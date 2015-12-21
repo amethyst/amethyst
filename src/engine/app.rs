@@ -1,6 +1,17 @@
 use core::timing::{Duration, SteadyTime};
 use engine::state::{State, StateMachine};
 
+/// Times a function and returns the elapsed time.
+macro_rules! benchmark {
+    ($function:expr) => {{
+        let mut timer = ::core::Stopwatch::new();
+        timer.restart();
+        $function;
+        timer.stop();
+        timer.elapsed()
+    }}
+}
+
 /// User-friendly facade for building games. Manages main loop.
 pub struct Application {
     pub states: StateMachine,
