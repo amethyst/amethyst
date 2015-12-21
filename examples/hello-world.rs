@@ -1,7 +1,6 @@
 extern crate amethyst;
 
-use amethyst::core::Duration;
-use amethyst::engine::{Application, State};
+use amethyst::engine::{Application, Duration, State};
 
 struct GameState;
 

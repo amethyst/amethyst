@@ -1,10 +1,10 @@
-use core::timing::{Duration, SteadyTime};
 use engine::state::{State, StateMachine};
+use engine::timing::{Duration, SteadyTime, Stopwatch};
 
 /// Times a function and returns the elapsed time.
 macro_rules! benchmark {
     ($function:expr) => {{
-        let mut timer = ::core::Stopwatch::new();
+        let mut timer = Stopwatch::new();
         timer.restart();
         $function;
         timer.stop();

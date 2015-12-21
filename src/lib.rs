@@ -10,8 +10,7 @@
 //! ```
 //! extern crate amethyst;
 //!
-//! use amethyst::core::{Duration, Event, Key};
-//! use amethyst::engine::{Application, Game, State};
+//! use amethyst::*;
 //!
 //! struct GameState;
 //!
@@ -41,6 +40,5 @@
 //! }
 //! ```
 
-pub mod core;
 pub mod engine;
 pub mod renderer;

@@ -70,10 +70,6 @@ impl Frontend {
         }
     }
 
-    pub fn load_assets(&mut self) {
-        unimplemented!();
-    }
-
     pub fn load_render_path(&mut self) { 
         unimplemented!();
     }

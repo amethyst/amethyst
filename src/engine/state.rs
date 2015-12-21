@@ -1,4 +1,4 @@
-use core::timing::Duration;
+use engine::timing::Duration;
 
 /// A trait which defines game states that can be used by the state machine.
 pub trait State {
