@@ -6,4 +6,12 @@ script:
     - cargo install mdbook
     - cargo doc -v
     - mdbook build book
-    - cargo build -v
+#    - cargo build -v
+after_success: |
+    [ $TRAVIS_BRANCH = master ] &&
+    [ $TRAVIS_PULL_REQUEST = false ] &&
+    cp -r book/html/ web/ &&
+    cp -r target/doc/ web/doc/ &&
+    sudo pip install ghp-import &&
+    ghp-import -n web/ &&
+    git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
