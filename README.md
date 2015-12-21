@@ -7,7 +7,7 @@
 [tc]: https://travis-ci.org/ebkalderon/amethyst/
 
 Experimental data-oriented game engine written in Rust. This project is a
-work in progress; pardon the dust!
+*work in progress* and very incomplete; pardon the dust!
 
 # Tutorials
 
