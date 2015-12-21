@@ -1,0 +1,16 @@
+[package]
+name = "amethyst"
+version = "0.1.0"
+authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
+keywords = ["game", "engine", "sdk", "amethyst"]
+license = "MIT"
+
+[lib]
+name = "amethyst"
+path = "src/lib.rs"
+
+[dependencies]
+time = "0.1"
+
+[dev-dependencies.amethyst_opengl]
+path = "../amethyst_opengl/"
