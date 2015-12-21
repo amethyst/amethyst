@@ -5,8 +5,6 @@ rust:
 script:
     - cargo install mdbook
     - mdbook build book
-#    - cargo doc -v
-#    - cargo build -v
 after_success: |
     [ $TRAVIS_BRANCH = master ] &&
     [ $TRAVIS_PULL_REQUEST = false ] &&
