@@ -14,6 +14,8 @@ work in progress; pardon the dust!
 Read the associated [book][bk] for an in-depth guide to using Amethyst. You can
 build the guide book locally with:
 
+[bk]: http://ebkalderon.github.io/amethyst/
+
 ```
 cargo install mdbook
 mdbook build book
