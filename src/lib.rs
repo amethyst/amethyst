@@ -41,16 +41,6 @@
 //! }
 //! ```
 
-macro_rules! benchmark {
-    ($function:expr) => {{
-        let mut timer = ::core::Stopwatch::new();
-        timer.restart();
-        $function;
-        timer.stop();
-        timer.elapsed()
-    }}
-}
-
 pub mod core;
 pub mod engine;
 pub mod renderer;
