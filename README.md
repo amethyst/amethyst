@@ -11,8 +11,8 @@ work in progress; pardon the dust!
 
 # Tutorials
 
-Hosted online documentation is forthcoming. For now, you can build the guide
-book with:
+Read the associated [book][bk] for an in-depth guide to using Amethyst. You can
+build the guide book locally with:
 
 ```
 cargo install mdbook
@@ -23,7 +23,10 @@ The text can be found in `book/html/index.html`.
 
 # API Reference
 
-To generate the crate documentation, do:
+See the online [API reference][ar]. To generate the crate documentation locally,
+do:
+
+[ar]: http://ebkalderon.github.io/amethyst/doc/amethyst/index.html
 
 ```
 cargo doc
