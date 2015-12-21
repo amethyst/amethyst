@@ -21,6 +21,10 @@ This book is split into seven sections. This page is the first. The others are:
 [rb]: https://www.ruby-lang.org/
 [in]: ./internals.html
 
+Read the [API documentation][ad].
+
+[ad]: https://github.com/ebkalderon/amethyst/doc/index.html
+
 ## Why should I learn Amethyst?
 
 ## Why the hell did you build this?
