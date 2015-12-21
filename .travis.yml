@@ -4,8 +4,8 @@ rust:
     - nightly
 script:
     - cargo install mdbook
-    - cargo doc -v
     - mdbook build book
+#    - cargo doc -v
 #    - cargo build -v
 after_success: |
     [ $TRAVIS_BRANCH = master ] &&
