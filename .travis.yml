@@ -1,0 +1,9 @@
+language: rust
+rust:
+    - stable
+    - nightly
+script:
+    - cargo build -v
+    - cargo doc -v
+    - mdbook build book
+
