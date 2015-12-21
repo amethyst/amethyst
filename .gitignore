@@ -1,4 +1,4 @@
-doc/book
+book/html
 prototypes
 target
 Cargo.lock
