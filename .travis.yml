@@ -3,6 +3,7 @@ rust:
     - stable
     - nightly
 script:
+    - cargo install mdbook
     - cargo build -v
     - cargo doc -v
     - mdbook build book
