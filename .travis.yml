@@ -2,6 +2,7 @@ language: rust
 rust:
     - stable
     - nightly
+sudo: true
 script:
     - cargo install mdbook
     - mdbook build book
