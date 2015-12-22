@@ -12,7 +12,7 @@ Experimental data-oriented game engine written in Rust. This project is a
 # Tutorials
 
 Read the associated [book][bk] for an in-depth guide to using Amethyst. You can
-build the guide book locally with:
+build the book locally with:
 
 [bk]: http://ebkalderon.github.io/amethyst/
 
