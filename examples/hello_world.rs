@@ -1,3 +1,5 @@
+//! The most basic Amethyst example.
+
 extern crate amethyst;
 
 use amethyst::engine::{Application, Duration, State};
