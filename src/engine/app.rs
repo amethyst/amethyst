@@ -14,7 +14,7 @@ macro_rules! benchmark {
 
 /// User-friendly facade for building games. Manages main loop.
 pub struct Application {
-    pub states: StateMachine,
+    states: StateMachine,
     last_fixed_update: SteadyTime,
     fixed_step: Duration,
     delta_time: Duration,
