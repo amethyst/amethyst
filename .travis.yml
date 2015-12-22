@@ -1,12 +1,12 @@
 language: rust
 rust:
-#    - stable
     - nightly
 sudo: true
 script:
     - cargo install mdbook
     - mdbook build book
     - cargo doc
+    - cargo build -v
 after_script: |
     [ $TRAVIS_BRANCH = master ] &&
     [ $TRAVIS_PULL_REQUEST = false ] &&

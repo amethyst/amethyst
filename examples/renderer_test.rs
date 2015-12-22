@@ -1,10 +1,12 @@
 //! Makes direct use of the renderer module for testing purposes.
 
 extern crate amethyst;
-use amethyst::renderer::{Frontend, Light, Object, Frame};
+
+use amethyst::renderer::{Backend, Frontend, Light, Object, Frame};
 use amethyst::renderer::types::Buffer;
 
 extern crate amethyst_opengl;
+
 use amethyst_opengl::BackendGl;
 
 fn main() {
@@ -33,3 +35,4 @@ fn main() {
 
     frontend.draw(frame);
 }
+
