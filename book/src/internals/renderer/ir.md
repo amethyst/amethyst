@@ -1,4 +1,2 @@
 # Intermediate Representation
 
-
-
