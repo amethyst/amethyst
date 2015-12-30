@@ -41,7 +41,7 @@ In short, I wrote Amethyst to scratch three of my own itches:
 
 ## Contributing
 
-The Markdown files from which this book is generated is located [on GitHub][md]. Pull requests are welcome!
+The Markdown source files from which this book is generated can be found [on GitHub][md]. Pull requests are welcome!
 
 [md]: https://github.com/ebkalderon/amethyst/tree/master/book/src
 
