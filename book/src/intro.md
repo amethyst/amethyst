@@ -19,7 +19,7 @@ This book is split into seven sections. This page is the first. The others are:
 
 Read the [API documentation][ad].
 
-[ad]: https://github.com/ebkalderon/amethyst/doc/index.html
+[ad]: http://ebkalderon.github.io/amethyst/doc/amethyst/index.html
 
 ## Why the hell did you build this?
 
