@@ -2,7 +2,7 @@
 
 [s1]: https://travis-ci.org/ebkalderon/amethyst.svg?branch=master
 [s2]: https://img.shields.io/badge/license-MIT-blue.svg
-[s3]: https://d2weczhvl823v0.cloudfront.net/ebkalderon/amethyst/trend.png
+[s3]: https://img.shields.io/badge/trending-bitdeli-9c5f9c.svg
 
 [ml]: https://github.com/ebkalderon/amethyst/blob/master/COPYING
 [tc]: https://travis-ci.org/ebkalderon/amethyst/
