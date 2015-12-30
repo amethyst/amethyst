@@ -36,3 +36,7 @@ cargo doc
 
 The API reference can be found in `target/doc/amethyst/index.html`.
 
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/ebkalderon/amethyst/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
