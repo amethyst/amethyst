@@ -8,4 +8,5 @@
         * [Frontend](./internals/renderer/frontend.md)
         * [IR](./internals/renderer/ir.md)
         * [Backend](./internals/renderer/backend.md)
+    * [Scripting](./internals/scripting.md)
 
