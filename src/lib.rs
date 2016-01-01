@@ -7,7 +7,7 @@
 //!
 //! # Example
 //!
-//! ```
+//! ```ignore
 //! extern crate amethyst;
 //!
 //! use amethyst::*;
