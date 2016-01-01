@@ -1,4 +1,6 @@
-# Amethyst [![Build Status][s1]][tc] [![MIT License][s2]][ml] [![Join the chat][s3]][gc]
+# Amethyst
+
+[![Build Status][s1]][tc] [![MIT License][s2]][ml] [![Join the chat][s3]][gc]
 
 [s1]: https://travis-ci.org/ebkalderon/amethyst.svg?branch=master
 [s2]: https://img.shields.io/badge/license-MIT-blue.svg
@@ -38,5 +40,8 @@ cargo doc
 
 The API reference can be found in `target/doc/amethyst/index.html`.
 
+# Contributing
 
-
+Amethyst is an open-source project that values community contribution. Pull
+requests are welcome! We assume you have granted non-exclusive right to your
+source code under the [MIT license][ml].
