@@ -1,5 +1,7 @@
 # Amethyst [![Build Status][s1]][tc] [![MIT License][s2]][ml]
 
+[![Join the chat at https://gitter.im/ebkalderon/amethyst](https://badges.gitter.im/ebkalderon/amethyst.svg)](https://gitter.im/ebkalderon/amethyst?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 [s1]: https://travis-ci.org/ebkalderon/amethyst.svg?branch=master
 [s2]: https://img.shields.io/badge/license-MIT-blue.svg
 
