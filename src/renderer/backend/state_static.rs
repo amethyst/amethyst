@@ -41,4 +41,3 @@ pub struct PipelineInfo {
 /// Handle to a pipeline state object.
 #[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Pipeline(u64);
-

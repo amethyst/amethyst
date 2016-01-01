@@ -7,4 +7,3 @@ pub mod traits;
 pub use self::state_dynamic::DynamicState;
 pub use self::state_static::Pipeline;
 pub use self::traits::{Backend, Resources, States};
-

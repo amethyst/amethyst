@@ -75,7 +75,7 @@ pub struct DepthStencilOp {
     pub fail: StencilOp,
     pub pass: StencilOp,
     pub stencil_func: CompareFunc,
-    pub reference_value: u8
+    pub reference_value: u8,
 }
 
 pub enum FillMode {
@@ -114,7 +114,7 @@ pub enum Primitive {
 
 pub struct ScissorBox {
     pub origin: [f32; 2],
-    pub size: [f32; 2]
+    pub size: [f32; 2],
 }
 
 pub enum StencilOp {
@@ -150,4 +150,3 @@ pub enum Winding {
     CW,
     CCW,
 }
-

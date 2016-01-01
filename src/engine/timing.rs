@@ -62,4 +62,3 @@ impl Stopwatch {
         self.end_time = self.start_time;
     }
 }
-

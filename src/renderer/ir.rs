@@ -22,8 +22,7 @@ pub trait AddCommands {
     /// Draws non-indexed, non-instanced primitives.
     fn draw(&mut self, first: u32, count: u32) -> &mut Self;
     /// Draws indexed, non-instanced primitives.
-    fn draw_indexed(&mut self, first: u32, count: u32, vertex_offset: usize)
-                    -> &mut Self;
+    fn draw_indexed(&mut self, first: u32, count: u32, vertex_offset: usize) -> &mut Self;
     /// Binds a vertex/index/constant buffer to pull data from.
     fn set_buffer(&mut self, handle: Buffer) -> &mut Self;
     /// Binds dynamic state (blend, depth-stencil, rasterizer, or viewport).
@@ -72,8 +71,7 @@ impl AddCommands for CommandEncoder {
         self
     }
 
-    fn draw_indexed(&mut self, first: u32, count: u32, vertex_offset: usize)
-                    -> &mut Self {
+    fn draw_indexed(&mut self, first: u32, count: u32, vertex_offset: usize) -> &mut Self {
         self.buffer.push(Command::DrawIndexed(first, count, vertex_offset));
         self
     }
@@ -112,13 +110,11 @@ impl CommandQueue {
     /// Sorts the queue and returns the result, ready for processing by the
     /// backend.
     pub fn sort_and_flush(&mut self) -> Vec<CommandBuffer> {
-        self.queue.sort_by(|prev, next| {
-            prev.key.cmp(&next.key)
-        });
+        self.queue.sort_by(|prev, next| prev.key.cmp(&next.key));
 
-        self.queue.drain(..)
-                  .map(|encoder| { encoder.buffer })
-                  .collect()
+        self.queue
+            .drain(..)
+            .map(|encoder| encoder.buffer)
+            .collect()
     }
 }
-

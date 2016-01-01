@@ -28,4 +28,3 @@ fn main() {
     let mut game = Application::new(GameState::new());
     game.run();
 }
-

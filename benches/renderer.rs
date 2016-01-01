@@ -32,9 +32,11 @@ fn drawing(b: &mut Bencher) {
                              Object::Sprite,
                              Object::Mesh { vertices: Buffer::Vertex(0) },
                              Object::Sprite];
-        frame.lights = vec![Light::Directional { color: [0.0, 0.0, 0.0, 0.0],
+        frame.lights = vec![Light::Directional {
+                                color: [0.0, 0.0, 0.0, 0.0],
                                 direction: [0.0, 0.0, 0.0],
-                                intensity: 3.0 } ];
+                                intensity: 3.0,
+                            }];
 
         frontend.draw(frame);
     });

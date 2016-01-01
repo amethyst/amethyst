@@ -35,7 +35,9 @@ pub struct StateMachine {
 }
 
 impl StateMachine {
-    pub fn new<T: 'static>(initial_state: T) -> StateMachine where T: State {
+    pub fn new<T: 'static>(initial_state: T) -> StateMachine
+        where T: State
+    {
         StateMachine {
             running: false,
             state_stack: vec![Box::new(initial_state)],
@@ -84,7 +86,9 @@ impl StateMachine {
     }
 
     /// Sets the currently active state.
-    pub fn switch<T: 'static>(&mut self, state:T) where T: State {
+    pub fn switch<T: 'static>(&mut self, state: T)
+        where T: State
+    {
         if self.running {
             if !self.state_stack.is_empty() {
                 self.current().unwrap().on_stop();
@@ -98,7 +102,9 @@ impl StateMachine {
 
     /// Pauses the active state (if any) and pushes a new state onto the state
     /// stack.
-    pub fn push<T: 'static>(&mut self, state: T) where T: State {
+    pub fn push<T: 'static>(&mut self, state: T)
+        where T: State
+    {
         if self.running {
             if let Some(state) = self.current() {
                 state.on_pause();
@@ -135,4 +141,3 @@ impl StateMachine {
         }
     }
 }
-

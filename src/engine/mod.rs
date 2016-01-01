@@ -7,4 +7,3 @@ pub mod timing;
 pub use self::app::Application;
 pub use self::state::{State, StateMachine};
 pub use self::timing::{Duration, SteadyTime, Stopwatch};
-

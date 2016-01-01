@@ -58,4 +58,3 @@ pub enum DynamicState {
     /// Viewport state.
     Viewport(u64),
 }
-

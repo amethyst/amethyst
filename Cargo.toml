@@ -15,4 +15,3 @@ time = "0.1"
 [dev-dependencies.amethyst_opengl]
 git = "https://github.com/ebkalderon/amethyst_opengl"
 branch = "master"
-

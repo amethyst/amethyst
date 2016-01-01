@@ -21,7 +21,9 @@ pub struct Application {
 }
 
 impl Application {
-    pub fn new<T: 'static>(initial_state: T) -> Application where T: State {
+    pub fn new<T: 'static>(initial_state: T) -> Application
+        where T: State
+    {
         Application {
             states: StateMachine::new(initial_state),
             last_fixed_update: SteadyTime::now(),
@@ -48,16 +50,16 @@ impl Application {
 
     /// Advances the game world by one tick.
     fn advance_frame(&mut self) {
-        //self.states.handle_events(&self.event_queue.poll());
+        // self.states.handle_events(&self.event_queue.poll());
 
         while SteadyTime::now() - self.last_fixed_update > self.fixed_step {
             self.states.fixed_update(self.fixed_step);
-            //self.systems.fixed_iterate(self.fixed_step);
+            // self.systems.fixed_iterate(self.fixed_step);
             self.last_fixed_update = self.last_fixed_update + self.fixed_step;
         }
 
         self.states.update(self.delta_time);
-        //self.systems.iterate(self.delta_time);
+        // self.systems.iterate(self.delta_time);
     }
 
     /// Cleans up after the quit signal is received.
@@ -65,4 +67,3 @@ impl Application {
         self.states.stop()
     }
 }
-
