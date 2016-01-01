@@ -82,25 +82,31 @@ impl Frontend {
         for light in frame.lights {
             self.queue.submit(match light {
                 Light::Area => CommandEncoder::new().finish(),
-                Light::Directional { col, dir, int } => CommandEncoder::new().finish(),
-                Light::Point { col, int, loc } => CommandEncoder::new().finish(),
-                Light::Spot { ang, col, dir, int, loc } => CommandEncoder::new().finish(),
+                Light::Directional { color, direction, intensity } => {
+                    CommandEncoder::new().finish()
+                }
+                Light::Point { color, intensity, location } => {
+                    CommandEncoder::new().finish()
+                }
+                Light::Spot { angle, color, direction, intensity, location } => {
+                    CommandEncoder::new().finish()
+                }
             });
         }
 
         for obj in frame.objects {
             self.queue.submit(match obj {
                 Object::Emitter => CommandEncoder::new().finish(),
-                Object::IndexedMesh { inds, verts } => {
+                Object::IndexedMesh { indices, vertices } => {
                     CommandEncoder::new()
-                        .set_buffer(inds)
-                        .set_buffer(verts)
+                        .set_buffer(indices)
+                        .set_buffer(vertices)
                         .draw_indexed(0, 0, 0)
                         .finish()
                 }
-                Object::Mesh { verts } => {
+                Object::Mesh { vertices } => {
                     CommandEncoder::new()
-                        .set_buffer(verts)
+                        .set_buffer(vertices)
                         .draw(0, 0)
                         .finish()
                 }
