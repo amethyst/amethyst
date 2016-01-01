@@ -43,9 +43,9 @@ The API reference can be found in `target/doc/amethyst/index.html`.
 # Contributing
 
 Amethyst is an open-source project that values community contribution. Pull
-requests are welcome! We assume you have granted non-exclusive right to your
-source code under the [MIT license][ml] and you have processed your code with
-`rustfmt` prior to submission.
+requests are welcome!
 
-If you want to be known as an author, please add your name to the AUTHORS.md
-file in the pull request.
+We assume you have granted non-exclusive right to your source code under the
+[MIT license][ml] and you have processed your code with `rustfmt` prior to
+submission. If you want to be known as an author, please add your name to the
+AUTHORS.md file in the pull request.
