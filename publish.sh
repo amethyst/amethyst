@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Publish the book and the API documentation to the `gh-pages' branch.
+
 cp -r book/html/ web/
 cp -r target/doc/ web/doc/
 
