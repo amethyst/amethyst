@@ -30,12 +30,11 @@ Read the [API documentation][ad].
 
 The video game industry is getting bigger every year, and it has actually been
 [outpacing Hollywood for years][hw]. As game studios grow, their toolset grows
-to match. Though we now have access to some great game development tools (often
-for free, I might add), the process has become increasingly [clunky][ue] and
-unfriendly to throwaway experimentation and iteration. The tools available are
-also pretty opaque to how they work internally, and if they are open, they don't
-usually adhere to modern design patterns well (think pre-C++11 idioms and
-convoluted class hierarchies).
+to match. Though we now have access to some great mostly free game development
+tools, their workflows are [clunky][ue] and unfriendly to throwaway
+experimentation and iteration. Most of these tools are also pretty opaque to how
+they work internally, and those that are open don't usually adhere to modern
+design patterns well (think pre-C++11 idioms and convoluted class hierarchies).
 
 [hw]: https://www.quora.com/Who-makes-more-money-Hollywood-or-the-video-game-industry
 [ue]: http://cdn.dbolical.com/videos/engines/1/1/456/Unreal_Engine_4_Features_Trailer_--_GDC_2014.mp4.jpg
