@@ -2,6 +2,7 @@
 
 * [Introduction](./intro.md)
 * [Getting Started](./getting_started.md)
+* [A Simple Application](./simple_application.md)
 * [Internals](./internals.md)
     * [Renderer](./internals/renderer.md)
         * [Frontend](./internals/renderer/frontend.md)

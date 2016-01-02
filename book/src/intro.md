@@ -11,13 +11,14 @@ of libraries and tools that collectively make up an engine.
 This book is split into seven sections. This page is the first. The others are:
 
 * [Getting Started][gs] – Prepare your computer for Amethyst development.
-* Writing A Simple Application – Build a basic pong game in Rust.
+* [A Simple Application][sa] – Build a basic pong game in Rust.
 * Effective Amethyst – Learn how to write complex games and applications.
 * Scripting – Jump into cross-platform development with [Ruby][rb].
 * [Internals][in] – Peek into Amethyst's innards and learn how it works.
 * Bibliography – Read the works that influenced the design.
 
 [gs]: ./getting_started.html
+[sa]: ./simple_application.html
 [rb]: https://www.ruby-lang.org/
 [in]: ./internals.html
 

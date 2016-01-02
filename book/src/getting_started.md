@@ -117,5 +117,7 @@ World" example, the logic flows like this:
 
 This program isn't very useful on its own, but if everything compiles correctly,
 then your environment is set up correctly and you can start working on the fun
-stuff! Follow along in the next section to see how I implement a simple Pong
-clone in Amethyst.
+stuff! Follow along in [the next section][sa] to see how I implement a simple
+Pong clone in Amethyst.
+
+[sa]: ./simple_application.html
