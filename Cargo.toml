@@ -10,4 +10,5 @@ name = "amethyst"
 path = "src/lib.rs"
 
 [dependencies]
+threadpool = "0.1.4"
 time = "0.1"
