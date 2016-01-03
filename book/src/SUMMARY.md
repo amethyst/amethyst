@@ -9,4 +9,5 @@
         * [IR](./internals/renderer/ir.md)
         * [Backend](./internals/renderer/backend.md)
     * [Scripting](./internals/scripting.md)
+    * [CLI Workflow](./internals/cli_workflow.md)
 
