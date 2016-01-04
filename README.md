@@ -13,6 +13,32 @@
 Experimental data-oriented game engine written in Rust. This project is a *work
 in progress* and very incomplete; pardon the dust!
 
+# Documentation
+
+Read the associated [online book][bk] for a comprehensive tutorial to using
+Amethyst. There is also an online crate-level [API reference][ar].
+
+[bk]: http://ebkalderon.github.io/amethyst/
+[ar]: http://ebkalderon.github.io/amethyst/doc/amethyst/index.html
+
+## Building Locally
+
+You can build the book locally with:
+
+```
+cargo install mdbook
+mdbook build book
+```
+
+The text can be found in `book/html/index.html`. To generate the API
+documentation locally, do:
+
+```
+cargo doc
+```
+
+The API reference can be found in `target/doc/amethyst/index.html`.
+
 # Hello, World!
 
 Create a new Cargo binary project with `cargo new --bin crate_name` and add the
@@ -59,32 +85,6 @@ fn main() {
 
 Compile and run the example with `cargo run`. You should see "Hello from
 Amethyst!" print out to the terminal and abruptly exit.
-
-# Documentation
-
-Read the associated [online book][bk] for a comprehensive tutorial to using
-Amethyst. There is also an online crate-level [API reference][ar].
-
-[bk]: http://ebkalderon.github.io/amethyst/
-[ar]: http://ebkalderon.github.io/amethyst/doc/amethyst/index.html
-
-## Building Locally
-
-You can build the book locally with:
-
-```
-cargo install mdbook
-mdbook build book
-```
-
-The text can be found in `book/html/index.html`. To generate the API
-documentation locally, do:
-
-```
-cargo doc
-```
-
-The API reference can be found in `target/doc/amethyst/index.html`.
 
 # Contributing
 
