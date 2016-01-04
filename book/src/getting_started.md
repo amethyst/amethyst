@@ -14,7 +14,7 @@ Rust compiler. Here are the system requirements:
   * OS: Windows Vista and newer, Linux, BSD, Mac OS X
   * Rust: Nightly (1.6.0 or newer)
 * Renderer Backends:
-  * OpenGL 4.0
+  * OpenGL 4.0 or newer
 
 ## Installation
 
