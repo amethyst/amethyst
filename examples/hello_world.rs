@@ -15,8 +15,9 @@ impl State for GameState {
         println!("Begin!");
     }
 
-    fn update(&mut self, delta: Duration) {
-        println!("{}", delta.num_microseconds().unwrap());
+    fn update(&mut self, _delta: Duration) {
+        println!("Hello from Amethyst!");
+        std::process::exit(0);
     }
 
     fn on_stop(&mut self) {
