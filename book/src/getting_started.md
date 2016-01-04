@@ -46,7 +46,9 @@ library yourself:
 
 ```toml
 [dependencies.amethyst]
-path= "../path/to/amethyst/"
+lib = "../path/to/amethyst/lib.rs"
+
+TODO: Need to verify accuracy!
 ```
 
 ## Hello, World!
@@ -86,7 +88,7 @@ cargo run
 ```
 
 If you see the output "Hello from Amethyst!" print to your terminal, then
-congratulations! You have successfully written your first Amethyst application.
+congratulations! You have successfully written your first Amethyst application!
 
 ## What did I just do?
 
