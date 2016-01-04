@@ -2,7 +2,7 @@
 
 # Publish the book and the API documentation to the `gh-pages' branch.
 
-cp -r book/html/ web/
+cp -r book/html/ book/images/ web/
 cp -r target/doc/ web/doc/
 
 sudo pip install ghp-import
