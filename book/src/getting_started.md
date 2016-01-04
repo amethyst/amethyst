@@ -25,7 +25,7 @@ Rust compiler. Here are the system requirements:
 Create a new Rust executable project with `cargo new --bin crate_name` and add
 the following lines to your "Cargo.toml":
 
-```
+```toml
 [dependencies]
 amethyst = "0.1.0"
 ```
@@ -44,7 +44,7 @@ cargo build
 Then, in your crate's "Cargo.toml", specify the location of the `amethyst`
 library yourself:
 
-```
+```toml
 [dependencies.amethyst]
 lib = "../path/to/amethyst/lib.rs"
 
