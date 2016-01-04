@@ -14,13 +14,12 @@ This book is split into seven sections. This page is the first. The others are:
 * [A Simple Application][sa] – Build a basic pong game in Rust.
 * Effective Amethyst – Learn how to write complex games and applications.
 * Scripting – Jump into cross-platform development with [Ruby][rb].
-* [Internals][in] – Peek into Amethyst's innards and learn how it works.
+* Glossary - Defines special terms used throughout the book.
 * Bibliography – Read the works that influenced the design.
 
 [gs]: ./getting_started.html
 [sa]: ./simple_application.html
 [rb]: https://www.ruby-lang.org/
-[in]: ./internals.html
 
 Read the [API documentation][ad].
 
