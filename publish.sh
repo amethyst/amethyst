@@ -2,6 +2,9 @@
 
 # Publish the book and the API documentation to the `gh-pages' branch.
 
+cargo install mdbook
+mdbook build book
+
 mkdir web
 cp -r book/html/* book/images/ web/
 cp -r target/doc/ web/doc/
