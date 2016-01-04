@@ -1,6 +1,6 @@
 # Amethyst
 
-> Note: This project is a *work in progress* and is very incomplete. Pardon our
+> Note: This project is a *work in progress* and is very incomplete. Pardon the
 > dust!
 
 Howdy! This book will teach you everything you need to know about building video
