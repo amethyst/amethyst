@@ -1,5 +1,8 @@
 # Amethyst
 
+> Note: This project is a *work in progress* and is very incomplete. Pardon our
+> dust!
+
 Howdy! This book will teach you everything you need to know about building video
 games and interactive simulations with the Amethyst software development kit.
 Amethyst is a clean and modern game engine written in [Rust][rs], a safe and
