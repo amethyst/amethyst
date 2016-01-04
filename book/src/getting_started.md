@@ -5,7 +5,7 @@ environment. Then we'll test this environment by compiling a simple "Hello,
 World" application.
 
 Amethyst should compile hassle-free on any platform properly supported by the
-Rust compiler. Here are the system requirements:
+Rust compiler. Here are the system requirements (they're pretty modest):
 
 * Minimum:
   * CPU: 1GHz, the more cores the better
