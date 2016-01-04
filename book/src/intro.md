@@ -21,9 +21,9 @@ This book is split into seven sections. This page is the first. The others are:
 [sa]: ./simple_application.html
 [rb]: https://www.ruby-lang.org/
 
-Read the [API documentation][ad].
+Read the crate-level [API documentation][ad].
 
-[ad]: http://ebkalderon.github.io/amethyst/doc/amethyst/index.html
+[ad]: http://ebkalderon.github.io/amethyst/doc/amethyst/
 
 ## Why the hell did you build this?
 

@@ -2,7 +2,14 @@
 name = "amethyst"
 version = "0.1.0"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
+description = "Data-oriented game engine written in Rust"
 keywords = ["game", "engine", "sdk", "amethyst"]
+
+documentation = "http://ebkalderon.github.io/amethyst/doc/amethyst/"
+homepage = "http://ebkalderon.github.io/amethyst/"
+repository = "https://github.com/ebkalderon/amethyst"
+
+readme = "README.md"
 license = "MIT"
 
 [lib]
