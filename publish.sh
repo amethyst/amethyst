@@ -3,9 +3,11 @@
 # Publish the book and the API documentation to the `gh-pages' branch.
 
 cargo install mdbook
-mdbook build book
+if [ $? -ne 0 ]; then
+    exit
+fi
 
-[ "$(whereis mdbook)" == "mdbook:" ] && exit
+mdbook build book
 
 mkdir web
 cp -r book/html/* book/images/ web/
