@@ -66,8 +66,11 @@ requests are welcome!
 We assume you have granted non-exclusive right to your source code under the
 [MIT license][ml] and you have processed your code with `rustfmt` prior to
 submission. If you want to be known as an author, please add your name to the
-AUTHORS.md file in the pull request.
+AUTHORS.md file in the pull request. If you put down your real name, then at
+least we can leave you a [cake on your doorstep][cd] congratulating you on your
+marvelous pull request.
 
 See the [Development Roadmap][dr] for ideas on what you can hack on.
 
+[cd]: http://tinyurl.com/j9hjmno
 [dr]: https://github.com/ebkalderon/amethyst/wiki/Roadmap
