@@ -15,8 +15,8 @@ in progress* and very incomplete; pardon the dust!
 
 ## Usage
 
-Read the associated [online book][bk] for a comprehensive tutorial to using
-Amethyst. There is also an online crate-level [API reference][ar].
+Read the [online book][bk] for a comprehensive tutorial to using Amethyst. There
+is also an online crate-level [API reference][ar].
 
 [bk]: http://ebkalderon.github.io/amethyst/
 [ar]: http://ebkalderon.github.io/amethyst/doc/amethyst/
