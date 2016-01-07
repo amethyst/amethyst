@@ -13,7 +13,7 @@
 Experimental data-oriented game engine written in Rust. This project is a *work
 in progress* and very incomplete; pardon the dust!
 
-# Usage
+## Usage
 
 Read the associated [online book][bk] for a comprehensive tutorial to using
 Amethyst. There is also an online crate-level [API reference][ar].
@@ -21,11 +21,11 @@ Amethyst. There is also an online crate-level [API reference][ar].
 [bk]: http://ebkalderon.github.io/amethyst/
 [ar]: http://ebkalderon.github.io/amethyst/doc/amethyst/
 
-# Quick Example
+## Quick Example
 
 See the [Getting Started][gs] chapter in the book for the full-blown "Hello,
-World!" tutorial. For the sake of brevity, you can generate an empty project
-with the [amethyst_cli][ac] tool and build it. Follow along below:
+World!" tutorial. For the sake of brevity, you can generate an empty game
+project with the [amethyst_cli][ac] tool and build it. Follow along below:
 
 [gs]: http://ebkalderon.github.io/amethyst/getting_started.html
 [ac]: https://github.com/ebkalderon/amethyst_cli
@@ -58,7 +58,7 @@ cargo doc
 
 The API reference can be found in `target/doc/amethyst/index.html`.
 
-# Contributing
+## Contributing
 
 Amethyst is an open-source project that values community contribution. Pull
 requests are welcome!

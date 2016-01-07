@@ -28,11 +28,10 @@ fn main() {
 }
 ```
 
-Then, compile and run the code with:
+Then, compile and run the code with `cargo run`, or `amethyst run` if you
+have the [CLI tool installed][ct].
 
-```
-cargo run
-```
+[ct]: ./getting_started/automatic_setup.html
 
 If you see the output "Hello from Amethyst!" print to your terminal, then
 congratulations! You have successfully written your first Amethyst application.
