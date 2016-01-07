@@ -5,6 +5,8 @@
 cargo install mdbook
 mdbook build book
 
+[ "$(whereis mdbook)" == "mdbook:" ] && exit
+
 mkdir web
 cp -r book/html/* book/images/ web/
 cp -r target/doc/ web/doc/
