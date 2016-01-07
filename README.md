@@ -31,7 +31,7 @@ project with the [amethyst_cli][ac] tool and build it. Follow along below:
 [ac]: https://github.com/ebkalderon/amethyst_cli
 
 ```
-cargo install --git https://github.com/ebkalderon/amethyst_cli.git
+cargo install amethyst_cli
 amethyst new mygame
 cd mygame
 amethyst run
