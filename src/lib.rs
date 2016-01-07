@@ -40,5 +40,9 @@
 //! }
 //! ```
 
-pub mod engine;
+mod engine;
 pub mod renderer;
+
+pub use engine::app::Application;
+pub use engine::state::{State, StateMachine};
+pub use engine::timing::{Duration, Stopwatch};

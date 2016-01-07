@@ -1,7 +1,10 @@
+//! Utilities for game state management.
+
 use engine::timing::Duration;
 
 /// A trait which defines game states that can be used by the state machine.
 pub trait State {
+    /// Standard constructor for all game states.
     fn new() -> Self where Self: Sized;
 
     /// Executed the first time when the game state is reached.

@@ -54,6 +54,13 @@ impl Frame {
             objects: Vec::new(),
         }
     }
+
+    pub fn with_data(lights: Vec<Light>, objects: Vec<Object>) -> Frame {
+        Frame {
+            lights: lights,
+            objects: objects,
+        }
+    }
 }
 
 /// Simple renderer frontend.

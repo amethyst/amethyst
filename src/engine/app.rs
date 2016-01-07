@@ -1,3 +1,5 @@
+//! The core engine framework.
+
 use engine::state::{State, StateMachine};
 use engine::timing::{Duration, SteadyTime, Stopwatch};
 
@@ -21,6 +23,7 @@ pub struct Application {
 }
 
 impl Application {
+    /// Creates a new Application with the given initial game state.
     pub fn new<T: 'static>(initial_state: T) -> Application
         where T: State
     {

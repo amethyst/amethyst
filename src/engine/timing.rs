@@ -1,3 +1,5 @@
+//! Utilities for working with time.
+
 extern crate time;
 
 pub use self::time::{Duration, SteadyTime};
