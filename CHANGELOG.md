@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.1
+## 0.1.1 (b7d804acd3a51db096a1bebe56eb79b6dcc23351)
 
 * Core
   * Hide engine submodule, reexport desired contents as public
