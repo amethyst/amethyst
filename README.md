@@ -13,15 +13,34 @@
 Experimental data-oriented game engine written in Rust. This project is a *work
 in progress* and very incomplete; pardon the dust!
 
-# Documentation
+# Usage
 
 Read the associated [online book][bk] for a comprehensive tutorial to using
 Amethyst. There is also an online crate-level [API reference][ar].
 
 [bk]: http://ebkalderon.github.io/amethyst/
-[ar]: http://ebkalderon.github.io/amethyst/doc/amethyst/index.html
+[ar]: http://ebkalderon.github.io/amethyst/doc/amethyst/
 
-## Building Locally
+# Quick Example
+
+See the [Getting Started][gs] chapter in the book for the full-blown "Hello,
+World!" tutorial. For the sake of brevity, you can generate an empty project
+with the [amethyst_cli][ac] tool and build it. Follow along below:
+
+[gs]: http://ebkalderon.github.io/amethyst/getting_started.html
+[ac]: https://github.com/ebkalderon/amethyst_cli
+
+```
+cargo install --git https://github.com/ebkalderon/amethyst_cli.git
+amethyst new mygame
+cd mygame
+amethyst run
+```
+
+If everything goes well, you should see "Hello from Amethyst!" print out to the
+terminal and abruptly exit.
+
+## Building Documentation
 
 You can build the book locally with:
 
@@ -38,54 +57,6 @@ cargo doc
 ```
 
 The API reference can be found in `target/doc/amethyst/index.html`.
-
-# Hello, World!
-
-Create a new Cargo binary project with `cargo new --bin crate_name` and add the
-following lines to your "Cargo.toml":
-
-```toml
-[dependencies.amethyst]
-git = "https://github.com/ebkalderon/amethyst.git"
-branch = "master"
-```
-
-Then, in your "main.rs", type or copy and paste the following code:
-
-```rust
-extern crate amethyst;
-
-use amethyst::{Application, Duration, State};
-
-struct HelloWorld;
-
-impl State for HelloWorld {
-    fn new() -> HelloWorld {
-        HelloWorld
-    }
-
-    fn on_start(&mut self) {
-        println!("Begin!");
-    }
-
-    fn update(&mut self, _delta: Duration) {
-        println!("Hello from Amethyst!");
-        std::process::exit(0);
-    }
-
-    fn on_stop(&mut self) {
-        println!("End!");
-    }
-}
-
-fn main() {
-    let mut game = Application::new(HelloWorld);
-    game.run();
-}
-```
-
-Compile and run the example with `cargo run`. You should see "Hello from
-Amethyst!" print out to the terminal and abruptly exit.
 
 # Contributing
 

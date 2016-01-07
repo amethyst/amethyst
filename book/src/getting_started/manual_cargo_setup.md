@@ -14,7 +14,7 @@ the following lines to your "Cargo.toml":
 
 ```toml
 [dependencies]
-amethyst = "0.1.0"
+amethyst = "*"
 ```
 
 ### From Git
@@ -53,7 +53,7 @@ And in the "config.yml" file, copy and paste this YAML configuration:
 ```
 ---
 logging:
-    file_path: "your_game.log"
+    file_path: "hello_world.log"
     output_verbosity: medium
     logging_verbosity: debug 
 

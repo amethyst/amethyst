@@ -10,7 +10,7 @@ hand, follow along with [the next section][ci] instead.
 To install the `amethyst_cli` tool, follow along in your terminal:
 
 ```
-cargo install amethyst_cli
+cargo install --git https://github.com/ebkalderon/amethyst_cli
 amethyst new hello_world
 ```
 
