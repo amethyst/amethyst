@@ -1,4 +1,4 @@
-//! Builds IR command buffers from Objects and feeds them into the backend.
+//! Simple renderer frontend.
 
 use renderer::backend::Backend;
 use renderer::ir::{AddCommands, CommandEncoder, CommandQueue};
@@ -63,7 +63,7 @@ impl Frame {
     }
 }
 
-/// Simple renderer frontend.
+/// Builds IR command buffers from Frames and feeds them into the backend.
 pub struct Frontend {
     backend: Box<Backend>,
     queue: CommandQueue,

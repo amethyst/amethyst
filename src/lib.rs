@@ -5,6 +5,8 @@
 //! idiomatic [Rust](https://www.rust-lang.org/) for building video games and
 //! interactive multimedia applications.
 //!
+//! This project is a work in progress and is very incomplete. Pardon the dust!
+//!
 //! # Example
 //!
 //! ```ignore
