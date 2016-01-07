@@ -55,7 +55,7 @@ Then, in your "main.rs", type or copy and paste the following code:
 ```rust
 extern crate amethyst;
 
-use amethyst::engine::{Application, Duration, State};
+use amethyst::{Application, Duration, State};
 
 struct HelloWorld;
 
