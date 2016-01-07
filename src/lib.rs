@@ -26,7 +26,7 @@
 //!             match e {
 //!                 Event::Closed => game.quit(),
 //!                 Event::Resized(x, y) => println!("x: {}, y: {}", x, y),
-//!                 Event::KeyPressed(k) => if k == Key::Esc { game.quit() }
+//!                 Event::KeyPressed(k) => if k == Key::Esc { game.quit() },
 //!             }
 //!         }
 //!     }
