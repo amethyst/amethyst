@@ -23,9 +23,9 @@ If you don't want to get Amethyst from Crates.io, you can download and compile
 Amethyst from the Git repository:
 
 ```
-git clone https://github.com/ebkalderon/amethyst.git
-cd amethyst
-cargo build
+$ git clone https://github.com/ebkalderon/amethyst.git
+$ cd amethyst
+$ cargo build
 ```
 
 Then, in your crate's "Cargo.toml", specify the location of the `amethyst`

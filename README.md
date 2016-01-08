@@ -31,10 +31,10 @@ project with the [amethyst_cli][ac] tool and build it. Follow along below:
 [ac]: https://github.com/ebkalderon/amethyst_cli
 
 ```
-cargo install amethyst_cli
-amethyst new mygame
-cd mygame
-amethyst run
+$ cargo install amethyst_cli
+$ amethyst new mygame
+$ cd mygame
+$ amethyst run
 ```
 
 If everything goes well, you should see "Hello from Amethyst!" print out to the
@@ -45,15 +45,15 @@ terminal and abruptly exit.
 You can build the book locally with:
 
 ```
-cargo install mdbook
-mdbook build book
+$ cargo install mdbook
+$ mdbook build book
 ```
 
 The text can be found in `book/html/index.html`. To generate the API
 documentation locally, do:
 
 ```
-cargo doc
+$ cargo doc
 ```
 
 The API reference can be found in `target/doc/amethyst/index.html`.

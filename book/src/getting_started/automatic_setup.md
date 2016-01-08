@@ -10,8 +10,8 @@ hand, follow along with [the next section][ci] instead.
 To install the `amethyst_cli` tool, follow along in your terminal:
 
 ```
-cargo install amethyst_cli
-amethyst new hello_world
+$ cargo install amethyst_cli
+$ amethyst new hello_world
 ```
 
 That's it! You should now have a customized Cargo project set up in a directory
