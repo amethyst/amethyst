@@ -33,7 +33,7 @@ library yourself:
 
 ```toml
 [dependencies.amethyst]
-path = "../path/to/amethyst/"
+path = "../path/to/amethyst/folder/"
 ```
 
 ## Resources Folder
