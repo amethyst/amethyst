@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.1.3 ()
+
+* Core
+  * Clean up use statements
+* Renderer
+  * Split ir.rs and frontend.rs into separate files
+  * Frontend
+    * Objects and Lights (enums) are now structs impl'ing Renderable trait
+    * Frame is a container of Renderable trait objects
+    * Start compiling library of common objects and light types
+  * Intermediate Representation
+    * Move GPU state modeling out of Backend and into IR
+    * CommandBuffers are now directly sortable
+    * CommandQueue now takes in CommandBuffers directly
+  * Backend
+    * Consolidate traits into one short file
+
 ## 0.1.1 (b7d804acd3a51db096a1bebe56eb79b6dcc23351)
 
 * Core
