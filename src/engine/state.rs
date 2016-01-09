@@ -1,6 +1,6 @@
 //! Utilities for game state management.
 
-use engine::timing::Duration;
+use super::timing::Duration;
 
 /// A trait which defines game states that can be used by the state machine.
 pub trait State {

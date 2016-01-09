@@ -1,7 +1,7 @@
 //! The core engine framework.
 
-use engine::state::{State, StateMachine};
-use engine::timing::{Duration, SteadyTime, Stopwatch};
+use super::state::{State, StateMachine};
+use super::timing::{Duration, SteadyTime, Stopwatch};
 
 /// Times a function and returns the elapsed time.
 macro_rules! benchmark {

@@ -1,9 +1,26 @@
 //! Makes low-level graphics API calls and manages memory.
 
-pub mod state_dynamic;
-pub mod state_static;
-pub mod traits;
+use renderer::ir::CommandBuffer;
+use renderer::ir::state_dynamic::*;
+use renderer::ir::state_static::{Pipeline, PipelineInfo};
+use renderer::types::*;
 
-pub use self::state_dynamic::DynamicState;
-pub use self::state_static::Pipeline;
-pub use self::traits::{Backend, Resources, States};
+/// Trait implemented by renderer backends.
+pub trait Backend {
+    fn process(&mut self, buffers: Vec<CommandBuffer>);
+}
+
+/// Trait for managing handles to GPU resources.
+pub trait Resources {
+    fn create_buffer(&mut self, info: BufferInfo) -> Option<Buffer>;
+    fn create_shader(&mut self) -> Option<Shader>;
+}
+
+/// Trait for managing handles to GPU state objects.
+pub trait States {
+    fn create_blend(&mut self, info: BlendInfo) -> Option<DynamicState>;
+    fn create_depth_stencil(&mut self, info: DepthStencilInfo) -> Option<DynamicState>;
+    fn create_pipeline(&mut self, info: PipelineInfo) -> Option<Pipeline>;
+    fn create_raster(&mut self, info: RasterizerInfo) -> Option<DynamicState>;
+    fn create_viewport(&mut self, info: ViewportInfo) -> Option<DynamicState>;
+}
