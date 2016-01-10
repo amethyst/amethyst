@@ -1,6 +1,7 @@
 //! Special types for representing cross-API GPU data.
 
 pub struct BufferInfo {
+    // TODO: Add const *void buffer data.
     /// Size in bytes.
     pub size: usize,
 }
