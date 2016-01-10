@@ -1,13 +1,15 @@
 # Amethyst
 
-[![Build Status][s1]][tc] [![MIT License][s2]][ml] [![Join the chat][s3]][gc]
+[![Build Status][s1]][tc] [![Crates.io][s2]][ci] [![MIT License][s3]][ml] [![Join the chat][s4]][gc]
 
 [s1]: https://travis-ci.org/ebkalderon/amethyst.svg?branch=master
-[s2]: https://img.shields.io/badge/license-MIT-blue.svg
-[s3]: https://badges.gitter.im/ebkalderon/amethyst.svg
+[s2]: https://img.shields.io/badge/crates.io-0.1.3-orange.svg
+[s3]: https://img.shields.io/badge/license-MIT-blue.svg
+[s4]: https://badges.gitter.im/ebkalderon/amethyst.svg
 
-[ml]: https://github.com/ebkalderon/amethyst/blob/master/COPYING
 [tc]: https://travis-ci.org/ebkalderon/amethyst/
+[ci]: https://crates.io/crates/amethyst/
+[ml]: https://github.com/ebkalderon/amethyst/blob/master/COPYING
 [gc]: https://gitter.im/ebkalderon/amethyst?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
 Experimental data-oriented game engine written in Rust. This project is a *work
