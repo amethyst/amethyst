@@ -4,7 +4,7 @@ rust:
     - nightly
 
 script:
-    - cargo doc
+    - cargo doc --no-deps
     - cargo build -v
     - cargo test -v
 
