@@ -4,14 +4,20 @@
 > dust!
 
 Howdy! This book will teach you everything you need to know about building video
-games and interactive simulations with the
-[Amethyst software development kit][am]. Amethyst is a clean and modern game
-engine written in [Rust][rs], a safe and
-fast systems programming language. But more correctly, Amethyst is a whole suite
-of libraries and tools that collectively make up an engine.
+games and interactive simulations with the **Amethyst** game engine. Amethyst is
+a clean and modern engine written in [Rust][rs], a safe and fast systems
+programming language. But more correctly, Amethyst is a whole suite of libraries
+and tools that collectively make up an engine.
 
-[am]: https://github.com/ebkalderon/amethyst
 [rs]: https://www.rust-lang.org/
+
+Amethyst is free and open source software, licensed under the [MIT License][ml].
+This means that the engine is given to you at no cost and its source code is
+completely yours to tinker with. The code is available on [GitHub][am].
+Contributions and feature requests are welcome!
+
+[ml]: https://github.com/ebkalderon/amethyst/blob/master/COPYING
+[am]: https://github.com/ebkalderon/amethyst
 
 This book is split into seven sections. This page is the first. The others are:
 
