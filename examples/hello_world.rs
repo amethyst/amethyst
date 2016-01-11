@@ -22,6 +22,6 @@ impl State for Example {
 }
 
 fn main() {
-    let mut game = Application::new(GameState::new());
+    let mut game = Application::new(Example);
     game.run();
 }
