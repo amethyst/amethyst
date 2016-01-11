@@ -25,7 +25,7 @@ This book is split into seven sections. This page is the first. The others are:
 * [Getting Started][gs] – Prepare your computer for Amethyst development.
 * [A Simple Application][sa] – Build a basic pong game in Rust.
 * Effective Amethyst – Learn how to write complex games and applications.
-* Scripting – Jump into cross-platform development with [Ruby][rb].
+* Scripting – Jump into script development with [Ruby][rb].
 * Glossary - Defines special terms used throughout the book.
 * Bibliography – Read the works that influenced the design.
 
@@ -54,8 +54,8 @@ In short, I wrote Amethyst to scratch three of my own itches:
 
 1. Teach myself game development and computer graphics in its purest form,
    rather than through the lens of a particular game engine.
-2. Write a fast, modular, data-driven engine suited for rapid prototyping that
-   demands (a little) less boilerplate.
+2. Write a fast, modular, data-oriented and data-driven engine suited for rapid
+   prototyping that demands (a little) less boilerplate from the user.
 3. Build a toolset that splits up the traditional "mega-editor" into several
    small but well-integrated tools, adhering to the [Unix philosophy][up].
 
