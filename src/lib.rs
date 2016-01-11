@@ -1,9 +1,12 @@
 #![crate_name = "amethyst"]
 #![crate_type = "lib"]
 
-//! Amethyst is a free and open source SDK (software development kit) written in
-//! idiomatic [Rust](https://www.rust-lang.org/) for building video games and
-//! interactive multimedia applications.
+//! Amethyst is a free and open source game engine written in idiomatic
+//! [Rust][rs] for building video games and interactive multimedia applications.
+//! The source code is available for free on [GitHub][gh].
+//!
+//! [rs]: https://www.rust-lang.org/
+//! [gh]: https://github.com/ebkalderon/amethyst
 //!
 //! This project is a work in progress and is very incomplete. Pardon the dust!
 //!
