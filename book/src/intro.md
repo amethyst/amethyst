@@ -33,7 +33,7 @@ This book is split into seven sections. This page is the first. The others are:
 [sa]: ./simple_application.html
 [rb]: https://www.ruby-lang.org/
 
-Read the crate-level [API documentation][ad].
+Read the crate-level [API documentation][ad] for more details.
 
 [ad]: http://ebkalderon.github.io/amethyst/doc/amethyst/
 
