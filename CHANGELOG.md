@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.4 ()
+## 0.1.4
 
 * Core
   * Stabilize state management
@@ -9,7 +9,7 @@
     * Remove standardized State constructor
     * Update book and doc comments
 
-## 0.1.3 (0ecc7d8c509f00915214386c6c74b6377b7d9fc3)
+## 0.1.3
 
 * Core
   * Clean up use statements
@@ -26,7 +26,7 @@
   * Backend
     * Consolidate traits into one short file
 
-## 0.1.1 (b7d804acd3a51db096a1bebe56eb79b6dcc23351)
+## 0.1.1
 
 * Core
   * Hide engine submodule, reexport desired contents as public
