@@ -17,27 +17,26 @@
 //! struct GameState;
 //!
 //! impl State for GameState {
-//!     fn new() -> GameState {
-//!         GameState
-//!     }
-//!
-//!     fn handle_events(&mut self, game: &Game, events: &Vec<Event>) {
+//!     fn handle_events(&mut self, events: &Vec<Event>) -> Trans {
 //!         for e in events {
 //!             match e {
-//!                 Event::Closed => game.quit(),
+//!                 Event::Closed => Trans::Quit,
 //!                 Event::Resized(x, y) => println!("x: {}, y: {}", x, y),
-//!                 Event::KeyPressed(k) => if k == Key::Esc { game.quit() },
+//!                 Event::KeyPressed(k) => if k == Key::Esc { Trans::Quit },
 //!             }
 //!         }
+//!
+//!         Trans::None
 //!     }
 //!
-//!     fn update(&mut self, game: &Game, delta: Duration) {
+//!     fn update(&mut self, delta: Duration) -> Trans {
 //!         println!("Computing some more whoop-ass...");
+//!         Trans::None
 //!     }
 //! }
 //!
 //! fn main() {
-//!     let mut game = Application::new(GameState::new());
+//!     let mut game = Application::new(GameState);
 //!     game.run();
 //! }
 //! ```
