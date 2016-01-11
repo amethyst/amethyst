@@ -29,7 +29,7 @@
 //!         Trans::None
 //!     }
 //!
-//!     fn update(&mut self, delta: Duration) -> Trans {
+//!     fn update(&mut self, _delta: Duration) -> Trans {
 //!         println!("Computing some more whoop-ass...");
 //!         Trans::None
 //!     }
