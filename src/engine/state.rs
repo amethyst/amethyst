@@ -42,7 +42,7 @@ pub trait State {
     fn update(&mut self, _delta: Duration) -> Trans { Trans::Pop }
 }
 
-/// A simple stack-based state machine.
+/// A simple stack-based state machine (pushdown automaton).
 pub struct StateMachine {
     running: bool,
     state_stack: Vec<Box<State>>,
