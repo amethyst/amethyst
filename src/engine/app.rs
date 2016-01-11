@@ -3,23 +3,13 @@
 use super::state::{State, StateMachine};
 use super::timing::{Duration, SteadyTime, Stopwatch};
 
-/// Times a function and returns the elapsed time.
-macro_rules! benchmark {
-    ($function:expr) => {{
-        let mut timer = Stopwatch::new();
-        timer.restart();
-        $function;
-        timer.stop();
-        timer.elapsed()
-    }}
-}
-
 /// User-friendly facade for building games. Manages main loop.
 pub struct Application {
-    states: StateMachine,
-    last_fixed_update: SteadyTime,
-    fixed_step: Duration,
     delta_time: Duration,
+    fixed_step: Duration,
+    last_fixed_update: SteadyTime,
+    states: StateMachine,
+    timer: Stopwatch,
 }
 
 impl Application {
@@ -28,10 +18,11 @@ impl Application {
         where T: State
     {
         Application {
-            states: StateMachine::new(initial_state),
-            last_fixed_update: SteadyTime::now(),
-            fixed_step: Duration::microseconds(16666),
             delta_time: Duration::zero(),
+            fixed_step: Duration::microseconds(16666),
+            last_fixed_update: SteadyTime::now(),
+            states: StateMachine::new(initial_state),
+            timer: Stopwatch::new(),
         }
     }
 
@@ -40,7 +31,10 @@ impl Application {
         self.initialize();
 
         while self.states.is_running() {
-            self.delta_time = benchmark!(self.advance_frame());
+            self.timer.restart();
+            self.advance_frame();
+            self.timer.stop();
+            self.delta_time = self.timer.elapsed()
         }
 
         self.shutdown();
