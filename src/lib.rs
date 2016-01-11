@@ -3,7 +3,7 @@
 
 //! Amethyst is a free and open source game engine written in idiomatic
 //! [Rust][rs] for building video games and interactive multimedia applications.
-//! The source code is available for free on [GitHub][gh].
+//! The source code is available for download on [GitHub][gh].
 //!
 //! [rs]: https://www.rust-lang.org/
 //! [gh]: https://github.com/ebkalderon/amethyst
