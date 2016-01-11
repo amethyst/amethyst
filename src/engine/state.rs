@@ -4,10 +4,15 @@ use super::timing::Duration;
 
 /// Types of state transitions.
 pub enum Trans {
+    /// Continue as normal.
     None,
+    /// Remove the active state and resume the next state on the stack (if any).
     Pop,
+    /// Pause the active state and push a new state onto the stack.
     Push(Box<State>),
+    /// Remove the current state on the stack and insert a different one.
     Switch(Box<State>),
+    /// Stop and remove all states and shut down the engine.
     Quit,
 }
 
@@ -124,8 +129,7 @@ impl StateMachine {
         }
     }
 
-    /// Pauses the active state (if any) and pushes a new state onto the state
-    /// stack.
+    /// Pauses the active state and pushes a new state onto the state stack.
     fn push(&mut self, state: Box<State>) {
         if self.running {
             if let Some(state) = self.state_stack.last_mut() {
@@ -164,4 +168,3 @@ impl StateMachine {
         }
     }
 }
-
