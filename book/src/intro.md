@@ -4,7 +4,7 @@
 > dust!
 
 Howdy! This book will teach you everything you need to know about building video
-games and interactive simulations with the **Amethyst** game engine. Amethyst is
+games and interactive simulations with the Amethyst game engine. Amethyst is
 a clean and modern engine written in [Rust][rs], a safe and fast systems
 programming language. But more correctly, Amethyst is a whole suite of libraries
 and tools that collectively make up an engine.
@@ -36,7 +36,7 @@ Read the crate-level [API documentation][ad].
 
 [ad]: http://ebkalderon.github.io/amethyst/doc/amethyst/
 
-## Why the hell did you build this?
+## Why are you building this?
 
 The video game industry is getting bigger every year, and it has actually been
 [outpacing Hollywood for years][hw]. As game studios grow, their toolset grows
