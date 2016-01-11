@@ -4,10 +4,11 @@
 > dust!
 
 Howdy! This book will teach you everything you need to know about building video
-games and interactive simulations with the Amethyst game engine. Amethyst is
-a clean and modern engine written in [Rust][rs], a safe and fast systems
-programming language. But more correctly, Amethyst is a whole suite of libraries
-and tools that collectively make up an engine.
+games and interactive simulations with the Amethyst game engine. This engine is
+written entirely in [Rust][rs], a safe and fast systems programming language,
+and sports a clean and modern design. More correctly, though, Amethyst is
+actually a suite of separate libraries and tools that collectively make up a
+game engine.
 
 [rs]: https://www.rust-lang.org/
 
