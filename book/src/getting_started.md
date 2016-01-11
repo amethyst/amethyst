@@ -1,6 +1,6 @@
 # Getting Started
 
-These instructions will help you set up a working Amethyst development
+These instructions will help you set up a working Amethyst game development
 environment. Then we'll test this environment by compiling a simple "Hello,
 World" application.
 
@@ -10,7 +10,7 @@ Rust compiler. Here are the system requirements (they're pretty modest):
 * Minimum:
   * CPU: 1GHz, the more cores the better
   * RAM: 512 MiB
-  * HDD: 30 MiB free disk space
+  * HDD: 17 MiB free disk space
   * OS: Windows Vista and newer, Linux, BSD, Mac OS X
   * Rust: Nightly (1.6.0 or newer)
 * Renderer Backends:
@@ -18,13 +18,13 @@ Rust compiler. Here are the system requirements (they're pretty modest):
 
 ## Setting Up
 
-> Note: This guide assumes you have nightly Rust and Cargo installed, and also a
-> working Internet connection. Please take care of these first before
-> proceeding.
+> Note: This guide assumes you have nightly Rust and Cargo installed, and also
+> have a working Internet connection. Please take care of these prerequisites
+> first before proceeding.
 
 There are two ways to get started working with Amethyst:
 
-1. [Use the `amethyst_cli` tool to generate a new Amethyst project][as].
+1. [Use the `amethyst_cli` tool to generate a new game project][as].
 2. [Create the Cargo crate and the "resources" folder structure yourself][ms].
 
 [as]: ./getting_started/automatic_setup.html
