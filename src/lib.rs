@@ -46,5 +46,5 @@ mod engine;
 pub mod renderer;
 
 pub use self::engine::app::Application;
-pub use self::engine::state::{Actions, State, StateMachine, Transition};
+pub use self::engine::state::{State, StateMachine, Trans};
 pub use self::engine::timing::{Duration, Stopwatch};

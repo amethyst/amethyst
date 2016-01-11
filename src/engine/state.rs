@@ -2,90 +2,43 @@
 
 use super::timing::Duration;
 
+/// Types of state transitions.
+pub enum Trans {
+    None,
+    Pop,
+    Push(Box<State>),
+    Switch(Box<State>),
+    Quit,
+}
+
 /// A trait which defines game states that can be used by the state machine.
 pub trait State {
-    /// Standard constructor for all game states.
-    fn new() -> Self where Self: Sized;
-
-    /// Executed the first time when the game state is reached.
+    /// Executed when the game state begins.
     fn on_start(&mut self) {}
 
-    /// Executed when the application finally exits.
+    /// Executed when the game state exits.
     fn on_stop(&mut self) {}
 
-    /// Executed when the application switches away to a different game state.
+    /// Executed when a different game state is pushed onto the stack.
     fn on_pause(&mut self) {}
 
     /// Executed when the application returns to this game state once again.
     fn on_resume(&mut self) {}
 
     /// Executed on every frame before updating, for use in reacting to events.
-    /// TODO: Replace i32 with an actual Event type of some kind.
+    // TODO: Replace i32 with an actual Event type of some kind.
     fn handle_events(&mut self, _events: &Vec<i32>) {}
 
     /// Executed repeatedly at stable, predictable intervals (1/60th of a second
     /// by default).
-    fn fixed_update(&mut self, _delta: Duration, _game: &mut Actions) {}
+    fn fixed_update(&mut self, _delta: Duration) -> Trans { Trans::None }
 
     /// Executed on every frame immediately, as fast as the engine will allow.
-    fn update(&mut self, _delta: Duration, _game: &mut Actions) {}
-}
-
-/// A possible action to take.
-#[derive(Clone, Copy)]
-pub enum Transition {
-    Nothing,
-    Pop,
-    Push,
-    Quit,
-    Switch,
-}
-
-/// A handle to the game state machine.
-pub struct Actions {
-    next_state: Option<Box<State>>,
-    transition: Transition,
-}
-
-impl Actions {
-    pub fn new() -> Actions {
-        Actions {
-            next_state: None,
-            transition: Transition::Nothing,
-        }
-    }
-
-    /// Signals to the engine to push a state onto the stack.
-    pub fn push<T: 'static>(&mut self, state: T)
-        where T: State
-    {
-        self.transition = Transition::Push;
-        self.next_state = Some(Box::new(state));
-    }
-
-    /// Signals to the engine to switch states.
-    pub fn switch<T: 'static>(&mut self, state: T)
-        where T: State
-    {
-        self.transition = Transition::Switch;
-        self.next_state = Some(Box::new(state));
-    }
-
-    /// Signals to the engine to quit.
-    pub fn quit(&mut self) {
-        self.transition = Transition::Quit;
-    }
-
-    pub fn get_trans(&mut self) -> (Transition, Option<Box<State>>) {
-        let output = (self.transition.clone(), self.next_state.take());
-        self.transition = Transition::Nothing;
-        output
-    }
+    fn update(&mut self, _delta: Duration) -> Trans { Trans::Pop }
 }
 
 /// A simple stack-based state machine.
 pub struct StateMachine {
-    actions: Actions,
     running: bool,
     state_stack: Vec<Box<State>>,
 }
@@ -95,7 +48,6 @@ impl StateMachine {
         where T: State
     {
         StateMachine {
-            actions: Actions::new(),
             running: false,
             state_stack: vec![Box::new(initial_state)],
         }
@@ -127,32 +79,36 @@ impl StateMachine {
     /// Updates the currently active state at a steady, fixed interval.
     pub fn fixed_update(&mut self, delta_time: Duration) {
         if self.running {
+            let mut trans = Trans::None;
             if let Some(state) = self.state_stack.last_mut() {
-                state.fixed_update(delta_time, &mut self.actions);
+                trans = state.fixed_update(delta_time);
             }
-            self.transition();
+            self.transition(trans);
         }
     }
 
     /// Updates the currently active state immediately.
     pub fn update(&mut self, delta_time: Duration) {
         if self.running {
+            let mut trans = Trans::None;
             if let Some(state) = self.state_stack.last_mut() {
-                state.update(delta_time, &mut self.actions);
+                trans = state.update(delta_time);
             }
-            self.transition();
+            self.transition(trans);
         }
     }
 
-    /// Makes a state transition if flagged by the Actions struct.
-    fn transition(&mut self) {
-        let trans = self.actions.get_trans();
-        match trans.0 {
-            Transition::Nothing => (),
-            Transition::Pop => self.pop(),
-            Transition::Push => self.push(trans.1.unwrap()),
-            Transition::Quit => self.stop(),
-            Transition::Switch => self.switch(trans.1.unwrap()),
+    /// Performs a state transition, if requested by either update() or
+    /// fixed_update().
+    fn transition(&mut self, request: Trans) {
+        if self.running {
+            match request {
+                Trans::None => (),
+                Trans::Pop => self.pop(),
+                Trans::Push(state) => self.push(state),
+                Trans::Switch(state) => self.switch(state),
+                Trans::Quit => self.stop(),
+            }
         }
     }
 

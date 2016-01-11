@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.4 ()
+
+* Core
+  * Stabilize state management
+    * Implement pushdown automaton state machine
+    * State transitioning
+    * Remove standardized State constructor
+    * Update book and doc comments
+
 ## 0.1.3 (0ecc7d8c509f00915214386c6c74b6377b7d9fc3)
 
 * Core
