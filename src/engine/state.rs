@@ -2,33 +2,39 @@
 
 use super::timing::Duration;
 
+/// Types of state transitions.
+pub enum Trans {
+    None,
+    Pop,
+    Push(Box<State>),
+    Switch(Box<State>),
+    Quit,
+}
+
 /// A trait which defines game states that can be used by the state machine.
 pub trait State {
-    /// Standard constructor for all game states.
-    fn new() -> Self where Self: Sized;
-
-    /// Executed the first time when the game state is reached.
+    /// Executed when the game state begins.
     fn on_start(&mut self) {}
 
-    /// Executed when the application finally exits.
+    /// Executed when the game state exits.
     fn on_stop(&mut self) {}
 
-    /// Executed when the application switches away to a different game state.
+    /// Executed when a different game state is pushed onto the stack.
     fn on_pause(&mut self) {}
 
     /// Executed when the application returns to this game state once again.
     fn on_resume(&mut self) {}
 
     /// Executed on every frame before updating, for use in reacting to events.
-    /// TODO: Replace i32 with an actual Event type of some kind.
+    // TODO: Replace i32 with an actual Event type of some kind.
     fn handle_events(&mut self, _events: &Vec<i32>) {}
 
     /// Executed repeatedly at stable, predictable intervals (1/60th of a second
     /// by default).
-    fn fixed_update(&mut self, _delta_time: Duration) {}
+    fn fixed_update(&mut self, _delta: Duration) -> Trans { Trans::None }
 
     /// Executed on every frame immediately, as fast as the engine will allow.
-    fn update(&mut self, _delta_time: Duration) {}
+    fn update(&mut self, _delta: Duration) -> Trans { Trans::Pop }
 }
 
 /// A simple stack-based state machine.
@@ -73,17 +79,35 @@ impl StateMachine {
     /// Updates the currently active state at a steady, fixed interval.
     pub fn fixed_update(&mut self, delta_time: Duration) {
         if self.running {
-            if let Some(state) = self.current() {
-                state.fixed_update(delta_time);
+            let mut trans = Trans::None;
+            if let Some(state) = self.state_stack.last_mut() {
+                trans = state.fixed_update(delta_time);
             }
+            self.transition(trans);
         }
     }
 
     /// Updates the currently active state immediately.
     pub fn update(&mut self, delta_time: Duration) {
         if self.running {
-            if let Some(state) = self.current() {
-                state.update(delta_time);
+            let mut trans = Trans::None;
+            if let Some(state) = self.state_stack.last_mut() {
+                trans = state.update(delta_time);
+            }
+            self.transition(trans);
+        }
+    }
+
+    /// Performs a state transition, if requested by either update() or
+    /// fixed_update().
+    fn transition(&mut self, request: Trans) {
+        if self.running {
+            match request {
+                Trans::None => (),
+                Trans::Pop => self.pop(),
+                Trans::Push(state) => self.push(state),
+                Trans::Switch(state) => self.switch(state),
+                Trans::Quit => self.stop(),
             }
         }
     }

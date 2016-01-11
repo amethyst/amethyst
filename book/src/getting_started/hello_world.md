@@ -7,18 +7,22 @@ copy and paste the following code:
 ```rust
 extern crate amethyst;
 
-use amethyst::{Application, Duration, Game, State};
+use amethyst::{Application, Duration, State, Trans};
 
 struct HelloWorld;
 
 impl State for HelloWorld {
-    fn new() -> HelloWorld {
-        HelloWorld
+    fn on_start(&mut self) {
+        println!("Game started!");
     }
 
-    fn update(&mut self, game: &Game, delta: Duration) {
+    fn update(&mut self, delta: Duration) -> Trans {
         println!("Hello from Amethyst!");
-        game.quit();
+        Trans::Quit
+    }
+
+    fn on_stop(&mut self) {
+        println!("Game stopped!");
     }
 }
 

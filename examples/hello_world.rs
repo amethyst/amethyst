@@ -2,22 +2,18 @@
 
 extern crate amethyst;
 
-use amethyst::{Application, Duration, State};
+use amethyst::{Application, Duration, State, Trans};
 
-struct GameState;
+struct Example;
 
-impl State for GameState {
-    fn new() -> GameState {
-        GameState
-    }
-
+impl State for Example {
     fn on_start(&mut self) {
         println!("Begin!");
     }
 
-    fn update(&mut self, _delta: Duration) {
+    fn update(&mut self, _delta: Duration) -> Trans {
         println!("Hello from Amethyst!");
-        std::process::exit(0);
+        Trans::Quit
     }
 
     fn on_stop(&mut self) {
@@ -29,4 +25,3 @@ fn main() {
     let mut game = Application::new(GameState::new());
     game.run();
 }
-
