@@ -25,7 +25,6 @@
 //!                 Event::KeyPressed(k) => if k == Key::Esc { Trans::Quit },
 //!             }
 //!         }
-//!
 //!         Trans::None
 //!     }
 //!
