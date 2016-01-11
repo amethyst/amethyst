@@ -5,6 +5,7 @@ extern crate amethyst;
 use amethyst::{Application, Duration, State, Trans};
 
 struct Example;
+
 impl State for Example {
     fn on_start(&mut self) {
         println!("Begin!");
@@ -21,6 +22,6 @@ impl State for Example {
 }
 
 fn main() {
-    let mut game = Application::new(Example);
+    let mut game = Application::new(GameState::new());
     game.run();
 }

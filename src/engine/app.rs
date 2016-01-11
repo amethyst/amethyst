@@ -39,7 +39,7 @@ impl Application {
     pub fn run(&mut self) {
         self.initialize();
 
-        while self.states.is_running() {
+        loop {
             self.delta_time = benchmark!(self.advance_frame());
         }
 
@@ -67,6 +67,6 @@ impl Application {
 
     /// Cleans up after the quit signal is received.
     fn shutdown(&mut self) {
-        // Placeholder
+        self.states.stop()
     }
 }

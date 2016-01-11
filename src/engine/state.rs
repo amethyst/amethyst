@@ -53,15 +53,15 @@ impl StateMachine {
         }
     }
 
-    /// Checks whether the state machine is running.
-    pub fn is_running(&self) -> bool {
-        self.running
+    /// Retrieves the currently active state.
+    pub fn current(&mut self) -> Option<&mut Box<State>> {
+        self.state_stack.last_mut()
     }
 
     /// Initializes the state machine.
     pub fn start(&mut self) {
         if !self.running {
-            self.state_stack.last_mut().unwrap().on_start();
+            self.current().unwrap().on_start();
             self.running = true;
         }
     }
@@ -70,7 +70,7 @@ impl StateMachine {
     // TODO: Replace i32 with an actual Event type of some kind.
     pub fn handle_events(&mut self, events: &Vec<i32>) {
         if self.running {
-            if let Some(state) = self.state_stack.last_mut() {
+            if let Some(state) = self.current() {
                 state.handle_events(events);
             }
         }
@@ -112,51 +112,55 @@ impl StateMachine {
         }
     }
 
-    /// Removes the current state on the stack and inserts a different one.
-    fn switch(&mut self, state: Box<State>) {
+    /// Sets the currently active state.
+    pub fn switch<T: 'static>(&mut self, state: T)
+        where T: State
+    {
         if self.running {
-            if let Some(mut state) = self.state_stack.pop() {
-                state.on_stop();
+            if !self.state_stack.is_empty() {
+                self.current().unwrap().on_stop();
+                self.state_stack.pop();
             }
 
-            self.state_stack.push(state);
-            self.state_stack.last_mut().unwrap().on_start();
+            self.state_stack.push(Box::new(state));
+            self.current().unwrap().on_start();
         }
     }
 
     /// Pauses the active state (if any) and pushes a new state onto the state
     /// stack.
-    fn push(&mut self, state: Box<State>) {
+    pub fn push<T: 'static>(&mut self, state: T)
+        where T: State
+    {
         if self.running {
-            if let Some(state) = self.state_stack.last_mut() {
+            if let Some(state) = self.current() {
                 state.on_pause();
             }
 
-            self.state_stack.push(state);
-            self.state_stack.last_mut().unwrap().on_start();
+            self.state_stack.push(Box::new(state));
+            self.current().unwrap().on_start();
         }
     }
 
     /// Stops and removes the active state and un-pauses the next state on the
     /// stack (if any).
-    fn pop(&mut self) {
+    pub fn pop(&mut self) {
         if self.running {
-            if let Some(mut state) = self.state_stack.pop() {
-                state.on_stop();
+            if !self.state_stack.is_empty() {
+                self.current().unwrap().on_stop();
+                self.state_stack.pop();
             }
 
-            if let Some(state) = self.state_stack.last_mut() {
+            if let Some(state) = self.current() {
                 state.on_resume();
-            } else {
-                self.running = false;
             }
         }
     }
 
     /// Shuts the state machine down.
-    fn stop(&mut self) {
+    pub fn stop(&mut self) {
         if self.running {
-            while let Some(mut state) = self.state_stack.pop() {
+            for state in self.state_stack.iter_mut() {
                 state.on_stop();
             }
 
