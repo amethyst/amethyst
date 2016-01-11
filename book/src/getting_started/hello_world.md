@@ -16,7 +16,7 @@ impl State for HelloWorld {
         println!("Game started!");
     }
 
-    fn update(&mut self, delta: Duration) -> Trans {
+    fn update(&mut self, _delta: Duration) -> Trans {
         println!("Hello from Amethyst!");
         Trans::Quit
     }
