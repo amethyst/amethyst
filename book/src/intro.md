@@ -28,12 +28,13 @@ This book is split into seven sections. This page is the first. The others are:
 * [A Simple Application][sa] – Build a basic pong game in Rust.
 * Effective Amethyst – Learn how to write complex games and applications.
 * Scripting – Jump into script development with [Ruby][rb].
-* Glossary - Defines special terms used throughout the book.
+* [Glossary][gl] - Defines special terms used throughout the book.
 * Bibliography – Read the works that influenced the design.
 
 [gs]: ./getting_started.html
 [sa]: ./simple_application.html
 [rb]: https://www.ruby-lang.org/
+[gl]: ./glossary.html
 
 Read the crate-level [API documentation][ad] for more details.
 
