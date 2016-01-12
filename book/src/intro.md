@@ -53,7 +53,7 @@ design patterns well (think pre-C++11 idioms and convoluted class hierarchies).
 [hw]: https://www.quora.com/Who-makes-more-money-Hollywood-or-the-video-game-industry
 [ue]: http://cdn.dbolical.com/videos/engines/1/1/456/Unreal_Engine_4_Features_Trailer_--_GDC_2014.mp4.jpg
 
-In short, I wrote Amethyst to scratch three of my own itches:
+In short, I am writing Amethyst to scratch three of my own itches:
 
 1. Teach myself game development and computer graphics in its purest form,
    rather than through the lens of a particular game engine.
