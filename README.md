@@ -1,8 +1,6 @@
-<img align="right" width="96px" src="./book/images/amethyst_thumb.png" />
+<img align="left" width="96px" src="./book/images/amethyst_thumb.png" />
 
-# Amethyst
-
-[![Build Status][s1]][tc] [![Crates.io][s2]][ci] [![MIT License][s3]][ml] [![Join the chat][s4]][gc]
+# Amethyst [![Build Status][s1]][tc] [![Crates.io][s2]][ci] [![MIT License][s3]][ml] [![Join the chat][s4]][gc]
 
 [s1]: https://travis-ci.org/ebkalderon/amethyst.svg?branch=master
 [s2]: https://img.shields.io/badge/crates.io-0.1.4-orange.svg
