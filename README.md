@@ -1,4 +1,4 @@
-<img align="left" width="96px" src="./book/images/amethyst_thumb.png" />
+<img align="left" width="64px" src="./book/images/amethyst_thumb.png" />
 
 # Amethyst [![Build Status][s1]][tc] [![Crates.io][s2]][ci] [![MIT License][s3]][ml] [![Join the chat][s4]][gc]
 
