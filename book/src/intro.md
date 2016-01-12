@@ -1,4 +1,4 @@
-<img src="./images/amethyst_thumb.png" alt="Logo" width="96px" style="float:left;margin-right:15px"/>
+<img align="left" src="./images/amethyst_thumb.png" />
 
 # The Amethyst Engine
 
