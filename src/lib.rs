@@ -1,5 +1,6 @@
 #![crate_name = "amethyst"]
 #![crate_type = "lib"]
+#![doc(html_logo_url = "https://raw.githubusercontent.com/ebkalderon/amethyst/master/book/images/amethyst_thumb.png")]
 
 //! Amethyst is a free and open source game engine written in idiomatic
 //! [Rust][rs] for building video games and interactive multimedia applications.
