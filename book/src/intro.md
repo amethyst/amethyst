@@ -1,6 +1,6 @@
-<img align="left" src="./images/amethyst_thumb.png" />
+<img src="./images/amethyst_thumb.png" alt="Logo" width="96px" style="float:left;margin-right:15px"/>
 
-The Amethyst Engine
+# The Amethyst Engine
 
 > Note: This project is a *work in progress* and is very incomplete. Pardon the
 > dust!
