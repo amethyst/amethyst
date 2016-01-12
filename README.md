@@ -1,4 +1,4 @@
-<img align="left" src="./images/amethyst_thumb.png" />
+<img align="left" src="./book/images/amethyst_thumb.png" />
 
 Amethyst
 
