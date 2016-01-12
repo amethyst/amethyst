@@ -1,3 +1,5 @@
+<img src="./book/images/amethyst_thumb.png" alt="Logo" width="96px" style="float:left;margin-right:15px"/>
+
 # Amethyst
 
 [![Build Status][s1]][tc] [![Crates.io][s2]][ci] [![MIT License][s3]][ml] [![Join the chat][s4]][gc]
