@@ -64,14 +64,11 @@ The API reference can be found in `target/doc/amethyst/index.html`.
 
 ## Contributing
 
-Amethyst is an open-source project that values community contribution. Pull
-requests are welcome!
+Amethyst is a community project that openly welcomes contributions from anyone.
+If you're interested in helping out, please read the [CONTRIBUTING.md][cm] file
+before getting started. If you need ideas on what to hack on, see the
+[Development Roadmap][dr] on our wiki, or search though [our issue tracker][it].
 
-We assume you have granted non-exclusive right to your source code under the
-[MIT license][ml] and you have processed your code with `rustfmt` prior to
-submission. If you want to be known as an author, please add your name to the
-AUTHORS.md file in the pull request.
-
-See the [Development Roadmap][dr] for ideas on what you can hack on.
-
+[cm]: ./CONTRIBUTING.md
 [dr]: https://github.com/ebkalderon/amethyst/wiki/Roadmap
+[it]: https://github.com/ebkalderon/amethyst/issues
