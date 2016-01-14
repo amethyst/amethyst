@@ -4,8 +4,9 @@ Amethyst is an open-source project that values community contribution. We could
 always use a helping hand! What would you like to do?
 
 1. [I want to submit issues or request features.](#submitting-issues)
-2. [I want to contribute code or documentation.](#pull-requests)
-3. [Are there any useful resources I can read?] (#useful-resources)
+2. [I want to contribute code.](#pull-requests)
+3. [I want to write documentation.](#writing-documentation)
+4. [Are there any useful resources I can read?] (#useful-resources)
 
 ## Submitting Issues
 
@@ -94,13 +95,44 @@ have done the following things first:
 
 Once you have pushed your pull request to the repository, please wait for a
 reviewer to give feedback on it. If no one responds, feel free to @-reply a
-developer or post publicly on [the Gitter chat][gi], asking for a review. Once
-your code has been reviewed and signed-off by a developer, it will be merged.
+developer or post publicly on [the Gitter chat room][gi] asking for a review.
+Once your code has been reviewed, revised if necessary, and then signed-off by a
+developer, it will be merged into the source tree.
 
 [gi]: https://gitter.im/ebkalderon/amethyst
 
 Thank you so much for your contribution! Now Amethyst will be a little bit
 faster, stronger, and more powerful.
+
+## Writing Documentation
+
+Documentation improvements are always welcome! A solid project needs to have
+solid documentation to go with it. You can search for documentation-related
+issues on any of our GitHub trackers by filtering by the orange `note: doc`
+label.
+
+There are two types of documentation in Amethyst you can work on:
+
+1. API documentation
+2. The online Amethyst book
+
+Our Rust API documentation is generated directly from source code comments
+marked with either `///` or `//!` using  a tool called Rustdoc. See
+[the official Rust book's chapter on Rustdoc][rd] for more information on how
+this works.
+
+[rd]: https://doc.rust-lang.org/book/documentation.html
+
+The Amethyst book is generated using a different documentation tool called
+[mdBook][mb]. This tool generates pretty HTML e-books from individual Markdown
+(.md) files. You can find the source files for this book in the
+[book/src/][bk] directory of the Amethyst repository.
+
+[mb]: https://github.com/azerupi/mdBook
+[bk]: https://github.com/ebkalderon/amethyst/tree/master/book/src
+
+When submitting your pull requests, please follow the same procedures described
+in the [Pull Requests][#pull-requests] section above.
 
 ## Useful Resources
 
