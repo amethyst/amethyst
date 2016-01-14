@@ -17,6 +17,10 @@
 Experimental data-oriented game engine written in Rust. This project is a *work
 in progress* and very incomplete; pardon the dust!
 
+Read a summary of what happened the past week at [*This Week in Amethyst*][tw].
+
+[tw]: https://thisweekinamethyst.wordpress.com/
+
 ## Usage
 
 Read the [online book][bk] for a comprehensive tutorial to using Amethyst. There
