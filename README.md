@@ -14,8 +14,8 @@
 [ml]: https://github.com/ebkalderon/amethyst/blob/master/COPYING
 [gc]: https://gitter.im/ebkalderon/amethyst?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
-This project is a *work in progress* and very incomplete; pardon the dust! Read
-a summary of what happened this past week at [*This Week in Amethyst*][tw].
+This project is a *work in progress* and is very incomplete; pardon the dust!
+Read a summary of what happened this past week at [*This Week in Amethyst*][tw].
 
 [tw]: https://thisweekinamethyst.wordpress.com/
 
