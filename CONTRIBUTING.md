@@ -104,10 +104,15 @@ faster, stronger, and more powerful.
 
 ## Useful Resources
 
-* [Amethyst Gitter][gi] - The Amethyst project's public chat room.
-* [Rust By Example][re] - Get acquainted with Rust through a series of small
-  code samples.
-* [The Rust Programming Language][rl] - The canonical online book about Rust.
+* Amethyst
+  * [Amethyst Gitter][gi] - The Amethyst project's public chat room.
+  * [Development Roadmap][dr] - See this wiki page for general ideas on what you
+    can hack on.
+* Rust
+  * [Rust By Example][re] - Get acquainted with Rust through a series of small
+    code samples.
+  * [The Rust Programming Language][rl] - The canonical online book about Rust.
 
+[dr]: https://github.com/ebkalderon/amethyst/wiki/Roadmap
 [re]: http://rustbyexample.com/
 [rl]: https://doc.rust-lang.org/book/
