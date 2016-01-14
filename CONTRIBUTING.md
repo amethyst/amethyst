@@ -113,8 +113,11 @@ label.
 
 There are two types of documentation in Amethyst you can work on:
 
-1. API documentation
-2. The online Amethyst book
+1. [API documentation][ad]
+2. [The online Amethyst book][ab]
+
+[ad]: http://ebkalderon.github.io/amethyst/doc/amethyst/
+[ab]: http://ebkalderon.github.io/amethyst/
 
 Our Rust API documentation is generated directly from source code comments
 marked with either `///` or `//!` using  a tool called Rustdoc. See
