@@ -21,6 +21,36 @@ Read a summary of what happened this past week at [*This Week in Amethyst*][tw].
 
 [tw]: https://thisweekinamethyst.wordpress.com/
 
+## Vision
+
+Amethyst aims to be a fast, data-oriented and data-driven game engine suitable
+for rapid prototyping and iteration. It also tries to push the Rust programming
+language to its limits, driving further improvement and hopefully attracting
+more game developers toward the young and vibrant Rust ecosystem.
+
+The engine's design draws much inspiration from the industrial-strength
+[Bitsquid Engine][bs] (now called [Autodesk Stringray][sr]). Some goals include:
+
+[bs]: http://twvideo01.ubm-us.net/o1/vault/gdc2012/slides/Programming%20Track/Persson_Tobias_Flexible_Rendering.pdf.pdf
+[sr]: http://stingrayengine.com/
+
+* Simple game state management in the form of a [pushdown automaton][pa].
+* Massively parallel architecture, especially in rendering.
+* [Correct entity-component-system model][em], with entities and prefabs largely
+  defined in [YAML files][ya].
+* Abstract scripting API that can be bound to a variety of embedded languages,
+  such as [mruby][mr], [Lua][lu], etc.
+* Renderer optimized for modern graphics APIs, e.g. Vulkan, Direct3D 12+, Metal.
+* Traditional "mega-editor" split into several small but well-integrated tools,
+  adhering to the [Unix philosophy][up].
+
+[pa]: http://gameprogrammingpatterns.com/state.html#pushdown-automata
+[em]: http://shaneenishry.com/blog/2014/12/27/misconceptions-of-component-based-entity-systems/
+[ya]: http://www.yaml.org/
+[mr]: http://mruby.org/
+[lu]: http://www.lua.org/
+[up]: https://en.wikipedia.org/wiki/Unix_philosophy
+
 ## Usage
 
 Read the [online book][bk] for a comprehensive tutorial to using Amethyst. There
