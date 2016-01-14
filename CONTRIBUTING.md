@@ -132,7 +132,7 @@ The Amethyst book is generated using a different documentation tool called
 [bk]: https://github.com/ebkalderon/amethyst/tree/master/book/src
 
 When submitting your pull requests, please follow the same procedures described
-in the [Pull Requests][#pull-requests] section above.
+in the [Pull Requests](#pull-requests) section above.
 
 ## Useful Resources
 
