@@ -64,9 +64,9 @@ The API reference can be found in `target/doc/amethyst/index.html`.
 
 ## Contributing
 
-Amethyst is a community project that openly welcomes contributions from anyone.
-If you're interested in helping out, please read the [CONTRIBUTING.md][cm] file
-before getting started. If you need ideas on what to hack on, see the
+We are a community project that welcomes contribution from anyone. If you're
+interested in helping out, please read the [CONTRIBUTING.md][cm] file before
+getting started. Don't know what to hack on? See the
 [Development Roadmap][dr] on our wiki, or search though [our issue tracker][it].
 
 [cm]: ./CONTRIBUTING.md
