@@ -104,7 +104,7 @@ developer, it will be merged into the source tree.
 [gi]: https://gitter.im/ebkalderon/amethyst
 
 Thank you so much for your contribution! Now Amethyst will be a little bit
-faster, stronger, and more powerful.
+faster, stronger, and more efficient.
 
 ## Writing Documentation
 
@@ -145,11 +145,24 @@ in the [Pull Requests](#pull-requests) section above.
   * [Amethyst Gitter][gi] - The Amethyst project's public chat room.
   * [Development Roadmap][dr] - See this wiki page for general ideas on what you
     can hack on.
+* Design Inspiration
+  * [Flexible Rendering for Multiple Platforms (2012)][fr]
+  * [Mantle Programming Guide and API Reference (2015)][ma]
+  * [Misconceptions of Component-Based Entity Systems (2014)][mo]
+  * [Nitrous & Mantle: Combining Efficient Engine Design with a Modern API (2014)][ni]
+  * [State Pattern - Pushdown Automata (2009)][pa]
 * Rust
   * [Rust By Example][re] - Get acquainted with Rust through a series of small
     code samples.
   * [The Rust Programming Language][rl] - The canonical online book about Rust.
 
 [dr]: https://github.com/ebkalderon/amethyst/wiki/Roadmap
+
+[fr]: http://twvideo01.ubm-us.net/o1/vault/gdc2012/slides/Programming%20Track/Persson_Tobias_Flexible_Rendering.pdf.pdf
+[ma]: http://www.amd.com/Documents/Mantle-Programming-Guide-and-API-Reference.pdf
+[mo]: http://shaneenishry.com/blog/2014/12/27/misconceptions-of-component-based-entity-systems/
+[ni]: http://www.gdcvault.com/play/1020706/Nitrous-Mantle-Combining-Efficient-Engine
+[pa]: http://gameprogrammingpatterns.com/state.html#pushdown-automata
+
 [re]: http://rustbyexample.com/
 [rl]: https://doc.rust-lang.org/book/
