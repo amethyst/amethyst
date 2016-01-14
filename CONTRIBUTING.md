@@ -79,8 +79,9 @@ have done the following things first:
 3. You have processed your source code with `rustfmt`.
 4. If your pull request adds new methods or functions to the codebase, you have
    written tests for them.
-   * Unit tests are placed in the same .rs file in a submodule called `test` with
-     `// Unit tests` right above it.
+   * Unit tests are placed at the bottom of the same .rs file in a submodule
+     called `test` with `// Unit tests` right above it. For an example, see the
+     unit tests in the [src/engine/timing.rs][ti] file
    * Integration tests are placed in a separate .rs file in the `tests`
      subdirectory.
 5. All of the following commands completed without errors.
@@ -89,6 +90,7 @@ have done the following things first:
    * `cargo run` (if it's a binary)
 
 [ml]: https://github.com/ebkalderon/amethyst/blob/master/COPYING
+[ti]: https://github.com/ebkalderon/amethyst/blob/master/src/engine/timing.rs
 
 > If you want to be publicly known as an author, feel free to add your name
 > and/or GitHub username to the AUTHORS.md file in your pull request.
