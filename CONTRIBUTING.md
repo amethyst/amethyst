@@ -3,9 +3,9 @@
 Amethyst is an open-source project that values community contribution. We could
 always use a helping hand!
 
-1. [Submitting Issues](#Submitting Issues)
-2. [Pull Requests](#Pull Requests)
-3. [Useful Resources] (#Useful Resources)
+1. [Submitting Issues](#submitting-issues)
+2. [Pull Requests](#pull-requests)
+3. [Useful Resources] (#useful-resources)
 
 ## Submitting Issues
 
