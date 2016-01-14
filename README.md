@@ -22,9 +22,12 @@ Read a summary of what happened this past week at [*This Week in Amethyst*][tw].
 ## Vision
 
 Amethyst aims to be a fast, data-oriented and data-driven game engine suitable
-for rapid prototyping and iteration. It also tries to push the Rust programming
-language to its limits, driving further improvement and hopefully attracting
-more game developers toward the young and vibrant Rust ecosystem.
+for rapid prototyping and iteration. It also tries to push the
+[Rust programming language][rs] to its limits, driving further improvement and
+hopefully attracting more game developers toward the young and vibrant Rust
+ecosystem.
+
+[rs]: https://www.rust-lang.org/
 
 The engine's design draws much inspiration from the industrial-strength
 [Bitsquid Engine][bs] (now called [Autodesk Stringray][sr]). However, Amethyst
