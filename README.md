@@ -21,7 +21,7 @@ Read a summary of what happened this past week at [*This Week in Amethyst*][tw].
 
 ## Vision
 
-Amethyst aims to be a fast, data-oriented and data-driven game engine suitable
+Amethyst aims to be a fast, data-oriented, and data-driven game engine suitable
 for rapid prototyping and iteration. It also tries to push the
 [Rust programming language][rs] to its limits, driving further improvement and
 hopefully attracting more game developers toward the young and vibrant Rust
@@ -43,6 +43,8 @@ does not aim to be API-compatible with it in any way. Some goals include:
 * Abstract scripting API that can be bound to a variety of embedded languages,
   such as [mruby][mr], [Lua][lu], etc.
 * Renderer optimized for modern graphics APIs, e.g. Vulkan, Direct3D 12+, Metal.
+* Easy integration with useful third-party game development libraries, e.g.
+  [Piston][pi].
 * Traditional "mega-editor" split into several small but well-integrated tools,
   adhering to the [Unix philosophy][up].
 
@@ -51,6 +53,7 @@ does not aim to be API-compatible with it in any way. Some goals include:
 [ya]: http://www.yaml.org/
 [mr]: http://mruby.org/
 [lu]: http://www.lua.org/
+[pi]: http://www.piston.rs/
 [up]: https://en.wikipedia.org/wiki/Unix_philosophy
 
 ## Usage
