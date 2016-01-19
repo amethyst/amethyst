@@ -81,7 +81,7 @@ have done the following things first:
    written tests for them.
    * Unit tests are placed at the bottom of the same .rs file in a submodule
      called `test` with `// Unit tests` right above it. For an example, see the
-     unit tests in the [src/engine/timing.rs#L68-L112][ti] file
+     unit tests in the [src/engine/timing.rs][ti] file
    * Integration tests are placed in a separate .rs file in the `tests`
      subdirectory.
 5. All of the following commands completed without errors.
@@ -90,7 +90,7 @@ have done the following things first:
    * `cargo run` (if it's a binary)
 
 [ml]: https://github.com/ebkalderon/amethyst/blob/master/COPYING
-[ti]: https://github.com/ebkalderon/amethyst/blob/master/src/engine/timing.rs
+[ti]: https://github.com/ebkalderon/amethyst/blob/master/src/engine/timing.rs#L68-L112
 
 > If you want to be publicly known as an author, feel free to add your name
 > and/or GitHub username to the AUTHORS.md file in your pull request.
