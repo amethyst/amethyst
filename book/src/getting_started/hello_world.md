@@ -37,8 +37,15 @@ have the [CLI tool installed][ct].
 
 [ct]: ./getting_started/automatic_setup.html
 
-If you see the output "Hello from Amethyst!" print to your terminal, then
-congratulations! You have successfully written your first Amethyst application.
+You should see the following output print to your terminal:
+
+```
+Game started!
+Hello from Amethyst!
+Game stopped!
+```
+
+Congratulations! You have successfully written your first Amethyst application.
 
 ## What did I just do?
 
