@@ -80,8 +80,13 @@ $ cd mygame
 $ amethyst run
 ```
 
-If everything goes well, you should see "Hello from Amethyst!" print out to the
-terminal and abruptly exit.
+If everything goes well, you should see the following print out to the terminal:
+
+```
+Game started!
+Hello from Amethyst!
+Game stopped!
+```
 
 ## Building Documentation
 
