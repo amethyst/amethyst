@@ -1,3 +1,5 @@
+//! Experiments with the threadpool crate.
+
 extern crate threadpool;
 
 use threadpool::ThreadPool;
