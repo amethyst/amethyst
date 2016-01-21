@@ -14,10 +14,10 @@ game engine.
 
 [rs]: https://www.rust-lang.org/
 
-Amethyst is free and open source software, licensed under the [MIT License][ml].
-This means that the engine is given to you at no cost and its source code is
-completely yours to tinker with. The code is available on [GitHub][am].
-Contributions and feature requests are welcome!
+Amethyst is free and open source software, distributed under the
+[MIT License][ml]. This means that the engine is given to you at no cost and its
+source code is completely yours to tinker with. The code is available on
+[GitHub][am]. Contributions and feature requests are welcome!
 
 [ml]: https://github.com/ebkalderon/amethyst/blob/master/COPYING
 [am]: https://github.com/ebkalderon/amethyst
@@ -27,7 +27,7 @@ This book is split into seven sections. This page is the first. The others are:
 * [Getting Started][gs] – Prepare your computer for Amethyst development.
 * [A Simple Application][sa] – Build a basic pong game in Rust.
 * Effective Amethyst – Learn how to write complex games and applications.
-* Scripting – Jump into script development with [Ruby][rb].
+* Scripting – Jump into scripted development with [Ruby][rb].
 * [Glossary][gl] - Defines special terms used throughout the book.
 * Bibliography – Read the works that influenced the design.
 
