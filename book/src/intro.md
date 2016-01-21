@@ -57,7 +57,7 @@ In short, I am writing Amethyst to scratch three of my own itches:
 
 1. Teach myself game development and computer graphics in its purest form,
    rather than through the lens of a particular game engine.
-2. Write a fast, modular, data-oriented and data-driven engine suited for rapid
+2. Write a fast, modular, data-oriented, and data-driven engine suited for rapid
    prototyping that demands (a little) less boilerplate from the user.
 3. Build a toolset that splits up the traditional "mega-editor" into several
    small but well-integrated tools, adhering to the [Unix philosophy][up].
@@ -70,4 +70,3 @@ The Markdown source files from which this book is generated can be found
 [on GitHub][md]. Pull requests are welcome!
 
 [md]: https://github.com/ebkalderon/amethyst/tree/master/book/src
-
