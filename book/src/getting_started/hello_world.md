@@ -45,6 +45,8 @@ Hello from Amethyst!
 Game stopped!
 ```
 
+If instead you see `error: use of unstable library feature` then make sure you're using the [nightly release](https://doc.rust-lang.org/book/release-channels.html) of Rust. You can use [multirust](https://github.com/brson/multirust) to install stable and nightly Rust side-by-side. 
+
 Congratulations! You have successfully written your first Amethyst application.
 
 ## What did I just do?
