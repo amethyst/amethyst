@@ -46,9 +46,8 @@
 //! }
 //! ```
 
-mod engine;
+extern crate amethyst_engine;
+
 pub mod renderer;
 
-pub use self::engine::app::Application;
-pub use self::engine::state::{State, StateMachine, Trans};
-pub use self::engine::timing::{Duration, Stopwatch};
+pub use amethyst_engine as engine;
