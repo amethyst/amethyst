@@ -1,6 +1,6 @@
 [package]
 name = "amethyst"
-version = "0.1.4"
+version = "0.2.0"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
 description = "Data-oriented game engine written in Rust"
 keywords = ["game", "engine", "sdk", "amethyst"]
@@ -18,4 +18,8 @@ path = "src/lib.rs"
 
 [dependencies.amethyst_engine]
 path = "src/engine/"
-version = "0.1.4"
+version = "0.2.0"
+
+[dependencies.amethyst_renderer]
+path = "src/engine/"
+version = "0.2.0"

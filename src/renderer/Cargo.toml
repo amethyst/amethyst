@@ -1,6 +1,20 @@
 [package]
 name = "amethyst_renderer"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
+description = "High-level rendering engine with multiple backends"
 
-[dependencies]
+documentation = "http://ebkalderon.github.io/amethyst/doc/amethyst/"
+homepage = "http://ebkalderon.github.io/amethyst/"
+repository = "https://github.com/ebkalderon/amethyst"
+
+readme = "README.md"
+license = "MIT"
+
+[dependencies.amethyst_renderer_core]
+path = "src/core/"
+version = "0.2.0"
+
+[dependencies.amethyst_renderer_gl]
+path = "src/gl/"
+version = "0.2.0"
