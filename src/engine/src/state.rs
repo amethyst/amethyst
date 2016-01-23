@@ -6,7 +6,7 @@ use super::timing::Duration;
 pub enum Trans {
     /// Continue as normal.
     None,
-    /// Remove the active state and resume the next state on the stack (if any).
+    /// Remove the active state and resume the next state on the stack or stop if there are none.
     Pop,
     /// Pause the active state and push a new state onto the stack.
     Push(Box<State>),
@@ -64,6 +64,8 @@ impl StateMachine {
     }
 
     /// Initializes the state machine.
+    /// # Panics
+    ///	Panics if no states are present in the stack.
     pub fn start(&mut self) {
         if !self.running {
             self.state_stack.last_mut().unwrap().on_start();
@@ -166,5 +168,44 @@ impl StateMachine {
 
             self.running = false;
         }
+    }
+}
+
+// Unit tests
+#[cfg(test)]
+mod test {
+    use super::*;
+    use timing::Duration;
+
+    struct State1(u8);
+    struct State2;
+
+    impl State for State1 {
+        fn update(&mut self, _delta: Duration) -> Trans {
+            if self.0 > 0 {
+                self.0 -= 1;
+                Trans::None
+            } else {
+                Trans::Switch(Box::new(State2))
+            }
+        }
+    }
+
+    impl State for State2 {
+        fn update(&mut self, _delta: Duration) -> Trans {
+            Trans::Pop
+        }
+    }
+
+    #[test]
+    fn switch_pop() {
+        let mut sm = StateMachine::new(State1(7));
+        sm.start();
+        for _ in 0..8 {
+            sm.update(Duration::seconds(0));
+            assert!(sm.is_running());
+        }
+        sm.update(Duration::seconds(0));
+        assert!(!sm.is_running());
     }
 }
