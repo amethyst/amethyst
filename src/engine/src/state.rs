@@ -32,7 +32,7 @@ pub trait State {
 
     /// Executed on every frame before updating, for use in reacting to events.
     // TODO: Replace i32 with an actual Event type of some kind.
-    fn handle_events(&mut self, _events: &Vec<i32>) {}
+    fn handle_events(&mut self, _events: &[i32]) {}
 
     /// Executed repeatedly at stable, predictable intervals (1/60th of a second
     /// by default).
@@ -73,7 +73,7 @@ impl StateMachine {
 
     /// Passes a vector of events to the active state to handle.
     // TODO: Replace i32 with an actual Event type of some kind.
-    pub fn handle_events(&mut self, events: &Vec<i32>) {
+    pub fn handle_events(&mut self, events: &[i32]) {
         if self.running {
             if let Some(state) = self.state_stack.last_mut() {
                 state.handle_events(events);
