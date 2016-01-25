@@ -11,10 +11,5 @@ repository = "https://github.com/ebkalderon/amethyst"
 readme = "README.md"
 license = "MIT"
 
-[dependencies.amethyst_renderer_core]
-path = "src/core/"
-version = "0.2.0"
-
-[dependencies.amethyst_renderer_gl]
-path = "src/gl/"
-version = "0.2.0"
+[dependencies]
+gfx = "*"

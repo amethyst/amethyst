@@ -1,6 +1,0 @@
-[package]
-name = "amethyst_renderer_gl"
-version = "0.2.0"
-authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
-
-[dependencies]
