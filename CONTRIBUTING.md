@@ -136,6 +136,23 @@ The Amethyst book is generated using a different documentation tool called
 [mb]: https://github.com/azerupi/mdBook
 [bk]: https://github.com/ebkalderon/amethyst/tree/master/book/src
 
+Documentation of any kind should adhere to the following standard:
+
+1. Lines must not extend beyond 80 characters in length.
+2. To enhance readability in text editors and terminals, use only *reference
+   style* Markdown links, as shown in the example below. However, if the link
+   points to an anchor that exists on the same page, the *inline style* should
+   be used instead.
+
+```
+Here is some [example text][et] with a link in it. While we are at it, here is
+yet [another link][al]. If we are linking to [an anchor](#anchor) on the same
+page, we can do this inline.
+
+[et]: https://some.url/
+[al]: https://another.url/
+```
+
 When submitting your pull requests, please follow the same procedures described
 in the [Pull Requests](#pull-requests) section above.
 
