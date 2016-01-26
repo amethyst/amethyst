@@ -23,7 +23,9 @@ use amethyst_renderer::*;
 fn main() {
     let path = RenderPath { ... };
     let mut front = Frontend::new(path);
-    let mut back = Backend::new();
+
+    let handles = Resources { ... };
+    let mut back = Backend::new(handles);
 
     loop {
         let frame = Frame { ... };
