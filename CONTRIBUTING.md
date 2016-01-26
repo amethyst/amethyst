@@ -6,7 +6,7 @@ always use a helping hand! What would you like to do?
 1. [I want to submit issues or request features.](#submitting-issues)
 2. [I want to contribute code.](#pull-requests)
 3. [I want to write documentation.](#writing-documentation)
-4. [Are there any useful resources I can read?] (#useful-resources)
+4. [Are there any useful resources I can read?](#useful-resources)
 
 ## Submitting Issues
 
