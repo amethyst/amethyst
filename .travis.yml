@@ -9,6 +9,8 @@ script:
     - cargo doc --no-deps -p amethyst -p amethyst_engine -p amethyst_renderer
     - cargo build -v
     - cargo test -v
+    - cargo test -p amethyst_engine -v
+    - cargo test -p amethyst_renderer -v
 
 sudo: true
 
