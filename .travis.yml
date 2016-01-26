@@ -6,7 +6,7 @@ rust:
     - nightly
 
 script:
-    - cargo doc --no-deps
+    - cargo doc --no-deps -p amethyst -p amethyst_engine -p amethyst_renderer
     - cargo build -v
     - cargo test -v
 

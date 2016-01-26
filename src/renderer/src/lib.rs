@@ -1,5 +1,5 @@
 extern crate gfx;
 
-mod backend;
-mod frontend;
-mod ir;
+pub mod backend;
+pub mod frontend;
+pub mod ir;
