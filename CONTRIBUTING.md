@@ -80,7 +80,7 @@ have done the following things first:
 4. If your pull request adds new methods or functions to the codebase, you have
    written tests for them.
    * Unit tests are placed at the bottom of the same .rs file in a submodule
-     called `test` with `// Unit tests` right above it. For an example, see the
+     called `tests` with `// Unit tests` right above it. For an example, see the
      unit tests in the [timing.rs][ti] file in the `amethyst_engine` sub-crate.
    * Integration tests are placed in a separate .rs file in the `tests`
      subdirectory.
