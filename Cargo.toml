@@ -12,10 +12,6 @@ repository = "https://github.com/ebkalderon/amethyst"
 readme = "README.md"
 license = "MIT"
 
-[lib]
-name = "amethyst"
-path = "src/lib.rs"
-
 [dependencies.amethyst_engine]
 path = "src/engine/"
 version = "0.2.0"
