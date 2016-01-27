@@ -9,9 +9,9 @@ adheres to [Semantic Versioning][sv].
 
 ### Changed
 * Added keywords to sub-crates
-* Removed reference to missing README file from `amethyst_renderer`
+* Removed reference to missing README file from `amethyst_engine`
 
-## 0.2.0 (2016-01-27)
+## 0.2.0 (2016-01-27) [YANKED]
 
 ### Added
 * Pass slice references to functions instead of `&Vec<T>`
