@@ -47,7 +47,7 @@
 //! ```
 
 extern crate amethyst_engine;
-
-pub mod renderer;
+extern crate amethyst_renderer;
 
 pub use amethyst_engine as engine;
+pub use amethyst_renderer as renderer;

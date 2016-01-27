@@ -36,14 +36,10 @@ pub trait State {
 
     /// Executed repeatedly at stable, predictable intervals (1/60th of a second
     /// by default).
-    fn fixed_update(&mut self, _delta: Duration) -> Trans {
-        Trans::None
-    }
+    fn fixed_update(&mut self, _delta: Duration) -> Trans { Trans::None }
 
     /// Executed on every frame immediately, as fast as the engine will allow.
-    fn update(&mut self, _delta: Duration) -> Trans {
-        Trans::Pop
-    }
+    fn update(&mut self, _delta: Duration) -> Trans { Trans::Pop }
 }
 
 /// A simple stack-based state machine (pushdown automaton).
@@ -172,5 +168,44 @@ impl StateMachine {
 
             self.running = false;
         }
+    }
+}
+
+// Unit tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use timing::Duration;
+
+    struct State1(u8);
+    struct State2;
+
+    impl State for State1 {
+        fn update(&mut self, _delta: Duration) -> Trans {
+            if self.0 > 0 {
+                self.0 -= 1;
+                Trans::None
+            } else {
+                Trans::Switch(Box::new(State2))
+            }
+        }
+    }
+
+    impl State for State2 {
+        fn update(&mut self, _delta: Duration) -> Trans {
+            Trans::Pop
+        }
+    }
+
+    #[test]
+    fn switch_pop() {
+        let mut sm = StateMachine::new(State1(7));
+        sm.start();
+        for _ in 0..8 {
+            sm.update(Duration::seconds(0));
+            assert!(sm.is_running());
+        }
+        sm.update(Duration::seconds(0));
+        assert!(!sm.is_running());
     }
 }

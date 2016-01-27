@@ -2,10 +2,10 @@
 
 For those of you who prefer working with Cargo directly, like any other Rust
 project, you can. However, since this is just a "Hello, World" program, I would
-strongly recommend using the [`amethyst_cli` tool][ac] instead. It will save you
+strongly recommend using the [Amethyst CLI tool][as] instead. It will save you
 a whole lot of time.
 
-[ac]: ./getting_started/automatic_setup.html
+[as]: ./getting_started/automatic_setup.html
 
 ### From Crates.io
 

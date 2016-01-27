@@ -1,9 +1,8 @@
 [package]
-name = "amethyst"
+name = "amethyst_renderer"
 version = "0.2.0"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
-description = "Data-oriented game engine written in Rust"
-keywords = ["game", "engine", "sdk", "amethyst"]
+description = "High-level rendering engine with multiple backends"
 
 documentation = "http://ebkalderon.github.io/amethyst/doc/amethyst/"
 homepage = "http://ebkalderon.github.io/amethyst/"
@@ -12,10 +11,5 @@ repository = "https://github.com/ebkalderon/amethyst"
 readme = "README.md"
 license = "MIT"
 
-[dependencies.amethyst_engine]
-path = "src/engine/"
-version = "0.2.0"
-
-[dependencies.amethyst_renderer]
-path = "src/engine/"
-version = "0.2.0"
+[dependencies]
+gfx = "*"

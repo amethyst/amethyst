@@ -5,7 +5,7 @@
 [![Build Status][s1]][tc] [![Crates.io][s2]][ci] [![MIT License][s3]][ml] [![Join the chat][s4]][gc]
 
 [s1]: https://travis-ci.org/ebkalderon/amethyst.svg?branch=master
-[s2]: https://img.shields.io/badge/crates.io-0.1.4-orange.svg
+[s2]: https://img.shields.io/badge/crates.io-0.2.0-orange.svg
 [s3]: https://img.shields.io/badge/license-MIT-blue.svg
 [s4]: https://badges.gitter.im/ebkalderon/amethyst.svg
 
@@ -68,13 +68,13 @@ is also an online crate-level [API reference][ar].
 
 See the [Getting Started][gs] chapter in the book for the full-blown "Hello,
 World!" tutorial. For the sake of brevity, you can generate an empty game
-project with the [amethyst_cli][ac] tool and build it. Follow along below:
+project with the [Amethyst CLI tool][ac] and build it. Follow along below:
 
 [gs]: http://ebkalderon.github.io/amethyst/getting_started.html
-[ac]: https://github.com/ebkalderon/amethyst_cli
+[ac]: https://github.com/ebkalderon/amethyst_tools/tree/reorg/src/cli
 
 ```
-$ cargo install amethyst_cli
+$ cargo install amethyst_tools
 $ amethyst new mygame
 $ cd mygame
 $ amethyst run
