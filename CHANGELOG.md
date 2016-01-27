@@ -45,7 +45,7 @@ adheres to [Semantic Versioning][sv].
 
 ### Changed
 * Clean up use statements
-* Renderer design progress (issue #7)
+* Renderer design progress (issue [#7])
   * Split ir.rs and frontend.rs into separate files
   * Frontend
     * Objects and Lights (enums) are now structs impl'ing `Renderable` trait
@@ -57,6 +57,8 @@ adheres to [Semantic Versioning][sv].
     * CommandQueue now takes in CommandBuffers directly
   * Backend
     * Consolidate traits into one short file
+
+[#7]: https://github.com/ebkalderon/amethyst/issues/7
 
 ## 0.1.1 (2016-01-06)
 
