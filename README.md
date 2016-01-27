@@ -68,7 +68,7 @@ is also an online crate-level [API reference][ar].
 
 See the [Getting Started][gs] chapter in the book for the full-blown "Hello,
 World!" tutorial. For the sake of brevity, you can generate an empty game
-project with the [amethyst_cli][ac] tool and build it. Follow along below:
+project with the [Amethyst CLI tool][ac] and build it. Follow along below:
 
 [gs]: http://ebkalderon.github.io/amethyst/getting_started.html
 [ac]: https://github.com/ebkalderon/amethyst_tools/tree/reorg/src/cli
