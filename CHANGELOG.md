@@ -9,26 +9,38 @@ adheres to [Semantic Versioning][sv].
 
 ### Added
 * Pass slice references to functions instead of `&Vec<T>`
-* State machine gained some unit tests (issue #9, pull request #15)
+* State machine gained some unit tests (issue [#9], pull request [#15])
+
 
 ### Changed
-* Mention nightly Rust in "Hello World" tutorial (issue #11, pull request #12)
-* Reorganize `amethyst` into separate sub-crates (issue #13, pull request #14)
-* Updated example to reflect API changes
+* Mention nightly Rust in "Hello World" tutorial (issue [#11], pull request
+  [#12])
+* Reorganize amethyst` into separate sub-crates (issue #13, pull request #14)
+* Update example to reflect API changes
 * Depend on gfx-rs to reduce workload and foster cooperation, removed old
   renderer backend code
+
+[#9]: https://github.com/ebkalderon/amethyst/issues/9
+[#11]: https://github.com/ebkalderon/amethyst/issues/11
+[#12]: https://github.com/ebkalderon/amethyst/issues/12
+[#13]: https://github.com/ebkalderon/amethyst/issues/13
+[#14]: https://github.com/ebkalderon/amethyst/issues/14
+[#15]: https://github.com/ebkalderon/amethyst/issues/15
 
 ## 0.1.4 (2016-01-10)
 
 ### Added
-* Stabilize state machine API (pull request #6)
+* Stabilize state machine API (pull request [#6])
   * Implement pushdown automaton state machine
   * Implement state transitions
 
 ### Changed
-* Remove standardized State constructor (pull request #6)
-* Fix unreachable shutdown statement bug (issue #5)
+* Remove standardized State constructor (pull request [#6])
+* Fix unreachable shutdown statement bug (issue [#5])
 * Update book and doc comments
+
+[#5]: https://github.com/ebkalderon/amethyst/issues/5
+[#6]: https://github.com/ebkalderon/amethyst/issues/6
 
 ## 0.1.3 (2016-01-09)
 
