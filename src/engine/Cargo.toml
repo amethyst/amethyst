@@ -8,7 +8,6 @@ documentation = "http://ebkalderon.github.io/amethyst/doc/amethyst/"
 homepage = "http://ebkalderon.github.io/amethyst/"
 repository = "https://github.com/ebkalderon/amethyst"
 
-readme = "README.md"
 license = "MIT"
 
 [lib]
