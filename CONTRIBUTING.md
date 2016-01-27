@@ -15,13 +15,11 @@ GitHub issue trackers. We can't fix problems we don't know about, so please
 report early and often! Make sure to post your issue on the tracker most
 relevant to you:
 
-* [Amethyst Tracker][am]: Issues on the core game engine itself or the Amethyst
-  Book.
-* [Amethyst-CLI Tracker][ac]: Issues on the command-line project management
-  tool.
+* [Amethyst Tracker][am]: Issues on the game engine itself or the Amethyst Book.
+* [Amethyst Tools Tracker][at]: Issues on the toolchain surrounding the engine.
 
 [am]: https://github.com/ebkalderon/amethyst/issues
-[ac]: https://github.com/ebkalderon/amethyst_cli/issues
+[at]: https://github.com/ebkalderon/amethyst_tools/issues
 
 Before posting your issue, please take a moment to search the tracker's existing
 issues first, as it's possible that someone else reported the same issue before

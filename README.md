@@ -71,10 +71,10 @@ World!" tutorial. For the sake of brevity, you can generate an empty game
 project with the [amethyst_cli][ac] tool and build it. Follow along below:
 
 [gs]: http://ebkalderon.github.io/amethyst/getting_started.html
-[ac]: https://github.com/ebkalderon/amethyst_cli
+[ac]: https://github.com/ebkalderon/amethyst_tools/tree/reorg/src/cli
 
 ```
-$ cargo install amethyst_cli
+$ cargo install amethyst_tools
 $ amethyst new mygame
 $ cd mygame
 $ amethyst run

@@ -34,4 +34,4 @@ Since we're just getting started, it's fastest and highly recommended to use
 [amethyst_cli][ac]. If you're of the intrepid type, you may go the vanilla Cargo
 route if you wish.
 
-[ac]: https://github.com/ebkalderon/amethyst_cli
+[ac]: https://github.com/ebkalderon/amethyst_tools/src/cli

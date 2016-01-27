@@ -4,7 +4,7 @@ An easy way to set up Amethyst and manage your project is with the
 [amethyst_cli][ac] crate. If you want to set up an Amethyst game project in Cargo by
 hand, follow along with [the next section][ci] instead.
 
-[ac]: https://github.com/ebkalderon/amethyst_cli
+[ac]: https://github.com/ebkalderon/amethyst_tools/tree/reorg/src/cli/
 [ci]: ./getting_started/manual_cargo_setup.html
 
 To install the `amethyst_cli` tool, follow along in your terminal:
