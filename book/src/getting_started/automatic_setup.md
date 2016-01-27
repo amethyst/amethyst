@@ -1,16 +1,17 @@
 # Automatic Setup Using The CLI Tool
 
 An easy way to set up Amethyst and manage your project is with the
-[amethyst_cli][ac] crate. If you want to set up an Amethyst game project in Cargo by
+[amethyst_tools][at] crate. If you want to set up a game project in Cargo by
 hand, follow along with [the next section][ci] instead.
 
-[ac]: https://github.com/ebkalderon/amethyst_tools/tree/reorg/src/cli/
+[at]: https://github.com/ebkalderon/amethyst_tools
 [ci]: ./getting_started/manual_cargo_setup.html
 
-To install the `amethyst_cli` tool, follow along in your terminal:
+To install the toolchain and generate a new project with the CLI tool, follow
+along in your terminal:
 
 ```
-$ cargo install amethyst_cli
+$ cargo install amethyst_tools
 $ amethyst new hello_world
 ```
 
