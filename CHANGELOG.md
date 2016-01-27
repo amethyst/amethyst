@@ -3,13 +3,13 @@
 ## 0.2.0
 
 * Core
-  * Reorganize `amethyst` into separate sub-crates
+  * Reorganize `amethyst` into separate sub-crates (breaking change)
   * Pass slice references to functions instead of &Vec<T>
   * Updated example to reflect API changes
   * Mention nightly Rust in the "Hello World" book chapter
 * Renderer
-  * Split renderer into separate sub-crates
   * Remove old code to better reflect GPU resources
+  * Depend on gfx-rs to reduce workload and foster cooperation
 
 ## 0.1.4
 
