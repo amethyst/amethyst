@@ -8,7 +8,7 @@ adheres to [Semantic Versioning][sv].
 ## 0.2.0 (2016-01-27)
 
 ### Added
-* Pass slice references to functions instead of &Vec<T>
+* Pass slice references to functions instead of `&Vec<T>`
 * State machine gained some unit tests (issue #9, pull request #15)
 
 ### Changed
