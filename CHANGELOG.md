@@ -11,11 +11,10 @@ adheres to [Semantic Versioning][sv].
 * Pass slice references to functions instead of `&Vec<T>`
 * State machine gained some unit tests (issue [#9], pull request [#15])
 
-
 ### Changed
 * Mention nightly Rust in "Hello World" tutorial (issue [#11], pull request
   [#12])
-* Reorganize amethyst` into separate sub-crates (issue #13, pull request #14)
+* Split amethyst` into separate sub-crates (issue [#13], pull request [#14])
 * Update example to reflect API changes
 * Depend on gfx-rs to reduce workload and foster cooperation, removed old
   renderer backend code
@@ -35,7 +34,7 @@ adheres to [Semantic Versioning][sv].
   * Implement state transitions
 
 ### Changed
-* Remove standardized State constructor (pull request [#6])
+* Remove standardized `State` constructor (pull request [#6])
 * Fix unreachable shutdown statement bug (issue [#5])
 * Update book and doc comments
 
@@ -49,8 +48,8 @@ adheres to [Semantic Versioning][sv].
 * Renderer design progress (issue #7)
   * Split ir.rs and frontend.rs into separate files
   * Frontend
-    * Objects and Lights (enums) are now structs impl'ing Renderable trait
-    * Frame is a container of Renderable trait objects
+    * Objects and Lights (enums) are now structs impl'ing `Renderable` trait
+    * `Frame` is a container of `Renderable` trait objects
     * Start compiling library of common objects and light types
   * Intermediate Representation
     * Move GPU state modeling out of Backend and into IR
@@ -62,7 +61,7 @@ adheres to [Semantic Versioning][sv].
 ## 0.1.1 (2016-01-06)
 
 ### Added
-* Add Frame::with_data constructor to renderer
+* Add `Frame::with_data` constructor to renderer
 
 ### Changed
 * Hide engine submodule, reexport desired contents as public
