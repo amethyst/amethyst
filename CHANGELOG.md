@@ -5,6 +5,12 @@ adheres to [Semantic Versioning][sv].
 
 [sv]: http://semver.org/
 
+## 0.2.1 (2016-01-27)
+
+### Changed
+* Added keywords to sub-crates
+* Removed reference to missing README file from `amethyst_renderer`
+
 ## 0.2.0 (2016-01-27)
 
 ### Added
