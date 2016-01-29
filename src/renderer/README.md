@@ -18,22 +18,15 @@ progress* and is very incomplete. Pardon the dust!
 ## Proposal
 
 ```rust
-extern crate amethyst_renderer;
+let mut front = Frontend::new(...);
+let mut back = Backend::new(...);
 
-use amethyst_renderer::*;
+let data = PersistentData { ... };
+let handles = back.load_persistent_data(data);
 
-fn main() {
-    let path = RenderPath { ... };
-    let mut front = Frontend::new(path);
-
-    let handles = Resources { ... };
-    let mut back = Backend::new(handles);
-
-    loop {
-        let frame = Frame { ... };
-
-        let ir = front.process(frame);
-        let back.process(ir);
-    }
+loop {
+    let frame = Frame { ... };
+    let ir = front.process(frame);
+    back.process(ir);
 }
 ```
