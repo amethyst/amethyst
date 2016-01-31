@@ -30,7 +30,7 @@ ecosystem.
 [rs]: https://www.rust-lang.org/
 
 The engine's design draws much inspiration from the industrial-strength
-[Bitsquid Engine][bs] (now called [Autodesk Stringray][sr]). However, Amethyst
+[Bitsquid Engine][bs] (now called [Autodesk Stingray][sr]). However, Amethyst
 does not aim to be API-compatible with it in any way. Some goals include:
 
 [bs]: http://twvideo01.ubm-us.net/o1/vault/gdc2012/slides/Programming%20Track/Persson_Tobias_Flexible_Rendering.pdf.pdf
