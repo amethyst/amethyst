@@ -31,7 +31,8 @@ There are two ways to get started working with Amethyst:
 [ms]: ./getting_started/manual_cargo_setup.html
 
 Since we're just getting started, it's fastest and highly recommended to use
-[Amethyst CLI][ac]. If you're of the intrepid type, you may go the vanilla Cargo
-route if you wish.
+[Amethyst CLI][ac], which is included in the [amethyst_tools][at] crate. If
+you're of the intrepid type, you may go the vanilla Cargo route if you wish.
 
 [ac]: https://github.com/ebkalderon/amethyst_tools/tree/master/src/cli
+[at]: https://github.com/ebkalderon/amethyst_tools
