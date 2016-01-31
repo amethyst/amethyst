@@ -45,8 +45,8 @@ does not aim to be API-compatible with it in any way. Some goals include:
 * Renderer optimized for modern graphics APIs, e.g. Vulkan, Direct3D 12+, Metal.
 * Easy integration with useful third-party game development libraries, e.g.
   [Piston][pi].
-* Traditional "mega-editor" split into several small but well-integrated tools,
-  adhering to the [Unix philosophy][up].
+* Traditional "mega-editor" split into several
+  [small but well-integrated tools][at], adhering to the [Unix philosophy][up].
 
 [pa]: http://gameprogrammingpatterns.com/state.html#pushdown-automata
 [em]: http://shaneenishry.com/blog/2014/12/27/misconceptions-of-component-based-entity-systems/
@@ -54,6 +54,7 @@ does not aim to be API-compatible with it in any way. Some goals include:
 [mr]: http://mruby.org/
 [lu]: http://www.lua.org/
 [pi]: http://www.piston.rs/
+[at]: https://github.com/ebkalderon/amethyst_tools
 [up]: https://en.wikipedia.org/wiki/Unix_philosophy
 
 ## Usage
