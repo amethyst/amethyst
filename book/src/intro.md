@@ -42,23 +42,33 @@ Read the crate-level [API documentation][ad] for more details.
 
 ## Why are you building this?
 
-The video game industry is getting bigger every year, and it has actually been
-[outpacing Hollywood for years][hw]. As game studios grow, their toolset grows
-to match. Though we now have access to some great mostly free game development
-tools, their workflows are [clunky][ue] and unfriendly to throwaway
-experimentation and iteration. Most of these tools are also pretty opaque to how
-they work internally, and those that are open don't usually adhere to modern
-design patterns well (think pre-C++11 idioms and convoluted class hierarchies).
+I've worked with a few game engines over the years, namely [Unity][un] and the
+[Unreal Development Kit][ud], and both are pretty solid solutions if you want to
+build a quality game. But each have their own pros and cons that you have to
+weigh before using them, especially in regards to performance and scalability.
 
-[hw]: https://www.quora.com/Who-makes-more-money-Hollywood-or-the-video-game-industry
-[ue]: http://cdn.dbolical.com/videos/engines/1/1/456/Unreal_Engine_4_Features_Trailer_--_GDC_2014.mp4.jpg
+[un]: http://unity3d.com/
+[ud]: https://www.unrealengine.com/
+
+One engine I've always admired as a programmer but never had a chance to play
+with is the [Bitsquid Engine][bs] (now called [Autodesk Stingray][as]). It's
+fast, forward-thinking, highly parallel, and data-driven. It seems like a
+wonderful platform for rapid prototyping. I've wanted to play around with a
+Bitsquid-like engine for a while, but I couldn't find any open-source
+equivalents out there. Most of those I did find stuck to outdated design
+patterns and lacked the multi-core scalability I was looking for. So I set out
+to write my own.
+
+[bs]: http://twvideo01.ubm-us.net/o1/vault/gdc2012/slides/Programming%20Track/Persson_Tobias_Flexible_Rendering.pdf.pdf
+[as]: http://stingrayengine.com/
+[bl]: http://bitsquid.blogspot.com/
 
 In short, I am writing Amethyst to scratch three of my own itches:
 
-1. Teach myself game development and computer graphics in its purest form,
-   rather than through the lens of a particular game engine.
-2. Write a fast, modular, data-oriented, and data-driven engine suited for rapid
-   prototyping that demands (a little) less boilerplate from the user.
+1. Teach myself Rust, game development, and computer graphics in their purest
+   form, rather than through the lens of a particular game engine.
+2. Write a modular, parallel, data-oriented, and data-driven engine suited for
+   rapid prototyping that demands (a little) less boilerplate from the user.
 3. Build a toolset that splits up the traditional "mega-editor" into several
    small but well-integrated tools, adhering to the [Unix philosophy][up].
 
