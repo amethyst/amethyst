@@ -23,7 +23,7 @@
 //! struct GameState;
 //!
 //! impl State for GameState {
-//!     fn handle_events(&mut self, events: &Vec<Event>) -> Trans {
+//!     fn handle_events(&mut self, events: &[Event]) -> Trans {
 //!         for e in events {
 //!             match e {
 //!                 Event::Closed => Trans::Quit,
