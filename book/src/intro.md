@@ -70,8 +70,9 @@ In short, I am writing Amethyst to scratch three of my own itches:
 2. Write a modular, parallel, data-oriented, and data-driven engine suited for
    rapid prototyping that demands (a little) less boilerplate from the user.
 3. Build a toolset that splits up the traditional "mega-editor" into several
-   small but well-integrated tools, adhering to the [Unix philosophy][up].
+   [small but well-integrated tools][at], adhering to the [Unix philosophy][up].
 
+[at]: https://github.com/ebkalderon/amethyst_tools
 [up]: https://en.wikipedia.org/wiki/Unix_philosophy
 
 ## Contributing
