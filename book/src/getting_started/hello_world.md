@@ -7,7 +7,7 @@ copy and paste the following code:
 ```rust
 extern crate amethyst;
 
-use amethyst::{Application, Duration, State, Trans};
+use amethyst::engine::{Application, Duration, State, Trans};
 
 struct HelloWorld;
 
