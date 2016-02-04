@@ -22,7 +22,7 @@ fn main() {
 		cur.z = prev.z + vel.z;
 	});
 	let pos1 = Position { x: 0.0, y: 0.0, z: 0.0 };
-	let vel1 = Velocity { x: 0.3, y: 0.3, z: 0.3 };
+	let vel1 = Velocity { x: 0.3, y: 0.2, z: 0.1 };
 	let mut pos2 = Position { x: 0.0, y: 0.0, z: 0.0 };
     rebuilder.rebuild::<Position, Velocity>(&pos1, &vel1, &mut pos2);
     println!("First position: {:?}", pos1);
