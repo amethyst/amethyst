@@ -1,4 +1,5 @@
 extern crate amethyst_ecs;
+
 use amethyst_ecs::*;
 
 #[derive(Debug)]

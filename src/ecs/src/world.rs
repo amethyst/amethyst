@@ -3,10 +3,15 @@
 use super::dynvec::DynVec;
 use super::entity::{Entity, Entities};
 
-use std::any::{Any,TypeId};
+use std::any::{Any, TypeId};
 use std::collections::HashMap;
 
 type Components = HashMap<TypeId, DynVec>;
+type EntityData = HashMap<TypeId, usize>;
+// Rebuilder is a function (or a wrapper of that function) that takes an immutable reference to a component T,
+// an optional list of immutable references to required components,
+// and returns a new component T, that will replace the previous one.
+type Rebuilders = HashMap<TypeId, u8>;
 
 /// A collection of entities and their respective components.
 #[derive(Debug)]
@@ -38,7 +43,7 @@ impl World {
     /// Attaches a component to an entity.
     pub fn insert_component<T: Any>(&mut self, entity: Entity, comp: T) {
         if self.entities.is_alive(entity) {
-			let t = TypeId::of::<(Entity, T)>();
+            let t = TypeId::of::<(Entity, T)>();
             if let Some(c) = self.components.get_mut(&t) {
                 c.push((entity, comp));
                 return;
@@ -48,14 +53,13 @@ impl World {
             self.components.insert(t, vec);
         }
     }
-    
+
     /// Returns ith component of selected type
     pub fn get_component<T: 'static + Any>(&self, index: usize) -> Option<&(Entity, T)> {
-		if let Some(c) = self.components.get(&TypeId::of::<(Entity, T)>()) {
-			Some(c.get_component(index))
-		} else {
-			None
-		}
-	}
+        if let Some(c) = self.components.get(&TypeId::of::<(Entity, T)>()) {
+            Some(c.get_component(index))
+        } else {
+            None
+        }
+    }
 }
-
