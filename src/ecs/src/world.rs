@@ -38,20 +38,20 @@ impl World {
     /// Attaches a component to an entity.
     pub fn insert_component<T: Any>(&mut self, entity: Entity, comp: T) {
         if self.entities.is_alive(entity) {
-			let t = TypeId::of::<T>();
+			let t = TypeId::of::<(Entity, T)>();
             if let Some(c) = self.components.get_mut(&t) {
-                c.push(comp);
+                c.push((entity, comp));
                 return;
             }
-            let mut vec = DynVec::new::<T>();
-            vec.push(comp);
+            let mut vec = DynVec::new::<(Entity, T)>();
+            vec.push((entity, comp));
             self.components.insert(t, vec);
         }
     }
     
     /// Returns ith component of selected type
-    pub fn get_component<T: 'static + Any>(&self, index: usize) -> Option<&T> {
-		if let Some(c) = self.components.get(&TypeId::of::<T>()) {
+    pub fn get_component<T: 'static + Any>(&self, index: usize) -> Option<&(Entity, T)> {
+		if let Some(c) = self.components.get(&TypeId::of::<(Entity, T)>()) {
 			Some(c.get_component(index))
 		} else {
 			None
