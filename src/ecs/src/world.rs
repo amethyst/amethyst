@@ -48,5 +48,14 @@ impl World {
             self.components.insert(t, vec);
         }
     }
+    
+    /// Returns ith component of selected type
+    pub fn get_component<T: 'static + Any>(&self, index: usize) -> Option<&T> {
+		if let Some(c) = self.components.get(&TypeId::of::<T>()) {
+			Some(c.get_component(index))
+		} else {
+			None
+		}
+	}
 }
 
