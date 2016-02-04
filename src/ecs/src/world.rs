@@ -36,6 +36,7 @@ impl World {
 
     /// Destroys a given entity and removes its components.
     pub fn destroy_entity(&mut self, entity: Entity) {
+        self.components.remove(&entity);
         self.entities.destroy(entity);
         if let Some(data) = self.ent_data.remove(&entity) {
             for (a, b) in data {
