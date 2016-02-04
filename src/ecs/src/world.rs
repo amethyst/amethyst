@@ -55,9 +55,18 @@ impl World {
     }
 
     /// Returns ith component of selected type
-    pub fn get_component<T: Any>(&self, index: usize) -> Option<&(Entity, T)> {
+    pub fn component<T: Any>(&self, index: usize) -> Option<&(Entity, T)> {
         if let Some(c) = self.components.get(&TypeId::of::<(Entity, T)>()) {
             Some(c.get_component(index))
+        } else {
+            None
+        }
+    }
+
+    /// Returns ith mutable component of selected type
+    pub fn component_mut<T: Any>(&mut self, index: usize) -> Option<&mut (Entity, T)> {
+        if let Some(mut c) = self.components.get_mut(&TypeId::of::<(Entity, T)>()) {
+            Some(c.get_component_mut(index))
         } else {
             None
         }
