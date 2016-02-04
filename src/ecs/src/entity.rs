@@ -37,7 +37,12 @@ impl Entities {
 
     /// Checks whether the given entity is alive.
     pub fn is_alive(&self, entity: Entity) -> bool {
-        self.alive.iter().filter(|&e| *e == entity).count() == 1
+        self.alive.contains(&entity)
+    }
+
+    /// Checks how many entities are currently in the world.
+    pub fn num_alive(&self) -> usize {
+        self.alive.len()
     }
 
     /// Destroys the given entity.
