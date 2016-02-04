@@ -2,6 +2,7 @@
 /// a list of immutable references to required components (could be empty), and a mutable reference to memory for a new component T
 /// which is used to write a updated component to.
 use std::any::{Any, TypeId};
+use std::mem::transmute;
 
 pub struct Rebuilder {
     component_type: TypeId,
@@ -16,17 +17,16 @@ impl Rebuilder {
         Rebuilder {
             component_type: TypeId::of::<T>(),
             arguments_type: TypeId::of::<Args>(),
-            func: Box::<Fn(&T, &Args, &mut T)>::new(function),
+            func: unsafe { transmute::<Box<Fn(&T, &Args, &mut T)>, Box<Any>>(Box::new(function)) }, /* Cast Box<Fn> to Box<Any> */
         }
     }
 
     pub fn rebuild<T: Any, Args: Any>(&self, current: &T, args: &Args, future: &mut T) {
         assert_eq!(self.component_type, TypeId::of::<T>());
         assert_eq!(self.arguments_type, TypeId::of::<Args>());
-        // We cast Box<Any> to Any and then to Box<Fn(..)> and use it
-        // let b: &Any = &self.func;
-        // b.downcast_ref::<Box<Fn(&T, &Args, &mut T)>>().unwrap()(current, args, future);
-        let b: Box<Fn(&T, &Args, &mut T)> = self.func.downcast().unwrap();
+        let b: &Box<Fn(&T, &Args, &mut T)> = unsafe {
+            transmute::<&Box<Any>, &Box<Fn(&T, &Args, &mut T)>>(&self.func)
+        }; // Cast Box<Any> to Box<Fn>
         b(current, args, future);
     }
 }
