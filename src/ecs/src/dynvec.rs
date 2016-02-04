@@ -11,7 +11,7 @@ pub struct DynVec {
 
 impl DynVec {
     /// Creates a new dynamically typed vector of type T
-    pub fn new<T: 'static + Any>() -> DynVec {
+    pub fn new<T: Any>() -> DynVec {
         DynVec {
             vec: vec![],
             t: TypeId::of::<T>(),
@@ -22,7 +22,7 @@ impl DynVec {
     /// Returns a ref to ith component in the vector
     /// # Panics
     /// Panics if the type T does not match with vector's type
-    pub fn get_component<T: 'static + Any>(&self, i: usize) -> &T {
+    pub fn get_component<T: Any>(&self, i: usize) -> &T {
         unsafe {
             assert_eq!(self.t, TypeId::of::<T>()); //TODO: replace with Option or Result?
             transmute::<&u8, &T>(self.vec.index(i * self.size))
@@ -33,7 +33,7 @@ impl DynVec {
     /// Returns a mutable ref to ith component in the vector
     /// # Panics
     /// Panics if the type T does not match with vector's type
-    pub fn get_component_mut<T: 'static + Any>(&mut self, i: usize) -> &mut T {
+    pub fn get_component_mut<T: Any>(&mut self, i: usize) -> &mut T {
         unsafe {
             assert_eq!(self.t, TypeId::of::<T>()); //TODO: replace with Option or Result?
             transmute::<&mut u8, &mut T>(self.vec.index_mut(i * self.size))
@@ -44,7 +44,7 @@ impl DynVec {
     /// Adds a new element to the end of the vector
     /// # Panics
     /// Panics if the type T does not match with vector's type
-    pub fn push<T: 'static + Any>(&mut self, val: T) {
+    pub fn push<T: Any>(&mut self, val: T) {
         unsafe {
             use std::slice::from_raw_parts;
             assert_eq!(self.t, TypeId::of::<T>()); //TODO: replace with Option or Result?
