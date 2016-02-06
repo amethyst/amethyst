@@ -8,10 +8,6 @@ use std::collections::HashMap;
 
 type Components = HashMap<TypeId, DynVec>;
 type EntityData = HashMap<TypeId, usize>;
-// Rebuilder is a function (or a wrapper of that function) that takes an immutable reference to a component T,
-// an optional list of immutable references to required components,
-// and returns a new component T, that will replace the previous one.
-type Rebuilders = HashMap<TypeId, u8>;
 
 /// A collection of entities and their respective components.
 #[derive(Debug)]
