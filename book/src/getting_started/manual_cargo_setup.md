@@ -50,7 +50,7 @@ the following folder structure:
 
 And in the "config.yml" file, copy and paste this YAML configuration:
 
-```
+```yaml
 ---
 logging:
     file_path: "hello_world.log"
