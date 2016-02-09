@@ -1,3 +1,5 @@
+//! A runtime-typed vector. All DynVecs are of the same type, regardless of their elements' types.
+
 use std::any::{Any, TypeId};
 use std::mem::{transmute, size_of};
 use std::ops::{Index, IndexMut};
@@ -5,6 +7,7 @@ use std::ops::{Index, IndexMut};
 #[derive(Debug)]
 pub struct DynVec {
     vec: Vec<u8>,
+    unused: Vec<usize>,
     t: TypeId,
     size: usize,
 }
@@ -14,6 +17,7 @@ impl DynVec {
     pub fn new<T: Any>() -> DynVec {
         DynVec {
             vec: vec![],
+            unused: vec![],
             t: TypeId::of::<T>(),
             size: size_of::<T>(),
         }
@@ -21,38 +25,49 @@ impl DynVec {
 
     /// Returns a ref to ith component in the vector
     /// # Panics
-    /// Panics if the type T does not match with vector's type
-    pub fn get_component<T: Any>(&self, i: usize) -> &T {
+    /// Panics if the type T does not match with the vector's type
+    pub fn get_component<T: Any>(&self, i: usize) -> Option<&T> {
         unsafe {
             assert_eq!(self.t, TypeId::of::<T>()); //TODO: replace with Option or Result?
-            transmute::<&u8, &T>(self.vec.index(i * self.size))
+            Some(transmute::<&u8, &T>(self.vec.index(i * self.size)))
         }
         // TODO: check bounds
     }
 
     /// Returns a mutable ref to ith component in the vector
     /// # Panics
-    /// Panics if the type T does not match with vector's type
-    pub fn get_component_mut<T: Any>(&mut self, i: usize) -> &mut T {
+    /// Panics if the type T does not match with the vector's type
+    pub fn get_component_mut<T: Any>(&mut self, i: usize) -> Option<&mut T> {
         unsafe {
             assert_eq!(self.t, TypeId::of::<T>()); //TODO: replace with Option or Result?
-            transmute::<&mut u8, &mut T>(self.vec.index_mut(i * self.size))
+            Some(transmute::<&mut u8, &mut T>(self.vec.index_mut(i * self.size)))
         }
         // TODO: check bounds
     }
 
-    /// Adds a new element to the end of the vector
+    /// Adds a new element and returns its index
     /// # Panics
-    /// Panics if the type T does not match with vector's type
-    pub fn push<T: Any>(&mut self, val: T) {
+    /// Panics if the type T does not match with the vector's type
+    pub fn add<T: Any>(&mut self, val: T) -> usize {
         unsafe {
             use std::slice::from_raw_parts;
             assert_eq!(self.t, TypeId::of::<T>()); //TODO: replace with Option or Result?
-            let slice: &[u8] = from_raw_parts::<u8>(transmute(&val), self.size);
-            self.vec.extend_from_slice(slice);
+			let slice: &[u8] = from_raw_parts::<u8>(transmute(&val), self.size);
+            if let Some(index) = self.unused.pop() {
+				for i in 0..self.size {
+					self.vec[i + index * self.size] = slice[i]; //TODO: replace with memcpy
+				}
+				index
+			} else {
+				self.vec.extend_from_slice(slice);
+				self.vec.len() - 1
+			}
         }
     }
 
-    // There is no removal method yet.
-    // It could be done similarily to entity::Entities with a stack of dead ids.
+    pub fn remove<T: Any>(&mut self, index: usize) {
+		assert!(index * self.size < self.vec.len());
+		assert!(!self.unused.contains(&index));
+		self.unused.push(index);
+	}
 }
