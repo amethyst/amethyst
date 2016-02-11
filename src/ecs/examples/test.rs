@@ -1,3 +1,5 @@
+///! Example of a basic entity-component system with 3 types of components.
+
 extern crate amethyst_ecs;
 
 use amethyst_ecs::*;
