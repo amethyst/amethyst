@@ -14,7 +14,7 @@ type EntityData = HashMap<TypeId, usize>;
 pub struct World {
     components: Components,
     entities: Entities,
-    ent_data: BTreeMap<Entity, EntityData>
+    ent_data: BTreeMap<Entity, EntityData>,
 }
 
 impl World {
@@ -23,7 +23,7 @@ impl World {
         World {
             components: Components::new(),
             entities: Entities::new(),
-            ent_data: BTreeMap::new()
+            ent_data: BTreeMap::new(),
         }
     }
 
@@ -37,41 +37,41 @@ impl World {
     /// Destroys a given entity and removes its components.
     pub fn destroy_entity(&mut self, entity: Entity) {
         self.entities.destroy(entity);
-        //TODO: remove components
+        // TODO: remove components
         self.ent_data.remove(&entity);
     }
 
     /// Attaches a component to an entity.
     pub fn insert_component<T: Any>(&mut self, entity: Entity, comp: T) -> Option<usize> {
-		let ent_data: &mut EntityData = match self.ent_data.get_mut(&entity) {
-			Some(s) => s,
-			None => return None
-		};
+        let ent_data: &mut EntityData = match self.ent_data.get_mut(&entity) {
+            Some(s) => s,
+            None => return None,
+        };
         let t = TypeId::of::<(Entity, T)>();
-        //is_alive check may be redundant, as we already check availability of EntityData.
+        // is_alive check may be redundant, as we already check availability of EntityData.
         if self.entities.is_alive(entity) && !ent_data.contains_key(&t) {
             if let Some(c) = self.components.get_mut(&t) {
-				let id = c.add((entity, comp));
-				ent_data.insert(t, id);
+                let id = c.add((entity, comp));
+                ent_data.insert(t, id);
                 return Some(id);
             }
-			let mut vec = DynVec::new::<(Entity, T)>();
-			vec.add((entity, comp));
-			self.components.insert(t, vec);
-			ent_data.insert(t, 0);
-			Some(0)
+            let mut vec = DynVec::new::<(Entity, T)>();
+            vec.add((entity, comp));
+            self.components.insert(t, vec);
+            ent_data.insert(t, 0);
+            Some(0)
         } else {
-			None
-		}
+            None
+        }
     }
 
-	pub fn remove_component<T: Any>(&mut self, entity: Entity) {
+    pub fn remove_component<T: Any>(&mut self, entity: Entity) {
         let t = TypeId::of::<(Entity, T)>();
         let id = self.ent_data[&entity][&t];
-		if let Some(c) = self.components.get_mut(&t) {
-			c.remove::<T>(id);
-		}
-	}
+        if let Some(c) = self.components.get_mut(&t) {
+            c.remove::<T>(id);
+        }
+    }
 
     /// Returns ith component of selected type
     pub fn component<T: Any>(&self, index: usize) -> Option<&(Entity, T)> {
