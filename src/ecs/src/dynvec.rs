@@ -16,8 +16,8 @@ impl DynVec {
     /// Creates a new dynamically typed vector of type T
     pub fn new<T: Any>() -> DynVec {
         DynVec {
-            vec: vec![],
-            unused: vec![],
+            vec: Vec::new(),
+            unused: Vec::new(),
             t: TypeId::of::<T>(),
             size: size_of::<T>(),
         }
@@ -52,22 +52,22 @@ impl DynVec {
         unsafe {
             use std::slice::from_raw_parts;
             assert_eq!(self.t, TypeId::of::<T>()); //TODO: replace with Option or Result?
-			let slice: &[u8] = from_raw_parts::<u8>(transmute(&val), self.size);
+            let slice: &[u8] = from_raw_parts::<u8>(transmute(&val), self.size);
             if let Some(index) = self.unused.pop() {
-				for i in 0..self.size {
-					self.vec[i + index * self.size] = slice[i]; //TODO: replace with memcpy
-				}
-				index
-			} else {
-				self.vec.extend_from_slice(slice);
-				self.vec.len() - 1
-			}
+                for i in 0..self.size {
+                    self.vec[i + index * self.size] = slice[i]; //TODO: replace with memcpy
+                }
+                index
+            } else {
+                self.vec.extend_from_slice(slice);
+                self.vec.len() - 1
+            }
         }
     }
 
     pub fn remove<T: Any>(&mut self, index: usize) {
-		assert!(index * self.size < self.vec.len());
-		assert!(!self.unused.contains(&index));
-		self.unused.push(index);
-	}
+        assert!(index * self.size < self.vec.len());
+        assert!(!self.unused.contains(&index));
+        self.unused.push(index);
+    }
 }
