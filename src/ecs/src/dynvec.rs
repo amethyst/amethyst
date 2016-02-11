@@ -65,7 +65,8 @@ impl DynVec {
         }
     }
 
-    pub fn remove<T: Any>(&mut self, index: usize) {
+    /// Removes an element
+    pub fn remove(&mut self, index: usize) {
         assert!(index * self.size < self.vec.len());
         assert!(!self.unused.contains(&index));
         self.unused.push(index);

@@ -37,8 +37,11 @@ impl World {
     /// Destroys a given entity and removes its components.
     pub fn destroy_entity(&mut self, entity: Entity) {
         self.entities.destroy(entity);
-        // TODO: remove components
-        self.ent_data.remove(&entity);
+        if let Some(data) = self.ent_data.remove(&entity) {
+            for (a, b) in data {
+                self.remove_component_type(a, entity);
+            }
+        }
     }
 
     /// Attaches a component to an entity.
@@ -67,9 +70,13 @@ impl World {
 
     pub fn remove_component<T: Any>(&mut self, entity: Entity) {
         let t = TypeId::of::<(Entity, T)>();
+        self.remove_component_type(t, entity);
+    }
+
+    pub fn remove_component_type(&mut self, t: TypeId, entity: Entity) {
         let id = self.ent_data[&entity][&t];
         if let Some(c) = self.components.get_mut(&t) {
-            c.remove::<T>(id);
+            c.remove(id);
         }
     }
 
