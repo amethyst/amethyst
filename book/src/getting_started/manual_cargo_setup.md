@@ -25,12 +25,12 @@ into it.
 
 ```
 $ git clone https://github.com/ebkalderon/amethyst.git
-$ cargo new mygame
-$ cd mygame
+$ cargo new --bin hello_world
+$ cd hello_world
 ```
 
-Finally in your "Cargo.toml" manifest, specify the location of the `amethyst`
-library and its sub-crates yourself:
+In your "Cargo.toml" manifest, add the local `amethyst` crate and its sub-crates
+as dependencies:
 
 ```toml
 [dependencies.amethyst]
