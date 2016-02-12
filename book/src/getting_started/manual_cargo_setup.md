@@ -19,21 +19,28 @@ amethyst = "*"
 
 ### From Git
 
-If you don't want to get Amethyst from Crates.io, you can download and compile
-Amethyst from the Git repository:
+If you don't want to get Amethyst from Crates.io, you can clone the entire SDK
+from the Git repository. Once you're done, create a new Cargo project and `cd`
+into it.
 
 ```
 $ git clone https://github.com/ebkalderon/amethyst.git
-$ cd amethyst
-$ cargo build
+$ cargo new mygame
+$ cd mygame
 ```
 
-Then, in your crate's "Cargo.toml", specify the location of the `amethyst`
-library yourself:
+Finally in your "Cargo.toml" manifest, specify the location of the `amethyst`
+library and its sub-crates yourself:
 
 ```toml
 [dependencies.amethyst]
-path = "../path/to/amethyst/folder/"
+path = "../path/to/amethyst/"
+
+[dependencies.amethyst_engine]
+path = "../path/to/amethyst/src/engine/"
+
+[dependencies.amethyst_renderer]
+path = "../path/to/amethyst/src/renderer/"
 ```
 
 ## Resources Folder
