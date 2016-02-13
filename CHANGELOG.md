@@ -41,11 +41,14 @@ adheres to [Semantic Versioning][sv].
 
 ### Changed
 * Remove standardized `State` constructor (pull request [#6])
-* Fix unreachable shutdown statement bug (issue [#5])
 * Update book and doc comments
 
-[#5]: https://github.com/ebkalderon/amethyst/issues/5
 [#6]: https://github.com/ebkalderon/amethyst/issues/6
+
+### Fixed
+* Fix unreachable shutdown statement bug (issue [#5])
+
+[#5]: https://github.com/ebkalderon/amethyst/issues/5
 
 ## 0.1.3 (2016-01-09)
 
