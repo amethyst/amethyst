@@ -71,12 +71,13 @@ and try our best to resolve it.
 So, you have a pull request? Great! But before you submit, please make sure you
 have done the following things first:
 
-1. You have ensured the pull request is against the master branch.
+1. You have ensured the pull request is against the latest version of your
+   branch.
 2. You have granted non-exclusive right to your source code under the
    [MIT License][ml].
-3. You have processed your source code with `rustfmt`.
+3. You have processed your source code with `cargo fmt`.
 4. If your pull request adds new methods or functions to the codebase, you have
-   written tests for them.
+   written adequate test cases for them.
    * Unit tests are placed at the bottom of the same .rs file in a submodule
      called `tests` with `// Unit tests` right above it. For an example, see the
      unit tests in the [timing.rs][ti] file in the `amethyst_engine` sub-crate.
@@ -94,7 +95,7 @@ have done the following things first:
 > and/or GitHub username to the AUTHORS.md file in your pull request.
 
 Once you have pushed your pull request to the repository, please wait for a
-reviewer to give feedback on it. If no one responds, feel free to @-reply a
+reviewer to give feedback on it. If no one responds, feel free to @-mention a
 developer or post publicly on [the Gitter chat room][gi] asking for a review.
 Once your code has been reviewed, revised if necessary, and then signed-off by a
 developer, it will be merged into the source tree.
