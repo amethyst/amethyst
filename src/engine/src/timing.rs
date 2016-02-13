@@ -68,7 +68,7 @@ impl Stopwatch {
 // Unit tests
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::Stopwatch;
     use std::thread;
     use std::time;
 
@@ -110,4 +110,3 @@ mod tests {
         assert_eq!(1, watch.elapsed().num_seconds());
     }
 }
-
