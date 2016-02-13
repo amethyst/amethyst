@@ -15,6 +15,7 @@ pub struct DynVec {
 impl DynVec {
     /// Creates a new dynamically typed vector of type T
     pub fn new<T: Any>() -> DynVec {
+        assert!(size_of::<T>() > 0);
         DynVec {
             vec: Vec::new(),
             unused: Vec::new(),
@@ -60,7 +61,7 @@ impl DynVec {
                 index
             } else {
                 self.vec.extend_from_slice(slice);
-                self.vec.len() - 1
+                self.vec.len() / self.size - 1
             }
         }
     }
@@ -70,5 +71,54 @@ impl DynVec {
         assert!(index * self.size < self.vec.len());
         assert!(!self.unused.contains(&index));
         self.unused.push(index);
+    }
+}
+
+
+// Unit tests
+#[cfg(test)]
+mod tests {
+    use super::DynVec;
+
+    #[test]
+    fn add_remove() {
+        struct Test(u32, f64);
+        let mut vec = DynVec::new::<Test>();
+        let id1 = vec.add(Test(32, 32.0));
+        let id2 = vec.add(Test(35, 64.125));
+        assert!(id1 != id2);
+        {
+            println!("{} {}", id1, id2);
+            let ref1 = vec.get_component::<Test>(id1).unwrap();
+            let ref2 = vec.get_component::<Test>(id2).unwrap();
+            assert_eq!(ref1.0, 32);
+            assert_eq!(ref1.1, 32.0); // Checking floats for equality? Anyway, it should work in this case.
+            assert_eq!(ref2.0, 35);
+            assert_eq!(ref2.1, 64.125); // Same
+        }
+        let id3 = vec.add(Test(0, 0.0));
+        vec.remove(id2);
+        let id4 = vec.add(Test(1, 0.25));
+        assert_eq!(id2, id4);
+        {
+            let ref4 = vec.get_component::<Test>(id4).unwrap();
+            assert_eq!(ref4.0, 1);
+            assert_eq!(ref4.1, 0.25); // Same
+        }
+    }
+
+    #[test]
+    #[should_panic]
+    fn type_check() {
+        struct Struct1(u8);
+        struct Struct2(u8);
+        let mut vec = DynVec::new::<Struct1>();
+        vec.add(Struct2(0));
+    }
+
+    #[test]
+    #[should_panic]
+    fn zero_sized_structs() {
+        let vec = DynVec::new::<()>();
     }
 }
