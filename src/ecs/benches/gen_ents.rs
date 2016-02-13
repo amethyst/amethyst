@@ -27,7 +27,7 @@ struct Mesh {
 fn gen_ents(b: &mut Bencher) {
     b.iter(|| {
         let mut world = World::new();
-        
+
         for _ in 0..180 {
             let ent = world.create_entity();
             world.insert_component(ent, Position { x: 0.0, y: 0.0, z: 0.0 });
