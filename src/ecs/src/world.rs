@@ -44,7 +44,7 @@ impl World {
         }
     }
 
-    /// Attaches a component to an entity.
+    /// Attaches a component to an entity and returns the component's index.
     pub fn insert_component<T: Any>(&mut self, entity: Entity, comp: T) -> Option<usize> {
         let ent_data: &mut EntityData = match self.ent_data.get_mut(&entity) {
             Some(s) => s,
