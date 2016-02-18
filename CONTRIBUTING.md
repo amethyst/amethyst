@@ -162,7 +162,7 @@ in the [Pull Requests](#pull-requests) section above.
   * [Development Roadmap][dr] - See this wiki page for general ideas on what you
     can hack on.
 * Design Inspiration
-  * [Bitsquid: Behind The Scenes][bs]
+  * [Bitsquid: Behind The Scenes (2013)][bs]
   * [Flexible Rendering for Multiple Platforms (2012)][fr]
   * [Mantle Programming Guide and API Reference (2015)][ma]
   * [Misconceptions of Component-Based Entity Systems (2014)][mo]
