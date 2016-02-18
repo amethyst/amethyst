@@ -162,6 +162,7 @@ in the [Pull Requests](#pull-requests) section above.
   * [Development Roadmap][dr] - See this wiki page for general ideas on what you
     can hack on.
 * Design Inspiration
+  * [Bitsquid: Behind The Scenes][bs]
   * [Flexible Rendering for Multiple Platforms (2012)][fr]
   * [Mantle Programming Guide and API Reference (2015)][ma]
   * [Misconceptions of Component-Based Entity Systems (2014)][mo]
@@ -174,6 +175,7 @@ in the [Pull Requests](#pull-requests) section above.
 
 [dr]: https://github.com/ebkalderon/amethyst/wiki/Roadmap
 
+[bs]: https://www.kth.se/social/upload/5289cb3ff276542440dd668c/bitsquid-behind-the-scenes.pdf
 [fr]: http://twvideo01.ubm-us.net/o1/vault/gdc2012/slides/Programming%20Track/Persson_Tobias_Flexible_Rendering.pdf.pdf
 [ma]: http://www.amd.com/Documents/Mantle-Programming-Guide-and-API-Reference.pdf
 [mo]: http://shaneenishry.com/blog/2014/12/27/misconceptions-of-component-based-entity-systems/
