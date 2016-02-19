@@ -14,6 +14,7 @@ impl ecs::Processor for Rendering {
 
 // Define our components.
 
+#[allow(dead_code)]
 struct Position {
     x: f32,
     y: f32,
@@ -22,15 +23,14 @@ struct Position {
 
 fn main () {
     let mut world = ecs::World::new();
+
+    let (mut sim, _errs) = ecs::Simulation::build()
+                                           .with(Rendering)
+                                           .done();
+
+    // May also be used without builder pattern.
     let mut sim = ecs::Simulation::new();
-
     sim.add_processor(Rendering);
-
-    // Alternatively, use a builder pattern:
-    //
-    // let (mut sim, _errs) = ecs::Simulation::build()
-    //                                        .with(Rendering)
-    //                                        .done();
 
     let ent = world.create_entity();
     world.insert_component(ent, Position { x: 0.0, y: 0.0, z: 0.0 });
