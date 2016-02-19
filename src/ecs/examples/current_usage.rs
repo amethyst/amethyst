@@ -31,5 +31,6 @@ fn main() {
         world.insert_component(ent, Light { x: 0.0, y: 0.0, z: 0.0 });
         world.insert_component(ent, Mesh { handle: 1234567890, y: 12 });
     }
+
     println!("Component Position #{}: {:?}", 60, world.component::<Position>(60).unwrap().1);
 }
