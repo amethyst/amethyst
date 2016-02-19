@@ -1,6 +1,8 @@
 //! Performs actions based on the relevant components found in the game world.
 
 /// The error type reported by processors if they fail to initialize.
+/// TODO: Implement actual error handling either with Result or custom
+/// type alias.
 pub struct ProcessorError;
 
 /// The trait implemented by all processors.
