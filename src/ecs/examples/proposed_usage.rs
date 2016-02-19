@@ -28,10 +28,6 @@ fn main () {
                                            .with(Rendering)
                                            .done();
 
-    // May also be used without builder pattern.
-    let mut sim = ecs::Simulation::new();
-    sim.add_processor(Rendering);
-
     let ent = world.create_entity();
     world.insert_component(ent, Position { x: 0.0, y: 0.0, z: 0.0 });
 
