@@ -13,4 +13,4 @@ readme = "README.md"
 license = "MIT"
 
 [dependencies]
-gfx = "0.9.0"
+gfx = "0.9.1"
