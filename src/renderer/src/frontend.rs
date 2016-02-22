@@ -1,3 +1,5 @@
+use frame::Frame;
+
 pub struct Frontend;
 
 impl Frontend {
@@ -5,7 +7,7 @@ impl Frontend {
         Frontend
     }
 
-    pub fn draw(&mut self) {
+    pub fn draw(&mut self, _frame: &Frame) {
         unimplemented!();
     }
 }

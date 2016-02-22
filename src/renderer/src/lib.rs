@@ -9,7 +9,9 @@ extern crate gfx;
 mod backend;
 mod frame;
 mod frontend;
+mod pipeline;
 
 pub use self::backend::Backend;
 pub use self::frame::{Frame, FrameBuilder};
 pub use self::frontend::Frontend;
+pub use self::pipeline::{Pipeline, Step};
