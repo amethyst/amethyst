@@ -8,7 +8,6 @@ extern crate gfx;
 
 mod backend;
 mod frontend;
-mod ir;
 
 pub use self::backend::Backend;
 pub use self::frontend::Frontend;
