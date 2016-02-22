@@ -46,6 +46,8 @@
 //! }
 //! ```
 
+extern crate amethyst_ecs;
 extern crate amethyst_engine;
 
+pub use amethyst_ecs as ecs;
 pub use amethyst_engine as engine;
