@@ -7,7 +7,9 @@
 extern crate gfx;
 
 mod backend;
+mod frame;
 mod frontend;
 
 pub use self::backend::Backend;
+pub use self::frame::{Frame, FrameBuilder};
 pub use self::frontend::Frontend;
