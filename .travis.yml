@@ -6,9 +6,9 @@ rust:
     - nightly
 
 script:
-    - cargo doc --no-deps -p amethyst -p amethyst_engine -p amethyst_renderer
+    - cargo doc --no-deps -p amethyst -p amethyst_engine
     - cargo build -v
-    - cargo test -p amethyst -p amethyst_engine -p amethyst_renderer -v
+    - cargo test -p amethyst -p amethyst_engine -v
 
 sudo: true
 
