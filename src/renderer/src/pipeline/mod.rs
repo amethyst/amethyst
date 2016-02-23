@@ -12,6 +12,7 @@ pub struct Pipeline {
 }
 
 impl Pipeline {
+    /// Creates an empty pipeline and assigns it a descriptive name.
     pub fn new(name: &str) -> Pipeline {
         Pipeline {
             name: name.to_string(),

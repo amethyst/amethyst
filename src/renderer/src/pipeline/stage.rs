@@ -28,7 +28,7 @@ pub struct Stage {
 }
 
 impl Stage {
-    /// Defines a new pipeline stage.
+    /// Defines a new pipeline stage and assigns it a descriptive name.
     pub fn new(name: &str) -> Stage {
         Stage {
             name: name.to_string(),
