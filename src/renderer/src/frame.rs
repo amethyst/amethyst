@@ -1,7 +1,7 @@
 //! Encodes the lights, objects, and uniform values needed to draw a single
 //! frame.
 
-/// A structure holding frame-specific data that is consumed by the frontend.
+/// Holds frame-specific data that is consumed by the frontend.
 pub struct Frame;
 
 impl Frame {
