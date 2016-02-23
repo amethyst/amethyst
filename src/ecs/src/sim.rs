@@ -1,6 +1,6 @@
 //! Computes the next state.
 
-use processor::{Processor, ProcessorError};
+use processor::{Processor, ProccessorResult};
 use world::World;
 
 pub struct Simulation {
@@ -21,9 +21,9 @@ impl Simulation {
     }
 
     /// Adds a new processor to the simulation.
-    pub fn add_processor<T: Processor + 'static>(&mut self, p: T) -> ProcessorError {
+    pub fn add_processor<T: Processor + 'static>(&mut self, p: T) -> ProccessorResult {
         self.procs.push(Box::new(p));
-        ProcessorError
+        Ok(())
     }
 
     /// Computes the next state of the world using the given processors.
@@ -41,7 +41,7 @@ impl Simulation {
 
 /// Consuming builder for easily constructing a new simulations.
 pub struct SimBuilder {
-    results: Vec<ProcessorError>,
+    errors: Vec<String>,
     sim: Simulation,
 }
 
@@ -49,7 +49,7 @@ impl SimBuilder {
     /// Starts building a new simulation.
     pub fn new() -> SimBuilder {
         SimBuilder {
-            results: Vec::new(),
+            errors: Vec::new(),
             sim: Simulation::new(),
         }
     }
@@ -57,13 +57,19 @@ impl SimBuilder {
     /// Add a given processor to the simulation.
     pub fn with<T: Processor + 'static>(mut self, p: T) -> SimBuilder {
         let r = self.sim.add_processor(p);
-        self.results.push(r);
+        if let Err(e) = r {
+            self.errors.push(e);
+        }
         self
     }
 
-    /// Returns the newly-built simulation plus a stack of any errors the
+    /// Returns the newly-built simulation or a list of any errors the
     /// processors may have encountered.
-    pub fn done(self) -> (Simulation, Vec<ProcessorError>) {
-        (self.sim, self.results)
+    pub fn done(self) -> Result<Simulation, Vec<String>> {
+        if self.errors.is_empty() {
+            Ok(self.sim)
+        } else {
+            Err(self.errors)
+        }
     }
 }
