@@ -24,9 +24,13 @@ struct Position {
 fn main () {
     let mut world = ecs::World::new();
 
-    let (mut sim, _errs) = ecs::Simulation::build()
+    let sim_builder_result = ecs::Simulation::build()
                                            .with(Rendering)
                                            .done();
+    let mut sim = match  sim_builder_result {
+        Err(e) => panic!("Simulation couldn't be built due to: {:?}", e),
+        Ok(sim) => sim
+    };
 
     let ent = world.create_entity();
     world.insert_component(ent, Position { x: 0.0, y: 0.0, z: 0.0 });
