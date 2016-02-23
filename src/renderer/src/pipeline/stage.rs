@@ -3,7 +3,7 @@
 /// A single, atomic rendering operation.
 #[derive(Debug)]
 pub enum Step {
-    /// Clear the current render target.
+    /// Clears the current render target.
     ClearTarget {
         /// Which buffers to clear. Possible values: "all", "color", "stencil".
         buffers: String,
@@ -11,12 +11,12 @@ pub enum Step {
         /// default to `[0.0, 0.0, 0.0, 0.0]`.
         value: Option<[f32; 4]>,
     },
-    /// Draw all objects in the scene.
+    /// Draws all objects in the scene.
     DrawObjects {
         shader: String,
     },
-    /// Select a render target to write to. If the given string is empty (`""`),
-    /// we render directly to the window surface.
+    /// Selects a render target to write to. If the given string is empty
+    /// (`""`), we render directly to the window surface.
     UseTarget(String),
 }
 
