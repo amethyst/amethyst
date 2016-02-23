@@ -1,15 +1,26 @@
+//! The components that make up a rendering pipeline.
+
+/// A single, atomic rendering operation.
 #[derive(Debug)]
 pub enum Step {
+    /// Clear the current render target.
     ClearTarget {
-        buffers: String
-    },
-    DrawGeometry {
-        shader: String,
+        /// Which buffers to clear. Possible values: "all", "color", "stencil".
+        buffers: String,
+        /// The RGBA value to clear the buffers with. If `None`, this will
+        /// default to `[0.0, 0.0, 0.0, 0.0]`.
         value: Option<[f32; 4]>,
     },
+    /// Draw all objects in the scene.
+    DrawObjects {
+        shader: String,
+    },
+    /// Select a render target to write to. If the given string is empty (`""`),
+    /// we render directly to the window surface.
     UseTarget(String),
 }
 
+/// A collection of steps that accomplishes some task in the rendering pipeline.
 #[derive(Debug)]
 pub struct Stage {
     name: String,
@@ -17,6 +28,7 @@ pub struct Stage {
 }
 
 impl Stage {
+    /// Defines a new pipeline stage.
     pub fn new(name: &str) -> Stage {
         Stage {
             name: name.to_string(),

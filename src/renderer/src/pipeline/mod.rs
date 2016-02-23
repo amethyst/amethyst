@@ -1,10 +1,14 @@
+//! Encodes information about how to draw the scene.
+
 mod stage;
 
-pub use self::stage::Step;
+pub use self::stage::{Stage, Step};
 
+/// A set of steps that describes how to draw a frame.
+#[derive(Debug)]
 pub struct Pipeline {
     name: String,
-    steps: Vec<Step>,
+    steps: Vec<Stage>,
 }
 
 impl Pipeline {
