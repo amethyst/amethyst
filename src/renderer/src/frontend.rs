@@ -3,8 +3,8 @@
 use frame::Frame;
 use pipeline::Pipeline;
 
-/// A simple renderer frontend. Accepts a `Pipeline` on startup, and consumes
-/// `Frames` every frame.
+/// A simple renderer frontend. Accepts a `Pipeline` on startup, and parses
+/// `Frame`s.
 pub struct Frontend {
     pipe: Pipeline,
 }
