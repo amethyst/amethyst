@@ -8,23 +8,21 @@ pub enum Step {
         /// Which buffers to clear. Possible values: "all", "color", "stencil".
         buffers: String,
         /// The RGBA value to clear the buffers with. If `None`, this will
-        /// default to `[0.0, 0.0, 0.0, 0.0]`.
+        /// default to `[0.0; 4]`.
         value: Option<[f32; 4]>,
     },
     /// Draws all objects in the scene.
-    DrawObjects {
-        shader: String,
-    },
+    DrawObjects,
     /// Selects a render target to write to. If the given string is empty
     /// (`""`), we render directly to the window surface.
     UseTarget(String),
 }
 
-/// A collection of steps that accomplishes some task in the rendering pipeline.
+/// A set of steps that accomplishes some task in the rendering pipeline.
 #[derive(Debug)]
 pub struct Stage {
-    name: String,
-    steps: Vec<Step>,
+    pub name: String,
+    pub steps: Vec<Step>,
 }
 
 impl Stage {

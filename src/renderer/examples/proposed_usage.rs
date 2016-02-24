@@ -6,7 +6,12 @@ use amethyst_renderer as r;
 fn main() {
     // Right now, we have...
 
-    let pipeline = r::Pipeline::new("forward");
+    let pipeline = r::Pipeline::build("forward")
+                               .new_stage("geometry")
+                               .new_stage("lighting")
+                               .new_stage("postproc")
+                               .done();
+
     let mut renderer = r::Renderer::new(pipeline);
 
     for _ in 0..5 {
@@ -16,8 +21,7 @@ fn main() {
 
     // I'm looking for something more like this...
 
-    // let (targets, pipe) = r::make_pipeline_forward();
-    // let mut renderer = r::Renderer::new(targets, pipe).expect("Whoops!");
+    // let mut renderer = r::Renderer::new_forward().expect("Whoops!");
     //
     // let mut res = r::Resources {...};
     // let mut handles = renderer.push_resources(res);

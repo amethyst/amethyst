@@ -25,6 +25,16 @@ impl Renderer {
         }
     }
 
+    /// Creates a new rendering engine with a deferred pipeline.
+    pub fn new_deferred() -> Renderer {
+        unimplemented!();
+    }
+
+    /// Creates a new rendering engine with a forward pipeline.
+    pub fn new_forward() -> Renderer {
+        unimplemented!();
+    }
+
     /// Draws a frame with the currently set render pipeline.
     ///
     /// TODO: Build actual modular, parallelized Object translators.
