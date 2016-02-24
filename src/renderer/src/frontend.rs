@@ -1,18 +1,26 @@
 //! Builds command buffers from frames and feeds them into the backend.
 
+use backend::Backend;
 use frame::Frame;
 use pipeline::Pipeline;
 
 /// A simple renderer frontend. Accepts a `Pipeline` on startup, and parses
 /// `Frame`s.
-pub struct Frontend {
+pub struct Renderer {
+    back: Backend,
     pipe: Pipeline,
 }
 
-impl Frontend {
-    /// Creates a new renderer frontend.
-    pub fn new(pipe: Pipeline) -> Frontend {
-        Frontend {
+impl Renderer {
+    /// Creates a new rendering engine.
+    ///
+    /// TODO: Decide whether the backend should be initialized at creation time
+    /// or at a different time. If at creation time, this method should return
+    /// `Result<Renderer, RendererError>` with `RendererError` implementing the
+    /// `Error` trait.
+    pub fn new(pipe: Pipeline) -> Renderer {
+        Renderer {
+            back: Backend::new(),
             pipe: pipe,
         }
     }
