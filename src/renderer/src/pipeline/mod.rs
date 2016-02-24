@@ -4,11 +4,11 @@ mod stage;
 
 pub use self::stage::{Stage, Step};
 
-/// A set of steps that describes how to draw a frame.
+/// A set of stages that describes how to draw a frame.
 #[derive(Debug)]
 pub struct Pipeline {
     name: String,
-    steps: Vec<Stage>,
+    stages: Vec<Stage>,
 }
 
 impl Pipeline {
@@ -16,7 +16,7 @@ impl Pipeline {
     pub fn new(name: &str) -> Pipeline {
         Pipeline {
             name: name.to_string(),
-            steps: Vec::new(),
+            stages: Vec::new(),
         }
     }
 }
