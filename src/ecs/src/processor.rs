@@ -4,7 +4,7 @@
 /// TODO: original note specified it was en error type reported by a **processor**,
 /// although, as seen below, Processor doesn't have any function to return an error,
 /// thus, only SimBuilder can return Result as of now.
-pub type ProccessorResult = Result<(), String>;
+pub type ProcessorResult = Result<(), String>;
 
 /// The trait implemented by all processors.
 pub trait Processor {

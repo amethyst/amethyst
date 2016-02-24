@@ -1,6 +1,6 @@
 //! Computes the next state.
 
-use processor::{Processor, ProccessorResult};
+use processor::{Processor, ProcessorResult};
 use world::World;
 
 pub struct Simulation {
@@ -21,7 +21,7 @@ impl Simulation {
     }
 
     /// Adds a new processor to the simulation.
-    pub fn add_processor<T: Processor + 'static>(&mut self, p: T) -> ProccessorResult {
+    pub fn add_processor<T: Processor + 'static>(&mut self, p: T) -> ProcessorResult {
         self.procs.push(Box::new(p));
         Ok(())
     }

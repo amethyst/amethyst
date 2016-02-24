@@ -24,10 +24,11 @@ struct Position {
 fn main () {
     let mut world = ecs::World::new();
 
-    let sim_builder_result = ecs::Simulation::build()
-                                           .with(Rendering)
-                                           .done();
-    let mut sim = match  sim_builder_result {
+    let sim_result = ecs::Simulation::build()
+                                     .with(Rendering)
+                                     .done();
+
+    let mut sim = match  sim_result {
         Err(e) => panic!("Simulation couldn't be built due to: {:?}", e),
         Ok(sim) => sim
     };
