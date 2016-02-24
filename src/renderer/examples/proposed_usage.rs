@@ -19,14 +19,14 @@ fn main() {
     // let (targets, pipe) = r::make_pipeline_forward();
     // let mut renderer = r::Renderer::new(targets, pipe).expect("Whoops!");
     //
-    // let res = r::Resources {...};
-    // let handles = renderer.push_resources(res);
+    // let mut res = r::Resources {...};
+    // let mut handles = renderer.push_resources(res);
     //
     // loop {
     //     if user_wins_level() {
     //         renderer.pop_resources();
     //
-    //         let res = get_next_level_resources();
+    //         res = get_next_level_resources();
     //         handles = renderer.push_resources(res);
     //     }
     //
