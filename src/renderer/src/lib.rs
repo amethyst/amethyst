@@ -13,4 +13,4 @@ mod pipeline;
 
 pub use self::frame::{Frame, FrameBuilder};
 pub use self::frontend::Renderer;
-pub use self::pipeline::{Pipeline, Stage, Step};
+pub use self::pipeline::{Pipeline, PipelineBuilder, Stage, Step};
