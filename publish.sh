@@ -2,16 +2,19 @@
 
 # Publish the book and the API documentation to the `gh-pages' branch.
 
+# TODO: Only run if book or blog has been updated via git diff
+
 cargo install mdbook
 if [ $? -ne 0 ]; then
     exit
 fi
 
-mdbook build book
+cargo install --git https://github.com/cobalt-org/cobalt.rs
+if [ $? -ne 0 ]; then
+    exit
+fi
 
-mkdir web
-cp -r book/html/* book/images/ web/
-cp -r target/doc/ web/doc/
+./build_web.sh
 
 sudo pip install ghp-import
 ghp-import -n web/
