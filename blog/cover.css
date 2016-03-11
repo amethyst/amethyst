@@ -58,6 +58,13 @@ body {
   padding: 30px;
 }
 
+/*
+ * Post list
+ */
+
+.post-list {
+  height: 300px;
+}
 
 /*
  * Header
