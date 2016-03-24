@@ -15,11 +15,11 @@ GitHub issue trackers. We can't fix problems we don't know about, so please
 report early and often! Make sure to post your issue on the tracker most
 relevant to you:
 
-* [Amethyst Tracker][am]: Issues on the game engine itself or the Amethyst Book.
-* [Amethyst Tools Tracker][at]: Issues on the toolchain surrounding the engine.
+* [Engine Tracker][et]: Issues on the game engine itself or the Amethyst Book.
+* [Tools Tracker][tt]: Issues on the toolchain surrounding the engine.
 
-[am]: https://github.com/ebkalderon/amethyst/issues
-[at]: https://github.com/ebkalderon/amethyst_tools/issues
+[et]: https://github.com/amethyst/amethyst/issues
+[tt]: https://github.com/amethyst/tools/issues
 
 Before posting your issue, please take a moment to search the tracker's existing
 issues first, as it's possible that someone else reported the same issue before
@@ -88,19 +88,19 @@ have done the following things first:
    * `cargo test`
    * `cargo run` (if it's a binary)
 
-[ml]: https://github.com/ebkalderon/amethyst/blob/master/COPYING
-[ti]: https://github.com/ebkalderon/amethyst/blob/master/src/engine/src/timing.rs#L68-L112
+[ml]: ./COPYING
+[ti]: ./src/engine/src/timing.rs#L68-L112
 
 > If you want to be publicly known as an author, feel free to add your name
 > and/or GitHub username to the AUTHORS.md file in your pull request.
 
 Once you have pushed your pull request to the repository, please wait for a
 reviewer to give feedback on it. If no one responds, feel free to @-mention a
-developer or post publicly on [the Gitter chat room][gi] asking for a review.
-Once your code has been reviewed, revised if necessary, and then signed-off by a
-developer, it will be merged into the source tree.
+developer or post publicly on [the `engine` room on Gitter][gi] asking for a
+review. Once your code has been reviewed, revised if necessary, and then
+signed-off by a developer, it will be merged into the source tree.
 
-[gi]: https://gitter.im/ebkalderon/amethyst
+[gi]: https://gitter.im/amethyst/engine
 
 Thank you so much for your contribution! Now Amethyst will be a little bit
 faster, stronger, and more efficient.
@@ -117,8 +117,8 @@ There are two types of documentation in Amethyst you can work on:
 1. [API documentation][ad]
 2. [The online Amethyst book][ab]
 
-[ad]: http://ebkalderon.github.io/amethyst/doc/amethyst/
-[ab]: http://ebkalderon.github.io/amethyst/
+[ad]: https://www.amethyst.rs/doc/amethyst/
+[ab]: https://www.amethyst.rs/book/
 
 Our Rust API documentation is generated directly from source code comments
 marked with either `///` or `//!` using  a tool called Rustdoc. See
@@ -133,7 +133,7 @@ The Amethyst book is generated using a different documentation tool called
 [book/src/][bk] directory of the Amethyst repository.
 
 [mb]: https://github.com/azerupi/mdBook
-[bk]: https://github.com/ebkalderon/amethyst/tree/master/book/src
+[bk]: ./book/src
 
 Documentation of any kind should adhere to the following standard:
 
@@ -173,7 +173,7 @@ in the [Pull Requests](#pull-requests) section above.
     code samples.
   * [The Rust Programming Language][rl] - The canonical online book about Rust.
 
-[dr]: https://github.com/ebkalderon/amethyst/wiki/Roadmap
+[dr]: https://github.com/amethyst/amethyst/wiki/Roadmap
 
 [bs]: https://www.kth.se/social/upload/5289cb3ff276542440dd668c/bitsquid-behind-the-scenes.pdf
 [fr]: http://twvideo01.ubm-us.net/o1/vault/gdc2012/slides/Programming%20Track/Persson_Tobias_Flexible_Rendering.pdf.pdf

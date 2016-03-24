@@ -19,8 +19,8 @@ Amethyst is free and open source software, distributed under the
 source code is completely yours to tinker with. The code is available on
 [GitHub][am]. Contributions and feature requests are welcome!
 
-[ml]: https://github.com/ebkalderon/amethyst/blob/master/COPYING
-[am]: https://github.com/ebkalderon/amethyst
+[ml]: https://github.com/amethyst/amethyst/blob/master/COPYING
+[am]: https://github.com/amethyst/amethyst
 
 This book is split into seven sections. This page is the first. The others are:
 
@@ -38,7 +38,7 @@ This book is split into seven sections. This page is the first. The others are:
 
 Read the crate-level [API documentation][ad] for more details.
 
-[ad]: http://ebkalderon.github.io/amethyst/doc/amethyst/
+[ad]: https://www.amethyst.rs/doc/amethyst/
 
 ## Why are you building this?
 
@@ -80,4 +80,4 @@ In short, I am writing Amethyst to scratch three of my own itches:
 The Markdown source files from which this book is generated can be found
 [on GitHub][md]. Pull requests are welcome!
 
-[md]: https://github.com/ebkalderon/amethyst/tree/master/book/src
+[md]: https://github.com/amethyst/amethyst/tree/master/book/src
