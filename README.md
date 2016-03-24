@@ -7,12 +7,12 @@
 [s1]: https://travis-ci.org/ebkalderon/amethyst.svg?branch=master
 [s2]: https://img.shields.io/badge/crates.io-0.2.1-orange.svg
 [s3]: https://img.shields.io/badge/license-MIT-blue.svg
-[s4]: https://badges.gitter.im/ebkalderon/amethyst.svg
+[s4]: https://badges.gitter.im/amethyst/general.svg
 
 [tc]: https://travis-ci.org/ebkalderon/amethyst/
 [ci]: https://crates.io/crates/amethyst/
-[ml]: https://github.com/ebkalderon/amethyst/blob/master/COPYING
-[gc]: https://gitter.im/ebkalderon/amethyst?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+[ml]: https://github.com/amethyst/amethyst/blob/master/COPYING
+[gc]: https://gitter.im/orgs/amethyst/rooms
 
 This project is a *work in progress* and is very incomplete; pardon the dust!
 Read a summary of what happened this past week at [*This Week in Amethyst*][tw].
@@ -54,7 +54,7 @@ does not aim to be API-compatible with it in any way. Some goals include:
 [mr]: http://mruby.org/
 [lu]: http://www.lua.org/
 [pi]: http://www.piston.rs/
-[at]: https://github.com/ebkalderon/amethyst_tools
+[at]: https://github.com/amethyst/tools
 [up]: https://en.wikipedia.org/wiki/Unix_philosophy
 
 ## Usage
@@ -62,8 +62,8 @@ does not aim to be API-compatible with it in any way. Some goals include:
 Read the [online book][bk] for a comprehensive tutorial to using Amethyst. There
 is also an online crate-level [API reference][ar].
 
-[bk]: http://ebkalderon.github.io/amethyst/
-[ar]: http://ebkalderon.github.io/amethyst/doc/amethyst/
+[bk]: https://www.amethyst.rs/book/
+[ar]: https://www.amethyst.rs/doc/amethyst/
 
 ## Quick Example
 
@@ -71,8 +71,8 @@ See the [Getting Started][gs] chapter in the book for the full-blown "Hello,
 World!" tutorial. For the sake of brevity, you can generate an empty game
 project with the [Amethyst CLI tool][ac] and build it. Follow along below:
 
-[gs]: http://ebkalderon.github.io/amethyst/getting_started.html
-[ac]: https://github.com/ebkalderon/amethyst_tools/tree/master/src/cli
+[gs]: https://www.amethyst.rs/book/getting_started.html
+[ac]: https://github.com/amethyst/tools/tree/master/src/cli
 
 ```
 $ cargo install amethyst_tools
@@ -114,6 +114,6 @@ interested in helping out, please read the [CONTRIBUTING.md][cm] file before
 getting started. Don't know what to hack on? See the
 [Development Roadmap][dr] on our wiki, or search though [our issue tracker][it].
 
-[cm]: ./CONTRIBUTING.md
-[dr]: https://github.com/ebkalderon/amethyst/wiki/Roadmap
-[it]: https://github.com/ebkalderon/amethyst/issues
+[cm]: https://github.com/amethyst/amethyst/blob/master/CONTRIBUTING.md
+[dr]: https://github.com/amethyst/amethyst/wiki/Roadmap
+[it]: https://github.com/amethyst/amethyst/issues

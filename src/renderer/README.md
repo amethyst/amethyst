@@ -5,12 +5,12 @@
 [s1]: https://api.travis-ci.org/ebkalderon/amethyst.svg
 [s2]: https://img.shields.io/badge/crates.io-0.2.1-orange.svg
 [s3]: https://img.shields.io/badge/license-MIT-blue.svg
-[s4]: https://badges.gitter.im/ebkalderon/amethyst.svg
+[s4]: https://badges.gitter.im/amethyst/amethyst.svg
 
 [tc]: https://travis-ci.org/ebkalderon/amethyst/
 [ci]: https://crates.io/crates/amethyst_renderer/
-[ml]: https://github.com/ebkalderon/amethyst/blob/master/COPYING
-[gc]: https://gitter.im/ebkalderon/amethyst?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+[ml]: https://github.com/amethyst/amethyst/blob/master/COPYING
+[gc]: https://gitter.im/org/amethyst/rooms
 
 High-level rendering engine with multiple backends. This project is a *work in
 progress* and is very incomplete. Pardon the dust!
