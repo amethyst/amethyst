@@ -4,12 +4,12 @@
 
 [![Build Status][s1]][tc] [![Crates.io][s2]][ci] [![MIT License][s3]][ml] [![Join the chat][s4]][gc]
 
-[s1]: https://travis-ci.org/ebkalderon/amethyst.svg?branch=master
+[s1]: https://travis-ci.org/amethyst/amethyst.svg?branch=master
 [s2]: https://img.shields.io/badge/crates.io-0.2.1-orange.svg
 [s3]: https://img.shields.io/badge/license-MIT-blue.svg
 [s4]: https://badges.gitter.im/amethyst/general.svg
 
-[tc]: https://travis-ci.org/ebkalderon/amethyst/
+[tc]: https://travis-ci.org/amethyst/amethyst/
 [ci]: https://crates.io/crates/amethyst/
 [ml]: https://github.com/amethyst/amethyst/blob/master/COPYING
 [gc]: https://gitter.im/orgs/amethyst/rooms
