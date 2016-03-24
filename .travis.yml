@@ -10,13 +10,6 @@ script:
     - cargo build -v
     - cargo test -p amethyst -p amethyst_engine -v
 
-sudo: true
-
-after_success: |
-    [ $TRAVIS_BRANCH = master ] &&
-    [ $TRAVIS_PULL_REQUEST = false ] &&
-    ./publish.sh
-
 notifications:
     webhooks:
         urls:
