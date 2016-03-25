@@ -15,11 +15,13 @@ GitHub issue trackers. We can't fix problems we don't know about, so please
 report early and often! Make sure to post your issue on the tracker most
 relevant to you:
 
-* [Engine Tracker][et]: Issues on the game engine itself or the Amethyst Book.
+* [Engine Tracker][et]: Issues on the game engine itself or the documentation.
 * [Tools Tracker][tt]: Issues on the toolchain surrounding the engine.
+* [Website Tracker][wt]: Issues on the website and *This Week in Amethyst*.
 
 [et]: https://github.com/amethyst/amethyst/issues
 [tt]: https://github.com/amethyst/tools/issues
+[wt]: https://github.com/amethyst/website/issues
 
 Before posting your issue, please take a moment to search the tracker's existing
 issues first, as it's possible that someone else reported the same issue before
@@ -51,6 +53,8 @@ issue:
      * Making existing functionality better.
    * Question
      * Any kind of question about the project.
+   * RFC
+     * Need peer review or a brainstorming session on a particular topic.
    * Task
      * A task or long-term initiative we should pursue.
 
