@@ -53,6 +53,8 @@ issue:
      * Making existing functionality better.
    * Question
      * Any kind of question about the project.
+   * RFC
+     * Request peer review or a brainstorming session on a particular topic.
    * Task
      * A task or long-term initiative we should pursue.
 
