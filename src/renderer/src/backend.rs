@@ -1,7 +1,7 @@
 //! Consumes command buffers and executes them in the correct order.
 
-use gfx::Device;
-use gfx::SubmitInfo;
+use std::any::Any;
+use gfx::{CommandBuffer, Resources};
 
 /// Makes low-level graphics API calls and manages memory.
 pub struct Backend;
@@ -12,7 +12,7 @@ impl Backend {
         Backend
     }
 
-    pub fn submit<D: Device>(buf: &SubmitInfo<D>) {
+    pub fn submit<R: Resources, T: Any + CommandBuffer<R>>(buf: Box<T>) {
         unimplemented!()
     }
 }

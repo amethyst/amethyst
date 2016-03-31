@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_engine"
-version = "0.2.1"
+version = "0.3.0"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
 description = "Core engine library"
 keywords = ["game", "engine", "core", "amethyst"]
@@ -16,5 +16,4 @@ name = "amethyst_engine"
 path = "src/lib.rs"
 
 [dependencies]
-threadpool = "0.1.4"
 time = "0.1"
