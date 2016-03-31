@@ -5,6 +5,22 @@ adheres to [Semantic Versioning][sv].
 
 [sv]: http://semver.org/
 
+## 0.3.0 (2016-03-31)
+
+### Added
+* Initial version of `amethyst_ecs` crate (issue [#37])
+* Add Gitter webhooks support
+
+### Changed
+* Update `amethyst_renderer` crate slightly (issue [#37])
+* Remove `publish.sh` script since website repo handles docs now (issue [#27])
+
+### Fixed
+* Update broken links for website, wiki, chat, and blog (issue [#27])
+
+[#27]: https://github.com/amethyst/amethyst/issues/27
+[#37]: https://github.com/amethyst/amethyst/issues/37
+
 ## 0.2.1 (2016-01-27)
 
 ### Changed
