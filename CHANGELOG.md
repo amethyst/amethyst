@@ -9,11 +9,12 @@ adheres to [Semantic Versioning][sv].
 
 ### Added
 * Initial version of `amethyst_ecs` crate (issue [#37])
-* Add Gitter webhooks support
+* Add Gitter webhooks support to Travis (issue [#27])
 
 ### Changed
 * Update `amethyst_renderer` crate slightly (issue [#37])
 * Remove `publish.sh` script since website repo handles docs now (issue [#27])
+* Updated contribution guidelines on submitting code (issue [#37])
 
 ### Fixed
 * Update broken links for website, wiki, chat, and blog (issue [#27])
