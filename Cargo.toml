@@ -16,6 +16,10 @@ license = "MIT"
 path = "src/engine/"
 version = "0.2.1"
 
+[dependencies.amethyst_ecs]
+path = "src/ecs/"
+version = "0.1.0"
+
 [dependencies.amethyst_renderer]
 path = "src/renderer/"
 version = "0.2.1"
