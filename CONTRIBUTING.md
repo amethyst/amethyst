@@ -72,25 +72,38 @@ and try our best to resolve it.
 
 ## Pull Requests
 
-So, you have a pull request? Great! But before you submit, please make sure you
-have done the following things first:
+So, you want to write some code? Great! But before you start writing, please
+make sure you are familiar with how our repositories are structured:
 
-1. You have ensured the pull request is against the latest version of your
-   branch.
+1. __develop__: If adding features, tweaking, improving docs, etc. do so here.
+2. __release-*__: If releasing a bugfix against a specific release, do so here.
+3. __hotfix-*__: Do not touch. Hotfix branches for broken (yanked) releases.
+4. __master__: Do not touch. Latest production-ready state of the code.
+
+To begin hacking, fork the repository to your account and `git clone` the forked
+copy to your local machine. Then switch to either the **develop** branch or
+appropriate __release-*__ branch. Now you're ready to work!
+
+### Submission Checklist
+
+Before submitting your pull request to the repository, please make sure you have
+done the following things first:
+
+1. You have ensured the pull request is based on a recent version of your
+   respective branch.
 2. You have granted non-exclusive right to your source code under the
    [MIT License][ml].
-3. You have processed your source code with `cargo fmt`.
-4. If your pull request adds new methods or functions to the codebase, you have
+3. If your pull request adds new methods or functions to the codebase, you have
    written adequate test cases for them.
    * Unit tests are placed at the bottom of the same .rs file in a submodule
      called `tests` with `// Unit tests` right above it. For an example, see the
      unit tests in the [timing.rs][ti] file in the `amethyst_engine` sub-crate.
    * Integration tests are placed in a separate .rs file in the `tests`
      subdirectory.
+4. You have processed your source code with `cargo fmt`.
 5. All of the following commands completed without errors.
    * `cargo build`
-   * `cargo test`
-   * `cargo run` (if it's a binary)
+   * `cargo test -p {crate-name} -v`
 
 [ml]: ./COPYING
 [ti]: ./src/engine/src/timing.rs#L68-L112
@@ -98,13 +111,13 @@ have done the following things first:
 > If you want to be publicly known as an author, feel free to add your name
 > and/or GitHub username to the AUTHORS.md file in your pull request.
 
-Once you have pushed your pull request to the repository, please wait for a
-reviewer to give feedback on it. If no one responds, feel free to @-mention a
-developer or post publicly on [the `engine` room on Gitter][gi] asking for a
-review. Once your code has been reviewed, revised if necessary, and then
-signed-off by a developer, it will be merged into the source tree.
+Once you have submitted your pull request, please wait for a reviewer to give
+feedback on it. If no one responds, feel free to @-mention a developer or post
+publicly on the [appropriate chat room][gi] on Gitter asking for a review. Once
+your code has been reviewed, revised if necessary, and then signed-off by a
+developer, it will be merged into the source tree.
 
-[gi]: https://gitter.im/amethyst/engine
+[gi]: https://gitter.im/orgs/amethyst/rooms
 
 Thank you so much for your contribution! Now Amethyst will be a little bit
 faster, stronger, and more efficient.
