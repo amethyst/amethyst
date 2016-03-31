@@ -5,9 +5,9 @@ authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
 description = "High-level rendering engine with multiple backends"
 keywords = ["game", "engine", "renderer", "3d", "amethyst"]
 
-documentation = "http://ebkalderon.github.io/amethyst/doc/amethyst/"
-homepage = "http://ebkalderon.github.io/amethyst/"
-repository = "https://github.com/ebkalderon/amethyst"
+documentation = "https://www.amethyst.rs/doc/amethyst/"
+homepage = "https://www.amethyst.rs/"
+repository = "https://github.com/amethyst/amethyst"
 
 readme = "README.md"
 license = "MIT"

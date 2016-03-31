@@ -5,9 +5,9 @@ authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
 description = "Core engine library"
 keywords = ["game", "engine", "core", "amethyst"]
 
-documentation = "http://ebkalderon.github.io/amethyst/doc/amethyst/"
-homepage = "http://ebkalderon.github.io/amethyst/"
-repository = "https://github.com/ebkalderon/amethyst"
+documentation = "https://www.amethyst.rs/doc/amethyst/"
+homepage = "https://amethyst.rs/"
+repository = "https://github.com/amethyst/amethyst"
 
 license = "MIT"
 
