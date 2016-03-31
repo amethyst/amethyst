@@ -2,5 +2,13 @@
 name = "amethyst_ecs"
 version = "0.1.0"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
+description = "Entity component system (ECS) library"
+keywords = ["entity", "component", "system", "game", "amethyst"]
+
+documentation = "https://www.amethyst.rs/doc/amethyst/"
+homepage = "https://www.amethyst.rs/"
+repository = "https://github.com/amethyst/amethyst"
+
+license = "MIT"
 
 [dependencies]
