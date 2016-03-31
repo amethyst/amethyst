@@ -17,7 +17,7 @@
 This project is a *work in progress* and is very incomplete; pardon the dust!
 Read a summary of what happened this past week at [*This Week in Amethyst*][tw].
 
-[tw]: https://thisweekinamethyst.wordpress.com/
+[tw]: https://www.amethyst.rs/
 
 ## Vision
 
