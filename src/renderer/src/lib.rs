@@ -10,8 +10,9 @@ extern crate glutin;
 
 mod forward;
 use gfx::traits::FactoryExt;
+pub use forward::VertexPosNormal;
 
-pub struct GfxRenderer<R: gfx::Resources> {
+pub struct Renderer<R: gfx::Resources> {
     pipeline_foward: forward::FlatPipeline<R>,
     flat_uniform_vs: gfx::handle::Buffer<R, forward::VertexUniforms>,
     flat_uniform_fs: gfx::handle::Buffer<R, forward::FlatFragmentUniforms>,
@@ -46,17 +47,17 @@ impl<R> GBufferTarget<R>
     }
 }
 
-impl<R> GfxRenderer<R>
+impl<R> Renderer<R>
     where R: gfx::Resources
 {
-    pub fn new<F>(mut factory: F) -> GfxRenderer<R>
+    pub fn new<F>(factory: &mut F) -> Renderer<R>
         where F: gfx::Factory<R>
     {
-        let pipeline_foward = forward::create_flat_pipeline(&mut factory);
-        let gbuf_target = GBufferTarget::new(&mut factory, (800, 600));
+        let pipeline_foward = forward::create_flat_pipeline(factory);
+        let gbuf_target = GBufferTarget::new(factory, (800, 600));
         let flat_uniform_vs = factory.create_constant_buffer(1);
         let flat_uniform_fs = factory.create_constant_buffer(1);
-        GfxRenderer {
+        Renderer {
             pipeline_foward: pipeline_foward,
             gbuf_target: gbuf_target,
             flat_uniform_vs: flat_uniform_vs,
@@ -64,7 +65,7 @@ impl<R> GfxRenderer<R>
         }
     }
 
-    pub fn render<C>(&mut self, scene: &Scene<R, forward::VertexPosNormal>, encoder: &mut gfx::Encoder<R, C>)
+    pub fn render<C>(&mut self, scene: &Scene<R, VertexPosNormal>, encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
 

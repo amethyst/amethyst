@@ -14,7 +14,6 @@ pub static FORWARD_VERTEX_SRC: &'static [u8] = b"
 
     in vec3 a_Pos;
     in vec3 a_Normal;
-    in vec3 a_Color;
 
     out vec3 v_FragPos;
     out vec3 v_Normal;
@@ -22,7 +21,6 @@ pub static FORWARD_VERTEX_SRC: &'static [u8] = b"
     void main() {
         v_FragPos = (u_Model * vec4(a_Pos, 1.0)).xyz;
         v_Normal = mat3(u_Model) * a_Normal;
-        v_Color = a_Color;
         gl_Position = u_Proj * u_View * u_Model * vec4(a_Pos, 1.0);
     }
 ";
@@ -46,7 +44,8 @@ pub static FORWARD_FLAT_FRAGMENT_SRC: &'static [u8] = b"
         vec3 n = normalize(v_Normal);
 
         o_Normal = vec4(n, 0.0);
-        o_Color = vec4(v_Color, 1.0);
+        o_Ka = u_Ka;
+        o_Kd = u_Kd;
     }
 ";
 
