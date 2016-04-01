@@ -5,9 +5,12 @@ extern crate gfx_window_glutin;
 extern crate glutin;
 extern crate genmesh;
 extern crate amethyst_renderer;
+extern crate rand;
 
 use gfx::{Device};
 use gfx::traits::FactoryExt;
+
+use rand::Rng;
 
 use cgmath::{Point3, Vector3, Matrix4};
 use cgmath::{Transform, AffineMatrix3};
@@ -15,10 +18,7 @@ use genmesh::generators::SphereUV;
 use genmesh::{Quad, Triangulate, MapToVertices, Vertices};
 
 use amethyst_renderer::VertexPosNormal as Vertex;
-
-pub type ColorFormat = gfx::format::Rgba8;
-pub type DepthFormat = gfx::format::DepthStencil;
-
+use amethyst_renderer::{ColorFormat, DepthFormat};
 
 fn build_sphere() -> Vec<Vertex> {
     SphereUV::new(16, 16)
@@ -30,9 +30,10 @@ fn build_sphere() -> Vec<Vertex> {
 
 fn main() {
     let builder = glutin::WindowBuilder::new()
-        .with_title("example renderer".to_string())
+        .with_title("Amethyst Renderer Demo".to_string())
         .with_dimensions(800, 600)
         .with_vsync();
+
     let (window, mut device, mut factory, main_color, main_depth) =
         gfx_window_glutin::init::<ColorFormat, DepthFormat>(builder);
     let (width, height) = window.get_inner_size().unwrap();
@@ -54,6 +55,8 @@ fn main() {
         entities: vec![]
     };
 
+    let mut rng = rand::thread_rng();
+
     for x in -2..3 {
         for y in -2..3 {
             for z in -2..3 {
@@ -61,11 +64,13 @@ fn main() {
                 let y = y as f32 * 4.;
                 let z = z as f32 * 4.;
 
+                let color = [rng.gen_range(0., 1.), rng.gen_range(0., 1.), rng.gen_range(0., 1.), 1.];
+
                 scene.entities.push(amethyst_renderer::Entity{
                     buffer: buffer.clone(),
                     slice: slice.clone(),
-                    ka: [0.; 4],
-                    kd: [1.; 4],
+                    ka: color,
+                    kd: color,
                     transform: Matrix4::from_translation(Vector3::new(x, y, z)).into()
                 })
             }
@@ -83,7 +88,7 @@ fn main() {
             }
         }
 
-        renderer.render(&scene, &mut combuf);
+        renderer.render(&scene, &mut combuf, &main_color);
         combuf.flush(&mut device);
         window.swap_buffers().unwrap();
         device.cleanup();

@@ -9,8 +9,14 @@ extern crate gfx;
 extern crate glutin;
 
 mod forward;
+mod gbuffer;
+use gfx::Slice;
+use gfx::handle::Buffer;
 use gfx::traits::FactoryExt;
 pub use forward::VertexPosNormal;
+
+pub type ColorFormat = gfx::format::Rgba8;
+pub type DepthFormat = gfx::format::DepthStencil;
 
 pub struct Renderer<R: gfx::Resources> {
     pipeline_foward: forward::FlatPipeline<R>,
@@ -18,6 +24,12 @@ pub struct Renderer<R: gfx::Resources> {
     flat_uniform_fs: gfx::handle::Buffer<R, forward::FlatFragmentUniforms>,
 
     gbuf_target: GBufferTarget<R>,
+    gbuf_texture: GBufferShaderResource<R>,
+
+    blit_mesh: Buffer<R, gbuffer::Vertex>,
+    blit_slice: Slice<R>,
+    blit_pipeline: gbuffer::BlitPipeline<R>,
+    blit_sampler: gfx::handle::Sampler<R>
 }
 
 struct GBufferTarget<R: gfx::Resources> {
@@ -27,23 +39,38 @@ struct GBufferTarget<R: gfx::Resources> {
     depth: gfx::handle::DepthStencilView<R, gfx::format::Depth>,
 }
 
+struct GBufferShaderResource<R: gfx::Resources> {
+    normal: gfx::handle::ShaderResourceView<R, [f32; 4]>,
+    ka: gfx::handle::ShaderResourceView<R, [f32; 4]>,
+    kd: gfx::handle::ShaderResourceView<R, [f32; 4]>,
+    depth: gfx::handle::ShaderResourceView<R, f32>,
+}
+
 impl<R> GBufferTarget<R>
     where R: gfx::Resources
 {
-    fn new<F>(factory: &mut F, (width, height): (u16, u16)) -> Self
+    fn new<F>(factory: &mut F, (width, height): (u16, u16)) -> (Self, GBufferShaderResource<R>)
         where F: gfx::Factory<R>
     {
-        let (_ , _, normal) = factory.create_render_target(width, height).unwrap();
-        let (_ , _, ka) = factory.create_render_target(width, height).unwrap();
-        let (_ , _, kd) = factory.create_render_target(width, height).unwrap();
-        let (_, _, depth) = factory.create_depth_stencil(width, height).unwrap();
+        let (_, texture_normal,  normal) = factory.create_render_target(width, height).unwrap();
+        let (_, texture_ka,  ka) = factory.create_render_target(width, height).unwrap();
+        let (_, texture_kd,  kd) = factory.create_render_target(width, height).unwrap();
+        let (_, texture_depth, depth) = factory.create_depth_stencil(width, height).unwrap();
 
-        GBufferTarget{
-            normal: normal,
-            ka: ka,
-            kd: kd,
-            depth: depth
-        }
+        (
+            GBufferTarget{
+                normal: normal,
+                ka: ka,
+                kd: kd,
+                depth: depth
+            },
+            GBufferShaderResource{
+                normal: texture_normal,
+                ka: texture_ka,
+                kd: texture_kd,
+                depth: texture_depth
+            }
+        )
     }
 }
 
@@ -54,18 +81,36 @@ impl<R> Renderer<R>
         where F: gfx::Factory<R>
     {
         let pipeline_foward = forward::create_flat_pipeline(factory);
-        let gbuf_target = GBufferTarget::new(factory, (800, 600));
+        let (gbuf_target, gbuf_texture) = GBufferTarget::new(factory, (800, 600));
         let flat_uniform_vs = factory.create_constant_buffer(1);
         let flat_uniform_fs = factory.create_constant_buffer(1);
+
+        let (buffer, slice) = gbuffer::create_mesh(factory);
+        let blit_pipeline = gbuffer::create_blit_pipeline(factory);
+
+        let blit_sampler = factory.create_sampler(
+            gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale,
+                                       gfx::tex::WrapMode::Clamp)
+        );
+
         Renderer {
             pipeline_foward: pipeline_foward,
             gbuf_target: gbuf_target,
+            gbuf_texture: gbuf_texture,
             flat_uniform_vs: flat_uniform_vs,
             flat_uniform_fs: flat_uniform_fs,
+
+            blit_mesh: buffer,
+            blit_slice: slice,
+            blit_pipeline: blit_pipeline,
+            blit_sampler: blit_sampler
         }
     }
 
-    pub fn render<C>(&mut self, scene: &Scene<R, VertexPosNormal>, encoder: &mut gfx::Encoder<R, C>)
+    pub fn render<C>(&mut self,
+                     scene: &Scene<R, VertexPosNormal>,
+                     encoder: &mut gfx::Encoder<R, C>,
+                     output: &gfx::handle::RenderTargetView<R, ColorFormat>)
         where C: gfx::CommandBuffer<R>
     {
 
@@ -115,6 +160,17 @@ impl<R> Renderer<R>
                 }
             );
         }
+
+        // blit the gbuffer to the screen
+        encoder.draw(
+            &self.blit_slice,
+            &self.blit_pipeline,
+            &gbuffer::blit::Data {
+                vbuf: self.blit_mesh.clone(),
+                tex: (self.gbuf_texture.ka.clone(), self.blit_sampler.clone()),
+                out: output.clone()
+            }
+        )
     }
 }
 

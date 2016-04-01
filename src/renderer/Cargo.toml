@@ -20,3 +20,4 @@ glutin = "0.4"
 [dev-dependencies]
 cgmath="*"
 genmesh="*"
+rand="*"
