@@ -9,7 +9,7 @@
 //!
 //! [rs]: https://www.rust-lang.org/
 //! [gh]: https://github.com/amethyst/amethyst
-//! [bk]: https://www.amethyst.rs/
+//! [bk]: https://www.amethyst.rs/book/
 //!
 //! This project is a work in progress and is very incomplete. Pardon the dust!
 //!
