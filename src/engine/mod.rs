@@ -1,7 +1,3 @@
-#![crate_name = "amethyst_engine"]
-#![crate_type = "lib"]
-#![doc(html_logo_url = "http://tinyurl.com/hgsb45k")]
-
 //! Game engine sitting atop the core libraries.
 
 mod app;

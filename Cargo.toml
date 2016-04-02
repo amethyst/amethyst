@@ -12,9 +12,8 @@ repository = "https://github.com/amethyst/amethyst"
 readme = "README.md"
 license = "MIT"
 
-[dependencies.amethyst_engine]
-path = "src/engine/"
-version = "0.3.0"
+[dependencies]
+time = "0.1"
 
 [dependencies.amethyst_ecs]
 path = "src/ecs/"
