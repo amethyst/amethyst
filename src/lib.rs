@@ -46,10 +46,7 @@
 //! }
 //! ```
 
-pub extern crate amethyst_ecs;
-pub extern crate amethyst_renderer;
+pub extern crate amethyst_ecs as ecs;
+pub extern crate amethyst_renderer as renderer;
 
 pub mod engine;
-
-pub use amethyst_ecs as ecs;
-pub use amethyst_renderer as renderer;
