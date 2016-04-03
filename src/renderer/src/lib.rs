@@ -7,12 +7,15 @@
 #[macro_use]
 extern crate gfx;
 extern crate glutin;
+extern crate cgmath;
 
 mod forward;
 mod gbuffer;
 use gfx::Slice;
 use gfx::handle::Buffer;
 use gfx::traits::FactoryExt;
+use cgmath::{Matrix4, SquareMatrix};
+
 pub use forward::VertexPosNormal;
 
 pub type ColorFormat = gfx::format::Rgba8;
@@ -167,8 +170,15 @@ impl<R> Renderer<R>
             &self.blit_pipeline,
             &gbuffer::blit::Data {
                 vbuf: self.blit_mesh.clone(),
-                tex: (self.gbuf_texture.ka.clone(), self.blit_sampler.clone()),
-                out: output.clone()
+                ka: (self.gbuf_texture.ka.clone(), self.blit_sampler.clone()),
+                kd: (self.gbuf_texture.kd.clone(), self.blit_sampler.clone()),
+                depth: (self.gbuf_texture.depth.clone(), self.blit_sampler.clone()),
+                normal: (self.gbuf_texture.normal.clone(), self.blit_sampler.clone()),
+                out: output.clone(),
+                inv_proj: Matrix4::from(scene.projection).invert().unwrap().into(),
+                inv_view: Matrix4::from(scene.view).invert().unwrap().into(),
+                proj: scene.projection,
+                viewport: [0., 0., 800., 600.]
             }
         )
     }

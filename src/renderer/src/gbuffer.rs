@@ -12,8 +12,16 @@ gfx_vertex_struct!( Vertex {
 
 gfx_pipeline!( blit {
     vbuf: gfx::VertexBuffer<Vertex> = (),
-    tex: gfx::TextureSampler<[f32; 4]> = "t_BlitTex",
-    out: gfx::RenderTarget<ColorFormat> = "Target0",
+    ka: gfx::TextureSampler<[f32; 4]> = "t_Ka",
+    kd: gfx::TextureSampler<[f32; 4]> = "t_Kd",
+    normal: gfx::TextureSampler<[f32; 4]> = "t_Normal",
+    depth: gfx::TextureSampler<f32> = "t_Depth",
+    out: gfx::RenderTarget<ColorFormat> = "o_Color",
+
+    viewport: gfx::Global<[f32; 4]> = "u_Viewport",
+    proj: gfx::Global<[[f32; 4]; 4]> = "u_Proj",
+    inv_proj: gfx::Global<[[f32; 4]; 4]> = "u_InvProj",
+    inv_view: gfx::Global<[[f32; 4]; 4]> = "u_InvView",
 });
 
 pub static BLIT_VERTEX_SRC: &'static [u8] = b"
@@ -29,16 +37,52 @@ pub static BLIT_VERTEX_SRC: &'static [u8] = b"
     }
 ";
 
+
 pub static BLIT_FRAGMENT_SRC: &'static [u8] = b"
     #version 150 core
 
-    uniform sampler2D t_BlitTex;
+    uniform mat4 u_Proj;
+    uniform mat4 u_InvProj;
+    uniform mat4 u_InvView;
+    uniform vec4 u_Viewport;
+
+    uniform sampler2D t_Ka;
+    uniform sampler2D t_Kd;
+    uniform sampler2D t_Depth;
+    uniform sampler2D t_Normal;
+
     in vec2 v_TexCoord;
     out vec4 o_Color;
 
+    vec4 calc_pos_from_window(vec3 window_space) {
+        vec2 depthrange = vec2(0., 1.);
+        vec3 ndc_pos;
+        ndc_pos.xy = ((2.0 * window_space.xy) - (2.0 * u_Viewport.xy)) / (u_Viewport.zw) - 1;
+        ndc_pos.z = (2.0 * window_space.z - depthrange.x - depthrange.y) /
+                   (depthrange.y - depthrange.x);
+
+        vec4 clip_pose;
+        clip_pose.w = u_Proj[3][2] / (ndc_pos.z - (u_Proj[2][2] / u_Proj[2][3]));
+        clip_pose.xyz = ndc_pos * clip_pose.w;
+
+        return u_InvView * u_InvProj * clip_pose;
+    }
+
     void main() {
-        vec4 tex = texture(t_BlitTex, v_TexCoord);
-        o_Color = tex;
+        float depth = texture(t_Depth, v_TexCoord).x;
+        vec4 ka = texture(t_Ka, v_TexCoord);
+        vec4 kd = texture(t_Kd, v_TexCoord);
+        vec4 normal = texture(t_Normal, v_TexCoord);
+
+        vec4 pos = calc_pos_from_window(vec3(gl_FragCoord.xy, depth));
+        vec4 from = vec4(0.);
+        vec4 delta = from - pos;
+        vec4 light_to_point_normal = normalize(delta);
+
+        float dist = length(pos - from);
+        dist = 4. / (dist*dist);
+
+        o_Color = ka + kd * dist * max(0, dot(light_to_point_normal, normal));
     }
 ";
 

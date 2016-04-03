@@ -12,7 +12,7 @@ use gfx::traits::FactoryExt;
 
 use rand::Rng;
 
-use cgmath::{Point3, Vector3, Matrix4};
+use cgmath::{Point3, Vector3, Matrix4, EuclideanVector};
 use cgmath::{Transform, AffineMatrix3};
 use genmesh::generators::SphereUV;
 use genmesh::{Quad, Triangulate, MapToVertices, Vertices};
@@ -22,7 +22,10 @@ use amethyst_renderer::{ColorFormat, DepthFormat};
 
 fn build_sphere() -> Vec<Vertex> {
     SphereUV::new(16, 16)
-        .vertex(|(x, y, z)| Vertex{pos: [x, y, z], normal: [x, y, z]})
+        .vertex(|(x, y, z)| Vertex{
+            pos: [x, y, z],
+            normal: Vector3::new(x, y, z).normalize().into()
+        })
         .triangulate()
         .vertices()
         .collect()
@@ -69,7 +72,7 @@ fn main() {
                 scene.entities.push(amethyst_renderer::Entity{
                     buffer: buffer.clone(),
                     slice: slice.clone(),
-                    ka: color,
+                    ka: [color[0] * 0.1, color[1] * 0.1, color[2] * 0.1, 1.],
                     kd: color,
                     transform: Matrix4::from_translation(Vector3::new(x, y, z)).into()
                 })
