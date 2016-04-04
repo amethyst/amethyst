@@ -32,14 +32,16 @@ pub struct Renderer<R: gfx::Resources> {
     blit_mesh: Buffer<R, gbuffer::Vertex>,
     blit_slice: Slice<R>,
     blit_pipeline: gbuffer::BlitPipeline<R>,
-    blit_sampler: gfx::handle::Sampler<R>
+    blit_sampler: gfx::handle::Sampler<R>,
+
+    light_pipeline: gbuffer::LightPipeline<R>,
 }
 
 struct GBufferTarget<R: gfx::Resources> {
     normal: gfx::handle::RenderTargetView<R, [f32; 4]>,
-    ka: gfx::handle::RenderTargetView<R, [f32; 4]>,
-    kd: gfx::handle::RenderTargetView<R, [f32; 4]>,
-    depth: gfx::handle::DepthStencilView<R, gfx::format::Depth>,
+    ka: gfx::handle::RenderTargetView<R, ColorFormat>,
+    kd: gfx::handle::RenderTargetView<R, ColorFormat>,
+    depth: gfx::handle::DepthStencilView<R, gfx::format::DepthStencil>,
 }
 
 struct GBufferShaderResource<R: gfx::Resources> {
@@ -63,8 +65,8 @@ impl<R> GBufferTarget<R>
         (
             GBufferTarget{
                 normal: normal,
-                ka: ka,
                 kd: kd,
+                ka: ka,
                 depth: depth
             },
             GBufferShaderResource{
@@ -106,14 +108,17 @@ impl<R> Renderer<R>
             blit_mesh: buffer,
             blit_slice: slice,
             blit_pipeline: blit_pipeline,
-            blit_sampler: blit_sampler
+            blit_sampler: blit_sampler,
+
+            light_pipeline: gbuffer::create_light_pipline(factory)
         }
     }
 
     pub fn render<C>(&mut self,
                      scene: &Scene<R, VertexPosNormal>,
                      encoder: &mut gfx::Encoder<R, C>,
-                     output: &gfx::handle::RenderTargetView<R, ColorFormat>)
+                     output: &gfx::handle::RenderTargetView<R, ColorFormat>,
+                     output_depth: &gfx::handle::DepthStencilView<R, DepthFormat>)
         where C: gfx::CommandBuffer<R>
     {
 
@@ -122,6 +127,7 @@ impl<R> Renderer<R>
         encoder.clear(&self.gbuf_target.ka, [0.; 4]);
         encoder.clear(&self.gbuf_target.kd, [0.; 4]);
         encoder.clear_depth(&self.gbuf_target.depth, 1.0);
+        encoder.clear_stencil(&output_depth, 0);
 
         // every entity gets drawn
         for e in &scene.entities {
@@ -138,16 +144,6 @@ impl<R> Renderer<R>
                     kd: e.kd
                 }
             );
-
-            let data = forward::flat::Data {
-                vbuf: e.buffer.clone(),
-                uniform_vs: self.flat_uniform_vs.clone(),
-                uniform_fs: self.flat_uniform_fs.clone(),
-                out_normal: self.gbuf_target.normal.clone(),
-                out_ka: self.gbuf_target.ka.clone(),
-                out_kd: self.gbuf_target.kd.clone(),
-                out_depth: self.gbuf_target.depth.clone()
-            };
 
             encoder.draw(
                 &e.slice,
@@ -170,17 +166,35 @@ impl<R> Renderer<R>
             &self.blit_pipeline,
             &gbuffer::blit::Data {
                 vbuf: self.blit_mesh.clone(),
-                ka: (self.gbuf_texture.ka.clone(), self.blit_sampler.clone()),
-                kd: (self.gbuf_texture.kd.clone(), self.blit_sampler.clone()),
-                depth: (self.gbuf_texture.depth.clone(), self.blit_sampler.clone()),
-                normal: (self.gbuf_texture.normal.clone(), self.blit_sampler.clone()),
+                source: (self.gbuf_texture.ka.clone(), self.blit_sampler.clone()),
                 out: output.clone(),
-                inv_proj: Matrix4::from(scene.projection).invert().unwrap().into(),
-                inv_view: Matrix4::from(scene.view).invert().unwrap().into(),
-                proj: scene.projection,
-                viewport: [0., 0., 800., 600.]
             }
-        )
+        );
+
+        for l in &scene.lights {
+            encoder.draw(
+                &self.blit_slice,
+                &self.light_pipeline,
+                &gbuffer::light::Data {
+                    vbuf: self.blit_mesh.clone(),
+                    kd: (self.gbuf_texture.kd.clone(), self.blit_sampler.clone()),
+                    normal: (self.gbuf_texture.normal.clone(), self.blit_sampler.clone()),
+                    depth: (self.gbuf_texture.depth.clone(), self.blit_sampler.clone()),
+                    out: output.clone(),
+                    color: l.color,
+                    center: [l.center[0], l.center[1], l.center[2], 1.],
+                    propagation: [
+                        l.propagation_constant,
+                        l.propagation_linear,
+                        l.propagation_r_square,
+                    ],
+                    inv_proj: Matrix4::from(scene.projection).invert().unwrap().into(),
+                    inv_view: Matrix4::from(scene.view).invert().unwrap().into(),
+                    proj: scene.projection,
+                    viewport: [0., 0., 800., 600.]
+                }
+            );
+        }
     }
 }
 
@@ -195,10 +209,24 @@ pub struct Entity<R: gfx::Resources, T> {
     pub kd: [f32; 4]
 }
 
+// placeholder light
+pub struct Light {
+    // clip scale
+    pub center: [f32; 3],
+    pub radius: f32,
+
+    pub color: [f32; 4],
+    // color * (pc + pl / r + pc / (r^2))
+    pub propagation_constant: f32,
+    pub propagation_linear: f32,
+    pub propagation_r_square: f32,
+
+}
+
 // this is a placeholder until we get a working ECS
 pub struct Scene<R: gfx::Resources, T> {
     pub projection: [[f32; 4]; 4],
     pub view: [[f32; 4]; 4],
     pub entities: Vec<Entity<R, T>>,
+    pub lights: Vec<Light>
 }
->>>>>>> first crack at the deffered render

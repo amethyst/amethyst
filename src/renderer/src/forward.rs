@@ -74,9 +74,9 @@ gfx_pipeline!( flat {
     uniform_fs: gfx::ConstantBuffer<FlatFragmentUniforms> = "FlatFragmentUniforms",
 
     out_normal: gfx::RenderTarget<GFormat> = "o_Normal",
-    out_ka: gfx::RenderTarget<GFormat> = "o_Ka",
-    out_kd: gfx::RenderTarget<GFormat> = "o_Kd",
-    out_depth: gfx::DepthTarget<gfx::format::Depth> =
+    out_ka: gfx::RenderTarget<gfx::format::Rgba8> = "o_Ka",
+    out_kd: gfx::RenderTarget<gfx::format::Rgba8> = "o_Kd",
+    out_depth: gfx::DepthTarget<gfx::format::DepthStencil> =
         gfx::preset::depth::LESS_EQUAL_WRITE,
 });
 

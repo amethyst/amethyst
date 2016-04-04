@@ -55,7 +55,8 @@ fn main() {
     let mut scene = amethyst_renderer::Scene{
         projection: proj.into(),
         view: view.mat.into(),
-        entities: vec![]
+        entities: vec![],
+        lights: vec![]
     };
 
     let mut rng = rand::thread_rng();
@@ -72,9 +73,31 @@ fn main() {
                 scene.entities.push(amethyst_renderer::Entity{
                     buffer: buffer.clone(),
                     slice: slice.clone(),
-                    ka: [color[0] * 0.1, color[1] * 0.1, color[2] * 0.1, 1.],
-                    kd: color,
+                    ka: [0., 0., 0., 1.],
+                    kd: [1., 1., 1., 1.],
                     transform: Matrix4::from_translation(Vector3::new(x, y, z)).into()
+                })
+            }
+        }
+    }
+
+
+    for x in -2..3 {
+        for y in -2..3 {
+            for z in -2..3 {
+                let x = x as f32 * 5. + 0.5;
+                let y = y as f32 * 5. + 0.5;
+                let z = z as f32 * 5. + 0.5;
+
+                let color = [rng.gen_range(0., 1.), rng.gen_range(0., 1.), rng.gen_range(0., 1.), 1.];
+
+                scene.lights.push(amethyst_renderer::Light{
+                    color: color,
+                    radius: 1.,
+                    center: [x, y, z],
+                    propagation_constant: 0.,
+                    propagation_linear: 0.0,
+                    propagation_r_square: 2.25,
                 })
             }
         }
@@ -82,6 +105,7 @@ fn main() {
 
     let mut renderer = amethyst_renderer::Renderer::new(&mut factory);
     'main: loop {
+
         // quit when Esc is pressed.
         for event in window.poll_events() {
             match event {
@@ -91,7 +115,7 @@ fn main() {
             }
         }
 
-        renderer.render(&scene, &mut combuf, &main_color);
+        renderer.render(&scene, &mut combuf, &main_color, &main_depth);
         combuf.flush(&mut device);
         window.swap_buffers().unwrap();
         device.cleanup();
