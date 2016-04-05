@@ -50,7 +50,7 @@ fn main() {
         Point3::new(0f32, 0.0, 0.0),
         Vector3::unit_z(),
     );
-    let proj = cgmath::perspective(cgmath::deg(45.0f32), 8. / 6., 1.0, 10.0);
+    let proj = cgmath::perspective(cgmath::deg(60.0f32), 8. / 6., 1.0, 100.0);
 
     let mut scene = amethyst_renderer::Scene{
         projection: proj.into(),
@@ -61,14 +61,14 @@ fn main() {
 
     let mut rng = rand::thread_rng();
 
-    for x in -2..3 {
-        for y in -2..3 {
-            for z in -2..3 {
+    for x in -1..2 {
+        for y in -1..2 {
+            for z in -1..2 {
                 let x = x as f32 * 4.;
                 let y = y as f32 * 4.;
                 let z = z as f32 * 4.;
 
-                let color = [rng.gen_range(0., 1.), rng.gen_range(0., 1.), rng.gen_range(0., 1.), 1.];
+                let color = [rng.gen_range(0., 0.1), rng.gen_range(0., 0.1), rng.gen_range(0., 0.1), 1.];
 
                 scene.entities.push(amethyst_renderer::Entity{
                     buffer: buffer.clone(),
@@ -81,23 +81,24 @@ fn main() {
         }
     }
 
-
     for x in -2..3 {
         for y in -2..3 {
             for z in -2..3 {
-                let x = x as f32 * 5. + 0.5;
-                let y = y as f32 * 5. + 0.5;
-                let z = z as f32 * 5. + 0.5;
+                let x = x as f32 * 5.;
+                let y = y as f32 * 5.;
+                let z = z as f32 * 5.;
 
-                let color = [rng.gen_range(0., 1.), rng.gen_range(0., 1.), rng.gen_range(0., 1.), 1.];
+                let r = (x + 10.) / 20.;
+                let g = (y + 10.) / 20.;
+                let b = (z + 10.) / 20.;
 
                 scene.lights.push(amethyst_renderer::Light{
-                    color: color,
+                    color: [r, g, b, 1.],
                     radius: 1.,
                     center: [x, y, z],
                     propagation_constant: 0.,
-                    propagation_linear: 0.0,
-                    propagation_r_square: 2.25,
+                    propagation_linear: 0.,
+                    propagation_r_square: 1.,
                 })
             }
         }

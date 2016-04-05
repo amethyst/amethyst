@@ -11,6 +11,8 @@ extern crate cgmath;
 
 mod forward;
 mod gbuffer;
+mod wireframe;
+
 use gfx::Slice;
 use gfx::handle::Buffer;
 use gfx::traits::FactoryExt;
@@ -35,6 +37,8 @@ pub struct Renderer<R: gfx::Resources> {
     blit_sampler: gfx::handle::Sampler<R>,
 
     light_pipeline: gbuffer::LightPipeline<R>,
+
+    wireframe_pipeline: wireframe::WireframePipeline<R>
 }
 
 struct GBufferTarget<R: gfx::Resources> {
@@ -110,7 +114,8 @@ impl<R> Renderer<R>
             blit_pipeline: blit_pipeline,
             blit_sampler: blit_sampler,
 
-            light_pipeline: gbuffer::create_light_pipline(factory)
+            light_pipeline: gbuffer::create_light_pipline(factory),
+            wireframe_pipeline: wireframe::create_wireframe_pipeline(factory),
         }
     }
 
