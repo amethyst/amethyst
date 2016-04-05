@@ -119,6 +119,34 @@ impl<R> Renderer<R>
         }
     }
 
+    pub fn wireframe<C>(&mut self,
+                     scene: &Scene<R, VertexPosNormal>,
+                     encoder: &mut gfx::Encoder<R, C>,
+                     output: &gfx::handle::RenderTargetView<R, ColorFormat>)
+        where C: gfx::CommandBuffer<R>
+    {
+        // clear the gbuffer
+        encoder.clear(&output, [0.; 4]);
+
+
+        // every entity gets drawn
+        for e in &scene.entities {
+            encoder.draw(
+                &e.slice,
+                &self.wireframe_pipeline,
+                &wireframe::wireframe::Data{
+                    vbuf: e.buffer.clone(),
+                    ka: e.ka,
+                    model: e.transform,
+                    view: scene.view,
+                    proj: scene.projection,
+                    out_ka: output.clone()
+                }
+            );
+        }
+    }
+
+
     pub fn render<C>(&mut self,
                      scene: &Scene<R, VertexPosNormal>,
                      encoder: &mut gfx::Encoder<R, C>,
@@ -232,6 +260,8 @@ pub struct Light {
 pub struct Scene<R: gfx::Resources, T> {
     pub projection: [[f32; 4]; 4],
     pub view: [[f32; 4]; 4],
+
     pub entities: Vec<Entity<R, T>>,
     pub lights: Vec<Light>
 }
+

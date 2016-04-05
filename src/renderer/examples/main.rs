@@ -15,7 +15,7 @@ use rand::Rng;
 use cgmath::{Point3, Vector3, Matrix4, EuclideanVector};
 use cgmath::{Transform, AffineMatrix3};
 use genmesh::generators::SphereUV;
-use genmesh::{Quad, Triangulate, MapToVertices, Vertices};
+use genmesh::{Triangulate, MapToVertices, Vertices};
 
 use amethyst_renderer::VertexPosNormal as Vertex;
 use amethyst_renderer::{ColorFormat, DepthFormat};
@@ -39,7 +39,6 @@ fn main() {
 
     let (window, mut device, mut factory, main_color, main_depth) =
         gfx_window_glutin::init::<ColorFormat, DepthFormat>(builder);
-    let (width, height) = window.get_inner_size().unwrap();
     let mut combuf = factory.create_command_buffer().into();
 
     let sphere = build_sphere();
@@ -68,13 +67,13 @@ fn main() {
                 let y = y as f32 * 4.;
                 let z = z as f32 * 4.;
 
-                let color = [rng.gen_range(0., 0.1), rng.gen_range(0., 0.1), rng.gen_range(0., 0.1), 1.];
+                let color = [rng.gen_range(0., 1.), rng.gen_range(0., 1.), rng.gen_range(0., 1.), 1.];
 
                 scene.entities.push(amethyst_renderer::Entity{
                     buffer: buffer.clone(),
                     slice: slice.clone(),
-                    ka: [0., 0., 0., 1.],
-                    kd: [1., 1., 1., 1.],
+                    ka: [color[0] * 0.1, color[1] * 0.1, color[2] * 0.1, 1.],
+                    kd: color,
                     transform: Matrix4::from_translation(Vector3::new(x, y, z)).into()
                 })
             }
@@ -104,19 +103,30 @@ fn main() {
         }
     }
 
+    let mut wireframe = false;
     let mut renderer = amethyst_renderer::Renderer::new(&mut factory);
     'main: loop {
 
         // quit when Esc is pressed.
         for event in window.poll_events() {
             match event {
+                glutin::Event::KeyboardInput(glutin::ElementState::Pressed, _, Some(glutin::VirtualKeyCode::Space)) => {
+                    wireframe = true;
+                }
+                glutin::Event::KeyboardInput(glutin::ElementState::Released, _, Some(glutin::VirtualKeyCode::Space)) => {
+                    wireframe = false;
+                }
                 glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Escape)) |
                 glutin::Event::Closed => break 'main,
                 _ => {},
             }
         }
 
-        renderer.render(&scene, &mut combuf, &main_color, &main_depth);
+        if wireframe {
+            renderer.wireframe(&scene, &mut combuf, &main_color);
+        } else {
+            renderer.render(&scene, &mut combuf, &main_color, &main_depth);
+        }
         combuf.flush(&mut device);
         window.swap_buffers().unwrap();
         device.cleanup();
