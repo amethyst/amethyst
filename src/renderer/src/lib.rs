@@ -1,6 +1,7 @@
 #![crate_name = "amethyst_renderer"]
 #![crate_type = "lib"]
 #![doc(html_logo_url = "http://tinyurl.com/hgsb45k")]
+#![allow(dead_code)]
 
 //! High-level rendering engine with multiple backends.
 
@@ -18,7 +19,7 @@ use gfx::handle::Buffer;
 use gfx::traits::FactoryExt;
 use cgmath::{Matrix4, SquareMatrix};
 
-pub use forward::VertexPosNormal;
+use gbuffer::{GBufferTarget, GBufferShaderResource};
 
 pub type ColorFormat = gfx::format::Rgba8;
 pub type DepthFormat = gfx::format::DepthStencil;
@@ -41,47 +42,11 @@ pub struct Renderer<R: gfx::Resources> {
     wireframe_pipeline: wireframe::WireframePipeline<R>
 }
 
-struct GBufferTarget<R: gfx::Resources> {
-    normal: gfx::handle::RenderTargetView<R, [f32; 4]>,
-    ka: gfx::handle::RenderTargetView<R, ColorFormat>,
-    kd: gfx::handle::RenderTargetView<R, ColorFormat>,
-    depth: gfx::handle::DepthStencilView<R, gfx::format::DepthStencil>,
-}
-
-struct GBufferShaderResource<R: gfx::Resources> {
-    normal: gfx::handle::ShaderResourceView<R, [f32; 4]>,
-    ka: gfx::handle::ShaderResourceView<R, [f32; 4]>,
-    kd: gfx::handle::ShaderResourceView<R, [f32; 4]>,
-    depth: gfx::handle::ShaderResourceView<R, f32>,
-}
-
-impl<R> GBufferTarget<R>
-    where R: gfx::Resources
-{
-    fn new<F>(factory: &mut F, (width, height): (u16, u16)) -> (Self, GBufferShaderResource<R>)
-        where F: gfx::Factory<R>
-    {
-        let (_, texture_normal,  normal) = factory.create_render_target(width, height).unwrap();
-        let (_, texture_ka,  ka) = factory.create_render_target(width, height).unwrap();
-        let (_, texture_kd,  kd) = factory.create_render_target(width, height).unwrap();
-        let (_, texture_depth, depth) = factory.create_depth_stencil(width, height).unwrap();
-
-        (
-            GBufferTarget{
-                normal: normal,
-                kd: kd,
-                ka: ka,
-                depth: depth
-            },
-            GBufferShaderResource{
-                normal: texture_normal,
-                ka: texture_ka,
-                kd: texture_kd,
-                depth: texture_depth
-            }
-        )
-    }
-}
+// placeholder
+gfx_vertex_struct!( VertexPosNormal {
+    pos: [f32; 3] = "a_Pos",
+    normal: [f32; 3] = "a_Normal",
+});
 
 impl<R> Renderer<R>
     where R: gfx::Resources

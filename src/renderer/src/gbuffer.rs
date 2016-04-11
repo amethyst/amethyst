@@ -149,3 +149,45 @@ pub fn create_light_pipline<F, R>(factory: &mut F) -> LightPipeline<R>
         light::new()
     ).unwrap()
 }
+
+pub struct GBufferTarget<R: gfx::Resources> {
+    pub normal: gfx::handle::RenderTargetView<R, [f32; 4]>,
+    pub ka: gfx::handle::RenderTargetView<R, ColorFormat>,
+    pub kd: gfx::handle::RenderTargetView<R, ColorFormat>,
+    pub depth: gfx::handle::DepthStencilView<R, gfx::format::DepthStencil>,
+}
+
+pub struct GBufferShaderResource<R: gfx::Resources> {
+    pub normal: gfx::handle::ShaderResourceView<R, [f32; 4]>,
+    pub ka: gfx::handle::ShaderResourceView<R, [f32; 4]>,
+    pub kd: gfx::handle::ShaderResourceView<R, [f32; 4]>,
+    pub depth: gfx::handle::ShaderResourceView<R, f32>,
+}
+
+impl<R> GBufferTarget<R>
+    where R: gfx::Resources
+{
+    pub fn new<F>(factory: &mut F, (width, height): (u16, u16)) -> (Self, GBufferShaderResource<R>)
+        where F: gfx::Factory<R>
+    {
+        let (_, texture_normal,  normal) = factory.create_render_target(width, height).unwrap();
+        let (_, texture_ka,  ka) = factory.create_render_target(width, height).unwrap();
+        let (_, texture_kd,  kd) = factory.create_render_target(width, height).unwrap();
+        let (_, texture_depth, depth) = factory.create_depth_stencil(width, height).unwrap();
+
+        (
+            GBufferTarget{
+                normal: normal,
+                kd: kd,
+                ka: ka,
+                depth: depth
+            },
+            GBufferShaderResource{
+                normal: texture_normal,
+                ka: texture_ka,
+                kd: texture_kd,
+                depth: texture_depth
+            }
+        )
+    }
+}

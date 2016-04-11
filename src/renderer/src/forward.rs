@@ -1,6 +1,7 @@
 
 use gfx;
 use gfx::traits::FactoryExt;
+pub use VertexPosNormal;
 
 pub static FORWARD_VERTEX_SRC: &'static [u8] = b"
     #version 150 core
@@ -50,12 +51,6 @@ pub static FORWARD_FLAT_FRAGMENT_SRC: &'static [u8] = b"
 ";
 
 pub type GFormat = [f32; 4];
-
-// placeholder
-gfx_vertex_struct!( VertexPosNormal {
-    pos: [f32; 3] = "a_Pos",
-    normal: [f32; 3] = "a_Normal",
-});
 
 gfx_constant_struct!( VertexUniforms {
     model: [[f32; 4]; 4] = "u_Model",

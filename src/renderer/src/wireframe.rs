@@ -1,7 +1,7 @@
 
 use gfx;
 use gfx::traits::FactoryExt;
-pub use forward::VertexPosNormal;
+pub use VertexPosNormal;
 
 pub static VERTEX_SRC: &'static [u8] = b"
     #version 150 core
