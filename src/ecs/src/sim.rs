@@ -1,23 +1,27 @@
 //! Computes the next state.
 
+use super::{World, Planner};
 use processor::{Processor, ProcessorResult};
-use world::World;
 
 pub struct Simulation {
+    planner: Planner,
     procs: Vec<Box<Processor>>,
 }
 
 impl Simulation {
     /// Creates an empty simulation.
-    pub fn new() -> Simulation {
-        Simulation { procs: Vec::new() }
+    pub fn new(world: World, num_threads: usize) -> Simulation {
+        Simulation {
+            planner: Planner::new(world, num_threads),
+            procs: Vec::new(),
+        }
     }
 
     /// Creates an initialized simulation using the [builder pattern][bp].
     ///
     /// [bp]: https://doc.rust-lang.org/book/method-syntax.html#builder-pattern
-    pub fn build() -> SimBuilder {
-        SimBuilder::new()
+    pub fn build(world: World, num_threads: usize) -> SimBuilder {
+        SimBuilder::new(world, num_threads)
     }
 
     /// Adds a new processor to the simulation.
@@ -26,16 +30,17 @@ impl Simulation {
         Ok(())
     }
 
+    /// Get a reference to the world.
+    pub fn world(&self) -> &World {
+        &self.planner.world
+    }
+
     /// Computes the next state of the world using the given processors.
-    pub fn step(&mut self, world: World) -> World {
-        let mut next_state = world;
-
-        // TODO: Rich possibilities for multithreading here.
+    pub fn step(&mut self) {
         for p in self.procs.iter_mut() {
-            p.process();
+            p.process(&mut self.planner);
         }
-
-        next_state
+        self.planner.wait();
     }
 }
 
@@ -47,10 +52,10 @@ pub struct SimBuilder {
 
 impl SimBuilder {
     /// Starts building a new simulation.
-    pub fn new() -> SimBuilder {
+    pub fn new(world: World, num_threads: usize) -> SimBuilder {
         SimBuilder {
             errors: Vec::new(),
-            sim: Simulation::new(),
+            sim: Simulation::new(world, num_threads),
         }
     }
 
