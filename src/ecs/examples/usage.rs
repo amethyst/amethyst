@@ -1,6 +1,9 @@
 ///! Example of a basic entity-component system with 3 types of components.
+extern crate time;
 
 extern crate amethyst_ecs as ecs;
+
+use time::Duration;
 
 use ecs::{World, Simulation, Processor, Planner, Component, VecStorage};
 
@@ -39,7 +42,7 @@ impl Component for Mesh {
 
 struct Render;
 impl Processor for Render {
-    fn process(&mut self, planner: &mut Planner) {
+    fn process(&mut self, planner: &mut Planner, _: Duration) {
         planner.run0w2r(|p: &Position, _: &Mesh| {
             println!("Render {:?}", p);
         });
@@ -79,6 +82,6 @@ fn main() {
     for _ in 0..3 {
         // Put game logic here.
 
-        simulation.step();
+        simulation.step(Duration::milliseconds(3));
     }
 }

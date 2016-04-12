@@ -1,5 +1,7 @@
 //! Computes the next state.
 
+use time::Duration;
+
 use super::{World, Planner};
 use processor::{Processor, ProcessorResult};
 
@@ -36,9 +38,9 @@ impl Simulation {
     }
 
     /// Computes the next state of the world using the given processors.
-    pub fn step(&mut self) {
+    pub fn step(&mut self, dt: Duration) {
         for p in self.procs.iter_mut() {
-            p.process(&mut self.planner);
+            p.process(&mut self.planner, dt);
         }
         self.planner.wait();
     }

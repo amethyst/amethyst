@@ -1,5 +1,7 @@
 //! Performs actions based on the relevant components found in the game world.
 
+use time::Duration;
+
 use super::Planner;
 
 /// The error type reported by SimBuilder if they fail to initialize.
@@ -13,5 +15,5 @@ pub trait Processor {
     /// TODO: Need to finalize API design here, according to [issue #10].
     ///
     /// [issue #10]: https://github.com/ebkalderon/amethyst/issues/10
-    fn process(&mut self, planner: &mut Planner);
+    fn process(&mut self, planner: &mut Planner, dt: Duration);
 }

@@ -12,4 +12,5 @@ repository = "https://github.com/amethyst/amethyst"
 license = "MIT"
 
 [dependencies]
+time = "0.1"
 specs = { git = "https://github.com/slide-rs/specs" }
