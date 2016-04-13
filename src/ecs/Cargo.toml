@@ -13,4 +13,4 @@ license = "MIT"
 
 [dependencies]
 time = "0.1"
-specs = { git = "https://github.com/slide-rs/specs" }
+specs = "0.4"
