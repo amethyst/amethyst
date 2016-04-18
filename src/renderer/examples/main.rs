@@ -112,8 +112,6 @@ fn main() {
         passes: vec![
             amethyst_renderer::Pass{
                 output: amethyst_renderer::ScreenOutput{
-                    width: 800,
-                    height: 600,
                     output: main_color,
                     output_depth: main_depth
                 },
@@ -146,6 +144,14 @@ fn main() {
                         amethyst_renderer::Operation::Clear([0.1, 0.1, 0.1, 1.], true),
                         amethyst_renderer::Operation::FlatShading(camera, format!("main"))
                     ]
+                }
+                glutin::Event::Resized(_, _) => {
+                    let output = &mut frame.passes[0];
+                    gfx_window_glutin::update_views(
+                        &window,
+                        &mut output.output.output,
+                        &mut output.output.output_depth
+                    );
                 }
                 glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Escape)) |
                 glutin::Event::Closed => break 'main,

@@ -191,8 +191,6 @@ pub struct Light {
 
 /// Render target
 pub struct ScreenOutput<R: gfx::Resources> {
-    pub width: u32,
-    pub height: u32,
     pub output: gfx::handle::RenderTargetView<R, ColorFormat>,
     pub output_depth: gfx::handle::DepthStencilView<R, DepthFormat>,
 }
