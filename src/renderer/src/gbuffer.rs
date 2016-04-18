@@ -191,3 +191,85 @@ impl<R> GBufferTarget<R>
         )
     }
 }
+
+
+    /*pub fn render<C>(&mut self,
+                     scene: &Scene<R, VertexPosNormal>,
+                     encoder: &mut gfx::Encoder<R, C>)
+        where C: gfx::CommandBuffer<R>
+    {
+
+        // clear the gbuffer
+        encoder.clear(&self.gbuf_target.normal, [0.; 4]);
+        encoder.clear(&self.gbuf_target.ka, [0.; 4]);
+        encoder.clear(&self.gbuf_target.kd, [0.; 4]);
+        encoder.clear_depth(&self.gbuf_target.depth, 1.0);
+        encoder.clear_stencil(&output_depth, 0);
+
+        // every entity gets drawn
+        for e in &scene.entities {
+            encoder.update_constant_buffer(&self.flat_uniform_vs,
+                &forward::VertexUniforms {
+                    view: scene.view,
+                    proj: scene.projection,
+                    model: e.transform
+                }
+            );
+            encoder.update_constant_buffer(&self.flat_uniform_fs,
+                &forward::FlatFragmentUniforms{
+                    ka: e.ka,
+                    kd: e.kd
+                }
+            );
+
+            encoder.draw(
+                &e.slice,
+                &self.pipeline_foward,
+                &forward::flat::Data {
+                    vbuf: e.buffer.clone(),
+                    uniform_vs: self.flat_uniform_vs.clone(),
+                    uniform_fs: self.flat_uniform_fs.clone(),
+                    out_normal: self.gbuf_target.normal.clone(),
+                    out_ka: self.gbuf_target.ka.clone(),
+                    out_kd: self.gbuf_target.kd.clone(),
+                    out_depth: self.gbuf_target.depth.clone()
+                }
+            );
+        }
+
+        // blit the gbuffer to the screen
+        encoder.draw(
+            &self.blit_slice,
+            &self.blit_pipeline,
+            &gbuffer::blit::Data {
+                vbuf: self.blit_mesh.clone(),
+                source: (self.gbuf_texture.ka.clone(), self.blit_sampler.clone()),
+                out: output.clone(),
+            }
+        );
+
+        for l in &scene.lights {
+            encoder.draw(
+                &self.blit_slice,
+                &self.light_pipeline,
+                &gbuffer::light::Data {
+                    vbuf: self.blit_mesh.clone(),
+                    kd: (self.gbuf_texture.kd.clone(), self.blit_sampler.clone()),
+                    normal: (self.gbuf_texture.normal.clone(), self.blit_sampler.clone()),
+                    depth: (self.gbuf_texture.depth.clone(), self.blit_sampler.clone()),
+                    out: output.clone(),
+                    color: l.color,
+                    center: [l.center[0], l.center[1], l.center[2], 1.],
+                    propagation: [
+                        l.propagation_constant,
+                        l.propagation_linear,
+                        l.propagation_r_square,
+                    ],
+                    inv_proj: Matrix4::from(scene.projection).invert().unwrap().into(),
+                    inv_view: Matrix4::from(scene.view).invert().unwrap().into(),
+                    proj: scene.projection,
+                    viewport: [0., 0., 800., 600.]
+                }
+            );
+        }
+    }*/

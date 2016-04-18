@@ -16,8 +16,8 @@ license = "MIT"
 gfx = "0.10"
 gfx_window_glutin = "0.10"
 glutin = "0.4"
-cgmath="*"
+cgmath="0.7"
 
 [dev-dependencies]
-genmesh="*"
+genmesh="0.4"
 rand="*"

@@ -39,7 +39,7 @@ fn main() {
 
     let (window, mut device, mut factory, main_color, main_depth) =
         gfx_window_glutin::init::<ColorFormat, DepthFormat>(builder);
-    let mut combuf = factory.create_command_buffer().into();
+    let mut combuf = factory.create_command_buffer();
 
     let sphere = build_sphere();
     let (buffer, slice) = factory.create_vertex_buffer(&sphere);
@@ -52,9 +52,9 @@ fn main() {
     let proj = cgmath::perspective(cgmath::deg(60.0f32), 8. / 6., 1.0, 100.0);
 
     let mut scene = amethyst_renderer::Scene{
-        projection: proj.into(),
-        view: view.mat.into(),
-        entities: vec![],
+        //projection: proj.into(),
+        //view: view.mat.into(),
+        fragments: vec![],
         lights: vec![]
     };
 
@@ -69,7 +69,7 @@ fn main() {
 
                 let color = [rng.gen_range(0., 1.), rng.gen_range(0., 1.), rng.gen_range(0., 1.), 1.];
 
-                scene.entities.push(amethyst_renderer::Entity{
+                scene.fragments.push(amethyst_renderer::Fragment{
                     buffer: buffer.clone(),
                     slice: slice.clone(),
                     ka: [color[0] * 0.1, color[1] * 0.1, color[2] * 0.1, 1.],
@@ -103,18 +103,49 @@ fn main() {
         }
     }
 
+    let camera = amethyst_renderer::Camera{
+        projection: proj.into(),
+        view: view.mat.into(),
+    };
+
+    let mut frame = amethyst_renderer::Frame{
+        passes: vec![
+            amethyst_renderer::Pass{
+                output: amethyst_renderer::ScreenOutput{
+                    width: 800,
+                    height: 600,
+                    output: main_color,
+                    output_depth: main_depth
+                },
+                ops: vec![
+                    amethyst_renderer::Operation::Clear([0.1, 0.1, 0.1, 1.], true),
+                    amethyst_renderer::Operation::FlatShading(camera, format!("main"))
+                ]
+            }
+        ],
+        scenes: std::collections::HashMap::new()
+    };
+
+    frame.scenes.insert(format!("main"), scene);
+
     let mut wireframe = false;
-    let mut renderer = amethyst_renderer::Renderer::new(&mut factory);
+    let mut renderer = amethyst_renderer::Renderer::new(&mut factory, combuf);
     'main: loop {
 
         // quit when Esc is pressed.
         for event in window.poll_events() {
             match event {
                 glutin::Event::KeyboardInput(glutin::ElementState::Pressed, _, Some(glutin::VirtualKeyCode::Space)) => {
-                    wireframe = true;
+                    frame.passes[0].ops = vec![
+                        amethyst_renderer::Operation::Clear([0.1, 0.1, 0.1, 1.], false),
+                        amethyst_renderer::Operation::Wireframe(camera, format!("main"))
+                    ]
                 }
                 glutin::Event::KeyboardInput(glutin::ElementState::Released, _, Some(glutin::VirtualKeyCode::Space)) => {
-                    wireframe = false;
+                    frame.passes[0].ops = vec![
+                        amethyst_renderer::Operation::Clear([0.1, 0.1, 0.1, 1.], true),
+                        amethyst_renderer::Operation::FlatShading(camera, format!("main"))
+                    ]
                 }
                 glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Escape)) |
                 glutin::Event::Closed => break 'main,
@@ -122,13 +153,16 @@ fn main() {
             }
         }
 
-        if wireframe {
+        renderer.submit(&frame, &mut device);
+        window.swap_buffers().unwrap();
+
+        /*if wireframe {
             renderer.wireframe(&scene, &mut combuf, &main_color);
         } else {
             renderer.render(&scene, &mut combuf, &main_color, &main_depth);
         }
         combuf.flush(&mut device);
         window.swap_buffers().unwrap();
-        device.cleanup();
+        device.cleanup();*/
     }
 }
