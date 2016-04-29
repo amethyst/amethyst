@@ -6,7 +6,7 @@ use super::{World, Planner};
 use processor::{Processor, ProcessorResult};
 
 pub struct Simulation {
-    planner: Planner,
+    planner: Planner<()>,
     procs: Vec<Box<Processor>>,
 }
 

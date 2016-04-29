@@ -42,7 +42,7 @@ impl Component for Mesh {
 
 struct Render;
 impl Processor for Render {
-    fn process(&mut self, planner: &mut Planner, _: Duration) {
+    fn process(&mut self, planner: &mut Planner<()>, _: Duration) {
         planner.run0w2r(|p: &Position, _: &Mesh| {
             println!("Render {:?}", p);
         });
