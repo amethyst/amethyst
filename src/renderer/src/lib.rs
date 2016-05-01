@@ -27,7 +27,7 @@ pub type DepthFormat = gfx::format::DepthStencil;
 
 pub struct Renderer<R: gfx::Resources, C: gfx::CommandBuffer<R>> {
     command_buffer: gfx::Encoder<R, C>,
-    methods: HashMap<(TypeId, TypeId), Box<Fn(&Box<Operation>, &Target, &HashMap<String, Scene<R>>, &mut gfx::Encoder<R, C>)>>
+    methods: HashMap<(TypeId, TypeId), Box<Fn(&Box<Operation>, &Target, &Frame<R>, &mut gfx::Encoder<R, C>)>>
 }
 
 // placeholder
@@ -58,10 +58,10 @@ impl<R, C> Renderer<R, C>
               T: Target
     {
         let id = (TypeId::of::<A>(), TypeId::of::<T>());
-        self.methods.insert(id, Box::new(move |a: &Box<Operation>, t: &Target, scene: &HashMap<String, Scene<R>>, encoder: &mut gfx::Encoder<R, C>| {
+        self.methods.insert(id, Box::new(move |a: &Box<Operation>, t: &Target, frame: &Frame<R>, encoder: &mut gfx::Encoder<R, C>| {
             let a = a.downcast_ref::<A>().unwrap();
             let t = t.downcast_ref::<T>().unwrap();
-            p.apply(a, t, scene, encoder)
+            p.apply(a, t, frame, encoder)
         }));
     }
 
@@ -72,7 +72,7 @@ impl<R, C> Renderer<R, C>
         for pass in &frame.passes {
             let id = (mopa::Any::get_type_id(&**pass), mopa::Any::get_type_id(&frame.target));
             let method = self.methods.get(&id).expect("No method found, cannot apply operation to target.");
-            method(pass, &frame.target as &Target, &frame.scenes, &mut self.command_buffer);
+            method(pass, &frame.target as &Target, &frame, &mut self.command_buffer);
         }
         self.command_buffer.flush(device);
         device.cleanup();
@@ -131,7 +131,8 @@ pub struct Camera {
 pub struct Frame<R: gfx::Resources> {
     pub target: ScreenOutput<R>,
     pub passes: Vec<Box<Operation>>,
-    pub scenes: HashMap<String, Scene<R>>
+    pub scenes: HashMap<String, Scene<R>>,
+    pub cameras: HashMap<String, Camera>
 }
 
 pub struct Clear {
@@ -140,13 +141,13 @@ pub struct Clear {
 impl Operation for Clear {}
 
 pub struct Wireframe {
-    pub camera: Camera,
+    pub camera: String,
     pub scene: String,
 }
 impl Operation for Wireframe {}
 
 pub struct FlatShading {
-    pub camera: Camera,
+    pub camera: String,
     pub scene: String,
 }
 impl Operation for FlatShading {}
@@ -163,5 +164,5 @@ pub trait Method<A, T, R, C>
           A: Operation,
           T: Target
 {
-    fn apply(&self, arg: &A, target: &T, scene: &HashMap<String, Scene<R>>, encoder: &mut gfx::Encoder<R, C>);
+    fn apply(&self, arg: &A, target: &T, scene: &Frame<R>, encoder: &mut gfx::Encoder<R, C>);
 }

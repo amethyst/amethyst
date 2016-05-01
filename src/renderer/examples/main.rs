@@ -7,10 +7,11 @@ extern crate genmesh;
 extern crate amethyst_renderer;
 extern crate rand;
 
+use std::time::SystemTime;
+use rand::Rng;
+
 use gfx::{Device};
 use gfx::traits::FactoryExt;
-
-use rand::Rng;
 
 use cgmath::{Point3, Vector3, Matrix4, EuclideanVector};
 use cgmath::{Transform, AffineMatrix3};
@@ -43,13 +44,6 @@ fn main() {
 
     let sphere = build_sphere();
     let (buffer, slice) = factory.create_vertex_buffer(&sphere);
-
-    let view: AffineMatrix3<f32> = Transform::look_at(
-        Point3::new(1.5f32, -5.0, 3.0),
-        Point3::new(0f32, 0.0, 0.0),
-        Vector3::unit_z(),
-    );
-    let proj = cgmath::perspective(cgmath::deg(60.0f32), 8. / 6., 1.0, 100.0);
 
     let mut scene = amethyst_renderer::Scene{
         fragments: vec![],
@@ -101,34 +95,21 @@ fn main() {
         }
     }
 
-    let camera = amethyst_renderer::Camera{
-        projection: proj.into(),
-        view: view.mat.into(),
-    };
 
     let mut frame = amethyst_renderer::Frame{
         passes: vec![
             Box::new(amethyst_renderer::Clear{color: [0.1, 0.1, 0.1, 1.]}),
             Box::new(amethyst_renderer::FlatShading{
-                camera: camera,
+                camera: format!("main"),
                 scene: format!("main")
             }),
-            /*amethyst_renderer::Pass{
-                output: amethyst_renderer::ScreenOutput{
-                    output: main_color,
-                    output_depth: main_depth
-                },
-                ops: vec![
-                    amethyst_renderer::Operation::Clear([0.1, 0.1, 0.1, 1.], true),
-                    amethyst_renderer::Operation::FlatShading(camera, format!("main"))
-                ]
-            }*/
         ],
         target: amethyst_renderer::ScreenOutput{
             output: main_color,
             output_depth: main_depth
         },
-        scenes: std::collections::HashMap::new()
+        scenes: std::collections::HashMap::new(),
+        cameras: std::collections::HashMap::new()
     };
 
     frame.scenes.insert(format!("main"), scene);
@@ -139,8 +120,9 @@ fn main() {
     renderer.add_method(amethyst_renderer::forward::FlatShading::new(&mut factory));
     renderer.add_method(amethyst_renderer::forward::Wireframe::new(&mut factory));
 
+    let start = SystemTime::now();
+    let (mut w, mut h) = (800., 600.);
     'main: loop {
-
         // quit when Esc is pressed.
         for event in window.poll_events() {
             match event {
@@ -148,7 +130,7 @@ fn main() {
                     frame.passes = vec![
                         Box::new(amethyst_renderer::Clear{color: [0.1, 0.1, 0.1, 1.]}),
                         Box::new(amethyst_renderer::Wireframe{
-                            camera: camera,
+                            camera: format!("main"),
                             scene: format!("main")
                         }),
                     ]
@@ -157,13 +139,15 @@ fn main() {
                     frame.passes = vec![
                         Box::new(amethyst_renderer::Clear{color: [0.1, 0.1, 0.1, 1.]}),
                         Box::new(amethyst_renderer::FlatShading{
-                            camera: camera,
+                            camera: format!("main"),
                             scene: format!("main")
                         }),
                     ]
                 }
-                glutin::Event::Resized(_, _) => {
+                glutin::Event::Resized(iw, ih) => {
                     let output = &mut frame.target;
+                    w = iw as f32;
+                    h = ih as f32;
                     gfx_window_glutin::update_views(
                         &window,
                         &mut output.output,
@@ -175,6 +159,19 @@ fn main() {
                 _ => {},
             }
         }
+
+        let diff = start.elapsed().unwrap();
+        let diff = diff.as_secs() as f32 + diff.subsec_nanos() as f32 / 1e9;
+        let view: AffineMatrix3<f32> = Transform::look_at(
+            Point3::new(diff.sin() * 6., diff.cos() * 6., 3.0),
+            Point3::new(0f32, 0.0, 0.0),
+            Vector3::unit_z(),
+        );
+        let proj = cgmath::perspective(cgmath::deg(60.0f32), w / h, 1.0, 100.0);
+        frame.cameras.insert(
+            format!("main"),
+            amethyst_renderer::Camera{projection: proj.into(), view: view.mat.into()}
+        );
 
         renderer.submit(&frame, &mut device);
         window.swap_buffers().unwrap();

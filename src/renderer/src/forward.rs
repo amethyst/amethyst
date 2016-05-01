@@ -1,9 +1,8 @@
 use gfx;
 use gfx::traits::FactoryExt;
-use std::collections::HashMap;
 use mopa::Any;
-use {Method, ScreenOutput};
 
+use {Method, ScreenOutput};
 pub use VertexPosNormal;
 
 pub static VERTEX_SRC: &'static [u8] = b"
@@ -64,7 +63,7 @@ impl<R, C> Method<::Clear, ScreenOutput<R>, R, C> for Clear
           <R as gfx::Resources>::DepthStencilView: Any,
           R: 'static
 {
-    fn apply(&self, arg: &::Clear, target: &ScreenOutput<R>, _: &HashMap<String, ::Scene<R>>, encoder: &mut gfx::Encoder<R, C>) {
+    fn apply(&self, arg: &::Clear, target: &ScreenOutput<R>, _: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
         encoder.clear(&target.output, arg.color);
         encoder.clear_depth(&target.output_depth, 1.0);
     }
@@ -104,8 +103,9 @@ impl<R, C> Method<::FlatShading, ScreenOutput<R>, R, C> for FlatShading<R>
           <R as gfx::Resources>::DepthStencilView: Any,
           R: 'static
 {
-    fn apply(&self, arg: &::FlatShading, target: &ScreenOutput<R>, scenes: &HashMap<String, ::Scene<R>>, encoder: &mut gfx::Encoder<R, C>) {
-        let scene = &scenes[&arg.scene];
+    fn apply(&self, arg: &::FlatShading, target: &ScreenOutput<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
+        let scene = &scenes.scenes[&arg.scene];
+        let camera = &scenes.cameras[&arg.camera];
 
         // every entity gets drawn
         for e in &scene.fragments {
@@ -116,8 +116,8 @@ impl<R, C> Method<::FlatShading, ScreenOutput<R>, R, C> for FlatShading<R>
                     vbuf: e.buffer.clone(),
                     ka: e.ka,
                     model: e.transform,
-                    view: arg.camera.view,
-                    proj: arg.camera.projection,
+                    view: camera.view,
+                    proj: camera.projection,
                     out_ka: target.output.clone(),
                     out_depth: target.output_depth.clone()
                 }
@@ -164,8 +164,9 @@ impl<R, C> Method<::Wireframe, ScreenOutput<R>, R, C> for Wireframe<R>
           <R as gfx::Resources>::DepthStencilView: Any,
           R: 'static
 {
-    fn apply(&self, arg: &::Wireframe, target: &ScreenOutput<R>, scenes: &HashMap<String, ::Scene<R>>, encoder: &mut gfx::Encoder<R, C>) {
-        let scene = &scenes[&arg.scene];
+    fn apply(&self, arg: &::Wireframe, target: &ScreenOutput<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
+        let scene = &scenes.scenes[&arg.scene];
+        let camera = &scenes.cameras[&arg.camera];
 
         // every entity gets drawn
         for e in &scene.fragments {
@@ -176,8 +177,8 @@ impl<R, C> Method<::Wireframe, ScreenOutput<R>, R, C> for Wireframe<R>
                     vbuf: e.buffer.clone(),
                     ka: e.ka,
                     model: e.transform,
-                    view: arg.camera.view,
-                    proj: arg.camera.projection,
+                    view: camera.view,
+                    proj: camera.projection,
                     out_ka: target.output.clone()
                 }
             );
