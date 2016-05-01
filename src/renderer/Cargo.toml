@@ -17,6 +17,8 @@ gfx = "0.10"
 gfx_window_glutin = "0.10"
 glutin = "0.4"
 cgmath="0.7"
+mopa ="0.2"
+
 
 [dev-dependencies]
 genmesh="0.4"

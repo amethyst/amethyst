@@ -7,42 +7,27 @@
 
 #[macro_use]
 extern crate gfx;
+#[macro_use]
+extern crate mopa;
+
 extern crate glutin;
 extern crate cgmath;
 
-mod forward;
+pub mod forward;
 mod gbuffer;
 mod wireframe;
 
+use std::any::TypeId;
 use std::collections::HashMap;
 
-use gfx::Slice;
-use gfx::handle::Buffer;
-use gfx::traits::FactoryExt;
-use cgmath::{Matrix4, SquareMatrix};
-
-use gbuffer::{GBufferTarget, GBufferShaderResource};
+use mopa::Any;
 
 pub type ColorFormat = gfx::format::Rgba8;
 pub type DepthFormat = gfx::format::DepthStencil;
 
 pub struct Renderer<R: gfx::Resources, C: gfx::CommandBuffer<R>> {
-    pipeline_foward: forward::FlatPipeline<R>,
-    flat_uniform_vs: gfx::handle::Buffer<R, forward::VertexUniforms>,
-    flat_uniform_fs: gfx::handle::Buffer<R, forward::FlatFragmentUniforms>,
-
-    gbuf_target: GBufferTarget<R>,
-    gbuf_texture: GBufferShaderResource<R>,
-
-    blit_mesh: Buffer<R, gbuffer::Vertex>,
-    blit_slice: Slice<R>,
-    blit_pipeline: gbuffer::BlitPipeline<R>,
-    blit_sampler: gfx::handle::Sampler<R>,
-
-    light_pipeline: gbuffer::LightPipeline<R>,
-
-    wireframe_pipeline: wireframe::WireframePipeline<R>,
-    command_buffer: gfx::Encoder<R, C>
+    command_buffer: gfx::Encoder<R, C>,
+    methods: HashMap<(TypeId, TypeId), Box<Fn(&Box<Operation>, &Target, &HashMap<String, Scene<R>>, &mut gfx::Encoder<R, C>)>>
 }
 
 // placeholder
@@ -53,112 +38,41 @@ gfx_vertex_struct!( VertexPosNormal {
 
 impl<R, C> Renderer<R, C>
     where R: gfx::Resources,
+          <R as gfx::Resources>::RenderTargetView: Any,
+          <R as gfx::Resources>::Texture: Any,
+          <R as gfx::Resources>::DepthStencilView: Any,
+          R: 'static,
           C: gfx::CommandBuffer<R>
 {
     /// Create a new Render pipline
-    pub fn new<F>(factory: &mut F, combuf: C) -> Renderer<R, C>
-        where F: gfx::Factory<R>
-    {
-        let pipeline_foward = forward::create_flat_pipeline(factory);
-        let (gbuf_target, gbuf_texture) = GBufferTarget::new(factory, (800, 600));
-        let flat_uniform_vs = factory.create_constant_buffer(1);
-        let flat_uniform_fs = factory.create_constant_buffer(1);
-
-        let (buffer, slice) = gbuffer::create_mesh(factory);
-        let blit_pipeline = gbuffer::create_blit_pipeline(factory);
-
-        let blit_sampler = factory.create_sampler(
-            gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale,
-                                       gfx::tex::WrapMode::Clamp)
-        );
-
+    pub fn new(combuf: C) -> Renderer<R, C> {
         Renderer {
-            pipeline_foward: pipeline_foward,
-            gbuf_target: gbuf_target,
-            gbuf_texture: gbuf_texture,
-            flat_uniform_vs: flat_uniform_vs,
-            flat_uniform_fs: flat_uniform_fs,
-
-            blit_mesh: buffer,
-            blit_slice: slice,
-            blit_pipeline: blit_pipeline,
-            blit_sampler: blit_sampler,
-
-            light_pipeline: gbuffer::create_light_pipline(factory),
-            wireframe_pipeline: wireframe::create_wireframe_pipeline(factory),
-
-            command_buffer: combuf.into()
+            command_buffer: combuf.into(),
+            methods: HashMap::new()
         }
     }
 
-    /// submit an operation to be rendered
-    fn submit_op(&mut self,
-                 scenes: &HashMap<String, Scene<R, VertexPosNormal>>,
-                 screen: &ScreenOutput<R>,
-                 op: &Operation)
+    pub fn add_method<A, T, P>(&mut self, p: P)
+        where P: Method<A, T, R, C> + 'static,
+              A: Operation,
+              T: Target
     {
-        match op {
-            &Operation::Clear(colour, depth) => {
-                if depth {
-                    self.command_buffer.clear_depth(&screen.output_depth, 1.0);
-                }
-                self.command_buffer.clear(&screen.output, colour);
-            }
-            &Operation::Wireframe(ref camera, ref fragments) => {
-                let scene = &scenes[fragments];
-
-                // every entity gets drawn
-                for e in &scene.fragments {
-                    self.command_buffer.draw(
-                        &e.slice,
-                        &self.wireframe_pipeline,
-                        &wireframe::wireframe::Data{
-                            vbuf: e.buffer.clone(),
-                            ka: e.ka,
-                            model: e.transform,
-                            view: camera.view,
-                            proj: camera.projection,
-                            out_ka: screen.output.clone()
-                        }
-                    );
-                }
-            }
-            &Operation::FlatShading(ref camera, ref fragments) => {
-                let scene = &scenes[fragments];
-
-                // every entity gets drawn
-                for e in &scene.fragments {
-                    self.command_buffer.draw(
-                        &e.slice,
-                        &self.pipeline_foward,
-                        &forward::flat::Data{
-                            vbuf: e.buffer.clone(),
-                            ka: e.ka,
-                            model: e.transform,
-                            view: camera.view,
-                            proj: camera.projection,
-                            out_ka: screen.output.clone(),
-                            out_depth: screen.output_depth.clone()
-                        }
-                    );
-                }
-            }
-        }
-    }
-
-    /// Raster the pass
-    fn submit_pass(&mut self, scenes: &HashMap<String, Scene<R, VertexPosNormal>>, pass: &Pass<R>) {
-        for op in &pass.ops {
-            self.submit_op(&scenes, &pass.output, op);
-        }
+        let id = (TypeId::of::<A>(), TypeId::of::<T>());
+        self.methods.insert(id, Box::new(move |a: &Box<Operation>, t: &Target, scene: &HashMap<String, Scene<R>>, encoder: &mut gfx::Encoder<R, C>| {
+            let a = a.downcast_ref::<A>().unwrap();
+            let t = t.downcast_ref::<T>().unwrap();
+            p.apply(a, t, scene, encoder)
+        }));
     }
 
     /// Raster the frame
-    pub fn submit<D>(&mut self, frame: &Frame<R, VertexPosNormal>, device: &mut D)
+    pub fn submit<D>(&mut self, frame: &Frame<R>, device: &mut D)
         where D: gfx::Device<Resources=R, CommandBuffer=C>
     {
         for pass in &frame.passes {
-            self.submit_pass(&frame.scenes, &pass);
+            let id = (mopa::Any::get_type_id(&**pass), mopa::Any::get_type_id(&frame.target));
+            let method = self.methods.get(&id).expect("No method found, cannot apply operation to target.");
+            method(pass, &frame.target as &Target, &frame.scenes, &mut self.command_buffer);
         }
         self.command_buffer.flush(device);
         device.cleanup();
@@ -166,9 +80,9 @@ impl<R, C> Renderer<R, C>
 }
 
 // placeholder Entity
-pub struct Fragment<R: gfx::Resources, T> {
+pub struct Fragment<R: gfx::Resources> {
     pub transform: [[f32; 4]; 4],
-    pub buffer: gfx::handle::Buffer<R, T>,
+    pub buffer: gfx::handle::Buffer<R, VertexPosNormal>,
     pub slice: gfx::Slice<R>,
     /// ambient colour
     pub ka: [f32; 4],
@@ -195,8 +109,15 @@ pub struct ScreenOutput<R: gfx::Resources> {
     pub output_depth: gfx::handle::DepthStencilView<R, DepthFormat>,
 }
 
-pub struct Scene<R: gfx::Resources, T> {
-    pub fragments: Vec<Fragment<R, T>>,
+impl<R: gfx::Resources> Target for ScreenOutput<R>
+    where <R as gfx::Resources>::RenderTargetView: Any,
+          <R as gfx::Resources>::Texture: Any,
+          <R as gfx::Resources>::DepthStencilView: Any,
+          R: 'static
+{}
+
+pub struct Scene<R: gfx::Resources> {
+    pub fragments: Vec<Fragment<R>>,
     pub lights: Vec<Light>
 }
 
@@ -206,20 +127,41 @@ pub struct Camera {
     pub view: [[f32; 4]; 4],
 }
 
-pub enum Operation {
-    Clear([f32; 4], bool),
-    Wireframe(Camera, String),
-    FlatShading(Camera, String),
-}
-
-pub struct Pass<R: gfx::Resources> {
-    pub output: ScreenOutput<R>,
-    pub ops: Vec<Operation>
-}
-
 /// The render job submission
-pub struct Frame<R: gfx::Resources, T> {
-    pub passes: Vec<Pass<R>>,
-    pub scenes: HashMap<String, Scene<R, T>>
+pub struct Frame<R: gfx::Resources> {
+    pub target: ScreenOutput<R>,
+    pub passes: Vec<Box<Operation>>,
+    pub scenes: HashMap<String, Scene<R>>
 }
 
+pub struct Clear {
+    pub color: [f32; 4]
+}
+impl Operation for Clear {}
+
+pub struct Wireframe {
+    pub camera: Camera,
+    pub scene: String,
+}
+impl Operation for Wireframe {}
+
+pub struct FlatShading {
+    pub camera: Camera,
+    pub scene: String,
+}
+impl Operation for FlatShading {}
+
+pub trait Operation: mopa::Any {}
+mopafy!(Operation);
+
+pub trait Target: mopa::Any {}
+mopafy!(Target);
+
+pub trait Method<A, T, R, C>
+    where R: gfx::Resources,
+          C: gfx::CommandBuffer<R>,
+          A: Operation,
+          T: Target
+{
+    fn apply(&self, arg: &A, target: &T, scene: &HashMap<String, Scene<R>>, encoder: &mut gfx::Encoder<R, C>);
+}
