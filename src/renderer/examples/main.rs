@@ -109,7 +109,7 @@ fn main() {
     frame.scenes.insert(format!("main"), scene);
     frame.passes.push(amethyst_renderer::RenderPasses::new(format!("gbuffer")));
     frame.passes[0].operations = vec![
-        Box::new(amethyst_renderer::Clear{color: [0.1, 0.1, 0.1, 1.]}),
+        Box::new(amethyst_renderer::Clear{color: [0., 0., 0., 1.]}),
         Box::new(amethyst_renderer::Draw{
             camera: format!("main"),
             scene: format!("main")
@@ -117,7 +117,7 @@ fn main() {
     ];
     frame.passes.push(amethyst_renderer::RenderPasses::new(format!("main")));
     frame.passes[1].operations = vec![
-        Box::new(amethyst_renderer::Clear{color: [0.1, 0.1, 0.1, 1.]}),
+        Box::new(amethyst_renderer::Clear{color: [0., 0., 0., 1.]}),
         Box::new(amethyst_renderer::BlitAmbiant{
             gbuffer: format!("gbuffer"),
         }),
@@ -142,6 +142,7 @@ fn main() {
     let mut renderer = amethyst_renderer::Renderer::new(combuf);
     renderer.load_all(&mut factory);
 
+    window.set_title("Amethyst Renderer [Deferred]");
     let start = SystemTime::now();
     let (mut w, mut h) = (800., 600.);
     'main: loop {
@@ -149,10 +150,11 @@ fn main() {
         for event in window.poll_events() {
             match event {
                 glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Key1)) => {
+                    window.set_title("Amethyst Renderer [Deferred]");
                     frame.passes.clear();
                     frame.passes.push(amethyst_renderer::RenderPasses::new(format!("gbuffer")));
                     frame.passes[0].operations = vec![
-                        Box::new(amethyst_renderer::Clear{color: [0.1, 0.1, 0.1, 1.]}),
+                        Box::new(amethyst_renderer::Clear{color: [0., 0., 0., 1.]}),
                         Box::new(amethyst_renderer::Draw{
                             camera: format!("main"),
                             scene: format!("main")
@@ -160,10 +162,10 @@ fn main() {
                     ];
                     frame.passes.push(amethyst_renderer::RenderPasses::new(format!("main")));
                     frame.passes[1].operations = vec![
-                        Box::new(amethyst_renderer::Clear{color: [0.1, 0.1, 0.1, 1.]}),
-                        /*Box::new(amethyst_renderer::BlitAmbiant{
+                        Box::new(amethyst_renderer::Clear{color: [0., 0., 0., 1.]}),
+                        Box::new(amethyst_renderer::BlitAmbiant{
                             gbuffer: format!("gbuffer"),
-                        }),*/
+                        }),
                         Box::new(amethyst_renderer::Lighting{
                             gbuffer: format!("gbuffer"),
                             camera: format!("main"),
@@ -172,10 +174,11 @@ fn main() {
                     ];
                 }
                 glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Key2)) => {
+                    window.set_title("Amethyst Renderer [Forward Flat]");
                     frame.passes.clear();
                     frame.passes.push(amethyst_renderer::RenderPasses::new(format!("main")));
                     frame.passes[0].operations = vec![
-                        Box::new(amethyst_renderer::Clear{color: [0.1, 0.1, 0.1, 1.]}),
+                        Box::new(amethyst_renderer::Clear{color: [0., 0., 0., 1.]}),
                         Box::new(amethyst_renderer::FlatShading{
                             camera: format!("main"),
                             scene: format!("main")
@@ -183,10 +186,11 @@ fn main() {
                     ]
                 }
                 glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Key3)) => {
+                    window.set_title("Amethyst Renderer [Forward Wireframe]");
                     frame.passes.clear();
                     frame.passes.push(amethyst_renderer::RenderPasses::new(format!("main")));
                     frame.passes[0].operations = vec![
-                        Box::new(amethyst_renderer::Clear{color: [0.1, 0.1, 0.1, 1.]}),
+                        Box::new(amethyst_renderer::Clear{color: [0., 0., 0., 1.]}),
                         Box::new(amethyst_renderer::Wireframe{
                             camera: format!("main"),
                             scene: format!("main")
