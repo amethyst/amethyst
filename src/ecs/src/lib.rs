@@ -1,10 +1,9 @@
-mod dynvec;
-mod entity;
+extern crate time;
+extern crate specs;
+
 mod processor;
 mod sim;
-mod world;
 
-pub use self::entity::Entity;
+pub use specs::*;
 pub use self::processor::{Processor, ProcessorResult};
 pub use self::sim::{Simulation, SimBuilder};
-pub use self::world::World;
