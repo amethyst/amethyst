@@ -12,5 +12,5 @@ repository = "https://github.com/amethyst/amethyst"
 license = "MIT"
 
 [dependencies]
-time = "0.1"
-specs = "0.6"
+time = "^0.1"
+specs = "^0.6.1"
