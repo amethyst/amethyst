@@ -22,6 +22,8 @@ use std::collections::HashMap;
 
 use mopa::Any;
 
+pub use gbuffer::{GBuffer, Draw, BlitAmbiant, Lighting};
+
 pub type ColorFormat = gfx::format::Rgba8;
 pub type DepthFormat = gfx::format::DepthStencil;
 
@@ -41,6 +43,8 @@ impl<R, C> Renderer<R, C>
           <R as gfx::Resources>::RenderTargetView: Any,
           <R as gfx::Resources>::Texture: Any,
           <R as gfx::Resources>::DepthStencilView: Any,
+          <R as gfx::Resources>::ShaderResourceView: Any,
+          <R as gfx::Resources>::Buffer: Any,
           R: 'static,
           C: gfx::CommandBuffer<R>
 {
@@ -50,6 +54,20 @@ impl<R, C> Renderer<R, C>
             command_buffer: combuf.into(),
             methods: HashMap::new()
         }
+    }
+
+    /// Load all known methods
+    pub fn load_all<F>(&mut self, factory: &mut F)
+        where F: gfx::Factory<R>
+    {
+        self.add_method(forward::Clear);
+        self.add_method(forward::FlatShading::new(factory));
+        self.add_method(forward::Wireframe::new(factory));
+
+        self.add_method(gbuffer::Clear);
+        self.add_method(gbuffer::DrawMethod::new(factory));
+        self.add_method(gbuffer::BlitAmbiantMethod::new(factory));
+        self.add_method(gbuffer::LightingMethod::new(factory));
     }
 
     pub fn add_method<A, T, P>(&mut self, p: P)
@@ -70,9 +88,12 @@ impl<R, C> Renderer<R, C>
         where D: gfx::Device<Resources=R, CommandBuffer=C>
     {
         for pass in &frame.passes {
-            let id = (mopa::Any::get_type_id(&**pass), mopa::Any::get_type_id(&frame.target));
-            let method = self.methods.get(&id).expect("No method found, cannot apply operation to target.");
-            method(pass, &frame.target as &Target, &frame, &mut self.command_buffer);
+            let target = frame.targets.get(&pass.target).unwrap();
+            for op in &pass.operations {
+                let id = (mopa::Any::get_type_id(&**op), mopa::Any::get_type_id(&**target));
+                let method = self.methods.get(&id).expect("No method found, cannot apply operation to target.");
+                method(op, &**target, &frame, &mut self.command_buffer);
+            }
         }
         self.command_buffer.flush(device);
         device.cleanup();
@@ -127,10 +148,24 @@ pub struct Camera {
     pub view: [[f32; 4]; 4],
 }
 
+pub struct RenderPasses {
+    pub target: String,
+    pub operations: Vec<Box<Operation>>,
+}
+
+impl RenderPasses {
+    pub fn new(target: String) -> RenderPasses {
+        RenderPasses {
+            target: target,
+            operations: vec![]
+        }
+    }
+}
+
 /// The render job submission
 pub struct Frame<R: gfx::Resources> {
-    pub target: ScreenOutput<R>,
-    pub passes: Vec<Box<Operation>>,
+    pub passes: Vec<RenderPasses>,
+    pub targets: HashMap<String, Box<Target>>,
     pub scenes: HashMap<String, Scene<R>>,
     pub cameras: HashMap<String, Camera>
 }
@@ -151,6 +186,7 @@ pub struct FlatShading {
     pub scene: String,
 }
 impl Operation for FlatShading {}
+
 
 pub trait Operation: mopa::Any {}
 mopafy!(Operation);

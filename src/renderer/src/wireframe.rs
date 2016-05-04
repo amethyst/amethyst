@@ -71,7 +71,7 @@ pub fn create_wireframe_pipeline<F, R>(factory: &mut F) -> WireframePipeline<R>
     factory.create_pipeline_state(
         &gfx::ShaderSet::Geometry(vs, gs, fs),
         gfx::Primitive::TriangleList,
-        gfx::state::Rasterizer::new_fill(gfx::state::CullFace::Nothing),
+        gfx::state::Rasterizer::new_fill(),
         wireframe::new()
     ).unwrap()
 }

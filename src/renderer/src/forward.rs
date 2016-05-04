@@ -13,7 +13,6 @@ pub static VERTEX_SRC: &'static [u8] = b"
     uniform mat4 u_Model;
 
     in vec3 a_Pos;
-    in vec3 a_Normal;
 
     void main() {
         gl_Position = u_Proj * u_View * u_Model * vec4(a_Pos, 1.0);
@@ -89,7 +88,6 @@ impl<R: gfx::Resources> FlatShading<R> {
         FlatShading(factory.create_pipeline_simple(
             VERTEX_SRC,
             FLAT_FRAGMENT_SRC,
-            gfx::state::CullFace::Back,
             flat::new()
         ).unwrap())
     }
@@ -148,13 +146,11 @@ impl<R: gfx::Resources> Wireframe<R> {
         Wireframe(factory.create_pipeline_state(
             &gfx::ShaderSet::Geometry(vs, gs, fs),
             gfx::Primitive::TriangleList,
-            gfx::state::Rasterizer::new_fill(gfx::state::CullFace::Nothing),
+            gfx::state::Rasterizer::new_fill(),
             wireframe::new()
         ).unwrap())
     }
 }
-
-
 
 impl<R, C> Method<::Wireframe, ScreenOutput<R>, R, C> for Wireframe<R>
     where R: gfx::Resources,

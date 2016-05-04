@@ -1,6 +1,7 @@
 
 extern crate cgmath;
 extern crate gfx;
+extern crate gfx_device_gl;
 extern crate gfx_window_glutin;
 extern crate glutin;
 extern crate genmesh;
@@ -8,6 +9,7 @@ extern crate amethyst_renderer;
 extern crate rand;
 
 use std::time::SystemTime;
+use std::collections::HashMap;
 use rand::Rng;
 
 use gfx::{Device};
@@ -22,7 +24,7 @@ use amethyst_renderer::VertexPosNormal as Vertex;
 use amethyst_renderer::{ColorFormat, DepthFormat};
 
 fn build_sphere() -> Vec<Vertex> {
-    SphereUV::new(16, 16)
+    SphereUV::new(32, 32)
         .vertex(|(x, y, z)| Vertex{
             pos: [x, y, z],
             normal: Vector3::new(x, y, z).normalize().into()
@@ -43,7 +45,8 @@ fn main() {
     let combuf = factory.create_command_buffer();
 
     let sphere = build_sphere();
-    let (buffer, slice) = factory.create_vertex_buffer(&sphere);
+    let buffer = factory.create_vertex_buffer(&sphere);
+    let slice = gfx::Slice::new_match_vertex_buffer(&buffer);
 
     let mut scene = amethyst_renderer::Scene{
         fragments: vec![],
@@ -97,28 +100,47 @@ fn main() {
 
 
     let mut frame = amethyst_renderer::Frame{
-        passes: vec![
-            Box::new(amethyst_renderer::Clear{color: [0.1, 0.1, 0.1, 1.]}),
-            Box::new(amethyst_renderer::FlatShading{
-                camera: format!("main"),
-                scene: format!("main")
-            }),
-        ],
-        target: amethyst_renderer::ScreenOutput{
-            output: main_color,
-            output_depth: main_depth
-        },
+        passes: vec![],
+        targets: HashMap::new(),
         scenes: std::collections::HashMap::new(),
         cameras: std::collections::HashMap::new()
     };
 
     frame.scenes.insert(format!("main"), scene);
+    frame.passes.push(amethyst_renderer::RenderPasses::new(format!("gbuffer")));
+    frame.passes[0].operations = vec![
+        Box::new(amethyst_renderer::Clear{color: [0.1, 0.1, 0.1, 1.]}),
+        Box::new(amethyst_renderer::Draw{
+            camera: format!("main"),
+            scene: format!("main")
+        })
+    ];
+    frame.passes.push(amethyst_renderer::RenderPasses::new(format!("main")));
+    frame.passes[1].operations = vec![
+        Box::new(amethyst_renderer::Clear{color: [0.1, 0.1, 0.1, 1.]}),
+        Box::new(amethyst_renderer::BlitAmbiant{
+            gbuffer: format!("gbuffer"),
+        }),
+        Box::new(amethyst_renderer::Lighting{
+            gbuffer: format!("gbuffer"),
+            camera: format!("main"),
+            scene: format!("main"),
+        }),
+    ];
+    frame.targets.insert(
+        format!("main"),
+        Box::new(amethyst_renderer::ScreenOutput{
+            output: main_color,
+            output_depth: main_depth
+        }
+    ));
+    frame.targets.insert(
+        format!("gbuffer"),
+        Box::new(amethyst_renderer::GBuffer::new(&mut factory, (800, 600)))
+    );
 
     let mut renderer = amethyst_renderer::Renderer::new(combuf);
-
-    renderer.add_method(amethyst_renderer::forward::Clear);
-    renderer.add_method(amethyst_renderer::forward::FlatShading::new(&mut factory));
-    renderer.add_method(amethyst_renderer::forward::Wireframe::new(&mut factory));
+    renderer.load_all(&mut factory);
 
     let start = SystemTime::now();
     let (mut w, mut h) = (800., 600.);
@@ -126,17 +148,33 @@ fn main() {
         // quit when Esc is pressed.
         for event in window.poll_events() {
             match event {
-                glutin::Event::KeyboardInput(glutin::ElementState::Pressed, _, Some(glutin::VirtualKeyCode::Space)) => {
-                    frame.passes = vec![
+                glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Key1)) => {
+                    frame.passes.clear();
+                    frame.passes.push(amethyst_renderer::RenderPasses::new(format!("gbuffer")));
+                    frame.passes[0].operations = vec![
                         Box::new(amethyst_renderer::Clear{color: [0.1, 0.1, 0.1, 1.]}),
-                        Box::new(amethyst_renderer::Wireframe{
+                        Box::new(amethyst_renderer::Draw{
                             camera: format!("main"),
                             scene: format!("main")
+                        })
+                    ];
+                    frame.passes.push(amethyst_renderer::RenderPasses::new(format!("main")));
+                    frame.passes[1].operations = vec![
+                        Box::new(amethyst_renderer::Clear{color: [0.1, 0.1, 0.1, 1.]}),
+                        /*Box::new(amethyst_renderer::BlitAmbiant{
+                            gbuffer: format!("gbuffer"),
+                        }),*/
+                        Box::new(amethyst_renderer::Lighting{
+                            gbuffer: format!("gbuffer"),
+                            camera: format!("main"),
+                            scene: format!("main"),
                         }),
-                    ]
+                    ];
                 }
-                glutin::Event::KeyboardInput(glutin::ElementState::Released, _, Some(glutin::VirtualKeyCode::Space)) => {
-                    frame.passes = vec![
+                glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Key2)) => {
+                    frame.passes.clear();
+                    frame.passes.push(amethyst_renderer::RenderPasses::new(format!("main")));
+                    frame.passes[0].operations = vec![
                         Box::new(amethyst_renderer::Clear{color: [0.1, 0.1, 0.1, 1.]}),
                         Box::new(amethyst_renderer::FlatShading{
                             camera: format!("main"),
@@ -144,14 +182,27 @@ fn main() {
                         }),
                     ]
                 }
+                glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Key3)) => {
+                    frame.passes.clear();
+                    frame.passes.push(amethyst_renderer::RenderPasses::new(format!("main")));
+                    frame.passes[0].operations = vec![
+                        Box::new(amethyst_renderer::Clear{color: [0.1, 0.1, 0.1, 1.]}),
+                        Box::new(amethyst_renderer::Wireframe{
+                            camera: format!("main"),
+                            scene: format!("main")
+                        }),
+                    ]
+                }
                 glutin::Event::Resized(iw, ih) => {
-                    let output = &mut frame.target;
+                    let output = frame.targets.get_mut("main").unwrap();
+                    let out = output.downcast_mut::<amethyst_renderer::ScreenOutput<gfx_device_gl::Resources>>();
+                    let out = out.unwrap();
                     w = iw as f32;
                     h = ih as f32;
                     gfx_window_glutin::update_views(
                         &window,
-                        &mut output.output,
-                        &mut output.output_depth
+                        &mut out.output,
+                        &mut out.output_depth
                     );
                 }
                 glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Escape)) |
