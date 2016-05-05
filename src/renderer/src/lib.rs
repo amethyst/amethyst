@@ -15,18 +15,17 @@ extern crate cgmath;
 
 pub mod target;
 pub mod pass;
-pub mod method;
 
 use std::any::TypeId;
 use std::collections::HashMap;
 
-pub use pass::Pass;
+pub use pass::PassDescription;
 pub use target::Target;
-pub use method::Method;
+pub use pass::Pass;
 
 pub struct Renderer<R: gfx::Resources, C: gfx::CommandBuffer<R>> {
     command_buffer: gfx::Encoder<R, C>,
-    methods: HashMap<(TypeId, TypeId), Box<Fn(&Box<Pass>, &Target, &Frame<R>, &mut gfx::Encoder<R, C>)>>
+    methods: HashMap<(TypeId, TypeId), Box<Fn(&Box<PassDescription>, &Target, &Frame<R>, &mut gfx::Encoder<R, C>)>>
 }
 
 // placeholder
@@ -51,24 +50,24 @@ impl<R, C> Renderer<R, C>
     pub fn load_all<F>(&mut self, factory: &mut F)
         where F: gfx::Factory<R>
     {
-        self.add_method(method::forward::Clear);
-        self.add_method(method::forward::DrawNoShading::new(factory));
-        self.add_method(method::forward::Wireframe::new(factory));
+        self.add_method(pass::forward::Clear);
+        self.add_method(pass::forward::DrawNoShading::new(factory));
+        self.add_method(pass::forward::Wireframe::new(factory));
 
-        self.add_method(method::deferred::Clear);
-        self.add_method(method::deferred::DrawMethod::new(factory));
-        self.add_method(method::deferred::BlitLayer::new(factory));
-        self.add_method(method::deferred::LightingMethod::new(factory));
+        self.add_method(pass::deferred::Clear);
+        self.add_method(pass::deferred::DrawPass::new(factory));
+        self.add_method(pass::deferred::BlitLayer::new(factory));
+        self.add_method(pass::deferred::LightingPass::new(factory));
     }
 
     /// Add a method to the table of available methods
     pub fn add_method<A, T, P>(&mut self, p: P)
-        where P: Method<R, Arg=A, Target=T> + 'static,
-              A: Pass,
+        where P: Pass<R, Arg=A, Target=T> + 'static,
+              A: PassDescription,
               T: Target
     {
         let id = (TypeId::of::<A>(), TypeId::of::<T>());
-        self.methods.insert(id, Box::new(move |a: &Box<Pass>, t: &Target, frame: &Frame<R>, encoder: &mut gfx::Encoder<R, C>| {
+        self.methods.insert(id, Box::new(move |a: &Box<PassDescription>, t: &Target, frame: &Frame<R>, encoder: &mut gfx::Encoder<R, C>| {
             let a = a.downcast_ref::<A>().unwrap();
             let t = t.downcast_ref::<T>().unwrap();
             p.apply(a, t, frame, encoder)
@@ -138,11 +137,11 @@ pub struct Camera {
 
 pub struct Layer {
     pub target: String,
-    pub passes: Vec<Box<Pass>>,
+    pub passes: Vec<Box<PassDescription>>,
 }
 
 impl Layer {
-    pub fn new<A>(target: A, passes: Vec<Box<Pass>>) -> Layer
+    pub fn new<A>(target: A, passes: Vec<Box<PassDescription>>) -> Layer
         where String: From<A>
     {
         Layer {

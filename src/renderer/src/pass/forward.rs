@@ -2,7 +2,7 @@ use gfx;
 use gfx::traits::FactoryExt;
 
 use pass;
-use Method;
+use Pass;
 use target::ColorBuffer;
 pub use VertexPosNormal;
 
@@ -55,7 +55,7 @@ pub type GFormat = [f32; 4];
 
 pub struct Clear;
 
-impl<R> Method<R> for Clear
+impl<R> Pass<R> for Clear
     where R: gfx::Resources,
 {
     type Arg = pass::Clear;
@@ -94,7 +94,7 @@ impl<R: gfx::Resources> DrawNoShading<R> {
     }
 }
 
-impl<R> Method<R> for DrawNoShading<R>
+impl<R> Pass<R> for DrawNoShading<R>
     where R: gfx::Resources
 {
     type Arg = pass::DrawNoShading;
@@ -153,7 +153,7 @@ impl<R: gfx::Resources> Wireframe<R> {
     }
 }
 
-impl<R> Method<R> for Wireframe<R>
+impl<R> Pass<R> for Wireframe<R>
     where R: gfx::Resources
 {
     type Arg = pass::Wireframe;

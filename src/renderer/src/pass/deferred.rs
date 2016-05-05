@@ -13,7 +13,7 @@ gfx_vertex_struct!( Vertex {
 
 pub struct Clear;
 
-impl<R> ::Method<R> for Clear
+impl<R> ::Pass<R> for Clear
     where R: gfx::Resources
 {
     type Arg = ::pass::Clear;
@@ -81,15 +81,15 @@ gfx_pipeline!( draw {
         gfx::preset::depth::LESS_EQUAL_WRITE,
 });
 
-pub struct DrawMethod<R: gfx::Resources>{
+pub struct DrawPass<R: gfx::Resources>{
     pso: gfx::PipelineState<R, draw::Meta>
 }
 
-impl<R: gfx::Resources> DrawMethod<R> {
-    pub fn new<F>(factory: &mut F) -> DrawMethod<R>
+impl<R: gfx::Resources> DrawPass<R> {
+    pub fn new<F>(factory: &mut F) -> DrawPass<R>
         where F: gfx::Factory<R>
     {
-        DrawMethod {
+        DrawPass {
             pso: factory.create_pipeline_simple(
                 DRAW_VERTEX_SRC,
                 DRAW_FRAGMENT_SRC,
@@ -99,7 +99,7 @@ impl<R: gfx::Resources> DrawMethod<R> {
     }
 }
 
-impl<R> ::Method<R> for DrawMethod<R>
+impl<R> ::Pass<R> for DrawPass<R>
     where R: gfx::Resources
 {
     type Arg = ::pass::DrawNoShading;
@@ -214,7 +214,7 @@ impl<R> BlitLayer<R>
     }
 }
 
-impl<R> ::Method<R> for BlitLayer<R>
+impl<R> ::Pass<R> for BlitLayer<R>
     where R: gfx::Resources,
 {
     type Arg = ::pass::BlitLayer;
@@ -332,7 +332,7 @@ gfx_defines!(
     }
 );
 
-pub struct LightingMethod<R: gfx::Resources> {
+pub struct LightingPass<R: gfx::Resources> {
     buffer: Buffer<R, Vertex>,
     lights: Buffer<R, PointLight>,
     slice: Slice<R>,
@@ -344,8 +344,8 @@ fn pad(x: [f32; 3]) -> [f32; 4] {
     [x[0], x[1], x[2], 0.]
 }
 
-impl<R: gfx::Resources> LightingMethod<R> {
-    pub fn new<F>(factory: &mut F) -> LightingMethod<R>
+impl<R: gfx::Resources> LightingPass<R> {
+    pub fn new<F>(factory: &mut F) -> LightingPass<R>
         where F: gfx::Factory<R>
     {
         let (buffer, slice) = create_screen_fill_triangle(factory);
@@ -355,7 +355,7 @@ impl<R: gfx::Resources> LightingMethod<R> {
         );
 
         let lights = factory.create_constant_buffer(128);
-        LightingMethod{
+        LightingPass{
             lights: lights,
             buffer: buffer,
             slice: slice,
@@ -369,7 +369,7 @@ impl<R: gfx::Resources> LightingMethod<R> {
     }
 }
 
-impl<R> ::Method<R> for LightingMethod<R>
+impl<R> ::Pass<R> for LightingPass<R>
     where R: gfx::Resources
 {
     type Arg = ::pass::Lighting;
