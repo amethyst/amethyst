@@ -16,7 +16,6 @@ pub struct Clear;
 impl<R, C> ::Method<::pass::Clear, GeometryBuffer<R>, R, C> for Clear
     where R: gfx::Resources,
           C: gfx::CommandBuffer<R>,
-          R: 'static
 {
     fn apply(&self, c: &::pass::Clear, target: &GeometryBuffer<R>, _: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
         encoder.clear(&target.normal, [0.; 4]);
@@ -338,6 +337,8 @@ impl<R, C> ::Method<::pass::Lighting, ::framebuffer::ColorBuffer<R>, R, C> for L
         let src = &scenes.framebuffers[&arg.gbuffer];
         let src = src.downcast_ref::<GeometryBuffer<R>>().unwrap();
 
+        let (w, h, _, _) = src.kd.get_dimensions();
+
         for l in &scene.lights {
             encoder.draw(
                 &self.slice,
@@ -358,7 +359,7 @@ impl<R, C> ::Method<::pass::Lighting, ::framebuffer::ColorBuffer<R>, R, C> for L
                     inv_proj: Matrix4::from(camera.projection).invert().unwrap().into(),
                     inv_view: Matrix4::from(camera.view).invert().unwrap().into(),
                     proj: camera.projection,
-                    viewport: [0., 0., 800., 600.]
+                    viewport: [0., 0., w as f32, h as f32]
                 }
             );
         }

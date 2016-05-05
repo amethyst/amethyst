@@ -193,16 +193,23 @@ fn main() {
                     ];
                 }
                 glutin::Event::Resized(iw, ih) => {
-                    let output = frame.framebuffers.get_mut("main").unwrap();
-                    let out = output.downcast_mut::<amethyst_renderer::framebuffer::ColorBuffer<gfx_device_gl::Resources>>();
-                    let out = out.unwrap();
-                    w = iw as f32;
-                    h = ih as f32;
-                    gfx_window_glutin::update_views(
-                        &window,
-                        &mut out.color,
-                        &mut out.output_depth
+                    {
+                        let output = frame.framebuffers.get_mut("main").unwrap();
+                        let out = output.downcast_mut::<amethyst_renderer::framebuffer::ColorBuffer<gfx_device_gl::Resources>>();
+                        let out = out.unwrap();
+                        w = iw as f32;
+                        h = ih as f32;
+                        gfx_window_glutin::update_views(
+                            &window,
+                            &mut out.color,
+                            &mut out.output_depth
+                        );
+                    }
+                    frame.framebuffers.insert(
+                        "gbuffer".into(),
+                        Box::new(amethyst_renderer::framebuffer::GeometryBuffer::new(&mut factory, (iw as u16, ih as u16)))
                     );
+
                 }
                 glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Escape)) |
                 glutin::Event::Closed => break 'main,
