@@ -20,7 +20,7 @@ use genmesh::generators::SphereUV;
 use genmesh::{Triangulate, MapToVertices, Vertices};
 
 use amethyst_renderer::VertexPosNormal as Vertex;
-use amethyst_renderer::framebuffer::{ColorFormat, DepthFormat};
+use amethyst_renderer::target::{ColorFormat, DepthFormat};
 use amethyst_renderer::{Frame, Layer};
 
 fn build_sphere() -> Vec<Vertex> {
@@ -122,16 +122,16 @@ fn main() {
     let mut frame = Frame::new();
 
     frame.scenes.insert("main".into(), scene);
-    frame.framebuffers.insert(
+    frame.targets.insert(
         "main".into(),
-        Box::new(amethyst_renderer::framebuffer::ColorBuffer{
+        Box::new(amethyst_renderer::target::ColorBuffer{
             color: main_color,
             output_depth: main_depth
         }
     ));
-    frame.framebuffers.insert(
+    frame.targets.insert(
         "gbuffer".into(),
-        Box::new(amethyst_renderer::framebuffer::GeometryBuffer::new(&mut factory, (800, 600)))
+        Box::new(amethyst_renderer::target::GeometryBuffer::new(&mut factory, (800, 600)))
     );
 
 
@@ -184,8 +184,8 @@ fn main() {
                 }
                 glutin::Event::Resized(iw, ih) => {
                     {
-                        let output = frame.framebuffers.get_mut("main").unwrap();
-                        let out = output.downcast_mut::<amethyst_renderer::framebuffer::ColorBuffer<gfx_device_gl::Resources>>();
+                        let output = frame.targets.get_mut("main").unwrap();
+                        let out = output.downcast_mut::<amethyst_renderer::target::ColorBuffer<gfx_device_gl::Resources>>();
                         let out = out.unwrap();
                         w = iw as f32;
                         h = ih as f32;
@@ -195,9 +195,9 @@ fn main() {
                             &mut out.output_depth
                         );
                     }
-                    frame.framebuffers.insert(
+                    frame.targets.insert(
                         "gbuffer".into(),
-                        Box::new(amethyst_renderer::framebuffer::GeometryBuffer::new(&mut factory, (iw as u16, ih as u16)))
+                        Box::new(amethyst_renderer::target::GeometryBuffer::new(&mut factory, (iw as u16, ih as u16)))
                     );
 
                 }

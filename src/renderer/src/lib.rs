@@ -13,7 +13,7 @@ extern crate mopa;
 extern crate glutin;
 extern crate cgmath;
 
-pub mod framebuffer;
+pub mod target;
 pub mod pass;
 pub mod method;
 
@@ -21,12 +21,12 @@ use std::any::TypeId;
 use std::collections::HashMap;
 
 pub use pass::Pass;
-pub use framebuffer::Framebuffer;
+pub use target::Target;
 pub use method::Method;
 
 pub struct Renderer<R: gfx::Resources, C: gfx::CommandBuffer<R>> {
     command_buffer: gfx::Encoder<R, C>,
-    methods: HashMap<(TypeId, TypeId), Box<Fn(&Box<Pass>, &Framebuffer, &Frame<R>, &mut gfx::Encoder<R, C>)>>
+    methods: HashMap<(TypeId, TypeId), Box<Fn(&Box<Pass>, &Target, &Frame<R>, &mut gfx::Encoder<R, C>)>>
 }
 
 // placeholder
@@ -65,10 +65,10 @@ impl<R, C> Renderer<R, C>
     pub fn add_method<A, T, P>(&mut self, p: P)
         where P: Method<R, Arg=A, Target=T> + 'static,
               A: Pass,
-              T: Framebuffer
+              T: Target
     {
         let id = (TypeId::of::<A>(), TypeId::of::<T>());
-        self.methods.insert(id, Box::new(move |a: &Box<Pass>, t: &Framebuffer, frame: &Frame<R>, encoder: &mut gfx::Encoder<R, C>| {
+        self.methods.insert(id, Box::new(move |a: &Box<Pass>, t: &Target, frame: &Frame<R>, encoder: &mut gfx::Encoder<R, C>| {
             let a = a.downcast_ref::<A>().unwrap();
             let t = t.downcast_ref::<T>().unwrap();
             p.apply(a, t, frame, encoder)
@@ -80,7 +80,7 @@ impl<R, C> Renderer<R, C>
         where D: gfx::Device<Resources=R, CommandBuffer=C>
     {
         for layer in &frame.layers {
-            let fb = frame.framebuffers.get(&layer.target).unwrap();
+            let fb = frame.targets.get(&layer.target).unwrap();
             for pass in &layer.passes {
                 let id = (mopa::Any::get_type_id(&**pass), mopa::Any::get_type_id(&**fb));
                 let method = self.methods.get(&id).expect("No method found, cannot apply passes to target.");
@@ -155,7 +155,7 @@ impl Layer {
 /// The render job submission
 pub struct Frame<R: gfx::Resources> {
     pub layers: Vec<Layer>,
-    pub framebuffers: HashMap<String, Box<Framebuffer>>,
+    pub targets: HashMap<String, Box<Target>>,
     pub scenes: HashMap<String, Scene<R>>,
     pub cameras: HashMap<String, Camera>
 }
@@ -165,7 +165,7 @@ impl<R: gfx::Resources> Frame<R> {
     pub fn new() -> Frame<R> {
         Frame {
             layers: vec![],
-            framebuffers: HashMap::new(),
+            targets: HashMap::new(),
             scenes: HashMap::new(),
             cameras: HashMap::new()
         }

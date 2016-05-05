@@ -3,7 +3,7 @@ use gfx::traits::FactoryExt;
 
 use pass;
 use Method;
-use framebuffer::ColorBuffer;
+use target::ColorBuffer;
 pub use VertexPosNormal;
 
 pub static VERTEX_SRC: &'static [u8] = b"

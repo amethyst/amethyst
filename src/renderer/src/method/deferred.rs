@@ -3,7 +3,7 @@ use gfx::traits::FactoryExt;
 use gfx::handle::Buffer;
 use gfx::Slice;
 use cgmath::{Matrix4, SquareMatrix};
-pub use ::framebuffer::{ColorFormat, GeometryBuffer};
+pub use ::target::{ColorFormat, GeometryBuffer};
 
 gfx_vertex_struct!( Vertex {
     pos: [i32; 2] = "a_Pos",
@@ -218,12 +218,12 @@ impl<R> ::Method<R> for BlitLayer<R>
     where R: gfx::Resources,
 {
     type Arg = ::pass::BlitLayer;
-    type Target = ::framebuffer::ColorBuffer<R>;
+    type Target = ::target::ColorBuffer<R>;
 
-    fn apply<C>(&self, arg: &::pass::BlitLayer, target: &::framebuffer::ColorBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+    fn apply<C>(&self, arg: &::pass::BlitLayer, target: &::target::ColorBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
-        let src = &scenes.framebuffers[&arg.gbuffer];
+        let src = &scenes.targets[&arg.gbuffer];
         let src = src.downcast_ref::<GeometryBuffer<R>>().unwrap();
 
         let layer = match arg.layer.as_ref() {
@@ -373,14 +373,14 @@ impl<R> ::Method<R> for LightingMethod<R>
     where R: gfx::Resources
 {
     type Arg = ::pass::Lighting;
-    type Target = ::framebuffer::ColorBuffer<R>;
+    type Target = ::target::ColorBuffer<R>;
 
-    fn apply<C>(&self, arg: &::pass::Lighting, target: &::framebuffer::ColorBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+    fn apply<C>(&self, arg: &::pass::Lighting, target: &::target::ColorBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
         let scene = &scenes.scenes[&arg.scene];
         let camera = &scenes.cameras[&arg.camera];
-        let src = &scenes.framebuffers[&arg.gbuffer];
+        let src = &scenes.targets[&arg.gbuffer];
         let src = src.downcast_ref::<GeometryBuffer<R>>().unwrap();
 
         let (w, h, _, _) = src.kd.get_dimensions();

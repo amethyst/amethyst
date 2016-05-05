@@ -2,8 +2,8 @@
 use gfx;
 use mopa;
 
-pub trait Framebuffer: mopa::Any {}
-mopafy!(Framebuffer);
+pub trait Target: mopa::Any {}
+mopafy!(Target);
 
 pub type ColorFormat = gfx::format::Rgba8;
 pub type DepthFormat = gfx::format::DepthStencil;
@@ -14,7 +14,7 @@ pub struct ColorBuffer<R: gfx::Resources> {
     pub output_depth: gfx::handle::DepthStencilView<R, DepthFormat>,
 }
 
-impl<R: gfx::Resources> Framebuffer for ColorBuffer<R> {}
+impl<R: gfx::Resources> Target for ColorBuffer<R> {}
 
 /// A geometry buffer is used in a deferred pipeline
 pub struct GeometryBuffer<R: gfx::Resources> {
@@ -53,4 +53,4 @@ impl<R: gfx::Resources> GeometryBuffer<R> {
     }
 }
 
-impl<R: gfx::Resources> Framebuffer for GeometryBuffer<R> {}
+impl<R: gfx::Resources> Target for GeometryBuffer<R> {}
