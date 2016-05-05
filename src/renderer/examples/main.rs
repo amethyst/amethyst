@@ -87,7 +87,7 @@ fn main() {
                 scene.fragments.push(amethyst_renderer::Fragment{
                     buffer: buffer.clone(),
                     slice: slice.clone(),
-                    ka: [color[0] * 0.1, color[1] * 0.1, color[2] * 0.1, 1.],
+                    ka: [color[0] * 0.05, color[1] * 0.05, color[2] * 0.05, 1.],
                     kd: color,
                     transform: Matrix4::from_translation(Vector3::new(x, y, z)).into()
                 })

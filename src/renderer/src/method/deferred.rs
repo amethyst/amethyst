@@ -247,14 +247,23 @@ impl<R> ::Method<R> for BlitLayer<R>
 
 pub static LIGHT_FRAGMENT_SRC: &'static [u8] = b"
     #version 150 core
+    #define MAX_NUM_TOTAL_LIGHTS 128
 
     uniform mat4 u_Proj;
     uniform mat4 u_InvProj;
     uniform mat4 u_InvView;
     uniform vec4 u_Viewport;
-    uniform vec3 u_Propagation;
-    uniform vec4 u_Center;
-    uniform vec4 u_Color;
+    uniform int u_LightCount;
+
+    struct Light {
+        vec4 propagation;
+        vec4 center;
+        vec4 color;
+    };
+
+    layout (std140) uniform u_Lights {
+        Light light[MAX_NUM_TOTAL_LIGHTS];
+    };
 
     uniform sampler2D t_Kd;
     uniform sampler2D t_Depth;
@@ -283,37 +292,56 @@ pub static LIGHT_FRAGMENT_SRC: &'static [u8] = b"
         vec4 normal = texture(t_Normal, v_TexCoord);
 
         vec4 pos = calc_pos_from_window(vec3(gl_FragCoord.xy, depth));
-        vec4 delta = u_Center - pos;
-        vec4 light_to_point_normal = normalize(delta);
 
-        float dist = length(pos - u_Center);
-        float intensity = dot(u_Propagation, vec3(1., 1./dist, 1/(dist*dist)));
+        vec4 color = vec4(0., 0., 0., 0.);
+        for (int i = 0; i < u_LightCount; i++) {
+            vec4 delta = light[i].center - pos;
+            vec4 light_to_point_normal = normalize(delta);
 
-        o_Color = kd * u_Color * intensity * max(0, dot(light_to_point_normal, normal));
+            float dist = length(delta);
+            float intensity = dot(light[i].propagation.xyz, vec3(1., 1./dist, 1/(dist*dist)));
+
+            color += kd * light[i].color * intensity * max(0, dot(light_to_point_normal, normal));
+        }
+        o_Color = color;
     }
 ";
 
-gfx_pipeline!( light {
-    vbuf: gfx::VertexBuffer<Vertex> = (),
-    kd: gfx::TextureSampler<[f32; 4]> = "t_Kd",
-    normal: gfx::TextureSampler<[f32; 4]> = "t_Normal",
-    depth: gfx::TextureSampler<f32> = "t_Depth",
-    out: gfx::BlendTarget<ColorFormat> = ("o_Color", gfx::state::MASK_ALL, gfx::preset::blend::ADD),
 
-    center: gfx::Global<[f32; 4]> = "u_Center",
-    color: gfx::Global<[f32; 4]> = "u_Color",
-    propagation: gfx::Global<[f32; 3]> = "u_Propagation",
-    viewport: gfx::Global<[f32; 4]> = "u_Viewport",
-    proj: gfx::Global<[[f32; 4]; 4]> = "u_Proj",
-    inv_proj: gfx::Global<[[f32; 4]; 4]> = "u_InvProj",
-    inv_view: gfx::Global<[[f32; 4]; 4]> = "u_InvView",
-});
+gfx_defines!(
+    constant PointLight {
+        propagation: [f32; 4] = "propagation",
+        center: [f32; 4] = "center",
+        color: [f32; 4] = "color",
+    }
+
+
+    pipeline light {
+        vbuf: gfx::VertexBuffer<Vertex> = (),
+        kd: gfx::TextureSampler<[f32; 4]> = "t_Kd",
+        normal: gfx::TextureSampler<[f32; 4]> = "t_Normal",
+        depth: gfx::TextureSampler<f32> = "t_Depth",
+        out: gfx::BlendTarget<ColorFormat> = ("o_Color", gfx::state::MASK_ALL, gfx::preset::blend::ADD),
+
+        light_count: gfx::Global<i32> = "u_LightCount",
+        lights: gfx::ConstantBuffer<PointLight> = "u_Lights",
+        viewport: gfx::Global<[f32; 4]> = "u_Viewport",
+        proj: gfx::Global<[[f32; 4]; 4]> = "u_Proj",
+        inv_proj: gfx::Global<[[f32; 4]; 4]> = "u_InvProj",
+        inv_view: gfx::Global<[[f32; 4]; 4]> = "u_InvView",
+    }
+);
 
 pub struct LightingMethod<R: gfx::Resources> {
     buffer: Buffer<R, Vertex>,
+    lights: Buffer<R, PointLight>,
     slice: Slice<R>,
     sampler: gfx::handle::Sampler<R>,
     pso: gfx::pso::PipelineState<R, light::Meta>
+}
+
+fn pad(x: [f32; 3]) -> [f32; 4] {
+    [x[0], x[1], x[2], 0.]
 }
 
 impl<R: gfx::Resources> LightingMethod<R> {
@@ -326,7 +354,9 @@ impl<R: gfx::Resources> LightingMethod<R> {
                                        gfx::tex::WrapMode::Clamp)
         );
 
+        let lights = factory.create_constant_buffer(128);
         LightingMethod{
+            lights: lights,
             buffer: buffer,
             slice: slice,
             sampler: sampler,
@@ -354,8 +384,23 @@ impl<R> ::Method<R> for LightingMethod<R>
         let src = src.downcast_ref::<GeometryBuffer<R>>().unwrap();
 
         let (w, h, _, _) = src.kd.get_dimensions();
+        for lights in scene.lights.chunks(128) {
+            let mut lights: Vec<_> = lights.iter().map(|l| PointLight{
+                    propagation: [l.propagation_constant, l.propagation_linear, l.propagation_r_square, 0.],
+                    color: l.color,
+                    center: pad(l.center)
+                }).collect();
 
-        for l in &scene.lights {
+            let count = lights.len();
+            while lights.len() < 128 {
+                lights.push(PointLight{
+                    propagation: [0., 0., 0., 0.],
+                    color: [0., 0., 0., 0.],
+                    center: [0., 0., 0., 0.],
+                })
+            }
+
+            encoder.update_buffer(&self.lights, &lights[..], 0).unwrap();
             encoder.draw(
                 &self.slice,
                 &self.pso,
@@ -365,19 +410,15 @@ impl<R> ::Method<R> for LightingMethod<R>
                     normal: (src.texture_normal.clone(), self.sampler.clone()),
                     depth: (src.texture_depth.clone(), self.sampler.clone()),
                     out: target.color.clone(),
-                    color: l.color,
-                    center: [l.center[0], l.center[1], l.center[2], 1.],
-                    propagation: [
-                        l.propagation_constant,
-                        l.propagation_linear,
-                        l.propagation_r_square,
-                    ],
                     inv_proj: Matrix4::from(camera.projection).invert().unwrap().into(),
                     inv_view: Matrix4::from(camera.view).invert().unwrap().into(),
                     proj: camera.projection,
-                    viewport: [0., 0., w as f32, h as f32]
+                    viewport: [0., 0., w as f32, h as f32],
+                    light_count: count as i32,
+                    lights: self.lights.clone()
                 }
             );
+
         }
     }
 }
