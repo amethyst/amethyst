@@ -25,7 +25,7 @@ pub use pass::Pass;
 
 pub struct Renderer<R: gfx::Resources, C: gfx::CommandBuffer<R>> {
     command_buffer: gfx::Encoder<R, C>,
-    methods: HashMap<(TypeId, TypeId), Box<Fn(&Box<PassDescription>, &Target, &Frame<R>, &mut gfx::Encoder<R, C>)>>
+    passes: HashMap<(TypeId, TypeId), Box<Fn(&Box<PassDescription>, &Target, &Frame<R>, &mut gfx::Encoder<R, C>)>>
 }
 
 // placeholder
@@ -42,32 +42,32 @@ impl<R, C> Renderer<R, C>
     pub fn new(combuf: C) -> Renderer<R, C> {
         Renderer {
             command_buffer: combuf.into(),
-            methods: HashMap::new()
+            passes: HashMap::new()
         }
     }
 
-    /// Load all known methods
+    /// Load all known passes
     pub fn load_all<F>(&mut self, factory: &mut F)
         where F: gfx::Factory<R>
     {
-        self.add_method(pass::forward::Clear);
-        self.add_method(pass::forward::DrawNoShading::new(factory));
-        self.add_method(pass::forward::Wireframe::new(factory));
+        self.add_pass(pass::forward::Clear);
+        self.add_pass(pass::forward::DrawNoShading::new(factory));
+        self.add_pass(pass::forward::Wireframe::new(factory));
 
-        self.add_method(pass::deferred::Clear);
-        self.add_method(pass::deferred::DrawPass::new(factory));
-        self.add_method(pass::deferred::BlitLayer::new(factory));
-        self.add_method(pass::deferred::LightingPass::new(factory));
+        self.add_pass(pass::deferred::Clear);
+        self.add_pass(pass::deferred::DrawPass::new(factory));
+        self.add_pass(pass::deferred::BlitLayer::new(factory));
+        self.add_pass(pass::deferred::LightingPass::new(factory));
     }
 
-    /// Add a method to the table of available methods
-    pub fn add_method<A, T, P>(&mut self, p: P)
+    /// Add a pass to the table of available passes
+    pub fn add_pass<A, T, P>(&mut self, p: P)
         where P: Pass<R, Arg=A, Target=T> + 'static,
               A: PassDescription,
               T: Target
     {
         let id = (TypeId::of::<A>(), TypeId::of::<T>());
-        self.methods.insert(id, Box::new(move |a: &Box<PassDescription>, t: &Target, frame: &Frame<R>, encoder: &mut gfx::Encoder<R, C>| {
+        self.passes.insert(id, Box::new(move |a: &Box<PassDescription>, t: &Target, frame: &Frame<R>, encoder: &mut gfx::Encoder<R, C>| {
             let a = a.downcast_ref::<A>().unwrap();
             let t = t.downcast_ref::<T>().unwrap();
             p.apply(a, t, frame, encoder)
@@ -80,10 +80,13 @@ impl<R, C> Renderer<R, C>
     {
         for layer in &frame.layers {
             let fb = frame.targets.get(&layer.target).unwrap();
-            for pass in &layer.passes {
-                let id = (mopa::Any::get_type_id(&**pass), mopa::Any::get_type_id(&**fb));
-                let method = self.methods.get(&id).expect("No method found, cannot apply passes to target.");
-                method(pass, &**fb, &frame, &mut self.command_buffer);
+            for desc in &layer.passes {
+                let id = (mopa::Any::get_type_id(&**desc), mopa::Any::get_type_id(&**fb));
+                if let Some(pass)= self.passes.get(&id) {
+                    pass(desc, &**fb, &frame, &mut self.command_buffer);
+                } else{
+                    panic!("No pass implementation found for target={}, pass={:?}", layer.target, desc);
+                }
             }
         }
         self.command_buffer.flush(device);

@@ -1,6 +1,7 @@
 pub mod forward;
 pub mod deferred;
 
+use std;
 use gfx;
 use mopa;
 
@@ -15,6 +16,7 @@ pub trait Pass<R>
         where C: gfx::CommandBuffer<R>;
 }
 
+#[derive(Clone, Debug)]
 pub struct Clear {
     pub color: [f32; 4]
 }
@@ -28,6 +30,7 @@ impl Clear {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct Wireframe {
     pub camera: String,
     pub scene: String,
@@ -45,6 +48,7 @@ impl Wireframe {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct DrawNoShading {
     pub camera: String,
     pub scene: String,
@@ -62,6 +66,7 @@ impl DrawNoShading {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct BlitLayer {
     pub gbuffer: String,
     pub layer: String,
@@ -79,6 +84,7 @@ impl BlitLayer {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct Lighting {
     pub camera: String,
     pub gbuffer: String,
@@ -99,6 +105,6 @@ impl Lighting {
 }
 
 /// Describes a render pass
-pub trait PassDescription: mopa::Any {}
+pub trait PassDescription: mopa::Any + std::fmt::Debug {}
 mopafy!(PassDescription);
 
