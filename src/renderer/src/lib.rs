@@ -70,6 +70,7 @@ impl<R, C> Renderer<R, C>
         self.add_method(gbuffer::LightingMethod::new(factory));
     }
 
+    /// Add a method to the table of available methods
     pub fn add_method<A, T, P>(&mut self, p: P)
         where P: Method<A, T, R, C> + 'static,
               A: Operation,
@@ -83,7 +84,7 @@ impl<R, C> Renderer<R, C>
         }));
     }
 
-    /// Raster the frame
+    /// Execute all passes
     pub fn submit<D>(&mut self, frame: &Frame<R>, device: &mut D)
         where D: gfx::Device<Resources=R, CommandBuffer=C>
     {
@@ -100,7 +101,6 @@ impl<R, C> Renderer<R, C>
     }
 }
 
-// placeholder Entity
 pub struct Fragment<R: gfx::Resources> {
     pub transform: [[f32; 4]; 4],
     pub buffer: gfx::handle::Buffer<R, VertexPosNormal>,

@@ -1,6 +1,5 @@
 use gfx;
 use gfx::traits::FactoryExt;
-use mopa::Any;
 
 use {Method, ScreenOutput};
 pub use VertexPosNormal;
@@ -57,10 +56,6 @@ pub struct Clear;
 impl<R, C> Method<::Clear, ScreenOutput<R>, R, C> for Clear
     where R: gfx::Resources,
           C: gfx::CommandBuffer<R>,
-          <R as gfx::Resources>::RenderTargetView: Any,
-          <R as gfx::Resources>::Texture: Any,
-          <R as gfx::Resources>::DepthStencilView: Any,
-          R: 'static
 {
     fn apply(&self, arg: &::Clear, target: &ScreenOutput<R>, _: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
         encoder.clear(&target.output, arg.color);
@@ -96,10 +91,6 @@ impl<R: gfx::Resources> FlatShading<R> {
 impl<R, C> Method<::FlatShading, ScreenOutput<R>, R, C> for FlatShading<R>
     where R: gfx::Resources,
           C: gfx::CommandBuffer<R>,
-          <R as gfx::Resources>::RenderTargetView: Any,
-          <R as gfx::Resources>::Texture: Any,
-          <R as gfx::Resources>::DepthStencilView: Any,
-          R: 'static
 {
     fn apply(&self, arg: &::FlatShading, target: &ScreenOutput<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
         let scene = &scenes.scenes[&arg.scene];
@@ -155,10 +146,6 @@ impl<R: gfx::Resources> Wireframe<R> {
 impl<R, C> Method<::Wireframe, ScreenOutput<R>, R, C> for Wireframe<R>
     where R: gfx::Resources,
           C: gfx::CommandBuffer<R>,
-          <R as gfx::Resources>::RenderTargetView: Any,
-          <R as gfx::Resources>::Texture: Any,
-          <R as gfx::Resources>::DepthStencilView: Any,
-          R: 'static
 {
     fn apply(&self, arg: &::Wireframe, target: &ScreenOutput<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
         let scene = &scenes.scenes[&arg.scene];

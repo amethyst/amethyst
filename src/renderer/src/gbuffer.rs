@@ -5,7 +5,6 @@ use gfx::traits::FactoryExt;
 use gfx::handle::Buffer;
 use gfx::Slice;
 use cgmath::{Matrix4, SquareMatrix};
-use mopa::Any;
 pub use ColorFormat;
 
 gfx_vertex_struct!( Vertex {
@@ -49,25 +48,13 @@ impl<R> GBuffer<R>
     }
 }
 
-impl<R: gfx::Resources> ::Target for GBuffer<R>
-    where <R as gfx::Resources>::RenderTargetView: Any,
-          <R as gfx::Resources>::Texture: Any,
-          <R as gfx::Resources>::DepthStencilView: Any,
-          <R as gfx::Resources>::ShaderResourceView: Any,
-          <R as gfx::Resources>::Buffer: Any,
-          R: 'static
-{}
+impl<R: gfx::Resources> ::Target for GBuffer<R> {}
 
 pub struct Clear;
 
 impl<R, C> ::Method<::Clear, GBuffer<R>, R, C> for Clear
     where R: gfx::Resources,
           C: gfx::CommandBuffer<R>,
-          <R as gfx::Resources>::RenderTargetView: Any,
-          <R as gfx::Resources>::Texture: Any,
-          <R as gfx::Resources>::DepthStencilView: Any,
-          <R as gfx::Resources>::ShaderResourceView: Any,
-          <R as gfx::Resources>::Buffer: Any,
           R: 'static
 {
     fn apply(&self, c: &::Clear, target: &GBuffer<R>, _: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
@@ -157,12 +144,6 @@ impl<R: gfx::Resources> DrawMethod<R> {
 impl<R, C> ::Method<Draw, GBuffer<R>, R, C> for DrawMethod<R>
     where R: gfx::Resources,
           C: gfx::CommandBuffer<R>,
-          <R as gfx::Resources>::RenderTargetView: Any,
-          <R as gfx::Resources>::Texture: Any,
-          <R as gfx::Resources>::DepthStencilView: Any,
-          <R as gfx::Resources>::ShaderResourceView: Any,
-          <R as gfx::Resources>::Buffer: Any,
-          R: 'static
 {
     fn apply(&self, arg: &Draw, target: &GBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
         let scene = &scenes.scenes[&arg.scene];
@@ -279,12 +260,6 @@ impl<R> BlitAmbiantMethod<R>
 impl<R, C> ::Method<BlitAmbiant, ::ScreenOutput<R>, R, C> for BlitAmbiantMethod<R>
     where R: gfx::Resources,
           C: gfx::CommandBuffer<R>,
-          <R as gfx::Resources>::RenderTargetView: Any,
-          <R as gfx::Resources>::Texture: Any,
-          <R as gfx::Resources>::DepthStencilView: Any,
-          <R as gfx::Resources>::ShaderResourceView: Any,
-          <R as gfx::Resources>::Buffer: Any,
-          R: 'static
 {
     fn apply(&self, arg: &BlitAmbiant, target: &::ScreenOutput<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
         let src = &scenes.targets[&arg.gbuffer];
@@ -406,12 +381,6 @@ impl<R: gfx::Resources> LightingMethod<R> {
 impl<R, C> ::Method<Lighting, ::ScreenOutput<R>, R, C> for LightingMethod<R>
     where R: gfx::Resources,
           C: gfx::CommandBuffer<R>,
-          <R as gfx::Resources>::RenderTargetView: Any,
-          <R as gfx::Resources>::Texture: Any,
-          <R as gfx::Resources>::DepthStencilView: Any,
-          <R as gfx::Resources>::ShaderResourceView: Any,
-          <R as gfx::Resources>::Buffer: Any,
-          R: 'static
 {
     fn apply(&self, arg: &Lighting, target: &::ScreenOutput<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
         let scene = &scenes.scenes[&arg.scene];
