@@ -13,11 +13,15 @@ gfx_vertex_struct!( Vertex {
 
 pub struct Clear;
 
-impl<R, C> ::Method<::pass::Clear, GeometryBuffer<R>, R, C> for Clear
-    where R: gfx::Resources,
-          C: gfx::CommandBuffer<R>,
+impl<R> ::Method<R> for Clear
+    where R: gfx::Resources
 {
-    fn apply(&self, c: &::pass::Clear, target: &GeometryBuffer<R>, _: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
+    type Arg = ::pass::Clear;
+    type Target = GeometryBuffer<R>;
+
+    fn apply<C>(&self, c: &::pass::Clear, target: &GeometryBuffer<R>, _: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+        where C: gfx::CommandBuffer<R>
+    {
         encoder.clear(&target.normal, [0.; 4]);
         encoder.clear(&target.ka, c.color);
         encoder.clear(&target.kd, c.color);
@@ -95,11 +99,15 @@ impl<R: gfx::Resources> DrawMethod<R> {
     }
 }
 
-impl<R, C> ::Method<::pass::DrawNoShading, GeometryBuffer<R>, R, C> for DrawMethod<R>
-    where R: gfx::Resources,
-          C: gfx::CommandBuffer<R>,
+impl<R> ::Method<R> for DrawMethod<R>
+    where R: gfx::Resources
 {
-    fn apply(&self, arg: &::pass::DrawNoShading, target: &GeometryBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
+    type Arg = ::pass::DrawNoShading;
+    type Target = GeometryBuffer<R>;
+
+    fn apply<C>(&self, arg: &::pass::DrawNoShading, target: &GeometryBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+        where C: gfx::CommandBuffer<R>
+    {
         let scene = &scenes.scenes[&arg.scene];
         let camera = &scenes.cameras[&arg.camera];
 
@@ -206,11 +214,15 @@ impl<R> BlitLayer<R>
     }
 }
 
-impl<R, C> ::Method<::pass::BlitLayer, ::framebuffer::ColorBuffer<R>, R, C> for BlitLayer<R>
+impl<R> ::Method<R> for BlitLayer<R>
     where R: gfx::Resources,
-          C: gfx::CommandBuffer<R>,
 {
-    fn apply(&self, arg: &::pass::BlitLayer, target: &::framebuffer::ColorBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
+    type Arg = ::pass::BlitLayer;
+    type Target = ::framebuffer::ColorBuffer<R>;
+
+    fn apply<C>(&self, arg: &::pass::BlitLayer, target: &::framebuffer::ColorBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+        where C: gfx::CommandBuffer<R>
+    {
         let src = &scenes.framebuffers[&arg.gbuffer];
         let src = src.downcast_ref::<GeometryBuffer<R>>().unwrap();
 
@@ -327,11 +339,15 @@ impl<R: gfx::Resources> LightingMethod<R> {
     }
 }
 
-impl<R, C> ::Method<::pass::Lighting, ::framebuffer::ColorBuffer<R>, R, C> for LightingMethod<R>
-    where R: gfx::Resources,
-          C: gfx::CommandBuffer<R>,
+impl<R> ::Method<R> for LightingMethod<R>
+    where R: gfx::Resources
 {
-    fn apply(&self, arg: &::pass::Lighting, target: &::framebuffer::ColorBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
+    type Arg = ::pass::Lighting;
+    type Target = ::framebuffer::ColorBuffer<R>;
+
+    fn apply<C>(&self, arg: &::pass::Lighting, target: &::framebuffer::ColorBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+        where C: gfx::CommandBuffer<R>
+    {
         let scene = &scenes.scenes[&arg.scene];
         let camera = &scenes.cameras[&arg.camera];
         let src = &scenes.framebuffers[&arg.gbuffer];

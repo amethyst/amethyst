@@ -63,7 +63,7 @@ impl<R, C> Renderer<R, C>
 
     /// Add a method to the table of available methods
     pub fn add_method<A, T, P>(&mut self, p: P)
-        where P: Method<A, T, R, C> + 'static,
+        where P: Method<R, Arg=A, Target=T> + 'static,
               A: Pass,
               T: Framebuffer
     {

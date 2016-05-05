@@ -55,11 +55,15 @@ pub type GFormat = [f32; 4];
 
 pub struct Clear;
 
-impl<R, C> Method<pass::Clear, ColorBuffer<R>, R, C> for Clear
+impl<R> Method<R> for Clear
     where R: gfx::Resources,
-          C: gfx::CommandBuffer<R>,
 {
-    fn apply(&self, arg: &pass::Clear, target: &ColorBuffer<R>, _: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
+    type Arg = pass::Clear;
+    type Target = ColorBuffer<R>;
+
+    fn apply<C>(&self, arg: &pass::Clear, target: &ColorBuffer<R>, _: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+        where C: gfx::CommandBuffer<R>
+    {
         encoder.clear(&target.color, arg.color);
         encoder.clear_depth(&target.output_depth, 1.0);
     }
@@ -90,11 +94,15 @@ impl<R: gfx::Resources> DrawNoShading<R> {
     }
 }
 
-impl<R, C> Method<pass::DrawNoShading, ColorBuffer<R>, R, C> for DrawNoShading<R>
-    where R: gfx::Resources,
-          C: gfx::CommandBuffer<R>,
+impl<R> Method<R> for DrawNoShading<R>
+    where R: gfx::Resources
 {
-    fn apply(&self, arg: &pass::DrawNoShading, target: &ColorBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
+    type Arg = pass::DrawNoShading;
+    type Target = ColorBuffer<R>;
+
+    fn apply<C>(&self, arg: &pass::DrawNoShading, target: &ColorBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+        where C: gfx::CommandBuffer<R>
+    {
         let scene = &scenes.scenes[&arg.scene];
         let camera = &scenes.cameras[&arg.camera];
 
@@ -145,11 +153,15 @@ impl<R: gfx::Resources> Wireframe<R> {
     }
 }
 
-impl<R, C> Method<pass::Wireframe, ColorBuffer<R>, R, C> for Wireframe<R>
-    where R: gfx::Resources,
-          C: gfx::CommandBuffer<R>,
+impl<R> Method<R> for Wireframe<R>
+    where R: gfx::Resources
 {
-    fn apply(&self, arg: &pass::Wireframe, target: &ColorBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
+    type Arg = pass::Wireframe;
+    type Target = ColorBuffer<R>;
+
+    fn apply<C>(&self, arg: &pass::Wireframe, target: &ColorBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+        where C: gfx::CommandBuffer<R>
+    {
         let scene = &scenes.scenes[&arg.scene];
         let camera = &scenes.cameras[&arg.camera];
 

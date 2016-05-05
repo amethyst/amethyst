@@ -4,11 +4,12 @@ pub mod deferred;
 use gfx;
 
 /// A `Method` is an implemnatnion of a Pass
-pub trait Method<A, T, R, C>
+pub trait Method<R>
     where R: gfx::Resources,
-          C: gfx::CommandBuffer<R>,
-          A: ::Pass,
-          T: ::Framebuffer
 {
-    fn apply(&self, arg: &A, target: &T, scene: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>);
+    type Arg: ::Pass;
+    type Target: ::Framebuffer;
+
+    fn apply<C>(&self, arg: &Self::Arg, target: &Self::Target, scene: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+        where C: gfx::CommandBuffer<R>;
 }
