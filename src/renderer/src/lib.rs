@@ -13,23 +13,20 @@ extern crate mopa;
 extern crate glutin;
 extern crate cgmath;
 
-pub mod forward;
-mod gbuffer;
-mod wireframe;
+pub mod framebuffer;
+pub mod pass;
+pub mod method;
 
 use std::any::TypeId;
 use std::collections::HashMap;
 
-use mopa::Any;
-
-pub use gbuffer::{GBuffer, Draw, BlitAmbiant, Lighting};
-
-pub type ColorFormat = gfx::format::Rgba8;
-pub type DepthFormat = gfx::format::DepthStencil;
+pub use pass::Pass;
+pub use framebuffer::Framebuffer;
+pub use method::Method;
 
 pub struct Renderer<R: gfx::Resources, C: gfx::CommandBuffer<R>> {
     command_buffer: gfx::Encoder<R, C>,
-    methods: HashMap<(TypeId, TypeId), Box<Fn(&Box<Operation>, &Target, &Frame<R>, &mut gfx::Encoder<R, C>)>>
+    methods: HashMap<(TypeId, TypeId), Box<Fn(&Box<Pass>, &Framebuffer, &Frame<R>, &mut gfx::Encoder<R, C>)>>
 }
 
 // placeholder
@@ -40,12 +37,6 @@ gfx_vertex_struct!( VertexPosNormal {
 
 impl<R, C> Renderer<R, C>
     where R: gfx::Resources,
-          <R as gfx::Resources>::RenderTargetView: Any,
-          <R as gfx::Resources>::Texture: Any,
-          <R as gfx::Resources>::DepthStencilView: Any,
-          <R as gfx::Resources>::ShaderResourceView: Any,
-          <R as gfx::Resources>::Buffer: Any,
-          R: 'static,
           C: gfx::CommandBuffer<R>
 {
     /// Create a new Render pipline
@@ -60,24 +51,24 @@ impl<R, C> Renderer<R, C>
     pub fn load_all<F>(&mut self, factory: &mut F)
         where F: gfx::Factory<R>
     {
-        self.add_method(forward::Clear);
-        self.add_method(forward::FlatShading::new(factory));
-        self.add_method(forward::Wireframe::new(factory));
+        self.add_method(method::forward::Clear);
+        self.add_method(method::forward::DrawNoShading::new(factory));
+        self.add_method(method::forward::Wireframe::new(factory));
 
-        self.add_method(gbuffer::Clear);
-        self.add_method(gbuffer::DrawMethod::new(factory));
-        self.add_method(gbuffer::BlitAmbiantMethod::new(factory));
-        self.add_method(gbuffer::LightingMethod::new(factory));
+        self.add_method(method::deferred::Clear);
+        self.add_method(method::deferred::DrawMethod::new(factory));
+        self.add_method(method::deferred::BlitLayer::new(factory));
+        self.add_method(method::deferred::LightingMethod::new(factory));
     }
 
     /// Add a method to the table of available methods
     pub fn add_method<A, T, P>(&mut self, p: P)
         where P: Method<A, T, R, C> + 'static,
-              A: Operation,
-              T: Target
+              A: Pass,
+              T: Framebuffer
     {
         let id = (TypeId::of::<A>(), TypeId::of::<T>());
-        self.methods.insert(id, Box::new(move |a: &Box<Operation>, t: &Target, frame: &Frame<R>, encoder: &mut gfx::Encoder<R, C>| {
+        self.methods.insert(id, Box::new(move |a: &Box<Pass>, t: &Framebuffer, frame: &Frame<R>, encoder: &mut gfx::Encoder<R, C>| {
             let a = a.downcast_ref::<A>().unwrap();
             let t = t.downcast_ref::<T>().unwrap();
             p.apply(a, t, frame, encoder)
@@ -89,11 +80,11 @@ impl<R, C> Renderer<R, C>
         where D: gfx::Device<Resources=R, CommandBuffer=C>
     {
         for pass in &frame.passes {
-            let target = frame.targets.get(&pass.target).unwrap();
-            for op in &pass.operations {
-                let id = (mopa::Any::get_type_id(&**op), mopa::Any::get_type_id(&**target));
-                let method = self.methods.get(&id).expect("No method found, cannot apply operation to target.");
-                method(op, &**target, &frame, &mut self.command_buffer);
+            let fb = frame.framebuffers.get(&pass.target).unwrap();
+            for op in &pass.passes {
+                let id = (mopa::Any::get_type_id(&**op), mopa::Any::get_type_id(&**fb));
+                let method = self.methods.get(&id).expect("No method found, cannot apply passes to target.");
+                method(op, &**fb, &frame, &mut self.command_buffer);
             }
         }
         self.command_buffer.flush(device);
@@ -124,19 +115,6 @@ pub struct Light {
     pub propagation_r_square: f32,
 }
 
-/// Render target
-pub struct ScreenOutput<R: gfx::Resources> {
-    pub output: gfx::handle::RenderTargetView<R, ColorFormat>,
-    pub output_depth: gfx::handle::DepthStencilView<R, DepthFormat>,
-}
-
-impl<R: gfx::Resources> Target for ScreenOutput<R>
-    where <R as gfx::Resources>::RenderTargetView: Any,
-          <R as gfx::Resources>::Texture: Any,
-          <R as gfx::Resources>::DepthStencilView: Any,
-          R: 'static
-{}
-
 pub struct Scene<R: gfx::Resources> {
     pub fragments: Vec<Fragment<R>>,
     pub lights: Vec<Light>
@@ -150,14 +128,14 @@ pub struct Camera {
 
 pub struct RenderPasses {
     pub target: String,
-    pub operations: Vec<Box<Operation>>,
+    pub passes: Vec<Box<Pass>>,
 }
 
 impl RenderPasses {
     pub fn new(target: String) -> RenderPasses {
         RenderPasses {
             target: target,
-            operations: vec![]
+            passes: vec![]
         }
     }
 }
@@ -165,40 +143,7 @@ impl RenderPasses {
 /// The render job submission
 pub struct Frame<R: gfx::Resources> {
     pub passes: Vec<RenderPasses>,
-    pub targets: HashMap<String, Box<Target>>,
+    pub framebuffers: HashMap<String, Box<Framebuffer>>,
     pub scenes: HashMap<String, Scene<R>>,
     pub cameras: HashMap<String, Camera>
-}
-
-pub struct Clear {
-    pub color: [f32; 4]
-}
-impl Operation for Clear {}
-
-pub struct Wireframe {
-    pub camera: String,
-    pub scene: String,
-}
-impl Operation for Wireframe {}
-
-pub struct FlatShading {
-    pub camera: String,
-    pub scene: String,
-}
-impl Operation for FlatShading {}
-
-
-pub trait Operation: mopa::Any {}
-mopafy!(Operation);
-
-pub trait Target: mopa::Any {}
-mopafy!(Target);
-
-pub trait Method<A, T, R, C>
-    where R: gfx::Resources,
-          C: gfx::CommandBuffer<R>,
-          A: Operation,
-          T: Target
-{
-    fn apply(&self, arg: &A, target: &T, scene: &Frame<R>, encoder: &mut gfx::Encoder<R, C>);
 }

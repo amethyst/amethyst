@@ -1,63 +1,24 @@
-
-
 use gfx;
 use gfx::traits::FactoryExt;
 use gfx::handle::Buffer;
 use gfx::Slice;
 use cgmath::{Matrix4, SquareMatrix};
-pub use ColorFormat;
+pub use ::framebuffer::{ColorFormat, GeometryBuffer};
 
 gfx_vertex_struct!( Vertex {
     pos: [i32; 2] = "a_Pos",
     tex_coord: [i32; 2] = "a_TexCoord",
 });
 
-pub struct GBuffer<R: gfx::Resources> {
-    pub normal: gfx::handle::RenderTargetView<R, [f32; 4]>,
-    pub ka: gfx::handle::RenderTargetView<R, ColorFormat>,
-    pub kd: gfx::handle::RenderTargetView<R, ColorFormat>,
-    pub depth: gfx::handle::DepthStencilView<R, gfx::format::DepthStencil>,
-
-    pub texture_normal: gfx::handle::ShaderResourceView<R, [f32; 4]>,
-    pub texture_ka: gfx::handle::ShaderResourceView<R, [f32; 4]>,
-    pub texture_kd: gfx::handle::ShaderResourceView<R, [f32; 4]>,
-    pub texture_depth: gfx::handle::ShaderResourceView<R, f32>,
-}
-
-impl<R> GBuffer<R>
-    where R: gfx::Resources
-{
-    pub fn new<F>(factory: &mut F, (width, height): (u16, u16)) -> Self
-        where F: gfx::Factory<R>
-    {
-        let (_, texture_normal,  normal) = factory.create_render_target(width, height).unwrap();
-        let (_, texture_ka,  ka) = factory.create_render_target(width, height).unwrap();
-        let (_, texture_kd,  kd) = factory.create_render_target(width, height).unwrap();
-        let (_, texture_depth, depth) = factory.create_depth_stencil(width, height).unwrap();
-
-        GBuffer{
-            normal: normal,
-            kd: kd,
-            ka: ka,
-            depth: depth,
-            texture_normal: texture_normal,
-            texture_ka: texture_ka,
-            texture_kd: texture_kd,
-            texture_depth: texture_depth
-        }
-    }
-}
-
-impl<R: gfx::Resources> ::Target for GBuffer<R> {}
 
 pub struct Clear;
 
-impl<R, C> ::Method<::Clear, GBuffer<R>, R, C> for Clear
+impl<R, C> ::Method<::pass::Clear, GeometryBuffer<R>, R, C> for Clear
     where R: gfx::Resources,
           C: gfx::CommandBuffer<R>,
           R: 'static
 {
-    fn apply(&self, c: &::Clear, target: &GBuffer<R>, _: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
+    fn apply(&self, c: &::pass::Clear, target: &GeometryBuffer<R>, _: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
         encoder.clear(&target.normal, [0.; 4]);
         encoder.clear(&target.ka, c.color);
         encoder.clear(&target.kd, c.color);
@@ -102,12 +63,6 @@ pub static DRAW_FRAGMENT_SRC: &'static [u8] = b"
     }
 ";
 
-pub struct Draw {
-    pub camera: String,
-    pub scene: String,
-}
-impl ::Operation for Draw {}
-
 pub type GFormat = [f32; 4];
 gfx_pipeline!( draw {
     vbuf: gfx::VertexBuffer<::VertexPosNormal> = (),
@@ -141,11 +96,11 @@ impl<R: gfx::Resources> DrawMethod<R> {
     }
 }
 
-impl<R, C> ::Method<Draw, GBuffer<R>, R, C> for DrawMethod<R>
+impl<R, C> ::Method<::pass::DrawNoShading, GeometryBuffer<R>, R, C> for DrawMethod<R>
     where R: gfx::Resources,
           C: gfx::CommandBuffer<R>,
 {
-    fn apply(&self, arg: &Draw, target: &GBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
+    fn apply(&self, arg: &::pass::DrawNoShading, target: &GeometryBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
         let scene = &scenes.scenes[&arg.scene];
         let camera = &scenes.cameras[&arg.camera];
 
@@ -219,22 +174,17 @@ fn create_screen_fill_triangle<F, R>(factory: &mut F) -> (Buffer<R, Vertex>, Sli
     (buffer, slice)
 }
 
-pub struct BlitAmbiant {
-    pub gbuffer: String
-}
-impl ::Operation for BlitAmbiant {}
-
-pub struct BlitAmbiantMethod<R: gfx::Resources> {
+pub struct BlitLayer<R: gfx::Resources> {
     buffer: Buffer<R, Vertex>,
     slice: Slice<R>,
     sampler: gfx::handle::Sampler<R>,
     pso: gfx::pso::PipelineState<R, blit::Meta>
 }
 
-impl<R> BlitAmbiantMethod<R>
+impl<R> BlitLayer<R>
     where R: gfx::Resources
 {
-    pub fn new<F>(factory: &mut F) -> BlitAmbiantMethod<R>
+    pub fn new<F>(factory: &mut F) -> BlitLayer<R>
         where F: gfx::Factory<R>
     {
         let (buffer, slice) = create_screen_fill_triangle(factory);
@@ -244,7 +194,7 @@ impl<R> BlitAmbiantMethod<R>
                                        gfx::tex::WrapMode::Clamp)
         );
 
-        BlitAmbiantMethod{
+        BlitLayer{
             slice: slice,
             buffer: buffer,
             sampler: sampler,
@@ -257,32 +207,32 @@ impl<R> BlitAmbiantMethod<R>
     }
 }
 
-impl<R, C> ::Method<BlitAmbiant, ::ScreenOutput<R>, R, C> for BlitAmbiantMethod<R>
+impl<R, C> ::Method<::pass::BlitLayer, ::framebuffer::ColorBuffer<R>, R, C> for BlitLayer<R>
     where R: gfx::Resources,
           C: gfx::CommandBuffer<R>,
 {
-    fn apply(&self, arg: &BlitAmbiant, target: &::ScreenOutput<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
-        let src = &scenes.targets[&arg.gbuffer];
-        let src = src.downcast_ref::<GBuffer<R>>().unwrap();
+    fn apply(&self, arg: &::pass::BlitLayer, target: &::framebuffer::ColorBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
+        let src = &scenes.framebuffers[&arg.gbuffer];
+        let src = src.downcast_ref::<GeometryBuffer<R>>().unwrap();
+
+        let layer = match arg.layer.as_ref() {
+            "ka" => src.texture_ka.clone(),
+            "kd" => src.texture_kd.clone(),
+            "normal" => src.texture_normal.clone(),
+            x => panic!("Unsupported layer {}", x)
+        };
 
         encoder.draw(
             &self.slice,
             &self.pso,
             &blit::Data {
                 vbuf: self.buffer.clone(),
-                source: (src.texture_ka.clone(), self.sampler.clone()),
-                out: target.output.clone()
+                source: (layer, self.sampler.clone()),
+                out: target.color.clone()
             }
         );
     }
 }
-
-pub struct Lighting {
-    pub camera: String,
-    pub gbuffer: String,
-    pub scene: String,
-}
-impl ::Operation for Lighting {}
 
 pub static LIGHT_FRAGMENT_SRC: &'static [u8] = b"
     #version 150 core
@@ -378,15 +328,15 @@ impl<R: gfx::Resources> LightingMethod<R> {
     }
 }
 
-impl<R, C> ::Method<Lighting, ::ScreenOutput<R>, R, C> for LightingMethod<R>
+impl<R, C> ::Method<::pass::Lighting, ::framebuffer::ColorBuffer<R>, R, C> for LightingMethod<R>
     where R: gfx::Resources,
           C: gfx::CommandBuffer<R>,
 {
-    fn apply(&self, arg: &Lighting, target: &::ScreenOutput<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
+    fn apply(&self, arg: &::pass::Lighting, target: &::framebuffer::ColorBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
         let scene = &scenes.scenes[&arg.scene];
         let camera = &scenes.cameras[&arg.camera];
-        let src = &scenes.targets[&arg.gbuffer];
-        let src = src.downcast_ref::<GBuffer<R>>().unwrap();
+        let src = &scenes.framebuffers[&arg.gbuffer];
+        let src = src.downcast_ref::<GeometryBuffer<R>>().unwrap();
 
         for l in &scene.lights {
             encoder.draw(
@@ -397,7 +347,7 @@ impl<R, C> ::Method<Lighting, ::ScreenOutput<R>, R, C> for LightingMethod<R>
                     kd: (src.texture_kd.clone(), self.sampler.clone()),
                     normal: (src.texture_normal.clone(), self.sampler.clone()),
                     depth: (src.texture_depth.clone(), self.sampler.clone()),
-                    out: target.output.clone(),
+                    out: target.color.clone(),
                     color: l.color,
                     center: [l.center[0], l.center[1], l.center[2], 1.],
                     propagation: [

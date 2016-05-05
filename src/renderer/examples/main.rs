@@ -21,7 +21,8 @@ use genmesh::generators::SphereUV;
 use genmesh::{Triangulate, MapToVertices, Vertices};
 
 use amethyst_renderer::VertexPosNormal as Vertex;
-use amethyst_renderer::{ColorFormat, DepthFormat};
+use amethyst_renderer::framebuffer::{ColorFormat, DepthFormat};
+use amethyst_renderer::Frame;
 
 fn build_sphere() -> Vec<Vertex> {
     SphereUV::new(32, 32)
@@ -32,6 +33,25 @@ fn build_sphere() -> Vec<Vertex> {
         .triangulate()
         .vertices()
         .collect()
+}
+
+fn pipeline_deferred<R>(frame: &mut Frame<R>)
+    where R: gfx::Resources
+{
+    use amethyst_renderer::pass::*;
+
+    frame.passes.clear();
+    frame.passes.push(amethyst_renderer::RenderPasses::new(format!("gbuffer")));
+    frame.passes[0].passes = vec![
+        Clear::new([0., 0., 0., 1.]),
+        DrawNoShading::new("main", "main")
+    ];
+    frame.passes.push(amethyst_renderer::RenderPasses::new(format!("main")));
+    frame.passes[1].passes = vec![
+        Clear::new([0., 0., 0., 1.]),
+        BlitLayer::new("gbuffer", "ka"),
+        Lighting::new("main", "gbuffer", "main")
+    ];
 }
 
 fn main() {
@@ -101,48 +121,31 @@ fn main() {
 
     let mut frame = amethyst_renderer::Frame{
         passes: vec![],
-        targets: HashMap::new(),
+        framebuffers: HashMap::new(),
         scenes: std::collections::HashMap::new(),
         cameras: std::collections::HashMap::new()
     };
 
-    frame.scenes.insert(format!("main"), scene);
-    frame.passes.push(amethyst_renderer::RenderPasses::new(format!("gbuffer")));
-    frame.passes[0].operations = vec![
-        Box::new(amethyst_renderer::Clear{color: [0., 0., 0., 1.]}),
-        Box::new(amethyst_renderer::Draw{
-            camera: format!("main"),
-            scene: format!("main")
-        })
-    ];
-    frame.passes.push(amethyst_renderer::RenderPasses::new(format!("main")));
-    frame.passes[1].operations = vec![
-        Box::new(amethyst_renderer::Clear{color: [0., 0., 0., 1.]}),
-        Box::new(amethyst_renderer::BlitAmbiant{
-            gbuffer: format!("gbuffer"),
-        }),
-        Box::new(amethyst_renderer::Lighting{
-            gbuffer: format!("gbuffer"),
-            camera: format!("main"),
-            scene: format!("main"),
-        }),
-    ];
-    frame.targets.insert(
-        format!("main"),
-        Box::new(amethyst_renderer::ScreenOutput{
-            output: main_color,
+    frame.scenes.insert("main".into(), scene);
+    frame.framebuffers.insert(
+        "main".into(),
+        Box::new(amethyst_renderer::framebuffer::ColorBuffer{
+            color: main_color,
             output_depth: main_depth
         }
     ));
-    frame.targets.insert(
-        format!("gbuffer"),
-        Box::new(amethyst_renderer::GBuffer::new(&mut factory, (800, 600)))
+    frame.framebuffers.insert(
+        "gbuffer".into(),
+        Box::new(amethyst_renderer::framebuffer::GeometryBuffer::new(&mut factory, (800, 600)))
     );
+
 
     let mut renderer = amethyst_renderer::Renderer::new(combuf);
     renderer.load_all(&mut factory);
 
     window.set_title("Amethyst Renderer [Deferred]");
+    pipeline_deferred(&mut frame);
+
     let start = SystemTime::now();
     let (mut w, mut h) = (800., 600.);
     'main: loop {
@@ -151,61 +154,35 @@ fn main() {
             match event {
                 glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Key1)) => {
                     window.set_title("Amethyst Renderer [Deferred]");
-                    frame.passes.clear();
-                    frame.passes.push(amethyst_renderer::RenderPasses::new(format!("gbuffer")));
-                    frame.passes[0].operations = vec![
-                        Box::new(amethyst_renderer::Clear{color: [0., 0., 0., 1.]}),
-                        Box::new(amethyst_renderer::Draw{
-                            camera: format!("main"),
-                            scene: format!("main")
-                        })
-                    ];
-                    frame.passes.push(amethyst_renderer::RenderPasses::new(format!("main")));
-                    frame.passes[1].operations = vec![
-                        Box::new(amethyst_renderer::Clear{color: [0., 0., 0., 1.]}),
-                        Box::new(amethyst_renderer::BlitAmbiant{
-                            gbuffer: format!("gbuffer"),
-                        }),
-                        Box::new(amethyst_renderer::Lighting{
-                            gbuffer: format!("gbuffer"),
-                            camera: format!("main"),
-                            scene: format!("main"),
-                        }),
-                    ];
+                    pipeline_deferred(&mut frame);
                 }
                 glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Key2)) => {
                     window.set_title("Amethyst Renderer [Forward Flat]");
                     frame.passes.clear();
                     frame.passes.push(amethyst_renderer::RenderPasses::new(format!("main")));
-                    frame.passes[0].operations = vec![
-                        Box::new(amethyst_renderer::Clear{color: [0., 0., 0., 1.]}),
-                        Box::new(amethyst_renderer::FlatShading{
-                            camera: format!("main"),
-                            scene: format!("main")
-                        }),
+                    frame.passes[0].passes = vec![
+                        amethyst_renderer::pass::Clear::new([0., 0., 0., 1.]),
+                        amethyst_renderer::pass::DrawNoShading::new("main", "main")
                     ]
                 }
                 glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Key3)) => {
                     window.set_title("Amethyst Renderer [Forward Wireframe]");
                     frame.passes.clear();
                     frame.passes.push(amethyst_renderer::RenderPasses::new(format!("main")));
-                    frame.passes[0].operations = vec![
-                        Box::new(amethyst_renderer::Clear{color: [0., 0., 0., 1.]}),
-                        Box::new(amethyst_renderer::Wireframe{
-                            camera: format!("main"),
-                            scene: format!("main")
-                        }),
+                    frame.passes[0].passes = vec![
+                        amethyst_renderer::pass::Clear::new([0., 0., 0., 1.]),
+                        amethyst_renderer::pass::Wireframe::new("main", "main")
                     ]
                 }
                 glutin::Event::Resized(iw, ih) => {
-                    let output = frame.targets.get_mut("main").unwrap();
-                    let out = output.downcast_mut::<amethyst_renderer::ScreenOutput<gfx_device_gl::Resources>>();
+                    let output = frame.framebuffers.get_mut("main").unwrap();
+                    let out = output.downcast_mut::<amethyst_renderer::framebuffer::ColorBuffer<gfx_device_gl::Resources>>();
                     let out = out.unwrap();
                     w = iw as f32;
                     h = ih as f32;
                     gfx_window_glutin::update_views(
                         &window,
-                        &mut out.output,
+                        &mut out.color,
                         &mut out.output_depth
                     );
                 }

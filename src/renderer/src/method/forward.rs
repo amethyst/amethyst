@@ -1,7 +1,9 @@
 use gfx;
 use gfx::traits::FactoryExt;
 
-use {Method, ScreenOutput};
+use pass;
+use Method;
+use framebuffer::ColorBuffer;
 pub use VertexPosNormal;
 
 pub static VERTEX_SRC: &'static [u8] = b"
@@ -53,12 +55,12 @@ pub type GFormat = [f32; 4];
 
 pub struct Clear;
 
-impl<R, C> Method<::Clear, ScreenOutput<R>, R, C> for Clear
+impl<R, C> Method<pass::Clear, ColorBuffer<R>, R, C> for Clear
     where R: gfx::Resources,
           C: gfx::CommandBuffer<R>,
 {
-    fn apply(&self, arg: &::Clear, target: &ScreenOutput<R>, _: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
-        encoder.clear(&target.output, arg.color);
+    fn apply(&self, arg: &pass::Clear, target: &ColorBuffer<R>, _: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
+        encoder.clear(&target.color, arg.color);
         encoder.clear_depth(&target.output_depth, 1.0);
     }
 }
@@ -73,14 +75,14 @@ gfx_pipeline!( flat {
     out_depth: gfx::DepthTarget<gfx::format::DepthStencil> = gfx::preset::depth::LESS_EQUAL_WRITE,
 });
 
-pub struct FlatShading<R: gfx::Resources>(gfx::pso::PipelineState<R, flat::Meta>);
+pub struct DrawNoShading<R: gfx::Resources>(gfx::pso::PipelineState<R, flat::Meta>);
 
-impl<R: gfx::Resources> FlatShading<R> {
-    pub fn new<F>(factory: &mut F) -> FlatShading<R>
+impl<R: gfx::Resources> DrawNoShading<R> {
+    pub fn new<F>(factory: &mut F) -> DrawNoShading<R>
         where R: gfx::Resources,
               F: gfx::Factory<R>
     {
-        FlatShading(factory.create_pipeline_simple(
+        DrawNoShading(factory.create_pipeline_simple(
             VERTEX_SRC,
             FLAT_FRAGMENT_SRC,
             flat::new()
@@ -88,11 +90,11 @@ impl<R: gfx::Resources> FlatShading<R> {
     }
 }
 
-impl<R, C> Method<::FlatShading, ScreenOutput<R>, R, C> for FlatShading<R>
+impl<R, C> Method<pass::DrawNoShading, ColorBuffer<R>, R, C> for DrawNoShading<R>
     where R: gfx::Resources,
           C: gfx::CommandBuffer<R>,
 {
-    fn apply(&self, arg: &::FlatShading, target: &ScreenOutput<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
+    fn apply(&self, arg: &pass::DrawNoShading, target: &ColorBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
         let scene = &scenes.scenes[&arg.scene];
         let camera = &scenes.cameras[&arg.camera];
 
@@ -107,7 +109,7 @@ impl<R, C> Method<::FlatShading, ScreenOutput<R>, R, C> for FlatShading<R>
                     model: e.transform,
                     view: camera.view,
                     proj: camera.projection,
-                    out_ka: target.output.clone(),
+                    out_ka: target.color.clone(),
                     out_depth: target.output_depth.clone()
                 }
             );
@@ -143,11 +145,11 @@ impl<R: gfx::Resources> Wireframe<R> {
     }
 }
 
-impl<R, C> Method<::Wireframe, ScreenOutput<R>, R, C> for Wireframe<R>
+impl<R, C> Method<pass::Wireframe, ColorBuffer<R>, R, C> for Wireframe<R>
     where R: gfx::Resources,
           C: gfx::CommandBuffer<R>,
 {
-    fn apply(&self, arg: &::Wireframe, target: &ScreenOutput<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
+    fn apply(&self, arg: &pass::Wireframe, target: &ColorBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) {
         let scene = &scenes.scenes[&arg.scene];
         let camera = &scenes.cameras[&arg.camera];
 
@@ -162,7 +164,7 @@ impl<R, C> Method<::Wireframe, ScreenOutput<R>, R, C> for Wireframe<R>
                     model: e.transform,
                     view: camera.view,
                     proj: camera.projection,
-                    out_ka: target.output.clone()
+                    out_ka: target.color.clone()
                 }
             );
         }
