@@ -79,12 +79,12 @@ impl<R, C> Renderer<R, C>
     pub fn submit<D>(&mut self, frame: &Frame<R>, device: &mut D)
         where D: gfx::Device<Resources=R, CommandBuffer=C>
     {
-        for pass in &frame.passes {
-            let fb = frame.framebuffers.get(&pass.target).unwrap();
-            for op in &pass.passes {
-                let id = (mopa::Any::get_type_id(&**op), mopa::Any::get_type_id(&**fb));
+        for layer in &frame.layers {
+            let fb = frame.framebuffers.get(&layer.target).unwrap();
+            for pass in &layer.passes {
+                let id = (mopa::Any::get_type_id(&**pass), mopa::Any::get_type_id(&**fb));
                 let method = self.methods.get(&id).expect("No method found, cannot apply passes to target.");
-                method(op, &**fb, &frame, &mut self.command_buffer);
+                method(pass, &**fb, &frame, &mut self.command_buffer);
             }
         }
         self.command_buffer.flush(device);
@@ -120,22 +120,32 @@ pub struct Scene<R: gfx::Resources> {
     pub lights: Vec<Light>
 }
 
+impl<R: gfx::Resources> Scene<R> {
+    /// Create an empty scene
+    pub fn new() -> Scene<R> {
+        Scene{
+            fragments: vec![],
+            lights: vec![]
+        }
+    }
+}
+
 #[derive(Copy, Clone)]
 pub struct Camera {
     pub projection: [[f32; 4]; 4],
     pub view: [[f32; 4]; 4],
 }
 
-pub struct RenderPasses {
+pub struct Layer {
     pub target: String,
     pub passes: Vec<Box<Pass>>,
 }
 
-impl RenderPasses {
-    pub fn new<A>(target: A, passes: Vec<Box<Pass>>) -> RenderPasses
+impl Layer {
+    pub fn new<A>(target: A, passes: Vec<Box<Pass>>) -> Layer
         where String: From<A>
     {
-        RenderPasses {
+        Layer {
             target: String::from(target),
             passes: passes
         }
@@ -144,8 +154,20 @@ impl RenderPasses {
 
 /// The render job submission
 pub struct Frame<R: gfx::Resources> {
-    pub passes: Vec<RenderPasses>,
+    pub layers: Vec<Layer>,
     pub framebuffers: HashMap<String, Box<Framebuffer>>,
     pub scenes: HashMap<String, Scene<R>>,
     pub cameras: HashMap<String, Camera>
+}
+
+impl<R: gfx::Resources> Frame<R> {
+    /// Create an empty Frame
+    pub fn new() -> Frame<R> {
+        Frame {
+            layers: vec![],
+            framebuffers: HashMap::new(),
+            scenes: HashMap::new(),
+            cameras: HashMap::new()
+        }
+    }
 }
