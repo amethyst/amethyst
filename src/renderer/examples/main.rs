@@ -157,6 +157,13 @@ fn main() {
                     pipeline_deferred(&mut frame);
                 }
                 glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Key2)) => {
+                    window.set_title("Amethyst Renderer [Deferred [Normal]]");
+                    pipeline_deferred(&mut frame);
+                    frame.passes[1].passes = vec![
+                        amethyst_renderer::pass::BlitLayer::new("gbuffer", "normal")
+                    ];
+                }
+                glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Key3)) => {
                     window.set_title("Amethyst Renderer [Forward Flat]");
                     frame.passes.clear();
                     frame.passes.push(amethyst_renderer::RenderPasses::new(format!("main")));
@@ -165,7 +172,7 @@ fn main() {
                         amethyst_renderer::pass::DrawNoShading::new("main", "main")
                     ]
                 }
-                glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Key3)) => {
+                glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Key4)) => {
                     window.set_title("Amethyst Renderer [Forward Wireframe]");
                     frame.passes.clear();
                     frame.passes.push(amethyst_renderer::RenderPasses::new(format!("main")));
