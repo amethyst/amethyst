@@ -132,10 +132,12 @@ pub struct RenderPasses {
 }
 
 impl RenderPasses {
-    pub fn new(target: String) -> RenderPasses {
+    pub fn new<A>(target: A, passes: Vec<Box<Pass>>) -> RenderPasses
+        where String: From<A>
+    {
         RenderPasses {
-            target: target,
-            passes: vec![]
+            target: String::from(target),
+            passes: passes
         }
     }
 }
