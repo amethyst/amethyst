@@ -23,4 +23,4 @@ mopa ="0.2"
 
 [dev-dependencies]
 genmesh="0.4"
-rand="*"
+rand="0.3"

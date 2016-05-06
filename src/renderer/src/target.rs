@@ -2,15 +2,22 @@
 use gfx;
 use mopa;
 
+/// A Target or a RenderTarget is any object that
+/// can be the target of a Layer This is normally
+/// a framebuffer
 pub trait Target: mopa::Any {}
 mopafy!(Target);
 
+/// Placeholder Color format
 pub type ColorFormat = gfx::format::Rgba8;
+/// Placeholder Depth Format
 pub type DepthFormat = gfx::format::DepthStencil;
 
 /// A simple output containing both a Color and a Depth target
 pub struct ColorBuffer<R: gfx::Resources> {
+    /// The color render target
     pub color: gfx::handle::RenderTargetView<R, ColorFormat>,
+    /// The depth buffer
     pub output_depth: gfx::handle::DepthStencilView<R, DepthFormat>,
 }
 
@@ -18,14 +25,22 @@ impl<R: gfx::Resources> Target for ColorBuffer<R> {}
 
 /// A geometry buffer is used in a deferred pipeline
 pub struct GeometryBuffer<R: gfx::Resources> {
+    /// Contains the Normals as a f32x4
     pub normal: gfx::handle::RenderTargetView<R, [f32; 4]>,
+    /// Contains the ambient color
     pub ka: gfx::handle::RenderTargetView<R, ColorFormat>,
+    /// Contains the diffuse color
     pub kd: gfx::handle::RenderTargetView<R, ColorFormat>,
+    /// Contains the depth buffer
     pub depth: gfx::handle::DepthStencilView<R, DepthFormat>,
 
+    /// The normal buffer as a texture
     pub texture_normal: gfx::handle::ShaderResourceView<R, [f32; 4]>,
+    /// the ambient color as texture
     pub texture_ka: gfx::handle::ShaderResourceView<R, [f32; 4]>,
+    /// the diffuse color as a texture
     pub texture_kd: gfx::handle::ShaderResourceView<R, [f32; 4]>,
+    /// the depth buffer as a texture
     pub texture_depth: gfx::handle::ShaderResourceView<R, f32>,
 }
 

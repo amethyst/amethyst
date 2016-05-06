@@ -68,6 +68,7 @@ fn main() {
     let (window, mut device, mut factory, main_color, main_depth) =
         gfx_window_glutin::init::<ColorFormat, DepthFormat>(builder);
     let combuf = factory.create_command_buffer();
+    let (mut w, mut h, _, _) = main_color.get_dimensions();
 
     let sphere = build_sphere();
     let (buffer, slice) = factory.create_vertex_buffer_with_slice(&sphere, ());
@@ -142,7 +143,6 @@ fn main() {
     frame.layers = pipeline_deferred();
 
     let start = SystemTime::now();
-    let (mut w, mut h) = (800., 600.);
     'main: loop {
         // quit when Esc is pressed.
         for event in window.poll_events() {
@@ -187,8 +187,8 @@ fn main() {
                         let output = frame.targets.get_mut("main").unwrap();
                         let out = output.downcast_mut::<amethyst_renderer::target::ColorBuffer<gfx_device_gl::Resources>>();
                         let out = out.unwrap();
-                        w = iw as f32;
-                        h = ih as f32;
+                        w = iw as u16;
+                        h = ih as u16;
                         gfx_window_glutin::update_views(
                             &window,
                             &mut out.color,
@@ -214,7 +214,7 @@ fn main() {
             Point3::new(0f32, 0.0, 0.0),
             Vector3::unit_z(),
         );
-        let proj = cgmath::perspective(cgmath::deg(60.0f32), w / h, 1.0, 100.0);
+        let proj = cgmath::perspective(cgmath::deg(60.0f32), w as f32 / h as f32, 1.0, 100.0);
         frame.cameras.insert(
             format!("main"),
             amethyst_renderer::Camera{projection: proj.into(), view: view.mat.into()}
