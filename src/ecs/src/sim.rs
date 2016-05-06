@@ -39,6 +39,11 @@ impl Simulation {
     /// Computes the next state of the world using the given processors.
     pub fn step(&mut self, dt: Duration) {
         self.planner.dispatch(dt);
+    }
+}
+
+impl Drop for Simulation {
+    fn drop(&mut self) {
         self.planner.wait();
     }
 }
