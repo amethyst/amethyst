@@ -315,7 +315,6 @@ gfx_defines!(
         color: [f32; 4] = "color",
     }
 
-
     pipeline light {
         vbuf: gfx::VertexBuffer<Vertex> = (),
         kd: gfx::TextureSampler<[f32; 4]> = "t_Kd",

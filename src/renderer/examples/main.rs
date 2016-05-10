@@ -161,6 +161,17 @@ fn main() {
                     ];
                 }
                 glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Key3)) => {
+                    window.set_title("Amethyst Renderer [Forward]");
+                    frame.layers = vec![
+                        Layer::new("main",
+                            vec![
+                                amethyst_renderer::pass::Clear::new([0., 0., 0., 1.]),
+                                amethyst_renderer::pass::DrawShaded::new("main", "main")
+                            ]
+                        )
+                    ];
+                }
+                glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Key4)) => {
                     window.set_title("Amethyst Renderer [Forward Flat]");
                     frame.layers = vec![
                         Layer::new("main",
@@ -171,7 +182,7 @@ fn main() {
                         )
                     ];
                 }
-                glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Key4)) => {
+                glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Key5)) => {
                     window.set_title("Amethyst Renderer [Forward Wireframe]");
                     frame.layers = vec![
                         Layer::new("main",

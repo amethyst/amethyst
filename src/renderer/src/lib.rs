@@ -57,6 +57,7 @@ impl<R, C> Renderer<R, C>
     {
         self.add_pass(pass::forward::Clear);
         self.add_pass(pass::forward::DrawNoShading::new(factory));
+        self.add_pass(pass::forward::DrawShaded::new(factory));
         self.add_pass(pass::forward::Wireframe::new(factory));
 
         self.add_pass(pass::deferred::Clear);
