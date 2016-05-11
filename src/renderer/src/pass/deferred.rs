@@ -66,22 +66,122 @@ pub static DRAW_FRAGMENT_SRC: &'static [u8] = b"
     }
 ";
 
+pub static LIGHT_FRAGMENT_SRC: &'static [u8] = b"
+    #version 150 core
+    #define MAX_NUM_TOTAL_LIGHTS 128
+
+    layout (std140) uniform u_FragmentLightArgs {
+        mat4 u_Proj;
+        mat4 u_InvProj;
+        mat4 u_InvView;
+        vec4 u_Viewport;
+        int u_LightCount;
+    };
+
+    struct Light {
+        vec4 propagation;
+        vec4 center;
+        vec4 color;
+    };
+
+    layout (std140) uniform u_Lights {
+        Light light[MAX_NUM_TOTAL_LIGHTS];
+    };
+
+    uniform sampler2D t_Kd;
+    uniform sampler2D t_Depth;
+    uniform sampler2D t_Normal;
+
+    in vec2 v_TexCoord;
+    out vec4 o_Color;
+
+    vec4 calc_pos_from_window(vec3 window_space) {
+        vec2 depthrange = vec2(0., 1.);
+        vec3 ndc_pos;
+        ndc_pos.xy = ((2.0 * window_space.xy) - (2.0 * u_Viewport.xy)) / (u_Viewport.zw) - 1;
+        ndc_pos.z = (2.0 * window_space.z - depthrange.x - depthrange.y) /
+                   (depthrange.y - depthrange.x);
+
+        vec4 clip_pose;
+        clip_pose.w = u_Proj[3][2] / (ndc_pos.z - (u_Proj[2][2] / u_Proj[2][3]));
+        clip_pose.xyz = ndc_pos * clip_pose.w;
+
+        return u_InvView * u_InvProj * clip_pose;
+    }
+
+    void main() {
+        float depth = texture(t_Depth, v_TexCoord).x;
+        vec4 kd = texture(t_Kd, v_TexCoord);
+        vec4 normal = texture(t_Normal, v_TexCoord);
+
+        vec4 pos = calc_pos_from_window(vec3(gl_FragCoord.xy, depth));
+
+        vec4 color = vec4(0., 0., 0., 0.);
+        for (int i = 0; i < u_LightCount; i++) {
+            vec4 delta = light[i].center - pos;
+            float dist = length(delta);
+            float inv_dist = 1. / dist;
+            vec4 light_to_point_normal = delta * inv_dist;
+            float intensity = dot(light[i].propagation.xyz, vec3(1., inv_dist, inv_dist * inv_dist));
+            color += kd * light[i].color * intensity * max(0, dot(light_to_point_normal, normal));
+        }
+        o_Color = color;
+    }
+";
+
+gfx_defines!(
+    constant PointLight {
+        propagation: [f32; 4] = "propagation",
+        center: [f32; 4] = "center",
+        color: [f32; 4] = "color",
+    }
+
+    constant FragmentLightArgs {
+        proj: [[f32; 4]; 4] = "u_Proj",
+        inv_proj: [[f32; 4]; 4] = "u_InvProj",
+        inv_view: [[f32; 4]; 4] = "u_InvView",
+        viewport: [f32; 4] = "u_Viewport",
+        light_count: i32 = "u_LightCount",
+    }
+
+    constant VertexArgs {
+        proj: [[f32; 4]; 4] = "u_Proj",
+        view: [[f32; 4]; 4] = "u_View",
+        model: [[f32; 4]; 4] = "u_Model",
+    }
+
+    constant FragmentArgs {
+        ka: [f32; 4] = "u_Ka",
+        kd: [f32; 4] = "u_Kd",
+    }
+
+    pipeline light {
+        vbuf: gfx::VertexBuffer<Vertex> = (),
+        kd: gfx::TextureSampler<[f32; 4]> = "t_Kd",
+        normal: gfx::TextureSampler<[f32; 4]> = "t_Normal",
+        depth: gfx::TextureSampler<f32> = "t_Depth",
+        out: gfx::BlendTarget<ColorFormat> = ("o_Color", gfx::state::MASK_ALL, gfx::preset::blend::ADD),
+        lights: gfx::ConstantBuffer<PointLight> = "u_Lights",
+        fragment_args: gfx::ConstantBuffer<FragmentLightArgs> = "u_FragmentLightArgs",
+    }
+
+    pipeline draw {
+        vbuf: gfx::VertexBuffer<::VertexPosNormal> = (),
+        vertex_args: gfx::ConstantBuffer<VertexArgs> = "u_VertexArgs",
+        fragment_args: gfx::ConstantBuffer<FragmentArgs> = "u_FragmentArgs",
+        out_normal: gfx::RenderTarget<GFormat> = "o_Normal",
+        out_ka: gfx::RenderTarget<gfx::format::Rgba8> = "o_Ka",
+        out_kd: gfx::RenderTarget<gfx::format::Rgba8> = "o_Kd",
+        out_depth: gfx::DepthTarget<gfx::format::DepthStencil> =
+            gfx::preset::depth::LESS_EQUAL_WRITE,
+    }
+);
+
 pub type GFormat = [f32; 4];
-gfx_pipeline!( draw {
-    vbuf: gfx::VertexBuffer<::VertexPosNormal> = (),
-    ka: gfx::Global<[f32; 4]> = "u_Ka",
-    kd: gfx::Global<[f32; 4]> = "u_Kd",
-    model: gfx::Global<[[f32; 4]; 4]> = "u_Model",
-    view: gfx::Global<[[f32; 4]; 4]> = "u_View",
-    proj: gfx::Global<[[f32; 4]; 4]> = "u_Proj",
-    out_normal: gfx::RenderTarget<GFormat> = "o_Normal",
-    out_ka: gfx::RenderTarget<gfx::format::Rgba8> = "o_Ka",
-    out_kd: gfx::RenderTarget<gfx::format::Rgba8> = "o_Kd",
-    out_depth: gfx::DepthTarget<gfx::format::DepthStencil> =
-        gfx::preset::depth::LESS_EQUAL_WRITE,
-});
 
 pub struct DrawPass<R: gfx::Resources>{
+    vertex: gfx::handle::Buffer<R, VertexArgs>,
+    fragment: gfx::handle::Buffer<R, FragmentArgs>,
     pso: gfx::PipelineState<R, draw::Meta>
 }
 
@@ -90,6 +190,8 @@ impl<R: gfx::Resources> DrawPass<R> {
         where F: gfx::Factory<R>
     {
         DrawPass {
+            vertex: factory.create_constant_buffer(1),
+            fragment: factory.create_constant_buffer(1),
             pso: factory.create_pipeline_simple(
                 DRAW_VERTEX_SRC,
                 DRAW_FRAGMENT_SRC,
@@ -113,15 +215,29 @@ impl<R> ::Pass<R> for DrawPass<R>
 
         // every entity gets drawn
         for f in &scene.fragments {
+            encoder.update_constant_buffer(
+                &self.vertex,
+                &VertexArgs{
+                    proj: camera.projection,
+                    view: camera.view,
+                    model: f.transform,
+                }
+            );
+
+            encoder.update_constant_buffer(
+                &self.fragment,
+                &FragmentArgs{
+                    ka: f.ka,
+                    kd: f.kd,
+                }
+            );
+
             encoder.draw(
                 &f.slice,
                 &self.pso,
-                &draw::Data {
-                    ka: f.ka,
-                    kd: f.kd,
-                    model: f.transform,
-                    view: camera.view,
-                    proj: camera.projection,
+                &draw::Data{
+                    fragment_args: self.fragment.clone(),
+                    vertex_args: self.vertex.clone(),
                     vbuf: f.buffer.clone(),
                     out_normal: target.normal.clone(),
                     out_ka: target.ka.clone(),
@@ -245,94 +361,10 @@ impl<R> ::Pass<R> for BlitLayer<R>
     }
 }
 
-pub static LIGHT_FRAGMENT_SRC: &'static [u8] = b"
-    #version 150 core
-    #define MAX_NUM_TOTAL_LIGHTS 128
-
-    uniform mat4 u_Proj;
-    uniform mat4 u_InvProj;
-    uniform mat4 u_InvView;
-    uniform vec4 u_Viewport;
-    uniform int u_LightCount;
-
-    struct Light {
-        vec4 propagation;
-        vec4 center;
-        vec4 color;
-    };
-
-    layout (std140) uniform u_Lights {
-        Light light[MAX_NUM_TOTAL_LIGHTS];
-    };
-
-    uniform sampler2D t_Kd;
-    uniform sampler2D t_Depth;
-    uniform sampler2D t_Normal;
-
-    in vec2 v_TexCoord;
-    out vec4 o_Color;
-
-    vec4 calc_pos_from_window(vec3 window_space) {
-        vec2 depthrange = vec2(0., 1.);
-        vec3 ndc_pos;
-        ndc_pos.xy = ((2.0 * window_space.xy) - (2.0 * u_Viewport.xy)) / (u_Viewport.zw) - 1;
-        ndc_pos.z = (2.0 * window_space.z - depthrange.x - depthrange.y) /
-                   (depthrange.y - depthrange.x);
-
-        vec4 clip_pose;
-        clip_pose.w = u_Proj[3][2] / (ndc_pos.z - (u_Proj[2][2] / u_Proj[2][3]));
-        clip_pose.xyz = ndc_pos * clip_pose.w;
-
-        return u_InvView * u_InvProj * clip_pose;
-    }
-
-    void main() {
-        float depth = texture(t_Depth, v_TexCoord).x;
-        vec4 kd = texture(t_Kd, v_TexCoord);
-        vec4 normal = texture(t_Normal, v_TexCoord);
-
-        vec4 pos = calc_pos_from_window(vec3(gl_FragCoord.xy, depth));
-
-        vec4 color = vec4(0., 0., 0., 0.);
-        for (int i = 0; i < u_LightCount; i++) {
-            vec4 delta = light[i].center - pos;
-            float dist = length(delta);
-            float inv_dist = 1. / dist;
-            vec4 light_to_point_normal = delta * inv_dist;
-            float intensity = dot(light[i].propagation.xyz, vec3(1., inv_dist, inv_dist * inv_dist));
-            color += kd * light[i].color * intensity * max(0, dot(light_to_point_normal, normal));
-        }
-        o_Color = color;
-    }
-";
-
-
-gfx_defines!(
-    constant PointLight {
-        propagation: [f32; 4] = "propagation",
-        center: [f32; 4] = "center",
-        color: [f32; 4] = "color",
-    }
-
-    pipeline light {
-        vbuf: gfx::VertexBuffer<Vertex> = (),
-        kd: gfx::TextureSampler<[f32; 4]> = "t_Kd",
-        normal: gfx::TextureSampler<[f32; 4]> = "t_Normal",
-        depth: gfx::TextureSampler<f32> = "t_Depth",
-        out: gfx::BlendTarget<ColorFormat> = ("o_Color", gfx::state::MASK_ALL, gfx::preset::blend::ADD),
-
-        light_count: gfx::Global<i32> = "u_LightCount",
-        lights: gfx::ConstantBuffer<PointLight> = "u_Lights",
-        viewport: gfx::Global<[f32; 4]> = "u_Viewport",
-        proj: gfx::Global<[[f32; 4]; 4]> = "u_Proj",
-        inv_proj: gfx::Global<[[f32; 4]; 4]> = "u_InvProj",
-        inv_view: gfx::Global<[[f32; 4]; 4]> = "u_InvView",
-    }
-);
-
 pub struct LightingPass<R: gfx::Resources> {
     buffer: Buffer<R, Vertex>,
     lights: Buffer<R, PointLight>,
+    fragment_args: Buffer<R, FragmentLightArgs>,
     slice: Slice<R>,
     sampler: gfx::handle::Sampler<R>,
     pso: gfx::pso::PipelineState<R, light::Meta>
@@ -353,11 +385,13 @@ impl<R: gfx::Resources> LightingPass<R> {
         );
 
         let lights = factory.create_constant_buffer(128);
+        let fragment_args = factory.create_constant_buffer(1);
         LightingPass{
             lights: lights,
             buffer: buffer,
             slice: slice,
             sampler: sampler,
+            fragment_args: fragment_args,
             pso: factory.create_pipeline_simple(
                 BLIT_VERTEX_SRC,
                 LIGHT_FRAGMENT_SRC,
@@ -398,6 +432,17 @@ impl<R> ::Pass<R> for LightingPass<R>
                 })
             }
 
+            encoder.update_constant_buffer(
+                &self.fragment_args,
+                &FragmentLightArgs{
+                    inv_proj: Matrix4::from(camera.projection).invert().unwrap().into(),
+                    inv_view: Matrix4::from(camera.view).invert().unwrap().into(),
+                    proj: camera.projection,
+                    viewport: [0., 0., w as f32, h as f32],
+                    light_count: count as i32,
+                }
+            );
+
             encoder.update_buffer(&self.lights, &lights[..], 0).unwrap();
             encoder.draw(
                 &self.slice,
@@ -408,11 +453,7 @@ impl<R> ::Pass<R> for LightingPass<R>
                     normal: (src.texture_normal.clone(), self.sampler.clone()),
                     depth: (src.texture_depth.clone(), self.sampler.clone()),
                     out: target.color.clone(),
-                    inv_proj: Matrix4::from(camera.projection).invert().unwrap().into(),
-                    inv_view: Matrix4::from(camera.view).invert().unwrap().into(),
-                    proj: camera.projection,
-                    viewport: [0., 0., w as f32, h as f32],
-                    light_count: count as i32,
+                    fragment_args: self.fragment_args.clone(),
                     lights: self.lights.clone()
                 }
             );
