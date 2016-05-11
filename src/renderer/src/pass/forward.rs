@@ -17,9 +17,11 @@ pub static VERTEX_SRC: &'static [u8] = b"
 
     in vec3 a_Pos;
     in vec3 a_Normal;
+    in vec2 a_TexCoord;
 
     out vec4 v_Position;
     out vec3 v_Normal;
+    out vec2 v_TexCoord;
 
     void main() {
         v_Position = u_Model * vec4(a_Pos, 1.0);
@@ -31,16 +33,14 @@ pub static VERTEX_SRC: &'static [u8] = b"
 pub static FLAT_FRAGMENT_SRC: &'static [u8] = b"
     #version 150 core
 
-    layout (std140) uniform u_FragmentArgs {
-        vec4 u_Ka;
-        vec4 u_Kd;
-        int u_LightCount;
-    };
+    uniform sampler2D t_Ka;
+    uniform sampler2D t_Kd;
 
+    in vec2 v_TexCoord;
     out vec4 o_Color;
 
     void main() {
-        o_Color = u_Ka;
+        o_Color = texture(t_Ka, v_TexCoord);
     }
 ";
 
@@ -49,8 +49,6 @@ pub static FRAGMENT_SRC: &'static [u8] = b"
     #define MAX_NUM_TOTAL_LIGHTS 512
 
     layout (std140) uniform u_FragmentArgs {
-        vec4 u_Ka;
-        vec4 u_Kd;
         int u_LightCount;
     };
 
@@ -64,19 +62,24 @@ pub static FRAGMENT_SRC: &'static [u8] = b"
         Light light[MAX_NUM_TOTAL_LIGHTS];
     };
 
+    uniform sampler2D t_Ka;
+    uniform sampler2D t_Kd;
+
     in vec4 v_Position;
     in vec3 v_Normal;
+    in vec2 v_TexCoord;
     out vec4 o_Color;
 
     void main() {
-        vec4 color = u_Ka;
+        vec4 kd = texture(t_Kd, v_TexCoord);
+        vec4 color = texture(t_Ka, v_TexCoord);
         for (int i = 0; i < u_LightCount; i++) {
             vec4 delta = light[i].center - v_Position;
             float dist = length(delta);
             float inv_dist = 1. / dist;
             vec4 light_to_point_normal = delta * inv_dist;
             float intensity = dot(light[i].propagation.xyz, vec3(1., inv_dist, inv_dist * inv_dist));
-            color += u_Kd * light[i].color * intensity * max(0, dot(light_to_point_normal, vec4(v_Normal, 0.)));
+            color += kd * light[i].color * intensity * max(0, dot(light_to_point_normal, vec4(v_Normal, 0.)));
         }
         o_Color = color;
     }
@@ -117,8 +120,6 @@ gfx_defines!(
     }
 
     constant FragmentArgs {
-        ka: [f32; 4] = "u_Ka",
-        kd: [f32; 4] = "u_Kd",
         light_count: i32 = "u_LightCount",
     }
 
@@ -128,6 +129,8 @@ gfx_defines!(
         fragment_args: gfx::ConstantBuffer<FragmentArgs> = "u_FragmentArgs",
         out_ka: gfx::RenderTarget<gfx::format::Rgba8> = "o_Color",
         out_depth: gfx::DepthTarget<gfx::format::DepthStencil> = gfx::preset::depth::LESS_EQUAL_WRITE,
+        ka: gfx::TextureSampler<[f32; 4]> = "t_Ka",
+        kd: gfx::TextureSampler<[f32; 4]> = "t_Kd",
     }
 
     pipeline shaded {
@@ -137,13 +140,16 @@ gfx_defines!(
         lights: gfx::ConstantBuffer<PointLight> = "u_Lights",
         out_ka: gfx::RenderTarget<gfx::format::Rgba8> = "o_Color",
         out_depth: gfx::DepthTarget<gfx::format::DepthStencil> = gfx::preset::depth::LESS_EQUAL_WRITE,
+        ka: gfx::TextureSampler<[f32; 4]> = "t_Ka",
+        kd: gfx::TextureSampler<[f32; 4]> = "t_Kd",
     }
 
     pipeline wireframe {
         vbuf: gfx::VertexBuffer<VertexPosNormal> = (),
         vertex_args: gfx::ConstantBuffer<VertexArgs> = "u_VertexArgs",
-        fragment_args: gfx::ConstantBuffer<FragmentArgs> = "u_FragmentArgs",
         out_ka: gfx::RenderTarget<gfx::format::Rgba8> = "o_Color",
+        ka: gfx::TextureSampler<[f32; 4]> = "t_Ka",
+        kd: gfx::TextureSampler<[f32; 4]> = "t_Kd",
     }
 );
 
@@ -167,7 +173,10 @@ impl<R> Pass<R> for Clear
 pub struct DrawNoShading<R: gfx::Resources>{
     vertex: gfx::handle::Buffer<R, VertexArgs>,
     fragment: gfx::handle::Buffer<R, FragmentArgs>,
-    pso: gfx::pso::PipelineState<R, flat::Meta>
+    ka: ::ConstantColorTexture<R>,
+    kd: ::ConstantColorTexture<R>,
+    pso: gfx::pso::PipelineState<R, flat::Meta>,
+    sampler: gfx::handle::Sampler<R>,
 }
 
 impl<R: gfx::Resources> DrawNoShading<R> {
@@ -183,10 +192,18 @@ impl<R: gfx::Resources> DrawNoShading<R> {
             flat::new()
         ).unwrap();
 
+        let sampler = factory.create_sampler(
+            gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale,
+                                       gfx::tex::WrapMode::Clamp)
+        );
+
         DrawNoShading{
             vertex: vertex,
             fragment: fragment,
-            pso: pso
+            ka: ::ConstantColorTexture::new(factory),
+            kd: ::ConstantColorTexture::new(factory),
+            pso: pso,
+            sampler: sampler
         }
     }
 }
@@ -217,11 +234,12 @@ impl<R> Pass<R> for DrawNoShading<R>
             encoder.update_constant_buffer(
                 &self.fragment,
                 &FragmentArgs{
-                    ka: e.ka,
-                    kd: e.kd,
                     light_count: 0
                 }
             );
+
+            let ka = e.ka.to_view(&self.ka, encoder);
+            let kd = e.kd.to_view(&self.kd, encoder);
 
             encoder.draw(
                 &e.slice,
@@ -231,7 +249,9 @@ impl<R> Pass<R> for DrawNoShading<R>
                     vertex_args: self.vertex.clone(),
                     fragment_args: self.fragment.clone(),
                     out_ka: target.color.clone(),
-                    out_depth: target.output_depth.clone()
+                    out_depth: target.output_depth.clone(),
+                    ka: (ka, self.sampler.clone()),
+                    kd: (kd, self.sampler.clone()),
                 }
             );
         }
@@ -242,7 +262,10 @@ pub struct DrawShaded<R: gfx::Resources>{
     vertex: gfx::handle::Buffer<R, VertexArgs>,
     fragment: gfx::handle::Buffer<R, FragmentArgs>,
     lights: gfx::handle::Buffer<R, PointLight>,
-    pso: gfx::pso::PipelineState<R, shaded::Meta>
+    pso: gfx::pso::PipelineState<R, shaded::Meta>,
+    sampler: gfx::handle::Sampler<R>,
+    ka: ::ConstantColorTexture<R>,
+    kd: ::ConstantColorTexture<R>,
 }
 
 impl<R: gfx::Resources> DrawShaded<R> {
@@ -259,11 +282,19 @@ impl<R: gfx::Resources> DrawShaded<R> {
             shaded::new()
         ).unwrap();
 
+        let sampler = factory.create_sampler(
+            gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale,
+                                       gfx::tex::WrapMode::Clamp)
+        );
+
         DrawShaded{
             vertex: vertex,
             fragment: fragment,
             lights: lights,
-            pso: pso
+            pso: pso,
+            ka: ::ConstantColorTexture::new(factory),
+            kd: ::ConstantColorTexture::new(factory),
+            sampler: sampler
         }
     }
 }
@@ -314,11 +345,12 @@ impl<R> Pass<R> for DrawShaded<R>
             encoder.update_constant_buffer(
                 &self.fragment,
                 &FragmentArgs{
-                    ka: e.ka,
-                    kd: e.kd,
                     light_count: count as i32
                 }
             );
+
+            let ka = e.ka.to_view(&self.ka, encoder);
+            let kd = e.kd.to_view(&self.kd, encoder);
 
             encoder.draw(
                 &e.slice,
@@ -329,7 +361,9 @@ impl<R> Pass<R> for DrawShaded<R>
                     vertex_args: self.vertex.clone(),
                     lights: self.lights.clone(),
                     out_ka: target.color.clone(),
-                    out_depth: target.output_depth.clone()
+                    out_depth: target.output_depth.clone(),
+                    ka: (ka, self.sampler.clone()),
+                    kd: (kd, self.sampler.clone()),
                 }
             );
         }
@@ -338,8 +372,10 @@ impl<R> Pass<R> for DrawShaded<R>
 
 pub struct Wireframe<R: gfx::Resources>{
     vertex: gfx::handle::Buffer<R, VertexArgs>,
-    fragment: gfx::handle::Buffer<R, FragmentArgs>,
-    pso: gfx::pso::PipelineState<R, wireframe::Meta>
+    pso: gfx::pso::PipelineState<R, wireframe::Meta>,
+    sampler: gfx::handle::Sampler<R>,
+    ka: ::ConstantColorTexture<R>,
+    kd: ::ConstantColorTexture<R>,
 }
 
 impl<R: gfx::Resources> Wireframe<R> {
@@ -350,7 +386,6 @@ impl<R: gfx::Resources> Wireframe<R> {
         let gs = factory.create_shader_geometry(WIREFRAME_GEOMETRY_SRC).unwrap();
         let fs = factory.create_shader_pixel(FLAT_FRAGMENT_SRC).unwrap();
         let vertex = factory.create_constant_buffer(1);
-        let fragment = factory.create_constant_buffer(1);
         let pso = factory.create_pipeline_state(
             &gfx::ShaderSet::Geometry(vs, gs, fs),
             gfx::Primitive::TriangleList,
@@ -358,10 +393,17 @@ impl<R: gfx::Resources> Wireframe<R> {
             wireframe::new()
         ).unwrap();
 
+        let sampler = factory.create_sampler(
+            gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale,
+                                       gfx::tex::WrapMode::Clamp)
+        );
+
         Wireframe{
             vertex: vertex,
-            fragment: fragment,
-            pso: pso
+            pso: pso,
+            sampler: sampler,
+            ka: ::ConstantColorTexture::new(factory),
+            kd: ::ConstantColorTexture::new(factory),
         }
     }
 }
@@ -389,14 +431,8 @@ impl<R> Pass<R> for Wireframe<R>
                 }
             );
 
-            encoder.update_constant_buffer(
-                &self.fragment,
-                &FragmentArgs{
-                    ka: e.ka,
-                    kd: e.kd,
-                    light_count: 0
-                }
-            );
+            let ka = e.ka.to_view(&self.ka, encoder);
+            let kd = e.kd.to_view(&self.kd, encoder);
 
             encoder.draw(
                 &e.slice,
@@ -404,8 +440,9 @@ impl<R> Pass<R> for Wireframe<R>
                 &wireframe::Data{
                     vbuf: e.buffer.clone(),
                     vertex_args: self.vertex.clone(),
-                    fragment_args: self.fragment.clone(),
-                    out_ka: target.color.clone()
+                    out_ka: target.color.clone(),
+                    ka: (ka, self.sampler.clone()),
+                    kd: (kd, self.sampler.clone()),
                 }
             );
         }

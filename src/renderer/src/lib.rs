@@ -37,6 +37,7 @@ pub struct Renderer<R: gfx::Resources, C: gfx::CommandBuffer<R>> {
 gfx_vertex_struct!( VertexPosNormal {
     pos: [f32; 3] = "a_Pos",
     normal: [f32; 3] = "a_Normal",
+    tex_coord: [f32; 2] = "a_TexCoord",
 });
 
 impl<R, C> Renderer<R, C>
@@ -100,6 +101,60 @@ impl<R, C> Renderer<R, C>
     }
 }
 
+/// holds a 1x1 texture that can be used to store constnat colours
+pub struct ConstantColorTexture<R: gfx::Resources> {
+    texture: gfx::handle::Texture<R, gfx::format::R8_G8_B8_A8>,
+    view: gfx::handle::ShaderResourceView<R, [f32; 4]>
+}
+
+impl<R: gfx::Resources> ConstantColorTexture<R> {
+    /// Create a texture buffer
+    pub fn new<F>(factory: &mut F) -> ConstantColorTexture<R>
+        where F: gfx::Factory<R>
+    {
+        let kind = gfx::tex::Kind::D2(1, 1, gfx::tex::AaMode::Single);
+        let (text, view) = factory.create_texture_const_u8::<gfx::format::Rgba8>(kind, &[&[0, 0, 0, 0]]).unwrap();
+        ConstantColorTexture{
+            texture: text,
+            view: view
+        }
+    }
+}
+
+pub enum Texture<R: gfx::Resources> {
+    Constant([f32; 4]),
+    Texture(gfx::handle::ShaderResourceView<R, [f32; 4]>),
+}
+
+impl<R: gfx::Resources> Texture<R> {
+    pub fn to_view<C>(&self, texture: &ConstantColorTexture<R>, encoder: &mut gfx::Encoder<R, C>) -> gfx::handle::ShaderResourceView<R, [f32; 4]>
+        where C: gfx::CommandBuffer<R>
+    {
+        match self {
+            &Texture::Constant(color) => {
+                let color: [[u8; 4]; 1] = [[
+                    (color[0] * 255.) as u8,
+                    (color[1] * 255.) as u8,
+                    (color[2] * 255.) as u8,
+                    (color[3] * 255.) as u8,
+                ]];
+                encoder.update_texture::<_, gfx::format::Rgba8>(
+                    &texture.texture,
+                    None,
+                    gfx::tex::ImageInfoCommon{
+                        xoffset: 0, yoffset: 0, zoffset:0,
+                        width: 1, height: 1, depth: 0,
+                        format: (), mipmap: 0
+                    },
+                    &color[..]
+                ).unwrap();
+                texture.view.clone()
+            }
+            &Texture::Texture(ref tex) => tex.clone()
+        }
+    }
+}
+
 /// A fragment is the most basic drawable element
 pub struct Fragment<R: gfx::Resources> {
     /// The transform matrix to apply to the matrix, this
@@ -110,9 +165,9 @@ pub struct Fragment<R: gfx::Resources> {
     /// A slice of the above vertex buffer
     pub slice: gfx::Slice<R>,
     /// ambient color
-    pub ka: [f32; 4],
+    pub ka: Texture<R>,
     /// diffuse color
-    pub kd: [f32; 4]
+    pub kd: Texture<R>
 }
 
 /// A basic light

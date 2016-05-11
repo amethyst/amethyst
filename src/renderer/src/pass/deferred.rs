@@ -32,16 +32,21 @@ impl<R> ::Pass<R> for Clear
 pub static DRAW_VERTEX_SRC: &'static [u8] = b"
     #version 150 core
 
-    uniform mat4 u_Proj;
-    uniform mat4 u_View;
-    uniform mat4 u_Model;
+    layout (std140) uniform u_VertexArgs {
+        uniform mat4 u_Proj;
+        uniform mat4 u_View;
+        uniform mat4 u_Model;
+    };
 
     in vec3 a_Normal;
     in vec3 a_Pos;
+    in vec2 a_TexCoord;
 
     out vec3 v_Normal;
+    out vec2 v_TexCoord;
 
     void main() {
+        v_TexCoord = a_TexCoord;
         v_Normal = mat3(u_Model) * a_Normal;
         gl_Position = u_Proj * u_View * u_Model * vec4(a_Pos, 1.0);
     }
@@ -50,18 +55,19 @@ pub static DRAW_VERTEX_SRC: &'static [u8] = b"
 pub static DRAW_FRAGMENT_SRC: &'static [u8] = b"
     #version 150 core
 
-    uniform vec4 u_Ka;
-    uniform vec4 u_Kd;
+    uniform sampler2D t_Ka;
+    uniform sampler2D t_Kd;
 
     in vec3 v_Normal;
+    in vec2 v_TexCoord;
 
     out vec4 o_Ka;
     out vec4 o_Kd;
     out vec4 o_Normal;
 
     void main() {
-        o_Ka = u_Ka;
-        o_Kd = u_Kd;
+        o_Ka = texture(t_Ka, v_TexCoord);
+        o_Kd = texture(t_Kd, v_TexCoord);
         o_Normal = vec4(normalize(v_Normal), 0.);
     }
 ";
@@ -166,6 +172,8 @@ gfx_defines!(
     }
 
     pipeline draw {
+        ka: gfx::TextureSampler<[f32; 4]> = "t_Ka",
+        kd: gfx::TextureSampler<[f32; 4]> = "t_Kd",
         vbuf: gfx::VertexBuffer<::VertexPosNormal> = (),
         vertex_args: gfx::ConstantBuffer<VertexArgs> = "u_VertexArgs",
         fragment_args: gfx::ConstantBuffer<FragmentArgs> = "u_FragmentArgs",
@@ -182,13 +190,21 @@ pub type GFormat = [f32; 4];
 pub struct DrawPass<R: gfx::Resources>{
     vertex: gfx::handle::Buffer<R, VertexArgs>,
     fragment: gfx::handle::Buffer<R, FragmentArgs>,
-    pso: gfx::PipelineState<R, draw::Meta>
+    pso: gfx::PipelineState<R, draw::Meta>,
+    ka: ::ConstantColorTexture<R>,
+    kd: ::ConstantColorTexture<R>,
+    sampler: gfx::handle::Sampler<R>,
 }
 
 impl<R: gfx::Resources> DrawPass<R> {
     pub fn new<F>(factory: &mut F) -> DrawPass<R>
         where F: gfx::Factory<R>
     {
+        let sampler = factory.create_sampler(
+            gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale,
+                                       gfx::tex::WrapMode::Clamp)
+        );
+
         DrawPass {
             vertex: factory.create_constant_buffer(1),
             fragment: factory.create_constant_buffer(1),
@@ -196,7 +212,10 @@ impl<R: gfx::Resources> DrawPass<R> {
                 DRAW_VERTEX_SRC,
                 DRAW_FRAGMENT_SRC,
                 draw::new()
-            ).unwrap()
+            ).unwrap(),
+            ka: ::ConstantColorTexture::new(factory),
+            kd: ::ConstantColorTexture::new(factory),
+            sampler: sampler
         }
     }
 }
@@ -224,13 +243,8 @@ impl<R> ::Pass<R> for DrawPass<R>
                 }
             );
 
-            encoder.update_constant_buffer(
-                &self.fragment,
-                &FragmentArgs{
-                    ka: f.ka,
-                    kd: f.kd,
-                }
-            );
+            let ka = f.ka.to_view(&self.ka, encoder);
+            let kd = f.kd.to_view(&self.kd, encoder);
 
             encoder.draw(
                 &f.slice,
@@ -242,7 +256,9 @@ impl<R> ::Pass<R> for DrawPass<R>
                     out_normal: target.normal.clone(),
                     out_ka: target.ka.clone(),
                     out_kd: target.kd.clone(),
-                    out_depth: target.depth.clone()
+                    out_depth: target.depth.clone(),
+                    ka: (ka, self.sampler.clone()),
+                    kd: (kd, self.sampler.clone()),
                 }
             );
         }
