@@ -170,7 +170,7 @@ impl<R> Pass<R> for Clear
     }
 }
 
-pub struct DrawNoShading<R: gfx::Resources>{
+pub struct DrawFlat<R: gfx::Resources>{
     vertex: gfx::handle::Buffer<R, VertexArgs>,
     fragment: gfx::handle::Buffer<R, FragmentArgs>,
     ka: ::ConstantColorTexture<R>,
@@ -179,8 +179,8 @@ pub struct DrawNoShading<R: gfx::Resources>{
     sampler: gfx::handle::Sampler<R>,
 }
 
-impl<R: gfx::Resources> DrawNoShading<R> {
-    pub fn new<F>(factory: &mut F) -> DrawNoShading<R>
+impl<R: gfx::Resources> DrawFlat<R> {
+    pub fn new<F>(factory: &mut F) -> DrawFlat<R>
         where R: gfx::Resources,
               F: gfx::Factory<R>
     {
@@ -197,7 +197,7 @@ impl<R: gfx::Resources> DrawNoShading<R> {
                                        gfx::tex::WrapMode::Clamp)
         );
 
-        DrawNoShading{
+        DrawFlat{
             vertex: vertex,
             fragment: fragment,
             ka: ::ConstantColorTexture::new(factory),
@@ -208,13 +208,13 @@ impl<R: gfx::Resources> DrawNoShading<R> {
     }
 }
 
-impl<R> Pass<R> for DrawNoShading<R>
+impl<R> Pass<R> for DrawFlat<R>
     where R: gfx::Resources
 {
-    type Arg = pass::DrawNoShading;
+    type Arg = pass::DrawFlat;
     type Target = ColorBuffer<R>;
 
-    fn apply<C>(&self, arg: &pass::DrawNoShading, target: &ColorBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+    fn apply<C>(&self, arg: &pass::DrawFlat, target: &ColorBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
         let scene = &scenes.scenes[&arg.scene];

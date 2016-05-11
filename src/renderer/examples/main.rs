@@ -41,7 +41,7 @@ fn layer_gbuffer() -> Layer {
     Layer::new("gbuffer",
         vec![
             Clear::new([0., 0., 0., 1.]),
-            DrawNoShading::new("main", "main")
+            DrawFlat::new("main", "main")
         ]
     )
 }
@@ -178,7 +178,7 @@ fn main() {
                         Layer::new("main",
                             vec![
                                 amethyst_renderer::pass::Clear::new([0., 0., 0., 1.]),
-                                amethyst_renderer::pass::DrawNoShading::new("main", "main")
+                                amethyst_renderer::pass::DrawFlat::new("main", "main")
                             ]
                         )
                     ];

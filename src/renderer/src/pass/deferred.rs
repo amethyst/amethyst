@@ -223,10 +223,10 @@ impl<R: gfx::Resources> DrawPass<R> {
 impl<R> ::Pass<R> for DrawPass<R>
     where R: gfx::Resources
 {
-    type Arg = ::pass::DrawNoShading;
+    type Arg = ::pass::DrawFlat;
     type Target = GeometryBuffer<R>;
 
-    fn apply<C>(&self, arg: &::pass::DrawNoShading, target: &GeometryBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+    fn apply<C>(&self, arg: &::pass::DrawFlat, target: &GeometryBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
         let scene = &scenes.scenes[&arg.scene];

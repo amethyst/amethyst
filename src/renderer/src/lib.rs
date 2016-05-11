@@ -57,7 +57,7 @@ impl<R, C> Renderer<R, C>
         where F: gfx::Factory<R>
     {
         self.add_pass(pass::forward::Clear);
-        self.add_pass(pass::forward::DrawNoShading::new(factory));
+        self.add_pass(pass::forward::DrawFlat::new(factory));
         self.add_pass(pass::forward::DrawShaded::new(factory));
         self.add_pass(pass::forward::Wireframe::new(factory));
 

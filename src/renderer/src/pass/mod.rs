@@ -61,20 +61,20 @@ impl Wireframe {
 
 #[derive(Clone, Debug)]
 /// Render into the target without any shading applied
-pub struct DrawNoShading {
+pub struct DrawFlat {
     /// The Camera to use
     pub camera: String,
     /// The scene to use
     pub scene: String,
 }
-impl PassDescription for DrawNoShading {}
+impl PassDescription for DrawFlat {}
 
-impl DrawNoShading {
-    /// Create a Boxed DrawNoShading
+impl DrawFlat {
+    /// Create a Boxed DrawFlat
     pub fn new<A, B>(camera: A, scene: B) -> Box<PassDescription>
         where String: From<A> + From<B>
     {
-        Box::new(DrawNoShading{
+        Box::new(DrawFlat{
             camera: String::from(camera),
             scene: String::from(scene),
         })
