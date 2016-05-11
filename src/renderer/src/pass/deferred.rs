@@ -296,11 +296,10 @@ pub static LIGHT_FRAGMENT_SRC: &'static [u8] = b"
         vec4 color = vec4(0., 0., 0., 0.);
         for (int i = 0; i < u_LightCount; i++) {
             vec4 delta = light[i].center - pos;
-            vec4 light_to_point_normal = normalize(delta);
-
             float dist = length(delta);
-            float intensity = dot(light[i].propagation.xyz, vec3(1., 1./dist, 1/(dist*dist)));
-
+            float inv_dist = 1. / dist;
+            vec4 light_to_point_normal = delta * inv_dist;
+            float intensity = dot(light[i].propagation.xyz, vec3(1., inv_dist, inv_dist * inv_dist));
             color += kd * light[i].color * intensity * max(0, dot(light_to_point_normal, normal));
         }
         o_Color = color;

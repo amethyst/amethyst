@@ -24,7 +24,7 @@ pub static VERTEX_SRC: &'static [u8] = b"
     void main() {
         v_Position = u_Model * vec4(a_Pos, 1.0);
         v_Normal = mat3(u_Model) * a_Normal;
-        gl_Position = u_Proj * u_View * u_Model * vec4(a_Pos, 1.0);
+        gl_Position = u_Proj * u_View * v_Position;
     }
 ";
 
@@ -72,11 +72,10 @@ pub static FRAGMENT_SRC: &'static [u8] = b"
         vec4 color = u_Ka;
         for (int i = 0; i < u_LightCount; i++) {
             vec4 delta = light[i].center - v_Position;
-            vec4 light_to_point_normal = normalize(delta);
-
             float dist = length(delta);
-            float intensity = dot(light[i].propagation.xyz, vec3(1., 1./dist, 1/(dist*dist)));
-
+            float inv_dist = 1. / dist;
+            vec4 light_to_point_normal = delta * inv_dist;
+            float intensity = dot(light[i].propagation.xyz, vec3(1., inv_dist, inv_dist * inv_dist));
             color += u_Kd * light[i].color * intensity * max(0, dot(light_to_point_normal, vec4(v_Normal, 0.)));
         }
         o_Color = color;
