@@ -9,9 +9,11 @@ pub use VertexPosNormal;
 pub static VERTEX_SRC: &'static [u8] = b"
     #version 150 core
 
-    uniform mat4 u_Proj;
-    uniform mat4 u_View;
-    uniform mat4 u_Model;
+    layout (std140) uniform u_VertexArgs {
+        uniform mat4 u_Proj;
+        uniform mat4 u_View;
+        uniform mat4 u_Model;
+    };
 
     in vec3 a_Pos;
     in vec3 a_Normal;
@@ -29,7 +31,11 @@ pub static VERTEX_SRC: &'static [u8] = b"
 pub static FLAT_FRAGMENT_SRC: &'static [u8] = b"
     #version 150 core
 
-    uniform vec4 u_Ka;
+    layout (std140) uniform u_FragmentArgs {
+        vec4 u_Ka;
+        vec4 u_Kd;
+        int u_LightCount;
+    };
 
     out vec4 o_Color;
 
@@ -42,9 +48,11 @@ pub static FRAGMENT_SRC: &'static [u8] = b"
     #version 150 core
     #define MAX_NUM_TOTAL_LIGHTS 512
 
-    uniform vec4 u_Ka;
-    uniform vec4 u_Kd;
-    uniform int u_LightCount;
+    layout (std140) uniform u_FragmentArgs {
+        vec4 u_Ka;
+        vec4 u_Kd;
+        int u_LightCount;
+    };
 
     struct Light {
         vec4 propagation;
@@ -96,6 +104,51 @@ pub static WIREFRAME_GEOMETRY_SRC: &'static [u8] = b"
 
 pub type GFormat = [f32; 4];
 
+gfx_defines!(
+    constant PointLight {
+        propagation: [f32; 4] = "propagation",
+        center: [f32; 4] = "center",
+        color: [f32; 4] = "color",
+    }
+
+    constant VertexArgs {
+        proj: [[f32; 4]; 4] = "u_Proj",
+        view: [[f32; 4]; 4] = "u_View",
+        model: [[f32; 4]; 4] = "u_Model",
+    }
+
+    constant FragmentArgs {
+        ka: [f32; 4] = "u_Ka",
+        kd: [f32; 4] = "u_Kd",
+        light_count: i32 = "u_LightCount",
+    }
+
+    pipeline flat {
+        vbuf: gfx::VertexBuffer<VertexPosNormal> = (),
+        vertex_args: gfx::ConstantBuffer<VertexArgs> = "u_VertexArgs",
+        fragment_args: gfx::ConstantBuffer<FragmentArgs> = "u_FragmentArgs",
+        out_ka: gfx::RenderTarget<gfx::format::Rgba8> = "o_Color",
+        out_depth: gfx::DepthTarget<gfx::format::DepthStencil> = gfx::preset::depth::LESS_EQUAL_WRITE,
+    }
+
+    pipeline shaded {
+        vbuf: gfx::VertexBuffer<VertexPosNormal> = (),
+        vertex_args: gfx::ConstantBuffer<VertexArgs> = "u_VertexArgs",
+        fragment_args: gfx::ConstantBuffer<FragmentArgs> = "u_FragmentArgs",
+        lights: gfx::ConstantBuffer<PointLight> = "u_Lights",
+        out_ka: gfx::RenderTarget<gfx::format::Rgba8> = "o_Color",
+        out_depth: gfx::DepthTarget<gfx::format::DepthStencil> = gfx::preset::depth::LESS_EQUAL_WRITE,
+    }
+
+    pipeline wireframe {
+        vbuf: gfx::VertexBuffer<VertexPosNormal> = (),
+        vertex_args: gfx::ConstantBuffer<VertexArgs> = "u_VertexArgs",
+        fragment_args: gfx::ConstantBuffer<FragmentArgs> = "u_FragmentArgs",
+        out_ka: gfx::RenderTarget<gfx::format::Rgba8> = "o_Color",
+    }
+);
+
+
 pub struct Clear;
 
 impl<R> Pass<R> for Clear
@@ -112,28 +165,30 @@ impl<R> Pass<R> for Clear
     }
 }
 
-gfx_pipeline!( flat {
-    vbuf: gfx::VertexBuffer<VertexPosNormal> = (),
-    ka: gfx::Global<[f32; 4]> = "u_Ka",
-    model: gfx::Global<[[f32; 4]; 4]> = "u_Model",
-    view: gfx::Global<[[f32; 4]; 4]> = "u_View",
-    proj: gfx::Global<[[f32; 4]; 4]> = "u_Proj",
-    out_ka: gfx::RenderTarget<gfx::format::Rgba8> = "o_Color",
-    out_depth: gfx::DepthTarget<gfx::format::DepthStencil> = gfx::preset::depth::LESS_EQUAL_WRITE,
-});
-
-pub struct DrawNoShading<R: gfx::Resources>(gfx::pso::PipelineState<R, flat::Meta>);
+pub struct DrawNoShading<R: gfx::Resources>{
+    vertex: gfx::handle::Buffer<R, VertexArgs>,
+    fragment: gfx::handle::Buffer<R, FragmentArgs>,
+    pso: gfx::pso::PipelineState<R, flat::Meta>
+}
 
 impl<R: gfx::Resources> DrawNoShading<R> {
     pub fn new<F>(factory: &mut F) -> DrawNoShading<R>
         where R: gfx::Resources,
               F: gfx::Factory<R>
     {
-        DrawNoShading(factory.create_pipeline_simple(
+        let vertex = factory.create_constant_buffer(1);
+        let fragment = factory.create_constant_buffer(1);
+        let pso = factory.create_pipeline_simple(
             VERTEX_SRC,
             FLAT_FRAGMENT_SRC,
             flat::new()
-        ).unwrap())
+        ).unwrap();
+
+        DrawNoShading{
+            vertex: vertex,
+            fragment: fragment,
+            pso: pso
+        }
     }
 }
 
@@ -151,15 +206,31 @@ impl<R> Pass<R> for DrawNoShading<R>
 
         // every entity gets drawn
         for e in &scene.fragments {
+            encoder.update_constant_buffer(
+                &self.vertex,
+                &VertexArgs{
+                    proj: camera.projection,
+                    view: camera.view,
+                    model: e.transform,
+                }
+            );
+
+            encoder.update_constant_buffer(
+                &self.fragment,
+                &FragmentArgs{
+                    ka: e.ka,
+                    kd: e.kd,
+                    light_count: 0
+                }
+            );
+
             encoder.draw(
                 &e.slice,
-                &self.0,
+                &self.pso,
                 &flat::Data{
                     vbuf: e.buffer.clone(),
-                    ka: e.ka,
-                    model: e.transform,
-                    view: camera.view,
-                    proj: camera.projection,
+                    vertex_args: self.vertex.clone(),
+                    fragment_args: self.fragment.clone(),
                     out_ka: target.color.clone(),
                     out_depth: target.output_depth.clone()
                 }
@@ -168,28 +239,9 @@ impl<R> Pass<R> for DrawNoShading<R>
     }
 }
 
-gfx_defines!(
-    constant PointLight {
-        propagation: [f32; 4] = "propagation",
-        center: [f32; 4] = "center",
-        color: [f32; 4] = "color",
-    }
-
-    pipeline shaded {
-        vbuf: gfx::VertexBuffer<VertexPosNormal> = (),
-        ka: gfx::Global<[f32; 4]> = "u_Ka",
-        kd: gfx::Global<[f32; 4]> = "u_Kd",
-        lights: gfx::ConstantBuffer<PointLight> = "u_Lights",
-        light_count: gfx::Global<i32> = "u_LightCount",
-        model: gfx::Global<[[f32; 4]; 4]> = "u_Model",
-        view: gfx::Global<[[f32; 4]; 4]> = "u_View",
-        proj: gfx::Global<[[f32; 4]; 4]> = "u_Proj",
-        out_ka: gfx::RenderTarget<gfx::format::Rgba8> = "o_Color",
-        out_depth: gfx::DepthTarget<gfx::format::DepthStencil> = gfx::preset::depth::LESS_EQUAL_WRITE,
-    }
-);
-
 pub struct DrawShaded<R: gfx::Resources>{
+    vertex: gfx::handle::Buffer<R, VertexArgs>,
+    fragment: gfx::handle::Buffer<R, FragmentArgs>,
     lights: gfx::handle::Buffer<R, PointLight>,
     pso: gfx::pso::PipelineState<R, shaded::Meta>
 }
@@ -200,13 +252,19 @@ impl<R: gfx::Resources> DrawShaded<R> {
               F: gfx::Factory<R>
     {
         let lights = factory.create_constant_buffer(512);
+        let vertex = factory.create_constant_buffer(1);
+        let fragment = factory.create_constant_buffer(1);
+        let pso = factory.create_pipeline_simple(
+            VERTEX_SRC,
+            FRAGMENT_SRC,
+            shaded::new()
+        ).unwrap();
+
         DrawShaded{
+            vertex: vertex,
+            fragment: fragment,
             lights: lights,
-            pso: factory.create_pipeline_simple(
-                VERTEX_SRC,
-                FRAGMENT_SRC,
-                shaded::new()
-            ).unwrap()
+            pso: pso
         }
     }
 }
@@ -245,18 +303,32 @@ impl<R> Pass<R> for DrawShaded<R>
 
         // every entity gets drawn
         for e in &scene.fragments {
+            encoder.update_constant_buffer(
+                &self.vertex,
+                &VertexArgs{
+                    proj: camera.projection,
+                    view: camera.view,
+                    model: e.transform,
+                }
+            );
+
+            encoder.update_constant_buffer(
+                &self.fragment,
+                &FragmentArgs{
+                    ka: e.ka,
+                    kd: e.kd,
+                    light_count: count as i32
+                }
+            );
+
             encoder.draw(
                 &e.slice,
                 &self.pso,
                 &shaded::Data{
                     vbuf: e.buffer.clone(),
-                    ka: e.ka,
-                    kd: e.kd,
-                    light_count: count as i32,
+                    fragment_args: self.fragment.clone(),
+                    vertex_args: self.vertex.clone(),
                     lights: self.lights.clone(),
-                    model: e.transform,
-                    view: camera.view,
-                    proj: camera.projection,
                     out_ka: target.color.clone(),
                     out_depth: target.output_depth.clone()
                 }
@@ -265,16 +337,11 @@ impl<R> Pass<R> for DrawShaded<R>
     }
 }
 
-gfx_pipeline!( wireframe {
-    vbuf: gfx::VertexBuffer<VertexPosNormal> = (),
-    ka: gfx::Global<[f32; 4]> = "u_Ka",
-    model: gfx::Global<[[f32; 4]; 4]> = "u_Model",
-    view: gfx::Global<[[f32; 4]; 4]> = "u_View",
-    proj: gfx::Global<[[f32; 4]; 4]> = "u_Proj",
-    out_ka: gfx::RenderTarget<gfx::format::Rgba8> = "o_Color",
-});
-
-pub struct Wireframe<R: gfx::Resources>(gfx::pso::PipelineState<R, wireframe::Meta>);
+pub struct Wireframe<R: gfx::Resources>{
+    vertex: gfx::handle::Buffer<R, VertexArgs>,
+    fragment: gfx::handle::Buffer<R, FragmentArgs>,
+    pso: gfx::pso::PipelineState<R, wireframe::Meta>
+}
 
 impl<R: gfx::Resources> Wireframe<R> {
     pub fn new<F>(factory: &mut F) -> Wireframe<R>
@@ -283,13 +350,20 @@ impl<R: gfx::Resources> Wireframe<R> {
         let vs = factory.create_shader_vertex(VERTEX_SRC).unwrap();
         let gs = factory.create_shader_geometry(WIREFRAME_GEOMETRY_SRC).unwrap();
         let fs = factory.create_shader_pixel(FLAT_FRAGMENT_SRC).unwrap();
-
-        Wireframe(factory.create_pipeline_state(
+        let vertex = factory.create_constant_buffer(1);
+        let fragment = factory.create_constant_buffer(1);
+        let pso = factory.create_pipeline_state(
             &gfx::ShaderSet::Geometry(vs, gs, fs),
             gfx::Primitive::TriangleList,
             gfx::state::Rasterizer::new_fill(),
             wireframe::new()
-        ).unwrap())
+        ).unwrap();
+
+        Wireframe{
+            vertex: vertex,
+            fragment: fragment,
+            pso: pso
+        }
     }
 }
 
@@ -307,18 +381,35 @@ impl<R> Pass<R> for Wireframe<R>
 
         // every entity gets drawn
         for e in &scene.fragments {
+            encoder.update_constant_buffer(
+                &self.vertex,
+                &VertexArgs{
+                    proj: camera.projection,
+                    view: camera.view,
+                    model: e.transform,
+                }
+            );
+
+            encoder.update_constant_buffer(
+                &self.fragment,
+                &FragmentArgs{
+                    ka: e.ka,
+                    kd: e.kd,
+                    light_count: 0
+                }
+            );
+
             encoder.draw(
                 &e.slice,
-                &self.0,
+                &self.pso,
                 &wireframe::Data{
                     vbuf: e.buffer.clone(),
-                    ka: e.ka,
-                    model: e.transform,
-                    view: camera.view,
-                    proj: camera.projection,
+                    vertex_args: self.vertex.clone(),
+                    fragment_args: self.fragment.clone(),
                     out_ka: target.color.clone()
                 }
             );
         }
     }
 }
+
