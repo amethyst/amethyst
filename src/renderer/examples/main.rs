@@ -21,13 +21,14 @@ use genmesh::{Triangulate, MapToVertices, Vertices};
 
 use amethyst_renderer::VertexPosNormal as Vertex;
 use amethyst_renderer::target::{ColorFormat, DepthFormat};
-use amethyst_renderer::{Frame, Layer};
+use amethyst_renderer::{Frame, Layer, Texture};
 
 fn build_sphere() -> Vec<Vertex> {
     SphereUV::new(32, 32)
         .vertex(|(x, y, z)| Vertex{
             pos: [x, y, z],
-            normal: Vector3::new(x, y, z).normalize().into()
+            normal: Vector3::new(x, y, z).normalize().into(),
+            tex_coord: [0., 0.]
         })
         .triangulate()
         .vertices()
@@ -40,7 +41,7 @@ fn layer_gbuffer() -> Layer {
     Layer::new("gbuffer",
         vec![
             Clear::new([0., 0., 0., 1.]),
-            DrawNoShading::new("main", "main")
+            DrawFlat::new("main", "main")
         ]
     )
 }
@@ -88,8 +89,8 @@ fn main() {
                 scene.fragments.push(amethyst_renderer::Fragment{
                     buffer: buffer.clone(),
                     slice: slice.clone(),
-                    ka: [color[0] * 0.05, color[1] * 0.05, color[2] * 0.05, 1.],
-                    kd: color,
+                    ka: Texture::Constant([color[0] * 0.05, color[1] * 0.05, color[2] * 0.05, 1.]),
+                    kd: Texture::Constant(color),
                     transform: Matrix4::from_translation(Vector3::new(x, y, z)).into()
                 })
             }
@@ -161,17 +162,28 @@ fn main() {
                     ];
                 }
                 glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Key3)) => {
-                    window.set_title("Amethyst Renderer [Forward Flat]");
+                    window.set_title("Amethyst Renderer [Forward]");
                     frame.layers = vec![
                         Layer::new("main",
                             vec![
                                 amethyst_renderer::pass::Clear::new([0., 0., 0., 1.]),
-                                amethyst_renderer::pass::DrawNoShading::new("main", "main")
+                                amethyst_renderer::pass::DrawShaded::new("main", "main")
                             ]
                         )
                     ];
                 }
                 glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Key4)) => {
+                    window.set_title("Amethyst Renderer [Forward Flat]");
+                    frame.layers = vec![
+                        Layer::new("main",
+                            vec![
+                                amethyst_renderer::pass::Clear::new([0., 0., 0., 1.]),
+                                amethyst_renderer::pass::DrawFlat::new("main", "main")
+                            ]
+                        )
+                    ];
+                }
+                glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Key5)) => {
                     window.set_title("Amethyst Renderer [Forward Wireframe]");
                     frame.layers = vec![
                         Layer::new("main",

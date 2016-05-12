@@ -14,6 +14,7 @@ license = "MIT"
 
 [dependencies]
 gfx = "0.11"
+gfx_core = "0.3"
 gfx_device_gl = "0.10"
 gfx_window_glutin = "0.11"
 glutin = "0.5"
