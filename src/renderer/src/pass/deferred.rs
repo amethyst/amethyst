@@ -32,7 +32,7 @@ impl<R> ::Pass<R> for Clear
 pub static DRAW_VERTEX_SRC: &'static [u8] = b"
     #version 150 core
 
-    layout (std140) uniform u_VertexArgs {
+    layout (std140) uniform cb_VertexArgs {
         uniform mat4 u_Proj;
         uniform mat4 u_View;
         uniform mat4 u_Model;
@@ -78,8 +78,7 @@ pub static LIGHT_FRAGMENT_SRC: &'static [u8] = b"
 
     layout (std140) uniform u_FragmentLightArgs {
         mat4 u_Proj;
-        mat4 u_InvProj;
-        mat4 u_InvView;
+        mat4 u_InvViewProj;
         vec4 u_Viewport;
         int u_LightCount;
     };
@@ -112,7 +111,7 @@ pub static LIGHT_FRAGMENT_SRC: &'static [u8] = b"
         clip_pose.w = u_Proj[3][2] / (ndc_pos.z - (u_Proj[2][2] / u_Proj[2][3]));
         clip_pose.xyz = ndc_pos * clip_pose.w;
 
-        return u_InvView * u_InvProj * clip_pose;
+        return u_InvViewProj * clip_pose;
     }
 
     void main() {
@@ -144,8 +143,7 @@ gfx_defines!(
 
     constant FragmentLightArgs {
         proj: [[f32; 4]; 4] = "u_Proj",
-        inv_proj: [[f32; 4]; 4] = "u_InvProj",
-        inv_view: [[f32; 4]; 4] = "u_InvView",
+        inv_view_proj: [[f32; 4]; 4] = "u_InvViewProj",
         viewport: [f32; 4] = "u_Viewport",
         light_count: i32 = "u_LightCount",
     }
@@ -175,8 +173,8 @@ gfx_defines!(
         ka: gfx::TextureSampler<[f32; 4]> = "t_Ka",
         kd: gfx::TextureSampler<[f32; 4]> = "t_Kd",
         vbuf: gfx::VertexBuffer<::VertexPosNormal> = (),
-        vertex_args: gfx::ConstantBuffer<VertexArgs> = "u_VertexArgs",
-        fragment_args: gfx::ConstantBuffer<FragmentArgs> = "u_FragmentArgs",
+        vertex_args: gfx::ConstantBuffer<VertexArgs> = "cb_VertexArgs",
+        fragment_args: gfx::ConstantBuffer<FragmentArgs> = "cb_FragmentArgs",
         out_normal: gfx::RenderTarget<GFormat> = "o_Normal",
         out_ka: gfx::RenderTarget<gfx::format::Rgba8> = "o_Ka",
         out_kd: gfx::RenderTarget<gfx::format::Rgba8> = "o_Kd",
@@ -448,11 +446,13 @@ impl<R> ::Pass<R> for LightingPass<R>
                 })
             }
 
+            let inv_view_proj = Matrix4::from(camera.view).invert().unwrap() *
+                                Matrix4::from(camera.projection).invert().unwrap();
+
             encoder.update_constant_buffer(
                 &self.fragment_args,
                 &FragmentLightArgs{
-                    inv_proj: Matrix4::from(camera.projection).invert().unwrap().into(),
-                    inv_view: Matrix4::from(camera.view).invert().unwrap().into(),
+                    inv_view_proj: inv_view_proj.into(),
                     proj: camera.projection,
                     viewport: [0., 0., w as f32, h as f32],
                     light_count: count as i32,

@@ -101,7 +101,7 @@ impl<R, C> Renderer<R, C>
     }
 }
 
-/// holds a 1x1 texture that can be used to store constnat colours
+/// holds a 1x1 texture that can be used to store constant colors
 pub struct ConstantColorTexture<R: gfx::Resources> {
     texture: gfx::handle::Texture<R, gfx::format::R8_G8_B8_A8>,
     view: gfx::handle::ShaderResourceView<R, [f32; 4]>
@@ -113,7 +113,15 @@ impl<R: gfx::Resources> ConstantColorTexture<R> {
         where F: gfx::Factory<R>
     {
         let kind = gfx::tex::Kind::D2(1, 1, gfx::tex::AaMode::Single);
-        let (text, view) = factory.create_texture_const_u8::<gfx::format::Rgba8>(kind, &[&[0, 0, 0, 0]]).unwrap();
+        let text = factory.create_texture::<gfx::format::R8_G8_B8_A8>(
+            kind,
+            1,
+            gfx::SHADER_RESOURCE,
+            gfx::Usage::Dynamic,
+            Some(gfx::format::ChannelType::Unorm)
+        ).unwrap();
+        let levels = (0, text.get_info().levels - 1);
+        let view = factory.view_texture_as_shader_resource::<gfx::format::Rgba8>(&text, levels, gfx::format::Swizzle::new()).unwrap();
         ConstantColorTexture{
             texture: text,
             view: view
@@ -141,11 +149,7 @@ impl<R: gfx::Resources> Texture<R> {
                 encoder.update_texture::<_, gfx::format::Rgba8>(
                     &texture.texture,
                     None,
-                    gfx::tex::ImageInfoCommon{
-                        xoffset: 0, yoffset: 0, zoffset:0,
-                        width: 1, height: 1, depth: 0,
-                        format: (), mipmap: 0
-                    },
+                    texture.texture.get_info().to_image_info(0),
                     &color[..]
                 ).unwrap();
                 texture.view.clone()

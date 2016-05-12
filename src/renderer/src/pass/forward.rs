@@ -9,7 +9,7 @@ pub use VertexPosNormal;
 pub static VERTEX_SRC: &'static [u8] = b"
     #version 150 core
 
-    layout (std140) uniform u_VertexArgs {
+    layout (std140) uniform cb_VertexArgs {
         uniform mat4 u_Proj;
         uniform mat4 u_View;
         uniform mat4 u_Model;
@@ -48,7 +48,7 @@ pub static FRAGMENT_SRC: &'static [u8] = b"
     #version 150 core
     #define MAX_NUM_TOTAL_LIGHTS 512
 
-    layout (std140) uniform u_FragmentArgs {
+    layout (std140) uniform cb_FragmentArgs {
         int u_LightCount;
     };
 
@@ -125,8 +125,8 @@ gfx_defines!(
 
     pipeline flat {
         vbuf: gfx::VertexBuffer<VertexPosNormal> = (),
-        vertex_args: gfx::ConstantBuffer<VertexArgs> = "u_VertexArgs",
-        fragment_args: gfx::ConstantBuffer<FragmentArgs> = "u_FragmentArgs",
+        vertex_args: gfx::ConstantBuffer<VertexArgs> = "cb_VertexArgs",
+        fragment_args: gfx::ConstantBuffer<FragmentArgs> = "cb_FragmentArgs",
         out_ka: gfx::RenderTarget<gfx::format::Rgba8> = "o_Color",
         out_depth: gfx::DepthTarget<gfx::format::DepthStencil> = gfx::preset::depth::LESS_EQUAL_WRITE,
         ka: gfx::TextureSampler<[f32; 4]> = "t_Ka",
@@ -135,8 +135,8 @@ gfx_defines!(
 
     pipeline shaded {
         vbuf: gfx::VertexBuffer<VertexPosNormal> = (),
-        vertex_args: gfx::ConstantBuffer<VertexArgs> = "u_VertexArgs",
-        fragment_args: gfx::ConstantBuffer<FragmentArgs> = "u_FragmentArgs",
+        vertex_args: gfx::ConstantBuffer<VertexArgs> = "cb_VertexArgs",
+        fragment_args: gfx::ConstantBuffer<FragmentArgs> = "cb_FragmentArgs",
         lights: gfx::ConstantBuffer<PointLight> = "u_Lights",
         out_ka: gfx::RenderTarget<gfx::format::Rgba8> = "o_Color",
         out_depth: gfx::DepthTarget<gfx::format::DepthStencil> = gfx::preset::depth::LESS_EQUAL_WRITE,
@@ -146,7 +146,7 @@ gfx_defines!(
 
     pipeline wireframe {
         vbuf: gfx::VertexBuffer<VertexPosNormal> = (),
-        vertex_args: gfx::ConstantBuffer<VertexArgs> = "u_VertexArgs",
+        vertex_args: gfx::ConstantBuffer<VertexArgs> = "cb_VertexArgs",
         out_ka: gfx::RenderTarget<gfx::format::Rgba8> = "o_Color",
         ka: gfx::TextureSampler<[f32; 4]> = "t_Ka",
         kd: gfx::TextureSampler<[f32; 4]> = "t_Kd",
