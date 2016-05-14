@@ -1,0 +1,10 @@
+logging:
+    file_path: "new_project.log"
+    output_level: "warn"
+    logging_level: "debug"
+
+display:
+    brightness: 1.0
+    fullscreen: false
+    size: [1024, 768]
+title: "Amethyst game"
