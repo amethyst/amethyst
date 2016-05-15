@@ -13,9 +13,29 @@ pub trait FromYaml: Sized {
     fn from_yaml(Yaml) -> Result<Self, String>;
 }
 
-impl FromYaml for i64 {
+macro_rules! yaml_int {
+    ($t:ty) => {
+        impl FromYaml for $t {
+            fn from_yaml(config: Yaml) -> Result<Self, String> {
+                let num: $t = try!(config.as_i64().ok_or("expect integer")) as $t;
+                Ok(num)
+            }
+        }
+    }
+}
+
+yaml_int!(i8);
+yaml_int!(i16);
+yaml_int!(i32);
+yaml_int!(i64);
+yaml_int!(u8);
+yaml_int!(u16);
+yaml_int!(u32);
+yaml_int!(u64);
+
+impl FromYaml for f32 {
     fn from_yaml(config: Yaml) -> Result<Self, String> {
-        Ok(try!(config.as_i64().ok_or("expect integer")))
+        Ok(try!(config.as_f64().ok_or("expect float")) as f32)
     }
 }
 
@@ -52,15 +72,15 @@ impl FromYaml for () {
 }
 
 macro_rules! yaml_array {
-    ($t:ty => $n:expr => $($i:expr)+) => {
-        impl FromYaml for [$t;$n] {
-            fn from_yaml(config: Yaml) -> Result<Self, String> {
+    ($n:expr => $($i:expr)+) => {
+        impl<T: FromYaml> FromYaml for [T;$n] {
+            fn from_yaml(config: Yaml) -> Result<Self,String> {
                 if let Yaml::Array(mut array) = config {
                     if array.len() != $n { return Err(format!("expect list of length {}",$n).into()); }
 
                     Ok([
                        $(
-                           try!(<$t>::from_yaml(array.remove(0))
+                           try!(T::from_yaml(array.remove(0))
                                 .map_err(|e| format!("list[{}]: {}",$i,e))),
                        )+
                     ])
@@ -72,51 +92,16 @@ macro_rules! yaml_array {
     }
 }
 
-// This is pretty horrific, a generic trait over FromYaml doesn't seem to work though.
-// Any ideas?
-yaml_array!(i64 => 1 => 0);
-yaml_array!(i64 => 2 => 0 1);
-yaml_array!(i64 => 3 => 0 1 2);
-yaml_array!(i64 => 4 => 0 1 2 3);
-yaml_array!(i64 => 5 => 0 1 2 3 4);
-yaml_array!(i64 => 6 => 0 1 2 3 4 5);
-yaml_array!(i64 => 7 => 0 1 2 3 4 5 6);
-yaml_array!(i64 => 8 => 0 1 2 3 4 5 6 7);
-yaml_array!(i64 => 9 => 0 1 2 3 4 5 6 7 8);
-yaml_array!(i64 => 10 => 0 1 2 3 4 5 6 7 8 9);
-
-yaml_array!(f64 => 1 => 0);
-yaml_array!(f64 => 2 => 0 1);
-yaml_array!(f64 => 3 => 0 1 2);
-yaml_array!(f64 => 4 => 0 1 2 3);
-yaml_array!(f64 => 5 => 0 1 2 3 4);
-yaml_array!(f64 => 6 => 0 1 2 3 4 5);
-yaml_array!(f64 => 7 => 0 1 2 3 4 5 6);
-yaml_array!(f64 => 8 => 0 1 2 3 4 5 6 7);
-yaml_array!(f64 => 9 => 0 1 2 3 4 5 6 7 8);
-yaml_array!(f64 => 10 => 0 1 2 3 4 5 6 7 8 9);
-
-yaml_array!(bool => 1 => 0);
-yaml_array!(bool => 2 => 0 1);
-yaml_array!(bool => 3 => 0 1 2);
-yaml_array!(bool => 4 => 0 1 2 3);
-yaml_array!(bool => 5 => 0 1 2 3 4);
-yaml_array!(bool => 6 => 0 1 2 3 4 5);
-yaml_array!(bool => 7 => 0 1 2 3 4 5 6);
-yaml_array!(bool => 8 => 0 1 2 3 4 5 6 7);
-yaml_array!(bool => 9 => 0 1 2 3 4 5 6 7 8);
-yaml_array!(bool => 10 => 0 1 2 3 4 5 6 7 8 9);
-
-yaml_array!(String => 1 => 0);
-yaml_array!(String => 2 => 0 1);
-yaml_array!(String => 3 => 0 1 2);
-yaml_array!(String => 4 => 0 1 2 3);
-yaml_array!(String => 5 => 0 1 2 3 4);
-yaml_array!(String => 6 => 0 1 2 3 4 5);
-yaml_array!(String => 7 => 0 1 2 3 4 5 6);
-yaml_array!(String => 8 => 0 1 2 3 4 5 6 7);
-yaml_array!(String => 9 => 0 1 2 3 4 5 6 7 8);
-yaml_array!(String => 10 => 0 1 2 3 4 5 6 7 8 9);
+yaml_array!(1 => 0);
+yaml_array!(2 => 0 1);
+yaml_array!(3 => 0 1 2);
+yaml_array!(4 => 0 1 2 3);
+yaml_array!(5 => 0 1 2 3 4);
+yaml_array!(6 => 0 1 2 3 4 5);
+yaml_array!(7 => 0 1 2 3 4 5 6);
+yaml_array!(8 => 0 1 2 3 4 5 6 7);
+yaml_array!(9 => 0 1 2 3 4 5 6 7 8);
+yaml_array!(10 => 0 1 2 3 4 5 6 7 8 9);
 
 macro_rules! config {
     ($root:ident {
@@ -129,7 +114,7 @@ macro_rules! config {
             pub struct $conf_type {
                 $( pub $field: $field_type, )*
             }
-            
+
             impl $conf_type {
                 pub fn default() -> $conf_type {
 
@@ -166,19 +151,19 @@ macro_rules! config {
             impl fmt::Debug for $conf_type {
                 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
                     let mut fields = "".to_owned();
-                    $( 
+                    $(
                         fields = fields + "\t\t" + &format!(r"{}: {:?}", stringify!($field), self.$field) + "\n\r";
                     )*
                     write!(f, "{} {{\n {} \t}}", stringify!($conf), fields)
                 }
             }
         )*
-    
+
         #[derive(Clone)]
         pub struct $root {
             $( pub $conf: $conf_type, )*
         }
-        
+
         impl $root {
             pub fn default() -> $root {
                 $root {
@@ -200,12 +185,12 @@ macro_rules! config {
                     )*
                 }
             }
-        } 
+        }
 
         impl fmt::Debug for $root {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
                 let mut fields = "".to_owned();
-                $( 
+                $(
                     fields = fields + "\t" + &format!(r"{:?},", self.$conf) + "\n\r";
                 )*
                 write!(f, "{} {{\n {} }}", stringify!($root), fields)
@@ -220,7 +205,7 @@ config!(
         display: DisplayConfig {
             brightness: f64 = 1.0,
             fullscreen: bool = false,
-            size: [i64; 2] = [1024, 768],
+            size: [u16; 2] = [1024, 768],
         },
         logging: LoggingConfig {
             file_path: String = "new_project.log".to_string(),
