@@ -4,18 +4,24 @@ use std::io::Read;
 use std::path::Path;
 use std::fmt;
 
-use yaml_rust::{Yaml, YamlLoader};
+use yaml_rust::{Yaml, YamlLoader, ScanError};
 
 pub enum ConfigError {
+    YamlScan(ScanError),
     YamlParse(String),
+    YamlMissing(String),
     FileNotFound(String),
+    FileNotValid(String),
 }
 
 impl ConfigError {
     pub fn to_string(&self) -> String {
         match self {
-            &ConfigError::YamlParse(ref path) => format!("Failed to parse YAML object: {} ", path),
+            &ConfigError::YamlScan(ref e) => format!("Failed to scan YAML: {}", e),
+            &ConfigError::YamlParse(ref e) => format!("Failed to parse YAML object: {} ", e),
+            &ConfigError::YamlMissing(ref e) => format!("Could not find YAML object: {}", e),
             &ConfigError::FileNotFound(ref path) => format!("File was not found: {}", path),
+            &ConfigError::FileNotValid(ref path) => format!("File was not valid: {}", path),
         }
     }
 }
@@ -146,18 +152,14 @@ macro_rules! config {
 
             // path should be the root config.yml if separated into multiple files
             pub fn from_file(path: &Path) -> Result<$root, ConfigError> {
-                let mut file = try!(File::open(path).map_err(|e| ConfigError::FileNotFound(path.to_str().unwrap().to_owned())));
+                let mut file = try!(File::open(path).map_err(|_| ConfigError::FileNotFound(path.to_str().unwrap().to_owned())));
                 let mut buffer = String::new();
-                file.read_to_string(&mut buffer);
+                try!(file.read_to_string(&mut buffer).map_err(|_| ConfigError::FileNotValid(path.to_str().unwrap().to_owned())));
 
-                let yaml = YamlLoader::load_from_str(&buffer).unwrap();
+                let yaml = try!(YamlLoader::load_from_str(&buffer).map_err(|e| ConfigError::YamlScan(e)));
                 let hash = &yaml[0];
 
                 $root::from_yaml(hash)
-            }
-
-            fn name(&self) -> &'static str {
-                stringify!($root)
             }
         }
 
@@ -168,19 +170,23 @@ macro_rules! config {
                 Ok($root {
                     $(
                         $field: {
-                            let val = <$ty>::from_yaml(&config[stringify!($field)]);
+                            let key = &config[stringify!($field)];
+                            let val = <$ty>::from_yaml(key);
 
                             match val {
                                 Ok(found) => found,
                                 Err(e) => {
                                     let err = match e {
                                         ConfigError::YamlParse(err) => err,
-                                        _ => "Unknown Parsing Error".to_string(),
+                                        _ => "unknown error".to_string(),
                                     };
 
-                                    let error = ConfigError::YamlParse(format!("{}->{}: {}", stringify!($root), stringify!($field), err));
+                                    if key.is_badvalue() {
+                                        println!("{:?}", ConfigError::YamlMissing(format!("{}->{}: {}", stringify!($root), stringify!($field), err)));
+                                    } else {
+                                        println!("{:?}", ConfigError::YamlParse(format!("{}->{}: {}", stringify!($root), stringify!($field), err)));
+                                    }
 
-                                    println!("{:?}", error);
                                     default.$field
                                 },
                             }
