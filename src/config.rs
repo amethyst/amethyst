@@ -10,13 +10,13 @@ use yaml_rust::{Yaml, YamlLoader};
 pub trait FromYaml: Sized {
     /// Convert yaml element into a rust type,
     /// Raises an error if it is not the yaml element expected
-    fn from_yaml(Yaml) -> Result<Self, String>;
+    fn from_yaml(&Yaml) -> Result<Self, String>;
 }
 
 macro_rules! yaml_int {
     ($t:ty) => {
         impl FromYaml for $t {
-            fn from_yaml(config: Yaml) -> Result<Self, String> {
+            fn from_yaml(config: &Yaml) -> Result<Self, String> {
                 let num: $t = try!(config.as_i64().ok_or("expect integer")) as $t;
                 Ok(num)
             }
@@ -34,27 +34,27 @@ yaml_int!(u32);
 yaml_int!(u64);
 
 impl FromYaml for f32 {
-    fn from_yaml(config: Yaml) -> Result<Self, String> {
+    fn from_yaml(config: &Yaml) -> Result<Self, String> {
         Ok(try!(config.as_f64().ok_or("expect float")) as f32)
     }
 }
 
 impl FromYaml for f64 {
-    fn from_yaml(config: Yaml) -> Result<Self, String> {
+    fn from_yaml(config: &Yaml) -> Result<Self, String> {
         Ok(try!(config.as_f64().ok_or("expect float")))
     }
 }
 
 impl FromYaml for bool {
-    fn from_yaml(config: Yaml) -> Result<Self, String> {
+    fn from_yaml(config: &Yaml) -> Result<Self, String> {
         Ok(try!(config.as_bool().ok_or("expect boolean")))
     }
 }
 
 impl FromYaml for String {
-    fn from_yaml(config: Yaml) -> Result<Self, String> {
-        if let Yaml::String(string) = config {
-            Ok(string)
+    fn from_yaml(config: &Yaml) -> Result<Self, String> {
+        if let &Yaml::String(ref string) = config {
+            Ok(string.clone())
         } else {
             Err("expect string".into())
         }
@@ -62,7 +62,7 @@ impl FromYaml for String {
 }
 
 impl FromYaml for () {
-    fn from_yaml(config: Yaml) -> Result<Self, String> {
+    fn from_yaml(config: &Yaml) -> Result<Self, String> {
         if config.is_null() {
             Ok(())
         } else {
@@ -74,13 +74,15 @@ impl FromYaml for () {
 macro_rules! yaml_array {
     ($n:expr => $($i:expr)+) => {
         impl<T: FromYaml> FromYaml for [T;$n] {
-            fn from_yaml(config: Yaml) -> Result<Self,String> {
-                if let Yaml::Array(mut array) = config {
+            fn from_yaml(config: &Yaml) -> Result<Self,String> {
+                if let &Yaml::Array(ref array) = config {
                     if array.len() != $n { return Err(format!("expect list of length {}",$n).into()); }
+
+                    let mut arr = array.clone();
 
                     Ok([
                        $(
-                           try!(T::from_yaml(array.remove(0))
+                           try!(T::from_yaml(&arr.remove(0))
                                 .map_err(|e| format!("list[{}]: {}",$i,e))),
                        )+
                     ])
@@ -103,7 +105,7 @@ yaml_array!(8 => 0 1 2 3 4 5 6 7);
 yaml_array!(9 => 0 1 2 3 4 5 6 7 8);
 yaml_array!(10 => 0 1 2 3 4 5 6 7 8 9);
 
-macro_rules! config {
+/*macro_rules! config {
     ($root:ident {
         $( $conf:ident: $conf_type:ident {
             $( $field:ident: $field_type:ty = $name:expr, )*
@@ -212,5 +214,77 @@ config!(
             output_level: String = "warn".to_string(),
             logging_level: String = "debug".to_string(),
         },
+    }
+);
+*/
+
+macro_rules! config {
+    ($root:ident {
+        $( $field:ident: $ty:ty = $name:expr, )*
+    }) => {
+
+        #[derive(Clone)]
+        pub struct $root {
+            $( pub $field: $ty, )*
+        }
+
+        impl $root {
+            pub fn default() -> $root {
+                $root {
+                    $( $field: $name, )*
+                }
+            }
+
+            pub fn from_file(path: &Path) -> $root {
+                let mut file = File::open(path).unwrap();
+                let mut buffer = String::new();
+                file.read_to_string(&mut buffer);
+
+                let yaml = YamlLoader::load_from_str(&buffer).unwrap();
+                let hash = &yaml[0];
+
+                $root::from_yaml(hash).unwrap()
+            }
+        }
+
+        impl FromYaml for $root {
+            fn from_yaml(config: &Yaml) -> Result<Self, String> {
+                Ok($root {
+                    $(
+                        $field: try!(<$ty>::from_yaml(&config[stringify!($field)])),
+                    )*
+                })
+            }
+        }
+
+        impl fmt::Debug for $root {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                let mut fields = "".to_owned();
+                $(
+                    fields = fields + &format!(r"{}: {:?},", stringify!($field), self.$field) + "\n\r";
+                )*
+                write!(f, "{} {{\n{}}}", stringify!($root), fields)
+            }
+        }
+    }
+}
+
+// Defines types along with defaulting values
+config!(DisplayConfig {
+    brightness: f64 = 1.0,
+    fullscreen: bool = false,
+    size: [u16; 2] = [1024, 768],
+});
+
+config!(LoggingConfig {
+    file_path: String = "new_project.log".to_string(),
+    output_level: String = "warn".to_string(),
+    logging_level: String = "debug".to_string(),
+});
+
+config!(
+    Config {
+        display: DisplayConfig = DisplayConfig::default(),
+        logging: LoggingConfig = LoggingConfig::default(),
     }
 );
