@@ -1,7 +1,8 @@
 
 use std::fs::File;
-use std::io::Read;
-use std::path::Path;
+use std::io::{Read, Error};
+use std::path::{Path, Display};
+use std::default::Default;
 use std::fmt;
 
 use yaml_rust::{Yaml, YamlLoader, ScanError};
@@ -10,8 +11,7 @@ pub enum ConfigError {
     YamlScan(ScanError),
     YamlParse(String),
     YamlMissing(String),
-    FileNotFound(String),
-    FileNotValid(String),
+    FileError(String, Error),
 }
 
 impl ConfigError {
@@ -20,13 +20,18 @@ impl ConfigError {
             &ConfigError::YamlScan(ref e) => format!("Failed to scan YAML: {}", e),
             &ConfigError::YamlParse(ref e) => format!("Failed to parse YAML object: {} ", e),
             &ConfigError::YamlMissing(ref e) => format!("Could not find YAML object: {}", e),
-            &ConfigError::FileNotFound(ref path) => format!("File was not found: {}", path),
-            &ConfigError::FileNotValid(ref path) => format!("File was not valid: {}", path),
+            &ConfigError::FileError(ref disp, ref e) => format!("Config File Error: \"{}\", {}", disp, e),
         }
     }
 }
 
 impl fmt::Debug for ConfigError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.to_string())
+    }
+}
+
+impl fmt::Display for ConfigError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.to_string())
     }
@@ -103,14 +108,12 @@ macro_rules! yaml_array {
             fn from_yaml(config: &Yaml) -> Result<Self, ConfigError> {
                 if let &Yaml::Array(ref array) = config {
                     if array.len() != $n {
-                        return Err(ConfigError::YamlParse(format!("expect list of length {}",$n)));
+                        return Err(ConfigError::YamlParse(format!("expect list of length {}, got {}", $n, array.len())));
                     }
-
-                    let mut arr = array.clone();
 
                     Ok([
                        $(
-                            try!(T::from_yaml(&arr.remove(0))
+                            try!(T::from_yaml(&array.get($i).unwrap())
                                 .map_err(|e| ConfigError::YamlParse(format!("list[{}]: {:?}", $i, e)))),
                        )+
                     ])
@@ -144,22 +147,24 @@ macro_rules! config {
         }
 
         impl $root {
-            pub fn default() -> $root {
-                $root {
-                    $( $field: $name, )*
-                }
-            }
-
             // path should be the root config.yml if separated into multiple files
             pub fn from_file(path: &Path) -> Result<$root, ConfigError> {
-                let mut file = try!(File::open(path).map_err(|_| ConfigError::FileNotFound(path.to_str().unwrap().to_owned())));
+                let mut file = try!(File::open(path).map_err(|e| ConfigError::FileError(path.display().to_string(), e)));
                 let mut buffer = String::new();
-                try!(file.read_to_string(&mut buffer).map_err(|_| ConfigError::FileNotValid(path.to_str().unwrap().to_owned())));
+                try!(file.read_to_string(&mut buffer).map_err(|e| ConfigError::FileError(path.display().to_string(), e)));
 
                 let yaml = try!(YamlLoader::load_from_str(&buffer).map_err(|e| ConfigError::YamlScan(e)));
                 let hash = &yaml[0];
 
                 $root::from_yaml(hash)
+            }
+        }
+
+        impl Default for $root {
+            fn default() -> Self {
+                $root {
+                    $( $field: $name, )*
+                }
             }
         }
 
@@ -182,9 +187,9 @@ macro_rules! config {
                                     };
 
                                     if key.is_badvalue() {
-                                        println!("{:?}", ConfigError::YamlMissing(format!("{}->{}: {}", stringify!($root), stringify!($field), err)));
+                                        println!("{}", ConfigError::YamlMissing(format!("{}->{}: {}", stringify!($root), stringify!($field), err)));
                                     } else {
-                                        println!("{:?}", ConfigError::YamlParse(format!("{}->{}: {}", stringify!($root), stringify!($field), err)));
+                                        println!("{}", ConfigError::YamlParse(format!("{}->{}: {}", stringify!($root), stringify!($field), err)));
                                     }
 
                                     default.$field
