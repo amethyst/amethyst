@@ -1,10 +1,7 @@
 logging:
     file_path: "new_project"
-    output_level: "warn"
+    output_level: 5
     logging_level: "debug"
 
-display:
-    brightness: 1.0
-    fullscreen: false
-    size: [1024, 768]
+display: extern
 title: "Amethyst game"
