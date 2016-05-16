@@ -1,7 +1,7 @@
 
 use std::fs::File;
 use std::io::{Read, Error};
-use std::path::{PathBuf, Path, Display};
+use std::path::{PathBuf, Path};
 use std::default::Default;
 use std::fmt;
 
@@ -9,8 +9,7 @@ use yaml_rust::{Yaml, YamlLoader, ScanError};
 
 pub enum ConfigError {
     YamlScan(ScanError),
-    YamlParse(ConfigMeta, String),
-    YamlMissing(ConfigMeta, String),
+    YamlParse(ConfigMeta),
     FileError(String, Error),
     MissingExternalFile(ConfigMeta),
 }
@@ -19,7 +18,7 @@ impl ConfigError {
     pub fn to_string(&self) -> String {
         match self {
             &ConfigError::YamlScan(ref e) => format!("Failed to scan YAML: {}", e),
-            &ConfigError::YamlParse(ref meta, ref e) => {
+            &ConfigError::YamlParse(ref meta) => {
                 let mut path = String::new();
 
                 for (index, element) in meta.fields.iter().enumerate() {
@@ -31,19 +30,6 @@ impl ConfigError {
                 }
 
                 format!("{}: Failed to parse YAML: {}: expect {}", meta.path.display(), path, meta.ty)
-            },
-            &ConfigError::YamlMissing(ref meta, ref e) => {
-                let mut path = String::new();
-
-                for (index, element) in meta.fields.iter().enumerate() {
-                    if index != 0 {
-                        path = path + "->";
-                    }
-
-                    path = path + element;
-                }
-
-                format!("{}: Could not find YAML: {}: expect {}", meta.path.display(), path, meta.ty)
             },
             &ConfigError::FileError(ref disp, ref e) => format!("Config File Error: \"{}\", {}", disp, e),
             &ConfigError::MissingExternalFile(ref meta) => format!("{}: External YAML file is missing", meta.path.display()),
@@ -91,7 +77,7 @@ macro_rules! yaml_int {
         impl FromYaml for $t {
             fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
                 let num: $t = try!(config.as_i64()
-                    .ok_or(ConfigError::YamlParse(meta.clone(), "expect integer".to_string()))) as $t;
+                    .ok_or(ConfigError::YamlParse(meta.clone()))) as $t;
                 Ok(num)
             }
         }
@@ -109,19 +95,19 @@ yaml_int!(u64);
 
 impl FromYaml for f32 {
     fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
-        Ok(try!(config.as_f64().ok_or(ConfigError::YamlParse(meta.clone(), "expect float".to_string()))) as f32)
+        Ok(try!(config.as_f64().ok_or(ConfigError::YamlParse(meta.clone()))) as f32)
     }
 }
 
 impl FromYaml for f64 {
     fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
-        Ok(try!(config.as_f64().ok_or(ConfigError::YamlParse(meta.clone(), "expect float".to_string()))))
+        Ok(try!(config.as_f64().ok_or(ConfigError::YamlParse(meta.clone()))))
     }
 }
 
 impl FromYaml for bool {
     fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
-        Ok(try!(config.as_bool().ok_or(ConfigError::YamlParse(meta.clone(), "expect boolean".to_string()))))
+        Ok(try!(config.as_bool().ok_or(ConfigError::YamlParse(meta.clone()))))
     }
 }
 
@@ -131,7 +117,7 @@ impl FromYaml for String {
             Ok(string.clone())
         }
         else {
-            Err(ConfigError::YamlParse(meta.clone(), "expect string".to_string()))
+            Err(ConfigError::YamlParse(meta.clone()))
         }
     }
 }
@@ -143,7 +129,7 @@ impl FromYaml for () {
             Ok(())
         }
         else {
-            Err(ConfigError::YamlParse(meta.clone(), "expect null".to_string()))
+            Err(ConfigError::YamlParse(meta.clone()))
         }
     }
 }
@@ -154,18 +140,18 @@ macro_rules! yaml_array {
             fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
                 if let &Yaml::Array(ref array) = config {
                     if array.len() != $n {
-                        return Err(ConfigError::YamlParse(meta.clone(), format!("expect list of length {}, got {}", $n, array.len())));
+                        return Err(ConfigError::YamlParse(meta.clone()));
                     }
 
                     Ok([
                        $(
                             try!(T::from_yaml(meta, &array.get($i).unwrap())
-                                .map_err(|e| ConfigError::YamlParse(meta.clone(), format!("list[{}]: {:?}", $i, e)))),
+                                .map_err(|_| ConfigError::YamlParse(meta.clone()))),
                        )+
                     ])
                 }
                 else {
-                    Err(ConfigError::YamlParse(meta.clone(), "expect list".to_string()))
+                    Err(ConfigError::YamlParse(meta.clone()))
                 }
             }
         }
