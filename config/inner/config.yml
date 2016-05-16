@@ -1,0 +1,4 @@
+config:
+    inside: 1.5
+    other: 5.0
+other_stuff: "Test"

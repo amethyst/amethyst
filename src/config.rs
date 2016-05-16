@@ -12,6 +12,7 @@ pub enum ConfigError {
     YamlParse(ConfigMeta, String),
     YamlMissing(ConfigMeta, String),
     FileError(String, Error),
+    MissingExternalFile(ConfigMeta),
 }
 
 impl ConfigError {
@@ -23,7 +24,7 @@ impl ConfigError {
 
                 for (index, element) in meta.fields.iter().enumerate() {
                     if index != 0 {
-                        path = path + "->"
+                        path = path + "->";
                     }
 
                     path = path + element;
@@ -36,7 +37,7 @@ impl ConfigError {
 
                 for (index, element) in meta.fields.iter().enumerate() {
                     if index != 0 {
-                        path = path + "->"
+                        path = path + "->";
                     }
 
                     path = path + element;
@@ -45,6 +46,7 @@ impl ConfigError {
                 format!("{}: Could not find YAML: {}: expect {}", meta.path.display(), path, meta.ty)
             },
             &ConfigError::FileError(ref disp, ref e) => format!("Config File Error: \"{}\", {}", disp, e),
+            &ConfigError::MissingExternalFile(ref meta) => format!("{}: External YAML file is missing", meta.path.display()),
         }
     }
 }
@@ -203,24 +205,25 @@ impl<T: FromYaml + Sized> FromFile for T {
         }
 
         field_path.set_extension("yml");
-
-        if field_path.exists() {
-            //println!("{:?}", field_path.as_path());
-        }
-
-        let mut file = try!(File::open(field_path.as_path())
-            .map_err(|e| ConfigError::FileError(field_path.as_path().display().to_string(), e)));
-        let mut buffer = String::new();
-        try!(file.read_to_string(&mut buffer)
-            .map_err(|e| ConfigError::FileError(field_path.as_path().display().to_string(), e)));
-
-        let yaml = try!(YamlLoader::load_from_str(&buffer)
-            .map_err(|e| ConfigError::YamlScan(e)));
-        let hash = &yaml[0];
-
         next_meta.path = field_path;
 
-        <T>::from_yaml(&next_meta, hash)
+        if next_meta.path.exists() {
+            let mut file = try!(File::open(next_meta.path.as_path())
+                .map_err(|e| ConfigError::FileError(next_meta.path.as_path().display().to_string(), e)));
+            let mut buffer = String::new();
+
+            try!(file.read_to_string(&mut buffer)
+                .map_err(|e| ConfigError::FileError(next_meta.path.as_path().display().to_string(), e)));
+
+            let yaml = try!(YamlLoader::load_from_str(&buffer)
+                .map_err(|e| ConfigError::YamlScan(e)));
+            let hash = &yaml[0];
+
+            <T>::from_yaml(&next_meta, hash)
+        }
+        else {
+            Err(ConfigError::MissingExternalFile(next_meta.clone()))
+        }
     }
 }
 
@@ -251,8 +254,9 @@ macro_rules! config {
                 let mut next_meta = meta.clone();
                 next_meta.ty = stringify!($root);
 
+                // Appends top-level
                 if meta.fields.len() == 0 {
-                    next_meta.fields.push(stringify!($root)); // Appends top-level
+                    next_meta.fields.push(stringify!($root));
                 }
 
                 default._meta = next_meta.clone();
@@ -263,30 +267,23 @@ macro_rules! config {
                         $field: {
                             let key = &config[stringify!($field)];
 
+                            // set up current meta
                             let mut field_meta = next_meta.clone();
                             field_meta.fields.push(stringify!($field));
                             field_meta.ty = stringify!($ty);
 
-                            let val = if key.as_str() == Some("extern") {
+                            let val = if key.as_str() == Some("extern") { // external file
                                 <$ty>::from_file_raw(&field_meta, Path::new(stringify!($field)))
-                            } else {
+                            }
+                            else { // current file
                                 <$ty>::from_yaml(&field_meta, key)
                             };
 
                             match val {
                                 Ok(found) => found,
                                 Err(e) => {
-                                    let (inner_meta, err) = match e {
-                                        ConfigError::YamlParse(meta, err) => (meta.clone(), err),
-                                        _ => (field_meta.clone(), "unknown error".to_string()),
-                                    };
-
-                                    if key.is_badvalue() { // Cannot find the YAML object in current file
-                                        println!("{}", ConfigError::YamlMissing(inner_meta, err));
-                                    }
-                                    else { // Found the YAML object, but incorrect type
-                                        println!("{}", ConfigError::YamlParse(inner_meta, err));
-                                    }
+                                    // output error and fall-through the default values
+                                    println!("{}", e);
 
                                     default.$field
                                 },
@@ -300,6 +297,16 @@ macro_rules! config {
 }
 
 // Defines types along with defaulting values
+config!(InnerInnerConfig {
+    inside: f64 = 5.0,
+    other: f32 = 2.5,
+});
+
+config!(InnerConfig {
+    config: InnerInnerConfig = InnerInnerConfig::default(),
+    other_stuff: String = "Hi there".to_string(),
+});
+
 config!(DisplayConfig {
     brightness: f64 = 1.0,
     fullscreen: bool = false,
@@ -313,6 +320,8 @@ config!(LoggingConfig {
 });
 
 config!(Config {
+    title: String = "Amethyst game".to_string(),
     display: DisplayConfig = DisplayConfig::default(),
     logging: LoggingConfig = LoggingConfig::default(),
+    inner: InnerConfig = InnerConfig::default(),
 });

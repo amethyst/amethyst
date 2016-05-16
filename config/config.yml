@@ -1,7 +1,9 @@
+title: "Amethyst game"
+
 logging:
     file_path: "new_project"
-    output_level: 5
+    output_level: "warn"
     logging_level: "debug"
 
 display: extern
-title: "Amethyst game"
+inner: extern
