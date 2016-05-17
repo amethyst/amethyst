@@ -1,4 +1,5 @@
 title: "Amethyst game"
+test: null
 
 logging:
     file_path: "new_project"

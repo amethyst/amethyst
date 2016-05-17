@@ -169,6 +169,16 @@ yaml_array!(8 => 0 1 2 3 4 5 6 7);
 yaml_array!(9 => 0 1 2 3 4 5 6 7 8);
 yaml_array!(10 => 0 1 2 3 4 5 6 7 8 9);
 
+impl<T: FromYaml> FromYaml for Option<T> {
+    fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
+        if config.is_null() {
+            Ok(None)
+        } else {
+            Ok(Some(try!(<T>::from_yaml(meta, config))))
+        }
+    }
+}
+
 pub trait FromFile: Sized {
     // From a file relative to current config
     fn from_file_raw(meta: &ConfigMeta, path: &Path) -> Result<Self, ConfigError>;
@@ -306,6 +316,7 @@ config!(LoggingConfig {
 });
 
 config!(Config {
+    test: Option<i64> = Some(58),
     title: String = "Amethyst game".to_string(),
     display: DisplayConfig = DisplayConfig::default(),
     logging: LoggingConfig = LoggingConfig::default(),
