@@ -1,5 +1,6 @@
 title: "Amethyst game"
 test: null
+test_enum: Option2
 
 logging:
     file_path: "new_project"

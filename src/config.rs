@@ -29,7 +29,31 @@ impl ConfigError {
                     path = path + element;
                 }
 
-                format!("{}: Failed to parse YAML: {}: expect {}", meta.path.display(), path, meta.ty)
+                let message = if meta.bad_value {
+                    "Could not find YAML"
+                } else {
+                    "Failed to parse YAML"
+                };
+
+                let basic = format!("{}: {}: {}: expected {}", meta.path.display(), message, path, meta.ty);
+
+                let options = if meta.options.len() > 0 {
+                    let mut result = "".to_string();
+
+                    for (index, option) in meta.options.iter().enumerate() {
+                        if index != 0 {
+                            result = result + ", ";
+                        }
+
+                        result = result + option;
+                    }
+
+                    format!("\n{}:\t {} {{ {} }}", meta.path.display(), meta.ty, result)
+                } else {
+                    "".to_string()
+                };
+
+                format!("{}{}", basic, options)
             },
             &ConfigError::FileError(ref disp, ref e) => format!("Config File Error: \"{}\", {}", disp, e),
             &ConfigError::MissingExternalFile(ref meta) => format!("{}: External YAML file is missing", meta.path.display()),
@@ -54,6 +78,8 @@ pub struct ConfigMeta {
     path: PathBuf, // Where the file is located, "" if not from a file.
     fields: Vec<&'static str>, // List from top-level to bottom-level configs
     ty: &'static str, // String representation of the type
+    bad_value: bool, // Whether key is bad or not
+    options: Vec<String>, // Options to display to user, usually used for enums
 }
 
 impl Default for ConfigMeta {
@@ -62,6 +88,8 @@ impl Default for ConfigMeta {
             path: PathBuf::from(""),
             fields: Vec::new(),
             ty: "T",
+            bad_value: false,
+            options: Vec::new(),
         }
     }
 }
@@ -223,6 +251,37 @@ impl<T: FromYaml + Sized> FromFile for T {
     }
 }
 
+macro_rules! config_enum {
+    ($root:ident {
+        $( $field:ident, )*
+    }) => {
+        #[derive(Clone, Debug)]
+        pub enum $root {
+            $($field,)*
+        }
+
+        impl FromYaml for $root {
+            fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
+                let mut next_meta = meta.clone();
+                next_meta.options = vec![$( stringify!($field).to_string(), )*];
+
+                if let &Yaml::String(ref string) = config {
+                    $(
+                        if string == &stringify!($field).to_string() {
+                            return Ok($root::$field);
+                        }
+                    )*
+
+                    return Err(ConfigError::YamlParse(next_meta.clone()));
+                }
+                else {
+                    Err(ConfigError::YamlParse(next_meta.clone()))
+                }
+            }
+        }
+    }
+}
+
 macro_rules! config {
     ($root:ident {
         $( $field:ident: $ty:ty = $name:expr, )*
@@ -267,6 +326,7 @@ macro_rules! config {
                             let mut field_meta = next_meta.clone();
                             field_meta.fields.push(stringify!($field));
                             field_meta.ty = stringify!($ty);
+                            field_meta.bad_value = key.is_badvalue();
 
                             let val = if key.as_str() == Some("extern") { // external file
                                 <$ty>::from_file_raw(&field_meta, Path::new(stringify!($field)))
@@ -291,6 +351,12 @@ macro_rules! config {
         }
     }
 }
+
+config_enum!(Test {
+    Option1,
+    Option2,
+    Option3,
+});
 
 // Defines types along with defaulting values
 config!(InnerInnerConfig {
@@ -317,6 +383,7 @@ config!(LoggingConfig {
 
 config!(Config {
     test: Option<i64> = Some(58),
+    test_enum: Test = Test::Option1,
     title: String = "Amethyst game".to_string(),
     display: DisplayConfig = DisplayConfig::default(),
     logging: LoggingConfig = LoggingConfig::default(),
