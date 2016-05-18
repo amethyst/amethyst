@@ -1,6 +1,7 @@
+#[macro_use]
 extern crate amethyst;
 
-use amethyst::config::FromFile;
+use amethyst::config::{FromFile};
 use std::path::Path;
 
 fn main() {
