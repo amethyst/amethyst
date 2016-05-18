@@ -21,14 +21,14 @@ impl ConfigError {
         match self {
             &ConfigError::YamlScan(ref e) => format!("Failed to scan YAML: {}", e),
             &ConfigError::YamlParse(ref meta) => {
-                let mut path = String::new();
+                let mut tree = String::new();
 
                 for (index, element) in meta.fields.iter().enumerate() {
                     if index != 0 {
-                        path = path + "->";
+                        tree = tree + "->";
                     }
 
-                    path = path + element;
+                    tree = tree + element;
                 }
 
                 let message = if meta.bad_value {
@@ -37,7 +37,12 @@ impl ConfigError {
                     "Failed to parse YAML"
                 };
 
-                let basic = format!("{}: {}: {}: expected {}", meta.path.display(), message, path, meta.ty);
+                let path = match meta.path {
+                    Some(ref path) => path.display().to_string() + ": ",
+                    None => "".to_string(),
+                };
+
+                let basic = format!("{}{}: {}: expected {}", path, message, tree, meta.ty);
 
                 let options = if meta.options.len() > 0 {
                     let mut result = "".to_string();
@@ -50,7 +55,7 @@ impl ConfigError {
                         result = result + option;
                     }
 
-                    format!("\n{}:\t {} {{ {} }}", meta.path.display(), meta.ty, result)
+                    format!("\n{}:\t {} {{ {} }}", path, meta.ty, result)
                 } else {
                     "".to_string()
                 };
@@ -58,7 +63,14 @@ impl ConfigError {
                 format!("{}{}", basic, options)
             },
             &ConfigError::FileError(ref disp, ref e) => format!("Config File Error: \"{}\", {}", disp, e),
-            &ConfigError::MissingExternalFile(ref meta) => format!("{}: External YAML file is missing", meta.path.display()),
+            &ConfigError::MissingExternalFile(ref meta) => {
+                let path = match meta.path {
+                    Some(ref path) => path.display().to_string() + ": ",
+                    None => "".to_string(),
+                };
+
+                format!("{}External YAML file is missing", path)
+            },
         }
     }
 }
@@ -77,7 +89,7 @@ impl fmt::Display for ConfigError {
 
 #[derive(Clone, Debug)]
 pub struct ConfigMeta {
-    pub path: PathBuf, // Where the file is located, "" if not from a file.
+    pub path: Option<PathBuf>, // Where the file is located
     pub fields: Vec<String>, // List from top-level to bottom-level configs
     pub ty: &'static str, // String representation of the type
     pub bad_value: bool, // Whether key is bad or not
@@ -87,9 +99,9 @@ pub struct ConfigMeta {
 impl Default for ConfigMeta {
     fn default() -> Self {
         ConfigMeta {
-            path: PathBuf::from(""),
+            path: None,
             fields: Vec::new(),
-            ty: "T",
+            ty: "Unknown Type",
             bad_value: false,
             options: Vec::new(),
         }
@@ -109,7 +121,11 @@ pub trait FromFile: Sized {
 impl<T: FromYaml + Sized> FromFile for T {
     fn from_file_raw(meta: &ConfigMeta, path: &Path) -> Result<T, ConfigError> {
         let mut next_meta = meta.clone();
-        let mut field_path = meta.path.parent().unwrap_or(Path::new("")).to_path_buf();
+
+        let mut field_path = match meta.path {
+            Some(ref path) => path.parent().unwrap_or(Path::new("")).to_path_buf(),
+            None => PathBuf::from(""),
+        };
 
         field_path.push(path);
 
@@ -124,15 +140,16 @@ impl<T: FromYaml + Sized> FromFile for T {
             field_path.set_extension("yaml");
         }
 
-        next_meta.path = field_path;
+        let path = field_path.clone();
+        next_meta.path = Some(field_path);
 
-        if next_meta.path.exists() {
-            let mut file = try!(File::open(next_meta.path.as_path())
-                .map_err(|e| ConfigError::FileError(next_meta.path.as_path().display().to_string(), e)));
+        if path.exists() {
+            let mut file = try!(File::open(path.as_path())
+                .map_err(|e| ConfigError::FileError(path.display().to_string(), e)));
             let mut buffer = String::new();
 
             try!(file.read_to_string(&mut buffer)
-                .map_err(|e| ConfigError::FileError(next_meta.path.as_path().display().to_string(), e)));
+                .map_err(|e| ConfigError::FileError(path.display().to_string(), e)));
 
             let yaml = try!(YamlLoader::load_from_str(&buffer)
                 .map_err(|e| ConfigError::YamlScan(e)));
