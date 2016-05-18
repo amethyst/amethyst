@@ -1,6 +1,17 @@
 title: "Amethyst game"
 test: null
 test_enum: Option2
+test_hash:
+  - "test": 0
+  - "test2": 1
+  - "test3": 2
+  - "test4": 3
+
+test_vec:
+  - "item1"
+  - "item2"
+  - "item3"
+  - "item4"
 
 logging:
     file_path: "new_project"

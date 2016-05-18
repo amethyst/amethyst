@@ -76,7 +76,7 @@ impl fmt::Display for ConfigError {
 #[derive(Clone, Debug)]
 pub struct ConfigMeta {
     path: PathBuf, // Where the file is located, "" if not from a file.
-    fields: Vec<&'static str>, // List from top-level to bottom-level configs
+    fields: Vec<String>, // List from top-level to bottom-level configs
     ty: &'static str, // String representation of the type
     bad_value: bool, // Whether key is bad or not
     options: Vec<String>, // Options to display to user, usually used for enums
@@ -162,6 +162,16 @@ impl FromYaml for () {
     }
 }
 
+impl<T: FromYaml> FromYaml for Option<T> {
+    fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
+        if config.is_null() {
+            Ok(None)
+        } else {
+            Ok(Some(try!(<T>::from_yaml(meta, config))))
+        }
+    }
+}
+
 macro_rules! yaml_array {
     ($n:expr => $($i:expr)+) => {
         impl<T: FromYaml> FromYaml for [T; $n] {
@@ -197,12 +207,21 @@ yaml_array!(8 => 0 1 2 3 4 5 6 7);
 yaml_array!(9 => 0 1 2 3 4 5 6 7 8);
 yaml_array!(10 => 0 1 2 3 4 5 6 7 8 9);
 
-impl<T: FromYaml> FromYaml for Option<T> {
+impl<T: FromYaml> FromYaml for Vec<T> {
     fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
-        if config.is_null() {
-            Ok(None)
+        if let &Yaml::Array(ref array) = config {
+            let mut vec = Vec::new();
+
+            for (index, element) in array.iter().enumerate() {
+                let mut element_meta = meta.clone();
+                element_meta.fields.push(index.to_string());
+
+                vec.push(try!(<T>::from_yaml(&element_meta, element)));
+            }
+
+            Ok(vec)
         } else {
-            Ok(Some(try!(<T>::from_yaml(meta, config))))
+            Err(ConfigError::YamlParse(meta.clone()))
         }
     }
 }
@@ -266,13 +285,14 @@ macro_rules! config_enum {
                 next_meta.options = vec![$( stringify!($field).to_string(), )*];
 
                 if let &Yaml::String(ref string) = config {
-                    $(
-                        if string == &stringify!($field).to_string() {
-                            return Ok($root::$field);
-                        }
-                    )*
+                    let s: &str = string;
 
-                    return Err(ConfigError::YamlParse(next_meta.clone()));
+                    match s {
+                        $(
+                            stringify!($field) => Ok($root::$field),
+                        )*
+                        _ => Err(ConfigError::YamlParse(next_meta.clone()))
+                    }
                 }
                 else {
                     Err(ConfigError::YamlParse(next_meta.clone()))
@@ -311,7 +331,7 @@ macro_rules! config {
 
                 // Appends top-level
                 if meta.fields.len() == 0 {
-                    next_meta.fields.push(stringify!($root));
+                    next_meta.fields.push(stringify!($root).to_string());
                 }
 
                 default._meta = next_meta.clone();
@@ -324,7 +344,7 @@ macro_rules! config {
 
                             // set up current meta
                             let mut field_meta = next_meta.clone();
-                            field_meta.fields.push(stringify!($field));
+                            field_meta.fields.push(stringify!($field).to_string());
                             field_meta.ty = stringify!($ty);
                             field_meta.bad_value = key.is_badvalue();
 
@@ -384,6 +404,7 @@ config!(LoggingConfig {
 config!(Config {
     test: Option<i64> = Some(58),
     test_enum: Test = Test::Option1,
+    test_vec: Vec<String> = Vec::new(),
     title: String = "Amethyst game".to_string(),
     display: DisplayConfig = DisplayConfig::default(),
     logging: LoggingConfig = LoggingConfig::default(),
