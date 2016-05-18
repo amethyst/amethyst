@@ -144,6 +144,7 @@ impl<T: FromYaml + Sized> FromFile for T {
         next_meta.path = Some(field_path);
 
         if path.exists() {
+
             let mut file = try!(File::open(path.as_path())
                 .map_err(|e| ConfigError::FileError(path.display().to_string(), e)));
             let mut buffer = String::new();
@@ -262,6 +263,21 @@ macro_rules! config {
                         },
                     )*
                 })
+            }
+
+            fn to_yaml(&self) -> Yaml {
+                use std::collections::BTreeMap;
+
+                let mut map: BTreeMap<Yaml, Yaml> = BTreeMap::new();
+
+                $(
+                    map.insert(
+                        Yaml::String(stringify!($field).to_string()),
+                        self.$field.to_yaml(),
+                    );
+                )*
+
+                Yaml::Hash(map)
             }
         }
     }

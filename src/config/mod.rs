@@ -15,6 +15,8 @@ mod yaml;
 pub use config::yaml::{FromYaml};
 pub use config::definitions::{FromFile, ConfigMeta, ConfigError};
 
+use std::collections::{HashMap, HashSet, BTreeMap, BTreeSet};
+
 // Defines types along with defaulting values
 config!(DisplayConfig {
     brightness: f64 = 1.0,

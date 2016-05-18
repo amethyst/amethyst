@@ -11,6 +11,9 @@ pub trait FromYaml: Sized {
     /// Convert yaml element into a rust type,
     /// Raises an error if it is not the yaml element expected
     fn from_yaml(&ConfigMeta, &Yaml) -> Result<Self, ConfigError>;
+
+    // Converts rust type into a yaml element for writing
+    fn to_yaml(&self) -> Yaml;
 }
 
 macro_rules! yaml_int {
@@ -20,6 +23,10 @@ macro_rules! yaml_int {
                 let num: $t = try!(config.as_i64()
                     .ok_or(ConfigError::YamlParse(meta.clone()))) as $t;
                 Ok(num)
+            }
+
+            fn to_yaml(&self) -> Yaml {
+                Yaml::Integer(self.clone() as i64)
             }
         }
     }
@@ -38,17 +45,29 @@ impl FromYaml for f32 {
     fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
         Ok(try!(config.as_f64().ok_or(ConfigError::YamlParse(meta.clone()))) as f32)
     }
+
+    fn to_yaml(&self) -> Yaml {
+        Yaml::Real(self.clone().to_string())
+    }
 }
 
 impl FromYaml for f64 {
     fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
         Ok(try!(config.as_f64().ok_or(ConfigError::YamlParse(meta.clone()))))
     }
+
+    fn to_yaml(&self) -> Yaml {
+        Yaml::Real(self.clone().to_string())
+    }
 }
 
 impl FromYaml for bool {
     fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
         Ok(try!(config.as_bool().ok_or(ConfigError::YamlParse(meta.clone()))))
+    }
+
+    fn to_yaml(&self) -> Yaml {
+        Yaml::Boolean(self.clone())
     }
 }
 
@@ -60,6 +79,10 @@ impl FromYaml for String {
         else {
             Err(ConfigError::YamlParse(meta.clone()))
         }
+    }
+
+    fn to_yaml(&self) -> Yaml {
+        Yaml::String(self.clone())
     }
 }
 
@@ -73,6 +96,10 @@ impl FromYaml for () {
             Err(ConfigError::YamlParse(meta.clone()))
         }
     }
+
+    fn to_yaml(&self) -> Yaml {
+        Yaml::Null
+    }
 }
 
 impl<T: FromYaml> FromYaml for Option<T> {
@@ -81,6 +108,13 @@ impl<T: FromYaml> FromYaml for Option<T> {
             Ok(None)
         } else {
             Ok(Some(try!(<T>::from_yaml(meta, config))))
+        }
+    }
+
+    fn to_yaml(&self) -> Yaml {
+        match self {
+            &Some(ref val) => val.to_yaml(),
+            &None => Yaml::Null,
         }
     }
 }
@@ -96,7 +130,7 @@ macro_rules! yaml_array {
 
                     Ok([
                        $(
-                            try!(T::from_yaml(meta, &array.get($i).unwrap())
+                            try!(<T>::from_yaml(meta, &array.get($i).unwrap())
                                 .map_err(|_| ConfigError::YamlParse(meta.clone()))),
                        )+
                     ])
@@ -104,6 +138,16 @@ macro_rules! yaml_array {
                 else {
                     Err(ConfigError::YamlParse(meta.clone()))
                 }
+            }
+
+            fn to_yaml(&self) -> Yaml {
+                let mut vec: Vec<Yaml> = Vec::new();
+
+                for element in self {
+                    vec.push(element.to_yaml());
+                }
+
+                Yaml::Array(vec)
             }
         }
     }
@@ -137,6 +181,16 @@ impl<T: FromYaml> FromYaml for Vec<T> {
             Err(ConfigError::YamlParse(meta.clone()))
         }
     }
+
+    fn to_yaml(&self) -> Yaml {
+        let mut vec: Vec<Yaml> = Vec::new();
+
+        for element in self {
+            vec.push(element.to_yaml());
+        }
+
+        Yaml::Array(vec)
+    }
 }
 
 macro_rules! yaml_map {
@@ -164,6 +218,21 @@ macro_rules! yaml_map {
                     Err(ConfigError::YamlParse(meta.clone()))
                 }
             }
+
+            fn to_yaml(&self) -> Yaml {
+                use std::collections::BTreeMap;
+
+                let mut map: BTreeMap<Yaml, Yaml> = BTreeMap::new();
+
+                for (key, value) in self.iter() {
+                    map.insert(
+                        key.to_yaml(),
+                        value.to_yaml(),
+                    );
+                }
+
+                Yaml::Hash(map)
+            }
         }
     }
 }
@@ -188,6 +257,18 @@ macro_rules! yaml_set {
                 } else {
                     Err(ConfigError::YamlParse(meta.clone()))
                 }
+            }
+
+            fn to_yaml(&self) -> Yaml {
+                let mut vec: Vec<Yaml> = Vec::new();
+
+                for element in self.iter() {
+                    vec.push(
+                        element.to_yaml(),
+                    );
+                }
+
+                Yaml::Array(vec)
             }
         }
     }
