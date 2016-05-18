@@ -4,6 +4,9 @@ use std::io::{Read, Error};
 use std::path::{PathBuf, Path};
 use std::default::Default;
 use std::fmt;
+use std::collections::{HashMap, HashSet, BTreeMap, BTreeSet};
+use std::hash::Hash;
+use std::cmp::Eq;
 
 use yaml_rust::{Yaml, YamlLoader, ScanError};
 
@@ -226,6 +229,63 @@ impl<T: FromYaml> FromYaml for Vec<T> {
     }
 }
 
+macro_rules! yaml_map {
+    ( $map:ident: $( $bound:ident )* ) => {
+        impl<K: FromYaml $( + $bound )*, V: FromYaml> FromYaml for $map<K, V> {
+            fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
+                if let &Yaml::Hash(ref hash) = config {
+                    let mut map = $map::new();
+
+                    for (key, value) in hash.iter() {
+                        let mut key_meta = meta.clone();
+                        key_meta.fields.push("key".to_string());
+
+                        let mut value_meta = meta.clone();
+                        value_meta.fields.push("value".to_string());
+
+                        map.insert(
+                            try!(<K>::from_yaml(&key_meta, key)),
+                            try!(<V>::from_yaml(&value_meta, value))
+                        );
+                    }
+
+                    Ok(map)
+                } else {
+                    Err(ConfigError::YamlParse(meta.clone()))
+                }
+            }
+        }
+    }
+}
+
+yaml_map!(HashMap: Hash Eq);
+yaml_map!(BTreeMap: Ord);
+
+macro_rules! yaml_set {
+    ( $set:ident: $( $bound:ident )* ) => {
+        impl<T: FromYaml $( + $bound )*> FromYaml for $set<T> {
+            fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
+                if let &Yaml::Array(ref list) = config {
+                    let mut set = $set::new();
+
+                    for element in list.iter() {
+                        set.insert(
+                            try!(<T>::from_yaml(&meta, element))
+                        );
+                    }
+
+                    Ok(set)
+                } else {
+                    Err(ConfigError::YamlParse(meta.clone()))
+                }
+            }
+        }
+    }
+}
+
+yaml_set!(HashSet: Hash Eq);
+yaml_set!(BTreeSet: Ord);
+
 pub trait FromFile: Sized {
     // From a file relative to current config
     fn from_file_raw(meta: &ConfigMeta, path: &Path) -> Result<Self, ConfigError>;
@@ -372,23 +432,7 @@ macro_rules! config {
     }
 }
 
-config_enum!(Test {
-    Option1,
-    Option2,
-    Option3,
-});
-
 // Defines types along with defaulting values
-config!(InnerInnerConfig {
-    inside: f64 = 5.0,
-    other: f32 = 2.5,
-});
-
-config!(InnerConfig {
-    config: InnerInnerConfig = InnerInnerConfig::default(),
-    other_stuff: String = "Hi there".to_string(),
-});
-
 config!(DisplayConfig {
     brightness: f64 = 1.0,
     fullscreen: bool = false,
@@ -402,11 +446,7 @@ config!(LoggingConfig {
 });
 
 config!(Config {
-    test: Option<i64> = Some(58),
-    test_enum: Test = Test::Option1,
-    test_vec: Vec<String> = Vec::new(),
     title: String = "Amethyst game".to_string(),
     display: DisplayConfig = DisplayConfig::default(),
     logging: LoggingConfig = LoggingConfig::default(),
-    inner: InnerConfig = InnerConfig::default(),
 });
