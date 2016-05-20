@@ -220,7 +220,8 @@ impl<T: Element> Element for Option<T> {
     fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
         if config.is_null() {
             Ok(None)
-        } else {
+        }
+        else {
             Ok(Some(try!(<T>::from_yaml(meta, config))))
         }
     }
@@ -291,7 +292,8 @@ impl<T: Element> Element for Vec<T> {
             }
 
             Ok(vec)
-        } else {
+        }
+        else {
             Err(ConfigError::YamlParse(meta.clone()))
         }
     }
@@ -328,7 +330,8 @@ macro_rules! yaml_map {
                     }
 
                     Ok(map)
-                } else {
+                }
+                else {
                     Err(ConfigError::YamlParse(meta.clone()))
                 }
             }
@@ -368,7 +371,8 @@ macro_rules! yaml_set {
                     }
 
                     Ok(set)
-                } else {
+                }
+                else {
                     Err(ConfigError::YamlParse(meta.clone()))
                 }
             }

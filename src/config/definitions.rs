@@ -32,7 +32,8 @@ impl ConfigError {
 
                 let message = if meta.bad_value {
                     "Could not find YAML"
-                } else {
+                }
+                else {
                     "Failed to parse YAML"
                 };
 
@@ -52,7 +53,8 @@ impl ConfigError {
                     }
 
                     format!("\n{}:\t {} {{ {} }}", path, meta.ty, result)
-                } else {
+                }
+                else {
                     "".to_string()
                 };
 
@@ -251,11 +253,15 @@ macro_rules! config {
             }
 
             fn write_file(&self) -> Result<(), ConfigError> {
-                use std::fs::File;
+                use std::fs::{DirBuilder, File};
                 use std::io::{Write, Error};
 
                 let path = self._meta.path.clone();
                 let readable = $crate::config::to_string(&self.to_yaml(&path.as_path()));
+
+                // Recursively create in the case of new project or deleted folders
+                try!(DirBuilder::new().recursive(true).create(&path.parent().unwrap())
+                    .map_err(|e| ConfigError::FileError(path.display().to_string(), e)));
 
                 let mut file = try!(File::create(&path)
                     .map_err(|e| ConfigError::FileError(path.display().to_string(), e)));
