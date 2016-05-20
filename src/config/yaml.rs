@@ -23,18 +23,24 @@ fn to_string_raw(yaml: &Yaml, level: usize) -> String {
         &Yaml::String(ref value) => value.clone(),
         &Yaml::Boolean(ref value) => value.to_string(),
         &Yaml::Array(ref array) => {
-            let mut result = "".to_string();
+            let mut result = "[".to_string();
 
-            for element in array {
-                let padding: String = iter::repeat("    ").take(level).collect();
+            for (index, element) in array.iter().enumerate() {
+                //let padding: String = iter::repeat("    ").take(level).collect();
 
-                let formatted = format!("\n{}- {}",
+                /*let formatted = format!("\n{}- {}",
                     padding,
                     to_string_raw(element, level + 1)
-                );
+                );*/
 
-                result = result + &formatted;
+                if index != 0 {
+                    result = result + ", ";
+                }
+
+                result = result + &to_string_raw(element, level + 1);
             }
+
+            result = result + "]";
 
             result
         },
@@ -80,26 +86,20 @@ pub trait Element: Sized {
     fn from_file_raw(meta: &ConfigMeta, path: &Path) -> Result<Self, ConfigError> {
         let mut next_meta = meta.clone();
 
-        let mut field_path = match meta.path {
-            Some(ref path) => path.parent().unwrap_or(Path::new("")).to_path_buf(),
-            None => PathBuf::from(""),
-        };
+        next_meta.path.push(path);
 
-        field_path.push(path);
-
-        if field_path.is_dir() && field_path.exists() {
-            field_path.push("config");
+        if next_meta.path.is_dir() && next_meta.path.exists() {
+            next_meta.path.push("config");
         }
 
-        field_path.set_extension("yml");
+        next_meta.path.set_extension("yml");
 
         // extra check for a file that uses the alternate extensions .yaml instead of .yml
-        if !field_path.exists() {
-            field_path.set_extension("yaml");
+        if !next_meta.path.exists() {
+            next_meta.path.set_extension("yaml");
         }
 
-        let path = field_path.clone();
-        next_meta.path = Some(field_path);
+        let path = next_meta.path.clone();
 
         if path.exists() {
             let mut file = try!(File::open(path.as_path())

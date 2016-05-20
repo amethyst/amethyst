@@ -1,5 +1,6 @@
 
-use std::io::Error;
+use std::fs::File;
+use std::io::{Write, Error};
 use std::path::PathBuf;
 use std::default::Default;
 use std::fmt;
@@ -35,10 +36,7 @@ impl ConfigError {
                     "Failed to parse YAML"
                 };
 
-                let path = match meta.path {
-                    Some(ref path) => path.display().to_string() + ": ",
-                    None => "".to_string(),
-                };
+                let path = meta.path.display().to_string() + ": ";
 
                 let basic = format!("{}{}: {}: expected {}", path, message, tree, meta.ty);
 
@@ -63,12 +61,7 @@ impl ConfigError {
             &ConfigError::YamlGeneric(ref string) => string.clone(),
             &ConfigError::FileError(ref disp, ref e) => format!("Config File Error: \"{}\", {}", disp, e),
             &ConfigError::MissingExternalFile(ref meta) => {
-                let path = match meta.path {
-                    Some(ref path) => path.display().to_string() + ": ",
-                    None => "".to_string(),
-                };
-
-                format!("{}External YAML file is missing", path)
+                format!("{}External YAML file is missing", meta.path.display().to_string() + ": ")
             },
         }
     }
@@ -88,7 +81,7 @@ impl fmt::Display for ConfigError {
 
 #[derive(Clone, Debug)]
 pub struct ConfigMeta {
-    pub path: Option<PathBuf>, // Where the file is located
+    pub path: PathBuf, // Where the file is located, defaults to "config/config.yml"
     pub fields: Vec<String>, // List from top-level to bottom-level configs
     pub ty: &'static str, // String representation of the type
     pub bad_value: bool, // Whether key is bad or not
@@ -98,7 +91,7 @@ pub struct ConfigMeta {
 impl Default for ConfigMeta {
     fn default() -> Self {
         ConfigMeta {
-            path: None,
+            path: PathBuf::from("config\\config.yml"),
             fields: Vec::new(),
             ty: "Unknown Type",
             bad_value: false,
@@ -162,7 +155,7 @@ macro_rules! config {
 
         impl $root {
             pub fn to_string(&self) -> String {
-                $crate::config::to_string(&self.to_yaml(&self._meta.path.clone().unwrap().as_path()))
+                $crate::config::to_string(&self.to_yaml(&self._meta.path.clone().as_path()))
             }
         }
 
@@ -237,13 +230,11 @@ macro_rules! config {
                     );
 
                     if let Some(field_meta) = self.$field.get_meta() {
-                        if let Some(field_path) = field_meta.path {
-                            if field_path != path {
-                                map.insert(
-                                    Yaml::String(stringify!($field).to_string()),
-                                    Yaml::String("extern".to_string()),
-                                );
-                            }
+                        if field_meta.path != path {
+                            map.insert(
+                                Yaml::String(stringify!($field).to_string()),
+                                Yaml::String("extern".to_string()),
+                            );
                         }
                     }
                 )*
@@ -260,18 +251,23 @@ macro_rules! config {
             }
 
             fn write_file(&self) -> Result<(), ConfigError> {
+                use std::fs::File;
+                use std::io::{Write, Error};
 
-                let path = self._meta.clone().path.unwrap();
+                let path = self._meta.path.clone();
+                let readable = $crate::config::to_string(&self.to_yaml(&path.as_path()));
 
-                let readable = self.to_yaml(&path.as_path());
-                println!("\n{}: {}", stringify!($root), $crate::config::to_string(&readable));
+                let mut file = try!(File::create(&path)
+                    .map_err(|e| ConfigError::FileError(path.display().to_string(), e)));
+                try!(file.write_all(readable.as_bytes())
+                    .map_err(|e| ConfigError::FileError(path.display().to_string(), e)));
+
+                println!("\n{}: {}", stringify!($root), readable);
 
                 $(
                     if let Some(ref field_meta) = self.$field.get_meta() {
-                        if let Some(ref field_path) = field_meta.path {
-                            if field_path != &path {
-                                self.$field.write_file();
-                            }
+                        if field_meta.path != path {
+                            self.$field.write_file();
                         }
                     }
                 )*

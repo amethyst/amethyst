@@ -1,13 +1,15 @@
-title: "Amethyst game"
 
-logging:
-    file_path: "new_project"
-    output_level: "warn"
-    logging_level: "debug"
-
-display: extern
-inner:
-  inner_inner:
-    field: 1823
-
-inner_inner: extern
+display: 
+    brightness: 1
+    fullscreen: false
+    size: [1024, 768]
+inner: 
+    inner_inner: 
+        field: 58123
+inner_inner: 
+    field: 58123
+logging: 
+    file_path: new_project.log
+    logging_level: debug
+    output_level: warn
+title: Amethyst game
