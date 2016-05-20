@@ -1,31 +1,145 @@
 
+use std::fs::File;
+use std::io::Read;
 use std::collections::{HashMap, HashSet, BTreeMap, BTreeSet};
 use std::hash::Hash;
 use std::cmp::Eq;
+use std::iter;
+use std::path::{PathBuf, Path};
 
-use yaml_rust::{Yaml, YamlLoader, ScanError};
+use yaml_rust::{Yaml, YamlLoader};
 
 use config::definitions::{ConfigError, ConfigMeta};
 
-pub trait FromYaml: Sized {
+pub fn to_string(yaml: &Yaml) -> String {
+    to_string_raw(yaml, 0)
+}
+
+// Converts a Yaml type into a readable yaml string
+fn to_string_raw(yaml: &Yaml, level: usize) -> String {
+    match yaml {
+        &Yaml::Real(ref value) => value.clone(),
+        &Yaml::Integer(ref value) => value.to_string(),
+        &Yaml::String(ref value) => value.clone(),
+        &Yaml::Boolean(ref value) => value.to_string(),
+        &Yaml::Array(ref array) => {
+            let mut result = "".to_string();
+
+            for element in array {
+                let padding: String = iter::repeat("    ").take(level).collect();
+
+                let formatted = format!("\n{}- {}",
+                    padding,
+                    to_string_raw(element, level + 1)
+                );
+
+                result = result + &formatted;
+            }
+
+            result
+        },
+        &Yaml::Hash(ref hash) => {
+            let mut result = "".to_string();
+
+            for (key, value) in hash {
+                let padding: String = iter::repeat("    ").take(level).collect();
+
+                let formatted = format!("\n{}{}: {}",
+                    padding,
+                    to_string_raw(key, level + 1), to_string_raw(value, level + 1)
+                );
+
+                result = result + &formatted;
+            }
+
+            result
+        },
+        &Yaml::Null => "null".to_string(),
+        _ => "Bad Value".to_string(), // Should never be a Yaml::BadValue | Yaml::Alias
+    }
+}
+
+pub trait Element: Sized {
     /// Convert yaml element into a rust type,
     /// Raises an error if it is not the yaml element expected
     fn from_yaml(&ConfigMeta, &Yaml) -> Result<Self, ConfigError>;
 
     // Converts rust type into a yaml element for writing
-    fn to_yaml(&self) -> Yaml;
+    // Requires the path for external configs
+    fn to_yaml(&self, &Path) -> Yaml;
+
+    // Only works on structs created by config! macro
+    fn set_meta(&mut self, &ConfigMeta) { }
+
+    // Returns meta data if it is a config structure
+    fn get_meta(&self) -> Option<ConfigMeta> {
+        None
+    }
+
+    // From a file relative to current config
+    fn from_file_raw(meta: &ConfigMeta, path: &Path) -> Result<Self, ConfigError> {
+        let mut next_meta = meta.clone();
+
+        let mut field_path = match meta.path {
+            Some(ref path) => path.parent().unwrap_or(Path::new("")).to_path_buf(),
+            None => PathBuf::from(""),
+        };
+
+        field_path.push(path);
+
+        if field_path.is_dir() && field_path.exists() {
+            field_path.push("config");
+        }
+
+        field_path.set_extension("yml");
+
+        // extra check for a file that uses the alternate extensions .yaml instead of .yml
+        if !field_path.exists() {
+            field_path.set_extension("yaml");
+        }
+
+        let path = field_path.clone();
+        next_meta.path = Some(field_path);
+
+        if path.exists() {
+            let mut file = try!(File::open(path.as_path())
+                .map_err(|e| ConfigError::FileError(path.display().to_string(), e)));
+            let mut buffer = String::new();
+
+            try!(file.read_to_string(&mut buffer)
+                .map_err(|e| ConfigError::FileError(path.display().to_string(), e)));
+
+            let yaml = try!(YamlLoader::load_from_str(&buffer)
+                .map_err(|e| ConfigError::YamlScan(e)));
+            let hash = &yaml[0];
+
+            Self::from_yaml(&next_meta, hash)
+        }
+        else {
+            Err(ConfigError::MissingExternalFile(next_meta.clone()))
+        }
+    }
+
+    // From a file relative to project
+    fn from_file(path: &Path) -> Result<Self, ConfigError> {
+        Self::from_file_raw(&ConfigMeta::default(), path)
+    }
+
+    fn write_file(&self) -> Result<(), ConfigError> {
+        Err(ConfigError::YamlGeneric("Attempting to write on a non-config struct".to_string()))
+    }
 }
 
 macro_rules! yaml_int {
     ($t:ty) => {
-        impl FromYaml for $t {
+        impl Element for $t {
             fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
                 let num: $t = try!(config.as_i64()
                     .ok_or(ConfigError::YamlParse(meta.clone()))) as $t;
                 Ok(num)
             }
 
-            fn to_yaml(&self) -> Yaml {
+            fn to_yaml(&self, _: &Path) -> Yaml {
                 Yaml::Integer(self.clone() as i64)
             }
         }
@@ -41,37 +155,37 @@ yaml_int!(u16);
 yaml_int!(u32);
 yaml_int!(u64);
 
-impl FromYaml for f32 {
+impl Element for f32 {
     fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
         Ok(try!(config.as_f64().ok_or(ConfigError::YamlParse(meta.clone()))) as f32)
     }
 
-    fn to_yaml(&self) -> Yaml {
+    fn to_yaml(&self, _: &Path) -> Yaml {
         Yaml::Real(self.clone().to_string())
     }
 }
 
-impl FromYaml for f64 {
+impl Element for f64 {
     fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
         Ok(try!(config.as_f64().ok_or(ConfigError::YamlParse(meta.clone()))))
     }
 
-    fn to_yaml(&self) -> Yaml {
+    fn to_yaml(&self, _: &Path) -> Yaml {
         Yaml::Real(self.clone().to_string())
     }
 }
 
-impl FromYaml for bool {
+impl Element for bool {
     fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
         Ok(try!(config.as_bool().ok_or(ConfigError::YamlParse(meta.clone()))))
     }
 
-    fn to_yaml(&self) -> Yaml {
+    fn to_yaml(&self, _: &Path) -> Yaml {
         Yaml::Boolean(self.clone())
     }
 }
 
-impl FromYaml for String {
+impl Element for String {
     fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
         if let &Yaml::String(ref string) = config {
             Ok(string.clone())
@@ -81,13 +195,13 @@ impl FromYaml for String {
         }
     }
 
-    fn to_yaml(&self) -> Yaml {
+    fn to_yaml(&self, _: &Path) -> Yaml {
         Yaml::String(self.clone())
     }
 }
 
 // Not sure if this is entirely needed
-impl FromYaml for () {
+impl Element for () {
     fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
         if config.is_null() {
             Ok(())
@@ -97,12 +211,12 @@ impl FromYaml for () {
         }
     }
 
-    fn to_yaml(&self) -> Yaml {
+    fn to_yaml(&self, _: &Path) -> Yaml {
         Yaml::Null
     }
 }
 
-impl<T: FromYaml> FromYaml for Option<T> {
+impl<T: Element> Element for Option<T> {
     fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
         if config.is_null() {
             Ok(None)
@@ -111,9 +225,9 @@ impl<T: FromYaml> FromYaml for Option<T> {
         }
     }
 
-    fn to_yaml(&self) -> Yaml {
+    fn to_yaml(&self, path: &Path) -> Yaml {
         match self {
-            &Some(ref val) => val.to_yaml(),
+            &Some(ref val) => val.to_yaml(path),
             &None => Yaml::Null,
         }
     }
@@ -121,7 +235,7 @@ impl<T: FromYaml> FromYaml for Option<T> {
 
 macro_rules! yaml_array {
     ($n:expr => $($i:expr)+) => {
-        impl<T: FromYaml> FromYaml for [T; $n] {
+        impl<T: Element> Element for [T; $n] {
             fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
                 if let &Yaml::Array(ref array) = config {
                     if array.len() != $n {
@@ -140,11 +254,11 @@ macro_rules! yaml_array {
                 }
             }
 
-            fn to_yaml(&self) -> Yaml {
+            fn to_yaml(&self, path: &Path) -> Yaml {
                 let mut vec: Vec<Yaml> = Vec::new();
 
                 for element in self {
-                    vec.push(element.to_yaml());
+                    vec.push(element.to_yaml(path));
                 }
 
                 Yaml::Array(vec)
@@ -164,7 +278,7 @@ yaml_array!(8 => 0 1 2 3 4 5 6 7);
 yaml_array!(9 => 0 1 2 3 4 5 6 7 8);
 yaml_array!(10 => 0 1 2 3 4 5 6 7 8 9);
 
-impl<T: FromYaml> FromYaml for Vec<T> {
+impl<T: Element> Element for Vec<T> {
     fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
         if let &Yaml::Array(ref array) = config {
             let mut vec = Vec::new();
@@ -182,11 +296,11 @@ impl<T: FromYaml> FromYaml for Vec<T> {
         }
     }
 
-    fn to_yaml(&self) -> Yaml {
+    fn to_yaml(&self, path: &Path) -> Yaml {
         let mut vec: Vec<Yaml> = Vec::new();
 
         for element in self {
-            vec.push(element.to_yaml());
+            vec.push(element.to_yaml(path));
         }
 
         Yaml::Array(vec)
@@ -195,7 +309,7 @@ impl<T: FromYaml> FromYaml for Vec<T> {
 
 macro_rules! yaml_map {
     ( $map:ident: $( $bound:ident )* ) => {
-        impl<K: FromYaml $( + $bound )*, V: FromYaml> FromYaml for $map<K, V> {
+        impl<K: Element $( + $bound )*, V: Element> Element for $map<K, V> {
             fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
                 if let &Yaml::Hash(ref hash) = config {
                     let mut map = $map::new();
@@ -219,15 +333,15 @@ macro_rules! yaml_map {
                 }
             }
 
-            fn to_yaml(&self) -> Yaml {
+            fn to_yaml(&self, path: &Path) -> Yaml {
                 use std::collections::BTreeMap;
 
                 let mut map: BTreeMap<Yaml, Yaml> = BTreeMap::new();
 
                 for (key, value) in self.iter() {
                     map.insert(
-                        key.to_yaml(),
-                        value.to_yaml(),
+                        key.to_yaml(path),
+                        value.to_yaml(path),
                     );
                 }
 
@@ -242,7 +356,7 @@ yaml_map!(BTreeMap: Ord);
 
 macro_rules! yaml_set {
     ( $set:ident: $( $bound:ident )* ) => {
-        impl<T: FromYaml $( + $bound )*> FromYaml for $set<T> {
+        impl<T: Element $( + $bound )*> Element for $set<T> {
             fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
                 if let &Yaml::Array(ref list) = config {
                     let mut set = $set::new();
@@ -259,12 +373,12 @@ macro_rules! yaml_set {
                 }
             }
 
-            fn to_yaml(&self) -> Yaml {
+            fn to_yaml(&self, path: &Path) -> Yaml {
                 let mut vec: Vec<Yaml> = Vec::new();
 
                 for element in self.iter() {
                     vec.push(
-                        element.to_yaml(),
+                        element.to_yaml(path),
                     );
                 }
 

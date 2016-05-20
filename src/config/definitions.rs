@@ -1,17 +1,15 @@
 
-use std::fs::File;
-use std::io::{Read, Error};
-use std::path::{PathBuf, Path};
+use std::io::Error;
+use std::path::PathBuf;
 use std::default::Default;
 use std::fmt;
 
-use yaml_rust::{Yaml, YamlLoader, ScanError};
-
-use config::FromYaml;
+use yaml_rust::ScanError;
 
 pub enum ConfigError {
     YamlScan(ScanError),
     YamlParse(ConfigMeta),
+    YamlGeneric(String),
     FileError(String, Error),
     MissingExternalFile(ConfigMeta),
 }
@@ -62,6 +60,7 @@ impl ConfigError {
 
                 format!("{}{}", basic, options)
             },
+            &ConfigError::YamlGeneric(ref string) => string.clone(),
             &ConfigError::FileError(ref disp, ref e) => format!("Config File Error: \"{}\", {}", disp, e),
             &ConfigError::MissingExternalFile(ref meta) => {
                 let path = match meta.path {
@@ -108,62 +107,6 @@ impl Default for ConfigMeta {
     }
 }
 
-pub trait FromFile: Sized {
-    // From a file relative to current config
-    fn from_file_raw(meta: &ConfigMeta, path: &Path) -> Result<Self, ConfigError>;
-
-    // From a file relative to project
-    fn from_file(path: &Path) -> Result<Self, ConfigError> {
-        Self::from_file_raw(&ConfigMeta::default(), path)
-    }
-}
-
-impl<T: FromYaml + Sized> FromFile for T {
-    fn from_file_raw(meta: &ConfigMeta, path: &Path) -> Result<T, ConfigError> {
-        let mut next_meta = meta.clone();
-
-        let mut field_path = match meta.path {
-            Some(ref path) => path.parent().unwrap_or(Path::new("")).to_path_buf(),
-            None => PathBuf::from(""),
-        };
-
-        field_path.push(path);
-
-        if field_path.is_dir() && field_path.exists() {
-            field_path.push("config");
-        }
-
-        field_path.set_extension("yml");
-
-        // extra check for a file that uses the alternate extensions .yaml instead of .yml
-        if !field_path.exists() {
-            field_path.set_extension("yaml");
-        }
-
-        let path = field_path.clone();
-        next_meta.path = Some(field_path);
-
-        if path.exists() {
-
-            let mut file = try!(File::open(path.as_path())
-                .map_err(|e| ConfigError::FileError(path.display().to_string(), e)));
-            let mut buffer = String::new();
-
-            try!(file.read_to_string(&mut buffer)
-                .map_err(|e| ConfigError::FileError(path.display().to_string(), e)));
-
-            let yaml = try!(YamlLoader::load_from_str(&buffer)
-                .map_err(|e| ConfigError::YamlScan(e)));
-            let hash = &yaml[0];
-
-            <T>::from_yaml(&next_meta, hash)
-        }
-        else {
-            Err(ConfigError::MissingExternalFile(next_meta.clone()))
-        }
-    }
-}
-
 #[macro_export]
 macro_rules! config_enum {
     ($root:ident {
@@ -175,7 +118,7 @@ macro_rules! config_enum {
             $($field,)*
         }
 
-        impl FromYaml for $root {
+        impl Element for $root {
             fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
                 let mut next_meta = meta.clone();
                 next_meta.options = vec![$( stringify!($field).to_string(), )*];
@@ -194,6 +137,14 @@ macro_rules! config_enum {
                     Err(ConfigError::YamlParse(next_meta.clone()))
                 }
             }
+
+            fn to_yaml(&self) -> Yaml {
+                match self {
+                    $(
+                        &$field => Yaml::String(stringify!($field).to_string()),
+                    )*
+                }
+            }
         }
     }
 }
@@ -209,6 +160,12 @@ macro_rules! config {
             $( pub $field: $ty, )*
         }
 
+        impl $root {
+            pub fn to_string(&self) -> String {
+                $crate::config::to_string(&self.to_yaml(&self._meta.path.clone().unwrap().as_path()))
+            }
+        }
+
         impl Default for $root {
             fn default() -> Self {
                 $root {
@@ -218,7 +175,7 @@ macro_rules! config {
             }
         }
 
-        impl FromYaml for $root {
+        impl Element for $root {
             fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
                 let mut default = $root::default();
 
@@ -240,6 +197,7 @@ macro_rules! config {
 
                             // set up current meta
                             let mut field_meta = next_meta.clone();
+
                             field_meta.fields.push(stringify!($field).to_string());
                             field_meta.ty = stringify!($ty);
                             field_meta.bad_value = key.is_badvalue();
@@ -257,6 +215,8 @@ macro_rules! config {
                                     // output error and fall-through the default values
                                     println!("{}", e);
 
+                                    default.$field.set_meta(&field_meta);
+
                                     default.$field
                                 },
                             }
@@ -265,7 +225,7 @@ macro_rules! config {
                 })
             }
 
-            fn to_yaml(&self) -> Yaml {
+            fn to_yaml(&self, path: &Path) -> Yaml {
                 use std::collections::BTreeMap;
 
                 let mut map: BTreeMap<Yaml, Yaml> = BTreeMap::new();
@@ -273,11 +233,50 @@ macro_rules! config {
                 $(
                     map.insert(
                         Yaml::String(stringify!($field).to_string()),
-                        self.$field.to_yaml(),
+                        self.$field.to_yaml(path),
                     );
+
+                    if let Some(field_meta) = self.$field.get_meta() {
+                        if let Some(field_path) = field_meta.path {
+                            if field_path != path {
+                                map.insert(
+                                    Yaml::String(stringify!($field).to_string()),
+                                    Yaml::String("extern".to_string()),
+                                );
+                            }
+                        }
+                    }
                 )*
 
                 Yaml::Hash(map)
+            }
+
+            fn set_meta(&mut self, meta: &ConfigMeta) {
+                self._meta = meta.clone();
+            }
+
+            fn get_meta(&self) -> Option<ConfigMeta> {
+                Some(self._meta.clone())
+            }
+
+            fn write_file(&self) -> Result<(), ConfigError> {
+
+                let path = self._meta.clone().path.unwrap();
+
+                let readable = self.to_yaml(&path.as_path());
+                println!("\n{}: {}", stringify!($root), $crate::config::to_string(&readable));
+
+                $(
+                    if let Some(ref field_meta) = self.$field.get_meta() {
+                        if let Some(ref field_path) = field_meta.path {
+                            if field_path != &path {
+                                self.$field.write_file();
+                            }
+                        }
+                    }
+                )*
+
+                Ok(())
             }
         }
     }

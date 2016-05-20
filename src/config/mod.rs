@@ -1,21 +1,13 @@
 
-use std::fs::File;
-use std::io::{Read, Error};
-use std::path::{PathBuf, Path};
-use std::default::Default;
-use std::fmt;
-
-use yaml_rust::{YamlLoader, ScanError};
+use std::path::Path;
 pub use yaml_rust::Yaml;
 
 #[macro_use]
 mod definitions;
 mod yaml;
 
-pub use config::yaml::{FromYaml};
-pub use config::definitions::{FromFile, ConfigMeta, ConfigError};
-
-use std::collections::{HashMap, HashSet, BTreeMap, BTreeSet};
+pub use config::yaml::{Element, to_string};
+pub use config::definitions::{ConfigMeta, ConfigError};
 
 // Defines types along with defaulting values
 config!(DisplayConfig {
@@ -30,8 +22,18 @@ config!(LoggingConfig {
     logging_level: String = "debug".to_string(),
 });
 
+config!(InnerInnerConfig {
+    field: u64 = 58123,
+});
+
+config!(InnerConfig {
+    inner_inner: InnerInnerConfig = InnerInnerConfig::default(),
+});
+
 config!(Config {
     title: String = "Amethyst game".to_string(),
     display: DisplayConfig = DisplayConfig::default(),
     logging: LoggingConfig = LoggingConfig::default(),
+    inner: InnerConfig = InnerConfig::default(),
+    inner_inner: InnerInnerConfig = InnerInnerConfig::default(),
 });

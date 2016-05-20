@@ -6,3 +6,8 @@ logging:
     logging_level: "debug"
 
 display: extern
+inner:
+  inner_inner:
+    field: 1823
+
+inner_inner: extern
