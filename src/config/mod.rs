@@ -1,8 +1,8 @@
 
 //! Loading configuration (.yaml/.yml) files into a structure for easy usage
-
+//!
 //! # Basic usage:
-//! ```rust
+//! ```ignore rust
 //! config!(Config {
 //!     amount: i32 = 50,
 //! })
@@ -13,7 +13,7 @@
 //!
 //! The inner fields of `Config` can be summed up as:
 //!
-//! ```rust
+//! ```ignore rust
 //! name: type = default,
 //! ```
 //!
@@ -29,7 +29,7 @@
 //! implement the [`Element`](trait.Element.html) trait. Meaning you can nest configuration structs
 //! inside of eachother as such:
 //!
-//! ```rust
+//! ```ignore rust
 //! config!(NestedConfig {
 //!     some_field: [i64; 3] = [1, 2, 3],
 //! });
@@ -46,7 +46,7 @@
 //! example: 
 //!
 //! ```yaml
-//! ## config\\config.yml
+//! config\\config.yml:
 //! display: "extern"
 //! ```
 //!
