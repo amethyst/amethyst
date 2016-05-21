@@ -1,4 +1,6 @@
 
+//! Configuration structures and macros
+
 use std::fs::File;
 use std::io::{Write, Error};
 use std::path::PathBuf;
@@ -7,6 +9,7 @@ use std::fmt;
 
 use yaml_rust::ScanError;
 
+/// Configuration error
 pub enum ConfigError {
     YamlScan(ScanError),
     YamlParse(ConfigMeta),
@@ -81,6 +84,7 @@ impl fmt::Display for ConfigError {
     }
 }
 
+/// Metadata for a configuration structure
 #[derive(Clone, Debug)]
 pub struct ConfigMeta {
     pub path: PathBuf, // Where the file is located, defaults to "config/config.yml"
@@ -267,8 +271,6 @@ macro_rules! config {
                     .map_err(|e| ConfigError::FileError(path.display().to_string(), e)));
                 try!(file.write_all(readable.as_bytes())
                     .map_err(|e| ConfigError::FileError(path.display().to_string(), e)));
-
-                println!("\n{}: {}", stringify!($root), readable);
 
                 $(
                     if let Some(ref field_meta) = self.$field.get_meta() {

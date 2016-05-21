@@ -8,7 +8,12 @@ use std::path::{PathBuf, Path};
 use yaml_rust::Yaml;
 
 fn main() {
-  let config = amethyst::config::Config::default();
+  let config = amethyst::config::Config::from_file(Path::new("config/config.yml"));
 
-  println!("{:?}", config.write_file());
+  match config {
+    Ok(conf) => {
+        conf.write_file();
+    },
+    Err(e) => println!("{:?}", e),
+  }
 }

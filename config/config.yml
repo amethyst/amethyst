@@ -1,8 +1,5 @@
 
-display: 
-    brightness: 1
-    fullscreen: false
-    size: [1024, 768]
+display: extern
 inner: 
     inner_inner: 
         field: 58123

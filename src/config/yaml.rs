@@ -1,4 +1,6 @@
 
+//! Configuration structure elements and conversions
+
 use std::fs::File;
 use std::io::Read;
 use std::collections::{HashMap, HashSet, BTreeMap, BTreeSet};
@@ -11,14 +13,25 @@ use yaml_rust::{Yaml, YamlLoader};
 
 use config::definitions::{ConfigError, ConfigMeta};
 
+/// Converts a Yaml object into a .yml/.yaml format
 pub fn to_string(yaml: &Yaml) -> String {
     to_string_raw(yaml, 0)
 }
 
-// Converts a Yaml type into a readable yaml string
+/// Converts a Yaml type into a readable yaml string
 fn to_string_raw(yaml: &Yaml, level: usize) -> String {
     match yaml {
-        &Yaml::Real(ref value) => value.clone(),
+        &Yaml::Real(ref value) => {
+            let mut float_string = value.to_string();
+    
+            // Rust automatically truncates floats without a fractional in them
+            // So stuff like "3.0" becomes "3" and the parser can't read it.
+            if float_string.find(".") == None {
+                float_string = float_string + ".0";
+            }
+            
+            float_string
+        },
         &Yaml::Integer(ref value) => value.to_string(),
         &Yaml::String(ref value) => value.clone(),
         &Yaml::Boolean(ref value) => value.to_string(),
@@ -26,13 +39,6 @@ fn to_string_raw(yaml: &Yaml, level: usize) -> String {
             let mut result = "[".to_string();
 
             for (index, element) in array.iter().enumerate() {
-                //let padding: String = iter::repeat("    ").take(level).collect();
-
-                /*let formatted = format!("\n{}- {}",
-                    padding,
-                    to_string_raw(element, level + 1)
-                );*/
-
                 if index != 0 {
                     result = result + ", ";
                 }
@@ -40,9 +46,7 @@ fn to_string_raw(yaml: &Yaml, level: usize) -> String {
                 result = result + &to_string_raw(element, level + 1);
             }
 
-            result = result + "]";
-
-            result
+            result + "]"
         },
         &Yaml::Hash(ref hash) => {
             let mut result = "".to_string();
@@ -65,26 +69,31 @@ fn to_string_raw(yaml: &Yaml, level: usize) -> String {
     }
 }
 
+/// Trait for fields inside of a configuration struct.
 pub trait Element: Sized {
     /// Convert yaml element into a rust type,
     /// Raises an error if it is not the yaml element expected
     fn from_yaml(&ConfigMeta, &Yaml) -> Result<Self, ConfigError>;
 
-    // Converts rust type into a yaml element for writing
-    // Requires the path for external configs
+    /// Converts rust type into a yaml element for writing
+    /// Requires the path for external configs
     fn to_yaml(&self, &Path) -> Yaml;
 
-    // Only works on structs created by config! macro
+    /// Sets the meta data of a config structure, only works on config structures
     fn set_meta(&mut self, &ConfigMeta) { }
 
-    // Returns meta data if it is a config structure
+    /// Returns meta data if it is a config structure
     fn get_meta(&self) -> Option<ConfigMeta> {
         None
     }
 
-    // From a file relative to current config
+    /// From a file relative to current config
     fn from_file_raw(meta: &ConfigMeta, path: &Path) -> Result<Self, ConfigError> {
         let mut next_meta = meta.clone();
+
+        if next_meta.path.is_file() {
+            next_meta.path = next_meta.path.parent().unwrap().to_path_buf();
+        }
 
         next_meta.path.push(path);
 
@@ -100,6 +109,8 @@ pub trait Element: Sized {
         }
 
         let path = next_meta.path.clone();
+
+        println!("FINAL: {:?} {:?}", path, path.exists());
 
         if path.exists() {
             let mut file = try!(File::open(path.as_path())
@@ -120,11 +131,21 @@ pub trait Element: Sized {
         }
     }
 
-    // From a file relative to project
+    /// From a file relative to project
     fn from_file(path: &Path) -> Result<Self, ConfigError> {
-        Self::from_file_raw(&ConfigMeta::default(), path)
+        let mut default = ConfigMeta::default();
+        default.path = PathBuf::from("");
+
+        println!("FROM FILE: {:?} {:?}", default.path, path);
+
+        Self::from_file_raw(&default, path)
     }
 
+    /// Recursively writes to files given the configuration's current context.
+    ///
+    /// The default path for a root configuration file is "config\\config.yml".
+    ///
+    /// Note: This should never be called on a non-config! defined structure.
     fn write_file(&self) -> Result<(), ConfigError> {
         Err(ConfigError::YamlGeneric("Attempting to write on a non-config struct".to_string()))
     }
@@ -200,7 +221,6 @@ impl Element for String {
     }
 }
 
-// Not sure if this is entirely needed
 impl Element for () {
     fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
         if config.is_null() {
