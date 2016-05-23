@@ -106,13 +106,13 @@ impl Default for ConfigMeta {
     }
 }
 
+/// Allows conversion from yaml to enum directly.
 #[macro_export]
 macro_rules! config_enum {
     ($root:ident {
         $( $field:ident, )*
     }) => {
-
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq)]
         pub enum $root {
             $($field,)*
         }
@@ -137,10 +137,10 @@ macro_rules! config_enum {
                 }
             }
 
-            fn to_yaml(&self) -> Yaml {
+            fn to_yaml(&self, _: &Path) -> Yaml {
                 match self {
                     $(
-                        &$field => Yaml::String(stringify!($field).to_string()),
+                        &$root::$field => Yaml::String(stringify!($field).to_string()),
                     )*
                 }
             }
@@ -148,6 +148,7 @@ macro_rules! config_enum {
     }
 }
 
+/// Automatically generates a structure for loading yaml config files.
 #[macro_export]
 macro_rules! config {
     ($root:ident {

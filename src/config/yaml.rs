@@ -92,7 +92,12 @@ pub trait Element: Sized {
         let mut next_meta = meta.clone();
 
         if next_meta.path.is_file() {
-            next_meta.path = next_meta.path.parent().unwrap().to_path_buf();
+            next_meta.path = if let Some(parent) = next_meta.path.parent() {
+                parent.to_path_buf()
+            }
+            else {
+                PathBuf::from("")
+            }
         }
 
         next_meta.path.push(path);
@@ -109,8 +114,6 @@ pub trait Element: Sized {
         }
 
         let path = next_meta.path.clone();
-
-        println!("FINAL: {:?} {:?}", path, path.exists());
 
         if path.exists() {
             let mut file = try!(File::open(path.as_path())
@@ -135,8 +138,6 @@ pub trait Element: Sized {
     fn from_file(path: &Path) -> Result<Self, ConfigError> {
         let mut default = ConfigMeta::default();
         default.path = PathBuf::from("");
-
-        println!("FROM FILE: {:?} {:?}", default.path, path);
 
         Self::from_file_raw(&default, path)
     }
