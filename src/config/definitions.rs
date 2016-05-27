@@ -106,58 +106,24 @@ impl Default for ConfigMeta {
     }
 }
 
-/// Allows conversion from yaml to enum directly.
-#[macro_export]
-macro_rules! config_enum {
-    ($root:ident {
-        $( $field:ident, )*
-    }) => {
-        #[derive(Clone, Debug, PartialEq)]
-        pub enum $root {
-            $($field,)*
-        }
-
-        impl Element for $root {
-            fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
-                let mut next_meta = meta.clone();
-                next_meta.options = vec![$( stringify!($field).to_string(), )*];
-
-                if let &Yaml::String(ref string) = config {
-                    let s: &str = string;
-
-                    match s {
-                        $(
-                            stringify!($field) => Ok($root::$field),
-                        )*
-                        _ => Err(ConfigError::YamlParse(next_meta.clone()))
-                    }
-                }
-                else {
-                    Err(ConfigError::YamlParse(next_meta.clone()))
-                }
-            }
-
-            fn to_yaml(&self, _: &Path) -> Yaml {
-                match self {
-                    $(
-                        &$root::$field => Yaml::String(stringify!($field).to_string()),
-                    )*
-                }
-            }
-        }
-    }
-}
-
-/// Automatically generates a structure for loading yaml config files.
+/// Automatically generates a struct/enums for loading in yaml files.
 #[macro_export]
 macro_rules! config {
-    ($root:ident {
-        $( $field:ident: $ty:ty = $name:expr, )*
-    }) => {
+    // Struct
+    (
+        $(#[$root_meta:meta])*
+        struct $root:ident {
+            $( $(#[$field_meta:meta])* pub $field:ident: $ty:ty = $name:expr, )*
+        }
+    ) => {
         #[derive(Clone, Debug)]
+        $(#[$root_meta])*
         pub struct $root {
             _meta: ConfigMeta,
-            $( pub $field: $ty, )*
+            $(
+                $(#[$field_meta])*
+                pub $field: $ty,
+            )*
         }
 
         impl $root {
@@ -284,5 +250,48 @@ macro_rules! config {
                 Ok(())
             }
         }
-    }
+    };
+
+    // Enum
+    (
+        $(#[$root_meta:meta])*
+        enum $root:ident {
+            $( $field:ident, )*
+        }
+    ) => {
+        #[derive(Clone, Debug, PartialEq)]
+        $(#[$root_meta])*
+        pub enum $root {
+            $($field,)*
+        }
+
+        impl Element for $root {
+            fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
+                let mut next_meta = meta.clone();
+                next_meta.options = vec![$( stringify!($field).to_string(), )*];
+
+                if let &Yaml::String(ref string) = config {
+                    let s: &str = string;
+
+                    match s {
+                        $(
+                            stringify!($field) => Ok($root::$field),
+                        )*
+                        _ => Err(ConfigError::YamlParse(next_meta.clone()))
+                    }
+                }
+                else {
+                    Err(ConfigError::YamlParse(next_meta.clone()))
+                }
+            }
+
+            fn to_yaml(&self, _: &Path) -> Yaml {
+                match self {
+                    $(
+                        &$root::$field => Yaml::String(stringify!($field).to_string()),
+                    )*
+                }
+            }
+        }
+    };
 }

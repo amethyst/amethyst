@@ -5,12 +5,12 @@
 //! ```rust
 //! #[macro_use]
 //! extern crate amethyst;
-//! 
+//!
 //! use amethyst::config::{Yaml, Element, ConfigMeta, ConfigError};
 //! use std::path::Path;
 //!
-//! config!(Config {
-//!     amount: i32 = 50,
+//! config!(struct Config {
+//!     pub amount: i32 = 50,
 //! });
 //!
 //! fn main() {
@@ -35,7 +35,7 @@
 //! In the case that the value is either the wrong type from the field's or simply cannot be
 //! found in the file, the field will be defaulted to `default`.
 //!
-//! 
+//!
 //! In addition to basic types, any struct created through the `config!` macro will automatically
 //! implement the [`Element`](trait.Element.html) trait. Meaning you can nest configuration structs
 //! inside of eachother as such:
@@ -44,22 +44,21 @@
 //! # #[macro_use] extern crate amethyst;
 //! # use amethyst::config::{Yaml, Element, ConfigMeta, ConfigError};
 //! # use std::path::Path;
-//!
-//! config!(NestedConfig {
-//!     some_field: [i64; 3] = [1, 2, 3],
+//! config!(struct NestedConfig {
+//!     pub some_field: [i64; 3] = [1, 2, 3],
 //! });
-//! 
-//! config!(Config {
-//!     nested: NestedConfig = NestedConfig::default(),
+//!
+//! config!(struct Config {
+//!     pub nested: NestedConfig = NestedConfig::default(),
 //! });
 //! # fn main() { }
 //! ```
-//! 
+//!
 //! # External .yml/.yaml files
 //! In the event that a config is getting too long, you can define it in the .yml/.yaml file as
 //! "extern"
 //!
-//! example: 
+//! example:
 //!
 //! ```yaml
 //! display: "extern"
@@ -71,21 +70,20 @@
 //! overwritten if you called `write_file()`.
 //!
 //! # Enums
-//! While this is little more than just a more convenient conversion tool, `config_enum!`
-//! automatically implements the Element trait for a basic enum. Does not provide possibilities
-//! for data holding enums, only conversion between a string and then enum.
+//! When `config!` is used on an enum type, it automatically implements the Element trait. However,
+//! it does not provide possibilities for data holding enums, only a simple options list enum.
 //!
 //! ```rust
 //! # #[macro_use] extern crate amethyst;
 //! # use amethyst::config::{Yaml, Element, ConfigMeta, ConfigError};
 //! # use std::path::Path;
-//! config_enum!(EnumName {
+//! config!(enum EnumName {
 //!     Option1,
 //!     Option2,
 //! });
 //!
-//! config!(Config {
-//!     field: EnumName = EnumName::Option2,
+//! config!(struct Config {
+//!     pub field: EnumName = EnumName::Option2,
 //! });
 //!
 //! fn main() {
@@ -93,6 +91,27 @@
 //!     assert_eq!(config.field, EnumName::Option2);
 //! }
 //! ```
+//!
+//! # Documentation/Commenting
+//! Normally when constructing a config you would want to have a small description as to what the
+//! fields will be used for. And possibly defaults.
+//!
+//! ```rust
+//! # #[macro_use] extern crate amethyst;
+//! # use amethyst::config::{Yaml, Element, ConfigMeta, ConfigError};
+//! # use std::path::Path;
+//! config!(
+//!     struct Config {
+//!         /// Width and height of the window on initialization. Defaults to 1024x768.
+//!         pub dimensions: [u16; 2] = [1024, 768],
+//!     }
+//! );
+//! # fn main() { }
+//! ```
+//!
+//! If the macro has problems expanding, then you may want to check whether you have the
+//! documentation on the line before the field and that you have te `pub` identifier before the
+//! field name.
 
 use std::path::Path;
 pub use yaml_rust::Yaml;
@@ -105,37 +124,27 @@ pub use config::yaml::{Element, to_string};
 pub use config::definitions::{ConfigMeta, ConfigError};
 
 // Defines types along with defaulting values
-config_enum!(Test {
-    Option1,
-    Option2,
-    Option3,
+config!(struct DisplayConfig {
+    /// Brightness of the screen.
+    pub brightness: f64 = 1.0,
+    pub fullscreen: bool = false,
+    /// Dimensions of the window, defaults to 1024x768.
+    pub size: [u16; 2] = [1024, 768],
 });
 
-config!(DisplayConfig {
-    brightness: f64 = 1.0,
-    fullscreen: bool = false,
-    size: [u16; 2] = [1024, 768],
+config!(struct LoggingConfig {
+    pub file_path: String = "new_project.log".to_string(),
+    pub output_level: String = "warn".to_string(),
+    pub logging_level: String = "debug".to_string(),
 });
 
-config!(LoggingConfig {
-    file_path: String = "new_project.log".to_string(),
-    output_level: String = "warn".to_string(),
-    logging_level: String = "debug".to_string(),
-});
+config!(struct Config {
+    /// Title of the game, used as default for window name.
+    pub title: String = "Amethyst game".to_string(),
 
-config!(InnerInnerConfig {
-    field: u64 = 58123,
-});
+    /// Configuration for display and graphics
+    pub display: DisplayConfig = DisplayConfig::default(),
 
-config!(InnerConfig {
-    inner_inner: InnerInnerConfig = InnerInnerConfig::default(),
-});
-
-config!(Config {
-    title: String = "Amethyst game".to_string(),
-    en: Test = Test::Option1,
-    display: DisplayConfig = DisplayConfig::default(),
-    logging: LoggingConfig = LoggingConfig::default(),
-    inner: InnerConfig = InnerConfig::default(),
-    inner_inner: InnerInnerConfig = InnerInnerConfig::default(),
+    /// Configuration for output
+    pub logging: LoggingConfig = LoggingConfig::default(),
 });

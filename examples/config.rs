@@ -7,8 +7,8 @@ use std::path::{PathBuf, Path};
 
 use yaml_rust::Yaml;
 
-config!(Test {
-	field: i32 = 50,
+config!(struct Test {
+	pub field: i32 = 50,
 });
 
 fn main() {
@@ -16,7 +16,7 @@ fn main() {
 
   match config {
     Ok(conf) => {
-        conf.write_file();
+        println!("{}", conf.to_string());
     },
     Err(e) => println!("{:?}", e),
   }
