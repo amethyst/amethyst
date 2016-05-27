@@ -124,11 +124,15 @@ pub use config::yaml::{Element, to_string};
 pub use config::definitions::{ConfigMeta, ConfigError};
 
 // Defines types along with defaulting values
+config!(enum Test {
+    Option1,
+    Option2,
+    Option3,
+});
+
 config!(struct DisplayConfig {
-    /// Brightness of the screen.
     pub brightness: f64 = 1.0,
     pub fullscreen: bool = false,
-    /// Dimensions of the window, defaults to 1024x768.
     pub size: [u16; 2] = [1024, 768],
 });
 
@@ -138,13 +142,32 @@ config!(struct LoggingConfig {
     pub logging_level: String = "debug".to_string(),
 });
 
+config!(struct InnerInnerConfig {
+    pub field: u64 = 58123,
+});
+
+config!(
+    /// A nested config
+    struct InnerConfig {
+        /// Test documentation
+        pub inner_inner: InnerInnerConfig = InnerInnerConfig::default(),
+    }
+);
+
 config!(struct Config {
     /// Title of the game, used as default for window name.
     pub title: String = "Amethyst game".to_string(),
+
+    /// A test enum
+    pub en: Test = Test::Option1,
 
     /// Configuration for display and graphics
     pub display: DisplayConfig = DisplayConfig::default(),
 
     /// Configuration for output
     pub logging: LoggingConfig = LoggingConfig::default(),
+
+    pub inner: InnerConfig = InnerConfig::default(),
+
+    pub inner_inner: InnerInnerConfig = InnerInnerConfig::default(),
 });

@@ -3,7 +3,7 @@ extern crate amethyst;
 extern crate yaml_rust;
 
 use amethyst::config::{Element, ConfigMeta, ConfigError};
-use std::path::{PathBuf, Path};
+use std::path::Path;
 
 use yaml_rust::Yaml;
 
@@ -13,10 +13,11 @@ config!(struct Test {
 
 fn main() {
   let config = amethyst::config::Config::from_file(Path::new("config/config.yml"));
+  println!("{:?}", config);
 
   match config {
     Ok(conf) => {
-        println!("{}", conf.to_string());
+        println!("{:?}", conf.write_file());
     },
     Err(e) => println!("{:?}", e),
   }

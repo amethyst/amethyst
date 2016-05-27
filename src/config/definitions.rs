@@ -1,8 +1,7 @@
 
 //! Configuration structures and macros
 
-use std::fs::File;
-use std::io::{Write, Error};
+use std::io::Error;
 use std::path::PathBuf;
 use std::default::Default;
 use std::fmt;
@@ -15,6 +14,7 @@ pub enum ConfigError {
     YamlParse(ConfigMeta),
     YamlGeneric(String),
     FileError(String, Error),
+    MultipleExternalFiles(String, Vec<PathBuf>),
     MissingExternalFile(ConfigMeta),
 }
 
@@ -65,8 +65,21 @@ impl ConfigError {
             },
             &ConfigError::YamlGeneric(ref string) => string.clone(),
             &ConfigError::FileError(ref disp, ref e) => format!("Config File Error: \"{}\", {}", disp, e),
+            &ConfigError::MultipleExternalFiles(ref name, ref conflicts) => {
+                let mut result = "".to_string();
+
+                for (index, conflict) in conflicts.iter().enumerate() {
+                    if index != 0 {
+                        result = result + ",\n\t";
+                    }
+
+                    result = result + &conflict.display().to_string();
+                }
+
+                format!("{}: Multiple external files: \n\t{}", name, result)
+            },
             &ConfigError::MissingExternalFile(ref meta) => {
-                format!("{}External YAML file is missing", meta.path.display().to_string() + ": ")
+                format!("{}: External YAML file is missing", meta.path.display().to_string())
             },
         }
     }
@@ -225,7 +238,7 @@ macro_rules! config {
 
             fn write_file(&self) -> Result<(), ConfigError> {
                 use std::fs::{DirBuilder, File};
-                use std::io::{Write, Error};
+                use std::io::{Write};
 
                 let path = self._meta.path.clone();
                 let readable = $crate::config::to_string(&self.to_yaml(&path.as_path()));
@@ -242,7 +255,9 @@ macro_rules! config {
                 $(
                     if let Some(ref field_meta) = self.$field.get_meta() {
                         if field_meta.path != path {
-                            self.$field.write_file();
+                            if let Err(e) = self.$field.write_file() {
+                                return Err(e);
+                            }
                         }
                     }
                 )*

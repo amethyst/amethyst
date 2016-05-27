@@ -23,13 +23,13 @@ fn to_string_raw(yaml: &Yaml, level: usize) -> String {
     match yaml {
         &Yaml::Real(ref value) => {
             let mut float_string = value.to_string();
-    
+
             // Rust automatically truncates floats without a fractional in them
             // So stuff like "3.0" becomes "3" and the parser can't read it.
             if float_string.find(".") == None {
                 float_string = float_string + ".0";
             }
-            
+
             float_string
         },
         &Yaml::Integer(ref value) => value.to_string(),
@@ -91,47 +91,73 @@ pub trait Element: Sized {
     fn from_file_raw(meta: &ConfigMeta, path: &Path) -> Result<Self, ConfigError> {
         let mut next_meta = meta.clone();
 
-        if next_meta.path.is_file() {
-            next_meta.path = if let Some(parent) = next_meta.path.parent() {
+        let initial_path = if next_meta.path.is_file() {
+            if let Some(parent) = next_meta.path.parent() {
                 parent.to_path_buf()
             }
             else {
                 PathBuf::from("")
             }
+        } else {
+            next_meta.path.clone()
+        };
+
+        let check = |list: &mut Vec<PathBuf>, file: &mut PathBuf| {
+            if file.exists() {
+                list.push(file.clone())
+            }
+        };
+
+        let mut found = Vec::new();
+
+        // file .yml
+        let mut file_path = initial_path.clone();
+        file_path.push(path);
+        file_path.set_extension("yml");
+        check(&mut found, &mut file_path);
+
+        // file .yaml
+        file_path.set_extension("yaml");
+        check(&mut found, &mut file_path);
+
+        // dir .yml
+        file_path.set_extension("");
+        file_path.push("config");
+        file_path.set_extension("yml");
+        check(&mut found, &mut file_path);
+
+        // dir .yaml
+        file_path.set_extension("yaml");
+        check(&mut found, &mut file_path);
+
+        if found.len() > 1 {
+            return Err(ConfigError::MultipleExternalFiles(path.display().to_string(), found));
+        }
+        else if found.len() == 0 {
+            return Err(ConfigError::MissingExternalFile(next_meta.clone()));
         }
 
-        next_meta.path.push(path);
+        let found_path = found[0].clone();
+        next_meta.path = found_path.clone();
 
-        if next_meta.path.is_dir() && next_meta.path.exists() {
-            next_meta.path.push("config");
-        }
+        let mut file = try!(File::open(found_path.as_path())
+            .map_err(|e| ConfigError::FileError(found_path.display().to_string(), e)));
+        let mut buffer = String::new();
 
-        next_meta.path.set_extension("yml");
+        try!(file.read_to_string(&mut buffer)
+            .map_err(|e| ConfigError::FileError(found_path.display().to_string(), e)));
 
-        // extra check for a file that uses the alternate extensions .yaml instead of .yml
-        if !next_meta.path.exists() {
-            next_meta.path.set_extension("yaml");
-        }
+        let yaml = try!(YamlLoader::load_from_str(&buffer)
+            .map_err(|e| ConfigError::YamlScan(e)));
 
-        let path = next_meta.path.clone();
-
-        if path.exists() {
-            let mut file = try!(File::open(path.as_path())
-                .map_err(|e| ConfigError::FileError(path.display().to_string(), e)));
-            let mut buffer = String::new();
-
-            try!(file.read_to_string(&mut buffer)
-                .map_err(|e| ConfigError::FileError(path.display().to_string(), e)));
-
-            let yaml = try!(YamlLoader::load_from_str(&buffer)
-                .map_err(|e| ConfigError::YamlScan(e)));
-            let hash = &yaml[0];
-
-            Self::from_yaml(&next_meta, hash)
+        let hash = if yaml.len() > 0 {
+            yaml[0].clone()
         }
         else {
-            Err(ConfigError::MissingExternalFile(next_meta.clone()))
-        }
+            Yaml::Hash(BTreeMap::new())
+        };
+
+        Self::from_yaml(&next_meta, &hash)
     }
 
     /// From a file relative to project
