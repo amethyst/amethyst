@@ -23,15 +23,7 @@ impl ConfigError {
         match self {
             &ConfigError::YamlScan(ref e) => format!("Failed to scan YAML: {}", e),
             &ConfigError::YamlParse(ref meta) => {
-                let mut tree = String::new();
-
-                for (index, element) in meta.fields.iter().enumerate() {
-                    if index != 0 {
-                        tree = tree + "->";
-                    }
-
-                    tree = tree + element;
-                }
+                let tree = meta.tree();
 
                 let message = if meta.bad_value {
                     "Could not find YAML"
@@ -119,6 +111,22 @@ impl Default for ConfigMeta {
     }
 }
 
+impl ConfigMeta {
+    pub fn tree(&self) -> String {
+        let mut tree = "".to_string();
+
+        for (index, element) in self.fields.iter().enumerate() {
+            if index != 0 {
+                tree = tree + "->";
+            }
+
+            tree = tree + element;
+        }
+
+        tree
+    }
+}
+
 /// Automatically generates a struct/enums for loading in yaml files.
 #[macro_export]
 macro_rules! config {
@@ -156,6 +164,8 @@ macro_rules! config {
 
         impl Element for $root {
             fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
+                use std::collections::HashSet;
+
                 let mut default = $root::default();
 
                 let mut next_meta = meta.clone();
@@ -167,6 +177,27 @@ macro_rules! config {
                 }
 
                 default._meta = next_meta.clone();
+
+                // Warns of keys that are in the Yaml Hash, but not in the structure
+                let mut unexpected = HashSet::new();
+
+                if let &Yaml::Hash(ref hash) = config {
+                    for (key, _) in hash {
+                        if let &Yaml::String(ref key_str) = key {
+                            unexpected.insert(key_str.clone());
+                        }
+                    }
+
+                    $(
+                        unexpected.remove(&stringify!($field).to_string());
+                    )*
+
+                    for unexpected_key in unexpected {
+                        println!("{}: Unexpected key: {}",
+                            default._meta.path.display().to_string(),
+                            default._meta.tree() + "->" + &unexpected_key);
+                    }
+                }
 
                 Ok($root {
                     _meta: default._meta,

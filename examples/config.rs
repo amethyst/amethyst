@@ -17,7 +17,7 @@ fn main() {
 
   match config {
     Ok(conf) => {
-        println!("{:?}", conf.write_file());
+        //println!("{:?}", conf.write_file());
     },
     Err(e) => println!("{:?}", e),
   }
