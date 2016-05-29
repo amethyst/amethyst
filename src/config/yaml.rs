@@ -13,13 +13,15 @@ use yaml_rust::{Yaml, YamlLoader};
 
 use config::definitions::{ConfigError, ConfigMeta};
 
+static TAB_CHARS: &'static str = "  "; // Characters to display for tabs
+
 /// Converts a Yaml object into a .yml/.yaml format
 pub fn to_string(yaml: &Yaml) -> String {
     to_string_raw(yaml, 0)
 }
 
 /// Converts a Yaml type into a readable yaml string
-fn to_string_raw(yaml: &Yaml, level: usize) -> String {
+fn to_string_raw(yaml: &Yaml, mut level: usize) -> String {
     match yaml {
         &Yaml::Real(ref value) => {
             let mut float_string = value.to_string();
@@ -36,23 +38,55 @@ fn to_string_raw(yaml: &Yaml, level: usize) -> String {
         &Yaml::String(ref value) => value.clone(),
         &Yaml::Boolean(ref value) => value.to_string(),
         &Yaml::Array(ref array) => {
-            let mut result = "[".to_string();
+            // Check if the array has an array, hash, or is long to determine display type
+            let mut complex = false;
+            for element in array {
+                match element {
+                    &Yaml::Array(_) |
+                    &Yaml::Hash(_) => {
+                        complex = true;
+                    },
+                    _ => { },
+                }
+            }
+
+            if array.len() > 10 {
+                complex = true
+            }
+
+            if complex {
+                level = level + 1;
+            }
+
+            let mut result = "".to_string();
 
             for (index, element) in array.iter().enumerate() {
-                if index != 0 {
+                if index != 0 && !complex {
                     result = result + ", ";
                 }
 
-                result = result + &to_string_raw(element, level + 1);
+                if complex {
+                    let padding: String = iter::repeat(TAB_CHARS).take(level).collect();
+                    let formatted = format!("\n{}- {}", padding, to_string_raw(element, level + 1));
+
+                    result = result + &formatted;
+                }
+                else {
+                    result = result + &to_string_raw(element, level + 1);
+                }
             }
 
-            result + "]"
+            if !complex {
+                result = "[".to_string() + &result + "]";
+            }
+
+            result
         },
         &Yaml::Hash(ref hash) => {
             let mut result = "".to_string();
 
             for (key, value) in hash {
-                let padding: String = iter::repeat("    ").take(level).collect();
+                let padding: String = iter::repeat(TAB_CHARS).take(level).collect();
 
                 let formatted = format!("\n{}{}: {}",
                     padding,
@@ -114,6 +148,10 @@ pub trait Element: Sized {
         let mut file_path = initial_path.clone();
         file_path.push(path);
         file_path.set_extension("yml");
+
+        // for proper error messages, displays the path it is looking for instead of parent
+        next_meta.path = file_path.clone();
+
         check(&mut found, &mut file_path);
 
         // file .yaml
@@ -244,7 +282,7 @@ impl Element for String {
     }
 
     fn to_yaml(&self, _: &Path) -> Yaml {
-        Yaml::String(self.clone())
+        Yaml::String("\"".to_string() + &self.clone() + "\"")
     }
 }
 

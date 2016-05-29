@@ -92,11 +92,26 @@ impl fmt::Display for ConfigError {
 /// Metadata for a configuration structure
 #[derive(Clone, Debug)]
 pub struct ConfigMeta {
-    pub path: PathBuf, // Where the file is located, defaults to "config/config.yml"
-    pub fields: Vec<String>, // List from top-level to bottom-level configs
-    pub ty: &'static str, // String representation of the type
-    pub bad_value: bool, // Whether key is bad or not
-    pub options: Vec<String>, // Options to display to user, usually used for enums
+    /// Where the file is located, defaults to "config/config.yml"
+    pub path: PathBuf,
+
+    /// List from top-level to bottom-level configs
+    pub fields: Vec<String>,
+
+    /// Parent meta
+    pub parent: Option<Box<ConfigMeta>>,
+
+    /// String representation of the type
+    pub ty: &'static str,
+
+    /// Name of the field
+    pub name: &'static str,
+
+    /// Whether key is bad or not
+    pub bad_value: bool,
+
+    /// Options to display to user, usually used for enums
+    pub options: Vec<String>,
 }
 
 impl Default for ConfigMeta {
@@ -104,7 +119,9 @@ impl Default for ConfigMeta {
         ConfigMeta {
             path: PathBuf::from("config\\config.yml"),
             fields: Vec::new(),
+            parent: None,
             ty: "Unknown Type",
+            name: "Unknown Name",
             bad_value: false,
             options: Vec::new(),
         }
@@ -112,6 +129,7 @@ impl Default for ConfigMeta {
 }
 
 impl ConfigMeta {
+    /// Displays the meta's fields in order
     pub fn tree(&self) -> String {
         let mut tree = "".to_string();
 
@@ -124,6 +142,16 @@ impl ConfigMeta {
         }
 
         tree
+    }
+
+    /// Returns the highest level parent or the root meta of the configuration
+    pub fn root(&self) -> ConfigMeta {
+        if let Some(ref parent) = self.parent {
+            parent.root()
+        }
+        else {
+            self.clone()
+        }
     }
 }
 
@@ -165,6 +193,7 @@ macro_rules! config {
         impl Element for $root {
             fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
                 use std::collections::HashSet;
+                use std::path::PathBuf;
 
                 let mut default = $root::default();
 
@@ -210,10 +239,20 @@ macro_rules! config {
 
                             field_meta.fields.push(stringify!($field).to_string());
                             field_meta.ty = stringify!($ty);
+                            field_meta.name = stringify!($field);
                             field_meta.bad_value = key.is_badvalue();
+                            field_meta.parent = Some(Box::new(next_meta.clone()));
 
                             let val = if key.as_str() == Some("extern") { // external file
-                                <$ty>::from_file_raw(&field_meta, Path::new(stringify!($field)))
+                                let mut path = PathBuf::from("");
+
+                                for (index, child) in field_meta.fields.iter().enumerate() {
+                                    if index != 0 {
+                                        path.push(child);
+                                    }
+                                }
+
+                                <$ty>::from_file_raw(&field_meta, &path.as_path())
                             }
                             else { // current file
                                 <$ty>::from_yaml(&field_meta, key)
