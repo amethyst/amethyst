@@ -169,7 +169,7 @@ pub trait Element: Sized {
         check(&mut found, &mut file_path);
 
         if found.len() > 1 {
-            return Err(ConfigError::MultipleExternalFiles(path.display().to_string(), found));
+            return Err(ConfigError::MultipleExternalFiles(path.to_path_buf(), found));
         }
         else if found.len() == 0 {
             return Err(ConfigError::MissingExternalFile(next_meta.clone()));
@@ -179,11 +179,11 @@ pub trait Element: Sized {
         next_meta.path = found_path.clone();
 
         let mut file = try!(File::open(found_path.as_path())
-            .map_err(|e| ConfigError::FileError(found_path.display().to_string(), e)));
+            .map_err(|e| ConfigError::FileError(found_path.clone(), e)));
         let mut buffer = String::new();
 
         try!(file.read_to_string(&mut buffer)
-            .map_err(|e| ConfigError::FileError(found_path.display().to_string(), e)));
+            .map_err(|e| ConfigError::FileError(found_path.clone(), e)));
 
         let yaml = try!(YamlLoader::load_from_str(&buffer)
             .map_err(|e| ConfigError::YamlScan(e)));

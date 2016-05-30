@@ -3,7 +3,6 @@ display:
     brightness: 1.0
     fullscreen: false
     size: [1024, 768]
-en: Option1
 logging:
     file_path: new_project.log
     logging_level: debug

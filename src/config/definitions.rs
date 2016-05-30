@@ -13,8 +13,8 @@ pub enum ConfigError {
     YamlScan(ScanError),
     YamlParse(ConfigMeta),
     YamlGeneric(String),
-    FileError(String, Error),
-    MultipleExternalFiles(String, Vec<PathBuf>),
+    FileError(PathBuf, Error),
+    MultipleExternalFiles(PathBuf, Vec<PathBuf>),
     MissingExternalFile(ConfigMeta),
 }
 
@@ -56,8 +56,10 @@ impl ConfigError {
                 format!("{}{}", basic, options)
             },
             &ConfigError::YamlGeneric(ref string) => string.clone(),
-            &ConfigError::FileError(ref disp, ref e) => format!("Config File Error: \"{}\", {}", disp, e),
-            &ConfigError::MultipleExternalFiles(ref name, ref conflicts) => {
+            &ConfigError::FileError(ref path, ref e) => {
+                format!("{}: Config File Error: {}", path.display().to_string(), e)
+            },
+            &ConfigError::MultipleExternalFiles(ref path, ref conflicts) => {
                 let mut result = "".to_string();
 
                 for (index, conflict) in conflicts.iter().enumerate() {
@@ -68,7 +70,7 @@ impl ConfigError {
                     result = result + &conflict.display().to_string();
                 }
 
-                format!("{}: Multiple external files: \n\t{}", name, result)
+                format!("{}: Multiple external files: \n\t{}", path.display().to_string(), result)
             },
             &ConfigError::MissingExternalFile(ref meta) => {
                 format!("{}: External YAML file is missing", meta.path.display().to_string())
@@ -315,12 +317,12 @@ macro_rules! config {
 
                 // Recursively create in the case of new project or deleted folders
                 try!(DirBuilder::new().recursive(true).create(&path.parent().unwrap())
-                    .map_err(|e| $crate::config::ConfigError::FileError(path.display().to_string(), e)));
+                    .map_err(|e| $crate::config::ConfigError::FileError(path.clone(), e)));
 
                 let mut file = try!(File::create(&path)
-                    .map_err(|e| $crate::config::ConfigError::FileError(path.display().to_string(), e)));
+                    .map_err(|e| $crate::config::ConfigError::FileError(path.clone(), e)));
                 try!(file.write_all(readable.as_bytes())
-                    .map_err(|e| $crate::config::ConfigError::FileError(path.display().to_string(), e)));
+                    .map_err(|e| $crate::config::ConfigError::FileError(path.clone(), e)));
 
                 $(
                     if let Some(ref field_meta) = self.$field.get_meta() {
