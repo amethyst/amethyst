@@ -51,7 +51,7 @@ fn to_string_raw(yaml: &Yaml, mut level: usize) -> String {
             }
 
             if array.len() > 10 {
-                complex = true
+                complex = true;
             }
 
             if complex {
@@ -148,6 +148,9 @@ pub trait Element: Sized {
         let mut file_path = initial_path.clone();
         file_path.push(path);
         file_path.set_extension("yml");
+
+        // remove any backslashes to prevent linux/mac problems
+        file_path = PathBuf::from(file_path.display().to_string().replace("\\", "/"));
 
         // for proper error messages, displays the path it is looking for instead of parent
         next_meta.path = file_path.clone();

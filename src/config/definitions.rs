@@ -119,7 +119,7 @@ pub struct ConfigMeta {
 impl Default for ConfigMeta {
     fn default() -> Self {
         ConfigMeta {
-            path: PathBuf::from("config\\config.yml"),
+            path: PathBuf::from("config/config.yml"),
             fields: Vec::new(),
             parent: None,
             ty: "Unknown Type",
