@@ -168,7 +168,7 @@ macro_rules! config {
         #[derive(Clone, Debug)]
         $(#[$root_meta])*
         pub struct $root {
-            _meta: ConfigMeta,
+            _meta: $crate::config::ConfigMeta,
             $(
                 $(#[$field_meta])*
                 pub $field: $ty,
@@ -184,14 +184,14 @@ macro_rules! config {
         impl Default for $root {
             fn default() -> Self {
                 $root {
-                    _meta: ConfigMeta::default(),
+                    _meta: $crate::config::ConfigMeta::default(),
                     $( $field: $name, )*
                 }
             }
         }
 
-        impl Element for $root {
-            fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
+        impl $crate::config::Element for $root {
+            fn from_yaml(meta: &$crate::config::ConfigMeta, config: &$crate::config::Yaml) -> Result<Self, $crate::config::ConfigError> {
                 use std::collections::HashSet;
                 use std::path::PathBuf;
 
@@ -210,9 +210,9 @@ macro_rules! config {
                 // Warns of keys that are in the Yaml Hash, but not in the structure
                 let mut unexpected = HashSet::new();
 
-                if let &Yaml::Hash(ref hash) = config {
+                if let &$crate::config::Yaml::Hash(ref hash) = config {
                     for (key, _) in hash {
-                        if let &Yaml::String(ref key_str) = key {
+                        if let &$crate::config::Yaml::String(ref key_str) = key {
                             unexpected.insert(key_str.clone());
                         }
                     }
@@ -274,39 +274,39 @@ macro_rules! config {
                 })
             }
 
-            fn to_yaml(&self, path: &Path) -> Yaml {
+            fn to_yaml(&self, path: &Path) -> $crate::config::Yaml {
                 use std::collections::BTreeMap;
 
-                let mut map: BTreeMap<Yaml, Yaml> = BTreeMap::new();
+                let mut map: BTreeMap<$crate::config::Yaml, $crate::config::Yaml> = BTreeMap::new();
 
                 $(
                     map.insert(
-                        Yaml::String(stringify!($field).to_string()),
+                        $crate::config::Yaml::String(stringify!($field).to_string()),
                         self.$field.to_yaml(path),
                     );
 
                     if let Some(field_meta) = self.$field.get_meta() {
                         if field_meta.path != path {
                             map.insert(
-                                Yaml::String(stringify!($field).to_string()),
-                                Yaml::String("extern".to_string()),
+                                $crate::config::Yaml::String(stringify!($field).to_string()),
+                                $crate::config::Yaml::String("extern".to_string()),
                             );
                         }
                     }
                 )*
 
-                Yaml::Hash(map)
+                $crate::config::Yaml::Hash(map)
             }
 
-            fn set_meta(&mut self, meta: &ConfigMeta) {
+            fn set_meta(&mut self, meta: &$crate::config::ConfigMeta) {
                 self._meta = meta.clone();
             }
 
-            fn get_meta(&self) -> Option<ConfigMeta> {
+            fn get_meta(&self) -> Option<$crate::config::ConfigMeta> {
                 Some(self._meta.clone())
             }
 
-            fn write_file(&self) -> Result<(), ConfigError> {
+            fn write_file(&self) -> Result<(), $crate::config::ConfigError> {
                 use std::fs::{DirBuilder, File};
                 use std::io::{Write};
 
@@ -315,12 +315,12 @@ macro_rules! config {
 
                 // Recursively create in the case of new project or deleted folders
                 try!(DirBuilder::new().recursive(true).create(&path.parent().unwrap())
-                    .map_err(|e| ConfigError::FileError(path.display().to_string(), e)));
+                    .map_err(|e| $crate::config::ConfigError::FileError(path.display().to_string(), e)));
 
                 let mut file = try!(File::create(&path)
-                    .map_err(|e| ConfigError::FileError(path.display().to_string(), e)));
+                    .map_err(|e| $crate::config::ConfigError::FileError(path.display().to_string(), e)));
                 try!(file.write_all(readable.as_bytes())
-                    .map_err(|e| ConfigError::FileError(path.display().to_string(), e)));
+                    .map_err(|e| $crate::config::ConfigError::FileError(path.display().to_string(), e)));
 
                 $(
                     if let Some(ref field_meta) = self.$field.get_meta() {
@@ -350,30 +350,30 @@ macro_rules! config {
             $($field,)*
         }
 
-        impl Element for $root {
-            fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
+        impl $crate::config::Element for $root {
+            fn from_yaml(meta: &$crate::config::ConfigMeta, config: &$crate::config::Yaml) -> Result<Self, $crate::config::ConfigError> {
                 let mut next_meta = meta.clone();
                 next_meta.options = vec![$( stringify!($field).to_string(), )*];
 
-                if let &Yaml::String(ref string) = config {
+                if let &$crate::config::Yaml::String(ref string) = config {
                     let s: &str = string;
 
                     match s {
                         $(
                             stringify!($field) => Ok($root::$field),
                         )*
-                        _ => Err(ConfigError::YamlParse(next_meta.clone()))
+                        _ => Err($crate::config::ConfigError::YamlParse(next_meta.clone()))
                     }
                 }
                 else {
-                    Err(ConfigError::YamlParse(next_meta.clone()))
+                    Err($crate::config::ConfigError::YamlParse(next_meta.clone()))
                 }
             }
 
-            fn to_yaml(&self, _: &Path) -> Yaml {
+            fn to_yaml(&self, _: &Path) -> $crate::config::Yaml {
                 match self {
                     $(
-                        &$root::$field => Yaml::String(stringify!($field).to_string()),
+                        &$root::$field => $crate::config::Yaml::String(stringify!($field).to_string()),
                     )*
                 }
             }

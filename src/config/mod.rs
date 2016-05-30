@@ -6,7 +6,7 @@
 //! #[macro_use]
 //! extern crate amethyst;
 //!
-//! use amethyst::config::{Yaml, Element, ConfigMeta, ConfigError};
+//! use amethyst::config::Element;
 //! use std::path::Path;
 //!
 //! config!(struct Config {
@@ -42,7 +42,7 @@
 //!
 //! ```rust
 //! # #[macro_use] extern crate amethyst;
-//! # use amethyst::config::{Yaml, Element, ConfigMeta, ConfigError};
+//! # use amethyst::config::Element;
 //! # use std::path::Path;
 //! config!(struct NestedConfig {
 //!     pub some_field: [i64; 3] = [1, 2, 3],
@@ -75,7 +75,7 @@
 //!
 //! ```rust
 //! # #[macro_use] extern crate amethyst;
-//! # use amethyst::config::{Yaml, Element, ConfigMeta, ConfigError};
+//! # use amethyst::config::Element;
 //! # use std::path::Path;
 //! config!(enum EnumName {
 //!     Option1,
@@ -98,7 +98,7 @@
 //!
 //! ```rust
 //! # #[macro_use] extern crate amethyst;
-//! # use amethyst::config::{Yaml, Element, ConfigMeta, ConfigError};
+//! # use amethyst::config::Element;
 //! # use std::path::Path;
 //! config!(
 //!     struct Config {
