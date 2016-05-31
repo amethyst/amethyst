@@ -140,6 +140,8 @@ config!(struct Config {
     /// Title of the game, used as default for window name.
     pub title: String = "Amethyst game".to_string(),
 
+    pub test_tuple: (i64, i64, String, bool) = (25, 25, "Default".to_string(), false),
+
     /// Configuration for display and graphics
     pub display: DisplayConfig = DisplayConfig::default(),
 

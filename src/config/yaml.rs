@@ -149,9 +149,6 @@ pub trait Element: Sized {
         file_path.push(path);
         file_path.set_extension("yml");
 
-        // remove any backslashes to prevent linux/mac problems
-        file_path = PathBuf::from(file_path.display().to_string().replace("\\", "/"));
-
         // for proper error messages, displays the path it is looking for instead of parent
         next_meta.path = file_path.clone();
 
@@ -305,6 +302,45 @@ impl Element for () {
         Yaml::Null
     }
 }
+
+macro_rules! yaml_tuple {
+    ($length:expr => $($name:ident : $position:expr,)+) => {
+        impl< $($name: Element),* > Element for ( $($name,)* ) {
+            fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
+                if let &Yaml::Array(ref array) = config {
+                    if array.len() < $length {
+                        return Err(ConfigError::YamlParse(meta.clone()));
+                    }
+
+                    Ok((
+                        $( try!(<$name>::from_yaml(&meta.clone(), &array[$position])), )*
+                    ))
+                }
+                else {
+                    Err(ConfigError::YamlParse(meta.clone()))
+                }
+            }
+
+            fn to_yaml(&self, path: &Path) -> Yaml {
+                let mut arr = Vec::new();
+
+                let &($(ref $name,)*) = self;
+
+                $(
+                    arr.push($name.to_yaml(path));
+                )*
+
+                Yaml::Array(arr)
+            }
+        }
+    }
+}
+
+yaml_tuple!(1 => A:0,);
+yaml_tuple!(2 => A:0, B:1,);
+yaml_tuple!(3 => A:0, B:1, C:2,);
+yaml_tuple!(4 => A:0, B:1, C:2, D:3,);
+yaml_tuple!(5 => A:0, B:1, C:2, D:3, E:4,);
 
 impl<T: Element> Element for Option<T> {
     fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
