@@ -341,6 +341,11 @@ yaml_tuple!(2 => A:0, B:1,);
 yaml_tuple!(3 => A:0, B:1, C:2,);
 yaml_tuple!(4 => A:0, B:1, C:2, D:3,);
 yaml_tuple!(5 => A:0, B:1, C:2, D:3, E:4,);
+yaml_tuple!(6 => A:0, B:1, C:2, D:3, E:4, F:5,);
+yaml_tuple!(7 => A:0, B:1, C:2, D:3, E:4, F:5, G:6,);
+yaml_tuple!(8 => A:0, B:1, C:2, D:3, E:4, F:5, G:6, H:7,);
+yaml_tuple!(9 => A:0, B:1, C:2, D:3, E:4, F:5, G:6, H:7, I:8,);
+yaml_tuple!(10 => A:0, B:1, C:2, D:3, E:4, F:5, G:6, H:7, I:8, J:9,);
 
 impl<T: Element> Element for Option<T> {
     fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
