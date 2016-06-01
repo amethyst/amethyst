@@ -55,7 +55,7 @@ impl ConfigError {
 
                 format!("{}{}", basic, options)
             },
-            &ConfigError::NonConfig => "Attempted usage of a struct function on a field.",
+            &ConfigError::NonConfig => "Attempted usage of a struct function on a field.".to_string(),
             &ConfigError::FileError(ref path, ref e) => {
                 format!("{}: Config File Error: {}", path.display().to_string(), e)
             },

@@ -10,7 +10,8 @@ fn main() {
 
     match config {
         Ok(conf) => {
-        println!("{}", conf.to_string());
-    },
-    Err(e) => println!("{:?}", e),
+            println!("{}", conf.to_string());
+        },
+        Err(e) => println!("{:?}", e),
+    }
 }

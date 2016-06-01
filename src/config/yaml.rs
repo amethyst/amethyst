@@ -322,6 +322,7 @@ macro_rules! yaml_tuple {
             }
 
             fn to_yaml(&self, path: &Path) -> Yaml {
+                #![allow(non_snake_case)]
                 let mut arr = Vec::new();
 
                 let &($(ref $name,)*) = self;

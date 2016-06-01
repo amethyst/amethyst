@@ -8,4 +8,3 @@ logging:
     logging_level: debug
     output_level: warn
 title: Amethyst game
-test_tuple: [13, 50]
