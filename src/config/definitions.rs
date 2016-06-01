@@ -12,7 +12,7 @@ use yaml_rust::ScanError;
 pub enum ConfigError {
     YamlScan(ScanError),
     YamlParse(ConfigMeta),
-    YamlGeneric(String),
+    NonConfig,
     FileError(PathBuf, Error),
     MultipleExternalFiles(PathBuf, Vec<PathBuf>),
     MissingExternalFile(ConfigMeta),
@@ -55,7 +55,7 @@ impl ConfigError {
 
                 format!("{}{}", basic, options)
             },
-            &ConfigError::YamlGeneric(ref string) => string.clone(),
+            &ConfigError::NonConfig => "Attempted usage of a struct function on a field.",
             &ConfigError::FileError(ref path, ref e) => {
                 format!("{}: Config File Error: {}", path.display().to_string(), e)
             },
@@ -131,7 +131,7 @@ impl Default for ConfigMeta {
 }
 
 impl ConfigMeta {
-    /// Displays the meta's fields in order
+    /// Displays the meta's fields in order e.g. Config->nested_config->field
     pub fn tree(&self) -> String {
         let mut tree = "".to_string();
 
@@ -287,7 +287,7 @@ macro_rules! config {
                         self.$field.to_yaml(path),
                     );
 
-                    if let Some(field_meta) = self.$field.get_meta() {
+                    if let Some(field_meta) = self.$field.meta() {
                         if field_meta.path != path {
                             map.insert(
                                 $crate::config::Yaml::String(stringify!($field).to_string()),
@@ -304,7 +304,7 @@ macro_rules! config {
                 self._meta = meta.clone();
             }
 
-            fn get_meta(&self) -> Option<$crate::config::ConfigMeta> {
+            fn meta(&self) -> Option<$crate::config::ConfigMeta> {
                 Some(self._meta.clone())
             }
 
@@ -325,7 +325,7 @@ macro_rules! config {
                     .map_err(|e| $crate::config::ConfigError::FileError(path.clone(), e)));
 
                 $(
-                    if let Some(ref field_meta) = self.$field.get_meta() {
+                    if let Some(ref field_meta) = self.$field.meta() {
                         if field_meta.path != path {
                             if let Err(e) = self.$field.write_file() {
                                 return Err(e);

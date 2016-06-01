@@ -123,7 +123,6 @@ mod yaml;
 pub use config::yaml::{Element, to_string};
 pub use config::definitions::{ConfigMeta, ConfigError};
 
-// Defines types along with defaulting values
 config!(struct DisplayConfig {
     pub brightness: f64 = 1.0,
     pub fullscreen: bool = false,

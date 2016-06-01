@@ -117,7 +117,7 @@ pub trait Element: Sized {
     fn set_meta(&mut self, &ConfigMeta) { }
 
     /// Returns meta data if it is a config structure
-    fn get_meta(&self) -> Option<ConfigMeta> {
+    fn meta(&self) -> Option<ConfigMeta> {
         None
     }
 
@@ -214,7 +214,7 @@ pub trait Element: Sized {
     ///
     /// Note: This should never be called on a non-config! defined structure.
     fn write_file(&self) -> Result<(), ConfigError> {
-        Err(ConfigError::YamlGeneric("Attempting to write on a non-config struct".to_string()))
+        Err(ConfigError::NonConfig)
     }
 }
 
