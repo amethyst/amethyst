@@ -11,7 +11,7 @@ use std::path::{PathBuf, Path};
 
 use yaml_rust::{Yaml, YamlLoader};
 
-use config::definitions::{ConfigError, ConfigMeta};
+use ::definitions::{ConfigError, ConfigMeta};
 
 static TAB_CHARS: &'static str = "  "; // Characters to display for tabs
 
@@ -210,7 +210,7 @@ pub trait Element: Sized {
 
     /// Recursively writes to files given the configuration's current context.
     ///
-    /// The default path for a root configuration file is "config\\config.yml".
+    /// The default path for a root configuration file is "config/config.yml".
     ///
     /// Note: This should never be called on a non-config! defined structure.
     fn write_file(&self) -> Result<(), ConfigError> {

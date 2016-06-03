@@ -25,4 +25,3 @@ path = "src/renderer/"
 version = "0.3.0"
 
 [dependencies]
-yaml-rust = "0.3.2"

@@ -1,3 +1,6 @@
+#![crate_name = "amethyst_config"]
+#![crate_type = "lib"]
+#![doc(html_logo_url = "http://tinyurl.com/hgsb45k")]
 
 //! Loading configuration (.yaml/.yml) files into a structure for easy usage
 //!
@@ -113,6 +116,8 @@
 //! documentation on the line before the field and that you have te `pub` identifier before the
 //! field name.
 
+extern crate yaml_rust;
+
 use std::path::Path;
 pub use yaml_rust::Yaml;
 
@@ -120,14 +125,8 @@ pub use yaml_rust::Yaml;
 mod definitions;
 mod yaml;
 
-pub use config::yaml::{Element, to_string};
-pub use config::definitions::{ConfigMeta, ConfigError};
-
-config!(struct DisplayConfig {
-    pub brightness: f64 = 1.0,
-    pub fullscreen: bool = false,
-    pub size: [u16; 2] = [1024, 768],
-});
+pub use yaml::{Element, to_string};
+pub use definitions::{ConfigMeta, ConfigError};
 
 config!(struct LoggingConfig {
     pub file_path: String = "new_project.log".to_string(),
@@ -135,10 +134,21 @@ config!(struct LoggingConfig {
     pub logging_level: String = "debug".to_string(),
 });
 
-config!(struct Config {
-    /// Title of the game, used as default for window name.
-    pub title: String = "Amethyst game".to_string(),
+config!(
+    struct DisplayConfig {
+        pub title: String = "Amethyst game".to_string(),
+        pub brightness: f64 = 1.0,
+        pub fullscreen: bool = false,
+        pub dimensions: (u16, u16) = (1024, 768),
+        pub min_dimensions: Option<(u16, u16)> = None,
+        pub max_dimensions: Option<(u16, u16)> = None,
+        pub vsync: bool = true,
+        pub multisampling: u16 = 0,
+        pub visibility: bool = true,
+    }
+);
 
+config!(struct Config {
     /// Configuration for display and graphics
     pub display: DisplayConfig = DisplayConfig::default(),
 
