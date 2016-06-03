@@ -24,4 +24,8 @@ version = "0.1.0"
 path = "src/renderer/"
 version = "0.3.0"
 
+[dependencies.amethyst_config]
+path = "src/config/"
+version = "0.1.0"
+
 [dependencies]
