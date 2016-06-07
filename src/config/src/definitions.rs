@@ -179,7 +179,7 @@ macro_rules! config {
 
         impl $root {
             pub fn to_string(&self) -> String {
-                $crate::to_string(&self.to_yaml(&self._meta.path.clone().as_path()))
+                $crate::to_string(&self.to_yaml(&self._meta.path.as_path())) + "\n"
             }
         }
 
@@ -313,7 +313,7 @@ macro_rules! config {
                 use std::io::{Write};
 
                 let path = self._meta.path.clone();
-                let readable = $crate::to_string(&self.to_yaml(&path.as_path()));
+                let readable = self.to_string();
 
                 // Recursively create in the case of new project or deleted folders
                 try!(DirBuilder::new().recursive(true).create(&path.parent().unwrap())

@@ -13,7 +13,7 @@ use yaml_rust::{Yaml, YamlLoader};
 
 use ::definitions::{ConfigError, ConfigMeta};
 
-static TAB_CHARS: &'static str = "  "; // Characters to display for tabs
+static TAB_CHARS: &'static str = "    "; // Characters to display for tabs
 
 /// Converts a Yaml object into a .yml/.yaml format
 pub fn to_string(yaml: &Yaml) -> String {
@@ -21,7 +21,7 @@ pub fn to_string(yaml: &Yaml) -> String {
 }
 
 /// Converts a Yaml type into a readable yaml string
-fn to_string_raw(yaml: &Yaml, mut level: usize) -> String {
+fn to_string_raw(yaml: &Yaml, level: usize) -> String {
     match yaml {
         &Yaml::Real(ref value) => {
             let mut float_string = value.to_string();
@@ -54,10 +54,6 @@ fn to_string_raw(yaml: &Yaml, mut level: usize) -> String {
                 complex = true;
             }
 
-            if complex {
-                level = level + 1;
-            }
-
             let mut result = "".to_string();
 
             for (index, element) in array.iter().enumerate() {
@@ -67,7 +63,7 @@ fn to_string_raw(yaml: &Yaml, mut level: usize) -> String {
 
                 if complex {
                     let padding: String = iter::repeat(TAB_CHARS).take(level).collect();
-                    let formatted = format!("\n{}- {}", padding, to_string_raw(element, level + 1));
+                    let formatted = format!("\n{}- {}", padding, to_string_raw(element, level + 2));
 
                     result = result + &formatted;
                 }

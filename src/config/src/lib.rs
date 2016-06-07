@@ -128,6 +128,8 @@ mod yaml;
 pub use yaml::{Element, to_string};
 pub use definitions::{ConfigMeta, ConfigError};
 
+use std::collections::HashMap;
+
 config!(struct LoggingConfig {
     pub file_path: String = "new_project.log".to_string(),
     pub output_level: String = "warn".to_string(),
@@ -145,6 +147,20 @@ config!(
         pub vsync: bool = true,
         pub multisampling: u16 = 0,
         pub visibility: bool = true,
+    }
+);
+
+config!(enum TestOption {
+    Option1,
+    Option2,
+});
+
+config!(
+    struct TestConfig {
+        pub test_enum: TestOption = TestOption::Option2,
+        pub test_short_array: [i64; 5] = [1, 2, 3, 4, 5],
+        pub test_hash: HashMap<String, String> = HashMap::new(),
+        pub test_vec: Vec<i64> = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
     }
 );
 

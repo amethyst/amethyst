@@ -11,6 +11,10 @@ fn main() {
     match config {
         Ok(conf) => {
             println!("{}", conf.to_string());
+
+            if let Err(e) = conf.write_file() {
+                println!("{}", e);
+            }
         },
         Err(e) => println!("{:?}", e),
     }
