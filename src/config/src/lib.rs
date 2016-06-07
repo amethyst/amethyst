@@ -150,20 +150,6 @@ config!(
     }
 );
 
-config!(enum TestOption {
-    Option1,
-    Option2,
-});
-
-config!(
-    struct TestConfig {
-        pub test_enum: TestOption = TestOption::Option2,
-        pub test_short_array: [i64; 5] = [1, 2, 3, 4, 5],
-        pub test_hash: HashMap<String, String> = HashMap::new(),
-        pub test_vec: Vec<i64> = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
-    }
-);
-
 config!(struct Config {
     /// Configuration for display and graphics
     pub display: DisplayConfig = DisplayConfig::default(),
