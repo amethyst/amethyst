@@ -1,15 +1,15 @@
 
-display:
+display: 
     brightness: 1.0
-    fullscreen: false
     dimensions: [1024, 768]
-    min_dimensions: null
+    fullscreen: false
     max_dimensions: null
-    title: "Amethyst Game"
-    vsync: true
+    min_dimensions: null
     multisampling: 0
+    title: "Amethyst Game"
     visibility: true
-logging:
-    file_path: new_project.log
-    logging_level: debug
-    output_level: warn
+    vsync: true
+logging: 
+    file_path: "new_project.log"
+    logging_level: "debug"
+    output_level: "warn"
