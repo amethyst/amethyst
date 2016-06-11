@@ -33,9 +33,7 @@ impl ConfigError {
                 };
 
                 let path = meta.path.display().to_string() + ": ";
-
                 let basic = format!("{}{}: {}: expected {}", path, message, tree, meta.ty);
-
                 let options = if meta.options.len() > 0 {
                     let mut result = "".to_string();
 

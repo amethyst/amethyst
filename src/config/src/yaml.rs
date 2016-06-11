@@ -64,7 +64,6 @@ fn to_string_raw(yaml: &Yaml, level: usize) -> String {
                 if complex {
                     let padding: String = iter::repeat(TAB_CHARS).take(level).collect();
                     let formatted = format!("\n{}- {}", padding, to_string_raw(element, level + 2));
-
                     result = result + &formatted;
                 }
                 else {
@@ -83,7 +82,6 @@ fn to_string_raw(yaml: &Yaml, level: usize) -> String {
 
             for (key, value) in hash {
                 let padding: String = iter::repeat(TAB_CHARS).take(level).collect();
-
                 let formatted = format!("\n{}{}: {}",
                     padding,
                     to_string_raw(key, level + 1), to_string_raw(value, level + 1)
@@ -118,7 +116,8 @@ pub trait Element: Sized {
     }
 
     /// From a file relative to current config
-    fn from_file_raw(meta: &ConfigMeta, path: &Path) -> Result<Self, ConfigError> {
+    fn from_file_raw<P: AsRef<Path>>(meta: &ConfigMeta, path: P) -> Result<Self, ConfigError> {
+        let path = path.as_ref();
         let mut next_meta = meta.clone();
 
         let initial_path = if next_meta.path.is_file() {
@@ -191,13 +190,11 @@ pub trait Element: Sized {
             Yaml::Hash(BTreeMap::new())
         };
 
-
-
         Self::from_yaml(&next_meta, &hash)
     }
 
     /// From a file relative to project
-    fn from_file(path: &Path) -> Result<Self, ConfigError> {
+    fn from_file<P: AsRef<Path>>(path: P) -> Result<Self, ConfigError> {
         let mut default = ConfigMeta::default();
         default.path = PathBuf::from("");
 
@@ -320,7 +317,6 @@ macro_rules! yaml_tuple {
             fn to_yaml(&self, path: &Path) -> Yaml {
                 #![allow(non_snake_case)]
                 let mut arr = Vec::new();
-
                 let &($(ref $name,)*) = self;
 
                 $(

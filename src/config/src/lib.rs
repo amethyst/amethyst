@@ -7,9 +7,9 @@
 //! # Basic usage:
 //! ```rust
 //! #[macro_use]
-//! extern crate amethyst;
+//! extern crate amethyst_config;
 //!
-//! use amethyst::config::Element;
+//! use amethyst_config::Element;
 //! use std::path::Path;
 //!
 //! config!(struct Config {
@@ -44,8 +44,8 @@
 //! inside of eachother as such:
 //!
 //! ```rust
-//! # #[macro_use] extern crate amethyst;
-//! # use amethyst::config::Element;
+//! # #[macro_use] extern crate amethyst_config;
+//! # use amethyst_config::Element;
 //! # use std::path::Path;
 //! config!(struct NestedConfig {
 //!     pub some_field: [i64; 3] = [1, 2, 3],
@@ -77,8 +77,8 @@
 //! it does not provide possibilities for data holding enums, only a simple options list enum.
 //!
 //! ```rust
-//! # #[macro_use] extern crate amethyst;
-//! # use amethyst::config::Element;
+//! # #[macro_use] extern crate amethyst_config;
+//! # use amethyst_config::Element;
 //! # use std::path::Path;
 //! config!(enum EnumName {
 //!     Option1,
@@ -100,8 +100,8 @@
 //! fields will be used for. And possibly defaults.
 //!
 //! ```rust
-//! # #[macro_use] extern crate amethyst;
-//! # use amethyst::config::Element;
+//! # #[macro_use] extern crate amethyst_config;
+//! # use amethyst_config::Element;
 //! # use std::path::Path;
 //! config!(
 //!     struct Config {
@@ -127,8 +127,6 @@ mod yaml;
 
 pub use yaml::{Element, to_string};
 pub use definitions::{ConfigMeta, ConfigError};
-
-use std::collections::HashMap;
 
 config!(struct LoggingConfig {
     pub file_path: String = "new_project.log".to_string(),
