@@ -46,10 +46,12 @@
 //! }
 //! ```
 
-extern crate amethyst_ecs;
-extern crate amethyst_engine;
-extern crate amethyst_renderer;
+pub extern crate amethyst_ecs;
+pub extern crate amethyst_engine;
+pub extern crate amethyst_renderer;
+pub extern crate amethyst_config;
 
 pub use amethyst_ecs as ecs;
 pub use amethyst_engine as engine;
 pub use amethyst_renderer as renderer;
+pub use amethyst_config as config;
