@@ -72,6 +72,29 @@ pub static DRAW_FRAGMENT_SRC: &'static [u8] = b"
     }
 ";
 
+pub static DEPTH_VERTEX_SRC: &'static [u8] = b"
+    #version 150 core
+
+    layout (std140) uniform cb_VertexArgs {
+        uniform mat4 u_Proj;
+        uniform mat4 u_View;
+        uniform mat4 u_Model;
+    };
+
+    in vec3 a_Pos;
+
+    void main() {
+        gl_Position = u_Proj * u_View * u_Model * vec4(a_Pos, 1.0);
+    }
+";
+
+pub static DEPTH_FRAGMENT_SRC: &'static [u8] = b"
+    #version 150 core
+
+    void main() {
+    }
+";
+
 pub static LIGHT_FRAGMENT_SRC: &'static [u8] = b"
     #version 150 core
     #define MAX_NUM_TOTAL_LIGHTS 128
@@ -181,6 +204,13 @@ gfx_defines!(
         out_depth: gfx::DepthTarget<gfx::format::DepthStencil> =
             gfx::preset::depth::LESS_EQUAL_WRITE,
     }
+
+    pipeline depth {
+        vbuf: gfx::VertexBuffer<::VertexPosNormal> = (),
+        vertex_args: gfx::ConstantBuffer<VertexArgs> = "cb_VertexArgs",
+        out_depth: gfx::DepthTarget<gfx::format::DepthStencil> =
+            gfx::preset::depth::LESS_EQUAL_WRITE,
+    }
 );
 
 pub type GFormat = [f32; 4];
@@ -257,6 +287,63 @@ impl<R> ::Pass<R> for DrawPass<R>
                     out_depth: target.depth.clone(),
                     ka: (ka, self.sampler.clone()),
                     kd: (kd, self.sampler.clone()),
+                }
+            );
+        }
+    }
+}
+
+pub struct DepthPass<R: gfx::Resources>{
+    vertex: gfx::handle::Buffer<R, VertexArgs>,
+    pso: gfx::PipelineState<R, depth::Meta>,
+}
+
+impl<R: gfx::Resources> DepthPass<R> {
+    pub fn new<F>(factory: &mut F) -> DepthPass<R>
+        where F: gfx::Factory<R>
+    {
+        DepthPass {
+            vertex: factory.create_constant_buffer(1),
+            pso: factory.create_pipeline_simple(
+                DEPTH_VERTEX_SRC,
+                DEPTH_FRAGMENT_SRC,
+                depth::new()
+            ).unwrap(),
+        }
+    }
+}
+
+impl<R> ::Pass<R> for DepthPass<R>
+    where R: gfx::Resources
+{
+    type Arg = ::pass::DepthPass;
+    type Target = GeometryBuffer<R>;
+
+    fn apply<C>(&self, arg: &::pass::DepthPass, target: &GeometryBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+        where C: gfx::CommandBuffer<R>
+    {
+        let scene = &scenes.scenes[&arg.scene];
+        let camera = &scenes.cameras[&arg.camera];
+
+        // every entity gets rendered into the depth layer
+        // not touching all other layers in Gbuffer
+        for f in &scene.fragments {
+            encoder.update_constant_buffer(
+                &self.vertex,
+                &VertexArgs{
+                    proj: camera.projection,
+                    view: camera.view,
+                    model: f.transform,
+                }
+            );
+
+            encoder.draw(
+                &f.slice,
+                &self.pso,
+                &depth::Data{
+                    vertex_args: self.vertex.clone(),
+                    vbuf: f.buffer.clone(),
+                    out_depth: target.depth.clone(),
                 }
             );
         }

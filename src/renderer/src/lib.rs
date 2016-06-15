@@ -63,6 +63,7 @@ impl<R, C> Renderer<R, C>
 
         self.add_pass(pass::deferred::Clear);
         self.add_pass(pass::deferred::DrawPass::new(factory));
+        self.add_pass(pass::deferred::DepthPass::new(factory));
         self.add_pass(pass::deferred::BlitLayer::new(factory));
         self.add_pass(pass::deferred::LightingPass::new(factory));
     }
