@@ -82,6 +82,30 @@ impl DrawFlat {
 }
 
 #[derive(Clone, Debug)]
+/// Render only the depth layer leaving
+/// all other Gbuffer layers unchanged
+pub struct DepthPass {
+    /// The Camera to use
+    pub camera: String,
+    /// The scene to use
+    pub scene: String,
+}
+
+impl PassDescription for DepthPass {}
+
+impl DepthPass {
+    /// Create a Boxed DepthPass
+    pub fn new<A, B>(camera: A, scene: B) -> Box<PassDescription>
+        where String: From<A> + From<B>
+    {
+        Box::new(DepthPass{
+            camera: String::from(camera),
+            scene: String::from(scene),
+        })
+    }
+}
+
+#[derive(Clone, Debug)]
 /// Render into the target without a standard
 /// ambient/diffuse shading
 pub struct DrawShaded {
