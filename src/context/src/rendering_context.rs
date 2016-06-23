@@ -48,7 +48,7 @@ impl RenderingContext {
             .with_multisampling(multisampling)
             .with_visibility(visibility);
 
-        match display_config.min_dimensions {
+        match display_config.dimensions {
             Some ((w, h)) => builder = builder.with_dimensions(w, h),
             None => (),
         }
