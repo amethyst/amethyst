@@ -48,19 +48,16 @@ impl RenderingContext {
             .with_multisampling(multisampling)
             .with_visibility(visibility);
 
-        match display_config.dimensions {
-            Some ((w, h)) => builder = builder.with_dimensions(w, h),
-            None => (),
+        if let Some ((w, h)) = display_config.dimensions {
+            builder = builder.with_dimensions(w, h);
         }
 
-        match display_config.min_dimensions {
-            Some ((w_min, h_min)) => builder = builder.with_min_dimensions(w_min, h_min),
-            None => (),
+        if let Some ((w_min, h_min)) = display_config.min_dimensions {
+            builder = builder.with_min_dimensions(w_min, h_min);
         }
 
-        match display_config.max_dimensions {
-            Some ((w_max, h_max)) => builder = builder.with_max_dimensions(w_max, h_max),
-            None => (),
+        if let Some ((w_max, h_max)) = display_config.max_dimensions {
+            builder = builder.with_max_dimensions(w_max, h_max);
         }
 
         if display_config.vsync {
