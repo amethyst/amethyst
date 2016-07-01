@@ -29,9 +29,8 @@ extern crate glutin;
 use amethyst_config::Element;
 use std::path::Path;
 
-mod rendering_context;
-pub use rendering_context::{RenderingContext, DisplayConfig};
-pub use glutin::Window;
+mod video_context;
+pub use video_context::{VideoContext, DisplayConfig};
 
 config!(
     /// Contains configs for resources provided by `Context`
@@ -39,20 +38,24 @@ config!(
     pub display_config: DisplayConfig = DisplayConfig::default(),
 });
 
-/// Contains all engine resources which are shared by `State`s, in particular `Window` and `RenderingContext`
+/// Contains all engine resources which are shared by `State`s, in particular `Window` and `VideoContext`
 pub struct Context {
-    pub window: Window,
-    pub rendering_context: RenderingContext,
+    pub video_context: VideoContext,
 }
 
 impl Context {
     //! Creates a `Context` configured according to `Config`
-    pub fn new(config: Config) -> Context {
-        let (window, rendering_context) = RenderingContext::new(config.display_config);
+    pub fn new(config: Config) -> Option<Context> {
+        let video_context =
+            match VideoContext::new(config.display_config) {
+                Some(video_context) => video_context,
+                None => return None,
+            };
 
-        Context {
-            window: window,
-            rendering_context: rendering_context,
-        }
+        Some(
+            Context {
+                video_context: video_context,
+            }
+        )
     }
 }
