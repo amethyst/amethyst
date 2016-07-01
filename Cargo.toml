@@ -28,4 +28,10 @@ version = "0.3.0"
 path = "src/config/"
 version = "0.1.0"
 
+[dependencies.amethyst_context]
+path = "src/context/"
+version = "0.1.0"
+
 [dependencies]
+# required by examples/window.rs
+glutin = "0.5"
