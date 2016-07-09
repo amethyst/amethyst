@@ -2,7 +2,7 @@
 #![crate_type = "lib"]
 #![doc(html_logo_url = "http://tinyurl.com/hgsb45k")]
 
-//! A way to manage engine resources
+//! A way to manage engine resources.
 //!
 //! # Basic usage:
 
@@ -44,7 +44,7 @@ pub struct Context {
 }
 
 impl Context {
-    //! Creates a `Context` configured according to `Config`
+    /// Creates a `Context` configured according to `Config`
     pub fn new(config: Config) -> Option<Context> {
         let video_context =
             match VideoContext::new(config.display_config) {

@@ -47,6 +47,7 @@ pub enum VideoContext {
 }
 
 impl VideoContext {
+    /// Creates a `VideoContext` configured according to the specified `DisplayConfig`
     pub fn new(display_config: DisplayConfig) -> Option<VideoContext> {
         match display_config.backend.clone().as_ref() {
             "OpenGL" => Some(VideoContext::new_gl(&display_config)),
@@ -62,7 +63,6 @@ impl VideoContext {
         VideoContext::Direct3D {  } 
     }
 
-    /// Creates a `VideoContext` configured according to the specified `DisplayConfig`
     fn new_gl(display_config: &DisplayConfig) -> VideoContext {
         let title = display_config.title.clone();
         let multisampling = display_config.multisampling.clone();
