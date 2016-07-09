@@ -19,10 +19,6 @@ impl Example {
 }
 
 impl State for Example {
-    fn on_start(&mut self) {
-        println!("Begin!");
-    }
-
     fn update(&mut self, _delta: Duration) -> Trans {
         use amethyst::context::VideoContext;
         match self.context.borrow_mut().video_context {
@@ -38,16 +34,12 @@ impl State for Example {
                 window.swap_buffers().unwrap();
                 trans
             },
-// #[cfg(windows)]
-            // Window::Direct3D { ref window, .. } => {
-            //     // stub
-            //     Trans::Quit
-            // },
+#[cfg(windows)]
+            VideoContext::Direct3D {  } => {
+                // stub
+                Trans::Quit
+            },
         }
-    }
-
-    fn on_stop(&mut self) {
-        println!("End!");
     }
 }
 

@@ -25,7 +25,3 @@ gfx_core = "0.3"
 gfx_device_gl = "0.10"
 gfx_window_glutin = "0.11"
 glutin = "0.5"
-
-# [target.'cfg(windows)'.dependencies]
-# gfx_device_dx11 = "0.3"
-# gfx_window_dxgi = "0.3"

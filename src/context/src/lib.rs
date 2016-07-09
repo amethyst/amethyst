@@ -38,7 +38,7 @@ config!(
     pub display_config: DisplayConfig = DisplayConfig::default(),
 });
 
-/// Contains all engine resources which are shared by `State`s, in particular `Window` and `VideoContext`
+/// Contains all engine resources which must be shared by multiple parties, in particular `VideoContext`
 pub struct Context {
     pub video_context: VideoContext,
 }

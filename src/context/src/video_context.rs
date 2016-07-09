@@ -2,10 +2,6 @@ extern crate amethyst_renderer;
 extern crate glutin;
 extern crate gfx_window_glutin;
 extern crate gfx_device_gl;
-// #[cfg(windows)]
-// extern crate gfx_window_dxgi;
-// #[cfg(windows)]
-// extern crate gfx_device_dx11;
 extern crate gfx;
 
 use amethyst_config::Element;
@@ -16,7 +12,7 @@ use self::gfx::handle::{RenderTargetView, DepthStencilView};
 
 config!(
     /// Contains display config,
-    /// it is required to create a `(Window, VideoContext)` pair
+    /// it is required to create a `VideoContext`
     struct DisplayConfig {
         pub title: String = "Amethyst game".to_string(),
         pub fullscreen: bool = false,
@@ -30,7 +26,10 @@ config!(
     }
 );
 
+/// Contains all resources related to video subsystem,
+/// variants of this enum represent available backends
 pub enum VideoContext {
+    /// Context for a video backend that uses glutin and OpenGL
     OpenGL {
         window: glutin::Window,
         device: gfx_device_gl::Device,
@@ -40,34 +39,30 @@ pub enum VideoContext {
         main_depth: DepthStencilView<gfx_device_gl::Resources, DepthFormat>,
     },
 
-// #[cfg(windows)]
-//     Direct3D {
-//         window: gfx_window_dxgi::Window,
-//         device: gfx_device_dx11::Device,
-//         factory: gfx_device_dx11::Factory,
-//         renderer: Renderer<gfx_device_dx11::Resources, gfx_device_dx11::CommandBuffer>,
-//         main_color: RenderTargetView<gfx_device_dx11::Resources, ColorFormat>,
-//         depth_color: DepthStencilView<gfx_device_dx11::Resources, DepthFormat>,
-//     },
+#[cfg(windows)]
+    /// Context for a video backend that uses dxgi and Direct3D
+    Direct3D {
+        // stub
+    },
 }
 
 impl VideoContext {
     pub fn new(display_config: DisplayConfig) -> Option<VideoContext> {
         match display_config.backend.clone().as_ref() {
             "OpenGL" => Some(VideoContext::new_gl(&display_config)),
- // #[cfg(windows)]
- //            "Direct3D" => Some(VideoContext::new_dx11(&display_config)),
+#[cfg(windows)]
+            "Direct3D" => Some(VideoContext::new_dx11(&display_config)),
             _ => None,
         }
     }
 
-// #[cfg(windows)]
-//     fn new_dx11(display_config: &DisplayConfig) -> (Window, VideoContext) {
-//         // stub
-//         None
-//     }
+#[cfg(windows)]
+    fn new_dx11(display_config: &DisplayConfig) -> VideoContext {
+        // stub
+        VideoContext::Direct3D {  } 
+    }
 
-//    //! Creates a `(Window, VideoContext)` pair configured according to `DisplayConfig`
+    /// Creates a `VideoContext` configured according to the specified `DisplayConfig`
     fn new_gl(display_config: &DisplayConfig) -> VideoContext {
         let title = display_config.title.clone();
         let multisampling = display_config.multisampling.clone();
