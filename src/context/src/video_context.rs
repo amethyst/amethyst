@@ -40,7 +40,7 @@ pub enum VideoContext {
     },
 
 #[cfg(windows)]
-    /// Context for a video backend that uses dxgi and Direct3D
+    /// Context for a video backend that uses dxgi and Direct3D (not implemented)
     Direct3D {
         // stub
     },
