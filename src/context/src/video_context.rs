@@ -51,13 +51,13 @@ impl VideoContext {
         match display_config.backend.clone().as_ref() {
             "OpenGL" => Some(VideoContext::new_gl(&display_config)),
 #[cfg(windows)]
-            "Direct3D" => Some(VideoContext::new_dx11(&display_config)),
+            "Direct3D" => Some(VideoContext::new_d3d()),
             _ => None,
         }
     }
 
 #[cfg(windows)]
-    fn new_dx11(display_config: &DisplayConfig) -> VideoContext {
+    fn new_d3d() -> VideoContext {
         // stub
         VideoContext::Direct3D {  } 
     }
