@@ -29,8 +29,10 @@ extern crate glutin;
 use amethyst_config::Element;
 use std::path::Path;
 
-mod video_context;
-pub use video_context::{VideoContext, DisplayConfig};
+pub mod video_context;
+pub mod event_handler;
+use video_context::{VideoContext, DisplayConfig};
+use event_handler::EventHandler;
 
 config!(
     /// Contains configs for resources provided by `Context`
@@ -38,9 +40,10 @@ config!(
     pub display_config: DisplayConfig = DisplayConfig::default(),
 });
 
-/// Contains all engine resources which must be shared by multiple parties, in particular `VideoContext`
+/// Contains all engine resources which must be shared by multiple parties, in particular `VideoContext` and `EventHandler`
 pub struct Context {
     pub video_context: VideoContext,
+    pub event_handler: EventHandler,
 }
 
 impl Context {
@@ -52,9 +55,12 @@ impl Context {
                 None => return None,
             };
 
+        let event_handler = EventHandler::new();
+
         Some(
             Context {
                 video_context: video_context,
+                event_handler: event_handler,
             }
         )
     }

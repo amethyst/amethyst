@@ -17,3 +17,6 @@ path = "src/lib.rs"
 
 [dependencies]
 time = "0.1"
+
+[dependencies.amethyst_context]
+path = "../context/"

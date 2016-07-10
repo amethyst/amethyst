@@ -1,8 +1,8 @@
 extern crate amethyst;
-extern crate glutin;
 
 use std::cell::RefCell;
 use std::rc::Rc;
+use amethyst::context::event_handler::EventIter;
 
 use amethyst::engine::{Application, Duration, State, Trans};
 use amethyst::context::Context;
@@ -19,27 +19,32 @@ impl Example {
 }
 
 impl State for Example {
+    fn handle_events(&mut self, _events: EventIter) -> Trans {
+        use amethyst::context::event_handler::{Event, VirtualKeyCode};
+        let mut trans = Trans::None;
+        for event in _events {
+            match event {
+                Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) => trans = Trans::Quit,
+                Event::Closed => trans = Trans::Quit,
+                _ => (),
+            }
+        }
+        trans
+    }
+
     fn update(&mut self, _delta: Duration) -> Trans {
-        use amethyst::context::VideoContext;
-        match self.context.borrow_mut().video_context {
+        use amethyst::context::video_context::VideoContext;
+        let context = self.context.borrow_mut();
+        match context.video_context {
             VideoContext::OpenGL { ref window, .. } => {
-                let mut trans = Trans::None;
-                for event in window.poll_events() {
-                    match event {
-                        glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Escape)) => trans = Trans::Quit,
-                        glutin::Event::Closed => trans = Trans::Quit,
-                        _ => (),
-                    }
-                }
                 window.swap_buffers().unwrap();
-                trans
-            },
+            }
 #[cfg(windows)]
             VideoContext::Direct3D {  } => {
                 // stub
-                Trans::Quit
             },
         }
+        Trans::None
     }
 }
 
@@ -49,6 +54,6 @@ fn main() {
     let context = Context::new(config).unwrap();
     let context_ref = Rc::new(RefCell::new(context));
     let example = Example::new(context_ref.clone());
-    let mut game = Application::new(example);
+    let mut game = Application::new(example, context_ref.clone());
     game.run();
 }
