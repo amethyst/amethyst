@@ -6,15 +6,13 @@ extern crate gfx;
 
 use amethyst_config::Element;
 use std::path::Path;
-use self::glutin::{Window, WindowBuilder};
 use self::amethyst_renderer::Renderer;
 use self::amethyst_renderer::target::{ColorFormat, DepthFormat};
-use self::gfx_device_gl::{Device, Factory, Resources, CommandBuffer};
 use self::gfx::handle::{RenderTargetView, DepthStencilView};
 
 config!(
     /// Contains display config,
-    /// it is required to create a `(Window, RenderingContext)` pair
+    /// it is required to create a `VideoContext`
     struct DisplayConfig {
         pub title: String = "Amethyst game".to_string(),
         pub fullscreen: bool = false,
@@ -24,26 +22,53 @@ config!(
         pub vsync: bool = true,
         pub multisampling: u16 = 1,
         pub visibility: bool = true,
+        pub backend: String = "OpenGL".to_string(),
     }
 );
 
-/// Contains resources required for rendering
-pub struct RenderingContext {
-    pub device: Device,
-    pub factory: Factory,
-    pub renderer: Renderer<Resources, CommandBuffer>,
-    pub main_color: RenderTargetView<Resources, ColorFormat>,
-    pub main_depth: DepthStencilView<Resources, DepthFormat>,
+/// Contains all resources related to video subsystem,
+/// variants of this enum represent available backends
+pub enum VideoContext {
+    /// Context for a video backend that uses glutin and OpenGL
+    OpenGL {
+        window: glutin::Window,
+        device: gfx_device_gl::Device,
+        factory: gfx_device_gl::Factory,
+        renderer: Renderer<gfx_device_gl::Resources, gfx_device_gl::CommandBuffer>,
+        main_color: RenderTargetView<gfx_device_gl::Resources, ColorFormat>,
+        main_depth: DepthStencilView<gfx_device_gl::Resources, DepthFormat>,
+    },
+
+#[cfg(windows)]
+    /// Context for a video backend that uses dxgi and Direct3D (not implemented)
+    Direct3D {
+        // stub
+    },
 }
 
-impl RenderingContext {
-    //! Creates a `(Window, RenderingContext)` pair configured according to `DisplayConfig`
-    pub fn new(display_config: DisplayConfig) -> (Window, RenderingContext) {
-        let title = display_config.title;
-        let multisampling = display_config.multisampling;
-        let visibility = display_config.visibility;
+impl VideoContext {
+    /// Creates a `VideoContext` configured according to the specified `DisplayConfig`
+    pub fn new(display_config: DisplayConfig) -> Option<VideoContext> {
+        match display_config.backend.clone().as_ref() {
+            "OpenGL" => Some(VideoContext::new_gl(&display_config)),
+#[cfg(windows)]
+            "Direct3D" => Some(VideoContext::new_d3d()),
+            _ => None,
+        }
+    }
 
-        let mut builder = WindowBuilder::new()
+#[cfg(windows)]
+    fn new_d3d() -> VideoContext {
+        // stub
+        VideoContext::Direct3D {  }
+    }
+
+    fn new_gl(display_config: &DisplayConfig) -> VideoContext {
+        let title = display_config.title.clone();
+        let multisampling = display_config.multisampling.clone();
+        let visibility = display_config.visibility.clone();
+
+        let mut builder = glutin::WindowBuilder::new()
             .with_title(title)
             .with_multisampling(multisampling)
             .with_visibility(visibility);
@@ -75,13 +100,14 @@ impl RenderingContext {
         let combuf = factory.create_command_buffer();
         let renderer = Renderer::new(combuf);
 
-        let rendering_context = RenderingContext {
+        let video_context = VideoContext::OpenGL {
+            window: window,
             device: device,
             factory: factory,
             renderer: renderer,
             main_color: main_color,
             main_depth: main_depth,
         };
-        (window, rendering_context)
+        video_context
     }
 }
