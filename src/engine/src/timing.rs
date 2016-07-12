@@ -1,19 +1,17 @@
 //! Utilities for working with time.
 
-extern crate time;
-
-pub use self::time::{Duration, SteadyTime};
+pub use std::time::{Duration, Instant};
 
 /// Useful utility for accurately measuring elapsed time.
 pub struct Stopwatch {
-    start_time: SteadyTime,
-    end_time: SteadyTime,
+    start_time: Instant,
+    end_time: Instant,
     running: bool,
 }
 
 impl Stopwatch {
     pub fn new() -> Stopwatch {
-        let initial_time = SteadyTime::now();
+        let initial_time = Instant::now();
 
         Stopwatch {
             start_time: initial_time,
@@ -40,7 +38,7 @@ impl Stopwatch {
     /// Note: Starting an already running stopwatch will do nothing.
     pub fn start(&mut self) {
         if !self.running {
-            if self.elapsed() == Duration::seconds(0) {
+            if self.elapsed() == Duration::new(0, 0) {
                 self.reset()
             }
 
@@ -53,14 +51,14 @@ impl Stopwatch {
     /// Note: Stopping a stopwatch that isn't running will do nothing.
     pub fn stop(&mut self) {
         if self.running {
-            self.end_time = SteadyTime::now();
+            self.end_time = Instant::now();
             self.running = false;
         }
     }
 
     /// Clears the current elapsed time value.
     pub fn reset(&mut self) {
-        self.start_time = SteadyTime::now();
+        self.start_time = Instant::now();
         self.end_time = self.start_time;
     }
 }
@@ -70,17 +68,17 @@ impl Stopwatch {
 mod tests {
     use super::Stopwatch;
     use std::thread;
-    use std::time;
+    use std::time::Duration;
 
     #[test]
     fn elapsed() {
         let mut watch = Stopwatch::new();
 
         watch.start();
-        thread::sleep(time::Duration::from_secs(2));
+        thread::sleep(Duration::from_secs(2));
         watch.stop();
 
-        assert_eq!(2, watch.elapsed().num_seconds());
+        assert_eq!(2, watch.elapsed().as_secs());
     }
 
     #[test]
@@ -88,11 +86,11 @@ mod tests {
         let mut watch = Stopwatch::new();
 
         watch.start();
-        thread::sleep(time::Duration::from_secs(2));
+        thread::sleep(Duration::from_secs(2));
         watch.stop();
         watch.reset();
 
-        assert_eq!(0, watch.elapsed().num_nanoseconds().unwrap());
+        assert_eq!(0, watch.elapsed().subsec_nanos());
     }
 
     #[test]
@@ -100,13 +98,13 @@ mod tests {
         let mut watch = Stopwatch::new();
 
         watch.start();
-        thread::sleep(time::Duration::from_secs(2));
+        thread::sleep(Duration::from_secs(2));
         watch.stop();
 
         watch.restart();
-        thread::sleep(time::Duration::from_secs(1));
+        thread::sleep(Duration::from_secs(1));
         watch.stop();
 
-        assert_eq!(1, watch.elapsed().num_seconds());
+        assert_eq!(1, watch.elapsed().as_secs());
     }
 }
