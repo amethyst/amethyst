@@ -3,32 +3,36 @@
 pub use std::time::{Duration, Instant};
 
 /// Useful utility for accurately measuring elapsed time.
-pub struct Stopwatch {
-    start_time: Instant,
-    end_time: Instant,
-    running: bool,
+#[derive(PartialEq, Eq)]
+pub enum Stopwatch {
+    Waiting,
+    Started(Instant),
+    Ended(Duration),
+}
+
+impl Default for Stopwatch {
+    fn default() -> Stopwatch {
+        Stopwatch::Waiting
+    }
 }
 
 impl Stopwatch {
     pub fn new() -> Stopwatch {
-        let initial_time = Instant::now();
-
-        Stopwatch {
-            start_time: initial_time,
-            end_time: initial_time,
-            running: false,
-        }
+        Stopwatch::Waiting
     }
 
     /// Retrieves the elapsed time.
     pub fn elapsed(&self) -> Duration {
-        self.end_time - self.start_time
+        match self {
+            &Stopwatch::Waiting => Duration::new(0, 0),
+            &Stopwatch::Started(start) => start.elapsed(),
+            &Stopwatch::Ended(dur) => dur,
+        }
     }
 
     /// Stops, resets, and starts the stopwatch again.
     pub fn restart(&mut self) {
-        self.reset();
-        self.start();
+        *self = Stopwatch::Started(Instant::now());
     }
 
     /// Starts, or resumes, measuring elapsed time. If the stopwatch has been
@@ -37,12 +41,8 @@ impl Stopwatch {
     ///
     /// Note: Starting an already running stopwatch will do nothing.
     pub fn start(&mut self) {
-        if !self.running {
-            if self.elapsed() == Duration::new(0, 0) {
-                self.reset()
-            }
-
-            self.running = true;
+        if self == &Stopwatch::Waiting {
+            self.restart();
         }
     }
 
@@ -50,16 +50,14 @@ impl Stopwatch {
     ///
     /// Note: Stopping a stopwatch that isn't running will do nothing.
     pub fn stop(&mut self) {
-        if self.running {
-            self.end_time = Instant::now();
-            self.running = false;
+        if let &mut Stopwatch::Started(start) = self {
+            *self = Stopwatch::Ended(start.elapsed());
         }
     }
 
     /// Clears the current elapsed time value.
     pub fn reset(&mut self) {
-        self.start_time = Instant::now();
-        self.end_time = self.start_time;
+        *self = Stopwatch::Started(Instant::now());
     }
 }
 
