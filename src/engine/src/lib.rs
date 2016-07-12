@@ -10,4 +10,4 @@ mod timing;
 
 pub use self::app::Application;
 pub use self::state::{State, StateMachine, Trans};
-pub use self::timing::{Duration, SteadyTime, Stopwatch};
+pub use self::timing::{Duration, Instant, Stopwatch};

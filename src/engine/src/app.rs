@@ -1,13 +1,13 @@
 //! The core engine framework.
 
 use super::state::{State, StateMachine};
-use super::timing::{Duration, SteadyTime, Stopwatch};
+use super::timing::{Duration, Instant, Stopwatch};
 
 /// User-friendly facade for building games. Manages main loop.
 pub struct Application {
     delta_time: Duration,
     fixed_step: Duration,
-    last_fixed_update: SteadyTime,
+    last_fixed_update: Instant,
     states: StateMachine,
     timer: Stopwatch,
 }
@@ -18,9 +18,9 @@ impl Application {
         where T: State
     {
         Application {
-            delta_time: Duration::zero(),
-            fixed_step: Duration::microseconds(16666),
-            last_fixed_update: SteadyTime::now(),
+            delta_time: Duration::new(0, 0),
+            fixed_step: Duration::new(0, 16666666),
+            last_fixed_update: Instant::now(),
             states: StateMachine::new(initial_state),
             timer: Stopwatch::new(),
         }
@@ -49,7 +49,7 @@ impl Application {
     fn advance_frame(&mut self) {
         // self.states.handle_events(&self.event_queue.poll());
 
-        while SteadyTime::now() - self.last_fixed_update > self.fixed_step {
+        while self.last_fixed_update.elapsed() > self.fixed_step {
             self.states.fixed_update(self.fixed_step);
             // self.systems.fixed_iterate(self.fixed_step);
             self.last_fixed_update = self.last_fixed_update + self.fixed_step;

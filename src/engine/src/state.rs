@@ -202,10 +202,10 @@ mod tests {
         let mut sm = StateMachine::new(State1(7));
         sm.start();
         for _ in 0..8 {
-            sm.update(Duration::seconds(0));
+            sm.update(Duration::new(0, 0));
             assert!(sm.is_running());
         }
-        sm.update(Duration::seconds(0));
+        sm.update(Duration::new(0, 0));
         assert!(!sm.is_running());
     }
 }
