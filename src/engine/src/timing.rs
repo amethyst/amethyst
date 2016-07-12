@@ -57,7 +57,7 @@ impl Stopwatch {
 
     /// Clears the current elapsed time value.
     pub fn reset(&mut self) {
-        *self = Stopwatch::Started(Instant::now());
+        *self = Stopwatch::Waiting;
     }
 }
 
