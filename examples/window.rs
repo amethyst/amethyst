@@ -50,6 +50,7 @@ impl State for Example {
             VideoContext::Direct3D {  } => {
                 // stub
             },
+            VideoContext::Null => (),
         }
         Trans::None
     }

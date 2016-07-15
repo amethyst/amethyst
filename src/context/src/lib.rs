@@ -78,7 +78,8 @@ impl Context {
                 // stub
                 let event = EngineEvent::new(Event::Closed);
                 events.push(event);
-            }
+            },
+            VideoContext::Null => (),
         }
         events
     }
