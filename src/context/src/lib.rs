@@ -30,9 +30,9 @@ use amethyst_config::Element;
 use std::path::Path;
 
 pub mod video_context;
-pub mod event_handler;
+pub mod broadcaster;
 use video_context::{VideoContext, DisplayConfig};
-use event_handler::EventHandler;
+use broadcaster::{Broadcaster, EngineEvent};
 
 config!(
     /// Contains configs for resources provided by `Context`
@@ -40,10 +40,10 @@ config!(
     pub display_config: DisplayConfig = DisplayConfig::default(),
 });
 
-/// Contains all engine resources which must be shared by multiple parties, in particular `VideoContext` and `EventHandler`
+/// Contains all engine resources which must be shared by multiple parties, in particular `VideoContext` and `Broadcaster`
 pub struct Context {
     pub video_context: VideoContext,
-    pub event_handler: EventHandler,
+    pub broadcaster: Broadcaster,
 }
 
 impl Context {
@@ -55,13 +55,31 @@ impl Context {
                 None => return None,
             };
 
-        let event_handler = EventHandler::new();
+        let broadcaster = Broadcaster::new();
 
         Some(
             Context {
                 video_context: video_context,
-                event_handler: event_handler,
+                broadcaster: broadcaster,
             }
         )
+    }
+
+    pub fn poll_engine_events(&mut self) -> Vec<EngineEvent> {
+        let mut events = vec!();
+        match self.video_context {
+            VideoContext::OpenGL { ref window, .. } =>
+                for event in window.poll_events() {
+                    let event = EngineEvent::new(event);
+                    events.push(event);
+                },
+            #[cfg(windows)]
+            VideoContext::Direct3D {  } => {
+                // stub
+                let event = EngineEvent::new(Event::Closed);
+                events.push(event);
+            }
+        }
+        events
     }
 }

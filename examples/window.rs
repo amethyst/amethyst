@@ -1,12 +1,14 @@
 extern crate amethyst;
+extern crate specs;
 
 use std::cell::RefCell;
 use std::rc::Rc;
-use amethyst::context::event_handler::EventIter;
 
 use amethyst::engine::{Application, Duration, State, Trans};
 use amethyst::context::Context;
+use amethyst::context::broadcaster::{EngineEvent, Event, VirtualKeyCode};
 use amethyst::config::Element;
+use amethyst::ecs::Entity;
 
 struct Example {
     context: Rc<RefCell<Context>>,
@@ -14,16 +16,21 @@ struct Example {
 
 impl Example {
     pub fn new(context: Rc<RefCell<Context>>) -> Example {
-        Example { context: context }
+        Example {
+            context: context,
+        }
     }
 }
 
 impl State for Example {
-    fn handle_events(&mut self, _events: EventIter) -> Trans {
-        use amethyst::context::event_handler::{Event, VirtualKeyCode};
+    fn handle_events(&mut self, events: Vec<Entity>) -> Trans {
         let mut trans = Trans::None;
-        for event in _events {
-            match event {
+        let mut context = self.context.borrow_mut();
+        let storage = context.broadcaster.read::<EngineEvent>();
+        for _event in events {
+            let event = storage.get(_event).unwrap();
+            let event = &event.payload;
+            match *event {
                 Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) => trans = Trans::Quit,
                 Event::Closed => trans = Trans::Quit,
                 _ => (),

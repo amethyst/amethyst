@@ -4,6 +4,7 @@ extern crate amethyst_context;
 use super::state::{State, StateMachine};
 use super::timing::{Duration, SteadyTime, Stopwatch};
 use self::amethyst_context::Context;
+use self::amethyst_context::broadcaster::EngineEvent;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -53,13 +54,12 @@ impl Application {
 
     /// Advances the game world by one tick.
     fn advance_frame(&mut self) {
-        {
-            use self::amethyst_context::event_handler::populate_event_handler;
-            let mut context = self.context.borrow_mut();
-            context.event_handler = populate_event_handler(&mut context.video_context);
-            self.states.handle_events(context.event_handler.poll());
+        let mut queue = self.context.borrow_mut().poll_engine_events();
+        for event in queue.drain(..) {
+            self.context.borrow_mut().broadcaster.publish().with::<EngineEvent>(event);
         }
-
+        let events = self.context.borrow_mut().broadcaster.poll();
+        self.states.handle_events(events);
         while SteadyTime::now() - self.last_fixed_update > self.fixed_step {
             self.states.fixed_update(self.fixed_step);
             // self.systems.fixed_iterate(self.fixed_step);
@@ -68,6 +68,7 @@ impl Application {
 
         self.states.update(self.delta_time);
         // self.systems.iterate(self.delta_time);
+        self.context.borrow_mut().broadcaster.clean();
     }
 
     /// Cleans up after the quit signal is received.

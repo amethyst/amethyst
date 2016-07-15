@@ -1,8 +1,9 @@
 //! Utilities for game state management.
 extern crate amethyst_context;
+extern crate amethyst_ecs;
 
 use super::timing::Duration;
-use self::amethyst_context::event_handler::EventIter;
+use self::amethyst_ecs::Entity;
 
 /// Types of state transitions.
 pub enum Trans {
@@ -33,7 +34,7 @@ pub trait State {
     fn on_resume(&mut self) {}
 
     /// Executed on every frame before updating, for use in reacting to events.
-    fn handle_events(&mut self, _events: EventIter) -> Trans { Trans::None }
+    fn handle_events(&mut self, _events: Vec<Entity>) -> Trans { Trans::None }
 
     /// Executed repeatedly at stable, predictable intervals (1/60th of a second
     /// by default).
@@ -76,7 +77,7 @@ impl StateMachine {
 
     /// Passes a vector of events to the active state to handle.
     // TODO: Replace i32 with an actual Event type of some kind.
-    pub fn handle_events(&mut self, events: EventIter) {
+    pub fn handle_events(&mut self, events: Vec<Entity>) {
         if self.running {
             let mut trans = Trans::None;
             if let Some(state) = self.state_stack.last_mut() {

@@ -3,6 +3,8 @@ extern crate specs;
 
 mod sim;
 
-pub use specs::{World, Component, System as Processor, RunArg, Entity, EntityBuilder, Entities,
-                CreateEntities, VecStorage, HashMapStorage, AntiStorage, NullStorage, JoinIter};
+pub use specs::{Allocator, AntiStorage, CreateEntities, Entities, Entity, EntityBuilder,
+                Generation, HashMapStorage, JoinIter, MaskedStorage, NullStorage, Planner,
+                RunArg, Storage, SystemInfo, VecStorage, World, InsertResult, Component,
+                Join, System as Processor, UnprotectedStorage};
 pub use self::sim::{Simulation, SimBuilder};

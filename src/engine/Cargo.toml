@@ -20,3 +20,8 @@ time = "0.1"
 
 [dependencies.amethyst_context]
 path = "../context/"
+version = "0.1.0"
+
+[dependencies.amethyst_ecs]
+path = "../ecs/"
+version = "0.1.0"
