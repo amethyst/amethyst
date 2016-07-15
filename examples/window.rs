@@ -25,7 +25,7 @@ impl Example {
 impl State for Example {
     fn handle_events(&mut self, events: Vec<Entity>) -> Trans {
         let mut trans = Trans::None;
-        let mut context = self.context.borrow_mut();
+        let context = self.context.borrow_mut();
         let storage = context.broadcaster.read::<EngineEvent>();
         for _event in events {
             let event = storage.get(_event).unwrap();

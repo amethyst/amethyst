@@ -47,13 +47,13 @@ impl Broadcaster {
         self.world.create_now()
     }
 
-    pub fn poll(&mut self) -> Vec<Entity> {
+    pub fn poll(&self) -> Vec<Entity> {
         let entities = self.world.entities();
         let _entities: Vec<Entity> = entities.iter().map(|e| e.clone()).collect();
         _entities
     }
 
-    pub fn read<T: Component>(&mut self) -> Storage<T, RwLockReadGuard<Allocator>, RwLockReadGuard<MaskedStorage<T>>> {
+    pub fn read<T: Component>(&self) -> Storage<T, RwLockReadGuard<Allocator>, RwLockReadGuard<MaskedStorage<T>>> {
         self.world.read::<T>()
     }
 
