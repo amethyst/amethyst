@@ -31,6 +31,3 @@ version = "0.1.0"
 [dependencies.amethyst_context]
 path = "src/context/"
 version = "0.1.0"
-
-[dependencies]
-specs = "0.7.0"

@@ -1,5 +1,4 @@
 extern crate amethyst;
-extern crate specs;
 
 use std::cell::RefCell;
 use std::rc::Rc;
