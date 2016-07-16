@@ -6,7 +6,7 @@ use std::rc::Rc;
 
 use amethyst::engine::{Application, Duration, State, Trans};
 use amethyst::context::Context;
-use amethyst::context::broadcaster::{EngineEvent, Event, VirtualKeyCode};
+use amethyst::context::event::{EngineEvent, Event, VirtualKeyCode};
 use amethyst::config::Element;
 use amethyst::ecs::Entity;
 

@@ -31,8 +31,10 @@ use std::path::Path;
 
 pub mod video_context;
 pub mod broadcaster;
+pub mod event;
 use video_context::{VideoContext, DisplayConfig};
-use broadcaster::{Broadcaster, EngineEvent};
+use broadcaster::Broadcaster;
+use event::EngineEvent;
 
 config!(
     /// Contains configs for resources provided by `Context`
@@ -55,7 +57,8 @@ impl Context {
                 None => return None,
             };
 
-        let broadcaster = Broadcaster::new();
+        let mut broadcaster = Broadcaster::new();
+        broadcaster.register::<EngineEvent>();
 
         Some(
             Context {
@@ -65,6 +68,7 @@ impl Context {
         )
     }
 
+    /// Return a vector containing all engine events
     pub fn poll_engine_events(&mut self) -> Vec<EngineEvent> {
         let mut events = vec!();
         match self.video_context {
