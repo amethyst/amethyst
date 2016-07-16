@@ -62,6 +62,7 @@ impl Context {
     }
 
     /// Return a vector containing all engine events
+    /// that have occured since the last call of this method
     pub fn poll_engine_events(&mut self) -> Vec<EngineEvent> {
         let mut events = vec!();
         match self.video_context {
