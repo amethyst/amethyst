@@ -26,7 +26,7 @@ impl State for Example {
 
 fn main() {
     let config = Config::default();
-    let context = Context::new(config).unwrap();
+    let context = Context::new(config);
     let context_ref = Rc::new(RefCell::new(context));
     let mut game = Application::new(Example, context_ref);
     game.run();

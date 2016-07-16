@@ -49,13 +49,12 @@ pub enum VideoContext {
 
 impl VideoContext {
     /// Creates a `VideoContext` configured according to the specified `DisplayConfig`
-    pub fn new(display_config: DisplayConfig) -> Option<VideoContext> {
+    pub fn new(display_config: DisplayConfig) -> VideoContext {
         match display_config.backend.clone().as_ref() {
-            "OpenGL" => Some(VideoContext::new_gl(&display_config)),
+            "OpenGL" => VideoContext::new_gl(&display_config),
 #[cfg(windows)]
-            "Direct3D" => Some(VideoContext::new_d3d()),
-            "Null" => Some(VideoContext::Null),
-            _ => None,
+            "Direct3D" => VideoContext::new_d3d(),
+            _ => VideoContext::Null,
         }
     }
 

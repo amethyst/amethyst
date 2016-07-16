@@ -50,22 +50,15 @@ pub struct Context {
 
 impl Context {
     /// Creates a `Context` configured according to `Config`
-    pub fn new(config: Config) -> Option<Context> {
-        let video_context =
-            match VideoContext::new(config.display_config) {
-                Some(video_context) => video_context,
-                None => return None,
-            };
-
+    pub fn new(config: Config) -> Context {
+        let video_context = VideoContext::new(config.display_config);
         let mut broadcaster = Broadcaster::new();
         broadcaster.register::<EngineEvent>();
 
-        Some(
-            Context {
-                video_context: video_context,
-                broadcaster: broadcaster,
-            }
-        )
+        Context {
+            video_context: video_context,
+            broadcaster: broadcaster,
+        }
     }
 
     /// Return a vector containing all engine events
