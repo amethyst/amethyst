@@ -1,3 +1,37 @@
+//! This module contains `Broadcaster` struct
+//! which allows publishing and polling specs
+//! entities. It is primarily used for event
+//! handling.
+//!
+//! # Example:
+//! ```
+//! extern crate amethyst_context;
+//! extern crate amethyst_ecs;
+//!
+//! use amethyst_context::broadcaster::Broadcaster;
+//! use amethyst_ecs::{Component, VecStorage}
+//!
+//! impl Component for i32 {
+//!     type Storage = VecStorage;
+//! }
+//!
+//! fn main() {
+//!     let broadcaster = Broadcaster::new();
+//!     broadcaster.register::<i32>();
+//!     for i in 0..10 {
+//!         broadcaster.publish::<i32>().with(i).build();
+//!     }
+//!     {
+//!         let storage = broadcaster.read::<i32>();
+//!         for entity in broadcaster.poll() {
+//!             let i = storage.get(entity);
+//!             println!(i);
+//!         }
+//!     }
+//!     broadcaster.clean();
+//! }
+//! ```
+
 extern crate amethyst_ecs;
 
 use self::amethyst_ecs::{World, Component, EntityBuilder,

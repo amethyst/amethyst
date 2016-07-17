@@ -49,7 +49,7 @@ pub struct Context {
 }
 
 impl Context {
-    /// Creates a `Context` configured according to `Config`
+    /// Create a `Context` configured according to `Config`
     pub fn new(config: Config) -> Context {
         let video_context = VideoContext::new(config.display_config);
         let mut broadcaster = Broadcaster::new();

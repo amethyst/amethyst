@@ -8,12 +8,15 @@ pub use glutin::{Event, ElementState, ScanCode,
 
 /// Represents an engine generated event,
 /// it can be attached to entities
-/// that are published by `Broadcaster`
+/// that are published by `Broadcaster`.
+/// Currently it is just a wraper around
+/// `glutin::Event`.
 pub struct EngineEvent {
     pub payload: Event,
 }
 
 impl EngineEvent {
+    /// Create an EnginEvent from a glutin::Event
     pub fn new(event: Event) -> EngineEvent {
         EngineEvent {
             payload: event,
