@@ -31,9 +31,9 @@ impl Simulation {
         self.planner.add_system(p, name, priority);
     }
 
-    /// Get a reference to the world.
-    pub fn world(&self) -> &World {
-        &self.planner.world
+    /// Get a mutable reference to the world.
+    pub fn mut_world(&mut self) -> &mut World {
+        self.planner.mut_world()
     }
 
     /// Computes the next state of the world using the given processors.

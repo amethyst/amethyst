@@ -7,3 +7,4 @@ display_config:
     title: "Windowing example"
     visibility: true
     vsync: true
+    backend: OpenGL

@@ -13,4 +13,4 @@ license = "MIT"
 
 [dependencies]
 time = "^0.1"
-specs = "^0.6.1"
+specs = "^0.7.0"

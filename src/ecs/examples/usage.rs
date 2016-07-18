@@ -65,7 +65,7 @@ fn main() {
                              .done();
 
     for i in 0..180 {
-        simulation.world()
+        simulation.mut_world()
                   .create_now()
                   .with(Position {
                       x: i as f32 * 0.1,

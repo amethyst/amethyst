@@ -22,7 +22,7 @@ config!(
         pub vsync: bool = true,
         pub multisampling: u16 = 1,
         pub visibility: bool = true,
-        pub backend: String = "OpenGL".to_string(),
+        pub backend: String = "Null".to_string(),
     }
 );
 
@@ -44,18 +44,20 @@ pub enum VideoContext {
     Direct3D {
         // stub
     },
+    Null,
 }
 
 impl VideoContext {
     /// Creates a `VideoContext` configured according to the specified `DisplayConfig`
-    pub fn new(display_config: DisplayConfig) -> Option<VideoContext> {
+    pub fn new(display_config: DisplayConfig) -> VideoContext {
         match display_config.backend.clone().as_ref() {
-            "OpenGL" => Some(VideoContext::new_gl(&display_config)),
+            "OpenGL" => VideoContext::new_gl(&display_config),
 #[cfg(windows)]
-            "Direct3D" => Some(VideoContext::new_d3d()),
-            _ => None,
+            "Direct3D" => VideoContext::new_d3d(),
+            _ => VideoContext::Null,
         }
     }
+
 
 #[cfg(windows)]
     fn new_d3d() -> VideoContext {

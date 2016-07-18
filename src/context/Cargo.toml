@@ -19,6 +19,10 @@ version = "0.3.0"
 path = "../config/"
 version = "0.1.0"
 
+[dependencies.amethyst_ecs]
+path = "../ecs/"
+version = "0.1.0"
+
 [dependencies]
 gfx = "0.11"
 gfx_core = "0.3"
