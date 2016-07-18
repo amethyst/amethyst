@@ -35,6 +35,7 @@ pub mod event;
 use video_context::{VideoContext, DisplayConfig};
 use broadcaster::Broadcaster;
 use event::EngineEvent;
+use glutin::Event;
 
 config!(
     /// Contains configs for resources provided by `Context`
