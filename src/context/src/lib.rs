@@ -24,7 +24,6 @@
 
 #[macro_use]
 extern crate amethyst_config;
-extern crate glutin;
 
 use amethyst_config::Element;
 use std::path::Path;
@@ -74,7 +73,7 @@ impl Context {
             #[cfg(windows)]
             VideoContext::Direct3D {  } => {
                 // stub
-                let event = EngineEvent::new(Event::Closed);
+                let event = EngineEvent::new(event::Event::Closed);
                 events.push(event);
             },
             VideoContext::Null => (),

@@ -2,9 +2,9 @@ extern crate amethyst_ecs;
 extern crate glutin;
 
 use self::amethyst_ecs::{Component, VecStorage};
-pub use glutin::{Event, ElementState, ScanCode,
-                 VirtualKeyCode, MouseScrollDelta,
-                 TouchPhase, MouseButton, Touch};
+pub use self::glutin::{Event, ElementState, ScanCode,
+                       VirtualKeyCode, MouseScrollDelta,
+                       TouchPhase, MouseButton, Touch};
 
 /// Represents an engine generated event,
 /// it can be attached to entities
