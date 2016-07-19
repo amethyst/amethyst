@@ -6,9 +6,8 @@ extern crate gfx;
 
 use amethyst_config::Element;
 use std::path::Path;
-use self::amethyst_renderer::Renderer;
-use self::amethyst_renderer::target::{ColorFormat, DepthFormat};
-use self::gfx::handle::{RenderTargetView, DepthStencilView};
+use self::amethyst_renderer::{Renderer, Frame};
+use self::amethyst_renderer::target::{ColorFormat, DepthFormat, ColorBuffer};
 
 config!(
     /// Contains display config,
@@ -35,8 +34,7 @@ pub enum VideoContext {
         device: gfx_device_gl::Device,
         factory: gfx_device_gl::Factory,
         renderer: Renderer<gfx_device_gl::Resources, gfx_device_gl::CommandBuffer>,
-        main_color: RenderTargetView<gfx_device_gl::Resources, ColorFormat>,
-        main_depth: DepthStencilView<gfx_device_gl::Resources, DepthFormat>,
+        frame: Frame<gfx_device_gl::Resources>,
     },
 
 #[cfg(windows)]
@@ -100,15 +98,24 @@ impl VideoContext {
         gfx_window_glutin::init::<ColorFormat, DepthFormat>(builder);
 
         let combuf = factory.create_command_buffer();
-        let renderer = Renderer::new(combuf);
+        let mut renderer = Renderer::new(combuf);
+        renderer.load_all(&mut factory);
+
+        let mut frame = Frame::new();
+        frame.targets.insert(
+            "main".into(),
+            Box::new(ColorBuffer{
+                color: main_color,
+                output_depth: main_depth
+            }
+            ));
 
         let video_context = VideoContext::OpenGL {
             window: window,
             device: device,
             factory: factory,
             renderer: renderer,
-            main_color: main_color,
-            main_depth: main_depth,
+            frame: frame,
         };
         video_context
     }
