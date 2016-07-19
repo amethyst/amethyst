@@ -48,7 +48,7 @@
 
 pub mod engine;
 
-pub extern crate amethyst_ecs as ecs;
-pub extern crate amethyst_renderer as renderer;
 pub extern crate amethyst_config as config;
 pub extern crate amethyst_context as context;
+pub extern crate amethyst_ecs as ecs;
+pub extern crate amethyst_renderer as renderer;
