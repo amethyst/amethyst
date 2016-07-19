@@ -177,7 +177,7 @@ impl StateMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use timing::Duration;
+    use engine::Duration;
 
     struct State1(u8);
     struct State2;
