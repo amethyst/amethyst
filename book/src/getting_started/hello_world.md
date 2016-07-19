@@ -56,7 +56,7 @@ you're using the [nightly release][nr] of Rust. You can use [rustup][ru] to
 install stable and nightly Rust side-by-side. 
 
 [nr]: https://doc.rust-lang.org/book/release-channels.html
-[ru]: https://rustup.rs
+[ru]: https://www.rustup.rs
 
 Congratulations! You have successfully written your first Amethyst application.
 
