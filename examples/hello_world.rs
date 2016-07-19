@@ -3,6 +3,9 @@
 extern crate amethyst;
 
 use amethyst::engine::{Application, Duration, State, Trans};
+use amethyst::context::{Context, Config};
+use std::rc::Rc;
+use std::cell::RefCell;
 
 struct Example;
 
@@ -22,6 +25,9 @@ impl State for Example {
 }
 
 fn main() {
-    let mut game = Application::new(Example);
+    let config = Config::default();
+    let context = Context::new(config);
+    let context_ref = Rc::new(RefCell::new(context));
+    let mut game = Application::new(Example, context_ref);
     game.run();
 }

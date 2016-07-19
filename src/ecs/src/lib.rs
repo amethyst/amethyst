@@ -1,10 +1,10 @@
-mod dynvec;
-mod entity;
-mod processor;
-mod sim;
-mod world;
+extern crate time;
+extern crate specs;
 
-pub use self::entity::Entity;
-pub use self::processor::{Processor, ProcessorResult};
+mod sim;
+
+pub use specs::{Allocator, AntiStorage, CreateEntities, Entities, Entity, EntityBuilder,
+                Generation, HashMapStorage, JoinIter, MaskedStorage, NullStorage, Planner,
+                RunArg, Storage, SystemInfo, VecStorage, World, InsertResult, Component,
+                Join, System as Processor, UnprotectedStorage};
 pub use self::sim::{Simulation, SimBuilder};
-pub use self::world::World;

@@ -13,4 +13,15 @@ readme = "README.md"
 license = "MIT"
 
 [dependencies]
-gfx = "0.10"
+gfx = "0.11"
+gfx_core = "0.3"
+gfx_device_gl = "0.10"
+gfx_window_glutin = "0.11"
+glutin = "0.5"
+cgmath="0.7"
+mopa ="0.2"
+
+
+[dev-dependencies]
+genmesh="0.4"
+rand="0.3"
