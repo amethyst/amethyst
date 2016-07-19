@@ -1,10 +1,10 @@
 //! The core engine framework.
-extern crate amethyst_context;
 
 use super::state::{State, StateMachine};
 use super::timing::{Duration, SteadyTime, Stopwatch};
-use self::amethyst_context::Context;
-use self::amethyst_context::event::EngineEvent;
+use context::Context;
+use context::event::EngineEvent;
+
 use std::cell::RefCell;
 use std::rc::Rc;
 

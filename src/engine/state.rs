@@ -1,9 +1,7 @@
 //! Utilities for game state management.
-extern crate amethyst_context;
-extern crate amethyst_ecs;
 
-use super::timing::Duration;
-use self::amethyst_ecs::Entity;
+use ecs::Entity;
+use super::Duration;
 
 /// Types of state transitions.
 pub enum Trans {
@@ -179,7 +177,7 @@ impl StateMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use timing::Duration;
+    use engine::Duration;
 
     struct State1(u8);
     struct State2;

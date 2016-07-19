@@ -6,9 +6,9 @@ rust:
     - nightly
 
 script:
-    - cargo doc --no-deps -p amethyst -p amethyst_engine -p amethyst_ecs
+    - cargo doc --no-deps -p amethyst -p amethyst_ecs
     - cargo build -v
-    - cargo test -p amethyst -p amethyst_engine -p amethyst_ecs -v
+    - cargo test -p amethyst -p amethyst_ecs -v
 
 notifications:
     webhooks:
