@@ -54,9 +54,9 @@ impl Application {
 
     /// Advances the game world by one tick.
     fn advance_frame(&mut self) {
-        let mut queue = self.context.borrow_mut().poll_engine_events();
-        for event in queue.drain(..) {
-            self.context.borrow_mut().broadcaster.publish().with::<EngineEvent>(event);
+        let engine_events = self.context.borrow_mut().poll_engine_events();
+        for engine_event in engine_events {
+            self.context.borrow_mut().broadcaster.publish().with::<EngineEvent>(engine_event);
         }
         let events = self.context.borrow_mut().broadcaster.poll();
         self.states.handle_events(events);
