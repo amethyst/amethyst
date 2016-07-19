@@ -8,6 +8,9 @@ copy and paste the following code:
 extern crate amethyst;
 
 use amethyst::engine::{Application, Duration, State, Trans};
+use amethyst::context::{Context, Config};
+use std::rc::Rc;
+use std::cell::RefCell;
 
 struct HelloWorld;
 
@@ -27,13 +30,16 @@ impl State for HelloWorld {
 }
 
 fn main() {
-    let mut game = Application::new(HelloWorld);
+    let config = Config::from_file("../resources/config.yml").unwrap();
+    let context = Context::new(config);
+    let context_ref = Rc::new(RefCell::new(context));
+    let mut game = Application::new(HelloWorld, context_ref);
     game.run();
 }
 ```
 
-Then, compile and run the code with `cargo run`, or `amethyst run` if you
-have the [CLI tool installed][ct].
+Then, compile and run the code inside "**src/**" with `cargo run`,
+or `amethyst run` if you have the [CLI tool installed][ct].
 
 [ct]: ./getting_started/automatic_setup.html
 
@@ -46,11 +52,11 @@ Game stopped!
 ```
 
 If instead you see `error: use of unstable library feature` then make sure
-you're using the [nightly release][nr] of Rust. You can use [multirust][mr] to
+you're using the [nightly release][nr] of Rust. You can use [rustup][ru] to
 install stable and nightly Rust side-by-side. 
 
 [nr]: https://doc.rust-lang.org/book/release-channels.html
-[mr]: https://github.com/brson/multirust
+[ru]: https://rustup.rs
 
 Congratulations! You have successfully written your first Amethyst application.
 
