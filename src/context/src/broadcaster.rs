@@ -9,23 +9,28 @@
 //! extern crate amethyst_ecs;
 //!
 //! use amethyst_context::broadcaster::Broadcaster;
-//! use amethyst_ecs::{Component, VecStorage}
+//! use amethyst_ecs::{Component, VecStorage};
 //!
-//! impl Component for i32 {
-//!     type Storage = VecStorage;
+//! struct UserComponent {
+//!     pub data: i32,
+//! }
+//!
+//! impl Component for UserComponent {
+//!     type Storage = VecStorage<UserComponent>;
 //! }
 //!
 //! fn main() {
-//!     let broadcaster = Broadcaster::new();
-//!     broadcaster.register::<i32>();
+//!     let mut broadcaster = Broadcaster::new();
+//!     broadcaster.register::<UserComponent>();
 //!     for i in 0..10 {
-//!         broadcaster.publish::<i32>().with(i).build();
+//!         let user_component = UserComponent { data: i };
+//!         broadcaster.publish().with::<UserComponent>(user_component).build();
 //!     }
 //!     {
-//!         let storage = broadcaster.read::<i32>();
+//!         let storage = broadcaster.read::<UserComponent>();
 //!         for entity in broadcaster.poll() {
-//!             let i = storage.get(entity);
-//!             println!(i);
+//!             let user_component = storage.get(entity).unwrap();
+//!             println!("{0}", user_component.data);
 //!         }
 //!     }
 //!     broadcaster.clean();
