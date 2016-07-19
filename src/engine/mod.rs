@@ -2,6 +2,7 @@
 
 mod app;
 mod state;
+mod tasks;
 mod timing;
 
 pub use self::app::Application;
