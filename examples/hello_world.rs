@@ -2,32 +2,28 @@
 
 extern crate amethyst;
 
-use amethyst::engine::{Application, Duration, State, Trans};
+use amethyst::engine::{Application, State, Trans};
 use amethyst::context::{Context, Config};
-use std::rc::Rc;
-use std::cell::RefCell;
 
 struct Example;
 
 impl State for Example {
-    fn on_start(&mut self) {
+    fn on_start(&mut self, _: &mut Context) {
         println!("Begin!");
     }
 
-    fn update(&mut self, _delta: Duration) -> Trans {
+    fn update(&mut self, _: &mut Context) -> Trans {
         println!("Hello from Amethyst!");
         Trans::Quit
     }
 
-    fn on_stop(&mut self) {
+    fn on_stop(&mut self, _: &mut Context) {
         println!("End!");
     }
 }
 
 fn main() {
     let config = Config::default();
-    let context = Context::new(config);
-    let context_ref = Rc::new(RefCell::new(context));
-    let mut game = Application::new(Example, context_ref);
+    let mut game = Application::new(Example, config);
     game.run();
 }
