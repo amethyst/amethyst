@@ -24,7 +24,6 @@ impl Position {
         self.y += speed.dy;
         self.z += speed.dz;
     }
-    
 }
 
 impl Component for Position {
@@ -57,7 +56,8 @@ struct Update;
 impl Processor<Duration> for Update {
     fn run(&mut self, arg: RunArg, _: Duration) {
         let (mut p, s) = arg.fetch(|w| (w.write::<Position>(), w.read::<Speed>())); // Make p writable.
-        for (p, s) in JoinIter::new((&mut p, &s)) { // We want to only update entities with position and mesh.
+        for (p, s) in JoinIter::new((&mut p, &s)) {
+            // We want to only update entities with position and speed.
             p.add_speed(&s);
         }
     }
@@ -69,7 +69,8 @@ struct Render {
 impl Processor<Duration> for Render {
     fn run(&mut self, arg: RunArg, _: Duration) {
         let (p, m) = arg.fetch(|w| (w.read::<Position>(), w.read::<Mesh>())); // Make p writable.
-        for (p, _) in JoinIter::new((&p, &m)) { // We want to only render entities with mesh and position.
+        for (p, _) in JoinIter::new((&p, &m)) {
+            // We want to only render entities with position and mesh.
             println!("Render {:?}", p);
         }
         self.frame_count += 1;
@@ -81,14 +82,14 @@ fn main() {
     use rand::distributions::{IndependentSample, Range};
     let mut rng = rand::thread_rng();
     let between = Range::new(-10f32, 10.);
-    
+
     let mut world = World::new();
     world.register::<Position>();
     world.register::<Speed>();
     world.register::<Mesh>();
 
     let mut simulation = Simulation::build(world, 4)
-                             .with(Update { }, "Updater", 1000) // High priority
+                             .with(Update, "Updater", 1000) // High priority
                              .with(Render { frame_count: 0 }, "Renderer", 500) // Low priority
                              .done();
 
