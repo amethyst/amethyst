@@ -179,13 +179,13 @@ impl StateMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use engine::Duration;
+    use context::{Config, Context};
 
     struct State1(u8);
     struct State2;
 
     impl State for State1 {
-        fn update(&mut self, _delta: Duration) -> Trans {
+        fn update(&mut self, _: &mut Context) -> Trans {
             if self.0 > 0 {
                 self.0 -= 1;
                 Trans::None
@@ -196,20 +196,22 @@ mod tests {
     }
 
     impl State for State2 {
-        fn update(&mut self, _delta: Duration) -> Trans {
+        fn update(&mut self, _: &mut Context) -> Trans {
             Trans::Pop
         }
     }
 
     #[test]
     fn switch_pop() {
+        let config = Config::default();
+        let mut context = Context::new(config);
         let mut sm = StateMachine::new(State1(7));
-        sm.start();
+        sm.start(&mut context);
         for _ in 0..8 {
-            sm.update(Duration::seconds(0));
+            sm.update(&mut context);
             assert!(sm.is_running());
         }
-        sm.update(Duration::seconds(0));
+        sm.update(&mut context);
         assert!(!sm.is_running());
     }
 }
