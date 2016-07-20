@@ -4,6 +4,7 @@ use super::state::{State, StateMachine};
 use context::timing::{SteadyTime, Stopwatch};
 use context::event::EngineEvent;
 use context::{Config, Context};
+use ecs::Simulation;
 
 /// User-friendly facade for building games. Manages main loop.
 pub struct Application {
@@ -14,12 +15,12 @@ pub struct Application {
 
 impl Application {
     /// Creates a new Application with the given initial game state and a given `Context`.
-    pub fn new<T: 'static>(initial_state: T, config: Config) -> Application
+    pub fn new<T: 'static>(initial_state: T, simulation: Simulation, config: Config) -> Application
         where T: State
     {
         let context = Context::new(config);
         Application {
-            states: StateMachine::new(initial_state),
+            states: StateMachine::new(initial_state, simulation),
             timer: Stopwatch::new(),
             context: context,
         }
