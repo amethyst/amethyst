@@ -191,23 +191,26 @@ impl StateMachine {
 mod tests {
     use super::*;
     use context::{Config, Context};
+    use ecs::{Simulation, World};
 
     struct State1(u8);
     struct State2;
 
     impl State for State1 {
-        fn update(&mut self, _: &mut Context) -> Trans {
+        fn update(&mut self, _: &mut Context, _: &mut World) -> Trans {
             if self.0 > 0 {
                 self.0 -= 1;
                 Trans::None
             } else {
-                Trans::Switch(Box::new(State2))
+                let world = World::new();
+                let simulation = Simulation::new(world, 1);
+                Trans::Switch(Box::new(State2), simulation)
             }
         }
     }
 
     impl State for State2 {
-        fn update(&mut self, _: &mut Context) -> Trans {
+        fn update(&mut self, _: &mut Context, _: &mut World) -> Trans {
             Trans::Pop
         }
     }
@@ -216,7 +219,9 @@ mod tests {
     fn switch_pop() {
         let config = Config::default();
         let mut context = Context::new(config);
-        let mut sm = StateMachine::new(State1(7));
+        let world = World::new();
+        let simulation = Simulation::new(world, 1);
+        let mut sm = StateMachine::new(State1(7), simulation);
         sm.start(&mut context);
         for _ in 0..8 {
             sm.update(&mut context);
