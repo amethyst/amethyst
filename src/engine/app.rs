@@ -2,7 +2,7 @@
 
 use super::state::{State, StateMachine};
 use super::timing::{Duration, SteadyTime, Stopwatch};
-use context::Context;
+use context::{Config, Context};
 use context::event::EngineEvent;
 
 use std::cell::RefCell;
@@ -20,9 +20,11 @@ pub struct Application {
 
 impl Application {
     /// Creates a new Application with the given initial game state and a given `Context`.
-    pub fn new<T: 'static>(initial_state: T, context: Rc<RefCell<Context>>) -> Application
+    pub fn new<T: 'static>(initial_state: T, config: Config) -> Application
         where T: State
     {
+        let context = Context::new(config);
+        let context = Rc::new(RefCell::new(context));
         Application {
             delta_time: Duration::zero(),
             fixed_step: Duration::microseconds(16666),
@@ -49,7 +51,7 @@ impl Application {
 
     /// Sets up the application.
     fn initialize(&mut self) {
-        self.states.start();
+        self.states.start(&mut *self.context.borrow_mut());
     }
 
     /// Advances the game world by one tick.
@@ -59,14 +61,14 @@ impl Application {
             self.context.borrow_mut().broadcaster.publish().with::<EngineEvent>(engine_event);
         }
         let events = self.context.borrow_mut().broadcaster.poll();
-        self.states.handle_events(events);
+        self.states.handle_events(events, &mut *self.context.borrow_mut());
         while SteadyTime::now() - self.last_fixed_update > self.fixed_step {
-            self.states.fixed_update(self.fixed_step);
+            self.states.fixed_update(self.fixed_step, &mut *self.context.borrow_mut());
             // self.systems.fixed_iterate(self.fixed_step);
             self.last_fixed_update = self.last_fixed_update + self.fixed_step;
         }
 
-        self.states.update(self.delta_time);
+        self.states.update(self.delta_time, &mut *self.context.borrow_mut());
         // self.systems.iterate(self.delta_time);
         self.context.borrow_mut().broadcaster.clean();
     }
