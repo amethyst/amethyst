@@ -19,5 +19,3 @@ specs = "^0.7.0"
 name = "usage"
 path = "examples/usage.rs"
 
-[dev-dependencies]
-rand = "0.3"

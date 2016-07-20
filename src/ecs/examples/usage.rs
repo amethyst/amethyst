@@ -1,6 +1,5 @@
 ///! Example of a basic entity-component system with 3 types of generic components.
 extern crate time;
-extern crate rand;
 
 extern crate amethyst_ecs as ecs;
 
@@ -79,10 +78,10 @@ impl Processor<Duration> for Render {
 }
 
 fn main() {
-    use rand::distributions::{IndependentSample, Range};
-    let mut rng = rand::thread_rng();
-    let between = Range::new(-10f32, 10.);
-
+    // Replace this with your favorite rng.
+    fn pfrand(i: u32) -> f32 {
+        (i as f32) * 1.21912 
+    } 
     let mut world = World::new();
     world.register::<Position>();
     world.register::<Speed>();
@@ -93,7 +92,7 @@ fn main() {
                              .with(Render { frame_count: 0 }, "Renderer", 500) // Low priority
                              .done();
 
-    for _ in 0..180 {
+    for i in 0..180 {
         simulation.mut_world()
                   .create_now()
                   .with(Position {
@@ -106,9 +105,9 @@ fn main() {
                       y: 12,
                   })
                   .with(Speed {
-                      dx: between.ind_sample(&mut rng),
-                      dy: between.ind_sample(&mut rng),
-                      dz: between.ind_sample(&mut rng),
+                      dx: pfrand(i),
+                      dy: pfrand(i),
+                      dz: pfrand(i),
                   })
                   .build();
     }
