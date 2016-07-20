@@ -30,10 +30,12 @@ use std::path::Path;
 
 pub mod video_context;
 pub mod broadcaster;
+pub mod timing;
 pub mod event;
 use video_context::{VideoContext, DisplayConfig};
 use broadcaster::Broadcaster;
 use event::EngineEvent;
+use timing::{Duration, SteadyTime};
 
 config!(
     /// Contains configs for resources provided by `Context`
@@ -45,6 +47,9 @@ config!(
 pub struct Context {
     pub video_context: VideoContext,
     pub broadcaster: Broadcaster,
+    pub delta_time: Duration,
+    pub fixed_step: Duration,
+    pub last_fixed_update: SteadyTime,
 }
 
 impl Context {
@@ -57,6 +62,9 @@ impl Context {
         Context {
             video_context: video_context,
             broadcaster: broadcaster,
+            delta_time: Duration::zero(),
+            fixed_step: Duration::microseconds(16666),
+            last_fixed_update: SteadyTime::now(),
         }
     }
 

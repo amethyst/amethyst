@@ -2,7 +2,6 @@
 
 use context::Context;
 use ecs::Entity;
-use super::Duration;
 
 /// Types of state transitions.
 pub enum Trans {
@@ -38,10 +37,10 @@ pub trait State {
 
     /// Executed repeatedly at stable, predictable intervals (1/60th of a second
     /// by default).
-    fn fixed_update(&mut self, _delta: Duration, context: &mut Context) -> Trans { Trans::None }
+    fn fixed_update(&mut self, context: &mut Context) -> Trans { Trans::None }
 
     /// Executed on every frame immediately, as fast as the engine will allow.
-    fn update(&mut self, _delta: Duration, context: &mut Context) -> Trans { Trans::Pop }
+    fn update(&mut self, context: &mut Context) -> Trans { Trans::Pop }
 }
 #[warn(unused_variables)]
 
@@ -89,22 +88,22 @@ impl StateMachine {
     }
 
     /// Updates the currently active state at a steady, fixed interval.
-    pub fn fixed_update(&mut self, delta_time: Duration, context: &mut Context) {
+    pub fn fixed_update(&mut self, context: &mut Context) {
         if self.running {
             let mut trans = Trans::None;
             if let Some(state) = self.state_stack.last_mut() {
-                trans = state.fixed_update(delta_time, context);
+                trans = state.fixed_update(context);
             }
             self.transition(trans, context);
         }
     }
 
     /// Updates the currently active state immediately.
-    pub fn update(&mut self, delta_time: Duration, context: &mut Context) {
+    pub fn update(&mut self, context: &mut Context) {
         if self.running {
             let mut trans = Trans::None;
             if let Some(state) = self.state_stack.last_mut() {
-                trans = state.update(delta_time, context);
+                trans = state.update(context);
             }
             self.transition(trans, context);
         }

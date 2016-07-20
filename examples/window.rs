@@ -1,6 +1,6 @@
 extern crate amethyst;
 
-use amethyst::engine::{Application, Duration, State, Trans};
+use amethyst::engine::{Application, State, Trans};
 use amethyst::context::Context;
 use amethyst::config::Element;
 use amethyst::ecs::Entity;
@@ -45,7 +45,7 @@ impl State for Example {
         }
     }
 
-    fn update(&mut self, _delta: Duration, context: &mut Context) -> Trans {
+    fn update(&mut self, context: &mut Context) -> Trans {
         use amethyst::context::video_context::VideoContext;
         match context.video_context {
             VideoContext::OpenGL { ref window,

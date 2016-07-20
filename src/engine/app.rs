@@ -1,21 +1,15 @@
 //! The core engine framework.
 
 use super::state::{State, StateMachine};
-use super::timing::{Duration, SteadyTime, Stopwatch};
-use context::{Config, Context};
+use context::timing::{SteadyTime, Stopwatch};
 use context::event::EngineEvent;
-
-use std::cell::RefCell;
-use std::rc::Rc;
+use context::{Config, Context};
 
 /// User-friendly facade for building games. Manages main loop.
 pub struct Application {
-    delta_time: Duration,
-    fixed_step: Duration,
-    last_fixed_update: SteadyTime,
     states: StateMachine,
     timer: Stopwatch,
-    context: Rc<RefCell<Context>>,
+    context: Context,
 }
 
 impl Application {
@@ -24,11 +18,7 @@ impl Application {
         where T: State
     {
         let context = Context::new(config);
-        let context = Rc::new(RefCell::new(context));
         Application {
-            delta_time: Duration::zero(),
-            fixed_step: Duration::microseconds(16666),
-            last_fixed_update: SteadyTime::now(),
             states: StateMachine::new(initial_state),
             timer: Stopwatch::new(),
             context: context,
@@ -43,7 +33,7 @@ impl Application {
             self.timer.restart();
             self.advance_frame();
             self.timer.stop();
-            self.delta_time = self.timer.elapsed()
+            self.context.delta_time = self.timer.elapsed()
         }
 
         self.shutdown();
@@ -51,26 +41,26 @@ impl Application {
 
     /// Sets up the application.
     fn initialize(&mut self) {
-        self.states.start(&mut *self.context.borrow_mut());
+        self.states.start(&mut self.context);
     }
 
     /// Advances the game world by one tick.
     fn advance_frame(&mut self) {
-        let engine_events = self.context.borrow_mut().poll_engine_events();
+        let engine_events = self.context.poll_engine_events();
         for engine_event in engine_events {
-            self.context.borrow_mut().broadcaster.publish().with::<EngineEvent>(engine_event);
+            self.context.broadcaster.publish().with::<EngineEvent>(engine_event);
         }
-        let events = self.context.borrow_mut().broadcaster.poll();
-        self.states.handle_events(events, &mut *self.context.borrow_mut());
-        while SteadyTime::now() - self.last_fixed_update > self.fixed_step {
-            self.states.fixed_update(self.fixed_step, &mut *self.context.borrow_mut());
+        let events = self.context.broadcaster.poll();
+        self.states.handle_events(events, &mut self.context);
+        while SteadyTime::now() - self.context.last_fixed_update > self.context.fixed_step {
+            self.states.fixed_update(&mut self.context);
             // self.systems.fixed_iterate(self.fixed_step);
-            self.last_fixed_update = self.last_fixed_update + self.fixed_step;
+            self.context.last_fixed_update = self.context.last_fixed_update + self.context.fixed_step;
         }
 
-        self.states.update(self.delta_time, &mut *self.context.borrow_mut());
+        self.states.update(&mut self.context);
         // self.systems.iterate(self.delta_time);
-        self.context.borrow_mut().broadcaster.clean();
+        self.context.broadcaster.clean();
     }
 
     /// Cleans up after the quit signal is received.
