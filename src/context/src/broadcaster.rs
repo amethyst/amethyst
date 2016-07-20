@@ -9,25 +9,31 @@
 //! extern crate amethyst_ecs;
 //!
 //! use amethyst_context::broadcaster::Broadcaster;
-//! use amethyst_ecs::{Component, VecStorage}
+//! use amethyst_ecs::{Component, VecStorage};
 //!
-//! impl Component for i32 {
-//!     type Storage = VecStorage;
+//! #[derive(Debug)]
+//! struct Numeric(u32); 
+//! 
+//! impl Component for Numeric {
+//!     type Storage = VecStorage<Numeric>;
 //! }
 //!
 //! fn main() {
-//!     let broadcaster = Broadcaster::new();
-//!     broadcaster.register::<i32>();
+//!     let mut result: Vec<u32> = vec!();
+//!     let mut broadcaster = Broadcaster::new();
+//!     broadcaster.register::<Numeric>();
 //!     for i in 0..10 {
-//!         broadcaster.publish::<i32>().with(i).build();
+//!         broadcaster.publish().with(Numeric(i)).build();
 //!     }
 //!     {
-//!         let storage = broadcaster.read::<i32>();
+//!         let storage = broadcaster.read::<Numeric>();
 //!         for entity in broadcaster.poll() {
-//!             let i = storage.get(entity);
-//!             println!(i);
+//!             if let Some(i) = storage.get(entity) {
+//!                 result.push(i.0);
+//!             }
 //!         }
 //!     }
+//!     assert_eq!(vec!(0,1,2,3,4,5,6,7,8,9), result);
 //!     broadcaster.clean();
 //! }
 //! ```
