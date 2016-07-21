@@ -4,7 +4,7 @@ use super::state::{State, StateMachine};
 use context::timing::{SteadyTime, Stopwatch};
 use context::event::EngineEvent;
 use context::{Config, Context};
-use ecs::Planner;
+use ecs::{Planner, World, Processor, Priority};
 use std::sync::{Arc, Mutex};
 use std::ops::DerefMut;
 
@@ -16,7 +16,7 @@ pub struct Application {
 }
 
 impl Application {
-    /// Creates a new Application with the given initial game state and a given `Context`.
+    /// Creates a new Application with the given initial game state, planner, and config.
     pub fn new<T: 'static>(initial_state: T, planner: Planner<Arc<Mutex<Context>>>, config: Config) -> Application
         where T: State
     {
@@ -27,6 +27,13 @@ impl Application {
             timer: Stopwatch::new(),
             context: context,
         }
+    }
+
+    /// Build a new Application using builder pattern.
+    pub fn build<T: 'static>(initial_state: T, config: Config) -> ApplicationBuilder<T>
+        where T: State
+    {
+        ApplicationBuilder::new(initial_state, config)
     }
 
     /// Starts the application and manages the game loop.
@@ -72,5 +79,43 @@ impl Application {
     /// Cleans up after the quit signal is received.
     fn shutdown(&mut self) {
         // Placeholder
+    }
+}
+
+/// Helper builder for Applications.
+pub struct ApplicationBuilder<T>
+    where T: 'static + State
+{
+    initial_state: T,
+    config: Config,
+    planner: Planner<Arc<Mutex<Context>>>,
+}
+
+impl<T> ApplicationBuilder<T>
+    where T: 'static + State
+{
+    pub fn new(initial_state: T, config: Config) -> ApplicationBuilder<T>
+    {
+        let world = World::new();
+        let planner = Planner::new(world, 1);
+        ApplicationBuilder {
+            initial_state: initial_state,
+            config: config,
+            planner: planner,
+        }
+    }
+
+    pub fn with<P: 'static>(mut self,
+                            sys: P,
+                            name: &str,
+                            priority: Priority) -> ApplicationBuilder<T>
+        where P: Processor<Arc<Mutex<Context>>>
+    {
+        self.planner.add_system::<P>(sys, name, priority);
+        self
+    }
+
+    pub fn done(self) -> Application {
+        Application::new(self.initial_state, self.planner, self.config)
     }
 }

@@ -3,7 +3,7 @@ extern crate amethyst;
 use amethyst::engine::{Application, State, Trans};
 use amethyst::context::Context;
 use amethyst::config::Element;
-use amethyst::ecs::{Planner, World, Entity};
+use amethyst::ecs::{World, Entity};
 
 struct Example;
 
@@ -52,7 +52,7 @@ impl State for Example {
                                    ref mut renderer,
                                    ref frame,
                                    ref mut device,
-                                   ..} => {
+                                   .. } => {
                 renderer.submit(frame, device);
                 window.swap_buffers().unwrap();
             }
@@ -69,8 +69,6 @@ impl State for Example {
 fn main() {
     use amethyst::context::Config;
     let config = Config::from_file("../config/window_example_config.yml").unwrap();
-    let world = World::new();
-    let planner = Planner::new(world, 1);
-    let mut game = Application::new(Example, planner, config);
+    let mut game = Application::build(Example, config).done();
     game.run();
 }

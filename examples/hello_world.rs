@@ -4,7 +4,7 @@ extern crate amethyst;
 
 use amethyst::engine::{Application, State, Trans};
 use amethyst::context::{Context, Config};
-use amethyst::ecs::{Planner, World};
+use amethyst::ecs::World;
 
 struct Example;
 
@@ -25,8 +25,6 @@ impl State for Example {
 
 fn main() {
     let config = Config::default();
-    let world = World::new();
-    let planner = Planner::new(world, 1);
-    let mut game = Application::new(Example, planner, config);
+    let mut game = Application::build(Example, config).done();
     game.run();
 }
