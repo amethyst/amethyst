@@ -1,7 +1,8 @@
 //! Utilities for game state management.
 
 use context::Context;
-use ecs::{Entity, Simulation, World};
+use ecs::{Entity, Planner, World};
+use std::sync::{Arc, Mutex};
 
 /// Types of state transitions.
 pub enum Trans {
@@ -10,9 +11,9 @@ pub enum Trans {
     /// Remove the active state and resume the next state on the stack or stop if there are none.
     Pop,
     /// Pause the active state and push a new state onto the stack.
-    Push(Box<State>, Simulation),
+    Push(Box<State>, Planner<Arc<Mutex<Context>>>),
     /// Remove the current state on the stack and insert a different one.
-    Switch(Box<State>, Simulation),
+    Switch(Box<State>, Planner<Arc<Mutex<Context>>>),
     /// Stop and remove all states and shut down the engine.
     Quit,
 }
@@ -47,16 +48,16 @@ pub trait State {
 /// A simple stack-based state machine (pushdown automaton).
 pub struct StateMachine {
     running: bool,
-    state_stack: Vec<(Box<State>, Simulation)>,
+    state_stack: Vec<(Box<State>, Planner<Arc<Mutex<Context>>>)>,
 }
 
 impl StateMachine {
-    pub fn new<T: 'static>(initial_state: T, simulation: Simulation) -> StateMachine
+    pub fn new<T: 'static>(initial_state: T, planner: Planner<Arc<Mutex<Context>>>) -> StateMachine
         where T: State
     {
         StateMachine {
             running: false,
-            state_stack: vec![(Box::new(initial_state), simulation)],
+            state_stack: vec![(Box::new(initial_state), planner)],
         }
     }
 
@@ -70,9 +71,17 @@ impl StateMachine {
     ///	Panics if no states are present in the stack.
     pub fn start(&mut self, context: &mut Context) {
         if !self.running {
-            let (ref mut state, ref mut simulation) = *self.state_stack.last_mut().unwrap();
-            state.on_start(context, simulation.mut_world());
+            let (ref mut state, ref mut planner) = *self.state_stack.last_mut().unwrap();
+            state.on_start(context, planner.mut_world());
             self.running = true;
+        }
+    }
+
+    /// Runs processors if the state machine is running.
+    pub fn run_processors(&mut self, context: Arc<Mutex<Context>>) {
+        if self.running {
+            let (_, ref mut planner) = *self.state_stack.last_mut().unwrap();
+            planner.dispatch(context);
         }
     }
 
@@ -82,8 +91,8 @@ impl StateMachine {
         if self.running {
             let mut trans = Trans::None;
             if let Some(_state) = self.state_stack.last_mut() {
-                let (ref mut state, ref mut simulation) = *_state;
-                trans = state.handle_events(events, context, simulation.mut_world());
+                let (ref mut state, ref mut planner) = *_state;
+                trans = state.handle_events(events, context, planner.mut_world());
             }
             self.transition(trans, context);
         }
@@ -94,8 +103,8 @@ impl StateMachine {
         if self.running {
             let mut trans = Trans::None;
             if let Some(_state) = self.state_stack.last_mut() {
-                let (ref mut state, ref mut simulation) = *_state;
-                trans = state.fixed_update(context, simulation.mut_world());
+                let (ref mut state, ref mut planner) = *_state;
+                trans = state.fixed_update(context, planner.mut_world());
             }
             self.transition(trans, context);
         }
@@ -106,8 +115,8 @@ impl StateMachine {
         if self.running {
             let mut trans = Trans::None;
             if let Some(_state) = self.state_stack.last_mut() {
-                let (ref mut state, ref mut simulation) = *_state;
-                trans = state.update(context, simulation.mut_world());
+                let (ref mut state, ref mut planner) = *_state;
+                trans = state.update(context, planner.mut_world());
             }
             self.transition(trans, context);
         }
@@ -120,38 +129,38 @@ impl StateMachine {
             match request {
                 Trans::None => (),
                 Trans::Pop => self.pop(context),
-                Trans::Push(state, simulation) => self.push(state, simulation, context),
-                Trans::Switch(state, simulation) => self.switch(state, simulation, context),
+                Trans::Push(state, planner) => self.push(state, planner, context),
+                Trans::Switch(state, planner) => self.switch(state, planner, context),
                 Trans::Quit => self.stop(context),
             }
         }
     }
 
     /// Removes the current state on the stack and inserts a different one.
-    fn switch(&mut self, state: Box<State>, simulation: Simulation, context: &mut Context) {
+    fn switch(&mut self, state: Box<State>, planner: Planner<Arc<Mutex<Context>>>, context: &mut Context) {
         if self.running {
             if let Some(mut _state) = self.state_stack.pop() {
-                let (ref mut state, ref mut simulation) = _state;
-                state.on_stop(context, simulation.mut_world());
+                let (ref mut state, ref mut planner) = _state;
+                state.on_stop(context, planner.mut_world());
             }
 
-            self.state_stack.push((state, simulation));
-            let (ref mut state, ref mut simulation) = *self.state_stack.last_mut().unwrap();
-            state.on_start(context, simulation.mut_world());
+            self.state_stack.push((state, planner));
+            let (ref mut state, ref mut planner) = *self.state_stack.last_mut().unwrap();
+            state.on_start(context, planner.mut_world());
         }
     }
 
     /// Pauses the active state and pushes a new state onto the state stack.
-    fn push(&mut self, state: Box<State>, simulation: Simulation, context: &mut Context) {
+    fn push(&mut self, state: Box<State>, planner: Planner<Arc<Mutex<Context>>>, context: &mut Context) {
         if self.running {
             if let Some(_state) = self.state_stack.last_mut() {
-                let (ref mut state, ref mut simulation) = *_state;
-                state.on_pause(context, simulation.mut_world());
+                let (ref mut state, ref mut planner) = *_state;
+                state.on_pause(context, planner.mut_world());
             }
 
-            self.state_stack.push((state, simulation));
-            let (ref mut state, ref mut simulation) = *self.state_stack.last_mut().unwrap();
-            state.on_start(context, simulation.mut_world());
+            self.state_stack.push((state, planner));
+            let (ref mut state, ref mut planner) = *self.state_stack.last_mut().unwrap();
+            state.on_start(context, planner.mut_world());
         }
     }
 
@@ -160,13 +169,13 @@ impl StateMachine {
     fn pop(&mut self, context: &mut Context) {
         if self.running {
             if let Some(mut _state) = self.state_stack.pop() {
-                let (ref mut state, ref mut simulation) = _state;
-                state.on_stop(context, simulation.mut_world());
+                let (ref mut state, ref mut planner) = _state;
+                state.on_stop(context, planner.mut_world());
             }
 
             if let Some(_state) = self.state_stack.last_mut() {
-                let (ref mut state, ref mut simulation) = *_state;
-                state.on_resume(context, simulation.mut_world());
+                let (ref mut state, ref mut planner) = *_state;
+                state.on_resume(context, planner.mut_world());
             } else {
                 self.running = false;
             }
@@ -177,8 +186,8 @@ impl StateMachine {
     fn stop(&mut self, context: &mut Context) {
         if self.running {
             while let Some(mut _state) = self.state_stack.pop() {
-                let (ref mut state, ref mut simulation) = _state;
-                state.on_stop(context, simulation.mut_world());
+                let (ref mut state, ref mut planner) = _state;
+                state.on_stop(context, planner.mut_world());
             }
 
             self.running = false;
@@ -191,7 +200,7 @@ impl StateMachine {
 mod tests {
     use super::*;
     use context::{Config, Context};
-    use ecs::{Simulation, World};
+    use ecs::{Planner, World};
 
     struct State1(u8);
     struct State2;
@@ -203,8 +212,8 @@ mod tests {
                 Trans::None
             } else {
                 let world = World::new();
-                let simulation = Simulation::new(world, 1);
-                Trans::Switch(Box::new(State2), simulation)
+                let planner = Planner::new(world, 1);
+                Trans::Switch(Box::new(State2), planner)
             }
         }
     }
@@ -220,8 +229,8 @@ mod tests {
         let config = Config::default();
         let mut context = Context::new(config);
         let world = World::new();
-        let simulation = Simulation::new(world, 1);
-        let mut sm = StateMachine::new(State1(7), simulation);
+        let planner = Planner::new(world, 1);
+        let mut sm = StateMachine::new(State1(7), planner);
         sm.start(&mut context);
         for _ in 0..8 {
             sm.update(&mut context);

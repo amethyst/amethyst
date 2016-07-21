@@ -52,6 +52,8 @@ pub struct Context {
     pub last_fixed_update: SteadyTime,
 }
 
+unsafe impl Send for Context {}
+
 impl Context {
     /// Create a `Context` configured according to `Config`
     pub fn new(config: Config) -> Context {
