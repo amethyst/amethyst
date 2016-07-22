@@ -66,7 +66,7 @@ impl Application {
         self.states.handle_events(events, self.context.lock().unwrap().deref_mut());
         let fixed_step = self.context.lock().unwrap().fixed_step.clone();
         let last_fixed_update = self.context.lock().unwrap().last_fixed_update.clone();
-        while SteadyTime::now() - self.context.lock().unwrap().last_fixed_update > fixed_step {
+        if SteadyTime::now() - last_fixed_update > fixed_step {
             self.states.fixed_update(self.context.lock().unwrap().deref_mut());
             // self.systems.fixed_iterate(self.fixed_step);
             self.context.lock().unwrap().last_fixed_update = last_fixed_update + fixed_step;
@@ -94,8 +94,7 @@ pub struct ApplicationBuilder<T>
 impl<T> ApplicationBuilder<T>
     where T: 'static + State
 {
-    pub fn new(initial_state: T, config: Config) -> ApplicationBuilder<T>
-    {
+    pub fn new(initial_state: T, config: Config) -> ApplicationBuilder<T> {
         let world = World::new();
         let planner = Planner::new(world, 1);
         ApplicationBuilder {
