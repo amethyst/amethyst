@@ -17,8 +17,8 @@ pub struct Application {
 
 impl Application {
     /// Creates a new Application with the given initial game state, planner, and config.
-    pub fn new<T: 'static>(initial_state: T, planner: Planner<Arc<Mutex<Context>>>, config: Config) -> Application
-        where T: State
+    pub fn new<T>(initial_state: T, planner: Planner<Arc<Mutex<Context>>>, config: Config) -> Application
+        where T: State + 'static
     {
         let context = Context::new(config);
         let context = Arc::new(Mutex::new(context));
@@ -30,8 +30,8 @@ impl Application {
     }
 
     /// Build a new Application using builder pattern.
-    pub fn build<T: 'static>(initial_state: T, config: Config) -> ApplicationBuilder<T>
-        where T: State
+    pub fn build<T>(initial_state: T, config: Config) -> ApplicationBuilder<T>
+        where T: State + 'static
     {
         ApplicationBuilder::new(initial_state, config)
     }
@@ -84,7 +84,7 @@ impl Application {
 
 /// Helper builder for Applications.
 pub struct ApplicationBuilder<T>
-    where T: 'static + State
+    where T: State + 'static
 {
     initial_state: T,
     config: Config,
@@ -92,7 +92,7 @@ pub struct ApplicationBuilder<T>
 }
 
 impl<T> ApplicationBuilder<T>
-    where T: 'static + State
+    where T: State + 'static
 {
     pub fn new(initial_state: T, config: Config) -> ApplicationBuilder<T> {
         let world = World::new();
@@ -104,11 +104,11 @@ impl<T> ApplicationBuilder<T>
         }
     }
 
-    pub fn with<P: 'static>(mut self,
-                            sys: P,
-                            name: &str,
-                            priority: Priority) -> ApplicationBuilder<T>
-        where P: Processor<Arc<Mutex<Context>>>
+    pub fn with<P>(mut self,
+                   sys: P,
+                   name: &str,
+                   priority: Priority) -> ApplicationBuilder<T>
+        where P: Processor<Arc<Mutex<Context>>> + 'static
     {
         self.planner.add_system::<P>(sys, name, priority);
         self

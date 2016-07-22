@@ -53,8 +53,8 @@ pub struct StateMachine {
 }
 
 impl StateMachine {
-    pub fn new<T: 'static>(initial_state: T, planner: Planner<Arc<Mutex<Context>>>) -> StateMachine
-        where T: State
+    pub fn new<T>(initial_state: T, planner: Planner<Arc<Mutex<Context>>>) -> StateMachine
+        where T: State + 'static
     {
         StateMachine {
             running: false,
