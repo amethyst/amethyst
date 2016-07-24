@@ -7,7 +7,7 @@ extern crate gfx;
 
 pub use self::gfx::tex::Kind;
 
-use self::amethyst_renderer::{Layer, Target, Camera, Light, VertexPosNormal as Vertex};
+use self::amethyst_renderer::{Layer, Scene, Target, Camera, Light, VertexPosNormal as Vertex};
 use self::amethyst_renderer::target::ColorFormat;
 use self::gfx::format::{Formatted, SurfaceTyped};
 use self::gfx::traits::FactoryExt;
@@ -75,6 +75,21 @@ impl Renderer {
         match self.video_context {
             VideoContext::OpenGL { ref mut frame, .. } => {
                 frame.targets.remove(&name);
+            }
+            #[cfg(windows)]
+            VideoContext::Direct3D {  } => {
+                // stub
+            },
+            VideoContext::Null => (),
+        }
+    }
+
+    /// Add an empty scene.
+    pub fn add_scene(&mut self, name: String) {
+        match self.video_context {
+            VideoContext::OpenGL { ref mut frame, .. } => {
+                let scene = Scene::new();
+                frame.scenes.insert(name, scene);
             }
             #[cfg(windows)]
             VideoContext::Direct3D {  } => {
