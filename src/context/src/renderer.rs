@@ -334,7 +334,6 @@ impl Renderer {
 
 /// An enum with variants representing concrete
 /// `Fragment` types compatible with different backends.
-#[allow(dead_code)]
 pub enum FragmentImpl {
     OpenGL {
         fragment: amethyst_renderer::Fragment<gfx_device_gl::Resources>,
