@@ -1,3 +1,5 @@
+//! This module contains `VideoContext` enum which holds all the resources related to video subsystem.
+
 extern crate amethyst_renderer;
 extern crate glutin;
 extern crate gfx_window_glutin;
