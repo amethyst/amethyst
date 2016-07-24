@@ -3,8 +3,15 @@
 
 extern crate amethyst_renderer;
 extern crate gfx_device_gl;
+extern crate gfx;
 
-use self::amethyst_renderer::{Layer, Target, Camera, Fragment, Light};
+pub use self::gfx::tex::Kind;
+
+use self::amethyst_renderer::{Layer, Target, Camera, Light, VertexPosNormal as Vertex};
+use self::amethyst_renderer::target::ColorFormat;
+use self::gfx::format::{Formatted, SurfaceTyped};
+use self::gfx::traits::FactoryExt;
+use self::gfx::Factory;
 use video_context::{VideoContext, DisplayConfig};
 
 /// A wraper around `VideoContext` required to
@@ -77,13 +84,13 @@ impl Renderer {
         }
     }
 
-    /// Add a `Mesh` to the scene with name `scene_name`.
-    /// Return the index of the added `Mesh`.
-    pub fn add_mesh(&mut self, scene_name: String, mesh: Mesh) -> usize {
+    /// Add a `Fragment` to the scene with name `scene_name`.
+    /// Return the index of the added `Fragment`.
+    pub fn add_fragment(&mut self, scene_name: String, fragment: Fragment) -> usize {
         match self.video_context {
             VideoContext::OpenGL { ref mut frame, .. } => {
                 let scene = frame.scenes.get_mut(&scene_name).unwrap();
-                if let FragmentImpl::OpenGL { fragment } = mesh.fragment_impl {
+                if let FragmentImpl::OpenGL { fragment } = fragment.fragment_impl {
                     scene.fragments.push(fragment);
                 }
                 scene.fragments.len() - 1
@@ -96,8 +103,24 @@ impl Renderer {
             VideoContext::Null => 0,
         }
     }
-    /// Delete `Mesh` with index `idx` in scene `scene_name`.
-    pub fn delete_mesh(&mut self, scene_name: String, idx: usize) {
+    /// Get a mutable reference to the transform field of `Fragment` with index `idx`
+    /// in scene `scene_name`.
+    pub fn mut_fragment_transform(&mut self, scene_name: String, idx: usize) -> Option<&mut [[f32; 4]; 4]> {
+        match self.video_context {
+            VideoContext::OpenGL { ref mut frame, .. } => {
+                let scene = frame.scenes.get_mut(&scene_name).unwrap();
+                Some(&mut scene.fragments[idx].transform)
+            }
+            #[cfg(windows)]
+            VideoContext::Direct3D {  } => {
+                // stub
+                None
+            },
+            VideoContext::Null => None,
+        }
+    }
+    /// Delete `Fragment` with index `idx` in scene `scene_name`.
+    pub fn delete_fragment(&mut self, scene_name: String, idx: usize) {
         match self.video_context {
             VideoContext::OpenGL { ref mut frame, .. } => {
                 let scene = frame.scenes.get_mut(&scene_name).unwrap();
@@ -199,6 +222,91 @@ impl Renderer {
         }
     }
 
+    /// Create a `Fragment` from vertex data, ka texture, kd texture, and transform matrix.
+    pub fn create_fragment(&mut self, data: &Vec<Vertex>, ka: Texture, kd: Texture, transform: [[f32; 4]; 4]) -> Option<Fragment> {
+        match self.video_context {
+            VideoContext::OpenGL {
+                ref mut factory,
+                ..
+            } => {
+                let (buffer, slice) = factory.create_vertex_buffer_with_slice(&data, ());
+
+                let ka = match ka.texture_impl {
+                    TextureImpl::OpenGL { texture } => texture,
+                    #[cfg(windows)]
+                    TextureImpl::Direct3D {  } => return None,
+                    TextureImpl::Null => return None,
+                };
+
+                let kd = match kd.texture_impl {
+                    TextureImpl::OpenGL { texture } => texture,
+                    #[cfg(windows)]
+                    TextureImpl::Direct3D {  } => return None,
+                    TextureImpl::Null => return None,
+                };
+
+                let fragment = amethyst_renderer::Fragment {
+                    transform: transform,
+                    buffer: buffer,
+                    slice: slice,
+                    ka: ka,
+                    kd: kd,
+                };
+                let fragment_impl = FragmentImpl::OpenGL {
+                    fragment: fragment,
+                };
+                Some(Fragment {
+                    fragment_impl: fragment_impl,
+                })
+            },
+            #[cfg(windows)]
+            VideoContext::Direct3D {  } => {
+                // stub
+                None
+            },
+            VideoContext::Null => None,
+        }
+    }
+
+    /// Create a constant solid color `Texture`.
+    pub fn create_constant_texture(&self, color: [f32; 4]) -> Texture {
+        let texture = amethyst_renderer::Texture::Constant(color);
+        let texture_impl = TextureImpl::OpenGL {
+            texture: texture,
+        };
+        Texture {
+            texture_impl: texture_impl,
+        }
+    }
+
+    /// Create a `Texture` from pixel data.
+    pub fn create_texture(&mut self, kind: Kind, data: &[&[<<ColorFormat as Formatted>::Surface as SurfaceTyped>::DataType]]) -> Option<Texture> {
+        match self.video_context {
+            VideoContext::OpenGL {
+                ref mut factory,
+                ..
+            } => {
+                let shader_resource_view = match factory.create_texture_const::<ColorFormat>(kind, data) {
+                    Ok((_, shader_resource_view)) => shader_resource_view,
+                    Err(_) => return None,
+                };
+                let texture = amethyst_renderer::Texture::Texture(shader_resource_view);
+                let texture_impl = TextureImpl::OpenGL {
+                    texture: texture,
+                };
+                Some(Texture {
+                    texture_impl: texture_impl,
+                })
+            },
+            #[cfg(windows)]
+            VideoContext::Direct3D {  } => {
+                // stub
+                None
+            },
+            VideoContext::Null => None,
+        }
+    }
+
     /// Get a mutable reference to `VideoContext`.
     pub fn mut_video_context(&mut self) -> &mut VideoContext {
         &mut self.video_context
@@ -229,7 +337,7 @@ impl Renderer {
 #[allow(dead_code)]
 pub enum FragmentImpl {
     OpenGL {
-        fragment: Fragment<gfx_device_gl::Resources>,
+        fragment: amethyst_renderer::Fragment<gfx_device_gl::Resources>,
     },
     #[cfg(windows)]
     Direct3D {
@@ -240,6 +348,21 @@ pub enum FragmentImpl {
 
 /// A wraper around `Fragment` required to
 /// hide all platform specific code from the user.
-pub struct Mesh {
+pub struct Fragment {
     fragment_impl: FragmentImpl,
+}
+
+pub enum TextureImpl {
+    OpenGL {
+        texture: amethyst_renderer::Texture<gfx_device_gl::Resources>,
+    },
+    #[cfg(windows)]
+    Direct3D {
+        // stub
+    },
+    Null,
+}
+
+pub struct Texture {
+    texture_impl: TextureImpl,
 }
