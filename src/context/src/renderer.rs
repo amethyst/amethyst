@@ -7,7 +7,7 @@ extern crate gfx;
 
 pub use self::gfx::tex::Kind;
 
-use self::amethyst_renderer::{Layer, Scene, Target, Camera, Light, VertexPosNormal as Vertex};
+use self::amethyst_renderer::{Layer, Scene, Target, Camera, Light, VertexPosNormal};
 use self::amethyst_renderer::target::ColorFormat;
 use self::gfx::format::{Formatted, SurfaceTyped};
 use self::gfx::traits::FactoryExt;
@@ -248,7 +248,7 @@ impl Renderer {
     }
 
     /// Create a `Fragment` from vertex data, ka texture, kd texture, and transform matrix.
-    pub fn create_fragment(&mut self, data: &Vec<Vertex>, ka: Texture, kd: Texture, transform: [[f32; 4]; 4]) -> Option<Fragment> {
+    pub fn create_fragment(&mut self, data: &Vec<VertexPosNormal>, ka: Texture, kd: Texture, transform: [[f32; 4]; 4]) -> Option<Fragment> {
         match self.video_context {
             VideoContext::OpenGL {
                 ref mut factory,
