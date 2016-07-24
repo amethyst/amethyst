@@ -128,6 +128,21 @@ impl Renderer {
             VideoContext::Null => 0,
         }
     }
+    /// Lookup `Light` in scene `scene_name` by index.
+    pub fn mut_light(&mut self, scene_name: String, idx:usize) -> Option<&mut Light> {
+        match self.video_context {
+            VideoContext::OpenGL { ref mut frame, .. } => {
+                let scene = frame.scenes.get_mut(&scene_name).unwrap();
+                scene.lights.get_mut(idx)
+            }
+            #[cfg(windows)]
+            VideoContext::Direct3D {  } => {
+                // stub
+                None
+            },
+            VideoContext::Null => None,
+        }
+    }
     /// Delete `Light` with index `idx` in scene `scene_name`.
     pub fn delete_light(&mut self, scene_name: String, idx: usize) {
         match self.video_context {
