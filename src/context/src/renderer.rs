@@ -37,7 +37,7 @@ impl Renderer {
             }
             #[cfg(windows)]
             VideoContext::Direct3D {  } => {
-                // stub
+                unimplemented!();
             },
             VideoContext::Null => (),
         }
@@ -51,7 +51,7 @@ impl Renderer {
             }
             #[cfg(windows)]
             VideoContext::Direct3D {  } => {
-                // stub
+                unimplemented!();
             },
             VideoContext::Null => (),
         }
@@ -65,8 +65,7 @@ impl Renderer {
             }
             #[cfg(windows)]
             VideoContext::Direct3D {  } => {
-                // stub
-                None
+                unimplemented!();
             },
             VideoContext::Null => None,
         }
@@ -80,7 +79,7 @@ impl Renderer {
             }
             #[cfg(windows)]
             VideoContext::Direct3D {  } => {
-                // stub
+                unimplemented!();
             },
             VideoContext::Null => (),
         }
@@ -95,7 +94,7 @@ impl Renderer {
             }
             #[cfg(windows)]
             VideoContext::Direct3D {  } => {
-                // stub
+                unimplemented!();
             },
             VideoContext::Null => (),
         }
@@ -115,8 +114,7 @@ impl Renderer {
             }
             #[cfg(windows)]
             VideoContext::Direct3D {  } => {
-                // stub
-                0
+                unimplemented!();
             },
             VideoContext::Null => 0,
         }
@@ -132,8 +130,7 @@ impl Renderer {
             }
             #[cfg(windows)]
             VideoContext::Direct3D {  } => {
-                // stub
-                None
+                unimplemented!();
             },
             VideoContext::Null => None,
         }
@@ -148,7 +145,7 @@ impl Renderer {
             }
             #[cfg(windows)]
             VideoContext::Direct3D {  } => {
-                // stub
+                unimplemented!();
             },
             VideoContext::Null => (),
         }
@@ -166,8 +163,7 @@ impl Renderer {
             }
             #[cfg(windows)]
             VideoContext::Direct3D {  } => {
-                // stub
-                0
+                unimplemented!();
             },
             VideoContext::Null => 0,
         }
@@ -182,8 +178,7 @@ impl Renderer {
             }
             #[cfg(windows)]
             VideoContext::Direct3D {  } => {
-                // stub
-                None
+                unimplemented!();
             },
             VideoContext::Null => None,
         }
@@ -198,7 +193,7 @@ impl Renderer {
             }
             #[cfg(windows)]
             VideoContext::Direct3D {  } => {
-                // stub
+                unimplemented!();
             },
             VideoContext::Null => (),
         }
@@ -212,7 +207,7 @@ impl Renderer {
             }
             #[cfg(windows)]
             VideoContext::Direct3D {  } => {
-                // stub
+                unimplemented!();
             },
             VideoContext::Null => (),
         }
@@ -226,8 +221,7 @@ impl Renderer {
             }
             #[cfg(windows)]
             VideoContext::Direct3D {  } => {
-                // stub
-                None
+                unimplemented!();
             },
             VideoContext::Null => None,
         }
@@ -241,7 +235,7 @@ impl Renderer {
             }
             #[cfg(windows)]
             VideoContext::Direct3D {  } => {
-                // stub
+                unimplemented!();
             },
             VideoContext::Null => (),
         }
@@ -286,8 +280,7 @@ impl Renderer {
             },
             #[cfg(windows)]
             VideoContext::Direct3D {  } => {
-                // stub
-                None
+                unimplemented!();
             },
             VideoContext::Null => None,
         }
@@ -325,8 +318,7 @@ impl Renderer {
             },
             #[cfg(windows)]
             VideoContext::Direct3D {  } => {
-                // stub
-                None
+                unimplemented!();
             },
             VideoContext::Null => None,
         }
@@ -340,8 +332,7 @@ impl Renderer {
             }
             #[cfg(windows)]
             VideoContext::Direct3D {  } => {
-                // stub
-                None
+                unimplemented!();
             },
             VideoContext::Null => None,
         }
@@ -365,7 +356,7 @@ impl Renderer {
             }
             #[cfg(windows)]
             VideoContext::Direct3D {  } => {
-                // stub
+                unimplemented!();
             },
             VideoContext::Null => (),
         }
@@ -391,6 +382,8 @@ pub struct Fragment {
     fragment_impl: FragmentImpl,
 }
 
+/// An enum with variants representing concrete
+/// `Texture` types compatible with different backends.
 pub enum TextureImpl {
     OpenGL {
         texture: amethyst_renderer::Texture<gfx_device_gl::Resources>,
@@ -402,6 +395,8 @@ pub enum TextureImpl {
     Null,
 }
 
+/// A wraper around `Texture` required to
+/// hide all platform specific code from the user.
 pub struct Texture {
     texture_impl: TextureImpl,
 }

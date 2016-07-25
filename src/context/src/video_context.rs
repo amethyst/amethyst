@@ -61,8 +61,7 @@ impl VideoContext {
 
 #[cfg(windows)]
     fn new_d3d() -> VideoContext {
-        // stub
-        VideoContext::Direct3D {  }
+        unimplemented!();
     }
 
     fn new_gl(display_config: &DisplayConfig) -> VideoContext {

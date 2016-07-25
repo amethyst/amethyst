@@ -89,8 +89,7 @@ impl Context {
             #[cfg(windows)]
             VideoContext::Direct3D {  } => {
                 // stub
-                let event = EngineEvent::new(event::Event::Closed);
-                events.push(event);
+                unimplemented!();
             },
             VideoContext::Null => (),
         }
