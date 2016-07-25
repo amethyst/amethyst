@@ -56,20 +56,6 @@ impl Renderer {
             VideoContext::Null => (),
         }
     }
-    /// Lookup a rendering `Target` by name.
-    pub fn mut_target(&mut self, name: &str) -> Option<&mut Box<Target>> {
-        match self.video_context {
-            VideoContext::OpenGL { ref mut frame, .. } => {
-                let name: String = name.into();
-                frame.targets.get_mut(&name)
-            }
-            #[cfg(windows)]
-            VideoContext::Direct3D {  } => {
-                unimplemented!();
-            },
-            VideoContext::Null => None,
-        }
-    }
     /// Delete a rendering `Target`.
     pub fn delete_target(&mut self, name: &str) {
         match self.video_context {
@@ -85,12 +71,25 @@ impl Renderer {
         }
     }
 
-    /// Add an empty scene.
+    /// Add an empty `Scene`.
     pub fn add_scene(&mut self, name: &str) {
         match self.video_context {
             VideoContext::OpenGL { ref mut frame, .. } => {
                 let scene = Scene::new();
                 frame.scenes.insert(name.into(), scene);
+            }
+            #[cfg(windows)]
+            VideoContext::Direct3D {  } => {
+                unimplemented!();
+            },
+            VideoContext::Null => (),
+        }
+    }
+    /// Delete a `Scene`.
+    pub fn delete_scene(&mut self, name: &str) {
+        match self.video_context {
+            VideoContext::OpenGL { ref mut frame, .. } => {
+                frame.scenes.remove(name.into());
             }
             #[cfg(windows)]
             VideoContext::Direct3D {  } => {
