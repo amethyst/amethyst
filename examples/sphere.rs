@@ -32,11 +32,12 @@ impl State for Example {
     }
 
     fn on_start(&mut self, context: &mut Context, _: &mut World) {
-        use amethyst::renderer::pass::{Clear, DrawFlat};
-        use amethyst::renderer::{Layer, Camera};
+        use amethyst::renderer::pass::{Clear, DrawShaded};
+        use amethyst::renderer::{Layer, Camera, Light};
+
         let (w, h) = context.renderer.get_dimensions().unwrap();
         let proj = Camera::perspective(60.0, w as f32 / h as f32, 1.0, 100.0);
-        let eye = [0., 10., 0.];
+        let eye = [0., 5., 0.];
         let target = [0., 0., 0.];
         let up = [0., 0., 1.];
         let view = Camera::look_at(eye, target, up);
@@ -47,20 +48,32 @@ impl State for Example {
 
         let sphere = build_sphere();
 
-        let ka = context.renderer.create_constant_texture([1., 1., 1., 1.]);
-        let kd = context.renderer.create_constant_texture([1., 1., 1., 1.]);
+        let ka = context.renderer.create_constant_texture([0.0, 0.0, 0.01, 1.]);
+        let kd = context.renderer.create_constant_texture([0.0, 1.0, 0.0, 1.]);
 
-        let transform: [[f32; 4]; 4] = cgmath::Matrix4::from_scale(1.).into();
-
+        let translation = Vector3::new(0.0, 0.0, 0.0);
+        let transform: [[f32; 4]; 4] = cgmath::Matrix4::from_translation(translation).into();
         let fragment = context.renderer.create_fragment(&sphere, ka, kd, transform).unwrap();
         context.renderer.add_fragment("main", fragment);
+
+        let light = Light {
+            color: [1., 1., 1., 1.],
+            radius: 1.,
+            center: [2., 2., 2.],
+            propagation_constant: 0.,
+            propagation_linear: 0.,
+            propagation_r_square: 1.,
+        };
+
+        context.renderer.add_light("main", light);
 
         let layer =
             Layer::new("main",
                         vec![
                             Clear::new([0., 0., 0., 1.]),
-                            DrawFlat::new("main", "main"),
+                            DrawShaded::new("main", "main"),
                         ]);
+
         let pipeline = vec![layer];
         context.renderer.set_pipeline(pipeline);
     }
