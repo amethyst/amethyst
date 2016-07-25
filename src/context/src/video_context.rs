@@ -112,6 +112,12 @@ impl VideoContext {
             }
             ));
 
+        let (w, h) = window.get_inner_size().unwrap();
+        frame.targets.insert(
+            "gbuffer".into(),
+            Box::new(amethyst_renderer::target::GeometryBuffer::new(&mut factory, (w as u16, h as u16)))
+        );
+
         let video_context = VideoContext::OpenGL {
             window: window,
             device: device,
