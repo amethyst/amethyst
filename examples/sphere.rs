@@ -48,12 +48,14 @@ impl State for Example {
 
         let sphere = build_sphere();
 
-        let ka = context.renderer.create_constant_texture([0.0, 0.0, 0.01, 1.]);
-        let kd = context.renderer.create_constant_texture([0.0, 1.0, 0.0, 1.]);
+        context.asset_manager.create_constant_texture("dark_blue", [0.0, 0.0, 0.01, 1.]);
+        context.asset_manager.create_constant_texture("green", [0.0, 1.0, 0.0, 1.]);
+        context.asset_manager.load_mesh("sphere", &sphere);
 
         let translation = Vector3::new(0.0, 0.0, 0.0);
         let transform: [[f32; 4]; 4] = cgmath::Matrix4::from_translation(translation).into();
-        let fragment = context.renderer.create_fragment(&sphere, ka, kd, transform).unwrap();
+        let fragment = context.asset_manager.get_fragment("sphere", "dark_blue", "green", transform).unwrap();
+
         context.renderer.add_fragment("main", fragment);
 
         let light = Light {

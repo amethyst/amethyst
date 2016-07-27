@@ -7,12 +7,8 @@ extern crate gfx;
 
 pub use self::gfx::tex::Kind;
 
-use self::amethyst_renderer::{Layer, Scene, Target, Camera, Light, VertexPosNormal};
-use self::amethyst_renderer::target::ColorFormat;
-use self::gfx::format::{Formatted, SurfaceTyped};
-use self::gfx::traits::FactoryExt;
-use self::gfx::Factory;
-use video_context::{VideoContext, DisplayConfig};
+use self::amethyst_renderer::{Layer, Scene, Target, Camera, Light};
+use video_context::VideoContext;
 
 /// A wraper around `VideoContext` required to
 /// hide all platform specific code from the user.
@@ -22,8 +18,7 @@ pub struct Renderer {
 
 impl Renderer {
     /// Create a new `Renderer` from `DisplayConfig`.
-    pub fn new(display_config: DisplayConfig) -> Renderer {
-        let video_context = VideoContext::new(display_config);
+    pub fn new(video_context: VideoContext) -> Renderer {
         Renderer {
             video_context: video_context,
         }
@@ -60,8 +55,7 @@ impl Renderer {
     pub fn delete_target(&mut self, name: &str) {
         match self.video_context {
             VideoContext::OpenGL { ref mut frame, .. } => {
-                let name: String = name.into();
-                frame.targets.remove(&name);
+                frame.targets.remove(name.into());
             }
             #[cfg(windows)]
             VideoContext::Direct3D {  } => {
@@ -104,8 +98,7 @@ impl Renderer {
     pub fn add_fragment(&mut self, scene_name: &str, fragment: Fragment) -> usize {
         match self.video_context {
             VideoContext::OpenGL { ref mut frame, .. } => {
-                let scene_name: String = scene_name.into();
-                let scene = frame.scenes.get_mut(&scene_name).unwrap();
+                let scene = frame.scenes.get_mut(scene_name.into()).unwrap();
                 if let FragmentImpl::OpenGL { fragment } = fragment.fragment_impl {
                     scene.fragments.push(fragment);
                 }
@@ -123,8 +116,7 @@ impl Renderer {
     pub fn mut_fragment_transform(&mut self, scene_name: &str, idx: usize) -> Option<&mut [[f32; 4]; 4]> {
         match self.video_context {
             VideoContext::OpenGL { ref mut frame, .. } => {
-                let scene_name: String = scene_name.into();
-                let scene = frame.scenes.get_mut(&scene_name).unwrap();
+                let scene = frame.scenes.get_mut(scene_name.into()).unwrap();
                 Some(&mut scene.fragments[idx].transform)
             }
             #[cfg(windows)]
@@ -138,8 +130,7 @@ impl Renderer {
     pub fn delete_fragment(&mut self, scene_name: &str, idx: usize) {
         match self.video_context {
             VideoContext::OpenGL { ref mut frame, .. } => {
-                let scene_name: String = scene_name.into();
-                let scene = frame.scenes.get_mut(&scene_name).unwrap();
+                let scene = frame.scenes.get_mut(scene_name.into()).unwrap();
                 scene.fragments.remove(idx);
             }
             #[cfg(windows)]
@@ -155,8 +146,7 @@ impl Renderer {
     pub fn add_light(&mut self, scene_name: &str, light: Light) -> usize {
         match self.video_context {
             VideoContext::OpenGL { ref mut frame, .. } => {
-                let scene_name: String = scene_name.into();
-                let scene = frame.scenes.get_mut(&scene_name).unwrap();
+                let scene = frame.scenes.get_mut(scene_name.into()).unwrap();
                 scene.lights.push(light);
                 scene.lights.len() - 1
             }
@@ -171,8 +161,7 @@ impl Renderer {
     pub fn mut_light(&mut self, scene_name: &str, idx:usize) -> Option<&mut Light> {
         match self.video_context {
             VideoContext::OpenGL { ref mut frame, .. } => {
-                let scene_name: String = scene_name.into();
-                let scene = frame.scenes.get_mut(&scene_name).unwrap();
+                let scene = frame.scenes.get_mut(scene_name.into()).unwrap();
                 scene.lights.get_mut(idx)
             }
             #[cfg(windows)]
@@ -186,8 +175,7 @@ impl Renderer {
     pub fn delete_light(&mut self, scene_name: &str, idx: usize) {
         match self.video_context {
             VideoContext::OpenGL { ref mut frame, .. } => {
-                let scene_name: String = scene_name.into();
-                let scene = frame.scenes.get_mut(&scene_name).unwrap();
+                let scene = frame.scenes.get_mut(scene_name.into()).unwrap();
                 scene.lights.remove(idx);
             }
             #[cfg(windows)]
@@ -215,8 +203,7 @@ impl Renderer {
     pub fn mut_camera(&mut self, name: &str) -> Option<&mut Camera> {
         match self.video_context {
             VideoContext::OpenGL { ref mut frame, .. } => {
-                let name: String = name.into();
-                frame.cameras.get_mut(&name)
+                frame.cameras.get_mut(name.into())
             }
             #[cfg(windows)]
             VideoContext::Direct3D {  } => {
@@ -229,97 +216,13 @@ impl Renderer {
     pub fn delete_camera(&mut self, name: &str) {
         match self.video_context {
             VideoContext::OpenGL { ref mut frame, .. } => {
-                let name: String = name.into();
-                frame.cameras.remove(&name);
+                frame.cameras.remove(name.into());
             }
             #[cfg(windows)]
             VideoContext::Direct3D {  } => {
                 unimplemented!();
             },
             VideoContext::Null => (),
-        }
-    }
-
-    /// Create a `Fragment` from vertex data, ka texture, kd texture, and transform matrix.
-    pub fn create_fragment(&mut self, data: &Vec<VertexPosNormal>, ka: Texture, kd: Texture, transform: [[f32; 4]; 4]) -> Option<Fragment> {
-        match self.video_context {
-            VideoContext::OpenGL {
-                ref mut factory,
-                ..
-            } => {
-                let (buffer, slice) = factory.create_vertex_buffer_with_slice(&data, ());
-
-                let ka = match ka.texture_impl {
-                    TextureImpl::OpenGL { texture } => texture,
-                    #[cfg(windows)]
-                    TextureImpl::Direct3D {  } => return None,
-                    TextureImpl::Null => return None,
-                };
-
-                let kd = match kd.texture_impl {
-                    TextureImpl::OpenGL { texture } => texture,
-                    #[cfg(windows)]
-                    TextureImpl::Direct3D {  } => return None,
-                    TextureImpl::Null => return None,
-                };
-
-                let fragment = amethyst_renderer::Fragment {
-                    transform: transform,
-                    buffer: buffer,
-                    slice: slice,
-                    ka: ka,
-                    kd: kd,
-                };
-                let fragment_impl = FragmentImpl::OpenGL {
-                    fragment: fragment,
-                };
-                Some(Fragment {
-                    fragment_impl: fragment_impl,
-                })
-            },
-            #[cfg(windows)]
-            VideoContext::Direct3D {  } => {
-                unimplemented!();
-            },
-            VideoContext::Null => None,
-        }
-    }
-
-    /// Create a constant solid color `Texture`.
-    pub fn create_constant_texture(&self, color: [f32; 4]) -> Texture {
-        let texture = amethyst_renderer::Texture::Constant(color);
-        let texture_impl = TextureImpl::OpenGL {
-            texture: texture,
-        };
-        Texture {
-            texture_impl: texture_impl,
-        }
-    }
-
-    /// Create a `Texture` from pixel data.
-    pub fn create_texture(&mut self, kind: Kind, data: &[&[<<ColorFormat as Formatted>::Surface as SurfaceTyped>::DataType]]) -> Option<Texture> {
-        match self.video_context {
-            VideoContext::OpenGL {
-                ref mut factory,
-                ..
-            } => {
-                let shader_resource_view = match factory.create_texture_const::<ColorFormat>(kind, data) {
-                    Ok((_, shader_resource_view)) => shader_resource_view,
-                    Err(_) => return None,
-                };
-                let texture = amethyst_renderer::Texture::Texture(shader_resource_view);
-                let texture_impl = TextureImpl::OpenGL {
-                    texture: texture,
-                };
-                Some(Texture {
-                    texture_impl: texture_impl,
-                })
-            },
-            #[cfg(windows)]
-            VideoContext::Direct3D {  } => {
-                unimplemented!();
-            },
-            VideoContext::Null => None,
         }
     }
 
@@ -378,11 +281,12 @@ pub enum FragmentImpl {
 /// A wraper around `Fragment` required to
 /// hide all platform specific code from the user.
 pub struct Fragment {
-    fragment_impl: FragmentImpl,
+    pub fragment_impl: FragmentImpl,
 }
 
 /// An enum with variants representing concrete
 /// `Texture` types compatible with different backends.
+#[derive(Clone)]
 pub enum TextureImpl {
     OpenGL {
         texture: amethyst_renderer::Texture<gfx_device_gl::Resources>,
@@ -396,6 +300,7 @@ pub enum TextureImpl {
 
 /// A wraper around `Texture` required to
 /// hide all platform specific code from the user.
+#[derive(Clone)]
 pub struct Texture {
-    texture_impl: TextureImpl,
+    pub texture_impl: TextureImpl,
 }

@@ -33,8 +33,11 @@ pub mod broadcaster;
 pub mod timing;
 pub mod event;
 pub mod renderer;
+pub mod asset_manager;
+mod video_init;
 use video_context::{VideoContext, DisplayConfig};
 use renderer::Renderer;
+use asset_manager::AssetManager;
 use broadcaster::Broadcaster;
 use event::EngineEvent;
 use timing::{Duration, SteadyTime};
@@ -51,6 +54,7 @@ config!(
 pub struct Context {
     // pub video_context: VideoContext,
     pub renderer: Renderer,
+    pub asset_manager: AssetManager,
     pub broadcaster: Broadcaster,
     pub delta_time: Duration,
     pub fixed_step: Duration,
@@ -62,12 +66,16 @@ unsafe impl Send for Context {}
 impl Context {
     /// Create a `Context` configured according to `Config`
     pub fn new(config: Config) -> Context {
-        let renderer = Renderer::new(config.display_config);
+        let (video_context, factory_impl) =
+            video_init::create_video_context_and_factory_impl(config.display_config);
+        let renderer = Renderer::new(video_context);
+        let asset_manager = AssetManager::new(factory_impl);
         let mut broadcaster = Broadcaster::new();
         broadcaster.register::<EngineEvent>();
 
         Context {
             renderer: renderer,
+            asset_manager: asset_manager,
             broadcaster: broadcaster,
             delta_time: Duration::zero(),
             fixed_step: Duration::microseconds(16666),

@@ -103,6 +103,7 @@ impl<R, C> Renderer<R, C>
 }
 
 /// holds a 1x1 texture that can be used to store constant colors
+#[derive(Clone)]
 pub struct ConstantColorTexture<R: gfx::Resources> {
     texture: gfx::handle::Texture<R, gfx::format::R8_G8_B8_A8>,
     view: gfx::handle::ShaderResourceView<R, [f32; 4]>
@@ -130,6 +131,7 @@ impl<R: gfx::Resources> ConstantColorTexture<R> {
     }
 }
 
+#[derive(Clone)]
 pub enum Texture<R: gfx::Resources> {
     Constant([f32; 4]),
     Texture(gfx::handle::ShaderResourceView<R, [f32; 4]>),
