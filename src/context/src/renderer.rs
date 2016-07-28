@@ -1,6 +1,20 @@
 //! This module provides a frontend for
 //! `amethyst_renderer`.
 
+macro_rules! unwind_video_context_mut {
+    ($variable:expr, $field1:ident, $expr_field:expr, $expr_null:expr) => {
+        match $variable {
+            VideoContext::OpenGL {
+                ref mut $field1,
+                ..
+            } => $expr_field,
+            #[cfg(windows)]
+            VideoContext::Direct3D { } => unimplemented!(),
+            VideoContext::Null => $expr_null,
+        }
+    };
+}
+
 extern crate amethyst_renderer;
 extern crate gfx_device_gl;
 extern crate gfx;
@@ -26,216 +40,215 @@ impl Renderer {
 
     /// Set the rendering pipeline to be used.
     pub fn set_pipeline(&mut self, pipeline: Vec<Layer>) {
-        match self.video_context {
-            VideoContext::OpenGL { ref mut frame, .. } => {
+        unwind_video_context_mut!(
+            self.video_context,
+            frame,
+            {
                 frame.layers = pipeline;
-            }
-            #[cfg(windows)]
-            VideoContext::Direct3D {  } => {
-                unimplemented!();
             },
-            VideoContext::Null => (),
-        }
+            ()
+        )
     }
 
     /// Add a rendering `Target`.
     pub fn add_target(&mut self, target: Box<Target>, name: &str) {
-        match self.video_context {
-            VideoContext::OpenGL { ref mut frame, .. } => {
+        unwind_video_context_mut!(
+            self.video_context,
+            frame,
+            {
                 frame.targets.insert(name.into(), target);
-            }
-            #[cfg(windows)]
-            VideoContext::Direct3D {  } => {
-                unimplemented!();
             },
-            VideoContext::Null => (),
-        }
+            ()
+        )
     }
     /// Delete a rendering `Target`.
     pub fn delete_target(&mut self, name: &str) {
-        match self.video_context {
-            VideoContext::OpenGL { ref mut frame, .. } => {
+        unwind_video_context_mut!(
+            self.video_context,
+            frame,
+            {
                 frame.targets.remove(name.into());
-            }
-            #[cfg(windows)]
-            VideoContext::Direct3D {  } => {
-                unimplemented!();
             },
-            VideoContext::Null => (),
-        }
+            ()
+        )
     }
 
     /// Add an empty `Scene`.
     pub fn add_scene(&mut self, name: &str) {
-        match self.video_context {
-            VideoContext::OpenGL { ref mut frame, .. } => {
+        unwind_video_context_mut!(
+            self.video_context,
+            frame,
+            {
                 let scene = Scene::new();
                 frame.scenes.insert(name.into(), scene);
-            }
-            #[cfg(windows)]
-            VideoContext::Direct3D {  } => {
-                unimplemented!();
             },
-            VideoContext::Null => (),
-        }
+            ()
+        )
     }
     /// Delete a `Scene`.
     pub fn delete_scene(&mut self, name: &str) {
-        match self.video_context {
-            VideoContext::OpenGL { ref mut frame, .. } => {
-                frame.scenes.remove(name.into());
-            }
-            #[cfg(windows)]
-            VideoContext::Direct3D {  } => {
-                unimplemented!();
+        unwind_video_context_mut!(
+            self.video_context,
+            frame,
+            {
+                frame.scenes.remove(name);
             },
-            VideoContext::Null => (),
-        }
+            ()
+        )
     }
 
     /// Add a `Fragment` to the scene with name `scene_name`.
     /// Return the index of the added `Fragment`.
-    pub fn add_fragment(&mut self, scene_name: &str, fragment: Fragment) -> usize {
+    pub fn add_fragment(&mut self, scene_name: &str, fragment: Fragment) -> Option<usize> {
         match self.video_context {
             VideoContext::OpenGL { ref mut frame, .. } => {
-                let scene = frame.scenes.get_mut(scene_name.into()).unwrap();
-                if let FragmentImpl::OpenGL { fragment } = fragment.fragment_impl {
-                    scene.fragments.push(fragment);
+                let scene = match frame.scenes.get_mut(scene_name.into()) {
+                    Some(scene) => scene,
+                    None => return None,
+                };
+                match fragment.fragment_impl {
+                    FragmentImpl::OpenGL {
+                        fragment
+                    } => {
+                        scene.fragments.push(fragment);
+                        Some(scene.fragments.len() - 1)
+                    },
+                    #[cfg(windows)]
+                    FragmentImpl::Direct3D {
+                    } => unimplemented!(),
+                    FragmentImpl::Null => None,
                 }
-                scene.fragments.len() - 1
             }
             #[cfg(windows)]
             VideoContext::Direct3D {  } => {
                 unimplemented!();
             },
-            VideoContext::Null => 0,
+            VideoContext::Null => None,
         }
     }
     /// Get a mutable reference to the transform field of `Fragment` with index `idx`
     /// in scene `scene_name`.
     pub fn mut_fragment_transform(&mut self, scene_name: &str, idx: usize) -> Option<&mut [[f32; 4]; 4]> {
-        match self.video_context {
-            VideoContext::OpenGL { ref mut frame, .. } => {
-                let scene = frame.scenes.get_mut(scene_name.into()).unwrap();
+        unwind_video_context_mut!(
+            self.video_context,
+            frame,
+            {
+                let scene = match frame.scenes.get_mut(scene_name.into()) {
+                    Some(scene) => scene,
+                    None => return None,
+                };
                 Some(&mut scene.fragments[idx].transform)
-            }
-            #[cfg(windows)]
-            VideoContext::Direct3D {  } => {
-                unimplemented!();
             },
-            VideoContext::Null => None,
-        }
+            None
+        )
     }
     /// Delete `Fragment` with index `idx` in scene `scene_name`.
     pub fn delete_fragment(&mut self, scene_name: &str, idx: usize) {
-        match self.video_context {
-            VideoContext::OpenGL { ref mut frame, .. } => {
-                let scene = frame.scenes.get_mut(scene_name.into()).unwrap();
+        unwind_video_context_mut!(
+            self.video_context,
+            frame,
+            {
+                let scene = match frame.scenes.get_mut(scene_name.into()) {
+                    Some(scene) => scene,
+                    None => return,
+                };
                 scene.fragments.remove(idx);
-            }
-            #[cfg(windows)]
-            VideoContext::Direct3D {  } => {
-                unimplemented!();
             },
-            VideoContext::Null => (),
-        }
+            ()
+        )
     }
 
     /// Add a `Light` to the scene `scene_name`.
     /// Return the index of the added `Light`.
-    pub fn add_light(&mut self, scene_name: &str, light: Light) -> usize {
-        match self.video_context {
-            VideoContext::OpenGL { ref mut frame, .. } => {
-                let scene = frame.scenes.get_mut(scene_name.into()).unwrap();
+    pub fn add_light(&mut self, scene_name: &str, light: Light) -> Option<usize> {
+        unwind_video_context_mut!(
+            self.video_context,
+            frame,
+            {
+                let scene = match frame.scenes.get_mut(scene_name.into()) {
+                    Some(scene) => scene,
+                    None => return None,
+                };
                 scene.lights.push(light);
-                scene.lights.len() - 1
-            }
-            #[cfg(windows)]
-            VideoContext::Direct3D {  } => {
-                unimplemented!();
+                Some(scene.lights.len() - 1)
             },
-            VideoContext::Null => 0,
-        }
+            None
+        )
     }
     /// Lookup `Light` in scene `scene_name` by index.
     pub fn mut_light(&mut self, scene_name: &str, idx:usize) -> Option<&mut Light> {
-        match self.video_context {
-            VideoContext::OpenGL { ref mut frame, .. } => {
-                let scene = frame.scenes.get_mut(scene_name.into()).unwrap();
+        unwind_video_context_mut!(
+            self.video_context,
+            frame,
+            {
+                let scene = match frame.scenes.get_mut(scene_name.into()) {
+                    Some(scene) => scene,
+                    None => return None,
+                };
                 scene.lights.get_mut(idx)
-            }
-            #[cfg(windows)]
-            VideoContext::Direct3D {  } => {
-                unimplemented!();
             },
-            VideoContext::Null => None,
-        }
+            None
+        )
     }
     /// Delete `Light` with index `idx` in scene `scene_name`.
     pub fn delete_light(&mut self, scene_name: &str, idx: usize) {
-        match self.video_context {
-            VideoContext::OpenGL { ref mut frame, .. } => {
-                let scene = frame.scenes.get_mut(scene_name.into()).unwrap();
+        unwind_video_context_mut!(
+            self.video_context,
+            frame,
+            {
+                let scene = match frame.scenes.get_mut(scene_name.into()) {
+                    Some(scene) => scene,
+                    None => return,
+                };
                 scene.lights.remove(idx);
-            }
-            #[cfg(windows)]
-            VideoContext::Direct3D {  } => {
-                unimplemented!();
             },
-            VideoContext::Null => (),
-        }
+            ()
+        )
     }
 
     /// Add a `Camera`.
     pub fn add_camera(&mut self, camera: Camera, name: &str) {
-        match self.video_context {
-            VideoContext::OpenGL { ref mut frame, .. } => {
+        unwind_video_context_mut!(
+            self.video_context,
+            frame,
+            {
                 frame.cameras.insert(name.into(), camera);
-            }
-            #[cfg(windows)]
-            VideoContext::Direct3D {  } => {
-                unimplemented!();
             },
-            VideoContext::Null => (),
-        }
+            ()
+        )
     }
     /// Lookup a `Camera` by name.
     pub fn mut_camera(&mut self, name: &str) -> Option<&mut Camera> {
-        match self.video_context {
-            VideoContext::OpenGL { ref mut frame, .. } => {
+        unwind_video_context_mut!(
+            self.video_context,
+            frame,
+            {
                 frame.cameras.get_mut(name.into())
-            }
-            #[cfg(windows)]
-            VideoContext::Direct3D {  } => {
-                unimplemented!();
             },
-            VideoContext::Null => None,
-        }
+            None
+        )
     }
     /// Delete a `Camera`.
     pub fn delete_camera(&mut self, name: &str) {
-        match self.video_context {
-            VideoContext::OpenGL { ref mut frame, .. } => {
+        unwind_video_context_mut!(
+            self.video_context,
+            frame,
+            {
                 frame.cameras.remove(name.into());
-            }
-            #[cfg(windows)]
-            VideoContext::Direct3D {  } => {
-                unimplemented!();
             },
-            VideoContext::Null => (),
-        }
+            ()
+        )
     }
 
-    pub fn get_dimensions(&mut self) -> Option<(u32, u32)> {
+    pub fn get_dimensions(&self) -> Option<(u32, u32)> {
         match self.video_context {
-            VideoContext::OpenGL { ref window,
-                                   .. } => {
-                window.get_inner_size()
-            }
+            VideoContext::OpenGL {
+                ref window,
+                ..
+            } => window.get_inner_size(),
             #[cfg(windows)]
-            VideoContext::Direct3D {  } => {
-                unimplemented!();
-            },
+            VideoContext::Direct3D {
+            } => unimplemented!(),
             VideoContext::Null => None,
         }
     }
@@ -248,18 +261,18 @@ impl Renderer {
     /// Submit the `Frame` to `amethyst_renderer::Renderer`.
     pub fn submit(&mut self) {
         match self.video_context {
-            VideoContext::OpenGL { ref window,
-                                   ref mut renderer,
-                                   ref frame,
-                                   ref mut device,
-                                   .. } => {
-                renderer.submit(frame, device);
-                window.swap_buffers().unwrap();
-            }
-            #[cfg(windows)]
-            VideoContext::Direct3D {  } => {
-                unimplemented!();
+            VideoContext::OpenGL {
+                ref window,
+                ref mut device,
+                ref mut renderer,
+                ref frame,
+            } => {
+                    renderer.submit(frame, device);
+                    window.swap_buffers().unwrap();
             },
+            #[cfg(windows)]
+            VideoContext::Direct3D {
+            } => unimplemented!(),
             VideoContext::Null => (),
         }
     }
