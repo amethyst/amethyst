@@ -1,19 +1,22 @@
-//! This module provides an asset managar
+//! This module provides an asset manager
 //! which loads and provides access to assets,
-//! such as `Texture`s, `Mesh`es and `Fragment`s.
+//! such as `Texture`s, `Mesh`es, and `Fragment`s.
 
 extern crate amethyst_renderer;
 extern crate gfx_device_gl;
 extern crate gfx;
 
+pub use self::gfx::tex::Kind;
 use self::gfx::traits::FactoryExt;
 use self::gfx::Factory;
 use self::gfx::format::{Formatted, SurfaceTyped};
 use self::amethyst_renderer::VertexPosNormal;
 use self::amethyst_renderer::target::ColorFormat;
 use std::collections::HashMap;
-use renderer::{Fragment, Texture, Kind, TextureImpl, FragmentImpl};
+use renderer::{Fragment, FragmentImpl};
 
+/// An enum with variants representing concrete
+/// `Factory` types compatible with different backends.
 pub enum FactoryImpl {
     OpenGL {
         factory: gfx_device_gl::Factory,
@@ -25,24 +28,7 @@ pub enum FactoryImpl {
     Null,
 }
 
-#[derive(Clone)]
-pub enum MeshImpl {
-    OpenGL {
-        buffer: gfx::handle::Buffer<gfx_device_gl::Resources, VertexPosNormal>,
-        slice: gfx::Slice<gfx_device_gl::Resources>,
-    },
-    #[cfg(windows)]
-    Direct3D {
-        // stub
-    },
-    Null,
-}
-
-#[derive(Clone)]
-pub struct Mesh {
-    mesh_impl: MeshImpl,
-}
-
+/// A struct which allows loading and accessing assets.
 pub struct AssetManager {
     factory_impl: FactoryImpl,
     meshes: HashMap<String, Mesh>,
@@ -150,14 +136,14 @@ impl AssetManager {
                     TextureImpl::OpenGL { texture } => texture,
                     #[cfg(windows)]
                     TextureImpl::Direct3D {  } => return None,
-                    TextureImpl::Null {  } => return None,
+                    TextureImpl::Null => return None,
                 };
 
                 let kd = match kd.texture_impl {
                     TextureImpl::OpenGL { texture } => texture,
                     #[cfg(windows)]
                     TextureImpl::Direct3D {  } => return None,
-                    TextureImpl::Null {  } => return None,
+                    TextureImpl::Null => return None,
                 };
 
                 let (buffer, slice) = match mesh.mesh_impl {
@@ -188,4 +174,47 @@ impl AssetManager {
             FactoryImpl::Null => None,
         }
     }
+}
+
+/// An enum with variants representing concrete
+/// `Mesh` types compatible with different backends.
+#[derive(Clone)]
+pub enum MeshImpl {
+    OpenGL {
+        buffer: gfx::handle::Buffer<gfx_device_gl::Resources, VertexPosNormal>,
+        slice: gfx::Slice<gfx_device_gl::Resources>,
+    },
+    #[cfg(windows)]
+    Direct3D {
+        // stub
+    },
+    Null,
+}
+
+/// A wraper around `Buffer` and `Slice` required to
+/// hide all platform specific code from the user.
+#[derive(Clone)]
+pub struct Mesh {
+    mesh_impl: MeshImpl,
+}
+
+/// An enum with variants representing concrete
+/// `Texture` types compatible with different backends.
+#[derive(Clone)]
+pub enum TextureImpl {
+    OpenGL {
+        texture: amethyst_renderer::Texture<gfx_device_gl::Resources>,
+    },
+    #[cfg(windows)]
+    Direct3D {
+        // stub
+    },
+    Null,
+}
+
+/// A wraper around `Texture` required to
+/// hide all platform specific code from the user.
+#[derive(Clone)]
+pub struct Texture {
+    texture_impl: TextureImpl,
 }

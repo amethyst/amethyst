@@ -19,8 +19,6 @@ extern crate amethyst_renderer;
 extern crate gfx_device_gl;
 extern crate gfx;
 
-pub use self::gfx::tex::Kind;
-
 use self::amethyst_renderer::{Layer, Scene, Target, Camera, Light};
 use video_context::VideoContext;
 
@@ -295,25 +293,4 @@ pub enum FragmentImpl {
 /// hide all platform specific code from the user.
 pub struct Fragment {
     pub fragment_impl: FragmentImpl,
-}
-
-/// An enum with variants representing concrete
-/// `Texture` types compatible with different backends.
-#[derive(Clone)]
-pub enum TextureImpl {
-    OpenGL {
-        texture: amethyst_renderer::Texture<gfx_device_gl::Resources>,
-    },
-    #[cfg(windows)]
-    Direct3D {
-        // stub
-    },
-    Null,
-}
-
-/// A wraper around `Texture` required to
-/// hide all platform specific code from the user.
-#[derive(Clone)]
-pub struct Texture {
-    pub texture_impl: TextureImpl,
 }
