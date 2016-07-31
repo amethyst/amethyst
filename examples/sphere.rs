@@ -1,16 +1,12 @@
 extern crate amethyst;
-extern crate genmesh;
 extern crate cgmath;
 
-use genmesh::generators::SphereUV;
-use genmesh::{Triangulate, MapToVertices, Vertices};
-use cgmath::{Vector3, EuclideanVector};
+use cgmath::Vector3;
 
 use amethyst::engine::{Application, State, Trans};
 use amethyst::context::Context;
 use amethyst::config::Element;
 use amethyst::ecs::{World, Entity};
-use amethyst::renderer::VertexPosNormal;
 
 struct Example;
 
@@ -46,11 +42,9 @@ impl State for Example {
         context.renderer.add_scene("main");
         context.renderer.add_camera(camera, "main");
 
-        let sphere = build_sphere();
-
         context.asset_manager.create_constant_texture("dark_blue", [0.0, 0.0, 0.01, 1.]);
         context.asset_manager.create_constant_texture("green", [0.0, 1.0, 0.0, 1.]);
-        context.asset_manager.load_mesh("sphere", &sphere);
+        context.asset_manager.gen_sphere("sphere", 32, 32);
 
         let translation = Vector3::new(0.0, 0.0, 0.0);
         let transform: [[f32; 4]; 4] = cgmath::Matrix4::from_translation(translation).into();
@@ -91,16 +85,4 @@ fn main() {
     let config = Config::from_file("../config/window_example_config.yml").unwrap();
     let mut game = Application::build(Example, config).done();
     game.run();
-}
-
-fn build_sphere() -> Vec<VertexPosNormal> {
-    SphereUV::new(32, 32)
-        .vertex(|(x, y, z)| VertexPosNormal {
-            pos: [x, y, z],
-            normal: Vector3::new(x, y, z).normalize().into(),
-            tex_coord: [0., 0.]
-        })
-        .triangulate()
-        .vertices()
-        .collect()
 }

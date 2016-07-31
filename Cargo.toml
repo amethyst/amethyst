@@ -30,5 +30,4 @@ version = "0.1.0"
 
 [dependencies]
 # required for examples/sphere.rs example
-genmesh="0.4"
 cgmath="0.7"

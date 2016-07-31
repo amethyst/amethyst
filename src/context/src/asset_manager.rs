@@ -5,6 +5,8 @@
 extern crate amethyst_renderer;
 extern crate gfx_device_gl;
 extern crate gfx;
+extern crate genmesh;
+extern crate cgmath;
 
 pub use self::gfx::tex::Kind;
 use self::gfx::traits::FactoryExt;
@@ -12,6 +14,11 @@ use self::gfx::Factory;
 use self::gfx::format::{Formatted, SurfaceTyped};
 use self::amethyst_renderer::VertexPosNormal;
 use self::amethyst_renderer::target::ColorFormat;
+
+use self::genmesh::generators::{SphereUV, Cube};
+use self::genmesh::{MapToVertices, Triangulate, Vertices};
+use self::cgmath::{Vector3, EuclideanVector};
+
 use std::collections::HashMap;
 use renderer::{Fragment, FragmentImpl};
 
@@ -67,6 +74,35 @@ impl AssetManager {
             },
             FactoryImpl::Null => (),
         }
+    }
+    /// Generate and load a sphere mesh using the number of vertices accross the equator (u)
+    /// and the number of vertices from pole to pole (v).
+    pub fn gen_sphere(&mut self, name: &str, u: usize, v: usize) {
+        let data: Vec<VertexPosNormal> =
+            SphereUV::new(u, v)
+            .vertex(|(x, y, z)| VertexPosNormal {
+                pos: [x, y, z],
+                normal: Vector3::new(x, y, z).normalize().into(),
+                tex_coord: [0., 0.]
+            })
+            .triangulate()
+            .vertices()
+            .collect();
+        self.load_mesh(name, &data);
+    }
+    /// Generate and load a cube mesh.
+    pub fn gen_cube(&mut self, name: &str) {
+        let data: Vec<VertexPosNormal> =
+            Cube::new()
+            .vertex(|(x, y, z)| VertexPosNormal {
+                pos: [x, y, z],
+                normal: Vector3::new(x, y, z).normalize().into(),
+                tex_coord: [0., 0.]
+            })
+            .triangulate()
+            .vertices()
+            .collect();
+        self.load_mesh(name, &data);
     }
     /// Lookup a `Mesh` by name.
     pub fn get_mesh(&mut self, name: &str) -> Option<Mesh> {
