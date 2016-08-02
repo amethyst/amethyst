@@ -1,3 +1,5 @@
+//! This module contains the `EngineEvent` component and reexports glutin event types.
+
 extern crate amethyst_ecs;
 extern crate glutin;
 

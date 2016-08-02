@@ -103,6 +103,7 @@ impl<R, C> Renderer<R, C>
 }
 
 /// holds a 1x1 texture that can be used to store constant colors
+#[derive(Clone)]
 pub struct ConstantColorTexture<R: gfx::Resources> {
     texture: gfx::handle::Texture<R, gfx::format::R8_G8_B8_A8>,
     view: gfx::handle::ShaderResourceView<R, [f32; 4]>
@@ -130,6 +131,7 @@ impl<R: gfx::Resources> ConstantColorTexture<R> {
     }
 }
 
+#[derive(Clone)]
 pub enum Texture<R: gfx::Resources> {
     Constant([f32; 4]),
     Texture(gfx::handle::ShaderResourceView<R, [f32; 4]>),
@@ -222,6 +224,29 @@ pub struct Camera {
     pub projection: [[f32; 4]; 4],
     /// A view matrix
     pub view: [[f32; 4]; 4],
+}
+
+impl Camera {
+    pub fn new(proj: [[f32; 4]; 4], view: [[f32; 4]; 4]) -> Camera {
+        Camera {
+            projection: proj,
+            view: view,
+        }
+    }
+
+    pub fn perspective(fov: f32, aspect: f32, near: f32, far: f32) -> [[f32; 4]; 4] {
+        cgmath::perspective(cgmath::deg(fov), aspect, near, far).into()
+    }
+
+    pub fn look_at(eye: [f32; 3], target: [f32; 3], up: [f32; 3]) -> [[f32; 4]; 4] {
+        use cgmath::{Point3, Vector3, AffineMatrix3, Transform};
+        let view: AffineMatrix3<f32> = Transform::look_at(
+            Point3::new(eye[0], eye[1], eye[2]),
+            Point3::new(target[0], target[1], target[2]),
+            Vector3::new(up[0], up[1], up[2]),
+        );
+        view.mat.into()
+    }
 }
 
 /// A layer is comprised of a Render target and

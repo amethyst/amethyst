@@ -25,43 +25,19 @@ impl State for Example {
     }
 
     fn on_start(&mut self, context: &mut Context, _: &mut World) {
-        use amethyst::context::video_context::VideoContext;
-        use amethyst::renderer::pass::*;
+        use amethyst::renderer::pass::Clear;
         use amethyst::renderer::Layer;
-        match context.video_context {
-            VideoContext::OpenGL { ref mut frame, .. } => {
-                let clear_layer =
-                    Layer::new("main",
-                               vec![
-                                   Clear::new([0., 0., 0., 1.]),
-                               ]);
-                frame.layers.push(clear_layer);
-            }
-            #[cfg(windows)]
-            VideoContext::Direct3D {  } => {
-                // stub
-            },
-            VideoContext::Null => (),
-        }
+        let clear_layer =
+            Layer::new("main",
+                        vec![
+                            Clear::new([0., 0., 0., 1.]),
+                        ]);
+        let pipeline = vec![clear_layer];
+        context.renderer.set_pipeline(pipeline);
     }
 
     fn update(&mut self, context: &mut Context, _: &mut World) -> Trans {
-        use amethyst::context::video_context::VideoContext;
-        match context.video_context {
-            VideoContext::OpenGL { ref window,
-                                   ref mut renderer,
-                                   ref frame,
-                                   ref mut device,
-                                   .. } => {
-                renderer.submit(frame, device);
-                window.swap_buffers().unwrap();
-            }
-#[cfg(windows)]
-            VideoContext::Direct3D {  } => {
-                // stub
-            },
-            VideoContext::Null => (),
-        }
+        context.renderer.submit();
         Trans::None
     }
 }
