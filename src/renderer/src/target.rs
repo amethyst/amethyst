@@ -18,7 +18,43 @@ pub struct ColorBuffer<R: gfx::Resources> {
     /// The color render target
     pub color: gfx::handle::RenderTargetView<R, ColorFormat>,
     /// The depth buffer
-    pub output_depth: gfx::handle::DepthStencilView<R, DepthFormat>,
+    pub depth: gfx::handle::DepthStencilView<R, DepthFormat>,
+
+    /// The color as a texture
+    pub texture_color: Option<gfx::handle::ShaderResourceView<R, [f32; 4]>>,
+    /// the depth buffer as a texture
+    pub texture_depth: Option<gfx::handle::ShaderResourceView<R, f32>>,
+}
+
+impl<R: gfx::Resources> ColorBuffer<R> {
+    /// Create a new ColorBuffer with the supplied factory
+    /// the target will be allocated to the supplied width and height
+    pub fn new<F>(factory: &mut F, (width, height): (u16, u16)) -> Self
+        where F: gfx::Factory<R>
+    {
+        let (_, texture_color,  color) = factory.create_render_target(width, height).unwrap();
+        let (_, texture_depth,  depth) = factory.create_depth_stencil(width, height).unwrap();
+
+        ColorBuffer {
+            color: color,
+            depth: depth,
+            texture_color: Some(texture_color),
+            texture_depth: Some(texture_depth),
+        }
+    }
+
+    /// Create a new screen ColorBuffer with the main color and main depth targets,
+    /// everything rendered to this target will be shown on the screen after the window.swap_buffers() call
+    pub fn new_screen(main_color: gfx::handle::RenderTargetView<R, ColorFormat>,
+               main_depth: gfx::handle::DepthStencilView<R, DepthFormat>) -> Self
+    {
+        ColorBuffer {
+            color: main_color,
+            depth: main_depth,
+            texture_color: None,
+            texture_depth: None,
+        }
+    }
 }
 
 impl<R: gfx::Resources> Target for ColorBuffer<R> {}

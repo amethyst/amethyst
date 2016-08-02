@@ -19,8 +19,9 @@ extern crate amethyst_renderer;
 extern crate gfx_device_gl;
 extern crate gfx;
 
-use self::amethyst_renderer::{Layer, Scene, Target, Camera, Light};
+use self::amethyst_renderer::{Layer, Scene, Camera, Light};
 use video_context::VideoContext;
+use asset_manager::{ColorBuffer, ColorBufferImpl};
 
 /// A wraper around `VideoContext` required to
 /// hide all platform specific code from the user.
@@ -47,15 +48,31 @@ impl Renderer {
     }
 
     /// Add a rendering `Target`.
-    pub fn add_target(&mut self, target: Box<Target>, name: &str) {
-        unwind_video_context_mut!(
-            self.video_context,
-            frame,
-            {
-                frame.targets.insert(name.into(), target);
+    pub fn add_target(&mut self, target: ColorBuffer, name: &str) {
+        match self.video_context {
+            VideoContext::OpenGL {
+                ref mut frame,
+                ..
+            } => {
+                let color_buffer_impl = target.color_buffer_impl;
+                if let ColorBufferImpl::OpenGL { color_buffer } = color_buffer_impl {
+                    frame.targets.insert(name.into(), color_buffer);
+                }
             },
-            ()
-        )
+            #[cfg(windows)]
+            VideoContext::Direct3D => {
+                unimplemented!();
+            },
+            VideoContext::Null => (),
+        }
+        // unwind_video_context_mut!(
+        //     self.video_context,
+        //     frame,
+        //     {
+        //         frame.targets.insert(name.into(), target);
+        //     },
+        //     ()
+        // )
     }
     /// Delete a rendering `Target`.
     pub fn delete_target(&mut self, name: &str) {
@@ -267,7 +284,10 @@ impl Renderer {
 
     pub fn get_dimensions(&self) -> Option<(u32, u32)> {
         match self.video_context {
-            VideoContext::OpenGL { ref window, .. } => window.get_inner_size(),
+            VideoContext::OpenGL {
+                ref window,
+                ..
+            } => window.get_inner_size_pixels(),
             #[cfg(windows)]
             VideoContext::Direct3D {} => unimplemented!(),
             VideoContext::Null => None,

@@ -176,6 +176,50 @@ impl AssetManager {
             None => None,
         }
     }
+    /// Create and return a color buffer
+    pub fn get_color_buffer(&mut self, (width, height): (u16, u16)) -> Option<ColorBuffer> {
+        match self.factory_impl {
+            FactoryImpl::OpenGL {
+                ref mut factory,
+            } => {
+                let color_buffer = Box::new(amethyst_renderer::target::ColorBuffer::new(factory, (width, height)));
+                let color_buffer_impl = ColorBufferImpl::OpenGL {
+                    color_buffer: color_buffer,
+                };
+                let color_buffer = ColorBuffer {
+                    color_buffer_impl: color_buffer_impl,
+                };
+                Some(color_buffer)
+            },
+            #[cfg(windows)]
+            FactoryImpl::Direct3D => {
+                unimplemented!();
+            },
+            FactoryImpl::Null => None,
+        }
+    }
+    /// Create and return a geometry buffer
+    pub fn get_geometry_buffer(&mut self, (width, height): (u16, u16)) -> Option<GeometryBuffer> {
+        match self.factory_impl {
+            FactoryImpl::OpenGL {
+                ref mut factory,
+            } => {
+                let geometry_buffer = Box::new(amethyst_renderer::target::GeometryBuffer::new(factory, (width, height)));
+                let geometry_buffer_impl = GeometryBufferImpl::OpenGL {
+                    geometry_buffer: geometry_buffer,
+                };
+                let geometry_buffer = GeometryBuffer {
+                    geometry_buffer_impl: geometry_buffer_impl,
+                };
+                Some(geometry_buffer)
+            },
+            #[cfg(windows)]
+            FactoryImpl::Direct3D => {
+                unimplemented!();
+            },
+            FactoryImpl::Null => None,
+        }
+    }
     /// Construct and return a `Fragment` from previously loaded mesh, ka and kd textures and a transform matrix.
     pub fn get_fragment(&mut self, mesh: &str, ka: &str, kd: &str, transform: [[f32; 4]; 4]) -> Option<Fragment> {
         let mesh = match self.get_mesh(mesh) {
@@ -271,4 +315,34 @@ pub enum TextureImpl {
 #[derive(Clone)]
 pub struct Texture {
     texture_impl: TextureImpl,
+}
+
+pub enum ColorBufferImpl {
+    OpenGL {
+        color_buffer: Box<amethyst_renderer::target::ColorBuffer<gfx_device_gl::Resources>>,
+    },
+    #[cfg(windows)]
+    Direct3D {
+        // stub
+    },
+    Null,
+}
+
+pub struct ColorBuffer {
+    pub color_buffer_impl: ColorBufferImpl,
+}
+
+pub enum GeometryBufferImpl {
+    OpenGL {
+        geometry_buffer: Box<amethyst_renderer::target::GeometryBuffer<gfx_device_gl::Resources>>,
+    },
+    #[cfg(windows)]
+    Direct3D {
+        // stub
+    },
+    Null,
+}
+
+pub struct GeometryBuffer {
+    pub geometry_buffer_impl: GeometryBufferImpl,
 }

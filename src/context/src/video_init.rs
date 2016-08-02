@@ -5,7 +5,7 @@ extern crate gfx_device_gl;
 extern crate gfx;
 
 use self::amethyst_renderer::{Renderer, Frame};
-use self::amethyst_renderer::target::{ColorFormat, DepthFormat, ColorBuffer};
+use self::amethyst_renderer::target::{ColorFormat, DepthFormat};
 use asset_manager::FactoryImpl;
 use video_context::{DisplayConfig, VideoContext};
 
@@ -61,15 +61,16 @@ fn new_gl(display_config: &DisplayConfig) -> (VideoContext, FactoryImpl) {
     renderer.load_all(&mut factory);
 
     let mut frame = Frame::new();
-    frame.targets.insert("main".into(),
-                         Box::new(ColorBuffer {
-                             color: main_color,
-                             output_depth: main_depth,
-                         }));
+    frame.targets.insert(
+        "main".into(),
+        Box::new(amethyst_renderer::target::ColorBuffer::new_screen(main_color, main_depth))
+    );
 
-    let (w, h) = window.get_inner_size().unwrap();
-    frame.targets.insert("gbuffer".into(),
-                         Box::new(amethyst_renderer::target::GeometryBuffer::new(&mut factory, (w as u16, h as u16))));
+    let (w, h) = window.get_inner_size_pixels().unwrap();
+    frame.targets.insert(
+        "gbuffer".into(),
+        Box::new(amethyst_renderer::target::GeometryBuffer::new(&mut factory, (w as u16, h as u16)))
+    );
 
     let video_context = VideoContext::OpenGL {
         window: window,

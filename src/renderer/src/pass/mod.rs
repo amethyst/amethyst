@@ -1,5 +1,6 @@
 pub mod forward;
 pub mod deferred;
+pub mod filters;
 
 use std;
 use gfx;
@@ -144,6 +145,48 @@ impl BlitLayer {
         Box::new(BlitLayer {
             gbuffer: String::from(gbuffer),
             layer: String::from(layer),
+        })
+    }
+}
+
+#[derive(Clone, Debug)]
+/// Perform an FXAA on a texture
+pub struct FXAA {
+    /// the source to perform FXAA on
+    pub source: String,
+    pub inverse_texture_size: [f32; 2],
+}
+
+impl PassDescription for FXAA {}
+
+impl FXAA {
+    /// Create a boxed FXAA
+    pub fn new<A>(source: A, (width, height): (u32, u32)) -> Box<PassDescription>
+        where String: From<A>
+    {
+        Box::new(FXAA {
+            source: String::from(source),
+            inverse_texture_size: [1. / width as f32, 1. / height as f32],
+        })
+    }
+}
+
+#[derive(Clone, Debug)]
+/// Blit pixels from source to target
+pub struct Null {
+    /// the source to perform blit from
+    pub source: String,
+}
+
+impl PassDescription for Null {}
+
+impl Null {
+    /// Create a boxed Null
+    pub fn new<A>(source: A) -> Box<PassDescription>
+        where String: From<A>
+    {
+        Box::new(Null {
+            source: String::from(source),
         })
     }
 }
