@@ -4,7 +4,7 @@ extern crate cgmath;
 use cgmath::Vector3;
 
 use amethyst::engine::{Application, State, Trans};
-use amethyst::processors::{RenderingProcessor, Renderable};
+use amethyst::processors::{RenderingProcessor, Renderable, Light};
 use amethyst::context::Context;
 use amethyst::config::Element;
 use amethyst::ecs::{World, Entity, Join};
@@ -40,7 +40,7 @@ impl State for Example {
 
     fn on_start(&mut self, context: &mut Context, world: &mut World) {
         use amethyst::renderer::pass::{Clear, DrawShaded};
-        use amethyst::renderer::{Layer, Camera, Light};
+        use amethyst::renderer::{Layer, Camera};
 
         let (w, h) = context.renderer.get_dimensions().unwrap();
         let proj = Camera::perspective(60.0, w as f32 / h as f32, 1.0, 100.0);
@@ -59,13 +59,14 @@ impl State for Example {
 
         let translation = Vector3::new(0.0, 0.0, 0.0);
         let transform: [[f32; 4]; 4] = cgmath::Matrix4::from_translation(translation).into();
+
         let sphere = Renderable::new("main", "sphere", "dark_blue", "green", transform);
 
         world.create_now()
             .with(sphere)
             .build();
 
-        let light = Light {
+        let light = amethyst::renderer::Light {
             color: [1., 1., 1., 1.],
             radius: 1.,
             center: [2., 2., 2.],
@@ -74,7 +75,11 @@ impl State for Example {
             propagation_r_square: 1.,
         };
 
-        context.renderer.add_light("main", light);
+        let light = Light::new("main", light);
+
+        world.create_now()
+            .with(light)
+            .build();
 
         let layer =
             Layer::new("main",
@@ -88,15 +93,21 @@ impl State for Example {
     }
 
     fn update(&mut self, context: &mut Context, world: &mut World) -> Trans {
-        // 1 radian per second
-        let angular_velocity = 1.0;
+        let angular_velocity = 1.0; // in radians per second
         self.t += context.delta_time.num_milliseconds() as f32 / 1.0e3;
         let phase = self.t * angular_velocity;
+
         let mut renderables = world.write::<Renderable>();
         for renderable in (&mut renderables).iter() {
             let translation = Vector3::new(phase.sin(), 0.0, phase.cos());
             let transform: [[f32; 4]; 4] = cgmath::Matrix4::from_translation(translation).into();
             renderable.transform = transform;
+        }
+
+        let mut lights = world.write::<Light>();
+        for light in (&mut lights).iter() {
+            light.light.center = [2.0 * phase.sin(), 2., 2.0 * phase.cos()];
+            light.light.color[1] = phase.sin().abs();
         }
         Trans::None
     }
