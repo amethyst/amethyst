@@ -63,7 +63,7 @@ Read the [online book][bk] for a comprehensive tutorial to using Amethyst. There
 is also an online crate-level [API reference][ar].
 
 [bk]: https://www.amethyst.rs/book/
-[ar]: https://www.amethyst.rs/doc/amethyst/
+[ar]: https://www.amethyst.rs/doc/
 
 ## Quick Example
 
