@@ -8,32 +8,35 @@ copy and paste the following code:
 extern crate amethyst;
 
 use amethyst::engine::{Application, Duration, State, Trans};
+use amethyst::context::{Context, Config};
+use amethyst::ecs::World;
 
 struct HelloWorld;
 
 impl State for HelloWorld {
-    fn on_start(&mut self) {
+    fn on_start(&mut self, _: &mut Context, _: &mut World) {
         println!("Game started!");
     }
 
-    fn update(&mut self, _delta: Duration) -> Trans {
+    fn update(&mut self, _: &mut Context, _: &mut World) -> Trans {
         println!("Hello from Amethyst!");
         Trans::Quit
     }
 
-    fn on_stop(&mut self) {
+    fn on_stop(&mut self, _: &mut Context, _: &mut World) {
         println!("Game stopped!");
     }
 }
 
 fn main() {
-    let mut game = Application::new(HelloWorld);
+    let config = Config::from_file("../resources/config.yml").unwrap();
+    let mut game = Application::build(HelloWorld, config).done();
     game.run();
 }
 ```
 
-Then, compile and run the code with `cargo run`, or `amethyst run` if you
-have the [CLI tool installed][ct].
+Then, compile and run the code inside "**src/**" with `cargo run`,
+or `amethyst run` if you have the [CLI tool installed][ct].
 
 [ct]: ./getting_started/automatic_setup.html
 
@@ -46,11 +49,11 @@ Game stopped!
 ```
 
 If instead you see `error: use of unstable library feature` then make sure
-you're using the [nightly release][nr] of Rust. You can use [multirust][mr] to
+you're using the [nightly release][nr] of Rust. You can use [rustup][ru] to
 install stable and nightly Rust side-by-side. 
 
 [nr]: https://doc.rust-lang.org/book/release-channels.html
-[mr]: https://github.com/brson/multirust
+[ru]: https://www.rustup.rs
 
 Congratulations! You have successfully written your first Amethyst application.
 
