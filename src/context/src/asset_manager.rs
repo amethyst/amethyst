@@ -161,9 +161,18 @@ impl AssetManager {
     }
     /// Construct and return a `Fragment` from previously loaded mesh, ka and kd textures and a transform matrix.
     pub fn get_fragment(&mut self, mesh: &str, ka: &str, kd: &str, transform: [[f32; 4]; 4]) -> Option<Fragment> {
-        let mesh = self.get_mesh(mesh).unwrap();
-        let ka = self.get_texture(ka).unwrap();
-        let kd = self.get_texture(kd).unwrap();
+        let mesh = match self.get_mesh(mesh) {
+            Some(mesh) => mesh,
+            None => return None,
+        };
+        let ka = match self.get_texture(ka) {
+            Some(ka) => ka,
+            None => return None,
+        };
+        let kd = match self.get_texture(kd) {
+            Some(kd) => kd,
+            None => return None,
+        };
         match self.factory_impl {
             FactoryImpl::OpenGL {
                 ..

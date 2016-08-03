@@ -41,7 +41,7 @@ pub trait State {
     fn fixed_update(&mut self, context: &mut Context, world: &mut World) -> Trans { Trans::None }
 
     /// Executed on every frame immediately, as fast as the engine will allow.
-    fn update(&mut self, context: &mut Context, world: &mut World) -> Trans { Trans::Pop }
+    fn update(&mut self, context: &mut Context, world: &mut World) -> Trans { Trans::None }
 }
 #[warn(unused_variables)]
 
@@ -72,6 +72,7 @@ impl StateMachine {
     pub fn run_processors(&mut self, context: Arc<Mutex<Context>>) {
         if self.running {
             self.planner.dispatch(context);
+            self.planner.wait();
         }
     }
 

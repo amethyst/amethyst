@@ -47,6 +47,7 @@
 //! ```
 
 pub mod engine;
+pub mod processors;
 
 pub extern crate amethyst_config as config;
 pub extern crate amethyst_context as context;

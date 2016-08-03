@@ -7,6 +7,7 @@ use context::{Config, Context};
 use ecs::{Planner, World, Processor, Priority};
 use std::sync::{Arc, Mutex};
 use std::ops::DerefMut;
+use processors::Renderable;
 
 /// User-friendly facade for building games. Manages main loop.
 pub struct Application {
@@ -73,6 +74,7 @@ impl Application {
         }
         self.states.update(self.context.lock().unwrap().deref_mut());
         self.states.run_processors(self.context.clone());
+        self.context.lock().unwrap().renderer.submit();
         self.context.lock().unwrap().broadcaster.clean();
     }
 
@@ -95,7 +97,8 @@ impl<T> ApplicationBuilder<T>
     where T: State + 'static
 {
     pub fn new(initial_state: T, config: Config) -> ApplicationBuilder<T> {
-        let world = World::new();
+        let mut world = World::new();
+        world.register::<Renderable>();
         let planner = Planner::new(world, 1);
         ApplicationBuilder {
             initial_state: initial_state,
