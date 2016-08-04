@@ -74,12 +74,10 @@ impl Context {
         let mut broadcaster = Broadcaster::new();
         broadcaster.register::<EngineEvent>();
 
-        let audio_endpoint = rodio::get_default_endpoint();
-        let mut audio_sink = None;
-
-        if let Some(ref endpoint) = audio_endpoint {
-            audio_sink = Some(rodio::Sink::new(endpoint));
-        }
+        let audio_sink = match rodio::get_default_endpoint() {
+            Some(endpoint) => Some(rodio::Sink::new(&endpoint)),
+            None => None,
+        };
 
         Context {
             renderer: renderer,
