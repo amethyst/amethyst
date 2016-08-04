@@ -7,6 +7,7 @@ extern crate gfx_device_gl;
 extern crate gfx;
 extern crate genmesh;
 extern crate cgmath;
+extern crate rodio;
 
 pub use self::gfx::tex::Kind;
 use self::gfx::traits::FactoryExt;
@@ -18,6 +19,11 @@ use self::amethyst_renderer::target::ColorFormat;
 use self::genmesh::generators::{SphereUV, Cube};
 use self::genmesh::{MapToVertices, Triangulate, Vertices};
 use self::cgmath::{Vector3, EuclideanVector};
+
+use self::rodio::Source;
+
+use std::io::BufReader;
+use std::fs::File;
 
 use std::collections::HashMap;
 use renderer::{Fragment, FragmentImpl};
@@ -40,6 +46,7 @@ pub struct AssetManager {
     factory_impl: FactoryImpl,
     meshes: HashMap<String, Mesh>,
     textures: HashMap<String, Texture>,
+    sounds: HashMap<String, Sound>,
 }
 
 impl AssetManager {
@@ -49,6 +56,7 @@ impl AssetManager {
             factory_impl: factory_impl,
             meshes: HashMap::new(),
             textures: HashMap::new(),
+            sounds: HashMap::new(),
         }
     }
     /// Load a `Mesh` from vertex data.
@@ -210,6 +218,34 @@ impl AssetManager {
             FactoryImpl::Null => None,
         }
     }
+
+    /// Load sound from file, rodio will attempt to guess the
+    /// file format. Currently it supports Ogg Vorbis and Wav formats.
+    pub fn load_sound(&mut self, name: &str, filename: &str) {
+        // Attempt to open file
+        let file = match File::open(filename) {
+            Ok(file) => file,
+            Err(_) => return,
+        };
+        // Attempt to decode file
+        let sound = match rodio::Decoder::new(BufReader::new(file)) {
+            Ok(sound) => sound,
+            Err(_) => return,
+        };
+        // Decoder doesn't implement Clone
+        // so we need to turn it into a clonable Buffered source
+        let sound = sound.buffered();
+        self.sounds.insert(name.into(), sound);
+    }
+    /// Lookup a `Sound` by name.
+    pub fn get_sound(&mut self, name: &str) -> Option<Sound> {
+        match self.sounds.get(name.into()) {
+            Some(sound) => {
+                Some((*sound).clone())
+            },
+            None => None,
+        }
+    }
 }
 
 /// An enum with variants representing concrete
@@ -254,3 +290,5 @@ pub enum TextureImpl {
 pub struct Texture {
     texture_impl: TextureImpl,
 }
+
+pub type Sound = rodio::source::Buffered<rodio::Decoder<BufReader<File>>>;
