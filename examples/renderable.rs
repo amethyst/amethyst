@@ -50,7 +50,6 @@ impl State for Example {
         let view = Camera::look_at(eye, target, up);
         let camera = Camera::new(proj, view);
 
-        context.renderer.add_scene("main");
         context.renderer.add_camera(camera, "main");
 
         context.asset_manager.create_constant_texture("dark_blue", [0.0, 0.0, 0.01, 1.]);
@@ -60,7 +59,7 @@ impl State for Example {
         let translation = Vector3::new(0.0, 0.0, 0.0);
         let transform: [[f32; 4]; 4] = cgmath::Matrix4::from_translation(translation).into();
 
-        let sphere = Renderable::new("main", "sphere", "dark_blue", "green", transform);
+        let sphere = Renderable::new("sphere", "dark_blue", "green", transform);
 
         world.create_now()
             .with(sphere)
@@ -75,7 +74,7 @@ impl State for Example {
             propagation_r_square: 1.,
         };
 
-        let light = Light::new("main", light);
+        let light = Light::new(light);
 
         world.create_now()
             .with(light)
@@ -116,8 +115,10 @@ impl State for Example {
 fn main() {
     use amethyst::context::Config;
     let config = Config::from_file("../config/window_example_config.yml").unwrap();
-    let mut game = Application::build(Example::new(), config)
-                   .with::<RenderingProcessor>(RenderingProcessor, "rendering_processor", 0)
+    let mut context = Context::new(config);
+    let rendering_processor = RenderingProcessor::new("main", &mut context);
+    let mut game = Application::build(Example::new(), context)
+                   .with::<RenderingProcessor>(rendering_processor, "rendering_processor", 0)
                    .done();
     game.run();
 }

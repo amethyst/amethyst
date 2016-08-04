@@ -3,7 +3,7 @@
 use super::state::{State, StateMachine};
 use context::timing::{SteadyTime, Stopwatch};
 use context::event::EngineEvent;
-use context::{Config, Context};
+use context::Context;
 use ecs::{Planner, World, Processor, Priority};
 use std::sync::{Arc, Mutex};
 use std::ops::DerefMut;
@@ -18,10 +18,9 @@ pub struct Application {
 
 impl Application {
     /// Creates a new Application with the given initial game state, planner, and config.
-    pub fn new<T>(initial_state: T, planner: Planner<Arc<Mutex<Context>>>, config: Config) -> Application
+    pub fn new<T>(initial_state: T, planner: Planner<Arc<Mutex<Context>>>, context: Context) -> Application
         where T: State + 'static
     {
-        let context = Context::new(config);
         let context = Arc::new(Mutex::new(context));
         Application {
             states: StateMachine::new(initial_state, planner),
@@ -31,10 +30,10 @@ impl Application {
     }
 
     /// Build a new Application using builder pattern.
-    pub fn build<T>(initial_state: T, config: Config) -> ApplicationBuilder<T>
+    pub fn build<T>(initial_state: T, context: Context) -> ApplicationBuilder<T>
         where T: State + 'static
     {
-        ApplicationBuilder::new(initial_state, config)
+        ApplicationBuilder::new(initial_state, context)
     }
 
     /// Starts the application and manages the game loop.
@@ -89,21 +88,21 @@ pub struct ApplicationBuilder<T>
     where T: State + 'static
 {
     initial_state: T,
-    config: Config,
+    context: Context,
     planner: Planner<Arc<Mutex<Context>>>,
 }
 
 impl<T> ApplicationBuilder<T>
     where T: State + 'static
 {
-    pub fn new(initial_state: T, config: Config) -> ApplicationBuilder<T> {
+    pub fn new(initial_state: T, context: Context) -> ApplicationBuilder<T> {
         let mut world = World::new();
         world.register::<Renderable>();
         world.register::<Light>();
         let planner = Planner::new(world, 1);
         ApplicationBuilder {
             initial_state: initial_state,
-            config: config,
+            context: context,
             planner: planner,
         }
     }
@@ -119,6 +118,6 @@ impl<T> ApplicationBuilder<T>
     }
 
     pub fn done(self) -> Application {
-        Application::new(self.initial_state, self.planner, self.config)
+        Application::new(self.initial_state, self.planner, self.context)
     }
 }

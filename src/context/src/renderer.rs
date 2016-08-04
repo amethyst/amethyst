@@ -156,6 +156,22 @@ impl Renderer {
         )
     }
 
+    // Return number of fragments in scene `scene_name`.
+    pub fn num_fragments(&mut self, scene_name: &str) -> Option<usize> {
+        unwind_video_context_mut!(
+            self.video_context,
+            frame,
+            {
+                let scene = match frame.scenes.get_mut(scene_name.into()) {
+                    Some(scene) => scene,
+                    None => return None,
+                };
+                Some(scene.fragments.len())
+            },
+            None
+        )
+    }
+
     /// Add a `Light` to the scene `scene_name`.
     /// Return the index of the added `Light`.
     pub fn add_light(&mut self, scene_name: &str, light: Light) -> Option<usize> {
@@ -201,6 +217,22 @@ impl Renderer {
                 scene.lights.remove(idx);
             },
             ()
+        )
+    }
+
+    // Return number of lights in scene `scene_name`.
+    pub fn num_lights(&mut self, scene_name: &str) -> Option<usize> {
+        unwind_video_context_mut!(
+            self.video_context,
+            frame,
+            {
+                let scene = match frame.scenes.get_mut(scene_name.into()) {
+                    Some(scene) => scene,
+                    None => return None,
+                };
+                Some(scene.lights.len())
+            },
+            None
         )
     }
 

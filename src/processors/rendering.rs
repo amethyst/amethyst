@@ -2,8 +2,24 @@ use ecs::{Processor, RunArg, Join, Component, VecStorage};
 use context::Context;
 use std::sync::{Mutex, Arc};
 use renderer;
+use std::collections::HashSet;
 
-pub struct RenderingProcessor;
+pub struct RenderingProcessor {
+    scene_name: String,
+    renderable_indices: HashSet<usize>,
+    light_indices: HashSet<usize>,
+}
+
+impl RenderingProcessor {
+    pub fn new(scene_name: &str, context: &mut Context) -> RenderingProcessor {
+        context.renderer.add_scene(scene_name);
+        RenderingProcessor {
+            scene_name: scene_name.into(),
+            renderable_indices: HashSet::new(),
+            light_indices: HashSet::new(),
+        }
+    }
+}
 
 unsafe impl Send for RenderingProcessor {  }
 
@@ -16,29 +32,30 @@ impl Processor<Arc<Mutex<Context>>> for RenderingProcessor {
                 match light.idx {
                     Some(idx) => {
                         // If this Light is already in frame then update it.
-                        let scene_name = light.scene_name.as_str();
+                        let scene_name = self.scene_name.as_str();
                         if let Some(frame_light) = context.renderer.mut_light(scene_name, idx) {
                             *frame_light = light.light.clone();
                         } else {
                             println!("Error: entity with id = {0} is deleted, \
-                                      because Light::scene_name field is invalid \
+                                      because RenderingProcessor::scene_name field is invalid \
                                       or Light::idx field is invalid.", entity.get_id());
                             arg.delete(entity);
                         }
                     },
                     None => {
                         // Otherwise add it to the frame.
-                        let scene_name = light.scene_name.as_str();
+                        let scene_name = self.scene_name.as_str();
                         let frame_light = light.light.clone();
                         if let Some(idx) = context.renderer.add_light(scene_name, frame_light) {
                             // If this Light can be added to the frame then add it and store
                             // the index in the light.idx field.
                             light.idx = Some(idx);
+                            self.light_indices.insert(idx);
                         } else {
                             // Otherwise log an error and delete this entity.
                             // TODO: Implement proper logging
                             println!("Error: entity with id = {0} is deleted, \
-                                      because Light::scene_name field is invalid.", entity.get_id());
+                                      because RenderingProcessor::scene_name field is invalid.", entity.get_id());
                             arg.delete(entity);
                         }
                     }
@@ -50,12 +67,12 @@ impl Processor<Arc<Mutex<Context>>> for RenderingProcessor {
                     // If this Renderable is already in frame then update the transform field
                     // of the corresponding Fragment.
                     Some(idx) => {
-                        let scene_name = renderable.scene_name.as_str();
+                        let scene_name = self.scene_name.as_str();
                         if let Some(transform) = context.renderer.mut_fragment_transform(scene_name, idx) {
                             *transform = renderable.transform;
                         } else {
                             println!("Error: entity with id = {0} is deleted, \
-                                      because Renderable::scene_name field is invalid \
+                                      because RenderingProcessor::scene_name field is invalid \
                                       or Renderable::idx field is invalid.", entity.get_id());
                             arg.delete(entity);
                         }
@@ -63,7 +80,7 @@ impl Processor<Arc<Mutex<Context>>> for RenderingProcessor {
                     // If it is not in frame then attempt to create a Fragment with given transform
                     // and requested mesh, ka, and kd, which are looked up using the asset manager
                     None => {
-                        let scene_name = renderable.scene_name.as_str();
+                        let scene_name = self.scene_name.as_str();
                         let mesh = renderable.mesh.as_str();
                         let ka = renderable.ka.as_str();
                         let kd = renderable.kd.as_str();
@@ -73,10 +90,11 @@ impl Processor<Arc<Mutex<Context>>> for RenderingProcessor {
                                 // If this Renderable can be added to the frame then add it and store
                                 // the index of this fragment in the renderable.idx field
                                 renderable.idx = Some(idx);
+                                self.renderable_indices.insert(idx);
                             } else {
                                 // Otherwise log an error and delete this entity
                                 println!("Error: entity with id = {0} is deleted, \
-                                          because Renderable::scene_name field is invalid.", entity.get_id());
+                                          because RenderingProcessor::scene_name field is invalid.", entity.get_id());
                                 arg.delete(entity);
                             }
                         } else {
@@ -101,7 +119,6 @@ pub struct Renderable {
     // to access the renderer::Fragment held by context.renderer
     // If idx == None then this Renderable is not renderered.
     idx: Option<usize>,
-    scene_name: String,
     mesh: String,
     ka: String,
     kd: String,
@@ -111,10 +128,9 @@ pub struct Renderable {
 impl Renderable {
     /// Create a new Renderable component from scene_name
     /// and names of assets loaded by context.asset_manager.
-    pub fn new(scene_name: &str, mesh: &str, ka: &str, kd: &str, transform: [[f32; 4]; 4]) -> Renderable {
+    pub fn new(mesh: &str, ka: &str, kd: &str, transform: [[f32; 4]; 4]) -> Renderable {
         Renderable {
             idx: None,
-            scene_name: scene_name.into(),
             mesh: mesh.into(),
             ka: ka.into(),
             kd: kd.into(),
@@ -135,16 +151,14 @@ pub struct Light {
     // held by context.renderer.
     // If idx == None then this Light doesn't affect the rendered image.
     idx: Option<usize>,
-    scene_name: String,
     pub light: renderer::Light,
 }
 
 impl Light {
     // Create a new light from scene_name and a renderer::Light.
-    pub fn new(scene_name: &str, light: renderer::Light) -> Light {
+    pub fn new(light: renderer::Light) -> Light {
         Light {
             idx: None,
-            scene_name: scene_name.into(),
             light: light,
         }
     }
