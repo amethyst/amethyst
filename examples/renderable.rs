@@ -96,6 +96,7 @@ impl State for Example {
         self.t += context.delta_time.num_milliseconds() as f32 / 1.0e3;
         let phase = self.t * angular_velocity;
 
+        // Test Renderable mutation
         let mut renderables = world.write::<Renderable>();
         for renderable in (&mut renderables).iter() {
             let translation = Vector3::new(phase.sin(), 0.0, phase.cos());
@@ -103,10 +104,25 @@ impl State for Example {
             renderable.transform = transform;
         }
 
+        // Test Light mutation
         let mut lights = world.write::<Light>();
         for light in (&mut lights).iter() {
             light.light.center = [2.0 * phase.sin(), 2., 2.0 * phase.cos()];
             light.light.color[1] = phase.sin().abs();
+        }
+
+        // Test Light deletion
+        if self.t > 5.0 {
+            for entity in (&world.entities()).iter() {
+                lights.remove(entity.clone());
+            }
+        }
+
+        // Test Renderable deletion
+        if self.t > 10.0 {
+            for entity in (&world.entities()).iter() {
+                renderables.remove(entity.clone());
+            }
         }
         Trans::None
     }

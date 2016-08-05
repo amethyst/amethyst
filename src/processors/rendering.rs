@@ -6,8 +6,6 @@ use std::collections::HashSet;
 
 pub struct RenderingProcessor {
     scene_name: String,
-    renderable_indices: HashSet<usize>,
-    light_indices: HashSet<usize>,
 }
 
 impl RenderingProcessor {
@@ -15,8 +13,6 @@ impl RenderingProcessor {
         context.renderer.add_scene(scene_name);
         RenderingProcessor {
             scene_name: scene_name.into(),
-            renderable_indices: HashSet::new(),
-            light_indices: HashSet::new(),
         }
     }
 }
@@ -28,10 +24,12 @@ impl Processor<Arc<Mutex<Context>>> for RenderingProcessor {
         if let Ok(mut context) = context.lock() {
             let (entities, mut renderables, mut lights) = arg.fetch(|w| (w.entities(), w.write::<Renderable>(), w.write::<Light>()));
 
+            let mut light_indices = HashSet::<usize>::new();
             for (entity, light) in (&entities, &mut lights).iter() {
                 match light.idx {
                     Some(idx) => {
                         // If this Light is already in frame then update it.
+                        light_indices.insert(idx);
                         let scene_name = self.scene_name.as_str();
                         if let Some(frame_light) = context.renderer.mut_light(scene_name, idx) {
                             *frame_light = light.light.clone();
@@ -50,7 +48,7 @@ impl Processor<Arc<Mutex<Context>>> for RenderingProcessor {
                             // If this Light can be added to the frame then add it and store
                             // the index in the light.idx field.
                             light.idx = Some(idx);
-                            self.light_indices.insert(idx);
+                            light_indices.insert(idx);
                         } else {
                             // Otherwise log an error and delete this entity.
                             // TODO: Implement proper logging
@@ -62,11 +60,13 @@ impl Processor<Arc<Mutex<Context>>> for RenderingProcessor {
                 }
             }
 
+            let mut renderable_indices = HashSet::<usize>::new();
             for (entity, renderable) in (&entities, &mut renderables).iter() {
                 match renderable.idx {
                     // If this Renderable is already in frame then update the transform field
                     // of the corresponding Fragment.
                     Some(idx) => {
+                        renderable_indices.insert(idx);
                         let scene_name = self.scene_name.as_str();
                         if let Some(transform) = context.renderer.mut_fragment_transform(scene_name, idx) {
                             *transform = renderable.transform;
@@ -90,7 +90,7 @@ impl Processor<Arc<Mutex<Context>>> for RenderingProcessor {
                                 // If this Renderable can be added to the frame then add it and store
                                 // the index of this fragment in the renderable.idx field
                                 renderable.idx = Some(idx);
-                                self.renderable_indices.insert(idx);
+                                renderable_indices.insert(idx);
                             } else {
                                 // Otherwise log an error and delete this entity
                                 println!("Error: entity with id = {0} is deleted, \
@@ -103,6 +103,24 @@ impl Processor<Arc<Mutex<Context>>> for RenderingProcessor {
                                       component attached to this entity doesn't exist.", entity.get_id());
                             arg.delete(entity);
                         }
+                    }
+                }
+            }
+
+            // Delete from frame all renderer::Lights corresponding to deleted Light components
+            if let Some(num_lights) = context.renderer.num_lights(self.scene_name.as_str()) {
+                for i in 0..num_lights {
+                    if !light_indices.contains(&i) {
+                        context.renderer.delete_light(self.scene_name.as_str(), i);
+                    }
+                }
+            }
+
+            // Delete from frame all Fragments corresponding to deleted Renderable components
+            if let Some(num_fragments) = context.renderer.num_fragments(self.scene_name.as_str()) {
+                for i in 0..num_fragments {
+                    if !renderable_indices.contains(&i) {
+                        context.renderer.delete_fragment(self.scene_name.as_str(), i);
                     }
                 }
             }
