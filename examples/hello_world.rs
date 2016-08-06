@@ -25,6 +25,7 @@ impl State for Example {
 
 fn main() {
     let config = Config::default();
-    let mut game = Application::build(Example, config).done();
+    let context = Context::new(config);
+    let mut game = Application::build(Example, context).done();
     game.run();
 }
