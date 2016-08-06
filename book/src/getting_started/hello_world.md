@@ -7,7 +7,7 @@ copy and paste the following code:
 ```rust
 extern crate amethyst;
 
-use amethyst::engine::{Application, Duration, State, Trans};
+use amethyst::engine::{Application, State, Trans};
 use amethyst::context::{Context, Config};
 use amethyst::ecs::World;
 
@@ -29,8 +29,9 @@ impl State for HelloWorld {
 }
 
 fn main() {
-    let config = Config::from_file("../resources/config.yml").unwrap();
-    let mut game = Application::build(HelloWorld, config).done();
+    let config = Config::default();
+    let context = Context::new(config);
+    let mut game = Application::build(HelloWorld, context).done();
     game.run();
 }
 ```
