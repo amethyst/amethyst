@@ -1,0 +1,3 @@
+pipeline: Deferred
+shading: Shaded
+clear_color: [0.0, 0.0, 0.0, 1.0]

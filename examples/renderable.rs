@@ -4,7 +4,8 @@ extern crate cgmath;
 use cgmath::Vector3;
 
 use amethyst::engine::{Application, State, Trans};
-use amethyst::processors::{RenderingProcessor, Renderable, Light};
+use amethyst::processors::{RenderingProcessor, Renderable, Light, Camera};
+use amethyst::processors::rendering::RendererConfig;
 use amethyst::context::Context;
 use amethyst::config::Element;
 use amethyst::ecs::{World, Entity, Join};
@@ -39,18 +40,24 @@ impl State for Example {
     }
 
     fn on_start(&mut self, context: &mut Context, world: &mut World) {
-        use amethyst::renderer::pass::{Clear, DrawShaded};
-        use amethyst::renderer::{Layer, Camera};
-
         let (w, h) = context.renderer.get_dimensions().unwrap();
-        let proj = Camera::perspective(60.0, w as f32 / h as f32, 1.0, 100.0);
+
+        let fov = 60.0;
+        let aspect = w as f32 / h as f32;
+        let near = 1.0;
+        let far = 100.0;
+
         let eye = [0., 5., 0.];
         let target = [0., 0., 0.];
         let up = [0., 0., 1.];
-        let view = Camera::look_at(eye, target, up);
-        let camera = Camera::new(proj, view);
 
-        context.renderer.add_camera(camera, "main");
+        let mut camera = Camera::new(fov, aspect, near, far,
+                                 eye, target, up);
+        camera.activate();
+
+        world.create_now()
+            .with(camera)
+            .build();
 
         context.asset_manager.create_constant_texture("dark_blue", [0.0, 0.0, 0.01, 1.]);
         context.asset_manager.create_constant_texture("green", [0.0, 1.0, 0.0, 1.]);
@@ -79,16 +86,6 @@ impl State for Example {
         world.create_now()
             .with(light)
             .build();
-
-        let layer =
-            Layer::new("main",
-                        vec![
-                            Clear::new([0., 0., 0., 1.]),
-                            DrawShaded::new("main", "main"),
-                        ]);
-
-        let pipeline = vec![layer];
-        context.renderer.set_pipeline(pipeline);
     }
 
     fn update(&mut self, context: &mut Context, world: &mut World) -> Trans {
@@ -111,6 +108,12 @@ impl State for Example {
             light.light.color[1] = phase.sin().abs();
         }
 
+        // Test Camera mutation
+        let mut cameras = world.write::<Camera>();
+        for camera in (&mut cameras).iter() {
+            camera.eye[1] = 3.0 + 3.0*phase.sin().abs();
+        }
+
         // Test Light deletion
         if self.t > 5.0 {
             for entity in (&world.entities()).iter() {
@@ -131,8 +134,9 @@ impl State for Example {
 fn main() {
     use amethyst::context::Config;
     let config = Config::from_file("../config/window_example_config.yml").unwrap();
+    let renderer_config = RendererConfig::from_file("../config/renderer_config.yml").unwrap();
     let mut context = Context::new(config);
-    let rendering_processor = RenderingProcessor::new("main", &mut context);
+    let rendering_processor = RenderingProcessor::new(renderer_config, &mut context);
     let mut game = Application::build(Example::new(), context)
                    .with::<RenderingProcessor>(rendering_processor, "rendering_processor", 0)
                    .done();
