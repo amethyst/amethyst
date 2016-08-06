@@ -83,6 +83,7 @@ impl State for Example {
 fn main() {
     use amethyst::context::Config;
     let config = Config::from_file("../config/window_example_config.yml").unwrap();
-    let mut game = Application::build(Example, config).done();
+    let context = Context::new(config);
+    let mut game = Application::build(Example, context).done();
     game.run();
 }
