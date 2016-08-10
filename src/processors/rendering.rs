@@ -1,3 +1,5 @@
+extern crate cgmath;
+
 use ecs::{Processor, RunArg, Join, Component, VecStorage, Entity};
 use context::Context;
 use std::sync::{Mutex, Arc};
@@ -189,6 +191,7 @@ impl Processor<Arc<Mutex<Context>>> for RenderingProcessor {
 
             let mut renderable_indices = HashSet::<usize>::new();
             for (entity, renderable) in (&entities, &mut renderables).iter() {
+                renderable.update_transform_matrix();
                 match renderable.idx {
                     // If this Renderable is already in frame then update the transform field
                     // of the corresponding Fragment.
@@ -289,19 +292,51 @@ pub struct Renderable {
     mesh: String,
     ka: String,
     kd: String,
-    pub transform: [[f32; 4]; 4],
+    transform: [[f32; 4]; 4],
+    pub translation: [f32; 3],
+    pub rotation_axis: [f32; 3],
+    pub rotation_angle: f32,
+    pub scale: [f32; 3],
 }
 
 impl Renderable {
     /// Create a new Renderable component from names of assets loaded by context.asset_manager.
-    pub fn new(mesh: &str, ka: &str, kd: &str, transform: [[f32; 4]; 4]) -> Renderable {
+    pub fn new(mesh: &str, ka: &str, kd: &str) -> Renderable {
         Renderable {
             idx: None,
             mesh: mesh.into(),
             ka: ka.into(),
             kd: kd.into(),
-            transform: transform,
+            transform: cgmath::Matrix4::from_scale(1.).into(),
+            translation: [0., 0., 0.],
+            rotation_axis: [0., 0., 0.],
+            rotation_angle: 0.,
+            scale: [1., 1., 1.],
         }
+    }
+
+    fn update_transform_matrix(&mut self) {
+        let translation = self.translation;
+        let translation = cgmath::Vector3::new(translation[0],
+                                               translation[1],
+                                               translation[2]);
+        let translation_matrix = cgmath::Matrix4::from_translation(translation);
+
+        let rotation_axis = self.rotation_axis;
+        let rotation_axis = cgmath::Vector3::new(rotation_axis[0],
+                                                 rotation_axis[1],
+                                                 rotation_axis[2]);
+        let rotation_angle = self.rotation_angle;
+        let rotation_angle = cgmath::Rad::new(rotation_angle);
+        let rotation_matrix = cgmath::Matrix4::from_axis_angle(rotation_axis, rotation_angle);
+
+        let scale = self.scale;
+        let scale_matrix = cgmath::Matrix4::from_nonuniform_scale(scale[0],
+                                                                  scale[1],
+                                                                  scale[2]);
+
+        let transform = translation_matrix * rotation_matrix * scale_matrix;
+        self.transform = transform.into();
     }
 }
 

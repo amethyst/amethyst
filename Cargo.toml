@@ -30,4 +30,4 @@ version = "0.1.0"
 
 [dependencies]
 # required for examples/sphere.rs example
-cgmath="0.7"
+cgmath="0.10"

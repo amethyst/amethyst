@@ -1,7 +1,4 @@
 extern crate amethyst;
-extern crate cgmath;
-
-use cgmath::Vector3;
 
 use amethyst::engine::{Application, State, Trans};
 use amethyst::processors::{RenderingProcessor, Renderable, Light, Camera};
@@ -63,10 +60,7 @@ impl State for Example {
         context.asset_manager.create_constant_texture("green", [0.0, 1.0, 0.0, 1.]);
         context.asset_manager.gen_sphere("sphere", 32, 32);
 
-        let translation = Vector3::new(0.0, 0.0, 0.0);
-        let transform: [[f32; 4]; 4] = cgmath::Matrix4::from_translation(translation).into();
-
-        let sphere = Renderable::new("sphere", "dark_blue", "green", transform);
+        let sphere = Renderable::new("sphere", "dark_blue", "green");
 
         world.create_now()
             .with(sphere)
@@ -89,25 +83,29 @@ impl State for Example {
     }
 
     fn update(&mut self, context: &mut Context, world: &mut World) -> Trans {
-        let angular_velocity = 1.0; // in radians per second
+        let angular_velocity = 2.0; // in radians per second
         self.t += context.delta_time.num_milliseconds() as f32 / 1.0e3;
         let phase = self.t * angular_velocity;
 
-        // Test Renderable mutation
+        // Test Transform mutation
         let mut renderables = world.write::<Renderable>();
         for renderable in (&mut renderables).iter() {
-            let translation = Vector3::new(phase.sin(), 0.0, phase.cos());
-            let transform: [[f32; 4]; 4] = cgmath::Matrix4::from_translation(translation).into();
-            renderable.transform = transform;
+            renderable.translation = [phase.sin(), 0.0, phase.cos()];
         }
 
+        let angular_velocity_light = 0.5;
+        let phase = self.t * angular_velocity_light;
         // Test Light mutation
         let mut lights = world.write::<Light>();
         for light in (&mut lights).iter() {
             light.light.center = [2.0 * phase.sin(), 2., 2.0 * phase.cos()];
+            let angular_velocity_color = 0.7;
+            let phase = self.t * angular_velocity_color;
             light.light.color[1] = phase.sin().abs();
         }
 
+        let angular_velocity_camera = 0.3;
+        let phase = self.t * angular_velocity_camera;
         // Test Camera mutation
         let mut cameras = world.write::<Camera>();
         for camera in (&mut cameras).iter() {
@@ -127,6 +125,7 @@ impl State for Example {
                 renderables.remove(entity.clone());
             }
         }
+
         Trans::None
     }
 }
