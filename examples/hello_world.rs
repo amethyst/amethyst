@@ -3,7 +3,7 @@
 extern crate amethyst;
 
 use amethyst::engine::{Application, State, Trans};
-use amethyst::context::{Context, Config};
+use amethyst::context::{Context, ContextConfig};
 use amethyst::ecs::World;
 
 struct Example;
@@ -24,7 +24,7 @@ impl State for Example {
 }
 
 fn main() {
-    let config = Config::default();
+    let config = ContextConfig::default();
     let context = Context::new(config);
     let mut game = Application::build(Example, context).done();
     game.run();

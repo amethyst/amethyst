@@ -192,7 +192,7 @@ impl StateMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use context::{Config, Context};
+    use context::{ContextConfig, Context};
     use ecs::{Planner, World};
 
     struct State1(u8);
@@ -217,7 +217,7 @@ mod tests {
 
     #[test]
     fn switch_pop() {
-        let config = Config::default();
+        let config = ContextConfig::default();
         let mut context = Context::new(config);
         let world = World::new();
         let planner = Planner::new(world, 1);

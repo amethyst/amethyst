@@ -11,11 +11,11 @@
 //! extern crate amethyst_context;
 //!
 //! use amethyst_config::Element;
-//! use amethyst_context::{Context, Config};
+//! use amethyst_context::{Context, ContextConfig};
 //!
 //!
 //! fn main() {
-//!     let config = Config::default();
+//!     let config = ContextConfig::default();
 //!     let context = Context::new(config);
 //!     // Now resources provided by Context are available
 //! }
@@ -44,7 +44,7 @@ use timing::{Duration, SteadyTime};
 
 config!(
     /// Contains configs for resources provided by `Context`
-    struct Config {
+    struct ContextConfig {
     pub display_config: DisplayConfig = DisplayConfig::default(),
 });
 
@@ -64,8 +64,8 @@ pub struct Context {
 unsafe impl Send for Context {}
 
 impl Context {
-    /// Create a `Context` configured according to `Config`
-    pub fn new(config: Config) -> Context {
+    /// Create a `Context` configured according to `ContextConfig`
+    pub fn new(config: ContextConfig) -> Context {
         let (video_context, factory_impl) =
             video_init::create_video_context_and_factory_impl(config.display_config);
         let renderer = Renderer::new(video_context);
