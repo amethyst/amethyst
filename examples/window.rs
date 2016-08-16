@@ -35,11 +35,6 @@ impl State for Example {
         let pipeline = vec![clear_layer];
         context.renderer.set_pipeline(pipeline);
     }
-
-    fn update(&mut self, context: &mut Context, _: &mut World) -> Trans {
-        context.renderer.submit();
-        Trans::None
-    }
 }
 
 fn main() {
