@@ -4,7 +4,7 @@ use amethyst::engine::{Application, State, Trans};
 use amethyst::processors::{RenderingProcessor, Renderable, Light, Camera};
 use amethyst::context::Context;
 use amethyst::config::Element;
-use amethyst::ecs::{World, Entity, Join};
+use amethyst::ecs::{World, Join};
 
 struct Example {
     t: f32,
@@ -19,22 +19,6 @@ impl Example {
 }
 
 impl State for Example {
-    fn handle_events(&mut self, events: Vec<Entity>, context: &mut Context, _: &mut World) -> Trans {
-        use amethyst::context::event::{EngineEvent, Event, VirtualKeyCode};
-        let mut trans = Trans::None;
-        let storage = context.broadcaster.read::<EngineEvent>();
-        for _event in events {
-            let event = storage.get(_event).unwrap();
-            let event = &event.payload;
-            match *event {
-                Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) => trans = Trans::Quit,
-                Event::Closed => trans = Trans::Quit,
-                _ => (),
-            }
-        }
-        trans
-    }
-
     fn on_start(&mut self, context: &mut Context, world: &mut World) {
         let (w, h) = context.renderer.get_dimensions().unwrap();
 
@@ -82,6 +66,17 @@ impl State for Example {
     }
 
     fn update(&mut self, context: &mut Context, world: &mut World) -> Trans {
+        use amethyst::context::event::{EngineEvent, Event, VirtualKeyCode};
+
+        let engine_events = context.broadcaster.read::<EngineEvent>();
+        for engine_event in engine_events.iter() {
+            match engine_event.payload {
+                Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) => return Trans::Quit,
+                Event::Closed => return Trans::Quit,
+                _ => (),
+            }
+        }
+
         let angular_velocity = 2.0; // in radians per second
         self.t += context.delta_time.num_milliseconds() as f32 / 1.0e3;
         let phase = self.t * angular_velocity;
@@ -109,20 +104,6 @@ impl State for Example {
         let mut cameras = world.write::<Camera>();
         for camera in (&mut cameras).iter() {
             camera.eye[1] = 3.0 + 3.0*phase.sin().abs();
-        }
-
-        // Test Light deletion
-        if self.t > 5.0 {
-            for entity in (&world.entities()).iter() {
-                lights.remove(entity.clone());
-            }
-        }
-
-        // Test Renderable deletion
-        if self.t > 10.0 {
-            for entity in (&world.entities()).iter() {
-                renderables.remove(entity.clone());
-            }
         }
 
         Trans::None
