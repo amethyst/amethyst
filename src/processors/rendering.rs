@@ -379,6 +379,7 @@ impl Component for Light {
     type Storage = VecStorage<Light>;
 }
 
+#[derive(Clone)]
 pub enum Projection {
     Perspective {
         fov: f32,

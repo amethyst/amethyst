@@ -104,6 +104,42 @@ impl AssetManager {
             .collect();
         self.load_mesh(name, &data);
     }
+    /// Generate and load a rectangle mesh in XY plane with given `width` and `height`.
+    pub fn gen_rectangle(&mut self, name: &str, width: f32, height: f32) {
+        let data = vec![
+            VertexPosNormal {
+                pos: [-width/2., height/2., 0.],
+                normal: [0., 0., 1.],
+                tex_coord: [0., 1.],
+            },
+            VertexPosNormal {
+                pos: [-width/2., -height/2., 0.],
+                normal: [0., 0., 1.],
+                tex_coord: [0., 0.],
+            },
+            VertexPosNormal {
+                pos: [width/2., -height/2., 0.],
+                normal: [0., 0., 1.],
+                tex_coord: [1., 0.],
+            },
+            VertexPosNormal {
+                pos: [width/2., -height/2., 0.],
+                normal: [0., 0., 1.],
+                tex_coord: [0., 1.],
+            },
+            VertexPosNormal {
+                pos: [width/2., height/2., 0.],
+                normal: [0., 0., 1.],
+                tex_coord: [0., 0.],
+            },
+            VertexPosNormal {
+                pos: [-width/2., height/2., 0.],
+                normal: [0., 0., 1.],
+                tex_coord: [1., 0.],
+            },
+        ];
+        self.load_mesh(name, &data);
+    }
     /// Lookup a `Mesh` by name.
     pub fn get_mesh(&mut self, name: &str) -> Option<Mesh> {
         match self.meshes.get(name.into()) {
