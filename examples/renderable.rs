@@ -1,7 +1,7 @@
 extern crate amethyst;
 
 use amethyst::engine::{Application, State, Trans};
-use amethyst::processors::{RenderingProcessor, Renderable, Light, Camera};
+use amethyst::processors::{RenderingProcessor, Renderable, Light, Camera, Projection};
 use amethyst::context::Context;
 use amethyst::config::Element;
 use amethyst::ecs::{World, Join};
@@ -22,17 +22,18 @@ impl State for Example {
     fn on_start(&mut self, context: &mut Context, world: &mut World) {
         let (w, h) = context.renderer.get_dimensions().unwrap();
 
-        let fov = 60.0;
-        let aspect = w as f32 / h as f32;
-        let near = 1.0;
-        let far = 100.0;
-
         let eye = [0., 5., 0.];
         let target = [0., 0., 0.];
         let up = [0., 0., 1.];
 
-        let mut camera = Camera::new(fov, aspect, near, far,
-                                     eye, target, up);
+        let projection = Projection::Perspective {
+            fov: 60.0,
+            aspect: w as f32 / h as f32,
+            near: 1.0,
+            far: 100.0,
+        };
+
+        let mut camera = Camera::new(projection, eye, target, up);
         camera.activate();
 
         world.create_now()

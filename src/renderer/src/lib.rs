@@ -239,6 +239,10 @@ impl Camera {
         cgmath::perspective(cgmath::deg(fov), aspect, near, far).into()
     }
 
+    pub fn orthographic(left: f32, right: f32, bottom: f32, top: f32, near: f32, far: f32) -> [[f32; 4]; 4] {
+        cgmath::ortho(left, right, bottom, top, near, far).into()
+    }
+
     pub fn look_at(eye: [f32; 3], target: [f32; 3], up: [f32; 3]) -> [[f32; 4]; 4] {
         use cgmath::{Point3, Vector3, AffineMatrix3, Transform};
         let view: AffineMatrix3<f32> = Transform::look_at(

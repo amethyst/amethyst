@@ -231,12 +231,22 @@ impl Processor<Arc<Mutex<Context>>> for RenderingProcessor {
 
             if let Some(active_camera) = self.active_camera {
                 if let Some(camera) = cameras.get(active_camera) {
-                    let fov = camera.fov;
-                    let aspect = camera.aspect;
-                    let near = camera.near;
-                    let far = camera.far;
-
-                    let proj = renderer::Camera::perspective(fov, aspect, near, far);
+                    let proj = match camera.projection {
+                        Projection::Perspective {
+                            fov,
+                            aspect,
+                            near,
+                            far
+                        } => renderer::Camera::perspective(fov, aspect, near, far),
+                        Projection::Orthographic {
+                            left,
+                            right,
+                            bottom,
+                            top,
+                            near,
+                            far,
+                        } => renderer::Camera::orthographic(left, right, bottom, top, near, far),
+                    };
 
                     let eye = camera.eye;
                     let target = camera.target;
@@ -369,14 +379,28 @@ impl Component for Light {
     type Storage = VecStorage<Light>;
 }
 
+pub enum Projection {
+    Perspective {
+        fov: f32,
+        aspect: f32,
+        near: f32,
+        far: f32,
+    },
+    Orthographic {
+        left:f32,
+        right: f32,
+        bottom: f32,
+        top: f32,
+        near: f32,
+        far: f32,
+    },
+}
+
 /// A `Camera` component.
 /// If this `Camera` is active then all changes in this component's fields
 /// will be applied to the camera that is being used to render the scene.
 pub struct Camera {
-    pub fov: f32,
-    pub aspect: f32,
-    pub near: f32,
-    pub far: f32,
+    pub projection: Projection,
 
     pub eye: [f32; 3],
     pub target: [f32; 3],
@@ -387,17 +411,14 @@ pub struct Camera {
 impl Camera {
     /// Create a new `Camera` component from all the parameters
     /// for projection and view transformations.
-    pub fn new(fov: f32, aspect: f32, near: f32, far: f32,
-               eye: [f32; 3], target: [f32; 3], up: [f32; 3]) -> Camera {
+    pub fn new(projection: Projection, eye: [f32; 3], target: [f32; 3], up: [f32; 3]) -> Camera {
         Camera {
-            fov: fov,
-            aspect: aspect,
-            near: near,
-            far: far,
+            projection: projection,
 
             eye: eye,
             target: target,
             up: up,
+
             activate: false,
         }
     }
