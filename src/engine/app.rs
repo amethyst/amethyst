@@ -4,10 +4,9 @@ use super::state::{State, StateMachine};
 use context::timing::{SteadyTime, Stopwatch};
 use context::event::EngineEvent;
 use context::Context;
-use ecs::{Planner, World, Processor, Priority};
+use ecs::{Planner, World, Processor, Priority, Component};
 use std::sync::{Arc, Mutex};
 use std::ops::DerefMut;
-use processors::{Renderable, Light, Camera};
 
 /// User-friendly facade for building games. Manages main loop.
 pub struct Application {
@@ -96,16 +95,23 @@ impl<T> ApplicationBuilder<T>
     where T: State + 'static
 {
     pub fn new(initial_state: T, context: Context) -> ApplicationBuilder<T> {
-        let mut world = World::new();
-        world.register::<Renderable>();
-        world.register::<Light>();
-        world.register::<Camera>();
+        let world = World::new();
         let planner = Planner::new(world, 1);
         ApplicationBuilder {
             initial_state: initial_state,
             context: context,
             planner: planner,
         }
+    }
+
+    pub fn register<C>(mut self) -> ApplicationBuilder<T>
+        where C: Component
+    {
+        {
+            let world = &mut self.planner.mut_world();
+            world.register::<C>();
+        }
+        self
     }
 
     pub fn with<P>(mut self,

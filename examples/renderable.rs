@@ -117,6 +117,9 @@ fn main() {
     let rendering_processor = RenderingProcessor::new(config.renderer_config, &mut context);
     let mut game = Application::build(Example::new(), context)
                    .with::<RenderingProcessor>(rendering_processor, "rendering_processor", 0)
+                   .register::<Renderable>()
+                   .register::<Light>()
+                   .register::<Camera>()
                    .done();
     game.run();
 }
