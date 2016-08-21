@@ -48,6 +48,7 @@ fn main() {
         format!("{}/config/window_example_config.yml",
                 env!("CARGO_MANIFEST_DIR"))
         ).unwrap(); 
-    let mut game = Application::build(Example, config).done();
+    let context = Context::new(config);
+    let mut game = Application::build(Example, context).done();
     game.run();
 }
