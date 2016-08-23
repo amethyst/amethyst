@@ -113,14 +113,19 @@ impl State for Example {
 
 fn main() {
     use amethyst::engine::Config;
-    let config = Config::from_file("../config/renderable_example_config.yml").unwrap();
+    let config = Config::from_file(
+        format!("{}/config/renderable_example_config.yml",
+                env!("CARGO_MANIFEST_DIR"))
+        ).unwrap();
     let mut context = Context::new(config.context_config);
     let rendering_processor = RenderingProcessor::new(config.renderer_config, &mut context);
     let mut game = Application::build(Example::new(), context)
                    .with::<RenderingProcessor>(rendering_processor, "rendering_processor", 0)
+
                    .register::<Renderable>()
                    .register::<Light>()
                    .register::<Camera>()
+
                    .done();
     game.run();
 }

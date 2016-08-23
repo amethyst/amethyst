@@ -16,7 +16,7 @@ pub struct Application {
 }
 
 impl Application {
-    /// Creates a new Application with the given initial game state, planner, and config.
+    /// Creates a new Application with the given initial game state, planner, and context.
     pub fn new<T>(initial_state: T, planner: Planner<Arc<Mutex<Context>>>, context: Context) -> Application
         where T: State + 'static
     {

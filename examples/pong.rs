@@ -362,7 +362,10 @@ impl State for Pong {
 
 fn main() {
     use amethyst::engine::Config;
-    let config = Config::from_file("../config/pong_example_config.yml").unwrap();
+    let config = Config::from_file(
+        format!("{}/config/pong_example_config.yml",
+                env!("CARGO_MANIFEST_DIR"))
+        ).unwrap();
     let mut context = Context::new(config.context_config);
     let rendering_processor = RenderingProcessor::new(config.renderer_config, &mut context);
     let mut game = Application::build(Pong, context)

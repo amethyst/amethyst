@@ -19,8 +19,11 @@ Rust compiler. Here are the system requirements (they're pretty modest):
 ## Setting Up
 
 > Note: This guide assumes you have nightly Rust and Cargo installed, and also
-> have a working Internet connection. Please take care of these prerequisites
-> first before proceeding.
+> have a working Internet connection.
+> Please take care of these prerequisites first before proceeding.
+> See [rustup][ru] for handling multiple rust toolchains.
+
+[ru]: https://www.rustup.rs/
 
 There are two ways to get started working with Amethyst:
 
