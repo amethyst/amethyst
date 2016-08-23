@@ -17,7 +17,7 @@ use self::amethyst_renderer::target::ColorFormat;
 
 use self::genmesh::generators::{SphereUV, Cube};
 use self::genmesh::{MapToVertices, Triangulate, Vertices};
-use self::cgmath::{Vector3, EuclideanVector};
+use self::cgmath::{Vector3, InnerSpace};
 
 use std::collections::HashMap;
 use renderer::{Fragment, FragmentImpl};
