@@ -244,13 +244,13 @@ impl Camera {
     }
 
     pub fn look_at(eye: [f32; 3], target: [f32; 3], up: [f32; 3]) -> [[f32; 4]; 4] {
-        use cgmath::{Point3, Vector3, AffineMatrix3, Transform};
-        let view: AffineMatrix3<f32> = Transform::look_at(
+        use cgmath::{Point3, Vector3, Matrix4, Transform};
+        let view: Matrix4<f32> = Transform::look_at(
             Point3::new(eye[0], eye[1], eye[2]),
             Point3::new(target[0], target[1], target[2]),
             Vector3::new(up[0], up[1], up[2]),
         );
-        view.mat.into()
+        view.into()
     }
 }
 
