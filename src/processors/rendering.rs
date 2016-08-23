@@ -1,3 +1,5 @@
+//! Default rendering processor types.
+
 extern crate cgmath;
 
 use ecs::{Processor, RunArg, Join, Component, VecStorage, Entity};
@@ -11,6 +13,7 @@ use config::Element;
 use std::path::Path;
 
 config!(
+    /// A config required to create a rendering processor.
     struct RendererConfig {
         // Forward or Deferred
         pub pipeline: String = "Forward".to_string(),
@@ -20,6 +23,7 @@ config!(
     }
 );
 
+/// A rendering processor struct.
 pub struct RenderingProcessor {
     active_camera: Option<Entity>,
 }
@@ -354,7 +358,7 @@ impl Component for Renderable {
     type Storage = VecStorage<Renderable>;
 }
 
-/// A light component.
+/// A `Light` component.
 /// All changes in the `light` field will be
 /// applied to the associated `renderer::Light` in the frame.
 pub struct Light {
@@ -380,6 +384,7 @@ impl Component for Light {
 }
 
 #[derive(Clone)]
+/// A projection enum which is required to create a `Camera` component.
 pub enum Projection {
     Perspective {
         fov: f32,

@@ -1,7 +1,7 @@
 extern crate amethyst;
 
 use amethyst::engine::{Application, State, Trans};
-use amethyst::processors::{RenderingProcessor, Renderable, Light, Camera, Projection};
+use amethyst::processors::rendering::{RenderingProcessor, Renderable, Light, Camera, Projection};
 use amethyst::context::Context;
 use amethyst::config::Element;
 use amethyst::ecs::{World, Join, VecStorage, Component, Processor, RunArg};
@@ -107,7 +107,7 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
              mut renderables,
 
              mut input_state,
-             mut projection,
+             projection,
              mut score) = arg.fetch(|w| (w.write::<Ball>(),
                                          w.write::<Plank>(),
                                          w.write::<Renderable>(),
@@ -312,7 +312,7 @@ impl State for Pong {
         context.asset_manager.gen_rectangle("square", 1.0, 1.0);
 
         // Create a ball entity
-        let mut square = Renderable::new("square", "white", "white");
+        let square = Renderable::new("square", "white", "white");
         let mut ball = Ball::new();
         ball.size = 0.02;
         ball.velocity = [0.5, 0.5];
@@ -322,7 +322,7 @@ impl State for Pong {
             .build();
 
         // Create a left plank entity
-        let mut square = Renderable::new("square", "white", "white");
+        let square = Renderable::new("square", "white", "white");
         let mut plank = Plank::new(Side::Left);
         plank.dimensions[0] = 0.01;
         plank.dimensions[1] = 0.1;
@@ -333,7 +333,7 @@ impl State for Pong {
             .build();
 
         // Create right plank entity
-        let mut square = Renderable::new("square", "white", "white");
+        let square = Renderable::new("square", "white", "white");
         let mut plank = Plank::new(Side::Right);
         plank.dimensions[0] = 0.01;
         plank.dimensions[1] = 0.1;
@@ -344,7 +344,7 @@ impl State for Pong {
             .build();
     }
 
-    fn update(&mut self, context: &mut Context, world: &mut World) -> Trans {
+    fn update(&mut self, context: &mut Context, _: &mut World) -> Trans {
         // Exit if user hits Escape or closes the window
         use amethyst::context::event::{EngineEvent, Event, VirtualKeyCode};
         let engine_events = context.broadcaster.read::<EngineEvent>();

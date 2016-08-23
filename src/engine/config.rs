@@ -1,5 +1,5 @@
 use context::ContextConfig;
-use processors::RendererConfig;
+use processors::rendering::RendererConfig;
 
 use config::Element;
 use std::path::Path;

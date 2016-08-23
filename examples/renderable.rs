@@ -1,7 +1,7 @@
 extern crate amethyst;
 
 use amethyst::engine::{Application, State, Trans};
-use amethyst::processors::{RenderingProcessor, Renderable, Light, Camera, Projection};
+use amethyst::processors::rendering::{RenderingProcessor, Renderable, Light, Camera, Projection};
 use amethyst::context::Context;
 use amethyst::config::Element;
 use amethyst::ecs::{World, Join};

@@ -1,3 +1,3 @@
-pub mod rendering;
+//! Default processors.
 
-pub use self::rendering::*;
+pub mod rendering;
