@@ -21,7 +21,6 @@ impl Example {
 impl State for Example {
     fn on_start(&mut self, context: &mut Context, world: &mut World) {
         let (w, h) = context.renderer.get_dimensions().unwrap();
-
         let eye = [0., 5., 0.];
         let target = [0., 0., 0.];
         let up = [0., 0., 1.];
@@ -121,11 +120,9 @@ fn main() {
     let rendering_processor = RenderingProcessor::new(config.renderer_config, &mut context);
     let mut game = Application::build(Example::new(), context)
                    .with::<RenderingProcessor>(rendering_processor, "rendering_processor", 0)
-
                    .register::<Renderable>()
                    .register::<Light>()
                    .register::<Camera>()
-
                    .done();
     game.run();
 }

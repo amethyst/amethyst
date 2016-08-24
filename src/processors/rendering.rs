@@ -8,7 +8,6 @@ use std::sync::{Mutex, Arc};
 use renderer;
 use renderer::Layer;
 use std::collections::HashSet;
-
 use config::Element;
 use std::path::Path;
 
@@ -36,10 +35,10 @@ fn forward_flat(clear_color: [f32; 4]) -> Vec<Layer> {
 
     vec![
         Layer::new("main",
-                vec![
-                    Clear::new(clear_color),
-                    DrawFlat::new(ACTIVE_CAMERA_NAME, ACTIVE_SCENE_NAME),
-                ]
+            vec![
+                Clear::new(clear_color),
+                DrawFlat::new(ACTIVE_CAMERA_NAME, ACTIVE_SCENE_NAME),
+            ]
         ),
     ]
 }
@@ -49,10 +48,10 @@ fn forward_shaded(clear_color: [f32; 4]) -> Vec<Layer> {
 
     vec![
         Layer::new("main",
-                vec![
-                    Clear::new(clear_color),
-                    DrawShaded::new(ACTIVE_CAMERA_NAME, ACTIVE_SCENE_NAME),
-                ]
+            vec![
+                Clear::new(clear_color),
+                DrawShaded::new(ACTIVE_CAMERA_NAME, ACTIVE_SCENE_NAME),
+            ]
         ),
     ]
 }
@@ -61,10 +60,10 @@ fn layer_gbuffer(clear_color: [f32; 4]) -> Layer {
     use renderer::pass::*;
 
     Layer::new("gbuffer",
-               vec![
-                   Clear::new(clear_color),
-                   DrawFlat::new(ACTIVE_CAMERA_NAME, ACTIVE_SCENE_NAME),
-               ]
+        vec![
+            Clear::new(clear_color),
+            DrawFlat::new(ACTIVE_CAMERA_NAME, ACTIVE_SCENE_NAME),
+        ]
     )
 }
 
@@ -74,9 +73,9 @@ fn deferred_flat(clear_color: [f32; 4]) -> Vec<Layer> {
     vec![
         layer_gbuffer(clear_color),
         Layer::new("main",
-                   vec![
-                       BlitLayer::new("gbuffer", "ka"),
-                   ]
+            vec![
+                BlitLayer::new("gbuffer", "ka"),
+            ]
         ),
     ]
 }
@@ -87,10 +86,10 @@ fn deferred_shaded(clear_color: [f32; 4]) -> Vec<Layer> {
     vec![
         layer_gbuffer(clear_color),
         Layer::new("main",
-                   vec![
-                       BlitLayer::new("gbuffer", "ka"),
-                       Lighting::new(ACTIVE_CAMERA_NAME, "gbuffer", ACTIVE_SCENE_NAME)
-                   ]
+            vec![
+                BlitLayer::new("gbuffer", "ka"),
+                Lighting::new(ACTIVE_CAMERA_NAME, "gbuffer", ACTIVE_SCENE_NAME)
+            ]
         ),
     ]
 }
@@ -100,40 +99,41 @@ fn clear(clear_color: [f32; 4]) -> Vec<Layer> {
 
     vec![
         Layer::new("main",
-                   vec![
-                       Clear::new(clear_color),
-                   ])]
+            vec![
+                Clear::new(clear_color),
+            ]
+        ),
+    ]
 }
 
 impl RenderingProcessor {
     pub fn new(renderer_config: RendererConfig, context: &mut Context) -> RenderingProcessor {
         let clear_color = renderer_config.clear_color;
-        let pipeline =
-            match renderer_config.pipeline.as_str() {
-                "Forward" => {
-                    match renderer_config.shading.as_str() {
-                        "Flat" => {
-                            forward_flat(clear_color)
-                        },
-                        "Shaded" => {
-                            forward_shaded(clear_color)
-                        },
-                        _ => clear(clear_color),
-                    }
-                },
-                "Deferred" => {
-                    match renderer_config.shading.as_str() {
-                        "Flat" => {
-                            deferred_flat(clear_color)
-                        },
-                        "Shaded" => {
-                            deferred_shaded(clear_color)
-                        },
-                        _ => clear(clear_color),
-                    }
+        let pipeline = match renderer_config.pipeline.as_str() {
+            "Forward" => {
+                match renderer_config.shading.as_str() {
+                    "Flat" => {
+                        forward_flat(clear_color)
+                    },
+                    "Shaded" => {
+                        forward_shaded(clear_color)
+                    },
+                    _ => clear(clear_color),
                 }
-                _ => clear(clear_color),
-            };
+            },
+            "Deferred" => {
+                match renderer_config.shading.as_str() {
+                    "Flat" => {
+                        deferred_flat(clear_color)
+                    },
+                    "Shaded" => {
+                        deferred_shaded(clear_color)
+                    },
+                    _ => clear(clear_color),
+                }
+            }
+            _ => clear(clear_color),
+        };
 
         context.renderer.add_scene(ACTIVE_SCENE_NAME);
 
@@ -335,7 +335,6 @@ impl Renderable {
                                                translation[1],
                                                translation[2]);
         let translation_matrix = cgmath::Matrix4::from_translation(translation);
-
         let rotation_axis = self.rotation_axis;
         let rotation_axis = cgmath::Vector3::new(rotation_axis[0],
                                                  rotation_axis[1],
@@ -343,12 +342,10 @@ impl Renderable {
         let rotation_angle = self.rotation_angle;
         let rotation_angle = cgmath::Rad::new(rotation_angle);
         let rotation_matrix = cgmath::Matrix4::from_axis_angle(rotation_axis, rotation_angle);
-
         let scale = self.scale;
         let scale_matrix = cgmath::Matrix4::from_nonuniform_scale(scale[0],
                                                                   scale[1],
                                                                   scale[2]);
-
         let transform = translation_matrix * rotation_matrix * scale_matrix;
         self.transform = transform.into();
     }
@@ -407,7 +404,6 @@ pub enum Projection {
 /// will be applied to the camera that is being used to render the scene.
 pub struct Camera {
     pub projection: Projection,
-
     pub eye: [f32; 3],
     pub target: [f32; 3],
     pub up: [f32; 3],
@@ -420,11 +416,9 @@ impl Camera {
     pub fn new(projection: Projection, eye: [f32; 3], target: [f32; 3], up: [f32; 3]) -> Camera {
         Camera {
             projection: projection,
-
             eye: eye,
             target: target,
             up: up,
-
             activate: false,
         }
     }

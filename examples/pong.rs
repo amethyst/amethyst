@@ -105,13 +105,11 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
         let (mut balls,
              mut planks,
              mut renderables,
-
              mut input_state,
              projection,
              mut score) = arg.fetch(|w| (w.write::<Ball>(),
                                          w.write::<Plank>(),
                                          w.write::<Renderable>(),
-
                                          w.write_resource::<InputState>(),
                                          w.read_resource::<Projection>(),
                                          w.write_resource::<Score>()));
@@ -274,11 +272,8 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
 
 impl State for Pong {
     fn on_start(&mut self, context: &mut Context, world: &mut World) {
-
         let (w, h) = context.renderer.get_dimensions().unwrap();
-
         let aspect = w as f32 / h as f32;
-
         let eye = [0., 0., 0.1];
         let target = [0., 0., 0.];
         let up = [0., 1., 0.];
@@ -370,16 +365,12 @@ fn main() {
     let rendering_processor = RenderingProcessor::new(config.renderer_config, &mut context);
     let mut game = Application::build(Pong, context)
                    .with::<RenderingProcessor>(rendering_processor, "rendering_processor", 0)
-
                    .register::<Renderable>()
                    .register::<Light>()
                    .register::<Camera>()
-
                    .with::<PongProcessor>(PongProcessor, "pong_processor", 0)
-
                    .register::<Ball>()
                    .register::<Plank>()
-
                    .done();
     game.run();
 }
