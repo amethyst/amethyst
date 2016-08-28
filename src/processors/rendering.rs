@@ -94,18 +94,6 @@ fn deferred_shaded(clear_color: [f32; 4]) -> Vec<Layer> {
     ]
 }
 
-fn clear(clear_color: [f32; 4]) -> Vec<Layer> {
-    use renderer::pass::*;
-
-    vec![
-        Layer::new("main",
-            vec![
-                Clear::new(clear_color),
-            ]
-        ),
-    ]
-}
-
 impl RenderingProcessor {
     pub fn new(renderer_config: RendererConfig, context: &mut Context) -> RenderingProcessor {
         let clear_color = renderer_config.clear_color;
@@ -118,7 +106,8 @@ impl RenderingProcessor {
                     "Shaded" => {
                         forward_shaded(clear_color)
                     },
-                    _ => clear(clear_color),
+                    _ => panic!("Error: Can't provide rendering pipeline requested in renderer_config, \
+                                 renderer_config.shading field is invalid."),
                 }
             },
             "Deferred" => {
@@ -129,10 +118,12 @@ impl RenderingProcessor {
                     "Shaded" => {
                         deferred_shaded(clear_color)
                     },
-                    _ => clear(clear_color),
+                    _ => panic!("Error: Can't provide rendering pipeline requested in renderer_config, \
+                                 renderer_config.shading field is invalid."),
                 }
             }
-            _ => clear(clear_color),
+            _ => panic!("Error: Can't provide rendering pipeline requested in renderer_config, \
+                         renderer_config.pipeline field is invalid."),
         };
 
         context.renderer.add_scene(ACTIVE_SCENE_NAME);
