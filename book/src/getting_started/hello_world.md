@@ -36,7 +36,7 @@ fn main() {
 }
 ```
 
-Then, compile and run the code inside "**src/**" with `cargo run`,
+Then, compile and run the code with `cargo run`,
 or `amethyst run` if you have the [CLI tool installed][ct].
 
 [ct]: ./getting_started/automatic_setup.html
