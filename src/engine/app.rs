@@ -61,8 +61,8 @@ impl Application {
             self.context.lock().unwrap().broadcaster.publish().with::<EngineEvent>(e);
         }
 
-        let ents = self.context.lock().unwrap().broadcaster.poll();
-        self.states.handle_events(&ents, self.context.lock().unwrap().deref_mut());
+        let entities = self.context.lock().unwrap().broadcaster.poll();
+        self.states.handle_events(&entities, self.context.lock().unwrap().deref_mut());
 
         let fixed_step = self.context.lock().unwrap().fixed_step.clone();
         let last_fixed_update = self.context.lock().unwrap().last_fixed_update.clone();
