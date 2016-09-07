@@ -5,16 +5,12 @@ authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
 description = "Data-oriented game engine written in Rust"
 keywords = ["game", "engine", "sdk", "amethyst"]
 
-documentation = "http://ebkalderon.github.io/amethyst/doc/amethyst/"
-homepage = "http://ebkalderon.github.io/amethyst/"
-repository = "https://github.com/ebkalderon/amethyst"
+documentation = "https://www.amethyst.rs/doc/amethyst"
+homepage = "https://www.amethyst.rs/"
+repository = "https://github.com/amethyst/amethyst"
 
 readme = "README.md"
 license = "MIT"
-
-[dependencies.amethyst_engine]
-path = "src/engine/"
-version = "0.3.1"
 
 [dependencies.amethyst_ecs]
 path = "src/ecs/"
@@ -23,3 +19,15 @@ version = "0.1.1"
 [dependencies.amethyst_renderer]
 path = "src/renderer/"
 version = "0.3.1"
+
+[dependencies.amethyst_config]
+path = "src/config/"
+version = "0.1.0"
+
+[dependencies.amethyst_context]
+path = "src/context/"
+version = "0.1.0"
+
+[dependencies]
+# required for examples/sphere.rs example
+cgmath="0.7"

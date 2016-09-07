@@ -12,3 +12,10 @@ repository = "https://github.com/amethyst/amethyst"
 license = "MIT"
 
 [dependencies]
+time = "^0.1"
+specs = "^0.7.0"
+
+[[example]]
+name = "usage"
+path = "examples/usage.rs"
+

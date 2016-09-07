@@ -7,7 +7,7 @@
 [s3]: https://img.shields.io/badge/license-MIT-blue.svg
 [s4]: https://badges.gitter.im/amethyst/amethyst.svg
 
-[tc]: https://travis-ci.org/ebkalderon/amethyst/
+[tc]: https://travis-ci.org/amethyst/amethyst/
 [ci]: https://crates.io/crates/amethyst_renderer/
 [ml]: https://github.com/amethyst/amethyst/blob/master/COPYING
 [gc]: https://gitter.im/org/amethyst/rooms

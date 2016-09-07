@@ -1,75 +1,77 @@
 //! Computes the next state.
 
-use processor::{Processor, ProcessorResult};
-use world::World;
+use time::Duration;
+
+use specs::Planner;
+
+use super::{World, Processor};
 
 pub struct Simulation {
-    procs: Vec<Box<Processor>>,
+    planner: Planner<Duration>,
 }
 
 impl Simulation {
     /// Creates an empty simulation.
-    pub fn new() -> Simulation {
-        Simulation { procs: Vec::new() }
+    pub fn new(world: World, num_threads: usize) -> Simulation {
+        Simulation { planner: Planner::new(world, num_threads) }
     }
 
     /// Creates an initialized simulation using the [builder pattern][bp].
     ///
     /// [bp]: https://doc.rust-lang.org/book/method-syntax.html#builder-pattern
-    pub fn build() -> SimBuilder {
-        SimBuilder::new()
+    pub fn build(world: World, num_threads: usize) -> SimBuilder {
+        SimBuilder::new(world, num_threads)
     }
 
     /// Adds a new processor to the simulation.
-    pub fn add_processor<T: Processor + 'static>(&mut self, p: T) -> ProcessorResult {
-        self.procs.push(Box::new(p));
-        Ok(())
+    pub fn add_processor<T: Processor<Duration> + 'static>(&mut self,
+                                                           p: T,
+                                                           name: &str,
+                                                           priority: i32) {
+        self.planner.add_system(p, name, priority);
+    }
+
+    /// Get a mutable reference to the world.
+    pub fn mut_world(&mut self) -> &mut World {
+        self.planner.mut_world()
     }
 
     /// Computes the next state of the world using the given processors.
-    pub fn step(&mut self, world: World) -> World {
-        let mut next_state = world;
+    pub fn step(&mut self, dt: Duration) {
+        self.planner.dispatch(dt);
+    }
+}
 
-        // TODO: Rich possibilities for multithreading here.
-        for p in self.procs.iter_mut() {
-            p.process();
-        }
-
-        next_state
+impl Drop for Simulation {
+    fn drop(&mut self) {
+        self.planner.wait();
     }
 }
 
 /// Consuming builder for easily constructing a new simulations.
 pub struct SimBuilder {
-    errors: Vec<String>,
     sim: Simulation,
 }
 
 impl SimBuilder {
     /// Starts building a new simulation.
-    pub fn new() -> SimBuilder {
-        SimBuilder {
-            errors: Vec::new(),
-            sim: Simulation::new(),
-        }
+    pub fn new(world: World, num_threads: usize) -> SimBuilder {
+        SimBuilder { sim: Simulation::new(world, num_threads) }
     }
 
     /// Add a given processor to the simulation.
-    pub fn with<T: Processor + 'static>(mut self, p: T) -> SimBuilder {
-        let r = self.sim.add_processor(p);
-        if let Err(e) = r {
-            self.errors.push(e);
-        }
+    pub fn with<T: Processor<Duration> + 'static>(mut self,
+                                                  p: T,
+                                                  name: &str,
+                                                  priority: i32)
+                                                  -> SimBuilder {
+        self.sim.add_processor(p, name, priority);
         self
     }
 
     /// Returns the newly-built simulation or a list of any errors the
     /// processors may have encountered.
-    pub fn done(self) -> Result<Simulation, Vec<String>> {
-        if self.errors.is_empty() {
-            Ok(self.sim)
-        } else {
-            Err(self.errors)
-        }
+    pub fn done(self) -> Simulation {
+        self.sim
     }
 }

@@ -9,7 +9,7 @@
 //!
 //! [rs]: https://www.rust-lang.org/
 //! [gh]: https://github.com/amethyst/amethyst
-//! [bk]: https://www.amethyst.rs/
+//! [bk]: https://www.amethyst.rs/book/
 //!
 //! This project is a work in progress and is very incomplete. Pardon the dust!
 //!
@@ -46,6 +46,9 @@
 //! }
 //! ```
 
+pub mod engine;
+
+pub extern crate amethyst_config as config;
+pub extern crate amethyst_context as context;
 pub extern crate amethyst_ecs as ecs;
-pub extern crate amethyst_engine as engine;
 pub extern crate amethyst_renderer as renderer;
