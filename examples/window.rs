@@ -8,12 +8,12 @@ use amethyst::ecs::{World, Entity};
 struct Example;
 
 impl State for Example {
-    fn handle_events(&mut self, events: Vec<Entity>, context: &mut Context, _: &mut World) -> Trans {
+    fn handle_events(&mut self, events: &[Entity], context: &mut Context, _: &mut World) -> Trans {
         use amethyst::context::event::{EngineEvent, Event, VirtualKeyCode};
         let mut trans = Trans::None;
         let storage = context.broadcaster.read::<EngineEvent>();
         for _event in events {
-            let event = storage.get(_event).unwrap();
+            let event = storage.get(*_event).unwrap();
             let event = &event.payload;
             match *event {
                 Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) => trans = Trans::Quit,
