@@ -97,11 +97,10 @@ impl<T> ApplicationBuilder<T>
 {
     pub fn new(initial_state: T, ctx: Context) -> ApplicationBuilder<T> {
         let world = World::new();
-        let planner = Planner::new(world, 1);
         ApplicationBuilder {
             initial_state: initial_state,
             context: ctx,
-            planner: planner,
+            planner: Planner::new(world, 1),
         }
     }
 

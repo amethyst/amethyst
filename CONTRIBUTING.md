@@ -104,6 +104,7 @@ done the following things first:
 5. All of the following commands completed without errors.
    * `cargo build`
    * `cargo test -p {crate-name} -v`
+   * `cargo run --example {example-name}`
 
 [ml]: ./COPYING
 [st]: ./src/engine/state.rs#L192-L233

@@ -8,12 +8,12 @@ use amethyst::ecs::{World, Entity};
 struct Example;
 
 impl State for Example {
-    fn handle_events(&mut self, events: &[Entity], context: &mut Context, _: &mut World) -> Trans {
+    fn handle_events(&mut self, events: &[Entity], ctx: &mut Context, _: &mut World) -> Trans {
         use amethyst::context::event::{EngineEvent, Event, VirtualKeyCode};
         let mut trans = Trans::None;
-        let storage = context.broadcaster.read::<EngineEvent>();
-        for _event in events {
-            let event = storage.get(*_event).unwrap();
+        let storage = ctx.broadcaster.read::<EngineEvent>();
+        for e in events {
+            let event = storage.get(*e).unwrap();
             let event = &event.payload;
             match *event {
                 Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) => trans = Trans::Quit,
@@ -24,7 +24,7 @@ impl State for Example {
         trans
     }
 
-    fn on_start(&mut self, context: &mut Context, _: &mut World) {
+    fn on_start(&mut self, ctx: &mut Context, _: &mut World) {
         use amethyst::renderer::pass::Clear;
         use amethyst::renderer::Layer;
         let clear_layer =
@@ -33,11 +33,11 @@ impl State for Example {
                             Clear::new([0., 0., 0., 1.]),
                         ]);
         let pipeline = vec![clear_layer];
-        context.renderer.set_pipeline(pipeline);
+        ctx.renderer.set_pipeline(pipeline);
     }
 
-    fn update(&mut self, context: &mut Context, _: &mut World) -> Trans {
-        context.renderer.submit();
+    fn update(&mut self, ctx: &mut Context, _: &mut World) -> Trans {
+        ctx.renderer.submit();
         Trans::None
     }
 }
@@ -48,7 +48,7 @@ fn main() {
         format!("{}/config/window_example_config.yml",
                 env!("CARGO_MANIFEST_DIR"))
         ).unwrap(); 
-    let context = Context::new(config);
-    let mut game = Application::build(Example, context).done();
+    let ctx = Context::new(config);
+    let mut game = Application::build(Example, ctx).done();
     game.run();
 }
