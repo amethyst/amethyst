@@ -34,7 +34,6 @@ pub mod timing;
 pub mod event;
 pub mod renderer;
 pub mod asset_manager;
-mod video_init;
 use video_context::{VideoContext, DisplayConfig};
 use renderer::Renderer;
 use asset_manager::AssetManager;
@@ -66,10 +65,9 @@ unsafe impl Send for Context {}
 impl Context {
     /// Create a `Context` configured according to `Config`
     pub fn new(config: Config) -> Context {
-        let (video_context, factory_impl) =
-            video_init::create_video_context_and_factory_impl(config.display_config);
+        let (video_context, factory) = VideoContext::new(&config.display_config);
         let renderer = Renderer::new(video_context);
-        let asset_manager = AssetManager::new(factory_impl);
+        let asset_manager = AssetManager::new(factory);
         let mut broadcaster = Broadcaster::new();
         broadcaster.register::<EngineEvent>();
 
@@ -88,18 +86,11 @@ impl Context {
     pub fn poll_engine_events(&mut self) -> Vec<EngineEvent> {
         let mut events = vec!();
         let video_context = self.renderer.mut_video_context();
-        match *video_context {
-            VideoContext::OpenGL { ref window, .. } =>
-                for event in window.poll_events() {
-                    let event = EngineEvent::new(event);
-                    events.push(event);
-                },
-            #[cfg(windows)]
-            VideoContext::Direct3D {  } => {
-                // stub
-                unimplemented!();
-            },
-            VideoContext::Null => (),
+        let ref mut window = video_context.window;
+
+        for event in window.poll_events() {
+            let event = EngineEvent::new(event);
+            events.push(event);
         }
         events
     }
