@@ -31,7 +31,7 @@ impl State for Example {
         let clear_layer =
             Layer::new("main",
                         vec![
-                            Clear::new([0., 0., 0., 1.]),
+                            Clear::new([0.0, 0.0, 0.0, 1.0]),
                         ]);
         let pipeline = vec![clear_layer];
         ctx.renderer.set_pipeline(pipeline);
