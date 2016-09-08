@@ -7,6 +7,11 @@ extern crate gfx;
 use self::amethyst_renderer::{Layer, Scene, Target, Camera, Light};
 use video_context::VideoContext;
 
+/// A wraper around `Fragment`
+pub struct Fragment {
+    pub data: amethyst_renderer::Fragment<gfx_device_gl::Resources>,
+}
+
 /// A wraper around `VideoContext` required to
 /// hide all platform specific code from the user.
 pub struct Renderer {
@@ -134,7 +139,3 @@ impl Renderer {
     }
 }
 
-/// A wraper around `Fragment`
-pub struct Fragment {
-    pub data: amethyst_renderer::Fragment<gfx_device_gl::Resources>,
-}

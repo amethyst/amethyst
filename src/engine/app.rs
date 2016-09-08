@@ -17,7 +17,10 @@ pub struct Application {
 
 impl Application {
     /// Creates a new Application with the given initial game state, planner, and context.
-    pub fn new<T>(initial_state: T, planner: Planner<Arc<Mutex<Context>>>, context: Context) -> Application
+    pub fn new<T>(initial_state: T,
+                  planner: Planner<Arc<Mutex<Context>>>,
+                  context: Context)
+                  -> Application
         where T: State + 'static
     {
         let context = Arc::new(Mutex::new(context));
@@ -103,10 +106,7 @@ impl<T> ApplicationBuilder<T>
         }
     }
 
-    pub fn with<P>(mut self,
-                   sys: P,
-                   name: &str,
-                   priority: Priority) -> ApplicationBuilder<T>
+    pub fn with<P>(mut self, sys: P, name: &str, priority: Priority) -> ApplicationBuilder<T>
         where P: Processor<Arc<Mutex<Context>>> + 'static
     {
         self.planner.add_system::<P>(sys, name, priority);
