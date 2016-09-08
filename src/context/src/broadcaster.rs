@@ -23,8 +23,8 @@
 //!     let mut broadcaster = Broadcaster::new();
 //!     broadcaster.register::<UserEvent>();
 //!     for i in 0..10 {
-//!         let user_component = UserEvent { data: i };
-//!         broadcaster.publish().with::<UserEvent>(user_component).build();
+//!         let user_event = UserEvent { data: i };
+//!         broadcaster.publish().with::<UserEvent>(user_event).build();
 //!     }
 //!     {
 //!         let user_events = broadcaster.read::<UserEvent>();
