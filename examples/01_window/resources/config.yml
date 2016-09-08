@@ -1,6 +1,7 @@
-display_config: 
+---
+display_config:
     dimensions: null
-    fullscreen: false
+    fullscreen: false 
     max_dimensions: null
     min_dimensions: null
     multisampling: 1
