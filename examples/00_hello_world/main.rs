@@ -1,9 +1,9 @@
-//! The most basic Amethyst example.
+//! The simplest Amethyst example.
 
 extern crate amethyst;
 
 use amethyst::engine::{Application, State, Trans};
-use amethyst::context::{Context, Config};
+use amethyst::context::{Config, Context};
 use amethyst::ecs::World;
 
 struct Example;
