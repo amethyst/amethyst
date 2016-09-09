@@ -40,7 +40,7 @@ use renderer::Renderer;
 use asset_manager::AssetManager;
 use broadcaster::Broadcaster;
 use event::EngineEvent;
-use timing::{Duration, SteadyTime};
+use std::time::{Duration, Instant};
 
 config!(
     /// Contains configs for resources provided by `Context`
@@ -58,7 +58,7 @@ pub struct Context {
     pub broadcaster: Broadcaster,
     pub delta_time: Duration,
     pub fixed_step: Duration,
-    pub last_fixed_update: SteadyTime,
+    pub last_fixed_update: Instant,
 }
 
 unsafe impl Send for Context {}
@@ -77,9 +77,9 @@ impl Context {
             renderer: renderer,
             asset_manager: asset_manager,
             broadcaster: broadcaster,
-            delta_time: Duration::zero(),
-            fixed_step: Duration::microseconds(16666),
-            last_fixed_update: SteadyTime::now(),
+            delta_time: Duration::new(0, 0),
+            fixed_step: Duration::new(0, 16666666),
+            last_fixed_update: Instant::now(),
         }
     }
 

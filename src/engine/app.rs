@@ -1,7 +1,7 @@
 //! The core engine framework.
 
 use super::state::{State, StateMachine};
-use context::timing::{SteadyTime, Stopwatch};
+use context::timing::Stopwatch;
 use context::event::EngineEvent;
 use context::Context;
 use ecs::{Planner, World, Processor, Priority};
@@ -64,12 +64,12 @@ impl Application {
         let entities = self.context.lock().unwrap().broadcaster.poll();
         self.states.handle_events(&entities, self.context.lock().unwrap().deref_mut());
 
-        let fixed_step = self.context.lock().unwrap().fixed_step.clone();
-        let last_fixed_update = self.context.lock().unwrap().last_fixed_update.clone();
+        let fixed_step = self.context.lock().unwrap().fixed_step;
+        let last_fixed_update = self.context.lock().unwrap().last_fixed_update;
 
-        if SteadyTime::now() - last_fixed_update > fixed_step {
+        if last_fixed_update.elapsed() >= fixed_step {
             self.states.fixed_update(self.context.lock().unwrap().deref_mut());
-            self.context.lock().unwrap().last_fixed_update = last_fixed_update + fixed_step;
+            self.context.lock().unwrap().last_fixed_update += fixed_step;
         }
 
         self.states.update(self.context.lock().unwrap().deref_mut());
