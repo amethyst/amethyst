@@ -133,7 +133,7 @@ label.
 There are two types of documentation in Amethyst you can work on:
 
 1. [API documentation][ad]
-2. [The online Amethyst book][ab]
+2. [The Amethyst book][ab]
 
 [ad]: https://www.amethyst.rs/doc/amethyst/
 [ab]: https://www.amethyst.rs/book/
@@ -161,7 +161,7 @@ Documentation of any kind should adhere to the following standard:
    points to an anchor that exists on the same page, the *inline style* should
    be used instead.
 
-```
+```markdown
 Here is some [example text][et] with a link in it. While we are at it, here is
 yet [another link][al]. If we are linking to [an anchor](#anchor) on the same
 page, we can do this inline.
