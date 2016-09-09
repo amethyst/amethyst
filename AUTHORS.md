@@ -2,7 +2,6 @@
 
 * Aceeri
 * Colin Sherratt
-* CSherratt
 * Demur Rumed
 * Douglas Eugene Reisinger II
 * Dzmitry Malyshau
