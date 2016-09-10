@@ -236,7 +236,7 @@ impl Camera {
     }
 
     pub fn perspective(fov: f32, aspect: f32, near: f32, far: f32) -> [[f32; 4]; 4] {
-        cgmath::perspective(cgmath::deg(fov), aspect, near, far).into()
+        cgmath::perspective(cgmath::Deg(fov), aspect, near, far).into()
     }
 
     pub fn orthographic(left: f32, right: f32, bottom: f32, top: f32, near: f32, far: f32) -> [[f32; 4]; 4] {
