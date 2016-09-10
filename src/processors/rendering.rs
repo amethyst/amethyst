@@ -97,33 +97,12 @@ fn deferred_shaded(clear_color: [f32; 4]) -> Vec<Layer> {
 impl RenderingProcessor {
     pub fn new(renderer_config: RendererConfig, context: &mut Context) -> RenderingProcessor {
         let clear_color = renderer_config.clear_color;
-        let pipeline = match renderer_config.pipeline.as_str() {
-            "Forward" => {
-                match renderer_config.shading.as_str() {
-                    "Flat" => {
-                        forward_flat(clear_color)
-                    },
-                    "Shaded" => {
-                        forward_shaded(clear_color)
-                    },
-                    _ => panic!("Error: Can't provide rendering pipeline requested in renderer_config, \
-                                 renderer_config.shading field is invalid."),
-                }
-            },
-            "Deferred" => {
-                match renderer_config.shading.as_str() {
-                    "Flat" => {
-                        deferred_flat(clear_color)
-                    },
-                    "Shaded" => {
-                        deferred_shaded(clear_color)
-                    },
-                    _ => panic!("Error: Can't provide rendering pipeline requested in renderer_config, \
-                                 renderer_config.shading field is invalid."),
-                }
-            }
-            _ => panic!("Error: Can't provide rendering pipeline requested in renderer_config, \
-                         renderer_config.pipeline field is invalid."),
+        let pipeline = match (renderer_config.pipeline.as_str(), renderer_config.shading.as_str()) {
+            ("Forward", "Flat") => forward_flat(clear_color),
+            ("Forward", "Shaded") => forward_shaded(clear_color),
+            ("Deferred", "Flat") => deferred_flat(clear_color),
+            ("Deferred", "Shaded") => deferred_shaded(clear_color),
+            _ => panic!("Error: Can't provide rendering pipeline requested in renderer_config"),
         };
 
         context.renderer.add_scene(ACTIVE_SCENE_NAME);
