@@ -178,7 +178,7 @@ pub struct Fragment<R: gfx::Resources> {
 }
 
 /// A basic light
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 pub struct Light {
     /// The XYZ coordinate of the light
     pub center: [f32; 3],
