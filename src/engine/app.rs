@@ -4,7 +4,7 @@ use super::state::{State, StateMachine};
 use context::timing::Stopwatch;
 use context::event::EngineEvent;
 use context::Context;
-use ecs::{Planner, World, Processor, Priority};
+use ecs::{Planner, World, Processor, Priority, Component};
 use std::sync::{Arc, Mutex};
 use std::ops::DerefMut;
 
@@ -74,6 +74,7 @@ impl Application {
 
         self.states.update(self.context.lock().unwrap().deref_mut());
         self.states.run_processors(self.context.clone());
+        self.context.lock().unwrap().renderer.submit();
         self.context.lock().unwrap().broadcaster.clean();
     }
 
@@ -102,6 +103,16 @@ impl<T> ApplicationBuilder<T>
             context: ctx,
             planner: Planner::new(world, 1),
         }
+    }
+
+    pub fn register<C>(mut self) -> ApplicationBuilder<T>
+        where C: Component
+    {
+        {
+            let world = &mut self.planner.mut_world();
+            world.register::<C>();
+        }
+        self
     }
 
     pub fn with<P>(mut self, pro: P, name: &str, pri: Priority) -> ApplicationBuilder<T>

@@ -18,7 +18,7 @@ gfx_core = "0.3"
 gfx_device_gl = "0.10"
 gfx_window_glutin = "0.11"
 glutin = "0.5"
-cgmath="0.7"
+cgmath="0.11"
 mopa ="0.2"
 
 [dev-dependencies]

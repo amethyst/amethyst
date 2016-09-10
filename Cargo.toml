@@ -40,5 +40,13 @@ path = "examples/01_window/main.rs"
 name = "sphere"
 path = "examples/02_sphere/main.rs"
 
-[dev_dependencies]
-cgmath="0.7"
+[[example]]
+name = "renderable"
+path = "examples/03_renderable/main.rs"
+
+[[example]]
+name = "pong"
+path = "examples/04_pong/main.rs"
+
+[dependencies]
+cgmath="0.11"

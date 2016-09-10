@@ -3,7 +3,7 @@
 extern crate amethyst;
 
 use amethyst::engine::{Application, State, Trans};
-use amethyst::context::{Context, Config};
+use amethyst::context::{Context, ContextConfig};
 use amethyst::config::Element;
 use amethyst::ecs::{World, Entity};
 
@@ -46,7 +46,7 @@ impl State for Example {
 fn main() {
     let path = format!("{}/examples/01_window/resources/config.yml",
                         env!("CARGO_MANIFEST_DIR"));
-	let config = Config::from_file(path).unwrap(); 
+	let config = ContextConfig::from_file(path).unwrap(); 
     let ctx = Context::new(config);
     let mut game = Application::build(Example, ctx).done();
     game.run();
