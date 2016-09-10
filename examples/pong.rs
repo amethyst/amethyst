@@ -305,36 +305,34 @@ impl State for Pong {
         // Generate a square mesh
         context.asset_manager.create_constant_texture("white", [1.0, 1.0, 1.0, 1.]);
         context.asset_manager.gen_rectangle("square", 1.0, 1.0);
+        let square = Renderable::new("square", "white", "white");
 
         // Create a ball entity
-        let square = Renderable::new("square", "white", "white");
         let mut ball = Ball::new();
         ball.size = 0.02;
         ball.velocity = [0.5, 0.5];
         world.create_now()
-            .with(square)
+            .with(square.clone())
             .with(ball)
             .build();
 
         // Create a left plank entity
-        let square = Renderable::new("square", "white", "white");
         let mut plank = Plank::new(Side::Left);
         plank.dimensions[0] = 0.01;
         plank.dimensions[1] = 0.1;
         plank.velocity = 1.;
         world.create_now()
-            .with(square)
+            .with(square.clone())
             .with(plank)
             .build();
 
         // Create right plank entity
-        let square = Renderable::new("square", "white", "white");
         let mut plank = Plank::new(Side::Right);
         plank.dimensions[0] = 0.01;
         plank.dimensions[1] = 0.1;
         plank.velocity = 1.;
         world.create_now()
-            .with(square)
+            .with(square.clone())
             .with(plank)
             .build();
     }

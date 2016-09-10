@@ -268,6 +268,7 @@ impl Processor<Arc<Mutex<Context>>> for RenderingProcessor {
 /// by the `RenderingProcessor`, modifying the `transform` field
 /// would affect the `transform` of the `Fragment` that is
 /// being rendered.
+#[derive(Clone)]
 pub struct Renderable {
     // This field holds the index which can be used
     // to access the renderer::Fragment held by context.renderer
@@ -328,6 +329,7 @@ impl Component for Renderable {
 /// A `Light` component.
 /// All changes in the `light` field will be
 /// applied to the associated `renderer::Light` in the frame.
+#[derive(Copy, Clone)]
 pub struct Light {
     // This field holds the index which can be used to access the renderer::Light
     // held by context.renderer.
@@ -350,8 +352,8 @@ impl Component for Light {
     type Storage = VecStorage<Light>;
 }
 
-#[derive(Clone)]
 /// A projection enum which is required to create a `Camera` component.
+#[derive(Copy, Clone)]
 pub enum Projection {
     Perspective {
         fov: f32,
@@ -372,6 +374,7 @@ pub enum Projection {
 /// A `Camera` component.
 /// If this `Camera` is active then all changes in this component's fields
 /// will be applied to the camera that is being used to render the scene.
+#[derive(Copy, Clone)]
 pub struct Camera {
     pub projection: Projection,
     pub eye: [f32; 3],
