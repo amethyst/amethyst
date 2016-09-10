@@ -154,6 +154,7 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
         // Dimensions of right plank
         let mut right_dimensions = [0., 0.];
 
+        let delta_time = context.delta_time.subsec_nanos() as f32 / 1.0e9;
         // Process all planks
         for (plank, renderable) in (&mut planks, &mut renderables).iter() {
             match plank.side {
@@ -166,13 +167,13 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
                     // If input_state.left_up == true and plank is in screen boundaries then move up
                     if input_state.left_up {
                         if plank.position + plank.dimensions[1]/2. < 1. {
-                            plank.position += plank.velocity * context.delta_time.num_milliseconds() as f32 / 1000.0;
+                            plank.position += plank.velocity * delta_time;
                         }
                     }
                     // If input_state.left_down == true and plank is in screen boundaries then move down
                     if input_state.left_down {
                         if plank.position - plank.dimensions[1]/2. > -1. {
-                            plank.position -= plank.velocity * context.delta_time.num_milliseconds() as f32 / 1000.0;
+                            plank.position -= plank.velocity * delta_time;
                         }
                     }
                     // Set translation[0] of renderable corresponding to this plank
@@ -187,13 +188,13 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
                     // If input_state.right_up == true and plank is in screen boundaries then move down
                     if input_state.right_up {
                         if plank.position + plank.dimensions[1]/2. < top_boundary {
-                            plank.position += plank.velocity * context.delta_time.num_milliseconds() as f32 / 1000.0;
+                            plank.position += plank.velocity * delta_time;
                         }
                     }
                     // If input_state.right_down == true and plank is in screen boundaries then move down
                     if input_state.right_down {
                         if plank.position - plank.dimensions[1]/2. > bottom_boundary {
-                            plank.position -= plank.velocity * context.delta_time.num_milliseconds() as f32 / 1000.0;
+                            plank.position -= plank.velocity * delta_time;
                         }
                     }
                     // Set translation[0] of renderable corresponding to this plank
@@ -210,8 +211,8 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
         // Process the ball
         for (ball, renderable) in (&mut balls, &mut renderables).iter() {
             // Move the ball
-            ball.position[0] += ball.velocity[0] * context.delta_time.num_milliseconds() as f32 / 1000.0;
-            ball.position[1] += ball.velocity[1] * context.delta_time.num_milliseconds() as f32 / 1000.0;
+            ball.position[0] += ball.velocity[0] * delta_time;
+            ball.position[1] += ball.velocity[1] * delta_time;
 
             // Check if the ball has collided with the right plank
             if ball.position[0] + ball.size/2. > right_boundary - left_dimensions[0] &&
@@ -355,10 +356,9 @@ impl State for Pong {
 
 fn main() {
     use amethyst::engine::Config;
-    let config = Config::from_file(
-        format!("{}/config/pong_example_config.yml",
-                env!("CARGO_MANIFEST_DIR"))
-        ).unwrap();
+    let path = format!("{}/examples/04_pong/resources/config.yml",
+                       env!("CARGO_MANIFEST_DIR"));
+    let config = Config::from_file(path).unwrap();
     let mut context = Context::new(config.context_config);
     let rendering_processor = RenderingProcessor::new(config.renderer_config, &mut context);
     let mut game = Application::build(Pong, context)

@@ -5,6 +5,16 @@ adheres to [Semantic Versioning][sv].
 
 [sv]: http://semver.org/
 
+## 0.3.1 (2016-09-07)
+
+### Fixed
+* Fixed broken API reference link in `README.md`
+* amethyst.rs book: link to API reference broken (issue [#86])
+* Master branch no longer builds on beta/nightly Rust (issue [#94])
+
+[#86]: https://github.com/amethyst/amethyst/issues/86
+[#94]: https://github.com/amethyst/amethyst/issues/94
+
 ## 0.3.0 (2016-03-31)
 
 ### Added

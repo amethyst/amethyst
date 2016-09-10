@@ -2,7 +2,6 @@
 
 mod app;
 mod state;
-mod tasks;
 mod config;
 
 pub use self::app::{Application, ApplicationBuilder};

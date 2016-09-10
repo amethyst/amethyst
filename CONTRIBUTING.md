@@ -96,17 +96,18 @@ done the following things first:
 3. If your pull request adds new methods or functions to the codebase, you have
    written adequate test cases for them.
    * Unit tests are placed at the bottom of the same .rs file in a submodule
-     called `tests` with `// Unit tests` right above it. For an example, see the
-     unit tests in the [timing.rs][ti] file in the `amethyst_engine` sub-crate.
+     called `tests`. For an example, see the unit tests in the [state.rs][st]
+     file in the top-level `amethyst` crate.
    * Integration tests are placed in a separate .rs file in the `tests`
      subdirectory.
 4. You have processed your source code with `cargo fmt`.
 5. All of the following commands completed without errors.
    * `cargo build`
    * `cargo test -p {crate-name} -v`
+   * `cargo run --example {example-name}`
 
 [ml]: ./COPYING
-[ti]: ./src/engine/src/timing.rs#L68-L112
+[st]: ./src/engine/state.rs#L192-L233
 
 > If you want to be publicly known as an author, feel free to add your name
 > and/or GitHub username to the AUTHORS.md file in your pull request.
@@ -132,7 +133,7 @@ label.
 There are two types of documentation in Amethyst you can work on:
 
 1. [API documentation][ad]
-2. [The online Amethyst book][ab]
+2. [The Amethyst book][ab]
 
 [ad]: https://www.amethyst.rs/doc/amethyst/
 [ab]: https://www.amethyst.rs/book/
@@ -160,7 +161,7 @@ Documentation of any kind should adhere to the following standard:
    points to an anchor that exists on the same page, the *inline style* should
    be used instead.
 
-```
+```markdown
 Here is some [example text][et] with a link in it. While we are at it, here is
 yet [another link][al]. If we are linking to [an anchor](#anchor) on the same
 page, we can do this inline.

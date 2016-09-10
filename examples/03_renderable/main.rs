@@ -78,7 +78,7 @@ impl State for Example {
         }
 
         let angular_velocity = 2.0; // in radians per second
-        self.t += context.delta_time.num_milliseconds() as f32 / 1.0e3;
+        self.t += context.delta_time.subsec_nanos() as f32 / 1.0e9;
         let phase = self.t * angular_velocity;
 
         // Test Transform mutation
@@ -112,10 +112,9 @@ impl State for Example {
 
 fn main() {
     use amethyst::engine::Config;
-    let config = Config::from_file(
-        format!("{}/config/renderable_example_config.yml",
-                env!("CARGO_MANIFEST_DIR"))
-        ).unwrap();
+    let path = format!("{}/examples/03_renderable/resources/config.yml",
+                    env!("CARGO_MANIFEST_DIR"));
+    let config = Config::from_file(path).unwrap();
     let mut context = Context::new(config.context_config);
     let rendering_processor = RenderingProcessor::new(config.renderer_config, &mut context);
     let mut game = Application::build(Example::new(), context)

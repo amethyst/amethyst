@@ -1,10 +1,9 @@
 //! Computes the next state.
 
-use time::Duration;
+use super::{World, Processor};
 
 use specs::Planner;
-
-use super::{World, Processor};
+use time::Duration;
 
 pub struct Simulation {
     planner: Planner<Duration>,
@@ -24,11 +23,10 @@ impl Simulation {
     }
 
     /// Adds a new processor to the simulation.
-    pub fn add_processor<T: Processor<Duration> + 'static>(&mut self,
-                                                           p: T,
-                                                           name: &str,
-                                                           priority: i32) {
-        self.planner.add_system(p, name, priority);
+    pub fn add_processor<P>(&mut self, pro: P, name: &str, priority: i32)
+        where P: Processor<Duration> + 'static
+    {
+        self.planner.add_system(pro, name, priority);
     }
 
     /// Get a mutable reference to the world.
@@ -60,12 +58,10 @@ impl SimBuilder {
     }
 
     /// Add a given processor to the simulation.
-    pub fn with<T: Processor<Duration> + 'static>(mut self,
-                                                  p: T,
-                                                  name: &str,
-                                                  priority: i32)
-                                                  -> SimBuilder {
-        self.sim.add_processor(p, name, priority);
+    pub fn with<P>(mut self, pro: P, name: &str, priority: i32) -> SimBuilder
+        where P: Processor<Duration> + 'static
+    {
+        self.sim.add_processor(pro, name, priority);
         self
     }
 

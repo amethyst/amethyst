@@ -1,7 +1,7 @@
 //! The core engine framework.
 
 use super::state::{State, StateMachine};
-use context::timing::{SteadyTime, Stopwatch};
+use context::timing::Stopwatch;
 use context::event::EngineEvent;
 use context::Context;
 use ecs::{Planner, World, Processor, Priority, Component};
@@ -17,10 +17,10 @@ pub struct Application {
 
 impl Application {
     /// Creates a new Application with the given initial game state, planner, and context.
-    pub fn new<T>(initial_state: T, planner: Planner<Arc<Mutex<Context>>>, context: Context) -> Application
+    pub fn new<T>(initial_state: T, planner: Planner<Arc<Mutex<Context>>>, ctx: Context) -> Application
         where T: State + 'static
     {
-        let context = Arc::new(Mutex::new(context));
+        let context = Arc::new(Mutex::new(ctx));
         Application {
             states: StateMachine::new(initial_state, planner),
             timer: Stopwatch::new(),
@@ -29,10 +29,10 @@ impl Application {
     }
 
     /// Build a new Application using builder pattern.
-    pub fn build<T>(initial_state: T, context: Context) -> ApplicationBuilder<T>
+    pub fn build<T>(initial_state: T, ctx: Context) -> ApplicationBuilder<T>
         where T: State + 'static
     {
-        ApplicationBuilder::new(initial_state, context)
+        ApplicationBuilder::new(initial_state, ctx)
     }
 
     /// Starts the application and manages the game loop.
@@ -56,20 +56,22 @@ impl Application {
 
     /// Advances the game world by one tick.
     fn advance_frame(&mut self) {
-        // let context = self.context.lock().unwrap().deref_mut();
-        let engine_events = self.context.lock().unwrap().poll_engine_events();
-        for engine_event in engine_events {
-            self.context.lock().unwrap().broadcaster.publish().with::<EngineEvent>(engine_event);
+        let events = self.context.lock().unwrap().poll_engine_events();
+        for e in events {
+            self.context.lock().unwrap().broadcaster.publish().with::<EngineEvent>(e);
         }
-        let events = self.context.lock().unwrap().broadcaster.poll();
-        self.states.handle_events(events, self.context.lock().unwrap().deref_mut());
-        let fixed_step = self.context.lock().unwrap().fixed_step.clone();
-        let last_fixed_update = self.context.lock().unwrap().last_fixed_update.clone();
-        if SteadyTime::now() - last_fixed_update > fixed_step {
+
+        let entities = self.context.lock().unwrap().broadcaster.poll();
+        self.states.handle_events(&entities, self.context.lock().unwrap().deref_mut());
+
+        let fixed_step = self.context.lock().unwrap().fixed_step;
+        let last_fixed_update = self.context.lock().unwrap().last_fixed_update;
+
+        if last_fixed_update.elapsed() >= fixed_step {
             self.states.fixed_update(self.context.lock().unwrap().deref_mut());
-            // self.systems.fixed_iterate(self.fixed_step);
-            self.context.lock().unwrap().last_fixed_update = last_fixed_update + fixed_step;
+            self.context.lock().unwrap().last_fixed_update += fixed_step;
         }
+
         self.states.update(self.context.lock().unwrap().deref_mut());
         self.states.run_processors(self.context.clone());
         self.context.lock().unwrap().renderer.submit();
@@ -94,13 +96,12 @@ pub struct ApplicationBuilder<T>
 impl<T> ApplicationBuilder<T>
     where T: State + 'static
 {
-    pub fn new(initial_state: T, context: Context) -> ApplicationBuilder<T> {
+    pub fn new(initial_state: T, ctx: Context) -> ApplicationBuilder<T> {
         let world = World::new();
-        let planner = Planner::new(world, 1);
         ApplicationBuilder {
             initial_state: initial_state,
-            context: context,
-            planner: planner,
+            context: ctx,
+            planner: Planner::new(world, 1),
         }
     }
 
@@ -114,13 +115,10 @@ impl<T> ApplicationBuilder<T>
         self
     }
 
-    pub fn with<P>(mut self,
-                   sys: P,
-                   name: &str,
-                   priority: Priority) -> ApplicationBuilder<T>
+    pub fn with<P>(mut self, pro: P, name: &str, pri: Priority) -> ApplicationBuilder<T>
         where P: Processor<Arc<Mutex<Context>>> + 'static
     {
-        self.planner.add_system::<P>(sys, name, priority);
+        self.planner.add_system::<P>(pro, name, pri);
         self
     }
 

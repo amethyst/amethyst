@@ -1,4 +1,4 @@
-//! The most basic Amethyst example.
+//! The simplest Amethyst example.
 
 extern crate amethyst;
 

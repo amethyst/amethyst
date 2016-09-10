@@ -311,7 +311,7 @@ impl Renderable {
                                                  rotation_axis[1],
                                                  rotation_axis[2]);
         let rotation_angle = self.rotation_angle;
-        let rotation_angle = cgmath::Rad::new(rotation_angle);
+        let rotation_angle = cgmath::Rad(rotation_angle);
         let rotation_matrix = cgmath::Matrix4::from_axis_angle(rotation_axis, rotation_angle);
         let scale = self.scale;
         let scale_matrix = cgmath::Matrix4::from_nonuniform_scale(scale[0],
