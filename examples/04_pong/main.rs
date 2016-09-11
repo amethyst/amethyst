@@ -77,7 +77,7 @@ impl Score {
 // Pong game processor
 impl Processor<Arc<Mutex<Context>>> for PongProcessor {
     fn run(&mut self, arg: RunArg, context: Arc<Mutex<Context>>) {
-        use amethyst::context::event::{EngineEvent, Event, VirtualKeyCode, ElementState};
+        use amethyst::context::event::VirtualKeyCode;
         use std::ops::Deref;
 
         // Get all needed component storages and resources
