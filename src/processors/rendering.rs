@@ -12,11 +12,11 @@ use config::Element;
 use std::path::Path;
 
 config!(
-    /// A config required to create a rendering processor.
+/// A config required to create a rendering processor.
     struct RendererConfig {
-        // Forward or Deferred
+// Forward or Deferred
         pub pipeline: String = "Forward".to_string(),
-        // Flat or Shaded
+// Flat or Shaded
         pub shading: String = "Flat".to_string(),
         pub clear_color: [f32; 4] = [0., 0., 0., 1.],
     }
@@ -60,11 +60,10 @@ fn layer_gbuffer(clear_color: [f32; 4]) -> Layer {
     use renderer::pass::*;
 
     Layer::new("gbuffer",
-        vec![
+               vec![
             Clear::new(clear_color),
             DrawFlat::new(ACTIVE_CAMERA_NAME, ACTIVE_SCENE_NAME),
-        ]
-    )
+        ])
 }
 
 fn deferred_flat(clear_color: [f32; 4]) -> Vec<Layer> {
@@ -97,7 +96,8 @@ fn deferred_shaded(clear_color: [f32; 4]) -> Vec<Layer> {
 impl RenderingProcessor {
     pub fn new(renderer_config: RendererConfig, context: &mut Context) -> RenderingProcessor {
         let clear_color = renderer_config.clear_color;
-        let pipeline = match (renderer_config.pipeline.as_str(), renderer_config.shading.as_str()) {
+        let pipeline = match (renderer_config.pipeline.as_str(),
+                              renderer_config.shading.as_str()) {
             ("Forward", "Flat") => forward_flat(clear_color),
             ("Forward", "Shaded") => forward_shaded(clear_color),
             ("Deferred", "Flat") => deferred_flat(clear_color),
@@ -117,24 +117,18 @@ impl RenderingProcessor {
 
         context.renderer.add_camera(camera, ACTIVE_CAMERA_NAME);
         context.renderer.set_pipeline(pipeline);
-        RenderingProcessor {
-            active_camera: None,
-        }
+        RenderingProcessor { active_camera: None }
     }
 }
 
-unsafe impl Send for RenderingProcessor {  }
+unsafe impl Send for RenderingProcessor {}
 
 impl Processor<Arc<Mutex<Context>>> for RenderingProcessor {
     fn run(&mut self, arg: RunArg, context: Arc<Mutex<Context>>) {
         if let Ok(mut context) = context.lock() {
-            let (entities,
-                 mut renderables,
-                 mut lights,
-                 mut cameras) = arg.fetch(|w| (w.entities(),
-                                               w.write::<Renderable>(),
-                                               w.write::<Light>(),
-                                               w.write::<Camera>()));
+            let (entities, mut renderables, mut lights, mut cameras) = arg.fetch(|w| {
+                (w.entities(), w.write::<Renderable>(), w.write::<Light>(), w.write::<Camera>())
+            });
 
             let mut light_indices = HashSet::<usize>::new();
             for (entity, light) in (&entities, &mut lights).iter() {
@@ -142,18 +136,20 @@ impl Processor<Arc<Mutex<Context>>> for RenderingProcessor {
                     Some(idx) => {
                         // If this Light is already in frame then update it.
                         light_indices.insert(idx);
-                        if let Some(frame_light) = context.renderer.mut_light(ACTIVE_SCENE_NAME, idx) {
+                        if let Some(frame_light) = context.renderer
+                            .mut_light(ACTIVE_SCENE_NAME, idx) {
                             *frame_light = light.light.clone();
                         } else {
                             println!("Error: entity with id = {0} is deleted, \
                                       because Light::idx field is invalid.", entity.get_id());
                             arg.delete(entity);
                         }
-                    },
+                    }
                     None => {
                         // Otherwise add it to the frame.
                         let frame_light = light.light.clone();
-                        if let Some(idx) = context.renderer.add_light(ACTIVE_SCENE_NAME, frame_light) {
+                        if let Some(idx) = context.renderer
+                            .add_light(ACTIVE_SCENE_NAME, frame_light) {
                             // If this Light can be added to the frame then add it and store
                             // the index in the light.idx field.
                             light.idx = Some(idx);
@@ -171,14 +167,15 @@ impl Processor<Arc<Mutex<Context>>> for RenderingProcessor {
                     // of the corresponding Fragment.
                     Some(idx) => {
                         renderable_indices.insert(idx);
-                        if let Some(transform) = context.renderer.mut_fragment_transform(ACTIVE_SCENE_NAME, idx) {
+                        if let Some(transform) = context.renderer
+                            .mut_fragment_transform(ACTIVE_SCENE_NAME, idx) {
                             *transform = renderable.transform;
                         } else {
                             println!("Error: entity with id = {0} is deleted, \
                                       because Renderable::idx field is invalid.", entity.get_id());
                             arg.delete(entity);
                         }
-                    },
+                    }
                     // If it is not in frame then attempt to create a Fragment with given transform
                     // and requested mesh, ka, and kd, which are looked up using the asset manager
                     None => {
@@ -186,17 +183,23 @@ impl Processor<Arc<Mutex<Context>>> for RenderingProcessor {
                         let ka = renderable.ka.as_str();
                         let kd = renderable.kd.as_str();
                         let transform = renderable.transform;
-                        if let Some(fragment) = context.asset_manager.get_fragment(mesh, ka, kd, transform) {
-                            if let Some(idx) = context.renderer.add_fragment(ACTIVE_SCENE_NAME, fragment) {
-                                // If this Renderable can be added to the frame then add it and store
-                                // the index of this fragment in the renderable.idx field
+                        if let Some(fragment) = context.asset_manager
+                            .get_fragment(mesh, ka, kd, transform) {
+                            if let Some(idx) = context.renderer
+                                .add_fragment(ACTIVE_SCENE_NAME, fragment) {
+                                // If this Renderable can be added to
+                                // the frame then add it and store
+                                // the index of this fragment
+                                // in the renderable.idx field
                                 renderable.idx = Some(idx);
                                 renderable_indices.insert(idx);
                             }
                         } else {
                             println!("Error: entity with id = {0} is deleted, \
-                                      because at least one of the assets requested by the Renderable \
-                                      component attached to this entity doesn't exist.", entity.get_id());
+                                      because at least one of the assets \
+                                      requested by the Renderable \
+                                      component attached to this \
+                                      entity doesn't exist.", entity.get_id());
                             arg.delete(entity);
                         }
                     }
@@ -206,20 +209,12 @@ impl Processor<Arc<Mutex<Context>>> for RenderingProcessor {
             if let Some(active_camera) = self.active_camera {
                 if let Some(camera) = cameras.get(active_camera) {
                     let proj = match camera.projection {
-                        Projection::Perspective {
-                            fov,
-                            aspect,
-                            near,
-                            far
-                        } => renderer::Camera::perspective(fov, aspect, near, far),
-                        Projection::Orthographic {
-                            left,
-                            right,
-                            bottom,
-                            top,
-                            near,
-                            far,
-                        } => renderer::Camera::orthographic(left, right, bottom, top, near, far),
+                        Projection::Perspective { fov, aspect, near, far } => {
+                            renderer::Camera::perspective(fov, aspect, near, far)
+                        }
+                        Projection::Orthographic { left, right, bottom, top, near, far } => {
+                            renderer::Camera::orthographic(left, right, bottom, top, near, far)
+                        }
                     };
 
                     let eye = camera.eye;
@@ -302,21 +297,16 @@ impl Renderable {
 
     fn update_transform_matrix(&mut self) {
         let translation = self.translation;
-        let translation = cgmath::Vector3::new(translation[0],
-                                               translation[1],
-                                               translation[2]);
+        let translation = cgmath::Vector3::new(translation[0], translation[1], translation[2]);
         let translation_matrix = cgmath::Matrix4::from_translation(translation);
         let rotation_axis = self.rotation_axis;
-        let rotation_axis = cgmath::Vector3::new(rotation_axis[0],
-                                                 rotation_axis[1],
-                                                 rotation_axis[2]);
+        let rotation_axis =
+            cgmath::Vector3::new(rotation_axis[0], rotation_axis[1], rotation_axis[2]);
         let rotation_angle = self.rotation_angle;
         let rotation_angle = cgmath::Rad(rotation_angle);
         let rotation_matrix = cgmath::Matrix4::from_axis_angle(rotation_axis, rotation_angle);
         let scale = self.scale;
-        let scale_matrix = cgmath::Matrix4::from_nonuniform_scale(scale[0],
-                                                                  scale[1],
-                                                                  scale[2]);
+        let scale_matrix = cgmath::Matrix4::from_nonuniform_scale(scale[0], scale[1], scale[2]);
         let transform = translation_matrix * rotation_matrix * scale_matrix;
         self.transform = transform.into();
     }
@@ -362,7 +352,7 @@ pub enum Projection {
         far: f32,
     },
     Orthographic {
-        left:f32,
+        left: f32,
         right: f32,
         bottom: f32,
         top: f32,
