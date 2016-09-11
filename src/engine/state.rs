@@ -87,7 +87,7 @@ impl StateMachine {
 
     /// Initializes the state machine.
     /// # Panics
-    /// 	Panics if no states are present in the stack.
+    /// Panics if no states are present in the stack.
     pub fn start(&mut self, ctx: &mut Context) {
         if !self.running {
             let state = self.state_stack.last_mut().unwrap();
