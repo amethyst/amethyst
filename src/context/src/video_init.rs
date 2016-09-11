@@ -33,15 +33,15 @@ fn new_gl(display_config: &DisplayConfig) -> (VideoContext, FactoryImpl) {
         .with_multisampling(multisampling)
         .with_visibility(visibility);
 
-    if let Some ((w, h)) = display_config.dimensions {
+    if let Some((w, h)) = display_config.dimensions {
         builder = builder.with_dimensions(w, h);
     }
 
-    if let Some ((w_min, h_min)) = display_config.min_dimensions {
+    if let Some((w_min, h_min)) = display_config.min_dimensions {
         builder = builder.with_min_dimensions(w_min, h_min);
     }
 
-    if let Some ((w_max, h_max)) = display_config.max_dimensions {
+    if let Some((w_max, h_max)) = display_config.max_dimensions {
         builder = builder.with_max_dimensions(w_max, h_max);
     }
 
@@ -54,27 +54,22 @@ fn new_gl(display_config: &DisplayConfig) -> (VideoContext, FactoryImpl) {
         builder = builder.with_fullscreen(monitor);
     }
 
-    let (window, device, mut factory, main_color, main_depth) =
-    gfx_window_glutin::init::<ColorFormat, DepthFormat>(builder);
+    let (window, device, mut factory, main_color, main_depth) = gfx_window_glutin::init::<ColorFormat, DepthFormat>(builder);
 
     let combuf = factory.create_command_buffer();
     let mut renderer = Renderer::new(combuf);
     renderer.load_all(&mut factory);
 
     let mut frame = Frame::new();
-    frame.targets.insert(
-        "main".into(),
-        Box::new(ColorBuffer{
-            color: main_color,
-            output_depth: main_depth
-        }
-        ));
+    frame.targets.insert("main".into(),
+                         Box::new(ColorBuffer {
+                             color: main_color,
+                             output_depth: main_depth,
+                         }));
 
     let (w, h) = window.get_inner_size().unwrap();
-    frame.targets.insert(
-        "gbuffer".into(),
-        Box::new(amethyst_renderer::target::GeometryBuffer::new(&mut factory, (w as u16, h as u16)))
-    );
+    frame.targets.insert("gbuffer".into(),
+                         Box::new(amethyst_renderer::target::GeometryBuffer::new(&mut factory, (w as u16, h as u16))));
 
     let video_context = VideoContext::OpenGL {
         window: window,
@@ -83,8 +78,6 @@ fn new_gl(display_config: &DisplayConfig) -> (VideoContext, FactoryImpl) {
         frame: frame,
     };
 
-    let factory_impl = FactoryImpl::OpenGL {
-        factory: factory,
-    };
+    let factory_impl = FactoryImpl::OpenGL { factory: factory };
     (video_context, factory_impl)
 }

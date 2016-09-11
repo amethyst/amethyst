@@ -50,12 +50,12 @@ impl<R: gfx::Resources> GeometryBuffer<R> {
     pub fn new<F>(factory: &mut F, (width, height): (u16, u16)) -> Self
         where F: gfx::Factory<R>
     {
-        let (_, texture_normal,  normal) = factory.create_render_target(width, height).unwrap();
-        let (_, texture_ka,  ka) = factory.create_render_target(width, height).unwrap();
-        let (_, texture_kd,  kd) = factory.create_render_target(width, height).unwrap();
+        let (_, texture_normal, normal) = factory.create_render_target(width, height).unwrap();
+        let (_, texture_ka, ka) = factory.create_render_target(width, height).unwrap();
+        let (_, texture_kd, kd) = factory.create_render_target(width, height).unwrap();
         let (_, texture_depth, depth) = factory.create_depth_stencil(width, height).unwrap();
 
-        GeometryBuffer{
+        GeometryBuffer {
             normal: normal,
             kd: kd,
             ka: ka,
@@ -63,7 +63,7 @@ impl<R: gfx::Resources> GeometryBuffer<R> {
             texture_normal: texture_normal,
             texture_ka: texture_ka,
             texture_kd: texture_kd,
-            texture_depth: texture_depth
+            texture_depth: texture_depth,
         }
     }
 }

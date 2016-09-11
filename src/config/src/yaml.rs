@@ -33,7 +33,7 @@ fn to_string_raw(yaml: &Yaml, level: usize) -> String {
             }
 
             float_string
-        },
+        }
         &Yaml::Integer(ref value) => value.to_string(),
         &Yaml::String(ref value) => value.clone(),
         &Yaml::Boolean(ref value) => value.to_string(),
@@ -42,11 +42,10 @@ fn to_string_raw(yaml: &Yaml, level: usize) -> String {
             let mut complex = false;
             for element in array {
                 match element {
-                    &Yaml::Array(_) |
-                    &Yaml::Hash(_) => {
+                    &Yaml::Array(_) | &Yaml::Hash(_) => {
                         complex = true;
-                    },
-                    _ => { },
+                    }
+                    _ => {}
                 }
             }
 
@@ -65,8 +64,7 @@ fn to_string_raw(yaml: &Yaml, level: usize) -> String {
                     let padding: String = iter::repeat(TAB_CHARS).take(level).collect();
                     let formatted = format!("\n{}- {}", padding, to_string_raw(element, level + 2));
                     result = result + &formatted;
-                }
-                else {
+                } else {
                     result = result + &to_string_raw(element, level + 1);
                 }
             }
@@ -76,22 +74,22 @@ fn to_string_raw(yaml: &Yaml, level: usize) -> String {
             }
 
             result
-        },
+        }
         &Yaml::Hash(ref hash) => {
             let mut result = "".to_string();
 
             for (key, value) in hash {
                 let padding: String = iter::repeat(TAB_CHARS).take(level).collect();
                 let formatted = format!("\n{}{}: {}",
-                    padding,
-                    to_string_raw(key, level + 1), to_string_raw(value, level + 1)
-                );
+                                        padding,
+                                        to_string_raw(key, level + 1),
+                                        to_string_raw(value, level + 1));
 
                 result = result + &formatted;
             }
 
             result
-        },
+        }
         &Yaml::Null => "null".to_string(),
         _ => "Bad Value".to_string(), // Should never be a Yaml::BadValue | Yaml::Alias
     }
@@ -108,7 +106,7 @@ pub trait Element: Sized {
     fn to_yaml(&self, &Path) -> Yaml;
 
     /// Sets the meta data of a config structure, only works on config structures
-    fn set_meta(&mut self, &ConfigMeta) { }
+    fn set_meta(&mut self, &ConfigMeta) {}
 
     /// Returns meta data if it is a config structure
     fn meta(&self) -> Option<ConfigMeta> {
@@ -123,8 +121,7 @@ pub trait Element: Sized {
         let initial_path = if next_meta.path.is_file() {
             if let Some(parent) = next_meta.path.parent() {
                 parent.to_path_buf()
-            }
-            else {
+            } else {
                 PathBuf::from("")
             }
         } else {
@@ -165,28 +162,24 @@ pub trait Element: Sized {
 
         if found.len() > 1 {
             return Err(ConfigError::MultipleExternalFiles(path.to_path_buf(), found));
-        }
-        else if found.len() == 0 {
+        } else if found.len() == 0 {
             return Err(ConfigError::MissingExternalFile(next_meta.clone()));
         }
 
         let found_path = found[0].clone();
         next_meta.path = found_path.clone();
 
-        let mut file = try!(File::open(found_path.as_path())
-            .map_err(|e| ConfigError::FileError(found_path.clone(), e)));
+        let mut file = try!(File::open(found_path.as_path()).map_err(|e| ConfigError::FileError(found_path.clone(), e)));
         let mut buffer = String::new();
 
         try!(file.read_to_string(&mut buffer)
             .map_err(|e| ConfigError::FileError(found_path.clone(), e)));
 
-        let yaml = try!(YamlLoader::load_from_str(&buffer)
-            .map_err(|e| ConfigError::YamlScan(e)));
+        let yaml = try!(YamlLoader::load_from_str(&buffer).map_err(|e| ConfigError::YamlScan(e)));
 
         let hash = if yaml.len() > 0 {
             yaml[0].clone()
-        }
-        else {
+        } else {
             Yaml::Hash(BTreeMap::new())
         };
 
@@ -270,8 +263,7 @@ impl Element for String {
     fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
         if let &Yaml::String(ref string) = config {
             Ok(string.clone())
-        }
-        else {
+        } else {
             Err(ConfigError::YamlParse(meta.clone()))
         }
     }
@@ -285,8 +277,7 @@ impl Element for () {
     fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
         if config.is_null() {
             Ok(())
-        }
-        else {
+        } else {
             Err(ConfigError::YamlParse(meta.clone()))
         }
     }
@@ -344,8 +335,7 @@ impl<T: Element> Element for Option<T> {
     fn from_yaml(meta: &ConfigMeta, config: &Yaml) -> Result<Self, ConfigError> {
         if config.is_null() {
             Ok(None)
-        }
-        else {
+        } else {
             Ok(Some(try!(<T>::from_yaml(meta, config))))
         }
     }
@@ -416,8 +406,7 @@ impl<T: Element> Element for Vec<T> {
             }
 
             Ok(vec)
-        }
-        else {
+        } else {
             Err(ConfigError::YamlParse(meta.clone()))
         }
     }

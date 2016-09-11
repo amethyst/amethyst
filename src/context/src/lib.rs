@@ -43,7 +43,7 @@ use event::EngineEvent;
 use std::time::{Duration, Instant};
 
 config!(
-    /// Contains configs for resources provided by `Context`
+/// Contains configs for resources provided by `Context`
     struct ContextConfig {
     pub display_config: DisplayConfig = DisplayConfig::default(),
 });
@@ -66,8 +66,7 @@ unsafe impl Send for Context {}
 impl Context {
     /// Create a `Context` configured according to `ContextConfig`
     pub fn new(config: ContextConfig) -> Context {
-        let (video_context, factory_impl) =
-            video_init::create_video_context_and_factory_impl(config.display_config);
+        let (video_context, factory_impl) = video_init::create_video_context_and_factory_impl(config.display_config);
         let renderer = Renderer::new(video_context);
         let asset_manager = AssetManager::new(factory_impl);
         let mut broadcaster = Broadcaster::new();
@@ -86,19 +85,20 @@ impl Context {
     /// Return a vector containing all engine events
     /// that have occured since the last call of this method
     pub fn poll_engine_events(&mut self) -> Vec<EngineEvent> {
-        let mut events = vec!();
+        let mut events = vec![];
         let video_context = self.renderer.mut_video_context();
         match *video_context {
-            VideoContext::OpenGL { ref window, .. } =>
+            VideoContext::OpenGL { ref window, .. } => {
                 for event in window.poll_events() {
                     let event = EngineEvent::new(event);
                     events.push(event);
-                },
+                }
+            }
             #[cfg(windows)]
-            VideoContext::Direct3D {  } => {
+            VideoContext::Direct3D {} => {
                 // stub
                 unimplemented!();
-            },
+            }
             VideoContext::Null => (),
         }
         events

@@ -34,14 +34,24 @@ pub trait State {
     fn on_resume(&mut self, _ctx: &mut Context, _world: &mut World) {}
 
     /// Executed on every frame before updating, for use in reacting to events.
-    fn handle_events(&mut self, _events: &[Entity], _ctx: &mut Context, _world: &mut World) -> Trans { Trans::None }
+    fn handle_events(&mut self,
+                     _events: &[Entity],
+                     _ctx: &mut Context,
+                     _world: &mut World)
+                     -> Trans {
+        Trans::None
+    }
 
     /// Executed repeatedly at stable, predictable intervals (1/60th of a second
     /// by default).
-    fn fixed_update(&mut self, _ctx: &mut Context, _world: &mut World) -> Trans { Trans::None }
+    fn fixed_update(&mut self, _ctx: &mut Context, _world: &mut World) -> Trans {
+        Trans::None
+    }
 
     /// Executed on every frame immediately, as fast as the engine will allow.
-    fn update(&mut self, _ctx: &mut Context, _world: &mut World) -> Trans { Trans::Pop }
+    fn update(&mut self, _ctx: &mut Context, _world: &mut World) -> Trans {
+        Trans::Pop
+    }
 }
 
 /// A simple stack-based state machine (pushdown automaton).
@@ -77,7 +87,7 @@ impl StateMachine {
 
     /// Initializes the state machine.
     /// # Panics
-    ///	Panics if no states are present in the stack.
+    /// Panics if no states are present in the stack.
     pub fn start(&mut self, ctx: &mut Context) {
         if !self.running {
             let state = self.state_stack.last_mut().unwrap();

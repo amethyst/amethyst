@@ -1,7 +1,7 @@
 #![crate_name = "amethyst_renderer"]
 #![crate_type = "lib"]
 #![doc(html_logo_url = "http://tinyurl.com/hgsb45k")]
-//#![deny(missing_docs)]
+// #![deny(missing_docs)]
 
 //! High-level rendering engine with multiple backends.
 
@@ -30,11 +30,15 @@ pub use pass::Pass;
 /// data is contained in the `Frame`
 pub struct Renderer<R: gfx::Resources, C: gfx::CommandBuffer<R>> {
     command_buffer: gfx::Encoder<R, C>,
-    passes: HashMap<(TypeId, TypeId), Box<Fn(&Box<PassDescription>, &Target, &Frame<R>, &mut gfx::Encoder<R, C>)>>
+    passes: HashMap<(TypeId, TypeId),
+                    Box<Fn(&Box<PassDescription>,
+                           &Target,
+                           &Frame<R>,
+                           &mut gfx::Encoder<R, C>)>>,
 }
 
 // placeholder
-gfx_vertex_struct!( VertexPosNormal {
+gfx_vertex_struct!(VertexPosNormal {
     pos: [f32; 3] = "a_Pos",
     normal: [f32; 3] = "a_Normal",
     tex_coord: [f32; 2] = "a_TexCoord",
@@ -48,7 +52,7 @@ impl<R, C> Renderer<R, C>
     pub fn new(combuf: C) -> Renderer<R, C> {
         Renderer {
             command_buffer: combuf.into(),
-            passes: HashMap::new()
+            passes: HashMap::new(),
         }
     }
 
@@ -70,30 +74,33 @@ impl<R, C> Renderer<R, C>
 
     /// Add a pass to the table of available passes
     pub fn add_pass<A, T, P>(&mut self, p: P)
-        where P: Pass<R, Arg=A, Target=T> + 'static,
+        where P: Pass<R, Arg = A, Target = T> + 'static,
               A: PassDescription,
               T: Target
     {
         let id = (TypeId::of::<A>(), TypeId::of::<T>());
-        self.passes.insert(id, Box::new(move |a: &Box<PassDescription>, t: &Target, frame: &Frame<R>, encoder: &mut gfx::Encoder<R, C>| {
-            let a = a.downcast_ref::<A>().unwrap();
-            let t = t.downcast_ref::<T>().unwrap();
-            p.apply(a, t, frame, encoder)
-        }));
+        self.passes.insert(id,
+                           Box::new(move |a: &Box<PassDescription>, t: &Target, frame: &Frame<R>, encoder: &mut gfx::Encoder<R, C>| {
+                               let a = a.downcast_ref::<A>().unwrap();
+                               let t = t.downcast_ref::<T>().unwrap();
+                               p.apply(a, t, frame, encoder)
+                           }));
     }
 
     /// Execute all passes
     pub fn submit<D>(&mut self, frame: &Frame<R>, device: &mut D)
-        where D: gfx::Device<Resources=R, CommandBuffer=C>
+        where D: gfx::Device<Resources = R, CommandBuffer = C>
     {
         for layer in &frame.layers {
             let fb = frame.targets.get(&layer.target).unwrap();
             for desc in &layer.passes {
                 let id = (mopa::Any::get_type_id(&**desc), mopa::Any::get_type_id(&**fb));
-                if let Some(pass)= self.passes.get(&id) {
+                if let Some(pass) = self.passes.get(&id) {
                     pass(desc, &**fb, &frame, &mut self.command_buffer);
-                } else{
-                    panic!("No pass implementation found for target={}, pass={:?}", layer.target, desc);
+                } else {
+                    panic!("No pass implementation found for target={}, pass={:?}",
+                           layer.target,
+                           desc);
                 }
             }
         }
@@ -106,7 +113,7 @@ impl<R, C> Renderer<R, C>
 #[derive(Clone)]
 pub struct ConstantColorTexture<R: gfx::Resources> {
     texture: gfx::handle::Texture<R, gfx::format::R8_G8_B8_A8>,
-    view: gfx::handle::ShaderResourceView<R, [f32; 4]>
+    view: gfx::handle::ShaderResourceView<R, [f32; 4]>,
 }
 
 impl<R: gfx::Resources> ConstantColorTexture<R> {
@@ -115,18 +122,18 @@ impl<R: gfx::Resources> ConstantColorTexture<R> {
         where F: gfx::Factory<R>
     {
         let kind = gfx::tex::Kind::D2(1, 1, gfx::tex::AaMode::Single);
-        let text = factory.create_texture::<gfx::format::R8_G8_B8_A8>(
-            kind,
-            1,
-            gfx::SHADER_RESOURCE,
-            gfx::Usage::Dynamic,
-            Some(gfx::format::ChannelType::Unorm)
-        ).unwrap();
+        let text = factory.create_texture::<gfx::format::R8_G8_B8_A8>(kind,
+                                                        1,
+                                                        gfx::SHADER_RESOURCE,
+                                                        gfx::Usage::Dynamic,
+                                                        Some(gfx::format::ChannelType::Unorm))
+            .unwrap();
         let levels = (0, text.get_info().levels - 1);
-        let view = factory.view_texture_as_shader_resource::<gfx::format::Rgba8>(&text, levels, gfx::format::Swizzle::new()).unwrap();
-        ConstantColorTexture{
+        let view = factory.view_texture_as_shader_resource::<gfx::format::Rgba8>(&text, levels, gfx::format::Swizzle::new())
+            .unwrap();
+        ConstantColorTexture {
             texture: text,
-            view: view
+            view: view,
         }
     }
 }
@@ -143,21 +150,17 @@ impl<R: gfx::Resources> Texture<R> {
     {
         match self {
             &Texture::Constant(color) => {
-                let color: [[u8; 4]; 1] = [[
-                    (color[0] * 255.) as u8,
-                    (color[1] * 255.) as u8,
-                    (color[2] * 255.) as u8,
-                    (color[3] * 255.) as u8,
-                ]];
-                encoder.update_texture::<_, gfx::format::Rgba8>(
-                    &texture.texture,
-                    None,
-                    texture.texture.get_info().to_image_info(0),
-                    &color[..]
-                ).unwrap();
+                let color: [[u8; 4]; 1] = [[(color[0] * 255.) as u8, (color[1] * 255.) as u8, (color[2] * 255.) as u8, (color[3] * 255.) as u8]];
+                encoder.update_texture::<_, gfx::format::Rgba8>(&texture.texture,
+                                                             None,
+                                                             texture.texture
+                                                                 .get_info()
+                                                                 .to_image_info(0),
+                                                             &color[..])
+                    .unwrap();
                 texture.view.clone()
             }
-            &Texture::Texture(ref tex) => tex.clone()
+            &Texture::Texture(ref tex) => tex.clone(),
         }
     }
 }
@@ -174,7 +177,7 @@ pub struct Fragment<R: gfx::Resources> {
     /// ambient color
     pub ka: Texture<R>,
     /// diffuse color
-    pub kd: Texture<R>
+    pub kd: Texture<R>,
 }
 
 /// A basic light
@@ -204,15 +207,15 @@ pub struct Scene<R: gfx::Resources> {
     /// A list of fragments
     pub fragments: Vec<Fragment<R>>,
     /// A list of lights
-    pub lights: Vec<Light>
+    pub lights: Vec<Light>,
 }
 
 impl<R: gfx::Resources> Scene<R> {
     /// Create an empty scene
     pub fn new() -> Scene<R> {
-        Scene{
+        Scene {
             fragments: vec![],
-            lights: vec![]
+            lights: vec![],
         }
     }
 }
@@ -245,11 +248,9 @@ impl Camera {
 
     pub fn look_at(eye: [f32; 3], target: [f32; 3], up: [f32; 3]) -> [[f32; 4]; 4] {
         use cgmath::{Point3, Vector3, Matrix4, Transform};
-        let view: Matrix4<f32> = Transform::look_at(
-            Point3::new(eye[0], eye[1], eye[2]),
-            Point3::new(target[0], target[1], target[2]),
-            Vector3::new(up[0], up[1], up[2]),
-        );
+        let view: Matrix4<f32> = Transform::look_at(Point3::new(eye[0], eye[1], eye[2]),
+                                                    Point3::new(target[0], target[1], target[2]),
+                                                    Vector3::new(up[0], up[1], up[2]));
         view.into()
     }
 }
@@ -274,7 +275,7 @@ impl Layer {
     {
         Layer {
             target: String::from(target),
-            passes: passes
+            passes: passes,
         }
     }
 }
@@ -291,7 +292,7 @@ pub struct Frame<R: gfx::Resources> {
     /// by different passes
     pub scenes: HashMap<String, Scene<R>>,
     /// Collection of Cameras owned by the scene
-    pub cameras: HashMap<String, Camera>
+    pub cameras: HashMap<String, Camera>,
 }
 
 impl<R: gfx::Resources> Frame<R> {
@@ -301,7 +302,7 @@ impl<R: gfx::Resources> Frame<R> {
             layers: vec![],
             targets: HashMap::new(),
             scenes: HashMap::new(),
-            cameras: HashMap::new()
+            cameras: HashMap::new(),
         }
     }
 }
