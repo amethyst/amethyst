@@ -149,9 +149,9 @@ config!(
 );
 
 config!(struct Config {
-    /// Configuration for display and graphics
+/// Configuration for display and graphics
     pub display: DisplayConfig = DisplayConfig::default(),
 
-    /// Configuration for output
+/// Configuration for output
     pub logging: LoggingConfig = LoggingConfig::default(),
 });

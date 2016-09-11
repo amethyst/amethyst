@@ -27,8 +27,7 @@ impl ConfigError {
 
                 let message = if meta.bad_value {
                     "Could not find YAML"
-                }
-                else {
+                } else {
                     "Failed to parse YAML"
                 };
 
@@ -46,17 +45,14 @@ impl ConfigError {
                     }
 
                     format!("\n{}:\t {} {{ {} }}", path, meta.ty, result)
-                }
-                else {
+                } else {
                     "".to_string()
                 };
 
                 format!("{}{}", basic, options)
-            },
+            }
             &ConfigError::NonConfig => "Attempted usage of a struct function on a field.".to_string(),
-            &ConfigError::FileError(ref path, ref e) => {
-                format!("{}: Config File Error: {}", path.display().to_string(), e)
-            },
+            &ConfigError::FileError(ref path, ref e) => format!("{}: Config File Error: {}", path.display().to_string(), e),
             &ConfigError::MultipleExternalFiles(ref path, ref conflicts) => {
                 let mut result = "".to_string();
 
@@ -68,11 +64,14 @@ impl ConfigError {
                     result = result + &conflict.display().to_string();
                 }
 
-                format!("{}: Multiple external files: \n\t{}", path.display().to_string(), result)
-            },
+                format!("{}: Multiple external files: \n\t{}",
+                        path.display().to_string(),
+                        result)
+            }
             &ConfigError::MissingExternalFile(ref meta) => {
-                format!("{}: External YAML file is missing", meta.path.display().to_string())
-            },
+                format!("{}: External YAML file is missing",
+                        meta.path.display().to_string())
+            }
         }
     }
 }
@@ -148,8 +147,7 @@ impl ConfigMeta {
     pub fn root(&self) -> ConfigMeta {
         if let Some(ref parent) = self.parent {
             parent.root()
-        }
-        else {
+        } else {
             self.clone()
         }
     }
