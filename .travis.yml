@@ -5,7 +5,9 @@ rust:
     - nightly
 
 cache: cargo
-before_script: (cargo install rustfmt || true)
+before_script:
+    - (cargo install rustfmt || true)
+    - export PATH=$PATH:/home/travis/.cargo/bin
 script:
     - |
       cargo fmt -- --write-mode=diff &&
