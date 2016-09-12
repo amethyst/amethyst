@@ -65,12 +65,12 @@ impl Application {
             self.context.lock().unwrap().broadcaster.publish().with::<EngineEvent>(e);
         }
 
-        let mut e = Vec::new();
         {
-            let ctx = self.context.lock().unwrap();
-            e = ctx.broadcaster.read::<EngineEvent>().iter().map(|x| x.payload.clone()).collect::<Vec<Event>>();
+            let mut ctx = self.context.lock().unwrap();
+            let e = ctx.broadcaster.read::<EngineEvent>().iter()
+                .map(|x| x.payload.clone()).collect::<Vec<Event>>();
+            self.states.handle_events(&e, ctx.deref_mut());
         }
-        self.states.handle_events(&e, self.context.lock().unwrap().deref_mut());
 
         let fixed_step = self.context.lock().unwrap().fixed_step;
         let last_fixed_update = self.context.lock().unwrap().last_fixed_update;

@@ -95,12 +95,12 @@ unsafe impl Sync for PongProcessor {  }
 
 // Pong game processor
 impl Processor<Arc<Mutex<Context>>> for PongProcessor {
-    fn run(&mut self, arg: RunArg, context: Arc<Mutex<Context>>) {
+    fn run(&mut self, arg: RunArg, ctx: Arc<Mutex<Context>>) {
         use amethyst::context::event::{EngineEvent, Event, VirtualKeyCode, ElementState};
         use std::ops::Deref;
 
         // Get all needed component storages and resources
-        let context = context.lock().unwrap();
+        let context = ctx.lock().unwrap();
         let (mut balls,
              mut planks,
              mut renderables,
@@ -273,8 +273,8 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
 struct Game;
 
 impl State for Game {
-    fn on_start(&mut self, context: &mut Context, world: &mut World) {
-        let (w, h) = context.renderer.get_dimensions().unwrap();
+    fn on_start(&mut self, ctx: &mut Context, world: &mut World) {
+        let (w, h) = ctx.renderer.get_dimensions().unwrap();
         let aspect = w as f32 / h as f32;
         let eye = [0., 0., 0.1];
         let target = [0., 0., 0.];
@@ -305,8 +305,8 @@ impl State for Game {
             .build();
 
         // Generate a square mesh
-        context.asset_manager.create_constant_texture("white", [1.0, 1.0, 1.0, 1.]);
-        context.asset_manager.gen_rectangle("square", 1.0, 1.0);
+        ctx.asset_manager.create_constant_texture("white", [1.0, 1.0, 1.0, 1.]);
+        ctx.asset_manager.gen_rectangle("square", 1.0, 1.0);
         let square = Renderable::new("square", "white", "white");
 
         // Create a ball entity
