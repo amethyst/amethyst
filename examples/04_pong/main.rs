@@ -3,11 +3,10 @@ extern crate amethyst;
 use amethyst::engine::{Application, State, Trans};
 use amethyst::processors::rendering::{RenderingProcessor, Renderable, Light, Camera, Projection};
 use amethyst::context::Context;
+use amethyst::context::event::{Event, VirtualKeyCode};
 use amethyst::config::Element;
 use amethyst::ecs::{World, Join, VecStorage, Component, Processor, RunArg};
 use std::sync::{Mutex, Arc};
-
-struct Pong;
 
 struct Ball {
     pub position: [f32; 2],
@@ -56,10 +55,6 @@ impl Component for Plank {
     type Storage = VecStorage<Plank>;
 }
 
-struct PongProcessor;
-
-unsafe impl Sync for PongProcessor {  }
-
 // If right_up == true then the right plank will move up,
 // other fields work the same way
 struct InputState {
@@ -93,6 +88,10 @@ impl Score {
         }
     }
 }
+
+struct PongProcessor;
+
+unsafe impl Sync for PongProcessor {  }
 
 // Pong game processor
 impl Processor<Arc<Mutex<Context>>> for PongProcessor {
@@ -271,7 +270,9 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
     }
 }
 
-impl State for Pong {
+struct Game;
+
+impl State for Game {
     fn on_start(&mut self, context: &mut Context, world: &mut World) {
         let (w, h) = context.renderer.get_dimensions().unwrap();
         let aspect = w as f32 / h as f32;
@@ -338,18 +339,18 @@ impl State for Pong {
             .build();
     }
 
-    fn update(&mut self, context: &mut Context, _: &mut World) -> Trans {
-        // Exit if user hits Escape or closes the window
-        use amethyst::context::event::{EngineEvent, Event, VirtualKeyCode};
-        let engine_events = context.broadcaster.read::<EngineEvent>();
-        for engine_event in engine_events.iter() {
-            match engine_event.payload {
+    fn handle_events(&mut self, events: &[Event], _: &mut Context, _: &mut World) -> Trans {
+        for e in events {
+            match *e {
                 Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) => return Trans::Quit,
                 Event::Closed => return Trans::Quit,
                 _ => (),
             }
         }
+        Trans::None
+    }
 
+    fn update(&mut self, _: &mut Context, _: &mut World) -> Trans {
         Trans::None
     }
 }
@@ -361,7 +362,7 @@ fn main() {
     let config = Config::from_file(path).unwrap();
     let mut context = Context::new(config.context_config);
     let rendering_processor = RenderingProcessor::new(config.renderer_config, &mut context);
-    let mut game = Application::build(Pong, context)
+    let mut game = Application::build(Game, context)
                    .with::<RenderingProcessor>(rendering_processor, "rendering_processor", 0)
                    .register::<Renderable>()
                    .register::<Light>()

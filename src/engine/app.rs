@@ -2,9 +2,9 @@
 
 use super::state::{State, StateMachine};
 use context::timing::Stopwatch;
-use context::event::EngineEvent;
+use context::event::{EngineEvent, Event};
 use context::Context;
-use ecs::{Planner, World, Processor, Priority, Component};
+use ecs::{Planner, World, Processor, Priority, Component, Join};
 use std::sync::{Arc, Mutex};
 use std::ops::DerefMut;
 
@@ -16,7 +16,8 @@ pub struct Application {
 }
 
 impl Application {
-    /// Creates a new Application with the given initial game state, planner, and context.
+    /// Creates a new Application with the given initial game state, planner,
+    /// and context.
     pub fn new<T>(initial_state: T,
                   planner: Planner<Arc<Mutex<Context>>>,
                   ctx: Context)
@@ -64,8 +65,12 @@ impl Application {
             self.context.lock().unwrap().broadcaster.publish().with::<EngineEvent>(e);
         }
 
-        let entities = self.context.lock().unwrap().broadcaster.poll();
-        self.states.handle_events(&entities, self.context.lock().unwrap().deref_mut());
+        let mut e = Vec::new();
+        {
+            let ctx = self.context.lock().unwrap();
+            e = ctx.broadcaster.read::<EngineEvent>().iter().map(|x| x.payload.clone()).collect::<Vec<Event>>();
+        }
+        self.states.handle_events(&e, self.context.lock().unwrap().deref_mut());
 
         let fixed_step = self.context.lock().unwrap().fixed_step;
         let last_fixed_update = self.context.lock().unwrap().last_fixed_update;

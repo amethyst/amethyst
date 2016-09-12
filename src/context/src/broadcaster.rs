@@ -9,28 +9,28 @@
 //! extern crate amethyst_ecs;
 //!
 //! use amethyst_context::broadcaster::Broadcaster;
-//! use amethyst_ecs::{Component, VecStorage};
+//! use amethyst_ecs::{Component, VecStorage, Join};
 //!
-//! struct UserComponent {
+//! struct UserEvent {
 //!     pub data: i32,
 //! }
 //!
-//! impl Component for UserComponent {
-//!     type Storage = VecStorage<UserComponent>;
+//! impl Component for UserEvent {
+//!     type Storage = VecStorage<UserEvent>;
 //! }
 //!
 //! fn main() {
 //!     let mut broadcaster = Broadcaster::new();
-//!     broadcaster.register::<UserComponent>();
+//!     broadcaster.register::<UserEvent>();
 //!     for i in 0..10 {
-//!         let user_component = UserComponent { data: i };
-//!         broadcaster.publish().with::<UserComponent>(user_component).build();
+//!         let user_event = UserEvent { data: i };
+//!         broadcaster.publish().with::<UserEvent>(user_event).build();
 //!     }
 //!     {
-//!         let storage = broadcaster.read::<UserComponent>();
+//!         let storage = broadcaster.read::<UserEvent>();
 //!         for entity in broadcaster.poll() {
-//!             let user_component = storage.get(entity).unwrap();
-//!             println!("{0}", user_component.data);
+//!             let user_event = storage.get(entity).unwrap();
+//!             println!("{0}", user_event.data);
 //!         }
 //!     }
 //!     broadcaster.clean();
@@ -39,7 +39,8 @@
 
 extern crate amethyst_ecs;
 
-use self::amethyst_ecs::{World, Component, EntityBuilder, Storage, Allocator, MaskedStorage, Join, Entity};
+use self::amethyst_ecs::{World, Component, EntityBuilder, Storage, Allocator,
+                         MaskedStorage, Join};
 use std::sync::RwLockReadGuard;
 
 /// Allows publishing entities
@@ -50,40 +51,30 @@ pub struct Broadcaster {
 impl Broadcaster {
     /// Create new `Broadcaster`
     pub fn new() -> Broadcaster {
-        let world = World::new();
-        Broadcaster { world: world }
+        Broadcaster { world: World::new() }
     }
 
-    /// Add a custom `Component` with which
-    /// entities can be built and published
-    /// using `Broadcaster::publish()`
+    /// Adds a custom `Component` with which entities can be built and published
+    /// using `Broadcaster::publish()`.
     pub fn register<T: Component>(&mut self) {
         self.world.register::<T>();
     }
 
-    /// Build and publish an entity,
-    /// using `EntityBuilder` syntax
+    /// Constructs and publishes a new entity using the `EntityBuilder` syntax.
     pub fn publish(&mut self) -> EntityBuilder {
         self.world.create_now()
     }
 
-    /// Return a vector containing clones of all published entities
-    pub fn poll(&self) -> Vec<Entity> {
-        let entities = self.world.entities();
-        let _entities: Vec<Entity> = entities.iter().map(|e| e.clone()).collect();
-        _entities
-    }
-
-    /// Access a component storage
+    /// Accesses a component storage.
     pub fn read<T: Component>(&self) -> Storage<T, RwLockReadGuard<Allocator>, RwLockReadGuard<MaskedStorage<T>>> {
         self.world.read::<T>()
     }
 
-    /// Delete all published entities
+    /// Deletes all published entities.
     pub fn clean(&mut self) {
-        let entities = self.poll();
-        for entity in entities {
-            self.world.delete_now(entity);
+        for entity in self.world.entities().iter() {
+            self.world.delete_later(entity);
         }
+        self.world.maintain();
     }
 }
