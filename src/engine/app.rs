@@ -67,8 +67,11 @@ impl Application {
 
         {
             let mut ctx = self.context.lock().unwrap();
-            let e = ctx.broadcaster.read::<EngineEvent>().iter()
-                .map(|x| x.payload.clone()).collect::<Vec<Event>>();
+            let e = ctx.broadcaster
+                .read::<EngineEvent>()
+                .iter()
+                .map(|x| x.payload.clone())
+                .collect::<Vec<Event>>();
             self.states.handle_events(&e, ctx.deref_mut());
         }
 
