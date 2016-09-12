@@ -28,9 +28,8 @@
 //!     }
 //!     {
 //!         let storage = broadcaster.read::<UserEvent>();
-//!         for entity in broadcaster.poll() {
-//!             let user_event = storage.get(entity).unwrap();
-//!             println!("{0}", user_event.data);
+//!         for event in storage.iter() {
+//!             println!("{0}", event.data);
 //!         }
 //!     }
 //!     broadcaster.clean();
