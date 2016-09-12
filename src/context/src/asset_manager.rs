@@ -1,5 +1,4 @@
-//! This module provides an asset manager
-//! which loads and provides access to assets,
+//! This module provides an asset manager which loads and provides access to assets,
 //! such as `Texture`s, `Mesh`es, and `Fragment`s.
 
 extern crate amethyst_renderer;
@@ -22,18 +21,18 @@ use self::cgmath::{Vector3, InnerSpace};
 use std::collections::HashMap;
 use renderer::{Fragment, FragmentImpl};
 
-/// An enum with variants representing concrete
-/// `Factory` types compatible with different backends.
+/// An enum with variants representing concrete `Factory` types compatible with
+/// different backends.
 pub enum FactoryImpl {
     OpenGL { factory: gfx_device_gl::Factory },
     #[cfg(windows)]
     Direct3D {
-        // stub
+        // TODO: Implementation needed.
     },
     Null,
 }
 
-/// A struct which allows loading and accessing assets.
+/// Manages the loading and accessing of game assets.
 pub struct AssetManager {
     factory_impl: FactoryImpl,
     meshes: HashMap<String, Mesh>,
@@ -41,7 +40,7 @@ pub struct AssetManager {
 }
 
 impl AssetManager {
-    /// Create a new `AssetManager` from `FactoryImpl` (used internally).
+    /// Creates a new `AssetManager` from the given `FactoryImpl` (used internally).
     pub fn new(factory_impl: FactoryImpl) -> AssetManager {
         AssetManager {
             factory_impl: factory_impl,
@@ -49,7 +48,8 @@ impl AssetManager {
             textures: HashMap::new(),
         }
     }
-    /// Load a `Mesh` from vertex data.
+
+    /// Loads a `Mesh` from vertex data.
     pub fn load_mesh(&mut self, name: &str, data: &Vec<VertexPosNormal>) {
         match self.factory_impl {
             FactoryImpl::OpenGL { ref mut factory } => {
@@ -68,7 +68,8 @@ impl AssetManager {
             FactoryImpl::Null => (),
         }
     }
-    /// Generate and load a sphere mesh using the number of vertices accross the equator (u)
+
+    /// Generates and loads a sphere mesh using the number of vertices accross the equator (u)
     /// and the number of vertices from pole to pole (v).
     pub fn gen_sphere(&mut self, name: &str, u: usize, v: usize) {
         let data: Vec<VertexPosNormal> = SphereUV::new(u, v)
@@ -84,7 +85,8 @@ impl AssetManager {
             .collect();
         self.load_mesh(name, &data);
     }
-    /// Generate and load a cube mesh.
+
+    /// Generates and loads a cube mesh.
     pub fn gen_cube(&mut self, name: &str) {
         let data: Vec<VertexPosNormal> = Cube::new()
             .vertex(|(x, y, z)| {
@@ -99,7 +101,9 @@ impl AssetManager {
             .collect();
         self.load_mesh(name, &data);
     }
-    /// Generate and load a rectangle mesh in XY plane with given `width` and `height`.
+
+    /// Generates and loads a rectangle mesh in the XY plane with given `width`
+    /// and `height`.
     pub fn gen_rectangle(&mut self, name: &str, width: f32, height: f32) {
         let data = vec![
             VertexPosNormal {
@@ -135,14 +139,16 @@ impl AssetManager {
         ];
         self.load_mesh(name, &data);
     }
-    /// Lookup a `Mesh` by name.
+
+    /// Looks up a `Mesh` asset by name.
     pub fn get_mesh(&mut self, name: &str) -> Option<Mesh> {
         match self.meshes.get(name.into()) {
             Some(mesh) => Some((*mesh).clone()),
             None => None,
         }
     }
-    /// Load a `Texture` from pixel data.
+
+    /// Loads a `Texture` from pixel data.
     pub fn load_texture(&mut self, name: &str, kind: Kind, data: &[&[<<ColorFormat as Formatted>::Surface as SurfaceTyped>::DataType]]) {
         match self.factory_impl {
             FactoryImpl::OpenGL { ref mut factory } => {
@@ -162,21 +168,25 @@ impl AssetManager {
             FactoryImpl::Null => (),
         }
     }
-    /// Create a constant solid color `Texture` from a specified color.
+
+    /// Creates a new `Texture` asset with the specified color.
     pub fn create_constant_texture(&mut self, name: &str, color: [f32; 4]) {
         let texture = amethyst_renderer::Texture::Constant(color);
         let texture_impl = TextureImpl::OpenGL { texture: texture };
         let texture = Texture { texture_impl: texture_impl };
         self.textures.insert(name.into(), texture);
     }
-    /// Lookup a `Texture` by name.
+
+    /// Looks up a `Texture` asset by name.
     pub fn get_texture(&mut self, name: &str) -> Option<Texture> {
         match self.textures.get(name.into()) {
             Some(texture) => Some((*texture).clone()),
             None => None,
         }
     }
-    /// Construct and return a `Fragment` from previously loaded mesh, ka and kd textures and a transform matrix.
+
+    /// Constructs and returns a `Fragment` from previously loaded mesh, *ka*
+    /// and *kd* textures, and a transform matrix.
     pub fn get_fragment(&mut self, mesh: &str, ka: &str, kd: &str, transform: [[f32; 4]; 4]) -> Option<Fragment> {
         let mesh = match self.get_mesh(mesh) {
             Some(mesh) => mesh,
@@ -232,8 +242,8 @@ impl AssetManager {
     }
 }
 
-/// An enum with variants representing concrete
-/// `Mesh` types compatible with different backends.
+/// An enum with variants representing concrete `Mesh` types compatible with
+/// different backends.
 #[derive(Clone)]
 pub enum MeshImpl {
     OpenGL {
@@ -242,32 +252,30 @@ pub enum MeshImpl {
     },
     #[cfg(windows)]
     Direct3D {
-        // stub
+        // TODO: Implementation needed.
     },
     Null,
 }
 
-/// A wraper around `Buffer` and `Slice` required to
-/// hide all platform specific code from the user.
+/// A backend-agnostic wrapper around `Buffer` and `Slice`.
 #[derive(Clone)]
 pub struct Mesh {
     mesh_impl: MeshImpl,
 }
 
-/// An enum with variants representing concrete
-/// `Texture` types compatible with different backends.
+/// An enum with variants representing concrete `Texture` types compatible with
+/// different backends.
 #[derive(Clone)]
 pub enum TextureImpl {
     OpenGL { texture: amethyst_renderer::Texture<gfx_device_gl::Resources>, },
     #[cfg(windows)]
     Direct3D {
-        // stub
+        // TODO: Implementation needed.
     },
     Null,
 }
 
-/// A wraper around `Texture` required to
-/// hide all platform specific code from the user.
+/// A backend-agnostic wrapper around `Texture`.
 #[derive(Clone)]
 pub struct Texture {
     texture_impl: TextureImpl,

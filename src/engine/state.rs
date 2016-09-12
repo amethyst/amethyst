@@ -1,7 +1,8 @@
 //! Utilities for game state management.
 
 use context::Context;
-use ecs::{Entity, Planner, World};
+use context::event::Event;
+use ecs::{Planner, World};
 use std::sync::{Arc, Mutex};
 
 /// Types of state transitions.
@@ -35,7 +36,7 @@ pub trait State {
 
     /// Executed on every frame before updating, for use in reacting to events.
     fn handle_events(&mut self,
-                     _events: &[Entity],
+                     _events: &[Event],
                      _ctx: &mut Context,
                      _world: &mut World)
                      -> Trans {
@@ -50,7 +51,7 @@ pub trait State {
 
     /// Executed on every frame immediately, as fast as the engine will allow.
     fn update(&mut self, _ctx: &mut Context, _world: &mut World) -> Trans {
-        Trans::Pop
+        Trans::None
     }
 }
 
@@ -97,7 +98,7 @@ impl StateMachine {
     }
 
     /// Passes a vector of events to the active state to handle.
-    pub fn handle_events(&mut self, events: &[Entity], ctx: &mut Context) {
+    pub fn handle_events(&mut self, events: &[Event], ctx: &mut Context) {
         if self.running {
             let trans = match self.state_stack.last_mut() {
                 Some(state) => state.handle_events(events, ctx, self.planner.mut_world()),

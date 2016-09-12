@@ -3,6 +3,7 @@ extern crate amethyst;
 use amethyst::engine::{Application, State, Trans};
 use amethyst::processors::rendering::{RenderingProcessor, Renderable, Light, Camera, Projection};
 use amethyst::context::Context;
+use amethyst::context::event::{Event, VirtualKeyCode};
 use amethyst::config::Element;
 use amethyst::ecs::{World, Join};
 
@@ -65,18 +66,18 @@ impl State for Example {
             .build();
     }
 
-    fn update(&mut self, context: &mut Context, world: &mut World) -> Trans {
-        use amethyst::context::event::{EngineEvent, Event, VirtualKeyCode};
-
-        let engine_events = context.broadcaster.read::<EngineEvent>();
-        for engine_event in engine_events.iter() {
-            match engine_event.payload {
+    fn handle_events(&mut self, events: &[Event], _: &mut Context, _: &mut World) -> Trans {
+        for e in events {
+            match *e {
                 Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) => return Trans::Quit,
                 Event::Closed => return Trans::Quit,
                 _ => (),
             }
         }
+        Trans::None
+    }
 
+    fn update(&mut self, context: &mut Context, world: &mut World) -> Trans {
         let angular_velocity = 2.0; // in radians per second
         self.t += context.delta_time.subsec_nanos() as f32 / 1.0e9;
         let phase = self.t * angular_velocity;

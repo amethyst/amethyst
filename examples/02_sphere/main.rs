@@ -5,25 +5,22 @@ extern crate cgmath;
 
 use amethyst::engine::{Application, State, Trans};
 use amethyst::context::{ContextConfig, Context};
+use amethyst::context::event::{Event, VirtualKeyCode};
 use amethyst::config::Element;
-use amethyst::ecs::{World, Entity};
+use amethyst::ecs::World;
 
 struct Example;
 
 impl State for Example {
-    fn handle_events(&mut self, events: &[Entity], ctx: &mut Context, _: &mut World) -> Trans {
-        use amethyst::context::event::{EngineEvent, Event, VirtualKeyCode};
-        let mut trans = Trans::None;
-        let storage = ctx.broadcaster.read::<EngineEvent>();
+    fn handle_events(&mut self, events: &[Event], _: &mut Context, _: &mut World) -> Trans {
         for e in events {
-            let event = storage.get(*e).unwrap();
-            match event.payload {
-                Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) => trans = Trans::Quit,
-                Event::Closed => trans = Trans::Quit,
+            match *e {
+                Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) => return Trans::Quit,
+                Event::Closed => return Trans::Quit,
                 _ => (),
             }
         }
-        trans
+        Trans::None
     }
 
     fn on_start(&mut self, ctx: &mut Context, _: &mut World) {
