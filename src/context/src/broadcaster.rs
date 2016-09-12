@@ -1,7 +1,7 @@
-//! This module contains `Broadcaster` struct
-//! which allows publishing and polling specs
-//! entities. It is primarily used for event
-//! handling.
+//! Contains the `Broadcaster` struct which allows publishing and polling
+//! [specs][sp] entities. It is primarily used for event handling.
+//!
+//! [sp]: https://github.com/slide-rs/specs
 //!
 //! # Example:
 //! ```
