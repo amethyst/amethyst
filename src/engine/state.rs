@@ -1,7 +1,8 @@
 //! Utilities for game state management.
 
+use super::Planner;
 use context::Context;
-use ecs::{Entity, Planner, World};
+use ecs::{Entity};
 use std::sync::{Arc, Mutex};
 
 /// Types of state transitions.
@@ -22,47 +23,47 @@ pub enum Trans {
 /// A trait which defines game states that can be used by the state machine.
 pub trait State {
     /// Executed when the game state begins.
-    fn on_start(&mut self, _ctx: &mut Context, _world: &mut World) {}
+    fn on_start(&mut self, _ctx: &mut Context, _planner: &mut Planner) {}
 
     /// Executed when the game state exits.
-    fn on_stop(&mut self, _ctx: &mut Context, _world: &mut World) {}
+    fn on_stop(&mut self, _ctx: &mut Context, _planner: &mut Planner) {}
 
     /// Executed when a different game state is pushed onto the stack.
-    fn on_pause(&mut self, _ctx: &mut Context, _world: &mut World) {}
+    fn on_pause(&mut self, _ctx: &mut Context, _planner: &mut Planner) {}
 
     /// Executed when the application returns to this game state once again.
-    fn on_resume(&mut self, _ctx: &mut Context, _world: &mut World) {}
+    fn on_resume(&mut self, _ctx: &mut Context, _planner: &mut Planner) {}
 
     /// Executed on every frame before updating, for use in reacting to events.
     fn handle_events(&mut self,
                      _events: &[Entity],
                      _ctx: &mut Context,
-                     _world: &mut World)
+                     _planner: &mut Planner)
                      -> Trans {
         Trans::None
     }
 
     /// Executed repeatedly at stable, predictable intervals (1/60th of a second
     /// by default).
-    fn fixed_update(&mut self, _ctx: &mut Context, _world: &mut World) -> Trans {
+    fn fixed_update(&mut self, _ctx: &mut Context, _planner: &mut Planner) -> Trans {
         Trans::None
     }
 
     /// Executed on every frame immediately, as fast as the engine will allow.
-    fn update(&mut self, _ctx: &mut Context, _world: &mut World) -> Trans {
+    fn update(&mut self, _ctx: &mut Context, _planner: &mut Planner) -> Trans {
         Trans::Pop
     }
 }
 
 /// A simple stack-based state machine (pushdown automaton).
 pub struct StateMachine {
-    planner: Planner<Arc<Mutex<Context>>>,
+    planner: Planner,
     running: bool,
     state_stack: Vec<Box<State>>,
 }
 
 impl StateMachine {
-    pub fn new<T>(initial_state: T, planner: Planner<Arc<Mutex<Context>>>) -> StateMachine
+    pub fn new<T>(initial_state: T, planner: Planner) -> StateMachine
         where T: State + 'static
     {
         StateMachine {
@@ -91,7 +92,7 @@ impl StateMachine {
     pub fn start(&mut self, ctx: &mut Context) {
         if !self.running {
             let state = self.state_stack.last_mut().unwrap();
-            state.on_start(ctx, self.planner.mut_world());
+            state.on_start(ctx, &mut self.planner);
             self.running = true;
         }
     }
@@ -100,7 +101,7 @@ impl StateMachine {
     pub fn handle_events(&mut self, events: &[Entity], ctx: &mut Context) {
         if self.running {
             let trans = match self.state_stack.last_mut() {
-                Some(state) => state.handle_events(events, ctx, self.planner.mut_world()),
+                Some(state) => state.handle_events(events, ctx, &mut self.planner),
                 None => Trans::None,
             };
 
@@ -112,7 +113,7 @@ impl StateMachine {
     pub fn fixed_update(&mut self, ctx: &mut Context) {
         if self.running {
             let trans = match self.state_stack.last_mut() {
-                Some(state) => state.fixed_update(ctx, self.planner.mut_world()),
+                Some(state) => state.fixed_update(ctx, &mut self.planner),
                 None => Trans::None,
             };
 
@@ -124,7 +125,7 @@ impl StateMachine {
     pub fn update(&mut self, ctx: &mut Context) {
         if self.running {
             let trans = match self.state_stack.last_mut() {
-                Some(state) => state.update(ctx, self.planner.mut_world()),
+                Some(state) => state.update(ctx, &mut self.planner),
                 None => Trans::None,
             };
 
@@ -150,12 +151,12 @@ impl StateMachine {
     fn switch(&mut self, state: Box<State>, ctx: &mut Context) {
         if self.running {
             if let Some(mut state) = self.state_stack.pop() {
-                state.on_stop(ctx, self.planner.mut_world());
+                state.on_stop(ctx, &mut self.planner);
             }
 
             self.state_stack.push(state);
             let state = self.state_stack.last_mut().unwrap();
-            state.on_start(ctx, self.planner.mut_world());
+            state.on_start(ctx, &mut self.planner);
         }
     }
 
@@ -163,12 +164,12 @@ impl StateMachine {
     fn push(&mut self, state: Box<State>, ctx: &mut Context) {
         if self.running {
             if let Some(state) = self.state_stack.last_mut() {
-                state.on_pause(ctx, self.planner.mut_world());
+                state.on_pause(ctx, &mut self.planner);
             }
 
             self.state_stack.push(state);
             let state = self.state_stack.last_mut().unwrap();
-            state.on_start(ctx, self.planner.mut_world());
+            state.on_start(ctx, &mut self.planner);
         }
     }
 
@@ -177,11 +178,11 @@ impl StateMachine {
     fn pop(&mut self, ctx: &mut Context) {
         if self.running {
             if let Some(mut state) = self.state_stack.pop() {
-                state.on_stop(ctx, self.planner.mut_world());
+                state.on_stop(ctx, &mut self.planner);
             }
 
             if let Some(mut state) = self.state_stack.last_mut() {
-                state.on_resume(ctx, self.planner.mut_world());
+                state.on_resume(ctx, &mut self.planner);
             } else {
                 self.running = false;
             }
@@ -192,7 +193,7 @@ impl StateMachine {
     fn stop(&mut self, ctx: &mut Context) {
         if self.running {
             while let Some(mut state) = self.state_stack.pop() {
-                state.on_stop(ctx, self.planner.mut_world());
+                state.on_stop(ctx, &mut self.planner);
             }
 
             self.running = false;

@@ -1,12 +1,14 @@
 //! The core engine framework.
 
 use super::state::{State, StateMachine};
+use super::Planner;
 use context::timing::Stopwatch;
 use context::event::EngineEvent;
 use context::Context;
-use ecs::{Planner, World, Processor, Priority, Component};
+use ecs::{World, Processor, Priority, Component};
 use std::sync::{Arc, Mutex};
 use std::ops::DerefMut;
+
 
 /// User-friendly facade for building games. Manages main loop.
 pub struct Application {
@@ -18,7 +20,7 @@ pub struct Application {
 impl Application {
     /// Creates a new Application with the given initial game state, planner, and context.
     pub fn new<T>(initial_state: T,
-                  planner: Planner<Arc<Mutex<Context>>>,
+                  planner: Planner,
                   ctx: Context)
                   -> Application
         where T: State + 'static
@@ -94,7 +96,7 @@ pub struct ApplicationBuilder<T>
 {
     initial_state: T,
     context: Context,
-    planner: Planner<Arc<Mutex<Context>>>,
+    planner: Planner,
 }
 
 impl<T> ApplicationBuilder<T>
