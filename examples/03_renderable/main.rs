@@ -1,10 +1,10 @@
 extern crate amethyst;
 
-use amethyst::engine::{Application, State, Trans};
+use amethyst::engine::{Application, Planner, State, Trans};
 use amethyst::processors::rendering::{RenderingProcessor, Renderable, Light, Camera, Projection};
 use amethyst::context::Context;
 use amethyst::config::Element;
-use amethyst::ecs::{World, Join};
+use amethyst::ecs::Join;
 
 struct Example {
     t: f32,
@@ -19,8 +19,10 @@ impl Example {
 }
 
 impl State for Example {
-    fn on_start(&mut self, context: &mut Context, world: &mut World) {
+    fn on_start(&mut self, context: &mut Context, planner: &mut Planner) {
         let (w, h) = context.renderer.get_dimensions().unwrap();
+        let world = planner.mut_world();
+
         let eye = [0., 5., 0.];
         let target = [0., 0., 0.];
         let up = [0., 0., 1.];
@@ -65,7 +67,7 @@ impl State for Example {
             .build();
     }
 
-    fn update(&mut self, context: &mut Context, world: &mut World) -> Trans {
+    fn update(&mut self, context: &mut Context, planner: &mut Planner) -> Trans {
         use amethyst::context::event::{EngineEvent, Event, VirtualKeyCode};
 
         let engine_events = context.broadcaster.read::<EngineEvent>();
@@ -77,34 +79,43 @@ impl State for Example {
             }
         }
 
-        let angular_velocity = 2.0; // in radians per second
         self.t += context.delta_time.subsec_nanos() as f32 / 1.0e9;
-        let phase = self.t * angular_velocity;
+        let time = self.t;
 
         // Test Transform mutation
-        let mut renderables = world.write::<Renderable>();
-        for renderable in (&mut renderables).iter() {
-            renderable.translation = [phase.sin(), 0.0, phase.cos()];
-        }
+        planner.run_custom(move |arg| {
+            let mut renderables = arg.fetch(|w| w.write::<Renderable>());
+            let angular_velocity = 2.0; // in radians per second
+            let phase = time * angular_velocity;
+            let offset = [phase.sin(), 0.0, phase.cos()];
+            for renderable in (&mut renderables).iter() {
+                renderable.translation = offset;
+            }
+        });
 
-        let angular_velocity_light = 0.5;
-        let phase = self.t * angular_velocity_light;
         // Test Light mutation
-        let mut lights = world.write::<Light>();
-        for light in (&mut lights).iter() {
-            light.light.center = [2.0 * phase.sin(), 2., 2.0 * phase.cos()];
+        planner.run_custom(move |arg| {
+            let mut lights = arg.fetch(|w| w.write::<Light>());
+            let angular_velocity = 0.5; // in radians per second
+            let phase = time * angular_velocity;
+            let center = [2.0 * phase.sin(), 2., 2.0 * phase.cos()];
             let angular_velocity_color = 0.7;
-            let phase = self.t * angular_velocity_color;
-            light.light.color[1] = phase.sin().abs();
-        }
+            let phase_color = time * angular_velocity_color;
+            for light in (&mut lights).iter() {
+                light.light.center = center;
+                light.light.color[1] = phase_color.sin().abs();
+            }
+        });
 
-        let angular_velocity_camera = 0.3;
-        let phase = self.t * angular_velocity_camera;
         // Test Camera mutation
-        let mut cameras = world.write::<Camera>();
-        for camera in (&mut cameras).iter() {
-            camera.eye[1] = 3.0 + 3.0*phase.sin().abs();
-        }
+        planner.run_custom(move |arg| {
+            let mut cameras = arg.fetch(|w| w.write::<Camera>());
+            let angular_velocity = 0.3; // in radians per second
+            let phase = time * angular_velocity;
+            for camera in (&mut cameras).iter() {
+                camera.eye[1] = 3.0 + 3.0*phase.sin().abs();
+            }
+        });
 
         Trans::None
     }
