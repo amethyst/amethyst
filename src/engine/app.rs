@@ -1,12 +1,14 @@
 //! The core engine framework.
 
 use super::state::{State, StateMachine};
+use super::Planner;
 use context::timing::Stopwatch;
 use context::event::EngineEvent;
 use context::Context;
-use ecs::{Planner, World, Processor, Priority, Component};
+use ecs::{World, Processor, Priority, Component};
 use std::sync::{Arc, Mutex};
 use std::ops::DerefMut;
+
 
 /// User-friendly facade for building games. Manages main loop.
 pub struct Application {
@@ -18,7 +20,7 @@ pub struct Application {
 impl Application {
     /// Creates a new Application with the given initial game state, planner, and context.
     pub fn new<T>(initial_state: T,
-                  planner: Planner<Arc<Mutex<Context>>>,
+                  planner: Planner,
                   ctx: Context)
                   -> Application
         where T: State + 'static
@@ -57,25 +59,26 @@ impl Application {
         self.states.start(self.context.lock().unwrap().deref_mut());
     }
 
+    fn update_states(states: &mut StateMachine, context: &mut Context) {
+        let events = context.poll_engine_events();
+        for e in events {
+            context.broadcaster.publish().with::<EngineEvent>(e);
+        }
+
+        let entities = context.broadcaster.poll();
+        states.handle_events(&entities, context);
+
+        if context.last_fixed_update.elapsed() >= context.fixed_step {
+            states.fixed_update(context);
+            context.last_fixed_update += context.fixed_step;
+        }
+
+        states.update(context);
+    }
+
     /// Advances the game world by one tick.
     fn advance_frame(&mut self) {
-        let events = self.context.lock().unwrap().poll_engine_events();
-        for e in events {
-            self.context.lock().unwrap().broadcaster.publish().with::<EngineEvent>(e);
-        }
-
-        let entities = self.context.lock().unwrap().broadcaster.poll();
-        self.states.handle_events(&entities, self.context.lock().unwrap().deref_mut());
-
-        let fixed_step = self.context.lock().unwrap().fixed_step;
-        let last_fixed_update = self.context.lock().unwrap().last_fixed_update;
-
-        if last_fixed_update.elapsed() >= fixed_step {
-            self.states.fixed_update(self.context.lock().unwrap().deref_mut());
-            self.context.lock().unwrap().last_fixed_update += fixed_step;
-        }
-
-        self.states.update(self.context.lock().unwrap().deref_mut());
+        Self::update_states(&mut self.states, self.context.lock().unwrap().deref_mut());
         self.states.run_processors(self.context.clone());
         self.context.lock().unwrap().renderer.submit();
         self.context.lock().unwrap().broadcaster.clean();
@@ -93,7 +96,7 @@ pub struct ApplicationBuilder<T>
 {
     initial_state: T,
     context: Context,
-    planner: Planner<Arc<Mutex<Context>>>,
+    planner: Planner,
 }
 
 impl<T> ApplicationBuilder<T>
