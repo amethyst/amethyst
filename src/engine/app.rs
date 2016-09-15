@@ -1,10 +1,10 @@
 //! The core engine framework.
 
 use super::state::{State, StateMachine};
-use context::timing::{SteadyTime, Stopwatch};
+use context::timing::Stopwatch;
 use context::event::EngineEvent;
 use context::Context;
-use ecs::{Planner, World, Processor, Priority};
+use ecs::{Planner, World, Processor, Priority, Component};
 use std::sync::{Arc, Mutex};
 use std::ops::DerefMut;
 
@@ -17,7 +17,10 @@ pub struct Application {
 
 impl Application {
     /// Creates a new Application with the given initial game state, planner, and context.
-    pub fn new<T>(initial_state: T, planner: Planner<Arc<Mutex<Context>>>, ctx: Context) -> Application
+    pub fn new<T>(initial_state: T,
+                  planner: Planner<Arc<Mutex<Context>>>,
+                  ctx: Context)
+                  -> Application
         where T: State + 'static
     {
         let context = Arc::new(Mutex::new(ctx));
@@ -64,13 +67,14 @@ impl Application {
         let fixed_step = self.context.lock().unwrap().fixed_step.clone();
         let last_fixed_update = self.context.lock().unwrap().last_fixed_update.clone();
 
-        if SteadyTime::now() - last_fixed_update > fixed_step {
+        if last_fixed_update.elapsed() >= fixed_step {
             self.states.fixed_update(self.context.lock().unwrap().deref_mut());
-            self.context.lock().unwrap().last_fixed_update = last_fixed_update + fixed_step;
+            self.context.lock().unwrap().last_fixed_update += fixed_step;
         }
 
         self.states.update(self.context.lock().unwrap().deref_mut());
         self.states.run_processors(self.context.clone());
+        self.context.lock().unwrap().renderer.submit();
         self.context.lock().unwrap().broadcaster.clean();
     }
 
@@ -99,6 +103,16 @@ impl<T> ApplicationBuilder<T>
             context: ctx,
             planner: Planner::new(world, 1),
         }
+    }
+
+    pub fn register<C>(mut self) -> ApplicationBuilder<T>
+        where C: Component
+    {
+        {
+            let world = &mut self.planner.mut_world();
+            world.register::<C>();
+        }
+        self
     }
 
     pub fn with<P>(mut self, pro: P, name: &str, pri: Priority) -> ApplicationBuilder<T>

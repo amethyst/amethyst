@@ -1,14 +1,19 @@
 language: rust
-
 rust:
     - stable
     - beta
     - nightly
 
+cache: cargo
+before_script:
+    - (cargo install rustfmt || true)
+    - export PATH=$PATH:/home/travis/.cargo/bin
 script:
-    - cargo doc --no-deps -p amethyst -p amethyst_ecs -p amethyst_config -p amethyst_context
-    - cargo build -v
-    - cargo test -p amethyst -p amethyst_ecs -p amethyst_config -p amethyst_context -v
+    - |
+      cargo fmt -- --write-mode=diff &&
+      cargo doc --no-deps -p amethyst -p amethyst_ecs -p amethyst_config -p amethyst_context &&
+      cargo build -v &&
+      cargo test -p amethyst -p amethyst_ecs -p amethyst_config -p amethyst_context -v
 
 notifications:
     webhooks:

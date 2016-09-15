@@ -32,7 +32,7 @@ See the [crates guide][crg] for more information on the Cargo manifest file.
 
 ### From Git via clone
 
-Instead of using the above, you can also clone the entire SDK from the 
+Instead of using the above, you can also clone the entire SDK from the
 Git repository. Once you're done, create a new Cargo project and `cd` into it.
 
 ```

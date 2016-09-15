@@ -5,7 +5,7 @@ use gfx::Slice;
 use cgmath::{Matrix4, SquareMatrix};
 pub use ::target::{ColorFormat, GeometryBuffer};
 
-gfx_vertex_struct!( Vertex {
+gfx_vertex_struct!(Vertex {
     pos: [i32; 2] = "a_Pos",
     tex_coord: [i32; 2] = "a_TexCoord",
 });
@@ -215,7 +215,7 @@ gfx_defines!(
 
 pub type GFormat = [f32; 4];
 
-pub struct DrawPass<R: gfx::Resources>{
+pub struct DrawPass<R: gfx::Resources> {
     vertex: gfx::handle::Buffer<R, VertexArgs>,
     fragment: gfx::handle::Buffer<R, FragmentArgs>,
     pso: gfx::PipelineState<R, draw::Meta>,
@@ -228,22 +228,16 @@ impl<R: gfx::Resources> DrawPass<R> {
     pub fn new<F>(factory: &mut F) -> DrawPass<R>
         where F: gfx::Factory<R>
     {
-        let sampler = factory.create_sampler(
-            gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale,
-                                       gfx::tex::WrapMode::Clamp)
-        );
+        let sampler = factory.create_sampler(gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale, gfx::tex::WrapMode::Clamp));
 
         DrawPass {
             vertex: factory.create_constant_buffer(1),
             fragment: factory.create_constant_buffer(1),
-            pso: factory.create_pipeline_simple(
-                DRAW_VERTEX_SRC,
-                DRAW_FRAGMENT_SRC,
-                draw::new()
-            ).unwrap(),
+            pso: factory.create_pipeline_simple(DRAW_VERTEX_SRC, DRAW_FRAGMENT_SRC, draw::new())
+                .unwrap(),
             ka: ::ConstantColorTexture::new(factory),
             kd: ::ConstantColorTexture::new(factory),
-            sampler: sampler
+            sampler: sampler,
         }
     }
 }
@@ -262,38 +256,34 @@ impl<R> ::Pass<R> for DrawPass<R>
 
         // every entity gets drawn
         for f in &scene.fragments {
-            encoder.update_constant_buffer(
-                &self.vertex,
-                &VertexArgs{
-                    proj: camera.projection,
-                    view: camera.view,
-                    model: f.transform,
-                }
-            );
+            encoder.update_constant_buffer(&self.vertex,
+                                           &VertexArgs {
+                                               proj: camera.projection,
+                                               view: camera.view,
+                                               model: f.transform,
+                                           });
 
             let ka = f.ka.to_view(&self.ka, encoder);
             let kd = f.kd.to_view(&self.kd, encoder);
 
-            encoder.draw(
-                &f.slice,
-                &self.pso,
-                &draw::Data{
-                    fragment_args: self.fragment.clone(),
-                    vertex_args: self.vertex.clone(),
-                    vbuf: f.buffer.clone(),
-                    out_normal: target.normal.clone(),
-                    out_ka: target.ka.clone(),
-                    out_kd: target.kd.clone(),
-                    out_depth: target.depth.clone(),
-                    ka: (ka, self.sampler.clone()),
-                    kd: (kd, self.sampler.clone()),
-                }
-            );
+            encoder.draw(&f.slice,
+                         &self.pso,
+                         &draw::Data {
+                             fragment_args: self.fragment.clone(),
+                             vertex_args: self.vertex.clone(),
+                             vbuf: f.buffer.clone(),
+                             out_normal: target.normal.clone(),
+                             out_ka: target.ka.clone(),
+                             out_kd: target.kd.clone(),
+                             out_depth: target.depth.clone(),
+                             ka: (ka, self.sampler.clone()),
+                             kd: (kd, self.sampler.clone()),
+                         });
         }
     }
 }
 
-pub struct DepthPass<R: gfx::Resources>{
+pub struct DepthPass<R: gfx::Resources> {
     vertex: gfx::handle::Buffer<R, VertexArgs>,
     pso: gfx::PipelineState<R, depth::Meta>,
 }
@@ -304,11 +294,8 @@ impl<R: gfx::Resources> DepthPass<R> {
     {
         DepthPass {
             vertex: factory.create_constant_buffer(1),
-            pso: factory.create_pipeline_simple(
-                DEPTH_VERTEX_SRC,
-                DEPTH_FRAGMENT_SRC,
-                depth::new()
-            ).unwrap(),
+            pso: factory.create_pipeline_simple(DEPTH_VERTEX_SRC, DEPTH_FRAGMENT_SRC, depth::new())
+                .unwrap(),
         }
     }
 }
@@ -328,24 +315,20 @@ impl<R> ::Pass<R> for DepthPass<R>
         // every entity gets rendered into the depth layer
         // not touching all other layers in Gbuffer
         for f in &scene.fragments {
-            encoder.update_constant_buffer(
-                &self.vertex,
-                &VertexArgs{
-                    proj: camera.projection,
-                    view: camera.view,
-                    model: f.transform,
-                }
-            );
+            encoder.update_constant_buffer(&self.vertex,
+                                           &VertexArgs {
+                                               proj: camera.projection,
+                                               view: camera.view,
+                                               model: f.transform,
+                                           });
 
-            encoder.draw(
-                &f.slice,
-                &self.pso,
-                &depth::Data{
-                    vertex_args: self.vertex.clone(),
-                    vbuf: f.buffer.clone(),
-                    out_depth: target.depth.clone(),
-                }
-            );
+            encoder.draw(&f.slice,
+                         &self.pso,
+                         &depth::Data {
+                             vertex_args: self.vertex.clone(),
+                             vbuf: f.buffer.clone(),
+                             out_depth: target.depth.clone(),
+                         });
         }
     }
 }
@@ -387,11 +370,18 @@ fn create_screen_fill_triangle<F, R>(factory: &mut F) -> (Buffer<R, Vertex>, Sli
     where F: gfx::Factory<R>,
           R: gfx::Resources
 {
-    let vertex_data = [
-        Vertex { pos: [-3, -1], tex_coord: [-1, 0] },
-        Vertex { pos: [ 1, -1], tex_coord: [1, 0] },
-        Vertex { pos: [ 1,  3], tex_coord: [1, 2] },
-    ];
+    let vertex_data = [Vertex {
+                           pos: [-3, -1],
+                           tex_coord: [-1, 0],
+                       },
+                       Vertex {
+                           pos: [1, -1],
+                           tex_coord: [1, 0],
+                       },
+                       Vertex {
+                           pos: [1, 3],
+                           tex_coord: [1, 2],
+                       }];
 
     let buffer = factory.create_vertex_buffer(&vertex_data);
     let slice = Slice::new_match_vertex_buffer(&buffer);
@@ -402,7 +392,7 @@ pub struct BlitLayer<R: gfx::Resources> {
     buffer: Buffer<R, Vertex>,
     slice: Slice<R>,
     sampler: gfx::handle::Sampler<R>,
-    pso: gfx::pso::PipelineState<R, blit::Meta>
+    pso: gfx::pso::PipelineState<R, blit::Meta>,
 }
 
 impl<R> BlitLayer<R>
@@ -413,26 +403,20 @@ impl<R> BlitLayer<R>
     {
         let (buffer, slice) = create_screen_fill_triangle(factory);
 
-        let sampler = factory.create_sampler(
-            gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale,
-                                       gfx::tex::WrapMode::Clamp)
-        );
+        let sampler = factory.create_sampler(gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale, gfx::tex::WrapMode::Clamp));
 
-        BlitLayer{
+        BlitLayer {
             slice: slice,
             buffer: buffer,
             sampler: sampler,
-            pso: factory.create_pipeline_simple(
-                BLIT_VERTEX_SRC,
-                BLIT_FRAGMENT_SRC,
-                blit::new()
-            ).unwrap()
+            pso: factory.create_pipeline_simple(BLIT_VERTEX_SRC, BLIT_FRAGMENT_SRC, blit::new())
+                .unwrap(),
         }
     }
 }
 
 impl<R> ::Pass<R> for BlitLayer<R>
-    where R: gfx::Resources,
+    where R: gfx::Resources
 {
     type Arg = ::pass::BlitLayer;
     type Target = ::target::ColorBuffer<R>;
@@ -447,18 +431,16 @@ impl<R> ::Pass<R> for BlitLayer<R>
             "ka" => src.texture_ka.clone(),
             "kd" => src.texture_kd.clone(),
             "normal" => src.texture_normal.clone(),
-            x => panic!("Unsupported layer {}", x)
+            x => panic!("Unsupported layer {}", x),
         };
 
-        encoder.draw(
-            &self.slice,
-            &self.pso,
-            &blit::Data {
-                vbuf: self.buffer.clone(),
-                source: (layer, self.sampler.clone()),
-                out: target.color.clone()
-            }
-        );
+        encoder.draw(&self.slice,
+                     &self.pso,
+                     &blit::Data {
+                         vbuf: self.buffer.clone(),
+                         source: (layer, self.sampler.clone()),
+                         out: target.color.clone(),
+                     });
     }
 }
 
@@ -468,7 +450,7 @@ pub struct LightingPass<R: gfx::Resources> {
     fragment_args: Buffer<R, FragmentLightArgs>,
     slice: Slice<R>,
     sampler: gfx::handle::Sampler<R>,
-    pso: gfx::pso::PipelineState<R, light::Meta>
+    pso: gfx::pso::PipelineState<R, light::Meta>,
 }
 
 fn pad(x: [f32; 3]) -> [f32; 4] {
@@ -480,24 +462,18 @@ impl<R: gfx::Resources> LightingPass<R> {
         where F: gfx::Factory<R>
     {
         let (buffer, slice) = create_screen_fill_triangle(factory);
-        let sampler = factory.create_sampler(
-            gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale,
-                                       gfx::tex::WrapMode::Clamp)
-        );
+        let sampler = factory.create_sampler(gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale, gfx::tex::WrapMode::Clamp));
 
         let lights = factory.create_constant_buffer(128);
         let fragment_args = factory.create_constant_buffer(1);
-        LightingPass{
+        LightingPass {
             lights: lights,
             buffer: buffer,
             slice: slice,
             sampler: sampler,
             fragment_args: fragment_args,
-            pso: factory.create_pipeline_simple(
-                BLIT_VERTEX_SRC,
-                LIGHT_FRAGMENT_SRC,
-                light::new()
-            ).unwrap()
+            pso: factory.create_pipeline_simple(BLIT_VERTEX_SRC, LIGHT_FRAGMENT_SRC, light::new())
+                .unwrap(),
         }
     }
 }
@@ -518,48 +494,47 @@ impl<R> ::Pass<R> for LightingPass<R>
 
         let (w, h, _, _) = src.kd.get_dimensions();
         for lights in scene.lights.chunks(128) {
-            let mut lights: Vec<_> = lights.iter().map(|l| PointLight{
-                    propagation: [l.propagation_constant, l.propagation_linear, l.propagation_r_square, 0.],
-                    color: l.color,
-                    center: pad(l.center)
-                }).collect();
+            let mut lights: Vec<_> = lights.iter()
+                .map(|l| {
+                    PointLight {
+                        propagation: [l.propagation_constant, l.propagation_linear, l.propagation_r_square, 0.],
+                        color: l.color,
+                        center: pad(l.center),
+                    }
+                })
+                .collect();
 
             let count = lights.len();
             while lights.len() < 128 {
-                lights.push(PointLight{
+                lights.push(PointLight {
                     propagation: [0., 0., 0., 0.],
                     color: [0., 0., 0., 0.],
                     center: [0., 0., 0., 0.],
                 })
             }
 
-            let inv_view_proj = Matrix4::from(camera.view).invert().unwrap() *
-                                Matrix4::from(camera.projection).invert().unwrap();
+            let inv_view_proj = Matrix4::from(camera.view).invert().unwrap() * Matrix4::from(camera.projection).invert().unwrap();
 
-            encoder.update_constant_buffer(
-                &self.fragment_args,
-                &FragmentLightArgs{
-                    inv_view_proj: inv_view_proj.into(),
-                    proj: camera.projection,
-                    viewport: [0., 0., w as f32, h as f32],
-                    light_count: count as i32,
-                }
-            );
+            encoder.update_constant_buffer(&self.fragment_args,
+                                           &FragmentLightArgs {
+                                               inv_view_proj: inv_view_proj.into(),
+                                               proj: camera.projection,
+                                               viewport: [0., 0., w as f32, h as f32],
+                                               light_count: count as i32,
+                                           });
 
             encoder.update_buffer(&self.lights, &lights[..], 0).unwrap();
-            encoder.draw(
-                &self.slice,
-                &self.pso,
-                &light::Data {
-                    vbuf: self.buffer.clone(),
-                    kd: (src.texture_kd.clone(), self.sampler.clone()),
-                    normal: (src.texture_normal.clone(), self.sampler.clone()),
-                    depth: (src.texture_depth.clone(), self.sampler.clone()),
-                    out: target.color.clone(),
-                    fragment_args: self.fragment_args.clone(),
-                    lights: self.lights.clone()
-                }
-            );
+            encoder.draw(&self.slice,
+                         &self.pso,
+                         &light::Data {
+                             vbuf: self.buffer.clone(),
+                             kd: (src.texture_kd.clone(), self.sampler.clone()),
+                             normal: (src.texture_normal.clone(), self.sampler.clone()),
+                             depth: (src.texture_depth.clone(), self.sampler.clone()),
+                             out: target.color.clone(),
+                             fragment_args: self.fragment_args.clone(),
+                             lights: self.lights.clone(),
+                         });
 
         }
     }

@@ -1,0 +1,16 @@
+context_config:
+    display_config:
+        dimensions: null
+        fullscreen: false
+        max_dimensions: null
+        min_dimensions: null
+        multisampling: 1
+        title: "Renderable example"
+        visibility: true
+        vsync: true
+        backend: OpenGL
+
+renderer_config:
+    pipeline: Deferred
+    shading: Shaded
+    clear_color: [0.0, 0.0, 0.0, 1.0]

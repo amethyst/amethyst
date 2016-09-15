@@ -1,7 +1,7 @@
 //! Utilities for game state management.
 
 use context::Context;
-use ecs::{Entity, Planner, World};
+use ecs::{Planner, World};
 use std::sync::{Arc, Mutex};
 
 /// Types of state transitions.
@@ -35,10 +35,14 @@ pub trait State {
 
     /// Executed repeatedly at stable, predictable intervals (1/60th of a second
     /// by default).
-    fn fixed_update(&mut self, _ctx: &mut Context, _world: &mut World) -> Trans { Trans::None }
+    fn fixed_update(&mut self, _ctx: &mut Context, _world: &mut World) -> Trans {
+        Trans::None
+    }
 
     /// Executed on every frame immediately, as fast as the engine will allow.
-    fn update(&mut self, _ctx: &mut Context, _world: &mut World) -> Trans { Trans::Pop }
+    fn update(&mut self, _ctx: &mut Context, _world: &mut World) -> Trans {
+        Trans::Pop
+    }
 }
 
 /// A simple stack-based state machine (pushdown automaton).
@@ -68,12 +72,13 @@ impl StateMachine {
     pub fn run_processors(&mut self, ctx: Arc<Mutex<Context>>) {
         if self.running {
             self.planner.dispatch(ctx);
+            self.planner.wait();
         }
     }
 
     /// Initializes the state machine.
     /// # Panics
-    ///	Panics if no states are present in the stack.
+    /// Panics if no states are present in the stack.
     pub fn start(&mut self, ctx: &mut Context) {
         if !self.running {
             let state = self.state_stack.last_mut().unwrap();
@@ -177,7 +182,7 @@ impl StateMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use context::{Config, Context};
+    use context::{ContextConfig, Context};
     use ecs::{Planner, World};
 
     struct State1(u8);
@@ -202,7 +207,7 @@ mod tests {
 
     #[test]
     fn switch_pop() {
-        let config = Config::default();
+        let config = ContextConfig::default();
         let mut context = Context::new(config);
         let world = World::new();
         let planner = Planner::new(world, 1);

@@ -31,9 +31,7 @@ pub struct Renderer {
 impl Renderer {
     /// Create a new `Renderer` from `DisplayConfig`.
     pub fn new(video_context: VideoContext) -> Renderer {
-        Renderer {
-            video_context: video_context,
-        }
+        Renderer { video_context: video_context }
     }
 
     /// Set the rendering pipeline to be used.
@@ -105,22 +103,19 @@ impl Renderer {
                     None => return None,
                 };
                 match fragment.fragment_impl {
-                    FragmentImpl::OpenGL {
-                        fragment
-                    } => {
+                    FragmentImpl::OpenGL { fragment } => {
                         scene.fragments.push(fragment);
                         Some(scene.fragments.len() - 1)
-                    },
+                    }
                     #[cfg(windows)]
-                    FragmentImpl::Direct3D {
-                    } => unimplemented!(),
+                    FragmentImpl::Direct3D {} => unimplemented!(),
                     FragmentImpl::Null => None,
                 }
             }
             #[cfg(windows)]
-            VideoContext::Direct3D {  } => {
+            VideoContext::Direct3D {} => {
                 unimplemented!();
-            },
+            }
             VideoContext::Null => None,
         }
     }
@@ -156,6 +151,22 @@ impl Renderer {
         )
     }
 
+    // Return number of fragments in scene `scene_name`.
+    pub fn num_fragments(&mut self, scene_name: &str) -> Option<usize> {
+        unwind_video_context_mut!(
+            self.video_context,
+            frame,
+            {
+                let scene = match frame.scenes.get_mut(scene_name.into()) {
+                    Some(scene) => scene,
+                    None => return None,
+                };
+                Some(scene.fragments.len())
+            },
+            None
+        )
+    }
+
     /// Add a `Light` to the scene `scene_name`.
     /// Return the index of the added `Light`.
     pub fn add_light(&mut self, scene_name: &str, light: Light) -> Option<usize> {
@@ -174,7 +185,7 @@ impl Renderer {
         )
     }
     /// Lookup `Light` in scene `scene_name` by index.
-    pub fn mut_light(&mut self, scene_name: &str, idx:usize) -> Option<&mut Light> {
+    pub fn mut_light(&mut self, scene_name: &str, idx: usize) -> Option<&mut Light> {
         unwind_video_context_mut!(
             self.video_context,
             frame,
@@ -201,6 +212,22 @@ impl Renderer {
                 scene.lights.remove(idx);
             },
             ()
+        )
+    }
+
+    // Return number of lights in scene `scene_name`.
+    pub fn num_lights(&mut self, scene_name: &str) -> Option<usize> {
+        unwind_video_context_mut!(
+            self.video_context,
+            frame,
+            {
+                let scene = match frame.scenes.get_mut(scene_name.into()) {
+                    Some(scene) => scene,
+                    None => return None,
+                };
+                Some(scene.lights.len())
+            },
+            None
         )
     }
 
@@ -240,13 +267,9 @@ impl Renderer {
 
     pub fn get_dimensions(&self) -> Option<(u32, u32)> {
         match self.video_context {
-            VideoContext::OpenGL {
-                ref window,
-                ..
-            } => window.get_inner_size(),
+            VideoContext::OpenGL { ref window, .. } => window.get_inner_size(),
             #[cfg(windows)]
-            VideoContext::Direct3D {
-            } => unimplemented!(),
+            VideoContext::Direct3D {} => unimplemented!(),
             VideoContext::Null => None,
         }
     }
@@ -259,18 +282,12 @@ impl Renderer {
     /// Submit the `Frame` to `amethyst_renderer::Renderer`.
     pub fn submit(&mut self) {
         match self.video_context {
-            VideoContext::OpenGL {
-                ref window,
-                ref mut device,
-                ref mut renderer,
-                ref frame,
-            } => {
-                    renderer.submit(frame, device);
-                    window.swap_buffers().unwrap();
-            },
+            VideoContext::OpenGL { ref window, ref mut device, ref mut renderer, ref frame } => {
+                renderer.submit(frame, device);
+                window.swap_buffers().unwrap();
+            }
             #[cfg(windows)]
-            VideoContext::Direct3D {
-            } => unimplemented!(),
+            VideoContext::Direct3D {} => unimplemented!(),
             VideoContext::Null => (),
         }
     }
@@ -279,9 +296,7 @@ impl Renderer {
 /// An enum with variants representing concrete
 /// `Fragment` types compatible with different backends.
 pub enum FragmentImpl {
-    OpenGL {
-        fragment: amethyst_renderer::Fragment<gfx_device_gl::Resources>,
-    },
+    OpenGL { fragment: amethyst_renderer::Fragment<gfx_device_gl::Resources>, },
     #[cfg(windows)]
     Direct3D {
         // stub

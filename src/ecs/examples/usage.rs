@@ -80,8 +80,8 @@ impl Processor<Duration> for Render {
 fn main() {
     // Replace this with your favorite rng.
     fn pfrand(i: u32) -> f32 {
-        (i as f32) * 1.21912 
-    } 
+        (i as f32) * 1.21912
+    }
     let mut world = World::new();
     world.register::<Position>();
     world.register::<Speed>();

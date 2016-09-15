@@ -38,8 +38,7 @@
 
 extern crate amethyst_ecs;
 
-use self::amethyst_ecs::{World, Component, EntityBuilder,
-                  Storage, Allocator, MaskedStorage, Join};
+use self::amethyst_ecs::{World, Component, EntityBuilder, Storage, Allocator, MaskedStorage, Join};
 use std::sync::RwLockReadGuard;
 
 /// Allows publishing entities
@@ -51,9 +50,7 @@ impl Broadcaster {
     /// Create new `Broadcaster`
     pub fn new() -> Broadcaster {
         let world = World::new();
-        Broadcaster {
-            world: world,
-        }
+        Broadcaster { world: world }
     }
 
     /// Add a custom `Component` with which
