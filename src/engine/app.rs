@@ -59,27 +59,33 @@ impl Application {
 
     /// Advances the game world by one tick.
     fn advance_frame(&mut self) {
-        let events = self.context.lock().unwrap().poll_engine_events();
-        self.context.lock().unwrap().input_handler.update(&events);
-        for e in events {
-            self.context.lock().unwrap().broadcaster.publish().with::<EngineEvent>(e);
+        {
+            let mut ctx = self.context.lock().unwrap();
+            let events = ctx.poll_engine_events();
+            ctx.input_handler.update(&events);
+            for e in events {
+                ctx.broadcaster.publish().with::<EngineEvent>(e);
+            }
+
+            let entities = ctx.broadcaster.poll();
+            self.states.handle_events(&entities, ctx.deref_mut());
+
+            let fixed_step = ctx.fixed_step;
+            let last_fixed_update = ctx.last_fixed_update;
+
+            if last_fixed_update.elapsed() >= fixed_step {
+                self.states.fixed_update(ctx.deref_mut());
+                ctx.last_fixed_update += fixed_step;
+            }
+
+            self.states.update(ctx.deref_mut());
         }
-
-        let entities = self.context.lock().unwrap().broadcaster.poll();
-        self.states.handle_events(&entities, self.context.lock().unwrap().deref_mut());
-
-        let fixed_step = self.context.lock().unwrap().fixed_step;
-        let last_fixed_update = self.context.lock().unwrap().last_fixed_update;
-
-        if last_fixed_update.elapsed() >= fixed_step {
-            self.states.fixed_update(self.context.lock().unwrap().deref_mut());
-            self.context.lock().unwrap().last_fixed_update += fixed_step;
-        }
-
-        self.states.update(self.context.lock().unwrap().deref_mut());
         self.states.run_processors(self.context.clone());
-        self.context.lock().unwrap().renderer.submit();
-        self.context.lock().unwrap().broadcaster.clean();
+        {
+            let mut ctx = self.context.lock().unwrap();
+            ctx.broadcaster.clean();
+            ctx.renderer.submit();
+        }
     }
 
     /// Cleans up after the quit signal is received.

@@ -76,12 +76,12 @@ impl Score {
 
 // Pong game processor
 impl Processor<Arc<Mutex<Context>>> for PongProcessor {
-    fn run(&mut self, arg: RunArg, context: Arc<Mutex<Context>>) {
-        use amethyst::context::event::{EngineEvent, Event, VirtualKeyCode, ElementState};
+    fn run(&mut self, arg: RunArg, ctx: Arc<Mutex<Context>>) {
+        use amethyst::context::event::VirtualKeyCode;
         use std::ops::Deref;
 
         // Get all needed component storages and resources
-        let context = context.lock().unwrap();
+        let ctx = ctx.lock().unwrap();
         let (mut balls,
              mut planks,
              mut renderables,
@@ -114,7 +114,7 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
         // Dimensions of right plank
         let mut right_dimensions = [0., 0.];
 
-        let delta_time = context.delta_time.subsec_nanos() as f32 / 1.0e9;
+        let delta_time = ctx.delta_time.subsec_nanos() as f32 / 1.0e9;
         // Process all planks
         for (plank, renderable) in (&mut planks, &mut renderables).iter() {
             match plank.side {
@@ -125,13 +125,13 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
                     // Store left plank dimensions for later use in ball processing
                     left_dimensions = plank.dimensions;
                     // If `W` is pressed and plank is in screen boundaries then move up
-                    if context.input_handler.key_down(VirtualKeyCode::W) {
+                    if ctx.input_handler.key_down(VirtualKeyCode::W) {
                         if plank.position + plank.dimensions[1]/2. < 1. {
                             plank.position += plank.velocity * delta_time;
                         }
                     }
                     // If `S` is pressed and plank is in screen boundaries then move down
-                    if context.input_handler.key_down(VirtualKeyCode::S) {
+                    if ctx.input_handler.key_down(VirtualKeyCode::S) {
                         if plank.position - plank.dimensions[1]/2. > -1. {
                             plank.position -= plank.velocity * delta_time;
                         }
@@ -146,13 +146,13 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
                     // Store right plank dimensions for later use in ball processing
                     right_dimensions = plank.dimensions;
                     // If `Up` is pressed and plank is in screen boundaries then move down
-                    if context.input_handler.key_down(VirtualKeyCode::Up) {
+                    if ctx.input_handler.key_down(VirtualKeyCode::Up) {
                         if plank.position + plank.dimensions[1]/2. < top_boundary {
                             plank.position += plank.velocity * delta_time;
                         }
                     }
                     // If `Down` is pressed and plank is in screen boundaries then move down
-                    if context.input_handler.key_down(VirtualKeyCode::Down) {
+                    if ctx.input_handler.key_down(VirtualKeyCode::Down) {
                         if plank.position - plank.dimensions[1]/2. > bottom_boundary {
                             plank.position -= plank.velocity * delta_time;
                         }
@@ -232,8 +232,8 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
 }
 
 impl State for Pong {
-    fn on_start(&mut self, context: &mut Context, world: &mut World) {
-        let (w, h) = context.renderer.get_dimensions().unwrap();
+    fn on_start(&mut self, ctx: &mut Context, world: &mut World) {
+        let (w, h) = ctx.renderer.get_dimensions().unwrap();
         let aspect = w as f32 / h as f32;
         let eye = [0., 0., 0.1];
         let target = [0., 0., 0.];
@@ -262,8 +262,8 @@ impl State for Pong {
             .build();
 
         // Generate a square mesh
-        context.asset_manager.create_constant_texture("white", [1.0, 1.0, 1.0, 1.]);
-        context.asset_manager.gen_rectangle("square", 1.0, 1.0);
+        ctx.asset_manager.create_constant_texture("white", [1.0, 1.0, 1.0, 1.]);
+        ctx.asset_manager.gen_rectangle("square", 1.0, 1.0);
         let square = Renderable::new("square", "white", "white");
 
         // Create a ball entity
@@ -296,10 +296,10 @@ impl State for Pong {
             .build();
     }
 
-    fn update(&mut self, context: &mut Context, _: &mut World) -> Trans {
+    fn update(&mut self, ctx: &mut Context, _: &mut World) -> Trans {
         // Exit if user hits Escape or closes the window
         use amethyst::context::event::{EngineEvent, Event, VirtualKeyCode};
-        let engine_events = context.broadcaster.read::<EngineEvent>();
+        let engine_events = ctx.broadcaster.read::<EngineEvent>();
         for engine_event in engine_events.iter() {
             match engine_event.payload {
                 Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) => return Trans::Quit,
@@ -317,9 +317,9 @@ fn main() {
     let path = format!("{}/examples/04_pong/resources/config.yml",
                        env!("CARGO_MANIFEST_DIR"));
     let config = Config::from_file(path).unwrap();
-    let mut context = Context::new(config.context_config);
-    let rendering_processor = RenderingProcessor::new(config.renderer_config, &mut context);
-    let mut game = Application::build(Pong, context)
+    let mut ctx = Context::new(config.context_config);
+    let rendering_processor = RenderingProcessor::new(config.renderer_config, &mut ctx);
+    let mut game = Application::build(Pong, ctx)
                    .with::<RenderingProcessor>(rendering_processor, "rendering_processor", 0)
                    .register::<Renderable>()
                    .register::<Light>()
