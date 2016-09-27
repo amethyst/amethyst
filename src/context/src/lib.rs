@@ -34,10 +34,12 @@ pub mod timing;
 pub mod event;
 pub mod renderer;
 pub mod asset_manager;
+pub mod input;
 mod video_init;
 use video_context::{VideoContext, DisplayConfig};
 use renderer::Renderer;
 use asset_manager::AssetManager;
+use input::InputHandler;
 use broadcaster::Broadcaster;
 use event::EngineEvent;
 use std::time::{Duration, Instant};
@@ -55,6 +57,7 @@ pub struct Context {
     // pub video_context: VideoContext,
     pub renderer: Renderer,
     pub asset_manager: AssetManager,
+    pub input_handler: InputHandler,
     pub broadcaster: Broadcaster,
     pub delta_time: Duration,
     pub fixed_step: Duration,
@@ -75,6 +78,7 @@ impl Context {
         Context {
             renderer: renderer,
             asset_manager: asset_manager,
+            input_handler: InputHandler::new(),
             broadcaster: broadcaster,
             delta_time: Duration::new(0, 0),
             fixed_step: Duration::new(0, 16666666),

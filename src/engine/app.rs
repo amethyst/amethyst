@@ -60,6 +60,7 @@ impl Application {
     /// Advances the game world by one tick.
     fn advance_frame(&mut self) {
         let events = self.context.lock().unwrap().poll_engine_events();
+        self.context.lock().unwrap().input_handler.update(&events);
         for e in events {
             self.context.lock().unwrap().broadcaster.publish().with::<EngineEvent>(e);
         }

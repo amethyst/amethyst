@@ -60,26 +60,6 @@ struct PongProcessor;
 
 unsafe impl Sync for PongProcessor {  }
 
-// If right_up == true then the right plank will move up,
-// other fields work the same way
-struct InputState {
-    pub right_up: bool,
-    pub right_down: bool,
-    pub left_up: bool,
-    pub left_down: bool,
-}
-
-impl InputState {
-    pub fn new() -> InputState {
-        InputState {
-            right_up: false,
-            right_down: false,
-            left_up: false,
-            left_down: false,
-        }
-    }
-}
-
 struct Score {
     score_left: i32,
     score_right: i32,
@@ -105,12 +85,10 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
         let (mut balls,
              mut planks,
              mut renderables,
-             mut input_state,
              projection,
              mut score) = arg.fetch(|w| (w.write::<Ball>(),
                                          w.write::<Plank>(),
                                          w.write::<Renderable>(),
-                                         w.write_resource::<InputState>(),
                                          w.read_resource::<Projection>(),
                                          w.write_resource::<Score>()));
 
@@ -125,24 +103,6 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
             } => (left, right, top, bottom),
             _ => (1.0, 1.0, 1.0, 1.0),
         };
-
-        // Update input_state resource using incoming events
-        let engine_events = context.broadcaster.read::<EngineEvent>();
-        for engine_event in engine_events.iter() {
-            match engine_event.payload {
-                Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::Up)) => input_state.right_up = true,
-                Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::Down)) => input_state.right_down = true,
-                Event::KeyboardInput(ElementState::Released, _, Some(VirtualKeyCode::Up)) => input_state.right_up = false,
-                Event::KeyboardInput(ElementState::Released, _, Some(VirtualKeyCode::Down)) => input_state.right_down = false,
-
-                Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::W)) => input_state.left_up = true,
-                Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::S)) => input_state.left_down = true,
-                Event::KeyboardInput(ElementState::Released, _, Some(VirtualKeyCode::W)) => input_state.left_up = false,
-                Event::KeyboardInput(ElementState::Released, _, Some(VirtualKeyCode::S)) => input_state.left_down = false,
-
-                _ => (),
-            }
-        }
 
         // Position of left plank
         let mut left_position = 0.;
@@ -164,14 +124,14 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
                     left_position = plank.position;
                     // Store left plank dimensions for later use in ball processing
                     left_dimensions = plank.dimensions;
-                    // If input_state.left_up == true and plank is in screen boundaries then move up
-                    if input_state.left_up {
+                    // If `W` is pressed and plank is in screen boundaries then move up
+                    if context.input_handler.key_down(VirtualKeyCode::W) {
                         if plank.position + plank.dimensions[1]/2. < 1. {
                             plank.position += plank.velocity * delta_time;
                         }
                     }
-                    // If input_state.left_down == true and plank is in screen boundaries then move down
-                    if input_state.left_down {
+                    // If `S` is pressed and plank is in screen boundaries then move down
+                    if context.input_handler.key_down(VirtualKeyCode::S) {
                         if plank.position - plank.dimensions[1]/2. > -1. {
                             plank.position -= plank.velocity * delta_time;
                         }
@@ -185,14 +145,14 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
                     right_position = plank.position;
                     // Store right plank dimensions for later use in ball processing
                     right_dimensions = plank.dimensions;
-                    // If input_state.right_up == true and plank is in screen boundaries then move down
-                    if input_state.right_up {
+                    // If `Up` is pressed and plank is in screen boundaries then move down
+                    if context.input_handler.key_down(VirtualKeyCode::Up) {
                         if plank.position + plank.dimensions[1]/2. < top_boundary {
                             plank.position += plank.velocity * delta_time;
                         }
                     }
-                    // If input_state.right_down == true and plank is in screen boundaries then move down
-                    if input_state.right_down {
+                    // If `Down` is pressed and plank is in screen boundaries then move down
+                    if context.input_handler.key_down(VirtualKeyCode::Down) {
                         if plank.position - plank.dimensions[1]/2. > bottom_boundary {
                             plank.position -= plank.velocity * delta_time;
                         }
@@ -290,9 +250,7 @@ impl State for Pong {
         };
 
         // Add all resources
-        let input_state = InputState::new();
         let score = Score::new();
-        world.add_resource::<InputState>(input_state);
         world.add_resource::<Score>(score);
         world.add_resource::<Projection>(projection.clone());
 
