@@ -176,8 +176,6 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
                 self.indices.insert(entity, parent_index);
             }
         }
-
-        println!("{:?}", self.sorted);
     }
 }
 
@@ -186,7 +184,7 @@ mod tests {
     //use super::test::Bencher;
     use super::*;
     use super::cgmath::{Decomposed, Quaternion, Vector3, Matrix4};
-    use ::ecs::{RunArg, Entity, Generation, Planner, World, Join};
+    use ::ecs::{RunArg, Planner, World, Join};
     use ::engine::{Config};
     use ::context::Context;
     use std::sync::{Arc, Mutex};
@@ -221,30 +219,22 @@ mod tests {
         world.register::<Transform>();
         world.register::<Init>();
 
-        // 1
-        let mut t1 = LocalTransform::default();
-
         let e1 = world.create_now()
-            .with::<LocalTransform>(t1)
-            .with::<Transform>(Transform::identity())
-            .build();
-
-        // 2
-        let mut t2 = LocalTransform::default();
-
-        let e2 = world.create_now()
-            .with::<LocalTransform>(t2)
-            .with::<Transform>(Transform::identity())
-            .build();
-
-        // 3
-        let e3 = world.create_now()
             .with::<LocalTransform>(LocalTransform::default())
             .with::<Transform>(Transform::identity())
             .build();
 
-        // 4
-       let e4 =  world.create_now()
+        let e2 = world.create_now()
+            .with::<LocalTransform>(LocalTransform::default())
+            .with::<Transform>(Transform::identity())
+            .build();
+
+        world.create_now()
+            .with::<LocalTransform>(LocalTransform::default())
+            .with::<Transform>(Transform::identity())
+            .build();
+
+        world.create_now()
             .with::<LocalTransform>(LocalTransform::default())
             .with::<Transform>(Transform::identity())
             .build();
