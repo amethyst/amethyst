@@ -22,7 +22,10 @@ impl InputHandler {
                 Event::KeyboardInput(ElementState::Pressed, _, Some(key_code)) => {
                     match self.pressed_keys.entry(key_code) {
                         Entry::Occupied(mut entry) => {
-                            entry.insert(false);
+                            // nop
+                            // Allows more accurate `key_once` calls,
+                            // I.e `key_once(key)` is queried after 
+                            // second `Pressed` event.
                         },
                         Entry::Vacant(entry) => {
                             entry.insert(true);
