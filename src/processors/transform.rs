@@ -13,7 +13,7 @@ use std::collections::HashMap;
 #[derive(Debug, Clone)]
 pub struct LocalTransform {
     pos: [f32; 3], // translation vector
-    rot: [f32; 4], // rotation (radians) vector
+    rot: [f32; 4], // quaternion [x, y, z, w (scalar)]
     scale: [f32; 3], // scale vector
     parent: Option<Entity>,
     dirty: bool,
@@ -59,11 +59,8 @@ impl LocalTransform {
 
     #[inline]
     pub fn matrix(&self) -> [[f32; 4]; 4] {
-        let quat: Matrix3<f32> = Quaternion::new(self.rot[3],
-                                                 self.rot[0],
-                                                 self.rot[1],
-                                                 self.rot[2])
-                                     .into();
+        let quat: Matrix3<f32> =
+            Quaternion::new(self.rot[3], self.rot[0], self.rot[1], self.rot[2]).into();
         let mut matrix: Matrix4<f32> = (&quat *
                                         Matrix3::new(self.scale[0],
                                                      0.0,
@@ -74,7 +71,7 @@ impl LocalTransform {
                                                      0.0,
                                                      0.0,
                                                      self.scale[2]))
-                                           .into();
+            .into();
         matrix.w = Vector3::from(self.pos).extend(1.0f32);
         matrix.into()
     }
@@ -247,24 +244,24 @@ mod tests {
         world.register::<Init>();
 
         let e1 = world.create_now()
-                      .with::<LocalTransform>(LocalTransform::default())
-                      .with::<Transform>(Transform::identity())
-                      .build();
+            .with::<LocalTransform>(LocalTransform::default())
+            .with::<Transform>(Transform::identity())
+            .build();
 
         let e2 = world.create_now()
-                      .with::<LocalTransform>(LocalTransform::default())
-                      .with::<Transform>(Transform::identity())
-                      .build();
+            .with::<LocalTransform>(LocalTransform::default())
+            .with::<Transform>(Transform::identity())
+            .build();
 
         world.create_now()
-             .with::<LocalTransform>(LocalTransform::default())
-             .with::<Transform>(Transform::identity())
-             .build();
+            .with::<LocalTransform>(LocalTransform::default())
+            .with::<Transform>(Transform::identity())
+            .build();
 
         world.create_now()
-             .with::<LocalTransform>(LocalTransform::default())
-             .with::<Transform>(Transform::identity())
-             .build();
+            .with::<LocalTransform>(LocalTransform::default())
+            .with::<Transform>(Transform::identity())
+            .build();
 
         let mut planner: Planner<Arc<Mutex<Context>>> = Planner::new(world, 1);
         let transform_processor = TransformProcessor::new();
