@@ -7,16 +7,17 @@ use self::cgmath::{Quaternion, Vector3, Matrix3, Matrix4};
 use ecs::{Join, Component, NullStorage, VecStorage, Entity, RunArg, Processor};
 use context::Context;
 use std::sync::{Mutex, Arc};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::collections::{HashMap, HashSet};
 
 /// Local position and rotation from parent.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct LocalTransform {
     pos: [f32; 3], // translation vector
     rot: [f32; 4], // quaternion [w (scalar), x, y, z]
     scale: [f32; 3], // scale vector
     parent: Option<Entity>,
-    dirty: bool,
+    dirty: AtomicBool,
 }
 
 impl LocalTransform {
@@ -39,26 +40,26 @@ impl LocalTransform {
     #[inline]
     pub fn set_pos(&mut self, pos: [f32; 3]) {
         self.pos = pos;
-        self.dirty = true;
+        self.dirty.store(true, Ordering::SeqCst);
     }
     #[inline]
     pub fn set_rot(&mut self, rot: [f32; 4]) {
         self.rot = rot;
-        self.dirty = true;
+        self.dirty.store(true, Ordering::SeqCst);
     }
     #[inline]
     pub fn set_scale(&mut self, scale: [f32; 3]) {
         self.scale = scale;
-        self.dirty = true;
+        self.dirty.store(true, Ordering::SeqCst);
     }
     #[inline]
     pub fn set_parent(&mut self, parent: Option<Entity>) {
         self.parent = parent;
-        self.dirty = true;
+        self.dirty.store(true, Ordering::SeqCst);
     }
     #[inline]
     pub fn is_dirty(&self) -> bool {
-        self.dirty
+        self.dirty.load(Ordering::SeqCst)
     }
 
     #[inline]
@@ -87,7 +88,7 @@ impl Default for LocalTransform {
             rot: [1.0, 0.0, 0.0, 0.0],
             scale: [1.0, 1.0, 1.0],
             parent: None,
-            dirty: true,
+            dirty: AtomicBool::new(true),
         }
     }
 }
@@ -188,21 +189,36 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
         for &(entity, parent_option) in self.sorted.iter() {
             match locals.get(entity) {
                 Some(local) => {
-                    let combined_transform = match parent_option {
-                        Some(parent) => {
-                            self.candidates.push((entity, parent));
+                    let mut dirty = local.is_dirty();
+                    if let Some(parent) = local.parent {
+                        if let Some(parent_local) = locals.get(parent) {
+                            dirty = dirty || parent_local.is_dirty();
+                        }
 
-                            if let Some(parent_global) = globals.get(parent) {
+                        self.candidates.push((entity, parent));
+
+                        if dirty {
+                            let combined_transform = if let Some(parent_global) =
+                                                            globals.get(parent) {
                                 Matrix4::from(parent_global.0) * Matrix4::from(local.matrix())
                             } else {
                                 Matrix4::from(local.matrix())
-                            }
-                        }
-                        None => Matrix4::from(local.matrix()),
-                    };
+                            };
 
-                    if let Some(global) = globals.get_mut(entity) {
-                        global.0 = combined_transform.into();
+                            if let Some(global) = globals.get_mut(entity) {
+                                global.0 = combined_transform.into();
+                            }
+
+                            local.dirty.store(false, Ordering::SeqCst);
+                        }
+                    } else {
+                        if dirty {
+                            if let Some(global) = globals.get_mut(entity) {
+                                global.0 = local.matrix();
+                            }
+
+                            local.dirty.store(false, Ordering::SeqCst);
+                        }
                     }
                 }
                 None => {
@@ -358,7 +374,7 @@ mod tests {
     // .with::<Transform>(Transform::identity())
     // .build();
     //
-    // for i in 0..50_000 {
+    // for i in 0..10_000 {
     // let mut transform = LocalTransform::default();
     //
     // prev_entity = world.create_now()
@@ -378,7 +394,6 @@ mod tests {
     // planner.dispatch(ctx.clone());
     // });
     // }
-
 
 
 }
