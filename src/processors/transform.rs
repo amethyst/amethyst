@@ -13,7 +13,7 @@ use std::collections::{HashMap, HashSet};
 #[derive(Debug, Clone)]
 pub struct LocalTransform {
     pos: [f32; 3], // translation vector
-    rot: [f32; 4], // quaternion [x, y, z, w (scalar)]
+    rot: [f32; 4], // quaternion [w (scalar), x, y, z]
     scale: [f32; 3], // scale vector
     parent: Option<Entity>,
     dirty: bool,
@@ -63,8 +63,7 @@ impl LocalTransform {
 
     #[inline]
     pub fn matrix(&self) -> [[f32; 4]; 4] {
-        let quat: Matrix3<f32> =
-            Quaternion::new(self.rot[3], self.rot[0], self.rot[1], self.rot[2]).into();
+        let quat: Matrix3<f32> = Quaternion::from(self.rot).into();
         let mut matrix: Matrix4<f32> = (&quat *
                                         Matrix3::new(self.scale[0],
                                                      0.0,
@@ -85,7 +84,7 @@ impl Default for LocalTransform {
     fn default() -> Self {
         LocalTransform {
             pos: [0.0, 0.0, 0.0],
-            rot: [0.0, 0.0, 0.0, 1.0],
+            rot: [1.0, 0.0, 0.0, 0.0],
             scale: [1.0, 1.0, 1.0],
             parent: None,
             dirty: true,
@@ -149,8 +148,7 @@ impl TransformProcessor {
             sorted: Vec::new(),
             candidates: Vec::new(),
             new: Vec::new(),
-            removed: HashSet::new(), /* prev_locals: Vec::new(),
-                                      * prev_transforms: Vec::new(), */
+            removed: HashSet::new(),
         }
     }
 }
@@ -229,13 +227,21 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
             let parent_index: usize = self.indices.get(&parent).unwrap().clone();
             let index: usize = self.indices.get(&entity).unwrap().clone();
             if parent_index > index {
-                self.sorted.swap(parent_index.clone(), index);
-                self.indices.insert(parent, index.clone());
+                self.sorted.swap(parent_index, index);
+                self.indices.insert(parent, index);
                 self.indices.insert(entity, parent_index);
             }
         }
 
-        self.removed.clear();
+        // Remove entities who no longer have transforms from sorted
+        for entity in self.removed.drain() {
+            let index = self.indices.get(&entity).unwrap().clone();
+            self.sorted.swap_remove(index);
+            if let Some(swapped) = self.sorted.get(index) {
+                self.indices.insert(swapped.0, index);
+            }
+            self.indices.remove(&entity);
+        }
     }
 }
 
@@ -253,14 +259,11 @@ mod tests {
     fn transform_matrix() {
         let mut transform = LocalTransform::default();
         transform.set_pos([5.0, 2.0, -0.5]);
-        transform.set_rot([0.0, 0.0, 0.0, 1.0]);
+        transform.set_rot([1.0, 0.0, 0.0, 0.0]);
         transform.set_scale([2.0, 2.0, 2.0]);
 
         let decomposed = Decomposed {
-            rot: Quaternion::new(transform.rot[3],
-                                 transform.rot[0],
-                                 transform.rot[1],
-                                 transform.rot[2]),
+            rot: Quaternion::from(transform.rot),
             disp: Vector3::from(transform.pos),
             scale: 2.0,
         };
@@ -282,7 +285,7 @@ mod tests {
         world.register::<Transform>();
         world.register::<Init>();
 
-        // test whether deleting the
+        // test whether deleting the parent deletes the child
         let e1 = world.create_now()
             .with::<LocalTransform>(LocalTransform::default())
             .with::<Transform>(Transform::identity())
@@ -342,39 +345,39 @@ mod tests {
 
 
     // Add #![feature(test)] to use.
-    // #[bench]
-    // fn bench_processor(b: &mut Bencher) {
-    // let mut world = World::new();
-    //
-    // world.register::<LocalTransform>();
-    // world.register::<Transform>();
-    // world.register::<Init>();
-    //
-    // let mut prev_entity = world.create_now()
-    // .with::<LocalTransform>(LocalTransform::default())
-    // .with::<Transform>(Transform::identity())
-    // .build();
-    //
-    // for i in 0..50_000 {
-    // let mut transform = LocalTransform::default();
-    //
-    // prev_entity = world.create_now()
-    // .with::<LocalTransform>(transform)
-    // .with::<Transform>(Transform::identity())
-    // .build();
-    // }
-    //
-    // let mut planner: Planner<Arc<Mutex<Context>>> = Planner::new(world, 1);
-    // let transform_processor = TransformProcessor::new();
-    // planner.add_system::<TransformProcessor>(transform_processor, "transform_processor", 0);
-    //
-    // let config = Config::default();
-    // let ctx = Arc::new(Mutex::new(Context::new(config.context_config)));
-    //
-    // b.iter(|| {
-    // planner.dispatch(ctx.clone());
-    // });
-    // }
+    /*#[bench]
+    fn bench_processor(b: &mut Bencher) {
+        let mut world = World::new();
+
+        world.register::<LocalTransform>();
+        world.register::<Transform>();
+        world.register::<Init>();
+
+        let mut prev_entity = world.create_now()
+            .with::<LocalTransform>(LocalTransform::default())
+            .with::<Transform>(Transform::identity())
+            .build();
+
+        for i in 0..50_000 {
+            let mut transform = LocalTransform::default();
+
+            prev_entity = world.create_now()
+                .with::<LocalTransform>(transform)
+                .with::<Transform>(Transform::identity())
+                .build();
+        }
+
+        let mut planner: Planner<Arc<Mutex<Context>>> = Planner::new(world, 1);
+        let transform_processor = TransformProcessor::new();
+        planner.add_system::<TransformProcessor>(transform_processor, "transform_processor", 0);
+
+        let config = Config::default();
+        let ctx = Arc::new(Mutex::new(Context::new(config.context_config)));
+
+        b.iter(|| {
+            planner.dispatch(ctx.clone());
+        });
+    }*/
 
 
 }
