@@ -345,39 +345,40 @@ mod tests {
 
 
     // Add #![feature(test)] to use.
-    /*#[bench]
-    fn bench_processor(b: &mut Bencher) {
-        let mut world = World::new();
+    // #[bench]
+    // fn bench_processor(b: &mut Bencher) {
+    // let mut world = World::new();
+    //
+    // world.register::<LocalTransform>();
+    // world.register::<Transform>();
+    // world.register::<Init>();
+    //
+    // let mut prev_entity = world.create_now()
+    // .with::<LocalTransform>(LocalTransform::default())
+    // .with::<Transform>(Transform::identity())
+    // .build();
+    //
+    // for i in 0..50_000 {
+    // let mut transform = LocalTransform::default();
+    //
+    // prev_entity = world.create_now()
+    // .with::<LocalTransform>(transform)
+    // .with::<Transform>(Transform::identity())
+    // .build();
+    // }
+    //
+    // let mut planner: Planner<Arc<Mutex<Context>>> = Planner::new(world, 1);
+    // let transform_processor = TransformProcessor::new();
+    // planner.add_system::<TransformProcessor>(transform_processor, "transform_processor", 0);
+    //
+    // let config = Config::default();
+    // let ctx = Arc::new(Mutex::new(Context::new(config.context_config)));
+    //
+    // b.iter(|| {
+    // planner.dispatch(ctx.clone());
+    // });
+    // }
 
-        world.register::<LocalTransform>();
-        world.register::<Transform>();
-        world.register::<Init>();
-
-        let mut prev_entity = world.create_now()
-            .with::<LocalTransform>(LocalTransform::default())
-            .with::<Transform>(Transform::identity())
-            .build();
-
-        for i in 0..50_000 {
-            let mut transform = LocalTransform::default();
-
-            prev_entity = world.create_now()
-                .with::<LocalTransform>(transform)
-                .with::<Transform>(Transform::identity())
-                .build();
-        }
-
-        let mut planner: Planner<Arc<Mutex<Context>>> = Planner::new(world, 1);
-        let transform_processor = TransformProcessor::new();
-        planner.add_system::<TransformProcessor>(transform_processor, "transform_processor", 0);
-
-        let config = Config::default();
-        let ctx = Arc::new(Mutex::new(Context::new(config.context_config)));
-
-        b.iter(|| {
-            planner.dispatch(ctx.clone());
-        });
-    }*/
 
 
 }
