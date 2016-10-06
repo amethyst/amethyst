@@ -1,6 +1,6 @@
 
 extern crate cgmath;
-// extern crate test;
+//extern crate test;
 
 use self::cgmath::{Quaternion, Vector3, Matrix3, Matrix4};
 
@@ -219,30 +219,30 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
             let (entity, parent_entity) = self.sorted[index];
             let mut swap = None;
 
-            // If the index is none then the parent is likely an orphan or dead
-            if let Some(parent_index) = self.indices.get(&parent_entity) {
-                let parent_index = parent_index.clone();
-                if parent_index > index {
-                    swap = Some((index, parent_index));
-                }
-            }
-
-            if let Some((i, p)) = swap {
-                // Swap the parent and child.
-                self.sorted.swap(p, i);
-                self.indices.insert(parent_entity, i);
-                self.indices.insert(entity, p);
-
-                // Swap took place, re-try this index.
-                continue;
-            }
-
             match parents.get(entity) {
                 Some(parent) => {
                     if let Some(local) = locals.get(entity) {
                         // Check if parent is alive.
                         // Make sure the transform is also dirty if the parent has changed.
                         if parent.is_dirty() {
+                            // If the index is none then the parent is likely an orphan or dead
+                            if let Some(parent_index) = self.indices.get(&parent_entity) {
+                                let parent_index = parent_index.clone();
+                                if parent_index > index {
+                                    swap = Some((index, parent_index));
+                                }
+                            }
+
+                            if let Some((i, p)) = swap {
+                                // Swap the parent and child.
+                                self.sorted.swap(p, i);
+                                self.indices.insert(parent_entity, i);
+                                self.indices.insert(entity, p);
+
+                                // Swap took place, re-try this index.
+                                continue;
+                            }
+
                             local.dirty.store(true, Ordering::SeqCst);
                         }
 
@@ -259,6 +259,7 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
                             }
 
                             local.dirty.store(false, Ordering::SeqCst);
+                            parent.dirty.store(false, Ordering::SeqCst);
                             self.dirty.insert(entity);
                         }
                     }
@@ -269,6 +270,11 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
                     self.sorted.swap_remove(index); // swap with last to prevent shift
                     if let Some(swapped) = self.sorted.get(index) {
                         self.indices.insert(swapped.0, index);
+                        
+                        // Make sure to check for parent swap next iteration
+                        if let Some(parent) = parents.get(swapped.0) {
+                            parent.dirty.store(true, Ordering::SeqCst);
+                        }
                     }
                     self.indices.remove(&entity);
                     init.remove(entity);
@@ -287,7 +293,7 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
 
 #[cfg(test)]
 mod tests {
-    // use super::test::Bencher;
+    //use super::test::Bencher;
     use super::*;
     use super::cgmath::{Decomposed, Quaternion, Vector3, Matrix4};
     use ecs::{Planner, World, RunArg};
@@ -399,47 +405,47 @@ mod tests {
 
 
     // Add #![feature(test)] to use.
-    // #[bench]
-    // fn bench_processor(b: &mut Bencher) {
-    // let mut world = World::new();
-    //
-    // world.register::<LocalTransform>();
-    // world.register::<Transform>();
-    // world.register::<Init>();
-    // world.register::<Parent>();
-    //
-    // let mut prev_entity = world.create_now()
-    // .with::<LocalTransform>(LocalTransform::default())
-    // .with::<Transform>(Transform::identity())
-    // .build();
-    //
-    // for i in 0..10_000 {
-    // let mut transform = LocalTransform::default();
-    //
-    // if i % 5 == 0 {
-    // prev_entity = world.create_now()
-    // .with::<LocalTransform>(transform)
-    // .with::<Parent>(Parent::new(prev_entity))
-    // .with::<Transform>(Transform::identity())
-    // .build();
-    // } else {
-    // prev_entity = world.create_now()
-    // .with::<LocalTransform>(transform)
-    // .with::<Transform>(Transform::identity())
-    // .build();
-    // }
-    // }
-    //
-    // let mut planner: Planner<Arc<Mutex<Context>>> = Planner::new(world, 1);
-    // let transform_processor = TransformProcessor::new();
-    // planner.add_system::<TransformProcessor>(transform_processor, "transform_processor", 0);
-    //
-    // let config = Config::default();
-    // let ctx = Arc::new(Mutex::new(Context::new(config.context_config)));
-    //
-    // b.iter(|| {
-    // planner.dispatch(ctx.clone());
-    // });
-    // }
+    /*#[bench]
+    fn bench_processor(b: &mut Bencher) {
+        let mut world = World::new();
+
+        world.register::<LocalTransform>();
+        world.register::<Transform>();
+        world.register::<Init>();
+        world.register::<Parent>();
+
+        let mut prev_entity = world.create_now()
+            .with::<LocalTransform>(LocalTransform::default())
+            .with::<Transform>(Transform::identity())
+            .build();
+
+        for i in 0..50_000 {
+            let mut transform = LocalTransform::default();
+
+            // if i % 5 == 0 {
+            prev_entity = world.create_now()
+                .with::<LocalTransform>(transform)
+                //.with::<Parent>(Parent::new(prev_entity))
+                .with::<Transform>(Transform::identity())
+                .build();
+            // } else {
+            // prev_entity = world.create_now()
+            // .with::<LocalTransform>(transform)
+            // .with::<Transform>(Transform::identity())
+            // .build();
+            // }
+        }
+
+        let mut planner: Planner<Arc<Mutex<Context>>> = Planner::new(world, 1);
+        let transform_processor = TransformProcessor::new();
+        planner.add_system::<TransformProcessor>(transform_processor, "transform_processor", 0);
+
+        let config = Config::default();
+        let ctx = Arc::new(Mutex::new(Context::new(config.context_config)));
+
+        b.iter(|| {
+            planner.dispatch(ctx.clone());
+        });
+    }*/
 
 }
