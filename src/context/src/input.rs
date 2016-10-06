@@ -3,8 +3,14 @@
 use std::collections::hash_map::{Entry, HashMap};
 use event::{ElementState, EngineEvent, Event, VirtualKeyCode};
 
+#[derive(PartialEq, Eq)]
+enum KeyQueryState{
+    NotQueried,
+    Queried,
+}
+
 pub struct InputHandler {
-    pressed_keys: HashMap<VirtualKeyCode, bool>,
+    pressed_keys: HashMap<VirtualKeyCode, KeyQueryState>,
 }
 
 impl InputHandler {
@@ -28,7 +34,7 @@ impl InputHandler {
                             // second `Pressed` event.
                         },
                         Entry::Vacant(entry) => {
-                            entry.insert(true);
+                            entry.insert(KeyQueryState::Queried);
                         }
                     }
                 },
@@ -58,8 +64,8 @@ impl InputHandler {
             return false;
         }
         if let Some(value) = self.pressed_keys.get_mut(&key) { // Should be safe
-            if *value {
-                *value = false;
+            if *value == KeyQueryState::NotQueried {
+                *value = KeyQueryState::Queried;
                 return true;
             }
         }
