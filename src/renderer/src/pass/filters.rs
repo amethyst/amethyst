@@ -61,10 +61,10 @@ pub static FXAA_FRAGMENT_SRC: &'static [u8] = b"
 
         vec3 luma = vec3(0.2126, 0.7152, 0.0722);
         float lumaM = dot(texture(t_Source, v_TexCoord).xyz, luma);
-        float lumaTL = dot(texture(t_Source, v_TexCoord + (vec2(-1.0, -1.0) * u_InverseTextureSize)).xyz, luma);
-        float lumaTR = dot(texture(t_Source, v_TexCoord + (vec2( 1.0, -1.0) * u_InverseTextureSize)).xyz, luma);
-        float lumaBR = dot(texture(t_Source, v_TexCoord + (vec2( 1.0,  1.0) * u_InverseTextureSize)).xyz, luma);
-        float lumaBL = dot(texture(t_Source, v_TexCoord + (vec2(-1.0,  1.0) * u_InverseTextureSize)).xyz, luma);
+        float lumaTL = dot(textureOffset(t_Source, v_TexCoord, ivec2(-1, -1)).xyz, luma);
+        float lumaTR = dot(textureOffset(t_Source, v_TexCoord, ivec2( 1, -1)).xyz, luma);
+        float lumaBR = dot(textureOffset(t_Source, v_TexCoord, ivec2( 1,  1)).xyz, luma);
+        float lumaBL = dot(textureOffset(t_Source, v_TexCoord, ivec2(-1,  1)).xyz, luma);
 
         vec2 dir;
         dir.x = -((lumaTL + lumaTR) - (lumaBL + lumaBR));
