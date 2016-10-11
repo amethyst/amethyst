@@ -2,6 +2,9 @@
 #![crate_type = "lib"]
 #![doc(html_logo_url = "http://tinyurl.com/hgsb45k")]
 
+#![feature(raw)]
+#![feature(specialization)]
+
 //! A way to manage engine resources.
 //!
 //! # Basic usage:
@@ -38,7 +41,7 @@ pub mod input;
 mod video_init;
 use video_context::{VideoContext, DisplayConfig};
 use renderer::Renderer;
-use asset_manager::AssetManager;
+use asset_manager::{AssetManager, FactoryImpl};
 use input::InputHandler;
 use broadcaster::Broadcaster;
 use event::EngineEvent;
@@ -71,7 +74,8 @@ impl Context {
     pub fn new(config: ContextConfig) -> Context {
         let (video_context, factory_impl) = video_init::create_video_context_and_factory_impl(config.display_config);
         let renderer = Renderer::new(video_context);
-        let asset_manager = AssetManager::new(factory_impl);
+        let mut asset_manager = AssetManager::new();
+        asset_manager.add_loader::<FactoryImpl>(factory_impl);
         let mut broadcaster = Broadcaster::new();
         broadcaster.register::<EngineEvent>();
 

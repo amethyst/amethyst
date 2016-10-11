@@ -5,6 +5,7 @@ use amethyst::processors::rendering::{RenderingProcessor, Renderable, Light, Cam
 use amethyst::context::Context;
 use amethyst::config::Element;
 use amethyst::ecs::{World, Join};
+use amethyst::context::asset_manager::{Mesh, Texture};
 
 struct Example {
     t: f32,
@@ -39,6 +40,8 @@ impl State for Example {
             .with(camera)
             .build();
 
+        ctx.asset_manager.register_asset::<Mesh>();
+        ctx.asset_manager.register_asset::<Texture>();
         ctx.asset_manager.create_constant_texture("dark_blue", [0.0, 0.0, 0.01, 1.]);
         ctx.asset_manager.create_constant_texture("green", [0.0, 1.0, 0.0, 1.]);
         ctx.asset_manager.gen_sphere("sphere", 32, 32);
