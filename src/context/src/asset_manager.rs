@@ -39,15 +39,15 @@ impl<T: Any + Send + Sync> Component for Asset<T> {
     type Storage = VecStorage<Asset<T>>;
 }
 
-trait AssetLoaderRaw<S>: Any {
-    fn from_raw(&self, data: &[u8]) -> S;
+pub trait AssetLoaderRaw<S>: Any {
+    fn from_raw(&self, data: &[u8]) -> Option<S>;
 }
 
-trait AssetLoader<A, S>: Any {
-    fn from_data(&mut self, data: S) -> A;
+pub trait AssetLoader<A, S>: Any {
+    fn from_data(&mut self, data: S) -> Option<A>;
 }
 
-trait AssetStore {}
+pub trait AssetStore {}
 
 pub trait AssetReadStorage<T> {
     fn read(&self, id: AssetId) -> Option<&T>;
@@ -72,18 +72,19 @@ pub struct AssetManager {
 // Default implementation for asset loading
 // Overwrite if you want to support a new asset type
 impl<S> AssetLoaderRaw<S> for AssetManager {
-    default fn from_raw(&self, _: &[u8]) -> S {
+    default fn from_raw(&self, _: &[u8]) -> Option<S> {
         unimplemented!()
     }
 }
 
 impl<A, S> AssetLoader<A, S> for AssetManager {
-    default fn from_data(&mut self, _: S) -> A {
+    default fn from_data(&mut self, _: S) -> Option<A> {
         unimplemented!()
     }
 }
 
 impl AssetManager {
+    /// Create a new asset manager
     pub fn new() -> AssetManager {
         AssetManager {
             loaders: HashMap::new(),
@@ -95,23 +96,30 @@ impl AssetManager {
         }
     }
 
+    /// Add loader resource to the manager
     pub fn add_loader<T: Any>(&mut self, loader: T) {
         let loader = Box::new(loader);
         self.loaders.insert(TypeId::of::<T>(), loader);
     }
 
     fn get_loader<T: Any>(&self) -> Option<&T> {
-        self.loaders.get(&TypeId::of::<T>()).expect("Unregistered loader").downcast_ref()
+        self.loaders.get(&TypeId::of::<T>())
+                    .expect("Unregistered loader")
+                    .downcast_ref()
     }
 
     fn get_loader_mut<T: Any>(&mut self) -> Option<&mut T> {
-        self.loaders.get_mut(&TypeId::of::<T>()).expect("Unregistered loader").downcast_mut()
+        self.loaders.get_mut(&TypeId::of::<T>())
+                    .expect("Unregistered loader")
+                    .downcast_mut()
     }
 
+    /// Register a new asset type
     pub fn register_asset<A: Any + Send + Sync>(&mut self) {
         self.assets.register::<Asset<A>>();
     }
 
+    /// Register a new loading method for a specific asset data type
     pub fn register_loader<A: Any + Send + Sync, S: Any>(&mut self, asset: &str) {
         let asset_id = TypeId::of::<A>();
         let source_id = TypeId::of::<S>();
@@ -128,44 +136,68 @@ impl AssetManager {
         self.asset_type_ids.insert(asset.into(), (asset_id, source_id));
     }
 
+    /// Retrieve the `AssetId` from the asset name
     pub fn id_from_name(&self, name: &str) -> Option<AssetId> {
         self.asset_ids.get(name).map(|id| *id)
     }
 
+    /// Read the storage of all assets for a certain type
     pub fn read_assets<A: Any + Send + Sync>(&self) -> Storage<Asset<A>, RwLockReadGuard<Allocator>, RwLockReadGuard<MaskedStorage<Asset<A>>>> {
         self.assets.read()
     }
 
-    pub fn load_asset_from_data<A: Any + Sync + Send, S>(&mut self, name: &str, data: S) -> AssetId {
+    /// Load an asset from data
+    pub fn load_asset_from_data<A: Any + Sync + Send, S>(&mut self, name: &str, data: S) -> Option<AssetId> {
         let asset = (self as &mut AssetLoader<A, S>).from_data(data);
-        let asset_id = self.assets.create_now().with(Asset::<A>(asset)).build();
-        self.asset_ids.insert(name.into(), asset_id);
-        asset_id
+        if let Some(asset) = asset {
+            Some(self.add_asset(name, asset))
+        } else {
+            None
+        }
     }
 
-    pub fn load_asset<A: Any + Send + Sync>(&mut self, name: &str, asset_type: &str, raw: &[u8]) -> AssetId {
-        let &(asset_type_id, source_id) = self.asset_type_ids.get(asset_type).expect("Unregisted asset type id");
+    /// Load an asset from raw data
+    pub fn load_asset<A: Any + Send + Sync>(&mut self, name: &str, asset_type: &str, raw: &[u8]) -> Option<AssetId> {
+        let &(asset_type_id, source_id) = self.asset_type_ids.get(asset_type).expect("Unregistered asset type id");
         assert!(asset_type_id == TypeId::of::<A>());
-        let raw_loader: &AssetLoaderRaw<()> = {
-            unsafe {
-                ::std::mem::transmute(::std::raw::TraitObject {
-                    data: self as *const _ as *mut (),
-                    vtable: *self.loader_raw_vtable.get(&source_id).unwrap(),
-                })
+        let data = {
+            let raw_loader: &AssetLoaderRaw<()> = {
+                unsafe {
+                    ::std::mem::transmute(::std::raw::TraitObject {
+                        data: self as *const _ as *mut (),
+                        vtable: *self.loader_raw_vtable.get(&source_id).unwrap(),
+                    })
+                }
+            };
+
+            if let Some(data) = raw_loader.from_raw(raw) {
+                data
+            } else {
+                return None;
             }
         };
 
-        let data = raw_loader.from_raw(raw);
-
-        let data_loader: &mut AssetLoader<A, ()> = {
-            unsafe {
-                ::std::mem::transmute(::std::raw::TraitObject {
-                    data: self as *const _ as *mut (),
-                    vtable: *self.loader_data_vtable.get(&(asset_type_id, source_id)).unwrap(),
-                })
+        let asset = {
+            let data_loader: &mut AssetLoader<A, ()> = {
+                unsafe {
+                    ::std::mem::transmute(::std::raw::TraitObject {
+                        data: self as *const _ as *mut (),
+                        vtable: *self.loader_data_vtable.get(&(asset_type_id, source_id)).unwrap(),
+                    })
+                }
+            };
+        
+            if let Some(data) = data_loader.from_data(data) {
+                data
+            } else {
+                return None;
             }
         };
-        let asset = data_loader.from_data(data);
+       
+       Some(self.add_asset(name, asset))
+    }
+
+    fn add_asset<A: Any + Send + Sync>(&mut self, name: &str, asset: A) -> AssetId {
         let asset_id = self.assets.create_now().with(Asset::<A>(asset)).build();
         self.asset_ids.insert(name.into(), asset_id);
         asset_id
@@ -184,7 +216,7 @@ pub enum FactoryImpl {
 }
 
 impl AssetLoader<Mesh, Vec<VertexPosNormal>> for AssetManager {
-    fn from_data(&mut self, data: Vec<VertexPosNormal>) -> Mesh {
+    fn from_data(&mut self, data: Vec<VertexPosNormal>) -> Option<Mesh> {
         let factory_impl = self.get_loader_mut::<FactoryImpl>().expect("Unable to retrieve factory");
         let mesh_impl = match *factory_impl {
             FactoryImpl::OpenGL { ref mut factory } => {
@@ -198,7 +230,7 @@ impl AssetLoader<Mesh, Vec<VertexPosNormal>> for AssetManager {
             FactoryImpl::Direct3D {} => unimplemented!(),
             FactoryImpl::Null => MeshImpl::Null,
         };
-        Mesh { mesh_impl: mesh_impl }
+        Some(Mesh { mesh_impl: mesh_impl })
     }
 }
 
@@ -208,13 +240,13 @@ pub struct TextureLoadData<'a> {
 }
 
 impl<'a> AssetLoader<Texture, TextureLoadData<'a>> for AssetManager {
-    fn from_data(&mut self, load_data: TextureLoadData) -> Texture {
+    fn from_data(&mut self, load_data: TextureLoadData) -> Option<Texture> {
         let factory_impl = self.get_loader_mut::<FactoryImpl>().expect("Unable to retrieve factory");
         let texture_impl = match *factory_impl {
             FactoryImpl::OpenGL { ref mut factory } => {
                 let shader_resource_view = match factory.create_texture_const::<ColorFormat>(load_data.kind, load_data.raw) {
                     Ok((_, shader_resource_view)) => shader_resource_view,
-                    Err(_) => panic!("Unable to create const texture"), // TODO:
+                    Err(_) => return None,
                 };
                 let texture = amethyst_renderer::Texture::Texture(shader_resource_view);
                 TextureImpl::OpenGL { texture: texture }
@@ -223,15 +255,15 @@ impl<'a> AssetLoader<Texture, TextureLoadData<'a>> for AssetManager {
             FactoryImpl::Direct3D {} => unimplemented!(),
             FactoryImpl::Null => TextureImpl::Null,
         };
-        Texture { texture_impl: texture_impl }
+        Some(Texture { texture_impl: texture_impl })
     }
 }
 
 impl AssetLoader<Texture, [f32; 4]> for AssetManager {
-    fn from_data(&mut self, color: [f32; 4]) -> Texture {
+    fn from_data(&mut self, color: [f32; 4]) -> Option<Texture> {
         let texture = amethyst_renderer::Texture::Constant(color);
         let texture_impl = TextureImpl::OpenGL { texture: texture };
-        Texture { texture_impl: texture_impl }
+        Some(Texture { texture_impl: texture_impl })
     }
 }
 
@@ -383,7 +415,6 @@ impl AssetManager {
         }
     }
 }
-
 
 /// An enum with variants representing concrete
 /// `Mesh` types compatible with different backends.
