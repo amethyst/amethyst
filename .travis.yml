@@ -1,24 +1,38 @@
+# Set up the Rust toolchain.
 language: rust
 rust:
     - stable
     - beta
     - nightly
 
-cache: cargo
-before_script:
-    - (cargo install rustfmt || true)
-    - export PATH=$PATH:/home/travis/.cargo/bin
-script:
-    - |
-      cargo fmt -- --write-mode=diff &&
-      cargo doc --no-deps -p amethyst -p amethyst_ecs -p amethyst_config -p amethyst_context &&
-      cargo build -v &&
-      cargo test -p amethyst -p amethyst_ecs -p amethyst_config -p amethyst_context -v
+# Allow for occasional compiler breakage on Nightly.
+matrix:
+    allow_failures:
+        - rust: nightly
 
+# Since this build doesn't require sudo, we can turn it off and improve build
+# performance.
+sudo: false
+
+# Force third-party crates to persist from previous builds and update only when
+# needed.
+cache: cargo
+
+# Install the necessary crates for building and testing the engine.
+before_script:
+    - export PATH=$PATH:/home/travis/.cargo/bin
+    - (cargo install cargo-local-pkgs || true)
+    - (cargo install rustfmt || true)
+
+# Format the codebase, generate documentation, compile the engine, run tests.
+script: |
+      cargo fmt -- --write-mode=diff &&
+      cargo local-pkgs doc --no-deps -v
+      cargo local-pkgs build -v &&
+      cargo test -p amethyst -p amethyst_config -p amethyst_context -p amethyst_ecs -v
+
+# Push notifications to `amethyst/general` and `amethyst/engine` Gitter chats.
 notifications:
     webhooks:
         urls:
             - https://webhooks.gitter.im/e/9735c01977c1df3de5cb
-        on_success: always
-        on_failure: always
-        on_start: never
