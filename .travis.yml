@@ -5,6 +5,11 @@ rust:
     - beta
     - nightly
 
+# Allow for occasional compiler breakage on Nightly.
+matrix:
+    allow_failures:
+        - rust: nightly
+
 # Since this build doesn't require sudo, we can turn it off and improve build
 # performance.
 sudo: false
@@ -19,11 +24,12 @@ before_script:
     - (cargo install cargo-local-pkgs || true)
     - (cargo install rustfmt || true)
 
+# Format the codebase, generate documentation, compile the engine, run tests.
 script: |
       cargo fmt -- --write-mode=diff &&
-      cargo doc --no-deps -p amethyst -p amethyst_config -p amethyst_context -p amethyst_ecs -p amethyst_renderer &&
-      cargo build -v &&
-      cargo local-pkgs test -v
+      cargo local-pkgs doc --no-deps -v
+      cargo local-pkgs build -v &&
+      cargo test -p amethyst -p amethyst_config -p amethyst_context -p amethyst_ecs -v
 
 # Push notifications to `amethyst/general` and `amethyst/engine` Gitter chats.
 notifications:

@@ -1,3 +1,7 @@
+#![crate_name = "amethyst_ecs"]
+#![crate_type = "lib"]
+#![doc(html_logo_url = "https://tinyurl.com/jtmm43a")]
+
 extern crate specs;
 extern crate time;
 

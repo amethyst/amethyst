@@ -1,4 +1,3 @@
-
 extern crate cgmath;
 extern crate gfx;
 extern crate gfx_device_gl;
@@ -11,17 +10,14 @@ extern crate rand;
 use std::time::SystemTime;
 use rand::Rng;
 
-use gfx::{Device};
 use gfx::traits::FactoryExt;
 
-use cgmath::{Point3, Vector3, Matrix4, EuclideanVector};
-use cgmath::{Transform, AffineMatrix3};
+use cgmath::{Point3, Vector3, Matrix4, InnerSpace, Transform};
 use genmesh::generators::SphereUV;
 use genmesh::{Triangulate, MapToVertices, Vertices};
 
-use amethyst_renderer::VertexPosNormal as Vertex;
 use amethyst_renderer::target::{ColorFormat, DepthFormat};
-use amethyst_renderer::{Frame, Layer, Texture};
+use amethyst_renderer::{Frame, Layer, Texture, VertexPosNormal as Vertex};
 
 fn build_sphere() -> Vec<Vertex> {
     SphereUV::new(32, 32)
@@ -119,7 +115,6 @@ fn main() {
             }
         }
     }
-
 
     let mut frame = Frame::new();
 
@@ -221,15 +216,15 @@ fn main() {
 
         let diff = start.elapsed().unwrap();
         let diff = diff.as_secs() as f32 + diff.subsec_nanos() as f32 / 1e9;
-        let view: AffineMatrix3<f32> = Transform::look_at(
+        let view: Matrix4<f32> = Transform::look_at(
             Point3::new(diff.sin() * 6., diff.cos() * 6., 3.0),
             Point3::new(0f32, 0.0, 0.0),
             Vector3::unit_z(),
         );
-        let proj = cgmath::perspective(cgmath::deg(60.0f32), w as f32 / h as f32, 1.0, 100.0);
+        let proj = cgmath::perspective(cgmath::Deg(60.0f32), w as f32 / h as f32, 1.0, 100.0);
         frame.cameras.insert(
             format!("main"),
-            amethyst_renderer::Camera{projection: proj.into(), view: view.mat.into()}
+            amethyst_renderer::Camera{projection: proj.into(), view: view.into()}
         );
 
         renderer.submit(&frame, &mut device);
