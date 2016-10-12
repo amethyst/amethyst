@@ -111,9 +111,10 @@ The API reference can be found in `target/doc/amethyst/index.html`.
 
 We are a community project that welcomes contribution from anyone. If you're
 interested in helping out, please read the [CONTRIBUTING.md][cm] file before
-getting started. Don't know what to hack on? See the
-[Development Roadmap][dr] on our wiki, or search though [our issue tracker][it].
+getting started. Don't know what to hack on? Check our [active projects][pr],
+read our [roadmap][rm], or search though [our issue tracker][it].
 
 [cm]: https://github.com/amethyst/amethyst/blob/master/CONTRIBUTING.md
-[dr]: https://github.com/amethyst/amethyst/wiki/Roadmap
+[pr]: https://github.com/amethyst/amethyst/projects
+[rm]: https://github.com/amethyst/amethyst/wiki/Roadmap
 [it]: https://github.com/amethyst/amethyst/issues
