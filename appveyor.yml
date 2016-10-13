@@ -1,0 +1,27 @@
+# Set up the build environment.
+environment:
+    matrix:
+        - TARGET: x86_64-pc-windows-msvc
+        - TARGET: i686-pc-windows-msvc
+        - TARGET: i686-pc-windows-gnu
+
+# Set up the Rust toolchain.
+install:
+    - ps: Start-FileDownload "https://static.rust-lang.org/dist/rust-nightly-${env:TARGET}.exe"
+    - rust-nightly-%TARGET%.exe /VERYSILENT /NORESTART /DIR="C:\Program Files (x86)\Rust"
+    - SET PATH=%PATH%;C:\Program Files (x86)\Rust\bin
+    - SET PATH=%PATH%;C:\MinGW\bin
+    - rustc -V
+    - cargo -V
+
+# Force third-party crates to persist from previous builds and update only when
+# needed.
+cache:
+    - .cargo -> rust-nightly-date, cargo-nightly-build
+
+# Since this is not a .NET project, we can flip the build system off.
+build: false
+
+# Compile the engine and run all tests.
+test_script:
+    - cargo test -p amethyst -p amethyst_config -p amethyst_context -p amethyst_ecs -v
