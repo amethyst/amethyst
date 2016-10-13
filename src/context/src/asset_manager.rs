@@ -108,7 +108,9 @@ impl Assets {
     }
 
     /// Load an asset from data
-    pub fn load_asset_from_data<A: Any + Sync + Send, S>(&mut self, name: &str, data: S) -> Option<AssetId> {
+    pub fn load_asset_from_data<A: Any + Sync + Send, S>(&mut self, name: &str, data: S) -> Option<AssetId>
+        where Assets: AssetLoader<A, S>
+    {
         let asset = (self as &mut AssetLoader<A, S>).from_data(data);
         if let Some(asset) = asset {
             Some(self.add_asset(name, asset))
@@ -121,20 +123,6 @@ impl Assets {
         let asset_id = self.assets.create_now().with(Asset::<A>(asset)).build();
         self.asset_ids.insert(name.into(), asset_id);
         asset_id
-    }
-}
-
-// Default implementation for asset loading
-// Overwrite if you want to support a new asset type
-impl<S> AssetLoaderRaw<S> for Assets {
-    default fn from_raw(&self, _: &[u8]) -> Option<S> {
-        unimplemented!()
-    }
-}
-
-impl<A, S> AssetLoader<A, S> for Assets {
-    default fn from_data(&mut self, _: S) -> Option<A> {
-        unimplemented!()
     }
 }
 
@@ -155,7 +143,9 @@ impl AssetManager {
     }
 
     /// Register a new loading method for a specific asset data type
-    pub fn register_loader<A: Any + Send + Sync, S: Any>(&mut self, asset: &str) {
+    pub fn register_loader<A: Any + Send + Sync, S: Any>(&mut self, asset: &str)
+        where Assets: AssetLoader<A, S> + AssetLoaderRaw<S>
+    {
         let asset_id = TypeId::of::<A>();
         let source_id = TypeId::of::<S>();
 
@@ -490,12 +480,5 @@ mod tests {
 
         assert!(assets.load_asset::<Foo>("asset01", "foo", &[0; 2]).is_some());
         assert_eq!(None, assets.load_asset_from_data::<Foo, u32>("asset02", 2));
-    }
-
-    #[test]
-    #[should_panic]
-    fn missing_loader_implementation() {
-        let mut assets = AssetManager::new();
-        assets.load_asset_from_data::<f32, f32>("test", 1.0);
     }
 }
