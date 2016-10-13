@@ -48,5 +48,13 @@ path = "examples/03_renderable/main.rs"
 name = "pong"
 path = "examples/04_pong/main.rs"
 
+[[example]]
+name = "assets"
+path = "examples/06_assets/main.rs"
+
+[dev-dependencies]
+obj-rs = "0.4.16"
+gfx = "0.11"
+
 [dependencies]
 cgmath="0.11"

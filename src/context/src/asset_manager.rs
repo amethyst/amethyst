@@ -27,6 +27,9 @@ use renderer::{Fragment, FragmentImpl};
 use std::ops::{Deref, DerefMut};
 use std::any::{Any, TypeId};
 use std::sync::RwLockReadGuard;
+use std::fs;
+use std::path::{Path, PathBuf};
+use std::io::Read;
 
 type AssetTypeId = TypeId;
 type SourceTypeId = TypeId;
@@ -39,15 +42,18 @@ impl<T: Any + Send + Sync> Component for Asset<T> {
     type Storage = VecStorage<Asset<T>>;
 }
 
-pub trait AssetLoaderRaw<S>: Any {
-    fn from_raw(&self, data: &[u8]) -> Option<S>;
+pub trait AssetLoaderRaw: Sized {
+    fn from_raw(assets: &Assets, data: &[u8]) -> Option<Self>;
 }
 
-pub trait AssetLoader<A, S>: Any {
-    fn from_data(&mut self, data: S) -> Option<A>;
+pub trait AssetLoader<A> {
+    fn from_data(assets: &mut Assets, data: Self) -> Option<A>;
 }
 
-pub trait AssetStore {}
+pub trait AssetStore {
+    fn has_asset(&self, name: &str, asset_type: &str) -> bool;
+    fn load_asset(&self, name: &str, asset_type: &str, buf: &mut Vec<u8>) -> Option<usize>;
+}
 
 pub trait AssetReadStorage<T> {
     fn read(&self, id: AssetId) -> Option<&T>;
@@ -60,7 +66,7 @@ impl<'a, T: Any + Send + Sync> AssetReadStorage<T> for Storage<Asset<T>, RwLockR
 }
 
 pub struct Assets {
-    loaders: HashMap<TypeId, Box<Any>>,
+    loaders: HashMap<LoaderTypeId, Box<Any>>,
     asset_ids: HashMap<String, AssetId>,
     assets: World,
 }
@@ -80,13 +86,13 @@ impl Assets {
         self.loaders.insert(TypeId::of::<T>(), loader);
     }
 
-    fn get_loader<T: Any>(&self) -> Option<&T> {
+    pub fn get_loader<T: Any>(&self) -> Option<&T> {
         self.loaders.get(&TypeId::of::<T>())
                     .expect("Unregistered loader")
                     .downcast_ref()
     }
 
-    fn get_loader_mut<T: Any>(&mut self) -> Option<&mut T> {
+    pub fn get_loader_mut<T: Any>(&mut self) -> Option<&mut T> {
         self.loaders.get_mut(&TypeId::of::<T>())
                     .expect("Unregistered loader")
                     .downcast_mut()
@@ -109,9 +115,9 @@ impl Assets {
 
     /// Load an asset from data
     pub fn load_asset_from_data<A: Any + Sync + Send, S>(&mut self, name: &str, data: S) -> Option<AssetId>
-        where Assets: AssetLoader<A, S>
+        where S: AssetLoader<A>
     {
-        let asset = (self as &mut AssetLoader<A, S>).from_data(data);
+        let asset = AssetLoader::<A>::from_data(self, data);
         if let Some(asset) = asset {
             Some(self.add_asset(name, asset))
         } else {
@@ -128,8 +134,9 @@ impl Assets {
 
 pub struct AssetManager {
     assets: Assets,
-    asset_type_ids: HashMap<String, (AssetTypeId, SourceTypeId)>,
+    asset_type_ids: HashMap<(String, AssetTypeId), SourceTypeId>,
     closures: HashMap<(AssetTypeId, SourceTypeId), Box<FnMut(&mut Assets, &str, &[u8]) -> Option<AssetId>>>,
+    stores: Vec<Box<AssetStore>>,
 }
 
 impl AssetManager {
@@ -139,19 +146,20 @@ impl AssetManager {
             asset_type_ids: HashMap::new(),
             assets: Assets::new(),
             closures: HashMap::new(),
+            stores: Vec::new(),
         }
     }
 
     /// Register a new loading method for a specific asset data type
     pub fn register_loader<A: Any + Send + Sync, S: Any>(&mut self, asset: &str)
-        where Assets: AssetLoader<A, S> + AssetLoaderRaw<S>
+        where S: AssetLoader<A> + AssetLoaderRaw
     {
         let asset_id = TypeId::of::<A>();
         let source_id = TypeId::of::<S>();
 
         self.closures.insert((asset_id, source_id), Box::new(|loader: &mut Assets, name: &str, raw: &[u8]| {
-            let data = (loader as &AssetLoaderRaw<S>).from_raw(raw);
-            let asset = (loader as &mut AssetLoader<A, S>).from_data(data.unwrap());
+            let data: Option<S> = AssetLoaderRaw::from_raw(loader, raw);
+            let asset = AssetLoader::<A>::from_data(loader, data.unwrap());
             if let Some(asset) = asset {
                 Some(loader.add_asset(name, asset))
             } else {
@@ -159,15 +167,31 @@ impl AssetManager {
             }
         }));
 
-        self.asset_type_ids.insert(asset.into(), (asset_id, source_id));
+        self.asset_type_ids.insert((asset.into(), asset_id), source_id);
+    }
+
+    pub fn register_store<T: 'static+AssetStore>(&mut self, store: T) {
+        self.stores.push(Box::new(store));
     }
 
     /// Load an asset from raw data
-    pub fn load_asset<A: Any + Send + Sync>(&mut self, name: &str, asset_type: &str, raw: &[u8]) -> Option<AssetId> {
-        let &(asset_type_id, source_id) = self.asset_type_ids.get(asset_type).expect("Unregistered asset type id");
-        assert!(asset_type_id == TypeId::of::<A>());
+    pub fn load_asset_from_raw<A: Any + Send + Sync>(&mut self, name: &str, asset_type: &str, raw: &[u8]) -> Option<AssetId> {
+        let asset_type_id = TypeId::of::<A>();
+        let &source_id = self.asset_type_ids.get(&(asset_type.into(), asset_type_id)).expect("Unregistered asset type id");
         let ref mut loader = self.closures.get_mut(&(asset_type_id, source_id)).unwrap();
         loader(&mut self.assets, name, raw)
+    }
+
+    /// Load an asset from data
+    pub fn load_asset<A: Any + Send + Sync>(&mut self, name: &str, asset_type: &str) -> Option<AssetId> {
+        let mut buf = Vec::new();
+        if let Some(store) = self.stores.iter().find(|store| store.has_asset(name, asset_type)) {
+            store.load_asset(name, asset_type, &mut buf);
+        } else {
+           return None;
+        }
+
+        self.load_asset_from_raw::<A>(name, asset_type, &buf)      
     }
 }
 
@@ -196,9 +220,9 @@ pub enum FactoryImpl {
     Null,
 }
 
-impl AssetLoader<Mesh, Vec<VertexPosNormal>> for Assets {
-    fn from_data(&mut self, data: Vec<VertexPosNormal>) -> Option<Mesh> {
-        let factory_impl = self.get_loader_mut::<FactoryImpl>().expect("Unable to retrieve factory");
+impl AssetLoader<Mesh> for Vec<VertexPosNormal> {
+    fn from_data(assets: &mut Assets, data: Vec<VertexPosNormal>) -> Option<Mesh> {
+        let factory_impl = assets.get_loader_mut::<FactoryImpl>().expect("Unable to retrieve factory");
         let mesh_impl = match *factory_impl {
             FactoryImpl::OpenGL { ref mut factory } => {
                 let (buffer, slice) = factory.create_vertex_buffer_with_slice(&data, ());
@@ -220,9 +244,9 @@ pub struct TextureLoadData<'a> {
     pub raw: &'a [&'a [<<ColorFormat as Formatted>::Surface as SurfaceTyped>::DataType]],
 }
 
-impl<'a> AssetLoader<Texture, TextureLoadData<'a>> for Assets {
-    fn from_data(&mut self, load_data: TextureLoadData) -> Option<Texture> {
-        let factory_impl = self.get_loader_mut::<FactoryImpl>().expect("Unable to retrieve factory");
+impl<'a> AssetLoader<Texture> for TextureLoadData<'a> {
+    fn from_data(assets: &mut Assets, load_data: TextureLoadData) -> Option<Texture> {
+        let factory_impl = assets.get_loader_mut::<FactoryImpl>().expect("Unable to retrieve factory");
         let texture_impl = match *factory_impl {
             FactoryImpl::OpenGL { ref mut factory } => {
                 let shader_resource_view = match factory.create_texture_const::<ColorFormat>(load_data.kind, load_data.raw) {
@@ -240,8 +264,8 @@ impl<'a> AssetLoader<Texture, TextureLoadData<'a>> for Assets {
     }
 }
 
-impl AssetLoader<Texture, [f32; 4]> for Assets {
-    fn from_data(&mut self, color: [f32; 4]) -> Option<Texture> {
+impl AssetLoader<Texture> for [f32; 4] {
+    fn from_data(_: &mut Assets, color: [f32; 4]) -> Option<Texture> {
         let texture = amethyst_renderer::Texture::Constant(color);
         let texture_impl = TextureImpl::OpenGL { texture: texture };
         Some(Texture { texture_impl: texture_impl })
@@ -416,7 +440,7 @@ pub enum MeshImpl {
 /// hide all platform specific code from the user.
 #[derive(Clone)]
 pub struct Mesh {
-    mesh_impl: MeshImpl,
+    pub mesh_impl: MeshImpl,
 }
 
 /// An enum with variants representing concrete
@@ -438,6 +462,36 @@ pub struct Texture {
     texture_impl: TextureImpl,
 }
 
+pub struct DirectoryStore {
+    path: PathBuf,
+}
+
+impl DirectoryStore {
+    pub fn new<P: AsRef<Path>>(path: P) -> DirectoryStore {
+        DirectoryStore {
+            path: path.as_ref().to_path_buf(),
+        }
+    }
+
+    fn asset_to_path<'a>(&self, name: &str, asset_type: &str) -> PathBuf {
+        let file_name = format!("{}.{}", name, asset_type);
+        self.path.join(file_name)
+    }
+}
+
+impl AssetStore for DirectoryStore {
+    fn has_asset(&self, name: &str, asset_type: &str) -> bool {
+        let file_path = self.asset_to_path(name, asset_type);
+        fs::metadata(file_path).ok().map(|meta| meta.is_file()).is_some()
+    }
+
+    fn load_asset(&self, name: &str, asset_type: &str, buf: &mut Vec<u8>) -> Option<usize> {
+        let file_path = self.asset_to_path(name, asset_type);
+        let mut file = if let Ok(file) = fs::File::open(file_path) { file } else { return None; };
+        file.read_to_end(buf).ok()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{Assets, AssetManager, AssetLoader, AssetLoaderRaw};
@@ -445,9 +499,8 @@ mod tests {
     struct Foo;
     struct FooLoader;
 
-    impl AssetLoader<Foo, u32> for Assets {
-        fn from_data(&mut self, x: u32) -> Option<Foo> {
-            println!("{:?}", x);
+    impl AssetLoader<Foo> for u32 {
+        fn from_data(assets: &mut Assets, x: u32) -> Option<Foo> {
             if x == 10 {
                 Some(Foo)
             } else {
@@ -456,9 +509,9 @@ mod tests {
         }
     }
 
-    impl AssetLoaderRaw<u32> for Assets {
-        fn from_raw(&self, _: &[u8]) -> Option<u32> {
-            let _ = self.get_loader::<FooLoader>();
+    impl AssetLoaderRaw for u32 {
+        fn from_raw(assets: &Assets, _: &[u8]) -> Option<u32> {
+            let _ = assets.get_loader::<FooLoader>();
             Some(10)
         }
     }
@@ -478,7 +531,7 @@ mod tests {
         assets.register_loader::<Foo, u32>("foo");
         assets.add_loader::<FooLoader>(FooLoader);
 
-        assert!(assets.load_asset::<Foo>("asset01", "foo", &[0; 2]).is_some());
+        assert!(assets.load_asset_from_raw::<Foo>("asset01", "foo", &[0; 2]).is_some());
         assert_eq!(None, assets.load_asset_from_data::<Foo, u32>("asset02", 2));
     }
 }
