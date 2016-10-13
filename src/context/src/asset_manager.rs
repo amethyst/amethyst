@@ -21,6 +21,7 @@ use self::cgmath::{Vector3, InnerSpace};
 
 use std::collections::HashMap;
 use renderer::{Fragment, FragmentImpl};
+use prefab_generator::{PrefabGenerator, CubeID, MeshID, RectangleID, SphereID, TextureID};
 
 /// An enum with variants representing concrete
 /// `Factory` types compatible with different backends.
@@ -38,6 +39,20 @@ pub struct AssetManager {
     factory_impl: FactoryImpl,
     meshes: HashMap<String, Mesh>,
     textures: HashMap<String, Texture>,
+}
+
+impl PrefabGenerator for AssetManager {
+    fn gen_sphere(&mut self, m: MeshID, u: usize, v: usize) -> SphereID {
+        SphereID::new()
+    }
+
+    fn gen_cube(&mut self, m: MeshID) -> CubeID {
+        CubeID::new()
+    }
+
+    fn gen_rectangle(&mut self, m: MeshID, width: f32, height: f32) -> RectangleID {
+        RectangleID::new()
+    }
 }
 
 impl AssetManager {
@@ -135,6 +150,7 @@ impl AssetManager {
         ];
         self.load_mesh(name, &data);
     }
+
     /// Lookup a `Mesh` by name.
     pub fn get_mesh(&mut self, name: &str) -> Option<Mesh> {
         match self.meshes.get(name.into()) {
