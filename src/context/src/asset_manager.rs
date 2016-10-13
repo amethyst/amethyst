@@ -35,11 +35,11 @@ pub enum FactoryImpl {
 }
 
 struct AssetIDManager {
-    mesh: i64,
-    texture: i64,
-    sphere: i64,
-    cube: i64,
-    rectangle: i64,
+    mesh: usize,
+    texture: usize,
+    sphere: usize,
+    cube: usize,
+    rectangle: usize,
 }
 
 impl AssetIDManager {
@@ -54,90 +54,86 @@ impl AssetIDManager {
     }
 
     pub fn next_mesh(&mut self) -> MeshID {
-        let id = MeshID::from_i64(self.mesh);
+        let id = MeshID::from_usize(self.mesh);
         self.mesh += 1;
         id
     }
 
     pub fn next_texture(&mut self) -> TextureID {
-        let id = TextureID::from_i64(self.texture);
+        let id = TextureID::from_usize(self.texture);
         self.texture += 1;
         id
     }
 
-    pub fn next_sphere(&mut self) -> SphereID {
-        let id = SphereID::from_i64(self.sphere);
-        self.sphere += 1;
-        id
+    // pub fn next_sphere(&mut self) -> SphereID {
+    // let id = SphereID::from_usize(self.sphere);
+    // self.sphere += 1;
+    // id
+    // }
+    //
+    // pub fn next_cube(&mut self) -> CubeID {
+    // let id = CubeID::from_usize(self.cube);
+    // self.cube += 1;
+    // id
+    // }
+    //
+    // pub fn next_rectangle(&mut self) -> RectangleID {
+    // let id = RectangleID::from_usize(self.rectangle);
+    // self.rectangle += 1;
+    // id
+    // }
+    //
+}
+
+struct AssetIndex {
+    meshes: HashMap<String, Mesh>,
+    textures: HashMap<String, Texture>,
+
+    // TODO: usize instead of String
+    mmap: Vec<Option<Mesh>>,
+    tmap: Vec<Option<Texture>>,
+}
+
+impl AssetIndex {
+    fn new(capacity: usize) -> AssetIndex {
+        AssetIndex {
+            meshes: HashMap::new(),
+            textures: HashMap::new(),
+            mmap: Vec::with_capacity(capacity),
+            tmap: Vec::with_capacity(capacity),
+        }
     }
 
-    pub fn next_cube(&mut self) -> CubeID {
-        let id = CubeID::from_i64(self.cube);
-        self.cube += 1;
-        id
+    pub fn add_mesh(&mut self, id_manager: &mut AssetIDManager, m: Mesh) -> MeshID {
+        let mesh_id = id_manager.next_mesh();
+        self.mmap[mesh_id.to_vec_index()] = Some(m);
+        mesh_id
     }
 
-    pub fn next_rectangle(&mut self) -> RectangleID {
-        let id = RectangleID::from_i64(self.rectangle);
-        self.rectangle += 1;
-        id
+    pub fn add_texture(&mut self, id_manager: &mut AssetIDManager, t: Texture) -> TextureID {
+        let texture_id = id_manager.next_texture();
+        self.tmap[texture_id.to_vec_index()] = Some(t);
+        texture_id
     }
+
+    // pub fn get_mesh(&self, index: usize) -> &Option<Mesh> {
+    // &self.mmap[index]
+    // }
+
+    // pub fn get_texture(&self, index: usize) -> &Option<Texture> {
+    // &self.tmap[index]
+    // }
 }
 
 /// A struct which allows loading and accessing assets.
 pub struct AssetManager {
     id_manager: AssetIDManager,
     factory_impl: FactoryImpl,
-    meshes: HashMap<String, Mesh>,
-    textures: HashMap<String, Texture>,
+    index: AssetIndex,
 }
 
 impl PrefabGenerator for AssetManager {
-    fn gen_sphere(&mut self, m: MeshID, u: usize, v: usize) -> SphereID {
-        self.id_manager.next_sphere()
-    }
-
-    fn gen_cube(&mut self, m: MeshID) -> CubeID {
-        self.id_manager.next_cube()
-    }
-
-    fn gen_rectangle(&mut self, m: MeshID, width: f32, height: f32) -> RectangleID {
-        self.id_manager.next_rectangle()
-    }
-}
-
-impl AssetManager {
-    /// Create a new `AssetManager` from `FactoryImpl` (used internally).
-    pub fn new(factory_impl: FactoryImpl) -> AssetManager {
-        AssetManager {
-            id_manager: AssetIDManager::new(),
-            factory_impl: factory_impl,
-            meshes: HashMap::new(),
-            textures: HashMap::new(),
-        }
-    }
-    /// Load a `Mesh` from vertex data.
-    pub fn load_mesh(&mut self, name: &str, data: &Vec<VertexPosNormal>) {
-        match self.factory_impl {
-            FactoryImpl::OpenGL { ref mut factory } => {
-                let (buffer, slice) = factory.create_vertex_buffer_with_slice(&data, ());
-                let mesh_impl = MeshImpl::OpenGL {
-                    buffer: buffer,
-                    slice: slice,
-                };
-                let mesh = Mesh { mesh_impl: mesh_impl };
-                self.meshes.insert(name.into(), mesh);
-            }
-            #[cfg(windows)]
-            FactoryImpl::Direct3D {} => {
-                unimplemented!();
-            }
-            FactoryImpl::Null => (),
-        }
-    }
-    /// Generate and load a sphere mesh using the number of vertices accross the equator (u)
-    /// and the number of vertices from pole to pole (v).
-    pub fn gen_sphere(&mut self, name: &str, u: usize, v: usize) {
+    fn gen_sphere(&mut self, u: usize, v: usize) -> SphereID {
         let data: Vec<VertexPosNormal> = SphereUV::new(u, v)
             .vertex(|(x, y, z)| {
                 VertexPosNormal {
@@ -149,10 +145,12 @@ impl AssetManager {
             .triangulate()
             .vertices()
             .collect();
-        self.load_mesh(name, &data);
+        let mesh = self.load_mesh(&data);
+        let mesh_id = self.index.add_mesh(&mut self.id_manager, mesh);
+        SphereID::from_meshid(mesh_id)
     }
-    /// Generate and load a cube mesh.
-    pub fn gen_cube(&mut self, name: &str) {
+
+    fn gen_cube(&mut self) -> CubeID {
         let data: Vec<VertexPosNormal> = Cube::new()
             .vertex(|(x, y, z)| {
                 VertexPosNormal {
@@ -164,10 +162,11 @@ impl AssetManager {
             .triangulate()
             .vertices()
             .collect();
-        self.load_mesh(name, &data);
+        let mesh = self.load_mesh(&data);
+        CubeID::from_meshid(self.index.add_mesh(&mut self.id_manager, mesh))
     }
-    /// Generate and load a rectangle mesh in XY plane with given `width` and `height`.
-    pub fn gen_rectangle(&mut self, name: &str, width: f32, height: f32) {
+
+    fn gen_rectangle(&mut self, width: f32, height: f32) -> RectangleID {
         let data = vec![
             VertexPosNormal {
                 pos: [-width/2., height/2., 0.],
@@ -200,12 +199,50 @@ impl AssetManager {
                 tex_coord: [1., 0.],
             },
         ];
-        self.load_mesh(name, &data);
+        let mesh = self.load_mesh(&data);
+        RectangleID::from_meshid(self.index.add_mesh(&mut self.id_manager, mesh))
     }
+}
 
+impl AssetManager {
+    /// Create a new `AssetManager` from `FactoryImpl` (used internally).
+    ///
+    /// Assumes a default capacity for the underlying storage.
+    pub fn new(factory_impl: FactoryImpl) -> AssetManager {
+        AssetManager::new_sized(factory_impl, 10000)
+    }
+    /// Create a new `AssetManager` from `FactoryImpl` (used internally).
+    /// Allows a capacity parameter to be passed, reserving capacity internally (optimization
+    /// opportunity).
+    pub fn new_sized(factory_impl: FactoryImpl, capacity: usize) -> AssetManager {
+        AssetManager {
+            id_manager: AssetIDManager::new(),
+            factory_impl: factory_impl,
+            index: AssetIndex::new(capacity),
+        }
+    }
+    /// Load a `Mesh` from vertex data.
+    fn load_mesh(&mut self, data: &Vec<VertexPosNormal>) -> Mesh {
+        match self.factory_impl {
+            FactoryImpl::OpenGL { ref mut factory } => {
+                let (buffer, slice) = factory.create_vertex_buffer_with_slice(&data, ());
+                let mesh_impl = MeshImpl::OpenGL {
+                    buffer: buffer,
+                    slice: slice,
+                };
+                Mesh { mesh_impl: mesh_impl };
+            }
+            #[cfg(windows)]
+            FactoryImpl::Direct3D {} => {
+                unimplemented!();
+            }
+            FactoryImpl::Null {} => unimplemented!(),
+        }
+        unimplemented!()
+    }
     /// Lookup a `Mesh` by name.
     pub fn get_mesh(&mut self, name: &str) -> Option<Mesh> {
-        match self.meshes.get(name.into()) {
+        match self.index.meshes.get(name.into()) {
             Some(mesh) => Some((*mesh).clone()),
             None => None,
         }
@@ -221,7 +258,7 @@ impl AssetManager {
                 let texture = amethyst_renderer::Texture::Texture(shader_resource_view);
                 let texture_impl = TextureImpl::OpenGL { texture: texture };
                 let texture = Texture { texture_impl: texture_impl };
-                self.textures.insert(name.into(), texture);
+                self.index.textures.insert(name.into(), texture);
             }
             #[cfg(windows)]
             FactoryImpl::Direct3D {} => {
@@ -235,11 +272,11 @@ impl AssetManager {
         let texture = amethyst_renderer::Texture::Constant(color);
         let texture_impl = TextureImpl::OpenGL { texture: texture };
         let texture = Texture { texture_impl: texture_impl };
-        self.textures.insert(name.into(), texture);
+        self.index.textures.insert(name.into(), texture);
     }
     /// Lookup a `Texture` by name.
     pub fn get_texture(&mut self, name: &str) -> Option<Texture> {
-        match self.textures.get(name.into()) {
+        match self.index.textures.get(name.into()) {
             Some(texture) => Some((*texture).clone()),
             None => None,
         }
