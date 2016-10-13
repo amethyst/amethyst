@@ -54,28 +54,33 @@ impl AssetIDManager {
     }
 
     pub fn next_mesh(&mut self) -> MeshID {
+        let id = MeshID::from_i64(self.mesh);
         self.mesh += 1;
-        MeshID::from_i64(self.mesh)
+        id
     }
 
     pub fn next_texture(&mut self) -> TextureID {
+        let id = TextureID::from_i64(self.texture);
         self.texture += 1;
-        TextureID::from_i64(self.texture)
+        id
     }
 
     pub fn next_sphere(&mut self) -> SphereID {
+        let id = SphereID::from_i64(self.sphere);
         self.sphere += 1;
-        SphereID::from_i64(self.sphere)
+        id
     }
 
     pub fn next_cube(&mut self) -> CubeID {
+        let id = CubeID::from_i64(self.cube);
         self.cube += 1;
-        CubeID::from_i64(self.cube)
+        id
     }
 
     pub fn next_rectangle(&mut self) -> RectangleID {
+        let id = RectangleID::from_i64(self.rectangle);
         self.rectangle += 1;
-        RectangleID::from_i64(self.rectangle)
+        id
     }
 }
 
