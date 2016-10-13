@@ -12,8 +12,8 @@ pub struct MeshID {
 
 impl MeshID {
     /// Create a new instance.
-    pub fn new() -> MeshID {
-        MeshID { id: 0 }
+    pub fn from_i64(value: i64) -> MeshID {
+        MeshID { id: value }
     }
 }
 
@@ -25,8 +25,8 @@ pub struct TextureID {
 
 impl TextureID {
     /// Create a new instance.
-    pub fn new() -> TextureID {
-        TextureID { id: 0 }
+    pub fn from_i64(value: i64) -> TextureID {
+        TextureID { id: value }
     }
 }
 
@@ -37,8 +37,8 @@ pub struct SphereID {
 }
 
 impl SphereID {
-    pub fn new() -> SphereID {
-        SphereID { id: 0 }
+    pub fn from_i64(value: i64) -> SphereID {
+        SphereID { id: value }
     }
 }
 
@@ -49,8 +49,8 @@ pub struct CubeID {
 }
 
 impl CubeID {
-    pub fn new() -> CubeID {
-        CubeID { id: 0 }
+    pub fn from_i64(value: i64) -> CubeID {
+        CubeID { id: value }
     }
 }
 
@@ -61,8 +61,8 @@ pub struct RectangleID {
 }
 
 impl RectangleID {
-    pub fn new() -> RectangleID {
-        RectangleID { id: 0 }
+    pub fn from_i64(value: i64) -> RectangleID {
+        RectangleID { id: value }
     }
 }
 

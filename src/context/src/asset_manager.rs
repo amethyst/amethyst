@@ -34,8 +34,54 @@ pub enum FactoryImpl {
     Null,
 }
 
+struct AssetIDManager {
+    mesh: i64,
+    texture: i64,
+    sphere: i64,
+    cube: i64,
+    rectangle: i64,
+}
+
+impl AssetIDManager {
+    pub fn new() -> AssetIDManager {
+        AssetIDManager {
+            mesh: 0,
+            texture: 0,
+            sphere: 0,
+            cube: 0,
+            rectangle: 0,
+        }
+    }
+
+    pub fn next_mesh(&mut self) -> MeshID {
+        self.mesh += 1;
+        MeshID::from_i64(self.mesh)
+    }
+
+    pub fn next_texture(&mut self) -> TextureID {
+        self.texture += 1;
+        TextureID::from_i64(self.texture)
+    }
+
+    pub fn next_sphere(&mut self) -> SphereID {
+        self.sphere += 1;
+        SphereID::from_i64(self.sphere)
+    }
+
+    pub fn next_cube(&mut self) -> CubeID {
+        self.cube += 1;
+        CubeID::from_i64(self.cube)
+    }
+
+    pub fn next_rectangle(&mut self) -> RectangleID {
+        self.rectangle += 1;
+        RectangleID::from_i64(self.rectangle)
+    }
+}
+
 /// A struct which allows loading and accessing assets.
 pub struct AssetManager {
+    id_manager: AssetIDManager,
     factory_impl: FactoryImpl,
     meshes: HashMap<String, Mesh>,
     textures: HashMap<String, Texture>,
@@ -43,15 +89,15 @@ pub struct AssetManager {
 
 impl PrefabGenerator for AssetManager {
     fn gen_sphere(&mut self, m: MeshID, u: usize, v: usize) -> SphereID {
-        SphereID::new()
+        self.id_manager.next_sphere()
     }
 
     fn gen_cube(&mut self, m: MeshID) -> CubeID {
-        CubeID::new()
+        self.id_manager.next_cube()
     }
 
     fn gen_rectangle(&mut self, m: MeshID, width: f32, height: f32) -> RectangleID {
-        RectangleID::new()
+        self.id_manager.next_rectangle()
     }
 }
 
@@ -59,6 +105,7 @@ impl AssetManager {
     /// Create a new `AssetManager` from `FactoryImpl` (used internally).
     pub fn new(factory_impl: FactoryImpl) -> AssetManager {
         AssetManager {
+            id_manager: AssetIDManager::new(),
             factory_impl: factory_impl,
             meshes: HashMap::new(),
             textures: HashMap::new(),
