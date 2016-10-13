@@ -201,7 +201,7 @@ impl<R> Pass<R> for Clear
         where C: gfx::CommandBuffer<R>
     {
         encoder.clear(&target.color, arg.color);
-        encoder.clear_depth(&target.output_depth, 1.0);
+        encoder.clear_depth(&target.depth, 1.0);
     }
 }
 
@@ -263,17 +263,19 @@ impl<R> Pass<R> for DrawFlat<R>
             let ka = e.ka.to_view(&self.ka, encoder);
             let kd = e.kd.to_view(&self.kd, encoder);
 
-            encoder.draw(&e.slice,
-                         &self.pso,
-                         &flat::Data {
-                             vbuf: e.buffer.clone(),
-                             vertex_args: self.vertex.clone(),
-                             fragment_args: self.fragment.clone(),
-                             out_ka: target.color.clone(),
-                             out_depth: target.output_depth.clone(),
-                             ka: (ka, self.sampler.clone()),
-                             kd: (kd, self.sampler.clone()),
-                         });
+            encoder.draw(
+                &e.slice,
+                &self.pso,
+                &flat::Data{
+                    vbuf: e.buffer.clone(),
+                    vertex_args: self.vertex.clone(),
+                    fragment_args: self.fragment.clone(),
+                    out_ka: target.color.clone(),
+                    out_depth: target.depth.clone(),
+                    ka: (ka, self.sampler.clone()),
+                    kd: (kd, self.sampler.clone()),
+                }
+            );
         }
     }
 }
@@ -364,18 +366,20 @@ impl<R> Pass<R> for DrawShaded<R>
             let ka = e.ka.to_view(&self.ka, encoder);
             let kd = e.kd.to_view(&self.kd, encoder);
 
-            encoder.draw(&e.slice,
-                         &self.pso,
-                         &shaded::Data {
-                             vbuf: e.buffer.clone(),
-                             fragment_args: self.fragment.clone(),
-                             vertex_args: self.vertex.clone(),
-                             lights: self.lights.clone(),
-                             out_ka: target.color.clone(),
-                             out_depth: target.output_depth.clone(),
-                             ka: (ka, self.sampler.clone()),
-                             kd: (kd, self.sampler.clone()),
-                         });
+            encoder.draw(
+                &e.slice,
+                &self.pso,
+                &shaded::Data{
+                    vbuf: e.buffer.clone(),
+                    fragment_args: self.fragment.clone(),
+                    vertex_args: self.vertex.clone(),
+                    lights: self.lights.clone(),
+                    out_ka: target.color.clone(),
+                    out_depth: target.depth.clone(),
+                    ka: (ka, self.sampler.clone()),
+                    kd: (kd, self.sampler.clone()),
+                }
+            );
         }
     }
 }

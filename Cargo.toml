@@ -48,5 +48,9 @@ path = "examples/03_renderable/main.rs"
 name = "pong"
 path = "examples/04_pong/main.rs"
 
+[[example]]
+name = "fxaa"
+path = "examples/05_fxaa/main.rs"
+
 [dependencies]
 cgmath="0.11"

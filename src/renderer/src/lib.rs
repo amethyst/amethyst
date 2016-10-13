@@ -70,6 +70,9 @@ impl<R, C> Renderer<R, C>
         self.add_pass(pass::deferred::DepthPass::new(factory));
         self.add_pass(pass::deferred::BlitLayer::new(factory));
         self.add_pass(pass::deferred::LightingPass::new(factory));
+
+        self.add_pass(pass::filters::FXAA::new(factory));
+        self.add_pass(pass::filters::Null::new(factory));
     }
 
     /// Add a pass to the table of available passes
