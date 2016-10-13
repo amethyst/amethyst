@@ -34,22 +34,28 @@ use std::io::Read;
 type AssetTypeId = TypeId;
 type SourceTypeId = TypeId;
 type LoaderTypeId = TypeId;
-type AssetId = Entity;
 
+/// Id for directly accessing assets in the manager
+pub type AssetId = Entity;
+
+/// Wrapper type for actual asset data
 pub struct Asset<T>(pub T);
 
 impl<T: Any + Send + Sync> Component for Asset<T> {
     type Storage = VecStorage<Asset<T>>;
 }
 
+/// A trait for generating intermdiate data for loading from raw data
 pub trait AssetLoaderRaw: Sized {
     fn from_raw(assets: &Assets, data: &[u8]) -> Option<Self>;
 }
 
+/// A trait for loading assets from arbitrary data
 pub trait AssetLoader<A> {
     fn from_data(assets: &mut Assets, data: Self) -> Option<A>;
 }
 
+/// A trait for asset stores which are permanent storages for assets
 pub trait AssetStore {
     fn has_asset(&self, name: &str, asset_type: &str) -> bool;
     fn load_asset(&self, name: &str, asset_type: &str, buf: &mut Vec<u8>) -> Option<usize>;
@@ -65,6 +71,7 @@ impl<'a, T: Any + Send + Sync> AssetReadStorage<T> for Storage<Asset<T>, RwLockR
     }
 }
 
+/// Internal assets handler which takes care of storing and loading assets.
 pub struct Assets {
     loaders: HashMap<LoaderTypeId, Box<Any>>,
     asset_ids: HashMap<String, AssetId>,
@@ -86,12 +93,14 @@ impl Assets {
         self.loaders.insert(TypeId::of::<T>(), loader);
     }
 
+    /// Returns stored loader resource
     pub fn get_loader<T: Any>(&self) -> Option<&T> {
         self.loaders.get(&TypeId::of::<T>())
                     .expect("Unregistered loader")
                     .downcast_ref()
     }
 
+    // Returns stored loader resource
     pub fn get_loader_mut<T: Any>(&mut self) -> Option<&mut T> {
         self.loaders.get_mut(&TypeId::of::<T>())
                     .expect("Unregistered loader")
@@ -126,12 +135,11 @@ impl Assets {
     }
 
     fn add_asset<A: Any + Send + Sync>(&mut self, name: &str, asset: A) -> AssetId {
-        let asset_id = self.assets.create_now().with(Asset::<A>(asset)).build();
-        self.asset_ids.insert(name.into(), asset_id);
-        asset_id
+        *self.asset_ids.entry(name.into()).or_insert(self.assets.create_now().with(Asset::<A>(asset)).build())
     }
 }
 
+/// Asset manager which handles assets and loaders.
 pub struct AssetManager {
     assets: Assets,
     asset_type_ids: HashMap<(String, AssetTypeId), SourceTypeId>,
@@ -170,6 +178,7 @@ impl AssetManager {
         self.asset_type_ids.insert((asset.into(), asset_id), source_id);
     }
 
+    /// Register an asset store
     pub fn register_store<T: 'static+AssetStore>(&mut self, store: T) {
         self.stores.push(Box::new(store));
     }
@@ -182,7 +191,7 @@ impl AssetManager {
         loader(&mut self.assets, name, raw)
     }
 
-    /// Load an asset from data
+    /// Load an asset from the asset stores
     pub fn load_asset<A: Any + Send + Sync>(&mut self, name: &str, asset_type: &str) -> Option<AssetId> {
         let mut buf = Vec::new();
         if let Some(store) = self.stores.iter().find(|store| store.has_asset(name, asset_type)) {
@@ -239,6 +248,7 @@ impl AssetLoader<Mesh> for Vec<VertexPosNormal> {
     }
 }
 
+/// A struct for creating a new texture from raw data
 pub struct TextureLoadData<'a> {
     pub kind: Kind,
     pub raw: &'a [&'a [<<ColorFormat as Formatted>::Surface as SurfaceTyped>::DataType]],
@@ -462,6 +472,7 @@ pub struct Texture {
     texture_impl: TextureImpl,
 }
 
+/// Asset store representing a file directory.
 pub struct DirectoryStore {
     path: PathBuf,
 }
@@ -533,5 +544,16 @@ mod tests {
 
         assert!(assets.load_asset_from_raw::<Foo>("asset01", "foo", &[0; 2]).is_some());
         assert_eq!(None, assets.load_asset_from_data::<Foo, u32>("asset02", 2));
+    }
+
+    #[test]
+    fn load_duplicated_asset() {
+        let mut assets = AssetManager::new();
+        assets.register_asset::<Foo>();
+        assets.register_loader::<Foo, u32>("foo");
+        assets.add_loader::<FooLoader>(FooLoader);
+
+        let asset01 = assets.load_asset_from_raw::<Foo>("asset01", "foo", &[0; 2]);
+        assert_eq!(asset01, assets.load_asset_from_raw::<Foo>("asset01", "foo", &[0; 2]));
     }
 }

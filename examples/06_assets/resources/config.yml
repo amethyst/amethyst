@@ -5,7 +5,7 @@ display_config:
     max_dimensions: null
     min_dimensions: null
     multisampling: 1
-    title: "Sphere Example"
+    title: "Assets Example"
     visibility: true
     vsync: true
     backend: OpenGL
