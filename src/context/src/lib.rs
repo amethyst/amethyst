@@ -2,7 +2,6 @@
 #![crate_type = "lib"]
 #![doc(html_logo_url = "http://tinyurl.com/hgsb45k")]
 
-#![feature(raw)]
 #![feature(specialization)]
 
 //! A way to manage engine resources.

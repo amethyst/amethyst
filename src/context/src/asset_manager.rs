@@ -24,7 +24,7 @@ use self::cgmath::{Vector3, InnerSpace};
 use std::collections::HashMap;
 use renderer::{Fragment, FragmentImpl};
 
-use std::{mem, raw};
+use std::ops::{Deref, DerefMut};
 use std::any::{Any, TypeId};
 use std::sync::RwLockReadGuard;
 
@@ -59,38 +59,16 @@ impl<'a, T: Any + Send + Sync> AssetReadStorage<T> for Storage<Asset<T>, RwLockR
     }
 }
 
-pub struct AssetManager {
+pub struct Assets {
     loaders: HashMap<TypeId, Box<Any>>,
-    loader_raw_vtable: HashMap<SourceTypeId, *mut ()>,
-    loader_data_vtable: HashMap<(AssetTypeId, SourceTypeId), *mut ()>,
-    asset_type_ids: HashMap<String, (AssetTypeId, SourceTypeId)>,
-
     asset_ids: HashMap<String, AssetId>,
     assets: World,
 }
 
-// Default implementation for asset loading
-// Overwrite if you want to support a new asset type
-impl<S> AssetLoaderRaw<S> for AssetManager {
-    default fn from_raw(&self, _: &[u8]) -> Option<S> {
-        unimplemented!()
-    }
-}
-
-impl<A, S> AssetLoader<A, S> for AssetManager {
-    default fn from_data(&mut self, _: S) -> Option<A> {
-        unimplemented!()
-    }
-}
-
-impl AssetManager {
-    /// Create a new asset manager
-    pub fn new() -> AssetManager {
-        AssetManager {
+impl Assets {
+    fn new() -> Assets {
+        Assets {
             loaders: HashMap::new(),
-            loader_raw_vtable: HashMap::new(),
-            loader_data_vtable: HashMap::new(),
-            asset_type_ids: HashMap::new(),
             asset_ids: HashMap::new(),
             assets: World::new(),
         }
@@ -119,23 +97,6 @@ impl AssetManager {
         self.assets.register::<Asset<A>>();
     }
 
-    /// Register a new loading method for a specific asset data type
-    pub fn register_loader<A: Any + Send + Sync, S: Any>(&mut self, asset: &str) {
-        let asset_id = TypeId::of::<A>();
-        let source_id = TypeId::of::<S>();
-        let loader_raw_vtable = {
-            let r: raw::TraitObject = unsafe { mem::transmute(self as &AssetLoaderRaw<S>) };
-            r.vtable
-        };
-        let loader_data_vtable = {
-            let r: raw::TraitObject = unsafe { mem::transmute(self as &AssetLoader<A, S>) };
-            r.vtable
-        };
-        self.loader_raw_vtable.insert(source_id, loader_raw_vtable);
-        self.loader_data_vtable.insert((asset_id, source_id), loader_data_vtable);
-        self.asset_type_ids.insert(asset.into(), (asset_id, source_id));
-    }
-
     /// Retrieve the `AssetId` from the asset name
     pub fn id_from_name(&self, name: &str) -> Option<AssetId> {
         self.asset_ids.get(name).map(|id| *id)
@@ -156,51 +117,81 @@ impl AssetManager {
         }
     }
 
-    /// Load an asset from raw data
-    pub fn load_asset<A: Any + Send + Sync>(&mut self, name: &str, asset_type: &str, raw: &[u8]) -> Option<AssetId> {
-        let &(asset_type_id, source_id) = self.asset_type_ids.get(asset_type).expect("Unregistered asset type id");
-        assert!(asset_type_id == TypeId::of::<A>());
-        let data = {
-            let raw_loader: &AssetLoaderRaw<()> = {
-                unsafe {
-                    ::std::mem::transmute(::std::raw::TraitObject {
-                        data: self as *const _ as *mut (),
-                        vtable: *self.loader_raw_vtable.get(&source_id).unwrap(),
-                    })
-                }
-            };
-
-            if let Some(data) = raw_loader.from_raw(raw) {
-                data
-            } else {
-                return None;
-            }
-        };
-
-        let asset = {
-            let data_loader: &mut AssetLoader<A, ()> = {
-                unsafe {
-                    ::std::mem::transmute(::std::raw::TraitObject {
-                        data: self as *const _ as *mut (),
-                        vtable: *self.loader_data_vtable.get(&(asset_type_id, source_id)).unwrap(),
-                    })
-                }
-            };
-        
-            if let Some(data) = data_loader.from_data(data) {
-                data
-            } else {
-                return None;
-            }
-        };
-       
-       Some(self.add_asset(name, asset))
-    }
-
     fn add_asset<A: Any + Send + Sync>(&mut self, name: &str, asset: A) -> AssetId {
         let asset_id = self.assets.create_now().with(Asset::<A>(asset)).build();
         self.asset_ids.insert(name.into(), asset_id);
         asset_id
+    }
+}
+
+// Default implementation for asset loading
+// Overwrite if you want to support a new asset type
+impl<S> AssetLoaderRaw<S> for Assets {
+    default fn from_raw(&self, _: &[u8]) -> Option<S> {
+        unimplemented!()
+    }
+}
+
+impl<A, S> AssetLoader<A, S> for Assets {
+    default fn from_data(&mut self, _: S) -> Option<A> {
+        unimplemented!()
+    }
+}
+
+pub struct AssetManager {
+    assets: Assets,
+    asset_type_ids: HashMap<String, (AssetTypeId, SourceTypeId)>,
+    closures: HashMap<(AssetTypeId, SourceTypeId), Box<FnMut(&mut Assets, &str, &[u8]) -> Option<AssetId>>>,
+}
+
+impl AssetManager {
+    /// Create a new asset manager
+    pub fn new() -> AssetManager {
+        AssetManager {
+            asset_type_ids: HashMap::new(),
+            assets: Assets::new(),
+            closures: HashMap::new(),
+        }
+    }
+
+    /// Register a new loading method for a specific asset data type
+    pub fn register_loader<A: Any + Send + Sync, S: Any>(&mut self, asset: &str) {
+        let asset_id = TypeId::of::<A>();
+        let source_id = TypeId::of::<S>();
+
+        self.closures.insert((asset_id, source_id), Box::new(|loader: &mut Assets, name: &str, raw: &[u8]| {
+            let data = (loader as &AssetLoaderRaw<S>).from_raw(raw);
+            let asset = (loader as &mut AssetLoader<A, S>).from_data(data.unwrap());
+            if let Some(asset) = asset {
+                Some(loader.add_asset(name, asset))
+            } else {
+                None
+            }
+        }));
+
+        self.asset_type_ids.insert(asset.into(), (asset_id, source_id));
+    }
+
+    /// Load an asset from raw data
+    pub fn load_asset<A: Any + Send + Sync>(&mut self, name: &str, asset_type: &str, raw: &[u8]) -> Option<AssetId> {
+        let &(asset_type_id, source_id) = self.asset_type_ids.get(asset_type).expect("Unregistered asset type id");
+        assert!(asset_type_id == TypeId::of::<A>());
+        let ref mut loader = self.closures.get_mut(&(asset_type_id, source_id)).unwrap();
+        loader(&mut self.assets, name, raw)
+    }
+}
+
+impl Deref for AssetManager {
+    type Target = Assets;
+
+    fn deref(&self) -> &Assets {
+        &self.assets
+    }
+}
+
+impl DerefMut for AssetManager {
+    fn deref_mut(&mut self) -> &mut Assets {
+        &mut self.assets
     }
 }
 
@@ -215,7 +206,7 @@ pub enum FactoryImpl {
     Null,
 }
 
-impl AssetLoader<Mesh, Vec<VertexPosNormal>> for AssetManager {
+impl AssetLoader<Mesh, Vec<VertexPosNormal>> for Assets {
     fn from_data(&mut self, data: Vec<VertexPosNormal>) -> Option<Mesh> {
         let factory_impl = self.get_loader_mut::<FactoryImpl>().expect("Unable to retrieve factory");
         let mesh_impl = match *factory_impl {
@@ -239,7 +230,7 @@ pub struct TextureLoadData<'a> {
     pub raw: &'a [&'a [<<ColorFormat as Formatted>::Surface as SurfaceTyped>::DataType]],
 }
 
-impl<'a> AssetLoader<Texture, TextureLoadData<'a>> for AssetManager {
+impl<'a> AssetLoader<Texture, TextureLoadData<'a>> for Assets {
     fn from_data(&mut self, load_data: TextureLoadData) -> Option<Texture> {
         let factory_impl = self.get_loader_mut::<FactoryImpl>().expect("Unable to retrieve factory");
         let texture_impl = match *factory_impl {
@@ -259,7 +250,7 @@ impl<'a> AssetLoader<Texture, TextureLoadData<'a>> for AssetManager {
     }
 }
 
-impl AssetLoader<Texture, [f32; 4]> for AssetManager {
+impl AssetLoader<Texture, [f32; 4]> for Assets {
     fn from_data(&mut self, color: [f32; 4]) -> Option<Texture> {
         let texture = amethyst_renderer::Texture::Constant(color);
         let texture_impl = TextureImpl::OpenGL { texture: texture };
@@ -455,4 +446,56 @@ pub enum TextureImpl {
 #[derive(Clone)]
 pub struct Texture {
     texture_impl: TextureImpl,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Assets, AssetManager, AssetLoader, AssetLoaderRaw};
+
+    struct Foo;
+    struct FooLoader;
+
+    impl AssetLoader<Foo, u32> for Assets {
+        fn from_data(&mut self, x: u32) -> Option<Foo> {
+            println!("{:?}", x);
+            if x == 10 {
+                Some(Foo)
+            } else {
+                None
+            }
+        }
+    }
+
+    impl AssetLoaderRaw<u32> for Assets {
+        fn from_raw(&self, _: &[u8]) -> Option<u32> {
+            let _ = self.get_loader::<FooLoader>();
+            Some(10)
+        }
+    }
+
+
+    #[test]
+    fn loader_resource() {
+        let mut assets = AssetManager::new();
+        assets.add_loader(0.0f32);
+        assert_eq!(Some(&0.0f32), assets.get_loader::<f32>());
+    }
+
+    #[test]
+    fn load_custom_asset() {
+        let mut assets = AssetManager::new();
+        assets.register_asset::<Foo>();
+        assets.register_loader::<Foo, u32>("foo");
+        assets.add_loader::<FooLoader>(FooLoader);
+
+        assert!(assets.load_asset::<Foo>("asset01", "foo", &[0; 2]).is_some());
+        assert_eq!(None, assets.load_asset_from_data::<Foo, u32>("asset02", 2));
+    }
+
+    #[test]
+    #[should_panic]
+    fn missing_loader_implementation() {
+        let mut assets = AssetManager::new();
+        assets.load_asset_from_data::<f32, f32>("test", 1.0);
+    }
 }
