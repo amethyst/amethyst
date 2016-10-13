@@ -76,18 +76,14 @@ pub enum FactoryImpl {
 
 pub struct AssetIDFactory {
     mesh: usize,
-    texture: usize, /* sphere: usize,
-                     * cube: usize,
-                     * rectangle: usize, */
+    texture: usize,
 }
 
 impl AssetIDFactory {
     pub fn new() -> AssetIDFactory {
         AssetIDFactory {
             mesh: 0,
-            texture: 0, /* sphere: 0,
-                         * cube: 0,
-                         * rectangle: 0, */
+            texture: 0,
         }
     }
 
@@ -102,25 +98,6 @@ impl AssetIDFactory {
         self.texture += 1;
         id
     }
-
-    // pub fn next_sphere(&mut self) -> SphereID {
-    // let id = SphereID::from_usize(self.sphere);
-    // self.sphere += 1;
-    // id
-    // }
-    //
-    // pub fn next_cube(&mut self) -> CubeID {
-    // let id = CubeID::from_usize(self.cube);
-    // self.cube += 1;
-    // id
-    // }
-    //
-    // pub fn next_rectangle(&mut self) -> RectangleID {
-    // let id = RectangleID::from_usize(self.rectangle);
-    // self.rectangle += 1;
-    // id
-    // }
-    //
 }
 
 pub struct AssetIndex {
