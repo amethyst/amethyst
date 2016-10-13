@@ -5,7 +5,6 @@
 extern crate amethyst_renderer;
 extern crate gfx_device_gl;
 extern crate gfx;
-extern crate genmesh;
 extern crate cgmath;
 
 pub use self::gfx::tex::Kind;
@@ -15,13 +14,54 @@ use self::gfx::format::{Formatted, SurfaceTyped};
 use self::amethyst_renderer::VertexPosNormal;
 use self::amethyst_renderer::target::ColorFormat;
 
-use self::genmesh::generators::{SphereUV, Cube};
-use self::genmesh::{MapToVertices, Triangulate, Vertices};
-use self::cgmath::{Vector3, InnerSpace};
-
-use std::collections::HashMap;
 use renderer::{Fragment, FragmentImpl};
-use prefab_generator::{PrefabGenerator, CubeID, MeshID, RectangleID, SphereID, TextureID};
+
+macro_rules! try_refopt_clone {
+    ($expr:expr) => (match *$expr {
+        ::std::option::Option::Some(ref val) => val.clone(),
+        ::std::option::Option::None => return None
+    })
+}
+
+/// An opaque handle for a "Mesh" resource.
+#[derive(Clone, Eq, PartialEq, Hash)]
+#[must_use]
+pub struct MeshID {
+    id: usize,
+}
+
+impl MeshID {
+    /// Create a new instance.
+    pub fn from_usize(value: usize) -> MeshID {
+        MeshID { id: value }
+    }
+
+    /// Convertible to the underlying `usize`, so they can be used as an index to a Vec
+    /// conveniently.
+    pub fn to_vec_index(&self) -> usize {
+        self.id
+    }
+}
+
+/// An opaque handle for a "Texture" resource.
+#[derive(Clone, Eq, PartialEq, Hash)]
+#[must_use]
+pub struct TextureID {
+    id: usize,
+}
+
+impl TextureID {
+    /// Create a new instance.
+    pub fn from_usize(value: usize) -> TextureID {
+        TextureID { id: value }
+    }
+
+    /// Convertible to the underlying `usize`, so they can be used as an index to a Vec
+    /// conveniently.
+    pub fn to_vec_index(&self) -> usize {
+        self.id
+    }
+}
 
 /// An enum with variants representing concrete
 /// `Factory` types compatible with different backends.
@@ -34,22 +74,20 @@ pub enum FactoryImpl {
     Null,
 }
 
-struct AssetIDManager {
+pub struct AssetIDFactory {
     mesh: usize,
-    texture: usize,
-    sphere: usize,
-    cube: usize,
-    rectangle: usize,
+    texture: usize, /* sphere: usize,
+                     * cube: usize,
+                     * rectangle: usize, */
 }
 
-impl AssetIDManager {
-    pub fn new() -> AssetIDManager {
-        AssetIDManager {
+impl AssetIDFactory {
+    pub fn new() -> AssetIDFactory {
+        AssetIDFactory {
             mesh: 0,
-            texture: 0,
-            sphere: 0,
-            cube: 0,
-            rectangle: 0,
+            texture: 0, /* sphere: 0,
+                         * cube: 0,
+                         * rectangle: 0, */
         }
     }
 
@@ -85,11 +123,7 @@ impl AssetIDManager {
     //
 }
 
-struct AssetIndex {
-    meshes: HashMap<String, Mesh>,
-    textures: HashMap<String, Texture>,
-
-    // TODO: usize instead of String
+pub struct AssetIndex {
     mmap: Vec<Option<Mesh>>,
     tmap: Vec<Option<Texture>>,
 }
@@ -97,111 +131,42 @@ struct AssetIndex {
 impl AssetIndex {
     fn new(capacity: usize) -> AssetIndex {
         AssetIndex {
-            meshes: HashMap::new(),
-            textures: HashMap::new(),
             mmap: Vec::with_capacity(capacity),
             tmap: Vec::with_capacity(capacity),
         }
     }
 
-    pub fn add_mesh(&mut self, id_manager: &mut AssetIDManager, m: Mesh) -> MeshID {
-        let mesh_id = id_manager.next_mesh();
+    pub fn add_mesh(&mut self, id_factory: &mut AssetIDFactory, m: Mesh) -> MeshID {
+        let mesh_id = id_factory.next_mesh();
         self.mmap[mesh_id.to_vec_index()] = Some(m);
         mesh_id
     }
 
-    pub fn add_texture(&mut self, id_manager: &mut AssetIDManager, t: Texture) -> TextureID {
-        let texture_id = id_manager.next_texture();
+    pub fn add_texture(&mut self, id_factory: &mut AssetIDFactory, t: Texture) -> TextureID {
+        let texture_id = id_factory.next_texture();
         self.tmap[texture_id.to_vec_index()] = Some(t);
         texture_id
     }
 
-    // pub fn get_mesh(&self, index: usize) -> &Option<Mesh> {
-    // &self.mmap[index]
-    // }
+    pub fn get_mesh(&self, index: &MeshID) -> &Option<Mesh> {
+        &self.mmap[index.to_vec_index()]
+    }
 
-    // pub fn get_texture(&self, index: usize) -> &Option<Texture> {
-    // &self.tmap[index]
-    // }
+    pub fn get_texture(&self, index: &TextureID) -> &Option<Texture> {
+        &self.tmap[index.to_vec_index()]
+    }
+}
+
+#[derive(Debug)]
+pub enum ResourceError {
+    TextureLoading(&'static str),
 }
 
 /// A struct which allows loading and accessing assets.
 pub struct AssetManager {
-    id_manager: AssetIDManager,
     factory_impl: FactoryImpl,
     index: AssetIndex,
-}
-
-impl PrefabGenerator for AssetManager {
-    fn gen_sphere(&mut self, u: usize, v: usize) -> SphereID {
-        let data: Vec<VertexPosNormal> = SphereUV::new(u, v)
-            .vertex(|(x, y, z)| {
-                VertexPosNormal {
-                    pos: [x, y, z],
-                    normal: Vector3::new(x, y, z).normalize().into(),
-                    tex_coord: [0., 0.],
-                }
-            })
-            .triangulate()
-            .vertices()
-            .collect();
-        let mesh = self.load_mesh(&data);
-        let mesh_id = self.index.add_mesh(&mut self.id_manager, mesh);
-        SphereID::from_meshid(mesh_id)
-    }
-
-    fn gen_cube(&mut self) -> CubeID {
-        let data: Vec<VertexPosNormal> = Cube::new()
-            .vertex(|(x, y, z)| {
-                VertexPosNormal {
-                    pos: [x, y, z],
-                    normal: Vector3::new(x, y, z).normalize().into(),
-                    tex_coord: [0., 0.],
-                }
-            })
-            .triangulate()
-            .vertices()
-            .collect();
-        let mesh = self.load_mesh(&data);
-        CubeID::from_meshid(self.index.add_mesh(&mut self.id_manager, mesh))
-    }
-
-    fn gen_rectangle(&mut self, width: f32, height: f32) -> RectangleID {
-        let data = vec![
-            VertexPosNormal {
-                pos: [-width/2., height/2., 0.],
-                normal: [0., 0., 1.],
-                tex_coord: [0., 1.],
-            },
-            VertexPosNormal {
-                pos: [-width/2., -height/2., 0.],
-                normal: [0., 0., 1.],
-                tex_coord: [0., 0.],
-            },
-            VertexPosNormal {
-                pos: [width/2., -height/2., 0.],
-                normal: [0., 0., 1.],
-                tex_coord: [1., 0.],
-            },
-            VertexPosNormal {
-                pos: [width/2., -height/2., 0.],
-                normal: [0., 0., 1.],
-                tex_coord: [0., 1.],
-            },
-            VertexPosNormal {
-                pos: [width/2., height/2., 0.],
-                normal: [0., 0., 1.],
-                tex_coord: [0., 0.],
-            },
-            VertexPosNormal {
-                pos: [-width/2., height/2., 0.],
-                normal: [0., 0., 1.],
-                tex_coord: [1., 0.],
-            },
-        ];
-        let mesh = self.load_mesh(&data);
-        RectangleID::from_meshid(self.index.add_mesh(&mut self.id_manager, mesh))
-    }
+    id_factory: AssetIDFactory,
 }
 
 impl AssetManager {
@@ -216,13 +181,12 @@ impl AssetManager {
     /// opportunity).
     pub fn new_sized(factory_impl: FactoryImpl, capacity: usize) -> AssetManager {
         AssetManager {
-            id_manager: AssetIDManager::new(),
             factory_impl: factory_impl,
             index: AssetIndex::new(capacity),
+            id_factory: AssetIDFactory::new(),
         }
     }
-    /// Load a `Mesh` from vertex data.
-    fn load_mesh(&mut self, data: &Vec<VertexPosNormal>) -> Mesh {
+    pub fn load_mesh(&mut self, data: &Vec<VertexPosNormal>) -> MeshID {
         match self.factory_impl {
             FactoryImpl::OpenGL { ref mut factory } => {
                 let (buffer, slice) = factory.create_vertex_buffer_with_slice(&data, ());
@@ -230,92 +194,74 @@ impl AssetManager {
                     buffer: buffer,
                     slice: slice,
                 };
-                Mesh { mesh_impl: mesh_impl };
+                let mesh = Mesh { mesh_impl: mesh_impl };
+                let mesh_id = self.index.add_mesh(&mut self.id_factory, mesh);
+                return mesh_id;
             }
             #[cfg(windows)]
-            FactoryImpl::Direct3D {} => {
-                unimplemented!();
-            }
-            FactoryImpl::Null {} => unimplemented!(),
+            FactoryImpl::Direct3D {} => {}
+            FactoryImpl::Null {} => {}
         }
         unimplemented!()
     }
     /// Lookup a `Mesh` by name.
-    pub fn get_mesh(&mut self, name: &str) -> Option<Mesh> {
-        match self.index.meshes.get(name.into()) {
-            Some(mesh) => Some((*mesh).clone()),
-            None => None,
-        }
+    pub fn get_mesh(&self, id: &MeshID) -> &Option<Mesh> {
+        self.index.get_mesh(id)
     }
     /// Load a `Texture` from pixel data.
-    pub fn load_texture(&mut self, name: &str, kind: Kind, data: &[&[<<ColorFormat as Formatted>::Surface as SurfaceTyped>::DataType]]) {
+    pub fn load_texture(&mut self, kind: Kind, data: &[&[<<ColorFormat as Formatted>::Surface as SurfaceTyped>::DataType]]) -> Result<TextureID, ResourceError> {
         match self.factory_impl {
             FactoryImpl::OpenGL { ref mut factory } => {
                 let shader_resource_view = match factory.create_texture_const::<ColorFormat>(kind, data) {
                     Ok((_, shader_resource_view)) => shader_resource_view,
-                    Err(_) => return,
+                    Err(_) => return Err(ResourceError::TextureLoading("hi ben")),
                 };
                 let texture = amethyst_renderer::Texture::Texture(shader_resource_view);
                 let texture_impl = TextureImpl::OpenGL { texture: texture };
                 let texture = Texture { texture_impl: texture_impl };
-                self.index.textures.insert(name.into(), texture);
+                let texture_id = self.index.add_texture(&mut self.id_factory, texture);
+                return Ok(texture_id);
             }
             #[cfg(windows)]
-            FactoryImpl::Direct3D {} => {
-                unimplemented!();
-            }
+            FactoryImpl::Direct3D {} => {}
             FactoryImpl::Null => (),
         }
+        unimplemented!();
     }
     /// Create a constant solid color `Texture` from a specified color.
-    pub fn create_constant_texture(&mut self, name: &str, color: [f32; 4]) {
+    pub fn create_constant_texture(&mut self, color: [f32; 4]) -> TextureID {
         let texture = amethyst_renderer::Texture::Constant(color);
         let texture_impl = TextureImpl::OpenGL { texture: texture };
         let texture = Texture { texture_impl: texture_impl };
-        self.index.textures.insert(name.into(), texture);
+        self.index.add_texture(&mut self.id_factory, texture)
     }
     /// Lookup a `Texture` by name.
-    pub fn get_texture(&mut self, name: &str) -> Option<Texture> {
-        match self.index.textures.get(name.into()) {
-            Some(texture) => Some((*texture).clone()),
-            None => None,
-        }
+    pub fn get_texture(&mut self, id: &TextureID) -> &Option<Texture> {
+        self.index.get_texture(id)
     }
-    /// Construct and return a `Fragment` from previously loaded mesh, ka and kd textures and a transform matrix.
-    pub fn get_fragment(&mut self, mesh: &str, ka: &str, kd: &str, transform: [[f32; 4]; 4]) -> Option<Fragment> {
-        let mesh = match self.get_mesh(mesh) {
-            Some(mesh) => mesh,
-            None => return None,
-        };
-        let ka = match self.get_texture(ka) {
-            Some(ka) => ka,
-            None => return None,
-        };
-        let kd = match self.get_texture(kd) {
-            Some(kd) => kd,
-            None => return None,
-        };
+
+    fn make_fragment(&mut self, mesh: Mesh, ka: Texture, kd: Texture, transform: [[f32; 4]; 4]) -> Fragment {
         match self.factory_impl {
             FactoryImpl::OpenGL { .. } => {
                 let ka = match ka.texture_impl {
                     TextureImpl::OpenGL { texture } => texture,
                     #[cfg(windows)]
-                    TextureImpl::Direct3D {} => return None,
-                    TextureImpl::Null => return None,
+                    TextureImpl::Direct3D {} => unimplemented!(),
+                    TextureImpl::Null => unimplemented!(),
                 };
 
                 let kd = match kd.texture_impl {
                     TextureImpl::OpenGL { texture } => texture,
                     #[cfg(windows)]
-                    TextureImpl::Direct3D {} => return None,
-                    TextureImpl::Null => return None,
+                    TextureImpl::Direct3D {} => unimplemented!(),
+                    TextureImpl::Null => unimplemented!(),
                 };
 
                 let (buffer, slice) = match mesh.mesh_impl {
                     MeshImpl::OpenGL { buffer, slice } => (buffer, slice),
                     #[cfg(windows)]
-                    MeshImpl::Direct3D {} => return None,
-                    MeshImpl::Null => return None,
+                    MeshImpl::Direct3D {} => unimplemented!(),
+                    MeshImpl::Null => unimplemented!(),
                 };
 
                 let fragment = amethyst_renderer::Fragment {
@@ -326,14 +272,22 @@ impl AssetManager {
                     kd: kd,
                 };
                 let fragment_impl = FragmentImpl::OpenGL { fragment: fragment };
-                Some(Fragment { fragment_impl: fragment_impl })
+                Fragment { fragment_impl: fragment_impl }
             }
             #[cfg(windows)]
             FactoryImpl::Direct3D {} => {
                 unimplemented!();
             }
-            FactoryImpl::Null => None,
+            FactoryImpl::Null => unimplemented!(),
         }
+    }
+    /// Construct and return a `Fragment` from previously loaded mesh, ka and kd textures and a transform matrix.
+    pub fn get_fragment(&mut self, m: &MeshID, ka: &TextureID, kd: &TextureID, transform: [[f32; 4]; 4]) -> Option<Fragment> {
+        // We clone the components of the Fragment, only if it is present.
+        let mesh = try_refopt_clone!(self.get_mesh(m));
+        let ka = try_refopt_clone!(self.get_texture(ka));
+        let kd = try_refopt_clone!(self.get_texture(kd));
+        Some(self.make_fragment(mesh, ka, kd, transform))
     }
 }
 
