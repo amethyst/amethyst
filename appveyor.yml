@@ -13,16 +13,15 @@ install:
     - SET PATH=%PATH%;C:\MinGW\bin
     - rustc -V
     - cargo -V
-    - cargo install cargo-local-pkgs && exit 0
 
 # Force third-party crates to persist from previous builds and update only when
 # needed.
 cache:
     - .cargo -> rust-nightly-date, cargo-nightly-build
 
-# Since this project is 
+# Since this is not a .NET project, we can flip the build system off.
 build: false
 
 # Compile the engine and run all tests.
 test_script:
-    - cargo local-pkgs test -v
+    - cargo test -p amethyst -p amethyst_config -p amethyst_context -p amethyst_ecs -v
