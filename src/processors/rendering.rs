@@ -6,10 +6,13 @@ use ecs::{Processor, RunArg, Join, Component, VecStorage, Entity};
 use context::Context;
 use std::sync::{Mutex, Arc};
 use renderer;
+use context::prefab::PrefabIndex;
 use renderer::Layer;
 use std::collections::HashSet;
 use config::Element;
 use std::path::Path;
+
+use context::resource::{MeshID, TextureID};
 
 config!(
 /// A config required to create a rendering processor.
@@ -179,11 +182,11 @@ impl Processor<Arc<Mutex<Context>>> for RenderingProcessor {
                     // If it is not in frame then attempt to create a Fragment with given transform
                     // and requested mesh, ka, and kd, which are looked up using the asset manager
                     None => {
-                        let mesh = renderable.mesh.as_str();
-                        let ka = renderable.ka.as_str();
-                        let kd = renderable.kd.as_str();
+                        let ref mesh = renderable.mesh;
+                        let ref ka = renderable.ka;
+                        let ref kd = renderable.kd;
                         let transform = renderable.transform;
-                        if let Some(fragment) = context.asset_manager
+                        if let Some(fragment) = context.prefab_manager
                             .get_fragment(mesh, ka, kd, transform) {
                             if let Some(idx) = context.renderer
                                 .add_fragment(ACTIVE_SCENE_NAME, fragment) {
@@ -269,9 +272,9 @@ pub struct Renderable {
     // to access the renderer::Fragment held by context.renderer
     // If idx == None then this Renderable is not renderered.
     idx: Option<usize>,
-    mesh: String,
-    ka: String,
-    kd: String,
+    mesh: MeshID,
+    ka: TextureID,
+    kd: TextureID,
     transform: [[f32; 4]; 4],
     pub translation: [f32; 3],
     pub rotation_axis: [f32; 3],
@@ -280,13 +283,13 @@ pub struct Renderable {
 }
 
 impl Renderable {
-    /// Create a new Renderable component from names of assets loaded by context.asset_manager.
-    pub fn new(mesh: &str, ka: &str, kd: &str) -> Renderable {
+    /// Create a new Renderable component from names of assets loaded by context.resource_manager.
+    pub fn new(mesh: MeshID, ka: TextureID, kd: TextureID) -> Renderable {
         Renderable {
             idx: None,
-            mesh: mesh.into(),
-            ka: ka.into(),
-            kd: kd.into(),
+            mesh: mesh,
+            ka: ka,
+            kd: kd,
             transform: cgmath::Matrix4::from_scale(1.).into(),
             translation: [0., 0., 0.],
             rotation_axis: [0., 0., 0.],

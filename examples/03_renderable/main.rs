@@ -6,15 +6,15 @@ use amethyst::context::Context;
 use amethyst::config::Element;
 use amethyst::ecs::{World, Join};
 
+use amethyst::context::prefab::PrefabGenerator;
+
 struct Example {
     t: f32,
 }
 
 impl Example {
     pub fn new() -> Example {
-        Example {
-            t: 0.0,
-        }
+        Example { t: 0.0 }
     }
 }
 
@@ -39,11 +39,11 @@ impl State for Example {
             .with(camera)
             .build();
 
-        ctx.asset_manager.create_constant_texture("dark_blue", [0.0, 0.0, 0.01, 1.]);
-        ctx.asset_manager.create_constant_texture("green", [0.0, 1.0, 0.0, 1.]);
-        ctx.asset_manager.gen_sphere("sphere", 32, 32);
+        let dark_blue = ctx.prefab_manager.create_constant_texture([0.0, 0.0, 0.01, 1.]);
+        let green = ctx.prefab_manager.create_constant_texture([0.0, 1.0, 0.0, 1.]);
+        let sphere = ctx.prefab_manager.gen_sphere(32, 32);
 
-        let sphere = Renderable::new("sphere", "dark_blue", "green");
+        let sphere = Renderable::new(sphere, dark_blue, green);
 
         world.create_now()
             .with(sphere)
@@ -103,7 +103,7 @@ impl State for Example {
         // Test Camera mutation
         let mut cameras = world.write::<Camera>();
         for camera in (&mut cameras).iter() {
-            camera.eye[1] = 3.0 + 3.0*phase.sin().abs();
+            camera.eye[1] = 3.0 + 3.0 * phase.sin().abs();
         }
 
         Trans::None
@@ -113,15 +113,15 @@ impl State for Example {
 fn main() {
     use amethyst::engine::Config;
     let path = format!("{}/examples/03_renderable/resources/config.yml",
-                    env!("CARGO_MANIFEST_DIR"));
+                       env!("CARGO_MANIFEST_DIR"));
     let config = Config::from_file(path).unwrap();
     let mut ctx = Context::new(config.context_config);
     let rendering_processor = RenderingProcessor::new(config.renderer_config, &mut ctx);
     let mut game = Application::build(Example::new(), ctx)
-                   .with::<RenderingProcessor>(rendering_processor, "rendering_processor", 0)
-                   .register::<Renderable>()
-                   .register::<Light>()
-                   .register::<Camera>()
-                   .done();
+        .with::<RenderingProcessor>(rendering_processor, "rendering_processor", 0)
+        .register::<Renderable>()
+        .register::<Light>()
+        .register::<Camera>()
+        .done();
     game.run();
 }

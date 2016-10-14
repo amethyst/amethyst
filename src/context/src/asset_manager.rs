@@ -1,274 +1,136 @@
 //! This module provides an asset manager
 //! which loads and provides access to assets,
 //! such as `Texture`s, `Mesh`es, and `Fragment`s.
-
 extern crate amethyst_renderer;
-extern crate gfx_device_gl;
 extern crate gfx;
-extern crate genmesh;
-extern crate cgmath;
 
-pub use self::gfx::tex::Kind;
-use self::gfx::traits::FactoryExt;
-use self::gfx::Factory;
-use self::gfx::format::{Formatted, SurfaceTyped};
+use prefab::{PrefabGenerator, PrefabIndex, PrefabManager};
+use resource::{MeshID, TextureID};
+use device::{DeviceError, DeviceManager, Mesh, Texture};
+use renderer::Fragment;
+
+use std::collections::HashMap;
+
+use asset_manager::gfx::tex::Kind;
+use asset_manager::gfx::format::{Formatted, SurfaceTyped};
 use self::amethyst_renderer::VertexPosNormal;
 use self::amethyst_renderer::target::ColorFormat;
 
-use self::genmesh::generators::{SphereUV, Cube};
-use self::genmesh::{MapToVertices, Triangulate, Vertices};
-use self::cgmath::{Vector3, InnerSpace};
+// pub use self::gfx::tex::Kind;
+// use self::gfx::traits::FactoryExt;
+// use self::gfx::Factory;
+// use self::gfx::format::{Formatted, SurfaceTyped};
+// use self::amethyst_renderer::VertexPosNormal;
+// use self::amethyst_renderer::target::ColorFormat;
+// use renderer::{Fragment, FragmentImpl};
+//
 
-use std::collections::HashMap;
-use renderer::{Fragment, FragmentImpl};
+/// Storage for different `Assets`.
+pub trait AssetManager {
+    fn add_cube(&mut self, name: &str);
+    fn add_sphere(&mut self, name: &str, u: usize, v: usize);
+    fn add_rectangle(&mut self, name: &str, width: f32, height: f32);
 
-/// An enum with variants representing concrete
-/// `Factory` types compatible with different backends.
-pub enum FactoryImpl {
-    OpenGL { factory: gfx_device_gl::Factory },
-    #[cfg(windows)]
-    Direct3D {
-        // stub
-    },
-    Null,
+    fn get_cube(&self, name: &str) -> &Option<Mesh>;
+    fn get_sphere(&self, name: &str) -> &Option<Mesh>;
+    fn get_rectangle(&self, name: &str) -> &Option<Mesh>;
+
+    fn new(m: &mut PrefabManager) -> HashmapAssetManager {
+        HashmapAssetManager::new(m)
+    }
 }
 
-/// A struct which allows loading and accessing assets.
-pub struct AssetManager {
-    factory_impl: FactoryImpl,
-    meshes: HashMap<String, Mesh>,
-    textures: HashMap<String, Texture>,
+pub struct HashmapAssetManager<'a> {
+    manager: &'a mut PrefabManager,
+    cubes: HashMap<String, MeshID>,
+    spheres: HashMap<String, MeshID>,
+    rectangles: HashMap<String, MeshID>,
 }
 
-impl AssetManager {
-    /// Create a new `AssetManager` from `FactoryImpl` (used internally).
-    pub fn new(factory_impl: FactoryImpl) -> AssetManager {
-        AssetManager {
-            factory_impl: factory_impl,
-            meshes: HashMap::new(),
-            textures: HashMap::new(),
-        }
-    }
-    /// Load a `Mesh` from vertex data.
-    pub fn load_mesh(&mut self, name: &str, data: &Vec<VertexPosNormal>) {
-        match self.factory_impl {
-            FactoryImpl::OpenGL { ref mut factory } => {
-                let (buffer, slice) = factory.create_vertex_buffer_with_slice(&data, ());
-                let mesh_impl = MeshImpl::OpenGL {
-                    buffer: buffer,
-                    slice: slice,
-                };
-                let mesh = Mesh { mesh_impl: mesh_impl };
-                self.meshes.insert(name.into(), mesh);
-            }
-            #[cfg(windows)]
-            FactoryImpl::Direct3D {} => {
-                unimplemented!();
-            }
-            FactoryImpl::Null => (),
-        }
-    }
-    /// Generate and load a sphere mesh using the number of vertices accross the equator (u)
-    /// and the number of vertices from pole to pole (v).
-    pub fn gen_sphere(&mut self, name: &str, u: usize, v: usize) {
-        let data: Vec<VertexPosNormal> = SphereUV::new(u, v)
-            .vertex(|(x, y, z)| {
-                VertexPosNormal {
-                    pos: [x, y, z],
-                    normal: Vector3::new(x, y, z).normalize().into(),
-                    tex_coord: [0., 0.],
-                }
-            })
-            .triangulate()
-            .vertices()
-            .collect();
-        self.load_mesh(name, &data);
-    }
-    /// Generate and load a cube mesh.
-    pub fn gen_cube(&mut self, name: &str) {
-        let data: Vec<VertexPosNormal> = Cube::new()
-            .vertex(|(x, y, z)| {
-                VertexPosNormal {
-                    pos: [x, y, z],
-                    normal: Vector3::new(x, y, z).normalize().into(),
-                    tex_coord: [0., 0.],
-                }
-            })
-            .triangulate()
-            .vertices()
-            .collect();
-        self.load_mesh(name, &data);
-    }
-    /// Generate and load a rectangle mesh in XY plane with given `width` and `height`.
-    pub fn gen_rectangle(&mut self, name: &str, width: f32, height: f32) {
-        let data = vec![
-            VertexPosNormal {
-                pos: [-width/2., height/2., 0.],
-                normal: [0., 0., 1.],
-                tex_coord: [0., 1.],
-            },
-            VertexPosNormal {
-                pos: [-width/2., -height/2., 0.],
-                normal: [0., 0., 1.],
-                tex_coord: [0., 0.],
-            },
-            VertexPosNormal {
-                pos: [width/2., -height/2., 0.],
-                normal: [0., 0., 1.],
-                tex_coord: [1., 0.],
-            },
-            VertexPosNormal {
-                pos: [width/2., -height/2., 0.],
-                normal: [0., 0., 1.],
-                tex_coord: [0., 1.],
-            },
-            VertexPosNormal {
-                pos: [width/2., height/2., 0.],
-                normal: [0., 0., 1.],
-                tex_coord: [0., 0.],
-            },
-            VertexPosNormal {
-                pos: [-width/2., height/2., 0.],
-                normal: [0., 0., 1.],
-                tex_coord: [1., 0.],
-            },
-        ];
-        self.load_mesh(name, &data);
-    }
-    /// Lookup a `Mesh` by name.
-    pub fn get_mesh(&mut self, name: &str) -> Option<Mesh> {
-        match self.meshes.get(name.into()) {
-            Some(mesh) => Some((*mesh).clone()),
-            None => None,
-        }
-    }
-    /// Load a `Texture` from pixel data.
-    pub fn load_texture(&mut self, name: &str, kind: Kind, data: &[&[<<ColorFormat as Formatted>::Surface as SurfaceTyped>::DataType]]) {
-        match self.factory_impl {
-            FactoryImpl::OpenGL { ref mut factory } => {
-                let shader_resource_view = match factory.create_texture_const::<ColorFormat>(kind, data) {
-                    Ok((_, shader_resource_view)) => shader_resource_view,
-                    Err(_) => return,
-                };
-                let texture = amethyst_renderer::Texture::Texture(shader_resource_view);
-                let texture_impl = TextureImpl::OpenGL { texture: texture };
-                let texture = Texture { texture_impl: texture_impl };
-                self.textures.insert(name.into(), texture);
-            }
-            #[cfg(windows)]
-            FactoryImpl::Direct3D {} => {
-                unimplemented!();
-            }
-            FactoryImpl::Null => (),
-        }
-    }
-    /// Create a constant solid color `Texture` from a specified color.
-    pub fn create_constant_texture(&mut self, name: &str, color: [f32; 4]) {
-        let texture = amethyst_renderer::Texture::Constant(color);
-        let texture_impl = TextureImpl::OpenGL { texture: texture };
-        let texture = Texture { texture_impl: texture_impl };
-        self.textures.insert(name.into(), texture);
-    }
-    /// Lookup a `Texture` by name.
-    pub fn get_texture(&mut self, name: &str) -> Option<Texture> {
-        match self.textures.get(name.into()) {
-            Some(texture) => Some((*texture).clone()),
-            None => None,
-        }
-    }
-    /// Construct and return a `Fragment` from previously loaded mesh, ka and kd textures and a transform matrix.
-    pub fn get_fragment(&mut self, mesh: &str, ka: &str, kd: &str, transform: [[f32; 4]; 4]) -> Option<Fragment> {
-        let mesh = match self.get_mesh(mesh) {
-            Some(mesh) => mesh,
-            None => return None,
-        };
-        let ka = match self.get_texture(ka) {
-            Some(ka) => ka,
-            None => return None,
-        };
-        let kd = match self.get_texture(kd) {
-            Some(kd) => kd,
-            None => return None,
-        };
-        match self.factory_impl {
-            FactoryImpl::OpenGL { .. } => {
-                let ka = match ka.texture_impl {
-                    TextureImpl::OpenGL { texture } => texture,
-                    #[cfg(windows)]
-                    TextureImpl::Direct3D {} => return None,
-                    TextureImpl::Null => return None,
-                };
-
-                let kd = match kd.texture_impl {
-                    TextureImpl::OpenGL { texture } => texture,
-                    #[cfg(windows)]
-                    TextureImpl::Direct3D {} => return None,
-                    TextureImpl::Null => return None,
-                };
-
-                let (buffer, slice) = match mesh.mesh_impl {
-                    MeshImpl::OpenGL { buffer, slice } => (buffer, slice),
-                    #[cfg(windows)]
-                    MeshImpl::Direct3D {} => return None,
-                    MeshImpl::Null => return None,
-                };
-
-                let fragment = amethyst_renderer::Fragment {
-                    transform: transform,
-                    buffer: buffer,
-                    slice: slice,
-                    ka: ka,
-                    kd: kd,
-                };
-                let fragment_impl = FragmentImpl::OpenGL { fragment: fragment };
-                Some(Fragment { fragment_impl: fragment_impl })
-            }
-            #[cfg(windows)]
-            FactoryImpl::Direct3D {} => {
-                unimplemented!();
-            }
-            FactoryImpl::Null => None,
+impl<'a> HashmapAssetManager<'a> {
+    fn new(m: &'a mut PrefabManager) -> HashmapAssetManager<'a> {
+        HashmapAssetManager {
+            manager: m,
+            cubes: HashMap::new(),
+            spheres: HashMap::new(),
+            rectangles: HashMap::new(),
         }
     }
 }
 
-/// An enum with variants representing concrete
-/// `Mesh` types compatible with different backends.
-#[derive(Clone)]
-pub enum MeshImpl {
-    OpenGL {
-        buffer: gfx::handle::Buffer<gfx_device_gl::Resources, VertexPosNormal>,
-        slice: gfx::Slice<gfx_device_gl::Resources>,
-    },
-    #[cfg(windows)]
-    Direct3D {
-        // stub
-    },
-    Null,
+impl<'a> AssetManager for HashmapAssetManager<'a> {
+    fn add_cube(&mut self, name: &str) {
+        let cube = self.manager.gen_cube();
+        self.cubes.insert(name.into(), cube);
+    }
+    fn add_sphere(&mut self, name: &str, u: usize, v: usize) {
+        let sphere = self.manager.gen_sphere(u, v);
+        self.spheres.insert(name.into(), sphere);
+    }
+    fn add_rectangle(&mut self, name: &str, width: f32, height: f32) {
+        let rectangle = self.manager.gen_rectangle(width, height);
+        self.rectangles.insert(name.into(), rectangle);
+    }
+
+    fn get_cube(&self, name: &str) -> &Option<Mesh> {
+        let ref id = self.cubes[name];
+        self.manager.load_cube(id)
+    }
+    fn get_sphere(&self, name: &str) -> &Option<Mesh> {
+        let ref id = self.spheres[name];
+        self.manager.load_sphere(id)
+    }
+    fn get_rectangle(&self, name: &str) -> &Option<Mesh> {
+        let ref id = self.rectangles[name];
+        self.manager.load_rectangle(id)
+    }
 }
 
-/// A wraper around `Buffer` and `Slice` required to
-/// hide all platform specific code from the user.
-#[derive(Clone)]
-pub struct Mesh {
-    mesh_impl: MeshImpl,
+impl<'a> PrefabGenerator for HashmapAssetManager<'a> {
+    fn gen_sphere(&mut self, u: usize, v: usize) -> MeshID {
+        self.manager.gen_sphere(u, v)
+    }
+    fn gen_cube(&mut self) -> MeshID {
+        self.manager.gen_cube()
+    }
+    fn gen_rectangle(&mut self, width: f32, height: f32) -> MeshID {
+        self.manager.gen_rectangle(width, height)
+    }
 }
 
-/// An enum with variants representing concrete
-/// `Texture` types compatible with different backends.
-#[derive(Clone)]
-pub enum TextureImpl {
-    OpenGL { texture: amethyst_renderer::Texture<gfx_device_gl::Resources>, },
-    #[cfg(windows)]
-    Direct3D {
-        // stub
-    },
-    Null,
+impl<'a> DeviceManager for HashmapAssetManager<'a> {
+    fn load_mesh(&mut self, data: &Vec<VertexPosNormal>) -> MeshID {
+        unimplemented!()
+    }
+    fn get_mesh(&self, id: &MeshID) -> &Option<Mesh> {
+        unimplemented!()
+    }
+    fn load_texture(&mut self, kind: Kind, data: &[&[<<ColorFormat as Formatted>::Surface as SurfaceTyped>::DataType]]) -> Result<TextureID, DeviceError> {
+        unimplemented!()
+    }
+    fn create_constant_texture(&mut self, color: [f32; 4]) -> TextureID {
+        unimplemented!()
+    }
+    fn get_texture(&mut self, id: &TextureID) -> &Option<Texture> {
+        unimplemented!()
+    }
+    fn make_fragment(&mut self, mesh: Mesh, ka: Texture, kd: Texture, transform: [[f32; 4]; 4]) -> Fragment {
+        unimplemented!()
+    }
 }
 
-/// A wraper around `Texture` required to
-/// hide all platform specific code from the user.
-#[derive(Clone)]
-pub struct Texture {
-    texture_impl: TextureImpl,
+impl<'a> PrefabIndex for HashmapAssetManager<'a> {
+    fn load_sphere(&self, id: &MeshID) -> &Option<Mesh> {
+        unimplemented!()
+    }
+    fn load_cube(&self, id: &MeshID) -> &Option<Mesh> {
+        unimplemented!()
+    }
+    fn load_rectangle(&self, id: &MeshID) -> &Option<Mesh> {
+        unimplemented!()
+    }
+
+    fn get_fragment(&mut self, m: &MeshID, ka: &TextureID, kd: &TextureID, transform: [[f32; 4]; 4]) -> Option<Fragment> {
+        unimplemented!()
+    }
 }

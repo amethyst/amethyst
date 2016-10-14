@@ -36,61 +36,51 @@ impl Renderer {
 
     /// Set the rendering pipeline to be used.
     pub fn set_pipeline(&mut self, pipeline: Vec<Layer>) {
-        unwind_video_context_mut!(
-            self.video_context,
-            frame,
-            {
-                frame.layers = pipeline;
-            },
-            ()
-        )
+        unwind_video_context_mut!(self.video_context,
+                                  frame,
+                                  {
+                                      frame.layers = pipeline;
+                                  },
+                                  ())
     }
 
     /// Add a rendering `Target`.
     pub fn add_target(&mut self, target: Box<Target>, name: &str) {
-        unwind_video_context_mut!(
-            self.video_context,
-            frame,
-            {
-                frame.targets.insert(name.into(), target);
-            },
-            ()
-        )
+        unwind_video_context_mut!(self.video_context,
+                                  frame,
+                                  {
+                                      frame.targets.insert(name.into(), target);
+                                  },
+                                  ())
     }
     /// Delete a rendering `Target`.
     pub fn delete_target(&mut self, name: &str) {
-        unwind_video_context_mut!(
-            self.video_context,
-            frame,
-            {
-                frame.targets.remove(name.into());
-            },
-            ()
-        )
+        unwind_video_context_mut!(self.video_context,
+                                  frame,
+                                  {
+                                      frame.targets.remove(name.into());
+                                  },
+                                  ())
     }
 
     /// Add an empty `Scene`.
     pub fn add_scene(&mut self, name: &str) {
-        unwind_video_context_mut!(
-            self.video_context,
-            frame,
-            {
-                let scene = Scene::new();
-                frame.scenes.insert(name.into(), scene);
-            },
-            ()
-        )
+        unwind_video_context_mut!(self.video_context,
+                                  frame,
+                                  {
+                                      let scene = Scene::new();
+                                      frame.scenes.insert(name.into(), scene);
+                                  },
+                                  ())
     }
     /// Delete a `Scene`.
     pub fn delete_scene(&mut self, name: &str) {
-        unwind_video_context_mut!(
-            self.video_context,
-            frame,
-            {
-                frame.scenes.remove(name);
-            },
-            ()
-        )
+        unwind_video_context_mut!(self.video_context,
+                                  frame,
+                                  {
+                                      frame.scenes.remove(name);
+                                  },
+                                  ())
     }
 
     /// Add a `Fragment` to the scene with name `scene_name`.
@@ -122,147 +112,127 @@ impl Renderer {
     /// Get a mutable reference to the transform field of `Fragment` with index `idx`
     /// in scene `scene_name`.
     pub fn mut_fragment_transform(&mut self, scene_name: &str, idx: usize) -> Option<&mut [[f32; 4]; 4]> {
-        unwind_video_context_mut!(
-            self.video_context,
-            frame,
-            {
-                let scene = match frame.scenes.get_mut(scene_name.into()) {
-                    Some(scene) => scene,
-                    None => return None,
-                };
-                Some(&mut scene.fragments[idx].transform)
-            },
-            None
-        )
+        unwind_video_context_mut!(self.video_context,
+                                  frame,
+                                  {
+                                      let scene = match frame.scenes.get_mut(scene_name.into()) {
+                                          Some(scene) => scene,
+                                          None => return None,
+                                      };
+                                      Some(&mut scene.fragments[idx].transform)
+                                  },
+                                  None)
     }
     /// Delete `Fragment` with index `idx` in scene `scene_name`.
     pub fn delete_fragment(&mut self, scene_name: &str, idx: usize) {
-        unwind_video_context_mut!(
-            self.video_context,
-            frame,
-            {
-                let scene = match frame.scenes.get_mut(scene_name.into()) {
-                    Some(scene) => scene,
-                    None => return,
-                };
-                scene.fragments.remove(idx);
-            },
-            ()
-        )
+        unwind_video_context_mut!(self.video_context,
+                                  frame,
+                                  {
+                                      let scene = match frame.scenes.get_mut(scene_name.into()) {
+                                          Some(scene) => scene,
+                                          None => return,
+                                      };
+                                      scene.fragments.remove(idx);
+                                  },
+                                  ())
     }
 
     // Return number of fragments in scene `scene_name`.
     pub fn num_fragments(&mut self, scene_name: &str) -> Option<usize> {
-        unwind_video_context_mut!(
-            self.video_context,
-            frame,
-            {
-                let scene = match frame.scenes.get_mut(scene_name.into()) {
-                    Some(scene) => scene,
-                    None => return None,
-                };
-                Some(scene.fragments.len())
-            },
-            None
-        )
+        unwind_video_context_mut!(self.video_context,
+                                  frame,
+                                  {
+                                      let scene = match frame.scenes.get_mut(scene_name.into()) {
+                                          Some(scene) => scene,
+                                          None => return None,
+                                      };
+                                      Some(scene.fragments.len())
+                                  },
+                                  None)
     }
 
     /// Add a `Light` to the scene `scene_name`.
     /// Return the index of the added `Light`.
     pub fn add_light(&mut self, scene_name: &str, light: Light) -> Option<usize> {
-        unwind_video_context_mut!(
-            self.video_context,
-            frame,
-            {
-                let scene = match frame.scenes.get_mut(scene_name.into()) {
-                    Some(scene) => scene,
-                    None => return None,
-                };
-                scene.lights.push(light);
-                Some(scene.lights.len() - 1)
-            },
-            None
-        )
+        unwind_video_context_mut!(self.video_context,
+                                  frame,
+                                  {
+                                      let scene = match frame.scenes.get_mut(scene_name.into()) {
+                                          Some(scene) => scene,
+                                          None => return None,
+                                      };
+                                      scene.lights.push(light);
+                                      Some(scene.lights.len() - 1)
+                                  },
+                                  None)
     }
     /// Lookup `Light` in scene `scene_name` by index.
     pub fn mut_light(&mut self, scene_name: &str, idx: usize) -> Option<&mut Light> {
-        unwind_video_context_mut!(
-            self.video_context,
-            frame,
-            {
-                let scene = match frame.scenes.get_mut(scene_name.into()) {
-                    Some(scene) => scene,
-                    None => return None,
-                };
-                scene.lights.get_mut(idx)
-            },
-            None
-        )
+        unwind_video_context_mut!(self.video_context,
+                                  frame,
+                                  {
+                                      let scene = match frame.scenes.get_mut(scene_name.into()) {
+                                          Some(scene) => scene,
+                                          None => return None,
+                                      };
+                                      scene.lights.get_mut(idx)
+                                  },
+                                  None)
     }
     /// Delete `Light` with index `idx` in scene `scene_name`.
     pub fn delete_light(&mut self, scene_name: &str, idx: usize) {
-        unwind_video_context_mut!(
-            self.video_context,
-            frame,
-            {
-                let scene = match frame.scenes.get_mut(scene_name.into()) {
-                    Some(scene) => scene,
-                    None => return,
-                };
-                scene.lights.remove(idx);
-            },
-            ()
-        )
+        unwind_video_context_mut!(self.video_context,
+                                  frame,
+                                  {
+                                      let scene = match frame.scenes.get_mut(scene_name.into()) {
+                                          Some(scene) => scene,
+                                          None => return,
+                                      };
+                                      scene.lights.remove(idx);
+                                  },
+                                  ())
     }
 
     // Return number of lights in scene `scene_name`.
     pub fn num_lights(&mut self, scene_name: &str) -> Option<usize> {
-        unwind_video_context_mut!(
-            self.video_context,
-            frame,
-            {
-                let scene = match frame.scenes.get_mut(scene_name.into()) {
-                    Some(scene) => scene,
-                    None => return None,
-                };
-                Some(scene.lights.len())
-            },
-            None
-        )
+        unwind_video_context_mut!(self.video_context,
+                                  frame,
+                                  {
+                                      let scene = match frame.scenes.get_mut(scene_name.into()) {
+                                          Some(scene) => scene,
+                                          None => return None,
+                                      };
+                                      Some(scene.lights.len())
+                                  },
+                                  None)
     }
 
     /// Add a `Camera`.
     pub fn add_camera(&mut self, camera: Camera, name: &str) {
-        unwind_video_context_mut!(
-            self.video_context,
-            frame,
-            {
-                frame.cameras.insert(name.into(), camera);
-            },
-            ()
-        )
+        unwind_video_context_mut!(self.video_context,
+                                  frame,
+                                  {
+                                      frame.cameras.insert(name.into(), camera);
+                                  },
+                                  ())
     }
     /// Lookup a `Camera` by name.
     pub fn mut_camera(&mut self, name: &str) -> Option<&mut Camera> {
-        unwind_video_context_mut!(
-            self.video_context,
-            frame,
-            {
-                frame.cameras.get_mut(name.into())
-            },
-            None
-        )
+        unwind_video_context_mut!(self.video_context,
+                                  frame,
+                                  {
+                                      frame.cameras.get_mut(name.into())
+                                  },
+                                  None)
     }
     /// Delete a `Camera`.
     pub fn delete_camera(&mut self, name: &str) {
-        unwind_video_context_mut!(
-            self.video_context,
-            frame,
-            {
-                frame.cameras.remove(name.into());
-            },
-            ()
-        )
+        unwind_video_context_mut!(self.video_context,
+                                  frame,
+                                  {
+                                      frame.cameras.remove(name.into());
+                                  },
+                                  ())
     }
 
     pub fn get_dimensions(&self) -> Option<(u32, u32)> {

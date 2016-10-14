@@ -1,10 +1,14 @@
 //! Displays a multicolored sphere to the user.
 
 extern crate amethyst;
+extern crate amethyst_context;
 extern crate cgmath;
 
 use amethyst::engine::{Application, State, Trans};
 use amethyst::context::{ContextConfig, Context};
+use amethyst::context::asset_manager::AssetManager;
+use amethyst::context::device::DeviceManager;
+use amethyst::context::prefab::{PrefabGenerator, PrefabIndex};
 use amethyst::config::Element;
 use amethyst::ecs::{World, Join};
 
@@ -27,13 +31,15 @@ impl State for Example {
         ctx.renderer.add_scene("main");
         ctx.renderer.add_camera(camera, "main");
 
-        ctx.asset_manager.create_constant_texture("dark_blue", [0.0, 0.0, 0.01, 1.0]);
-        ctx.asset_manager.create_constant_texture("green", [0.0, 1.0, 0.0, 1.0]);
-        ctx.asset_manager.gen_sphere("sphere", 32, 32);
+        let asset_manager = AssetManager::new(&mut ctx.prefab_manager);
+
+        let dark_blue = asset_manager.create_constant_texture([0.0, 0.0, 0.01, 1.0]);
+        let green = asset_manager.create_constant_texture([0.0, 1.0, 0.0, 1.0]);
+        let sphere = asset_manager.gen_sphere(32, 32);
 
         let translation = Vector3::new(0.0, 0.0, 0.0);
         let transform: [[f32; 4]; 4] = cgmath::Matrix4::from_translation(translation).into();
-        let fragment = ctx.asset_manager.get_fragment("sphere", "dark_blue", "green", transform).unwrap();
+        let fragment = asset_manager.get_fragment(&sphere, &dark_blue, &green, transform).unwrap();
 
         ctx.renderer.add_fragment("main", fragment);
 
@@ -48,9 +54,8 @@ impl State for Example {
 
         ctx.renderer.add_light("main", light);
 
-        let layer =
-            Layer::new("main",
-                        vec![
+        let layer = Layer::new("main",
+                               vec![
                             Clear::new([0.0, 0.0, 0.0, 1.0]),
                             DrawShaded::new("main", "main"),
                         ]);
