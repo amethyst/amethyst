@@ -3,6 +3,9 @@ extern crate amethyst;
 use amethyst::engine::{Application, State, Trans};
 use amethyst::processors::rendering::{RenderingProcessor, Renderable, Light, Camera, Projection};
 use amethyst::context::Context;
+use amethyst::context::asset_manager::AssetManager;
+use amethyst::context::device::DeviceManager;
+use amethyst::context::prefab::PrefabGenerator;
 use amethyst::config::Element;
 use amethyst::ecs::{World, Join, VecStorage, Component, Processor, RunArg};
 use std::sync::{Mutex, Arc};
@@ -58,7 +61,7 @@ impl Component for Plank {
 
 struct PongProcessor;
 
-unsafe impl Sync for PongProcessor {  }
+unsafe impl Sync for PongProcessor {}
 
 struct Score {
     score_left: i32,
@@ -82,27 +85,22 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
 
         // Get all needed component storages and resources
         let ctx = ctx.lock().unwrap();
-        let (mut balls,
-             mut planks,
-             mut renderables,
-             projection,
-             mut score) = arg.fetch(|w| (w.write::<Ball>(),
-                                         w.write::<Plank>(),
-                                         w.write::<Renderable>(),
-                                         w.read_resource::<Projection>(),
-                                         w.write_resource::<Score>()));
+        let (mut balls, mut planks, mut renderables, projection, mut score) = arg.fetch(|w| {
+            (w.write::<Ball>(),
+             w.write::<Plank>(),
+             w.write::<Renderable>(),
+             w.read_resource::<Projection>(),
+             w.write_resource::<Score>())
+        });
 
         // Get left and right boundaries of the screen
-        let (left_boundary, right_boundary, top_boundary, bottom_boundary) = match *projection.deref() {
-            Projection::Orthographic {
-                left,
-                right,
-                top,
-                bottom,
-                ..
-            } => (left, right, top, bottom),
-            _ => (1.0, 1.0, 1.0, 1.0),
-        };
+        let (left_boundary, right_boundary, top_boundary, bottom_boundary) =
+            match *projection.deref() {
+                Projection::Orthographic { left, right, top, bottom, .. } => {
+                    (left, right, top, bottom)
+                }
+                _ => (1.0, 1.0, 1.0, 1.0),
+            };
 
         // Position of left plank
         let mut left_position = 0.;
@@ -126,18 +124,18 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
                     left_dimensions = plank.dimensions;
                     // If `W` is pressed and plank is in screen boundaries then move up
                     if ctx.input_handler.key_down(VirtualKeyCode::W) {
-                        if plank.position + plank.dimensions[1]/2. < 1. {
+                        if plank.position + plank.dimensions[1] / 2. < 1. {
                             plank.position += plank.velocity * delta_time;
                         }
                     }
                     // If `S` is pressed and plank is in screen boundaries then move down
                     if ctx.input_handler.key_down(VirtualKeyCode::S) {
-                        if plank.position - plank.dimensions[1]/2. > -1. {
+                        if plank.position - plank.dimensions[1] / 2. > -1. {
                             plank.position -= plank.velocity * delta_time;
                         }
                     }
                     // Set translation[0] of renderable corresponding to this plank
-                    renderable.translation[0] = left_boundary + plank.dimensions[0]/2.;
+                    renderable.translation[0] = left_boundary + plank.dimensions[0] / 2.;
                 }
                 // If it is a right plank
                 Side::Right => {
@@ -147,18 +145,18 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
                     right_dimensions = plank.dimensions;
                     // If `Up` is pressed and plank is in screen boundaries then move down
                     if ctx.input_handler.key_down(VirtualKeyCode::Up) {
-                        if plank.position + plank.dimensions[1]/2. < top_boundary {
+                        if plank.position + plank.dimensions[1] / 2. < top_boundary {
                             plank.position += plank.velocity * delta_time;
                         }
                     }
                     // If `Down` is pressed and plank is in screen boundaries then move down
                     if ctx.input_handler.key_down(VirtualKeyCode::Down) {
-                        if plank.position - plank.dimensions[1]/2. > bottom_boundary {
+                        if plank.position - plank.dimensions[1] / 2. > bottom_boundary {
                             plank.position -= plank.velocity * delta_time;
                         }
                     }
                     // Set translation[0] of renderable corresponding to this plank
-                    renderable.translation[0] = right_boundary - plank.dimensions[0]/2.;
+                    renderable.translation[0] = right_boundary - plank.dimensions[0] / 2.;
                 }
             };
             // Set translation[1] of renderable corresponding to this plank
@@ -175,50 +173,52 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
             ball.position[1] += ball.velocity[1] * delta_time;
 
             // Check if the ball has collided with the right plank
-            if ball.position[0] + ball.size/2. > right_boundary - left_dimensions[0] &&
-               ball.position[0] + ball.size/2. < right_boundary {
-                if ball.position[1] - ball.size/2. < right_position + right_dimensions[1]/2. &&
-                   ball.position[1] + ball.size/2. > right_position - right_dimensions[1]/2.
-                {
-                    ball.position[0] = right_boundary - 0.01 - ball.size/2.;
+            if ball.position[0] + ball.size / 2. > right_boundary - left_dimensions[0] &&
+               ball.position[0] + ball.size / 2. < right_boundary {
+                if ball.position[1] - ball.size / 2. < right_position + right_dimensions[1] / 2. &&
+                   ball.position[1] + ball.size / 2. > right_position - right_dimensions[1] / 2. {
+                    ball.position[0] = right_boundary - 0.01 - ball.size / 2.;
                     ball.velocity[0] = -ball.velocity[0];
                 }
             }
 
             // Check if the ball is to the left of the right boundary, if it is not reset it's position and score the left player
-            if ball.position[0] - ball.size/2. > right_boundary {
+            if ball.position[0] - ball.size / 2. > right_boundary {
                 ball.position[0] = 0.;
                 score.score_left += 1;
-                println!("Left player score: {0}, Right player score {1}", score.score_left, score.score_right);
+                println!("Left player score: {0}, Right player score {1}",
+                         score.score_left,
+                         score.score_right);
             }
 
             // Check if the ball has collided with the left plank
-            if ball.position[0] - ball.size/2. < left_boundary + left_dimensions[0] &&
-               ball.position[0] + ball.size/2. > left_boundary {
-                if ball.position[1] - ball.size/2. < left_position + left_dimensions[1]/2. &&
-                   ball.position[1] + ball.size/2. > left_position - left_dimensions[1]/2.
-                {
-                    ball.position[0] = left_boundary + 0.01 + ball.size/2.;
+            if ball.position[0] - ball.size / 2. < left_boundary + left_dimensions[0] &&
+               ball.position[0] + ball.size / 2. > left_boundary {
+                if ball.position[1] - ball.size / 2. < left_position + left_dimensions[1] / 2. &&
+                   ball.position[1] + ball.size / 2. > left_position - left_dimensions[1] / 2. {
+                    ball.position[0] = left_boundary + 0.01 + ball.size / 2.;
                     ball.velocity[0] = -ball.velocity[0];
                 }
             }
 
             // Check if the ball is to the right of the left boundary, if it is not reset it's position and score the right player
-            if ball.position[0] + ball.size/2. < left_boundary {
+            if ball.position[0] + ball.size / 2. < left_boundary {
                 ball.position[0] = 0.;
                 score.score_right += 1;
-                println!("Left player score: {0}, Right player score {1}", score.score_left, score.score_right);
+                println!("Left player score: {0}, Right player score {1}",
+                         score.score_left,
+                         score.score_right);
             }
 
             // Check if the ball is below the top boundary, if it is not deflect it
-            if ball.position[1] + ball.size/2. > top_boundary {
-                ball.position[1] = top_boundary - ball.size/2.;
+            if ball.position[1] + ball.size / 2. > top_boundary {
+                ball.position[1] = top_boundary - ball.size / 2.;
                 ball.velocity[1] = -ball.velocity[1];
             }
 
             // Check if the ball is above the bottom boundary, if it is not deflect it
-            if ball.position[1] - ball.size/2. < bottom_boundary {
-                ball.position[1] = bottom_boundary + ball.size/2.;
+            if ball.position[1] - ball.size / 2. < bottom_boundary {
+                ball.position[1] = bottom_boundary + ball.size / 2.;
                 ball.velocity[1] = -ball.velocity[1];
             }
 
@@ -261,10 +261,12 @@ impl State for Pong {
             .with(camera)
             .build();
 
+        let asset_manager = AssetManager::new(&mut ctx.prefab_manager);
+
         // Generate a square mesh
-        ctx.asset_manager.create_constant_texture("white", [1.0, 1.0, 1.0, 1.]);
-        ctx.asset_manager.gen_rectangle("square", 1.0, 1.0);
-        let square = Renderable::new("square", "white", "white");
+        let white = asset_manager.create_constant_texture([1.0, 1.0, 1.0, 1.]);
+        let rectangle = asset_manager.gen_rectangle(1.0, 1.0);
+        let square = Renderable::new(rectangle, white, white);
 
         // Create a ball entity
         let mut ball = Ball::new();
@@ -320,13 +322,13 @@ fn main() {
     let mut ctx = Context::new(config.context_config);
     let rendering_processor = RenderingProcessor::new(config.renderer_config, &mut ctx);
     let mut game = Application::build(Pong, ctx)
-                   .with::<RenderingProcessor>(rendering_processor, "rendering_processor", 0)
-                   .register::<Renderable>()
-                   .register::<Light>()
-                   .register::<Camera>()
-                   .with::<PongProcessor>(PongProcessor, "pong_processor", 0)
-                   .register::<Ball>()
-                   .register::<Plank>()
-                   .done();
+        .with::<RenderingProcessor>(rendering_processor, "rendering_processor", 0)
+        .register::<Renderable>()
+        .register::<Light>()
+        .register::<Camera>()
+        .with::<PongProcessor>(PongProcessor, "pong_processor", 0)
+        .register::<Ball>()
+        .register::<Plank>()
+        .done();
     game.run();
 }

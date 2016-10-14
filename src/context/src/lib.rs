@@ -28,18 +28,21 @@ extern crate amethyst_config;
 use amethyst_config::Element;
 use std::path::Path;
 
+pub mod asset_manager;
 pub mod video_context;
 pub mod broadcaster;
 pub mod timing;
+pub mod device; // TODO: maybe not?
 pub mod event;
 pub mod renderer;
-pub mod asset_manager;
+pub mod resource;
 pub mod input;
-pub mod prefab_generator;
+pub mod prefab;
 mod video_init;
 use video_context::{VideoContext, DisplayConfig};
+use prefab::PrefabManager;
 use renderer::Renderer;
-use asset_manager::AssetManager;
+use device::DeviceManagerImpl;
 use input::InputHandler;
 use broadcaster::Broadcaster;
 use event::EngineEvent;
@@ -57,7 +60,7 @@ config!(
 pub struct Context {
     // pub video_context: VideoContext,
     pub renderer: Renderer,
-    pub asset_manager: AssetManager,
+    pub prefab_manager: PrefabManager,
     pub input_handler: InputHandler,
     pub broadcaster: Broadcaster,
     pub delta_time: Duration,
@@ -72,13 +75,13 @@ impl Context {
     pub fn new(config: ContextConfig) -> Context {
         let (video_context, factory_impl) = video_init::create_video_context_and_factory_impl(config.display_config);
         let renderer = Renderer::new(video_context);
-        let asset_manager = AssetManager::new(factory_impl);
+        let device_manager = DeviceManagerImpl::new(factory_impl);
         let mut broadcaster = Broadcaster::new();
         broadcaster.register::<EngineEvent>();
 
         Context {
             renderer: renderer,
-            asset_manager: asset_manager,
+            prefab_manager: PrefabManager::new(device_manager),
             input_handler: InputHandler::new(),
             broadcaster: broadcaster,
             delta_time: Duration::new(0, 0),

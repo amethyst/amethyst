@@ -6,7 +6,7 @@ extern crate gfx;
 
 use self::amethyst_renderer::{Renderer, Frame};
 use self::amethyst_renderer::target::{ColorFormat, DepthFormat, ColorBuffer};
-use asset_manager::FactoryImpl;
+use device::FactoryImpl;
 use video_context::{DisplayConfig, VideoContext};
 
 pub fn create_video_context_and_factory_impl(display_config: DisplayConfig) -> (VideoContext, FactoryImpl) {
