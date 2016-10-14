@@ -1,15 +1,13 @@
 extern crate amethyst;
 extern crate cgmath;
 extern crate obj;
-extern crate gfx;
 
 use amethyst::engine::{Application, State, Trans};
 use amethyst::context::{ContextConfig, Context};
 use amethyst::config::Element;
 use amethyst::ecs::{World, Join};
-use amethyst::context::asset_manager::{Assets, AssetLoader, AssetLoaderRaw, DirectoryStore, FactoryImpl, Mesh, MeshImpl, Texture};
+use amethyst::context::asset_manager::{Assets, AssetLoader, AssetLoaderRaw, DirectoryStore, Mesh, Texture};
 use amethyst::renderer::VertexPosNormal;
-use gfx::traits::FactoryExt;
 use cgmath::{InnerSpace, Vector3};
 use std::io::BufReader;
 
@@ -23,7 +21,6 @@ impl AssetLoaderRaw for Obj {
 
 impl AssetLoader<Mesh> for Obj {
     fn from_data(assets: &mut Assets, obj: Obj) -> Option<Mesh> {
-        let factory_impl = assets.get_loader_mut::<FactoryImpl>().expect("Unable to retrieve factory");
         let obj = obj.0;
         let vertices = obj.indices.iter().map(|&index| {
             let vertex = obj.vertices[index as usize];
@@ -36,19 +33,7 @@ impl AssetLoader<Mesh> for Obj {
             }
         }).collect::<Vec<VertexPosNormal>>();
 
-        let mesh_impl = match *factory_impl {
-            FactoryImpl::OpenGL { ref mut factory } => {
-                let (buffer, slice) = factory.create_vertex_buffer_with_slice(&vertices, ());
-                MeshImpl::OpenGL {
-                    buffer: buffer,
-                    slice: slice,
-                }
-            }
-            #[cfg(windows)]
-            FactoryImpl::Direct3D {} => unimplemented!(),
-            FactoryImpl::Null => MeshImpl::Null,
-        };
-        Some(Mesh { mesh_impl: mesh_impl })
+        AssetLoader::<Mesh>::from_data(assets, vertices)
     }
 }
 
@@ -80,8 +65,8 @@ impl State for Example {
                        env!("CARGO_MANIFEST_DIR"));
         ctx.asset_manager.register_store(DirectoryStore::new(assets_path));
 
-        ctx.asset_manager.create_constant_texture("dark_blue", [0.0, 0.0, 0.2, 1.0]);
-        ctx.asset_manager.create_constant_texture("green", [0.0, 1.0, 0.0, 1.0]);
+        ctx.asset_manager.create_constant_texture("dark_blue", [0.0, 0.0, 0.1, 1.0]);
+        ctx.asset_manager.create_constant_texture("green", [0.0, 1.0, 0.2, 1.0]);
         ctx.asset_manager.load_asset::<Mesh>("Mesh000", "obj");
         ctx.asset_manager.load_asset::<Mesh>("Mesh001", "obj");
 
@@ -95,11 +80,11 @@ impl State for Example {
 
         let light = Light {
             color: [1.0, 1.0, 1.0, 1.0],
-            radius: 8.0,
-            center: [8.0, 8.0, 8.0],
-            propagation_constant: 0.0,
-            propagation_linear: 0.0,
-            propagation_r_square: 2.0,
+            radius: 10.0,
+            center: [6.0, 6.0, 6.0],
+            propagation_constant: 0.2,
+            propagation_linear: 0.2,
+            propagation_r_square: 0.6,
         };
 
         ctx.renderer.add_light("main", light);
