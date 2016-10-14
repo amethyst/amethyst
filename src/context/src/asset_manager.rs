@@ -95,16 +95,18 @@ impl Assets {
 
     /// Returns stored loader resource
     pub fn get_loader<T: Any>(&self) -> Option<&T> {
-        self.loaders.get(&TypeId::of::<T>())
-                    .expect("Unregistered loader")
-                    .downcast_ref()
+        self.loaders
+            .get(&TypeId::of::<T>())
+            .expect("Unregistered loader")
+            .downcast_ref()
     }
 
     // Returns stored loader resource
     pub fn get_loader_mut<T: Any>(&mut self) -> Option<&mut T> {
-        self.loaders.get_mut(&TypeId::of::<T>())
-                    .expect("Unregistered loader")
-                    .downcast_mut()
+        self.loaders
+            .get_mut(&TypeId::of::<T>())
+            .expect("Unregistered loader")
+            .downcast_mut()
     }
 
     /// Register a new asset type
@@ -165,7 +167,8 @@ impl AssetManager {
         let asset_id = TypeId::of::<A>();
         let source_id = TypeId::of::<S>();
 
-        self.closures.insert((asset_id, source_id), Box::new(|loader: &mut Assets, name: &str, raw: &[u8]| {
+        self.closures.insert((asset_id, source_id),
+                             Box::new(|loader: &mut Assets, name: &str, raw: &[u8]| {
             let data: Option<S> = AssetLoaderRaw::from_raw(loader, raw);
             let asset = AssetLoader::<A>::from_data(loader, data.unwrap());
             if let Some(asset) = asset {
@@ -179,7 +182,7 @@ impl AssetManager {
     }
 
     /// Register an asset store
-    pub fn register_store<T: 'static+AssetStore>(&mut self, store: T) {
+    pub fn register_store<T: 'static + AssetStore>(&mut self, store: T) {
         self.stores.push(Box::new(store));
     }
 
@@ -197,10 +200,10 @@ impl AssetManager {
         if let Some(store) = self.stores.iter().find(|store| store.has_asset(name, asset_type)) {
             store.load_asset(name, asset_type, &mut buf);
         } else {
-           return None;
+            return None;
         }
 
-        self.load_asset_from_raw::<A>(name, asset_type, &buf)      
+        self.load_asset_from_raw::<A>(name, asset_type, &buf)
     }
 }
 
@@ -479,9 +482,7 @@ pub struct DirectoryStore {
 
 impl DirectoryStore {
     pub fn new<P: AsRef<Path>>(path: P) -> DirectoryStore {
-        DirectoryStore {
-            path: path.as_ref().to_path_buf(),
-        }
+        DirectoryStore { path: path.as_ref().to_path_buf() }
     }
 
     fn asset_to_path<'a>(&self, name: &str, asset_type: &str) -> PathBuf {
@@ -498,7 +499,11 @@ impl AssetStore for DirectoryStore {
 
     fn load_asset(&self, name: &str, asset_type: &str, buf: &mut Vec<u8>) -> Option<usize> {
         let file_path = self.asset_to_path(name, asset_type);
-        let mut file = if let Ok(file) = fs::File::open(file_path) { file } else { return None; };
+        let mut file = if let Ok(file) = fs::File::open(file_path) {
+            file
+        } else {
+            return None;
+        };
         file.read_to_end(buf).ok()
     }
 }
@@ -512,11 +517,7 @@ mod tests {
 
     impl AssetLoader<Foo> for u32 {
         fn from_data(assets: &mut Assets, x: u32) -> Option<Foo> {
-            if x == 10 {
-                Some(Foo)
-            } else {
-                None
-            }
+            if x == 10 { Some(Foo) } else { None }
         }
     }
 
