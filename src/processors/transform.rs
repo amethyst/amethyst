@@ -4,11 +4,13 @@ extern crate cgmath;
 
 use self::cgmath::{Quaternion, Vector3, Matrix3, Matrix4};
 
-use ecs::{Join, Component, NullStorage, VecStorage, Entity, RunArg, Processor};
+use ecs::{Join, Component, NullStorage, VecStorage, Entity, Generation, RunArg, Processor};
 use context::Context;
 use std::sync::{Mutex, Arc};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::collections::{HashMap, HashSet};
+use std::fmt;
+use std::mem;
 
 /// Local position and rotation from parent.
 #[derive(Debug)]
@@ -145,7 +147,6 @@ impl Component for Parent {
 
 /// Transformation processor.
 /// Handles updating `Transform` components based on the `LocalTransform` component and parents.
-#[derive(Debug)]
 pub struct TransformProcessor {
     // Map of entities to index in sorted vec.
     indices: HashMap<Entity, usize>,
@@ -185,7 +186,7 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
 
             // Deletes entities whose parents aren't alive.
             for (entity, _, parent) in (&entities, &locals, &parents).iter() {
-                if self.dead.contains(&parent.parent()) || !w.is_alive(parent.parent()) {
+                if !w.is_alive(parent.parent) || self.dead.contains(&parent.parent) {
                     arg.delete(entity);
                     self.dead.insert(entity);
                 }
@@ -210,6 +211,7 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
         for (local, global, _) in (&locals, &mut globals, !&parents).iter() {
             if local.is_dirty() {
                 global.0 = local.matrix();
+                local.dirty.store(false, Ordering::SeqCst);
             }
         }
 
@@ -217,56 +219,56 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
         let mut index = 0;
         while index < self.sorted.len() {
             let (entity, parent_entity) = self.sorted[index];
-            let mut swap = None;
 
-            match parents.get(entity) {
-                Some(parent) => {
-                    if let Some(local) = locals.get(entity) {
-                        // Check if parent is alive.
-                        // Make sure the transform is also dirty if the parent has changed.
-                        if parent.is_dirty() {
-                            // If the index is none then the parent is likely an orphan or dead
-                            if let Some(parent_index) = self.indices.get(&parent_entity) {
-                                let parent_index = parent_index.clone();
-                                if parent_index > index {
-                                    swap = Some((index, parent_index));
-                                }
-                            }
-
-                            if let Some((i, p)) = swap {
-                                // Swap the parent and child.
-                                self.sorted.swap(p, i);
-                                self.indices.insert(parent_entity, i);
-                                self.indices.insert(entity, p);
-
-                                // Swap took place, re-try this index.
-                                continue;
-                            }
-
-                            local.dirty.store(true, Ordering::SeqCst);
+            match (parents.get(entity), locals.get(entity), self.dead.contains(&entity)) {
+                (Some(parent), Some(local), false) => {
+                    // Make sure the transform is also dirty if the parent has changed.
+                    if parent.is_dirty() {
+                        if parent.parent != parent_entity {
+                            self.sorted[index] = (entity, parent.parent);
                         }
 
-                        if local.is_dirty() || self.dirty.contains(&parent_entity) {
-                            let combined_transform = if let Some(parent_global) =
-                                                            globals.get(parent_entity) {
-                                Matrix4::from(parent_global.0) * Matrix4::from(local.matrix())
-                            } else {
-                                Matrix4::from(local.matrix())
-                            };
+                        let mut swap = None;
 
-                            if let Some(global) = globals.get_mut(entity) {
-                                global.0 = combined_transform.into();
+                        // If the index is none then the parent is an orphan or dead
+                        if let Some(parent_index) = self.indices.get(&parent.parent) {
+                            let parent_index = parent_index.clone();
+                            if parent_index > index {
+                                swap = Some((index, parent_index));
                             }
-
-                            local.dirty.store(false, Ordering::SeqCst);
-                            parent.dirty.store(false, Ordering::SeqCst);
-                            self.dirty.insert(entity);
                         }
+
+                        if let Some((i, p)) = swap {
+                            // Swap the parent and child.
+                            self.sorted.swap(p, i);
+                            self.indices.insert(parent.parent, i);
+                            self.indices.insert(entity, p);
+
+                            // Swap took place, re-try this index.
+                            continue;
+                        }
+
+                        local.dirty.store(true, Ordering::SeqCst);
+                    }
+
+                    if local.is_dirty() || self.dirty.contains(&parent.parent) {
+                        let combined_transform = if let Some(parent_global) =
+                                                        globals.get(parent.parent) {
+                            (Matrix4::from(parent_global.0) * Matrix4::from(local.matrix())).into()
+                        } else {
+                            local.matrix()
+                        };
+
+                        if let Some(global) = globals.get_mut(entity) {
+                            global.0 = combined_transform;
+                        }
+
+                        local.dirty.store(false, Ordering::SeqCst);
+                        parent.dirty.store(false, Ordering::SeqCst);
+                        self.dirty.insert(entity);
                     }
                 }
-                None => {
-                    // Parent component was removed.
-                    // Therefore, remove from sorted and indices.
+                _ => {
                     self.sorted.swap_remove(index); // swap with last to prevent shift
                     if let Some(swapped) = self.sorted.get(index) {
                         self.indices.insert(swapped.0, index);
@@ -296,10 +298,12 @@ mod tests {
     // use super::test::Bencher;
     use super::*;
     use super::cgmath::{Decomposed, Quaternion, Vector3, Matrix4};
-    use ecs::{Planner, World, RunArg};
+    use ecs::{Planner, World, RunArg, Entity, Generation, InsertResult};
     use engine::Config;
     use context::Context;
     use std::sync::{Arc, Mutex};
+    use std::sync::atomic::Ordering;
+    use std::mem;
 
     #[test]
     fn transform_matrix() {
@@ -340,7 +344,6 @@ mod tests {
 
         let e2 = world.create_now()
             .with::<LocalTransform>(LocalTransform::default())
-            .with::<Parent>(Parent::new(e1))
             .with::<Transform>(Transform::identity())
             .build();
 
@@ -352,101 +355,156 @@ mod tests {
 
         let e4 = world.create_now()
             .with::<LocalTransform>(LocalTransform::default())
-            .with::<Parent>(Parent::new(e3))
             .with::<Transform>(Transform::identity())
             .build();
 
-        // let e5 = world.create_now()
-        // .with::<LocalTransform>(LocalTransform::default())
-        // .with::<Parent>(Parent::new(e4))
-        // .with::<Transform>(Transform::identity())
-        // .build();
+        let e5 = world.create_now()
+            .with::<LocalTransform>(LocalTransform::default())
+            .with::<Transform>(Transform::identity())
+            .build();
 
         let mut planner: Planner<Arc<Mutex<Context>>> = Planner::new(world, 1);
         let transform_processor = TransformProcessor::new();
         planner.add_system::<TransformProcessor>(transform_processor, "transform_processor", 0);
 
-        {
-            let mut world = planner.mut_world();
-            // world.delete_now(e1);
-
-            let mut parents = world.write::<Parent>();
-            // parents.remove(e2);
-        }
-
-        // frame 1
-        planner.dispatch(ctx.clone());
-        planner.wait();
+        let ent_str = |e: &Entity| {
+            unsafe {
+                format!("({:?}, {:?})", e.get_id(), mem::transmute::<Generation, i32>(e.get_gen()))
+            }
+        };
 
         {
             let mut world = planner.mut_world();
             // world.delete_now(e1);
-
-            let mut parents = world.write::<Parent>();
-            // parents.insert(e2
-            parents.remove(e2);
-        }
-
-        // frame 2
-        planner.dispatch(ctx.clone());
-        planner.wait();
-
-        {
-            let world = planner.mut_world();
 
             let mut parents = world.write::<Parent>();
             parents.insert(e2, Parent::new(e1));
+            parents.insert(e3, Parent::new(e2));
+            parents.insert(e4, Parent::new(e1));
+
         }
 
-        // frame 3
+        // frame 1
+        println!("\nFRAME 1:\n---");
         planner.dispatch(ctx.clone());
         planner.wait();
+
+        {
+            let mut world = planner.mut_world();
+            world.delete_now(e3);
+
+            {
+                let mut parents = world.write::<Parent>();
+
+                match parents.insert(e3, Parent::new(e4)) {
+                    InsertResult::Inserted => println!("INSERTED"),
+                    InsertResult::Updated(old) => println!("UPDATED"),
+                    InsertResult::EntityIsDead(p) => println!("DEAD"),
+                }
+            }
+
+            {
+                let mut locals = world.write::<LocalTransform>();
+                // locals.remove(e3);
+            }
+        }
+
+        // frame 2
+        println!("\nFRAME 2:\n---");
+        planner.dispatch(ctx.clone());
+        planner.wait();
+
+        // {
+        // let world = planner.mut_world();
+        // world.delete_now(e3);
+        //
+        // let mut parents = world.write::<Parent>();
+        // parents.insert(e2, Parent::new(e1));
+        // }
+        //
+        // frame 3
+        // println!("\nFRAME 3:\n---");
+        // planner.dispatch(ctx.clone());
+        // planner.wait();
     }
 
+    fn construct(n: usize) -> (Planner<Arc<Mutex<Context>>>, Arc<Mutex<Context>>) {
+        let mut world = World::new();
 
-    // Add #![feature(test)] to use.
-    // #[bench]
-    // fn bench_processor(b: &mut Bencher) {
-    // let mut world = World::new();
-    //
-    // world.register::<LocalTransform>();
-    // world.register::<Transform>();
-    // world.register::<Init>();
-    // world.register::<Parent>();
-    //
-    // let mut prev_entity = world.create_now()
-    // .with::<LocalTransform>(LocalTransform::default())
-    // .with::<Transform>(Transform::identity())
-    // .build();
-    //
-    // for i in 0..50_000 {
-    // let mut transform = LocalTransform::default();
-    //
-    // if i % 5 == 0 {
-    // prev_entity = world.create_now()
-    // .with::<LocalTransform>(transform)
-    // .with::<Parent>(Parent::new(prev_entity))
-    // .with::<Transform>(Transform::identity())
-    // .build();
-    // } else {
-    // prev_entity = world.create_now()
-    // .with::<LocalTransform>(transform)
-    // .with::<Transform>(Transform::identity())
-    // .build();
-    // }
-    // }
-    //
-    // let mut planner: Planner<Arc<Mutex<Context>>> = Planner::new(world, 1);
-    // let transform_processor = TransformProcessor::new();
-    // planner.add_system::<TransformProcessor>(transform_processor, "transform_processor", 0);
-    //
-    // let config = Config::default();
-    // let ctx = Arc::new(Mutex::new(Context::new(config.context_config)));
-    //
-    // b.iter(|| {
-    // planner.dispatch(ctx.clone());
-    // });
-    // }
+        world.register::<LocalTransform>();
+        world.register::<Transform>();
+        world.register::<Init>();
+        world.register::<Parent>();
 
+        let mut prev_entity = world.create_now()
+            .with::<LocalTransform>(LocalTransform::default())
+            .with::<Transform>(Transform::identity())
+            .build();
 
+        for i in 0..(n - 1) {
+            let transform = LocalTransform::default();
+
+            prev_entity = world.create_now()
+            //.with::<Parent>(Parent::new(prev_entity))
+            .with::<LocalTransform>(transform)
+            .with::<Transform>(Transform::identity())
+            .build();
+        }
+
+        let mut planner: Planner<Arc<Mutex<Context>>> = Planner::new(world, 1);
+        let transform_processor = TransformProcessor::new();
+        planner.add_system::<TransformProcessor>(transform_processor, "transform_processor", 0);
+
+        let config = Config::default();
+        let ctx = Arc::new(Mutex::new(Context::new(config.context_config)));
+
+        (planner, ctx)
+    }
+
+    macro_rules! bench_list {
+        ($name:ident = $n:expr => $split:expr) => {
+            #[bench]
+            fn $name(b: &mut Bencher) {
+                let (mut planner, ctx) = construct($n);
+
+                planner.dispatch(ctx.clone());
+                planner.wait();
+
+                let mut i = 0;
+                planner.run1w0r(move |local: &mut LocalTransform| {
+                    if i % $split == 0 {
+                        local.dirty.store(true, Ordering::SeqCst);
+                        assert!(local.is_dirty());
+                    }
+                    i += 1;
+                });
+                planner.wait();
+
+                b.iter(|| {
+                    planner.dispatch(ctx.clone());
+                    planner.wait();
+                });
+            }
+        }
+    }
+
+    // bench_list!(bench_1000_flagged = 1000 => 1);
+    // bench_list!(bench_1000_half_flagged = 1000 => 2);
+    // bench_list!(bench_1000_third_flagged = 1000 => 3);
+    // bench_list!(bench_1000_unflagged = 1000 => u32::max_value());
+    //
+    // bench_list!(bench_5000_flagged = 5000 => 1);
+    // bench_list!(bench_5000_half_flagged = 5000 => 2);
+    // bench_list!(bench_5000_third_flagged = 5000 => 3);
+    // bench_list!(bench_5000_unflagged = 5000 => u32::max_value());
+    //
+    // bench_list!(bench_10000_flagged = 10000 => 1);
+    // bench_list!(bench_10000_half_flagged = 10000 => 2);
+    // bench_list!(bench_10000_third_flagged = 10000 => 3);
+    // bench_list!(bench_10000_unflagged = 10000 => u32::max_value());
+    //
+    // bench_list!(bench_50000_flagged = 50000 => 1);
+    // bench_list!(bench_50000_half_flagged = 50000 => 2);
+    // bench_list!(bench_50000_third_flagged = 50000 => 3);
+    // bench_list!(bench_50000_unflagged = 50000 => u32::max_value());
 }
