@@ -7,6 +7,7 @@ use context::Context;
 use std::sync::{Mutex, Arc};
 use renderer;
 use renderer::Layer;
+use processors::transform::Transform;
 use std::collections::HashSet;
 use config::Element;
 use std::path::Path;
@@ -126,9 +127,13 @@ unsafe impl Send for RenderingProcessor {}
 impl Processor<Arc<Mutex<Context>>> for RenderingProcessor {
     fn run(&mut self, arg: RunArg, context: Arc<Mutex<Context>>) {
         if let Ok(mut context) = context.lock() {
-            let (entities, mut renderables, mut lights, mut cameras) = arg.fetch(|w| {
-                (w.entities(), w.write::<Renderable>(), w.write::<Light>(), w.write::<Camera>())
-            });
+            let (entities, transforms, mut renderables, mut lights, mut cameras) = arg.fetch(|w| {
+                    (w.entities(),
+                     w.read::<Transform>(),
+                     w.write::<Renderable>(),
+                     w.write::<Light>(),
+                     w.write::<Camera>())
+                });
 
             let mut light_indices = HashSet::<usize>::new();
             for (entity, light) in (&entities, &mut lights).iter() {
@@ -160,8 +165,8 @@ impl Processor<Arc<Mutex<Context>>> for RenderingProcessor {
             }
 
             let mut renderable_indices = HashSet::<usize>::new();
-            for (entity, renderable) in (&entities, &mut renderables).iter() {
-                renderable.update_transform_matrix();
+            for (entity, global, renderable) in (&entities, &transforms, &mut renderables).iter() {
+                // renderable.update_transform_matrix();
                 match renderable.idx {
                     // If this Renderable is already in frame then update the transform field
                     // of the corresponding Fragment.
@@ -169,7 +174,8 @@ impl Processor<Arc<Mutex<Context>>> for RenderingProcessor {
                         renderable_indices.insert(idx);
                         if let Some(transform) = context.renderer
                             .mut_fragment_transform(ACTIVE_SCENE_NAME, idx) {
-                            *transform = renderable.transform;
+                            // *transform = renderable.transform;
+                            *transform = global.0;
                         } else {
                             println!("Error: entity with id = {0} is deleted, \
                                       because Renderable::idx field is invalid.", entity.get_id());
@@ -182,7 +188,8 @@ impl Processor<Arc<Mutex<Context>>> for RenderingProcessor {
                         let mesh = renderable.mesh.as_str();
                         let ka = renderable.ka.as_str();
                         let kd = renderable.kd.as_str();
-                        let transform = renderable.transform;
+                        // let transform = renderable.transform;
+                        let transform = global.0;
                         if let Some(fragment) = context.asset_manager
                             .get_fragment(mesh, ka, kd, transform) {
                             if let Some(idx) = context.renderer
@@ -272,11 +279,6 @@ pub struct Renderable {
     mesh: String,
     ka: String,
     kd: String,
-    transform: [[f32; 4]; 4],
-    pub translation: [f32; 3],
-    pub rotation_axis: [f32; 3],
-    pub rotation_angle: f32,
-    pub scale: [f32; 3],
 }
 
 impl Renderable {
@@ -287,28 +289,7 @@ impl Renderable {
             mesh: mesh.into(),
             ka: ka.into(),
             kd: kd.into(),
-            transform: cgmath::Matrix4::from_scale(1.).into(),
-            translation: [0., 0., 0.],
-            rotation_axis: [0., 0., 0.],
-            rotation_angle: 0.,
-            scale: [1., 1., 1.],
         }
-    }
-
-    fn update_transform_matrix(&mut self) {
-        let translation = self.translation;
-        let translation = cgmath::Vector3::new(translation[0], translation[1], translation[2]);
-        let translation_matrix = cgmath::Matrix4::from_translation(translation);
-        let rotation_axis = self.rotation_axis;
-        let rotation_axis =
-            cgmath::Vector3::new(rotation_axis[0], rotation_axis[1], rotation_axis[2]);
-        let rotation_angle = self.rotation_angle;
-        let rotation_angle = cgmath::Rad(rotation_angle);
-        let rotation_matrix = cgmath::Matrix4::from_axis_angle(rotation_axis, rotation_angle);
-        let scale = self.scale;
-        let scale_matrix = cgmath::Matrix4::from_nonuniform_scale(scale[0], scale[1], scale[2]);
-        let transform = translation_matrix * rotation_matrix * scale_matrix;
-        self.transform = transform.into();
     }
 }
 

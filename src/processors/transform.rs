@@ -1,23 +1,29 @@
+//! Scene graph processor and types
 
 extern crate cgmath;
 // extern crate test;
 
 use self::cgmath::{Quaternion, Vector3, Matrix3, Matrix4};
 
-use ecs::{Join, Component, NullStorage, VecStorage, Entity, Generation, RunArg, Processor};
+use ecs::{Join, Component, NullStorage, VecStorage, Entity, RunArg, Processor};
 use context::Context;
 use std::sync::{Mutex, Arc};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::collections::{HashMap, HashSet};
-use std::fmt;
-use std::mem;
 
-/// Local position and rotation from parent.
+/// Local position, rotation, and scale (from parent if exists).
 #[derive(Debug)]
 pub struct LocalTransform {
-    pos: [f32; 3], // translation vector
-    rot: [f32; 4], // quaternion [w (scalar), x, y, z]
-    scale: [f32; 3], // scale vector
+    /// Translation vector [x, y, z]
+    pos: [f32; 3],
+
+    /// Quaternion [w (scalar), x, y, z]
+    rot: [f32; 4],
+
+    /// Scale vector [x, y, z]
+    scale: [f32; 3],
+
+    /// Flag for re-computation
     dirty: AtomicBool,
 }
 
@@ -37,37 +43,79 @@ impl LocalTransform {
     #[inline]
     pub fn set_pos(&mut self, pos: [f32; 3]) {
         self.pos = pos;
-        self.dirty.store(true, Ordering::SeqCst);
+        self.flag();
     }
     #[inline]
     pub fn set_rot(&mut self, rot: [f32; 4]) {
         self.rot = rot;
-        self.dirty.store(true, Ordering::SeqCst);
+        self.flag();
     }
     #[inline]
     pub fn set_scale(&mut self, scale: [f32; 3]) {
         self.scale = scale;
+        self.flag();
+    }
+
+    /// Set a specific part of the position without modifying the others
+    /// (must be an index less than 3).
+    /// Format: [0 = x, 1 = y, 2 = z]
+    /// e.g. `transform.set_pos_index(1, 5.0)` // sets `y` to `5.0`
+    #[inline]
+    pub fn set_pos_index(&mut self, index: usize, val: f32) {
+        if index < 3 {
+            self.pos[index] = val;
+        }
+        self.flag();
+    }
+
+    /// Set a specific part of the rotation quaternion without modifying the others
+    /// (must be an index less than 4).
+    /// Format: [0 = w, 1 = x, 2 = y, 3 = z]
+    /// e.g. `transform.set_rot_index(1, 0.0)` // sets `x` to `0.0`
+    #[inline]
+    pub fn set_rot_index(&mut self, index: usize, val: f32) {
+        if index < 4 {
+            self.rot[index] = val;
+        }
+        self.flag();
+    }
+
+    /// Set a specific part of the scale without modifying the others
+    /// (must be an index less than 3).
+    /// Format: [0 = x, 1 = y, 2 = z]
+    /// e.g. `transform.set_scale_index(2, 3.0)` // sets `z` to `3.0`
+    #[inline]
+    pub fn set_scale_index(&mut self, index: usize, val: f32) {
+        if index < 3 {
+            self.scale[index] = val;
+        }
+        self.flag();
+    }
+
+    /// Flags the current transform for re-computation.
+    #[inline]
+    pub fn flag(&self) {
         self.dirty.store(true, Ordering::SeqCst);
     }
+
+    /// Returns whether or not the current transform is flagged for re-computation or "dirty".
     #[inline]
     pub fn is_dirty(&self) -> bool {
         self.dirty.load(Ordering::SeqCst)
     }
 
+    /// Returns the local object matrix for the transform.
+    /// Combined with the parent's global `Transform` component it gives
+    /// the global (or world) matrix for the current entity.
     #[inline]
     pub fn matrix(&self) -> [[f32; 4]; 4] {
         let quat: Matrix3<f32> = Quaternion::from(self.rot).into();
-        let mut matrix: Matrix4<f32> = (&quat *
-                                        Matrix3::new(self.scale[0],
-                                                     0.0,
-                                                     0.0,
-                                                     0.0,
-                                                     self.scale[1],
-                                                     0.0,
-                                                     0.0,
-                                                     0.0,
-                                                     self.scale[2]))
-            .into();
+        let scale: Matrix3<f32> = Matrix3::<f32> {
+            x: [self.scale[0], 0.0, 0.0].into(),
+            y: [0.0, self.scale[1], 0.0].into(),
+            z: [0.0, 0.0, self.scale[2]].into(),
+        };
+        let mut matrix: Matrix4<f32> = (&quat * scale).into();
         matrix.w = Vector3::from(self.pos).extend(1.0f32);
         matrix.into()
     }
@@ -92,17 +140,18 @@ impl Component for LocalTransform {
 /// Should be used for rendering position and orientation.
 #[derive(Debug, Copy, Clone)]
 pub struct Transform(pub [[f32; 4]; 4]);
-impl Transform {
-    pub fn identity() -> Self {
+
+impl Component for Transform {
+    type Storage = VecStorage<Transform>;
+}
+
+impl Default for Transform {
+    fn default() -> Self {
         Transform([[1.0, 0.0, 0.0, 0.0],
                    [0.0, 1.0, 0.0, 0.0],
                    [0.0, 0.0, 1.0, 0.0],
                    [0.0, 0.0, 0.0, 1.0]])
     }
-}
-
-impl Component for Transform {
-    type Storage = VecStorage<Transform>;
 }
 
 /// Initialization component
@@ -113,8 +162,12 @@ impl Component for Init {
     type Storage = NullStorage<Init>;
 }
 
+/// Component for defining a parent entity.
 pub struct Parent {
+    /// The parent entity
     parent: Entity,
+
+    /// Flag for whether the parent was changed
     dirty: AtomicBool,
 }
 
@@ -303,7 +356,6 @@ mod tests {
     use context::Context;
     use std::sync::{Arc, Mutex};
     use std::sync::atomic::Ordering;
-    use std::mem;
 
     #[test]
     fn transform_matrix() {
@@ -339,39 +391,33 @@ mod tests {
         // test whether deleting the parent deletes the child
         let e1 = world.create_now()
             .with::<LocalTransform>(LocalTransform::default())
-            .with::<Transform>(Transform::identity())
+            .with::<Transform>(Transform::default())
             .build();
 
         let e2 = world.create_now()
             .with::<LocalTransform>(LocalTransform::default())
-            .with::<Transform>(Transform::identity())
+            .with::<Transform>(Transform::default())
             .build();
 
         // test whether deleting an entity deletes the child
         let e3 = world.create_now()
             .with::<LocalTransform>(LocalTransform::default())
-            .with::<Transform>(Transform::identity())
+            .with::<Transform>(Transform::default())
             .build();
 
         let e4 = world.create_now()
             .with::<LocalTransform>(LocalTransform::default())
-            .with::<Transform>(Transform::identity())
+            .with::<Transform>(Transform::default())
             .build();
 
         let e5 = world.create_now()
             .with::<LocalTransform>(LocalTransform::default())
-            .with::<Transform>(Transform::identity())
+            .with::<Transform>(Transform::default())
             .build();
 
         let mut planner: Planner<Arc<Mutex<Context>>> = Planner::new(world, 1);
         let transform_processor = TransformProcessor::new();
         planner.add_system::<TransformProcessor>(transform_processor, "transform_processor", 0);
-
-        let ent_str = |e: &Entity| {
-            unsafe {
-                format!("({:?}, {:?})", e.get_id(), mem::transmute::<Generation, i32>(e.get_gen()))
-            }
-        };
 
         {
             let mut world = planner.mut_world();
@@ -395,12 +441,6 @@ mod tests {
 
             {
                 let mut parents = world.write::<Parent>();
-
-                match parents.insert(e3, Parent::new(e4)) {
-                    InsertResult::Inserted => println!("INSERTED"),
-                    InsertResult::Updated(old) => println!("UPDATED"),
-                    InsertResult::EntityIsDead(p) => println!("DEAD"),
-                }
             }
 
             {
@@ -436,19 +476,13 @@ mod tests {
         world.register::<Init>();
         world.register::<Parent>();
 
-        let mut prev_entity = world.create_now()
-            .with::<LocalTransform>(LocalTransform::default())
-            .with::<Transform>(Transform::identity())
-            .build();
-
-        for i in 0..(n - 1) {
+        for _ in 0..n {
             let transform = LocalTransform::default();
 
-            prev_entity = world.create_now()
-            //.with::<Parent>(Parent::new(prev_entity))
-            .with::<LocalTransform>(transform)
-            .with::<Transform>(Transform::identity())
-            .build();
+            world.create_now()
+                .with::<LocalTransform>(transform)
+                .with::<Transform>(Transform::default())
+                .build();
         }
 
         let mut planner: Planner<Arc<Mutex<Context>>> = Planner::new(world, 1);
