@@ -262,43 +262,8 @@ impl TransformProcessor {
     }
 }
 
-impl fmt::Debug for TransformProcessor {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let ent_str = |e: &Entity| {
-            use std::mem;
-            unsafe {
-                format!("({:?}, {:?})",
-                        e.get_id(),
-                        mem::transmute::<Generation, i32>(e.get_gen()))
-            }
-        };
-
-        try!(write!(f, "sorted: ["));
-        for &(entity, parent) in &self.sorted {
-            try!(write!(f, "\n  {} -> {}", ent_str(&entity), ent_str(&parent)));
-        }
-        if self.sorted.len() > 0 {
-            try!(write!(f, "\n"));
-        }
-        try!(writeln!(f, "]"));
-
-        try!(write!(f, "indices: ["));
-        for (entity, index) in &self.indices {
-            try!(write!(f, "\n  {}: {}", ent_str(entity), index));
-        }
-        if self.indices.len() > 0 {
-            try!(write!(f, "\n"));
-        }
-        try!(writeln!(f, "]"));
-
-        Ok(())
-    }
-}
-
 impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
     fn run(&mut self, arg: RunArg, _: Arc<Mutex<Context>>) {
-        println!("BEFORE:\n{:?}", self);
-
         // Fetch world and gets entities/components
         let (entities, locals, mut globals, mut init, parents) = arg.fetch(|w| {
             let entities = w.entities();
@@ -410,8 +375,6 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
             index += 1;
         }
 
-        println!("AFTER:\n{:?}", self);
-
         self.dirty.clear();
     }
 }
@@ -516,36 +479,12 @@ mod tests {
         {
             let mut world = planner.mut_world();
             // world.delete_now(e2);
-
-            {
-                let mut parents = world.write::<Parent>();
-            }
-
-            {
-                let mut locals = world.write::<LocalTransform>();
-                let mut e2_local = locals.get_mut(e2).unwrap();
-                e2_local.set_pos_index(3, 5.0);
-                // locals.remove(e3);
-            }
         }
 
         // frame 2
         println!("\nFRAME 2:\n---");
         planner.dispatch(ctx.clone());
         planner.wait();
-
-        // {
-        // let world = planner.mut_world();
-        // world.delete_now(e3);
-        //
-        // let mut parents = world.write::<Parent>();
-        // parents.insert(e2, Parent::new(e1));
-        // }
-        //
-        // frame 3
-        // println!("\nFRAME 3:\n---");
-        // planner.dispatch(ctx.clone());
-        // planner.wait();
     }
 
     fn construct(n: usize) -> (Planner<Arc<Mutex<Context>>>, Arc<Mutex<Context>>) {
