@@ -5,13 +5,14 @@ extern crate cgmath;
 
 use self::cgmath::{Quaternion, Vector3, Matrix3, Matrix4};
 
-use ecs::{Join, Component, NullStorage, VecStorage, Entity, RunArg, Processor};
+use ecs::{Join, Component, NullStorage, VecStorage, Entity, RunArg, Processor, Generation};
 use context::Context;
 use std::sync::{Mutex, Arc};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::collections::{HashMap, HashSet};
+use std::fmt;
 
-/// Local position, rotation, and scale (from parent if exists).
+/// Local position, rotation, and scale (from parent if it exists).
 #[derive(Debug)]
 pub struct LocalTransform {
     /// Translation vector [x, y, z]
@@ -43,59 +44,67 @@ impl LocalTransform {
     #[inline]
     pub fn set_pos(&mut self, pos: [f32; 3]) {
         self.pos = pos;
-        self.flag();
+        self.flag(true);
     }
     #[inline]
     pub fn set_rot(&mut self, rot: [f32; 4]) {
         self.rot = rot;
-        self.flag();
+        self.flag(true);
     }
     #[inline]
     pub fn set_scale(&mut self, scale: [f32; 3]) {
         self.scale = scale;
-        self.flag();
+        self.flag(true);
     }
 
     /// Set a specific part of the position without modifying the others
     /// (must be an index less than 3).
+    ///
     /// Format: [0 = x, 1 = y, 2 = z]
-    /// e.g. `transform.set_pos_index(1, 5.0)` // sets `y` to `5.0`
+    ///
+    /// e.g. `transform.set_pos_index(1, 5.0)` sets `y` to `5.0`
     #[inline]
     pub fn set_pos_index(&mut self, index: usize, val: f32) {
-        if index < 3 {
-            self.pos[index] = val;
-        }
-        self.flag();
+        assert!(index < 3,
+                "Attempted to use `set_pos_index` with an index higher than 2");
+        self.pos[index] = val;
+        self.flag(true);
     }
 
     /// Set a specific part of the rotation quaternion without modifying the others
     /// (must be an index less than 4).
+    ///
     /// Format: [0 = w, 1 = x, 2 = y, 3 = z]
-    /// e.g. `transform.set_rot_index(1, 0.0)` // sets `x` to `0.0`
+    ///
+    /// e.g. `transform.set_rot_index(1, 0.0)` sets `x` to `0.0`
     #[inline]
     pub fn set_rot_index(&mut self, index: usize, val: f32) {
-        if index < 4 {
-            self.rot[index] = val;
-        }
-        self.flag();
+        assert!(index < 4,
+                "Attempted to use `set_rot_index` with an index higher than 3");
+        self.rot[index] = val;
+        self.flag(true);
     }
 
     /// Set a specific part of the scale without modifying the others
     /// (must be an index less than 3).
+    ///
     /// Format: [0 = x, 1 = y, 2 = z]
-    /// e.g. `transform.set_scale_index(2, 3.0)` // sets `z` to `3.0`
+    ///
+    /// e.g. `transform.set_scale_index(2, 3.0)` sets `z` to `3.0`
     #[inline]
     pub fn set_scale_index(&mut self, index: usize, val: f32) {
-        if index < 3 {
-            self.scale[index] = val;
-        }
-        self.flag();
+        assert!(index < 3,
+                "Attempted to use `set_scale_index` with an index higher than 2");
+        self.scale[index] = val;
+        self.flag(true);
     }
 
     /// Flags the current transform for re-computation.
+    ///
+    /// Note: All `set_*` methods will automatically flag the component.
     #[inline]
-    pub fn flag(&self) {
-        self.dirty.store(true, Ordering::SeqCst);
+    pub fn flag(&self, dirty: bool) {
+        self.dirty.store(dirty, Ordering::SeqCst);
     }
 
     /// Returns whether or not the current transform is flagged for re-computation or "dirty".
@@ -105,6 +114,7 @@ impl LocalTransform {
     }
 
     /// Returns the local object matrix for the transform.
+    ///
     /// Combined with the parent's global `Transform` component it gives
     /// the global (or world) matrix for the current entity.
     #[inline]
@@ -136,8 +146,8 @@ impl Component for LocalTransform {
     type Storage = VecStorage<LocalTransform>;
 }
 
-/// Absolute transformation (transformed from origin)
-/// Should be used for rendering position and orientation.
+/// Absolute transformation (transformed from origin).
+/// Used for rendering position and orientation.
 #[derive(Debug, Copy, Clone)]
 pub struct Transform(pub [[f32; 4]; 4]);
 
@@ -154,7 +164,19 @@ impl Default for Transform {
     }
 }
 
-/// Initialization component
+impl From<[[f32; 4]; 4]> for Transform {
+    fn from(matrix: [[f32; 4]; 4]) -> Self {
+        Transform(matrix)
+    }
+}
+
+impl Into<[[f32; 4]; 4]> for Transform {
+    fn into(self) -> [[f32; 4]; 4] {
+        self.0
+    }
+}
+
+/// Initialization flag.
 /// Added to entity with a `LocalTransform` component after the first update.
 #[derive(Default, Copy, Clone)]
 pub struct Init;
@@ -186,8 +208,18 @@ impl Parent {
     #[inline]
     pub fn set_parent(&mut self, entity: Entity) {
         self.parent = entity;
-        self.dirty.store(true, Ordering::SeqCst);
+        self.flag(true);
     }
+
+    /// Flag the parent as changed.
+    ///
+    /// Note: `set_parent` flags the parent.
+    #[inline]
+    pub fn flag(&self, dirty: bool) {
+        self.dirty.store(dirty, Ordering::SeqCst);
+    }
+
+    /// Returns whether the parent was changed.
     #[inline]
     pub fn is_dirty(&self) -> bool {
         self.dirty.load(Ordering::SeqCst)
@@ -199,6 +231,7 @@ impl Component for Parent {
 }
 
 /// Transformation processor.
+///
 /// Handles updating `Transform` components based on the `LocalTransform` component and parents.
 pub struct TransformProcessor {
     // Map of entities to index in sorted vec.
@@ -229,8 +262,43 @@ impl TransformProcessor {
     }
 }
 
+impl fmt::Debug for TransformProcessor {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let ent_str = |e: &Entity| {
+            use std::mem;
+            unsafe {
+                format!("({:?}, {:?})",
+                        e.get_id(),
+                        mem::transmute::<Generation, i32>(e.get_gen()))
+            }
+        };
+
+        try!(write!(f, "sorted: ["));
+        for &(entity, parent) in &self.sorted {
+            try!(write!(f, "\n  {} -> {}", ent_str(&entity), ent_str(&parent)));
+        }
+        if self.sorted.len() > 0 {
+            try!(write!(f, "\n"));
+        }
+        try!(writeln!(f, "]"));
+
+        try!(write!(f, "indices: ["));
+        for (entity, index) in &self.indices {
+            try!(write!(f, "\n  {}: {}", ent_str(entity), index));
+        }
+        if self.indices.len() > 0 {
+            try!(write!(f, "\n"));
+        }
+        try!(writeln!(f, "]"));
+
+        Ok(())
+    }
+}
+
 impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
     fn run(&mut self, arg: RunArg, _: Arc<Mutex<Context>>) {
+        println!("BEFORE:\n{:?}", self);
+
         // Fetch world and gets entities/components
         let (entities, locals, mut globals, mut init, parents) = arg.fetch(|w| {
             let entities = w.entities();
@@ -264,7 +332,7 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
         for (local, global, _) in (&locals, &mut globals, !&parents).iter() {
             if local.is_dirty() {
                 global.0 = local.matrix();
-                local.dirty.store(false, Ordering::SeqCst);
+                local.flag(false);
             }
         }
 
@@ -301,7 +369,7 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
                             continue;
                         }
 
-                        local.dirty.store(true, Ordering::SeqCst);
+                        local.flag(true);
                     }
 
                     if local.is_dirty() || self.dirty.contains(&parent.parent) {
@@ -316,8 +384,8 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
                             global.0 = combined_transform;
                         }
 
-                        local.dirty.store(false, Ordering::SeqCst);
-                        parent.dirty.store(false, Ordering::SeqCst);
+                        local.flag(false);
+                        parent.flag(false);
                         self.dirty.insert(entity);
                     }
                 }
@@ -328,7 +396,7 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
 
                         // Make sure to check for parent swap next iteration
                         if let Some(parent) = parents.get(swapped.0) {
-                            parent.dirty.store(true, Ordering::SeqCst);
+                            parent.flag(true);
                         }
                     }
                     self.indices.remove(&entity);
@@ -341,6 +409,8 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
 
             index += 1;
         }
+
+        println!("AFTER:\n{:?}", self);
 
         self.dirty.clear();
     }
@@ -375,6 +445,16 @@ mod tests {
         let cg_matrix: [[f32; 4]; 4] = cg_matrix.into();
 
         assert_eq!(matrix, cg_matrix);
+    }
+
+    #[test]
+    fn into_from() {
+        let transform = Transform::default();
+        let primitive: [[f32; 4]; 4] = transform.into();
+        assert_eq!(primitive, transform.0);
+
+        let transform: Transform = primitive.into();
+        assert_eq!(primitive, transform.0);
     }
 
     #[test]
@@ -424,9 +504,7 @@ mod tests {
             // world.delete_now(e1);
 
             let mut parents = world.write::<Parent>();
-            parents.insert(e2, Parent::new(e1));
-            parents.insert(e3, Parent::new(e2));
-            parents.insert(e4, Parent::new(e1));
+            parents.insert(e2, Parent::new(e2));
 
         }
 
@@ -437,7 +515,7 @@ mod tests {
 
         {
             let mut world = planner.mut_world();
-            world.delete_now(e3);
+            // world.delete_now(e2);
 
             {
                 let mut parents = world.write::<Parent>();
@@ -445,6 +523,8 @@ mod tests {
 
             {
                 let mut locals = world.write::<LocalTransform>();
+                let mut e2_local = locals.get_mut(e2).unwrap();
+                e2_local.set_pos_index(3, 5.0);
                 // locals.remove(e3);
             }
         }

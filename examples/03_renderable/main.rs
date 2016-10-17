@@ -55,17 +55,10 @@ impl State for Example {
             .with(Transform::default())
             .build();
 
-        world.create_now()
-            .with(Parent::new(e1))
-            .with(sphere.clone())
-            .with(LocalTransform::default())
-            .with(Transform::default())
-            .build();
-
         let light = amethyst::renderer::Light {
             color: [1., 1., 1., 1.],
             radius: 1.,
-            center: [2., 2., 2.],
+            center: [1., 1., 1.],
             propagation_constant: 0.,
             propagation_linear: 0.,
             propagation_r_square: 1.,
@@ -105,11 +98,11 @@ impl State for Example {
         // Test Light mutation
         let mut lights = world.write::<Light>();
         for light in (&mut lights).iter() {
-
-            light.light.center = [2.0 * phase.sin(), 2., 2.0 * phase.cos()];
+            //light.light.center = [2.0 * phase.sin(), 2., 2.0 * phase.cos()];
+            light.light.center = [3.0, 3.0, 3.0];
             let angular_velocity_color = 0.7;
             let phase = self.t * angular_velocity_color;
-            light.light.color[1] = phase.sin().abs();
+            //light.light.color[1] = phase.sin().abs();
         }
 
         let angular_velocity_camera = 0.3;
