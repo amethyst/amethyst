@@ -174,7 +174,6 @@ impl Processor<Arc<Mutex<Context>>> for RenderingProcessor {
                         renderable_indices.insert(idx);
                         if let Some(transform) = context.renderer
                             .mut_fragment_transform(ACTIVE_SCENE_NAME, idx) {
-                            // *transform = renderable.transform;
                             *transform = global.0;
                         } else {
                             println!("Error: entity with id = {0} is deleted, \
@@ -188,7 +187,6 @@ impl Processor<Arc<Mutex<Context>>> for RenderingProcessor {
                         let mesh = renderable.mesh.as_str();
                         let ka = renderable.ka.as_str();
                         let kd = renderable.kd.as_str();
-                        // let transform = renderable.transform;
                         let transform = global.0;
                         if let Some(fragment) = context.asset_manager
                             .get_fragment(mesh, ka, kd, transform) {

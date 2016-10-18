@@ -86,12 +86,10 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
         let (mut balls,
              mut planks,
              mut locals,
-             mut renderables,
              projection,
              mut score) = arg.fetch(|w| (w.write::<Ball>(),
                                          w.write::<Plank>(),
                                          w.write::<LocalTransform>(),
-                                         w.write::<Renderable>(),
                                          w.read_resource::<Projection>(),
                                          w.write_resource::<Score>()));
 
@@ -140,7 +138,7 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
                         }
                     }
                     // Set translation[0] of renderable corresponding to this plank
-                    local.set_pos_index(0, left_boundary + plank.dimensions[0]/2.);
+                    local.set_translation_index(0, left_boundary + plank.dimensions[0]/2.);
                 }
                 // If it is a right plank
                 Side::Right => {
@@ -161,11 +159,11 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
                         }
                     }
                     // Set translation[0] of renderable corresponding to this plank
-                    local.set_pos_index(0, right_boundary - plank.dimensions[0]/2.)
+                    local.set_translation_index(0, right_boundary - plank.dimensions[0]/2.)
                 }
             };
             // Set translation[1] of renderable corresponding to this plank
-            local.set_pos_index(1, plank.position);
+            local.set_translation_index(1, plank.position);
             // Set scale for renderable corresponding to this plank
             local.set_scale([plank.dimensions[0], plank.dimensions[1], 1.0])
         }
@@ -225,8 +223,8 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
             }
 
             // Update the renderable corresponding to this ball
-            local.set_pos_index(0, ball.position[0]);
-            local.set_pos_index(1, ball.position[1]);
+            local.set_translation_index(0, ball.position[0]);
+            local.set_translation_index(1, ball.position[1]);
             local.set_scale_index(0, ball.size);
             local.set_scale_index(1, ball.size);
         }

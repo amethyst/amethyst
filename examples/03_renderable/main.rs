@@ -1,5 +1,4 @@
 extern crate amethyst;
-extern crate cgmath;
 
 use amethyst::engine::{Application, State, Trans};
 use amethyst::processors::rendering::{RenderingProcessor, Renderable, Light, Camera, Projection};
@@ -7,8 +6,6 @@ use amethyst::processors::transform::{TransformProcessor, Parent, Init, Transfor
 use amethyst::context::Context;
 use amethyst::config::Element;
 use amethyst::ecs::{World, Join};
-
-use cgmath::{Quaternion, Euler, Rad};
 
 struct Example {
     t: f32,
@@ -49,7 +46,7 @@ impl State for Example {
 
         let sphere = Renderable::new("sphere", "dark_blue", "green");
 
-        let e1 = world.create_now()
+        world.create_now()
             .with(sphere.clone())
             .with(LocalTransform::default())
             .with(Transform::default())
@@ -90,7 +87,7 @@ impl State for Example {
         // Test Transform mutation
         let mut locals = world.write::<LocalTransform>();
         for local in (&mut locals).iter() {
-            local.set_pos([phase.sin(), 0.0, phase.cos()]);
+            local.set_translation([phase.sin(), 0.0, phase.cos()]);
         }
 
         let angular_velocity_light = 0.5;
@@ -98,11 +95,10 @@ impl State for Example {
         // Test Light mutation
         let mut lights = world.write::<Light>();
         for light in (&mut lights).iter() {
-            //light.light.center = [2.0 * phase.sin(), 2., 2.0 * phase.cos()];
-            light.light.center = [3.0, 3.0, 3.0];
+            light.light.center = [2.0 * phase.sin(), 2., 2.0 * phase.cos()];
             let angular_velocity_color = 0.7;
             let phase = self.t * angular_velocity_color;
-            //light.light.color[1] = phase.sin().abs();
+            light.light.color[1] = phase.sin().abs();
         }
 
         let angular_velocity_camera = 0.3;
