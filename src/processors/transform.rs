@@ -247,6 +247,9 @@ pub struct TransformProcessor {
 
     // Parent entities that were dirty.
     dirty: HashSet<Entity>,
+
+    // Prevent circular infinite loops with parents.
+    swapped: HashSet<Entity>,
 }
 
 impl TransformProcessor {
@@ -257,6 +260,7 @@ impl TransformProcessor {
             new: Vec::new(),
             dead: HashSet::new(),
             dirty: HashSet::new(),
+            swapped: HashSet::new(),
         }
     }
 }
@@ -308,7 +312,7 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
             match (parents.get(entity), locals.get(entity), self.dead.contains(&entity)) {
                 (Some(parent), Some(local), false) => {
                     // Make sure the transform is also dirty if the parent has changed.
-                    if parent.is_dirty() {
+                    if parent.is_dirty() && !self.swapped.contains(&entity) {
                         if parent.parent != parent_entity {
                             self.sorted[index] = (entity, parent.parent);
                         }
@@ -317,26 +321,24 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
 
                         // If the index is none then the parent is an orphan or dead
                         if let Some(parent_index) = self.indices.get(&parent.parent) {
-                            let parent_index = parent_index.clone();
-                            if parent_index > index {
-                                swap = Some((index, parent_index));
+                            if parent_index > &index {
+                                swap = Some(parent_index.clone());
                             }
                         }
 
-                        if let Some((i, p)) = swap {
+                        if let Some(p) = swap {
                             // Swap the parent and child.
-                            self.sorted.swap(p, i);
-                            self.indices.insert(parent.parent, i);
+                            self.sorted.swap(p, index);
+                            self.indices.insert(parent.parent, index);
                             self.indices.insert(entity, p);
+                            self.swapped.insert(entity);
 
                             // Swap took place, re-try this index.
                             continue;
                         }
-
-                        local.flag(true);
                     }
 
-                    if local.is_dirty() || self.dirty.contains(&parent.parent) {
+                    if local.is_dirty() || parent.is_dirty() || self.dirty.contains(&parent.parent) {
                         let combined_transform = if let Some(parent_global) =
                                                         globals.get(parent.parent) {
                             (Matrix4::from(parent_global.0) * Matrix4::from(local.matrix())).into()
@@ -375,6 +377,8 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
         }
 
         self.dirty.clear();
+        self.dead.clear();
+        self.swapped.clear();
     }
 }
 
