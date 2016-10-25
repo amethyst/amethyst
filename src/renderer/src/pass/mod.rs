@@ -7,7 +7,7 @@ use mopa;
 
 /// A `Pass` is an implemnatnion of a Pass
 pub trait Pass<R>
-    where R: gfx::Resources,
+    where R: gfx::Resources
 {
     /// The argument required for the Pass
     type Arg: ::PassDescription;
@@ -16,24 +16,21 @@ pub trait Pass<R>
 
     /// encode the pass into the encoder using the supplied argument
     /// frame and render target
-    fn apply<C>(&self, arg: &Self::Arg, target: &Self::Target, scene: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
-        where C: gfx::CommandBuffer<R>;
+    fn apply<C>(&self, arg: &Self::Arg, target: &Self::Target, scene: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>) where C: gfx::CommandBuffer<R>;
 }
 
 #[derive(Clone, Debug)]
 /// Clear the frame buffer
 pub struct Clear {
     /// the color to clear with
-    pub color: [f32; 4]
+    pub color: [f32; 4],
 }
 impl PassDescription for Clear {}
 
 impl Clear {
     /// Create a new boxed Clear Description
     pub fn new(color: [f32; 4]) -> Box<PassDescription> {
-        Box::new(Clear{
-            color: color
-        })
+        Box::new(Clear { color: color })
     }
 }
 
@@ -52,7 +49,7 @@ impl Wireframe {
     pub fn new<A, B>(camera: A, scene: B) -> Box<PassDescription>
         where String: From<A> + From<B>
     {
-        Box::new(Wireframe{
+        Box::new(Wireframe {
             camera: String::from(camera),
             scene: String::from(scene),
         })
@@ -74,7 +71,7 @@ impl DrawFlat {
     pub fn new<A, B>(camera: A, scene: B) -> Box<PassDescription>
         where String: From<A> + From<B>
     {
-        Box::new(DrawFlat{
+        Box::new(DrawFlat {
             camera: String::from(camera),
             scene: String::from(scene),
         })
@@ -98,7 +95,7 @@ impl DepthPass {
     pub fn new<A, B>(camera: A, scene: B) -> Box<PassDescription>
         where String: From<A> + From<B>
     {
-        Box::new(DepthPass{
+        Box::new(DepthPass {
             camera: String::from(camera),
             scene: String::from(scene),
         })
@@ -121,7 +118,7 @@ impl DrawShaded {
     pub fn new<A, B>(camera: A, scene: B) -> Box<PassDescription>
         where String: From<A> + From<B>
     {
-        Box::new(DrawShaded{
+        Box::new(DrawShaded {
             camera: String::from(camera),
             scene: String::from(scene),
         })
@@ -144,7 +141,7 @@ impl BlitLayer {
     pub fn new<A, B>(gbuffer: A, layer: B) -> Box<PassDescription>
         where String: From<A> + From<B>
     {
-        Box::new(BlitLayer{
+        Box::new(BlitLayer {
             gbuffer: String::from(gbuffer),
             layer: String::from(layer),
         })
@@ -168,7 +165,7 @@ impl Lighting {
     pub fn new<A, B, C>(camera: A, gbuffer: B, scene: C) -> Box<PassDescription>
         where String: From<A> + From<B> + From<C>
     {
-        Box::new(Lighting{
+        Box::new(Lighting {
             camera: String::from(camera),
             gbuffer: String::from(gbuffer),
             scene: String::from(scene),
@@ -179,4 +176,3 @@ impl Lighting {
 /// Describes a render pass
 pub trait PassDescription: mopa::Any + std::fmt::Debug {}
 mopafy!(PassDescription);
-

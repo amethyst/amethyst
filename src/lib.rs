@@ -1,6 +1,6 @@
 #![crate_name = "amethyst"]
 #![crate_type = "lib"]
-#![doc(html_logo_url = "http://tinyurl.com/jtmm43a")]
+#![doc(html_logo_url = "https://tinyurl.com/jtmm43a")]
 
 //! Amethyst is a free and open source game engine written in idiomatic
 //! [Rust][rs] for building video games and interactive multimedia applications.
@@ -47,7 +47,9 @@
 //! ```
 
 pub mod engine;
+pub mod processors;
 
+#[macro_use]
 pub extern crate amethyst_config as config;
 pub extern crate amethyst_context as context;
 pub extern crate amethyst_ecs as ecs;

@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_ecs"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
 description = "Entity component system (ECS) library"
 keywords = ["entity", "component", "system", "game", "amethyst"]
@@ -14,3 +14,8 @@ license = "MIT"
 [dependencies]
 time = "^0.1"
 specs = "^0.7.0"
+
+[[example]]
+name = "usage"
+path = "examples/usage.rs"
+

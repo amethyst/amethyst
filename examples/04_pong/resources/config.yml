@@ -1,0 +1,16 @@
+context_config:
+    display_config:
+        dimensions: null
+        fullscreen: false
+        max_dimensions: null
+        min_dimensions: null
+        multisampling: 1
+        title: "Pong example"
+        visibility: true
+        vsync: true
+        backend: OpenGL
+
+renderer_config:
+    pipeline: Forward
+    shading: Flat
+    clear_color: [0.0, 0.0, 0.0, 1.0]

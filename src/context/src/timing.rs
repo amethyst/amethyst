@@ -1,36 +1,38 @@
 //! Utilities for working with time.
 
-extern crate time;
-
-pub use self::time::{Duration, SteadyTime};
+use std::time::{Duration, Instant};
 
 /// Useful utility for accurately measuring elapsed time.
-pub struct Stopwatch {
-    start_time: SteadyTime,
-    end_time: SteadyTime,
-    running: bool,
+#[derive(PartialEq, Eq)]
+pub enum Stopwatch {
+    Waiting,
+    Started(Instant),
+    Ended(Duration),
+}
+
+impl Default for Stopwatch {
+    fn default() -> Stopwatch {
+        Stopwatch::Waiting
+    }
 }
 
 impl Stopwatch {
     pub fn new() -> Stopwatch {
-        let initial_time = SteadyTime::now();
-
-        Stopwatch {
-            start_time: initial_time,
-            end_time: initial_time,
-            running: false,
-        }
+        Stopwatch::Waiting
     }
 
     /// Retrieves the elapsed time.
     pub fn elapsed(&self) -> Duration {
-        self.end_time - self.start_time
+        match self {
+            &Stopwatch::Waiting => Duration::new(0, 0),
+            &Stopwatch::Started(start) => start.elapsed(),
+            &Stopwatch::Ended(dur) => dur,
+        }
     }
 
     /// Stops, resets, and starts the stopwatch again.
     pub fn restart(&mut self) {
-        self.reset();
-        self.start();
+        *self = Stopwatch::Started(Instant::now());
     }
 
     /// Starts, or resumes, measuring elapsed time. If the stopwatch has been
@@ -39,12 +41,8 @@ impl Stopwatch {
     ///
     /// Note: Starting an already running stopwatch will do nothing.
     pub fn start(&mut self) {
-        if !self.running {
-            if self.elapsed() == Duration::seconds(0) {
-                self.reset()
-            }
-
-            self.running = true;
+        if self == &Stopwatch::Waiting {
+            self.restart();
         }
     }
 
@@ -52,16 +50,14 @@ impl Stopwatch {
     ///
     /// Note: Stopping a stopwatch that isn't running will do nothing.
     pub fn stop(&mut self) {
-        if self.running {
-            self.end_time = SteadyTime::now();
-            self.running = false;
+        if let &mut Stopwatch::Started(start) = self {
+            *self = Stopwatch::Ended(start.elapsed());
         }
     }
 
     /// Clears the current elapsed time value.
     pub fn reset(&mut self) {
-        self.start_time = SteadyTime::now();
-        self.end_time = self.start_time;
+        *self = Stopwatch::Waiting;
     }
 }
 
@@ -70,17 +66,17 @@ impl Stopwatch {
 mod tests {
     use super::Stopwatch;
     use std::thread;
-    use std::time;
+    use std::time::Duration;
 
     #[test]
     fn elapsed() {
         let mut watch = Stopwatch::new();
 
         watch.start();
-        thread::sleep(time::Duration::from_secs(2));
+        thread::sleep(Duration::from_secs(2));
         watch.stop();
 
-        assert_eq!(2, watch.elapsed().num_seconds());
+        assert_eq!(2, watch.elapsed().as_secs());
     }
 
     #[test]
@@ -88,11 +84,11 @@ mod tests {
         let mut watch = Stopwatch::new();
 
         watch.start();
-        thread::sleep(time::Duration::from_secs(2));
+        thread::sleep(Duration::from_secs(2));
         watch.stop();
         watch.reset();
 
-        assert_eq!(0, watch.elapsed().num_nanoseconds().unwrap());
+        assert_eq!(0, watch.elapsed().subsec_nanos());
     }
 
     #[test]
@@ -100,13 +96,13 @@ mod tests {
         let mut watch = Stopwatch::new();
 
         watch.start();
-        thread::sleep(time::Duration::from_secs(2));
+        thread::sleep(Duration::from_secs(2));
         watch.stop();
 
         watch.restart();
-        thread::sleep(time::Duration::from_secs(1));
+        thread::sleep(Duration::from_secs(1));
         watch.stop();
 
-        assert_eq!(1, watch.elapsed().num_seconds());
+        assert_eq!(1, watch.elapsed().as_secs());
     }
 }

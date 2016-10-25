@@ -38,7 +38,7 @@ This book is split into seven sections. This page is the first. The others are:
 
 Read the crate-level [API documentation][ad] for more details.
 
-[ad]: https://www.amethyst.rs/doc/amethyst/
+[ad]: https://www.amethyst.rs/doc/master/amethyst/
 
 ## Why are you building this?
 

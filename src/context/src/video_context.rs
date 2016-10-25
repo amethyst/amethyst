@@ -11,8 +11,8 @@ use std::path::Path;
 use self::amethyst_renderer::{Renderer, Frame};
 
 config!(
-    /// Contains display config,
-    /// it is required to create a `VideoContext`
+/// Contains display config,
+/// it is required to create a `VideoContext`
     struct DisplayConfig {
         pub title: String = "Amethyst game".to_string(),
         pub fullscreen: bool = false,
@@ -37,7 +37,7 @@ pub enum VideoContext {
         frame: Frame<gfx_device_gl::Resources>,
     },
 
-#[cfg(windows)]
+    #[cfg(windows)]
     /// Context for a video backend that uses dxgi and Direct3D (not implemented)
     Direct3D {
         // stub

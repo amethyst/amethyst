@@ -2,7 +2,8 @@
 
 mod app;
 mod state;
-mod tasks;
+mod config;
 
 pub use self::app::{Application, ApplicationBuilder};
 pub use self::state::{State, StateMachine, Trans};
+pub use self::config::Config;

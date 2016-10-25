@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_renderer"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
 description = "High-level rendering engine with multiple backends"
 keywords = ["game", "engine", "renderer", "3d", "amethyst"]
@@ -18,7 +18,7 @@ gfx_core = "0.3"
 gfx_device_gl = "0.10"
 gfx_window_glutin = "0.11"
 glutin = "0.5"
-cgmath="0.7"
+cgmath="0.11"
 mopa ="0.2"
 
 [dev-dependencies]
