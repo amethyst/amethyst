@@ -48,5 +48,9 @@ path = "examples/03_renderable/main.rs"
 name = "pong"
 path = "examples/04_pong/main.rs"
 
+[[example]]
+name = "sound"
+path = "examples/05_sound/main.rs"
+
 [dependencies]
 cgmath="0.11"

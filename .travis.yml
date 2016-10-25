@@ -1,5 +1,12 @@
 # Set up the Rust toolchain.
 language: rust
+
+addons:
+  apt:
+    packages:
+      # Required for building rodio dependency
+      - libasound2-dev
+
 rust:
     - stable
     - beta

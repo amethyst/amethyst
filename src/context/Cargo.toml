@@ -13,7 +13,7 @@ license = "MIT/Apache-2.0"
 
 [dependencies.amethyst_renderer]
 path = "../renderer/"
-version = "0.3.0"
+version = "0.3.1"
 
 [dependencies.amethyst_config]
 path = "../config/"
@@ -21,7 +21,7 @@ version = "0.1.0"
 
 [dependencies.amethyst_ecs]
 path = "../ecs/"
-version = "0.1.0"
+version = "0.1.1"
 
 [dependencies]
 gfx = "0.11"
@@ -30,5 +30,6 @@ gfx_device_gl = "0.10"
 gfx_window_glutin = "0.11"
 glutin = "0.5"
 time = "0.1"
-genmesh="0.4"
+genmesh = "0.4"
+rodio = "0.3"
 cgmath="0.11"

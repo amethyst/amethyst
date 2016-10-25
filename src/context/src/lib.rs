@@ -24,6 +24,7 @@
 
 #[macro_use]
 extern crate amethyst_config;
+pub extern crate rodio;
 
 use amethyst_config::Element;
 use std::path::Path;
@@ -54,11 +55,11 @@ config!(
 /// An `Arc<Mutex<Context>>` is passed to every `Processor` run by the engine and a `&mut Context` is passed to every `State`
 /// method.
 pub struct Context {
-    // pub video_context: VideoContext,
     pub renderer: Renderer,
     pub asset_manager: AssetManager,
     pub input_handler: InputHandler,
     pub broadcaster: Broadcaster,
+    pub audio_sink: Option<rodio::Sink>,
     pub delta_time: Duration,
     pub fixed_step: Duration,
     pub last_fixed_update: Instant,
@@ -75,11 +76,17 @@ impl Context {
         let mut broadcaster = Broadcaster::new();
         broadcaster.register::<EngineEvent>();
 
+        let audio_sink = match rodio::get_default_endpoint() {
+            Some(endpoint) => Some(rodio::Sink::new(&endpoint)),
+            None => None,
+        };
+
         Context {
             renderer: renderer,
             asset_manager: asset_manager,
             input_handler: InputHandler::new(),
             broadcaster: broadcaster,
+            audio_sink: audio_sink,
             delta_time: Duration::new(0, 0),
             fixed_step: Duration::new(0, 16666666),
             last_fixed_update: Instant::now(),
