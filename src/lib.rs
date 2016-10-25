@@ -66,9 +66,12 @@
 #[macro_use]
 #[cfg(feature="profiler")]
 pub extern crate thread_profiler;
-#[macro_use]
-pub extern crate amethyst_config as config;
 pub extern crate amethyst_renderer as renderer;
+
+#[macro_use]
+extern crate serde_derive;
+extern crate serde;
+extern crate serde_yaml;
 
 extern crate cgmath;
 extern crate dds;
@@ -84,6 +87,8 @@ extern crate threadpool;
 extern crate ticketed_lock;
 extern crate wavefront_obj;
 
+#[macro_use]
+pub mod project;
 pub mod asset_manager;
 pub mod ecs;
 pub mod gfx_device;

@@ -1,15 +1,12 @@
-//! Graphical display configuration.
 
-use std::path::Path;
+use std;
+use serde;
+use serde_yaml;
 
-use config::Element;
-
-config! {
-    /// Graphical display configuration.
-    ///
-    /// These are fed in when calling `video_init()`.
-    struct DisplayConfig {
-        /// Name of the application window.
+config!(
+    /// Contains display config,
+    /// it is required to call `video_init()`
+    pub struct DisplayConfig {
         pub title: String = "Amethyst game".to_string(),
         /// Enables or disables fullscreen mode.
         pub fullscreen: bool = false,
@@ -26,4 +23,5 @@ config! {
         /// Sets the visibility of the window.
         pub visibility: bool = true,
     }
-}
+);
+

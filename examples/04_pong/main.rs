@@ -2,7 +2,7 @@ extern crate amethyst;
 
 use amethyst::{Application, Event, State, Trans, VirtualKeyCode, WindowEvent};
 use amethyst::asset_manager::AssetManager;
-use amethyst::config::Element;
+use amethyst::project::Config;
 use amethyst::ecs::{World, Join, VecStorage, Component, RunArg, System};
 use amethyst::ecs::components::{Mesh, LocalTransform, Texture, Transform};
 use amethyst::gfx_device::DisplayConfig;
@@ -338,7 +338,7 @@ impl State for Pong {
 fn main() {
     let path = format!("{}/examples/04_pong/resources/config.yml",
                        env!("CARGO_MANIFEST_DIR"));
-    let cfg = DisplayConfig::from_file(path).unwrap();
+    let cfg = DisplayConfig::load(path);
     let mut game = Application::build(Pong, cfg)
         .register::<Ball>()
         .register::<Plank>()

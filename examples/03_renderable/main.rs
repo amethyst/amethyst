@@ -6,7 +6,7 @@ extern crate cgmath;
 
 use amethyst::{Application, ElementState, Event, State, Trans, VirtualKeyCode, WindowEvent};
 use amethyst::asset_manager::{AssetManager, DirectoryStore};
-use amethyst::config::Element;
+use amethyst::project::Config;
 use amethyst::ecs::{Join, System, RunArg, World};
 use amethyst::ecs::components::{LocalTransform, Mesh, Texture, Transform};
 use amethyst::ecs::resources::{Camera, Projection, ScreenDimensions, Time};
@@ -289,7 +289,7 @@ fn main() {
 
     let path = format!("{}/examples/03_renderable/resources/config.yml",
                        env!("CARGO_MANIFEST_DIR"));
-    let cfg = DisplayConfig::from_file(path).unwrap();
+    let cfg = DisplayConfig::load(path);
     let mut game = Application::build(Example, cfg)
         .with::<ExampleSystem>(ExampleSystem, "example_system", 1)
         .done();
