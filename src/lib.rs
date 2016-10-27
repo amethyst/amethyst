@@ -50,7 +50,7 @@ pub mod engine;
 pub mod processors;
 
 #[macro_use]
-extern crate amethyst_config as config;
-extern crate amethyst_context as context;
-extern crate amethyst_ecs as ecs;
-extern crate amethyst_renderer as renderer;
+pub extern crate amethyst_config as config;
+pub extern crate amethyst_context as context;
+pub extern crate amethyst_ecs as ecs;
+pub extern crate amethyst_renderer as renderer;
