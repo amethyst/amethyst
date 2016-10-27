@@ -274,10 +274,12 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
             let parents = w.read::<Child>();
 
             // Deletes entities whose parents aren't alive.
-            for (entity, _, parent) in (&entities, &locals, &parents).iter() {
-                if !w.is_alive(parent.parent) || self.dead.contains(&parent.parent) {
-                    arg.delete(entity);
-                    self.dead.insert(entity);
+            for &(entity, _) in &self.sorted {
+                if let Some(parent) = parents.get(entity) {
+                    if !w.is_alive(parent.parent) || self.dead.contains(&parent.parent) {
+                        arg.delete(entity);
+                        self.dead.insert(entity);
+                    }
                 }
             }
 
