@@ -268,10 +268,18 @@ impl TransformProcessor {
 impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
     fn run(&mut self, arg: RunArg, _: Arc<Mutex<Context>>) {
         // Fetch world and gets entities/components
-        let (entities, locals, mut globals, mut init, parents) = arg.fetch(|w| {
+        let (locals, mut globals, mut init, parents) = arg.fetch(|w| {
             let entities = w.entities();
             let locals = w.read::<LocalTransform>();
             let parents = w.read::<Child>();
+            let init = w.write::<Init>();
+
+            // Checks for entities with a local transform and parent, but no `Init` component.
+            for (entity, _, parent, _) in (&entities, &locals, &parents, !&init).iter() {
+                self.indices.insert(entity, self.sorted.len());
+                self.sorted.push((entity, parent.parent()));
+                self.new.push(entity.clone());
+            }
 
             // Deletes entities whose parents aren't alive.
             for &(entity, _) in &self.sorted {
@@ -283,15 +291,8 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
                 }
             }
 
-            (entities, locals, w.write::<Transform>(), w.write::<Init>(), parents)
+            (locals, w.write::<Transform>(), init, parents)
         });
-
-        // Checks for entities with a local transform and parent, but no `Init` component.
-        for (entity, _, parent, _) in (&entities, &locals, &parents, !&init).iter() {
-            self.indices.insert(entity, self.sorted.len());
-            self.sorted.push((entity, parent.parent()));
-            self.new.push(entity.clone());
-        }
 
         // Adds an `Init` component to the entity.
         for entity in self.new.drain(..) {
