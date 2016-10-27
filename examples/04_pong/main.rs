@@ -2,7 +2,7 @@ extern crate amethyst;
 
 use amethyst::engine::{Application, State, Trans};
 use amethyst::processors::rendering::{RenderingProcessor, Renderable, Light, Camera, Projection};
-use amethyst::processors::transform::{TransformProcessor, LocalTransform, Transform, Parent, Init};
+use amethyst::processors::transform::{TransformProcessor, LocalTransform, Transform, Child, Init};
 use amethyst::context::Context;
 use amethyst::config::Element;
 use amethyst::ecs::{World, Join, VecStorage, Component, Processor, RunArg};
@@ -330,13 +330,13 @@ fn main() {
                    .register::<Renderable>()
                    .register::<Light>()
                    .register::<Camera>()
-                   .with::<PongProcessor>(PongProcessor, "pong_processor", 0)
+                   .with::<PongProcessor>(PongProcessor, "pong_processor", 1)
                    .register::<Ball>()
                    .register::<Plank>()
-                   .with::<TransformProcessor>(TransformProcessor::new(), "transform_processor", 1)
+                   .with::<TransformProcessor>(TransformProcessor::new(), "transform_processor", 2)
                    .register::<LocalTransform>()
                    .register::<Transform>()
-                   .register::<Parent>()
+                   .register::<Child>()
                    .register::<Init>()
                    .done();
     game.run();

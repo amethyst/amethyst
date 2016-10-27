@@ -184,17 +184,17 @@ impl Component for Init {
 }
 
 /// Component for defining a parent entity.
-pub struct Parent {
+pub struct Child {
     /// The parent entity
     parent: Entity,
 
-    /// Flag for whether the parent was changed
+    /// Flag for whether the child was changed
     dirty: AtomicBool,
 }
 
-impl Parent {
-    pub fn new(entity: Entity) -> Parent {
-        Parent {
+impl Child {
+    pub fn new(entity: Entity) -> Child {
+        Child {
             parent: entity,
             dirty: AtomicBool::new(true),
         }
@@ -210,7 +210,7 @@ impl Parent {
         self.flag(true);
     }
 
-    /// Flag the parent as changed.
+    /// Flag that parent has been changed
     ///
     /// Note: `set_parent` flags the parent.
     #[inline]
@@ -225,8 +225,8 @@ impl Parent {
     }
 }
 
-impl Component for Parent {
-    type Storage = VecStorage<Parent>;
+impl Component for Child {
+    type Storage = VecStorage<Child>;
 }
 
 /// Transformation processor.
@@ -245,7 +245,7 @@ pub struct TransformProcessor {
     // Entities that have been removed in current frame.
     dead: HashSet<Entity>,
 
-    // Parent entities that were dirty.
+    // Child entities that were dirty.
     dirty: HashSet<Entity>,
 
     // Prevent circular infinite loops with parents.
@@ -271,7 +271,7 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
         let (entities, locals, mut globals, mut init, parents) = arg.fetch(|w| {
             let entities = w.entities();
             let locals = w.read::<LocalTransform>();
-            let parents = w.read::<Parent>();
+            let parents = w.read::<Child>();
 
             // Deletes entities whose parents aren't alive.
             for (entity, _, parent) in (&entities, &locals, &parents).iter() {
@@ -338,7 +338,8 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
                         }
                     }
 
-                    if local.is_dirty() || parent.is_dirty() || self.dirty.contains(&parent.parent) {
+                    if local.is_dirty() || parent.is_dirty() ||
+                       self.dirty.contains(&parent.parent) {
                         let combined_transform = if let Some(parent_global) =
                                                         globals.get(parent.parent) {
                             (Matrix4::from(parent_global.0) * Matrix4::from(local.matrix())).into()
@@ -424,7 +425,7 @@ mod tests {
     // world.register::<LocalTransform>();
     // world.register::<Transform>();
     // world.register::<Init>();
-    // world.register::<Parent>();
+    // world.register::<Child>();
     //
     // for _ in 0..n {
     // let transform = LocalTransform::default();

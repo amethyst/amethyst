@@ -2,7 +2,7 @@ extern crate amethyst;
 
 use amethyst::engine::{Application, State, Trans};
 use amethyst::processors::rendering::{RenderingProcessor, Renderable, Light, Camera, Projection};
-use amethyst::processors::transform::{TransformProcessor, Parent, Init, Transform, LocalTransform};
+use amethyst::processors::transform::{TransformProcessor, Child, Init, Transform, LocalTransform};
 use amethyst::context::Context;
 use amethyst::config::Element;
 use amethyst::ecs::{World, Join};
@@ -128,7 +128,7 @@ fn main() {
                    .register::<LocalTransform>()
                    .register::<Transform>()
                    .register::<Init>()
-                   .register::<Parent>()
+                   .register::<Child>()
                    .register::<Light>()
                    .register::<Camera>()
                    .done();

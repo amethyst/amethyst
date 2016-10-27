@@ -145,8 +145,9 @@ impl Processor<Arc<Mutex<Context>>> for RenderingProcessor {
                             .mut_light(ACTIVE_SCENE_NAME, idx) {
                             *frame_light = light.light.clone();
                         } else {
-                            println!("Error: entity with id = {0} is deleted, \
-                                      because Light::idx field is invalid.", entity.get_id());
+                            println!("Error: entity with id = {0} is deleted, because Light::idx \
+                                      field is invalid.",
+                                     entity.get_id());
                             arg.delete(entity);
                         }
                     }
@@ -176,8 +177,9 @@ impl Processor<Arc<Mutex<Context>>> for RenderingProcessor {
                             .mut_fragment_transform(ACTIVE_SCENE_NAME, idx) {
                             *transform = global.0;
                         } else {
-                            println!("Error: entity with id = {0} is deleted, \
-                                      because Renderable::idx field is invalid.", entity.get_id());
+                            println!("Error: entity with id = {0} is deleted, because \
+                                      Renderable::idx field is invalid.",
+                                     entity.get_id());
                             arg.delete(entity);
                         }
                     }
@@ -200,11 +202,10 @@ impl Processor<Arc<Mutex<Context>>> for RenderingProcessor {
                                 renderable_indices.insert(idx);
                             }
                         } else {
-                            println!("Error: entity with id = {0} is deleted, \
-                                      because at least one of the assets \
-                                      requested by the Renderable \
-                                      component attached to this \
-                                      entity doesn't exist.", entity.get_id());
+                            println!("Error: entity with id = {0} is deleted, because at least \
+                                      one of the assets requested by the Renderable component \
+                                      attached to this entity doesn't exist.",
+                                     entity.get_id());
                             arg.delete(entity);
                         }
                     }
