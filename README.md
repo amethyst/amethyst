@@ -107,6 +107,15 @@ $ cargo doc
 
 The API reference can be found in `target/doc/amethyst/index.html`.
 
+## License
+
+Licensed under either of
+
+ * Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+ * MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+
+at your option.
+
 ## Contributing
 
 We are a community project that welcomes contribution from anyone. If you're
@@ -122,12 +131,3 @@ additional terms or conditions.
 [pr]: https://github.com/amethyst/amethyst/projects
 [rm]: https://github.com/amethyst/amethyst/wiki/Roadmap
 [it]: https://github.com/amethyst/amethyst/issues
-
-## License
-
-Licensed under either of
-
- * Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
- * MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
-
-at your option.
