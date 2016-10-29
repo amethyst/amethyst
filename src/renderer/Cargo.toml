@@ -10,7 +10,7 @@ homepage = "https://www.amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
 readme = "README.md"
-license = "MIT"
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 gfx = "0.11"
