@@ -268,30 +268,30 @@ impl TransformProcessor {
 impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
     fn run(&mut self, arg: RunArg, _: Arc<Mutex<Context>>) {
         // Fetch world and gets entities/components
-        let (locals, mut globals, mut init, parents) = arg.fetch(|w| {
+        let (locals, mut globals, mut init, children) = arg.fetch(|w| {
             let entities = w.entities();
             let locals = w.read::<LocalTransform>();
-            let parents = w.read::<Child>();
+            let children = w.read::<Child>();
             let init = w.write::<Init>();
 
             // Checks for entities with a local transform and parent, but no `Init` component.
-            for (entity, _, parent, _) in (&entities, &locals, &parents, !&init).iter() {
+            for (entity, _, child, _) in (&entities, &locals, &children, !&init).iter() {
                 self.indices.insert(entity, self.sorted.len());
-                self.sorted.push((entity, parent.parent()));
+                self.sorted.push((entity, child.parent()));
                 self.new.push(entity.clone());
             }
 
             // Deletes entities whose parents aren't alive.
             for &(entity, _) in &self.sorted {
-                if let Some(parent) = parents.get(entity) {
-                    if !w.is_alive(parent.parent) || self.dead.contains(&parent.parent) {
+                if let Some(child) = children.get(entity) {
+                    if !w.is_alive(child.parent()) || self.dead.contains(&child.parent()) {
                         arg.delete(entity);
                         self.dead.insert(entity);
                     }
                 }
             }
 
-            (locals, w.write::<Transform>(), init, parents)
+            (locals, w.write::<Transform>(), init, children)
         });
 
         // Adds an `Init` component to the entity.
@@ -300,7 +300,7 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
         }
 
         // Compute transforms without parents.
-        for (local, global, _) in (&locals, &mut globals, !&parents).iter() {
+        for (local, global, _) in (&locals, &mut globals, !&children).iter() {
             if local.is_dirty() {
                 global.0 = local.matrix();
                 local.flag(false);
@@ -312,18 +312,18 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
         while index < self.sorted.len() {
             let (entity, parent_entity) = self.sorted[index];
 
-            match (parents.get(entity), locals.get(entity), self.dead.contains(&entity)) {
-                (Some(parent), Some(local), false) => {
+            match (children.get(entity), locals.get(entity), self.dead.contains(&entity)) {
+                (Some(child), Some(local), false) => {
                     // Make sure the transform is also dirty if the parent has changed.
-                    if parent.is_dirty() && !self.swapped.contains(&entity) {
-                        if parent.parent != parent_entity {
-                            self.sorted[index] = (entity, parent.parent);
+                    if child.is_dirty() && !self.swapped.contains(&entity) {
+                        if child.parent() != parent_entity {
+                            self.sorted[index] = (entity, child.parent());
                         }
 
                         let mut swap = None;
 
                         // If the index is none then the parent is an orphan or dead
-                        if let Some(parent_index) = self.indices.get(&parent.parent) {
+                        if let Some(parent_index) = self.indices.get(&child.parent()) {
                             if parent_index > &index {
                                 swap = Some(parent_index.clone());
                             }
@@ -332,7 +332,7 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
                         if let Some(p) = swap {
                             // Swap the parent and child.
                             self.sorted.swap(p, index);
-                            self.indices.insert(parent.parent, index);
+                            self.indices.insert(child.parent(), index);
                             self.indices.insert(entity, p);
                             self.swapped.insert(entity);
 
@@ -341,10 +341,10 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
                         }
                     }
 
-                    if local.is_dirty() || parent.is_dirty() ||
-                       self.dirty.contains(&parent.parent) {
+                    if local.is_dirty() || child.is_dirty() ||
+                       self.dirty.contains(&child.parent()) {
                         let combined_transform = if let Some(parent_global) =
-                                                        globals.get(parent.parent) {
+                                                        globals.get(child.parent()) {
                             (Matrix4::from(parent_global.0) * Matrix4::from(local.matrix())).into()
                         } else {
                             local.matrix()
@@ -355,7 +355,7 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
                         }
 
                         local.flag(false);
-                        parent.flag(false);
+                        child.flag(false);
                         self.dirty.insert(entity);
                     }
                 }
@@ -365,7 +365,7 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
                         self.indices.insert(swapped.0, index);
 
                         // Make sure to check for parent swap next iteration
-                        if let Some(parent) = parents.get(swapped.0) {
+                        if let Some(parent) = children.get(swapped.0) {
                             parent.flag(true);
                         }
                     }
