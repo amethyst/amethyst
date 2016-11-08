@@ -97,16 +97,14 @@ impl Assets {
     pub fn get_loader<T: Any>(&self) -> Option<&T> {
         self.loaders
             .get(&TypeId::of::<T>())
-            .expect("Unregistered loader")
-            .downcast_ref()
+            .and_then(|loader| loader.downcast_ref())
     }
 
     // Returns stored loader resource
     pub fn get_loader_mut<T: Any>(&mut self) -> Option<&mut T> {
         self.loaders
             .get_mut(&TypeId::of::<T>())
-            .expect("Unregistered loader")
-            .downcast_mut()
+            .and_then(|loader| loader.downcast_mut())
     }
 
     /// Register a new asset type
@@ -169,13 +167,13 @@ impl AssetManager {
 
         self.closures.insert((asset_id, source_id),
                              Box::new(|loader: &mut Assets, name: &str, raw: &[u8]| {
-            let data: Option<S> = AssetLoaderRaw::from_raw(loader, raw);
-            let asset = AssetLoader::<A>::from_data(loader, data.unwrap());
-            if let Some(asset) = asset {
-                Some(loader.add_asset(name, asset))
-            } else {
-                None
-            }
+            S::from_raw(loader, raw)
+                .and_then(|data| {
+                    AssetLoader::<A>::from_data(loader, data)
+                })
+                .and_then(|asset| {
+                    Some(loader.add_asset(name, asset))
+                })
         }));
 
         self.asset_type_ids.insert((asset.into(), asset_id), source_id);
@@ -187,6 +185,8 @@ impl AssetManager {
     }
 
     /// Load an asset from raw data
+    /// # Panics
+    /// Panics if the asset type isn't registered
     pub fn load_asset_from_raw<A: Any + Send + Sync>(&mut self, name: &str, asset_type: &str, raw: &[u8]) -> Option<AssetId> {
         let asset_type_id = TypeId::of::<A>();
         let &source_id = self.asset_type_ids.get(&(asset_type.into(), asset_type_id)).expect("Unregistered asset type id");
@@ -233,6 +233,8 @@ pub enum FactoryImpl {
 }
 
 impl AssetLoader<Mesh> for Vec<VertexPosNormal> {
+    /// # Panics
+    /// Panics if factory isn't registered as loader.
     fn from_data(assets: &mut Assets, data: Vec<VertexPosNormal>) -> Option<Mesh> {
         let factory_impl = assets.get_loader_mut::<FactoryImpl>().expect("Unable to retrieve factory");
         let mesh_impl = match *factory_impl {
@@ -258,6 +260,8 @@ pub struct TextureLoadData<'a> {
 }
 
 impl<'a> AssetLoader<Texture> for TextureLoadData<'a> {
+    /// # Panics
+    /// Panics if factory isn't registered as loader.
     fn from_data(assets: &mut Assets, load_data: TextureLoadData) -> Option<Texture> {
         let factory_impl = assets.get_loader_mut::<FactoryImpl>().expect("Unable to retrieve factory");
         let texture_impl = match *factory_impl {
@@ -360,6 +364,8 @@ impl AssetManager {
     }
 
     /// Construct and return a `Fragment` from previously loaded mesh, ka and kd textures and a transform matrix.
+    /// # Panics
+    /// Panics if factory isn't registered as loader.
     pub fn get_fragment(&mut self, mesh: &str, ka: &str, kd: &str, transform: [[f32; 4]; 4]) -> Option<Fragment> {
         let mesh_assets = self.read_assets::<Mesh>();
         let texture_assets = self.read_assets::<Texture>();
