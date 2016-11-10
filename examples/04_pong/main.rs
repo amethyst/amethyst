@@ -2,6 +2,7 @@ extern crate amethyst;
 
 use amethyst::engine::{Application, State, Trans};
 use amethyst::processors::rendering::{RenderingProcessor, Renderable, Light, Camera, Projection};
+use amethyst::processors::transform::{TransformProcessor, LocalTransform, Transform, Child, Init};
 use amethyst::context::Context;
 use amethyst::config::Element;
 use amethyst::ecs::{World, Join, VecStorage, Component, Processor, RunArg};
@@ -85,11 +86,11 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
         let ctx = ctx.lock().unwrap();
         let (mut balls,
              mut planks,
-             mut renderables,
+             mut locals,
              projection,
              mut score) = arg.fetch(|w| (w.write::<Ball>(),
                                          w.write::<Plank>(),
-                                         w.write::<Renderable>(),
+                                         w.write::<LocalTransform>(),
                                          w.read_resource::<Projection>(),
                                          w.write_resource::<Score>()));
 
@@ -117,7 +118,7 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
 
         let delta_time = ctx.delta_time.subsec_nanos() as f32 / 1.0e9;
         // Process all planks
-        for (plank, renderable) in (&mut planks, &mut renderables).iter() {
+        for (plank, local) in (&mut planks, &mut locals).iter() {
             match plank.side {
                 // If it is a left plank
                 Side::Left => {
@@ -138,7 +139,7 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
                         }
                     }
                     // Set translation[0] of renderable corresponding to this plank
-                    renderable.translation[0] = left_boundary + plank.dimensions[0]/2.;
+                    local.set_translation_index(0, left_boundary + plank.dimensions[0]/2.);
                 }
                 // If it is a right plank
                 Side::Right => {
@@ -159,18 +160,17 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
                         }
                     }
                     // Set translation[0] of renderable corresponding to this plank
-                    renderable.translation[0] = right_boundary - plank.dimensions[0]/2.;
+                    local.set_translation_index(0, right_boundary - plank.dimensions[0]/2.)
                 }
             };
             // Set translation[1] of renderable corresponding to this plank
-            renderable.translation[1] = plank.position;
+            local.set_translation_index(1, plank.position);
             // Set scale for renderable corresponding to this plank
-            renderable.scale[0] = plank.dimensions[0];
-            renderable.scale[1] = plank.dimensions[1];
+            local.set_scale([plank.dimensions[0], plank.dimensions[1], 1.0])
         }
 
         // Process the ball
-        for (ball, renderable) in (&mut balls, &mut renderables).iter() {
+        for (ball, local) in (&mut balls, &mut locals).iter() {
             // Move the ball
             ball.position[0] += ball.velocity[0] * delta_time;
             ball.position[1] += ball.velocity[1] * delta_time;
@@ -224,10 +224,10 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
             }
 
             // Update the renderable corresponding to this ball
-            renderable.translation[0] = ball.position[0];
-            renderable.translation[1] = ball.position[1];
-            renderable.scale[0] = ball.size;
-            renderable.scale[1] = ball.size;
+            local.set_translation_index(0, ball.position[0]);
+            local.set_translation_index(1, ball.position[1]);
+            local.set_scale_index(0, ball.size);
+            local.set_scale_index(1, ball.size);
         }
     }
 }
@@ -276,6 +276,8 @@ impl State for Pong {
         world.create_now()
             .with(square.clone())
             .with(ball)
+            .with(LocalTransform::default())
+            .with(Transform::default())
             .build();
 
         // Create a left plank entity
@@ -286,6 +288,8 @@ impl State for Pong {
         world.create_now()
             .with(square.clone())
             .with(plank)
+            .with(LocalTransform::default())
+            .with(Transform::default())
             .build();
 
         // Create right plank entity
@@ -296,6 +300,8 @@ impl State for Pong {
         world.create_now()
             .with(square.clone())
             .with(plank)
+            .with(LocalTransform::default())
+            .with(Transform::default())
             .build();
     }
 
@@ -327,9 +333,14 @@ fn main() {
                    .register::<Renderable>()
                    .register::<Light>()
                    .register::<Camera>()
-                   .with::<PongProcessor>(PongProcessor, "pong_processor", 0)
+                   .with::<PongProcessor>(PongProcessor, "pong_processor", 1)
                    .register::<Ball>()
                    .register::<Plank>()
+                   .with::<TransformProcessor>(TransformProcessor::new(), "transform_processor", 2)
+                   .register::<LocalTransform>()
+                   .register::<Transform>()
+                   .register::<Child>()
+                   .register::<Init>()
                    .done();
     game.run();
 }

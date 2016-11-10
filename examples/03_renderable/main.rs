@@ -2,6 +2,7 @@ extern crate amethyst;
 
 use amethyst::engine::{Application, State, Trans};
 use amethyst::processors::rendering::{RenderingProcessor, Renderable, Light, Camera, Projection};
+use amethyst::processors::transform::{TransformProcessor, Child, Init, Transform, LocalTransform};
 use amethyst::context::Context;
 use amethyst::config::Element;
 use amethyst::ecs::{World, Join};
@@ -49,13 +50,15 @@ impl State for Example {
         let sphere = Renderable::new("sphere", "dark_blue", "green");
 
         world.create_now()
-            .with(sphere)
+            .with(sphere.clone())
+            .with(LocalTransform::default())
+            .with(Transform::default())
             .build();
 
         let light = amethyst::renderer::Light {
             color: [1., 1., 1., 1.],
             radius: 1.,
-            center: [2., 2., 2.],
+            center: [1., 1., 1.],
             propagation_constant: 0.,
             propagation_linear: 0.,
             propagation_r_square: 1.,
@@ -85,9 +88,9 @@ impl State for Example {
         let phase = self.t * angular_velocity;
 
         // Test Transform mutation
-        let mut renderables = world.write::<Renderable>();
-        for renderable in (&mut renderables).iter() {
-            renderable.translation = [phase.sin(), 0.0, phase.cos()];
+        let mut locals = world.write::<LocalTransform>();
+        for local in (&mut locals).iter() {
+            local.set_translation([phase.sin(), 0.0, phase.cos()]);
         }
 
         let angular_velocity_light = 0.5;
@@ -120,9 +123,15 @@ fn main() {
     let config = Config::from_file(path).unwrap();
     let mut ctx = Context::new(config.context_config);
     let rendering_processor = RenderingProcessor::new(config.renderer_config, &mut ctx);
+    let transform_processor = TransformProcessor::new();
     let mut game = Application::build(Example::new(), ctx)
                    .with::<RenderingProcessor>(rendering_processor, "rendering_processor", 0)
+                   .with::<TransformProcessor>(transform_processor, "transform_processor", 1)
                    .register::<Renderable>()
+                   .register::<LocalTransform>()
+                   .register::<Transform>()
+                   .register::<Init>()
+                   .register::<Child>()
                    .register::<Light>()
                    .register::<Camera>()
                    .done();
