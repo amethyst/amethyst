@@ -7,6 +7,7 @@ use amethyst::context::Context;
 use amethyst::config::Element;
 use amethyst::ecs::{World, Join, VecStorage, Component, Processor, RunArg};
 use std::sync::{Mutex, Arc};
+use amethyst::context::asset_manager::{Mesh, Texture};
 
 struct Pong;
 
@@ -262,6 +263,8 @@ impl State for Pong {
             .build();
 
         // Generate a square mesh
+        ctx.asset_manager.register_asset::<Mesh>();
+        ctx.asset_manager.register_asset::<Texture>();
         ctx.asset_manager.create_constant_texture("white", [1.0, 1.0, 1.0, 1.]);
         ctx.asset_manager.gen_rectangle("square", 1.0, 1.0);
         let square = Renderable::new("square", "white", "white");

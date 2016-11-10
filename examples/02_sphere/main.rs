@@ -7,6 +7,7 @@ use amethyst::engine::{Application, State, Trans};
 use amethyst::context::{ContextConfig, Context};
 use amethyst::config::Element;
 use amethyst::ecs::{World, Join};
+use amethyst::context::asset_manager::{Mesh, Texture};
 
 struct Example;
 
@@ -27,6 +28,8 @@ impl State for Example {
         ctx.renderer.add_scene("main");
         ctx.renderer.add_camera(camera, "main");
 
+        ctx.asset_manager.register_asset::<Mesh>();
+        ctx.asset_manager.register_asset::<Texture>();
         ctx.asset_manager.create_constant_texture("dark_blue", [0.0, 0.0, 0.01, 1.0]);
         ctx.asset_manager.create_constant_texture("green", [0.0, 1.0, 0.0, 1.0]);
         ctx.asset_manager.gen_sphere("sphere", 32, 32);
