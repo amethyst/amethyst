@@ -145,7 +145,7 @@ impl Processor<()> for PongProcessor {
                         }
                     }
                     // Set translation[0] of renderable corresponding to this plank
-                    local.set_translation_index(0 , left_boundary + plank.dimensions[0]/2.0);
+                    local.translation[0] = left_boundary + plank.dimensions[0]/2.0
                 }
                 // If it is a right plank
                 Side::Right => {
@@ -166,13 +166,13 @@ impl Processor<()> for PongProcessor {
                         }
                     }
                     // Set translation[0] of renderable corresponding to this plank
-                    local.set_translation_index(0, right_boundary - plank.dimensions[0]/2.0);
+                    local.translation[0] = right_boundary - plank.dimensions[0]/2.0
                 }
             };
             // Set translation[1] of renderable corresponding to this plank
-            local.set_translation_index(1, plank.position);
+            local.translation[1] = plank.position;
             // Set scale for renderable corresponding to this plank
-            local.set_scale([plank.dimensions[0], plank.dimensions[1], 1.0]);
+            local.scale = [plank.dimensions[0], plank.dimensions[1], 1.0];
         }
 
         // Process the ball
@@ -230,8 +230,10 @@ impl Processor<()> for PongProcessor {
             }
 
             // Update the renderable corresponding to this ball
-            local.set_translation([ball.position[0], ball.position[1], 0.0]);
-            local.set_scale([ball.size, ball.size, 0.0]);
+            local.translation[0] = ball.position[0];
+            local.translation[1] = ball.position[1];
+            local.scale[0] = ball.size;
+            local.scale[1] = ball.size;
         }
     }
 }
