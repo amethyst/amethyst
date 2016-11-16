@@ -35,6 +35,9 @@ pub mod event;
 pub mod renderer;
 pub mod asset_manager;
 pub mod input;
+pub mod gfx_device;
+pub mod gfx_init;
+pub
 mod video_init;
 use video_context::{VideoContext, DisplayConfig};
 use renderer::Renderer;
