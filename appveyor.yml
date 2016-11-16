@@ -1,14 +1,41 @@
 # Set up the build environment.
 environment:
     matrix:
-        - TARGET: x86_64-pc-windows-msvc
-        - TARGET: i686-pc-windows-msvc
-        - TARGET: i686-pc-windows-gnu
+        - channel: stable
+          target: x86_64-pc-windows-msvc
+        - channel: stable
+          target: i686-pc-windows-msvc
+        - channel: stable
+          target: i686-pc-windows-gnu
+        - channel: stable
+          target: x86_64-pc-windows-gnu
+
+        - channel: beta
+          target: x86_64-pc-windows-msvc
+        - channel: beta
+          target: i686-pc-windows-msvc
+        - channel: beta
+          target: i686-pc-windows-gnu
+        - channel: beta
+          target: x86_64-pc-windows-gnu
+
+        - channel: nightly
+          target: x86_64-pc-windows-msvc
+        - channel: nightly
+          target: i686-pc-windows-msvc
+        - channel: nightly
+          target: i686-pc-windows-gnu
+        - channel: nightly
+          target: x86_64-pc-windows-gnu
+
+matrix:
+    allow_failures:
+        - channel: nightly
 
 # Set up the Rust toolchain.
 install:
-    - ps: Start-FileDownload "https://static.rust-lang.org/dist/rust-nightly-${env:TARGET}.exe"
-    - rust-nightly-%TARGET%.exe /VERYSILENT /NORESTART /DIR="C:\Program Files (x86)\Rust"
+    - ps: Start-FileDownload "https://static.rust-lang.org/dist/rust-${env:channel}-${env:target}.exe"
+    - rust-%channel%-%target%.exe /VERYSILENT /NORESTART /DIR="C:\Program Files (x86)\Rust"
     - SET PATH=%PATH%;C:\Program Files (x86)\Rust\bin
     - SET PATH=%PATH%;C:\MinGW\bin
     - rustc -V
@@ -17,7 +44,7 @@ install:
 # Force third-party crates to persist from previous builds and update only when
 # needed.
 cache:
-    - .cargo -> rust-nightly-date, cargo-nightly-build
+    - .cargo -> rust-%channel%-date, cargo-%channel%-build
 
 # Since this is not a .NET project, we can flip the build system off.
 build: false
@@ -25,3 +52,7 @@ build: false
 # Compile the engine and run all tests.
 test_script:
     - cargo test -p amethyst -p amethyst_config -p amethyst_ecs -v
+
+branches:
+    only:
+        - develop
