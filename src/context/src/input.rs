@@ -46,12 +46,12 @@ impl InputHandler {
         self.keys_down.contains(&key)
     }
 
-    ///Check if `button` is pressed.
+    /// Check if `button` is pressed.
     pub fn mouse_key_down(&self, button: MouseButton) -> bool {
         self.buttons_down.contains(&button)
     }
 
-    ///Get pointer location.
+    /// Get pointer location.
     pub fn pointer_location(&self) -> (i32, i32) {
         self.pointer_location
     }
