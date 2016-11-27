@@ -6,8 +6,7 @@ extern crate cgmath;
 use self::cgmath::{Quaternion, Vector3, Matrix3, Matrix4};
 
 use ecs::{Join, Component, NullStorage, VecStorage, Entity, RunArg, Processor};
-use context::Context;
-use std::sync::{Mutex, Arc};
+// use context::Context;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::collections::{HashMap, HashSet};
 use std::ops::{Deref, DerefMut};
@@ -218,8 +217,8 @@ impl TransformProcessor {
     }
 }
 
-impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
-    fn run(&mut self, arg: RunArg, _: Arc<Mutex<Context>>) {
+impl Processor<()> for TransformProcessor {
+    fn run(&mut self, arg: RunArg, _: ()) {
         // Fetch world and gets entities/components
         let (locals, mut globals, mut init, children) = arg.fetch(|w| {
             let entities = w.entities();

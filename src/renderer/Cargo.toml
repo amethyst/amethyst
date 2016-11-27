@@ -24,3 +24,7 @@ mopa ="0.2"
 [dev-dependencies]
 genmesh = "0.4"
 rand = "0.3"
+
+[dependencies.amethyst_ecs]
+path = "../ecs/"
+version = "0.1.0"

@@ -2,268 +2,270 @@
 
 extern crate cgmath;
 
-use ecs::{Processor, RunArg, Join, Component, VecStorage, Entity};
-use context::Context;
-use std::sync::{Mutex, Arc};
+use ecs::{// Processor, RunArg, Join,
+          Component, VecStorage, // Entity
+};
+// use context::Context;
+// use std::sync::{Mutex, Arc};
 use renderer;
-use renderer::Layer;
-use processors::transform::Transform;
-use std::collections::HashSet;
-use config::Element;
-use std::path::Path;
+// use renderer::Layer;
+// use processors::transform::Transform;
+// use std::collections::HashSet;
+// use config::Element;
+// use std::path::Path;
 
-config!(
-/// A config required to create a rendering processor.
-    struct RendererConfig {
-// Forward or Deferred
-        pub pipeline: String = "Forward".to_string(),
-// Flat or Shaded
-        pub shading: String = "Flat".to_string(),
-        pub clear_color: [f32; 4] = [0., 0., 0., 1.],
-    }
-);
+// config!(
+// /// A config required to create a rendering processor.
+//     struct RendererConfig {
+// // Forward or Deferred
+//         pub pipeline: String = "Forward".to_string(),
+// // Flat or Shaded
+//         pub shading: String = "Flat".to_string(),
+//         pub clear_color: [f32; 4] = [0., 0., 0., 1.],
+//     }
+// );
 
-/// A rendering processor struct.
-pub struct RenderingProcessor {
-    active_camera: Option<Entity>,
-}
+// /// A rendering processor struct.
+// pub struct RenderingProcessor {
+//     active_camera: Option<Entity>,
+// }
 
-const ACTIVE_CAMERA_NAME: &'static str = "main";
-const ACTIVE_SCENE_NAME: &'static str = "main";
+// const ACTIVE_CAMERA_NAME: &'static str = "main";
+// const ACTIVE_SCENE_NAME: &'static str = "main";
 
-fn forward_flat(clear_color: [f32; 4]) -> Vec<Layer> {
-    use renderer::pass::*;
+// fn forward_flat(clear_color: [f32; 4]) -> Vec<Layer> {
+//     use renderer::pass::*;
 
-    vec![
-        Layer::new("main",
-            vec![
-                Clear::new(clear_color),
-                DrawFlat::new(ACTIVE_CAMERA_NAME, ACTIVE_SCENE_NAME),
-            ]
-        ),
-    ]
-}
+//     vec![
+//         Layer::new("main",
+//             vec![
+//                 Clear::new(clear_color),
+//                 DrawFlat::new(ACTIVE_CAMERA_NAME, ACTIVE_SCENE_NAME),
+//             ]
+//         ),
+//     ]
+// }
 
-fn forward_shaded(clear_color: [f32; 4]) -> Vec<Layer> {
-    use renderer::pass::*;
+// fn forward_shaded(clear_color: [f32; 4]) -> Vec<Layer> {
+//     use renderer::pass::*;
 
-    vec![
-        Layer::new("main",
-            vec![
-                Clear::new(clear_color),
-                DrawShaded::new(ACTIVE_CAMERA_NAME, ACTIVE_SCENE_NAME),
-            ]
-        ),
-    ]
-}
+//     vec![
+//         Layer::new("main",
+//             vec![
+//                 Clear::new(clear_color),
+//                 DrawShaded::new(ACTIVE_CAMERA_NAME, ACTIVE_SCENE_NAME),
+//             ]
+//         ),
+//     ]
+// }
 
-fn layer_gbuffer(clear_color: [f32; 4]) -> Layer {
-    use renderer::pass::*;
+// fn layer_gbuffer(clear_color: [f32; 4]) -> Layer {
+//     use renderer::pass::*;
 
-    Layer::new("gbuffer",
-               vec![
-            Clear::new(clear_color),
-            DrawFlat::new(ACTIVE_CAMERA_NAME, ACTIVE_SCENE_NAME),
-        ])
-}
+//     Layer::new("gbuffer",
+//                vec![
+//             Clear::new(clear_color),
+//             DrawFlat::new(ACTIVE_CAMERA_NAME, ACTIVE_SCENE_NAME),
+//         ])
+// }
 
-fn deferred_flat(clear_color: [f32; 4]) -> Vec<Layer> {
-    use renderer::pass::*;
+// fn deferred_flat(clear_color: [f32; 4]) -> Vec<Layer> {
+//     use renderer::pass::*;
 
-    vec![
-        layer_gbuffer(clear_color),
-        Layer::new("main",
-            vec![
-                BlitLayer::new("gbuffer", "ka"),
-            ]
-        ),
-    ]
-}
+//     vec![
+//         layer_gbuffer(clear_color),
+//         Layer::new("main",
+//             vec![
+//                 BlitLayer::new("gbuffer", "ka"),
+//             ]
+//         ),
+//     ]
+// }
 
-fn deferred_shaded(clear_color: [f32; 4]) -> Vec<Layer> {
-    use renderer::pass::*;
+// fn deferred_shaded(clear_color: [f32; 4]) -> Vec<Layer> {
+//     use renderer::pass::*;
 
-    vec![
-        layer_gbuffer(clear_color),
-        Layer::new("main",
-            vec![
-                BlitLayer::new("gbuffer", "ka"),
-                Lighting::new(ACTIVE_CAMERA_NAME, "gbuffer", ACTIVE_SCENE_NAME)
-            ]
-        ),
-    ]
-}
+//     vec![
+//         layer_gbuffer(clear_color),
+//         Layer::new("main",
+//             vec![
+//                 BlitLayer::new("gbuffer", "ka"),
+//                 Lighting::new(ACTIVE_CAMERA_NAME, "gbuffer", ACTIVE_SCENE_NAME)
+//             ]
+//         ),
+//     ]
+// }
 
-impl RenderingProcessor {
-    pub fn new(renderer_config: RendererConfig, context: &mut Context) -> RenderingProcessor {
-        let clear_color = renderer_config.clear_color;
-        let pipeline = match (renderer_config.pipeline.as_str(),
-                              renderer_config.shading.as_str()) {
-            ("Forward", "Flat") => forward_flat(clear_color),
-            ("Forward", "Shaded") => forward_shaded(clear_color),
-            ("Deferred", "Flat") => deferred_flat(clear_color),
-            ("Deferred", "Shaded") => deferred_shaded(clear_color),
-            _ => panic!("Error: Can't provide rendering pipeline requested in renderer_config"),
-        };
+// impl RenderingProcessor {
+//     pub fn new(renderer_config: RendererConfig, context: &mut Context) -> RenderingProcessor {
+//         let clear_color = renderer_config.clear_color;
+//         let pipeline = match (renderer_config.pipeline.as_str(),
+//                               renderer_config.shading.as_str()) {
+//             ("Forward", "Flat") => forward_flat(clear_color),
+//             ("Forward", "Shaded") => forward_shaded(clear_color),
+//             ("Deferred", "Flat") => deferred_flat(clear_color),
+//             ("Deferred", "Shaded") => deferred_shaded(clear_color),
+//             _ => panic!("Error: Can't provide rendering pipeline requested in renderer_config"),
+//         };
 
-        context.renderer.add_scene(ACTIVE_SCENE_NAME);
+//         context.renderer.add_scene(ACTIVE_SCENE_NAME);
 
-        let (w, h) = context.renderer.get_dimensions().unwrap();
-        let proj = renderer::Camera::perspective(60.0, w as f32 / h as f32, 1.0, 100.0);
-        let eye = [0., 0., 0.];
-        let target = [0., 0., 0.];
-        let up = [0., 0., 1.];
-        let view = renderer::Camera::look_at(eye, target, up);
-        let camera = renderer::Camera::new(proj, view);
+//         let (w, h) = context.renderer.get_dimensions().unwrap();
+//         let proj = renderer::Camera::perspective(60.0, w as f32 / h as f32, 1.0, 100.0);
+//         let eye = [0., 0., 0.];
+//         let target = [0., 0., 0.];
+//         let up = [0., 0., 1.];
+//         let view = renderer::Camera::look_at(eye, target, up);
+//         let camera = renderer::Camera::new(proj, view);
 
-        context.renderer.add_camera(camera, ACTIVE_CAMERA_NAME);
-        context.renderer.set_pipeline(pipeline);
-        RenderingProcessor { active_camera: None }
-    }
-}
+//         context.renderer.add_camera(camera, ACTIVE_CAMERA_NAME);
+//         context.renderer.set_pipeline(pipeline);
+//         RenderingProcessor { active_camera: None }
+//     }
+// }
 
-unsafe impl Send for RenderingProcessor {}
+// unsafe impl Send for RenderingProcessor {}
 
-impl Processor<Arc<Mutex<Context>>> for RenderingProcessor {
-    fn run(&mut self, arg: RunArg, context: Arc<Mutex<Context>>) {
-        if let Ok(mut context) = context.lock() {
-            let (entities, transforms, mut renderables, mut lights, mut cameras) = arg.fetch(|w| {
-                    (w.entities(),
-                     w.read::<Transform>(),
-                     w.write::<Renderable>(),
-                     w.write::<Light>(),
-                     w.write::<Camera>())
-                });
+// impl Processor<Arc<Mutex<Context>>> for RenderingProcessor {
+//     fn run(&mut self, arg: RunArg, context: Arc<Mutex<Context>>) {
+//         if let Ok(mut context) = context.lock() {
+//             let (entities, transforms, mut renderables, mut lights, mut cameras) = arg.fetch(|w| {
+//                     (w.entities(),
+//                      w.read::<Transform>(),
+//                      w.write::<Renderable>(),
+//                      w.write::<Light>(),
+//                      w.write::<Camera>())
+//                 });
 
-            let mut light_indices = HashSet::<usize>::new();
-            for (entity, light) in (&entities, &mut lights).iter() {
-                match light.idx {
-                    Some(idx) => {
-                        // If this Light is already in frame then update it.
-                        light_indices.insert(idx);
-                        if let Some(frame_light) = context.renderer
-                            .mut_light(ACTIVE_SCENE_NAME, idx) {
-                            *frame_light = light.light.clone();
-                        } else {
-                            println!("Error: entity with id = {0} is deleted, because Light::idx \
-                                      field is invalid.",
-                                     entity.get_id());
-                            arg.delete(entity);
-                        }
-                    }
-                    None => {
-                        // Otherwise add it to the frame.
-                        let frame_light = light.light.clone();
-                        if let Some(idx) = context.renderer
-                            .add_light(ACTIVE_SCENE_NAME, frame_light) {
-                            // If this Light can be added to the frame then add it and store
-                            // the index in the light.idx field.
-                            light.idx = Some(idx);
-                            light_indices.insert(idx);
-                        }
-                    }
-                }
-            }
+//             let mut light_indices = HashSet::<usize>::new();
+//             for (entity, light) in (&entities, &mut lights).iter() {
+//                 match light.idx {
+//                     Some(idx) => {
+//                         // If this Light is already in frame then update it.
+//                         light_indices.insert(idx);
+//                         if let Some(frame_light) = context.renderer
+//                             .mut_light(ACTIVE_SCENE_NAME, idx) {
+//                             *frame_light = light.light.clone();
+//                         } else {
+//                             println!("Error: entity with id = {0} is deleted, because Light::idx \
+//                                       field is invalid.",
+//                                      entity.get_id());
+//                             arg.delete(entity);
+//                         }
+//                     }
+//                     None => {
+//                         // Otherwise add it to the frame.
+//                         let frame_light = light.light.clone();
+//                         if let Some(idx) = context.renderer
+//                             .add_light(ACTIVE_SCENE_NAME, frame_light) {
+//                             // If this Light can be added to the frame then add it and store
+//                             // the index in the light.idx field.
+//                             light.idx = Some(idx);
+//                             light_indices.insert(idx);
+//                         }
+//                     }
+//                 }
+//             }
 
-            let mut renderable_indices = HashSet::<usize>::new();
-            for (entity, global, renderable) in (&entities, &transforms, &mut renderables).iter() {
-                // renderable.update_transform_matrix();
-                match renderable.idx {
-                    // If this Renderable is already in frame then update the transform field
-                    // of the corresponding Fragment.
-                    Some(idx) => {
-                        renderable_indices.insert(idx);
-                        if let Some(transform) = context.renderer
-                            .mut_fragment_transform(ACTIVE_SCENE_NAME, idx) {
-                            *transform = global.0;
-                        } else {
-                            println!("Error: entity with id = {0} is deleted, because \
-                                      Renderable::idx field is invalid.",
-                                     entity.get_id());
-                            arg.delete(entity);
-                        }
-                    }
-                    // If it is not in frame then attempt to create a Fragment with given transform
-                    // and requested mesh, ka, and kd, which are looked up using the asset manager
-                    None => {
-                        let mesh = renderable.mesh.as_str();
-                        let ka = renderable.ka.as_str();
-                        let kd = renderable.kd.as_str();
-                        let transform = global.0;
-                        if let Some(fragment) = context.asset_manager
-                            .get_fragment(mesh, ka, kd, transform) {
-                            if let Some(idx) = context.renderer
-                                .add_fragment(ACTIVE_SCENE_NAME, fragment) {
-                                // If this Renderable can be added to
-                                // the frame then add it and store
-                                // the index of this fragment
-                                // in the renderable.idx field
-                                renderable.idx = Some(idx);
-                                renderable_indices.insert(idx);
-                            }
-                        } else {
-                            println!("Error: entity with id = {0} is deleted, because at least \
-                                      one of the assets requested by the Renderable component \
-                                      attached to this entity doesn't exist.",
-                                     entity.get_id());
-                            arg.delete(entity);
-                        }
-                    }
-                }
-            }
+//             let mut renderable_indices = HashSet::<usize>::new();
+//             for (entity, global, renderable) in (&entities, &transforms, &mut renderables).iter() {
+//                 // renderable.update_transform_matrix();
+//                 match renderable.idx {
+//                     // If this Renderable is already in frame then update the transform field
+//                     // of the corresponding Fragment.
+//                     Some(idx) => {
+//                         renderable_indices.insert(idx);
+//                         if let Some(transform) = context.renderer
+//                             .mut_fragment_transform(ACTIVE_SCENE_NAME, idx) {
+//                             *transform = global.0;
+//                         } else {
+//                             println!("Error: entity with id = {0} is deleted, because \
+//                                       Renderable::idx field is invalid.",
+//                                      entity.get_id());
+//                             arg.delete(entity);
+//                         }
+//                     }
+//                     // If it is not in frame then attempt to create a Fragment with given transform
+//                     // and requested mesh, ka, and kd, which are looked up using the asset manager
+//                     None => {
+//                         let mesh = renderable.mesh.as_str();
+//                         let ka = renderable.ka.as_str();
+//                         let kd = renderable.kd.as_str();
+//                         let transform = global.0;
+//                         if let Some(fragment) = context.asset_manager
+//                             .get_fragment(mesh, ka, kd, transform) {
+//                             if let Some(idx) = context.renderer
+//                                 .add_fragment(ACTIVE_SCENE_NAME, fragment) {
+//                                 // If this Renderable can be added to
+//                                 // the frame then add it and store
+//                                 // the index of this fragment
+//                                 // in the renderable.idx field
+//                                 renderable.idx = Some(idx);
+//                                 renderable_indices.insert(idx);
+//                             }
+//                         } else {
+//                             println!("Error: entity with id = {0} is deleted, because at least \
+//                                       one of the assets requested by the Renderable component \
+//                                       attached to this entity doesn't exist.",
+//                                      entity.get_id());
+//                             arg.delete(entity);
+//                         }
+//                     }
+//                 }
+//             }
 
-            if let Some(active_camera) = self.active_camera {
-                if let Some(camera) = cameras.get(active_camera) {
-                    let proj = match camera.projection {
-                        Projection::Perspective { fov, aspect, near, far } => {
-                            renderer::Camera::perspective(fov, aspect, near, far)
-                        }
-                        Projection::Orthographic { left, right, bottom, top, near, far } => {
-                            renderer::Camera::orthographic(left, right, bottom, top, near, far)
-                        }
-                    };
+//             if let Some(active_camera) = self.active_camera {
+//                 if let Some(camera) = cameras.get(active_camera) {
+//                     let proj = match camera.projection {
+//                         Projection::Perspective { fov, aspect, near, far } => {
+//                             renderer::Camera::perspective(fov, aspect, near, far)
+//                         }
+//                         Projection::Orthographic { left, right, bottom, top, near, far } => {
+//                             renderer::Camera::orthographic(left, right, bottom, top, near, far)
+//                         }
+//                     };
 
-                    let eye = camera.eye;
-                    let target = camera.target;
-                    let up = camera.up;
+//                     let eye = camera.eye;
+//                     let target = camera.target;
+//                     let up = camera.up;
 
-                    let view = renderer::Camera::look_at(eye, target, up);
+//                     let view = renderer::Camera::look_at(eye, target, up);
 
-                    if let Some(camera) = context.renderer.mut_camera(ACTIVE_CAMERA_NAME) {
-                        *camera = renderer::Camera::new(proj, view);
-                    }
-                } else {
-                    self.active_camera = None;
-                }
-            }
+//                     if let Some(camera) = context.renderer.mut_camera(ACTIVE_CAMERA_NAME) {
+//                         *camera = renderer::Camera::new(proj, view);
+//                     }
+//                 } else {
+//                     self.active_camera = None;
+//                 }
+//             }
 
-            for (entity, camera) in (&entities, &mut cameras).iter() {
-                if camera.activate {
-                    self.active_camera = Some(entity);
-                    camera.activate = false;
-                }
-            }
+//             for (entity, camera) in (&entities, &mut cameras).iter() {
+//                 if camera.activate {
+//                     self.active_camera = Some(entity);
+//                     camera.activate = false;
+//                 }
+//             }
 
-            // Delete from frame all renderer::Lights corresponding to deleted Light components
-            if let Some(num_lights) = context.renderer.num_lights(ACTIVE_SCENE_NAME) {
-                for i in 0..num_lights {
-                    if !light_indices.contains(&i) {
-                        context.renderer.delete_light(ACTIVE_SCENE_NAME, i);
-                    }
-                }
-            }
+//             // Delete from frame all renderer::Lights corresponding to deleted Light components
+//             if let Some(num_lights) = context.renderer.num_lights(ACTIVE_SCENE_NAME) {
+//                 for i in 0..num_lights {
+//                     if !light_indices.contains(&i) {
+//                         context.renderer.delete_light(ACTIVE_SCENE_NAME, i);
+//                     }
+//                 }
+//             }
 
-            // Delete from frame all Fragments corresponding to deleted Renderable components
-            if let Some(num_fragments) = context.renderer.num_fragments(ACTIVE_SCENE_NAME) {
-                for i in 0..num_fragments {
-                    if !renderable_indices.contains(&i) {
-                        context.renderer.delete_fragment(ACTIVE_SCENE_NAME, i);
-                    }
-                }
-            }
-        }
-    }
-}
+//             // Delete from frame all Fragments corresponding to deleted Renderable components
+//             if let Some(num_fragments) = context.renderer.num_fragments(ACTIVE_SCENE_NAME) {
+//                 for i in 0..num_fragments {
+//                     if !renderable_indices.contains(&i) {
+//                         context.renderer.delete_fragment(ACTIVE_SCENE_NAME, i);
+//                     }
+//                 }
+//             }
+//         }
+//     }
+// }
 
 /// Entities with this component are rendered
 /// by the `RenderingProcessor`, modifying the `transform` field

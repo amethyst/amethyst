@@ -4,15 +4,16 @@ extern crate amethyst;
 extern crate cgmath;
 
 use amethyst::engine::{Application, State, Trans};
-use amethyst::context::{ContextConfig, Context};
 use amethyst::config::Element;
-use amethyst::ecs::{World, Join};
-use amethyst::context::asset_manager::{Mesh, Texture};
+use amethyst::ecs::World;
+use amethyst::gfx_device::DisplayConfig;
+use amethyst::asset_manager::AssetManager;
+use amethyst::context::event::EngineEvent;
 
 struct Example;
 
 impl State for Example {
-    fn on_start(&mut self, ctx: &mut Context, _: &mut World) {
+    fn on_start(&mut self, _: &mut World, _: &mut AssetManager) {
         use amethyst::renderer::pass::{Clear, DrawShaded};
         use amethyst::renderer::{Layer, Camera, Light};
         use cgmath::Vector3;
@@ -62,18 +63,15 @@ impl State for Example {
         ctx.renderer.set_pipeline(pipeline);
     }
 
-    fn update(&mut self, ctx: &mut Context, _: &mut World) -> Trans {
-        // Exit if user hits Escape or closes the window
-        use amethyst::context::event::{EngineEvent, Event, VirtualKeyCode};
-        let engine_events = ctx.broadcaster.read::<EngineEvent>();
-        for engine_event in engine_events.iter() {
-            match engine_event.payload {
+    fn handle_events(&mut self, events: &[EngineEvent], _: &mut World, _: &mut AssetManager) -> Trans {
+        use amethyst::context::event::*;
+        for event in events {
+            match event.payload {
                 Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) => return Trans::Quit,
                 Event::Closed => return Trans::Quit,
                 _ => (),
             }
         }
-
         Trans::None
     }
 }
@@ -86,3 +84,19 @@ fn main() {
     let mut game = Application::build(Example, ctx).done();
     game.run();
 }
+
+// /// Generate and load a sphere mesh using the number of vertices accross the equator (u)
+// /// and the number of vertices from pole to pole (v).
+// fn gen_sphere(&mut self, name: &str, u: usize, v: usize) -> Vec<VertexPosNormal> {
+//     let data: Vec<VertexPosNormal> = SphereUV::new(u, v)
+//         .vertex(|(x, y, z)| {
+//             VertexPosNormal {
+//                 pos: [x, y, z],
+//                 normal: Vector3::new(x, y, z).normalize().into(),
+//                 tex_coord: [0., 0.],
+//             }
+//         })
+//         .triangulate()
+//         .vertices()
+//         .collect()
+// }

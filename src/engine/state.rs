@@ -1,8 +1,8 @@
 //! Utilities for game state management.
 
-use context::Context;
-use ecs::{Entity, Planner, World};
-use std::sync::{Arc, Mutex};
+use asset_manager::AssetManager;
+use context::event::EngineEvent;
+use ecs::World;
 
 /// Types of state transitions.
 pub enum Trans {
@@ -22,51 +22,50 @@ pub enum Trans {
 /// A trait which defines game states that can be used by the state machine.
 pub trait State {
     /// Executed when the game state begins.
-    fn on_start(&mut self, _ctx: &mut Context, _world: &mut World) {}
+    fn on_start(&mut self, _world: &mut World, _asset_manager: &mut AssetManager) {}
 
     /// Executed when the game state exits.
-    fn on_stop(&mut self, _ctx: &mut Context, _world: &mut World) {}
+    fn on_stop(&mut self, _world: &mut World, _asset_manager: &mut AssetManager) {}
 
     /// Executed when a different game state is pushed onto the stack.
-    fn on_pause(&mut self, _ctx: &mut Context, _world: &mut World) {}
+    fn on_pause(&mut self, _world: &mut World, _asset_manager: &mut AssetManager) {}
 
     /// Executed when the application returns to this game state once again.
-    fn on_resume(&mut self, _ctx: &mut Context, _world: &mut World) {}
+    fn on_resume(&mut self, _world: &mut World, _asset_manager: &mut AssetManager) {}
 
     /// Executed on every frame before updating, for use in reacting to events.
     fn handle_events(&mut self,
-                     _events: &[Entity],
-                     _ctx: &mut Context,
-                     _world: &mut World)
+                     _events: &[EngineEvent],
+                     _world: &mut World,
+                     _asset_manager: &mut AssetManager)
                      -> Trans {
         Trans::None
     }
 
     /// Executed repeatedly at stable, predictable intervals (1/60th of a second
     /// by default).
-    fn fixed_update(&mut self, _ctx: &mut Context, _world: &mut World) -> Trans {
+    fn fixed_update(&mut self, _world: &mut World, _asset_manager: &mut AssetManager) -> Trans {
         Trans::None
     }
 
     /// Executed on every frame immediately, as fast as the engine will allow.
-    fn update(&mut self, _ctx: &mut Context, _world: &mut World) -> Trans {
-        Trans::Pop
+    fn update(&mut self, _world: &mut World, _asset_manager: &mut AssetManager) -> Trans {
+        Trans::None
     }
 }
 
 /// A simple stack-based state machine (pushdown automaton).
 pub struct StateMachine {
-    planner: Planner<Arc<Mutex<Context>>>,
+    // planner: Planner<()>,
     running: bool,
     state_stack: Vec<Box<State>>,
 }
 
 impl StateMachine {
-    pub fn new<T>(initial_state: T, planner: Planner<Arc<Mutex<Context>>>) -> StateMachine
+    pub fn new<T>(initial_state: T) -> StateMachine
         where T: State + 'static
     {
         StateMachine {
-            planner: planner,
             running: false,
             state_stack: vec![Box::new(initial_state)],
         }
@@ -77,111 +76,103 @@ impl StateMachine {
         self.running
     }
 
-    /// Runs processors if the state machine is running.
-    pub fn run_processors(&mut self, ctx: Arc<Mutex<Context>>) {
-        if self.running {
-            self.planner.dispatch(ctx);
-            self.planner.wait();
-        }
-    }
-
     /// Initializes the state machine.
     /// # Panics
     /// Panics if no states are present in the stack.
-    pub fn start(&mut self, ctx: &mut Context) {
+    pub fn start(&mut self, world: &mut World, asset_manager: &mut AssetManager) {
         if !self.running {
             let state = self.state_stack.last_mut().unwrap();
-            state.on_start(ctx, self.planner.mut_world());
+            state.on_start(world, asset_manager);
             self.running = true;
         }
     }
 
     /// Passes a vector of events to the active state to handle.
-    pub fn handle_events(&mut self, events: &[Entity], ctx: &mut Context) {
+    pub fn handle_events(&mut self, events: &[EngineEvent], world: &mut World, asset_manager: &mut AssetManager) {
         if self.running {
             let trans = match self.state_stack.last_mut() {
-                Some(state) => state.handle_events(events, ctx, self.planner.mut_world()),
+                Some(state) => state.handle_events(events, world, asset_manager),
                 None => Trans::None,
             };
 
-            self.transition(trans, ctx);
+            self.transition(trans, world, asset_manager);
         }
     }
 
     /// Updates the currently active state at a steady, fixed interval.
-    pub fn fixed_update(&mut self, ctx: &mut Context) {
+    pub fn fixed_update(&mut self, world: &mut World, asset_manager: &mut AssetManager) {
         if self.running {
             let trans = match self.state_stack.last_mut() {
-                Some(state) => state.fixed_update(ctx, self.planner.mut_world()),
+                Some(state) => state.fixed_update(world, asset_manager),
                 None => Trans::None,
             };
 
-            self.transition(trans, ctx);
+            self.transition(trans, world, asset_manager);
         }
     }
 
     /// Updates the currently active state immediately.
-    pub fn update(&mut self, ctx: &mut Context) {
+    pub fn update(&mut self, world: &mut World, asset_manager: &mut AssetManager) {
         if self.running {
             let trans = match self.state_stack.last_mut() {
-                Some(state) => state.update(ctx, self.planner.mut_world()),
+                Some(state) => state.update(world, asset_manager),
                 None => Trans::None,
             };
 
-            self.transition(trans, ctx);
+            self.transition(trans, world, asset_manager);
         }
     }
 
     /// Performs a state transition, if requested by either update() or
     /// fixed_update().
-    fn transition(&mut self, request: Trans, ctx: &mut Context) {
+    fn transition(&mut self, request: Trans, world: &mut World, asset_manager: &mut AssetManager) {
         if self.running {
             match request {
                 Trans::None => (),
-                Trans::Pop => self.pop(ctx),
-                Trans::Push(state) => self.push(state, ctx),
-                Trans::Switch(state) => self.switch(state, ctx),
-                Trans::Quit => self.stop(ctx),
+                Trans::Pop => self.pop(world, asset_manager),
+                Trans::Push(state) => self.push(state, world, asset_manager),
+                Trans::Switch(state) => self.switch(state, world, asset_manager),
+                Trans::Quit => self.stop(world, asset_manager),
             }
         }
     }
 
     /// Removes the current state on the stack and inserts a different one.
-    fn switch(&mut self, state: Box<State>, ctx: &mut Context) {
+    fn switch(&mut self, state: Box<State>, world: &mut World, asset_manager: &mut AssetManager) {
         if self.running {
             if let Some(mut state) = self.state_stack.pop() {
-                state.on_stop(ctx, self.planner.mut_world());
+                state.on_stop(world, asset_manager);
             }
 
             self.state_stack.push(state);
             let state = self.state_stack.last_mut().unwrap();
-            state.on_start(ctx, self.planner.mut_world());
+            state.on_start(world, asset_manager);
         }
     }
 
     /// Pauses the active state and pushes a new state onto the state stack.
-    fn push(&mut self, state: Box<State>, ctx: &mut Context) {
+    fn push(&mut self, state: Box<State>, world: &mut World, asset_manager: &mut AssetManager) {
         if self.running {
             if let Some(state) = self.state_stack.last_mut() {
-                state.on_pause(ctx, self.planner.mut_world());
+                state.on_pause(world, asset_manager);
             }
 
             self.state_stack.push(state);
             let state = self.state_stack.last_mut().unwrap();
-            state.on_start(ctx, self.planner.mut_world());
+            state.on_start(world, asset_manager);
         }
     }
 
     /// Stops and removes the active state and un-pauses the next state on the
     /// stack (if any).
-    fn pop(&mut self, ctx: &mut Context) {
+    fn pop(&mut self, world: &mut World, asset_manager: &mut AssetManager) {
         if self.running {
             if let Some(mut state) = self.state_stack.pop() {
-                state.on_stop(ctx, self.planner.mut_world());
+                state.on_stop(world, asset_manager);
             }
 
             if let Some(mut state) = self.state_stack.last_mut() {
-                state.on_resume(ctx, self.planner.mut_world());
+                state.on_resume(world, asset_manager);
             } else {
                 self.running = false;
             }
@@ -189,10 +180,10 @@ impl StateMachine {
     }
 
     /// Shuts the state machine down.
-    fn stop(&mut self, ctx: &mut Context) {
+    fn stop(&mut self, world: &mut World, asset_manager: &mut AssetManager) {
         if self.running {
             while let Some(mut state) = self.state_stack.pop() {
-                state.on_stop(ctx, self.planner.mut_world());
+                state.on_stop(world, asset_manager);
             }
 
             self.running = false;
@@ -203,14 +194,14 @@ impl StateMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use context::{ContextConfig, Context};
+    use context::{GfxDeviceConfig, GfxDevice};
     use ecs::{Planner, World};
 
     struct State1(u8);
     struct State2;
 
     impl State for State1 {
-        fn update(&mut self, _: &mut Context, _: &mut World) -> Trans {
+        fn update(&mut self, _: &mut World) -> Trans {
             if self.0 > 0 {
                 self.0 -= 1;
                 Trans::None
@@ -221,15 +212,15 @@ mod tests {
     }
 
     impl State for State2 {
-        fn update(&mut self, _: &mut Context, _: &mut World) -> Trans {
+        fn update(&mut self, _: &mut GfxDevice, _: &mut World) -> Trans {
             Trans::Pop
         }
     }
 
     #[test]
     fn switch_pop() {
-        let config = ContextConfig::default();
-        let mut context = Context::new(config);
+        let config = GfxDeviceConfig::default();
+        let mut context = GfxDevice::new(config);
         let world = World::new();
         let planner = Planner::new(world, 1);
         let mut sm = StateMachine::new(State1(7), planner);

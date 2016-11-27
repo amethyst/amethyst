@@ -48,6 +48,8 @@
 
 pub mod engine;
 pub mod processors;
+pub mod gfx_device;
+pub mod asset_manager;
 
 #[macro_use]
 pub extern crate amethyst_config as config;

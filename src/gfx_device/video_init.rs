@@ -4,44 +4,28 @@ extern crate gfx_window_glutin;
 extern crate gfx_device_gl;
 extern crate gfx;
 
-use amethyst_config::Element;
-use std::path::Path;
-use self::amethyst_renderer::{Renderer, Frame};
+use gfx_device::DisplayConfig;
+use gfx_device::gfx_device_inner::GfxDeviceInner;
+use gfx_device::gfx_loader::GfxLoader;
+
+use self::amethyst_renderer::{Renderer, Pipeline};
 use self::amethyst_renderer::target::{ColorFormat, DepthFormat, ColorBuffer};
 
-use gfx_device::GfxDeviceInner;
-
-config!(
-    /// Contains display config,
-    /// it is required to create a `VideoContext`
-    struct DisplayConfig {
-        pub title: String = "Amethyst game".to_string(),
-        pub fullscreen: bool = false,
-        pub dimensions: Option<(u32, u32)> = None,
-        pub min_dimensions: Option<(u32, u32)> = None,
-        pub max_dimensions: Option<(u32, u32)> = None,
-        pub vsync: bool = true,
-        pub multisampling: u16 = 1,
-        pub visibility: bool = true,
-        pub backend: String = "Null".to_string(),
-    }
-);
-
-pub fn gfx_init(display_config: DisplayConfig) -> GfxDeviceInner {
-    match display_config.backend.clone().as_ref() {
+pub fn video_init(display_config: DisplayConfig) -> (GfxDeviceInner, GfxLoader) {
+    match display_config.backend.as_str() {
         "OpenGL" => new_gl(&display_config),
         #[cfg(windows)]
         "Direct3D" => new_d3d(),
-        _ => GfxDeviceInner::Null,
+        _ => (GfxDeviceInner::Null, GfxLoader::Null),
     }
 }
 
 #[cfg(windows)]
-fn new_d3d() -> (VideoContext, FactoryImpl) {
+fn new_d3d() -> (VideoContext, GfxLoader) {
     unimplemented!();
 }
 
-fn new_gl(display_config: &DisplayConfig) -> GfxDeviceInner {
+fn new_gl(display_config: &DisplayConfig) -> (GfxDeviceInner, GfxLoader) {
     let title = display_config.title.clone();
     let multisampling = display_config.multisampling.clone();
     let visibility = display_config.visibility.clone();
@@ -78,24 +62,27 @@ fn new_gl(display_config: &DisplayConfig) -> GfxDeviceInner {
     let mut renderer = Renderer::new(combuf);
     renderer.load_all(&mut factory);
 
-    let mut frame = Frame::new();
-    frame.targets.insert("main".into(),
+    let mut pipeline = Pipeline::new();
+    pipeline.targets.insert("main".into(),
                          Box::new(ColorBuffer {
                              color: main_color,
                              output_depth: main_depth,
                          }));
 
     let (w, h) = window.get_inner_size().unwrap();
-    frame.targets.insert("gbuffer".into(),
+    pipeline.targets.insert("gbuffer".into(),
                          Box::new(amethyst_renderer::target::GeometryBuffer::new(&mut factory, (w as u16, h as u16))));
 
     let gfx_device_inner = GfxDeviceInner::OpenGL {
         window: window,
         device: device,
-        factory: factory,
         renderer: renderer,
-        frame: frame,
+        pipeline: pipeline,
     };
 
-    gfx_device_inner
+    let gfx_loader = GfxLoader::OpenGL {
+        factory: factory,
+    };
+
+    (gfx_device_inner, gfx_loader)
 }

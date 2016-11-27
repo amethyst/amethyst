@@ -13,10 +13,14 @@ extern crate mopa;
 extern crate glutin;
 extern crate cgmath;
 
+extern crate amethyst_ecs;
+
 /// Contains the included Render Targets
 pub mod target;
 /// Contains the included Passes
 pub mod pass;
+
+use amethyst_ecs::{Component, VecStorage};
 
 use std::any::TypeId;
 use std::collections::HashMap;
@@ -33,7 +37,8 @@ pub struct Renderer<R: gfx::Resources, C: gfx::CommandBuffer<R>> {
     passes: HashMap<(TypeId, TypeId),
                     Box<Fn(&Box<PassDescription>,
                            &Target,
-                           &Frame<R>,
+                           &Pipeline,
+                           &Scene<R>,
                            &mut gfx::Encoder<R, C>)>>,
 }
 
@@ -80,23 +85,23 @@ impl<R, C> Renderer<R, C>
     {
         let id = (TypeId::of::<A>(), TypeId::of::<T>());
         self.passes.insert(id,
-                           Box::new(move |a: &Box<PassDescription>, t: &Target, frame: &Frame<R>, encoder: &mut gfx::Encoder<R, C>| {
+                           Box::new(move |a: &Box<PassDescription>, t: &Target, pipeline: &Pipeline, scene: &Scene<R>, encoder: &mut gfx::Encoder<R, C>| {
                                let a = a.downcast_ref::<A>().unwrap();
                                let t = t.downcast_ref::<T>().unwrap();
-                               p.apply(a, t, frame, encoder)
+                               p.apply(a, t, pipeline, scene, encoder)
                            }));
     }
 
     /// Execute all passes
-    pub fn submit<D>(&mut self, frame: &Frame<R>, device: &mut D)
+    pub fn submit<D>(&mut self, pipeline: &Pipeline, scene: &Scene<R>, device: &mut D)
         where D: gfx::Device<Resources = R, CommandBuffer = C>
     {
-        for layer in &frame.layers {
-            let fb = frame.targets.get(&layer.target).unwrap();
+        for layer in &pipeline.layers {
+            let fb = pipeline.targets.get(&layer.target).unwrap();
             for desc in &layer.passes {
                 let id = (mopa::Any::get_type_id(&**desc), mopa::Any::get_type_id(&**fb));
                 if let Some(pass) = self.passes.get(&id) {
-                    pass(desc, &**fb, &frame, &mut self.command_buffer);
+                    pass(desc, &**fb, &pipeline, &scene, &mut self.command_buffer);
                 } else {
                     panic!("No pass implementation found for target={}, pass={:?}",
                            layer.target,
@@ -166,6 +171,7 @@ impl<R: gfx::Resources> Texture<R> {
 }
 
 /// A fragment is the most basic drawable element
+#[derive(Clone)]
 pub struct Fragment<R: gfx::Resources> {
     /// The transform matrix to apply to the matrix, this
     /// is sometimes refereed to as the model matrix
@@ -201,21 +207,29 @@ pub struct Light {
     pub propagation_r_square: f32,
 }
 
+impl Component for Light {
+    type Storage = VecStorage<Light>;
+}
+
 /// A scene is a collection of fragments and
 /// lights that make up the scene.
+#[derive(Clone)]
 pub struct Scene<R: gfx::Resources> {
     /// A list of fragments
     pub fragments: Vec<Fragment<R>>,
     /// A list of lights
     pub lights: Vec<Light>,
+    /// A camera used to render this scene
+    pub camera: Camera,
 }
 
 impl<R: gfx::Resources> Scene<R> {
     /// Create an empty scene
-    pub fn new() -> Scene<R> {
+    pub fn new(camera: Camera) -> Scene<R> {
         Scene {
             fragments: vec![],
             lights: vec![],
+            camera: camera,
         }
     }
 }
@@ -281,28 +295,20 @@ impl Layer {
 }
 
 /// The render job submission
-pub struct Frame<R: gfx::Resources> {
+pub struct Pipeline {
     /// the layers to be processed
     pub layers: Vec<Layer>,
     /// collection of render targets. A target may be
     /// a source or a sink for a `Pass`
     pub targets: HashMap<String, Box<Target>>,
-    /// Collection of scenes, having multiple scenes
-    /// allows for selection of different fragments
-    /// by different passes
-    pub scenes: HashMap<String, Scene<R>>,
-    /// Collection of Cameras owned by the scene
-    pub cameras: HashMap<String, Camera>,
 }
 
-impl<R: gfx::Resources> Frame<R> {
-    /// Create an empty Frame
-    pub fn new() -> Frame<R> {
-        Frame {
+impl Pipeline {
+    /// Create an empty Pipeline
+    pub fn new() -> Pipeline {
+        Pipeline {
             layers: vec![],
             targets: HashMap::new(),
-            scenes: HashMap::new(),
-            cameras: HashMap::new(),
         }
     }
 }
