@@ -118,7 +118,62 @@ publicly on the [appropriate chat room][gi] on Gitter asking for a review. Once
 your code has been reviewed, revised if necessary, and then signed-off by a
 developer, it will be merged into the source tree.
 
+### Dealing with upstream changes.
+
+When pulling remote changes to a local branch/machine, we recommend users to rebase instead of
+creating merge commits. 
+
+This is used sometimes when an upstream change cause problems with your pull request. The best practice is
+to do a fast-forward(ff) rebase.
+
+First setup a remote called `upstream`.
+
+```bash
+# Do one of the following. ssh is prefered, but not available on all
+# environments.
+
+# For ssh
+git remote add upstream git@github.com:amethyst/amethyst.git
+# For https
+git remote add upstream https://github.com/amethyst/amethyst.git
+```
+
+If your `origin` remote points to the original repo we recommend you to set it
+to your own fork. (check with `git remote origin get-url`)
+
+```bash
+# Set origin remote to fork, <your-fork> is git@github.com:<your-username>/amethyst.git
+# For https use https://github.com/<your-username>/amethyst.git
+git remote origin set-url <your-fork>
+```
+
+To learn how to rebase a upstream change into your branch read [this excellent wiki][rebase-how-to]
+
+TL;DR
+```bash
+# Fetch latest changes
+git fetch upstream
+# Rebase unto branch
+git checkout <branch-name>
+git rebase upstream/<branch-to-sync-with>
+```
+
+If any errors occurs git will try to tell you what has happened. If you can't figure 
+out how to solve your problem a quick google can help or you can hit us up on [gitter][gi].
+Abort with `git rebase --abort` and also sometimes `git merge --abort`
+
+To check that nothing major has changed you can do this
+```
+# Fetch latest changes
+git fetch upstream
+# Do a "non-intruisive" check. 
+git merge --ff-only --no-commit upstream
+```
+
+Then you can decide to do a ff rebase.
+
 [gi]: https://gitter.im/orgs/amethyst/rooms
+[rebase-how-to]: https://github.com/edx/edx-platform/wiki/How-to-Rebase-a-Pull-Request#how-do-i-rebase
 
 Thank you so much for your contribution! Now Amethyst will be a little bit
 faster, stronger, and more efficient.
