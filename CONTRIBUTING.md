@@ -153,7 +153,7 @@ TL;DR
 ```bash
 # Fetch latest changes
 git fetch upstream
-# Rebase unto branch
+# Rebase this branch to upstream
 git checkout <branch-name>
 git rebase upstream/<branch-to-sync-with>
 ```
@@ -176,7 +176,7 @@ Then you can decide to do a ff rebase.
 [rebase-how-to]: https://github.com/edx/edx-platform/wiki/How-to-Rebase-a-Pull-Request#how-do-i-rebase
 
 Thank you so much for your contribution! Now Amethyst will be a little bit
-faster, stronger, and more efficient.
+faster, stronger, and more efficient. The commits will also be more organized and efficient.
 
 ## Writing Documentation
 
