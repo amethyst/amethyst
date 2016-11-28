@@ -10,94 +10,45 @@ use context::Context;
 use std::sync::{Mutex, Arc};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::collections::{HashMap, HashSet};
+use std::ops::{Deref, DerefMut};
+
+#[derive(Debug)]
+pub struct InnerTransform {
+    /// Translation/position vector [x, y, z]
+    pub translation: [f32; 3],
+
+    /// Quaternion [w (scalar), x, y, z]
+    pub rotation: [f32; 4],
+
+    /// Scale vector [x, y, z]
+    pub scale: [f32; 3],
+}
 
 /// Local position, rotation, and scale (from parent if it exists).
 #[derive(Debug)]
 pub struct LocalTransform {
-    /// Translation/position vector [x, y, z]
-    translation: [f32; 3],
-
-    /// Quaternion [w (scalar), x, y, z]
-    rotation: [f32; 4],
-
-    /// Scale vector [x, y, z]
-    scale: [f32; 3],
+    /// Wrapper around the transform data for dirty flag setting.
+    wrapped: InnerTransform,
 
     /// Flag for re-computation
     dirty: AtomicBool,
 }
 
+impl Deref for LocalTransform {
+    type Target = InnerTransform;
+    fn deref(&self) -> &InnerTransform {
+        &self.wrapped
+    }
+}
+
+impl DerefMut for LocalTransform {
+    fn deref_mut(&mut self) -> &mut InnerTransform {
+        self.flag(true);
+        &mut self.wrapped
+    }
+}
+
 impl LocalTransform {
-    #[inline]
-    pub fn translation(&self) -> [f32; 3] {
-        self.translation
-    }
-    #[inline]
-    pub fn rotation(&self) -> [f32; 4] {
-        self.rotation
-    }
-    #[inline]
-    pub fn scale(&self) -> [f32; 3] {
-        self.scale
-    }
-    #[inline]
-    pub fn set_translation(&mut self, translation: [f32; 3]) {
-        self.translation = translation;
-        self.flag(true);
-    }
-    #[inline]
-    pub fn set_rotation(&mut self, rotation: [f32; 4]) {
-        self.rotation = rotation;
-        self.flag(true);
-    }
-    #[inline]
-    pub fn set_scale(&mut self, scale: [f32; 3]) {
-        self.scale = scale;
-        self.flag(true);
-    }
-
-    /// Set a specific part of the translation/position without modifying the others
-    /// (must be an index less than 3).
-    ///
-    /// Format: [0 = x, 1 = y, 2 = z]
-    ///
-    /// e.g. `transform.set_translation_index(1, 5.0)` sets `y` to `5.0`
-    #[inline]
-    pub fn set_translation_index(&mut self, index: usize, val: f32) {
-        assert!(index < 3,
-                "Attempted to use `set_pos_index` with an index higher than 2");
-        self.translation[index] = val;
-        self.flag(true);
-    }
-
-    /// Set a specific part of the rotation quaternion without modifying the others
-    /// (must be an index less than 4).
-    ///
-    /// Format: [0 = w, 1 = x, 2 = y, 3 = z]
-    ///
-    /// e.g. `transform.set_rot_index(1, 0.0)` sets `x` to `0.0`
-    #[inline]
-    pub fn set_rotation_index(&mut self, index: usize, val: f32) {
-        assert!(index < 4,
-                "Attempted to use `set_rot_index` with an index higher than 3");
-        self.rotation[index] = val;
-        self.flag(true);
-    }
-
-    /// Set a specific part of the scale without modifying the others
-    /// (must be an index less than 3).
-    ///
-    /// Format: [0 = x, 1 = y, 2 = z]
-    ///
-    /// e.g. `transform.set_scale_index(2, 3.0)` sets `z` to `3.0`
-    #[inline]
-    pub fn set_scale_index(&mut self, index: usize, val: f32) {
-        assert!(index < 3,
-                "Attempted to use `set_scale_index` with an index higher than 2");
-        self.scale[index] = val;
-        self.flag(true);
-    }
-
     /// Flags the current transform for re-computation.
     ///
     /// Note: All `set_*` methods will automatically flag the component.
@@ -133,9 +84,11 @@ impl LocalTransform {
 impl Default for LocalTransform {
     fn default() -> Self {
         LocalTransform {
-            translation: [0.0, 0.0, 0.0],
-            rotation: [1.0, 0.0, 0.0, 0.0],
-            scale: [1.0, 1.0, 1.0],
+            wrapped: InnerTransform {
+                translation: [0.0, 0.0, 0.0],
+                rotation: [1.0, 0.0, 0.0, 0.0],
+                scale: [1.0, 1.0, 1.0],
+            },
             dirty: AtomicBool::new(true),
         }
     }
@@ -395,9 +348,9 @@ mod tests {
     #[test]
     fn transform_matrix() {
         let mut transform = LocalTransform::default();
-        transform.set_translation([5.0, 2.0, -0.5]);
-        transform.set_rotation([1.0, 0.0, 0.0, 0.0]);
-        transform.set_scale([2.0, 2.0, 2.0]);
+        transform.translation = [5.0, 2.0, -0.5];
+        transform.rotation = [1.0, 0.0, 0.0, 0.0];
+        transform.scale = [2.0, 2.0, 2.0];
 
         let decomposed = Decomposed {
             rot: Quaternion::from(transform.rotation),
