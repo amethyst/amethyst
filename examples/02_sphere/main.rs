@@ -47,7 +47,7 @@ impl State for Example {
         }
         let sphere_vertices = gen_sphere(32, 32);
         let sphere_mesh = asset_manager.load_asset_from_data::<Mesh, Vec<VertexPosNormal>>(sphere_vertices).unwrap();
-        let dark_blue = asset_manager.load_asset_from_data::<Texture, [f32; 4]>([0.0, 0.0, 0.1, 1.0]).unwrap();
+        let dark_blue = asset_manager.load_asset_from_data::<Texture, [f32; 4]>([0.0, 0.0, 0.01, 1.0]).unwrap();
         let green = asset_manager.load_asset_from_data::<Texture, [f32; 4]>([0.0, 1.0, 0.0, 1.0]).unwrap();
         let sphere = Renderable {
             ka: dark_blue,

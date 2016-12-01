@@ -14,16 +14,21 @@ use std::time::{Duration, Instant};
 /// User-friendly facade for building games. Manages main loop.
 pub struct Application {
     states: StateMachine,
-    timer: Stopwatch,
     gfx_device: GfxDevice,
     pipeline: Pipeline,
     planner: Planner<()>,
     asset_manager: AssetManager,
+    timer: Stopwatch,
     delta_time: Duration,
     fixed_step: Duration,
     last_fixed_update: Instant,
 }
 
+pub struct Time {
+    pub delta_time: Duration,
+    pub fixed_step: Duration,
+    pub last_fixed_update: Instant,
+}
 
 impl Application {
     /// Creates a new Application with the given initial game state, planner, and display_config.
@@ -63,6 +68,11 @@ impl Application {
         asset_manager.add_loader::<gfx_device::gfx_loader::GfxLoader>(gfx_loader);
         {
             let mut world = planner.mut_world();
+            let time = Time {
+                delta_time: Duration::new(0, 0),
+                fixed_step: Duration::new(0, 16666666),
+                last_fixed_update: Instant::now(),
+            };
             if let Some ((w, h)) = gfx_device.get_dimensions() {
                 let dimensions = ScreenDimensions::new(w, h);
                 let projection = Projection::Perspective {
@@ -75,6 +85,7 @@ impl Application {
                 let target = [1.0, 0.0, 0.0];
                 let up = [0.0, 1.0, 0.0];
                 let camera = Camera::new(projection, eye, target, up);
+                world.add_resource::<Time>(time);
                 world.add_resource::<ScreenDimensions>(dimensions);
                 world.add_resource::<Camera>(camera);
             }
@@ -84,11 +95,11 @@ impl Application {
         }
         Application {
             states: StateMachine::new(initial_state),
-            timer: Stopwatch::new(),
             gfx_device: gfx_device,
             planner: planner,
             pipeline: pipeline,
             asset_manager: asset_manager,
+            timer: Stopwatch::new(),
             delta_time: Duration::new(0, 0),
             fixed_step: Duration::new(0, 16666666),
             last_fixed_update: Instant::now(),
@@ -141,6 +152,12 @@ impl Application {
         self.planner.dispatch(());
         self.planner.wait();
         let world = self.planner.mut_world();
+        {
+            let mut time = world.write_resource::<Time>();
+            time.delta_time = self.delta_time;
+            time.fixed_step = self.fixed_step;
+            time.last_fixed_update = self.last_fixed_update;
+        }
         self.gfx_device.render_world(world, &self.pipeline);
     }
 
