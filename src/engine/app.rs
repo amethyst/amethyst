@@ -1,7 +1,8 @@
 //! The core engine framework.
 
 use super::state::{State, StateMachine};
-use renderer::{Camera, Light};
+use renderer;
+use renderer::{Light, Pipeline};
 use processors::transform::LocalTransform;
 use asset_manager::AssetManager;
 use gfx_device;
@@ -15,6 +16,7 @@ pub struct Application {
     states: StateMachine,
     timer: Stopwatch,
     gfx_device: GfxDevice,
+    pipeline: Pipeline,
     planner: Planner<()>,
     asset_manager: AssetManager,
     delta_time: Duration,
@@ -22,25 +24,58 @@ pub struct Application {
     last_fixed_update: Instant,
 }
 
+
 impl Application {
-    /// Creates a new Application with the given initial game state, planner, and context.
+    /// Creates a new Application with the given initial game state, planner, and display_config.
     pub fn new<T>(initial_state: T,
                   mut planner: Planner<()>,
                   display_config: DisplayConfig)
                   -> Application
         where T: State + 'static
     {
-        let (gfx_device_inner, gfx_loader) = gfx_device::video_init(display_config);
+        use gfx_device::camera::{Camera, Projection};
+        use gfx_device::screen_dimensions::ScreenDimensions;
+        let (gfx_device_inner, gfx_loader, main_target_inner) = gfx_device::video_init(display_config);
         let gfx_device = gfx_device::GfxDevice::new(gfx_device_inner);
+        let main_target = gfx_device::MainTarget::new(main_target_inner);
+        // FIXME Remove all platform specific code from here!
+        let mut pipeline = Pipeline::new();
+        match main_target.main_target_inner {
+            gfx_device::MainTargetInner::OpenGL {
+                ref main_color,
+                ref main_depth,
+            } => {
+                pipeline.targets.insert("main".into(),
+                                     Box::new(renderer::target::ColorBuffer {
+                                         color: main_color.clone(),
+                                         output_depth: main_depth.clone(),
+                                     }));
+
+                // let (w, h) = window.get_inner_size().unwrap();
+                // pipeline.targets.insert("gbuffer".into(),
+                //                      Box::new(renderer::target::GeometryBuffer::new(&mut factory, (w as u16, h as u16))));
+            },
+            #[cfg(windows)]
+            gfx_device::MainTargetInner::Direct3D {  } =>  unimplemented!(),
+            gfx_device::MainTargetInner::Null => (),
+        };
         let mut asset_manager = AssetManager::new();
         asset_manager.add_loader::<gfx_device::gfx_loader::GfxLoader>(gfx_loader);
         {
             let mut world = planner.mut_world();
             if let Some ((w, h)) = gfx_device.get_dimensions() {
-                let aspect = w as f32 / h as f32;
-                let projection = Camera::perspective(90.0, aspect, 0.1, 100.0);
-                let view = Camera::look_at([0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]);
-                let camera = Camera::new(projection, view);
+                let dimensions = ScreenDimensions::new(w, h);
+                let projection = Projection::Perspective {
+                    fov: 90.0,
+                    aspect_ratio: dimensions.aspect_ratio,
+                    near: 0.1,
+                    far: 100.0,
+                };
+                let eye = [0.0, 0.0, 0.0];
+                let target = [1.0, 0.0, 0.0];
+                let up = [0.0, 1.0, 0.0];
+                let camera = Camera::new(projection, eye, target, up);
+                world.add_resource::<ScreenDimensions>(dimensions);
                 world.add_resource::<Camera>(camera);
             }
             world.register::<Renderable>();
@@ -52,6 +87,7 @@ impl Application {
             timer: Stopwatch::new(),
             gfx_device: gfx_device,
             planner: planner,
+            pipeline: pipeline,
             asset_manager: asset_manager,
             delta_time: Duration::new(0, 0),
             fixed_step: Duration::new(0, 16666666),
@@ -82,7 +118,7 @@ impl Application {
 
     /// Sets up the application.
     fn initialize(&mut self) {
-        self.states.start(self.planner.mut_world(), &mut self.asset_manager);
+        self.states.start(self.planner.mut_world(), &mut self.asset_manager, &mut self.pipeline);
     }
 
     /// Advances the game world by one tick.
@@ -90,21 +126,22 @@ impl Application {
         {
             let events = self.gfx_device.poll_events();
 
-            self.states.handle_events(events.as_ref(), self.planner.mut_world(), &mut self.asset_manager);
+            self.states.handle_events(events.as_ref(), self.planner.mut_world(), &mut self.asset_manager, &mut self.pipeline);
 
             let fixed_step = self.fixed_step;
             let last_fixed_update = self.last_fixed_update;
 
             if last_fixed_update.elapsed() >= fixed_step {
-                self.states.fixed_update(self.planner.mut_world(), &mut self.asset_manager);
+                self.states.fixed_update(self.planner.mut_world(), &mut self.asset_manager, &mut self.pipeline);
                 self.last_fixed_update += fixed_step;
             }
 
-            self.states.update(self.planner.mut_world(), &mut self.asset_manager);
+            self.states.update(self.planner.mut_world(), &mut self.asset_manager, &mut self.pipeline);
         }
         self.planner.dispatch(());
         self.planner.wait();
-        self.gfx_device.render_world(self.planner.mut_world());
+        let world = self.planner.mut_world();
+        self.gfx_device.render_world(world, &self.pipeline);
     }
 
     /// Cleans up after the quit signal is received.

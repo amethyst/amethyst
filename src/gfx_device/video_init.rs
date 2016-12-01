@@ -7,25 +7,26 @@ extern crate gfx;
 use gfx_device::DisplayConfig;
 use gfx_device::gfx_device_inner::GfxDeviceInner;
 use gfx_device::gfx_loader::GfxLoader;
+use gfx_device::MainTargetInner;
 
-use self::amethyst_renderer::{Renderer, Pipeline};
-use self::amethyst_renderer::target::{ColorFormat, DepthFormat, ColorBuffer};
+use self::amethyst_renderer::Renderer;
+use self::amethyst_renderer::target::{ColorFormat, DepthFormat};
 
-pub fn video_init(display_config: DisplayConfig) -> (GfxDeviceInner, GfxLoader) {
+pub fn video_init(display_config: DisplayConfig) -> (GfxDeviceInner, GfxLoader, MainTargetInner) {
     match display_config.backend.as_str() {
         "OpenGL" => new_gl(&display_config),
         #[cfg(windows)]
         "Direct3D" => new_d3d(),
-        _ => (GfxDeviceInner::Null, GfxLoader::Null),
+        _ => (GfxDeviceInner::Null, GfxLoader::Null, MainTargetInner::Null),
     }
 }
 
 #[cfg(windows)]
-fn new_d3d() -> (VideoContext, GfxLoader) {
+fn new_d3d() -> (VideoContext, GfxLoader, MainTargetInner) {
     unimplemented!();
 }
 
-fn new_gl(display_config: &DisplayConfig) -> (GfxDeviceInner, GfxLoader) {
+fn new_gl(display_config: &DisplayConfig) -> (GfxDeviceInner, GfxLoader, MainTargetInner) {
     let title = display_config.title.clone();
     let multisampling = display_config.multisampling.clone();
     let visibility = display_config.visibility.clone();
@@ -62,27 +63,20 @@ fn new_gl(display_config: &DisplayConfig) -> (GfxDeviceInner, GfxLoader) {
     let mut renderer = Renderer::new(combuf);
     renderer.load_all(&mut factory);
 
-    let mut pipeline = Pipeline::new();
-    pipeline.targets.insert("main".into(),
-                         Box::new(ColorBuffer {
-                             color: main_color,
-                             output_depth: main_depth,
-                         }));
-
-    let (w, h) = window.get_inner_size().unwrap();
-    pipeline.targets.insert("gbuffer".into(),
-                         Box::new(amethyst_renderer::target::GeometryBuffer::new(&mut factory, (w as u16, h as u16))));
-
     let gfx_device_inner = GfxDeviceInner::OpenGL {
         window: window,
         device: device,
         renderer: renderer,
-        pipeline: pipeline,
+    };
+
+    let main_target_inner = MainTargetInner::OpenGL {
+        main_color: main_color,
+        main_depth: main_depth,
     };
 
     let gfx_loader = GfxLoader::OpenGL {
         factory: factory,
     };
 
-    (gfx_device_inner, gfx_loader)
+    (gfx_device_inner, gfx_loader, main_target_inner)
 }

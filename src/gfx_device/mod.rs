@@ -20,7 +20,7 @@ extern crate gfx;
 use config::Element;
 use std::path::Path;
 use renderer;
-use renderer::{Layer, Target, Light};
+use renderer::Light;
 use ecs::{World, Component, VecStorage, Join};
 use context::event::EngineEvent;
 use processors::transform::LocalTransform;
@@ -28,16 +28,20 @@ use processors::transform::LocalTransform;
 mod gfx_device_inner;
 mod texture;
 mod mesh;
+mod main_target;
 pub mod gfx_loader;
+pub mod camera;
+pub mod screen_dimensions;
 mod video_init;
 pub use self::video_init::video_init;
 use self::gfx_device_inner::GfxDeviceInner;
 pub use self::texture::*;
 pub use self::mesh::*;
+pub use self::main_target::*;
 
 config!(
     /// Contains display config,
-    /// it is required to create a `VideoContext`
+    /// it is required to call video_init()
     struct DisplayConfig {
         pub title: String = "Amethyst game".to_string(),
         pub fullscreen: bool = false,
@@ -51,51 +55,14 @@ config!(
     }
 );
 
-/// GfxDevice owns all resources related to graphics (e.g. amethyst_renderer::Renderer, gfx_device_gl::Device,
-/// gfx_device_gl::Factory amethyst_renderer::Frame).
 pub struct GfxDevice {
     gfx_device_inner: GfxDeviceInner,
 }
 
 impl GfxDevice {
-    /// Create a new `GfxDevice` from `DisplayConfig`.
+    /// Create a new `GfxDevice` from `GfxDeviceInner`.
     pub fn new(gfx_device_inner: GfxDeviceInner) -> GfxDevice {
         GfxDevice { gfx_device_inner: gfx_device_inner }
-    }
-
-    /// Set the rendering pipeline to be used.
-    pub fn set_pipeline(&mut self, _pipeline: Vec<Layer>) {
-        unwind_gfx_device_inner_mut!(
-            self.gfx_device_inner,
-            pipeline,
-            {
-                pipeline.layers = _pipeline;
-            },
-            ()
-        )
-    }
-
-    /// Add a rendering `Target`.
-    pub fn add_target(&mut self, target: Box<Target>, name: &str) {
-        unwind_gfx_device_inner_mut!(
-            self.gfx_device_inner,
-            pipeline,
-            {
-                pipeline.targets.insert(name.into(), target);
-            },
-            ()
-        )
-    }
-    /// Delete a rendering `Target`.
-    pub fn delete_target(&mut self, name: &str) {
-        unwind_gfx_device_inner_mut!(
-            self.gfx_device_inner,
-            pipeline,
-            {
-                pipeline.targets.remove(name.into());
-            },
-            ()
-        )
     }
 
     pub fn get_dimensions(&self) -> Option<(u32, u32)> {
@@ -107,14 +74,36 @@ impl GfxDevice {
         }
     }
 
-    pub fn render_world(&mut self, world: &mut World) {
+    pub fn render_world(&mut self, world: &mut World, pipeline: &renderer::Pipeline) {
         match self.gfx_device_inner {
             GfxDeviceInner::OpenGL { ref mut renderer,
                                      ref mut device,
-                                     ref pipeline,
                                      ref window,
                                      .. } => {
-                let camera = world.read_resource::<renderer::Camera>().clone();
+                let camera = world.read_resource::<camera::Camera>().clone();
+
+                let projection_mat = match camera.projection {
+                    camera::Projection::Perspective {
+                        fov,
+                        aspect_ratio,
+                        near,
+                        far,
+                    } => renderer::Camera::perspective(fov, aspect_ratio, near, far),
+                    camera::Projection::Orthographic {
+                        left,
+                        right,
+                        bottom,
+                        top,
+                        near,
+                        far,
+                    } => renderer::Camera::orthographic(left, right, bottom, top, near, far),
+                };
+                let eye = camera.eye;
+                let target = camera.target;
+                let up = camera.up;
+                let view_mat = renderer::Camera::look_at(eye, target, up);
+                let camera = renderer::Camera::new(projection_mat, view_mat);
+
                 let mut scene = renderer::Scene::<gfx_device_gl::Resources>::new(camera);
                 let renderables = world.read::<Renderable>();
                 let local_transforms = world.read::<LocalTransform>();
@@ -174,37 +163,6 @@ impl GfxDevice {
         events
     }
 }
-
-// pub enum MeshInner {
-//     OpenGL {
-//         buffer: gfx::handle::Buffer<gfx_device_gl::Resources, VertexPosNormal>,
-//         slice: gfx::Slice<gfx_device_gl::Resources>,
-//     },
-//     #[cfg(windows)]
-//     Direct3D {
-//         // stub
-//     },
-//     Null,
-// }
-
-// pub struct Mesh {
-//     pub mesh_inner: MeshInner,
-// }
-
-// pub enum TextureInner {
-//     OpenGL {
-//         texture: renderer::Texture<gfx_device_gl::Resources>,
-//     },
-//     #[cfg(windows)]
-//     Direct3D {
-//         // stub
-//     },
-//     Null,
-// }
-
-// pub struct Texture {
-//     pub texture_inner: TextureInner,
-// }
 
 pub struct Renderable {
     pub mesh: Mesh,
