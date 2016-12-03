@@ -38,8 +38,8 @@ impl Application {
                   -> Application
         where T: State + 'static
     {
-        use gfx_device::camera::{Camera, Projection};
-        use gfx_device::screen_dimensions::ScreenDimensions;
+        use gfx_device::world_resources::camera::{Camera, Projection};
+        use gfx_device::world_resources::ScreenDimensions;
         let (gfx_device_inner, gfx_loader, main_target_inner) = gfx_device::video_init(display_config);
         let gfx_device = gfx_device::GfxDevice::new(gfx_device_inner);
         let main_target = gfx_device::MainTarget::new(main_target_inner);

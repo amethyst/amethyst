@@ -8,7 +8,8 @@ use amethyst::ecs::{World, Join};
 use amethyst::gfx_device::DisplayConfig;
 use amethyst::asset_manager::AssetManager;
 use amethyst::context::event::EngineEvent;
-use amethyst::gfx_device::{Renderable, Texture, Mesh};
+use amethyst::gfx_device::assets::{Texture, Mesh};
+use amethyst::gfx_device::Renderable;
 use amethyst::renderer::{VertexPosNormal, Pipeline};
 use amethyst::processors::transform::LocalTransform;
 
@@ -32,8 +33,8 @@ impl State for Example {
     fn on_start(&mut self, world: &mut World, asset_manager: &mut AssetManager, pipeline: &mut Pipeline) {
         use amethyst::renderer::pass::*;
         use amethyst::renderer::{Layer, Light};
-        use amethyst::gfx_device::camera::*;
-        use amethyst::gfx_device::screen_dimensions::*;
+        use amethyst::gfx_device::world_resources::camera::*;
+        use amethyst::gfx_device::world_resources::ScreenDimensions;
         let clear_layer =
             Layer::new("main",
                         vec![
@@ -82,6 +83,7 @@ impl State for Example {
 
     fn update(&mut self, world: &mut World, _: &mut AssetManager, _: &mut Pipeline) -> Trans {
         use amethyst::renderer::Light;
+        use amethyst::gfx_device::world_resources::Camera;
         let time = world.read_resource::<amethyst::engine::Time>();
         let angular_velocity = 2.0; // in radians per second
         self.t += time.delta_time.subsec_nanos() as f32 / 1.0e9;
@@ -107,7 +109,7 @@ impl State for Example {
         let angular_velocity_camera = 0.3;
         let phase = self.t * angular_velocity_camera;
         // Test Camera mutation
-        let mut camera = world.write_resource::<amethyst::gfx_device::camera::Camera>();
+        let mut camera = world.write_resource::<Camera>();
         camera.eye[1] = 3.0 + 3.0*phase.sin().abs();
 
         Trans::None

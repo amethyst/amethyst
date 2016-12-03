@@ -10,7 +10,8 @@ use amethyst::ecs::World;
 use amethyst::gfx_device::DisplayConfig;
 use amethyst::asset_manager::AssetManager;
 use amethyst::context::event::EngineEvent;
-use amethyst::gfx_device::{Renderable, Texture, Mesh};
+use amethyst::gfx_device::assets::{Texture, Mesh};
+use amethyst::gfx_device::Renderable;
 use amethyst::renderer::{VertexPosNormal, Pipeline};
 use amethyst::processors::transform::LocalTransform;
 
@@ -24,8 +25,8 @@ impl State for Example {
     fn on_start(&mut self, world: &mut World, asset_manager: &mut AssetManager, pipeline: &mut Pipeline) {
         use amethyst::renderer::pass::*;
         use amethyst::renderer::{Layer, Light};
-        use amethyst::gfx_device::camera::*;
-        use amethyst::gfx_device::screen_dimensions::*;
+        use amethyst::gfx_device::world_resources::camera::*;
+        use amethyst::gfx_device::world_resources::ScreenDimensions;
         let clear_layer =
             Layer::new("main",
                         vec![

@@ -7,8 +7,8 @@ pub struct ScreenDimensions {
 impl ScreenDimensions {
     pub fn new(w: u32, h: u32) -> ScreenDimensions {
         ScreenDimensions {
-            w: w.clone(),
-            h: h.clone(),
+            w: w,
+            h: h,
             aspect_ratio: w as f32 / h as f32,
         }
     }
