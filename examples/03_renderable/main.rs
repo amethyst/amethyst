@@ -6,7 +6,8 @@ use amethyst::processors::transform::{TransformProcessor, Child, Init, Transform
 use amethyst::context::Context;
 use amethyst::config::Element;
 use amethyst::ecs::{World, Join};
-use amethyst::context::asset_manager::{Mesh, Texture};
+use amethyst::context::asset_manager::Mesh;
+use amethyst::renderer::Texture;
 
 struct Example {
     t: f32,

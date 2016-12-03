@@ -1,5 +1,6 @@
 use gfx;
 use gfx::traits::FactoryExt;
+use gfx_core::memory::Typed;
 
 use pass;
 use Pass;
@@ -197,7 +198,7 @@ impl<R> Pass<R> for Clear
     type Arg = pass::Clear;
     type Target = ColorBuffer<R>;
 
-    fn apply<C>(&self, arg: &pass::Clear, target: &ColorBuffer<R>, _: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+    fn apply<C>(&self, resources: &mut ::ResourceCache<R>, arg: &pass::Clear, target: &ColorBuffer<R>, _: &::Frame, encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
         encoder.clear(&target.color, arg.color);
@@ -224,7 +225,7 @@ impl<R: gfx::Resources> DrawFlat<R> {
         let pso = factory.create_pipeline_simple(VERTEX_SRC, FLAT_FRAGMENT_SRC, flat::new())
             .unwrap();
 
-        let sampler = factory.create_sampler(gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale, gfx::tex::WrapMode::Clamp));
+        let sampler = factory.create_sampler(gfx::texture::SamplerInfo::new(gfx::texture::FilterMethod::Scale, gfx::texture::WrapMode::Clamp));
 
         DrawFlat {
             vertex: vertex,
@@ -243,7 +244,7 @@ impl<R> Pass<R> for DrawFlat<R>
     type Arg = pass::DrawFlat;
     type Target = ColorBuffer<R>;
 
-    fn apply<C>(&self, arg: &pass::DrawFlat, target: &ColorBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+    fn apply<C>(&self, resources: &mut ::ResourceCache<R>, arg: &pass::DrawFlat, target: &ColorBuffer<R>, scenes: &::Frame, encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
         let scene = &scenes.scenes[&arg.scene];
@@ -260,13 +261,13 @@ impl<R> Pass<R> for DrawFlat<R>
 
             encoder.update_constant_buffer(&self.fragment, &FragmentArgs { light_count: 0 });
 
-            let ka = e.ka.to_view(&self.ka, encoder);
-            let kd = e.kd.to_view(&self.kd, encoder);
+            let ka = e.ka.to_view(&self.ka, resources, encoder);
+            let kd = e.kd.to_view(&self.kd, resources, encoder);
 
-            encoder.draw(&e.slice,
+            encoder.draw(&resources.get_slice(&e.slice),
                          &self.pso,
                          &flat::Data {
-                             vbuf: e.buffer.clone(),
+                             vbuf: gfx::handle::Buffer::new(resources.get_buffer(e.buffer.raw())),
                              vertex_args: self.vertex.clone(),
                              fragment_args: self.fragment.clone(),
                              out_ka: target.color.clone(),
@@ -299,7 +300,7 @@ impl<R: gfx::Resources> DrawShaded<R> {
         let pso = factory.create_pipeline_simple(VERTEX_SRC, FRAGMENT_SRC, shaded::new())
             .unwrap();
 
-        let sampler = factory.create_sampler(gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale, gfx::tex::WrapMode::Clamp));
+        let sampler = factory.create_sampler(gfx::texture::SamplerInfo::new(gfx::texture::FilterMethod::Scale, gfx::texture::WrapMode::Clamp));
 
         DrawShaded {
             vertex: vertex,
@@ -323,7 +324,7 @@ impl<R> Pass<R> for DrawShaded<R>
     type Arg = pass::DrawShaded;
     type Target = ColorBuffer<R>;
 
-    fn apply<C>(&self, arg: &pass::DrawShaded, target: &ColorBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+    fn apply<C>(&self, resources: &mut ::ResourceCache<R>, arg: &pass::DrawShaded, target: &ColorBuffer<R>, scenes: &::Frame, encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
         let scene = &scenes.scenes[&arg.scene];
@@ -361,13 +362,13 @@ impl<R> Pass<R> for DrawShaded<R>
 
             encoder.update_constant_buffer(&self.fragment, &FragmentArgs { light_count: count as i32 });
 
-            let ka = e.ka.to_view(&self.ka, encoder);
-            let kd = e.kd.to_view(&self.kd, encoder);
+            let ka = e.ka.to_view(&self.ka, resources, encoder);
+            let kd = e.kd.to_view(&self.kd, resources, encoder);
 
-            encoder.draw(&e.slice,
+            encoder.draw(&resources.get_slice(&e.slice),
                          &self.pso,
                          &shaded::Data {
-                             vbuf: e.buffer.clone(),
+                             vbuf: gfx::handle::Buffer::new(resources.get_buffer(e.buffer.raw())),
                              fragment_args: self.fragment.clone(),
                              vertex_args: self.vertex.clone(),
                              lights: self.lights.clone(),
@@ -402,7 +403,7 @@ impl<R: gfx::Resources> Wireframe<R> {
                                    wireframe::new())
             .unwrap();
 
-        let sampler = factory.create_sampler(gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale, gfx::tex::WrapMode::Clamp));
+        let sampler = factory.create_sampler(gfx::texture::SamplerInfo::new(gfx::texture::FilterMethod::Scale, gfx::texture::WrapMode::Clamp));
 
         Wireframe {
             vertex: vertex,
@@ -420,7 +421,7 @@ impl<R> Pass<R> for Wireframe<R>
     type Arg = pass::Wireframe;
     type Target = ColorBuffer<R>;
 
-    fn apply<C>(&self, arg: &pass::Wireframe, target: &ColorBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+    fn apply<C>(&self, resources: &mut ::ResourceCache<R>, arg: &pass::Wireframe, target: &ColorBuffer<R>, scenes: &::Frame, encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
         let scene = &scenes.scenes[&arg.scene];
@@ -435,13 +436,13 @@ impl<R> Pass<R> for Wireframe<R>
                                                model: e.transform,
                                            });
 
-            let ka = e.ka.to_view(&self.ka, encoder);
-            let kd = e.kd.to_view(&self.kd, encoder);
+            let ka = e.ka.to_view(&self.ka, resources, encoder);
+            let kd = e.kd.to_view(&self.kd, resources, encoder);
 
-            encoder.draw(&e.slice,
+            encoder.draw(&resources.get_slice(&e.slice),
                          &self.pso,
                          &wireframe::Data {
-                             vbuf: e.buffer.clone(),
+                             vbuf: gfx::handle::Buffer::new(resources.get_buffer(e.buffer.raw())),
                              vertex_args: self.vertex.clone(),
                              out_ka: target.color.clone(),
                              ka: (ka, self.sampler.clone()),

@@ -24,11 +24,11 @@ path = "../ecs/"
 version = "0.1.0"
 
 [dependencies]
-gfx = "0.11"
-gfx_core = "0.3"
-gfx_device_gl = "0.10"
-gfx_window_glutin = "0.11"
-glutin = "0.5"
+gfx = { git = "https://github.com/gfx-rs/gfx" }
+gfx_core = { git = "https://github.com/gfx-rs/gfx" }
+gfx_device_gl = { git = "https://github.com/gfx-rs/gfx" }
+gfx_window_glutin = { git = "https://github.com/gfx-rs/gfx" }
+glutin = "0.7"
 time = "0.1"
 genmesh="0.4"
 cgmath="0.11"

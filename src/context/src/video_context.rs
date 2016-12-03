@@ -33,8 +33,8 @@ pub enum VideoContext {
     OpenGL {
         window: glutin::Window,
         device: gfx_device_gl::Device,
-        renderer: Renderer<gfx_device_gl::Resources, gfx_device_gl::CommandBuffer>,
-        frame: Frame<gfx_device_gl::Resources>,
+        renderer: Renderer<gfx_device_gl::Resources, gfx_device_gl::CommandBuffer, gfx_device_gl::Factory>,
+        frame: Frame,
     },
 
     #[cfg(windows)]

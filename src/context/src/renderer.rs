@@ -19,7 +19,7 @@ extern crate amethyst_renderer;
 extern crate gfx_device_gl;
 extern crate gfx;
 
-use self::amethyst_renderer::{Layer, Scene, Target, Camera, Light};
+use self::amethyst_renderer::{Layer, Scene, Target, Camera, Light, Fragment};
 use video_context::VideoContext;
 
 /// A wraper around `VideoContext` required to
@@ -96,28 +96,19 @@ impl Renderer {
     /// Add a `Fragment` to the scene with name `scene_name`.
     /// Return the index of the added `Fragment`.
     pub fn add_fragment(&mut self, scene_name: &str, fragment: Fragment) -> Option<usize> {
-        match self.video_context {
-            VideoContext::OpenGL { ref mut frame, .. } => {
+        unwind_video_context_mut!(
+            self.video_context,
+            frame,
+            {
                 let scene = match frame.scenes.get_mut(scene_name.into()) {
                     Some(scene) => scene,
                     None => return None,
                 };
-                match fragment.fragment_impl {
-                    FragmentImpl::OpenGL { fragment } => {
-                        scene.fragments.push(fragment);
-                        Some(scene.fragments.len() - 1)
-                    }
-                    #[cfg(windows)]
-                    FragmentImpl::Direct3D {} => unimplemented!(),
-                    FragmentImpl::Null => None,
-                }
-            }
-            #[cfg(windows)]
-            VideoContext::Direct3D {} => {
-                unimplemented!();
-            }
-            VideoContext::Null => None,
-        }
+                scene.fragments.push(fragment);
+                Some(scene.fragments.len() - 1)
+            },
+            None
+        )
     }
     /// Get a mutable reference to the transform field of `Fragment` with index `idx`
     /// in scene `scene_name`.
@@ -291,21 +282,4 @@ impl Renderer {
             VideoContext::Null => (),
         }
     }
-}
-
-/// An enum with variants representing concrete
-/// `Fragment` types compatible with different backends.
-pub enum FragmentImpl {
-    OpenGL { fragment: amethyst_renderer::Fragment<gfx_device_gl::Resources>, },
-    #[cfg(windows)]
-    Direct3D {
-        // stub
-    },
-    Null,
-}
-
-/// A wraper around `Fragment` required to
-/// hide all platform specific code from the user.
-pub struct Fragment {
-    pub fragment_impl: FragmentImpl,
 }

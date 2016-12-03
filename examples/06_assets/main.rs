@@ -6,8 +6,8 @@ use amethyst::engine::{Application, State, Trans};
 use amethyst::context::{ContextConfig, Context};
 use amethyst::config::Element;
 use amethyst::ecs::{World, Join};
-use amethyst::context::asset_manager::{Assets, AssetLoader, AssetLoaderRaw, DirectoryStore, Mesh, Texture};
-use amethyst::renderer::VertexPosNormal;
+use amethyst::context::asset_manager::{Assets, AssetLoader, AssetLoaderRaw, DirectoryStore, Mesh};
+use amethyst::renderer::{VertexPosNormal, Texture};
 use cgmath::{InnerSpace, Vector3};
 use std::io::BufReader;
 

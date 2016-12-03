@@ -7,7 +7,8 @@ use amethyst::context::Context;
 use amethyst::config::Element;
 use amethyst::ecs::{World, Join, VecStorage, Component, Processor, RunArg};
 use std::sync::{Mutex, Arc};
-use amethyst::context::asset_manager::{Mesh, Texture};
+use amethyst::context::asset_manager::Mesh;
+use amethyst::renderer::Texture;
 
 struct Pong;
 

@@ -1,7 +1,8 @@
 use gfx;
 use gfx::traits::FactoryExt;
-use gfx::handle::Buffer;
+use gfx::handle::{Buffer, ShaderResourceView};
 use gfx::Slice;
+use gfx_core::memory::Typed;
 use cgmath::{Matrix4, SquareMatrix};
 pub use ::target::{ColorFormat, GeometryBuffer};
 
@@ -19,7 +20,7 @@ impl<R> ::Pass<R> for Clear
     type Arg = ::pass::Clear;
     type Target = GeometryBuffer<R>;
 
-    fn apply<C>(&self, c: &::pass::Clear, target: &GeometryBuffer<R>, _: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+    fn apply<C>(&self, resources: &mut ::ResourceCache<R>, c: &::pass::Clear, target: &GeometryBuffer<R>, _: &::Frame, encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
         encoder.clear(&target.normal, [0.; 4]);
@@ -228,7 +229,7 @@ impl<R: gfx::Resources> DrawPass<R> {
     pub fn new<F>(factory: &mut F) -> DrawPass<R>
         where F: gfx::Factory<R>
     {
-        let sampler = factory.create_sampler(gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale, gfx::tex::WrapMode::Clamp));
+        let sampler = factory.create_sampler(gfx::texture::SamplerInfo::new(gfx::texture::FilterMethod::Scale, gfx::texture::WrapMode::Clamp));
 
         DrawPass {
             vertex: factory.create_constant_buffer(1),
@@ -248,7 +249,7 @@ impl<R> ::Pass<R> for DrawPass<R>
     type Arg = ::pass::DrawFlat;
     type Target = GeometryBuffer<R>;
 
-    fn apply<C>(&self, arg: &::pass::DrawFlat, target: &GeometryBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+    fn apply<C>(&self, resources: &mut ::ResourceCache<R>, arg: &::pass::DrawFlat, target: &GeometryBuffer<R>, scenes: &::Frame, encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
         let scene = &scenes.scenes[&arg.scene];
@@ -263,15 +264,15 @@ impl<R> ::Pass<R> for DrawPass<R>
                                                model: f.transform,
                                            });
 
-            let ka = f.ka.to_view(&self.ka, encoder);
-            let kd = f.kd.to_view(&self.kd, encoder);
+            let ka = f.ka.to_view(&self.ka, resources, encoder);
+            let kd = f.kd.to_view(&self.kd, resources, encoder);
 
-            encoder.draw(&f.slice,
+            encoder.draw(&resources.get_slice(&f.slice),
                          &self.pso,
                          &draw::Data {
                              fragment_args: self.fragment.clone(),
                              vertex_args: self.vertex.clone(),
-                             vbuf: f.buffer.clone(),
+                             vbuf: Buffer::new(resources.get_buffer(f.buffer.raw())),
                              out_normal: target.normal.clone(),
                              out_ka: target.ka.clone(),
                              out_kd: target.kd.clone(),
@@ -306,7 +307,7 @@ impl<R> ::Pass<R> for DepthPass<R>
     type Arg = ::pass::DepthPass;
     type Target = GeometryBuffer<R>;
 
-    fn apply<C>(&self, arg: &::pass::DepthPass, target: &GeometryBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+    fn apply<C>(&self, resources: &mut ::ResourceCache<R>, arg: &::pass::DepthPass, target: &GeometryBuffer<R>, scenes: &::Frame, encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
         let scene = &scenes.scenes[&arg.scene];
@@ -322,11 +323,11 @@ impl<R> ::Pass<R> for DepthPass<R>
                                                model: f.transform,
                                            });
 
-            encoder.draw(&f.slice,
+            encoder.draw(&resources.get_slice(&f.slice),
                          &self.pso,
                          &depth::Data {
                              vertex_args: self.vertex.clone(),
-                             vbuf: f.buffer.clone(),
+                             vbuf: gfx::handle::Buffer::new(resources.get_buffer(f.buffer.raw())),
                              out_depth: target.depth.clone(),
                          });
         }
@@ -403,7 +404,7 @@ impl<R> BlitLayer<R>
     {
         let (buffer, slice) = create_screen_fill_triangle(factory);
 
-        let sampler = factory.create_sampler(gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale, gfx::tex::WrapMode::Clamp));
+        let sampler = factory.create_sampler(gfx::texture::SamplerInfo::new(gfx::texture::FilterMethod::Scale, gfx::texture::WrapMode::Clamp));
 
         BlitLayer {
             slice: slice,
@@ -421,7 +422,7 @@ impl<R> ::Pass<R> for BlitLayer<R>
     type Arg = ::pass::BlitLayer;
     type Target = ::target::ColorBuffer<R>;
 
-    fn apply<C>(&self, arg: &::pass::BlitLayer, target: &::target::ColorBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+    fn apply<C>(&self, resources: &mut ::ResourceCache<R>, arg: &::pass::BlitLayer, target: &::target::ColorBuffer<R>, scenes: &::Frame, encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
         let src = &scenes.targets[&arg.gbuffer];
@@ -462,7 +463,7 @@ impl<R: gfx::Resources> LightingPass<R> {
         where F: gfx::Factory<R>
     {
         let (buffer, slice) = create_screen_fill_triangle(factory);
-        let sampler = factory.create_sampler(gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale, gfx::tex::WrapMode::Clamp));
+        let sampler = factory.create_sampler(gfx::texture::SamplerInfo::new(gfx::texture::FilterMethod::Scale, gfx::texture::WrapMode::Clamp));
 
         let lights = factory.create_constant_buffer(128);
         let fragment_args = factory.create_constant_buffer(1);
@@ -484,7 +485,7 @@ impl<R> ::Pass<R> for LightingPass<R>
     type Arg = ::pass::Lighting;
     type Target = ::target::ColorBuffer<R>;
 
-    fn apply<C>(&self, arg: &::pass::Lighting, target: &::target::ColorBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+    fn apply<C>(&self, resources: &mut ::ResourceCache<R>, arg: &::pass::Lighting, target: &::target::ColorBuffer<R>, scenes: &::Frame, encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
         let scene = &scenes.scenes[&arg.scene];
