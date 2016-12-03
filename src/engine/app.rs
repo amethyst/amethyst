@@ -85,10 +85,10 @@ impl Application {
                 let target = [1.0, 0.0, 0.0];
                 let up = [0.0, 1.0, 0.0];
                 let camera = Camera::new(projection, eye, target, up);
-                world.add_resource::<Time>(time);
                 world.add_resource::<ScreenDimensions>(dimensions);
                 world.add_resource::<Camera>(camera);
             }
+            world.add_resource::<Time>(time);
             world.register::<Renderable>();
             world.register::<LocalTransform>();
             world.register::<Light>();
