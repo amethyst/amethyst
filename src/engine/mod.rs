@@ -2,6 +2,7 @@
 
 mod app;
 mod state;
+mod timing;
 // mod config;
 
 pub use self::app::{Application, ApplicationBuilder, Time};

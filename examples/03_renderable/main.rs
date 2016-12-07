@@ -7,11 +7,8 @@ use amethyst::config::Element;
 use amethyst::ecs::{World, Join};
 use amethyst::gfx_device::DisplayConfig;
 use amethyst::asset_manager::AssetManager;
-use amethyst::context::event::EngineEvent;
-use amethyst::gfx_device::assets::{Texture, Mesh};
-use amethyst::gfx_device::Renderable;
+use amethyst::components::event::EngineEvent;
 use amethyst::renderer::{VertexPosNormal, Pipeline};
-use amethyst::processors::transform::LocalTransform;
 
 use self::genmesh::generators::{SphereUV};
 use self::genmesh::{MapToVertices, Triangulate, Vertices};
@@ -31,10 +28,13 @@ impl Example {
 
 impl State for Example {
     fn on_start(&mut self, world: &mut World, asset_manager: &mut AssetManager, pipeline: &mut Pipeline) {
-        use amethyst::renderer::pass::*;
+        use amethyst::renderer::pass::{Clear, DrawShaded};
         use amethyst::renderer::{Layer, Light};
-        use amethyst::gfx_device::world_resources::camera::*;
-        use amethyst::gfx_device::world_resources::ScreenDimensions;
+        use amethyst::world_resources::camera::{Projection, Camera};
+        use amethyst::world_resources::ScreenDimensions;
+        use amethyst::components::transform::LocalTransform;
+        use amethyst::components::rendering::{Texture, Mesh, Renderable};
+
         let clear_layer =
             Layer::new("main",
                         vec![
@@ -83,7 +83,9 @@ impl State for Example {
 
     fn update(&mut self, world: &mut World, _: &mut AssetManager, _: &mut Pipeline) -> Trans {
         use amethyst::renderer::Light;
-        use amethyst::gfx_device::world_resources::Camera;
+        use amethyst::world_resources::Camera;
+        use amethyst::components::transform::LocalTransform;
+
         let time = world.read_resource::<amethyst::engine::Time>();
         let angular_velocity = 2.0; // in radians per second
         self.t += time.delta_time.subsec_nanos() as f32 / 1.0e9;
@@ -116,7 +118,7 @@ impl State for Example {
     }
 
     fn handle_events(&mut self, events: &[EngineEvent], _: &mut World, _: &mut AssetManager, _: &mut Pipeline) -> Trans {
-        use amethyst::context::event::*;
+        use amethyst::components::event::*;
         for event in events {
             match event.payload {
                 Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) => return Trans::Quit,

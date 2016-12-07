@@ -1,5 +1,5 @@
-use gfx_device::assets::Mesh;
-use gfx_device::assets::Texture;
+use components::rendering::Mesh;
+use components::rendering::Texture;
 use ecs::{Component, VecStorage};
 
 pub struct Renderable {

@@ -17,11 +17,9 @@ extern crate gfx_device_gl;
 use renderer;
 use ecs;
 use ecs::Join;
-use context::event::EngineEvent;
-use gfx_device::world_resources;
+use components::event::EngineEvent;
+use world_resources;
 use gfx_device::gfx_device_inner::GfxDeviceInner;
-use gfx_device::renderable::Renderable;
-use processors::transform::LocalTransform;
 
 pub struct GfxDevice {
     gfx_device_inner: GfxDeviceInner,
@@ -43,9 +41,9 @@ impl GfxDevice {
     }
 
     pub fn render_world(&mut self, world: &mut ecs::World, pipeline: &renderer::Pipeline) {
-        use gfx_device::assets::mesh::MeshInner;
-        use gfx_device::assets::texture::TextureInner;
-        use gfx_device::world_resources::camera::Projection;
+        use components::rendering::{MeshInner, TextureInner, Renderable};
+        use components::transform::LocalTransform;
+        use world_resources::camera::Projection;
         match self.gfx_device_inner {
             GfxDeviceInner::OpenGL { ref mut renderer,
                                      ref mut device,

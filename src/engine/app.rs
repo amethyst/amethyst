@@ -1,13 +1,13 @@
 //! The core engine framework.
-
 use super::state::{State, StateMachine};
+use super::timing::Stopwatch;
 use renderer;
 use renderer::{Light, Pipeline};
-use processors::transform::LocalTransform;
 use asset_manager::AssetManager;
 use gfx_device;
-use gfx_device::{GfxDevice, DisplayConfig, Renderable};
-use context::timing::Stopwatch;
+use gfx_device::{GfxDevice, DisplayConfig};
+use components::transform::LocalTransform;
+use components::rendering::Renderable;
 use ecs::{Planner, World, Processor, Priority, Component};
 use std::time::{Duration, Instant};
 
@@ -38,8 +38,8 @@ impl Application {
                   -> Application
         where T: State + 'static
     {
-        use gfx_device::world_resources::camera::{Camera, Projection};
-        use gfx_device::world_resources::ScreenDimensions;
+        use world_resources::camera::{Camera, Projection};
+        use world_resources::ScreenDimensions;
         let (gfx_device_inner, gfx_loader, main_target_inner) = gfx_device::video_init(display_config);
         let gfx_device = gfx_device::GfxDevice::new(gfx_device_inner);
         let main_target = gfx_device::MainTarget::new(main_target_inner);

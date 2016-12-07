@@ -46,13 +46,14 @@
 //! }
 //! ```
 
+pub mod world_resources;
 pub mod engine;
 pub mod processors;
+pub mod components;
 pub mod gfx_device;
 pub mod asset_manager;
 
 #[macro_use]
 pub extern crate amethyst_config as config;
-pub extern crate amethyst_context as context;
 pub extern crate amethyst_ecs as ecs;
 pub extern crate amethyst_renderer as renderer;

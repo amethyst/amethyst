@@ -1,7 +1,7 @@
 //! Utilities for game state management.
 
 use asset_manager::AssetManager;
-use context::event::EngineEvent;
+use components::event::EngineEvent;
 use renderer::Pipeline;
 use ecs::World;
 

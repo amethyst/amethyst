@@ -1,13 +1,11 @@
 //! Default rendering processor types.
 
-extern crate cgmath;
+// extern crate cgmath;
 
-use ecs::{// Processor, RunArg, Join,
-          Component, VecStorage, // Entity
-};
+// use ecs::{Processor, RunArg, Join, Component, VecStorage,  Entity};
 // use context::Context;
 // use std::sync::{Mutex, Arc};
-use renderer;
+// use renderer;
 // use renderer::Layer;
 // use processors::transform::Transform;
 // use std::collections::HashSet;
@@ -267,115 +265,115 @@ use renderer;
 //     }
 // }
 
-/// Entities with this component are rendered
-/// by the `RenderingProcessor`, modifying the `transform` field
-/// would affect the `transform` of the `Fragment` that is
-/// being rendered.
-#[derive(Clone)]
-pub struct Renderable {
-    // This field holds the index which can be used
-    // to access the renderer::Fragment held by context.renderer
-    // If idx == None then this Renderable is not renderered.
-    idx: Option<usize>,
-    mesh: String,
-    ka: String,
-    kd: String,
-}
+// /// Entities with this component are rendered
+// /// by the `RenderingProcessor`, modifying the `transform` field
+// /// would affect the `transform` of the `Fragment` that is
+// /// being rendered.
+// #[derive(Clone)]
+// pub struct Renderable {
+//     // This field holds the index which can be used
+//     // to access the renderer::Fragment held by context.renderer
+//     // If idx == None then this Renderable is not renderered.
+//     idx: Option<usize>,
+//     mesh: String,
+//     ka: String,
+//     kd: String,
+// }
 
-impl Renderable {
-    /// Create a new Renderable component from names of assets loaded by context.asset_manager.
-    pub fn new(mesh: &str, ka: &str, kd: &str) -> Renderable {
-        Renderable {
-            idx: None,
-            mesh: mesh.into(),
-            ka: ka.into(),
-            kd: kd.into(),
-        }
-    }
-}
+// impl Renderable {
+//     /// Create a new Renderable component from names of assets loaded by context.asset_manager.
+//     pub fn new(mesh: &str, ka: &str, kd: &str) -> Renderable {
+//         Renderable {
+//             idx: None,
+//             mesh: mesh.into(),
+//             ka: ka.into(),
+//             kd: kd.into(),
+//         }
+//     }
+// }
 
-impl Component for Renderable {
-    type Storage = VecStorage<Renderable>;
-}
+// impl Component for Renderable {
+//     type Storage = VecStorage<Renderable>;
+// }
 
-/// A `Light` component.
-/// All changes in the `light` field will be
-/// applied to the associated `renderer::Light` in the frame.
-#[derive(Copy, Clone)]
-pub struct Light {
-    // This field holds the index which can be used to access the renderer::Light
-    // held by context.renderer.
-    // If idx == None then this Light doesn't affect the rendered image.
-    idx: Option<usize>,
-    pub light: renderer::Light,
-}
+// /// A `Light` component.
+// /// All changes in the `light` field will be
+// /// applied to the associated `renderer::Light` in the frame.
+// #[derive(Copy, Clone)]
+// pub struct Light {
+//     // This field holds the index which can be used to access the renderer::Light
+//     // held by context.renderer.
+//     // If idx == None then this Light doesn't affect the rendered image.
+//     idx: Option<usize>,
+//     pub light: renderer::Light,
+// }
 
-impl Light {
-    // Create a new `Light` component from a `renderer::Light`.
-    pub fn new(light: renderer::Light) -> Light {
-        Light {
-            idx: None,
-            light: light,
-        }
-    }
-}
+// impl Light {
+//     // Create a new `Light` component from a `renderer::Light`.
+//     pub fn new(light: renderer::Light) -> Light {
+//         Light {
+//             idx: None,
+//             light: light,
+//         }
+//     }
+// }
 
-impl Component for Light {
-    type Storage = VecStorage<Light>;
-}
+// impl Component for Light {
+//     type Storage = VecStorage<Light>;
+// }
 
-/// A projection enum which is required to create a `Camera` component.
-#[derive(Copy, Clone)]
-pub enum Projection {
-    Perspective {
-        fov: f32,
-        aspect: f32,
-        near: f32,
-        far: f32,
-    },
-    Orthographic {
-        left: f32,
-        right: f32,
-        bottom: f32,
-        top: f32,
-        near: f32,
-        far: f32,
-    },
-}
+// /// A projection enum which is required to create a `Camera` component.
+// #[derive(Copy, Clone)]
+// pub enum Projection {
+//     Perspective {
+//         fov: f32,
+//         aspect: f32,
+//         near: f32,
+//         far: f32,
+//     },
+//     Orthographic {
+//         left: f32,
+//         right: f32,
+//         bottom: f32,
+//         top: f32,
+//         near: f32,
+//         far: f32,
+//     },
+// }
 
-/// A `Camera` component.
-/// If this `Camera` is active then all changes in this component's fields
-/// will be applied to the camera that is being used to render the scene.
-#[derive(Copy, Clone)]
-pub struct Camera {
-    pub projection: Projection,
-    pub eye: [f32; 3],
-    pub target: [f32; 3],
-    pub up: [f32; 3],
-    activate: bool,
-}
+// /// A `Camera` component.
+// /// If this `Camera` is active then all changes in this component's fields
+// /// will be applied to the camera that is being used to render the scene.
+// #[derive(Copy, Clone)]
+// pub struct Camera {
+//     pub projection: Projection,
+//     pub eye: [f32; 3],
+//     pub target: [f32; 3],
+//     pub up: [f32; 3],
+//     activate: bool,
+// }
 
-impl Camera {
-    /// Create a new `Camera` component from all the parameters
-    /// for projection and view transformations.
-    pub fn new(projection: Projection, eye: [f32; 3], target: [f32; 3], up: [f32; 3]) -> Camera {
-        Camera {
-            projection: projection,
-            eye: eye,
-            target: target,
-            up: up,
-            activate: false,
-        }
-    }
+// impl Camera {
+//     /// Create a new `Camera` component from all the parameters
+//     /// for projection and view transformations.
+//     pub fn new(projection: Projection, eye: [f32; 3], target: [f32; 3], up: [f32; 3]) -> Camera {
+//         Camera {
+//             projection: projection,
+//             eye: eye,
+//             target: target,
+//             up: up,
+//             activate: false,
+//         }
+//     }
 
-    // Note: If this method is called more than once per frame, then
-    // the Camera that was created first will be activated, not the one
-    // that called this method last.
-    pub fn activate(&mut self) {
-        self.activate = true;
-    }
-}
+//     // Note: If this method is called more than once per frame, then
+//     // the Camera that was created first will be activated, not the one
+//     // that called this method last.
+//     pub fn activate(&mut self) {
+//         self.activate = true;
+//     }
+// }
 
-impl Component for Camera {
-    type Storage = VecStorage<Camera>;
-}
+// impl Component for Camera {
+//     type Storage = VecStorage<Camera>;
+// }

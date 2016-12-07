@@ -9,7 +9,7 @@ use amethyst::config::Element;
 use amethyst::ecs::World;
 use amethyst::gfx_device::DisplayConfig;
 use amethyst::asset_manager::AssetManager;
-use amethyst::context::event::EngineEvent;
+use amethyst::components::event::EngineEvent;
 use amethyst::renderer::Pipeline;
 
 
@@ -28,7 +28,7 @@ impl State for Example {
     }
 
     fn handle_events(&mut self, events: &[EngineEvent], _: &mut World, _: &mut AssetManager, _: &mut Pipeline) -> Trans {
-        use amethyst::context::event::*;
+        use amethyst::components::event::*;
         for event in events {
             match event.payload {
                 Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) => return Trans::Quit,
