@@ -58,3 +58,5 @@ gfx = "0.11"
 
 [dependencies]
 cgmath="0.11"
+
+[workspace]
