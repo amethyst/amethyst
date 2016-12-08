@@ -13,7 +13,7 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 time = "^0.1"
-specs = "^0.7.0"
+specs = { git = "https://github.com/msiglreith/specs", branch = "alloc" } #"^0.7.0"
 
 [[example]]
 name = "usage"

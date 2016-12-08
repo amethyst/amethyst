@@ -4,26 +4,36 @@ extern crate gfx_window_glutin;
 extern crate gfx_device_gl;
 extern crate gfx;
 
-use self::amethyst_renderer::{Renderer, Frame};
+use self::amethyst_renderer::{Renderer, Frame, GpuFactoryStream};
 use self::amethyst_renderer::target::{ColorFormat, DepthFormat, ColorBuffer};
-use asset_manager::FactoryImpl;
 use video_context::{DisplayConfig, VideoContext};
 
-pub fn create_video_context_and_factory_impl(display_config: DisplayConfig) -> (VideoContext, FactoryImpl) {
+pub enum FactoryStream {
+    OpenGL {
+        stream: GpuFactoryStream<gfx_device_gl::Resources>,
+    },
+    #[cfg(windows)]
+    Direct3D {
+        // stub
+    },
+    Null,
+}
+
+pub fn create_video_context_and_factory_impl(display_config: DisplayConfig) -> (VideoContext, FactoryStream) {
     match display_config.backend.clone().as_ref() {
         "OpenGL" => new_gl(&display_config),
         #[cfg(windows)]
         "Direct3D" => new_d3d(),
-        _ => (VideoContext::Null, FactoryImpl::Null),
+        _ => (VideoContext::Null, FactoryStream::Null),
     }
 }
 
 #[cfg(windows)]
-fn new_d3d() -> (VideoContext, FactoryImpl) {
+fn new_d3d() -> (VideoContext, FactoryStream) {
     unimplemented!();
 }
 
-fn new_gl(display_config: &DisplayConfig) -> (VideoContext, FactoryImpl) {
+fn new_gl(display_config: &DisplayConfig) -> (VideoContext, FactoryStream) {
     let title = display_config.title.clone();
     let multisampling = display_config.multisampling.clone();
     let visibility = display_config.visibility.clone();
@@ -57,7 +67,7 @@ fn new_gl(display_config: &DisplayConfig) -> (VideoContext, FactoryImpl) {
     let (window, device, mut factory, main_color, main_depth) = gfx_window_glutin::init::<ColorFormat, DepthFormat>(builder);
 
     let combuf = factory.create_command_buffer();
-    let mut renderer = Renderer::new(combuf);
+    let (mut renderer, stream) = Renderer::new(combuf, factory.clone(), ());
     renderer.load_all(&mut factory);
 
     let mut frame = Frame::new();
@@ -77,7 +87,7 @@ fn new_gl(display_config: &DisplayConfig) -> (VideoContext, FactoryImpl) {
         renderer: renderer,
         frame: frame,
     };
-
-    let factory_impl = FactoryImpl::OpenGL { factory: factory };
-    (video_context, factory_impl)
+    
+    let stream = FactoryStream::OpenGL { stream: stream };
+    (video_context, stream)
 }

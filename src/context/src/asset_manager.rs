@@ -9,21 +9,20 @@ extern crate genmesh;
 extern crate cgmath;
 extern crate amethyst_ecs;
 
-pub use self::gfx::tex::Kind;
+pub use self::gfx::texture::Kind;
 use self::gfx::traits::FactoryExt;
 use self::gfx::Factory;
 use self::gfx::format::{Formatted, SurfaceTyped};
-use self::amethyst_renderer::VertexPosNormal;
+use self::amethyst_renderer::{VertexPosNormal, Resources as R, Texture, Fragment};
 use self::amethyst_renderer::target::ColorFormat;
 use self::amethyst_ecs::{World, Component, Storage, VecStorage, Allocator, Entity, MaskedStorage};
+use video_init::FactoryStream;
 
 use self::genmesh::generators::{SphereUV, Cube};
 use self::genmesh::{MapToVertices, Triangulate, Vertices};
 use self::cgmath::{Vector3, InnerSpace};
 
 use std::collections::HashMap;
-use renderer::{Fragment, FragmentImpl};
-
 use std::ops::{Deref, DerefMut};
 use std::any::{Any, TypeId};
 use std::sync::RwLockReadGuard;
@@ -221,35 +220,21 @@ impl DerefMut for AssetManager {
     }
 }
 
-/// An enum with variants representing concrete
-/// `Factory` types compatible with different backends.
-pub enum FactoryImpl {
-    OpenGL { factory: gfx_device_gl::Factory },
-    #[cfg(windows)]
-    Direct3D {
-        // stub
-    },
-    Null,
-}
-
 impl AssetLoader<Mesh> for Vec<VertexPosNormal> {
     /// # Panics
     /// Panics if factory isn't registered as loader.
     fn from_data(assets: &mut Assets, data: Vec<VertexPosNormal>) -> Option<Mesh> {
-        let factory_impl = assets.get_loader_mut::<FactoryImpl>().expect("Unable to retrieve factory");
-        let mesh_impl = match *factory_impl {
-            FactoryImpl::OpenGL { ref mut factory } => {
-                let (buffer, slice) = factory.create_vertex_buffer_with_slice(&data, ());
-                MeshImpl::OpenGL {
-                    buffer: buffer,
-                    slice: slice,
-                }
-            }
+        let factory_impl = assets.get_loader_mut::<FactoryStream>().expect("Unable to retrieve factory");
+        let (buffer, slice) = match *factory_impl {
+            FactoryStream::OpenGL { ref mut stream } => stream.create_vertex_buffer_with_slice(&data, ()),
             #[cfg(windows)]
-            FactoryImpl::Direct3D {} => unimplemented!(),
-            FactoryImpl::Null => MeshImpl::Null,
+            FactoryStream::Direct3D {} => unimplemented!(),
+            FactoryStream::Null => unimplemented!(),
         };
-        Some(Mesh { mesh_impl: mesh_impl })
+        Some(Mesh {
+            buffer: buffer,
+            slice: slice
+        })
     }
 }
 
@@ -263,29 +248,21 @@ impl<'a> AssetLoader<Texture> for TextureLoadData<'a> {
     /// # Panics
     /// Panics if factory isn't registered as loader.
     fn from_data(assets: &mut Assets, load_data: TextureLoadData) -> Option<Texture> {
-        let factory_impl = assets.get_loader_mut::<FactoryImpl>().expect("Unable to retrieve factory");
+        let factory_impl = assets.get_loader_mut::<FactoryStream>().expect("Unable to retrieve factory");
         let texture_impl = match *factory_impl {
-            FactoryImpl::OpenGL { ref mut factory } => {
-                let shader_resource_view = match factory.create_texture_const::<ColorFormat>(load_data.kind, load_data.raw) {
-                    Ok((_, shader_resource_view)) => shader_resource_view,
-                    Err(_) => return None,
-                };
-                let texture = amethyst_renderer::Texture::Texture(shader_resource_view);
-                TextureImpl::OpenGL { texture: texture }
-            }
+            FactoryStream::OpenGL { ref mut stream } => stream.create_texture_immutable::<ColorFormat>(load_data.kind, load_data.raw),
             #[cfg(windows)]
-            FactoryImpl::Direct3D {} => unimplemented!(),
-            FactoryImpl::Null => TextureImpl::Null,
+            FactoryStream::Direct3D {} => unimplemented!(),
+            FactoryStream::Null => unimplemented!(),
         };
-        Some(Texture { texture_impl: texture_impl })
+        
+        texture_impl.ok().and_then(|(_, srv)| Some(Texture::Texture(srv)))
     }
 }
 
 impl AssetLoader<Texture> for [f32; 4] {
-    fn from_data(_: &mut Assets, color: [f32; 4]) -> Option<Texture> {
-        let texture = amethyst_renderer::Texture::Constant(color);
-        let texture_impl = TextureImpl::OpenGL { texture: texture };
-        Some(Texture { texture_impl: texture_impl })
+    fn from_data(_assets: &mut Assets, color: [f32; 4]) -> Option<Texture> {
+        Some(Texture::Constant(color))
     }
 }
 
@@ -397,89 +374,25 @@ impl AssetManager {
             Some(kd) => kd,
             None => return None,
         };
-        let factory_impl = self.get_loader::<FactoryImpl>().expect("Unable to retrieve factory");
-        match *factory_impl {
-            FactoryImpl::OpenGL { .. } => {
-                let ka = match ka.texture_impl {
-                    TextureImpl::OpenGL { ref texture } => texture,
-                    #[cfg(windows)]
-                    TextureImpl::Direct3D {} => return None,
-                    TextureImpl::Null => return None,
-                };
 
-                let kd = match kd.texture_impl {
-                    TextureImpl::OpenGL { ref texture } => texture,
-                    #[cfg(windows)]
-                    TextureImpl::Direct3D {} => return None,
-                    TextureImpl::Null => return None,
-                };
-
-                let (buffer, slice) = match mesh.mesh_impl {
-                    MeshImpl::OpenGL { ref buffer, ref slice } => (buffer, slice),
-                    #[cfg(windows)]
-                    MeshImpl::Direct3D {} => return None,
-                    MeshImpl::Null => return None,
-                };
-
-                let fragment = amethyst_renderer::Fragment {
-                    transform: transform,
-                    buffer: buffer.clone(),
-                    slice: slice.clone(),
-                    ka: ka.clone(),
-                    kd: kd.clone(),
-                };
-                let fragment_impl = FragmentImpl::OpenGL { fragment: fragment };
-                Some(Fragment { fragment_impl: fragment_impl })
-            }
-            #[cfg(windows)]
-            FactoryImpl::Direct3D {} => {
-                unimplemented!();
-            }
-            FactoryImpl::Null => None,
-        }
+        Some(Fragment {
+            transform: transform,
+            buffer: mesh.buffer.clone(),
+            slice: mesh.slice.clone(),
+            ka: ka.clone(),
+            kd: kd.clone(),
+        })
     }
-}
-
-/// An enum with variants representing concrete
-/// `Mesh` types compatible with different backends.
-#[derive(Clone)]
-pub enum MeshImpl {
-    OpenGL {
-        buffer: gfx::handle::Buffer<gfx_device_gl::Resources, VertexPosNormal>,
-        slice: gfx::Slice<gfx_device_gl::Resources>,
-    },
-    #[cfg(windows)]
-    Direct3D {
-        // stub
-    },
-    Null,
 }
 
 /// A wraper around `Buffer` and `Slice` required to
 /// hide all platform specific code from the user.
 #[derive(Clone)]
 pub struct Mesh {
-    pub mesh_impl: MeshImpl,
+    buffer: gfx::handle::Buffer<R, VertexPosNormal>,
+    slice: gfx::Slice<R>,
 }
 
-/// An enum with variants representing concrete
-/// `Texture` types compatible with different backends.
-#[derive(Clone)]
-pub enum TextureImpl {
-    OpenGL { texture: amethyst_renderer::Texture<gfx_device_gl::Resources>, },
-    #[cfg(windows)]
-    Direct3D {
-        // stub
-    },
-    Null,
-}
-
-/// A wraper around `Texture` required to
-/// hide all platform specific code from the user.
-#[derive(Clone)]
-pub struct Texture {
-    texture_impl: TextureImpl,
-}
 
 /// Asset store representing a file directory.
 pub struct DirectoryStore {
