@@ -54,7 +54,7 @@ path = "examples/06_assets/main.rs"
 
 [dev-dependencies]
 obj-rs = "0.4.16"
-gfx = "0.11"
+gfx = "0.12"
 
 [dependencies]
 cgmath="0.11"
