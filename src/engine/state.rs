@@ -195,14 +195,15 @@ impl StateMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use context::{GfxDeviceConfig, GfxDevice};
-    use ecs::{Planner, World};
+    use asset_manager::AssetManager;
+    use renderer::Pipeline;
+    use ecs::World;
 
     struct State1(u8);
     struct State2;
 
     impl State for State1 {
-        fn update(&mut self, _: &mut World) -> Trans {
+        fn update(&mut self, _: &mut World, _: &mut AssetManager, _: &mut Pipeline) -> Trans {
             if self.0 > 0 {
                 self.0 -= 1;
                 Trans::None
@@ -213,24 +214,23 @@ mod tests {
     }
 
     impl State for State2 {
-        fn update(&mut self, _: &mut GfxDevice, _: &mut World) -> Trans {
+        fn update(&mut self, _: &mut World, _: &mut AssetManager, _: &mut Pipeline) -> Trans {
             Trans::Pop
         }
     }
 
     #[test]
     fn switch_pop() {
-        let config = GfxDeviceConfig::default();
-        let mut context = GfxDevice::new(config);
-        let world = World::new();
-        let planner = Planner::new(world, 1);
-        let mut sm = StateMachine::new(State1(7), planner);
-        sm.start(&mut context);
+        let mut asset_manager = AssetManager::new();
+        let mut pipeline = Pipeline::new();
+        let mut world = World::new();
+        let mut sm = StateMachine::new(State1(7));
+        sm.start(&mut world, &mut asset_manager, &mut pipeline);
         for _ in 0..8 {
-            sm.update(&mut context);
+            sm.update(&mut world, &mut asset_manager, &mut pipeline);
             assert!(sm.is_running());
         }
-        sm.update(&mut context);
+        sm.update(&mut world, &mut asset_manager, &mut pipeline);
         assert!(!sm.is_running());
     }
 }
