@@ -32,7 +32,7 @@ impl State for Example {
         use amethyst::renderer::{Layer, Light};
         use amethyst::world_resources::camera::{Projection, Camera};
         use amethyst::world_resources::ScreenDimensions;
-        use amethyst::components::transform::LocalTransform;
+        use amethyst::components::transform::{LocalTransform, Transform};
         use amethyst::components::rendering::{Texture, Mesh, Renderable};
 
         let clear_layer =
@@ -63,10 +63,10 @@ impl State for Example {
             kd: green,
             mesh: sphere_mesh,
         };
-        let transform = LocalTransform::default();
         world.create_now()
             .with::<Renderable>(sphere)
-            .with::<LocalTransform>(transform)
+            .with::<LocalTransform>(LocalTransform::default())
+            .with::<Transform>(Transform::default())
             .build();
         let light = Light {
             color: [1.0, 1.0, 1.0, 1.0],

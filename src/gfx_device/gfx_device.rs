@@ -42,7 +42,7 @@ impl GfxDevice {
 
     pub fn render_world(&mut self, world: &mut ecs::World, pipeline: &renderer::Pipeline) {
         use components::rendering::{MeshInner, TextureInner, Renderable};
-        use components::transform::LocalTransform;
+        use components::transform::Transform;
         use world_resources::camera::Projection;
         match self.gfx_device_inner {
             GfxDeviceInner::OpenGL { ref mut renderer,
@@ -75,8 +75,8 @@ impl GfxDevice {
 
                 let mut scene = renderer::Scene::<gfx_device_gl::Resources>::new(camera);
                 let renderables = world.read::<Renderable>();
-                let local_transforms = world.read::<LocalTransform>();
-                for (renderable, local_transform) in (&renderables, &local_transforms).iter() {
+                let global_transforms = world.read::<Transform>();
+                for (renderable, global_transform) in (&renderables, &global_transforms).iter() {
                     let (buffer, slice) = match renderable.mesh.mesh_inner {
                         MeshInner::OpenGL { ref buffer,
                                             ref slice } => { (buffer.clone(), slice.clone()) },
@@ -90,9 +90,8 @@ impl GfxDevice {
                         TextureInner::OpenGL { ref texture } => texture.clone(),
                         _ => continue,
                     };
-                    let transform = local_transform.matrix();
                     let fragment = renderer::Fragment {
-                        transform: transform,
+                        transform: global_transform.clone().into(),
                         buffer: buffer,
                         slice: slice,
                         ka: ka,

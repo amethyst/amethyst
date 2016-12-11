@@ -6,7 +6,8 @@ use renderer::{Light, Pipeline};
 use asset_manager::AssetManager;
 use gfx_device;
 use gfx_device::{GfxDevice, DisplayConfig};
-use components::transform::LocalTransform;
+use components::transform::{LocalTransform, Transform, Child, Init};
+use processors::transform::TransformProcessor;
 use components::rendering::Renderable;
 use ecs::{Planner, World, Processor, Priority, Component};
 use std::time::{Duration, Instant};
@@ -66,6 +67,8 @@ impl Application {
         };
         let mut asset_manager = AssetManager::new();
         asset_manager.add_loader::<gfx_device::gfx_loader::GfxLoader>(gfx_loader);
+        let transform_processor = TransformProcessor::new();
+        planner.add_system::<TransformProcessor>(transform_processor, "transform_processor", 0);
         {
             let mut world = planner.mut_world();
             let time = Time {
@@ -90,8 +93,11 @@ impl Application {
             }
             world.add_resource::<Time>(time);
             world.register::<Renderable>();
-            world.register::<LocalTransform>();
             world.register::<Light>();
+            world.register::<LocalTransform>();
+            world.register::<Transform>();
+            world.register::<Child>();
+            world.register::<Init>();
         }
         Application {
             states: StateMachine::new(initial_state),
