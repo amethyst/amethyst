@@ -171,6 +171,7 @@ mod tests {
     // use super::test::Bencher;
     use super::*;
     use super::cgmath::{Decomposed, Quaternion, Vector3, Matrix4};
+    use components::transform::{LocalTransform, Transform, Child, Init};
 
     #[test]
     fn transform_matrix() {
@@ -180,8 +181,8 @@ mod tests {
         transform.scale = [2.0, 2.0, 2.0];
 
         let decomposed = Decomposed {
-            rot: Quaternion::from(transform.rotation),
-            disp: Vector3::from(transform.translation),
+            rot: Quaternion::from(transform.rotation()),
+            disp: Vector3::from(transform.translation()),
             scale: 2.0,
         };
 

@@ -39,7 +39,7 @@
 
 extern crate amethyst_ecs;
 
-use self::amethyst_ecs::{World, Component, EntityBuilder, Storage, Allocator, MaskedStorage, Join, Entity};
+use self::amethyst_ecs::{World, Component, EntityBuilder, Storage, Allocator, MaskedStorage, Join};
 use std::sync::RwLockReadGuard;
 
 /// Allows publishing entities
