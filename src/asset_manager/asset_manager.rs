@@ -247,6 +247,7 @@ impl AssetStore for DirectoryStore {
 mod tests {
     use super::{Assets, AssetManager, AssetLoader, AssetLoaderRaw};
 
+    #[derive(PartialEq, Debug)]
     struct Foo;
     struct FooLoader;
 
@@ -279,7 +280,7 @@ mod tests {
         assets.add_loader::<FooLoader>(FooLoader);
 
         assert!(assets.load_asset_from_raw::<Foo>("asset01", "foo", &[0; 2]).is_some());
-        assert_eq!(None, assets.load_asset_from_data::<Foo, u32>("asset02", 2));
+        assert_eq!(None, assets.load_asset_from_data::<Foo, u32>(2));
     }
 
     #[test]

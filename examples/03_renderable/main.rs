@@ -1,4 +1,4 @@
-nextern crate amethyst;
+extern crate amethyst;
 extern crate genmesh;
 extern crate cgmath;
 
