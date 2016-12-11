@@ -1,4 +1,4 @@
-extern crate amethyst;
+nextern crate amethyst;
 extern crate genmesh;
 extern crate cgmath;
 
@@ -35,13 +35,13 @@ impl State for Example {
         use amethyst::components::transform::{LocalTransform, Transform};
         use amethyst::components::rendering::{Texture, Mesh, Renderable};
 
-        let clear_layer =
+        let layer =
             Layer::new("main",
                         vec![
                             Clear::new([0.0, 0.0, 0.0, 1.0]),
                             DrawShaded::new("main", "main"),
                         ]);
-        pipeline.layers = vec![clear_layer];
+        pipeline.layers = vec![layer];
         {
             let dimensions = world.read_resource::<ScreenDimensions>();
             let mut camera = world.write_resource::<Camera>();
@@ -84,9 +84,10 @@ impl State for Example {
     fn update(&mut self, world: &mut World, _: &mut AssetManager, _: &mut Pipeline) -> Trans {
         use amethyst::renderer::Light;
         use amethyst::world_resources::Camera;
+        use amethyst::world_resources::Time;
         use amethyst::components::transform::LocalTransform;
 
-        let time = world.read_resource::<amethyst::engine::Time>();
+        let time = world.read_resource::<Time>();
         let angular_velocity = 2.0; // in radians per second
         self.t += time.delta_time.subsec_nanos() as f32 / 1.0e9;
         let phase = self.t * angular_velocity;

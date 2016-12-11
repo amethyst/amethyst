@@ -1,7 +1,7 @@
 //! The input handler for the game engine
 
 use std::collections::hash_map::{Entry, HashMap};
-use event::{ElementState, EngineEvent, Event, VirtualKeyCode};
+use components::event::{ElementState, EngineEvent, Event, VirtualKeyCode};
 
 #[derive(PartialEq, Eq)]
 enum KeyQueryState{
@@ -51,12 +51,12 @@ impl InputHandler {
     pub fn key_down(&self, key: VirtualKeyCode) -> bool {
         self.pressed_keys.contains_key(&key)
     }
-    
+
     /// Check if all `keys` are currently pressed
     pub fn keys_down(&self, keys: &[VirtualKeyCode]) -> bool {
         keys.iter().all(|key| self.key_down(*key))
     }
-    
+
     /// Check if `key` is currently pressed and `key_once` or `keys_once` hasn't been
     /// called since this `key` was first pressed.
     pub fn key_once(&mut self, key: VirtualKeyCode) -> bool {

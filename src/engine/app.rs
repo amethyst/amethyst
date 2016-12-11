@@ -11,6 +11,7 @@ use processors::transform::TransformProcessor;
 use components::rendering::Renderable;
 use ecs::{Planner, World, Processor, Priority, Component};
 use std::time::{Duration, Instant};
+use world_resources::Time;
 
 /// User-friendly facade for building games. Manages main loop.
 pub struct Application {
@@ -23,12 +24,6 @@ pub struct Application {
     delta_time: Duration,
     fixed_step: Duration,
     last_fixed_update: Instant,
-}
-
-pub struct Time {
-    pub delta_time: Duration,
-    pub fixed_step: Duration,
-    pub last_fixed_update: Instant,
 }
 
 impl Application {

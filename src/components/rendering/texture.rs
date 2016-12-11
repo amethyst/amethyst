@@ -9,6 +9,7 @@ use self::gfx::format::{Formatted, SurfaceTyped};
 use asset_manager::{AssetLoader, Assets};
 use gfx_device::gfx_loader::GfxLoader;
 
+#[derive(Clone)]
 pub enum TextureInner {
     OpenGL {
         texture: renderer::Texture<gfx_device_gl::Resources>,
@@ -20,6 +21,7 @@ pub enum TextureInner {
     Null,
 }
 
+#[derive(Clone)]
 pub struct Texture {
     pub texture_inner: TextureInner,
 }

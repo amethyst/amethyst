@@ -6,6 +6,7 @@ use renderer::VertexPosNormal;
 use asset_manager::{AssetLoader, Assets};
 use gfx_device::gfx_loader::GfxLoader;
 
+#[derive(Clone)]
 pub enum MeshInner {
     OpenGL {
         buffer: gfx::handle::Buffer<gfx_device_gl::Resources, VertexPosNormal>,
@@ -18,6 +19,7 @@ pub enum MeshInner {
     Null,
 }
 
+#[derive(Clone)]
 pub struct Mesh {
     pub mesh_inner: MeshInner,
 }
