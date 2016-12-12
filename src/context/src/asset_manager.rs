@@ -323,25 +323,25 @@ impl AssetManager {
     }
     /// Generate and load a rectangle mesh in XY plane with given `width` and `height`.
     pub fn gen_rectangle(&mut self, name: &str, width: f32, height: f32) {
-        let norm = [0., 0., 1.];
+        const NORM: [f32; 3] = [0., 0., 1.];
         let t_left = VertexPosNormal {
             pos: [-width/2., -height/2., 0.],
-            normal: norm.clone(),
+            normal: NORM,
             tex_coord: [0., 0.],
         };
         let t_right = VertexPosNormal {
             pos: [width/2., -height/2., 0.],
-            normal: norm.clone(),
+            normal: NORM,
             tex_coord: [1., 0.],
         };
         let b_left = VertexPosNormal {
             pos: [-width/2., height/2., 0.],
-            normal: norm.clone(),
+            normal: NORM,
             tex_coord: [0., 1.],
         };
         let b_right = VertexPosNormal {
             pos: [width/2., height/2., 0.],
-            normal: norm.clone(),
+            normal: NORM,
             tex_coord: [1., 1.],
         };
 
