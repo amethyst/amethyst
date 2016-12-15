@@ -93,7 +93,7 @@ impl State for Example {
         // Test Transform mutation
         let mut locals = world.write::<LocalTransform>();
         for local in (&mut locals).iter() {
-            local.translation = [phase.sin(), 0.0, phase.cos()];
+            local.set_translation([phase.sin(), 0.0, phase.cos()]);
         }
 
         let angular_velocity_light = 0.5;

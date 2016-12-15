@@ -54,8 +54,6 @@ gfx = "0.12"
 
 [dependencies]
 cgmath="0.11"
-
-[workspace]
 glutin = "0.6"
 gfx = "0.12"
 gfx_device_gl = "0.11"
