@@ -176,9 +176,9 @@ mod tests {
     #[test]
     fn transform_matrix() {
         let mut transform = LocalTransform::default();
-        transform.translation = [5.0, 2.0, -0.5];
-        transform.rotation = [1.0, 0.0, 0.0, 0.0];
-        transform.scale = [2.0, 2.0, 2.0];
+        transform.set_translation([5.0, 2.0, -0.5]);
+        transform.set_rotation([1.0, 0.0, 0.0, 0.0]);
+        transform.set_scale([2.0, 2.0, 2.0]);
 
         let decomposed = Decomposed {
             rot: Quaternion::from(transform.rotation()),

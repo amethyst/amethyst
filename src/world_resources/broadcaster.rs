@@ -5,11 +5,10 @@
 //!
 //! # Example:
 //! ```
-//! extern crate amethyst_context;
-//! extern crate amethyst_ecs;
+//! extern crate amethyst;
 //!
-//! use amethyst_context::broadcaster::Broadcaster;
-//! use amethyst_ecs::{Component, VecStorage, Join};
+//! use amethyst::world_resources::Broadcaster;
+//! use amethyst::ecs::{Component, VecStorage, Join};
 //!
 //! struct UserComponent {
 //!     pub data: i32,
@@ -29,7 +28,6 @@
 //!     {
 //!         let user_components = broadcaster.read::<UserComponent>();
 //!         for user_component in user_components.iter() {
-//!             let user_component = storage.get(entity).unwrap();
 //!             println!("{0}", user_component.data);
 //!         }
 //!     }
