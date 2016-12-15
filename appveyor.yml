@@ -24,4 +24,4 @@ build: false
 
 # Compile the engine and run all tests.
 test_script:
-    - cargo test -p amethyst -p amethyst_config -p amethyst_context -p amethyst_ecs -v
+    - cargo test -p amethyst -p amethyst_config -p amethyst_ecs -v
