@@ -221,7 +221,7 @@ impl TransformProcessor {
 impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
     fn run(&mut self, arg: RunArg, _: Arc<Mutex<Context>>) {
         // Fetch world and gets entities/components
-        let (locals, mut globals, mut init, children) = arg.fetch(|w| {
+        let (entities, locals, mut globals, mut init, children) = arg.fetch(|w| {
             let entities = w.entities();
             let locals = w.read::<LocalTransform>();
             let children = w.read::<Child>();
@@ -244,7 +244,7 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
                 }
             }
 
-            (locals, w.write::<Transform>(), init, children)
+            (entities, locals, w.write::<Transform>(), init, children)
         });
 
         // Adds an `Init` component to the entity.
@@ -252,11 +252,21 @@ impl Processor<Arc<Mutex<Context>>> for TransformProcessor {
             init.insert(entity, Init);
         }
 
-        // Compute transforms without parents.
-        for (local, global, _) in (&locals, &mut globals, !&children).iter() {
-            if local.is_dirty() {
-                global.0 = local.matrix();
-                local.flag(false);
+        {
+            let without_parents = (
+                &entities,
+                &locals,
+                &mut globals,
+                !&children,
+            ).iter();
+
+            // Compute transforms without parents.
+            for (ent, local, global, _) in without_parents {
+                if local.is_dirty() {
+                    self.dirty.insert(ent);
+                    global.0 = local.matrix();
+                    local.flag(false);
+                }
             }
         }
 
