@@ -4,7 +4,7 @@ use amethyst::engine::{Application, State, Trans};
 use amethyst::components::transform::{LocalTransform, Transform};
 use amethyst::config::Element;
 use amethyst::ecs::{World, Join, VecStorage, Component, Processor, RunArg};
-use amethyst::components::rendering::{Renderable, Mesh, Texture};
+use amethyst::components::rendering::{Mesh, Texture};
 use amethyst::components::event::EngineEvent;
 use amethyst::gfx_device::DisplayConfig;
 use amethyst::asset_manager::AssetManager;
@@ -285,11 +285,10 @@ impl State for Pong {
         // Generate a square mesh
         asset_manager.register_asset::<Mesh>();
         asset_manager.register_asset::<Texture>();
-        let ka = asset_manager.load_asset_from_data::<Texture, [f32; 4]>([1.0, 1.0, 1.0, 1.0]).unwrap();
-        let kd = ka.clone();
+        asset_manager.load_asset_from_data::<Texture, [f32; 4]>("white", [1.0, 1.0, 1.0, 1.0]);
         let square_vertices = gen_rectangle(1.0, 1.0);
-        let square = asset_manager.load_asset_from_data::<Mesh, Vec<VertexPosNormal>>(square_vertices).unwrap();
-        let square = Renderable::new(square, ka, kd);
+        asset_manager.load_asset_from_data::<Mesh, Vec<VertexPosNormal>>("square", square_vertices);
+        let square = asset_manager.create_renderable("square", "white", "white").unwrap();
 
         // Create a ball entity
         let mut ball = Ball::new();

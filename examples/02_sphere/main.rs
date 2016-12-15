@@ -46,14 +46,12 @@ impl State for Example {
             camera.target = [0.0, 0.0, 0.0];
         }
         let sphere_vertices = gen_sphere(32, 32);
-        let sphere_mesh = asset_manager.load_asset_from_data::<Mesh, Vec<VertexPosNormal>>(sphere_vertices).unwrap();
-        let dark_blue = asset_manager.load_asset_from_data::<Texture, [f32; 4]>([0.0, 0.0, 0.01, 1.0]).unwrap();
-        let green = asset_manager.load_asset_from_data::<Texture, [f32; 4]>([0.0, 1.0, 0.0, 1.0]).unwrap();
-        let sphere = Renderable {
-            ka: dark_blue,
-            kd: green,
-            mesh: sphere_mesh,
-        };
+        asset_manager.register_asset::<Mesh>();
+        asset_manager.register_asset::<Texture>();
+        asset_manager.load_asset_from_data::<Mesh, Vec<VertexPosNormal>>("sphere", sphere_vertices);
+        asset_manager.load_asset_from_data::<Texture, [f32; 4]>("dark_blue", [0.0, 0.0, 0.01, 1.0]);
+        asset_manager.load_asset_from_data::<Texture, [f32; 4]>("green", [0.0, 1.0, 0.0, 1.0]);
+        let sphere = asset_manager.create_renderable("sphere", "dark_blue", "green").unwrap();
         world.create_now()
             .with::<Renderable>(sphere)
             .with::<Transform>(Transform::default())

@@ -11,10 +11,7 @@ extern crate amethyst_ecs;
 
 pub use self::gfx::tex::Kind;
 use self::amethyst_ecs::{World, Component, Storage, VecStorage, Allocator, Entity, MaskedStorage};
-
-// use self::genmesh::generators::{SphereUV, Cube};
-// use self::genmesh::{MapToVertices, Triangulate, Vertices};
-// use self::cgmath::{Vector3, InnerSpace};
+use components::rendering::{Renderable, Mesh, Texture};
 
 use std::collections::HashMap;
 
@@ -117,10 +114,15 @@ impl Assets {
     }
 
     /// Load an asset from data
-    pub fn load_asset_from_data<A: Any + Sync + Send, S>(&mut self, data: S) -> Option<A>
+    pub fn load_asset_from_data<A: Any + Sync + Send, S>(&mut self, name: &str, data: S) -> Option<AssetId>
         where S: AssetLoader<A>
     {
-        AssetLoader::<A>::from_data(self, data)
+        let asset = AssetLoader::<A>::from_data(self, data);
+        if let Some(asset) = asset {
+            Some(self.add_asset(name, asset))
+        } else {
+            None
+        }
     }
 
     fn add_asset<A: Any + Send + Sync>(&mut self, name: &str, asset: A) -> AssetId {
@@ -193,6 +195,41 @@ impl AssetManager {
         }
 
         self.load_asset_from_raw::<A>(name, asset_type, &buf)
+    }
+
+    /// Create a `Renderable` component from a loaded mesh, ka texture, and kd texture
+    pub fn create_renderable(&self, mesh: &str, ka: &str, kd: &str) -> Option<Renderable> {
+        let meshes = self.read_assets::<Mesh>();
+        let textures = self.read_assets::<Texture>();
+        let mesh_id = match self.id_from_name(mesh) {
+            Some(id) => id,
+            None => return None,
+        };
+        let mesh = match meshes.read(mesh_id) {
+            Some(mesh) => mesh,
+            None => return None,
+        };
+        let ka_id = match self.id_from_name(ka) {
+            Some(id) => id,
+            None => return None,
+        };
+        let ka = match textures.read(ka_id) {
+            Some(ka) => ka,
+            None => return None,
+        };
+        let kd_id = match self.id_from_name(kd) {
+            Some(id) => id,
+            None => return None,
+        };
+        let kd = match textures.read(kd_id) {
+            Some(kd) => kd,
+            None => return None,
+        };
+        Some(Renderable {
+            mesh: mesh.clone(),
+            ka: ka.clone(),
+            kd: kd.clone(),
+        })
     }
 }
 
