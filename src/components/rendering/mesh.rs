@@ -4,9 +4,10 @@ extern crate gfx_device_gl;
 use self::gfx::traits::FactoryExt;
 use renderer::VertexPosNormal;
 use asset_manager::{AssetLoader, Assets};
-use gfx_device::gfx_loader::GfxLoader;
+use gfx_device::GfxLoader;
 
 #[derive(Clone)]
+/// Variants of this enum hold `gfx::handle::Buffer`,`gfx::Slice` pairs.
 pub enum MeshInner {
     OpenGL {
         buffer: gfx::handle::Buffer<gfx_device_gl::Resources, VertexPosNormal>,
@@ -20,6 +21,7 @@ pub enum MeshInner {
 }
 
 #[derive(Clone)]
+/// This struct represents a piece of geometry. It is part of a `Renderable`
 pub struct Mesh {
     pub mesh_inner: MeshInner,
 }

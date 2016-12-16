@@ -1,3 +1,6 @@
+//! Resources that can be added to `ecs::World`.
+//! `Camera`, `ScreenDimensions`, and `Time` are added by default and automatically updated every frame by `Application`.
+
 pub mod camera;
 pub mod screen_dimensions;
 pub mod time;

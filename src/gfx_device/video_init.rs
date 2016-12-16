@@ -12,6 +12,7 @@ use gfx_device::MainTargetInner;
 use self::amethyst_renderer::Renderer;
 use self::amethyst_renderer::target::{ColorFormat, DepthFormat};
 
+/// Create a `(GfxDeviceInner, GfxLoader, MainTargetInner)` tuple from `DisplayConfig`
 pub fn video_init(display_config: DisplayConfig) -> (GfxDeviceInner, GfxLoader, MainTargetInner) {
     match display_config.backend.as_str() {
         "OpenGL" => new_gl(&display_config),

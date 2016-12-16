@@ -61,7 +61,7 @@ impl Application {
             gfx_device::MainTargetInner::Null => (),
         };
         let mut asset_manager = AssetManager::new();
-        asset_manager.add_loader::<gfx_device::gfx_loader::GfxLoader>(gfx_loader);
+        asset_manager.add_loader::<gfx_device::GfxLoader>(gfx_loader);
         let transform_processor = TransformProcessor::new();
         planner.add_system::<TransformProcessor>(transform_processor, "transform_processor", 0);
         {
@@ -135,24 +135,29 @@ impl Application {
 
     /// Advances the game world by one tick.
     fn advance_frame(&mut self) {
-        {
-            let events = self.gfx_device.poll_events();
+        use world_resources::ScreenDimensions;
+        use components::event::Event;
+        let events = self.gfx_device.poll_events();
 
-            self.states.handle_events(events.as_ref(), self.planner.mut_world(), &mut self.asset_manager, &mut self.pipeline);
+        self.states.handle_events(events.as_ref(), self.planner.mut_world(), &mut self.asset_manager, &mut self.pipeline);
 
-            let fixed_step = self.fixed_step;
-            let last_fixed_update = self.last_fixed_update;
+        let fixed_step = self.fixed_step;
+        let last_fixed_update = self.last_fixed_update;
 
-            if last_fixed_update.elapsed() >= fixed_step {
-                self.states.fixed_update(self.planner.mut_world(), &mut self.asset_manager, &mut self.pipeline);
-                self.last_fixed_update += fixed_step;
-            }
-
-            self.states.update(self.planner.mut_world(), &mut self.asset_manager, &mut self.pipeline);
+        if last_fixed_update.elapsed() >= fixed_step {
+            self.states.fixed_update(self.planner.mut_world(), &mut self.asset_manager, &mut self.pipeline);
+            self.last_fixed_update += fixed_step;
         }
+
+        self.states.update(self.planner.mut_world(), &mut self.asset_manager, &mut self.pipeline);
         self.planner.dispatch(());
         self.planner.wait();
+
         let world = self.planner.mut_world();
+        if let Some((w, h)) = self.gfx_device.get_dimensions() {
+            let mut screen_dimensions = world.write_resource::<ScreenDimensions>();
+            screen_dimensions.update(w, h);
+        }
         {
             let mut time = world.write_resource::<Time>();
             time.delta_time = self.delta_time;

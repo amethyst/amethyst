@@ -12,7 +12,6 @@ use amethyst::asset_manager::AssetManager;
 use amethyst::components::event::EngineEvent;
 use amethyst::renderer::Pipeline;
 
-
 struct Example;
 
 impl State for Example {

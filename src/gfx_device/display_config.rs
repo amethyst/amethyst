@@ -3,7 +3,7 @@ use std::path::Path;
 
 config!(
     /// Contains display config,
-    /// it is required to call video_init()
+    /// it is required to call `video_init()`
     struct DisplayConfig {
         pub title: String = "Amethyst game".to_string(),
         pub fullscreen: bool = false,

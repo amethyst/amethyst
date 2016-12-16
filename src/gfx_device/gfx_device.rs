@@ -21,6 +21,7 @@ use components::event::EngineEvent;
 use world_resources;
 use gfx_device::gfx_device_inner::GfxDeviceInner;
 
+/// This struct holds all the graphics resources (except `MainTarget`) required to render a scene.
 pub struct GfxDevice {
     gfx_device_inner: GfxDeviceInner,
 }
@@ -31,6 +32,7 @@ impl GfxDevice {
         GfxDevice { gfx_device_inner: gfx_device_inner }
     }
 
+    /// Get screen dimensions.
     pub fn get_dimensions(&self) -> Option<(u32, u32)> {
         match self.gfx_device_inner {
             GfxDeviceInner::OpenGL { ref window, .. } => window.get_inner_size(),
@@ -40,6 +42,7 @@ impl GfxDevice {
         }
     }
 
+    /// Render all `Renderable`, `Transform` pairs in `World`.
     pub fn render_world(&mut self, world: &mut ecs::World, pipeline: &renderer::Pipeline) {
         use components::rendering::{MeshInner, TextureInner, Renderable};
         use components::transform::Transform;
@@ -112,6 +115,7 @@ impl GfxDevice {
         }
     }
 
+    /// Poll events from `GfxDevice`.
     pub fn poll_events(&mut self) -> Vec<EngineEvent> {
         let mut events = vec![];
         match self.gfx_device_inner {
@@ -123,7 +127,6 @@ impl GfxDevice {
             }
             #[cfg(windows)]
             GfxDeviceInner::Direct3D {} => {
-                // stub
                 unimplemented!();
             }
             GfxDeviceInner::Null => (),

@@ -6,6 +6,7 @@ extern crate gfx;
 
 use self::amethyst_renderer::Renderer;
 
+/// Variants of this enum hold `window`, `device`, and `renderer`.
 pub enum GfxDeviceInner {
     OpenGL {
         window: glutin::Window,

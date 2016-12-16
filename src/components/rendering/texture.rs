@@ -7,9 +7,10 @@ pub use self::gfx::tex::Kind;
 use self::gfx::Factory;
 use self::gfx::format::{Formatted, SurfaceTyped};
 use asset_manager::{AssetLoader, Assets};
-use gfx_device::gfx_loader::GfxLoader;
+use gfx_device::GfxLoader;
 
 #[derive(Clone)]
+/// Variants of this enum hold `amethyst_renderer::Texture`.
 pub enum TextureInner {
     OpenGL {
         texture: renderer::Texture<gfx_device_gl::Resources>,
@@ -22,6 +23,7 @@ pub enum TextureInner {
 }
 
 #[derive(Clone)]
+/// This struct represents an image. It is a part of a `Renderable`.
 pub struct Texture {
     pub texture_inner: TextureInner,
 }
