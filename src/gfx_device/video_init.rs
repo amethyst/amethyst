@@ -22,7 +22,7 @@ pub fn video_init(display_config: DisplayConfig) -> (GfxDeviceInner, GfxLoader, 
 }
 
 #[cfg(windows)]
-fn new_d3d() -> (VideoContext, GfxLoader, MainTargetInner) {
+fn new_d3d() -> (GfxDeviceInner, GfxLoader, MainTargetInner) {
     unimplemented!();
 }
 
