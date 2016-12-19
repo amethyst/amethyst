@@ -26,13 +26,13 @@ impl State for Example {
         use amethyst::world_resources::ScreenDimensions;
         use amethyst::components::transform::Transform;
         use amethyst::components::rendering::{Texture, Mesh, Renderable};
-        let clear_layer =
+        let layer =
             Layer::new("main",
                         vec![
                             Clear::new([0.0, 0.0, 0.0, 1.0]),
                             DrawShaded::new("main", "main"),
                         ]);
-        pipeline.layers = vec![clear_layer];
+        pipeline.layers = vec![layer];
         {
             let dimensions = world.read_resource::<ScreenDimensions>();
             let mut camera = world.write_resource::<Camera>();

@@ -36,7 +36,7 @@ impl Application {
     {
         use world_resources::camera::{Camera, Projection};
         use world_resources::ScreenDimensions;
-        let (gfx_device_inner, gfx_loader, main_target_inner) = gfx_device::video_init(display_config);
+        let (gfx_device_inner, mut gfx_loader, main_target_inner) = gfx_device::video_init(display_config);
         let gfx_device = gfx_device::GfxDevice::new(gfx_device_inner);
         let main_target = gfx_device::MainTarget::new(main_target_inner);
         // FIXME Remove all platform specific code from here!
@@ -52,9 +52,11 @@ impl Application {
                                          output_depth: main_depth.clone(),
                                      }));
 
-                // let (w, h) = window.get_inner_size().unwrap();
-                // pipeline.targets.insert("gbuffer".into(),
-                //                      Box::new(renderer::target::GeometryBuffer::new(&mut factory, (w as u16, h as u16))));
+                if let gfx_device::GfxLoader::OpenGL { ref mut factory } = gfx_loader {
+                    let (w, h) = gfx_device.get_dimensions().unwrap();
+                    pipeline.targets.insert("gbuffer".into(),
+                                        Box::new(renderer::target::GeometryBuffer::new(factory, (w as u16, h as u16))));
+                }
             },
             #[cfg(windows)]
             gfx_device::MainTargetInner::Direct3D {  } =>  unimplemented!(),
