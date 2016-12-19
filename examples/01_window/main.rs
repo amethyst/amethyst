@@ -1,8 +1,6 @@
 //! Opens an empty window.
 
 extern crate amethyst;
-extern crate genmesh;
-extern crate cgmath;
 
 use amethyst::engine::{Application, State, Trans};
 use amethyst::config::Element;
