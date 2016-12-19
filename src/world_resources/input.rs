@@ -1,7 +1,7 @@
 //! The input handler for the game engine
 
 use std::collections::hash_map::{Entry, HashMap};
-use components::event::{ElementState, EngineEvent, Event, VirtualKeyCode};
+use event::{ElementState, WindowEvent, Event, VirtualKeyCode};
 
 #[derive(PartialEq, Eq)]
 enum KeyQueryState{
@@ -22,7 +22,7 @@ impl InputHandler {
     }
 
     /// Update the input handler with new engine events
-    pub fn update(&mut self, events: &[EngineEvent]) {
+    pub fn update(&mut self, events: &[WindowEvent]) {
         for event in events {
             match event.payload {
                 Event::KeyboardInput(ElementState::Pressed, _, Some(key_code)) => {

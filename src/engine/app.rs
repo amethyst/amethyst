@@ -136,7 +136,7 @@ impl Application {
     /// Advances the game world by one tick.
     fn advance_frame(&mut self) {
         use world_resources::ScreenDimensions;
-        use components::event::Event;
+        use event::Event;
         let events = self.gfx_device.poll_events();
 
         self.states.handle_events(events.as_ref(), self.planner.mut_world(), &mut self.asset_manager, &mut self.pipeline);

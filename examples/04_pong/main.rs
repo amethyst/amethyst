@@ -5,7 +5,7 @@ use amethyst::components::transform::{LocalTransform, Transform};
 use amethyst::config::Element;
 use amethyst::ecs::{World, Join, VecStorage, Component, Processor, RunArg};
 use amethyst::components::rendering::{Mesh, Texture};
-use amethyst::components::event::EngineEvent;
+use amethyst::event::WindowEvent;
 use amethyst::gfx_device::DisplayConfig;
 use amethyst::asset_manager::AssetManager;
 use amethyst::renderer::{Pipeline, VertexPosNormal};
@@ -80,7 +80,7 @@ impl Score {
 // Pong game processor
 impl Processor<()> for PongProcessor {
     fn run(&mut self, arg: RunArg, _: ()) {
-        use amethyst::components::event::VirtualKeyCode;
+        use amethyst::event::VirtualKeyCode;
         use amethyst::world_resources::camera::{Camera, Projection};
         use amethyst::world_resources::Time;
         use amethyst::world_resources::InputHandler;
@@ -324,9 +324,9 @@ impl State for Pong {
             .build();
     }
 
-    fn handle_events(&mut self, events: &[EngineEvent], world: &mut World, _: &mut AssetManager, _: &mut Pipeline) -> Trans {
+    fn handle_events(&mut self, events: &[WindowEvent], world: &mut World, _: &mut AssetManager, _: &mut Pipeline) -> Trans {
         use amethyst::world_resources::InputHandler;
-        use amethyst::components::event::*;
+        use amethyst::event::*;
 
         let mut input_handler = world.write_resource::<InputHandler>();
         input_handler.update(events);

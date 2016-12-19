@@ -8,7 +8,7 @@ use amethyst::config::Element;
 use amethyst::ecs::World;
 use amethyst::asset_manager::{Assets, AssetManager, AssetLoader, AssetLoaderRaw, DirectoryStore};
 use amethyst::components::rendering::{Mesh, Texture};
-use amethyst::components::event::EngineEvent;
+use amethyst::event::WindowEvent;
 use amethyst::renderer::{VertexPosNormal, Pipeline};
 use cgmath::{InnerSpace, Vector3};
 use std::io::BufReader;
@@ -112,9 +112,9 @@ impl State for Example {
         pipeline.layers = vec![layer];
     }
 
-    fn handle_events(&mut self, events: &[EngineEvent], _: &mut World, _: &mut AssetManager, _: &mut Pipeline) -> Trans {
+    fn handle_events(&mut self, events: &[WindowEvent], _: &mut World, _: &mut AssetManager, _: &mut Pipeline) -> Trans {
         // Exit if user hits Escape or closes the window
-        use amethyst::components::event::*;
+        use amethyst::event::*;
         for event in events {
             match event.payload {
                 Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) => return Trans::Quit,

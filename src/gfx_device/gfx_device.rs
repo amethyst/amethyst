@@ -17,7 +17,7 @@ extern crate gfx_device_gl;
 use renderer;
 use ecs;
 use ecs::Join;
-use components::event::EngineEvent;
+use event::WindowEvent;
 use world_resources;
 use gfx_device::gfx_device_inner::GfxDeviceInner;
 
@@ -116,12 +116,12 @@ impl GfxDevice {
     }
 
     /// Poll events from `GfxDevice`.
-    pub fn poll_events(&mut self) -> Vec<EngineEvent> {
+    pub fn poll_events(&mut self) -> Vec<WindowEvent> {
         let mut events = vec![];
         match self.gfx_device_inner {
             GfxDeviceInner::OpenGL { ref window, .. } => {
                 for event in window.poll_events() {
-                    let event = EngineEvent::new(event);
+                    let event = WindowEvent::new(event);
                     events.push(event);
                 }
             }

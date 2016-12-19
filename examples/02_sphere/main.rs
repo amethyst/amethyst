@@ -9,7 +9,7 @@ use amethyst::config::Element;
 use amethyst::ecs::World;
 use amethyst::gfx_device::DisplayConfig;
 use amethyst::asset_manager::AssetManager;
-use amethyst::components::event::EngineEvent;
+use amethyst::event::WindowEvent;
 use amethyst::renderer::{VertexPosNormal, Pipeline};
 
 use self::genmesh::generators::{SphereUV};
@@ -69,8 +69,8 @@ impl State for Example {
             .build();
     }
 
-    fn handle_events(&mut self, events: &[EngineEvent], _: &mut World, _: &mut AssetManager, _: &mut Pipeline) -> Trans {
-        use amethyst::components::event::*;
+    fn handle_events(&mut self, events: &[WindowEvent], _: &mut World, _: &mut AssetManager, _: &mut Pipeline) -> Trans {
+        use amethyst::event::*;
         for event in events {
             match event.payload {
                 Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) => return Trans::Quit,

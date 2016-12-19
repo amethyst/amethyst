@@ -1,7 +1,7 @@
 //! Utilities for game state management.
 
 use asset_manager::AssetManager;
-use components::event::EngineEvent;
+use event::WindowEvent;
 use renderer::Pipeline;
 use ecs::World;
 
@@ -36,7 +36,7 @@ pub trait State {
 
     /// Executed on every frame before updating, for use in reacting to events.
     fn handle_events(&mut self,
-                     _events: &[EngineEvent],
+                     _events: &[WindowEvent],
                      _world: &mut World,
                      _asset_manager: &mut AssetManager, _pipeline: &mut Pipeline)
                      -> Trans {
@@ -89,7 +89,7 @@ impl StateMachine {
     }
 
     /// Passes a vector of events to the active state to handle.
-    pub fn handle_events(&mut self, events: &[EngineEvent], world: &mut World, asset_manager: &mut AssetManager, pipeline: &mut Pipeline) {
+    pub fn handle_events(&mut self, events: &[WindowEvent], world: &mut World, asset_manager: &mut AssetManager, pipeline: &mut Pipeline) {
         if self.running {
             let trans = match self.state_stack.last_mut() {
                 Some(state) => state.handle_events(events, world, asset_manager, pipeline),
