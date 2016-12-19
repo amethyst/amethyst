@@ -169,9 +169,8 @@ impl Processor<()> for TransformProcessor {
 #[cfg(test)]
 mod tests {
     // use super::test::Bencher;
-    use super::*;
     use super::cgmath::{Decomposed, Quaternion, Vector3, Matrix4};
-    use components::transform::{LocalTransform, Transform, Child, Init};
+    use components::transform::{LocalTransform, Transform};
 
     #[test]
     fn transform_matrix() {

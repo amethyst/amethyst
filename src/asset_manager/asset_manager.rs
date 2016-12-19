@@ -289,7 +289,7 @@ mod tests {
     struct FooLoader;
 
     impl AssetLoader<Foo> for u32 {
-        fn from_data(assets: &mut Assets, x: u32) -> Option<Foo> {
+        fn from_data(_: &mut Assets, x: u32) -> Option<Foo> {
             if x == 10 { Some(Foo) } else { None }
         }
     }
