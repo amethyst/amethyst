@@ -4,6 +4,7 @@ extern crate cgmath;
 
 use ecs::{Processor, RunArg, Join, Component, VecStorage, Entity};
 use context::Context;
+use context::map_manager::{MapLight, MapRenderable};
 use std::sync::{Mutex, Arc};
 use renderer;
 use renderer::Layer;
@@ -296,6 +297,12 @@ impl Component for Renderable {
     type Storage = VecStorage<Renderable>;
 }
 
+impl MapRenderable for Renderable {
+    fn new(mesh: &str, ka: &str, kd: &str) -> Renderable {
+        Renderable::new(mesh, ka, kd)
+    }
+}
+
 /// A `Light` component.
 /// All changes in the `light` field will be
 /// applied to the associated `renderer::Light` in the frame.
@@ -320,6 +327,12 @@ impl Light {
 
 impl Component for Light {
     type Storage = VecStorage<Light>;
+}
+
+impl MapLight for Light {
+    fn new(light: renderer::Light) -> Light {
+        Light::new(light)
+    }
 }
 
 /// A projection enum which is required to create a `Camera` component.

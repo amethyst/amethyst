@@ -52,9 +52,14 @@ path = "examples/04_pong/main.rs"
 name = "assets"
 path = "examples/06_assets/main.rs"
 
+[[example]]
+name = "maps"
+path = "examples/08_maps/main.rs"
+
 [dev-dependencies]
 obj-rs = "0.4.16"
 gfx = "0.12"
+yaml-rust = "*"
 
 [dependencies]
 cgmath="0.11"

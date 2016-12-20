@@ -7,6 +7,7 @@ use self::cgmath::{Quaternion, Vector3, Matrix3, Matrix4};
 
 use ecs::{Join, Component, NullStorage, VecStorage, Entity, RunArg, Processor};
 use context::Context;
+use context::map_manager::MapTransform;
 use std::sync::{Mutex, Arc};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::collections::{HashMap, HashSet};
@@ -98,6 +99,12 @@ impl Component for LocalTransform {
     type Storage = VecStorage<LocalTransform>;
 }
 
+impl MapTransform for LocalTransform {
+    fn default_transform() -> LocalTransform {
+        LocalTransform::default()
+    }
+}
+
 /// Absolute transformation (transformed from origin).
 /// Used for rendering position and orientation.
 #[derive(Debug, Copy, Clone)]
@@ -125,6 +132,12 @@ impl From<[[f32; 4]; 4]> for Transform {
 impl Into<[[f32; 4]; 4]> for Transform {
     fn into(self) -> [[f32; 4]; 4] {
         self.0
+    }
+}
+
+impl MapTransform for Transform {
+    fn default_transform() -> Transform {
+        Transform::default()
     }
 }
 
