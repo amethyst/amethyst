@@ -323,37 +323,35 @@ impl AssetManager {
     }
     /// Generate and load a rectangle mesh in XY plane with given `width` and `height`.
     pub fn gen_rectangle(&mut self, name: &str, width: f32, height: f32) {
+        const NORM: [f32; 3] = [0., 0., 1.];
+        let t_left = VertexPosNormal {
+            pos: [-width/2., -height/2., 0.],
+            normal: NORM,
+            tex_coord: [0., 0.],
+        };
+        let t_right = VertexPosNormal {
+            pos: [width/2., -height/2., 0.],
+            normal: NORM,
+            tex_coord: [1., 0.],
+        };
+        let b_left = VertexPosNormal {
+            pos: [-width/2., height/2., 0.],
+            normal: NORM,
+            tex_coord: [0., 1.],
+        };
+        let b_right = VertexPosNormal {
+            pos: [width/2., height/2., 0.],
+            normal: NORM,
+            tex_coord: [1., 1.],
+        };
+
         let data = vec![
-            VertexPosNormal {
-                pos: [-width/2., height/2., 0.],
-                normal: [0., 0., 1.],
-                tex_coord: [0., 1.],
-            },
-            VertexPosNormal {
-                pos: [-width/2., -height/2., 0.],
-                normal: [0., 0., 1.],
-                tex_coord: [0., 0.],
-            },
-            VertexPosNormal {
-                pos: [width/2., -height/2., 0.],
-                normal: [0., 0., 1.],
-                tex_coord: [1., 0.],
-            },
-            VertexPosNormal {
-                pos: [width/2., -height/2., 0.],
-                normal: [0., 0., 1.],
-                tex_coord: [0., 1.],
-            },
-            VertexPosNormal {
-                pos: [width/2., height/2., 0.],
-                normal: [0., 0., 1.],
-                tex_coord: [0., 0.],
-            },
-            VertexPosNormal {
-                pos: [-width/2., height/2., 0.],
-                normal: [0., 0., 1.],
-                tex_coord: [1., 0.],
-            },
+            t_left,
+            t_right,
+            b_left,
+            b_left,
+            t_right,
+            b_right,
         ];
         self.load_asset_from_data::<Mesh, Vec<VertexPosNormal>>(name, data);
     }
