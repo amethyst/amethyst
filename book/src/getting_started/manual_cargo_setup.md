@@ -47,12 +47,6 @@ as dependencies:
 ```toml
 [dependencies.amethyst]
 path = "../path/to/amethyst/"
-
-[dependencies.amethyst_engine]
-path = "../path/to/amethyst/src/engine/"
-
-[dependencies.amethyst_renderer]
-path = "../path/to/amethyst/src/renderer/"
 ```
 
 ## Resources Folder
