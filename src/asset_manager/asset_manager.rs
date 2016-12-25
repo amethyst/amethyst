@@ -2,25 +2,33 @@
 //! which loads and provides access to assets,
 //! such as `Texture`s, `Mesh`es, and `Fragment`s.
 
+extern crate amethyst_ecs;
 extern crate amethyst_renderer;
+extern crate cgmath;
+extern crate genmesh;
 extern crate gfx_device_gl;
 extern crate gfx;
-extern crate genmesh;
-extern crate cgmath;
-extern crate amethyst_ecs;
+extern crate obj;
 
-pub use self::gfx::tex::Kind;
-use self::amethyst_ecs::{World, Component, Storage, VecStorage, Allocator, Entity, MaskedStorage};
-use components::rendering::{Renderable, Mesh, Texture};
 
-use std::collections::HashMap;
-
-use std::ops::{Deref, DerefMut};
+// stdlib imports
 use std::any::{Any, TypeId};
-use std::sync::RwLockReadGuard;
+use std::collections::HashMap;
 use std::fs;
+use std::io::{BufReader, Read};
+use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
-use std::io::Read;
+use std::sync::RwLockReadGuard;
+
+// self imports
+use components::rendering::{Renderable, Mesh, Texture};
+use renderer::VertexPosNormal;
+
+// external imports
+use self::amethyst_ecs::{World, Component, Storage, VecStorage, Allocator, Entity, MaskedStorage};
+use self::cgmath::{InnerSpace, Vector3};
+pub use self::gfx::tex::Kind;
+
 
 type AssetTypeId = TypeId;
 type SourceTypeId = TypeId;
@@ -141,12 +149,18 @@ pub struct AssetManager {
 impl AssetManager {
     /// Create a new asset manager
     pub fn new() -> AssetManager {
-        AssetManager {
+        let mut asset_manager = AssetManager {
             asset_type_ids: HashMap::new(),
             assets: Assets::new(),
             closures: HashMap::new(),
             stores: Vec::new(),
-        }
+        };
+
+        asset_manager.register_asset::<Mesh>();
+        asset_manager.register_asset::<Texture>();
+        asset_manager.register_loader::<Mesh, obj::Obj>("obj");
+
+        asset_manager
     }
 
     /// Register a new loading method for a specific asset data type
@@ -277,6 +291,29 @@ impl AssetStore for DirectoryStore {
             return None;
         };
         file.read_to_end(buf).ok()
+    }
+}
+
+impl AssetLoaderRaw for obj::Obj {
+    fn from_raw(_: &Assets, data: &[u8]) -> Option<obj::Obj> {
+        obj::load_obj(BufReader::new(data)).ok()
+    }
+}
+
+impl AssetLoader<Mesh> for obj::Obj {
+    fn from_data(assets: &mut Assets, object: obj::Obj) -> Option<Mesh> {
+        let vertices = object.indices.iter().map(|&index| {
+            let vertex = object.vertices[index as usize];
+            let normal = vertex.normal;
+            let normal = Vector3::from(normal).normalize();
+            VertexPosNormal {
+                pos: vertex.position,
+                normal: normal.into(),
+                tex_coord: [0., 0.],
+            }
+        }).collect::<Vec<VertexPosNormal>>();
+
+        AssetLoader::<Mesh>::from_data(assets, vertices)
     }
 }
 

@@ -13,13 +13,13 @@ readme = "README.md"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
+cgmath = "0.11"
 gfx = "0.12"
 gfx_core = "0.4"
 gfx_device_gl = "0.11"
 gfx_window_glutin = "0.12"
 glutin = "0.6"
-cgmath="0.11"
-mopa ="0.2"
+mopa = "0.2"
 
 [dev-dependencies]
 genmesh = "0.4"
