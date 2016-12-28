@@ -197,7 +197,7 @@ impl<R> Pass<R> for Clear
     type Arg = pass::Clear;
     type Target = ColorBuffer<R>;
 
-    fn apply<C>(&self, arg: &pass::Clear, target: &ColorBuffer<R>, _: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+    fn apply<C>(&self, arg: &pass::Clear, target: &ColorBuffer<R>, _: &::Pipeline, _: &::Scene<R>, encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
         encoder.clear(&target.color, arg.color);
@@ -243,18 +243,15 @@ impl<R> Pass<R> for DrawFlat<R>
     type Arg = pass::DrawFlat;
     type Target = ColorBuffer<R>;
 
-    fn apply<C>(&self, arg: &pass::DrawFlat, target: &ColorBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+    fn apply<C>(&self, _: &pass::DrawFlat, target: &ColorBuffer<R>, _: &::Pipeline, scene: &::Scene<R>, encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
-        let scene = &scenes.scenes[&arg.scene];
-        let camera = &scenes.cameras[&arg.camera];
-
         // every entity gets drawn
         for e in &scene.fragments {
             encoder.update_constant_buffer(&self.vertex,
                                            &VertexArgs {
-                                               proj: camera.projection,
-                                               view: camera.view,
+                                               proj: scene.camera.projection,
+                                               view: scene.camera.view,
                                                model: e.transform,
                                            });
 
@@ -323,11 +320,11 @@ impl<R> Pass<R> for DrawShaded<R>
     type Arg = pass::DrawShaded;
     type Target = ColorBuffer<R>;
 
-    fn apply<C>(&self, arg: &pass::DrawShaded, target: &ColorBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+    fn apply<C>(&self, _: &pass::DrawShaded, target: &ColorBuffer<R>, _: &::Pipeline, scene: &::Scene<R>, encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
-        let scene = &scenes.scenes[&arg.scene];
-        let camera = &scenes.cameras[&arg.camera];
+        // let scene = &scenes.scenes[&arg.scene];
+        // let camera = &scenes.cameras[&arg.camera];
 
         let mut lights: Vec<_> = scene.lights
             .iter()
@@ -354,8 +351,8 @@ impl<R> Pass<R> for DrawShaded<R>
         for e in &scene.fragments {
             encoder.update_constant_buffer(&self.vertex,
                                            &VertexArgs {
-                                               proj: camera.projection,
-                                               view: camera.view,
+                                               proj: scene.camera.projection,
+                                               view: scene.camera.view,
                                                model: e.transform,
                                            });
 
@@ -420,18 +417,18 @@ impl<R> Pass<R> for Wireframe<R>
     type Arg = pass::Wireframe;
     type Target = ColorBuffer<R>;
 
-    fn apply<C>(&self, arg: &pass::Wireframe, target: &ColorBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+    fn apply<C>(&self, _: &pass::Wireframe, target: &ColorBuffer<R>, _: &::Pipeline, scene: &::Scene<R>, encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
-        let scene = &scenes.scenes[&arg.scene];
-        let camera = &scenes.cameras[&arg.camera];
+        // let scene = &scenes.scenes[&arg.scene];
+        // let camera = &scenes.cameras[&arg.camera];
 
         // every entity gets drawn
         for e in &scene.fragments {
             encoder.update_constant_buffer(&self.vertex,
                                            &VertexArgs {
-                                               proj: camera.projection,
-                                               view: camera.view,
+                                               proj: scene.camera.projection,
+                                               view: scene.camera.view,
                                                model: e.transform,
                                            });
 

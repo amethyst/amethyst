@@ -1,13 +1,14 @@
 extern crate amethyst;
 
 use amethyst::engine::{Application, State, Trans};
-use amethyst::processors::rendering::{RenderingProcessor, Renderable, Light, Camera, Projection};
-use amethyst::processors::transform::{TransformProcessor, LocalTransform, Transform, Child, Init};
-use amethyst::context::Context;
+use amethyst::components::transform::{LocalTransform, Transform};
 use amethyst::config::Element;
 use amethyst::ecs::{World, Join, VecStorage, Component, Processor, RunArg};
-use std::sync::{Mutex, Arc};
-use amethyst::context::asset_manager::{Mesh, Texture};
+use amethyst::components::rendering::{Mesh, Texture};
+use amethyst::event::WindowEvent;
+use amethyst::gfx_device::DisplayConfig;
+use amethyst::asset_manager::AssetManager;
+use amethyst::renderer::{Pipeline, VertexPosNormal};
 
 struct Pong;
 
@@ -77,25 +78,30 @@ impl Score {
 }
 
 // Pong game processor
-impl Processor<Arc<Mutex<Context>>> for PongProcessor {
-    fn run(&mut self, arg: RunArg, ctx: Arc<Mutex<Context>>) {
-        use amethyst::context::event::VirtualKeyCode;
-        use std::ops::Deref;
+impl Processor<()> for PongProcessor {
+    fn run(&mut self, arg: RunArg, _: ()) {
+        use amethyst::event::VirtualKeyCode;
+        use amethyst::world_resources::camera::{Camera, Projection};
+        use amethyst::world_resources::Time;
+        use amethyst::world_resources::InputHandler;
 
         // Get all needed component storages and resources
-        let ctx = ctx.lock().unwrap();
         let (mut balls,
              mut planks,
              mut locals,
-             projection,
+             camera,
+             time,
+             input_handler,
              mut score) = arg.fetch(|w| (w.write::<Ball>(),
                                          w.write::<Plank>(),
                                          w.write::<LocalTransform>(),
-                                         w.read_resource::<Projection>(),
+                                         w.read_resource::<Camera>(),
+                                         w.read_resource::<Time>(),
+                                         w.read_resource::<InputHandler>(),
                                          w.write_resource::<Score>()));
 
         // Get left and right boundaries of the screen
-        let (left_boundary, right_boundary, top_boundary, bottom_boundary) = match *projection.deref() {
+        let (left_boundary, right_boundary, top_boundary, bottom_boundary) = match camera.projection {
             Projection::Orthographic {
                 left,
                 right,
@@ -116,7 +122,7 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
         // Dimensions of right plank
         let mut right_dimensions = [0., 0.];
 
-        let delta_time = ctx.delta_time.subsec_nanos() as f32 / 1.0e9;
+        let delta_time = time.delta_time.subsec_nanos() as f32 / 1.0e9;
         // Process all planks
         for (plank, local) in (&mut planks, &mut locals).iter() {
             match plank.side {
@@ -127,13 +133,13 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
                     // Store left plank dimensions for later use in ball processing
                     left_dimensions = plank.dimensions;
                     // If `W` is pressed and plank is in screen boundaries then move up
-                    if ctx.input_handler.key_down(VirtualKeyCode::W) {
+                    if input_handler.key_down(VirtualKeyCode::W) {
                         if plank.position + plank.dimensions[1]/2. < 1. {
                             plank.position += plank.velocity * delta_time;
                         }
                     }
                     // If `S` is pressed and plank is in screen boundaries then move down
-                    if ctx.input_handler.key_down(VirtualKeyCode::S) {
+                    if input_handler.key_down(VirtualKeyCode::S) {
                         if plank.position - plank.dimensions[1]/2. > -1. {
                             plank.position -= plank.velocity * delta_time;
                         }
@@ -148,13 +154,13 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
                     // Store right plank dimensions for later use in ball processing
                     right_dimensions = plank.dimensions;
                     // If `Up` is pressed and plank is in screen boundaries then move down
-                    if ctx.input_handler.key_down(VirtualKeyCode::Up) {
+                    if input_handler.key_down(VirtualKeyCode::Up) {
                         if plank.position + plank.dimensions[1]/2. < top_boundary {
                             plank.position += plank.velocity * delta_time;
                         }
                     }
                     // If `Down` is pressed and plank is in screen boundaries then move down
-                    if ctx.input_handler.key_down(VirtualKeyCode::Down) {
+                    if input_handler.key_down(VirtualKeyCode::Down) {
                         if plank.position - plank.dimensions[1]/2. > bottom_boundary {
                             plank.position -= plank.velocity * delta_time;
                         }
@@ -233,41 +239,56 @@ impl Processor<Arc<Mutex<Context>>> for PongProcessor {
 }
 
 impl State for Pong {
-    fn on_start(&mut self, ctx: &mut Context, world: &mut World) {
-        let (w, h) = ctx.renderer.get_dimensions().unwrap();
-        let aspect = w as f32 / h as f32;
-        let eye = [0., 0., 0.1];
-        let target = [0., 0., 0.];
-        let up = [0., 1., 0.];
+    fn on_start(&mut self, world: &mut World, asset_manager: &mut AssetManager, pipeline: &mut Pipeline) {
+        use amethyst::renderer::pass::{Clear, DrawFlat};
+        use amethyst::world_resources::InputHandler;
+        use amethyst::renderer::Layer;
+        use amethyst::world_resources::camera::{Camera, Projection};
+        use amethyst::world_resources::screen_dimensions::ScreenDimensions;
 
-        // Get an Orthographic projection
-        let projection = Projection::Orthographic {
-            left: -1.0 * aspect,
-            right: 1.0 * aspect,
-            bottom: -1.0,
-            top: 1.0,
-            near: 0.0,
-            far: 1.0,
-        };
+        let layer =
+        Layer::new("main",
+                    vec![
+                        Clear::new([0.0, 0.0, 0.0, 1.0]),
+                        DrawFlat::new("main", "main"),
+                    ]);
+        pipeline.layers = vec![layer];
+
+        {
+            let dimensions = world.read_resource::<ScreenDimensions>();
+            let mut camera = world.write_resource::<Camera>();
+            let aspect_ratio = dimensions.aspect_ratio;
+            let eye = [0., 0., 0.1];
+            let target = [0., 0., 0.];
+            let up = [0., 1., 0.];
+
+            // Get an Orthographic projection
+            let projection = Projection::Orthographic {
+                left: -1.0 * aspect_ratio,
+                right: 1.0 * aspect_ratio,
+                bottom: -1.0,
+                top: 1.0,
+                near: 0.0,
+                far: 1.0,
+            };
+
+            camera.projection = projection;
+            camera.eye = eye;
+            camera.target = target;
+            camera.up = up;
+        }
 
         // Add all resources
-        let score = Score::new();
-        world.add_resource::<Score>(score);
-        world.add_resource::<Projection>(projection.clone());
-
-        // Create a camera entity
-        let mut camera = Camera::new(projection, eye, target, up);
-        camera.activate();
-        world.create_now()
-            .with(camera)
-            .build();
+        world.add_resource::<Score>(Score::new());
+        world.add_resource::<InputHandler>(InputHandler::new());
 
         // Generate a square mesh
-        ctx.asset_manager.register_asset::<Mesh>();
-        ctx.asset_manager.register_asset::<Texture>();
-        ctx.asset_manager.create_constant_texture("white", [1.0, 1.0, 1.0, 1.]);
-        ctx.asset_manager.gen_rectangle("square", 1.0, 1.0);
-        let square = Renderable::new("square", "white", "white");
+        asset_manager.register_asset::<Mesh>();
+        asset_manager.register_asset::<Texture>();
+        asset_manager.load_asset_from_data::<Texture, [f32; 4]>("white", [1.0, 1.0, 1.0, 1.0]);
+        let square_vertices = gen_rectangle(1.0, 1.0);
+        asset_manager.load_asset_from_data::<Mesh, Vec<VertexPosNormal>>("square", square_vertices);
+        let square = asset_manager.create_renderable("square", "white", "white").unwrap();
 
         // Create a ball entity
         let mut ball = Ball::new();
@@ -305,42 +326,67 @@ impl State for Pong {
             .build();
     }
 
-    fn update(&mut self, ctx: &mut Context, _: &mut World) -> Trans {
-        // Exit if user hits Escape or closes the window
-        use amethyst::context::event::{EngineEvent, Event, VirtualKeyCode};
-        let engine_events = ctx.broadcaster.read::<EngineEvent>();
-        for engine_event in engine_events.iter() {
-            match engine_event.payload {
+    fn handle_events(&mut self, events: &[WindowEvent], world: &mut World, _: &mut AssetManager, _: &mut Pipeline) -> Trans {
+        use amethyst::world_resources::InputHandler;
+        use amethyst::event::*;
+
+        let mut input_handler = world.write_resource::<InputHandler>();
+        input_handler.update(events);
+        for event in events {
+            match event.payload {
                 Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) => return Trans::Quit,
                 Event::Closed => return Trans::Quit,
                 _ => (),
             }
         }
-
         Trans::None
     }
 }
 
 fn main() {
-    use amethyst::engine::Config;
     let path = format!("{}/examples/04_pong/resources/config.yml",
-                       env!("CARGO_MANIFEST_DIR"));
-    let config = Config::from_file(path).unwrap();
-    let mut ctx = Context::new(config.context_config);
-    let rendering_processor = RenderingProcessor::new(config.renderer_config, &mut ctx);
-    let mut game = Application::build(Pong, ctx)
-                   .with::<RenderingProcessor>(rendering_processor, "rendering_processor", 0)
-                   .register::<Renderable>()
-                   .register::<Light>()
-                   .register::<Camera>()
-                   .with::<PongProcessor>(PongProcessor, "pong_processor", 1)
-                   .register::<Ball>()
-                   .register::<Plank>()
-                   .with::<TransformProcessor>(TransformProcessor::new(), "transform_processor", 2)
-                   .register::<LocalTransform>()
-                   .register::<Transform>()
-                   .register::<Child>()
-                   .register::<Init>()
-                   .done();
+                        env!("CARGO_MANIFEST_DIR"));
+    let display_config = DisplayConfig::from_file(path).unwrap();
+    let mut game = Application::build(Pong, display_config)
+        .register::<Ball>()
+        .register::<Plank>()
+        .with::<PongProcessor>(PongProcessor, "pong_processor", 1)
+        .done();
     game.run();
+}
+
+fn gen_rectangle(w: f32, h: f32) -> Vec<VertexPosNormal> {
+    let data: Vec<VertexPosNormal> = vec![
+        VertexPosNormal{
+            pos: [-w/2., -h/2., 0.],
+            normal: [0., 0., 1.],
+            tex_coord: [0., 0.],
+        },
+        VertexPosNormal{
+            pos: [w/2., -h/2., 0.],
+            normal: [0., 0., 1.],
+            tex_coord: [1., 0.],
+        },
+        VertexPosNormal{
+            pos: [w/2., h/2., 0.],
+            normal: [0., 0., 1.],
+            tex_coord: [1., 1.],
+        },
+        VertexPosNormal{
+            pos: [w/2., h/2., 0.],
+            normal: [0., 0., 1.],
+            tex_coord: [1., 1.],
+        },
+        VertexPosNormal{
+            pos: [-w/2., h/2., 0.],
+            normal: [0., 0., 1.],
+            tex_coord: [1., 1.],
+        },
+        VertexPosNormal{
+            pos: [-w/2., -h/2., 0.],
+            normal: [0., 0., 1.],
+            tex_coord: [1., 1.],
+        },
+    ];
+    data
 }

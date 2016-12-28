@@ -2,8 +2,7 @@
 
 mod app;
 mod state;
-mod config;
+mod timing;
 
 pub use self::app::{Application, ApplicationBuilder};
 pub use self::state::{State, StateMachine, Trans};
-pub use self::config::Config;

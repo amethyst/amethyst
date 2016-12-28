@@ -3,11 +3,13 @@ extern crate cgmath;
 extern crate obj;
 
 use amethyst::engine::{Application, State, Trans};
-use amethyst::context::{ContextConfig, Context};
+use amethyst::gfx_device::DisplayConfig;
 use amethyst::config::Element;
-use amethyst::ecs::{World, Join};
-use amethyst::context::asset_manager::{Assets, AssetLoader, AssetLoaderRaw, DirectoryStore, Mesh, Texture};
-use amethyst::renderer::VertexPosNormal;
+use amethyst::ecs::World;
+use amethyst::asset_manager::{Assets, AssetManager, AssetLoader, AssetLoaderRaw, DirectoryStore};
+use amethyst::components::rendering::{Mesh, Texture};
+use amethyst::event::WindowEvent;
+use amethyst::renderer::{VertexPosNormal, Pipeline};
 use cgmath::{InnerSpace, Vector3};
 use std::io::BufReader;
 
@@ -40,43 +42,53 @@ impl AssetLoader<Mesh> for Obj {
 struct Example;
 
 impl State for Example {
-    fn on_start(&mut self, ctx: &mut Context, _: &mut World) {
+    fn on_start(&mut self, world: &mut World, asset_manager: &mut AssetManager, pipeline: &mut Pipeline) {
         use amethyst::renderer::pass::{Clear, DrawShaded};
-        use amethyst::renderer::{Layer, Camera, Light};
-        use cgmath::Vector3;
+        use amethyst::renderer::{Layer, Light};
+        use amethyst::components::transform::Transform;
+        use amethyst::world_resources::camera::{Camera, Projection};
+        use amethyst::world_resources::ScreenDimensions;
 
-        let (w, h) = ctx.renderer.get_dimensions().unwrap();
-        let proj = Camera::perspective(60.0, w as f32 / h as f32, 1.0, 100.0);
-        let eye = [10.0, 10.0, 0.0];
-        let target = [0.0, 3.0, 0.0];
-        let up = [0.0, 1.0, 0.0];
-        let view = Camera::look_at(eye, target, up);
-        let camera = Camera::new(proj, view);
+        {
+            let dimensions = world.read_resource::<ScreenDimensions>();
+            let mut camera = world.write_resource::<Camera>();
+            let proj = Projection::Perspective {
+                fov: 60.0,
+                aspect_ratio: dimensions.aspect_ratio,
+                near: 1.0,
+                far: 100.0,
+            };
+            camera.projection = proj;
+            camera.eye = [10.0, 10.0, 0.0];
+            camera.target = [0.0, 3.0, 0.0];
+            camera.up = [0.0, 1.0, 0.0];
+        }
 
-        ctx.renderer.add_scene("main");
-        ctx.renderer.add_camera(camera, "main");
+        asset_manager.register_asset::<Mesh>();
+        asset_manager.register_asset::<Texture>();
 
-        ctx.asset_manager.register_asset::<Mesh>();
-        ctx.asset_manager.register_asset::<Texture>();
-
-        ctx.asset_manager.register_loader::<Mesh, Obj>("obj");
+        asset_manager.register_loader::<Mesh, Obj>("obj");
 
         let assets_path = format!("{}/examples/06_assets/resources/assets",
                        env!("CARGO_MANIFEST_DIR"));
-        ctx.asset_manager.register_store(DirectoryStore::new(assets_path));
+        asset_manager.register_store(DirectoryStore::new(assets_path));
 
-        ctx.asset_manager.create_constant_texture("dark_blue", [0.0, 0.0, 0.1, 1.0]);
-        ctx.asset_manager.create_constant_texture("green", [0.0, 1.0, 0.2, 1.0]);
-        ctx.asset_manager.load_asset::<Mesh>("Mesh000", "obj");
-        ctx.asset_manager.load_asset::<Mesh>("Mesh001", "obj");
+        asset_manager.load_asset_from_data::<Texture, [f32; 4]>("dark_blue", [0.0, 0.0, 0.1, 1.0]);
+        asset_manager.load_asset_from_data::<Texture, [f32; 4]>("green", [0.0, 0.0, 0.1, 1.0]);
+        asset_manager.load_asset::<Mesh>("Mesh000", "obj");
+        asset_manager.load_asset::<Mesh>("Mesh001", "obj");
 
-        let translation = Vector3::new(0.0, 0.0, 0.0);
-        let transform: [[f32; 4]; 4] = cgmath::Matrix4::from_translation(translation).into();
-        let fragment = ctx.asset_manager.get_fragment("Mesh000", "dark_blue", "green", transform).unwrap();
-        ctx.renderer.add_fragment("main", fragment);
+        let renderable = asset_manager.create_renderable("Mesh000", "dark_blue", "green").unwrap();
+        world.create_now()
+            .with(renderable)
+            .with(Transform::default())
+            .build();
 
-        let fragment = ctx.asset_manager.get_fragment("Mesh001", "dark_blue", "green", transform).unwrap();
-        ctx.renderer.add_fragment("main", fragment);
+        let renderable = asset_manager.create_renderable("Mesh001", "dark_blue", "green").unwrap();
+        world.create_now()
+            .with(renderable)
+            .with(Transform::default())
+            .build();
 
         let light = Light {
             color: [1.0, 1.0, 1.0, 1.0],
@@ -87,7 +99,9 @@ impl State for Example {
             propagation_r_square: 0.6,
         };
 
-        ctx.renderer.add_light("main", light);
+        world.create_now()
+            .with(light)
+            .build();
 
         let layer =
             Layer::new("main",
@@ -95,23 +109,19 @@ impl State for Example {
                             Clear::new([0.0, 0.0, 0.0, 1.0]),
                             DrawShaded::new("main", "main"),
                         ]);
-
-        let pipeline = vec![layer];
-        ctx.renderer.set_pipeline(pipeline);
+        pipeline.layers = vec![layer];
     }
 
-    fn update(&mut self, ctx: &mut Context, _: &mut World) -> Trans {
+    fn handle_events(&mut self, events: &[WindowEvent], _: &mut World, _: &mut AssetManager, _: &mut Pipeline) -> Trans {
         // Exit if user hits Escape or closes the window
-        use amethyst::context::event::{EngineEvent, Event, VirtualKeyCode};
-        let engine_events = ctx.broadcaster.read::<EngineEvent>();
-        for engine_event in engine_events.iter() {
-            match engine_event.payload {
+        use amethyst::event::*;
+        for event in events {
+            match event.payload {
                 Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) => return Trans::Quit,
                 Event::Closed => return Trans::Quit,
                 _ => (),
             }
         }
-
         Trans::None
     }
 }
@@ -119,8 +129,7 @@ impl State for Example {
 fn main() {
     let path = format!("{}/examples/06_assets/resources/config.yml",
                        env!("CARGO_MANIFEST_DIR"));
-    let config = ContextConfig::from_file(path).unwrap();
-    let ctx = Context::new(config);
-    let mut game = Application::build(Example, ctx).done();
+    let display_config = DisplayConfig::from_file(path).unwrap();
+    let mut game = Application::build(Example, display_config).done();
     game.run();
 }

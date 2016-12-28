@@ -1,41 +1,119 @@
 //! The core engine framework.
-
 use super::state::{State, StateMachine};
-use context::timing::Stopwatch;
-use context::event::EngineEvent;
-use context::Context;
+use super::timing::Stopwatch;
+use renderer;
+use renderer::{Light, Pipeline};
+use asset_manager::AssetManager;
+use gfx_device;
+use gfx_device::{GfxDevice, DisplayConfig};
+use components::transform::{LocalTransform, Transform, Child, Init};
+use processors::transform::TransformProcessor;
+use components::rendering::Renderable;
 use ecs::{Planner, World, Processor, Priority, Component};
-use std::sync::{Arc, Mutex};
-use std::ops::DerefMut;
+use std::time::{Duration, Instant};
+use world_resources::Time;
 
 /// User-friendly facade for building games. Manages main loop.
 pub struct Application {
     states: StateMachine,
+    gfx_device: GfxDevice,
+    pipeline: Pipeline,
+    planner: Planner<()>,
+    asset_manager: AssetManager,
     timer: Stopwatch,
-    context: Arc<Mutex<Context>>,
+    delta_time: Duration,
+    fixed_step: Duration,
+    last_fixed_update: Instant,
 }
 
 impl Application {
-    /// Creates a new Application with the given initial game state, planner, and context.
+    /// Creates a new Application with the given initial game state, planner, and display_config.
     pub fn new<T>(initial_state: T,
-                  planner: Planner<Arc<Mutex<Context>>>,
-                  ctx: Context)
+                  mut planner: Planner<()>,
+                  display_config: DisplayConfig)
                   -> Application
         where T: State + 'static
     {
-        let context = Arc::new(Mutex::new(ctx));
+        use world_resources::camera::{Camera, Projection};
+        use world_resources::ScreenDimensions;
+        let (gfx_device_inner, mut gfx_loader, main_target_inner) = gfx_device::video_init(display_config);
+        let gfx_device = gfx_device::GfxDevice::new(gfx_device_inner);
+        let main_target = gfx_device::MainTarget::new(main_target_inner);
+        // FIXME Remove all platform specific code from here!
+        let mut pipeline = Pipeline::new();
+        match main_target.main_target_inner {
+            gfx_device::MainTargetInner::OpenGL {
+                ref main_color,
+                ref main_depth,
+            } => {
+                pipeline.targets.insert("main".into(),
+                                     Box::new(renderer::target::ColorBuffer {
+                                         color: main_color.clone(),
+                                         output_depth: main_depth.clone(),
+                                     }));
+
+                if let gfx_device::GfxLoader::OpenGL { ref mut factory } = gfx_loader {
+                    let (w, h) = gfx_device.get_dimensions().unwrap();
+                    pipeline.targets.insert("gbuffer".into(),
+                                        Box::new(renderer::target::GeometryBuffer::new(factory, (w as u16, h as u16))));
+                }
+            },
+            #[cfg(windows)]
+            gfx_device::MainTargetInner::Direct3D {  } =>  unimplemented!(),
+            gfx_device::MainTargetInner::Null => (),
+        };
+        let mut asset_manager = AssetManager::new();
+        asset_manager.add_loader::<gfx_device::GfxLoader>(gfx_loader);
+        let transform_processor = TransformProcessor::new();
+        planner.add_system::<TransformProcessor>(transform_processor, "transform_processor", 0);
+        {
+            let mut world = planner.mut_world();
+            let time = Time {
+                delta_time: Duration::new(0, 0),
+                fixed_step: Duration::new(0, 16666666),
+                last_fixed_update: Instant::now(),
+            };
+            if let Some ((w, h)) = gfx_device.get_dimensions() {
+                let dimensions = ScreenDimensions::new(w, h);
+                let projection = Projection::Perspective {
+                    fov: 90.0,
+                    aspect_ratio: dimensions.aspect_ratio,
+                    near: 0.1,
+                    far: 100.0,
+                };
+                let eye = [0.0, 0.0, 0.0];
+                let target = [1.0, 0.0, 0.0];
+                let up = [0.0, 1.0, 0.0];
+                let camera = Camera::new(projection, eye, target, up);
+                world.add_resource::<ScreenDimensions>(dimensions);
+                world.add_resource::<Camera>(camera);
+            }
+            world.add_resource::<Time>(time);
+            world.register::<Renderable>();
+            world.register::<Light>();
+            world.register::<LocalTransform>();
+            world.register::<Transform>();
+            world.register::<Child>();
+            world.register::<Init>();
+        }
         Application {
-            states: StateMachine::new(initial_state, planner),
+            states: StateMachine::new(initial_state),
+            gfx_device: gfx_device,
+            planner: planner,
+            pipeline: pipeline,
+            asset_manager: asset_manager,
             timer: Stopwatch::new(),
-            context: context,
+            delta_time: Duration::new(0, 0),
+            fixed_step: Duration::new(0, 16666666),
+            last_fixed_update: Instant::now(),
         }
     }
 
     /// Build a new Application using builder pattern.
-    pub fn build<T>(initial_state: T, ctx: Context) -> ApplicationBuilder<T>
+    pub fn build<T>(initial_state: T, display_config: DisplayConfig) -> ApplicationBuilder<T>
         where T: State + 'static
     {
-        ApplicationBuilder::new(initial_state, ctx)
+        ApplicationBuilder::new(initial_state, display_config)
     }
 
     /// Starts the application and manages the game loop.
@@ -46,7 +124,7 @@ impl Application {
             self.timer.restart();
             self.advance_frame();
             self.timer.stop();
-            self.context.lock().unwrap().delta_time = self.timer.elapsed();
+            self.delta_time = self.timer.elapsed();
         }
 
         self.shutdown();
@@ -54,38 +132,40 @@ impl Application {
 
     /// Sets up the application.
     fn initialize(&mut self) {
-        self.states.start(self.context.lock().unwrap().deref_mut());
+        self.states.start(self.planner.mut_world(), &mut self.asset_manager, &mut self.pipeline);
     }
 
     /// Advances the game world by one tick.
     fn advance_frame(&mut self) {
-        {
-            let mut ctx = self.context.lock().unwrap();
-            let events = ctx.poll_engine_events();
-            ctx.input_handler.update(&events);
-            for e in events {
-                ctx.broadcaster.publish().with::<EngineEvent>(e);
-            }
+        use world_resources::ScreenDimensions;
+        let events = self.gfx_device.poll_events();
 
-            let entities = ctx.broadcaster.poll();
-            self.states.handle_events(&entities, ctx.deref_mut());
+        self.states.handle_events(events.as_ref(), self.planner.mut_world(), &mut self.asset_manager, &mut self.pipeline);
 
-            let fixed_step = ctx.fixed_step;
-            let last_fixed_update = ctx.last_fixed_update;
+        let fixed_step = self.fixed_step;
+        let last_fixed_update = self.last_fixed_update;
 
-            if last_fixed_update.elapsed() >= fixed_step {
-                self.states.fixed_update(ctx.deref_mut());
-                ctx.last_fixed_update += fixed_step;
-            }
-
-            self.states.update(ctx.deref_mut());
+        if last_fixed_update.elapsed() >= fixed_step {
+            self.states.fixed_update(self.planner.mut_world(), &mut self.asset_manager, &mut self.pipeline);
+            self.last_fixed_update += fixed_step;
         }
-        self.states.run_processors(self.context.clone());
-        {
-            let mut ctx = self.context.lock().unwrap();
-            ctx.broadcaster.clean();
-            ctx.renderer.submit();
+
+        self.states.update(self.planner.mut_world(), &mut self.asset_manager, &mut self.pipeline);
+        self.planner.dispatch(());
+        self.planner.wait();
+
+        let world = self.planner.mut_world();
+        if let Some((w, h)) = self.gfx_device.get_dimensions() {
+            let mut screen_dimensions = world.write_resource::<ScreenDimensions>();
+            screen_dimensions.update(w, h);
         }
+        {
+            let mut time = world.write_resource::<Time>();
+            time.delta_time = self.delta_time;
+            time.fixed_step = self.fixed_step;
+            time.last_fixed_update = self.last_fixed_update;
+        }
+        self.gfx_device.render_world(world, &self.pipeline);
     }
 
     /// Cleans up after the quit signal is received.
@@ -99,18 +179,18 @@ pub struct ApplicationBuilder<T>
     where T: State + 'static
 {
     initial_state: T,
-    context: Context,
-    planner: Planner<Arc<Mutex<Context>>>,
+    display_config: DisplayConfig,
+    planner: Planner<()>,
 }
 
 impl<T> ApplicationBuilder<T>
     where T: State + 'static
 {
-    pub fn new(initial_state: T, ctx: Context) -> ApplicationBuilder<T> {
+    pub fn new(initial_state: T, display_config: DisplayConfig) -> ApplicationBuilder<T> {
         let world = World::new();
         ApplicationBuilder {
             initial_state: initial_state,
-            context: ctx,
+            display_config: display_config,
             planner: Planner::new(world, 1),
         }
     }
@@ -126,13 +206,13 @@ impl<T> ApplicationBuilder<T>
     }
 
     pub fn with<P>(mut self, pro: P, name: &str, pri: Priority) -> ApplicationBuilder<T>
-        where P: Processor<Arc<Mutex<Context>>> + 'static
+        where P: Processor<()> + 'static
     {
         self.planner.add_system::<P>(pro, name, pri);
         self
     }
 
     pub fn done(self) -> Application {
-        Application::new(self.initial_state, self.planner, self.context)
+        Application::new(self.initial_state, self.planner, self.display_config)
     }
 }

@@ -1,11 +1,9 @@
----
-display_config: 
-    dimensions: null
-    fullscreen: false
-    max_dimensions: null
-    min_dimensions: null
-    multisampling: 1
-    title: "Assets Example"
-    visibility: true
-    vsync: true
-    backend: OpenGL
+dimensions: null
+fullscreen: false
+max_dimensions: null
+min_dimensions: null
+multisampling: 1
+title: "Assets Example"
+visibility: true
+vsync: true
+backend: OpenGL

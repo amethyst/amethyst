@@ -5,11 +5,10 @@
 //!
 //! # Example:
 //! ```
-//! extern crate amethyst_context;
-//! extern crate amethyst_ecs;
+//! extern crate amethyst;
 //!
-//! use amethyst_context::broadcaster::Broadcaster;
-//! use amethyst_ecs::{Component, VecStorage};
+//! use amethyst::world_resources::Broadcaster;
+//! use amethyst::ecs::{Component, VecStorage, Join};
 //!
 //! struct UserComponent {
 //!     pub data: i32,
@@ -27,9 +26,8 @@
 //!         broadcaster.publish().with::<UserComponent>(user_component).build();
 //!     }
 //!     {
-//!         let storage = broadcaster.read::<UserComponent>();
-//!         for entity in broadcaster.poll() {
-//!             let user_component = storage.get(entity).unwrap();
+//!         let user_components = broadcaster.read::<UserComponent>();
+//!         for user_component in user_components.iter() {
 //!             println!("{0}", user_component.data);
 //!         }
 //!     }
@@ -39,7 +37,7 @@
 
 extern crate amethyst_ecs;
 
-use self::amethyst_ecs::{World, Component, EntityBuilder, Storage, Allocator, MaskedStorage, Join, Entity};
+use self::amethyst_ecs::{World, Component, EntityBuilder, Storage, Allocator, MaskedStorage, Join};
 use std::sync::RwLockReadGuard;
 
 /// Allows publishing entities
@@ -67,13 +65,6 @@ impl Broadcaster {
         self.world.create_now()
     }
 
-    /// Return a vector containing clones of all published entities
-    pub fn poll(&self) -> Vec<Entity> {
-        let entities = self.world.entities();
-        let _entities: Vec<Entity> = entities.iter().map(|e| e.clone()).collect();
-        _entities
-    }
-
     /// Access a component storage
     pub fn read<T: Component>(&self) -> Storage<T, RwLockReadGuard<Allocator>, RwLockReadGuard<MaskedStorage<T>>> {
         self.world.read::<T>()
@@ -81,9 +72,9 @@ impl Broadcaster {
 
     /// Delete all published entities
     pub fn clean(&mut self) {
-        let entities = self.poll();
-        for entity in entities {
-            self.world.delete_now(entity);
+        for entity in self.world.entities().iter() {
+            self.world.delete_later(entity);
         }
+        self.world.maintain();
     }
 }

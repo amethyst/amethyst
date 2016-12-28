@@ -19,7 +19,7 @@ impl<R> ::Pass<R> for Clear
     type Arg = ::pass::Clear;
     type Target = GeometryBuffer<R>;
 
-    fn apply<C>(&self, c: &::pass::Clear, target: &GeometryBuffer<R>, _: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+    fn apply<C>(&self, c: &::pass::Clear, target: &GeometryBuffer<R>, _: &::Pipeline, _: &::Scene<R>, encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
         encoder.clear(&target.normal, [0.; 4]);
@@ -248,18 +248,15 @@ impl<R> ::Pass<R> for DrawPass<R>
     type Arg = ::pass::DrawFlat;
     type Target = GeometryBuffer<R>;
 
-    fn apply<C>(&self, arg: &::pass::DrawFlat, target: &GeometryBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+    fn apply<C>(&self, _: &::pass::DrawFlat, target: &GeometryBuffer<R>, _: &::Pipeline, scene: &::Scene<R>, encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
-        let scene = &scenes.scenes[&arg.scene];
-        let camera = &scenes.cameras[&arg.camera];
-
         // every entity gets drawn
         for f in &scene.fragments {
             encoder.update_constant_buffer(&self.vertex,
                                            &VertexArgs {
-                                               proj: camera.projection,
-                                               view: camera.view,
+                                               proj: scene.camera.projection,
+                                               view: scene.camera.view,
                                                model: f.transform,
                                            });
 
@@ -306,19 +303,16 @@ impl<R> ::Pass<R> for DepthPass<R>
     type Arg = ::pass::DepthPass;
     type Target = GeometryBuffer<R>;
 
-    fn apply<C>(&self, arg: &::pass::DepthPass, target: &GeometryBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+    fn apply<C>(&self, _: &::pass::DepthPass, target: &GeometryBuffer<R>, _: &::Pipeline, scene: &::Scene<R>, encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
-        let scene = &scenes.scenes[&arg.scene];
-        let camera = &scenes.cameras[&arg.camera];
-
         // every entity gets rendered into the depth layer
         // not touching all other layers in Gbuffer
         for f in &scene.fragments {
             encoder.update_constant_buffer(&self.vertex,
                                            &VertexArgs {
-                                               proj: camera.projection,
-                                               view: camera.view,
+                                               proj: scene.camera.projection,
+                                               view: scene.camera.view,
                                                model: f.transform,
                                            });
 
@@ -421,10 +415,10 @@ impl<R> ::Pass<R> for BlitLayer<R>
     type Arg = ::pass::BlitLayer;
     type Target = ::target::ColorBuffer<R>;
 
-    fn apply<C>(&self, arg: &::pass::BlitLayer, target: &::target::ColorBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+    fn apply<C>(&self, arg: &::pass::BlitLayer, target: &::target::ColorBuffer<R>, pipeline: &::Pipeline, _: &::Scene<R>, encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
-        let src = &scenes.targets[&arg.gbuffer];
+        let src = &pipeline.targets[&arg.gbuffer];
         let src = src.downcast_ref::<GeometryBuffer<R>>().unwrap();
 
         let layer = match arg.layer.as_ref() {
@@ -484,12 +478,10 @@ impl<R> ::Pass<R> for LightingPass<R>
     type Arg = ::pass::Lighting;
     type Target = ::target::ColorBuffer<R>;
 
-    fn apply<C>(&self, arg: &::pass::Lighting, target: &::target::ColorBuffer<R>, scenes: &::Frame<R>, encoder: &mut gfx::Encoder<R, C>)
+    fn apply<C>(&self, arg: &::pass::Lighting, target: &::target::ColorBuffer<R>, pipeline: &::Pipeline, scene: &::Scene<R>, encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
-        let scene = &scenes.scenes[&arg.scene];
-        let camera = &scenes.cameras[&arg.camera];
-        let src = &scenes.targets[&arg.gbuffer];
+        let src = &pipeline.targets[&arg.gbuffer];
         let src = src.downcast_ref::<GeometryBuffer<R>>().unwrap();
 
         let (w, h, _, _) = src.kd.get_dimensions();
@@ -513,12 +505,12 @@ impl<R> ::Pass<R> for LightingPass<R>
                 })
             }
 
-            let inv_view_proj = Matrix4::from(camera.view).invert().unwrap() * Matrix4::from(camera.projection).invert().unwrap();
+            let inv_view_proj = Matrix4::from(scene.camera.view).invert().unwrap() * Matrix4::from(scene.camera.projection).invert().unwrap();
 
             encoder.update_constant_buffer(&self.fragment_args,
                                            &FragmentLightArgs {
                                                inv_view_proj: inv_view_proj.into(),
-                                               proj: camera.projection,
+                                               proj: scene.camera.projection,
                                                viewport: [0., 0., w as f32, h as f32],
                                                light_count: count as i32,
                                            });

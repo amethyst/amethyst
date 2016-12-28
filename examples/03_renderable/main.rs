@@ -1,12 +1,18 @@
 extern crate amethyst;
+extern crate genmesh;
+extern crate cgmath;
 
 use amethyst::engine::{Application, State, Trans};
-use amethyst::processors::rendering::{RenderingProcessor, Renderable, Light, Camera, Projection};
-use amethyst::processors::transform::{TransformProcessor, Child, Init, Transform, LocalTransform};
-use amethyst::context::Context;
 use amethyst::config::Element;
 use amethyst::ecs::{World, Join};
-use amethyst::context::asset_manager::{Mesh, Texture};
+use amethyst::gfx_device::DisplayConfig;
+use amethyst::asset_manager::AssetManager;
+use amethyst::event::WindowEvent;
+use amethyst::renderer::{VertexPosNormal, Pipeline};
+
+use self::genmesh::generators::{SphereUV};
+use self::genmesh::{MapToVertices, Triangulate, Vertices};
+use self::cgmath::{Vector3, InnerSpace};
 
 struct Example {
     t: f32,
@@ -21,70 +27,67 @@ impl Example {
 }
 
 impl State for Example {
-    fn on_start(&mut self, ctx: &mut Context, world: &mut World) {
-        let (w, h) = ctx.renderer.get_dimensions().unwrap();
-        let eye = [0., 5., 0.];
-        let target = [0., 0., 0.];
-        let up = [0., 0., 1.];
+    fn on_start(&mut self, world: &mut World, asset_manager: &mut AssetManager, pipeline: &mut Pipeline) {
+        use amethyst::renderer::pass::{Clear, DrawShaded};
+        use amethyst::renderer::{Layer, Light};
+        use amethyst::world_resources::camera::{Projection, Camera};
+        use amethyst::world_resources::ScreenDimensions;
+        use amethyst::components::transform::{LocalTransform, Transform};
+        use amethyst::components::rendering::{Texture, Mesh, Renderable};
 
-        let projection = Projection::Perspective {
-            fov: 60.0,
-            aspect: w as f32 / h as f32,
-            near: 1.0,
-            far: 100.0,
-        };
-
-        let mut camera = Camera::new(projection, eye, target, up);
-        camera.activate();
-
+        let layer =
+            Layer::new("main",
+                        vec![
+                            Clear::new([0.0, 0.0, 0.0, 1.0]),
+                            DrawShaded::new("main", "main"),
+                        ]);
+        pipeline.layers = vec![layer];
+        {
+            let dimensions = world.read_resource::<ScreenDimensions>();
+            let mut camera = world.write_resource::<Camera>();
+            camera.projection = Projection::Perspective {
+                fov: 90.0,
+                aspect_ratio: dimensions.aspect_ratio,
+                near: 0.1,
+                far: 100.0,
+            };
+            camera.eye = [5.0, 0.0, 0.0];
+            camera.target = [0.0, 0.0, 0.0];
+        }
+        let sphere_vertices = gen_sphere(32, 32);
+        asset_manager.register_asset::<Mesh>();
+        asset_manager.register_asset::<Texture>();
+        asset_manager.load_asset_from_data::<Mesh, Vec<VertexPosNormal>>("sphere", sphere_vertices);
+        asset_manager.load_asset_from_data::<Texture, [f32; 4]>("dark_blue", [0.0, 0.0, 0.01, 1.0]);
+        asset_manager.load_asset_from_data::<Texture, [f32; 4]>("green", [0.0, 1.0, 0.0, 1.0]);
+        let sphere = asset_manager.create_renderable("sphere", "dark_blue", "green").unwrap();
         world.create_now()
-            .with(camera)
+            .with::<Renderable>(sphere)
+            .with::<LocalTransform>(LocalTransform::default())
+            .with::<Transform>(Transform::default())
             .build();
-
-        ctx.asset_manager.register_asset::<Mesh>();
-        ctx.asset_manager.register_asset::<Texture>();
-        ctx.asset_manager.create_constant_texture("dark_blue", [0.0, 0.0, 0.01, 1.]);
-        ctx.asset_manager.create_constant_texture("green", [0.0, 1.0, 0.0, 1.]);
-        ctx.asset_manager.gen_sphere("sphere", 32, 32);
-
-        let sphere = Renderable::new("sphere", "dark_blue", "green");
-
-        world.create_now()
-            .with(sphere.clone())
-            .with(LocalTransform::default())
-            .with(Transform::default())
-            .build();
-
-        let light = amethyst::renderer::Light {
-            color: [1., 1., 1., 1.],
-            radius: 1.,
-            center: [1., 1., 1.],
-            propagation_constant: 0.,
-            propagation_linear: 0.,
-            propagation_r_square: 1.,
+        let light = Light {
+            color: [1.0, 1.0, 1.0, 1.0],
+            radius: 1.0,
+            center: [2.0, 2.0, 2.0],
+            propagation_constant: 0.0,
+            propagation_linear: 0.0,
+            propagation_r_square: 1.0,
         };
-
-        let light = Light::new(light);
-
         world.create_now()
-            .with(light)
+            .with::<Light>(light)
             .build();
     }
 
-    fn update(&mut self, ctx: &mut Context, world: &mut World) -> Trans {
-        use amethyst::context::event::{EngineEvent, Event, VirtualKeyCode};
+    fn update(&mut self, world: &mut World, _: &mut AssetManager, _: &mut Pipeline) -> Trans {
+        use amethyst::renderer::Light;
+        use amethyst::world_resources::Camera;
+        use amethyst::world_resources::Time;
+        use amethyst::components::transform::LocalTransform;
 
-        let engine_events = ctx.broadcaster.read::<EngineEvent>();
-        for engine_event in engine_events.iter() {
-            match engine_event.payload {
-                Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) => return Trans::Quit,
-                Event::Closed => return Trans::Quit,
-                _ => (),
-            }
-        }
-
+        let time = world.read_resource::<Time>();
         let angular_velocity = 2.0; // in radians per second
-        self.t += ctx.delta_time.subsec_nanos() as f32 / 1.0e9;
+        self.t += time.delta_time.subsec_nanos() as f32 / 1.0e9;
         let phase = self.t * angular_velocity;
 
         // Test Transform mutation
@@ -98,42 +101,53 @@ impl State for Example {
         // Test Light mutation
         let mut lights = world.write::<Light>();
         for light in (&mut lights).iter() {
-            light.light.center = [2.0 * phase.sin(), 2., 2.0 * phase.cos()];
+            light.center = [2.0 * phase.sin(), 2., 2.0 * phase.cos()];
             let angular_velocity_color = 0.7;
             let phase = self.t * angular_velocity_color;
-            light.light.color[1] = phase.sin().abs();
+            light.color[1] = phase.sin().abs();
         }
 
         let angular_velocity_camera = 0.3;
         let phase = self.t * angular_velocity_camera;
         // Test Camera mutation
-        let mut cameras = world.write::<Camera>();
-        for camera in (&mut cameras).iter() {
-            camera.eye[1] = 3.0 + 3.0*phase.sin().abs();
-        }
+        let mut camera = world.write_resource::<Camera>();
+        camera.eye[1] = 3.0 + 3.0*phase.sin().abs();
 
+        Trans::None
+    }
+
+    fn handle_events(&mut self, events: &[WindowEvent], _: &mut World, _: &mut AssetManager, _: &mut Pipeline) -> Trans {
+        use amethyst::event::*;
+        for event in events {
+            match event.payload {
+                Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) => return Trans::Quit,
+                Event::Closed => return Trans::Quit,
+                _ => (),
+            }
+        }
         Trans::None
     }
 }
 
 fn main() {
-    use amethyst::engine::Config;
-    let path = format!("{}/examples/03_renderable/resources/config.yml",
-                    env!("CARGO_MANIFEST_DIR"));
-    let config = Config::from_file(path).unwrap();
-    let mut ctx = Context::new(config.context_config);
-    let rendering_processor = RenderingProcessor::new(config.renderer_config, &mut ctx);
-    let transform_processor = TransformProcessor::new();
-    let mut game = Application::build(Example::new(), ctx)
-                   .with::<RenderingProcessor>(rendering_processor, "rendering_processor", 0)
-                   .with::<TransformProcessor>(transform_processor, "transform_processor", 1)
-                   .register::<Renderable>()
-                   .register::<LocalTransform>()
-                   .register::<Transform>()
-                   .register::<Init>()
-                   .register::<Child>()
-                   .register::<Light>()
-                   .register::<Camera>()
-                   .done();
+    let path = format!("{}/examples/01_window/resources/config.yml",
+                       env!("CARGO_MANIFEST_DIR"));
+    let display_config = DisplayConfig::from_file(path).unwrap();
+    let mut game = Application::build(Example::new(), display_config).done();
     game.run();
+}
+
+fn gen_sphere(u: usize, v: usize) -> Vec<VertexPosNormal> {
+    let data: Vec<VertexPosNormal> = SphereUV::new(u, v)
+        .vertex(|(x, y, z)| {
+            VertexPosNormal {
+                pos: [x, y, z],
+                normal: Vector3::new(x, y, z).normalize().into(),
+                tex_coord: [0., 0.],
+            }
+        })
+        .triangulate()
+        .vertices()
+        .collect();
+    data
 }

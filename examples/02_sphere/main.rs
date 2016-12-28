@@ -1,45 +1,61 @@
 //! Displays a multicolored sphere to the user.
 
 extern crate amethyst;
+extern crate genmesh;
 extern crate cgmath;
 
 use amethyst::engine::{Application, State, Trans};
-use amethyst::context::{ContextConfig, Context};
 use amethyst::config::Element;
-use amethyst::ecs::{World, Join};
-use amethyst::context::asset_manager::{Mesh, Texture};
+use amethyst::ecs::World;
+use amethyst::gfx_device::DisplayConfig;
+use amethyst::asset_manager::AssetManager;
+use amethyst::event::WindowEvent;
+use amethyst::renderer::{VertexPosNormal, Pipeline};
+
+use self::genmesh::generators::{SphereUV};
+use self::genmesh::{MapToVertices, Triangulate, Vertices};
+use self::cgmath::{Vector3, InnerSpace};
 
 struct Example;
 
 impl State for Example {
-    fn on_start(&mut self, ctx: &mut Context, _: &mut World) {
+    fn on_start(&mut self, world: &mut World, asset_manager: &mut AssetManager, pipeline: &mut Pipeline) {
         use amethyst::renderer::pass::{Clear, DrawShaded};
-        use amethyst::renderer::{Layer, Camera, Light};
-        use cgmath::Vector3;
-
-        let (w, h) = ctx.renderer.get_dimensions().unwrap();
-        let proj = Camera::perspective(60.0, w as f32 / h as f32, 1.0, 100.0);
-        let eye = [0.0, 5.0, 0.0];
-        let target = [0.0, 0.0, 0.0];
-        let up = [0.0, 0.0, 1.0];
-        let view = Camera::look_at(eye, target, up);
-        let camera = Camera::new(proj, view);
-
-        ctx.renderer.add_scene("main");
-        ctx.renderer.add_camera(camera, "main");
-
-        ctx.asset_manager.register_asset::<Mesh>();
-        ctx.asset_manager.register_asset::<Texture>();
-        ctx.asset_manager.create_constant_texture("dark_blue", [0.0, 0.0, 0.01, 1.0]);
-        ctx.asset_manager.create_constant_texture("green", [0.0, 1.0, 0.0, 1.0]);
-        ctx.asset_manager.gen_sphere("sphere", 32, 32);
-
-        let translation = Vector3::new(0.0, 0.0, 0.0);
-        let transform: [[f32; 4]; 4] = cgmath::Matrix4::from_translation(translation).into();
-        let fragment = ctx.asset_manager.get_fragment("sphere", "dark_blue", "green", transform).unwrap();
-
-        ctx.renderer.add_fragment("main", fragment);
-
+        use amethyst::renderer::{Layer, Light};
+        use amethyst::world_resources::camera::{Projection, Camera};
+        use amethyst::world_resources::ScreenDimensions;
+        use amethyst::components::transform::Transform;
+        use amethyst::components::rendering::{Texture, Mesh, Renderable};
+        let layer =
+            Layer::new("main",
+                        vec![
+                            Clear::new([0.0, 0.0, 0.0, 1.0]),
+                            DrawShaded::new("main", "main"),
+                        ]);
+        pipeline.layers = vec![layer];
+        {
+            let dimensions = world.read_resource::<ScreenDimensions>();
+            let mut camera = world.write_resource::<Camera>();
+            camera.projection = Projection::Perspective {
+                fov: 90.0,
+                aspect_ratio: dimensions.aspect_ratio,
+                near: 0.1,
+                far: 100.0,
+            };
+            camera.eye = [5.0, 0.0, 0.0];
+            camera.target = [0.0, 0.0, 0.0];
+        }
+        let sphere_vertices = gen_sphere(32, 32);
+        asset_manager.register_asset::<Mesh>();
+        asset_manager.register_asset::<Texture>();
+        asset_manager.load_asset_from_data::<Mesh, Vec<VertexPosNormal>>("sphere", sphere_vertices);
+        asset_manager.load_asset_from_data::<Texture, [f32; 4]>("dark_blue", [0.0, 0.0, 0.01, 1.0]);
+        asset_manager.load_asset_from_data::<Texture, [f32; 4]>("green", [0.0, 1.0, 0.0, 1.0]);
+        let sphere = asset_manager.create_renderable("sphere", "dark_blue", "green").unwrap();
+        world.create_now()
+            .with::<Renderable>(sphere)
+            .with::<Transform>(Transform::default())
+            .build();
         let light = Light {
             color: [1.0, 1.0, 1.0, 1.0],
             radius: 1.0,
@@ -48,41 +64,44 @@ impl State for Example {
             propagation_linear: 0.0,
             propagation_r_square: 1.0,
         };
-
-        ctx.renderer.add_light("main", light);
-
-        let layer =
-            Layer::new("main",
-                        vec![
-                            Clear::new([0.0, 0.0, 0.0, 1.0]),
-                            DrawShaded::new("main", "main"),
-                        ]);
-
-        let pipeline = vec![layer];
-        ctx.renderer.set_pipeline(pipeline);
+        world.create_now()
+            .with::<Light>(light)
+            .build();
     }
 
-    fn update(&mut self, ctx: &mut Context, _: &mut World) -> Trans {
-        // Exit if user hits Escape or closes the window
-        use amethyst::context::event::{EngineEvent, Event, VirtualKeyCode};
-        let engine_events = ctx.broadcaster.read::<EngineEvent>();
-        for engine_event in engine_events.iter() {
-            match engine_event.payload {
+    fn handle_events(&mut self, events: &[WindowEvent], _: &mut World, _: &mut AssetManager, _: &mut Pipeline) -> Trans {
+        use amethyst::event::*;
+        for event in events {
+            match event.payload {
                 Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) => return Trans::Quit,
                 Event::Closed => return Trans::Quit,
                 _ => (),
             }
         }
-
         Trans::None
     }
 }
 
 fn main() {
-    let path = format!("{}/examples/02_sphere/resources/config.yml",
-                       env!("CARGO_MANIFEST_DIR"));
-    let config = ContextConfig::from_file(path).unwrap();
-    let ctx = Context::new(config);
-    let mut game = Application::build(Example, ctx).done();
+    let path = format!("{}/examples/01_window/resources/config.yml",
+                        env!("CARGO_MANIFEST_DIR"));
+    let display_config = DisplayConfig::from_file(path).unwrap();
+    let mut game = Application::build(Example, display_config).done();
     game.run();
+}
+
+
+fn gen_sphere(u: usize, v: usize) -> Vec<VertexPosNormal> {
+    let data: Vec<VertexPosNormal> = SphereUV::new(u, v)
+        .vertex(|(x, y, z)| {
+            VertexPosNormal {
+                pos: [x, y, z],
+                normal: Vector3::new(x, y, z).normalize().into(),
+                tex_coord: [0., 0.],
+            }
+        })
+        .triangulate()
+        .vertices()
+        .collect();
+    data
 }

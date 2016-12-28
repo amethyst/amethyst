@@ -4,26 +4,30 @@ extern crate gfx_window_glutin;
 extern crate gfx_device_gl;
 extern crate gfx;
 
-use self::amethyst_renderer::{Renderer, Frame};
-use self::amethyst_renderer::target::{ColorFormat, DepthFormat, ColorBuffer};
-use asset_manager::FactoryImpl;
-use video_context::{DisplayConfig, VideoContext};
+use gfx_device::DisplayConfig;
+use gfx_device::gfx_device_inner::GfxDeviceInner;
+use gfx_device::gfx_loader::GfxLoader;
+use gfx_device::MainTargetInner;
 
-pub fn create_video_context_and_factory_impl(display_config: DisplayConfig) -> (VideoContext, FactoryImpl) {
-    match display_config.backend.clone().as_ref() {
+use self::amethyst_renderer::Renderer;
+use self::amethyst_renderer::target::{ColorFormat, DepthFormat};
+
+/// Create a `(GfxDeviceInner, GfxLoader, MainTargetInner)` tuple from `DisplayConfig`
+pub fn video_init(display_config: DisplayConfig) -> (GfxDeviceInner, GfxLoader, MainTargetInner) {
+    match display_config.backend.as_str() {
         "OpenGL" => new_gl(&display_config),
         #[cfg(windows)]
         "Direct3D" => new_d3d(),
-        _ => (VideoContext::Null, FactoryImpl::Null),
+        _ => (GfxDeviceInner::Null, GfxLoader::Null, MainTargetInner::Null),
     }
 }
 
 #[cfg(windows)]
-fn new_d3d() -> (VideoContext, FactoryImpl) {
+fn new_d3d() -> (GfxDeviceInner, GfxLoader, MainTargetInner) {
     unimplemented!();
 }
 
-fn new_gl(display_config: &DisplayConfig) -> (VideoContext, FactoryImpl) {
+fn new_gl(display_config: &DisplayConfig) -> (GfxDeviceInner, GfxLoader, MainTargetInner) {
     let title = display_config.title.clone();
     let multisampling = display_config.multisampling.clone();
     let visibility = display_config.visibility.clone();
@@ -60,24 +64,20 @@ fn new_gl(display_config: &DisplayConfig) -> (VideoContext, FactoryImpl) {
     let mut renderer = Renderer::new(combuf);
     renderer.load_all(&mut factory);
 
-    let mut frame = Frame::new();
-    frame.targets.insert("main".into(),
-                         Box::new(ColorBuffer {
-                             color: main_color,
-                             output_depth: main_depth,
-                         }));
-
-    let (w, h) = window.get_inner_size().unwrap();
-    frame.targets.insert("gbuffer".into(),
-                         Box::new(amethyst_renderer::target::GeometryBuffer::new(&mut factory, (w as u16, h as u16))));
-
-    let video_context = VideoContext::OpenGL {
+    let gfx_device_inner = GfxDeviceInner::OpenGL {
         window: window,
         device: device,
         renderer: renderer,
-        frame: frame,
     };
 
-    let factory_impl = FactoryImpl::OpenGL { factory: factory };
-    (video_context, factory_impl)
+    let main_target_inner = MainTargetInner::OpenGL {
+        main_color: main_color,
+        main_depth: main_depth,
+    };
+
+    let gfx_loader = GfxLoader::OpenGL {
+        factory: factory,
+    };
+
+    (gfx_device_inner, gfx_loader, main_target_inner)
 }

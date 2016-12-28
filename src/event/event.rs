@@ -6,22 +6,21 @@ extern crate glutin;
 use self::amethyst_ecs::{Component, VecStorage};
 pub use self::glutin::{Event, ElementState, ScanCode, VirtualKeyCode, MouseScrollDelta, TouchPhase, MouseButton, Touch};
 
-/// Represents an engine generated event,
-/// it can be attached to entities
-/// that are published by `Broadcaster`.
+/// Represents a window generated event,
+/// it can be attached to an entity published by `Broadcaster`.
 /// Currently it is just a wraper around
 /// `glutin::Event`.
-pub struct EngineEvent {
+pub struct WindowEvent {
     pub payload: Event,
 }
 
-impl EngineEvent {
+impl WindowEvent {
     /// Create an EnginEvent from a glutin::Event
-    pub fn new(event: Event) -> EngineEvent {
-        EngineEvent { payload: event }
+    pub fn new(event: Event) -> WindowEvent {
+        WindowEvent { payload: event }
     }
 }
 
-impl Component for EngineEvent {
-    type Storage = VecStorage<EngineEvent>;
+impl Component for WindowEvent {
+    type Storage = VecStorage<WindowEvent>;
 }
