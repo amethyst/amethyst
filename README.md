@@ -69,16 +69,14 @@ is also an online crate-level [API reference][ar].
 
 See the [Getting Started][gs] chapter in the book for the full-blown "Hello,
 World!" tutorial. For the sake of brevity, you can generate an empty game
-project with the [Amethyst CLI tool][ac] and build it. Follow along below:
+project with `cargo` and build it. Follow along below:
 
 [gs]: https://www.amethyst.rs/book/getting_started.html
-[ac]: https://github.com/amethyst/tools/tree/master/src/cli
 
 ```
-$ cargo install amethyst_tools
-$ amethyst new mygame
+$ cargo new --template-repo https://github.com/amethyst/project_template mygame
 $ cd mygame
-$ amethyst run
+$ cargo run
 ```
 
 If everything goes well, you should see the following print out to the terminal:
