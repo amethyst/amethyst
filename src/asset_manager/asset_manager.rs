@@ -160,6 +160,7 @@ impl AssetManager {
             stores: Vec::new(),
         };
 
+        // Handle some common use cases by default
         asset_manager.register_asset::<Mesh>();
         asset_manager.register_asset::<Texture>();
 
