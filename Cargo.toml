@@ -53,9 +53,10 @@ gfx = "0.12"
 
 [dependencies]
 cgmath = "0.11"
+genmesh = "0.4"
 gfx = "0.12"
 gfx_device_gl = "0.11"
 gfx_window_glutin = "0.12"
-genmesh = "0.4"
 glutin = "0.6"
-obj-rs = "*"
+imagefmt = "*"
+wavefront_obj = "*"

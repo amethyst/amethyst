@@ -8,7 +8,7 @@ use std::env::set_var;
 
 use amethyst::asset_manager::{AssetManager, DirectoryStore};
 use amethyst::components::rendering::{Mesh, Texture};
-use amethyst::components::transform::Transform;
+use amethyst::components::transform::{LocalTransform, Transform};
 use amethyst::config::Element;
 use amethyst::ecs::World;
 use amethyst::engine::{Application, State, Trans};
@@ -34,8 +34,8 @@ impl State for Example {
                 far: 100.0,
             };
             camera.projection = proj;
-            camera.eye = [0.0, 15.0, 0.0];
-            camera.target = [0.0, 0.0, 0.0];
+            camera.eye = [0.0, -20.0, 10.0];
+            camera.target = [0.0, 0.0, 5.0];
             camera.up = [0.0, 0.0, 1.0];
         }
 
@@ -47,50 +47,61 @@ impl State for Example {
         // Create some basic colors for the teapot, and load some textures
         // for the cube and sphere.
         asset_manager.load_asset_from_data::<Texture, [f32; 4]>("dark_blue", [0.0, 0.0, 0.1, 1.0]);
-        asset_manager.load_asset_from_data::<Texture, [f32; 4]>("green", [0.0, 0.0, 0.1, 1.0]);
+        asset_manager.load_asset_from_data::<Texture, [f32; 4]>("green",     [0.0, 1.0, 0.2, 1.0]);
+        asset_manager.load_asset_from_data::<Texture, [f32; 4]>("tan",       [0.8, 0.6, 0.5, 1.0]);
         asset_manager.load_asset::<Texture>("crate", "png");
         asset_manager.load_asset::<Texture>("grass", "bmp");
 
         // Load/generate meshes
-        asset_manager.load_asset::<Mesh>("Mesh000", "obj");
-        asset_manager.load_asset::<Mesh>("Mesh001", "obj");
-        // asset_manager.gen_cube("cube");
-        // asset_manager.gen_sphere("sphere", 32, 32);
+        asset_manager.load_asset::<Mesh>("teapot", "obj");
+        asset_manager.load_asset::<Mesh>("lid", "obj");
+        asset_manager.load_asset::<Mesh>("cube", "obj");
+        asset_manager.load_asset::<Mesh>("sphere", "obj");
 
-        // Add teapot lid to scene
-        let renderable = asset_manager.create_renderable("Mesh000", "dark_blue", "green").unwrap();
+        // Add teapot and lid to scene
+        for mesh in vec!["lid", "teapot"].iter() {
+            let mut transform = LocalTransform::default();
+            transform.rotation = [0.5, 0.5, -0.5, -0.5];
+            transform.translation = [0.0, 0.0, 5.0];
+            let renderable = asset_manager.create_renderable(mesh, "dark_blue", "green").unwrap();
+            world.create_now()
+                .with(renderable)
+                .with(transform)
+                .with(Transform::default())
+                .build();
+        }
+
+        // Add cube to scene
+        let renderable = asset_manager.create_renderable("cube", "crate", "tan").unwrap();
+        let mut transform = LocalTransform::default();
+        transform.translation = [5.0, 0.0, 0.0];
+        transform.scale = [2.0, 2.0, 2.0];
         world.create_now()
             .with(renderable)
+            .with(transform)
             .with(Transform::default())
             .build();
 
-        // Add teapot body to scene
-        let renderable = asset_manager.create_renderable("Mesh001", "dark_blue", "green").unwrap();
+        // Add sphere to scene
+        let renderable = asset_manager.create_renderable("sphere", "grass", "green").unwrap();
+        let mut transform = LocalTransform::default();
+        transform.translation = [-5.0, 0.0, 0.0];
+        transform.rotation = [0.70711, 0.70711, 0.0, 0.0];
+        transform.scale = [0.15, 0.15, 0.15];
         world.create_now()
             .with(renderable)
+            .with(transform)
             .with(Transform::default())
             .build();
-
-        // // Add cube to scene
-        // let translation = cgmath::Vector3::new(0.0, 2.5, -5.0);
-        // let transform: [[f32; 4]; 4] = cgmath::Matrix4::from_translation(translation).into();
-        // let fragment = asset_manager.get_fragment("cube", "crate", "crate", transform).unwrap();
-        // ctx.renderer.add_fragment("main", fragment);
-        //
-        // // Add sphere to scene
-        // let translation = cgmath::Vector3::new(0.0, -2.5, -5.0);
-        // let transform: [[f32; 4]; 4] = cgmath::Matrix4::from_translation(translation).into();
-        // let fragment = asset_manager.get_fragment("sphere", "grass", "green", transform).unwrap();
-        // ctx.renderer.add_fragment("main", fragment);
 
         // Add light to scene
         let light = Light {
             color: [1.0, 1.0, 1.0, 1.0],
             radius: 10.0,
-            center: [15.0, 0.0, 0.0],
-            propagation_constant: 0.2,
-            propagation_linear: 0.2,
-            propagation_r_square: 0.6,
+            center: [10.0, -10.0, 10.0],
+            propagation_constant: 0.0,
+            propagation_linear: 0.0,
+            propagation_r_square: 10.0,
         };
 
         world.create_now()
