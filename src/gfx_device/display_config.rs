@@ -1,8 +1,4 @@
 
-use std;
-use serde;
-use serde_yaml;
-
 config!(
     /// Contains display config,
     /// it is required to call `video_init()`

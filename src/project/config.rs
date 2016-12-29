@@ -7,9 +7,9 @@ macro_rules! impl_config(
             )*
         }
     ) => {
-        impl serde::de::Deserialize for $identifier {
+        impl ::serde::de::Deserialize for $identifier {
             fn deserialize<D>(deserializer: &mut D) -> Result<Self, D::Error>
-                where D: serde::de::Deserializer
+                where D: ::serde::de::Deserializer
             {
                 #[allow(non_camel_case_types)]
                 enum Field {
@@ -18,24 +18,24 @@ macro_rules! impl_config(
                     )*
                 }
 
-                impl serde::de::Deserialize for Field {
+                impl ::serde::de::Deserialize for Field {
                     fn deserialize<D>(deserializer: &mut D) -> Result<Self, D::Error>
-                        where D: serde::de::Deserializer
+                        where D: ::serde::de::Deserializer
                     {
                         struct FieldVisitor;
 
-                        impl serde::de::Visitor for FieldVisitor {
+                        impl ::serde::de::Visitor for FieldVisitor {
                             type Value = Field;
 
                             fn visit_str<E>(&mut self, value: &str) -> Result<Field, E>
-                                where E: serde::Error,
+                                where E: ::serde::Error,
                             {
                                 match value {
                                     $(
                                         stringify!($field) => Ok(Field::$field),
                                     )*
                                     _ => {
-                                        Err(serde::Error::unknown_field(value))
+                                        Err(::serde::Error::unknown_field(value))
                                     },
                                 }
                             }
@@ -46,11 +46,11 @@ macro_rules! impl_config(
                 }
 
                 struct IdentifierVisitor;
-                impl serde::de::Visitor for IdentifierVisitor {
+                impl ::serde::de::Visitor for IdentifierVisitor {
                     type Value = $identifier;
 
                     fn visit_seq<V>(&mut self, mut visitor: V) -> Result<Self::Value, V::Error>
-                        where V: serde::de::SeqVisitor,
+                        where V: ::serde::de::SeqVisitor,
                     {
                         let result = $identifier {
                             $(
@@ -75,7 +75,7 @@ macro_rules! impl_config(
                     }
 
                     fn visit_map<V>(&mut self, mut visitor: V) -> Result<Self::Value, V::Error>
-                        where V: serde::de::MapVisitor,
+                        where V: ::serde::de::MapVisitor,
                     {
                         $(
                             let mut $field: Option<$ty> = None; // allows checking for duplicates
@@ -128,7 +128,7 @@ macro_rules! impl_config(
             }
         }
 
-        impl std::default::Default for $identifier {
+        impl ::std::default::Default for $identifier {
             fn default() -> Self {
                 $identifier {
                     $(
@@ -142,7 +142,7 @@ macro_rules! impl_config(
         impl $identifier {
             /// Attempts to load the struct from file.
             /// Defaults if any errors occurred.
-            pub fn load<P: AsRef<std::path::Path>>(path: P) -> Self {
+            pub fn load<P: AsRef<::std::path::Path>>(path: P) -> Self {
                 match $identifier::direct_load(path) {
                     Ok(v) => v,
                     Err(e) => {
@@ -152,21 +152,21 @@ macro_rules! impl_config(
                 }
             }
 
-            pub fn write<P: AsRef<std::path::Path>>(&self, path: P) -> Result<(), $crate::project::ProjectError> {
-                use std::io::Write;
+            pub fn write<P: AsRef<::std::path::Path>>(&self, path: P) -> Result<(), $crate::project::ProjectError> {
+                use ::std::io::Write;
 
-                let result = serde_yaml::to_string(self);
+                let result = ::serde_yaml::to_string(self);
                 let serialized = try!(result.map_err(|e| $crate::project::ProjectError::Parser(e.to_string()) ));
-                let mut file = try!(std::fs::File::create(path));
+                let mut file = try!(::std::fs::File::create(path));
                 try!(file.write(&serialized.into_bytes()));
 
                 Ok(())
             }
 
             /// Attempts to load the struct from file.
-            pub fn direct_load<P: AsRef<std::path::Path>>(path: P) -> Result<Self, $crate::project::ProjectError> {
+            pub fn direct_load<P: AsRef<::std::path::Path>>(path: P) -> Result<Self, $crate::project::ProjectError> {
                 let content = try!($crate::project::directory::Directory::load(path));
-                let parsed = serde_yaml::from_str::<$identifier>(&content);
+                let parsed = ::serde_yaml::from_str::<$identifier>(&content);
                 parsed.map_err(|e| $crate::project::ProjectError::Parser(e.to_string()) )
             }
         }
