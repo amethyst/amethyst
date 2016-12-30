@@ -19,6 +19,9 @@ Read a summary of what happened this past week at [*This Week in Amethyst*][tw].
 
 [tw]: https://www.amethyst.rs/
 
+## [Documentation][ar]
+[ar]: https://www.amethyst.rs/doc/
+
 ## Vision
 
 Amethyst aims to be a fast, data-oriented, and data-driven game engine suitable
@@ -63,7 +66,6 @@ Read the [online book][bk] for a comprehensive tutorial to using Amethyst. There
 is also an online crate-level [API reference][ar].
 
 [bk]: https://www.amethyst.rs/book/
-[ar]: https://www.amethyst.rs/doc/master/amethyst/
 
 ## Quick Example
 
