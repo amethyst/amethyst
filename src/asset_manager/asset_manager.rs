@@ -329,11 +329,10 @@ impl AssetLoaderRaw for imagefmt::Image<u8> {
 impl AssetLoader<Texture> for imagefmt::Image<u8> {
     fn from_data(assets: &mut Assets, image: imagefmt::Image<u8>) -> Option<Texture> {
         let pixels = image.buf.chunks(4).map(|p| [p[0], p[1], p[2], p[3]]).collect::<Vec<_>>();
-        let chunked = pixels.as_slice().chunks(image.w).collect::<Vec<_>>();
 
         AssetLoader::from_data(assets, TextureLoadData {
             kind: Kind::D2(image.w as u16, image.h as u16, AaMode::Single),
-            raw: chunked.as_slice(),
+            raw: &[pixels.as_slice()],
         })
     }
 }
