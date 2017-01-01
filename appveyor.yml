@@ -3,30 +3,30 @@ environment:
     matrix:
         - channel: stable
           target: x86_64-pc-windows-msvc
-        - channel: stable
-          target: i686-pc-windows-msvc
-        - channel: stable
-          target: i686-pc-windows-gnu
-        - channel: stable
-          target: x86_64-pc-windows-gnu
+        # - channel: stable
+        #   target: i686-pc-windows-msvc
+        # - channel: stable
+        #   target: i686-pc-windows-gnu
+        # - channel: stable
+        #   target: x86_64-pc-windows-gnu
 
         - channel: beta
           target: x86_64-pc-windows-msvc
-        - channel: beta
-          target: i686-pc-windows-msvc
-        - channel: beta
-          target: i686-pc-windows-gnu
-        - channel: beta
-          target: x86_64-pc-windows-gnu
+        # - channel: beta
+        #   target: i686-pc-windows-msvc
+        # - channel: beta
+        #   target: i686-pc-windows-gnu
+        # - channel: beta
+        #   target: x86_64-pc-windows-gnu
 
         - channel: nightly
           target: x86_64-pc-windows-msvc
-        - channel: nightly
-          target: i686-pc-windows-msvc
-        - channel: nightly
-          target: i686-pc-windows-gnu
-        - channel: nightly
-          target: x86_64-pc-windows-gnu
+        # - channel: nightly
+        #   target: i686-pc-windows-msvc
+        # - channel: nightly
+        #   target: i686-pc-windows-gnu
+        # - channel: nightly
+        #   target: x86_64-pc-windows-gnu
 
 matrix:
     allow_failures:
@@ -34,10 +34,9 @@ matrix:
 
 # Set up the Rust toolchain.
 install:
-    - ps: Start-FileDownload "https://static.rust-lang.org/dist/rust-${env:channel}-${env:target}.exe"
-    - rust-%channel%-%target%.exe /VERYSILENT /NORESTART /DIR="C:\Program Files (x86)\Rust"
-    - SET PATH=%PATH%;C:\Program Files (x86)\Rust\bin
-    - SET PATH=%PATH%;C:\MinGW\bin
+    - ps: Start-FileDownload "https://win.rustup.rs/"
+    - rustup-init.exe -y --default-toolchain ${env:channel}-${env:target}
+    - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
     - rustc -V
     - cargo -V
 
