@@ -35,7 +35,7 @@ matrix:
 # Set up the Rust toolchain.
 install:
     - curl -fsS "https://win.rustup.rs/" -o rustup-init.exe
-    - ps: rustup-init.exe -y --default-toolchain ${env:channel}-${env:target}
+    - rustup-init.exe -y --default-toolchain %channel%-%target%
     - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
     - rustc -V
     - cargo -V
