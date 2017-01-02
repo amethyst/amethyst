@@ -42,11 +42,12 @@ impl GfxDevice {
         }
     }
 
-    /// Render all `Renderable`, `Transform` pairs in `World`.
+    /// Render all entities with `Renderable` components in `World`.
     pub fn render_world(&mut self, world: &mut ecs::World, pipeline: &renderer::Pipeline) {
         use components::rendering::{MeshInner, TextureInner, Renderable};
         use components::transform::Transform;
         use world_resources::camera::Projection;
+        use renderer::Fragment;
         match self.gfx_device_inner {
             GfxDeviceInner::OpenGL { ref mut renderer,
                                      ref mut device,
@@ -79,35 +80,50 @@ impl GfxDevice {
                 let mut scene = renderer::Scene::<gfx_device_gl::Resources>::new(camera);
                 let renderables = world.read::<Renderable>();
                 let global_transforms = world.read::<Transform>();
+                // Add all entities which only have Renderable component attached to them to the scene.
+                for (renderable, _) in (&renderables, !&global_transforms).iter() {
+                    // If Transform is not specified use the identity transform.
+                    if let Some(fragment) = unwrap_renderable(renderable, &Transform::default()) {
+                        scene.fragments.push(fragment);
+                    }
+                }
+                // Add all entities which have a Renderable, Transform pair attached to them to the scene.
                 for (renderable, global_transform) in (&renderables, &global_transforms).iter() {
+                    if let Some(fragment) = unwrap_renderable(renderable, global_transform) {
+                        scene.fragments.push(fragment);
+                    }
+                }
+                let lights = world.read::<renderer::Light>();
+                // Add all Lights to the scene.
+                for light in lights.iter() {
+                    scene.lights.push(light.clone());
+                }
+                // Render the scene.
+                renderer.submit(pipeline, &scene, device);
+                window.swap_buffers().unwrap();
+                // Function that creates Fragments from Renderable, Transform pairs.
+                fn unwrap_renderable(renderable: &Renderable, global_transform: &Transform) -> Option<Fragment<gfx_device_gl::Resources>> {
                     let (buffer, slice) = match renderable.mesh.mesh_inner {
                         MeshInner::OpenGL { ref buffer,
                                             ref slice } => { (buffer.clone(), slice.clone()) },
-                        _ => continue,
-                        };
+                        _ => return None,
+                    };
                     let ka = match renderable.ka.texture_inner {
                         TextureInner::OpenGL { ref texture } => texture.clone(),
-                        _ => continue,
+                        _ => return None,
                     };
                     let kd = match renderable.kd.texture_inner {
                         TextureInner::OpenGL { ref texture } => texture.clone(),
-                        _ => continue,
+                        _ => return None,
                     };
-                    let fragment = renderer::Fragment {
+                    Some(Fragment {
                         transform: global_transform.clone().into(),
                         buffer: buffer,
                         slice: slice,
                         ka: ka,
                         kd: kd,
-                    };
-                    scene.fragments.push(fragment);
+                    })
                 }
-                let lights = world.read::<renderer::Light>();
-                for light in lights.iter() {
-                    scene.lights.push(light.clone());
-                }
-                renderer.submit(pipeline, &scene, device);
-                window.swap_buffers().unwrap();
             }
             #[cfg(windows)]
             GfxDeviceInner::Direct3D {} => unimplemented!(),
