@@ -237,8 +237,8 @@ impl AssetManager {
         self.load_asset_from_raw::<A>(name, asset_type, &buf)
     }
 
-    /// Create a `Renderable` component from a loaded mesh, ka texture, and kd texture
-    pub fn create_renderable(&self, mesh: &str, ka: &str, kd: &str) -> Option<Renderable> {
+    /// Create a `Renderable` component from a loaded mesh and ka/kd/ks textures
+    pub fn create_renderable(&self, mesh: &str, ka: &str, kd: &str, ks: &str, ns: f32) -> Option<Renderable> {
         let meshes = self.read_assets::<Mesh>();
         let textures = self.read_assets::<Texture>();
         let mesh_id = match self.id_from_name(mesh) {
@@ -265,10 +265,20 @@ impl AssetManager {
             Some(kd) => kd,
             None => return None,
         };
+        let ks_id = match self.id_from_name(ks) {
+            Some(id) => id,
+            None => return None,
+        };
+        let ks = match textures.read(ks_id) {
+            Some(ks) => ks,
+            None => return None,
+        };
         Some(Renderable {
             mesh: mesh.clone(),
-            ka: ka.clone(),
-            kd: kd.clone(),
+            ambient: ka.clone(),
+            diffuse: kd.clone(),
+            specular: ks.clone(),
+            specular_exponent: ns,
         })
     }
 }

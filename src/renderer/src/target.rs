@@ -31,6 +31,8 @@ pub struct GeometryBuffer<R: gfx::Resources> {
     pub ka: gfx::handle::RenderTargetView<R, ColorFormat>,
     /// Contains the diffuse color
     pub kd: gfx::handle::RenderTargetView<R, ColorFormat>,
+    /// Contains the specular color
+    pub ks: gfx::handle::RenderTargetView<R, ColorFormat>,
     /// Contains the depth buffer
     pub depth: gfx::handle::DepthStencilView<R, DepthFormat>,
 
@@ -40,6 +42,8 @@ pub struct GeometryBuffer<R: gfx::Resources> {
     pub texture_ka: gfx::handle::ShaderResourceView<R, [f32; 4]>,
     /// the diffuse color as a texture
     pub texture_kd: gfx::handle::ShaderResourceView<R, [f32; 4]>,
+    /// the specular color as a texture
+    pub texture_ks: gfx::handle::ShaderResourceView<R, [f32; 4]>,
     /// the depth buffer as a texture
     pub texture_depth: gfx::handle::ShaderResourceView<R, f32>,
 }
@@ -53,16 +57,19 @@ impl<R: gfx::Resources> GeometryBuffer<R> {
         let (_, texture_normal, normal) = factory.create_render_target(width, height).unwrap();
         let (_, texture_ka, ka) = factory.create_render_target(width, height).unwrap();
         let (_, texture_kd, kd) = factory.create_render_target(width, height).unwrap();
+        let (_, texture_ks, ks) = factory.create_render_target(width, height).unwrap();
         let (_, texture_depth, depth) = factory.create_depth_stencil(width, height).unwrap();
 
         GeometryBuffer {
             normal: normal,
-            kd: kd,
             ka: ka,
+            kd: kd,
+            ks: ks,
             depth: depth,
             texture_normal: texture_normal,
             texture_ka: texture_ka,
             texture_kd: texture_kd,
+            texture_ks: texture_ks,
             texture_depth: texture_depth,
         }
     }

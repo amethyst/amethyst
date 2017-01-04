@@ -2,7 +2,7 @@
 use super::state::{State, StateMachine};
 use super::timing::Stopwatch;
 use renderer;
-use renderer::{Light, Pipeline};
+use renderer::{PointLight, Pipeline};
 use asset_manager::AssetManager;
 use gfx_device;
 use gfx_device::{GfxDevice, DisplayConfig};
@@ -90,7 +90,7 @@ impl Application {
             }
             world.add_resource::<Time>(time);
             world.register::<Renderable>();
-            world.register::<Light>();
+            world.register::<PointLight>();
             world.register::<LocalTransform>();
             world.register::<Transform>();
             world.register::<Child>();

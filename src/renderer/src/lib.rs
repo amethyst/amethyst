@@ -53,7 +53,7 @@ impl<R, C> Renderer<R, C>
     where R: gfx::Resources,
           C: gfx::CommandBuffer<R>
 {
-    /// Create a new Render pipline
+    /// Create a new Render pipeline
     pub fn new(combuf: C) -> Renderer<R, C> {
         Renderer {
             command_buffer: combuf.into(),
@@ -174,7 +174,7 @@ impl<R: gfx::Resources> Texture<R> {
 #[derive(Clone)]
 pub struct Fragment<R: gfx::Resources> {
     /// The transform matrix to apply to the matrix, this
-    /// is sometimes refereed to as the model matrix
+    /// is sometimes referred to as the model matrix
     pub transform: [[f32; 4]; 4],
     /// The vertex buffer
     pub buffer: gfx::handle::Buffer<R, VertexPosNormal>,
@@ -184,31 +184,50 @@ pub struct Fragment<R: gfx::Resources> {
     pub ka: Texture<R>,
     /// diffuse color
     pub kd: Texture<R>,
+    /// specular color
+    pub ks: Texture<R>,
+    /// specular exponent
+    pub ns: f32,
 }
 
-/// A basic light
+
+/// Represents a point light.
 #[derive(Copy, Clone)]
-pub struct Light {
+pub struct PointLight {
     /// The XYZ coordinate of the light
     pub center: [f32; 3],
-    /// How big the light is radius, lighting
-    /// passes are not required to render the light
-    /// beyond this radius
-    pub radius: f32,
 
     /// The color of light emitted
     pub color: [f32; 4],
-    /// constant, propagation means no falloff of the light
-    /// emission from distance. Useful for the sun.
-    pub propagation_constant: f32,
-    /// linear level drops
-    pub propagation_linear: f32,
-    /// cubic light level drop
-    pub propagation_r_square: f32,
+
+    /// Represents constant, linear, and quadratic (kc, kl, and kq)
+    /// factors for light attenuation calculations. See these links
+    /// for some more information on how to choose good values for
+    /// these factors:
+    /// https://imdoingitwrong.wordpress.com/2011/01/31/light-attenuation/
+    /// http://ogldev.atspace.co.uk/www/tutorial20/tutorial20.html
+    pub attenuation: [f32; 3],
 }
 
-impl Component for Light {
-    type Storage = VecStorage<Light>;
+impl PointLight {
+    pub fn from_radius(radius: f32) -> PointLight {
+        // TODO(mechaxl): Implement this
+        PointLight { .. Default::default() }
+    }
+}
+
+impl Default for PointLight {
+    fn default() -> PointLight {
+        PointLight {
+            color: [1.0, 1.0, 1.0, 1.0],
+            center: [0.0, 0.0, 0.0],
+            attenuation: [1.0, 0.1, 0.01],
+        }
+    }
+}
+
+impl Component for PointLight {
+    type Storage = VecStorage<PointLight>;
 }
 
 /// A scene is a collection of fragments and
@@ -217,8 +236,10 @@ impl Component for Light {
 pub struct Scene<R: gfx::Resources> {
     /// A list of fragments
     pub fragments: Vec<Fragment<R>>,
+
     /// A list of lights
-    pub lights: Vec<Light>,
+    pub lights: Vec<PointLight>,
+
     /// A camera used to render this scene
     pub camera: Camera,
 }

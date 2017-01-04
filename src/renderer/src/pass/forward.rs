@@ -37,7 +37,6 @@ pub static FLAT_FRAGMENT_SRC: &'static [u8] = b"
     #version 150 core
 
     uniform sampler2D t_Ka;
-    uniform sampler2D t_Kd;
 
     in VertexData {
         vec4 Position;
@@ -61,7 +60,7 @@ pub static FRAGMENT_SRC: &'static [u8] = b"
     };
 
     struct Light {
-        vec4 propagation;
+        vec4 attenuation;
         vec4 center;
         vec4 color;
     };
@@ -72,6 +71,8 @@ pub static FRAGMENT_SRC: &'static [u8] = b"
 
     uniform sampler2D t_Ka;
     uniform sampler2D t_Kd;
+    uniform sampler2D t_Ks;
+    uniform float f_Ns;
 
     in VertexData {
         vec4 Position;
@@ -82,16 +83,34 @@ pub static FRAGMENT_SRC: &'static [u8] = b"
     out vec4 o_Color;
 
     void main() {
-        vec4 kd = texture(t_Kd, v_In.TexCoord);
         vec4 color = texture(t_Ka, v_In.TexCoord);
+        vec4 lighting = vec4(0.0);
+        vec4 normal = vec4(normalize(v_In.Normal), 0.0);
+
         for (int i = 0; i < u_LightCount; i++) {
-            vec4 delta = light[i].center - v_In.Position;
-            float dist = length(delta);
-            float inv_dist = 1. / dist;
-            vec4 light_to_point_normal = delta * inv_dist;
-            float intensity = dot(light[i].propagation.xyz, vec3(1., inv_dist, inv_dist * inv_dist));
-            color += kd * light[i].color * intensity * max(0, dot(light_to_point_normal, vec4(v_In.Normal, 0.)));
+            // Calculate diffuse light
+            vec4 lightDir = normalize(light[i].center - v_In.Position);
+            float diff = max(dot(lightDir, normal), 0.0);
+            vec4 diffuse = diff * light[i].color;
+
+            // Calculate specular light. Uses Blinn-Phong model
+            // for specular highlights.
+            vec4 viewDir = normalize(-v_In.Position);
+            vec4 reflectDir = reflect(-lightDir, normal);
+            vec4 halfwayDir = normalize(lightDir + viewDir);
+            float spec = pow(max(dot(normal, halfwayDir), 0.0), f_Ns);
+            vec4 specular = spec * light[i].color;
+
+            // Calculate attenuation
+            float dist = length(light[i].center - v_In.Position);
+            float kc = light[i].attenuation[0];
+            float kl = light[i].attenuation[1];
+            float kq = light[i].attenuation[2];
+            float attenuation = 1.0 / (kc + kl * dist + kq * dist * dist);
+
+            lighting += attenuation * (diffuse + specular);
         }
+        color *= lighting;
         o_Color = color;
     }
 ";
@@ -142,8 +161,11 @@ pub static WIREFRAME_GEOMETRY_SRC: &'static [u8] = b"
 pub type GFormat = [f32; 4];
 
 gfx_defines!(
+    // Necessary for these to be `[f32; 4]` in order for shader
+    // transforms to work correctly, even though attenuation/center
+    // are really `[f32; 3]`.
     constant PointLight {
-        propagation: [f32; 4] = "propagation",
+        attenuation: [f32; 4] = "attenuation",
         center: [f32; 4] = "center",
         color: [f32; 4] = "color",
     }
@@ -177,6 +199,8 @@ gfx_defines!(
         out_depth: gfx::DepthTarget<gfx::format::DepthStencil> = gfx::preset::depth::LESS_EQUAL_WRITE,
         ka: gfx::TextureSampler<[f32; 4]> = "t_Ka",
         kd: gfx::TextureSampler<[f32; 4]> = "t_Kd",
+        ks: gfx::TextureSampler<[f32; 4]> = "t_Ks",
+        ns: gfx::Global<f32> = "f_Ns",
     }
 
     pipeline wireframe {
@@ -283,6 +307,7 @@ pub struct DrawShaded<R: gfx::Resources> {
     sampler: gfx::handle::Sampler<R>,
     ka: ::ConstantColorTexture<R>,
     kd: ::ConstantColorTexture<R>,
+    ks: ::ConstantColorTexture<R>,
 }
 
 impl<R: gfx::Resources> DrawShaded<R> {
@@ -305,10 +330,12 @@ impl<R: gfx::Resources> DrawShaded<R> {
             pso: pso,
             ka: ::ConstantColorTexture::new(factory),
             kd: ::ConstantColorTexture::new(factory),
+            ks: ::ConstantColorTexture::new(factory),
             sampler: sampler,
         }
     }
 }
+
 
 fn pad(x: [f32; 3]) -> [f32; 4] {
     [x[0], x[1], x[2], 0.]
@@ -323,14 +350,12 @@ impl<R> Pass<R> for DrawShaded<R>
     fn apply<C>(&self, _: &pass::DrawShaded, target: &ColorBuffer<R>, _: &::Pipeline, scene: &::Scene<R>, encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
-        // let scene = &scenes.scenes[&arg.scene];
-        // let camera = &scenes.cameras[&arg.camera];
 
         let mut lights: Vec<_> = scene.lights
             .iter()
             .map(|l| {
                 PointLight {
-                    propagation: [l.propagation_constant, l.propagation_linear, l.propagation_r_square, 0.],
+                    attenuation: pad(l.attenuation),
                     color: l.color,
                     center: pad(l.center),
                 }
@@ -340,7 +365,7 @@ impl<R> Pass<R> for DrawShaded<R>
         let count = lights.len();
         while lights.len() < 512 {
             lights.push(PointLight {
-                propagation: [0., 0., 0., 0.],
+                attenuation: [0.0, 0.0, 0.0, 0.0],
                 color: [0., 0., 0., 0.],
                 center: [0., 0., 0., 0.],
             })
@@ -349,17 +374,20 @@ impl<R> Pass<R> for DrawShaded<R>
 
         // every entity gets drawn
         for e in &scene.fragments {
-            encoder.update_constant_buffer(&self.vertex,
-                                           &VertexArgs {
-                                               proj: scene.camera.projection,
-                                               view: scene.camera.view,
-                                               model: e.transform,
-                                           });
+            encoder.update_constant_buffer(
+                &self.vertex,
+                &VertexArgs {
+                    proj: scene.camera.projection,
+                    view: scene.camera.view,
+                    model: e.transform,
+                }
+            );
 
             encoder.update_constant_buffer(&self.fragment, &FragmentArgs { light_count: count as i32 });
 
             let ka = e.ka.to_view(&self.ka, encoder);
             let kd = e.kd.to_view(&self.kd, encoder);
+            let ks = e.ks.to_view(&self.ks, encoder);
 
             encoder.draw(&e.slice,
                          &self.pso,
@@ -372,6 +400,8 @@ impl<R> Pass<R> for DrawShaded<R>
                              out_depth: target.output_depth.clone(),
                              ka: (ka, self.sampler.clone()),
                              kd: (kd, self.sampler.clone()),
+                             ks: (ks, self.sampler.clone()),
+                             ns: e.ns,
                          });
         }
     }
@@ -420,8 +450,6 @@ impl<R> Pass<R> for Wireframe<R>
     fn apply<C>(&self, _: &pass::Wireframe, target: &ColorBuffer<R>, _: &::Pipeline, scene: &::Scene<R>, encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
-        // let scene = &scenes.scenes[&arg.scene];
-        // let camera = &scenes.cameras[&arg.camera];
 
         // every entity gets drawn
         for e in &scene.fragments {

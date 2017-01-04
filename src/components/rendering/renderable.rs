@@ -3,21 +3,44 @@ use components::rendering::Texture;
 use ecs::{Component, VecStorage};
 
 #[derive(Clone)]
-/// This struct is a `Component`, which combines geometry and ka, kd textures.
-/// Every `Renderable`, `Transform` pair attached to an entity inside the `World`
-/// is rendered by `GfxDevice::render_world` method.
+/// A `Component` that can be attached to an ECS `Entity` to render it onscreen.
+///
+/// It combines geometry and various textures used in lighting calculations
+/// to represent an entity on the screen. Every `Renderable`, `Transform`
+/// pair attached to an entity inside the ECS `World` is rendered by the
+/// `GfxDevice::render_world` method.
 pub struct Renderable {
+    /// The geometry that will be rendered
     pub mesh: Mesh,
-    pub ka: Texture,
-    pub kd: Texture,
+
+    /// Texture used in ambient lighting calculations
+    pub ambient: Texture,
+
+    /// Texture used in diffuse lighting calculations
+    pub diffuse: Texture,
+
+    /// Texture used in specular lighting calculations
+    pub specular: Texture,
+
+    /// Specular exponent used in lighting calculations
+    pub specular_exponent: f32,
 }
 
 impl Renderable {
-    pub fn new(mesh: Mesh, ka: Texture, kd: Texture) -> Renderable {
+    /// Creates a new renderable. You will probably want not use this directly.
+    /// Instead, use the `AssetManager::create_renderable` function.
+    pub fn new(mesh: Mesh,
+               ambient: Texture,
+               diffuse: Texture,
+               specular: Texture,
+               specular_exponent: f32) -> Renderable {
+
         Renderable {
             mesh: mesh,
-            ka: ka,
-            kd: kd,
+            ambient: ambient,
+            diffuse: diffuse,
+            specular: specular,
+            specular_exponent: specular_exponent,
         }
     }
 }

@@ -12,7 +12,7 @@
 //! [bk]: https://www.amethyst.rs/book/
 //!
 //! This project is a work in progress and is very incomplete. Pardon the dust!
-//! //! # Example
+//! # Example
 //!
 //! ```ignore
 //! extern crate amethyst;

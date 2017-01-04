@@ -48,6 +48,10 @@ path = "examples/04_pong/main.rs"
 name = "assets"
 path = "examples/06_assets/main.rs"
 
+[[example]]
+name = "lighting"
+path = "examples/08_lighting/main.rs"
+
 [dev-dependencies]
 gfx = "0.12"
 
