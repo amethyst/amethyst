@@ -20,8 +20,9 @@ use ecs::Join;
 use event::WindowEvent;
 use world_resources;
 use gfx_device::gfx_device_inner::GfxDeviceInner;
+use gfx_device::gfx::Device;
 
-/// This struct holds all the graphics resources (except `MainTarget`) required to render a scene.
+/// This struct holds all the graphics resources (except `MainTarget`) required to render a `Scene`, `Pipeline` pair.
 pub struct GfxDevice {
     gfx_device_inner: GfxDeviceInner,
 }
@@ -42,7 +43,7 @@ impl GfxDevice {
         }
     }
 
-    /// Render all entities with `Renderable` components in `World`.
+    /// Render all `Entity`s with `Renderable` components in `World`.
     pub fn render_world(&mut self, world: &mut ecs::World, pipeline: &renderer::Pipeline) {
         use components::rendering::{MeshInner, TextureInner, Renderable};
         use components::transform::Transform;
@@ -78,34 +79,31 @@ impl GfxDevice {
                 let camera = renderer::Camera::new(projection_mat, view_mat);
 
                 let mut scene = renderer::Scene::<gfx_device_gl::Resources>::new(camera);
+                let entities = world.entities();
                 let renderables = world.read::<Renderable>();
                 let global_transforms = world.read::<Transform>();
-                // Add all entities which only have Renderable component attached to them to the scene.
-                for (renderable, _) in (&renderables, !&global_transforms).iter() {
-                    // If Transform is not specified use the identity transform.
-                    if let Some(fragment) = unwrap_renderable(renderable, &Transform::default()) {
+                // Add all `Entity`s with `Renderable` components attached to them to the `Scene`.
+                for (renderable, entity) in (&renderables, &entities).iter() {
+                    let global_transform = match global_transforms.get(entity) {
+                        Some(global_transform) => global_transform.clone(),
+                        None => Transform::default(),
+                    };
+                    if let Some(fragment) = unwrap_renderable(renderable, &global_transform) {
                         scene.fragments.push(fragment);
                     }
                 }
-                // Add all entities which have a Renderable, Transform pair attached to them to the scene.
-                for (renderable, global_transform) in (&renderables, &global_transforms).iter() {
-                    if let Some(fragment) = unwrap_renderable(renderable, global_transform) {
-                        scene.fragments.push(fragment);
-                    }
-                }
+                // Add all `Light`s to the `Scene`.
                 let lights = world.read::<renderer::Light>();
-                // Add all Lights to the scene.
-                for light in lights.iter() {
-                    scene.lights.push(light.clone());
-                }
-                // Render the scene.
+                scene.lights.extend(lights.iter());
+                // Render the `Scene`.
                 renderer.submit(pipeline, &scene, device);
                 window.swap_buffers().unwrap();
-                // Function that creates Fragments from Renderable, Transform pairs.
+                device.cleanup();
+                // Function that creates `Fragment`s from `Renderable`, `Transform` pairs.
                 fn unwrap_renderable(renderable: &Renderable, global_transform: &Transform) -> Option<Fragment<gfx_device_gl::Resources>> {
                     let (buffer, slice) = match renderable.mesh.mesh_inner {
                         MeshInner::OpenGL { ref buffer,
-                                            ref slice } => { (buffer.clone(), slice.clone()) },
+                                            ref slice } => (buffer.clone(), slice.clone()),
                         _ => return None,
                     };
                     let ka = match renderable.ka.texture_inner {
