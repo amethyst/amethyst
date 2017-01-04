@@ -45,7 +45,6 @@ impl State for Example {
     fn on_start(&mut self, world: &mut World, asset_manager: &mut AssetManager, pipeline: &mut Pipeline) {
         use amethyst::renderer::pass::{Clear, DrawShaded};
         use amethyst::renderer::{Layer, Light};
-        use amethyst::components::transform::Transform;
         use amethyst::world_resources::camera::{Camera, Projection};
         use amethyst::world_resources::ScreenDimensions;
 
@@ -81,13 +80,11 @@ impl State for Example {
         let renderable = asset_manager.create_renderable("Mesh000", "dark_blue", "green").unwrap();
         world.create_now()
             .with(renderable)
-            .with(Transform::default())
             .build();
 
         let renderable = asset_manager.create_renderable("Mesh001", "dark_blue", "green").unwrap();
         world.create_now()
             .with(renderable)
-            .with(Transform::default())
             .build();
 
         let light = Light {
