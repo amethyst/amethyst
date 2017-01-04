@@ -21,22 +21,22 @@ struct Example;
 impl State for Example {
     fn on_start(&mut self, world: &mut World, asset_manager: &mut AssetManager, pipeline: &mut Pipeline) {
         use amethyst::renderer::pass::{Clear, DrawShaded};
-        use amethyst::renderer::{Layer, Light};
+        use amethyst::renderer::{Layer, PointLight};
         use amethyst::world_resources::camera::{Projection, Camera};
         use amethyst::world_resources::ScreenDimensions;
-        use amethyst::components::rendering::{Texture, Mesh, Renderable};
-        let layer =
-            Layer::new("main",
-                        vec![
-                            Clear::new([0.0, 0.0, 0.0, 1.0]),
-                            DrawShaded::new("main", "main"),
-                        ]);
+        use amethyst::components::rendering::{Texture, Mesh};
+
+        let layer = Layer::new("main", vec![
+            Clear::new([0.0, 0.0, 0.0, 1.0]),
+            DrawShaded::new("main", "main"),
+        ]);
         pipeline.layers = vec![layer];
+
         {
             let dimensions = world.read_resource::<ScreenDimensions>();
             let mut camera = world.write_resource::<Camera>();
             camera.projection = Projection::Perspective {
-                fov: 90.0,
+                fov: 60.0,
                 aspect_ratio: dimensions.aspect_ratio,
                 near: 0.1,
                 far: 100.0,
@@ -44,26 +44,27 @@ impl State for Example {
             camera.eye = [5.0, 0.0, 0.0];
             camera.target = [0.0, 0.0, 0.0];
         }
+
         let sphere_vertices = gen_sphere(32, 32);
         asset_manager.register_asset::<Mesh>();
         asset_manager.register_asset::<Texture>();
         asset_manager.load_asset_from_data::<Mesh, Vec<VertexPosNormal>>("sphere", sphere_vertices);
-        asset_manager.load_asset_from_data::<Texture, [f32; 4]>("dark_blue", [0.0, 0.0, 0.01, 1.0]);
-        asset_manager.load_asset_from_data::<Texture, [f32; 4]>("green", [0.0, 1.0, 0.0, 1.0]);
-        let sphere = asset_manager.create_renderable("sphere", "dark_blue", "green").unwrap();
+        asset_manager.load_asset_from_data::<Texture, [f32; 4]>("blue", [0.0, 0.0, 1.0, 1.0]);
+        asset_manager.load_asset_from_data::<Texture, [f32; 4]>("white", [1.0, 1.0, 1.0, 1.0]);
+
+        let sphere = asset_manager.create_renderable("sphere", "blue", "white", "white", 1.0).unwrap();
         world.create_now()
-            .with::<Renderable>(sphere)
+            .with(sphere)
             .build();
-        let light = Light {
-            color: [1.0, 1.0, 1.0, 1.0],
-            radius: 1.0,
+
+        let light = PointLight {
             center: [2.0, 2.0, 2.0],
-            propagation_constant: 0.0,
-            propagation_linear: 0.0,
-            propagation_r_square: 1.0,
+            radius: 5.0,
+            intensity: 3.0,
+            ..Default::default()
         };
         world.create_now()
-            .with::<Light>(light)
+            .with(light)
             .build();
     }
 

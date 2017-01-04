@@ -53,7 +53,7 @@ impl<R, C> Renderer<R, C>
     where R: gfx::Resources,
           C: gfx::CommandBuffer<R>
 {
-    /// Create a new Render pipline
+    /// Create a new Render pipeline
     pub fn new(combuf: C) -> Renderer<R, C> {
         Renderer {
             command_buffer: combuf.into(),
@@ -155,14 +155,20 @@ impl<R: gfx::Resources> Texture<R> {
     {
         match self {
             &Texture::Constant(color) => {
-                let color: [[u8; 4]; 1] = [[(color[0] * 255.) as u8, (color[1] * 255.) as u8, (color[2] * 255.) as u8, (color[3] * 255.) as u8]];
-                encoder.update_texture::<_, gfx::format::Rgba8>(&texture.texture,
-                                                             None,
-                                                             texture.texture
-                                                                 .get_info()
-                                                                 .to_image_info(0),
-                                                             &color[..])
-                    .unwrap();
+                let color: [[u8; 4]; 1] = [[
+                    (color[0] * 255.) as u8,
+                    (color[1] * 255.) as u8,
+                    (color[2] * 255.) as u8,
+                    (color[3] * 255.) as u8,
+                ]];
+
+                encoder.update_texture::<_, gfx::format::Rgba8>(
+                    &texture.texture,
+                    None,
+                    texture.texture.get_info().to_image_info(0),
+                    &color[..]
+                ).unwrap();
+
                 texture.view.clone()
             }
             &Texture::Texture(ref tex) => tex.clone(),
@@ -174,7 +180,7 @@ impl<R: gfx::Resources> Texture<R> {
 #[derive(Clone)]
 pub struct Fragment<R: gfx::Resources> {
     /// The transform matrix to apply to the matrix, this
-    /// is sometimes refereed to as the model matrix
+    /// is sometimes referred to as the model matrix
     pub transform: [[f32; 4]; 4],
     /// The vertex buffer
     pub buffer: gfx::handle::Buffer<R, VertexPosNormal>,
@@ -184,31 +190,91 @@ pub struct Fragment<R: gfx::Resources> {
     pub ka: Texture<R>,
     /// diffuse color
     pub kd: Texture<R>,
+    /// specular color
+    pub ks: Texture<R>,
+    /// specular exponent
+    pub ns: f32,
 }
 
-/// A basic light
+
+/// Represents a point light. Lighting calculations are based off of
+/// the Frostbite engine's lighting, which is explained in detail here:
+/// http://www.frostbite.com/wp-content/uploads/2014/11/course_notes_moving_frostbite_to_pbr.pdf
+/// The particular equation used for our calculations is Eq. 26, and
+/// the `PointLight` properties below map as `I -> intensity`,
+/// `radius -> lightRadius`, and `n -> smoothness`.
 #[derive(Copy, Clone)]
-pub struct Light {
-    /// The XYZ coordinate of the light
+pub struct PointLight {
+    /// The XYZ coordinate of this light
     pub center: [f32; 3],
-    /// How big the light is radius, lighting
-    /// passes are not required to render the light
-    /// beyond this radius
-    pub radius: f32,
 
     /// The color of light emitted
     pub color: [f32; 4],
-    /// constant, propagation means no falloff of the light
-    /// emission from distance. Useful for the sun.
-    pub propagation_constant: f32,
-    /// linear level drops
-    pub propagation_linear: f32,
-    /// cubic light level drop
-    pub propagation_r_square: f32,
+
+    /// The brightness of this light
+    pub intensity: f32,
+
+    /// What distance this light's effects will be clamped to
+    pub radius: f32,
+
+    /// How smooth the transition from light to dark is at the edge
+    /// of this light's radius
+    pub smoothness: f32,
 }
 
-impl Component for Light {
-    type Storage = VecStorage<Light>;
+impl Default for PointLight {
+    fn default() -> PointLight {
+        PointLight {
+            color: [1.0, 1.0, 1.0, 1.0],
+            center: [0.0, 0.0, 0.0],
+            intensity: 10.0,
+            radius: 10.0,
+            smoothness: 4.0,
+        }
+    }
+}
+
+impl Component for PointLight {
+    type Storage = VecStorage<PointLight>;
+}
+
+
+/// Represents a directional light
+#[derive(Copy, Clone)]
+pub struct DirectionalLight {
+    /// The color of light emitted
+    pub color: [f32; 4],
+
+    /// Which direction this light shines towards
+    pub direction: [f32; 3],
+}
+
+impl Default for DirectionalLight {
+    fn default() -> DirectionalLight {
+        DirectionalLight {
+            color: [1.0; 4],
+            direction: [-1.0; 3],
+        }
+    }
+}
+
+impl Component for DirectionalLight {
+    type Storage = VecStorage<DirectionalLight>;
+}
+
+
+/// Represents an ambient light
+pub struct AmbientLight {
+    // How powerful the ambient light factor is
+    pub power: f32,
+}
+
+impl Default for AmbientLight {
+    fn default() -> AmbientLight {
+        AmbientLight {
+            power: 0.01,
+        }
+    }
 }
 
 /// A scene is a collection of fragments and
@@ -217,8 +283,16 @@ impl Component for Light {
 pub struct Scene<R: gfx::Resources> {
     /// A list of fragments
     pub fragments: Vec<Fragment<R>>,
-    /// A list of lights
-    pub lights: Vec<Light>,
+
+    /// A list of point lights
+    pub point_lights: Vec<PointLight>,
+
+    /// A list of directional lights
+    pub directional_lights: Vec<DirectionalLight>,
+
+    /// The ambient light factor
+    pub ambient_light: f32,
+
     /// A camera used to render this scene
     pub camera: Camera,
 }
@@ -228,7 +302,9 @@ impl<R: gfx::Resources> Scene<R> {
     pub fn new(camera: Camera) -> Scene<R> {
         Scene {
             fragments: vec![],
-            lights: vec![],
+            point_lights: vec![],
+            directional_lights: vec![],
+            ambient_light: 0.01,
             camera: camera,
         }
     }

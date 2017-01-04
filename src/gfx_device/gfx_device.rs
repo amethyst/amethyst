@@ -66,9 +66,14 @@ impl GfxDevice {
                 scene.fragments.push(fragment);
             }
         }
+
         // Add all `Light`s to the `Scene`.
-        let lights = world.read::<renderer::Light>();
-        scene.lights.extend(lights.iter());
+        scene.point_lights.extend(world.read::<renderer::PointLight>().iter());
+        scene.directional_lights.extend(world.read::<renderer::DirectionalLight>().iter());
+
+        let ambient_light = world.read_resource::<renderer::AmbientLight>();
+        scene.ambient_light = ambient_light.power;
+
         // Render the `Scene`.
         self.renderer.submit(pipeline, &scene, &mut self.device);
         self.window.swap_buffers().unwrap();
@@ -76,14 +81,14 @@ impl GfxDevice {
         // Function that creates `Fragment`s from `Renderable`, `Transform` pairs.
         fn unwrap_renderable(renderable: &Renderable, global_transform: &Transform) -> Option<Fragment<gfx_types::Resources>> {
             let mesh = &renderable.mesh;
-            let ka = &renderable.ka;
-            let kd = &renderable.kd;
             Some(Fragment {
                 transform: global_transform.clone().into(),
                 buffer: mesh.buffer.clone(),
                 slice: mesh.slice.clone(),
-                ka: ka.clone(),
-                kd: kd.clone(),
+                ka: (&renderable.ambient).clone(),
+                kd: (&renderable.diffuse).clone(),
+                ks: (&renderable.specular).clone(),
+                ns: renderable.specular_exponent,
             })
         }
     }

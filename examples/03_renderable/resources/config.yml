@@ -3,6 +3,6 @@ fullscreen: false
 max_dimensions: null
 min_dimensions: null
 multisampling: 1
-title: "Renderable example"
+title: "Renderable Example"
 visibility: true
 vsync: true

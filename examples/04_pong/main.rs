@@ -288,7 +288,7 @@ impl State for Pong {
         asset_manager.load_asset_from_data::<Texture, [f32; 4]>("white", [1.0, 1.0, 1.0, 1.0]);
         let square_vertices = gen_rectangle(1.0, 1.0);
         asset_manager.load_asset_from_data::<Mesh, Vec<VertexPosNormal>>("square", square_vertices);
-        let square = asset_manager.create_renderable("square", "white", "white").unwrap();
+        let square = asset_manager.create_renderable("square", "white", "white", "white", 1.0).unwrap();
 
         // Create a ball entity
         let mut ball = Ball::new();
