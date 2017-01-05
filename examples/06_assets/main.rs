@@ -3,6 +3,7 @@
 //! various paths.
 
 extern crate amethyst;
+extern crate cgmath;
 
 use std::env::set_var;
 use std::str;
@@ -19,6 +20,7 @@ use amethyst::renderer::{Layer, Light, Pipeline, VertexPosNormal};
 use amethyst::renderer::pass::{Clear, DrawShaded};
 use amethyst::world_resources::camera::{Camera, Projection};
 use amethyst::world_resources::ScreenDimensions;
+use cgmath::{Deg, Euler, Quaternion};
 
 // Implement custom asset loader that reads files with a simple format of
 // 1 vertex and 1 normal per line, with coordinates separated by whitespace.
@@ -118,7 +120,7 @@ impl State for Example {
         // Add teapot and lid to scene
         for mesh in vec!["lid", "teapot"].iter() {
             let mut transform = LocalTransform::default();
-            transform.rotation = [0.5, 0.5, -0.5, -0.5];
+            transform.rotation = Quaternion::from(Euler::new(Deg(90.0), Deg(-90.0), Deg(0.0))).into();
             transform.translation = [5.0, 0.0, 5.0];
             let renderable = asset_manager.create_renderable(mesh, "dark_blue", "green").unwrap();
             world.create_now()
@@ -135,6 +137,8 @@ impl State for Example {
         transform.scale = [2.0, 2.0, 2.0];
         world.create_now()
             .with(renderable)
+            .with(transform)
+            .with(Transform::default())
             .build();
 
         // Add cube to scene
@@ -144,13 +148,15 @@ impl State for Example {
         transform.scale = [2.0, 2.0, 2.0];
         world.create_now()
             .with(renderable)
+            .with(transform)
+            .with(Transform::default())
             .build();
 
         // Add sphere to scene
         let renderable = asset_manager.create_renderable("sphere", "grass", "green").unwrap();
         let mut transform = LocalTransform::default();
         transform.translation = [-5.0, 0.0, 7.5];
-        transform.rotation = [0.70711, 0.70711, 0.0, 0.0];
+        transform.rotation = Quaternion::from(Euler::new(Deg(90.0), Deg(0.0), Deg(0.0))).into();
         transform.scale = [0.15, 0.15, 0.15];
         world.create_now()
             .with(renderable)
