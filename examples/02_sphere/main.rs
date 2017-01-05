@@ -24,7 +24,6 @@ impl State for Example {
         use amethyst::renderer::{Layer, Light};
         use amethyst::world_resources::camera::{Projection, Camera};
         use amethyst::world_resources::ScreenDimensions;
-        use amethyst::components::transform::Transform;
         use amethyst::components::rendering::{Texture, Mesh, Renderable};
         let layer =
             Layer::new("main",
@@ -54,7 +53,6 @@ impl State for Example {
         let sphere = asset_manager.create_renderable("sphere", "dark_blue", "green").unwrap();
         world.create_now()
             .with::<Renderable>(sphere)
-            .with::<Transform>(Transform::default())
             .build();
         let light = Light {
             color: [1.0, 1.0, 1.0, 1.0],

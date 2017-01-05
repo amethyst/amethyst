@@ -135,8 +135,6 @@ impl State for Example {
         transform.scale = [2.0, 2.0, 2.0];
         world.create_now()
             .with(renderable)
-            .with(transform)
-            .with(Transform::default())
             .build();
 
         // Add cube to scene
@@ -146,8 +144,6 @@ impl State for Example {
         transform.scale = [2.0, 2.0, 2.0];
         world.create_now()
             .with(renderable)
-            .with(transform)
-            .with(Transform::default())
             .build();
 
         // Add sphere to scene
