@@ -30,7 +30,11 @@ pub struct Texture {
 
 /// A struct for creating a new texture from raw data
 pub struct TextureLoadData<'a> {
+    // Which kind of texture storage will be used
     pub kind: Kind,
+
+    // Slice of slices with each inner slice representing an image/texture's
+    // pixels laid out contiguously.
     pub raw: &'a [&'a [<<ColorFormat as Formatted>::Surface as SurfaceTyped>::DataType]],
 }
 

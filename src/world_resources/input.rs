@@ -30,7 +30,7 @@ impl InputHandler {
                         Entry::Occupied(_) => {
                             // nop
                             // Allows more accurate `key_once` calls,
-                            // I.e `key_once(key)` is queried after 
+                            // I.e `key_once(key)` is queried after
                             // second `Pressed` event.
                         },
                         Entry::Vacant(entry) => {

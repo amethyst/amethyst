@@ -49,13 +49,14 @@ name = "assets"
 path = "examples/06_assets/main.rs"
 
 [dev-dependencies]
-obj-rs = "0.4.16"
 gfx = "0.12"
 
 [dependencies]
-cgmath="0.11"
-glutin = "0.6"
+cgmath = "0.11"
+genmesh = "0.4"
 gfx = "0.12"
 gfx_device_gl = "0.11"
 gfx_window_glutin = "0.12"
-genmesh="0.4"
+glutin = "0.6"
+imagefmt = "4.0.0"
+wavefront_obj = "5.0.0"
