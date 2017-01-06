@@ -12,7 +12,7 @@ use gfx_device::main_target::MainTarget;
 use self::amethyst_renderer::Renderer;
 use self::amethyst_renderer::target::{ColorFormat, DepthFormat};
 
-/// Create a `(GfxDevice, GfxLoader, MainTarget)` tuple from `DisplayConfig`
+/// Create a `(GfxDevice, Factory, MainTarget)` tuple from `DisplayConfig`
 pub fn video_init(display_config: DisplayConfig) -> (GfxDevice, Factory, MainTarget) {
     #[cfg(feature="opengl")]
     return new_gl(&display_config);
@@ -20,11 +20,12 @@ pub fn video_init(display_config: DisplayConfig) -> (GfxDevice, Factory, MainTar
     return new_d3d(&display_config);
 }
 
-#[cfg(windows)]
-fn new_d3d() -> (GfxDevice, GfxLoader, MainTarget) {
+#[cfg(all(windows, feature="direct3d"))]
+fn new_d3d() -> (GfxDevice, Factory, MainTarget) {
     unimplemented!();
 }
 
+#[cfg(feature="opengl")]
 fn new_gl(display_config: &DisplayConfig) -> (GfxDevice, Factory, MainTarget) {
     let title = display_config.title.clone();
     let multisampling = display_config.multisampling.clone();
