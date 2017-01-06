@@ -6,4 +6,3 @@ multisampling: 1
 title: "Assets Example"
 visibility: true
 vsync: true
-backend: OpenGL

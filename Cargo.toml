@@ -60,3 +60,12 @@ gfx_window_glutin = "0.12"
 glutin = "0.6"
 imagefmt = "4.0.0"
 wavefront_obj = "5.0.0"
+
+[target.'cfg(windows)'.dependencies]
+gfx_device_dx11 = "0.4"
+gfx_window_dxgi = "0.5"
+
+[features]
+default = ["opengl"]
+opengl = []
+direct3d = []

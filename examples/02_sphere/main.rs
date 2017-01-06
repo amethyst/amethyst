@@ -81,7 +81,7 @@ impl State for Example {
 }
 
 fn main() {
-    let path = format!("{}/examples/01_window/resources/config.yml",
+    let path = format!("{}/examples/02_sphere/resources/config.yml",
                         env!("CARGO_MANIFEST_DIR"));
     let display_config = DisplayConfig::from_file(path).unwrap();
     let mut game = Application::build(Example, display_config).done();

@@ -13,6 +13,5 @@ config!(
         pub vsync: bool = true,
         pub multisampling: u16 = 1,
         pub visibility: bool = true,
-        pub backend: String = "Null".to_string(),
     }
 );

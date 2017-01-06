@@ -2,8 +2,6 @@ use ecs::{Component, VecStorage};
 
 /// Absolute transformation (transformed from origin).
 /// Used for rendering position and orientation.
-/// Every `Renderable`, `Transform` pair attached to an `Entity`
-/// inside the `World` is rendered by `GfxDevice::render_world` method.
 #[derive(Debug, Copy, Clone)]
 pub struct Transform(pub [[f32; 4]; 4]);
 

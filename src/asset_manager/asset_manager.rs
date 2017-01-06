@@ -55,6 +55,7 @@ pub trait AssetLoaderRaw: Sized {
 
 /// A trait for loading assets from arbitrary data
 pub trait AssetLoader<A> {
+    // TODO: Return Ok instead of Option
     fn from_data(assets: &mut Assets, data: Self) -> Option<A>;
 }
 
