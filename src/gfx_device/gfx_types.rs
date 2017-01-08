@@ -12,9 +12,9 @@ mod types {
 mod types {
     extern crate gfx_device_dx11;
     extern crate gfx_window_dxgi;
-    pub type Window = gfx_window_dxgi;
+    pub type Window = gfx_window_dxgi::Window;
     pub type Resources = gfx_device_dx11::Resources;
-    pub type CommandBuffer = gfx_device_dx11::CommandBuffer;
+    pub type CommandBuffer = gfx_device_dx11::CommandBuffer<gfx_device_dx11::DeferredContext>;
     pub type Factory = gfx_device_dx11::Factory;
     pub type Device = gfx_device_dx11::Device;
 }
