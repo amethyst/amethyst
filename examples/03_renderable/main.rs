@@ -29,7 +29,7 @@ impl Example {
 impl State for Example {
     fn on_start(&mut self, world: &mut World, asset_manager: &mut AssetManager, pipeline: &mut Pipeline) {
         use amethyst::renderer::pass::{Clear, DrawShaded};
-        use amethyst::renderer::{Layer, Light};
+        use amethyst::renderer::{Layer, PointLight};
         use amethyst::world_resources::camera::{Projection, Camera};
         use amethyst::world_resources::ScreenDimensions;
         use amethyst::components::transform::{LocalTransform, Transform};
@@ -58,29 +58,25 @@ impl State for Example {
         asset_manager.register_asset::<Mesh>();
         asset_manager.register_asset::<Texture>();
         asset_manager.load_asset_from_data::<Mesh, Vec<VertexPosNormal>>("sphere", sphere_vertices);
-        asset_manager.load_asset_from_data::<Texture, [f32; 4]>("dark_blue", [0.0, 0.0, 0.01, 1.0]);
+        asset_manager.load_asset_from_data::<Texture, [f32; 4]>("blue", [0.0, 0.0, 1.0, 1.0]);
         asset_manager.load_asset_from_data::<Texture, [f32; 4]>("green", [0.0, 1.0, 0.0, 1.0]);
-        let sphere = asset_manager.create_renderable("sphere", "dark_blue", "green").unwrap();
+        let sphere = asset_manager.create_renderable("sphere", "blue", "green", "green", 1.0).unwrap();
         world.create_now()
             .with::<Renderable>(sphere)
             .with::<LocalTransform>(LocalTransform::default())
             .with::<Transform>(Transform::default())
             .build();
-        let light = Light {
-            color: [1.0, 1.0, 1.0, 1.0],
-            radius: 1.0,
+        let light = PointLight {
             center: [2.0, 2.0, 2.0],
-            propagation_constant: 0.0,
-            propagation_linear: 0.0,
-            propagation_r_square: 1.0,
+            ..Default::default()
         };
         world.create_now()
-            .with::<Light>(light)
+            .with::<PointLight>(light)
             .build();
     }
 
     fn update(&mut self, world: &mut World, _: &mut AssetManager, _: &mut Pipeline) -> Trans {
-        use amethyst::renderer::Light;
+        use amethyst::renderer::PointLight;
         use amethyst::world_resources::Camera;
         use amethyst::world_resources::Time;
         use amethyst::components::transform::LocalTransform;
@@ -99,7 +95,7 @@ impl State for Example {
         let angular_velocity_light = 0.5;
         let phase = self.t * angular_velocity_light;
         // Test Light mutation
-        let mut lights = world.write::<Light>();
+        let mut lights = world.write::<PointLight>();
         for light in (&mut lights).iter() {
             light.center = [2.0 * phase.sin(), 2., 2.0 * phase.cos()];
             let angular_velocity_color = 0.7;
