@@ -69,12 +69,9 @@ pub static DRAW_FRAGMENT_SRC: &'static [u8] = b"
     out vec4 o_Normal;
 
     void main() {
-        // o_Ka = texture(t_Ka, v_TexCoord);
-        // o_Kd = texture(t_Kd, v_TexCoord);
-        // o_Ks = texture(t_Ks, v_TexCoord);
-        o_Ka = vec4(1.0);
-        o_Kd = vec4(1.0);
-        o_Ks = vec4(1.0);
+        o_Ka = texture(t_Ka, v_TexCoord);
+        o_Kd = texture(t_Kd, v_TexCoord);
+        o_Ks = texture(t_Ks, v_TexCoord);
         o_Normal = vec4(normalize(v_Normal), 0.);
     }
 ";
@@ -104,30 +101,41 @@ pub static DEPTH_FRAGMENT_SRC: &'static [u8] = b"
 
 pub static LIGHT_FRAGMENT_SRC: &'static [u8] = b"
     #version 150 core
-    #define MAX_NUM_TOTAL_LIGHTS 128
 
     layout (std140) uniform u_FragmentLightArgs {
         mat4 u_Proj;
         mat4 u_InvViewProj;
         vec4 u_Viewport;
-        int u_LightCount;
+        int u_PointLightCount;
+        int u_DirectionalLightCount;
     };
 
-    struct Light {
+    struct PointLight {
         vec4 attenuation;
         vec4 center;
         vec4 color;
     };
 
-    layout (std140) uniform u_Lights {
-        Light light[MAX_NUM_TOTAL_LIGHTS];
+    struct DirectionalLight {
+        vec4 color;
+        vec4 direction;
+    };
+
+    layout (std140) uniform u_PointLights {
+        PointLight plight[128];
+    };
+
+    layout (std140) uniform u_DirectionalLights {
+        DirectionalLight dlight[16];
     };
 
     uniform sampler2D t_Ka;
     uniform sampler2D t_Kd;
     uniform sampler2D t_Ks;
+    uniform float f_Ns;
     uniform sampler2D t_Depth;
     uniform sampler2D t_Normal;
+    uniform float f_Ambient;
 
     in vec2 v_TexCoord;
     out vec4 o_Color;
@@ -155,48 +163,67 @@ pub static LIGHT_FRAGMENT_SRC: &'static [u8] = b"
 
         vec4 pos = calc_pos_from_window(vec3(gl_FragCoord.xy, depth));
 
-        vec4 lighting = vec4(ka);
+        vec4 lighting = vec4(0.0);
 
-        for (int i = 0; i < u_LightCount; i++) {
+        for (int i = 0; i < u_PointLightCount; i++) {
             // Calculate diffuse light
-            vec4 lightDir = normalize(light[i].center - pos);
+            vec4 lightDir = normalize(plight[i].center - pos);
             float diff = max(dot(lightDir, normal), 0.0);
-            vec4 diffuse = diff * kd * light[i].color;
+            vec4 diffuse = diff * plight[i].color * kd;
 
             // Calculate specular light
             vec4 viewDir = normalize(-gl_FragCoord);
             vec4 reflectDir = reflect(-lightDir, normal);
             vec4 halfwayDir = normalize(lightDir + viewDir);
-            float spec = pow(max(dot(normal, halfwayDir), 0.0), 16.0);
-            vec4 specular = spec * light[i].color;
+            float spec = pow(max(dot(normal, halfwayDir), 0.0), f_Ns);
+            vec4 specular = spec * plight[i].color * ks;
 
             // Calculate attenuation
-            float dist = length(light[i].center - pos);
-            float kc = light[i].attenuation[0];
-            float kl = light[i].attenuation[1];
-            float kq = light[i].attenuation[2];
+            float dist = length(plight[i].center - pos);
+            float kc = plight[i].attenuation[0];
+            float kl = plight[i].attenuation[1];
+            float kq = plight[i].attenuation[2];
             float attenuation = 1.0 / (kc + kl * dist + kq * dist * dist);
 
             lighting += attenuation * (diffuse + specular);
         }
 
-        // o_Color = lighting;
-        o_Color = normal;
+        for (int i = 0; i < u_DirectionalLightCount; i++) {
+            vec4 dir = dlight[i].direction;
+            float diff = max(dot(-dir, normal), 0.0);
+            vec4 diffuse = diff * dlight[i].color * kd;
+
+            vec4 viewDir = normalize(-gl_FragCoord);
+            vec4 reflectDir = reflect(-dir, normal);
+            vec4 halfwayDir = normalize(dir + viewDir);
+            float spec = pow(max(dot(normal, halfwayDir), 0.0), 16.0);
+            vec4 specular = spec * dlight[i].color * ks;
+
+            lighting += diffuse + specular;
+        }
+
+        o_Color = ka * f_Ambient + lighting;
     }
 ";
 
 gfx_defines!(
     constant PointLight {
-        propagation: [f32; 4] = "propagation",
+        attenuation: [f32; 4] = "attenuation",
         center: [f32; 4] = "center",
         color: [f32; 4] = "color",
+    }
+
+    constant DirectionalLight {
+        color: [f32; 4] = "color",
+        direction: [f32; 4] = "direction",
     }
 
     constant FragmentLightArgs {
         proj: [[f32; 4]; 4] = "u_Proj",
         inv_view_proj: [[f32; 4]; 4] = "u_InvViewProj",
         viewport: [f32; 4] = "u_Viewport",
-        light_count: i32 = "u_LightCount",
+        point_light_count: i32 = "u_PointLightCount",
+        directional_light_count: i32 = "u_DirectionalLightCount",
     }
 
     constant VertexArgs {
@@ -216,10 +243,13 @@ gfx_defines!(
         ka: gfx::TextureSampler<[f32; 4]> = "t_Ka",
         kd: gfx::TextureSampler<[f32; 4]> = "t_Kd",
         ks: gfx::TextureSampler<[f32; 4]> = "t_Ks",
+        ns: gfx::Global<f32> = "f_Ns",
+        ambient: gfx::Global<f32> = "f_Ambient",
         normal: gfx::TextureSampler<[f32; 4]> = "t_Normal",
         depth: gfx::TextureSampler<f32> = "t_Depth",
         out: gfx::BlendTarget<ColorFormat> = ("o_Color", gfx::state::MASK_ALL, gfx::preset::blend::MULTIPLY),
-        lights: gfx::ConstantBuffer<PointLight> = "u_Lights",
+        point_lights: gfx::ConstantBuffer<PointLight> = "u_PointLights",
+        directional_lights: gfx::ConstantBuffer<DirectionalLight> = "u_DirectionalLights",
         fragment_args: gfx::ConstantBuffer<FragmentLightArgs> = "u_FragmentLightArgs",
     }
 
@@ -478,7 +508,8 @@ impl<R> ::Pass<R> for BlitLayer<R>
 
 pub struct LightingPass<R: gfx::Resources> {
     buffer: Buffer<R, Vertex>,
-    lights: Buffer<R, PointLight>,
+    point_lights: Buffer<R, PointLight>,
+    directional_lights: Buffer<R, DirectionalLight>,
     fragment_args: Buffer<R, FragmentLightArgs>,
     slice: Slice<R>,
     sampler: gfx::handle::Sampler<R>,
@@ -496,10 +527,12 @@ impl<R: gfx::Resources> LightingPass<R> {
         let (buffer, slice) = create_screen_fill_triangle(factory);
         let sampler = factory.create_sampler(gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale, gfx::tex::WrapMode::Clamp));
 
-        let lights = factory.create_constant_buffer(128);
+        let point_lights = factory.create_constant_buffer(128);
+        let directional_lights = factory.create_constant_buffer(16);
         let fragment_args = factory.create_constant_buffer(1);
         LightingPass {
-            lights: lights,
+            point_lights: point_lights,
+            directional_lights: directional_lights,
             buffer: buffer,
             slice: slice,
             sampler: sampler,
@@ -516,59 +549,90 @@ impl<R> ::Pass<R> for LightingPass<R>
     type Arg = ::pass::Lighting;
     type Target = ::target::ColorBuffer<R>;
 
-    fn apply<C>(&self, arg: &::pass::Lighting, target: &::target::ColorBuffer<R>, pipeline: &::Pipeline, scene: &::Scene<R>, encoder: &mut gfx::Encoder<R, C>)
+    fn apply<C>(&self,
+                arg: &::pass::Lighting,
+                target: &::target::ColorBuffer<R>,
+                pipeline: &::Pipeline,
+                scene: &::Scene<R>,
+                encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
         let src = &pipeline.targets[&arg.gbuffer];
         let src = src.downcast_ref::<GeometryBuffer<R>>().unwrap();
-
         let (w, h, _, _) = src.kd.get_dimensions();
-        for lights in scene.lights.chunks(128) {
-            let mut lights: Vec<_> = lights.iter()
+
+        let inv_view_proj = Matrix4::from(scene.camera.view).invert().unwrap() *
+                            Matrix4::from(scene.camera.projection).invert().unwrap();
+
+        // Add lighting to scene in chunks of 128 lights at a time
+        // TODO: Why chunked?
+        for chunk in scene.point_lights.chunks(128) {
+            let blank_light = PointLight {
+                attenuation: [0.0, 0.0, 0.0, 0.0],
+                color: [0.0, 0.0, 0.0, 0.0],
+                center: [0.0, 0.0, 0.0, 0.0],
+            };
+            let mut point_lights: Vec<_> = scene.point_lights
+                .iter()
                 .map(|l| {
                     PointLight {
-                        propagation: pad(l.attenuation),
+                        attenuation: pad(l.attenuation),
                         color: l.color,
                         center: pad(l.center),
                     }
                 })
                 .collect();
+            point_lights.extend(vec![blank_light; 128 - scene.point_lights.len()]);
 
-            let count = lights.len();
-            while lights.len() < 128 {
-                lights.push(PointLight {
-                    propagation: [0., 0., 0., 0.],
-                    color: [0., 0., 0., 0.],
-                    center: [0., 0., 0., 0.],
+            // Add directional lights to scene
+            let blank_light = DirectionalLight {
+                color: [0.0, 0.0, 0.0, 0.0],
+                direction: [0.0, 0.0, 0.0, 0.0],
+            };
+
+            let mut directional_lights: Vec<_> = scene.directional_lights
+                .iter()
+                .map(|l| {
+                    DirectionalLight {
+                        color: l.color,
+                        direction: pad(l.direction),
+                    }
                 })
-            }
+                .collect();
+            directional_lights.extend(vec![blank_light; 16 - scene.directional_lights.len()]);
 
-            let inv_view_proj = Matrix4::from(scene.camera.view).invert().unwrap() *
-                                Matrix4::from(scene.camera.projection).invert().unwrap();
+            encoder.update_constant_buffer(
+                &self.fragment_args,
+                &FragmentLightArgs {
+                    inv_view_proj: inv_view_proj.into(),
+                    proj: scene.camera.projection,
+                    viewport: [0., 0., w as f32, h as f32],
+                    point_light_count: scene.point_lights.len() as i32,
+                    directional_light_count: scene.directional_lights.len() as i32,
+                }
+            );
 
-            encoder.update_constant_buffer(&self.fragment_args,
-                                           &FragmentLightArgs {
-                                               inv_view_proj: inv_view_proj.into(),
-                                               proj: scene.camera.projection,
-                                               viewport: [0., 0., w as f32, h as f32],
-                                               light_count: count as i32,
-                                           });
+            encoder.update_buffer(&self.point_lights, &point_lights[..], 0).unwrap();
+            encoder.update_buffer(&self.directional_lights, &directional_lights[..], 0).unwrap();
 
-            encoder.update_buffer(&self.lights, &lights[..], 0).unwrap();
-            encoder.draw(&self.slice,
-                         &self.pso,
-                         &light::Data {
-                             vbuf: self.buffer.clone(),
-                             ka: (src.texture_ka.clone(), self.sampler.clone()),
-                             kd: (src.texture_kd.clone(), self.sampler.clone()),
-                             ks: (src.texture_ks.clone(), self.sampler.clone()),
-                             normal: (src.texture_normal.clone(), self.sampler.clone()),
-                             depth: (src.texture_depth.clone(), self.sampler.clone()),
-                             out: target.color.clone(),
-                             fragment_args: self.fragment_args.clone(),
-                             lights: self.lights.clone(),
-                         });
-
+            encoder.draw(
+                &self.slice,
+                &self.pso,
+                &light::Data {
+                    vbuf: self.buffer.clone(),
+                    ka: (src.texture_ka.clone(), self.sampler.clone()),
+                    kd: (src.texture_kd.clone(), self.sampler.clone()),
+                    ks: (src.texture_ks.clone(), self.sampler.clone()),
+                    ns: 16.0,
+                    ambient: scene.ambient_light,
+                    normal: (src.texture_normal.clone(), self.sampler.clone()),
+                    depth: (src.texture_depth.clone(), self.sampler.clone()),
+                    out: target.color.clone(),
+                    fragment_args: self.fragment_args.clone(),
+                    point_lights: self.point_lights.clone(),
+                    directional_lights: self.directional_lights.clone(),
+                }
+            );
         }
     }
 }

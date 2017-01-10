@@ -210,9 +210,19 @@ pub struct PointLight {
 }
 
 impl PointLight {
+    /// Creates a new PointLight with the attenuation factors
+    /// set to create a light that falls below a cutoff at `radius`.
+    /// Since most monitors won't display anything less than an RGB
+    /// value of 1/255, this function uses that value as a cutoff.
     pub fn from_radius(radius: f32) -> PointLight {
-        // TODO(mechaxl): Implement this
-        PointLight { .. Default::default() }
+        let cutoff = 1.0 / 255.0;
+        let quadratic = ((1.0 / cutoff - 1.0) / radius - 0.1) / radius;
+
+        PointLight {
+            color: [1.0, 1.0, 1.0, 1.0],
+            center: [0.0, 0.0, 0.0],
+            attenuation: [1.0, 0.1, quadratic],
+        }
     }
 }
 
@@ -230,6 +240,45 @@ impl Component for PointLight {
     type Storage = VecStorage<PointLight>;
 }
 
+
+/// Represents a directional light
+#[derive(Copy, Clone)]
+pub struct DirectionalLight {
+    /// The color of light emitted
+    pub color: [f32; 4],
+
+    /// Which direction this light shines towards
+    pub direction: [f32; 3],
+}
+
+impl Default for DirectionalLight {
+    fn default() -> DirectionalLight {
+        DirectionalLight {
+            color: [1.0; 4],
+            direction: [-1.0; 3],
+        }
+    }
+}
+
+impl Component for DirectionalLight {
+    type Storage = VecStorage<DirectionalLight>;
+}
+
+
+/// Represents an ambient light
+pub struct AmbientLight {
+    // How powerful the ambient light factor is
+    pub power: f32,
+}
+
+impl Default for AmbientLight {
+    fn default() -> AmbientLight {
+        AmbientLight {
+            power: 0.01,
+        }
+    }
+}
+
 /// A scene is a collection of fragments and
 /// lights that make up the scene.
 #[derive(Clone)]
@@ -237,8 +286,14 @@ pub struct Scene<R: gfx::Resources> {
     /// A list of fragments
     pub fragments: Vec<Fragment<R>>,
 
-    /// A list of lights
-    pub lights: Vec<PointLight>,
+    /// A list of point lights
+    pub point_lights: Vec<PointLight>,
+
+    /// A list of directional lights
+    pub directional_lights: Vec<DirectionalLight>,
+
+    /// The ambient light factor
+    pub ambient_light: f32,
 
     /// A camera used to render this scene
     pub camera: Camera,
@@ -249,7 +304,9 @@ impl<R: gfx::Resources> Scene<R> {
     pub fn new(camera: Camera) -> Scene<R> {
         Scene {
             fragments: vec![],
-            lights: vec![],
+            point_lights: vec![],
+            directional_lights: vec![],
+            ambient_light: 0.01,
             camera: camera,
         }
     }

@@ -93,8 +93,11 @@ impl GfxDevice {
                     }
                 }
                 // Add all `Light`s to the `Scene`.
-                let lights = world.read::<renderer::PointLight>();
-                scene.lights.extend(lights.iter());
+                scene.point_lights.extend(world.read::<renderer::PointLight>().iter());
+                scene.directional_lights.extend(world.read::<renderer::DirectionalLight>().iter());
+
+                let ambient_light = world.read_resource::<renderer::AmbientLight>();
+                scene.ambient_light = ambient_light.power;
 
                 // Render the `Scene`.
                 renderer.submit(pipeline, &scene, device);
