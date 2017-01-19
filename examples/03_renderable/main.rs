@@ -159,7 +159,7 @@ impl State for Example {
             .build();
 
         // Add cone to scene
-        let renderable = asset_manager.create_renderable("cone", "white", "red", "blue", 10.0).unwrap();
+        let renderable = asset_manager.create_renderable("cone", "white", "red", "blue", 40.0).unwrap();
         let mut transform = LocalTransform::default();
         transform.translation = [-5.0, 5.0, 0.0];
         transform.scale = [2.0; 3];
@@ -219,7 +219,13 @@ impl State for Example {
         });
     }
 
-    fn handle_events(&mut self, events: &[WindowEvent], w: &mut World, _: &mut AssetManager, pipeline: &mut Pipeline) -> Trans {
+    fn handle_events(&mut self,
+                     events: &[WindowEvent],
+                     w: &mut World,
+                     _: &mut AssetManager,
+                     pipeline: &mut Pipeline)
+                     -> Trans {
+
         // Exit if user hits Escape or closes the window
         use amethyst::event::*;
         for event in events {
@@ -305,11 +311,11 @@ fn main() {
     //
     //     AMETHYST_ASSET_DIRS=/foo/bar cargo run
     let assets_path = format!("{}/examples/03_renderable/resources/textures",
-                   env!("CARGO_MANIFEST_DIR"));
+                              env!("CARGO_MANIFEST_DIR"));
     set_var("AMETHYST_ASSET_DIRS", assets_path);
 
     let path = format!("{}/examples/03_renderable/resources/config.yml",
-                   env!("CARGO_MANIFEST_DIR"));
+                       env!("CARGO_MANIFEST_DIR"));
     let display_config = DisplayConfig::from_file(path).unwrap();
     let mut game = Application::build(Example, display_config)
         .with::<ExampleProcessor>(ExampleProcessor, "example_processor", 1)

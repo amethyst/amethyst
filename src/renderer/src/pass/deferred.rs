@@ -196,7 +196,7 @@ pub static LIGHT_FRAGMENT_SRC: &'static [u8] = b"
             vec4 viewDir = normalize(-gl_FragCoord);
             vec4 reflectDir = reflect(-dir, normal);
             vec4 halfwayDir = normalize(dir + viewDir);
-            float spec = pow(max(dot(normal, halfwayDir), 0.0), 16.0);
+            float spec = pow(max(dot(normal, halfwayDir), 0.0), f_Ns);
             vec4 specular = spec * dlight[i].color * ks;
 
             lighting += diffuse + specular;
@@ -317,32 +317,35 @@ impl<R> ::Pass<R> for DrawPass<R>
     {
         // every entity gets drawn
         for f in &scene.fragments {
-            encoder.update_constant_buffer(&self.vertex,
-                                           &VertexArgs {
-                                               proj: scene.camera.projection,
-                                               view: scene.camera.view,
-                                               model: f.transform,
-                                           });
+            encoder.update_constant_buffer(
+                &self.vertex,
+                &VertexArgs {
+                    proj: scene.camera.projection,
+                    view: scene.camera.view,
+                    model: f.transform,
+                }
+            );
 
             let ka = f.ka.to_view(&self.ka, encoder);
             let kd = f.kd.to_view(&self.kd, encoder);
             let ks = f.ks.to_view(&self.ks, encoder);
 
-            encoder.draw(&f.slice,
-                         &self.pso,
-                         &draw::Data {
-                             fragment_args: self.fragment.clone(),
-                             vertex_args: self.vertex.clone(),
-                             vbuf: f.buffer.clone(),
-                             out_normal: target.normal.clone(),
-                             out_ka: target.ka.clone(),
-                             out_kd: target.kd.clone(),
-                             out_ks: target.ks.clone(),
-                             out_depth: target.depth.clone(),
-                             ka: (ka, self.sampler.clone()),
-                             kd: (kd, self.sampler.clone()),
-                             ks: (ks, self.sampler.clone()),
-                         });
+            encoder.draw(
+                &f.slice,
+                &self.pso,
+                &draw::Data {
+                    fragment_args: self.fragment.clone(),
+                    vertex_args: self.vertex.clone(),
+                    vbuf: f.buffer.clone(),
+                    out_normal: target.normal.clone(),
+                    out_ka: target.ka.clone(),
+                    out_kd: target.kd.clone(),
+                    out_ks: target.ks.clone(),
+                    out_depth: target.depth.clone(),
+                    ka: (ka, self.sampler.clone()),
+                    kd: (kd, self.sampler.clone()),
+                    ks: (ks, self.sampler.clone()),
+                 });
         }
     }
 }
@@ -572,7 +575,7 @@ impl<R> ::Pass<R> for LightingPass<R>
                 color: [0.0, 0.0, 0.0, 0.0],
                 center: [0.0, 0.0, 0.0, 0.0],
             };
-            let mut point_lights: Vec<_> = scene.point_lights
+            let mut point_lights: Vec<_> = chunk
                 .iter()
                 .map(|l| {
                     PointLight {

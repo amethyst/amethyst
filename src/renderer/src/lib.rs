@@ -155,14 +155,20 @@ impl<R: gfx::Resources> Texture<R> {
     {
         match self {
             &Texture::Constant(color) => {
-                let color: [[u8; 4]; 1] = [[(color[0] * 255.) as u8, (color[1] * 255.) as u8, (color[2] * 255.) as u8, (color[3] * 255.) as u8]];
-                encoder.update_texture::<_, gfx::format::Rgba8>(&texture.texture,
-                                                             None,
-                                                             texture.texture
-                                                                 .get_info()
-                                                                 .to_image_info(0),
-                                                             &color[..])
-                    .unwrap();
+                let color: [[u8; 4]; 1] = [[
+                    (color[0] * 255.) as u8,
+                    (color[1] * 255.) as u8,
+                    (color[2] * 255.) as u8,
+                    (color[3] * 255.) as u8,
+                ]];
+
+                encoder.update_texture::<_, gfx::format::Rgba8>(
+                    &texture.texture,
+                    None,
+                    texture.texture.get_info().to_image_info(0),
+                    &color[..]
+                ).unwrap();
+
                 texture.view.clone()
             }
             &Texture::Texture(ref tex) => tex.clone(),

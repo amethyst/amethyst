@@ -16,7 +16,7 @@ use amethyst::ecs::World;
 use amethyst::engine::{Application, State, Trans};
 use amethyst::event::{Event, VirtualKeyCode, WindowEvent};
 use amethyst::gfx_device::DisplayConfig;
-use amethyst::renderer::{Layer, Light, Pipeline, VertexPosNormal};
+use amethyst::renderer::{Layer, PointLight, Pipeline, VertexPosNormal};
 use amethyst::renderer::pass::{Clear, DrawShaded};
 use amethyst::world_resources::camera::{Camera, Projection};
 use amethyst::world_resources::ScreenDimensions;
@@ -37,7 +37,7 @@ impl AssetLoaderRaw for CustomObj {
 
         for line in data.split("\n") {
             if line.len() < 1 {
-                continue
+                continue;
             }
 
             let nums: Vec<&str> = line.split_whitespace().collect();
@@ -64,13 +64,17 @@ impl AssetLoaderRaw for CustomObj {
 
 impl AssetLoader<Mesh> for CustomObj {
     fn from_data(assets: &mut Assets, obj: CustomObj) -> Option<Mesh> {
-        let vertices = obj.vertices.iter().zip(obj.normals.iter()).map(|(v, n)| {
-            VertexPosNormal {
-                pos: v.clone(),
-                normal: n.clone(),
-                tex_coord: [0.0, 0.0],
-            }
-        }).collect::<Vec<_>>();
+        let vertices = obj.vertices
+            .iter()
+            .zip(obj.normals.iter())
+            .map(|(v, n)| {
+                VertexPosNormal {
+                    pos: v.clone(),
+                    normal: n.clone(),
+                    tex_coord: [0.0, 0.0],
+                }
+            })
+            .collect::<Vec<_>>();
         AssetLoader::<Mesh>::from_data(assets, vertices)
     }
 }
@@ -78,7 +82,10 @@ impl AssetLoader<Mesh> for CustomObj {
 struct Example;
 
 impl State for Example {
-    fn on_start(&mut self, world: &mut World, asset_manager: &mut AssetManager, pipeline: &mut Pipeline) {
+    fn on_start(&mut self,
+                world: &mut World,
+                asset_manager: &mut AssetManager,
+                pipeline: &mut Pipeline) {
         {
             let dimensions = world.read_resource::<ScreenDimensions>();
             let mut camera = world.write_resource::<Camera>();
@@ -95,15 +102,14 @@ impl State for Example {
         }
 
         // Set up an assets path by directly registering an assets store.
-        let assets_path = format!("{}/examples/06_assets/resources/meshes",
-                       env!("CARGO_MANIFEST_DIR"));
+        let assets_path = format!("{}/examples/06_assets/resources/meshes", env!("CARGO_MANIFEST_DIR"));
         asset_manager.register_store(DirectoryStore::new(assets_path));
 
         // Create some basic colors for the teapot, and load some textures
         // for the cube and sphere.
         asset_manager.load_asset_from_data::<Texture, [f32; 4]>("dark_blue", [0.0, 0.0, 0.1, 1.0]);
-        asset_manager.load_asset_from_data::<Texture, [f32; 4]>("green",     [0.0, 1.0, 0.2, 1.0]);
-        asset_manager.load_asset_from_data::<Texture, [f32; 4]>("tan",       [0.8, 0.6, 0.5, 1.0]);
+        asset_manager.load_asset_from_data::<Texture, [f32; 4]>("green", [0.0, 1.0, 0.2, 1.0]);
+        asset_manager.load_asset_from_data::<Texture, [f32; 4]>("tan", [0.8, 0.6, 0.5, 1.0]);
         asset_manager.load_asset::<Texture>("crate", "png");
         asset_manager.load_asset::<Texture>("grass", "bmp");
 
@@ -122,7 +128,7 @@ impl State for Example {
             let mut transform = LocalTransform::default();
             transform.rotation = Quaternion::from(Euler::new(Deg(90.0), Deg(-90.0), Deg(0.0))).into();
             transform.translation = [5.0, 0.0, 5.0];
-            let renderable = asset_manager.create_renderable(mesh, "dark_blue", "green").unwrap();
+            let renderable = asset_manager.create_renderable(mesh, "dark_blue", "green", "white", 1.0).unwrap();
             world.create_now()
                 .with(renderable)
                 .with(transform)
@@ -131,7 +137,7 @@ impl State for Example {
         }
 
         // Add custom cube object to scene
-        let renderable = asset_manager.create_renderable("cuboid", "dark_blue", "green").unwrap();
+        let renderable = asset_manager.create_renderable("cuboid", "dark_blue", "green", "white", 1.0).unwrap();
         let mut transform = LocalTransform::default();
         transform.translation = [-5.0, 0.0, 0.0];
         transform.scale = [2.0, 2.0, 2.0];
@@ -142,7 +148,7 @@ impl State for Example {
             .build();
 
         // Add cube to scene
-        let renderable = asset_manager.create_renderable("cube", "crate", "tan").unwrap();
+        let renderable = asset_manager.create_renderable("cube", "crate", "tan", "white", 1.0).unwrap();
         let mut transform = LocalTransform::default();
         transform.translation = [5.0, 0.0, 0.0];
         transform.scale = [2.0, 2.0, 2.0];
@@ -153,7 +159,7 @@ impl State for Example {
             .build();
 
         // Add sphere to scene
-        let renderable = asset_manager.create_renderable("sphere", "grass", "green").unwrap();
+        let renderable = asset_manager.create_renderable("sphere", "grass", "green", "white", 1.0).unwrap();
         let mut transform = LocalTransform::default();
         transform.translation = [-5.0, 0.0, 7.5];
         transform.rotation = Quaternion::from(Euler::new(Deg(90.0), Deg(0.0), Deg(0.0))).into();
@@ -165,14 +171,8 @@ impl State for Example {
             .build();
 
         // Add light to scene
-        let light = Light {
-            color: [1.0, 1.0, 1.0, 1.0],
-            radius: 10.0,
-            center: [10.0, -10.0, 10.0],
-            propagation_constant: 0.0,
-            propagation_linear: 0.0,
-            propagation_r_square: 10.0,
-        };
+        let mut light = PointLight::default();
+        light.center = [10.0, -10.0, 10.0];
 
         world.create_now()
             .with(light)
@@ -186,7 +186,12 @@ impl State for Example {
         pipeline.layers = vec![layer];
     }
 
-    fn handle_events(&mut self, events: &[WindowEvent], _: &mut World, _: &mut AssetManager, _: &mut Pipeline) -> Trans {
+    fn handle_events(&mut self,
+                     events: &[WindowEvent],
+                     _: &mut World,
+                     _: &mut AssetManager,
+                     _: &mut Pipeline)
+                     -> Trans {
         // Exit if user hits Escape or closes the window
         for event in events {
             match event.payload {
@@ -205,11 +210,11 @@ fn main() {
     //
     //     AMETHYST_ASSET_DIRS=/foo/bar cargo run
     let assets_path = format!("{}/examples/06_assets/resources/textures",
-                   env!("CARGO_MANIFEST_DIR"));
+                              env!("CARGO_MANIFEST_DIR"));
     set_var("AMETHYST_ASSET_DIRS", assets_path);
 
     let path = format!("{}/examples/06_assets/resources/config.yml",
-                   env!("CARGO_MANIFEST_DIR"));
+                       env!("CARGO_MANIFEST_DIR"));
     let display_config = DisplayConfig::from_file(path).unwrap();
     let mut game = Application::build(Example, display_config).done();
     game.run();
