@@ -48,8 +48,12 @@ path = "examples/04_pong/main.rs"
 name = "assets"
 path = "examples/06_assets/main.rs"
 
+[[example]]
+name = "physics"
+path = "examples/07_physics/main.rs"
+
 [dev-dependencies]
-gfx = "0.12"
+rand = "0.3.15"
 
 [dependencies]
 cgmath = "0.11"
@@ -59,4 +63,9 @@ gfx_device_gl = "0.11"
 gfx_window_glutin = "0.12"
 glutin = "0.6"
 imagefmt = "4.0.0"
+nalgebra = "0.9.*"
+ncollide = "0.10.0"
+nphysics3d = "0.5.0"
 wavefront_obj = "5.0.0"
+
+[workspace]

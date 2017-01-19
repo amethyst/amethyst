@@ -9,6 +9,8 @@ use gfx_device::{GfxDevice, DisplayConfig};
 use components::transform::{LocalTransform, Transform, Child, Init};
 use processors::transform::TransformProcessor;
 use components::rendering::Renderable;
+use components::physics::PhysicsComponent;
+use processors::physics::{PhysicsProcessor, PhysicsWorld};
 use ecs::{Planner, World, Processor, Priority, Component};
 use std::time::{Duration, Instant};
 use world_resources::Time;
@@ -66,6 +68,8 @@ impl Application {
         asset_manager.add_loader::<gfx_device::GfxLoader>(gfx_loader);
         let transform_processor = TransformProcessor::new();
         planner.add_system::<TransformProcessor>(transform_processor, "transform_processor", 0);
+        let physics_processor = PhysicsProcessor::new();
+        planner.add_system::<PhysicsProcessor>(physics_processor, "physics_processor", 1);
         {
             let mut world = planner.mut_world();
             let time = Time {
@@ -88,6 +92,10 @@ impl Application {
                 world.add_resource::<ScreenDimensions>(dimensions);
                 world.add_resource::<Camera>(camera);
             }
+
+            let mut physics_world = PhysicsWorld::new();
+            world.add_resource::<PhysicsWorld>(physics_world);
+
             world.add_resource::<Time>(time);
             world.register::<Renderable>();
             world.register::<Light>();
@@ -95,6 +103,7 @@ impl Application {
             world.register::<Transform>();
             world.register::<Child>();
             world.register::<Init>();
+            world.register::<PhysicsComponent>();
         }
         Application {
             states: StateMachine::new(initial_state),
