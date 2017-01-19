@@ -5,7 +5,7 @@ use std;
 use gfx;
 use mopa;
 
-/// A `Pass` is an implemnatnion of a Pass
+/// A `Pass` is an implementation of a Pass
 pub trait Pass<R>
     where R: gfx::Resources
 {

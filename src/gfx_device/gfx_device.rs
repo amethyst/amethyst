@@ -93,12 +93,17 @@ impl GfxDevice {
                     }
                 }
                 // Add all `Light`s to the `Scene`.
-                let lights = world.read::<renderer::Light>();
-                scene.lights.extend(lights.iter());
+                scene.point_lights.extend(world.read::<renderer::PointLight>().iter());
+                scene.directional_lights.extend(world.read::<renderer::DirectionalLight>().iter());
+
+                let ambient_light = world.read_resource::<renderer::AmbientLight>();
+                scene.ambient_light = ambient_light.power;
+
                 // Render the `Scene`.
                 renderer.submit(pipeline, &scene, device);
                 window.swap_buffers().unwrap();
                 device.cleanup();
+
                 // Function that creates `Fragment`s from `Renderable`, `Transform` pairs.
                 fn unwrap_renderable(renderable: &Renderable, global_transform: &Transform) -> Option<Fragment<gfx_device_gl::Resources>> {
                     let (buffer, slice) = match renderable.mesh.mesh_inner {
@@ -106,11 +111,15 @@ impl GfxDevice {
                                             ref slice } => (buffer.clone(), slice.clone()),
                         _ => return None,
                     };
-                    let ka = match renderable.ka.texture_inner {
+                    let ka = match renderable.ambient.texture_inner {
                         TextureInner::OpenGL { ref texture } => texture.clone(),
                         _ => return None,
                     };
-                    let kd = match renderable.kd.texture_inner {
+                    let kd = match renderable.diffuse.texture_inner {
+                        TextureInner::OpenGL { ref texture } => texture.clone(),
+                        _ => return None,
+                    };
+                    let ks = match renderable.specular.texture_inner {
                         TextureInner::OpenGL { ref texture } => texture.clone(),
                         _ => return None,
                     };
@@ -120,6 +129,8 @@ impl GfxDevice {
                         slice: slice,
                         ka: ka,
                         kd: kd,
+                        ks: ks,
+                        ns: renderable.specular_exponent,
                     })
                 }
             }

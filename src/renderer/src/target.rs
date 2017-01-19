@@ -23,24 +23,38 @@ pub struct ColorBuffer<R: gfx::Resources> {
 
 impl<R: gfx::Resources> Target for ColorBuffer<R> {}
 
-/// A geometry buffer is used in a deferred pipeline
+/// A geometry buffer that is used in a deferred pipeline.
+/// TODO: Why both `ka` and `texture_ka`, etc?
 pub struct GeometryBuffer<R: gfx::Resources> {
     /// Contains the Normals as a f32x4
     pub normal: gfx::handle::RenderTargetView<R, [f32; 4]>,
+
     /// Contains the ambient color
     pub ka: gfx::handle::RenderTargetView<R, ColorFormat>,
+
     /// Contains the diffuse color
     pub kd: gfx::handle::RenderTargetView<R, ColorFormat>,
+
+    /// Contains the specular color
+    pub ks: gfx::handle::RenderTargetView<R, ColorFormat>,
+
     /// Contains the depth buffer
     pub depth: gfx::handle::DepthStencilView<R, DepthFormat>,
 
+
     /// The normal buffer as a texture
     pub texture_normal: gfx::handle::ShaderResourceView<R, [f32; 4]>,
-    /// the ambient color as texture
+
+    /// The ambient color as texture
     pub texture_ka: gfx::handle::ShaderResourceView<R, [f32; 4]>,
-    /// the diffuse color as a texture
+
+    /// The diffuse color as a texture
     pub texture_kd: gfx::handle::ShaderResourceView<R, [f32; 4]>,
-    /// the depth buffer as a texture
+
+    /// The specular color as a texture
+    pub texture_ks: gfx::handle::ShaderResourceView<R, [f32; 4]>,
+
+    /// The depth buffer as a texture
     pub texture_depth: gfx::handle::ShaderResourceView<R, f32>,
 }
 
@@ -53,16 +67,19 @@ impl<R: gfx::Resources> GeometryBuffer<R> {
         let (_, texture_normal, normal) = factory.create_render_target(width, height).unwrap();
         let (_, texture_ka, ka) = factory.create_render_target(width, height).unwrap();
         let (_, texture_kd, kd) = factory.create_render_target(width, height).unwrap();
+        let (_, texture_ks, ks) = factory.create_render_target(width, height).unwrap();
         let (_, texture_depth, depth) = factory.create_depth_stencil(width, height).unwrap();
 
         GeometryBuffer {
             normal: normal,
-            kd: kd,
             ka: ka,
+            kd: kd,
+            ks: ks,
             depth: depth,
             texture_normal: texture_normal,
             texture_ka: texture_ka,
             texture_kd: texture_kd,
+            texture_ks: texture_ks,
             texture_depth: texture_depth,
         }
     }
