@@ -1,4 +1,6 @@
-use ecs::{Component, VecStorage};
+extern crate specs;
+
+use self::specs::{Component, VecStorage};
 
 /// Absolute transformation (transformed from origin).
 /// Used for rendering position and orientation.

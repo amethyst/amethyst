@@ -1,9 +1,9 @@
 //! This module contains the `EngineEvent` component and reexports glutin event types.
 
-extern crate amethyst_ecs;
+extern crate specs;
 extern crate glutin;
 
-use self::amethyst_ecs::{Component, VecStorage};
+use self::specs::{Component, VecStorage};
 pub use self::glutin::{Event, ElementState, ScanCode, VirtualKeyCode, MouseScrollDelta, TouchPhase, MouseButton, Touch};
 
 /// Represents a window generated event,

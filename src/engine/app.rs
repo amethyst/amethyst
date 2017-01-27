@@ -1,4 +1,5 @@
 //! The core engine framework.
+extern crate specs;
 use super::state::{State, StateMachine};
 use super::timing::Stopwatch;
 use renderer;
@@ -8,9 +9,9 @@ use gfx_device;
 use gfx_device::gfx_types;
 use gfx_device::{GfxDevice, DisplayConfig};
 use components::transform::{LocalTransform, Transform, Child, Init};
-use processors::transform::TransformProcessor;
+use systems::transform::TransformSystem;
 use components::rendering::Renderable;
-use ecs::{Planner, World, Processor, Priority, Component};
+use self::specs::{Planner, World, System, Priority, Component};
 use std::time::{Duration, Instant};
 use world_resources::Time;
 
@@ -49,8 +50,8 @@ impl Application {
                             Box::new(renderer::target::GeometryBuffer::new(&mut factory, (w as u16, h as u16))));
         let mut asset_manager = AssetManager::new();
         asset_manager.add_loader::<gfx_types::Factory>(factory);
-        let transform_processor = TransformProcessor::new();
-        planner.add_system::<TransformProcessor>(transform_processor, "transform_processor", 0);
+        let transform_system = TransformSystem::new();
+        planner.add_system::<TransformSystem>(transform_system, "transform_system", 0);
         {
             let mut world = planner.mut_world();
             let time = Time {
@@ -193,7 +194,7 @@ impl<T> ApplicationBuilder<T>
     }
 
     pub fn with<P>(mut self, pro: P, name: &str, pri: Priority) -> ApplicationBuilder<T>
-        where P: Processor<()> + 'static
+        where P: System<()> + 'static
     {
         self.planner.add_system::<P>(pro, name, pri);
         self

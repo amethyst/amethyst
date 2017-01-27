@@ -3,7 +3,7 @@
 extern crate amethyst;
 
 use amethyst::engine::{Application, State, Trans};
-use amethyst::ecs::World;
+use amethyst::specs::World;
 use amethyst::gfx_device::DisplayConfig;
 use amethyst::asset_manager::AssetManager;
 use amethyst::renderer::Pipeline;

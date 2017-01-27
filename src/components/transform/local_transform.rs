@@ -1,7 +1,8 @@
+extern crate specs;
 extern crate cgmath;
 
 use self::cgmath::{Quaternion, Vector3, Matrix3, Matrix4};
-use ecs::{Component, VecStorage};
+use self::specs::{Component, VecStorage};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::ops::{Deref, DerefMut};
 

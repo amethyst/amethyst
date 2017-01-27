@@ -6,7 +6,7 @@ extern crate cgmath;
 
 use amethyst::engine::{Application, State, Trans};
 use amethyst::config::Element;
-use amethyst::ecs::World;
+use amethyst::specs::World;
 use amethyst::gfx_device::DisplayConfig;
 use amethyst::asset_manager::AssetManager;
 use amethyst::event::WindowEvent;

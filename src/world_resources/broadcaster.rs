@@ -8,7 +8,7 @@
 //! extern crate amethyst;
 //!
 //! use amethyst::world_resources::Broadcaster;
-//! use amethyst::ecs::{Component, VecStorage, Join};
+//! use amethyst::specs::{Component, VecStorage, Join};
 //!
 //! struct UserComponent {
 //!     pub data: i32,
@@ -35,9 +35,9 @@
 //! }
 //! ```
 
-extern crate amethyst_ecs;
+extern crate specs;
 
-use self::amethyst_ecs::{World, Component, EntityBuilder, Storage, Allocator, MaskedStorage, Join};
+use self::specs::{World, Component, EntityBuilder, Storage, Allocator, MaskedStorage, Join};
 use std::sync::RwLockReadGuard;
 
 /// Allows publishing entities

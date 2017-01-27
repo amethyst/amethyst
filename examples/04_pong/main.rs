@@ -3,7 +3,7 @@ extern crate amethyst;
 use amethyst::engine::{Application, State, Trans};
 use amethyst::components::transform::{LocalTransform, Transform};
 use amethyst::config::Element;
-use amethyst::ecs::{World, Join, VecStorage, Component, Processor, RunArg};
+use amethyst::specs::{World, Join, VecStorage, Component, System, RunArg};
 use amethyst::components::rendering::{Mesh, Texture};
 use amethyst::event::WindowEvent;
 use amethyst::gfx_device::DisplayConfig;
@@ -59,9 +59,9 @@ impl Component for Plank {
     type Storage = VecStorage<Plank>;
 }
 
-struct PongProcessor;
+struct PongSystem;
 
-unsafe impl Sync for PongProcessor {  }
+unsafe impl Sync for PongSystem {  }
 
 struct Score {
     score_left: i32,
@@ -77,8 +77,8 @@ impl Score {
     }
 }
 
-// Pong game processor
-impl Processor<()> for PongProcessor {
+// Pong game system
+impl System<()> for PongSystem {
     fn run(&mut self, arg: RunArg, _: ()) {
         use amethyst::event::VirtualKeyCode;
         use amethyst::world_resources::camera::{Camera, Projection};
@@ -350,7 +350,7 @@ fn main() {
     let mut game = Application::build(Pong, display_config)
         .register::<Ball>()
         .register::<Plank>()
-        .with::<PongProcessor>(PongProcessor, "pong_processor", 1)
+        .with::<PongSystem>(PongSystem, "pong_system", 1)
         .done();
     game.run();
 }

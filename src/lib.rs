@@ -19,7 +19,7 @@
 //!
 //! use amethyst::engine::{Application, State, Trans};
 //! use amethyst::config::Element;
-//! use amethyst::ecs::World;
+//! use amethyst::specs::World;
 //! use amethyst::gfx_device::DisplayConfig;
 //! use amethyst::asset_manager::AssetManager;
 //! use amethyst::event::WindowEvent;
@@ -63,7 +63,7 @@
 
 pub mod world_resources;
 pub mod engine;
-pub mod processors;
+pub mod systems;
 pub mod components;
 pub mod gfx_device;
 pub mod asset_manager;
@@ -71,5 +71,5 @@ pub mod event;
 
 #[macro_use]
 pub extern crate amethyst_config as config;
-pub extern crate amethyst_ecs as ecs;
 pub extern crate amethyst_renderer as renderer;
+pub extern crate specs as specs;

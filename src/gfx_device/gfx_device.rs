@@ -1,6 +1,7 @@
+extern crate specs;
+
 use renderer;
-use ecs;
-use ecs::Join;
+use self::specs::Join;
 use event::WindowEvent;
 use world_resources;
 use gfx_device::gfx::Device;
@@ -23,7 +24,7 @@ impl GfxDevice {
     }
 
     /// Render all `Entity`s with `Renderable` components in `World`.
-    pub fn render_world(&mut self, world: &mut ecs::World, pipeline: &renderer::Pipeline) {
+    pub fn render_world(&mut self, world: &mut self::specs::World, pipeline: &renderer::Pipeline) {
         use components::transform::Transform;
         use components::rendering::Renderable;
         use world_resources::camera::Projection;

@@ -12,7 +12,7 @@ use amethyst::asset_manager::{AssetLoader, AssetLoaderRaw, AssetManager, Assets,
 use amethyst::components::rendering::{Mesh, Texture};
 use amethyst::components::transform::{LocalTransform, Transform};
 use amethyst::config::Element;
-use amethyst::ecs::World;
+use amethyst::specs::World;
 use amethyst::engine::{Application, State, Trans};
 use amethyst::event::{Event, VirtualKeyCode, WindowEvent};
 use amethyst::gfx_device::DisplayConfig;

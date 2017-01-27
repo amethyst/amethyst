@@ -2,7 +2,7 @@
 //! which loads and provides access to assets,
 //! such as `Texture`s, `Mesh`es, and `Fragment`s.
 
-extern crate amethyst_ecs;
+extern crate specs;
 extern crate amethyst_renderer;
 extern crate cgmath;
 extern crate genmesh;
@@ -28,7 +28,7 @@ use components::rendering::{Mesh, Renderable, Texture, TextureLoadData};
 use renderer::VertexPosNormal;
 
 // external imports
-use self::amethyst_ecs::{Allocator, Component, Entity, MaskedStorage, Storage, VecStorage, World};
+use self::specs::{Allocator, Component, Entity, MaskedStorage, Storage, VecStorage, World};
 use self::cgmath::{InnerSpace, Vector3};
 pub use self::gfx::tex::{AaMode, Kind};
 use self::wavefront_obj::obj::{ObjSet, parse, Primitive};

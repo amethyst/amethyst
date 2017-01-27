@@ -17,10 +17,6 @@ license = "MIT OR Apache-2.0"
 path = "src/config/"
 version = "0.1.0"
 
-[dependencies.amethyst_ecs]
-path = "src/ecs/"
-version = "0.1.1"
-
 [dependencies.amethyst_renderer]
 path = "src/renderer/"
 version = "0.3.1"
@@ -53,6 +49,7 @@ path = "examples/06_assets/main.rs"
 gfx = "0.12"
 
 [dependencies]
+specs = "0.7"
 cgmath = "0.11"
 genmesh = "0.4"
 gfx = "0.12"
