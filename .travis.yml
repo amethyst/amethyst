@@ -29,7 +29,7 @@ script: |
       cargo fmt -- --write-mode=diff &&
       cargo local-pkgs doc --no-deps -v
       cargo local-pkgs build -v &&
-      cargo test -p amethyst -p amethyst_config -p amethyst_ecs -v
+      cargo test -p amethyst -p amethyst_config -v
 
 # Push notifications to `amethyst/general` and `amethyst/engine` Gitter chats.
 notifications:
