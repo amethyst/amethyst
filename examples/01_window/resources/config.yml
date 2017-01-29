@@ -8,4 +8,3 @@ multisampling: 1
 title: "Windowing example"
 visibility: true
 vsync: true
-backend: OpenGL

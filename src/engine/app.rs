@@ -5,6 +5,7 @@ use renderer;
 use renderer::{Light, Pipeline};
 use asset_manager::AssetManager;
 use gfx_device;
+use gfx_device::gfx_types;
 use gfx_device::{GfxDevice, DisplayConfig};
 use components::transform::{LocalTransform, Transform, Child, Init};
 use processors::transform::TransformProcessor;
@@ -36,34 +37,18 @@ impl Application {
     {
         use world_resources::camera::{Camera, Projection};
         use world_resources::ScreenDimensions;
-        let (gfx_device_inner, mut gfx_loader, main_target_inner) = gfx_device::video_init(display_config);
-        let gfx_device = gfx_device::GfxDevice::new(gfx_device_inner);
-        let main_target = gfx_device::MainTarget::new(main_target_inner);
-        // FIXME Remove all platform specific code from here!
+        let (gfx_device, mut factory, main_target) = gfx_device::video_init(display_config);
         let mut pipeline = Pipeline::new();
-        match main_target.main_target_inner {
-            gfx_device::MainTargetInner::OpenGL {
-                ref main_color,
-                ref main_depth,
-            } => {
-                pipeline.targets.insert("main".into(),
-                                     Box::new(renderer::target::ColorBuffer {
-                                         color: main_color.clone(),
-                                         output_depth: main_depth.clone(),
-                                     }));
-
-                if let gfx_device::GfxLoader::OpenGL { ref mut factory } = gfx_loader {
-                    let (w, h) = gfx_device.get_dimensions().unwrap();
-                    pipeline.targets.insert("gbuffer".into(),
-                                        Box::new(renderer::target::GeometryBuffer::new(factory, (w as u16, h as u16))));
-                }
-            },
-            #[cfg(windows)]
-            gfx_device::MainTargetInner::Direct3D {  } =>  unimplemented!(),
-            gfx_device::MainTargetInner::Null => (),
-        };
+        pipeline.targets.insert("main".into(),
+                                Box::new(renderer::target::ColorBuffer {
+                                    color: main_target.main_color.clone(),
+                                    output_depth: main_target.main_depth.clone(),
+                                }));
+        let (w, h) = gfx_device.get_dimensions().unwrap();
+        pipeline.targets.insert("gbuffer".into(),
+                            Box::new(renderer::target::GeometryBuffer::new(&mut factory, (w as u16, h as u16))));
         let mut asset_manager = AssetManager::new();
-        asset_manager.add_loader::<gfx_device::GfxLoader>(gfx_loader);
+        asset_manager.add_loader::<gfx_types::Factory>(factory);
         let transform_processor = TransformProcessor::new();
         planner.add_system::<TransformProcessor>(transform_processor, "transform_processor", 0);
         {
