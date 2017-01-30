@@ -7,7 +7,7 @@
 //! ```
 //! extern crate amethyst;
 //!
-//! use amethyst::world_resources::Broadcaster;
+//! use amethyst::specs_batteries::resources::Broadcaster;
 //! use amethyst::specs::{Component, VecStorage, Join};
 //!
 //! struct UserComponent {

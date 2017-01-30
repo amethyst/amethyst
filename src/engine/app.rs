@@ -1,5 +1,6 @@
 //! The core engine framework.
 extern crate specs;
+
 use super::state::{State, StateMachine};
 use super::timing::Stopwatch;
 use renderer;
@@ -8,12 +9,12 @@ use asset_manager::AssetManager;
 use gfx_device;
 use gfx_device::gfx_types;
 use gfx_device::{GfxDevice, DisplayConfig};
-use components::transform::{LocalTransform, Transform, Child, Init};
-use systems::transform::TransformSystem;
-use components::rendering::Renderable;
+use specs_batteries::components::rendering::Renderable;
+use specs_batteries::components::transform::{LocalTransform, Transform, Child, Init};
+use specs_batteries::systems::transform::TransformSystem;
+use specs_batteries::resources::Time;
 use self::specs::{Planner, World, System, Priority, Component};
 use std::time::{Duration, Instant};
-use world_resources::Time;
 
 /// User-friendly facade for building games. Manages main loop.
 pub struct Application {
@@ -36,8 +37,8 @@ impl Application {
                   -> Application
         where T: State + 'static
     {
-        use world_resources::camera::{Camera, Projection};
-        use world_resources::ScreenDimensions;
+        use specs_batteries::resources::camera::{Camera, Projection};
+        use specs_batteries::resources::ScreenDimensions;
         let (gfx_device, mut factory, main_target) = gfx_device::video_init(display_config);
         let mut pipeline = Pipeline::new();
         pipeline.targets.insert("main".into(),
@@ -125,7 +126,7 @@ impl Application {
 
     /// Advances the game world by one tick.
     fn advance_frame(&mut self) {
-        use world_resources::ScreenDimensions;
+        use specs_batteries::resources::ScreenDimensions;
         let events = self.gfx_device.poll_events();
 
         self.states.handle_events(events.as_ref(), self.planner.mut_world(), &mut self.asset_manager, &mut self.pipeline);

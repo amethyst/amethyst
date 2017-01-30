@@ -3,7 +3,6 @@ extern crate specs;
 use renderer;
 use self::specs::Join;
 use event::WindowEvent;
-use world_resources;
 use gfx_device::gfx::Device;
 use gfx_device::gfx_types;
 
@@ -25,11 +24,11 @@ impl GfxDevice {
 
     /// Render all `Entity`s with `Renderable` components in `World`.
     pub fn render_world(&mut self, world: &mut self::specs::World, pipeline: &renderer::Pipeline) {
-        use components::transform::Transform;
-        use components::rendering::Renderable;
-        use world_resources::camera::Projection;
+        use specs_batteries::components::transform::Transform;
+        use specs_batteries::components::rendering::Renderable;
+        use specs_batteries::resources::camera::{Projection, Camera};
         use renderer::Fragment;
-        let camera = world.read_resource::<world_resources::Camera>().clone();
+        let camera = world.read_resource::<Camera>().clone();
 
         let projection_mat = match camera.projection {
             Projection::Perspective {

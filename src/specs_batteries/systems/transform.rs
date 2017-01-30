@@ -7,7 +7,7 @@ extern crate specs;
 use self::cgmath::Matrix4;
 use self::specs::{Join, Entity, RunArg, System};
 
-use components::transform::{LocalTransform, Transform, Child, Init};
+use super::super::components::transform::{LocalTransform, Transform, Child, Init};
 use std::collections::{HashMap, HashSet};
 
 /// Transformation system.
@@ -181,7 +181,7 @@ impl System<()> for TransformSystem {
 mod tests {
     // use super::test::Bencher;
     use super::cgmath::{Decomposed, Quaternion, Vector3, Matrix4};
-    use components::transform::{LocalTransform, Transform};
+    use specs_batteries::components::transform::{LocalTransform, Transform};
 
     #[test]
     fn transform_matrix() {

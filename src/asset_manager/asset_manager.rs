@@ -24,7 +24,7 @@ use std::str;
 use std::sync::RwLockReadGuard;
 
 // self imports
-use components::rendering::{Mesh, Renderable, Texture, TextureLoadData};
+use specs_batteries::components::rendering::{Mesh, Renderable, Texture, TextureLoadData};
 use renderer::VertexPosNormal;
 
 // external imports

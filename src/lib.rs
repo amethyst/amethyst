@@ -61,13 +61,11 @@
 //! }
 //! ```
 
-pub mod world_resources;
-pub mod engine;
-pub mod systems;
-pub mod components;
-pub mod gfx_device;
 pub mod asset_manager;
+pub mod engine;
 pub mod event;
+pub mod gfx_device;
+pub mod specs_batteries;
 
 #[macro_use]
 pub extern crate amethyst_config as config;

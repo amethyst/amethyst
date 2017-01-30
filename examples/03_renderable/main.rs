@@ -8,8 +8,8 @@ use std::env::set_var;
 use std::str;
 
 use amethyst::asset_manager::{AssetManager, DirectoryStore};
-use amethyst::components::rendering::{Mesh, Texture};
-use amethyst::components::transform::{LocalTransform, Transform};
+use amethyst::specs_batteries::components::rendering::{Mesh, Texture};
+use amethyst::specs_batteries::components::transform::{LocalTransform, Transform};
 use amethyst::config::Element;
 use amethyst::engine::{Application, State, Trans};
 use amethyst::specs::{World, Join, System, RunArg};
@@ -18,8 +18,8 @@ use amethyst::gfx_device::DisplayConfig;
 use amethyst::renderer::{AmbientLight, DirectionalLight, Layer, PointLight};
 use amethyst::renderer::Pipeline;
 use amethyst::renderer::pass::{BlitLayer, Clear, DrawFlat, DrawShaded, Lighting};
-use amethyst::world_resources::camera::{Camera, Projection};
-use amethyst::world_resources::{ScreenDimensions, Time};
+use amethyst::specs_batteries::resources::camera::{Camera, Projection};
+use amethyst::specs_batteries::resources::{ScreenDimensions, Time};
 use cgmath::{Deg, Euler, Quaternion};
 
 
@@ -96,7 +96,6 @@ struct Example;
 
 impl State for Example {
     fn on_start(&mut self, world: &mut World, asset_manager: &mut AssetManager, pipeline: &mut Pipeline) {
-
         {
             let dimensions = world.read_resource::<ScreenDimensions>();
             let mut camera = world.write_resource::<Camera>();

@@ -1,7 +1,7 @@
 extern crate specs;
 
-use components::rendering::Mesh;
-use components::rendering::Texture;
+use super::Mesh;
+use super::Texture;
 use self::specs::{Component, VecStorage};
 
 #[derive(Clone)]
