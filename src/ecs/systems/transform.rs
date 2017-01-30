@@ -181,7 +181,7 @@ impl System<()> for TransformSystem {
 mod tests {
     // use super::test::Bencher;
     use super::cgmath::{Decomposed, Quaternion, Vector3, Matrix4};
-    use specs_batteries::components::transform::{LocalTransform, Transform};
+    use ecs::components::transform::{LocalTransform, Transform};
 
     #[test]
     fn transform_matrix() {

@@ -9,10 +9,10 @@ use asset_manager::AssetManager;
 use gfx_device;
 use gfx_device::gfx_types;
 use gfx_device::{GfxDevice, DisplayConfig};
-use specs_batteries::components::rendering::Renderable;
-use specs_batteries::components::transform::{LocalTransform, Transform, Child, Init};
-use specs_batteries::systems::transform::TransformSystem;
-use specs_batteries::resources::Time;
+use ecs::components::rendering::Renderable;
+use ecs::components::transform::{LocalTransform, Transform, Child, Init};
+use ecs::systems::transform::TransformSystem;
+use ecs::resources::Time;
 use self::specs::{Planner, World, System, Priority, Component};
 use std::time::{Duration, Instant};
 
@@ -37,8 +37,8 @@ impl Application {
                   -> Application
         where T: State + 'static
     {
-        use specs_batteries::resources::camera::{Camera, Projection};
-        use specs_batteries::resources::ScreenDimensions;
+        use ecs::resources::camera::{Camera, Projection};
+        use ecs::resources::ScreenDimensions;
         let (gfx_device, mut factory, main_target) = gfx_device::video_init(display_config);
         let mut pipeline = Pipeline::new();
         pipeline.targets.insert("main".into(),
@@ -126,7 +126,7 @@ impl Application {
 
     /// Advances the game world by one tick.
     fn advance_frame(&mut self) {
-        use specs_batteries::resources::ScreenDimensions;
+        use ecs::resources::ScreenDimensions;
         let events = self.gfx_device.poll_events();
 
         self.states.handle_events(events.as_ref(), self.planner.mut_world(), &mut self.asset_manager, &mut self.pipeline);

@@ -22,9 +22,9 @@ impl State for Example {
     fn on_start(&mut self, world: &mut World, asset_manager: &mut AssetManager, pipeline: &mut Pipeline) {
         use amethyst::renderer::pass::{Clear, DrawShaded};
         use amethyst::renderer::{Layer, PointLight};
-        use amethyst::specs_batteries::resources::camera::{Projection, Camera};
-        use amethyst::specs_batteries::resources::ScreenDimensions;
-        use amethyst::specs_batteries::components::rendering::{Texture, Mesh};
+        use amethyst::ecs::resources::camera::{Projection, Camera};
+        use amethyst::ecs::resources::ScreenDimensions;
+        use amethyst::ecs::components::rendering::{Texture, Mesh};
         let layer = Layer::new("main", vec![
             Clear::new([0.0, 0.0, 0.0, 1.0]),
             DrawShaded::new("main", "main"),

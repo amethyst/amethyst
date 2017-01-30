@@ -9,8 +9,8 @@ use std::env::set_var;
 use std::str;
 
 use amethyst::asset_manager::{AssetLoader, AssetLoaderRaw, AssetManager, Assets, DirectoryStore};
-use amethyst::specs_batteries::components::rendering::{Mesh, Texture};
-use amethyst::specs_batteries::components::transform::{LocalTransform, Transform};
+use amethyst::ecs::components::rendering::{Mesh, Texture};
+use amethyst::ecs::components::transform::{LocalTransform, Transform};
 use amethyst::config::Element;
 use amethyst::specs::World;
 use amethyst::engine::{Application, State, Trans};
@@ -18,8 +18,8 @@ use amethyst::event::{Event, VirtualKeyCode, WindowEvent};
 use amethyst::gfx_device::DisplayConfig;
 use amethyst::renderer::{Layer, PointLight, Pipeline, VertexPosNormal};
 use amethyst::renderer::pass::{Clear, DrawShaded};
-use amethyst::specs_batteries::resources::camera::{Camera, Projection};
-use amethyst::specs_batteries::resources::ScreenDimensions;
+use amethyst::ecs::resources::camera::{Camera, Projection};
+use amethyst::ecs::resources::ScreenDimensions;
 use cgmath::{Deg, Euler, Quaternion};
 
 // Implement custom asset loader that reads files with a simple format of

@@ -1,10 +1,10 @@
 extern crate amethyst;
 
 use amethyst::engine::{Application, State, Trans};
-use amethyst::specs_batteries::components::transform::{LocalTransform, Transform};
+use amethyst::ecs::components::transform::{LocalTransform, Transform};
 use amethyst::config::Element;
 use amethyst::specs::{World, Join, VecStorage, Component, System, RunArg};
-use amethyst::specs_batteries::components::rendering::{Mesh, Texture};
+use amethyst::ecs::components::rendering::{Mesh, Texture};
 use amethyst::event::WindowEvent;
 use amethyst::gfx_device::DisplayConfig;
 use amethyst::asset_manager::AssetManager;
@@ -81,9 +81,9 @@ impl Score {
 impl System<()> for PongSystem {
     fn run(&mut self, arg: RunArg, _: ()) {
         use amethyst::event::VirtualKeyCode;
-        use amethyst::specs_batteries::resources::camera::{Camera, Projection};
-        use amethyst::specs_batteries::resources::Time;
-        use amethyst::specs_batteries::resources::InputHandler;
+        use amethyst::ecs::resources::camera::{Camera, Projection};
+        use amethyst::ecs::resources::Time;
+        use amethyst::ecs::resources::InputHandler;
 
         // Get all needed component storages and resources
         let (mut balls,
@@ -241,10 +241,10 @@ impl System<()> for PongSystem {
 impl State for Pong {
     fn on_start(&mut self, world: &mut World, asset_manager: &mut AssetManager, pipeline: &mut Pipeline) {
         use amethyst::renderer::pass::{Clear, DrawFlat};
-        use amethyst::specs_batteries::resources::InputHandler;
+        use amethyst::ecs::resources::InputHandler;
         use amethyst::renderer::Layer;
-        use amethyst::specs_batteries::resources::camera::{Camera, Projection};
-        use amethyst::specs_batteries::resources::ScreenDimensions;
+        use amethyst::ecs::resources::camera::{Camera, Projection};
+        use amethyst::ecs::resources::ScreenDimensions;
 
         let layer =
         Layer::new("main",
@@ -327,7 +327,7 @@ impl State for Pong {
     }
 
     fn handle_events(&mut self, events: &[WindowEvent], world: &mut World, _: &mut AssetManager, _: &mut Pipeline) -> Trans {
-        use amethyst::specs_batteries::resources::InputHandler;
+        use amethyst::ecs::resources::InputHandler;
         use amethyst::event::*;
 
         let mut input_handler = world.write_resource::<InputHandler>();

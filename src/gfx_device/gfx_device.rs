@@ -24,9 +24,9 @@ impl GfxDevice {
 
     /// Render all `Entity`s with `Renderable` components in `World`.
     pub fn render_world(&mut self, world: &mut self::specs::World, pipeline: &renderer::Pipeline) {
-        use specs_batteries::components::transform::Transform;
-        use specs_batteries::components::rendering::Renderable;
-        use specs_batteries::resources::camera::{Projection, Camera};
+        use ecs::components::transform::Transform;
+        use ecs::components::rendering::Renderable;
+        use ecs::resources::camera::{Projection, Camera};
         use renderer::Fragment;
         let camera = world.read_resource::<Camera>().clone();
 

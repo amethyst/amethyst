@@ -8,8 +8,8 @@ use std::env::set_var;
 use std::str;
 
 use amethyst::asset_manager::{AssetManager, DirectoryStore};
-use amethyst::specs_batteries::components::rendering::{Mesh, Texture};
-use amethyst::specs_batteries::components::transform::{LocalTransform, Transform};
+use amethyst::ecs::components::rendering::{Mesh, Texture};
+use amethyst::ecs::components::transform::{LocalTransform, Transform};
 use amethyst::config::Element;
 use amethyst::engine::{Application, State, Trans};
 use amethyst::specs::{World, Join, System, RunArg};
@@ -18,8 +18,8 @@ use amethyst::gfx_device::DisplayConfig;
 use amethyst::renderer::{AmbientLight, DirectionalLight, Layer, PointLight};
 use amethyst::renderer::Pipeline;
 use amethyst::renderer::pass::{BlitLayer, Clear, DrawFlat, DrawShaded, Lighting};
-use amethyst::specs_batteries::resources::camera::{Camera, Projection};
-use amethyst::specs_batteries::resources::{ScreenDimensions, Time};
+use amethyst::ecs::resources::camera::{Camera, Projection};
+use amethyst::ecs::resources::{ScreenDimensions, Time};
 use cgmath::{Deg, Euler, Quaternion};
 
 
