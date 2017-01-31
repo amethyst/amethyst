@@ -2,7 +2,7 @@
 use super::state::{State, StateMachine};
 use super::timing::Stopwatch;
 use renderer;
-use renderer::{Light, Pipeline};
+use renderer::{AmbientLight, DirectionalLight, Pipeline, PointLight};
 use asset_manager::AssetManager;
 use gfx_device;
 use gfx_device::gfx_types;
@@ -73,13 +73,15 @@ impl Application {
                 world.add_resource::<ScreenDimensions>(dimensions);
                 world.add_resource::<Camera>(camera);
             }
+            world.add_resource::<AmbientLight>(AmbientLight::default());
             world.add_resource::<Time>(time);
-            world.register::<Renderable>();
-            world.register::<Light>();
-            world.register::<LocalTransform>();
-            world.register::<Transform>();
             world.register::<Child>();
+            world.register::<DirectionalLight>();
             world.register::<Init>();
+            world.register::<LocalTransform>();
+            world.register::<PointLight>();
+            world.register::<Renderable>();
+            world.register::<Transform>();
         }
         Application {
             states: StateMachine::new(initial_state),
