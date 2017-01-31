@@ -573,14 +573,7 @@ impl<R> ::Pass<R> for LightingPass<R>
         // Add lighting to scene in chunks of 128 lights at a time
         // TODO: Why chunked?
         for chunk in scene.point_lights.chunks(128) {
-            let blank_light = PointLight {
-                color: [0.0, 0.0, 0.0, 0.0],
-                center: [0.0, 0.0, 0.0, 0.0],
-                intensity: 0.0,
-                radius: 0.0,
-                smoothness: 0.0,
-            };
-            let mut point_lights: Vec<_> = chunk
+            let point_lights: Vec<_> = chunk
                 .iter()
                 .map(|l| {
                     PointLight {
@@ -592,15 +585,9 @@ impl<R> ::Pass<R> for LightingPass<R>
                     }
                 })
                 .collect();
-            point_lights.extend(vec![blank_light; 128 - scene.point_lights.len()]);
 
             // Add directional lights to scene
-            let blank_light = DirectionalLight {
-                color: [0.0, 0.0, 0.0, 0.0],
-                direction: [0.0, 0.0, 0.0, 0.0],
-            };
-
-            let mut directional_lights: Vec<_> = scene.directional_lights
+            let directional_lights: Vec<_> = scene.directional_lights
                 .iter()
                 .map(|l| {
                     DirectionalLight {
@@ -609,7 +596,6 @@ impl<R> ::Pass<R> for LightingPass<R>
                     }
                 })
                 .collect();
-            directional_lights.extend(vec![blank_light; 16 - scene.directional_lights.len()]);
 
             encoder.update_constant_buffer(
                 &self.fragment_args,
@@ -617,8 +603,8 @@ impl<R> ::Pass<R> for LightingPass<R>
                     inv_view_proj: inv_view_proj.into(),
                     proj: scene.camera.projection,
                     viewport: [0., 0., w as f32, h as f32],
-                    point_light_count: scene.point_lights.len() as i32,
-                    directional_light_count: scene.directional_lights.len() as i32,
+                    point_light_count: point_lights.len() as i32,
+                    directional_light_count: directional_lights.len() as i32,
                 }
             );
 
@@ -633,7 +619,7 @@ impl<R> ::Pass<R> for LightingPass<R>
                     ka: (src.texture_ka.clone(), self.sampler.clone()),
                     kd: (src.texture_kd.clone(), self.sampler.clone()),
                     ks: (src.texture_ks.clone(), self.sampler.clone()),
-                    ns: 16.0,
+                    ns: 16.0, // TODO: Remove this hardcoded value, requires support for different materials
                     ambient: scene.ambient_light,
                     normal: (src.texture_normal.clone(), self.sampler.clone()),
                     depth: (src.texture_depth.clone(), self.sampler.clone()),
