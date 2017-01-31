@@ -4,6 +4,7 @@ version = "0.3.1"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
 description = "High-level rendering engine with multiple backends"
 keywords = ["game", "engine", "renderer", "3d", "amethyst"]
+categories = ["rendering"]
 
 documentation = "https://www.amethyst.rs/doc/amethyst/"
 homepage = "https://www.amethyst.rs/"
