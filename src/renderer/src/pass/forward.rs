@@ -426,14 +426,7 @@ impl<R> Pass<R> for DrawShaded<R> where R: gfx::Resources {
     {
 
         // Add point lights to scene
-        let blank_light = PointLight {
-            color: [0.0, 0.0, 0.0, 0.0],
-            center: [0.0, 0.0, 0.0, 0.0],
-            intensity: 0.0,
-            radius: 0.0,
-            smoothness: 0.0,
-        };
-        let mut point_lights: Vec<_> = scene.point_lights
+        let point_lights: Vec<_> = scene.point_lights
             .iter()
             .map(|l| {
                 PointLight {
@@ -445,15 +438,10 @@ impl<R> Pass<R> for DrawShaded<R> where R: gfx::Resources {
                 }
             })
             .collect();
-        point_lights.extend(vec![blank_light; 512 - scene.point_lights.len()]);
         encoder.update_buffer(&self.point_lights, &point_lights[..], 0).unwrap();
 
         // Add directional lights to scene
-        let blank_light = DirectionalLight {
-            color: [0.0, 0.0, 0.0, 0.0],
-            direction: [0.0, 0.0, 0.0, 0.0],
-        };
-        let mut directional_lights: Vec<_> = scene.directional_lights
+        let directional_lights: Vec<_> = scene.directional_lights
             .iter()
             .map(|l| {
                 DirectionalLight {
@@ -462,7 +450,6 @@ impl<R> Pass<R> for DrawShaded<R> where R: gfx::Resources {
                 }
             })
             .collect();
-        directional_lights.extend(vec![blank_light; 16 - scene.directional_lights.len()]);
         encoder.update_buffer(&self.directional_lights, &directional_lights[..], 0).unwrap();
 
         // Draw every entity
@@ -479,8 +466,8 @@ impl<R> Pass<R> for DrawShaded<R> where R: gfx::Resources {
             encoder.update_constant_buffer(
                 &self.fragment,
                 &FragmentArgs {
-                    point_light_count: scene.point_lights.len() as i32,
-                    directional_light_count: scene.directional_lights.len() as i32,
+                    point_light_count: point_lights.len() as i32,
+                    directional_light_count: directional_lights.len() as i32,
                 }
             );
 
