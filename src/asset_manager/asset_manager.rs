@@ -5,6 +5,7 @@
 extern crate amethyst_ecs;
 extern crate amethyst_renderer;
 extern crate cgmath;
+extern crate dds;
 extern crate genmesh;
 extern crate gfx_device_gl;
 extern crate gfx;
@@ -30,6 +31,7 @@ use renderer::VertexPosNormal;
 // external imports
 use self::amethyst_ecs::{Allocator, Component, Entity, MaskedStorage, Storage, VecStorage, World};
 use self::cgmath::{InnerSpace, Vector3};
+use self::dds::DDS;
 pub use self::gfx::tex::{AaMode, Kind};
 use self::wavefront_obj::obj::{ObjSet, parse, Primitive};
 
@@ -170,6 +172,8 @@ impl AssetManager {
         for fmt in vec!["png", "bmp", "jpg", "jpeg", "tga"] {
             asset_manager.register_loader::<Texture, imagefmt::Image<u8>>(fmt);
         }
+
+        asset_manager.register_loader::<Texture, DDS>("dds");
 
         // Set up default resource directories. Will add each dir in
         // `AMETHYST_ASSET_DIRS` if set. Will also add the current
@@ -344,6 +348,21 @@ impl AssetLoader<Texture> for imagefmt::Image<u8> {
         AssetLoader::from_data(assets, TextureLoadData {
             kind: Kind::D2(image.w as u16, image.h as u16, AaMode::Single),
             raw: &[pixels.as_slice()],
+        })
+    }
+}
+
+impl AssetLoaderRaw for DDS {
+    fn from_raw(_: &Assets, data: &[u8]) -> Option<DDS> {
+        DDS::decode(&mut data.clone())
+    }
+}
+
+impl AssetLoader<Texture> for DDS {
+    fn from_data(assets: &mut Assets, image: DDS) -> Option<Texture> {
+        AssetLoader::from_data(assets, TextureLoadData {
+            kind: Kind::D2(image.header.width as u16, image.header.height as u16, AaMode::Single),
+            raw: image.layers.iter().map(|l| l.as_slice()).collect::<Vec<_>>().as_slice(),
         })
     }
 }

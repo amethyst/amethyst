@@ -125,7 +125,7 @@ impl State for Example {
         asset_manager.load_asset_from_data::<Texture, [f32; 4]>("black", [0.0, 0.0, 0.0, 1.0]);
         asset_manager.load_asset_from_data::<Texture, [f32; 4]>("white", [1.0, 1.0, 1.0, 1.0]);
         asset_manager.load_asset::<Texture>("logo", "png");
-        asset_manager.load_asset::<Texture>("grass", "png");
+        asset_manager.load_asset::<Texture>("ground", "dds");
 
         // Load/generate meshes
         asset_manager.load_asset::<Mesh>("teapot", "obj");
@@ -180,7 +180,7 @@ impl State for Example {
             .build();
 
         // Create base rectangle as floor
-        let renderable = asset_manager.create_renderable("rectangle", "grass", "grass", "black", 1.0).unwrap();
+        let renderable = asset_manager.create_renderable("rectangle", "ground", "ground", "black", 1.0).unwrap();
         let mut transform = LocalTransform::default();
         transform.scale = [10.0; 3];
         world.create_now()

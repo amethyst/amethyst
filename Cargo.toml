@@ -53,6 +53,7 @@ gfx = "0.12"
 
 [dependencies]
 cgmath = "0.11"
+dds-rs = "0.1.0"
 genmesh = "0.4"
 gfx = "0.12"
 gfx_device_gl = "0.11"
