@@ -74,12 +74,13 @@ Using `gfx-rs` for backend abstraction allows us to provide compatibility with m
 **Next steps**
  * Raw input support (winit?)
  * Gamepad support (winit?)
- * Input Mapping
+ * Input Mapping: Map input events (e.g key press) to abstract action events (`Jump`, `Forward`, ..)
 
 ### Audio
 TODO: Unfortunately I'm not that deep into the audio components of game engines (state of art?)
 I imagine some kind of OpenAL like API, supporting spatial sound source objects, audio streaming, attenuation, etc.
 Provide low-level access?
+Add support for common audio formats.
 
 ** Next Steps**
 
@@ -99,7 +100,7 @@ TODO
 
 ** Next Steps**
  * Improve current approach regarding robustness (error handling) and flexibility with scene formats
- * Implement loaders for common file formats and archives
+ * Implement loaders for common file formats and archives. Write `AssetLoader` implements based on external loaders or develope new libraries for other formats.
 
 ### Documentation/Tutorial
 TODO
@@ -111,7 +112,7 @@ TODO: I would consider physics pretty difficult part to do *right*, therefore no
 Maybe rely on external libraries first.
 Should still provide ways for collision detection, allowing to do collision checks, raycasts, etc. (-> ncollide?).
 
-**Parallelism** TODO: internal physic parallelism, possible GPU implementation (hard), difficult with external libraries
+**Parallelism** TODO: internal physic parallelism, possible GPU implementation (hard) (Rust to GPU compilation in the future?), difficult with external libraries
 **Data-Driven** TODO: integration issue: physics world <-> ECS world, having 2 different representations? if so how to keep them in sync and integrate with other conflicting processors (e.g spatial hierarchy)
 
 ** Next Steps**
@@ -119,7 +120,7 @@ Should still provide ways for collision detection, allowing to do collision chec
  * Provide collision testing API (triggers, raycasts, etc.)
 
 ### Tooling
-We want to focus on developing a game engine, even though a rich toolset is required to simplify different task for users. If possible, we can integrate existing tools like profilers and 3D editors.
+We want to focus on developing a game engine, even though a rich toolset is required to simplify different task for users. If possible, we can integrate existing tools like profilers and 3D editors (e.g adding plugins to serialize/deserialize amethyst worlds).
 'In-house' tools would be implemented on demand, e.g. engine specific data formats, own editor (Qt based?).
 
 ** Next Steps**
@@ -133,18 +134,21 @@ Scripting could be use for several subsystems like animation, particle system, A
 
 ** Next Steps**
  * Evaluate the different scripting languages with respect to interoperability, performance, usability, ..
+ * Implement backend for one (or multiple) scripting lanuages
  
 ### Graphical UI
 ** Next Steps**
  * Compatibility of GUIs with entity component systems (UI elements as entities <-> only root UI elements)
- * Integrate an existing UI library (e.g conrod) or develop a new library from scratch (requires further planning then)
+ * Integrate an existing UI library (e.g conrod) or develop a new library from scratch (requires further planning then), rendered with gfx-rs
  
 Future:
 A common trend for large engines is embedding webbrowser frameworks like CEF for UI. Allowing to re-use existing JS/HTML/CSS frameworks to create complex UIs in a short time.
-Unfortunately CEF is pretty large, therefore a Servo based approach would be desirable for performance and easier integration.
+Unfortunately CEF is pretty large, therefore a Servo based approach would be desirable for performance and easier integration. Instead of pulling whole servo into the project (difficult to compile on all platforms and pretty long compilation times), we could try to build something on top of webrender (no gfx-rs backend so far) or the layout components.
 
 ### Networking
 TODO: same as physics, hard to do correctly, interesting would be something like `libyojimbo` but well..
+Use serialization to provide safe network protocols (i.e safe parsing, integer ranges, etc.)
+Tasks to handle: serialization (read/write packets, transmission and compression, higher level APIs for matchmaking, client-server connections, ..)
 
 ** Next Steps**
 
