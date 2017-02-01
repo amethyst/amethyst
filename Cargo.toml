@@ -4,6 +4,7 @@ version = "0.3.1"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
 description = "Data-oriented game engine written in Rust"
 keywords = ["game", "engine", "sdk", "amethyst"]
+categories = ["game-engines"]
 
 documentation = "https://www.amethyst.rs/doc/amethyst"
 homepage = "https://www.amethyst.rs/"
