@@ -1,6 +1,8 @@
-use components::rendering::Mesh;
-use components::rendering::Texture;
-use ecs::{Component, VecStorage};
+extern crate specs;
+
+use super::Mesh;
+use super::Texture;
+use self::specs::{Component, VecStorage};
 
 #[derive(Clone)]
 /// A `Component` that can be attached to an ECS `Entity` to render it onscreen.

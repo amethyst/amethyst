@@ -12,15 +12,14 @@ extern crate mopa;
 
 extern crate glutin;
 extern crate cgmath;
-
-extern crate amethyst_ecs;
+extern crate specs;
 
 /// Contains the included Render Targets
 pub mod target;
 /// Contains the included Passes
 pub mod pass;
 
-use amethyst_ecs::{Component, VecStorage};
+use self::specs::{Component, VecStorage};
 
 use std::any::TypeId;
 use std::collections::HashMap;

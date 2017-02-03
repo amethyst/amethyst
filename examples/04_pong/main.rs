@@ -1,10 +1,10 @@
 extern crate amethyst;
 
 use amethyst::engine::{Application, State, Trans};
-use amethyst::components::transform::{LocalTransform, Transform};
+use amethyst::ecs::components::transform::{LocalTransform, Transform};
 use amethyst::config::Element;
-use amethyst::ecs::{World, Join, VecStorage, Component, Processor, RunArg};
-use amethyst::components::rendering::{Mesh, Texture};
+use amethyst::specs::{World, Join, VecStorage, Component, System, RunArg};
+use amethyst::ecs::components::rendering::{Mesh, Texture};
 use amethyst::event::WindowEvent;
 use amethyst::gfx_device::DisplayConfig;
 use amethyst::asset_manager::AssetManager;
@@ -59,9 +59,9 @@ impl Component for Plank {
     type Storage = VecStorage<Plank>;
 }
 
-struct PongProcessor;
+struct PongSystem;
 
-unsafe impl Sync for PongProcessor {  }
+unsafe impl Sync for PongSystem {  }
 
 struct Score {
     score_left: i32,
@@ -77,13 +77,13 @@ impl Score {
     }
 }
 
-// Pong game processor
-impl Processor<()> for PongProcessor {
+// Pong game system
+impl System<()> for PongSystem {
     fn run(&mut self, arg: RunArg, _: ()) {
         use amethyst::event::VirtualKeyCode;
-        use amethyst::world_resources::camera::{Camera, Projection};
-        use amethyst::world_resources::Time;
-        use amethyst::world_resources::InputHandler;
+        use amethyst::ecs::resources::camera::{Camera, Projection};
+        use amethyst::ecs::resources::Time;
+        use amethyst::ecs::resources::InputHandler;
 
         // Get all needed component storages and resources
         let (mut balls,
@@ -241,10 +241,10 @@ impl Processor<()> for PongProcessor {
 impl State for Pong {
     fn on_start(&mut self, world: &mut World, asset_manager: &mut AssetManager, pipeline: &mut Pipeline) {
         use amethyst::renderer::pass::{Clear, DrawFlat};
-        use amethyst::world_resources::InputHandler;
+        use amethyst::ecs::resources::InputHandler;
         use amethyst::renderer::Layer;
-        use amethyst::world_resources::camera::{Camera, Projection};
-        use amethyst::world_resources::screen_dimensions::ScreenDimensions;
+        use amethyst::ecs::resources::camera::{Camera, Projection};
+        use amethyst::ecs::resources::ScreenDimensions;
 
         let layer =
         Layer::new("main",
@@ -327,7 +327,7 @@ impl State for Pong {
     }
 
     fn handle_events(&mut self, events: &[WindowEvent], world: &mut World, _: &mut AssetManager, _: &mut Pipeline) -> Trans {
-        use amethyst::world_resources::InputHandler;
+        use amethyst::ecs::resources::InputHandler;
         use amethyst::event::*;
 
         let mut input_handler = world.write_resource::<InputHandler>();
@@ -350,7 +350,7 @@ fn main() {
     let mut game = Application::build(Pong, display_config)
         .register::<Ball>()
         .register::<Plank>()
-        .with::<PongProcessor>(PongProcessor, "pong_processor", 1)
+        .with::<PongSystem>(PongSystem, "pong_system", 1)
         .done();
     game.run();
 }

@@ -8,18 +8,18 @@ use std::env::set_var;
 use std::str;
 
 use amethyst::asset_manager::{AssetManager, DirectoryStore};
-use amethyst::components::rendering::{Mesh, Texture};
-use amethyst::components::transform::{LocalTransform, Transform};
+use amethyst::ecs::components::rendering::{Mesh, Texture};
+use amethyst::ecs::components::transform::{LocalTransform, Transform};
 use amethyst::config::Element;
-use amethyst::ecs::{Join, Processor, RunArg, World};
 use amethyst::engine::{Application, State, Trans};
+use amethyst::specs::{World, Join, System, RunArg};
 use amethyst::event::WindowEvent;
 use amethyst::gfx_device::DisplayConfig;
 use amethyst::renderer::{AmbientLight, DirectionalLight, Layer, PointLight};
 use amethyst::renderer::Pipeline;
 use amethyst::renderer::pass::{BlitLayer, Clear, DrawFlat, DrawShaded, Lighting};
-use amethyst::world_resources::camera::{Camera, Projection};
-use amethyst::world_resources::{ScreenDimensions, Time};
+use amethyst::ecs::resources::camera::{Camera, Projection};
+use amethyst::ecs::resources::{ScreenDimensions, Time};
 use cgmath::{Deg, Euler, Quaternion};
 
 
@@ -34,9 +34,9 @@ struct DemoState {
 }
 
 
-struct ExampleProcessor;
+struct ExampleSystem;
 
-impl Processor<()> for ExampleProcessor {
+impl System<()> for ExampleSystem {
     fn run(&mut self, arg: RunArg, _: ()) {
         let (
             mut lights,
@@ -96,7 +96,6 @@ struct Example;
 
 impl State for Example {
     fn on_start(&mut self, world: &mut World, asset_manager: &mut AssetManager, pipeline: &mut Pipeline) {
-
         {
             let dimensions = world.read_resource::<ScreenDimensions>();
             let mut camera = world.write_resource::<Camera>();
@@ -318,7 +317,7 @@ fn main() {
                        env!("CARGO_MANIFEST_DIR"));
     let display_config = DisplayConfig::from_file(path).unwrap();
     let mut game = Application::build(Example, display_config)
-        .with::<ExampleProcessor>(ExampleProcessor, "example_processor", 1)
+        .with::<ExampleSystem>(ExampleSystem, "example_system", 1)
         .done();
     game.run();
 }

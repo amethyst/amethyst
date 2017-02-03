@@ -1,4 +1,6 @@
-use ecs::{Component, VecStorage, Entity};
+extern crate specs;
+
+use self::specs::{Component, VecStorage, Entity};
 use std::sync::atomic::{AtomicBool, Ordering};
 
 /// Component for defining a parent entity.

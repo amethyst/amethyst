@@ -6,7 +6,7 @@ extern crate cgmath;
 
 use amethyst::engine::{Application, State, Trans};
 use amethyst::config::Element;
-use amethyst::ecs::World;
+use amethyst::specs::World;
 use amethyst::gfx_device::DisplayConfig;
 use amethyst::asset_manager::AssetManager;
 use amethyst::event::WindowEvent;
@@ -22,10 +22,9 @@ impl State for Example {
     fn on_start(&mut self, world: &mut World, asset_manager: &mut AssetManager, pipeline: &mut Pipeline) {
         use amethyst::renderer::pass::{Clear, DrawShaded};
         use amethyst::renderer::{Layer, PointLight};
-        use amethyst::world_resources::camera::{Projection, Camera};
-        use amethyst::world_resources::ScreenDimensions;
-        use amethyst::components::rendering::{Texture, Mesh};
-
+        use amethyst::ecs::resources::camera::{Projection, Camera};
+        use amethyst::ecs::resources::ScreenDimensions;
+        use amethyst::ecs::components::rendering::{Texture, Mesh};
         let layer = Layer::new("main", vec![
             Clear::new([0.0, 0.0, 0.0, 1.0]),
             DrawShaded::new("main", "main"),

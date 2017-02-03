@@ -1,18 +1,19 @@
-//! Scene graph processor and types
+//! Scene graph system and types
 
 extern crate cgmath;
+extern crate specs;
 // extern crate test;
 
 use self::cgmath::Matrix4;
+use self::specs::{Join, Entity, RunArg, System};
 
-use ecs::{Join, Entity, RunArg, Processor};
-use components::transform::{LocalTransform, Transform, Child, Init};
+use super::super::components::transform::{LocalTransform, Transform, Child, Init};
 use std::collections::{HashMap, HashSet};
 
-/// Transformation processor.
+/// Transformation system.
 ///
 /// Handles updating `Transform` components based on the `LocalTransform` component and parents.
-pub struct TransformProcessor {
+pub struct TransformSystem {
     // Map of entities to index in sorted vec.
     indices: HashMap<Entity, usize>,
 
@@ -32,9 +33,9 @@ pub struct TransformProcessor {
     swapped: HashSet<Entity>,
 }
 
-impl TransformProcessor {
-    pub fn new() -> TransformProcessor {
-        TransformProcessor {
+impl TransformSystem {
+    pub fn new() -> TransformSystem {
+        TransformSystem {
             indices: HashMap::new(),
             sorted: Vec::new(),
             new: Vec::new(),
@@ -45,7 +46,7 @@ impl TransformProcessor {
     }
 }
 
-impl Processor<()> for TransformProcessor {
+impl System<()> for TransformSystem {
     fn run(&mut self, arg: RunArg, _: ()) {
         // Fetch world and gets entities/components
         let (entities, locals, mut globals, mut init, children) = arg.fetch(|w| {
@@ -180,7 +181,7 @@ impl Processor<()> for TransformProcessor {
 mod tests {
     // use super::test::Bencher;
     use super::cgmath::{Decomposed, Quaternion, Vector3, Matrix4};
-    use components::transform::{LocalTransform, Transform};
+    use ecs::components::transform::{LocalTransform, Transform};
 
     #[test]
     fn transform_matrix() {
@@ -230,8 +231,8 @@ mod tests {
     // }
     //
     // let mut planner: Planner<Arc<Mutex<Context>>> = Planner::new(world, 1);
-    // let transform_processor = TransformProcessor::new();
-    // planner.add_system::<TransformProcessor>(transform_processor, "transform_processor", 0);
+    // let transform_system = TransformSystem::new();
+    // planner.add_system::<TransformSystem>(transform_system, "transform_system", 0);
     //
     // let config = Config::default();
     // let ctx = Arc::new(Mutex::new(Context::new(config.context_config)));

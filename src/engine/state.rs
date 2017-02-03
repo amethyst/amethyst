@@ -1,9 +1,11 @@
 //! Utilities for game state management.
 
+extern crate specs;
+
 use asset_manager::AssetManager;
 use event::WindowEvent;
 use renderer::Pipeline;
-use ecs::World;
+use self::specs::World;
 
 /// Types of state transitions.
 pub enum Trans {
@@ -197,7 +199,7 @@ mod tests {
     use super::*;
     use asset_manager::AssetManager;
     use renderer::Pipeline;
-    use ecs::World;
+    use specs::World;
 
     struct State1(u8);
     struct State2;

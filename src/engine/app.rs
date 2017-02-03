@@ -1,4 +1,6 @@
 //! The core engine framework.
+extern crate specs;
+
 use super::state::{State, StateMachine};
 use super::timing::Stopwatch;
 use renderer;
@@ -7,12 +9,12 @@ use asset_manager::AssetManager;
 use gfx_device;
 use gfx_device::gfx_types;
 use gfx_device::{GfxDevice, DisplayConfig};
-use components::transform::{LocalTransform, Transform, Child, Init};
-use processors::transform::TransformProcessor;
-use components::rendering::Renderable;
-use ecs::{Planner, World, Processor, Priority, Component};
+use ecs::components::rendering::Renderable;
+use ecs::components::transform::{LocalTransform, Transform, Child, Init};
+use ecs::systems::transform::TransformSystem;
+use ecs::resources::Time;
+use self::specs::{Planner, World, System, Priority, Component};
 use std::time::{Duration, Instant};
-use world_resources::Time;
 
 /// User-friendly facade for building games. Manages main loop.
 pub struct Application {
@@ -35,8 +37,8 @@ impl Application {
                   -> Application
         where T: State + 'static
     {
-        use world_resources::camera::{Camera, Projection};
-        use world_resources::ScreenDimensions;
+        use ecs::resources::camera::{Camera, Projection};
+        use ecs::resources::ScreenDimensions;
         let (gfx_device, mut factory, main_target) = gfx_device::video_init(display_config);
         let mut pipeline = Pipeline::new();
         pipeline.targets.insert("main".into(),
@@ -49,8 +51,8 @@ impl Application {
                             Box::new(renderer::target::GeometryBuffer::new(&mut factory, (w as u16, h as u16))));
         let mut asset_manager = AssetManager::new();
         asset_manager.add_loader::<gfx_types::Factory>(factory);
-        let transform_processor = TransformProcessor::new();
-        planner.add_system::<TransformProcessor>(transform_processor, "transform_processor", 0);
+        let transform_system = TransformSystem::new();
+        planner.add_system::<TransformSystem>(transform_system, "transform_system", 0);
         {
             let mut world = planner.mut_world();
             let time = Time {
@@ -124,7 +126,7 @@ impl Application {
 
     /// Advances the game world by one tick.
     fn advance_frame(&mut self) {
-        use world_resources::ScreenDimensions;
+        use ecs::resources::ScreenDimensions;
         let events = self.gfx_device.poll_events();
 
         self.states.handle_events(events.as_ref(), self.planner.mut_world(), &mut self.asset_manager, &mut self.pipeline);
@@ -193,7 +195,7 @@ impl<T> ApplicationBuilder<T>
     }
 
     pub fn with<P>(mut self, pro: P, name: &str, pri: Priority) -> ApplicationBuilder<T>
-        where P: Processor<()> + 'static
+        where P: System<()> + 'static
     {
         self.planner.add_system::<P>(pro, name, pri);
         self
