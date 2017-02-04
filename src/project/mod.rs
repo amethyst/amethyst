@@ -17,3 +17,12 @@ impl From<io::Error> for ProjectError {
     }
 }
 
+impl ProjectError {
+    pub fn description(&self) -> String {
+        match self {
+            &ProjectError::File(ref err) => err.to_string(),
+            &ProjectError::Parser(ref msg) => msg.clone(),
+        }
+    }
+}
+

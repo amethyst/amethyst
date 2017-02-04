@@ -8,9 +8,12 @@ macro_rules! impl_config(
         }
     ) => {
         impl ::serde::de::Deserialize for $identifier {
-            fn deserialize<D>(deserializer: &mut D) -> Result<Self, D::Error>
+            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
                 where D: ::serde::de::Deserializer
             {
+                const FIELDS: &'static [&'static str] = &[ $( stringify!($field), )* ];
+                const CONFIG_NAME: &'static str = stringify!($identifier);
+
                 #[allow(non_camel_case_types)]
                 enum Field {
                     $(
@@ -19,7 +22,7 @@ macro_rules! impl_config(
                 }
 
                 impl ::serde::de::Deserialize for Field {
-                    fn deserialize<D>(deserializer: &mut D) -> Result<Self, D::Error>
+                    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
                         where D: ::serde::de::Deserializer
                     {
                         struct FieldVisitor;
@@ -27,15 +30,25 @@ macro_rules! impl_config(
                         impl ::serde::de::Visitor for FieldVisitor {
                             type Value = Field;
 
-                            fn visit_str<E>(&mut self, value: &str) -> Result<Field, E>
-                                where E: ::serde::Error,
+                            fn expecting(&self, formatter: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+                                try!(write!(formatter, "one of "));
+
+                                $(
+                                    try!(write!(formatter, "`{}`, ", stringify!($field)));
+                                )*
+
+                                Ok(())
+                            }
+
+                            fn visit_str<E>(self, value: &str) -> Result<Field, E>
+                                where E: ::serde::de::Error,
                             {
                                 match value {
                                     $(
                                         stringify!($field) => Ok(Field::$field),
                                     )*
                                     _ => {
-                                        Err(::serde::Error::unknown_field(value))
+                                        Err(::serde::de::Error::unknown_field(value, FIELDS))
                                     },
                                 }
                             }
@@ -49,7 +62,11 @@ macro_rules! impl_config(
                 impl ::serde::de::Visitor for IdentifierVisitor {
                     type Value = $identifier;
 
-                    fn visit_seq<V>(&mut self, mut visitor: V) -> Result<Self::Value, V::Error>
+                    fn expecting(&self, formatter: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+                        write!(formatter, "a {} configuration", stringify!($identifier))
+                    }
+
+                    fn visit_seq<V>(self, mut visitor: V) -> Result<Self::Value, V::Error>
                         where V: ::serde::de::SeqVisitor,
                     {
                         let result = $identifier {
@@ -62,19 +79,18 @@ macro_rules! impl_config(
                                                 $default
                                             },
                                         },
-                                        Err(e) => {
-                                            println!("{:?}", e);
+                                        Err(err) => {
+                                            println!("{}: {}, expecting: `{}`", CONFIG_NAME, err, stringify!($ty));
                                             $default
                                         },
                                     }
                                 },
                             )*
                         };
-                        try!(visitor.end());
                         Ok(result)
                     }
 
-                    fn visit_map<V>(&mut self, mut visitor: V) -> Result<Self::Value, V::Error>
+                    fn visit_map<V>(self, mut visitor: V) -> Result<Self::Value, V::Error>
                         where V: ::serde::de::MapVisitor,
                     {
                         $(
@@ -86,13 +102,15 @@ macro_rules! impl_config(
                                 $(
                                     Field::$field => {
                                         if $field.is_some() {
-                                            println!("Duplicate entry: {:?}", stringify!($field));
+                                            use ::serde::de::Error;
+                                            let err: V::Error = V::Error::duplicate_field(stringify!($field));
+                                            println!("{}: {}", CONFIG_NAME, err);
                                         }
 
                                         $field = match visitor.visit_value() {
                                             Ok(v) => Some(v),
-                                            Err(e) => {
-                                                println!("{:?}", e);
+                                            Err(err) => {
+                                                println!("{}: {}, expecting: `{}`", CONFIG_NAME, err, stringify!($ty));
                                                 Some($default)
                                             },
                                         };
@@ -100,14 +118,14 @@ macro_rules! impl_config(
                                 )*
                             }
                         }
-                        try!(visitor.end());
 
                         $(
                             let $field = match $field {
                                 Some(v) => v,
                                 None => {
-                                    let err: Result<(), V::Error> = visitor.missing_field(stringify!($field));
-                                    println!("{:?}", err);
+                                    use ::serde::de::Error;
+                                    let err: V::Error = V::Error::missing_field(stringify!($field));
+                                    println!("{}: {}, expecting: `{}`", CONFIG_NAME, err, stringify!($ty));
                                     $default
                                 },
                             };
@@ -123,7 +141,6 @@ macro_rules! impl_config(
                     }
                 }
 
-                const FIELDS: &'static [&'static str] = &[ $( stringify!($field), )* ];
                 deserializer.deserialize_struct(stringify!($identifier), FIELDS, IdentifierVisitor)
             }
         }
@@ -141,12 +158,12 @@ macro_rules! impl_config(
         #[allow(dead_code)]
         impl $identifier {
             /// Attempts to load the struct from file.
-            /// Defaults if any errors occurred.
+            /// Prints out the error and defaults if any errors occurred.
             pub fn load<P: AsRef<::std::path::Path>>(path: P) -> Self {
-                match $identifier::direct_load(path) {
+                match $identifier::direct_load(path.as_ref()) {
                     Ok(v) => v,
-                    Err(e) => {
-                        println!("{:?}", e);
+                    Err(err) => {
+                        println!("{}: {}", stringify!($identifier), err.description());
                         $identifier::default()
                     },
                 }

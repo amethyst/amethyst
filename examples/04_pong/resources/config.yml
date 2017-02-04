@@ -6,3 +6,4 @@ multisampling: 1
 title: "Pong example"
 visibility: true
 vsync: true
+
