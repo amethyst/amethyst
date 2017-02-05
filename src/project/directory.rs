@@ -2,7 +2,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::io::Read;
-use ::project::ProjectError;
+use project::ProjectError;
 
 /// Tracking root folder for files as well as a list of files in destination.
 #[derive(Debug)]
