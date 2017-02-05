@@ -5,6 +5,8 @@ use std::io;
 pub mod config;
 pub mod directory;
 
+pub use self::config::Config;
+
 #[derive(Debug)]
 pub enum ProjectError {
     File(io::Error),

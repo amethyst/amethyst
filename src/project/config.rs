@@ -1,4 +1,18 @@
 
+/// Trait implemented by the `config!` macro.
+pub trait Config where Self: Sized {
+    /// Loads a configuration structure from a file.
+    /// Defaults if the file fails in any way.
+    fn load<P: AsRef<::std::path::Path>>(P) -> Self;
+
+    /// Loads a configuration structure from a file.
+    fn direct_load<P: AsRef<::std::path::Path>>(P) -> Result<Self, ::project::ProjectError>;
+
+    /// Writes a configuration structure to a file.
+    fn write<P: AsRef<::std::path::Path>>(&self, P) -> Result<(), ::project::ProjectError>;
+}
+
+#[macro_export]
 macro_rules! impl_config(
     (
         struct $identifier:ident {
@@ -155,11 +169,8 @@ macro_rules! impl_config(
             }
         }
 
-        #[allow(dead_code)]
-        impl $identifier {
-            /// Attempts to load the struct from file.
-            /// Prints out the error and defaults if any errors occurred.
-            pub fn load<P: AsRef<::std::path::Path>>(path: P) -> Self {
+        impl $crate::project::Config for $identifier {
+            fn load<P: AsRef<::std::path::Path>>(path: P) -> Self {
                 match $identifier::direct_load(path.as_ref()) {
                     Ok(v) => v,
                     Err(err) => {
@@ -169,7 +180,7 @@ macro_rules! impl_config(
                 }
             }
 
-            pub fn write<P: AsRef<::std::path::Path>>(&self, path: P) -> Result<(), $crate::project::ProjectError> {
+            fn write<P: AsRef<::std::path::Path>>(&self, path: P) -> Result<(), $crate::project::ProjectError> {
                 use ::std::io::Write;
 
                 let result = ::serde_yaml::to_string(self);
@@ -180,8 +191,7 @@ macro_rules! impl_config(
                 Ok(())
             }
 
-            /// Attempts to load the struct from file.
-            pub fn direct_load<P: AsRef<::std::path::Path>>(path: P) -> Result<Self, $crate::project::ProjectError> {
+            fn direct_load<P: AsRef<::std::path::Path>>(path: P) -> Result<Self, $crate::project::ProjectError> {
                 let content = try!($crate::project::directory::Directory::load(path));
                 let parsed = ::serde_yaml::from_str::<$identifier>(&content);
                 parsed.map_err(|e| $crate::project::ProjectError::Parser(e.to_string()) )
@@ -190,9 +200,50 @@ macro_rules! impl_config(
     }
 );
 
+/// The `config!` macro allows defining configuration structures that can load in
+/// `.yml`/`.yaml` files.
+///
+/// It implements the [`serde::Serialize`], [`serde::Deserialize`], and [`Config`] traits.
+///
+/// It follows Rust's syntax for defining structures with one addition, defaulting values.
+/// If the file fails to specific fields of a configuration, then it will print out
+/// an error describing the issue and then load in this defaulting value.
+///
+/// In the case that the file is not found, or the configuration does not exist at all
+/// inside the file, then the configuration will have all default values.
+///
+/// Note: Documentation must be put on the line before the field, rather than on the same line.
+///
+///## Example Usage:
+/// 
+/// ```rust
+/// #[macro_use]
+/// extern crate amethyst;
+/// extern crate serde;
+/// #[macro_use]
+/// extern crate serde_derive;
+/// extern crate serde_yaml;
+///
+///config!(
+///    pub struct DisplayConfig {
+///        pub title: String = "Amethyst Game".to_string(),
+///
+///        /// Resolution of the window size at start.
+///        pub resolution: (u32, u32) = (1920, 1080),
+///        
+///        pub fullscreen: bool = false,
+///    }    
+///);
+///# fn main(){}
+/// ```
+///
+/// [`serde::Serialize`]: ../serde/trait.Serialize.html
+/// [`serde::Deserialize`]: ../serde/trait.Deserialize.html
+/// [`Config`]: ../amethyst/project/config/trait.Config.html
 #[macro_export]
 macro_rules! config(
     (
+        // public configuration structure
         $(#[$identifier_meta:meta])*
         pub struct $identifier:ident {
             $(
@@ -210,6 +261,7 @@ macro_rules! config(
             )*
         }
 
+        // Implements custom `Deserialize` for configuration structures
         impl_config!(
             struct $identifier {
                 $(
@@ -219,6 +271,7 @@ macro_rules! config(
         );
     };
     (
+        // private configuration structure
         $(#[$identifier_meta:meta])*
         struct $identifier:ident {
             $(
@@ -236,6 +289,7 @@ macro_rules! config(
             )*
         }
 
+        // Implements custom `Deserialize` for configuration structures
         impl_config!(
             struct $identifier {
                 $(

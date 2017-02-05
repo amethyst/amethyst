@@ -7,6 +7,7 @@ use amethyst::ecs::{World, Join, VecStorage, Component, RunArg, System};
 use amethyst::ecs::components::{Mesh, LocalTransform, Texture, Transform};
 use amethyst::gfx_device::DisplayConfig;
 use amethyst::renderer::{Pipeline, VertexPosNormal};
+use amethyst::project::Config;
 
 struct Pong;
 
