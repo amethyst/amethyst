@@ -194,10 +194,10 @@ impl<T> ApplicationBuilder<T>
         self
     }
 
-    pub fn with<P>(mut self, pro: P, name: &str, pri: Priority) -> ApplicationBuilder<T>
-        where P: System<()> + 'static
+    pub fn with<S>(mut self, sys: S, name: &str, pri: Priority) -> ApplicationBuilder<T>
+        where S: System<()> + 'static
     {
-        self.planner.add_system::<P>(pro, name, pri);
+        self.planner.add_system::<S>(sys, name, pri);
         self
     }
 
