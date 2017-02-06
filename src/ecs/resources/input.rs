@@ -1,12 +1,25 @@
 //! The input handler for the game engine
 
-use std::collections::hash_map::{Entry, HashMap};
+use std::collections::hash_map::{Entry, HashMap, Keys};
+use std::iter::Iterator;
 use event::{ElementState, WindowEvent, Event, VirtualKeyCode};
 
 #[derive(PartialEq, Eq)]
-enum KeyQueryState{
+enum KeyQueryState {
     NotQueried,
     Queried,
+}
+
+/// Iterator that iterates through all currently pressed down keys
+pub struct PressedKeysIterator<'a> {
+    iterator: Keys<'a, VirtualKeyCode, KeyQueryState>,
+}
+
+impl<'a> Iterator for PressedKeysIterator<'a> {
+    type Item = &'a VirtualKeyCode;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iterator.next()
+    }
 }
 
 pub struct InputHandler {
@@ -16,9 +29,7 @@ pub struct InputHandler {
 impl InputHandler {
     /// Create a new InputHandler
     pub fn new() -> InputHandler {
-        InputHandler {
-            pressed_keys: HashMap::new(),
-        }
+        InputHandler { pressed_keys: HashMap::new() }
     }
 
     /// Update the input handler with new engine events
@@ -32,19 +43,24 @@ impl InputHandler {
                             // Allows more accurate `key_once` calls,
                             // I.e `key_once(key)` is queried after
                             // second `Pressed` event.
-                        },
+                        }
                         Entry::Vacant(entry) => {
                             entry.insert(KeyQueryState::Queried);
                         }
                     }
-                },
+                }
                 Event::KeyboardInput(ElementState::Released, _, Some(key_code)) => {
                     self.pressed_keys.remove(&key_code);
-                },
+                }
                 Event::Focused(false) => self.pressed_keys.clear(),
                 _ => {}
             }
         }
+    }
+
+    /// Returns an iterator for all the pressed down keys
+    pub fn pressed_keys(&self) -> PressedKeysIterator {
+        PressedKeysIterator { iterator: self.pressed_keys.keys() }
     }
 
     /// Check if `key` is currently pressed
