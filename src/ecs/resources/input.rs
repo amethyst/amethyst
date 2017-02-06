@@ -10,7 +10,7 @@ enum KeyQueryState {
     Queried,
 }
 
-// Iterator that iterates through all currently pressed down keys
+/// Iterator that iterates through all currently pressed down keys
 pub struct PressedKeysIterator<'a> {
     iterator: Keys<'a, VirtualKeyCode, KeyQueryState>,
 }
