@@ -1,5 +1,6 @@
 //! The core engine framework.
 extern crate specs;
+extern crate num_cpus;
 
 use super::state::{State, StateMachine};
 use super::timing::Stopwatch;
@@ -180,7 +181,7 @@ impl<T> ApplicationBuilder<T>
         ApplicationBuilder {
             initial_state: initial_state,
             display_config: display_config,
-            planner: Planner::new(world, 1),
+            planner: Planner::new(world, self::num_cpus::get()),
         }
     }
 

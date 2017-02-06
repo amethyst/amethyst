@@ -49,6 +49,7 @@ path = "examples/06_assets/main.rs"
 gfx = "0.12"
 
 [dependencies]
+num_cpus = "1.2"
 specs = "0.7"
 cgmath = "0.11"
 dds-rs = "0.1.0"
