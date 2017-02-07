@@ -2,16 +2,16 @@
 
 # Amethyst
 
-[![Build Status][s1]][tc] [![Crates.io][s2]][ci] [![MIT License][s3]][ml] [![Join the chat][s4]][gc]
+[![Build Status][s1]][tc] [![Crates.io][s2]][ci] [![MIT/Apache][s3]][li] [![Join the chat][s4]][gc]
 
 [s1]: https://travis-ci.org/amethyst/amethyst.svg?branch=master
 [s2]: https://img.shields.io/crates/v/amethyst.svg
-[s3]: https://img.shields.io/badge/license-MIT-blue.svg
+[s3]: https://img.shields.io/badge/license-MIT%2FApache-blue.svg
 [s4]: https://badges.gitter.im/amethyst/general.svg
 
 [tc]: https://travis-ci.org/amethyst/amethyst/
 [ci]: https://crates.io/crates/amethyst/
-[ml]: https://github.com/amethyst/amethyst/blob/master/COPYING
+[li]: COPYING
 [gc]: https://gitter.im/orgs/amethyst/rooms
 
 This project is a *work in progress* and is very incomplete; pardon the dust!
@@ -20,6 +20,7 @@ Read a summary of what happened this past week at [*This Week in Amethyst*][tw].
 [tw]: https://www.amethyst.rs/
 
 ## [Documentation][ar]
+
 [ar]: https://www.amethyst.rs/doc/
 
 ## Vision
@@ -109,12 +110,11 @@ The API reference can be found in `target/doc/amethyst/index.html`.
 
 ## License
 
-Licensed under either of
+Amethyst is free and open source software distributed under the terms of both
+the [MIT License][lm] and the [Apache License 2.0][la].
 
- * Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
- * MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
-
-at your option.
+[lm]: LICENSE-MIT
+[la]: LICENSE-APACHE
 
 ## Contributing
 
@@ -124,10 +124,10 @@ getting started. Don't know what to hack on? Check our [active projects][pr],
 read our [roadmap][rm], or search though [our issue tracker][it].
 
 Unless you explicitly state otherwise, any contribution intentionally submitted
-for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any
-additional terms or conditions.
+for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
+dual licensed as above, without any additional terms or conditions.
 
-[cm]: https://github.com/amethyst/amethyst/blob/master/CONTRIBUTING.md
+[cm]: CONTRIBUTING.md
 [pr]: https://github.com/amethyst/amethyst/projects
 [rm]: https://github.com/amethyst/amethyst/wiki/Roadmap
 [it]: https://github.com/amethyst/amethyst/issues

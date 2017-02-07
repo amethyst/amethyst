@@ -61,13 +61,14 @@
 //! }
 //! ```
 
-pub mod asset_manager;
-pub mod engine;
-pub mod event;
-pub mod gfx_device;
-pub mod ecs;
-
 #[macro_use]
 pub extern crate amethyst_config as config;
 pub extern crate amethyst_renderer as renderer;
 pub extern crate specs as specs;
+
+pub mod asset_manager;
+pub mod ecs;
+pub mod engine;
+pub mod event;
+pub mod gfx_device;
+pub mod timing;
