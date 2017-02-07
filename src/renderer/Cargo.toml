@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_renderer"
-version = "0.3.1"
+version = "0.4.0"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
 description = "High-level rendering engine with multiple backends"
 keywords = ["game", "engine", "renderer", "3d", "amethyst"]
@@ -11,7 +11,7 @@ homepage = "https://www.amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
 readme = "README.md"
-license = "MIT OR Apache-2.0"
+license = "MIT/Apache-2.0"
 
 [dependencies]
 cgmath = "0.11"
