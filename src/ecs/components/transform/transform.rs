@@ -1,8 +1,9 @@
-extern crate specs;
+//! Global transform component.
 
-use self::specs::{Component, VecStorage};
+use ecs::{Component, VecStorage};
 
-/// Absolute transformation (transformed from origin).
+/// Performs a global transformation on the entity (transform from origin).
+///
 /// Used for rendering position and orientation.
 #[derive(Debug, Copy, Clone)]
 pub struct Transform(pub [[f32; 4]; 4]);

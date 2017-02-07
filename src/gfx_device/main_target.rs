@@ -1,10 +1,15 @@
+//! Primary render target used by the renderer.
+
 extern crate gfx;
 extern crate gfx_device_gl;
-use renderer;
-use gfx_device::gfx_types;
 
-/// This struct represents the screen render target.
+use gfx_device::gfx_types;
+use renderer::target;
+
+/// Main render target that gets drawn on the screen.
 pub struct MainTarget {
-    pub main_color: gfx::handle::RenderTargetView<gfx_types::Resources, renderer::target::ColorFormat>,
-    pub main_depth: gfx::handle::DepthStencilView<gfx_types::Resources, renderer::target::DepthFormat>,
+    /// Primary color render target.
+    pub color: gfx::handle::RenderTargetView<gfx_types::Resources, target::ColorFormat>,
+    /// Primary depth-stencil render target.
+    pub depth: gfx::handle::DepthStencilView<gfx_types::Resources, target::DepthFormat>,
 }

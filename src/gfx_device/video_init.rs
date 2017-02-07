@@ -13,11 +13,11 @@ use self::amethyst_renderer::Renderer;
 use self::amethyst_renderer::target::{ColorFormat, DepthFormat};
 
 /// Create a `(GfxDevice, Factory, MainTarget)` tuple from `DisplayConfig`
-pub fn video_init(display_config: DisplayConfig) -> (GfxDevice, Factory, MainTarget) {
+pub fn video_init(cfg: DisplayConfig) -> (GfxDevice, Factory, MainTarget) {
     #[cfg(feature="opengl")]
-    return new_gl(&display_config);
+    return new_gl(&cfg);
     #[cfg(all(windows, feature="direct3d"))]
-    return new_d3d(&display_config);
+    return new_d3d(&cfg);
 }
 
 #[cfg(all(windows, feature="direct3d"))]
@@ -26,38 +26,39 @@ fn new_d3d() -> (GfxDevice, Factory, MainTarget) {
 }
 
 #[cfg(feature="opengl")]
-fn new_gl(display_config: &DisplayConfig) -> (GfxDevice, Factory, MainTarget) {
-    let title = display_config.title.clone();
-    let multisampling = display_config.multisampling.clone();
-    let visibility = display_config.visibility.clone();
+fn new_gl(cfg: &DisplayConfig) -> (GfxDevice, Factory, MainTarget) {
+    let title = cfg.title.clone();
+    let multisampling = cfg.multisampling.clone();
+    let visibility = cfg.visibility.clone();
 
     let mut builder = glutin::WindowBuilder::new()
         .with_title(title)
         .with_multisampling(multisampling)
         .with_visibility(visibility);
 
-    if let Some((w, h)) = display_config.dimensions {
+    if let Some((w, h)) = cfg.dimensions {
         builder = builder.with_dimensions(w, h);
     }
 
-    if let Some((w_min, h_min)) = display_config.min_dimensions {
+    if let Some((w_min, h_min)) = cfg.min_dimensions {
         builder = builder.with_min_dimensions(w_min, h_min);
     }
 
-    if let Some((w_max, h_max)) = display_config.max_dimensions {
+    if let Some((w_max, h_max)) = cfg.max_dimensions {
         builder = builder.with_max_dimensions(w_max, h_max);
     }
 
-    if display_config.vsync {
+    if cfg.vsync {
         builder = builder.with_vsync();
     }
 
-    if display_config.fullscreen {
+    if cfg.fullscreen {
         let monitor = glutin::get_primary_monitor();
         builder = builder.with_fullscreen(monitor);
     }
 
-    let (window, device, mut factory, main_color, main_depth) = gfx_window_glutin::init::<ColorFormat, DepthFormat>(builder);
+    let (window, device, mut factory, main_color, main_depth) =
+        gfx_window_glutin::init::<ColorFormat, DepthFormat>(builder);
 
     let combuf = factory.create_command_buffer();
     let mut renderer = Renderer::new(combuf);
@@ -70,8 +71,8 @@ fn new_gl(display_config: &DisplayConfig) -> (GfxDevice, Factory, MainTarget) {
     };
 
     let main_target = MainTarget {
-        main_color: main_color,
-        main_depth: main_depth,
+        color: main_color,
+        depth: main_depth,
     };
 
     (gfx_device, factory, main_target)

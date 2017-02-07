@@ -6,41 +6,36 @@ description = "Data-oriented game engine written in Rust"
 keywords = ["game", "engine", "sdk", "amethyst"]
 categories = ["game-engines"]
 
-documentation = "https://www.amethyst.rs/doc/amethyst"
+documentation = "https://www.amethyst.rs/doc/master/amethyst"
 homepage = "https://www.amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
 readme = "README.md"
 license = "MIT/Apache-2.0"
 
-[dependencies.amethyst_config]
-path = "src/config/"
-version = "0.2.0"
-
-[dependencies.amethyst_renderer]
-path = "src/renderer/"
-version = "0.4.0"
-
-[dependencies]
-num_cpus = "1.2"
-specs = "0.7"
-cgmath = "0.11"
-dds-rs = "0.1.0"
-genmesh = "0.4"
-gfx = "0.12"
-gfx_device_gl = "0.11"
-gfx_window_glutin = "0.12"
-glutin = "0.6"
-imagefmt = "4.0.0"
-wavefront_obj = "5.0.0"
-
-[dev-dependencies]
-gfx = "0.12"
+[badges]
+appveyor = { repository = "amethyst/amethyst" }
+travis-ci = { repository = "amethyst/amethyst" }
 
 [features]
 default = ["opengl"]
 opengl = []
 direct3d = []
+
+[dependencies]
+amethyst_config = { path = "src/config/" }
+amethyst_renderer = { path = "src/renderer" }
+cgmath = "0.11"
+dds-rs = "0.1"
+num_cpus = "1.2"
+genmesh = "0.4"
+gfx = "0.12"
+gfx_device_gl = "0.11"
+gfx_window_glutin = "0.12"
+glutin = "0.6"
+imagefmt = "4.0"
+specs = "0.7"
+wavefront_obj = "5.0"
 
 [target.'cfg(windows)'.dependencies]
 gfx_device_dx11 = "0.4"
@@ -68,4 +63,7 @@ path = "examples/04_pong/main.rs"
 
 [[example]]
 name = "assets"
-path = "examples/06_assets/main.rs"
+path = "examples/05_assets/main.rs"
+
+[workspace]
+members = ["src/config", "src/renderer"]

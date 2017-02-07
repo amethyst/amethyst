@@ -1,25 +1,31 @@
 use gfx;
-use gfx::traits::FactoryExt;
 use gfx::handle::Buffer;
-use gfx::Slice;
+use gfx::traits::FactoryExt;
 use cgmath::{Matrix4, SquareMatrix};
-pub use ::target::{ColorFormat, GeometryBuffer};
+
+use ConstantColorTexture;
+use pass::Pass;
+use target::{ColorFormat, GeometryBuffer};
 
 gfx_vertex_struct!(Vertex {
     pos: [i32; 2] = "a_Pos",
     tex_coord: [i32; 2] = "a_TexCoord",
 });
 
-
 pub struct Clear;
 
-impl<R> ::Pass<R> for Clear
+impl<R> Pass<R> for Clear
     where R: gfx::Resources
 {
     type Arg = ::pass::Clear;
     type Target = GeometryBuffer<R>;
 
-    fn apply<C>(&self, c: &::pass::Clear, target: &GeometryBuffer<R>, _: &::Pipeline, _: &::Scene<R>, encoder: &mut gfx::Encoder<R, C>)
+    fn apply<C>(&self,
+                c: &::pass::Clear,
+                target: &GeometryBuffer<R>,
+                _: &::Pipeline,
+                _: &::Scene<R>,
+                encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
         encoder.clear(&target.normal, [0.; 4]);
@@ -279,14 +285,13 @@ gfx_defines!(
     }
 );
 
-
 pub struct DrawPass<R: gfx::Resources> {
     vertex: gfx::handle::Buffer<R, VertexArgs>,
     fragment: gfx::handle::Buffer<R, FragmentArgs>,
     pso: gfx::PipelineState<R, draw::Meta>,
-    ka: ::ConstantColorTexture<R>,
-    kd: ::ConstantColorTexture<R>,
-    ks: ::ConstantColorTexture<R>,
+    ka: ConstantColorTexture<R>,
+    kd: ConstantColorTexture<R>,
+    ks: ConstantColorTexture<R>,
     sampler: gfx::handle::Sampler<R>,
 }
 
@@ -294,16 +299,18 @@ impl<R: gfx::Resources> DrawPass<R> {
     pub fn new<F>(factory: &mut F) -> DrawPass<R>
         where F: gfx::Factory<R>
     {
-        let sampler = factory.create_sampler(gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale, gfx::tex::WrapMode::Clamp));
+        let sampler =
+            factory.create_sampler(gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale,
+                                                              gfx::tex::WrapMode::Clamp));
 
         DrawPass {
             vertex: factory.create_constant_buffer(1),
             fragment: factory.create_constant_buffer(1),
             pso: factory.create_pipeline_simple(DRAW_VERTEX_SRC, DRAW_FRAGMENT_SRC, draw::new())
                 .unwrap(),
-            ka: ::ConstantColorTexture::new(factory),
-            kd: ::ConstantColorTexture::new(factory),
-            ks: ::ConstantColorTexture::new(factory),
+            ka: ConstantColorTexture::new(factory),
+            kd: ConstantColorTexture::new(factory),
+            ks: ConstantColorTexture::new(factory),
             sampler: sampler,
         }
     }
@@ -315,40 +322,42 @@ impl<R> ::Pass<R> for DrawPass<R>
     type Arg = ::pass::DrawFlat;
     type Target = GeometryBuffer<R>;
 
-    fn apply<C>(&self, _: &::pass::DrawFlat, target: &GeometryBuffer<R>, _: &::Pipeline, scene: &::Scene<R>, encoder: &mut gfx::Encoder<R, C>)
+    fn apply<C>(&self,
+                _: &::pass::DrawFlat,
+                target: &GeometryBuffer<R>,
+                _: &::Pipeline,
+                scene: &::Scene<R>,
+                encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
         // every entity gets drawn
         for f in &scene.fragments {
-            encoder.update_constant_buffer(
-                &self.vertex,
-                &VertexArgs {
-                    proj: scene.camera.projection,
-                    view: scene.camera.view,
-                    model: f.transform,
-                }
-            );
+            encoder.update_constant_buffer(&self.vertex,
+                                           &VertexArgs {
+                                               proj: scene.camera.proj,
+                                               view: scene.camera.view,
+                                               model: f.transform,
+                                           });
 
             let ka = f.ka.to_view(&self.ka, encoder);
             let kd = f.kd.to_view(&self.kd, encoder);
             let ks = f.ks.to_view(&self.ks, encoder);
 
-            encoder.draw(
-                &f.slice,
-                &self.pso,
-                &draw::Data {
-                    fragment_args: self.fragment.clone(),
-                    vertex_args: self.vertex.clone(),
-                    vbuf: f.buffer.clone(),
-                    out_normal: target.normal.clone(),
-                    out_ka: target.ka.clone(),
-                    out_kd: target.kd.clone(),
-                    out_ks: target.ks.clone(),
-                    out_depth: target.depth.clone(),
-                    ka: (ka, self.sampler.clone()),
-                    kd: (kd, self.sampler.clone()),
-                    ks: (ks, self.sampler.clone()),
-                 });
+            encoder.draw(&f.slice,
+                         &self.pso,
+                         &draw::Data {
+                             fragment_args: self.fragment.clone(),
+                             vertex_args: self.vertex.clone(),
+                             vbuf: f.buffer.clone(),
+                             out_normal: target.normal.clone(),
+                             out_ka: target.ka.clone(),
+                             out_kd: target.kd.clone(),
+                             out_ks: target.ks.clone(),
+                             out_depth: target.depth.clone(),
+                             ka: (ka, self.sampler.clone()),
+                             kd: (kd, self.sampler.clone()),
+                             ks: (ks, self.sampler.clone()),
+                         });
         }
     }
 }
@@ -376,7 +385,12 @@ impl<R> ::Pass<R> for DepthPass<R>
     type Arg = ::pass::DepthPass;
     type Target = GeometryBuffer<R>;
 
-    fn apply<C>(&self, _: &::pass::DepthPass, target: &GeometryBuffer<R>, _: &::Pipeline, scene: &::Scene<R>, encoder: &mut gfx::Encoder<R, C>)
+    fn apply<C>(&self,
+                _: &::pass::DepthPass,
+                target: &GeometryBuffer<R>,
+                _: &::Pipeline,
+                scene: &::Scene<R>,
+                encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
         // every entity gets rendered into the depth layer
@@ -384,7 +398,7 @@ impl<R> ::Pass<R> for DepthPass<R>
         for f in &scene.fragments {
             encoder.update_constant_buffer(&self.vertex,
                                            &VertexArgs {
-                                               proj: scene.camera.projection,
+                                               proj: scene.camera.proj,
                                                view: scene.camera.view,
                                                model: f.transform,
                                            });
@@ -433,7 +447,7 @@ pub static BLIT_FRAGMENT_SRC: &'static [u8] = b"
 ";
 
 
-fn create_screen_fill_triangle<F, R>(factory: &mut F) -> (Buffer<R, Vertex>, Slice<R>)
+fn create_screen_fill_triangle<F, R>(factory: &mut F) -> (Buffer<R, Vertex>, gfx::Slice<R>)
     where F: gfx::Factory<R>,
           R: gfx::Resources
 {
@@ -451,13 +465,13 @@ fn create_screen_fill_triangle<F, R>(factory: &mut F) -> (Buffer<R, Vertex>, Sli
                        }];
 
     let buffer = factory.create_vertex_buffer(&vertex_data);
-    let slice = Slice::new_match_vertex_buffer(&buffer);
+    let slice = gfx::Slice::new_match_vertex_buffer(&buffer);
     (buffer, slice)
 }
 
 pub struct BlitLayer<R: gfx::Resources> {
     buffer: Buffer<R, Vertex>,
-    slice: Slice<R>,
+    slice: gfx::Slice<R>,
     sampler: gfx::handle::Sampler<R>,
     pso: gfx::pso::PipelineState<R, blit::Meta>,
 }
@@ -470,7 +484,9 @@ impl<R> BlitLayer<R>
     {
         let (buffer, slice) = create_screen_fill_triangle(factory);
 
-        let sampler = factory.create_sampler(gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale, gfx::tex::WrapMode::Clamp));
+        let sampler =
+            factory.create_sampler(gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale,
+                                                              gfx::tex::WrapMode::Clamp));
 
         BlitLayer {
             slice: slice,
@@ -488,7 +504,12 @@ impl<R> ::Pass<R> for BlitLayer<R>
     type Arg = ::pass::BlitLayer;
     type Target = ::target::ColorBuffer<R>;
 
-    fn apply<C>(&self, arg: &::pass::BlitLayer, target: &::target::ColorBuffer<R>, pipeline: &::Pipeline, _: &::Scene<R>, encoder: &mut gfx::Encoder<R, C>)
+    fn apply<C>(&self,
+                arg: &::pass::BlitLayer,
+                target: &::target::ColorBuffer<R>,
+                pipeline: &::Pipeline,
+                _: &::Scene<R>,
+                encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
         let src = &pipeline.targets[&arg.gbuffer];
@@ -517,7 +538,7 @@ pub struct LightingPass<R: gfx::Resources> {
     point_lights: Buffer<R, PointLight>,
     directional_lights: Buffer<R, DirectionalLight>,
     fragment_args: Buffer<R, FragmentLightArgs>,
-    slice: Slice<R>,
+    slice: gfx::Slice<R>,
     sampler: gfx::handle::Sampler<R>,
     pso: gfx::pso::PipelineState<R, light::Meta>,
 }
@@ -531,7 +552,9 @@ impl<R: gfx::Resources> LightingPass<R> {
         where F: gfx::Factory<R>
     {
         let (buffer, slice) = create_screen_fill_triangle(factory);
-        let sampler = factory.create_sampler(gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale, gfx::tex::WrapMode::Clamp));
+        let sampler =
+            factory.create_sampler(gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale,
+                                                              gfx::tex::WrapMode::Clamp));
 
         let point_lights = factory.create_constant_buffer(128);
         let directional_lights = factory.create_constant_buffer(16);
@@ -568,13 +591,12 @@ impl<R> ::Pass<R> for LightingPass<R>
         let (w, h, _, _) = src.kd.get_dimensions();
 
         let inv_view_proj = Matrix4::from(scene.camera.view).invert().unwrap() *
-                            Matrix4::from(scene.camera.projection).invert().unwrap();
+                            Matrix4::from(scene.camera.proj).invert().unwrap();
 
         // Add lighting to scene in chunks of 128 lights at a time
         // TODO: Why chunked?
         for chunk in scene.point_lights.chunks(128) {
-            let point_lights: Vec<_> = chunk
-                .iter()
+            let point_lights: Vec<_> = chunk.iter()
                 .map(|l| {
                     PointLight {
                         color: l.color,
@@ -597,38 +619,35 @@ impl<R> ::Pass<R> for LightingPass<R>
                 })
                 .collect();
 
-            encoder.update_constant_buffer(
-                &self.fragment_args,
-                &FragmentLightArgs {
-                    inv_view_proj: inv_view_proj.into(),
-                    proj: scene.camera.projection,
-                    viewport: [0., 0., w as f32, h as f32],
-                    point_light_count: point_lights.len() as i32,
-                    directional_light_count: directional_lights.len() as i32,
-                }
-            );
+            encoder.update_constant_buffer(&self.fragment_args,
+                                           &FragmentLightArgs {
+                                               inv_view_proj: inv_view_proj.into(),
+                                               proj: scene.camera.proj,
+                                               viewport: [0., 0., w as f32, h as f32],
+                                               point_light_count: point_lights.len() as i32,
+                                               directional_light_count: directional_lights.len() as
+                                                                        i32,
+                                           });
 
             encoder.update_buffer(&self.point_lights, &point_lights[..], 0).unwrap();
             encoder.update_buffer(&self.directional_lights, &directional_lights[..], 0).unwrap();
 
-            encoder.draw(
-                &self.slice,
-                &self.pso,
-                &light::Data {
-                    vbuf: self.buffer.clone(),
-                    ka: (src.texture_ka.clone(), self.sampler.clone()),
-                    kd: (src.texture_kd.clone(), self.sampler.clone()),
-                    ks: (src.texture_ks.clone(), self.sampler.clone()),
-                    ns: 16.0, // TODO: Remove this hardcoded value, requires support for different materials
-                    ambient: scene.ambient_light,
-                    normal: (src.texture_normal.clone(), self.sampler.clone()),
-                    depth: (src.texture_depth.clone(), self.sampler.clone()),
-                    out: target.color.clone(),
-                    fragment_args: self.fragment_args.clone(),
-                    point_lights: self.point_lights.clone(),
-                    directional_lights: self.directional_lights.clone(),
-                }
-            );
+            encoder.draw(&self.slice,
+                         &self.pso,
+                         &light::Data {
+                             vbuf: self.buffer.clone(),
+                             ka: (src.texture_ka.clone(), self.sampler.clone()),
+                             kd: (src.texture_kd.clone(), self.sampler.clone()),
+                             ks: (src.texture_ks.clone(), self.sampler.clone()),
+                             ns: 16.0, // TODO: Remove this hardcoded value, requires support for different materials
+                             ambient: scene.ambient_light,
+                             normal: (src.texture_normal.clone(), self.sampler.clone()),
+                             depth: (src.texture_depth.clone(), self.sampler.clone()),
+                             out: target.color.clone(),
+                             fragment_args: self.fragment_args.clone(),
+                             point_lights: self.point_lights.clone(),
+                             directional_lights: self.directional_lights.clone(),
+                         });
         }
     }
 }

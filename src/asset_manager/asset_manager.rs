@@ -1,76 +1,70 @@
-//! This module provides an asset manager
-//! which loads and provides access to assets,
-//! such as `Texture`s, `Mesh`es, and `Fragment`s.
+//! This module provides an asset manager which loads and provides access to
+//! assets such as `Texture`s, `Mesh`es, and `Fragment`s.
 
-extern crate specs;
-extern crate amethyst_renderer;
-extern crate cgmath;
-extern crate dds;
-extern crate genmesh;
-extern crate gfx_device_gl;
-extern crate gfx;
-extern crate imagefmt;
-extern crate wavefront_obj;
-
-
-// stdlib imports
+use cgmath::{InnerSpace, Vector3};
+use dds::DDS;
+use gfx::tex::{AaMode, Kind};
+use imagefmt::{ColFmt, Image, read_from};
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
-use std::env;
-use std::fs;
+use std::{env, fs};
 use std::io::{Cursor, Read};
 use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
 use std::str;
 use std::sync::RwLockReadGuard;
+use wavefront_obj::obj::{ObjSet, parse, Primitive};
 
-// self imports
-use ecs::components::rendering::{Mesh, Renderable, Texture, TextureLoadData};
+use ecs::{Allocator, Component, Entity, MaskedStorage, Storage, VecStorage, World};
+use ecs::components::{Mesh, Renderable, Texture, TextureLoadData};
 use renderer::VertexPosNormal;
-
-// external imports
-use self::specs::{Allocator, Component, Entity, MaskedStorage, Storage, VecStorage, World};
-use self::cgmath::{InnerSpace, Vector3};
-use self::dds::DDS;
-pub use self::gfx::tex::{AaMode, Kind};
-use self::wavefront_obj::obj::{ObjSet, parse, Primitive};
-
 
 type AssetTypeId = TypeId;
 type SourceTypeId = TypeId;
 type LoaderTypeId = TypeId;
 
-/// Id for directly accessing assets in the manager
+/// An ID used for directly accessing assets in the manager.
 pub type AssetId = Entity;
 
-/// Wrapper type for actual asset data
+/// Generic wrapper around actual asset data.
 pub struct Asset<T>(pub T);
 
 impl<T: Any + Send + Sync> Component for Asset<T> {
     type Storage = VecStorage<Asset<T>>;
 }
 
-/// A trait for generating intermdiate data for loading from raw data
+/// Describes a raw asset loader type.
 pub trait AssetLoaderRaw: Sized {
+    /// TODO: Return a `Result` instead of an `Option`.
     fn from_raw(assets: &Assets, data: &[u8]) -> Option<Self>;
 }
 
-/// A trait for loading assets from arbitrary data
+/// Describes an abstract asset loader type.
 pub trait AssetLoader<A> {
-    // TODO: Return Ok instead of Option
+    /// TODO: Return a `Result` instead of an `Option`.
     fn from_data(assets: &mut Assets, data: Self) -> Option<A>;
 }
 
-/// A trait for asset stores which are permanent storages for assets
+/// Describes a permanent storage for assets.
 pub trait AssetStore {
+    /// Returns whether the asset store contains an asset with the given name
+    /// and type strings.
     fn has_asset(&self, name: &str, asset_type: &str) -> bool;
+    /// Loads an asset file with the given name and type into buffer `buf`.
+    ///
+    /// Returns the final size of the asset in bytes, returns `None` on failure.
     fn load_asset(&self, name: &str, asset_type: &str, buf: &mut Vec<u8>) -> Option<usize>;
 }
 
+/// Describes an asset reader type that can read assets of type `T`.
 pub trait AssetReadStorage<T> {
+    /// Returns `Some(&T)` given the asset ID, returns `None` if the asset does
+    /// not exist.
     fn read(&self, id: AssetId) -> Option<&T>;
 }
 
+// FIXME: Please use some short, descriptive type aliases to make this easier to
+// read. This is absolutely horrendous!
 impl<'a, T: Any + Send + Sync> AssetReadStorage<T> for Storage<Asset<T>, RwLockReadGuard<'a, Allocator>, RwLockReadGuard<'a, MaskedStorage<Asset<T>>>> {
     fn read(&self, id: AssetId) -> Option<&T> {
         self.get(id).map(|asset| &asset.0)
@@ -106,7 +100,7 @@ impl Assets {
             .and_then(|loader| loader.downcast_ref())
     }
 
-    // Returns stored loader resource
+    /// Returns stored loader resource
     pub fn get_loader_mut<T: Any>(&mut self) -> Option<&mut T> {
         self.loaders
             .get_mut(&TypeId::of::<T>())
@@ -124,12 +118,17 @@ impl Assets {
     }
 
     /// Read the storage of all assets for a certain type
-    pub fn read_assets<A: Any + Send + Sync>(&self) -> Storage<Asset<A>, RwLockReadGuard<Allocator>, RwLockReadGuard<MaskedStorage<Asset<A>>>> {
+    pub fn read_assets<A: Any + Send + Sync>
+        (&self)
+         -> Storage<Asset<A>, RwLockReadGuard<Allocator>, RwLockReadGuard<MaskedStorage<Asset<A>>>> {
         self.assets.read()
     }
 
     /// Load an asset from data
-    pub fn load_asset_from_data<A: Any + Sync + Send, S>(&mut self, name: &str, data: S) -> Option<AssetId>
+    pub fn load_asset_from_data<A: Any + Sync + Send, S>(&mut self,
+                                                         name: &str,
+                                                         data: S)
+                                                         -> Option<AssetId>
         where S: AssetLoader<A>
     {
         let asset = AssetLoader::<A>::from_data(self, data);
@@ -141,7 +140,9 @@ impl Assets {
     }
 
     fn add_asset<A: Any + Send + Sync>(&mut self, name: &str, asset: A) -> AssetId {
-        *self.asset_ids.entry(name.into()).or_insert(self.assets.create_now().with(Asset::<A>(asset)).build())
+        *self.asset_ids
+            .entry(name.into())
+            .or_insert(self.assets.create_now().with(Asset::<A>(asset)).build())
     }
 }
 
@@ -149,7 +150,8 @@ impl Assets {
 pub struct AssetManager {
     assets: Assets,
     asset_type_ids: HashMap<(String, AssetTypeId), SourceTypeId>,
-    closures: HashMap<(AssetTypeId, SourceTypeId), Box<FnMut(&mut Assets, &str, &[u8]) -> Option<AssetId>>>,
+    closures: HashMap<(AssetTypeId, SourceTypeId),
+                      Box<FnMut(&mut Assets, &str, &[u8]) -> Option<AssetId>>>,
     stores: Vec<Box<AssetStore>>,
 }
 
@@ -170,7 +172,7 @@ impl AssetManager {
         asset_manager.register_loader::<Mesh, ObjSet>("obj");
 
         for fmt in vec!["png", "bmp", "jpg", "jpeg", "tga"] {
-            asset_manager.register_loader::<Texture, imagefmt::Image<u8>>(fmt);
+            asset_manager.register_loader::<Texture, Image<u8>>(fmt);
         }
 
         asset_manager.register_loader::<Texture, DDS>("dds");
@@ -203,14 +205,10 @@ impl AssetManager {
 
         self.closures.insert((asset_id, source_id),
                              Box::new(|loader: &mut Assets, name: &str, raw: &[u8]| {
-            S::from_raw(loader, raw)
-                .and_then(|data| {
-                    AssetLoader::<A>::from_data(loader, data)
-                })
-                .and_then(|asset| {
-                    Some(loader.add_asset(name, asset))
-                })
-        }));
+                                 S::from_raw(loader, raw)
+                                     .and_then(|data| AssetLoader::<A>::from_data(loader, data))
+                                     .and_then(|asset| Some(loader.add_asset(name, asset)))
+                             }));
 
         self.asset_type_ids.insert((asset.into(), asset_id), source_id);
     }
@@ -223,15 +221,24 @@ impl AssetManager {
     /// Load an asset from raw data
     /// # Panics
     /// Panics if the asset type isn't registered
-    pub fn load_asset_from_raw<A: Any + Send + Sync>(&mut self, name: &str, asset_type: &str, raw: &[u8]) -> Option<AssetId> {
+    pub fn load_asset_from_raw<A: Any + Send + Sync>(&mut self,
+                                                     name: &str,
+                                                     asset_type: &str,
+                                                     raw: &[u8])
+                                                     -> Option<AssetId> {
         let asset_type_id = TypeId::of::<A>();
-        let &source_id = self.asset_type_ids.get(&(asset_type.into(), asset_type_id)).expect("Unregistered asset type id");
+        let &source_id = self.asset_type_ids
+            .get(&(asset_type.into(), asset_type_id))
+            .expect("Unregistered asset type id");
         let ref mut loader = self.closures.get_mut(&(asset_type_id, source_id)).unwrap();
         loader(&mut self.assets, name, raw)
     }
 
     /// Load an asset from the asset stores
-    pub fn load_asset<A: Any + Send + Sync>(&mut self, name: &str, asset_type: &str) -> Option<AssetId> {
+    pub fn load_asset<A: Any + Send + Sync>(&mut self,
+                                            name: &str,
+                                            asset_type: &str)
+                                            -> Option<AssetId> {
         let mut buf = Vec::new();
         if let Some(store) = self.stores.iter().find(|store| store.has_asset(name, asset_type)) {
             store.load_asset(name, asset_type, &mut buf);
@@ -243,7 +250,13 @@ impl AssetManager {
     }
 
     /// Create a `Renderable` component from a loaded mesh and ka/kd/ks textures
-    pub fn create_renderable(&self, mesh: &str, ka: &str, kd: &str, ks: &str, ns: f32) -> Option<Renderable> {
+    pub fn create_renderable(&self,
+                             mesh: &str,
+                             ka: &str,
+                             kd: &str,
+                             ks: &str,
+                             ns: f32)
+                             -> Option<Renderable> {
         let meshes = self.read_assets::<Mesh>();
         let textures = self.read_assets::<Texture>();
         let mesh_id = match self.id_from_name(mesh) {
@@ -308,10 +321,12 @@ pub struct DirectoryStore {
 }
 
 impl DirectoryStore {
+    /// Creates a new asset store from the given directory path.
     pub fn new<P: AsRef<Path>>(path: P) -> DirectoryStore {
         DirectoryStore { path: path.as_ref().to_path_buf() }
     }
 
+    /// Returns the path to an asset file given the asset's name and type.
     fn asset_to_path<'a>(&self, name: &str, asset_type: &str) -> PathBuf {
         let file_name = format!("{}.{}", name, asset_type);
         self.path.join(file_name)
@@ -335,20 +350,21 @@ impl AssetStore for DirectoryStore {
     }
 }
 
-impl AssetLoaderRaw for imagefmt::Image<u8> {
-    fn from_raw(_: &Assets, data: &[u8]) -> Option<imagefmt::Image<u8>> {
-        imagefmt::read_from(&mut Cursor::new(data), imagefmt::ColFmt::RGBA).ok()
+impl AssetLoaderRaw for Image<u8> {
+    fn from_raw(_: &Assets, data: &[u8]) -> Option<Image<u8>> {
+        read_from(&mut Cursor::new(data), ColFmt::RGBA).ok()
     }
 }
 
-impl AssetLoader<Texture> for imagefmt::Image<u8> {
-    fn from_data(assets: &mut Assets, image: imagefmt::Image<u8>) -> Option<Texture> {
+impl AssetLoader<Texture> for Image<u8> {
+    fn from_data(assets: &mut Assets, image: Image<u8>) -> Option<Texture> {
         let pixels = image.buf.chunks(4).map(|p| [p[0], p[1], p[2], p[3]]).collect::<Vec<_>>();
 
-        AssetLoader::from_data(assets, TextureLoadData {
-            kind: Kind::D2(image.w as u16, image.h as u16, AaMode::Single),
-            raw: &[pixels.as_slice()],
-        })
+        AssetLoader::from_data(assets,
+                               TextureLoadData {
+                                   kind: Kind::D2(image.w as u16, image.h as u16, AaMode::Single),
+                                   raw: &[pixels.as_slice()],
+                               })
     }
 }
 
@@ -360,10 +376,17 @@ impl AssetLoaderRaw for DDS {
 
 impl AssetLoader<Texture> for DDS {
     fn from_data(assets: &mut Assets, image: DDS) -> Option<Texture> {
-        AssetLoader::from_data(assets, TextureLoadData {
-            kind: Kind::D2(image.header.width as u16, image.header.height as u16, AaMode::Single),
-            raw: image.layers.iter().map(|l| l.as_slice()).collect::<Vec<_>>().as_slice(),
-        })
+        AssetLoader::from_data(assets,
+                               TextureLoadData {
+                                   kind: Kind::D2(image.header.width as u16,
+                                                  image.header.height as u16,
+                                                  AaMode::Single),
+                                   raw: image.layers
+                                       .iter()
+                                       .map(|l| l.as_slice())
+                                       .collect::<Vec<_>>()
+                                       .as_slice(),
+                               })
     }
 }
 
@@ -384,61 +407,63 @@ impl AssetLoader<Mesh> for ObjSet {
         // flat vec of `VertexPosNormal` objects.
         // TODO: Doesn't differentiate between objects in a `*.obj` file, treats
         // them all as a single mesh.
-        let vertices: Vec<VertexPosNormal> = obj_set.objects.iter().flat_map(|object| {
-            object.geometry.iter().flat_map(|ref geometry| {
-                geometry.shapes.iter().flat_map(|s| -> Vec<VertexPosNormal> {
-                    let mut vtn_indices = vec![];
+        let vertices: Vec<VertexPosNormal> = obj_set.objects
+            .iter()
+            .flat_map(|object| {
+                object.geometry
+                    .iter()
+                    .flat_map(|ref geometry| {
+                        geometry.shapes.iter().flat_map(|s| -> Vec<VertexPosNormal> {
+                            let mut vtn_indices = vec![];
 
-                    match s.primitive {
-                        Primitive::Point(v1) => {
-                            vtn_indices.push(v1);
-                        },
-                        Primitive::Line(v1, v2) => {
-                            vtn_indices.push(v1);
-                            vtn_indices.push(v2);
-                        },
-                        Primitive::Triangle(v1, v2, v3) => {
-                            vtn_indices.push(v1);
-                            vtn_indices.push(v2);
-                            vtn_indices.push(v3);
-                        },
-                    }
+                            match s.primitive {
+                                Primitive::Point(v1) => {
+                                    vtn_indices.push(v1);
+                                }
+                                Primitive::Line(v1, v2) => {
+                                    vtn_indices.push(v1);
+                                    vtn_indices.push(v2);
+                                }
+                                Primitive::Triangle(v1, v2, v3) => {
+                                    vtn_indices.push(v1);
+                                    vtn_indices.push(v2);
+                                    vtn_indices.push(v3);
+                                }
+                            }
 
-                    vtn_indices.iter().map(|&(vi, ti, ni)| {
-                        let vertex = object.vertices[vi];
+                            vtn_indices.iter()
+                                .map(|&(vi, ti, ni)| {
+                                    let vertex = object.vertices[vi];
 
-                        VertexPosNormal {
-                            pos: [
-                                vertex.x as f32,
-                                vertex.y as f32,
-                                vertex.z as f32
-                            ],
-                            normal: match ni {
-                                Some(i) => {
-                                    let normal = object.normals[i];
+                                    VertexPosNormal {
+                                        pos: [vertex.x as f32, vertex.y as f32, vertex.z as f32],
+                                        normal: match ni {
+                                            Some(i) => {
+                                                let normal = object.normals[i];
 
-                                    Vector3::from([
-                                        normal.x as f32,
-                                        normal.y as f32,
-                                        normal.z as f32
-                                    ])
-                                    .normalize()
-                                    .into()
-                                },
-                                None => [0.0, 0.0, 0.0],
-                            },
-                            tex_coord: match ti {
-                                Some(i) => {
-                                    let tvertex = object.tex_vertices[i];
-                                    [tvertex.u as f32, tvertex.v as f32]
-                                },
-                                None => [0.0, 0.0],
-                            },
-                        }
-                    }).collect()
-                })
-            }).collect::<Vec<VertexPosNormal>>()
-        }).collect();
+                                                Vector3::from([normal.x as f32,
+                                                               normal.y as f32,
+                                                               normal.z as f32])
+                                                    .normalize()
+                                                    .into()
+                                            }
+                                            None => [0.0, 0.0, 0.0],
+                                        },
+                                        tex_coord: match ti {
+                                            Some(i) => {
+                                                let tvertex = object.tex_vertices[i];
+                                                [tvertex.u as f32, tvertex.v as f32]
+                                            }
+                                            None => [0.0, 0.0],
+                                        },
+                                    }
+                                })
+                                .collect()
+                        })
+                    })
+                    .collect::<Vec<VertexPosNormal>>()
+            })
+            .collect();
 
         AssetLoader::<Mesh>::from_data(assets, vertices)
     }
@@ -492,6 +517,7 @@ mod tests {
         assets.add_loader::<FooLoader>(FooLoader);
 
         let asset01 = assets.load_asset_from_raw::<Foo>("asset01", "foo", &[0; 2]);
-        assert_eq!(asset01, assets.load_asset_from_raw::<Foo>("asset01", "foo", &[0; 2]));
+        assert_eq!(asset01,
+                   assets.load_asset_from_raw::<Foo>("asset01", "foo", &[0; 2]));
     }
 }
