@@ -172,7 +172,8 @@ $ git remote origin set-url <your-fork>
 To learn how to rebase a upstream change into your branch, please read
 [this excellent wiki post][rb].
 
-*TL;DR*
+#### TL;DR
+
 ```bash
 $ # Fetch latest changes
 $ git fetch upstream
@@ -190,7 +191,7 @@ If needed, abort with `git rebase --abort` and also sometimes
 
 To check whether anything major has changed upstream, you can do:
 
-```
+```bash
 $ # Fetch latest changes
 $ git fetch upstream
 $ # Do a "non-intruisive" check. 
