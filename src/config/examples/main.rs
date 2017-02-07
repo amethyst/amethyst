@@ -1,4 +1,3 @@
-#[macro_use]
 extern crate amethyst_config;
 
 use amethyst_config::Element;
