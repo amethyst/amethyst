@@ -71,4 +71,3 @@ pub mod ecs;
 pub mod engine;
 pub mod event;
 pub mod gfx_device;
-pub mod timing;
