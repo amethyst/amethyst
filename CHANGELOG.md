@@ -35,6 +35,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Update instructions for generating a new project using Cargo templates.
 * Scale number of `specs` threads according to system core count.
 * Improve Travis CI build speeds.
+* Rewrite `Stopwatch` to be an enum.
 * Update contribution guidelines and change log.
 * Update book to reflect new API changes.
 * Update dependency versions.
@@ -43,6 +44,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Remove `amethyst_ecs` crate in favor of using `specs` directly.
 * Remove `amethyst_context` and refactor to greatly improve performance.
 * Remove unused lights from included forward and deferred renderer pipelines.
+* Remove dependency on `time` crate.
 
 ## [0.3.1] - 2016-09-07
 ### Fixed
