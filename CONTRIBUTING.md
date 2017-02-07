@@ -28,11 +28,16 @@ issues first, as it's possible that someone else reported the same issue before
 you. Though it helps save time, don't worry! We won't mind if you accidentally
 post a duplicate issue.
 
-When you are filling out your issue, please label it accordingly. These labels
-help developers prioritize what they should work on next. All Amethyst issue
-trackers use the same set of labels to mark each issue. Please select one (1)
-label from each of the following three sections that is most relevant to your
-issue:
+That's all there is to it! Thanks for posting your issue; we'll take it to heart
+and try our best to resolve it.
+
+### Issue Handling For Team Members
+
+Whenever a new issue is filed by anyone, please label it accordingly. These
+labels help developers prioritize what they should work on next. All Amethyst
+issue trackers use the same set of labels to mark each issue. Please select one
+(1) label from each of the following three sections that is most relevant to
+the issue:
 
 1. **Diff**: How difficult do you think it is to resolve?
    * Hard (highest)
@@ -67,8 +72,21 @@ with "Note".
   * Help Wanted
     * This issue requires lots of people's help to get done.
 
-That's all there is to it! Thanks for posting your issue; we'll take it to heart
-and try our best to resolve it.
+Finally, a "Status" label can be assigned to stalled or unresolved issues.
+
+* **Status**: Adds extra hints about the
+  * Stalled
+    * This issue hasn't been updated and has gone stale. If it's particularly
+      old and irrelevant, feel free to close it.
+  * Wontfix
+    * This issue will not be pursued either because it is deemed either very low
+      priority or is outside the scope of the project goals.
+
+A visual "kanban" board showing the status of all issues in the repository can
+be found in the [Projects][pr] tab, next to "Pull Requests." Feel free to check
+it out and update it as you like.
+
+[pr]: https://github.com/amethyst/amethyst/projects
 
 ## Pull Requests
 
@@ -91,22 +109,27 @@ done the following things first:
 
 1. You have ensured the pull request is based on a recent version of your
    respective branch.
-2. You have granted non-exclusive right to your source code under the
-   [MIT License][ml].
-3. If your pull request adds new methods or functions to the codebase, you have
-   written adequate test cases for them.
+2. If your pull request adds new methods or functions to the codebase, you have
+   written test cases for them.
    * Unit tests are placed at the bottom of the same .rs file in a submodule
-     called `tests` with `// Unit tests` right above it. For an example, see the
-     unit tests in the [timing.rs][ti] file in the `amethyst_engine` sub-crate.
+     called `tests`. For an example, see the unit tests in the [state.rs][st]
+     file in the top-level `amethyst` crate.
    * Integration tests are placed in a separate .rs file in the `tests`
      subdirectory.
-4. You have processed your source code with `cargo fmt`.
-5. All of the following commands completed without errors.
+3. You have processed your source code with `cargo fmt`.
+4. All of the following commands completed without errors.
    * `cargo build`
-   * `cargo test -p {crate-name} -v`
+   * `cargo test --all`
+   * `cargo run --example {example-name}`
+5. You have granted non-exclusive right to your source code under both the
+   [MIT License][lm] and the [Apache License 2.0][la]. Unless you explicitly
+   state otherwise, any contribution intentionally submitted for inclusion in
+   the work by you, as defined in the Apache 2.0 license, shall be dual
+   licensed as above, without any additional terms or conditions.
 
-[ml]: ./COPYING
-[ti]: ./src/engine/src/timing.rs#L68-L112
+[lm]: LICENSE-MIT
+[la]: LICENSE-APACHE
+[st]: src/engine/state.rs#L192-L233
 
 > If you want to be publicly known as an author, feel free to add your name
 > and/or GitHub username to the AUTHORS.md file in your pull request.
@@ -117,7 +140,69 @@ publicly on the [appropriate chat room][gi] on Gitter asking for a review. Once
 your code has been reviewed, revised if necessary, and then signed-off by a
 developer, it will be merged into the source tree.
 
+### Dealing With Upstream Changes
+
+When pulling remote changes to a local branch or machine, we recommend users to
+rebase instead of creating merge commits. 
+
+This is used sometimes when an upstream change cause problems with your pull
+request. The best practice is to do a fast-forward (FF) rebase.
+
+First, setup a remote called `upstream`:
+
+```bash
+# Do one of the following. SSH is prefered, but not available on all
+# environments.
+
+$ # For ssh
+$ git remote add upstream git@github.com:amethyst/amethyst.git
+$ # For https
+$ git remote add upstream https://github.com/amethyst/amethyst.git
+```
+
+If your `origin` remote points to the original repo we recommend you to set it
+to your own fork. Check with `git remote origin get-url` to be sure.
+
+```bash
+$ # Set origin remote to fork, <your-fork> is git@github.com:<your-username>/amethyst.git
+$ # For https use https://github.com/<your-username>/amethyst.git
+$ git remote origin set-url <your-fork>
+```
+
+To learn how to rebase a upstream change into your branch, please read
+[this excellent wiki post][rb].
+
+#### TL;DR
+
+```bash
+$ # Fetch latest changes
+$ git fetch upstream
+$ # Rebase this branch to upstream
+$ git checkout <branch-name>
+$ git rebase upstream/<branch-to-sync-with>
+```
+
+If any errors occur, Git will try to guess what happened. If you can't figure 
+out how to solve your problem, a quick Google search can help, or you can hit us
+up on our [Gitter][gi] chat.
+
+If needed, abort with `git rebase --abort` and also sometimes
+`git merge --abort`.
+
+To check whether anything major has changed upstream, you can do:
+
+```bash
+$ # Fetch latest changes
+$ git fetch upstream
+$ # Do a "non-intruisive" check. 
+$ git merge --ff-only --no-commit upstream
+```
+
+Then you can decide to do a FF rebase. This way, our commit logs remain nice
+and clean, and we'll be grateful.
+
 [gi]: https://gitter.im/orgs/amethyst/rooms
+[rb]: https://github.com/edx/edx-platform/wiki/How-to-Rebase-a-Pull-Request#how-do-i-rebase
 
 Thank you so much for your contribution! Now Amethyst will be a little bit
 faster, stronger, and more efficient.
@@ -132,7 +217,7 @@ label.
 There are two types of documentation in Amethyst you can work on:
 
 1. [API documentation][ad]
-2. [The online Amethyst book][ab]
+2. [The Amethyst book][ab]
 
 [ad]: https://www.amethyst.rs/doc/amethyst/
 [ab]: https://www.amethyst.rs/book/
@@ -146,11 +231,11 @@ this works.
 
 The Amethyst book is generated using a different documentation tool called
 [mdBook][mb]. This tool generates pretty HTML e-books from individual Markdown
-(.md) files. You can find the source files for this book in the
-[book/src/][bk] directory of the Amethyst repository.
+(.md) files. You can find the source files for this book in the [book/src/][bk]
+directory of the Amethyst repository.
 
 [mb]: https://github.com/azerupi/mdBook
-[bk]: ./book/src
+[bk]: book/src
 
 Documentation of any kind should adhere to the following standard:
 
@@ -160,7 +245,7 @@ Documentation of any kind should adhere to the following standard:
    points to an anchor that exists on the same page, the *inline style* should
    be used instead.
 
-```
+```markdown
 Here is some [example text][et] with a link in it. While we are at it, here is
 yet [another link][al]. If we are linking to [an anchor](#anchor) on the same
 page, we can do this inline.

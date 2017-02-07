@@ -1,25 +1,71 @@
 [package]
 name = "amethyst"
-version = "0.3.1"
+version = "0.4.0"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
 description = "Data-oriented game engine written in Rust"
 keywords = ["game", "engine", "sdk", "amethyst"]
+categories = ["game-engines"]
 
-documentation = "http://ebkalderon.github.io/amethyst/doc/amethyst/"
-homepage = "http://ebkalderon.github.io/amethyst/"
-repository = "https://github.com/ebkalderon/amethyst"
+documentation = "https://www.amethyst.rs/doc/amethyst"
+homepage = "https://www.amethyst.rs/"
+repository = "https://github.com/amethyst/amethyst"
 
 readme = "README.md"
-license = "MIT"
+license = "MIT/Apache-2.0"
 
-[dependencies.amethyst_engine]
-path = "src/engine/"
-version = "0.3.1"
-
-[dependencies.amethyst_ecs]
-path = "src/ecs/"
-version = "0.1.1"
+[dependencies.amethyst_config]
+path = "src/config/"
+version = "0.2.0"
 
 [dependencies.amethyst_renderer]
 path = "src/renderer/"
-version = "0.3.1"
+version = "0.4.0"
+
+[dependencies]
+num_cpus = "1.2"
+specs = "0.7"
+cgmath = "0.11"
+dds-rs = "0.1.0"
+genmesh = "0.4"
+gfx = "0.12"
+gfx_device_gl = "0.11"
+gfx_window_glutin = "0.12"
+glutin = "0.6"
+imagefmt = "4.0.0"
+wavefront_obj = "5.0.0"
+
+[dev-dependencies]
+gfx = "0.12"
+
+[features]
+default = ["opengl"]
+opengl = []
+direct3d = []
+
+[target.'cfg(windows)'.dependencies]
+gfx_device_dx11 = "0.4"
+gfx_window_dxgi = "0.5"
+
+[[example]]
+name = "hello_world"
+path = "examples/00_hello_world/main.rs"
+
+[[example]]
+name = "window"
+path = "examples/01_window/main.rs"
+
+[[example]]
+name = "sphere"
+path = "examples/02_sphere/main.rs"
+
+[[example]]
+name = "renderable"
+path = "examples/03_renderable/main.rs"
+
+[[example]]
+name = "pong"
+path = "examples/04_pong/main.rs"
+
+[[example]]
+name = "assets"
+path = "examples/06_assets/main.rs"

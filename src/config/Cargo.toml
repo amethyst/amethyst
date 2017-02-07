@@ -1,0 +1,14 @@
+[package]
+name = "amethyst_config"
+version = "0.2.0"
+authors = ["Aceeri <conmcclusk@gmail.com>"]
+description = "Loading from .yml/.yaml files, with a Rust module-like system, into Rust structures."
+
+documentation = "https://www.amethyst.rs/doc/amethyst/"
+homepage = "https://www.amethyst.rs/"
+repository = "https://github.com/amethyst/amethyst"
+
+license = "MIT/Apache-2.0"
+
+[dependencies]
+yaml-rust = "0.3.2"

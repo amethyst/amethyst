@@ -1,0 +1,15 @@
+grass.bmp was released under a CC BY 3.0 license:
+
+http://opengameart.org/content/grass
+
+
+crate.png was released under a CC-BY-SA 3.0 license:
+
+http://opengameart.org/content/crate-tile
+
+
+ground.dds was released under a CC-BY-SA 3.0 license by Wildfire Games:
+
+http://opengameart.org/content/0-ad-textures
+http://creativecommons.org/licenses/by-sa/3.0/
+http://www.wildfiregames.com/

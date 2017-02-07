@@ -16,15 +16,27 @@ the following lines to your "Cargo.toml":
 [dependencies]
 amethyst = "*"
 ```
+### From Git via cargo
 
-### From Git
+If you don't want to get Amethyst from Crates.io but directly from the
+Git repository, you can add the following lines to your "Cargo.toml":
 
-If you don't want to get Amethyst from Crates.io, you can clone the entire SDK
-from the Git repository. Once you're done, create a new Cargo project and `cd`
-into it.
+```toml
+[dependencies]
+amethyst = { git = "https://github.com/amethyst/amethyst.git" }
+```
+
+See the [crates guide][crg] for more information on the Cargo manifest file.
+
+[crg]: http://doc.crates.io/specifying-dependencies.html#specifying-dependencies-from-git-repositories
+
+### From Git via clone
+
+Instead of using the above, you can also clone the entire SDK from the
+Git repository. Once you're done, create a new Cargo project and `cd` into it.
 
 ```
-$ git clone https://github.com/ebkalderon/amethyst.git
+$ git clone https://github.com/amethyst/amethyst.git
 $ cargo new --bin hello_world
 $ cd hello_world
 ```
@@ -35,12 +47,6 @@ as dependencies:
 ```toml
 [dependencies.amethyst]
 path = "../path/to/amethyst/"
-
-[dependencies.amethyst_engine]
-path = "../path/to/amethyst/src/engine/"
-
-[dependencies.amethyst_renderer]
-path = "../path/to/amethyst/src/renderer/"
 ```
 
 ## Resources Folder

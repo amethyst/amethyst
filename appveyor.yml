@@ -1,0 +1,37 @@
+# Set up the build environment.
+environment:
+    matrix:
+        - channel: stable
+          target: x86_64-pc-windows-msvc
+        - channel: beta
+          target: x86_64-pc-windows-msvc
+        - channel: nightly
+          target: x86_64-pc-windows-msvc
+
+matrix:
+    allow_failures:
+        - channel: nightly
+
+# Set up the Rust toolchain.
+install:
+    - curl -fsS "https://win.rustup.rs/" -o rustup-init.exe
+    - rustup-init.exe -y --default-toolchain %channel%-%target%
+    - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
+    - rustc -V
+    - cargo -V
+
+# Force third-party crates to persist from previous builds and update only when
+# needed.
+cache:
+    - .cargo -> rust-%channel%-date, cargo-%channel%-build
+
+# Since this is not a .NET project, we can flip the build system off.
+build: false
+
+# Compile the engine and run all tests.
+test_script:
+    - cargo test -p amethyst -p amethyst_config -v
+
+branches:
+    only:
+        - develop

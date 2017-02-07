@@ -14,12 +14,13 @@ game engine.
 
 [rs]: https://www.rust-lang.org/
 
-Amethyst is free and open source software, distributed under the
-[MIT License][ml]. This means that the engine is given to you at no cost and its
-source code is completely yours to tinker with. The code is available on
+Amethyst is free and open source software, distributed under a dual license of [MIT][ml]
+and [Apache][al]. This means that the engine is given to you at no cost 
+and its source code is completely yours to tinker with. The code is available on
 [GitHub][am]. Contributions and feature requests are welcome!
 
-[ml]: https://github.com/amethyst/amethyst/blob/master/COPYING
+[ml]: https://github.com/amethyst/amethyst/blob/master/LICENSE-MIT
+[al]: https://github.com/amethyst/amethyst/blob/master/LICENSE-APACHE
 [am]: https://github.com/amethyst/amethyst
 
 This book is split into seven sections. This page is the first. The others are:
