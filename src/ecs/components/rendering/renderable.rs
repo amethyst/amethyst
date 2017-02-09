@@ -1,4 +1,4 @@
-//! Adds a physical
+//! Physically renderable component.
 
 use ecs::{Component, VecStorage};
 use ecs::components::rendering::{Mesh, Texture};
