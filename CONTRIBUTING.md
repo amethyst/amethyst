@@ -109,38 +109,28 @@ done the following things first:
 
 1. You have ensured the pull request is based on a recent version of your
    respective branch.
-<<<<<<< HEAD
-2. If your pull request adds new methods or functions to the codebase, you have
-   written test cases for them.
-=======
 2. You have granted non-exclusive right to your source code under either the
    [Apache 2.0 license][al] or the [MIT License][ml].
 3. If your pull request adds new methods or functions to the codebase, you have
    written adequate test cases for them.
->>>>>>> Enable #[deny(missing_docs)], code style polish, add lots of documentation, add TODO's and FIXME's
    * Unit tests are placed at the bottom of the same .rs file in a submodule
      called `tests`. For an example, see the unit tests in the [state.rs][st]
      file in the top-level `amethyst` crate.
    * Integration tests are placed in a separate .rs file in the `tests`
      subdirectory.
-3. You have processed your source code with `cargo fmt`.
-4. All of the following commands completed without errors.
+4. You have processed your source code with `cargo fmt`.
+5. All of the following commands completed without errors.
    * `cargo build`
    * `cargo test --all`
    * `cargo run --example {example-name}`
-5. You have granted non-exclusive right to your source code under both the
+6. You have granted non-exclusive right to your source code under both the
    [MIT License][lm] and the [Apache License 2.0][la]. Unless you explicitly
    state otherwise, any contribution intentionally submitted for inclusion in
    the work by you, as defined in the Apache 2.0 license, shall be dual
    licensed as above, without any additional terms or conditions.
 
-<<<<<<< HEAD
 [lm]: LICENSE-MIT
 [la]: LICENSE-APACHE
-=======
-[al]: LICENSE-APACHE
-[ml]: LICENSE-MIT
->>>>>>> Enable #[deny(missing_docs)], code style polish, add lots of documentation, add TODO's and FIXME's
 [st]: src/engine/state.rs#L192-L233
 
 > If you want to be publicly known as an author, feel free to add your name
