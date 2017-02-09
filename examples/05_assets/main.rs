@@ -27,14 +27,14 @@ struct CustomObj {
 impl AssetLoaderRaw for CustomObj {
     fn from_raw(_: &Assets, data: &[u8]) -> Option<CustomObj> {
         let data: String = str::from_utf8(data).unwrap().into();
-        let mut vertices = vec![];
-        let mut normals = vec![];
+        let mut vertices = Vec::new();
+        let mut normals = Vec::new();
 
-        for line in data.split("\n") {
-            if line.len() < 1 {
-                continue;
-            }
+        let trimmed: Vec<&str> = data.lines()
+            .filter(|line| line.len() >= 1)
+            .collect();
 
+        for line in trimmed {
             let nums: Vec<&str> = line.split_whitespace().collect();
 
             vertices.push([nums[0].parse::<f32>().unwrap(),

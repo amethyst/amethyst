@@ -1,10 +1,10 @@
+use cgmath::{Matrix4, SquareMatrix};
 use gfx;
 use gfx::handle::Buffer;
 use gfx::traits::FactoryExt;
-use cgmath::{Matrix4, SquareMatrix};
 
 use ConstantColorTexture;
-use pass::Pass;
+use pass;
 use target::{ColorFormat, GeometryBuffer};
 
 gfx_vertex_struct!(Vertex {
@@ -14,14 +14,14 @@ gfx_vertex_struct!(Vertex {
 
 pub struct Clear;
 
-impl<R> Pass<R> for Clear
+impl<R> pass::Pass<R> for Clear
     where R: gfx::Resources
 {
-    type Arg = ::pass::Clear;
+    type Arg = pass::Clear;
     type Target = GeometryBuffer<R>;
 
     fn apply<C>(&self,
-                c: &::pass::Clear,
+                c: &pass::Clear,
                 target: &GeometryBuffer<R>,
                 _: &::Pipeline,
                 _: &::Scene<R>,
@@ -316,14 +316,14 @@ impl<R: gfx::Resources> DrawPass<R> {
     }
 }
 
-impl<R> ::Pass<R> for DrawPass<R>
+impl<R> pass::Pass<R> for DrawPass<R>
     where R: gfx::Resources
 {
-    type Arg = ::pass::DrawFlat;
+    type Arg = pass::DrawFlat;
     type Target = GeometryBuffer<R>;
 
     fn apply<C>(&self,
-                _: &::pass::DrawFlat,
+                _: &pass::DrawFlat,
                 target: &GeometryBuffer<R>,
                 _: &::Pipeline,
                 scene: &::Scene<R>,
@@ -382,11 +382,11 @@ impl<R: gfx::Resources> DepthPass<R> {
 impl<R> ::Pass<R> for DepthPass<R>
     where R: gfx::Resources
 {
-    type Arg = ::pass::DepthPass;
+    type Arg = pass::DepthPass;
     type Target = GeometryBuffer<R>;
 
     fn apply<C>(&self,
-                _: &::pass::DepthPass,
+                _: &pass::DepthPass,
                 target: &GeometryBuffer<R>,
                 _: &::Pipeline,
                 scene: &::Scene<R>,
@@ -498,14 +498,14 @@ impl<R> BlitLayer<R>
     }
 }
 
-impl<R> ::Pass<R> for BlitLayer<R>
+impl<R> pass::Pass<R> for BlitLayer<R>
     where R: gfx::Resources
 {
-    type Arg = ::pass::BlitLayer;
+    type Arg = pass::BlitLayer;
     type Target = ::target::ColorBuffer<R>;
 
     fn apply<C>(&self,
-                arg: &::pass::BlitLayer,
+                arg: &pass::BlitLayer,
                 target: &::target::ColorBuffer<R>,
                 pipeline: &::Pipeline,
                 _: &::Scene<R>,
@@ -572,14 +572,14 @@ impl<R: gfx::Resources> LightingPass<R> {
     }
 }
 
-impl<R> ::Pass<R> for LightingPass<R>
+impl<R> pass::Pass<R> for LightingPass<R>
     where R: gfx::Resources
 {
-    type Arg = ::pass::Lighting;
+    type Arg = pass::Lighting;
     type Target = ::target::ColorBuffer<R>;
 
     fn apply<C>(&self,
-                arg: &::pass::Lighting,
+                arg: &pass::Lighting,
                 target: &::target::ColorBuffer<R>,
                 pipeline: &::Pipeline,
                 scene: &::Scene<R>,
