@@ -23,10 +23,9 @@ impl State for Example {
         use amethyst::renderer::{Layer, PointLight};
         use amethyst::renderer::pass::{Clear, DrawShaded};
 
-        let layer = Layer::new("main", vec![
-            Clear::new([0.0, 0.0, 0.0, 1.0]),
-            DrawShaded::new("main", "main")
-        ]);
+        let layer = Layer::new("main",
+                               vec![Clear::new([0.0, 0.0, 0.0, 1.0]),
+                                    DrawShaded::new("main", "main")]);
 
         pipe.layers.push(layer);
 

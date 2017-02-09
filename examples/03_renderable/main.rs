@@ -58,20 +58,17 @@ impl System<()> for ExampleSystem {
 
 fn set_pipeline_state(pipe: &mut Pipeline, forward: bool) {
     if forward {
-        let layer = Layer::new("main", vec![
-            Clear::new([0.0, 0.0, 0.0, 1.0]),
-            DrawShaded::new("main", "main")
-        ]);
+        let layer = Layer::new("main",
+                               vec![Clear::new([0.0, 0.0, 0.0, 1.0]),
+                                    DrawShaded::new("main", "main")]);
         pipe.layers.push(layer);
     } else {
-        let geom_layer = Layer::new("main", vec![
-            Clear::new([0.0, 0.0, 0.0, 1.0]),
-            DrawFlat::new("main", "main")
-        ]);
-        let postproc_layer = Layer::new("main", vec![
-            BlitLayer::new("gbuffer", "ka"),
-            Lighting::new("main", "gbuffer", "main")
-        ]);
+        let geom_layer = Layer::new("main",
+                                    vec![Clear::new([0.0, 0.0, 0.0, 1.0]),
+                                         DrawFlat::new("main", "main")]);
+        let postproc_layer = Layer::new("main",
+                                        vec![BlitLayer::new("gbuffer", "ka"),
+                                             Lighting::new("main", "gbuffer", "main")]);
         pipe.layers.push(geom_layer);
         pipe.layers.push(postproc_layer);
     }

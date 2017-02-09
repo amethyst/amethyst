@@ -230,10 +230,9 @@ impl State for Pong {
         use amethyst::renderer::Layer;
         use amethyst::renderer::pass::{Clear, DrawFlat};
 
-        let layer = Layer::new("main", vec![
-            Clear::new([0.0, 0.0, 0.0, 1.0]),
-            DrawFlat::new("main", "main")
-        ]);
+        let layer = Layer::new("main",
+                               vec![Clear::new([0.0, 0.0, 0.0, 1.0]),
+                                    DrawFlat::new("main", "main")]);
 
         pipe.layers.push(layer);
 

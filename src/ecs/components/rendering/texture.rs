@@ -1,15 +1,14 @@
-extern crate gfx;
-extern crate gfx_device_gl;
+//! Graphical texture resource.
 
-use self::gfx::Factory;
-use self::gfx::format::{Formatted, SurfaceTyped};
+use gfx::Factory;
+use gfx::format::{Formatted, SurfaceTyped};
 
 use asset_manager::{AssetLoader, Assets};
 use gfx_device::gfx_types;
 use renderer;
 use renderer::target::ColorFormat;
 
-pub use self::gfx::tex::Kind;
+pub use gfx::texture::Kind;
 
 /// Handle to a texture resource.
 pub type Texture = renderer::Texture<gfx_types::Resources>;
@@ -33,10 +32,11 @@ impl<'a> AssetLoader<Texture> for TextureLoadData<'a> {
     fn from_data(assets: &mut Assets, data: TextureLoadData) -> Option<Texture> {
         let factory = assets.get_loader_mut::<gfx_types::Factory>()
             .expect("Couldn't retrieve factory.");
-        let tex_res_view = match factory.create_texture_const::<ColorFormat>(data.kind, data.raw) {
-            Ok((_, tex_res_view)) => tex_res_view,
-            Err(_) => return None,
-        };
+        let tex_res_view =
+            match factory.create_texture_immutable::<ColorFormat>(data.kind, data.raw) {
+                Ok((_, tex_res_view)) => tex_res_view,
+                Err(_) => return None,
+            };
         Some(renderer::Texture::Texture(tex_res_view))
     }
 }

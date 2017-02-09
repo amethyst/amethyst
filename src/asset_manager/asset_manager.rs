@@ -3,7 +3,7 @@
 
 use cgmath::{InnerSpace, Vector3};
 use dds::DDS;
-use gfx::tex::{AaMode, Kind};
+use gfx::texture::{AaMode, Kind};
 use imagefmt::{ColFmt, Image, read_from};
 use std::any::{Any, TypeId};
 use std::collections::HashMap;

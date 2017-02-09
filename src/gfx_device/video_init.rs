@@ -1,16 +1,9 @@
-extern crate amethyst_renderer;
-extern crate glutin;
-extern crate gfx_window_glutin;
-extern crate gfx_device_gl;
-extern crate gfx;
-
 use gfx_device::DisplayConfig;
 use gfx_device::gfx_device::GfxDevice;
 use gfx_device::gfx_types::Factory;
 use gfx_device::main_target::MainTarget;
-
-use self::amethyst_renderer::Renderer;
-use self::amethyst_renderer::target::{ColorFormat, DepthFormat};
+use renderer::Renderer;
+use renderer::target::{ColorFormat, DepthFormat};
 
 /// Create a `(GfxDevice, Factory, MainTarget)` tuple from `DisplayConfig`
 pub fn video_init(cfg: DisplayConfig) -> (GfxDevice, Factory, MainTarget) {
@@ -21,12 +14,15 @@ pub fn video_init(cfg: DisplayConfig) -> (GfxDevice, Factory, MainTarget) {
 }
 
 #[cfg(all(windows, feature="direct3d"))]
-fn new_d3d() -> (GfxDevice, Factory, MainTarget) {
+fn new_d3d(_: &DisplayConfig) -> (GfxDevice, Factory, MainTarget) {
     unimplemented!();
 }
 
 #[cfg(feature="opengl")]
 fn new_gl(cfg: &DisplayConfig) -> (GfxDevice, Factory, MainTarget) {
+    use gfx_window_glutin;
+    use glutin;
+
     let title = cfg.title.clone();
     let multisampling = cfg.multisampling.clone();
     let visibility = cfg.visibility.clone();
