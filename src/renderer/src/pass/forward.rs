@@ -2,7 +2,6 @@ use gfx;
 use gfx::traits::FactoryExt;
 
 use pass;
-use Pass;
 use target::ColorBuffer;
 pub use VertexPosNormal;
 
@@ -254,7 +253,7 @@ gfx_defines!(
 /// Handles clearing the screen
 pub struct Clear;
 
-impl<R> Pass<R> for Clear
+impl<R> pass::Pass<R> for Clear
     where R: gfx::Resources
 {
     type Arg = pass::Clear;
@@ -292,11 +291,11 @@ impl<R: gfx::Resources> DrawFlat<R> {
         let vertex = factory.create_constant_buffer(1);
         let fragment = factory.create_constant_buffer(1);
         let pso = factory.create_pipeline_simple(VERTEX_SRC, FLAT_FRAGMENT_SRC, flat::new())
-            .unwrap();
+            .expect("Could not create PSO for `DrawFlat`!");
 
         let sampler =
             factory.create_sampler(gfx::texture::SamplerInfo::new(gfx::texture::FilterMethod::Scale,
-                                                              gfx::texture::WrapMode::Clamp));
+                                                               gfx::texture::WrapMode::Clamp));
 
         DrawFlat {
             vertex: vertex,
@@ -309,7 +308,7 @@ impl<R: gfx::Resources> DrawFlat<R> {
     }
 }
 
-impl<R> Pass<R> for DrawFlat<R>
+impl<R> pass::Pass<R> for DrawFlat<R>
     where R: gfx::Resources
 {
     type Arg = pass::DrawFlat;
@@ -380,11 +379,11 @@ impl<R: gfx::Resources> DrawShaded<R> {
         let vertex = factory.create_constant_buffer(1);
         let fragment = factory.create_constant_buffer(1);
         let pso = factory.create_pipeline_simple(VERTEX_SRC, FRAGMENT_SRC, shaded::new())
-            .unwrap();
+            .expect("Could not create PSO for `DrawShaded`!");
 
         let sampler =
             factory.create_sampler(gfx::texture::SamplerInfo::new(gfx::texture::FilterMethod::Scale,
-                                                              gfx::texture::WrapMode::Clamp));
+                                                               gfx::texture::WrapMode::Clamp));
 
         DrawShaded {
             vertex: vertex,
@@ -405,7 +404,7 @@ fn pad(x: [f32; 3]) -> [f32; 4] {
     [x[0], x[1], x[2], 0.]
 }
 
-impl<R> Pass<R> for DrawShaded<R>
+impl<R> pass::Pass<R> for DrawShaded<R>
     where R: gfx::Resources
 {
     type Arg = pass::DrawShaded;
@@ -509,11 +508,11 @@ impl<R: gfx::Resources> Wireframe<R> {
                                    gfx::Primitive::TriangleList,
                                    gfx::state::Rasterizer::new_fill(),
                                    wireframe::new())
-            .unwrap();
+            .expect("Could not create PSO for `Wireframe`!");
 
         let sampler =
             factory.create_sampler(gfx::texture::SamplerInfo::new(gfx::texture::FilterMethod::Scale,
-                                                              gfx::texture::WrapMode::Clamp));
+                                                               gfx::texture::WrapMode::Clamp));
 
         Wireframe {
             vertex: vertex,
@@ -525,7 +524,7 @@ impl<R: gfx::Resources> Wireframe<R> {
     }
 }
 
-impl<R> Pass<R> for Wireframe<R>
+impl<R> pass::Pass<R> for Wireframe<R>
     where R: gfx::Resources
 {
     type Arg = pass::Wireframe;

@@ -4,24 +4,22 @@
 #![crate_type = "lib"]
 #![doc(html_logo_url = "http://tinyurl.com/hgsb45k")]
 
+extern crate cgmath;
+extern crate glutin;
+extern crate specs;
 #[macro_use]
 extern crate gfx;
 #[macro_use]
 extern crate mopa;
 
-extern crate cgmath;
-extern crate glutin;
-extern crate specs;
-
-pub mod target;
 pub mod pass;
+pub mod target;
 
 use specs::{Component, VecStorage};
 use std::any::TypeId;
 use std::collections::HashMap;
 
-pub use pass::Pass;
-pub use pass::PassDescription;
+pub use pass::{Pass, PassDescription};
 pub use target::Target;
 
 /// Manages passes and the execution of the passes over the targets. It only
