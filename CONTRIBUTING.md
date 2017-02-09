@@ -109,21 +109,19 @@ done the following things first:
 
 1. You have ensured the pull request is based on a recent version of your
    respective branch.
-2. You have granted non-exclusive right to your source code under either the
-   [Apache 2.0 license][al] or the [MIT License][ml].
-3. If your pull request adds new methods or functions to the codebase, you have
-   written adequate test cases for them.
+2. If your pull request adds new methods or functions to the codebase, you have
+   written test cases for them.
    * Unit tests are placed at the bottom of the same .rs file in a submodule
      called `tests`. For an example, see the unit tests in the [state.rs][st]
      file in the top-level `amethyst` crate.
    * Integration tests are placed in a separate .rs file in the `tests`
      subdirectory.
-4. You have processed your source code with `cargo fmt`.
-5. All of the following commands completed without errors.
+3. You have processed your source code with `cargo fmt`.
+4. All of the following commands completed without errors.
    * `cargo build`
    * `cargo test --all`
    * `cargo run --example {example-name}`
-6. You have granted non-exclusive right to your source code under both the
+5. You have granted non-exclusive right to your source code under both the
    [MIT License][lm] and the [Apache License 2.0][la]. Unless you explicitly
    state otherwise, any contribution intentionally submitted for inclusion in
    the work by you, as defined in the Apache 2.0 license, shall be dual
