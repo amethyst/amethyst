@@ -26,7 +26,7 @@ before_script:
 
 # Format the codebase, generate documentation, compile the engine, run tests.
 script: |
-      cargo fmt -- --write-mode=diff &&
+      # cargo fmt -- --write-mode=diff &&
       cargo local-pkgs doc --no-deps -v &&
       cargo local-pkgs build -v &&
       cargo test --all -v

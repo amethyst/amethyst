@@ -123,7 +123,7 @@ impl System<()> for TransformSystem {
                     if local.is_dirty() || child.is_dirty() ||
                        self.dirty.contains(&child.parent()) {
                         let combined_transform = if let Some(parent_global) =
-                                                        globals.get(child.parent()) {
+                            globals.get(child.parent()) {
                             (Matrix4::from(parent_global.0) * Matrix4::from(local.matrix())).into()
                         } else {
                             local.matrix()
