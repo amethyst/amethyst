@@ -300,8 +300,8 @@ impl<R: gfx::Resources> DrawPass<R> {
         where F: gfx::Factory<R>
     {
         let sampler =
-            factory.create_sampler(gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale,
-                                                              gfx::tex::WrapMode::Clamp));
+            factory.create_sampler(gfx::texture::SamplerInfo::new(gfx::texture::FilterMethod::Scale,
+                                                               gfx::texture::WrapMode::Clamp));
 
         DrawPass {
             vertex: factory.create_constant_buffer(1),
@@ -485,8 +485,8 @@ impl<R> BlitLayer<R>
         let (buffer, slice) = create_screen_fill_triangle(factory);
 
         let sampler =
-            factory.create_sampler(gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale,
-                                                              gfx::tex::WrapMode::Clamp));
+            factory.create_sampler(gfx::texture::SamplerInfo::new(gfx::texture::FilterMethod::Scale,
+                                                               gfx::texture::WrapMode::Clamp));
 
         BlitLayer {
             slice: slice,
@@ -553,8 +553,8 @@ impl<R: gfx::Resources> LightingPass<R> {
     {
         let (buffer, slice) = create_screen_fill_triangle(factory);
         let sampler =
-            factory.create_sampler(gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale,
-                                                              gfx::tex::WrapMode::Clamp));
+            factory.create_sampler(gfx::texture::SamplerInfo::new(gfx::texture::FilterMethod::Scale,
+                                                               gfx::texture::WrapMode::Clamp));
 
         let point_lights = factory.create_constant_buffer(128);
         let directional_lights = factory.create_constant_buffer(16);

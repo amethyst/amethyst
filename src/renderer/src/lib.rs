@@ -1,8 +1,8 @@
+//! High-level rendering engine with multiple backends.
+
 #![crate_name = "amethyst_renderer"]
 #![crate_type = "lib"]
 #![doc(html_logo_url = "http://tinyurl.com/hgsb45k")]
-
-//! High-level rendering engine with multiple backends.
 
 #[macro_use]
 extern crate gfx;
@@ -128,11 +128,11 @@ impl<R: gfx::Resources> ConstantColorTexture<R> {
     pub fn new<F>(factory: &mut F) -> ConstantColorTexture<R>
         where F: gfx::Factory<R>
     {
-        let kind = gfx::tex::Kind::D2(1, 1, gfx::tex::AaMode::Single);
+        let kind = gfx::texture::Kind::D2(1, 1, gfx::texture::AaMode::Single);
         let text = factory.create_texture::<gfx::format::R8_G8_B8_A8>(kind,
                                                         1,
                                                         gfx::SHADER_RESOURCE,
-                                                        gfx::Usage::Dynamic,
+                                                        gfx::memory::Usage::Dynamic,
                                                         Some(gfx::format::ChannelType::Unorm))
             .unwrap();
         let levels = (0, text.get_info().levels - 1);
@@ -384,7 +384,7 @@ impl Layer {
 }
 
 /// The render job submission
-/// Describes the layers and 
+/// Describes the layers and
 pub struct Pipeline {
     /// the layers to be processed
     pub layers: Vec<Layer>,

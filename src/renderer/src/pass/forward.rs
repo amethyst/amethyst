@@ -295,8 +295,8 @@ impl<R: gfx::Resources> DrawFlat<R> {
             .unwrap();
 
         let sampler =
-            factory.create_sampler(gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale,
-                                                              gfx::tex::WrapMode::Clamp));
+            factory.create_sampler(gfx::texture::SamplerInfo::new(gfx::texture::FilterMethod::Scale,
+                                                              gfx::texture::WrapMode::Clamp));
 
         DrawFlat {
             vertex: vertex,
@@ -383,8 +383,8 @@ impl<R: gfx::Resources> DrawShaded<R> {
             .unwrap();
 
         let sampler =
-            factory.create_sampler(gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale,
-                                                              gfx::tex::WrapMode::Clamp));
+            factory.create_sampler(gfx::texture::SamplerInfo::new(gfx::texture::FilterMethod::Scale,
+                                                              gfx::texture::WrapMode::Clamp));
 
         DrawShaded {
             vertex: vertex,
@@ -512,8 +512,8 @@ impl<R: gfx::Resources> Wireframe<R> {
             .unwrap();
 
         let sampler =
-            factory.create_sampler(gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Scale,
-                                                              gfx::tex::WrapMode::Clamp));
+            factory.create_sampler(gfx::texture::SamplerInfo::new(gfx::texture::FilterMethod::Scale,
+                                                              gfx::texture::WrapMode::Clamp));
 
         Wireframe {
             vertex: vertex,
