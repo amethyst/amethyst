@@ -54,8 +54,8 @@ pub static FRAGMENT_SRC: &'static [u8] = b"
     #version 150 core
 
     layout (std140) uniform cb_FragmentArgs {
-        int u_PointLightCount;
-        int u_DirectionalLightCount;
+        uint u_PointLightCount;
+        uint u_DirectionalLightCount;
     };
 
     struct PointLight {
@@ -211,8 +211,8 @@ gfx_defines!(
     }
 
     constant FragmentArgs {
-        point_light_count: i32 = "u_PointLightCount",
-        directional_light_count: i32 = "u_DirectionalLightCount",
+        point_light_count: u32 = "u_PointLightCount",
+        directional_light_count: u32 = "u_DirectionalLightCount",
     }
 
     pipeline flat {
@@ -230,7 +230,7 @@ gfx_defines!(
         vertex_args: gfx::ConstantBuffer<VertexArgs> = "cb_VertexArgs",
         fragment_args: gfx::ConstantBuffer<FragmentArgs> = "cb_FragmentArgs",
         point_lights: gfx::ConstantBuffer<PointLight> = "u_PointLights",
-        directional_lights: gfx::ConstantBuffer<DirectionalLight> = "u_DirectionalLights",
+        dir_lights: gfx::ConstantBuffer<DirectionalLight> = "u_DirectionalLights",
         out_ka: gfx::RenderTarget<gfx::format::Rgba8> = "o_Color",
         out_depth: gfx::DepthTarget<gfx::format::DepthStencil> = gfx::preset::depth::LESS_EQUAL_WRITE,
         ka: gfx::TextureSampler<[f32; 4]> = "t_Ka",
@@ -295,7 +295,7 @@ impl<R: gfx::Resources> DrawFlat<R> {
 
         let sampler =
             factory.create_sampler(gfx::texture::SamplerInfo::new(gfx::texture::FilterMethod::Scale,
-                                                               gfx::texture::WrapMode::Clamp));
+                                                                  gfx::texture::WrapMode::Clamp));
 
         DrawFlat {
             vertex: vertex,
@@ -309,7 +309,7 @@ impl<R: gfx::Resources> DrawFlat<R> {
 }
 
 impl<R> pass::Pass<R> for DrawFlat<R>
-    where R: gfx::Resources
+where R: gfx::Resources
 {
     type Arg = pass::DrawFlat;
     type Target = ColorBuffer<R>;
@@ -321,20 +321,20 @@ impl<R> pass::Pass<R> for DrawFlat<R>
                 scene: &::Scene<R>,
                 encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
-    {
-        // every entity gets drawn
-        for e in &scene.fragments {
-            encoder.update_constant_buffer(&self.vertex,
-                                           &VertexArgs {
-                                               proj: scene.camera.proj,
-                                               view: scene.camera.view,
-                                               model: e.transform,
-                                           });
+        {
+            // every entity gets drawn
+            for e in &scene.fragments {
+                encoder.update_constant_buffer(&self.vertex,
+                                               &VertexArgs {
+                                                   proj: scene.camera.proj,
+                                                   view: scene.camera.view,
+                                                   model: e.transform,
+                                               });
 
-            encoder.update_constant_buffer(&self.fragment,
-                                           &FragmentArgs {
-                                               point_light_count: 0,
-                                               directional_light_count: 0,
+                encoder.update_constant_buffer(&self.fragment,
+                                               &FragmentArgs {
+                                                   point_light_count: 0,
+                                                   directional_light_count: 0,
                                            });
 
             let ka = e.ka.to_view(&self.ka, encoder);
@@ -361,7 +361,7 @@ pub struct DrawShaded<R: gfx::Resources> {
     vertex: gfx::handle::Buffer<R, VertexArgs>,
     fragment: gfx::handle::Buffer<R, FragmentArgs>,
     point_lights: gfx::handle::Buffer<R, PointLight>,
-    directional_lights: gfx::handle::Buffer<R, DirectionalLight>,
+    dir_lights: gfx::handle::Buffer<R, DirectionalLight>,
     pso: gfx::pso::PipelineState<R, shaded::Meta>,
     sampler: gfx::handle::Sampler<R>,
     ka: ::ConstantColorTexture<R>,
@@ -375,7 +375,7 @@ impl<R: gfx::Resources> DrawShaded<R> {
               F: gfx::Factory<R>
     {
         let point_lights = factory.create_constant_buffer(512);
-        let directional_lights = factory.create_constant_buffer(16);
+        let dir_lights = factory.create_constant_buffer(16);
         let vertex = factory.create_constant_buffer(1);
         let fragment = factory.create_constant_buffer(1);
         let pso = factory.create_pipeline_simple(VERTEX_SRC, FRAGMENT_SRC, shaded::new())
@@ -389,7 +389,7 @@ impl<R: gfx::Resources> DrawShaded<R> {
             vertex: vertex,
             fragment: fragment,
             point_lights: point_lights,
-            directional_lights: directional_lights,
+            dir_lights: dir_lights,
             pso: pso,
             ka: ::ConstantColorTexture::new(factory),
             kd: ::ConstantColorTexture::new(factory),
@@ -435,8 +435,7 @@ impl<R> pass::Pass<R> for DrawShaded<R>
         encoder.update_buffer(&self.point_lights, &point_lights[..], 0).unwrap();
 
         // Add directional lights to scene
-        let directional_lights: Vec<_> = scene.directional_lights
-            .iter()
+        let dir_lights: Vec<_> = scene.directional_lights.iter()
             .map(|l| {
                 DirectionalLight {
                     color: l.color,
@@ -444,7 +443,7 @@ impl<R> pass::Pass<R> for DrawShaded<R>
                 }
             })
             .collect();
-        encoder.update_buffer(&self.directional_lights, &directional_lights[..], 0).unwrap();
+        encoder.update_buffer(&self.dir_lights, &dir_lights[..], 0).unwrap();
 
         // Draw every entity
         for e in &scene.fragments {
@@ -457,9 +456,8 @@ impl<R> pass::Pass<R> for DrawShaded<R>
 
             encoder.update_constant_buffer(&self.fragment,
                                            &FragmentArgs {
-                                               point_light_count: point_lights.len() as i32,
-                                               directional_light_count: directional_lights.len() as
-                                                                        i32,
+                                               point_light_count: point_lights.len() as u32,
+                                               directional_light_count: dir_lights.len() as u32,
                                            });
 
             let ka = e.ka.to_view(&self.ka, encoder);
@@ -473,7 +471,7 @@ impl<R> pass::Pass<R> for DrawShaded<R>
                              fragment_args: self.fragment.clone(),
                              vertex_args: self.vertex.clone(),
                              point_lights: self.point_lights.clone(),
-                             directional_lights: self.directional_lights.clone(),
+                             dir_lights: self.dir_lights.clone(),
                              out_ka: target.color.clone(),
                              out_depth: target.output_depth.clone(),
                              ka: (ka, self.sampler.clone()),
