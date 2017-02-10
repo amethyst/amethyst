@@ -11,7 +11,7 @@
 //!
 //! # Example
 //!
-//! ```
+//! ```no_run
 //! extern crate amethyst;
 //!
 //! use amethyst::{Application, Event, State, Trans, VirtualKeyCode, WindowEvent};
