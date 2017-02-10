@@ -1,9 +1,7 @@
 //! Mesh resource handling.
 
-extern crate gfx;
-extern crate gfx_device_gl;
-
-use self::gfx::traits::FactoryExt;
+use gfx;
+use gfx::traits::FactoryExt;
 
 use asset_manager::{AssetLoader, Assets};
 use gfx_device::gfx_types;

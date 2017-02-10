@@ -1,8 +1,8 @@
 //! Graphical display configuration.
 
-use config::Element;
-
 use std::path::Path;
+
+use config::Element;
 
 config! {
     /// Graphical display configuration.

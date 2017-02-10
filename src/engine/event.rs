@@ -1,4 +1,4 @@
-//! This module contains the `EngineEvent` component and reexports glutin event
+//! This module contains the `WindowEvent` type and re-exports glutin event
 //! types.
 
 use ecs::{Component, VecStorage};

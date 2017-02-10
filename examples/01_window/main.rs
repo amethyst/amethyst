@@ -17,7 +17,6 @@ impl State for Example {
         use amethyst::renderer::pass::Clear;
 
         let clear_layer = Layer::new("main", vec![Clear::new([0.0, 0.0, 0.0, 1.0])]);
-
         pipe.layers = vec![clear_layer];
     }
 

@@ -54,8 +54,8 @@ pub static FRAGMENT_SRC: &'static [u8] = b"
     #version 150 core
 
     layout (std140) uniform cb_FragmentArgs {
-        uint u_PointLightCount;
-        uint u_DirectionalLightCount;
+        int u_PointLightCount;
+        int u_DirectionalLightCount;
     };
 
     struct PointLight {
@@ -211,8 +211,8 @@ gfx_defines!(
     }
 
     constant FragmentArgs {
-        point_light_count: u32 = "u_PointLightCount",
-        directional_light_count: u32 = "u_DirectionalLightCount",
+        point_light_count: i32 = "u_PointLightCount",
+        directional_light_count: i32 = "u_DirectionalLightCount",
     }
 
     pipeline flat {
@@ -456,8 +456,8 @@ impl<R> pass::Pass<R> for DrawShaded<R>
 
             encoder.update_constant_buffer(&self.fragment,
                                            &FragmentArgs {
-                                               point_light_count: point_lights.len() as u32,
-                                               directional_light_count: dir_lights.len() as u32,
+                                               point_light_count: point_lights.len() as i32,
+                                               directional_light_count: dir_lights.len() as i32,
                                            });
 
             let ka = e.ka.to_view(&self.ka, encoder);

@@ -1,8 +1,6 @@
 //! Primary render target used by the renderer.
 
-extern crate gfx;
-extern crate gfx_device_gl;
-
+use gfx;
 use gfx_device::gfx_types;
 use renderer::target;
 
