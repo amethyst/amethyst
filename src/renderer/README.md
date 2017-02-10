@@ -2,7 +2,7 @@
 
 [![Build Status][s1]][tc] [![Crates.io][s2]][ci] [![MIT/Apache][s3]][li] [![Join the chat][s4]][gc]
 
-[s1]: https://api.travis-ci.org/ebkalderon/amethyst.svg
+[s1]: https://api.travis-ci.org/amethyst/amethyst.svg
 [s2]: https://img.shields.io/crates/v/amethyst_renderer.svg
 [s3]: https://img.shields.io/badge/license-MIT%2FApache-blue.svg
 [s4]: https://badges.gitter.im/amethyst/amethyst.svg

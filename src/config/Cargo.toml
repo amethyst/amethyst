@@ -10,5 +10,9 @@ repository = "https://github.com/amethyst/amethyst"
 
 license = "MIT/Apache-2.0"
 
+[badges]
+appveyor = { repository = "amethyst/amethyst" }
+travis-ci = { repository = "amethyst/amethyst" }
+
 [dependencies]
-yaml-rust = "0.3.2"
+yaml-rust = "0.3"

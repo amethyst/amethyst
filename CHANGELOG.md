@@ -7,6 +7,40 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [kc]: http://keepachangelog.com/
 [sv]: http://semver.org/
 
+## [0.4.1] - 2017-02-10
+### Added
+* Make `CONTRIBUTING.md` have teeth by enabling `#[deny(missing_docs)]`.
+* Add lots of shiny new API documentation.
+* Convert `amethyst` crate into a workspace.
+* Add Travis and Appveyor badges to Cargo manifests.
+
+### Changed
+* Bump `amethyst` to version 0.4.1, `amethyst_renderer` to 0.4.1, and
+  `amethyst_config` to 0.2.0.
+* Temporarily disable `cargo fmt` checking in Travis due to panics.
+* Update to `dds` 0.4.
+* Update to `gfx` 0.14, fix breaking changes relating to shaders, PSO, and
+  module layout changes.
+* Update to `gfx_device_gl` 0.13.
+* Update to `gfx_window_glutin` 0.14.
+* Update to `glutin` 0.7.
+* Improve quality of existing doc comments.
+* Implement `Deref` and `DerefMut` into `glutin::Event` for `WindowEvent`.
+* Re-export contents of `engine` to top-level and make module private.
+* Shorten certain variable names to help combat rightward drift.
+* Update `.travis.yml` and `appveyor.yml` to use `cargo test --all` instead of
+  specifying explicit crates.
+* Rename `06_assets` to `05_assets`.
+* Make Git line endings consistent for source and config files throughout the
+  repo.
+* Process entire codebase through `cargo fmt`.
+* Improve wording and formatting in `CONTRIBUTING.md` and in `README.md`.
+
+### Removed
+* Delete `rustfmt.toml` from `amethyst_renderer`.
+* Delete outdated example from `amethyst_renderer`.
+* Delete redundant `extern crate` directives outside of `lib.rs`.
+
 ## [0.4.0] - 2017-02-07
 ### Added
 * Add transform system, transform components, light components, `specs`
@@ -144,6 +178,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ## 0.1.0 - 2016-01-03
 * Initial release
 
-[Unreleased]: https://github.com/amethyst/amethyst/compare/v0.4...HEAD
+[Unreleased]: https://github.com/amethyst/amethyst/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/amethyst/amethyst/compare/v0.4...v0.4.1
 [0.4.0]: https://github.com/amethyst/amethyst/compare/v0.3.1...v0.4
 [0.3.1]: https://github.com/amethyst/amethyst/compare/v0.3...v0.3.1
