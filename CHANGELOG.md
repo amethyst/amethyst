@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Changed
 * Bump `amethyst` to version 0.4.1, `amethyst_renderer` to 0.4.1, and
-  `amethyst_config` to 0.2.0.
+  `amethyst_config` to 0.2.1.
 * Temporarily disable `cargo fmt` checking in Travis due to panics.
 * Update to `dds` 0.4.
 * Update to `gfx` 0.14, fix breaking changes relating to shaders, PSO, and
