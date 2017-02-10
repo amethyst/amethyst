@@ -23,8 +23,8 @@ opengl = []
 direct3d = []
 
 [dependencies]
-amethyst_config = { path = "src/config/" }
-amethyst_renderer = { path = "src/renderer" }
+amethyst_config = { path = "src/config/", version = "0.2.1" }
+amethyst_renderer = { path = "src/renderer", version = "0.4.1" }
 cgmath = "0.12"
 dds-rs = "0.4"
 num_cpus = "1.2"
