@@ -64,6 +64,7 @@ pub static FRAGMENT_SRC: &'static [u8] = b"
         float intensity;
         float radius;
         float smoothness;
+        float pad;
     };
 
     layout (std140) uniform u_PointLights {
@@ -197,6 +198,7 @@ gfx_defines!(
         intensity: f32 = "intensity",
         radius: f32 = "radius",
         smoothness: f32 = "smoothness",
+        _pad: f32 = "pad",
     }
 
     constant DirectionalLight {
@@ -429,6 +431,7 @@ impl<R> pass::Pass<R> for DrawShaded<R>
                     intensity: l.intensity,
                     radius: l.radius,
                     smoothness: l.smoothness,
+                    _pad: 0.0,
                 }
             })
             .collect();

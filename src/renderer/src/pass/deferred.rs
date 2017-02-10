@@ -122,6 +122,7 @@ pub static LIGHT_FRAGMENT_SRC: &'static [u8] = b"
         float intensity;
         float radius;
         float smoothness;
+        float pad;
     };
 
     struct DirectionalLight {
@@ -220,6 +221,7 @@ gfx_defines!(
         intensity: f32 = "intensity",
         radius: f32 = "radius",
         smoothness: f32 = "smoothness",
+        _pad: f32 = "pad",
     }
 
     constant DirectionalLight {
@@ -604,6 +606,7 @@ impl<R> pass::Pass<R> for LightingPass<R>
                         intensity: l.intensity,
                         radius: l.radius,
                         smoothness: l.smoothness,
+                        _pad: 0.0,
                     }
                 })
                 .collect();
