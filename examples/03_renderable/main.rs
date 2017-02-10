@@ -1,27 +1,21 @@
-//! Demonstrates how to load renderable objects, along with
-//! several lighting methods.
+//! Demonstrates how to load renderable objects, along with several lighting
+//! methods.
 
 extern crate amethyst;
 extern crate cgmath;
 
+use amethyst::{Application, ElementState, Event, State, Trans, VirtualKeyCode, WindowEvent};
+use amethyst::asset_manager::{AssetManager, DirectoryStore};
+use amethyst::config::Element;
+use amethyst::ecs::{Join, System, RunArg, World};
+use amethyst::ecs::components::{LocalTransform, Mesh, Texture, Transform};
+use amethyst::ecs::resources::{Camera, Projection, ScreenDimensions, Time};
+use amethyst::gfx_device::DisplayConfig;
+use amethyst::renderer::{AmbientLight, DirectionalLight, Layer, PointLight, Pipeline};
+use amethyst::renderer::pass::{BlitLayer, Clear, DrawFlat, DrawShaded, Lighting};
+use cgmath::{Deg, Euler, Quaternion};
 use std::env::set_var;
 use std::str;
-
-use amethyst::asset_manager::{AssetManager, DirectoryStore};
-use amethyst::ecs::components::rendering::{Mesh, Texture};
-use amethyst::ecs::components::transform::{LocalTransform, Transform};
-use amethyst::config::Element;
-use amethyst::engine::{Application, State, Trans};
-use amethyst::specs::{World, Join, System, RunArg};
-use amethyst::event::WindowEvent;
-use amethyst::gfx_device::DisplayConfig;
-use amethyst::renderer::{AmbientLight, DirectionalLight, Layer, PointLight};
-use amethyst::renderer::Pipeline;
-use amethyst::renderer::pass::{BlitLayer, Clear, DrawFlat, DrawShaded, Lighting};
-use amethyst::ecs::resources::camera::{Camera, Projection};
-use amethyst::ecs::resources::{ScreenDimensions, Time};
-use cgmath::{Deg, Euler, Quaternion};
-
 
 struct DemoState {
     light_angle: f32,
@@ -33,22 +27,16 @@ struct DemoState {
     pipeline_forward: bool,
 }
 
-
 struct ExampleSystem;
 
 impl System<()> for ExampleSystem {
     fn run(&mut self, arg: RunArg, _: ()) {
-        let (
-            mut lights,
-            time,
-            mut camera,
-            mut state,
-        ) = arg.fetch(|w| (
-            w.write::<PointLight>(),
-            w.read_resource::<Time>(),
-            w.write_resource::<Camera>(),
-            w.write_resource::<DemoState>(),
-        ));
+        let (mut lights, time, mut camera, mut state) = arg.fetch(|w| {
+            (w.write::<PointLight>(),
+             w.read_resource::<Time>(),
+             w.write_resource::<Camera>(),
+             w.write_resource::<DemoState>())
+        });
 
         let delta_time = time.delta_time.subsec_nanos() as f32 / 1.0e9;
 
@@ -68,44 +56,36 @@ impl System<()> for ExampleSystem {
     }
 }
 
-
-fn set_pipeline_state(pipeline: &mut Pipeline, forward: bool) {
+fn set_pipeline_state(pipe: &mut Pipeline, forward: bool) {
     if forward {
-        pipeline.layers = vec![
-            Layer::new("main", vec![
-                Clear::new([0.0, 0.0, 0.0, 1.0]),
-                DrawShaded::new("main", "main"),
-            ]),
-        ];
+        let layer = Layer::new("main",
+                               vec![Clear::new([0.0, 0.0, 0.0, 1.0]),
+                                    DrawShaded::new("main", "main")]);
+        pipe.layers = vec![layer];
     } else {
-        pipeline.layers = vec![
-            Layer::new("gbuffer", vec![
-                Clear::new([0., 0., 0., 1.]),
-                DrawFlat::new("main", "main"),
-            ]),
-            Layer::new("main", vec![
-                BlitLayer::new("gbuffer", "ka"),
-                Lighting::new("main", "gbuffer", "main"),
-            ]),
-        ];
+        let geom_layer = Layer::new("main",
+                                    vec![Clear::new([0.0, 0.0, 0.0, 1.0]),
+                                         DrawFlat::new("main", "main")]);
+        let postproc_layer = Layer::new("main",
+                                        vec![BlitLayer::new("gbuffer", "ka"),
+                                             Lighting::new("main", "gbuffer", "main")]);
+        pipe.layers = vec![geom_layer, postproc_layer];
     }
 }
-
-
 struct Example;
 
 impl State for Example {
-    fn on_start(&mut self, world: &mut World, asset_manager: &mut AssetManager, pipeline: &mut Pipeline) {
+    fn on_start(&mut self, world: &mut World, assets: &mut AssetManager, pipe: &mut Pipeline) {
         {
-            let dimensions = world.read_resource::<ScreenDimensions>();
+            let dim = world.read_resource::<ScreenDimensions>();
             let mut camera = world.write_resource::<Camera>();
             let proj = Projection::Perspective {
                 fov: 60.0,
-                aspect_ratio: dimensions.aspect_ratio,
+                aspect_ratio: dim.aspect_ratio,
                 near: 1.0,
                 far: 100.0,
             };
-            camera.projection = proj;
+            camera.proj = proj;
             camera.eye = [0.0, -20.0, 10.0];
             camera.target = [0.0, 0.0, 5.0];
             camera.up = [0.0, 0.0, 1.0];
@@ -113,78 +93,78 @@ impl State for Example {
 
         // Set up an assets path by directly registering an assets store.
         let assets_path = format!("{}/examples/03_renderable/resources/meshes",
-                       env!("CARGO_MANIFEST_DIR"));
-        asset_manager.register_store(DirectoryStore::new(assets_path));
+                                  env!("CARGO_MANIFEST_DIR"));
+        assets.register_store(DirectoryStore::new(assets_path));
 
         // Create some basic colors and load textures
-        asset_manager.load_asset_from_data::<Texture, [f32; 4]>("red",   [0.8, 0.2, 0.2, 1.0]);
-        asset_manager.load_asset_from_data::<Texture, [f32; 4]>("green", [0.2, 0.8, 0.2, 1.0]);
-        asset_manager.load_asset_from_data::<Texture, [f32; 4]>("blue",  [0.2, 0.2, 0.8, 1.0]);
-        asset_manager.load_asset_from_data::<Texture, [f32; 4]>("pink",  [1.0, 0.8, 0.8, 1.0]);
-        asset_manager.load_asset_from_data::<Texture, [f32; 4]>("black", [0.0, 0.0, 0.0, 1.0]);
-        asset_manager.load_asset_from_data::<Texture, [f32; 4]>("white", [1.0, 1.0, 1.0, 1.0]);
-        asset_manager.load_asset::<Texture>("logo", "png");
-        asset_manager.load_asset::<Texture>("ground", "dds");
+        assets.load_asset_from_data::<Texture, [f32; 4]>("red", [0.8, 0.2, 0.2, 1.0]);
+        assets.load_asset_from_data::<Texture, [f32; 4]>("green", [0.2, 0.8, 0.2, 1.0]);
+        assets.load_asset_from_data::<Texture, [f32; 4]>("blue", [0.2, 0.2, 0.8, 1.0]);
+        assets.load_asset_from_data::<Texture, [f32; 4]>("pink", [1.0, 0.8, 0.8, 1.0]);
+        assets.load_asset_from_data::<Texture, [f32; 4]>("black", [0.0, 0.0, 0.0, 1.0]);
+        assets.load_asset_from_data::<Texture, [f32; 4]>("white", [1.0, 1.0, 1.0, 1.0]);
+        assets.load_asset::<Texture>("logo", "png");
+        assets.load_asset::<Texture>("ground", "dds");
 
         // Load/generate meshes
-        asset_manager.load_asset::<Mesh>("teapot", "obj");
-        asset_manager.load_asset::<Mesh>("lid", "obj");
-        asset_manager.load_asset::<Mesh>("rectangle", "obj");
-        asset_manager.load_asset::<Mesh>("cube", "obj");
-        asset_manager.load_asset::<Mesh>("cone", "obj");
+        assets.load_asset::<Mesh>("teapot", "obj");
+        assets.load_asset::<Mesh>("lid", "obj");
+        assets.load_asset::<Mesh>("rectangle", "obj");
+        assets.load_asset::<Mesh>("cube", "obj");
+        assets.load_asset::<Mesh>("cone", "obj");
 
         // Add teapot and lid to scene
         for mesh in vec!["lid", "teapot"].iter() {
-            let mut transform = LocalTransform::default();
-            transform.rotation = Quaternion::from(Euler::new(Deg(90.0), Deg(-90.0), Deg(0.0))).into();
-            transform.translation = [5.0, 5.0, 0.0];
-            let renderable = asset_manager.create_renderable(mesh, "red", "blue", "white", 10.0).unwrap();
+            let mut trans = LocalTransform::default();
+            trans.rotation = Quaternion::from(Euler::new(Deg(90.0), Deg(-90.0), Deg(0.0))).into();
+            trans.translation = [5.0, 5.0, 0.0];
+            let rend = assets.create_renderable(mesh, "red", "blue", "white", 10.0).unwrap();
             world.create_now()
-                .with(renderable)
-                .with(transform)
+                .with(rend)
+                .with(trans)
                 .with(Transform::default())
                 .build();
         }
 
         // Add cube to scene
-        let renderable = asset_manager.create_renderable("cube", "logo", "logo", "white", 1.0).unwrap();
-        let mut transform = LocalTransform::default();
-        transform.translation = [5.0, -5.0, 2.0];
-        transform.scale = [2.0; 3];
+        let rend = assets.create_renderable("cube", "logo", "logo", "white", 1.0).unwrap();
+        let mut trans = LocalTransform::default();
+        trans.translation = [5.0, -5.0, 2.0];
+        trans.scale = [2.0; 3];
         world.create_now()
-            .with(renderable)
-            .with(transform)
+            .with(rend)
+            .with(trans)
             .with(Transform::default())
             .build();
 
         // Add cone to scene
-        let renderable = asset_manager.create_renderable("cone", "white", "red", "blue", 40.0).unwrap();
-        let mut transform = LocalTransform::default();
-        transform.translation = [-5.0, 5.0, 0.0];
-        transform.scale = [2.0; 3];
+        let rend = assets.create_renderable("cone", "white", "red", "blue", 40.0).unwrap();
+        let mut trans = LocalTransform::default();
+        trans.translation = [-5.0, 5.0, 0.0];
+        trans.scale = [2.0; 3];
         world.create_now()
-            .with(renderable)
-            .with(transform)
+            .with(rend)
+            .with(trans)
             .with(Transform::default())
             .build();
 
         // Add custom cube object to scene
-        let renderable = asset_manager.create_renderable("cube", "blue", "green", "white", 1.0).unwrap();
-        let mut transform = LocalTransform::default();
-        transform.translation = [-5.0, -5.0, 1.0];
+        let rend = assets.create_renderable("cube", "blue", "green", "white", 1.0).unwrap();
+        let mut trans = LocalTransform::default();
+        trans.translation = [-5.0, -5.0, 1.0];
         world.create_now()
-            .with(renderable)
-            .with(transform)
+            .with(rend)
+            .with(trans)
             .with(Transform::default())
             .build();
 
         // Create base rectangle as floor
-        let renderable = asset_manager.create_renderable("rectangle", "ground", "ground", "black", 1.0).unwrap();
-        let mut transform = LocalTransform::default();
-        transform.scale = [10.0; 3];
+        let rend = assets.create_renderable("rectangle", "ground", "ground", "black", 1.0).unwrap();
+        let mut trans = LocalTransform::default();
+        trans.scale = [10.0; 3];
         world.create_now()
-            .with(renderable)
-            .with(transform)
+            .with(rend)
+            .with(trans)
             .with(Transform::default())
             .build();
 
@@ -206,7 +186,7 @@ impl State for Example {
         }
 
         // Set rendering pipeline to forward by default, and add utility resources
-        set_pipeline_state(pipeline, true);
+        set_pipeline_state(pipe, true);
         world.add_resource::<DemoState>(DemoState {
             light_angle: 0.0,
             light_color: [1.0; 4],
@@ -222,41 +202,40 @@ impl State for Example {
                      events: &[WindowEvent],
                      w: &mut World,
                      _: &mut AssetManager,
-                     pipeline: &mut Pipeline)
+                     pipe: &mut Pipeline)
                      -> Trans {
 
         // Exit if user hits Escape or closes the window
-        use amethyst::event::*;
-        for event in events {
-            match event.payload {
+        for e in events {
+            match **e {
                 Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) => return Trans::Quit,
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::Space)) => {
                     let mut state = w.write_resource::<DemoState>();
 
                     if state.pipeline_forward {
                         state.pipeline_forward = false;
-                        set_pipeline_state(pipeline, false);
+                        set_pipeline_state(pipe, false);
                     } else {
                         state.pipeline_forward = true;
-                        set_pipeline_state(pipeline, true);
+                        set_pipeline_state(pipe, true);
                     }
-                },
+                }
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::R)) => {
                     let mut state = w.write_resource::<DemoState>();
                     state.light_color = [0.8, 0.2, 0.2, 1.0];
-                },
+                }
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::G)) => {
                     let mut state = w.write_resource::<DemoState>();
                     state.light_color = [0.2, 0.8, 0.2, 1.0];
-                },
+                }
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::B)) => {
                     let mut state = w.write_resource::<DemoState>();
                     state.light_color = [0.2, 0.2, 0.8, 1.0];
-                },
+                }
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::W)) => {
                     let mut state = w.write_resource::<DemoState>();
                     state.light_color = [1.0, 1.0, 1.0, 1.0];
-                },
+                }
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::A)) => {
                     let mut light = w.write_resource::<AmbientLight>();
                     let mut state = w.write_resource::<DemoState>();
@@ -268,7 +247,7 @@ impl State for Example {
                         state.ambient_light = true;
                         light.power = 0.01;
                     }
-                },
+                }
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::D)) => {
                     let mut lights = w.write::<DirectionalLight>();
                     let mut state = w.write_resource::<DemoState>();
@@ -284,7 +263,7 @@ impl State for Example {
                             light.color = [0.2; 4];
                         }
                     }
-                },
+                }
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::P)) => {
                     let mut state = w.write_resource::<DemoState>();
 
@@ -295,7 +274,7 @@ impl State for Example {
                         state.point_light = true;
                         state.light_color = [1.0; 4];
                     }
-                },
+                }
                 Event::Closed => return Trans::Quit,
                 _ => (),
             }
@@ -315,8 +294,8 @@ fn main() {
 
     let path = format!("{}/examples/03_renderable/resources/config.yml",
                        env!("CARGO_MANIFEST_DIR"));
-    let display_config = DisplayConfig::from_file(path).unwrap();
-    let mut game = Application::build(Example, display_config)
+    let cfg = DisplayConfig::from_file(path).unwrap();
+    let mut game = Application::build(Example, cfg)
         .with::<ExampleSystem>(ExampleSystem, "example_system", 1)
         .done();
     game.run();

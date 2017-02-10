@@ -1,4 +1,3 @@
-
 //! Configuration structures and macros
 
 use std::io::Error;
@@ -174,6 +173,7 @@ macro_rules! config {
         }
 
         impl $root {
+            /// TODO: Needs documentation!
             pub fn to_string(&self) -> String {
                 $crate::to_string(&self.to_yaml(&self._meta.path.as_path())) + "\n"
             }
@@ -189,6 +189,7 @@ macro_rules! config {
         }
 
         impl $crate::Element for $root {
+            /// TODO: Needs documentation!
             fn from_yaml(meta: &$crate::ConfigMeta, config: &$crate::Yaml) -> Result<Self, $crate::ConfigError> {
                 use std::collections::HashSet;
                 use std::path::PathBuf;
@@ -232,7 +233,7 @@ macro_rules! config {
                         $field: {
                             let key = &config[stringify!($field)];
 
-                            // set up current meta
+                            // Set up current meta
                             let mut field_meta = next_meta.clone();
 
                             field_meta.fields.push(stringify!($field).to_string());
@@ -241,7 +242,7 @@ macro_rules! config {
                             field_meta.bad_value = key.is_badvalue();
                             field_meta.parent = Some(Box::new(next_meta.clone()));
 
-                            let val = if key.as_str() == Some("extern") { // external file
+                            let val = if key.as_str() == Some("extern") { // External file
                                 let mut path = PathBuf::from("");
 
                                 for (index, child) in field_meta.fields.iter().enumerate() {
@@ -251,15 +252,14 @@ macro_rules! config {
                                 }
 
                                 <$ty>::from_file_raw(&field_meta, &path.as_path())
-                            }
-                            else { // current file
+                            } else { // current file
                                 <$ty>::from_yaml(&field_meta, key)
                             };
 
                             match val {
                                 Ok(found) => found,
                                 Err(e) => {
-                                    // output error and fall-through the default values
+                                    // Output error and fall-through the default values
                                     println!("{}", e);
 
                                     default.$field.set_meta(&field_meta);
@@ -272,6 +272,7 @@ macro_rules! config {
                 })
             }
 
+            /// TODO: Needs documentation!
             fn to_yaml(&self, path: &Path) -> $crate::Yaml {
                 use std::collections::BTreeMap;
 
@@ -296,14 +297,17 @@ macro_rules! config {
                 $crate::Yaml::Hash(map)
             }
 
+            /// TODO: Needs documentation!
             fn set_meta(&mut self, meta: &$crate::ConfigMeta) {
                 self._meta = meta.clone();
             }
 
+            /// TODO: Needs documentation!
             fn meta(&self) -> Option<$crate::ConfigMeta> {
                 Some(self._meta.clone())
             }
 
+            /// TODO: Needs documentation!
             fn write_file(&self) -> Result<(), $crate::ConfigError> {
                 use std::fs::{DirBuilder, File};
                 use std::io::{Write};
@@ -349,6 +353,7 @@ macro_rules! config {
         }
 
         impl $crate::Element for $root {
+            /// TODO: Needs documentation!
             fn from_yaml(meta: &$crate::ConfigMeta, config: &$crate::Yaml) -> Result<Self, $crate::ConfigError> {
                 let mut next_meta = meta.clone();
                 next_meta.options = vec![$( stringify!($field).to_string(), )*];
@@ -368,6 +373,7 @@ macro_rules! config {
                 }
             }
 
+            /// TODO: Needs documentation!
             fn to_yaml(&self, _: &Path) -> $crate::Yaml {
                 match self {
                     $(

@@ -1,17 +1,17 @@
-//! This module contains `ScreenDimensions` struct, which holds width, height, and aspect ratio of the screen.
+//! World resource that stores screen dimensions.
 
-/// `ScreenDimensions` is added to `ecs::World` as a resource by default.
-/// It's fields are set to the correct values every frame.
+/// Abstract representation of a screen.
 pub struct ScreenDimensions {
-    /// Width of screen.
+    /// Screen width in pixels (px).
     pub w: f32,
-    /// Height of screen.
+    /// Screen height in pixels (px).
     pub h: f32,
     /// Width divided by height.
     pub aspect_ratio: f32,
 }
 
 impl ScreenDimensions {
+    /// Creates a new screen dimensions object with the given width and height.
     pub fn new(w: u32, h: u32) -> ScreenDimensions {
         ScreenDimensions {
             w: w as f32,
@@ -20,6 +20,8 @@ impl ScreenDimensions {
         }
     }
 
+    /// Updates the width and height of the screen and recomputes the aspect
+    /// ratio.
     pub fn update(&mut self, w: u32, h: u32) {
         self.w = w as f32;
         self.h = h as f32;

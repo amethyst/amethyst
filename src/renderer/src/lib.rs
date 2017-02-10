@@ -1,38 +1,31 @@
+//! High-level rendering engine with multiple backends.
+
 #![crate_name = "amethyst_renderer"]
 #![crate_type = "lib"]
 #![doc(html_logo_url = "http://tinyurl.com/hgsb45k")]
-// #![deny(missing_docs)]
 
-//! High-level rendering engine with multiple backends.
-
+extern crate cgmath;
+extern crate glutin;
+extern crate specs;
 #[macro_use]
 extern crate gfx;
 #[macro_use]
 extern crate mopa;
 
-extern crate glutin;
-extern crate cgmath;
-extern crate specs;
-
-/// Contains the included Render Targets
-pub mod target;
-/// Contains the included Passes
 pub mod pass;
+pub mod target;
 
-use self::specs::{Component, VecStorage};
-
+use specs::{Component, VecStorage};
 use std::any::TypeId;
 use std::collections::HashMap;
 
-pub use pass::PassDescription;
+pub use pass::{Pass, PassDescription};
 pub use target::Target;
-pub use pass::Pass;
 
-/// A Renderer manages passes and the execution of the passes
-/// over the targets. It only contains the passes, all other
-/// data is contained in the `Frame`
+/// Manages passes and the execution of the passes over the targets. It only
+/// contains the passes, all other data is contained in the `Frame`.
 pub struct Renderer<R: gfx::Resources, C: gfx::CommandBuffer<R>> {
-    command_buffer: gfx::Encoder<R, C>,
+    cmd_buf: gfx::Encoder<R, C>,
     passes: HashMap<(TypeId, TypeId),
                     Box<Fn(&Box<PassDescription>,
                            &Target,
@@ -41,7 +34,8 @@ pub struct Renderer<R: gfx::Resources, C: gfx::CommandBuffer<R>> {
                            &mut gfx::Encoder<R, C>)>>,
 }
 
-// placeholder
+/// NOTE: This is just a placeholder!
+#[allow(missing_docs)]
 gfx_vertex_struct!(VertexPosNormal {
     pos: [f32; 3] = "a_Pos",
     normal: [f32; 3] = "a_Normal",
@@ -52,15 +46,15 @@ impl<R, C> Renderer<R, C>
     where R: gfx::Resources,
           C: gfx::CommandBuffer<R>
 {
-    /// Create a new Render pipeline
-    pub fn new(combuf: C) -> Renderer<R, C> {
+    /// Creates a new renderer with the given command buffer.
+    pub fn new(cmd_buf: C) -> Renderer<R, C> {
         Renderer {
-            command_buffer: combuf.into(),
+            cmd_buf: cmd_buf.into(),
             passes: HashMap::new(),
         }
     }
 
-    /// Load all known passes
+    /// Load all known passes into the renderer.
     pub fn load_all<F>(&mut self, factory: &mut F)
         where F: gfx::Factory<R>
     {
@@ -76,7 +70,7 @@ impl<R, C> Renderer<R, C>
         self.add_pass(pass::deferred::LightingPass::new(factory));
     }
 
-    /// Add a pass to the table of available passes
+    /// Add a pass to the table of available passes.
     pub fn add_pass<A, T, P>(&mut self, p: P)
         where P: Pass<R, Arg = A, Target = T> + 'static,
               A: PassDescription,
@@ -84,23 +78,27 @@ impl<R, C> Renderer<R, C>
     {
         let id = (TypeId::of::<A>(), TypeId::of::<T>());
         self.passes.insert(id,
-                           Box::new(move |a: &Box<PassDescription>, t: &Target, pipeline: &Pipeline, scene: &Scene<R>, encoder: &mut gfx::Encoder<R, C>| {
+                           Box::new(move |a: &Box<PassDescription>,
+                                          t: &Target,
+                                          pipeline: &Pipeline,
+                                          scene: &Scene<R>,
+                                          encoder: &mut gfx::Encoder<R, C>| {
                                let a = a.downcast_ref::<A>().unwrap();
                                let t = t.downcast_ref::<T>().unwrap();
                                p.apply(a, t, pipeline, scene, encoder)
                            }));
     }
 
-    /// Execute all passes
-    pub fn submit<D>(&mut self, pipeline: &Pipeline, scene: &Scene<R>, device: &mut D)
+    /// Execute all passes and draw the frame.
+    pub fn submit<D>(&mut self, pipe: &Pipeline, scene: &Scene<R>, device: &mut D)
         where D: gfx::Device<Resources = R, CommandBuffer = C>
     {
-        for layer in &pipeline.layers {
-            let fb = pipeline.targets.get(&layer.target).unwrap();
+        for layer in &pipe.layers {
+            let fb = pipe.targets.get(&layer.target).unwrap();
             for desc in &layer.passes {
                 let id = (mopa::Any::get_type_id(&**desc), mopa::Any::get_type_id(&**fb));
                 if let Some(pass) = self.passes.get(&id) {
-                    pass(desc, &**fb, &pipeline, &scene, &mut self.command_buffer);
+                    pass(desc, &**fb, &pipe, &scene, &mut self.cmd_buf);
                 } else {
                     panic!("No pass implementation found for target={}, pass={:?}",
                            layer.target,
@@ -108,32 +106,37 @@ impl<R, C> Renderer<R, C>
                 }
             }
         }
-        self.command_buffer.flush(device);
+
+        self.cmd_buf.flush(device);
         device.cleanup();
     }
 }
 
-/// holds a 1x1 texture that can be used to store constant colors
+/// Tiny 1x1 texture that can be used to store constant colors.
 #[derive(Clone)]
 pub struct ConstantColorTexture<R: gfx::Resources> {
+    /// Handle to the texture resource.
     texture: gfx::handle::Texture<R, gfx::format::R8_G8_B8_A8>,
+    /// Immutable view of the texture resource above.
     view: gfx::handle::ShaderResourceView<R, [f32; 4]>,
 }
 
 impl<R: gfx::Resources> ConstantColorTexture<R> {
-    /// Create a texture buffer
+    /// Create a new `ConstantColorTexture` from the given factory.
     pub fn new<F>(factory: &mut F) -> ConstantColorTexture<R>
         where F: gfx::Factory<R>
     {
-        let kind = gfx::tex::Kind::D2(1, 1, gfx::tex::AaMode::Single);
+        let kind = gfx::texture::Kind::D2(1, 1, gfx::texture::AaMode::Single);
         let text = factory.create_texture::<gfx::format::R8_G8_B8_A8>(kind,
                                                         1,
                                                         gfx::SHADER_RESOURCE,
-                                                        gfx::Usage::Dynamic,
+                                                        gfx::memory::Usage::Dynamic,
                                                         Some(gfx::format::ChannelType::Unorm))
             .unwrap();
         let levels = (0, text.get_info().levels - 1);
-        let view = factory.view_texture_as_shader_resource::<gfx::format::Rgba8>(&text, levels, gfx::format::Swizzle::new())
+        let view = factory.view_texture_as_shader_resource::<gfx::format::Rgba8>(&text,
+                                                                   levels,
+                                                                   gfx::format::Swizzle::new())
             .unwrap();
         ConstantColorTexture {
             texture: text,
@@ -142,82 +145,90 @@ impl<R: gfx::Resources> ConstantColorTexture<R> {
     }
 }
 
+/// A renderable texture resource.
 #[derive(Clone)]
 pub enum Texture<R: gfx::Resources> {
+    /// A texture with one constant RGBA color value.
     Constant([f32; 4]),
+    /// Handle to a slice of texture memory.
     Texture(gfx::handle::ShaderResourceView<R, [f32; 4]>),
 }
 
 impl<R: gfx::Resources> Texture<R> {
-    pub fn to_view<C>(&self, texture: &ConstantColorTexture<R>, encoder: &mut gfx::Encoder<R, C>) -> gfx::handle::ShaderResourceView<R, [f32; 4]>
+    /// Takes the given constant color texture and, using the encoder, returns a
+    /// slice of texture memory.
+    pub fn to_view<C>(&self,
+                      texture: &ConstantColorTexture<R>,
+                      encoder: &mut gfx::Encoder<R, C>)
+                      -> gfx::handle::ShaderResourceView<R, [f32; 4]>
         where C: gfx::CommandBuffer<R>
     {
-        match self {
-            &Texture::Constant(color) => {
-                let color: [[u8; 4]; 1] = [[
-                    (color[0] * 255.) as u8,
-                    (color[1] * 255.) as u8,
-                    (color[2] * 255.) as u8,
-                    (color[3] * 255.) as u8,
-                ]];
+        match *self {
+            Texture::Constant(ref color) => {
+                let color: [[u8; 4]; 1] = [[(color[0] * 255.) as u8,
+                                            (color[1] * 255.) as u8,
+                                            (color[2] * 255.) as u8,
+                                            (color[3] * 255.) as u8]];
 
-                encoder.update_texture::<_, gfx::format::Rgba8>(
-                    &texture.texture,
-                    None,
-                    texture.texture.get_info().to_image_info(0),
-                    &color[..]
-                ).unwrap();
+                encoder.update_texture::<_, gfx::format::Rgba8>(&texture.texture,
+                                                             None,
+                                                             texture.texture
+                                                                 .get_info()
+                                                                 .to_image_info(0),
+                                                             &color[..])
+                    .unwrap();
 
                 texture.view.clone()
             }
-            &Texture::Texture(ref tex) => tex.clone(),
+            Texture::Texture(ref tex) => tex.clone(),
         }
     }
 }
 
-/// A fragment is the most basic drawable element
+/// The most basic drawable element.
 #[derive(Clone)]
 pub struct Fragment<R: gfx::Resources> {
-    /// The transform matrix to apply to the matrix, this
-    /// is sometimes referred to as the model matrix
+    /// The transform matrix to apply to the matrix. This is sometimes referred
+    /// to as the model matrix. FIXME: Wording needs clarification.
     pub transform: [[f32; 4]; 4],
-    /// The vertex buffer
+    /// Vertex buffer associated with this fragment.
     pub buffer: gfx::handle::Buffer<R, VertexPosNormal>,
-    /// A slice of the above vertex buffer
+    /// A slice of the vertex buffer above.
     pub slice: gfx::Slice<R>,
-    /// ambient color
+    /// The ambient color.
     pub ka: Texture<R>,
-    /// diffuse color
+    /// The diffuse color.
     pub kd: Texture<R>,
-    /// specular color
+    /// The specular color.
     pub ks: Texture<R>,
-    /// specular exponent
+    /// The pecular exponent.
     pub ns: f32,
 }
 
-
-/// Represents a point light. Lighting calculations are based off of
-/// the Frostbite engine's lighting, which is explained in detail here:
-/// http://www.frostbite.com/wp-content/uploads/2014/11/course_notes_moving_frostbite_to_pbr.pdf
-/// The particular equation used for our calculations is Eq. 26, and
-/// the `PointLight` properties below map as `I -> intensity`,
-/// `radius -> lightRadius`, and `n -> smoothness`.
-#[derive(Copy, Clone)]
+/// A point light source.
+///
+/// Lighting calculations are based off of the Frostbite engine's lighting,
+/// which is explained in detail here in [this presentation][fb]. The particular
+/// equation used for our calculations is Eq. 26, and the `PointLight`
+/// properties below map like so:
+///
+/// * *I* = `intensity`
+/// * *radius* = `radius`
+/// * *n* = `smoothness`
+///
+/// [fb]: http://www.frostbite.com/wp-content/uploads/2014/11/course_notes_moving_frostbite_to_pbr.pdf
+#[derive(Copy, Clone, Debug)]
 pub struct PointLight {
-    /// The XYZ coordinate of this light
+    /// Coordinates of the light source in three dimensional space.
     pub center: [f32; 3],
-
-    /// The color of light emitted
+    /// Color of the light.
     pub color: [f32; 4],
-
-    /// The brightness of this light
+    /// Brightness of the light source.
     pub intensity: f32,
-
-    /// What distance this light's effects will be clamped to
+    /// Maximum radius of the point light's affected area.
     pub radius: f32,
-
-    /// How smooth the transition from light to dark is at the edge
-    /// of this light's radius
+    /// Smoothness of the light-to-dark transition from the center to the
+    /// radius.
     pub smoothness: f32,
 }
 
@@ -237,14 +248,12 @@ impl Component for PointLight {
     type Storage = VecStorage<PointLight>;
 }
 
-
-/// Represents a directional light
-#[derive(Copy, Clone)]
+/// A directional light source.
+#[derive(Clone, Copy, Debug)]
 pub struct DirectionalLight {
-    /// The color of light emitted
+    /// Color of the light.
     pub color: [f32; 4],
-
-    /// Which direction this light shines towards
+    /// Direction that the light is pointing.
     pub direction: [f32; 3],
 }
 
@@ -261,80 +270,82 @@ impl Component for DirectionalLight {
     type Storage = VecStorage<DirectionalLight>;
 }
 
-
-/// Represents an ambient light
+/// An ambient light source.
+#[derive(Clone, Copy, Debug)]
 pub struct AmbientLight {
-    // How powerful the ambient light factor is
+    /// Intensity of the light.
     pub power: f32,
 }
 
 impl Default for AmbientLight {
     fn default() -> AmbientLight {
-        AmbientLight {
-            power: 0.01,
-        }
+        AmbientLight { power: 0.01 }
     }
 }
 
-/// A scene is a collection of fragments and
-/// lights that make up the scene.
+/// Collection of fragments and lights that make up the scene.
 #[derive(Clone)]
 pub struct Scene<R: gfx::Resources> {
-    /// A list of fragments
+    /// List of renderable fragments.
     pub fragments: Vec<Fragment<R>>,
-
-    /// A list of point lights
+    /// List of point lights.
     pub point_lights: Vec<PointLight>,
-
-    /// A list of directional lights
+    /// List of directional lights.
     pub directional_lights: Vec<DirectionalLight>,
-
-    /// The ambient light factor
+    /// Ambient light factor.
     pub ambient_light: f32,
-
     /// A camera used to render this scene
     pub camera: Camera,
 }
 
 impl<R: gfx::Resources> Scene<R> {
-    /// Create an empty scene
+    /// Creates an empty scene with the given camera.
     pub fn new(camera: Camera) -> Scene<R> {
         Scene {
-            fragments: vec![],
-            point_lights: vec![],
-            directional_lights: vec![],
+            fragments: Vec::new(),
+            point_lights: Vec::new(),
+            directional_lights: Vec::new(),
             ambient_light: 0.01,
             camera: camera,
         }
     }
 }
 
-
-/// Contains the transforms for a Camera
+/// Contains the graphical transforms for a camera.
 #[derive(Copy, Clone)]
 pub struct Camera {
-    /// A projection matrix
-    pub projection: [[f32; 4]; 4],
-    /// A view matrix
+    /// Graphical projection matrix.
+    pub proj: [[f32; 4]; 4],
+    /// The view matrix.
     pub view: [[f32; 4]; 4],
 }
 
 impl Camera {
+    /// Creates a new camera with the given projection and view matrices.
     pub fn new(proj: [[f32; 4]; 4], view: [[f32; 4]; 4]) -> Camera {
         Camera {
-            projection: proj,
+            proj: proj,
             view: view,
         }
     }
 
+    /// Returns a realistic perspective projection matrix.
     pub fn perspective(fov: f32, aspect: f32, near: f32, far: f32) -> [[f32; 4]; 4] {
         cgmath::perspective(cgmath::Deg(fov), aspect, near, far).into()
     }
 
-    pub fn orthographic(left: f32, right: f32, bottom: f32, top: f32, near: f32, far: f32) -> [[f32; 4]; 4] {
+    /// Returns an orthographic projection matrix..
+    pub fn orthographic(left: f32,
+                        right: f32,
+                        bottom: f32,
+                        top: f32,
+                        near: f32,
+                        far: f32)
+                        -> [[f32; 4]; 4] {
         cgmath::ortho(left, right, bottom, top, near, far).into()
     }
 
+    /// Returns a 4x4 view matrix.
     pub fn look_at(eye: [f32; 3], target: [f32; 3], up: [f32; 3]) -> [[f32; 4]; 4] {
         use cgmath::{Point3, Vector3, Matrix4, Transform};
         let view: Matrix4<f32> = Transform::look_at(Point3::new(eye[0], eye[1], eye[2]),
@@ -344,23 +355,24 @@ impl Camera {
     }
 }
 
-/// A layer is comprised of a Render target and
-/// a list of passes
+/// A stackable image layer.
+///
+/// Layers contain a list of passes which are used to render a final image which
+/// is then composited onto a render target. They are especially useful for
+/// postprocessing, e.g. applying a fullscreen night vision effect, drawing a
+/// HUD (heads-up display) over a rendered scene.
 pub struct Layer {
-    /// The render target, looked up  by name during the Frame
-    /// submission.
+    /// Name of the render target to draw on.
     pub target: String,
-    /// A list of passes to be executed in order to build
-    /// up the target with the scene's data.
+    /// Sequence of passes to execute over the render target.
     pub passes: Vec<Box<PassDescription>>,
 }
 
 impl Layer {
-    /// Create a new pass with that will target the supplied
-    /// Target reference, The Layer will be initialized with the suppled
-    /// list of passes.
-    pub fn new<A>(target: A, passes: Vec<Box<PassDescription>>) -> Layer
-        where String: From<A>
+    /// Creates a new layer with the given list of passes and the name of the
+    /// render target
+    pub fn new<T>(target: T, passes: Vec<Box<PassDescription>>) -> Layer
+        where String: From<T>
     {
         Layer {
             target: String::from(target),
@@ -370,6 +382,7 @@ impl Layer {
 }
 
 /// The render job submission
+/// Describes the layers and
 pub struct Pipeline {
     /// the layers to be processed
     pub layers: Vec<Layer>,
@@ -382,7 +395,7 @@ impl Pipeline {
     /// Create an empty Pipeline
     pub fn new() -> Pipeline {
         Pipeline {
-            layers: vec![],
+            layers: Vec::new(),
             targets: HashMap::new(),
         }
     }

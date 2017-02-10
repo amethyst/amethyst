@@ -2,7 +2,6 @@ use gfx;
 use gfx::traits::FactoryExt;
 
 use pass;
-use Pass;
 use target::ColorBuffer;
 pub use VertexPosNormal;
 
@@ -65,6 +64,7 @@ pub static FRAGMENT_SRC: &'static [u8] = b"
         float intensity;
         float radius;
         float smoothness;
+        float pad;
     };
 
     layout (std140) uniform u_PointLights {
@@ -198,6 +198,7 @@ gfx_defines!(
         intensity: f32 = "intensity",
         radius: f32 = "radius",
         smoothness: f32 = "smoothness",
+        _pad: f32 = "pad",
     }
 
     constant DirectionalLight {
@@ -231,7 +232,7 @@ gfx_defines!(
         vertex_args: gfx::ConstantBuffer<VertexArgs> = "cb_VertexArgs",
         fragment_args: gfx::ConstantBuffer<FragmentArgs> = "cb_FragmentArgs",
         point_lights: gfx::ConstantBuffer<PointLight> = "u_PointLights",
-        directional_lights: gfx::ConstantBuffer<DirectionalLight> = "u_DirectionalLights",
+        dir_lights: gfx::ConstantBuffer<DirectionalLight> = "u_DirectionalLights",
         out_ka: gfx::RenderTarget<gfx::format::Rgba8> = "o_Color",
         out_depth: gfx::DepthTarget<gfx::format::DepthStencil> = gfx::preset::depth::LESS_EQUAL_WRITE,
         ka: gfx::TextureSampler<[f32; 4]> = "t_Ka",
@@ -254,7 +255,9 @@ gfx_defines!(
 /// Handles clearing the screen
 pub struct Clear;
 
-impl<R> Pass<R> for Clear where R: gfx::Resources {
+impl<R> pass::Pass<R> for Clear
+    where R: gfx::Resources
+{
     type Arg = pass::Clear;
     type Target = ColorBuffer<R>;
 
@@ -289,14 +292,12 @@ impl<R: gfx::Resources> DrawFlat<R> {
     {
         let vertex = factory.create_constant_buffer(1);
         let fragment = factory.create_constant_buffer(1);
-        let pso = factory.create_pipeline_simple(VERTEX_SRC, FLAT_FRAGMENT_SRC, flat::new()).unwrap();
+        let pso = factory.create_pipeline_simple(VERTEX_SRC, FLAT_FRAGMENT_SRC, flat::new())
+            .expect("Could not create PSO for `DrawFlat`!");
 
-        let sampler = factory.create_sampler(
-            gfx::tex::SamplerInfo::new(
-                gfx::tex::FilterMethod::Scale,
-                gfx::tex::WrapMode::Clamp,
-            )
-        );
+        let sampler =
+            factory.create_sampler(gfx::texture::SamplerInfo::new(gfx::texture::FilterMethod::Scale,
+                                                                  gfx::texture::WrapMode::Clamp));
 
         DrawFlat {
             vertex: vertex,
@@ -309,7 +310,9 @@ impl<R: gfx::Resources> DrawFlat<R> {
     }
 }
 
-impl<R> Pass<R> for DrawFlat<R> where R: gfx::Resources {
+impl<R> pass::Pass<R> for DrawFlat<R>
+where R: gfx::Resources
+{
     type Arg = pass::DrawFlat;
     type Target = ColorBuffer<R>;
 
@@ -320,42 +323,36 @@ impl<R> Pass<R> for DrawFlat<R> where R: gfx::Resources {
                 scene: &::Scene<R>,
                 encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
-    {
-        // every entity gets drawn
-        for e in &scene.fragments {
-            encoder.update_constant_buffer(
-                &self.vertex,
-                &VertexArgs {
-                    proj: scene.camera.projection,
-                    view: scene.camera.view,
-                    model: e.transform,
-                }
-            );
+        {
+            // every entity gets drawn
+            for e in &scene.fragments {
+                encoder.update_constant_buffer(&self.vertex,
+                                               &VertexArgs {
+                                                   proj: scene.camera.proj,
+                                                   view: scene.camera.view,
+                                                   model: e.transform,
+                                               });
 
-            encoder.update_constant_buffer(
-                &self.fragment,
-                &FragmentArgs {
-                    point_light_count: 0,
-                    directional_light_count: 0,
-                }
-            );
+                encoder.update_constant_buffer(&self.fragment,
+                                               &FragmentArgs {
+                                                   point_light_count: 0,
+                                                   directional_light_count: 0,
+                                           });
 
             let ka = e.ka.to_view(&self.ka, encoder);
             let kd = e.kd.to_view(&self.kd, encoder);
 
-            encoder.draw(
-                &e.slice,
-                &self.pso,
-                &flat::Data {
-                    vbuf: e.buffer.clone(),
-                    vertex_args: self.vertex.clone(),
-                    fragment_args: self.fragment.clone(),
-                    out_ka: target.color.clone(),
-                    out_depth: target.output_depth.clone(),
-                    ka: (ka, self.sampler.clone()),
-                    kd: (kd, self.sampler.clone()),
-                }
-            );
+            encoder.draw(&e.slice,
+                         &self.pso,
+                         &flat::Data {
+                             vbuf: e.buffer.clone(),
+                             vertex_args: self.vertex.clone(),
+                             fragment_args: self.fragment.clone(),
+                             out_ka: target.color.clone(),
+                             out_depth: target.output_depth.clone(),
+                             ka: (ka, self.sampler.clone()),
+                             kd: (kd, self.sampler.clone()),
+                         });
         }
     }
 }
@@ -366,7 +363,7 @@ pub struct DrawShaded<R: gfx::Resources> {
     vertex: gfx::handle::Buffer<R, VertexArgs>,
     fragment: gfx::handle::Buffer<R, FragmentArgs>,
     point_lights: gfx::handle::Buffer<R, PointLight>,
-    directional_lights: gfx::handle::Buffer<R, DirectionalLight>,
+    dir_lights: gfx::handle::Buffer<R, DirectionalLight>,
     pso: gfx::pso::PipelineState<R, shaded::Meta>,
     sampler: gfx::handle::Sampler<R>,
     ka: ::ConstantColorTexture<R>,
@@ -380,24 +377,21 @@ impl<R: gfx::Resources> DrawShaded<R> {
               F: gfx::Factory<R>
     {
         let point_lights = factory.create_constant_buffer(512);
-        let directional_lights = factory.create_constant_buffer(16);
+        let dir_lights = factory.create_constant_buffer(16);
         let vertex = factory.create_constant_buffer(1);
         let fragment = factory.create_constant_buffer(1);
         let pso = factory.create_pipeline_simple(VERTEX_SRC, FRAGMENT_SRC, shaded::new())
-            .unwrap();
+            .expect("Could not create PSO for `DrawShaded`!");
 
-        let sampler = factory.create_sampler(
-            gfx::tex::SamplerInfo::new(
-                gfx::tex::FilterMethod::Scale,
-                gfx::tex::WrapMode::Clamp,
-            )
-        );
+        let sampler =
+            factory.create_sampler(gfx::texture::SamplerInfo::new(gfx::texture::FilterMethod::Scale,
+                                                               gfx::texture::WrapMode::Clamp));
 
         DrawShaded {
             vertex: vertex,
             fragment: fragment,
             point_lights: point_lights,
-            directional_lights: directional_lights,
+            dir_lights: dir_lights,
             pso: pso,
             ka: ::ConstantColorTexture::new(factory),
             kd: ::ConstantColorTexture::new(factory),
@@ -412,7 +406,9 @@ fn pad(x: [f32; 3]) -> [f32; 4] {
     [x[0], x[1], x[2], 0.]
 }
 
-impl<R> Pass<R> for DrawShaded<R> where R: gfx::Resources {
+impl<R> pass::Pass<R> for DrawShaded<R>
+    where R: gfx::Resources
+{
     type Arg = pass::DrawShaded;
     type Target = ColorBuffer<R>;
 
@@ -435,14 +431,14 @@ impl<R> Pass<R> for DrawShaded<R> where R: gfx::Resources {
                     intensity: l.intensity,
                     radius: l.radius,
                     smoothness: l.smoothness,
+                    _pad: 0.0,
                 }
             })
             .collect();
         encoder.update_buffer(&self.point_lights, &point_lights[..], 0).unwrap();
 
         // Add directional lights to scene
-        let directional_lights: Vec<_> = scene.directional_lights
-            .iter()
+        let dir_lights: Vec<_> = scene.directional_lights.iter()
             .map(|l| {
                 DirectionalLight {
                     color: l.color,
@@ -450,49 +446,43 @@ impl<R> Pass<R> for DrawShaded<R> where R: gfx::Resources {
                 }
             })
             .collect();
-        encoder.update_buffer(&self.directional_lights, &directional_lights[..], 0).unwrap();
+        encoder.update_buffer(&self.dir_lights, &dir_lights[..], 0).unwrap();
 
         // Draw every entity
         for e in &scene.fragments {
-            encoder.update_constant_buffer(
-                &self.vertex,
-                &VertexArgs {
-                    proj: scene.camera.projection,
-                    view: scene.camera.view,
-                    model: e.transform,
-                }
-            );
+            encoder.update_constant_buffer(&self.vertex,
+                                           &VertexArgs {
+                                               proj: scene.camera.proj,
+                                               view: scene.camera.view,
+                                               model: e.transform,
+                                           });
 
-            encoder.update_constant_buffer(
-                &self.fragment,
-                &FragmentArgs {
-                    point_light_count: point_lights.len() as i32,
-                    directional_light_count: directional_lights.len() as i32,
-                }
-            );
+            encoder.update_constant_buffer(&self.fragment,
+                                           &FragmentArgs {
+                                               point_light_count: point_lights.len() as i32,
+                                               directional_light_count: dir_lights.len() as i32,
+                                           });
 
             let ka = e.ka.to_view(&self.ka, encoder);
             let kd = e.kd.to_view(&self.kd, encoder);
             let ks = e.ks.to_view(&self.ks, encoder);
 
-            encoder.draw(
-                &e.slice,
-                &self.pso,
-                &shaded::Data {
-                    vbuf: e.buffer.clone(),
-                    fragment_args: self.fragment.clone(),
-                    vertex_args: self.vertex.clone(),
-                    point_lights: self.point_lights.clone(),
-                    directional_lights: self.directional_lights.clone(),
-                    out_ka: target.color.clone(),
-                    out_depth: target.output_depth.clone(),
-                    ka: (ka, self.sampler.clone()),
-                    kd: (kd, self.sampler.clone()),
-                    ks: (ks, self.sampler.clone()),
-                    ns: e.ns,
-                    ambient: scene.ambient_light,
-                }
-            );
+            encoder.draw(&e.slice,
+                         &self.pso,
+                         &shaded::Data {
+                             vbuf: e.buffer.clone(),
+                             fragment_args: self.fragment.clone(),
+                             vertex_args: self.vertex.clone(),
+                             point_lights: self.point_lights.clone(),
+                             dir_lights: self.dir_lights.clone(),
+                             out_ka: target.color.clone(),
+                             out_depth: target.output_depth.clone(),
+                             ka: (ka, self.sampler.clone()),
+                             kd: (kd, self.sampler.clone()),
+                             ks: (ks, self.sampler.clone()),
+                             ns: e.ns,
+                             ambient: scene.ambient_light,
+                         });
         }
     }
 }
@@ -508,24 +498,22 @@ pub struct Wireframe<R: gfx::Resources> {
 }
 
 impl<R: gfx::Resources> Wireframe<R> {
-    pub fn new<F>(factory: &mut F) -> Wireframe<R> where F: gfx::Factory<R> {
+    pub fn new<F>(factory: &mut F) -> Wireframe<R>
+        where F: gfx::Factory<R>
+    {
         let vs = factory.create_shader_vertex(VERTEX_SRC).unwrap();
         let gs = factory.create_shader_geometry(WIREFRAME_GEOMETRY_SRC).unwrap();
         let fs = factory.create_shader_pixel(FLAT_FRAGMENT_SRC).unwrap();
         let vertex = factory.create_constant_buffer(1);
-        let pso = factory.create_pipeline_state(
-            &gfx::ShaderSet::Geometry(vs, gs, fs),
-            gfx::Primitive::TriangleList,
-            gfx::state::Rasterizer::new_fill(),
-            wireframe::new()
-        ).unwrap();
+        let pso = factory.create_pipeline_state(&gfx::ShaderSet::Geometry(vs, gs, fs),
+                                   gfx::Primitive::TriangleList,
+                                   gfx::state::Rasterizer::new_fill(),
+                                   wireframe::new())
+            .expect("Could not create PSO for `Wireframe`!");
 
-        let sampler = factory.create_sampler(
-            gfx::tex::SamplerInfo::new(
-                gfx::tex::FilterMethod::Scale,
-                gfx::tex::WrapMode::Clamp,
-            )
-        );
+        let sampler =
+            factory.create_sampler(gfx::texture::SamplerInfo::new(gfx::texture::FilterMethod::Scale,
+                                                               gfx::texture::WrapMode::Clamp));
 
         Wireframe {
             vertex: vertex,
@@ -537,7 +525,9 @@ impl<R: gfx::Resources> Wireframe<R> {
     }
 }
 
-impl<R> Pass<R> for Wireframe<R> where R: gfx::Resources {
+impl<R> pass::Pass<R> for Wireframe<R>
+    where R: gfx::Resources
+{
     type Arg = pass::Wireframe;
     type Target = ColorBuffer<R>;
 
@@ -552,29 +542,25 @@ impl<R> Pass<R> for Wireframe<R> where R: gfx::Resources {
 
         // every entity gets drawn
         for e in &scene.fragments {
-            encoder.update_constant_buffer(
-                &self.vertex,
-                &VertexArgs {
-                    proj: scene.camera.projection,
-                    view: scene.camera.view,
-                    model: e.transform,
-                }
-            );
+            encoder.update_constant_buffer(&self.vertex,
+                                           &VertexArgs {
+                                               proj: scene.camera.proj,
+                                               view: scene.camera.view,
+                                               model: e.transform,
+                                           });
 
             let ka = e.ka.to_view(&self.ka, encoder);
             let kd = e.kd.to_view(&self.kd, encoder);
 
-            encoder.draw(
-                &e.slice,
-                &self.pso,
-                &wireframe::Data {
-                    vbuf: e.buffer.clone(),
-                    vertex_args: self.vertex.clone(),
-                    out_ka: target.color.clone(),
-                    ka: (ka, self.sampler.clone()),
-                    kd: (kd, self.sampler.clone()),
-                }
-            );
+            encoder.draw(&e.slice,
+                         &self.pso,
+                         &wireframe::Data {
+                             vbuf: e.buffer.clone(),
+                             vertex_args: self.vertex.clone(),
+                             out_ka: target.color.clone(),
+                             ka: (ka, self.sampler.clone()),
+                             kd: (kd, self.sampler.clone()),
+                         });
         }
     }
 }

@@ -1,110 +1,108 @@
-extern crate specs;
+//! Very light wrapper around GFX.
 
-use renderer;
-use self::specs::Join;
-use event::WindowEvent;
-use gfx_device::gfx::Device;
+use ecs::{Join, World, resources};
+use engine::WindowEvent;
+use gfx::Device;
 use gfx_device::gfx_types;
+use gfx_device::gfx_types::{CommandBuffer, Resources, Window};
+use renderer::{Fragment, Pipeline, Renderer, Scene};
 
-/// This struct holds all the graphics resources (except `MainTarget`) required to render a `Scene`, `Pipeline` pair.
+/// Holds all graphics resources required to render a `Scene`/`Pipeline` pair,
+/// except `MainTarget`.
 pub struct GfxDevice {
-    pub window: gfx_types::Window,
+    /// Handles drawing output to the screen.
     pub device: gfx_types::Device,
-    pub renderer: renderer::Renderer<gfx_types::Resources, gfx_types::CommandBuffer>,
+    /// Processes and renders scenes.
+    pub renderer: Renderer<Resources, CommandBuffer>,
+    /// An application window.
+    pub window: Window,
 }
 
 impl GfxDevice {
-    /// Get screen dimensions.
+    /// Returns the window's dimensions in pixels.
     pub fn get_dimensions(&self) -> Option<(u32, u32)> {
-        #[cfg(feature="opengl")]
-        return self.window.get_inner_size();
-        #[cfg(all(windows, feature="direct3d"))]
-        unimplemented!();
+        if cfg!(feature = "opengl") {
+            self.window.get_inner_size()
+        } else {
+            unimplemented!()
+        }
     }
 
     /// Render all `Entity`s with `Renderable` components in `World`.
-    pub fn render_world(&mut self, world: &mut self::specs::World, pipeline: &renderer::Pipeline) {
-        use ecs::components::transform::Transform;
-        use ecs::components::rendering::Renderable;
-        use ecs::resources::camera::{Projection, Camera};
-        use renderer::Fragment;
-        let camera = world.read_resource::<Camera>().clone();
+    pub fn render_world(&mut self, world: &mut World, pipe: &Pipeline) {
+        use ecs::components::{Renderable, Transform};
+        use ecs::resources::Projection;
+        use renderer::{AmbientLight, Camera, DirectionalLight, PointLight};
 
-        let projection_mat = match camera.projection {
-            Projection::Perspective {
-                fov,
-                aspect_ratio,
-                near,
-                far,
-            } => renderer::Camera::perspective(fov, aspect_ratio, near, far),
-            Projection::Orthographic {
-                left,
-                right,
-                bottom,
-                top,
-                near,
-                far,
-            } => renderer::Camera::orthographic(left, right, bottom, top, near, far),
+        let camera = world.read_resource::<resources::Camera>().clone();
+        let proj_mat = match camera.proj {
+            Projection::Perspective { fov, aspect_ratio, near, far } => {
+                Camera::perspective(fov, aspect_ratio, near, far)
+            }
+            Projection::Orthographic { left, right, bottom, top, near, far } => {
+                Camera::orthographic(left, right, bottom, top, near, far)
+            }
         };
+
         let eye = camera.eye;
         let target = camera.target;
         let up = camera.up;
-        let view_mat = renderer::Camera::look_at(eye, target, up);
-        let camera = renderer::Camera::new(projection_mat, view_mat);
+        let view_mat = Camera::look_at(eye, target, up);
+        let camera = Camera::new(proj_mat, view_mat);
+        let mut scene = Scene::<Resources>::new(camera);
 
-        let mut scene = renderer::Scene::<gfx_types::Resources>::new(camera);
         let entities = world.entities();
         let renderables = world.read::<Renderable>();
         let global_transforms = world.read::<Transform>();
-        // Add all `Entity`s with `Renderable` components attached to them to the `Scene`.
-        for (renderable, entity) in (&renderables, &entities).iter() {
-            let global_transform = match global_transforms.get(entity) {
-                Some(global_transform) => global_transform.clone(),
+
+        // Add all entities with `Renderable` components attached to them to
+        // the scene.
+        for (rend, entity) in (&renderables, &entities).iter() {
+            let global_trans = match global_transforms.get(entity) {
+                Some(gt) => gt.clone(),
                 None => Transform::default(),
             };
-            if let Some(fragment) = unwrap_renderable(renderable, &global_transform) {
-                scene.fragments.push(fragment);
+
+            if let Some(frag) = unwrap_renderable(rend, &global_trans) {
+                scene.fragments.push(frag);
             }
         }
 
-        // Add all `Light`s to the `Scene`.
-        scene.point_lights.extend(world.read::<renderer::PointLight>().iter());
-        scene.directional_lights.extend(world.read::<renderer::DirectionalLight>().iter());
+        // Add all lights to the scene.
+        scene.point_lights.extend(world.read::<PointLight>().iter());
+        scene.directional_lights.extend(world.read::<DirectionalLight>().iter());
 
-        let ambient_light = world.read_resource::<renderer::AmbientLight>();
+        let ambient_light = world.read_resource::<AmbientLight>();
         scene.ambient_light = ambient_light.power;
 
-        // Render the `Scene`.
-        self.renderer.submit(pipeline, &scene, &mut self.device);
+        // Render the final scene.
+        self.renderer.submit(pipe, &scene, &mut self.device);
         self.window.swap_buffers().unwrap();
         self.device.cleanup();
+
         // Function that creates `Fragment`s from `Renderable`, `Transform` pairs.
-        fn unwrap_renderable(renderable: &Renderable, global_transform: &Transform) -> Option<Fragment<gfx_types::Resources>> {
-            let mesh = &renderable.mesh;
+        fn unwrap_renderable(rend: &Renderable,
+                             global_trans: &Transform)
+                             -> Option<Fragment<Resources>> {
+            let mesh = &rend.mesh;
             Some(Fragment {
-                transform: global_transform.clone().into(),
+                transform: global_trans.clone().into(),
                 buffer: mesh.buffer.clone(),
                 slice: mesh.slice.clone(),
-                ka: (&renderable.ambient).clone(),
-                kd: (&renderable.diffuse).clone(),
-                ks: (&renderable.specular).clone(),
-                ns: renderable.specular_exponent,
+                ka: (&rend.ambient).clone(),
+                kd: (&rend.diffuse).clone(),
+                ks: (&rend.specular).clone(),
+                ns: rend.specular_exponent,
             })
         }
     }
 
     /// Poll events from `GfxDevice`.
     pub fn poll_events(&mut self) -> Vec<WindowEvent> {
-        #[cfg(feature="opengl")]
-        {
-            let mut events = vec![];
-            for event in self.window.poll_events() {
-                let event = WindowEvent::new(event);
-                events.push(event);
-            }
-            events
+        if cfg!(feature = "opengl") {
+            self.window.poll_events().map(|e| WindowEvent::new(e)).collect()
+        } else {
+            unimplemented!()
         }
-        #[cfg(all(windows, feature="direct3d"))]
-        unimplemented!();
     }
 }

@@ -1,16 +1,18 @@
-//! The input handler for the game engine
+//! World resource that handles all user input.
 
 use std::collections::hash_map::{Entry, HashMap, Keys};
 use std::iter::Iterator;
-use event::{ElementState, WindowEvent, Event, VirtualKeyCode};
 
-#[derive(PartialEq, Eq)]
+use engine::{ElementState, WindowEvent, Event, VirtualKeyCode};
+
+/// Indicates whether a given VirtualKeyCode has been queried or not.
+#[derive(Eq, PartialEq)]
 enum KeyQueryState {
     NotQueried,
     Queried,
 }
 
-/// Iterator that iterates through all currently pressed down keys
+/// An iterator over all currently pressed down keys.
 pub struct PressedKeysIterator<'a> {
     iterator: Keys<'a, VirtualKeyCode, KeyQueryState>,
 }
@@ -22,17 +24,18 @@ impl<'a> Iterator for PressedKeysIterator<'a> {
     }
 }
 
+/// Processes user input events.
 pub struct InputHandler {
     pressed_keys: HashMap<VirtualKeyCode, KeyQueryState>,
 }
 
 impl InputHandler {
-    /// Create a new InputHandler
+    /// Creates a new input handler.
     pub fn new() -> InputHandler {
         InputHandler { pressed_keys: HashMap::new() }
     }
 
-    /// Update the input handler with new engine events
+    /// Updates the input handler with new engine events.
     pub fn update(&mut self, events: &[WindowEvent]) {
         for event in events {
             match event.payload {
@@ -63,33 +66,40 @@ impl InputHandler {
         PressedKeysIterator { iterator: self.pressed_keys.keys() }
     }
 
-    /// Check if `key` is currently pressed
+    /// Checks if the given key is being pressed.
     pub fn key_down(&self, key: VirtualKeyCode) -> bool {
         self.pressed_keys.contains_key(&key)
     }
 
-    /// Check if all `keys` are currently pressed
+    /// Checks if all the given keys are being pressed.
     pub fn keys_down(&self, keys: &[VirtualKeyCode]) -> bool {
         keys.iter().all(|key| self.key_down(*key))
     }
 
-    /// Check if `key` is currently pressed and `key_once` or `keys_once` hasn't been
-    /// called since this `key` was first pressed.
+    /// Checks if the given key is being pressed and held down.
+    ///
+    /// If `key` hasn't been let go since the last `key_once()` query, this
+    /// function will return false.
     pub fn key_once(&mut self, key: VirtualKeyCode) -> bool {
         if !self.pressed_keys.contains_key(&key) {
             return false;
         }
-        if let Some(value) = self.pressed_keys.get_mut(&key) { // Should be safe
+
+        if let Some(value) = self.pressed_keys.get_mut(&key) {
+            // Should be safe
             if *value == KeyQueryState::NotQueried {
                 *value = KeyQueryState::Queried;
                 return true;
             }
         }
+
         return false;
     }
 
-    /// Checks if `keys` are all currently pressed and haven't been called with `key_once` or
-    /// `keys_once`
+    /// Checks if the all the given keys are being pressed and held down.
+    ///
+    /// If the `keys` haven't been let go since the last `key_once()` query,
+    /// this function will return false.
     pub fn keys_once(&mut self, keys: &[VirtualKeyCode]) -> bool {
         keys.iter().any(|key| self.key_once(*key)) && self.keys_down(keys)
     }
