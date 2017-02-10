@@ -1,7 +1,3 @@
-#![crate_name = "amethyst_config"]
-#![crate_type = "lib"]
-#![doc(html_logo_url = "http://tinyurl.com/hgsb45k")]
-
 //! Loads YAML configuration files (.yaml/.yml) into a structure for easy usage.
 //!
 //! # Basic usage:
@@ -134,6 +130,10 @@
 //! If the macro has problems expanding, then you may want to check whether you
 //! have the documentation on the line before the field and that you have the
 //! `pub` identifier before the field name.
+
+#![crate_name = "amethyst_config"]
+#![crate_type = "lib"]
+#![doc(html_logo_url = "http://tinyurl.com/hgsb45k")]
 
 extern crate yaml_rust;
 
