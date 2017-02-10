@@ -1,9 +1,11 @@
+//! Components for the transform processor.
+
+mod child;
+mod init;
 mod local_transform;
 mod transform;
-mod init;
-mod child;
 
-pub use self::local_transform::*;
-pub use self::transform::*;
-pub use self::init::*;
-pub use self::child::*;
+pub use self::child::Child;
+pub use self::init::Init;
+pub use self::transform::Transform;
+pub use self::local_transform::{InnerTransform, LocalTransform};

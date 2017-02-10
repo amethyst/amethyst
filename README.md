@@ -19,7 +19,7 @@ Read a summary of what happened this past week at [*This Week in Amethyst*][tw].
 
 [tw]: https://www.amethyst.rs/
 
-## [Documentation][ar]
+### [Documentation][ar]
 
 [ar]: https://www.amethyst.rs/doc/
 
@@ -123,11 +123,11 @@ interested in helping out, please read the [CONTRIBUTING.md][cm] file before
 getting started. Don't know what to hack on? Check our [active projects][pr],
 read our [roadmap][rm], or search though [our issue tracker][it].
 
-Unless you explicitly state otherwise, any contribution intentionally submitted
-for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
-dual licensed as above, without any additional terms or conditions.
-
 [cm]: CONTRIBUTING.md
 [pr]: https://github.com/amethyst/amethyst/projects
 [rm]: https://github.com/amethyst/amethyst/wiki/Roadmap
 [it]: https://github.com/amethyst/amethyst/issues
+
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
+dual licensed as above, without any additional terms or conditions.

@@ -1,3 +1,5 @@
 //! Built-in `specs` `System`s.
 
-pub mod transform;
+mod transform;
+
+pub use self::transform::TransformSystem;

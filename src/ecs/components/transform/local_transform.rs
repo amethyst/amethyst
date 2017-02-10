@@ -1,29 +1,29 @@
-extern crate specs;
-extern crate cgmath;
+//! Local transform component.
 
-use self::cgmath::{Quaternion, Vector3, Matrix3, Matrix4};
-use self::specs::{Component, VecStorage};
+use cgmath::{Quaternion, Vector3, Matrix3, Matrix4};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::ops::{Deref, DerefMut};
 
+use ecs::{Component, VecStorage};
+
+/// Raw transform data.
 #[derive(Debug)]
 pub struct InnerTransform {
     /// Translation/position vector [x, y, z]
     pub translation: [f32; 3],
-
     /// Quaternion [w (scalar), x, y, z]
     pub rotation: [f32; 4],
-
     /// Scale vector [x, y, z]
     pub scale: [f32; 3],
 }
 
 /// Local position, rotation, and scale (from parent if it exists).
+///
+/// Used for rendering position and orientation.
 #[derive(Debug)]
 pub struct LocalTransform {
     /// Wrapper around the transform data for dirty flag setting.
     wrapped: InnerTransform,
-
     /// Flag for re-computation
     dirty: AtomicBool,
 }
@@ -51,7 +51,8 @@ impl LocalTransform {
         self.dirty.store(dirty, Ordering::SeqCst);
     }
 
-    /// Returns whether or not the current transform is flagged for re-computation or "dirty".
+    /// Returns whether or not the current transform is flagged for
+    /// re-computation or "dirty".
     #[inline]
     pub fn is_dirty(&self) -> bool {
         self.dirty.load(Ordering::SeqCst)

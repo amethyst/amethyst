@@ -1,12 +1,12 @@
 [package]
 name = "amethyst_renderer"
-version = "0.4.0"
+version = "0.4.1"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
 description = "High-level rendering engine with multiple backends"
 keywords = ["game", "engine", "renderer", "3d", "amethyst"]
 categories = ["rendering", "rendering::engine"]
 
-documentation = "https://www.amethyst.rs/doc/amethyst/"
+documentation = "https://www.amethyst.rs/doc/master/amethyst_renderer/"
 homepage = "https://www.amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
@@ -14,12 +14,11 @@ readme = "README.md"
 license = "MIT/Apache-2.0"
 
 [dependencies]
-cgmath = "0.11"
-gfx = "0.12"
-gfx_core = "0.4"
-gfx_device_gl = "0.11"
-gfx_window_glutin = "0.12"
-glutin = "0.6"
+cgmath = "0.12"
+gfx = "0.14"
+gfx_device_gl = "0.13"
+gfx_window_glutin = "0.14"
+glutin = "0.7"
 mopa = "0.2"
 specs = "0.7"
 

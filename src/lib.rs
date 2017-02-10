@@ -1,7 +1,3 @@
-#![crate_name = "amethyst"]
-#![crate_type = "lib"]
-#![doc(html_logo_url = "https://tinyurl.com/jtmm43a")]
-
 //! Amethyst is a free and open source game engine written in idiomatic
 //! [Rust][rs] for building video games and interactive multimedia applications.
 //! The source code is available for download on [GitHub][gh]. See the
@@ -12,37 +8,34 @@
 //! [bk]: https://www.amethyst.rs/book/
 //!
 //! This project is a work in progress and is very incomplete. Pardon the dust!
+//!
 //! # Example
 //!
-//! ```ignore
+//! ```no_run
 //! extern crate amethyst;
 //!
-//! use amethyst::engine::{Application, State, Trans};
-//! use amethyst::config::Element;
-//! use amethyst::specs::World;
-//! use amethyst::gfx_device::DisplayConfig;
+//! use amethyst::{Application, Event, State, Trans, VirtualKeyCode, WindowEvent};
 //! use amethyst::asset_manager::AssetManager;
-//! use amethyst::event::WindowEvent;
+//! use amethyst::config::Element;
+//! use amethyst::ecs::World;
+//! use amethyst::gfx_device::DisplayConfig;
 //! use amethyst::renderer::Pipeline;
 //!
 //! struct GameState;
 //!
 //! impl State for GameState {
-//!     fn on_start(&mut self, _: &mut World, _: &mut AssetManager, pipeline: &mut Pipeline) {
+//!     fn on_start(&mut self, _: &mut World, _: &mut AssetManager, pipe: &mut Pipeline) {
 //!         use amethyst::renderer::pass::Clear;
 //!         use amethyst::renderer::Layer;
-//!         let clear_layer =
-//!             Layer::new("main",
-//!                     vec![
-//!                         Clear::new([0.0, 0.0, 0.0, 1.0]),
-//!                     ]);
-//!         pipeline.layers = vec![clear_layer];
+//!         let clear_layer = Layer::new("main", vec![
+//!             Clear::new([0.0, 0.0, 0.0, 1.0]),
+//!         ]);
+//!         pipe.layers.push(clear_layer);
 //!     }
 //!
 //!     fn handle_events(&mut self, events: &[WindowEvent], _: &mut World, _: &mut AssetManager, _: &mut Pipeline) -> Trans {
-//!         use amethyst::event::*;
-//!         for event in events {
-//!             match event.payload {
+//!         for e in events {
+//!             match e.payload {
 //!                 Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) => return Trans::Quit,
 //!                 Event::Closed => return Trans::Quit,
 //!                 _ => (),
@@ -55,19 +48,36 @@
 //! fn main() {
 //!     let path = format!("{}/examples/01_window/resources/config.yml",
 //!                        env!("CARGO_MANIFEST_DIR"));
-//!     let display_config = DisplayConfig::from_file(path).unwrap();
-//!     let mut game = Application::build(GameState, display_config).done();
+//!     let cfg = DisplayConfig::from_file(path).expect("Could not find config!");
+//!     let mut game = Application::build(GameState, cfg).done();
 //!     game.run();
 //! }
 //! ```
 
+#![crate_name = "amethyst"]
+#![crate_type = "lib"]
+#![deny(missing_docs)]
+#![doc(html_logo_url = "https://tinyurl.com/jtmm43a")]
+
 #[macro_use]
 pub extern crate amethyst_config as config;
 pub extern crate amethyst_renderer as renderer;
-pub extern crate specs as specs;
+
+extern crate cgmath;
+extern crate dds;
+extern crate gfx;
+extern crate gfx_window_glutin;
+extern crate glutin;
+extern crate genmesh;
+extern crate imagefmt;
+extern crate num_cpus;
+extern crate specs;
+extern crate wavefront_obj;
 
 pub mod asset_manager;
 pub mod ecs;
-pub mod engine;
-pub mod event;
 pub mod gfx_device;
+
+mod engine;
+
+pub use engine::*;

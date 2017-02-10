@@ -30,7 +30,7 @@ build: false
 
 # Compile the engine and run all tests.
 test_script:
-    - cargo test -p amethyst -p amethyst_config -v
+    - cargo test --all -v
 
 branches:
     only:

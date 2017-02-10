@@ -1,14 +1,12 @@
-//! This module contains `Broadcaster` struct
-//! which allows publishing and polling specs
-//! entities. It is primarily used for event
-//! handling.
+//! This module contains `Broadcaster` struct which allows publishing and
+//! polling specs entities. It is primarily used for event handling.
 //!
 //! # Example:
 //! ```
 //! extern crate amethyst;
 //!
+//! use amethyst::ecs::{Component, VecStorage, Join};
 //! use amethyst::ecs::resources::Broadcaster;
-//! use amethyst::specs::{Component, VecStorage, Join};
 //!
 //! struct UserComponent {
 //!     pub data: i32,
@@ -19,26 +17,25 @@
 //! }
 //!
 //! fn main() {
-//!     let mut broadcaster = Broadcaster::new();
-//!     broadcaster.register::<UserComponent>();
+//!     let mut bc = Broadcaster::new();
+//!     bc.register::<UserComponent>();
 //!     for i in 0..10 {
-//!         let user_component = UserComponent { data: i };
-//!         broadcaster.publish().with::<UserComponent>(user_component).build();
+//!         let user_comp = UserComponent { data: i };
+//!         bc.publish().with::<UserComponent>(user_comp).build();
 //!     }
 //!     {
-//!         let user_components = broadcaster.read::<UserComponent>();
-//!         for user_component in user_components.iter() {
-//!             println!("{0}", user_component.data);
+//!         let user_comps = bc.read::<UserComponent>();
+//!         for user_comp in user_comps.iter() {
+//!             println!("{0}", user_comp.data);
 //!         }
 //!     }
-//!     broadcaster.clean();
+//!     bc.clean();
 //! }
 //! ```
 
-extern crate specs;
-
-use self::specs::{World, Component, EntityBuilder, Storage, Allocator, MaskedStorage, Join};
 use std::sync::RwLockReadGuard;
+
+use ecs::{World, Component, EntityBuilder, Storage, Allocator, MaskedStorage, Join};
 
 /// Allows publishing entities
 pub struct Broadcaster {
@@ -66,7 +63,9 @@ impl Broadcaster {
     }
 
     /// Access a component storage
-    pub fn read<T: Component>(&self) -> Storage<T, RwLockReadGuard<Allocator>, RwLockReadGuard<MaskedStorage<T>>> {
+    pub fn read<T: Component>
+        (&self)
+         -> Storage<T, RwLockReadGuard<Allocator>, RwLockReadGuard<MaskedStorage<T>>> {
         self.world.read::<T>()
     }
 

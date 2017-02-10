@@ -1,44 +1,59 @@
-//! This module contains `Projection` and `Camera` structs,
-//! which are used in `GfxDevice::render_world` to construct
-//! projection and view transformations.
+//! World resource for an orthographic or perspective projection camera.
 
-/// A projection enum which is required to create a `Camera`.
+/// Represents the graphical projection of a `Camera`.
 #[derive(Copy, Clone)]
 pub enum Projection {
+    /// A realistic [perspective projection][pp].
+    ///
+    /// [pp]: https://en.wikipedia.org/wiki/Perspective_(graphical)
     Perspective {
+        /// Field of view, measured in degrees.
         fov: f32,
+        /// Aspect ratio of the viewport.
         aspect_ratio: f32,
+        /// Distance of the near clipping plane.
         near: f32,
+        /// Distance of the far clipping plane.
         far: f32,
     },
+    /// An [orthographic projection][op].
+    ///
+    /// [op]: https://en.wikipedia.org/wiki/Orthographic_projection
     Orthographic {
+        /// Distance of the left clipping plane.
         left: f32,
+        /// Distance of the right clipping plane.
         right: f32,
+        /// Distance of the bottom clipping plane.
         bottom: f32,
+        /// Distance of the top clipping plane.
         top: f32,
+        /// Distance of the near clipping plane.
         near: f32,
+        /// Distance of the far clipping plane.
         far: f32,
     },
 }
 
-/// A `Camera` world resource, it is added by default to `ecs::World` by `Application`.
-/// Projection and view matricies are constructed from it and used by `GfxDevice::render_world` method.
+/// Represents a camera looking around inside a game world.
 #[derive(Copy, Clone)]
 pub struct Camera {
-    pub projection: Projection,
-    /// Point at which camera is located.
+    /// Graphical projection of the camera.
+    pub proj: Projection,
+    /// Location of the camera in three-dimensional space.
     pub eye: [f32; 3],
-    /// Position of camera target (point at which camera is pointed).
+    /// The point at which the camera is looking directly at.
     pub target: [f32; 3],
-    /// Vector defining the up direction for the camera.
+    /// Upward elevation vector of the camera.
     pub up: [f32; 3],
 }
 
 impl Camera {
-    /// Create a new `Camera` from `Projection` enum and eye, target, up vectors
-    pub fn new(projection: Projection, eye: [f32; 3], target: [f32; 3], up: [f32; 3]) -> Camera {
+    /// Creates a new camera with the projection `proj` and the given eye,
+    /// target, and up vectors.
+    pub fn new(proj: Projection, eye: [f32; 3], target: [f32; 3], up: [f32; 3]) -> Camera {
         Camera {
-            projection: projection,
+            proj: proj,
             eye: eye,
             target: target,
             up: up,

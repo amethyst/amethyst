@@ -16,7 +16,13 @@ pub trait Pass<R>
 
     /// encode the pass into the encoder using the supplied argument
     /// frame and render target
-    fn apply<C>(&self, arg: &Self::Arg, target: &Self::Target, pipeline: &::Pipeline, scene: &::Scene<R>, encoder: &mut gfx::Encoder<R, C>) where C: gfx::CommandBuffer<R>;
+    fn apply<C>(&self,
+                arg: &Self::Arg,
+                target: &Self::Target,
+                pipeline: &::Pipeline,
+                scene: &::Scene<R>,
+                encoder: &mut gfx::Encoder<R, C>)
+        where C: gfx::CommandBuffer<R>;
 }
 
 #[derive(Clone, Debug)]

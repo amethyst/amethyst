@@ -2,11 +2,14 @@
 
 use std::time::{Duration, Instant};
 
-/// Useful utility for accurately measuring elapsed time.
+/// A stopwatch which accurately measures elapsed time.
 #[derive(PartialEq, Eq)]
 pub enum Stopwatch {
+    /// Initial state with an elapsed time value of 0 seconds.
     Waiting,
+    /// Stopwatch has started counting the elapsed time since this `Instant`.
     Started(Instant),
+    /// Stopwatch has been stopped and reports the elapsed time `Duration`.
     Ended(Duration),
 }
 
@@ -17,6 +20,7 @@ impl Default for Stopwatch {
 }
 
 impl Stopwatch {
+    /// Creates a new stopwatch.
     pub fn new() -> Stopwatch {
         Stopwatch::Waiting
     }

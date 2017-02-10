@@ -1,15 +1,15 @@
 extern crate amethyst_config;
 
-use amethyst_config::Element;
+use amethyst_config::{Config, Element};
 
 fn main() {
-    let config = amethyst_config::Config::from_file("../../config/config.yml");
+    let res = Config::from_file("../../config/config.yml");
 
-    match config {
-        Ok(conf) => {
-            println!("{}", conf.to_string());
+    match res {
+        Ok(cfg) => {
+            println!("{}", cfg.to_string());
 
-            if let Err(e) = conf.write_file() {
+            if let Err(e) = cfg.write_file() {
                 println!("{}", e);
             }
         },
