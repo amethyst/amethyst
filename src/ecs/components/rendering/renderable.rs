@@ -1,30 +1,25 @@
-extern crate specs;
+//! Physically renderable component.
 
-use super::Mesh;
-use super::Texture;
-use self::specs::{Component, VecStorage};
+use ecs::{Component, VecStorage};
+use ecs::components::rendering::{Mesh, Texture};
 
-#[derive(Clone)]
 /// A `Component` that can be attached to an ECS `Entity` to render it onscreen.
 ///
 /// It combines geometry and various textures used in lighting calculations
 /// to represent an entity on the screen. Every `Renderable`, `Transform`
 /// pair attached to an entity inside the ECS `World` is rendered by the
 /// `GfxDevice::render_world` method.
+#[derive(Clone)]
 pub struct Renderable {
-    /// The geometry that will be rendered
+    /// Mesh asset to be renderered.
     pub mesh: Mesh,
-
-    /// Texture used in ambient lighting calculations
+    /// Applied during ambient lighting calculations.
     pub ambient: Texture,
-
-    /// Texture used in diffuse lighting calculations
+    /// Applied during diffuse lighting calculations.
     pub diffuse: Texture,
-
-    /// Texture used in specular lighting calculations
+    /// Applied during specular lighting calculations.
     pub specular: Texture,
-
-    /// Specular exponent used in lighting calculations
+    /// Shininess of the object's surface.
     pub specular_exponent: f32,
 }
 
@@ -35,7 +30,8 @@ impl Renderable {
                ambient: Texture,
                diffuse: Texture,
                specular: Texture,
-               specular_exponent: f32) -> Renderable {
+               specular_exponent: f32)
+               -> Renderable {
 
         Renderable {
             mesh: mesh,

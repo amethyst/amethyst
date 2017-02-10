@@ -7,12 +7,12 @@ use std::sync::atomic::{AtomicBool, Ordering};
 pub struct Child {
     /// The parent entity
     parent: Entity,
-
-    /// Flag for whether the child was changed
+    /// Flags whether the child was changed
     dirty: AtomicBool,
 }
 
 impl Child {
+    /// Creates a new child
     pub fn new(entity: Entity) -> Child {
         Child {
             parent: entity,
@@ -20,25 +20,28 @@ impl Child {
         }
     }
 
+    /// Returns our parent entity.
     #[inline]
     pub fn parent(&self) -> Entity {
         self.parent
     }
+
+    /// Sets the given entity as our parent.
     #[inline]
     pub fn set_parent(&mut self, entity: Entity) {
         self.parent = entity;
         self.flag(true);
     }
 
-    /// Flag that parent has been changed
+    /// Signals to our parent entity that its child entity has changed.
     ///
-    /// Note: `set_parent` flags the parent.
+    /// Note: Calling `set_parent()` flags the parent as dirty.
     #[inline]
     pub fn flag(&self, dirty: bool) {
         self.dirty.store(dirty, Ordering::SeqCst);
     }
 
-    /// Returns whether the parent was changed.
+    /// Returns whether the parent entity has changed.
     #[inline]
     pub fn is_dirty(&self) -> bool {
         self.dirty.load(Ordering::SeqCst)

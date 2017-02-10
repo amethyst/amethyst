@@ -1,4 +1,3 @@
-
 use gfx;
 use mopa;
 
@@ -40,7 +39,6 @@ pub struct GeometryBuffer<R: gfx::Resources> {
 
     /// Contains the depth buffer
     pub depth: gfx::handle::DepthStencilView<R, DepthFormat>,
-
 
     /// The normal buffer as a texture
     pub texture_normal: gfx::handle::ShaderResourceView<R, [f32; 4]>,
