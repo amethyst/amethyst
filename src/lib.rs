@@ -48,7 +48,7 @@
 //! fn main() {
 //!     let path = format!("{}/examples/01_window/resources/config.yml",
 //!                        env!("CARGO_MANIFEST_DIR"));
-//!     let cfg = DisplayConfig::from_file(path).unwrap();
+//!     let cfg = DisplayConfig::from_file(path).expect("Could not find config!");
 //!     let mut game = Application::build(GameState, cfg).done();
 //!     game.run();
 //! }
