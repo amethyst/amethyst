@@ -18,16 +18,15 @@ struct Example;
 
 impl State for Example {
     fn on_start(&mut self, world: &mut World, assets: &mut AssetManager, pipe: &mut Pipeline) {
-        use amethyst::ecs::components::{Mesh, Texture};
-        use amethyst::ecs::resources::{Camera, Projection, ScreenDimensions};
+        use amethyst::renderer::pass::DrawShaded;
         use amethyst::renderer::{Layer, PointLight};
-        use amethyst::renderer::pass::{Clear, DrawShaded};
-
-        let layer = Layer::new("main",
-                               vec![Clear::new([0.0, 0.0, 0.0, 1.0]),
-                                    DrawShaded::new("main", "main")]);
-
-        pipe.layers.push(layer);
+        use amethyst::ecs::resources::{Projection, Camera};
+        use amethyst::ecs::resources::ScreenDimensions;
+        use amethyst::ecs::components::{Texture, Mesh};
+        let layer = Layer::new("main", vec![
+            DrawShaded::new("main", "main"),
+        ]);
+        pipe.layers = vec![layer];
 
         {
             let dim = world.read_resource::<ScreenDimensions>();

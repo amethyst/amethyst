@@ -6,7 +6,7 @@ use gfx;
 use mopa;
 
 /// A `Pass` is an implementation of a Pass
-pub trait Pass<R>
+pub trait Pass<R>: Sync
     where R: gfx::Resources
 {
     /// The argument required for the Pass
@@ -20,24 +20,9 @@ pub trait Pass<R>
                 arg: &Self::Arg,
                 target: &Self::Target,
                 pipeline: &::Pipeline,
-                scene: &::Scene<R>,
-                encoder: &mut gfx::Encoder<R, C>)
-        where C: gfx::CommandBuffer<R>;
-}
-
-#[derive(Clone, Debug)]
-/// Clear the frame buffer
-pub struct Clear {
-    /// the color to clear with
-    pub color: [f32; 4],
-}
-impl PassDescription for Clear {}
-
-impl Clear {
-    /// Create a new boxed Clear Description
-    pub fn new(color: [f32; 4]) -> Box<PassDescription> {
-        Box::new(Clear { color: color })
-    }
+                fragments: &[::Fragment<R>],
+                scene: &::Scene,
+                encoder: &mut gfx::Encoder<R, C>) where C: gfx::CommandBuffer<R>;
 }
 
 #[derive(Clone, Debug)]
@@ -180,5 +165,5 @@ impl Lighting {
 }
 
 /// Describes a render pass
-pub trait PassDescription: mopa::Any + std::fmt::Debug {}
+pub trait PassDescription: mopa::Any + std::fmt::Debug + Sync {}
 mopafy!(PassDescription);

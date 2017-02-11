@@ -25,13 +25,13 @@ pub use target::Target;
 /// Manages passes and the execution of the passes over the targets. It only
 /// contains the passes, all other data is contained in the `Frame`.
 pub struct Renderer<R: gfx::Resources, C: gfx::CommandBuffer<R>> {
-    cmd_buf: gfx::Encoder<R, C>,
     passes: HashMap<(TypeId, TypeId),
                     Box<Fn(&Box<PassDescription>,
                            &Target,
                            &Pipeline,
-                           &Scene<R>,
-                           &mut gfx::Encoder<R, C>)>>,
+                           &[Fragment<R>],
+                           &Scene,
+                           &mut gfx::Encoder<R, C>) + Sync>>,
 }
 
 /// NOTE: This is just a placeholder!
@@ -46,10 +46,9 @@ impl<R, C> Renderer<R, C>
     where R: gfx::Resources,
           C: gfx::CommandBuffer<R>
 {
-    /// Creates a new renderer with the given command buffer.
-    pub fn new(cmd_buf: C) -> Renderer<R, C> {
+    /// Create a new Render pipeline
+    pub fn new() -> Renderer<R, C> {
         Renderer {
-            cmd_buf: cmd_buf.into(),
             passes: HashMap::new(),
         }
     }
@@ -58,12 +57,10 @@ impl<R, C> Renderer<R, C>
     pub fn load_all<F>(&mut self, factory: &mut F)
         where F: gfx::Factory<R>
     {
-        self.add_pass(pass::forward::Clear);
         self.add_pass(pass::forward::DrawFlat::new(factory));
         self.add_pass(pass::forward::DrawShaded::new(factory));
         self.add_pass(pass::forward::Wireframe::new(factory));
 
-        self.add_pass(pass::deferred::Clear);
         self.add_pass(pass::deferred::DrawPass::new(factory));
         self.add_pass(pass::deferred::DepthPass::new(factory));
         self.add_pass(pass::deferred::BlitLayer::new(factory));
@@ -79,26 +76,30 @@ impl<R, C> Renderer<R, C>
         let id = (TypeId::of::<A>(), TypeId::of::<T>());
         self.passes.insert(id,
                            Box::new(move |a: &Box<PassDescription>,
-                                          t: &Target,
-                                          pipeline: &Pipeline,
-                                          scene: &Scene<R>,
-                                          encoder: &mut gfx::Encoder<R, C>| {
+                                    t: &Target,
+                                    pipe: &Pipeline,
+                                    fragments: &[Fragment<R>],
+                                    scene: &Scene,
+                                    encoder: &mut gfx::Encoder<R, C>| {
                                let a = a.downcast_ref::<A>().unwrap();
                                let t = t.downcast_ref::<T>().unwrap();
-                               p.apply(a, t, pipeline, scene, encoder)
+                               p.apply(a, t, pipe, fragments, scene, encoder)
                            }));
     }
 
-    /// Execute all passes and draw the frame.
-    pub fn submit<D>(&mut self, pipe: &Pipeline, scene: &Scene<R>, device: &mut D)
-        where D: gfx::Device<Resources = R, CommandBuffer = C>
+    /// Execute all passes
+        pub fn submit(&self,
+                      encoder: &mut gfx::Encoder<R, C>,
+                      pipe: &Pipeline,
+                      fragments: &[Fragment<R>],
+                      scene: &Scene)
     {
         for layer in &pipe.layers {
             let fb = pipe.targets.get(&layer.target).unwrap();
             for desc in &layer.passes {
                 let id = (mopa::Any::get_type_id(&**desc), mopa::Any::get_type_id(&**fb));
                 if let Some(pass) = self.passes.get(&id) {
-                    pass(desc, &**fb, &pipe, &scene, &mut self.cmd_buf);
+                    pass(desc, &**fb, &pipe, fragments, scene, encoder);
                 } else {
                     panic!("No pass implementation found for target={}, pass={:?}",
                            layer.target,
@@ -106,9 +107,6 @@ impl<R, C> Renderer<R, C>
                 }
             }
         }
-
-        self.cmd_buf.flush(device);
-        device.cleanup();
     }
 }
 
@@ -283,12 +281,13 @@ impl Default for AmbientLight {
     }
 }
 
-/// Collection of fragments and lights that make up the scene.
+/// A Scene is a collection of all the things that
+/// are shared between different rendering threads
+/// lights that make up the scene, now it is just `Camera` and different kinds of lights.
+/// A `&[Fragment]` is passed separatelly.
 #[derive(Clone)]
-pub struct Scene<R: gfx::Resources> {
-    /// List of renderable fragments.
-    pub fragments: Vec<Fragment<R>>,
-    /// List of point lights.
+pub struct Scene {
+    /// A list of point lights
     pub point_lights: Vec<PointLight>,
     /// List of directional lights.
     pub directional_lights: Vec<DirectionalLight>,
@@ -298,13 +297,12 @@ pub struct Scene<R: gfx::Resources> {
     pub camera: Camera,
 }
 
-impl<R: gfx::Resources> Scene<R> {
-    /// Creates an empty scene with the given camera.
-    pub fn new(camera: Camera) -> Scene<R> {
+impl Scene {
+    /// Create an empty scene
+    pub fn new(camera: Camera) -> Scene {
         Scene {
-            fragments: Vec::new(),
-            point_lights: Vec::new(),
-            directional_lights: Vec::new(),
+            point_lights: vec![],
+            directional_lights: vec![],
             ambient_light: 0.01,
             camera: camera,
         }

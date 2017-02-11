@@ -1,28 +1,30 @@
+extern crate gfx_window_glutin;
+extern crate glutin;
+
 use gfx_device::DisplayConfig;
 use gfx_device::gfx_device::GfxDevice;
-use gfx_device::gfx_types::Factory;
-use gfx_device::main_target::MainTarget;
-use renderer::Renderer;
 use renderer::target::{ColorFormat, DepthFormat};
+use renderer::Renderer;
+use gfx_device::gfx_types::{Factory, Encoder};
+
 
 /// Create a `(GfxDevice, Factory, MainTarget)` tuple from `DisplayConfig`
-pub fn video_init(cfg: DisplayConfig) -> (GfxDevice, Factory, MainTarget) {
+pub fn video_init(cfg: DisplayConfig, num_cpus: usize) -> (GfxDevice, Factory) {
     #[cfg(feature="opengl")]
-    return new_gl(&cfg);
+    return new_gl(&cfg, num_cpus);
     #[cfg(all(windows, feature="direct3d"))]
-    return new_d3d(&cfg);
+    return new_d3d(&cfg, num_cpus);
 }
 
 #[cfg(all(windows, feature="direct3d"))]
-fn new_d3d(_: &DisplayConfig) -> (GfxDevice, Factory, MainTarget) {
+fn new_d3d(_: &DisplayConfig, _: usize) -> (GfxDevice, Factory) {
     unimplemented!();
 }
 
-#[cfg(feature="opengl")]
-fn new_gl(cfg: &DisplayConfig) -> (GfxDevice, Factory, MainTarget) {
-    use gfx_window_glutin;
-    use glutin;
 
+/// Create a `(GfxDevice, Factory)` tuple from `DisplayConfig`
+#[cfg(feature="opengl")]
+pub fn new_gl(cfg: &DisplayConfig, num_cpus: usize) -> (GfxDevice, Factory) {
     let title = cfg.title.clone();
     let multisampling = cfg.multisampling.clone();
     let visibility = cfg.visibility.clone();
@@ -56,20 +58,24 @@ fn new_gl(cfg: &DisplayConfig) -> (GfxDevice, Factory, MainTarget) {
     let (window, device, mut factory, main_color, main_depth) =
         gfx_window_glutin::init::<ColorFormat, DepthFormat>(builder);
 
-    let combuf = factory.create_command_buffer();
-    let mut renderer = Renderer::new(combuf);
+    let mut renderer = Renderer::new();
     renderer.load_all(&mut factory);
+
+    let mut encoders: Vec<Encoder> = vec![];
+    for _ in 0..num_cpus {
+        let combuf = factory.create_command_buffer();
+        let encoder: Encoder = combuf.into();
+        encoders.push(encoder);
+    }
 
     let gfx_device = GfxDevice {
         window: window,
         device: device,
+        main_color: main_color,
+        main_depth: main_depth,
         renderer: renderer,
+        encoders: encoders,
     };
 
-    let main_target = MainTarget {
-        color: main_color,
-        depth: main_depth,
-    };
-
-    (gfx_device, factory, main_target)
+    (gfx_device, factory)
 }

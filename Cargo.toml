@@ -13,10 +13,6 @@ repository = "https://github.com/amethyst/amethyst"
 readme = "README.md"
 license = "MIT/Apache-2.0"
 
-[badges]
-appveyor = { repository = "amethyst/amethyst" }
-travis-ci = { repository = "amethyst/amethyst" }
-
 [features]
 default = ["opengl"]
 opengl = []
@@ -36,6 +32,7 @@ glutin = "0.7"
 imagefmt = "4.0"
 specs = "0.7"
 wavefront_obj = "5.0"
+scoped_threadpool = "0.1"
 
 [target.'cfg(windows)'.dependencies]
 gfx_device_dx11 = "0.4"

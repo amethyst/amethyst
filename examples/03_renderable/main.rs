@@ -11,8 +11,9 @@ use amethyst::ecs::{Join, System, RunArg, World};
 use amethyst::ecs::components::{LocalTransform, Mesh, Texture, Transform};
 use amethyst::ecs::resources::{Camera, Projection, ScreenDimensions, Time};
 use amethyst::gfx_device::DisplayConfig;
-use amethyst::renderer::{AmbientLight, DirectionalLight, Layer, PointLight, Pipeline};
-use amethyst::renderer::pass::{BlitLayer, Clear, DrawFlat, DrawShaded, Lighting};
+use amethyst::renderer::{AmbientLight, DirectionalLight, Layer, PointLight};
+use amethyst::renderer::Pipeline;
+use amethyst::renderer::pass::{BlitLayer, DrawFlat, DrawShaded, Lighting};
 use cgmath::{Deg, Euler, Quaternion};
 use std::env::set_var;
 use std::str;
@@ -59,13 +60,11 @@ impl System<()> for ExampleSystem {
 fn set_pipeline_state(pipe: &mut Pipeline, forward: bool) {
     if forward {
         let layer = Layer::new("main",
-                               vec![Clear::new([0.0, 0.0, 0.0, 1.0]),
-                                    DrawShaded::new("main", "main")]);
+                               vec![DrawShaded::new("main", "main")]);
         pipe.layers = vec![layer];
     } else {
         let geom_layer = Layer::new("main",
-                                    vec![Clear::new([0.0, 0.0, 0.0, 1.0]),
-                                         DrawFlat::new("main", "main")]);
+                                    vec![DrawFlat::new("main", "main")]);
         let postproc_layer = Layer::new("main",
                                         vec![BlitLayer::new("gbuffer", "ka"),
                                              Lighting::new("main", "gbuffer", "main")]);

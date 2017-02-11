@@ -1,6 +1,8 @@
 //! The core engine framework.
+extern crate scoped_threadpool;
+extern crate specs;
+extern crate num_cpus;
 
-use num_cpus;
 use std::time::{Duration, Instant};
 
 use asset_manager::AssetManager;
@@ -12,7 +14,8 @@ use engine::state::{State, StateMachine};
 use engine::timing::Stopwatch;
 use gfx_device;
 use gfx_device::{DisplayConfig, GfxDevice, gfx_types};
-use renderer::{AmbientLight, DirectionalLight, Pipeline, PointLight, target};
+use renderer::{AmbientLight, DirectionalLight, Pipeline, PointLight};
+use renderer;
 
 /// User-friendly facade for building games. Manages main loop.
 pub struct Application {
@@ -22,6 +25,9 @@ pub struct Application {
     gfx_device: GfxDevice,
     pipe: Pipeline,
     planner: Planner<()>,
+
+    // Threadpool for rendering.
+    pool: self::scoped_threadpool::Pool,
 
     // State management and game loop timing structs.
     delta_time: Duration,
@@ -37,26 +43,19 @@ impl Application {
     pub fn new<T>(initial_state: T, mut planner: Planner<()>, cfg: DisplayConfig) -> Application
         where T: State + 'static
     {
-        use ecs::resources::{Camera, Projection, ScreenDimensions};
-
-        let (device, mut factory, main_target) = gfx_device::video_init(cfg);
+        use ecs::resources::camera::{Camera, Projection};
+        use ecs::resources::{ScreenDimensions, ClearColor};
+        let (device, mut factory) = gfx_device::video_init(cfg, self::num_cpus::get());
         let mut pipe = Pipeline::new();
         pipe.targets.insert("main".into(),
-                            Box::new(target::ColorBuffer {
-                                color: main_target.color.clone(),
-                                output_depth: main_target.depth.clone(),
-                            }));
-
+                                Box::new(device.get_main_target()));
         let (w, h) = device.get_dimensions().unwrap();
-        let geom_buf = target::GeometryBuffer::new(&mut factory, (w as u16, h as u16));
-        pipe.targets.insert("gbuffer".into(), Box::new(geom_buf));
-
+        pipe.targets.insert("gbuffer".into(),
+                                Box::new(renderer::target::GeometryBuffer::new(&mut factory, (w as u16, h as u16))));
         let mut assets = AssetManager::new();
         assets.add_loader::<gfx_types::Factory>(factory);
-
-        let trans_sys = TransformSystem::new();
-        planner.add_system::<TransformSystem>(trans_sys, "transform_system", 0);
-
+        let transform_system = TransformSystem::new();
+        planner.add_system::<TransformSystem>(transform_system, "transform_system", 0);
         {
             let mut world = planner.mut_world();
             let time = Time {
@@ -79,7 +78,11 @@ impl Application {
                 world.add_resource::<ScreenDimensions>(dim);
                 world.add_resource::<Camera>(camera);
             }
-
+            let clear_color = ClearColor {
+                clear_color: [0., 0., 0., 1.],
+                clear_depth: 1.,
+            };
+            world.add_resource::<ClearColor>(clear_color);
             world.add_resource::<AmbientLight>(AmbientLight::default());
             world.add_resource::<Time>(time);
             world.register::<Child>();
@@ -101,6 +104,7 @@ impl Application {
             delta_time: Duration::new(0, 0),
             fixed_step: Duration::new(0, 16666666),
             last_fixed_update: Instant::now(),
+            pool: self::scoped_threadpool::Pool::new(self::num_cpus::get() as u32),
         }
     }
 
@@ -171,7 +175,7 @@ impl Application {
             }
 
             let pipe = &mut self.pipe;
-            self.gfx_device.render_world(world, pipe);
+            self.gfx_device.render_world(world, pipe, &mut self.pool);
         }
     }
 

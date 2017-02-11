@@ -12,7 +12,7 @@ use amethyst::ecs::components::{LocalTransform, Mesh, Texture, Transform};
 use amethyst::ecs::resources::{Camera, Projection, ScreenDimensions};
 use amethyst::gfx_device::DisplayConfig;
 use amethyst::renderer::{Layer, PointLight, Pipeline, VertexPosNormal};
-use amethyst::renderer::pass::{Clear, DrawShaded};
+use amethyst::renderer::pass::DrawShaded;
 use cgmath::{Deg, Euler, Quaternion};
 use std::env::set_var;
 use std::str;
@@ -177,8 +177,7 @@ impl State for Example {
 
         // Set up rendering pipeline
         let layer = Layer::new("main",
-                               vec![Clear::new([0.0, 0.0, 0.0, 1.0]),
-                                    DrawShaded::new("main", "main")]);
+                               vec![DrawShaded::new("main", "main")]);
         pipe.layers.push(layer);
     }
 

@@ -4,6 +4,7 @@
 mod types {
     extern crate gfx_device_gl;
     extern crate glutin;
+    extern crate gfx;
 
     /// An application window.
     pub type Window = glutin::Window;
@@ -15,11 +16,14 @@ mod types {
     pub type Factory = gfx_device_gl::Factory;
     /// Handles drawing output.
     pub type Device = gfx_device_gl::Device;
+    /// A wrapper around command buffer.
+    pub type Encoder = gfx::Encoder<Resources, CommandBuffer>;
 }
-#[cfg(all(windows, feature="direct3d"))]
+#[cfg(all(os_target="windows", feature="direct3d"))]
 mod types {
     extern crate gfx_device_dx11;
     extern crate gfx_window_dxgi;
+    extern crate gfx;
 
     /// An application window.
     pub type Window = gfx_window_dxgi::Window;
@@ -31,6 +35,8 @@ mod types {
     pub type Factory = gfx_device_dx11::Factory;
     /// Handles drawing output.
     pub type Device = gfx_device_dx11::Device;
+    /// A wrapper around command buffer.
+    pub type Encoder = gfx::Encoder<Resources, CommandBuffer>;
 }
 
 pub use self::types::*;

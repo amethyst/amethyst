@@ -12,14 +12,6 @@ use amethyst::renderer::Pipeline;
 struct Example;
 
 impl State for Example {
-    fn on_start(&mut self, _: &mut World, _: &mut AssetManager, pipe: &mut Pipeline) {
-        use amethyst::renderer::Layer;
-        use amethyst::renderer::pass::Clear;
-
-        let clear_layer = Layer::new("main", vec![Clear::new([0.0, 0.0, 0.0, 1.0])]);
-        pipe.layers = vec![clear_layer];
-    }
-
     fn handle_events(&mut self,
                      events: &[WindowEvent],
                      _: &mut World,
