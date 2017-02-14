@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [kc]: http://keepachangelog.com/
 [sv]: http://semver.org/
 
+## [Unreleased]
+### Fixed
+* Correct the quick example given in `README.md`.
+
 ## [0.4.1] - 2017-02-10
 ### Added
 * Make `CONTRIBUTING.md` have teeth by enabling `#[deny(missing_docs)]`.
