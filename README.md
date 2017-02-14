@@ -77,7 +77,7 @@ project with `cargo` and build it. Follow along below:
 [gs]: https://www.amethyst.rs/book/getting_started.html
 
 ```
-$ cargo new --template-repo https://github.com/amethyst/project_template mygame
+$ cargo new --template https://github.com/amethyst/project_template mygame
 $ cd mygame
 $ cargo run
 ```
