@@ -12,10 +12,108 @@ pub trait Config where Self: Sized {
     fn write<P: AsRef<::std::path::Path>>(&self, P) -> Result<(), ::project::ProjectError>;
 }
 
+/// The `config!` macro allows defining configuration structures that can load in
+/// `.yml`/`.yaml` files.
+///
+/// It implements the [`serde::Serialize`], [`serde::Deserialize`], and [`Config`] traits.
+/// As well as the standard libraries Default trait for the defaulting fields.
+///
+/// It follows Rust's syntax for defining structures with one addition, defaulting values.
+/// If the file fails to specific fields of a configuration, then it will print out
+/// an error describing the issue and then load in this defaulting value.
+///
+/// In the case that the file is not found, or the configuration does not exist at all
+/// inside the file, then the configuration will have all default values.
+///
+/// Note: Documentation must be put on the line before the field, rather than on the same line.
+///
+///## Example Usage:
+/// 
+/// ```rust
+/// #[macro_use]
+/// extern crate amethyst;
+/// extern crate serde;
+/// #[macro_use]
+/// extern crate serde_derive;
+/// extern crate serde_yaml;
+///
+///config!(
+///    pub struct DisplayConfig {
+///        pub title: String = "Amethyst Game".to_string(),
+///
+///        /// Resolution of the window size at start.
+///        pub resolution: (u32, u32) = (1920, 1080),
+///        
+///        pub fullscreen: bool = false,
+///    }    
+///);
+///# fn main(){}
+/// ```
+///
+/// [`serde::Serialize`]: ../serde/trait.Serialize.html
+/// [`serde::Deserialize`]: ../serde/trait.Deserialize.html
+/// [`Config`]: ../amethyst/project/config/trait.Config.html
 #[macro_export]
-macro_rules! impl_config(
+macro_rules! config(
     (
+        // public configuration structure
+        $(#[$identifier_meta:meta])*
+        pub struct $identifier:ident {
+            $(
+                $(#[$field_meta:meta])*
+                pub $field:ident: $ty:ty = $default:expr $(,)*
+            )*
+        }
+    ) => {
+        $( #[$identifier_meta] )*
+        #[derive(Serialize)]
+        pub struct $identifier {
+            $(
+                $( #[$field_meta] )*
+                pub $field: $ty,
+            )*
+        }
+
+        // Implements custom `Deserialize` for configuration structures
+        config!(
+            impl $identifier {
+                $(
+                    $field: $ty = $default,
+                )*
+            }
+        );
+    };
+    (
+        // private configuration structure
+        $(#[$identifier_meta:meta])*
         struct $identifier:ident {
+            $(
+                $(#[$field_meta:meta])*
+                pub $field:ident: $ty:ty = $default:expr $(,)*
+            )*
+        }
+    ) => {
+        $( #[$identifier_meta] )*
+        #[derive(Serialize)]
+        struct $identifier {
+            $(
+                $( #[$field_meta] )*
+                pub $field: $ty,
+            )*
+        }
+
+        // Implements custom `Deserialize` for configuration structures
+        config!(
+            impl $identifier {
+                $(
+                    $field: $ty = $default,
+                )*
+            }
+        );
+    };
+    (
+        // Implements the configuration structure's methods.
+        impl $identifier:ident {
             $(
                 $field:ident: $ty:ty = $default:expr,
             )*
@@ -197,106 +295,6 @@ macro_rules! impl_config(
                 parsed.map_err(|e| $crate::project::ProjectError::Parser(e.to_string()) )
             }
         }
-    }
-);
-
-/// The `config!` macro allows defining configuration structures that can load in
-/// `.yml`/`.yaml` files.
-///
-/// It implements the [`serde::Serialize`], [`serde::Deserialize`], and [`Config`] traits.
-///
-/// It follows Rust's syntax for defining structures with one addition, defaulting values.
-/// If the file fails to specific fields of a configuration, then it will print out
-/// an error describing the issue and then load in this defaulting value.
-///
-/// In the case that the file is not found, or the configuration does not exist at all
-/// inside the file, then the configuration will have all default values.
-///
-/// Note: Documentation must be put on the line before the field, rather than on the same line.
-///
-///## Example Usage:
-/// 
-/// ```rust
-/// #[macro_use]
-/// extern crate amethyst;
-/// extern crate serde;
-/// #[macro_use]
-/// extern crate serde_derive;
-/// extern crate serde_yaml;
-///
-///config!(
-///    pub struct DisplayConfig {
-///        pub title: String = "Amethyst Game".to_string(),
-///
-///        /// Resolution of the window size at start.
-///        pub resolution: (u32, u32) = (1920, 1080),
-///        
-///        pub fullscreen: bool = false,
-///    }    
-///);
-///# fn main(){}
-/// ```
-///
-/// [`serde::Serialize`]: ../serde/trait.Serialize.html
-/// [`serde::Deserialize`]: ../serde/trait.Deserialize.html
-/// [`Config`]: ../amethyst/project/config/trait.Config.html
-#[macro_export]
-macro_rules! config(
-    (
-        // public configuration structure
-        $(#[$identifier_meta:meta])*
-        pub struct $identifier:ident {
-            $(
-                $(#[$field_meta:meta])*
-                pub $field:ident: $ty:ty = $default:expr $(,)*
-            )*
-        }
-    ) => {
-        $( #[$identifier_meta] )*
-        #[derive(Serialize)]
-        pub struct $identifier {
-            $(
-                $( #[$field_meta] )*
-                pub $field: $ty,
-            )*
-        }
-
-        // Implements custom `Deserialize` for configuration structures
-        impl_config!(
-            struct $identifier {
-                $(
-                    $field: $ty = $default,
-                )*
-            }
-        );
-    };
-    (
-        // private configuration structure
-        $(#[$identifier_meta:meta])*
-        struct $identifier:ident {
-            $(
-                $(#[$field_meta:meta])*
-                pub $field:ident: $ty:ty = $default:expr $(,)*
-            )*
-        }
-    ) => {
-        $( #[$identifier_meta] )*
-        #[derive(Serialize)]
-        struct $identifier {
-            $(
-                $( #[$field_meta] )*
-                pub $field: $ty,
-            )*
-        }
-
-        // Implements custom `Deserialize` for configuration structures
-        impl_config!(
-            struct $identifier {
-                $(
-                    $field: $ty = $default,
-                )*
-            }
-        );
     };
 );
 
