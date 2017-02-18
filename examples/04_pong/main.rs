@@ -170,7 +170,7 @@ impl System<()> for PongSystem {
                ball.position[0] + ball.size / 2. < right_bound {
                 if ball.position[1] - ball.size / 2. < right_position + right_dimensions[1] / 2. &&
                    ball.position[1] + ball.size / 2. > right_position - right_dimensions[1] / 2. {
-                    ball.position[0] = right_bound - 0.01 - ball.size / 2.;
+                    ball.position[0] = right_bound - right_dimensions[0] - ball.size / 2.;
                     ball.velocity[0] = -ball.velocity[0];
                 }
             }
@@ -189,7 +189,7 @@ impl System<()> for PongSystem {
                ball.position[0] + ball.size / 2. > left_bound {
                 if ball.position[1] - ball.size / 2. < left_position + left_dimensions[1] / 2. &&
                    ball.position[1] + ball.size / 2. > left_position - left_dimensions[1] / 2. {
-                    ball.position[0] = left_bound + 0.01 + ball.size / 2.;
+                    ball.position[0] = left_bound + left_dimensions[0] + ball.size / 2.;
                     ball.velocity[0] = -ball.velocity[0];
                 }
             }
