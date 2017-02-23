@@ -113,7 +113,7 @@ pub trait Element: Sized {
         None
     }
 
-    /// From a file relative to current config
+    /// From some string (should be used for top level elements if you want to embed the code)
     fn from_string<'a>(src: &'a str) -> Result<Self, ConfigError> {
         let mut meta = ConfigMeta::default();
         meta.path = PathBuf::from("");
