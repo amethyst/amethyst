@@ -83,9 +83,17 @@ impl State for Example {
 }
 
 fn main() {
-    let path = format!("{}/examples/02_sphere/resources/config.yml",
-                       env!("CARGO_MANIFEST_DIR"));
-    let cfg = DisplayConfig::from_file(path).unwrap();
+    let cfg = DisplayConfig::from_string(r#"dimensions: null
+fullscreen: false
+max_dimensions: null
+min_dimensions: null
+multisampling: 1
+title: "Sphere example"
+visibility: true
+vsync: true
+"#)
+        .unwrap();
+
     let mut game = Application::build(Example, cfg).done();
     game.run();
 }

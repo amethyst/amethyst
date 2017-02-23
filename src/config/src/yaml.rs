@@ -11,7 +11,7 @@ use std::path::{PathBuf, Path};
 
 use yaml_rust::{Yaml, YamlLoader};
 
-use ::definitions::{ConfigError, ConfigMeta};
+use definitions::{ConfigError, ConfigMeta};
 
 static TAB_CHARS: &'static str = "    "; // Characters to display for tabs
 
@@ -114,6 +114,21 @@ pub trait Element: Sized {
     }
 
     /// From a file relative to current config
+    fn from_string<'a>(src: &'a str) -> Result<Self, ConfigError> {
+        let mut meta = ConfigMeta::default();
+        meta.path = PathBuf::from("");
+        let yaml = try!(YamlLoader::load_from_str(src).map_err(|e| ConfigError::YamlScan(e)));
+
+        let hash = if yaml.len() > 0 {
+            yaml[0].clone()
+        } else {
+            Yaml::Hash(BTreeMap::new())
+        };
+
+        Self::from_yaml(&meta, &hash)
+    }
+
+    /// From a file relative to current config
     fn from_file_raw<P: AsRef<Path>>(meta: &ConfigMeta, path: P) -> Result<Self, ConfigError> {
         let path = path.as_ref();
         let mut next_meta = meta.clone();
@@ -128,10 +143,8 @@ pub trait Element: Sized {
             next_meta.path.clone()
         };
 
-        let check = |list: &mut Vec<PathBuf>, file: &mut PathBuf| {
-            if file.exists() {
-                list.push(file.clone())
-            }
+        let check = |list: &mut Vec<PathBuf>, file: &mut PathBuf| if file.exists() {
+            list.push(file.clone())
         };
 
         let mut found = Vec::new();
