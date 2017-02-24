@@ -11,7 +11,7 @@ use std::path::{PathBuf, Path};
 
 use yaml_rust::{Yaml, YamlLoader};
 
-use ::definitions::{ConfigError, ConfigMeta};
+use definitions::{ConfigError, ConfigMeta};
 
 static TAB_CHARS: &'static str = "    "; // Characters to display for tabs
 
@@ -113,6 +113,21 @@ pub trait Element: Sized {
         None
     }
 
+    /// From some string (should be used for top level elements if you want to embed the code)
+    fn from_string(src: &str) -> Result<Self, ConfigError> {
+        let mut meta = ConfigMeta::default();
+        meta.path = PathBuf::from("");
+        let yaml = YamlLoader::load_from_str(src).map_err(|e| ConfigError::YamlScan(e))?;
+
+        let hash = if yaml.len() > 0 {
+            yaml[0].clone()
+        } else {
+            Yaml::Hash(BTreeMap::new())
+        };
+
+        Self::from_yaml(&meta, &hash)
+    }
+
     /// From a file relative to current config
     fn from_file_raw<P: AsRef<Path>>(meta: &ConfigMeta, path: P) -> Result<Self, ConfigError> {
         let path = path.as_ref();
@@ -128,10 +143,8 @@ pub trait Element: Sized {
             next_meta.path.clone()
         };
 
-        let check = |list: &mut Vec<PathBuf>, file: &mut PathBuf| {
-            if file.exists() {
-                list.push(file.clone())
-            }
+        let check = |list: &mut Vec<PathBuf>, file: &mut PathBuf| if file.exists() {
+            list.push(file.clone())
         };
 
         let mut found = Vec::new();
@@ -169,13 +182,13 @@ pub trait Element: Sized {
         let found_path = found[0].clone();
         next_meta.path = found_path.clone();
 
-        let mut file = try!(File::open(found_path.as_path()).map_err(|e| ConfigError::FileError(found_path.clone(), e)));
+        let mut file = File::open(found_path.as_path()).map_err(|e| ConfigError::FileError(found_path.clone(), e))?;
         let mut buffer = String::new();
 
-        try!(file.read_to_string(&mut buffer)
-            .map_err(|e| ConfigError::FileError(found_path.clone(), e)));
+        file.read_to_string(&mut buffer)
+            .map_err(|e| ConfigError::FileError(found_path.clone(), e))?;
 
-        let yaml = try!(YamlLoader::load_from_str(&buffer).map_err(|e| ConfigError::YamlScan(e)));
+        let yaml = YamlLoader::load_from_str(&buffer).map_err(|e| ConfigError::YamlScan(e))?;
 
         let hash = if yaml.len() > 0 {
             yaml[0].clone()
