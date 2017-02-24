@@ -182,7 +182,7 @@ pub trait Element: Sized {
         let found_path = found[0].clone();
         next_meta.path = found_path.clone();
 
-        let mut file = File::open(found_path.as_path()).map_err(|e| ConfigError::FileError(found_path.clone(), e));
+        let mut file = File::open(found_path.as_path()).map_err(|e| ConfigError::FileError(found_path.clone(), e))?;
         let mut buffer = String::new();
 
         file.read_to_string(&mut buffer)
