@@ -114,7 +114,7 @@ pub trait Element: Sized {
     }
 
     /// From some string (should be used for top level elements if you want to embed the code)
-    fn from_string<'a>(src: &'a str) -> Result<Self, ConfigError> {
+    fn from_string(src: &str) -> Result<Self, ConfigError> {
         let mut meta = ConfigMeta::default();
         meta.path = PathBuf::from("");
         let yaml = YamlLoader::load_from_str(src).map_err(|e| ConfigError::YamlScan(e))?;
