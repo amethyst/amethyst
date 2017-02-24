@@ -117,7 +117,7 @@ pub trait Element: Sized {
     fn from_string<'a>(src: &'a str) -> Result<Self, ConfigError> {
         let mut meta = ConfigMeta::default();
         meta.path = PathBuf::from("");
-        let yaml = try!(YamlLoader::load_from_str(src).map_err(|e| ConfigError::YamlScan(e)));
+        let yaml = YamlLoader::load_from_str(src).map_err(|e| ConfigError::YamlScan(e))?;
 
         let hash = if yaml.len() > 0 {
             yaml[0].clone()
@@ -182,13 +182,13 @@ pub trait Element: Sized {
         let found_path = found[0].clone();
         next_meta.path = found_path.clone();
 
-        let mut file = try!(File::open(found_path.as_path()).map_err(|e| ConfigError::FileError(found_path.clone(), e)));
+        let mut file = File::open(found_path.as_path()).map_err(|e| ConfigError::FileError(found_path.clone(), e));
         let mut buffer = String::new();
 
-        try!(file.read_to_string(&mut buffer)
-            .map_err(|e| ConfigError::FileError(found_path.clone(), e)));
+        file.read_to_string(&mut buffer)
+            .map_err(|e| ConfigError::FileError(found_path.clone(), e))?;
 
-        let yaml = try!(YamlLoader::load_from_str(&buffer).map_err(|e| ConfigError::YamlScan(e)));
+        let yaml = YamlLoader::load_from_str(&buffer).map_err(|e| ConfigError::YamlScan(e))?;
 
         let hash = if yaml.len() > 0 {
             yaml[0].clone()
