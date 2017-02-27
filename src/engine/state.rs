@@ -1,6 +1,6 @@
 //! Utilities for game state management.
 
-use asset_manager::AssetManager;
+use asset_manager::AssetLoader;
 use engine::event::WindowEvent;
 use renderer::Pipeline;
 use ecs::World;
@@ -23,22 +23,22 @@ pub enum Trans {
 /// A trait which defines game states that can be used by the state machine.
 pub trait State {
     /// Executed when the game state begins.
-    fn on_start(&mut self, _world: &mut World, _assets: &mut AssetManager, _pipe: &mut Pipeline) {}
+    fn on_start(&mut self, _world: &mut World, _assets: &mut AssetLoader, _pipe: &mut Pipeline) {}
 
     /// Executed when the game state exits.
-    fn on_stop(&mut self, _world: &mut World, _assets: &mut AssetManager, _pipe: &mut Pipeline) {}
+    fn on_stop(&mut self, _world: &mut World, _assets: &mut AssetLoader, _pipe: &mut Pipeline) {}
 
     /// Executed when a different game state is pushed onto the stack.
-    fn on_pause(&mut self, _world: &mut World, _assets: &mut AssetManager, _pipe: &mut Pipeline) {}
+    fn on_pause(&mut self, _world: &mut World, _assets: &mut AssetLoader, _pipe: &mut Pipeline) {}
 
     /// Executed when the application returns to this game state once again.
-    fn on_resume(&mut self, _world: &mut World, _assets: &mut AssetManager, _pipe: &mut Pipeline) {}
+    fn on_resume(&mut self, _world: &mut World, _assets: &mut AssetLoader, _pipe: &mut Pipeline) {}
 
     /// Executed on every frame before updating, for use in reacting to events.
     fn handle_events(&mut self,
                      _events: &[WindowEvent],
                      _world: &mut World,
-                     _assets: &mut AssetManager,
+                     _assets: &mut AssetLoader,
                      _pipe: &mut Pipeline)
                      -> Trans {
         Trans::None
@@ -48,7 +48,7 @@ pub trait State {
     /// by default).
     fn fixed_update(&mut self,
                     _world: &mut World,
-                    _assets: &mut AssetManager,
+                    _assets: &mut AssetLoader,
                     _pipe: &mut Pipeline)
                     -> Trans {
         Trans::None
@@ -57,7 +57,7 @@ pub trait State {
     /// Executed on every frame immediately, as fast as the engine will allow.
     fn update(&mut self,
               _world: &mut World,
-              _assets: &mut AssetManager,
+              _assets: &mut AssetLoader,
               _pipe: &mut Pipeline)
               -> Trans {
         Trans::None
@@ -90,7 +90,7 @@ impl StateMachine {
     ///
     /// # Panics
     /// Panics if no states are present in the stack.
-    pub fn start(&mut self, world: &mut World, assets: &mut AssetManager, pipe: &mut Pipeline) {
+    pub fn start(&mut self, world: &mut World, assets: &mut AssetLoader, pipe: &mut Pipeline) {
         if !self.running {
             let state = self.state_stack.last_mut().unwrap();
             state.on_start(world, assets, pipe);
@@ -102,7 +102,7 @@ impl StateMachine {
     pub fn handle_events(&mut self,
                          events: &[WindowEvent],
                          world: &mut World,
-                         assets: &mut AssetManager,
+                         assets: &mut AssetLoader,
                          pipe: &mut Pipeline) {
         if self.running {
             let trans = match self.state_stack.last_mut() {
@@ -117,7 +117,7 @@ impl StateMachine {
     /// Updates the currently active state at a steady, fixed interval.
     pub fn fixed_update(&mut self,
                         world: &mut World,
-                        assets: &mut AssetManager,
+                        assets: &mut AssetLoader,
                         pipe: &mut Pipeline) {
         if self.running {
             let trans = match self.state_stack.last_mut() {
@@ -130,7 +130,7 @@ impl StateMachine {
     }
 
     /// Updates the currently active state immediately.
-    pub fn update(&mut self, world: &mut World, assets: &mut AssetManager, pipe: &mut Pipeline) {
+    pub fn update(&mut self, world: &mut World, assets: &mut AssetLoader, pipe: &mut Pipeline) {
         if self.running {
             let trans = match self.state_stack.last_mut() {
                 Some(state) => state.update(world, assets, pipe),
@@ -146,7 +146,7 @@ impl StateMachine {
     fn transition(&mut self,
                   request: Trans,
                   world: &mut World,
-                  assets: &mut AssetManager,
+                  assets: &mut AssetLoader,
                   pipe: &mut Pipeline) {
         if self.running {
             match request {
@@ -163,7 +163,7 @@ impl StateMachine {
     fn switch(&mut self,
               state: Box<State>,
               world: &mut World,
-              assets: &mut AssetManager,
+              assets: &mut AssetLoader,
               pipe: &mut Pipeline) {
         if self.running {
             if let Some(mut state) = self.state_stack.pop() {
@@ -180,7 +180,7 @@ impl StateMachine {
     fn push(&mut self,
             state: Box<State>,
             world: &mut World,
-            assets: &mut AssetManager,
+            assets: &mut AssetLoader,
             pipe: &mut Pipeline) {
         if self.running {
             if let Some(state) = self.state_stack.last_mut() {
@@ -195,7 +195,7 @@ impl StateMachine {
 
     /// Stops and removes the active state and un-pauses the next state on the
     /// stack (if any).
-    fn pop(&mut self, world: &mut World, assets: &mut AssetManager, pipe: &mut Pipeline) {
+    fn pop(&mut self, world: &mut World, assets: &mut AssetLoader, pipe: &mut Pipeline) {
         if self.running {
             if let Some(mut state) = self.state_stack.pop() {
                 state.on_stop(world, assets, pipe);
@@ -210,7 +210,7 @@ impl StateMachine {
     }
 
     /// Shuts the state machine down.
-    fn stop(&mut self, world: &mut World, assets: &mut AssetManager, pipe: &mut Pipeline) {
+    fn stop(&mut self, world: &mut World, assets: &mut AssetLoader, pipe: &mut Pipeline) {
         if self.running {
             while let Some(mut state) = self.state_stack.pop() {
                 state.on_stop(world, assets, pipe);
@@ -229,7 +229,7 @@ mod tests {
     struct State2;
 
     impl State for State1 {
-        fn update(&mut self, _: &mut World, _: &mut AssetManager, _: &mut Pipeline) -> Trans {
+        fn update(&mut self, _: &mut World, _: &mut AssetLoader, _: &mut Pipeline) -> Trans {
             if self.0 > 0 {
                 self.0 -= 1;
                 Trans::None
@@ -240,14 +240,14 @@ mod tests {
     }
 
     impl State for State2 {
-        fn update(&mut self, _: &mut World, _: &mut AssetManager, _: &mut Pipeline) -> Trans {
+        fn update(&mut self, _: &mut World, _: &mut AssetLoader, _: &mut Pipeline) -> Trans {
             Trans::Pop
         }
     }
 
     #[test]
     fn switch_pop() {
-        let mut assets = AssetManager::new();
+        let mut assets = AssetLoader::new();
         let mut pipe = Pipeline::new();
         let mut world = World::new();
 

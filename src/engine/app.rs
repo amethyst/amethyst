@@ -3,7 +3,7 @@
 use num_cpus;
 use std::time::{Duration, Instant};
 
-use asset_manager::AssetManager;
+use asset_manager::AssetLoader;
 use ecs::{Component, Planner, Priority, System, World};
 use ecs::components::{LocalTransform, Transform, Child, Init, Renderable};
 use ecs::resources::Time;
@@ -11,14 +11,27 @@ use ecs::systems::TransformSystem;
 use engine::state::{State, StateMachine};
 use engine::timing::Stopwatch;
 use gfx_device;
-use gfx_device::{DisplayConfig, GfxDevice, gfx_types};
+use gfx_device::{DisplayConfig, GfxDevice};
+use gfx_device::gfx_types::Factory;
 use renderer::{AmbientLight, DirectionalLight, Pipeline, PointLight, target};
+
+/// A context, which stores structs
+/// that are required for asset instantioation,
+/// like the gfx factory.
+pub struct Context {
+    /// The gfx factory which is used
+    /// for creating buffers.
+    pub factory: Factory,
+}
 
 /// User-friendly facade for building games. Manages main loop.
 pub struct Application {
+    /// The context of this application.
+    pub context: Context,
+
     // Graphics and asset management structs.
     // TODO: Refactor so `pipe` and `gfx_device` are moved into the renderer.
-    assets: AssetManager,
+    asset_loader: AssetLoader,
     gfx_device: GfxDevice,
     pipe: Pipeline,
     planner: Planner<()>,
@@ -29,6 +42,19 @@ pub struct Application {
     last_fixed_update: Instant,
     states: StateMachine,
     timer: Stopwatch,
+}
+
+impl Context {
+    /// Creates a new context. At the moment,
+    /// the `Context` only contains a `Factory` for
+    /// creating gfx objects.
+    ///
+    /// This will also be the place for
+    /// things like an audio context in the
+    /// future.
+    pub fn new(factory: Factory) -> Self {
+        Context { factory: factory }
+    }
 }
 
 impl Application {
@@ -51,8 +77,8 @@ impl Application {
         let geom_buf = target::GeometryBuffer::new(&mut factory, (w as u16, h as u16));
         pipe.targets.insert("gbuffer".into(), Box::new(geom_buf));
 
-        let mut assets = AssetManager::new();
-        assets.add_loader::<gfx_types::Factory>(factory);
+        let context = Context::new(factory);
+        let assets = AssetLoader::new();
 
         let trans_sys = TransformSystem::new();
         planner.add_system::<TransformSystem>(trans_sys, "transform_system", 0);
@@ -92,10 +118,11 @@ impl Application {
         }
 
         Application {
-            assets: assets,
+            asset_loader: assets,
             states: StateMachine::new(initial_state),
             gfx_device: device,
             pipe: pipe,
+            context: context,
             planner: planner,
             timer: Stopwatch::new(),
             delta_time: Duration::new(0, 0),
@@ -128,7 +155,7 @@ impl Application {
     /// Sets up the application.
     fn initialize(&mut self) {
         let world = &mut self.planner.mut_world();
-        let assets = &mut self.assets;
+        let assets = &mut self.asset_loader;
         let pipe = &mut self.pipe;
         self.states.start(world, assets, pipe);
     }
@@ -140,7 +167,7 @@ impl Application {
         {
             let events = self.gfx_device.poll_events();
             let world = &mut self.planner.mut_world();
-            let assets = &mut self.assets;
+            let assets = &mut self.asset_loader;
             let pipe = &mut self.pipe;
 
             self.states.handle_events(events.as_ref(), world, assets, pipe);

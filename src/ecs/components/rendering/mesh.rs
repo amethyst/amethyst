@@ -3,8 +3,10 @@
 use gfx;
 use gfx::traits::FactoryExt;
 
-use asset_manager::{AssetLoader, Assets};
+use asset_manager::Asset;
 use gfx_device::gfx_types;
+
+use engine::Context;
 use renderer::VertexPosNormal;
 
 /// A physical piece of geometry.
@@ -16,15 +18,14 @@ pub struct Mesh {
     pub slice: gfx::Slice<gfx_types::Resources>,
 }
 
-impl AssetLoader<Mesh> for Vec<VertexPosNormal> {
-    /// # Panics
-    ///
-    /// Panics if factory isn't registered as loader.
-    fn from_data(assets: &mut Assets, data: Vec<VertexPosNormal>) -> Option<Mesh> {
-        let factory = assets.get_loader_mut::<gfx_types::Factory>()
-            .expect("Couldn't retrieve factory.");
-        let (buffer, slice) = factory.create_vertex_buffer_with_slice(&data, ());
-        Some(Mesh {
+impl Asset for Mesh {
+    type Data = Vec<VertexPosNormal>;
+    type Error = ();
+
+    fn from_data(data: Vec<VertexPosNormal>, context: &mut Context) -> Result<Mesh, ()> {
+        let (buffer, slice) = context.factory.create_vertex_buffer_with_slice(&data, ());
+
+        Ok(Mesh {
             buffer: buffer,
             slice: slice,
         })

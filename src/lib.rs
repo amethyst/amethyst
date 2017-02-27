@@ -60,7 +60,7 @@
 
 #![crate_name = "amethyst"]
 #![crate_type = "lib"]
-#![deny(missing_docs)]
+#![deny(missing_docs, warnings)]
 #![doc(html_logo_url = "https://tinyurl.com/jtmm43a")]
 
 #[macro_use]
