@@ -21,7 +21,9 @@ use std::io::{Error as IoError, ErrorKind};
 /// asset:
 ///
 /// ```
-/// use amethyst::asset_manager::Asset;
+/// use std::io::{Read, BufRead, BufReader};
+///
+/// use amethyst::asset_manager::{Asset, ImportError};
 /// use amethyst::engine::Context;
 ///
 /// struct Table {
@@ -37,13 +39,45 @@ use std::io::{Error as IoError, ErrorKind};
 ///     type Error = (); // Should be some InconsistentSizeError (if data.len() != num_rows * num_columns)
 ///
 ///     fn from_data(data: Self, _: &mut Context) -> Result<Self, ()> {
-///         Ok(data) // Ommittedhere: Check for size
+///         Ok(data) // Ommitted here: Check for size
 ///     }
 /// }
 ///
 /// impl AssetFormat for WhitespaceTable {
 ///     fn file_extension() -> &'static str {
 ///         "wst"
+///     }
+/// }
+///
+/// impl Import<WhitspaceTable::Data> for WhitespaceTable {
+///     fn import<R: Read>(stream: R) -> Result<WhitespaceTable, ImportError> {
+///         let mut num_columns = 0;
+///         let mut old_columns = 0;
+///         let mut values = Vec::new();
+///         let mut reader = BufReader::new(stream);
+///
+///         for line in reader.lines() {
+///             for word in line.split_whitespace() {
+///                 num_columns += 1;
+///                 values.push(word.parse().map_err(|x| ImportError::FormatError("Invalid integer".to_string()))?)
+///             }
+///             if (old_columns != 0 && num_columns != old_columns) {
+///                 return Err(ImportError::FormatError(format!("Number of columns not matching (previous line: {}, this line: {})",
+///                                                             old_columns, num_columns)));
+///             }
+///             old_columns = num_columns;
+///             num_columns = 0;
+///         }
+///
+///         if values.len() == 0 {
+///             return Err(ImportError::FormatError("Empty file".to_string()));
+///         }
+///
+///         Ok(WhitespaceTable {
+///             num_columns: old_columns,
+///             num_rows: values.len() / old_columns,
+///             data: values.into_boxed_slice(),
+///         })
 ///     }
 /// }
 /// ```
@@ -67,9 +101,16 @@ pub trait Asset: Sized {
 /// `Import` trait for the target `Asset`s data
 /// type.
 pub trait AssetFormat {
-    /// Return the typical file extension a file
-    // with this format has, without the preceding `"."`.
-    fn file_extension() -> &'static str;
+    /// Return the typical file extensions a file
+    /// with this format has, without the preceding `"."`.
+    /// If there is no asset with the first extension, the
+    /// next ones will be tested fo existence.
+    ///
+    /// # Panics
+    ///
+    /// May cause a panic if the length of
+    /// file extensions is 0! Do not do this.
+    fn file_extensions(&self) -> &[&str];
 }
 
 /// An asset store may be a ".zip" file, a server,
@@ -80,7 +121,7 @@ pub trait AssetStore {
     /// return the bytes.
     fn read_asset<F: AssetFormat>(&self,
                                   name: &str,
-                                  format: F)
+                                  format: &F)
                                   -> Result<Box<[u8]>, AssetStoreError>;
 }
 

@@ -4,10 +4,14 @@
 //!
 //! If you just want to load it, look at `AssetLoader` / `AssetManager`.
 
+pub mod formats;
+
 mod asset;
+mod common;
 mod io;
 
 pub use self::asset::{Asset, AssetFormat, AssetStore, AssetStoreError};
+pub use self::common::{DefaultStore, DirectoryStore};
 pub use self::io::{Import, Error as ImportError};
 
 use std::fmt::{Display, Error as FormatError, Formatter};
@@ -62,7 +66,7 @@ pub struct AssetLoader {
 /// the loaded data and create an asset from that
 /// data. If it hasn't yet finished, it will block
 /// the calling thread.
-pub struct AssetFuture<T: Asset + Send> {
+pub struct AssetFuture<T: Asset> {
     inner: CpuFuture<T::Data, AssetError>,
 }
 
@@ -101,22 +105,18 @@ impl AssetLoader {
         where S: AssetStore,
               F: AssetFormat + Import<D>
     {
-        let bytes = store.read_asset::<F>(name, format)?;
-        F::import(bytes.as_ref()).map_err(|x| AssetError::ImportError(x))
+        let bytes = store.read_asset::<F>(name, &format)?;
+        format.import(bytes).map_err(|x| AssetError::ImportError(x))
     }
 
     /// Load the data using one of the threads from the
     /// cpu pool, returning an `AssetFuture`.
-    pub fn load<T, S: 'static, F: 'static>(&mut self,
-                                           store: S,
-                                           name: &str,
-                                           format: F)
-                                           -> AssetFuture<T>
-        where T: Asset + Send + 'static,
-              T::Data: Send,
-              T::Error: Send,
-              S: AssetStore + Send + Sync,
-              F: AssetFormat + Import<T::Data> + Send
+    pub fn load<T, S, F>(&self, store: S, name: &str, format: F) -> AssetFuture<T>
+        where T: Asset,
+              T::Data: Send + 'static,
+              T::Error: Send + 'static,
+              S: AssetStore + Send + 'static,
+              F: AssetFormat + Import<T::Data> + Send + 'static
     {
         let name = name.to_string();
 
@@ -124,6 +124,23 @@ impl AssetLoader {
             .spawn_fn(move || Self::load_data(store, &name, format));
 
         AssetFuture { inner: cpu_future }
+    }
+
+    /// Loads an asset from
+    /// the `DefaultStore`. You should use
+    /// use this if possible because it is cross
+    /// platform.
+    ///
+    /// On desktop, it just loads an asset from
+    /// the "assets" folder, on android it will
+    /// load it from the embedded assets.
+    pub fn load_default<T, F>(&self, name: &str, format: F) -> AssetFuture<T>
+        where T: Asset,
+              T::Data: Send + 'static,
+              T::Error: Send + 'static,
+              F: AssetFormat + Import<T::Data> + Send + 'static
+    {
+        self.load(DefaultStore, name, format)
     }
 }
 
@@ -148,17 +165,14 @@ impl<T: Asset + Send> AssetFuture<T> {
     /// let tree = tree.finish(&mut context);
     /// ```
     pub fn finish(self, context: &mut Context) -> Result<T, FinishError<T>>
-        where T: Send,
-              T::Data: Send,
-              Self: Future<Item = T::Data, Error = AssetError>,
-              AssetFuture<T>: Future
+        where Self: Future<Item = T::Data, Error = AssetError>
     {
         let data = self.wait()?;
         T::from_data(data, context).map_err(|x| FinishError::Finish(x))
     }
 }
 
-impl<T: Asset + Send + 'static> Future for AssetFuture<T>
+impl<T: Asset + 'static> Future for AssetFuture<T>
     where T::Data: Send
 {
     type Item = T::Data;

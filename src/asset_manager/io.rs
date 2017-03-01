@@ -1,5 +1,5 @@
 use std::fmt::{Display, Formatter, Error as FormatError};
-use std::io::{Read, Error as IoError};
+use std::io::Error as IoError;
 
 /// Error type which may be raised when trying
 /// to import some asset data.
@@ -18,13 +18,15 @@ pub enum Error {
 /// with `AssetFormat` for each format that can be loaded
 /// into asset data.
 pub trait Import<T> {
-    /// Imports `T` from a stream.
-    fn import<R: Read>(stream: R) -> Result<T, Error>;
+    /// Imports `T` from a boxed slice of bytes.
+    fn import(&self, bytes: Box<[u8]>) -> Result<T, Error>;
 }
 
-// pub trait Export<T> {
-//     fn export<W: Write>(stream: W, data: T) -> Result<(), String>;
-// }
+impl From<IoError> for Error {
+    fn from(e: IoError) -> Self {
+        Error::IoError(e)
+    }
+}
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FormatError> {

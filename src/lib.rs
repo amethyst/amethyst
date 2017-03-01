@@ -81,6 +81,9 @@ extern crate wavefront_obj;
 extern crate futures;
 extern crate futures_cpupool;
 
+#[cfg(android)]
+extern crate android_glue;
+
 pub mod asset_manager;
 pub mod ecs;
 pub mod gfx_device;
