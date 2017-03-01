@@ -1,9 +1,9 @@
 //! Provided common things for asset management
 
 use std::fs::File;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-use asset_manager::{AssetFormat, AssetStore, AssetStoreError};
+use asset_manager::{Asset, AssetFormat, AssetStore, AssetStoreError};
 
 #[cfg(not(android))]
 mod desktop {
@@ -11,10 +11,10 @@ mod desktop {
 
     use asset_manager::{AssetFormat, AssetStoreError};
 
-    pub fn read_asset<F: AssetFormat>(name: &str,
-                                      format: &F)
-                                      -> Result<Box<[u8]>, AssetStoreError> {
-        read_asset_from_path(Path::new("assets").join(name), format)
+    pub fn read_asset<T: Asset, F: AssetFormat>(name: &str,
+                                                format: &F)
+                                                -> Result<Box<[u8]>, AssetStoreError> {
+        read_asset_from_path(Path::new("assets").join(T::category()).join(name), format)
     }
 
     pub fn read_asset_from_path<P, F>(path: P, format: &F) -> Result<Box<[u8]>, AssetStoreError>
@@ -23,8 +23,14 @@ mod desktop {
     {
         let mut last_error = None;
 
+        let mut path = PathBuf::from(path.as_ref());
+
         for extension in format.file_extensions() {
-            match read_file_complete(&path.as_ref().join(extension)) {
+            path.set_extension(extension);
+
+            println!("Trying path {:?}", &path);
+
+            match read_file_complete(&path) {
                 Ok(x) => return Ok(x),
                 Err(AssetStoreError::NoSuchAsset) => continue,
                 Err(AssetStoreError::PermissionDenied) => {
@@ -46,13 +52,14 @@ mod android {
     use android_glue::AssetError;
     use asset_manager::{AssetFormat, AssetStoreError};
 
-    pub fn read_asset<F: AssetFormat>(name: &str,
-                                      format: &F)
-                                      -> Result<Box<[u8]>, AssetStoreError> {
+    pub fn read_asset<T: Asset, F: AssetFormat>(name: &str,
+                                                format: &F)
+                                                -> Result<Box<[u8]>, AssetStoreError> {
         for extension in format.file_extensions() {
             let file_name = into_file_name(name, extension);
+            let path = PathBuf::from(T::category()).join(file_name);
 
-            match android_glue::load_asset(file_name) {
+            match android_glue::load_asset(path.to_str().unwrap()) {
                 Ok(x) => Ok(x.into_boxed_slice()),
                 Err(AssetError::AssetMissing) => continue,
                 Err(AssetError::EmptyBuffer) => {
@@ -91,35 +98,48 @@ fn read_file_complete<P: AsRef<Path>>(path: P) -> Result<Box<[u8]>, AssetStoreEr
 /// platforms and to embedded assets on
 /// Android. Should be used if you do
 /// not need anything special.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct DefaultStore;
 
 /// A directory store which just searches for
 /// an asset in a directory.
 /// Does only work on desktop.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 #[cfg(not(android))]
 pub struct DirectoryStore {
     /// The path the assets are imported from.
     /// Note that there are subfolders, as specified
     /// in the `Asset` type.
-    pub path: Path,
+    pub path: PathBuf,
 }
 
-impl AssetStore for DefaultStore {
-    fn read_asset<F: AssetFormat>(&self,
-                                  name: &str,
-                                  format: &F)
-                                  -> Result<Box<[u8]>, AssetStoreError> {
-        read_asset(name, format)
+impl DirectoryStore {
+    /// Creates a new `DirectoryStore` which will read from
+    /// the specified directory.
+    pub fn new<P: AsRef<Path>>(path: P) -> Self {
+        DirectoryStore { path: path.as_ref().into() }
     }
 }
 
+impl AssetStore for DefaultStore {
+    fn read_asset<T, F>(&self, name: &str, format: &F) -> Result<Box<[u8]>, AssetStoreError>
+        where F: AssetFormat,
+              T: Asset
+    {
+        read_asset::<T, _>(name, format)
+    }
+}
+
+#[cfg(not(android))]
 impl AssetStore for DirectoryStore {
-    fn read_asset<F: AssetFormat>(&self,
-                                  name: &str,
-                                  format: &F)
-                                  -> Result<Box<[u8]>, AssetStoreError> {
-        read_asset_from_path(&self.path.join(name), format)
+    fn read_asset<T, F>(&self, name: &str, format: &F) -> Result<Box<[u8]>, AssetStoreError>
+        where F: AssetFormat,
+              T: Asset
+    {
+        let path = self.path.join(T::category()).join(name);
+
+        println!("path: {:?}", path);
+
+        read_asset_from_path(&path, format)
     }
 }

@@ -101,27 +101,32 @@ impl AssetLoader {
     }
 
     /// Loads just the data for some asset (blocking).
-    pub fn load_data<D, S, F>(store: S, name: &str, format: F) -> Result<D, AssetError>
-        where S: AssetStore,
+    pub fn load_data<T, D, S, F>(store: &S, name: &str, format: F) -> Result<D, AssetError>
+        where T: Asset<Data = D>,
+              S: AssetStore,
               F: AssetFormat + Import<D>
     {
-        let bytes = store.read_asset::<F>(name, &format)?;
+        let bytes = store.read_asset::<T, _>(name, &format)?;
         format.import(bytes).map_err(|x| AssetError::ImportError(x))
     }
 
     /// Load the data using one of the threads from the
     /// cpu pool, returning an `AssetFuture`.
-    pub fn load<T, S, F>(&self, store: S, name: &str, format: F) -> AssetFuture<T>
+    ///
+    /// If you already have the asset data and you just want to
+    /// import it, use `MyAsset::from_data(data, context)`.
+    pub fn load<T, S, F>(&self, store: &S, name: &str, format: F) -> AssetFuture<T>
         where T: Asset,
               T::Data: Send + 'static,
               T::Error: Send + 'static,
-              S: AssetStore + Send + 'static,
+              S: AssetStore + Clone + Send + Sync + 'static,
               F: AssetFormat + Import<T::Data> + Send + 'static
     {
+        let store: S = store.clone();
         let name = name.to_string();
 
         let cpu_future: CpuFuture<T::Data, _> = self.cpupool
-            .spawn_fn(move || Self::load_data(store, &name, format));
+            .spawn_fn(move || Self::load_data::<T, _, _, _>(&store, &name, format));
 
         AssetFuture { inner: cpu_future }
     }
@@ -140,7 +145,8 @@ impl AssetLoader {
               T::Error: Send + 'static,
               F: AssetFormat + Import<T::Data> + Send + 'static
     {
-        self.load(DefaultStore, name, format)
+        let store = DefaultStore;
+        self.load(&store, name, format)
     }
 }
 

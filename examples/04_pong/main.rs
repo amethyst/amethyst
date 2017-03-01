@@ -1,12 +1,11 @@
 extern crate amethyst;
 
-use amethyst::{Application, Event, State, Trans, VirtualKeyCode, WindowEvent};
-use amethyst::asset_manager::AssetManager;
+use amethyst::{Application, Engine, Event, State, Trans, VirtualKeyCode, WindowEvent};
 use amethyst::config::Element;
-use amethyst::ecs::{World, Join, VecStorage, Component, RunArg, System};
+use amethyst::ecs::{Join, VecStorage, Component, RunArg, System};
 use amethyst::ecs::components::{Mesh, LocalTransform, Texture, Transform};
 use amethyst::gfx_device::DisplayConfig;
-use amethyst::renderer::{Pipeline, VertexPosNormal};
+use amethyst::renderer::VertexPosNormal;
 
 struct Pong;
 
@@ -225,8 +224,10 @@ impl System<()> for PongSystem {
 }
 
 impl State for Pong {
-    fn on_start(&mut self, world: &mut World, assets: &mut AssetManager, pipe: &mut Pipeline) {
+    fn on_start(&mut self, engine: &mut Engine) {
+        use amethyst::asset_manager::Asset;
         use amethyst::ecs::resources::{Camera, InputHandler, Projection, ScreenDimensions};
+        use amethyst::ecs::components::Renderable;
         use amethyst::renderer::Layer;
         use amethyst::renderer::pass::{Clear, DrawFlat};
 
@@ -234,9 +235,10 @@ impl State for Pong {
                                vec![Clear::new([0.0, 0.0, 0.0, 1.0]),
                                     DrawFlat::new("main", "main")]);
 
-        pipe.layers.push(layer);
+        engine.pipe.layers.push(layer);
 
         {
+            let world = engine.planner.mut_world();
             let dim = world.read_resource::<ScreenDimensions>();
             let mut camera = world.write_resource::<Camera>();
             let aspect_ratio = dim.aspect_ratio;
@@ -260,17 +262,17 @@ impl State for Pong {
             camera.up = up;
         }
 
+        let world = engine.planner.mut_world();
+
         // Add all resources
         world.add_resource::<Score>(Score::new());
         world.add_resource::<InputHandler>(InputHandler::new());
 
         // Generate a square mesh
-        assets.register_asset::<Mesh>();
-        assets.register_asset::<Texture>();
-        assets.load_asset_from_data::<Texture, [f32; 4]>("white", [1.0, 1.0, 1.0, 1.0]);
+        let white = Texture::from_color([1.0, 1.0, 1.0, 1.0]);
         let square_verts = gen_rectangle(1.0, 1.0);
-        assets.load_asset_from_data::<Mesh, Vec<VertexPosNormal>>("square", square_verts);
-        let square = assets.create_renderable("square", "white", "white", "white", 1.0).unwrap();
+        let square_mesh = Mesh::from_data(square_verts, &mut engine.context).unwrap();
+        let square = Renderable::new(square_mesh, white.clone(), white.clone(), white, 1.0);
 
         // Create a ball entity
         let mut ball = Ball::new();
@@ -308,13 +310,10 @@ impl State for Pong {
             .build();
     }
 
-    fn handle_events(&mut self,
-                     events: &[WindowEvent],
-                     world: &mut World,
-                     _: &mut AssetManager,
-                     _: &mut Pipeline)
-                     -> Trans {
+    fn handle_events(&mut self, events: &[WindowEvent], engine: &mut Engine) -> Trans {
         use amethyst::ecs::resources::InputHandler;
+
+        let world = engine.planner.mut_world();
 
         let mut input = world.write_resource::<InputHandler>();
         input.update(events);
@@ -331,7 +330,7 @@ impl State for Pong {
 }
 
 fn main() {
-    let path = format!("{}/examples/04_pong/resources/config.yml",
+    let path = format!("{}/examples/04_pong/assets/config.yml",
                        env!("CARGO_MANIFEST_DIR"));
     let cfg = DisplayConfig::from_file(path).unwrap();
     let mut game = Application::build(Pong, cfg)

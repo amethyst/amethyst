@@ -4,11 +4,11 @@
 extern crate amethyst;
 extern crate cgmath;
 
-use amethyst::{Application, ElementState, Event, State, Trans, VirtualKeyCode, WindowEvent};
-use amethyst::asset_manager::{AssetManager, DirectoryStore};
+use amethyst::{Application, ElementState, Engine, Event, State, Trans, VirtualKeyCode, WindowEvent};
+use amethyst::asset_manager::{AssetLoader, DirectoryStore};
 use amethyst::config::Element;
-use amethyst::ecs::{Join, System, RunArg, World};
-use amethyst::ecs::components::{LocalTransform, Mesh, Texture, Transform};
+use amethyst::ecs::{Join, System, RunArg};
+use amethyst::ecs::components::{LocalTransform, Mesh, Renderable, Texture, Transform};
 use amethyst::ecs::resources::{Camera, Projection, ScreenDimensions, Time};
 use amethyst::gfx_device::DisplayConfig;
 use amethyst::renderer::{AmbientLight, DirectionalLight, Layer, PointLight, Pipeline};
@@ -72,11 +72,15 @@ fn set_pipeline_state(pipe: &mut Pipeline, forward: bool) {
         pipe.layers = vec![geom_layer, postproc_layer];
     }
 }
+
 struct Example;
 
 impl State for Example {
-    fn on_start(&mut self, world: &mut World, assets: &mut AssetManager, pipe: &mut Pipeline) {
+    fn on_start(&mut self, engine: &mut Engine) {
+        use amethyst::asset_manager::formats::{Png, Dds, Obj};
+
         {
+            let world = engine.planner.mut_world();
             let dim = world.read_resource::<ScreenDimensions>();
             let mut camera = world.write_resource::<Camera>();
             let proj = Projection::Perspective {
@@ -92,33 +96,42 @@ impl State for Example {
         }
 
         // Set up an assets path by directly registering an assets store.
-        let assets_path = format!("{}/examples/03_renderable/resources/meshes",
+        let assets_path = format!("{}/examples/03_renderable/assets",
                                   env!("CARGO_MANIFEST_DIR"));
-        assets.register_store(DirectoryStore::new(assets_path));
+        let store = DirectoryStore::new(assets_path);
 
         // Create some basic colors and load textures
-        assets.load_asset_from_data::<Texture, [f32; 4]>("red", [0.8, 0.2, 0.2, 1.0]);
-        assets.load_asset_from_data::<Texture, [f32; 4]>("green", [0.2, 0.8, 0.2, 1.0]);
-        assets.load_asset_from_data::<Texture, [f32; 4]>("blue", [0.2, 0.2, 0.8, 1.0]);
-        assets.load_asset_from_data::<Texture, [f32; 4]>("pink", [1.0, 0.8, 0.8, 1.0]);
-        assets.load_asset_from_data::<Texture, [f32; 4]>("black", [0.0, 0.0, 0.0, 1.0]);
-        assets.load_asset_from_data::<Texture, [f32; 4]>("white", [1.0, 1.0, 1.0, 1.0]);
-        assets.load_asset::<Texture>("logo", "png");
-        assets.load_asset::<Texture>("ground", "dds");
+        let red = Texture::from_color([0.8, 0.2, 0.2, 1.0]);
+        let green = Texture::from_color([0.2, 0.8, 0.2, 1.0]);
+        let blue = Texture::from_color([0.2, 0.2, 0.8, 1.0]);
+        let black = Texture::from_color([0.0, 0.0, 0.0, 1.0]);
+        let white = Texture::from_color([1.0, 1.0, 1.0, 1.0]);
+
+        let asset_loader = AssetLoader::new();
+
+        let logo = asset_loader.load(&store, "logo", Png);
+        let ground = asset_loader.load(&store, "ground", Dds);
 
         // Load/generate meshes
-        assets.load_asset::<Mesh>("teapot", "obj");
-        assets.load_asset::<Mesh>("lid", "obj");
-        assets.load_asset::<Mesh>("rectangle", "obj");
-        assets.load_asset::<Mesh>("cube", "obj");
-        assets.load_asset::<Mesh>("cone", "obj");
+        let teapot = asset_loader.load(&store, "teapot", Obj);
+        let lid = asset_loader.load(&store, "lid", Obj);
+        let rectangle = asset_loader.load(&store, "rectangle", Obj);
+        let cube = asset_loader.load(&store, "cube", Obj);
+        let cone = asset_loader.load(&store, "cone", Obj);
+
+        let world = engine.planner.mut_world();
 
         // Add teapot and lid to scene
-        for mesh in vec!["lid", "teapot"].iter() {
+        for mesh in vec![lid.finish(&mut engine.context), teapot.finish(&mut engine.context)] {
             let mut trans = LocalTransform::default();
             trans.rotation = Quaternion::from(Euler::new(Deg(90.0), Deg(-90.0), Deg(0.0))).into();
             trans.translation = [5.0, 5.0, 0.0];
-            let rend = assets.create_renderable(mesh, "red", "blue", "white", 10.0).unwrap();
+
+            let rend = Renderable::new(mesh.expect("Failed to load mesh"),
+                                       red.clone(),
+                                       blue.clone(),
+                                       white.clone(),
+                                       10.0);
             world.create_now()
                 .with(rend)
                 .with(trans)
@@ -126,8 +139,15 @@ impl State for Example {
                 .build();
         }
 
+        let cube: Mesh = cube.finish(&mut engine.context).expect("Failed to load cube");
+        let logo: Texture = logo.finish(&mut engine.context).expect("Failed to load logo");
+
         // Add cube to scene
-        let rend = assets.create_renderable("cube", "logo", "logo", "white", 1.0).unwrap();
+        let rend = Renderable::new(cube.clone(),
+                                   logo.clone(),
+                                   logo.clone(),
+                                   white.clone(),
+                                   10.0);
         let mut trans = LocalTransform::default();
         trans.translation = [5.0, -5.0, 2.0];
         trans.scale = [2.0; 3];
@@ -137,8 +157,10 @@ impl State for Example {
             .with(Transform::default())
             .build();
 
+        let cone = cone.finish(&mut engine.context).expect("Failed to load cone");
+
         // Add cone to scene
-        let rend = assets.create_renderable("cone", "white", "red", "blue", 40.0).unwrap();
+        let rend = Renderable::new(cone, white.clone(), red.clone(), blue.clone(), 40.0);
         let mut trans = LocalTransform::default();
         trans.translation = [-5.0, 5.0, 0.0];
         trans.scale = [2.0; 3];
@@ -149,7 +171,7 @@ impl State for Example {
             .build();
 
         // Add custom cube object to scene
-        let rend = assets.create_renderable("cube", "blue", "green", "white", 1.0).unwrap();
+        let rend = Renderable::new(cube, blue.clone(), green.clone(), white.clone(), 1.0);
         let mut trans = LocalTransform::default();
         trans.translation = [-5.0, -5.0, 1.0];
         world.create_now()
@@ -158,8 +180,16 @@ impl State for Example {
             .with(Transform::default())
             .build();
 
+        let rectangle: Mesh = rectangle.finish(&mut engine.context)
+            .expect("Failed to load rectangle");
+        let ground: Texture = ground.finish(&mut engine.context).expect("Failed to load ground");
+
         // Create base rectangle as floor
-        let rend = assets.create_renderable("rectangle", "ground", "ground", "black", 1.0).unwrap();
+        let rend = Renderable::new(rectangle,
+                                   ground.clone(),
+                                   ground.clone(),
+                                   black.clone(),
+                                   1.0);
         let mut trans = LocalTransform::default();
         trans.scale = [10.0; 3];
         world.create_now()
@@ -186,7 +216,7 @@ impl State for Example {
         }
 
         // Set rendering pipeline to forward by default, and add utility resources
-        set_pipeline_state(pipe, true);
+        set_pipeline_state(&mut engine.pipe, true);
         world.add_resource::<DemoState>(DemoState {
             light_angle: 0.0,
             light_color: [1.0; 4],
@@ -198,12 +228,10 @@ impl State for Example {
         });
     }
 
-    fn handle_events(&mut self,
-                     events: &[WindowEvent],
-                     w: &mut World,
-                     _: &mut AssetManager,
-                     pipe: &mut Pipeline)
-                     -> Trans {
+    fn handle_events(&mut self, events: &[WindowEvent], engine: &mut Engine) -> Trans {
+
+        let w = engine.planner.mut_world();
+        let pipe = &mut engine.pipe;
 
         // Exit if user hits Escape or closes the window
         for e in events {
@@ -284,15 +312,7 @@ impl State for Example {
 }
 
 fn main() {
-    // Set up an assets path by setting an environment variable. Note that
-    // this would normally be done with something like this:
-    //
-    //     AMETHYST_ASSET_DIRS=/foo/bar cargo run
-    let assets_path = format!("{}/examples/03_renderable/resources/textures",
-                              env!("CARGO_MANIFEST_DIR"));
-    set_var("AMETHYST_ASSET_DIRS", assets_path);
-
-    let path = format!("{}/examples/03_renderable/resources/config.yml",
+    let path = format!("{}/examples/03_renderable/assets/config.yml",
                        env!("CARGO_MANIFEST_DIR"));
     let cfg = DisplayConfig::from_file(path).unwrap();
     let mut game = Application::build(Example, cfg)

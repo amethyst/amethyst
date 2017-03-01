@@ -1,5 +1,6 @@
 use std::fmt::{Display, Formatter, Error as FormatError};
 use std::io::Error as IoError;
+use std::str::Utf8Error;
 
 /// Error type which may be raised when trying
 /// to import some asset data.
@@ -25,6 +26,12 @@ pub trait Import<T> {
 impl From<IoError> for Error {
     fn from(e: IoError) -> Self {
         Error::IoError(e)
+    }
+}
+
+impl From<Utf8Error> for Error {
+    fn from(_: Utf8Error) -> Self {
+        Error::FormatError("Invalid UTF8 character".to_string())
     }
 }
 

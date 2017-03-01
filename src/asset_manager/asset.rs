@@ -90,6 +90,12 @@ pub trait Asset: Sized {
     /// `from_data` fails.
     type Error: Debug;
 
+    /// Returns the category, which is
+    /// used for subfolders.
+    ///
+    /// Examples are `"meshes"` and `"textures"`.
+    fn category() -> &'static str;
+
     /// Create the asset from the data and the context (used to create buffers for the gpu).
     fn from_data(data: Self::Data, context: &mut Context) -> Result<Self, Self::Error>;
 }
@@ -119,10 +125,9 @@ pub trait AssetFormat {
 pub trait AssetStore {
     /// Read an asset from a given name and format and
     /// return the bytes.
-    fn read_asset<F: AssetFormat>(&self,
-                                  name: &str,
-                                  format: &F)
-                                  -> Result<Box<[u8]>, AssetStoreError>;
+    fn read_asset<T, F>(&self, name: &str, format: &F) -> Result<Box<[u8]>, AssetStoreError>
+        where F: AssetFormat,
+              T: Asset;
 }
 
 /// Error raised if an asset could not be loaded from

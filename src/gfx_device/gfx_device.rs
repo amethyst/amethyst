@@ -89,9 +89,9 @@ impl GfxDevice {
                 transform: global_trans.clone().into(),
                 buffer: mesh.buffer.clone(),
                 slice: mesh.slice.clone(),
-                ka: (&rend.ambient).clone(),
-                kd: (&rend.diffuse).clone(),
-                ks: (&rend.specular).clone(),
+                ka: (&rend.ambient.inner).clone(),
+                kd: (&rend.diffuse.inner).clone(),
+                ks: (&rend.specular.inner).clone(),
                 ns: rend.specular_exponent,
             })
         }

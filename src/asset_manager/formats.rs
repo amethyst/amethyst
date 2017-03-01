@@ -7,16 +7,6 @@ use asset_manager::{AssetFormat, Import, ImportError};
 
 use std::io::Cursor;
 
-// -----------------------------------------------------------------------------------------
-// Image formats
-// -----------------------------------------------------------------------------------------
-
-use imagefmt;
-use dds::{Header, DDS};
-
-use ecs::components::{TextureData, TextureLoadData};
-use gfx::texture::{Kind, AaMode};
-
 macro_rules! replace_expr {
     ($_t:tt, $with:expr) => {$with};
 }
@@ -37,19 +27,44 @@ macro_rules! string_array {
     );
 }
 
-/// Docs
+// -----------------------------------------------------------------------------------------
+// Image formats
+// -----------------------------------------------------------------------------------------
+
+use imagefmt;
+use dds::{Header, DDS};
+
+use ecs::components::{TextureData, TextureLoadData};
+use gfx::texture::{Kind, AaMode};
+
+/// The png file format for loading
+/// images. Implements `AssetFormat`
+/// and `Import` in order to allow
+/// loading a texture from it.
 pub struct Png;
 
-/// Docs
+/// The jpg file format for loading
+/// images. Implements `AssetFormat`
+/// and `Import` in order to allow
+/// loading a texture from it.
 pub struct Jpg;
 
-/// Docs
+/// The tga file format for loading
+/// images. Implements `AssetFormat`
+/// and `Import` in order to allow
+/// loading a texture from it.
 pub struct Tga;
 
-/// Docs
+/// The bmp file format for loading
+/// images. Implements `AssetFormat`
+/// and `Import` in order to allow
+/// loading a texture from it.
 pub struct Bmp;
 
-/// Docs
+/// The dds file format for loading
+/// images. Implements `AssetFormat`
+/// and `Import` in order to allow
+/// loading a texture from it.
 pub struct Dds;
 
 fn read_image<F>(bytes: Box<[u8]>, f: F) -> Result<TextureData, ImportError>
@@ -147,8 +162,18 @@ use renderer::VertexPosNormal;
 
 use wavefront_obj::obj::{Primitive, parse as parse_obj};
 
+// -----------------------------------------------------------------------------------------
+// Model formats
+// -----------------------------------------------------------------------------------------
+
 /// Wavefront OBJ model format.
 pub struct Obj;
+
+impl AssetFormat for Obj {
+    fn file_extensions(&self) -> &[&str] {
+        string_array!("obj")
+    }
+}
 
 impl Import<Vec<VertexPosNormal>> for Obj {
     fn import(&self, bytes: Box<[u8]>) -> Result<Vec<VertexPosNormal>, ImportError> {

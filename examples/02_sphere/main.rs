@@ -4,12 +4,10 @@ extern crate amethyst;
 extern crate cgmath;
 extern crate genmesh;
 
-use amethyst::{Application, Event, State, Trans, VirtualKeyCode, WindowEvent};
-use amethyst::asset_manager::AssetManager;
+use amethyst::{Application, Event, Engine, State, Trans, VirtualKeyCode, WindowEvent};
 use amethyst::config::Element;
-use amethyst::ecs::World;
 use amethyst::gfx_device::DisplayConfig;
-use amethyst::renderer::{VertexPosNormal, Pipeline};
+use amethyst::renderer::VertexPosNormal;
 use cgmath::{Vector3, InnerSpace};
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
@@ -17,8 +15,9 @@ use genmesh::generators::SphereUV;
 struct Example;
 
 impl State for Example {
-    fn on_start(&mut self, world: &mut World, assets: &mut AssetManager, pipe: &mut Pipeline) {
-        use amethyst::ecs::components::{Mesh, Texture};
+    fn on_start(&mut self, engine: &mut Engine) {
+        use amethyst::asset_manager::Asset;
+        use amethyst::ecs::components::{Mesh, Renderable, Texture};
         use amethyst::ecs::resources::{Camera, Projection, ScreenDimensions};
         use amethyst::renderer::{Layer, PointLight};
         use amethyst::renderer::pass::{Clear, DrawShaded};
@@ -27,7 +26,9 @@ impl State for Example {
                                vec![Clear::new([0.0, 0.0, 0.0, 1.0]),
                                     DrawShaded::new("main", "main")]);
 
-        pipe.layers.push(layer);
+        engine.pipe.layers.push(layer);
+
+        let world = engine.planner.mut_world();
 
         {
             let dim = world.read_resource::<ScreenDimensions>();
@@ -43,13 +44,13 @@ impl State for Example {
         }
 
         let sphere_verts = gen_sphere(32, 32);
-        assets.register_asset::<Mesh>();
-        assets.register_asset::<Texture>();
-        assets.load_asset_from_data::<Mesh, Vec<VertexPosNormal>>("sphere", sphere_verts);
-        assets.load_asset_from_data::<Texture, [f32; 4]>("blue", [0.0, 0.0, 1.0, 1.0]);
-        assets.load_asset_from_data::<Texture, [f32; 4]>("white", [1.0, 1.0, 1.0, 1.0]);
+        let sphere_mesh = Mesh::from_data(sphere_verts, &mut engine.context)
+            .expect("Failed to load sphere mesh");
+        let blue = Texture::from_color([0.0, 0.0, 1.0, 1.0]);
+        let white = Texture::from_color([1.0, 1.0, 1.0, 1.0]);
 
-        let sphere = assets.create_renderable("sphere", "blue", "white", "white", 1.0).unwrap();
+        let sphere = Renderable::new(sphere_mesh, blue, white.clone(), white, 1.0);
+
         world.create_now()
             .with(sphere)
             .build();
@@ -60,17 +61,13 @@ impl State for Example {
             intensity: 3.0,
             ..Default::default()
         };
+
         world.create_now()
             .with(light)
             .build();
     }
 
-    fn handle_events(&mut self,
-                     events: &[WindowEvent],
-                     _: &mut World,
-                     _: &mut AssetManager,
-                     _: &mut Pipeline)
-                     -> Trans {
+    fn handle_events(&mut self, events: &[WindowEvent], _: &mut Engine) -> Trans {
         for e in events {
             match **e {
                 Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) => return Trans::Quit,

@@ -3,7 +3,6 @@
 use num_cpus;
 use std::time::{Duration, Instant};
 
-use asset_manager::AssetLoader;
 use ecs::{Component, Planner, Priority, System, World};
 use ecs::components::{LocalTransform, Transform, Child, Init, Renderable};
 use ecs::resources::Time;
@@ -24,17 +23,35 @@ pub struct Context {
     pub factory: Factory,
 }
 
+/// The engine type, which holds
+/// several structs which are needed
+/// throughout the whole runtime.
+/// These are also used by
+/// the user, which allows
+/// him to use the `context`
+/// or access the world.
+pub struct Engine {
+    /// The context which is used for
+    /// loading assets.
+    pub context: Context,
+    /// The graphics pipeline
+    pub pipe: Pipeline,
+    /// The ecs planner
+    ///
+    /// To get the world, use `world_mut`.
+    pub planner: Planner<()>,
+}
+
 /// User-friendly facade for building games. Manages main loop.
 pub struct Application {
-    /// The context of this application.
-    pub context: Context,
+    /// The engine of this application which holds
+    /// some global structs, like the asset_loader, the
+    /// context and gfx structs.
+    pub engine: Engine,
 
     // Graphics and asset management structs.
     // TODO: Refactor so `pipe` and `gfx_device` are moved into the renderer.
-    asset_loader: AssetLoader,
     gfx_device: GfxDevice,
-    pipe: Pipeline,
-    planner: Planner<()>,
 
     // State management and game loop timing structs.
     delta_time: Duration,
@@ -54,6 +71,16 @@ impl Context {
     /// future.
     pub fn new(factory: Factory) -> Self {
         Context { factory: factory }
+    }
+}
+
+impl Engine {
+    fn new(context: Context, pipe: Pipeline, planner: Planner<()>) -> Self {
+        Engine {
+            context: context,
+            pipe: pipe,
+            planner: planner,
+        }
     }
 }
 
@@ -78,7 +105,6 @@ impl Application {
         pipe.targets.insert("gbuffer".into(), Box::new(geom_buf));
 
         let context = Context::new(factory);
-        let assets = AssetLoader::new();
 
         let trans_sys = TransformSystem::new();
         planner.add_system::<TransformSystem>(trans_sys, "transform_system", 0);
@@ -117,13 +143,12 @@ impl Application {
             world.register::<Transform>();
         }
 
+        let engine = Engine::new(context, pipe, planner);
+
         Application {
-            asset_loader: assets,
+            engine: engine,
             states: StateMachine::new(initial_state),
             gfx_device: device,
-            pipe: pipe,
-            context: context,
-            planner: planner,
             timer: Stopwatch::new(),
             delta_time: Duration::new(0, 0),
             fixed_step: Duration::new(0, 16666666),
@@ -154,10 +179,7 @@ impl Application {
 
     /// Sets up the application.
     fn initialize(&mut self) {
-        let world = &mut self.planner.mut_world();
-        let assets = &mut self.asset_loader;
-        let pipe = &mut self.pipe;
-        self.states.start(world, assets, pipe);
+        self.states.start(&mut self.engine);
     }
 
     /// Advances the game world by one tick.
@@ -166,25 +188,23 @@ impl Application {
 
         {
             let events = self.gfx_device.poll_events();
-            let world = &mut self.planner.mut_world();
-            let assets = &mut self.asset_loader;
-            let pipe = &mut self.pipe;
+            let events = events.as_ref();
 
-            self.states.handle_events(events.as_ref(), world, assets, pipe);
+            self.states.handle_events(events, &mut self.engine);
 
             if self.last_fixed_update.elapsed() >= self.fixed_step {
-                self.states.fixed_update(world, assets, pipe);
+                self.states.fixed_update(&mut self.engine);
                 self.last_fixed_update += self.fixed_step;
             }
 
-            self.states.update(world, assets, pipe);
+            self.states.update(&mut self.engine);
         }
 
-        self.planner.dispatch(());
-        self.planner.wait();
+        self.engine.planner.dispatch(());
+        self.engine.planner.wait();
 
         {
-            let world = &mut self.planner.mut_world();
+            let world = &mut self.engine.planner.mut_world();
             if let Some((w, h)) = self.gfx_device.get_dimensions() {
                 let mut dim = world.write_resource::<ScreenDimensions>();
                 dim.update(w, h);
@@ -197,7 +217,7 @@ impl Application {
                 time.last_fixed_update = self.last_fixed_update;
             }
 
-            let pipe = &mut self.pipe;
+            let pipe = &mut self.engine.pipe;
             self.gfx_device.render_world(world, pipe);
         }
     }

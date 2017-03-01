@@ -4,60 +4,51 @@
 extern crate amethyst;
 extern crate cgmath;
 
-use amethyst::{Application, Event, State, Trans, VirtualKeyCode, WindowEvent};
-use amethyst::asset_manager::{AssetLoader, AssetLoaderRaw, AssetManager, Assets, DirectoryStore};
+use amethyst::{Application, Engine, Event, State, Trans, VirtualKeyCode, WindowEvent};
+use amethyst::asset_manager::{AssetFormat, AssetLoader, DirectoryStore, Import, ImportError};
 use amethyst::config::Element;
-use amethyst::ecs::World;
-use amethyst::ecs::components::{LocalTransform, Mesh, Texture, Transform};
+use amethyst::ecs::components::{LocalTransform, Renderable, Texture, Transform};
 use amethyst::ecs::resources::{Camera, Projection, ScreenDimensions};
 use amethyst::gfx_device::DisplayConfig;
-use amethyst::renderer::{Layer, PointLight, Pipeline, VertexPosNormal};
+use amethyst::renderer::{Layer, PointLight, VertexPosNormal};
 use amethyst::renderer::pass::{Clear, DrawShaded};
 use cgmath::{Deg, Euler, Quaternion};
-use std::env::set_var;
 use std::str;
 
 // Implement custom asset loader that reads files with a simple format of
 // 1 vertex and 1 normal per line, with coordinates separated by whitespace.
-struct CustomObj {
-    vertices: Vec<[f32; 3]>,
-    normals: Vec<[f32; 3]>,
+struct CustomObj;
+
+impl AssetFormat for CustomObj {
+    fn file_extensions(&self) -> &[&str] {
+        const FE: [&'static str; 1] = ["custom"];
+        const FE_REF: &'static [&'static str; 1] = &FE;
+
+        FE_REF
+    }
 }
 
-impl AssetLoaderRaw for CustomObj {
-    fn from_raw(_: &Assets, data: &[u8]) -> Option<CustomObj> {
-        let data: String = str::from_utf8(data).unwrap().into();
-        let mut vertices = Vec::new();
-        let mut normals = Vec::new();
+impl Import<Vec<VertexPosNormal>> for CustomObj {
+    fn import(&self, data: Box<[u8]>) -> Result<Vec<VertexPosNormal>, ImportError> {
+        let data: String = str::from_utf8(data.as_ref())?.to_string();
+        let mut vertices: Vec<[f32; 3]> = Vec::new();
+        let mut normals: Vec<[f32; 3]> = Vec::new();
 
         let trimmed: Vec<&str> = data.lines()
             .filter(|line| line.len() >= 1)
             .collect();
 
         for line in trimmed {
-            let nums: Vec<&str> = line.split_whitespace().collect();
+            let nums: Result<_, _> = line.split_whitespace().map(|x| x.parse::<f32>()).collect();
+            let nums: Vec<f32> =
+                nums.map_err(|x| ImportError::FormatError(format!("Invalid float: {:?}", x)))?;
 
-            vertices.push([nums[0].parse::<f32>().unwrap(),
-                           nums[1].parse::<f32>().unwrap(),
-                           nums[2].parse::<f32>().unwrap()]);
-
-            normals.push([nums[3].parse::<f32>().unwrap(),
-                          nums[4].parse::<f32>().unwrap(),
-                          nums[5].parse::<f32>().unwrap()]);
+            vertices.push([nums[0], nums[1], nums[2]]);
+            normals.push([nums[3], nums[4], nums[5]]);
         }
 
-        Some(CustomObj {
-            vertices: vertices,
-            normals: normals,
-        })
-    }
-}
-
-impl AssetLoader<Mesh> for CustomObj {
-    fn from_data(assets: &mut Assets, obj: CustomObj) -> Option<Mesh> {
-        let vertices = obj.vertices
-            .iter()
-            .zip(obj.normals.iter())
+        let vertices = vertices.iter()
+            .zip(&normals)
             .map(|(v, n)| {
                 VertexPosNormal {
                     pos: v.clone(),
@@ -66,14 +57,19 @@ impl AssetLoader<Mesh> for CustomObj {
                 }
             })
             .collect::<Vec<_>>();
-        AssetLoader::<Mesh>::from_data(assets, vertices)
+
+        Ok(vertices)
     }
 }
 
 struct Example;
 
 impl State for Example {
-    fn on_start(&mut self, world: &mut World, assets: &mut AssetManager, pipe: &mut Pipeline) {
+    fn on_start(&mut self, engine: &mut Engine) {
+        use amethyst::asset_manager::formats::{Png, Bmp, Obj};
+
+        let world = engine.planner.mut_world();
+
         {
             let dim = world.read_resource::<ScreenDimensions>();
             let mut camera = world.write_resource::<Camera>();
@@ -90,36 +86,35 @@ impl State for Example {
         }
 
         // Set up an assets path by directly registering an assets store.
-        let assets_path = format!("{}/examples/05_assets/resources/meshes",
-                                  env!("CARGO_MANIFEST_DIR"));
-        assets.register_store(DirectoryStore::new(assets_path));
+        let assets_path = format!("{}/examples/05_assets/assets", env!("CARGO_MANIFEST_DIR"));
+        let store = DirectoryStore::new(assets_path);
 
         // Create some basic colors for the teapot, and load some textures
         // for the cube and sphere.
-        assets.load_asset_from_data::<Texture, [f32; 4]>("dark_blue", [0.0, 0.0, 0.1, 1.0]);
-        assets.load_asset_from_data::<Texture, [f32; 4]>("green", [0.0, 1.0, 0.2, 1.0]);
-        assets.load_asset_from_data::<Texture, [f32; 4]>("tan", [0.8, 0.6, 0.5, 1.0]);
-        assets.load_asset_from_data::<Texture, [f32; 4]>("white", [1.0, 1.0, 1.0, 1.0]);
-        assets.load_asset::<Texture>("crate", "png");
-        assets.load_asset::<Texture>("grass", "bmp");
+        let dark_blue = Texture::from_color([0.0, 0.0, 0.1, 1.0]);
+        let green = Texture::from_color([0.0, 1.0, 0.2, 1.0]);
+        let tan = Texture::from_color([0.8, 0.6, 0.5, 1.0]);
+        let white = Texture::from_color([1.0, 1.0, 1.0, 1.0]);
+
+        let asset_loader = AssetLoader::new();
+
+        let mycrate = asset_loader.load(&store, "crate", Png);
+        let grass = asset_loader.load(&store, "grass", Bmp);
 
         // Load/generate meshes
-        assets.load_asset::<Mesh>("teapot", "obj");
-        assets.load_asset::<Mesh>("lid", "obj");
-        assets.load_asset::<Mesh>("cube", "obj");
-        assets.load_asset::<Mesh>("sphere", "obj");
-
-        // Also add custom asset loader and load mesh
-        assets.register_loader::<Mesh, CustomObj>("custom");
-        assets.load_asset::<Mesh>("cuboid", "custom");
+        let teapot = asset_loader.load(&store, "teapot", Obj);
+        let lid = asset_loader.load(&store, "lid", Obj);
+        let cube = asset_loader.load(&store, "cube", Obj);
+        let sphere = asset_loader.load(&store, "sphere", Obj);
+        let cuboid = asset_loader.load(&store, "cuboid", CustomObj);
 
         // Add teapot and lid to scene
-        for mesh in vec!["lid", "teapot"].iter() {
+        for mesh in vec![lid, teapot] {
             let mut trans = LocalTransform::default();
             trans.rotation = Quaternion::from(Euler::new(Deg(90.0), Deg(-90.0), Deg(0.0))).into();
             trans.translation = [5.0, 0.0, 5.0];
-            let rend = assets.create_renderable(mesh, "dark_blue", "green", "white", 1.0)
-                .unwrap();
+            let mesh = mesh.finish(&mut engine.context).expect("Failed to load mesh");
+            let rend = Renderable::new(mesh, dark_blue.clone(), green.clone(), white.clone(), 1.0);
             world.create_now()
                 .with(rend)
                 .with(trans)
@@ -128,8 +123,8 @@ impl State for Example {
         }
 
         // Add custom cube object to scene
-        let rend = assets.create_renderable("cuboid", "dark_blue", "green", "white", 1.0)
-            .unwrap();
+        let cuboid = cuboid.finish(&mut engine.context).expect("Failed to load cuboid");
+        let rend = Renderable::new(cuboid, dark_blue, green.clone(), white.clone(), 1.0);
         let mut trans = LocalTransform::default();
         trans.translation = [-5.0, 0.0, 0.0];
         trans.scale = [2.0, 2.0, 2.0];
@@ -140,7 +135,9 @@ impl State for Example {
             .build();
 
         // Add cube to scene
-        let rend = assets.create_renderable("cube", "crate", "tan", "white", 1.0).unwrap();
+        let cube = cube.finish(&mut engine.context).expect("Failed to load cube");
+        let mycrate = mycrate.finish(&mut engine.context).expect("Failed to load crate");
+        let rend = Renderable::new(cube, mycrate, tan, white.clone(), 1.0);
         let mut trans = LocalTransform::default();
         trans.translation = [5.0, 0.0, 0.0];
         trans.scale = [2.0, 2.0, 2.0];
@@ -151,8 +148,10 @@ impl State for Example {
             .build();
 
         // Add sphere to scene
-        let rend = assets.create_renderable("sphere", "grass", "green", "white", 1.0)
-            .unwrap();
+        let sphere = sphere.finish(&mut engine.context).expect("Failed to load sphere");
+        let grass = grass.finish(&mut engine.context).expect("Failed to load grass");
+
+        let rend = Renderable::new(sphere, grass, green, white, 1.0);
         let mut trans = LocalTransform::default();
         trans.translation = [-5.0, 0.0, 7.5];
         trans.rotation = Quaternion::from(Euler::new(Deg(90.0), Deg(0.0), Deg(0.0))).into();
@@ -179,15 +178,10 @@ impl State for Example {
         let layer = Layer::new("main",
                                vec![Clear::new([0.0, 0.0, 0.0, 1.0]),
                                     DrawShaded::new("main", "main")]);
-        pipe.layers.push(layer);
+        engine.pipe.layers.push(layer);
     }
 
-    fn handle_events(&mut self,
-                     events: &[WindowEvent],
-                     _: &mut World,
-                     _: &mut AssetManager,
-                     _: &mut Pipeline)
-                     -> Trans {
+    fn handle_events(&mut self, events: &[WindowEvent], _: &mut Engine) -> Trans {
         // Exit if user hits Escape or closes the window
         for e in events {
             match **e {
@@ -201,15 +195,7 @@ impl State for Example {
 }
 
 fn main() {
-    // Set up an assets path by setting an environment variable. Note that
-    // this would normally be done with something like this:
-    //
-    //     AMETHYST_ASSET_DIRS=/foo/bar cargo run
-    let assets_path = format!("{}/examples/05_assets/resources/textures",
-                              env!("CARGO_MANIFEST_DIR"));
-    set_var("AMETHYST_ASSET_DIRS", assets_path);
-
-    let path = format!("{}/examples/05_assets/resources/config.yml",
+    let path = format!("{}/examples/05_assets/assets/config.yml",
                        env!("CARGO_MANIFEST_DIR"));
     let cfg = DisplayConfig::from_file(path).unwrap();
     let mut game = Application::build(Example, cfg).done();

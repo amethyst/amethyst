@@ -24,8 +24,7 @@ pub struct Renderable {
 }
 
 impl Renderable {
-    /// Creates a new renderable. You will probably want not use this directly.
-    /// Instead, use the `AssetManager::create_renderable` function.
+    /// Creates a new renderable.
     pub fn new(mesh: Mesh,
                ambient: Texture,
                diffuse: Texture,
