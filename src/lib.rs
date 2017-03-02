@@ -73,6 +73,7 @@ extern crate specs;
 extern crate wavefront_obj;
 extern crate futures;
 extern crate futures_cpupool;
+extern crate zip;
 
 #[cfg(android)]
 extern crate android_glue;

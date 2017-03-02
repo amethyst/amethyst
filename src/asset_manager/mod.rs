@@ -11,7 +11,7 @@ mod common;
 mod io;
 
 pub use self::asset::{Asset, AssetFormat, AssetStore, AssetStoreError};
-pub use self::common::{DefaultStore, DirectoryStore};
+pub use self::common::{DefaultStore, DirectoryStore, ZipStore};
 pub use self::io::{Import, Error as ImportError};
 
 use std::fmt::{Debug, Display, Error as FormatError, Formatter};

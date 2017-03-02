@@ -1,9 +1,17 @@
 //! Provided common things for asset management
 
+use asset_manager::{Asset, AssetFormat, AssetStore, AssetStoreError};
+
+// -----------------------------------------------------------------------------------------
+// Asset stores
+// -----------------------------------------------------------------------------------------
+
+use std::collections::HashMap;
 use std::fs::File;
 use std::path::{Path, PathBuf};
+use std::io::{BufReader, Error as IoError, ErrorKind, Read, Seek};
 
-use asset_manager::{Asset, AssetFormat, AssetStore, AssetStoreError};
+use zip::ZipArchive;
 
 #[cfg(not(android))]
 mod desktop {
@@ -71,6 +79,14 @@ mod android {
         }
     }
 
+    pub fn read_bytes(path: &str) -> Result<Box<[u8]>, IoError> {
+        match android_glue::load_asset(path) {
+            Ok(x) => Ok(x.into_boxed_slice()),
+            Err(AssetError::AssetMissing) => Err(ErrorKind::NotFound.into()),
+            Err(AssetError::EmptyBuffer) => Err(ErrorKind::InvalidData.into()),
+        }
+    }
+
     fn into_file_name<F: AssetFormat>(name: &str, extension: &str) -> String {
         name.to_owned() + "." + extension
     }
@@ -80,11 +96,9 @@ mod android {
 use self::desktop::{read_asset, read_asset_from_path};
 
 #[cfg(android)]
-use self::android::read_asset;
+use self::android::{read_asset, read_bytes};
 
 fn read_file_complete<P: AsRef<Path>>(path: P) -> Result<Box<[u8]>, AssetStoreError> {
-    use std::io::Read;
-
     let mut file: File = File::open(&path)?;
     let mut bytes = Vec::with_capacity(file.metadata().map(|x| x.len()).unwrap_or(512) as usize);
 
@@ -111,6 +125,14 @@ pub struct DirectoryStore {
     /// Note that there are subfolders, as specified
     /// in the `Asset` type.
     pub path: PathBuf,
+}
+
+/// An asset store that
+/// loads assets from a ZIP
+/// file.
+#[derive(Clone, Debug)]
+pub struct ZipStore {
+    files: HashMap<String, Box<[u8]>>,
 }
 
 impl DirectoryStore {
@@ -141,5 +163,81 @@ impl AssetStore for DirectoryStore {
         println!("path: {:?}", path);
 
         read_asset_from_path(&path, format)
+    }
+}
+
+impl ZipStore {
+    /// Reads a zip file from a stream
+    /// and returns a ZipStore.
+    pub fn from<T>(stream: T) -> Result<Self, IoError>
+        where T: Read + Seek
+    {
+        use zip::read::ZipFile;
+        use zip::result::ZipError;
+
+        let map_zip_err = |x: ZipError| {
+            let e: IoError = match x {
+                    ZipError::Io(x) => x.kind(),
+                    ZipError::FileNotFound => ErrorKind::NotFound,
+                    ZipError::InvalidArchive(_) => ErrorKind::InvalidData,
+                    ZipError::UnsupportedArchive(_) => ErrorKind::InvalidData,
+                }
+                .into();
+
+            e
+        };
+
+        let archive: Result<ZipArchive<T>, ZipError> = ZipArchive::<T>::new(stream);
+        let mut archive = archive.map_err(|x| map_zip_err(x))?;
+
+        let mut map = HashMap::with_capacity(archive.len());
+
+        for file in 0..archive.len() {
+            let mut file: ZipFile = archive.by_index(file).map_err(|x| map_zip_err(x))?;
+            let mut bytes = Vec::with_capacity(file.size() as usize);
+            file.read_to_end(&mut bytes)?;
+            map.insert(file.name().to_owned(), bytes.into_boxed_slice());
+        }
+
+        Ok(ZipStore { files: map })
+    }
+
+    /// Open a file and read its contents
+    #[cfg(not(android))]
+    pub fn open<P: AsRef<Path>>(p: P) -> Result<Self, IoError> {
+        let stream = BufReader::new(File::open(p)?);
+
+        Self::from(stream)
+    }
+
+    /// Open a zip file and read its contents
+    #[cfg(android)]
+    pub fn open<P: AsRef<Path>>(p: P) -> Result<Self, IoError> {
+        use std::io::Cursor;
+
+        let stream = read_bytes(p.to_str().unwrap())?;
+        let stream = Cursor::new(stream);
+
+        Self::from(stream)
+    }
+}
+
+impl AssetStore for ZipStore {
+    fn read_asset<T, F>(&self, name: &str, format: &F) -> Result<Box<[u8]>, AssetStoreError>
+        where F: AssetFormat,
+              T: Asset
+    {
+        let mut pathbuf = PathBuf::from(T::category()).join(name);
+
+        for extension in format.file_extensions() {
+            pathbuf.set_extension(extension);
+            let s = pathbuf.to_str().unwrap();
+
+            if let Some(bytes) = self.files.get(s) {
+                return Ok(bytes.clone());
+            }
+        }
+
+        Err(AssetStoreError::NoSuchAsset)
     }
 }
