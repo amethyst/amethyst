@@ -10,7 +10,7 @@ hand, follow along with [the next section][ci] instead.
 To install the toolchain and generate a new project with the CLI tool, follow
 along in your terminal:
 
-```
+```bash
 $ cargo install amethyst_tools
 $ amethyst new hello_world
 ```
@@ -20,11 +20,19 @@ called "hello_world". `cd` into it, and you should find the following file
 structure:
 
 * **hello_world**/
-  * **resources**/
+  * **assets**/
     * Lots of junk...
   * **src**/
     * main.rs
   * Cargo.toml
+
+If you do have nightly cargo installed, you can also use
+
+```bash
+$ cargo new mygame --template https://github.com/amethyst/project_template
+```
+
+to set up a project.
 
 You're all set! Skip forward to [section 2.3][hw] to see your setup in action.
 

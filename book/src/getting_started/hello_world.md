@@ -7,31 +7,29 @@ copy and paste the following code:
 ```rust
 extern crate amethyst;
 
-use amethyst::engine::{Application, State, Trans};
-use amethyst::context::{Context, Config};
-use amethyst::ecs::World;
+use amethyst::{Application, Engine, State, Trans};
+use amethyst::gfx_device::DisplayConfig;
 
 struct HelloWorld;
 
 impl State for HelloWorld {
-    fn on_start(&mut self, _: &mut Context, _: &mut World) {
-        println!("Game started!");
+    fn on_start(&mut self, _: &mut Engine) {
+        println!("Begin!");
     }
 
-    fn update(&mut self, _: &mut Context, _: &mut World) -> Trans {
-        println!("Hello from Amethyst!");
+    fn update(&mut self, _: &mut Engine) -> Trans {
+        println!("Hello World!");
         Trans::Quit
     }
 
-    fn on_stop(&mut self, _: &mut Context, _: &mut World) {
-        println!("Game stopped!");
+    fn on_stop(&mut self, _: &mut Engine) {
+        println!("End!");
     }
 }
 
 fn main() {
-    let config = Config::default();
-    let context = Context::new(config);
-    let mut game = Application::build(HelloWorld, context).done();
+    let cfg = DisplayConfig::default();
+    let mut game = Application::build(HelloWorld, cfg).done();
     game.run();
 }
 ```
@@ -48,13 +46,6 @@ Game started!
 Hello from Amethyst!
 Game stopped!
 ```
-
-If instead you see `error: use of unstable library feature` then make sure
-you're using the [nightly release][nr] of Rust. You can use [rustup][ru] to
-install stable and nightly Rust side-by-side. 
-
-[nr]: https://doc.rust-lang.org/book/release-channels.html
-[ru]: https://www.rustup.rs
 
 Congratulations! You have successfully written your first Amethyst application.
 

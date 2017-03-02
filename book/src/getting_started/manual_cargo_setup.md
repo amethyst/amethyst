@@ -2,7 +2,7 @@
 
 For those of you who prefer working with Cargo directly, like any other Rust
 project, you can. However, since this is just a "Hello, World" program, I would
-strongly recommend using the [Amethyst CLI tool][as] instead. It will save you
+strongly recommend using the [Amethyst CLI tool or cargo with the project template][as] instead. It will save you
 a whole lot of time.
 
 [as]: ./getting_started/automatic_setup.html
@@ -16,6 +16,7 @@ the following lines to your "Cargo.toml":
 [dependencies]
 amethyst = "*"
 ```
+
 ### From Git via cargo
 
 If you don't want to get Amethyst from Crates.io but directly from the
@@ -51,11 +52,13 @@ path = "../path/to/amethyst/"
 
 ## Resources Folder
 
-Every Amethyst game project must have a top-level folder called "resources".
+Every Amethyst game project must have a top-level folder called "assets".
 This is where your game assets are stored. In your project's root folder, create
 the following folder structure:
 
-* **resources**/
+* **assets**/
+  * **meshes**/
+  * **textures**/
   * **entities**/
   * **prefabs**/
   * config.yml
