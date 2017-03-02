@@ -78,22 +78,6 @@ impl State for Example {
     fn on_start(&mut self, engine: &mut Engine) {
         use amethyst::asset_manager::formats::{Png, Dds, Obj};
 
-        {
-            let world = engine.planner.mut_world();
-            let dim = world.read_resource::<ScreenDimensions>();
-            let mut camera = world.write_resource::<Camera>();
-            let proj = Projection::Perspective {
-                fov: 60.0,
-                aspect_ratio: dim.aspect_ratio,
-                near: 1.0,
-                far: 100.0,
-            };
-            camera.proj = proj;
-            camera.eye = [0.0, -20.0, 10.0];
-            camera.target = [0.0, 0.0, 5.0];
-            camera.up = [0.0, 0.0, 1.0];
-        }
-
         // Set up an assets path by directly registering an assets store.
         let assets_path = format!("{}/examples/03_renderable/assets",
                                   env!("CARGO_MANIFEST_DIR"));
@@ -119,6 +103,22 @@ impl State for Example {
         let cone = asset_loader.load(&store, "cone", Obj);
 
         let world = engine.planner.mut_world();
+
+        {
+            // Let's do other things while the assets are loading
+            let dim = world.read_resource::<ScreenDimensions>();
+            let mut camera = world.write_resource::<Camera>();
+            let proj = Projection::Perspective {
+                fov: 60.0,
+                aspect_ratio: dim.aspect_ratio,
+                near: 1.0,
+                far: 100.0,
+            };
+            camera.proj = proj;
+            camera.eye = [0.0, -20.0, 10.0];
+            camera.target = [0.0, 0.0, 5.0];
+            camera.up = [0.0, 0.0, 1.0];
+        }
 
         // Add teapot and lid to scene
         for mesh in vec![lid.finish(&mut engine.context), teapot.finish(&mut engine.context)] {

@@ -237,8 +237,9 @@ impl State for Pong {
 
         engine.pipe.layers.push(layer);
 
+        let world = engine.planner.mut_world();
+
         {
-            let world = engine.planner.mut_world();
             let dim = world.read_resource::<ScreenDimensions>();
             let mut camera = world.write_resource::<Camera>();
             let aspect_ratio = dim.aspect_ratio;
@@ -261,8 +262,6 @@ impl State for Pong {
             camera.target = target;
             camera.up = up;
         }
-
-        let world = engine.planner.mut_world();
 
         // Add all resources
         world.add_resource::<Score>(Score::new());
