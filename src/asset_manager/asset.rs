@@ -23,8 +23,8 @@ use std::io::{Error as IoError, ErrorKind};
 /// ```
 /// use std::io::{Read, BufRead, BufReader};
 ///
-/// use amethyst::asset_manager::{Asset, ImportError};
-/// use amethyst::engine::Context;
+/// use amethyst::asset_manager::{Asset, AssetFormat, Import, ImportError};
+/// use amethyst::Context;
 ///
 /// struct Table {
 ///     num_rows: u32,
@@ -38,30 +38,41 @@ use std::io::{Error as IoError, ErrorKind};
 ///     type Data = Self;
 ///     type Error = (); // Should be some InconsistentSizeError (if data.len() != num_rows * num_columns)
 ///
+///     fn category() -> &'static str {
+///         // Tables will be in the "tables" folder
+///
+///         "tables"
+///     }
+///
 ///     fn from_data(data: Self, _: &mut Context) -> Result<Self, ()> {
 ///         Ok(data) // Ommitted here: Check for size
 ///     }
 /// }
 ///
 /// impl AssetFormat for WhitespaceTable {
-///     fn file_extension() -> &'static str {
-///         "wst"
+///     fn file_extensions(&self) -> &[&str] {
+///         const FE: [&'static str; 1] = ["wst"];
+///         const FE_REF: &'static [&'static str; 1] = &FE;
+///
+///         FE_REF
 ///     }
 /// }
 ///
-/// impl Import<WhitspaceTable::Data> for WhitespaceTable {
-///     fn import<R: Read>(stream: R) -> Result<WhitespaceTable, ImportError> {
+/// impl Import<<Table as Asset>::Data> for WhitespaceTable {
+///     fn import(&self, bytes: Box<[u8]>) -> Result<Table, ImportError> {
 ///         let mut num_columns = 0;
 ///         let mut old_columns = 0;
 ///         let mut values = Vec::new();
-///         let mut reader = BufReader::new(stream);
+///         let mut reader = bytes.as_ref();
 ///
 ///         for line in reader.lines() {
+///             let line = line?;
+///
 ///             for word in line.split_whitespace() {
 ///                 num_columns += 1;
 ///                 values.push(word.parse().map_err(|x| ImportError::FormatError("Invalid integer".to_string()))?)
 ///             }
-///             if (old_columns != 0 && num_columns != old_columns) {
+///             if old_columns != 0 && num_columns != old_columns {
 ///                 return Err(ImportError::FormatError(format!("Number of columns not matching (previous line: {}, this line: {})",
 ///                                                             old_columns, num_columns)));
 ///             }
@@ -73,9 +84,9 @@ use std::io::{Error as IoError, ErrorKind};
 ///             return Err(ImportError::FormatError("Empty file".to_string()));
 ///         }
 ///
-///         Ok(WhitespaceTable {
+///         Ok(Table {
 ///             num_columns: old_columns,
-///             num_rows: values.len() / old_columns,
+///             num_rows: values.len() as u32 / old_columns,
 ///             data: values.into_boxed_slice(),
 ///         })
 ///     }

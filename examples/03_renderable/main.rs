@@ -14,7 +14,6 @@ use amethyst::gfx_device::DisplayConfig;
 use amethyst::renderer::{AmbientLight, DirectionalLight, Layer, PointLight, Pipeline};
 use amethyst::renderer::pass::{BlitLayer, Clear, DrawFlat, DrawShaded, Lighting};
 use cgmath::{Deg, Euler, Quaternion};
-use std::env::set_var;
 use std::str;
 
 struct DemoState {
