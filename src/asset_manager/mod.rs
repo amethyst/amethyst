@@ -100,11 +100,20 @@ impl AssetLoader {
         AssetLoader { cpupool: CpuPool::new_num_cpus() }
     }
 
+    pub fn load_now<T, S, F>(store: &S,
+                             name: &str,
+                             format: F,
+                             context: &mut Context)
+                             -> Result<T, AssetError> {
+        let data = Self::from_data(store, name, format)?;
+        T::from_data(data, context)
+    }
+
     /// Loads just the data for some asset (blocking).
-    pub fn load_data<T, D, S, F>(store: &S, name: &str, format: F) -> Result<D, AssetError>
-        where T: Asset<Data = D>,
+    pub fn load_data<T, S, F>(store: &S, name: &str, format: F) -> Result<T::Data, AssetError>
+        where T: Asset,
               S: AssetStore,
-              F: AssetFormat + Import<D>
+              F: AssetFormat + Import<T::Data>
     {
         let bytes = store.read_asset::<T, _>(name, &format)?;
         format.import(bytes).map_err(|x| AssetError::ImportError(x))
