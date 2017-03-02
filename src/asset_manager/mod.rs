@@ -14,7 +14,7 @@ pub use self::asset::{Asset, AssetFormat, AssetStore, AssetStoreError};
 pub use self::common::{DefaultStore, DirectoryStore};
 pub use self::io::{Import, Error as ImportError};
 
-use std::fmt::{Display, Error as FormatError, Formatter};
+use std::fmt::{Debug, Display, Error as FormatError, Formatter};
 use std::marker::Send;
 
 use futures::{Async, Future};
@@ -67,30 +67,23 @@ pub struct AssetLoader {
 /// data. If it hasn't yet finished, it will block
 /// the calling thread.
 pub struct AssetFuture<T: Asset> {
-    inner: CpuFuture<T::Data, AssetError>,
+    inner: CpuFuture<T::Data, AssetError<T>>,
 }
 
 /// The error that can occurr when trying
 /// to import asset data from a store.
 #[derive(Debug)]
-pub enum AssetError {
+pub enum AssetError<T: Asset> {
     /// Occurs if the `AssetStore` could not load
     /// the asset. See `AssetStoreInfo` for details.
     StoreError(AssetStoreError),
     /// Raised if the data is in an invalid format
     /// or there was an io error.
     ImportError(ImportError),
-}
-
-/// An error type which may be return when using
-/// `AssetFuture::finish`.
-#[derive(Debug)]
-pub enum FinishError<T: Asset> {
-    /// There was an `AssetError`.
-    Asset(AssetError),
-    /// The asset could not be instantiated from
-    /// the data.
-    Finish(T::Error), // TODO: Find better names
+    /// Importing the data didn't work
+    /// out. Note that this does not necessarily mean
+    /// that the data is invalid.
+    DataError(T::Error),
 }
 
 impl AssetLoader {
@@ -100,17 +93,25 @@ impl AssetLoader {
         AssetLoader { cpupool: CpuPool::new_num_cpus() }
     }
 
+    /// Load an asset on the calling thread.
+    /// If it is not a very small asset, you
+    /// should use `load` or `load_default`
+    /// instead.
     pub fn load_now<T, S, F>(store: &S,
                              name: &str,
                              format: F,
                              context: &mut Context)
-                             -> Result<T, AssetError> {
-        let data = Self::from_data(store, name, format)?;
-        T::from_data(data, context)
+                             -> Result<T, AssetError<T>>
+        where T: Asset,
+              S: AssetStore,
+              F: AssetFormat + Import<T::Data>
+    {
+        let data = Self::load_data(store, name, format)?;
+        T::from_data(data, context).map_err(|x| AssetError::DataError(x))
     }
 
     /// Loads just the data for some asset (blocking).
-    pub fn load_data<T, S, F>(store: &S, name: &str, format: F) -> Result<T::Data, AssetError>
+    pub fn load_data<T, S, F>(store: &S, name: &str, format: F) -> Result<T::Data, AssetError<T>>
         where T: Asset,
               S: AssetStore,
               F: AssetFormat + Import<T::Data>
@@ -125,7 +126,7 @@ impl AssetLoader {
     /// If you already have the asset data and you just want to
     /// import it, use `MyAsset::from_data(data, context)`.
     pub fn load<T, S, F>(&self, store: &S, name: &str, format: F) -> AssetFuture<T>
-        where T: Asset,
+        where T: Asset + 'static,
               T::Data: Send + 'static,
               T::Error: Send + 'static,
               S: AssetStore + Clone + Send + Sync + 'static,
@@ -135,7 +136,7 @@ impl AssetLoader {
         let name = name.to_string();
 
         let cpu_future: CpuFuture<T::Data, _> = self.cpupool
-            .spawn_fn(move || Self::load_data::<T, _, _, _>(&store, &name, format));
+            .spawn_fn(move || Self::load_data::<T, _, _>(&store, &name, format));
 
         AssetFuture { inner: cpu_future }
     }
@@ -149,7 +150,7 @@ impl AssetLoader {
     /// the "assets" folder, on android it will
     /// load it from the embedded assets.
     pub fn load_default<T, F>(&self, name: &str, format: F) -> AssetFuture<T>
-        where T: Asset,
+        where T: Asset + 'static,
               T::Data: Send + 'static,
               T::Error: Send + 'static,
               F: AssetFormat + Import<T::Data> + Send + 'static
@@ -179,53 +180,42 @@ impl<T: Asset + Send> AssetFuture<T> {
     ///
     /// let tree = tree.finish(&mut context);
     /// ```
-    pub fn finish(self, context: &mut Context) -> Result<T, FinishError<T>>
-        where Self: Future<Item = T::Data, Error = AssetError>
+    pub fn finish(self, context: &mut Context) -> Result<T, AssetError<T>>
+        where Self: Future<Item = T::Data, Error = AssetError<T>>
     {
         let data = self.wait()?;
-        T::from_data(data, context).map_err(|x| FinishError::Finish(x))
+        T::from_data(data, context).map_err(|x| AssetError::DataError(x))
     }
 }
 
 impl<T: Asset + 'static> Future for AssetFuture<T>
-    where T::Data: Send
+    where T::Data: Send,
+          T::Error: Send
 {
     type Item = T::Data;
-    type Error = AssetError;
+    type Error = AssetError<T>;
 
-    fn poll(&mut self) -> Result<Async<T::Data>, AssetError> {
+    fn poll(&mut self) -> Result<Async<T::Data>, AssetError<T>> {
         self.inner.poll()
     }
 }
 
-impl From<AssetStoreError> for AssetError {
+impl<T: Asset> From<AssetStoreError> for AssetError<T> {
     fn from(e: AssetStoreError) -> Self {
         AssetError::StoreError(e)
     }
 }
 
-impl<T: Asset> From<AssetError> for FinishError<T> {
-    fn from(e: AssetError) -> Self {
-        FinishError::Asset(e)
-    }
-}
-
-impl<T: Asset> Display for FinishError<T> {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FormatError> {
-        match self {
-            &FinishError::Asset(ref x) => write!(f, "Error when loading asset data: {}", x),
-            &FinishError::Finish(ref x) => {
-                write!(f, "Error when instantiating asset from data: {:?}", x)
-            }
-        }
-    }
-}
-
-impl Display for AssetError {
+impl<T: Asset> Display for AssetError<T>
+    where T::Error: Debug
+{
     fn fmt(&self, f: &mut Formatter) -> Result<(), FormatError> {
         match self {
             &AssetError::StoreError(ref x) => write!(f, "IO Error: {}", x),
             &AssetError::ImportError(ref x) => write!(f, "Import Error: {}", x),
+            &AssetError::DataError(ref x) => {
+                write!(f, "Error when instantiating asset from data: {:?}", x)
+            }
         }
     }
 }
