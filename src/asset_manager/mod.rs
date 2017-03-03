@@ -252,6 +252,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_mesh_texture() {
         use self::formats::Obj;
         use ecs::components::Mesh;
