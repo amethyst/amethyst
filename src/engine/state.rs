@@ -194,3 +194,65 @@ impl StateMachine {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    struct State1(u8);
+    struct State2;
+
+    impl State for State1 {
+        fn update(&mut self, _: &mut Engine) -> Trans {
+            if self.0 > 0 {
+                self.0 -= 1;
+                Trans::None
+            } else {
+                Trans::Switch(Box::new(State2))
+            }
+        }
+    }
+
+    impl State for State2 {
+        fn update(&mut self, _: &mut Engine) -> Trans {
+            Trans::Pop
+        }
+    }
+
+    fn fake_engine() -> Engine {
+        // Engine isn't used here,
+        // so this should be safe
+
+        let engine = unsafe { ::std::mem::uninitialized() };
+
+        engine
+    }
+
+    fn drop_engine(engine: Engine) {
+        // Forget the engine
+        // because the implicit `Drop` implementation
+        // would cause a segmentation fault
+        // else (because it cannot release any resources
+        // which weren't created)
+
+        ::std::mem::forget(engine);
+    }
+
+    #[test]
+    fn switch_pop() {
+        let mut engine = fake_engine();
+
+        let mut sm = StateMachine::new(State1(7));
+        sm.start(&mut engine);
+
+        for _ in 0..8 {
+            sm.update(&mut engine);
+            assert!(sm.is_running());
+        }
+
+        sm.update(&mut engine);
+        assert!(!sm.is_running());
+
+        drop_engine(engine);
+    }
+}

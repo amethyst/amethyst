@@ -94,7 +94,8 @@ use std::io::{Error as IoError, ErrorKind};
 pub trait Asset: Sized {
     /// The data type, an intermediate format.
     /// This may also be `Self` if this asset does
-    /// not depend on `Context`.
+    /// not depend on `Context` (if it is just
+    /// plain data).
     type Data;
     /// The error type that may be returned if
     /// `from_data` fails.
