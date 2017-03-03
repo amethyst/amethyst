@@ -7,7 +7,8 @@ use std::time::{Duration, Instant};
 pub enum Stopwatch {
     /// Initial state with an elapsed time value of 0 seconds.
     Waiting,
-    /// Stopwatch has started counting the elapsed time since this `Instant`.
+    /// Stopwatch has started counting the elapsed time since this `Instant`
+    /// and accumuluated time from previous start/stop cycles `Duration`.
     Started(Duration, Instant),
     /// Stopwatch has been stopped and reports the elapsed time `Duration`.
     Ended(Duration),
