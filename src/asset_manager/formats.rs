@@ -100,7 +100,7 @@ impl Import<TextureData> for Png {
 
 impl AssetFormat for Jpg {
     fn file_extensions() -> &'static [&'static str] {
-        string_array!("jpg");
+        string_array!("jpg")
     }
 }
 
