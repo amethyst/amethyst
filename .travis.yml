@@ -21,6 +21,7 @@ cache: cargo
 # Install the necessary crates for building and testing the engine.
 before_script:
     - export PATH=$PATH:/home/travis/.cargo/bin
+    - export RUST_BACKTRACE=1
     - (cargo install cargo-local-pkgs || true)
     - (cargo install rustfmt || true)
 
