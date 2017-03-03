@@ -25,17 +25,4 @@ Rust compiler. Here are the system requirements (they're pretty modest):
 
 [ru]: https://www.rustup.rs/
 
-There are two ways to get started working with Amethyst:
-
-1. [Use the Amethyst CLI tool to generate a new game project][as].
-2. [Create the Cargo crate and the "resources" folder structure yourself][ms].
-
-[as]: ./getting_started/automatic_setup.html
-[ms]: ./getting_started/manual_cargo_setup.html
-
-Since we're just getting started, it's fastest and highly recommended to use
-[Amethyst CLI][ac], which is included in the [amethyst_tools][at] crate. If
-you're of the intrepid type, you may go the vanilla Cargo route if you wish.
-
-[ac]: https://github.com/amethyst/tools/tree/master/src/cli
-[at]: https://github.com/amethyst/tools
+To create a new project, it's recommended to use our project template as described in the [next section](./getting_started/automatic_setup.html).
