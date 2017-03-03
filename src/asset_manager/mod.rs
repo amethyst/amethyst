@@ -116,7 +116,7 @@ impl AssetLoader {
               S: AssetStore,
               F: AssetFormat + Import<T::Data>
     {
-        let bytes = store.read_asset::<T, _>(name, &format)?;
+        let bytes = store.read_asset::<T, F>(name)?;
         format.import(bytes).map_err(|x| AssetError::ImportError(x))
     }
 
@@ -235,7 +235,7 @@ mod tests {
     }
 
     impl AssetStore for FakeStore {
-        fn read_asset<T, F>(&self, name: &str, _: &F) -> Result<Box<[u8]>, AssetStoreError>
+        fn read_asset<T, F>(&self, name: &str) -> Result<Box<[u8]>, AssetStoreError>
             where T: Asset,
                   F: AssetFormat
         {

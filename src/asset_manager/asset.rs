@@ -136,7 +136,7 @@ pub trait AssetFormat {
 pub trait AssetStore {
     /// Read an asset from a given name and format and
     /// return the bytes.
-    fn read_asset<T, F>(&self, name: &str, format: &F) -> Result<Box<[u8]>, AssetStoreError>
+    fn read_asset<T, F>(&self, name: &str) -> Result<Box<[u8]>, AssetStoreError>
         where F: AssetFormat,
               T: Asset;
 }

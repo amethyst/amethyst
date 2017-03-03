@@ -19,13 +19,11 @@ mod desktop {
 
     use asset_manager::{AssetFormat, AssetStoreError};
 
-    pub fn read_asset<T: Asset, F: AssetFormat>(name: &str,
-                                                format: &F)
-                                                -> Result<Box<[u8]>, AssetStoreError> {
-        read_asset_from_path(Path::new("assets").join(T::category()).join(name), format)
+    pub fn read_asset<T: Asset, F: AssetFormat>(name: &str) -> Result<Box<[u8]>, AssetStoreError> {
+        read_asset_from_path::<_, F>(Path::new("assets").join(T::category()).join(name))
     }
 
-    pub fn read_asset_from_path<P, F>(path: P, _: &F) -> Result<Box<[u8]>, AssetStoreError>
+    pub fn read_asset_from_path<P, F>(path: P) -> Result<Box<[u8]>, AssetStoreError>
         where P: AsRef<Path>,
               F: AssetFormat
     {
@@ -58,9 +56,7 @@ mod android {
     use android_glue::AssetError;
     use asset_manager::{AssetFormat, AssetStoreError};
 
-    pub fn read_asset<T: Asset, F: AssetFormat>(name: &str,
-                                                _: &F)
-                                                -> Result<Box<[u8]>, AssetStoreError> {
+    pub fn read_asset<T: Asset, F: AssetFormat>(name: &str) -> Result<Box<[u8]>, AssetStoreError> {
         for extension in F::file_extensions() {
             let file_name = into_file_name(name, extension);
             let path = PathBuf::from(T::category()).join(file_name);
@@ -142,23 +138,23 @@ impl DirectoryStore {
 }
 
 impl AssetStore for DefaultStore {
-    fn read_asset<T, F>(&self, name: &str, format: &F) -> Result<Box<[u8]>, AssetStoreError>
+    fn read_asset<T, F>(&self, name: &str) -> Result<Box<[u8]>, AssetStoreError>
         where F: AssetFormat,
               T: Asset
     {
-        read_asset::<T, _>(name, format)
+        read_asset::<T, F>(name)
     }
 }
 
 #[cfg(not(android))]
 impl AssetStore for DirectoryStore {
-    fn read_asset<T, F>(&self, name: &str, format: &F) -> Result<Box<[u8]>, AssetStoreError>
+    fn read_asset<T, F>(&self, name: &str) -> Result<Box<[u8]>, AssetStoreError>
         where F: AssetFormat,
               T: Asset
     {
         let path = self.path.join(T::category()).join(name);
 
-        read_asset_from_path(&path, format)
+        read_asset_from_path::<_, F>(&path)
     }
 }
 
@@ -219,7 +215,7 @@ impl ZipStore {
 }
 
 impl AssetStore for ZipStore {
-    fn read_asset<T, F>(&self, name: &str, _: &F) -> Result<Box<[u8]>, AssetStoreError>
+    fn read_asset<T, F>(&self, name: &str) -> Result<Box<[u8]>, AssetStoreError>
         where F: AssetFormat,
               T: Asset
     {
