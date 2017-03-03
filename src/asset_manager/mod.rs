@@ -219,3 +219,68 @@ impl<T: Asset> Display for AssetError<T>
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use std::collections::HashMap;
+    use std::default::Default;
+
+    use gfx_device::video_init;
+
+    #[derive(Clone)]
+    struct FakeStore {
+        files: HashMap<String, Box<[u8]>>,
+    }
+
+    impl AssetStore for FakeStore {
+        fn read_asset<T, F>(&self, name: &str, _: &F) -> Result<Box<[u8]>, AssetStoreError>
+            where T: Asset,
+                  F: AssetFormat
+        {
+            self.files
+                .get(&(T::category().to_string() + "/" + name))
+                .ok_or(AssetStoreError::NoSuchAsset)
+                .map(|x| x.clone())
+        }
+    }
+
+    fn create_context() -> Context {
+        let (_, factory, _) = video_init(Default::default());
+        Context::new(factory)
+    }
+
+    #[test]
+    fn test_mesh_texture() {
+        use self::formats::Obj;
+        use ecs::components::Mesh;
+        use ecs::components::Texture;
+
+        let loader = AssetLoader::new();
+        let mut store = FakeStore { files: HashMap::new() };
+
+        store.files.insert("meshes/foo".to_string(),
+                           "
+v 1.0 2.0 3.0
+v 4.0 5.0 6.0
+v 7.0 8.0 9.0
+
+vt 0.0 0.0
+vt 1.0 0.0
+vt 0.0 1.0
+
+vn 1.0 0.0 0.0
+
+f 1/1/1 2/2/1 3/3/1
+"
+                               .as_bytes()
+                               .to_owned()
+                               .into_boxed_slice());
+
+        let mut context = create_context();
+        let mesh = loader.load::<Mesh, _, _>(&store, "foo", Obj);
+        mesh.finish(&mut context).unwrap();
+        Texture::from_color([1.0, 0.0, 1.0, 1.0]);
+    }
+}
