@@ -17,7 +17,7 @@ use std::io::{Error as IoError, ErrorKind};
 ///
 /// # Examples
 ///
-/// Here is an examle implementation of an
+/// Here is an example implementation of an
 /// asset:
 ///
 /// ```
@@ -50,11 +50,10 @@ use std::io::{Error as IoError, ErrorKind};
 /// }
 ///
 /// impl AssetFormat for WhitespaceTable {
-///     fn file_extensions(&self) -> &[&str] {
-///         const FE: [&'static str; 1] = ["wst"];
-///         const FE_REF: &'static [&'static str; 1] = &FE;
+///     fn file_extensions() -> &'static [&'static str] {
+///         const EXTENSIONS: &'static [&'static str] = &["wst"];
 ///
-///         FE_REF
+///         EXTENSIONS
 ///     }
 /// }
 ///
@@ -121,13 +120,13 @@ pub trait AssetFormat {
     /// Return the typical file extensions a file
     /// with this format has, without the preceding `"."`.
     /// If there is no asset with the first extension, the
-    /// next ones will be tested fo existence.
+    /// next ones will be tested for existence.
     ///
     /// # Panics
     ///
     /// May cause a panic if the length of
     /// file extensions is 0! Do not do this.
-    fn file_extensions(&self) -> &[&str];
+    fn file_extensions() -> &'static [&'static str];
 }
 
 /// An asset store may be a ".zip" file, a server,

@@ -25,7 +25,7 @@ mod desktop {
         read_asset_from_path(Path::new("assets").join(T::category()).join(name), format)
     }
 
-    pub fn read_asset_from_path<P, F>(path: P, format: &F) -> Result<Box<[u8]>, AssetStoreError>
+    pub fn read_asset_from_path<P, F>(path: P, _: &F) -> Result<Box<[u8]>, AssetStoreError>
         where P: AsRef<Path>,
               F: AssetFormat
     {
@@ -33,10 +33,8 @@ mod desktop {
 
         let mut path = PathBuf::from(path.as_ref());
 
-        for extension in format.file_extensions() {
+        for extension in F::file_extensions() {
             path.set_extension(extension);
-
-            println!("Trying path {:?}", &path);
 
             match read_file_complete(&path) {
                 Ok(x) => return Ok(x),
@@ -61,9 +59,9 @@ mod android {
     use asset_manager::{AssetFormat, AssetStoreError};
 
     pub fn read_asset<T: Asset, F: AssetFormat>(name: &str,
-                                                format: &F)
+                                                _: &F)
                                                 -> Result<Box<[u8]>, AssetStoreError> {
-        for extension in format.file_extensions() {
+        for extension in F::file_extensions() {
             let file_name = into_file_name(name, extension);
             let path = PathBuf::from(T::category()).join(file_name);
 
@@ -160,8 +158,6 @@ impl AssetStore for DirectoryStore {
     {
         let path = self.path.join(T::category()).join(name);
 
-        println!("path: {:?}", path);
-
         read_asset_from_path(&path, format)
     }
 }
@@ -223,13 +219,13 @@ impl ZipStore {
 }
 
 impl AssetStore for ZipStore {
-    fn read_asset<T, F>(&self, name: &str, format: &F) -> Result<Box<[u8]>, AssetStoreError>
+    fn read_asset<T, F>(&self, name: &str, _: &F) -> Result<Box<[u8]>, AssetStoreError>
         where F: AssetFormat,
               T: Asset
     {
         let mut pathbuf = PathBuf::from(T::category()).join(name);
 
-        for extension in format.file_extensions() {
+        for extension in F::file_extensions() {
             pathbuf.set_extension(extension);
             let s = pathbuf.to_str().unwrap();
 

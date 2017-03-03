@@ -73,7 +73,7 @@ fn read_image<F>(bytes: Box<[u8]>, f: F) -> Result<TextureData, ImportError>
     let mut bytes_ref = Cursor::new(bytes.as_ref());
 
     let data = f(&mut bytes_ref, imagefmt::ColFmt::RGBA)
-            .map_err(|x| ImportError::FormatError(format!("Failed to load png: {}", x)))?;
+            .map_err(|x| ImportError::FormatError(format!("Failed to load image: {}", x)))?;
 
     let (w, h, pixels): (u16, u16, Vec<u8>) = (data.w as u16, data.h as u16, data.buf);
 
@@ -87,7 +87,7 @@ fn read_image<F>(bytes: Box<[u8]>, f: F) -> Result<TextureData, ImportError>
 }
 
 impl AssetFormat for Png {
-    fn file_extensions(&self) -> &[&str] {
+    fn file_extensions() -> &'static [&'static str] {
         string_array!("png")
     }
 }
@@ -99,8 +99,10 @@ impl Import<TextureData> for Png {
 }
 
 impl AssetFormat for Jpg {
-    fn file_extensions(&self) -> &[&str] {
-        string_array!("jpg")
+    fn file_extensions() -> &'static [&'static str] {
+        const EXTENSIONS: &'static [&'static str] = &["jpg"];
+
+        EXTENSIONS
     }
 }
 
@@ -111,7 +113,7 @@ impl Import<TextureData> for Jpg {
 }
 
 impl AssetFormat for Tga {
-    fn file_extensions(&self) -> &[&str] {
+    fn file_extensions() -> &'static [&'static str] {
         string_array!("tga")
     }
 }
@@ -123,7 +125,7 @@ impl Import<TextureData> for Tga {
 }
 
 impl AssetFormat for Bmp {
-    fn file_extensions(&self) -> &[&str] {
+    fn file_extensions() -> &'static [&'static str] {
         string_array!("bmp")
     }
 }
@@ -135,7 +137,7 @@ impl Import<TextureData> for Bmp {
 }
 
 impl AssetFormat for Dds {
-    fn file_extensions(&self) -> &[&str] {
+    fn file_extensions() -> &'static [&'static str] {
         string_array!("dds")
     }
 }
@@ -170,7 +172,7 @@ use wavefront_obj::obj::{Primitive, parse as parse_obj};
 pub struct Obj;
 
 impl AssetFormat for Obj {
-    fn file_extensions(&self) -> &[&str] {
+    fn file_extensions() -> &'static [&'static str] {
         string_array!("obj")
     }
 }

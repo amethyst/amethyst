@@ -15,7 +15,7 @@ use gfx_device::gfx_types::Factory;
 use renderer::{AmbientLight, DirectionalLight, Pipeline, PointLight, target};
 
 /// A context, which stores structs
-/// that are required for asset instantioation,
+/// that are required for asset instantiation,
 /// like the gfx factory.
 pub struct Context {
     /// The gfx factory which is used

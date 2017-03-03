@@ -20,11 +20,10 @@ use std::str;
 struct CustomObj;
 
 impl AssetFormat for CustomObj {
-    fn file_extensions(&self) -> &[&str] {
-        const FE: [&'static str; 1] = ["custom"];
-        const FE_REF: &'static [&'static str; 1] = &FE;
+    fn file_extensions() -> &'static [&'static str] {
+        const EXTENSIONS: &'static [&'static str] = &["custom"];
 
-        FE_REF
+        EXTENSIONS
     }
 }
 
