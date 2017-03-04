@@ -6,7 +6,7 @@ use renderer::Renderer;
 use renderer::target::{ColorFormat, DepthFormat};
 
 /// Create a `(GfxDevice, Factory, MainTarget)` tuple from `DisplayConfig`
-pub fn video_init(cfg: DisplayConfig) -> (GfxDevice, Factory, MainTarget) {
+pub fn video_init(cfg: &DisplayConfig) -> (GfxDevice, Factory, MainTarget) {
     #[cfg(feature="opengl")]
     return new_gl(&cfg);
     #[cfg(all(windows, feature="direct3d"))]
