@@ -33,7 +33,11 @@
 //!         pipe.layers.push(clear_layer);
 //!     }
 //!
-//!     fn handle_events(&mut self, events: &[WindowEvent], _: &mut World, _: &mut AssetManager, _: &mut Pipeline) -> Trans {
+//!     fn handle_events(&mut self,
+//!                      events: &[WindowEvent],
+//!                      _: &mut World,
+//!                      _: &mut AssetManager,
+//!                      _: &mut Pipeline) -> Trans {
 //!         for e in events {
 //!             match e.payload {
 //!                 Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) => return Trans::Quit,
