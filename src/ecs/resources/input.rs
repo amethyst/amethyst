@@ -93,7 +93,7 @@ impl InputHandler {
             }
         }
 
-        return false;
+        false
     }
 
     /// Checks if the all the given keys are being pressed and held down.
