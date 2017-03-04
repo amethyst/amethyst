@@ -100,7 +100,7 @@ impl GfxDevice {
     /// Poll events from `GfxDevice`.
     pub fn poll_events(&mut self) -> Vec<WindowEvent> {
         if cfg!(feature = "opengl") {
-            self.window.poll_events().map(|e| WindowEvent::new(e)).collect()
+            self.window.poll_events().map(WindowEvent::new).collect()
         } else {
             unimplemented!()
         }
