@@ -5,7 +5,7 @@ use std::iter::Iterator;
 
 use engine::{ElementState, WindowEvent, Event, VirtualKeyCode};
 
-/// Indicates whether a given VirtualKeyCode has been queried or not.
+/// Indicates whether a given `VirtualKeyCode` has been queried or not.
 #[derive(Eq, PartialEq)]
 enum KeyQueryState {
     NotQueried,
