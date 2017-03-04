@@ -27,10 +27,10 @@ impl Stopwatch {
 
     /// Retrieves the elapsed time.
     pub fn elapsed(&self) -> Duration {
-        match self {
-            &Stopwatch::Waiting => Duration::new(0, 0),
-            &Stopwatch::Started(start) => start.elapsed(),
-            &Stopwatch::Ended(dur) => dur,
+        match *self {
+            Stopwatch::Waiting => Duration::new(0, 0),
+            Stopwatch::Started(start) => start.elapsed(),
+            Stopwatch::Ended(dur) => dur,
         }
     }
 
