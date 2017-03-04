@@ -8,6 +8,7 @@ use ecs::components::{LocalTransform, Transform, Child, Init};
 
 /// Handles updating `Transform` components based on the `LocalTransform`
 /// component and parents.
+#[derive(Default)]
 pub struct TransformSystem {
     /// Map of entities to index in sorted vec.
     indices: HashMap<Entity, usize>,

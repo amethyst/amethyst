@@ -25,6 +25,7 @@ impl<'a> Iterator for PressedKeysIterator<'a> {
 }
 
 /// Processes user input events.
+#[derive(Default)]
 pub struct InputHandler {
     pressed_keys: HashMap<VirtualKeyCode, KeyQueryState>,
 }
