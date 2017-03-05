@@ -34,7 +34,7 @@ impl GfxDevice {
         use ecs::resources::Projection;
         use renderer::{AmbientLight, Camera, DirectionalLight, PointLight};
 
-        let camera = world.read_resource::<resources::Camera>().clone();
+        let camera = world.read_resource::<resources::Camera>();
         let proj_mat = match camera.proj {
             Projection::Perspective { fov, aspect_ratio, near, far } => {
                 Camera::perspective(fov, aspect_ratio, near, far)
@@ -59,7 +59,7 @@ impl GfxDevice {
         // the scene.
         for (rend, entity) in (&renderables, &entities).iter() {
             let global_trans = match global_transforms.get(entity) {
-                Some(gt) => gt.clone(),
+                Some(gt) => *gt,
                 None => Transform::default(),
             };
 
@@ -100,7 +100,7 @@ impl GfxDevice {
     /// Poll events from `GfxDevice`.
     pub fn poll_events(&mut self) -> Vec<WindowEvent> {
         if cfg!(feature = "opengl") {
-            self.window.poll_events().map(|e| WindowEvent::new(e)).collect()
+            self.window.poll_events().map(WindowEvent::new).collect()
         } else {
             unimplemented!()
         }

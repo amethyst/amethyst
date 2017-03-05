@@ -39,7 +39,7 @@ impl Application {
     {
         use ecs::resources::{Camera, Projection, ScreenDimensions};
 
-        let (device, mut factory, main_target) = gfx_device::video_init(cfg);
+        let (device, mut factory, main_target) = gfx_device::video_init(&cfg);
         let mut pipe = Pipeline::new();
         pipe.targets.insert("main".into(),
                             Box::new(target::ColorBuffer {

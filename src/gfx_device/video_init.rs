@@ -6,11 +6,11 @@ use renderer::Renderer;
 use renderer::target::{ColorFormat, DepthFormat};
 
 /// Create a `(GfxDevice, Factory, MainTarget)` tuple from `DisplayConfig`
-pub fn video_init(cfg: DisplayConfig) -> (GfxDevice, Factory, MainTarget) {
+pub fn video_init(cfg: &DisplayConfig) -> (GfxDevice, Factory, MainTarget) {
     #[cfg(feature="opengl")]
-    return new_gl(&cfg);
+    return new_gl(cfg);
     #[cfg(all(windows, feature="direct3d"))]
-    return new_d3d(&cfg);
+    return new_d3d(cfg);
 }
 
 #[cfg(all(windows, feature="direct3d"))]
@@ -24,8 +24,8 @@ fn new_gl(cfg: &DisplayConfig) -> (GfxDevice, Factory, MainTarget) {
     use glutin;
 
     let title = cfg.title.clone();
-    let multisampling = cfg.multisampling.clone();
-    let visibility = cfg.visibility.clone();
+    let multisampling = cfg.multisampling;
+    let visibility = cfg.visibility;
 
     let mut builder = glutin::WindowBuilder::new()
         .with_title(title)

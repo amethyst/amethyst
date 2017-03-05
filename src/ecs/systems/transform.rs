@@ -8,6 +8,7 @@ use ecs::components::{LocalTransform, Transform, Child, Init};
 
 /// Handles updating `Transform` components based on the `LocalTransform`
 /// component and parents.
+#[derive(Default)]
 pub struct TransformSystem {
     /// Map of entities to index in sorted vec.
     indices: HashMap<Entity, usize>,
@@ -52,7 +53,7 @@ impl System<()> for TransformSystem {
             for (entity, _, child, _) in (&entities, &locals, &children, !&init).iter() {
                 self.indices.insert(entity, self.sorted.len());
                 self.sorted.push((entity, child.parent()));
-                self.new.push(entity.clone());
+                self.new.push(entity);
             }
 
             // Deletes entities whose parents aren't alive.
@@ -104,7 +105,7 @@ impl System<()> for TransformSystem {
                         // If the index is none then the parent is an orphan or dead
                         if let Some(parent_index) = self.indices.get(&child.parent()) {
                             if parent_index > &index {
-                                swap = Some(parent_index.clone());
+                                swap = Some(*parent_index);
                             }
                         }
 

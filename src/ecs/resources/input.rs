@@ -5,7 +5,7 @@ use std::iter::Iterator;
 
 use engine::{ElementState, WindowEvent, Event, VirtualKeyCode};
 
-/// Indicates whether a given VirtualKeyCode has been queried or not.
+/// Indicates whether a given `VirtualKeyCode` has been queried or not.
 #[derive(Eq, PartialEq)]
 enum KeyQueryState {
     NotQueried,
@@ -25,6 +25,7 @@ impl<'a> Iterator for PressedKeysIterator<'a> {
 }
 
 /// Processes user input events.
+#[derive(Default)]
 pub struct InputHandler {
     pressed_keys: HashMap<VirtualKeyCode, KeyQueryState>,
 }
@@ -93,7 +94,7 @@ impl InputHandler {
             }
         }
 
-        return false;
+        false
     }
 
     /// Checks if the all the given keys are being pressed and held down.
