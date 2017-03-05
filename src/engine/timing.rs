@@ -30,7 +30,7 @@ impl Stopwatch {
     pub fn elapsed(&self) -> Duration {
         match *self {
             Stopwatch::Waiting => Duration::new(0, 0),
-            Stopwatch::Started(start) => start.elapsed(),
+            Stopwatch::Started(dur, start) => dur + start.elapsed(),
             Stopwatch::Ended(dur) => dur,
         }
     }
