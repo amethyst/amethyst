@@ -7,6 +7,7 @@
 * Dzmitry Malyshau
 * Emil Gardström
 * Eyal Kalderon
+* Ilya Bogdanov
 * Lucio Franco
 * Lukas Schmierer
 * msiglreith
@@ -14,4 +15,3 @@
 * Oflor
 * Robbie Cooper
 * White-Oak
-* Ilya Bogdanov
