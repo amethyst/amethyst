@@ -12,30 +12,6 @@ gfx_vertex_struct!(Vertex {
     tex_coord: [i32; 2] = "a_TexCoord",
 });
 
-pub struct Clear;
-
-impl<R> pass::Pass<R> for Clear
-    where R: gfx::Resources
-{
-    type Arg = pass::Clear;
-    type Target = GeometryBuffer<R>;
-
-    fn apply<C>(&self,
-                c: &pass::Clear,
-                target: &GeometryBuffer<R>,
-                _: &::Pipeline,
-                _: &::Scene<R>,
-                encoder: &mut gfx::Encoder<R, C>)
-        where C: gfx::CommandBuffer<R>
-    {
-        encoder.clear(&target.normal, [0.; 4]);
-        encoder.clear(&target.ka, c.color);
-        encoder.clear(&target.kd, c.color);
-        encoder.clear(&target.ks, c.color);
-        encoder.clear_depth(&target.depth, 1.0);
-    }
-}
-
 pub static DRAW_VERTEX_SRC: &'static [u8] = b"
     #version 150 core
 
@@ -325,21 +301,24 @@ impl<R> pass::Pass<R> for DrawPass<R>
     type Target = GeometryBuffer<R>;
 
     fn apply<C>(&self,
-                _: &pass::DrawFlat,
+                _: &::pass::DrawFlat,
                 target: &GeometryBuffer<R>,
                 _: &::Pipeline,
-                scene: &::Scene<R>,
+                fragments: &[::Fragment<R>],
+                scene: &::Scene,
                 encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
         // every entity gets drawn
-        for f in &scene.fragments {
-            encoder.update_constant_buffer(&self.vertex,
-                                           &VertexArgs {
-                                               proj: scene.camera.proj,
-                                               view: scene.camera.view,
-                                               model: f.transform,
-                                           });
+        for f in fragments {
+            encoder.update_constant_buffer(
+                &self.vertex,
+                &VertexArgs {
+                    proj: scene.camera.proj,
+                    view: scene.camera.view,
+                    model: f.transform,
+                }
+            );
 
             let ka = f.ka.to_view(&self.ka, encoder);
             let kd = f.kd.to_view(&self.kd, encoder);
@@ -388,16 +367,17 @@ impl<R> ::Pass<R> for DepthPass<R>
     type Target = GeometryBuffer<R>;
 
     fn apply<C>(&self,
-                _: &pass::DepthPass,
+                _: &::pass::DepthPass,
                 target: &GeometryBuffer<R>,
                 _: &::Pipeline,
-                scene: &::Scene<R>,
+                fragments: &[::Fragment<R>],
+                scene: &::Scene,
                 encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
         // every entity gets rendered into the depth layer
         // not touching all other layers in Gbuffer
-        for f in &scene.fragments {
+        for f in fragments {
             encoder.update_constant_buffer(&self.vertex,
                                            &VertexArgs {
                                                proj: scene.camera.proj,
@@ -506,15 +486,16 @@ impl<R> pass::Pass<R> for BlitLayer<R>
     type Arg = pass::BlitLayer;
     type Target = ::target::ColorBuffer<R>;
 
-    fn apply<C>(&self,
-                arg: &pass::BlitLayer,
-                target: &::target::ColorBuffer<R>,
-                pipeline: &::Pipeline,
-                _: &::Scene<R>,
-                encoder: &mut gfx::Encoder<R, C>)
+        fn apply<C>(&self,
+                    arg: &::pass::BlitLayer,
+                    target: &::target::ColorBuffer<R>,
+                    pipe: &::Pipeline,
+                    _: &[::Fragment<R>],
+                    _: &::Scene,
+                    encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
-        let src = &pipeline.targets[&arg.gbuffer];
+        let src = &pipe.targets[&arg.gbuffer];
         let src = src.downcast_ref::<GeometryBuffer<R>>().unwrap();
 
         let layer = match arg.layer.as_ref() {
@@ -583,12 +564,13 @@ impl<R> pass::Pass<R> for LightingPass<R>
     fn apply<C>(&self,
                 arg: &pass::Lighting,
                 target: &::target::ColorBuffer<R>,
-                pipeline: &::Pipeline,
-                scene: &::Scene<R>,
+                pipe: &::Pipeline,
+                _: &[::Fragment<R>],
+                scene: &::Scene,
                 encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
-        let src = &pipeline.targets[&arg.gbuffer];
+        let src = &pipe.targets[&arg.gbuffer];
         let src = src.downcast_ref::<GeometryBuffer<R>>().unwrap();
         let (w, h, _, _) = src.kd.get_dimensions();
 

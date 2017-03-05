@@ -251,30 +251,6 @@ gfx_defines!(
     }
 );
 
-
-/// Handles clearing the screen
-pub struct Clear;
-
-impl<R> pass::Pass<R> for Clear
-    where R: gfx::Resources
-{
-    type Arg = pass::Clear;
-    type Target = ColorBuffer<R>;
-
-    fn apply<C>(&self,
-                arg: &pass::Clear,
-                target: &ColorBuffer<R>,
-                _: &::Pipeline,
-                _: &::Scene<R>,
-                encoder: &mut gfx::Encoder<R, C>)
-        where C: gfx::CommandBuffer<R>
-    {
-        encoder.clear(&target.color, arg.color);
-        encoder.clear_depth(&target.output_depth, 1.0);
-    }
-}
-
-
 /// Handles rendering fragments with no shading
 pub struct DrawFlat<R: gfx::Resources> {
     vertex: gfx::handle::Buffer<R, VertexArgs>,
@@ -320,24 +296,29 @@ where R: gfx::Resources
                 _: &pass::DrawFlat,
                 target: &ColorBuffer<R>,
                 _: &::Pipeline,
-                scene: &::Scene<R>,
+                fragments: &[::Fragment<R>],
+                scene: &::Scene,
                 encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
-        {
-            // every entity gets drawn
-            for e in &scene.fragments {
-                encoder.update_constant_buffer(&self.vertex,
-                                               &VertexArgs {
-                                                   proj: scene.camera.proj,
-                                                   view: scene.camera.view,
-                                                   model: e.transform,
-                                               });
+    {
+        // every entity gets drawn
+        for e in fragments {
+            encoder.update_constant_buffer(
+                &self.vertex,
+                &VertexArgs {
+                    proj: scene.camera.proj,
+                    view: scene.camera.view,
+                    model: e.transform,
+                }
+            );
 
-                encoder.update_constant_buffer(&self.fragment,
-                                               &FragmentArgs {
-                                                   point_light_count: 0,
-                                                   directional_light_count: 0,
-                                           });
+            encoder.update_constant_buffer(
+                &self.fragment,
+                &FragmentArgs {
+                    point_light_count: 0,
+                    directional_light_count: 0,
+                }
+            );
 
             let ka = e.ka.to_view(&self.ka, encoder);
             let kd = e.kd.to_view(&self.kd, encoder);
@@ -416,7 +397,8 @@ impl<R> pass::Pass<R> for DrawShaded<R>
                 _: &pass::DrawShaded,
                 target: &ColorBuffer<R>,
                 _: &::Pipeline,
-                scene: &::Scene<R>,
+                fragments: &[::Fragment<R>],
+                scene: &::Scene,
                 encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
@@ -449,19 +431,23 @@ impl<R> pass::Pass<R> for DrawShaded<R>
         encoder.update_buffer(&self.dir_lights, &dir_lights[..], 0).unwrap();
 
         // Draw every entity
-        for e in &scene.fragments {
-            encoder.update_constant_buffer(&self.vertex,
-                                           &VertexArgs {
-                                               proj: scene.camera.proj,
-                                               view: scene.camera.view,
-                                               model: e.transform,
-                                           });
+        for e in fragments {
+            encoder.update_constant_buffer(
+                &self.vertex,
+                &VertexArgs {
+                    proj: scene.camera.proj,
+                    view: scene.camera.view,
+                    model: e.transform,
+                }
+            );
 
-            encoder.update_constant_buffer(&self.fragment,
-                                           &FragmentArgs {
-                                               point_light_count: point_lights.len() as i32,
-                                               directional_light_count: dir_lights.len() as i32,
-                                           });
+            encoder.update_constant_buffer(
+                &self.fragment,
+                &FragmentArgs {
+                    point_light_count: scene.point_lights.len() as i32,
+                    directional_light_count: scene.directional_lights.len() as i32,
+                }
+            );
 
             let ka = e.ka.to_view(&self.ka, encoder);
             let kd = e.kd.to_view(&self.kd, encoder);
@@ -535,19 +521,22 @@ impl<R> pass::Pass<R> for Wireframe<R>
                 _: &pass::Wireframe,
                 target: &ColorBuffer<R>,
                 _: &::Pipeline,
-                scene: &::Scene<R>,
+                fragments: &[::Fragment<R>],
+                scene: &::Scene,
                 encoder: &mut gfx::Encoder<R, C>)
         where C: gfx::CommandBuffer<R>
     {
 
         // every entity gets drawn
-        for e in &scene.fragments {
-            encoder.update_constant_buffer(&self.vertex,
-                                           &VertexArgs {
-                                               proj: scene.camera.proj,
-                                               view: scene.camera.view,
-                                               model: e.transform,
-                                           });
+        for e in fragments {
+            encoder.update_constant_buffer(
+                &self.vertex,
+                &VertexArgs {
+                    proj: scene.camera.proj,
+                    view: scene.camera.view,
+                    model: e.transform,
+                }
+            );
 
             let ka = e.ka.to_view(&self.ka, encoder);
             let kd = e.kd.to_view(&self.kd, encoder);

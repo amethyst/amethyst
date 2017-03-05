@@ -228,11 +228,10 @@ impl State for Pong {
     fn on_start(&mut self, world: &mut World, assets: &mut AssetManager, pipe: &mut Pipeline) {
         use amethyst::ecs::resources::{Camera, InputHandler, Projection, ScreenDimensions};
         use amethyst::renderer::Layer;
-        use amethyst::renderer::pass::{Clear, DrawFlat};
+        use amethyst::renderer::pass::{DrawFlat};
 
         let layer = Layer::new("main",
-                               vec![Clear::new([0.0, 0.0, 0.0, 1.0]),
-                                    DrawFlat::new("main", "main")]);
+                               vec![DrawFlat::new("main", "main")]);
 
         pipe.layers.push(layer);
 
@@ -343,35 +342,36 @@ fn main() {
 }
 
 fn gen_rectangle(w: f32, h: f32) -> Vec<VertexPosNormal> {
-    let data: Vec<VertexPosNormal> = vec![VertexPosNormal {
-                                              pos: [-w / 2., -h / 2., 0.],
-                                              normal: [0., 0., 1.],
-                                              tex_coord: [0., 0.],
-                                          },
-                                          VertexPosNormal {
-                                              pos: [w / 2., -h / 2., 0.],
-                                              normal: [0., 0., 1.],
-                                              tex_coord: [1., 0.],
-                                          },
-                                          VertexPosNormal {
-                                              pos: [w / 2., h / 2., 0.],
-                                              normal: [0., 0., 1.],
-                                              tex_coord: [1., 1.],
-                                          },
-                                          VertexPosNormal {
-                                              pos: [w / 2., h / 2., 0.],
-                                              normal: [0., 0., 1.],
-                                              tex_coord: [1., 1.],
-                                          },
-                                          VertexPosNormal {
-                                              pos: [-w / 2., h / 2., 0.],
-                                              normal: [0., 0., 1.],
-                                              tex_coord: [1., 1.],
-                                          },
-                                          VertexPosNormal {
-                                              pos: [-w / 2., -h / 2., 0.],
-                                              normal: [0., 0., 1.],
-                                              tex_coord: [1., 1.],
-                                          }];
+    let data: Vec<VertexPosNormal> =
+        vec![VertexPosNormal {
+            pos: [-w / 2., -h / 2., 0.],
+            normal: [0., 0., 1.],
+            tex_coord: [0., 0.],
+        },
+        VertexPosNormal {
+            pos: [w / 2., -h / 2., 0.],
+            normal: [0., 0., 1.],
+            tex_coord: [1., 0.],
+        },
+        VertexPosNormal {
+            pos: [w / 2., h / 2., 0.],
+            normal: [0., 0., 1.],
+            tex_coord: [1., 1.],
+        },
+        VertexPosNormal {
+            pos: [w / 2., h / 2., 0.],
+            normal: [0., 0., 1.],
+            tex_coord: [1., 1.],
+        },
+        VertexPosNormal {
+            pos: [-w / 2., h / 2., 0.],
+            normal: [0., 0., 1.],
+            tex_coord: [1., 1.],
+        },
+        VertexPosNormal {
+            pos: [-w / 2., -h / 2., 0.],
+            normal: [0., 0., 1.],
+            tex_coord: [1., 1.],
+        }];
     data
 }

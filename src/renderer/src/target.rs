@@ -4,7 +4,7 @@ use mopa;
 /// A Target or a RenderTarget is any object that
 /// can be the target of a Layer This is normally
 /// a framebuffer
-pub trait Target: mopa::Any {}
+pub trait Target: mopa::Any + Sync {}
 mopafy!(Target);
 
 /// Placeholder Color format
