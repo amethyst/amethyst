@@ -14,4 +14,5 @@
 * Nikita Chashchinskii
 * Oflor
 * Robbie Cooper
+* Scott Corbeil
 * White-Oak
