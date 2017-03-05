@@ -14,13 +14,20 @@ pub use self::asset::{Asset, AssetFormat, AssetStore, AssetStoreError};
 pub use self::common::{DefaultStore, DirectoryStore, ZipStore};
 pub use self::io::{Import, Error as ImportError};
 
+use std::any::Any;
+use std::collections::HashMap;
 use std::fmt::{Debug, Display, Error as FormatError, Formatter};
-use std::marker::Send;
+use std::marker::{Send, PhantomData};
+use std::sync::{Arc, Mutex};
+use std::sync::mpsc;
 
 use futures::{Async, Future};
 use futures_cpupool::{CpuPool, CpuFuture};
 
+use threadpool::ThreadPool;
+
 use engine::Context;
+use ecs::{System, RunArg};
 
 /// A parallel asset loader.
 /// It contains a `CpuPool` and
@@ -48,7 +55,28 @@ use engine::Context;
 /// let asset_future = loader.load(my_store, "my_asset", MyFormat);
 /// ```
 pub struct AssetLoader {
-    cpupool: CpuPool,
+    assets: HashMap<String, Box<Any>>,
+    data: Arc<Mutex<Vec<AssetData>>>,
+    pool: Arc<ThreadPool>,
+}
+
+type LoadData = Box<Fn() -> Result<Box<Any + Send>, AssetError> + Send>;
+type LoadAsset = Box<Fn(Box<Any + Send>, &mut Context) -> Box<Any> + Send>;
+
+/// Wrapper type for a generic
+/// asset data.
+pub struct Submission {
+    name: String,
+    load_data: LoadData,
+    load_asset: LoadAsset,
+}
+
+/// Wrapper type for a generic asset,
+/// which data was already loaded.
+pub struct AssetData {
+    name: String,
+    data: Box<Any + Send>,
+    load_asset: LoadAsset,
 }
 
 /// An asset future which means
@@ -66,14 +94,16 @@ pub struct AssetLoader {
 /// the loaded data and create an asset from that
 /// data. If it hasn't yet finished, it will block
 /// the calling thread.
-pub struct AssetFuture<T: Asset> {
-    inner: CpuFuture<T::Data, AssetError<T>>,
+pub struct AssetFuture<'a, T: Asset> {
+    name: String,
+    loader: &'a AssetLoader,
+    phantom: PhantomData<T>,
 }
 
 /// The error that can occurr when trying
 /// to import asset data from a store.
 #[derive(Debug)]
-pub enum AssetError<T: Asset> {
+pub enum AssetError {
     /// Occurs if the `AssetStore` could not load
     /// the asset. See `AssetStoreInfo` for details.
     StoreError(AssetStoreError),
@@ -83,15 +113,26 @@ pub enum AssetError<T: Asset> {
     /// Importing the data didn't work
     /// out. Note that this does not necessarily mean
     /// that the data is invalid.
-    DataError(T::Error),
+    DataError(String),
 }
 
 impl AssetLoader {
     /// Creates a new asset loader with a cpu pool
     /// using the number of cpu cores for the number of threads.
-    pub fn new() -> Self {
-        AssetLoader { cpupool: CpuPool::new_num_cpus() }
+    pub fn new(pool: Arc<ThreadPool>) -> Self {
+        AssetLoader {
+            assets: HashMap::new(),
+            data: Arc::new(Mutex::new(Vec::new())),
+            pool: pool,
+        }
     }
+
+    fn spawn(&self, sub: Submission) {
+        let data = self.data.clone();
+        self.pool.execute(move || Self::execute(sub, data));
+    }
+
+    fn execute(sub: Submission, data: Arc<Mutex<Vec<AssetData>>>) {}
 
     /// Load an asset on the calling thread.
     /// If it is not a very small asset, you
@@ -101,17 +142,20 @@ impl AssetLoader {
                              name: &str,
                              format: F,
                              context: &mut Context)
-                             -> Result<T, AssetError<T>>
+                             -> Result<T, AssetError>
         where T: Asset,
               S: AssetStore,
               F: AssetFormat + Import<T::Data>
     {
-        let data = Self::load_data(store, name, format)?;
-        T::from_data(data, context).map_err(|x| AssetError::DataError(x))
+        let data = Self::load_data::<T, S, F>(store, name, format)?;
+        T::from_data(data, context).map_err(|x| AssetError::DataError(format!("{:?}", x)))
     }
 
     /// Loads just the data for some asset (blocking).
-    pub fn load_data<T, S, F>(store: &S, name: &str, format: F) -> Result<T::Data, AssetError<T>>
+    ///
+    /// Try to use `load` or `load_default` instead, unless
+    /// it's a very small asset.
+    pub fn load_data<T, S, F>(store: &S, name: &str, format: F) -> Result<T::Data, AssetError>
         where T: Asset,
               S: AssetStore,
               F: AssetFormat + Import<T::Data>
@@ -135,10 +179,32 @@ impl AssetLoader {
         let store: S = store.clone();
         let name = name.to_string();
 
-        let cpu_future: CpuFuture<T::Data, _> = self.cpupool
-            .spawn_fn(move || Self::load_data::<T, _, _>(&store, &name, format));
+        let sub = Submission {
+            name: name,
+            load_data: Box::new(move || {
+                let data = Self::load_data::<T, S, F>(&store, &name.clone(), format)?;
+                let data_boxed = Box::new(data) as Box<Any + Send>;
+                Ok(data_boxed)
+            }),
+            load_asset: Box::new(|x, context| {
+                debug_assert!(x.is::<T>());
 
-        AssetFuture { inner: cpu_future }
+                let data: Box<T::Data> = unsafe { ::std::mem::transmute(x) };
+                let data = *data;
+
+                let asset = T::from_data(data, context);
+
+                Box::new(asset) as Box<Any>
+            }),
+        };
+
+        self.spawn(sub);
+
+        AssetFuture {
+            name: name,
+            loader: self,
+            phantom: PhantomData,
+        }
     }
 
     /// Loads an asset from
@@ -160,61 +226,19 @@ impl AssetLoader {
     }
 }
 
-impl<T: Asset + Send> AssetFuture<T> {
-    /// This blocks the current thread until the data
-    /// is imported (if it isn't already). After that,
-    /// it'll do things which have to be done on the
-    /// main thread, most likely uploading data to
-    /// the graphics card.
-    ///
-    /// # Examples
-    ///
-    /// You would use it like this:
-    ///
-    /// ```ignore
-    /// # use amethyst::asset_manager::AssetLoader;
-    ///
-    /// let tree = loader.load_default("tree", MyFormat);
-    ///
-    /// // Display loading screen
-    ///
-    /// let tree = tree.finish(&mut context);
-    /// ```
-    pub fn finish(self, context: &mut Context) -> Result<T, AssetError<T>>
-        where Self: Future<Item = T::Data, Error = AssetError<T>>
-    {
-        let data = self.wait()?;
-        T::from_data(data, context).map_err(|x| AssetError::DataError(x))
-    }
-}
-
-impl<T: Asset + 'static> Future for AssetFuture<T>
-    where T::Data: Send,
-          T::Error: Send
-{
-    type Item = T::Data;
-    type Error = AssetError<T>;
-
-    fn poll(&mut self) -> Result<Async<T::Data>, AssetError<T>> {
-        self.inner.poll()
-    }
-}
-
-impl<T: Asset> From<AssetStoreError> for AssetError<T> {
+impl From<AssetStoreError> for AssetError {
     fn from(e: AssetStoreError) -> Self {
         AssetError::StoreError(e)
     }
 }
 
-impl<T: Asset> Display for AssetError<T>
-    where T::Error: Debug
-{
+impl Display for AssetError {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FormatError> {
-        match self {
-            &AssetError::StoreError(ref x) => write!(f, "IO Error: {}", x),
-            &AssetError::ImportError(ref x) => write!(f, "Import Error: {}", x),
-            &AssetError::DataError(ref x) => {
-                write!(f, "Error when instantiating asset from data: {:?}", x)
+        match *self {
+            AssetError::StoreError(ref x) => write!(f, "IO Error: {}", x),
+            AssetError::ImportError(ref x) => write!(f, "Import Error: {}", x),
+            AssetError::DataError(ref x) => {
+                write!(f, "Error when instantiating asset from data: {}", x)
             }
         }
     }

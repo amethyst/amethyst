@@ -182,6 +182,15 @@ impl Application {
         self.states.start(&mut self.engine);
     }
 
+    fn should_load_asset(delta_time: f32) -> bool {
+        // TODO: don't hardocode
+        const FPS: f32 = 60.0;
+        const REQUIRED_OVERHANG: f32 = 0.1;
+        const REQUIRED_DELTA_TIME: f32 = (1.0 / FPS) * (1.0 - REQUIRED_OVERHANG);
+
+        delta_time < REQUIRED_DELTA_TIME
+    }
+
     /// Advances the game world by one tick.
     fn advance_frame(&mut self) {
         use ecs::resources::ScreenDimensions;
