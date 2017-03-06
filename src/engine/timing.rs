@@ -95,8 +95,8 @@ mod tests {
         let lower = duration / 100 * (100 - UNCERTAINTY);
         let upper = duration / 100 * (100 + UNCERTAINTY);
         assert!(elapsed < upper && elapsed > lower,
-                "expected about {} seconds, got {:?}",
-                duration.as_secs(), elapsed);
+                "expected {} +- {}% seconds, got {:?}",
+                DURATION, UNCERTAINTY, elapsed);
     }
 
     #[test]
@@ -133,8 +133,8 @@ mod tests {
         let lower = duration / 100 * (100 - UNCERTAINTY);
         let upper = duration / 100 * (100 + UNCERTAINTY);
         assert!(elapsed < upper && elapsed > lower,
-                "expected about {} second, got {:?}",
-                duration.as_secs(), elapsed);
+                "expected {} +- {}% seconds, got {:?}",
+                DURATION, UNCERTAINTY, elapsed);
     }
 
     // test that multiple start-stop cycles are cumulative
@@ -156,7 +156,7 @@ mod tests {
         let lower = duration / 100 * (100 - UNCERTAINTY);
         let upper = duration / 100 * (100 + UNCERTAINTY);
         assert!(elapsed < upper && elapsed > lower,
-                "expected about {} seconds, got {:?}",
-                duration.as_secs(), elapsed);
+                "expected {}  +- {}% seconds, got {:?}",
+                DURATION, UNCERTAINTY, elapsed);
     }
 }
