@@ -27,6 +27,7 @@ amethyst_config = { path = "src/config/", version = "0.2.1" }
 amethyst_renderer = { path = "src/renderer", version = "0.4.1" }
 cgmath = "0.12"
 dds-rs = "0.4"
+fnv = "1.0"
 num_cpus = "1.2"
 genmesh = "0.4"
 gfx = "0.14"
@@ -36,7 +37,6 @@ glutin = "0.7"
 imagefmt = "4.0"
 specs = "0.7"
 wavefront_obj = "5.0"
-fnv = "1.0.5"
 
 [target.'cfg(windows)'.dependencies]
 gfx_device_dx11 = "0.4"

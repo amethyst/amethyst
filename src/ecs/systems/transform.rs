@@ -1,7 +1,7 @@
 //! Scene graph system and types
 
 use cgmath::Matrix4;
-use fnv::{FnvHashMap, FnvHashSet};
+use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 
 use ecs::{Join, Entity, RunArg, System};
 use ecs::components::{LocalTransform, Transform, Child, Init};
@@ -11,30 +11,30 @@ use ecs::components::{LocalTransform, Transform, Child, Init};
 #[derive(Default)]
 pub struct TransformSystem {
     /// Map of entities to index in sorted vec.
-    indices: FnvHashMap<Entity, usize>,
+    indices: HashMap<Entity, usize>,
     /// Vec of entities with parents before children. Only contains entities
     /// with parents.
     sorted: Vec<(Entity, Entity)>,
     /// New entities in the current update.
     new: Vec<Entity>,
     /// Entities that have been removed in current frame.
-    dead: FnvHashSet<Entity>,
+    dead: HashSet<Entity>,
     /// Child entities that were dirty.
-    dirty: FnvHashSet<Entity>,
+    dirty: HashSet<Entity>,
     /// Prevent circular infinite loops with parents.
-    swapped: FnvHashSet<Entity>,
+    swapped: HashSet<Entity>,
 }
 
 impl TransformSystem {
     /// Creates a new transform processor.
     pub fn new() -> TransformSystem {
         TransformSystem {
-            indices: FnvHashMap::default(),
+            indices: HashMap::default(),
             sorted: Vec::new(),
             new: Vec::new(),
-            dead: FnvHashSet::default(),
-            dirty: FnvHashSet::default(),
-            swapped: FnvHashSet::default(),
+            dead: HashSet::default(),
+            dirty: HashSet::default(),
+            swapped: HashSet::default(),
         }
     }
 }

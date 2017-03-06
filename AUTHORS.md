@@ -8,6 +8,7 @@
 * Emil Gardström
 * Eyal Kalderon
 * Ilya Bogdanov
+* Konstantin Zverev
 * Lucio Franco
 * Lukas Schmierer
 * msiglreith
@@ -16,4 +17,3 @@
 * Robbie Cooper
 * Scott Corbeil
 * White-Oak
-* Konstantin Zverev

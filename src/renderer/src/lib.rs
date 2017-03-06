@@ -16,9 +16,9 @@ extern crate mopa;
 pub mod pass;
 pub mod target;
 
+use fnv::FnvHashMap as HashMap;
 use specs::{Component, VecStorage};
 use std::any::TypeId;
-use fnv::FnvHashMap;
 
 pub use pass::{Pass, PassDescription};
 pub use target::Target;
@@ -27,7 +27,7 @@ pub use target::Target;
 /// contains the passes, all other data is contained in the `Frame`.
 pub struct Renderer<R: gfx::Resources, C: gfx::CommandBuffer<R>> {
     cmd_buf: gfx::Encoder<R, C>,
-    passes: FnvHashMap<(TypeId, TypeId),
+    passes: HashMap<(TypeId, TypeId),
                     Box<Fn(&Box<PassDescription>,
                            &Target,
                            &Pipeline,
@@ -51,7 +51,7 @@ impl<R, C> Renderer<R, C>
     pub fn new(cmd_buf: C) -> Renderer<R, C> {
         Renderer {
             cmd_buf: cmd_buf.into(),
-            passes: FnvHashMap::default(),
+            passes: HashMap::default(),
         }
     }
 
@@ -389,7 +389,7 @@ pub struct Pipeline {
     pub layers: Vec<Layer>,
     /// collection of render targets. A target may be
     /// a source or a sink for a `Pass`
-    pub targets: FnvHashMap<String, Box<Target>>,
+    pub targets: HashMap<String, Box<Target>>,
 }
 
 impl Pipeline {
@@ -397,7 +397,7 @@ impl Pipeline {
     pub fn new() -> Pipeline {
         Pipeline {
             layers: Vec::new(),
-            targets: FnvHashMap::default(),
+            targets: HashMap::default(),
         }
     }
 }

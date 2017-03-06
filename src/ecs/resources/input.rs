@@ -1,7 +1,8 @@
 //! World resource that handles all user input.
 
+use fnv::FnvHashMap as HashMap;
+
 use std::collections::hash_map::{Entry, Keys};
-use fnv::FnvHashMap;
 use std::iter::Iterator;
 
 use engine::{ElementState, WindowEvent, Event, VirtualKeyCode};
@@ -28,13 +29,13 @@ impl<'a> Iterator for PressedKeysIterator<'a> {
 /// Processes user input events.
 #[derive(Default)]
 pub struct InputHandler {
-    pressed_keys: FnvHashMap<VirtualKeyCode, KeyQueryState>,
+    pressed_keys: HashMap<VirtualKeyCode, KeyQueryState>,
 }
 
 impl InputHandler {
     /// Creates a new input handler.
     pub fn new() -> InputHandler {
-        InputHandler { pressed_keys: FnvHashMap::default() }
+        InputHandler { pressed_keys: HashMap::default() }
     }
 
     /// Updates the input handler with new engine events.
