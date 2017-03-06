@@ -77,6 +77,7 @@ extern crate imagefmt;
 extern crate num_cpus;
 extern crate specs;
 extern crate wavefront_obj;
+extern crate fnv;
 
 pub mod asset_manager;
 pub mod ecs;

@@ -6,7 +6,7 @@ use dds::DDS;
 use gfx::texture::{AaMode, Kind};
 use imagefmt::{ColFmt, Image, read_from};
 use std::any::{Any, TypeId};
-use std::collections::HashMap;
+use fnv::FnvHashMap;
 use std::{env, fs};
 use std::io::{Cursor, Read};
 use std::ops::{Deref, DerefMut};
@@ -73,16 +73,16 @@ impl<'a, T: Any + Send + Sync> AssetReadStorage<T> for Storage<Asset<T>, RwLockR
 
 /// Internal assets handler which takes care of storing and loading assets.
 pub struct Assets {
-    loaders: HashMap<LoaderTypeId, Box<Any>>,
-    asset_ids: HashMap<String, AssetId>,
+    loaders: FnvHashMap<LoaderTypeId, Box<Any>>,
+    asset_ids: FnvHashMap<String, AssetId>,
     assets: World,
 }
 
 impl Assets {
     fn new() -> Assets {
         Assets {
-            loaders: HashMap::new(),
-            asset_ids: HashMap::new(),
+            loaders: FnvHashMap::default(),
+            asset_ids: FnvHashMap::default(),
             assets: World::new(),
         }
     }
@@ -149,8 +149,8 @@ impl Assets {
 /// Asset manager which handles assets and loaders.
 pub struct AssetManager {
     assets: Assets,
-    asset_type_ids: HashMap<(String, AssetTypeId), SourceTypeId>,
-    closures: HashMap<(AssetTypeId, SourceTypeId),
+    asset_type_ids: FnvHashMap<(String, AssetTypeId), SourceTypeId>,
+    closures: FnvHashMap<(AssetTypeId, SourceTypeId),
                       Box<FnMut(&mut Assets, &str, &[u8]) -> Option<AssetId>>>,
     stores: Vec<Box<AssetStore>>,
 }
@@ -159,9 +159,9 @@ impl AssetManager {
     /// Create a new asset manager
     pub fn new() -> AssetManager {
         let mut asset_manager = AssetManager {
-            asset_type_ids: HashMap::new(),
+            asset_type_ids: FnvHashMap::default(),
             assets: Assets::new(),
-            closures: HashMap::new(),
+            closures: FnvHashMap::default(),
             stores: Vec::new(),
         };
 

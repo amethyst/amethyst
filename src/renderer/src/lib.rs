@@ -5,6 +5,7 @@
 #![doc(html_logo_url = "http://tinyurl.com/hgsb45k")]
 
 extern crate cgmath;
+extern crate fnv;
 extern crate glutin;
 extern crate specs;
 #[macro_use]
@@ -17,7 +18,7 @@ pub mod target;
 
 use specs::{Component, VecStorage};
 use std::any::TypeId;
-use std::collections::HashMap;
+use fnv::FnvHashMap;
 
 pub use pass::{Pass, PassDescription};
 pub use target::Target;
@@ -26,7 +27,7 @@ pub use target::Target;
 /// contains the passes, all other data is contained in the `Frame`.
 pub struct Renderer<R: gfx::Resources, C: gfx::CommandBuffer<R>> {
     cmd_buf: gfx::Encoder<R, C>,
-    passes: HashMap<(TypeId, TypeId),
+    passes: FnvHashMap<(TypeId, TypeId),
                     Box<Fn(&Box<PassDescription>,
                            &Target,
                            &Pipeline,
@@ -50,7 +51,7 @@ impl<R, C> Renderer<R, C>
     pub fn new(cmd_buf: C) -> Renderer<R, C> {
         Renderer {
             cmd_buf: cmd_buf.into(),
-            passes: HashMap::new(),
+            passes: FnvHashMap::default(),
         }
     }
 
@@ -388,7 +389,7 @@ pub struct Pipeline {
     pub layers: Vec<Layer>,
     /// collection of render targets. A target may be
     /// a source or a sink for a `Pass`
-    pub targets: HashMap<String, Box<Target>>,
+    pub targets: FnvHashMap<String, Box<Target>>,
 }
 
 impl Pipeline {
@@ -396,7 +397,7 @@ impl Pipeline {
     pub fn new() -> Pipeline {
         Pipeline {
             layers: Vec::new(),
-            targets: HashMap::new(),
+            targets: FnvHashMap::default(),
         }
     }
 }
