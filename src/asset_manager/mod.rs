@@ -2,7 +2,7 @@
 //!
 //! For how to implement an asset yourself, see the `Asset` trait.
 //!
-//! If you just want to load it, look at `AssetLoader` / `AssetManager`.
+//! If you just want to load it, look at `AssetLoader`.
 
 pub mod formats;
 
@@ -16,26 +16,19 @@ pub use self::io::{Import, Error as ImportError};
 
 use std::any::Any;
 use std::collections::HashMap;
-use std::fmt::{Debug, Display, Error as FormatError, Formatter};
-use std::marker::{Send, PhantomData};
+use std::fmt::{Display, Error as FormatError, Formatter};
+use std::marker::Send;
 use std::sync::{Arc, Mutex};
-use std::sync::mpsc;
-
-use futures::{Async, Future};
-use futures_cpupool::{CpuPool, CpuFuture};
 
 use threadpool::ThreadPool;
 
 use engine::Context;
-use ecs::{System, RunArg};
 
 /// A parallel asset loader.
-/// It contains a `CpuPool` and
-/// creates `Future`s from that.
+/// It has access to a shared threadpool on
+/// which the data is loaded.
 ///
-/// Only the `Asset::Data` will be
-/// loaded in a separate thread, the
-/// asset itself will be created on the main
+/// The asset itself will be created on the main
 /// thread, because often it requires thread-unsafe
 /// actions (accessing OpenGL to create some buffer).
 ///
@@ -57,11 +50,12 @@ use ecs::{System, RunArg};
 pub struct AssetLoader {
     assets: HashMap<String, Box<Any>>,
     data: Arc<Mutex<Vec<AssetData>>>,
+    errors: Arc<Mutex<HashMap<String, AssetError>>>,
     pool: Arc<ThreadPool>,
 }
 
 type LoadData = Box<Fn() -> Result<Box<Any + Send>, AssetError> + Send>;
-type LoadAsset = Box<Fn(Box<Any + Send>, &mut Context) -> Box<Any> + Send>;
+type LoadAsset = Box<Fn(Box<Any + Send>, &mut Context) -> Result<Box<Any>, AssetError> + Send>;
 
 /// Wrapper type for a generic
 /// asset data.
@@ -77,27 +71,6 @@ pub struct AssetData {
     name: String,
     data: Box<Any + Send>,
     load_asset: LoadAsset,
-}
-
-/// An asset future which means
-/// "This will be available in the future".
-///
-/// #### Why isn't it available immediately?
-///
-/// The reason is that assets are loaded in
-/// separate threads, without blocking the
-/// main thread. Once they're finished,
-/// you can access it.
-///
-/// As soon as you need the asset, you call
-/// `finish` on this future which will return
-/// the loaded data and create an asset from that
-/// data. If it hasn't yet finished, it will block
-/// the calling thread.
-pub struct AssetFuture<'a, T: Asset> {
-    name: String,
-    loader: &'a AssetLoader,
-    phantom: PhantomData<T>,
 }
 
 /// The error that can occurr when trying
@@ -123,16 +96,65 @@ impl AssetLoader {
         AssetLoader {
             assets: HashMap::new(),
             data: Arc::new(Mutex::new(Vec::new())),
+            errors: Arc::new(Mutex::new(HashMap::new())),
             pool: pool,
         }
     }
 
     fn spawn(&self, sub: Submission) {
         let data = self.data.clone();
-        self.pool.execute(move || Self::execute(sub, data));
+        let errors = self.errors.clone();
+        self.pool.execute(move || Self::execute(sub, data, errors));
     }
 
-    fn execute(sub: Submission, data: Arc<Mutex<Vec<AssetData>>>) {}
+    fn execute(sub: Submission,
+               data_vec: Arc<Mutex<Vec<AssetData>>>,
+               error_vec: Arc<Mutex<HashMap<String, AssetError>>>) {
+        let Submission { name, load_data, load_asset } = sub;
+
+        match load_data() {
+            Ok(data) => {
+                let mut data_vec = data_vec.lock().unwrap();
+                let asset_data = AssetData {
+                    name: name,
+                    data: data,
+                    load_asset: load_asset,
+                };
+                data_vec.push(asset_data);
+            }
+            Err(x) => {
+                let mut errors = error_vec.lock().unwrap();
+                errors.insert(name, x);
+            }
+        }
+    }
+
+    /// Tries to retrieve an
+    /// asset from this asset loader.
+    ///
+    /// An error may be returned if the asset could not be loaded.
+    /// Note that such an error is only returned the first time you
+    /// call this method.
+    ///
+    /// If `Ok(None)` is returned, the asset might not be submitted
+    /// yet, has another type or it hasn't finished.
+    pub fn asset<T>(&self, name: &str) -> Result<Option<&T>, AssetError>
+        where T: Asset + 'static
+    {
+        let assets = &self.assets;
+
+        match assets.get(&name.to_owned()) {
+            Some(x) => Ok(x.downcast_ref()),
+            None => {
+                let mut errors = self.errors.lock().unwrap();
+
+                match errors.remove(&name.to_owned()) {
+                    Some(x) => Err(x),
+                    None => Ok(None),
+                }
+            }
+        }
+    }
 
     /// Load an asset on the calling thread.
     /// If it is not a very small asset, you
@@ -164,47 +186,44 @@ impl AssetLoader {
         format.import(bytes).map_err(|x| AssetError::ImportError(x))
     }
 
-    /// Load the data using one of the threads from the
-    /// cpu pool, returning an `AssetFuture`.
+    /// Submit an asset to load, using a shared threadpool.
     ///
     /// If you already have the asset data and you just want to
-    /// import it, use `MyAsset::from_data(data, context)`.
-    pub fn load<T, S, F>(&self, store: &S, name: &str, format: F) -> AssetFuture<T>
+    /// import it, use `load_from_data`.
+    pub fn load<T, S, F>(&self, store: &S, name: &str, format: F)
         where T: Asset + 'static,
               T::Data: Send + 'static,
               T::Error: Send + 'static,
               S: AssetStore + Clone + Send + Sync + 'static,
-              F: AssetFormat + Import<T::Data> + Send + 'static
+              F: AssetFormat + Import<T::Data> + Clone + Send + 'static
     {
-        let store: S = store.clone();
         let name = name.to_string();
 
+        if self.assets.contains_key(&name) {
+            // There's nothing to do
+
+            return;
+        }
+
+        let store: S = store.clone();
+        let name_closure = name.clone();
+
         let sub = Submission {
-            name: name,
+            name: name.clone(),
             load_data: Box::new(move || {
-                let data = Self::load_data::<T, S, F>(&store, &name.clone(), format)?;
+                let data = Self::load_data::<T, S, F>(&store, &name_closure, format.clone())?;
                 let data_boxed = Box::new(data) as Box<Any + Send>;
                 Ok(data_boxed)
             }),
             load_asset: Box::new(|x, context| {
-                debug_assert!(x.is::<T>());
+                let data: T::Data = *x.downcast::<T::Data>().unwrap();
+                let asset = T::from_data(data, context).map_err(|x| AssetError::DataError(format!("{:?}", x)))?;
 
-                let data: Box<T::Data> = unsafe { ::std::mem::transmute(x) };
-                let data = *data;
-
-                let asset = T::from_data(data, context);
-
-                Box::new(asset) as Box<Any>
+                Ok(Box::new(asset) as Box<Any>)
             }),
         };
 
         self.spawn(sub);
-
-        AssetFuture {
-            name: name,
-            loader: self,
-            phantom: PhantomData,
-        }
     }
 
     /// Loads an asset from
@@ -215,14 +234,55 @@ impl AssetLoader {
     /// On desktop, it just loads an asset from
     /// the "assets" folder, on android it will
     /// load it from the embedded assets.
-    pub fn load_default<T, F>(&self, name: &str, format: F) -> AssetFuture<T>
+    pub fn load_default<T, F>(&self, name: &str, format: F)
         where T: Asset + 'static,
               T::Data: Send + 'static,
               T::Error: Send + 'static,
-              F: AssetFormat + Import<T::Data> + Send + 'static
+              F: AssetFormat + Import<T::Data> + Clone + Send + 'static
     {
         let store = DefaultStore;
-        self.load(&store, name, format)
+        self.load::<T, _, F>(&store, name, format);
+    }
+
+    /// Returns the number of assets
+    /// which were loaded by this asset loader.
+    pub fn num_assets(&self) -> usize {
+        self.assets.len()
+    }
+
+    /// Process a number of asset datasets
+    /// as long as `as_long` returns true.
+    ///
+    /// Intended to be used from the internals
+    /// of the engine to allow loading assets
+    /// as long as the wished frame time wasn't reached
+    /// yet.
+    pub fn process<F: FnMut() -> bool>(&mut self, context: &mut Context, mut as_long: F) {
+        let mut data_vec = self.data.lock().unwrap();
+
+        loop {
+            let asset_data = match data_vec.pop() {
+                Some(x) => x,
+                None => break,
+            };
+
+            let AssetData { name, data, load_asset } = asset_data;
+
+            let res = load_asset(data, context);
+
+            match res {
+                Ok(x) => {
+                    self.assets.insert(name, x);
+                }
+                Err(x) => {
+                    self.errors.lock().unwrap().insert(name, x);
+                }
+            }
+
+            if !as_long() {
+                break;
+            }
+        }
     }
 }
 
@@ -241,71 +301,5 @@ impl Display for AssetError {
                 write!(f, "Error when instantiating asset from data: {}", x)
             }
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    use std::collections::HashMap;
-    use std::default::Default;
-
-    use gfx_device::video_init;
-
-    #[derive(Clone)]
-    struct FakeStore {
-        files: HashMap<String, Box<[u8]>>,
-    }
-
-    impl AssetStore for FakeStore {
-        fn read_asset<T, F>(&self, name: &str) -> Result<Box<[u8]>, AssetStoreError>
-            where T: Asset,
-                  F: AssetFormat
-        {
-            self.files
-                .get(&(T::category().to_string() + "/" + name))
-                .ok_or(AssetStoreError::NoSuchAsset)
-                .map(|x| x.clone())
-        }
-    }
-
-    fn create_context() -> Context {
-        let (_, factory, _) = video_init(Default::default());
-        Context::new(factory)
-    }
-
-    #[test]
-    #[ignore]
-    fn test_mesh_texture() {
-        use self::formats::Obj;
-        use ecs::components::Mesh;
-        use ecs::components::Texture;
-
-        let loader = AssetLoader::new();
-        let mut store = FakeStore { files: HashMap::new() };
-
-        store.files.insert("meshes/foo".to_string(),
-                           "
-v 1.0 2.0 3.0
-v 4.0 5.0 6.0
-v 7.0 8.0 9.0
-
-vt 0.0 0.0
-vt 1.0 0.0
-vt 0.0 1.0
-
-vn 1.0 0.0 0.0
-
-f 1/1/1 2/2/1 3/3/1
-"
-                               .as_bytes()
-                               .to_owned()
-                               .into_boxed_slice());
-
-        let mut context = create_context();
-        let mesh = loader.load::<Mesh, _, _>(&store, "foo", Obj);
-        mesh.finish(&mut context).unwrap();
-        Texture::from_color([1.0, 0.0, 1.0, 1.0]);
     }
 }

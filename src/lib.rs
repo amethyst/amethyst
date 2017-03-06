@@ -64,7 +64,6 @@ extern crate cgmath;
 extern crate dds;
 extern crate fnv;
 extern crate futures;
-extern crate futures_cpupool;
 extern crate gfx;
 extern crate gfx_window_glutin;
 extern crate glutin;

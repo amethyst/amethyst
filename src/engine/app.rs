@@ -1,8 +1,12 @@
 //! The core engine framework.
 
-use num_cpus;
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
+use num_cpus;
+use threadpool::ThreadPool;
+
+use asset_manager::AssetLoader;
 use ecs::{Component, Planner, Priority, System, World};
 use ecs::components::{LocalTransform, Transform, Child, Init, Renderable};
 use ecs::resources::Time;
@@ -40,6 +44,9 @@ pub struct Engine {
     ///
     /// To get the world, use `world_mut`.
     pub planner: Planner<()>,
+    /// The asset loader used to submit
+    /// assets to be loaded in parallel
+    pub loader: AssetLoader,
 }
 
 /// User-friendly facade for building games. Manages main loop.
@@ -75,11 +82,12 @@ impl Context {
 }
 
 impl Engine {
-    fn new(context: Context, pipe: Pipeline, planner: Planner<()>) -> Self {
+    fn new(context: Context, pipe: Pipeline, planner: Planner<()>, loader: AssetLoader) -> Self {
         Engine {
             context: context,
             pipe: pipe,
             planner: planner,
+            loader: loader,
         }
     }
 }
@@ -143,7 +151,10 @@ impl Application {
             world.register::<Transform>();
         }
 
-        let engine = Engine::new(context, pipe, planner);
+        // TODO: use ecs thread pool once
+        // TODO: PR is merged
+        let loader = AssetLoader::new(Arc::new(ThreadPool::new(num_cpus::get())));
+        let engine = Engine::new(context, pipe, planner, loader);
 
         Application {
             engine: engine,
@@ -170,6 +181,7 @@ impl Application {
         while self.states.is_running() {
             self.timer.restart();
             self.advance_frame();
+            self.do_asset_loading();
             self.timer.stop();
             self.delta_time = self.timer.elapsed();
         }
@@ -182,13 +194,26 @@ impl Application {
         self.states.start(&mut self.engine);
     }
 
-    fn should_load_asset(delta_time: f32) -> bool {
-        // TODO: don't hardocode
-        const FPS: f32 = 60.0;
-        const REQUIRED_OVERHANG: f32 = 0.1;
-        const REQUIRED_DELTA_TIME: f32 = (1.0 / FPS) * (1.0 - REQUIRED_OVERHANG);
+    fn should_load_asset(timer: &Stopwatch, fixed: Duration) -> bool {
+        const REQUIRED_OVERHANG: f64 = 0.05;
 
-        delta_time < REQUIRED_DELTA_TIME
+        let elapsed = timer.elapsed();
+
+        if elapsed.as_secs() > fixed.as_secs() {
+            false
+        } else {
+            let required = fixed.subsec_nanos() as f64 * (1.0 - REQUIRED_OVERHANG);
+
+            (elapsed.subsec_nanos() as f64) < required
+        }
+    }
+
+    fn do_asset_loading(&mut self) {
+        let loader = &mut self.engine.loader;
+        let context = &mut self.engine.context;
+        let timer = &self.timer;
+        let fixed = self.fixed_step;
+        loader.process(context, || Self::should_load_asset(timer, fixed));
     }
 
     /// Advances the game world by one tick.
