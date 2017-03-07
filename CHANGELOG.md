@@ -8,8 +8,25 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [sv]: http://semver.org/
 
 ## [Unreleased]
+
+## [0.4.2] - 2017-03-07
+### Added
+* Allow loading configuration files directly from strings.
+* Add `#[derive(Default)]` for some types in ECS module.
+* Add Ilya Bogdanov, Konstantin Zverev, and Scott Corbeil to `AUTHORS.md`.
+
+### Changed
+* Implement some clippy suggestions.
+* Use `FnvHasher` instead of Rust's default SipHash implementation for better
+  performance.
+
 ### Fixed
 * Correct the quick example given in `README.md`.
+* Replace constant paddle width with actual value in Pong example.
+* Minor fix of line numbers in link in `CONTRIBUTING.md`.
+* Add backticks around word in doc comment within `input.rs`.
+* Match `Stopwatch` behavior to API documentation.
+* Fix AppVeyor build failures due to `timing.rs` test failure.
 
 ## [0.4.1] - 2017-02-10
 ### Added
@@ -182,7 +199,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ## 0.1.0 - 2016-01-03
 * Initial release
 
-[Unreleased]: https://github.com/amethyst/amethyst/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/amethyst/amethyst/compare/v0.4.2...HEAD
+[0.4.2]: https://github.com/amethyst/amethyst/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/amethyst/amethyst/compare/v0.4...v0.4.1
 [0.4.0]: https://github.com/amethyst/amethyst/compare/v0.3.1...v0.4
 [0.3.1]: https://github.com/amethyst/amethyst/compare/v0.3...v0.3.1
