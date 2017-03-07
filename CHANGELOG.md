@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [sv]: http://semver.org/
 
 ## [Unreleased]
+### Changed
+* Change to lowercase in `CONTRIBUTING.md`.
 
 ## [0.4.2] - 2017-03-07
 ### Added
