@@ -69,6 +69,7 @@ pub extern crate amethyst_renderer as renderer;
 
 extern crate cgmath;
 extern crate dds;
+extern crate fnv;
 extern crate gfx;
 extern crate gfx_window_glutin;
 extern crate glutin;

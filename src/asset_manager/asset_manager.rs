@@ -3,10 +3,10 @@
 
 use cgmath::{InnerSpace, Vector3};
 use dds::DDS;
+use fnv::FnvHashMap as HashMap;
 use gfx::texture::{AaMode, Kind};
 use imagefmt::{ColFmt, Image, read_from};
 use std::any::{Any, TypeId};
-use std::collections::HashMap;
 use std::{env, fs};
 use std::io::{Cursor, Read};
 use std::ops::{Deref, DerefMut};
@@ -81,8 +81,8 @@ pub struct Assets {
 impl Assets {
     fn new() -> Assets {
         Assets {
-            loaders: HashMap::new(),
-            asset_ids: HashMap::new(),
+            loaders: HashMap::default(),
+            asset_ids: HashMap::default(),
             assets: World::new(),
         }
     }
@@ -159,9 +159,9 @@ impl AssetManager {
     /// Create a new asset manager
     pub fn new() -> AssetManager {
         let mut asset_manager = AssetManager {
-            asset_type_ids: HashMap::new(),
+            asset_type_ids: HashMap::default(),
             assets: Assets::new(),
-            closures: HashMap::new(),
+            closures: HashMap::default(),
             stores: Vec::new(),
         };
 

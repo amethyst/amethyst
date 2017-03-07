@@ -19,6 +19,7 @@ travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
 cgmath = "0.12"
+fnv = "1.0"
 gfx = "0.14"
 gfx_device_gl = "0.13"
 gfx_window_glutin = "0.14"

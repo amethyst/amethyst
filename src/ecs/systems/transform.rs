@@ -1,7 +1,7 @@
 //! Scene graph system and types
 
 use cgmath::Matrix4;
-use std::collections::{HashMap, HashSet};
+use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 
 use ecs::{Join, Entity, RunArg, System};
 use ecs::components::{LocalTransform, Transform, Child, Init};
@@ -29,12 +29,12 @@ impl TransformSystem {
     /// Creates a new transform processor.
     pub fn new() -> TransformSystem {
         TransformSystem {
-            indices: HashMap::new(),
+            indices: HashMap::default(),
             sorted: Vec::new(),
             new: Vec::new(),
-            dead: HashSet::new(),
-            dirty: HashSet::new(),
-            swapped: HashSet::new(),
+            dead: HashSet::default(),
+            dirty: HashSet::default(),
+            swapped: HashSet::default(),
         }
     }
 }

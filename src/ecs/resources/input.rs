@@ -1,6 +1,8 @@
 //! World resource that handles all user input.
 
-use std::collections::hash_map::{Entry, HashMap, Keys};
+use fnv::FnvHashMap as HashMap;
+
+use std::collections::hash_map::{Entry, Keys};
 use std::iter::Iterator;
 
 use engine::{ElementState, WindowEvent, Event, VirtualKeyCode};
@@ -33,7 +35,7 @@ pub struct InputHandler {
 impl InputHandler {
     /// Creates a new input handler.
     pub fn new() -> InputHandler {
-        InputHandler { pressed_keys: HashMap::new() }
+        InputHandler { pressed_keys: HashMap::default() }
     }
 
     /// Updates the input handler with new engine events.
