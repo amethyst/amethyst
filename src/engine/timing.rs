@@ -81,28 +81,31 @@ mod tests {
 
     #[test]
     fn elapsed() {
+        const DURATION: u64 = 1; // in seconds.
+        const UNCERTAINTY: u32 = 5; // in percents.
         let mut watch = Stopwatch::new();
 
         watch.start();
-        thread::sleep(Duration::from_secs(2));
+        thread::sleep(Duration::from_secs(DURATION));
         watch.stop();
 
-        // check that elapsed time was 2 sec +/- 1%
+        // check that elapsed time was DURATION sec +/- UNCERTAINTY%
         let elapsed = watch.elapsed();
-        let two_sec = Duration::new(2, 0);
-        let lower = two_sec / 100 * 99;
-        let upper = two_sec / 100 * 101;
+        let duration = Duration::new(DURATION, 0);
+        let lower = duration / 100 * (100 - UNCERTAINTY);
+        let upper = duration / 100 * (100 + UNCERTAINTY);
         assert!(elapsed < upper && elapsed > lower,
-                "expected about 2 seconds, got {:?}",
-                elapsed);
+                "expected {} +- {}% seconds, got {:?}",
+                DURATION, UNCERTAINTY, elapsed);
     }
 
     #[test]
     fn reset() {
+        const DURATION: u64 = 2; // in seconds.
         let mut watch = Stopwatch::new();
 
         watch.start();
-        thread::sleep(Duration::from_secs(2));
+        thread::sleep(Duration::from_secs(DURATION));
         watch.stop();
         watch.reset();
 
@@ -111,44 +114,49 @@ mod tests {
 
     #[test]
     fn restart() {
+        const DURATION0: u64 = 2; // in seconds.
+        const DURATION: u64 = 1; // in seconds.
+        const UNCERTAINTY: u32 = 5; // in percents.
         let mut watch = Stopwatch::new();
 
         watch.start();
-        thread::sleep(Duration::from_secs(2));
+        thread::sleep(Duration::from_secs(DURATION0));
         watch.stop();
 
         watch.restart();
-        thread::sleep(Duration::from_secs(1));
+        thread::sleep(Duration::from_secs(DURATION));
         watch.stop();
 
-        // check that elapsed time was 1 sec +/- 1%
+        // check that elapsed time was DURATION sec +/- UNCERTAINTY%
         let elapsed = watch.elapsed();
-        let one_sec = Duration::new(1, 0);
-        let lower = one_sec / 100 * 99;
-        let upper = one_sec / 100 * 101;
+        let duration = Duration::new(DURATION, 0);
+        let lower = duration / 100 * (100 - UNCERTAINTY);
+        let upper = duration / 100 * (100 + UNCERTAINTY);
         assert!(elapsed < upper && elapsed > lower,
-                "expected about 1 second, got {:?}",
-                elapsed);
+                "expected {} +- {}% seconds, got {:?}",
+                DURATION, UNCERTAINTY, elapsed);
     }
 
     // test that multiple start-stop cycles are cumulative
     #[test]
     fn stop_start() {
+        const DURATION: u64 = 3; // in seconds.
+        const UNCERTAINTY: u32 = 5; // in percents.
         let mut watch = Stopwatch::new();
 
-        for _ in 0..3 {
+        for _ in 0..DURATION {
             watch.start();
             thread::sleep(Duration::from_secs(1));
             watch.stop();
         }
 
-        // check that elapsed time was 3 sec +/- 1%
+        // check that elapsed time was DURATION sec +/- UNCERTAINTY%
         let elapsed = watch.elapsed();
-        let three_sec = Duration::new(3, 0);
-        let lower = three_sec / 100 * 99;
-        let upper = three_sec / 100 * 101;
+        let duration = Duration::new(DURATION, 0);
+        let lower = duration / 100 * (100 - UNCERTAINTY);
+        let upper = duration / 100 * (100 + UNCERTAINTY);
         assert!(elapsed < upper && elapsed > lower,
-                "expected about 3 seconds, got {:?}",
-                elapsed);
+                "expected {}  +- {}% seconds, got {:?}",
+                DURATION, UNCERTAINTY, elapsed);
     }
 }
