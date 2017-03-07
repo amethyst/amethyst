@@ -1,4 +1,6 @@
 //! Displays a multicolored sphere to the user.
+//!
+//! TODO: Rewrite for new renderer.
 
 extern crate amethyst;
 extern crate cgmath;

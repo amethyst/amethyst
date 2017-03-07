@@ -1,10 +1,9 @@
 //! Scene graph system and types
 
 use cgmath::Matrix4;
-use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
-
 use ecs::{Entities, Entity, Join, ReadStorage, System, WriteStorage};
 use ecs::components::{LocalTransform, Transform, Child, Init};
+use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 
 /// Handles updating `Transform` components based on the `LocalTransform`
 /// component and parents.

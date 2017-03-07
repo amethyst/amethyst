@@ -74,20 +74,17 @@ extern crate cgmath;
 extern crate dds;
 extern crate fnv;
 extern crate gfx;
-extern crate gfx_window_glutin;
-extern crate glutin;
 extern crate genmesh;
+extern crate glutin;
 extern crate imagefmt;
 extern crate num_cpus;
 extern crate rayon;
 extern crate smallvec;
 extern crate specs;
-extern crate ticketed_lock;
 extern crate wavefront_obj;
 
 pub mod asset_manager;
 pub mod ecs;
-pub mod gfx_device;
 
 mod engine;
 
