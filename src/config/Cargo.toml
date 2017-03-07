@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_config"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["Aceeri <conmcclusk@gmail.com>"]
 description = "Loading from .yml/.yaml files, with a Rust module-like system, into Rust structures."
 

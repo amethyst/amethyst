@@ -1,6 +1,6 @@
 [package]
 name = "amethyst"
-version = "0.4.1"
+version = "0.4.2"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
 description = "Data-oriented game engine written in Rust"
 keywords = ["game", "engine", "sdk", "amethyst"]
@@ -23,8 +23,8 @@ opengl = []
 direct3d = []
 
 [dependencies]
-amethyst_config = { path = "src/config/", version = "0.2.1" }
-amethyst_renderer = { path = "src/renderer", version = "0.4.1" }
+amethyst_config = { path = "src/config/", version = "0.2.2" }
+amethyst_renderer = { path = "src/renderer", version = "0.4.2" }
 cgmath = "0.12"
 dds-rs = "0.4"
 fnv = "1.0"

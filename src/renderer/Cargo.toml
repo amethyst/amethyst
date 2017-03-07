@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_renderer"
-version = "0.4.1"
+version = "0.4.2"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
 description = "High-level rendering engine with multiple backends"
 keywords = ["game", "engine", "renderer", "3d", "amethyst"]
