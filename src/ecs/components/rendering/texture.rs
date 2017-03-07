@@ -1,14 +1,14 @@
 //! Graphical texture resource.
 
+
+use asset_manager::{AssetLoader, Assets};
 use gfx::Factory;
 use gfx::format::{Formatted, SurfaceTyped};
 
-use asset_manager::{AssetLoader, Assets};
+pub use gfx::texture::Kind;
 use gfx_device::gfx_types;
 use renderer;
 use renderer::target::ColorFormat;
-
-pub use gfx::texture::Kind;
 
 /// Handle to a texture resource.
 pub type Texture = renderer::Texture<gfx_types::Resources>;

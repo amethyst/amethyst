@@ -1,3 +1,5 @@
+//! TODO: Rewrite for new renderer.
+
 extern crate amethyst;
 
 use amethyst::{Application, Event, State, Trans, VirtualKeyCode, WindowEvent};

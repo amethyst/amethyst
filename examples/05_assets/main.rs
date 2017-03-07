@@ -1,5 +1,7 @@
 //! Demonstrates several assets-related techniques, including writing a custom
 //! asset loader, and loading assets from various paths.
+//!
+//! TODO: Rewrite for new renderer.
 
 extern crate amethyst;
 extern crate cgmath;

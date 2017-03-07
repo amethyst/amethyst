@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_renderer"
-version = "0.4.3"
+version = "0.5.0"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
 description = "High-level rendering engine with multiple backends"
 keywords = ["game", "engine", "renderer", "3d", "amethyst"]
@@ -17,16 +17,34 @@ license = "MIT/Apache-2.0"
 appveyor = { repository = "amethyst/amethyst", branch = "develop" }
 travis-ci = { repository = "amethyst/amethyst" }
 
+[features]
+default = ["opengl"]
+d3d11 = ["gfx_device_dx11", "gfx_window_dxgi"]
+metal = ["gfx_device_metal", "gfx_window_metal"]
+opengl = ["gfx_device_gl", "gfx_window_glutin", "glutin"]
+vulkan = ["gfx_device_vulkan", "gfx_window_vulkan"]
+
 [dependencies]
 cgmath = "0.12"
 fnv = "1.0"
 gfx = "0.14"
-gfx_device_gl = "0.13"
-gfx_window_glutin = "0.14"
-glutin = "0.7"
-mopa = "0.2"
-specs = "0.9.1"
+num_cpus = "1.0"
+rayon = "0.6"
+winit = "0.5"
+
+gfx_device_gl = { version = "0.13", optional = true }
+gfx_device_vulkan = { version = "0.1", optional = true }
+gfx_window_glutin = { version = "0.14", optional = true }
+gfx_window_vulkan = { version = "0.1", optional = true }
+glutin = { version = "0.7", optional = true }
+
+[target.'cfg(macos)'.dependencies]
+gfx_device_metal = { version = "0.1", optional = true }
+gfx_window_metal = { version = "0.1", optional = true }
+
+[target.'cfg(windows)'.dependencies]
+gfx_device_dx11 = { version = "0.5", optional = true }
+gfx_window_dxgi = { version = "0.6", optional = true }
 
 [dev-dependencies]
 genmesh = "0.4"
-rand = "0.3"

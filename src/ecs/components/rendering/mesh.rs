@@ -1,9 +1,9 @@
 //! Mesh resource handling.
 
-use gfx;
-use gfx::traits::FactoryExt;
 
 use asset_manager::{AssetLoader, Assets};
+use gfx;
+use gfx::traits::FactoryExt;
 use gfx_device::gfx_types;
 use renderer::VertexPosNormal;
 

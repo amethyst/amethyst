@@ -2,10 +2,10 @@
 //! types.
 
 use ecs::{Component, VecStorage};
-use std::ops::{Deref, DerefMut};
 
 pub use glutin::{Event, ElementState, ScanCode, VirtualKeyCode, MouseScrollDelta, TouchPhase,
                  MouseButton, Touch};
+use std::ops::{Deref, DerefMut};
 
 /// A window-generated event.
 pub struct WindowEvent {

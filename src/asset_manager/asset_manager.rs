@@ -3,20 +3,17 @@
 
 use cgmath::{InnerSpace, Vector3};
 use dds::DDS;
+use ecs::{Component, Entity, ReadStorage, VecStorage, World};
+// use ecs::components::{Mesh, Renderable, Texture, TextureLoadData};
 use fnv::FnvHashMap as HashMap;
 use gfx::texture::{AaMode, Kind};
 use imagefmt::{ColFmt, Image, read_from};
+use renderer::vertex::PosNormTex;
+use std::{env, fs, str};
 use std::any::{Any, TypeId};
-use std::{env, fs};
 use std::io::{Cursor, Read};
 use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
-use std::str;
-use wavefront_obj::obj::{ObjSet, parse, Primitive};
-
-use ecs::{Component, Entity, ReadStorage, VecStorage, World};
-use ecs::components::{Mesh, Renderable, Texture, TextureLoadData};
-use renderer::VertexPosNormal;
 
 type AssetTypeId = TypeId;
 type SourceTypeId = TypeId;
@@ -162,17 +159,17 @@ impl AssetManager {
             stores: Vec::new(),
         };
 
-        // Handle some common use cases by default
-        asset_manager.register_asset::<Mesh>();
-        asset_manager.register_asset::<Texture>();
+        // // Handle some common use cases by default
+        // asset_manager.register_asset::<Mesh>();
+        // asset_manager.register_asset::<Texture>();
 
-        asset_manager.register_loader::<Mesh, ObjSet>("obj");
+        // asset_manager.register_loader::<Mesh, ObjSet>("obj");
 
-        for fmt in vec!["png", "bmp", "jpg", "jpeg", "tga"] {
-            asset_manager.register_loader::<Texture, Image<u8>>(fmt);
-        }
+        // for fmt in vec!["png", "bmp", "jpg", "jpeg", "tga"] {
+        //     asset_manager.register_loader::<Texture, Image<u8>>(fmt);
+        // }
 
-        asset_manager.register_loader::<Texture, DDS>("dds");
+        // asset_manager.register_loader::<Texture, DDS>("dds");
 
         // Set up default resource directories. Will add each dir in
         // `AMETHYST_ASSET_DIRS` if set. Will also add the current
@@ -250,56 +247,56 @@ impl AssetManager {
         self.load_asset_from_raw::<A>(name, asset_type, &buf)
     }
 
-    /// Create a `Renderable` component from a loaded mesh and ka/kd/ks textures
-    pub fn create_renderable(&self,
-                             mesh: &str,
-                             ka: &str,
-                             kd: &str,
-                             ks: &str,
-                             ns: f32)
-                             -> Option<Renderable> {
-        let meshes = self.read_assets::<Mesh>();
-        let textures = self.read_assets::<Texture>();
-        let mesh_id = match self.id_from_name(mesh) {
-            Some(id) => id,
-            None => return None,
-        };
-        let mesh = match meshes.get(mesh_id) {
-            Some(mesh) => mesh,
-            None => return None,
-        };
-        let ka_id = match self.id_from_name(ka) {
-            Some(id) => id,
-            None => return None,
-        };
-        let ka = match textures.get(ka_id) {
-            Some(ka) => ka,
-            None => return None,
-        };
-        let kd_id = match self.id_from_name(kd) {
-            Some(id) => id,
-            None => return None,
-        };
-        let kd = match textures.get(kd_id) {
-            Some(kd) => kd,
-            None => return None,
-        };
-        let ks_id = match self.id_from_name(ks) {
-            Some(id) => id,
-            None => return None,
-        };
-        let ks = match textures.get(ks_id) {
-            Some(ks) => ks,
-            None => return None,
-        };
-        Some(Renderable {
-                 mesh: mesh.0.clone(),
-                 ambient: ka.0.clone(),
-                 diffuse: kd.0.clone(),
-                 specular: ks.0.clone(),
-                 specular_exponent: ns,
-             })
-    }
+    // /// Create a `Renderable` component from a loaded mesh and ka/kd/ks textures
+    // pub fn create_renderable(&self,
+    //                          mesh: &str,
+    //                          ka: &str,
+    //                          kd: &str,
+    //                          ks: &str,
+    //                          ns: f32)
+    //                          -> Option<Renderable> {
+    //     let meshes = self.read_assets::<Mesh>();
+    //     let textures = self.read_assets::<Texture>();
+    //     let mesh_id = match self.id_from_name(mesh) {
+    //         Some(id) => id,
+    //         None => return None,
+    //     };
+    //     let mesh = match meshes.get(mesh_id) {
+    //         Some(mesh) => mesh,
+    //         None => return None,
+    //     };
+    //     let ka_id = match self.id_from_name(ka) {
+    //         Some(id) => id,
+    //         None => return None,
+    //     };
+    //     let ka = match textures.get(ka_id) {
+    //         Some(ka) => ka,
+    //         None => return None,
+    //     };
+    //     let kd_id = match self.id_from_name(kd) {
+    //         Some(id) => id,
+    //         None => return None,
+    //     };
+    //     let kd = match textures.get(kd_id) {
+    //         Some(kd) => kd,
+    //         None => return None,
+    //     };
+    //     let ks_id = match self.id_from_name(ks) {
+    //         Some(id) => id,
+    //         None => return None,
+    //     };
+    //     let ks = match textures.get(ks_id) {
+    //         Some(ks) => ks,
+    //         None => return None,
+    //     };
+    //     Some(Renderable {
+    //         mesh: mesh.0.clone(),
+    //         ambient: ka.0.clone(),
+    //         diffuse: kd.0.clone(),
+    //         specular: ks.0.clone(),
+    //         specular_exponent: ns,
+    //     })
+    // }
 }
 
 impl Deref for AssetManager {
@@ -360,21 +357,17 @@ impl AssetLoaderRaw for Image<u8> {
     }
 }
 
-impl AssetLoader<Texture> for Image<u8> {
-    fn from_data(assets: &mut Assets, image: Image<u8>) -> Option<Texture> {
-        let pixels = image
-            .buf
-            .chunks(4)
-            .map(|p| [p[0], p[1], p[2], p[3]])
-            .collect::<Vec<_>>();
-
-        AssetLoader::from_data(assets,
-                               TextureLoadData {
-                                   kind: Kind::D2(image.w as u16, image.h as u16, AaMode::Single),
-                                   raw: &[pixels.as_slice()],
-                               })
-    }
-}
+// impl AssetLoader<Texture> for Image<u8> {
+//     fn from_data(assets: &mut Assets, image: Image<u8>) -> Option<Texture> {
+//         let pixels = image.buf.chunks(4).map(|p| [p[0], p[1], p[2], p[3]]).collect::<Vec<_>>();
+//
+//         AssetLoader::from_data(assets,
+//                                TextureLoadData {
+//                                    kind: Kind::D2(image.w as u16, image.h as u16, AaMode::Single),
+//                                    raw: &[pixels.as_slice()],
+//                                })
+//     }
+// }
 
 impl AssetLoaderRaw for DDS {
     fn from_raw(_: &Assets, data: &[u8]) -> Option<DDS> {
@@ -382,109 +375,100 @@ impl AssetLoaderRaw for DDS {
     }
 }
 
-impl AssetLoader<Texture> for DDS {
-    fn from_data(assets: &mut Assets, image: DDS) -> Option<Texture> {
-        AssetLoader::from_data(assets,
-                               TextureLoadData {
-                                   kind: Kind::D2(image.header.width as u16,
-                                                  image.header.height as u16,
-                                                  AaMode::Single),
-                                   raw: image
-                                       .layers
-                                       .iter()
-                                       .map(|l| l.as_slice())
-                                       .collect::<Vec<_>>()
-                                       .as_slice(),
-                               })
-    }
-}
+// impl AssetLoader<Texture> for DDS {
+//     fn from_data(assets: &mut Assets, image: DDS) -> Option<Texture> {
+//         AssetLoader::from_data(assets,
+//                                TextureLoadData {
+//                                    kind: Kind::D2(image.header.width as u16,
+//                                                   image.header.height as u16,
+//                                                   AaMode::Single),
+//                                    raw: image.layers
+//                                        .iter()
+//                                        .map(|l| l.as_slice())
+//                                        .collect::<Vec<_>>()
+//                                        .as_slice(),
+//                                })
+//     }
+// }
 
-impl AssetLoaderRaw for ObjSet {
-    fn from_raw(_: &Assets, data: &[u8]) -> Option<ObjSet> {
-        if let Some(data) = str::from_utf8(data).ok() {
-            parse(data.into()).ok()
-        } else {
-            None
-        }
-    }
-}
+// impl AssetLoaderRaw for ObjSet {
+//     fn from_raw(_: &Assets, data: &[u8]) -> Option<ObjSet> {
+//         if let Some(data) = str::from_utf8(data).ok() {
+//             parse(data.into()).ok()
+//         } else {
+//             None
+//         }
+//     }
+// }
 
-impl AssetLoader<Mesh> for ObjSet {
-    fn from_data(assets: &mut Assets, obj_set: ObjSet) -> Option<Mesh> {
-        // Takes a list of objects that contain geometries that contain shapes that contain
-        // vertex/texture/normal indices into the main list of vertices, and converts to a
-        // flat vec of `VertexPosNormal` objects.
-        // TODO: Doesn't differentiate between objects in a `*.obj` file, treats
-        // them all as a single mesh.
-        let vertices: Vec<VertexPosNormal> = obj_set
-            .objects
-            .iter()
-            .flat_map(|object| {
-                object
-                    .geometry
-                    .iter()
-                    .flat_map(|ref geometry| {
-                        geometry
-                            .shapes
-                            .iter()
-                            .flat_map(|s| -> Vec<VertexPosNormal> {
-                                let mut vtn_indices = vec![];
+// impl AssetLoader<Mesh> for ObjSet {
+//     fn from_data(assets: &mut Assets, obj_set: ObjSet) -> Option<Mesh> {
+//         // Takes a list of objects that contain geometries that contain shapes that contain
+//         // vertex/texture/normal indices into the main list of vertices, and converts to a
+//         // flat vec of `PosNormTex` objects.
+//         // TODO: Doesn't differentiate between objects in a `*.obj` file, treats
+//         // them all as a single mesh.
+//         let vertices: Vec<PosNormTex> = obj_set.objects
+//             .iter()
+//             .flat_map(|object| {
+//                 object.geometry
+//                     .iter()
+//                     .flat_map(|ref geometry| {
+//                         geometry.shapes.iter().flat_map(|s| -> Vec<PosNormTex> {
+//                             let mut vtn_indices = vec![];
 
-                                match s.primitive {
-                                    Primitive::Point(v1) => {
-                                        vtn_indices.push(v1);
-                                    }
-                                    Primitive::Line(v1, v2) => {
-                                        vtn_indices.push(v1);
-                                        vtn_indices.push(v2);
-                                    }
-                                    Primitive::Triangle(v1, v2, v3) => {
-                                        vtn_indices.push(v1);
-                                        vtn_indices.push(v2);
-                                        vtn_indices.push(v3);
-                                    }
-                                }
+//                             match s.primitive {
+//                                 Primitive::Point(v1) => {
+//                                     vtn_indices.push(v1);
+//                                 }
+//                                 Primitive::Line(v1, v2) => {
+//                                     vtn_indices.push(v1);
+//                                     vtn_indices.push(v2);
+//                                 }
+//                                 Primitive::Triangle(v1, v2, v3) => {
+//                                     vtn_indices.push(v1);
+//                                     vtn_indices.push(v2);
+//                                     vtn_indices.push(v3);
+//                                 }
+//                             }
 
-                                vtn_indices
-                                    .iter()
-                                    .map(|&(vi, ti, ni)| {
-                                        let vertex = object.vertices[vi];
+//                             vtn_indices.iter()
+//                                 .map(|&(vi, ti, ni)| {
+//                                     let vertex = object.vertices[vi];
 
-                                        VertexPosNormal {
-                                            pos: [vertex.x as f32,
-                                                  vertex.y as f32,
-                                                  vertex.z as f32],
-                                            normal: match ni {
-                                                Some(i) => {
-                                                    let normal = object.normals[i];
+//                                     PosNormTex {
+//                                         pos: [vertex.x as f32, vertex.y as f32, vertex.z as f32],
+//                                         normal: match ni {
+//                                             Some(i) => {
+//                                                 let normal = object.normals[i];
 
-                                                    Vector3::from([normal.x as f32,
-                                                                   normal.y as f32,
-                                                                   normal.z as f32])
-                                                            .normalize()
-                                                            .into()
-                                                }
-                                                None => [0.0, 0.0, 0.0],
-                                            },
-                                            tex_coord: match ti {
-                                                Some(i) => {
-                                                    let tvertex = object.tex_vertices[i];
-                                                    [tvertex.u as f32, tvertex.v as f32]
-                                                }
-                                                None => [0.0, 0.0],
-                                            },
-                                        }
-                                    })
-                                    .collect()
-                            })
-                    })
-                    .collect::<Vec<VertexPosNormal>>()
-            })
-            .collect();
+//                                                 Vector3::from([normal.x as f32,
+//                                                                normal.y as f32,
+//                                                                normal.z as f32])
+//                                                     .normalize()
+//                                                     .into()
+//                                             }
+//                                             None => [0.0, 0.0, 0.0],
+//                                         },
+//                                         tex_coord: match ti {
+//                                             Some(i) => {
+//                                                 let tvertex = object.tex_vertices[i];
+//                                                 [tvertex.u as f32, tvertex.v as f32]
+//                                             }
+//                                             None => [0.0, 0.0],
+//                                         },
+//                                     }
+//                                 })
+//                                 .collect()
+//                         })
+//                     })
+//                     .collect::<Vec<PosNormTex>>()
+//             })
+//             .collect();
 
-        AssetLoader::<Mesh>::from_data(assets, vertices)
-    }
-}
+//         AssetLoader::<Mesh>::from_data(assets, vertices)
+//     }
+// }
 
 #[cfg(test)]
 mod tests {
