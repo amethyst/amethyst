@@ -146,7 +146,7 @@ When pulling remote changes to a local branch or machine, we recommend users to
 rebase instead of creating merge commits. 
 
 This is used sometimes when an upstream change cause problems with your pull
-request. The best practice is to do a fast-forward (FF) rebase.
+request. The best practice is to do a fast-forward ("ff") rebase.
 
 First, setup a remote called `upstream`:
 
