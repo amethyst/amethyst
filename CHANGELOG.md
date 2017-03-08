@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ## [Unreleased]
 ### Changed
-* Change to lowercase in `CONTRIBUTING.md`.
+* Changes in `CONTRIBUTING.md`.
 
 ## [0.4.2] - 2017-03-07
 ### Added
