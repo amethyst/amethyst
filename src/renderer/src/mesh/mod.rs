@@ -1,18 +1,22 @@
 //! Mesh resource.
 
-use {Buffer, Factory, Slice, VertexFormat};
+use {Factory, Slice, VertexFormat};
 use cgmath::{Deg, Matrix4, Point3, Vector3, Transform};
+use self::vertex::{PosColor, PosNormTex, VertexBuffer};
 
-/// Represents a triangle mesh.
-pub struct Mesh<V: VertexFormat> {
+pub mod vertex;
+
+/// Represents a typed triangle mesh.
+#[derive(Debug)]
+pub struct Mesh {
     slice: Slice,
     transform: Matrix4<f32>,
-    vert_buf: Buffer<V>,
+    vert_buf: VertexBuffer,
 }
 
-impl<V: VertexFormat> Mesh<V> {
+impl Mesh {
     /// Returns the mesh's vertex buffer and associated buffer slice.
-    pub fn geometry(&self) -> (&Buffer<V>, &Slice) {
+    pub fn geometry(&self) -> (&VertexBuffer, &Slice) {
         (&self.vert_buf, &self.slice)
     }
 
@@ -78,9 +82,11 @@ impl<'a, V: 'a + VertexFormat> MeshBuilder<'a, V> {
         self.transform = mat.into();
         self
     }
+}
 
+impl<'a> MeshBuilder<'a, PosColor> {
     /// Builds and returns the new mesh.
-    pub fn build(self) -> Mesh<V> {
+    pub fn build(self) -> Mesh {
         use gfx::traits::FactoryExt;
 
         let fac = self.factory;
@@ -90,7 +96,24 @@ impl<'a, V: 'a + VertexFormat> MeshBuilder<'a, V> {
         Mesh {
             slice: slice,
             transform: self.transform,
-            vert_buf: vbuf,
+            vert_buf: VertexBuffer::PosColor(vbuf),
+        }
+    }
+}
+
+impl<'a> MeshBuilder<'a, PosNormTex> {
+    /// Builds and returns the new mesh.
+    pub fn build(self) -> Mesh {
+        use gfx::traits::FactoryExt;
+
+        let fac = self.factory;
+        let verts = self.vertices;
+        let (vbuf, slice) = fac.create_vertex_buffer_with_slice(verts, ());
+
+        Mesh {
+            slice: slice,
+            transform: self.transform,
+            vert_buf: VertexBuffer::PosNormTex(vbuf),
         }
     }
 }
