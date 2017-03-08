@@ -2,6 +2,17 @@
 
 #![allow(missing_docs)]
 
+use Buffer;
+
+/// Typed vertex buffer.
+#[derive(Clone, Debug)]
+pub enum VertexBuffer {
+    /// Buffer with the `PosColor` format.
+    PosColor(Buffer<PosColor>),
+    /// Buffer with the `PosNormTex` format.
+    PosNormTex(Buffer<PosNormTex>),
+}
+
 /// Vertex format with position and RGBA8 color attributes.
 gfx_vertex_struct! {
     PosColor {

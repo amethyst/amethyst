@@ -49,7 +49,9 @@ fn main() {
         for event in window.poll_events() {
             match event {
                 Event::Closed => break 'main,
-                Event::KeyboardInput(Pressed, _, Some(Key::Escape)) => break 'main,
+                Event::KeyboardInput(Pressed, _, Some(Key::Escape)) => {
+                    break 'main,
+                }
                 _ => (),
             }
         }

@@ -94,6 +94,7 @@ pub use error::{Error, Result};
 pub use mesh::{Mesh, MeshBuilder};
 pub use pass::Pass;
 pub use pipe::{Pipeline, PipelineBuilder};
+pub use scene::Scene;
 pub use stage::{Stage, StageBuilder};
 pub use target::{Target, TargetBuilder};
 pub use types::VertexFormat;
@@ -101,13 +102,13 @@ pub use types::VertexFormat;
 use std::time::Duration;
 use types::{Buffer, ColorFormat, DepthFormat, Encoder, Factory, Resources, Slice, Window};
 
+pub mod mesh;
 pub mod pass;
 pub mod target;
-pub mod vertex;
 
 mod error;
-mod mesh;
 mod pipe;
+mod scene;
 mod stage;
 mod types;
 

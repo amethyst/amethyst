@@ -11,6 +11,7 @@ use gfx;
 use gfx::format::Format;
 use gfx::pso::buffer::Structure;
 use gfx::traits::Pod;
+use std::fmt::Debug;
 
 #[cfg(all(feature = "d3d11", target_os = "windows"))]
 mod d3d11;
@@ -41,5 +42,5 @@ pub type Encoder = gfx::Encoder<Resources, CommandBuffer>;
 pub type Slice = gfx::Slice<Resources>;
 
 /// Trait implemented by all valid vertex formats.
-pub trait VertexFormat: Pod + Structure<Format> {}
-impl<T> VertexFormat for T where T: Pod + Structure<Format> {}
+pub trait VertexFormat: Debug + Pod + Structure<Format> {}
+impl<T> VertexFormat for T where T: Debug + Pod + Structure<Format> {}
