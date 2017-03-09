@@ -7,7 +7,7 @@ extern crate winit;
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 use std::time::{Duration, Instant};
-use renderer::{RendererBuilder, Scene, Stage, Target};
+use renderer::{Renderer, Scene, Stage, Target};
 use renderer::pass::ClearTarget;
 use renderer::vertex::PosColor;
 use winit::{Event, WindowBuilder};
@@ -19,8 +19,7 @@ fn main() {
         .with_title("Amethyst Renderer Demo")
         .with_dimensions(1024, 768);
 
-    let mut renderer = RendererBuilder::new(builder)
-        .build()
+    let mut renderer = Renderer::from_winit_builder(builder)
         .expect("Could not build renderer");
 
     let pipe = renderer.create_pipeline()
@@ -59,7 +58,6 @@ fn main() {
         }
 
         renderer.draw(&scene, &pipe, delta);
-        window.swap_buffers().expect("Window error");
 
         let end = Instant::now();
         delta = end - start;
