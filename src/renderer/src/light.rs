@@ -63,13 +63,13 @@ impl From<Directional> for Light {
 pub struct Point {
     /// Location of the light source in three dimensional space.
     pub center: Point3<f32>,
-	/// Color of the light.
+    /// Color of the light.
     pub color: Rgba,
-	/// Brightness of the light source, in lumens.
+    /// Brightness of the light source, in lumens.
     pub intensity: f32,
-	/// Maximum radius of the point light's affected area.
+    /// Maximum radius of the point light's affected area.
     pub radius: f32,
-	/// Smoothness of the light-to-dark transition from the center to the
+    /// Smoothness of the light-to-dark transition from the center to the
     /// radius.
     pub smoothness: f32,
 }
@@ -99,15 +99,15 @@ pub struct Spot {
     pub angle: Deg<f32>,
     /// Location of the light source in three dimensional space.
     pub center: Point3<f32>,
-	/// Color of the light in RGBA8 format.
+    /// Color of the light in RGBA8 format.
     pub color: Rgba,
     /// Direction that the light is pointing.
     pub direction: Vector3<f32>,
-	/// Brightness of the light source, in lumens.
+    /// Brightness of the light source, in lumens.
     pub intensity: f32,
-	/// Maximum radius of the point light's affected area.
+    /// Maximum radius of the point light's affected area.
     pub radius: f32,
-	/// Smoothness of the light-to-dark transition from the center to the
+    /// Smoothness of the light-to-dark transition from the center to the
     /// radius.
     pub smoothness: f32,
 }
@@ -141,7 +141,7 @@ pub struct Sun {
     pub color: Rgba,
     /// Direction that the light is pointing.
     pub direction: Vector3<f32>,
-	/// Brightness of the sun light, in lux.
+    /// Brightness of the sun light, in lux.
     pub intensity: f32,
 }
 
