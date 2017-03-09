@@ -1,6 +1,6 @@
 //! Clears the color and/or depth buffers in a target.
 
-use {Encoder, Pass, Target};
+use {Encoder, Pass, Scene, Target};
 
 /// Clears the color and/or depth buffers in a target.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -36,7 +36,7 @@ impl ClearTarget {
 }
 
 impl Pass for ClearTarget {
-    fn apply(&self, enc: &mut Encoder, target: &Target, _: f64) {
+    fn apply(&self, enc: &mut Encoder, target: &Target, _: &Scene, _: f64) {
         if let Some(val) = self.color_val {
             for buf in target.color_bufs() {
                 enc.clear(buf, val);

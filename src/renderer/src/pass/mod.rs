@@ -1,6 +1,6 @@
 //! Different types of rendering passes.
 
-use {Encoder, Factory, Result, Target};
+use {Encoder, Factory, Result, Scene, Target};
 use fnv::FnvHashMap as HashMap;
 use std::fmt::Debug;
 
@@ -18,5 +18,5 @@ pub trait Pass: Debug + Send + Sync {
     /// Initializes the pass when first added to a pipeline.
     fn init(&mut self, _args: &Args) -> Result<()> { Ok(()) }
     /// Applies the pass to the given target.
-    fn apply(&self, enc: &mut Encoder, target: &Target, f64);
+    fn apply(&self, enc: &mut Encoder, target: &Target, scene: &Scene, dt: f64);
 }

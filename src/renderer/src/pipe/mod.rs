@@ -1,7 +1,13 @@
 //! Renderer pipeline configuration.
 
-use {Factory, Result, Stage, StageBuilder, Target, TargetBuilder};
+pub use self::stage::{Stage, StageBuilder};
+pub use self::target::{Target, TargetBuilder};
+
+use {Factory, Result};
 use fnv::FnvHashMap as HashMap;
+
+mod stage;
+mod target;
 
 /// Defines how the rendering pipeline should be configured.
 #[derive(Debug)]
