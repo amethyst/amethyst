@@ -26,6 +26,11 @@ impl Scene {
         self.lights.remove(name)
     }
 
+    /// Removes a mesh from the scene.
+    pub fn remove_mesh(&mut self, name: &str) -> Option<Mesh> {
+        self.meshes.remove(name)
+    }
+
     /// Returns an immutable reference to all lights in the scene.
     pub fn lights(&self) -> &HashMap<String, Light> {
         &self.lights
