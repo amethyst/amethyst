@@ -4,7 +4,7 @@ extern crate amethyst_renderer as renderer;
 extern crate winit;
 
 use std::time::{Duration, Instant};
-use renderer::{RendererBuilder, Stage, Target};
+use renderer::{RendererBuilder, Scene, Stage, Target};
 use renderer::pass::ClearTarget;
 use winit::{Event, WindowBuilder};
 use winit::ElementState::Pressed;
@@ -15,7 +15,7 @@ fn main() {
         .with_title("Amethyst Renderer Demo")
         .with_dimensions(1024, 768);
 
-    let (window, mut renderer) = RendererBuilder::new(builder)
+    let mut renderer = RendererBuilder::new(builder)
         .build()
         .expect("Could not build renderer");
 
@@ -34,12 +34,14 @@ fn main() {
         .build()
         .expect("Could not build pipeline");
 
+    let scene = Scene::default();
+
     let mut delta = Duration::from_secs(0);
 
     'main: loop {
         let start = Instant::now();
 
-        for event in window.poll_events() {
+        for event in renderer.window().poll_events() {
             match event {
                 Event::Closed | Event::KeyboardInput(Pressed, _, Some(Key::Escape)) => {
                     break 'main
@@ -48,8 +50,7 @@ fn main() {
             }
         }
 
-        renderer.draw(&pipe, delta);
-        window.swap_buffers().expect("Window error");
+        renderer.draw(&scene, &pipe, delta);
 
         let end = Instant::now();
         delta = end - start;

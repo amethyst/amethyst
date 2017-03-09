@@ -1,6 +1,6 @@
 //! A stage in the rendering pipeline.
 
-use {Encoder, Error, Factory, Pass, Result, Target};
+use {Encoder, Error, Factory, Pass, Result, Scene, Target};
 use fnv::FnvHashMap as HashMap;
 
 /// A stage in the rendering pipeline.
@@ -32,11 +32,12 @@ impl Stage {
         self.enabled
     }
 
-    /// Applies all passes in this layer to the given target.
-    pub fn apply(&self, mut enc: &mut Encoder, delta: f64) {
+    /// Applies all passes in this stage to the given `Scene` and outputs the
+    /// result to the proper target.
+    pub fn apply(&self, enc: &mut Encoder, scene: &Scene, delta: f64) {
         if self.enabled {
             for pass in self.passes.as_slice() {
-                pass.apply(&mut enc, &self.target, delta);
+                pass.apply(enc, &self.target, scene, delta);
             }
         }
     }

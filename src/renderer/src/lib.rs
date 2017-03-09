@@ -3,11 +3,13 @@
 //! # Example
 //!
 //! ```ignore
+//! # use winit;
+//! # use amethyst_renderer::*;
 //! let wb = winit::WindowBuilder::new()
 //!     .with_title("Amethyst Renderer Demo")
 //!     .with_dimensions(800, 600);
 //!
-//! let (win, mut renderer) = RendererBuilder::new(wb)
+//! let mut renderer = RendererBuilder::new(wb)
 //!    .build()
 //!    .expect("Could not build renderer");
 //!
@@ -26,32 +28,32 @@
 //!     .smoothness(0.3);
 //!
 //! let scene = Scene::new()
-//!     .add_object(sphere)
+//!     .add_mesh(sphere)
 //!     .add_light(light);
 //!
 //! let pipe = renderer.create_pipeline()
 //!     .with_target(Target::new("gbuffer")
 //!         .with_num_color_bufs(4)
 //!         .with_depth_buf(true))
-//!     .with_layer(Layer::with_target("gbuffer")
-//!         .with_pass(ClearTarget::with_values([0.0; 4], 0.0))
+//!     .with_stage(Stage::with_target("gbuffer")
+//!         .with_pass(ClearTarget::with_values(Rgba::default(), 0.0))
 //!         .with_pass(DrawFlat::with_camera("main_camera")))
-//!     .with_layer(Layer::with_target("main")
-//!         .with_pass(BlitLayer::from_target_color_buf("gbuffer", 2))
+//!     .with_stage(Stage::with_target("main")
+//!         .with_pass(BlitBuffer::color_buf("gbuffer", 2))
 //!         .with_pass(DeferredLighting::new("main_camera", "gbuffer", "scene")))
 //!     .build()
 //!     .expect("Could not build pipeline");
 //!
 //! 'main: loop {
-//!     for e in win.poll_events() {
-//!         match e {
+//!     for event in renderer.window().poll_events() {
+//!         match event {
 //!             winit::Event::Closed => break 'main,
 //!             _ => (),
 //!         }
 //!     }
 //!
-//!     renderer.draw(&scene, &pipe);
-//!     win.swap_buffers().expect("Could not swap buffers");
+//!     # let delta = std::time::Duration::secs(0);
+//!     renderer.draw(&scene, &pipe, delta);
 //! }
 //! ```
 
@@ -94,10 +96,8 @@ pub use error::{Error, Result};
 pub use light::Light;
 pub use mesh::{Mesh, MeshBuilder};
 pub use pass::Pass;
-pub use pipe::{Pipeline, PipelineBuilder};
+pub use pipe::{Pipeline, PipelineBuilder, Target, TargetBuilder, Stage, StageBuilder};
 pub use scene::Scene;
-pub use stage::{Stage, StageBuilder};
-pub use target::{Target, TargetBuilder};
 pub use types::VertexFormat;
 
 use std::time::Duration;
@@ -106,14 +106,12 @@ use types::{Buffer, ColorFormat, DepthFormat, Encoder, Factory, Resources, Slice
 pub mod color;
 pub mod light;
 pub mod pass;
-pub mod target;
 pub mod vertex;
 
 mod error;
 mod mesh;
 mod pipe;
 mod scene;
-mod stage;
 mod types;
 
 /// Generic renderer.
@@ -122,11 +120,12 @@ pub struct Renderer {
     encoders: Vec<Encoder>,
     factory: Factory,
     main_target: Target,
+    window: Window,
 }
 
 impl Renderer {
     /// Creates a new renderer with the given device and factory.
-    pub fn new(dev: types::Device, mut fac: Factory, main: Target) -> Self {
+    pub fn new(dev: types::Device, mut fac: Factory, main: Target, win: Window) -> Renderer {
         let num_cores = num_cpus::get();
 
         let encoders = (0..num_cores)
@@ -138,6 +137,7 @@ impl Renderer {
             encoders: encoders,
             factory: fac,
             main_target: main,
+            window: win,
         }
     }
 
@@ -153,8 +153,13 @@ impl Renderer {
         PipelineBuilder::new(&mut self.factory, self.main_target.clone())
     }
 
+    /// Returns an immutable reference to the renderer window.
+    pub fn window(&self) -> &winit::Window {
+        self.window.as_winit_window()
+    }
+
     /// Draws a scene with the given pipeline.
-    pub fn draw(&mut self, pipe: &Pipeline, delta: Duration) {
+    pub fn draw(&mut self, scene: &Scene, pipe: &Pipeline, delta: Duration) {
         use gfx::Device;
         use rayon::prelude::*;
 
@@ -163,13 +168,16 @@ impl Renderer {
         pipe.stages()
             .par_iter()
             .zip(self.encoders.as_mut_slice())
-            .for_each(|(stage, ref mut enc)| stage.apply(enc, dt));
+            .for_each(|(stage, ref mut enc)| stage.apply(enc, scene, dt));
 
         for enc in self.encoders.as_mut_slice() {
             enc.flush(&mut self.device);
         }
 
         self.device.cleanup();
+
+        #[cfg(feature = "opengl")]
+        self.window.swap_buffers().expect("OpenGL context has been lost");
     }
 }
 
@@ -180,12 +188,6 @@ impl Drop for Renderer {
     }
 }
 
-impl From<(types::Device, Factory, Target)> for Renderer {
-    fn from((dev, fac, main): (types::Device, Factory, Target)) -> Renderer {
-        Renderer::new(dev, fac, main)
-    }
-}
-
 /// Builds a new renderer.
 pub struct RendererBuilder {
     window: winit::WindowBuilder,
@@ -193,13 +195,13 @@ pub struct RendererBuilder {
 
 impl RendererBuilder {
     /// Constructs a new RendererBuilder from the given WindowBuilder.
-    pub fn new(wb: winit::WindowBuilder) -> Self {
+    pub fn new(wb: winit::WindowBuilder) -> RendererBuilder {
         RendererBuilder { window: wb }
     }
 
     /// Builds a new renderer.
     #[cfg(feature = "opengl")]
-    pub fn build(self) -> Result<(Window, Renderer)> {
+    pub fn build(self) -> Result<Renderer> {
         use glutin::{GlProfile, GlRequest, WindowBuilder};
         let wb = WindowBuilder::from_winit_builder(self.window)
             .with_gl_profile(GlProfile::Core)
@@ -210,12 +212,12 @@ impl RendererBuilder {
         let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
         let main_target: Target = (vec![color], depth, size).into();
 
-        Ok((win, (dev, fac, main_target).into()))
+        Ok(Renderer::new(dev, fac, main_target, win))
     }
 
     /// Builds a new renderer.
     #[cfg(all(feature = "d3d11", target_os = "windows"))]
-    pub fn build(self) -> Result<(Window, Renderer)> {
+    pub fn build(self) -> Result<Renderer> {
         let (win, dev, mut fac, color) = gfx_window_dxgi::init::<ColorFormat>(self.window).unwrap();
         let dev = gfx_device_dx11::Deferred::from(dev);
 
@@ -224,6 +226,6 @@ impl RendererBuilder {
         let depth = fac.create_depth_stencil_view_only::<DepthFormat>(w, h)?;
         let main_target: Target = (vec![color], depth, size).into();
 
-        Ok((win, (dev, fac, main_target).into()))
+        Ok(Renderer::new(dev, fac, main_target, win))
     }
 }

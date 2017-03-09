@@ -7,7 +7,7 @@ extern crate winit;
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 use std::time::{Duration, Instant};
-use renderer::{RendererBuilder, Stage, Target};
+use renderer::{RendererBuilder, Scene, Stage, Target};
 use renderer::pass::ClearTarget;
 use renderer::vertex::PosColor;
 use winit::{Event, WindowBuilder};
@@ -19,7 +19,7 @@ fn main() {
         .with_title("Amethyst Renderer Demo")
         .with_dimensions(1024, 768);
 
-    let (window, mut renderer) = RendererBuilder::new(builder)
+    let mut renderer = RendererBuilder::new(builder)
         .build()
         .expect("Could not build renderer");
 
@@ -43,10 +43,13 @@ fn main() {
     let verts = gen_sphere(32, 32);
     let mesh = renderer.create_mesh(&verts).build();
 
+    let mut scene = Scene::default();
+    scene.add_mesh("ball", mesh);
+
     'main: loop {
         let start = Instant::now();
 
-        for event in window.poll_events() {
+        for event in renderer.window().poll_events() {
             match event {
                 Event::Closed | Event::KeyboardInput(Pressed, _, Some(Key::Escape)) => {
                     break 'main
@@ -55,7 +58,7 @@ fn main() {
             }
         }
 
-        renderer.draw(&pipe, delta);
+        renderer.draw(&scene, &pipe, delta);
         window.swap_buffers().expect("Window error");
 
         let end = Instant::now();
