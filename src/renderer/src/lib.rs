@@ -17,12 +17,7 @@
 //!     .build()
 //!     .expect("Could not build sphere");
 //!
-//! let light = PointLight::new()
-//!     .position(Point3::new(4.0, 6.0, -4.0))
-//!     .color(Rgba(1.0, 0.5, 0.2, 1.0))
-//!     .radius(1.0)
-//!     .intensity(0.7)
-//!     .smoothness(0.3);
+//! let light = PointLight::default();
 //!
 //! let scene = Scene::new()
 //!     .add_mesh(sphere)
@@ -43,13 +38,12 @@
 //!
 //! 'main: loop {
 //!     for event in renderer.window().poll_events() {
-//!         match event {
-//!             winit::Event::Closed => break 'main,
-//!             _ => (),
+//!         if event == winit::Event::Closed {
+//!             break 'main;
 //!         }
 //!     }
 //!
-//!     renderer.draw(&scene, &pipe, delta);
+//!     renderer.draw(&scene, &pipe, dt);
 //! }
 //! ```
 

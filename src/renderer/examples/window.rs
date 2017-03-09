@@ -4,7 +4,7 @@ extern crate amethyst_renderer as renderer;
 extern crate winit;
 
 use std::time::{Duration, Instant};
-use renderer::{Renderer, Scene, Stage, Target};
+use renderer::{Renderer, Scene, Stage};
 use renderer::pass::ClearTarget;
 use winit::{Event, WindowBuilder};
 use winit::ElementState::Pressed;
@@ -19,17 +19,8 @@ fn main() {
         .expect("Could not build renderer");
 
     let pipe = renderer.create_pipeline()
-        .with_target(Target::new("gbuffer")
-            .with_num_color_bufs(4)
-            .with_depth_buf(true))
-        .with_stage(Stage::with_target("gbuffer")
-            .with_pass(ClearTarget::with_values([1.0; 4], 1.0)))
         .with_stage(Stage::with_target("")
-            .with_pass(ClearTarget::with_values([1.0; 4], 1.0))
-            .enabled_by_default(true))
-        .with_stage(Stage::with_target("")
-            .with_pass(ClearTarget::with_values([0.0; 4], 1.0))
-            .enabled_by_default(false))
+            .with_pass(ClearTarget::with_values([0.0, 0.0, 0.0, 1.0], 1.0)))
         .build()
         .expect("Could not build pipeline");
 
@@ -51,7 +42,6 @@ fn main() {
 
         renderer.draw(&scene, &pipe, delta);
 
-        let end = Instant::now();
-        delta = end - start;
+        delta = Instant::now() - start;
     }
 }

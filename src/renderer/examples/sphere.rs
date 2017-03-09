@@ -7,7 +7,7 @@ extern crate winit;
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 use std::time::{Duration, Instant};
-use renderer::{Renderer, Scene, Stage, Target};
+use renderer::{Renderer, Scene, Stage};
 use renderer::pass::ClearTarget;
 use renderer::vertex::PosColor;
 use winit::{Event, WindowBuilder};
@@ -23,11 +23,6 @@ fn main() {
         .expect("Could not build renderer");
 
     let pipe = renderer.create_pipeline()
-        .with_target(Target::new("gbuffer")
-            .with_num_color_bufs(4)
-            .with_depth_buf(true))
-        .with_stage(Stage::with_target("gbuffer")
-            .with_pass(ClearTarget::with_values([1.0; 4], 1.0)))
         .with_stage(Stage::with_target("")
             .with_pass(ClearTarget::with_values([1.0; 4], 1.0))
             .enabled_by_default(true))
@@ -37,13 +32,13 @@ fn main() {
         .build()
         .expect("Could not build pipeline");
 
-    let mut delta = Duration::from_secs(0);
-
     let verts = gen_sphere(32, 32);
     let mesh = renderer.create_mesh(&verts).build();
 
     let mut scene = Scene::default();
     scene.add_mesh("ball", mesh);
+
+    let mut delta = Duration::from_secs(0);
 
     'main: loop {
         let start = Instant::now();
@@ -59,8 +54,7 @@ fn main() {
 
         renderer.draw(&scene, &pipe, delta);
 
-        let end = Instant::now();
-        delta = end - start;
+        delta = Instant::now() - start;
     }
 }
 
