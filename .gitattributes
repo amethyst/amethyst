@@ -7,6 +7,7 @@
 *.rs text
 *.toml text
 *.yml text
+
 COPYING text
 LICENSE-* text
 
