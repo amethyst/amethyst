@@ -3,14 +3,11 @@
 //! # Example
 //!
 //! ```ignore
-//! # use winit;
-//! # use amethyst_renderer::*;
 //! let wb = winit::WindowBuilder::new()
 //!     .with_title("Amethyst Renderer Demo")
 //!     .with_dimensions(800, 600);
 //!
-//! let mut renderer = RendererBuilder::new(wb)
-//!    .build()
+//! let mut renderer = Renderer::from_winit_builder(wb)
 //!    .expect("Could not build renderer");
 //!
 //! let verts = some_sphere_gen_func();
@@ -52,7 +49,6 @@
 //!         }
 //!     }
 //!
-//!     # let delta = std::time::Duration::secs(0);
 //!     renderer.draw(&scene, &pipe, delta);
 //! }
 //! ```
@@ -125,20 +121,21 @@ pub struct Renderer {
 
 impl Renderer {
     /// Creates a new renderer with the given device and factory.
-    pub fn new(dev: types::Device, mut fac: Factory, main: Target, win: Window) -> Renderer {
-        let num_cores = num_cpus::get();
+    pub fn from_winit_builder(builder: winit::WindowBuilder) -> Result<Renderer> {
+        let Backend(dev, mut fac, main, win) = init_backend(builder)?;
 
+        let num_cores = num_cpus::get();
         let encoders = (0..num_cores)
             .map(|_| fac.create_command_buffer().into())
             .collect();
 
-        Renderer {
+        Ok(Renderer {
             device: dev,
             encoders: encoders,
             factory: fac,
             main_target: main,
             window: win,
-        }
+        })
     }
 
     /// Builds a new mesh from the given vertices.
@@ -188,44 +185,38 @@ impl Drop for Renderer {
     }
 }
 
-/// Builds a new renderer.
-pub struct RendererBuilder {
-    window: winit::WindowBuilder,
+/// Represents a graphics backend for the renderer.
+struct Backend(pub types::Device, pub Factory, pub Target, pub Window);
+
+/// Creates the OpenGL backend.
+#[cfg(feature = "opengl")]
+fn init_backend(builder: winit::WindowBuilder) -> Result<Backend> {
+    use glutin::{GlProfile, GlRequest, WindowBuilder};
+    use gfx_window_glutin as win;
+
+    let wb = WindowBuilder::from_winit_builder(builder)
+        .with_gl_profile(GlProfile::Core)
+        .with_gl(GlRequest::Latest);
+
+    let (win, dev, fac, color, depth) = win::init::<ColorFormat, DepthFormat>(wb);
+    let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
+    let main_target: Target = (vec![color], depth, size).into();
+
+    Ok(Backend(dev, fac, main_target, win))
 }
 
-impl RendererBuilder {
-    /// Constructs a new RendererBuilder from the given WindowBuilder.
-    pub fn new(wb: winit::WindowBuilder) -> RendererBuilder {
-        RendererBuilder { window: wb }
-    }
+/// Creates the Direct3D 11 backend.
+#[cfg(all(feature = "d3d11", target_os = "windows"))]
+fn init_backend(builder: winit::WindowBuilder) -> Result<Backend> {
+    use gfx_window_dxgi as win;
 
-    /// Builds a new renderer.
-    #[cfg(feature = "opengl")]
-    pub fn build(self) -> Result<Renderer> {
-        use glutin::{GlProfile, GlRequest, WindowBuilder};
-        let wb = WindowBuilder::from_winit_builder(self.window)
-            .with_gl_profile(GlProfile::Core)
-            .with_gl(GlRequest::Latest);
+    let (win, dev, mut fac, color) = win::init::<ColorFormat>(builder).unwrap();
+    let dev = gfx_device_dx11::Deferred::from(dev);
 
-        let (win, dev, fac, color, depth) = gfx_window_glutin::init::<ColorFormat, DepthFormat>(wb);
+    let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
+    let (w, h) = (size.0 as u16, size.1 as u16);
+    let depth = fac.create_depth_stencil_view_only::<DepthFormat>(w, h)?;
+    let main_target: Target = (vec![color], depth, size).into();
 
-        let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
-        let main_target: Target = (vec![color], depth, size).into();
-
-        Ok(Renderer::new(dev, fac, main_target, win))
-    }
-
-    /// Builds a new renderer.
-    #[cfg(all(feature = "d3d11", target_os = "windows"))]
-    pub fn build(self) -> Result<Renderer> {
-        let (win, dev, mut fac, color) = gfx_window_dxgi::init::<ColorFormat>(self.window).unwrap();
-        let dev = gfx_device_dx11::Deferred::from(dev);
-
-        let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
-        let (w, h) = (size.0 as u16, size.1 as u16);
-        let depth = fac.create_depth_stencil_view_only::<DepthFormat>(w, h)?;
-        let main_target: Target = (vec![color], depth, size).into();
-
-        Ok(Renderer::new(dev, fac, main_target, win))
-    }
+    Ok(Backend(dev, fac, main_target, win))
 }
