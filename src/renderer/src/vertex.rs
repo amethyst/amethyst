@@ -5,7 +5,7 @@
 use Buffer;
 
 /// Typed vertex buffer.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum VertexBuffer {
     /// Buffer with the `PosColor` format.
     PosColor(Buffer<PosColor>),

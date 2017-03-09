@@ -22,7 +22,7 @@ pub struct Target {
 
 impl Target {
     /// Creates a new TargetBuilder with the given name.
-    pub fn new<S: Into<String>>(name: S) -> TargetBuilder {
+    pub fn new<N: Into<String>>(name: N) -> TargetBuilder {
         TargetBuilder::new(name.into())
     }
 

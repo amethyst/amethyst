@@ -2,12 +2,10 @@
 
 use {Factory, Slice, VertexFormat};
 use cgmath::{Deg, Matrix4, Point3, Vector3, Transform};
-use self::vertex::{PosColor, PosNormTex, VertexBuffer};
-
-pub mod vertex;
+use vertex::{PosColor, PosNormTex, VertexBuffer};
 
 /// Represents a typed triangle mesh.
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Mesh {
     slice: Slice,
     transform: Matrix4<f32>,

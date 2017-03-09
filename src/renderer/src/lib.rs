@@ -91,6 +91,7 @@ extern crate gfx_device_vulkan;
 extern crate gfx_window_vulkan;
 
 pub use error::{Error, Result};
+pub use light::Light;
 pub use mesh::{Mesh, MeshBuilder};
 pub use pass::Pass;
 pub use pipe::{Pipeline, PipelineBuilder};
@@ -102,11 +103,14 @@ pub use types::VertexFormat;
 use std::time::Duration;
 use types::{Buffer, ColorFormat, DepthFormat, Encoder, Factory, Resources, Slice, Window};
 
-pub mod mesh;
+pub mod color;
+pub mod light;
 pub mod pass;
 pub mod target;
+pub mod vertex;
 
 mod error;
+mod mesh;
 mod pipe;
 mod scene;
 mod stage;
@@ -141,7 +145,7 @@ impl Renderer {
     pub fn create_mesh<'a, V>(&'a mut self, verts: &'a [V]) -> MeshBuilder<'a, V>
         where V: VertexFormat + 'a
     {
-        MeshBuilder::new(&mut self.factory, &verts)
+        MeshBuilder::new(&mut self.factory, verts)
     }
 
     /// Builds a new renderer pipeline.

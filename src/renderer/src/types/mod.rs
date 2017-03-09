@@ -43,4 +43,5 @@ pub type Slice = gfx::Slice<Resources>;
 
 /// Trait implemented by all valid vertex formats.
 pub trait VertexFormat: Debug + Pod + Structure<Format> {}
+
 impl<T> VertexFormat for T where T: Debug + Pod + Structure<Format> {}
