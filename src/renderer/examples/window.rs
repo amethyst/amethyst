@@ -19,7 +19,7 @@ fn main() {
         .expect("Could not build renderer");
 
     let pipe = renderer.create_pipeline()
-        .with_stage(Stage::with_target("")
+        .with_stage(Stage::with_main_target()
             .with_pass(ClearTarget::with_values([0.0, 0.0, 0.0, 1.0], 1.0)))
         .build()
         .expect("Could not build pipeline");

@@ -1,7 +1,24 @@
 //! Renderer pipeline configuration.
+//!
+//! # Example
+//!
+//! ```ignore
+//! let pipe = renderer.create_pipeline()
+//!     .with_target(Target::new("gbuffer")
+//!         .with_num_color_bufs(4)
+//!         .with_depth_buf(true))
+//!     .with_stage(Stage::with_target("gbuffer")
+//!         .with_pass(ClearTarget::with_values(Rgba::default(), 0.0))
+//!         .with_pass(DrawFlat::with_camera("main_camera")))
+//!     .with_stage(Stage::with_target("main")
+//!         .with_pass(BlitBuffer::color_buf("gbuffer", 2))
+//!         .with_pass(DeferredLighting::new("main_camera", "gbuffer", "scene")))
+//!     .build()
+//!     .expect("Could not build pipeline");
+//! ```
 
 pub use self::stage::{Stage, StageBuilder};
-pub use self::target::{Target, TargetBuilder};
+pub use self::target::{Target, TargetBuilder, TargetColorBuffer, TargetDepthBuffer};
 
 use {Factory, Result};
 use fnv::FnvHashMap as HashMap;

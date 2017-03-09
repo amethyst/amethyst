@@ -3,7 +3,7 @@
 use {Light, Mesh};
 use fnv::FnvHashMap as HashMap;
 
-/// Scene struct.
+/// Collection of lights and meshes to render.
 #[derive(Clone, Debug, Default)]
 pub struct Scene {
     lights: HashMap<String, Light>,

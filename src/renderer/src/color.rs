@@ -1,6 +1,6 @@
 //! Color value types.
 
-/// Floating-point red green blue alpha (RGBA) color value.
+/// An RGBA color value.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Rgba(pub f32, pub f32, pub f32, pub f32);
 

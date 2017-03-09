@@ -3,12 +3,7 @@
 //! # Example
 //!
 //! ```ignore
-//! let wb = winit::WindowBuilder::new()
-//!     .with_title("Amethyst Renderer Demo")
-//!     .with_dimensions(800, 600);
-//!
-//! let mut renderer = Renderer::from_winit_builder(wb)
-//!    .expect("Could not build renderer");
+//! let mut renderer = Renderer::new().expect("Could not build renderer");
 //!
 //! let verts = some_sphere_gen_func();
 //! let sphere = renderer.create_mesh(verts)
@@ -23,18 +18,7 @@
 //!     .add_mesh(sphere)
 //!     .add_light(light);
 //!
-//! let pipe = renderer.create_pipeline()
-//!     .with_target(Target::new("gbuffer")
-//!         .with_num_color_bufs(4)
-//!         .with_depth_buf(true))
-//!     .with_stage(Stage::with_target("gbuffer")
-//!         .with_pass(ClearTarget::with_values(Rgba::default(), 0.0))
-//!         .with_pass(DrawFlat::with_camera("main_camera")))
-//!     .with_stage(Stage::with_target("main")
-//!         .with_pass(BlitBuffer::color_buf("gbuffer", 2))
-//!         .with_pass(DeferredLighting::new("main_camera", "gbuffer", "scene")))
-//!     .build()
-//!     .expect("Could not build pipeline");
+//! let pipe = pipe::deferred(&renderer);
 //!
 //! 'main: loop {
 //!     for event in renderer.window().poll_events() {
@@ -82,25 +66,26 @@ extern crate gfx_device_vulkan;
 #[cfg(feature = "vulkan")]
 extern crate gfx_window_vulkan;
 
+pub use color::Rgba;
 pub use error::{Error, Result};
 pub use light::Light;
 pub use mesh::{Mesh, MeshBuilder};
 pub use pass::Pass;
-pub use pipe::{Pipeline, PipelineBuilder, Target, TargetBuilder, Stage, StageBuilder};
+pub use pipe::{Pipeline, PipelineBuilder, Target, Stage};
 pub use scene::Scene;
 pub use types::VertexFormat;
 
 use std::time::Duration;
 use types::{Buffer, ColorFormat, DepthFormat, Encoder, Factory, Resources, Slice, Window};
 
-pub mod color;
 pub mod light;
 pub mod pass;
+pub mod pipe;
 pub mod vertex;
 
+mod color;
 mod error;
 mod mesh;
-mod pipe;
 mod scene;
 mod types;
 
@@ -114,7 +99,13 @@ pub struct Renderer {
 }
 
 impl Renderer {
-    /// Creates a new renderer with the given device and factory.
+    /// Creates a new renderer with default window settings.
+    pub fn new() -> Result<Renderer> {
+        let wb = winit::WindowBuilder::new();
+        Renderer::from_winit_builder(wb)
+    }
+
+    /// Creates a new renderer with the given `winit::WindowBuilder`.
     pub fn from_winit_builder(builder: winit::WindowBuilder) -> Result<Renderer> {
         let Backend(dev, mut fac, main, win) = init_backend(builder)?;
 
