@@ -7,6 +7,8 @@
 *.rs text
 *.toml text
 *.yml text
+COPYING text
+LICENSE-* text
 
 # Denote all files that are truly binary and should not be modified.
 *.obj binary
