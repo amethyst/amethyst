@@ -1,6 +1,6 @@
 
 /// Trait implemented by the `config!` macro.
-pub trait Config where Self: Sized {
+pub trait Config where Self: Sized + ::serde::Deserialize + ::serde::Serialize {
     /// Loads a configuration structure from a file.
     /// Defaults if the file fails in any way.
     fn load<P: AsRef<::std::path::Path>>(P) -> Self;
@@ -16,7 +16,7 @@ pub trait Config where Self: Sized {
 /// `.yml`/`.yaml` files.
 ///
 /// It implements the [`serde::Serialize`], [`serde::Deserialize`], and [`Config`] traits.
-/// As well as the standard libraries Default trait for the defaulting fields.
+/// As well as the standard libraries `std::default::Default` trait for the defaulting fields.
 ///
 /// It follows Rust's syntax for defining structures with one addition, defaulting values.
 /// If the file fails to specific fields of a configuration, then it will print out
@@ -70,6 +70,7 @@ macro_rules! config(
         pub struct $identifier {
             $(
                 $( #[$field_meta] )*
+                ///
                 pub $field: $ty,
             )*
         }

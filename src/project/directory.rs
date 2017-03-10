@@ -40,6 +40,8 @@ pub struct Directory {
 }
 
 impl Directory {
+    /// Create a new directory from a path and extensions, recursive will search for files
+    /// with the extension recursively.
     pub fn new<P: AsRef<Path>>(path: P,
                                recursive: bool,
                                extensions: Vec<String>)

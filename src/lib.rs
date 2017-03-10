@@ -16,7 +16,7 @@
 //!
 //! use amethyst::{Application, Event, State, Trans, VirtualKeyCode, WindowEvent};
 //! use amethyst::asset_manager::AssetManager;
-//! use amethyst::config::Element;
+//! use amethyst::project::Config;
 //! use amethyst::ecs::World;
 //! use amethyst::gfx_device::DisplayConfig;
 //! use amethyst::renderer::Pipeline;
@@ -52,7 +52,7 @@
 //! fn main() {
 //!     let path = format!("{}/examples/01_window/resources/config.yml",
 //!                        env!("CARGO_MANIFEST_DIR"));
-//!     let cfg = DisplayConfig::from_file(path).expect("Could not find config!");
+//!     let cfg = DisplayConfig::load(path);
 //!     let mut game = Application::build(GameState, cfg).done();
 //!     game.run();
 //! }

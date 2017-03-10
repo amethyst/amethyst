@@ -8,7 +8,6 @@ use amethyst::project::Config;
 use amethyst::ecs::World;
 use amethyst::gfx_device::DisplayConfig;
 use amethyst::renderer::Pipeline;
-use amethyst::project::Config;
 
 struct Example;
 
