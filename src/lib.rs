@@ -64,6 +64,8 @@
 #![doc(html_logo_url = "https://tinyurl.com/jtmm43a")]
 
 #[macro_use]
+pub extern crate thread_profiler;
+#[macro_use]
 pub extern crate amethyst_config as config;
 pub extern crate amethyst_renderer as renderer;
 

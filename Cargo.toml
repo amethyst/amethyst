@@ -18,9 +18,10 @@ appveyor = { repository = "amethyst/amethyst" }
 travis-ci = { repository = "amethyst/amethyst" }
 
 [features]
-default = ["opengl"]
+default = ["opengl", "profiler"]
 opengl = []
 direct3d = []
+profiler = ["thread_profiler/thread_profiler"]
 
 [dependencies]
 amethyst_config = { path = "src/config/", version = "0.2.2" }
@@ -37,6 +38,7 @@ glutin = "0.7"
 imagefmt = "4.0"
 specs = "0.7"
 wavefront_obj = "5.0"
+thread_profiler = "0.1"
 
 [target.'cfg(windows)'.dependencies]
 gfx_device_dx11 = "0.4"

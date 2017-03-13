@@ -10,3 +10,6 @@ thumbs.db
 *~
 *.rs.bk
 *.swp
+
+# Thread profiler output
+thread_profile.json

@@ -257,6 +257,16 @@ page, we can do this inline.
 When submitting your pull requests, please follow the same procedures described
 in the [Pull Requests](#pull-requests) section above.
 
+## Profiling the engine
+By default Amethyst generates a `thread_profile.json` file
+(living in the same directory as `Cargo.toml`).
+Which holds information about engine performance
+(how much time do various bits of code take to run).
+Amethyst uses the same profiling method as [webrender][wr] ([thread_profiler][tp] crate).
+`thread_profile.json` can be viewed using Chromium tracing utility.
+You can access it by launching Chromium and typing in `about:tracing` in your address bar.
+Then you can hit load button and choose `thread_profile.json` file.
+
 ## Useful Resources
 
 * Amethyst
@@ -286,3 +296,5 @@ in the [Pull Requests](#pull-requests) section above.
 
 [re]: http://rustbyexample.com/
 [rl]: https://doc.rust-lang.org/book/
+[wr]: https://github.com/servo/webrender/pull/854
+[tp]: https://crates.io/crates/thread_profiler
