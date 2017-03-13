@@ -63,7 +63,7 @@ fn set_pipeline_state(pipe: &mut Pipeline, forward: bool) {
                                     DrawShaded::new("main", "main")]);
         pipe.layers = vec![layer];
     } else {
-        let geom_layer = Layer::new("main",
+        let geom_layer = Layer::new("gbuffer",
                                     vec![Clear::new([0.0, 0.0, 0.0, 1.0]),
                                          DrawFlat::new("main", "main")]);
         let postproc_layer = Layer::new("main",
