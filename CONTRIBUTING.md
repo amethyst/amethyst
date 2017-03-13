@@ -258,9 +258,17 @@ When submitting your pull requests, please follow the same procedures described
 in the [Pull Requests](#pull-requests) section above.
 
 ## Profiling the engine
-By default Amethyst generates a `thread_profile.json` file
-(living in the same directory as `Cargo.toml`).
-Which holds information about engine performance
+You can build Amethyst with a `profiler` feature like this:
+
+```
+cargo build --release --features profiler
+```
+Or if you wanted to run an example with profiler:
+```
+cargo run --example my_example --release --features profiler
+```
+After an Amethyst instance built with `profiler` feature shuts down a
+`thread_profile.json` file is generated. It holds information about engine performance
 (how much time do various bits of code take to run).
 Amethyst uses the same profiling method as [webrender][wr] ([thread_profiler][tp] crate).
 `thread_profile.json` can be viewed using Chromium tracing utility.

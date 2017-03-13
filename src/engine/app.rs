@@ -1,5 +1,6 @@
 //! The core engine framework.
 
+#[cfg(feature="profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
 use num_cpus;
 use std::time::{Duration, Instant};
@@ -128,6 +129,7 @@ impl Application {
 
     /// Sets up the application.
     fn initialize(&mut self) {
+        #[cfg(feature="profiler")]
         register_thread_with_profiler("Main".into());
         let world = &mut self.planner.mut_world();
         let assets = &mut self.assets;
@@ -139,6 +141,7 @@ impl Application {
     fn advance_frame(&mut self) {
         use ecs::resources::ScreenDimensions;
         {
+            #[cfg(feature="profiler")]
             profile_scope!("handle_events");
             let events = self.gfx_device.poll_events();
             let world = &mut self.planner.mut_world();
@@ -147,20 +150,24 @@ impl Application {
 
             self.states.handle_events(events.as_ref(), world, assets, pipe);
 
+            #[cfg(feature="profiler")]
             profile_scope!("fixed_update");
             if self.last_fixed_update.elapsed() >= self.fixed_step {
                 self.states.fixed_update(world, assets, pipe);
                 self.last_fixed_update += self.fixed_step;
             }
 
+            #[cfg(feature="profiler")]
             profile_scope!("update");
             self.states.update(world, assets, pipe);
         }
 
+        #[cfg(feature="profiler")]
         profile_scope!("dispatch");
         self.planner.dispatch(());
         self.planner.wait();
 
+        #[cfg(feature="profiler")]
         profile_scope!("render_world");
         {
             let world = &mut self.planner.mut_world();
@@ -184,9 +191,12 @@ impl Application {
     /// Cleans up after the quit signal is received.
     fn shutdown(&mut self) {
         // TODO: Specify filename in config.
-        let path = format!("{}/thread_profile.json",
-                               env!("CARGO_MANIFEST_DIR"));
-        write_profile(path.as_str());
+        #[cfg(feature="profiler")]
+        {
+            let path = format!("{}/thread_profile.json",
+                                env!("CARGO_MANIFEST_DIR"));
+            write_profile(path.as_str());
+        }
     }
 }
 
