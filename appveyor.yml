@@ -31,6 +31,7 @@ build: false
 # Compile the engine and run all tests.
 test_script:
     - cargo test --all -v
+    - cargo test --all -v --features profiler
 
 branches:
     only:
