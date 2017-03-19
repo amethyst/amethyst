@@ -41,6 +41,10 @@ impl Application {
     {
         use ecs::resources::{Camera, Projection, ScreenDimensions};
 
+        #[cfg(feature="profiler")]
+        register_thread_with_profiler("Main".into());
+        #[cfg(feature="profiler")]
+        profile_scope!("video_init");
         let (device, mut factory, main_target) = gfx_device::video_init(&cfg);
         let mut pipe = Pipeline::new();
         pipe.targets.insert("main".into(),
@@ -115,7 +119,11 @@ impl Application {
 
     /// Starts the application and manages the game loop.
     pub fn run(&mut self) {
-        self.initialize();
+        {
+            #[cfg(feature="profiler")]
+            profile_scope!("initialize");
+            self.initialize();
+        }
 
         while self.states.is_running() {
             self.timer.restart();
@@ -124,13 +132,17 @@ impl Application {
             self.delta_time = self.timer.elapsed();
         }
 
-        self.shutdown();
+        {
+            #[cfg(feature="profiler")]
+            profile_scope!("shutdown");
+            self.shutdown();
+        }
+        #[cfg(feature="profiler")]
+        self.write_profile();
     }
 
     /// Sets up the application.
     fn initialize(&mut self) {
-        #[cfg(feature="profiler")]
-        register_thread_with_profiler("Main".into());
         let world = &mut self.planner.mut_world();
         let assets = &mut self.assets;
         let pipe = &mut self.pipe;
@@ -190,13 +202,16 @@ impl Application {
 
     /// Cleans up after the quit signal is received.
     fn shutdown(&mut self) {
+        // Placeholder.
+    }
+
+    #[cfg(feature="profiler")]
+    /// Writes thread_profiler profile.
+    fn write_profile(&self) {
         // TODO: Specify filename in config.
-        #[cfg(feature="profiler")]
-        {
-            let path = format!("{}/thread_profile.json",
-                                env!("CARGO_MANIFEST_DIR"));
-            write_profile(path.as_str());
-        }
+        let path = format!("{}/thread_profile.json",
+                           env!("CARGO_MANIFEST_DIR"));
+        write_profile(path.as_str());
     }
 }
 
