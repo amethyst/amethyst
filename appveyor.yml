@@ -14,6 +14,7 @@ matrix:
 
 # Set up the Rust toolchain.
 install:
+    - set PATH=C:\Program Files\Git\mingw64\bin;%PATH%
     - curl -fsS "https://win.rustup.rs/" -o rustup-init.exe
     - rustup-init.exe -y --default-toolchain %channel%-%target%
     - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
