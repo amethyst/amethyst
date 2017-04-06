@@ -17,6 +17,8 @@
 //! }
 //!
 //! fn main() {
+//!     use amethyst::ecs::Gate;
+//!
 //!     let mut bc = Broadcaster::new();
 //!     bc.register::<UserComponent>();
 //!     for i in 0..10 {
@@ -24,8 +26,8 @@
 //!         bc.publish().with::<UserComponent>(user_comp).build();
 //!     }
 //!     {
-//!         let user_comps = bc.read::<UserComponent>();
-//!         for user_comp in user_comps.iter() {
+//!         let user_comps = bc.read::<UserComponent>().pass();
+//!         for user_comp in user_comps.join() {
 //!             println!("{0}", user_comp.data);
 //!         }
 //!     }
