@@ -1,12 +1,11 @@
 extern crate amethyst;
 
-use amethyst::{Application, Event, State, Trans, VirtualKeyCode, WindowEvent};
-use amethyst::asset_manager::AssetManager;
+use amethyst::{Application, Engine, Event, State, Trans, VirtualKeyCode, WindowEvent};
 use amethyst::config::Element;
-use amethyst::ecs::{World, Join, VecStorage, Component, RunArg, System};
+use amethyst::ecs::{Join, VecStorage, Component, RunArg, System};
 use amethyst::ecs::components::{Mesh, LocalTransform, Texture, Transform};
 use amethyst::gfx_device::DisplayConfig;
-use amethyst::renderer::{Pipeline, VertexPosNormal};
+use amethyst::renderer::VertexPosNormal;
 
 struct Pong;
 
@@ -228,7 +227,7 @@ impl System<()> for PongSystem {
 }
 
 impl State for Pong {
-    fn on_start(&mut self, world: &mut World, assets: &mut AssetManager, pipe: &mut Pipeline) {
+    fn on_start(&mut self, engine: &mut Engine) {
         use amethyst::ecs::Gate;
         use amethyst::ecs::resources::{Camera, InputHandler, Projection, ScreenDimensions};
         use amethyst::renderer::Layer;
@@ -238,7 +237,9 @@ impl State for Pong {
                                vec![Clear::new([0.0, 0.0, 0.0, 1.0]),
                                     DrawFlat::new("main", "main")]);
 
-        pipe.layers.push(layer);
+        engine.pipe.layers.push(layer);
+
+        let world = engine.planner.mut_world();
 
         {
             let dim = world.read_resource::<ScreenDimensions>().pass();
@@ -267,6 +268,8 @@ impl State for Pong {
         // Add all resources
         world.add_resource::<Score>(Score::new());
         world.add_resource::<InputHandler>(InputHandler::new());
+
+        let assets = &mut engine.manager;
 
         // Generate a square mesh
         assets.register_asset::<Mesh>();
@@ -314,13 +317,12 @@ impl State for Pong {
 
     fn handle_events(&mut self,
                      events: &[WindowEvent],
-                     world: &mut World,
-                     _: &mut AssetManager,
-                     _: &mut Pipeline)
+                     engine: &mut Engine)
                      -> Trans {
         use amethyst::ecs::Gate;
         use amethyst::ecs::resources::InputHandler;
 
+        let world = engine.planner.mut_world();
         let input = world.write_resource::<InputHandler>();
         input.pass().update(events);
 

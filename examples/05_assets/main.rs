@@ -4,14 +4,13 @@
 extern crate amethyst;
 extern crate cgmath;
 
-use amethyst::{Application, Event, State, Trans, VirtualKeyCode, WindowEvent};
-use amethyst::asset_manager::{AssetLoader, AssetLoaderRaw, AssetManager, Assets, DirectoryStore};
+use amethyst::{Application, Engine, Event, State, Trans, VirtualKeyCode, WindowEvent};
+use amethyst::asset_manager::{AssetLoader, AssetLoaderRaw, Assets, DirectoryStore};
 use amethyst::config::Element;
-use amethyst::ecs::World;
 use amethyst::ecs::components::{LocalTransform, Mesh, Texture, Transform};
 use amethyst::ecs::resources::{Camera, Projection, ScreenDimensions};
 use amethyst::gfx_device::DisplayConfig;
-use amethyst::renderer::{Layer, PointLight, Pipeline, VertexPosNormal};
+use amethyst::renderer::{Layer, PointLight, VertexPosNormal};
 use amethyst::renderer::pass::{Clear, DrawShaded};
 use cgmath::{Deg, Euler, Quaternion};
 use std::env::set_var;
@@ -73,8 +72,10 @@ impl AssetLoader<Mesh> for CustomObj {
 struct Example;
 
 impl State for Example {
-    fn on_start(&mut self, world: &mut World, assets: &mut AssetManager, pipe: &mut Pipeline) {
+    fn on_start(&mut self, engine: &mut Engine) {
         use amethyst::ecs::Gate;
+
+        let world = engine.planner.mut_world();
 
         {
             let dim = world.read_resource::<ScreenDimensions>().pass();
@@ -90,6 +91,8 @@ impl State for Example {
             camera.target = [0.0, 0.0, 5.0];
             camera.up = [0.0, 0.0, 1.0];
         }
+
+        let assets = &mut engine.manager;
 
         // Set up an assets path by directly registering an assets store.
         let assets_path = format!("{}/examples/05_assets/resources/meshes",
@@ -181,14 +184,12 @@ impl State for Example {
         let layer = Layer::new("main",
                                vec![Clear::new([0.0, 0.0, 0.0, 1.0]),
                                     DrawShaded::new("main", "main")]);
-        pipe.layers.push(layer);
+        engine.pipe.layers.push(layer);
     }
 
     fn handle_events(&mut self,
                      events: &[WindowEvent],
-                     _: &mut World,
-                     _: &mut AssetManager,
-                     _: &mut Pipeline)
+                     _: &mut Engine)
                      -> Trans {
         // Exit if user hits Escape or closes the window
         for e in events {

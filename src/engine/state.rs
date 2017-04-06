@@ -1,9 +1,7 @@
 //! Utilities for game state management.
 
-use asset_manager::AssetManager;
+use engine::Engine;
 use engine::event::WindowEvent;
-use renderer::Pipeline;
-use ecs::World;
 
 /// Types of state transitions.
 pub enum Trans {
@@ -23,43 +21,30 @@ pub enum Trans {
 /// A trait which defines game states that can be used by the state machine.
 pub trait State {
     /// Executed when the game state begins.
-    fn on_start(&mut self, _world: &mut World, _assets: &mut AssetManager, _pipe: &mut Pipeline) {}
+    fn on_start(&mut self, _engine: &mut Engine) {}
 
     /// Executed when the game state exits.
-    fn on_stop(&mut self, _world: &mut World, _assets: &mut AssetManager, _pipe: &mut Pipeline) {}
+    fn on_stop(&mut self, _engine: &mut Engine) {}
 
     /// Executed when a different game state is pushed onto the stack.
-    fn on_pause(&mut self, _world: &mut World, _assets: &mut AssetManager, _pipe: &mut Pipeline) {}
+    fn on_pause(&mut self, _engine: &mut Engine) {}
 
     /// Executed when the application returns to this game state once again.
-    fn on_resume(&mut self, _world: &mut World, _assets: &mut AssetManager, _pipe: &mut Pipeline) {}
+    fn on_resume(&mut self, _engine: &mut Engine) {}
 
     /// Executed on every frame before updating, for use in reacting to events.
-    fn handle_events(&mut self,
-                     _events: &[WindowEvent],
-                     _world: &mut World,
-                     _assets: &mut AssetManager,
-                     _pipe: &mut Pipeline)
-                     -> Trans {
+    fn handle_events(&mut self, _events: &[WindowEvent], _engine: &mut Engine) -> Trans {
         Trans::None
     }
 
     /// Executed repeatedly at stable, predictable intervals (1/60th of a second
     /// by default).
-    fn fixed_update(&mut self,
-                    _world: &mut World,
-                    _assets: &mut AssetManager,
-                    _pipe: &mut Pipeline)
-                    -> Trans {
+    fn fixed_update(&mut self, _engine: &mut Engine) -> Trans {
         Trans::None
     }
 
     /// Executed on every frame immediately, as fast as the engine will allow.
-    fn update(&mut self,
-              _world: &mut World,
-              _assets: &mut AssetManager,
-              _pipe: &mut Pipeline)
-              -> Trans {
+    fn update(&mut self, _engine: &mut Engine) -> Trans {
         Trans::None
     }
 }
@@ -90,10 +75,10 @@ impl StateMachine {
     ///
     /// # Panics
     /// Panics if no states are present in the stack.
-    pub fn start(&mut self, world: &mut World, assets: &mut AssetManager, pipe: &mut Pipeline) {
+    pub fn start(&mut self, engine: &mut Engine) {
         if !self.running {
             let state = self.state_stack.last_mut().unwrap();
-            state.on_start(world, assets, pipe);
+            state.on_start(engine);
             self.running = true;
         }
     }
@@ -101,43 +86,39 @@ impl StateMachine {
     /// Passes a vector of events to the active state to handle.
     pub fn handle_events(&mut self,
                          events: &[WindowEvent],
-                         world: &mut World,
-                         assets: &mut AssetManager,
-                         pipe: &mut Pipeline) {
+                         engine: &mut Engine) {
         if self.running {
             let trans = match self.state_stack.last_mut() {
-                Some(state) => state.handle_events(events, world, assets, pipe),
+                Some(state) => state.handle_events(events, engine),
                 None => Trans::None,
             };
 
-            self.transition(trans, world, assets, pipe);
+            self.transition(trans, engine);
         }
     }
 
     /// Updates the currently active state at a steady, fixed interval.
     pub fn fixed_update(&mut self,
-                        world: &mut World,
-                        assets: &mut AssetManager,
-                        pipe: &mut Pipeline) {
+                        engine: &mut Engine) {
         if self.running {
             let trans = match self.state_stack.last_mut() {
-                Some(state) => state.fixed_update(world, assets, pipe),
+                Some(state) => state.fixed_update(engine),
                 None => Trans::None,
             };
 
-            self.transition(trans, world, assets, pipe);
+            self.transition(trans, engine);
         }
     }
 
     /// Updates the currently active state immediately.
-    pub fn update(&mut self, world: &mut World, assets: &mut AssetManager, pipe: &mut Pipeline) {
+    pub fn update(&mut self, engine: &mut Engine) {
         if self.running {
             let trans = match self.state_stack.last_mut() {
-                Some(state) => state.update(world, assets, pipe),
+                Some(state) => state.update(engine),
                 None => Trans::None,
             };
 
-            self.transition(trans, world, assets, pipe);
+            self.transition(trans, engine);
         }
     }
 
@@ -145,16 +126,14 @@ impl StateMachine {
     /// fixed_update().
     fn transition(&mut self,
                   request: Trans,
-                  world: &mut World,
-                  assets: &mut AssetManager,
-                  pipe: &mut Pipeline) {
+                  engine: &mut Engine) {
         if self.running {
             match request {
                 Trans::None => (),
-                Trans::Pop => self.pop(world, assets, pipe),
-                Trans::Push(state) => self.push(state, world, assets, pipe),
-                Trans::Switch(state) => self.switch(state, world, assets, pipe),
-                Trans::Quit => self.stop(world, assets, pipe),
+                Trans::Pop => self.pop(engine),
+                Trans::Push(state) => self.push(state, engine),
+                Trans::Switch(state) => self.switch(state, engine),
+                Trans::Quit => self.stop(engine),
             }
         }
     }
@@ -162,47 +141,43 @@ impl StateMachine {
     /// Removes the current state on the stack and inserts a different one.
     fn switch(&mut self,
               state: Box<State>,
-              world: &mut World,
-              assets: &mut AssetManager,
-              pipe: &mut Pipeline) {
+              engine: &mut Engine) {
         if self.running {
             if let Some(mut state) = self.state_stack.pop() {
-                state.on_stop(world, assets, pipe);
+                state.on_stop(engine);
             }
 
             self.state_stack.push(state);
             let state = self.state_stack.last_mut().unwrap();
-            state.on_start(world, assets, pipe);
+            state.on_start(engine);
         }
     }
 
     /// Pauses the active state and pushes a new state onto the state stack.
     fn push(&mut self,
             state: Box<State>,
-            world: &mut World,
-            assets: &mut AssetManager,
-            pipe: &mut Pipeline) {
+            engine: &mut Engine) {
         if self.running {
             if let Some(state) = self.state_stack.last_mut() {
-                state.on_pause(world, assets, pipe);
+                state.on_pause(engine);
             }
 
             self.state_stack.push(state);
             let state = self.state_stack.last_mut().unwrap();
-            state.on_start(world, assets, pipe);
+            state.on_start(engine);
         }
     }
 
     /// Stops and removes the active state and un-pauses the next state on the
     /// stack (if any).
-    fn pop(&mut self, world: &mut World, assets: &mut AssetManager, pipe: &mut Pipeline) {
+    fn pop(&mut self, engine: &mut Engine) {
         if self.running {
             if let Some(mut state) = self.state_stack.pop() {
-                state.on_stop(world, assets, pipe);
+                state.on_stop(engine);
             }
 
             if let Some(mut state) = self.state_stack.last_mut() {
-                state.on_resume(world, assets, pipe);
+                state.on_resume(engine);
             } else {
                 self.running = false;
             }
@@ -210,10 +185,10 @@ impl StateMachine {
     }
 
     /// Shuts the state machine down.
-    fn stop(&mut self, world: &mut World, assets: &mut AssetManager, pipe: &mut Pipeline) {
+    fn stop(&mut self, engine: &mut Engine) {
         if self.running {
             while let Some(mut state) = self.state_stack.pop() {
-                state.on_stop(world, assets, pipe);
+                state.on_stop(engine);
             }
 
             self.running = false;
@@ -225,11 +200,20 @@ impl StateMachine {
 mod tests {
     use super::*;
 
+    use std::sync::Arc;
+
+    use threadpool::ThreadPool;
+
+    use asset_manager::AssetManager;
+    use ecs::{Planner, World};
+    use engine::Engine;
+    use renderer::Pipeline;
+
     struct State1(u8);
     struct State2;
 
     impl State for State1 {
-        fn update(&mut self, _: &mut World, _: &mut AssetManager, _: &mut Pipeline) -> Trans {
+        fn update(&mut self, _: &mut Engine) -> Trans {
             if self.0 > 0 {
                 self.0 -= 1;
                 Trans::None
@@ -240,26 +224,29 @@ mod tests {
     }
 
     impl State for State2 {
-        fn update(&mut self, _: &mut World, _: &mut AssetManager, _: &mut Pipeline) -> Trans {
+        fn update(&mut self, _: &mut Engine) -> Trans {
             Trans::Pop
         }
     }
 
     #[test]
     fn switch_pop() {
-        let mut assets = AssetManager::new();
-        let mut pipe = Pipeline::new();
-        let mut world = World::new();
+        let assets = AssetManager::new();
+        let pipe = Pipeline::new();
+        let pool = Arc::new(ThreadPool::new(2));
+        let planner = Planner::from_pool(World::new(), pool.clone());
+
+        let mut engine = Engine { manager: assets, pipe: pipe, planner: planner, pool: pool };
 
         let mut sm = StateMachine::new(State1(7));
-        sm.start(&mut world, &mut assets, &mut pipe);
+        sm.start(&mut engine);
 
         for _ in 0..8 {
-            sm.update(&mut world, &mut assets, &mut pipe);
+            sm.update(&mut engine);
             assert!(sm.is_running());
         }
 
-        sm.update(&mut world, &mut assets, &mut pipe);
+        sm.update(&mut engine);
         assert!(!sm.is_running());
     }
 }
