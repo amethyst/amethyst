@@ -1,9 +1,12 @@
 //! The core engine framework.
 
+use std::sync::Arc;
+use std::time::{Duration, Instant};
+
+use threadpool::ThreadPool;
 #[cfg(feature="profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
 use num_cpus;
-use std::time::{Duration, Instant};
 
 use asset_manager::AssetManager;
 use ecs::{Component, Planner, Priority, System, World};
@@ -182,14 +185,16 @@ impl Application {
         #[cfg(feature="profiler")]
         profile_scope!("render_world");
         {
+            use ecs::Gate;
+
             let world = &mut self.planner.mut_world();
             if let Some((w, h)) = self.gfx_device.get_dimensions() {
-                let mut dim = world.write_resource::<ScreenDimensions>();
+                let mut dim = world.write_resource::<ScreenDimensions>().pass();
                 dim.update(w, h);
             }
 
             {
-                let mut time = world.write_resource::<Time>();
+                let mut time = world.write_resource::<Time>().pass();
                 time.delta_time = self.delta_time;
                 time.fixed_step = self.fixed_step;
                 time.last_fixed_update = self.last_fixed_update;
@@ -230,10 +235,12 @@ impl<T> ApplicationBuilder<T>
     /// Creates a new ApplicationBuilder with the given initial game state and
     /// display configuration.
     pub fn new(initial_state: T, cfg: DisplayConfig) -> ApplicationBuilder<T> {
+        let pool = Arc::new(ThreadPool::new(num_cpus::get()));
+
         ApplicationBuilder {
             config: cfg,
             initial_state: initial_state,
-            planner: Planner::new(World::new(), num_cpus::get()),
+            planner: Planner::from_pool(World::new(), pool),
         }
     }
 

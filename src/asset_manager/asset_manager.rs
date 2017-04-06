@@ -13,9 +13,10 @@ use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
 use std::str;
 use std::sync::RwLockReadGuard;
+use ticketed_lock::ReadTicket;
 use wavefront_obj::obj::{ObjSet, parse, Primitive};
 
-use ecs::{Allocator, Component, Entity, MaskedStorage, Storage, VecStorage, World};
+use ecs::{Allocator, Component, Entity, GatedStorage, MaskedStorage, Storage, VecStorage, World};
 use ecs::components::{Mesh, Renderable, Texture, TextureLoadData};
 use renderer::VertexPosNormal;
 
@@ -120,7 +121,7 @@ impl Assets {
     /// Read the storage of all assets for a certain type
     pub fn read_assets<A: Any + Send + Sync>
         (&self)
-         -> Storage<Asset<A>, RwLockReadGuard<Allocator>, RwLockReadGuard<MaskedStorage<Asset<A>>>> {
+         -> GatedStorage<Asset<A>, RwLockReadGuard<Allocator>, ReadTicket<MaskedStorage<Asset<A>>>> {
         self.assets.read()
     }
 
@@ -257,13 +258,15 @@ impl AssetManager {
                              ks: &str,
                              ns: f32)
                              -> Option<Renderable> {
-        let meshes = self.read_assets::<Mesh>();
-        let textures = self.read_assets::<Texture>();
+        use ecs::Gate;
+
+        let meshes = self.read_assets::<Mesh>().pass();
+        let textures = self.read_assets::<Texture>().pass();
         let mesh_id = match self.id_from_name(mesh) {
             Some(id) => id,
             None => return None,
         };
-        let mesh = match meshes.read(mesh_id) {
+        let mesh = match meshes.get(mesh_id) {
             Some(mesh) => mesh,
             None => return None,
         };
@@ -271,7 +274,7 @@ impl AssetManager {
             Some(id) => id,
             None => return None,
         };
-        let ka = match textures.read(ka_id) {
+        let ka = match textures.get(ka_id) {
             Some(ka) => ka,
             None => return None,
         };
@@ -279,7 +282,7 @@ impl AssetManager {
             Some(id) => id,
             None => return None,
         };
-        let kd = match textures.read(kd_id) {
+        let kd = match textures.get(kd_id) {
             Some(kd) => kd,
             None => return None,
         };
@@ -287,15 +290,15 @@ impl AssetManager {
             Some(id) => id,
             None => return None,
         };
-        let ks = match textures.read(ks_id) {
+        let ks = match textures.get(ks_id) {
             Some(ks) => ks,
             None => return None,
         };
         Some(Renderable {
-            mesh: mesh.clone(),
-            ambient: ka.clone(),
-            diffuse: kd.clone(),
-            specular: ks.clone(),
+            mesh: mesh.0.clone(),
+            ambient: ka.0.clone(),
+            diffuse: kd.0.clone(),
+            specular: ks.0.clone(),
             specular_exponent: ns,
         })
     }

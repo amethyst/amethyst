@@ -30,11 +30,12 @@ impl GfxDevice {
 
     /// Render all `Entity`s with `Renderable` components in `World`.
     pub fn render_world(&mut self, world: &mut World, pipe: &Pipeline) {
+        use ecs::Gate;
         use ecs::components::{Renderable, Transform};
         use ecs::resources::Projection;
         use renderer::{AmbientLight, Camera, DirectionalLight, PointLight};
 
-        let camera = world.read_resource::<resources::Camera>();
+        let camera = world.read_resource::<resources::Camera>().pass();
         let proj_mat = match camera.proj {
             Projection::Perspective { fov, aspect_ratio, near, far } => {
                 Camera::perspective(fov, aspect_ratio, near, far)
@@ -52,12 +53,12 @@ impl GfxDevice {
         let mut scene = Scene::<Resources>::new(camera);
 
         let entities = world.entities();
-        let renderables = world.read::<Renderable>();
-        let global_transforms = world.read::<Transform>();
+        let renderables = world.read::<Renderable>().pass();
+        let global_transforms = world.read::<Transform>().pass();
 
         // Add all entities with `Renderable` components attached to them to
         // the scene.
-        for (rend, entity) in (&renderables, &entities).iter() {
+        for (rend, entity) in (&renderables, &entities).join() {
             let global_trans = match global_transforms.get(entity) {
                 Some(gt) => *gt,
                 None => Transform::default(),
@@ -69,10 +70,10 @@ impl GfxDevice {
         }
 
         // Add all lights to the scene.
-        scene.point_lights.extend(world.read::<PointLight>().iter());
-        scene.directional_lights.extend(world.read::<DirectionalLight>().iter());
+        scene.point_lights.extend(world.read::<PointLight>().pass().join());
+        scene.directional_lights.extend(world.read::<DirectionalLight>().pass().join());
 
-        let ambient_light = world.read_resource::<AmbientLight>();
+        let ambient_light = world.read_resource::<AmbientLight>().pass();
         scene.ambient_light = ambient_light.power;
 
         // Render the final scene.
