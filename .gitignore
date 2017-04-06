@@ -11,5 +11,9 @@ thumbs.db
 *.rs.bk
 *.swp
 
+# IDE / Editor files
+*.iml
+/.idea
+
 # Thread profiler output
 thread_profile.json
