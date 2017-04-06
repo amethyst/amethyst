@@ -13,7 +13,7 @@ thumbs.db
 
 # IDE / Editor files
 *.iml
-/.idea
+.idea
 
 # Thread profiler output
 thread_profile.json
