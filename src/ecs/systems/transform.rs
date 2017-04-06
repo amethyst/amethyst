@@ -41,16 +41,18 @@ impl TransformSystem {
 
 impl System<()> for TransformSystem {
     fn run(&mut self, arg: RunArg, _: ()) {
+        use ecs::Gate;
+
         // Fetch world and gets entities/components
         let (entities, locals, mut globals, mut init, children) = arg.fetch(|w| {
             let entities = w.entities();
-            let locals = w.read::<LocalTransform>();
-            let children = w.read::<Child>();
-            let init = w.write::<Init>();
+            let locals = w.read::<LocalTransform>().pass();
+            let children = w.read::<Child>().pass();
+            let init = w.write::<Init>().pass();
 
             // Checks for entities with a local transform and parent, but no
             // `Init` component.
-            for (entity, _, child, _) in (&entities, &locals, &children, !&init).iter() {
+            for (entity, _, child, _) in (&entities, &locals, &children, !&init).join() {
                 self.indices.insert(entity, self.sorted.len());
                 self.sorted.push((entity, child.parent()));
                 self.new.push(entity);
@@ -75,7 +77,7 @@ impl System<()> for TransformSystem {
         }
 
         {
-            let without_parents = (&entities, &locals, &mut globals, !&children).iter();
+            let without_parents = (&entities, &locals, &mut globals, !&children).join();
 
             // Compute transforms without parents.
             for (ent, local, global, _) in without_parents {

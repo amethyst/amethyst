@@ -18,6 +18,7 @@ struct Example;
 
 impl State for Example {
     fn on_start(&mut self, world: &mut World, assets: &mut AssetManager, pipe: &mut Pipeline) {
+        use amethyst::ecs::Gate;
         use amethyst::ecs::components::{Mesh, Texture};
         use amethyst::ecs::resources::{Camera, Projection, ScreenDimensions};
         use amethyst::renderer::{Layer, PointLight};
@@ -30,8 +31,8 @@ impl State for Example {
         pipe.layers.push(layer);
 
         {
-            let dim = world.read_resource::<ScreenDimensions>();
-            let mut camera = world.write_resource::<Camera>();
+            let dim = world.read_resource::<ScreenDimensions>().pass();
+            let mut camera = world.write_resource::<Camera>().pass();
             camera.proj = Projection::Perspective {
                 fov: 60.0,
                 aspect_ratio: dim.aspect_ratio,

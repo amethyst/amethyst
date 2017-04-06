@@ -78,10 +78,11 @@ impl Score {
 // Pong game system
 impl System<()> for PongSystem {
     fn run(&mut self, arg: RunArg, _: ()) {
+        use amethyst::ecs::Gate;
         use amethyst::ecs::resources::{Camera, InputHandler, Projection, Time};
 
         // Get all needed component storages and resources
-        let (mut balls, mut planks, mut locals, camera, time, input, mut score) = arg.fetch(|w| {
+        let (mut balls, planks, locals, camera, time, input, mut score) = arg.fetch(|w| {
                 (w.write::<Ball>(),
                  w.write::<Plank>(),
                  w.write::<LocalTransform>(),
@@ -107,8 +108,10 @@ impl System<()> for PongSystem {
 
         let delta_time = time.delta_time.subsec_nanos() as f32 / 1.0e9;
 
+        let mut locals = locals.pass();
+
         // Process all planks
-        for (plank, local) in (&mut planks, &mut locals).iter() {
+        for (plank, local) in (&mut planks.pass(), &mut locals).join() {
             match plank.side {
                 // If it is a left plank
                 Side::Left => {
@@ -160,7 +163,7 @@ impl System<()> for PongSystem {
         }
 
         // Process the ball
-        for (ball, local) in (&mut balls, &mut locals).iter() {
+        for (ball, local) in (&mut balls, &mut locals).join() {
             // Move the ball
             ball.position[0] += ball.velocity[0] * delta_time;
             ball.position[1] += ball.velocity[1] * delta_time;
@@ -226,6 +229,7 @@ impl System<()> for PongSystem {
 
 impl State for Pong {
     fn on_start(&mut self, world: &mut World, assets: &mut AssetManager, pipe: &mut Pipeline) {
+        use amethyst::ecs::Gate;
         use amethyst::ecs::resources::{Camera, InputHandler, Projection, ScreenDimensions};
         use amethyst::renderer::Layer;
         use amethyst::renderer::pass::{Clear, DrawFlat};
@@ -237,8 +241,8 @@ impl State for Pong {
         pipe.layers.push(layer);
 
         {
-            let dim = world.read_resource::<ScreenDimensions>();
-            let mut camera = world.write_resource::<Camera>();
+            let dim = world.read_resource::<ScreenDimensions>().pass();
+            let mut camera = world.write_resource::<Camera>().pass();
             let aspect_ratio = dim.aspect_ratio;
             let eye = [0., 0., 0.1];
             let target = [0., 0., 0.];
@@ -314,10 +318,11 @@ impl State for Pong {
                      _: &mut AssetManager,
                      _: &mut Pipeline)
                      -> Trans {
+        use amethyst::ecs::Gate;
         use amethyst::ecs::resources::InputHandler;
 
-        let mut input = world.write_resource::<InputHandler>();
-        input.update(events);
+        let input = world.write_resource::<InputHandler>();
+        input.pass().update(events);
 
         for e in events {
             match **e {

@@ -46,7 +46,7 @@ impl System<()> for ExampleSystem {
         camera.eye[0] = 20.0 * state.camera_angle.cos();
         camera.eye[1] = 20.0 * state.camera_angle.sin();
 
-        for light in (&mut lights).iter() {
+        for light in (&mut lights).join() {
             light.center[0] = 15.0 * state.light_angle.cos();
             light.center[1] = 15.0 * state.light_angle.sin();
             light.center[2] = 6.0;
@@ -76,9 +76,11 @@ struct Example;
 
 impl State for Example {
     fn on_start(&mut self, world: &mut World, assets: &mut AssetManager, pipe: &mut Pipeline) {
+        use amethyst::ecs::Gate;
+
         {
-            let dim = world.read_resource::<ScreenDimensions>();
-            let mut camera = world.write_resource::<Camera>();
+            let dim = world.read_resource::<ScreenDimensions>().pass();
+            let mut camera = world.write_resource::<Camera>().pass();
             let proj = Projection::Perspective {
                 fov: 60.0,
                 aspect_ratio: dim.aspect_ratio,
@@ -181,7 +183,7 @@ impl State for Example {
             .build();
 
         {
-            let mut ambient_light = world.write_resource::<AmbientLight>();
+            let mut ambient_light = world.write_resource::<AmbientLight>().pass();
             ambient_light.power = 0.01;
         }
 
@@ -204,14 +206,15 @@ impl State for Example {
                      _: &mut AssetManager,
                      pipe: &mut Pipeline)
                      -> Trans {
+        use amethyst::ecs::Gate;
 
         // Exit if user hits Escape or closes the window
+        let mut state = w.write_resource::<DemoState>().pass();
+
         for e in events {
             match **e {
                 Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) => return Trans::Quit,
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::Space)) => {
-                    let mut state = w.write_resource::<DemoState>();
-
                     if state.pipeline_forward {
                         state.pipeline_forward = false;
                         set_pipeline_state(pipe, false);
@@ -221,24 +224,19 @@ impl State for Example {
                     }
                 }
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::R)) => {
-                    let mut state = w.write_resource::<DemoState>();
                     state.light_color = [0.8, 0.2, 0.2, 1.0];
                 }
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::G)) => {
-                    let mut state = w.write_resource::<DemoState>();
                     state.light_color = [0.2, 0.8, 0.2, 1.0];
                 }
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::B)) => {
-                    let mut state = w.write_resource::<DemoState>();
                     state.light_color = [0.2, 0.2, 0.8, 1.0];
                 }
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::W)) => {
-                    let mut state = w.write_resource::<DemoState>();
                     state.light_color = [1.0, 1.0, 1.0, 1.0];
                 }
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::A)) => {
-                    let mut light = w.write_resource::<AmbientLight>();
-                    let mut state = w.write_resource::<DemoState>();
+                    let mut light = w.write_resource::<AmbientLight>().pass();
 
                     if state.ambient_light {
                         state.ambient_light = false;
@@ -249,24 +247,21 @@ impl State for Example {
                     }
                 }
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::D)) => {
-                    let mut lights = w.write::<DirectionalLight>();
-                    let mut state = w.write_resource::<DemoState>();
+                    let mut lights = w.write::<DirectionalLight>().pass();
 
                     if state.directional_light {
                         state.directional_light = false;
-                        for mut light in (&mut lights).iter() {
+                        for mut light in (&mut lights).join() {
                             light.color = [0.0; 4];
                         }
                     } else {
                         state.directional_light = true;
-                        for mut light in (&mut lights).iter() {
+                        for mut light in (&mut lights).join() {
                             light.color = [0.2; 4];
                         }
                     }
                 }
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::P)) => {
-                    let mut state = w.write_resource::<DemoState>();
-
                     if state.point_light {
                         state.point_light = false;
                         state.light_color = [0.0; 4];
