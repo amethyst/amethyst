@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ## [Unreleased]
 ### Changed
 * Changes in `CONTRIBUTING.md`.
+* Update to `specs` 0.8.1.
 
 ## [0.4.2] - 2017-03-07
 ### Added
