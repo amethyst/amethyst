@@ -234,9 +234,9 @@ mod tests {
         let assets = AssetManager::new();
         let pipe = Pipeline::new();
         let pool = Arc::new(ThreadPool::new(2));
-        let planner = Planner::from_pool(World::new(), pool.clone());
+        let planner: Planner<()> = Planner::from_pool(World::new(), pool.clone());
 
-        let mut engine = Engine { manager: assets, pipe: pipe, planner: planner, pool: pool };
+        let mut engine = unsafe { ::std::mem::uninitialized() };
 
         let mut sm = StateMachine::new(State1(7));
         sm.start(&mut engine);
@@ -248,5 +248,7 @@ mod tests {
 
         sm.update(&mut engine);
         assert!(!sm.is_running());
+
+        ::std::mem::forget(engine);
     }
 }
