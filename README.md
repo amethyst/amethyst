@@ -108,6 +108,20 @@ $ cargo doc
 
 The API reference can be found in `target/doc/amethyst/index.html`.
 
+
+## Questions / Help
+
+Please check out the [FAQ][faq] before asking.
+
+If you have an easy question, just ask on [Gitter][gt] and we'll help you and add it to the FAQ.
+
+Other places you may want to check out are [r/rust_gamedev][rg] and [#rust-gamedev IRC][irc].
+
+[faq]: https://github.com/amethyst/amethyst/wiki/Frequently-Asked-Questions
+[gt]: https://gitter.im/amethyst/general
+[rg]: https://www.reddit.com/r/rust_gamedev/
+[irc]: https://botbot.me/mozilla/rust-gamedev/
+
 ## License
 
 Amethyst is free and open source software distributed under the terms of both
