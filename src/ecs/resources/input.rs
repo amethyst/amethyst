@@ -51,7 +51,7 @@ impl InputHandler {
                             // second `Pressed` event.
                         }
                         Entry::Vacant(entry) => {
-                            entry.insert(KeyQueryState::Queried);
+                            entry.insert(KeyQueryState::NotQueried);
                         }
                     }
                 }
