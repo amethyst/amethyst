@@ -12,12 +12,15 @@ if git stash save -u -k -q $STASH_NAME; then
     stash=1
 fi
 
-cargo doc --no-deps
-cargo build
+cargo doc --no-deps &&
+cargo build &&
 # Build and test without profiler
-cargo test --all
+cargo test --all &&
 # Build and test with profiler
 cargo test --all --features profiler
+
+# Capture exit code from tests
+status=$?
 
 if [ "$stash" -eq 1 ]
 then
@@ -27,3 +30,6 @@ then
         echo "\n\n${RED}Unable to revert stash command${NC}"
     fi
 fi
+
+# Keep exit code from tests, so if they fail, prevent commit
+exit $status
