@@ -7,9 +7,15 @@ GREEN='\033[1;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-if git stash save -u -k -q $STASH_NAME; then
-    echo "${YELLOW}Stashed changes as:${NC} ${STASH_NAME}\n\n"
-    stash=1
+# Check to make sure commit isn't emtpy
+if git diff-index --quiet HEAD --; then
+    echo "${RED} Empty commit"
+else
+    # Stash all changes in the working directory so we test only commit files
+    if git stash save -u -k -q $STASH_NAME; then
+        echo "${YELLOW}Stashed changes as:${NC} ${STASH_NAME}\n\n"
+        stash=1
+    fi
 fi
 
 cargo doc --no-deps &&
@@ -22,6 +28,7 @@ cargo test --all --features profiler
 # Capture exit code from tests
 status=$?
 
+# Revert stash if changes were stashed to restor working directory files
 if [ "$stash" -eq 1 ]
 then
     if git stash pop -q; then
