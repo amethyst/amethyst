@@ -127,6 +127,28 @@ done the following things first:
    the work by you, as defined in the Apache 2.0 license, shall be dual
    licensed as above, without any additional terms or conditions.
 
+To streamline the process, the `.pre-commit.sh` script will run tests on each
+commit in a sanitary way for you; to have it run automatically on each commit
+simply create a symbolic link with
+
+```bash
+$ ln -s -f ../../.pre-commit.sh .git/hooks/pre-commit
+```
+
+This ensures that you can't commit your changes if tests fail.  If you need to
+make a commit without running tests, then simply pass the `--no-verify` flag.
+We recommend the following aliases:
+
+```bash
+$ git config --global alias.ci "commit"
+$ git config --global alias.cnv "commit --no-verify"
+```
+
+Note: the `pre-commit` hook stashes all of your unstaged changes temporarily to
+ensure that your changes don't depend on code you haven't included in your
+commit.  So if you've lost any work, run `git stash list` and `git stash apply`
+to bring your changes back.
+
 [lm]: LICENSE-MIT
 [la]: LICENSE-APACHE
 [st]: src/engine/state.rs#L224-L265
@@ -143,7 +165,7 @@ developer, it will be merged into the source tree.
 ### Dealing With Upstream Changes
 
 When pulling remote changes to a local branch or machine, we recommend users to
-rebase instead of creating merge commits. 
+rebase instead of creating merge commits.
 
 This is used sometimes when an upstream change cause problems with your pull
 request. The best practice is to do a fast-forward ("ff") rebase.
@@ -182,7 +204,7 @@ $ git checkout <branch-name>
 $ git rebase upstream/<branch-to-sync-with>
 ```
 
-If any errors occur, Git will try to guess what happened. If you can't figure 
+If any errors occur, Git will try to guess what happened. If you can't figure
 out how to solve your problem, a quick Google search can help, or you can hit us
 up on our [Gitter][gi] chat.
 
@@ -194,7 +216,7 @@ To check whether anything major has changed upstream, you can do:
 ```bash
 $ # Fetch latest changes
 $ git fetch upstream
-$ # Do a "non-intruisive" check. 
+$ # Do a "non-intruisive" check.
 $ git merge --ff-only --no-commit upstream
 ```
 
