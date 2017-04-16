@@ -135,13 +135,21 @@ simply create a symbolic link with
 $ ln -s -f ../../.pre-commit.sh .git/hooks/pre-commit
 ```
 
-This ensures that you can't commit your changes if tests fail.  If you need to
-make a commit without running tests, then simply pass the `--no-verify` flag.
-We recommend the following aliases:
+or copy it to your `.git` folder with
 
 ```bash
-$ git config --global alias.ci "commit"
-$ git config --global alias.cnv "commit --no-verify"
+$ cp .pre-commit.sh .git/hooks/pre-commit
+```
+
+Note: if you use `cp` you won't get upstream changes, but if you use `ln` and
+you checkout a path without the .pre-commit.sh` script in your working
+directory, the hook won't run.
+
+This ensures that you can't commit your changes if tests fail.  If you need to
+make a commit without running tests, then simply use
+
+```bash
+$ git commit --no-verify
 ```
 
 Note: the `pre-commit` hook stashes all of your unstaged changes temporarily to
