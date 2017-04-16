@@ -6,10 +6,14 @@ RED='\033[1;31m'
 GREEN='\033[1;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
+BOLD='\033[1m'
 
-# Check to make sure commit isn't emtpy
+stash=0
+# Check to make sure commit isn't emtpy, exit with status 1 if it is
 if git diff-index --quiet HEAD --; then
-    echo "${RED} Empty commit"
+    echo "${RED}You've tried to commit an empty commit${NC}"
+    echo "\tMake sure to add your changes with 'git add'"
+    exit 1
 else
     # Stash all changes in the working directory so we test only commit files
     if git stash save -u -k -q $STASH_NAME; then
@@ -17,6 +21,8 @@ else
         stash=1
     fi
 fi
+
+echo "${GREEN} Testing commit\n\n"
 
 cargo doc --no-deps &&
 cargo build &&
@@ -27,6 +33,12 @@ cargo test --all --features profiler
 
 # Capture exit code from tests
 status=$?
+
+# Inform user of build failure
+if [ "$status" -ne "0" ]
+then
+    echo "${RED}Build failed:${NC} if you still want to commit use ${BOLD}'--no-verify'${NC}"
+fi
 
 # Revert stash if changes were stashed to restor working directory files
 if [ "$stash" -eq 1 ]
