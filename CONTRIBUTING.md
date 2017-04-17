@@ -141,9 +141,9 @@ or copy it to your `.git` folder with
 $ cp .pre-commit.sh .git/hooks/pre-commit
 ```
 
-Note: if you use `cp` you won't get upstream changes, but if you use `ln` and
-you checkout a path without the .pre-commit.sh` script in your working
-directory, the hook won't run.
+Note: if you use `cp` you won't get upstream changes to `.pre-commit.sh`, but if
+you use `ln` and you checkout a path without the .pre-commit.sh` script in your
+ working directory, the hook won't run.
 
 This ensures that you can't commit your changes if tests fail.  If you need to
 make a commit without running tests, then simply use
