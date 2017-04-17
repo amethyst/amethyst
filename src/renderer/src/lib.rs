@@ -39,7 +39,6 @@
 
 extern crate cgmath;
 extern crate fnv;
-#[macro_use]
 extern crate gfx;
 extern crate gfx_core;
 #[macro_use]
@@ -108,6 +107,7 @@ pub struct Renderer {
     encoders: Vec<Encoder>,
     factory: Factory,
     main_target: Arc<Target>,
+    pool: rayon::ThreadPool,
     window: Window,
 }
 
@@ -127,18 +127,22 @@ impl Renderer {
             .map(|_| fac.create_command_buffer().into())
             .collect();
 
+        let cfg = rayon::Configuration::new().num_threads(num_cores);
+        let pool = rayon::ThreadPool::new(cfg).map_err(|e| Error::PoolCreation(e))?;
+
         Ok(Renderer {
             device: dev,
             encoders: encoders,
             factory: fac,
             main_target: Arc::new(main),
+            pool: pool,
             window: win,
         })
     }
 
     /// Builds a new mesh from the given vertices.
-    pub fn create_mesh<'a, V>(&'a mut self, verts: &'a [V]) -> MeshBuilder<'a>
-        where V: VertexFormat + 'a
+    pub fn create_mesh<V>(&mut self, verts: &'static [V]) -> MeshBuilder
+        where V: VertexFormat
     {
         MeshBuilder::new(&mut self.factory, verts)
     }
@@ -158,12 +162,17 @@ impl Renderer {
         use gfx::Device;
         use rayon::prelude::*;
 
-        pipe.stages()
-            .par_iter()
-            .zip(self.encoders.as_mut_slice())
-            .for_each(|(stage, ref mut enc)| stage.apply(enc, scene));
+        {
+            let encoders = self.encoders.as_mut_slice();
+            self.pool.install(|| {
+                    pipe.stages()
+                        .par_iter()
+                        .zip(encoders)
+                        .for_each(|(stage, enc)| stage.apply(enc, scene));
+                });
+        }
 
-        for enc in self.encoders.as_mut_slice() {
+        for enc in self.encoders.iter_mut() {
             enc.flush(&mut self.device);
         }
 
