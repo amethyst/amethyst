@@ -1,24 +1,28 @@
 //! A stage in the rendering pipeline.
 
-use {Encoder, Error, Factory, Pass, Result, Scene, Target};
-use fnv::FnvHashMap as HashMap;
+use error::{Error, Result};
+use pipe::{Target, Targets};
+use pipe::pass::{Pass, PassBuilder};
+use scene::Scene;
+use std::sync::Arc;
+use types::{Encoder, Factory};
 
 /// A stage in the rendering pipeline.
 #[derive(Debug)]
 pub struct Stage {
     enabled: bool,
-    passes: Vec<Box<Pass>>,
-    target: Target,
+    passes: Vec<Pass>,
+    target: Arc<Target>,
 }
 
 impl Stage {
     /// Creates a new stage using the Target with the given name.
     pub fn with_target<T: Into<String>>(target_name: T) -> StageBuilder {
-        StageBuilder::new(target_name)
+        StageBuilder::new(target_name.into())
     }
 
     /// Creates a new layer which draws straight into the backbuffer.
-    pub fn with_main_target() -> StageBuilder {
+    pub fn with_backbuffer() -> StageBuilder {
         StageBuilder::new("")
     }
 
@@ -34,24 +38,25 @@ impl Stage {
 
     /// Applies all passes in this stage to the given `Scene` and outputs the
     /// result to the proper target.
-    pub fn apply(&self, enc: &mut Encoder, scene: &Scene, delta: f64) {
+    pub fn apply(&self, enc: &mut Encoder, scene: &Scene) {
         if self.enabled {
             for pass in self.passes.as_slice() {
-                pass.apply(enc, &self.target, scene, delta);
+                pass.apply(enc, &self.target);
             }
         }
     }
 }
 
 /// Constructs a new rendering stage.
+#[derive(Debug)]
 pub struct StageBuilder {
     enabled: bool,
-    passes: Vec<Box<Pass>>,
+    passes: Vec<PassBuilder>,
     target_name: String,
 }
 
 impl StageBuilder {
-    /// Creates a new StageBuilder using the given target name.
+    /// Creates a new `StageBuilder` using the given target.
     pub fn new<T: Into<String>>(target_name: T) -> Self {
         StageBuilder {
             enabled: true,
@@ -60,36 +65,35 @@ impl StageBuilder {
         }
     }
 
-    /// Appends another pass to the stage.
-    pub fn with_pass<P: Pass + 'static>(mut self, pass: P) -> Self {
-        self.passes.push(Box::new(pass));
+    /// Appends another `Pass` to the stage.
+    pub fn with_pass<P: Into<PassBuilder>>(mut self, pass: P) -> Self {
+        self.passes.push(pass.into());
         self
     }
 
-    /// Sets whether the stage is turned on by default.
-    pub fn enabled_by_default(mut self, val: bool) -> Self {
+    /// Sets whether the `Stage` is turned on by default.
+    pub fn enabled(mut self, val: bool) -> Self {
         self.enabled = val;
         self
     }
 
     /// Builds and returns the stage.
-    pub fn build(mut self, targets: &HashMap<String, Target>, fac: &mut Factory) -> Result<Stage> {
-        use pass::Args;
-
+    pub fn build(mut self, fac: &mut Factory, targets: &Targets) -> Result<Stage> {
         let name = self.target_name;
-        let target = targets.get(&name).ok_or(Error::NoSuchTarget(name))?;
-
-        let args = Args(fac, targets);
+        let out = targets
+            .get(&name)
+            .cloned()
+            .ok_or(Error::NoSuchTarget(name))?;
 
         let passes = self.passes
             .drain(..)
-            .map(|mut p| p.init(&args).and(Ok(p)))
+            .map(|pb| pb.build(fac, targets, &out))
             .collect::<Result<_>>()?;
 
         Ok(Stage {
             enabled: self.enabled,
             passes: passes,
-            target: target.clone(),
+            target: out,
         })
     }
 }

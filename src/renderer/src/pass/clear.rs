@@ -1,9 +1,9 @@
 //! Clears the color and/or depth buffers in a target.
 
-use {Encoder, Pass, Scene, Target};
+use pipe::pass::{Pass, PassBuilder};
 
 /// Clears the color and/or depth buffers in a target.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct ClearTarget {
     color_val: Option<[f32; 4]>,
     depth_val: Option<f32>,
@@ -24,7 +24,7 @@ impl ClearTarget {
     /// // Ignores color buffers, clears the depth buffer to 0.5.
     /// ClearTarget::with_values(None, 0.5);
     /// ```
-    pub fn with_values<C, D>(color_val: C, depth_val: D) -> Self
+    pub fn with_values<C, D>(color_val: C, depth_val: D) -> ClearTarget
         where C: Into<Option<[f32; 4]>>,
               D: Into<Option<f32>>
     {
@@ -35,19 +35,21 @@ impl ClearTarget {
     }
 }
 
-impl Pass for ClearTarget {
-    fn apply(&self, enc: &mut Encoder, target: &Target, _: &Scene, _: f64) {
-        if let Some(val) = self.color_val {
-            for buf in target.color_bufs() {
-                enc.clear(buf, val);
-            }
-        }
+impl Into<PassBuilder> for ClearTarget {
+    fn into(self) -> PassBuilder {
+        PassBuilder::function(move |ref mut enc, ref out| {
+                if let Some(val) = self.color_val {
+                    for buf in out.color_bufs() {
+                        enc.clear(&buf.as_output, val);
+                    }
+                }
 
-        if let Some(val) = self.depth_val {
-            if let Some(buf) = target.depth_buf() {
-                enc.clear_depth(buf, val);
-                enc.clear_stencil(buf, val as u8);
-            }
-        }
+                if let Some(val) = self.depth_val {
+                    if let Some(buf) = out.depth_buf() {
+                        enc.clear_depth(&buf.as_output, val);
+                        enc.clear_stencil(&buf.as_output, val as u8);
+                    }
+                }
+            })
     }
 }

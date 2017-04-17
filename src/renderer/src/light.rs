@@ -1,43 +1,43 @@
 //! Light sources.
 
-use color::Rgba;
 use cgmath::{Deg, Point3, Vector3};
+use color::Rgba;
 
 /// A light source.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub enum Light {
     /// An area light.
     Area,
     /// A directional light.
-    Directional(Directional),
+    Directional(DirectionalLight),
     /// A point light.
-    Point(Point),
+    Point(PointLight),
     /// A spot light.
-    Spot(Spot),
+    Spot(SpotLight),
     /// A sun light.
-    Sun(Sun),
+    Sun(SunLight),
 }
 
 /// A directional light source.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Directional {
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub struct DirectionalLight {
     /// Color of the light in RGBA8 format.
     pub color: Rgba,
     /// Direction that the light is pointing.
     pub direction: Vector3<f32>,
 }
 
-impl Default for Directional {
-    fn default() -> Directional {
-        Directional {
+impl Default for DirectionalLight {
+    fn default() -> DirectionalLight {
+        DirectionalLight {
             color: Rgba::default(),
             direction: Vector3::new(-1.0, -1.0, -1.0),
         }
     }
 }
 
-impl From<Directional> for Light {
-    fn from(dir: Directional) -> Light {
+impl From<DirectionalLight> for Light {
+    fn from(dir: DirectionalLight) -> Light {
         Light::Directional(dir)
     }
 }
@@ -59,8 +59,8 @@ impl From<Directional> for Light {
 /// * *n* = `smoothness`
 ///
 /// [fb]: http://www.frostbite.com/wp-content/uploads/2014/11/course_notes_moving_frostbite_to_pbr.pdf
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Point {
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub struct PointLight {
     /// Location of the light source in three dimensional space.
     pub center: Point3<f32>,
     /// Color of the light.
@@ -74,9 +74,9 @@ pub struct Point {
     pub smoothness: f32,
 }
 
-impl Default for Point {
-    fn default() -> Point {
-        Point {
+impl Default for PointLight {
+    fn default() -> PointLight {
+        PointLight {
             center: Point3::new(0.0, 0.0, 0.0),
             color: Rgba::default(),
             intensity: 10.0,
@@ -86,15 +86,15 @@ impl Default for Point {
     }
 }
 
-impl From<Point> for Light {
-    fn from(pt: Point) -> Light {
+impl From<PointLight> for Light {
+    fn from(pt: PointLight) -> Light {
         Light::Point(pt)
     }
 }
 
 /// A spot light source.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Spot {
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub struct SpotLight {
     /// Opening angle of the light cone.
     pub angle: Deg<f32>,
     /// Location of the light source in three dimensional space.
@@ -112,9 +112,9 @@ pub struct Spot {
     pub smoothness: f32,
 }
 
-impl Default for Spot {
-    fn default() -> Spot {
-        Spot {
+impl Default for SpotLight {
+    fn default() -> SpotLight {
+        SpotLight {
             angle: Deg(60.0),
             center: Point3::new(0.0, 1.0, 0.0),
             color: Rgba::default(),
@@ -126,15 +126,15 @@ impl Default for Spot {
     }
 }
 
-impl From<Spot> for Light {
-    fn from(sp: Spot) -> Light {
+impl From<SpotLight> for Light {
+    fn from(sp: SpotLight) -> Light {
         Light::Spot(sp)
     }
 }
 
-/// A realistic sun light source.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Sun {
+/// A realistic disk-shaped sun light source.
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub struct SunLight {
     /// The sun's angular radius.
     pub ang_rad: Deg<f32>,
     /// Color of the light in RGBA8 format.
@@ -145,19 +145,19 @@ pub struct Sun {
     pub intensity: f32,
 }
 
-impl Default for Sun {
-    fn default() -> Sun {
-        Sun {
+impl Default for SunLight {
+    fn default() -> SunLight {
+        SunLight {
             ang_rad: Deg(0.0093),
             color: Rgba::default(),
-            direction: [-1.0; 3].into(),
+            direction: Vector3::new(-1.0, -1.0, -1.0),
             intensity: 64_000.0,
         }
     }
 }
 
-impl From<Sun> for Light {
-    fn from(sun: Sun) -> Light {
+impl From<SunLight> for Light {
+    fn from(sun: SunLight) -> Light {
         Light::Sun(sun)
     }
 }

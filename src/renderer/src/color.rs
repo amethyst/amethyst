@@ -1,7 +1,7 @@
 //! Color value types.
 
 /// An RGBA color value.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, PartialOrd, Serialize)]
 pub struct Rgba(pub f32, pub f32, pub f32, pub f32);
 
 impl Default for Rgba {

@@ -1,12 +1,15 @@
 //! A fully renderable scene.
 
-use {Light, Mesh};
 use fnv::FnvHashMap as HashMap;
+use light::Light;
+use mesh::Mesh;
+use mtl::Material;
 
 /// Collection of lights and meshes to render.
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Scene {
     lights: HashMap<String, Light>,
+    mats: HashMap<String, Material>,
     meshes: HashMap<String, Mesh>,
 }
 
@@ -35,7 +38,7 @@ impl Scene {
     pub fn lights(&self) -> &HashMap<String, Light> {
         &self.lights
     }
-    
+
     /// Returns an immutable reference to all meshes in the scene.
     pub fn meshes(&self) -> &HashMap<String, Mesh> {
         &self.meshes
