@@ -13,7 +13,7 @@ pub struct Texture {
 
 /// Builds new textures.
 pub struct TextureBuilder<'a> {
-    data: Option<&'a[&'a[u8]]>,
+    data: Option<&'a [&'a [u8]]>,
     info: Info,
     factory: &'a mut Factory,
 }

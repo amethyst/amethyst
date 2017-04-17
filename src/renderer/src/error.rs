@@ -11,7 +11,7 @@ use std::result::Result as StdResult;
 pub type Result<T> = StdResult<T, Error>;
 
 /// Common renderer error type.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug)]
 pub enum Error {
     /// Failed to create a buffer.
     BufferCreation(gfx::buffer::CreationError),
@@ -21,6 +21,8 @@ pub enum Error {
     PassInit(gfx::PipelineStateError<String>),
     /// Failed to create a pipeline state object (PSO).
     PipelineCreation(gfx_core::pso::CreationError),
+    /// Failed to create thread pool.
+    PoolCreation(Box<StdError + 'static>),
     /// Failed to create and link a shader program.
     ProgramCreation(gfx::shade::ProgramError),
     /// Failed to create a resource view.
@@ -40,6 +42,7 @@ impl StdError for Error {
             Error::NoSuchTarget(_) => "Target with this name does not exist!",
             Error::PassInit(_) => "Failed to initialize render pass!",
             Error::PipelineCreation(_) => "Failed to create PSO!",
+            Error::PoolCreation(_) => "Failed to create thread pool!",
             Error::ProgramCreation(_) => "Failed to create shader program!",
             Error::ResViewCreation(_) => "Failed to create resource view!",
             Error::TargetCreation(_) => "Failed to create render target!",
@@ -53,6 +56,7 @@ impl StdError for Error {
             Error::BufferCreation(ref e) => Some(e),
             Error::PassInit(ref e) => Some(e),
             Error::PipelineCreation(ref e) => Some(e),
+            Error::PoolCreation(ref e) => Some(e.as_ref()),
             Error::ProgramCreation(ref e) => Some(e),
             Error::ResViewCreation(ref e) => Some(e),
             Error::TargetCreation(ref e) => Some(e),
@@ -69,6 +73,7 @@ impl Display for Error {
             Error::NoSuchTarget(ref e) => write!(fmt, "Nonexistent target: {}", e),
             Error::PassInit(ref e) => write!(fmt, "Pass initialization failed: {}", e),
             Error::PipelineCreation(ref e) => write!(fmt, "PSO creation failed: {}", e),
+            Error::PoolCreation(ref e) => write!(fmt, "Thread pool creation failed: {}", e),
             Error::ProgramCreation(ref e) => write!(fmt, "Program compilation failed: {}", e),
             Error::ResViewCreation(ref e) => write!(fmt, "Resource view creation failed: {}", e),
             Error::TargetCreation(ref e) => write!(fmt, "Target creation failed: {}", e),
