@@ -1,0 +1,100 @@
+//! Different types of rendering passes.
+
+use error::Result;
+use fnv::FnvHashMap as HashMap;
+use gfx::texture::{FilterMethod, SamplerInfo, WrapMode};
+use pipe::{Target, Targets};
+use types::{Encoder, Factory, RawPipelineState, Sampler};
+use scene::Scene;
+use std::fmt::{Debug, Formatter, Result as FmtResult};
+
+/// Implemented by all render passes.
+pub trait Pass: Debug + Send + Sync {
+    /// Initializes any graphics data needed by the pass.
+    fn init(&self, _builder: DataBuilder) -> Result<Data>;
+    /// Applies the pass using the given encoder, graphics data, and target.
+    fn apply(&self, enc: &mut Encoder, data: &Data, out: &Target);
+}
+
+/// Pass-specific graphics data that is passed into the `Kernel` on every frame.
+#[derive(Clone, Debug, Default)]
+pub struct Data {
+    /// Pipeline state object for use in drawing.
+    pub pso: Option<RawPipelineState>,
+    /// Texture samplers.
+    pub samplers: HashMap<String, Sampler>,
+    /// Additional render targets.
+    pub targets: Targets,
+}
+
+/// Builds new render passes.
+pub struct DataBuilder<'a> {
+    factory: &'a mut Factory,
+    req_samplers: HashMap<String, SamplerInfo>,
+    req_targets: Vec<String>,
+    targets: &'a Targets,
+}
+
+impl<'a> DataBuilder<'a> {
+    /// Creates a new `PassBuilder`.
+    pub fn new(fac: &'a mut Factory, targets: &'a Targets) -> Self {
+        DataBuilder {
+            factory: fac,
+            req_samplers: HashMap::default(),
+            req_targets: Vec::new(),
+            targets: targets,
+        }
+    }
+
+    /// Requests a new texture sampler be created for this `Pass`.
+    pub fn create_sampler<N: Into<String>>(&mut self, name: N, f: FilterMethod, w: WrapMode) -> &mut Self {
+        self.req_samplers.insert(name.into(), SamplerInfo::new(f, w));
+        self
+    }
+
+    /// Requests a specific render target to be retrieved for the `Pass`.
+    pub fn retrieve_target<N: Into<String>>(&mut self, name: N) -> &mut Self {
+        self.req_targets.push(name.into());
+        self
+    }
+
+    /// Builds and returns the pass using the given factory and render targets.
+    pub fn build(&mut self) -> Result<Data> {
+        use error::Error;
+        use gfx::Factory;
+
+        let targets = self.req_targets
+            .iter()
+            .cloned()
+            .map(|name| {
+                match self.targets.get(&name).cloned() {
+                    Some(t) => Ok((name, t)),
+                    None => Err(Error::NoSuchTarget(name)),
+                }
+            })
+            .collect::<Result<_>>()?;
+
+        let samplers = self.req_samplers
+            .clone()
+            .iter()
+            .map(|(name, info)| (name.clone(), self.factory.create_sampler(*info)))
+            .collect();
+
+        Ok(Data {
+            pso: None,
+            samplers: samplers,
+            targets: targets,
+        })
+    }
+}
+
+impl<'a> Debug for DataBuilder<'a> {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        f.debug_struct("PassBuilder")
+            .field("factory", &"&'a mut Factory")
+            .field("req_samplers", &self.req_samplers)
+            .field("req_targets", &self.req_targets)
+            .field("targets", &self.targets)
+            .finish()
+    }
+}

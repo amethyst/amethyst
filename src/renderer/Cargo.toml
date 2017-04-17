@@ -25,11 +25,15 @@ opengl = ["gfx_device_gl", "gfx_window_glutin", "glutin"]
 vulkan = ["gfx_device_vulkan", "gfx_window_vulkan"]
 
 [dependencies]
-cgmath = "0.12"
+cgmath = { version = "0.13", features = ["eders", "use_simd"] }
 fnv = "1.0"
 gfx = "0.14"
+gfx_core = "0.6"
+gfx_macros = "0.2"
 num_cpus = "1.0"
-rayon = "0.6"
+rayon = "0.7"
+serde = "0.9"
+serde_derive = "0.9"
 winit = "0.5"
 
 gfx_device_gl = { version = "0.13", optional = true }

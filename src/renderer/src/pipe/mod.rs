@@ -8,21 +8,27 @@
 //!         .with_num_color_bufs(4)
 //!         .with_depth_buf(true))
 //!     .with_stage(Stage::with_target("gbuffer")
-//!         .with_pass(ClearTarget::with_values(Rgba::default(), 0.0))
-//!         .with_pass(DrawFlat::with_camera("main_camera")))
-//!     .with_stage(Stage::with_target("main")
+//!         .with_pass(ClearTarget::with_values([0.0; 1], 0.0))
+//!         .with_pass(DrawFlat::new()))
+//!     .with_stage(Stage::with_backbuffer()
 //!         .with_pass(BlitBuffer::color_buf("gbuffer", 2))
-//!         .with_pass(DeferredLighting::new("main_camera", "gbuffer", "scene")))
+//!         .with_pass(DeferredLighting::compute_from("gbuffer")))
 //!     .build()
 //!     .expect("Could not build pipeline");
 //! ```
 
+pub use self::effect::{Effect, EffectBuilder};
 pub use self::stage::{Stage, StageBuilder};
-pub use self::target::{Target, TargetBuilder, TargetColorBuffer, TargetDepthBuffer};
+pub use self::target::{ColorBuffer, DepthBuffer, Target, TargetBuilder, Targets};
 
-use {Factory, Result};
+use error::Result;
 use fnv::FnvHashMap as HashMap;
+use std::sync::Arc;
+use types::Factory;
 
+pub mod pass;
+
+mod effect;
 mod stage;
 mod target;
 
@@ -30,7 +36,7 @@ mod target;
 #[derive(Debug)]
 pub struct Pipeline {
     stages: Vec<Stage>,
-    targets: HashMap<String, Target>,
+    targets: HashMap<String, Arc<Target>>,
 }
 
 impl Pipeline {
@@ -40,7 +46,7 @@ impl Pipeline {
     }
 
     /// Returns an immutable reference to all targets and their name strings.
-    pub fn targets(&self) -> &HashMap<String, Target> {
+    pub fn targets(&self) -> &HashMap<String, Arc<Target>> {
         &self.targets
     }
 }
@@ -48,14 +54,14 @@ impl Pipeline {
 /// Constructs a new pipeline with the given render targets and layers.
 pub struct PipelineBuilder<'a> {
     factory: &'a mut Factory,
-    main_target: Target,
+    main_target: Arc<Target>,
     stages: Vec<StageBuilder>,
     targets: Vec<TargetBuilder>,
 }
 
 impl<'a> PipelineBuilder<'a> {
     /// Creates a new PipelineBuilder with the given gfx::Factory.
-    pub fn new(fac: &'a mut Factory, main: Target) -> Self {
+    pub fn new(fac: &'a mut Factory, main: Arc<Target>) -> Self {
         PipelineBuilder {
             factory: fac,
             main_target: main,
@@ -84,13 +90,13 @@ impl<'a> PipelineBuilder<'a> {
         let mut targets = self.targets
             .drain(..)
             .map(|tb| tb.build(main_target.size(), factory))
-            .collect::<Result<HashMap<String, Target>>>()?;
+            .collect::<Result<Targets>>()?;
 
         targets.insert("".into(), main_target);
 
         let stages = self.stages
             .drain(..)
-            .map(|sb| sb.build(&targets, factory))
+            .map(|sb| sb.build(factory, &targets))
             .collect::<Result<_>>()?;
 
         Ok(Pipeline {
@@ -98,4 +104,31 @@ impl<'a> PipelineBuilder<'a> {
             targets: targets,
         })
     }
+}
+
+/// Builds a default deferred pipeline.
+///
+/// FIXME: Only generates a dummy pipeline for now.
+pub fn deferred(r: &mut super::Renderer) -> Result<Pipeline> {
+    use pass::*;
+    r.create_pipeline()
+        .with_target(Target::new("gbuffer")
+            .with_num_color_bufs(4)
+            .with_depth_buf(true))
+        .with_stage(Stage::with_target("gbuffer")
+            .with_pass(ClearTarget::with_values([1.0; 4], None)))
+        .with_stage(Stage::with_backbuffer()
+            .with_pass(ClearTarget::with_values([1.0; 4], None)))
+        .build()
+}
+
+/// Builds a default forward pipeline.
+///
+/// FIXME: Only generates a dummy pipeline for now.
+pub fn forward(r: &mut super::Renderer) -> Result<Pipeline> {
+    use pass::*;
+    r.create_pipeline()
+        .with_stage(Stage::with_backbuffer()
+            .with_pass(ClearTarget::with_values([1.0; 4], None)))
+        .build()
 }

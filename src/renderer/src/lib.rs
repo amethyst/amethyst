@@ -3,27 +3,28 @@
 //! # Example
 //!
 //! ```ignore
-//! let mut renderer = Renderer::new().expect("Could not build renderer");
+//! let mut renderer = Renderer::new().unwrap();
 //!
 //! let verts = some_sphere_gen_func();
-//! let sphere = renderer.create_mesh(verts)
+//! let sphere = renderer.create_mesh(&verts)
 //!     .with_ambient_texture(Rgba(1.0, 0.5, 0.2, 1.0))
 //!     .with_diffuse_texture(Rgba(0.7, 0.3, 0.1, 1.0))
 //!     .build()
-//!     .expect("Could not build sphere");
+//!     .unwrap()
 //!
 //! let light = PointLight::default();
 //!
 //! let scene = Scene::new()
-//!     .add_mesh(sphere)
-//!     .add_light(light);
+//!     .add_mesh("ball", sphere)
+//!     .add_light("lamp", light);
 //!
-//! let pipe = pipe::deferred(&renderer);
+//! let pipe = pipe::deferred(&mut renderer).unwrap();
 //!
 //! 'main: loop {
 //!     for event in renderer.window().poll_events() {
-//!         if event == winit::Event::Closed {
-//!             break 'main;
+//!         match event {
+//!             winit::Event::Closed => break 'main,
+//!             _ => (),
 //!         }
 //!     }
 //!
@@ -40,8 +41,14 @@ extern crate cgmath;
 extern crate fnv;
 #[macro_use]
 extern crate gfx;
+extern crate gfx_core;
+#[macro_use]
+extern crate gfx_macros;
 extern crate num_cpus;
 extern crate rayon;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
 extern crate winit;
 
 #[cfg(all(feature = "d3d11", target_os = "windows"))]
@@ -70,23 +77,29 @@ pub use color::Rgba;
 pub use error::{Error, Result};
 pub use light::Light;
 pub use mesh::{Mesh, MeshBuilder};
-pub use pass::Pass;
+pub use mtl::Material;
 pub use pipe::{Pipeline, PipelineBuilder, Target, Stage};
 pub use scene::Scene;
-pub use types::VertexFormat;
+pub use tex::{Texture, TextureBuilder};
+pub use vertex::VertexFormat;
 
+use pipe::{ColorBuffer, DepthBuffer};
+use std::sync::Arc;
 use std::time::Duration;
-use types::{Buffer, ColorFormat, DepthFormat, Encoder, Factory, Resources, Slice, Window};
+use types::{ColorFormat, DepthFormat, Encoder, Factory, Window};
 
 pub mod light;
 pub mod pass;
+pub mod prelude;
 pub mod pipe;
 pub mod vertex;
 
 mod color;
 mod error;
 mod mesh;
+mod mtl;
 mod scene;
+mod tex;
 mod types;
 
 /// Generic renderer.
@@ -94,7 +107,7 @@ pub struct Renderer {
     device: types::Device,
     encoders: Vec<Encoder>,
     factory: Factory,
-    main_target: Target,
+    main_target: Arc<Target>,
     window: Window,
 }
 
@@ -118,13 +131,13 @@ impl Renderer {
             device: dev,
             encoders: encoders,
             factory: fac,
-            main_target: main,
+            main_target: Arc::new(main),
             window: win,
         })
     }
 
     /// Builds a new mesh from the given vertices.
-    pub fn create_mesh<'a, V>(&'a mut self, verts: &'a [V]) -> MeshBuilder<'a, V>
+    pub fn create_mesh<'a, V>(&'a mut self, verts: &'a [V]) -> MeshBuilder<'a>
         where V: VertexFormat + 'a
     {
         MeshBuilder::new(&mut self.factory, verts)
@@ -135,22 +148,20 @@ impl Renderer {
         PipelineBuilder::new(&mut self.factory, self.main_target.clone())
     }
 
-    /// Returns an immutable reference to the renderer window.
-    pub fn window(&self) -> &winit::Window {
-        self.window.as_winit_window()
+    /// Builds a new texture resource.
+    pub fn create_texture(&mut self) -> TextureBuilder {
+        TextureBuilder::new(&mut self.factory)
     }
 
     /// Draws a scene with the given pipeline.
-    pub fn draw(&mut self, scene: &Scene, pipe: &Pipeline, delta: Duration) {
+    pub fn draw(&mut self, scene: &Scene, pipe: &Pipeline, _delta: Duration) {
         use gfx::Device;
         use rayon::prelude::*;
-
-        let dt = (delta.subsec_nanos() as f64 * 1e-9) + (delta.as_secs() as f64);
 
         pipe.stages()
             .par_iter()
             .zip(self.encoders.as_mut_slice())
-            .for_each(|(stage, ref mut enc)| stage.apply(enc, scene, dt));
+            .for_each(|(stage, ref mut enc)| stage.apply(enc, scene));
 
         for enc in self.encoders.as_mut_slice() {
             enc.flush(&mut self.device);
@@ -160,6 +171,11 @@ impl Renderer {
 
         #[cfg(feature = "opengl")]
         self.window.swap_buffers().expect("OpenGL context has been lost");
+    }
+
+    /// Returns an immutable reference to the renderer window.
+    pub fn window(&self) -> &winit::Window {
+        self.window.as_winit_window()
     }
 }
 
@@ -173,6 +189,56 @@ impl Drop for Renderer {
 /// Represents a graphics backend for the renderer.
 struct Backend(pub types::Device, pub Factory, pub Target, pub Window);
 
+/// Creates the Direct3D 11 backend.
+#[cfg(all(feature = "d3d11", target_os = "windows"))]
+fn init_backend(builder: winit::WindowBuilder) -> Result<Backend> {
+    use gfx_window_dxgi as win;
+
+    let (win, dev, mut fac, color) = win::init::<ColorFormat>(builder).unwrap();
+    let dev = gfx_device_dx11::Deferred::from(dev);
+
+    let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
+    let (w, h) = (size.0 as u16, size.1 as u16);
+    let depth = fac.create_depth_stencil_view_only::<DepthFormat>(w, h)?;
+    let main_target = Target::from((vec![
+        ColorBuffer {
+            as_input: None,
+            as_output: color,
+        }],
+        DepthBuffer {
+            as_input: None,
+            as_output: depth,
+        },
+        size,
+    ));
+
+    Ok(Backend(dev, fac, main_target, win))
+}
+
+#[cfg(all(feature = "metal", target_os = "macos"))]
+fn init_backend(builder: winit::WindowBuilder) -> Result<Backend> {
+    use gfx_window_metal as win;
+
+    let (win, dev, mut fac, color) = win::init::<ColorFormat>(builder).unwrap();
+
+    let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
+    let (w, h) = (size.0 as u16, size.1 as u16);
+    let depth = fac.create_depth_stencil_view_only::<DepthFormat>(w, h)?;
+    let main_target = Target::from((vec![
+        ColorBuffer {
+            as_input: None,
+            as_output: color,
+        }],
+        DepthBuffer {
+            as_input: None,
+            as_output: depth,
+        },
+        size,
+    ));
+
+    Ok(Backend(dev, fac, main_target, win))
+}
+
 /// Creates the OpenGL backend.
 #[cfg(feature = "opengl")]
 fn init_backend(builder: winit::WindowBuilder) -> Result<Backend> {
@@ -185,23 +251,17 @@ fn init_backend(builder: winit::WindowBuilder) -> Result<Backend> {
 
     let (win, dev, fac, color, depth) = win::init::<ColorFormat, DepthFormat>(wb);
     let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
-    let main_target: Target = (vec![color], depth, size).into();
-
-    Ok(Backend(dev, fac, main_target, win))
-}
-
-/// Creates the Direct3D 11 backend.
-#[cfg(all(feature = "d3d11", target_os = "windows"))]
-fn init_backend(builder: winit::WindowBuilder) -> Result<Backend> {
-    use gfx_window_dxgi as win;
-
-    let (win, dev, mut fac, color) = win::init::<ColorFormat>(builder).unwrap();
-    let dev = gfx_device_dx11::Deferred::from(dev);
-
-    let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
-    let (w, h) = (size.0 as u16, size.1 as u16);
-    let depth = fac.create_depth_stencil_view_only::<DepthFormat>(w, h)?;
-    let main_target: Target = (vec![color], depth, size).into();
+    let main_target = Target::from((vec![
+        ColorBuffer {
+            as_input: None,
+            as_output: color,
+        }],
+        DepthBuffer {
+            as_input: None,
+            as_output: depth,
+        },
+        size,
+    ));
 
     Ok(Backend(dev, fac, main_target, win))
 }

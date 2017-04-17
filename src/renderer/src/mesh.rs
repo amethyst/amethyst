@@ -1,21 +1,30 @@
 //! Mesh resource.
 
-use {Factory, Slice, VertexFormat};
 use cgmath::{Deg, Matrix4, Point3, Vector3, Transform};
-use vertex::{PosColor, PosNormTex, VertexBuffer};
+use error::Result;
+use gfx::Primitive;
+use types::{Factory, RawBuffer, Slice};
+use vertex::{Attribute, VertexFormat};
 
-/// Represents a typed triangle mesh.
+/// Represents a polygonal mesh.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Mesh {
+    attrs: Vec<Attribute>,
+    prim: Primitive,
     slice: Slice,
     transform: Matrix4<f32>,
-    vert_buf: VertexBuffer,
+    vbuf: RawBuffer,
 }
 
 impl Mesh {
+    /// Returns a list of all vertex attributes needed by this mesh.
+    pub fn attributes(&self) -> &[Attribute] {
+        self.attrs.as_ref()
+    }
+
     /// Returns the mesh's vertex buffer and associated buffer slice.
-    pub fn geometry(&self) -> (&VertexBuffer, &Slice) {
-        (&self.vert_buf, &self.slice)
+    pub fn geometry(&self) -> (&RawBuffer, &Slice) {
+        (&self.vbuf, &self.slice)
     }
 
     /// Returns the transformation matrix of the mesh.
@@ -29,26 +38,46 @@ impl Mesh {
 }
 
 /// Builds new meshes.
-pub struct MeshBuilder<'a, V: 'a + VertexFormat> {
+pub struct MeshBuilder<'a> {
+    attrs: Vec<Attribute>,
     factory: &'a mut Factory,
+    prim: Primitive,
+    stride: usize,
     transform: Matrix4<f32>,
-    vertices: &'a [V],
+    vertices: &'a [u8],
 }
 
-impl<'a, V: 'a + VertexFormat> MeshBuilder<'a, V> {
-    /// Creates a new MeshBuilder with the given factory.
-    pub fn new(fac: &'a mut Factory, verts: &'a [V]) -> Self {
+impl<'a> MeshBuilder<'a> {
+    /// Creates a new `MeshBuilder` with the given factory and vertices.
+    pub fn new<V>(fac: &'a mut Factory, verts: &'a [V]) -> Self
+        where V: 'a + VertexFormat
+    {
         use cgmath::SquareMatrix;
+        use gfx::memory::cast_slice;
+        use std::mem::size_of;
+
         MeshBuilder {
+            attrs: V::attributes(),
             factory: fac,
+            prim: Primitive::TriangleList,
+            stride: size_of::<V>(),
             transform: Matrix4::identity(),
-            vertices: verts,
+            vertices: cast_slice(verts),
         }
+    }
+
+    /// Sets the primitive type of the mesh.
+    ///
+    /// By default, meshes are constructed as triangle lists.
+    pub fn with_prim_type(mut self, prim: Primitive) -> Self {
+        self.prim = prim;
+        self
     }
 
     /// Sets the position of the mesh in 3D space.
     pub fn with_position<P: Into<Point3<f32>>>(mut self, pos: P) -> Self {
         use cgmath::EuclideanSpace;
+
         let trans = Matrix4::from_translation(pos.into().to_vec());
         self.transform.concat_self(&trans);
         self
@@ -80,38 +109,33 @@ impl<'a, V: 'a + VertexFormat> MeshBuilder<'a, V> {
         self.transform = mat.into();
         self
     }
-}
 
-impl<'a> MeshBuilder<'a, PosColor> {
     /// Builds and returns the new mesh.
-    pub fn build(self) -> Mesh {
-        use gfx::traits::FactoryExt;
+    pub fn build(self) -> Result<Mesh> {
+        use gfx::{Bind, Factory, IndexBuffer};
+        use gfx::buffer::Role;
 
-        let fac = self.factory;
+        let mut fac = self.factory;
         let verts = self.vertices;
-        let (vbuf, slice) = fac.create_vertex_buffer_with_slice(verts, ());
+        let stride = self.stride;
+        let role = Role::Vertex;
+        let bind = Bind::empty();
 
-        Mesh {
+        let vbuf = fac.create_buffer_immutable_raw(verts, stride, role, bind)?;
+        let slice = Slice {
+            start: 0,
+            end: verts.len() as u32,
+            base_vertex: 0,
+            instances: None,
+            buffer: IndexBuffer::Auto,
+        };
+
+        Ok(Mesh {
+            attrs: self.attrs,
+            prim: self.prim,
             slice: slice,
             transform: self.transform,
-            vert_buf: VertexBuffer::PosColor(vbuf),
-        }
-    }
-}
-
-impl<'a> MeshBuilder<'a, PosNormTex> {
-    /// Builds and returns the new mesh.
-    pub fn build(self) -> Mesh {
-        use gfx::traits::FactoryExt;
-
-        let fac = self.factory;
-        let verts = self.vertices;
-        let (vbuf, slice) = fac.create_vertex_buffer_with_slice(verts, ());
-
-        Mesh {
-            slice: slice,
-            transform: self.transform,
-            vert_buf: VertexBuffer::PosNormTex(vbuf),
-        }
+            vbuf: vbuf,
+        })
     }
 }
