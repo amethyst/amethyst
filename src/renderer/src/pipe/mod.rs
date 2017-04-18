@@ -44,6 +44,31 @@ impl Pipeline {
         PipelineBuilder::new()
     }
 
+    /// Builds a default deferred pipeline.
+    ///
+    /// FIXME: Only generates a dummy pipeline for now.
+    pub fn deferred() -> PipelineBuilder {
+        use pass::*;
+        PipelineBuilder::new()
+            .with_target(Target::new("gbuffer")
+                .with_num_color_bufs(4)
+                .with_depth_buf(true))
+            .with_stage(Stage::with_target("gbuffer")
+                .with_pass(ClearTarget::with_values([1.0; 4], None)))
+            .with_stage(Stage::with_backbuffer()
+                .with_pass(ClearTarget::with_values([1.0; 4], None)))
+    }
+
+    /// Builds a default forward pipeline.
+    ///
+    /// FIXME: Only generates a dummy pipeline for now.
+    pub fn forward() -> PipelineBuilder {
+        use pass::*;
+        PipelineBuilder::new()
+            .with_stage(Stage::with_backbuffer()
+                .with_pass(ClearTarget::with_values([1.0; 4], None)))
+    }
+
     /// Returns an immutable slice of all stages in the pipeline.
     pub fn stages(&self) -> &[Stage] {
         self.stages.as_ref()
@@ -104,29 +129,4 @@ impl PipelineBuilder {
             targets: targets,
         })
     }
-}
-
-/// Builds a default deferred pipeline.
-///
-/// FIXME: Only generates a dummy pipeline for now.
-pub fn deferred() -> PipelineBuilder {
-    use pass::*;
-    PipelineBuilder::new()
-        .with_target(Target::new("gbuffer")
-            .with_num_color_bufs(4)
-            .with_depth_buf(true))
-        .with_stage(Stage::with_target("gbuffer")
-            .with_pass(ClearTarget::with_values([1.0; 4], None)))
-        .with_stage(Stage::with_backbuffer()
-            .with_pass(ClearTarget::with_values([1.0; 4], None)))
-}
-
-/// Builds a default forward pipeline.
-///
-/// FIXME: Only generates a dummy pipeline for now.
-pub fn forward() -> PipelineBuilder {
-    use pass::*;
-    PipelineBuilder::new()
-        .with_stage(Stage::with_backbuffer()
-            .with_pass(ClearTarget::with_values([1.0; 4], None)))
 }

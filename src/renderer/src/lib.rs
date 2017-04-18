@@ -4,7 +4,7 @@
 //!
 //! ```ignore
 //! let mut renderer = Renderer::new().unwrap();
-//! let pipe = renderer.create_pipeline(pipe::deferred()).unwrap();
+//! let pipe = renderer.create_pipeline(Pipeline::deferred()).unwrap();
 //!
 //! let verts = some_sphere_gen_func();
 //! let sphere = renderer.create_mesh(Mesh::new(&verts)
@@ -74,12 +74,13 @@ pub use color::Rgba;
 pub use error::{Error, Result};
 pub use light::Light;
 pub use mesh::{Mesh, MeshBuilder};
-pub use mtl::Material;
+pub use mtl::{Material, MaterialBuilder};
 pub use pipe::{Pipeline, PipelineBuilder, Target, Stage};
 pub use scene::Scene;
 pub use tex::{Texture, TextureBuilder};
 pub use vertex::VertexFormat;
 
+// use encoder::Encoder;
 use pipe::{ColorBuffer, DepthBuffer};
 use std::sync::Arc;
 use std::time::Duration;
@@ -92,6 +93,7 @@ pub mod pipe;
 pub mod vertex;
 
 mod color;
+mod encoder;
 mod error;
 mod mesh;
 mod mtl;

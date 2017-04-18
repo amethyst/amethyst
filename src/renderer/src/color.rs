@@ -33,3 +33,27 @@ impl From<(f32, f32, f32, f32)> for Rgba {
         Rgba(r, g, b, a)
     }
 }
+
+impl From<Rgba> for [f32; 3] {
+    fn from(Rgba(r, g, b, _): Rgba) -> [f32; 3] {
+        [r, g, b]
+    }
+}
+
+impl From<Rgba> for [f32; 4] {
+    fn from(Rgba(r, g, b, a): Rgba) -> [f32; 4] {
+        [r, g, b, a]
+    }
+}
+
+impl From<Rgba> for (f32, f32, f32) {
+    fn from(Rgba(r, g, b, _): Rgba) -> (f32, f32, f32) {
+        (r, g, b)
+    }
+}
+
+impl From<Rgba> for (f32, f32, f32, f32) {
+    fn from(Rgba(r, g, b, a): Rgba) -> (f32, f32, f32, f32) {
+        (r, g, b, a)
+    }
+}
