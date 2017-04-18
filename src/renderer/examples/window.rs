@@ -11,7 +11,7 @@ use winit::VirtualKeyCode as Key;
 
 fn main() {
     let mut renderer = Renderer::new().unwrap();
-    let pipe = renderer.create_pipe(pipe::forward()).unwrap();
+    let pipe = renderer.create_pipe(Pipeline::forward()).unwrap();
     let scene = Scene::default();
 
     let mut delta = Duration::from_secs(0);

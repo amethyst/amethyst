@@ -1,6 +1,6 @@
 //! Clears the color and/or depth buffers in a target.
 
-use pipe::pass::{Pass, PassBuilder};
+use pipe::pass::PassBuilder;
 
 /// Clears the color and/or depth buffers in a target.
 #[derive(Copy, Clone, Debug, PartialEq)]

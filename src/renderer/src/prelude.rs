@@ -3,6 +3,6 @@
 pub use Renderer;
 pub use mesh::{Mesh, MeshBuilder};
 pub use light::*;
-pub use pipe::{self, Pipeline, PipelineBuilder, Stage, StageBuilder, Target};
+pub use pipe::{Pipeline, PipelineBuilder, Stage, StageBuilder, Target};
 pub use scene::Scene;
 pub use tex::{Texture, TextureBuilder};
