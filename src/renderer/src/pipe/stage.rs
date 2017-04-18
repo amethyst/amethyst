@@ -8,7 +8,7 @@ use std::sync::Arc;
 use types::{Encoder, Factory};
 
 /// A stage in the rendering pipeline.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Stage {
     enabled: bool,
     passes: Vec<Pass>,
@@ -48,7 +48,7 @@ impl Stage {
 }
 
 /// Constructs a new rendering stage.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct StageBuilder {
     enabled: bool,
     passes: Vec<PassBuilder>,

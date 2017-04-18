@@ -4,7 +4,6 @@ extern crate amethyst_renderer as renderer;
 extern crate winit;
 
 use renderer::prelude::*;
-use renderer::pipe;
 use std::time::{Duration, Instant};
 use winit::ElementState::Pressed;
 use winit::Event;
@@ -12,7 +11,7 @@ use winit::VirtualKeyCode as Key;
 
 fn main() {
     let mut renderer = Renderer::new().unwrap();
-    let pipe = pipe::forward(&mut renderer).unwrap();
+    let pipe = renderer.create_pipe(pipe::forward()).unwrap();
     let scene = Scene::default();
 
     let mut delta = Duration::from_secs(0);

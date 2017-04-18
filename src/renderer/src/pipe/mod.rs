@@ -17,7 +17,6 @@
 //!     .expect("Could not build pipeline");
 //! ```
 
-pub use self::effect::{Effect, EffectBuilder};
 pub use self::stage::{Stage, StageBuilder};
 pub use self::target::{ColorBuffer, DepthBuffer, Target, TargetBuilder, Targets};
 
@@ -33,13 +32,18 @@ mod stage;
 mod target;
 
 /// Defines how the rendering pipeline should be configured.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Pipeline {
     stages: Vec<Stage>,
     targets: HashMap<String, Arc<Target>>,
 }
 
 impl Pipeline {
+    /// Builds a new renderer pipeline.
+    pub fn new() -> PipelineBuilder {
+        PipelineBuilder::new()
+    }
+
     /// Returns an immutable slice of all stages in the pipeline.
     pub fn stages(&self) -> &[Stage] {
         self.stages.as_ref()
@@ -52,19 +56,16 @@ impl Pipeline {
 }
 
 /// Constructs a new pipeline with the given render targets and layers.
-pub struct PipelineBuilder<'a> {
-    factory: &'a mut Factory,
-    main_target: Arc<Target>,
+#[derive(Clone, Debug)]
+pub struct PipelineBuilder {
     stages: Vec<StageBuilder>,
     targets: Vec<TargetBuilder>,
 }
 
-impl<'a> PipelineBuilder<'a> {
-    /// Creates a new PipelineBuilder with the given gfx::Factory.
-    pub fn new(fac: &'a mut Factory, main: Arc<Target>) -> Self {
+impl PipelineBuilder {
+    /// Creates a new PipelineBuilder.
+    pub fn new() -> PipelineBuilder {
         PipelineBuilder {
-            factory: fac,
-            main_target: main,
             stages: Vec::new(),
             targets: Vec::new(),
         }
@@ -83,20 +84,19 @@ impl<'a> PipelineBuilder<'a> {
     }
 
     /// Builds and returns the new pipeline.
-    pub fn build(mut self) -> Result<Pipeline> {
-        let factory = self.factory;
-        let main_target = self.main_target;
-
+    pub fn build(self, fac: &mut Factory, out: &Arc<Target>) -> Result<Pipeline> {
         let mut targets = self.targets
-            .drain(..)
-            .map(|tb| tb.build(main_target.size(), factory))
+            .iter()
+            .cloned()
+            .map(|tb| tb.build(fac, out.size()))
             .collect::<Result<Targets>>()?;
 
-        targets.insert("".into(), main_target);
+        targets.insert("".into(), out.clone());
 
         let stages = self.stages
-            .drain(..)
-            .map(|sb| sb.build(factory, &targets))
+            .iter()
+            .cloned()
+            .map(|sb| sb.build(fac, &targets))
             .collect::<Result<_>>()?;
 
         Ok(Pipeline {
@@ -109,9 +109,9 @@ impl<'a> PipelineBuilder<'a> {
 /// Builds a default deferred pipeline.
 ///
 /// FIXME: Only generates a dummy pipeline for now.
-pub fn deferred(r: &mut super::Renderer) -> Result<Pipeline> {
+pub fn deferred() -> PipelineBuilder {
     use pass::*;
-    r.create_pipeline()
+    PipelineBuilder::new()
         .with_target(Target::new("gbuffer")
             .with_num_color_bufs(4)
             .with_depth_buf(true))
@@ -119,16 +119,14 @@ pub fn deferred(r: &mut super::Renderer) -> Result<Pipeline> {
             .with_pass(ClearTarget::with_values([1.0; 4], None)))
         .with_stage(Stage::with_backbuffer()
             .with_pass(ClearTarget::with_values([1.0; 4], None)))
-        .build()
 }
 
 /// Builds a default forward pipeline.
 ///
 /// FIXME: Only generates a dummy pipeline for now.
-pub fn forward(r: &mut super::Renderer) -> Result<Pipeline> {
+pub fn forward() -> PipelineBuilder {
     use pass::*;
-    r.create_pipeline()
+    PipelineBuilder::new()
         .with_stage(Stage::with_backbuffer()
             .with_pass(ClearTarget::with_values([1.0; 4], None)))
-        .build()
 }

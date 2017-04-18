@@ -3,11 +3,9 @@
 #![allow(missing_docs)]
 
 use error::Result;
-use fnv::FnvHashMap as HashMap;
-use gfx::texture::{FilterMethod, SamplerInfo, WrapMode};
 use pipe::{Target, Targets};
 use pipe::effect::{Effect, EffectBuilder};
-use types::{Encoder, Factory, RawPipelineState, Sampler};
+use types::{Encoder, Factory};
 use scene::Scene;
 use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::sync::Arc;

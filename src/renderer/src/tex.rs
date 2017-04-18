@@ -11,23 +11,30 @@ pub struct Texture {
     view: RawShaderResourceView,
 }
 
-/// Builds new textures.
-pub struct TextureBuilder<'a> {
-    data: Option<&'a [&'a [u8]]>,
-    info: Info,
-    factory: &'a mut Factory,
+impl Texture {
+    /// Builds a new texture with the given raw texture data.
+    pub fn new<'d, D: Into<&'d [&'d [u8]]>>(data: D) -> TextureBuilder<'d> {
+        TextureBuilder::new(data)
+    }
 }
 
-impl<'a> TextureBuilder<'a> {
-    /// Creates a new `TextureBuilder` with the given factory.
-    pub fn new(fac: &'a mut Factory) -> Self {
+/// Builds new textures.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct TextureBuilder<'d> {
+    data: &'d [&'d [u8]],
+    info: Info,
+}
+
+impl<'d> TextureBuilder<'d> {
+    /// Creates a new `TextureBuilder` with the given raw texture data.
+    pub fn new<D: Into<&'d [&'d [u8]]>>(data: D) -> Self {
         use gfx::Bind;
         use gfx::format::SurfaceType;
         use gfx::memory::Usage;
         use gfx::texture::{AaMode, Kind};
 
         TextureBuilder {
-            data: None,
+            data: data.into(),
             info: Info {
                 kind: Kind::D2(1, 1, AaMode::Single),
                 levels: 1,
@@ -35,16 +42,7 @@ impl<'a> TextureBuilder<'a> {
                 bind: Bind::empty(),
                 usage: Usage::Dynamic,
             },
-            factory: fac,
         }
-    }
-
-    /// Sets the raw texture data to send to the GPU.
-    pub fn with_data<D: Into<&'a [&'a [u8]]>>(mut self, data: D) -> Self {
-        use gfx::texture::{AaMode, Kind};
-        self.data = Some(data.into());
-        self.info.kind = Kind::D2(1, 1, AaMode::Single);
-        self
     }
 
     /// Sets the number of mipmap levels to generate.
@@ -87,14 +85,13 @@ impl<'a> TextureBuilder<'a> {
     }
 
     /// Builds and returns the new texture.
-    pub fn build(self) -> Result<Texture> {
+    pub fn build(self, fac: &mut Factory) -> Result<Texture> {
         use gfx::Factory;
         use gfx::format::{ChannelType, Swizzle};
         use gfx::texture::ResourceDesc;
 
-        let mut fac = self.factory;
         let chan = ChannelType::Srgb;
-        let tex = fac.create_texture_raw(self.info, Some(chan), self.data)?;
+        let tex = fac.create_texture_raw(self.info, Some(chan), Some(self.data))?;
 
         let desc = ResourceDesc {
             channel: ChannelType::Srgb,
@@ -103,6 +100,7 @@ impl<'a> TextureBuilder<'a> {
             max: self.info.levels,
             swizzle: Swizzle::new(),
         };
+
         let view = fac.view_texture_as_shader_resource_raw(&tex, desc)?;
 
         Ok(Texture {

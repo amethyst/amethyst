@@ -9,7 +9,6 @@ use std::time::{Duration, Instant};
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 use renderer::prelude::*;
-use renderer::pipe;
 use renderer::vertex::PosColor;
 use winit::ElementState::Pressed;
 use winit::Event;
@@ -17,10 +16,10 @@ use winit::VirtualKeyCode as Key;
 
 fn main() {
     let mut renderer = Renderer::new().unwrap();
-    let pipe = pipe::forward(&mut renderer).unwrap();
+    let pipe = renderer.create_pipe(pipe::forward()).unwrap();
 
     let verts = gen_sphere(32, 32);
-    let mesh = renderer.create_mesh(&verts).build().unwrap();
+    let mesh = renderer.create_mesh(Mesh::new(&verts)).unwrap();
 
     let mut scene = Scene::default();
     scene.add_mesh("ball", mesh);

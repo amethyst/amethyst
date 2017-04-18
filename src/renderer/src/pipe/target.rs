@@ -120,12 +120,12 @@ impl TargetBuilder {
     }
 
     /// Builds and returns the new render target.
-    pub fn build(self, win_size: (u32, u32), fac: &mut Factory) -> Result<(String, Arc<Target>)> {
+    pub fn build(self, fac: &mut Factory, size: (u32, u32)) -> Result<(String, Arc<Target>)> {
         use gfx::Factory;
 
         let size = match self.custom_size {
             Some(s) => s,
-            None => win_size,
+            None => size,
         };
 
         let color_bufs = (0..self.num_color_bufs)
