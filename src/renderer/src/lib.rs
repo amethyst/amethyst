@@ -1,4 +1,10 @@
-//! A highly parallel rendering engine developed for the Amethyst game engine.
+//! A data parallel rendering engine developed by the [Amethyst][am] project.
+//! The source code is available for download on [GitHub][gh]. See the
+//! [online book][bk] for a complete guide to using Amethyst.
+//!
+//! [am]: https://www.amethyst.rs/
+//! [gh]: https://github.com/amethyst/amethyst/tree/develop/src/renderer
+//! [bk]: https://www.amethyst.rs/book/
 //!
 //! # Example
 //!
