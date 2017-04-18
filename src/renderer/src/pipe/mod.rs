@@ -3,7 +3,7 @@
 //! # Example
 //!
 //! ```ignore
-//! let pipe = renderer.create_pipeline()
+//! let pipe = renderer.create_pipe(Pipeline::new()
 //!     .with_target(Target::new("gbuffer")
 //!         .with_num_color_bufs(4)
 //!         .with_depth_buf(true))
@@ -12,8 +12,7 @@
 //!         .with_pass(DrawFlat::new()))
 //!     .with_stage(Stage::with_backbuffer()
 //!         .with_pass(BlitBuffer::color_buf("gbuffer", 2))
-//!         .with_pass(DeferredLighting::compute_from("gbuffer")))
-//!     .build()
+//!         .with_pass(DeferredLighting::compute_from("gbuffer"))))
 //!     .expect("Could not build pipeline");
 //! ```
 
