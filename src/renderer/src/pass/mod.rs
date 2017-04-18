@@ -1,4 +1,4 @@
-//! Built-in library of passes.
+//! Different kinds of render passes.
 
 // pub use self::blit::BlitBuffer;
 pub use self::clear::ClearTarget;
