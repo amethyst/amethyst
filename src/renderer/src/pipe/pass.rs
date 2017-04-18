@@ -1,4 +1,4 @@
-//! Different types of rendering passes.
+//! Types for constructing render passes.
 
 #![allow(missing_docs)]
 
