@@ -4,7 +4,7 @@
 //!
 //! ```ignore
 //! let mut renderer = Renderer::new().unwrap();
-//! let pipe = renderer.create_pipeline(Pipeline::deferred()).unwrap();
+//! let pipe = renderer.create_pipe(Pipeline::deferred()).unwrap();
 //!
 //! let verts = some_sphere_gen_func();
 //! let sphere = renderer.create_mesh(Mesh::new(&verts)
@@ -166,6 +166,7 @@ impl Renderer {
                 pipe.stages()
                     .par_iter()
                     .zip(encoders)
+                    .filter(|&(stage, _)| stage.is_enabled())
                     .for_each(|(stage, enc)| stage.apply(enc, scene));
             });
         }
