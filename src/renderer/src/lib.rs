@@ -4,21 +4,19 @@
 //!
 //! ```ignore
 //! let mut renderer = Renderer::new().unwrap();
+//! let pipe = renderer.create_pipeline(pipe::deferred()).unwrap();
 //!
 //! let verts = some_sphere_gen_func();
-//! let sphere = renderer.create_mesh(&verts)
+//! let sphere = renderer.create_mesh(Mesh::new(&verts)
 //!     .with_ambient_texture(Rgba(1.0, 0.5, 0.2, 1.0))
-//!     .with_diffuse_texture(Rgba(0.7, 0.3, 0.1, 1.0))
-//!     .build()
-//!     .unwrap()
+//!     .with_diffuse_texture(Rgba(0.7, 0.3, 0.1, 1.0)))
+//!     .unwrap();
 //!
 //! let light = PointLight::default();
 //!
-//! let scene = Scene::new()
+//! let scene = Scene::default()
 //!     .add_mesh("ball", sphere)
 //!     .add_light("lamp", light);
-//!
-//! let pipe = pipe::deferred(&mut renderer).unwrap();
 //!
 //! 'main: loop {
 //!     for event in renderer.window().poll_events() {
@@ -141,20 +139,18 @@ impl Renderer {
     }
 
     /// Builds a new mesh from the given vertices.
-    pub fn create_mesh<V>(&mut self, verts: &'static [V]) -> MeshBuilder
-        where V: VertexFormat
-    {
-        MeshBuilder::new(&mut self.factory, verts)
+    pub fn create_mesh(&mut self, mb: MeshBuilder) -> Result<Mesh> {
+        mb.build(&mut self.factory)
     }
 
     /// Builds a new renderer pipeline.
-    pub fn create_pipeline(&mut self) -> PipelineBuilder {
-        PipelineBuilder::new(&mut self.factory, self.main_target.clone())
+    pub fn create_pipe(&mut self, pb: PipelineBuilder) -> Result<Pipeline> {
+        pb.build(&mut self.factory, &self.main_target)
     }
 
     /// Builds a new texture resource.
-    pub fn create_texture(&mut self) -> TextureBuilder {
-        TextureBuilder::new(&mut self.factory)
+    pub fn create_texture(&mut self, tb: TextureBuilder) -> Result<Texture> {
+        tb.build(&mut self.factory)
     }
 
     /// Draws a scene with the given pipeline.
@@ -165,11 +161,11 @@ impl Renderer {
         {
             let encoders = self.encoders.as_mut_slice();
             self.pool.install(|| {
-                    pipe.stages()
-                        .par_iter()
-                        .zip(encoders)
-                        .for_each(|(stage, enc)| stage.apply(enc, scene));
-                });
+                pipe.stages()
+                    .par_iter()
+                    .zip(encoders)
+                    .for_each(|(stage, enc)| stage.apply(enc, scene));
+            });
         }
 
         for enc in self.encoders.iter_mut() {
@@ -177,7 +173,6 @@ impl Renderer {
         }
 
         self.device.cleanup();
-
         #[cfg(feature = "opengl")]
         self.window.swap_buffers().expect("OpenGL context has been lost");
     }

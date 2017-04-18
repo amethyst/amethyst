@@ -17,6 +17,11 @@ pub struct Mesh {
 }
 
 impl Mesh {
+    /// Builds a new mesh from the given vertices.
+    pub fn new<'v, V: VertexFormat + 'v >(verts: &'v [V]) -> MeshBuilder {
+        MeshBuilder::new(verts)
+    }
+
     /// Returns a list of all vertex attributes needed by this mesh.
     pub fn attributes(&self) -> &[Attribute] {
         self.attrs.as_ref()
@@ -38,27 +43,24 @@ impl Mesh {
 }
 
 /// Builds new meshes.
-pub struct MeshBuilder<'a> {
+#[derive(Clone, Debug, PartialEq)]
+pub struct MeshBuilder<'v> {
     attrs: Vec<Attribute>,
-    factory: &'a mut Factory,
     prim: Primitive,
     stride: usize,
     transform: Matrix4<f32>,
-    vertices: &'a [u8],
+    vertices: &'v [u8],
 }
 
-impl<'a> MeshBuilder<'a> {
-    /// Creates a new `MeshBuilder` with the given factory and vertices.
-    pub fn new<V>(fac: &'a mut Factory, verts: &'a [V]) -> Self
-        where V: 'a + VertexFormat
-    {
+impl<'v> MeshBuilder<'v> {
+    /// Creates a new `MeshBuilder` with the given vertices.
+    pub fn new<V: VertexFormat + 'v >(verts: &'v [V]) -> Self {
         use cgmath::SquareMatrix;
         use gfx::memory::cast_slice;
         use std::mem::size_of;
 
         MeshBuilder {
             attrs: V::attributes(),
-            factory: fac,
             prim: Primitive::TriangleList,
             stride: size_of::<V>(),
             transform: Matrix4::identity(),
@@ -111,11 +113,10 @@ impl<'a> MeshBuilder<'a> {
     }
 
     /// Builds and returns the new mesh.
-    pub fn build(self) -> Result<Mesh> {
+    pub fn build(self, fac: &mut Factory) -> Result<Mesh> {
         use gfx::{Bind, Factory, IndexBuffer};
         use gfx::buffer::Role;
 
-        let mut fac = self.factory;
         let verts = self.vertices;
         let stride = self.stride;
         let role = Role::Vertex;

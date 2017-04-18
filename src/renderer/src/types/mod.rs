@@ -16,8 +16,8 @@ mod opengl;
 #[cfg(feature = "vulkan")]
 mod vulkan;
 
-/// Handle to a typed GPU buffer.
-pub type Buffer<V> = gfx::handle::Buffer<Resources, V>;
+// /// Handle to a typed GPU buffer.
+// pub type Buffer<V> = gfx::handle::Buffer<Resources, V>;
 
 /// Color buffer format.
 pub type ColorFormat = gfx::format::Srgba8;
@@ -37,8 +37,8 @@ pub type DepthStencilView = gfx::handle::DepthStencilView<Resources, DepthFormat
 /// Created by calling `CommandBuffer::into()`.
 pub type Encoder = gfx::Encoder<Resources, CommandBuffer>;
 
-/// Statically-typed pipeline state object (PSO).
-pub type PipelineState<M> = gfx::PipelineState<Resources, M>;
+// /// Statically-typed pipeline state object (PSO).
+// pub type PipelineState<M> = gfx::PipelineState<Resources, M>;
 
 /// Handle to a compiled shader program.
 pub type Program = gfx::handle::Program<Resources>;
