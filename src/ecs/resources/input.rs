@@ -64,6 +64,9 @@ impl<'a> Iterator for PressedMouseButtons<'a> {
 pub struct InputHandler {
     pressed_keys: HashMap<VirtualKeyCode, KeyQueryState>,
     pressed_mouse_buttons: HashMap<MouseButton, KeyQueryState>,
+    // defined to match glium
+    mouse_position: Option<(i32, i32)>,
+    previous_mouse_position: Option<(i32, i32)>,
 }
 
 impl InputHandler {
@@ -72,6 +75,8 @@ impl InputHandler {
         InputHandler {
             pressed_keys: HashMap::default(),
             pressed_mouse_buttons: HashMap::default(),
+            mouse_position: None,
+            previous_mouse_position: None,
         }
     }
 
@@ -97,9 +102,14 @@ impl InputHandler {
                 Event::MouseInput(ElementState::Released, button) => {
                     self.pressed_mouse_buttons.remove(&button);
                 }
+                Event::MouseMoved(x, y) => {
+                    self.mouse_position = Some((x, y));
+                }
                 Event::Focused(false) => {
                     self.pressed_keys.clear();
                     self.pressed_mouse_buttons.clear();
+                    self.mouse_position = None;
+                    self.previous_mouse_position = None;
                 }
                 _ => {}
             }
@@ -186,5 +196,26 @@ impl InputHandler {
     /// this function will return false.
     pub fn mouse_buttons_once(&mut self, buttons: &[MouseButton]) -> bool {
         buttons.iter().any(|btn| self.mouse_button_once(*btn)) && self.mouse_buttons_down(buttons)
+    }
+
+    /// Gets the current mouse position.
+    ///
+    /// this method can return None, either if no mouse is connected, or if no mouse events have
+    /// been recorded
+    pub fn mouse_position(&self) -> Option<(i32, i32)> {
+        self.mouse_position
+    }
+
+    /// Gets the change in position since this function was last called.
+    ///
+    /// This function will return (0, 0) when it cannot calculate a change, either for the reasons
+    /// given above or on the first call.
+    pub fn mouse_position_change(&mut self) -> (i32, i32) {
+        let out = match (self.mouse_position, self.previous_mouse_position) {
+            (Some(current), Some(previous)) => (current.0 - previous.0, current.1 - previous.1),
+            _ => (0, 0),
+        };
+        self.previous_mouse_position = self.mouse_position;
+        out
     }
 }
