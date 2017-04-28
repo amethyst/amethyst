@@ -32,7 +32,8 @@ pub struct PosColor {
 impl VertexFormat for PosColor {
     #[inline]
     fn attributes() -> Vec<Attribute> {
-        vec![Self::query("a_position").unwrap(), Self::query("a_color").unwrap()]
+        vec![Self::query("a_position").unwrap(),
+             Self::query("a_color").unwrap()]
     }
 }
 
@@ -48,7 +49,8 @@ pub struct PosTex {
 impl VertexFormat for PosTex {
     #[inline]
     fn attributes() -> Vec<Attribute> {
-        vec![Self::query("a_position").unwrap(), Self::query("a_tex_coord").unwrap()]
+        vec![Self::query("a_position").unwrap(),
+             Self::query("a_tex_coord").unwrap()]
     }
 }
 

@@ -26,7 +26,6 @@ use types::Factory;
 
 pub mod pass;
 
-mod effect;
 mod stage;
 mod target;
 
@@ -124,8 +123,8 @@ impl PipelineBuilder {
             .collect::<Result<_>>()?;
 
         Ok(Pipeline {
-            stages: stages,
-            targets: targets,
+           stages: stages,
+           targets: targets,
         })
     }
 }

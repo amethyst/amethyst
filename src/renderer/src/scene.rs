@@ -1,13 +1,30 @@
 //! A fully renderable scene.
+//!
+//! # Example
+//!
+//! ```rust
+//! let mut scene = Scene::default();
+//! scene.add_light(PointLight::default());
+//! scene.add_mesh(sphere, material);
+//! ```
 
+use cam::Camera;
 use fnv::FnvHashMap as HashMap;
 use light::Light;
 use mesh::Mesh;
 use mtl::Material;
+use std::collections::hash_map::Values;
+
+/// Immutable slice iterator of lights.
+pub type LightIter<'l> = Values<'l, String, Light>;
+
+/// Immutable slice iterator of meshes.
+pub type MeshIter<'m> = Values<'m, String, Mesh>;
 
 /// Collection of lights and meshes to render.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Scene {
+    camera: Vec<Camera>,
     lights: HashMap<String, Light>,
     mats: HashMap<String, Material>,
     meshes: HashMap<String, Mesh>,
@@ -35,12 +52,12 @@ impl Scene {
     }
 
     /// Returns an immutable reference to all lights in the scene.
-    pub fn lights(&self) -> &HashMap<String, Light> {
-        &self.lights
+    pub fn iter_lights(&self) -> LightIter {
+        self.lights.values()
     }
 
     /// Returns an immutable reference to all meshes in the scene.
-    pub fn meshes(&self) -> &HashMap<String, Mesh> {
-        &self.meshes
+    pub fn iter_meshes(&self) -> MeshIter {
+        self.meshes.values()
     }
 }

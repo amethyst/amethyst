@@ -1,12 +1,47 @@
 //! Color value types.
 
+use gfx::shade::{Formatted, ToUniform};
+use gfx_core::shade::{BaseType, ContainerType, UniformValue};
+
 /// An RGBA color value.
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, PartialOrd, Serialize)]
 pub struct Rgba(pub f32, pub f32, pub f32, pub f32);
 
+impl Rgba {
+    /// Returns a solid black color value.
+    pub fn black() -> Rgba {
+        Rgba(0.0, 0.0, 0.0, 1.0)
+    }
+
+    /// Returns a solid blue color value.
+    pub fn blue() -> Rgba {
+        Rgba(0.0, 0.0, 1.0, 1.0)
+    }
+
+    /// Returns a solid green color value.
+    pub fn green() -> Rgba {
+        Rgba(0.0, 1.0, 0.0, 1.0)
+    }
+
+    /// Returns a solid red color value.
+    pub fn red() -> Rgba {
+        Rgba(1.0, 0.0, 0.0, 1.0)
+    }
+
+    /// Returns a transparent color value.
+    pub fn transparent() -> Rgba {
+        Rgba(0.0, 0.0, 0.0, 0.0)
+    }
+
+    /// Returns a solid white color value.
+    pub fn white() -> Rgba {
+        Rgba(1.0, 1.0, 1.0, 1.0)
+    }
+}
+
 impl Default for Rgba {
     fn default() -> Rgba {
-        Rgba(1.0, 1.0, 1.0, 1.0)
+        Rgba::white()
     }
 }
 
@@ -55,5 +90,17 @@ impl From<Rgba> for (f32, f32, f32) {
 impl From<Rgba> for (f32, f32, f32, f32) {
     fn from(Rgba(r, g, b, a): Rgba) -> (f32, f32, f32, f32) {
         (r, g, b, a)
+    }
+}
+
+impl Formatted for Rgba {
+    fn get_format() -> (BaseType, ContainerType) {
+        (BaseType::F32, ContainerType::Vector(4))
+    }
+}
+
+impl ToUniform for Rgba {
+    fn convert(self) -> UniformValue {
+        UniformValue::F32Vector4(self.into())
     }
 }

@@ -1,9 +1,9 @@
 //! Texture resource.
 
 use error::Result;
-use gfx::texture::{Kind, Info};
+use gfx::texture::{Info, Kind};
 use gfx::traits::Pod;
-use types::{Factory, RawTexture, RawShaderResourceView};
+use types::{Factory, RawShaderResourceView, RawTexture};
 
 /// Handle to a GPU texture resource.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -16,7 +16,7 @@ pub struct Texture {
 
 impl Texture {
     /// Builds a new texture with the given raw texture data.
-    pub fn new<'d, T: 'd, D: 'd>(data: D) -> TextureBuilder
+    pub fn new<'d, T: 'd, D>(data: D) -> TextureBuilder
         where T: Copy + Pod,
               D: Into<&'d [T]>
     {
@@ -30,7 +30,7 @@ impl Texture {
 }
 
 /// Builds new textures.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub struct TextureBuilder {
     data: Vec<u8>,
     info: Info,
@@ -44,7 +44,7 @@ impl TextureBuilder {
     {
         use gfx::Bind;
         use gfx::format::SurfaceType;
-        use gfx::memory::{cast_slice, Usage};
+        use gfx::memory::{Usage, cast_slice};
         use gfx::texture::{AaMode, Kind};
 
         TextureBuilder {
@@ -58,14 +58,14 @@ impl TextureBuilder {
             },
         }
     }
-    
+
     /// Creates a new `TextureBuilder` from the given RGBA color value.
     pub fn from_color_val<C: Into<[f32; 4]>>(rgba: C) -> Self {
         let color = rgba.into();
         let data: [[u8; 4]; 1] = [[(color[0] * 255.0) as u8,
-                                    (color[1] * 255.0) as u8,
-                                    (color[2] * 255.0) as u8,
-                                    (color[3] * 255.0) as u8]];
+                                   (color[1] * 255.0) as u8,
+                                   (color[2] * 255.0) as u8,
+                                   (color[3] * 255.0) as u8]];
 
         TextureBuilder::new::<[u8; 4], &[[u8; 4]]>(&data)
     }
@@ -87,11 +87,7 @@ impl TextureBuilder {
     pub fn is_mutable(mut self, mutable: bool) -> Self {
         use gfx::memory::Usage;
 
-        self.info.usage = if mutable {
-            Usage::Dynamic
-        } else {
-            Usage::Data
-        };
+        self.info.usage = if mutable { Usage::Dynamic } else { Usage::Data };
 
         self
     }
@@ -116,10 +112,10 @@ impl TextureBuilder {
         let view = fac.view_texture_as_shader_resource_raw(&tex, desc)?;
 
         Ok(Texture {
-            data: self.data.to_owned(),
-            kind: self.info.kind,
-            texture: tex,
-            view: view,
-        })
+               data: self.data.to_owned(),
+               kind: self.info.kind,
+               texture: tex,
+               view: view,
+           })
     }
 }

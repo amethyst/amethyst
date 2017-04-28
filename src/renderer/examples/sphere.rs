@@ -4,12 +4,11 @@ extern crate amethyst_renderer as renderer;
 extern crate genmesh;
 extern crate winit;
 
-use std::time::{Duration, Instant};
-
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 use renderer::prelude::*;
 use renderer::vertex::PosColor;
+use std::time::{Duration, Instant};
 use winit::ElementState::Pressed;
 use winit::Event;
 use winit::VirtualKeyCode as Key;

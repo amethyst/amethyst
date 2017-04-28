@@ -11,7 +11,7 @@ homepage = "https://www.amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
 readme = "README.md"
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 
 [badges]
 appveyor = { repository = "amethyst/amethyst", branch = "develop" }
@@ -25,30 +25,32 @@ opengl = ["gfx_device_gl", "gfx_window_glutin", "glutin"]
 vulkan = ["gfx_device_vulkan", "gfx_window_vulkan"]
 
 [dependencies]
-cgmath = { version = "0.13", features = ["eders", "use_simd"] }
+cgmath = { version = "0.14", features = ["eders", "use_simd"] }
 fnv = "1.0"
-gfx = "0.14"
-gfx_core = "0.6"
+gfx = { version = "0.15", features = ["cgmath-types", "serialize"], git = "https://github.com/gfx-rs/gfx" }
+gfx_core = { version = "0.7", features = ["cgmath-types", "serialize"], git = "https://github.com/gfx-rs/gfx" }
 gfx_macros = "0.2"
 num_cpus = "1.0"
 rayon = "0.7"
-serde = "0.9"
-serde_derive = "0.9"
+serde = "1.0"
+serde_derive = "1.0"
 winit = "0.5"
 
-gfx_device_gl = { version = "0.13", optional = true }
-gfx_device_vulkan = { version = "0.1", optional = true }
-gfx_window_glutin = { version = "0.14", optional = true }
-gfx_window_vulkan = { version = "0.1", optional = true }
+gfx_device_gl = { version = "0.14", optional = true, git = "https://github.com/gfx-rs/gfx" }
+gfx_window_glutin = { version = "0.15", optional = true, git = "https://github.com/gfx-rs/gfx" }
 glutin = { version = "0.7", optional = true }
 
+[target.'cfg(not(macos))'.dependencies]
+gfx_device_vulkan = { version = "0.1", optional = true }
+gfx_window_vulkan = { version = "0.1", optional = true }
+
 [target.'cfg(macos)'.dependencies]
-gfx_device_metal = { version = "0.1", optional = true }
-gfx_window_metal = { version = "0.1", optional = true }
+gfx_device_metal = { version = "0.2", optional = true }
+gfx_window_metal = { version = "0.2", optional = true }
 
 [target.'cfg(windows)'.dependencies]
-gfx_device_dx11 = { version = "0.5", optional = true }
-gfx_window_dxgi = { version = "0.6", optional = true }
+gfx_device_dx11 = { version = "0.6", optional = true }
+gfx_window_dxgi = { version = "0.7", optional = true }
 
 [dev-dependencies]
 genmesh = "0.4"

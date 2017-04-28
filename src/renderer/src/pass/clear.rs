@@ -38,18 +38,13 @@ impl ClearTarget {
 impl Into<PassBuilder> for ClearTarget {
     fn into(self) -> PassBuilder {
         PassBuilder::function(move |ref mut enc, ref out| {
-                if let Some(val) = self.color_val {
-                    for buf in out.color_bufs() {
-                        enc.clear(&buf.as_output, val);
-                    }
-                }
+            if let Some(val) = self.color_val {
+                enc.clear_color(&out, val);
+            }
 
-                if let Some(val) = self.depth_val {
-                    if let Some(buf) = out.depth_buf() {
-                        enc.clear_depth(&buf.as_output, val);
-                        enc.clear_stencil(&buf.as_output, val as u8);
-                    }
-                }
-            })
+            if let Some(val) = self.depth_val {
+                enc.clear_depth(&out, val);
+            }
+        })
     }
 }

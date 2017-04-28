@@ -2,6 +2,7 @@
 
 use cgmath::{Deg, Point3, Vector3};
 use color::Rgba;
+use gfx;
 
 /// A light source.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
@@ -19,7 +20,7 @@ pub enum Light {
 }
 
 /// A directional light source.
-#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, ConstantBuffer, Debug, Deserialize, PartialEq, Serialize)]
 pub struct DirectionalLight {
     /// Color of the light in RGBA8 format.
     pub color: Rgba,
@@ -49,7 +50,10 @@ impl From<DirectionalLight> for Light {
 /// equation 26, which we used for the lighting evaluation.
 ///
 /// <p align="center">
-///     <img src="https://latex.codecogs.com/gif.latex?\dpi{100}&space;E_{window1}&space;=&space;(\frac{I}{distance^{2}})&space;\cdot&space;saturate(1&space;-&space;\frac{x^{n}}{lightRadius^{n}})^{2}" alt="equation" />
+///     <img src="https://latex.codecogs.com/gif.latex?\dpi{100}&space;E_
+///     {window1}&space;=&space;(\frac{I}{distance^{2}})&space;\cdot&space;
+///     saturate(1&space;-&space;\frac{x^{n}}{lightRadius^{n}})^{2}"
+///     alt="equation" />
 /// </p>
 ///
 /// The `Point` properties below map like so:
@@ -59,11 +63,11 @@ impl From<DirectionalLight> for Light {
 /// * *n* = `smoothness`
 ///
 /// [fb]: http://www.frostbite.com/wp-content/uploads/2014/11/course_notes_moving_frostbite_to_pbr.pdf
-#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, ConstantBuffer, Debug, Deserialize, PartialEq, Serialize)]
 pub struct PointLight {
     /// Location of the light source in three dimensional space.
     pub center: Point3<f32>,
-    /// Color of the light.
+    /// Color of the light in RGBA8 format.
     pub color: Rgba,
     /// Brightness of the light source, in lumens.
     pub intensity: f32,
@@ -93,7 +97,7 @@ impl From<PointLight> for Light {
 }
 
 /// A spot light source.
-#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, ConstantBuffer, Debug, Deserialize, PartialEq, Serialize)]
 pub struct SpotLight {
     /// Opening angle of the light cone.
     pub angle: Deg<f32>,
@@ -133,7 +137,7 @@ impl From<SpotLight> for Light {
 }
 
 /// A realistic disk-shaped sun light source.
-#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, ConstantBuffer, Debug, Deserialize, PartialEq, Serialize)]
 pub struct SunLight {
     /// The sun's angular radius.
     pub ang_rad: Deg<f32>,

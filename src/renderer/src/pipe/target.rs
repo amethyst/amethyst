@@ -77,7 +77,7 @@ impl<D> From<(Vec<ColorBuffer>, D, (u32, u32))> for Target
 ///
 /// By default, it creates render targets with one color buffer and no
 /// depth-stencil buffer.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct TargetBuilder {
     custom_size: Option<(u32, u32)>,
     name: String,
@@ -131,13 +131,13 @@ impl TargetBuilder {
         let color_bufs = (0..self.num_color_bufs)
             .into_iter()
             .map(|_| {
-                let (w, h) = (size.0 as u16, size.1 as u16);
-                let (_, res, rt) = fac.create_render_target(w, h)?;
-                Ok(ColorBuffer {
-                    as_input: Some(res),
-                    as_output: rt,
-                })
-            })
+                     let (w, h) = (size.0 as u16, size.1 as u16);
+                     let (_, res, rt) = fac.create_render_target(w, h)?;
+                     Ok(ColorBuffer {
+                        as_input: Some(res),
+                        as_output: rt,
+                     })
+                 })
             .collect::<Result<_>>()?;
 
         let depth_buf = if self.has_depth_buf {
@@ -152,11 +152,13 @@ impl TargetBuilder {
             None
         };
 
-        Ok((self.name, Arc::new(Target {
+        let target = Target {
             color_bufs: color_bufs,
             depth_buf: depth_buf,
             size: size,
-        })))
+        };
+
+        Ok((self.name, Arc::new(target)))
     }
 }
 

@@ -10,9 +10,8 @@ use gfx::state::Depth;
 use gfx::texture::{FilterMethod, SamplerInfo, WrapMode};
 use pipe::{Target, Targets};
 use types::{Factory, Program, RawPipelineState, Sampler};
-use vertex::VertexFormat;
 
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum BlendMode {
     Add,
     Alpha,
@@ -20,14 +19,14 @@ pub enum BlendMode {
     Multiply,
 }
 
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum DepthMode {
     LessEqualTest,
     LessEqualWrite,
 }
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub enum ProgramSource {
+enum ProgramSource {
     Simple(&'static [u8], &'static [u8]),
     Geometry(&'static [u8], &'static [u8], &'static [u8]),
     Tessellated(&'static [u8], &'static [u8], &'static [u8], &'static [u8]),
@@ -42,8 +41,9 @@ impl ProgramSource {
         match *self {
             ProgramSource::Simple(ref vs, ref ps) => {
                 let set = fac.create_shader_set(vs, ps)?;
-                fac.create_program(&set).map_err(|e| ProgramError::Link(e).into())
-            },
+                fac.create_program(&set)
+                    .map_err(|e| ProgramError::Link(e).into())
+            }
             ProgramSource::Geometry(ref vs, ref gs, ref ps) => {
                 let v = fac.create_shader_vertex(vs)
                     .map_err(|e| ProgramError::Vertex(e))?;
@@ -52,12 +52,14 @@ impl ProgramSource {
                 let p = fac.create_shader_pixel(ps)
                     .map_err(|e| ProgramError::Pixel(e))?;
                 let set = ShaderSet::Geometry(v, g, p);
-                fac.create_program(&set).map_err(|e| ProgramError::Link(e).into())
-            },
+                fac.create_program(&set)
+                    .map_err(|e| ProgramError::Link(e).into())
+            }
             ProgramSource::Tessellated(ref vs, ref hs, ref ds, ref ps) => {
                 let set = fac.create_shader_set_tessellation(vs, hs, ds, ps)?;
-                fac.create_program(&set).map_err(|e| ProgramError::Link(e).into())
-            },
+                fac.create_program(&set)
+                    .map_err(|e| ProgramError::Link(e).into())
+            }
         }
     }
 }
@@ -74,7 +76,7 @@ impl Effect {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct EffectBuilder {
     desc: Descriptor,
     out_depth: Depth,
@@ -89,7 +91,7 @@ impl EffectBuilder {
         use gfx::state::Rasterizer;
 
         let prim = Primitive::TriangleList;
-        let rast =  Rasterizer::new_fill().with_cull_back();
+        let rast = Rasterizer::new_fill().with_cull_back();
 
         EffectBuilder {
             desc: Descriptor::new(prim, rast),
@@ -153,20 +155,22 @@ impl EffectBuilder {
 
         for i in 0..out.color_bufs().len() {
             let fmt = ColorFormat::get_format();
-            self.desc.color_targets[i] = Some((fmt, ColorInfo {
-                mask: MASK_ALL,
-                color: None,
-                alpha: None,
-            }));
+            self.desc.color_targets[i] = Some((fmt,
+                                               ColorInfo {
+                                                   mask: MASK_ALL,
+                                                   color: None,
+                                                   alpha: None,
+                                               }));
         }
 
         if out.depth_buf().is_some() {
             let fmt = DepthFormat::get_format();
-            self.desc.depth_stencil = Some((fmt, DepthStencilInfo {
-                depth: Some(self.out_depth.clone()),
-                front: None,
-                back: None,
-            }));
+            self.desc.depth_stencil = Some((fmt,
+                                            DepthStencilInfo {
+                                                depth: Some(self.out_depth.clone()),
+                                                front: None,
+                                                back: None,
+                                            }));
         }
 
         let prog = self.prog.compile(fac)?;
@@ -179,8 +183,8 @@ impl EffectBuilder {
             .collect();
 
         Ok(Effect {
-            pso: pso,
-            samplers: samplers,
-        })
+               pso: pso,
+               samplers: samplers,
+           })
     }
 }
