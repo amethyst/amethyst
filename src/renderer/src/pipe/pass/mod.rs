@@ -2,30 +2,34 @@
 
 #![allow(missing_docs)]
 
+pub use self::effect::{Effect, EffectBuilder};
+
+use enc::Encoder;
 use error::Result;
 use pipe::{Target, Targets};
-use pipe::effect::{Effect, EffectBuilder};
-use types::{Encoder, Factory};
 use scene::Scene;
 use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::sync::Arc;
+use types::Factory;
+
+mod effect;
 
 pub type FunctionFn = Arc<Fn(&mut Encoder, &Target) + Send + Sync>;
-pub type PostprocFn = Arc<Fn(&mut Encoder, &Target, &Effect) + Send + Sync>;
+pub type PostFn = Arc<Fn(&mut Encoder, &Target, &Effect, &Scene) + Send + Sync>;
 
 /// Discrete rendering pass.
 #[derive(Clone)]
 pub enum Pass {
     Function(FunctionFn),
-    Postproc(PostprocFn, Effect),
+    Post(PostFn, Effect),
 }
 
 impl Pass {
     /// Applies the rendering pass using the given `Encoder` and `Target`.
-    pub fn apply(&self, enc: &mut Encoder, out: &Target) {
+    pub fn apply(&self, enc: &mut Encoder, out: &Target, scene: &Scene) {
         match *self {
-            Pass::Function(ref f) => f(enc, out),
-            Pass::Postproc(ref f, ref e) => f(enc, out, e),
+            Pass::Function(ref func) => func(enc, out),
+            Pass::Post(ref func, ref e) => func(enc, out, e, scene),
         }
     }
 }
@@ -37,9 +41,9 @@ impl Debug for Pass {
                 fmt.debug_tuple("Function")
                     .field(&"[closure]")
                     .finish()
-            },
-            Pass::Postproc(_, ref e) => {
-                fmt.debug_tuple("Postproc")
+            }
+            Pass::Post(_, ref e) => {
+                fmt.debug_tuple("Post")
                     .field(&"[closure]")
                     .field(e)
                     .finish()
@@ -51,7 +55,7 @@ impl Debug for Pass {
 #[derive(Clone)]
 pub enum PassBuilder {
     Function(FunctionFn),
-    Postproc(PostprocFn, EffectBuilder),
+    Post(PostFn, EffectBuilder),
 }
 
 impl PassBuilder {
@@ -62,15 +66,15 @@ impl PassBuilder {
     }
 
     pub fn postproc<F>(eb: EffectBuilder, func: F) -> PassBuilder
-        where F: Fn(&mut Encoder, &Target, &Effect) + Send + Sync + 'static
+        where F: Fn(&mut Encoder, &Target, &Effect, &Scene) + Send + Sync + 'static
     {
-        PassBuilder::Postproc(Arc::new(func), eb)
+        PassBuilder::Post(Arc::new(func), eb)
     }
 
     pub fn build(self, fac: &mut Factory, t: &Targets, out: &Target) -> Result<Pass> {
         match self {
             PassBuilder::Function(f) => Ok(Pass::Function(f)),
-            PassBuilder::Postproc(f, mut e) => Ok(Pass::Postproc(f, e.build(fac, out)?)),
+            PassBuilder::Post(f, mut e) => Ok(Pass::Post(f, e.build(fac, out)?)),
         }
     }
 }
@@ -80,11 +84,10 @@ impl Debug for PassBuilder {
         match *self {
             PassBuilder::Function(_) => {
                 fmt.debug_tuple("Function")
-                    .field(&"[closure]")
-                    .finish()
-            },
-            PassBuilder::Postproc(_, ref e) => {
-                fmt.debug_tuple("Postproc")
+                    .field(&"[closure]").finish()
+            }
+            PassBuilder::Post(_, ref e) => {
+                fmt.debug_tuple("Post")
                     .field(&"[closure]")
                     .field(e)
                     .finish()

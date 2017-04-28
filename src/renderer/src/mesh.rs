@@ -1,6 +1,6 @@
 //! Mesh resource.
 
-use cgmath::{Deg, Matrix4, Point3, Vector3, Transform};
+use cgmath::{Deg, Matrix4, Point3, Transform, Vector3};
 use error::Result;
 use gfx::Primitive;
 use types::{Factory, RawBuffer, Slice};
@@ -18,7 +18,7 @@ pub struct Mesh {
 
 impl Mesh {
     /// Builds a new mesh from the given vertices.
-    pub fn new<'v, V: VertexFormat + 'v >(verts: &'v [V]) -> MeshBuilder {
+    pub fn new<'v, V: VertexFormat + 'v>(verts: &'v [V]) -> MeshBuilder {
         MeshBuilder::new(verts)
     }
 
@@ -43,7 +43,7 @@ impl Mesh {
 }
 
 /// Builds new meshes.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct MeshBuilder<'v> {
     attrs: Vec<Attribute>,
     prim: Primitive,
@@ -54,7 +54,7 @@ pub struct MeshBuilder<'v> {
 
 impl<'v> MeshBuilder<'v> {
     /// Creates a new `MeshBuilder` with the given vertices.
-    pub fn new<V: VertexFormat + 'v >(verts: &'v [V]) -> Self {
+    pub fn new<V: VertexFormat + 'v>(verts: &'v [V]) -> Self {
         use cgmath::SquareMatrix;
         use gfx::memory::cast_slice;
         use std::mem::size_of;
@@ -132,11 +132,11 @@ impl<'v> MeshBuilder<'v> {
         };
 
         Ok(Mesh {
-            attrs: self.attrs,
-            prim: self.prim,
-            slice: slice,
-            transform: self.transform,
-            vbuf: vbuf,
-        })
+               attrs: self.attrs,
+               prim: self.prim,
+               slice: slice,
+               transform: self.transform,
+               vbuf: vbuf,
+           })
     }
 }

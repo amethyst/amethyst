@@ -1,11 +1,12 @@
 //! A stage in the rendering pipeline.
 
+use enc::Encoder;
 use error::{Error, Result};
 use pipe::{Target, Targets};
 use pipe::pass::{Pass, PassBuilder};
 use scene::Scene;
 use std::sync::Arc;
-use types::{Encoder, Factory};
+use types::Factory;
 
 /// A stage in the rendering pipeline.
 #[derive(Clone, Debug)]
@@ -41,7 +42,7 @@ impl Stage {
     pub fn apply(&self, enc: &mut Encoder, scene: &Scene) {
         if self.enabled {
             for pass in self.passes.as_slice() {
-                pass.apply(enc, &self.target);
+                pass.apply(enc, &self.target, scene);
             }
         }
     }
