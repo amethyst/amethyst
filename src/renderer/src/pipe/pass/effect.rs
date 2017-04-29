@@ -41,8 +41,7 @@ impl ProgramSource {
         match *self {
             ProgramSource::Simple(ref vs, ref ps) => {
                 let set = fac.create_shader_set(vs, ps)?;
-                fac.create_program(&set)
-                    .map_err(|e| ProgramError::Link(e).into())
+                fac.create_program(&set).map_err(|e| ProgramError::Link(e).into())
             }
             ProgramSource::Geometry(ref vs, ref gs, ref ps) => {
                 let v = fac.create_shader_vertex(vs)
@@ -52,13 +51,11 @@ impl ProgramSource {
                 let p = fac.create_shader_pixel(ps)
                     .map_err(|e| ProgramError::Pixel(e))?;
                 let set = ShaderSet::Geometry(v, g, p);
-                fac.create_program(&set)
-                    .map_err(|e| ProgramError::Link(e).into())
+                fac.create_program(&set).map_err(|e| ProgramError::Link(e).into())
             }
             ProgramSource::Tessellated(ref vs, ref hs, ref ds, ref ps) => {
                 let set = fac.create_shader_set_tessellation(vs, hs, ds, ps)?;
-                fac.create_program(&set)
-                    .map_err(|e| ProgramError::Link(e).into())
+                fac.create_program(&set).map_err(|e| ProgramError::Link(e).into())
             }
         }
     }
@@ -155,22 +152,20 @@ impl EffectBuilder {
 
         for i in 0..out.color_bufs().len() {
             let fmt = ColorFormat::get_format();
-            self.desc.color_targets[i] = Some((fmt,
-                                               ColorInfo {
-                                                   mask: MASK_ALL,
-                                                   color: None,
-                                                   alpha: None,
-                                               }));
+            self.desc.color_targets[i] = Some((fmt, ColorInfo {
+                mask: MASK_ALL,
+                color: None,
+                alpha: None,
+            }));
         }
 
         if out.depth_buf().is_some() {
             let fmt = DepthFormat::get_format();
-            self.desc.depth_stencil = Some((fmt,
-                                            DepthStencilInfo {
-                                                depth: Some(self.out_depth.clone()),
-                                                front: None,
-                                                back: None,
-                                            }));
+            self.desc.depth_stencil = Some((fmt, DepthStencilInfo {
+                depth: Some(self.out_depth.clone()),
+                front: None,
+                back: None,
+            }));
         }
 
         let prog = self.prog.compile(fac)?;
@@ -183,8 +178,8 @@ impl EffectBuilder {
             .collect();
 
         Ok(Effect {
-               pso: pso,
-               samplers: samplers,
-           })
+            pso: pso,
+            samplers: samplers,
+        })
     }
 }

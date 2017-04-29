@@ -86,9 +86,7 @@ impl TextureBuilder {
     /// Sets whether the texture is mutable or not.
     pub fn is_mutable(mut self, mutable: bool) -> Self {
         use gfx::memory::Usage;
-
         self.info.usage = if mutable { Usage::Dynamic } else { Usage::Data };
-
         self
     }
 
@@ -112,10 +110,10 @@ impl TextureBuilder {
         let view = fac.view_texture_as_shader_resource_raw(&tex, desc)?;
 
         Ok(Texture {
-               data: self.data.to_owned(),
-               kind: self.info.kind,
-               texture: tex,
-               view: view,
-           })
+            data: self.data.to_owned(),
+            kind: self.info.kind,
+            texture: tex,
+            view: view,
+        })
     }
 }

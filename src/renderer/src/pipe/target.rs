@@ -131,13 +131,13 @@ impl TargetBuilder {
         let color_bufs = (0..self.num_color_bufs)
             .into_iter()
             .map(|_| {
-                     let (w, h) = (size.0 as u16, size.1 as u16);
-                     let (_, res, rt) = fac.create_render_target(w, h)?;
-                     Ok(ColorBuffer {
-                        as_input: Some(res),
-                        as_output: rt,
-                     })
-                 })
+                let (w, h) = (size.0 as u16, size.1 as u16);
+                let (_, res, rt) = fac.create_render_target(w, h)?;
+                Ok(ColorBuffer {
+                    as_input: Some(res),
+                    as_output: rt,
+                })
+            })
             .collect::<Result<_>>()?;
 
         let depth_buf = if self.has_depth_buf {

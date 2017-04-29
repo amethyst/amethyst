@@ -138,13 +138,13 @@ impl Renderer {
             .map_err(|e| Error::PoolCreation(e))?;
 
         Ok(Renderer {
-               device: dev,
-               encoders: encoders,
-               factory: fac,
-               main_target: Arc::new(main),
-               pool: pool,
-               window: win,
-           })
+            device: dev,
+            encoders: encoders,
+            factory: fac,
+            main_target: Arc::new(main),
+            pool: pool,
+            window: win,
+        })
     }
 
     /// Builds a new mesh from the given vertices.
@@ -169,14 +169,13 @@ impl Renderer {
 
         {
             let encoders = self.encoders.as_mut_slice();
-            self.pool
-                .install(|| {
-                             pipe.stages()
-                                 .par_iter()
-                                 .zip(encoders)
-                                 .filter(|&(stage, _)| stage.is_enabled())
-                                 .for_each(|(stage, enc)| stage.apply(enc, scene));
-                         });
+            self.pool.install(|| {
+                pipe.stages()
+                    .par_iter()
+                    .zip(encoders)
+                    .filter(|&(stage, _)| stage.is_enabled())
+                    .for_each(|(stage, enc)| stage.apply(enc, scene));
+            });
         }
 
         for enc in self.encoders.iter_mut() {
@@ -185,9 +184,7 @@ impl Renderer {
 
         self.device.cleanup();
         #[cfg(feature = "opengl")]
-        self.window
-            .swap_buffers()
-            .expect("OpenGL context has been lost");
+        self.window.swap_buffers().expect("OpenGL context has been lost");
     }
 
     /// Returns an immutable reference to the renderer window.
@@ -214,19 +211,19 @@ fn init_backend(builder: winit::WindowBuilder) -> Result<Backend> {
     let (win, dev, mut fac, color) = win::init::<ColorFormat>(builder).unwrap();
     let dev = gfx_device_dx11::Deferred::from(dev);
 
-    let size = win.get_inner_size_points()
-        .ok_or(Error::WindowDestroyed)?;
+    let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
     let (w, h) = (size.0 as u16, size.1 as u16);
     let depth = fac.create_depth_stencil_view_only::<DepthFormat>(w, h)?;
-    let main_target = Target::from((vec![ColorBuffer {
-                                             as_input: None,
-                                             as_output: color,
-                                         }],
-                                    DepthBuffer {
-                                        as_input: None,
-                                        as_output: depth,
-                                    },
-                                    size));
+    let main_target = Target::from((
+        vec![ColorBuffer {
+            as_input: None,
+            as_output: color,
+        }],
+        DepthBuffer {
+            as_input: None,
+            as_output: depth,
+        },
+        size));
 
     Ok(Backend(dev, fac, main_target, win))
 }
@@ -237,19 +234,19 @@ fn init_backend(builder: winit::WindowBuilder) -> Result<Backend> {
 
     let (win, dev, mut fac, color) = win::init::<ColorFormat>(builder).unwrap();
 
-    let size = win.get_inner_size_points()
-        .ok_or(Error::WindowDestroyed)?;
+    let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
     let (w, h) = (size.0 as u16, size.1 as u16);
     let depth = fac.create_depth_stencil_view_only::<DepthFormat>(w, h)?;
-    let main_target = Target::from((vec![ColorBuffer {
-                                             as_input: None,
-                                             as_output: color,
-                                         }],
-                                    DepthBuffer {
-                                        as_input: None,
-                                        as_output: depth,
-                                    },
-                                    size));
+    let main_target = Target::from((
+        vec![ColorBuffer {
+            as_input: None,
+            as_output: color,
+        }],
+        DepthBuffer {
+            as_input: None,
+            as_output: depth,
+        },
+        size));
 
     Ok(Backend(dev, fac, main_target, win))
 }
@@ -265,17 +262,17 @@ fn init_backend(builder: winit::WindowBuilder) -> Result<Backend> {
         .with_gl(GlRequest::Latest);
 
     let (win, dev, fac, color, depth) = win::init::<ColorFormat, DepthFormat>(wb);
-    let size = win.get_inner_size_points()
-        .ok_or(Error::WindowDestroyed)?;
-    let main_target = Target::from((vec![ColorBuffer {
-                                             as_input: None,
-                                             as_output: color,
-                                         }],
-                                    DepthBuffer {
-                                        as_input: None,
-                                        as_output: depth,
-                                    },
-                                    size));
+    let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
+    let main_target = Target::from((
+        vec![ColorBuffer {
+            as_input: None,
+            as_output: color,
+        }],
+        DepthBuffer {
+            as_input: None,
+            as_output: depth,
+        },
+        size));
 
     Ok(Backend(dev, fac, main_target, win))
 }
