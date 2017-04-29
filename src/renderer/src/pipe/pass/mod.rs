@@ -84,7 +84,8 @@ impl Debug for PassBuilder {
         match *self {
             PassBuilder::Function(_) => {
                 fmt.debug_tuple("Function")
-                    .field(&"[closure]").finish()
+                    .field(&"[closure]")
+                    .finish()
             }
             PassBuilder::Post(_, ref e) => {
                 fmt.debug_tuple("Post")

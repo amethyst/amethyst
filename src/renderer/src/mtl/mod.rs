@@ -94,12 +94,12 @@ impl MaterialBuilder {
     /// Builds and returns the new material.
     pub fn build(self, fac: &mut Factory) -> Result<Material> {
         Ok(Material {
-               albedo: self.albedo.into_texture(fac)?,
-               emission: self.emission.into_texture(fac)?,
-               normal: self.normal.into_texture(fac)?,
-               metallic: self.metallic.into_texture(fac)?,
-               reflectance: self.reflectance.into_texture(fac)?,
-               roughness: self.roughness.into_texture(fac)?,
-           })
+            albedo: self.albedo.into_texture(fac)?,
+            emission: self.emission.into_texture(fac)?,
+            normal: self.normal.into_texture(fac)?,
+            metallic: self.metallic.into_texture(fac)?,
+            reflectance: self.reflectance.into_texture(fac)?,
+            roughness: self.roughness.into_texture(fac)?,
+        })
     }
 }

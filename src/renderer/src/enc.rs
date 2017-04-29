@@ -25,8 +25,7 @@ impl Encoder {
         use gfx::{CommandBuffer, Device};
 
         dev.pin_submitted_resources(&self.handles);
-        dev.submit(&mut self.cmd_buf, &self.access_info)
-            .expect("Submit fail");
+        dev.submit(&mut self.cmd_buf, &self.access_info).expect("Submit fail");
         self.cmd_buf.reset();
         self.access_info.clear();
         self.handles.clear();
@@ -54,8 +53,7 @@ impl Encoder {
             let raw = self.handles.ref_dsv(buf.as_output.raw()).clone();
             let depth = val.into();
             let stencil = val.into() as u8;
-            self.cmd_buf
-                .clear_depth_stencil(raw, Some(depth), Some(stencil))
+            self.cmd_buf.clear_depth_stencil(raw, Some(depth), Some(stencil));
         }
     }
 

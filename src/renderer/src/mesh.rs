@@ -132,11 +132,11 @@ impl<'v> MeshBuilder<'v> {
         };
 
         Ok(Mesh {
-               attrs: self.attrs,
-               prim: self.prim,
-               slice: slice,
-               transform: self.transform,
-               vbuf: vbuf,
-           })
+            attrs: self.attrs,
+            prim: self.prim,
+            slice: slice,
+            transform: self.transform,
+            vbuf: vbuf,
+        })
     }
 }
