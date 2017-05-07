@@ -1,7 +1,6 @@
 //! Camera type with support for perspective and orthographic projections.
 
-use cgmath::{Deg, Matrix4, Ortho, PerspectiveFov, Point3, Rad, Vector3};
-use std::fmt::Debug;
+use cgmath::{Deg, Matrix4, Ortho, PerspectiveFov, Point3, Vector3};
 
 /// The projection mode of a `Camera`.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]

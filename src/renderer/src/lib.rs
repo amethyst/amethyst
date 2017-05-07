@@ -85,11 +85,16 @@ pub use scene::{LightIter, MeshIter, Scene};
 pub use tex::{Texture, TextureBuilder};
 pub use vertex::VertexFormat;
 
-use enc::Encoder;
 use pipe::{ColorBuffer, DepthBuffer};
 use std::sync::Arc;
 use std::time::Duration;
-use types::{ColorFormat, DepthFormat, Factory, Window};
+use types::{ColorFormat, DepthFormat, Encoder, Factory, Window};
+use winit::WindowBuilder;
+
+#[cfg(feature = "opengl")]
+use glutin::EventsLoop;
+#[cfg(not(feature = "opengl"))]
+use winit::EventsLoop;
 
 pub mod light;
 pub mod pass;
@@ -99,7 +104,6 @@ pub mod vertex;
 
 mod cam;
 mod color;
-mod enc;
 mod error;
 mod mesh;
 mod mtl;
@@ -119,14 +123,14 @@ pub struct Renderer {
 
 impl Renderer {
     /// Creates a new renderer with default window settings.
-    pub fn new() -> Result<Renderer> {
-        let wb = winit::WindowBuilder::new();
-        Renderer::from_winit_builder(wb)
+    pub fn new(el: &EventsLoop) -> Result<Renderer> {
+        let wb = WindowBuilder::new();
+        Renderer::from_winit_builder(wb, el)
     }
 
     /// Creates a new renderer with the given `winit::WindowBuilder`.
-    pub fn from_winit_builder(builder: winit::WindowBuilder) -> Result<Renderer> {
-        let Backend(dev, mut fac, main, win) = init_backend(builder)?;
+    pub fn from_winit_builder(wb: winit::WindowBuilder, el: &EventsLoop) -> Result<Renderer> {
+        let Backend(dev, mut fac, main, win) = init_backend(wb, el)?;
 
         let num_cores = num_cpus::get();
         let encoders = (0..num_cores)
@@ -136,6 +140,8 @@ impl Renderer {
         let cfg = rayon::Configuration::new().num_threads(num_cores);
         let pool = rayon::ThreadPool::new(cfg)
             .map_err(|e| Error::PoolCreation(e))?;
+
+        let mut init = pipe::EffectBuilder::new().with_simple_prog("".as_bytes(), "".as_bytes()).build(&mut fac, &main);
 
         Ok(Renderer {
             device: dev,
@@ -205,10 +211,10 @@ struct Backend(pub types::Device, pub Factory, pub Target, pub Window);
 
 /// Creates the Direct3D 11 backend.
 #[cfg(all(feature = "d3d11", target_os = "windows"))]
-fn init_backend(builder: winit::WindowBuilder) -> Result<Backend> {
+fn init_backend(wb: WindowBuilder, el: &EventsLoop) -> Result<Backend> {
     use gfx_window_dxgi as win;
 
-    let (win, dev, mut fac, color) = win::init::<ColorFormat>(builder).unwrap();
+    let (win, dev, mut fac, color) = win::init::<ColorFormat>(wb, el).unwrap();
     let dev = gfx_device_dx11::Deferred::from(dev);
 
     let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
@@ -229,10 +235,10 @@ fn init_backend(builder: winit::WindowBuilder) -> Result<Backend> {
 }
 
 #[cfg(all(feature = "metal", target_os = "macos"))]
-fn init_backend(builder: winit::WindowBuilder) -> Result<Backend> {
+fn init_backend(wb: WindowBuilder, el: &EventsLoop) -> Result<Backend> {
     use gfx_window_metal as win;
 
-    let (win, dev, mut fac, color) = win::init::<ColorFormat>(builder).unwrap();
+    let (win, dev, mut fac, color) = win::init::<ColorFormat>(wb, el).unwrap();
 
     let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
     let (w, h) = (size.0 as u16, size.1 as u16);
@@ -253,15 +259,15 @@ fn init_backend(builder: winit::WindowBuilder) -> Result<Backend> {
 
 /// Creates the OpenGL backend.
 #[cfg(feature = "opengl")]
-fn init_backend(builder: winit::WindowBuilder) -> Result<Backend> {
+fn init_backend(wb: WindowBuilder, el: &EventsLoop) -> Result<Backend> {
     use glutin::{GlProfile, GlRequest, WindowBuilder};
     use gfx_window_glutin as win;
 
-    let wb = WindowBuilder::from_winit_builder(builder)
+    let wb = WindowBuilder::from_winit_builder(wb)
         .with_gl_profile(GlProfile::Core)
         .with_gl(GlRequest::Latest);
 
-    let (win, dev, fac, color, depth) = win::init::<ColorFormat, DepthFormat>(wb);
+    let (win, dev, fac, color, depth) = win::init::<ColorFormat, DepthFormat>(wb, el);
     let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
     let main_target = Target::from((
         vec![ColorBuffer {

@@ -2,14 +2,19 @@
 
 #![allow(missing_docs)]
 
-use error::Result;
+use self::pso::{Data, Init, Meta};
+
+use error::{Error, Result};
 use fnv::FnvHashMap as HashMap;
+use gfx::{Primitive, ShaderSet};
 use gfx::preset::depth::{LESS_EQUAL_TEST, LESS_EQUAL_WRITE};
-use gfx::pso::Descriptor;
-use gfx::state::Depth;
+use gfx::shade::ProgramError;
+use gfx::state::{Depth, Rasterizer};
 use gfx::texture::{FilterMethod, SamplerInfo, WrapMode};
 use pipe::{Target, Targets};
-use types::{Factory, Program, RawPipelineState, Sampler};
+use types::{Factory, PipelineState, Resources, Sampler};
+
+mod pso;
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum BlendMode {
@@ -33,15 +38,14 @@ enum ProgramSource {
 }
 
 impl ProgramSource {
-    pub fn compile(&self, fac: &mut Factory) -> Result<Program> {
-        use gfx::{Factory, ShaderSet};
-        use gfx::shade::ProgramError;
+    pub fn compile(&self, fac: &mut Factory) -> Result<ShaderSet<Resources>> {
+        use gfx::Factory;
         use gfx::traits::FactoryExt;
 
         match *self {
             ProgramSource::Simple(ref vs, ref ps) => {
-                let set = fac.create_shader_set(vs, ps)?;
-                fac.create_program(&set).map_err(|e| ProgramError::Link(e).into())
+                fac.create_shader_set(vs, ps)
+                    .map_err(|e| Error::ProgramCreation(e))
             }
             ProgramSource::Geometry(ref vs, ref gs, ref ps) => {
                 let v = fac.create_shader_vertex(vs)
@@ -50,12 +54,11 @@ impl ProgramSource {
                     .expect("Geometry shader creation failed");
                 let p = fac.create_shader_pixel(ps)
                     .map_err(|e| ProgramError::Pixel(e))?;
-                let set = ShaderSet::Geometry(v, g, p);
-                fac.create_program(&set).map_err(|e| ProgramError::Link(e).into())
+                Ok(ShaderSet::Geometry(v, g, p))
             }
             ProgramSource::Tessellated(ref vs, ref hs, ref ds, ref ps) => {
-                let set = fac.create_shader_set_tessellation(vs, hs, ds, ps)?;
-                fac.create_program(&set).map_err(|e| ProgramError::Link(e).into())
+                fac.create_shader_set_tessellation(vs, hs, ds, ps)
+                    .map_err(|e| Error::ProgramCreation(e))
             }
         }
     }
@@ -63,7 +66,8 @@ impl ProgramSource {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Effect {
-    pso: RawPipelineState,
+    pso: PipelineState<Meta>,
+    pso_data: Data,
     samplers: HashMap<String, Sampler>,
 }
 
@@ -75,24 +79,25 @@ impl Effect {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct EffectBuilder {
-    desc: Descriptor,
+    init: Init<'static>,
     out_depth: Depth,
+    prim: Primitive,
     prog: ProgramSource,
+    rast: Rasterizer,
     samplers: HashMap<String, SamplerInfo>,
 }
 
 impl EffectBuilder {
     /// Creates a new `EffectBuilder`.
-    pub fn new() -> EffectBuilder {
+    pub fn new() -> Self {
         use gfx::Primitive;
         use gfx::state::Rasterizer;
 
-        let prim = Primitive::TriangleList;
-        let rast = Rasterizer::new_fill().with_cull_back();
-
         EffectBuilder {
-            desc: Descriptor::new(prim, rast),
+            init: Init::default(),
             out_depth: LESS_EQUAL_WRITE,
+            prim: Primitive::TriangleList,
+            rast: Rasterizer::new_fill().with_cull_back(),
             prog: ProgramSource::Simple("".as_bytes(), "".as_bytes()),
             samplers: HashMap::default(),
         }
@@ -100,11 +105,11 @@ impl EffectBuilder {
 
     /// Requests a new texture sampler be created for this `Pass`.
     pub fn with_sampler<N>(mut self, name: N, f: FilterMethod, w: WrapMode) -> Self
-        where N: Into<String>
+        where N: Into<&'static str>
     {
-        use gfx::shade::Usage;
-        self.samplers.insert(name.into(), SamplerInfo::new(f, w));
-        self.desc.samplers[self.samplers.len()] = Some(Usage::empty());
+        let val = name.into();
+        self.samplers.insert(String::from(val), SamplerInfo::new(f, w));
+        self.init.samplers.push(val);
         self
     }
 
@@ -143,42 +148,22 @@ impl EffectBuilder {
         self
     }
 
-    pub fn build(&mut self, fac: &mut Factory, out: &Target) -> Result<Effect> {
+    pub fn build(self, fac: &mut Factory, out: &Target) -> Result<Effect> {
         use gfx::Factory;
-        use gfx::format::Formatted;
-        use gfx::state::MASK_ALL;
-        use gfx_core::pso::{ColorInfo, DepthStencilInfo};
-        use types::{ColorFormat, DepthFormat};
-
-        for i in 0..out.color_bufs().len() {
-            let fmt = ColorFormat::get_format();
-            self.desc.color_targets[i] = Some((fmt, ColorInfo {
-                mask: MASK_ALL,
-                color: None,
-                alpha: None,
-            }));
-        }
-
-        if out.depth_buf().is_some() {
-            let fmt = DepthFormat::get_format();
-            self.desc.depth_stencil = Some((fmt, DepthStencilInfo {
-                depth: Some(self.out_depth.clone()),
-                front: None,
-                back: None,
-            }));
-        }
+        use gfx::traits::FactoryExt;
 
         let prog = self.prog.compile(fac)?;
-        let pso = fac.create_pipeline_state_raw(&prog, &self.desc)?;
+        let pso = fac.create_pipeline_state(&prog, self.prim, self.rast, self.init)?;
 
         let samplers = self.samplers
             .clone()
             .iter()
             .map(|(name, info)| (name.clone(), fac.create_sampler(*info)))
-            .collect();
+            .collect::<HashMap<_, _>>();
 
         Ok(Effect {
             pso: pso,
+            pso_data: Data::default(),
             samplers: samplers,
         })
     }

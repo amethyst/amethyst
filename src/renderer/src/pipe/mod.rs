@@ -16,6 +16,7 @@
 //!     .expect("Could not build pipeline");
 //! ```
 
+pub use self::effect::{Effect, EffectBuilder};
 pub use self::stage::{Stage, StageBuilder};
 pub use self::target::{ColorBuffer, DepthBuffer, Target, TargetBuilder, Targets};
 
@@ -26,6 +27,7 @@ use types::Factory;
 
 pub mod pass;
 
+mod effect;
 mod stage;
 mod target;
 

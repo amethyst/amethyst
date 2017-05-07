@@ -2,17 +2,12 @@
 
 #![allow(missing_docs)]
 
-pub use self::effect::{Effect, EffectBuilder};
-
-use enc::Encoder;
 use error::Result;
-use pipe::{Target, Targets};
+use pipe::{Effect, EffectBuilder, Target, Targets};
 use scene::Scene;
 use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::sync::Arc;
-use types::Factory;
-
-mod effect;
+use types::{Encoder, Factory};
 
 pub type FunctionFn = Arc<Fn(&mut Encoder, &Target) + Send + Sync>;
 pub type PostFn = Arc<Fn(&mut Encoder, &Target, &Effect, &Scene) + Send + Sync>;

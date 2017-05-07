@@ -37,8 +37,8 @@ pub type DepthStencilView = gfx::handle::DepthStencilView<Resources, DepthFormat
 /// Created by calling `CommandBuffer::into()`.
 pub type Encoder = gfx::Encoder<Resources, CommandBuffer>;
 
-// /// Statically-typed pipeline state object (PSO).
-// pub type PipelineState<M> = gfx::PipelineState<Resources, M>;
+/// Statically-typed pipeline state object (PSO).
+pub type PipelineState<M> = gfx::PipelineState<Resources, M>;
 
 /// Handle to a compiled shader program.
 pub type Program = gfx::handle::Program<Resources>;
@@ -49,8 +49,8 @@ pub type Program = gfx::handle::Program<Resources>;
 /// or staging buffer.
 pub type RawBuffer = gfx::handle::RawBuffer<Resources>;
 
-/// Dynamically typed pipeline state object (PSO).
-pub type RawPipelineState = gfx::handle::RawPipelineState<Resources>;
+// /// Dynamically typed pipeline state object (PSO).
+// pub type RawPipelineState = gfx::handle::RawPipelineState<Resources>;
 
 /// Dynamically typed shader resource viw.
 pub type RawShaderResourceView = gfx::handle::RawShaderResourceView<Resources>;

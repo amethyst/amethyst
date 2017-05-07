@@ -34,11 +34,11 @@ num_cpus = "1.0"
 rayon = "0.7"
 serde = "1.0"
 serde_derive = "1.0"
-winit = "0.5"
+winit = "0.6"
 
 gfx_device_gl = { version = "0.14", optional = true, git = "https://github.com/gfx-rs/gfx" }
-gfx_window_glutin = { version = "0.15", optional = true, git = "https://github.com/gfx-rs/gfx" }
-glutin = { version = "0.7", optional = true }
+gfx_window_glutin = { version = "0.16", optional = true, git = "https://github.com/gfx-rs/gfx" }
+glutin = { version = "0.8", optional = true }
 
 [target.'cfg(not(macos))'.dependencies]
 gfx_device_vulkan = { version = "0.1", optional = true }
