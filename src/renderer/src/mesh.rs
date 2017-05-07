@@ -57,12 +57,11 @@ impl<'v> MeshBuilder<'v> {
     pub fn new<V: VertexFormat + 'v>(verts: &'v [V]) -> Self {
         use cgmath::SquareMatrix;
         use gfx::memory::cast_slice;
-        use std::mem::size_of;
 
         MeshBuilder {
             attrs: V::attributes(),
             prim: Primitive::TriangleList,
-            stride: size_of::<V>(),
+            stride: V::size(),
             transform: Matrix4::identity(),
             vertices: cast_slice(verts),
         }

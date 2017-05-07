@@ -1,12 +1,11 @@
 //! A stage in the rendering pipeline.
 
-use enc::Encoder;
 use error::{Error, Result};
 use pipe::{Target, Targets};
 use pipe::pass::{Pass, PassBuilder};
 use scene::Scene;
 use std::sync::Arc;
-use types::Factory;
+use types::{Encoder, Factory};
 
 /// A stage in the rendering pipeline.
 #[derive(Clone, Debug)]

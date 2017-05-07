@@ -4,13 +4,12 @@ use gfx;
 use gfx::format::Format;
 use gfx::pso::buffer::Structure;
 use gfx::traits::Pod;
-use std::fmt::Debug;
 
 /// Handle to a vertex attribute.
 pub type Attribute = gfx::pso::buffer::Element<Format>;
 
 /// Trait implemented by all valid vertex formats.
-pub trait VertexFormat: Debug + Pod + Structure<Format> + Sized {
+pub trait VertexFormat: Pod + Structure<Format> + Sized {
     /// Returns a list of all attributes specified in the vertex.
     fn attributes() -> Vec<Attribute>;
     /// Returns the size of a single vertex in bytes.
