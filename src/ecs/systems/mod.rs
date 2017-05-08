@@ -6,7 +6,7 @@ pub use self::transform::TransformSystem;
 use config::Config;
 use error::Result;
 use ecs::{System, World};
-use engine::EventsIter;
+use event::EventsIter;
 
 mod rendering;
 mod transform;

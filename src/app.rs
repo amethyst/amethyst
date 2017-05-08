@@ -6,13 +6,12 @@ use ecs::{Component, Dispatcher, DispatcherBuilder, System, World};
 use ecs::components::{LocalTransform, Transform, Child, Init};
 use ecs::resources::Time;
 use ecs::systems::SystemExt;
-use engine::event::Event;
-use engine::state::{State, StateMachine};
-use engine::timing::{Stopwatch, Time};
 use error::{Error, Result};
 use rayon::{Configuration, ThreadPool};
+use state::{State, StateMachine};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
+use timing::{Stopwatch, Time};
 
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
@@ -38,7 +37,7 @@ pub struct Application<'a, 'b> {
 
     // State management and game loop timing structs.
     config: Config,
-    states: StateMachine,
+    states: StateMachine<'static>,
     time: Time,
     timer: Stopwatch,
 }
@@ -90,6 +89,8 @@ impl<'a, 'b> Application<'a, 'b> {
     /// Advances the game world by one tick.
     fn advance_frame(&mut self) {
         {
+            use event::Event;
+
             let mut world = self.planner.mut_world();
             let mut time = world.write_resource::<Time>().pass();
             time.delta_time = self.time.delta_time;
@@ -161,11 +162,11 @@ impl<'a, 'b> Application<'a, 'b> {
     fn write_profile(&self) {
         // TODO: Specify filename in config.
         let path = format!("{}/thread_profile.json", env!("CARGO_MANIFEST_DIR"));
-        write_profile(path.as_str());
+        thread_profiler::write_profile(path.as_str());
     }
 }
 
-impl Drop for Application {
+impl<'a> Drop for Application<'a> {
     fn drop(&mut self) {
         #[cfg(feature = "profiler")]
         self.write_profile();
@@ -242,8 +243,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T>
     /// Builds the Application and returns the result.
     pub fn done(self) -> Application<'a, 'b> {
         #[cfg(feature = "profiler")]
-        register_thread_with_profiler("Main".into());
-
+        thread_profile::register_thread_with_profiler("Main".into());
         #[cfg(feature = "profiler")]
         profile_scope!("new");
 

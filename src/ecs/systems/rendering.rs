@@ -2,7 +2,7 @@
 
 use config::Config;
 use ecs::{RunArg, System, World};
-use engine::EventsIter;
+use event::EventsIter;
 use error::Result;
 use renderer::prelude::*;
 use super::SystemExt;

@@ -40,9 +40,9 @@ fn main() {
 
     match res {
         Ok(cfg) => {
-            println!("{:#?}", cfg);
+            println!("{}", cfg.to_string());
 
-            if let Err(e) = cfg.write(&path) {
+            if let Err(e) = cfg.write_file() {
                 println!("{}", e);
             }
         },
