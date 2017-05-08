@@ -22,7 +22,6 @@ impl State for Example {
 }
 
 fn main() {
-    let cfg = Config::default();
-    let mut game = Application::build(Example, cfg).finish().expect("Fatal error");
+    let mut game = Application::new(Example).expect("Fatal error");
     game.run();
 }

@@ -1,7 +1,7 @@
 //! Utilities for game state management.
 
-// use asset_manager::AssetManager;
-use engine::{Engine, Event};
+use app::Engine;
+use event::Event;
 
 /// Types of state transitions.
 pub enum Trans {
@@ -52,15 +52,15 @@ pub trait State {
 /// A simple stack-based state machine (pushdown automaton).
 #[derive(Derivative)]
 #[derivative(Debug)]
-pub struct StateMachine {
+pub struct StateMachine<'a> {
     running: bool,
     #[derivative(Debug = "ignore")]
-    state_stack: Vec<Box<State>>,
+    state_stack: Vec<Box<State + 'a>>,
 }
 
-impl StateMachine {
+impl<'a> StateMachine<'a> {
     /// Creates a new state machine with the given initial state.
-    pub fn new<S: State + 'static>(initial_state: S) -> StateMachine {
+    pub fn new<S: State + 'a>(initial_state: S) -> StateMachine<'a> {
         StateMachine {
             running: false,
             state_stack: vec![Box::new(initial_state)],
