@@ -1,17 +1,15 @@
 //! Launches a new renderer window.
 
 extern crate amethyst_renderer as renderer;
-//extern crate winit;
+extern crate winit;
 extern crate glutin;
 
+use glutin::EventsLoop;
 use renderer::prelude::*;
 use std::time::{Duration, Instant};
-// use winit::ElementState::Pressed;
-// use winit::{Event, EventsLoop, WindowEvent};
-// use winit::VirtualKeyCode as Key;
-use glutin::ElementState::Pressed;
-use glutin::{Event, EventsLoop, WindowEvent};
-use glutin::VirtualKeyCode as Key;
+use winit::ElementState::Pressed;
+use winit::{Event, WindowEvent};
+use winit::VirtualKeyCode as Key;
 
 fn main() {
     let events = EventsLoop::new();

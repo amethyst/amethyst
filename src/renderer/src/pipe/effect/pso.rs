@@ -1,6 +1,6 @@
 use gfx::{handle, pso};
 use gfx::pso::{DataBind, DataLink, Descriptor, PipelineData, PipelineInit, InitError};
-use gfx::pso::buffer::{RawConstantBuffer, RawVertexBuffer};
+use gfx::pso::buffer::{Global, RawConstantBuffer, RawVertexBuffer};
 use gfx::pso::resource::{RawShaderResource, Sampler};
 use gfx::pso::target;
 use gfx::shade::core::ProgramInfo;
@@ -60,6 +60,7 @@ impl<'d> PipelineInit for Init<'d> {
         if let Some(depth) = self.out_depth {
             let mut meta_depth = <DepthStencilTarget as DataLink<'d>>::new();
             if let Some(d) = meta_depth.link_depth_stencil(&depth) {
+                desc.scissor = meta_depth.link_scissor();
                 meta.out_depth = Some(meta_depth);
                 desc.depth_stencil = Some(d);
             }
