@@ -121,8 +121,10 @@ impl InputHandler {
         self.released_mouse_buttons.clear();
         self.previous_mouse_position = self.mouse_position;
         self.text_this_frame.clear();
+
         for event in events {
-            match event.payload {
+            if let Event::WindowEvent(e) = event {
+            match e {
                 Event::ReceivedCharacter(c) => {
                     self.text_this_frame.push(c);
                 }

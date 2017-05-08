@@ -1,11 +1,10 @@
 //! Mesh resource handling.
 
-
 use asset_manager::{AssetLoader, Assets};
 use gfx;
 use gfx::traits::FactoryExt;
 use gfx_device::gfx_types;
-use renderer::VertexPosNormal;
+use renderer::vertex::PosNormTex;
 
 /// A physical piece of geometry.
 #[derive(Clone)]

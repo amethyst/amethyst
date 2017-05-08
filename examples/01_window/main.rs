@@ -2,23 +2,17 @@
 
 extern crate amethyst;
 
-use amethyst::{Application, Event, State, Trans, VirtualKeyCode, WindowEvent};
-use amethyst::asset_manager::AssetManager;
-use amethyst::config::Config;
-use amethyst::ecs::World;
+use amethyst::prelude::*;
+use amethyst::ecs::systems::TransformSystem;
 
 struct Example;
 
 impl State for Example {
-    fn handle_events(&mut self,
-                     events: &[WindowEvent],
-                     _: &mut World,
-                     _: &mut AssetManager)
-                     -> Trans {
-        for e in events {
-            match **e {
-                Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) => return Trans::Quit,
-                Event::Closed => return Trans::Quit,
+    fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
+        if let Event::Window(e) = event {
+            match e {
+                WindowEvent::KeyboardInput(_, _, Some(VirtualKeyCode::Escape), _) |
+                WindowEvent::Closed => return Trans::Quit,
                 _ => (),
             }
         }
@@ -29,6 +23,12 @@ impl State for Example {
 fn main() {
     let path = format!("{}/examples/01_window/resources/config.yml",
                        env!("CARGO_MANIFEST_DIR"));
-    let mut game = Application::build(Example).done();
+
+    let cfg = Config::from_file(path).unwrap();
+    let mut game = Application::build(Example, cfg)
+        .with_system::<TransformSystem>("trans", 0)
+        .finish()
+        .expect("Could not create game");
+
     game.run();
 }
