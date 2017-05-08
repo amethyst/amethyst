@@ -2,28 +2,27 @@
 
 extern crate amethyst;
 
-use amethyst::{Application, State, Trans};
-use amethyst::asset_manager::AssetManager;
-use amethyst::ecs::World;
+use amethyst::prelude::*;
 
 struct Example;
 
 impl State for Example {
-    fn on_start(&mut self, _: &mut World, _: &mut AssetManager) {
+    fn on_start(&mut self, _: &mut Engine) {
         println!("Begin!");
     }
 
-    fn update(&mut self, _: &mut World, _: &mut AssetManager) -> Trans {
+    fn update(&mut self, _: &mut Engine) -> Trans {
         println!("Hello from Amethyst!");
         Trans::Quit
     }
 
-    fn on_stop(&mut self, _: &mut World, _: &mut AssetManager) {
+    fn on_stop(&mut self, _: &mut Engine) {
         println!("End!");
     }
 }
 
 fn main() {
-    let mut game = Application::build(Example).done();
+    let cfg = Config::default();
+    let mut game = Application::build(Example, cfg).finish().expect("Fatal error");
     game.run();
 }

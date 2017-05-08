@@ -2,8 +2,29 @@
 
 use std::time::{Duration, Instant};
 
+/// Frame timing values.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Time {
+    /// Time elapsed since the last frame.
+    pub delta_time: Duration,
+    /// Rate at which `State::fixed_update` is called.
+    pub fixed_step: Duration,
+    /// Time at which `State::fixed_update` was last called.
+    pub last_fixed_update: Instant,
+}
+
+impl Default for Time {
+    fn default() -> Time {
+        Time {
+            delta_time: Duration::from_secs(0),
+            fixed_step: Duration::new(0, 16666666),
+            last_fixed_update: Instant::now(),
+        }
+    }
+}
+
 /// A stopwatch which accurately measures elapsed time.
-#[derive(PartialEq, Eq)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum Stopwatch {
     /// Initial state with an elapsed time value of 0 seconds.
     Waiting,
@@ -23,7 +44,7 @@ impl Default for Stopwatch {
 impl Stopwatch {
     /// Creates a new stopwatch.
     pub fn new() -> Stopwatch {
-        Stopwatch::Waiting
+        Stopwatch::default()
     }
 
     /// Retrieves the elapsed time.
@@ -46,11 +67,9 @@ impl Stopwatch {
     ///
     /// Note: Starting an already running stopwatch will do nothing.
     pub fn start(&mut self) {
-        match self {
-            &mut Stopwatch::Waiting => {
-                self.restart();
-            }
-            &mut Stopwatch::Ended(dur) => {
+        match *self {
+            Stopwatch::Waiting => self.restart(),
+            Stopwatch::Ended(dur) => {
                 *self = Stopwatch::Started(dur, Instant::now());
             }
             _ => {}
@@ -61,7 +80,7 @@ impl Stopwatch {
     ///
     /// Note: Stopping a stopwatch that isn't running will do nothing.
     pub fn stop(&mut self) {
-        if let &mut Stopwatch::Started(dur, start) = self {
+        if let Stopwatch::Started(dur, start) = *self {
             *self = Stopwatch::Ended(dur + start.elapsed());
         }
     }

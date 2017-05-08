@@ -27,8 +27,10 @@ vulkan = ["gfx_device_vulkan", "gfx_window_vulkan"]
 [dependencies]
 cgmath = { version = "0.14", features = ["eders", "use_simd"] }
 fnv = "1.0"
-gfx = { version = "0.15", features = ["cgmath-types", "serialize"], git = "https://github.com/gfx-rs/gfx" }
-gfx_core = { version = "0.7", features = ["cgmath-types", "serialize"], git = "https://github.com/gfx-rs/gfx" }
+#gfx = { version = "0.15", features = ["cgmath-types", "serialize"], git = "https://github.com/gfx-rs/gfx" }
+gfx = { version = "0.15", features = ["cgmath-types", "serialize"], path = "/home/ekalderon/gfx/src/render/" }
+#gfx_core = { version = "0.7", features = ["cgmath-types", "serialize"], git = "https://github.com/gfx-rs/gfx" }
+gfx_core = { version = "0.7", features = ["cgmath-types", "serialize"], path = "/home/ekalderon/gfx/src/core/" }
 gfx_macros = "0.2"
 num_cpus = "1.0"
 rayon = "0.7"
@@ -36,8 +38,10 @@ serde = "1.0"
 serde_derive = "1.0"
 winit = "0.6"
 
-gfx_device_gl = { version = "0.14", optional = true, git = "https://github.com/gfx-rs/gfx" }
-gfx_window_glutin = { version = "0.16", optional = true, git = "https://github.com/gfx-rs/gfx" }
+#gfx_device_gl = { version = "0.14", optional = true, git = "https://github.com/gfx-rs/gfx" }
+gfx_device_gl = { version = "0.14", optional = true, path = "/home/ekalderon/gfx/src/backend/gl/" }
+#gfx_window_glutin = { version = "0.16", optional = true, git = "https://github.com/gfx-rs/gfx" }
+gfx_window_glutin = { version = "0.16", optional = true, path = "/home/ekalderon/gfx/src/window/glutin/" }
 glutin = { version = "0.8", optional = true }
 
 [target.'cfg(not(macos))'.dependencies]

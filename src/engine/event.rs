@@ -1,39 +1,49 @@
 //! This module contains the `WindowEvent` type and re-exports glutin event
 //! types.
 
-use ecs::{Component, VecStorage};
+pub use winit::{ElementState, MouseButton, MouseScrollDelta, ScanCode,
+                TouchPhase, VirtualKeyCode as Key, WindowEvent};
 
-pub use glutin::{Event, ElementState, ScanCode, VirtualKeyCode, MouseScrollDelta, TouchPhase,
-                 MouseButton, Touch};
-use std::ops::{Deref, DerefMut};
+use winit::Event as WinitEvent;
 
-/// A window-generated event.
-pub struct WindowEvent {
-    /// Underlying Glutin event type.
-    pub payload: Event,
+/// Generic engine event.
+#[derive(Debug)]
+pub enum Event {
+    /// An asset event.
+    Asset(String),
+    /// A window event.
+    Window(WindowEvent),
+    /// User-defined event.
+    User(String),
 }
 
-impl WindowEvent {
-    /// Creates a new window event from the given Glutin event.
-    pub fn new(event: Event) -> WindowEvent {
-        WindowEvent { payload: event }
+impl From<WinitEvent> for Event {
+    fn from(e: WinitEvent) -> Event {
+        let WinitEvent::WindowEvent { event, .. } = e;
+        Event::Window(event)
     }
 }
 
-impl Component for WindowEvent {
-    type Storage = VecStorage<WindowEvent>;
-}
-
-impl Deref for WindowEvent {
-    type Target = Event;
-
-    fn deref(&self) -> &Event {
-        &self.payload
+impl From<WindowEvent> for Event {
+    fn from(e: WindowEvent) -> Event {
+        Event::Window(e)
     }
 }
 
-impl DerefMut for WindowEvent {
-    fn deref_mut(&mut self) -> &mut Event {
-        &mut self.payload
+/// Iterable stream of events.
+#[derive(Debug, Default)]
+pub struct EventsIter(Vec<Event>);
+
+impl Iterator for EventsIter {
+    type Item = Event;
+
+    fn next(&mut self) -> Option<Event> {
+        self.0.pop()
+    }
+}
+
+impl<E: Into<Event>> From<Vec<E>> for EventsIter {
+    fn from(e: Vec<E>) -> EventsIter {
+        EventsIter(e.into_iter().map(|e| e.into()).collect())
     }
 }
