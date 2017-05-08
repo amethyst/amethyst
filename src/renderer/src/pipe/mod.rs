@@ -109,6 +109,7 @@ impl PipelineBuilder {
     }
 
     /// Builds and returns the new pipeline.
+    #[doc(hidden)]
     pub fn build(self, fac: &mut Factory, out: &Arc<Target>) -> Result<Pipeline> {
         let mut targets = self.targets
             .iter()

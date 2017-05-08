@@ -2,20 +2,18 @@
 
 extern crate amethyst_renderer as renderer;
 extern crate genmesh;
-// extern crate winit;
+extern crate winit;
 extern crate glutin;
 
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
+use glutin::EventsLoop;
 use renderer::prelude::*;
 use renderer::vertex::PosColor;
 use std::time::{Duration, Instant};
-// use winit::ElementState::Pressed;
-// use winit::Event;
-// use winit::VirtualKeyCode as Key;
-use glutin::ElementState::Pressed;
-use glutin::{Event, EventsLoop, WindowEvent};
-use glutin::VirtualKeyCode as Key;
+use winit::ElementState::Pressed;
+use winit::{Event, WindowEvent};
+use winit::VirtualKeyCode as Key;
 
 fn main() {
     let events = EventsLoop::new();

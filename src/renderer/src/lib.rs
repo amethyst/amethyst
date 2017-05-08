@@ -9,7 +9,8 @@
 //! # Example
 //!
 //! ```ignore
-//! let mut renderer = Renderer::new().unwrap();
+//! let loop = winit::EventsLoop::new();
+//! let mut renderer = Renderer::new(&loop).unwrap();
 //! let pipe = renderer.create_pipe(Pipeline::deferred()).unwrap();
 //!
 //! let verts = some_sphere_gen_func();
@@ -24,12 +25,11 @@
 //!     .add_mesh("ball", sphere)
 //!     .add_light("lamp", light);
 //!
-//! 'main: loop {
-//!     for event in renderer.window().poll_events() {
-//!         match event {
-//!             winit::Event::Closed => break 'main,
-//!             _ => (),
-//!         }
+//! loop.run_forever(|e| {
+//!     let winit::Event::WindowEvent { event, .. } = e;
+//!     match event {
+//!         winit::WindowEvent::Closed => loop.interrupt(),
+//!         _ => (),
 //!     }
 //!
 //!     renderer.draw(&scene, &pipe, dt);
@@ -111,6 +111,44 @@ mod scene;
 mod tex;
 mod types;
 
+static DRAW_VERTEX_SRC: &[u8] = b"
+    #version 150 core
+    layout (std140) uniform cb_VertexArgs {
+        uniform mat4 u_Proj;
+        uniform mat4 u_View;
+        uniform mat4 u_Model;
+    };
+    in vec3 a_Normal;
+    in vec3 a_Pos;
+    in vec2 a_TexCoord;
+    out vec3 v_Normal;
+    out vec2 v_TexCoord;
+    void main() {
+        v_TexCoord = a_TexCoord;
+        v_Normal = mat3(u_Model) * a_Normal;
+        gl_Position = u_Proj * u_View * u_Model * vec4(a_Pos, 1.0);
+    }
+";
+
+static DRAW_FRAGMENT_SRC: &[u8] = b"
+    #version 150 core
+    uniform sampler2D t_Ka;
+    uniform sampler2D t_Kd;
+    uniform sampler2D t_Ks;
+    in vec3 v_Normal;
+    in vec2 v_TexCoord;
+    out vec4 o_Ka;
+    out vec4 o_Kd;
+    out vec4 o_Ks;
+    out vec4 o_Normal;
+    void main() {
+        o_Ka = texture(t_Ka, v_TexCoord);
+        o_Kd = texture(t_Kd, v_TexCoord);
+        o_Ks = texture(t_Ks, v_TexCoord);
+        o_Normal = vec4(normalize(v_Normal), 0.);
+    }
+";
+
 /// Generic renderer.
 pub struct Renderer {
     device: types::Device,
@@ -124,12 +162,12 @@ pub struct Renderer {
 impl Renderer {
     /// Creates a new renderer with default window settings.
     pub fn new(el: &EventsLoop) -> Result<Renderer> {
-        let wb = WindowBuilder::new();
+        let wb = WindowBuilder::new().with_title("Amethyst");
         Renderer::from_winit_builder(wb, el)
     }
 
     /// Creates a new renderer with the given `winit::WindowBuilder`.
-    pub fn from_winit_builder(wb: winit::WindowBuilder, el: &EventsLoop) -> Result<Renderer> {
+    pub fn from_winit_builder(wb: WindowBuilder, el: &EventsLoop) -> Result<Renderer> {
         let Backend(dev, mut fac, main, win) = init_backend(wb, el)?;
 
         let num_cores = num_cpus::get();
@@ -141,7 +179,9 @@ impl Renderer {
         let pool = rayon::ThreadPool::new(cfg)
             .map_err(|e| Error::PoolCreation(e))?;
 
-        let mut init = pipe::EffectBuilder::new().with_simple_prog("".as_bytes(), "".as_bytes()).build(&mut fac, &main);
+        let init = pipe::EffectBuilder::new()
+            .with_simple_prog(DRAW_VERTEX_SRC, DRAW_FRAGMENT_SRC)
+            .build(&mut fac, &main).expect("Blah");
 
         Ok(Renderer {
             device: dev,
@@ -260,10 +300,10 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop) -> Result<Backend> {
 /// Creates the OpenGL backend.
 #[cfg(feature = "opengl")]
 fn init_backend(wb: WindowBuilder, el: &EventsLoop) -> Result<Backend> {
-    use glutin::{GlProfile, GlRequest, WindowBuilder};
+    use glutin::{GlProfile, GlRequest};
     use gfx_window_glutin as win;
 
-    let wb = WindowBuilder::from_winit_builder(wb)
+    let wb = glutin::WindowBuilder::from_winit_builder(wb)
         .with_gl_profile(GlProfile::Core)
         .with_gl(GlRequest::Latest);
 
