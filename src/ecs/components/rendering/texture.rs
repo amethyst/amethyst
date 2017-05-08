@@ -1,6 +1,5 @@
 //! Graphical texture resource.
 
-
 use asset_manager::{AssetLoader, Assets};
 use gfx::Factory;
 use gfx::format::{Formatted, SurfaceTyped};

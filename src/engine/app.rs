@@ -179,9 +179,7 @@ impl<'a, 'b> Application<'a, 'b> {
 }
 
 /// Helper builder for Applications.
-pub struct ApplicationBuilder<'a, 'b, T>
-    where T: State + 'static
-{
+pub struct ApplicationBuilder<'a, 'b, T: State + 'static> {
     initial_state: T,
     dispatcher_builder: DispatcherBuilder<'a, 'b>,
     world: World,
