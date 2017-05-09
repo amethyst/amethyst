@@ -24,14 +24,14 @@
 //!     }
 //!
 //!     fn handle_event(&mut self, _: &mut Engine, event: &Event) -> Trans {
-//!         if let Event::Window(e) = event {
-//!             match e {
+//!         match event {
+//!             Event::Window(e) => match e {
 //!                 WindowEvent::KeyboardInput(_, _, Some(Key::Escape), _) |
-//!                 WindowEvent::Closed => return Trans::Quit,
-//!                 _ => (),
+//!                 WindowEvent::Closed => Trans::Quit,
+//!                 _ => Trans::None,
 //!             }
+//!             _ => Trans::None,
 //!         }
-//!         Trans::None
 //!     }
 //!
 //!     fn update(&mut self, _: &mut Engine) -> Trans {

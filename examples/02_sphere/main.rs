@@ -6,7 +6,7 @@ extern crate amethyst;
 extern crate cgmath;
 extern crate genmesh;
 
-use amethyst::{Application, Event, State, Trans, VirtualKeyCode, WindowEvent};
+use amethyst::prelude::*;
 use amethyst::asset_manager::AssetManager;
 use amethyst::config::Config;
 use amethyst::ecs::World;
@@ -65,28 +65,23 @@ impl State for Example {
         world.create_entity().with(light).build();
     }
 
-    fn handle_events(&mut self,
-                     events: &[WindowEvent],
-                     _: &mut World,
-                     _: &mut AssetManager,
-                     _: &mut Pipeline)
-                     -> Trans {
-        for e in events {
-            match **e {
-                Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) => return Trans::Quit,
-                Event::Closed => return Trans::Quit,
-                _ => (),
-            }
+    fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
+        match event {
+            Event::Window(e) => match e {
+                WindowEvent::KeyboardInput(_, _, Some(Key::Escape), _) |
+                WindowEvent::Closed => Trans::Quit,
+                _ => Trans::None,
+            },
+            _ => Trans::None,
         }
-        Trans::None
     }
 }
 
 fn main() {
     let path = format!("{}/examples/02_sphere/resources/config.yml",
                        env!("CARGO_MANIFEST_DIR"));
-    let cfg = DisplayConfig::load(path);
-    let mut game = Application::build(Example, cfg).done();
+    let cfg = Config::from_file(path).unwrap();
+    let mut game = Application::build(Example, cfg).finish().expect("Fatal error");
     game.run();
 }
 
