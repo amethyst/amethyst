@@ -27,22 +27,20 @@ fn main() {
     scene.add_mesh("ball", mesh);
     scene.add_light("lamp", PointLight::default());
 
-    let mut running = true;
     let mut delta = Duration::from_secs(0);
-    while running {
+    events.run_forever(|e| {
         let start = Instant::now();
-        events.poll_events(|e| {
-            let Event::WindowEvent { event, .. } = e;
-            match event {
-                WindowEvent::Closed |
-                WindowEvent::KeyboardInput(Pressed, _, Some(Key::Escape), _) => running = false,
-                _ => (),
-            }
-        });
+
+        let Event::WindowEvent { event, .. } = e;
+        match event {
+            WindowEvent::KeyboardInput(Pressed, _, Some(Key::Escape), _) |
+            WindowEvent::Closed => events.interrupt(),
+            _ => (),
+        }
 
         renderer.draw(&scene, &pipe, delta);
         delta = Instant::now() - start;
-    }
+    });
 }
 
 fn gen_sphere(u: usize, v: usize) -> Vec<PosColor> {
