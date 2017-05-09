@@ -24,12 +24,13 @@ impl ClearTarget {
     /// // Ignores color buffers, clears the depth buffer to 0.5.
     /// ClearTarget::with_values(None, 0.5);
     /// ```
-    pub fn with_values<C, D>(color_val: C, depth_val: D) -> ClearTarget
-        where C: Into<Option<[f32; 4]>>,
+    pub fn with_values<R, C, D>(color_val: C, depth_val: D) -> ClearTarget
+        where R: Into<[f32; 4]>,
+              C: Into<Option<R>>,
               D: Into<Option<f32>>
     {
         ClearTarget {
-            color_val: color_val.into(),
+            color_val: color_val.into().map(|c| c.into()),
             depth_val: depth_val.into(),
         }
     }

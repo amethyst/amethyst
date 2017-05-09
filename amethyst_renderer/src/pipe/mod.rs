@@ -20,6 +20,7 @@ pub use self::effect::{Effect, EffectBuilder};
 pub use self::stage::{Stage, StageBuilder};
 pub use self::target::{ColorBuffer, DepthBuffer, Target, TargetBuilder, Targets};
 
+use color::Rgba;
 use error::Result;
 use fnv::FnvHashMap as HashMap;
 use std::sync::Arc;
@@ -54,9 +55,9 @@ impl Pipeline {
                 .with_num_color_bufs(4)
                 .with_depth_buf(true))
             .with_stage(Stage::with_target("gbuffer")
-                .with_pass(ClearTarget::with_values([1.0; 4], None)))
+                .with_pass(ClearTarget::with_values(Rgba::black(), None)))
             .with_stage(Stage::with_backbuffer()
-                .with_pass(ClearTarget::with_values([1.0; 4], None)))
+                .with_pass(ClearTarget::with_values(Rgba::black(), None)))
     }
 
     /// Builds a default forward pipeline.

@@ -41,7 +41,7 @@ impl Rgba {
 
 impl Default for Rgba {
     fn default() -> Rgba {
-        Rgba::white()
+        Rgba::black()
     }
 }
 
