@@ -3,7 +3,7 @@
 use std::time::{Duration, Instant};
 
 /// Frame timing values.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Time {
     /// Time elapsed since the last frame.
     pub delta_time: Duration,
@@ -24,7 +24,7 @@ impl Default for Time {
 }
 
 /// A stopwatch which accurately measures elapsed time.
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Stopwatch {
     /// Initial state with an elapsed time value of 0 seconds.
     Waiting,

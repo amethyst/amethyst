@@ -1,8 +1,8 @@
 //! This module contains the `WindowEvent` type and re-exports glutin event
 //! types.
 
-pub use winit::{ElementState, MouseButton, MouseScrollDelta, ScanCode,
-                TouchPhase, VirtualKeyCode as Key, WindowEvent};
+pub use winit::{ElementState, ModifiersState, MouseButton, MouseScrollDelta,
+                ScanCode, Touch, TouchPhase, VirtualKeyCode as Key, WindowEvent};
 
 use winit::Event as WinitEvent;
 

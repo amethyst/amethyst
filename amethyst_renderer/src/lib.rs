@@ -9,8 +9,8 @@
 //! # Example
 //!
 //! ```ignore
-//! let loop = winit::EventsLoop::new();
-//! let mut renderer = Renderer::new(&loop).unwrap();
+//! let event_loop = winit::EventsLoop::new();
+//! let mut renderer = Renderer::new(&event_loop).unwrap();
 //! let pipe = renderer.create_pipe(Pipeline::deferred()).unwrap();
 //!
 //! let verts = some_sphere_gen_func();
@@ -25,10 +25,10 @@
 //!     .add_mesh("ball", sphere)
 //!     .add_light("lamp", light);
 //!
-//! loop.run_forever(|e| {
+//! event_loop.run_forever(|e| {
 //!     let winit::Event::WindowEvent { event, .. } = e;
 //!     match event {
-//!         winit::WindowEvent::Closed => loop.interrupt(),
+//!         winit::WindowEvent::Closed => event_loop.interrupt(),
 //!         _ => (),
 //!     }
 //!

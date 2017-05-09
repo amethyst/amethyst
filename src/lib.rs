@@ -74,16 +74,15 @@ extern crate winit;
 pub use self::app::{Application, ApplicationBuilder, Engine};
 pub use self::error::{Error, Result};
 pub use self::state::{State, StateMachine, Trans};
-pub use self::timing::Stopwatch;
 
 pub mod asset_manager;
 pub mod ecs;
+pub mod event;
 pub mod prelude;
 #[macro_use]
 pub mod project;
+pub mod timing;
 
 mod app;
-mod event;
 mod state;
-mod timing;
 mod error;
