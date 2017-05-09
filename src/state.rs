@@ -214,9 +214,16 @@ mod tests {
 
     #[test]
     fn switch_pop() {
-        let assets = AssetManager::new();
-        let world = World::new();
-        let engine = Engine::new(assets, Duration::default(), world);
+        use config::Config;
+        use ecs::{Planner, World};
+        use rayon::{Configuration, ThreadPool};
+        use std::sync::Arc;
+        use timing::Time;
+
+        let cfg = Config::default();
+        let pool = Arc::new(ThreadPool::new(Configuration::new()).unwrap());
+        let plan = Planner::from_pool(World::new(), pool.clone());
+        let mut engine = Engine::new(cfg, plan, pool);
 
         let mut sm = StateMachine::new(State1(7));
         sm.start(&mut engine);

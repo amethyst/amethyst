@@ -16,7 +16,6 @@ impl State for Example {
                 _ => (),
             }
         }
-        Trans::None
     }
 }
 
@@ -28,7 +27,7 @@ fn main() {
     let mut game = Application::build(Example, cfg)
         .with_system::<TransformSystem>("trans", 0)
         .finish()
-        .expect("Could not create game");
+        .expect("Fatal error");
 
     game.run();
 }
