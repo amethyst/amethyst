@@ -108,7 +108,7 @@ impl EffectBuilder {
         where N: Into<&'static str>
     {
         let val = name.into();
-        self.samplers.insert(String::from(val), SamplerInfo::new(f, w));
+        self.samplers.insert(val.to_string(), SamplerInfo::new(f, w));
         self.init.samplers.push(val);
         self
     }

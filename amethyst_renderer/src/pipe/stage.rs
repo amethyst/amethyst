@@ -78,6 +78,7 @@ impl StageBuilder {
     }
 
     /// Builds and returns the stage.
+    #[doc(hidden)]
     pub fn build(mut self, fac: &mut Factory, targets: &Targets) -> Result<Stage> {
         let name = self.target_name;
         let out = targets

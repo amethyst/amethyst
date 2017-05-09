@@ -120,6 +120,7 @@ impl TargetBuilder {
     }
 
     /// Builds and returns the new render target.
+    #[doc(hidden)]
     pub fn build(self, fac: &mut Factory, size: (u32, u32)) -> Result<(String, Arc<Target>)> {
         use gfx::Factory;
 
