@@ -21,17 +21,15 @@ cache: cargo
 # Install the necessary crates for building and testing the engine.
 before_script:
     - export PATH=$PATH:/home/travis/.cargo/bin
-    - (cargo install cargo-local-pkgs || true)
-    - (cargo install rustfmt || true)
 
 # Format the codebase, generate documentation, compile the engine, run tests.
 script: |
-      cargo local-pkgs doc --no-deps -v &&
-      cargo local-pkgs build -v &&
+      cargo doc --all --no-deps -v &&
+      cargo build --all -v &&
       # Build and test without profiler
       cargo test --all -v &&
       # Build and test with profiler
-      cargo test --all -v --features profiler
+      cargo test --all --features profiler -v
 
 # Push notifications to `amethyst/general` and `amethyst/engine` Gitter chats.
 notifications:
