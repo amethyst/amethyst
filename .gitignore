@@ -1,6 +1,5 @@
 # Unwanted files
 book/html
-prototypes
 target
 Cargo.lock
 

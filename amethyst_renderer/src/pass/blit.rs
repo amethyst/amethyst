@@ -2,8 +2,7 @@
 
 use gfx;
 use pipe::pass::PassBuilder;
-use types::{Buffer, ColorFormat, Factory, Slice};
-use vertex::PosTex;
+use pipe::Effect;
 
 static VERT_SRC: &'static [u8] = b"
     #version 150 core
@@ -25,14 +24,6 @@ static FRAG_SRC: &'static [u8] = b"
         o_Color = texture(t_source, v_tex_coord);
     }
 ";
-
-gfx_pipeline!(
-    blit {
-        vbuf: gfx::VertexBuffer<PosTex> = (),
-        source: gfx::TextureSampler<[f32; 4]> = "t_source",
-        out: gfx::RenderTarget<ColorFormat> = "o_color",
-    }
-);
 
 /// Blits a color or depth buffer from one Target onto another.
 #[derive(Clone, Debug, PartialEq)]
@@ -65,40 +56,21 @@ impl Into<PassBuilder> for BlitBuffer {
 
         let effect = Effect::new()
             .with_sampler("blit", FilterMethod::Scale, WrapMode::Clamp)
-            .with_input_target(self.target, "blit")
+            // .with_input_target(self.target, "blit")
             .with_simple_prog(VERT_SRC, FRAG_SRC);
 
-        PassBuilder::postproc(effect, move |ref mut enc, ref out, ref effect| {
-                let buf = if let Some(i) = buf_idx {
-                    data.targets[0].color_buf(i).unwrap().target_view
-                } else {
-                    data.targets[0].depth_buf().unwrap().target_view
-                };
+        PassBuilder::postproc(effect, move |ref mut enc, ref out, ref effect, ref scene| {
+                // let buf = if let Some(i) = buf_idx {
+                //     data.targets[0].color_buf(i).unwrap().target_view
+                // } else {
+                //     data.targets[0].depth_buf().unwrap().target_view
+                // };
 
-                enc.draw(&slice, &data.pso.unwrap(), &blit::Data {
-                    vbuf: vbuf,
-                    source: (buf, data.samplers[0].clone()),
-                    out: out.color_buf(0).unwrap().target_view.clone(),
-                });
+                // enc.draw(&slice, &data.pso.unwrap(), &blit::Data {
+                //     vbuf: vbuf,
+                //     source: (buf, data.samplers[0].clone()),
+                //     out: out.color_buf(0).unwrap().target_view.clone(),
+                // });
             })
     }
-}
-
-fn create_fullscreen_quad(fac: &mut Factory) -> (Buffer<PosTex>, Slice) {
-    use gfx::traits::FactoryExt;
-
-    let verts = [PosTex {
-                     a_position: [-3.0, -1.0, 0.0],
-                     a_tex_coord: [-1.0, 0.0],
-                 },
-                 PosTex {
-                     a_position: [1.0, -1.0, 0.0],
-                     a_tex_coord: [1.0, 0.0],
-                 },
-                 PosTex {
-                     a_position: [1.0, 3.0, 0.0],
-                     a_tex_coord: [1.0, 2.0],
-                 }];
-
-    fac.create_vertex_buffer_with_slice(&verts, ())
 }
