@@ -69,7 +69,7 @@ impl PassBuilder {
     pub fn build(self, fac: &mut Factory, t: &Targets, out: &Target) -> Result<Pass> {
         match self {
             PassBuilder::Function(f) => Ok(Pass::Function(f)),
-            PassBuilder::Post(f, mut e) => Ok(Pass::Post(f, e.build(fac, out)?)),
+            PassBuilder::Post(f, e) => Ok(Pass::Post(f, e.build(fac, out)?)),
         }
     }
 }
