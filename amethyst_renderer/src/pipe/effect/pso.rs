@@ -1,6 +1,6 @@
 use gfx::{handle, pso};
 use gfx::pso::{DataBind, DataLink, Descriptor, PipelineData, PipelineInit, InitError};
-use gfx::pso::buffer::{Global, RawConstantBuffer, RawVertexBuffer};
+use gfx::pso::buffer::{RawConstantBuffer, RawVertexBuffer};
 use gfx::pso::resource::{RawShaderResource, Sampler};
 use gfx::pso::target;
 use gfx::shade::core::ProgramInfo;

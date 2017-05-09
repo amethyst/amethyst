@@ -91,6 +91,7 @@ impl TextureBuilder {
     }
 
     /// Builds and returns the new texture.
+    #[doc(hidden)]
     pub fn build(self, fac: &mut Factory) -> Result<Texture> {
         use gfx::Factory;
         use gfx::format::{ChannelType, Swizzle};
