@@ -12,7 +12,7 @@ use winit::{Event, WindowEvent};
 use winit::VirtualKeyCode as Key;
 
 fn main() {
-    let event = EventsLoop::new();
+    let events = EventsLoop::new();
     let mut renderer = Renderer::new(&events).unwrap();
     let pipe = renderer.create_pipe(Pipeline::forward()).unwrap();
     let scene = Scene::default();
