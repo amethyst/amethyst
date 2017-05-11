@@ -40,6 +40,8 @@
 #![doc(html_logo_url = "https://tinyurl.com/jtmm43a")]
 
 extern crate cgmath;
+#[macro_use]
+extern crate derivative;
 extern crate fnv;
 extern crate gfx;
 extern crate gfx_core;
@@ -111,44 +113,6 @@ mod scene;
 mod tex;
 mod types;
 
-static DRAW_VERTEX_SRC: &[u8] = b"
-    #version 150 core
-    layout (std140) uniform cb_VertexArgs {
-        uniform mat4 u_Proj;
-        uniform mat4 u_View;
-        uniform mat4 u_Model;
-    };
-    in vec3 a_Normal;
-    in vec3 a_Pos;
-    in vec2 a_TexCoord;
-    out vec3 v_Normal;
-    out vec2 v_TexCoord;
-    void main() {
-        v_TexCoord = a_TexCoord;
-        v_Normal = mat3(u_Model) * a_Normal;
-        gl_Position = u_Proj * u_View * u_Model * vec4(a_Pos, 1.0);
-    }
-";
-
-static DRAW_FRAGMENT_SRC: &[u8] = b"
-    #version 150 core
-    uniform sampler2D t_Ka;
-    uniform sampler2D t_Kd;
-    uniform sampler2D t_Ks;
-    in vec3 v_Normal;
-    in vec2 v_TexCoord;
-    out vec4 o_Ka;
-    out vec4 o_Kd;
-    out vec4 o_Ks;
-    out vec4 o_Normal;
-    void main() {
-        o_Ka = texture(t_Ka, v_TexCoord);
-        o_Kd = texture(t_Kd, v_TexCoord);
-        o_Ks = texture(t_Ks, v_TexCoord);
-        o_Normal = vec4(normalize(v_Normal), 0.);
-    }
-";
-
 /// Generic renderer.
 pub struct Renderer {
     device: types::Device,
@@ -178,10 +142,6 @@ impl Renderer {
         let cfg = rayon::Configuration::new().num_threads(num_cores);
         let pool = rayon::ThreadPool::new(cfg)
             .map_err(|e| Error::PoolCreation(e))?;
-
-        let init = pipe::EffectBuilder::new()
-            .with_simple_prog(DRAW_VERTEX_SRC, DRAW_FRAGMENT_SRC)
-            .build(&mut fac, &main).expect("Blah");
 
         Ok(Renderer {
             device: dev,

@@ -54,10 +54,9 @@ impl Into<PassBuilder> for BlitBuffer {
     fn into(self) -> PassBuilder {
         use gfx::texture::{FilterMethod, WrapMode};
 
-        let effect = Effect::new()
-            .with_sampler("blit", FilterMethod::Scale, WrapMode::Clamp)
+        let effect = Effect::new_simple_prog(VERT_SRC, FRAG_SRC)
+            .with_sampler("blit", FilterMethod::Scale, WrapMode::Clamp);
             // .with_input_target(self.target, "blit")
-            .with_simple_prog(VERT_SRC, FRAG_SRC);
 
         PassBuilder::postproc(effect, move |ref mut enc, ref out, ref effect, ref scene| {
                 // let buf = if let Some(i) = buf_idx {
