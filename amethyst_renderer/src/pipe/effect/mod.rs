@@ -8,7 +8,7 @@ use error::{Error, Result};
 use fnv::FnvHashMap as HashMap;
 use gfx::{Primitive, ShaderSet};
 use gfx::preset::depth::{LESS_EQUAL_TEST, LESS_EQUAL_WRITE};
-use gfx::shade::ProgramError;
+use gfx::shade::{ProgramError, ToUniform};
 use gfx::state::{Depth, Rasterizer};
 use gfx::texture::{FilterMethod, SamplerInfo, WrapMode};
 use pipe::{Target, Targets};
@@ -64,16 +64,33 @@ impl ProgramSource {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Derivative)]
+#[derivative(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Effect {
     pso: PipelineState<Meta>,
+    #[derivative(Hash = "ignore")]
     pso_data: Data,
+    #[derivative(Hash = "ignore")]
     samplers: HashMap<String, Sampler>,
 }
 
 impl Effect {
-    pub fn new() -> EffectBuilder {
-        EffectBuilder::new()
+    pub fn new_simple_prog<S>(vs: S, ps: S) -> EffectBuilder
+        where S: Into<&'static [u8]>
+    {
+        EffectBuilder::new_simple_prog(vs, ps)
+    }
+
+    pub fn new_geom_prog<S>(vs: S, gs: S, ps: S) -> EffectBuilder
+        where S: Into<&'static [u8]>
+    {
+        EffectBuilder::new_geom_prog(vs, gs, ps)
+    }
+
+    pub fn new_tess_prog<S>(vs: S, hs: S, ds: S, ps: S) -> EffectBuilder
+        where S: Into<&'static [u8]>
+    {
+        EffectBuilder::new_tess_prog(vs, hs, ds, ps)
     }
 }
 
@@ -87,9 +104,8 @@ pub struct EffectBuilder {
     samplers: HashMap<String, SamplerInfo>,
 }
 
-impl EffectBuilder {
-    /// Creates a new `EffectBuilder`.
-    pub fn new() -> Self {
+impl Default for EffectBuilder {
+    fn default() -> EffectBuilder {
         use gfx::Primitive;
         use gfx::state::Rasterizer;
 
@@ -102,14 +118,42 @@ impl EffectBuilder {
             samplers: HashMap::default(),
         }
     }
+}
 
-    /// Requests a new texture sampler be created for this `Pass`.
-    pub fn with_sampler<N>(mut self, name: N, f: FilterMethod, w: WrapMode) -> Self
-        where N: Into<&'static str>
+impl EffectBuilder {
+    pub fn new_simple_prog<S>(vs: S, ps: S) -> EffectBuilder
+        where S: Into<&'static [u8]>
     {
-        let val = name.into();
-        self.samplers.insert(val.to_string(), SamplerInfo::new(f, w));
-        self.init.samplers.push(val);
+        let (vs, ps) = (vs.into(), ps.into());
+        EffectBuilder {
+            prog: ProgramSource::Simple(vs, ps),
+            .. Default::default()
+        }
+    }
+
+    pub fn new_geom_prog<S>(vs: S, gs: S, ps: S) -> EffectBuilder
+        where S: Into<&'static [u8]>
+    {
+        let (vs, gs, ps) = (vs.into(), gs.into(), ps.into());
+        EffectBuilder {
+            prog: ProgramSource::Geometry(vs, gs, ps),
+            .. Default::default()
+        }
+    }
+
+    pub fn new_tess_prog<S>(vs: S, hs: S, ds: S, ps: S) -> EffectBuilder
+        where S: Into<&'static [u8]>
+    {
+        let (vs, hs, ds, ps) = (vs.into(), hs.into(), ds.into(), ps.into());
+        EffectBuilder {
+            prog: ProgramSource::Tessellated(vs, hs, ds, ps),
+            .. Default::default()
+        }
+    }
+
+    /// Adds a global constant to this `Effect`.
+    pub fn with_global<N: Into<&'static str>>(mut self, name: N) -> Self {
+        self.init.globals.push(name.into());
         self
     }
 
@@ -124,27 +168,13 @@ impl EffectBuilder {
         self
     }
 
-    pub fn with_simple_prog<S>(mut self, vs: S, ps: S) -> Self
-        where S: Into<&'static [u8]>
+    /// Requests a new texture sampler be created for this `Effect`.
+    pub fn with_sampler<N>(mut self, name: N, f: FilterMethod, w: WrapMode) -> Self
+        where N: Into<&'static str>
     {
-        let (vs, ps) = (vs.into(), ps.into());
-        self.prog = ProgramSource::Simple(vs, ps);
-        self
-    }
-
-    pub fn with_geom_prog<S>(mut self, vs: S, gs: S, ps: S) -> Self
-        where S: Into<&'static [u8]>
-    {
-        let (vs, gs, ps) = (vs.into(), gs.into(), ps.into());
-        self.prog = ProgramSource::Geometry(vs, gs, ps);
-        self
-    }
-
-    pub fn with_tess_prog<S>(mut self, vs: S, hs: S, ds: S, ps: S) -> Self
-        where S: Into<&'static [u8]>
-    {
-        let (vs, hs, ds, ps) = (vs.into(), hs.into(), ds.into(), ps.into());
-        self.prog = ProgramSource::Tessellated(vs, hs, ds, ps);
+        let val = name.into();
+        self.samplers.insert(val.to_string(), SamplerInfo::new(f, w));
+        self.init.samplers.push(val);
         self
     }
 

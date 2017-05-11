@@ -1,6 +1,6 @@
 use gfx::{handle, pso};
 use gfx::pso::{DataBind, DataLink, Descriptor, PipelineData, PipelineInit, InitError};
-use gfx::pso::buffer::{RawConstantBuffer, RawVertexBuffer};
+use gfx::pso::buffer::{RawConstantBuffer, RawGlobal, RawVertexBuffer};
 use gfx::pso::resource::{RawShaderResource, Sampler};
 use gfx::pso::target;
 use gfx::shade::core::ProgramInfo;
@@ -16,6 +16,7 @@ type InitResult<'r, M> = Result<M, InitError<&'r str>>;
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct Meta {
     const_bufs: Vec<RawConstantBuffer>,
+    globals: Vec<RawGlobal>,
     out_colors: Vec<RenderTarget>,
     out_depth: Option<DepthStencilTarget>,
 	samplers: Vec<Sampler>,
@@ -26,6 +27,7 @@ pub struct Meta {
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct Init<'d> {
     pub const_bufs: Vec<<RawConstantBuffer as DataLink<'d>>::Init>,
+    pub globals: Vec<<RawGlobal as DataLink<'d>>::Init>,
     pub out_colors: Vec<<RenderTarget as DataLink<'d>>::Init>,
     pub out_depth: Option<<DepthStencilTarget as DataLink<'d>>::Init>,
 	pub samplers: Vec<<Sampler as DataLink<'d>>::Init>,
@@ -46,6 +48,14 @@ impl<'d> PipelineInit for Init<'d> {
                 meta.const_bufs.push(meta_cbuf);
                 desc.constant_buffers[info.slot as usize] = Some(d);
 			}
+        }
+
+        for (info, global) in info.globals.iter().zip(&self.globals) {
+            let mut meta_global = <RawGlobal as DataLink<'d>>::new();
+            if let Some(res) = meta_global.link_global_constant(info, global) {
+                res.map_err(|e| InitError::GlobalConstant(info.name.as_str(), Some(e)))?;
+                meta.globals.push(meta_global);
+            }
         }
 
         for (info, color) in info.outputs.iter().zip(&self.out_colors) {
@@ -102,9 +112,10 @@ impl<'d> PipelineInit for Init<'d> {
     }
 }
 
-#[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Data {
     pub const_bufs: Vec<<RawConstantBuffer as DataBind<Resources>>::Data>,
+    pub globals: Vec<<RawGlobal as DataBind<Resources>>::Data>,
     pub out_colors: Vec<<RenderTarget as DataBind<Resources>>::Data>,
     pub out_depth: Option<<DepthStencilTarget as DataBind<Resources>>::Data>,
 	pub samplers: Vec<<Sampler as DataBind<Resources>>::Data>,
@@ -119,6 +130,11 @@ impl PipelineData<Resources> for Data {
         let const_bufs = meta.const_bufs.iter().zip(&self.const_bufs);
         for (meta_cbuf, cbuf) in const_bufs {
             meta_cbuf.bind_to(out, &cbuf, mgr, acc);
+        }
+
+        let globals = meta.globals.iter().zip(&self.globals);
+        for (meta_global, global) in globals {
+            meta_global.bind_to(out, &global, mgr, acc);
         }
 
         let out_colors = meta.out_colors.iter().zip(&self.out_colors);
