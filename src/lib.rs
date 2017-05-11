@@ -48,10 +48,6 @@
 #![deny(missing_docs)]
 #![doc(html_logo_url = "https://tinyurl.com/jtmm43a")]
 
-#[macro_use]
-#[cfg(feature="profiler")]
-pub extern crate thread_profiler;
-
 pub extern crate amethyst_assets as assets;
 #[macro_use]
 pub extern crate amethyst_config as config;
@@ -70,6 +66,10 @@ extern crate smallvec;
 extern crate specs;
 extern crate wavefront_obj;
 extern crate winit;
+
+#[cfg(feature="profiler")]
+#[macro_use]
+extern crate thread_profiler;
 
 pub use self::app::{Application, ApplicationBuilder, Engine};
 pub use self::error::{Error, Result};
