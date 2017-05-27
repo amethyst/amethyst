@@ -6,7 +6,7 @@ pub trait Config where Self: Sized + ::serde::Deserialize + ::serde::Serialize {
     fn load<P: AsRef<::std::path::Path>>(P) -> Self;
 
     /// Loads a configuration structure from a file.
-    fn direct_load<P: AsRef<::std::path::Path>>(P) -> Result<Self, ::project::ProjectError>;
+    fn load_no_fallback<P: AsRef<::std::path::Path>>(P) -> Result<Self, ::project::ProjectError>;
 
     /// Writes a configuration structure to a file.
     fn write<P: AsRef<::std::path::Path>>(&self, P) -> Result<(), ::project::ProjectError>;
@@ -270,7 +270,7 @@ macro_rules! config(
 
         impl $crate::project::Config for $identifier {
             fn load<P: AsRef<::std::path::Path>>(path: P) -> Self {
-                match $identifier::direct_load(path.as_ref()) {
+                match $identifier::load_no_fallback(path.as_ref()) {
                     Ok(v) => v,
                     Err(err) => {
                         println!("{}: {}", stringify!($identifier), err.description());
@@ -290,7 +290,7 @@ macro_rules! config(
                 Ok(())
             }
 
-            fn direct_load<P: AsRef<::std::path::Path>>(path: P) -> Result<Self, $crate::project::ProjectError> {
+            fn load_no_fallback<P: AsRef<::std::path::Path>>(path: P) -> Result<Self, $crate::project::ProjectError> {
                 let content = try!($crate::project::directory::Directory::load(path));
                 let parsed = ::serde_yaml::from_str::<$identifier>(&content);
                 parsed.map_err(|e| $crate::project::ProjectError::Parser(e.to_string()) )

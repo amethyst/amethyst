@@ -40,6 +40,7 @@ impl ProjectError {
 }
 
 /// Project structure, holds information related to configurations and meta information.
+#[derive(Debug)]
 pub struct Project {
     project: PathBuf,
     config: PathBuf,
