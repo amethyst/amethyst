@@ -1,15 +1,18 @@
 
+use std::path::Path;
+use project::ProjectError;
+
 /// Trait implemented by the `config!` macro.
-pub trait Config where Self: Sized + ::serde::Deserialize + ::serde::Serialize {
+pub trait Config where Self: Sized {
     /// Loads a configuration structure from a file.
     /// Defaults if the file fails in any way.
-    fn load<P: AsRef<::std::path::Path>>(P) -> Self;
+    fn load<P: AsRef<Path>>(P) -> Self;
 
     /// Loads a configuration structure from a file.
-    fn load_no_fallback<P: AsRef<::std::path::Path>>(P) -> Result<Self, ::project::ProjectError>;
+    fn load_no_fallback<P: AsRef<Path>>(P) -> Result<Self, ProjectError>;
 
     /// Writes a configuration structure to a file.
-    fn write<P: AsRef<::std::path::Path>>(&self, P) -> Result<(), ::project::ProjectError>;
+    fn write<P: AsRef<Path>>(&self, P) -> Result<(), ProjectError>;
 }
 
 /// The `config!` macro allows defining configuration structures that can load in
@@ -19,7 +22,7 @@ pub trait Config where Self: Sized + ::serde::Deserialize + ::serde::Serialize {
 /// As well as the standard libraries `std::default::Default` trait for the defaulting fields.
 ///
 /// It follows Rust's syntax for defining structures with one addition, defaulting values.
-/// If the file fails to specific fields of a configuration, then it will print out
+/// If the file does not contain a field of the configuration, then it will print out
 /// an error describing the issue and then load in this defaulting value.
 ///
 /// In the case that the file is not found, or the configuration does not exist at all
@@ -36,6 +39,7 @@ pub trait Config where Self: Sized + ::serde::Deserialize + ::serde::Serialize {
 /// #[macro_use]
 /// extern crate serde_derive;
 /// extern crate serde_yaml;
+/// extern crate toml;
 ///
 ///config!(
 ///    pub struct DisplayConfig {
@@ -45,7 +49,7 @@ pub trait Config where Self: Sized + ::serde::Deserialize + ::serde::Serialize {
 ///        pub resolution: (u32, u32) = (1920, 1080),
 ///        
 ///        pub fullscreen: bool = false,
-///    }    
+///    }
 ///);
 ///# fn main(){}
 /// ```
@@ -270,11 +274,10 @@ macro_rules! config(
 
         impl $crate::project::Config for $identifier {
             fn load<P: AsRef<::std::path::Path>>(path: P) -> Self {
-                use ::std::error::Error;
                 match $identifier::load_no_fallback(path.as_ref()) {
                     Ok(v) => v,
                     Err(err) => {
-                        println!("{}: {}", stringify!($identifier), err.description());
+                        println!("1: {}: {}", stringify!($identifier), err);
                         $identifier::default()
                     },
                 }
@@ -293,6 +296,7 @@ macro_rules! config(
 
             fn load_no_fallback<P: AsRef<::std::path::Path>>(path: P) -> Result<Self, $crate::project::ProjectError> {
                 use ::std::io::Read;
+                let path = path.as_ref();
 
                 let content = {
                     let mut file = ::std::fs::File::open(path)?;
@@ -300,9 +304,32 @@ macro_rules! config(
                     file.read_to_string(&mut buffer)?;
                     buffer
                 };
-                //let content = $crate::project::directory::Directory::load(path)?;
-                let parsed = ::serde_yaml::from_str::<$identifier>(&content);
-                parsed.map_err(|e| $crate::project::ProjectError::Parser(e.to_string()) )
+
+                let mut result = None;
+                if let Some(extension) = path.extension() {
+                    if let Some(extension) = extension.to_str() {
+                        match extension {
+                            "yml" | "yaml" => {
+                                let parsed = ::serde_yaml::from_str::<$identifier>(&content);
+                                let parsed = parsed.map_err(|e| $crate::project::ProjectError::Parser(e.to_string()) );
+                                result = Some(parsed);
+                            }
+                            "toml" => {
+                                let parsed = ::toml::from_str::<$identifier>(&content);
+                                let parsed = parsed.map_err(|e| $crate::project::ProjectError::Parser(e.to_string()) );
+                                result = Some(parsed);
+                            },
+                            _ => { },
+                        }
+                    }
+                }
+
+                if let Some(parsed) = result {
+                    parsed
+                }
+                else {
+                    Err($crate::project::ProjectError::Extension(path.to_path_buf()))
+                }
             }
         }
     };

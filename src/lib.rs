@@ -72,6 +72,7 @@ pub extern crate amethyst_renderer as renderer;
 extern crate serde_derive;
 extern crate serde;
 extern crate serde_yaml;
+extern crate toml;
 
 extern crate cgmath;
 extern crate dds;

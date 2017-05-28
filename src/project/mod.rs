@@ -4,6 +4,7 @@
 
 use std::io;
 use std::fmt;
+use std::path::{PathBuf};
 use std::error::Error;
 
 /// Configuration macros.
@@ -20,21 +21,29 @@ pub enum ProjectError {
     File(io::Error),
     /// Errors related to serde's parsing of configuration files.
     Parser(String),
-}
-
-impl ProjectError {
-    /// Displays the type of error and relevant information.
-    pub fn to_string(&self) -> &str {
-        match self {
-            &ProjectError::File(ref err) => err.description(),
-            &ProjectError::Parser(ref msg) => msg,
-        }
-    }
+    /// Related to the path of the file.
+    Extension(PathBuf),
 }
 
 impl fmt::Display for ProjectError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.to_string()) 
+        match *self {
+            ProjectError::File(ref err) => write!(f, "{}", err),
+            ProjectError::Parser(ref msg) => write!(f, "{}", msg),
+            ProjectError::Extension(ref path) => {
+                let found = match path.extension() {
+                    Some(extension) => format!("{:?}", extension),
+                    None => format!("a directory."),
+                };
+
+                write!(
+                    f,
+                    "{}: Invalid path extension, expected \"yml\", \"yaml\", or \"toml\". Got {}. ", 
+                    path.display().to_string(),
+                    found,
+                )
+            },
+        }
     }
 }
 
@@ -45,9 +54,19 @@ impl From<io::Error> for ProjectError {
 }
 
 impl Error for ProjectError {
-    /// Returns a human friendly error message for the `ProjectError`.
     fn description(&self) -> &str {
-        self.to_string()
+        match *self {
+            ProjectError::File(_) => "Project file error",
+            ProjectError::Parser(_) => "Project parser error",
+            ProjectError::Extension(_) => "Invalid extension or directory for a file",
+        }
+    }
+
+    fn cause(&self) -> Option<&Error> {
+        match *self {
+            ProjectError::File(ref err) => Some(err),
+            _ => None,
+        }
     }
 }
 
