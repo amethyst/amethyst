@@ -144,10 +144,10 @@ macro_rules! config(
                             type Value = Field;
 
                             fn expecting(&self, formatter: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-                                try!(write!(formatter, "one of "));
+                                write!(formatter, "one of ")?;
 
                                 $(
-                                    try!(write!(formatter, "`{}`, ", stringify!($field)));
+                                    write!(formatter, "`{}`, ", stringify!($field))?;
                                 )*
 
                                 Ok(())
@@ -210,7 +210,7 @@ macro_rules! config(
                             let mut $field: Option<$ty> = None; // allows checking for duplicates
                         )*
 
-                        while let Some(key) = try!(visitor.visit_key::<Field>()) {
+                        while let Some(key) = visitor.visit_key::<Field>()? {
                             match key {
                                 $(
                                     Field::$field => {
@@ -270,6 +270,7 @@ macro_rules! config(
 
         impl $crate::project::Config for $identifier {
             fn load<P: AsRef<::std::path::Path>>(path: P) -> Self {
+                use ::std::error::Error;
                 match $identifier::load_no_fallback(path.as_ref()) {
                     Ok(v) => v,
                     Err(err) => {
@@ -283,15 +284,23 @@ macro_rules! config(
                 use ::std::io::Write;
 
                 let result = ::serde_yaml::to_string(self);
-                let serialized = try!(result.map_err(|e| $crate::project::ProjectError::Parser(e.to_string()) ));
-                let mut file = try!(::std::fs::File::create(path));
-                try!(file.write(&serialized.into_bytes()));
+                let serialized = result.map_err(|e| $crate::project::ProjectError::Parser(e.to_string()) )?;
+                let mut file = ::std::fs::File::create(path)?;
+                file.write(&serialized.into_bytes())?;
 
                 Ok(())
             }
 
             fn load_no_fallback<P: AsRef<::std::path::Path>>(path: P) -> Result<Self, $crate::project::ProjectError> {
-                let content = try!($crate::project::directory::Directory::load(path));
+                use ::std::io::Read;
+
+                let content = {
+                    let mut file = ::std::fs::File::open(path)?;
+                    let mut buffer = String::new();
+                    file.read_to_string(&mut buffer)?;
+                    buffer
+                };
+                //let content = $crate::project::directory::Directory::load(path)?;
                 let parsed = ::serde_yaml::from_str::<$identifier>(&content);
                 parsed.map_err(|e| $crate::project::ProjectError::Parser(e.to_string()) )
             }
