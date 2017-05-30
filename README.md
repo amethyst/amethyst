@@ -14,6 +14,8 @@
 [li]: COPYING
 [gc]: https://gitter.im/orgs/amethyst/rooms
 
+**Warning: The book and tools repository are severely out of date at the moment. Amethyst is undergoing a lot of changes at the moment so if you are looking to use the library it would be better to just read the examples.**
+
 This project is a *work in progress* and is very incomplete; pardon the dust!
 Read a summary of what happened this past week at [*This Week in Amethyst*][tw].
 
