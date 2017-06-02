@@ -4,12 +4,10 @@ extern crate amethyst;
 extern crate cgmath;
 extern crate genmesh;
 
-use amethyst::{Application, Event, State, Trans, VirtualKeyCode, WindowEvent};
-use amethyst::asset_manager::AssetManager;
+use amethyst::{Application, Engine, Event, State, Trans, VirtualKeyCode, WindowEvent};
 use amethyst::config::Element;
-use amethyst::ecs::World;
 use amethyst::gfx_device::DisplayConfig;
-use amethyst::renderer::{VertexPosNormal, Pipeline};
+use amethyst::renderer::VertexPosNormal;
 use cgmath::{Vector3, InnerSpace};
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
@@ -17,7 +15,7 @@ use genmesh::generators::SphereUV;
 struct Example;
 
 impl State for Example {
-    fn on_start(&mut self, world: &mut World, assets: &mut AssetManager, pipe: &mut Pipeline) {
+    fn on_start(&mut self, engine: &mut Engine) {
         use amethyst::ecs::Gate;
         use amethyst::ecs::components::{Mesh, Texture};
         use amethyst::ecs::resources::{Camera, Projection, ScreenDimensions};
@@ -28,7 +26,9 @@ impl State for Example {
                                vec![Clear::new([0.0, 0.0, 0.0, 1.0]),
                                     DrawShaded::new("main", "main")]);
 
-        pipe.layers.push(layer);
+        engine.pipe.layers.push(layer);
+
+        let world = engine.planner.mut_world();
 
         {
             let dim = world.read_resource::<ScreenDimensions>().pass();
@@ -44,6 +44,8 @@ impl State for Example {
         }
 
         let sphere_verts = gen_sphere(32, 32);
+        let assets = &mut engine.manager;
+
         assets.register_asset::<Mesh>();
         assets.register_asset::<Texture>();
         assets.load_asset_from_data::<Mesh, Vec<VertexPosNormal>>("sphere", sphere_verts);
@@ -68,9 +70,7 @@ impl State for Example {
 
     fn handle_events(&mut self,
                      events: &[WindowEvent],
-                     _: &mut World,
-                     _: &mut AssetManager,
-                     _: &mut Pipeline)
+                     _: &mut Engine)
                      -> Trans {
         for e in events {
             match **e {

@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use threadpool::ThreadPool;
-#[cfg(feature="profiler")]
+#[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
 use num_cpus;
 
@@ -19,14 +19,77 @@ use gfx_device;
 use gfx_device::{DisplayConfig, GfxDevice, gfx_types};
 use renderer::{AmbientLight, DirectionalLight, Pipeline, PointLight, target};
 
+/// The engine type, which holds
+/// several useful structs which can be accessed
+/// by engine and game.
+/// It allows for sharing a thread pool,
+/// and it holds the asset manager.
+pub struct Engine {
+    /// The graphics pipeline
+    pub pipe: Pipeline,
+    /// The ecs planner
+    ///
+    /// To get the world, use `world_mut`.
+    pub planner: Planner<()>,
+    /// The asset manager used to submit
+    /// assets to be loaded in parallel
+    pub manager: AssetManager,
+    /// A thread pool which is used
+    /// for asset loading and the ecs.
+    pub pool: Arc<ThreadPool>,
+
+    gfx_device: GfxDevice,
+}
+
+impl Engine {
+    fn new(pipe: Pipeline, planner: Planner<()>,
+           manager: AssetManager, pool: Arc<ThreadPool>,
+           device: GfxDevice) -> Self {
+        Engine {
+            pipe: pipe,
+            planner: planner,
+            manager: manager,
+            pool: pool,
+            gfx_device: device,
+        }
+    }
+
+    fn advance_frame(&mut self, delta: Duration, fixed: Duration, last_fixed: Instant) {
+        use ecs::resources::ScreenDimensions;
+
+        #[cfg(feature="profiler")]
+        profile_scope!("dispatch");
+        self.planner.dispatch(());
+        self.planner.wait();
+
+        #[cfg(feature="profiler")]
+        profile_scope!("render_world");
+        {
+            use ecs::Gate;
+
+            let world = &mut self.planner.mut_world();
+            if let Some((w, h)) = self.gfx_device.get_dimensions() {
+                let mut dim = world.write_resource::<ScreenDimensions>().pass();
+                dim.update(w, h);
+            }
+
+            {
+                let mut time = world.write_resource::<Time>().pass();
+                time.delta_time = delta;
+                time.fixed_step = fixed;
+                time.last_fixed_update = last_fixed;
+            }
+
+            let pipe = &mut self.pipe;
+            self.gfx_device.render_world(world, pipe);
+        }
+    }
+}
+
 /// User-friendly facade for building games. Manages main loop.
 pub struct Application {
-    // Graphics and asset management structs.
-    // TODO: Refactor so `pipe` and `gfx_device` are moved into the renderer.
-    assets: AssetManager,
-    gfx_device: GfxDevice,
-    pipe: Pipeline,
-    planner: Planner<()>,
+    /// Holds "global" resources per engine.
+    pub engine: Engine,
 
     // State management and game loop timing structs.
     delta_time: Duration,
@@ -39,14 +102,15 @@ pub struct Application {
 impl Application {
     /// Creates a new Application with the given initial game state, planner,
     /// and display configuration.
-    pub fn new<T>(initial_state: T, mut planner: Planner<()>, cfg: DisplayConfig) -> Application
+    pub fn new<T>(initial_state: T, mut planner: Planner<()>,
+                  cfg: DisplayConfig, pool: Arc<ThreadPool>) -> Application
         where T: State + 'static
     {
         use ecs::resources::{Camera, Projection, ScreenDimensions};
 
-        #[cfg(feature="profiler")]
+        #[cfg(feature = "profiler")]
         register_thread_with_profiler("Main".into());
-        #[cfg(feature="profiler")]
+        #[cfg(feature = "profiler")]
         profile_scope!("video_init");
         let (device, mut factory, main_target) = gfx_device::video_init(&cfg);
         let mut pipe = Pipeline::new();
@@ -100,12 +164,12 @@ impl Application {
             world.register::<Transform>();
         }
 
+        let engine = Engine::new(pipe, planner, assets, pool, device);
+
         Application {
-            assets: assets,
+            engine: engine,
+
             states: StateMachine::new(initial_state),
-            gfx_device: device,
-            pipe: pipe,
-            planner: planner,
             timer: Stopwatch::new(),
             delta_time: Duration::new(0, 0),
             fixed_step: Duration::new(0, 16666666),
@@ -146,63 +210,28 @@ impl Application {
 
     /// Sets up the application.
     fn initialize(&mut self) {
-        let world = &mut self.planner.mut_world();
-        let assets = &mut self.assets;
-        let pipe = &mut self.pipe;
-        self.states.start(world, assets, pipe);
+        self.states.start(&mut self.engine);
     }
 
     /// Advances the game world by one tick.
     fn advance_frame(&mut self) {
-        use ecs::resources::ScreenDimensions;
-        {
-            #[cfg(feature="profiler")]
-            profile_scope!("handle_events");
-            let events = self.gfx_device.poll_events();
-            let world = &mut self.planner.mut_world();
-            let assets = &mut self.assets;
-            let pipe = &mut self.pipe;
+        #[cfg(feature = "profiler")]
+        profile_scope!("handle_events");
+        let events = self.engine.gfx_device.poll_events();
+        self.states.handle_events(events.as_ref(), &mut self.engine);
 
-            self.states.handle_events(events.as_ref(), world, assets, pipe);
-
-            #[cfg(feature="profiler")]
-            profile_scope!("fixed_update");
-            if self.last_fixed_update.elapsed() >= self.fixed_step {
-                self.states.fixed_update(world, assets, pipe);
-                self.last_fixed_update += self.fixed_step;
-            }
-
-            #[cfg(feature="profiler")]
-            profile_scope!("update");
-            self.states.update(world, assets, pipe);
+        #[cfg(feature = "profiler")]
+        profile_scope!("fixed_update");
+        if self.last_fixed_update.elapsed() >= self.fixed_step {
+            self.states.fixed_update(&mut self.engine);
+            self.last_fixed_update += self.fixed_step;
         }
 
-        #[cfg(feature="profiler")]
-        profile_scope!("dispatch");
-        self.planner.dispatch(());
-        self.planner.wait();
+        #[cfg(feature = "profiler")]
+        profile_scope!("update");
+        self.states.update(&mut self.engine);
 
-        #[cfg(feature="profiler")]
-        profile_scope!("render_world");
-        {
-            use ecs::Gate;
-
-            let world = &mut self.planner.mut_world();
-            if let Some((w, h)) = self.gfx_device.get_dimensions() {
-                let mut dim = world.write_resource::<ScreenDimensions>().pass();
-                dim.update(w, h);
-            }
-
-            {
-                let mut time = world.write_resource::<Time>().pass();
-                time.delta_time = self.delta_time;
-                time.fixed_step = self.fixed_step;
-                time.last_fixed_update = self.last_fixed_update;
-            }
-
-            let pipe = &mut self.pipe;
-            self.gfx_device.render_world(world, pipe);
-        }
+        self.engine.advance_frame(self.delta_time, self.fixed_step, self.last_fixed_update);
     }
 
     /// Cleans up after the quit signal is received.
@@ -227,6 +256,7 @@ pub struct ApplicationBuilder<T>
     config: DisplayConfig,
     initial_state: T,
     planner: Planner<()>,
+    pool: Arc<ThreadPool>,
 }
 
 impl<T> ApplicationBuilder<T>
@@ -240,7 +270,8 @@ impl<T> ApplicationBuilder<T>
         ApplicationBuilder {
             config: cfg,
             initial_state: initial_state,
-            planner: Planner::from_pool(World::new(), pool),
+            planner: Planner::from_pool(World::new(), pool.clone()),
+            pool: pool,
         }
     }
 
@@ -266,6 +297,6 @@ impl<T> ApplicationBuilder<T>
 
     /// Builds the Application and returns the result.
     pub fn done(self) -> Application {
-        Application::new(self.initial_state, self.planner, self.config)
+        Application::new(self.initial_state, self.planner, self.config, self.pool)
     }
 }

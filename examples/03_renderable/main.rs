@@ -4,10 +4,10 @@
 extern crate amethyst;
 extern crate cgmath;
 
-use amethyst::{Application, ElementState, Event, State, Trans, VirtualKeyCode, WindowEvent};
-use amethyst::asset_manager::{AssetManager, DirectoryStore};
+use amethyst::{Application, ElementState, Engine, Event, State, Trans, VirtualKeyCode, WindowEvent};
+use amethyst::asset_manager::DirectoryStore;
 use amethyst::config::Element;
-use amethyst::ecs::{Join, System, RunArg, World};
+use amethyst::ecs::{Join, System, RunArg};
 use amethyst::ecs::components::{LocalTransform, Mesh, Texture, Transform};
 use amethyst::ecs::resources::{Camera, Projection, ScreenDimensions, Time};
 use amethyst::gfx_device::DisplayConfig;
@@ -75,8 +75,10 @@ fn set_pipeline_state(pipe: &mut Pipeline, forward: bool) {
 struct Example;
 
 impl State for Example {
-    fn on_start(&mut self, world: &mut World, assets: &mut AssetManager, pipe: &mut Pipeline) {
+    fn on_start(&mut self, engine: &mut Engine) {
         use amethyst::ecs::Gate;
+
+        let world = engine.planner.mut_world();
 
         {
             let dim = world.read_resource::<ScreenDimensions>().pass();
@@ -92,6 +94,8 @@ impl State for Example {
             camera.target = [0.0, 0.0, 5.0];
             camera.up = [0.0, 0.0, 1.0];
         }
+
+        let assets = &mut engine.manager;
 
         // Set up an assets path by directly registering an assets store.
         let assets_path = format!("{}/examples/03_renderable/resources/meshes",
@@ -188,7 +192,7 @@ impl State for Example {
         }
 
         // Set rendering pipeline to forward by default, and add utility resources
-        set_pipeline_state(pipe, true);
+        set_pipeline_state(&mut engine.pipe, true);
         world.add_resource::<DemoState>(DemoState {
             light_angle: 0.0,
             light_color: [1.0; 4],
@@ -202,13 +206,13 @@ impl State for Example {
 
     fn handle_events(&mut self,
                      events: &[WindowEvent],
-                     w: &mut World,
-                     _: &mut AssetManager,
-                     pipe: &mut Pipeline)
+                     engine: &mut Engine)
                      -> Trans {
         use amethyst::ecs::Gate;
 
         // Exit if user hits Escape or closes the window
+        let w = engine.planner.mut_world();
+
         let mut state = w.write_resource::<DemoState>().pass();
 
         for e in events {
@@ -217,10 +221,10 @@ impl State for Example {
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::Space)) => {
                     if state.pipeline_forward {
                         state.pipeline_forward = false;
-                        set_pipeline_state(pipe, false);
+                        set_pipeline_state(&mut engine.pipe, false);
                     } else {
                         state.pipeline_forward = true;
-                        set_pipeline_state(pipe, true);
+                        set_pipeline_state(&mut engine.pipe, true);
                     }
                 }
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::R)) => {

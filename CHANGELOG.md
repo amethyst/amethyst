@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [sv]: http://semver.org/
 
 ## [Unreleased]
+### Added
+* Add the `Engine` struct which holds commonly used structs including a thread pool.
+
 ### Changed
 * Changes in `CONTRIBUTING.md`.
 * Update to `specs` 0.8.1.
