@@ -1,6 +1,6 @@
 [package]
 name = "amethyst"
-version = "0.4.2"
+version = "0.4.3"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
 description = "Data-oriented game engine written in Rust"
 keywords = ["game", "engine", "sdk", "amethyst"]
@@ -14,7 +14,7 @@ readme = "README.md"
 license = "MIT/Apache-2.0"
 
 [badges]
-appveyor = { repository = "amethyst/amethyst" }
+appveyor = { repository = "amethyst/amethyst", branch = "develop" }
 travis-ci = { repository = "amethyst/amethyst" }
 
 [features]
@@ -25,7 +25,7 @@ profiler = ["thread_profiler/thread_profiler"]
 
 [dependencies]
 amethyst_config = { path = "src/config/", version = "0.2.2" }
-amethyst_renderer = { path = "src/renderer", version = "0.4.2" }
+amethyst_renderer = { path = "src/renderer", version = "0.4.3" }
 cgmath = "0.12"
 dds-rs = "0.4"
 fnv = "1.0"

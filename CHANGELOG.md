@@ -8,9 +8,41 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [sv]: http://semver.org/
 
 ## [Unreleased]
+
+## [0.4.3] - 2017-06-03
+### Added
+* Add mouse button events to `InputHandler` (pull request [#181]).
+* Built-in application profiler using [`thread_profiler`][tp] (pull request
+  [#212]).
+* Screenshots for all in-repo examples (pull request [#213]).
+* Pre-commit hook to automate local testing for commits (pull request [#228]).
+
 ### Changed
-* Changes in `CONTRIBUTING.md`.
-* Update to `specs` 0.8.1.
+* Changes to `CONTRIBUTING.md` (pull requests [#206], [#226]).
+* Update to `specs` 0.8.1 (pull request [#219]).
+
+### Fixed
+* Fix deferred rendering in renderable example (pull request [#211]).
+* Fix AppVeyor curl command (pull request [#217]).
+* Ignore IntelliJ IDEA project files (pull request [#218]).
+* Fix `InputHandler` key press bug (pull request [#227]).
+* Fix CRLF normalization on extensionless files (pull request [#207]).
+* Update code to latest template (pull request [#215]).
+
+[#181]: https://github.com/amethyst/amethyst/pull/181
+[#206]: https://github.com/amethyst/amethyst/pull/206
+[#207]: https://github.com/amethyst/amethyst/pull/207
+[#211]: https://github.com/amethyst/amethyst/pull/211
+[#212]: https://github.com/amethyst/amethyst/pull/212
+[#213]: https://github.com/amethyst/amethyst/pull/213
+[#215]: https://github.com/amethyst/amethyst/pull/215
+[#217]: https://github.com/amethyst/amethyst/pull/217
+[#218]: https://github.com/amethyst/amethyst/pull/218
+[#219]: https://github.com/amethyst/amethyst/pull/219
+[#226]: https://github.com/amethyst/amethyst/pull/226
+[#228]: https://github.com/amethyst/amethyst/pull/228
+[#227]: https://github.com/amethyst/amethyst/pull/227
+[tp]: https://github.com/glennw/thread_profiler
 
 ## [0.4.2] - 2017-03-07
 ### Added
@@ -130,7 +162,6 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#37]: https://github.com/amethyst/amethyst/issues/37
 
 ## 0.2.1 (2016-01-27)
-
 ### Changed
 * Add keywords to sub-crates.
 * Remove reference to missing README file from `amethyst_engine`
@@ -203,6 +234,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Initial release
 
 [Unreleased]: https://github.com/amethyst/amethyst/compare/v0.4.2...HEAD
+[0.4.3]: https://github.com/amethyst/amethyst/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/amethyst/amethyst/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/amethyst/amethyst/compare/v0.4...v0.4.1
 [0.4.0]: https://github.com/amethyst/amethyst/compare/v0.3.1...v0.4
