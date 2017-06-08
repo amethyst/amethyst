@@ -5,7 +5,7 @@ use gfx::traits::FactoryExt;
 
 use ConstantColorTexture;
 use pass;
-use target::{ColorFormat, GeometryBuffer};
+pub use target::{ColorFormat, GeometryBuffer};
 
 gfx_vertex_struct!(Vertex {
     pos: [i32; 2] = "a_Pos",
