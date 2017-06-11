@@ -6,7 +6,7 @@ extern crate genmesh;
 
 use amethyst::{Application, Event, State, Trans, VirtualKeyCode, WindowEvent};
 use amethyst::asset_manager::AssetManager;
-use amethyst::config::Element;
+use amethyst::project::Config;
 use amethyst::ecs::World;
 use amethyst::gfx_device::DisplayConfig;
 use amethyst::renderer::{VertexPosNormal, Pipeline};
@@ -86,7 +86,7 @@ impl State for Example {
 fn main() {
     let path = format!("{}/examples/02_sphere/resources/config.yml",
                        env!("CARGO_MANIFEST_DIR"));
-    let cfg = DisplayConfig::from_file(path).unwrap();
+    let cfg = DisplayConfig::load(path);
     let mut game = Application::build(Example, cfg).done();
     game.run();
 }

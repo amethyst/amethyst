@@ -16,7 +16,7 @@
 //!
 //! use amethyst::{Application, Event, State, Trans, VirtualKeyCode, WindowEvent};
 //! use amethyst::asset_manager::AssetManager;
-//! use amethyst::config::Element;
+//! use amethyst::project::Config;
 //! use amethyst::ecs::World;
 //! use amethyst::gfx_device::DisplayConfig;
 //! use amethyst::renderer::Pipeline;
@@ -52,7 +52,7 @@
 //! fn main() {
 //!     let path = format!("{}/examples/01_window/resources/config.yml",
 //!                        env!("CARGO_MANIFEST_DIR"));
-//!     let cfg = DisplayConfig::from_file(path).expect("Could not find config!");
+//!     let cfg = DisplayConfig::load(path);
 //!     let mut game = Application::build(GameState, cfg).done();
 //!     game.run();
 //! }
@@ -66,9 +66,13 @@
 #[macro_use]
 #[cfg(feature="profiler")]
 pub extern crate thread_profiler;
-#[macro_use]
-pub extern crate amethyst_config as config;
 pub extern crate amethyst_renderer as renderer;
+
+#[macro_use]
+extern crate serde_derive;
+extern crate serde;
+extern crate serde_yaml;
+extern crate toml;
 
 extern crate cgmath;
 extern crate dds;
@@ -84,6 +88,8 @@ extern crate threadpool;
 extern crate ticketed_lock;
 extern crate wavefront_obj;
 
+#[macro_use]
+pub mod project;
 pub mod asset_manager;
 pub mod ecs;
 pub mod gfx_device;
