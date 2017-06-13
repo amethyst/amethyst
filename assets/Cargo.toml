@@ -1,0 +1,14 @@
+[package]
+name = "amethyst_assets"
+version = "0.1.0"
+authors = ["torkleyy <torkleyy@gmail.com>"]
+readme = "README.md"
+description = """
+Asynchronous asset management for games.
+"""
+
+[dependencies]
+fnv = "1"
+futures = "0.1.14"
+parking_lot = "0.4.4"
+rayon = { version = "0.7", features = ["unstable"] }
