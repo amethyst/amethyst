@@ -39,7 +39,7 @@ impl Format for DummyFormat {
         "dum"
     }
 
-    fn import(&self, bytes: Vec<u8>) -> Result<Self::Data, Self::Error> {
+    fn parse(&self, bytes: Vec<u8>) -> Result<Self::Data, Self::Error> {
         from_utf8(bytes.as_slice()).map(|s| s.to_owned())
     }
 }

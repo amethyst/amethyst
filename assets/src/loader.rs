@@ -144,7 +144,7 @@ fn load_asset_inner<A, F, S>(context: &A::Context,
     let bytes = storage
         .load(A::category(), &spec.name, spec.ext)
         .map_err(LoadError::StorageError)?;
-    let data = format.import(bytes).map_err(LoadError::FormatError)?;
+    let data = format.parse(bytes).map_err(LoadError::FormatError)?;
     let a = Asset::from_data(data, context)
         .map_err(LoadError::AssetError)?;
 

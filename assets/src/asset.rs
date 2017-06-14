@@ -159,6 +159,6 @@ pub trait Format
     /// * `"wav"`
     fn extension() -> &'static str;
 
-    /// Imports the given bytes and produces asset data.
-    fn import(&self, bytes: Vec<u8>) -> Result<Self::Data, Self::Error>;
+    /// Reads the given bytes and produces asset data.
+    fn parse(&self, bytes: Vec<u8>) -> Result<Self::Data, Self::Error>;
 }
