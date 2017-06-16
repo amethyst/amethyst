@@ -2,21 +2,34 @@
 
 use fnv::FnvHashMap as HashMap;
 
-use std::collections::hash_map::{Entry, Keys};
-use std::iter::Iterator;
+use std::iter::{Iterator, Chain, Map};
+use std::slice::Iter;
 
 use engine::{ElementState, WindowEvent, Event, VirtualKeyCode, MouseButton};
 
-/// Indicates whether a given `VirtualKeyCode` has been queried or not.
-#[derive(Eq, PartialEq)]
-enum KeyQueryState {
-    NotQueried,
-    Queried,
+/// A Button is any kind of digital input that the engine supports.
+#[derive(Eq, PartialEq, Debug, Copy, Clone)]
+pub enum Button {
+    Key(VirtualKeyCode),
+    Mouse(MouseButton),
+    //TODO: Add controller buttons here when the engine has support.
+}
+
+impl From<VirtualKeyCode> for Button {
+    fn from(keycode: VirtualKeyCode) -> Self {
+        Button::Key(keycode)
+    }
+}
+
+impl From<MouseButton> for Button {
+    fn from(mouse_button: MouseButton) -> Self {
+        Button::Mouse(mouse_button)
+    }
 }
 
 /// An iterator over the currently pressed down keys.
 pub struct PressedKeys<'a> {
-    iterator: Keys<'a, VirtualKeyCode, KeyQueryState>,
+    iterator: Iter<'a, VirtualKeyCode>,
 }
 
 impl<'a> Iterator for PressedKeys<'a> {
@@ -28,7 +41,7 @@ impl<'a> Iterator for PressedKeys<'a> {
 
 /// An iterator over the currently pressed down mouse buttons.
 pub struct PressedMouseButtons<'a> {
-    iterator: Keys<'a, MouseButton, KeyQueryState>,
+    iterator: Iter<'a, MouseButton>,
 }
 
 impl<'a> Iterator for PressedMouseButtons<'a> {
@@ -36,6 +49,23 @@ impl<'a> Iterator for PressedMouseButtons<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         self.iterator.next()
     }
+}
+
+pub struct PressedButtons<'a> {
+    iterator: Chain<Map<PressedMouseButtons<'a>, fn(&MouseButton) -> Button>,
+                    Map<PressedKeys<'a>, fn(&VirtualKeyCode) -> Button>>,
+}
+
+impl<'a> Iterator for PressedButtons<'a> {
+    type Item = Button;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iterator.next()
+    }
+}
+
+pub struct Axis {
+    pub pos: Button,
+    pub neg: Button,
 }
 
 /// This struct holds state information about input devices.
@@ -62,45 +92,73 @@ impl<'a> Iterator for PressedMouseButtons<'a> {
 /// ```
 #[derive(Default)]
 pub struct InputHandler {
-    pressed_keys: HashMap<VirtualKeyCode, KeyQueryState>,
-    pressed_mouse_buttons: HashMap<MouseButton, KeyQueryState>,
+    pressed_keys: Vec<VirtualKeyCode>,
+    previous_pressed_keys: Vec<VirtualKeyCode>,
+    pressed_mouse_buttons: Vec<MouseButton>,
+    previous_pressed_mouse_buttons: Vec<MouseButton>,
     // defined to match glium
     mouse_position: Option<(i32, i32)>,
     previous_mouse_position: Option<(i32, i32)>,
+    axes: HashMap<i32, Axis>,
+    actions: HashMap<i32, Button>,
+    text_this_frame: String,
 }
 
 impl InputHandler {
     /// Creates a new input handler.
     pub fn new() -> InputHandler {
         InputHandler {
-            pressed_keys: HashMap::default(),
-            pressed_mouse_buttons: HashMap::default(),
+            pressed_keys: Vec::new(),
+            previous_pressed_keys: Vec::new(),
+            pressed_mouse_buttons: Vec::new(),
+            previous_pressed_mouse_buttons: Vec::new(),
             mouse_position: None,
             previous_mouse_position: None,
+            axes: HashMap::default(),
+            actions: HashMap::default(),
+            text_this_frame: String::new(),
         }
     }
 
     /// Updates the input handler with new engine events.
     pub fn update(&mut self, events: &[WindowEvent]) {
+        // Before processing these events store the input states of the previous frame.
+        self.previous_mouse_position = self.mouse_position;
+        self.previous_pressed_keys.clear();
+        self.previous_pressed_keys
+            .extend_from_slice(&self.pressed_keys);
+        self.previous_pressed_mouse_buttons.clear();
+        self.previous_pressed_mouse_buttons
+            .extend_from_slice(&self.pressed_mouse_buttons);
+        self.text_this_frame.clear();
         for event in events {
             match event.payload {
+                Event::ReceivedCharacter(c) => {
+                    self.text_this_frame.push(c);
+                }
                 Event::KeyboardInput(ElementState::Pressed, _, Some(key_code)) => {
-                    // The check for Entry::Vacant allows more accurate `key_once` calls,
-                    // I.e `key_once(key)` is queried after second `Pressed` event.
-                    if let Entry::Vacant(entry) = self.pressed_keys.entry(key_code) {
-                        entry.insert(KeyQueryState::NotQueried);
+                    if self.pressed_keys.iter().all(|&k| k != key_code) {
+                        self.pressed_keys.push(key_code);
                     }
                 }
                 Event::KeyboardInput(ElementState::Released, _, Some(key_code)) => {
-                    self.pressed_keys.remove(&key_code);
+                    let index = self.pressed_keys.iter().position(|&k| k == key_code);
+                    if let Some(i) = index {
+                        self.pressed_keys.swap_remove(i);
+                    }
                 }
                 Event::MouseInput(ElementState::Pressed, button) => {
-                    if let Entry::Vacant(entry) = self.pressed_mouse_buttons.entry(button) {
-                        entry.insert(KeyQueryState::NotQueried);
+                    if self.pressed_mouse_buttons.iter().all(|&b| b != button) {
+                        self.pressed_mouse_buttons.push(button);
                     }
                 }
                 Event::MouseInput(ElementState::Released, button) => {
-                    self.pressed_mouse_buttons.remove(&button);
+                    let index = self.pressed_mouse_buttons
+                        .iter()
+                        .position(|&b| b == button);
+                    if let Some(i) = index {
+                        self.pressed_mouse_buttons.swap_remove(i);
+                    }
                 }
                 Event::MouseMoved(x, y) => {
                     self.mouse_position = Some((x, y));
@@ -116,86 +174,65 @@ impl InputHandler {
         }
     }
 
+    /// Returns a string representation of all text entered this frame.
+    ///
+    /// Intended for use with text entry fields, insert this string at the cursor position
+    /// every frame.
+    pub fn text_entered(&self) -> &str {
+        self.text_this_frame.as_str()
+    }
+
     /// Returns an iterator for all the pressed down keys.
     pub fn pressed_keys(&self) -> PressedKeys {
-        PressedKeys { iterator: self.pressed_keys.keys() }
+        PressedKeys { iterator: self.pressed_keys.iter() }
     }
 
     /// Checks if the given key is being pressed.
-    pub fn key_down(&self, key: VirtualKeyCode) -> bool {
-        self.pressed_keys.contains_key(&key)
+    pub fn key_pressed(&self, key: VirtualKeyCode) -> bool {
+        self.pressed_keys.iter().any(|&k| k == key)
     }
 
     /// Checks if all the given keys are being pressed.
-    pub fn keys_down(&self, keys: &[VirtualKeyCode]) -> bool {
+    pub fn keys_pressed(&self, keys: &[VirtualKeyCode]) -> bool {
         keys.iter().all(|key| self.key_down(*key))
     }
 
-    /// Checks if the given key is being pressed and held down.
-    ///
-    /// If `key` hasn't been released since the last `key_once()` query, this
-    /// function will return false.
-    pub fn key_once(&mut self, key: VirtualKeyCode) -> bool {
-        if !self.pressed_keys.contains_key(&key) {
-            return false;
-        }
-
-        if let Some(value) = self.pressed_keys.get_mut(&key) {
-            if *value == KeyQueryState::NotQueried {
-                *value = KeyQueryState::Queried;
-                return true;
-            }
-        }
-
-        false
+    /// Checks if the given key was pressed on this frame.
+    pub fn key_down(&self, key: VirtualKeyCode) -> bool {
+        self.key_pressed(key) && self.previous_pressed_keys.iter().all(|&k| k != key)
     }
 
-    /// Checks if the all the given keys are being pressed and held down.
-    ///
-    /// If the `keys` haven't been released since the last `key_once()` query,
-    /// this function will return false.
-    pub fn keys_once(&mut self, keys: &[VirtualKeyCode]) -> bool {
-        keys.iter().any(|key| self.key_once(*key)) && self.keys_down(keys)
+    /// Checks if the all the given keys are down and at least one was pressed on this frame.
+    pub fn keys_down(&self, keys: &[VirtualKeyCode]) -> bool {
+        keys.iter().any(|key| self.key_down(*key)) && self.keys_down(keys)
     }
 
     /// Returns an iterator for all the pressed down mouse buttons.
     pub fn pressed_mouse_buttons(&self) -> PressedMouseButtons {
-        PressedMouseButtons { iterator: self.pressed_mouse_buttons.keys() }
+        PressedMouseButtons { iterator: self.pressed_mouse_buttons.iter() }
     }
 
     /// Checks if the given mouse button is being pressed.
-    pub fn mouse_button_down(&self, button: MouseButton) -> bool {
-        self.pressed_mouse_buttons.contains_key(&button)
+    pub fn mouse_button_pressed(&self, button: MouseButton) -> bool {
+        self.pressed_mouse_buttons.iter().any(|&b| b == button)
     }
 
     /// Checks if all the given mouse buttons are being pressed.
-    pub fn mouse_buttons_down(&self, buttons: &[MouseButton]) -> bool {
+    pub fn mouse_buttons_pressed(&self, buttons: &[MouseButton]) -> bool {
         buttons.iter().all(|btn| self.mouse_button_down(*btn))
     }
 
-    /// Checks if the given mouse button is being pressed and held down.
-    ///
-    /// If `button` hasn't been released since the last `mouse_button_once()` query, this
-    /// function will return false.
-    pub fn mouse_button_once(&mut self, button: MouseButton) -> bool {
-        if !self.pressed_mouse_buttons.contains_key(&button) {
-            return false;
-        }
-        if let Some(value) = self.pressed_mouse_buttons.get_mut(&button) {
-            if *value == KeyQueryState::NotQueried {
-                *value = KeyQueryState::Queried;
-                return true;
-            }
-        }
-        false
+    /// Checks if the given mouse button was pressed this frame.
+    pub fn mouse_button_down(&self, button: MouseButton) -> bool {
+        self.mouse_button_pressed(button) &&
+        self.previous_pressed_mouse_buttons
+            .iter()
+            .all(|&b| b != button)
     }
 
-    /// Checks if the all the given mouse buttons are being pressed and held down.
-    ///
-    /// If the `buttons` haven't been released since the last `mouse_button_once()` query,
-    /// this function will return false.
-    pub fn mouse_buttons_once(&mut self, buttons: &[MouseButton]) -> bool {
-        buttons.iter().any(|btn| self.mouse_button_once(*btn)) && self.mouse_buttons_down(buttons)
+    /// Checks if the all the given mouse buttons are down and at least one was pressed this frame.
+    pub fn mouse_buttons_down(&self, buttons: &[MouseButton]) -> bool {
+        buttons.iter().any(|&btn| self.mouse_button_down(btn)) && self.mouse_buttons_down(buttons)
     }
 
     /// Gets the current mouse position.
@@ -206,16 +243,174 @@ impl InputHandler {
         self.mouse_position
     }
 
-    /// Gets the change in position since this function was last called.
-    ///
-    /// This function will return (0, 0) when it cannot calculate a change, either for the reasons
-    /// given above or on the first call.
-    pub fn mouse_position_change(&mut self) -> (i32, i32) {
-        let out = match (self.mouse_position, self.previous_mouse_position) {
+    /// Gets the change in position since the last frame.
+    pub fn mouse_position_change(&self) -> (i32, i32) {
+        match (self.mouse_position, self.previous_mouse_position) {
             (Some(current), Some(previous)) => (current.0 - previous.0, current.1 - previous.1),
             _ => (0, 0),
-        };
-        self.previous_mouse_position = self.mouse_position;
-        out
+        }
     }
+
+    /// Returns an iterator over the buttons that are currently pressed
+    pub fn pressed_buttons(&self) -> PressedButtons {
+        let mouse_button_convert = mouse_button_to_button as fn(&MouseButton) -> Button;
+        let key_convert = key_to_button as fn(&VirtualKeyCode) -> Button;
+        let mouse_buttons = self.pressed_mouse_buttons().map(mouse_button_convert);
+        let keys = self.pressed_keys().map(key_convert);
+        PressedButtons { iterator: mouse_buttons.chain(keys) }
+    }
+
+    /// Checks if the given button is currently pressed.
+    pub fn button_pressed(&self, button: Button) -> bool {
+        match button {
+            Button::Key(k) => self.key_down(k),
+            Button::Mouse(b) => self.mouse_button_down(b),
+        }
+    }
+
+    /// Checks if all the given buttons are pressed.
+    pub fn buttons_pressed(&self, buttons: &[Button]) -> bool {
+        buttons.iter().all(|b| self.button_down(*b))
+    }
+
+    /// Checks if the given mouse button was pressed on this frame.
+    pub fn button_down(&self, button: Button) -> bool {
+        match button {
+            Button::Key(k) => self.key_down(k),
+            Button::Mouse(b) => self.mouse_button_down(b),
+        }
+    }
+
+    /// Checks if the all the given buttons are being pressed and at least one was pressed this frame.
+    pub fn buttons_down(&self, buttons: &[Button]) -> bool {
+        buttons.iter().any(|&b| self.button_down(b)) &&
+        buttons.iter().all(|&b| self.button_pressed(b))
+    }
+
+    /// Returns the value of an axis by the i32 id, if the id doesn't exist this returns None.
+    pub fn axis_value(&self, id: i32) -> Option<f32> {
+        if let Some(a) = self.axes.get(&id) {
+            let pos = self.button_down(a.pos);
+            let neg = self.button_down(a.neg);
+            if pos == neg {
+                return Some(0.0);
+            } else if pos {
+                return Some(1.0);
+            } else {
+                return Some(-1.0);
+            }
+        } else {
+            return None;
+        }
+    }
+
+    // Pressed actions has been omitted as the function is a little difficult to write and I
+    // can't think of a use case for it.
+
+    /// Checks if the given button is currently pressed.
+    pub fn action_pressed(&self, action: i32) -> Option<bool> {
+        self.actions
+            .get(&action)
+            .and_then(|&b| Some(self.button_pressed(b)))
+    }
+
+    /// Checks if all the given actions are pressed.
+    ///
+    /// If any action in this list is invalid this will return the id of it in Err.
+    pub fn actions_pressed(&self, actions: &[i32]) -> Result<bool, Vec<i32>> {
+        let mut all_buttons_pressed = true;
+        //Prefer to skip initializing a new vec if we can.
+        let mut bad_values = Vec::new();
+        for action in actions {
+            if let Some(button) = self.actions.get(action) {
+                if all_buttons_pressed && !self.button_pressed(*button) {
+                    all_buttons_pressed = false;
+                }
+            } else {
+                bad_values.push(*action);
+            }
+        }
+        if bad_values.len() > 0 {
+            Err(bad_values)
+        } else {
+            Ok(all_buttons_pressed)
+        }
+    }
+
+    /// Checks if the given action was pressed on this frame.
+    pub fn action_down(&self, action: i32) -> Option<bool> {
+        self.actions
+            .get(&action)
+            .and_then(|&b| Some(self.button_down(b)))
+    }
+
+    /// Checks if the all the given actions are being pressed and at least one was pressed this frame.
+    ///
+    /// If any action in this list is invalid this will return the id of it in Err.
+    pub fn actions_down(&self, actions: &[i32]) -> Result<bool, Vec<i32>> {
+        let mut all_buttons_pressed = true;
+        let mut any_button_pressed_this_frame = false;
+        let mut bad_values = Vec::new();
+        for action in actions {
+            if let Some(button) = self.actions.get(action) {
+                if !any_button_pressed_this_frame && self.button_down(*button) {
+                    any_button_pressed_this_frame = true;
+                }
+                if all_buttons_pressed && !self.button_pressed(*button) {
+                    all_buttons_pressed = false;
+                }
+            } else {
+                bad_values.push(*action);
+            }
+        }
+        if bad_values.len() > 0 {
+            Err(bad_values)
+        } else {
+            Ok(all_buttons_pressed && any_button_pressed_this_frame)
+        }
+    }
+
+    /// Assign an axis to an ID value
+    ///
+    /// This will insert a new axis if no entry for this id exists.
+    /// If one does exist this will replace the axis at that id and return it.
+    pub fn insert_axis(&mut self, id: i32, axis: Axis) -> Option<Axis> {
+        self.axes.insert(id, axis)
+    }
+
+    /// Removes an axis, this will return the removed axis if successful.
+    pub fn remove_axis(&mut self, id: i32) -> Option<Axis> {
+        self.axes.remove(&id)
+    }
+
+    /// Returns a reference to an axis.
+    pub fn get_axis(&mut self, id: i32) -> Option<&Axis> {
+        self.axes.get(&id)
+    }
+
+    /// Assign an action to an ID value
+    ///
+    /// This will insert a new action if no entry for this id exists.
+    /// If one does exist this will replace the action at that id and return it.
+    pub fn insert_action(&mut self, id: i32, binding: Button) -> Option<Button> {
+        self.actions.insert(id, binding)
+    }
+
+    /// Removes an action, this will return the removed action if successful.
+    pub fn remove_action(&mut self, id: i32) -> Option<Button> {
+        self.actions.remove(&id)
+    }
+
+    /// Returns a reference to an action's button.
+    pub fn get_action(&mut self, id: i32) -> Option<&Button> {
+        self.actions.get(&id)
+    }
+}
+
+fn mouse_button_to_button(mb: &MouseButton) -> Button {
+    Button::Mouse(*mb)
+}
+
+fn key_to_button(k: &VirtualKeyCode) -> Button {
+    Button::Key(*k)
 }
