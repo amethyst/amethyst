@@ -286,9 +286,14 @@ impl InputHandler {
         self.current_frame.key_pressed(key) && !self.previous_frame.key_pressed(key)
     }
 
+    /// Checks if a given key was released on this frame.
+    pub fn key_released(&self, key: VirtualKeyCode) -> bool {
+        !self.current_frame.key_pressed(key) && self.previous_frame.key_pressed(key)
+    }
+
     /// Checks if the all the given keys are down and at least one was pressed on this frame.
     pub fn keys_down(&self, keys: &[VirtualKeyCode]) -> bool {
-        keys.iter().any(|key| self.key_down(*key)) && self.keys_pressed(keys)
+        keys.iter().any(|&key| self.key_down(key)) && self.keys_pressed(keys)
     }
 
     /// Returns an iterator for all the pressed down mouse buttons.
@@ -310,6 +315,12 @@ impl InputHandler {
     pub fn mouse_button_down(&self, button: MouseButton) -> bool {
         self.current_frame.mouse_button_pressed(button) &&
         !self.previous_frame.mouse_button_pressed(button)
+    }
+
+    /// Checks if the given mouse button was released this frame.
+    pub fn mouse_button_released(&self, button: MouseButton) -> bool {
+        !self.current_frame.mouse_button_pressed(button) &&
+        self.previous_frame.mouse_button_pressed(button)
     }
 
     /// Checks if the all the given mouse buttons are down and at least one was pressed this frame.
@@ -354,6 +365,14 @@ impl InputHandler {
         match button {
             Button::Key(k) => self.key_down(k),
             Button::Mouse(b) => self.mouse_button_down(b),
+        }
+    }
+
+    /// Checks if the given button was released on this frame.
+    pub fn button_released(&self, button: Button) -> bool {
+        match button {
+            Button::Key(k) => self.key_released(k),
+            Button::Mouse(b) => self.mouse_button_released(b),
         }
     }
 
@@ -416,6 +435,13 @@ impl InputHandler {
     /// Checks if the given action was pressed on this frame.
     pub fn action_down(&self, action: i32) -> Option<bool> {
         self.actions.get(&action).map(|&b| self.button_down(b))
+    }
+
+    /// Checks if the given action was released on this frame.
+    pub fn action_released(&self, action: i32) -> Option<bool> {
+        self.actions
+            .get(&action)
+            .map(|&b| self.button_released(b))
     }
 
     /// Checks if the all the given actions are being pressed and at least one was pressed this frame.
