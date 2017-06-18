@@ -365,19 +365,19 @@ impl InputHandler {
 
     /// Returns the value of an axis by the i32 id, if the id doesn't exist this returns None.
     pub fn axis_value(&self, id: i32) -> Option<f32> {
-        if let Some(a) = self.axes.get(&id) {
-            let pos = self.button_down(a.pos);
-            let neg = self.button_down(a.neg);
-            if pos == neg {
-                Some(0.0)
-            } else if pos {
-                Some(1.0)
-            } else {
-                Some(-1.0)
-            }
-        } else {
-            return None;
-        }
+        self.axes
+            .get(&id)
+            .map(|a| {
+                let pos = self.button_down(a.pos);
+                let neg = self.button_down(a.neg);
+                if pos == neg {
+                    0.0
+                } else if pos {
+                    1.0
+                } else {
+                    -1.0
+                }
+            })
     }
 
     // Pressed actions has been omitted as the function is a little difficult to write and I
@@ -387,7 +387,7 @@ impl InputHandler {
     pub fn action_pressed(&self, action: i32) -> Option<bool> {
         self.actions
             .get(&action)
-            .and_then(|&b| Some(self.button_pressed(b)))
+            .map(|&b| self.button_pressed(b))
     }
 
     /// Checks if all the given actions are pressed.
