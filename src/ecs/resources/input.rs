@@ -414,7 +414,6 @@ impl InputHandler {
     /// If any action in this list is invalid this will return the id of it in Err.
     pub fn actions_pressed(&self, actions: &[i32]) -> Result<bool, Vec<i32>> {
         let mut all_buttons_pressed = true;
-        //Prefer to skip initializing a new vec if we can.
         let mut bad_values = Vec::new();
         for action in actions {
             if let Some(button) = self.actions.get(action) {
