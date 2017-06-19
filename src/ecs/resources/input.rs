@@ -63,11 +63,14 @@ impl<'a> Iterator for PressedButtons<'a> {
     }
 }
 
+/// Represents an axis made up of digital inputs, like W and S or A and D.
+/// Two of these could be analogous to a DPAD.
 pub struct Axis {
     pub pos: Button,
     pub neg: Button,
 }
 
+/// Represents a single frame of input data from the mouse and keyboard.
 #[derive(Default)]
 struct FrameInputData {
     pressed_keys: Vec<VirtualKeyCode>,
@@ -84,6 +87,7 @@ impl FrameInputData {
         }
     }
 
+    /// Pushes data from this frame into the previous frame parameter.
     fn advance_frame(&mut self, previous_frame: &mut FrameInputData) {
         previous_frame.mouse_position = self.mouse_position;
         previous_frame.pressed_keys.clear();
@@ -124,14 +128,6 @@ impl FrameInputData {
     /// Checks if all the given mouse buttons are being pressed.
     fn mouse_buttons_are_pressed(&self, buttons: &[MouseButton]) -> bool {
         buttons.iter().all(|btn| self.mouse_button_is_pressed(*btn))
-    }
-
-    /// Gets the current mouse position.
-    ///
-    /// this method can return None, either if no mouse is connected, or if no mouse events have
-    /// been recorded
-    fn mouse_position(&self) -> Option<(i32, i32)> {
-        self.mouse_position
     }
 
     /// Returns an iterator over the buttons that are currently pressed
