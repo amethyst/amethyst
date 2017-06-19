@@ -102,13 +102,13 @@ impl FrameInputData {
     }
 
     /// Checks if the given key is being pressed.
-    fn key_pressed(&self, key: VirtualKeyCode) -> bool {
+    fn key_is_pressed(&self, key: VirtualKeyCode) -> bool {
         self.pressed_keys.iter().any(|&k| k == key)
     }
 
     /// Checks if all the given keys are being pressed.
-    fn keys_pressed(&self, keys: &[VirtualKeyCode]) -> bool {
-        keys.iter().all(|key| self.key_pressed(*key))
+    fn keys_are_pressed(&self, keys: &[VirtualKeyCode]) -> bool {
+        keys.iter().all(|key| self.key_is_pressed(*key))
     }
 
     /// Returns an iterator for all the pressed down mouse buttons.
@@ -117,13 +117,13 @@ impl FrameInputData {
     }
 
     /// Checks if the given mouse button is being pressed.
-    fn mouse_button_pressed(&self, button: MouseButton) -> bool {
+    fn mouse_button_is_pressed(&self, button: MouseButton) -> bool {
         self.pressed_mouse_buttons.iter().any(|&b| b == button)
     }
 
     /// Checks if all the given mouse buttons are being pressed.
-    fn mouse_buttons_pressed(&self, buttons: &[MouseButton]) -> bool {
-        buttons.iter().all(|btn| self.mouse_button_pressed(*btn))
+    fn mouse_buttons_are_pressed(&self, buttons: &[MouseButton]) -> bool {
+        buttons.iter().all(|btn| self.mouse_button_is_pressed(*btn))
     }
 
     /// Gets the current mouse position.
@@ -144,16 +144,16 @@ impl FrameInputData {
     }
 
     /// Checks if the given button is currently pressed.
-    fn button_pressed(&self, button: Button) -> bool {
+    fn button_is_pressed(&self, button: Button) -> bool {
         match button {
-            Button::Key(k) => self.key_pressed(k),
-            Button::Mouse(b) => self.mouse_button_pressed(b),
+            Button::Key(k) => self.key_is_pressed(k),
+            Button::Mouse(b) => self.mouse_button_is_pressed(b),
         }
     }
 
     /// Checks if all the given buttons are pressed.
-    fn buttons_pressed(&self, buttons: &[Button]) -> bool {
-        buttons.iter().all(|b| self.button_pressed(*b))
+    fn buttons_are_pressed(&self, buttons: &[Button]) -> bool {
+        buttons.iter().all(|b| self.button_is_pressed(*b))
     }
 }
 
@@ -203,8 +203,7 @@ impl InputHandler {
     /// Updates the input handler with new engine events.
     pub fn update(&mut self, events: &[WindowEvent]) {
         // Before processing these events store the input states of the previous frame.
-        self.current_frame
-            .advance_frame(&mut self.previous_frame);
+        self.current_frame.advance_frame(&mut self.previous_frame);
         self.text_this_frame.clear();
         for event in events {
             match event.payload {
@@ -272,28 +271,28 @@ impl InputHandler {
     }
 
     /// Checks if the given key is being pressed.
-    pub fn key_pressed(&self, key: VirtualKeyCode) -> bool {
-        self.current_frame.key_pressed(key)
+    pub fn key_is_pressed(&self, key: VirtualKeyCode) -> bool {
+        self.current_frame.key_is_pressed(key)
     }
 
     /// Checks if all the given keys are being pressed.
-    pub fn keys_pressed(&self, keys: &[VirtualKeyCode]) -> bool {
-        self.current_frame.keys_pressed(keys)
+    pub fn keys_are_pressed(&self, keys: &[VirtualKeyCode]) -> bool {
+        self.current_frame.keys_are_pressed(keys)
     }
 
     /// Checks if the given key was pressed on this frame.
     pub fn key_down(&self, key: VirtualKeyCode) -> bool {
-        self.current_frame.key_pressed(key) && !self.previous_frame.key_pressed(key)
+        self.current_frame.key_is_pressed(key) && !self.previous_frame.key_is_pressed(key)
     }
 
     /// Checks if a given key was released on this frame.
     pub fn key_released(&self, key: VirtualKeyCode) -> bool {
-        !self.current_frame.key_pressed(key) && self.previous_frame.key_pressed(key)
+        !self.current_frame.key_is_pressed(key) && self.previous_frame.key_is_pressed(key)
     }
 
     /// Checks if the all the given keys are down and at least one was pressed on this frame.
     pub fn keys_down(&self, keys: &[VirtualKeyCode]) -> bool {
-        keys.iter().any(|&key| self.key_down(key)) && self.keys_pressed(keys)
+        keys.iter().any(|&key| self.key_down(key)) && self.keys_are_pressed(keys)
     }
 
     /// Returns an iterator for all the pressed down mouse buttons.
@@ -302,31 +301,31 @@ impl InputHandler {
     }
 
     /// Checks if the given mouse button is being pressed.
-    pub fn mouse_button_pressed(&self, button: MouseButton) -> bool {
-        self.current_frame.mouse_button_pressed(button)
+    pub fn mouse_button_is_pressed(&self, button: MouseButton) -> bool {
+        self.current_frame.mouse_button_is_pressed(button)
     }
 
     /// Checks if all the given mouse buttons are being pressed.
-    pub fn mouse_buttons_pressed(&self, buttons: &[MouseButton]) -> bool {
-        self.current_frame.mouse_buttons_pressed(buttons)
+    pub fn mouse_buttons_are_pressed(&self, buttons: &[MouseButton]) -> bool {
+        self.current_frame.mouse_buttons_are_pressed(buttons)
     }
 
     /// Checks if the given mouse button was pressed this frame.
     pub fn mouse_button_down(&self, button: MouseButton) -> bool {
-        self.current_frame.mouse_button_pressed(button) &&
-        !self.previous_frame.mouse_button_pressed(button)
+        self.current_frame.mouse_button_is_pressed(button) &&
+        !self.previous_frame.mouse_button_is_pressed(button)
     }
 
     /// Checks if the given mouse button was released this frame.
     pub fn mouse_button_released(&self, button: MouseButton) -> bool {
-        !self.current_frame.mouse_button_pressed(button) &&
-        self.previous_frame.mouse_button_pressed(button)
+        !self.current_frame.mouse_button_is_pressed(button) &&
+        self.previous_frame.mouse_button_is_pressed(button)
     }
 
     /// Checks if the all the given mouse buttons are down and at least one was pressed this frame.
     pub fn mouse_buttons_down(&self, buttons: &[MouseButton]) -> bool {
         buttons.iter().any(|&btn| self.mouse_button_down(btn)) &&
-        self.mouse_buttons_pressed(buttons)
+        self.mouse_buttons_are_pressed(buttons)
     }
 
     /// Gets the current mouse position.
@@ -351,13 +350,13 @@ impl InputHandler {
     }
 
     /// Checks if the given button is currently pressed.
-    pub fn button_pressed(&self, button: Button) -> bool {
-        self.current_frame.button_pressed(button)
+    pub fn button_is_pressed(&self, button: Button) -> bool {
+        self.current_frame.button_is_pressed(button)
     }
 
     /// Checks if all the given buttons are pressed.
-    pub fn buttons_pressed(&self, buttons: &[Button]) -> bool {
-        self.current_frame.buttons_pressed(buttons)
+    pub fn buttons_are_pressed(&self, buttons: &[Button]) -> bool {
+        self.current_frame.buttons_are_pressed(buttons)
     }
 
     /// Checks if the given button was pressed on this frame.
@@ -379,7 +378,7 @@ impl InputHandler {
     /// Checks if the all the given buttons are being pressed and at least one was pressed this frame.
     pub fn buttons_down(&self, buttons: &[Button]) -> bool {
         buttons.iter().any(|&b| self.button_down(b)) &&
-        buttons.iter().all(|&b| self.button_pressed(b))
+        buttons.iter().all(|&b| self.button_is_pressed(b))
     }
 
     /// Returns the value of an axis by the i32 id, if the id doesn't exist this returns None.
@@ -403,22 +402,22 @@ impl InputHandler {
     // can't think of a use case for it.
 
     /// Checks if the given button is currently pressed.
-    pub fn action_pressed(&self, action: i32) -> Option<bool> {
+    pub fn action_is_pressed(&self, action: i32) -> Option<bool> {
         self.actions
             .get(&action)
-            .map(|&b| self.button_pressed(b))
+            .map(|&b| self.button_is_pressed(b))
     }
 
     /// Checks if all the given actions are pressed.
     ///
     /// If any action in this list is invalid this will return the id of it in Err.
-    pub fn actions_pressed(&self, actions: &[i32]) -> Result<bool, Vec<i32>> {
-        let mut all_buttons_pressed = true;
+    pub fn actions_are_pressed(&self, actions: &[i32]) -> Result<bool, Vec<i32>> {
+        let mut all_buttons_are_pressed = true;
         let mut bad_values = Vec::new();
         for action in actions {
             if let Some(button) = self.actions.get(action) {
-                if all_buttons_pressed && !self.button_pressed(*button) {
-                    all_buttons_pressed = false;
+                if all_buttons_are_pressed && !self.button_is_pressed(*button) {
+                    all_buttons_are_pressed = false;
                 }
             } else {
                 bad_values.push(*action);
@@ -427,7 +426,7 @@ impl InputHandler {
         if !bad_values.is_empty() {
             Err(bad_values)
         } else {
-            Ok(all_buttons_pressed)
+            Ok(all_buttons_are_pressed)
         }
     }
 
@@ -438,25 +437,23 @@ impl InputHandler {
 
     /// Checks if the given action was released on this frame.
     pub fn action_released(&self, action: i32) -> Option<bool> {
-        self.actions
-            .get(&action)
-            .map(|&b| self.button_released(b))
+        self.actions.get(&action).map(|&b| self.button_released(b))
     }
 
     /// Checks if the all the given actions are being pressed and at least one was pressed this frame.
     ///
     /// If any action in this list is invalid this will return the id of it in Err.
     pub fn actions_down(&self, actions: &[i32]) -> Result<bool, Vec<i32>> {
-        let mut all_buttons_pressed = true;
-        let mut any_button_pressed_this_frame = false;
+        let mut all_buttons_are_pressed = true;
+        let mut any_button_is_pressed_this_frame = false;
         let mut bad_values = Vec::new();
         for action in actions {
             if let Some(button) = self.actions.get(action) {
-                if !any_button_pressed_this_frame && self.button_down(*button) {
-                    any_button_pressed_this_frame = true;
+                if !any_button_is_pressed_this_frame && self.button_down(*button) {
+                    any_button_is_pressed_this_frame = true;
                 }
-                if all_buttons_pressed && !self.button_pressed(*button) {
-                    all_buttons_pressed = false;
+                if all_buttons_are_pressed && !self.button_is_pressed(*button) {
+                    all_buttons_are_pressed = false;
                 }
             } else {
                 bad_values.push(*action);
@@ -465,7 +462,7 @@ impl InputHandler {
         if !bad_values.is_empty() {
             Err(bad_values)
         } else {
-            Ok(all_buttons_pressed && any_button_pressed_this_frame)
+            Ok(all_buttons_are_pressed && any_button_is_pressed_this_frame)
         }
     }
 
