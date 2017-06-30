@@ -17,8 +17,6 @@
 //! }
 //!
 //! fn main() {
-//!     use amethyst::ecs::Gate;
-//!
 //!     let mut bc = Broadcaster::new();
 //!     bc.register::<UserComponent>();
 //!     for i in 0..10 {
@@ -26,7 +24,7 @@
 //!         bc.publish().with::<UserComponent>(user_comp).build();
 //!     }
 //!     {
-//!         let user_comps = bc.read::<UserComponent>().pass();
+//!         let user_comps = bc.read::<UserComponent>();
 //!         for user_comp in user_comps.join() {
 //!             println!("{0}", user_comp.data);
 //!         }
@@ -35,11 +33,7 @@
 //! }
 //! ```
 
-use std::sync::RwLockReadGuard;
-
-use ticketed_lock::ReadTicket;
-
-use ecs::{World, Component, EntityBuilder, GatedStorage, Allocator, MaskedStorage, Join};
+use ecs::{Component, EntityBuilder, Join, ReadStorage, World};
 
 /// Allows publishing entities
 pub struct Broadcaster {
@@ -63,21 +57,23 @@ impl Broadcaster {
     /// Build and publish an entity,
     /// using `EntityBuilder` syntax
     pub fn publish(&mut self) -> EntityBuilder {
-        self.world.create_now()
+        self.world.create_entity()
     }
 
     /// Access a component storage
     pub fn read<T: Component>
         (&self)
-         -> GatedStorage<T, RwLockReadGuard<Allocator>, ReadTicket<MaskedStorage<T>>> {
+         -> ReadStorage<T> {
         self.world.read::<T>()
     }
 
     /// Delete all published entities
     pub fn clean(&mut self) {
-        for entity in self.world.entities().join() {
-            self.world.delete_later(entity);
+        let entities = {
+            self.world.entities().join().collect::<Vec<_>>()
+        };
+        for entity in entities {
+            self.world.delete_entity(entity);
         }
-        self.world.maintain();
     }
 }
