@@ -74,11 +74,9 @@ struct Example;
 
 impl State for Example {
     fn on_start(&mut self, world: &mut World, assets: &mut AssetManager, pipe: &mut Pipeline) {
-        use amethyst::ecs::Gate;
-
         {
-            let dim = world.read_resource::<ScreenDimensions>().pass();
-            let mut camera = world.write_resource::<Camera>().pass();
+            let dim = world.read_resource::<ScreenDimensions>();
+            let mut camera = world.write_resource::<Camera>();
             let proj = Projection::Perspective {
                 fov: 60.0,
                 aspect_ratio: dim.aspect_ratio,
@@ -122,7 +120,7 @@ impl State for Example {
             trans.translation = [5.0, 0.0, 5.0];
             let rend = assets.create_renderable(mesh, "dark_blue", "green", "white", 1.0)
                 .unwrap();
-            world.create_now()
+            world.create_entity()
                 .with(rend)
                 .with(trans)
                 .with(Transform::default())
@@ -135,7 +133,7 @@ impl State for Example {
         let mut trans = LocalTransform::default();
         trans.translation = [-5.0, 0.0, 0.0];
         trans.scale = [2.0, 2.0, 2.0];
-        world.create_now()
+        world.create_entity()
             .with(rend)
             .with(trans)
             .with(Transform::default())
@@ -146,7 +144,7 @@ impl State for Example {
         let mut trans = LocalTransform::default();
         trans.translation = [5.0, 0.0, 0.0];
         trans.scale = [2.0, 2.0, 2.0];
-        world.create_now()
+        world.create_entity()
             .with(rend)
             .with(trans)
             .with(Transform::default())
@@ -159,7 +157,7 @@ impl State for Example {
         trans.translation = [-5.0, 0.0, 7.5];
         trans.rotation = Quaternion::from(Euler::new(Deg(90.0), Deg(0.0), Deg(0.0))).into();
         trans.scale = [0.15, 0.15, 0.15];
-        world.create_now()
+        world.create_entity()
             .with(rend)
             .with(trans)
             .with(Transform::default())
@@ -173,7 +171,7 @@ impl State for Example {
             ..Default::default()
         };
 
-        world.create_now()
+        world.create_entity()
             .with(light)
             .build();
 
