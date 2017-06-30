@@ -33,7 +33,7 @@
 //! }
 //! ```
 
-use ecs::{World, Component, EntityBuilder, Join, ReadStorage};
+use ecs::{Component, EntityBuilder, Join, ReadStorage, World};
 
 /// Allows publishing entities
 pub struct Broadcaster {
@@ -75,6 +75,5 @@ impl Broadcaster {
         for entity in entities {
             self.world.delete_entity(entity);
         }
-        self.world.maintain();
     }
 }
