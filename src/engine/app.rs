@@ -3,13 +3,13 @@
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use threadpool::ThreadPool;
+use rayon::ThreadPool;
 #[cfg(feature="profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
 use num_cpus;
 
 use asset_manager::AssetManager;
-use ecs::{Component, Planner, Priority, System, World};
+use ecs::{Component, Dispatcher, DispatcherBuilder, System, World};
 use ecs::components::{LocalTransform, Transform, Child, Init, Renderable};
 use ecs::resources::Time;
 use ecs::systems::TransformSystem;
@@ -20,13 +20,14 @@ use gfx_device::{DisplayConfig, GfxDevice, gfx_types};
 use renderer::{AmbientLight, DirectionalLight, Pipeline, PointLight, target};
 
 /// User-friendly facade for building games. Manages main loop.
-pub struct Application {
+pub struct Application<'a> {
     // Graphics and asset management structs.
     // TODO: Refactor so `pipe` and `gfx_device` are moved into the renderer.
     assets: AssetManager,
     gfx_device: GfxDevice,
     pipe: Pipeline,
-    planner: Planner<()>,
+    dispatcher: Dispatcher<'a, 'a>,
+    world: World,
 
     // State management and game loop timing structs.
     delta_time: Duration,
@@ -36,10 +37,10 @@ pub struct Application {
     timer: Stopwatch,
 }
 
-impl Application {
+impl<'a> Application<'a> {
     /// Creates a new Application with the given initial game state, planner,
     /// and display configuration.
-    pub fn new<T>(initial_state: T, mut planner: Planner<()>, cfg: DisplayConfig) -> Application
+    pub fn new<T>(initial_state: T, dispatcher_builder: DispatcherBuilder<'a, 'a>, mut world: World, cfg: DisplayConfig) -> Application<'a>
         where T: State + 'static
     {
         use ecs::resources::{Camera, Projection, ScreenDimensions};
@@ -64,10 +65,11 @@ impl Application {
         assets.add_loader::<gfx_types::Factory>(factory);
 
         let trans_sys = TransformSystem::new();
-        planner.add_system::<TransformSystem>(trans_sys, "transform_system", 0);
+
+        let dispatcher_builder = dispatcher_builder.add_barrier();
+        let dispatcher_builder = dispatcher_builder.add(trans_sys, "transform_system", &[]);
 
         {
-            let mut world = planner.mut_world();
             let time = Time {
                 delta_time: Duration::new(0, 0),
                 fixed_step: Duration::new(0, 16666666),
@@ -105,7 +107,8 @@ impl Application {
             states: StateMachine::new(initial_state),
             gfx_device: device,
             pipe: pipe,
-            planner: planner,
+            dispatcher: dispatcher_builder.build(),
+            world: world,
             timer: Stopwatch::new(),
             delta_time: Duration::new(0, 0),
             fixed_step: Duration::new(0, 16666666),
@@ -114,7 +117,7 @@ impl Application {
     }
 
     /// Builds a new application using builder pattern.
-    pub fn build<T>(initial_state: T, cfg: DisplayConfig) -> ApplicationBuilder<T>
+    pub fn build<T>(initial_state: T, cfg: DisplayConfig) -> ApplicationBuilder<'a, T>
         where T: State + 'static
     {
         ApplicationBuilder::new(initial_state, cfg)
@@ -146,7 +149,7 @@ impl Application {
 
     /// Sets up the application.
     fn initialize(&mut self) {
-        let world = &mut self.planner.mut_world();
+        let world = &mut self.world;
         let assets = &mut self.assets;
         let pipe = &mut self.pipe;
         self.states.start(world, assets, pipe);
@@ -159,7 +162,7 @@ impl Application {
             #[cfg(feature="profiler")]
             profile_scope!("handle_events");
             let events = self.gfx_device.poll_events();
-            let world = &mut self.planner.mut_world();
+            let world = &mut self.world;
             let assets = &mut self.assets;
             let pipe = &mut self.pipe;
 
@@ -179,22 +182,19 @@ impl Application {
 
         #[cfg(feature="profiler")]
         profile_scope!("dispatch");
-        self.planner.dispatch(());
-        self.planner.wait();
+        self.dispatcher.dispatch(&mut self.world.res);
 
         #[cfg(feature="profiler")]
         profile_scope!("render_world");
         {
-            use ecs::Gate;
-
-            let world = &mut self.planner.mut_world();
+            let world = &mut self.world;
             if let Some((w, h)) = self.gfx_device.get_dimensions() {
-                let mut dim = world.write_resource::<ScreenDimensions>().pass();
+                let mut dim = world.write_resource::<ScreenDimensions>();
                 dim.update(w, h);
             }
 
             {
-                let mut time = world.write_resource::<Time>().pass();
+                let mut time = world.write_resource::<Time>();
                 time.delta_time = self.delta_time;
                 time.fixed_step = self.fixed_step;
                 time.last_fixed_update = self.last_fixed_update;
@@ -221,51 +221,57 @@ impl Application {
 }
 
 /// Helper builder for Applications.
-pub struct ApplicationBuilder<T>
+pub struct ApplicationBuilder<'a, T>
     where T: State + 'static
 {
     config: DisplayConfig,
     initial_state: T,
-    planner: Planner<()>,
+    dispatcher_builder: DispatcherBuilder<'a, 'a>,
+    world: World,
 }
 
-impl<T> ApplicationBuilder<T>
+impl<'a, T> ApplicationBuilder<'a, T>
     where T: State + 'static
 {
     /// Creates a new ApplicationBuilder with the given initial game state and
     /// display configuration.
-    pub fn new(initial_state: T, cfg: DisplayConfig) -> ApplicationBuilder<T> {
-        let pool = Arc::new(ThreadPool::new(num_cpus::get()));
+    pub fn new(initial_state: T, cfg: DisplayConfig) -> ApplicationBuilder<'a, T> {
+        let pool = Arc::new(ThreadPool::new( ::rayon::Configuration::new().num_threads(num_cpus::get())).unwrap());
 
         ApplicationBuilder {
             config: cfg,
             initial_state: initial_state,
-            planner: Planner::from_pool(World::new(), pool),
+            dispatcher_builder: DispatcherBuilder::new().with_pool(pool),
+            world: World::new(),
         }
     }
 
     /// Registers a given component type.
-    pub fn register<C>(mut self) -> ApplicationBuilder<T>
+    pub fn register<C>(mut self) -> ApplicationBuilder<'a, T>
         where C: Component
     {
-        {
-            let world = &mut self.planner.mut_world();
-            world.register::<C>();
-        }
+        self.world.register::<C>();
         self
     }
 
     /// Adds a given system `pro`, assigns it the string identifier `name`,
     /// and marks it with the runtime priority `pri`.
-    pub fn with<S>(mut self, sys: S, name: &str, pri: Priority) -> ApplicationBuilder<T>
-        where S: System<()> + 'static
+    pub fn add_barrier(mut self) -> ApplicationBuilder<'a, T> {
+        self.dispatcher_builder = self.dispatcher_builder.add_barrier();
+        self
+    }
+
+    /// Adds a given system `pro`, assigns it the string identifier `name`,
+    /// and marks it with the runtime priority `pri`.
+    pub fn with<S>(mut self, sys: S, name: &str, dep: &[&str]) -> ApplicationBuilder<'a, T>
+        where for<'b> S: System<'b> + Send + 'a
     {
-        self.planner.add_system::<S>(sys, name, pri);
+        self.dispatcher_builder = self.dispatcher_builder.add(sys, name, dep);
         self
     }
 
     /// Builds the Application and returns the result.
-    pub fn done(self) -> Application {
-        Application::new(self.initial_state, self.planner, self.config)
+    pub fn done(self) -> Application<'a> {
+        Application::new(self.initial_state, self.dispatcher_builder, self.world, self.config)
     }
 }

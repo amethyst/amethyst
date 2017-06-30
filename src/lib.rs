@@ -84,7 +84,7 @@ extern crate genmesh;
 extern crate imagefmt;
 extern crate num_cpus;
 extern crate specs;
-extern crate threadpool;
+extern crate rayon;
 extern crate ticketed_lock;
 extern crate wavefront_obj;
 

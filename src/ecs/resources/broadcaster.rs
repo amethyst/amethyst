@@ -35,11 +35,7 @@
 //! }
 //! ```
 
-use std::sync::RwLockReadGuard;
-
-use ticketed_lock::ReadTicket;
-
-use ecs::{World, Component, EntityBuilder, GatedStorage, Allocator, MaskedStorage, Join};
+use ecs::{World, Component, EntityBuilder, Join, ReadStorage};
 
 /// Allows publishing entities
 pub struct Broadcaster {
@@ -63,20 +59,23 @@ impl Broadcaster {
     /// Build and publish an entity,
     /// using `EntityBuilder` syntax
     pub fn publish(&mut self) -> EntityBuilder {
-        self.world.create_now()
+        self.world.create_entity()
     }
 
     /// Access a component storage
     pub fn read<T: Component>
         (&self)
-         -> GatedStorage<T, RwLockReadGuard<Allocator>, ReadTicket<MaskedStorage<T>>> {
+         -> ReadStorage<T> {
         self.world.read::<T>()
     }
 
     /// Delete all published entities
     pub fn clean(&mut self) {
-        for entity in self.world.entities().join() {
-            self.world.delete_later(entity);
+        let entities = {
+            self.world.entities().join().collect::<Vec<_>>()
+        };
+        for entity in entities {
+            self.world.delete_entity(entity);
         }
         self.world.maintain();
     }

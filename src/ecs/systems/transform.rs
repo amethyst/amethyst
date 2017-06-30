@@ -3,7 +3,7 @@
 use cgmath::Matrix4;
 use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 
-use ecs::{Join, Entity, RunArg, System};
+use ecs::{Entity, Join, WriteStorage, ReadStorage, Entities, System};
 use ecs::components::{LocalTransform, Transform, Child, Init};
 
 /// Handles updating `Transform` components based on the `LocalTransform`
@@ -39,37 +39,28 @@ impl TransformSystem {
     }
 }
 
-impl System<()> for TransformSystem {
-    fn run(&mut self, arg: RunArg, _: ()) {
-        use ecs::Gate;
+impl<'a> System<'a> for TransformSystem {
+    type SystemData = (Entities<'a>, ReadStorage<'a, LocalTransform>, ReadStorage<'a, Child>, WriteStorage<'a, Init>, WriteStorage<'a, Transform>);
 
-        // Fetch world and gets entities/components
-        let (entities, locals, mut globals, mut init, children) = arg.fetch(|w| {
-            let entities = w.entities();
-            let locals = w.read::<LocalTransform>().pass();
-            let children = w.read::<Child>().pass();
-            let init = w.write::<Init>().pass();
+    fn run(&mut self, (entities, locals, children, mut init, mut globals): Self::SystemData) {
+       
+        // Checks for entities with a local transform and parent, but no
+        // `Init` component.
+        for (entity, _, child, _) in (&*entities, &locals, &children, !&init).join() {
+            self.indices.insert(entity, self.sorted.len());
+            self.sorted.push((entity, child.parent()));
+            self.new.push(entity);
+        }
 
-            // Checks for entities with a local transform and parent, but no
-            // `Init` component.
-            for (entity, _, child, _) in (&entities, &locals, &children, !&init).join() {
-                self.indices.insert(entity, self.sorted.len());
-                self.sorted.push((entity, child.parent()));
-                self.new.push(entity);
-            }
-
-            // Deletes entities whose parents aren't alive.
-            for &(entity, _) in &self.sorted {
-                if let Some(child) = children.get(entity) {
-                    if !w.is_alive(child.parent()) || self.dead.contains(&child.parent()) {
-                        arg.delete(entity);
-                        self.dead.insert(entity);
-                    }
+        // Deletes entities whose parents aren't alive.
+        for &(entity, _) in &self.sorted {
+            if let Some(child) = children.get(entity) {
+                if !entities.is_alive(child.parent()) || self.dead.contains(&child.parent()) {
+                    entities.delete(entity);
+                    self.dead.insert(entity);
                 }
             }
-
-            (entities, locals, w.write::<Transform>(), init, children)
-        });
+        }
 
         // Adds an `Init` component to the entity.
         for entity in self.new.drain(..) {
@@ -77,10 +68,8 @@ impl System<()> for TransformSystem {
         }
 
         {
-            let without_parents = (&entities, &locals, &mut globals, !&children).join();
-
             // Compute transforms without parents.
-            for (ent, local, global, _) in without_parents {
+            for (ent, local, global, _) in (&*entities, &locals, &mut globals, !&children).join() {
                 if local.is_dirty() {
                     self.dirty.insert(ent);
                     global.0 = local.matrix();
