@@ -16,9 +16,7 @@
 //!     type Storage = VecStorage<UserComponent>;
 //! }
 //!
-//! fn main() {
-//!     use amethyst::ecs::Gate;
-//!
+//! fn main() {//!
 //!     let mut bc = Broadcaster::new();
 //!     bc.register::<UserComponent>();
 //!     for i in 0..10 {
@@ -26,7 +24,7 @@
 //!         bc.publish().with::<UserComponent>(user_comp).build();
 //!     }
 //!     {
-//!         let user_comps = bc.read::<UserComponent>().pass();
+//!         let user_comps = bc.read::<UserComponent>();
 //!         for user_comp in user_comps.join() {
 //!             println!("{0}", user_comp.data);
 //!         }
