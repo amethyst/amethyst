@@ -3,7 +3,7 @@
 use cgmath::Matrix4;
 use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 
-use ecs::{Entity, Join, WriteStorage, ReadStorage, Entities, System};
+use ecs::{Entities, Entity, Join, ReadStorage, System, WriteStorage};
 use ecs::components::{LocalTransform, Transform, Child, Init};
 
 /// Handles updating `Transform` components based on the `LocalTransform`

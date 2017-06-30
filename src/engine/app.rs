@@ -271,7 +271,7 @@ impl<'a, T> ApplicationBuilder<'a, T>
     }
 
     /// Adds a given thread-local system `sys`
-    /// All thread-local systems executed sequentially after all non-thread-local systems
+    /// All thread-local systems are executed sequentially after all non-thread-local systems
     pub fn with_thread_local<S>(mut self, sys: S) -> ApplicationBuilder<'a, T>
         where for<'b> S: System<'b> + 'a
     {

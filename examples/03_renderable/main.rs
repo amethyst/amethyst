@@ -286,7 +286,7 @@ fn main() {
     let cfg = DisplayConfig::load(path);
     let mut game = Application::build(Example, cfg)
         .with::<ExampleSystem>(ExampleSystem, "example_system", &[])
-        .with_thread_local::<TransformSystem>(TransformSystem::new())
+        .with::<TransformSystem>(TransformSystem::new(), "transform_system", &[])
         .done();
     game.run();
 }

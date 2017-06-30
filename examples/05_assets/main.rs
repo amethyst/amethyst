@@ -214,7 +214,7 @@ fn main() {
                        env!("CARGO_MANIFEST_DIR"));
     let cfg = DisplayConfig::load(path);
     let mut game = Application::build(Example, cfg)
-        .with_thread_local::<TransformSystem>(TransformSystem::new())
+        .with::<TransformSystem>(TransformSystem::new(), "transform_system", &[])
         .done();
     game.run();
 }

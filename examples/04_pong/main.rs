@@ -3,7 +3,7 @@ extern crate amethyst;
 use amethyst::{Application, Event, State, Trans, VirtualKeyCode, WindowEvent};
 use amethyst::asset_manager::AssetManager;
 use amethyst::project::Config;
-use amethyst::ecs::{World, Join, VecStorage, Component, System, WriteStorage, Fetch, FetchMut};
+use amethyst::ecs::{Component, Fetch, FetchMut, Join, System, VecStorage, World, WriteStorage};
 use amethyst::ecs::components::{Mesh, LocalTransform, Texture, Transform};
 use amethyst::ecs::resources::{Camera, InputHandler, Projection, Time};
 use amethyst::ecs::systems::TransformSystem;
@@ -336,7 +336,7 @@ fn main() {
         .register::<Ball>()
         .register::<Plank>()
         .with::<PongSystem>(PongSystem, "pong_system", &[])
-        .with_thread_local::<TransformSystem>(TransformSystem::new())
+        .with::<TransformSystem>(TransformSystem::new(), "transform_system", &["pong_system"])
         .done();
     game.run();
 }
