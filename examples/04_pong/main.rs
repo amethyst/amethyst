@@ -6,6 +6,7 @@ use amethyst::project::Config;
 use amethyst::ecs::{World, Join, VecStorage, Component, System, WriteStorage, Fetch, FetchMut};
 use amethyst::ecs::components::{Mesh, LocalTransform, Texture, Transform};
 use amethyst::ecs::resources::{Camera, InputHandler, Projection, Time};
+use amethyst::ecs::systems::TransformSystem;
 use amethyst::gfx_device::DisplayConfig;
 use amethyst::renderer::{Pipeline, VertexPosNormal};
 
@@ -79,7 +80,13 @@ impl Score {
 // Pong game system
 impl<'a> System<'a> for PongSystem {
 
-    type SystemData = (WriteStorage<'a, Ball>, WriteStorage<'a, Plank>, WriteStorage<'a, LocalTransform>, Fetch<'a, Camera>, Fetch<'a, Time>, Fetch<'a, InputHandler>, FetchMut<'a, Score>);
+    type SystemData = (WriteStorage<'a, Ball>,
+                       WriteStorage<'a, Plank>,
+                       WriteStorage<'a, LocalTransform>,
+                       Fetch<'a, Camera>,
+                       Fetch<'a, Time>,
+                       Fetch<'a, InputHandler>,
+                       FetchMut<'a, Score>);
 
     fn run(&mut self, (mut balls, mut planks, mut locals, camera, time, input, mut score): Self::SystemData) {
         // Get left and right boundaries of the screen
@@ -329,6 +336,7 @@ fn main() {
         .register::<Ball>()
         .register::<Plank>()
         .with::<PongSystem>(PongSystem, "pong_system", &[])
+        .with_thread_local::<TransformSystem>(TransformSystem::new())
         .done();
     game.run();
 }

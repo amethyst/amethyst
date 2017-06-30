@@ -16,7 +16,7 @@
 //!     type Storage = VecStorage<UserComponent>;
 //! }
 //!
-//! fn main() {//!
+//! fn main() {
 //!     let mut bc = Broadcaster::new();
 //!     bc.register::<UserComponent>();
 //!     for i in 0..10 {

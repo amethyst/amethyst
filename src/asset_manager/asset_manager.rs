@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 use std::str;
 use wavefront_obj::obj::{ObjSet, parse, Primitive};
 
-use ecs::{Component, Entity, VecStorage, World, ReadStorage};
+use ecs::{Component, Entity, ReadStorage, VecStorage, World};
 use ecs::components::{Mesh, Renderable, Texture, TextureLoadData};
 use renderer::VertexPosNormal;
 

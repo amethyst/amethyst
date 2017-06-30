@@ -7,9 +7,10 @@ extern crate cgmath;
 use amethyst::{Application, ElementState, Event, State, Trans, VirtualKeyCode, WindowEvent};
 use amethyst::asset_manager::{AssetManager, DirectoryStore};
 use amethyst::project::Config;
-use amethyst::ecs::{Join, System, World, WriteStorage, Fetch, FetchMut};
+use amethyst::ecs::{Fetch, FetchMut, Join, System, WriteStorage, World};
 use amethyst::ecs::components::{LocalTransform, Mesh, Texture, Transform};
 use amethyst::ecs::resources::{Camera, Projection, ScreenDimensions, Time};
+use amethyst::ecs::systems::TransformSystem;
 use amethyst::gfx_device::DisplayConfig;
 use amethyst::renderer::{AmbientLight, DirectionalLight, Layer, PointLight, Pipeline};
 use amethyst::renderer::pass::{BlitLayer, Clear, DrawFlat, DrawShaded, Lighting};
@@ -285,6 +286,7 @@ fn main() {
     let cfg = DisplayConfig::load(path);
     let mut game = Application::build(Example, cfg)
         .with::<ExampleSystem>(ExampleSystem, "example_system", &[])
+        .with_thread_local::<TransformSystem>(TransformSystem::new())
         .done();
     game.run();
 }

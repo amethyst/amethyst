@@ -10,6 +10,7 @@ use amethyst::project::Config;
 use amethyst::ecs::World;
 use amethyst::ecs::components::{LocalTransform, Mesh, Texture, Transform};
 use amethyst::ecs::resources::{Camera, Projection, ScreenDimensions};
+use amethyst::ecs::systems::TransformSystem;
 use amethyst::gfx_device::DisplayConfig;
 use amethyst::renderer::{Layer, PointLight, Pipeline, VertexPosNormal};
 use amethyst::renderer::pass::{Clear, DrawShaded};
@@ -212,6 +213,8 @@ fn main() {
     let path = format!("{}/examples/05_assets/resources/config.yml",
                        env!("CARGO_MANIFEST_DIR"));
     let cfg = DisplayConfig::load(path);
-    let mut game = Application::build(Example, cfg).done();
+    let mut game = Application::build(Example, cfg)
+        .with_thread_local::<TransformSystem>(TransformSystem::new())
+        .done();
     game.run();
 }
