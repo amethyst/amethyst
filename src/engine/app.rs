@@ -141,6 +141,11 @@ impl<'a> Application<'a> {
         self.write_profile();
     }
 
+    /// Direct access to `World`
+    pub fn world_mut(&mut self) -> &mut World {
+        &mut self.world
+    }
+
     /// Sets up the application.
     fn initialize(&mut self) {
         let world = &mut self.world;
