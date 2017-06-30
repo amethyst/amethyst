@@ -120,13 +120,13 @@ impl System<()> for PongSystem {
                     // Store left plank dimensions for later use in ball processing
                     left_dimensions = plank.dimensions;
                     // If `W` is pressed and plank is in screen boundaries then move up
-                    if input.key_down(VirtualKeyCode::W) {
+                    if input.key_is_pressed(VirtualKeyCode::W) {
                         if plank.position + plank.dimensions[1] / 2. < 1. {
                             plank.position += plank.velocity * delta_time;
                         }
                     }
                     // If `S` is pressed and plank is in screen boundaries then move down
-                    if input.key_down(VirtualKeyCode::S) {
+                    if input.key_is_pressed(VirtualKeyCode::S) {
                         if plank.position - plank.dimensions[1] / 2. > -1. {
                             plank.position -= plank.velocity * delta_time;
                         }
@@ -141,13 +141,13 @@ impl System<()> for PongSystem {
                     // Store right plank dimensions for later use in ball processing
                     right_dimensions = plank.dimensions;
                     // If `Up` is pressed and plank is in screen boundaries then move down
-                    if input.key_down(VirtualKeyCode::Up) {
+                    if input.key_is_pressed(VirtualKeyCode::Up) {
                         if plank.position + plank.dimensions[1] / 2. < top_bound {
                             plank.position += plank.velocity * delta_time;
                         }
                     }
                     // If `Down` is pressed and plank is in screen boundaries then move down
-                    if input.key_down(VirtualKeyCode::Down) {
+                    if input.key_is_pressed(VirtualKeyCode::Down) {
                         if plank.position - plank.dimensions[1] / 2. > bottom_bound {
                             plank.position -= plank.velocity * delta_time;
                         }
