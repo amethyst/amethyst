@@ -31,7 +31,7 @@ enum TextureKind {
 impl TextureKind {
     pub fn into_texture(self, fac: &mut Factory) -> Result<Texture> {
         match self {
-            TextureKind::Constant(c) => Texture::from_color_val(c).build(fac),
+            TextureKind::Constant(c) => Texture::from_color_val(c).finish(fac),
             TextureKind::Map(tex) => Ok(tex),
         }
     }

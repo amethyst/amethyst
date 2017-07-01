@@ -18,7 +18,7 @@ pub struct Mesh {
 
 impl Mesh {
     /// Builds a new mesh from the given vertices.
-    pub fn new<'v, V: VertexFormat + 'v>(verts: &'v [V]) -> MeshBuilder {
+    pub fn build<'v, V: VertexFormat + 'v>(verts: &'v [V]) -> MeshBuilder {
         MeshBuilder::new(verts)
     }
 
@@ -112,8 +112,7 @@ impl<'v> MeshBuilder<'v> {
     }
 
     /// Builds and returns the new mesh.
-    #[doc(hidden)]
-    pub fn build(self, fac: &mut Factory) -> Result<Mesh> {
+    pub(crate) fn finish(self, fac: &mut Factory) -> Result<Mesh> {
         use gfx::{Bind, Factory, IndexBuffer};
         use gfx::buffer::Role;
 

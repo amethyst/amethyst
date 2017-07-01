@@ -136,17 +136,17 @@ impl Renderer {
 
     /// Builds a new mesh from the given vertices.
     pub fn create_mesh(&mut self, mb: MeshBuilder) -> Result<Mesh> {
-        mb.build(&mut self.factory)
+        mb.finish(&mut self.factory)
     }
 
     /// Builds a new renderer pipeline.
     pub fn create_pipe(&mut self, pb: PipelineBuilder) -> Result<Pipeline> {
-        pb.build(&mut self.factory, &self.main_target)
+        pb.finish(&mut self.factory, &self.main_target)
     }
 
     /// Builds a new texture resource.
     pub fn create_texture(&mut self, tb: TextureBuilder) -> Result<Texture> {
-        tb.build(&mut self.factory)
+        tb.finish(&mut self.factory)
     }
 
     /// Draws a scene with the given pipeline.

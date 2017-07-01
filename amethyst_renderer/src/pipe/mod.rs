@@ -41,7 +41,7 @@ pub struct Pipeline {
 
 impl Pipeline {
     /// Builds a new renderer pipeline.
-    pub fn new() -> PipelineBuilder {
+    pub fn build() -> PipelineBuilder {
         PipelineBuilder::new()
     }
 
@@ -51,7 +51,7 @@ impl Pipeline {
     pub fn deferred() -> PipelineBuilder {
         use pass::*;
         PipelineBuilder::new()
-            .with_target(Target::new("gbuffer")
+            .with_target(Target::named("gbuffer")
                 .with_num_color_bufs(4)
                 .with_depth_buf(true))
             .with_stage(Stage::with_target("gbuffer")
@@ -110,12 +110,11 @@ impl PipelineBuilder {
     }
 
     /// Builds and returns the new pipeline.
-    #[doc(hidden)]
-    pub fn build(self, fac: &mut Factory, out: &Arc<Target>) -> Result<Pipeline> {
+    pub(crate) fn finish(self, fac: &mut Factory, out: &Arc<Target>) -> Result<Pipeline> {
         let mut targets = self.targets
             .iter()
             .cloned()
-            .map(|tb| tb.build(fac, out.size()))
+            .map(|tb| tb.finish(fac, out.size()))
             .collect::<Result<Targets>>()?;
 
         targets.insert("".into(), out.clone());
@@ -123,7 +122,7 @@ impl PipelineBuilder {
         let stages = self.stages
             .iter()
             .cloned()
-            .map(|sb| sb.build(fac, &targets))
+            .map(|sb| sb.finish(fac, &targets))
             .collect::<Result<_>>()?;
 
         Ok(Pipeline {

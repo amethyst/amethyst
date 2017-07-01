@@ -79,7 +79,7 @@ impl StageBuilder {
 
     /// Builds and returns the stage.
     #[doc(hidden)]
-    pub fn build(mut self, fac: &mut Factory, targets: &Targets) -> Result<Stage> {
+    pub(crate) fn finish(mut self, fac: &mut Factory, targets: &Targets) -> Result<Stage> {
         let name = self.target_name;
         let out = targets
             .get(&name)
@@ -88,7 +88,7 @@ impl StageBuilder {
 
         let passes = self.passes
             .drain(..)
-            .map(|pb| pb.build(fac, targets, &out))
+            .map(|pb| pb.finish(fac, targets, &out))
             .collect::<Result<_>>()?;
 
         Ok(Stage {
