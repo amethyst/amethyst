@@ -119,38 +119,19 @@ pub struct Renderer {
     encoders: Vec<Encoder>,
     factory: Factory,
     main_target: Arc<Target>,
-    pool: rayon::ThreadPool,
+    pool: Arc<rayon::ThreadPool>,
     window: Window,
 }
 
 impl Renderer {
     /// Creates a new renderer with default window settings.
     pub fn new(el: &EventsLoop) -> Result<Renderer> {
-        let wb = WindowBuilder::new().with_title("Amethyst");
-        Renderer::from_winit_builder(wb, el)
+        Renderer::build(el).finish()
     }
 
-    /// Creates a new renderer with the given `winit::WindowBuilder`.
-    pub fn from_winit_builder(wb: WindowBuilder, el: &EventsLoop) -> Result<Renderer> {
-        let Backend(dev, mut fac, main, win) = init_backend(wb, el)?;
-
-        let num_cores = num_cpus::get();
-        let encoders = (0..num_cores)
-            .map(|_| fac.create_command_buffer().into())
-            .collect();
-
-        let cfg = rayon::Configuration::new().num_threads(num_cores);
-        let pool = rayon::ThreadPool::new(cfg)
-            .map_err(|e| Error::PoolCreation(e))?;
-
-        Ok(Renderer {
-            device: dev,
-            encoders: encoders,
-            factory: fac,
-            main_target: Arc::new(main),
-            pool: pool,
-            window: win,
-        })
+    #[allow(missing_docs)]
+    pub fn build(el: &EventsLoop) -> RendererBuilder {
+        RendererBuilder::new(el)
     }
 
     /// Builds a new mesh from the given vertices.
@@ -203,6 +184,64 @@ impl Drop for Renderer {
     fn drop(&mut self) {
         use gfx::Device;
         self.device.cleanup();
+    }
+}
+
+#[allow(missing_docs)]
+pub struct RendererBuilder<'a> {
+    events: &'a EventsLoop,
+    pool: Option<Arc<rayon::ThreadPool>>,
+    winit_builder: WindowBuilder,
+}
+
+impl<'a> RendererBuilder<'a> {
+    #[allow(missing_docs)]
+    pub fn new(el: &'a EventsLoop) -> RendererBuilder<'a> {
+        RendererBuilder{
+            events: el,
+            pool: None,
+            winit_builder: WindowBuilder::new().with_title("Amethyst"),
+        }
+    }
+
+    #[allow(missing_docs)]
+    pub fn with_winit_builder(&mut self, wb: WindowBuilder) -> &mut Self {
+        self.winit_builder = wb;
+        self
+    }
+
+    #[allow(missing_docs)]
+    pub fn with_pool(&mut self, pool: Arc<rayon::ThreadPool>) -> &mut Self {
+        self.pool = Some(pool);
+        self
+    }
+
+    #[allow(missing_docs)]
+    pub fn finish(self) -> Result<Renderer> {
+        let Backend(dev, mut fac, main, win) = init_backend(self.winit_builder, self.events)?;
+
+        let num_cores = num_cpus::get();
+        let encoders = (0..num_cores)
+            .map(|_| fac.create_command_buffer().into())
+            .collect();
+
+        let pool = self.pool
+            .map(|p| Ok(p))
+            .unwrap_or_else(|| {
+                let cfg = rayon::Configuration::new().num_threads(num_cores);
+                rayon::ThreadPool::new(cfg)
+                    .map(|p| Arc::new(p))
+                    .map_err(|e| Error::PoolCreation(e))
+            })?;
+
+        Ok(Renderer {
+            device: dev,
+            encoders: encoders,
+            factory: fac,
+            main_target: Arc::new(main),
+            pool: pool,
+            window: win,
+        })
     }
 }
 
