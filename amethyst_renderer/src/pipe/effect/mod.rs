@@ -178,8 +178,7 @@ impl EffectBuilder {
         self
     }
 
-    #[doc(hidden)]
-    pub fn build(self, fac: &mut Factory, out: &Target) -> Result<Effect> {
+    pub(crate) fn finish(self, fac: &mut Factory, out: &Target) -> Result<Effect> {
         use gfx::Factory;
         use gfx::traits::FactoryExt;
 

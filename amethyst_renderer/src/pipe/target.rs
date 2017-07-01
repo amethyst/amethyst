@@ -36,7 +36,7 @@ pub struct Target {
 
 impl Target {
     /// Creates a new TargetBuilder with the given name.
-    pub fn new<N: Into<String>>(name: N) -> TargetBuilder {
+    pub fn named<N: Into<String>>(name: N) -> TargetBuilder {
         TargetBuilder::new(name)
     }
 
@@ -121,13 +121,10 @@ impl TargetBuilder {
 
     /// Builds and returns the new render target.
     #[doc(hidden)]
-    pub fn build(self, fac: &mut Factory, size: (u32, u32)) -> Result<(String, Arc<Target>)> {
+    pub(crate) fn finish(self, fac: &mut Factory, size: (u32, u32)) -> Result<(String, Arc<Target>)> {
         use gfx::Factory;
 
-        let size = match self.custom_size {
-            Some(s) => s,
-            None => size,
-        };
+        let size = self.custom_size.unwrap_or(size);
 
         let color_bufs = (0..self.num_color_bufs)
             .into_iter()

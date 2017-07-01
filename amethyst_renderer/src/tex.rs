@@ -16,7 +16,7 @@ pub struct Texture {
 
 impl Texture {
     /// Builds a new texture with the given raw texture data.
-    pub fn new<'d, T: 'd, D>(data: D) -> TextureBuilder
+    pub fn build<'d, T: 'd, D>(data: D) -> TextureBuilder
         where T: Copy + Pod,
               D: Into<&'d [T]>
     {
@@ -91,8 +91,7 @@ impl TextureBuilder {
     }
 
     /// Builds and returns the new texture.
-    #[doc(hidden)]
-    pub fn build(self, fac: &mut Factory) -> Result<Texture> {
+    pub(crate) fn finish(self, fac: &mut Factory) -> Result<Texture> {
         use gfx::Factory;
         use gfx::format::{ChannelType, Swizzle};
         use gfx::texture::ResourceDesc;
