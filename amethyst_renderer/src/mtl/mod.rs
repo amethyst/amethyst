@@ -16,7 +16,7 @@ pub struct Material {
     pub normal: Texture,
     /// Metallic map.
     pub metallic: Texture,
-    /// Reflectance value.
+    /// Reflectance map.
     pub reflectance: Texture,
     /// Roughness map.
     pub roughness: Texture,
