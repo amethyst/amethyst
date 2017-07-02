@@ -19,8 +19,8 @@ pub struct Meta {
     globals: Vec<RawGlobal>,
     out_colors: Vec<RenderTarget>,
     out_depth: Option<DepthStencilTarget>,
-	samplers: Vec<Sampler>,
-	textures: Vec<RawShaderResource>,
+    samplers: Vec<Sampler>,
+    textures: Vec<RawShaderResource>,
     vertex_bufs: Vec<RawVertexBuffer>,
 }
 
@@ -30,8 +30,8 @@ pub struct Init<'d> {
     pub globals: Vec<<RawGlobal as DataLink<'d>>::Init>,
     pub out_colors: Vec<<RenderTarget as DataLink<'d>>::Init>,
     pub out_depth: Option<<DepthStencilTarget as DataLink<'d>>::Init>,
-	pub samplers: Vec<<Sampler as DataLink<'d>>::Init>,
-	pub textures: Vec<<RawShaderResource as DataLink<'d>>::Init>,
+    pub samplers: Vec<<Sampler as DataLink<'d>>::Init>,
+    pub textures: Vec<<RawShaderResource as DataLink<'d>>::Init>,
     pub vertex_bufs: Vec<<RawVertexBuffer as DataLink<'d>>::Init>,
 }
 
@@ -47,7 +47,7 @@ impl<'d> PipelineInit for Init<'d> {
                 let d = res.map_err(|e| InitError::ConstantBuffer(info.name.as_str(), Some(e)))?;
                 meta.const_bufs.push(meta_cbuf);
                 desc.constant_buffers[info.slot as usize] = Some(d);
-			}
+            }
         }
 
         for (info, global) in info.globals.iter().zip(&self.globals) {
@@ -96,7 +96,7 @@ impl<'d> PipelineInit for Init<'d> {
         for (i, vbuf) in self.vertex_bufs.iter().enumerate() {
             let mut meta_vbuf = <RawVertexBuffer as DataLink<'d>>::new();
             if let Some(d) = meta_vbuf.link_vertex_buffer(i as u8, vbuf) {
-		        for attr in info.vertex_attributes.iter() {
+                for attr in info.vertex_attributes.iter() {
                     if let Some(res) = meta_vbuf.link_input(attr, vbuf) {
                         let d = res.map_err(|e| InitError::VertexImport(attr.name.as_str(), Some(e)))?;
                         desc.attributes[attr.slot as usize] = Some(d);
@@ -118,8 +118,8 @@ pub struct Data {
     pub globals: Vec<<RawGlobal as DataBind<Resources>>::Data>,
     pub out_colors: Vec<<RenderTarget as DataBind<Resources>>::Data>,
     pub out_depth: Option<<DepthStencilTarget as DataBind<Resources>>::Data>,
-	pub samplers: Vec<<Sampler as DataBind<Resources>>::Data>,
-	pub textures: Vec<<RawShaderResource as DataBind<Resources>>::Data>,
+    pub samplers: Vec<<Sampler as DataBind<Resources>>::Data>,
+    pub textures: Vec<<RawShaderResource as DataBind<Resources>>::Data>,
     pub vertex_bufs: Vec<<RawVertexBuffer as DataBind<Resources>>::Data>,
 }
 
@@ -147,14 +147,14 @@ impl PipelineData<Resources> for Data {
             meta_depth.bind_to(out, &depth, mgr, acc);
         }
 
-		let samplers = meta.samplers.iter().zip(&self.samplers);
-		for (meta_samp, samp) in samplers {
-			meta_samp.bind_to(out, &samp, mgr, acc);
+        let samplers = meta.samplers.iter().zip(&self.samplers);
+        for (meta_samp, samp) in samplers {
+            meta_samp.bind_to(out, &samp, mgr, acc);
 		}
 
-		let textures = meta.textures.iter().zip(&self.textures);
-		for (meta_tex, tex) in textures {
-			meta_tex.bind_to(out, &tex, mgr, acc);
+        let textures = meta.textures.iter().zip(&self.textures);
+        for (meta_tex, tex) in textures {
+            meta_tex.bind_to(out, &tex, mgr, acc);
 		}
 
         let vertex_bufs = meta.vertex_bufs.iter().zip(&self.vertex_bufs);
