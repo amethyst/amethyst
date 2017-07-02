@@ -92,7 +92,7 @@ impl MaterialBuilder {
     }
 
     /// Builds and returns the new material.
-    pub fn build(self, fac: &mut Factory) -> Result<Material> {
+    pub(crate) fn finish(self, fac: &mut Factory) -> Result<Material> {
         Ok(Material {
             albedo: self.albedo.into_texture(fac)?,
             emission: self.emission.into_texture(fac)?,

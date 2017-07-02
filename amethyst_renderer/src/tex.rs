@@ -8,7 +8,6 @@ use types::{Factory, RawShaderResourceView, RawTexture};
 /// Handle to a GPU texture resource.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Texture {
-    data: Vec<u8>,
     kind: Kind,
     texture: RawTexture,
     view: RawShaderResourceView,
@@ -71,6 +70,7 @@ impl TextureBuilder {
     }
 
     /// Sets the number of mipmap levels to generate.
+    /// FIXME: Need to understand how to handle this in gfx.
     pub fn with_mip_levels(mut self, val: u8) -> Self {
         self.info.levels = val;
         self
@@ -84,7 +84,7 @@ impl TextureBuilder {
     }
 
     /// Sets whether the texture is mutable or not.
-    pub fn is_mutable(mut self, mutable: bool) -> Self {
+    pub fn dynamic(mut self, mutable: bool) -> Self {
         use gfx::memory::Usage;
         self.info.usage = if mutable { Usage::Dynamic } else { Usage::Data };
         self
@@ -110,7 +110,6 @@ impl TextureBuilder {
         let view = fac.view_texture_as_shader_resource_raw(&tex, desc)?;
 
         Ok(Texture {
-            data: self.data.to_owned(),
             kind: self.info.kind,
             texture: tex,
             view: view,

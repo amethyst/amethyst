@@ -4,7 +4,7 @@
 
 use error::Result;
 use pipe::{Effect, EffectBuilder, Target, Targets};
-use scene::Scene;
+use scene::{Model, Scene};
 use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::sync::Arc;
 use types::{Encoder, Factory};
@@ -21,7 +21,7 @@ pub enum Pass {
 
 impl Pass {
     /// Applies the rendering pass using the given `Encoder` and `Target`.
-    pub fn apply(&self, enc: &mut Encoder, out: &Target, scene: &Scene) {
+    pub fn apply(&self, enc: &mut Encoder, model: &Model, scene: &Scene, out: &Target) {
         match *self {
             Pass::Function(ref func) => func(enc, out),
             Pass::Post(ref func, ref e) => func(enc, out, e, scene),
