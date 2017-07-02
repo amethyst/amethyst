@@ -3,7 +3,7 @@
 use error::{Error, Result};
 use pipe::{Target, Targets};
 use pipe::pass::{Pass, PassBuilder};
-use scene::Scene;
+use scene::{Model, Scene};
 use std::sync::Arc;
 use types::{Encoder, Factory};
 
@@ -38,10 +38,10 @@ impl Stage {
 
     /// Applies all passes in this stage to the given `Scene` and outputs the
     /// result to the proper target.
-    pub fn apply(&self, enc: &mut Encoder, scene: &Scene) {
+    pub fn apply(&self, enc: &mut Encoder, model: &Model, scene: &Scene) {
         if self.enabled {
             for pass in self.passes.as_slice() {
-                pass.apply(enc, &self.target, scene);
+                pass.apply(enc, model, scene, &self.target);
             }
         }
     }

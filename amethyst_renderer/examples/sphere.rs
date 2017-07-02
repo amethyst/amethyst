@@ -21,11 +21,16 @@ fn main() {
     let pipe = renderer.create_pipe(Pipeline::forward()).unwrap();
 
     let verts = gen_sphere(32, 32);
-    let mesh = renderer.create_mesh(Mesh::new(&verts)).unwrap();
+    let mesh = renderer.create_mesh(Mesh::build(&verts)).unwrap();
+
+    // let bytes = load_texture("bricks.png").unwrap();
+    // let tex = renderer.create_texture(Texture::build(&bytes)).unwrap();
+    // let mtl = Material::build().with_albedo(&tex).finish();
+    // let model = Model { mesh: mesh, material: mtl };
 
     let mut scene = Scene::default();
-    scene.add_mesh("ball", mesh);
-    scene.add_light("lamp", PointLight::default());
+    // scene.add_model(&model);
+    scene.add_light(PointLight::default());
 
     let mut delta = Duration::from_secs(0);
     events.run_forever(|e| {

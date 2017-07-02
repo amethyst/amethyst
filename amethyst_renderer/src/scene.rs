@@ -3,61 +3,59 @@
 //! # Example
 //!
 //! ```rust
+//! # use amethyst_renderer::Scene;
+//! # use amethyst_renderer::light::PointLight;
 //! let mut scene = Scene::default();
-//! scene.add_light(PointLight::default());
-//! scene.add_mesh(sphere, material);
+//! scene.add_light("light", PointLight::default());
 //! ```
 
 use cam::Camera;
-use fnv::FnvHashMap as HashMap;
 use light::Light;
 use mesh::Mesh;
 use mtl::Material;
-use std::collections::hash_map::Values;
+use rayon::slice::Iter;
 
-/// Immutable slice iterator of lights.
-pub type LightIter<'l> = Values<'l, String, Light>;
+/// Immutable parallel iterator of lights.
+pub type Lights<'l> = Iter<'l, Light>;
 
-/// Immutable slice iterator of meshes.
-pub type MeshIter<'m> = Values<'m, String, Mesh>;
+/// Immutable parallel iterator of models.
+pub type Models<'l> = Iter<'l, Model>;
 
 /// Collection of lights and meshes to render.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Scene {
-    camera: Vec<Camera>,
-    lights: HashMap<String, Light>,
-    mats: HashMap<String, Material>,
-    meshes: HashMap<String, Mesh>,
+    cameras: Vec<Camera>,
+    lights: Vec<Light>,
+    models: Vec<Model>,
 }
 
 impl Scene {
     /// Adds a light source to the scene.
-    pub fn add_light<N: Into<String>, L: Into<Light>>(&mut self, name: N, light: L) {
-        self.lights.insert(name.into(), light.into());
+    pub fn add_light<L: Into<Light>>(&mut self, light: L) {
+        self.lights.push(light.into());
     }
 
     /// Adds a mesh to the scene.
-    pub fn add_mesh<N: Into<String>>(&mut self, name: N, mesh: Mesh) {
-        self.meshes.insert(name.into(), mesh);
+    pub fn add_model(&mut self, model: Model) {
+        self.models.push(model);
     }
 
-    /// Removes a light source from the scene.
-    pub fn remove_light(&mut self, name: &str) -> Option<Light> {
-        self.lights.remove(name)
+    /// Iterates through all stored lights in parallel.
+    pub fn par_iter_lights(&self) -> Lights {
+        use rayon::prelude::*;
+        self.lights.par_iter()
     }
 
-    /// Removes a mesh from the scene.
-    pub fn remove_mesh(&mut self, name: &str) -> Option<Mesh> {
-        self.meshes.remove(name)
+    /// Iterates through all stored models in parallel.
+    pub fn par_iter_models(&self) -> Models {
+        use rayon::prelude::*;
+        self.models.par_iter()
     }
+}
 
-    /// Returns an immutable reference to all lights in the scene.
-    pub fn iter_lights(&self) -> LightIter {
-        self.lights.values()
-    }
-
-    /// Returns an immutable reference to all meshes in the scene.
-    pub fn iter_meshes(&self) -> MeshIter {
-        self.meshes.values()
-    }
+#[allow(missing_docs)]
+#[derive(Clone, Debug, PartialEq)]
+pub struct Model {
+    pub material: Material,
+    pub mesh: Mesh,
 }

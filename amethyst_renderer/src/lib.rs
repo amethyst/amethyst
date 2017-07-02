@@ -83,7 +83,7 @@ pub use light::Light;
 pub use mesh::{Mesh, MeshBuilder};
 pub use mtl::{Material, MaterialBuilder};
 pub use pipe::{Pipeline, PipelineBuilder, Stage, Target};
-pub use scene::{LightIter, MeshIter, Scene};
+pub use scene::{Model, Scene};
 pub use tex::{Texture, TextureBuilder};
 pub use vertex::VertexFormat;
 
@@ -154,15 +154,15 @@ impl Renderer {
         use gfx::Device;
         use rayon::prelude::*;
 
-        {
+        for stage in pipe.stages() {
             let encoders = self.encoders.as_mut_slice();
-            self.pool.install(|| {
-                pipe.stages()
-                    .par_iter()
-                    .zip(encoders)
-                    .filter(|&(stage, _)| stage.is_enabled())
-                    .for_each(|(stage, enc)| stage.apply(enc, scene));
-            });
+            if stage.is_enabled() {
+                self.pool.install(|| {
+                    scene.par_iter_models()
+                        .zip(encoders)
+                        .for_each(|(model, enc)| stage.apply(enc, model, scene));
+                });
+            }
         }
 
         for enc in self.encoders.iter_mut() {
@@ -205,13 +205,13 @@ impl<'a> RendererBuilder<'a> {
     }
 
     #[allow(missing_docs)]
-    pub fn with_winit_builder(&mut self, wb: WindowBuilder) -> &mut Self {
+    pub fn with_winit_builder(mut self, wb: WindowBuilder) -> Self {
         self.winit_builder = wb;
         self
     }
 
     #[allow(missing_docs)]
-    pub fn with_pool(&mut self, pool: Arc<rayon::ThreadPool>) -> &mut Self {
+    pub fn with_pool(mut self, pool: Arc<rayon::ThreadPool>) -> Self {
         self.pool = Some(pool);
         self
     }
