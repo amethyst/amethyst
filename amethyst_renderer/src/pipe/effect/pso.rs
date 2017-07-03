@@ -150,12 +150,12 @@ impl PipelineData<Resources> for Data {
         let samplers = meta.samplers.iter().zip(&self.samplers);
         for (meta_samp, samp) in samplers {
             meta_samp.bind_to(out, &samp, mgr, acc);
-		}
+        }
 
         let textures = meta.textures.iter().zip(&self.textures);
         for (meta_tex, tex) in textures {
             meta_tex.bind_to(out, &tex, mgr, acc);
-		}
+        }
 
         let vertex_bufs = meta.vertex_bufs.iter().zip(&self.vertex_bufs);
         for (meta_vbuf, vbuf) in vertex_bufs {

@@ -23,7 +23,7 @@ pub struct Material {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-enum TextureKind {
+pub(crate) enum TextureKind {
     Constant(Rgba),
     Map(Texture),
 }

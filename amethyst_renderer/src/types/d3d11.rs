@@ -1,7 +1,6 @@
 //! Direct3D 11 backend types.
 
-use gfx_device_dx11;
-use gfx_device_dx11::DeferredContext;
+use gfx_device_dx11::{self, DeferredContext};
 use gfx_window_dxgi;
 
 /// Command buffer type.
@@ -15,6 +14,9 @@ pub type Factory = gfx_device_dx11::Factory;
 
 /// Graphics resource type.
 pub type Resources = gfx_device_dx11::Resources;
+
+/// Shader model version.
+pub type ShaderModel = gfx_device_dx11::ShaderModel;
 
 /// Window type.
 pub type Window = gfx_window_dxgi::Window;
