@@ -34,7 +34,7 @@ gfx = { version = "0.15", features = ["cgmath-types", "serialize"], path = "/hom
 gfx_core = { version = "0.7", features = ["cgmath-types", "serialize"], path = "/home/ekalderon/gfx/src/core/" }
 gfx_macros = "0.2"
 num_cpus = "1.0"
-rayon = "0.7"
+rayon = "0.8"
 serde = "1.0"
 serde_derive = "1.0"
 winit = "0.6"
@@ -51,7 +51,7 @@ gfx_window_vulkan = { version = "0.1", optional = true }
 
 [target.'cfg(macos)'.dependencies]
 gfx_device_metal = { version = "0.2", optional = true }
-gfx_window_metal = { version = "0.2", optional = true }
+gfx_window_metal = { version = "0.3", optional = true }
 
 [target.'cfg(windows)'.dependencies]
 gfx_device_dx11 = { version = "0.6", optional = true }

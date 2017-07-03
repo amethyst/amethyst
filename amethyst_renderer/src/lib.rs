@@ -155,6 +155,7 @@ impl Renderer {
         use rayon::prelude::*;
 
         for stage in pipe.stages() {
+            assert_eq!(self.encoders.len(), num_cpus::get());
             let encoders = self.encoders.as_mut_slice();
             if stage.is_enabled() {
                 self.pool.install(|| {

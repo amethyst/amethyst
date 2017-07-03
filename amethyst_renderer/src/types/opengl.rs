@@ -15,5 +15,8 @@ pub type Factory = gfx_device_gl::Factory;
 /// Graphics resource type.
 pub type Resources = gfx_device_gl::Resources;
 
+/// Shader model version.
+pub type ShaderModel = gfx_device_gl::Version;
+
 /// Window type.
 pub type Window = glutin::Window;

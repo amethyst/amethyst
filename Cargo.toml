@@ -34,7 +34,7 @@ imagefmt = "4.0"
 serde = "1"
 serde_derive = "1"
 specs = "0.9.1"
-rayon = "0.7"
+rayon = "0.8"
 ticketed_lock = "0.1"
 wavefront_obj = "5.0"
 winit = "0.6"
@@ -74,4 +74,4 @@ name = "assets"
 path = "examples/05_assets/main.rs"
 
 [workspace]
-members = ["amethyst_assets", "amethyst_config"]
+members = ["amethyst_assets", "amethyst_config", "amethyst_renderer"]
