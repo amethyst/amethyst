@@ -14,10 +14,7 @@
 //! let pipe = renderer.create_pipe(Pipeline::deferred()).unwrap();
 //!
 //! let verts = some_sphere_gen_func();
-//! let sphere = renderer.create_mesh(Mesh::new(&verts)
-//!     .with_ambient_texture(Rgba(1.0, 0.5, 0.2, 1.0))
-//!     .with_diffuse_texture(Rgba(0.7, 0.3, 0.1, 1.0)))
-//!     .unwrap();
+//! let sphere = renderer.create_mesh(Mesh::build(&verts)).unwrap();
 //!
 //! let light = PointLight::default();
 //!
@@ -33,7 +30,7 @@
 //!     }
 //!
 //!     renderer.draw(&scene, &pipe, dt);
-//! }
+//! };
 //! ```
 
 #![deny(missing_docs)]
