@@ -61,8 +61,6 @@ impl Component for Plank {
 
 struct PongSystem;
 
-unsafe impl Sync for PongSystem {}
-
 struct Score {
     score_left: i32,
     score_right: i32,
