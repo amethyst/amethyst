@@ -10,7 +10,10 @@ use engine::{ElementState, WindowEvent, Event, VirtualKeyCode, MouseButton};
 /// A Button is any kind of digital input that the engine supports.
 #[derive(Eq, PartialEq, Debug, Copy, Clone)]
 pub enum Button {
+    /// Keyboard keys
     Key(VirtualKeyCode),
+
+    /// Mouse buttons
     Mouse(MouseButton),
     //TODO: Add controller buttons here when the engine has support.
 }
@@ -51,6 +54,7 @@ impl<'a> Iterator for PressedMouseButtons<'a> {
     }
 }
 
+/// Iterator over currently pressed down keys and mouse buttons.
 pub struct PressedButtons<'a> {
     iterator: Chain<Map<PressedMouseButtons<'a>, fn(&MouseButton) -> Button>,
                     Map<PressedKeys<'a>, fn(&VirtualKeyCode) -> Button>>,
@@ -66,7 +70,9 @@ impl<'a> Iterator for PressedButtons<'a> {
 /// Represents an axis made up of digital inputs, like W and S or A and D.
 /// Two of these could be analogous to a DPAD.
 pub struct Axis {
+    /// Positive button, when pressed down the axis value will return 1 if `neg` is not pressed down.
     pub pos: Button,
+    /// Negative button, when pressed down the axis value will return -1 if `neg` is not pressed down.
     pub neg: Button,
 }
 

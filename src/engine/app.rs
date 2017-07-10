@@ -19,13 +19,13 @@ use gfx_device::{DisplayConfig, GfxDevice, gfx_types};
 use renderer::{AmbientLight, DirectionalLight, Pipeline, PointLight, target};
 
 /// User-friendly facade for building games. Manages main loop.
-pub struct Application<'a> {
+pub struct Application<'a, 'b> {
     // Graphics and asset management structs.
     // TODO: Refactor so `pipe` and `gfx_device` are moved into the renderer.
     assets: AssetManager,
     gfx_device: GfxDevice,
     pipe: Pipeline,
-    dispatcher: Dispatcher<'a, 'a>,
+    dispatcher: Dispatcher<'a, 'b>,
     world: World,
 
     // State management and game loop timing structs.
@@ -36,10 +36,10 @@ pub struct Application<'a> {
     timer: Stopwatch,
 }
 
-impl<'a> Application<'a> {
+impl<'a, 'b> Application<'a, 'b> {
     /// Creates a new Application with the given initial game state, dispatcher and world,
     /// and display configuration.
-    pub fn new<T>(initial_state: T, dispatcher: Dispatcher<'a, 'a>, mut world: World, cfg: DisplayConfig) -> Application<'a>
+    pub fn new<T>(initial_state: T, dispatcher: Dispatcher<'a, 'b>, mut world: World, cfg: DisplayConfig) -> Application<'a, 'b>
         where T: State + 'static
     {
         use ecs::resources::{Camera, Projection, ScreenDimensions};
@@ -111,7 +111,7 @@ impl<'a> Application<'a> {
     }
 
     /// Builds a new application using builder pattern.
-    pub fn build<T>(initial_state: T, cfg: DisplayConfig) -> ApplicationBuilder<'a, T>
+    pub fn build<T>(initial_state: T, cfg: DisplayConfig) -> ApplicationBuilder<'a, 'b, T>
         where T: State + 'static
     {
         ApplicationBuilder::new(initial_state, cfg)
@@ -222,21 +222,21 @@ impl<'a> Application<'a> {
 }
 
 /// Helper builder for Applications.
-pub struct ApplicationBuilder<'a, T>
+pub struct ApplicationBuilder<'a, 'b, T>
     where T: State + 'static
 {
     config: DisplayConfig,
     initial_state: T,
-    dispatcher_builder: DispatcherBuilder<'a, 'a>,
+    dispatcher_builder: DispatcherBuilder<'a, 'b>,
     world: World,
 }
 
-impl<'a, T> ApplicationBuilder<'a, T>
+impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T>
     where T: State + 'static
 {
     /// Creates a new ApplicationBuilder with the given initial game state and
     /// display configuration.
-    pub fn new(initial_state: T, cfg: DisplayConfig) -> ApplicationBuilder<'a, T> {
+    pub fn new(initial_state: T, cfg: DisplayConfig) -> ApplicationBuilder<'a, 'b, T> {
         use rayon::Configuration;
 
         let pool = Arc::new(ThreadPool::new(Configuration::new().num_threads(num_cpus::get())).expect("Failed to create rayon::ThreadPool"));
@@ -250,7 +250,7 @@ impl<'a, T> ApplicationBuilder<'a, T>
     }
 
     /// Registers a given component type.
-    pub fn register<C>(mut self) -> ApplicationBuilder<'a, T>
+    pub fn register<C>(mut self) -> ApplicationBuilder<'a, 'b, T>
         where C: Component
     {
         self.world.register::<C>();
@@ -260,7 +260,7 @@ impl<'a, T> ApplicationBuilder<'a, T>
     /// Inserts a barrier which assures that all systems added before the barrier are executed before the ones after this barrier.
     /// Does nothing if there were no systems added since the last call to add_barrier().
     /// Thread-local systems are not affected by barriers; they're always executed at the end.
-    pub fn add_barrier(mut self) -> ApplicationBuilder<'a, T> {
+    pub fn add_barrier(mut self) -> ApplicationBuilder<'a, 'b, T> {
         self.dispatcher_builder = self.dispatcher_builder.add_barrier();
         self
     }
@@ -268,8 +268,8 @@ impl<'a, T> ApplicationBuilder<'a, T>
     /// Adds a given system `sys`, assigns it the string identifier `name`,
     /// and marks it dependent on systems `dep`.
     /// Note: all dependencies should be added before you add depending system
-    pub fn with<S>(mut self, sys: S, name: &str, dep: &[&str]) -> ApplicationBuilder<'a, T>
-        where for<'b> S: System<'b> + Send + 'a
+    pub fn with<S>(mut self, sys: S, name: &str, dep: &[&str]) -> ApplicationBuilder<'a, 'b, T>
+        where for<'c> S: System<'c> + Send + 'a + 'b
     {
         self.dispatcher_builder = self.dispatcher_builder.add(sys, name, dep);
         self
@@ -277,15 +277,15 @@ impl<'a, T> ApplicationBuilder<'a, T>
 
     /// Adds a given thread-local system `sys`
     /// All thread-local systems are executed sequentially after all non-thread-local systems
-    pub fn with_thread_local<S>(mut self, sys: S) -> ApplicationBuilder<'a, T>
-        where for<'b> S: System<'b> + 'a
+    pub fn with_thread_local<S>(mut self, sys: S) -> ApplicationBuilder<'a, 'b, T>
+        where for<'c> S: System<'c> + 'a + 'b
     {
         self.dispatcher_builder = self.dispatcher_builder.add_thread_local(sys);
         self
     }
 
     /// Builds the Application and returns the result.
-    pub fn done(self) -> Application<'a> {
+    pub fn done(self) -> Application<'a, 'b> {
         Application::new(self.initial_state, self.dispatcher_builder.build(), self.world, self.config)
     }
 }
