@@ -33,11 +33,11 @@ impl Asset for DummyAsset {
         Ok(DummyAsset(Arc::new(data)))
     }
 
-    fn asset_loaded(context: &Context, spec: AssetSpec, asset: &Self) {
+    fn cache(context: &Context, spec: AssetSpec, asset: &Self) {
         context.cache.insert(spec, asset.clone());
     }
 
-    fn cached(context: &Context, spec: &AssetSpec) -> Option<Self> {
+    fn retrieve(context: &Context, spec: &AssetSpec) -> Option<Self> {
         context.cache.get(spec)
     }
 

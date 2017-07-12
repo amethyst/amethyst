@@ -253,7 +253,7 @@ pub fn load_asset<A, F, N, S>(context: &A::Context,
     let store_id = storage.store_id();
     let spec = AssetSpec::new(name.clone(), F::extension(), store_id);
 
-    A::cached(context, &spec)
+    A::retrieve(context, &spec)
         .map(|a| Ok(a))
         .unwrap_or_else(move || load_asset_inner(context, format, spec, storage))
         .map_err(|e| AssetError::new(AssetSpec::new(name, F::extension(), store_id), e))
@@ -295,7 +295,7 @@ fn load_asset_inner<A, F, S>(context: &A::Context,
     let a = Asset::from_data(data, context)
         .map_err(LoadError::AssetError)?;
 
-    A::asset_loaded(context, spec, &a);
+    A::cache(context, spec, &a);
 
     Ok(a)
 }

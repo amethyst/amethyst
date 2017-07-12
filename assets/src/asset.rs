@@ -42,12 +42,12 @@ pub trait Asset
 
     /// Notifies about an asset load. This is can be used to cache the asset.
     /// To return a cached asset, see the `cached` function.
-    fn asset_loaded(_context: &Self::Context, _spec: AssetSpec, _asset: &Self) {}
+    fn cache(_context: &Self::Context, _spec: AssetSpec, _asset: &Self) {}
 
     /// Returns `Some` cached value if possible, otherwise `None`.
     ///
     /// For a basic implementation of a cache, please take a look at the `Cache` type.
-    fn cached(_context: &Self::Context, _spec: &AssetSpec) -> Option<Self> {
+    fn retrieve(_context: &Self::Context, _spec: &AssetSpec) -> Option<Self> {
         None
     }
 
