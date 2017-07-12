@@ -28,6 +28,10 @@ issues first, as it's possible that someone else reported the same issue before
 you. Though it helps save time, don't worry! We won't mind if you accidentally
 post a duplicate issue.
 
+Please note that if an issue can only be reproduced on a nightly compiler it will be closed and marked "Will not fix."
+If an issue can only be reproduced on a beta compiler the next action is to determine if this issue will also occur
+in the next release of stable.  If it will, we'll address it, otherwise it will be closed as "Will not fix."
+
 That's all there is to it! Thanks for posting your issue; we'll take it to heart
 and try our best to resolve it.
 
