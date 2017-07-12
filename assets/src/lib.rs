@@ -1,4 +1,4 @@
-//! # amethyst-assets
+//! # amethyst_assets
 //!
 //! Asset management crate. Designed with the following goals
 //! in mind:
