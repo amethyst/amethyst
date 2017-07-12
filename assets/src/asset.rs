@@ -106,13 +106,15 @@ impl<T> Cache<T>
     }
 
     /// Inserts an asset, locking the internal `RwLock` to get write access to the hash map.
-    pub fn insert(&self, spec: AssetSpec, asset: T) {
-        self.map.write().insert(spec, asset);
+    ///
+    /// Returns the previous value in case there was any.
+    pub fn insert(&self, spec: AssetSpec, asset: T) -> Option<T> {
+        self.map.write().insert(spec, asset)
     }
 
     /// Retrieves an asset, locking the internal `RwLock` to get read access to the hash map.
     /// In case this asset has been inserted previously, it will be cloned and returned.
-    /// Otherwise, you'll `None`.
+    /// Otherwise, you'll receive `None`.
     pub fn get(&self, spec: &AssetSpec) -> Option<T> {
         self.map.read().get(spec).map(Clone::clone)
     }

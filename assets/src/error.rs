@@ -1,10 +1,11 @@
 use std::error::Error;
-use std::fmt::{Display, Error as FormatError, Formatter};
+use std::fmt::{Debug, Display, Error as FormatError, Formatter, Result as FmtResult};
+use std::convert::AsRef;
 
-use AssetSpec;
+use asset::AssetSpec;
 
 /// Error type returned when loading an asset.
-/// Includes the `AssetSpec` and the error (`LoadErrorPure`).
+/// Includes the `AssetSpec` and the error (`LoadError`).
 #[derive(Clone, Debug)]
 pub struct AssetError<A, F, S> {
     /// The specifier of the asset which failed to load
@@ -34,9 +35,43 @@ impl<A, F, S> Display for AssetError<A, F, S>
     }
 }
 
+pub struct BoxedErr(pub Box<Error + Send + Sync + 'static>);
+
+impl BoxedErr {
+    pub fn new<T>(err: T) -> Self
+        where T: Error + Send + Sync + 'static
+    {
+        BoxedErr(Box::new(err))
+    }
+}
+
+impl AsRef<Error> for BoxedErr {
+    fn as_ref(&self) -> &(Error + 'static) {
+        self.0.as_ref()
+    }
+}
+
+impl Debug for BoxedErr {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        write!(f, "{:?}", self.as_ref())
+    }
+}
+
+impl Display for BoxedErr {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        write!(f, "{}", self.as_ref())
+    }
+}
+
+impl Error for BoxedErr {
+    fn description(&self) -> &str {
+        self.as_ref().description()
+    }
+}
+
 /// Combined error type which is produced when loading an
 /// asset. This error does not include information which asset
-/// failed to load. For that, please look at `LoadError`.
+/// failed to load. For that, please look at `AssetError`.
 #[derive(Clone, Debug)]
 pub enum LoadError<A, F, S> {
     /// The conversion from data -> asset failed.

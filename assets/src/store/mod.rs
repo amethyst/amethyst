@@ -2,6 +2,7 @@ pub use self::dir::Directory;
 
 use std::error::Error;
 use std::sync::atomic::{AtomicUsize, Ordering};
+use BoxedErr;
 
 mod dir;
 
@@ -23,11 +24,58 @@ impl Allocator {
     }
 }
 
+pub trait AnyStore: Send + Sync + 'static {
+    fn modified(&self, category: &str, id: &str, ext: &str) -> Result<u64, BoxedErr>;
+
+    fn load(&self, category: &str, id: &str, ext: &str) -> Result<Vec<u8>, BoxedErr>;
+
+    fn store_id(&self) -> StoreId;
+}
+
+impl<T> AnyStore for T
+    where T: Store + Send + Sync + 'static
+{
+    fn modified(&self, category: &str, id: &str, ext: &str) -> Result<u64, BoxedErr> {
+        T::modified(self, category, id, ext)
+            .map_err(BoxedErr::new)
+    }
+
+    fn load(&self, category: &str, id: &str, ext: &str) -> Result<Vec<u8>, BoxedErr> {
+        T::load(self, category, id, ext).map_err(BoxedErr::new)
+    }
+
+    fn store_id(&self) -> StoreId {
+        T::store_id(self)
+    }
+}
+
+impl<T> Store for Box<T>
+    where T: AnyStore + ?Sized
+{
+    type Error = BoxedErr;
+
+    fn modified(&self, category: &str, id: &str, ext: &str) -> Result<u64, Self::Error> {
+        T::modified(self, category, id, ext)
+    }
+
+    fn load(&self, category: &str, id: &str, ext: &str) -> Result<Vec<u8>, Self::Error> {
+        T::load(self, category, id, ext)
+    }
+
+    fn store_id(&self) -> StoreId {
+        T::store_id(self)
+    }
+}
+
 /// A trait for asset stores, which provides
 /// methods for loading
 pub trait Store {
-    type Error: Error + 'static;
-    type Location;
+    type Error: Error + Send + Sync + 'static;
+
+    /// This is called to check if an asset has been modified.
+    ///
+    /// Returns the modification time as seconds since `UNIX_EPOCH`.
+    fn modified(&self, category: &str, id: &str, ext: &str) -> Result<u64, Self::Error>;
 
     /// Loads the bytes given a category, id and extension of the asset.
     ///
