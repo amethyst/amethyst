@@ -19,14 +19,14 @@ use {Allocator, Asset, BoxedErr, Directory, Format, AssetError, LoadError, Store
 /// added to the ECS world, where the responsible system can poll it and merge
 /// it into the persistent storage once it is `Ready`.
 pub struct AssetFuture<A, E> {
-    inner: Option<Arc<AssetFutureInner<A, E>>>,
+    inner: Option<Arc<AssetFutureCell<A, E>>>,
 }
 
 impl<A: 'static, E: 'static> AssetFuture<A, E> {
     fn spawn<F>(pool: &ThreadPool, f: F) -> Self
         where F: FnOnce() -> Result<A, E> + Send + 'static
     {
-        let inner = AssetFutureInner { value: UnsafeCell::new(None) };
+        let inner = AssetFutureCell { value: UnsafeCell::new(None) };
         let inner = Arc::new(inner);
 
         let cloned = inner.clone();
@@ -96,12 +96,12 @@ impl<A, E> Future for AssetFuture<A, E> {
     }
 }
 
-struct AssetFutureInner<A, E> {
+struct AssetFutureCell<A, E> {
     value: UnsafeCell<Option<Result<A, E>>>,
 }
 
-unsafe impl<A, E> Send for AssetFutureInner<A, E> {}
-unsafe impl<A, E> Sync for AssetFutureInner<A, E> {}
+unsafe impl<A, E> Send for AssetFutureCell<A, E> {}
+unsafe impl<A, E> Sync for AssetFutureCell<A, E> {}
 
 /// The asset loader, holding the contexts,
 /// the default (directory) store and a reference to the
