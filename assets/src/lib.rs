@@ -13,8 +13,10 @@ extern crate parking_lot;
 extern crate rayon;
 extern crate specs;
 
+pub use specs::common::BoxedErr;
+
 pub use asset::{Asset, AssetSpec, Cache, Format};
-pub use error::{AssetError, BoxedErr, LoadError, NoError};
+pub use error::{AssetError, LoadError, NoError};
 pub use loader::{AssetFuture, Loader, load_asset, load_asset_future};
 pub use store::{Allocator, Directory, Store, StoreId};
 

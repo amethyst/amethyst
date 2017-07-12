@@ -1,6 +1,5 @@
 use std::error::Error;
-use std::fmt::{Debug, Display, Error as FormatError, Formatter, Result as FmtResult};
-use std::convert::AsRef;
+use std::fmt::{Display, Formatter, Result as FmtResult};
 
 use asset::AssetSpec;
 
@@ -25,47 +24,13 @@ impl<A, F, S> Display for AssetError<A, F, S>
           F: Display,
           S: Display
 {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FormatError> {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
         write!(f,
                "Failed to load asset \"{}\" of format \"{}\" from storage with id \"{}\": {}",
                &self.asset.name,
                &self.asset.ext,
                &self.asset.store.id(),
                &self.error)
-    }
-}
-
-pub struct BoxedErr(pub Box<Error + Send + Sync + 'static>);
-
-impl BoxedErr {
-    pub fn new<T>(err: T) -> Self
-        where T: Error + Send + Sync + 'static
-    {
-        BoxedErr(Box::new(err))
-    }
-}
-
-impl AsRef<Error> for BoxedErr {
-    fn as_ref(&self) -> &(Error + 'static) {
-        self.0.as_ref()
-    }
-}
-
-impl Debug for BoxedErr {
-    fn fmt(&self, f: &mut Formatter) -> FmtResult {
-        write!(f, "{:?}", self.as_ref())
-    }
-}
-
-impl Display for BoxedErr {
-    fn fmt(&self, f: &mut Formatter) -> FmtResult {
-        write!(f, "{}", self.as_ref())
-    }
-}
-
-impl Error for BoxedErr {
-    fn description(&self) -> &str {
-        self.as_ref().description()
     }
 }
 
@@ -87,7 +52,7 @@ impl<A, F, S> Display for LoadError<A, F, S>
           F: Display,
           S: Display
 {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FormatError> {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
         match *self {
             LoadError::AssetError(ref e) => write!(f, "Failed to load asset: {}", e),
             LoadError::FormatError(ref e) => write!(f, "Failed to load data: {}", e),
@@ -141,7 +106,7 @@ impl<A, F, S> Error for LoadError<A, F, S>
 pub enum NoError {}
 
 impl Display for NoError {
-    fn fmt(&self, _: &mut Formatter) -> Result<(), FormatError> {
+    fn fmt(&self, _: &mut Formatter) -> FmtResult {
         match *self {}
     }
 }
