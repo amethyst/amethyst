@@ -26,8 +26,6 @@ impl<A: 'static, E: 'static> AssetFuture<A, E> {
     fn spawn<F>(pool: &ThreadPool, f: F) -> Self
         where F: FnOnce() -> Result<A, E> + Send + 'static
     {
-        use std::mem::drop;
-
         let inner = AssetFutureInner { value: UnsafeCell::new(None) };
         let inner = Arc::new(inner);
 
@@ -81,6 +79,18 @@ impl<A, E> Future for AssetFuture<A, E> {
                 self.inner = Some(arc);
 
                 Ok(Async::NotReady)
+            }
+        }
+    }
+
+    fn wait(mut self) -> Result<Self::Item, Self::Error> {
+        use futures::Async;
+
+        loop {
+            match self.poll() {
+                Ok(Async::Ready(x)) => return Ok(x),
+                Ok(Async::NotReady) => {}
+                Err(x) => return Err(x),
             }
         }
     }
