@@ -41,7 +41,7 @@ pub trait Asset
     fn from_data(data: Self::Data, context: &Self::Context) -> Result<Self, Self::Error>;
 
     /// Notifies about an asset load. This is can be used to cache the asset.
-    /// To return a cached asset, see the `cached` function.
+    /// To return a cached asset, see the `retrieve` function.
     fn cache(_context: &Self::Context, _spec: AssetSpec, _asset: &Self) {}
 
     /// Returns `Some` cached value if possible, otherwise `None`.
