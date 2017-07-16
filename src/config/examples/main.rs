@@ -2,7 +2,7 @@
 #[macro_use]
 extern crate amethyst_config;
 
-use amethyst_config::{Config, ConfigError};
+use amethyst_config::Config;
 
 config! {
     #[derive(Debug)]

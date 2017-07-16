@@ -1,4 +1,4 @@
-//! Loads YAML configuration files (.yaml/.yml) into a structure for easy usage.
+//! Loads configuration files (.yaml/.yml/.toml) into a structure for easy/statically typed usage.
 //!
 //! # Basic usage:
 //!
@@ -6,17 +6,16 @@
 //! #[macro_use]
 //! extern crate amethyst_config;
 //!
-//! use amethyst_config::Element;
-//! use std::path::Path;
+//! use amethyst_config::Config;
 //!
 //! config! {
-//!     struct MyConfig {
+//!     struct ExampleConfig {
 //!         pub amount: i32 = 50,
 //!     }
 //! }
 //!
 //! fn main() {
-//!     let config = MyConfig::default();
+//!     let config = ExampleConfig::default();
 //!     assert_eq!(config.amount, 50);
 //! }
 //! ```
@@ -32,20 +31,19 @@
 //! ```
 //!
 //! The field name will be looked up when attempting to load from a .yml/.yaml
-//! file. If it is found, then the value will be converted from a YAML type to
+//! file. If it is found, then the value will be converted from the formats type to
 //! a Rust type and assigned to the field.
 //!
 //! If a field is missing from the config file or has a value of a wrong type,
 //! the Rust field will fall back to the `default` value.
 //!
 //! In addition to basic types, any struct created through the `config!` macro
-//! will automatically implement the [`Element`](trait.Element.html) trait,
-//! meaning you can nest configuration structs inside each other like so:
+//! will automatically implement `Serialize` and `Deserialize` from the `serde`
+//! library, meaning you can nest configuration structs inside each other.
 //!
 //! ```rust
 //! # #[macro_use] extern crate amethyst_config;
-//! # use amethyst_config::Element;
-//! # use std::path::Path;
+//! # use amethyst_config::Config;
 //!
 //! config! {
 //!     struct NestedConfig {
@@ -54,55 +52,11 @@
 //! }
 //!
 //! config! {
-//!     struct Config {
+//!     struct ExampleConfig {
 //!         pub nested: NestedConfig = NestedConfig::default(),
 //!     }
 //! }
 //! # fn main() { }
-//! ```
-//!
-//! # External YAML files
-//!
-//! In the event that a config file is getting too long, you may define it in
-//! the YAML file as an "extern" field. For example:
-//!
-//! ```yaml
-//! display: "extern"
-//! ```
-//!
-//! This works similarly to Rust's module system. It will first search for
-//! "\\display\\config.yml" in the current context. If it cannot find it, then
-//! it will look for "\\display.yml". If it cannot find either of these, then
-//! the value will be defaulted in addition to `display` being overwritten if
-//! you called `write_file()`.
-//!
-//! # Enums
-//!
-//! When `config!` is used on an enum type, it automatically implements the
-//! `Element` trait. However, it does not provide possibilities for data holding
-//! enums, only simple options list enums.
-//!
-//! ```rust
-//! # #[macro_use] extern crate amethyst_config;
-//! # use amethyst_config::Element;
-//! # use std::path::Path;
-//! config! {
-//!     enum EnumName {
-//!         Option1,
-//!         Option2,
-//!     }
-//! }
-//!
-//! config! {
-//!     struct Config {
-//!         pub field: EnumName = EnumName::Option2,
-//!     }
-//! }
-//!
-//! fn main() {
-//!     let config = Config::default();
-//!     assert_eq!(config.field, EnumName::Option2);
-//! }
 //! ```
 //!
 //! # Documentation and commenting
@@ -114,11 +68,10 @@
 //! ```rust
 //! # #[macro_use]
 //! # extern crate amethyst_config;
-//! #
-//! # use amethyst_config::Element;
-//! # use std::path::Path;
+//! # use amethyst_config::Config;
 //! config! {
-//!     struct Config {
+//!     /// This is an example configuration!
+//!     struct ExampleConfig {
 //!         /// Width and height of the window on initialization. Defaults to
 //!         /// 1024x768.
 //!         pub dimensions: [u16; 2] = [1024, 768],

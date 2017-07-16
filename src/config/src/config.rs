@@ -75,14 +75,14 @@ pub trait Config where Self: Sized {
 }
 
 /// The `config!` macro allows defining configuration structures that can load in
-/// `.yml`/`.yaml` files.
+/// `.yml`/`.yaml`/`.toml` files.
 ///
 /// It implements the [`serde::Serialize`], [`serde::Deserialize`], and [`Config`] traits.
 /// As well as the standard libraries `std::default::Default` trait for the defaulting fields.
 ///
-/// It follows Rust's syntax for defining structures with one addition, defaulting values.
+/// It follows Rust's syntax for defining structures with one addition: defaulting values.
 /// If the file does not contain a field of the configuration, then it will print out
-/// an error describing the issue and then load in this defaulting value.
+/// an error describing the issue and then load in this default value.
 ///
 /// In the case that the file is not found, or the configuration does not exist at all
 /// inside the file, then the configuration will have all default values.
@@ -93,12 +93,7 @@ pub trait Config where Self: Sized {
 /// 
 /// ```rust
 /// #[macro_use]
-/// extern crate amethyst;
-/// extern crate serde;
-/// #[macro_use]
-/// extern crate serde_derive;
-/// extern crate serde_yaml;
-/// extern crate toml;
+/// extern crate amethyst_config;
 ///
 ///config!(
 ///    pub struct DisplayConfig {
