@@ -4,7 +4,7 @@ extern crate amethyst;
 
 use amethyst::{Application, Event, State, Trans, VirtualKeyCode, WindowEvent};
 use amethyst::asset_manager::AssetManager;
-use amethyst::project::Config;
+use amethyst::config::Config;
 use amethyst::ecs::World;
 use amethyst::gfx_device::DisplayConfig;
 use amethyst::renderer::Pipeline;

@@ -2,7 +2,7 @@ extern crate amethyst;
 
 use amethyst::{Application, Event, State, Trans, VirtualKeyCode, WindowEvent};
 use amethyst::asset_manager::AssetManager;
-use amethyst::project::Config;
+use amethyst::config::Config;
 use amethyst::ecs::{Component, Fetch, FetchMut, Join, System, VecStorage, World, WriteStorage};
 use amethyst::ecs::components::{Mesh, LocalTransform, Texture, Transform};
 use amethyst::ecs::resources::{Camera, InputHandler, Projection, Time};

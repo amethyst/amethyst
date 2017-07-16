@@ -135,45 +135,11 @@
 #![crate_type = "lib"]
 #![doc(html_logo_url = "http://tinyurl.com/hgsb45k")]
 
-extern crate yaml_rust;
+pub extern crate serde;
+pub extern crate serde_yaml;
+pub extern crate toml;
 
 #[macro_use]
-mod definitions;
-mod yaml;
+mod config;
 
-use std::path::Path;
-
-pub use definitions::{ConfigMeta, ConfigError};
-pub use yaml::{Element, to_string};
-pub use yaml_rust::Yaml;
-
-config! {
-    struct DisplayConfig {
-        pub title: String = "Amethyst game".to_string(),
-        pub brightness: f64 = 1.0,
-        pub fullscreen: bool = false,
-        pub dimensions: (u16, u16) = (1024, 768),
-        pub min_dimensions: Option<(u16, u16)> = None,
-        pub max_dimensions: Option<(u16, u16)> = None,
-        pub vsync: bool = true,
-        pub multisampling: u16 = 0,
-        pub visibility: bool = true,
-    }
-}
-
-config! {
-    struct LoggingConfig {
-        pub file_path: String = "new_project.log".to_string(),
-        pub output_level: String = "warn".to_string(),
-        pub logging_level: String = "debug".to_string(),
-    }
-}
-
-config! {
-    struct Config {
-        /// Configuration for display and graphics
-        pub display: DisplayConfig = DisplayConfig::default(),
-        /// Configuration for output
-        pub logging: LoggingConfig = LoggingConfig::default(),
-    }
-}
+pub use config::{Config, ConfigError};
