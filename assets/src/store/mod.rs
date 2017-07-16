@@ -24,6 +24,7 @@ impl Allocator {
     }
 }
 
+/// A dynamic version of `Store`, allowing to use it as a trait object.
 pub trait AnyStore: Send + Sync + 'static {
     fn modified(&self, category: &str, id: &str, ext: &str) -> Result<u64, BoxedErr>;
 
@@ -70,6 +71,7 @@ impl<T> Store for Box<T>
 /// A trait for asset stores, which provides
 /// methods for loading
 pub trait Store {
+    /// The error that may occur when calling `modified` or `load`.
     type Error: Error + Send + Sync + 'static;
 
     /// This is called to check if an asset has been modified.

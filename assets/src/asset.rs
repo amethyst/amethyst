@@ -22,8 +22,11 @@ use StoreId;
 pub trait Asset
     where Self: Sized
 {
+    /// An associated context type
     type Context;
+    /// The `Data` type this asset can be created from
     type Data;
+    /// The error that may be returned from `from_data`.
     type Error: Error;
 
     /// A small keyword for which category this asset belongs to.
@@ -65,7 +68,7 @@ pub trait Asset
 /// A specifier for an asset, uniquely identifying it by
 ///
 /// * the extension (the format it was provided in)
-/// * it's name
+/// * its name
 /// * the storage it was loaded from
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct AssetSpec {

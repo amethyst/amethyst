@@ -127,6 +127,8 @@ impl Loader {
         }
     }
 
+    /// Adds a store which can later be loaded from by supplying the same `name`
+    /// to `load_from`.
     pub fn add_store<I, S>(&mut self, name: I, store: S)
         where I: Into<String>,
               S: Store + Send + Sync + 'static
@@ -143,7 +145,7 @@ impl Loader {
             .insert(TypeId::of::<A>(), Box::new(Arc::new(context)));
     }
 
-    /// Like `load_from`, but doesn't ask the cache for a
+    /// Like `load_from`, but doesn't ask the cache for the asset.
     pub fn reload<A, F, N, S>(&self,
                               name: N,
                               format: F,
@@ -260,6 +262,8 @@ pub fn load_asset<A, F, N, S>(context: &A::Context,
 }
 
 /// Loads an asset with a given context, format, specifier and storage right now.
+/// Note that this method does not ask for a cached version of the asset, but just
+/// reloads the asset.
 pub fn reload_asset<A, F, N, S>(context: &A::Context,
                                 format: &F,
                                 name: N,
@@ -323,7 +327,7 @@ pub fn load_asset_future<A, F, N, S>(context: Arc<A::Context>,
     AssetFuture::spawn(thread_pool, closure)
 }
 
-/// Like `load_asset`, but loads the asset on a worker thread and returns
+/// Like `reload_asset`, but loads the asset on a worker thread and returns
 /// an `AssetFuture` immediately.
 pub fn reload_asset_future<A, F, N, S>
     (context: Arc<A::Context>,

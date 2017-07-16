@@ -7,6 +7,8 @@
 //! * asynchronous & parallel using rayon and futures
 //! * allow different stores
 
+#![warn(missing_docs)]
+
 extern crate fnv;
 extern crate futures;
 extern crate parking_lot;

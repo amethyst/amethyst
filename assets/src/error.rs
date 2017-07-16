@@ -14,7 +14,7 @@ pub struct AssetError<A, F, S> {
 }
 
 impl<A, F, S> AssetError<A, F, S> {
-    pub fn new(asset: AssetSpec, error: LoadError<A, F, S>) -> Self {
+    pub(crate) fn new(asset: AssetSpec, error: LoadError<A, F, S>) -> Self {
         AssetError { asset, error }
     }
 }
