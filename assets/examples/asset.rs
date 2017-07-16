@@ -47,11 +47,13 @@ impl Format for DummyFormat {
 fn main() {
     use futures::Future;
 
+    let path = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
+
     let cfg = Configuration::new().num_threads(8);
     let pool = Arc::new(ThreadPool::new(cfg).expect("Invalid config"));
 
     let alloc = Allocator::new();
-    let mut loader = Loader::new(&alloc, "examples/assets", pool);
+    let mut loader = Loader::new(&alloc, &path, pool);
 
     loader.register::<DummyAsset>(">> ");
 
