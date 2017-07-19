@@ -6,7 +6,7 @@ extern crate cgmath;
 
 use amethyst::{Application, ElementState, Event, State, Trans, VirtualKeyCode, WindowEvent};
 use amethyst::asset_manager::{AssetManager, DirectoryStore};
-use amethyst::project::Config;
+use amethyst::config::Config;
 use amethyst::ecs::{Fetch, FetchMut, Join, System, WriteStorage, World};
 use amethyst::ecs::components::{LocalTransform, Mesh, Texture, Transform};
 use amethyst::ecs::resources::{Camera, Projection, ScreenDimensions, Time};

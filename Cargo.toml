@@ -15,7 +15,7 @@ license = "MIT/Apache-2.0"
 
 [badges]
 appveyor = { repository = "amethyst/amethyst", branch = "develop" }
-travis-ci = { repository = "amethyst/amethyst" }
+travis-ci = { repository = "amethyst/amethyst", branch = "develop" }
 
 [features]
 default = ["opengl"]
@@ -24,6 +24,7 @@ direct3d = []
 profiler = ["thread_profiler/thread_profiler"]
 
 [dependencies]
+amethyst_config = { path = "src/config", version = "0.3.0" }
 amethyst_renderer = { path = "src/renderer", version = "0.4.3" }
 cgmath = "0.12"
 dds-rs = "0.4"
@@ -41,10 +42,6 @@ ticketed_lock = "0.1"
 wavefront_obj = "5.0"
 
 thread_profiler = { version = "0.1", optional = true }
-serde = "0.9.7"
-serde_derive = "0.9.7"
-serde_yaml = "0.6.2"
-toml = "0.3"
 
 [target.'cfg(windows)'.dependencies]
 gfx_device_dx11 = "0.4"
@@ -75,4 +72,4 @@ name = "assets"
 path = "examples/05_assets/main.rs"
 
 [workspace]
-members = ["src/renderer"]
+members = ["src/config", "src/renderer"]
