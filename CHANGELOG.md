@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [sv]: http://semver.org/
 
 ## [Unreleased]
+### Changed
+* Asset management rewrite (pull request [#244]).
+
+[#244]: https://github.com/amethyst/amethyst/pull/244
 
 ## [0.4.3] - 2017-06-03
 ### Added

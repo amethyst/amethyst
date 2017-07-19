@@ -1,0 +1,27 @@
+[package]
+name = "amethyst_assets"
+version = "0.1.0"
+authors = ["torkleyy <torkleyy@gmail.com>"]
+readme = "README.md"
+description = """
+Asynchronous asset management for games.
+"""
+license = "MIT/Apache-2.0"
+keywords = ["game", "asset", "resource", "management", "amethyst"]
+categories = ["filesystem"]
+
+documentation = "https://www.amethyst.rs/doc/master/amethyst"
+homepage = "https://www.amethyst.rs/"
+repository = "https://github.com/amethyst/amethyst"
+
+[badges]
+appveyor = { repository = "amethyst/amethyst", branch = "develop" }
+travis-ci = { repository = "amethyst/amethyst" }
+
+[dependencies]
+fnv = "1"
+futures = "0.1.14"
+mopa = "0.2.2"
+parking_lot = "0.4.4"
+rayon = "0.7"
+specs = { version = "0.9.2", features = ["common"] }

@@ -72,4 +72,4 @@ name = "assets"
 path = "examples/05_assets/main.rs"
 
 [workspace]
-members = ["src/config", "src/renderer"]
+members = ["amethyst_assets", "src/renderer", "src/config"]
