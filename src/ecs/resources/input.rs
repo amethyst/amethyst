@@ -388,8 +388,8 @@ impl InputHandler {
         self.axes
             .get(&id)
             .map(|a| {
-                let pos = self.button_down(a.pos);
-                let neg = self.button_down(a.neg);
+                let pos = self.button_is_pressed(a.pos);
+                let neg = self.button_is_pressed(a.neg);
                 if pos == neg {
                     0.0
                 } else if pos {
