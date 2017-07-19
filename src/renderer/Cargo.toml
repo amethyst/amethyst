@@ -25,7 +25,7 @@ gfx_device_gl = "0.13"
 gfx_window_glutin = "0.14"
 glutin = "0.7"
 mopa = "0.2"
-specs = "0.8.1"
+specs = "0.9.1"
 
 [dev-dependencies]
 genmesh = "0.4"

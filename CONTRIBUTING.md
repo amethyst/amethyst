@@ -28,6 +28,11 @@ issues first, as it's possible that someone else reported the same issue before
 you. Though it helps save time, don't worry! We won't mind if you accidentally
 post a duplicate issue.
 
+Amethyst does not officially support beta or nightly channels of Rust.
+If an issue can only be reproduced on those channels our resolution strategy will
+be to communicate with the rust project itself to ensure the issue does not reach
+the stable branch.
+
 That's all there is to it! Thanks for posting your issue; we'll take it to heart
 and try our best to resolve it.
 

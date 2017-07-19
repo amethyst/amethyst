@@ -113,6 +113,8 @@ The API reference can be found in `target/doc/amethyst/index.html`.
 
 ## Questions / Help
 
+We do not support anything other than the most recent Rust stable release. Use nightly and beta channels with this project at your own risk.
+
 Please check out the [FAQ][faq] before asking.
 
 If you have an easy question, just ask on [Gitter][gt] and we'll help you and add it to the FAQ.

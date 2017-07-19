@@ -6,7 +6,7 @@ extern crate genmesh;
 
 use amethyst::{Application, Event, State, Trans, VirtualKeyCode, WindowEvent};
 use amethyst::asset_manager::AssetManager;
-use amethyst::project::Config;
+use amethyst::config::Config;
 use amethyst::ecs::World;
 use amethyst::gfx_device::DisplayConfig;
 use amethyst::renderer::{VertexPosNormal, Pipeline};
@@ -18,7 +18,6 @@ struct Example;
 
 impl State for Example {
     fn on_start(&mut self, world: &mut World, assets: &mut AssetManager, pipe: &mut Pipeline) {
-        use amethyst::ecs::Gate;
         use amethyst::ecs::components::{Mesh, Texture};
         use amethyst::ecs::resources::{Camera, Projection, ScreenDimensions};
         use amethyst::renderer::{Layer, PointLight};
@@ -31,8 +30,8 @@ impl State for Example {
         pipe.layers.push(layer);
 
         {
-            let dim = world.read_resource::<ScreenDimensions>().pass();
-            let mut camera = world.write_resource::<Camera>().pass();
+            let dim = world.read_resource::<ScreenDimensions>();
+            let mut camera = world.write_resource::<Camera>();
             camera.proj = Projection::Perspective {
                 fov: 60.0,
                 aspect_ratio: dim.aspect_ratio,
@@ -51,7 +50,7 @@ impl State for Example {
         assets.load_asset_from_data::<Texture, [f32; 4]>("white", [1.0, 1.0, 1.0, 1.0]);
 
         let sphere = assets.create_renderable("sphere", "blue", "white", "white", 1.0).unwrap();
-        world.create_now()
+        world.create_entity()
             .with(sphere)
             .build();
 
@@ -61,7 +60,7 @@ impl State for Example {
             intensity: 3.0,
             ..Default::default()
         };
-        world.create_now()
+        world.create_entity()
             .with(light)
             .build();
     }

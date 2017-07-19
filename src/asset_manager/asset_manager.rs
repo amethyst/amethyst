@@ -12,11 +12,9 @@ use std::io::{Cursor, Read};
 use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
 use std::str;
-use std::sync::RwLockReadGuard;
-use ticketed_lock::ReadTicket;
 use wavefront_obj::obj::{ObjSet, parse, Primitive};
 
-use ecs::{Allocator, Component, Entity, GatedStorage, MaskedStorage, Storage, VecStorage, World};
+use ecs::{Component, Entity, ReadStorage, VecStorage, World};
 use ecs::components::{Mesh, Renderable, Texture, TextureLoadData};
 use renderer::VertexPosNormal;
 
@@ -66,7 +64,7 @@ pub trait AssetReadStorage<T> {
 
 // FIXME: Please use some short, descriptive type aliases to make this easier to
 // read. This is absolutely horrendous!
-impl<'a, T: Any + Send + Sync> AssetReadStorage<T> for Storage<Asset<T>, RwLockReadGuard<'a, Allocator>, RwLockReadGuard<'a, MaskedStorage<Asset<T>>>> {
+impl<'a, T: Any + Send + Sync> AssetReadStorage<T> for ReadStorage<'a, Asset<T>> {
     fn read(&self, id: AssetId) -> Option<&T> {
         self.get(id).map(|asset| &asset.0)
     }
@@ -121,7 +119,7 @@ impl Assets {
     /// Read the storage of all assets for a certain type
     pub fn read_assets<A: Any + Send + Sync>
         (&self)
-         -> GatedStorage<Asset<A>, RwLockReadGuard<Allocator>, ReadTicket<MaskedStorage<Asset<A>>>> {
+         -> ReadStorage<Asset<A>> {
         self.assets.read()
     }
 
@@ -143,7 +141,7 @@ impl Assets {
     fn add_asset<A: Any + Send + Sync>(&mut self, name: &str, asset: A) -> AssetId {
         *self.asset_ids
             .entry(name.into())
-            .or_insert(self.assets.create_now().with(Asset::<A>(asset)).build())
+            .or_insert(self.assets.create_entity().with(Asset::<A>(asset)).build())
     }
 }
 
@@ -258,10 +256,8 @@ impl AssetManager {
                              ks: &str,
                              ns: f32)
                              -> Option<Renderable> {
-        use ecs::Gate;
-
-        let meshes = self.read_assets::<Mesh>().pass();
-        let textures = self.read_assets::<Texture>().pass();
+        let meshes = self.read_assets::<Mesh>();
+        let textures = self.read_assets::<Texture>();
         let mesh_id = match self.id_from_name(mesh) {
             Some(id) => id,
             None => return None,

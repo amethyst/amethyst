@@ -17,3 +17,4 @@
 * Robbie Cooper
 * Scott Corbeil
 * White-Oak
+* Xaeroxe (Jacob Kiesel)
