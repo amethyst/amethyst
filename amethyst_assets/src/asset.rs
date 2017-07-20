@@ -68,13 +68,13 @@ where
 
 /// A specifier for an asset, uniquely identifying it by
 ///
-/// * the extension (the format it was provided in)
+/// * possible extensions of the asset (the format it was provided in)
 /// * its name
 /// * the storage it was loaded from
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct AssetSpec {
-    /// The extension of this asset
-    pub ext: &'static str,
+    /// The possible extensions of this asset
+    pub exts: &'static [&'static str],
     /// The name of this asset.
     pub name: String,
     /// Unique identifier indicating the Storage from which the asset was loaded.
@@ -83,8 +83,8 @@ pub struct AssetSpec {
 
 impl AssetSpec {
     /// Creates a new asset specifier from the given parameters.
-    pub fn new(name: String, ext: &'static str, store: StoreId) -> Self {
-        AssetSpec { ext, name, store }
+    pub fn new(name: String, exts: &'static [&'static str], store: StoreId) -> Self {
+        AssetSpec { exts, name, store }
     }
 }
 
@@ -155,14 +155,14 @@ where
     /// The kind of error it may produce.
     type Error: Error;
 
-    /// Returns the extension (without `.`).
+    /// Returns a list of supported extension (without `.`).
     ///
     /// ## Examples
     ///
     /// * `"png"`
     /// * `"obj"`
     /// * `"wav"`
-    fn extension() -> &'static str;
+    fn extensions() -> &'static [&'static str];
 
     /// Reads the given bytes and produces asset data.
     fn parse(&self, bytes: Vec<u8>) -> Result<Self::Data, Self::Error>;

@@ -50,14 +50,16 @@ impl Asset for DummyAsset {
     }
 }
 
+const DUMMY_EXTS: &[&str] = &["dum", "dummy"];
+
 struct DummyFormat;
 
 impl Format for DummyFormat {
     type Data = String;
     type Error = Utf8Error;
 
-    fn extension() -> &'static str {
-        "dum"
+    fn extensions() -> &'static [&'static str] {
+        DUMMY_EXTS
     }
 
     fn parse(&self, bytes: Vec<u8>) -> Result<Self::Data, Self::Error> {
@@ -77,9 +79,9 @@ fn main() {
     let mut loader = Loader::new(&alloc, &path, pool);
 
     loader.register::<DummyAsset>(Context {
-                                      cache: Cache::new(),
-                                      prepend: ">> ",
-                                  });
+        cache: Cache::new(),
+        prepend: ">> ",
+    });
 
     let dummy = loader.load("whatever", DummyFormat);
     let dummy: DummyAsset = dummy.wait().expect("Failed to load dummy asset");
