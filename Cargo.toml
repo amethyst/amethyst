@@ -24,7 +24,7 @@ direct3d = []
 profiler = ["thread_profiler/thread_profiler"]
 
 [dependencies]
-amethyst_config = { path = "src/config", version = "0.3.0" }
+amethyst_config = { path = "amethyst_config", version = "0.3.0" }
 amethyst_renderer = { path = "src/renderer", version = "0.4.3" }
 cgmath = "0.12"
 dds-rs = "0.4"
@@ -72,4 +72,4 @@ name = "assets"
 path = "examples/05_assets/main.rs"
 
 [workspace]
-members = ["amethyst_assets", "src/renderer", "src/config"]
+members = ["amethyst_assets", "amethyst_config", "src/renderer"]
