@@ -29,6 +29,12 @@ impl From<MouseButton> for Button {
     }
 }
 
+/// Iterator over keycodes
+pub type KeyCodes<'a> = Iter<'a, VirtualKeyCode>;
+
+/// Iterator over MouseButtons
+pub type MouseButtons<'a> = Iter<'a, MouseButton>;
+
 /// Represents an axis made up of digital inputs, like W and S or A and D.
 /// Two of these could be analogous to a DPAD.
 pub struct Axis {
@@ -39,11 +45,11 @@ pub struct Axis {
 }
 
 /// An iterator over buttons
-pub struct ButtonIterator<'a> {
+pub struct Buttons<'a> {
     iterator: Chain<Map<Iter<'a, MouseButton>, fn(&MouseButton) -> Button>,Map<Iter<'a, VirtualKeyCode>, fn(&VirtualKeyCode) -> Button>>
 }
 
-impl<'a> Iterator for ButtonIterator<'a> {
+impl<'a> Iterator for Buttons<'a> {
     type Item = Button;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -168,17 +174,17 @@ impl InputHandler {
     }
 
     /// Returns a vector containing pressed down keys.
-    pub fn pressed_keys(&self) -> Iter<VirtualKeyCode> {
+    pub fn pressed_keys(&self) -> KeyCodes {
         self.pressed_keys.iter()
     }
 
     /// Returns a vector containing keys pressed on this frame.
-    pub fn down_keys(&self) -> Iter<VirtualKeyCode> {
+    pub fn down_keys(&self) -> KeyCodes {
         self.down_keys.iter()
     }
 
     /// Returns a vector containing keys released on this frame.
-    pub fn released_keys(&self) -> Iter<VirtualKeyCode> {
+    pub fn released_keys(&self) -> KeyCodes {
         self.released_keys.iter()
     }
 
@@ -208,17 +214,17 @@ impl InputHandler {
     }
 
     /// Returns a vector containing pressed down mouse buttons.
-    pub fn pressed_mouse_buttons(&self) -> Iter<MouseButton> {
+    pub fn pressed_mouse_buttons(&self) -> MouseButtons {
         self.pressed_mouse_buttons.iter()
     }
 
     /// Returns a vector containing mouse buttons pressed on this frame.
-    pub fn down_mouse_buttons(&self) -> Iter<MouseButton>  {
+    pub fn down_mouse_buttons(&self) -> MouseButtons  {
         self.down_mouse_buttons.iter()
     }
 
     /// Returns a vector containing mouse buttons released on this frame.
-    pub fn released_mouse_buttons(&self) -> Iter<MouseButton> {
+    pub fn released_mouse_buttons(&self) -> MouseButtons {
         self.released_mouse_buttons.iter()
     }
 
@@ -265,34 +271,34 @@ impl InputHandler {
     }
 
     /// Returns a vector containing the buttons that are currently pressed
-    pub fn pressed_buttons(&self) -> ButtonIterator {
+    pub fn pressed_buttons(&self) -> Buttons {
         let mouse_buttons = self.pressed_mouse_buttons
             .iter()
             .map((|&mb| Button::Mouse(mb)) as fn(&MouseButton) -> Button);
         let keys = self.pressed_keys.iter().map((|&k| Button::Key(k)) as fn(&VirtualKeyCode) -> Button);
-        ButtonIterator {
+        Buttons {
             iterator: mouse_buttons.chain(keys)
         }
     }
 
     /// Returns a vector containing the buttons that were pressed this frame
-    pub fn down_buttons(&self) -> ButtonIterator {
+    pub fn down_buttons(&self) -> Buttons {
         let mouse_buttons = self.down_mouse_buttons
             .iter()
             .map((|&mb| Button::Mouse(mb)) as fn(&MouseButton) -> Button);
         let keys = self.down_keys.iter().map((|&k| Button::Key(k)) as fn(&VirtualKeyCode) -> Button);
-        ButtonIterator {
+        Buttons {
             iterator: mouse_buttons.chain(keys)
         }
     }
 
     /// Returns a vector containing the buttons that were released this frame
-    pub fn released_buttons(&self) -> ButtonIterator {
+    pub fn released_buttons(&self) -> Buttons {
         let mouse_buttons = self.released_mouse_buttons
             .iter()
             .map((|&mb| Button::Mouse(mb)) as fn(&MouseButton) -> Button);
         let keys = self.released_keys.iter().map((|&k| Button::Key(k)) as fn(&VirtualKeyCode) -> Button);
-        ButtonIterator {
+        Buttons {
             iterator: mouse_buttons.chain(keys)
         }
     }
@@ -333,9 +339,9 @@ impl InputHandler {
     }
 
     /// Returns the value of an axis by the i32 id, if the id doesn't exist this returns None.
-    pub fn axis_value(&self, id: &str) -> Option<f32> {
+    pub fn axis_value<T: AsRef<str>>(&self, id: T) -> Option<f32> {
         self.axes
-            .get(id)
+            .get(id.as_ref())
             .map(|a| {
                 let pos = self.button_is_pressed(a.pos);
                 let neg = self.button_is_pressed(a.neg);
@@ -353,27 +359,27 @@ impl InputHandler {
     // can't think of a use case for it.
 
     /// Checks if the given button is currently pressed.
-    pub fn action_is_pressed(&self, action: &str) -> Option<bool> {
+    pub fn action_is_pressed<T: AsRef<str>>(&self, action: T) -> Option<bool> {
         self.actions
-            .get(action)
+            .get(action.as_ref())
             .map(|ref buttons| buttons.iter().any(|&b| self.button_is_pressed(b)))
     }
 
     /// Checks if all the given actions are pressed.
     ///
     /// If any action in this list is invalid this will return the id of it in Err.
-    pub fn actions_are_pressed(&self, actions: &[&str]) -> Result<bool, Vec<String>> {
+    pub fn actions_are_pressed<T: AsRef<str>>(&self, actions: &[T]) -> Result<bool, Vec<String>> {
         let mut all_buttons_are_pressed = true;
         let mut bad_values = Vec::new();
         for action in actions {
-            if let Some(buttons) = self.actions.get(*action) {
+            if let Some(buttons) = self.actions.get(action.as_ref()) {
                 if all_buttons_are_pressed {
                     if !buttons.iter().any(|&b| self.button_is_pressed(b)) {
                         all_buttons_are_pressed = false;
                     }
                 }
             } else {
-                bad_values.push(action.to_string());
+                bad_values.push(action.as_ref().to_string());
             }
         }
         if !bad_values.is_empty() {
@@ -384,28 +390,28 @@ impl InputHandler {
     }
 
     /// Checks if the given action was pressed on this frame.
-    pub fn action_down(&self, action: &str) -> Option<bool> {
+    pub fn action_down<T: AsRef<str>>(&self, action: T) -> Option<bool> {
         self.actions
-            .get(action)
+            .get(action.as_ref())
             .map(|ref buttons| buttons.iter().any(|&b| self.button_down(b)))
     }
 
     /// Checks if the given action was released on this frame.
-    pub fn action_released(&self, action: &str) -> Option<bool> {
+    pub fn action_released<T: AsRef<str>>(&self, action: T) -> Option<bool> {
         self.actions
-            .get(action)
+            .get(action.as_ref())
             .map(|ref buttons| buttons.iter().any(|&b| self.button_released(b)))
     }
 
     /// Checks if the all given actions are being pressed and at least one was pressed this frame.
     ///
     /// If any action in this list is invalid this will return the id of it in Err.
-    pub fn actions_down(&self, actions: &[&str]) -> Result<bool, Vec<String>> {
+    pub fn actions_down<T: AsRef<str>>(&self, actions: &[T]) -> Result<bool, Vec<String>> {
         let mut all_actions_are_pressed = true;
         let mut any_action_is_pressed_this_frame = false;
         let mut bad_values = Vec::new();
         for action in actions {
-            if let Some(buttons) = self.actions.get(*action) {
+            if let Some(buttons) = self.actions.get(action.as_ref()) {
                 if !any_action_is_pressed_this_frame {
                     if buttons.iter().any(|&b| self.button_down(b)) {
                         any_action_is_pressed_this_frame = true;
@@ -417,7 +423,7 @@ impl InputHandler {
                     }
                 }
             } else {
-                bad_values.push(action.to_string());
+                bad_values.push(action.as_ref().to_string());
             }
         }
         if !bad_values.is_empty() {
@@ -436,13 +442,13 @@ impl InputHandler {
     }
 
     /// Removes an axis, this will return the removed axis if successful.
-    pub fn remove_axis(&mut self, id: &str) -> Option<Axis> {
-        self.axes.remove(id)
+    pub fn remove_axis<T: AsRef<str>>(&mut self, id: T) -> Option<Axis> {
+        self.axes.remove(id.as_ref())
     }
 
     /// Returns a reference to an axis.
-    pub fn axis(&mut self, id: &str) -> Option<&Axis> {
-        self.axes.get(id)
+    pub fn axis<T: AsRef<str>>(&mut self, id: T) -> Option<&Axis> {
+        self.axes.get(id.as_ref())
     }
 
     /// Get's a list of all axes
@@ -453,9 +459,9 @@ impl InputHandler {
     /// Add a button to an action.
     ///
     /// This will insert a new binding between this action and the button.
-    pub fn insert_action_binding(&mut self, id: &str, binding: Button) {
+    pub fn insert_action_binding<T: AsRef<str>>(&mut self, id: T, binding: Button) {
         let mut make_new = false;
-        match self.actions.get_mut(id) {
+        match self.actions.get_mut(id.as_ref()) {
             Some(action_bindings) => {
                 if action_bindings.iter().all(|&b| b != binding) {
                     action_bindings.push(binding);
@@ -468,14 +474,14 @@ impl InputHandler {
         if make_new {
             let mut bindings = SmallVec::new();
             bindings.push(binding);
-            self.actions.insert(id.to_string(), bindings);
+            self.actions.insert(id.as_ref().to_string(), bindings);
         }
     }
 
     /// Removes an action binding that was assigned previously.
-    pub fn remove_action_binding(&mut self, id: &str, binding: Button) {
+    pub fn remove_action_binding<T: AsRef<str>>(&mut self, id: T, binding: Button) {
         let mut kill_it = false;
-        if let Some(action_bindings) = self.actions.get_mut(id) {
+        if let Some(action_bindings) = self.actions.get_mut(id.as_ref()) {
             let index = action_bindings.iter().position(|&b| b == binding);
             if let Some(index) = index {
                 action_bindings.swap_remove(index);
@@ -485,13 +491,13 @@ impl InputHandler {
             }
         }
         if kill_it {
-            self.actions.remove(id);
+            self.actions.remove(id.as_ref());
         }
     }
 
     /// Returns an action's bindings.
-    pub fn action_bindings(&self, id: &str) -> Option<&[Button]> {
-        self.actions.get(id).map(|a| &**a)
+    pub fn action_bindings<T: AsRef<str>>(&self, id: T) -> Option<&[Button]> {
+        self.actions.get(id.as_ref()).map(|a| &**a)
     }
 
     /// Get's a list of all action bindings

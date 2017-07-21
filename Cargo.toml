@@ -36,11 +36,11 @@ gfx_device_gl = "0.13"
 gfx_window_glutin = "0.14"
 glutin = "0.7"
 imagefmt = "4.0"
+smallvec = "0.4"
 specs = "0.9.1"
 rayon = "0.7"
 ticketed_lock = "0.1"
 wavefront_obj = "5.0"
-smallvec = "0.4"
 
 thread_profiler = { version = "0.1", optional = true }
 
