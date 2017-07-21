@@ -1,5 +1,6 @@
 # Set up the build environment.
 environment:
+    RUSTUP_USE_HYPER: 1
     matrix:
         - channel: stable
           target: x86_64-pc-windows-msvc
@@ -15,7 +16,7 @@ matrix:
 # Set up the Rust toolchain.
 install:
     - set PATH=C:\Program Files\Git\mingw64\bin;%PATH%
-    - curl -fsS "https://win.rustup.rs/" -o rustup-init.exe
+    - curl --ssl-no-revoke -fsS "https://win.rustup.rs/" -o rustup-init.exe
     - rustup-init.exe -y --default-toolchain %channel%-%target%
     - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
     - rustc -V
