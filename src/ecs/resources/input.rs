@@ -168,18 +168,18 @@ impl InputHandler {
     }
 
     /// Returns a vector containing pressed down keys.
-    pub fn pressed_keys(&self) -> &[VirtualKeyCode] {
-        &*self.pressed_keys
+    pub fn pressed_keys(&self) -> Iter<VirtualKeyCode> {
+        self.pressed_keys.iter()
     }
 
     /// Returns a vector containing keys pressed on this frame.
-    pub fn down_keys(&self) -> &[VirtualKeyCode] {
-        &*self.down_keys
+    pub fn down_keys(&self) -> Iter<VirtualKeyCode> {
+        self.down_keys.iter()
     }
 
     /// Returns a vector containing keys released on this frame.
-    pub fn released_keys(&self) -> &[VirtualKeyCode] {
-        &*self.released_keys
+    pub fn released_keys(&self) -> Iter<VirtualKeyCode> {
+        self.released_keys.iter()
     }
 
     /// Checks if the given key is being pressed.
@@ -208,18 +208,18 @@ impl InputHandler {
     }
 
     /// Returns a vector containing pressed down mouse buttons.
-    pub fn pressed_mouse_buttons(&self) -> &[MouseButton] {
-        &*self.pressed_mouse_buttons
+    pub fn pressed_mouse_buttons(&self) -> Iter<MouseButton> {
+        self.pressed_mouse_buttons.iter()
     }
 
     /// Returns a vector containing mouse buttons pressed on this frame.
-    pub fn down_mouse_buttons(&self) -> &[MouseButton]  {
-        &*self.down_mouse_buttons
+    pub fn down_mouse_buttons(&self) -> Iter<MouseButton>  {
+        self.down_mouse_buttons.iter()
     }
 
     /// Returns a vector containing mouse buttons released on this frame.
-    pub fn released_mouse_buttons(&self) -> &[MouseButton] {
-        &*self.released_mouse_buttons
+    pub fn released_mouse_buttons(&self) -> Iter<MouseButton> {
+        self.released_mouse_buttons.iter()
     }
 
     /// Checks if the given mouse button is being pressed.
