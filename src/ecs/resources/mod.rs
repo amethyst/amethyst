@@ -11,6 +11,6 @@ mod broadcaster;
 
 pub use self::broadcaster::Broadcaster;
 pub use self::camera::{Camera, Projection};
-pub use self::input::{Axis, Button, InputHandler};
+pub use self::input::{Axis, Button, InputHandler, ButtonIterator};
 pub use self::screen_dimensions::ScreenDimensions;
 pub use self::time::Time;

@@ -1,9 +1,9 @@
 //! World resource that handles all user input.
 
 use fnv::FnvHashMap as HashMap;
-
+use std::iter::{Chain, Map, Iterator};
+use std::slice::Iter;
 use engine::{ElementState, WindowEvent, Event, VirtualKeyCode, MouseButton};
-
 use smallvec::SmallVec;
 
 /// A Button is any kind of digital input that the engine supports.
@@ -36,6 +36,19 @@ pub struct Axis {
     pub pos: Button,
     /// Negative button, when pressed down axis value will return -1 if `neg` is not pressed down.
     pub neg: Button,
+}
+
+/// An iterator over buttons
+pub struct ButtonIterator<'a> {
+    iterator: Chain<Map<Iter<'a, MouseButton>, fn(&MouseButton) -> Button>,Map<Iter<'a, VirtualKeyCode>, fn(&VirtualKeyCode) -> Button>>
+}
+
+impl<'a> Iterator for ButtonIterator<'a> {
+    type Item = Button;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iterator.next()
+    }
 }
 
 /// This struct holds state information about input devices.
@@ -155,18 +168,18 @@ impl InputHandler {
     }
 
     /// Returns a vector containing pressed down keys.
-    pub fn pressed_keys(&self) -> &SmallVec<[VirtualKeyCode; 16]> {
-        &self.pressed_keys
+    pub fn pressed_keys(&self) -> &[VirtualKeyCode] {
+        &*self.pressed_keys
     }
 
     /// Returns a vector containing keys pressed on this frame.
-    pub fn down_keys(&self) -> &SmallVec<[VirtualKeyCode; 8]> {
-        &self.down_keys
+    pub fn down_keys(&self) -> &[VirtualKeyCode] {
+        &*self.down_keys
     }
 
     /// Returns a vector containing keys released on this frame.
-    pub fn released_keys(&self) -> &SmallVec<[VirtualKeyCode; 8]> {
-        &self.released_keys
+    pub fn released_keys(&self) -> &[VirtualKeyCode] {
+        &*self.released_keys
     }
 
     /// Checks if the given key is being pressed.
@@ -195,18 +208,18 @@ impl InputHandler {
     }
 
     /// Returns a vector containing pressed down mouse buttons.
-    pub fn pressed_mouse_buttons(&self) -> &SmallVec<[MouseButton; 16]> {
-        &self.pressed_mouse_buttons
+    pub fn pressed_mouse_buttons(&self) -> &[MouseButton] {
+        &*self.pressed_mouse_buttons
     }
 
     /// Returns a vector containing mouse buttons pressed on this frame.
-    pub fn down_mouse_buttons(&self) -> &SmallVec<[MouseButton; 8]> {
-        &self.down_mouse_buttons
+    pub fn down_mouse_buttons(&self) -> &[MouseButton]  {
+        &*self.down_mouse_buttons
     }
 
     /// Returns a vector containing mouse buttons released on this frame.
-    pub fn released_mouse_buttons(&self) -> &SmallVec<[MouseButton; 8]> {
-        &self.released_mouse_buttons
+    pub fn released_mouse_buttons(&self) -> &[MouseButton] {
+        &*self.released_mouse_buttons
     }
 
     /// Checks if the given mouse button is being pressed.
@@ -252,32 +265,36 @@ impl InputHandler {
     }
 
     /// Returns a vector containing the buttons that are currently pressed
-    pub fn pressed_buttons(&self) -> SmallVec<[Button; 16]> {
+    pub fn pressed_buttons(&self) -> ButtonIterator {
         let mouse_buttons = self.pressed_mouse_buttons
             .iter()
-            .map((|&mb| Button::Mouse(mb)));
-        let keys = self.pressed_keys.iter().map((|&k| Button::Key(k)));
-        mouse_buttons
-            .chain(keys)
-            .collect::<SmallVec<[Button; 16]>>()
+            .map((|&mb| Button::Mouse(mb)) as fn(&MouseButton) -> Button);
+        let keys = self.pressed_keys.iter().map((|&k| Button::Key(k)) as fn(&VirtualKeyCode) -> Button);
+        ButtonIterator {
+            iterator: mouse_buttons.chain(keys)
+        }
     }
 
     /// Returns a vector containing the buttons that were pressed this frame
-    pub fn down_buttons(&self) -> SmallVec<[Button; 8]> {
+    pub fn down_buttons(&self) -> ButtonIterator {
         let mouse_buttons = self.down_mouse_buttons
             .iter()
-            .map((|&mb| Button::Mouse(mb)));
-        let keys = self.down_keys.iter().map((|&k| Button::Key(k)));
-        mouse_buttons.chain(keys).collect::<SmallVec<[Button; 8]>>()
+            .map((|&mb| Button::Mouse(mb)) as fn(&MouseButton) -> Button);
+        let keys = self.down_keys.iter().map((|&k| Button::Key(k)) as fn(&VirtualKeyCode) -> Button);
+        ButtonIterator {
+            iterator: mouse_buttons.chain(keys)
+        }
     }
 
     /// Returns a vector containing the buttons that were released this frame
-    pub fn released_buttons(&self) -> SmallVec<[Button; 8]> {
+    pub fn released_buttons(&self) -> ButtonIterator {
         let mouse_buttons = self.released_mouse_buttons
             .iter()
-            .map((|&mb| Button::Mouse(mb)));
-        let keys = self.released_keys.iter().map((|&k| Button::Key(k)));
-        mouse_buttons.chain(keys).collect::<SmallVec<[Button; 8]>>()
+            .map((|&mb| Button::Mouse(mb)) as fn(&MouseButton) -> Button);
+        let keys = self.released_keys.iter().map((|&k| Button::Key(k)) as fn(&VirtualKeyCode) -> Button);
+        ButtonIterator {
+            iterator: mouse_buttons.chain(keys)
+        }
     }
 
     /// Checks if the given button is currently pressed.
