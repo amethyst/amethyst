@@ -1,5 +1,6 @@
 # Set up the build environment.
 environment:
+    RUSTUP_USE_HYPER: 1
     matrix:
         - channel: stable
           target: x86_64-pc-windows-msvc
