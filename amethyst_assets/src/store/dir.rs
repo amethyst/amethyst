@@ -4,6 +4,7 @@ use std::path::PathBuf;
 use std::time::UNIX_EPOCH;
 
 use store::{Allocator, Store, StoreId};
+use asset::MediaType;
 
 /// Directory store.
 ///
@@ -34,24 +35,31 @@ impl Directory {
 impl Store for Directory {
     type Error = IoError;
 
-    fn modified(&self, category: &str, id: &str, exts: &[&str]) -> Result<u64, IoError> {
+    fn modified(
+        &self,
+        category: &str,
+        id: &str,
+        media_extensions: &[(&MediaType, &[&str])],
+    ) -> Result<u64, IoError> {
         let mut path = self.loc.clone();
 
         path.push(category);
         path.push(id);
 
-        for ext in exts {
-            match fs::metadata(path.with_extension(ext)) {
-                Ok(meta) => {
-                    return Ok(
-                        meta.modified()?
-                            .duration_since(UNIX_EPOCH)
-                            .unwrap()
-                            .as_secs(),
-                    )
+        for &(_, extensions) in media_extensions {
+            for extension in extensions {
+                match fs::metadata(path.with_extension(extension)) {
+                    Ok(meta) => {
+                        return Ok(
+                            meta.modified()?
+                                .duration_since(UNIX_EPOCH)
+                                .unwrap()
+                                .as_secs(),
+                        )
+                    }
+                    Err(ref err) if err.kind() == IoErrorKind::NotFound => {}
+                    Err(err) => return Err(err),
                 }
-                Err(ref err) if err.kind() == IoErrorKind::NotFound => {}
-                Err(err) => return Err(err),
             }
         }
 
@@ -60,7 +68,7 @@ impl Store for Directory {
             format!(
                 "no file {:?} with any of extensions {:?} found",
                 path,
-                exts
+                media_extensions
             ),
         ))
     }
@@ -69,7 +77,12 @@ impl Store for Directory {
         self.id
     }
 
-    fn load(&self, category: &str, name: &str, exts: &[&str]) -> Result<Vec<u8>, IoError> {
+    fn load(
+        &self,
+        category: &str,
+        name: &str,
+        media_extensions: &'static [(&MediaType, &[&str])],
+    ) -> Result<(&'static MediaType, Vec<u8>), IoError> {
         use std::io::Read;
 
         let mut path = self.loc.clone();
@@ -77,15 +90,17 @@ impl Store for Directory {
         path.push(category);
         path.push(name);
 
-        for ext in exts {
-            match File::open(&path.with_extension(ext)) {
-                Ok(mut file) => {
-                    let mut v = Vec::new();
-                    file.read_to_end(&mut v)?;
-                    return Ok(v);
+        for &(media_type, extensions) in media_extensions {
+            for extension in extensions {
+                match File::open(&path.with_extension(extension)) {
+                    Ok(mut file) => {
+                        let mut v = Vec::new();
+                        file.read_to_end(&mut v)?;
+                        return Ok((media_type, v));
+                    }
+                    Err(ref err) if err.kind() == IoErrorKind::NotFound => {}
+                    Err(err) => return Err(err),
                 }
-                Err(ref err) if err.kind() == IoErrorKind::NotFound => {}
-                Err(err) => return Err(err),
             }
         }
 
@@ -94,7 +109,7 @@ impl Store for Directory {
             format!(
                 "no file {:?} with any of extensions {:?} found",
                 path,
-                exts
+                media_extensions
             ),
         ))
     }

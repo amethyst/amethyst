@@ -4,6 +4,8 @@ use std::error::Error;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use BoxedErr;
 
+use asset::MediaType;
+
 mod dir;
 
 /// An `Allocator`, holding a counter for producing unique IDs for the stores.
@@ -26,9 +28,19 @@ impl Allocator {
 
 /// A dynamic version of `Store`, allowing to use it as a trait object.
 pub trait AnyStore: Send + Sync + 'static {
-    fn modified(&self, category: &str, id: &str, exts: &[&str]) -> Result<u64, BoxedErr>;
+    fn modified(
+        &self,
+        category: &str,
+        id: &str,
+        media_extensions: &[(&MediaType, &[&str])],
+    ) -> Result<u64, BoxedErr>;
 
-    fn load(&self, category: &str, id: &str, exts: &[&str]) -> Result<Vec<u8>, BoxedErr>;
+    fn load(
+        &self,
+        category: &str,
+        id: &str,
+        media_extensions: &'static [(&MediaType, &[&str])],
+    ) -> Result<(&'static MediaType, Vec<u8>), BoxedErr>;
 
     fn store_id(&self) -> StoreId;
 }
@@ -37,12 +49,22 @@ impl<T> AnyStore for T
 where
     T: Store + Send + Sync + 'static,
 {
-    fn modified(&self, category: &str, id: &str, exts: &[&str]) -> Result<u64, BoxedErr> {
-        T::modified(self, category, id, exts).map_err(BoxedErr::new)
+    fn modified(
+        &self,
+        category: &str,
+        id: &str,
+        media_extensions: &[(&MediaType, &[&str])],
+    ) -> Result<u64, BoxedErr> {
+        T::modified(self, category, id, media_extensions).map_err(BoxedErr::new)
     }
 
-    fn load(&self, category: &str, id: &str, exts: &[&str]) -> Result<Vec<u8>, BoxedErr> {
-        T::load(self, category, id, exts).map_err(BoxedErr::new)
+    fn load(
+        &self,
+        category: &str,
+        id: &str,
+        media_extensions: &'static [(&MediaType, &[&str])],
+    ) -> Result<(&'static MediaType, Vec<u8>), BoxedErr> {
+        T::load(self, category, id, media_extensions).map_err(BoxedErr::new)
     }
 
     fn store_id(&self) -> StoreId {
@@ -56,12 +78,22 @@ where
 {
     type Error = BoxedErr;
 
-    fn modified(&self, category: &str, id: &str, exts: &[&str]) -> Result<u64, Self::Error> {
-        T::modified(self, category, id, exts)
+    fn modified(
+        &self,
+        category: &str,
+        id: &str,
+        media_extensions: &[(&MediaType, &[&str])],
+    ) -> Result<u64, Self::Error> {
+        T::modified(self, category, id, media_extensions)
     }
 
-    fn load(&self, category: &str, id: &str, exts: &[&str]) -> Result<Vec<u8>, Self::Error> {
-        T::load(self, category, id, exts)
+    fn load(
+        &self,
+        category: &str,
+        id: &str,
+        media_extensions: &'static [(&MediaType, &[&str])],
+    ) -> Result<(&'static MediaType, Vec<u8>), Self::Error> {
+        T::load(self, category, id, media_extensions)
     }
 
     fn store_id(&self) -> StoreId {
@@ -78,12 +110,22 @@ pub trait Store {
     /// This is called to check if an asset has been modified.
     ///
     /// Returns the modification time as seconds since `UNIX_EPOCH`.
-    fn modified(&self, category: &str, id: &str, exts: &[&str]) -> Result<u64, Self::Error>;
+    fn modified(
+        &self,
+        category: &str,
+        id: &str,
+        media_extensions: &[(&MediaType, &[&str])],
+    ) -> Result<u64, Self::Error>;
 
     /// Loads the bytes given a category, id and extension of the asset.
     ///
     /// The id should always use `/`as separator in paths.
-    fn load(&self, category: &str, id: &str, exts: &[&str]) -> Result<Vec<u8>, Self::Error>;
+    fn load(
+        &self,
+        category: &str,
+        id: &str,
+        media_extensions: &'static [(&MediaType, &[&str])],
+    ) -> Result<(&'static MediaType, Vec<u8>), Self::Error>;
 
     /// Returns the unique store id. You'll often want to just
     /// have such a field for your storage which is initialized using

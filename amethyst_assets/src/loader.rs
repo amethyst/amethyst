@@ -273,13 +273,13 @@ where
     let name = name.into();
 
     let store_id = storage.store_id();
-    let spec = AssetSpec::new(name.clone(), F::extensions(), store_id);
+    let spec = AssetSpec::new(name.clone(), F::media_extensions(), store_id);
 
     A::retrieve(context, &spec)
         .map(|a| Ok(a))
         .unwrap_or_else(move || load_asset_inner(context, format, spec, storage))
         .map_err(|e| {
-            AssetError::new(AssetSpec::new(name, F::extensions(), store_id), e)
+            AssetError::new(AssetSpec::new(name, F::media_extensions(), store_id), e)
         })
 }
 
@@ -301,10 +301,10 @@ where
     let name = name.into();
 
     let store_id = storage.store_id();
-    let spec = AssetSpec::new(name.clone(), F::extensions(), store_id);
+    let spec = AssetSpec::new(name.clone(), F::media_extensions(), store_id);
 
     load_asset_inner(context, format, spec, storage).map_err(|e| {
-        AssetError::new(AssetSpec::new(name, F::extensions(), store_id), e)
+        AssetError::new(AssetSpec::new(name, F::media_extensions(), store_id), e)
     })
 }
 
@@ -319,10 +319,12 @@ where
     F: Format<Data = A::Data>,
     S: Store,
 {
-    let bytes = store.load(A::category(), &spec.name, spec.exts).map_err(
-        LoadError::StorageError,
+    let (media_type, bytes) = store
+        .load(A::category(), &spec.name, spec.media_extensions)
+        .map_err(LoadError::StorageError)?;
+    let data = format.parse(media_type, bytes).map_err(
+        LoadError::FormatError,
     )?;
-    let data = format.parse(bytes).map_err(LoadError::FormatError)?;
     let a = Asset::from_data(data, context).map_err(
         LoadError::AssetError,
     )?;

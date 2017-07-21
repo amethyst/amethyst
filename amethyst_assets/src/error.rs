@@ -30,7 +30,7 @@ where
             f,
             "Failed to load asset \"{}\" of format \"{:?}\" from storage with id \"{}\": {}",
             &self.asset.name,
-            &self.asset.exts,
+            &self.asset.media_extensions,
             &self.asset.store.id(),
             &self.error
         )
