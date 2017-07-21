@@ -83,8 +83,8 @@ pub struct InputHandler {
     released_mouse_buttons: SmallVec<[MouseButton; 8]>,
     mouse_position: Option<(i32, i32)>,
     previous_mouse_position: Option<(i32, i32)>,
-    axes: HashMap<i32, Axis>,
-    actions: HashMap<i32, SmallVec<[Button; 8]>>,
+    axes: HashMap<String, Axis>,
+    actions: HashMap<String, SmallVec<[Button; 8]>>,
     text_this_frame: String,
 }
 
@@ -353,27 +353,27 @@ impl InputHandler {
     // can't think of a use case for it.
 
     /// Checks if the given button is currently pressed.
-    pub fn action_is_pressed(&self, action: i32) -> Option<bool> {
+    pub fn action_is_pressed(&self, action: &str) -> Option<bool> {
         self.actions
-            .get(&action)
+            .get(action)
             .map(|ref buttons| buttons.iter().any(|&b| self.button_is_pressed(b)))
     }
 
     /// Checks if all the given actions are pressed.
     ///
     /// If any action in this list is invalid this will return the id of it in Err.
-    pub fn actions_are_pressed(&self, actions: &[i32]) -> Result<bool, Vec<i32>> {
+    pub fn actions_are_pressed(&self, actions: &[&str]) -> Result<bool, Vec<String>> {
         let mut all_buttons_are_pressed = true;
         let mut bad_values = Vec::new();
         for action in actions {
-            if let Some(buttons) = self.actions.get(action) {
+            if let Some(buttons) = self.actions.get(*action) {
                 if all_buttons_are_pressed {
                     if !buttons.iter().any(|&b| self.button_is_pressed(b)) {
                         all_buttons_are_pressed = false;
                     }
                 }
             } else {
-                bad_values.push(*action);
+                bad_values.push(action.to_string());
             }
         }
         if !bad_values.is_empty() {
@@ -384,28 +384,28 @@ impl InputHandler {
     }
 
     /// Checks if the given action was pressed on this frame.
-    pub fn action_down(&self, action: i32) -> Option<bool> {
+    pub fn action_down(&self, action: &str) -> Option<bool> {
         self.actions
-            .get(&action)
+            .get(action)
             .map(|ref buttons| buttons.iter().any(|&b| self.button_down(b)))
     }
 
     /// Checks if the given action was released on this frame.
-    pub fn action_released(&self, action: i32) -> Option<bool> {
+    pub fn action_released(&self, action: &str) -> Option<bool> {
         self.actions
-            .get(&action)
+            .get(action)
             .map(|ref buttons| buttons.iter().any(|&b| self.button_released(b)))
     }
 
     /// Checks if the all given actions are being pressed and at least one was pressed this frame.
     ///
     /// If any action in this list is invalid this will return the id of it in Err.
-    pub fn actions_down(&self, actions: &[i32]) -> Result<bool, Vec<i32>> {
+    pub fn actions_down(&self, actions: &[&str]) -> Result<bool, Vec<String>> {
         let mut all_actions_are_pressed = true;
         let mut any_action_is_pressed_this_frame = false;
         let mut bad_values = Vec::new();
         for action in actions {
-            if let Some(buttons) = self.actions.get(action) {
+            if let Some(buttons) = self.actions.get(*action) {
                 if !any_action_is_pressed_this_frame {
                     if buttons.iter().any(|&b| self.button_down(b)) {
                         any_action_is_pressed_this_frame = true;
@@ -417,7 +417,7 @@ impl InputHandler {
                     }
                 }
             } else {
-                bad_values.push(*action);
+                bad_values.push(action.to_string());
             }
         }
         if !bad_values.is_empty() {
@@ -431,31 +431,31 @@ impl InputHandler {
     ///
     /// This will insert a new axis if no entry for this id exists.
     /// If one does exist this will replace the axis at that id and return it.
-    pub fn insert_axis(&mut self, id: i32, axis: Axis) -> Option<Axis> {
+    pub fn insert_axis(&mut self, id: String, axis: Axis) -> Option<Axis> {
         self.axes.insert(id, axis)
     }
 
     /// Removes an axis, this will return the removed axis if successful.
-    pub fn remove_axis(&mut self, id: i32) -> Option<Axis> {
+    pub fn remove_axis(&mut self, id: String) -> Option<Axis> {
         self.axes.remove(&id)
     }
 
     /// Returns a reference to an axis.
-    pub fn get_axis(&mut self, id: i32) -> Option<&Axis> {
+    pub fn get_axis(&mut self, id: String) -> Option<&Axis> {
         self.axes.get(&id)
     }
 
     /// Get's a list of all axes
-    pub fn get_axes(&self) -> Vec<i32> {
-        self.axes.keys().map(|&k| k).collect::<Vec<i32>>()
+    pub fn get_axes(&self) -> Vec<String> {
+        self.axes.keys().map(|&k| k).collect::<Vec<String>>()
     }
 
     /// Add a button to an action.
     ///
     /// This will insert a new binding between this action and the button.
-    pub fn insert_action_binding(&mut self, id: i32, binding: Button) {
+    pub fn insert_action_binding(&mut self, id: &str, binding: Button) {
         let mut make_new = false;
-        match self.actions.get_mut(&id) {
+        match self.actions.get_mut(id) {
             Some(action_bindings) => {
                 if action_bindings.iter().all(|&b| b != binding) {
                     action_bindings.push(binding);
@@ -468,14 +468,14 @@ impl InputHandler {
         if make_new {
             let mut bindings = SmallVec::new();
             bindings.push(binding);
-            self.actions.insert(id, bindings);
+            self.actions.insert(id.to_string(), bindings);
         }
     }
 
     /// Removes an action binding that was assigned previously.
-    pub fn remove_action_binding(&mut self, id: i32, binding: Button) {
+    pub fn remove_action_binding(&mut self, id: &str, binding: Button) {
         let mut kill_it = false;
-        if let Some(action_bindings) = self.actions.get_mut(&id) {
+        if let Some(action_bindings) = self.actions.get_mut(id) {
             let index = action_bindings.iter().position(|&b| b == binding);
             if let Some(index) = index {
                 action_bindings.swap_remove(index);
@@ -485,17 +485,17 @@ impl InputHandler {
             }
         }
         if kill_it {
-            self.actions.remove(&id);
+            self.actions.remove(id);
         }
     }
 
     /// Returns an action's bindings.
-    pub fn get_action_bindings(&self, id: i32) -> Option<SmallVec<[Button; 8]>> {
-        self.actions.get(&id).map(|a| a.clone())
+    pub fn get_action_bindings(&self, id: &str) -> Option<&[Button]> {
+        self.actions.get(id).map(|a| &**a)
     }
 
     /// Get's a list of all action bindings
-    pub fn get_actions(&self) -> Vec<i32> {
-        self.actions.keys().map(|&k| k).collect::<Vec<i32>>()
+    pub fn get_actions(&self) -> Vec<String> {
+        self.actions.keys().map(|&k| k).collect::<Vec<String>>()
     }
 }
