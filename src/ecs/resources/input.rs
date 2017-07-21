@@ -428,6 +428,11 @@ impl InputHandler {
         self.axes.get(&id)
     }
 
+    /// Get's a list of all axes
+    pub fn get_axes(&self) -> Vec<i32> {
+        self.axes.keys().map(|&k| k).collect::<Vec<i32>>()
+    }
+
     /// Add a button to an action.
     ///
     /// This will insert a new binding between this action and the button.
