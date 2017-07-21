@@ -36,12 +36,20 @@ impl GfxDevice {
 
         let camera = world.read_resource::<resources::Camera>();
         let proj_mat = match camera.proj {
-            Projection::Perspective { fov, aspect_ratio, near, far } => {
-                Camera::perspective(fov, aspect_ratio, near, far)
-            }
-            Projection::Orthographic { left, right, bottom, top, near, far } => {
-                Camera::orthographic(left, right, bottom, top, near, far)
-            }
+            Projection::Perspective {
+                fov,
+                aspect_ratio,
+                near,
+                far,
+            } => Camera::perspective(fov, aspect_ratio, near, far),
+            Projection::Orthographic {
+                left,
+                right,
+                bottom,
+                top,
+                near,
+                far,
+            } => Camera::orthographic(left, right, bottom, top, near, far),
         };
 
         let eye = camera.eye;
@@ -70,7 +78,9 @@ impl GfxDevice {
 
         // Add all lights to the scene.
         scene.point_lights.extend(world.read::<PointLight>().join());
-        scene.directional_lights.extend(world.read::<DirectionalLight>().join());
+        scene
+            .directional_lights
+            .extend(world.read::<DirectionalLight>().join());
 
         let ambient_light = world.read_resource::<AmbientLight>();
         scene.ambient_light = ambient_light.power;
@@ -86,14 +96,14 @@ impl GfxDevice {
                              -> Option<Fragment<Resources>> {
             let mesh = &rend.mesh;
             Some(Fragment {
-                transform: global_trans.clone().into(),
-                buffer: mesh.buffer.clone(),
-                slice: mesh.slice.clone(),
-                ka: (&rend.ambient).clone(),
-                kd: (&rend.diffuse).clone(),
-                ks: (&rend.specular).clone(),
-                ns: rend.specular_exponent,
-            })
+                     transform: global_trans.clone().into(),
+                     buffer: mesh.buffer.clone(),
+                     slice: mesh.slice.clone(),
+                     ka: (&rend.ambient).clone(),
+                     kd: (&rend.diffuse).clone(),
+                     ks: (&rend.specular).clone(),
+                     ns: rend.specular_exponent,
+                 })
         }
     }
 

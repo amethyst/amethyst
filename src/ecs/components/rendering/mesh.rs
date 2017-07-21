@@ -21,12 +21,13 @@ impl AssetLoader<Mesh> for Vec<VertexPosNormal> {
     ///
     /// Panics if factory isn't registered as loader.
     fn from_data(assets: &mut Assets, data: Vec<VertexPosNormal>) -> Option<Mesh> {
-        let factory = assets.get_loader_mut::<gfx_types::Factory>()
+        let factory = assets
+            .get_loader_mut::<gfx_types::Factory>()
             .expect("Couldn't retrieve factory.");
         let (buffer, slice) = factory.create_vertex_buffer_with_slice(&data, ());
         Some(Mesh {
-            buffer: buffer,
-            slice: slice,
-        })
+                 buffer: buffer,
+                 slice: slice,
+             })
     }
 }

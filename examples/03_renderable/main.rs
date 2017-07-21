@@ -32,8 +32,10 @@ struct DemoState {
 struct ExampleSystem;
 
 impl<'a> System<'a> for ExampleSystem {
-
-    type SystemData = (WriteStorage<'a, PointLight>, Fetch<'a, Time>, FetchMut<'a, Camera>, FetchMut<'a, DemoState>);
+    type SystemData = (WriteStorage<'a, PointLight>,
+     Fetch<'a, Time>,
+     FetchMut<'a, Camera>,
+     FetchMut<'a, DemoState>);
 
     fn run(&mut self, (mut lights, time, mut camera, mut state): Self::SystemData) {
         let delta_time = time.delta_time.subsec_nanos() as f32 / 1.0e9;
@@ -116,8 +118,11 @@ impl State for Example {
             let mut trans = LocalTransform::default();
             trans.rotation = Quaternion::from(Euler::new(Deg(90.0), Deg(-90.0), Deg(0.0))).into();
             trans.translation = [5.0, 5.0, 0.0];
-            let rend = assets.create_renderable(mesh, "red", "blue", "white", 10.0).unwrap();
-            world.create_entity()
+            let rend = assets
+                .create_renderable(mesh, "red", "blue", "white", 10.0)
+                .unwrap();
+            world
+                .create_entity()
                 .with(rend)
                 .with(trans)
                 .with(Transform::default())
@@ -125,57 +130,68 @@ impl State for Example {
         }
 
         // Add cube to scene
-        let rend = assets.create_renderable("cube", "logo", "logo", "white", 1.0).unwrap();
+        let rend = assets
+            .create_renderable("cube", "logo", "logo", "white", 1.0)
+            .unwrap();
         let mut trans = LocalTransform::default();
         trans.translation = [5.0, -5.0, 2.0];
         trans.scale = [2.0; 3];
-        world.create_entity()
+        world
+            .create_entity()
             .with(rend)
             .with(trans)
             .with(Transform::default())
             .build();
 
         // Add cone to scene
-        let rend = assets.create_renderable("cone", "white", "red", "blue", 40.0).unwrap();
+        let rend = assets
+            .create_renderable("cone", "white", "red", "blue", 40.0)
+            .unwrap();
         let mut trans = LocalTransform::default();
         trans.translation = [-5.0, 5.0, 0.0];
         trans.scale = [2.0; 3];
-        world.create_entity()
+        world
+            .create_entity()
             .with(rend)
             .with(trans)
             .with(Transform::default())
             .build();
 
         // Add custom cube object to scene
-        let rend = assets.create_renderable("cube", "blue", "green", "white", 1.0).unwrap();
+        let rend = assets
+            .create_renderable("cube", "blue", "green", "white", 1.0)
+            .unwrap();
         let mut trans = LocalTransform::default();
         trans.translation = [-5.0, -5.0, 1.0];
-        world.create_entity()
+        world
+            .create_entity()
             .with(rend)
             .with(trans)
             .with(Transform::default())
             .build();
 
         // Create base rectangle as floor
-        let rend = assets.create_renderable("rectangle", "ground", "ground", "black", 1.0).unwrap();
+        let rend = assets
+            .create_renderable("rectangle", "ground", "ground", "black", 1.0)
+            .unwrap();
         let mut trans = LocalTransform::default();
         trans.scale = [10.0; 3];
-        world.create_entity()
+        world
+            .create_entity()
             .with(rend)
             .with(trans)
             .with(Transform::default())
             .build();
 
         // Add lights to scene
-        world.create_entity()
-            .with(PointLight::default())
-            .build();
+        world.create_entity().with(PointLight::default()).build();
 
-        world.create_entity()
+        world
+            .create_entity()
             .with(DirectionalLight {
-                color: [0.2; 4],
-                direction: [-1.0; 3],
-            })
+                      color: [0.2; 4],
+                      direction: [-1.0; 3],
+                  })
             .build();
 
         {
@@ -186,14 +202,14 @@ impl State for Example {
         // Set rendering pipeline to forward by default, and add utility resources
         set_pipeline_state(pipe, true);
         world.add_resource::<DemoState>(DemoState {
-            light_angle: 0.0,
-            light_color: [1.0; 4],
-            ambient_light: true,
-            point_light: true,
-            directional_light: true,
-            camera_angle: 0.0,
-            pipeline_forward: true,
-        });
+                                            light_angle: 0.0,
+                                            light_color: [1.0; 4],
+                                            ambient_light: true,
+                                            point_light: true,
+                                            directional_light: true,
+                                            camera_angle: 0.0,
+                                            pipeline_forward: true,
+                                        });
     }
 
     fn handle_events(&mut self,

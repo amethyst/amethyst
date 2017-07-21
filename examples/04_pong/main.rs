@@ -77,19 +77,25 @@ impl Score {
 
 // Pong game system
 impl<'a> System<'a> for PongSystem {
-
     type SystemData = (WriteStorage<'a, Ball>,
-                       WriteStorage<'a, Plank>,
-                       WriteStorage<'a, LocalTransform>,
-                       Fetch<'a, Camera>,
-                       Fetch<'a, Time>,
-                       Fetch<'a, InputHandler>,
-                       FetchMut<'a, Score>);
+     WriteStorage<'a, Plank>,
+     WriteStorage<'a, LocalTransform>,
+     Fetch<'a, Camera>,
+     Fetch<'a, Time>,
+     Fetch<'a, InputHandler>,
+     FetchMut<'a, Score>);
 
-    fn run(&mut self, (mut balls, mut planks, mut locals, camera, time, input, mut score): Self::SystemData) {
+    fn run(&mut self,
+           (mut balls, mut planks, mut locals, camera, time, input, mut score): Self::SystemData) {
         // Get left and right boundaries of the screen
         let (left_bound, right_bound, top_bound, bottom_bound) = match camera.proj {
-            Projection::Orthographic { left, right, top, bottom, .. } => (left, right, top, bottom),
+            Projection::Orthographic {
+                left,
+                right,
+                top,
+                bottom,
+                ..
+            } => (left, right, top, bottom),
             _ => (1.0, 1.0, 1.0, 1.0),
         };
 
@@ -171,7 +177,8 @@ impl<'a> System<'a> for PongSystem {
                 }
             }
 
-            // Check if the ball is to the left of the right boundary, if it is not reset it's position and score the left player
+            // Check if the ball is to the left of the right boundary
+            // if it is not reset it's position and score the left player
             if ball.position[0] - ball.size / 2. > right_bound {
                 ball.position[0] = 0.;
                 score.score_left += 1;
@@ -190,7 +197,8 @@ impl<'a> System<'a> for PongSystem {
                 }
             }
 
-            // Check if the ball is to the right of the left boundary, if it is not reset it's position and score the right player
+            // Check if the ball is to the right of the left boundary
+            // if it is not reset it's position and score the right player
             if ball.position[0] + ball.size / 2. < left_bound {
                 ball.position[0] = 0.;
                 score.score_right += 1;
@@ -266,13 +274,16 @@ impl State for Pong {
         assets.load_asset_from_data::<Texture, [f32; 4]>("white", [1.0, 1.0, 1.0, 1.0]);
         let square_verts = gen_rectangle(1.0, 1.0);
         assets.load_asset_from_data::<Mesh, Vec<VertexPosNormal>>("square", square_verts);
-        let square = assets.create_renderable("square", "white", "white", "white", 1.0).unwrap();
+        let square = assets
+            .create_renderable("square", "white", "white", "white", 1.0)
+            .unwrap();
 
         // Create a ball entity
         let mut ball = Ball::new();
         ball.size = 0.02;
         ball.velocity = [0.5, 0.5];
-        world.create_entity()
+        world
+            .create_entity()
             .with(square.clone())
             .with(ball)
             .with(LocalTransform::default())
@@ -284,7 +295,8 @@ impl State for Pong {
         plank.dimensions[0] = 0.01;
         plank.dimensions[1] = 0.1;
         plank.velocity = 1.;
-        world.create_entity()
+        world
+            .create_entity()
             .with(square.clone())
             .with(plank)
             .with(LocalTransform::default())
@@ -296,7 +308,8 @@ impl State for Pong {
         plank.dimensions[0] = 0.01;
         plank.dimensions[1] = 0.1;
         plank.velocity = 1.;
-        world.create_entity()
+        world
+            .create_entity()
             .with(square.clone())
             .with(plank)
             .with(LocalTransform::default())

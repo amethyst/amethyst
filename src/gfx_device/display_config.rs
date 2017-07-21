@@ -5,7 +5,7 @@ config!(
     ///
     /// These are fed in when calling `video_init()`.
     pub struct DisplayConfig {
-        /// Name of the application window.       
+        /// Name of the application window.
         pub title: String = "Amethyst game".to_string(),
         /// Enables or disables fullscreen mode.
         pub fullscreen: bool = false,
@@ -23,4 +23,3 @@ config!(
         pub visibility: bool = true,
     }
 );
-
