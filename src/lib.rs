@@ -71,6 +71,7 @@ pub extern crate amethyst_renderer as renderer;
 pub extern crate amethyst_config as config;
 
 extern crate cgmath;
+extern crate smallvec;
 extern crate dds;
 extern crate fnv;
 extern crate gfx;
