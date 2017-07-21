@@ -46,16 +46,29 @@ impl Store for Directory {
         path.push(category);
         path.push(id);
 
+        let mut result = None;
+
         for &(_, extensions) in media_extensions {
             for extension in extensions {
                 match fs::metadata(path.with_extension(extension)) {
                     Ok(meta) => {
-                        return Ok(
-                            meta.modified()?
-                                .duration_since(UNIX_EPOCH)
-                                .unwrap()
-                                .as_secs(),
-                        )
+                        if result.is_some() {
+                            return Err(IoError::new(
+                                IoErrorKind::NotFound,
+                                format!(
+                                    "multiple files {:?} with any of extensions {:?} found",
+                                    path,
+                                    media_extensions
+                                ),
+                            ));
+                        } else {
+                            result = Some(
+                                meta.modified()?
+                                    .duration_since(UNIX_EPOCH)
+                                    .unwrap()
+                                    .as_secs(),
+                            );
+                        }
                     }
                     Err(ref err) if err.kind() == IoErrorKind::NotFound => {}
                     Err(err) => return Err(err),
@@ -63,7 +76,7 @@ impl Store for Directory {
             }
         }
 
-        Err(IoError::new(
+        result.ok_or(IoError::new(
             IoErrorKind::NotFound,
             format!(
                 "no file {:?} with any of extensions {:?} found",
@@ -90,13 +103,27 @@ impl Store for Directory {
         path.push(category);
         path.push(name);
 
+        let mut result = None;
+
         for &(media_type, extensions) in media_extensions {
             for extension in extensions {
                 match File::open(&path.with_extension(extension)) {
                     Ok(mut file) => {
-                        let mut v = Vec::new();
-                        file.read_to_end(&mut v)?;
-                        return Ok((media_type, v));
+                        if result.is_some() {
+                            return Err(IoError::new(
+                                IoErrorKind::NotFound,
+                                format!(
+                                    "multiple files {:?} with any of extensions {:?} found",
+                                    path,
+                                    media_extensions
+                                ),
+                            ));
+                        } else {
+                            let mut v = Vec::new();
+                            file.read_to_end(&mut v)?;
+
+                            result = Some((media_type, v));
+                        }
                     }
                     Err(ref err) if err.kind() == IoErrorKind::NotFound => {}
                     Err(err) => return Err(err),
@@ -104,7 +131,7 @@ impl Store for Directory {
             }
         }
 
-        Err(IoError::new(
+        result.ok_or(IoError::new(
             IoErrorKind::NotFound,
             format!(
                 "no file {:?} with any of extensions {:?} found",
