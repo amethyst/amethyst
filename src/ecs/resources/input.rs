@@ -436,13 +436,13 @@ impl InputHandler {
     }
 
     /// Removes an axis, this will return the removed axis if successful.
-    pub fn remove_axis(&mut self, id: String) -> Option<Axis> {
-        self.axes.remove(&id)
+    pub fn remove_axis(&mut self, id: &str) -> Option<Axis> {
+        self.axes.remove(id)
     }
 
     /// Returns a reference to an axis.
-    pub fn get_axis(&mut self, id: String) -> Option<&Axis> {
-        self.axes.get(&id)
+    pub fn get_axis(&mut self, id: &str) -> Option<&Axis> {
+        self.axes.get(id)
     }
 
     /// Get's a list of all axes
