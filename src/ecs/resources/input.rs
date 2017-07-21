@@ -173,17 +173,17 @@ impl InputHandler {
         self.text_this_frame.as_str()
     }
 
-    /// Returns a vector containing pressed down keys.
+    /// Returns an iterator over pressed down keys.
     pub fn pressed_keys(&self) -> KeyCodes {
         self.pressed_keys.iter()
     }
 
-    /// Returns a vector containing keys pressed on this frame.
+    /// Returns an iterator over keys pressed on this frame.
     pub fn down_keys(&self) -> KeyCodes {
         self.down_keys.iter()
     }
 
-    /// Returns a vector containing keys released on this frame.
+    /// Returns an iterator over keys released on this frame.
     pub fn released_keys(&self) -> KeyCodes {
         self.released_keys.iter()
     }
@@ -213,17 +213,17 @@ impl InputHandler {
         keys.iter().all(|key| self.key_is_pressed(*key))
     }
 
-    /// Returns a vector containing pressed down mouse buttons.
+    /// Returns an iterator over containing pressed down mouse buttons.
     pub fn pressed_mouse_buttons(&self) -> MouseButtons {
         self.pressed_mouse_buttons.iter()
     }
 
-    /// Returns a vector containing mouse buttons pressed on this frame.
+    /// Returns an iterator over containing mouse buttons pressed on this frame.
     pub fn down_mouse_buttons(&self) -> MouseButtons  {
         self.down_mouse_buttons.iter()
     }
 
-    /// Returns a vector containing mouse buttons released on this frame.
+    /// Returns an iterator over mouse buttons released on this frame.
     pub fn released_mouse_buttons(&self) -> MouseButtons {
         self.released_mouse_buttons.iter()
     }
@@ -393,14 +393,14 @@ impl InputHandler {
     pub fn action_down<T: AsRef<str>>(&self, action: T) -> Option<bool> {
         self.actions
             .get(action.as_ref())
-            .map(|ref buttons| buttons.iter().any(|&b| self.button_down(b)))
+            .map(|buttons| buttons.iter().any(|&b| self.button_down(b)))
     }
 
     /// Checks if the given action was released on this frame.
     pub fn action_released<T: AsRef<str>>(&self, action: T) -> Option<bool> {
         self.actions
             .get(action.as_ref())
-            .map(|ref buttons| buttons.iter().any(|&b| self.button_released(b)))
+            .map(|buttons| buttons.iter().any(|&b| self.button_released(b)))
     }
 
     /// Checks if the all given actions are being pressed and at least one was pressed this frame.
@@ -437,8 +437,8 @@ impl InputHandler {
     ///
     /// This will insert a new axis if no entry for this id exists.
     /// If one does exist this will replace the axis at that id and return it.
-    pub fn insert_axis(&mut self, id: String, axis: Axis) -> Option<Axis> {
-        self.axes.insert(id, axis)
+    pub fn insert_axis<T: Into<String>>(&mut self, id: T, axis: Axis) -> Option<Axis> {
+        self.axes.insert(id.into(), axis)
     }
 
     /// Removes an axis, this will return the removed axis if successful.
@@ -451,7 +451,7 @@ impl InputHandler {
         self.axes.get(id.as_ref())
     }
 
-    /// Get's a list of all axes
+    /// Gets a list of all axes
     pub fn axes(&self) -> Vec<String> {
         self.axes.keys().map(|k| k.clone()).collect::<Vec<String>>()
     }
@@ -486,9 +486,7 @@ impl InputHandler {
             if let Some(index) = index {
                 action_bindings.swap_remove(index);
             }
-            if action_bindings.len() == 0 {
-                kill_it = true;
-            }
+            kill_it = action_bindings.is_empty();
         }
         if kill_it {
             self.actions.remove(id.as_ref());
