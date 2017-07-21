@@ -441,12 +441,12 @@ impl InputHandler {
     }
 
     /// Returns a reference to an axis.
-    pub fn get_axis(&mut self, id: &str) -> Option<&Axis> {
+    pub fn axis(&mut self, id: &str) -> Option<&Axis> {
         self.axes.get(id)
     }
 
     /// Get's a list of all axes
-    pub fn get_axes(&self) -> Vec<String> {
+    pub fn axes(&self) -> Vec<String> {
         self.axes.keys().map(|k| k.clone()).collect::<Vec<String>>()
     }
 
@@ -490,12 +490,12 @@ impl InputHandler {
     }
 
     /// Returns an action's bindings.
-    pub fn get_action_bindings(&self, id: &str) -> Option<&[Button]> {
+    pub fn action_bindings(&self, id: &str) -> Option<&[Button]> {
         self.actions.get(id).map(|a| &**a)
     }
 
     /// Get's a list of all action bindings
-    pub fn get_actions(&self) -> Vec<String> {
+    pub fn actions(&self) -> Vec<String> {
         self.actions.keys().map(|k| k.clone()).collect::<Vec<String>>()
     }
 }
