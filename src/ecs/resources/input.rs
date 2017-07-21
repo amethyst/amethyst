@@ -333,9 +333,9 @@ impl InputHandler {
     }
 
     /// Returns the value of an axis by the i32 id, if the id doesn't exist this returns None.
-    pub fn axis_value(&self, id: i32) -> Option<f32> {
+    pub fn axis_value(&self, id: &str) -> Option<f32> {
         self.axes
-            .get(&id)
+            .get(id)
             .map(|a| {
                 let pos = self.button_is_pressed(a.pos);
                 let neg = self.button_is_pressed(a.neg);
@@ -447,7 +447,7 @@ impl InputHandler {
 
     /// Get's a list of all axes
     pub fn get_axes(&self) -> Vec<String> {
-        self.axes.keys().map(|&k| k).collect::<Vec<String>>()
+        self.axes.keys().map(|k| k.clone()).collect::<Vec<String>>()
     }
 
     /// Add a button to an action.
@@ -496,6 +496,6 @@ impl InputHandler {
 
     /// Get's a list of all action bindings
     pub fn get_actions(&self) -> Vec<String> {
-        self.actions.keys().map(|&k| k).collect::<Vec<String>>()
+        self.actions.keys().map(|k| k.clone()).collect::<Vec<String>>()
     }
 }
