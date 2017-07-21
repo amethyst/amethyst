@@ -40,10 +40,14 @@ impl TransformSystem {
 }
 
 impl<'a> System<'a> for TransformSystem {
-    type SystemData = (Entities<'a>, ReadStorage<'a, LocalTransform>, ReadStorage<'a, Child>, WriteStorage<'a, Init>, WriteStorage<'a, Transform>);
+    type SystemData = (Entities<'a>,
+     ReadStorage<'a, LocalTransform>,
+     ReadStorage<'a, Child>,
+     WriteStorage<'a, Init>,
+     WriteStorage<'a, Transform>);
 
     fn run(&mut self, (entities, locals, children, mut init, mut globals): Self::SystemData) {
-       
+
         // Checks for entities with a local transform and parent, but no
         // `Init` component.
         for (entity, _, child, _) in (&*entities, &locals, &children, !&init).join() {

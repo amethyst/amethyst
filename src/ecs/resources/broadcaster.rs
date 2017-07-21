@@ -61,9 +61,7 @@ impl Broadcaster {
     }
 
     /// Access a component storage
-    pub fn read<T: Component>
-        (&self)
-         -> ReadStorage<T> {
+    pub fn read<T: Component>(&self) -> ReadStorage<T> {
         self.world.read::<T>()
     }
 

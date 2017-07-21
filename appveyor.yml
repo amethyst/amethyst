@@ -1,5 +1,10 @@
 # Set up the build environment.
 environment:
+    # WORKAROUND START #
+    RUSTUP_USE_HYPER: 1
+    CARGO_HTTP_CHECK_REVOKE: false
+    # WORKAROUND END #
+
     matrix:
         - channel: stable
           target: x86_64-pc-windows-msvc

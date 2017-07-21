@@ -39,7 +39,11 @@ pub struct Application<'a, 'b> {
 impl<'a, 'b> Application<'a, 'b> {
     /// Creates a new Application with the given initial game state, dispatcher and world,
     /// and display configuration.
-    pub fn new<T>(initial_state: T, dispatcher: Dispatcher<'a, 'b>, mut world: World, cfg: DisplayConfig) -> Application<'a, 'b>
+    pub fn new<T>(initial_state: T,
+                  dispatcher: Dispatcher<'a, 'b>,
+                  mut world: World,
+                  cfg: DisplayConfig)
+                  -> Application<'a, 'b>
         where T: State + 'static
     {
         use ecs::resources::{Camera, Projection, ScreenDimensions};
@@ -50,11 +54,12 @@ impl<'a, 'b> Application<'a, 'b> {
         profile_scope!("video_init");
         let (device, mut factory, main_target) = gfx_device::video_init(&cfg);
         let mut pipe = Pipeline::new();
-        pipe.targets.insert("main".into(),
-                            Box::new(target::ColorBuffer {
-                                color: main_target.color.clone(),
-                                output_depth: main_target.depth.clone(),
-                            }));
+        pipe.targets
+            .insert("main".into(),
+                    Box::new(target::ColorBuffer {
+                                 color: main_target.color.clone(),
+                                 output_depth: main_target.depth.clone(),
+                             }));
 
         let (w, h) = device.get_dimensions().unwrap();
         let geom_buf = target::GeometryBuffer::new(&mut factory, (w as u16, h as u16));
@@ -165,7 +170,8 @@ impl<'a, 'b> Application<'a, 'b> {
             let assets = &mut self.assets;
             let pipe = &mut self.pipe;
 
-            self.states.handle_events(events.as_ref(), world, assets, pipe);
+            self.states
+                .handle_events(events.as_ref(), world, assets, pipe);
 
             #[cfg(feature="profiler")]
             profile_scope!("fixed_update");
@@ -215,8 +221,7 @@ impl<'a, 'b> Application<'a, 'b> {
     /// Writes thread_profiler profile.
     fn write_profile(&self) {
         // TODO: Specify filename in config.
-        let path = format!("{}/thread_profile.json",
-                           env!("CARGO_MANIFEST_DIR"));
+        let path = format!("{}/thread_profile.json", env!("CARGO_MANIFEST_DIR"));
         write_profile(path.as_str());
     }
 }
@@ -239,7 +244,8 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T>
     pub fn new(initial_state: T, cfg: DisplayConfig) -> ApplicationBuilder<'a, 'b, T> {
         use rayon::Configuration;
 
-        let pool = Arc::new(ThreadPool::new(Configuration::new().num_threads(num_cpus::get())).expect("Failed to create rayon::ThreadPool"));
+        let pool = Arc::new(ThreadPool::new(Configuration::new().num_threads(num_cpus::get()))
+                                .expect("Failed to create rayon::ThreadPool"));
 
         ApplicationBuilder {
             config: cfg,
@@ -256,8 +262,9 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T>
         self.world.register::<C>();
         self
     }
-    
-    /// Inserts a barrier which assures that all systems added before the barrier are executed before the ones after this barrier.
+
+    /// Inserts a barrier which assures that all systems added before the barrier are executed
+    /// before the ones after this barrier.
     /// Does nothing if there were no systems added since the last call to add_barrier().
     /// Thread-local systems are not affected by barriers; they're always executed at the end.
     pub fn add_barrier(mut self) -> ApplicationBuilder<'a, 'b, T> {
@@ -286,6 +293,9 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T>
 
     /// Builds the Application and returns the result.
     pub fn done(self) -> Application<'a, 'b> {
-        Application::new(self.initial_state, self.dispatcher_builder.build(), self.world, self.config)
+        Application::new(self.initial_state,
+                         self.dispatcher_builder.build(),
+                         self.world,
+                         self.config)
     }
 }
