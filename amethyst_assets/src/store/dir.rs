@@ -48,9 +48,13 @@ impl Store for Directory {
                             .duration_since(UNIX_EPOCH)
                             .unwrap()
                             .as_secs(),
-                    );
+                    )
                 }
-                Err(_) => (),
+                Err(err) => {
+                    if err.kind() != IoErrorKind::NotFound {
+                        return Err(err);
+                    }
+                }
             }
         }
 
@@ -83,7 +87,11 @@ impl Store for Directory {
                     file.read_to_end(&mut v)?;
                     return Ok(v);
                 }
-                Err(_) => (),
+                Err(err) => {
+                    if err.kind() != IoErrorKind::NotFound {
+                        return Err(err);
+                    }
+                }
             }
         }
 
