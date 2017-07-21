@@ -255,10 +255,8 @@ impl InputHandler {
     pub fn pressed_buttons(&self) -> SmallVec<[Button; 16]> {
         let mouse_buttons = self.pressed_mouse_buttons
             .iter()
-            .map((|&mb| Button::Mouse(mb)) as fn(&MouseButton) -> Button);
-        let keys = self.pressed_keys
-            .iter()
-            .map((|&k| Button::Key(k)) as fn(&VirtualKeyCode) -> Button);
+            .map((|&mb| Button::Mouse(mb)));
+        let keys = self.pressed_keys.iter().map((|&k| Button::Key(k)));
         mouse_buttons
             .chain(keys)
             .collect::<SmallVec<[Button; 16]>>()
@@ -268,10 +266,8 @@ impl InputHandler {
     pub fn down_buttons(&self) -> SmallVec<[Button; 8]> {
         let mouse_buttons = self.down_mouse_buttons
             .iter()
-            .map((|&mb| Button::Mouse(mb)) as fn(&MouseButton) -> Button);
-        let keys = self.down_keys
-            .iter()
-            .map((|&k| Button::Key(k)) as fn(&VirtualKeyCode) -> Button);
+            .map((|&mb| Button::Mouse(mb)));
+        let keys = self.down_keys.iter().map((|&k| Button::Key(k)));
         mouse_buttons.chain(keys).collect::<SmallVec<[Button; 8]>>()
     }
 
@@ -279,10 +275,8 @@ impl InputHandler {
     pub fn released_buttons(&self) -> SmallVec<[Button; 8]> {
         let mouse_buttons = self.released_mouse_buttons
             .iter()
-            .map((|&mb| Button::Mouse(mb)) as fn(&MouseButton) -> Button);
-        let keys = self.released_keys
-            .iter()
-            .map((|&k| Button::Key(k)) as fn(&VirtualKeyCode) -> Button);
+            .map((|&mb| Button::Mouse(mb)));
+        let keys = self.released_keys.iter().map((|&k| Button::Key(k)));
         mouse_buttons.chain(keys).collect::<SmallVec<[Button; 8]>>()
     }
 
