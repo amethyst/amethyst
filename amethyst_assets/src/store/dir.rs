@@ -50,11 +50,8 @@ impl Store for Directory {
                             .as_secs(),
                     )
                 }
-                Err(err) => {
-                    if err.kind() != IoErrorKind::NotFound {
-                        return Err(err);
-                    }
-                }
+                Err(ref err) if err.kind() == IoErrorKind::NotFound => {}
+                Err(err) => return Err(err),
             }
         }
 
@@ -87,11 +84,8 @@ impl Store for Directory {
                     file.read_to_end(&mut v)?;
                     return Ok(v);
                 }
-                Err(err) => {
-                    if err.kind() != IoErrorKind::NotFound {
-                        return Err(err);
-                    }
-                }
+                Err(ref err) if err.kind() == IoErrorKind::NotFound => {}
+                Err(err) => return Err(err),
             }
         }
 

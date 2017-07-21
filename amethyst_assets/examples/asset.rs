@@ -29,8 +29,6 @@ impl Asset for DummyAsset {
     }
 }
 
-const DUMMY_EXTS: &[&str] = &["dum", "dummy"];
-
 struct DummyFormat;
 
 impl Format for DummyFormat {
@@ -38,7 +36,8 @@ impl Format for DummyFormat {
     type Error = Utf8Error;
 
     fn extensions() -> &'static [&'static str] {
-        DUMMY_EXTS
+        const DUMMY_EXTENSIONS: &[&str] = &["dum", "dummy"];
+        DUMMY_EXTENSIONS
     }
 
     fn parse(&self, bytes: Vec<u8>) -> Result<Self::Data, Self::Error> {
