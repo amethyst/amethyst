@@ -32,9 +32,9 @@ impl From<MouseButton> for Button {
 /// Represents an axis made up of digital inputs, like W and S or A and D.
 /// Two of these could be analogous to a DPAD.
 pub struct Axis {
-    /// Positive button, when pressed down the axis value will return 1 if `neg` is not pressed down.
+    /// Positive button, when pressed down axis value will return 1 if `neg` is not pressed down.
     pub pos: Button,
-    /// Negative button, when pressed down the axis value will return -1 if `neg` is not pressed down.
+    /// Negative button, when pressed down axis value will return -1 if `neg` is not pressed down.
     pub neg: Button,
 }
 
@@ -309,7 +309,7 @@ impl InputHandler {
         }
     }
 
-    /// Checks if the all the given buttons are being pressed and at least one was pressed this frame.
+    /// Checks if the all given buttons are being pressed and at least one was pressed this frame.
     pub fn buttons_down(&self, buttons: &[Button]) -> bool {
         buttons.iter().any(|&b| self.button_down(b)) &&
         buttons.iter().all(|&b| self.button_is_pressed(b))
@@ -380,7 +380,7 @@ impl InputHandler {
             .map(|ref buttons| buttons.iter().any(|&b| self.button_released(b)))
     }
 
-    /// Checks if the all the given actions are being pressed and at least one was pressed this frame.
+    /// Checks if the all given actions are being pressed and at least one was pressed this frame.
     ///
     /// If any action in this list is invalid this will return the id of it in Err.
     pub fn actions_down(&self, actions: &[i32]) -> Result<bool, Vec<i32>> {
