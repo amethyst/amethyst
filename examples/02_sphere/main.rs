@@ -49,10 +49,10 @@ impl State for Example {
         assets.load_asset_from_data::<Texture, [f32; 4]>("blue", [0.0, 0.0, 1.0, 1.0]);
         assets.load_asset_from_data::<Texture, [f32; 4]>("white", [1.0, 1.0, 1.0, 1.0]);
 
-        let sphere = assets.create_renderable("sphere", "blue", "white", "white", 1.0).unwrap();
-        world.create_entity()
-            .with(sphere)
-            .build();
+        let sphere = assets
+            .create_renderable("sphere", "blue", "white", "white", 1.0)
+            .unwrap();
+        world.create_entity().with(sphere).build();
 
         let light = PointLight {
             center: [2.0, 2.0, 2.0],
@@ -60,9 +60,7 @@ impl State for Example {
             intensity: 3.0,
             ..Default::default()
         };
-        world.create_entity()
-            .with(light)
-            .build();
+        world.create_entity().with(light).build();
     }
 
     fn handle_events(&mut self,
@@ -94,12 +92,12 @@ fn main() {
 fn gen_sphere(u: usize, v: usize) -> Vec<VertexPosNormal> {
     let data: Vec<VertexPosNormal> = SphereUV::new(u, v)
         .vertex(|(x, y, z)| {
-            VertexPosNormal {
-                pos: [x, y, z],
-                normal: Vector3::new(x, y, z).normalize().into(),
-                tex_coord: [0., 0.],
-            }
-        })
+                    VertexPosNormal {
+                        pos: [x, y, z],
+                        normal: Vector3::new(x, y, z).normalize().into(),
+                        tex_coord: [0., 0.],
+                    }
+                })
         .triangulate()
         .vertices()
         .collect();

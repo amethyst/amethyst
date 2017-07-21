@@ -30,7 +30,8 @@ impl<'a> AssetLoader<Texture> for TextureLoadData<'a> {
     ///
     /// Panics if factory isn't registered as loader.
     fn from_data(assets: &mut Assets, data: TextureLoadData) -> Option<Texture> {
-        let factory = assets.get_loader_mut::<gfx_types::Factory>()
+        let factory = assets
+            .get_loader_mut::<gfx_types::Factory>()
             .expect("Couldn't retrieve factory.");
         let tex_res_view =
             match factory.create_texture_immutable::<ColorFormat>(data.kind, data.raw) {

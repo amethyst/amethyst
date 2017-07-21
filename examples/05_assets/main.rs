@@ -31,9 +31,7 @@ impl AssetLoaderRaw for CustomObj {
         let mut vertices = Vec::new();
         let mut normals = Vec::new();
 
-        let trimmed: Vec<&str> = data.lines()
-            .filter(|line| line.len() >= 1)
-            .collect();
+        let trimmed: Vec<&str> = data.lines().filter(|line| line.len() >= 1).collect();
 
         for line in trimmed {
             let nums: Vec<&str> = line.split_whitespace().collect();
@@ -48,9 +46,9 @@ impl AssetLoaderRaw for CustomObj {
         }
 
         Some(CustomObj {
-            vertices: vertices,
-            normals: normals,
-        })
+                 vertices: vertices,
+                 normals: normals,
+             })
     }
 }
 
@@ -60,12 +58,12 @@ impl AssetLoader<Mesh> for CustomObj {
             .iter()
             .zip(obj.normals.iter())
             .map(|(v, n)| {
-                VertexPosNormal {
-                    pos: v.clone(),
-                    normal: n.clone(),
-                    tex_coord: [0.0, 0.0],
-                }
-            })
+                     VertexPosNormal {
+                         pos: v.clone(),
+                         normal: n.clone(),
+                         tex_coord: [0.0, 0.0],
+                     }
+                 })
             .collect::<Vec<_>>();
         AssetLoader::<Mesh>::from_data(assets, vertices)
     }
@@ -119,9 +117,11 @@ impl State for Example {
             let mut trans = LocalTransform::default();
             trans.rotation = Quaternion::from(Euler::new(Deg(90.0), Deg(-90.0), Deg(0.0))).into();
             trans.translation = [5.0, 0.0, 5.0];
-            let rend = assets.create_renderable(mesh, "dark_blue", "green", "white", 1.0)
+            let rend = assets
+                .create_renderable(mesh, "dark_blue", "green", "white", 1.0)
                 .unwrap();
-            world.create_entity()
+            world
+                .create_entity()
                 .with(rend)
                 .with(trans)
                 .with(Transform::default())
@@ -129,36 +129,43 @@ impl State for Example {
         }
 
         // Add custom cube object to scene
-        let rend = assets.create_renderable("cuboid", "dark_blue", "green", "white", 1.0)
+        let rend = assets
+            .create_renderable("cuboid", "dark_blue", "green", "white", 1.0)
             .unwrap();
         let mut trans = LocalTransform::default();
         trans.translation = [-5.0, 0.0, 0.0];
         trans.scale = [2.0, 2.0, 2.0];
-        world.create_entity()
+        world
+            .create_entity()
             .with(rend)
             .with(trans)
             .with(Transform::default())
             .build();
 
         // Add cube to scene
-        let rend = assets.create_renderable("cube", "crate", "tan", "white", 1.0).unwrap();
+        let rend = assets
+            .create_renderable("cube", "crate", "tan", "white", 1.0)
+            .unwrap();
         let mut trans = LocalTransform::default();
         trans.translation = [5.0, 0.0, 0.0];
         trans.scale = [2.0, 2.0, 2.0];
-        world.create_entity()
+        world
+            .create_entity()
             .with(rend)
             .with(trans)
             .with(Transform::default())
             .build();
 
         // Add sphere to scene
-        let rend = assets.create_renderable("sphere", "grass", "green", "white", 1.0)
+        let rend = assets
+            .create_renderable("sphere", "grass", "green", "white", 1.0)
             .unwrap();
         let mut trans = LocalTransform::default();
         trans.translation = [-5.0, 0.0, 7.5];
         trans.rotation = Quaternion::from(Euler::new(Deg(90.0), Deg(0.0), Deg(0.0))).into();
         trans.scale = [0.15, 0.15, 0.15];
-        world.create_entity()
+        world
+            .create_entity()
             .with(rend)
             .with(trans)
             .with(Transform::default())
@@ -172,9 +179,7 @@ impl State for Example {
             ..Default::default()
         };
 
-        world.create_entity()
-            .with(light)
-            .build();
+        world.create_entity().with(light).build();
 
         // Set up rendering pipeline
         let layer = Layer::new("main",

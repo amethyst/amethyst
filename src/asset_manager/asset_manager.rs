@@ -117,9 +117,7 @@ impl Assets {
     }
 
     /// Read the storage of all assets for a certain type
-    pub fn read_assets<A: Any + Send + Sync>
-        (&self)
-         -> ReadStorage<Asset<A>> {
+    pub fn read_assets<A: Any + Send + Sync>(&self) -> ReadStorage<Asset<A>> {
         self.assets.read()
     }
 
@@ -140,8 +138,8 @@ impl Assets {
 
     fn add_asset<A: Any + Send + Sync>(&mut self, name: &str, asset: A) -> AssetId {
         *self.asset_ids
-            .entry(name.into())
-            .or_insert(self.assets.create_entity().with(Asset::<A>(asset)).build())
+             .entry(name.into())
+             .or_insert(self.assets.create_entity().with(Asset::<A>(asset)).build())
     }
 }
 
@@ -202,14 +200,16 @@ impl AssetManager {
         let asset_id = TypeId::of::<A>();
         let source_id = TypeId::of::<S>();
 
-        self.closures.insert((asset_id, source_id),
-                             Box::new(|loader: &mut Assets, name: &str, raw: &[u8]| {
+        self.closures
+            .insert((asset_id, source_id),
+                    Box::new(|loader: &mut Assets, name: &str, raw: &[u8]| {
                                  S::from_raw(loader, raw)
                                      .and_then(|data| AssetLoader::<A>::from_data(loader, data))
                                      .and_then(|asset| Some(loader.add_asset(name, asset)))
                              }));
 
-        self.asset_type_ids.insert((asset.into(), asset_id), source_id);
+        self.asset_type_ids
+            .insert((asset.into(), asset_id), source_id);
     }
 
     /// Register an asset store
@@ -239,7 +239,9 @@ impl AssetManager {
                                             asset_type: &str)
                                             -> Option<AssetId> {
         let mut buf = Vec::new();
-        if let Some(store) = self.stores.iter().find(|store| store.has_asset(name, asset_type)) {
+        if let Some(store) = self.stores
+               .iter()
+               .find(|store| store.has_asset(name, asset_type)) {
             store.load_asset(name, asset_type, &mut buf);
         } else {
             return None;
@@ -291,12 +293,12 @@ impl AssetManager {
             None => return None,
         };
         Some(Renderable {
-            mesh: mesh.0.clone(),
-            ambient: ka.0.clone(),
-            diffuse: kd.0.clone(),
-            specular: ks.0.clone(),
-            specular_exponent: ns,
-        })
+                 mesh: mesh.0.clone(),
+                 ambient: ka.0.clone(),
+                 diffuse: kd.0.clone(),
+                 specular: ks.0.clone(),
+                 specular_exponent: ns,
+             })
     }
 }
 
@@ -335,7 +337,10 @@ impl DirectoryStore {
 impl AssetStore for DirectoryStore {
     fn has_asset(&self, name: &str, asset_type: &str) -> bool {
         let file_path = self.asset_to_path(name, asset_type);
-        fs::metadata(file_path).ok().map(|meta| meta.is_file()).is_some()
+        fs::metadata(file_path)
+            .ok()
+            .map(|meta| meta.is_file())
+            .is_some()
     }
 
     fn load_asset(&self, name: &str, asset_type: &str, buf: &mut Vec<u8>) -> Option<usize> {
@@ -357,7 +362,11 @@ impl AssetLoaderRaw for Image<u8> {
 
 impl AssetLoader<Texture> for Image<u8> {
     fn from_data(assets: &mut Assets, image: Image<u8>) -> Option<Texture> {
-        let pixels = image.buf.chunks(4).map(|p| [p[0], p[1], p[2], p[3]]).collect::<Vec<_>>();
+        let pixels = image
+            .buf
+            .chunks(4)
+            .map(|p| [p[0], p[1], p[2], p[3]])
+            .collect::<Vec<_>>();
 
         AssetLoader::from_data(assets,
                                TextureLoadData {
@@ -380,7 +389,8 @@ impl AssetLoader<Texture> for DDS {
                                    kind: Kind::D2(image.header.width as u16,
                                                   image.header.height as u16,
                                                   AaMode::Single),
-                                   raw: image.layers
+                                   raw: image
+                                       .layers
                                        .iter()
                                        .map(|l| l.as_slice())
                                        .collect::<Vec<_>>()
@@ -406,59 +416,67 @@ impl AssetLoader<Mesh> for ObjSet {
         // flat vec of `VertexPosNormal` objects.
         // TODO: Doesn't differentiate between objects in a `*.obj` file, treats
         // them all as a single mesh.
-        let vertices: Vec<VertexPosNormal> = obj_set.objects
+        let vertices: Vec<VertexPosNormal> = obj_set
+            .objects
             .iter()
             .flat_map(|object| {
-                object.geometry
+                object
+                    .geometry
                     .iter()
                     .flat_map(|ref geometry| {
-                        geometry.shapes.iter().flat_map(|s| -> Vec<VertexPosNormal> {
-                            let mut vtn_indices = vec![];
+                        geometry
+                            .shapes
+                            .iter()
+                            .flat_map(|s| -> Vec<VertexPosNormal> {
+                                let mut vtn_indices = vec![];
 
-                            match s.primitive {
-                                Primitive::Point(v1) => {
-                                    vtn_indices.push(v1);
-                                }
-                                Primitive::Line(v1, v2) => {
-                                    vtn_indices.push(v1);
-                                    vtn_indices.push(v2);
-                                }
-                                Primitive::Triangle(v1, v2, v3) => {
-                                    vtn_indices.push(v1);
-                                    vtn_indices.push(v2);
-                                    vtn_indices.push(v3);
-                                }
-                            }
-
-                            vtn_indices.iter()
-                                .map(|&(vi, ti, ni)| {
-                                    let vertex = object.vertices[vi];
-
-                                    VertexPosNormal {
-                                        pos: [vertex.x as f32, vertex.y as f32, vertex.z as f32],
-                                        normal: match ni {
-                                            Some(i) => {
-                                                let normal = object.normals[i];
-
-                                                Vector3::from([normal.x as f32,
-                                                               normal.y as f32,
-                                                               normal.z as f32])
-                                                    .normalize()
-                                                    .into()
-                                            }
-                                            None => [0.0, 0.0, 0.0],
-                                        },
-                                        tex_coord: match ti {
-                                            Some(i) => {
-                                                let tvertex = object.tex_vertices[i];
-                                                [tvertex.u as f32, tvertex.v as f32]
-                                            }
-                                            None => [0.0, 0.0],
-                                        },
+                                match s.primitive {
+                                    Primitive::Point(v1) => {
+                                        vtn_indices.push(v1);
                                     }
-                                })
-                                .collect()
-                        })
+                                    Primitive::Line(v1, v2) => {
+                                        vtn_indices.push(v1);
+                                        vtn_indices.push(v2);
+                                    }
+                                    Primitive::Triangle(v1, v2, v3) => {
+                                        vtn_indices.push(v1);
+                                        vtn_indices.push(v2);
+                                        vtn_indices.push(v3);
+                                    }
+                                }
+
+                                vtn_indices
+                                    .iter()
+                                    .map(|&(vi, ti, ni)| {
+                                        let vertex = object.vertices[vi];
+
+                                        VertexPosNormal {
+                                            pos: [vertex.x as f32,
+                                                  vertex.y as f32,
+                                                  vertex.z as f32],
+                                            normal: match ni {
+                                                Some(i) => {
+                                                    let normal = object.normals[i];
+
+                                                    Vector3::from([normal.x as f32,
+                                                                   normal.y as f32,
+                                                                   normal.z as f32])
+                                                            .normalize()
+                                                            .into()
+                                                }
+                                                None => [0.0, 0.0, 0.0],
+                                            },
+                                            tex_coord: match ti {
+                                                Some(i) => {
+                                                    let tvertex = object.tex_vertices[i];
+                                                    [tvertex.u as f32, tvertex.v as f32]
+                                                }
+                                                None => [0.0, 0.0],
+                                            },
+                                        }
+                                    })
+                                    .collect()
+                            })
                     })
                     .collect::<Vec<VertexPosNormal>>()
             })
@@ -504,7 +522,9 @@ mod tests {
         assets.register_loader::<Foo, u32>("foo");
         assets.add_loader::<FooLoader>(FooLoader);
 
-        assert!(assets.load_asset_from_raw::<Foo>("asset01", "foo", &[0; 2]).is_some());
+        assert!(assets
+                    .load_asset_from_raw::<Foo>("asset01", "foo", &[0; 2])
+                    .is_some());
         assert_eq!(None, assets.load_asset_from_data::<Foo, u32>("foo", 2));
     }
 
