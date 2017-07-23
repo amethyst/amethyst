@@ -315,10 +315,15 @@ macro_rules! config(
                             let $field = match $field {
                                 Some(v) => v,
                                 None => {
-                                    use $crate::serde::de::Error;
-                                    let err: M::Error = M::Error::missing_field(stringify!($field));
-                                    println!("{}: {}, expecting: `{}`", CONFIG_NAME, err, stringify!($ty));
-                                    $default
+                                    // Any field that claims to be optional will not warn when
+                                    // missing.
+                                    match $crate::missing_field::<$ty, M::Error>(stringify!($field)) {
+                                        Ok(_) => $default,
+                                        Err(err) => {
+                                            println!("{}: {}, expecting: `{}`", CONFIG_NAME, err, stringify!($ty));
+                                            $default
+                                        }
+                                    }
                                 },
                             };
                         )*
@@ -410,3 +415,42 @@ macro_rules! config(
     };
 );
 
+/// If the missing field is of type `Option<T>` then treat is as `None`,
+/// otherwise it is an error.
+pub fn missing_field<'de, V, E>(field: &'static str) -> Result<V, E>
+where
+    V: ::serde::de::Deserialize<'de>,
+    E: ::serde::de::Error,
+{
+    struct MissingFieldDeserializer<E>(&'static str, ::std::marker::PhantomData<E>);
+
+    impl<'de, E> ::serde::de::Deserializer<'de> for MissingFieldDeserializer<E>
+    where
+        E: ::serde::de::Error,
+    {
+        type Error = E;
+
+        fn deserialize_any<V>(self, _visitor: V) -> Result<V::Value, E>
+        where
+            V: ::serde::de::Visitor<'de>,
+        {
+            Err(::serde::de::Error::missing_field(self.0))
+        }
+
+        fn deserialize_option<V>(self, visitor: V) -> Result<V::Value, E>
+        where
+            V: ::serde::de::Visitor<'de>,
+        {
+            visitor.visit_none()
+        }
+
+        forward_to_deserialize_any! {
+            bool i8 i16 i32 i64 u8 u16 u32 u64 f32 f64 char str string bytes
+            byte_buf unit unit_struct newtype_struct seq tuple tuple_struct map
+            struct enum identifier ignored_any
+        }
+    }
+
+    let deserializer = MissingFieldDeserializer(field, ::std::marker::PhantomData);
+    ::serde::de::Deserialize::deserialize(deserializer)
+}
