@@ -85,6 +85,7 @@ pub use tex::{Texture, TextureBuilder};
 pub use vertex::VertexFormat;
 
 use pipe::{ColorBuffer, DepthBuffer};
+use pipe::pass::Pass;
 use std::sync::Arc;
 use std::time::Duration;
 use types::{ColorFormat, DepthFormat, Encoder, Factory, Window};
@@ -146,30 +147,107 @@ impl Renderer {
         tb.finish(&mut self.factory)
     }
 
+    /// Builds a new material resource.
+    pub fn create_material(&mut self, mb: MaterialBuilder) -> Result<Material> {
+        mb.finish(&mut self.factory)
+    }
+
     /// Draws a scene with the given pipeline.
     pub fn draw(&mut self, scene: &Scene, pipe: &Pipeline, _delta: Duration) {
         use gfx::Device;
         use rayon::prelude::*;
 
-        for stage in pipe.stages() {
-            assert_eq!(self.encoders.len(), num_cpus::get());
-            let encoders = self.encoders.as_mut_slice();
-            if stage.is_enabled() {
-                self.pool.install(|| {
-                    scene.par_iter_models()
-                        .zip(encoders)
-                        .for_each(|(model, enc)| stage.apply(enc, model, scene));
-                });
+        let Renderer {
+            ref mut device,
+            ref mut encoders,
+            ref mut factory,
+            ref pool,
+            ref mut window,
+            ..
+        } = *self;
+
+        let num_threads = pool.current_num_threads();
+        let encoders_required = pipe.stages()
+            .iter()
+            .filter(|stage| stage.is_enabled())
+            .map(|stage| stage.encoders_required(num_threads))
+            .sum::<usize>();
+
+        let encoders_count = encoders.len();
+        if encoders_count < encoders_required {
+            encoders.extend((encoders_count..encoders_required).map(|_| factory.create_command_buffer().into()))
+        }
+
+        {
+            let mut encoders = encoders.as_mut_slice();
+            let mut model = Vec::new();
+            let mut light = Vec::new();
+            for stage in pipe.stages().iter().filter(|stage| stage.is_enabled()) {
+                for pass in stage.passes().iter() {
+                    match *pass {
+                        Pass::Basic(ref pass) => {
+                            let enc = {
+                                let slice = encoders;
+                                let (first, left) = slice.split_first_mut().unwrap();
+                                encoders = left;
+                                first
+                            };
+                            pass.apply(enc, &stage.target());
+                        }
+                        Pass::Simple(ref pass) => {
+                            let enc = {
+                                let slice = encoders;
+                                let (first, left) = slice.split_first_mut().unwrap();
+                                encoders = left;
+                                first
+                            };
+                            pass.apply(enc, &stage.target(), scene)
+                        }
+                        Pass::Model(ref pass) => {
+                            let mut fragments_iter = scene.par_chunks_models(num_threads);
+                            let enc = {
+                                let slice = encoders;
+                                let (count, left) = slice.split_at_mut(fragments_iter.len());
+                                encoders = left;
+                                count
+                            };
+                            model.push(fragments_iter
+                                           .zip(enc)
+                                           .map(move |(models, enc)| for model in models {
+                                                    pass.apply(enc, &stage.target(), scene, model);
+                                                }));
+                        }
+                        Pass::Light(ref pass) => {
+                            let mut fragments_iter = scene.par_chunks_lights(num_threads);
+                            let enc = {
+                                let slice = encoders;
+                                let (count, left) = slice.split_at_mut(fragments_iter.len());
+                                encoders = left;
+                                count
+                            };
+                            light.push(fragments_iter
+                                           .zip(enc)
+                                           .map(move |(lights, enc)| for light in lights {
+                                                    pass.apply(enc, &stage.target(), scene, light);
+                                                }));
+                        }
+                    }
+                }
             }
+            pool.install(move || {
+                model.into_par_iter()
+                    .flat_map(|i|i)
+                    .chain(light.into_par_iter().flat_map(|i|i))
+                    .for_each(|()| {});
+            });
         }
 
-        for enc in self.encoders.iter_mut() {
-            enc.flush(&mut self.device);
+        for enc in encoders.iter_mut() {
+            enc.flush(device);
         }
-
-        self.device.cleanup();
+        device.cleanup();
         #[cfg(feature = "opengl")]
-        self.window.swap_buffers().expect("OpenGL context has been lost");
+        window.swap_buffers().expect("OpenGL context has been lost");
     }
 
     /// Returns an immutable reference to the renderer window.
@@ -195,7 +273,7 @@ pub struct RendererBuilder<'a> {
 impl<'a> RendererBuilder<'a> {
     #[allow(missing_docs)]
     pub fn new(el: &'a EventsLoop) -> RendererBuilder<'a> {
-        RendererBuilder{
+        RendererBuilder {
             events: el,
             pool: None,
             winit_builder: WindowBuilder::new().with_title("Amethyst"),
@@ -219,27 +297,23 @@ impl<'a> RendererBuilder<'a> {
         let Backend(dev, mut fac, main, win) = init_backend(self.winit_builder, self.events)?;
 
         let num_cores = num_cpus::get();
-        let encoders = (0..num_cores)
-            .map(|_| fac.create_command_buffer().into())
-            .collect();
-
         let pool = self.pool
             .map(|p| Ok(p))
             .unwrap_or_else(|| {
-                let cfg = rayon::Configuration::new().num_threads(num_cores);
-                rayon::ThreadPool::new(cfg)
-                    .map(|p| Arc::new(p))
-                    .map_err(|e| Error::PoolCreation(e))
-            })?;
+                                let cfg = rayon::Configuration::new().num_threads(num_cores);
+                                rayon::ThreadPool::new(cfg)
+                                    .map(|p| Arc::new(p))
+                                    .map_err(|e| Error::PoolCreation(e))
+                            })?;
 
         Ok(Renderer {
-            device: dev,
-            encoders: encoders,
-            factory: fac,
-            main_target: Arc::new(main),
-            pool: pool,
-            window: win,
-        })
+               device: dev,
+               encoders: Vec::new(),
+               factory: fac,
+               main_target: Arc::new(main),
+               pool: pool,
+               window: win,
+           })
     }
 }
 
@@ -259,14 +333,14 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop) -> Result<Backend> {
     let depth = fac.create_depth_stencil_view_only::<DepthFormat>(w, h)?;
     let main_target = Target::from((
         vec![ColorBuffer {
-            as_input: None,
-            as_output: color,
-        }],
-        DepthBuffer {
-            as_input: None,
-            as_output: depth,
-        },
-        size));
+                                             as_input: None,
+                                             as_output: color,
+                                         }],
+                                    DepthBuffer {
+                                        as_input: None,
+                                        as_output: depth,
+                                    },
+                                    size));
 
     Ok(Backend(dev, fac, main_target, win))
 }

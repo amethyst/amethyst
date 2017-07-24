@@ -41,6 +41,15 @@ impl Projection {
     }
 }
 
+impl From<Projection> for Matrix4<f32> {
+    fn from(proj: Projection) -> Self {
+        match proj {
+            Projection::Orthographic(ortho) => ortho.into(),
+            Projection::Perspective(perspective) => perspective.into(),
+        }
+    }
+}
+
 /// Camera struct.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct Camera {

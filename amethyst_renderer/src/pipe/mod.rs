@@ -16,7 +16,7 @@
 //!     .expect("Could not build pipeline");
 //! ```
 
-pub use self::effect::{Effect, EffectBuilder};
+pub use self::effect::{Effect, EffectBuilder, DepthMode};
 pub use self::stage::{Stage, StageBuilder};
 pub use self::target::{ColorBuffer, DepthBuffer, Target, TargetBuilder, Targets};
 
@@ -41,14 +41,14 @@ pub struct Pipeline {
 
 impl Pipeline {
     /// Builds a new renderer pipeline.
-    pub fn build() -> PipelineBuilder {
+    pub fn build<'a>() -> PipelineBuilder<'a> {
         PipelineBuilder::new()
     }
 
     /// Builds a default deferred pipeline.
     ///
     /// FIXME: Only generates a dummy pipeline for now.
-    pub fn deferred() -> PipelineBuilder {
+    pub fn deferred<'a>() -> PipelineBuilder<'a> {
         use pass::*;
         PipelineBuilder::new()
             .with_target(Target::named("gbuffer")
@@ -63,7 +63,7 @@ impl Pipeline {
     /// Builds a default forward pipeline.
     ///
     /// FIXME: Only generates a dummy pipeline for now.
-    pub fn forward() -> PipelineBuilder {
+    pub fn forward<'a>() -> PipelineBuilder<'a> {
         use pass::*;
         PipelineBuilder::new()
             .with_stage(Stage::with_backbuffer()
@@ -83,14 +83,14 @@ impl Pipeline {
 
 /// Constructs a new pipeline with the given render targets and layers.
 #[derive(Clone, Debug)]
-pub struct PipelineBuilder {
-    stages: Vec<StageBuilder>,
+pub struct PipelineBuilder<'a> {
+    stages: Vec<StageBuilder<'a>>,
     targets: Vec<TargetBuilder>,
 }
 
-impl PipelineBuilder {
+impl<'a> PipelineBuilder<'a> {
     /// Creates a new PipelineBuilder.
-    pub fn new() -> PipelineBuilder {
+    pub fn new() -> Self {
         PipelineBuilder {
             stages: Vec::new(),
             targets: Vec::new(),
@@ -104,7 +104,7 @@ impl PipelineBuilder {
     }
 
     /// Constructs a new stage in this pipeline.
-    pub fn with_stage(mut self, sb: StageBuilder) -> Self {
+    pub fn with_stage(mut self, sb: StageBuilder<'a>) -> Self {
         self.stages.push(sb);
         self
     }

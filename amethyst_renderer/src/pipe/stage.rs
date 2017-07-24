@@ -2,10 +2,11 @@
 
 use error::{Error, Result};
 use pipe::{Target, Targets};
-use pipe::pass::{Pass, PassBuilder};
+use pipe::pass::{ModelPass, Pass, PassBuilder, SimplePass, BasicPass};
+use rayon::iter::{IndexedParallelIterator, IntoParallelIterator, ParallelIterator};
 use scene::{Model, Scene};
 use std::sync::Arc;
-use types::{Encoder, Factory};
+use types::{Encoder, Device, Factory};
 
 /// A stage in the rendering pipeline.
 #[derive(Clone, Debug)]
@@ -17,12 +18,12 @@ pub struct Stage {
 
 impl Stage {
     /// Creates a new stage using the Target with the given name.
-    pub fn with_target<T: Into<String>>(target_name: T) -> StageBuilder {
+    pub fn with_target<'a, T: Into<String>>(target_name: T) -> StageBuilder<'a> {
         StageBuilder::new(target_name.into())
     }
 
     /// Creates a new layer which draws straight into the backbuffer.
-    pub fn with_backbuffer() -> StageBuilder {
+    pub fn with_backbuffer<'a>() -> StageBuilder<'a> {
         StageBuilder::new("")
     }
 
@@ -36,26 +37,39 @@ impl Stage {
         self.enabled
     }
 
-    /// Applies all passes in this stage to the given `Scene` and outputs the
-    /// result to the proper target.
-    pub fn apply(&self, enc: &mut Encoder, model: &Model, scene: &Scene) {
-        if self.enabled {
-            for pass in self.passes.as_slice() {
-                pass.apply(enc, model, scene, &self.target);
-            }
-        }
+    /// Get passes of the stage
+    pub fn passes(&self) -> &[Pass] {
+        self.passes.as_slice()
+    }
+
+    /// Get target of the stage
+    pub fn target(&self) -> &Target {
+        &self.target
+    }
+
+    /// Get count of parallelable passes
+    pub fn encoders_required(&self, jobs_count: usize) -> usize {
+        self.passes
+            .iter()
+            .map(|pass| match *pass {
+                     Pass::Basic(_) => 1,
+                     Pass::Simple(_) => 1,
+                     Pass::Model(_) => jobs_count,
+                     Pass::Light(_) => jobs_count,
+                 })
+            .sum::<usize>()
     }
 }
 
 /// Constructs a new rendering stage.
 #[derive(Clone, Debug)]
-pub struct StageBuilder {
+pub struct StageBuilder<'a> {
     enabled: bool,
-    passes: Vec<PassBuilder>,
+    passes: Vec<PassBuilder<'a>>,
     target_name: String,
 }
 
-impl StageBuilder {
+impl<'a> StageBuilder<'a> {
     /// Creates a new `StageBuilder` using the given target.
     pub fn new<T: Into<String>>(target_name: T) -> Self {
         StageBuilder {
@@ -66,7 +80,7 @@ impl StageBuilder {
     }
 
     /// Appends another `Pass` to the stage.
-    pub fn with_pass<P: Into<PassBuilder>>(mut self, pass: P) -> Self {
+    pub fn with_pass<P: Into<PassBuilder<'a>>>(mut self, pass: P) -> Self {
         self.passes.push(pass.into());
         self
     }
@@ -86,15 +100,12 @@ impl StageBuilder {
             .cloned()
             .ok_or(Error::NoSuchTarget(name))?;
 
-        let passes = self.passes
-            .drain(..)
-            .map(|pb| pb.finish(fac, targets, &out))
-            .collect::<Result<_>>()?;
+        let passes = self.passes.into_iter().map(|pb| pb.finish(fac, targets, &out)).collect::<Result<Vec<_>>>()?;
 
         Ok(Stage {
-            enabled: self.enabled,
-            passes: passes,
-            target: out,
-        })
+               enabled: self.enabled,
+               passes: passes,
+               target: out,
+           })
     }
 }

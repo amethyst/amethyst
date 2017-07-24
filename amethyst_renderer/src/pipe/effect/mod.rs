@@ -6,13 +6,18 @@ use self::pso::{Data, Init, Meta};
 
 use error::{Error, Result};
 use fnv::FnvHashMap as HashMap;
+use gfx::Bind;
+use gfx::buffer::{Info as BufferInfo, Role as BufferRole};
+use gfx::memory::Usage;
 use gfx::{Primitive, ShaderSet};
 use gfx::preset::depth::{LESS_EQUAL_TEST, LESS_EQUAL_WRITE};
+use gfx::pso::buffer::{ElemStride, InstanceRate};
 use gfx::shade::{ProgramError, ToUniform};
-use gfx::state::{Depth, Rasterizer};
+use gfx::state::{Comparison, Depth, Rasterizer, Stencil};
 use gfx::texture::{FilterMethod, SamplerInfo, WrapMode};
 use pipe::{Target, Targets};
-use types::{Factory, PipelineState, Resources, Sampler};
+use types::{Factory, PipelineState, RawBuffer, Resources, Sampler};
+use vertex::Attribute;
 
 mod pso;
 
@@ -31,13 +36,13 @@ pub enum DepthMode {
 }
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
-enum ProgramSource {
-    Simple(&'static [u8], &'static [u8]),
-    Geometry(&'static [u8], &'static [u8], &'static [u8]),
-    Tessellated(&'static [u8], &'static [u8], &'static [u8], &'static [u8]),
+enum ProgramSource<'a> {
+    Simple(&'a [u8], &'a [u8]),
+    Geometry(&'a [u8], &'a [u8], &'a [u8]),
+    Tessellated(&'a [u8], &'a [u8], &'a [u8], &'a [u8]),
 }
 
-impl ProgramSource {
+impl<'a> ProgramSource<'a> {
     pub fn compile(&self, fac: &mut Factory) -> Result<ShaderSet<Resources>> {
         use gfx::Factory;
         use gfx::traits::FactoryExt;
@@ -67,62 +72,64 @@ impl ProgramSource {
 #[derive(Derivative)]
 #[derivative(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Effect {
-    pso: PipelineState<Meta>,
+    pub pso: PipelineState<Meta>,
     #[derivative(Hash = "ignore")]
-    pso_data: Data,
+    pub pso_data: Data,
     #[derivative(Hash = "ignore")]
-    samplers: HashMap<String, Sampler>,
+    pub samplers: HashMap<String, Sampler>,
+    #[derivative(Hash = "ignore")]
+    pub const_bufs: HashMap<String, RawBuffer>,
 }
 
 impl Effect {
-    pub fn new_simple_prog<S>(vs: S, ps: S) -> EffectBuilder
-        where S: Into<&'static [u8]>
+    pub fn new_simple_prog<'a, S>(vs: S, ps: S) -> EffectBuilder<'a>
+        where S: Into<&'a [u8]>
     {
         EffectBuilder::new_simple_prog(vs, ps)
     }
 
-    pub fn new_geom_prog<S>(vs: S, gs: S, ps: S) -> EffectBuilder
-        where S: Into<&'static [u8]>
+    pub fn new_geom_prog<'a, S>(vs: S, gs: S, ps: S) -> EffectBuilder<'a>
+        where S: Into<&'a [u8]>
     {
         EffectBuilder::new_geom_prog(vs, gs, ps)
     }
 
-    pub fn new_tess_prog<S>(vs: S, hs: S, ds: S, ps: S) -> EffectBuilder
-        where S: Into<&'static [u8]>
+    pub fn new_tess_prog<'a, S>(vs: S, hs: S, ds: S, ps: S) -> EffectBuilder<'a>
+        where S: Into<&'a [u8]>
     {
         EffectBuilder::new_tess_prog(vs, hs, ds, ps)
     }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct EffectBuilder {
-    init: Init<'static>,
-    out_depth: Depth,
+pub struct EffectBuilder<'a> {
+    init: Init<'a>,
     prim: Primitive,
-    prog: ProgramSource,
+    prog: ProgramSource<'a>,
     rast: Rasterizer,
-    samplers: HashMap<String, SamplerInfo>,
+    samplers: HashMap<SamplerInfo, &'a [&'a str]>,
+    const_bufs: HashMap<&'a str, BufferInfo>,
 }
 
-impl Default for EffectBuilder {
-    fn default() -> EffectBuilder {
+impl<'a> Default for EffectBuilder<'a> {
+    fn default() -> Self {
         use gfx::Primitive;
         use gfx::state::Rasterizer;
 
         EffectBuilder {
             init: Init::default(),
-            out_depth: LESS_EQUAL_WRITE,
             prim: Primitive::TriangleList,
             rast: Rasterizer::new_fill().with_cull_back(),
             prog: ProgramSource::Simple("".as_bytes(), "".as_bytes()),
             samplers: HashMap::default(),
+            const_bufs: HashMap::default(),
         }
     }
 }
 
-impl EffectBuilder {
-    pub fn new_simple_prog<S>(vs: S, ps: S) -> EffectBuilder
-        where S: Into<&'static [u8]>
+impl<'a> EffectBuilder<'a> {
+    pub fn new_simple_prog<S>(vs: S, ps: S) -> Self
+        where S: Into<&'a [u8]>
     {
         let (vs, ps) = (vs.into(), ps.into());
         EffectBuilder {
@@ -131,8 +138,8 @@ impl EffectBuilder {
         }
     }
 
-    pub fn new_geom_prog<S>(vs: S, gs: S, ps: S) -> EffectBuilder
-        where S: Into<&'static [u8]>
+    pub fn new_geom_prog<S>(vs: S, gs: S, ps: S) -> Self
+        where S: Into<&'a [u8]>
     {
         let (vs, gs, ps) = (vs.into(), gs.into(), ps.into());
         EffectBuilder {
@@ -141,8 +148,8 @@ impl EffectBuilder {
         }
     }
 
-    pub fn new_tess_prog<S>(vs: S, hs: S, ds: S, ps: S) -> EffectBuilder
-        where S: Into<&'static [u8]>
+    pub fn new_tess_prog<S>(vs: S, hs: S, ds: S, ps: S) -> Self
+        where S: Into<&'a [u8]>
     {
         let (vs, hs, ds, ps) = (vs.into(), hs.into(), ds.into(), ps.into());
         EffectBuilder {
@@ -152,29 +159,55 @@ impl EffectBuilder {
     }
 
     /// Adds a global constant to this `Effect`.
-    pub fn with_global<N: Into<&'static str>>(mut self, name: N) -> Self {
-        self.init.globals.push(name.into());
+    pub fn with_raw_global(mut self, name: &'a str) -> Self {
+        self.init.globals.push(name);
+        self
+    }
+
+    /// Adds a raw uniform constant to this `Effect`.
+    /// Requests a new constant buffer to be created
+    pub fn with_raw_constant_buffer(mut self, name: &'a str, size: usize, num: usize) -> Self {
+        self.const_bufs.insert(name, BufferInfo {
+            role: BufferRole::Constant,
+            bind: Bind::empty(),
+            usage: Usage::Dynamic,
+            size: num * size,
+            stride: size,
+        });
+        self.init.const_bufs.push(name);
         self
     }
 
     /// Sets the output target of the PSO.
     ///
     /// If the target contains a depth buffer, its mode will be set by `depth`.
-    pub fn with_output(mut self, depth: DepthMode) -> Self {
-        self.out_depth = match depth {
-            DepthMode::LessEqualTest => LESS_EQUAL_TEST,
-            DepthMode::LessEqualWrite => LESS_EQUAL_WRITE,
-        };
+    pub fn with_output(mut self, name: &'a str, depth: Option<DepthMode>) -> Self {
+        if let Some(depth) = depth {
+            self.init.out_depth = Some((match depth {
+                DepthMode::LessEqualTest => LESS_EQUAL_TEST,
+                DepthMode::LessEqualWrite => LESS_EQUAL_WRITE,
+            }, Stencil::default()));
+        }
+        self.init.out_colors.push(name);
         self
     }
 
     /// Requests a new texture sampler be created for this `Effect`.
-    pub fn with_sampler<N>(mut self, name: N, f: FilterMethod, w: WrapMode) -> Self
-        where N: Into<&'static str>
-    {
-        let val = name.into();
-        self.samplers.insert(val.to_string(), SamplerInfo::new(f, w));
-        self.init.samplers.push(val);
+    pub fn with_sampler(mut self, names: &'a [&'a str], f: FilterMethod, w: WrapMode) -> Self {
+        self.samplers.insert(SamplerInfo::new(f, w), names);
+        self.init.samplers.extend(names);
+        self
+    }
+
+    /// Adds a texture to this `Effect`
+    pub fn with_texture(mut self, name: &'a str) -> Self {
+        self.init.textures.push(name);
+        self
+    }
+
+    /// Adds a vertex buffer to this `Effect`
+    pub fn with_raw_vertex_buffer(mut self, attributes: &'a [(&'a str, Attribute)], stride: ElemStride, rate: InstanceRate) -> Self {
+        self.init.vertex_bufs.push((attributes, stride, rate));
         self
     }
 
@@ -188,13 +221,23 @@ impl EffectBuilder {
         let samplers = self.samplers
             .clone()
             .iter()
-            .map(|(name, info)| (name.clone(), fac.create_sampler(*info)))
+            .flat_map(|(info, names)| {
+                let sampler = fac.create_sampler(*info);
+                names.iter().map(move |name| ((*name).into(), sampler.clone()))
+            })
             .collect::<HashMap<_, _>>();
+
+        let const_bufs = self.const_bufs
+            .clone()
+            .iter()
+            .map(|(name, info)| Ok(((*name).into(), fac.create_buffer_raw(*info)?)))
+            .collect::<Result<HashMap<_, _>>>()?;
 
         Ok(Effect {
             pso: pso,
             pso_data: Data::default(),
             samplers: samplers,
+            const_bufs: const_bufs,
         })
     }
 }

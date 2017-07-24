@@ -15,9 +15,9 @@ pub struct Texture {
 
 impl Texture {
     /// Builds a new texture with the given raw texture data.
-    pub fn build<'d, T: 'd, D>(data: D) -> TextureBuilder
+    pub fn build<T, D>(data: D) -> TextureBuilder
         where T: Copy + Pod,
-              D: Into<&'d [T]>
+              D: AsRef<[T]>
     {
         TextureBuilder::new(data)
     }
@@ -25,6 +25,11 @@ impl Texture {
     /// Builds a new texture with the given raw texture data.
     pub fn from_color_val<C: Into<[f32; 4]>>(rgba: C) -> TextureBuilder {
         TextureBuilder::from_color_val(rgba)
+    }
+
+    /// Get view
+    pub fn view(&self) -> &RawShaderResourceView {
+        &self.view
     }
 }
 
@@ -37,22 +42,22 @@ pub struct TextureBuilder {
 
 impl TextureBuilder {
     /// Creates a new `TextureBuilder` with the given raw texture data.
-    pub fn new<'d, T: 'd, D>(data: D) -> TextureBuilder
+    pub fn new<T, D>(data: D) -> TextureBuilder
         where T: Copy + Pod,
-              D: Into<&'d [T]>
+              D: AsRef<[T]>
     {
-        use gfx::Bind;
+        use gfx::{SHADER_RESOURCE, Bind};
         use gfx::format::SurfaceType;
         use gfx::memory::{Usage, cast_slice};
         use gfx::texture::{AaMode, Kind};
 
         TextureBuilder {
-            data: cast_slice(data.into()).to_vec(),
+            data: cast_slice(data.as_ref()).to_vec(),
             info: Info {
                 kind: Kind::D2(1, 1, AaMode::Single),
                 levels: 1,
                 format: SurfaceType::R8_G8_B8_A8,
-                bind: Bind::empty(),
+                bind: SHADER_RESOURCE,
                 usage: Usage::Dynamic,
             },
         }
@@ -97,7 +102,7 @@ impl TextureBuilder {
         use gfx::texture::ResourceDesc;
 
         let chan = ChannelType::Srgb;
-        let tex = fac.create_texture_raw(self.info, Some(chan), None)?;
+        let tex = fac.create_texture_raw(self.info, Some(chan), Some(&[self.data.as_slice()]))?;
 
         let desc = ResourceDesc {
             channel: ChannelType::Srgb,

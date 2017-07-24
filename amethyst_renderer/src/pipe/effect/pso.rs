@@ -3,7 +3,7 @@ use gfx::pso::{DataBind, DataLink, Descriptor, PipelineData, PipelineInit, InitE
 use gfx::pso::buffer::{RawConstantBuffer, RawGlobal, RawVertexBuffer};
 use gfx::pso::resource::{RawShaderResource, Sampler};
 use gfx::pso::target;
-use gfx::shade::core::ProgramInfo;
+use gfx::shade::core::{BaseType, ContainerType, OutputVar, ProgramInfo};
 use types::{ColorFormat, DepthFormat, Resources};
 
 type AccessInfo = pso::AccessInfo<Resources>;
@@ -41,29 +41,55 @@ impl<'d> PipelineInit for Init<'d> {
     fn link_to<'r>(&self, desc: &mut Descriptor, info: &'r ProgramInfo) -> InitResult<'r, Meta> {
         let mut meta = Meta::default();
 
-        for (info, cbuf) in info.constant_buffers.iter().zip(&self.const_bufs) {
+        for cbuf in self.const_bufs.iter() {
             let mut meta_cbuf = <RawConstantBuffer as DataLink<'d>>::new();
-            if let Some(res) = meta_cbuf.link_constant_buffer(info, cbuf) {
-                let d = res.map_err(|e| InitError::ConstantBuffer(info.name.as_str(), Some(e)))?;
-                meta.const_bufs.push(meta_cbuf);
-                desc.constant_buffers[info.slot as usize] = Some(d);
+            for info in info.constant_buffers.iter() {
+                if let Some(res) = meta_cbuf.link_constant_buffer(info, cbuf) {
+                    let d = res.map_err(|e| InitError::ConstantBuffer(info.name.as_str(), Some(e)))?;
+                    desc.constant_buffers[info.slot as usize] = Some(d);
+                    break;
+                }
             }
+            meta.const_bufs.push(meta_cbuf);
         }
 
-        for (info, global) in info.globals.iter().zip(&self.globals) {
+        for global in self.globals.iter() {
             let mut meta_global = <RawGlobal as DataLink<'d>>::new();
-            if let Some(res) = meta_global.link_global_constant(info, global) {
-                res.map_err(|e| InitError::GlobalConstant(info.name.as_str(), Some(e)))?;
-                meta.globals.push(meta_global);
+            for info in info.globals.iter() {
+                if let Some(res) = meta_global.link_global_constant(info, global) {
+                    res.map_err(|e| InitError::GlobalConstant(info.name.as_str(), Some(e)))?;
+                    break;
+                }
             }
+            meta.globals.push(meta_global);
         }
 
-        for (info, color) in info.outputs.iter().zip(&self.out_colors) {
+        for color in self.out_colors.iter() {
             let mut meta_color = <RenderTarget as DataLink<'d>>::new();
-            if let Some(res) = meta_color.link_output(info, color) {
-                let d = res.map_err(|e| InitError::PixelExport(info.name.as_str(), Some(e)))?;
+            for info in info.outputs.iter() {
+                if let Some(res) = meta_color.link_output(info, color) {
+                    let d = res.map_err(|e| InitError::PixelExport(info.name.as_str(), Some(e)))?;
+                    desc.color_targets[info.slot as usize] = Some(d);
+                    break;
+                }
+            }
+            meta.out_colors.push(meta_color);
+        }
+        if !info.knows_outputs {
+            let mut info = OutputVar {
+                name: String::new(),
+                slot: 0,
+                base_type: BaseType::F32,
+                container: ContainerType::Vector(4),
+            };
+            for color in self.out_colors.iter() {
+                let mut meta_color = <RenderTarget as DataLink<'d>>::new();
+                if let Some(res) = meta_color.link_output(&info, color) {
+                    let d = res.map_err(|e| InitError::PixelExport("", Some(e)))?;
+                    desc.color_targets[info.slot as usize] = Some(d);
+                    info.slot += 1;
+                }
                 meta.out_colors.push(meta_color);
-                desc.color_targets[info.slot as usize] = Some(d);
             }
         }
 
@@ -71,26 +97,32 @@ impl<'d> PipelineInit for Init<'d> {
             let mut meta_depth = <DepthStencilTarget as DataLink<'d>>::new();
             if let Some(d) = meta_depth.link_depth_stencil(&depth) {
                 desc.scissor = meta_depth.link_scissor();
-                meta.out_depth = Some(meta_depth);
                 desc.depth_stencil = Some(d);
             }
+            meta.out_depth = Some(meta_depth);
         }
 
-        for (info, smp) in info.samplers.iter().zip(&self.samplers) {
+        for smp in self.samplers.iter() {
             let mut meta_smp = <Sampler as DataLink<'d>>::new();
-            if let Some(d) = meta_smp.link_sampler(info, smp) {
-                meta.samplers.push(meta_smp);
-                desc.samplers[info.slot as usize] = Some(d);
+            for info in info.samplers.iter() {
+                if let Some(d) = meta_smp.link_sampler(info, smp) {
+                    desc.samplers[info.slot as usize] = Some(d);
+                    break;
+                }
             }
+            meta.samplers.push(meta_smp);
         }
 
-        for (info, tex) in info.textures.iter().zip(&self.textures) {
+        for tex in self.textures.iter() {
             let mut meta_tex = <RawShaderResource as DataLink<'d>>::new();
-            if let Some(res) = meta_tex.link_resource_view(info, tex) {
-                let d = res.map_err(|_| InitError::ResourceView(info.name.as_str(), Some(())))?;
-                meta.textures.push(meta_tex);
-                desc.resource_views[info.slot as usize] = Some(d);
+            for info in info.textures.iter() {
+                if let Some(res) = meta_tex.link_resource_view(info, tex) {
+                    let d = res.map_err(|_| InitError::ResourceView(info.name.as_str(), Some(())))?;
+                    desc.resource_views[info.slot as usize] = Some(d);
+                    break;
+                }
             }
+            meta.textures.push(meta_tex);
         }
 
         for (i, vbuf) in self.vertex_bufs.iter().enumerate() {
@@ -102,10 +134,9 @@ impl<'d> PipelineInit for Init<'d> {
                         desc.attributes[attr.slot as usize] = Some(d);
                     }
                 }
-
-                meta.vertex_bufs.push(meta_vbuf);
                 desc.vertex_buffers[i] = Some(d);
             }
+            meta.vertex_bufs.push(meta_vbuf);
         }
 
         Ok(meta)
