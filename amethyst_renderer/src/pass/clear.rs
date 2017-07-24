@@ -36,9 +36,9 @@ impl ClearTarget {
     }
 }
 
-impl Into<PassBuilder> for ClearTarget {
-    fn into(self) -> PassBuilder {
-        PassBuilder::function(move |ref mut enc, ref out| {
+impl<'a> Into<PassBuilder<'a>> for ClearTarget {
+    fn into(self) -> PassBuilder<'a> {
+        PassBuilder::basic(move |ref mut enc, ref out| {
             if let Some(val) = self.color_val {
                 for buf in out.color_bufs() {
                     enc.clear(&buf.as_output, val);
