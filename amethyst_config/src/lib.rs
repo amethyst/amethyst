@@ -88,6 +88,7 @@
 #![crate_type = "lib"]
 #![doc(html_logo_url = "http://tinyurl.com/hgsb45k")]
 
+#[macro_use]
 pub extern crate serde;
 pub extern crate serde_yaml;
 pub extern crate toml;
@@ -95,4 +96,4 @@ pub extern crate toml;
 #[macro_use]
 mod config;
 
-pub use config::{Config, ConfigError};
+pub use config::{Config, ConfigError, missing_field};
