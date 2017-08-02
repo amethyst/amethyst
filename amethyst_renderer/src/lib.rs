@@ -75,6 +75,7 @@ extern crate gfx_window_vulkan;
 
 pub use cam::{Camera, Projection};
 pub use color::Rgba;
+pub use config::Config;
 pub use error::{Error, Result};
 pub use light::Light;
 pub use mesh::{Mesh, MeshBuilder};
@@ -85,16 +86,11 @@ pub use tex::{Texture, TextureBuilder};
 pub use vertex::VertexFormat;
 
 use pipe::{ColorBuffer, DepthBuffer};
-use pipe::pass::Pass;
+use rayon::ThreadPool;
 use std::sync::Arc;
 use std::time::Duration;
 use types::{ColorFormat, DepthFormat, Encoder, Factory, Window};
-use winit::WindowBuilder;
-
-#[cfg(feature = "opengl")]
-use glutin::EventsLoop;
-#[cfg(not(feature = "opengl"))]
-use winit::EventsLoop;
+use winit::{EventsLoop, WindowBuilder};
 
 pub mod light;
 pub mod pass;
@@ -104,6 +100,7 @@ pub mod vertex;
 
 mod cam;
 mod color;
+mod config;
 mod error;
 mod mesh;
 mod mtl;
@@ -113,146 +110,92 @@ mod types;
 
 /// Generic renderer.
 pub struct Renderer {
+    config: Config,
     device: types::Device,
     encoders: Vec<Encoder>,
     factory: Factory,
     main_target: Arc<Target>,
-    pool: Arc<rayon::ThreadPool>,
+    pool: Arc<ThreadPool>,
     window: Window,
 }
 
 impl Renderer {
     /// Creates a new renderer with default window settings.
     pub fn new(el: &EventsLoop) -> Result<Renderer> {
-        Renderer::build(el).finish()
+        RendererBuilder::new(el).build()
     }
 
-    #[allow(missing_docs)]
+    /// Builds a new renderer builder.
     pub fn build(el: &EventsLoop) -> RendererBuilder {
         RendererBuilder::new(el)
     }
 
+    /// Builds a new material resource.
+    pub fn create_material(&mut self, mb: MaterialBuilder) -> Result<Material> {
+        mb.build(&mut self.factory)
+    }
+
     /// Builds a new mesh from the given vertices.
     pub fn create_mesh(&mut self, mb: MeshBuilder) -> Result<Mesh> {
-        mb.finish(&mut self.factory)
+        mb.build(&mut self.factory)
     }
 
     /// Builds a new renderer pipeline.
     pub fn create_pipe(&mut self, pb: PipelineBuilder) -> Result<Pipeline> {
-        pb.finish(&mut self.factory, &self.main_target)
+        pb.build(&mut self.factory, &self.main_target)
     }
 
     /// Builds a new texture resource.
     pub fn create_texture(&mut self, tb: TextureBuilder) -> Result<Texture> {
-        tb.finish(&mut self.factory)
-    }
-
-    /// Builds a new material resource.
-    pub fn create_material(&mut self, mb: MaterialBuilder) -> Result<Material> {
-        mb.finish(&mut self.factory)
+        tb.build(&mut self.factory)
     }
 
     /// Draws a scene with the given pipeline.
     pub fn draw(&mut self, scene: &Scene, pipe: &Pipeline, _delta: Duration) {
         use gfx::Device;
-        use rayon::prelude::*;
+        use glutin::GlContext;
 
-        let Renderer {
-            ref mut device,
-            ref mut encoders,
-            ref mut factory,
-            ref pool,
-            ref mut window,
-            ..
-        } = *self;
+        let num_threads = self.pool.current_num_threads();
+        let encoders_required: usize = pipe.enabled_stages()
+            .map(|s| s.encoders_required(num_threads))
+            .sum();
 
-        let num_threads = pool.current_num_threads();
-        let encoders_required = pipe.stages()
-            .iter()
-            .filter(|stage| stage.is_enabled())
-            .map(|stage| stage.encoders_required(num_threads))
-            .sum::<usize>();
-
-        let encoders_count = encoders.len();
+        let ref mut fac = self.factory;
+        let encoders_count = self.encoders.len();
         if encoders_count < encoders_required {
-            encoders.extend((encoders_count..encoders_required).map(|_| factory.create_command_buffer().into()))
+            self.encoders.extend((encoders_count..encoders_required)
+                                 .map(|_| fac.create_command_buffer().into()))
         }
 
         {
-            let mut encoders = encoders.as_mut_slice();
-            let mut model = Vec::new();
-            let mut light = Vec::new();
-            for stage in pipe.stages().iter().filter(|stage| stage.is_enabled()) {
-                for pass in stage.passes().iter() {
-                    match *pass {
-                        Pass::Basic(ref pass) => {
-                            let enc = {
-                                let slice = encoders;
-                                let (first, left) = slice.split_first_mut().unwrap();
-                                encoders = left;
-                                first
-                            };
-                            pass.apply(enc, &stage.target());
-                        }
-                        Pass::Simple(ref pass) => {
-                            let enc = {
-                                let slice = encoders;
-                                let (first, left) = slice.split_first_mut().unwrap();
-                                encoders = left;
-                                first
-                            };
-                            pass.apply(enc, &stage.target(), scene)
-                        }
-                        Pass::Model(ref pass) => {
-                            let mut fragments_iter = scene.par_chunks_models(num_threads);
-                            let enc = {
-                                let slice = encoders;
-                                let (count, left) = slice.split_at_mut(fragments_iter.len());
-                                encoders = left;
-                                count
-                            };
-                            model.push(fragments_iter
-                                           .zip(enc)
-                                           .map(move |(models, enc)| for model in models {
-                                                    pass.apply(enc, &stage.target(), scene, model);
-                                                }));
-                        }
-                        Pass::Light(ref pass) => {
-                            let mut fragments_iter = scene.par_chunks_lights(num_threads);
-                            let enc = {
-                                let slice = encoders;
-                                let (count, left) = slice.split_at_mut(fragments_iter.len());
-                                encoders = left;
-                                count
-                            };
-                            light.push(fragments_iter
-                                           .zip(enc)
-                                           .map(move |(lights, enc)| for light in lights {
-                                                    pass.apply(enc, &stage.target(), scene, light);
-                                                }));
-                        }
-                    }
+            let mut encoders = self.encoders.as_mut_slice();
+            self.pool.install(move || {
+                for stage in pipe.enabled_stages() {
+                    let needed = stage.encoders_required(num_threads);
+                    let enc = {
+                        let slice = encoders;
+                        let (count, left) = slice.split_at_mut(needed);
+                        encoders = left;
+                        count
+                    };
+                    stage.apply(enc, scene);
                 }
-            }
-            pool.install(move || {
-                model.into_par_iter()
-                    .flat_map(|i|i)
-                    .chain(light.into_par_iter().flat_map(|i|i))
-                    .for_each(|()| {});
             });
         }
-
-        for enc in encoders.iter_mut() {
-            enc.flush(device);
+        
+        for enc in self.encoders.iter_mut() {
+            enc.flush(&mut self.device);
         }
-        device.cleanup();
+
+        self.device.cleanup();
+
         #[cfg(feature = "opengl")]
-        window.swap_buffers().expect("OpenGL context has been lost");
+        self.window.swap_buffers().expect("OpenGL context has been lost");
     }
 
     /// Returns an immutable reference to the renderer window.
     pub fn window(&self) -> &winit::Window {
-        self.window.as_winit_window()
+        self.window.window()
     }
 }
 
@@ -265,8 +208,9 @@ impl Drop for Renderer {
 
 #[allow(missing_docs)]
 pub struct RendererBuilder<'a> {
+    config: Config,
     events: &'a EventsLoop,
-    pool: Option<Arc<rayon::ThreadPool>>,
+    pool: Option<Arc<ThreadPool>>,
     winit_builder: WindowBuilder,
 }
 
@@ -274,6 +218,7 @@ impl<'a> RendererBuilder<'a> {
     #[allow(missing_docs)]
     pub fn new(el: &'a EventsLoop) -> RendererBuilder<'a> {
         RendererBuilder {
+            config: Config::default(),
             events: el,
             pool: None,
             winit_builder: WindowBuilder::new().with_title("Amethyst"),
@@ -287,26 +232,27 @@ impl<'a> RendererBuilder<'a> {
     }
 
     #[allow(missing_docs)]
-    pub fn with_pool(mut self, pool: Arc<rayon::ThreadPool>) -> Self {
+    pub fn with_pool(mut self, pool: Arc<ThreadPool>) -> Self {
         self.pool = Some(pool);
         self
     }
 
     #[allow(missing_docs)]
-    pub fn finish(self) -> Result<Renderer> {
-        let Backend(dev, mut fac, main, win) = init_backend(self.winit_builder, self.events)?;
+    pub fn build(self) -> Result<Renderer> {
+        let Backend(dev, fac, main, win) = init_backend(self.winit_builder, self.events)?;
 
         let num_cores = num_cpus::get();
         let pool = self.pool
             .map(|p| Ok(p))
             .unwrap_or_else(|| {
                                 let cfg = rayon::Configuration::new().num_threads(num_cores);
-                                rayon::ThreadPool::new(cfg)
+                                ThreadPool::new(cfg)
                                     .map(|p| Arc::new(p))
                                     .map_err(|e| Error::PoolCreation(e))
                             })?;
 
         Ok(Renderer {
+               config: Config::default(),
                device: dev,
                encoders: Vec::new(),
                factory: fac,
@@ -331,16 +277,17 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop) -> Result<Backend> {
     let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
     let (w, h) = (size.0 as u16, size.1 as u16);
     let depth = fac.create_depth_stencil_view_only::<DepthFormat>(w, h)?;
-    let main_target = Target::from((
-        vec![ColorBuffer {
-                                             as_input: None,
-                                             as_output: color,
-                                         }],
-                                    DepthBuffer {
-                                        as_input: None,
-                                        as_output: depth,
-                                    },
-                                    size));
+    let main_target = Target::new(
+        ColorBuffer {
+            as_input: None,
+            as_output: color,
+        },
+        DepthBuffer {
+            as_input: None,
+            as_output: depth,
+        },
+        size
+    );
 
     Ok(Backend(dev, fac, main_target, win))
 }
@@ -354,16 +301,17 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop) -> Result<Backend> {
     let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
     let (w, h) = (size.0 as u16, size.1 as u16);
     let depth = fac.create_depth_stencil_view_only::<DepthFormat>(w, h)?;
-    let main_target = Target::from((
-        vec![ColorBuffer {
+    let main_target = Target::new(
+        ColorBuffer {
             as_input: None,
             as_output: color,
-        }],
+        },
         DepthBuffer {
             as_input: None,
             as_output: depth,
         },
-        size));
+        size
+    );
 
     Ok(Backend(dev, fac, main_target, win))
 }
@@ -374,22 +322,24 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop) -> Result<Backend> {
     use glutin::{GlProfile, GlRequest};
     use gfx_window_glutin as win;
 
-    let wb = glutin::WindowBuilder::from_winit_builder(wb)
+    let ctx = glutin::ContextBuilder::new()
+        .with_vsync(true)
         .with_gl_profile(GlProfile::Core)
         .with_gl(GlRequest::Latest);
 
-    let (win, dev, fac, color, depth) = win::init::<ColorFormat, DepthFormat>(wb, el);
+    let (win, dev, fac, color, depth) = win::init::<ColorFormat, DepthFormat>(wb, ctx, el);
     let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
-    let main_target = Target::from((
-        vec![ColorBuffer {
+    let main_target = Target::new(
+        ColorBuffer {
             as_input: None,
             as_output: color,
-        }],
+        },
         DepthBuffer {
             as_input: None,
             as_output: depth,
         },
-        size));
+        size
+    );
 
     Ok(Backend(dev, fac, main_target, win))
 }

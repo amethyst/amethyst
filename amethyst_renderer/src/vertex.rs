@@ -31,7 +31,7 @@ pub trait AttributeNames {
 }
 
 /// Trait implemented by all valid vertex formats.
-pub trait VertexFormat: Pod + Structure<Format> + Sized {
+pub trait VertexFormat: Pod + Structure<Format> + Sized + Send + Sync {
     /// Container for attributes of this format
     type Attributes: AsRef<[Attribute]>;
 
@@ -54,7 +54,10 @@ pub trait VertexFormat: Pod + Structure<Format> + Sized {
 
     /// Returns attribute of vertex by type
     #[inline]
-    fn attribute<F>() -> Attribute where Self: WithField<F> {
+    fn attribute<F>() -> Attribute
+    where
+        Self: WithField<F>,
+    {
         <Self as WithField<F>>::field_attribute()
     }
 }
@@ -66,6 +69,7 @@ pub trait WithField<F>: VertexFormat {
 }
 
 /// Vertex format with position and RGBA8 color attributes.
+#[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, VertexData)]
 pub struct PosColor {
     /// Position of the vertex in 3D space.
@@ -77,13 +81,21 @@ pub struct PosColor {
 impl VertexFormat for PosColor {
     type Attributes = [Attribute; 2];
     type NamedAttributes = [(&'static str, Attribute); 2];
+
     #[inline]
     fn attributes() -> Self::Attributes {
-        [Self::query("a_position").unwrap(), Self::query("a_color").unwrap()]
+        [
+            Self::query("a_position").unwrap(),
+            Self::query("a_color").unwrap(),
+        ]
     }
+
     #[inline]
     fn named_attributes<N: AttributeNames>() -> Self::NamedAttributes {
-        [(N::name::<Position>(), Self::query("a_position").unwrap()), (N::name::<Color>(), Self::query("a_color").unwrap())]
+        [
+            (N::name::<Position>(), Self::query("a_position").unwrap()),
+            (N::name::<Color>(), Self::query("a_color").unwrap()),
+        ]
     }
 }
 
@@ -102,6 +114,7 @@ impl WithField<Color> for PosColor {
 }
 
 /// Vertex format with position and UV texture coordinate attributes.
+#[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, VertexData)]
 pub struct PosTex {
     /// Position of the vertex in 3D space.
@@ -113,13 +126,24 @@ pub struct PosTex {
 impl VertexFormat for PosTex {
     type Attributes = [Attribute; 2];
     type NamedAttributes = [(&'static str, Attribute); 2];
+
     #[inline]
     fn attributes() -> Self::Attributes {
-        [Self::query("a_position").unwrap(), Self::query("a_tex_coord").unwrap()]
+        [
+            Self::query("a_position").unwrap(),
+            Self::query("a_tex_coord").unwrap(),
+        ]
     }
+
     #[inline]
     fn named_attributes<N: AttributeNames>() -> Self::NamedAttributes {
-        [(N::name::<Position>(), Self::query("a_position").unwrap()), (N::name::<TextureCoord>(), Self::query("a_tex_coord").unwrap())]
+        [
+            (N::name::<Position>(), Self::query("a_position").unwrap()),
+            (
+                N::name::<TextureCoord>(),
+                Self::query("a_tex_coord").unwrap(),
+            ),
+        ]
     }
 }
 
@@ -138,6 +162,7 @@ impl WithField<TextureCoord> for PosTex {
 }
 
 /// Vertex format with position, normal, and UV texture coordinate attributes.
+#[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, VertexData)]
 pub struct PosNormTex {
     /// Position of the vertex in 3D space.
@@ -151,13 +176,26 @@ pub struct PosNormTex {
 impl VertexFormat for PosNormTex {
     type Attributes = [Attribute; 3];
     type NamedAttributes = [(&'static str, Attribute); 3];
+
     #[inline]
     fn attributes() -> Self::Attributes {
-        [Self::query("a_position").unwrap(), Self::query("a_normal").unwrap(), Self::query("a_tex_coord").unwrap()]
+        [
+            Self::query("a_position").unwrap(),
+            Self::query("a_normal").unwrap(),
+            Self::query("a_tex_coord").unwrap(),
+        ]
     }
+
     #[inline]
     fn named_attributes<N: AttributeNames>() -> Self::NamedAttributes {
-        [(N::name::<Position>(), Self::query("a_position").unwrap()), (N::name::<Normal>(), Self::query("a_normal").unwrap()), (N::name::<TextureCoord>(), Self::query("a_tex_coord").unwrap())]
+        [
+            (N::name::<Position>(), Self::query("a_position").unwrap()),
+            (N::name::<Normal>(), Self::query("a_normal").unwrap()),
+            (
+                N::name::<TextureCoord>(),
+                Self::query("a_tex_coord").unwrap(),
+            ),
+        ]
     }
 }
 
@@ -183,6 +221,7 @@ impl WithField<TextureCoord> for PosNormTex {
 }
 
 /// Vertex format with position, normal, and UV texture coordinate attributes.
+#[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, VertexData)]
 pub struct PosNormTangTex {
     /// Position of the vertex in 3D space.
@@ -200,11 +239,24 @@ impl VertexFormat for PosNormTangTex {
     type NamedAttributes = [(&'static str, Attribute); 4];
     #[inline]
     fn attributes() -> Self::Attributes {
-        [Self::query("a_position").unwrap(), Self::query("a_normal").unwrap(), Self::query("a_tangent").unwrap(), Self::query("a_tex_coord").unwrap()]
+        [
+            Self::query("a_position").unwrap(),
+            Self::query("a_normal").unwrap(),
+            Self::query("a_tangent").unwrap(),
+            Self::query("a_tex_coord").unwrap(),
+        ]
     }
     #[inline]
     fn named_attributes<N: AttributeNames>() -> Self::NamedAttributes {
-        [(N::name::<Position>(), Self::query("a_position").unwrap()), (N::name::<Normal>(), Self::query("a_normal").unwrap()), (N::name::<Tangent>(), Self::query("a_tangent").unwrap()), (N::name::<TextureCoord>(), Self::query("a_tex_coord").unwrap())]
+        [
+            (N::name::<Position>(), Self::query("a_position").unwrap()),
+            (N::name::<Normal>(), Self::query("a_normal").unwrap()),
+            (N::name::<Tangent>(), Self::query("a_tangent").unwrap()),
+            (
+                N::name::<TextureCoord>(),
+                Self::query("a_tex_coord").unwrap(),
+            ),
+        ]
     }
 }
 

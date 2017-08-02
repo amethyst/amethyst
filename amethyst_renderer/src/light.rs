@@ -1,4 +1,6 @@
 //! Light sources.
+//!
+//! TODO: Remove redundant padding once `#[repr(align(...))]` stabilizes.
 
 use cgmath::{Deg, Point3, Vector3};
 use color::Rgba;
@@ -8,6 +10,7 @@ use gfx;
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub enum Light {
     /// An area light.
+    /// FIXME: Missing implementation!
     Area,
     /// A directional light.
     Directional(DirectionalLight),
@@ -20,6 +23,7 @@ pub enum Light {
 }
 
 /// A directional light source.
+#[repr(C)]
 #[derive(Clone, ConstantBuffer, Debug, Deserialize, PartialEq, Serialize)]
 pub struct DirectionalLight {
     /// Color of the light in RGBA8 format.
@@ -29,7 +33,7 @@ pub struct DirectionalLight {
 }
 
 impl Default for DirectionalLight {
-    fn default() -> DirectionalLight {
+    fn default() -> Self {
         DirectionalLight {
             color: Rgba::default(),
             direction: Vector3::new(-1.0, -1.0, -1.0),
@@ -38,7 +42,7 @@ impl Default for DirectionalLight {
 }
 
 impl From<DirectionalLight> for Light {
-    fn from(dir: DirectionalLight) -> Light {
+    fn from(dir: DirectionalLight) -> Self {
         Light::Directional(dir)
     }
 }
@@ -63,6 +67,7 @@ impl From<DirectionalLight> for Light {
 /// * *n* = `smoothness`
 ///
 /// [fb]: http://www.frostbite.com/wp-content/uploads/2014/11/course_notes_moving_frostbite_to_pbr.pdf
+#[repr(C)]
 #[derive(Clone, ConstantBuffer, Debug, Deserialize, PartialEq, Serialize)]
 pub struct PointLight {
     /// Location of the light source in three dimensional space.
@@ -79,7 +84,7 @@ pub struct PointLight {
 }
 
 impl Default for PointLight {
-    fn default() -> PointLight {
+    fn default() -> Self {
         PointLight {
             center: Point3::new(0.0, 0.0, 0.0),
             color: Rgba::default(),
@@ -91,12 +96,13 @@ impl Default for PointLight {
 }
 
 impl From<PointLight> for Light {
-    fn from(pt: PointLight) -> Light {
+    fn from(pt: PointLight) -> Self {
         Light::Point(pt)
     }
 }
 
 /// A spot light source.
+#[repr(C)]
 #[derive(Clone, ConstantBuffer, Debug, Deserialize, PartialEq, Serialize)]
 pub struct SpotLight {
     /// Opening angle of the light cone.
@@ -117,7 +123,7 @@ pub struct SpotLight {
 }
 
 impl Default for SpotLight {
-    fn default() -> SpotLight {
+    fn default() -> Self {
         SpotLight {
             angle: Deg(60.0),
             center: Point3::new(0.0, 1.0, 0.0),
@@ -131,12 +137,13 @@ impl Default for SpotLight {
 }
 
 impl From<SpotLight> for Light {
-    fn from(sp: SpotLight) -> Light {
+    fn from(sp: SpotLight) -> Self {
         Light::Spot(sp)
     }
 }
 
 /// A realistic disk-shaped sun light source.
+#[repr(C)]
 #[derive(Clone, ConstantBuffer, Debug, Deserialize, PartialEq, Serialize)]
 pub struct SunLight {
     /// The sun's angular radius.
@@ -150,7 +157,7 @@ pub struct SunLight {
 }
 
 impl Default for SunLight {
-    fn default() -> SunLight {
+    fn default() -> Self {
         SunLight {
             ang_rad: Deg(0.0093),
             color: Rgba::default(),
@@ -161,7 +168,7 @@ impl Default for SunLight {
 }
 
 impl From<SunLight> for Light {
-    fn from(sun: SunLight) -> Light {
+    fn from(sun: SunLight) -> Self {
         Light::Sun(sun)
     }
 }

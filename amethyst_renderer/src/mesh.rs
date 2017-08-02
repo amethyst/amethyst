@@ -112,7 +112,7 @@ impl<'v> MeshBuilder<'v> {
     }
 
     /// Builds and returns the new mesh.
-    pub(crate) fn finish(self, fac: &mut Factory) -> Result<Mesh> {
+    pub(crate) fn build(self, fac: &mut Factory) -> Result<Mesh> {
         use gfx::{Bind, Factory, IndexBuffer};
         use gfx::buffer::Role;
 

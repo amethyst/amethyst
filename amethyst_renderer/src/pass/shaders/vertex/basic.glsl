@@ -1,3 +1,5 @@
+// TODO: Needs documentation.
+
 #version 150 core
 
 layout (std140) uniform VertexArgs {

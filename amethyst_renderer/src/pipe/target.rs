@@ -2,8 +2,7 @@
 
 use error::Result;
 use fnv::FnvHashMap as HashMap;
-use std::sync::Arc;
-use types::{DepthStencilView, Factory, RenderTargetView, ShaderResourceView};
+use types::{DepthStencilView, Encoder, Factory, RenderTargetView, ShaderResourceView};
 
 /// Target color buffer.
 #[derive(Clone, Debug, PartialEq)]
@@ -23,6 +22,9 @@ pub struct DepthBuffer {
     pub as_output: DepthStencilView,
 }
 
+/// A hash map containing named render targets.
+pub type Targets = HashMap<String, Target>;
+
 /// A render target.
 ///
 /// Each render target contains a certain number of color buffers and an
@@ -35,9 +37,35 @@ pub struct Target {
 }
 
 impl Target {
+    /// Creates a new `Target` from a single color buffer and depth buffer pair.
+    pub(crate) fn new(cb: ColorBuffer, db: DepthBuffer, size: (u32, u32)) -> Self {
+        Target {
+            color_bufs: vec![cb],
+            depth_buf: Some(db),
+            size: size,
+        }
+    }
+
     /// Creates a new TargetBuilder with the given name.
     pub fn named<N: Into<String>>(name: N) -> TargetBuilder {
         TargetBuilder::new(name)
+    }
+
+    /// Clears all color buffers to the given value.
+    pub fn clear_color<V: Into<[f32; 4]>>(&self, enc:  &mut Encoder, value: V) {
+        let val = value.into();
+        for buf in self.color_bufs.iter() {
+            enc.clear(&buf.as_output, val);
+        }
+    }
+
+    /// Clears the depth stencil buffer to the given value.
+    pub fn clear_depth_stencil<V: Into<f32>>(&self, enc: &mut Encoder, value: V) {
+        if let Some(ref buf) = self.depth_buf {
+            let val = value.into();
+            enc.clear_depth(&buf.as_output, val);
+            enc.clear_stencil(&buf.as_output, val as u8);
+        }
     }
 
     /// Returns the width and height of the render target, measured in pixels.
@@ -58,18 +86,6 @@ impl Target {
     /// Returns the render target's depth-stencil buffer, if it has one.
     pub fn depth_buf(&self) -> Option<&DepthBuffer> {
         self.depth_buf.as_ref()
-    }
-}
-
-impl<D> From<(Vec<ColorBuffer>, D, (u32, u32))> for Target
-    where D: Into<Option<DepthBuffer>>
-{
-    fn from(data: (Vec<ColorBuffer>, D, (u32, u32))) -> Target {
-        Target {
-            color_bufs: data.0,
-            depth_buf: data.1.into(),
-            size: data.2,
-        }
     }
 }
 
@@ -120,8 +136,7 @@ impl TargetBuilder {
     }
 
     /// Builds and returns the new render target.
-    #[doc(hidden)]
-    pub(crate) fn finish(self, fac: &mut Factory, size: (u32, u32)) -> Result<(String, Arc<Target>)> {
+    pub(crate) fn build(self, fac: &mut Factory, size: (u32, u32)) -> Result<(String, Target)> {
         use gfx::Factory;
 
         let size = self.custom_size.unwrap_or(size);
@@ -156,20 +171,6 @@ impl TargetBuilder {
             size: size,
         };
 
-        Ok((self.name, Arc::new(target)))
+        Ok((self.name, target))
     }
 }
-
-impl<T> From<(T, usize, bool, (u32, u32))> for TargetBuilder
-    where T: Into<String>
-{
-    fn from(builder: (T, usize, bool, (u32, u32))) -> TargetBuilder {
-        TargetBuilder::new(builder.0)
-            .with_num_color_bufs(builder.1)
-            .with_depth_buf(builder.2)
-            .with_size(builder.3)
-    }
-}
-
-/// A hash map containing named render targets.
-pub type Targets = HashMap<String, Arc<Target>>;

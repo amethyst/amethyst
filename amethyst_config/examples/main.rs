@@ -1,3 +1,5 @@
+
+#[macro_use]
 extern crate amethyst_config;
 #[macro_use]
 extern crate serde_derive;
@@ -40,9 +42,9 @@ fn main() {
 
     match res {
         Ok(cfg) => {
-            println!("{}", cfg.to_string());
+            println!("{:#?}", cfg);
 
-            if let Err(e) = cfg.write_file() {
+            if let Err(e) = cfg.write(&path) {
                 println!("{}", e);
             }
         },

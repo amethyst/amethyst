@@ -3,18 +3,23 @@
 extern crate amethyst;
 
 use amethyst::prelude::*;
-use amethyst::ecs::systems::TransformSystem;
+use amethyst::ecs::systems::{RenderSystem, SystemExt};
+use amethyst::ecs::resources::{KeyboardInput, KeyCode};
 
 struct Example;
 
 impl State for Example {
     fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
-        if let Event::Window(e) = event {
-            match e {
-                WindowEvent::KeyboardInput(_, _, Some(VirtualKeyCode::Escape), _) |
-                WindowEvent::Closed => return Trans::Quit,
-                _ => (),
-            }
+        match event {
+            Event::Window(e) => match e {
+                WindowEvent::KeyboardInput {
+                    input: KeyboardInput {
+                        virtual_keycode: Some(KeyCode::Escape), ..
+                    }, ..
+                } | WindowEvent::Closed => Trans::Quit,
+                _ => Trans::None,
+            },
+            _ => Trans::None,
         }
     }
 }
@@ -23,10 +28,9 @@ fn main() {
     let path = format!("{}/examples/01_window/resources/config.ron",
                        env!("CARGO_MANIFEST_DIR"));
 
-    let cfg = Config::from_file(path).unwrap();
-    let mut game = Application::build(Example, cfg)
-        .with_system::<TransformSystem>("trans", 0)
-        .finish()
+    let mut game = Application::build(Example)
+        .with_thread_local(RenderSystem::build(()).unwrap())
+        .build()
         .expect("Fatal error");
 
     game.run();

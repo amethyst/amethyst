@@ -1,40 +1,32 @@
 //! Launches a new renderer window.
 
 extern crate amethyst_renderer as renderer;
+extern crate cgmath;
 extern crate genmesh;
 extern crate winit;
-extern crate glutin;
-extern crate cgmath;
 
 use cgmath::{Matrix4, Deg, Vector3};
 use cgmath::prelude::{InnerSpace, Transform};
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
-use glutin::EventsLoop;
 use renderer::prelude::*;
 use renderer::vertex::PosNormTex;
-use std::time::{Duration, Instant};
-use winit::ElementState::Pressed;
-use winit::{Event, WindowEvent};
-use winit::VirtualKeyCode as Key;
 
 fn main() {
-    let events = EventsLoop::new();
+    use std::time::{Duration, Instant};
+    use winit::{EventsLoop, ControlFlow, Event, WindowEvent};
+
+    let mut events = EventsLoop::new();
     let mut renderer = Renderer::new(&events).expect("Renderer create");
-    let pipe = renderer.create_pipe(
-        Pipeline::forward()
-            .with_stage(
-                Stage::with_backbuffer()
-                    .with_pass(pass::ClearTarget::with_values([0.00196, 0.23726, 0.21765, 1.0], Some(1.0f32)))
-                    .with_pass(&pass::DrawFlat::<PosNormTex>::new())
-            )
-    ).expect("Pipeline create");
+    let pipe = renderer.create_pipe(Pipeline::build()
+            .with_stage(Stage::with_backbuffer()
+                .clear_target([0.00196, 0.23726, 0.21765, 1.0], 1.0)
+                .with_model_pass(pass::DrawFlat::<PosNormTex>::new())))
+            .expect("Pipeline create");
 
     let verts = gen_sphere(32, 32);
     let mesh = renderer.create_mesh(Mesh::build(&verts)).expect("Mesh create");
 
-   // let bytes = load_texture("bricks.png").unwrap();
-    // let tex = renderer.create_texture(Texture::build(&bytes)).unwrap();
     let tex = renderer.create_texture(Texture::from_color_val([0.88235, 0.09412, 0.21569, 1.0])).expect("Texture create");
     let mtl = renderer.create_material(MaterialBuilder::new().with_albedo(&tex)).expect("Material create");
     let model = Model { mesh: mesh, material: mtl, pos: Matrix4::one() };
@@ -54,15 +46,18 @@ fn main() {
     events.run_forever(|e| {
         let start = Instant::now();
 
-        let Event::WindowEvent { event, .. } = e;
-        match event {
-            WindowEvent::KeyboardInput(Pressed, _, Some(Key::Escape), _) |
-            WindowEvent::Closed => events.interrupt(),
+        match e {
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::KeyboardInput { .. } | 
+                WindowEvent::Closed => return ControlFlow::Break,
+                _ => (),
+            },
             _ => (),
         }
 
         renderer.draw(&scene, &pipe, delta);
         delta = Instant::now() - start;
+        ControlFlow::Continue
     });
 }
 

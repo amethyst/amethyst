@@ -24,7 +24,8 @@ pub struct Meta {
     vertex_bufs: Vec<RawVertexBuffer>,
 }
 
-#[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
+/// FIXME: Cannot `Deserialize` for some reason.
+#[derive(Clone, Debug, Default, Eq, Hash, Serialize, PartialEq)]
 pub struct Init<'d> {
     pub const_bufs: Vec<<RawConstantBuffer as DataLink<'d>>::Init>,
     pub globals: Vec<<RawGlobal as DataLink<'d>>::Init>,
@@ -75,6 +76,7 @@ impl<'d> PipelineInit for Init<'d> {
             }
             meta.out_colors.push(meta_color);
         }
+
         if !info.knows_outputs {
             let mut info = OutputVar {
                 name: String::new(),
@@ -82,6 +84,7 @@ impl<'d> PipelineInit for Init<'d> {
                 base_type: BaseType::F32,
                 container: ContainerType::Vector(4),
             };
+
             for color in self.out_colors.iter() {
                 let mut meta_color = <RenderTarget as DataLink<'d>>::new();
                 if let Some(res) = meta_color.link_output(&info, color) {

@@ -1,9 +1,9 @@
 //! Rendering system.
 
-use config::Config;
-use ecs::{RunArg, System, World};
+// use config::Config;
+use ecs::{System, World};
 use event::EventsIter;
-use error::Result;
+use error::{Error, Result};
 use renderer::prelude::*;
 use super::SystemExt;
 use winit::EventsLoop;
@@ -11,20 +11,25 @@ use winit::EventsLoop;
 /// Rendering system.
 #[derive(Derivative)]
 #[derivative(Debug)]
-pub struct RenderingSystem {
+pub struct RenderSystem {
     #[derivative(Debug = "ignore")]
     events: EventsLoop,
-    // renderer: Renderer,
+    pipe: Pipeline,
+    #[derivative(Debug = "ignore")]
+    renderer: Renderer,
     scene: Scene,
 }
 
-impl SystemExt for RenderingSystem {
-    fn build(_: &Config) -> Result<RenderingSystem> {
+impl<'a> SystemExt<'a> for RenderSystem {
+    fn build(_: ()) -> Result<RenderSystem> {
         let events = EventsLoop::new();
-        // let renderer = Renderer::new(&events)?;
-        Ok(RenderingSystem {
+        let mut renderer = Renderer::new(&events).map_err(|_| Error::System)?;
+        let pipe = renderer.create_pipe(Pipeline::forward()).map_err(|_| Error::System)?;
+
+        Ok(RenderSystem {
             events: events,
-            // renderer: Mutex::new(renderer),
+            pipe: pipe,
+            renderer: renderer,
             scene: Scene::default(),
         })
     }
@@ -33,7 +38,7 @@ impl SystemExt for RenderingSystem {
 
     }
 
-    fn poll_events(&self) -> EventsIter {
+    fn poll_events(&mut self) -> EventsIter {
         let mut new_events = Vec::new();
         self.events.poll_events(|e| {
             new_events.push(e);
@@ -43,8 +48,10 @@ impl SystemExt for RenderingSystem {
     }
 }
 
-impl System<()> for RenderingSystem {
-    fn run(&mut self, arg: RunArg, _: ()) {
-        use ecs::Gate;
+impl<'a> System<'a> for RenderSystem {
+    type SystemData = ();
+    fn run(&mut self, mut data: Self::SystemData) {
+        use std::time::Duration;
+        self.renderer.draw(&self.scene, &self.pipe, Duration::from_secs(0));
     }
 }

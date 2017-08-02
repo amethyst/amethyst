@@ -15,8 +15,5 @@ pub type Factory = gfx_device_metal::Factory;
 /// Graphics resource type.
 pub type Resources = gfx_device_metal::Resources;
 
-/// Shader model version.
-pub type ShaderModel = gfx_device_metal::Version;
-
 /// Window type.
 pub type Window = gfx_window_metal::MetalWindow;
