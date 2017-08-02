@@ -1,3 +1,5 @@
+// TODO: Needs documentation.
+
 #version 150 core
 
 layout (std140) uniform FragmentArgs {
@@ -20,7 +22,7 @@ layout (std140) uniform PointLights {
 
 struct DirectionalLight {
     vec3 direction;
-    vec3 color;
+    vec4 color;
 };
 
 layout (std140) uniform DirectionalLights {
@@ -30,13 +32,13 @@ layout (std140) uniform DirectionalLights {
 uniform vec3 ambient_color;
 uniform vec3 camera_position;
 
-uniform sampler2D sampler_albedo;
-uniform sampler2D sampler_emission;
-uniform sampler2D sampler_normal;
-uniform sampler2D sampler_metallic;
-uniform sampler2D sampler_roughness;
-uniform sampler2D sampler_ambient_occlusion;
-uniform sampler2D sampler_caveat;
+uniform sampler2D albedo;
+uniform sampler2D emission;
+uniform sampler2D normal;
+uniform sampler2D metallic;
+uniform sampler2D roughness;
+uniform sampler2D ambient_occlusion;
+uniform sampler2D caveat;
 
 in VertexData {
     vec4 position;
@@ -75,13 +77,13 @@ vec3 fresnel(float HdotV, vec3 fresnel_base) {
 }
 
 void main() {
-    vec3 albedo             = texture(sampler_albedo, vertex.tex_coord).rgb;
-    vec3 emission           = texture(sampler_emission, vertex.tex_coord).rgb; // TODO: Use emission
-    vec3 normal             = texture(sampler_normal, vertex.tex_coord).rgb;
-    float metallic          = texture(sampler_metallic, vertex.tex_coord).r;
-    float roughness         = texture(sampler_roughness, vertex.tex_coord).r;
-    float ambient_occlusion = texture(sampler_ambient_occlusion, vertex.tex_coord).r;
-    float caveat            = texture(sampler_caveat, vertex.tex_coord).r;
+    vec3 albedo             = texture(albedo, vertex.tex_coord).rgb;
+    vec3 emission           = texture(emission, vertex.tex_coord).rgb;
+    vec3 normal             = texture(normal, vertex.tex_coord).rgb;
+    float metallic          = texture(metallic, vertex.tex_coord).r;
+    float roughness         = texture(roughness, vertex.tex_coord).r;
+    float ambient_occlusion = texture(ambient_occlusion, vertex.tex_coord).r;
+    float caveat            = texture(caveat, vertex.tex_coord).r; // TODO: Use caveat
 
     // gamma correction
     normal = pow(normal, vec3(1.0/2.33));

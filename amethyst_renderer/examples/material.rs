@@ -1,48 +1,39 @@
 //! Launches a new renderer window.
 
 extern crate amethyst_renderer as renderer;
+extern crate cgmath;
 extern crate genmesh;
 extern crate winit;
-extern crate glutin;
-extern crate cgmath;
 
 use cgmath::{Matrix4, Deg, Vector3};
-use cgmath::prelude::{InnerSpace, Transform};
+use cgmath::prelude::InnerSpace;
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
-use glutin::EventsLoop;
 use renderer::prelude::*;
 use renderer::vertex::PosNormTangTex;
 use std::time::{Duration, Instant};
-use winit::ElementState::Pressed;
-use winit::{Event, WindowEvent};
-use winit::VirtualKeyCode as Key;
+use winit::{ControlFlow, Event, EventsLoop, WindowEvent};
 
 fn main() {
-    let events = EventsLoop::new();
+    let mut events = EventsLoop::new();
     let mut renderer = Renderer::new(&events).expect("Renderer create");
     let pipe = renderer.create_pipe(
-        Pipeline::forward()
-            .with_stage(
-                Stage::with_backbuffer()
-                    .with_pass(pass::ClearTarget::with_values([0.0, 0.0, 0.0, 1.0], Some(2.0)))
-                    .with_pass(&pass::DrawShaded::<PosNormTangTex>::new())
-            )
-    ).expect("Pipeline create");
+        Pipeline::build()
+            .with_stage(Stage::with_backbuffer()
+                .clear_target([0.0, 0.0, 0.0, 1.0], 2.0)
+                .with_model_pass(pass::DrawShaded::<PosNormTangTex>::new())))
+            .expect("Pipeline create");
 
     let verts = gen_sphere(64, 64);
     let mesh = renderer.create_mesh(Mesh::build(&verts)).expect("Mesh create");
-
-    // let bytes = load_texture("bricks.png").unwrap();
-    // let tex = renderer.create_texture(Texture::build(&bytes)).unwrap();
 
     let mut scene = Scene::default();
     let alb = renderer.create_texture(Texture::from_color_val([1.0; 4])).expect("Texture create");
             
     for i in 0..5 {
         for j in 0..5 {
-            let roughness = (1.0f32 * (i as f32 / 4.0f32));
-            let metallic = (1.0f32 * (j as f32 / 4.0f32));
+            let roughness = 1.0f32 * (i as f32 / 4.0f32);
+            let metallic = 1.0f32 * (j as f32 / 4.0f32);
             let pos = Matrix4::from_translation([2.0f32 * (i - 2) as f32, 2.0f32 * (j - 2) as f32, 0.0].into()) * Matrix4::from_scale(0.8);
 
             let rog = renderer.create_texture(Texture::from_color_val([roughness; 4])).expect("Texture create");
@@ -72,6 +63,9 @@ fn main() {
     };
     scene.add_light(light);
 
+    let light = DirectionalLight::default();
+    scene.add_light(light);
+
     scene.add_camera(Camera {
         eye: [0.0, 0.0, -12.0].into(),
         proj: Projection::perspective(1.3, Deg(60.0)).into(),
@@ -84,15 +78,18 @@ fn main() {
     events.run_forever(|e| {
         let start = Instant::now();
 
-        let Event::WindowEvent { event, .. } = e;
-        match event {
-            WindowEvent::KeyboardInput(Pressed, _, Some(Key::Escape), _) |
-            WindowEvent::Closed => events.interrupt(),
+        match e {
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::KeyboardInput { .. } | 
+                WindowEvent::Closed => return ControlFlow::Break,
+                _ => (),
+            },
             _ => (),
         }
 
         renderer.draw(&scene, &pipe, delta);
         delta = Instant::now() - start;
+        ControlFlow::Continue
     });
 }
 

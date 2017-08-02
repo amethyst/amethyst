@@ -7,8 +7,6 @@ extern crate cgmath;
 extern crate genmesh;
 
 use amethyst::prelude::*;
-use amethyst::asset_manager::AssetManager;
-use amethyst::config::Config;
 use amethyst::ecs::World;
 use amethyst::gfx_device::DisplayConfig;
 use amethyst::renderer::{VertexPosNormal, Pipeline};
@@ -80,8 +78,7 @@ impl State for Example {
 fn main() {
     let path = format!("{}/examples/02_sphere/resources/config.yml",
                        env!("CARGO_MANIFEST_DIR"));
-    let cfg = Config::from_file(path).unwrap();
-    let mut game = Application::build(Example, cfg).finish().expect("Fatal error");
+    let mut game = Application::build(Example).build().expect("Fatal error");
     game.run();
 }
 

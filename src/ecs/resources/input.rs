@@ -1,24 +1,28 @@
 //! World resource that handles all user input.
 
-use engine::{ElementState, Event, MouseButton, VirtualKeyCode, WindowEvent};
+pub use winit::{ElementState, KeyboardInput, ModifiersState, MouseButton,
+                MouseScrollDelta, ScanCode, Touch, TouchPhase,
+                VirtualKeyCode as KeyCode};
+
 use fnv::FnvHashMap as HashMap;
+use event::{Event, WindowEvent};
 use smallvec::SmallVec;
 use std::iter::{Chain, Map, Iterator};
 use std::slice::Iter;
 
 /// A Button is any kind of digital input that the engine supports.
-#[derive(Eq, PartialEq, Debug, Copy, Clone)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum Button {
     /// Keyboard keys
-    Key(VirtualKeyCode),
+    Key(KeyCode),
 
     /// Mouse buttons
     Mouse(MouseButton),
     //TODO: Add controller buttons here when the engine has support.
 }
 
-impl From<VirtualKeyCode> for Button {
-    fn from(keycode: VirtualKeyCode) -> Self {
+impl From<KeyCode> for Button {
+    fn from(keycode: KeyCode) -> Self {
         Button::Key(keycode)
     }
 }
@@ -30,23 +34,27 @@ impl From<MouseButton> for Button {
 }
 
 /// Iterator over keycodes
-pub type KeyCodes<'a> = Iter<'a, VirtualKeyCode>;
+pub type KeyCodes<'a> = Iter<'a, KeyCode>;
 
 /// Iterator over MouseButtons
 pub type MouseButtons<'a> = Iter<'a, MouseButton>;
 
-/// Represents an axis made up of digital inputs, like W and S or A and D.
-/// Two of these could be analogous to a DPAD.
+/// Represents an axis made up of digital inputs, like W and S or A and D. Two
+/// of these could be analogous to a DPAD.
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Axis {
-    /// Positive button, when pressed down axis value will return 1 if `neg` is not pressed down.
+    /// Positive button. When pressed down, axis value will return 1 if `neg` is
+    /// not pressed down.
     pub pos: Button,
-    /// Negative button, when pressed down axis value will return -1 if `neg` is not pressed down.
+    /// Negative button. When pressed down axis value will return -1 if `neg` is
+    /// not pressed down.
     pub neg: Button,
 }
 
 /// An iterator over buttons
+#[derive(Debug)]
 pub struct Buttons<'a> {
-    iterator: Chain<Map<Iter<'a, MouseButton>, fn(&MouseButton) -> Button>,Map<Iter<'a, VirtualKeyCode>, fn(&VirtualKeyCode) -> Button>>
+    iterator: Chain<Map<MouseButtons<'a>, fn(&MouseButton) -> Button>, Map<KeyCodes<'a>, fn(&KeyCode) -> Button>>
 }
 
 impl<'a> Iterator for Buttons<'a> {
@@ -60,30 +68,14 @@ impl<'a> Iterator for Buttons<'a> {
 /// This struct holds state information about input devices.
 ///
 /// For example, if a key is pressed on the keyboard, this struct will record
-/// that the key is pressed until it is released again. Usage requires pumping input events through
-/// this struct, using the following code in the [handle_events] method of [State].
-///
-/// [State]: ../../../engine/trait.State.html
-/// [handle_events]: ../../../engine/trait.State.html#method.handle_events
-///
-/// ```ignore
-/// fn handle_events(&mut self,
-///                  events: &[WindowEvent],
-///                  _: &mut World,
-///                  _: &mut AssetManager,
-///                  _: &mut Pipeline)
-///                  -> Trans {
-///     // ...
-///     let mut input_handler = world.write_resource::<InputHandler>();
-///     input_handler.update(events);
-///     // ...
-/// }
+/// that the key is pressed until it is released again. Usage requires pumping
+/// input events through this struct.
 /// ```
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct InputHandler {
-    pressed_keys: SmallVec<[VirtualKeyCode; 16]>,
-    down_keys: SmallVec<[VirtualKeyCode; 8]>,
-    released_keys: SmallVec<[VirtualKeyCode; 8]>,
+    pressed_keys: SmallVec<[KeyCode; 16]>,
+    down_keys: SmallVec<[KeyCode; 8]>,
+    released_keys: SmallVec<[KeyCode; 8]>,
     pressed_mouse_buttons: SmallVec<[MouseButton; 16]>,
     down_mouse_buttons: SmallVec<[MouseButton; 8]>,
     released_mouse_buttons: SmallVec<[MouseButton; 8]>,
@@ -113,7 +105,7 @@ impl InputHandler {
     }
 
     /// Updates the input handler with new engine events.
-    pub fn update(&mut self, events: &[WindowEvent]) {
+    pub fn update(&mut self, events: &[Event]) {
         // Before processing these events clear the single frame vectors
         self.down_keys.clear();
         self.released_keys.clear();
@@ -121,48 +113,57 @@ impl InputHandler {
         self.released_mouse_buttons.clear();
         self.previous_mouse_position = self.mouse_position;
         self.text_this_frame.clear();
-
         for event in events {
-            if let Event::WindowEvent(e) = event {
-            match e {
-                Event::ReceivedCharacter(c) => {
-                    self.text_this_frame.push(c);
-                }
-                Event::KeyboardInput(ElementState::Pressed, _, Some(key_code)) => {
-                    if self.pressed_keys.iter().all(|&k| k != key_code) {
-                        self.pressed_keys.push(key_code);
-                        self.down_keys.push(key_code);
+            if let Event::Window(ref e) = *event {
+                match *e {
+                    WindowEvent::ReceivedCharacter(c) => {
+                        self.text_this_frame.push(c);
                     }
-                }
-                Event::KeyboardInput(ElementState::Released, _, Some(key_code)) => {
-                    let index = self.pressed_keys.iter().position(|&k| k == key_code);
-                    if let Some(i) = index {
-                        self.pressed_keys.swap_remove(i);
-                        self.released_keys.push(key_code);
+                    WindowEvent::KeyboardInput { input, .. } => {
+                        match (input.state, input.virtual_keycode) {
+                            (ElementState::Pressed, Some(key)) => {
+                                if self.pressed_keys.iter().all(|&k| k != key) {
+                                    self.pressed_keys.push(key);
+                                    self.down_keys.push(key);
+                                }
+                            }
+                            (ElementState::Released, Some(key)) => {
+                                let idx = self.pressed_keys.iter().position(|&k| k == key);
+                                if let Some(i) = idx {
+                                    self.pressed_keys.swap_remove(i);
+                                    self.released_keys.push(key);
+                                }
+                            }
+                            (_, _) => {}
+                        }
                     }
-                }
-                Event::MouseInput(ElementState::Pressed, button) => {
-                    if self.pressed_mouse_buttons.iter().all(|&b| b != button) {
-                        self.pressed_mouse_buttons.push(button);
-                        self.down_mouse_buttons.push(button);
+                    WindowEvent::MouseInput { state, button, .. } => {
+                        match state {
+                            ElementState::Pressed => {
+                                if self.pressed_mouse_buttons.iter().all(|&b| b != button) {
+                                    self.pressed_mouse_buttons.push(button);
+                                    self.down_mouse_buttons.push(button);
+                                }
+                            }
+                            ElementState::Released => {
+                                let idx = self.pressed_mouse_buttons.iter().position(|&b| b == button);
+                                if let Some(i) = idx {
+                                    self.pressed_mouse_buttons.swap_remove(i);
+                                    self.released_mouse_buttons.push(button);
+                                }
+                            }
+                        }
                     }
-                }
-                Event::MouseInput(ElementState::Released, button) => {
-                    let index = self.pressed_mouse_buttons.iter().position(|&b| b == button);
-                    if let Some(i) = index {
-                        self.pressed_mouse_buttons.swap_remove(i);
-                        self.released_mouse_buttons.push(button);
+                    WindowEvent::MouseMoved { position, .. } => {
+                        self.mouse_position = Some((position.0 as i32, position.1 as i32));
                     }
+                    WindowEvent::Focused(false) => {
+                        self.pressed_keys.clear();
+                        self.pressed_mouse_buttons.clear();
+                        self.mouse_position = None;
+                    }
+                    _ => {}
                 }
-                Event::MouseMoved(x, y) => {
-                    self.mouse_position = Some((x, y));
-                }
-                Event::Focused(false) => {
-                    self.pressed_keys.clear();
-                    self.pressed_mouse_buttons.clear();
-                    self.mouse_position = None;
-                }
-                _ => {}
             }
         }
     }
@@ -191,27 +192,27 @@ impl InputHandler {
     }
 
     /// Checks if the given key is being pressed.
-    pub fn key_is_pressed(&self, key: VirtualKeyCode) -> bool {
+    pub fn key_is_pressed(&self, key: KeyCode) -> bool {
         self.pressed_keys.iter().any(|&k| k == key)
     }
 
     /// Checks if the given key was pressed on this frame.
-    pub fn key_down(&self, key: VirtualKeyCode) -> bool {
+    pub fn key_down(&self, key: KeyCode) -> bool {
         self.down_keys.iter().any(|&k| k == key)
     }
 
     /// Checks if a given key was released on this frame.
-    pub fn key_released(&self, key: VirtualKeyCode) -> bool {
+    pub fn key_released(&self, key: KeyCode) -> bool {
         self.released_keys.iter().any(|&k| k == key)
     }
 
     /// Checks if the all the given keys are down and at least one was pressed on this frame.
-    pub fn keys_down(&self, keys: &[VirtualKeyCode]) -> bool {
+    pub fn keys_down(&self, keys: &[KeyCode]) -> bool {
         keys.iter().any(|&key| self.key_down(key)) && self.keys_are_pressed(keys)
     }
 
     /// Checks if all the given keys are being pressed.
-    pub fn keys_are_pressed(&self, keys: &[VirtualKeyCode]) -> bool {
+    pub fn keys_are_pressed(&self, keys: &[KeyCode]) -> bool {
         keys.iter().all(|key| self.key_is_pressed(*key))
     }
 
@@ -277,7 +278,7 @@ impl InputHandler {
         let mouse_buttons = self.pressed_mouse_buttons
             .iter()
             .map((|&mb| Button::Mouse(mb)) as fn(&MouseButton) -> Button);
-        let keys = self.pressed_keys.iter().map((|&k| Button::Key(k)) as fn(&VirtualKeyCode) -> Button);
+        let keys = self.pressed_keys.iter().map((|&k| Button::Key(k)) as fn(&KeyCode) -> Button);
         Buttons {
             iterator: mouse_buttons.chain(keys)
         }
@@ -288,7 +289,7 @@ impl InputHandler {
         let mouse_buttons = self.down_mouse_buttons
             .iter()
             .map((|&mb| Button::Mouse(mb)) as fn(&MouseButton) -> Button);
-        let keys = self.down_keys.iter().map((|&k| Button::Key(k)) as fn(&VirtualKeyCode) -> Button);
+        let keys = self.down_keys.iter().map((|&k| Button::Key(k)) as fn(&KeyCode) -> Button);
         Buttons {
             iterator: mouse_buttons.chain(keys)
         }
@@ -299,7 +300,7 @@ impl InputHandler {
         let mouse_buttons = self.released_mouse_buttons
             .iter()
             .map((|&mb| Button::Mouse(mb)) as fn(&MouseButton) -> Button);
-        let keys = self.released_keys.iter().map((|&k| Button::Key(k)) as fn(&VirtualKeyCode) -> Button);
+        let keys = self.released_keys.iter().map((|&k| Button::Key(k)) as fn(&KeyCode) -> Button);
         Buttons {
             iterator: mouse_buttons.chain(keys)
         }

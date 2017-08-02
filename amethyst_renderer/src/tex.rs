@@ -1,24 +1,23 @@
 //! Texture resource.
 
+pub use gfx::texture::{FilterMethod, WrapMode};
+
 use error::Result;
-use gfx::texture::{Info, Kind};
+use gfx::texture::{Info, SamplerInfo};
 use gfx::traits::Pod;
-use types::{Factory, RawShaderResourceView, RawTexture};
+use types::{Factory, RawShaderResourceView, RawTexture, Sampler};
 
 /// Handle to a GPU texture resource.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Texture {
-    kind: Kind,
+    sampler: Sampler,
     texture: RawTexture,
     view: RawShaderResourceView,
 }
 
 impl Texture {
     /// Builds a new texture with the given raw texture data.
-    pub fn build<T, D>(data: D) -> TextureBuilder
-        where T: Copy + Pod,
-              D: AsRef<[T]>
-    {
+    pub fn from_data<T: Pod, D: AsRef<[T]>>(data: D) -> TextureBuilder {
         TextureBuilder::new(data)
     }
 
@@ -27,7 +26,12 @@ impl Texture {
         TextureBuilder::from_color_val(rgba)
     }
 
-    /// Get view
+    /// Returns the sampler for the texture.
+    pub fn sampler(&self) -> &Sampler {
+        &self.sampler
+    }
+
+    /// Returns the texture's raw shader resource view.
     pub fn view(&self) -> &RawShaderResourceView {
         &self.view
     }
@@ -38,15 +42,13 @@ impl Texture {
 pub struct TextureBuilder {
     data: Vec<u8>,
     info: Info,
+    sampler: SamplerInfo,
 }
 
 impl TextureBuilder {
     /// Creates a new `TextureBuilder` with the given raw texture data.
-    pub fn new<T, D>(data: D) -> TextureBuilder
-        where T: Copy + Pod,
-              D: AsRef<[T]>
-    {
-        use gfx::{SHADER_RESOURCE, Bind};
+    pub fn new<T: Pod, D: AsRef<[T]>>(data: D) -> Self {
+        use gfx::SHADER_RESOURCE;
         use gfx::format::SurfaceType;
         use gfx::memory::{Usage, cast_slice};
         use gfx::texture::{AaMode, Kind};
@@ -60,6 +62,7 @@ impl TextureBuilder {
                 bind: SHADER_RESOURCE,
                 usage: Usage::Dynamic,
             },
+            sampler: SamplerInfo::new(FilterMethod::Scale, WrapMode::Clamp),
         }
     }
 
@@ -71,12 +74,13 @@ impl TextureBuilder {
                                    (color[2] * 255.0) as u8,
                                    (color[3] * 255.0) as u8]];
 
-        TextureBuilder::new::<[u8; 4], &[[u8; 4]]>(&data)
+        TextureBuilder::new(&data[..])
     }
 
     /// Sets the number of mipmap levels to generate.
-    /// FIXME: Need to understand how to handle this in gfx.
-    pub fn with_mip_levels(mut self, val: u8) -> Self {
+    ///
+    /// FIXME: Only encoders can generate mipmap levels.
+    pub fn mip_levels(mut self, val: u8) -> Self {
         self.info.levels = val;
         self
     }
@@ -96,7 +100,7 @@ impl TextureBuilder {
     }
 
     /// Builds and returns the new texture.
-    pub(crate) fn finish(self, fac: &mut Factory) -> Result<Texture> {
+    pub(crate) fn build(self, fac: &mut Factory) -> Result<Texture> {
         use gfx::Factory;
         use gfx::format::{ChannelType, Swizzle};
         use gfx::texture::ResourceDesc;
@@ -113,9 +117,10 @@ impl TextureBuilder {
         };
 
         let view = fac.view_texture_as_shader_resource_raw(&tex, desc)?;
+        let sampler = fac.create_sampler(self.sampler);
 
         Ok(Texture {
-            kind: self.info.kind,
+            sampler: sampler,
             texture: tex,
             view: view,
         })

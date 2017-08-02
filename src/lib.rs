@@ -71,18 +71,17 @@ extern crate winit;
 #[macro_use]
 extern crate thread_profiler;
 
-pub use self::app::{Application, ApplicationBuilder, Engine};
+pub use self::app::{Application, ApplicationBuilder};
+pub use self::engine::Engine;
 pub use self::error::{Error, Result};
 pub use self::state::{State, StateMachine, Trans};
 
-pub mod asset_manager;
 pub mod ecs;
 pub mod event;
 pub mod prelude;
-#[macro_use]
-pub mod project;
 pub mod timing;
 
 mod app;
+mod engine;
 mod state;
 mod error;

@@ -1,4 +1,7 @@
 # Unwanted files
+amethyst_assets/target
+amethyst_config/target
+amethyst_renderer/target
 book/html
 target
 Cargo.lock

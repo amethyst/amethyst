@@ -1,14 +1,16 @@
 //! The core engine framework.
 
-use asset_manager::AssetManager;
 use config::Config;
 use ecs::{Component, Dispatcher, DispatcherBuilder, System, World};
+use ecs::resources::InputHandler;
 use ecs::components::{LocalTransform, Transform, Child, Init};
-use ecs::resources::Time;
 use ecs::systems::SystemExt;
+use engine::Engine;
 use error::{Error, Result};
-use rayon::{Configuration, ThreadPool};
+use event::Event;
+use rayon::ThreadPool;
 use state::{State, StateMachine};
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use timing::{Stopwatch, Time};
@@ -16,45 +18,30 @@ use timing::{Stopwatch, Time};
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
 
-/// User-facing engine handle.
-pub struct Engine<'e> {
-    /// Asset manager.
-    pub assets: &'e mut AssetManager,
-    /// Configuration.
-    pub config: &'e Config,
-    /// Current delta time value.
-    pub delta: Duration,
-    /// Mutable reference to the world.
-    pub world: &'e mut World,
-}
-
 /// User-friendly facade for building games. Manages main loop.
-#[derive(Debug)]
+#[derive(Derivative)]
+#[derivative(Debug)]
 pub struct Application<'a, 'b> {
-    // Graphics and asset management structs.
-    assets: AssetManager,
+    #[derivative(Debug = "ignore")]
     dispatcher: Dispatcher<'a, 'b>,
-    world: World,
-
-    // State management and game loop timing structs.
-    config: Config,
-    states: StateMachine<'static>,
+    #[derivative(Debug = "ignore")]
+    engine: Engine,
+    states: StateMachine<'a>,
     time: Time,
     timer: Stopwatch,
 }
 
 impl<'a, 'b> Application<'a, 'b> {
     /// Creates a new Application with the given initial game state.
-    pub fn new<S: State + 'static>(initial_state: S) -> Application<'a, 'b> {
-        use ecs::systems::{RenderingSystem, TransformSystem};
-        ApplicationBuilder::new(initial_state, Config::default()).done()
+    pub fn new<S: State + 'a>(initial_state: S) -> Result<Application<'a, 'b>> {
+        ApplicationBuilder::new(initial_state).build()
     }
 
-    /// Builds a new application using builder pattern.
-    pub fn build<S>(initial_state: S, cfg: Config) -> ApplicationBuilder<'a, 'b, S>
-        where S: State + 'static
+    /// Builds a new Application with the given settings.
+    pub fn build<S>(initial_state: S) -> ApplicationBuilder<'a, 'b, S>
+        where S: State + 'a
     {
-        ApplicationBuilder::new(initial_state, cfg)
+        ApplicationBuilder::new(initial_state)
     }
 
     /// Starts the application and manages the game loop.
@@ -67,6 +54,8 @@ impl<'a, 'b> Application<'a, 'b> {
             self.timer.stop();
             self.time.delta_time = self.timer.elapsed();
         }
+
+        self.shutdown();
     }
 
     /// Sets up the application.
@@ -74,37 +63,20 @@ impl<'a, 'b> Application<'a, 'b> {
         #[cfg(feature = "profiler")]
         profile_scope!("initialize");
 
-        let world = &mut self.world;
-        world.add_resource(self.time.clone());
-
-        let mut engine = Engine {
-            assets: &mut self.assets,
-            config: &self.config,
-            delta: self.time.delta_time,
-            world: world,
-        };
-
-        self.states.start(&mut engine);
+        self.engine.world.add_resource(self.time.clone());
+        self.states.start(&mut self.engine);
     }
 
     /// Advances the game world by one tick.
     fn advance_frame(&mut self) {
         {
-            use event::Event;
-
-            let mut world = self.planner.mut_world();
-            let mut time = world.write_resource::<Time>().pass();
+            let mut time = self.engine.world.write_resource::<Time>();
             time.delta_time = self.time.delta_time;
             time.fixed_step = self.time.fixed_step;
             time.last_fixed_update = self.time.last_fixed_update;
+        }
 
-            let mut engine = Engine {
-                assets: &mut self.assets,
-                config: &self.config,
-                delta: self.time.delta_time,
-                world: world,
-            };
-
+        {
             #[cfg(feature = "profiler")]
             profile_scope!("handle_event");
 
@@ -114,43 +86,28 @@ impl<'a, 'b> Application<'a, 'b> {
 
             let mut events: Vec<Event> = Vec::new();
             while let Some(e) = events.pop() {
-                self.states.handle_event(&mut engine, e);
+                self.states.handle_event(&mut self.engine, e);
             }
 
             #[cfg(feature = "profiler")]
             profile_scope!("fixed_update");
             if self.time.last_fixed_update.elapsed() >= self.time.fixed_step {
-                self.states.fixed_update(&mut engine);
+                self.states.fixed_update(&mut self.engine);
                 self.time.last_fixed_update += self.time.fixed_step;
             }
 
             #[cfg(feature = "profiler")]
             profile_scope!("update");
-            self.states.update(&mut engine);
+            self.states.update(&mut self.engine);
         }
 
         #[cfg(feature = "profiler")]
         profile_scope!("dispatch");
-        self.dispatcher.dispatch(&mut self.world.res);
+        self.dispatcher.dispatch(&mut self.engine.world.res);
 
         #[cfg(feature="profiler")]
-        profile_scope!("render_world");
-        {
-            let world = &mut self.world;
-            // if let Some((w, h)) = self.gfx_device.get_dimensions() {
-            //     let mut dim = world.write_resource::<ScreenDimensions>();
-            //     dim.update(w, h);
-            // }
-
-            {
-                let mut time = world.write_resource::<Time>();
-                time.delta_time = self.delta_time;
-                time.fixed_step = self.fixed_step;
-                time.last_fixed_update = self.last_fixed_update;
-            }
-        }
-
-        self.world.maintain();
+        profile_scope!("maintain");
+        self.engine.world.maintain();
     }
 
     /// Cleans up after the quit signal is received.
@@ -160,7 +117,7 @@ impl<'a, 'b> Application<'a, 'b> {
 }
 
 #[cfg(feature = "profiler")]
-impl<'a> Drop for Application<'a> {
+impl<'a, 'b> Drop for Application<'a, 'b> {
     fn drop(&mut self) {
         // TODO: Specify filename in config.
         let path = format!("{}/thread_profile.json", env!("CARGO_MANIFEST_DIR"));
@@ -169,110 +126,88 @@ impl<'a> Drop for Application<'a> {
 }
 
 /// Helper builder for Applications.
-#[derive(Derivative)]
-#[derivative(Debug)]
-pub struct ApplicationBuilder<'a, 'b, T: State + 'static> {
-    config: Config,
+pub struct ApplicationBuilder<'a, 'b, T: State + 'a> {
+    base_path: PathBuf,
+    // config: Config,
+    disp_builder: DispatcherBuilder<'a, 'b>,
     errors: Vec<Error>,
     initial_state: T,
-    dispatcher_builder: DispatcherBuilder<'a, 'b>,
     world: World,
 }
 
-impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T>
-    where T: State + 'static
-{
+impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     /// Creates a new ApplicationBuilder with the given initial game state and
     /// display configuration.
-    pub fn new(initial_state: T, cfg: Config) -> ApplicationBuilder<'a, 'b, T> {
-        use num_cpus;
-        use rayon::Configuration;
-
-        let num_cores = num_cpus::get();
-        let pool_cfg = Configuration::new().num_threads(num_cores);
-        let pool = ThreadPool::new(pool_cfg).map(|p| Arc::new(p)).unwrap();
-
+    pub fn new(initial_state: T) -> Self {
         ApplicationBuilder {
-            config: cfg,
+            base_path: format!("{}/resources", env!("CARGO_MANIFEST_DIR")).into(),
+            // config: cfg,
+            disp_builder: DispatcherBuilder::new(),
             errors: Vec::new(),
             initial_state: initial_state,
-            dispatcher_builder: DispatcherBuilder::new().with_pool(pool),
             world: World::new(),
         }
     }
 
     /// Registers a given component type.
-    pub fn register<C>(mut self) -> ApplicationBuilder<'a, 'b, T>
-        where C: Component
-    {
+    pub fn register<C: Component>(mut self) -> Self {
         self.world.register::<C>();
         self
     }
 
-    /// Inserts a barrier which assures that all systems added before the barrier are executed
-    /// before the ones after this barrier.
-    /// Does nothing if there were no systems added since the last call to add_barrier().
-    /// Thread-local systems are not affected by barriers; they're always executed at the end.
-    pub fn add_barrier(mut self) -> ApplicationBuilder<'a, 'b, T> {
-        self.dispatcher_builder = self.dispatcher_builder.add_barrier();
+    /// Inserts a barrier which assures that all systems added before the
+    /// barrier are executed before the ones after this barrier.
+    ///
+    /// Does nothing if there were no systems added since the last call to
+    /// `add_barrier()`. Thread-local systems are not affected by barriers;
+    /// they're always executed at the end.
+    pub fn add_barrier(mut self) -> Self {
+        self.disp_builder = self.disp_builder.add_barrier();
         self
     }
 
     /// Adds a given system `sys`, assigns it the string identifier `name`,
     /// and marks it dependent on systems `dep`.
     /// Note: all dependencies should be added before you add depending system
-    pub fn with<S>(mut self, sys: S, name: &str, dep: &[&str]) -> ApplicationBuilder<'a, 'b, T>
+    pub fn with<S>(mut self, sys: S, name: &str, dep: &[&str]) -> Self
         where for<'c> S: System<'c> + Send + 'a + 'b
     {
-        self.dispatcher_builder = self.dispatcher_builder.add(sys, name, dep);
+        self.disp_builder = self.disp_builder.add(sys, name, dep);
         self
     }
 
-    /// Adds a given thread-local system `sys`
-    /// All thread-local systems are executed sequentially after all non-thread-local systems
-    pub fn with_thread_local<S>(mut self, sys: S) -> ApplicationBuilder<'a, 'b, T>
+    /// Adds a given thread-local system `sys` to the Application.
+    ///
+    /// All thread-local systems are executed sequentially after all
+    /// non-thread-local systems.
+    pub fn with_thread_local<S>(mut self, sys: S) -> Self
         where for<'c> S: System<'c> + 'a + 'b
     {
-        self.dispatcher_builder = self.dispatcher_builder.add_thread_local(sys);
+        self.disp_builder = self.disp_builder.add_thread_local(sys);
         self
     }
 
     /// Builds the Application and returns the result.
-    pub fn done(self) -> Application<'a, 'b> {
+    pub fn build(self) -> Result<Application<'a, 'b>> {
+        use num_cpus;
+        use rayon::Configuration;
+
         #[cfg(feature = "profiler")]
         register_thread_with_profiler("Main".into());
         #[cfg(feature = "profiler")]
         profile_scope!("new");
 
-        let mut assets = AssetManager::new();
-        // assets.add_loader::<gfx_types::Factory>(factory);
+        let num_cores = num_cpus::get();
+        let cfg = Configuration::new().num_threads(num_cores);
+        let pool = ThreadPool::new(cfg).map(|p| Arc::new(p)).map_err(|_| Error::Application)?;
 
-        {
-            let time = Time {
-                delta_time: Duration::new(0, 0),
-                fixed_step: Duration::new(0, 16666666),
-                last_fixed_update: Instant::now(),
-            };
-
-            // world.add_resource::<AmbientLight>(AmbientLight::default());
-            world.add_resource::<Time>(time);
-            world.register::<Child>();
-            // world.register::<DirectionalLight>();
-            world.register::<Init>();
-            world.register::<LocalTransform>();
-            // world.register::<PointLight>();
-            // world.register::<Renderable>();
-            // world.register::<Transform>();
-        }
-
-        Application {
-            assets: assets,
-            config: self.config,
+        Ok(Application {
+            engine: Engine::new(&self.base_path, pool.clone(), self.world),
+            // config: self.config,
             states: StateMachine::new(self.initial_state),
-            dispatcher: self.dispatcher_builder.build(),
+            dispatcher: self.disp_builder.with_pool(pool).build(),
             time: Time::default(),
             timer: Stopwatch::new(),
-            world: self.world,
-        }
+        })
     }
 }

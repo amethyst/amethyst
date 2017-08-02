@@ -3,6 +3,8 @@
 use cgmath::{Deg, Matrix4, Ortho, PerspectiveFov, Point3, Vector3};
 
 /// The projection mode of a `Camera`.
+///
+/// TODO: Remove and integrate with `Camera`.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub enum Projection {
     /// An [orthographic projection][op].
@@ -51,6 +53,8 @@ impl From<Projection> for Matrix4<f32> {
 }
 
 /// Camera struct.
+///
+/// TODO: Add more convenience methods, refine API.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct Camera {
     /// Location of the camera in three-dimensional space.
@@ -63,4 +67,11 @@ pub struct Camera {
     pub right: Vector3<f32>,
     /// Upward elevation vector of the camera.
     pub up: Vector3<f32>,
+}
+
+impl Camera {
+    /// Calculates the view matrix from the given data.
+    pub fn to_view_matrix(&self) -> Matrix4<f32> {
+        Matrix4::look_at(self.eye, self.eye + self.forward, self.up)
+    }
 }

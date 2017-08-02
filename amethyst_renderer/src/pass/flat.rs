@@ -1,18 +1,17 @@
-//! Blits a color or depth buffer from one Target onto another.
+//! Simple flat forward drawing pass.
 
-use cam::Camera;
+use error::Result;
 use cgmath::{Matrix4, One};
-use gfx;
-use gfx::pso::buffer::{ElemStride, NonInstanced};
-use pipe::pass::PassBuilder;
-use pipe::{DepthMode, Effect};
-use std::any::{Any, TypeId};
+use gfx::pso::buffer::ElemStride;
+use pipe::pass::Pass;
+use pipe::{DepthMode, Effect, NewEffect};
+use scene::{Model, Scene};
 use std::marker::PhantomData;
-use std::mem::{self, transmute};
-use vertex::{Attribute, Color, Position, TextureCoord, VertexFormat, WithField};
+use types::Encoder;
+use vertex::{Attribute, Position, TextureCoord, VertexFormat, WithField};
 
-static VERT_SRC: &'static [u8] = include_bytes!("shaders/vertex/basic.glsl");
-static FRAG_SRC: &'static [u8] = include_bytes!("shaders/fragment/flat.glsl");
+static VERT_SRC: &[u8] = include_bytes!("shaders/vertex/basic.glsl");
+static FRAG_SRC: &[u8] = include_bytes!("shaders/fragment/flat.glsl");
 
 /// Draw mesh without lighting
 #[derive(Clone, Debug, PartialEq)]
@@ -34,62 +33,45 @@ impl<V> DrawFlat<V>
     }
 }
 
-static SAMPLER_NAMES: [&'static str; 1] = ["albedo"];
+#[derive(Clone, Copy, Debug)]
+struct VertexArgs {
+    proj: [[f32; 4]; 4],
+    view: [[f32; 4]; 4],
+    model: [[f32; 4]; 4],
+}
 
-impl<'a, V> Into<PassBuilder<'a>> for &'a DrawFlat<V>
-    where V: VertexFormat
-{
-    fn into(self) -> PassBuilder<'a> {
-        use gfx::texture::{FilterMethod, WrapMode};
-
-        #[derive(Clone, Copy, Debug)]
-        struct VertexArgs {
-            proj: [[f32; 4]; 4],
-            view: [[f32; 4]; 4],
-            model: [[f32; 4]; 4],
-        };
-
-        let effect = Effect::new_simple_prog(VERT_SRC, FRAG_SRC)
-            .with_raw_constant_buffer("VertexArgs", mem::size_of::<VertexArgs>(), 1)
+impl<V: VertexFormat> Pass for DrawFlat<V> {
+    fn compile(&self, effect: NewEffect) -> Result<Effect> {
+        effect.simple(VERT_SRC, FRAG_SRC)
+            .with_raw_constant_buffer("VertexArgs", ::std::mem::size_of::<VertexArgs>(), 1)
             .with_raw_vertex_buffer(self.vertex_attributes.as_ref(), V::size() as ElemStride, 0)
-            .with_sampler(&SAMPLER_NAMES, FilterMethod::Scale, WrapMode::Clamp)
             .with_texture("albedo")
-            .with_output("color", Some(DepthMode::LessEqualWrite));
+            .with_output("color", Some(DepthMode::LessEqualWrite))
+            .build()
+    }
 
-        PassBuilder::model(effect,
-                           move |ref mut enc, ref out, ref effect, ref scene, ref model| {
-            let vertex_args = scene
-                .active_camera()
-                .map(|cam| {
-                         VertexArgs {
-                             proj: cam.proj.into(),
-                             view: Matrix4::look_at(cam.eye, cam.eye + cam.forward, cam.up).into(),
-                             model: model.pos.into(),
-                         }
-                     })
-                .unwrap_or_else(|| {
-                                    VertexArgs {
-                                        proj: Matrix4::one().into(),
-                                        view: Matrix4::one().into(),
-                                        model: model.pos.into(),
-                                    }
-                                });
-            let vertex_args_buf = effect.const_bufs["VertexArgs"].clone();
+    fn apply(&self, enc: &mut Encoder, effect: &mut Effect, scene: &Scene, model: &Model) {
+        let vertex_args = scene
+             .active_camera()
+             .map(|cam| {
+                      VertexArgs {
+                          proj: cam.proj.into(),
+                          view: cam.to_view_matrix().into(),
+                          model: model.pos.into(),
+                      }
+                  })
+             .unwrap_or_else(|| {
+                                 VertexArgs {
+                                     proj: Matrix4::one().into(),
+                                     view: Matrix4::one().into(),
+                                     model: model.pos.into(),
+                                 }
+                             });
 
-            // FIXME: update raw buffer without transmute
-            enc.update_constant_buffer::<VertexArgs>(unsafe { transmute(&vertex_args_buf) },
-                                                     &vertex_args);
+         effect.update_constant_buffer("VertexArgs", &vertex_args, enc);
+         effect.data.textures.push(model.material.albedo.view().clone());
+         effect.data.samplers.push(model.material.albedo.sampler().clone());
 
-            let mut data = effect.pso_data.clone();
-            data.const_bufs.push(vertex_args_buf);
-            let (vertex, slice) = model.mesh.geometry();
-            data.vertex_bufs.push(vertex.clone());
-            data.samplers.push(effect.samplers["albedo"].clone());
-            data.textures.push(model.material.albedo.view().clone());
-            data.out_colors
-                .extend(out.color_buf(0).map(|cb| cb.as_output.clone()));
-            data.out_depth = out.depth_buf().map(|db| (db.as_output.clone(), (0, 0)));
-            enc.draw(slice, &effect.pso, &data);
-        })
+         effect.draw(model, enc);         
     }
 }

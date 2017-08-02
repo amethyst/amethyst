@@ -4,7 +4,7 @@
 //! automatically updated every frame by `Application`.
 
 // pub use self::camera::{Camera, Projection};
-pub use self::input::{Axis, Button, Buttons, InputHandler, KeyCodes, MouseButtons};
+pub use self::input::{Axis, Button, Buttons, InputHandler, KeyboardInput, KeyCode, KeyCodes, MouseButtons};
 // pub use self::screen_dimensions::ScreenDimensions;
 // pub use self::time::Time;
 

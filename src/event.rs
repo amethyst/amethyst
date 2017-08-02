@@ -1,16 +1,19 @@
 //! This module contains the `WindowEvent` type and re-exports glutin event
 //! types.
 
-pub use winit::{ElementState, ModifiersState, MouseButton, MouseScrollDelta,
-                ScanCode, Touch, TouchPhase, VirtualKeyCode as Key, WindowEvent};
+pub use winit::{DeviceEvent, WindowEvent};
 
 use winit::Event as WinitEvent;
 
 /// Generic engine event.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Event {
     /// An asset event.
     Asset(String),
+    /// Event loop awakened event.
+    Awakened,
+    /// A device event.
+    Device(DeviceEvent),
     /// A window event.
     Window(WindowEvent),
     /// User-defined event.
@@ -19,8 +22,17 @@ pub enum Event {
 
 impl From<WinitEvent> for Event {
     fn from(e: WinitEvent) -> Event {
-        let WinitEvent::WindowEvent { event, .. } = e;
-        Event::Window(event)
+        match e {
+            WinitEvent::Awakened => Event::Awakened,
+            WinitEvent::DeviceEvent { event, .. } => Event::Device(event),
+            WinitEvent::WindowEvent { event, .. } => Event::Window(event),
+        }
+    }
+}
+
+impl From<DeviceEvent> for Event {
+    fn from(e: DeviceEvent) -> Event {
+        Event::Device(e)
     }
 }
 

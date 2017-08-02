@@ -33,7 +33,7 @@ pub(crate) enum TextureKind {
 impl TextureKind {
     pub fn into_texture(self, fac: &mut Factory) -> Result<Texture> {
         match self {
-            TextureKind::Constant(c) => Texture::from_color_val(c).finish(fac),
+            TextureKind::Constant(c) => Texture::from_color_val(c).build(fac),
             TextureKind::Map(tex) => Ok(tex),
         }
     }
@@ -83,7 +83,7 @@ impl MaterialBuilder {
         self
     }
 
-    /// Sets the roughness to an existing texture map.
+    /// Sets the metallic to an existing texture map.
     pub fn with_metallic(mut self, tex: &Texture) -> Self {
         self.metallic = TextureKind::Map(tex.clone());
         self
@@ -95,7 +95,7 @@ impl MaterialBuilder {
         self
     }
 
-    /// Sets the reflectance to an existing texture map.
+    /// Sets the ambient_occlusion to an existing texture map.
     pub fn with_ambient_occlusion(mut self, tex: &Texture) -> Self {
         self.ambient_occlusion = TextureKind::Map(tex.clone());
         self
@@ -108,7 +108,7 @@ impl MaterialBuilder {
     }
 
     /// Builds and returns the new material.
-    pub(crate) fn finish(self, fac: &mut Factory) -> Result<Material> {
+    pub(crate) fn build(self, fac: &mut Factory) -> Result<Material> {
         Ok(Material {
             albedo: self.albedo.into_texture(fac)?,
             emission: self.emission.into_texture(fac)?,

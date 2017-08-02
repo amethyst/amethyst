@@ -2,28 +2,28 @@
 
 use error::{Error, Result};
 use pipe::{Target, Targets};
-use pipe::pass::{ModelPass, Pass, PassBuilder, SimplePass, BasicPass};
-use rayon::iter::{IndexedParallelIterator, IntoParallelIterator, ParallelIterator};
-use scene::{Model, Scene};
-use std::sync::Arc;
-use types::{Encoder, Device, Factory};
+use pipe::pass::{CompiledPass, Pass, Description};
+use scene::Scene;
+use types::{Encoder, Factory};
 
 /// A stage in the rendering pipeline.
 #[derive(Clone, Debug)]
 pub struct Stage {
+    clear_color: Option<[f32; 4]>,
+    clear_depth: Option<f32>,
     enabled: bool,
-    passes: Vec<Pass>,
-    target: Arc<Target>,
+    passes: Vec<CompiledPass>,
+    target: Target,
 }
 
 impl Stage {
     /// Creates a new stage using the Target with the given name.
-    pub fn with_target<'a, T: Into<String>>(target_name: T) -> StageBuilder<'a> {
+    pub fn with_target<N: Into<String>>(target_name: N) -> StageBuilder {
         StageBuilder::new(target_name.into())
     }
 
-    /// Creates a new layer which draws straight into the backbuffer.
-    pub fn with_backbuffer<'a>() -> StageBuilder<'a> {
+    /// Creates a new stage which draws straight into the backbuffer.
+    pub fn with_backbuffer() -> StageBuilder {
         StageBuilder::new("")
     }
 
@@ -37,51 +37,78 @@ impl Stage {
         self.enabled
     }
 
-    /// Get passes of the stage
-    pub fn passes(&self) -> &[Pass] {
-        self.passes.as_slice()
-    }
+    /// Applies all passes within this stage.
+    pub fn apply(&self, encoders: &mut [Encoder], scene: &Scene) {
+        use rayon::prelude::*;
 
-    /// Get target of the stage
-    pub fn target(&self) -> &Target {
-        &self.target
+        let mut encs = encoders;
+        self.clear_color.map(|c| self.target.clear_color(&mut encs[0], c));
+        self.clear_depth.map(|d| self.target.clear_depth_stencil(&mut encs[0], d));
+
+        for pass in self.passes.iter() {
+            let mut models = scene.par_chunks_models(4);
+
+            let enc = {
+                let slice = encs;
+                let (count, left) = slice.split_at_mut(models.len());
+                encs = left;
+                count
+            };
+
+            models.zip(enc)
+                .for_each(move |(models, enc)| for model in models {
+                              pass.apply(enc, scene, model);
+                          });
+        }
     }
 
     /// Get count of parallelable passes
     pub fn encoders_required(&self, jobs_count: usize) -> usize {
         self.passes
             .iter()
-            .map(|pass| match *pass {
-                     Pass::Basic(_) => 1,
-                     Pass::Simple(_) => 1,
-                     Pass::Model(_) => jobs_count,
-                     Pass::Light(_) => jobs_count,
-                 })
-            .sum::<usize>()
+            .map(|_| jobs_count)
+            .sum::<usize>() + 1
     }
 }
 
 /// Constructs a new rendering stage.
-#[derive(Clone, Debug)]
-pub struct StageBuilder<'a> {
+#[derive(Derivative)]
+#[derivative(Clone, Debug)]
+pub struct StageBuilder {
+    clear_color: Option<[f32; 4]>,
+    clear_depth: Option<f32>,
     enabled: bool,
-    passes: Vec<PassBuilder<'a>>,
+    #[derivative(Debug = "ignore")]
+    passes: Vec<Description>,
     target_name: String,
 }
 
-impl<'a> StageBuilder<'a> {
+impl StageBuilder {
     /// Creates a new `StageBuilder` using the given target.
     pub fn new<T: Into<String>>(target_name: T) -> Self {
         StageBuilder {
+            clear_color: None,
+            clear_depth: None,
             enabled: true,
             passes: Vec::new(),
             target_name: target_name.into(),
         }
     }
 
+    /// Clears the stage's target.
+    pub fn clear_target<R, C, D>(mut self, color_val: C, depth_val: D) -> Self
+        where R: Into<[f32; 4]>,
+              C: Into<Option<R>>,
+              D: Into<Option<f32>>
+    {
+        self.clear_color = color_val.into().map(|c| c.into());
+        self.clear_depth = depth_val.into();
+        self
+    }
+
     /// Appends another `Pass` to the stage.
-    pub fn with_pass<P: Into<PassBuilder<'a>>>(mut self, pass: P) -> Self {
-        self.passes.push(pass.into());
+    pub fn with_model_pass<P: Pass + 'static>(mut self, pass: P) -> Self {
+        self.passes.push(Description::new(pass));
         self
     }
 
@@ -92,17 +119,20 @@ impl<'a> StageBuilder<'a> {
     }
 
     /// Builds and returns the stage.
-    #[doc(hidden)]
-    pub(crate) fn finish(mut self, fac: &mut Factory, targets: &Targets) -> Result<Stage> {
-        let name = self.target_name;
+    pub(crate) fn build(mut self, fac: &mut Factory, targets: &Targets) -> Result<Stage> {
         let out = targets
-            .get(&name)
+            .get(&self.target_name)
             .cloned()
-            .ok_or(Error::NoSuchTarget(name))?;
+            .ok_or(Error::NoSuchTarget(self.target_name))?;
 
-        let passes = self.passes.into_iter().map(|pb| pb.finish(fac, targets, &out)).collect::<Result<Vec<_>>>()?;
+        let passes = self.passes
+            .drain(..)
+            .map(|pb| pb.compile(fac, &out))
+            .collect::<Result<_>>()?;
 
         Ok(Stage {
+               clear_color: self.clear_color,
+               clear_depth: self.clear_depth,
                enabled: self.enabled,
                passes: passes,
                target: out,

@@ -1,6 +1,6 @@
 //! Utilities for game state management.
 
-use app::Engine;
+use engine::Engine;
 use event::Event;
 
 /// Types of state transitions.
@@ -21,30 +21,30 @@ pub enum Trans {
 /// A trait which defines game states that can be used by the state machine.
 pub trait State {
     /// Executed when the game state begins.
-    fn on_start(&mut self, _engine: &mut Engine) {}
+    fn on_start(&mut self, _eng: &mut Engine) {}
 
     /// Executed when the game state exits.
-    fn on_stop(&mut self, _engine: &mut Engine) {}
+    fn on_stop(&mut self, _eng: &mut Engine) {}
 
     /// Executed when a different game state is pushed onto the stack.
-    fn on_pause(&mut self, _engine: &mut Engine) {}
+    fn on_pause(&mut self, _eng: &mut Engine) {}
 
     /// Executed when the application returns to this game state once again.
-    fn on_resume(&mut self, _engine: &mut Engine) {}
+    fn on_resume(&mut self, _eng: &mut Engine) {}
 
     /// Executed on every frame before updating, for use in reacting to events.
-    fn handle_event(&mut self, _engine: &mut Engine, _event: Event) -> Trans {
+    fn handle_event(&mut self, _eng: &mut Engine, _event: Event) -> Trans {
         Trans::None
     }
 
     /// Executed repeatedly at stable, predictable intervals (1/60th of a second
     /// by default).
-    fn fixed_update(&mut self, _engine: &mut Engine) -> Trans {
+    fn fixed_update(&mut self, _eng: &mut Engine) -> Trans {
         Trans::None
     }
 
     /// Executed on every frame immediately, as fast as the engine will allow.
-    fn update(&mut self, _engine: &mut Engine) -> Trans {
+    fn update(&mut self, _eng: &mut Engine) -> Trans {
         Trans::None
     }
 }
@@ -214,16 +214,13 @@ mod tests {
 
     #[test]
     fn switch_pop() {
-        use config::Config;
-        use ecs::{Planner, World};
+        use ecs::World;
         use rayon::{Configuration, ThreadPool};
         use std::sync::Arc;
         use timing::Time;
 
-        let cfg = Config::default();
         let pool = Arc::new(ThreadPool::new(Configuration::new()).unwrap());
-        let plan = Planner::from_pool(World::new(), pool.clone());
-        let mut engine = Engine::new(cfg, plan, pool);
+        let mut engine = Engine::new("resources", pool, World::new());
 
         let mut sm = StateMachine::new(State1(7));
         sm.start(&mut engine);

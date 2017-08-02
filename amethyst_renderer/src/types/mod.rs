@@ -1,11 +1,11 @@
 //! Compile-time graphics API types.
 
 #[cfg(all(feature = "d3d11", target_os = "windows"))]
-pub use self::d3d11::{CommandBuffer, Device, Factory, Resources, ShaderModel, Window};
+pub use self::d3d11::{CommandBuffer, Device, Factory, Resources, Window};
 #[cfg(all(feature = "metal", target_os = "macos"))]
-pub use self::metal::{CommandBuffer, Device, Factory, Resources, ShaderModel, Window};
+pub use self::metal::{CommandBuffer, Device, Factory, Resources, Window};
 #[cfg(feature = "opengl")]
-pub use self::opengl::{CommandBuffer, Device, Factory, Resources, ShaderModel, Window};
+pub use self::opengl::{CommandBuffer, Device, Factory, Resources, Window};
 #[cfg(feature = "vulkan")]
 pub use self::vulkan::{CommandBuffer, Device, Factory, Resources, Window};
 

@@ -13,10 +13,13 @@ use gfx::{Primitive, ShaderSet};
 use gfx::preset::depth::{LESS_EQUAL_TEST, LESS_EQUAL_WRITE};
 use gfx::pso::buffer::{ElemStride, InstanceRate};
 use gfx::shade::{ProgramError, ToUniform};
-use gfx::state::{Comparison, Depth, Rasterizer, Stencil};
-use gfx::texture::{FilterMethod, SamplerInfo, WrapMode};
+use gfx::shade::core::UniformValue;
+use gfx::state::{Rasterizer, Stencil};
+use gfx::traits::Pod;
 use pipe::{Target, Targets};
-use types::{Factory, PipelineState, RawBuffer, Resources, Sampler};
+use scene::Model;
+use std::mem;
+use types::{Encoder, Factory, PipelineState, Resources};
 use vertex::Attribute;
 
 mod pso;
@@ -35,8 +38,8 @@ pub enum DepthMode {
     LessEqualWrite,
 }
 
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
-enum ProgramSource<'a> {
+#[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+pub(crate) enum ProgramSource<'a> {
     Simple(&'a [u8], &'a [u8]),
     Geometry(&'a [u8], &'a [u8], &'a [u8]),
     Tessellated(&'a [u8], &'a [u8], &'a [u8], &'a [u8]),
@@ -70,91 +73,101 @@ impl<'a> ProgramSource<'a> {
 }
 
 #[derive(Derivative)]
-#[derivative(Clone, Debug, Eq, Hash, PartialEq)]
+#[derivative(Clone, Debug, Eq, PartialEq)]
 pub struct Effect {
     pub pso: PipelineState<Meta>,
-    #[derivative(Hash = "ignore")]
-    pub pso_data: Data,
-    #[derivative(Hash = "ignore")]
-    pub samplers: HashMap<String, Sampler>,
-    #[derivative(Hash = "ignore")]
-    pub const_bufs: HashMap<String, RawBuffer>,
+    pub data: Data,
+    const_bufs: HashMap<String, usize>,
+    globals: HashMap<String, usize>,
 }
 
 impl Effect {
-    pub fn new_simple_prog<'a, S>(vs: S, ps: S) -> EffectBuilder<'a>
-        where S: Into<&'a [u8]>
-    {
-        EffectBuilder::new_simple_prog(vs, ps)
+    pub fn update_global<N: AsRef<str>, T: ToUniform>(&mut self, name: N, data: T) {
+        if let Some(i) = self.globals.get(name.as_ref()) {
+            self.data.globals[*i] = data.convert();
+        }
     }
 
-    pub fn new_geom_prog<'a, S>(vs: S, gs: S, ps: S) -> EffectBuilder<'a>
-        where S: Into<&'a [u8]>
+    /// FIXME: Update raw buffer without transmute, use `Result` somehow.
+    pub fn update_buffer<N, T>(&self, name: N, data: &[T], enc: &mut Encoder)
+        where N: AsRef<str>, T: Pod
     {
-        EffectBuilder::new_geom_prog(vs, gs, ps)
+        if let Some(i) = self.const_bufs.get(name.as_ref()) {
+            let raw = &self.data.const_bufs[*i];
+            enc.update_buffer::<T>(unsafe { mem::transmute(raw) }, &data[..], 0);
+        }
     }
 
-    pub fn new_tess_prog<'a, S>(vs: S, hs: S, ds: S, ps: S) -> EffectBuilder<'a>
-        where S: Into<&'a [u8]>
+    /// FIXME: Update raw buffer without transmute.
+    pub fn update_constant_buffer<N, T>(&self, name: N, data: &T, enc: &mut Encoder)
+        where N: AsRef<str>, T: Copy
     {
-        EffectBuilder::new_tess_prog(vs, hs, ds, ps)
+        if let Some(i) = self.const_bufs.get(name.as_ref()) {
+            let raw = &self.data.const_bufs[*i];
+            enc.update_constant_buffer::<T>(unsafe { mem::transmute(raw) }, &data);
+        }
+    }
+
+    /// FIXME: Add support for arbitrary materials and textures.
+    pub fn draw(&self, model: &Model, enc: &mut Encoder) {
+        let mut data = self.data.clone();
+
+        let (vbuf, slice) = model.mesh.geometry();
+        data.vertex_bufs.push(vbuf.clone());
+
+        enc.draw(&slice, &self.pso, &data);
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct NewEffect<'f> {
+    factory: &'f mut Factory,
+    out: &'f Target,
+}
+
+impl<'f> NewEffect<'f> {
+    pub(crate) fn new(fac: &'f mut Factory, out: &'f Target) -> NewEffect<'f> {
+        NewEffect {
+            factory: fac,
+            out,
+        }
+    }
+
+    pub fn simple<S: Into<&'f [u8]>>(self, vs: S, ps: S) -> EffectBuilder<'f> {
+        let src = ProgramSource::Simple(vs.into(), ps.into());
+        EffectBuilder::new(self.factory, self.out, src)
+    }
+
+    pub fn geom<S: Into<&'f [u8]>>(self, vs: S, gs: S, ps: S) -> EffectBuilder<'f> {
+        let src = ProgramSource::Geometry(vs.into(), gs.into(), ps.into());
+        EffectBuilder::new(self.factory, self.out, src)
+    }
+
+    pub fn tess<S: Into<&'f [u8]>>(self, vs: S, hs: S, ds: S, ps: S) -> EffectBuilder<'f> {
+        let src = ProgramSource::Tessellated(vs.into(), hs.into(), ds.into(), ps.into());
+        EffectBuilder::new(self.factory, self.out, src)
+    }
+}
+
 pub struct EffectBuilder<'a> {
+    factory: &'a mut Factory,
+    out: &'a Target,
     init: Init<'a>,
     prim: Primitive,
     prog: ProgramSource<'a>,
     rast: Rasterizer,
-    samplers: HashMap<SamplerInfo, &'a [&'a str]>,
-    const_bufs: HashMap<&'a str, BufferInfo>,
-}
-
-impl<'a> Default for EffectBuilder<'a> {
-    fn default() -> Self {
-        use gfx::Primitive;
-        use gfx::state::Rasterizer;
-
-        EffectBuilder {
-            init: Init::default(),
-            prim: Primitive::TriangleList,
-            rast: Rasterizer::new_fill().with_cull_back(),
-            prog: ProgramSource::Simple("".as_bytes(), "".as_bytes()),
-            samplers: HashMap::default(),
-            const_bufs: HashMap::default(),
-        }
-    }
+    const_bufs: Vec<BufferInfo>,
 }
 
 impl<'a> EffectBuilder<'a> {
-    pub fn new_simple_prog<S>(vs: S, ps: S) -> Self
-        where S: Into<&'a [u8]>
-    {
-        let (vs, ps) = (vs.into(), ps.into());
+    pub(crate) fn new(fac: &'a mut Factory, out: &'a Target, src: ProgramSource<'a>) -> Self {
         EffectBuilder {
-            prog: ProgramSource::Simple(vs, ps),
-            .. Default::default()
-        }
-    }
-
-    pub fn new_geom_prog<S>(vs: S, gs: S, ps: S) -> Self
-        where S: Into<&'a [u8]>
-    {
-        let (vs, gs, ps) = (vs.into(), gs.into(), ps.into());
-        EffectBuilder {
-            prog: ProgramSource::Geometry(vs, gs, ps),
-            .. Default::default()
-        }
-    }
-
-    pub fn new_tess_prog<S>(vs: S, hs: S, ds: S, ps: S) -> Self
-        where S: Into<&'a [u8]>
-    {
-        let (vs, hs, ds, ps) = (vs.into(), hs.into(), ds.into(), ps.into());
-        EffectBuilder {
-            prog: ProgramSource::Tessellated(vs, hs, ds, ps),
-            .. Default::default()
+            factory: fac,
+            out: out,
+            init: Init::default(),
+            prim: Primitive::TriangleList,
+            rast: Rasterizer::new_fill().with_cull_back(),
+            prog: src,
+            const_bufs: Vec::new(),
         }
     }
 
@@ -165,9 +178,10 @@ impl<'a> EffectBuilder<'a> {
     }
 
     /// Adds a raw uniform constant to this `Effect`.
+    ///
     /// Requests a new constant buffer to be created
     pub fn with_raw_constant_buffer(mut self, name: &'a str, size: usize, num: usize) -> Self {
-        self.const_bufs.insert(name, BufferInfo {
+        self.const_bufs.push(BufferInfo {
             role: BufferRole::Constant,
             bind: Bind::empty(),
             usage: Usage::Dynamic,
@@ -192,52 +206,58 @@ impl<'a> EffectBuilder<'a> {
         self
     }
 
-    /// Requests a new texture sampler be created for this `Effect`.
-    pub fn with_sampler(mut self, names: &'a [&'a str], f: FilterMethod, w: WrapMode) -> Self {
-        self.samplers.insert(SamplerInfo::new(f, w), names);
-        self.init.samplers.extend(names);
-        self
-    }
-
-    /// Adds a texture to this `Effect`
+    /// Adds a texture sampler to this `Effect`.
     pub fn with_texture(mut self, name: &'a str) -> Self {
+        self.init.samplers.push(name);
         self.init.textures.push(name);
         self
     }
 
-    /// Adds a vertex buffer to this `Effect`
-    pub fn with_raw_vertex_buffer(mut self, attributes: &'a [(&'a str, Attribute)], stride: ElemStride, rate: InstanceRate) -> Self {
-        self.init.vertex_bufs.push((attributes, stride, rate));
+    /// Adds a vertex buffer to this `Effect`.
+    pub fn with_raw_vertex_buffer(mut self, attrs: &'a [(&'a str, Attribute)], stride: ElemStride, rate: InstanceRate) -> Self {
+        self.init.vertex_bufs.push((attrs, stride, rate));
         self
     }
 
-    pub(crate) fn finish(self, fac: &mut Factory, out: &Target) -> Result<Effect> {
+    pub fn build(mut self) -> Result<Effect> {
         use gfx::Factory;
         use gfx::traits::FactoryExt;
 
+        let mut fac = self.factory;
         let prog = self.prog.compile(fac)?;
-        let pso = fac.create_pipeline_state(&prog, self.prim, self.rast, self.init)?;
+        let pso = fac.create_pipeline_state(&prog, self.prim, self.rast, self.init.clone())?;
 
-        let samplers = self.samplers
-            .clone()
+        let mut data = Data::default();
+
+        let const_bufs = self.init.const_bufs
             .iter()
-            .flat_map(|(info, names)| {
-                let sampler = fac.create_sampler(*info);
-                names.iter().map(move |name| ((*name).into(), sampler.clone()))
+            .enumerate()
+            .zip(self.const_bufs.drain(..))
+            .map(|((i, name), info)| {
+                let cbuf = fac.create_buffer_raw(info)?;
+                data.const_bufs.push(cbuf);
+                Ok((name.to_string(), i))
+            })
+            .collect::<Result<HashMap<_, _>>>()?;
+
+        let globals = self.init.globals
+            .iter()
+            .enumerate()
+            .map(|(i, name)| {
+                // Insert placeholder value until updated by user.
+                data.globals.push(UniformValue::F32Vector4([0.0; 4]));
+                (name.to_string(), i)
             })
             .collect::<HashMap<_, _>>();
 
-        let const_bufs = self.const_bufs
-            .clone()
-            .iter()
-            .map(|(name, info)| Ok(((*name).into(), fac.create_buffer_raw(*info)?)))
-            .collect::<Result<HashMap<_, _>>>()?;
+        data.out_colors.extend(self.out.color_bufs().iter().map(|cb| cb.as_output.clone()));
+        data.out_depth = self.out.depth_buf().map(|db| (db.as_output.clone(), (0, 0)));
 
         Ok(Effect {
-            pso: pso,
-            pso_data: Data::default(),
-            samplers: samplers,
-            const_bufs: const_bufs,
+            pso,
+            data,
+            const_bufs,
+            globals,
         })
     }
 }
