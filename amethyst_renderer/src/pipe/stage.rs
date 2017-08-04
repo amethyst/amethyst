@@ -5,7 +5,7 @@ use pipe::{Target, Targets};
 use pipe::pass::{CompiledPass, Description, Pass};
 use rayon::iter::{IndexedParallelIterator, IntoParallelIterator, MapWith, ParallelIterator, Zip};
 use rayon::iter::internal::UnindexedConsumer;
-use rayon::slice::Chunks;
+use rayon::slice::{Chunks, IterMut as ParIterMut};
 use rayon::vec::IntoIter;
 use scene::{Model, Scene};
 use types::{Encoder, Factory};
@@ -13,7 +13,7 @@ use types::{Encoder, Factory};
 /// TODO: Eliminate all this explicit typing once `impl Trait` lands.
 type ApplyPassFn<'a> = fn(&mut &'a CompiledPass, (&'a [Model], &'a mut Encoder))
                           -> (&'a CompiledPass, &'a [Model], &'a mut Encoder);
-type Workload<'a> = Zip<Chunks<'a, Model>, IntoIter<&'a mut Encoder>>;
+type Workload<'a> = Zip<Chunks<'a, Model>, ParIterMut<'a, Encoder>>;
 
 /// Parallel iterator of `Encoder` chunks batched with each `Pass` in a `Stage`.
 pub(crate) struct DrawUpdate<'a> {
@@ -69,29 +69,28 @@ impl Stage {
     /// Divides the given `Encoder`s into different sized chunks, pairs each
     /// chunk with a corresponding `Pass`, and returns the resulting batches as
     /// a `DrawUpdate`.
-    pub(crate) fn apply<'a, E>(&'a self, mut encoders: E, scene: &'a Scene) -> DrawUpdate<'a>
-        where E: Iterator<Item = &'a mut Encoder>,
-    {
+    pub(crate) fn apply<'a>(&'a self, encoders: &'a mut[Encoder], scene: &'a Scene) -> DrawUpdate<'a> {
         use num_cpus;
 
         self.clear_color.map(|c| {
-            self.target.clear_color(encoders.nth(0).unwrap(), c)
+            self.target.clear_color(&mut encoders[0], c)
         });
         self.clear_depth.map(|d| {
-            self.target.clear_depth_stencil(encoders.nth(0).unwrap(), d)
+            self.target.clear_depth_stencil(&mut encoders[0], d)
         });
 
-        let update = self.passes
-            .iter()
-            .map(|pass| {
-                let mut models = scene.par_chunks_models(num_cpus::get());
-                let enc = encoders.by_ref().take(models.len()).collect::<Vec<_>>();
-                models.zip(enc).map_with(
-                    pass,
-                    (|pass, (models, enc)| (*pass, models, enc)) as ApplyPassFn<'a>,
-                )
-            })
-            .collect::<Vec<_>>();
+        let mut encoders = encoders.iter_mut();
+        let mut update = Vec::new();
+        for pass in self.passes.iter() {
+            let mut models = scene.par_chunks_models(num_cpus::get());
+            let slice = encoders.into_slice();
+            let (taken, left) = slice.split_at_mut(models.len());
+            encoders = left.iter_mut();
+            update.push(models.zip(taken).map_with(
+                pass,
+                (|pass, (models, enc)| (*pass, models, enc)) as ApplyPassFn<'a>,
+            ));
+        }
 
         DrawUpdate { inner: update.into_par_iter() }
     }

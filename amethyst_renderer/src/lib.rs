@@ -199,16 +199,18 @@ impl Renderer {
         }
 
         {
-            let mut encoders = self.encoders.as_mut_slice().into_iter();
+            let mut encoders = self.encoders.iter_mut();
             self.pool.install(move || {
-                pipe.enabled_stages()
-                    .map(|stage| {
-                        let needed = stage.encoders_required(num_threads);
-                        let enc = encoders.by_ref().take(needed);
-                        stage.apply(enc, scene)
-                    })
-                    .collect::<Vec<_>>()
-                    .into_par_iter()
+                let mut updates = Vec::new();
+                for stage in pipe.enabled_stages() {
+                    let needed = stage.encoders_required(num_threads);
+                    let slice = encoders.into_slice();
+                    let (taken, left) = slice.split_at_mut(needed);
+                    encoders = left.iter_mut();
+                    updates.push(stage.apply(taken, scene));
+                }
+
+                updates.into_par_iter()
                     .flat_map(|update| update)
                     .for_each(|(pass, models, enc)| {
                         for model in models {
