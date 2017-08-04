@@ -297,7 +297,7 @@ fn main() {
                               env!("CARGO_MANIFEST_DIR"));
     set_var("AMETHYST_ASSET_DIRS", assets_path);
 
-    let path = format!("{}/examples/03_renderable/resources/config.yml",
+    let path = format!("{}/examples/03_renderable/resources/config.ron",
                        env!("CARGO_MANIFEST_DIR"));
     let cfg = DisplayConfig::load(path);
     let mut game = Application::build(Example, cfg)

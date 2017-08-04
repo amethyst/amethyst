@@ -340,7 +340,7 @@ impl State for Pong {
 }
 
 fn main() {
-    let path = format!("{}/examples/04_pong/resources/config.yml",
+    let path = format!("{}/examples/04_pong/resources/config.ron",
                        env!("CARGO_MANIFEST_DIR"));
     let cfg = DisplayConfig::load(path);
     let mut game = Application::build(Pong, cfg)
