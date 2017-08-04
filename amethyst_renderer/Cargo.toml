@@ -1,0 +1,57 @@
+[package]
+name = "amethyst_renderer"
+version = "0.5.0"
+authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
+description = "High-level rendering engine with multiple backends"
+keywords = ["game", "engine", "renderer", "3d", "amethyst"]
+categories = ["rendering", "rendering::engine"]
+
+documentation = "https://www.amethyst.rs/doc/master/amethyst_renderer/"
+homepage = "https://www.amethyst.rs/"
+repository = "https://github.com/amethyst/amethyst"
+
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+
+[badges]
+appveyor = { repository = "amethyst/amethyst", branch = "develop" }
+travis-ci = { repository = "amethyst/amethyst" }
+
+[features]
+default = ["opengl"]
+d3d11 = ["gfx_device_dx11", "gfx_window_dxgi"]
+metal = ["gfx_device_metal", "gfx_window_metal"]
+opengl = ["gfx_device_gl", "gfx_window_glutin", "glutin"]
+vulkan = ["gfx_device_vulkan", "gfx_window_vulkan"]
+
+[dependencies]
+cgmath = { version = "0.14", features = ["eders"] }
+derivative = "1.0"
+fnv = "1.0"
+gfx = { version = "0.16", features = ["cgmath-types", "serialize"] }
+gfx_core = { version = "0.7", features = ["cgmath-types", "serialize"] }
+gfx_macros = "0.2"
+num_cpus = "1.0"
+rayon = "0.8"
+serde = "1.0"
+serde_derive = "1.0"
+winit = "0.7"
+
+gfx_device_gl = { version = "0.14", optional = true }
+gfx_window_glutin = { version = "0.17", optional = true }
+glutin = { version = "0.9", optional = true }
+
+[target.'cfg(not(macos))'.dependencies]
+gfx_device_vulkan = { version = "0.1", optional = true }
+gfx_window_vulkan = { version = "0.1", optional = true }
+
+[target.'cfg(macos)'.dependencies]
+gfx_device_metal = { version = "0.2", optional = true }
+gfx_window_metal = { version = "0.3", optional = true }
+
+[target.'cfg(windows)'.dependencies]
+gfx_device_dx11 = { version = "0.6", optional = true }
+gfx_window_dxgi = { version = "0.7", optional = true }
+
+[dev-dependencies]
+genmesh = "0.4"
