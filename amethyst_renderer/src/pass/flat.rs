@@ -42,8 +42,9 @@ struct VertexArgs {
 
 impl<V: VertexFormat> Pass for DrawFlat<V> {
     fn compile(&self, effect: NewEffect) -> Result<Effect> {
+        use std::mem;
         effect.simple(VERT_SRC, FRAG_SRC)
-            .with_raw_constant_buffer("VertexArgs", ::std::mem::size_of::<VertexArgs>(), 1)
+            .with_raw_constant_buffer("VertexArgs", mem::size_of::<VertexArgs>(), 1)
             .with_raw_vertex_buffer(self.vertex_attributes.as_ref(), V::size() as ElemStride, 0)
             .with_texture("albedo")
             .with_output("color", Some(DepthMode::LessEqualWrite))
