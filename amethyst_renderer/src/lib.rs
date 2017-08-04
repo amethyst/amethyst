@@ -8,29 +8,59 @@
 //!
 //! # Example
 //!
-//! ```ignore
-//! let event_loop = winit::EventsLoop::new();
-//! let mut renderer = Renderer::new(&event_loop).unwrap();
-//! let pipe = renderer.create_pipe(Pipeline::deferred()).unwrap();
+//! ```rust,no_run
+//! # extern crate amethyst_renderer;
+//! # extern crate winit;
+//! #
+//! # use amethyst_renderer::{Mesh, Pipeline, Renderer, Result, Scene};
+//! # use amethyst_renderer::light::PointLight;
+//! # use amethyst_renderer::vertex::PosColor;
+//! # use std::time::{Duration, Instant};
+//! # use winit::{Event, EventsLoop, Window, WindowEvent};
+//! #
+//! # fn some_sphere_gen_func() -> &'static [PosColor] {
+//! #     &[]
+//! # }
+//! #
+//! # fn run_example() -> Result<()> {
+//! let mut events = winit::EventsLoop::new();
+//! let mut renderer = Renderer::new(&events)?;
+//! let pipe = renderer.create_pipe(Pipeline::deferred())?;
 //!
 //! let verts = some_sphere_gen_func();
-//! let sphere = renderer.create_mesh(Mesh::build(&verts)).unwrap();
+//! let sphere = renderer.create_mesh(Mesh::build(&verts))?;
 //!
 //! let light = PointLight::default();
 //!
-//! let scene = Scene::default()
-//!     .add_mesh("ball", sphere)
-//!     .add_light("lamp", light);
+//! let mut scene = Scene::default();
+//! //scene.add_mesh(sphere)
+//! scene.add_light(light);
 //!
-//! event_loop.run_forever(|e| {
-//!     let winit::Event::WindowEvent { event, .. } = e;
-//!     match event {
-//!         winit::WindowEvent::Closed => event_loop.interrupt(),
-//!         _ => (),
-//!     }
+//! let mut delta = Duration::from_secs(0);
+//! let mut running = true;
+//! while running {
+//!     let start = Instant::now();
 //!
-//!     renderer.draw(&scene, &pipe, dt);
-//! };
+//!     events.poll_events(|e| {
+//!         match e {
+//!             Event::WindowEvent { event, .. } => match event {
+//!                 WindowEvent::KeyboardInput { .. } |
+//!                 WindowEvent::Closed => running = false,
+//!                 _ => (),
+//!             },
+//!             _ => (),
+//!         }
+//!     });
+//!
+//!     renderer.draw(&scene, &pipe, delta);
+//!     delta = Instant::now() - start;
+//! }
+//! # Ok(())
+//! # }
+//! #
+//! # fn main() {
+//! #     run_example().unwrap();
+//! # }
 //! ```
 
 #![deny(missing_docs)]
@@ -154,6 +184,7 @@ impl Renderer {
     pub fn draw(&mut self, scene: &Scene, pipe: &Pipeline, _delta: Duration) {
         use gfx::Device;
         use glutin::GlContext;
+        use rayon::prelude::*;
 
         let num_threads = self.pool.current_num_threads();
         let encoders_required: usize = pipe.enabled_stages()
@@ -168,18 +199,28 @@ impl Renderer {
         }
 
         {
-            let mut encoders = self.encoders.as_mut_slice();
+            let mut encoders = self.encoders.as_mut_slice().into_iter();
+            let mut updates = Vec::new();
+            for stage in pipe.enabled_stages() {
+                let needed = stage.encoders_required(num_threads);
+                // let enc = {
+                //     let slice = encoders;
+                //     let (count, left) = slice.split_at_mut(needed);
+                //     encoders = left;
+                //     count
+                // };
+                let enc = encoders.by_ref().take(needed);
+                updates.push(stage.apply(enc, scene));
+            }
+
             self.pool.install(move || {
-                for stage in pipe.enabled_stages() {
-                    let needed = stage.encoders_required(num_threads);
-                    let enc = {
-                        let slice = encoders;
-                        let (count, left) = slice.split_at_mut(needed);
-                        encoders = left;
-                        count
-                    };
-                    stage.apply(enc, scene);
-                }
+                updates.into_par_iter()
+                    .flat_map(|u| u)
+                    .for_each(|(pass, models, enc)| {
+                        for model in models {
+                            pass.apply(enc, scene, model);
+                        }
+                    });
             });
         }
         

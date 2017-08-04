@@ -3,8 +3,31 @@
 use error::{Error, Result};
 use pipe::{Target, Targets};
 use pipe::pass::{CompiledPass, Pass, Description};
-use scene::Scene;
+use rayon::iter::{IndexedParallelIterator, IntoParallelIterator, MapWith, ParallelIterator, Zip};
+use rayon::iter::internal::UnindexedConsumer;
+use rayon::slice::Chunks;
+use rayon::vec::IntoIter;
+use scene::{Model, Scene};
 use types::{Encoder, Factory};
+
+/// TODO: Eliminate all this explicit typing once `impl Trait` lands.
+type ApplyPassFn<'a> = fn(&mut &'a CompiledPass, (&'a [Model], &'a mut Encoder)) -> (&'a CompiledPass, &'a [Model], &'a mut Encoder);
+type Workload<'a> = Zip<Chunks<'a, Model>, IntoIter<&'a mut Encoder>>;
+
+/// Parallel iterator of all pass.
+pub(crate) struct DrawUpdate<'a> {
+    inner: IntoIter<MapWith<Workload<'a>, &'a CompiledPass, ApplyPassFn<'a>>>,
+}
+
+impl<'a> ParallelIterator for DrawUpdate<'a> {
+    type Item = (&'a CompiledPass, &'a [Model], &'a mut Encoder);
+
+    fn drive_unindexed<C>(self, consumer: C) -> C::Result
+        where C: UnindexedConsumer<Self::Item>
+    {
+        self.inner.flat_map(|i| i).drive_unindexed(consumer)
+    }
+}
 
 /// A stage in the rendering pipeline.
 #[derive(Clone, Debug)]
@@ -38,36 +61,26 @@ impl Stage {
     }
 
     /// Applies all passes within this stage.
-    pub fn apply(&self, encoders: &mut [Encoder], scene: &Scene) {
-        use rayon::prelude::*;
+    pub(crate) fn apply<'a, T: Iterator<Item = &'a mut Encoder>>(&'a self, mut encoders: T, scene: &'a Scene) -> DrawUpdate<'a> {
+        use num_cpus;
 
-        let mut encs = encoders;
-        self.clear_color.map(|c| self.target.clear_color(&mut encs[0], c));
-        self.clear_depth.map(|d| self.target.clear_depth_stencil(&mut encs[0], d));
+        self.clear_color.map(|c| self.target.clear_color(encoders.nth(0).unwrap(), c));
+        self.clear_depth.map(|d| self.target.clear_depth_stencil(encoders.nth(0).unwrap(), d));
 
+        let mut update = Vec::new();
         for pass in self.passes.iter() {
-            let mut models = scene.par_chunks_models(4);
-
-            let enc = {
-                let slice = encs;
-                let (count, left) = slice.split_at_mut(models.len());
-                encs = left;
-                count
-            };
-
-            models.zip(enc)
-                .for_each(move |(models, enc)| for model in models {
-                              pass.apply(enc, scene, model);
-                          });
+            let mut models = scene.par_chunks_models(num_cpus::get());
+            let enc: Vec<_> = encoders.by_ref().take(models.len()).collect();
+            update.push(models.zip(enc).map_with(pass, (|pass, (models, enc)| (*pass, models, enc)) as ApplyPassFn<'a>));
         }
+
+        DrawUpdate { inner: update.into_par_iter() }
     }
 
     /// Get count of parallelable passes
     pub fn encoders_required(&self, jobs_count: usize) -> usize {
-        self.passes
-            .iter()
-            .map(|_| jobs_count)
-            .sum::<usize>() + 1
+        use std::cmp;
+        self.passes.len() * (cmp::max(jobs_count, 1) - 1) + 1
     }
 }
 

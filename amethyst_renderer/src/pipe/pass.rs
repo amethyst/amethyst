@@ -48,6 +48,7 @@ pub struct CompiledPass {
 
 impl CompiledPass {
     pub fn apply(&self, enc: &mut Encoder, scene: &Scene, model: &Model) {
+        // TODO: Eliminate this clone.
         self.inner.apply(enc, &mut self.effect.clone(), scene, model);
     }
 }
