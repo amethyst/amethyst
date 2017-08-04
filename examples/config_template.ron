@@ -1,0 +1,18 @@
+(
+    display: (
+        title: "Amethyst game",
+        brightness: 1,
+        fullscreen: false,
+        dimensions: (1024, 768),
+        min_dimensions: None,
+        max_dimensions: None,
+        vsync: true,
+        multisampling: 0,
+        visibility: true,
+    ),
+    logging: (
+        file_path: "new_project.log",
+        output_level: "warn",
+        logging_level: "debug",
+    ),
+)

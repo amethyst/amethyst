@@ -50,7 +50,7 @@
 //! }
 //!
 //! fn main() {
-//!     let path = format!("{}/examples/01_window/resources/config.yml",
+//!     let path = format!("{}/examples/01_window/resources/config.ron",
 //!                        env!("CARGO_MANIFEST_DIR"));
 //!     let cfg = DisplayConfig::load(path);
 //!     let mut game = Application::build(GameState, cfg).done();
