@@ -2,7 +2,7 @@
 
 use error::{Error, Result};
 use pipe::{Target, Targets};
-use pipe::pass::{CompiledPass, Pass, Description};
+use pipe::pass::{CompiledPass, Description, Pass};
 use rayon::iter::{IndexedParallelIterator, IntoParallelIterator, MapWith, ParallelIterator, Zip};
 use rayon::iter::internal::UnindexedConsumer;
 use rayon::slice::Chunks;
@@ -11,10 +11,11 @@ use scene::{Model, Scene};
 use types::{Encoder, Factory};
 
 /// TODO: Eliminate all this explicit typing once `impl Trait` lands.
-type ApplyPassFn<'a> = fn(&mut &'a CompiledPass, (&'a [Model], &'a mut Encoder)) -> (&'a CompiledPass, &'a [Model], &'a mut Encoder);
+type ApplyPassFn<'a> = fn(&mut &'a CompiledPass, (&'a [Model], &'a mut Encoder))
+                          -> (&'a CompiledPass, &'a [Model], &'a mut Encoder);
 type Workload<'a> = Zip<Chunks<'a, Model>, IntoIter<&'a mut Encoder>>;
 
-/// Parallel iterator of all pass.
+/// Parallel iterator of `Encoder` chunks batched with each `Pass` in a `Stage`.
 pub(crate) struct DrawUpdate<'a> {
     inner: IntoIter<MapWith<Workload<'a>, &'a CompiledPass, ApplyPassFn<'a>>>,
 }
@@ -40,47 +41,65 @@ pub struct Stage {
 }
 
 impl Stage {
-    /// Creates a new stage using the Target with the given name.
+    /// Builds a new `Stage` which outputs to the `Target` with the given name.
     pub fn with_target<N: Into<String>>(target_name: N) -> StageBuilder {
         StageBuilder::new(target_name.into())
     }
 
-    /// Creates a new stage which draws straight into the backbuffer.
+    /// Builds a new `Stage` which outputs straight into the backbuffer.
     pub fn with_backbuffer() -> StageBuilder {
         StageBuilder::new("")
     }
 
-    /// Sets whether this layer should execute.
-    pub fn toggle_enabled(&mut self) {
-        self.enabled = !self.enabled;
+    /// Enables the `Stage` so it will execute on every frame.
+    pub fn enable(&mut self) {
+        self.enabled = true;
     }
 
-    /// Checks whether this layer is enabled.
+    /// Disables the `Stage`, preventing it from being executed on every frame.
+    pub fn disable(&mut self) {
+        self.enabled = false;
+    }
+
+    /// Returns whether this `Stage` is enabled.
     pub fn is_enabled(&self) -> bool {
         self.enabled
     }
 
-    /// Applies all passes within this stage.
-    pub(crate) fn apply<'a, T: Iterator<Item = &'a mut Encoder>>(&'a self, mut encoders: T, scene: &'a Scene) -> DrawUpdate<'a> {
+    /// Divides the given `Encoder`s into different sized chunks, pairs each
+    /// chunk with a corresponding `Pass`, and returns the resulting batches as
+    /// a `DrawUpdate`.
+    pub(crate) fn apply<'a, E>(&'a self, mut encoders: E, scene: &'a Scene) -> DrawUpdate<'a>
+        where E: Iterator<Item = &'a mut Encoder>,
+    {
         use num_cpus;
 
-        self.clear_color.map(|c| self.target.clear_color(encoders.nth(0).unwrap(), c));
-        self.clear_depth.map(|d| self.target.clear_depth_stencil(encoders.nth(0).unwrap(), d));
+        self.clear_color.map(|c| {
+            self.target.clear_color(encoders.nth(0).unwrap(), c)
+        });
+        self.clear_depth.map(|d| {
+            self.target.clear_depth_stencil(encoders.nth(0).unwrap(), d)
+        });
 
-        let mut update = Vec::new();
-        for pass in self.passes.iter() {
-            let mut models = scene.par_chunks_models(num_cpus::get());
-            let enc: Vec<_> = encoders.by_ref().take(models.len()).collect();
-            update.push(models.zip(enc).map_with(pass, (|pass, (models, enc)| (*pass, models, enc)) as ApplyPassFn<'a>));
-        }
+        let update = self.passes
+            .iter()
+            .map(|pass| {
+                let mut models = scene.par_chunks_models(num_cpus::get());
+                let enc = encoders.by_ref().take(models.len()).collect::<Vec<_>>();
+                models.zip(enc).map_with(
+                    pass,
+                    (|pass, (models, enc)| (*pass, models, enc)) as ApplyPassFn<'a>,
+                )
+            })
+            .collect::<Vec<_>>();
 
         DrawUpdate { inner: update.into_par_iter() }
     }
 
-    /// Get count of parallelable passes
+    /// Get number of encoders needed for this stage.
     pub fn encoders_required(&self, jobs_count: usize) -> usize {
         use std::cmp;
-        self.passes.len() * (cmp::max(jobs_count, 1) - 1) + 1
+        cmp::max(self.passes.len() * jobs_count, 1)
     }
 }
 
@@ -112,7 +131,7 @@ impl StageBuilder {
     pub fn clear_target<R, C, D>(mut self, color_val: C, depth_val: D) -> Self
         where R: Into<[f32; 4]>,
               C: Into<Option<R>>,
-              D: Into<Option<f32>>
+              D: Into<Option<f32>>,
     {
         self.clear_color = color_val.into().map(|c| c.into());
         self.clear_depth = depth_val.into();
@@ -133,10 +152,11 @@ impl StageBuilder {
 
     /// Builds and returns the stage.
     pub(crate) fn build(mut self, fac: &mut Factory, targets: &Targets) -> Result<Stage> {
-        let out = targets
-            .get(&self.target_name)
-            .cloned()
-            .ok_or(Error::NoSuchTarget(self.target_name))?;
+        let out = targets.get(&self.target_name).cloned().ok_or(
+            Error::NoSuchTarget(
+                self.target_name,
+            ),
+        )?;
 
         let passes = self.passes
             .drain(..)
@@ -144,11 +164,11 @@ impl StageBuilder {
             .collect::<Result<_>>()?;
 
         Ok(Stage {
-               clear_color: self.clear_color,
-               clear_depth: self.clear_depth,
-               enabled: self.enabled,
-               passes: passes,
-               target: out,
-           })
+            clear_color: self.clear_color,
+            clear_depth: self.clear_depth,
+            enabled: self.enabled,
+            passes: passes,
+            target: out,
+        })
     }
 }

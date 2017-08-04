@@ -16,7 +16,6 @@
 //! # use amethyst_renderer::light::PointLight;
 //! # use amethyst_renderer::vertex::PosColor;
 //! # use std::time::{Duration, Instant};
-//! # use winit::{Event, EventsLoop, Window, WindowEvent};
 //! #
 //! # fn some_sphere_gen_func() -> &'static [PosColor] {
 //! #     &[]
@@ -43,9 +42,9 @@
 //!
 //!     events.poll_events(|e| {
 //!         match e {
-//!             Event::WindowEvent { event, .. } => match event {
-//!                 WindowEvent::KeyboardInput { .. } |
-//!                 WindowEvent::Closed => running = false,
+//!             winit::Event::WindowEvent { event, .. } => match event {
+//!                 winit::WindowEvent::KeyboardInput { .. } |
+//!                 winit::WindowEvent::Closed => running = false,
 //!                 _ => (),
 //!             },
 //!             _ => (),
@@ -113,13 +112,14 @@ pub use mtl::{Material, MaterialBuilder};
 pub use pipe::{Pipeline, PipelineBuilder, Stage, Target};
 pub use scene::{Model, Scene};
 pub use tex::{Texture, TextureBuilder};
+pub use types::Encoder;
 pub use vertex::VertexFormat;
 
 use pipe::{ColorBuffer, DepthBuffer};
 use rayon::ThreadPool;
 use std::sync::Arc;
 use std::time::Duration;
-use types::{ColorFormat, DepthFormat, Encoder, Factory, Window};
+use types::{ColorFormat, DepthFormat, Factory, Window};
 use winit::{EventsLoop, WindowBuilder};
 
 pub mod light;
@@ -150,12 +150,12 @@ pub struct Renderer {
 }
 
 impl Renderer {
-    /// Creates a new renderer with default window settings.
+    /// Creates a `Renderer` with default window settings.
     pub fn new(el: &EventsLoop) -> Result<Renderer> {
         RendererBuilder::new(el).build()
     }
 
-    /// Builds a new renderer builder.
+    /// Creates a new `RendererBuilder`, equivalent to `RendererBuilder::new()`.
     pub fn build(el: &EventsLoop) -> RendererBuilder {
         RendererBuilder::new(el)
     }
@@ -200,22 +200,16 @@ impl Renderer {
 
         {
             let mut encoders = self.encoders.as_mut_slice().into_iter();
-            let mut updates = Vec::new();
-            for stage in pipe.enabled_stages() {
-                let needed = stage.encoders_required(num_threads);
-                // let enc = {
-                //     let slice = encoders;
-                //     let (count, left) = slice.split_at_mut(needed);
-                //     encoders = left;
-                //     count
-                // };
-                let enc = encoders.by_ref().take(needed);
-                updates.push(stage.apply(enc, scene));
-            }
-
             self.pool.install(move || {
-                updates.into_par_iter()
-                    .flat_map(|u| u)
+                pipe.enabled_stages()
+                    .map(|stage| {
+                        let needed = stage.encoders_required(num_threads);
+                        let enc = encoders.by_ref().take(needed);
+                        stage.apply(enc, scene)
+                    })
+                    .collect::<Vec<_>>()
+                    .into_par_iter()
+                    .flat_map(|update| update)
                     .for_each(|(pass, models, enc)| {
                         for model in models {
                             pass.apply(enc, scene, model);
@@ -247,7 +241,7 @@ impl Drop for Renderer {
     }
 }
 
-#[allow(missing_docs)]
+/// Constructs a new `Renderer`.
 pub struct RendererBuilder<'a> {
     config: Config,
     events: &'a EventsLoop,
@@ -256,7 +250,7 @@ pub struct RendererBuilder<'a> {
 }
 
 impl<'a> RendererBuilder<'a> {
-    #[allow(missing_docs)]
+    /// Creates a new `RendererBuilder`.
     pub fn new(el: &'a EventsLoop) -> RendererBuilder<'a> {
         RendererBuilder {
             config: Config::default(),
