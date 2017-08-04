@@ -5,6 +5,7 @@ use cgmath::Matrix4;
 use light::Light;
 use mesh::Mesh;
 use mtl::Material;
+use rayon::prelude::*;
 use rayon::slice::{Chunks, Iter};
 
 /// Immutable parallel iterator of lights.
@@ -59,42 +60,41 @@ impl Scene {
 
     /// Iterates through all stored lights in parallel.
     pub fn par_iter_lights(&self) -> Lights {
-        use rayon::prelude::*;
         self.lights.par_iter()
     }
 
     /// Iterates through all stored lights in parallel in chunks.
     pub fn par_chunks_lights(&self, count: usize) -> LightsChunks {
-        use rayon::prelude::*;
         let size = self.lights.len();
         self.lights.par_chunks(((size - 1) / count) + 1)
     }
 
     /// Iterates through all stored models in parallel.
     pub fn par_iter_models(&self) -> Models {
-        use rayon::prelude::*;
         self.models.par_iter()
     }
 
     /// Iterates through all stored models in parallel in chunks.
     pub fn par_chunks_models(&self, count: usize) -> ModelsChunks {
-        use rayon::prelude::*;
         let size = self.models.len();
         self.models.par_chunks(((size - 1) / count) + 1)
     }
 
-    /// Active camera
+    /// Returns the active camera in the scene.
     ///
-    /// TODO: Render to multiple viewports with possibly different cameras
+    /// TODO: Render to multiple viewports with possibly different cameras.
     pub fn active_camera(&self) -> Option<&Camera> {
         self.cameras.first()
     }
 }
 
-#[allow(missing_docs)]
+/// A renderable object in a scene.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Model {
+    /// Material properties of the model.
     pub material: Material,
+    /// Physical geometry of the model.
     pub mesh: Mesh,
+    /// Model matrix.
     pub pos: Matrix4<f32>,
 }
