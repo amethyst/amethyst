@@ -62,7 +62,6 @@ impl Pipeline {
     ///
     /// FIXME: Only generates a dummy pipeline for now.
     pub fn deferred() -> PipelineBuilder {
-        use pass::*;
         PipelineBuilder::new()
             .with_target(Target::named("gbuffer")
                 .with_num_color_bufs(4)
@@ -77,13 +76,12 @@ impl Pipeline {
     ///
     /// FIXME: Only generates a dummy pipeline for now.
     pub fn forward() -> PipelineBuilder {
-        use pass::*;
         PipelineBuilder::new()
             .with_stage(Stage::with_backbuffer()
                 .clear_target([1.0; 4], None))
     }
 
-    /// Returns an immutable slice of all stages in the pipeline.
+    /// Iterates over all enabled stages in the pipeline.
     pub fn enabled_stages(&self) -> Stages {
         Stages(self.stages.iter().filter(|s| s.is_enabled()))
     }
