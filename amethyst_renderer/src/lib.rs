@@ -253,7 +253,7 @@ pub struct RendererBuilder<'a> {
 
 impl<'a> RendererBuilder<'a> {
     /// Creates a new `RendererBuilder`.
-    pub fn new(el: &'a EventsLoop) -> RendererBuilder<'a> {
+    pub fn new(el: &'a EventsLoop) -> Self {
         RendererBuilder {
             config: Config::default(),
             events: el,
@@ -262,24 +262,25 @@ impl<'a> RendererBuilder<'a> {
         }
     }
 
-    #[allow(missing_docs)]
-    pub fn with_winit_builder(mut self, wb: WindowBuilder) -> Self {
+    /// Applies window settings from the given `winit::WindowBuilder`.
+    pub fn use_winit_builder(&mut self, wb: WindowBuilder) -> &mut Self {
         self.winit_builder = wb;
         self
     }
 
-    #[allow(missing_docs)]
-    pub fn with_pool(mut self, pool: Arc<ThreadPool>) -> Self {
+    /// Specifies an existing thread pool for the `Renderer` to use.
+    pub fn with_pool(&mut self, pool: Arc<ThreadPool>) -> &mut Self {
         self.pool = Some(pool);
         self
     }
 
-    #[allow(missing_docs)]
-    pub fn build(self) -> Result<Renderer> {
-        let Backend(dev, fac, main, win) = init_backend(self.winit_builder, self.events)?;
+    /// Consumes the builder and creates the new `Renderer`.
+    pub fn build(&self) -> Result<Renderer> {
+        let Backend(dev, fac, main, win) = init_backend(self.winit_builder.clone(), self.events)?;
 
         let num_cores = num_cpus::get();
         let pool = self.pool
+            .clone()
             .map(|p| Ok(p))
             .unwrap_or_else(|| {
                                 let cfg = rayon::Configuration::new().num_threads(num_cores);

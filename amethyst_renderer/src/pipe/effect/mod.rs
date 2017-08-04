@@ -125,7 +125,7 @@ pub struct NewEffect<'f> {
 }
 
 impl<'f> NewEffect<'f> {
-    pub(crate) fn new(fac: &'f mut Factory, out: &'f Target) -> NewEffect<'f> {
+    pub(crate) fn new(fac: &'f mut Factory, out: &'f Target) -> Self {
         NewEffect {
             factory: fac,
             out,
@@ -172,7 +172,7 @@ impl<'a> EffectBuilder<'a> {
     }
 
     /// Adds a global constant to this `Effect`.
-    pub fn with_raw_global(mut self, name: &'a str) -> Self {
+    pub fn with_raw_global(&mut self, name: &'a str) -> &mut Self {
         self.init.globals.push(name);
         self
     }
@@ -180,7 +180,7 @@ impl<'a> EffectBuilder<'a> {
     /// Adds a raw uniform constant to this `Effect`.
     ///
     /// Requests a new constant buffer to be created
-    pub fn with_raw_constant_buffer(mut self, name: &'a str, size: usize, num: usize) -> Self {
+    pub fn with_raw_constant_buffer(&mut self, name: &'a str, size: usize, num: usize) -> &mut Self {
         self.const_bufs.push(BufferInfo {
             role: BufferRole::Constant,
             bind: Bind::empty(),
@@ -195,7 +195,7 @@ impl<'a> EffectBuilder<'a> {
     /// Sets the output target of the PSO.
     ///
     /// If the target contains a depth buffer, its mode will be set by `depth`.
-    pub fn with_output(mut self, name: &'a str, depth: Option<DepthMode>) -> Self {
+    pub fn with_output(&mut self, name: &'a str, depth: Option<DepthMode>) -> &mut Self {
         if let Some(depth) = depth {
             self.init.out_depth = Some((match depth {
                 DepthMode::LessEqualTest => LESS_EQUAL_TEST,
@@ -207,24 +207,24 @@ impl<'a> EffectBuilder<'a> {
     }
 
     /// Adds a texture sampler to this `Effect`.
-    pub fn with_texture(mut self, name: &'a str) -> Self {
+    pub fn with_texture(&mut self, name: &'a str) -> &mut Self {
         self.init.samplers.push(name);
         self.init.textures.push(name);
         self
     }
 
     /// Adds a vertex buffer to this `Effect`.
-    pub fn with_raw_vertex_buffer(mut self, attrs: &'a [(&'a str, Attribute)], stride: ElemStride, rate: InstanceRate) -> Self {
+    pub fn with_raw_vertex_buffer(&mut self, attrs: &'a [(&'a str, Attribute)], stride: ElemStride, rate: InstanceRate) -> &mut Self {
         self.init.vertex_bufs.push((attrs, stride, rate));
         self
     }
 
     /// TODO: Support render targets as inputs.
-    pub fn build(mut self) -> Result<Effect> {
+    pub fn build(&mut self) -> Result<Effect> {
         use gfx::Factory;
         use gfx::traits::FactoryExt;
 
-        let mut fac = self.factory;
+        let ref mut fac = self.factory;
         let prog = self.prog.compile(fac)?;
         let pso = fac.create_pipeline_state(&prog, self.prim, self.rast, self.init.clone())?;
 
