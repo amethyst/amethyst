@@ -80,6 +80,8 @@ extern crate genmesh;
 extern crate imagefmt;
 extern crate num_cpus;
 extern crate rayon;
+#[macro_use]
+extern crate serde_derive;
 extern crate smallvec;
 extern crate specs;
 extern crate ticketed_lock;
