@@ -1,13 +1,4 @@
 //! A fully renderable scene.
-//!
-//! # Example
-//!
-//! ```rust
-//! # use amethyst_renderer::Scene;
-//! # use amethyst_renderer::light::PointLight;
-//! let mut scene = Scene::default();
-//! scene.add_light("light", PointLight::default());
-//! ```
 
 use cam::Camera;
 use cgmath::Matrix4;
@@ -38,6 +29,15 @@ pub struct Scene {
 
 impl Scene {
     /// Adds a light source to the scene.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use amethyst_renderer::Scene;
+    /// # use amethyst_renderer::light::PointLight;
+    /// let mut scene = Scene::default();
+    /// scene.add_light(PointLight::default());
+    /// ```
     pub fn add_light<L: Into<Light>>(&mut self, light: L) {
         self.lights.push(light.into());
     }

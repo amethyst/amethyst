@@ -219,6 +219,7 @@ impl<'a> EffectBuilder<'a> {
         self
     }
 
+    /// TODO: Support render targets as inputs.
     pub fn build(mut self) -> Result<Effect> {
         use gfx::Factory;
         use gfx::traits::FactoryExt;

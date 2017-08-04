@@ -14,7 +14,7 @@ use renderer::vertex::PosNormTex;
 
 fn main() {
     use std::time::{Duration, Instant};
-    use winit::{EventsLoop, ControlFlow, Event, WindowEvent};
+    use winit::{EventsLoop, Event, WindowEvent};
 
     let mut events = EventsLoop::new();
     let mut renderer = Renderer::new(&events).expect("Renderer create");
@@ -43,22 +43,24 @@ fn main() {
     });
 
     let mut delta = Duration::from_secs(0);
-    events.run_forever(|e| {
+    let mut running = true;
+    while running {
         let start = Instant::now();
 
-        match e {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::KeyboardInput { .. } | 
-                WindowEvent::Closed => return ControlFlow::Break,
+        events.poll_events(|e| {
+            match e {
+                Event::WindowEvent { event, .. } => match event {
+                    WindowEvent::KeyboardInput { .. } |
+                    WindowEvent::Closed => running = false,
+                    _ => (),
+                },
                 _ => (),
-            },
-            _ => (),
-        }
+            }
+        });
 
         renderer.draw(&scene, &pipe, delta);
         delta = Instant::now() - start;
-        ControlFlow::Continue
-    });
+    }
 }
 
 fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTex> {

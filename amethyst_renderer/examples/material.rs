@@ -11,10 +11,11 @@ use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 use renderer::prelude::*;
 use renderer::vertex::PosNormTangTex;
-use std::time::{Duration, Instant};
-use winit::{ControlFlow, Event, EventsLoop, WindowEvent};
 
 fn main() {
+    use std::time::{Duration, Instant};
+    use winit::{Event, EventsLoop, WindowEvent};
+
     let mut events = EventsLoop::new();
     let mut renderer = Renderer::new(&events).expect("Renderer create");
     let pipe = renderer.create_pipe(
@@ -63,9 +64,6 @@ fn main() {
     };
     scene.add_light(light);
 
-    let light = DirectionalLight::default();
-    scene.add_light(light);
-
     scene.add_camera(Camera {
         eye: [0.0, 0.0, -12.0].into(),
         proj: Projection::perspective(1.3, Deg(60.0)).into(),
@@ -75,22 +73,24 @@ fn main() {
     });
 
     let mut delta = Duration::from_secs(0);
-    events.run_forever(|e| {
+    let mut running = true;
+    while running {
         let start = Instant::now();
 
-        match e {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::KeyboardInput { .. } | 
-                WindowEvent::Closed => return ControlFlow::Break,
+        events.poll_events(|e| {
+            match e {
+                Event::WindowEvent { event, .. } => match event {
+                    WindowEvent::KeyboardInput { .. } |
+                    WindowEvent::Closed => running = false,
+                    _ => (),
+                },
                 _ => (),
-            },
-            _ => (),
-        }
+            }
+        });
 
         renderer.draw(&scene, &pipe, delta);
         delta = Instant::now() - start;
-        ControlFlow::Continue
-    });
+    }
 }
 
 fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTangTex> {
