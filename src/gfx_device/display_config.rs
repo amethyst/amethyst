@@ -26,6 +26,8 @@ pub struct DisplayConfig {
     #[serde(default)]
     pub multisampling: u16,
     /// Sets the visibility of the window.
-    #[serde(default = "true")]
+    #[serde(default = "default_visibility")]
     pub visibility: bool,
 }
+
+fn default_visibility() -> bool { true }
