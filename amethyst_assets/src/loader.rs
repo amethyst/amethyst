@@ -297,7 +297,7 @@ fn load_asset_inner<C, F, S>(context: &C,
         .load(context.category(), &spec.name, spec.ext)
         .map_err(LoadError::StorageError)?;
     let data = format.parse(bytes).map_err(LoadError::FormatError)?;
-    let a = context.from_data(data)
+    let a = context.create_asset(data)
         .map_err(LoadError::AssetError)?;
 
     context.cache(spec, &a);

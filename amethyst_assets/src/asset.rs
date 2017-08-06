@@ -130,7 +130,7 @@ pub trait Context {
     fn category(&self) -> &str;
 
     /// Provides the conversion from the data format to the actual asset.
-    fn from_data(&self, data: Self::Data) -> Result<Self::Asset, Self::Error>;
+    fn create_asset(&self, data: Self::Data) -> Result<Self::Asset, Self::Error>;
 
     /// Notifies about an asset load. This is can be used to cache the asset.
     /// To return a cached asset, see the `retrieve` function.

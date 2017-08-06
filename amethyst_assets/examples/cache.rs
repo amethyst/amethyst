@@ -24,7 +24,7 @@ impl Context for DummyContext {
         "dummy"
     }
 
-    fn from_data(&self, mut data: String) -> Result<DummyAsset, Self::Error> {
+    fn create_asset(&self, mut data: String) -> Result<DummyAsset, Self::Error> {
         data.insert_str(0, self.prepend);
 
         Ok(DummyAsset(Arc::new(data)))

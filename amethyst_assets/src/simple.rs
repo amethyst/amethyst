@@ -43,7 +43,7 @@ impl<A, D, E, T> Context for SimpleContext<A, D, E, T>
         self.category.as_ref()
     }
 
-    fn from_data(&self, data: Self::Data) -> Result<Self::Asset, Self::Error> {
+    fn create_asset(&self, data: Self::Data) -> Result<Self::Asset, Self::Error> {
         (&self.load)(data)
     }
 
