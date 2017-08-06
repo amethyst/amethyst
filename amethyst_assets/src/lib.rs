@@ -20,9 +20,11 @@ pub use specs::common::BoxedErr;
 pub use asset::{Asset, AssetSpec, Cache, Context, Format};
 pub use error::{AssetError, LoadError, NoError};
 pub use loader::{AssetFuture, Loader, load_asset, load_asset_future};
+pub use simple::SimpleContext;
 pub use store::{Allocator, Directory, Store, StoreId};
 
 mod asset;
 mod error;
 mod loader;
+mod simple;
 mod store;

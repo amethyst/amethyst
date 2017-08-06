@@ -10,10 +10,14 @@ use std::sync::Arc;
 use amethyst_assets::*;
 use rayon::{Configuration, ThreadPool};
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct DummyAsset(String);
 
-impl Asset for DummyAsset {}
+impl Asset for DummyAsset {
+    fn is_shared(&self) -> bool {
+        false
+    }
+}
 
 struct DummyContext(&'static str);
 

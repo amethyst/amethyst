@@ -39,7 +39,7 @@ impl Context for DummyContext {
     }
 
     fn clear(&self) {
-        self.cache.retain(|_, a| Arc::strong_count(&a.0) > 1);
+        self.cache.retain(|_, a| a.is_shared());
     }
 
     fn clear_all(&self) {
@@ -50,7 +50,11 @@ impl Context for DummyContext {
 #[derive(Clone, Debug)]
 struct DummyAsset(Arc<String>);
 
-impl Asset for DummyAsset {}
+impl Asset for DummyAsset {
+    fn is_shared(&self) -> bool {
+        Arc::strong_count(&self.0) > 1
+    }
+}
 
 struct DummyFormat;
 
