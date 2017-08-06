@@ -10,8 +10,10 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ## [Unreleased]
 ### Changed
 * Asset management rewrite (pull request [#244]).
+* Use RON as config format ([#269])
 
 [#244]: https://github.com/amethyst/amethyst/pull/244
+[#269]: https://github.com/amethyst/amethyst/pull/269
 
 ## [0.4.3] - 2017-06-03
 ### Added

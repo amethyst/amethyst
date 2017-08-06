@@ -45,7 +45,7 @@ does not aim to be API-compatible with it in any way. Some goals include:
 * Simple game state management in the form of a [pushdown automaton][pa].
 * Massively parallel architecture, especially in rendering.
 * [Correct entity-component-system model][em], with entities and prefabs largely
-  defined in [YAML files][ya].
+  defined in [Ron files][rn].
 * Abstract scripting API that can be bound to a variety of embedded languages,
   such as [mruby][mr], [Lua][lu], etc.
 * Renderer optimized for modern graphics APIs, e.g. Vulkan, Direct3D 12+, Metal.
@@ -56,7 +56,7 @@ does not aim to be API-compatible with it in any way. Some goals include:
 
 [pa]: http://gameprogrammingpatterns.com/state.html#pushdown-automata
 [em]: http://shaneenishry.com/blog/2014/12/27/misconceptions-of-component-based-entity-systems/
-[ya]: http://www.yaml.org/
+[rn]: https://github.com/ron-rs/ron
 [mr]: http://mruby.org/
 [lu]: http://www.lua.org/
 [pi]: http://www.piston.rs/

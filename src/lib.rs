@@ -50,7 +50,7 @@
 //! }
 //!
 //! fn main() {
-//!     let path = format!("{}/examples/01_window/resources/config.yml",
+//!     let path = format!("{}/examples/01_window/resources/config.ron",
 //!                        env!("CARGO_MANIFEST_DIR"));
 //!     let cfg = DisplayConfig::load(path);
 //!     let mut game = Application::build(GameState, cfg).done();
@@ -67,7 +67,6 @@
 #[cfg(feature="profiler")]
 pub extern crate thread_profiler;
 pub extern crate amethyst_renderer as renderer;
-#[macro_use]
 pub extern crate amethyst_config as config;
 
 extern crate cgmath;
@@ -80,6 +79,9 @@ extern crate genmesh;
 extern crate imagefmt;
 extern crate num_cpus;
 extern crate rayon;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
 extern crate smallvec;
 extern crate specs;
 extern crate ticketed_lock;

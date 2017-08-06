@@ -1,9 +1,0 @@
-dimensions: null
-fullscreen: false
-max_dimensions: null
-min_dimensions: null
-multisampling: 1
-title: "Pong example"
-visibility: true
-vsync: true
-
