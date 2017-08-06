@@ -1,9 +1,10 @@
-use std::fs::File;
-use std::io::Error as IoError;
+use std::fs::{self, File};
+use std::io::{Error as IoError, ErrorKind as IoErrorKind};
 use std::path::PathBuf;
 use std::time::UNIX_EPOCH;
 
 use store::{Allocator, Store, StoreId};
+use asset::MediaType;
 
 /// Directory store.
 ///
@@ -21,7 +22,8 @@ pub struct Directory {
 impl Directory {
     /// Creates a new directory storage.
     pub fn new<P>(alloc: &Allocator, loc: P) -> Self
-        where P: Into<PathBuf>
+    where
+        P: Into<PathBuf>,
     {
         Directory {
             id: alloc.next_store_id(),
@@ -33,34 +35,109 @@ impl Directory {
 impl Store for Directory {
     type Error = IoError;
 
-    fn modified(&self, category: &str, id: &str, ext: &str) -> Result<u64, IoError> {
-        use std::fs::metadata;
-
+    fn modified(
+        &self,
+        category: &str,
+        id: &str,
+        media_extensions: &[(&MediaType, &[&str])],
+    ) -> Result<u64, IoError> {
         let mut path = self.loc.clone();
 
         path.push(category);
         path.push(id);
-        path.set_extension(ext);
 
-        Ok(metadata(&path)?.modified()?.duration_since(UNIX_EPOCH).unwrap().as_secs())
+        let mut result = None;
+
+        for &(_, extensions) in media_extensions {
+            for extension in extensions {
+                match fs::metadata(path.with_extension(extension)) {
+                    Ok(meta) => {
+                        if result.is_some() {
+                            return Err(IoError::new(
+                                IoErrorKind::NotFound,
+                                format!(
+                                    "multiple files {:?} with any of extensions {:?} found",
+                                    path,
+                                    media_extensions
+                                ),
+                            ));
+                        } else {
+                            result = Some(
+                                meta.modified()?
+                                    .duration_since(UNIX_EPOCH)
+                                    .unwrap()
+                                    .as_secs(),
+                            );
+                        }
+                    }
+                    Err(ref err) if err.kind() == IoErrorKind::NotFound => {}
+                    Err(err) => return Err(err),
+                }
+            }
+        }
+
+        result.ok_or(IoError::new(
+            IoErrorKind::NotFound,
+            format!(
+                "no file {:?} with any of extensions {:?} found",
+                path,
+                media_extensions
+            ),
+        ))
     }
 
     fn store_id(&self) -> StoreId {
         self.id
     }
 
-    fn load(&self, category: &str, name: &str, ext: &str) -> Result<Vec<u8>, IoError> {
+    fn load(
+        &self,
+        category: &str,
+        name: &str,
+        media_extensions: &'static [(&MediaType, &[&str])],
+    ) -> Result<(&'static MediaType, Vec<u8>), IoError> {
         use std::io::Read;
 
         let mut path = self.loc.clone();
 
         path.push(category);
         path.push(name);
-        path.set_extension(ext);
 
-        let mut v = Vec::new();
-        File::open(&path)?.read_to_end(&mut v)?;
+        let mut result = None;
 
-        Ok(v)
+        for &(media_type, extensions) in media_extensions {
+            for extension in extensions {
+                match File::open(&path.with_extension(extension)) {
+                    Ok(mut file) => {
+                        if result.is_some() {
+                            return Err(IoError::new(
+                                IoErrorKind::NotFound,
+                                format!(
+                                    "multiple files {:?} with any of extensions {:?} found",
+                                    path,
+                                    media_extensions
+                                ),
+                            ));
+                        } else {
+                            let mut v = Vec::new();
+                            file.read_to_end(&mut v)?;
+
+                            result = Some((media_type, v));
+                        }
+                    }
+                    Err(ref err) if err.kind() == IoErrorKind::NotFound => {}
+                    Err(err) => return Err(err),
+                }
+            }
+        }
+
+        result.ok_or(IoError::new(
+            IoErrorKind::NotFound,
+            format!(
+                "no file {:?} with any of extensions {:?} found",
+                path,
+                media_extensions
+            ),
+        ))
     }
 }

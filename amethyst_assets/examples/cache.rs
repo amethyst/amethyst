@@ -50,17 +50,23 @@ impl Asset for DummyAsset {
     }
 }
 
+const MEDIA_TYPE_DUMMY: &MediaType = "text/dummy";
+
 struct DummyFormat;
 
 impl Format for DummyFormat {
     type Data = String;
     type Error = Utf8Error;
 
-    fn extension() -> &'static str {
-        "dum"
+    fn media_extensions() -> &'static [(&'static str, &'static [&'static str])] {
+        const DUMMY_EXTENSIONS: &[(&str, &[&str])] = &[(MEDIA_TYPE_DUMMY, &["dum", "dummy"])];
+        DUMMY_EXTENSIONS
     }
 
-    fn parse(&self, bytes: Vec<u8>) -> Result<Self::Data, Self::Error> {
+    fn parse(&self, media_type: &MediaType, bytes: Vec<u8>) -> Result<Self::Data, Self::Error> {
+        if media_type != MEDIA_TYPE_DUMMY {
+            panic!("unsupported media type");
+        }
         from_utf8(bytes.as_slice()).map(|s| s.to_owned())
     }
 }
@@ -77,9 +83,9 @@ fn main() {
     let mut loader = Loader::new(&alloc, &path, pool);
 
     loader.register::<DummyAsset>(Context {
-                                      cache: Cache::new(),
-                                      prepend: ">> ",
-                                  });
+        cache: Cache::new(),
+        prepend: ">> ",
+    });
 
     let dummy = loader.load("whatever", DummyFormat);
     let dummy: DummyAsset = dummy.wait().expect("Failed to load dummy asset");

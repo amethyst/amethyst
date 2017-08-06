@@ -20,17 +20,20 @@ impl<A, F, S> AssetError<A, F, S> {
 }
 
 impl<A, F, S> Display for AssetError<A, F, S>
-    where A: Display,
-          F: Display,
-          S: Display
+where
+    A: Display,
+    F: Display,
+    S: Display,
 {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
-        write!(f,
-               "Failed to load asset \"{}\" of format \"{}\" from storage with id \"{}\": {}",
-               &self.asset.name,
-               &self.asset.ext,
-               &self.asset.store.id(),
-               &self.error)
+        write!(
+            f,
+            "Failed to load asset \"{}\" of format \"{:?}\" from storage with id \"{}\": {}",
+            &self.asset.name,
+            &self.asset.media_extensions,
+            &self.asset.store.id(),
+            &self.error
+        )
     }
 }
 
@@ -48,9 +51,10 @@ pub enum LoadError<A, F, S> {
 }
 
 impl<A, F, S> Display for LoadError<A, F, S>
-    where A: Display,
-          F: Display,
-          S: Display
+where
+    A: Display,
+    F: Display,
+    S: Display,
 {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         match *self {
@@ -62,9 +66,10 @@ impl<A, F, S> Display for LoadError<A, F, S>
 }
 
 impl<A, F, S> Error for AssetError<A, F, S>
-    where A: Error,
-          F: Error,
-          S: Error
+where
+    A: Error,
+    F: Error,
+    S: Error,
 {
     fn description(&self) -> &str {
         "Failed to load asset"
@@ -76,9 +81,10 @@ impl<A, F, S> Error for AssetError<A, F, S>
 }
 
 impl<A, F, S> Error for LoadError<A, F, S>
-    where A: Error,
-          F: Error,
-          S: Error
+where
+    A: Error,
+    F: Error,
+    S: Error,
 {
     fn cause(&self) -> Option<&Error> {
         let cause: &Error = match *self {

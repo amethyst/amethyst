@@ -68,13 +68,13 @@ where
 
 /// A specifier for an asset, uniquely identifying it by
 ///
-/// * the extension (the format it was provided in)
+/// * possible extensions of the asset (the format it was provided in)
 /// * its name
 /// * the storage it was loaded from
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct AssetSpec {
-    /// The extension of this asset
-    pub ext: &'static str,
+    /// The possible extensions of this asset
+    pub media_extensions: &'static [(&'static str, &'static [&'static str])],
     /// The name of this asset.
     pub name: String,
     /// Unique identifier indicating the Storage from which the asset was loaded.
@@ -83,8 +83,16 @@ pub struct AssetSpec {
 
 impl AssetSpec {
     /// Creates a new asset specifier from the given parameters.
-    pub fn new(name: String, ext: &'static str, store: StoreId) -> Self {
-        AssetSpec { ext, name, store }
+    pub fn new(
+        name: String,
+        media_extensions: &'static [(&'static str, &'static [&'static str])],
+        store: StoreId,
+    ) -> Self {
+        AssetSpec {
+            media_extensions,
+            name,
+            store,
+        }
     }
 }
 
@@ -143,6 +151,9 @@ impl<T> Default for Cache<T> {
     }
 }
 
+/// Supported media type of an asset.
+pub type MediaType = str;
+
 /// A format, providing a conversion from bytes to asset data, which is then
 /// in turn accepted by `Asset::from_data`. Examples for formats are
 /// `Png`, `Obj` and `Wave`.
@@ -155,15 +166,15 @@ where
     /// The kind of error it may produce.
     type Error: Error;
 
-    /// Returns the extension (without `.`).
+    /// Returns a list of media types with supported extensions (without `.`).
     ///
     /// ## Examples
     ///
-    /// * `"png"`
-    /// * `"obj"`
-    /// * `"wav"`
-    fn extension() -> &'static str;
+    /// * `[("image/png", ["png"), ("image/jpeg", ["jpg", "jpeg"])]`
+    /// * `[("text/plain", ["obj"])]`
+    /// * `[("audio/wav", ["wav"])]`
+    fn media_extensions() -> &'static [(&'static MediaType, &'static [&'static str])];
 
     /// Reads the given bytes and produces asset data.
-    fn parse(&self, bytes: Vec<u8>) -> Result<Self::Data, Self::Error>;
+    fn parse(&self, media_type: &MediaType, bytes: Vec<u8>) -> Result<Self::Data, Self::Error>;
 }
