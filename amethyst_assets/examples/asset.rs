@@ -10,20 +10,28 @@ use std::sync::Arc;
 use amethyst_assets::*;
 use rayon::{Configuration, ThreadPool};
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct DummyAsset(String);
 
 impl Asset for DummyAsset {
-    type Context = &'static str;
+    fn is_shared(&self) -> bool {
+        false
+    }
+}
+
+struct DummyContext(&'static str);
+
+impl Context for DummyContext {
+    type Asset = DummyAsset;
     type Data = String;
     type Error = NoError;
 
-    fn category() -> &'static str {
+    fn category(&self) -> &str {
         "dummy"
     }
 
-    fn from_data(mut data: String, prepend: &&'static str) -> Result<Self, Self::Error> {
-        data.insert_str(0, prepend);
+    fn create_asset(&self, mut data: String) -> Result<DummyAsset, Self::Error> {
+        data.insert_str(0, self.0);
 
         Ok(DummyAsset(data))
     }
@@ -55,9 +63,9 @@ fn main() {
     let alloc = Allocator::new();
     let mut loader = Loader::new(&alloc, &path, pool);
 
-    loader.register::<DummyAsset>(">> ");
+    loader.register(DummyContext(">> "));
 
-    let dummy = loader.load("whatever", DummyFormat);
+    let dummy = loader.load::<DummyContext, _, _>("whatever", DummyFormat);
     let dummy: DummyAsset = dummy.wait().expect("Failed to load dummy asset");
 
     println!("dummy: {:?}", dummy);
