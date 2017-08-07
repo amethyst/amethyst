@@ -23,6 +23,15 @@ pub trait Asset
 where
     Self: Clone + Sized,
 {
+    /// The `Context` type that can produce this asset
+    type Context: Context<Asset=Self, Data=Self::Data, Error=Self::Error>;
+
+    /// The `Data` type the asset can be created from.
+    type Data;
+
+    /// The error that may be returned from `Self::Context::from_data`.
+    type Error: Error;
+
     /// Returns `true` if another asset points to the same
     /// internal data.
     ///
