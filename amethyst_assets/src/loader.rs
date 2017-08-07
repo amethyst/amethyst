@@ -137,9 +137,9 @@ impl Loader {
     }
 
     /// Registers an asset and inserts a context into the map.
-    pub fn register<A>(&mut self, context: A::Context)
+    pub fn register<A, C>(&mut self, context: C)
         where A: Asset + 'static,
-              A::Context: Context + 'static,
+              C: Context<Asset=A> + 'static,
     {
         self.contexts
             .insert(TypeId::of::<A>(), Box::new(Arc::new(context)));

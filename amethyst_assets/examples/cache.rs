@@ -86,7 +86,7 @@ fn main() {
     let alloc = Allocator::new();
     let mut loader = Loader::new(&alloc, &path, pool);
 
-    loader.register::<DummyAsset>(DummyContext {
+    loader.register(DummyContext {
         cache: Cache::new(),
         prepend: ">> ",
     });
