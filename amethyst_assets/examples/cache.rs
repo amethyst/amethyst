@@ -51,6 +51,10 @@ impl Context for DummyContext {
 struct DummyAsset(Arc<String>);
 
 impl Asset for DummyAsset {
+    type Context = DummyContext;
+    type Data = String;
+    type Error = NoError;
+
     fn is_shared(&self) -> bool {
         Arc::strong_count(&self.0) > 1
     }
@@ -82,12 +86,12 @@ fn main() {
     let alloc = Allocator::new();
     let mut loader = Loader::new(&alloc, &path, pool);
 
-    loader.register::<DummyContext>(DummyContext {
+    loader.register::<DummyAsset>(DummyContext {
         cache: Cache::new(),
         prepend: ">> ",
     });
 
-    let dummy = loader.load::<DummyContext, _, _>("whatever", DummyFormat);
+    let dummy = loader.load("whatever", DummyFormat);
     let dummy: DummyAsset = dummy.wait().expect("Failed to load dummy asset");
 
     println!("dummy: {:?}", dummy);
