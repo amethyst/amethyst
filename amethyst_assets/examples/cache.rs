@@ -45,6 +45,10 @@ impl Context for DummyContext {
     fn clear_all(&self) {
         self.cache.clear_all();
     }
+
+    fn update(&self, _spec: &AssetSpec, _asset: Self::Asset) {
+        unimplemented!()
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -57,6 +61,14 @@ impl Asset for DummyAsset {
 
     fn is_shared(&self) -> bool {
         Arc::strong_count(&self.0) > 1
+    }
+
+    fn push_update(&self, _updated: Self) {
+        unimplemented!()
+    }
+
+    fn update(&mut self) {
+        unimplemented!()
     }
 }
 

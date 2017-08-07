@@ -32,6 +32,17 @@ where
     /// The error that may be returned from `Self::Context::from_data`.
     type Error: Error;
 
+    /// Pushes an update to a queue.
+    /// The updated version will be applied by calling
+    /// `update`.
+    ///
+    /// **Note:** The updated version only gets pushed on a single
+    /// asset.
+    fn push_update(&self, updated: Self);
+
+    /// Applies a previously pushed update.
+    fn update(&mut self);
+
     /// Returns `true` if another asset points to the same
     /// internal data.
     ///
@@ -94,6 +105,19 @@ where
         self.map.read().get(spec).map(Clone::clone)
     }
 
+    /// Accesses a cached asset, locking the internal `RwLock` to get read access to the hash map.
+    /// In case the asset exists, `f` gets called with a reference to the cached asset and this
+    /// method returns `true`.
+    pub fn access<F: FnOnce(&T)>(&self, spec: &AssetSpec, f: F) -> bool {
+        if let Some(a) = self.map.read().get(spec) {
+            f(a);
+
+            true
+        } else {
+            false
+        }
+    }
+
     /// Deletes all cached values, except the ones `f` returned `true` for.
     /// May be used when you're about to clear unused assets (see `Asset::clear`).
     ///
@@ -124,10 +148,10 @@ pub trait Context {
     type Asset: Asset;
     /// The `Data` type the asset can be created from.
     type Data;
-    /// The error that may be returned from `from_data`.
+    /// The error that may be returned from `create_asset`.
     type Error: Error;
 
-    /// A small keyword for which category this asset belongs to.
+    /// A small keyword for which category these assets belongs to.
     ///
     /// ## Examples
     ///
@@ -151,6 +175,13 @@ pub trait Context {
     fn retrieve(&self, _spec: &AssetSpec) -> Option<Self::Asset> {
         None
     }
+
+    /// Updates an asset after it's been reloaded.
+    ///
+    /// This usually just puts the new asset into a queue;
+    /// the actual update happens by calling `update` on the
+    /// asset.
+    fn update(&self, spec: &AssetSpec, asset: Self::Asset);
 
     /// Gives a hint that several assets may have been released recently.
     ///
@@ -187,3 +218,4 @@ where
     /// Reads the given bytes and produces asset data.
     fn parse(&self, bytes: Vec<u8>) -> Result<Self::Data, Self::Error>;
 }
+
