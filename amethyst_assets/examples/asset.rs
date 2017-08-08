@@ -21,6 +21,14 @@ impl Asset for DummyAsset {
     fn is_shared(&self) -> bool {
         false
     }
+
+    fn push_update(&self, _updated: Self) {
+        unimplemented!()
+    }
+
+    fn update(&mut self) {
+        unimplemented!()
+    }
 }
 
 struct DummyContext(&'static str);
@@ -38,6 +46,10 @@ impl Context for DummyContext {
         data.insert_str(0, self.0);
 
         Ok(DummyAsset(data))
+    }
+
+    fn update(&self, _spec: &AssetSpec, _asset: Self::Asset) {
+        unimplemented!()
     }
 }
 

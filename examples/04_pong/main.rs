@@ -5,7 +5,8 @@ use amethyst::asset_manager::AssetManager;
 use amethyst::config::Config;
 use amethyst::ecs::{Component, Fetch, FetchMut, Join, System, VecStorage, World, WriteStorage};
 use amethyst::ecs::components::{Mesh, LocalTransform, Texture, Transform};
-use amethyst::ecs::resources::{Camera, InputHandler, Projection, Time};
+use amethyst::ecs::resources::{Camera, Projection, Time};
+use amethyst::ecs::resources::input::*;
 use amethyst::ecs::systems::TransformSystem;
 use amethyst::gfx_device::DisplayConfig;
 use amethyst::renderer::{Pipeline, VertexPosNormal};
@@ -118,16 +119,14 @@ impl<'a> System<'a> for PongSystem {
                     left_position = plank.position;
                     // Store left plank dimensions for later use in ball processing
                     left_dimensions = plank.dimensions;
-                    // If `W` is pressed and plank is in screen boundaries then move up
-                    if input.key_is_pressed(VirtualKeyCode::W) {
-                        if plank.position + plank.dimensions[1] / 2. < 1. {
-                            plank.position += plank.velocity * delta_time;
+                    // Move plank according to axis input.
+                    if let Some(value) = input.axis_value("P1") {
+                            plank.position += plank.velocity * delta_time * value;
+                        if plank.position + plank.dimensions[1] / 2. > 1. {
+                            plank.position = 1. - plank.dimensions[1] / 2.
                         }
-                    }
-                    // If `S` is pressed and plank is in screen boundaries then move down
-                    if input.key_is_pressed(VirtualKeyCode::S) {
-                        if plank.position - plank.dimensions[1] / 2. > -1. {
-                            plank.position -= plank.velocity * delta_time;
+                        if plank.position - plank.dimensions[1] / 2. < -1. {
+                            plank.position = -1. + plank.dimensions[1] / 2.;
                         }
                     }
                     // Set translation[0] of renderable corresponding to this plank
@@ -139,16 +138,14 @@ impl<'a> System<'a> for PongSystem {
                     right_position = plank.position;
                     // Store right plank dimensions for later use in ball processing
                     right_dimensions = plank.dimensions;
-                    // If `Up` is pressed and plank is in screen boundaries then move down
-                    if input.key_is_pressed(VirtualKeyCode::Up) {
-                        if plank.position + plank.dimensions[1] / 2. < top_bound {
-                            plank.position += plank.velocity * delta_time;
+                    // Move plank according to axis input.
+                    if let Some(value) = input.axis_value("P2") {
+                        plank.position += plank.velocity * delta_time * value;
+                        if plank.position + plank.dimensions[1] / 2. > 1. {
+                            plank.position = 1. - plank.dimensions[1] / 2.
                         }
-                    }
-                    // If `Down` is pressed and plank is in screen boundaries then move down
-                    if input.key_is_pressed(VirtualKeyCode::Down) {
-                        if plank.position - plank.dimensions[1] / 2. > bottom_bound {
-                            plank.position -= plank.velocity * delta_time;
+                        if plank.position - plank.dimensions[1] / 2. < -1. {
+                            plank.position = -1. + plank.dimensions[1] / 2.;
                         }
                     }
                     // Set translation[0] of renderable corresponding to this plank
@@ -230,7 +227,7 @@ impl<'a> System<'a> for PongSystem {
 
 impl State for Pong {
     fn on_start(&mut self, world: &mut World, assets: &mut AssetManager, pipe: &mut Pipeline) {
-        use amethyst::ecs::resources::{Camera, InputHandler, Projection, ScreenDimensions};
+        use amethyst::ecs::resources::{Camera, Projection, ScreenDimensions};
         use amethyst::renderer::Layer;
         use amethyst::renderer::pass::{Clear, DrawFlat};
 
@@ -266,8 +263,10 @@ impl State for Pong {
 
         // Add all resources
         world.add_resource::<Score>(Score::new());
-        world.add_resource::<InputHandler>(InputHandler::new());
-
+        let mut input = InputHandler::new();
+        input.bindings = Bindings::load(format!("{}/examples/04_pong/resources/input.ron",
+                                                env!("CARGO_MANIFEST_DIR")));
+        world.add_resource::<InputHandler>(input);
         // Generate a square mesh
         assets.register_asset::<Mesh>();
         assets.register_asset::<Texture>();
@@ -323,7 +322,6 @@ impl State for Pong {
                      _: &mut AssetManager,
                      _: &mut Pipeline)
                      -> Trans {
-        use amethyst::ecs::resources::InputHandler;
 
         let mut input = world.write_resource::<InputHandler>();
         input.update(events);
