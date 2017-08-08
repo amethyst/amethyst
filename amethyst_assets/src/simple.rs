@@ -20,6 +20,12 @@ use {Asset, AssetSpec, Cache, Context};
 /// `Asset` by calling these methods. Methods for the asset
 /// can then be implemented on that wrapper struct by getting
 /// the inner asset with `inner` and `inner_mut`.
+///
+/// The type parameter `A` is the type of the asset handle
+/// (examples: texture handle, shader id, ..). To avoid unnecessarily
+/// duplicated buffer allocations, make sure your handle is reference-counted,
+/// so wrap it with an `Arc` in case the handle doesn't have this functionality
+/// itself.
 #[derive(Clone)]
 pub struct AssetPtr<A> {
     inner: A,
