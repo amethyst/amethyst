@@ -64,14 +64,14 @@ impl<A> AssetPtr<A>
         let &(ref count, ref lock) = &*self.update;
 
         *lock.write() = Some(updated.inner);
-        count.fetch_add(1, Ordering::SeqCst);
+        count.fetch_add(1, Ordering::Release);
     }
 
     /// Applies a previously pushed update.
     pub fn update(&mut self) {
         let &(ref count, ref lock) = &*self.update;
 
-        let new_count = count.load(Ordering::SeqCst);
+        let new_count = count.load(Ordering::Acquire);
         if new_count != self.version {
             self.inner = lock.read().as_ref().expect("Unexpected None").clone();
             self.version = new_count;
