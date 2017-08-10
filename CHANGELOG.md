@@ -11,9 +11,13 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Changed
 * Asset management rewrite (pull request [#244]).
 * Use RON as config format ([#269])
+* Overhaul input system ([#247]) and ([#261])
 
 [#244]: https://github.com/amethyst/amethyst/pull/244
+[#247]: https://github.com/amethyst/amethyst/pull/247
+[#261]: https://github.com/amethyst/amethyst/pull/261
 [#269]: https://github.com/amethyst/amethyst/pull/269
+
 
 ## [0.4.3] - 2017-06-03
 ### Added
