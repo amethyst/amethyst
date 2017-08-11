@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#274]: https://github.com/amethyst/amethyst/pull/274
 
 
+
 ## [0.4.3] - 2017-06-03
 ### Added
 * Add mouse button events to `InputHandler` (pull request [#181]).
