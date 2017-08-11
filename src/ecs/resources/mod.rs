@@ -6,9 +6,7 @@
 mod camera;
 mod screen_dimensions;
 mod time;
-mod broadcaster;
 
-pub use self::broadcaster::Broadcaster;
 pub use self::camera::{Camera, Projection};
 pub use self::screen_dimensions::ScreenDimensions;
 pub use self::time::Time;
