@@ -1,45 +1,41 @@
-
-#[macro_use]
 extern crate amethyst_config;
+#[macro_use]
+extern crate serde_derive;
 
 use amethyst_config::Config;
 
-config! {
-    #[derive(Debug)]
-    pub struct DisplayConfig {
-        pub title: String = "Amethyst game".to_string(),
-        pub brightness: f64 = 1.0,
-        pub fullscreen: bool = false,
-        pub dimensions: (u16, u16) = (1024, 768),
-        pub min_dimensions: Option<(u16, u16)> = None,
-        pub max_dimensions: Option<(u16, u16)> = None,
-        pub vsync: bool = true,
-        pub multisampling: u16 = 0,
-        pub visibility: bool = true,
-    }
+#[derive(Debug, Default, Deserialize, Serialize)]
+pub struct DisplayConfig {
+    pub title: String,
+    pub brightness: f64,
+    #[serde(default)]
+    pub fullscreen: bool,
+    pub dimensions: (u16, u16),
+    pub min_dimensions: Option<(u16, u16)>,
+    pub max_dimensions: Option<(u16, u16)>,
+    pub vsync: bool,
+    pub multisampling: u16,
+    pub visibility: bool,
 }
 
-config! {
-    #[derive(Debug)]
-    pub struct LoggingConfig {
-        pub file_path: String = "new_project.log".to_string(),
-        pub output_level: String = "warn".to_string(),
-        pub logging_level: String = "debug".to_string(),
-    }
+
+#[derive(Debug, Default, Deserialize, Serialize)]
+pub struct LoggingConfig {
+    pub file_path: String,
+    pub output_level: String,
+    pub logging_level: String,
 }
 
-config! {
-    #[derive(Debug)]
-    pub struct ExampleConfig {
-        /// Configuration for display and graphics
-        pub display: DisplayConfig = DisplayConfig::default(),
-        /// Configuration for output
-        pub logging: LoggingConfig = LoggingConfig::default(),
-    }
+#[derive(Debug, Default, Deserialize, Serialize)]
+pub struct ExampleConfig {
+    /// Configuration for display and graphics
+    pub display: DisplayConfig,
+    /// Configuration for output
+    pub logging: LoggingConfig,
 }
 
 fn main() {
-    let path = format!("{}/examples/config.yml", env!("CARGO_MANIFEST_DIR"));
+    let path = format!("{}/examples/config.ron", env!("CARGO_MANIFEST_DIR"));
     let res = ExampleConfig::load_no_fallback(&path);
 
     match res {

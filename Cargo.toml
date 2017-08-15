@@ -31,7 +31,8 @@ fnv = "1.0"
 num_cpus = "1.2"
 genmesh = "0.4"
 imagefmt = "4.0"
-smallvec = "0.4"
+serde = "1"
+serde_derive = "1"
 specs = "0.9.1"
 rayon = "0.8"
 ticketed_lock = "0.1"
@@ -39,6 +40,14 @@ wavefront_obj = "5.0"
 winit = "0.7"
 
 thread_profiler = { version = "0.1", optional = true }
+
+[dependencies.smallvec]
+version = "0.4.2"
+features = ["serde"]
+
+[target.'cfg(windows)'.dependencies]
+gfx_device_dx11 = "0.4"
+gfx_window_dxgi = "0.5"
 
 [[example]]
 name = "hello_world"

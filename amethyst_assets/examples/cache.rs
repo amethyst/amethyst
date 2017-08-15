@@ -10,43 +10,65 @@ use std::sync::Arc;
 use amethyst_assets::*;
 use rayon::{Configuration, ThreadPool};
 
-struct Context {
+struct DummyContext {
     cache: Cache<DummyAsset>,
     prepend: &'static str,
+}
+
+impl Context for DummyContext {
+    type Asset = DummyAsset;
+    type Data = String;
+    type Error = NoError;
+
+    fn category(&self) -> &'static str {
+        "dummy"
+    }
+
+    fn create_asset(&self, mut data: String) -> Result<DummyAsset, Self::Error> {
+        data.insert_str(0, self.prepend);
+
+        Ok(DummyAsset(Arc::new(data)))
+    }
+
+    fn cache(&self, spec: AssetSpec, asset: &DummyAsset) {
+        self.cache.insert(spec, asset.clone());
+    }
+
+    fn retrieve(&self, spec: &AssetSpec) -> Option<DummyAsset> {
+        self.cache.get(spec)
+    }
+
+    fn clear(&self) {
+        self.cache.retain(|_, a| a.is_shared());
+    }
+
+    fn clear_all(&self) {
+        self.cache.clear_all();
+    }
+
+    fn update(&self, _spec: &AssetSpec, _asset: Self::Asset) {
+        unimplemented!()
+    }
 }
 
 #[derive(Clone, Debug)]
 struct DummyAsset(Arc<String>);
 
 impl Asset for DummyAsset {
-    type Context = Context;
+    type Context = DummyContext;
     type Data = String;
     type Error = NoError;
 
-    fn category() -> &'static str {
-        "dummy"
+    fn is_shared(&self) -> bool {
+        Arc::strong_count(&self.0) > 1
     }
 
-    fn from_data(mut data: String, context: &Context) -> Result<Self, Self::Error> {
-        data.insert_str(0, &context.prepend);
-
-        Ok(DummyAsset(Arc::new(data)))
+    fn push_update(&self, _updated: Self) {
+        unimplemented!()
     }
 
-    fn cache(context: &Context, spec: AssetSpec, asset: &Self) {
-        context.cache.insert(spec, asset.clone());
-    }
-
-    fn retrieve(context: &Context, spec: &AssetSpec) -> Option<Self> {
-        context.cache.get(spec)
-    }
-
-    fn clear(context: &Context) {
-        context.cache.retain(|_, a| Arc::strong_count(&a.0) > 1);
-    }
-
-    fn clear_all(context: &Context) {
-        context.cache.clear_all();
+    fn update(&mut self) {
+        unimplemented!()
     }
 }
 
@@ -76,10 +98,10 @@ fn main() {
     let alloc = Allocator::new();
     let mut loader = Loader::new(&alloc, &path, pool);
 
-    loader.register::<DummyAsset>(Context {
-                                      cache: Cache::new(),
-                                      prepend: ">> ",
-                                  });
+    loader.register(DummyContext {
+        cache: Cache::new(),
+        prepend: ">> ",
+    });
 
     let dummy = loader.load("whatever", DummyFormat);
     let dummy: DummyAsset = dummy.wait().expect("Failed to load dummy asset");

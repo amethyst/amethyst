@@ -6,6 +6,7 @@ use rayon::ThreadPool;
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
+use winit::EventsLoop;
 
 /// User-facing engine handle.
 pub struct Engine {
@@ -15,7 +16,7 @@ pub struct Engine {
     pub delta: Duration,
     /// Thread pool.
     pub pool: Arc<ThreadPool>,
-    /// Mutable reference to the world.
+    /// World.
     pub world: World,
 }
 

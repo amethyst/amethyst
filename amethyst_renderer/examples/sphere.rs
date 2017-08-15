@@ -3,7 +3,7 @@
 extern crate amethyst_renderer as renderer;
 extern crate cgmath;
 extern crate genmesh;
-extern crate winit;
+extern crate glutin;
 
 use cgmath::{Matrix4, Deg, Vector3};
 use cgmath::prelude::{InnerSpace, Transform};
@@ -14,7 +14,7 @@ use renderer::vertex::PosNormTex;
 
 fn main() {
     use std::time::{Duration, Instant};
-    use winit::{EventsLoop, Event, WindowEvent};
+    use glutin::{EventsLoop, Event, WindowEvent};
 
     let mut events = EventsLoop::new();
     let mut renderer = Renderer::new(&events).expect("Renderer create");
@@ -27,8 +27,8 @@ fn main() {
     let verts = gen_sphere(32, 32);
     let mesh = renderer.create_mesh(Mesh::build(&verts)).expect("Mesh create");
 
-    let tex = renderer.create_texture(Texture::from_color_val([0.88235, 0.09412, 0.21569, 1.0])).expect("Texture create");
-    let mtl = renderer.create_material(MaterialBuilder::new().with_albedo(&tex)).expect("Material create");
+    let tex = Texture::from_color_val([0.88235, 0.09412, 0.21569, 1.0]);
+    let mtl = renderer.create_material(MaterialBuilder::new().with_albedo(tex)).expect("Material create");
     let model = Model { mesh: mesh, material: mtl, pos: Matrix4::one() };
 
     let mut scene = Scene::default();

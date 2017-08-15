@@ -3,7 +3,7 @@
 extern crate amethyst_renderer as renderer;
 extern crate cgmath;
 extern crate genmesh;
-extern crate winit;
+extern crate glutin;
 
 use cgmath::{Matrix4, Deg, Vector3};
 use cgmath::prelude::InnerSpace;
@@ -14,7 +14,7 @@ use renderer::vertex::PosNormTangTex;
 
 fn main() {
     use std::time::{Duration, Instant};
-    use winit::{Event, EventsLoop, WindowEvent};
+    use glutin::{Event, EventsLoop, WindowEvent};
 
     let mut events = EventsLoop::new();
     let mut renderer = Renderer::new(&events).expect("Renderer create");
@@ -29,7 +29,7 @@ fn main() {
     let mesh = renderer.create_mesh(Mesh::build(&verts)).expect("Mesh create");
 
     let mut scene = Scene::default();
-    let alb = renderer.create_texture(Texture::from_color_val([1.0; 4])).expect("Texture create");
+    let alb = Texture::from_color_val([1.0; 4]);
             
     for i in 0..5 {
         for j in 0..5 {
@@ -37,12 +37,13 @@ fn main() {
             let metallic = 1.0f32 * (j as f32 / 4.0f32);
             let pos = Matrix4::from_translation([2.0f32 * (i - 2) as f32, 2.0f32 * (j - 2) as f32, 0.0].into()) * Matrix4::from_scale(0.8);
 
-            let rog = renderer.create_texture(Texture::from_color_val([roughness; 4])).expect("Texture create");
-            let met = renderer.create_texture(Texture::from_color_val([metallic; 4])).expect("Texture create");
+            let rog = Texture::from_color_val([roughness; 4]);
+            let met = Texture::from_color_val([metallic; 4]);
             let mtl = renderer.create_material(MaterialBuilder::new()
-                .with_albedo(&alb)
-                .with_roughness(&rog)
-                .with_metallic(&met)).expect("Material create");
+                .with_albedo(alb.clone())
+                .with_roughness(rog)
+                .with_metallic(met))
+                .expect("Material create");
             let model = Model { mesh: mesh.clone(), material: mtl, pos: pos };
             scene.add_model(model);
         }

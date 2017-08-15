@@ -75,10 +75,13 @@ impl Pipeline {
     /// Builds a default forward pipeline.
     ///
     /// FIXME: Only generates a dummy pipeline for now.
-    pub fn forward() -> PipelineBuilder {
+    pub fn forward<V>() -> PipelineBuilder
+        where V: 'static + ::vertex::VertexFormat + ::vertex::WithField<::vertex::Position> + ::vertex::WithField<::vertex::TextureCoord>
+    {
         PipelineBuilder::new()
             .with_stage(Stage::with_backbuffer()
-                .clear_target([1.0; 4], None))
+                .clear_target([1.0; 4], None)
+                .with_model_pass(::pass::DrawFlat::<V>::new()))
     }
 
     /// Iterates over all enabled stages in the pipeline.

@@ -1,0 +1,14 @@
+(
+    axes: {
+        "P2": (
+            pos: Key(Up),
+            neg: Key(Down),
+        ),
+        "P1": (
+            pos: Key(W),
+            neg: Key(S),
+        ),
+    },
+    actions: {
+    },
+)

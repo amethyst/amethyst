@@ -2,7 +2,7 @@
 name = "amethyst_config"
 version = "0.3.0"
 authors = ["Aceeri <conmcclusk@gmail.com>"]
-description = "Loading from .yml/.yaml files into Rust structures with defaults to prevent hard errors."
+description = "Loading from .ron files into Rust structures with defaults to prevent hard errors."
 
 documentation = "https://www.amethyst.rs/doc/master/amethyst_config/"
 homepage = "https://www.amethyst.rs/"
@@ -15,6 +15,8 @@ appveyor = { repository = "amethyst/amethyst" }
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
+ron = "0.1"
 serde = "1.0"
-serde_yaml = "0.7.1"
-toml = "0.4.2"
+
+[dev-dependencies]
+serde_derive = "1"
