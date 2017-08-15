@@ -16,7 +16,7 @@ use gfx::shade::{ProgramError, ToUniform};
 use gfx::shade::core::UniformValue;
 use gfx::state::{Rasterizer, Stencil};
 use gfx::traits::Pod;
-use pipe::{Target, Targets};
+use pipe::Target;
 use scene::Model;
 use std::mem;
 use types::{Encoder, Factory, PipelineState, Resources};
@@ -94,7 +94,7 @@ impl Effect {
     {
         if let Some(i) = self.const_bufs.get(name.as_ref()) {
             let raw = &self.data.const_bufs[*i];
-            enc.update_buffer::<T>(unsafe { mem::transmute(raw) }, &data[..], 0);
+            enc.update_buffer::<T>(unsafe { mem::transmute(raw) }, &data[..], 0).expect("Failed to update buffer (TODO: replace expect)");
         }
     }
 

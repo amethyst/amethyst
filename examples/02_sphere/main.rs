@@ -11,7 +11,7 @@ extern crate winit;
 use amethyst::prelude::*;
 use amethyst::ecs::systems::RenderSystem;
 use amethyst::ecs::components::*;
-use amethyst_renderer::prelude::*;
+use amethyst::renderer::prelude::*;
 
 use cgmath::{Deg, Vector3};
 use cgmath::prelude::InnerSpace;

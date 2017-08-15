@@ -1,6 +1,5 @@
 //! Physically-based material.
 
-use color::Rgba;
 use error::Result;
 use gfx::traits::Pod;
 use tex::{Texture, TextureBuilder};

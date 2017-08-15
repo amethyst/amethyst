@@ -2,13 +2,14 @@
 
 extern crate amethyst;
 extern crate amethyst_renderer;
+extern crate cgmath;
 
 use amethyst::prelude::*;
 use amethyst::ecs::World;
 use amethyst::ecs::systems::RenderSystem;
 use amethyst::event::{KeyboardInput, VirtualKeyCode};
-
-use amethyst_renderer::prelude::*;
+use amethyst::renderer::prelude::*;
+use cgmath::Deg;
 
 struct Example;
 
@@ -32,6 +33,14 @@ impl State for Example {
 
 fn register(world: &mut World) {
     use amethyst::ecs::components::*;
+
+    world.add_resource(Camera {
+        eye: [0.0, 0.0, -4.0].into(),
+        proj: Projection::perspective(1.3, Deg(60.0)).into(),
+        forward: [0.0, 0.0, 1.0].into(),
+        right: [1.0, 0.0, 0.0].into(),
+        up: [0.0, 1.0, 0.0].into(),
+    });
 
     world.register::<Transform>();
     world.register::<MeshComponent>();
