@@ -76,7 +76,7 @@ impl State for Example {
 }
 
 fn main() {
-    let path = format!("{}/examples/02_sphere/resources/config.yml",
+    let path = format!("{}/examples/02_sphere/resources/config.ron",
                        env!("CARGO_MANIFEST_DIR"));
     let builder = Application::build(Example);
     let render = RenderSystem::new(

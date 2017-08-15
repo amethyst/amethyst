@@ -1,8 +1,0 @@
-dimensions: null
-fullscreen: false
-max_dimensions: null
-min_dimensions: null
-multisampling: 1
-title: "Renderable Example"
-visibility: true
-vsync: true

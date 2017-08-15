@@ -48,8 +48,10 @@
 #![deny(missing_docs)]
 #![doc(html_logo_url = "https://tinyurl.com/jtmm43a")]
 
-pub extern crate amethyst_assets as assets;
 #[macro_use]
+#[cfg(feature="profiler")]
+pub extern crate thread_profiler;
+pub extern crate amethyst_assets as assets;
 pub extern crate amethyst_config as config;
 pub extern crate amethyst_renderer as renderer;
 
@@ -62,6 +64,9 @@ extern crate genmesh;
 extern crate imagefmt;
 extern crate num_cpus;
 extern crate rayon;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
 extern crate smallvec;
 extern crate specs;
 extern crate wavefront_obj;

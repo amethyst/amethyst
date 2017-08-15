@@ -2,7 +2,7 @@
 
 use config::Config;
 use ecs::{Component, Dispatcher, DispatcherBuilder, System, World};
-use ecs::resources::InputHandler;
+use ecs::resources::input::InputHandler;
 use ecs::components::{LocalTransform, Transform, Child, Init};
 use ecs::systems::RenderSystem;
 use engine::Engine;

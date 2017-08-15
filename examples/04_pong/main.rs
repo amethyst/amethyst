@@ -6,14 +6,14 @@ extern crate cgmath;
 
 //use amethyst::{Application, State, Trans, VirtualKeyCode, WindowEvent};
 use amethyst::prelude::*;
-use amethyst::timing::Time;
 use amethyst::ecs::{Component, Fetch, FetchMut, Join, System, VecStorage, World, WriteStorage};
 use amethyst::ecs::components::*;
 use amethyst::ecs::resources::*;
+use amethyst::ecs::resources::input::{Bindings, InputHandler};
 use amethyst::ecs::systems::{RenderSystem, TransformSystem};
+use amethyst::timing::Time;
 use amethyst_renderer::prelude::*;
 use cgmath::{Matrix4, Deg, Vector3};
-
 
 struct Pong;
 
@@ -111,20 +111,18 @@ impl<'a> System<'a> for PongSystem {
                     left_position = plank.position;
                     // Store left plank dimensions for later use in ball processing
                     left_dimensions = plank.dimensions;
-                    // If `W` is pressed and plank is in screen boundaries then move up
-                    if input.key_is_pressed(VirtualKeyCode::W) {
-                        if plank.position + plank.dimensions[1] / 2. < 1. {
-                            plank.position += plank.velocity * delta_time;
+                    // Move plank according to axis input.
+                    if let Some(value) = input.axis_value("P1") {
+                            plank.position += plank.velocity * delta_time * value as f32;
+                        if plank.position + plank.dimensions[1] / 2. > 1. {
+                            plank.position = 1. - plank.dimensions[1] / 2.
                         }
-                    }
-                    // If `S` is pressed and plank is in screen boundaries then move down
-                    if input.key_is_pressed(VirtualKeyCode::S) {
-                        if plank.position - plank.dimensions[1] / 2. > 0. {
-                            plank.position -= plank.velocity * delta_time;
+                        if plank.position - plank.dimensions[1] / 2. < 0. {
+                            plank.position = plank.dimensions[1] / 2.;
                         }
                     }
                     // Set translation[0] of renderable corresponding to this plank
-                    local.translation[0] = 0.0 + plank.dimensions[0] / 2.0
+                    local.translation[0] = plank.dimensions[0] / 2.0
                 }
                 // If it is a right plank
                 Side::Right => {
@@ -132,16 +130,14 @@ impl<'a> System<'a> for PongSystem {
                     right_position = plank.position;
                     // Store right plank dimensions for later use in ball processing
                     right_dimensions = plank.dimensions;
-                    // If `Up` is pressed and plank is in screen boundaries then move down
-                    if input.key_is_pressed(VirtualKeyCode::Up) {
-                        if plank.position + plank.dimensions[1] / 2. < 1.0 {
-                            plank.position += plank.velocity * delta_time;
+                    // Move plank according to axis input.
+                    if let Some(value) = input.axis_value("P2") {
+                        plank.position += plank.velocity * delta_time * value as f32;
+                        if plank.position + plank.dimensions[1] / 2. > 1. {
+                            plank.position = 1. - plank.dimensions[1] / 2.
                         }
-                    }
-                    // If `Down` is pressed and plank is in screen boundaries then move down
-                    if input.key_is_pressed(VirtualKeyCode::Down) {
-                        if plank.position - plank.dimensions[1] / 2. > 0.0 {
-                            plank.position -= plank.velocity * delta_time;
+                        if plank.position - plank.dimensions[1] / 2. < 0. {
+                            plank.position = plank.dimensions[1] / 2.;
                         }
                     }
                     // Set translation[0] of renderable corresponding to this plank
@@ -149,7 +145,7 @@ impl<'a> System<'a> for PongSystem {
                 }
             };
             // Set translation[1] of renderable corresponding to this plank
-            local.translation[1] = plank.position * (1.0 - 0.0) + 0.0;
+            local.translation[1] = plank.position;
             // Set scale for renderable corresponding to this plank
             local.scale = [plank.dimensions[0], plank.dimensions[1], 1.0];
         }
@@ -181,11 +177,11 @@ impl<'a> System<'a> for PongSystem {
             }
 
             // Check if the ball has collided with the left plank
-            if ball.position[0] - ball.size / 2. < 0.0 + left_dimensions[0] &&
+            if ball.position[0] - ball.size / 2. < left_dimensions[0] &&
                ball.position[0] + ball.size / 2. > 0.0 {
                 if ball.position[1] - ball.size / 2. < left_position + left_dimensions[1] / 2. &&
                    ball.position[1] + ball.size / 2. > left_position - left_dimensions[1] / 2. {
-                    ball.position[0] = 0.0 + left_dimensions[0] + ball.size / 2.;
+                    ball.position[0] = left_dimensions[0] + ball.size / 2.;
                     ball.velocity[0] = -ball.velocity[0];
                 }
             }
@@ -208,7 +204,7 @@ impl<'a> System<'a> for PongSystem {
 
             // Check if the ball is above the bottom boundary, if it is not deflect it
             if ball.position[1] - ball.size / 2. < 0.0 {
-                ball.position[1] = 0.0 + ball.size / 2.;
+                ball.position[1] = ball.size / 2.;
                 ball.velocity[1] = -ball.velocity[1];
             }
 
@@ -236,6 +232,8 @@ impl State for Pong {
         // Add all resources
         world.add_resource(Score::new());
         let mut input = InputHandler::new();
+        input.bindings = Bindings::load(format!("{}/examples/04_pong/resources/input.ron",
+                                                env!("CARGO_MANIFEST_DIR")));
         
         world.add_resource(input);
         world.add_resource(Time::default());
@@ -321,7 +319,7 @@ impl State for Pong {
 }
 
 fn main() {
-    let path = format!("{}/examples/04_pong/resources/config.yml",
+    let path = format!("{}/examples/04_pong/resources/config.ron",
                        env!("CARGO_MANIFEST_DIR"));
 
     let builder = Application::build(Pong);

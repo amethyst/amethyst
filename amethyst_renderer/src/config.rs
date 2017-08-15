@@ -6,37 +6,49 @@ use glutin::WindowBuilder;
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Config {
     /// Name of the application window.
+    #[serde(default = "default_title")]
     pub title: String,
     /// Enables or disables fullscreen mode.
+    #[serde(default)]
     pub fullscreen: bool,
-    /// Window dimensions, measured in pixels (px).
+    /// Current window dimensions, measured in pixels (px).
+    #[serde(default)]
     pub dimensions: Option<(u32, u32)>,
-    /// Maximum window dimensions, measured in pixels (px).
-    pub max_dimensions: Option<(u32, u32)>,
     /// Minimum window dimensions, measured in pixels (px).
+    #[serde(default)]
     pub min_dimensions: Option<(u32, u32)>,
+    /// Maximum window dimensions, measured in pixels (px).
+    #[serde(default)]
+    pub max_dimensions: Option<(u32, u32)>,
     /// Enables or disables vertical synchronization.
+    #[serde(default = "default_vsync")]
     pub vsync: bool,
     /// Level of MSAA anti-aliasing.
+    #[serde(default = "default_multisampling")]
     pub multisampling: u16,
     /// Sets the visibility of the window.
-    pub visible: bool,
+    #[serde(default = "default_visibility")]
+    pub visibility: bool,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Config {
-            title: "Amethyst".to_string(),
+            title: default_title(),
             fullscreen: false,
             dimensions: None,
-            max_dimensions: None,
             min_dimensions: None,
-            vsync: true,
-            multisampling: 0,
-            visible: true,
+            max_dimensions: None,
+            vsync: default_vsync(),
+            multisampling: default_multisampling(),
+            visibility: default_visibility(),
         }
     }
 }
+fn default_title() -> String { "Amethyst game".to_string() }
+fn default_vsync() -> bool { true }
+fn default_multisampling() -> u16 { 1 }
+fn default_visibility() -> bool { true }
 
 impl From<Config> for WindowBuilder {
     fn from(cfg: Config) -> Self {
@@ -47,7 +59,7 @@ impl From<Config> for WindowBuilder {
             max_dimensions: cfg.max_dimensions,
             min_dimensions: cfg.min_dimensions,
             title: cfg.title,
-            visible: cfg.visible,
+            visible: cfg.visibility,
             .. Default::default()
         };
 
@@ -70,7 +82,7 @@ impl From<WindowBuilder> for Config {
             dimensions: wb.window.dimensions,
             max_dimensions: wb.window.max_dimensions,
             min_dimensions: wb.window.min_dimensions,
-            visible: wb.window.visible,
+            visibility: wb.window.visible,
             .. Default::default()
         }
     }
