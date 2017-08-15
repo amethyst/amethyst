@@ -51,7 +51,6 @@ fn register(world: &mut World) {
 }
 
 fn main() {
-
     let path = format!("{}/examples/01_window/resources/config.ron",
                        env!("CARGO_MANIFEST_DIR"));
 
