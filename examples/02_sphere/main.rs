@@ -13,7 +13,7 @@ use amethyst::ecs::systems::RenderSystem;
 use amethyst::ecs::components::*;
 use amethyst_renderer::prelude::*;
 
-use cgmath::{Matrix4, Deg, Vector3};
+use cgmath::{Deg, Vector3};
 use cgmath::prelude::InnerSpace;
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
@@ -22,8 +22,6 @@ struct Example;
 
 impl State for Example {
     fn on_start(&mut self, engine: &mut Engine) {
-        use std::time::{Duration, Instant};
-
         let verts = gen_sphere(32, 32);
         let mesh = Mesh::build(verts);
         let tex = Texture::from_color_val([0.0, 0.0, 1.0, 1.0]);

@@ -6,7 +6,7 @@
 extern crate amethyst;
 extern crate cgmath;
 
-use amethyst::{Application, Event, State, Trans, VirtualKeyCode, WindowEvent};
+use amethyst::{Application, State, Trans};
 use amethyst::asset_manager::{AssetLoader, AssetLoaderRaw, AssetManager, Assets, DirectoryStore};
 use amethyst::config::Config;
 use amethyst::ecs::World;

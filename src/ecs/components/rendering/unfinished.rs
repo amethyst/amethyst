@@ -2,8 +2,6 @@
 
 use ecs::{Component, HashMapStorage};
 use renderer::{Renderer, Result};
-use super::mesh::*;
-use super::material::*;
 
 /// Transform builder into `Unfinshed<T>`
 pub trait IntoUnfinished {

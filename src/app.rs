@@ -2,17 +2,12 @@
 
 use config::Config;
 use ecs::{Component, Dispatcher, DispatcherBuilder, System, World};
-use ecs::resources::input::InputHandler;
-use ecs::components::{LocalTransform, Transform, Child, Init};
-use ecs::systems::RenderSystem;
 use engine::Engine;
 use error::{Error, Result};
-use event::Event;
 use rayon::ThreadPool;
 use state::{State, StateMachine};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
 use timing::{Stopwatch, Time};
 use winit::EventsLoop;
 
@@ -23,12 +18,14 @@ use thread_profiler::{register_thread_with_profiler, write_profile};
 #[derive(Derivative)]
 #[derivative(Debug)]
 pub struct Application<'a, 'b> {
+    /// The `engine` struct, holding world and thread pool.
+    #[derivative(Debug = "ignore")]
+    pub engine: Engine,
+
     #[derivative(Debug = "ignore")]
     dispatcher: Dispatcher<'a, 'b>,
     #[derivative(Debug = "ignore")]
     events: EventsLoop,
-    #[derivative(Debug = "ignore")]
-    engine: Engine,
     states: StateMachine<'a>,
     time: Time,
     timer: Stopwatch,
@@ -131,7 +128,6 @@ pub struct ApplicationBuilder<'a, 'b, T: State + 'a> {
     base_path: PathBuf,
     // config: Config,
     disp_builder: DispatcherBuilder<'a, 'b>,
-    errors: Vec<Error>,
     initial_state: T,
     world: World,
     /// Allows to create `RenderSystem`
@@ -146,7 +142,6 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
         ApplicationBuilder {
             base_path: format!("{}/resources", env!("CARGO_MANIFEST_DIR")).into(),
             disp_builder: DispatcherBuilder::new(),
-            errors: Vec::new(),
             initial_state: initial_state,
             world: World::new(),
             events: EventsLoop::new(),
