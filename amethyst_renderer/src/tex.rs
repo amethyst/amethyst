@@ -5,6 +5,7 @@ pub use gfx::texture::{FilterMethod, WrapMode};
 use error::Result;
 use gfx::texture::{Info, SamplerInfo};
 use gfx::traits::Pod;
+use std::marker::PhantomData;
 use types::{Factory, RawShaderResourceView, RawTexture, Sampler};
 
 /// Handle to a GPU texture resource.
@@ -17,12 +18,12 @@ pub struct Texture {
 
 impl Texture {
     /// Builds a new texture with the given raw texture data.
-    pub fn from_data<T: Pod, D: AsRef<[T]>>(data: D) -> TextureBuilder {
+    pub fn from_data<T: Pod, D: AsRef<[T]>>(data: D) -> TextureBuilder<D, T> {
         TextureBuilder::new(data)
     }
 
     /// Builds a new texture with the given raw texture data.
-    pub fn from_color_val<C: Into<[f32; 4]>>(rgba: C) -> TextureBuilder {
+    pub fn from_color_val<C: Into<[f32; 4]>>(rgba: C) -> TextureBuilder<[u8; 4], u8> {
         TextureBuilder::from_color_val(rgba)
     }
 
@@ -39,22 +40,39 @@ impl Texture {
 
 /// Builds new textures.
 #[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-pub struct TextureBuilder {
-    data: Vec<u8>,
+pub struct TextureBuilder<D, T> {
+    data: D,
     info: Info,
     sampler: SamplerInfo,
+    pd: PhantomData<T>,
 }
 
-impl TextureBuilder {
+impl TextureBuilder<[u8; 4], u8> {
+    /// Creates a new `TextureBuilder` from the given RGBA color value.
+    pub fn from_color_val<C: Into<[f32; 4]>>(rgba: C) -> Self {
+        let color = rgba.into();
+        let data: [u8; 4] = [(color[0] * 255.0) as u8,
+                                   (color[1] * 255.0) as u8,
+                                   (color[2] * 255.0) as u8,
+                                   (color[3] * 255.0) as u8];
+
+        TextureBuilder::new(data)
+    }
+}
+
+impl<D, T> TextureBuilder<D, T>
+    where D: AsRef<[T]>,
+          T: Pod,
+{
     /// Creates a new `TextureBuilder` with the given raw texture data.
-    pub fn new<T: Pod, D: AsRef<[T]>>(data: D) -> Self {
+    pub fn new(data: D) -> Self {
         use gfx::SHADER_RESOURCE;
         use gfx::format::SurfaceType;
-        use gfx::memory::{Usage, cast_slice};
+        use gfx::memory::Usage;
         use gfx::texture::{AaMode, Kind};
 
         TextureBuilder {
-            data: cast_slice(data.as_ref()).to_vec(),
+            data: data,
             info: Info {
                 kind: Kind::D2(1, 1, AaMode::Single),
                 levels: 1,
@@ -63,18 +81,8 @@ impl TextureBuilder {
                 usage: Usage::Dynamic,
             },
             sampler: SamplerInfo::new(FilterMethod::Scale, WrapMode::Clamp),
+            pd: PhantomData,
         }
-    }
-
-    /// Creates a new `TextureBuilder` from the given RGBA color value.
-    pub fn from_color_val<C: Into<[f32; 4]>>(rgba: C) -> Self {
-        let color = rgba.into();
-        let data: [[u8; 4]; 1] = [[(color[0] * 255.0) as u8,
-                                   (color[1] * 255.0) as u8,
-                                   (color[2] * 255.0) as u8,
-                                   (color[3] * 255.0) as u8]];
-
-        TextureBuilder::new(&data[..])
     }
 
     /// Sets the number of mipmap levels to generate.
@@ -103,10 +111,11 @@ impl TextureBuilder {
     pub(crate) fn build(self, fac: &mut Factory) -> Result<Texture> {
         use gfx::Factory;
         use gfx::format::{ChannelType, Swizzle};
+        use gfx::memory::cast_slice;
         use gfx::texture::ResourceDesc;
 
         let chan = ChannelType::Srgb;
-        let tex = fac.create_texture_raw(self.info, Some(chan), Some(&[self.data.as_slice()]))?;
+        let tex = fac.create_texture_raw(self.info, Some(chan), Some(&[cast_slice(self.data.as_ref())]))?;
 
         let desc = ResourceDesc {
             channel: ChannelType::Srgb,

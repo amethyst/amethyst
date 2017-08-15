@@ -4,7 +4,7 @@ use config::Config;
 use ecs::{Component, Dispatcher, DispatcherBuilder, System, World};
 use ecs::resources::InputHandler;
 use ecs::components::{LocalTransform, Transform, Child, Init};
-use ecs::systems::SystemExt;
+use ecs::systems::RenderSystem;
 use engine::Engine;
 use error::{Error, Result};
 use event::Event;
@@ -14,6 +14,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use timing::{Stopwatch, Time};
+use winit::EventsLoop;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
@@ -24,6 +25,8 @@ use thread_profiler::{register_thread_with_profiler, write_profile};
 pub struct Application<'a, 'b> {
     #[derivative(Debug = "ignore")]
     dispatcher: Dispatcher<'a, 'b>,
+    #[derivative(Debug = "ignore")]
+    events: EventsLoop,
     #[derivative(Debug = "ignore")]
     engine: Engine,
     states: StateMachine<'a>,
@@ -77,18 +80,16 @@ impl<'a, 'b> Application<'a, 'b> {
         }
 
         {
+            let engine = &mut self.engine;
+            let states = &mut self.states;
             #[cfg(feature = "profiler")]
             profile_scope!("handle_event");
 
-            // let mut events = self.planner.systems.iter()
-            //     .map(|s| s.poll_events())
-            //     .collect();
-
-            let mut events: Vec<Event> = Vec::new();
-            while let Some(e) = events.pop() {
-                self.states.handle_event(&mut self.engine, e);
-            }
-
+            self.events.poll_events(|event| {
+                states.handle_event(engine, event);
+            });
+        }
+        {
             #[cfg(feature = "profiler")]
             profile_scope!("fixed_update");
             if self.time.last_fixed_update.elapsed() >= self.time.fixed_step {
@@ -133,6 +134,9 @@ pub struct ApplicationBuilder<'a, 'b, T: State + 'a> {
     errors: Vec<Error>,
     initial_state: T,
     world: World,
+    /// Allows to create `RenderSystem`
+    // TODO: Come up with something clever
+    pub events: EventsLoop,
 }
 
 impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
@@ -141,11 +145,11 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     pub fn new(initial_state: T) -> Self {
         ApplicationBuilder {
             base_path: format!("{}/resources", env!("CARGO_MANIFEST_DIR")).into(),
-            // config: cfg,
             disp_builder: DispatcherBuilder::new(),
             errors: Vec::new(),
             initial_state: initial_state,
             world: World::new(),
+            events: EventsLoop::new(),
         }
     }
 
@@ -205,6 +209,7 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
             engine: Engine::new(&self.base_path, pool.clone(), self.world),
             // config: self.config,
             states: StateMachine::new(self.initial_state),
+            events: self.events,
             dispatcher: self.disp_builder.with_pool(pool).build(),
             time: Time::default(),
             timer: Stopwatch::new(),

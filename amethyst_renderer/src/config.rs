@@ -1,6 +1,6 @@
 //! Renderer configuration.
 
-use winit::WindowBuilder;
+use glutin::WindowBuilder;
 
 /// Structure for holding the renderer configuration.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -40,7 +40,7 @@ impl Default for Config {
 
 impl From<Config> for WindowBuilder {
     fn from(cfg: Config) -> Self {
-        use winit::{self, WindowAttributes};
+        use glutin::{self, WindowAttributes};
 
         let attrs = WindowAttributes {
             dimensions: cfg.dimensions,
@@ -55,7 +55,7 @@ impl From<Config> for WindowBuilder {
         builder.window = attrs;
 
         if cfg.fullscreen {
-            builder = builder.with_fullscreen(winit::get_primary_monitor());
+            builder = builder.with_fullscreen(glutin::get_primary_monitor());
         }
 
         builder

@@ -105,7 +105,7 @@ impl InputHandler {
     }
 
     /// Updates the input handler with new engine events.
-    pub fn update(&mut self, events: &[Event]) {
+    pub fn update(&mut self, events: &[WindowEvent]) {
         // Before processing these events clear the single frame vectors
         self.down_keys.clear();
         self.released_keys.clear();
@@ -114,56 +114,54 @@ impl InputHandler {
         self.previous_mouse_position = self.mouse_position;
         self.text_this_frame.clear();
         for event in events {
-            if let Event::Window(ref e) = *event {
-                match *e {
-                    WindowEvent::ReceivedCharacter(c) => {
-                        self.text_this_frame.push(c);
-                    }
-                    WindowEvent::KeyboardInput { input, .. } => {
-                        match (input.state, input.virtual_keycode) {
-                            (ElementState::Pressed, Some(key)) => {
-                                if self.pressed_keys.iter().all(|&k| k != key) {
-                                    self.pressed_keys.push(key);
-                                    self.down_keys.push(key);
-                                }
-                            }
-                            (ElementState::Released, Some(key)) => {
-                                let idx = self.pressed_keys.iter().position(|&k| k == key);
-                                if let Some(i) = idx {
-                                    self.pressed_keys.swap_remove(i);
-                                    self.released_keys.push(key);
-                                }
-                            }
-                            (_, _) => {}
-                        }
-                    }
-                    WindowEvent::MouseInput { state, button, .. } => {
-                        match state {
-                            ElementState::Pressed => {
-                                if self.pressed_mouse_buttons.iter().all(|&b| b != button) {
-                                    self.pressed_mouse_buttons.push(button);
-                                    self.down_mouse_buttons.push(button);
-                                }
-                            }
-                            ElementState::Released => {
-                                let idx = self.pressed_mouse_buttons.iter().position(|&b| b == button);
-                                if let Some(i) = idx {
-                                    self.pressed_mouse_buttons.swap_remove(i);
-                                    self.released_mouse_buttons.push(button);
-                                }
-                            }
-                        }
-                    }
-                    WindowEvent::MouseMoved { position, .. } => {
-                        self.mouse_position = Some((position.0 as i32, position.1 as i32));
-                    }
-                    WindowEvent::Focused(false) => {
-                        self.pressed_keys.clear();
-                        self.pressed_mouse_buttons.clear();
-                        self.mouse_position = None;
-                    }
-                    _ => {}
+            match *event {
+                WindowEvent::ReceivedCharacter(c) => {
+                    self.text_this_frame.push(c);
                 }
+                WindowEvent::KeyboardInput { input, .. } => {
+                    match (input.state, input.virtual_keycode) {
+                        (ElementState::Pressed, Some(key)) => {
+                            if self.pressed_keys.iter().all(|&k| k != key) {
+                                self.pressed_keys.push(key);
+                                self.down_keys.push(key);
+                            }
+                        }
+                        (ElementState::Released, Some(key)) => {
+                            let idx = self.pressed_keys.iter().position(|&k| k == key);
+                            if let Some(i) = idx {
+                                self.pressed_keys.swap_remove(i);
+                                self.released_keys.push(key);
+                            }
+                        }
+                        (_, _) => {}
+                    }
+                }
+                WindowEvent::MouseInput { state, button, .. } => {
+                    match state {
+                        ElementState::Pressed => {
+                            if self.pressed_mouse_buttons.iter().all(|&b| b != button) {
+                                self.pressed_mouse_buttons.push(button);
+                                self.down_mouse_buttons.push(button);
+                            }
+                        }
+                        ElementState::Released => {
+                            let idx = self.pressed_mouse_buttons.iter().position(|&b| b == button);
+                            if let Some(i) = idx {
+                                self.pressed_mouse_buttons.swap_remove(i);
+                                self.released_mouse_buttons.push(button);
+                            }
+                        }
+                    }
+                }
+                WindowEvent::MouseMoved { position, .. } => {
+                    self.mouse_position = Some((position.0 as i32, position.1 as i32));
+                }
+                WindowEvent::Focused(false) => {
+                    self.pressed_keys.clear();
+                    self.pressed_mouse_buttons.clear();
+                    self.mouse_position = None;
+                }
+                _ => {}
             }
         }
     }

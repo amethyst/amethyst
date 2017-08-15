@@ -3,6 +3,7 @@
 use cgmath::{Deg, Matrix4, Point3, Transform, Vector3};
 use error::Result;
 use gfx::Primitive;
+use std::marker::PhantomData;
 use types::{Factory, RawBuffer, Slice};
 use vertex::{Attribute, VertexFormat};
 
@@ -18,7 +19,10 @@ pub struct Mesh {
 
 impl Mesh {
     /// Builds a new mesh from the given vertices.
-    pub fn build<'v, V: VertexFormat + 'v>(verts: &'v [V]) -> MeshBuilder {
+    pub fn build<D, V>(verts: D) -> MeshBuilder<D, V>
+        where D: AsRef<[V]>,
+              V: VertexFormat,
+    {
         MeshBuilder::new(verts)
     }
 
@@ -44,26 +48,26 @@ impl Mesh {
 
 /// Builds new meshes.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
-pub struct MeshBuilder<'v> {
-    attrs: Vec<Attribute>,
+pub struct MeshBuilder<D, V> {
     prim: Primitive,
-    stride: usize,
     transform: Matrix4<f32>,
-    vertices: &'v [u8],
+    vertices: D,
+    pd: PhantomData<V>,
 }
 
-impl<'v> MeshBuilder<'v> {
+impl<D, V> MeshBuilder<D, V>
+    where D: AsRef<[V]>,
+          V: VertexFormat,
+{
     /// Creates a new `MeshBuilder` with the given vertices.
-    pub fn new<V: VertexFormat + 'v>(verts: &'v [V]) -> Self {
+    pub fn new(verts: D) -> Self {
         use cgmath::SquareMatrix;
-        use gfx::memory::cast_slice;
 
         MeshBuilder {
-            attrs: V::attributes().as_ref().to_vec(),
             prim: Primitive::TriangleList,
-            stride: V::size(),
             transform: Matrix4::identity(),
-            vertices: cast_slice(verts),
+            vertices: verts,
+            pd: PhantomData,
         }
     }
 
@@ -115,23 +119,25 @@ impl<'v> MeshBuilder<'v> {
     pub(crate) fn build(self, fac: &mut Factory) -> Result<Mesh> {
         use gfx::{Bind, Factory, IndexBuffer};
         use gfx::buffer::Role;
+        use gfx::memory::cast_slice;
 
-        let verts = self.vertices;
-        let stride = self.stride;
+        let verts = cast_slice(self.vertices.as_ref());
+        let count = self.vertices.as_ref().len();
+        let stride = verts.len() / count;
         let role = Role::Vertex;
         let bind = Bind::empty();
 
         let vbuf = fac.create_buffer_immutable_raw(verts, stride, role, bind)?;
         let slice = Slice {
             start: 0,
-            end: (verts.len() / stride) as u32,
+            end: count as u32,
             base_vertex: 0,
             instances: None,
             buffer: IndexBuffer::Auto,
         };
 
         Ok(Mesh {
-            attrs: self.attrs,
+            attrs: V::attributes().as_ref().to_vec(),
             prim: self.prim,
             slice: slice,
             transform: self.transform,
@@ -139,3 +145,4 @@ impl<'v> MeshBuilder<'v> {
         })
     }
 }
+
