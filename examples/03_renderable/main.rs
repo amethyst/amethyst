@@ -1,5 +1,7 @@
 //! Demonstrates how to load renderable objects, along with several lighting
 //! methods.
+//!
+//! TODO: Rewrite for new renderer.
 
 extern crate amethyst;
 extern crate cgmath;

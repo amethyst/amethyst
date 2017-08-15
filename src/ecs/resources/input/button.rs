@@ -1,4 +1,4 @@
-use engine::{VirtualKeyCode, MouseButton};
+use event::{VirtualKeyCode, MouseButton};
 
 use super::local_mouse_button::LocalMouseButton;
 use super::local_virtual_key_code::LocalVirtualKeyCode;

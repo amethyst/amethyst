@@ -1,10 +1,10 @@
 //! Local transform component.
 
 use cgmath::{Quaternion, Vector3, Matrix3, Matrix4};
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::ops::{Deref, DerefMut};
 
 use ecs::{Component, VecStorage};
+use std::ops::{Deref, DerefMut};
+use std::sync::atomic::{AtomicBool, Ordering};
 
 /// Raw transform data.
 #[derive(Debug)]

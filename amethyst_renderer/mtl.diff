@@ -1,0 +1,227 @@
+diff --git a/amethyst_renderer/src/mtl/mod.rs b/amethyst_renderer/src/mtl/mod.rs
+index eda3cc1..0bb4471 100644
+--- a/amethyst_renderer/src/mtl/mod.rs
++++ b/amethyst_renderer/src/mtl/mod.rs
+@@ -2,7 +2,8 @@
+ 
+ use color::Rgba;
+ use error::Result;
+-use tex::Texture;
++use gfx::traits::Pod;
++use tex::{Texture, TextureBuilder};
+ use types::Factory;
+ 
+ /// Material struct.
+@@ -24,99 +25,150 @@ pub struct Material {
+     pub caveat: Texture,
+ }
+ 
+-#[derive(Clone, Debug, PartialEq)]
+-pub(crate) enum TextureKind {
+-    Constant(Rgba),
+-    Map(Texture),
+-}
+-
+-impl TextureKind {
+-    pub fn into_texture(self, fac: &mut Factory) -> Result<Texture> {
+-        match self {
+-            TextureKind::Constant(c) => Texture::from_color_val(c).build(fac),
+-            TextureKind::Map(tex) => Ok(tex),
+-        }
+-    }
+-}
+-
+ /// Builds new materials.
+ #[derive(Clone, Debug, PartialEq)]
+-pub struct MaterialBuilder {
+-    albedo: TextureKind,
+-    emission: TextureKind,
+-    normal: TextureKind,
+-    metallic: TextureKind,
+-    roughness: TextureKind,
+-    ambient_occlusion: TextureKind,
+-    caveat: TextureKind,
++pub struct MaterialBuilder<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC> {
++    albedo: TextureBuilder<DA, TA>,
++    emission: TextureBuilder<DE, TE>,
++    normal: TextureBuilder<DN, TN>,
++    metallic: TextureBuilder<DM, TM>,
++    roughness: TextureBuilder<DR, TR>,
++    ambient_occlusion: TextureBuilder<DO, TO>,
++    caveat: TextureBuilder<DC, TC>,
+ }
+ 
+-impl MaterialBuilder {
+-    /// Creates a new material builder.
++impl MaterialBuilder<[u8; 4], u8, [u8; 4], u8, [u8; 4], u8, [u8; 4], u8, [u8; 4], u8, [u8; 4], u8, [u8; 4], u8> {
++   /// Creates a new material builder.
+     pub fn new() -> Self {
+         MaterialBuilder {
+-            albedo: TextureKind::Constant([0.0, 0.0, 0.5, 1.0].into()),
+-            emission: TextureKind::Constant([0.0; 4].into()),
+-            metallic: TextureKind::Constant([0.0; 4].into()),
+-            normal: TextureKind::Constant([0.5, 0.5, 1.0, 1.0].into()),
+-            roughness: TextureKind::Constant([0.5; 4].into()),
+-            ambient_occlusion: TextureKind::Constant([1.0; 4].into()),
+-            caveat: TextureKind::Constant([1.0; 4].into()),
++            albedo: TextureBuilder::from_color_val([0.0, 0.0, 0.5, 1.0]),
++            emission: TextureBuilder::from_color_val([0.0; 4]),
++            normal: TextureBuilder::from_color_val([0.5, 0.5, 1.0, 1.0]),
++            metallic: TextureBuilder::from_color_val([0.0; 4]),
++            roughness: TextureBuilder::from_color_val([0.5; 4]),
++            ambient_occlusion: TextureBuilder::from_color_val([1.0; 4]),
++            caveat: TextureBuilder::from_color_val([1.0; 4]),
+         }
+     }
++} 
+ 
++impl<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC> MaterialBuilder<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC> {
+     /// Sets the albedo to an existing texture map.
+-    pub fn with_albedo(mut self, tex: &Texture) -> Self {
+-        self.albedo = TextureKind::Map(tex.clone());
+-        self
++    pub fn with_albedo<Y, U>(self, tex: TextureBuilder<Y, U>) -> MaterialBuilder<Y, U, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC> {
++        MaterialBuilder {
++            albedo: tex,
++            emission: self.emission,
++            normal: self.normal,
++            metallic: self.metallic,
++            roughness: self.roughness,
++            ambient_occlusion: self.ambient_occlusion,
++            caveat: self.caveat,
++        }
+     }
+ 
+     /// Sets the emission to an existing texture map.
+-    pub fn with_emission(mut self, tex: &Texture) -> Self {
+-        self.emission = TextureKind::Map(tex.clone());
+-        self
++    pub fn with_emission<Y, U>(self, tex: TextureBuilder<Y, U>) -> MaterialBuilder<DA, TA, Y, U, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC> {
++        MaterialBuilder {
++            albedo: self.albedo,
++            emission: tex,
++            normal: self.normal,
++            metallic: self.metallic,
++            roughness: self.roughness,
++            ambient_occlusion: self.ambient_occlusion,
++            caveat: self.caveat,
++        }
+     }
+ 
+     /// Sets the normal to an existing texture map.
+-    pub fn with_normal(mut self, tex: &Texture) -> Self {
+-        self.normal = TextureKind::Map(tex.clone());
+-        self
++    pub fn with_normal<Y, U>(self, tex: TextureBuilder<Y, U>) -> MaterialBuilder<DA, TA, DE, TE, Y, U, DM, TM, DR, TR, DO, TO, DC, TC> {
++        MaterialBuilder {
++            albedo: self.albedo,
++            emission: self.emission,
++            normal: tex,
++            metallic: self.metallic,
++            roughness: self.roughness,
++            ambient_occlusion: self.ambient_occlusion,
++            caveat: self.caveat,
++        }
+     }
+ 
+     /// Sets the metallic to an existing texture map.
+-    pub fn with_metallic(mut self, tex: &Texture) -> Self {
+-        self.metallic = TextureKind::Map(tex.clone());
+-        self
++    pub fn with_metallic<Y, U>(self, tex: TextureBuilder<Y, U>) -> MaterialBuilder<DA, TA, DE, TE, DN, TN, Y, U, DR, TR, DO, TO, DC, TC> {
++        MaterialBuilder {
++            albedo: self.albedo,
++            emission: self.emission,
++            normal: self.normal,
++            metallic: tex,
++            roughness: self.roughness,
++            ambient_occlusion: self.ambient_occlusion,
++            caveat: self.caveat,
++        }
+     }
+ 
+     /// Sets the roughness to an existing texture map.
+-    pub fn with_roughness(mut self, tex: &Texture) -> Self {
+-        self.roughness = TextureKind::Map(tex.clone());
+-        self
++    pub fn with_roughness<Y, U>(self, tex: TextureBuilder<Y, U>) -> MaterialBuilder<DA, TA, DE, TE, DN, TN, DM, TM, Y, U, DO, TO, DC, TC> {
++        MaterialBuilder {
++            albedo: self.albedo,
++            emission: self.emission,
++            normal: self.normal,
++            metallic: self.metallic,
++            roughness: tex,
++            ambient_occlusion: self.ambient_occlusion,
++            caveat: self.caveat,
++        }
+     }
+ 
+     /// Sets the ambient_occlusion to an existing texture map.
+-    pub fn with_ambient_occlusion(mut self, tex: &Texture) -> Self {
+-        self.ambient_occlusion = TextureKind::Map(tex.clone());
+-        self
++    pub fn with_ambient_occlusion<Y, U>(self, tex: TextureBuilder<Y, U>) -> MaterialBuilder<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, Y, U, DC, TC> {
++        MaterialBuilder {
++            albedo: self.albedo,
++            emission: self.emission,
++            normal: self.normal,
++            metallic: self.metallic,
++            roughness: self.roughness,
++            ambient_occlusion: tex,
++            caveat: self.caveat,
++        }
+     }
+ 
+-    /// Sets the reflectance to an existing texture map.
+-    pub fn with_caveat(mut self, tex: &Texture) -> Self {
+-        self.caveat = TextureKind::Map(tex.clone());
+-        self
++    /// Sets the caveat to an existing texture map.
++    pub fn with_caveat<Y, U>(self, tex: TextureBuilder<Y, U>) -> MaterialBuilder<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, Y, U> {
++        MaterialBuilder {
++            albedo: self.albedo,
++            emission: self.emission,
++            normal: self.normal,
++            metallic: self.metallic,
++            roughness: self.roughness,
++            ambient_occlusion: self.ambient_occlusion,
++            caveat: tex,
++        }
+     }
+ 
+     /// Builds and returns the new material.
+-    pub(crate) fn build(self, fac: &mut Factory) -> Result<Material> {
++    pub(crate) fn build(self, fac: &mut Factory) -> Result<Material>
++        where DA: AsRef<[TA]>,
++              TA: Pod,
++              DE: AsRef<[TE]>,
++              TE: Pod,
++              DN: AsRef<[TN]>,
++              TN: Pod,
++              DM: AsRef<[TM]>,
++              TM: Pod,
++              DR: AsRef<[TR]>,
++              TR: Pod,
++              DO: AsRef<[TO]>,
++              TO: Pod,
++              DC: AsRef<[TC]>,
++              TC: Pod,
++    {
+         Ok(Material {
+-            albedo: self.albedo.into_texture(fac)?,
+-            emission: self.emission.into_texture(fac)?,
+-            normal: self.normal.into_texture(fac)?,
+-            metallic: self.metallic.into_texture(fac)?,
+-            roughness: self.roughness.into_texture(fac)?,
+-            ambient_occlusion: self.ambient_occlusion.into_texture(fac)?,
+-            caveat: self.caveat.into_texture(fac)?,
++            albedo: self.albedo.build(fac)?,
++            emission: self.emission.build(fac)?,
++            normal: self.normal.build(fac)?,
++            metallic: self.metallic.build(fac)?,
++            roughness: self.roughness.build(fac)?,
++            ambient_occlusion: self.ambient_occlusion.build(fac)?,
++            caveat: self.caveat.build(fac)?,
+         })
+     }
+ }

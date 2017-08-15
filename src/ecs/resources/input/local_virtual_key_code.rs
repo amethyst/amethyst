@@ -1,4 +1,4 @@
-use engine::VirtualKeyCode;
+use event::VirtualKeyCode;
 
 #[derive(Serialize, Deserialize)]
 #[serde(remote = "VirtualKeyCode")]

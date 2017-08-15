@@ -1,4 +1,4 @@
-use engine::MouseButton;
+use event::MouseButton;
 
 #[derive(Serialize, Deserialize)]
 #[serde(remote = "MouseButton")]

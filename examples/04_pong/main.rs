@@ -1,15 +1,19 @@
-extern crate amethyst;
+//! TODO: Rewrite for new renderer.
 
-use amethyst::{Application, Event, State, Trans, VirtualKeyCode, WindowEvent};
-use amethyst::asset_manager::AssetManager;
-use amethyst::config::Config;
+extern crate amethyst;
+extern crate amethyst_renderer;
+extern crate cgmath;
+
+//use amethyst::{Application, State, Trans, VirtualKeyCode, WindowEvent};
+use amethyst::prelude::*;
+use amethyst::timing::Time;
 use amethyst::ecs::{Component, Fetch, FetchMut, Join, System, VecStorage, World, WriteStorage};
-use amethyst::ecs::components::{Mesh, LocalTransform, Texture, Transform};
-use amethyst::ecs::resources::{Camera, Projection, Time};
+use amethyst::ecs::components::*;
 use amethyst::ecs::resources::input::*;
-use amethyst::ecs::systems::TransformSystem;
-use amethyst::gfx_device::DisplayConfig;
-use amethyst::renderer::{Pipeline, VertexPosNormal};
+use amethyst::ecs::systems::{RenderSystem, TransformSystem};
+use amethyst_renderer::prelude::*;
+use cgmath::{Matrix4, Deg, Vector3};
+
 
 struct Pong;
 
@@ -89,16 +93,7 @@ impl<'a> System<'a> for PongSystem {
     fn run(&mut self,
            (mut balls, mut planks, mut locals, camera, time, input, mut score): Self::SystemData) {
         // Get left and right boundaries of the screen
-        let (left_bound, right_bound, top_bound, bottom_bound) = match camera.proj {
-            Projection::Orthographic {
-                left,
-                right,
-                top,
-                bottom,
-                ..
-            } => (left, right, top, bottom),
-            _ => (1.0, 1.0, 1.0, 1.0),
-        };
+        let (left_bound, right_bound, top_bound, bottom_bound) = (0.0, 1.0, 1.0, 0.0);
 
         // Properties of left paddle.
         let mut left_dimensions = [0.0, 0.0];
@@ -121,12 +116,12 @@ impl<'a> System<'a> for PongSystem {
                     left_dimensions = plank.dimensions;
                     // Move plank according to axis input.
                     if let Some(value) = input.axis_value("P1") {
-                            plank.position += plank.velocity * delta_time * value;
+                            plank.position += plank.velocity * delta_time * value as f32;
                         if plank.position + plank.dimensions[1] / 2. > 1. {
                             plank.position = 1. - plank.dimensions[1] / 2.
                         }
-                        if plank.position - plank.dimensions[1] / 2. < -1. {
-                            plank.position = -1. + plank.dimensions[1] / 2.;
+                        if plank.position - plank.dimensions[1] / 2. < 0. {
+                            plank.position = plank.dimensions[1] / 2.;
                         }
                     }
                     // Set translation[0] of renderable corresponding to this plank
@@ -140,12 +135,12 @@ impl<'a> System<'a> for PongSystem {
                     right_dimensions = plank.dimensions;
                     // Move plank according to axis input.
                     if let Some(value) = input.axis_value("P2") {
-                        plank.position += plank.velocity * delta_time * value;
+                        plank.position += plank.velocity * delta_time * value as f32;
                         if plank.position + plank.dimensions[1] / 2. > 1. {
                             plank.position = 1. - plank.dimensions[1] / 2.
                         }
-                        if plank.position - plank.dimensions[1] / 2. < -1. {
-                            plank.position = -1. + plank.dimensions[1] / 2.;
+                        if plank.position - plank.dimensions[1] / 2. < 0. {
+                            plank.position = plank.dimensions[1] / 2.;
                         }
                     }
                     // Set translation[0] of renderable corresponding to this plank
@@ -153,7 +148,7 @@ impl<'a> System<'a> for PongSystem {
                 }
             };
             // Set translation[1] of renderable corresponding to this plank
-            local.translation[1] = plank.position;
+            local.translation[1] = plank.position * (top_bound - bottom_bound) + bottom_bound;
             // Set scale for renderable corresponding to this plank
             local.scale = [plank.dimensions[0], plank.dimensions[1], 1.0];
         }
@@ -226,56 +221,41 @@ impl<'a> System<'a> for PongSystem {
 }
 
 impl State for Pong {
-    fn on_start(&mut self, world: &mut World, assets: &mut AssetManager, pipe: &mut Pipeline) {
-        use amethyst::ecs::resources::{Camera, Projection, ScreenDimensions};
-        use amethyst::renderer::Layer;
-        use amethyst::renderer::pass::{Clear, DrawFlat};
-
-        let layer = Layer::new("main",
-                               vec![Clear::new([0.0, 0.0, 0.0, 1.0]),
-                                    DrawFlat::new("main", "main")]);
-
-        pipe.layers.push(layer);
-
-        {
-            let dim = world.read_resource::<ScreenDimensions>();
-            let mut camera = world.write_resource::<Camera>();
-            let aspect_ratio = dim.aspect_ratio;
-            let eye = [0., 0., 0.1];
-            let target = [0., 0., 0.];
-            let up = [0., 1., 0.];
-
-            // Get an Orthographic projection
-            let proj = Projection::Orthographic {
-                left: -1.0 * aspect_ratio,
-                right: 1.0 * aspect_ratio,
-                bottom: -1.0,
-                top: 1.0,
-                near: 0.0,
-                far: 1.0,
-            };
-
-            camera.proj = proj;
-            camera.eye = eye;
-            camera.target = target;
-            camera.up = up;
-        }
+    fn on_start(&mut self, engine: &mut Engine) {
+        let world = &mut engine.world;
+        
+        world.add_resource(Camera {
+            eye: [0., 0., 1.0].into(),
+            proj: Projection::orthographic(0.0, 1.0, 1.0, 0.0).into(),
+            forward: [0., 0., -1.0].into(),
+            right: [1.0, 0.0, 0.0].into(),
+            up: [0., 1.0, 0.].into(),
+        });
 
         // Add all resources
-        world.add_resource::<Score>(Score::new());
+        world.add_resource(Score::new());
         let mut input = InputHandler::new();
         input.bindings = Bindings::load(format!("{}/examples/04_pong/resources/input.ron",
                                                 env!("CARGO_MANIFEST_DIR")));
-        world.add_resource::<InputHandler>(input);
+        world.add_resource(input);
+        world.add_resource(Time::default());
+
+        world.register::<Transform>();
+        world.register::<Child>();
+        world.register::<Init>();
+        world.register::<LocalTransform>();
+        world.register::<MeshComponent>();
+        world.register::<MaterialComponent>();
+        world.register::<LightComponent>();
+        world.register::<Unfinished<MeshComponent>>();
+        world.register::<Unfinished<MaterialComponent>>();
+
         // Generate a square mesh
-        assets.register_asset::<Mesh>();
-        assets.register_asset::<Texture>();
-        assets.load_asset_from_data::<Texture, [f32; 4]>("white", [1.0, 1.0, 1.0, 1.0]);
+        let tex = Texture::from_color_val([1.0, 1.0, 1.0, 1.0]);
+        let mtl = MaterialBuilder::new().with_albedo(tex);
+
         let square_verts = gen_rectangle(1.0, 1.0);
-        assets.load_asset_from_data::<Mesh, Vec<VertexPosNormal>>("square", square_verts);
-        let square = assets
-            .create_renderable("square", "white", "white", "white", 1.0)
-            .unwrap();
+        let mesh = Mesh::build(square_verts);
 
         // Create a ball entity
         let mut ball = Ball::new();
@@ -283,7 +263,8 @@ impl State for Pong {
         ball.velocity = [0.5, 0.5];
         world
             .create_entity()
-            .with(square.clone())
+            .with(mesh.clone().unfinished())
+            .with(mtl.clone().unfinished())
             .with(ball)
             .with(LocalTransform::default())
             .with(Transform::default())
@@ -296,7 +277,8 @@ impl State for Pong {
         plank.velocity = 1.;
         world
             .create_entity()
-            .with(square.clone())
+            .with(mesh.clone().unfinished())
+            .with(mtl.clone().unfinished())
             .with(plank)
             .with(LocalTransform::default())
             .with(Transform::default())
@@ -309,77 +291,92 @@ impl State for Pong {
         plank.velocity = 1.;
         world
             .create_entity()
-            .with(square.clone())
+            .with(mesh.unfinished())
+            .with(mtl.unfinished())
             .with(plank)
             .with(LocalTransform::default())
             .with(Transform::default())
             .build();
     }
 
-    fn handle_events(&mut self,
-                     events: &[WindowEvent],
-                     world: &mut World,
-                     _: &mut AssetManager,
-                     _: &mut Pipeline)
-                     -> Trans {
-
-        let mut input = world.write_resource::<InputHandler>();
-        input.update(events);
-
-        for e in events {
-            match **e {
-                Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) => return Trans::Quit,
-                Event::Closed => return Trans::Quit,
-                _ => (),
-            }
+    fn handle_event(&mut self, engine: &mut Engine, event: Event) -> Trans {
+        let mut input = engine.world.write_resource::<InputHandler>();        
+        match event {
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::KeyboardInput {
+                    input: KeyboardInput {
+                        virtual_keycode: Some(VirtualKeyCode::Escape), ..
+                    }, ..
+                } | WindowEvent::Closed => {
+                    Trans::Quit
+                }
+                _ => {
+                    input.update(&[event]);
+                    Trans::None
+                }
+            },
+            _ => Trans::None,
         }
-        Trans::None
     }
 }
 
 fn main() {
     let path = format!("{}/examples/04_pong/resources/config.ron",
                        env!("CARGO_MANIFEST_DIR"));
-    let cfg = DisplayConfig::load(path);
-    let mut game = Application::build(Pong, cfg)
+
+    let builder = Application::build(Pong);
+
+    let render = RenderSystem::new(
+        &builder.events,
+        DisplayConfig::default(),
+        Pipeline::build()
+            .with_stage(Stage::with_backbuffer()
+                .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
+                .with_model_pass(pass::DrawFlat::<PosNormTex>::new())
+            )
+    ).unwrap();
+
+    let mut game = builder
         .register::<Ball>()
         .register::<Plank>()
         .with::<PongSystem>(PongSystem, "pong_system", &[])
         .with::<TransformSystem>(TransformSystem::new(), "transform_system", &["pong_system"])
-        .done();
+        .with_thread_local(render)
+        .build()
+        .expect("Fatal error");
     game.run();
 }
 
-fn gen_rectangle(w: f32, h: f32) -> Vec<VertexPosNormal> {
-    let data: Vec<VertexPosNormal> = vec![VertexPosNormal {
-                                              pos: [-w / 2., -h / 2., 0.],
-                                              normal: [0., 0., 1.],
-                                              tex_coord: [0., 0.],
+fn gen_rectangle(w: f32, h: f32) -> Vec<PosNormTex> {
+    let data: Vec<PosNormTex> = vec![PosNormTex {
+                                              a_position: [-w / 2., -h / 2., 0.],
+                                              a_normal: [0., 0., 1.],
+                                              a_tex_coord: [0., 0.],
                                           },
-                                          VertexPosNormal {
-                                              pos: [w / 2., -h / 2., 0.],
-                                              normal: [0., 0., 1.],
-                                              tex_coord: [1., 0.],
+                                          PosNormTex {
+                                              a_position: [w / 2., -h / 2., 0.],
+                                              a_normal: [0., 0., 1.],
+                                              a_tex_coord: [1., 0.],
                                           },
-                                          VertexPosNormal {
-                                              pos: [w / 2., h / 2., 0.],
-                                              normal: [0., 0., 1.],
-                                              tex_coord: [1., 1.],
+                                          PosNormTex {
+                                              a_position: [w / 2., h / 2., 0.],
+                                              a_normal: [0., 0., 1.],
+                                              a_tex_coord: [1., 1.],
                                           },
-                                          VertexPosNormal {
-                                              pos: [w / 2., h / 2., 0.],
-                                              normal: [0., 0., 1.],
-                                              tex_coord: [1., 1.],
+                                          PosNormTex {
+                                              a_position: [w / 2., h / 2., 0.],
+                                              a_normal: [0., 0., 1.],
+                                              a_tex_coord: [1., 1.],
                                           },
-                                          VertexPosNormal {
-                                              pos: [-w / 2., h / 2., 0.],
-                                              normal: [0., 0., 1.],
-                                              tex_coord: [1., 1.],
+                                          PosNormTex {
+                                              a_position: [-w / 2., h / 2., 0.],
+                                              a_normal: [0., 0., 1.],
+                                              a_tex_coord: [1., 1.],
                                           },
-                                          VertexPosNormal {
-                                              pos: [-w / 2., -h / 2., 0.],
-                                              normal: [0., 0., 1.],
-                                              tex_coord: [1., 1.],
+                                          PosNormTex {
+                                              a_position: [-w / 2., -h / 2., 0.],
+                                              a_normal: [0., 0., 1.],
+                                              a_tex_coord: [1., 1.],
                                           }];
     data
 }
