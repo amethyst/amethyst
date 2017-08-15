@@ -3,14 +3,15 @@
 extern crate amethyst_renderer as renderer;
 extern crate glutin;
 
-use renderer::prelude::*;
 use std::time::{Duration, Instant};
+
 use glutin::{Event, EventsLoop, WindowEvent};
+use renderer::prelude::*;
 
 fn main() {
     let mut events = EventsLoop::new();
     let mut renderer = Renderer::new(&events).unwrap();
-    let pipe = renderer.create_pipe(Pipeline::forward()).unwrap();
+    let pipe = renderer.create_pipe(Pipeline::forward::<PosTex>()).unwrap();
     let scene = Scene::default();
 
     let mut delta = Duration::from_secs(0);

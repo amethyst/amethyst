@@ -1,6 +1,5 @@
 //! Engine error types.
 
-use assets::AssetError;
 use config::ConfigError;
 
 use std::error::Error as StdError;

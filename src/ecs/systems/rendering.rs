@@ -1,11 +1,10 @@
 //! Rendering system.
 
-use ecs::{Entities, Entity, Fetch, Join, ReadStorage, System, World, WriteStorage};
+use ecs::{Entities, Fetch, Join, ReadStorage, System, WriteStorage};
 use ecs::components::*;
 use error::{Error, Result};
 use renderer::prelude::*;
-use super::SystemExt;
-use winit::{EventsLoop, get_primary_monitor, WindowBuilder};
+use winit::EventsLoop;
 
 /// Rendering system.
 #[derive(Derivative)]
@@ -28,6 +27,7 @@ impl<'a> System<'a> for RenderSystem {
         WriteStorage<'a, MaterialComponent>,
         WriteStorage<'a, MeshComponent>,
     );
+
     fn run(&mut self, (ents, camera, globals, lights, mut umaterials, mut umeshes, mut materials, mut meshes): Self::SystemData) {
         use std::time::Duration;
 
@@ -72,8 +72,6 @@ impl RenderSystem {
     pub fn new(events: &EventsLoop, pipe: PipelineBuilder) -> Result<Self>
         where Self: Sized
     {
-        let mut window_builder = WindowBuilder::new();
-
         let mut renderer = Renderer::new(events).map_err(|_| Error::System)?;
         let pipe = renderer.create_pipe(pipe).map_err(|_| Error::System)?;
 

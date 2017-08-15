@@ -4,6 +4,7 @@ extern crate amethyst;
 extern crate amethyst_renderer;
 
 use amethyst::prelude::*;
+use amethyst::ecs::World;
 use amethyst::ecs::systems::RenderSystem;
 use amethyst::event::{KeyboardInput, VirtualKeyCode};
 
@@ -29,7 +30,19 @@ impl State for Example {
     }
 }
 
+fn register(world: &mut World) {
+    use amethyst::ecs::components::*;
+
+    world.register::<Transform>();
+    world.register::<MeshComponent>();
+    world.register::<MaterialComponent>();
+    world.register::<LightComponent>();
+    world.register::<Unfinished<MeshComponent>>();
+    world.register::<Unfinished<MaterialComponent>>();
+}
+
 fn main() {
+
     let path = format!("{}/examples/01_window/resources/config.ron",
                        env!("CARGO_MANIFEST_DIR"));
 
@@ -43,6 +56,8 @@ fn main() {
         .with_thread_local(render)
         .build()
         .expect("Fatal error");
+
+    register(&mut game.engine.world);
 
     game.run();
 }
