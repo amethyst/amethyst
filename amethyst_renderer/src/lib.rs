@@ -10,7 +10,7 @@
 //!
 //! ```rust,no_run
 //! # extern crate amethyst_renderer;
-//! # extern crate winit;
+//! # extern crate glutin;
 //! #
 //! # use amethyst_renderer::{Mesh, Pipeline, Renderer, Result, Scene};
 //! # use amethyst_renderer::light::PointLight;
@@ -22,7 +22,7 @@
 //! # }
 //! #
 //! # fn run_example() -> Result<()> {
-//! let mut events = winit::EventsLoop::new();
+//! let mut events = glutin::EventsLoop::new();
 //! let mut renderer = Renderer::new(&events)?;
 //! let pipe = renderer.create_pipe(Pipeline::deferred())?;
 //!
@@ -42,9 +42,9 @@
 //!
 //!     events.poll_events(|e| {
 //!         match e {
-//!             winit::Event::WindowEvent { event, .. } => match event {
-//!                 winit::WindowEvent::KeyboardInput { .. } |
-//!                 winit::WindowEvent::Closed => running = false,
+//!             glutin::Event::WindowEvent { event, .. } => match event {
+//!                 glutin::WindowEvent::KeyboardInput { .. } |
+//!                 glutin::WindowEvent::Closed => running = false,
 //!                 _ => (),
 //!             },
 //!             _ => (),
@@ -115,6 +115,7 @@ pub use tex::{Texture, TextureBuilder};
 pub use types::Encoder;
 pub use vertex::VertexFormat;
 
+use gfx::memory::Pod;
 use pipe::{ColorBuffer, DepthBuffer};
 use rayon::ThreadPool;
 use std::sync::Arc;
@@ -160,24 +161,45 @@ impl Renderer {
         RendererBuilder::new(el)
     }
 
-    /// Builds a new material resource.
-    pub fn create_material(&mut self, mb: MaterialBuilder) -> Result<Material> {
+    /// Builds a new mesh from the given vertices.
+    pub fn create_mesh<D, T>(&mut self, mb: MeshBuilder<D, T>) -> Result<Mesh>
+        where D: AsRef<[T]>,
+              T: VertexFormat,
+    {
         mb.build(&mut self.factory)
     }
 
-    /// Builds a new mesh from the given vertices.
-    pub fn create_mesh(&mut self, mb: MeshBuilder) -> Result<Mesh> {
+    /// Builds a new texture resource.
+    pub fn create_texture<D, T>(&mut self, tb: TextureBuilder<D, T>) -> Result<Texture>
+        where D: AsRef<[T]>,
+              T: Pod,
+    {
+        tb.build(&mut self.factory)
+    }
+
+    /// Builds a new material resource.
+    pub fn create_material<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC>(&mut self, mb: MaterialBuilder<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC>) -> Result<Material>
+        where DA: AsRef<[TA]>,
+              TA: Pod,
+              DE: AsRef<[TE]>,
+              TE: Pod,
+              DN: AsRef<[TN]>,
+              TN: Pod,
+              DM: AsRef<[TM]>,
+              TM: Pod,
+              DR: AsRef<[TR]>,
+              TR: Pod,
+              DO: AsRef<[TO]>,
+              TO: Pod,
+              DC: AsRef<[TC]>,
+              TC: Pod,
+    {
         mb.build(&mut self.factory)
     }
 
     /// Builds a new renderer pipeline.
     pub fn create_pipe(&mut self, pb: PipelineBuilder) -> Result<Pipeline> {
         pb.build(&mut self.factory, &self.main_target)
-    }
-
-    /// Builds a new texture resource.
-    pub fn create_texture(&mut self, tb: TextureBuilder) -> Result<Texture> {
-        tb.build(&mut self.factory)
     }
 
     /// Draws a scene with the given pipeline.
@@ -229,11 +251,6 @@ impl Renderer {
         #[cfg(feature = "opengl")]
         self.window.swap_buffers().expect("OpenGL context has been lost");
     }
-
-    /// Returns an immutable reference to the renderer window.
-    pub fn window(&self) -> &winit::Window {
-        self.window.window()
-    }
 }
 
 impl Drop for Renderer {
@@ -262,7 +279,7 @@ impl<'a> RendererBuilder<'a> {
         }
     }
 
-    /// Applies window settings from the given `winit::WindowBuilder`.
+    /// Applies window settings from the given `glutin::WindowBuilder`.
     pub fn use_winit_builder(&mut self, wb: WindowBuilder) -> &mut Self {
         self.winit_builder = wb;
         self

@@ -1,32 +1,33 @@
 //! Mesh resource handling.
 
-use asset_manager::{AssetLoader, Assets};
-use gfx;
-use gfx::traits::FactoryExt;
-use gfx_device::gfx_types;
-use renderer::vertex::PosNormTex;
+use ecs::{Component, VecStorage};
+use renderer::prelude::{Mesh, MeshBuilder, VertexFormat};
+use renderer::{Renderer, Result};
+use super::unfinished::{ComponentBuilder, IntoUnfinished, Unfinished};
 
-/// A physical piece of geometry.
-#[derive(Clone)]
-pub struct Mesh {
-    /// A buffer full of vertices.
-    pub buffer: gfx::handle::Buffer<gfx_types::Resources, VertexPosNormal>,
-    /// A read-only slice of the vertex buffer data.
-    pub slice: gfx::Slice<gfx_types::Resources>,
+/// Wraps `Mesh` into component
+pub struct MeshComponent(pub Mesh);
+
+impl Component for MeshComponent {
+    type Storage = VecStorage<Self>;
 }
 
-impl AssetLoader<Mesh> for Vec<VertexPosNormal> {
-    /// # Panics
-    ///
-    /// Panics if factory isn't registered as loader.
-    fn from_data(assets: &mut Assets, data: Vec<VertexPosNormal>) -> Option<Mesh> {
-        let factory = assets
-            .get_loader_mut::<gfx_types::Factory>()
-            .expect("Couldn't retrieve factory.");
-        let (buffer, slice) = factory.create_vertex_buffer_with_slice(&data, ());
-        Some(Mesh {
-                 buffer: buffer,
-                 slice: slice,
-             })
+impl<D, V> ComponentBuilder for MeshBuilder<D, V>
+    where D: AsRef<[V]>,
+          V: VertexFormat,
+{
+    type Output = MeshComponent;
+    fn build(self: Box<Self>, renderer: &mut Renderer) -> Result<MeshComponent> {
+        renderer.create_mesh(*self).map(MeshComponent)
+    }
+}
+
+impl<D, V> IntoUnfinished for MeshBuilder<D, V>
+   where D: AsRef<[V]> + Send + Sync + 'static,
+          V: VertexFormat + 'static,
+{
+    type Output = MeshComponent;
+    fn unfinished(self) -> Unfinished<MeshComponent> {
+        Unfinished::new(self)
     }
 }

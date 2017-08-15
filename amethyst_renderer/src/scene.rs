@@ -86,6 +86,13 @@ impl Scene {
     pub fn active_camera(&self) -> Option<&Camera> {
         self.cameras.first()
     }
+
+    /// Remove all objects from `Scene`
+    pub fn clear(&mut self) {
+        self.models.clear();
+        self.lights.clear();
+        self.cameras.clear();
+    }
 }
 
 /// A renderable object in a scene.

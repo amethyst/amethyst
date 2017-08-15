@@ -3,71 +3,71 @@
 //! TODO: Rewrite for new renderer.
 
 extern crate amethyst;
+extern crate amethyst_renderer;
 extern crate cgmath;
 extern crate genmesh;
+extern crate winit;
 
 use amethyst::prelude::*;
-use amethyst::ecs::World;
-use amethyst::gfx_device::DisplayConfig;
-use amethyst::renderer::{VertexPosNormal, Pipeline};
-use cgmath::{Vector3, InnerSpace};
+use amethyst::ecs::systems::RenderSystem;
+use amethyst::ecs::components::*;
+use amethyst_renderer::prelude::*;
+
+use cgmath::{Matrix4, Deg, Vector3};
+use cgmath::prelude::InnerSpace;
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 
 struct Example;
 
 impl State for Example {
-    fn on_start(&mut self, world: &mut World, assets: &mut AssetManager, pipe: &mut Pipeline) {
-        use amethyst::ecs::components::{Mesh, Texture};
-        use amethyst::ecs::resources::{Camera, Projection, ScreenDimensions};
-        use amethyst::renderer::{Layer, PointLight};
-        use amethyst::renderer::pass::{Clear, DrawShaded};
+    fn on_start(&mut self, engine: &mut Engine) {
+        use std::time::{Duration, Instant};
 
-        let layer = Layer::new("main",
-                               vec![Clear::new([0.0, 0.0, 0.0, 1.0]),
-                                    DrawShaded::new("main", "main")]);
+        let verts = gen_sphere(32, 32);
+        let mesh = Mesh::build(verts);
+        let tex = Texture::from_color_val([0.0, 0.0, 1.0, 1.0]);
+        let mtl = MaterialBuilder::new().with_albedo(tex);
 
-        pipe.layers.push(layer);
+        engine.world.register::<Transform>();
+        engine.world.register::<MeshComponent>();
+        engine.world.register::<MaterialComponent>();
+        engine.world.register::<LightComponent>();
+        engine.world.register::<Unfinished<MeshComponent>>();
+        engine.world.register::<Unfinished<MaterialComponent>>();
 
-        {
-            let dim = world.read_resource::<ScreenDimensions>();
-            let mut camera = world.write_resource::<Camera>();
-            camera.proj = Projection::Perspective {
-                fov: 60.0,
-                aspect_ratio: dim.aspect_ratio,
-                near: 0.1,
-                far: 100.0,
-            };
-            camera.eye = [5.0, 0.0, 0.0];
-            camera.target = [0.0, 0.0, 0.0];
-        }
+        engine.world.create_entity()
+            .with(Transform::default())
+            .with(mesh.unfinished())
+            .with(mtl.unfinished())
+            .build();
 
-        let sphere_verts = gen_sphere(32, 32);
-        assets.register_asset::<Mesh>();
-        assets.register_asset::<Texture>();
-        assets.load_asset_from_data::<Mesh, Vec<VertexPosNormal>>("sphere", sphere_verts);
-        assets.load_asset_from_data::<Texture, [f32; 4]>("blue", [0.0, 0.0, 1.0, 1.0]);
-        assets.load_asset_from_data::<Texture, [f32; 4]>("white", [1.0, 1.0, 1.0, 1.0]);
+        engine.world.create_entity()
+            .with(LightComponent(PointLight {
+                center: [2.0, 2.0, 2.0].into(),
+                radius: 5.0,
+                intensity: 3.0,
+                ..Default::default()
+            }.into()))
+            .build();
 
-        let sphere = assets
-            .create_renderable("sphere", "blue", "white", "white", 1.0)
-            .unwrap();
-        world.create_entity().with(sphere).build();
-
-        let light = PointLight {
-            center: [2.0, 2.0, 2.0],
-            radius: 5.0,
-            intensity: 3.0,
-            ..Default::default()
-        };
-        world.create_entity().with(light).build();
+        engine.world.add_resource(Camera {
+            eye: [0.0, 0.0, -4.0].into(),
+            proj: Projection::perspective(1.3, Deg(60.0)).into(),
+            forward: [0.0, 0.0, 1.0].into(),
+            right: [1.0, 0.0, 0.0].into(),
+            up: [0.0, 1.0, 0.0].into(),
+        });
     }
 
     fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
         match event {
-            Event::Window(e) => match e {
-                WindowEvent::KeyboardInput(_, _, Some(Key::Escape), _) |
-                WindowEvent::Closed => Trans::Quit,
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::KeyboardInput {
+                    input: KeyboardInput {
+                        virtual_keycode: Some(VirtualKeyCode::Escape), ..
+                    }, ..
+                } | WindowEvent::Closed => Trans::Quit,
                 _ => Trans::None,
             },
             _ => Trans::None,
@@ -78,22 +78,34 @@ impl State for Example {
 fn main() {
     let path = format!("{}/examples/02_sphere/resources/config.ron",
                        env!("CARGO_MANIFEST_DIR"));
-    let mut game = Application::build(Example).build().expect("Fatal error");
+    let builder = Application::build(Example);
+    let render = RenderSystem::new(
+        &builder.events,
+        DisplayConfig::default(),
+        Pipeline::build()
+            .with_stage(Stage::with_backbuffer()
+                .clear_target([0.00196, 0.23726, 0.21765, 1.0], 1.0)
+                .with_model_pass(pass::DrawFlat::<PosNormTex>::new())
+            )
+    ).unwrap();
+
+    let mut game = builder
+        .with_thread_local(render)
+        .build()
+        .expect("Fatal error");
     game.run();
 }
 
-
-fn gen_sphere(u: usize, v: usize) -> Vec<VertexPosNormal> {
-    let data: Vec<VertexPosNormal> = SphereUV::new(u, v)
+fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTex> {
+    SphereUV::new(u, v)
         .vertex(|(x, y, z)| {
-                    VertexPosNormal {
-                        pos: [x, y, z],
-                        normal: Vector3::new(x, y, z).normalize().into(),
-                        tex_coord: [0., 0.],
-                    }
-                })
+            PosNormTex {
+                a_position: [x, y, z],
+                a_normal: Vector3::from([x, y, z]).normalize().into(),
+                a_tex_coord: [0.1, 0.1],
+            }
+        })
         .triangulate()
         .vertices()
-        .collect();
-    data
+        .collect()
 }

@@ -1,6 +1,6 @@
 //! World resource that handles all user input.
 
-use engine::{ElementState, WindowEvent, Event, VirtualKeyCode, MouseButton};
+use event::{ElementState, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
 use smallvec::SmallVec;
 use super::*;
 
@@ -36,8 +36,8 @@ pub struct InputHandler {
     pressed_mouse_buttons: SmallVec<[MouseButton; 16]>,
     down_mouse_buttons: SmallVec<[MouseButton; 16]>,
     released_mouse_buttons: SmallVec<[MouseButton; 16]>,
-    mouse_position: Option<(i32, i32)>,
-    previous_mouse_position: Option<(i32, i32)>,
+    mouse_position: Option<(f64, f64)>,
+    previous_mouse_position: Option<(f64, f64)>,
     text_this_frame: String,
 }
 
@@ -68,30 +68,52 @@ impl InputHandler {
         self.previous_mouse_position = self.mouse_position;
         self.text_this_frame.clear();
         for event in events {
-            match event.payload {
-                Event::ReceivedCharacter(c) => {
+            match *event {
+                WindowEvent::ReceivedCharacter(c) => {
                     self.text_this_frame.push(c);
                 }
-                Event::KeyboardInput(ElementState::Pressed, _, Some(key_code)) => {
+                WindowEvent::KeyboardInput {
+                    input: KeyboardInput {
+                        state: ElementState::Pressed,
+                        virtual_keycode: Some(key_code),
+                        ..
+                    },
+                    ..
+                } => {
                     if self.pressed_keys.iter().all(|&k| k != key_code) {
                         self.pressed_keys.push(key_code);
                         self.down_keys.push(key_code);
                     }
                 }
-                Event::KeyboardInput(ElementState::Released, _, Some(key_code)) => {
+                WindowEvent::KeyboardInput {
+                    input: KeyboardInput {
+                        state: ElementState::Released,
+                        virtual_keycode: Some(key_code),
+                        ..
+                    },
+                    ..
+                } => {
                     let index = self.pressed_keys.iter().position(|&k| k == key_code);
                     if let Some(i) = index {
                         self.pressed_keys.swap_remove(i);
                         self.released_keys.push(key_code);
                     }
                 }
-                Event::MouseInput(ElementState::Pressed, button) => {
+                WindowEvent::MouseInput {
+                    state: ElementState::Pressed,
+                    button,
+                    ..
+                } => {
                     if self.pressed_mouse_buttons.iter().all(|&b| b != button) {
                         self.pressed_mouse_buttons.push(button);
                         self.down_mouse_buttons.push(button);
                     }
                 }
-                Event::MouseInput(ElementState::Released, button) => {
+                WindowEvent::MouseInput {
+                    state: ElementState::Released,
+                    button,
+                    ..
+                } => {
                     let index = self.pressed_mouse_buttons
                         .iter()
                         .position(|&b| b == button);
@@ -100,10 +122,13 @@ impl InputHandler {
                         self.released_mouse_buttons.push(button);
                     }
                 }
-                Event::MouseMoved(x, y) => {
+                WindowEvent::MouseMoved {
+                    position: (x, y),
+                    ..
+                } => {
                     self.mouse_position = Some((x, y));
                 }
-                Event::Focused(false) => {
+                WindowEvent::Focused(false) => {
                     self.pressed_keys.clear();
                     self.pressed_mouse_buttons.clear();
                     self.mouse_position = None;
@@ -203,15 +228,15 @@ impl InputHandler {
     ///
     /// this method can return None, either if no mouse is connected, or if no mouse events have
     /// been recorded
-    pub fn mouse_position(&self) -> Option<(i32, i32)> {
+    pub fn mouse_position(&self) -> Option<(f64, f64)> {
         self.mouse_position
     }
 
     /// Gets the change in position since the last frame.
-    pub fn mouse_position_change(&self) -> (i32, i32) {
+    pub fn mouse_position_change(&self) -> (f64, f64) {
         match (self.mouse_position, self.previous_mouse_position) {
             (Some(current), Some(previous)) => (current.0 - previous.0, current.1 - previous.1),
-            _ => (0, 0),
+            _ => (0f64, 0f64),
         }
     }
 
@@ -260,7 +285,7 @@ impl InputHandler {
     }
 
     /// Returns the value of an axis by the string id, if the id doesn't exist this returns None.
-    pub fn axis_value<T: AsRef<str>>(&self, id: T) -> Option<f32> {
+    pub fn axis_value<T: AsRef<str>>(&self, id: T) -> Option<f64> {
         self.bindings
             .axes
             .get(id.as_ref())

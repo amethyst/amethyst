@@ -88,6 +88,7 @@ pub mod prelude;
 pub mod timing;
 
 mod app;
+mod display_config;
 mod engine;
 mod state;
 mod error;
