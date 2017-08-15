@@ -1,5 +1,7 @@
 //! A fully renderable scene.
 
+use std::cmp::max;
+
 use cam::Camera;
 use cgmath::Matrix4;
 use light::Light;
@@ -66,7 +68,7 @@ impl Scene {
     /// Iterates through all stored lights in parallel in chunks.
     pub fn par_chunks_lights(&self, count: usize) -> LightsChunks {
         let size = self.lights.len();
-        self.lights.par_chunks(((size - 1) / count) + 1)
+        self.lights.par_chunks(max(size / count, 1))
     }
 
     /// Iterates through all stored models in parallel.
@@ -77,7 +79,7 @@ impl Scene {
     /// Iterates through all stored models in parallel in chunks.
     pub fn par_chunks_models(&self, count: usize) -> ModelsChunks {
         let size = self.models.len();
-        self.models.par_chunks(((size - 1) / count) + 1)
+        self.models.par_chunks(max(size / count, 1))
     }
 
     /// Returns the active camera in the scene.
