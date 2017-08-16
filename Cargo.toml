@@ -25,9 +25,11 @@ amethyst_assets = { path = "amethyst_assets", version = "0.1.0" }
 amethyst_config = { path = "amethyst_config", version = "0.3.0" }
 amethyst_renderer = { path = "amethyst_renderer", version = "0.5" }
 cgmath = "0.14"
+crossbeam = "0.3"
 dds-rs = "0.4"
 derivative = "1.0"
 fnv = "1.0"
+futures = "0.1.14"
 num_cpus = "1.2"
 genmesh = "0.4"
 imagefmt = "4.0"

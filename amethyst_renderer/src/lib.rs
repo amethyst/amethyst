@@ -112,7 +112,7 @@ pub use mtl::{Material, MaterialBuilder};
 pub use pipe::{Pipeline, PipelineBuilder, Stage, Target};
 pub use scene::{Model, Scene};
 pub use tex::{Texture, TextureBuilder};
-pub use types::Encoder;
+pub use types::{Encoder, Factory};
 pub use vertex::VertexFormat;
 
 use gfx::memory::Pod;
@@ -120,7 +120,7 @@ use pipe::{ColorBuffer, DepthBuffer};
 use rayon::ThreadPool;
 use std::sync::Arc;
 use std::time::Duration;
-use types::{ColorFormat, DepthFormat, Factory, Window};
+use types::{ColorFormat, DepthFormat, Window};
 use winit::{EventsLoop, WindowBuilder};
 
 pub mod light;

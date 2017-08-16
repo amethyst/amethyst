@@ -57,10 +57,12 @@ pub extern crate amethyst_config as config;
 pub extern crate amethyst_renderer as renderer;
 
 extern crate cgmath;
+extern crate crossbeam;
 extern crate dds;
 #[macro_use]
 extern crate derivative;
 extern crate fnv;
+extern crate futures;
 extern crate genmesh;
 extern crate imagefmt;
 extern crate num_cpus;

@@ -116,7 +116,7 @@ impl<D, V> MeshBuilder<D, V>
     }
 
     /// Builds and returns the new mesh.
-    pub(crate) fn build(self, fac: &mut Factory) -> Result<Mesh> {
+    pub fn build(self, fac: &mut Factory) -> Result<Mesh> {
         use gfx::{Bind, Factory, IndexBuffer};
         use gfx::buffer::Role;
         use gfx::memory::cast_slice;
