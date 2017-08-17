@@ -108,9 +108,9 @@ unsafe impl<A, E> Sync for AssetFutureCell<A, E> {}
 /// `ThreadPool`.
 pub struct Loader {
     contexts: FnvHashMap<TypeId, Box<Any>>,
-    directory: Arc<Box<AnyStore>>,
+    directory: Arc<AnyStore>,
     pool: Arc<ThreadPool>,
-    stores: FnvHashMap<String, Arc<Box<AnyStore>>>,
+    stores: FnvHashMap<String, Arc<AnyStore>>,
 }
 
 impl Loader {
@@ -121,7 +121,7 @@ impl Loader {
     {
         Loader {
             contexts: Default::default(),
-            directory: Arc::new(Box::new(Directory::new(alloc, directory))),
+            directory: Arc::new(Directory::new(alloc, directory)),
             pool: pool,
             stores: Default::default(),
         }
@@ -133,7 +133,7 @@ impl Loader {
         where I: Into<String>,
               S: Store + Send + Sync + 'static
     {
-        self.stores.insert(name.into(), Arc::new(Box::new(store)));
+        self.stores.insert(name.into(), Arc::new(store));
     }
 
     /// Registers an asset and inserts a context into the map.
@@ -229,7 +229,7 @@ impl Loader {
         context.downcast_ref().unwrap()
     }
 
-    fn store<S>(&self, store: &S) -> Arc<Box<AnyStore>>
+    fn store<S>(&self, store: &S) -> Arc<AnyStore>
         where S: Eq + Hash + ?Sized,
               String: Borrow<S>
     {
@@ -312,7 +312,7 @@ fn load_asset_inner<C, F, S>(context: &C,
 pub fn load_asset_future<A, F, N, S>(context: Arc<A::Context>,
                                      format: F,
                                      name: N,
-                                     storage: Arc<S>,
+                                     storage: S,
                                      thread_pool: &ThreadPool)
                                      -> AssetFuture<A, AssetError<A::Error, F::Error, S::Error>>
     where A: Asset + Send + 'static,
@@ -325,7 +325,7 @@ pub fn load_asset_future<A, F, N, S>(context: Arc<A::Context>,
 {
     let name = name.into();
 
-    let closure = move || load_asset::<A, F, _, S>(&*context, &format, name, &*storage);
+    let closure = move || load_asset::<A, F, _, S>(&*context, &format, name, &storage);
 
     AssetFuture::spawn(thread_pool, closure)
 }
@@ -336,7 +336,7 @@ pub fn reload_asset_future<A, F, N, S>
     (context: Arc<A::Context>,
      format: F,
      name: N,
-     storage: Arc<S>,
+     storage: S,
      thread_pool: &ThreadPool)
      -> AssetFuture<A, AssetError<A::Error, F::Error, S::Error>>
     where A::Context: Context + Send + Sync + 'static,
@@ -349,7 +349,7 @@ pub fn reload_asset_future<A, F, N, S>
 {
     let name = name.into();
 
-    let closure = move || reload_asset::<A, F, _, S>(&*context, &format, name, &*storage);
+    let closure = move || reload_asset::<A, F, _, S>(&*context, &format, name, &storage);
 
     AssetFuture::spawn(thread_pool, closure)
 }
