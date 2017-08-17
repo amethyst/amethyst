@@ -141,10 +141,12 @@ mod types;
 
 /// Generic renderer.
 pub struct Renderer {
+    /// The gfx factory used for creation of buffers.
+    pub factory: Factory,
+
     config: Config,
     device: types::Device,
     encoders: Vec<Encoder>,
-    factory: Factory,
     main_target: Arc<Target>,
     pool: Arc<ThreadPool>,
     window: Window,

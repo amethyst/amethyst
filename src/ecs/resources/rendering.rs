@@ -4,7 +4,7 @@ use futures::sync::oneshot::{Receiver, Sender, channel};
 use gfx::traits::Pod;
 use renderer::{Error, Material, MaterialBuilder, Mesh, MeshBuilder};
 
-trait Exec: Send + Sync {
+pub(crate) trait Exec: Send + Sync {
     fn exec(self: Box<Self>, factory: &mut ::renderer::Factory);
 }
 
@@ -26,10 +26,17 @@ impl<A, E> Future for FactoryFuture<A, E> {
 /// The factory abstraction, which allows to access the real
 /// factory and returns futures.
 pub struct Factory {
-    jobs: MsQueue<Box<Exec>>,
+    pub(crate) jobs: MsQueue<Box<Exec>>,
 }
 
 impl Factory {
+    /// Creates a new factory resource.
+    pub fn new() -> Self {
+        Factory {
+            jobs: MsQueue::new(),
+        }
+    }
+
     /// Creates a mesh asynchronously.
     pub fn create_mesh<D, V>(&self, mb: MeshBuilder<D, V>) -> MeshFuture
         where D: AsRef<[V]> + Send + Sync + 'static,

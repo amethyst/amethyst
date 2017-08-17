@@ -1,7 +1,8 @@
 //! Rendering system.
 
-use ecs::{Entities, Fetch, Join, ReadStorage, System, WriteStorage};
+use ecs::{Fetch, Join, ReadStorage, System};
 use ecs::components::*;
+use ecs::resources::Factory as FactoryRes;
 use error::{Error, Result};
 use renderer::prelude::*;
 use winit::EventsLoop;
@@ -18,32 +19,19 @@ pub struct RenderSystem {
 
 impl<'a> System<'a> for RenderSystem {
     type SystemData = (
-        Entities<'a>,
         Fetch<'a, Camera>,
+        Fetch<'a, FactoryRes>,
         ReadStorage<'a, Transform>,
         ReadStorage<'a, LightComponent>,
-        WriteStorage<'a, Unfinished<MaterialComponent>>,
-        WriteStorage<'a, Unfinished<MeshComponent>>,
-        WriteStorage<'a, MaterialComponent>,
-        WriteStorage<'a, MeshComponent>,
+        ReadStorage<'a, MaterialComponent>,
+        ReadStorage<'a, MeshComponent>,
     );
 
-    fn run(&mut self, (ents, camera, globals, lights, mut umaterials, mut umeshes, mut materials, mut meshes): Self::SystemData) {
+    fn run(&mut self, (camera, factory_res, globals, lights, materials, meshes): Self::SystemData) {
         use std::time::Duration;
 
-        /// Finish `Unfinished`
-        for (ent, _) in (&*ents, &umaterials.check()).join() {
-            println!("Finish material");
-            let umaterial = umaterials.remove(ent).expect("Checked");
-            let material = umaterial.finish(&mut self.renderer).expect("Why???");
-            materials.insert(ent, material);
-        }
-
-        for (ent, _) in (&*ents, &umeshes.check()).join() {
-            println!("Finish mesh");
-            let umesh = umeshes.remove(ent).expect("Checked");
-            let mesh = umesh.finish(&mut self.renderer).expect("Why???");
-            meshes.insert(ent, mesh);
+        while let Some(job) = factory_res.jobs.try_pop() {
+            job.exec(&mut self.renderer.factory);
         }
         
         self.scene.clear();
