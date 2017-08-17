@@ -207,20 +207,6 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
         use ecs::resources::Factory;
         use ecs::systems::RenderSystem;
 
-        /*world.add_resource(Camera {
-            eye: [0.0, 0.0, -4.0].into(),
-            proj: Projection::perspective(1.3, Deg(60.0)).into(),
-            forward: [0.0, 0.0, 1.0].into(),
-            right: [1.0, 0.0, 0.0].into(),
-            up: [0.0, 1.0, 0.0].into(),
-        });
-        world.add_resource(Factory::new());
-
-        world.register::<Transform>();
-        world.register::<MeshComponent>();
-        world.register::<MaterialComponent>();
-        world.register::<LightComponent>();*/
-
         let cam = Camera {
             eye: [0.0, 0.0, -4.0].into(),
             proj: Projection::perspective(1.3, Deg(60.0)).into(),
