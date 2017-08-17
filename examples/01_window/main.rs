@@ -4,12 +4,9 @@ extern crate amethyst;
 extern crate amethyst_renderer;
 extern crate cgmath;
 
-use amethyst::prelude::*;
-use amethyst::ecs::World;
-use amethyst::ecs::systems::RenderSystem;
 use amethyst::event::{KeyboardInput, VirtualKeyCode};
-use amethyst::renderer::prelude::*;
-use cgmath::Deg;
+use amethyst::prelude::*;
+use amethyst::renderer::PipelineBuilder;
 
 struct Example;
 
@@ -31,41 +28,23 @@ impl State for Example {
     }
 }
 
-fn register(world: &mut World) {
-    use amethyst::ecs::components::*;
-    use amethyst::ecs::resources::*;
-
-    world.add_resource(Camera {
-        eye: [0.0, 0.0, -4.0].into(),
-        proj: Projection::perspective(1.3, Deg(60.0)).into(),
-        forward: [0.0, 0.0, 1.0].into(),
-        right: [1.0, 0.0, 0.0].into(),
-        up: [0.0, 1.0, 0.0].into(),
-    });
-    world.add_resource(Factory::new());
-
-    world.register::<Transform>();
-    world.register::<MeshComponent>();
-    world.register::<MaterialComponent>();
-    world.register::<LightComponent>();
-}
-
-fn main() {
+fn run() -> Result<()> {
     let path = format!("{}/examples/01_window/resources/config.ron",
                        env!("CARGO_MANIFEST_DIR"));
 
-    let builder = Application::build(Example);
-    let render = RenderSystem::new(
-        &builder.events,
-        Pipeline::forward::<PosNormTex>()
-    ).unwrap();
-
-    let mut game = builder
-        .with_thread_local(render)
+    let mut game = Application::build(Example)
+        .with_renderer(Pipeline::forward::<PosNormTex>())?
         .build()
         .expect("Fatal error");
 
-    register(&mut game.engine.world);
-
     game.run();
+
+    Ok(())
+}
+
+fn main() {
+    if let Err(e) = run() {
+        println!("Failed to execute example: {}", e);
+        ::std::process::exit(1);
+    }
 }
