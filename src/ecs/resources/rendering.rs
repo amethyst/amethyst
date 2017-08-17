@@ -1,79 +1,23 @@
-use std::cell::UnsafeCell;
-use std::sync::Arc;
-
 use crossbeam::sync::MsQueue;
 use futures::{Async, Future, Poll};
+use futures::sync::oneshot::{Receiver, channel};
 use gfx::traits::Pod;
 use renderer::{Error, Material, MaterialBuilder, Mesh, MeshBuilder};
 
 /// A factory future.
-pub struct FactoryFuture<A, E> {
-    inner: Option<Arc<FactoryFutureCell<A, E>>>,
-}
-
-impl<A: 'static, E: 'static> FactoryFuture<A, E> {
-    fn new() -> (Self, Arc<FactoryFutureCell<A, E>>) {
-        let inner = FactoryFutureCell { value: UnsafeCell::new(None) };
-        let inner = Arc::new(inner);
-
-        let cloned = inner.clone();
-        let inner = Some(inner);
-
-        (FactoryFuture { inner }, cloned)
-    }
-}
+pub struct FactoryFuture<A, E>(Receiver<Result<A, E>>);
 
 impl<A, E> Future for FactoryFuture<A, E> {
     type Item = A;
     type Error = E;
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-        match Arc::try_unwrap(self.inner.take().unwrap()) {
-            Ok(x) => {
-                // As soon as the worker thread finished executing the closure, the second
-                // reference gets dropped and we enter this branch.
-                // Thus, we are the only one with access to the cell.
-                unsafe {
-                    x.value
-                        .into_inner()
-                        .expect("Thread panicked")
-                        .map(Async::Ready)
-                }
-            }
-            Err(arc) => {
-                self.inner = Some(arc);
-
-                Ok(Async::NotReady)
-            }
-        }
-    }
-
-    fn wait(mut self) -> Result<Self::Item, Self::Error> {
-        use futures::Async;
-
-        loop {
-            match self.poll() {
-                Ok(Async::Ready(x)) => return Ok(x),
-                Ok(Async::NotReady) => {}
-                Err(x) => return Err(x),
-            }
+        match self.0.poll().expect("Sender destroyed") {
+            Async::Ready(x) => x.map(Async::Ready),
+            Async::NotReady => Ok(Async::NotReady),
         }
     }
 }
-
-struct FactoryFutureCell<A, E> {
-    value: UnsafeCell<Option<Result<A, E>>>,
-}
-
-impl<A, E> FactoryFutureCell<A, E> {
-    fn set(&self, res: Result<A, E>) {
-        unsafe { *self.value.get() = Some(res); }
-    }
-}
-
-unsafe impl<A, E> Send for FactoryFutureCell<A, E> {}
-
-unsafe impl<A, E> Sync for FactoryFutureCell<A, E> {}
 
 /// The factory abstraction, which allows to access the real
 /// factory and returns futures.
@@ -119,14 +63,14 @@ impl Factory {
               T: 'static,
               E: 'static,
     {
-        let (f, cell) = FactoryFuture::new();
+        let (send, recv) = channel();
 
         self.jobs.push(Box::new(move |factory| {
             let r = fun(factory);
-            cell.set(r);
+            let _ = send.send(r);
         }));
 
-        f
+        FactoryFuture(recv)
     }
 }
 
