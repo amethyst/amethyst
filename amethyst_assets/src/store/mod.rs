@@ -1,6 +1,7 @@
 pub use self::dir::Directory;
 
 use std::error::Error;
+use std::ops::Deref;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use BoxedErr;
 
@@ -51,21 +52,21 @@ impl<T> AnyStore for T
 }
 
 impl<T, S> Store for T
-    where T: ::std::ops::Deref<Target=S>,
+    where T: Deref<Target=S>,
           S: AnyStore + ?Sized
 {
     type Error = BoxedErr;
 
     fn modified(&self, category: &str, id: &str, ext: &str) -> Result<u64, Self::Error> {
-        S::modified(self.deref(), category, id, ext)
+        S::modified(self, category, id, ext)
     }
 
     fn load(&self, category: &str, id: &str, ext: &str) -> Result<Vec<u8>, Self::Error> {
-        S::load(self.deref(), category, id, ext)
+        S::load(self, category, id, ext)
     }
 
     fn store_id(&self) -> StoreId {
-        S::store_id(self.deref())
+        S::store_id(self)
     }
 }
 
