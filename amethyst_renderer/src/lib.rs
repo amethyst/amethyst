@@ -112,7 +112,7 @@ pub use mtl::{Material, MaterialBuilder};
 pub use pipe::{Pipeline, PipelineBuilder, Stage, Target};
 pub use scene::{Model, Scene};
 pub use tex::{Texture, TextureBuilder};
-pub use types::Encoder;
+pub use types::{Encoder, Factory};
 pub use vertex::VertexFormat;
 
 use gfx::memory::Pod;
@@ -120,7 +120,7 @@ use pipe::{ColorBuffer, DepthBuffer};
 use rayon::ThreadPool;
 use std::sync::Arc;
 use std::time::Duration;
-use types::{ColorFormat, DepthFormat, Factory, Window};
+use types::{ColorFormat, DepthFormat, Window};
 use winit::{EventsLoop, WindowBuilder};
 
 pub mod light;
@@ -141,10 +141,12 @@ mod types;
 
 /// Generic renderer.
 pub struct Renderer {
+    /// The gfx factory used for creation of buffers.
+    pub factory: Factory,
+
     config: Config,
     device: types::Device,
     encoders: Vec<Encoder>,
-    factory: Factory,
     main_target: Arc<Target>,
     pool: Arc<ThreadPool>,
     window: Window,
@@ -303,7 +305,7 @@ impl<'a> RendererBuilder<'a> {
                                 let cfg = rayon::Configuration::new().num_threads(num_cores);
                                 ThreadPool::new(cfg)
                                     .map(|p| Arc::new(p))
-                                    .map_err(|e| Error::PoolCreation(e))
+                                    .map_err(|e| Error::PoolCreation(format!("{}", e)))
                             })?;
 
         Ok(Renderer {

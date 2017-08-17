@@ -11,4 +11,8 @@
 // mod screen_dimensions;
 // mod time;
 
+pub use self::rendering::{Factory, FactoryFuture, MeshFuture};
+
 pub mod input;
+
+mod rendering;

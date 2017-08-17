@@ -144,7 +144,7 @@ impl<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC> MaterialBuilder<DA,
     }
 
     /// Builds and returns the new material.
-    pub(crate) fn build(self, fac: &mut Factory) -> Result<Material>
+    pub fn build(self, fac: &mut Factory) -> Result<Material>
         where DA: AsRef<[TA]>,
               TA: Pod,
               DE: AsRef<[TE]>,
