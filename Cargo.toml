@@ -48,10 +48,6 @@ thread_profiler = { version = "0.1", optional = true }
 version = "0.4.2"
 features = ["serde"]
 
-[target.'cfg(windows)'.dependencies]
-gfx_device_dx11 = "0.4"
-gfx_window_dxgi = "0.5"
-
 [[example]]
 name = "hello_world"
 path = "examples/00_hello_world/main.rs"
