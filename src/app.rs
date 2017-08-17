@@ -1,15 +1,19 @@
 //! The core engine framework.
 
+use std::sync::Arc;
+use std::path::PathBuf;
+
+use rayon::ThreadPool;
+use renderer::PipelineBuilder;
+use shred::Resource;
+use winit::EventsLoop;
+
 use config::Config;
 use ecs::{Component, Dispatcher, DispatcherBuilder, System, World};
 use engine::Engine;
 use error::{Error, Result};
-use rayon::ThreadPool;
 use state::{State, StateMachine};
-use std::path::PathBuf;
-use std::sync::Arc;
 use timing::{Stopwatch, Time};
-use winit::EventsLoop;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
@@ -154,6 +158,15 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
         self
     }
 
+    /// Adds an ECS resource which can be accessed from systems.
+    pub fn add_resource<R>(mut self, res: R) -> Self
+        where R: Resource
+    {
+        self.world.add_resource(res);
+
+        self
+    }
+
     /// Inserts a barrier which assures that all systems added before the
     /// barrier are executed before the ones after this barrier.
     ///
@@ -184,6 +197,35 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     {
         self.disp_builder = self.disp_builder.add_thread_local(sys);
         self
+    }
+
+    /// Automatically registers components, adds resources and the rendering system.
+    pub fn with_renderer(self, pipe: PipelineBuilder) -> Result<Self> {
+        use cgmath::Deg;
+        use renderer::{Camera, Projection};
+        use ecs::components::{LightComponent, MaterialComponent, MeshComponent, Transform};
+        use ecs::resources::Factory;
+        use ecs::systems::RenderSystem;
+
+        let cam = Camera {
+            eye: [0.0, 0.0, -4.0].into(),
+            proj: Projection::perspective(1.3, Deg(60.0)).into(),
+            forward: [0.0, 0.0, 1.0].into(),
+            right: [1.0, 0.0, 0.0].into(),
+            up: [0.0, 1.0, 0.0].into(),
+        };
+
+        let render_sys = RenderSystem::new(&self.events, pipe)?;
+
+        let this = self.add_resource(cam)
+            .add_resource(Factory::new())
+            .register::<LightComponent>()
+            .register::<MaterialComponent>()
+            .register::<MeshComponent>()
+            .register::<Transform>()
+            .with_thread_local(render_sys);
+
+        Ok(this)
     }
 
     /// Builds the Application and returns the result.

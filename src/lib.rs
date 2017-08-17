@@ -72,6 +72,7 @@ extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate smallvec;
+extern crate shred;
 extern crate specs;
 extern crate wavefront_obj;
 extern crate winit;
