@@ -22,7 +22,7 @@ pub enum Error {
     /// Failed to create a pipeline state object (PSO).
     PipelineCreation(gfx_core::pso::CreationError),
     /// Failed to create thread pool.
-    PoolCreation(Box<StdError + 'static>),
+    PoolCreation(String),
     /// Failed to create and link a shader program.
     ProgramCreation(gfx::shade::ProgramError),
     /// Failed to create a resource view.
@@ -56,7 +56,6 @@ impl StdError for Error {
             Error::BufferCreation(ref e) => Some(e),
             Error::PassInit(ref e) => Some(e),
             Error::PipelineCreation(ref e) => Some(e),
-            Error::PoolCreation(ref e) => Some(e.as_ref()),
             Error::ProgramCreation(ref e) => Some(e),
             Error::ResViewCreation(ref e) => Some(e),
             Error::TargetCreation(ref e) => Some(e),

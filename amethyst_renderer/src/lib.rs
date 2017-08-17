@@ -303,7 +303,7 @@ impl<'a> RendererBuilder<'a> {
                                 let cfg = rayon::Configuration::new().num_threads(num_cores);
                                 ThreadPool::new(cfg)
                                     .map(|p| Arc::new(p))
-                                    .map_err(|e| Error::PoolCreation(e))
+                                    .map_err(|e| Error::PoolCreation(format!("{}", e)))
                             })?;
 
         Ok(Renderer {
