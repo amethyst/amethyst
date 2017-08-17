@@ -63,6 +63,7 @@ extern crate dds;
 extern crate derivative;
 extern crate fnv;
 extern crate futures;
+extern crate gfx;
 extern crate genmesh;
 extern crate imagefmt;
 extern crate num_cpus;

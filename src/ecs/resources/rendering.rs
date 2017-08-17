@@ -3,7 +3,8 @@ use std::sync::Arc;
 
 use crossbeam::sync::MsQueue;
 use futures::{Async, Future, Poll};
-use renderer::{Error, Mesh, MeshBuilder};
+use gfx::traits::Pod;
+use renderer::{Error, Material, MaterialBuilder, Mesh, MeshBuilder};
 
 /// A factory future.
 pub struct FactoryFuture<A, E> {
@@ -89,6 +90,29 @@ impl Factory {
         self.execute(move |f| mb.build(f))
     }
 
+    /// Creates a mesh asynchronously.
+    pub fn create_material<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC>(
+        &self,
+        mb: MaterialBuilder<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC>)
+        -> MaterialFuture
+        where DA: AsRef<[TA]> + 'static,
+              TA: Pod + 'static,
+              DE: AsRef<[TE]> + 'static,
+              TE: Pod + 'static,
+              DN: AsRef<[TN]> + 'static,
+              TN: Pod + 'static,
+              DM: AsRef<[TM]> + 'static,
+              TM: Pod + 'static,
+              DR: AsRef<[TR]> + 'static,
+              TR: Pod + 'static,
+              DO: AsRef<[TO]> + 'static,
+              TO: Pod + 'static,
+              DC: AsRef<[TC]> + 'static,
+              TC: Pod + 'static,
+    {
+        self.execute(|f| mb.build(f))
+    }
+
     /// Execute a closure which takes in the real factory.
     pub fn execute<F, T, E>(&self, fun: F) -> FactoryFuture<T, E>
         where F: FnOnce(&mut ::renderer::Factory) -> Result<T, E> + 'static,
@@ -105,6 +129,9 @@ impl Factory {
         f
     }
 }
+
+/// A material which may not have been created yet.
+pub type MaterialFuture = FactoryFuture<Material, Error>;
 
 /// A mesh which may not have been created yet.
 pub type MeshFuture = FactoryFuture<Mesh, Error>;
