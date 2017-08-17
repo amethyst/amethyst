@@ -1,15 +1,18 @@
 //! The core engine framework.
 
+use std::sync::Arc;
+use std::path::PathBuf;
+
+use rayon::ThreadPool;
+use shred::Resource;
+use winit::EventsLoop;
+
 use config::Config;
 use ecs::{Component, Dispatcher, DispatcherBuilder, System, World};
 use engine::Engine;
 use error::{Error, Result};
-use rayon::ThreadPool;
 use state::{State, StateMachine};
-use std::path::PathBuf;
-use std::sync::Arc;
 use timing::{Stopwatch, Time};
-use winit::EventsLoop;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
@@ -151,6 +154,15 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     /// Registers a given component type.
     pub fn register<C: Component>(mut self) -> Self {
         self.world.register::<C>();
+        self
+    }
+
+    /// Adds an ECS resource which can be accessed from systems.
+    pub fn add_resource<T>(mut self, res: T) -> Self
+        where T: Resource
+    {
+        self.world.add_resource(res);
+
         self
     }
 
