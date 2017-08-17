@@ -4,6 +4,7 @@ use std::sync::Arc;
 use std::path::PathBuf;
 
 use rayon::ThreadPool;
+use renderer::PipelineBuilder;
 use shred::Resource;
 use winit::EventsLoop;
 
@@ -158,8 +159,8 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     }
 
     /// Adds an ECS resource which can be accessed from systems.
-    pub fn add_resource<T>(mut self, res: T) -> Self
-        where T: Resource
+    pub fn add_resource<R>(mut self, res: R) -> Self
+        where R: Resource
     {
         self.world.add_resource(res);
 
@@ -196,6 +197,49 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     {
         self.disp_builder = self.disp_builder.add_thread_local(sys);
         self
+    }
+
+    /// Automatically registers components, adds resources and the rendering system.
+    pub fn with_renderer(self, pipe: PipelineBuilder) -> Result<Self> {
+        use cgmath::Deg;
+        use renderer::{Camera, Projection};
+        use ecs::components::{LightComponent, MaterialComponent, MeshComponent, Transform};
+        use ecs::resources::Factory;
+        use ecs::systems::RenderSystem;
+
+        /*world.add_resource(Camera {
+            eye: [0.0, 0.0, -4.0].into(),
+            proj: Projection::perspective(1.3, Deg(60.0)).into(),
+            forward: [0.0, 0.0, 1.0].into(),
+            right: [1.0, 0.0, 0.0].into(),
+            up: [0.0, 1.0, 0.0].into(),
+        });
+        world.add_resource(Factory::new());
+
+        world.register::<Transform>();
+        world.register::<MeshComponent>();
+        world.register::<MaterialComponent>();
+        world.register::<LightComponent>();*/
+
+        let cam = Camera {
+            eye: [0.0, 0.0, -4.0].into(),
+            proj: Projection::perspective(1.3, Deg(60.0)).into(),
+            forward: [0.0, 0.0, 1.0].into(),
+            right: [1.0, 0.0, 0.0].into(),
+            up: [0.0, 1.0, 0.0].into(),
+        };
+
+        let render_sys = RenderSystem::new(&self.events, pipe)?;
+
+        let this = self.add_resource(cam)
+            .add_resource(Factory::new())
+            .register::<LightComponent>()
+            .register::<MaterialComponent>()
+            .register::<MeshComponent>()
+            .register::<Transform>()
+            .with_thread_local(render_sys);
+
+        Ok(this)
     }
 
     /// Builds the Application and returns the result.
