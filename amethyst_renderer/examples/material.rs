@@ -3,7 +3,7 @@
 extern crate amethyst_renderer as renderer;
 extern crate cgmath;
 extern crate genmesh;
-extern crate glutin;
+extern crate winit;
 
 use cgmath::{Matrix4, Deg, Vector3};
 use cgmath::prelude::InnerSpace;
@@ -14,7 +14,7 @@ use renderer::vertex::PosNormTangTex;
 
 fn main() {
     use std::time::{Duration, Instant};
-    use glutin::{Event, EventsLoop, WindowEvent};
+    use winit::{Event, EventsLoop, WindowEvent};
 
     let mut events = EventsLoop::new();
     let mut renderer = Renderer::new(&events).expect("Renderer create");

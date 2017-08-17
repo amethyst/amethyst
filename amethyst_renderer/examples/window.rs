@@ -1,11 +1,11 @@
 //! Launches a new renderer window.
 
 extern crate amethyst_renderer as renderer;
-extern crate glutin;
+extern crate winit;
 
 use std::time::{Duration, Instant};
 
-use glutin::{Event, EventsLoop, WindowEvent};
+use winit::{Event, EventsLoop, WindowEvent};
 use renderer::prelude::*;
 
 fn main() {
