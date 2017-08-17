@@ -50,23 +50,25 @@ impl<T> AnyStore for T
     }
 }
 
-impl<T> Store for Box<T>
-    where T: AnyStore + ?Sized
+impl<T, S> Store for T
+    where T: ::std::ops::Deref<Target=S>,
+          S: AnyStore + ?Sized
 {
     type Error = BoxedErr;
 
     fn modified(&self, category: &str, id: &str, ext: &str) -> Result<u64, Self::Error> {
-        T::modified(self, category, id, ext)
+        S::modified(self.deref(), category, id, ext)
     }
 
     fn load(&self, category: &str, id: &str, ext: &str) -> Result<Vec<u8>, Self::Error> {
-        T::load(self, category, id, ext)
+        S::load(self.deref(), category, id, ext)
     }
 
     fn store_id(&self) -> StoreId {
-        T::store_id(self)
+        S::store_id(self.deref())
     }
 }
+
 
 /// A trait for asset stores, which provides
 /// methods for loading
