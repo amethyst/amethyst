@@ -1,6 +1,6 @@
 //! Renderer configuration.
 
-use glutin::WindowBuilder;
+use winit::WindowBuilder;
 
 /// Structure for holding the renderer configuration.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -52,7 +52,7 @@ fn default_visibility() -> bool { true }
 
 impl From<Config> for WindowBuilder {
     fn from(cfg: Config) -> Self {
-        use glutin::{self, WindowAttributes};
+        use winit::{self, WindowAttributes};
 
         let attrs = WindowAttributes {
             dimensions: cfg.dimensions,
@@ -67,7 +67,7 @@ impl From<Config> for WindowBuilder {
         builder.window = attrs;
 
         if cfg.fullscreen {
-            builder = builder.with_fullscreen(glutin::get_primary_monitor());
+            builder = builder.with_fullscreen(winit::get_primary_monitor());
         }
 
         builder
