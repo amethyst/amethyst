@@ -17,6 +17,7 @@ impl Asset for DummyAsset {
     type Context = DummyContext;
     type Data = String;
     type Error = NoError;
+    type Result = Result<Asset, NoError>;
 
     fn is_shared(&self) -> bool {
         false
@@ -37,6 +38,7 @@ impl Context for DummyContext {
     type Asset = DummyAsset;
     type Data = String;
     type Error = NoError;
+    type Result = Result<Asset, NoError>;
 
     fn category(&self) -> &str {
         "dummy"

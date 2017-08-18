@@ -8,6 +8,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use parking_lot::RwLock;
+use rayon::ThreadPool;
 
 use {Asset, AssetSpec, Cache, Context};
 
@@ -86,7 +87,7 @@ impl<A> AssetPtr<A>
 
 /// A simple implementation of the `Context` trait.
 pub struct SimpleContext<A, D, E, T> {
-    cache: Cache<A>,
+    cache: Cache<Result<A, E>>,
     category: Cow<'static, str>,
     load: T,
     phantom: PhantomData<(D, E)>,
@@ -94,6 +95,7 @@ pub struct SimpleContext<A, D, E, T> {
 
 impl<A, D, E, T> SimpleContext<A, D, E, T>
     where A: Asset,
+          E: Clone
 {
     /// Creates a new `SimpleContext` from a category string and
     /// a closure which transforms data to assets.
@@ -110,38 +112,51 @@ impl<A, D, E, T> SimpleContext<A, D, E, T>
 impl<A, D, E, T> Context for SimpleContext<A, D, E, T>
     where T: Fn(D) -> Result<A, E>,
           A: Asset,
-          E: Error,
+          E: Error + Clone,
 {
     type Asset = A;
     type Data = D;
     type Error = E;
+    type Result = Result<A, E>;
 
     fn category(&self) -> &str {
         self.category.as_ref()
     }
 
-    fn create_asset(&self, data: Self::Data) -> Result<Self::Asset, Self::Error> {
-        (&self.load)(data)
+    fn create_asset(&self, data: Self::Data) -> Result<A, E> {
+        let asset = (&self.load)(data)?;
+        Ok(asset)
     }
 
-    fn cache(&self, spec: AssetSpec, asset: &Self::Asset) {
-        self.cache.insert(spec, asset.clone());
+    fn cache(&self, spec: AssetSpec, asset: Result<A, E>) {
+        self.cache.insert(spec, asset);
     }
 
-    fn retrieve(&self, spec: &AssetSpec) -> Option<Self::Asset> {
+    fn retrieve(&self, spec: &AssetSpec) -> Option<Result<A, E>> {
         self.cache.get(spec)
     }
 
     fn update(&self, spec: &AssetSpec, updated: A) {
-        if !self.cache.access(spec, |a| a.push_update(updated)) {
-            warn!(target: "SimpleContext::update",
-                  "Cannot update the asset {:?} since there is no cached version",
-                  spec);
+        let mut insert = None;
+        {
+            let insert_ref = &mut insert;
+            if !self.cache.access(spec, move |a| if a.is_ok() {
+                a.as_ref().map(|a| a.push_update(updated));
+            } else {
+                *insert_ref = Some(updated);
+            }) {
+                warn!(target: "SimpleContext::update",
+                      "Cannot update the asset {:?} since there is no cached version",
+                      spec);
+            }
+        }
+        if let Some(insert) = insert {
+            self.cache.insert(spec.clone(), Ok(insert));
         }
     }
 
     fn clear(&self) {
-        self.cache.retain(|_, a| a.is_shared());
+        self.cache.retain(|_, a| a.as_ref().map(A::is_shared).unwrap_or(false));
     }
 
     fn clear_all(&self) {
