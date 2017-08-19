@@ -21,7 +21,7 @@ pub use specs::common::BoxedErr;
 
 pub use asset::{Asset, AssetSpec, Cache, Context, Format};
 pub use error::{AssetError, LoadError, NoError};
-pub use loader::{AssetFuture, Loader, load_asset, load_asset_future};
+pub use loader::{Loader, load_asset};
 pub use simple::{AssetPtr, SimpleContext};
 pub use store::{Allocator, Directory, Store, StoreId};
 

@@ -19,6 +19,7 @@ impl Context for DummyContext {
     type Asset = DummyAsset;
     type Data = String;
     type Error = NoError;
+    type Result = Result<Asset, NoError>;
 
     fn category(&self) -> &'static str {
         "dummy"
@@ -58,6 +59,7 @@ impl Asset for DummyAsset {
     type Context = DummyContext;
     type Data = String;
     type Error = NoError;
+    type Result = Result<Asset, NoError>;
 
     fn is_shared(&self) -> bool {
         Arc::strong_count(&self.0) > 1

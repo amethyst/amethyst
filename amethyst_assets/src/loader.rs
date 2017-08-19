@@ -6,7 +6,8 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use fnv::FnvHashMap;
-use futures::{Future, Poll};
+use futures::{Future, IntoFuture, Poll, Async};
+use futures::sync::oneshot::{channel, Receiver};
 use rayon::ThreadPool;
 use specs::{Component, DenseVecStorage};
 
@@ -15,93 +16,114 @@ use asset::AssetSpec;
 use store::AnyStore;
 use {Allocator, Asset, BoxedErr, Context, Directory, Format, AssetError, LoadError, Store};
 
+enum AssetFutureInner<A, F, S>
+    where A: Asset
+{
+    Prepared(Receiver<Result<A::Result, LoadError<A::Error, F, S>>>),
+    Received(<A::Result as IntoFuture>::Future),
+    Final(<Result<A, LoadError<A::Error, F, S>> as IntoFuture>::Future),
+}
+
 /// Represents a future value of an asset. This future may be
 /// added to the ECS world, where the responsible system can poll it and merge
 /// it into the persistent storage once it is `Ready`.
-pub struct AssetFuture<A, E> {
-    inner: Option<Arc<AssetFutureCell<A, E>>>,
+pub struct AssetFuture<A, F, S>
+    where A: Asset
+{
+    spec: AssetSpec,
+    inner: AssetFutureInner<A, F, S>,
 }
 
-impl<A: 'static, E: 'static> AssetFuture<A, E> {
-    fn spawn<F>(pool: &ThreadPool, f: F) -> Self
-        where F: FnOnce() -> Result<A, E> + Send + 'static
-    {
-        let inner = AssetFutureCell { value: UnsafeCell::new(None) };
-        let inner = Arc::new(inner);
+impl<A, F, S> AssetFuture<A, F, S>
+    where A: Asset
+{
+    fn new(spec: AssetSpec, asset: A::Result) -> Self {
+        AssetFuture {
+            spec: spec,
+            inner: AssetFutureInner::Received(asset.into_future())
+        }
+    }
 
-        let cloned = inner.clone();
+    fn ok(spec: AssetSpec, asset: A) -> Self {
+        AssetFuture {
+            spec: spec,
+            inner: AssetFutureInner::Final(Ok(asset).into_future())
+        }
+    }
+
+    fn error(error: AssetError<A::Error, F, S>) -> Self {
+        let AssetError { asset, error } = error;
+        AssetFuture {
+            spec: asset,
+            inner: AssetFutureInner::Final(Err(error).into_future())
+        }
+    }
+    
+    fn spawn<U>(spec: AssetSpec, pool: &ThreadPool, f: U) -> Self
+        where U: FnOnce() -> Result<A::Result, LoadError<A::Error, F, S>> + Send + 'static,
+              A::Result: Send + 'static,
+              A::Error: Send + 'static,
+              F: Send + 'static,
+              S: Send + 'static,
+    {
+        let (send, recv) = channel();
 
         pool.spawn(move || {
-            let res = f();
-            // This is safe because the other reference to `value` is only accessed
-            // if there is just one strong reference of the `Arc`. However, this closure holds
-            // one.
-            unsafe {
-                *cloned.value.get() = Some(res);
-            }
-
-            // Now, `cloned` gets dropped.
+            send.send(f());
         });
 
-        let inner = Some(inner);
-
-        AssetFuture { inner }
+        AssetFuture {
+            spec: spec,
+            inner: AssetFutureInner::Prepared(recv)
+        }
     }
 }
 
-impl<A, E> Component for AssetFuture<A, E>
-    where A: Component,
-          E: 'static
+impl<A, F, S> Future for AssetFuture<A, F, S>
+    where A: Asset
+{
+    type Item = A;
+    type Error = AssetError<A::Error, F, S>;
+
+    fn poll(&mut self) -> Poll<A, AssetError<A::Error, F, S>> {
+        let AssetFuture { ref mut spec, ref mut inner } = *self;
+        let res = match *inner {
+            AssetFutureInner::Prepared(ref mut recv) => {
+                match recv.poll().expect("Sender was dropped") {
+                    Async::Ready(Ok(res)) => {
+                        let mut res = res.into_future();
+                        match res.poll() {
+                            Ok(Async::Ready(asset)) => return Ok(Async::Ready(asset)),
+                            Ok(Async::NotReady) => res,
+                            Err(err) => return Err(AssetError::new(spec.clone(), LoadError::AssetError(err))),
+                        }
+                    },
+                    Async::Ready(Err(err)) => return Err(AssetError::new(spec.clone(), err)),
+                    Async::NotReady => return Ok(Async::NotReady),
+                }
+            }
+            AssetFutureInner::Received(ref mut res) =>
+                return res.poll().map_err(|err| AssetError::new(spec.clone(), LoadError::AssetError(err))),
+            AssetFutureInner::Final(ref mut res) =>
+                return res.poll().map_err(|err| AssetError::new(spec.clone(), err)),
+        };
+
+        *inner = AssetFutureInner::Received(res);
+        Ok(Async::NotReady)
+    }
+}
+
+impl<A, F, S> Component for AssetFuture<A, F, S>
+    where A: Asset + Component + Send + Sync,
+          A::Error: Send + Sync,
+          A::Result: Send,
+          <A::Result as IntoFuture>::Future: Send + Sync,
+          F: Send + Sync + 'static,
+          S: Send + Sync + 'static
 {
     type Storage = DenseVecStorage<Self>;
 }
 
-impl<A, E> Future for AssetFuture<A, E> {
-    type Item = A;
-    type Error = E;
-
-    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-        use futures::Async;
-
-        match Arc::try_unwrap(self.inner.take().unwrap()) {
-            Ok(x) => {
-                // As soon as the worker thread finished executing the closure, the second
-                // reference gets dropped and we enter this branch.
-                // Thus, we are the only one with access to the cell.
-                unsafe {
-                    x.value
-                        .into_inner()
-                        .expect("Thread panicked")
-                        .map(Async::Ready)
-                }
-            }
-            Err(arc) => {
-                self.inner = Some(arc);
-
-                Ok(Async::NotReady)
-            }
-        }
-    }
-
-    fn wait(mut self) -> Result<Self::Item, Self::Error> {
-        use futures::Async;
-
-        loop {
-            match self.poll() {
-                Ok(Async::Ready(x)) => return Ok(x),
-                Ok(Async::NotReady) => {}
-                Err(x) => return Err(x),
-            }
-        }
-    }
-}
-
-struct AssetFutureCell<A, E> {
-    value: UnsafeCell<Option<Result<A, E>>>,
-}
-
-unsafe impl<A, E> Send for AssetFutureCell<A, E> {}
-unsafe impl<A, E> Sync for AssetFutureCell<A, E> {}
 
 /// The asset loader, holding the contexts,
 /// the default (directory) store and a reference to the
@@ -150,10 +172,11 @@ impl Loader {
                               name: N,
                               format: F,
                               store: &S)
-                              -> AssetFuture<A, AssetError<A::Error, F::Error, BoxedErr>>
+                              -> AssetFuture<A, F::Error, BoxedErr>
         where A: Asset + Send + 'static,
               A::Context: Context + Send + Sync + 'static,
               A::Error: Send + 'static,
+              A::Result: Send + 'static,
               F: Format<Data = A::Data> + Send + 'static,
               F::Error: Send + 'static,
               N: Into<String>,
@@ -177,10 +200,11 @@ impl Loader {
     pub fn load<A, F, N>(&self,
                          id: N,
                          format: F)
-                         -> AssetFuture<A, AssetError<A::Error, F::Error, BoxedErr>>
+                         -> AssetFuture<A, F::Error, BoxedErr>
         where A: Asset + Send + 'static,
               A::Context: Context + Send + Sync + 'static,
               A::Error: Send + 'static,
+              A::Result: Send + 'static,
               F: Format<Data = A::Data> + Send + 'static,
               F::Error: Send + 'static,
               N: Into<String>
@@ -199,10 +223,11 @@ impl Loader {
                                  name: N,
                                  format: F,
                                  store: &S)
-                                 -> AssetFuture<A, AssetError<A::Error, F::Error, BoxedErr>>
+                                 -> AssetFuture<A, F::Error, BoxedErr>
         where A: Asset + Send + 'static,
               A::Context: Context + Send + Sync + 'static,
               A::Error: Send + 'static,
+              A::Result: Send + 'static,
               F: Format<Data = A::Data> + Send + 'static,
               F::Error: Send + 'static,
               N: Into<String>,
@@ -245,7 +270,7 @@ pub fn load_asset<A, F, N, S>(context: &A::Context,
                               format: &F,
                               name: N,
                               storage: &S)
-                              -> Result<A, AssetError<A::Error, F::Error, S::Error>>
+                              -> AssetFuture<A, F::Error, S::Error>
     where A: Asset,
           A::Context: Context,
           F: Format<Data = A::Data>,
@@ -257,10 +282,15 @@ pub fn load_asset<A, F, N, S>(context: &A::Context,
     let store_id = storage.store_id();
     let spec = AssetSpec::new(name.clone(), F::extension(), store_id);
 
-    context.retrieve(&spec)
-        .map(|a| Ok(a))
-        .unwrap_or_else(move || load_asset_inner(context, format, spec, storage))
-        .map_err(|e| AssetError::new(AssetSpec::new(name, F::extension(), store_id), e))
+    match context.retrieve(&spec) {
+        Some(asset) => AssetFuture::new(spec, asset),
+        None => {
+            match load_asset_inner::<A, F, S>(context, format, &spec, storage) {
+                Ok(res) => AssetFuture::new(spec, res),
+                Err(err) => AssetFuture::error(AssetError::new(spec, err)),
+            }
+        }
+    }
 }
 
 /// Loads an asset with a given context, format, specifier and storage right now.
@@ -270,7 +300,7 @@ pub fn reload_asset<A, F, N, S>(context: &A::Context,
                                 format: &F,
                                 name: N,
                                 storage: &S)
-                                -> Result<A, AssetError<A::Error, F::Error, S::Error>>
+                                -> AssetFuture<A, F::Error, S::Error>
     where A: Asset,
           A::Context: Context,
           F: Format<Data = A::Data>,
@@ -282,29 +312,10 @@ pub fn reload_asset<A, F, N, S>(context: &A::Context,
     let store_id = storage.store_id();
     let spec = AssetSpec::new(name.clone(), F::extension(), store_id);
 
-    load_asset_inner(context, format, spec, storage)
-        .map_err(|e| AssetError::new(AssetSpec::new(name, F::extension(), store_id), e))
-}
-
-fn load_asset_inner<C, F, S>(context: &C,
-                             format: &F,
-                             spec: AssetSpec,
-                             store: &S)
-                             -> Result<C::Asset, LoadError<C::Error, F::Error, S::Error>>
-    where C: Context,
-          F: Format<Data = C::Data>,
-          S: Store
-{
-    let bytes = store
-        .load(context.category(), &spec.name, spec.ext)
-        .map_err(LoadError::StorageError)?;
-    let data = format.parse(bytes).map_err(LoadError::FormatError)?;
-    let a = context.create_asset(data)
-        .map_err(LoadError::AssetError)?;
-
-    context.cache(spec, &a);
-
-    Ok(a)
+    match load_asset_inner::<A, F, S>(context, format, &spec, storage) {
+        Ok(res) => AssetFuture::new(spec, res),
+        Err(err) => AssetFuture::error(AssetError::new(spec, err)),
+    }
 }
 
 /// Like `load_asset`, but loads the asset on a worker thread and returns
@@ -314,10 +325,11 @@ pub fn load_asset_future<A, F, N, S>(context: Arc<A::Context>,
                                      name: N,
                                      storage: S,
                                      thread_pool: &ThreadPool)
-                                     -> AssetFuture<A, AssetError<A::Error, F::Error, S::Error>>
+                                     -> AssetFuture<A, F::Error, S::Error>
     where A: Asset + Send + 'static,
           A::Context: Context + Send + Sync + 'static,
           A::Error: Send + 'static,
+          A::Result: Send + 'static,
           F: Format<Data = A::Data> + Send + 'static,
           F::Error: Send + 'static,
           N: Into<String>,
@@ -325,23 +337,29 @@ pub fn load_asset_future<A, F, N, S>(context: Arc<A::Context>,
 {
     let name = name.into();
 
-    let closure = move || load_asset::<A, F, _, S>(&*context, &format, name, &storage);
+    let store_id = storage.store_id();
+    let spec = AssetSpec::new(name.clone(), F::extension(), store_id);
 
-    AssetFuture::spawn(thread_pool, closure)
+    match context.retrieve(&spec) {
+        Some(asset) => AssetFuture::new(spec, asset),
+        None => {
+            AssetFuture::spawn(spec.clone(), thread_pool, move || load_asset_inner::<A, F, S>(&context, &format, &spec, &storage))
+        }
+    }
 }
 
 /// Like `reload_asset`, but loads the asset on a worker thread and returns
 /// an `AssetFuture` immediately.
-pub fn reload_asset_future<A, F, N, S>
-    (context: Arc<A::Context>,
-     format: F,
-     name: N,
-     storage: S,
-     thread_pool: &ThreadPool)
-     -> AssetFuture<A, AssetError<A::Error, F::Error, S::Error>>
+pub fn reload_asset_future<A, F, N, S>(context: Arc<A::Context>,
+                                       format: F,
+                                       name: N,
+                                       storage: S,
+                                       thread_pool: &ThreadPool)
+                                       -> AssetFuture<A, F::Error, S::Error>
     where A::Context: Context + Send + Sync + 'static,
           A: Asset + Send + 'static,
           A::Error: Send + 'static,
+          A::Result: Send + 'static,
           F: Format<Data = A::Data> + Send + 'static,
           F::Error: Send + 'static,
           N: Into<String>,
@@ -349,7 +367,25 @@ pub fn reload_asset_future<A, F, N, S>
 {
     let name = name.into();
 
-    let closure = move || reload_asset::<A, F, _, S>(&*context, &format, name, &storage);
+    let store_id = storage.store_id();
+    let spec = AssetSpec::new(name.clone(), F::extension(), store_id);
 
-    AssetFuture::spawn(thread_pool, closure)
+    AssetFuture::spawn(spec.clone(), thread_pool, move || load_asset_inner::<A, F, S>(&context, &format, &spec, &storage))
 }
+
+fn load_asset_inner<A, F, S>(context: &A::Context,
+                             format: &F,
+                             spec: &AssetSpec,
+                             store: &S)
+                             -> Result<A::Result, LoadError<A::Error, F::Error, S::Error>>
+    where A: Asset,
+          F: Format<Data = A::Data>,
+          S: Store
+{
+    let bytes = store
+        .load(context.category(), &spec.name, spec.ext)
+        .map_err(LoadError::StorageError)?;
+    let data = format.parse(bytes).map_err(LoadError::FormatError)?;
+    Ok(context.create_asset(data))
+}
+
