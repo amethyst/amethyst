@@ -32,6 +32,7 @@ impl Directory {
 
 impl Store for Directory {
     type Error = IoError;
+    type Result = Result<Vec<u8>, IoError>;
 
     fn modified(&self, category: &str, id: &str, ext: &str) -> Result<u64, IoError> {
         use std::fs::metadata;

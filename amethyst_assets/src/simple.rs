@@ -7,9 +7,11 @@ use std::marker::PhantomData;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+use futures::IntoFuture;
 use parking_lot::RwLock;
+use rayon::ThreadPool;
 
-use {Asset, AssetSpec, Cache, Context};
+use {Asset, AssetFuture, AssetSpec, Cache, Context};
 
 /// An `AssetPtr` which provides `push_update`, `update`
 /// and `is_shared` methods. These can simply be called
@@ -85,11 +87,11 @@ impl<A> AssetPtr<A>
 }
 
 /// A simple implementation of the `Context` trait.
-pub struct SimpleContext<A, D, E, T> {
-    cache: Cache<A>,
+pub struct SimpleContext<A, D, R, T> {
+    cache: Cache<AssetFuture<A>>,
     category: Cow<'static, str>,
     load: T,
-    phantom: PhantomData<(D, E)>,
+    phantom: PhantomData<(D, R)>,
 }
 
 impl<A, D, E, T> SimpleContext<A, D, E, T>
@@ -107,28 +109,30 @@ impl<A, D, E, T> SimpleContext<A, D, E, T>
     }
 }
 
-impl<A, D, E, T> Context for SimpleContext<A, D, E, T>
-    where T: Fn(D) -> Result<A, E>,
-          A: Asset,
-          E: Error,
+impl<A, D, E, R, T> Context for SimpleContext<A, D, R, T>
+    where T: Fn(D) -> R,
+          A: Asset + Clone,
+          E: Error + Send + Sync,
+          R: IntoFuture<Item=A, Error=E>,
 {
     type Asset = A;
     type Data = D;
     type Error = E;
+    type Result = R;
 
     fn category(&self) -> &str {
         self.category.as_ref()
     }
 
-    fn create_asset(&self, data: Self::Data) -> Result<Self::Asset, Self::Error> {
+    fn create_asset(&self, data: Self::Data, pool: &ThreadPool) -> R {
         (&self.load)(data)
     }
 
-    fn cache(&self, spec: AssetSpec, asset: &Self::Asset) {
-        self.cache.insert(spec, asset.clone());
+    fn cache(&self, spec: AssetSpec, asset: AssetFuture<A>) {
+        self.cache.insert(spec, asset);
     }
 
-    fn retrieve(&self, spec: &AssetSpec) -> Option<Self::Asset> {
+    fn retrieve(&self, spec: &AssetSpec) -> Option<AssetFuture<A>> {
         self.cache.get(spec)
     }
 

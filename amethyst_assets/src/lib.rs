@@ -19,9 +19,9 @@ extern crate specs;
 
 pub use specs::common::BoxedErr;
 
-pub use asset::{Asset, AssetSpec, Cache, Context, Format};
+pub use asset::{Asset, AssetFuture, AssetSpec, Cache, Context, Format};
 pub use error::{AssetError, LoadError, NoError};
-pub use loader::{AssetFuture, Loader, load_asset, load_asset_future};
+pub use loader::{SpawnedFuture, Loader, load_asset};
 pub use simple::{AssetPtr, SimpleContext};
 pub use store::{Allocator, Directory, Store, StoreId};
 
