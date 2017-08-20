@@ -2,28 +2,25 @@ use std::error::Error;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
 use asset::AssetSpec;
+use BoxedErr;
 
 /// Error type returned when loading an asset.
 /// Includes the `AssetSpec` and the error (`LoadError`).
-#[derive(Clone, Debug)]
-pub struct AssetError<A, F, S> {
+#[derive(Debug)]
+pub struct AssetError {
     /// The specifier of the asset which failed to load
     pub asset: AssetSpec,
     /// The error that's been raised.
-    pub error: LoadError<A, F, S>,
+    pub error: BoxedErr,
 }
 
-impl<A, F, S> AssetError<A, F, S> {
-    pub(crate) fn new(asset: AssetSpec, error: LoadError<A, F, S>) -> Self {
+impl AssetError {
+    pub(crate) fn new(asset: AssetSpec, error: BoxedErr) -> Self {
         AssetError { asset, error }
     }
 }
 
-impl<A, F, S> Display for AssetError<A, F, S>
-    where A: Display,
-          F: Display,
-          S: Display
-{
+impl Display for AssetError {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         write!(f,
                "Failed to load asset \"{}\" of format \"{}\" from storage with id \"{}\": {}",
@@ -61,11 +58,7 @@ impl<A, F, S> Display for LoadError<A, F, S>
     }
 }
 
-impl<A, F, S> Error for AssetError<A, F, S>
-    where A: Error,
-          F: Error,
-          S: Error
-{
+impl Error for AssetError {
     fn description(&self) -> &str {
         "Failed to load asset"
     }
