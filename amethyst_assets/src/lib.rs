@@ -19,13 +19,15 @@ extern crate specs;
 
 pub use specs::common::BoxedErr;
 
-pub use asset::{Asset, AssetFuture, AssetSpec, Cache, Context, Format};
+pub use asset::{Asset, AssetFuture, AssetSpec, Context, Format};
+pub use cache::Cache;
 pub use error::{AssetError, LoadError, NoError};
 pub use loader::{SpawnedFuture, Loader, load_asset};
 pub use simple::{AssetPtr, SimpleContext};
 pub use store::{Allocator, Directory, Store, StoreId};
 
 mod asset;
+mod cache;
 mod error;
 mod loader;
 mod simple;

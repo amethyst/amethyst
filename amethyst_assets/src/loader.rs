@@ -95,18 +95,20 @@ impl Loader {
     /// Like `load_from`, but doesn't ask the cache for the asset.
     pub fn reload<A, F, N, S>(&self,
                               name: N,
-                              format: &F,
+                              format: F,
                               store: &S)
                               -> AssetFuture<A>
         where A: Asset,
-              F: Format<Data=A::Data>,
+              A::Context: 'static,
+              F: Format<Data=<A::Context as Context>::Data> + 'static,
+              F::Error: 'static,
               N: Into<String>,
               S: Eq + Hash + ? Sized,
               String: Borrow<S>
     {
         let context = self.context::<A::Context>();
 
-        reload_asset::<A, F, N, _>(context,
+        reload_asset::<A, F, N, _>(context.clone(),
                                    format,
                                    name,
                                    self.store(store),
@@ -120,10 +122,11 @@ impl Loader {
     /// a future.
     pub fn load<A, F, N>(&self,
                          id: N,
-                         format: &F)
+                         format: F)
                          -> AssetFuture<A>
         where A: Asset,
-              F: Format<Data=A::Data>,
+              A::Context: 'static,
+              F: Format<Data=<A::Context as Context>::Data> + 'static,
               N: Into<String>
     {
         self.load_from::<A, F, _, _>(id, format, "")
@@ -138,11 +141,12 @@ impl Loader {
     /// Panics if the asset wasn't registered.
     pub fn load_from<A, F, N, S>(&self,
                                  name: N,
-                                 format: &F,
+                                 format: F,
                                  store: &S)
                                  -> AssetFuture<A>
         where A: Asset,
-              F: Format<Data=A::Data>,
+              A::Context: 'static,
+              F: Format<Data=<A::Context as Context>::Data> + 'static,
               N: Into<String>,
               S: AsRef<str> + Eq + Hash + ? Sized,
               String: Borrow<S>
@@ -153,12 +157,11 @@ impl Loader {
             _ => self.store(store),
         };
 
-        load_asset::<A, F, N, _>(context, format, name, store, &self.pool)
+        load_asset::<A, F, N, _>(context.clone(), format, name, store, &self.pool)
     }
 
     fn context<C>(&self) -> &Arc<C>
         where C: Context + 'static,
-              C::Asset: 'static
     {
         let context = self.contexts
             .get(&TypeId::of::<C::Asset>())
@@ -178,45 +181,47 @@ impl Loader {
 }
 
 /// Loads an asset with a given context, format, specifier and storage right now.
-pub fn load_asset<A, F, N, S>(context: &A::Context,
-                              format: &F,
+pub fn load_asset<A, F, N, S>(context: Arc<A::Context>,
+                              format: F,
                               name: N,
                               storage: &S,
                               pool: &Arc<ThreadPool>)
                               -> AssetFuture<A>
     where A: Asset,
-          A::Context: Context,
-          F: Format<Data=A::Data>,
+          A::Context: Context + 'static,
+          F: Format<Data=<A::Context as Context>::Data> + 'static,
+          F::Error: 'static,
           N: Into<String>,
-          S: Store
+          S: Store,
+          <S::Result as IntoFuture>::Future: 'static,
 {
     let name = name.into();
 
     let store_id = storage.store_id();
     let spec = AssetSpec::new(name.clone(), F::extension(), store_id);
 
-    let f = context.retrieve(&spec)
+    context.retrieve(&spec)
         .unwrap_or_else(move || load_asset_inner(context, format, spec, storage, pool))
-        .map_err(|e| AssetError::new(AssetSpec::new(name, F::extension(), store_id), e))
-        .map_err(BoxedErr::new);
-
-    Box::new(f)
+        
 }
 
 /// Loads an asset with a given context, format, specifier and storage right now.
 /// Note that this method does not ask for a cached version of the asset, but just
 /// reloads the asset.
-pub fn reload_asset<A, F, N, S>(context: &A::Context,
-                                format: &F,
+pub fn reload_asset<A, F, N, S>(context: Arc<A::Context>,
+                                format: F,
                                 name: N,
                                 storage: &S,
                                 pool: &Arc<ThreadPool>)
                                 -> AssetFuture<A>
     where A: Asset,
-          A::Context: Context,
-          F: Format<Data=A::Data>,
+          A::Context: Context + 'static,
+          //<A::Context as Context>::Error: 'static,
+          F: Format<Data=<A::Context as Context>::Data> + 'static,
+          F::Error: 'static,
           N: Into<String>,
-          S: Store
+          S: Store,
+          <S::Result as IntoFuture>::Future: 'static,
 {
     let name = name.into();
 
@@ -226,31 +231,44 @@ pub fn reload_asset<A, F, N, S>(context: &A::Context,
     load_asset_inner(context, format, spec, storage, pool)
 }
 
-fn load_asset_inner<C, F, S>(context: &C,
-                             format: &F,
+fn load_asset_inner<C, F, S>(context: Arc<C>,
+                             format: F,
                              spec: AssetSpec,
                              store: &S,
                              pool: &Arc<ThreadPool>)
                              -> AssetFuture<C::Asset>
-    where C: Context,
-          F: Format<Data=C::Data>,
-          S: Store
+    where C: Context + 'static,
+          F: Format<Data=C::Data> + 'static,
+          F::Error: 'static,
+          S: Store,
+          <S::Result as IntoFuture>::Future: 'static,
 {
+    let spec_store_err = spec.clone();
+    let spec_format_err = spec.clone();
+    let spec_asset_err = spec.clone();
+    let context_clone = context.clone();
+    let pool = pool.clone();
     let future = store
         .load(context.category(), &spec.name, spec.ext)
         .into_future()
-        .map_err(LoadError::StorageError)
+        .map_err(LoadError::StorageError::<C::Error, F::Error, S::Error>)
         .map_err(BoxedErr::new)
-        .and_then(|bytes| format.parse(bytes)
+        .map_err(move |e| AssetError::new(spec_store_err, e))
+        .and_then(move |bytes| format.parse(bytes)
             .into_future()
-            .map_err(LoadError::FormatError)
-            .map_err(BoxedErr::new))
-        .and_then(|data| context.create_asset(data, pool)
+            .map_err(LoadError::FormatError::<C::Error, F::Error, S::Error>)
+            .map_err(BoxedErr::new)
+            .map_err(move |e| AssetError::new(spec_format_err, e)))
+        .and_then(move |data| context.create_asset(data, &pool)
             .into_future()
-            .map_err(LoadError::AssetError)
-            .map_err(BoxedErr::new));
+            .map_err(LoadError::AssetError::<C::Error, F::Error, S::Error>)
+            .map_err(BoxedErr::new)
+            .map_err(move |e| AssetError::new(spec_asset_err, e)));
 
-    context.cache(spec, unimplemented!());
+    let future: Box<Future<Item=C::Asset, Error=AssetError>> = Box::new(future);
+    let future = future.shared();
 
-    Box::new(future)
+    context_clone.cache(spec, future.clone());
+
+    future
 }
