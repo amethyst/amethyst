@@ -1,10 +1,6 @@
 //! Provides texture formats
 
-use std::mem::replace;
-use std::sync::{Arc, Mutex};
-
-use assets::Format;
-use futures::{Async, Future};
+use assets::{SpawnedFuture, Format};
 use image;
 use image::{ImageBuffer, ImageFormat, Rgba};
 use rayon::ThreadPool;
@@ -18,41 +14,13 @@ pub struct ImageData {
 }
 
 /// A future which will eventually have an image available.
-pub struct ImageFuture {
-    result: Arc<Mutex<Option<Result<ImageData, ImageError>>>>,
-}
-
-impl Future for ImageFuture {
-    type Item = ImageData;
-    type Error = ImageError;
-
-    fn poll(&mut self) -> Result<Async<ImageData>, ImageError> {
-        let mut lock = self.result.lock().unwrap();
-        if lock.is_some() {
-            if lock.as_ref().unwrap().is_ok() {
-                let image_data = replace(&mut *lock, None);
-                Ok(Async::Ready(image_data.unwrap().unwrap()))
-            } else {
-                let image_error = replace(&mut *lock, None);
-                Err(image_error.unwrap().unwrap_err())
-            }
-        } else {
-            Ok(Async::NotReady)
-        }
-    }
-}
+pub type ImageFuture = SpawnedFuture<ImageData, ImageError>;
 
 fn parse_jpeg(bytes: Vec<u8>, pool: &ThreadPool) -> ImageFuture {
-    let result = Arc::new(Mutex::new(None));
-    let result_clone = result.clone();
-    pool.spawn(move || {
-        let result = image::load_from_memory_with_format(&bytes, ImageFormat::JPEG)
-            .map(|di| ImageData { raw: di.to_rgba() });
-        *result_clone.lock().unwrap() = Some(result);
-    });
-    ImageFuture {
-        result,
-    }
+    ImageFuture::spawn(pool, move || {
+        image::load_from_memory_with_format(&bytes, ImageFormat::JPEG)
+            .map(|di| ImageData { raw: di.to_rgba() })
+    })
 }
 
 /// Allows loading of Jpeg files.
