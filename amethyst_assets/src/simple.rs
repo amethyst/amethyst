@@ -6,7 +6,6 @@ use futures::Future;
 use std::borrow::Cow;
 use std::error::Error;
 use std::marker::PhantomData;
-use std::ops::Deref;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -16,22 +15,6 @@ use parking_lot::RwLock;
 use rayon::ThreadPool;
 
 use {Asset, AssetFuture, AssetSpec, Cache, Context};
-
-/// An `AssetPtr` which provides `push_update`, `update`
-/// and `is_shared` methods. These can simply be called
-/// in order to implement the `Asset` trait.
-///
-/// The recommended strategy is to create a struct for an
-/// asset which simply wraps `AssetPtr` and implements
-/// `Asset` by calling these methods. Methods for the asset
-/// can then be implemented on that wrapper struct by getting
-/// the inner asset with `inner` and `inner_mut`.
-///
-/// The type parameter `A` is the type of the asset handle
-/// (examples: texture handle, shader id, ..). To avoid unnecessarily
-/// duplicated buffer allocations, make sure your handle is reference-counted,
-/// so wrap it with an `Arc` in case the handle doesn't have this functionality
-/// itself.
 
 struct AssetUpdate<A> {
     counter: AtomicUsize,
@@ -56,7 +39,7 @@ impl<A> AssetUpdate<A>
                 *self.ready.write() = Some(updated.inner.clone());
                 self.counter.fetch_add(1, Ordering::Release);
             }
-            Err(err) => {},
+            Err(_) => {},
             Ok(Async::NotReady) => {
                 let last = {
                     let defer_lock = &mut*self.defer.write();
@@ -94,6 +77,21 @@ impl<A> AssetUpdate<A>
     }
 }
 
+/// An `AssetPtr` which provides `push_update`, `update`
+/// and `is_shared` methods. These can simply be called
+/// in order to implement the `Asset` trait.
+///
+/// The recommended strategy is to create a struct for an
+/// asset which simply wraps `AssetPtr` and implements
+/// `Asset` by calling these methods. Methods for the asset
+/// can then be implemented on that wrapper struct by getting
+/// the inner asset with `inner` and `inner_mut`.
+///
+/// The type parameter `A` is the type of the asset handle
+/// (examples: texture handle, shader id, ..). To avoid unnecessarily
+/// duplicated buffer allocations, make sure your handle is reference-counted,
+/// so wrap it with an `Arc` in case the handle doesn't have this functionality
+/// itself.
 #[derive(Clone)]
 pub struct AssetPtr<A> {
     inner: A,
