@@ -217,8 +217,7 @@ mod tests {
         use ecs::World;
         use rayon::{Configuration, ThreadPool};
         use std::sync::Arc;
-        use timing::Time;
-
+        
         let pool = Arc::new(ThreadPool::new(Configuration::new()).unwrap());
         let mut engine = Engine::new("resources", pool, World::new());
 
