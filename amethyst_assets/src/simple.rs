@@ -136,6 +136,7 @@ impl<A> AssetPtr<A>
         }
     }
 
+    /// Returns `true` if a clone of this `AssetPtr` exists.
     pub fn is_shared(&self) -> bool {
         Arc::strong_count(&self.update) > 1
     }
@@ -180,7 +181,7 @@ impl<A, D, E, R, T> Context for SimpleContext<A, D, R, T>
         self.category.as_ref()
     }
 
-    fn create_asset(&self, data: Self::Data, pool: &ThreadPool) -> R {
+    fn create_asset(&self, data: Self::Data, _: &ThreadPool) -> R {
         (&self.load)(data)
     }
 

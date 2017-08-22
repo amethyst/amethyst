@@ -127,5 +127,5 @@ pub trait Format {
     fn extension() -> &'static str;
 
     /// Reads the given bytes and produces asset data.
-    fn parse(&self, bytes: Vec<u8>) -> Self::Result;
+    fn parse(&self, bytes: Vec<u8>, pool: &ThreadPool) -> Self::Result;
 }

@@ -2,12 +2,13 @@
 
 use std::mem::replace;
 use std::sync::{Arc, Mutex};
-use std::thread::spawn;
 
 use assets::Format;
 use futures::{Async, Future};
 use image;
 use image::{ImageBuffer, ImageFormat, Rgba};
+use rayon::ThreadPool;
+
 pub use image::ImageError;
 
 /// ImageData provided by formats, can be interpreted as a texture.
@@ -41,10 +42,10 @@ impl Future for ImageFuture {
     }
 }
 
-fn parse_jpeg(bytes: Vec<u8>) -> ImageFuture {
+fn parse_jpeg(bytes: Vec<u8>, pool: &ThreadPool) -> ImageFuture {
     let result = Arc::new(Mutex::new(None));
     let result_clone = result.clone();
-    spawn(move || {
+    pool.spawn(move || {
         let result = image::load_from_memory_with_format(&bytes, ImageFormat::JPEG)
             .map(|di| ImageData { raw: di.to_rgba() });
         *result_clone.lock().unwrap() = Some(result);
@@ -66,8 +67,8 @@ impl Format for JpegFormat {
         "jpeg"
     }
 
-    fn parse(&self, bytes: Vec<u8>) -> Self::Result {
-        parse_jpeg(bytes)
+    fn parse(&self, bytes: Vec<u8>, pool: &ThreadPool) -> Self::Result {
+        parse_jpeg(bytes, pool)
     }
 }
 
@@ -83,7 +84,7 @@ impl Format for JpgFormat {
         "jpg"
     }
 
-    fn parse(&self, bytes: Vec<u8>) -> Self::Result {
-        parse_jpeg(bytes)
+    fn parse(&self, bytes: Vec<u8>, pool: &ThreadPool) -> Self::Result {
+        parse_jpeg(bytes, pool)
     }
 }
