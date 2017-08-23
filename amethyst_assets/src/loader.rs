@@ -99,7 +99,8 @@ impl Loader {
                               store: &S)
                               -> AssetFuture<A>
         where A: Asset,
-              F: Format<Data=<A::Context as Context>::Data> + 'static,
+              F: Format + 'static,
+              F::Data: Into<<A::Context as Context>::Data>,
               F::Error: 'static,
               N: Into<String>,
               S: Eq + Hash + ? Sized,
@@ -124,7 +125,8 @@ impl Loader {
                          format: F)
                          -> AssetFuture<A>
         where A: Asset,
-              F: Format<Data=<A::Context as Context>::Data> + 'static,
+              F: Format + 'static,
+              F::Data: Into<<A::Context as Context>::Data>,
               N: Into<String>
     {
         self.load_from::<A, F, _, _>(id, format, "")
@@ -143,7 +145,8 @@ impl Loader {
                                  store: &S)
                                  -> AssetFuture<A>
         where A: Asset,
-              F: Format<Data=<A::Context as Context>::Data> + 'static,
+              F: Format + 'static,
+              F::Data: Into<<A::Context as Context>::Data>,
               N: Into<String>,
               S: AsRef<str> + Eq + Hash + ? Sized,
               String: Borrow<S>
@@ -187,7 +190,8 @@ pub fn load_asset<A, F, N, S>(context: Arc<A::Context>,
                               -> AssetFuture<A>
     where A: Asset,
           A::Context: Context,
-          F: Format<Data=<A::Context as Context>::Data> + 'static,
+          F: Format + 'static,
+          F::Data: Into<<A::Context as Context>::Data>,
           F::Error: 'static,
           N: Into<String>,
           S: Store,
@@ -214,8 +218,8 @@ pub fn reload_asset<A, F, N, S>(context: Arc<A::Context>,
                                 -> AssetFuture<A>
     where A: Asset,
           A::Context: Context,
-          //<A::Context as Context>::Error: 'static,
-          F: Format<Data=<A::Context as Context>::Data> + 'static,
+          F: Format + 'static,
+          F::Data: Into<<A::Context as Context>::Data>,
           F::Error: 'static,
           N: Into<String>,
           S: Store,
@@ -236,7 +240,8 @@ fn load_asset_inner<C, F, S>(context: Arc<C>,
                              pool: &Arc<ThreadPool>)
                              -> AssetFuture<C::Asset>
     where C: Context,
-          F: Format<Data=C::Data> + 'static,
+          F: Format + 'static,
+          F::Data: Into<C::Data>,
           F::Error: 'static,
           S: Store,
           <S::Result as IntoFuture>::Future: 'static,
@@ -255,6 +260,7 @@ fn load_asset_inner<C, F, S>(context: Arc<C>,
         .map_err(move |e| AssetError::new(spec_store_err, e))
         .and_then(move |bytes| format.parse(bytes, &pool)
             .into_future()
+            .map(Into::into)
             .map_err(LoadError::FormatError::<C::Error, F::Error, S::Error>)
             .map_err(BoxedErr::new)
             .map_err(move |e| AssetError::new(spec_format_err, e)))
