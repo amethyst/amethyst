@@ -106,7 +106,7 @@ impl Factory {
     }
 }
 
-/// A mesh which may not have been created yet.
+/// A texture which may not have been created yet.
 pub type TextureFuture = FactoryFuture<Texture, Error>;
 
 /// A material which may not have been created yet.

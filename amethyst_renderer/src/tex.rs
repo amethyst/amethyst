@@ -68,7 +68,6 @@ impl<D, T> TextureBuilder<D, T>
     /// Creates a new `TextureBuilder` with the given raw texture data.
     pub fn new(data: D) -> Self {
         use gfx::SHADER_RESOURCE;
-        ;
         use gfx::memory::Usage;
         use gfx::texture::{AaMode, Kind};
 
