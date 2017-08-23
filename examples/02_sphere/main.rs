@@ -9,9 +9,9 @@ extern crate genmesh;
 extern crate winit;
 
 use amethyst::prelude::*;
-use amethyst::ecs::systems::RenderSystem;
 use amethyst::ecs::components::*;
 use amethyst::renderer::prelude::*;
+use amethyst::renderer::Config as DisplayConfig;
 
 use cgmath::{Deg, Vector3};
 use cgmath::prelude::InnerSpace;
@@ -27,17 +27,10 @@ impl State for Example {
         let tex = Texture::from_color_val([0.0, 0.0, 1.0, 1.0]);
         let mtl = MaterialBuilder::new().with_albedo(tex);
 
-        engine.world.register::<Transform>();
-        engine.world.register::<MeshComponent>();
-        engine.world.register::<MaterialComponent>();
-        engine.world.register::<LightComponent>();
-        engine.world.register::<Unfinished<MeshComponent>>();
-        engine.world.register::<Unfinished<MaterialComponent>>();
-
         engine.world.create_entity()
             .with(Transform::default())
-            .with(mesh.unfinished())
-            .with(mtl.unfinished())
+            //.with(mesh.unfinished()) // FIXME: asset loader pending
+            //.with(mtl.unfinished()) // FIXME: asset loader pending
             .build();
 
         engine.world.create_entity()
@@ -76,18 +69,17 @@ impl State for Example {
 fn main() {
     let path = format!("{}/examples/02_sphere/resources/config.ron",
                        env!("CARGO_MANIFEST_DIR"));
-    let builder = Application::build(Example);
-    let render = RenderSystem::new(
-        &builder.events,
-        Pipeline::build()
+    let config = DisplayConfig::load(&path);
+    let builder = Application::build(Example)
+        .with_renderer(Pipeline::build()
             .with_stage(Stage::with_backbuffer()
                 .clear_target([0.00196, 0.23726, 0.21765, 1.0], 1.0)
                 .with_model_pass(pass::DrawFlat::<PosNormTex>::new())
-            )
-    ).unwrap();
+            ),
+            config)
+    .unwrap();
 
     let mut game = builder
-        .with_thread_local(render)
         .build()
         .expect("Fatal error");
     game.run();

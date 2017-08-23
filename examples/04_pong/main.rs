@@ -6,14 +6,13 @@ extern crate cgmath;
 
 //use amethyst::{Application, State, Trans, VirtualKeyCode, WindowEvent};
 use amethyst::prelude::*;
-use amethyst::ecs::{Component, Fetch, FetchMut, Join, System, VecStorage, World, WriteStorage};
+use amethyst::ecs::{Component, Fetch, FetchMut, Join, System, VecStorage, WriteStorage};
 use amethyst::ecs::components::*;
-use amethyst::ecs::resources::*;
 use amethyst::ecs::resources::input::{Bindings, InputHandler};
-use amethyst::ecs::systems::{RenderSystem, TransformSystem};
+use amethyst::ecs::systems::TransformSystem;
 use amethyst::timing::Time;
 use amethyst_renderer::prelude::*;
-use cgmath::{Matrix4, Deg, Vector3};
+use amethyst_renderer::Config as DisplayConfig;
 
 struct Pong;
 
@@ -91,7 +90,7 @@ impl<'a> System<'a> for PongSystem {
      FetchMut<'a, Score>);
 
     fn run(&mut self,
-           (mut balls, mut planks, mut locals, camera, time, input, mut score): Self::SystemData) {
+           (mut balls, mut planks, mut locals, _, time, input, mut score): Self::SystemData) {
         // Properties of left paddle.
         let mut left_dimensions = [0.0, 0.0];
         let mut left_position = 0.0;
@@ -238,15 +237,9 @@ impl State for Pong {
         world.add_resource(input);
         world.add_resource(Time::default());
 
-        world.register::<Transform>();
         world.register::<Child>();
         world.register::<Init>();
         world.register::<LocalTransform>();
-        world.register::<MeshComponent>();
-        world.register::<MaterialComponent>();
-        world.register::<LightComponent>();
-        world.register::<Unfinished<MeshComponent>>();
-        world.register::<Unfinished<MaterialComponent>>();
 
         // Generate a square mesh
         let tex = Texture::from_color_val([1.0, 1.0, 1.0, 1.0]);
@@ -261,8 +254,8 @@ impl State for Pong {
         ball.velocity = [0.5, 0.5];
         world
             .create_entity()
-            .with(mesh.clone().unfinished())
-            .with(mtl.clone().unfinished())
+            //.with(mesh.clone().unfinished()) // FIXME: asset loader pending
+            //.with(mtl.clone().unfinished()) // FIXME: asset loader pending
             .with(ball)
             .with(LocalTransform::default())
             .with(Transform::default())
@@ -275,8 +268,8 @@ impl State for Pong {
         plank.velocity = 1.;
         world
             .create_entity()
-            .with(mesh.clone().unfinished())
-            .with(mtl.clone().unfinished())
+            //.with(mesh.clone().unfinished()) // FIXME: asset loader pending
+            //.with(mtl.clone().unfinished()) // FIXME: asset loader pending
             .with(plank)
             .with(LocalTransform::default())
             .with(Transform::default())
@@ -289,8 +282,8 @@ impl State for Pong {
         plank.velocity = 1.;
         world
             .create_entity()
-            .with(mesh.unfinished())
-            .with(mtl.unfinished())
+            //.with(mesh.unfinished()) // FIXME: asset loader pending
+            //.with(mtl.unfinished()) // FIXME: asset loader pending
             .with(plank)
             .with(LocalTransform::default())
             .with(Transform::default())
@@ -322,23 +315,20 @@ fn main() {
     let path = format!("{}/examples/04_pong/resources/config.ron",
                        env!("CARGO_MANIFEST_DIR"));
 
+    let config = DisplayConfig::load(&path);
     let builder = Application::build(Pong);
-
-    let render = RenderSystem::new(
-        &builder.events,
-        Pipeline::build()
-            .with_stage(Stage::with_backbuffer()
-                .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-                .with_model_pass(pass::DrawFlat::<PosNormTex>::new())
-            )
-    ).unwrap();
 
     let mut game = builder
         .register::<Ball>()
         .register::<Plank>()
         .with::<PongSystem>(PongSystem, "pong_system", &[])
         .with::<TransformSystem>(TransformSystem::new(), "transform_system", &["pong_system"])
-        .with_thread_local(render)
+        .with_renderer(Pipeline::build()
+                           .with_stage(Stage::with_backbuffer()
+                               .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
+                               .with_model_pass(pass::DrawFlat::<PosNormTex>::new())
+                           ),
+                       config).unwrap()
         .build()
         .expect("Fatal error");
     game.run();

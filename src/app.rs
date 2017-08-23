@@ -13,6 +13,7 @@ use engine::Engine;
 use error::{Error, Result};
 use state::{State, StateMachine};
 use timing::{Stopwatch, Time};
+use renderer::Config as DisplayConfig;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
@@ -199,7 +200,7 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     }
 
     /// Automatically registers components, adds resources and the rendering system.
-    pub fn with_renderer(self, pipe: PipelineBuilder) -> Result<Self> {
+    pub fn with_renderer(self, pipe: PipelineBuilder, config: DisplayConfig) -> Result<Self> {
         use cgmath::Deg;
         use renderer::{Camera, Projection};
         use ecs::components::{LightComponent, MaterialComponent, MeshComponent, Transform};
@@ -214,7 +215,7 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
             up: [0.0, 1.0, 0.0].into(),
         };
 
-        let render_sys = RenderSystem::new(&self.events, pipe)?;
+        let render_sys = RenderSystem::new(&self.events, pipe, config)?;
 
         let this = self.add_resource(cam)
             .add_resource(Factory::new())

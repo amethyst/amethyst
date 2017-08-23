@@ -6,7 +6,8 @@ extern crate cgmath;
 
 use amethyst::event::{KeyboardInput, VirtualKeyCode};
 use amethyst::prelude::*;
-use amethyst::renderer::PipelineBuilder;
+use amethyst::renderer::prelude::{PosNormTex, Pipeline};
+use amethyst::renderer::Config as DisplayConfig;
 
 struct Example;
 
@@ -28,12 +29,13 @@ impl State for Example {
     }
 }
 
-fn run() -> Result<()> {
+fn run() -> Result<(), amethyst::Error> {
     let path = format!("{}/examples/01_window/resources/config.ron",
                        env!("CARGO_MANIFEST_DIR"));
+    let config = DisplayConfig::load(&path);
 
     let mut game = Application::build(Example)
-        .with_renderer(Pipeline::forward::<PosNormTex>())?
+        .with_renderer(Pipeline::forward::<PosNormTex>(), config)?
         .build()
         .expect("Fatal error");
 

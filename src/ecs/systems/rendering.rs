@@ -5,6 +5,7 @@ use ecs::components::*;
 use ecs::resources::Factory as FactoryRes;
 use error::{Error, Result};
 use renderer::prelude::*;
+use renderer::Config as DisplayConfig;
 use winit::EventsLoop;
 
 /// Rendering system.
@@ -57,10 +58,13 @@ impl<'a> System<'a> for RenderSystem {
 impl RenderSystem {
     /// Create new `RenderSystem`
     /// It creates window and do render into it
-    pub fn new(events: &EventsLoop, pipe: PipelineBuilder) -> Result<Self>
+    pub fn new(events: &EventsLoop, pipe: PipelineBuilder, config: DisplayConfig) -> Result<Self>
         where Self: Sized
     {
-        let mut renderer = Renderer::new(events).map_err(|_| Error::System)?;
+        let mut renderer = Renderer::build(events)
+            .with_config(config)
+            .build()
+            .map_err(|_| Error::System)?;
         let pipe = renderer.create_pipe(pipe).map_err(|_| Error::System)?;
 
         Ok(RenderSystem {
