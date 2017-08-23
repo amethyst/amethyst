@@ -282,6 +282,32 @@ impl<'a> RendererBuilder<'a> {
         }
     }
 
+    /// Applies configuration from `Config`
+    pub fn with_config(&mut self, config: Config) -> &mut Self {
+        self.config = config;
+        let mut wb = self.winit_builder.clone();
+        wb = wb.with_title(self.config.title.clone())
+            .with_visibility(self.config.visibility);
+
+        if self.config.fullscreen {
+            wb = wb.with_fullscreen(winit::get_primary_monitor());
+        }
+        match self.config.dimensions {
+            Some((width, height)) => { wb = wb.with_dimensions(width, height); },
+            _ => ()
+        }
+        match self.config.min_dimensions {
+            Some((width, height)) => { wb = wb.with_min_dimensions(width, height); },
+            _ => ()
+        }
+        match self.config.max_dimensions {
+            Some((width, height)) => { wb = wb.with_max_dimensions(width, height); },
+            _ => ()
+        }
+        self.winit_builder = wb;
+        self
+    }
+
     /// Applies window settings from the given `glutin::WindowBuilder`.
     pub fn use_winit_builder(&mut self, wb: WindowBuilder) -> &mut Self {
         self.winit_builder = wb;
@@ -296,8 +322,7 @@ impl<'a> RendererBuilder<'a> {
 
     /// Consumes the builder and creates the new `Renderer`.
     pub fn build(&self) -> Result<Renderer> {
-        let Backend(dev, fac, main, win) = init_backend(self.winit_builder.clone(), self.events)?;
-
+        let Backend(dev, fac, main, win) = init_backend(self.winit_builder.clone(), self.events, &self.config)?;
         let num_cores = num_cpus::get();
         let pool = self.pool
             .clone()
@@ -310,7 +335,7 @@ impl<'a> RendererBuilder<'a> {
                             })?;
 
         Ok(Renderer {
-               config: Config::default(),
+               config: self.config.clone(),
                device: dev,
                encoders: Vec::new(),
                factory: fac,
@@ -326,9 +351,10 @@ struct Backend(pub types::Device, pub Factory, pub Target, pub Window);
 
 /// Creates the Direct3D 11 backend.
 #[cfg(all(feature = "d3d11", target_os = "windows"))]
-fn init_backend(wb: WindowBuilder, el: &EventsLoop) -> Result<Backend> {
+fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &Config) -> Result<Backend> {
     use gfx_window_dxgi as win;
 
+    // FIXME: vsync + multisampling from config
     let (win, dev, mut fac, color) = win::init::<ColorFormat>(wb, el).unwrap();
     let dev = gfx_device_dx11::Deferred::from(dev);
 
@@ -351,9 +377,10 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop) -> Result<Backend> {
 }
 
 #[cfg(all(feature = "metal", target_os = "macos"))]
-fn init_backend(wb: WindowBuilder, el: &EventsLoop) -> Result<Backend> {
+fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &Config) -> Result<Backend> {
     use gfx_window_metal as win;
 
+    // FIXME: vsync + multisampling from config
     let (win, dev, mut fac, color) = win::init::<ColorFormat>(wb, el).unwrap();
 
     let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
@@ -376,12 +403,13 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop) -> Result<Backend> {
 
 /// Creates the OpenGL backend.
 #[cfg(feature = "opengl")]
-fn init_backend(wb: WindowBuilder, el: &EventsLoop) -> Result<Backend> {
+fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &Config) -> Result<Backend> {
     use glutin::{GlProfile, GlRequest};
     use gfx_window_glutin as win;
 
     let ctx = glutin::ContextBuilder::new()
-        .with_vsync(true)
+        .with_multisampling(config.multisampling)
+        .with_vsync(config.vsync)
         .with_gl_profile(GlProfile::Core)
         .with_gl(GlRequest::Latest);
 

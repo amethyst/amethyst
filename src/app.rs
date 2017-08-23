@@ -14,6 +14,7 @@ use engine::Engine;
 use error::{Error, Result};
 use state::{State, StateMachine};
 use timing::{Stopwatch, Time};
+use renderer::Config as DisplayConfig;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
@@ -209,11 +210,32 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     }
 
     /// Automatically registers components, adds resources and the rendering system.
-    pub fn with_renderer(mut self, pipe: PipelineBuilder) -> Result<Self> {
+    pub fn with_renderer(mut self, pipe: PipelineBuilder, config: Option<DisplayConfig>) -> Result<Self> {
+        use cgmath::Deg;
+        use renderer::{Camera, Projection};
+        use ecs::components::{LightComponent, MaterialComponent, MeshComponent, Transform};
+        use ecs::resources::Factory;
         use ecs::systems::{RenderSystem, SystemExt};
 
-        let render_sys = RenderSystem::build((&self.events, pipe), &mut self.world)?;
-        Ok(self.with_thread_local(render_sys))
+        let cam = Camera {
+            eye: [0.0, 0.0, -4.0].into(),
+            proj: Projection::perspective(1.3, Deg(60.0)).into(),
+            forward: [0.0, 0.0, 1.0].into(),
+            right: [1.0, 0.0, 0.0].into(),
+            up: [0.0, 1.0, 0.0].into(),
+        };
+
+        let render_sys = RenderSystem::build((&self.events, pipe, config), &mut self.world)?;
+
+        let this = self.add_resource(cam)
+            .add_resource(Factory::new())
+            .register::<LightComponent>()
+            .register::<MaterialComponent>()
+            .register::<MeshComponent>()
+            .register::<Transform>()
+            .with_thread_local(render_sys);
+
+        Ok(this)
     }
 
     /// Add asset loader to resources

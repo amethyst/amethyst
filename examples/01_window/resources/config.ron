@@ -1,5 +1,4 @@
-
-DisplayConfig (
+(
   title: "Windowing example",
   dimensions: None,
   max_dimensions: None,
