@@ -167,7 +167,7 @@ impl Loader {
             .get(&TypeId::of::<C::Asset>())
             .expect("Assets need to be registered with `Loader::register`.");
 
-        let context: &Any = context; // Won't compile without this one
+        let context: &Any = context; // `Any + Send + Sync` doesn't has `downcast_ref`
         context.downcast_ref().unwrap()
     }
 
