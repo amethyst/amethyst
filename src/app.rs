@@ -8,6 +8,7 @@ use renderer::PipelineBuilder;
 use shred::Resource;
 use winit::EventsLoop;
 
+use assets::Asset;
 use ecs::{Component, Dispatcher, DispatcherBuilder, System, World};
 use engine::Engine;
 use error::{Error, Result};
@@ -37,11 +38,11 @@ pub struct Application<'a, 'b> {
 impl<'a, 'b> Application<'a, 'b> {
     /// Creates a new Application with the given initial game state.
     pub fn new<S: State + 'a>(initial_state: S) -> Result<Application<'a, 'b>> {
-        ApplicationBuilder::new(initial_state).build()
+        ApplicationBuilder::new(initial_state)?.build()
     }
 
     /// Builds a new Application with the given settings.
-    pub fn build<S>(initial_state: S) -> ApplicationBuilder<'a, 'b, S>
+    pub fn build<S>(initial_state: S) -> Result<ApplicationBuilder<'a, 'b, S>>
         where S: State + 'a
     {
         ApplicationBuilder::new(initial_state)
@@ -133,6 +134,7 @@ pub struct ApplicationBuilder<'a, 'b, T: State + 'a> {
     disp_builder: DispatcherBuilder<'a, 'b>,
     initial_state: T,
     world: World,
+    pool: Arc<ThreadPool>,
     /// Allows to create `RenderSystem`
     // TODO: Come up with something clever
     pub events: EventsLoop,
@@ -141,14 +143,22 @@ pub struct ApplicationBuilder<'a, 'b, T: State + 'a> {
 impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     /// Creates a new ApplicationBuilder with the given initial game state and
     /// display configuration.
-    pub fn new(initial_state: T) -> Self {
-        ApplicationBuilder {
+    pub fn new(initial_state: T) -> Result<Self> {
+        use num_cpus;
+        use rayon::Configuration;
+
+        let num_cores = num_cpus::get();
+        let cfg = Configuration::new().num_threads(num_cores);
+        let pool = ThreadPool::new(cfg).map(|p| Arc::new(p)).map_err(|_| Error::Application)?;
+
+        Ok(ApplicationBuilder {
             base_path: format!("{}/resources", env!("CARGO_MANIFEST_DIR")).into(),
             disp_builder: DispatcherBuilder::new(),
             initial_state: initial_state,
             world: World::new(),
             events: EventsLoop::new(),
-        }
+            pool: pool,
+        })
     }
 
     /// Registers a given component type.
@@ -206,26 +216,49 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
         Ok(self.with_thread_local(render_sys))
     }
 
+    /// Add asset loader to resources
+    pub fn with_loader<P>(mut self, path: P) -> Self
+        where P: Into<PathBuf>
+    {
+        use assets::{Allocator, Loader};
+
+        let allocator = Allocator::new();
+        self.world.add_resource(Loader::new(&allocator, path, self.pool.clone()));
+        self.world.add_resource(allocator);
+        self
+    }
+
+    /// Register new context within the loader
+    pub fn register_asset<A, F>(mut self, make_context: F) -> Self
+        where A: Component + Asset + 'static,
+              F: FnOnce(&mut World) -> A::Context,
+    {
+        use assets::Loader;
+        self = self.register::<A>();
+        // TODO: register `AssetFuture<A>` as well
+        // TODO: Add `specs::common::Merge<AssetFuture<A>>` system
+        {
+            let context = make_context(&mut self.world);
+            let mut loader = self.world.write_resource::<Loader>();
+            loader.register(context);
+        }
+        self
+    }
+
     /// Builds the Application and returns the result.
     pub fn build(self) -> Result<Application<'a, 'b>> {
-        use num_cpus;
-        use rayon::Configuration;
 
         #[cfg(feature = "profiler")]
         register_thread_with_profiler("Main".into());
         #[cfg(feature = "profiler")]
         profile_scope!("new");
 
-        let num_cores = num_cpus::get();
-        let cfg = Configuration::new().num_threads(num_cores);
-        let pool = ThreadPool::new(cfg).map(|p| Arc::new(p)).map_err(|_| Error::Application)?;
-
         Ok(Application {
-            engine: Engine::new(&self.base_path, pool.clone(), self.world),
+            engine: Engine::new(&self.base_path, self.pool.clone(), self.world),
             // config: self.config,
             states: StateMachine::new(self.initial_state),
             events: self.events,
-            dispatcher: self.disp_builder.with_pool(pool).build(),
+            dispatcher: self.disp_builder.with_pool(self.pool).build(),
             time: Time::default(),
             timer: Stopwatch::new(),
         })

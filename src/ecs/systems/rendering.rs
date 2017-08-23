@@ -1,10 +1,6 @@
 //! Rendering system.
 
-use std::sync::Arc;
-
-
 use winit::EventsLoop;
-
 
 use ecs::{Fetch, Join, ReadStorage, System, World};
 use ecs::components::*;
@@ -21,23 +17,22 @@ pub struct RenderSystem {
     #[derivative(Debug = "ignore")]
     renderer: Renderer,
     scene: Scene,
-    #[derivative(Debug = "ignore")]
-    factory: Arc<Factory>,
 }
 
 impl<'a> System<'a> for RenderSystem {
     type SystemData = (
         Fetch<'a, Camera>,
+        Fetch<'a, Factory>,
         ReadStorage<'a, Transform>,
         ReadStorage<'a, LightComponent>,
         ReadStorage<'a, MaterialComponent>,
         ReadStorage<'a, MeshComponent>,
     );
 
-    fn run(&mut self, (camera, globals, lights, materials, meshes): Self::SystemData) {
+    fn run(&mut self, (camera, factory, globals, lights, materials, meshes): Self::SystemData) {
         use std::time::Duration;
 
-        while let Some(job) = self.factory.jobs.try_pop() {
+        while let Some(job) = factory.jobs.try_pop() {
             job.exec(&mut self.renderer.factory);
         }
 
@@ -46,7 +41,7 @@ impl<'a> System<'a> for RenderSystem {
         for (mesh, material, global) in (&meshes, &materials, &globals).join() {
             self.scene.add_model(Model {
                 material: material.0.clone(),
-                mesh: mesh.0.clone(),
+                mesh: mesh.as_ref().clone(),
                 pos: global.0.into()
             });
         }
@@ -70,10 +65,7 @@ impl<'a, 'b> SystemExt<'a, (&'b EventsLoop, PipelineBuilder)> for RenderSystem {
 
         use cgmath::Deg;
         use renderer::{Camera, Projection};
-        use ecs::components::{LightComponent, MaterialComponent, MeshComponent, TextureComponent,
-                              TextureContext, Transform};
         use ecs::resources::Factory;
-        use assets::Loader;
 
         let cam = Camera {
             eye: [0.0, 0.0, -4.0].into(),
@@ -83,6 +75,7 @@ impl<'a, 'b> SystemExt<'a, (&'b EventsLoop, PipelineBuilder)> for RenderSystem {
             up: [0.0, 1.0, 0.0].into(),
         };
 
+        world.add_resource(Factory::new());
         world.add_resource(cam);
         world.register::<LightComponent>();
         world.register::<MaterialComponent>();
@@ -90,18 +83,10 @@ impl<'a, 'b> SystemExt<'a, (&'b EventsLoop, PipelineBuilder)> for RenderSystem {
         world.register::<TextureComponent>();
         world.register::<Transform>();
 
-        let factory = Arc::new(Factory::new());
-
-        // No way to know if `Loaded` was added. Just hope it was
-        let mut loader = world.write_resource::<Loader>();
-        loader.register(TextureContext::new(factory.clone()));
-        // TODO: Other contexts
-
         Ok(RenderSystem {
             pipe: pipe,
             renderer: renderer,
             scene: Scene::default(),
-            factory: factory,
         })
     }
 }

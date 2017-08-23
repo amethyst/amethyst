@@ -2,7 +2,6 @@
 
 use std::error::Error;
 use std::fmt::{self, Display, Formatter};
-use std::sync::Arc;
 
 use futures::{Async, Future, Poll};
 use gfx::format::SurfaceType;
@@ -13,7 +12,7 @@ use rayon::ThreadPool;
 
 use assets::{Asset, AssetFuture, AssetPtr, AssetSpec, Cache, Context};
 use assets::formats::textures::ImageData;
-use ecs::{Component, VecStorage};
+use ecs::{Component, DenseVecStorage, VecStorage};
 use ecs::resources::{Factory, FactoryFuture};
 use renderer::{Texture, TextureBuilder, Error as RendererError};
 
@@ -99,6 +98,10 @@ impl TextureFuture {
     }
 }
 
+impl Component for TextureFuture {
+    type Storage = DenseVecStorage<Self>;
+}
+
 impl Future for TextureFuture {
     type Item = TextureComponent;
     type Error = TextureError;
@@ -122,11 +125,13 @@ impl Future for TextureFuture {
 /// Wraps `Texture` into component
 #[derive(Clone, Debug)]
 pub struct TextureComponent(pub AssetPtr<Texture, TextureComponent>);
+
 impl AsRef<Texture> for TextureComponent {
     fn as_ref(&self) -> &Texture {
         self.0.inner()
     }
 }
+
 impl AsMut<Texture> for TextureComponent {
     fn as_mut(&mut self) -> &mut Texture {
         self.0.inner_mut()
@@ -150,11 +155,11 @@ impl Asset for TextureComponent {
 /// Context to create textures from images
 pub struct TextureContext {
     cache: Cache<AssetFuture<TextureComponent>>,
-    factory: Arc<Factory>,
+    factory: Factory,
 }
 
 impl TextureContext {
-    pub(crate) fn new(factory: Arc<Factory>) -> Self {
+    pub(crate) fn new(factory: Factory) -> Self {
         TextureContext {
             cache: Cache::new(),
             factory: factory,
@@ -173,6 +178,15 @@ impl Context for TextureContext {
     }
 
     fn create_asset(&self, image: ImageData, _: &ThreadPool) -> TextureFuture {
+        fn convert_color_format(fmt: ColFmt) -> Option<SurfaceType> {
+            match fmt {
+                ColFmt::Auto => unreachable!(),
+                ColFmt::RGBA => Some(SurfaceType::R8_G8_B8_A8),
+                ColFmt::BGRA => Some(SurfaceType::B8_G8_R8_A8),
+                _ => None,
+            }
+        }
+
         let image = image.raw;
         let fmt = match convert_color_format(image.fmt) {
             Some(fmt) => fmt,
@@ -205,31 +219,19 @@ impl Context for TextureContext {
                 None
             }
             _ => Some(asset),
-        })
-               .and_then(|a| a) {
+        }).and_then(|a| a) {
             self.cache.insert(spec.clone(), asset);
         }
     }
 
     fn clear(&self) {
-        self.cache
-            .retain(|_, a| match a.peek() {
-                        Some(Ok(a)) => a.0.is_shared(),
-                        _ => true,
-                    });
+        self.cache.retain(|_, a| match a.peek() {
+            Some(Ok(a)) => a.0.is_shared(),
+            _ => true,
+        });
     }
 
     fn clear_all(&self) {
         self.cache.clear_all();
-    }
-}
-
-
-fn convert_color_format(fmt: ColFmt) -> Option<SurfaceType> {
-    match fmt {
-        ColFmt::Auto => unreachable!(),
-        ColFmt::RGBA => Some(SurfaceType::R8_G8_B8_A8),
-        ColFmt::BGRA => Some(SurfaceType::B8_G8_R8_A8),
-        _ => None,
     }
 }

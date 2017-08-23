@@ -24,7 +24,7 @@ pub use asset::{Asset, AssetFuture, AssetSpec, Context, Format};
 pub use cache::Cache;
 pub use error::{AssetError, LoadError, NoError};
 pub use loader::{SpawnedFuture, Loader, load_asset};
-pub use simple::{AssetPtr, SimpleContext};
+pub use simple::{AssetPtr, SimpleAsset, SimpleContext};
 pub use store::{Allocator, Directory, Store, StoreId};
 
 mod asset;

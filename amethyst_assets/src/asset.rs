@@ -51,7 +51,7 @@ impl AssetSpec {
 
 /// The context type which manages assets of one type.
 /// It is responsible for caching
-pub trait Context {
+pub trait Context: Send + Sync + 'static {
     /// The asset type this context can produce.
     type Asset: Asset;
     /// The `Data` type the asset can be created from.

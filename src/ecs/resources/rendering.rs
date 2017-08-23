@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crossbeam::sync::MsQueue;
 use futures::{Async, Future, Poll};
 use futures::sync::oneshot::{Receiver, Sender, channel};
@@ -26,14 +28,14 @@ impl<A, E> Future for FactoryFuture<A, E> {
 /// The factory abstraction, which allows to access the real
 /// factory and returns futures.
 pub struct Factory {
-    pub(crate) jobs: MsQueue<Box<Exec>>,
+    pub(crate) jobs: Arc<MsQueue<Box<Exec>>>,
 }
 
 impl Factory {
     /// Creates a new factory resource.
     pub fn new() -> Self {
         Factory {
-            jobs: MsQueue::new(),
+            jobs: Arc::new(MsQueue::new()),
         }
     }
 

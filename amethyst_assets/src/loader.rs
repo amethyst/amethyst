@@ -86,7 +86,7 @@ impl Loader {
     /// Registers an asset and inserts a context into the map.
     pub fn register<A, C>(&mut self, context: C)
         where A: Asset + 'static,
-              C: Context<Asset=A> + Send + Sync + 'static,
+              C: Context<Asset=A>,
     {
         self.contexts
             .insert(TypeId::of::<A>(), Box::new(Arc::new(context)));
@@ -99,7 +99,6 @@ impl Loader {
                               store: &S)
                               -> AssetFuture<A>
         where A: Asset,
-              A::Context: 'static,
               F: Format<Data=<A::Context as Context>::Data> + 'static,
               F::Error: 'static,
               N: Into<String>,
@@ -125,7 +124,6 @@ impl Loader {
                          format: F)
                          -> AssetFuture<A>
         where A: Asset,
-              A::Context: 'static,
               F: Format<Data=<A::Context as Context>::Data> + 'static,
               N: Into<String>
     {
@@ -145,7 +143,6 @@ impl Loader {
                                  store: &S)
                                  -> AssetFuture<A>
         where A: Asset,
-              A::Context: 'static,
               F: Format<Data=<A::Context as Context>::Data> + 'static,
               N: Into<String>,
               S: AsRef<str> + Eq + Hash + ? Sized,
@@ -161,14 +158,14 @@ impl Loader {
     }
 
     fn context<C>(&self) -> &Arc<C>
-        where C: Context + 'static,
+        where C: Context,
     {
-        let context: &Box<Any + Send + Sync> = self.contexts
+        let context = self.contexts
             .get(&TypeId::of::<C::Asset>())
             .expect("Assets need to be registered with `Loader::register`.");
 
-        let context: &Any = context; // `Any + Send + Sync` doesn't has `downcast_ref`
-        context.downcast_ref().unwrap()
+        // `Any + Send + Sync` doesn't have `downcast_ref`
+        Any::downcast_ref(context).unwrap()
     }
 
     fn store<S>(&self, store: &S) -> &Arc<AnyStore>
@@ -189,7 +186,7 @@ pub fn load_asset<A, F, N, S>(context: Arc<A::Context>,
                               pool: &Arc<ThreadPool>)
                               -> AssetFuture<A>
     where A: Asset,
-          A::Context: Context + 'static,
+          A::Context: Context,
           F: Format<Data=<A::Context as Context>::Data> + 'static,
           F::Error: 'static,
           N: Into<String>,
@@ -216,7 +213,7 @@ pub fn reload_asset<A, F, N, S>(context: Arc<A::Context>,
                                 pool: &Arc<ThreadPool>)
                                 -> AssetFuture<A>
     where A: Asset,
-          A::Context: Context + 'static,
+          A::Context: Context,
           //<A::Context as Context>::Error: 'static,
           F: Format<Data=<A::Context as Context>::Data> + 'static,
           F::Error: 'static,
@@ -238,7 +235,7 @@ fn load_asset_inner<C, F, S>(context: Arc<C>,
                              store: &S,
                              pool: &Arc<ThreadPool>)
                              -> AssetFuture<C::Asset>
-    where C: Context + 'static,
+    where C: Context,
           F: Format<Data=C::Data> + 'static,
           F::Error: 'static,
           S: Store,

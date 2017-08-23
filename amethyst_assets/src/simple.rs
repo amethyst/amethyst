@@ -150,6 +150,7 @@ impl<A, W> AssetPtr<A, W>
     }
 }
 
+/// `Asset` implementation that supports hot reloading
 pub struct SimpleAsset<A>(pub AssetPtr<A, SimpleAsset<A>>);
 impl<A> AsRef<A> for SimpleAsset<A> {
     fn as_ref(&self) -> &A {
@@ -163,14 +164,14 @@ impl<A> AsMut<A> for SimpleAsset<A> {
 }
 
 /// A simple implementation of the `Context` trait.
-pub struct SimpleContext<A, D, R, T> {
+pub struct SimpleContext<A, D, T> {
     cache: Cache<AssetFuture<SimpleAsset<A>>>,
     category: Cow<'static, str>,
     load: T,
-    phantom: PhantomData<(D, R)>,
+    phantom: PhantomData<*const D>,
 }
 
-impl<A, D, E, T> SimpleContext<A, D, E, T> {
+impl<A, D, T> SimpleContext<A, D, T> {
     /// Creates a new `SimpleContext` from a category string and
     /// a closure which transforms data to assets.
     pub fn new<C: Into<Cow<'static, str>>>(category: C, load: T) -> Self {
@@ -183,11 +184,19 @@ impl<A, D, E, T> SimpleContext<A, D, E, T> {
     }
 }
 
-impl<A, D, E, R, T> Context for SimpleContext<A, D, R, T>
+unsafe impl<A, D, T> Send for SimpleContext<A, D, T>
+    where T: Send,
+{}
+
+unsafe impl<A, D, T> Sync for SimpleContext<A, D, T>
+    where T: Sync,
+{}
+
+impl<A, D, E, R, T> Context for SimpleContext<A, D, T>
     where A: Clone,
           R: Send + 'static,
           D: Send + 'static,
-          T: Fn(D) -> R + Send + 'static,
+          T: Fn(D) -> R + Send + Sync + 'static,
           SimpleAsset<A>: Asset + Clone + Send + 'static,
           E: Error + Send + Sync,
           R: IntoFuture<Item=SimpleAsset<A>, Error=E>,
