@@ -2,7 +2,7 @@ use crossbeam::sync::MsQueue;
 use futures::{Async, Future, Poll};
 use futures::sync::oneshot::{Receiver, Sender, channel};
 use gfx::traits::Pod;
-use renderer::{Error, Material, MaterialBuilder, Mesh, MeshBuilder};
+use renderer::{Error, Material, MaterialBuilder, Mesh, MeshBuilder, Texture, TextureBuilder};
 
 pub(crate) trait Exec: Send + Sync {
     fn exec(self: Box<Self>, factory: &mut ::renderer::Factory);
@@ -45,6 +45,14 @@ impl Factory {
         self.execute(move |f| mb.build(f))
     }
 
+    /// Creates a texture asynchronously.
+    pub fn create_texture<D, T>(&self, tb: TextureBuilder<D, T>) -> TextureFuture
+        where D: AsRef<[T]> + Send + Sync + 'static,
+              T: Pod + Send + Sync + 'static
+    {
+        self.execute(move |f| tb.build(f))
+    }
+
     /// Creates a mesh asynchronously.
     pub fn create_material<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC>(
         &self,
@@ -72,7 +80,7 @@ impl Factory {
     pub fn execute<F, T, E>(&self, fun: F) -> FactoryFuture<T, E>
         where F: FnOnce(&mut ::renderer::Factory) -> Result<T, E> + Send + Sync + 'static,
               T: Send + Sync + 'static,
-              E: Send + Sync + 'static,
+              E: Send + Sync + 'static
     {
         let (send, recv) = channel();
 
@@ -97,6 +105,9 @@ impl Factory {
         FactoryFuture(recv)
     }
 }
+
+/// A mesh which may not have been created yet.
+pub type TextureFuture = FactoryFuture<Texture, Error>;
 
 /// A material which may not have been created yet.
 pub type MaterialFuture = FactoryFuture<Material, Error>;

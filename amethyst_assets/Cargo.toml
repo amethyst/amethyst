@@ -19,6 +19,7 @@ appveyor = { repository = "amethyst/amethyst", branch = "develop" }
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
+derivative = "1.0"
 fnv = "1"
 futures = "0.1.14"
 log = "0.3.8"

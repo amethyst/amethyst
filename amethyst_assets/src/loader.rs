@@ -54,7 +54,7 @@ impl<A, E> Future for SpawnedFuture<A, E> {
 /// the default (directory) store and a reference to the
 /// `ThreadPool`.
 pub struct Loader {
-    contexts: FnvHashMap<TypeId, Box<Any>>,
+    contexts: FnvHashMap<TypeId, Box<Any + Send + Sync>>,
     directory: Arc<AnyStore>,
     pool: Arc<ThreadPool>,
     stores: FnvHashMap<String, Arc<AnyStore>>,
@@ -86,7 +86,7 @@ impl Loader {
     /// Registers an asset and inserts a context into the map.
     pub fn register<A, C>(&mut self, context: C)
         where A: Asset + 'static,
-              C: Context<Asset=A> + 'static,
+              C: Context<Asset=A> + Send + Sync + 'static,
     {
         self.contexts
             .insert(TypeId::of::<A>(), Box::new(Arc::new(context)));
@@ -163,10 +163,11 @@ impl Loader {
     fn context<C>(&self) -> &Arc<C>
         where C: Context + 'static,
     {
-        let context = self.contexts
+        let context: &Box<Any + Send + Sync> = self.contexts
             .get(&TypeId::of::<C::Asset>())
             .expect("Assets need to be registered with `Loader::register`.");
 
+        let context: &Any = context; // Won't compile without this one
         context.downcast_ref().unwrap()
     }
 
