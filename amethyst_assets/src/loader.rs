@@ -1,15 +1,13 @@
 use std::any::{Any, TypeId};
 use std::borrow::Borrow;
-use std::cell::UnsafeCell;
 use std::hash::Hash;
 use std::path::PathBuf;
 use std::sync::Arc;
 
 use fnv::FnvHashMap;
 use futures::{Async, Future, IntoFuture, Poll};
-use futures::sync::oneshot::{Receiver, Sender, channel};
+use futures::sync::oneshot::{Receiver, channel};
 use rayon::ThreadPool;
-use specs::{Component, DenseVecStorage};
 
 use asset::AssetSpec;
 
@@ -22,7 +20,9 @@ use {Allocator, Asset, AssetFuture, BoxedErr, Context, Directory, Format, AssetE
 pub struct SpawnedFuture<A, E>(Receiver<Result<A, E>>);
 
 impl<A: 'static, E: 'static> SpawnedFuture<A, E> {
-    fn spawn<F>(pool: &ThreadPool, f: F) -> Self
+
+    /// Creates a SpawnedFuture and starts processing it.
+    pub fn spawn<F>(pool: &ThreadPool, f: F) -> Self
         where A: Send,
               E: Send,
               F: FnOnce() -> Result<A, E> + Send + 'static
@@ -202,7 +202,7 @@ pub fn load_asset<A, F, N, S>(context: Arc<A::Context>,
 
     context.retrieve(&spec)
         .unwrap_or_else(move || load_asset_inner(context, format, spec, storage, pool))
-        
+
 }
 
 /// Loads an asset with a given context, format, specifier and storage right now.
@@ -248,18 +248,19 @@ fn load_asset_inner<C, F, S>(context: Arc<C>,
     let spec_asset_err = spec.clone();
     let context_clone = context.clone();
     let pool = pool.clone();
+    let pool_clone = pool.clone();
     let future = store
         .load(context.category(), &spec.name, spec.ext)
         .into_future()
         .map_err(LoadError::StorageError::<C::Error, F::Error, S::Error>)
         .map_err(BoxedErr::new)
         .map_err(move |e| AssetError::new(spec_store_err, e))
-        .and_then(move |bytes| format.parse(bytes)
+        .and_then(move |bytes| format.parse(bytes, &pool)
             .into_future()
             .map_err(LoadError::FormatError::<C::Error, F::Error, S::Error>)
             .map_err(BoxedErr::new)
             .map_err(move |e| AssetError::new(spec_format_err, e)))
-        .and_then(move |data| context.create_asset(data, &pool)
+        .and_then(move |data| context.create_asset(data, &pool_clone)
             .into_future()
             .map_err(LoadError::AssetError::<C::Error, F::Error, S::Error>)
             .map_err(BoxedErr::new)

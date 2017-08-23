@@ -8,7 +8,6 @@ use renderer::PipelineBuilder;
 use shred::Resource;
 use winit::EventsLoop;
 
-use config::Config;
 use ecs::{Component, Dispatcher, DispatcherBuilder, System, World};
 use engine::Engine;
 use error::{Error, Result};

@@ -52,10 +52,11 @@
 #[macro_use]
 #[cfg(feature="profiler")]
 pub extern crate thread_profiler;
-pub extern crate amethyst_assets as assets;
+
 pub extern crate amethyst_config as config;
 pub extern crate amethyst_renderer as renderer;
 
+extern crate amethyst_assets;
 extern crate cgmath;
 extern crate crossbeam;
 extern crate dds;
@@ -86,6 +87,7 @@ pub use self::engine::Engine;
 pub use self::error::{Error, Result};
 pub use self::state::{State, StateMachine, Trans};
 
+pub mod assets;
 pub mod ecs;
 pub mod event;
 pub mod prelude;

@@ -11,7 +11,6 @@
 
 extern crate fnv;
 extern crate futures;
-#[macro_use]
 extern crate log;
 extern crate parking_lot;
 extern crate rayon;

@@ -1,8 +1,6 @@
 use std::error::Error;
 
-use fnv::FnvHashMap;
 use futures::future::{Future, IntoFuture, Shared};
-use parking_lot::RwLock;
 use rayon::ThreadPool;
 
 use {AssetError, StoreId};
@@ -26,6 +24,7 @@ pub trait Asset: Sized {
     type Context: Context<Asset=Self>;
 }
 
+/// A future for an asset
 pub type AssetFuture<A, E = AssetError> = Shared<Box<Future<Item=A, Error=E>>>;
 
 /// A specifier for an asset, uniquely identifying it by
@@ -128,5 +127,5 @@ pub trait Format {
     fn extension() -> &'static str;
 
     /// Reads the given bytes and produces asset data.
-    fn parse(&self, bytes: Vec<u8>) -> Self::Result;
+    fn parse(&self, bytes: Vec<u8>, pool: &ThreadPool) -> Self::Result;
 }
