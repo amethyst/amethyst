@@ -1,16 +1,18 @@
 //! Provides texture formats
 
+use std::io::Cursor;
+
 use assets::{SpawnedFuture, Format};
-use image;
-use image::{ImageBuffer, ImageFormat, Rgba};
+use imagefmt;
+use imagefmt::{Image, ColFmt};
 use rayon::ThreadPool;
 
-pub use image::ImageError;
+pub use imagefmt::Error as ImageError;
 
 /// ImageData provided by formats, can be interpreted as a texture.
 #[derive(Clone, Debug)]
 pub struct ImageData {
-    raw: ImageBuffer<Rgba<u8>, Vec<u8>>,
+    raw: Image<u8>,
 }
 
 /// A future which will eventually have an image available.
@@ -18,8 +20,7 @@ pub type ImageFuture = SpawnedFuture<ImageData, ImageError>;
 
 fn parse_jpeg(bytes: Vec<u8>, pool: &ThreadPool) -> ImageFuture {
     ImageFuture::spawn(pool, move || {
-        image::load_from_memory_with_format(&bytes, ImageFormat::JPEG)
-            .map(|di| ImageData { raw: di.to_rgba() })
+        imagefmt::jpeg::read(&mut Cursor::new(bytes), ColFmt::RGBA).map(|raw| ImageData { raw })
     })
 }
 
@@ -54,5 +55,43 @@ impl Format for JpgFormat {
 
     fn parse(&self, bytes: Vec<u8>, pool: &ThreadPool) -> Self::Result {
         parse_jpeg(bytes, pool)
+    }
+}
+
+/// Allows loading of PNG files.
+pub struct PngFormat;
+
+impl Format for PngFormat {
+    type Data = ImageData;
+    type Error = ImageError;
+    type Result = ImageFuture;
+
+    fn extension() -> &'static str {
+        "png"
+    }
+
+    fn parse(&self, bytes: Vec<u8>, pool: &ThreadPool) -> Self::Result {
+        ImageFuture::spawn(pool, move || {
+            imagefmt::png::read(&mut Cursor::new(bytes), ColFmt::RGBA).map(|raw| ImageData { raw })
+        })
+    }
+}
+
+/// Allows loading of BMP files.
+pub struct BmpFormat;
+
+impl Format for BmpFormat {
+    type Data = ImageData;
+    type Error = ImageError;
+    type Result = ImageFuture;
+
+    fn extension() -> &'static str {
+        "bmp"
+    }
+
+    fn parse(&self, bytes: Vec<u8>, pool: &ThreadPool) -> Self::Result {
+        ImageFuture::spawn(pool, move || {
+            imagefmt::bmp::read(&mut Cursor::new(bytes), ColFmt::RGBA).map(|raw| ImageData { raw })
+        })
     }
 }
