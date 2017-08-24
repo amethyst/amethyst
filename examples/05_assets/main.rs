@@ -66,7 +66,8 @@ fn main() {
 
 /// Wrapper around the main, so we can return errors easily.
 fn run() -> Result<(), Error> {
-    use amethyst::ecs::components::{Child, Init, LocalTransform, Transform};
+    use amethyst::assets::Directory;
+    use amethyst::ecs::components::{Child, Init, LocalTransform};
     use amethyst::ecs::systems::TransformSystem;
     use std::env::set_var;
 
@@ -74,18 +75,24 @@ fn run() -> Result<(), Error> {
     // this would normally be done with something like this:
     //
     //     AMETHYST_ASSET_DIRS=/foo/bar cargo run
-    let assets_path = format!(
+    let textures_path = format!(
         "{}/examples/05_assets/resources/textures",
         env!("CARGO_MANIFEST_DIR")
     );
-    set_var("AMETHYST_ASSET_DIRS", assets_path);
+    set_var("AMETHYST_ASSET_DIRS", textures_path);
 
-    let path = format!(
+    // Add our meshes directory to the asset loader.
+    let mesh_directory = format!(
+        "{}/examples/05_assets/resources/meshes",
+        env!("CARGO_MANIFEST_DIR")
+    );
+
+    let display_config_path = format!(
         "{}/examples/05_assets/resources/config.ron",
         env!("CARGO_MANIFEST_DIR")
     );
 
-    let display_config = DisplayConfig::load(path);
+    let display_config = DisplayConfig::load(display_config_path);
     let pipeline_builder = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
@@ -99,6 +106,7 @@ fn run() -> Result<(), Error> {
         .register::<Init>()
         .with::<TransformSystem>(TransformSystem::new(), "transform_system", &[])
         .with_renderer(pipeline_builder, Some(display_config))?
+        .add_store("meshes", Directory::new(mesh_directory))
         .build()?;
 
     game.run();
