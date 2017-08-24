@@ -7,6 +7,8 @@ use ecs::components::*;
 use ecs::resources::Factory;
 use error::{Error, Result};
 use renderer::prelude::*;
+use renderer::Config as DisplayConfig;
+
 use super::SystemExt;
 
 /// Rendering system.
@@ -56,11 +58,15 @@ impl<'a> System<'a> for RenderSystem {
     }
 }
 
-impl<'a, 'b> SystemExt<'a, (&'b EventsLoop, PipelineBuilder)> for RenderSystem {
+impl<'a, 'b> SystemExt<'a, (&'b EventsLoop, PipelineBuilder, Option<DisplayConfig>)> for RenderSystem {
     /// Create new `RenderSystem`
     /// It creates window and do render into it
-    fn build((events, pipe): (&'b EventsLoop, PipelineBuilder), world: &mut World) -> Result<Self> {
-        let mut renderer = Renderer::new(events).map_err(|_| Error::System)?;
+    fn build((events, pipe, config): (&'b EventsLoop, PipelineBuilder, Option<DisplayConfig>), world: &mut World) -> Result<Self> {
+        let mut renderer = Renderer::build(events);
+        if let Some(config) = config {
+            renderer.with_config(config);
+        }
+        let mut renderer =  renderer.build().map_err(|_| Error::System)?;
         let pipe = renderer.create_pipe(pipe).map_err(|_| Error::System)?;
 
         use cgmath::Deg;
