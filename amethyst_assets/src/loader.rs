@@ -3,6 +3,7 @@ use std::borrow::Borrow;
 use std::hash::Hash;
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use fnv::FnvHashMap;
 use futures::{Async, Future, IntoFuture, Poll};
@@ -12,7 +13,7 @@ use rayon::ThreadPool;
 use asset::AssetSpec;
 
 use store::AnyStore;
-use {Allocator, Asset, AssetFuture, BoxedErr, Context, Directory, Format, AssetError, LoadError, Store};
+use {Asset, AssetFuture, BoxedErr, Context, Directory, Format, AssetError, LoadError, Store};
 
 /// Represents a future value of an asset. This future may be
 /// added to the ECS world, where the responsible system can poll it and merge
@@ -50,27 +51,78 @@ impl<A, E> Future for SpawnedFuture<A, E> {
     }
 }
 
+/// A unique store id, used to identify the storage in `AssetSpec`.
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct StoreId(usize);
+
+impl StoreId {
+    /// Returns a copy of the internal id.
+    pub fn id(&self) -> usize {
+        self.0
+    }
+}
+
+/// An `Allocator`, holding a counter for producing unique IDs for the stores.
+#[derive(Debug, Default)]
+struct Allocator {
+    store_count: AtomicUsize,
+}
+
+impl Allocator {
+    /// Creates a new `Allocator`.
+    fn new() -> Self {
+        Default::default()
+    }
+
+    /// Produces a new store id.
+    fn next_store_id(&self) -> StoreId {
+        StoreId(self.store_count.fetch_add(1, Ordering::Relaxed))
+    }
+}
+
+struct StoreWithId<S: Store = Box<AnyStore>> {
+    id: StoreId,
+    store: S,
+}
+
+impl<S> StoreWithId<S>
+    where S: Store,
+{
+    fn id(&self) -> StoreId {
+        self.id
+    }
+    fn store(&self) -> &S {
+        &self.store
+    }
+}
+
 /// The asset loader, holding the contexts,
 /// the default (directory) store and a reference to the
 /// `ThreadPool`.
 pub struct Loader {
     contexts: FnvHashMap<TypeId, Box<Any + Send + Sync>>,
-    directory: Arc<AnyStore>,
+    directory: StoreWithId<Directory>,
     pool: Arc<ThreadPool>,
-    stores: FnvHashMap<String, Arc<AnyStore>>,
+    stores: FnvHashMap<String, StoreWithId>,
+    allocator: Allocator,
 }
 
 impl Loader {
     /// Creates a new asset loader, initializing the directory store with the
     /// given path.
-    pub fn new<P>(alloc: &Allocator, directory: P, pool: Arc<ThreadPool>) -> Self
+    pub fn new<P>(directory: P, pool: Arc<ThreadPool>) -> Self
         where P: Into<PathBuf>
     {
+        let allocator = Allocator::new();
         Loader {
             contexts: Default::default(),
-            directory: Arc::new(Directory::new(alloc, directory)),
+            directory: StoreWithId {
+                id: allocator.next_store_id(),
+                store: Directory::new(directory),
+            },
             pool: pool,
             stores: Default::default(),
+            allocator: allocator,
         }
     }
 
@@ -80,7 +132,11 @@ impl Loader {
         where I: Into<String>,
               S: Store + Send + Sync + 'static
     {
-        self.stores.insert(name.into(), Arc::new(store));
+        let id = self.allocator.next_store_id();
+        self.stores.insert(name.into(), StoreWithId{
+            id: id,
+            store: Box::new(store),
+        });
     }
 
     /// Registers an asset and inserts a context into the map.
@@ -108,10 +164,13 @@ impl Loader {
     {
         let context = self.context::<A::Context>();
 
+        let si = self.store(store);
+
         reload_asset::<A, F, N, _>(context.clone(),
                                    format,
                                    name,
-                                   self.store(store),
+                                   si.id(),
+                                   si.store(),
                                    &self.pool)
     }
 
@@ -152,12 +211,18 @@ impl Loader {
               String: Borrow<S>
     {
         let context = self.context::<A::Context>();
-        let store = match store.as_ref() {
-            "" => &self.directory,
-            _ => self.store(store),
+        let (ref store, id) = match store.as_ref() {
+            "" => {
+                let si = &self.directory;
+                (si.store() as &AnyStore, si.id())
+            },
+            _ => {
+                let si = self.store(store);
+                (si.store() as &AnyStore, si.id())
+            }
         };
 
-        load_asset::<A, F, N, _>(context.clone(), format, name, store, &self.pool)
+        load_asset::<A, F, N, _>(context.clone(), format, name, id, store, &self.pool)
     }
 
     fn context<C>(&self) -> &Arc<C>
@@ -171,7 +236,7 @@ impl Loader {
         Any::downcast_ref(context).unwrap()
     }
 
-    fn store<S>(&self, store: &S) -> &Arc<AnyStore>
+    fn store<S>(&self, store: &S) -> &StoreWithId
         where S: Eq + Hash + ? Sized,
               String: Borrow<S>
     {
@@ -185,6 +250,7 @@ impl Loader {
 pub fn load_asset<A, F, N, S>(context: Arc<A::Context>,
                               format: F,
                               name: N,
+                              store_id: StoreId,
                               storage: &S,
                               pool: &Arc<ThreadPool>)
                               -> AssetFuture<A>
@@ -194,12 +260,11 @@ pub fn load_asset<A, F, N, S>(context: Arc<A::Context>,
           F::Data: Into<<A::Context as Context>::Data>,
           F::Error: 'static,
           N: Into<String>,
-          S: Store,
+          S: Store + ?Sized,
           <S::Result as IntoFuture>::Future: 'static,
 {
     let name = name.into();
 
-    let store_id = storage.store_id();
     let spec = AssetSpec::new(name.clone(), F::extension(), store_id);
 
     context.retrieve(&spec)
@@ -213,6 +278,7 @@ pub fn load_asset<A, F, N, S>(context: Arc<A::Context>,
 pub fn reload_asset<A, F, N, S>(context: Arc<A::Context>,
                                 format: F,
                                 name: N,
+                                store_id: StoreId,
                                 storage: &S,
                                 pool: &Arc<ThreadPool>)
                                 -> AssetFuture<A>
@@ -222,12 +288,11 @@ pub fn reload_asset<A, F, N, S>(context: Arc<A::Context>,
           F::Data: Into<<A::Context as Context>::Data>,
           F::Error: 'static,
           N: Into<String>,
-          S: Store,
+          S: Store + ?Sized,
           <S::Result as IntoFuture>::Future: 'static,
 {
     let name = name.into();
 
-    let store_id = storage.store_id();
     let spec = AssetSpec::new(name.clone(), F::extension(), store_id);
 
     load_asset_inner(context, format, spec, storage, pool)
@@ -243,7 +308,7 @@ fn load_asset_inner<C, F, S>(context: Arc<C>,
           F: Format + 'static,
           F::Data: Into<C::Data>,
           F::Error: 'static,
-          S: Store,
+          S: Store + ?Sized,
           <S::Result as IntoFuture>::Future: 'static,
 {
     let spec_store_err = spec.clone();

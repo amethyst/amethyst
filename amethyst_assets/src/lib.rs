@@ -23,9 +23,9 @@ pub use specs::common::BoxedErr;
 pub use asset::{Asset, AssetFuture, AssetSpec, Context, Format};
 pub use cache::Cache;
 pub use error::{AssetError, LoadError, NoError};
-pub use loader::{SpawnedFuture, Loader, load_asset};
+pub use loader::{Loader, load_asset, SpawnedFuture, StoreId};
 pub use simple::{AssetPtr, SimpleAsset, SimpleContext};
-pub use store::{Allocator, Directory, Store, StoreId};
+pub use store::{Directory, Store};
 
 mod asset;
 mod cache;
