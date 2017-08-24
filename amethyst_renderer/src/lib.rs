@@ -144,7 +144,6 @@ pub struct Renderer {
     /// The gfx factory used for creation of buffers.
     pub factory: Factory,
 
-    config: Config,
     device: types::Device,
     encoders: Vec<Encoder>,
     main_target: Arc<Target>,
@@ -335,7 +334,6 @@ impl<'a> RendererBuilder<'a> {
                             })?;
 
         Ok(Renderer {
-               config: self.config.clone(),
                device: dev,
                encoders: Vec::new(),
                factory: fac,

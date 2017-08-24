@@ -85,6 +85,8 @@ impl<'a, 'b> SystemExt<'a, (&'b EventsLoop, PipelineBuilder, Option<DisplayConfi
         world.add_resource(cam);
         world.register::<LightComponent>();
         world.register::<MaterialComponent>();
+        world.register::<MeshComponent>();
+        world.register::<Transform>();
 
         Ok(RenderSystem {
             pipe: pipe,

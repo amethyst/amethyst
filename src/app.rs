@@ -216,7 +216,10 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
         use ecs::systems::{RenderSystem, SystemExt};
         let render_sys = RenderSystem::build((&self.events, pipe, config), &mut self.world)?;
         self = self.with_thread_local(render_sys);
-        Ok(self)
+
+        Ok(self
+            .register_mesh_asset()
+            .register_texture_asset())
     }
 
     /// Add asset loader to resources
@@ -250,26 +253,6 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
         self
     }
 
-    /// Register new context within the loader
-    pub fn register_mesh_asset(self) -> Self {
-        use ecs::components::*;
-        use ecs::resources::Factory;
-        self.register_asset::<MeshComponent, _>(|world| {
-            let factory = world.read_resource::<Factory>();
-            MeshContext::new((&*factory).clone())
-        })
-    }
-
-    /// Register new context within the loader
-    pub fn register_texture_asset(self) -> Self {
-        use ecs::components::*;
-        use ecs::resources::Factory;
-        self.register_asset::<TextureComponent, _>(|world| {
-            let factory = world.read_resource::<Factory>();
-            TextureContext::new((&*factory).clone())
-        })
-    }
-
     /// Builds the Application and returns the result.
     pub fn build(self) -> Result<Application<'a, 'b>> {
 
@@ -286,6 +269,29 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
             dispatcher: self.disp_builder.with_pool(self.pool).build(),
             time: Time::default(),
             timer: Stopwatch::new(),
+        })
+    }
+
+
+
+
+    /// Register new context within the loader
+    fn register_mesh_asset(self) -> Self {
+        use ecs::components::*;
+        use ecs::resources::Factory;
+        self.register_asset::<MeshComponent, _>(|world| {
+            let factory = world.read_resource::<Factory>();
+            MeshContext::new((&*factory).clone())
+        })
+    }
+
+    /// Register new context within the loader
+    fn register_texture_asset(self) -> Self {
+        use ecs::components::*;
+        use ecs::resources::Factory;
+        self.register_asset::<TextureComponent, _>(|world| {
+            let factory = world.read_resource::<Factory>();
+            TextureContext::new((&*factory).clone())
         })
     }
 }
