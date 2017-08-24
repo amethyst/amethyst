@@ -9,6 +9,7 @@ use mesh::Mesh;
 use mtl::Material;
 use rayon::prelude::*;
 use rayon::slice::{Chunks, Iter};
+use color::Rgba;
 
 /// Immutable parallel iterator of lights.
 pub type Lights<'l> = Iter<'l, Light>;
@@ -28,6 +29,7 @@ pub struct Scene {
     cameras: Vec<Camera>,
     lights: Vec<Light>,
     models: Vec<Model>,
+    ambient_color: Rgba,
 }
 
 impl Scene {
@@ -53,6 +55,16 @@ impl Scene {
     /// Adds a camera to the scene.
     pub fn add_camera<C: Into<Camera>>(&mut self, camera: C) {
         self.cameras.push(camera.into());
+    }
+
+    /// Set ambient color for the scene
+    pub fn set_ambient_color(&mut self, color: Rgba) {
+        self.ambient_color = color;
+    }
+
+    /// Get the ambient color for the scene
+    pub fn ambient_color(&self) -> Rgba {
+        self.ambient_color.clone()
     }
 
     /// Get all lights on scene

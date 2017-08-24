@@ -151,7 +151,7 @@ impl<V: VertexFormat> Pass for DrawShaded<V> {
         effect.update_buffer("PointLights", &point_lights[..], enc);
         effect.update_buffer("DirectionalLights", &directional_lights[..], enc);
 
-        effect.update_global("ambient_color", [0.005; 3]);
+        effect.update_global("ambient_color", Into::<[f32; 3]>::into(scene.ambient_color()));
         effect.update_global("camera_position", scene.active_camera()
                                                     .map(|cam| cam.eye.into())
                                                     .unwrap_or([0.0; 3]));

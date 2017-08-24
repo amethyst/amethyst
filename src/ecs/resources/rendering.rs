@@ -5,6 +5,7 @@ use futures::{Async, Future, Poll};
 use futures::sync::oneshot::{Receiver, Sender, channel};
 use gfx::traits::Pod;
 use renderer::{Error, Material, MaterialBuilder, Mesh, MeshBuilder, Texture, TextureBuilder};
+use renderer::Rgba;
 
 pub(crate) trait Exec: Send + Sync {
     fn exec(self: Box<Self>, factory: &mut ::renderer::Factory);
@@ -117,3 +118,6 @@ pub type MaterialFuture = FactoryFuture<Material, Error>;
 
 /// A mesh which may not have been created yet.
 pub type MeshFuture = FactoryFuture<Mesh, Error>;
+
+/// The ambient color of a scene
+pub struct AmbientColor(pub Rgba);

@@ -5,6 +5,8 @@ use winit::EventsLoop;
 use ecs::{Fetch, Join, ReadStorage, System, World};
 use ecs::components::*;
 use ecs::resources::Factory;
+use ecs::resources::AmbientColor;
+
 use error::{Error, Result};
 use renderer::prelude::*;
 use renderer::Config as DisplayConfig;
@@ -25,13 +27,14 @@ impl<'a> System<'a> for RenderSystem {
     type SystemData = (
         Fetch<'a, Camera>,
         Fetch<'a, Factory>,
+        Fetch<'a, Option<AmbientColor>>,
         ReadStorage<'a, Transform>,
         ReadStorage<'a, LightComponent>,
         ReadStorage<'a, MaterialComponent>,
         ReadStorage<'a, MeshComponent>,
     );
 
-    fn run(&mut self, (camera, factory, globals, lights, materials, meshes): Self::SystemData) {
+    fn run(&mut self, (camera, factory, ambient_color, globals, lights, materials, meshes): Self::SystemData) {
         use std::time::Duration;
 
         while let Some(job) = factory.jobs.try_pop() {
@@ -46,6 +49,10 @@ impl<'a> System<'a> for RenderSystem {
                 mesh: mesh.as_ref().clone(),
                 pos: global.0.into()
             });
+        }
+
+        if let Some(ref color) = *ambient_color {
+            self.scene.set_ambient_color(color.0.clone());
         }
 
         for light in lights.join() {
@@ -83,10 +90,11 @@ impl<'a, 'b> SystemExt<'a, (&'b EventsLoop, PipelineBuilder, Option<DisplayConfi
 
         world.add_resource(Factory::new());
         world.add_resource(cam);
+        world.add_resource::<Option<AmbientColor>>(None);
+        world.register::<Transform>();
         world.register::<LightComponent>();
         world.register::<MaterialComponent>();
         world.register::<MeshComponent>();
-        world.register::<Transform>();
 
         Ok(RenderSystem {
             pipe: pipe,

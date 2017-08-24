@@ -80,7 +80,7 @@ fn run() -> Result<(), amethyst::Error> {
             Some(config)
         )?
         .build()?;
-    Ok(game.run())    
+    Ok(game.run())
 }
 
 fn main() {

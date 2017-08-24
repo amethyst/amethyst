@@ -240,10 +240,11 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
               F: FnOnce(&mut World) -> A::Context,
     {
         use assets::AssetFuture;
-        use specs::common::Merge;
+        use specs::common::{Merge, Errors};
 
         self.world.register::<A>();
         self.world.register::<AssetFuture<A>>();
+        self.world.add_resource(Errors::new());
         self = self.with(Merge::<AssetFuture<A>>::new(), "", &[]);
         {
             let context = make_context(&mut self.world);
