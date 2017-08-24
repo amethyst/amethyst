@@ -135,7 +135,7 @@ impl Loader {
         let id = self.allocator.next_store_id();
         self.stores.insert(name.into(), StoreWithId{
             id: id,
-            store: Box::new(store),
+            store: Box::new(store) as Box<AnyStore>,
         });
     }
 
