@@ -196,7 +196,7 @@ impl State for Example {
             .build();
 
         {
-            world.add_resource(Some(AmbientColor(Rgba::from([0.01; 3]))));
+            world.add_resource(AmbientColor(Rgba::from([0.01; 3])));
         }
 
         world.add_resource::<DemoState>(DemoState {
@@ -250,14 +250,13 @@ impl State for Example {
                             state.light_color = [1.0, 1.0, 1.0, 1.0];
                         },
                         Some(VirtualKeyCode::A) => {
-                            if let Some(ref mut color) = *w.write_resource::<Option<AmbientColor>>() {
-                                if state.ambient_light {
-                                    state.ambient_light = false;
-                                    color.0 = [0.0; 3].into();
-                                } else {
-                                    state.ambient_light = true;
-                                    color.0 = [0.01; 3].into();
-                                }
+                            let mut color = w.write_resource::<AmbientColor>();
+                            if state.ambient_light {
+                                state.ambient_light = false;
+                                color.0 = [0.0; 3].into();
+                            } else {
+                                state.ambient_light = true;
+                                color.0 = [0.01; 3].into();
                             }
                         },
                         Some(VirtualKeyCode::D) => {

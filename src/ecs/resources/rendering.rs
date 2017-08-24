@@ -120,4 +120,5 @@ pub type MaterialFuture = FactoryFuture<Material, Error>;
 pub type MeshFuture = FactoryFuture<Mesh, Error>;
 
 /// The ambient color of a scene
+#[derive(Default)]
 pub struct AmbientColor(pub Rgba);

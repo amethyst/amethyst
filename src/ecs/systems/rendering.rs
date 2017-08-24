@@ -10,6 +10,7 @@ use ecs::resources::AmbientColor;
 use error::{Error, Result};
 use renderer::prelude::*;
 use renderer::Config as DisplayConfig;
+use renderer::Rgba;
 
 use super::SystemExt;
 
@@ -27,7 +28,7 @@ impl<'a> System<'a> for RenderSystem {
     type SystemData = (
         Fetch<'a, Camera>,
         Fetch<'a, Factory>,
-        Fetch<'a, Option<AmbientColor>>,
+        Fetch<'a, AmbientColor>,
         ReadStorage<'a, Transform>,
         ReadStorage<'a, LightComponent>,
         ReadStorage<'a, MaterialComponent>,
@@ -51,9 +52,7 @@ impl<'a> System<'a> for RenderSystem {
             });
         }
 
-        if let Some(ref color) = *ambient_color {
-            self.scene.set_ambient_color(color.0.clone());
-        }
+        self.scene.set_ambient_color(ambient_color.0.clone());
 
         for light in lights.join() {
             self.scene.add_light(light.0.clone());
@@ -90,7 +89,7 @@ impl<'a, 'b> SystemExt<'a, (&'b EventsLoop, PipelineBuilder, Option<DisplayConfi
 
         world.add_resource(Factory::new());
         world.add_resource(cam);
-        world.add_resource::<Option<AmbientColor>>(None);
+        world.add_resource(AmbientColor(Rgba::from([0.01; 3])));
         world.register::<Transform>();
         world.register::<LightComponent>();
         world.register::<MaterialComponent>();
