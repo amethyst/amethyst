@@ -77,15 +77,13 @@ impl Format for DummyFormat {
 
 fn main() {
     use futures::Future;
-    use futures::future::SharedItem;
 
     let path = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
 
     let cfg = Configuration::new().num_threads(8);
     let pool = Arc::new(ThreadPool::new(cfg).expect("Invalid config"));
 
-    let alloc = Allocator::new();
-    let mut loader = Loader::new(&alloc, &path, pool);
+    let mut loader = Loader::new(&path, pool);
 
     loader.register(DummyContext {
         cache: Cache::new(),
@@ -93,7 +91,7 @@ fn main() {
     });
 
     let dummy = loader.load("whatever", DummyFormat);
-    let dummy: SharedItem<DummyAsset> = dummy.wait().expect("Failed to load dummy asset");
+    let dummy: DummyAsset = dummy.wait().expect("Failed to load dummy asset");
 
-    println!("dummy: {:?}", *dummy);
+    println!("dummy: {:?}", dummy);
 }

@@ -9,6 +9,8 @@
 
 #![warn(missing_docs)]
 
+#[macro_use]
+extern crate derivative;
 extern crate fnv;
 extern crate futures;
 extern crate log;
@@ -20,10 +22,10 @@ pub use specs::common::BoxedErr;
 
 pub use asset::{Asset, AssetFuture, AssetSpec, Context, Format};
 pub use cache::Cache;
-pub use error::{AssetError, LoadError, NoError};
-pub use loader::{SpawnedFuture, Loader, load_asset};
-pub use simple::{AssetPtr, SimpleContext};
-pub use store::{Allocator, Directory, Store, StoreId};
+pub use error::{AssetError, LoadError, NoError, SharedAssetError};
+pub use loader::{Loader, load_asset, SpawnedFuture, StoreId};
+pub use simple::{AssetPtr, SimpleAsset, SimpleContext};
+pub use store::{Directory, Store};
 
 mod asset;
 mod cache;

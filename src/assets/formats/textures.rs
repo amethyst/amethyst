@@ -12,7 +12,7 @@ pub use imagefmt::Error as ImageError;
 /// ImageData provided by formats, can be interpreted as a texture.
 #[derive(Clone, Debug)]
 pub struct ImageData {
-    raw: Image<u8>,
+    pub(crate) raw: Image<u8>,
 }
 
 /// A future which will eventually have an image available.

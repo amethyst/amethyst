@@ -10,21 +10,18 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use futures::{Async, IntoFuture};
-use futures::future::Shared;
 use parking_lot::RwLock;
 use rayon::ThreadPool;
 
 use {Asset, AssetFuture, AssetSpec, Cache, Context};
 
-struct AssetUpdate<A> {
+struct AssetUpdate<A, W> {
     counter: AtomicUsize,
     ready: RwLock<Option<A>>,
-    defer: RwLock<Option<AssetFuture<AssetPtr<A>>>>,
+    defer: RwLock<Option<AssetFuture<W>>>,
 }
 
-impl<A> AssetUpdate<A>
-    where A: Clone
-{
+impl<A, W> AssetUpdate<A, W> {
     fn new() -> Self {
         AssetUpdate {
             counter: AtomicUsize::new(0),
@@ -32,11 +29,16 @@ impl<A> AssetUpdate<A>
             defer: RwLock::new(None),
         }
     }
+}
 
-    fn push_update(&self, mut updated: AssetFuture<AssetPtr<A>>) {
+impl<A, W> AssetUpdate<A, W>
+    where A: Clone,
+          W: AsRef<A> + Clone,
+{
+    fn push_update(&self, mut updated: AssetFuture<W>) {
         match updated.poll() {
             Ok(Async::Ready(updated)) => {
-                *self.ready.write() = Some(updated.inner.clone());
+                *self.ready.write() = Some(updated.as_ref().clone());
                 self.counter.fetch_add(1, Ordering::Release);
             }
             Err(_) => {},
@@ -51,7 +53,7 @@ impl<A> AssetUpdate<A>
                     match last.poll() {
                         Err(_) | Ok(Async::NotReady) => {}
                         Ok(Async::Ready(updated)) => {
-                            *self.ready.write() = Some(updated.inner.clone());
+                            *self.ready.write() = Some(updated.as_ref().clone());
                         }
                     }
                 }
@@ -63,9 +65,9 @@ impl<A> AssetUpdate<A>
     fn updated(&self, count: usize) -> Option<(A, usize)> {
         let new = self.counter.load(Ordering::Acquire);
         if new > count {
-            match self.defer.read().as_ref().map(Shared::peek).and_then(|a|a) {
+            match self.defer.read().as_ref().map(AssetFuture::peek).and_then(|a|a) {
                 Some(Ok(updated)) => {
-                    Some((updated.inner.clone(), new))
+                    Some((updated.as_ref().clone(), new))
                 }
                 Some(Err(_)) | None => {
                     self.ready.read().as_ref().map(|a| (a.clone(), new))
@@ -92,16 +94,16 @@ impl<A> AssetUpdate<A>
 /// duplicated buffer allocations, make sure your handle is reference-counted,
 /// so wrap it with an `Arc` in case the handle doesn't have this functionality
 /// itself.
-#[derive(Clone)]
-pub struct AssetPtr<A> {
+#[derive(Derivative)]
+#[derivative(Clone, Debug)]
+pub struct AssetPtr<A, W> {
     inner: A,
     version: usize,
-    update: Arc<AssetUpdate<A>>,
+    #[derivative(Debug = "ignore")]
+    update: Arc<AssetUpdate<A, W>>,
 }
 
-impl<A> AssetPtr<A>
-    where A: Clone,
-{
+impl<A, W> AssetPtr<A, W> {
     /// Creates a new asset pointer.
     pub fn new(data: A) -> Self {
         AssetPtr {
@@ -121,10 +123,20 @@ impl<A> AssetPtr<A>
         &mut self.inner
     }
 
+    /// Returns `true` if a clone of this `AssetPtr` exists.
+    pub fn is_shared(&self) -> bool {
+        Arc::strong_count(&self.update) > 1
+    }
+}
+
+impl<A, W> AssetPtr<A, W>
+    where A: Clone,
+          W: AsRef<A> + Clone,
+{
     /// Pushes an update to the shared update container;
     /// this update can then be applied to all asset pointers by calling
     /// `update` on them.
-    pub fn push_update(&self, updated: AssetFuture<AssetPtr<A>>) {
+    pub fn push_update(&self, updated: AssetFuture<W>) {
         self.update.push_update(updated);
     }
 
@@ -135,22 +147,30 @@ impl<A> AssetPtr<A>
             self.version = version;
         }
     }
+}
 
-    /// Returns `true` if a clone of this `AssetPtr` exists.
-    pub fn is_shared(&self) -> bool {
-        Arc::strong_count(&self.update) > 1
+/// `Asset` implementation that supports hot reloading
+pub struct SimpleAsset<A>(pub AssetPtr<A, SimpleAsset<A>>);
+impl<A> AsRef<A> for SimpleAsset<A> {
+    fn as_ref(&self) -> &A {
+        self.0.inner()
+    }
+}
+impl<A> AsMut<A> for SimpleAsset<A> {
+    fn as_mut(&mut self) -> &mut A {
+        self.0.inner_mut()
     }
 }
 
 /// A simple implementation of the `Context` trait.
-pub struct SimpleContext<A, D, R, T> {
-    cache: Cache<AssetFuture<AssetPtr<A>>>,
+pub struct SimpleContext<A, D, T> {
+    cache: Cache<AssetFuture<SimpleAsset<A>>>,
     category: Cow<'static, str>,
     load: T,
-    phantom: PhantomData<(D, R)>,
+    phantom: PhantomData<*const D>,
 }
 
-impl<A, D, E, T> SimpleContext<A, D, E, T> {
+impl<A, D, T> SimpleContext<A, D, T> {
     /// Creates a new `SimpleContext` from a category string and
     /// a closure which transforms data to assets.
     pub fn new<C: Into<Cow<'static, str>>>(category: C, load: T) -> Self {
@@ -163,16 +183,24 @@ impl<A, D, E, T> SimpleContext<A, D, E, T> {
     }
 }
 
-impl<A, D, E, R, T> Context for SimpleContext<A, D, R, T>
+unsafe impl<A, D, T> Send for SimpleContext<A, D, T>
+    where T: Send,
+{}
+
+unsafe impl<A, D, T> Sync for SimpleContext<A, D, T>
+    where T: Sync,
+{}
+
+impl<A, D, E, R, T> Context for SimpleContext<A, D, T>
     where A: Clone,
           R: Send + 'static,
           D: Send + 'static,
-          T: Fn(D) -> R + Send + 'static,
-          AssetPtr<A>: Asset + Clone + Send + 'static,
+          T: Fn(D) -> R + Send + Sync + 'static,
+          SimpleAsset<A>: Asset + Clone + Send + 'static,
           E: Error + Send + Sync,
-          R: IntoFuture<Item=AssetPtr<A>, Error=E>,
+          R: IntoFuture<Item=SimpleAsset<A>, Error=E>,
 {
-    type Asset = AssetPtr<A>;
+    type Asset = SimpleAsset<A>;
     type Data = D;
     type Error = E;
     type Result = R;
@@ -185,18 +213,18 @@ impl<A, D, E, R, T> Context for SimpleContext<A, D, R, T>
         (&self.load)(data)
     }
 
-    fn cache(&self, spec: AssetSpec, asset: AssetFuture<AssetPtr<A>>) {
+    fn cache(&self, spec: AssetSpec, asset: AssetFuture<SimpleAsset<A>>) {
         self.cache.insert(spec, asset);
     }
 
-    fn retrieve(&self, spec: &AssetSpec) -> Option<AssetFuture<AssetPtr<A>>> {
+    fn retrieve(&self, spec: &AssetSpec) -> Option<AssetFuture<SimpleAsset<A>>> {
         self.cache.get(spec)
     }
 
-    fn update(&self, spec: &AssetSpec, updated: AssetFuture<AssetPtr<A>>) {
+    fn update(&self, spec: &AssetSpec, updated: AssetFuture<SimpleAsset<A>>) {
         if let Some(updated) = self.cache.access(spec, |a| {
             match a.peek() {
-                Some(Ok(a)) => { a.push_update(updated); None }
+                Some(Ok(a)) => { a.0.push_update(updated); None }
                 _ => { Some(updated) }
             }
         }).and_then(|a|a) {
@@ -206,7 +234,7 @@ impl<A, D, E, R, T> Context for SimpleContext<A, D, R, T>
 
     fn clear(&self) {
         self.cache.retain(|_, a| match a.peek() {
-            Some(Ok(a)) => { a.is_shared() }
+            Some(Ok(a)) => { a.0.is_shared() }
             _ => { true }
         });
     }

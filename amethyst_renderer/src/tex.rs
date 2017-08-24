@@ -3,6 +3,7 @@
 pub use gfx::texture::{FilterMethod, WrapMode};
 
 use error::Result;
+use gfx::format::SurfaceType;
 use gfx::texture::{Info, SamplerInfo};
 use gfx::traits::Pod;
 use std::marker::PhantomData;
@@ -67,7 +68,6 @@ impl<D, T> TextureBuilder<D, T>
     /// Creates a new `TextureBuilder` with the given raw texture data.
     pub fn new(data: D) -> Self {
         use gfx::SHADER_RESOURCE;
-        use gfx::format::SurfaceType;
         use gfx::memory::Usage;
         use gfx::texture::{AaMode, Kind};
 
@@ -93,10 +93,10 @@ impl<D, T> TextureBuilder<D, T>
         self
     }
 
-    /// Sets the texture length and width in pixels.
-    pub fn with_size(mut self, l: usize, w: usize) -> Self {
+    /// Sets the texture width and height in pixels.
+    pub fn with_size(mut self, w: u16, h: u16) -> Self {
         use gfx::texture::{AaMode, Kind};
-        self.info.kind = Kind::D2(l as u16, w as u16, AaMode::Single);
+        self.info.kind = Kind::D2(w, h, AaMode::Single);
         self
     }
 
@@ -107,8 +107,14 @@ impl<D, T> TextureBuilder<D, T>
         self
     }
 
+    /// Sets the texture format
+    pub fn with_format(mut self, format: SurfaceType) -> Self {
+        self.info.format = format;
+        self
+    }
+
     /// Builds and returns the new texture.
-    pub(crate) fn build(self, fac: &mut Factory) -> Result<Texture> {
+    pub fn build(self, fac: &mut Factory) -> Result<Texture> {
         use gfx::Factory;
         use gfx::format::{ChannelType, Swizzle};
         use gfx::memory::cast_slice;
