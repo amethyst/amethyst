@@ -26,12 +26,10 @@ pub use error::{AssetError, LoadError, NoError, SharedAssetError};
 pub use loader::{Loader, load_asset, SpawnedFuture, StoreId};
 pub use simple::{AssetPtr, SimpleAsset, SimpleContext};
 pub use store::{Directory, Store};
-pub use merge::Merge;
 
 mod asset;
 mod cache;
 mod error;
 mod loader;
-mod merge;
 mod simple;
 mod store;

@@ -236,7 +236,8 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
         where A: Component + Asset + Clone + Send + Sync + 'static,
               F: FnOnce(&mut World) -> A::Context,
     {
-        use assets::{AssetFuture, Merge};
+        use assets::AssetFuture;
+        use specs::common::Merge;
 
         self.world.register::<A>();
         self.world.register::<AssetFuture<A>>();
