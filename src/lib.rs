@@ -11,7 +11,7 @@
 //!
 //! # Example
 //!
-//! ```rust,no_run
+//! ```Rust
 //! extern crate amethyst;
 //!
 //! use amethyst::prelude::*;
@@ -77,10 +77,6 @@ extern crate shred;
 extern crate specs;
 extern crate wavefront_obj;
 extern crate winit;
-
-#[cfg(feature="profiler")]
-#[macro_use]
-extern crate thread_profiler;
 
 pub use self::app::{Application, ApplicationBuilder};
 pub use self::engine::Engine;

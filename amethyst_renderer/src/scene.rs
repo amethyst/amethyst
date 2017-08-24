@@ -1,7 +1,5 @@
 //! A fully renderable scene.
 
-use std::cmp::max;
-
 use cam::Camera;
 use cgmath::Matrix4;
 use light::Light;

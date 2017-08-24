@@ -58,7 +58,7 @@ impl<A> Future for AssetFuture<A>
     fn poll(&mut self) -> Poll<A, BoxedErr> {
         match self.0.poll() {
             Ok(Async::NotReady) => Ok(Async::NotReady),
-            Ok(Async::Ready(asset)) => Ok(Async::Ready(asset.clone())),
+            Ok(Async::Ready(asset)) => Ok(Async::Ready((*asset).clone())),
             Err(err) => Err(BoxedErr(Box::new(SharedAssetError::from(err))))
         }
     }
