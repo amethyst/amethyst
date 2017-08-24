@@ -311,14 +311,13 @@ impl State for Pong {
     }
 }
 
-fn main() {
+fn run() -> Result<(), amethyst::Error> {
     let path = format!("{}/examples/04_pong/resources/config.ron",
                        env!("CARGO_MANIFEST_DIR"));
 
     let config = DisplayConfig::load(&path);
-    let builder = Application::build(Pong);
 
-    let mut game = builder
+    let mut game = Application::build(Pong)?
         .register::<Ball>()
         .register::<Plank>()
         .with::<PongSystem>(PongSystem, "pong_system", &[])
@@ -328,11 +327,22 @@ fn main() {
                                .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
                                .with_model_pass(pass::DrawFlat::<PosNormTex>::new())
                            ),
-                       config).unwrap()
+                       Some(config)
+        )?
         .build()
         .expect("Fatal error");
-    game.run();
+    Ok(game.run())
 }
+
+
+
+fn main() {
+    if let Err(e) = run() {
+        println!("Failed to execute example: {}", e);
+        ::std::process::exit(1);
+    }
+}
+
 
 fn gen_rectangle(w: f32, h: f32) -> Vec<PosNormTex> {
     let data: Vec<PosNormTex> = vec![PosNormTex {

@@ -1,9 +1,11 @@
 use std::error::Error;
 
-use futures::future::{Future, IntoFuture, Shared};
+use futures::future::{Future, IntoFuture, Shared, SharedItem, SharedError};
+use futures::{Async, Poll};
 use rayon::ThreadPool;
+use specs::{Component, DenseVecStorage};
 
-use {AssetError, StoreId};
+use {BoxedErr, SharedAssetError, StoreId};
 
 /// One of the three core traits of this crate.
 ///
@@ -25,7 +27,46 @@ pub trait Asset: Sized {
 }
 
 /// A future for an asset
-pub type AssetFuture<A, E = AssetError> = Shared<Box<Future<Item=A, Error=E>>>;
+pub struct AssetFuture<A>(Shared<Box<Future<Item=A, Error=BoxedErr>>>);
+
+impl<A> Component for AssetFuture<A>
+    where A: Component, Self: 'static
+{
+    type Storage = DenseVecStorage<Self>;
+}
+
+impl<A> AssetFuture<A> {
+    /// If any clone of this future has completed execution, returns its result immediately without blocking.
+    /// Otherwise, returns None without triggering the work represented by this future.
+    pub fn peek(&self) -> Option<Result<SharedItem<A>, SharedError<BoxedErr>>> {
+        self.0.peek()
+    }
+}
+
+impl<A> Clone for AssetFuture<A> {
+    fn clone(&self) -> Self {
+        AssetFuture(self.0.clone())
+    }
+}
+
+impl<A> Future for AssetFuture<A>
+    where A: Clone,
+{
+    type Item = A;
+    type Error = SharedAssetError<BoxedErr>;
+
+    fn poll(&mut self) -> Poll<A, SharedAssetError<BoxedErr>> {
+        match self.0.poll()? {
+            Async::NotReady => Ok(Async::NotReady),
+            Async::Ready(asset) => Ok(Async::Ready(asset.clone())),
+        }
+    }
+}
+impl<A> From<Shared<Box<Future<Item=A, Error=BoxedErr>>>> for AssetFuture<A> {
+    fn from(inner: Shared<Box<Future<Item=A, Error=BoxedErr>>>) -> Self {
+        AssetFuture(inner)
+    }
+}
 
 /// A specifier for an asset, uniquely identifying it by
 ///

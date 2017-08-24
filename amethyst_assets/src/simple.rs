@@ -10,7 +10,6 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use futures::{Async, IntoFuture};
-use futures::future::Shared;
 use parking_lot::RwLock;
 use rayon::ThreadPool;
 
@@ -34,7 +33,7 @@ impl<A, W> AssetUpdate<A, W> {
 
 impl<A, W> AssetUpdate<A, W>
     where A: Clone,
-          W: AsRef<A>,    
+          W: AsRef<A> + Clone,
 {
     fn push_update(&self, mut updated: AssetFuture<W>) {
         match updated.poll() {
@@ -66,7 +65,7 @@ impl<A, W> AssetUpdate<A, W>
     fn updated(&self, count: usize) -> Option<(A, usize)> {
         let new = self.counter.load(Ordering::Acquire);
         if new > count {
-            match self.defer.read().as_ref().map(Shared::peek).and_then(|a|a) {
+            match self.defer.read().as_ref().map(AssetFuture::peek).and_then(|a|a) {
                 Some(Ok(updated)) => {
                     Some((updated.as_ref().clone(), new))
                 }
@@ -132,7 +131,7 @@ impl<A, W> AssetPtr<A, W> {
 
 impl<A, W> AssetPtr<A, W>
     where A: Clone,
-          W: AsRef<A>,
+          W: AsRef<A> + Clone,
 {
     /// Pushes an update to the shared update container;
     /// this update can then be applied to all asset pointers by calling

@@ -321,22 +321,20 @@ fn load_asset_inner<C, F, S>(context: Arc<C>,
         .load(context.category(), &spec.name, spec.ext)
         .into_future()
         .map_err(LoadError::StorageError::<C::Error, F::Error, S::Error>)
-        .map_err(BoxedErr::new)
         .map_err(move |e| AssetError::new(spec_store_err, e))
         .and_then(move |bytes| format.parse(bytes, &pool)
             .into_future()
             .map(Into::into)
             .map_err(LoadError::FormatError::<C::Error, F::Error, S::Error>)
-            .map_err(BoxedErr::new)
             .map_err(move |e| AssetError::new(spec_format_err, e)))
         .and_then(move |data| context.create_asset(data, &pool_clone)
             .into_future()
             .map_err(LoadError::AssetError::<C::Error, F::Error, S::Error>)
-            .map_err(BoxedErr::new)
-            .map_err(move |e| AssetError::new(spec_asset_err, e)));
+            .map_err(move |e| AssetError::new(spec_asset_err, e)))
+        .map_err(BoxedErr::new);
 
-    let future: Box<Future<Item=C::Asset, Error=AssetError>> = Box::new(future);
-    let future = future.shared();
+    let future: Box<Future<Item=C::Asset, Error=BoxedErr>> = Box::new(future);
+    let future = AssetFuture::from(future.shared());
 
     context_clone.cache(spec, future.clone());
 

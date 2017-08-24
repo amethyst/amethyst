@@ -8,7 +8,6 @@ use std::str::{Utf8Error, from_utf8};
 use std::sync::Arc;
 
 use amethyst_assets::*;
-use futures::future::SharedItem;
 use rayon::{Configuration, ThreadPool};
 
 #[derive(Clone, Debug)]
@@ -65,13 +64,12 @@ fn main() {
     let cfg = Configuration::new().num_threads(8);
     let pool = Arc::new(ThreadPool::new(cfg).expect("Invalid config"));
 
-    let alloc = Allocator::new();
-    let mut loader = Loader::new(&alloc, &path, pool);
+    let mut loader = Loader::new(&path, pool);
 
     loader.register(DummyContext(">> "));
 
     let dummy = loader.load("whatever", DummyFormat);
-    let dummy: SharedItem<DummyAsset> = dummy.wait().expect("Failed to load dummy asset");
+    let dummy: DummyAsset = dummy.wait().expect("Failed to load dummy asset");
 
-    println!("dummy: {:?}", *dummy);
+    println!("dummy: {:?}", dummy);
 }

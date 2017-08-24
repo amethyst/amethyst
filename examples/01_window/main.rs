@@ -34,8 +34,8 @@ fn run() -> Result<(), amethyst::Error> {
                        env!("CARGO_MANIFEST_DIR"));
     let config = DisplayConfig::load(&path);
 
-    let mut game = Application::build(Example)
-        .with_renderer(Pipeline::forward::<PosNormTex>(), config)?
+    let mut game = Application::build(Example)?
+        .with_renderer(Pipeline::forward::<PosNormTex>(), Some(config))?
         .build()
         .expect("Fatal error");
 

@@ -1,14 +1,13 @@
 //! The core engine framework.
 
 use std::sync::Arc;
-use std::path::PathBuf;
 
 use rayon::ThreadPool;
 use renderer::PipelineBuilder;
 use shred::Resource;
 use winit::EventsLoop;
 
-use assets::Asset;
+use assets::{Asset, Loader, Store};
 use ecs::{Component, Dispatcher, DispatcherBuilder, System, World};
 use engine::Engine;
 use error::{Error, Result};
@@ -130,7 +129,6 @@ impl<'a, 'b> Drop for Application<'a, 'b> {
 
 /// Helper builder for Applications.
 pub struct ApplicationBuilder<'a, 'b, T: State + 'a> {
-    base_path: PathBuf,
     // config: Config,
     disp_builder: DispatcherBuilder<'a, 'b>,
     initial_state: T,
@@ -151,12 +149,14 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
         let num_cores = num_cpus::get();
         let cfg = Configuration::new().num_threads(num_cores);
         let pool = ThreadPool::new(cfg).map(|p| Arc::new(p)).map_err(|_| Error::Application)?;
+        let mut world = World::new();
+        let base_path = format!("{}/resources", env!("CARGO_MANIFEST_DIR"));
+        world.add_resource(Loader::new(base_path, pool.clone()));
 
         Ok(ApplicationBuilder {
-            base_path: format!("{}/resources", env!("CARGO_MANIFEST_DIR")).into(),
             disp_builder: DispatcherBuilder::new(),
             initial_state: initial_state,
-            world: World::new(),
+            world: world,
             events: EventsLoop::new(),
             pool: pool,
         })
@@ -191,6 +191,8 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     /// Adds a given system `sys`, assigns it the string identifier `name`,
     /// and marks it dependent on systems `dep`.
     /// Note: all dependencies should be added before you add depending system
+    /// If you want to register systems which can not be specified as dependencies,
+    /// you can use "" as their name, which will not panic (using another name twice will).
     pub fn with<S>(mut self, sys: S, name: &str, dep: &[&str]) -> Self
         where for<'c> S: System<'c> + Send + 'a + 'b
     {
@@ -211,60 +213,60 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
 
     /// Automatically registers components, adds resources and the rendering system.
     pub fn with_renderer(mut self, pipe: PipelineBuilder, config: Option<DisplayConfig>) -> Result<Self> {
-        use cgmath::Deg;
-        use renderer::{Camera, Projection};
-        use ecs::components::{LightComponent, MaterialComponent, MeshComponent, Transform};
-        use ecs::resources::Factory;
         use ecs::systems::{RenderSystem, SystemExt};
-
-        let cam = Camera {
-            eye: [0.0, 0.0, -4.0].into(),
-            proj: Projection::perspective(1.3, Deg(60.0)).into(),
-            forward: [0.0, 0.0, 1.0].into(),
-            right: [1.0, 0.0, 0.0].into(),
-            up: [0.0, 1.0, 0.0].into(),
-        };
-
         let render_sys = RenderSystem::build((&self.events, pipe, config), &mut self.world)?;
-
-        let this = self.add_resource(cam)
-            .add_resource(Factory::new())
-            .register::<LightComponent>()
-            .register::<MaterialComponent>()
-            .register::<MeshComponent>()
-            .register::<Transform>()
-            .with_thread_local(render_sys);
-
-        Ok(this)
+        self = self.with_thread_local(render_sys);
+        Ok(self)
     }
 
     /// Add asset loader to resources
-    pub fn with_loader<P>(mut self, path: P) -> Self
-        where P: Into<PathBuf>
+    pub fn add_store<I, S>(self, name: I, store: S) -> Self
+        where I: Into<String>,
+              S: Store + Send + Sync + 'static,
     {
-        use assets::{Allocator, Loader};
-
-        let allocator = Allocator::new();
-        self.world.add_resource(Loader::new(&allocator, path, self.pool.clone()));
-        self.world.add_resource(allocator);
+        {
+            let mut loader = self.world.write_resource::<Loader>();
+            loader.add_store(name, store);
+        }
         self
     }
 
     /// Register new context within the loader
     pub fn register_asset<A, F>(mut self, make_context: F) -> Self
-        where A: Component + Asset + 'static,
+        where A: Component + Asset + Clone + Send + Sync + 'static,
               F: FnOnce(&mut World) -> A::Context,
     {
-        use assets::Loader;
-        self = self.register::<A>();
-        // TODO: register `AssetFuture<A>` as well
-        // TODO: Add `specs::common::Merge<AssetFuture<A>>` system
+        use assets::{AssetFuture, Merge};
+
+        self.world.register::<A>();
+        self.world.register::<AssetFuture<A>>();
+        self = self.with(Merge::<AssetFuture<A>>::new(), "", &[]);
         {
             let context = make_context(&mut self.world);
             let mut loader = self.world.write_resource::<Loader>();
             loader.register(context);
         }
         self
+    }
+
+    /// Register new context within the loader
+    pub fn register_mesh_asset(self) -> Self {
+        use ecs::components::*;
+        use ecs::resources::Factory;
+        self.register_asset::<MeshComponent, _>(|world| {
+            let factory = world.read_resource::<Factory>();
+            MeshContext::new((&*factory).clone())
+        })
+    }
+
+    /// Register new context within the loader
+    pub fn register_texture_asset(self) -> Self {
+        use ecs::components::*;
+        use ecs::resources::Factory;
+        self.register_asset::<TextureComponent, _>(|world| {
+            let factory = world.read_resource::<Factory>();
+            TextureContext::new((&*factory).clone())
+        })
     }
 
     /// Builds the Application and returns the result.
@@ -276,7 +278,7 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
         profile_scope!("new");
 
         Ok(Application {
-            engine: Engine::new(&self.base_path, self.pool.clone(), self.world),
+            engine: Engine::new(self.pool.clone(), self.world),
             // config: self.config,
             states: StateMachine::new(self.initial_state),
             events: self.events,

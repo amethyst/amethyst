@@ -87,7 +87,6 @@ impl<'a, 'b> SystemExt<'a, (&'b EventsLoop, PipelineBuilder, Option<DisplayConfi
         world.register::<MaterialComponent>();
         world.register::<MeshComponent>();
         world.register::<TextureComponent>();
-        world.register::<Transform>();
 
         Ok(RenderSystem {
             pipe: pipe,

@@ -66,23 +66,28 @@ impl State for Example {
     }
 }
 
-fn main() {
+
+fn run() -> Result<(), amethyst::Error> {
     let path = format!("{}/examples/02_sphere/resources/config.ron",
                        env!("CARGO_MANIFEST_DIR"));
     let config = DisplayConfig::load(&path);
-    let builder = Application::build(Example)
+    let mut game = Application::build(Example)?
         .with_renderer(Pipeline::build()
             .with_stage(Stage::with_backbuffer()
                 .clear_target([0.00196, 0.23726, 0.21765, 1.0], 1.0)
                 .with_model_pass(pass::DrawFlat::<PosNormTex>::new())
             ),
-            config)
-    .unwrap();
+            Some(config)
+        )?
+        .build()?;
+    Ok(game.run())    
+}
 
-    let mut game = builder
-        .build()
-        .expect("Fatal error");
-    game.run();
+fn main() {
+    if let Err(e) = run() {
+        println!("Failed to execute example: {}", e);
+        ::std::process::exit(1);
+    }
 }
 
 fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTex> {

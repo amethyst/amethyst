@@ -5,7 +5,7 @@ use rayon::ThreadPool;
 
 
 use assets::{Asset, AssetFuture, AssetPtr, AssetSpec, Cache, Context};
-use ecs::{Component, DenseVecStorage, VecStorage};
+use ecs::{Component, VecStorage};
 use ecs::resources::{Factory, FactoryFuture};
 use renderer::{Mesh, MeshBuilder, Error as RendererError};
 use renderer::vertex::PosNormTex;
@@ -46,9 +46,6 @@ pub type MeshError = RendererError;
 /// Will be `MeshComponent` result type of `MeshContext::create_asset`
 pub struct MeshFuture(FactoryFuture<Mesh, RendererError>);
 
-impl Component for MeshFuture {
-    type Storage = DenseVecStorage<Self>;
-}
 
 impl Future for MeshFuture {
     type Item = MeshComponent;
@@ -63,7 +60,7 @@ impl Future for MeshFuture {
     }
 }
 
-/// Context to create textures from images
+/// Context to create meshes from vertices
 pub struct MeshContext {
     cache: Cache<AssetFuture<MeshComponent>>,
     factory: Factory,

@@ -27,6 +27,7 @@ impl<A, E> Future for FactoryFuture<A, E> {
 
 /// The factory abstraction, which allows to access the real
 /// factory and returns futures.
+#[derive(Clone)]
 pub struct Factory {
     pub(crate) jobs: Arc<MsQueue<Box<Exec>>>,
 }
