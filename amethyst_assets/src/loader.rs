@@ -233,7 +233,7 @@ impl Loader {
             .expect("Assets need to be registered with `Loader::register`.");
 
         // `Any + Send + Sync` doesn't have `downcast_ref`
-        Any::downcast_ref(context).unwrap()
+        Any::downcast_ref(&**context).unwrap()
     }
 
     fn store<S>(&self, store: &S) -> &StoreWithId
