@@ -41,7 +41,7 @@ impl<'a, T, S> Store for T
     }
 
     fn load(&self, category: &str, id: &str, ext: &str) -> Self::Result {
-        AnyStore::load(self, category, id, ext)
+        AnyStore::load(&**self, category, id, ext)
     }
 }
 
