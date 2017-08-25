@@ -1,4 +1,4 @@
-use event::VirtualKeyCode;
+use winit::VirtualKeyCode;
 
 #[derive(Serialize, Deserialize)]
 #[serde(remote = "VirtualKeyCode")]

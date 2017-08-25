@@ -4,7 +4,7 @@ use cgmath::Matrix4;
 use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 
 use ecs::{Entities, Entity, Join, ReadStorage, System, WriteStorage};
-use ecs::components::{LocalTransform, Transform, Child, Init};
+use ecs::transform::{LocalTransform, Transform, Child, Init};
 
 /// Handles updating `Transform` components based on the `LocalTransform`
 /// component and parents.
@@ -164,7 +164,7 @@ impl<'a> System<'a> for TransformSystem {
 #[cfg(test)]
 mod tests {
     use cgmath::{Decomposed, Quaternion, Vector3, Matrix4};
-    use ecs::components::{LocalTransform, Transform};
+    use ecs::transform::{LocalTransform, Transform};
 
     #[test]
     fn transform_matrix() {

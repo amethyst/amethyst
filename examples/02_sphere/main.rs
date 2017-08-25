@@ -11,8 +11,8 @@ extern crate winit;
 
 use amethyst::prelude::*;
 use amethyst::assets::{AssetFuture, BoxedErr};
-use amethyst::ecs::components::*;
-use amethyst::ecs::resources::*;
+use amethyst::ecs::rendering::*;
+use amethyst::ecs::transform::*;
 use amethyst::renderer::prelude::*;
 use amethyst::renderer::Config as DisplayConfig;
 

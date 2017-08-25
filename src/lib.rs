@@ -55,6 +55,7 @@ pub extern crate thread_profiler;
 
 pub extern crate amethyst_config as config;
 pub extern crate amethyst_renderer as renderer;
+pub extern crate amethyst_input as input;
 
 extern crate amethyst_assets;
 extern crate cgmath;
@@ -71,8 +72,8 @@ extern crate num_cpus;
 extern crate rayon;
 extern crate rodio;
 extern crate serde;
-#[macro_use]
-extern crate serde_derive;
+//#[macro_use]
+//extern crate serde_derive; // Only used in sub crates now
 extern crate smallvec;
 extern crate shred;
 extern crate specs;

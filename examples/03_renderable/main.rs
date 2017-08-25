@@ -9,14 +9,12 @@ extern crate futures;
 
 use amethyst::prelude::*;
 use amethyst::{Application, Error, State, Trans};
-use amethyst::assets::{AssetFuture, BoxedErr, Context, Format, Loader, NoError};
-use amethyst::assets::formats::textures::{PngFormat, BmpFormat};
+use amethyst::assets::{AssetFuture, BoxedErr, Context, Format, Loader};
+use amethyst::assets::formats::textures::PngFormat;
 use amethyst::assets::formats::meshes::ObjFormat;
 use amethyst::config::Config;
-use amethyst::ecs::World;
-use amethyst::ecs::resources::input::InputHandler;
-use amethyst::ecs::resources::{AmbientColor, Factory};
-use amethyst::ecs::components::*;
+use amethyst::ecs::rendering::*;
+use amethyst::ecs::transform::*;
 use amethyst::ecs::{Fetch, FetchMut, Join, System, WriteStorage};
 use amethyst::timing::Time;
 use amethyst::renderer::{Camera, Rgba, Config as DisplayConfig};
@@ -282,10 +280,8 @@ fn main() {
 /// Wrapper around the main, so we can return errors easily.
 fn run() -> Result<(), Error> {
     use amethyst::assets::Directory;
-    use amethyst::ecs::components::{Child, Init, LocalTransform, MeshComponent};
-    use amethyst::ecs::systems::TransformSystem;
+    use amethyst::ecs::transform::{Child, Init, LocalTransform, TransformSystem};
     use amethyst::ecs::common::Errors;
-    use std::env::set_var;
 
     // Add our meshes directory to the asset loader.
     let resources_directory = format!(
@@ -368,8 +364,7 @@ fn load_mesh<F>(engine: &mut Engine, name: &str, f: F) -> AssetFuture<MeshCompon
     where F: Format + 'static,
           F::Data: Into<<MeshContext as Context>::Data>,
 {
-    use futures::Future;
-    let mut future = {
+    let future = {
         let loader = engine.world.read_resource::<Loader>();
         loader.load_from::<MeshComponent, _, _, _>(name, f, "resources")
     };

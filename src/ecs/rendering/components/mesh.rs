@@ -6,7 +6,7 @@ use rayon::ThreadPool;
 
 use assets::{Asset, AssetFuture, AssetPtr, AssetSpec, Cache, Context};
 use ecs::{Component, VecStorage};
-use ecs::resources::{Factory, FactoryFuture};
+use ecs::rendering::resources::{Factory, FactoryFuture};
 use renderer::{Mesh, MeshBuilder, Error as RendererError};
 use renderer::vertex::*;
 

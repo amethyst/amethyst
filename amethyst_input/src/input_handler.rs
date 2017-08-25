@@ -1,6 +1,6 @@
 //! World resource that handles all user input.
 
-use event::{ElementState, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
+use winit::{ElementState, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
 use smallvec::SmallVec;
 use super::*;
 

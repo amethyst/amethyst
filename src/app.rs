@@ -213,7 +213,8 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
 
     /// Automatically registers components, adds resources and the rendering system.
     pub fn with_renderer(mut self, pipe: PipelineBuilder, config: Option<DisplayConfig>) -> Result<Self> {
-        use ecs::systems::{RenderSystem, SystemExt};
+        use ecs::SystemExt;
+        use ecs::rendering::RenderSystem;
         let render_sys = RenderSystem::build((&self.events, pipe, config), &mut self.world)?;
         self = self.with_thread_local(render_sys);
 
@@ -281,8 +282,7 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
 
     /// Register new context within the loader
     fn register_mesh_asset(self) -> Self {
-        use ecs::components::*;
-        use ecs::resources::Factory;
+        use ecs::rendering::{MeshComponent, MeshContext, Factory};
         self.register_asset::<MeshComponent, _>(|world| {
             let factory = world.read_resource::<Factory>();
             MeshContext::new((&*factory).clone())
@@ -292,7 +292,7 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     /// Register new context within the loader
     fn register_material_not_yet_asset(mut self) -> Self {
         use assets::AssetFuture;
-        use ecs::components::*;
+        use ecs::rendering::MaterialComponent;
         use specs::common::Merge;
 
         self.world.register::<MaterialComponent>();
@@ -303,8 +303,7 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
 
     /// Register new context within the loader
     fn register_texture_asset(self) -> Self {
-        use ecs::components::*;
-        use ecs::resources::Factory;
+        use ecs::rendering::{TextureComponent, TextureContext, Factory};
         self.register_asset::<TextureComponent, _>(|world| {
             let factory = world.read_resource::<Factory>();
             TextureContext::new((&*factory).clone())
