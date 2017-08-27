@@ -219,7 +219,10 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
 
         Ok(self
             .register_mesh_asset()
-            .register_texture_asset())
+            .register_texture_asset()
+            .register_material_not_yet_asset())
+
+
     }
 
     /// Add asset loader to resources
@@ -284,6 +287,18 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
             let factory = world.read_resource::<Factory>();
             MeshContext::new((&*factory).clone())
         })
+    }
+
+    /// Register new context within the loader
+    fn register_material_not_yet_asset(mut self) -> Self {
+        use assets::AssetFuture;
+        use ecs::components::*;
+        use specs::common::Merge;
+
+        self.world.register::<MaterialComponent>();
+        self.world.register::<AssetFuture<MaterialComponent>>();
+        self = self.with(Merge::<AssetFuture<MaterialComponent>>::new(), "", &[]);
+        self
     }
 
     /// Register new context within the loader

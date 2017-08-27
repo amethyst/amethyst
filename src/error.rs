@@ -7,6 +7,8 @@ use std::fmt::{Display, Formatter};
 use std::fmt::Result as FmtResult;
 use std::result::Result as StdResult;
 
+use specs::common::BoxedErr;
+
 /// Engine result type.
 pub type Result<T> = StdResult<T, Error>;
 
@@ -20,7 +22,7 @@ pub enum Error {
     /// Configuration error.
     Config(ConfigError),
     /// System error.
-    System,
+    System(BoxedErr),
 }
 
 impl StdError for Error {
@@ -28,7 +30,7 @@ impl StdError for Error {
         match *self {
             Error::Application => "Application error!",
             Error::Config(_) => "Configuration error!",
-            Error::System => "System error!",
+            Error::System(_) => "System error!",
         }
     }
 
@@ -45,7 +47,7 @@ impl Display for Error {
         match *self {
             Error::Application => write!(fmt, "Application initialization failed!"),
             Error::Config(ref e) => write!(fmt, "Configuration loading failed: {}", e),
-            Error::System => write!(fmt, "System creation failed!"),
+            Error::System(ref e) => write!(fmt, "System creation failed: {}", e),
         }
     }
 }

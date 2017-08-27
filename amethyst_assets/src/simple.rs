@@ -113,8 +113,13 @@ impl<A, W> AssetPtr<A, W> {
         }
     }
 
+    /// Take the inner asset.
+    pub fn inner(self) -> A {
+        self.inner
+    }
+
     /// Borrows the inner asset.
-    pub fn inner(&self) -> &A {
+    pub fn inner_ref(&self) -> &A {
         &self.inner
     }
 
@@ -153,7 +158,7 @@ impl<A, W> AssetPtr<A, W>
 pub struct SimpleAsset<A>(pub AssetPtr<A, SimpleAsset<A>>);
 impl<A> AsRef<A> for SimpleAsset<A> {
     fn as_ref(&self) -> &A {
-        self.0.inner()
+        self.0.inner_ref()
     }
 }
 impl<A> AsMut<A> for SimpleAsset<A> {

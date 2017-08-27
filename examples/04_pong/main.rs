@@ -3,16 +3,21 @@
 extern crate amethyst;
 extern crate amethyst_renderer;
 extern crate cgmath;
+extern crate futures;
 
 //use amethyst::{Application, State, Trans, VirtualKeyCode, WindowEvent};
 use amethyst::prelude::*;
+use amethyst::assets::{AssetFuture, BoxedErr};
 use amethyst::ecs::{Component, Fetch, FetchMut, Join, System, VecStorage, WriteStorage};
 use amethyst::ecs::components::*;
 use amethyst::ecs::resources::input::{Bindings, InputHandler};
+use amethyst::ecs::resources::Factory;
 use amethyst::ecs::systems::TransformSystem;
 use amethyst::timing::Time;
 use amethyst_renderer::prelude::*;
 use amethyst_renderer::Config as DisplayConfig;
+
+use futures::{Future, IntoFuture};
 
 struct Pong;
 
@@ -216,8 +221,43 @@ impl<'a> System<'a> for PongSystem {
     }
 }
 
+fn load_proc_asset<T, F>(engine: &mut Engine, f: F) -> AssetFuture<T::Item>
+    where T: IntoFuture<Error=BoxedErr>,
+          T::Future: 'static,
+          F: FnOnce(&mut Engine) -> T
+{
+    let future = f(engine).into_future();
+    let future: Box<Future<Item=T::Item, Error=BoxedErr>> = Box::new(future);
+    AssetFuture(future.shared())
+}
+
 impl State for Pong {
     fn on_start(&mut self, engine: &mut Engine) {
+
+        // Generate a square mesh
+        let tex = Texture::from_color_val([1.0, 1.0, 1.0, 1.0]);
+        let mtl = MaterialBuilder::new().with_albedo(tex);
+
+        let square_verts = gen_rectangle(1.0, 1.0);
+        let mesh = Mesh::build(square_verts);
+
+        let mesh = load_proc_asset(engine, move |engine| {
+            let factory = engine.world.read_resource::<Factory>();
+            factory
+                .create_mesh(mesh)
+                .map(MeshComponent::new)
+                .map_err(BoxedErr::new)
+        });
+
+        let mtl = load_proc_asset(engine, move |engine| {
+            let factory = engine.world.read_resource::<Factory>();
+            factory
+                .create_material(mtl)
+                .map(MaterialComponent)
+                .map_err(BoxedErr::new)
+        });
+
+
         let world = &mut engine.world;
         
         world.add_resource(Camera {
@@ -241,21 +281,14 @@ impl State for Pong {
         world.register::<Init>();
         world.register::<LocalTransform>();
 
-        // Generate a square mesh
-        let tex = Texture::from_color_val([1.0, 1.0, 1.0, 1.0]);
-        let mtl = MaterialBuilder::new().with_albedo(tex);
-
-        let square_verts = gen_rectangle(1.0, 1.0);
-        let mesh = Mesh::build(square_verts);
-
         // Create a ball entity
         let mut ball = Ball::new();
         ball.size = 0.02;
         ball.velocity = [0.5, 0.5];
         world
             .create_entity()
-            //.with(mesh.clone().unfinished()) // FIXME: asset loader pending
-            //.with(mtl.clone().unfinished()) // FIXME: asset loader pending
+            .with(mesh.clone())
+            .with(mtl.clone())
             .with(ball)
             .with(LocalTransform::default())
             .with(Transform::default())
@@ -268,8 +301,8 @@ impl State for Pong {
         plank.velocity = 1.;
         world
             .create_entity()
-            //.with(mesh.clone().unfinished()) // FIXME: asset loader pending
-            //.with(mtl.clone().unfinished()) // FIXME: asset loader pending
+            .with(mesh.clone())
+            .with(mtl.clone())
             .with(plank)
             .with(LocalTransform::default())
             .with(Transform::default())
@@ -282,8 +315,8 @@ impl State for Pong {
         plank.velocity = 1.;
         world
             .create_entity()
-            //.with(mesh.unfinished()) // FIXME: asset loader pending
-            //.with(mtl.unfinished()) // FIXME: asset loader pending
+            .with(mesh)
+            .with(mtl)
             .with(plank)
             .with(LocalTransform::default())
             .with(Transform::default())

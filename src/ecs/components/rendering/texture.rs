@@ -12,7 +12,7 @@ use rayon::ThreadPool;
 
 use assets::{Asset, AssetFuture, AssetPtr, AssetSpec, Cache, Context};
 use assets::formats::textures::ImageData;
-use ecs::{Component, DenseVecStorage, VecStorage};
+use ecs::{Component, VecStorage};
 use ecs::resources::{Factory, FactoryFuture};
 use renderer::{Texture, TextureBuilder, Error as RendererError};
 
@@ -98,10 +98,6 @@ impl TextureFuture {
     }
 }
 
-impl Component for TextureFuture {
-    type Storage = DenseVecStorage<Self>;
-}
-
 impl Future for TextureFuture {
     type Item = TextureComponent;
     type Error = TextureError;
@@ -128,7 +124,7 @@ pub struct TextureComponent(pub AssetPtr<Texture, TextureComponent>);
 
 impl AsRef<Texture> for TextureComponent {
     fn as_ref(&self) -> &Texture {
-        self.0.inner()
+        self.0.inner_ref()
     }
 }
 
@@ -139,7 +135,8 @@ impl AsMut<Texture> for TextureComponent {
 }
 
 impl TextureComponent {
-    fn new(texture: Texture) -> Self {
+    /// Create new `TextureComponent` from `Texture`
+    pub fn new(texture: Texture) -> Self {
         TextureComponent(AssetPtr::new(texture))
     }
 }

@@ -2,6 +2,7 @@
 
 use winit::EventsLoop;
 
+use assets::BoxedErr;
 use ecs::{Fetch, Join, ReadStorage, System, World};
 use ecs::components::*;
 use ecs::resources::Factory;
@@ -72,8 +73,8 @@ impl<'a, 'b> SystemExt<'a, (&'b EventsLoop, PipelineBuilder, Option<DisplayConfi
         if let Some(config) = config {
             renderer.with_config(config);
         }
-        let mut renderer =  renderer.build().map_err(|_| Error::System)?;
-        let pipe = renderer.create_pipe(pipe).map_err(|_| Error::System)?;
+        let mut renderer =  renderer.build().map_err(|err| Error::System(BoxedErr::new(err)))?;
+        let pipe = renderer.create_pipe(pipe).map_err(|err| Error::System(BoxedErr::new(err)))?;
 
         use cgmath::Deg;
         use renderer::{Camera, Projection};

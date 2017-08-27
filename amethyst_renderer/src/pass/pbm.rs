@@ -11,30 +11,32 @@ use scene::{Model, Scene};
 use std::marker::PhantomData;
 use std::mem;
 use types::Encoder;
-use vertex::{Attribute, Normal, Position, TextureCoord, VertexFormat, WithField};
+use vertex::{Attribute, Normal, Position, Tangent, TextureCoord, VertexFormat, WithField};
 
 static VERT_SRC: &[u8] = include_bytes!("shaders/vertex/basic.glsl");
-static FRAG_SRC: &[u8] = include_bytes!("shaders/fragment/shaded.glsl");
+static FRAG_SRC: &[u8] = include_bytes!("shaders/fragment/pbm.glsl");
 
 /// Draw mesh without lighting
 #[derive(Clone, Debug, PartialEq)]
-pub struct DrawShaded<V> {
-    vertex_attributes: [(&'static str, Attribute); 3],
+pub struct DrawPbm<V> {
+    vertex_attributes: [(&'static str, Attribute); 4],
     _pd: PhantomData<V>,
 }
 
-impl<V> DrawShaded<V>
+impl<V> DrawPbm<V>
     where V: VertexFormat +
           WithField<Position> +
           WithField<Normal> +
+          WithField<Tangent> +
           WithField<TextureCoord>
 {
-/// Create instance of `DrawShaded` pass
+/// Create instance of `DrawPbm` pass
     pub fn new() -> Self {
-        DrawShaded {
+        DrawPbm {
             vertex_attributes: [
                 ("position", V::attribute::<Position>()),
                 ("normal", V::attribute::<Normal>()),
+                ("tangent", V::attribute::<Tangent>()),
                 ("tex_coord", V::attribute::<TextureCoord>()),
             ],
             _pd: PhantomData,
@@ -73,7 +75,7 @@ struct PointLight2 {
 
 unsafe impl Pod for PointLight2 {}
 
-impl<V: VertexFormat> Pass for DrawShaded<V> {
+impl<V: VertexFormat> Pass for DrawPbm<V> {
     fn compile(&self, effect: NewEffect) -> Result<Effect> {
         effect.simple(VERT_SRC, FRAG_SRC)
             .with_raw_vertex_buffer(self.vertex_attributes.as_ref(), V::size() as ElemStride, 0)
@@ -83,7 +85,12 @@ impl<V: VertexFormat> Pass for DrawShaded<V> {
             .with_raw_constant_buffer("DirectionalLight", mem::size_of::<DirectionalLight>(), 16)
             .with_raw_global("ambient_color")
             .with_raw_global("camera_position")
+            .with_texture("roughness")
+            .with_texture("caveat")
+            .with_texture("metallic")
+            .with_texture("ambient_occlusion")
             .with_texture("emission")
+            .with_texture("normal")
             .with_texture("albedo")
             .with_output("out_color", Some(DepthMode::LessEqualWrite))
             .build()
@@ -148,8 +155,18 @@ impl<V: VertexFormat> Pass for DrawShaded<V> {
         effect.update_global("camera_position", scene.active_camera()
                                                     .map(|cam| cam.eye.into())
                                                     .unwrap_or([0.0; 3]));
+        effect.data.textures.push(model.material.roughness.view().clone());
+        effect.data.samplers.push(model.material.roughness.sampler().clone());
+        effect.data.textures.push(model.material.caveat.view().clone());
+        effect.data.samplers.push(model.material.caveat.sampler().clone());
+        effect.data.textures.push(model.material.metallic.view().clone());
+        effect.data.samplers.push(model.material.metallic.sampler().clone());
+        effect.data.textures.push(model.material.ambient_occlusion.view().clone());
+        effect.data.samplers.push(model.material.ambient_occlusion.sampler().clone());
         effect.data.textures.push(model.material.emission.view().clone());
         effect.data.samplers.push(model.material.emission.sampler().clone());
+        effect.data.textures.push(model.material.normal.view().clone());
+        effect.data.samplers.push(model.material.normal.sampler().clone());
         effect.data.textures.push(model.material.albedo.view().clone());
         effect.data.samplers.push(model.material.albedo.sampler().clone());
 
