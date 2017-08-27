@@ -69,10 +69,10 @@ impl<V: VertexFormat> Pass for DrawFlat<V> {
                                  }
                              });
 
-         effect.update_constant_buffer("VertexArgs", &vertex_args, enc);
-         effect.data.textures.push(model.material.albedo.view().clone());
-         effect.data.samplers.push(model.material.albedo.sampler().clone());
+        effect.update_constant_buffer("VertexArgs", &vertex_args, enc);
+        effect.data.textures.push(model.material.albedo.view().clone());
+        effect.data.samplers.push(model.material.albedo.sampler().clone());
 
-         effect.draw(model, enc);         
+        effect.draw(model, enc);         
     }
 }

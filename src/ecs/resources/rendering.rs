@@ -4,6 +4,7 @@ use crossbeam::sync::MsQueue;
 use futures::{Async, Future, Poll};
 use futures::sync::oneshot::{Receiver, Sender, channel};
 use gfx::traits::Pod;
+
 use renderer::{Error, Material, MaterialBuilder, Mesh, MeshBuilder, Texture, TextureBuilder};
 use renderer::Rgba;
 

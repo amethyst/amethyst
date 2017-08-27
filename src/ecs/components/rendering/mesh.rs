@@ -8,21 +8,22 @@ use assets::{Asset, AssetFuture, AssetPtr, AssetSpec, Cache, Context};
 use ecs::{Component, VecStorage};
 use ecs::resources::{Factory, FactoryFuture};
 use renderer::{Mesh, MeshBuilder, Error as RendererError};
-use renderer::vertex::PosNormTex;
+use renderer::vertex::*;
 
 /// Wraps `Mesh` into component
 #[derive(Clone, Debug)]
 pub struct MeshComponent(pub AssetPtr<Mesh, MeshComponent>);
 
 impl MeshComponent {
-    fn new(mesh: Mesh) -> Self {
+    /// Create new `MeshComponent` from `Mesh`
+    pub fn new(mesh: Mesh) -> Self {
         MeshComponent(AssetPtr::new(mesh))
     }
 }
 
 impl AsRef<Mesh> for MeshComponent {
     fn as_ref(&self) -> &Mesh {
-        self.0.inner()
+        self.0.inner_ref()
     }
 }
 
@@ -75,9 +76,49 @@ impl MeshContext {
     }
 }
 
+
+/// One of known vertices type
+pub enum Vertices {
+    /// Position and color
+    PosColor(Vec<PosColor>),
+
+    /// Position and texture coordinates
+    PosTex(Vec<PosTex>),
+
+    /// Position, normal and texture coordinates
+    PosNormTex(Vec<PosNormTex>),
+
+    /// Position, normal, tangent and texture coordinates
+    PosNormTangTex(Vec<PosNormTangTex>),
+}
+
+impl From<Vec<PosColor>> for Vertices {
+    fn from(vertcies: Vec<PosColor>) -> Self {
+        Vertices::PosColor(vertcies)
+    }
+}
+
+impl From<Vec<PosTex>> for Vertices {
+    fn from(vertcies: Vec<PosTex>) -> Self {
+        Vertices::PosTex(vertcies)
+    }
+}
+
+impl From<Vec<PosNormTex>> for Vertices {
+    fn from(vertcies: Vec<PosNormTex>) -> Self {
+        Vertices::PosNormTex(vertcies)
+    }
+}
+
+impl From<Vec<PosNormTangTex>> for Vertices {
+    fn from(vertcies: Vec<PosNormTangTex>) -> Self {
+        Vertices::PosNormTangTex(vertcies)
+    }
+}
+
 impl Context for MeshContext {
     type Asset = MeshComponent;
-    type Data = Vec<PosNormTex>;
+    type Data = Vertices;
     type Error = MeshError;
     type Result = MeshFuture;
 
@@ -85,9 +126,25 @@ impl Context for MeshContext {
         "mesh"
     }
 
-    fn create_asset(&self, vertices: Vec<PosNormTex>, _: &ThreadPool) -> MeshFuture {
-        let mb = MeshBuilder::new(vertices);
-        MeshFuture(self.factory.create_mesh(mb))
+    fn create_asset(&self, vertices: Vertices, _: &ThreadPool) -> MeshFuture {
+        match vertices {
+            Vertices::PosColor(vertices) => {
+                let mb = MeshBuilder::new(vertices);
+                MeshFuture(self.factory.create_mesh(mb))
+            }
+            Vertices::PosTex(vertices) => {
+                let mb = MeshBuilder::new(vertices);
+                MeshFuture(self.factory.create_mesh(mb))
+            }
+            Vertices::PosNormTex(vertices) => {
+                let mb = MeshBuilder::new(vertices);
+                MeshFuture(self.factory.create_mesh(mb))
+            }
+            Vertices::PosNormTangTex(vertices) => {
+                let mb = MeshBuilder::new(vertices);
+                MeshFuture(self.factory.create_mesh(mb))
+            }
+        }
     }
 
     fn cache(&self, spec: AssetSpec, asset: AssetFuture<MeshComponent>) {

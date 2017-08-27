@@ -5,20 +5,34 @@
 extern crate amethyst;
 extern crate amethyst_renderer;
 extern crate cgmath;
+extern crate futures;
 extern crate genmesh;
 extern crate winit;
 
 use amethyst::prelude::*;
+use amethyst::assets::{AssetFuture, BoxedErr};
 use amethyst::ecs::components::*;
+use amethyst::ecs::resources::*;
 use amethyst::renderer::prelude::*;
 use amethyst::renderer::Config as DisplayConfig;
 
 use cgmath::{Deg, Vector3};
 use cgmath::prelude::InnerSpace;
+use futures::{Future, IntoFuture};
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 
 struct Example;
+
+fn load_proc_asset<T, F>(engine: &mut Engine, f: F) -> AssetFuture<T::Item>
+    where T: IntoFuture<Error=BoxedErr>,
+          T::Future: 'static,
+          F: FnOnce(&mut Engine) -> T
+{
+    let future = f(engine).into_future();
+    let future: Box<Future<Item=T::Item, Error=BoxedErr>> = Box::new(future);
+    AssetFuture(future.shared())
+}
 
 impl State for Example {
     fn on_start(&mut self, engine: &mut Engine) {
@@ -27,10 +41,26 @@ impl State for Example {
         let tex = Texture::from_color_val([0.0, 0.0, 1.0, 1.0]);
         let mtl = MaterialBuilder::new().with_albedo(tex);
 
+        let mesh = load_proc_asset(engine, move |engine| {
+            let factory = engine.world.read_resource::<Factory>();
+            factory
+                .create_mesh(mesh)
+                .map(MeshComponent::new)
+                .map_err(BoxedErr::new)
+        });
+
+        let mtl = load_proc_asset(engine, move |engine| {
+            let factory = engine.world.read_resource::<Factory>();
+            factory
+                .create_material(mtl)
+                .map(MaterialComponent)
+                .map_err(BoxedErr::new)
+        });
+
         engine.world.create_entity()
             .with(Transform::default())
-            //.with(mesh.unfinished()) // FIXME: asset loader pending
-            //.with(mtl.unfinished()) // FIXME: asset loader pending
+            .with(mesh)
+            .with(mtl)
             .build();
 
         engine.world.create_entity()

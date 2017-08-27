@@ -27,7 +27,17 @@ pub trait Asset: Sized {
 }
 
 /// A future for an asset
-pub struct AssetFuture<A>(Shared<Box<Future<Item=A, Error=BoxedErr>>>);
+pub struct AssetFuture<A>(pub Shared<Box<Future<Item=A, Error=BoxedErr>>>);
+
+impl<A> AssetFuture<A> {
+    /// Wrap another future into `AssetFuture`
+    pub fn from_future<F>(f: F) -> Self
+        where F: IntoFuture<Item=A, Error=BoxedErr> + 'static
+    {
+        let f: Box<Future<Item=A, Error=BoxedErr>> = Box::new(f.into_future());
+        AssetFuture(f.shared())
+    }
+}
 
 impl<A> Component for AssetFuture<A>
     where A: Component, Self: 'static
