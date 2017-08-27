@@ -19,10 +19,10 @@ travis-ci = { repository = "amethyst/amethyst" }
 
 [features]
 default = ["opengl"]
-d3d11 = ["gfx_device_dx11", "gfx_window_dxgi"]
-metal = ["gfx_device_metal", "gfx_window_metal"]
+#d3d11 = ["gfx_device_dx11", "gfx_window_dxgi"]
+#metal = ["gfx_device_metal", "gfx_window_metal"]
 opengl = ["gfx_device_gl", "gfx_window_glutin", "glutin"]
-vulkan = ["gfx_device_vulkan", "gfx_window_vulkan"]
+#vulkan = ["gfx_device_vulkan", "gfx_window_vulkan"]
 
 [dependencies]
 cgmath = { version = "0.14", features = ["eders"] }
