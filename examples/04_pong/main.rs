@@ -4,8 +4,15 @@ extern crate amethyst;
 extern crate amethyst_renderer;
 extern crate cgmath;
 extern crate futures;
+extern crate rayon;
+
+use std::sync::Arc;
 
 //use amethyst::{Application, State, Trans, VirtualKeyCode, WindowEvent};
+use amethyst::assets::*;
+use amethyst::audio::*;
+use amethyst::audio::output::{default_output, Output};
+use amethyst::audio::play::*;
 use amethyst::prelude::*;
 use amethyst::assets::{AssetFuture, BoxedErr};
 use amethyst::ecs::{Component, Fetch, FetchMut, Join, System, VecStorage, WriteStorage};
@@ -68,7 +75,11 @@ impl Component for Plank {
     type Storage = VecStorage<Plank>;
 }
 
-struct PongSystem;
+struct PongSystem {
+    score_sfx: Source,
+    bounce_sfx: Source,
+    audio_output: Option<Output>,
+}
 
 struct Score {
     score_left: i32,
@@ -167,6 +178,9 @@ impl<'a> System<'a> for PongSystem {
                    ball.position[1] + ball.size / 2. > right_position - right_dimensions[1] / 2. {
                     ball.position[0] = 1.0 - right_dimensions[0] - ball.size / 2.;
                     ball.velocity[0] = -ball.velocity[0];
+                    if let Some(ref output) = self.audio_output {
+                        play_once(&self.bounce_sfx, &output);
+                    }
                 }
             }
 
@@ -178,6 +192,9 @@ impl<'a> System<'a> for PongSystem {
                 println!("Left player score: {0}, Right player score {1}",
                          score.score_left,
                          score.score_right);
+                if let Some(ref output) = self.audio_output {
+                    play_once(&self.score_sfx, &output);
+                }
             }
 
             // Check if the ball has collided with the left plank
@@ -187,6 +204,9 @@ impl<'a> System<'a> for PongSystem {
                    ball.position[1] + ball.size / 2. > left_position - left_dimensions[1] / 2. {
                     ball.position[0] = left_dimensions[0] + ball.size / 2.;
                     ball.velocity[0] = -ball.velocity[0];
+                    if let Some(ref output) = self.audio_output {
+                        play_once(&self.bounce_sfx, &output);
+                    }
                 }
             }
 
@@ -198,18 +218,27 @@ impl<'a> System<'a> for PongSystem {
                 println!("Left player score: {0}, Right player score {1}",
                          score.score_left,
                          score.score_right);
+                if let Some(ref output) = self.audio_output {
+                    play_once(&self.score_sfx, &output);
+                }
             }
 
             // Check if the ball is below the top boundary, if it is not deflect it
             if ball.position[1] + ball.size / 2. > 1.0 {
                 ball.position[1] = 1.0 - ball.size / 2.;
                 ball.velocity[1] = -ball.velocity[1];
+                if let Some(ref output) = self.audio_output {
+                    play_once(&self.bounce_sfx, &output);
+                }
             }
 
             // Check if the ball is above the bottom boundary, if it is not deflect it
             if ball.position[1] - ball.size / 2. < 0.0 {
                 ball.position[1] = ball.size / 2.;
                 ball.velocity[1] = -ball.velocity[1];
+                if let Some(ref output) = self.audio_output {
+                    play_once(&self.bounce_sfx, &output);
+                }
             }
 
             // Update the renderable corresponding to this ball
@@ -259,7 +288,7 @@ impl State for Pong {
 
 
         let world = &mut engine.world;
-        
+
         world.add_resource(Camera {
             eye: [0., 0., 1.0].into(),
             proj: Projection::orthographic(0.0, 1.0, 1.0, 0.0).into(),
@@ -273,7 +302,7 @@ impl State for Pong {
         let mut input = InputHandler::new();
         input.bindings = Bindings::load(format!("{}/examples/04_pong/resources/input.ron",
                                                 env!("CARGO_MANIFEST_DIR")));
-        
+
         world.add_resource(input);
         world.add_resource(Time::default());
 
@@ -324,7 +353,7 @@ impl State for Pong {
     }
 
     fn handle_event(&mut self, engine: &mut Engine, event: Event) -> Trans {
-        let mut input = engine.world.write_resource::<InputHandler>();        
+        let mut input = engine.world.write_resource::<InputHandler>();
         match event {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::KeyboardInput {
@@ -345,22 +374,42 @@ impl State for Pong {
 }
 
 fn run() -> Result<(), amethyst::Error> {
+    use futures::future::Future;
+    use rayon::{Configuration, ThreadPool};
+
     let path = format!("{}/examples/04_pong/resources/config.ron",
                        env!("CARGO_MANIFEST_DIR"));
-
-    let config = DisplayConfig::load(&path);
-
-    let mut game = Application::build(Pong)?
+    let cfg = DisplayConfig::load(path);
+    let assets_dir = format!("{}/examples/04_pong/resources/",
+                                            env!("CARGO_MANIFEST_DIR"));
+    let mut loader = Loader::new(assets_dir, Arc::new(ThreadPool::new(Configuration::new()).unwrap()));
+    loader.register(AudioContext::new());
+    let bounce_sfx = loader.load("bounce",
+                                formats::audio::OggFormat)
+        .wait().unwrap();
+    let score_sfx = loader.load("score",
+                               formats::audio::OggFormat)
+        .wait().unwrap();
+    let audio_output = default_output();
+    if let None = audio_output {
+        eprintln!("Audio device not found, no sound will be played.");
+    }
+    let pong = PongSystem {
+        bounce_sfx: bounce_sfx,
+        score_sfx: score_sfx,
+        audio_output: audio_output,
+    };
+    let mut game = Application::build(Pong).unwrap()
         .register::<Ball>()
         .register::<Plank>()
-        .with::<PongSystem>(PongSystem, "pong_system", &[])
+        .with::<PongSystem>(pong, "pong_system", &[])
         .with::<TransformSystem>(TransformSystem::new(), "transform_system", &["pong_system"])
         .with_renderer(Pipeline::build()
                            .with_stage(Stage::with_backbuffer()
                                .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
                                .with_model_pass(pass::DrawFlat::<PosNormTex>::new())
                            ),
-                       Some(config)
+                       Some(cfg)
         )?
         .build()
         .expect("Fatal error");
