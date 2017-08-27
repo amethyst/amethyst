@@ -1,4 +1,4 @@
-//! Built-in `specs` `System`s.
+//! `amethyst` audio ecs systems
 
 pub use self::audio::AudioSystem;
 pub use self::dj::DjSystem;

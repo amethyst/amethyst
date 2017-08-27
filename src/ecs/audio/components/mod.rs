@@ -1,3 +1,5 @@
+//! `amethyst` audio ecs components
+
 mod audio_emitter;
 mod audio_listener;
 

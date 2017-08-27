@@ -19,8 +19,7 @@ use amethyst::ecs::{Component, Fetch, FetchMut, Join, System, VecStorage, WriteS
 use amethyst::ecs::transform::*;
 use amethyst::ecs::rendering::{Factory, MeshComponent, MaterialComponent};
 use amethyst::ecs::input::{Bindings, InputHandler};
-use amethyst::ecs::systems::{DjSystem, TransformSystem};
-use amethyst::ecs::components::*;
+use amethyst::ecs::audio::DjSystem;
 use amethyst::timing::Time;
 use amethyst_renderer::prelude::*;
 use amethyst_renderer::Config as DisplayConfig;
