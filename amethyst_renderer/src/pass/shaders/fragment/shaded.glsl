@@ -38,6 +38,7 @@ uniform sampler2D emission;
 in VertexData {
     vec4 position;
     vec3 normal;
+    vec3 tangent;
     vec2 tex_coord;
 } vertex;
 
