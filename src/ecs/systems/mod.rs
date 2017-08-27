@@ -1,10 +1,5 @@
 //! Built-in `specs` `System`s.
 
-mod audio;
-mod dj;
-mod rendering;
-mod transform;
-
 pub use self::audio::AudioSystem;
 pub use self::dj::DjSystem;
 pub use self::rendering::RenderSystem;
@@ -13,6 +8,11 @@ pub use self::transform::TransformSystem;
 // use config::Config;
 use error::Result;
 use ecs::{System, World};
+
+mod audio;
+mod dj;
+mod rendering;
+mod transform;
 
 /// Extension trait for all systems.
 pub trait SystemExt<'a, A>: System<'a> {

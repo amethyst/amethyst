@@ -19,7 +19,7 @@ use amethyst::ecs::{Component, Fetch, FetchMut, Join, System, VecStorage, WriteS
 use amethyst::ecs::components::*;
 use amethyst::ecs::resources::input::{Bindings, InputHandler};
 use amethyst::ecs::resources::Factory;
-use amethyst::ecs::systems::TransformSystem;
+use amethyst::ecs::systems::{DjSystem, TransformSystem};
 use amethyst::timing::Time;
 use amethyst_renderer::prelude::*;
 use amethyst_renderer::Config as DisplayConfig;
@@ -390,10 +390,37 @@ fn run() -> Result<(), amethyst::Error> {
     let score_sfx = loader.load("score",
                                formats::audio::OggFormat)
         .wait().unwrap();
+    let music_1: Source = loader.load("Computer_Music_All-Stars_-_Wheres_My_Jetpack.ogg",
+                               formats::audio::OggFormat)
+        .wait().unwrap();
+    let music_2: Source = loader.load("Computer_Music_All-Stars_-_Albatross_v2.ogg",
+                               formats::audio::OggFormat)
+        .wait().unwrap();
     let audio_output = default_output();
-    if let None = audio_output {
-        eprintln!("Audio device not found, no sound will be played.");
-    }
+    let dj = match audio_output {
+        Some(ref output) => {
+            let mut dj = Dj::new(&output);
+            dj.set_volume(0.25); // Music is a bit loud, reduce the volume.
+            let mut playing_1 = false;
+            let music_1 = music_1.clone();
+            let music_2 = music_2.clone();
+            dj.set_picker(Box::new(move |ref mut dj| {
+                if playing_1 {
+                    dj.append(&music_2).expect("Decoder error occurred!");
+                    playing_1 = false;
+                } else {
+                    dj.append(&music_1).expect("Decoder error occurred!");
+                    playing_1 = true;
+                }
+                true
+            }));
+            Some(dj)
+        }
+        None => {
+            eprintln!("Audio device not found, no sound will be played.");
+            None
+        }
+    };
     let pong = PongSystem {
         bounce_sfx: bounce_sfx,
         score_sfx: score_sfx,
@@ -410,10 +437,12 @@ fn run() -> Result<(), amethyst::Error> {
                                .with_model_pass(pass::DrawFlat::<PosNormTex>::new())
                            ),
                        Some(cfg)
-        )?
-        .build()
-        .expect("Fatal error");
-    Ok(game.run())
+        )?;
+    if let Some(dj) = dj {
+        game = game.add_resource(dj)
+            .with(DjSystem, "dj_system", &[]);
+    }
+    Ok(game.build()?.run())
 }
 
 
