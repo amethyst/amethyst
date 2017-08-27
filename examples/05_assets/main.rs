@@ -59,44 +59,6 @@ impl Format for Custom {
     }
 }
 
-fn load_material<F>(engine: &mut Engine, albedo: &str, format: F) -> AssetFuture<MaterialComponent>
-    where F: Format + 'static,
-          F::Data: Into<<TextureContext as Context>::Data>,
-{
-    let future = {
-        let factory = engine.world.read_resource::<Factory>();
-        factory.create_material(MaterialBuilder::new()).map_err(BoxedErr::new)
-    }.join({
-        let loader = engine.world.read_resource::<Loader>();
-        loader.load_from::<TextureComponent, _, _, _>(albedo, format, "resources")
-    }).map(|(mut mtl, albedo)| {
-        mtl.albedo = albedo.0.inner();
-        MaterialComponent(mtl)
-    });
-    AssetFuture::from_future(future)
-}
-
-fn make_material(engine: &mut Engine, albedo: [f32;4]) -> AssetFuture<MaterialComponent> {
-    let future = {
-        let factory = engine.world.read_resource::<Factory>();
-        factory.create_material(MaterialBuilder::new().with_albedo(TextureBuilder::from_color_val(albedo)))
-            .map(MaterialComponent)
-            .map_err(BoxedErr::new)
-    };
-    AssetFuture::from_future(future)
-}
-
-fn load_mesh<F>(engine: &mut Engine, name: &str, f: F) -> AssetFuture<MeshComponent>
-    where F: Format + 'static,
-          F::Data: Into<<MeshContext as Context>::Data>,
-{
-    let mut future = {
-        let loader = engine.world.read_resource::<Loader>();
-        loader.load_from::<MeshComponent, _, _, _>(name, f, "resources")
-    };
-    future
-}
-
 
 struct AssetsExample;
 
@@ -285,4 +247,42 @@ fn initialise_lights(world: &mut World) {
         .create_entity()
         .with(LightComponent(light.into()))
         .build();
+}
+
+fn load_material<F>(engine: &mut Engine, albedo: &str, format: F) -> AssetFuture<MaterialComponent>
+    where F: Format + 'static,
+          F::Data: Into<<TextureContext as Context>::Data>,
+{
+    let future = {
+        let factory = engine.world.read_resource::<Factory>();
+        factory.create_material(MaterialBuilder::new()).map_err(BoxedErr::new)
+    }.join({
+        let loader = engine.world.read_resource::<Loader>();
+        loader.load_from::<TextureComponent, _, _, _>(albedo, format, "resources")
+    }).map(|(mut mtl, albedo)| {
+        mtl.albedo = albedo.0.inner();
+        MaterialComponent(mtl)
+    });
+    AssetFuture::from_future(future)
+}
+
+fn make_material(engine: &mut Engine, albedo: [f32;4]) -> AssetFuture<MaterialComponent> {
+    let future = {
+        let factory = engine.world.read_resource::<Factory>();
+        factory.create_material(MaterialBuilder::new().with_albedo(TextureBuilder::from_color_val(albedo)))
+            .map(MaterialComponent)
+            .map_err(BoxedErr::new)
+    };
+    AssetFuture::from_future(future)
+}
+
+fn load_mesh<F>(engine: &mut Engine, name: &str, f: F) -> AssetFuture<MeshComponent>
+    where F: Format + 'static,
+          F::Data: Into<<MeshContext as Context>::Data>,
+{
+    let mut future = {
+        let loader = engine.world.read_resource::<Loader>();
+        loader.load_from::<MeshComponent, _, _, _>(name, f, "resources")
+    };
+    future
 }
