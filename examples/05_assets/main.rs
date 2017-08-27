@@ -12,7 +12,8 @@ use amethyst::assets::formats::textures::{PngFormat, BmpFormat};
 use amethyst::config::Config;
 use amethyst::ecs::World;
 use amethyst::ecs::input::InputHandler;
-use amethyst::ecs::rendering::*;
+use amethyst::ecs::rendering::{MeshComponent, Factory, MeshContext, TextureComponent,
+                               MaterialComponent, TextureContext};
 use amethyst::ecs::transform::{LocalTransform, Transform};
 use amethyst::prelude::*;
 use amethyst::renderer::{Camera, Rgba, Config as DisplayConfig};
@@ -192,8 +193,6 @@ fn run() -> Result<(), Error> {
             .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
             .with_model_pass(pass::DrawShaded::<PosNormTex>::new()),
     );
-
-
 
     let mut game = Application::build(AssetsExample)
         .expect("Failed to build ApplicationBuilder for an unknown reason.")

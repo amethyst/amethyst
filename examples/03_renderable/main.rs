@@ -13,9 +13,10 @@ use amethyst::assets::{AssetFuture, BoxedErr, Context, Format, Loader};
 use amethyst::assets::formats::textures::PngFormat;
 use amethyst::assets::formats::meshes::ObjFormat;
 use amethyst::config::Config;
-use amethyst::ecs::rendering::*;
-use amethyst::ecs::transform::*;
 use amethyst::ecs::{Fetch, FetchMut, Join, System, WriteStorage};
+use amethyst::ecs::transform::{LocalTransform, Transform};
+use amethyst::ecs::rendering::{LightComponent, MaterialComponent, AmbientColor, TextureContext,
+                               Factory, TextureComponent, MeshComponent, MeshContext};
 use amethyst::timing::Time;
 use amethyst::renderer::{Camera, Rgba, Config as DisplayConfig};
 use amethyst::renderer::prelude::*;
