@@ -195,7 +195,7 @@ fn run() -> Result<(), Error> {
     let display_config = DisplayConfig::load(display_config_path);
     let pipeline_builder = Pipeline::build().with_stage(
         Stage::with_backbuffer()
-            .clear_target([0.00196, 0.23726, 0.21765, 1.0], 1.0)
+            .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
             .with_model_pass(pass::DrawShaded::<PosNormTex>::new()),
     );
     
@@ -223,9 +223,9 @@ fn initialise_camera(camera: &mut Camera) {
 
     // TODO: Fix the aspect ratio.
     camera.proj = Projection::perspective(1.0, Deg(60.0)).into();
-    camera.eye = [0.0, -20.0, 15.0].into();
+    camera.eye = [0.0, -20.0, 10.0].into();
 
-    camera.forward = [0.0, 2.0, -1.0].into();
+    camera.forward = [0.0, 20.0, -5.0].into();
     camera.right = [1.0, 0.0, 0.0].into();
     camera.up = [0.0, 0.0, 1.0].into();
 }

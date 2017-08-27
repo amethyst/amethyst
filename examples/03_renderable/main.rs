@@ -5,17 +5,22 @@
 
 extern crate amethyst;
 extern crate cgmath;
+extern crate futures;
 
 use amethyst::prelude::*;
+use amethyst::{Application, Error, State, Trans};
+use amethyst::assets::{AssetFuture, BoxedErr, Context, Format, Loader, NoError};
+use amethyst::assets::formats::textures::{PngFormat, BmpFormat};
+use amethyst::assets::formats::meshes::ObjFormat;
 use amethyst::config::Config;
-use amethyst::ecs::{Fetch, FetchMut, Join, System, WriteStorage};
-use amethyst::ecs::systems::TransformSystem;
+use amethyst::ecs::World;
+use amethyst::ecs::resources::input::InputHandler;
+use amethyst::ecs::resources::{AmbientColor, Factory};
 use amethyst::ecs::components::*;
-use amethyst::ecs::resources::AmbientColor;
+use amethyst::ecs::{Fetch, FetchMut, Join, System, WriteStorage};
 use amethyst::timing::Time;
+use amethyst::renderer::{Camera, Rgba, Config as DisplayConfig};
 use amethyst::renderer::prelude::*;
-use amethyst::renderer::Rgba;
-use amethyst::renderer::Config as DisplayConfig;
 
 use cgmath::{Deg, Euler, Quaternion};
 use std::str;
@@ -44,8 +49,10 @@ impl<'a> System<'a> for ExampleSystem {
         state.light_angle -= delta_time;
         state.camera_angle += delta_time / 10.0;
 
+        let target = camera.eye + camera.forward;
         camera.eye[0] = 20.0 * state.camera_angle.cos();
         camera.eye[1] = 20.0 * state.camera_angle.sin();
+        camera.forward = target - camera.eye;
 
         for point_light in (&mut lights).join()
             .filter_map(|light| {
@@ -69,125 +76,89 @@ struct Example;
 
 impl State for Example {
     fn on_start(&mut self, engine: &mut Engine) {
-        let world = &mut engine.world;
 
-        world.add_resource(Camera {
-            eye: [0.0, -20.0, 10.0].into(),
-            proj: Projection::perspective(1.3, Deg(60.0)).into(),
-            forward: [0.0, 0.0, 1.0].into(),
-            right: [1.0, 0.0, 0.0].into(),
-            up: [0.0, 0.0, 1.0].into(),
-        });
-
-        world.register::<LocalTransform>();
-        world.register::<Child>();
-        world.register::<Init>();
-        world.register::<LightComponent>();
-
-        // FIXME: asset loader pending
-        // Set up an assets path by directly registering an assets store.
-        /*let assets_path = format!("{}/examples/03_renderable/resources/meshes",
-                                  env!("CARGO_MANIFEST_DIR"));
-        assets.register_store(DirectoryStore::new(assets_path));
-
-        // Create some basic colors and load textures
-        assets.load_asset_from_data::<Texture, [f32; 4]>("red", [0.8, 0.2, 0.2, 1.0]);
-        assets.load_asset_from_data::<Texture, [f32; 4]>("green", [0.2, 0.8, 0.2, 1.0]);
-        assets.load_asset_from_data::<Texture, [f32; 4]>("blue", [0.2, 0.2, 0.8, 1.0]);
-        assets.load_asset_from_data::<Texture, [f32; 4]>("pink", [1.0, 0.8, 0.8, 1.0]);
-        assets.load_asset_from_data::<Texture, [f32; 4]>("black", [0.0, 0.0, 0.0, 1.0]);
-        assets.load_asset_from_data::<Texture, [f32; 4]>("white", [1.0, 1.0, 1.0, 1.0]);
-        assets.load_asset::<Texture>("logo", "png");
-        assets.load_asset::<Texture>("ground", "dds");
-
-        // Load/generate meshes
-        assets.load_asset::<Mesh>("teapot", "obj");
-        assets.load_asset::<Mesh>("lid", "obj");
-        assets.load_asset::<Mesh>("rectangle", "obj");
-        assets.load_asset::<Mesh>("cube", "obj");
-        assets.load_asset::<Mesh>("cone", "obj");*/
+        initialise_camera(&mut engine.world.write_resource::<Camera>());
 
         // Add teapot and lid to scene
         for mesh in vec!["lid", "teapot"].iter() {
             let mut trans = LocalTransform::default();
             trans.rotation = Quaternion::from(Euler::new(Deg(90.0), Deg(-90.0), Deg(0.0))).into();
             trans.translation = [5.0, 5.0, 0.0];
-            // FIXME: asset loader pending
-            /*let rend = assets
-                .create_renderable(mesh, "red", "blue", "white", 10.0)
-                .unwrap();*/
-            world
+            let mesh = load_mesh(engine, mesh, ObjFormat);
+            let mtl = make_material(engine, [1.0, 0.0, 0.0, 1.0]);
+            engine.world
                 .create_entity()
-                //.with(rend) // FIXME: asset loader pending
+                .with(mesh)
+                .with(mtl)
                 .with(trans)
                 .with(Transform::default())
                 .build();
         }
 
         // Add cube to scene
-        // FIXME: asset loader pending
-//        let rend = assets
-//            .create_renderable("cube", "logo", "logo", "white", 1.0)
-//            .unwrap();
         let mut trans = LocalTransform::default();
         trans.translation = [5.0, -5.0, 2.0];
         trans.scale = [2.0; 3];
-        world
+        let mesh = load_mesh(engine, "cube", ObjFormat);
+        let mtl = load_material(engine, "logo", PngFormat);
+        engine.world
             .create_entity()
-            // .with(rend) // FIXME: asset loader pending
+            .with(mesh)
+            .with(mtl)
             .with(trans)
             .with(Transform::default())
             .build();
 
         // Add cone to scene
-        // FIXME: asset loader pending
-        /*let rend = assets
-            .create_renderable("cone", "white", "red", "blue", 40.0)
-            .unwrap();*/
         let mut trans = LocalTransform::default();
         trans.translation = [-5.0, 5.0, 0.0];
         trans.scale = [2.0; 3];
-        world
+        let mesh = load_mesh(engine, "cone", ObjFormat);
+        let mtl = make_material(engine, [1.0; 4]);
+        engine.world
             .create_entity()
-            //.with(rend) // FIXME: asset loader pending
+            .with(mesh)
+            .with(mtl)
             .with(trans)
             .with(Transform::default())
             .build();
 
         // Add custom cube object to scene
-        // FIXME: asset loader pending
-        /*let rend = assets
-            .create_renderable("cube", "blue", "green", "white", 1.0)
-            .unwrap();*/
         let mut trans = LocalTransform::default();
         trans.translation = [-5.0, -5.0, 1.0];
-        world
+        let mesh = load_mesh(engine, "cube", ObjFormat);
+        let mtl = make_material(engine, [0.0, 0.0, 1.0, 1.0]);
+        engine.world
             .create_entity()
-            //.with(rend) // FIXME: asset loader pending
+            .with(mesh)
+            .with(mtl)
             .with(trans)
             .with(Transform::default())
             .build();
 
         // Create base rectangle as floor
-        // FIXME: asset loader pending
-        /*let rend = assets
-            .create_renderable("rectangle", "ground", "ground", "black", 1.0)
-            .unwrap();*/
         let mut trans = LocalTransform::default();
         trans.scale = [10.0; 3];
-        world
+        let mesh = load_mesh(engine, "rectangle", ObjFormat);
+        //let mtl = load_material(engine, "ground", DdsFormat);
+        engine.world
             .create_entity()
-            //.with(rend) // FIXME: asset loader pending
+            .with(mesh)
+            //.with(mtl)
             .with(trans)
             .with(Transform::default())
             .build();
 
         // Add lights to scene
-        world.create_entity()
-            .with(LightComponent(PointLight::default().into()))
+        engine.world.create_entity()
+            .with(LightComponent(PointLight {
+                color: [1.0, 1.0, 0.0].into(),
+                intensity: 50.0,
+                ..PointLight::default()
+            }.into()))
             .build();
 
-        world
+        engine.world
             .create_entity()
             .with(LightComponent(DirectionalLight {
                       color: [0.2; 4].into(),
@@ -196,10 +167,10 @@ impl State for Example {
             .build();
 
         {
-            world.add_resource(AmbientColor(Rgba::from([0.01; 3])));
+            engine.world.add_resource(AmbientColor(Rgba::from([0.01; 3])));
         }
 
-        world.add_resource::<DemoState>(DemoState {
+        engine.world.add_resource::<DemoState>(DemoState {
                                             light_angle: 0.0,
                                             light_color: [1.0; 4],
                                             ambient_light: true,
@@ -298,20 +269,109 @@ impl State for Example {
     }
 }
 
+
+
 fn main() {
-    let path = format!("{}/examples/03_renderable/resources/config.ron",
-                       env!("CARGO_MANIFEST_DIR"));
-    let cfg = DisplayConfig::load(path);
-    let mut game = Application::build(Example).unwrap()
+    if let Err(error) = run() {
+        eprintln!("Could not run the example!");
+        eprintln!("{}", error);
+        ::std::process::exit(1);
+    }
+}
+
+/// Wrapper around the main, so we can return errors easily.
+fn run() -> Result<(), Error> {
+    use amethyst::assets::Directory;
+    use amethyst::ecs::components::{Child, Init, LocalTransform, MeshComponent};
+    use amethyst::ecs::systems::TransformSystem;
+    use amethyst::ecs::common::Errors;
+    use std::env::set_var;
+
+    // Add our meshes directory to the asset loader.
+    let resources_directory = format!(
+        "{}/examples/03_renderable/resources",
+        env!("CARGO_MANIFEST_DIR")
+    );
+
+    let display_config_path = format!(
+        "{}/examples/03_renderable/resources/config.ron",
+        env!("CARGO_MANIFEST_DIR")
+    );
+
+    let display_config = DisplayConfig::load(display_config_path);
+    let pipeline_builder = Pipeline::build().with_stage(
+        Stage::with_backbuffer()
+            .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
+            .with_model_pass(pass::DrawShaded::<PosNormTex>::new()),
+    );
+
+    let mut game = Application::build(Example)
+        .expect("Failed to build ApplicationBuilder for an unknown reason.")
+        .register::<Child>()
+        .register::<LocalTransform>()
+        .register::<Init>()
         .with::<ExampleSystem>(ExampleSystem, "example_system", &[])
         .with::<TransformSystem>(TransformSystem::new(), "transform_system", &[])
-        .with_renderer(Pipeline::build()
-                           .with_stage(Stage::with_backbuffer()
-                               .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-                               .with_model_pass(pass::DrawFlat::<PosNormTex>::new())
-                           ),
-                       Some(cfg)).unwrap()
-        .build()
-        .expect("Fatal error");
+        .with_renderer(pipeline_builder, Some(display_config))?
+        .add_store("resources", Directory::new(resources_directory))
+        .add_resource(Errors::new())
+        .build()?;
+
     game.run();
+    Ok(())
+}
+
+
+/// Initialises the camera structure.
+fn initialise_camera(camera: &mut Camera) {
+    use cgmath::Deg;
+
+    // TODO: Fix the aspect ratio.
+    camera.proj = Projection::perspective(1.0, Deg(60.0)).into();
+    camera.eye = [0.0, -20.0, 10.0].into();
+
+    camera.forward = [0.0, 20.0, -5.0].into();
+    camera.right = [1.0, 0.0, 0.0].into();
+    camera.up = [0.0, 0.0, 1.0].into();
+}
+
+fn load_material<F>(engine: &mut Engine, albedo: &str, format: F) -> AssetFuture<MaterialComponent>
+    where F: Format + 'static,
+          F::Data: Into<<TextureContext as Context>::Data>,
+{
+    use futures::Future;
+    let future = {
+        let factory = engine.world.read_resource::<Factory>();
+        factory.create_material(MaterialBuilder::new()).map_err(BoxedErr::new)
+    }.join({
+        let loader = engine.world.read_resource::<Loader>();
+        loader.load_from::<TextureComponent, _, _, _>(albedo, format, "resources")
+    }).map(|(mut mtl, albedo)| {
+        mtl.albedo = albedo.0.inner();
+        MaterialComponent(mtl)
+    });
+    AssetFuture::from_future(future)
+}
+
+fn make_material(engine: &mut Engine, albedo: [f32;4]) -> AssetFuture<MaterialComponent> {
+    use futures::Future;
+    let future = {
+        let factory = engine.world.read_resource::<Factory>();
+        factory.create_material(MaterialBuilder::new().with_albedo(TextureBuilder::from_color_val(albedo)))
+            .map(MaterialComponent)
+            .map_err(BoxedErr::new)
+    };
+    AssetFuture::from_future(future)
+}
+
+fn load_mesh<F>(engine: &mut Engine, name: &str, f: F) -> AssetFuture<MeshComponent>
+    where F: Format + 'static,
+          F::Data: Into<<MeshContext as Context>::Data>,
+{
+    use futures::Future;
+    let mut future = {
+        let loader = engine.world.read_resource::<Loader>();
+        loader.load_from::<MeshComponent, _, _, _>(name, f, "resources")
+    };
+    future
 }

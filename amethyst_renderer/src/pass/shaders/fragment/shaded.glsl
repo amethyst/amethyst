@@ -21,8 +21,8 @@ layout (std140) uniform PointLights {
 };
 
 struct DirectionalLight {
-    vec3 direction;
     vec4 color;
+    vec3 direction;
 };
 
 layout (std140) uniform DirectionalLights {

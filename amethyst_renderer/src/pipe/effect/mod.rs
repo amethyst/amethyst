@@ -86,6 +86,8 @@ impl Effect {
         if let Some(i) = self.globals.get(name.as_ref()) {
             self.data.globals[*i] = data.convert();
         }
+        // FIXME: Don't silently ignore unknown update.
+        // maybe `.expect(...)` would fit here
     }
 
     /// FIXME: Update raw buffer without transmute, use `Result` somehow.
@@ -96,6 +98,8 @@ impl Effect {
             let raw = &self.data.const_bufs[*i];
             enc.update_buffer::<T>(unsafe { mem::transmute(raw) }, &data[..], 0).expect("Failed to update buffer (TODO: replace expect)");
         }
+        // FIXME: Don't silently ignore unknown update.
+        // maybe `.expect(...)` would fit here
     }
 
     /// FIXME: Update raw buffer without transmute.
@@ -106,6 +110,8 @@ impl Effect {
             let raw = &self.data.const_bufs[*i];
             enc.update_constant_buffer::<T>(unsafe { mem::transmute(raw) }, &data);
         }
+        // FIXME: Don't silently ignore unknown update.
+        // maybe `.expect(...)` would fit here
     }
 
     /// FIXME: Add support for arbitrary materials and textures.
