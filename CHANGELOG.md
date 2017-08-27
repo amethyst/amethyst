@@ -1,5 +1,5 @@
 # Change Log
-All notable changes to this project will be documented in this file. 
+All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog][kc], and this project adheres to
 [Semantic Versioning][sv].
@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [sv]: http://semver.org/
 
 ## [Unreleased]
+### Added
+* Add audio support ([#265])
+
 ### Changed
 * Asset management rewrite (pull request [#244]).
 * Use RON as config format ([#269])
@@ -16,6 +19,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#244]: https://github.com/amethyst/amethyst/pull/244
 [#247]: https://github.com/amethyst/amethyst/pull/247
 [#261]: https://github.com/amethyst/amethyst/pull/261
+[#265]: https://github.com/amethyst/amethyst/pull/265
 [#269]: https://github.com/amethyst/amethyst/pull/269
 [#274]: https://github.com/amethyst/amethyst/pull/274
 
