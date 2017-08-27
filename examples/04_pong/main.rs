@@ -16,7 +16,7 @@ use amethyst::audio::play::*;
 use amethyst::prelude::*;
 use amethyst::assets::{AssetFuture, BoxedErr};
 use amethyst::ecs::{Component, Fetch, FetchMut, Join, System, VecStorage, WriteStorage};
-use amethyst::ecs::transform::*;
+use amethyst::ecs::transform::{Transform, LocalTransform, Child, Init, TransformSystem};
 use amethyst::ecs::rendering::{Factory, MeshComponent, MaterialComponent};
 use amethyst::ecs::input::{Bindings, InputHandler};
 use amethyst::ecs::audio::DjSystem;
