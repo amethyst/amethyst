@@ -15,25 +15,12 @@ struct DummyAsset(String);
 
 impl Asset for DummyAsset {
     type Context = DummyContext;
-    type Data = String;
-    type Error = NoError;
-
-    fn is_shared(&self) -> bool {
-        false
-    }
-
-    fn push_update(&self, _updated: Self) {
-        unimplemented!()
-    }
-
-    fn update(&mut self) {
-        unimplemented!()
-    }
 }
 
 struct DummyContext(&'static str);
 
 impl Context for DummyContext {
+    type Result = Result<DummyAsset, NoError>;
     type Asset = DummyAsset;
     type Data = String;
     type Error = NoError;
@@ -42,13 +29,13 @@ impl Context for DummyContext {
         "dummy"
     }
 
-    fn create_asset(&self, mut data: String) -> Result<DummyAsset, Self::Error> {
+    fn create_asset(&self, mut data: String, _: &ThreadPool) -> Result<DummyAsset, Self::Error> {
         data.insert_str(0, self.0);
 
         Ok(DummyAsset(data))
     }
 
-    fn update(&self, _spec: &AssetSpec, _asset: Self::Asset) {
+    fn update(&self, _spec: &AssetSpec, _asset: AssetFuture<Self::Asset>) {
         unimplemented!()
     }
 }
@@ -56,6 +43,7 @@ impl Context for DummyContext {
 struct DummyFormat;
 
 impl Format for DummyFormat {
+    type Result = Result<String, Utf8Error>;
     type Data = String;
     type Error = Utf8Error;
 
@@ -63,7 +51,7 @@ impl Format for DummyFormat {
         "dum"
     }
 
-    fn parse(&self, bytes: Vec<u8>) -> Result<Self::Data, Self::Error> {
+    fn parse(&self, bytes: Vec<u8>, _: &ThreadPool) -> Self::Result {
         from_utf8(bytes.as_slice()).map(|s| s.to_owned())
     }
 }
@@ -76,8 +64,7 @@ fn main() {
     let cfg = Configuration::new().num_threads(8);
     let pool = Arc::new(ThreadPool::new(cfg).expect("Invalid config"));
 
-    let alloc = Allocator::new();
-    let mut loader = Loader::new(&alloc, &path, pool);
+    let mut loader = Loader::new(&path, pool);
 
     loader.register(DummyContext(">> "));
 

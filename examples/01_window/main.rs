@@ -1,46 +1,52 @@
 //! Opens an empty window.
 
 extern crate amethyst;
+extern crate amethyst_renderer;
+extern crate cgmath;
 
-use amethyst::{Application, Event, State, Trans, VirtualKeyCode, WindowEvent};
-use amethyst::asset_manager::AssetManager;
-use amethyst::config::Config;
-use amethyst::ecs::World;
-use amethyst::gfx_device::DisplayConfig;
-use amethyst::renderer::Pipeline;
+use amethyst::event::{KeyboardInput, VirtualKeyCode};
+use amethyst::prelude::*;
+use amethyst::renderer::prelude::{PosNormTex, Pipeline};
+use amethyst::renderer::Config as DisplayConfig;
 
 struct Example;
 
 impl State for Example {
-    fn on_start(&mut self, _: &mut World, _: &mut AssetManager, pipe: &mut Pipeline) {
-        use amethyst::renderer::Layer;
-        use amethyst::renderer::pass::Clear;
-
-        let clear_layer = Layer::new("main", vec![Clear::new([0.0, 0.0, 0.0, 1.0])]);
-        pipe.layers = vec![clear_layer];
-    }
-
-    fn handle_events(&mut self,
-                     events: &[WindowEvent],
-                     _: &mut World,
-                     _: &mut AssetManager,
-                     _: &mut Pipeline)
-                     -> Trans {
-        for e in events {
-            match **e {
-                Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) => return Trans::Quit,
-                Event::Closed => return Trans::Quit,
-                _ => (),
-            }
+    fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
+        match event {
+            Event::WindowEvent {
+                event, ..
+            } => match event {
+                WindowEvent::KeyboardInput {
+                    input: KeyboardInput {
+                        virtual_keycode: Some(VirtualKeyCode::Escape), ..
+                    }, ..
+                } | WindowEvent::Closed => Trans::Quit,
+                _ => Trans::None,
+            },
+            _ => Trans::None,
         }
-        Trans::None
     }
 }
 
-fn main() {
+fn run() -> Result<(), amethyst::Error> {
     let path = format!("{}/examples/01_window/resources/config.ron",
                        env!("CARGO_MANIFEST_DIR"));
-    let cfg = DisplayConfig::load(path);
-    let mut game = Application::build(Example, cfg).done();
+    let config = DisplayConfig::load(&path);
+
+    let mut game = Application::build(Example)?
+        .with_renderer(Pipeline::forward::<PosNormTex>(), Some(config))?
+        .build()
+        .expect("Fatal error");
+
     game.run();
+
+    Ok(())
+}
+
+fn main() {
+    if let Err(e) = run() {
+        println!("Failed to execute example: {}", e);
+        ::std::process::exit(1);
+    }
 }

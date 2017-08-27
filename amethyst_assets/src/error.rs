@@ -1,11 +1,12 @@
 use std::error::Error;
-use std::fmt::{Display, Formatter, Result as FmtResult};
+use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 
 use asset::AssetSpec;
+use futures::future::SharedError;
 
 /// Error type returned when loading an asset.
 /// Includes the `AssetSpec` and the error (`LoadError`).
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct AssetError<A, F, S> {
     /// The specifier of the asset which failed to load
     pub asset: AssetSpec,
@@ -114,5 +115,49 @@ impl Display for NoError {
 impl Error for NoError {
     fn description(&self) -> &str {
         match *self {}
+    }
+}
+
+
+/// Shared version of error
+pub struct SharedAssetError<E>(SharedError<E>);
+
+impl<E> AsRef<E> for SharedAssetError<E> {
+    fn as_ref(&self) -> &E {
+        &*self.0
+    }
+}
+
+impl<E> Error for SharedAssetError<E>
+    where E: Error,
+{
+    fn description(&self) -> &str {
+        self.as_ref().description()
+    }
+
+    fn cause(&self) -> Option<&Error> {
+        self.as_ref().cause()
+    }
+}
+
+impl<E> Debug for SharedAssetError<E>
+    where E: Debug
+{
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        self.as_ref().fmt(f)
+    }
+}
+
+impl<E> Display for SharedAssetError<E>
+    where E: Display
+{
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        self.as_ref().fmt(f)
+    }
+}
+
+impl<E> From<SharedError<E>> for SharedAssetError<E> {
+    fn from(err: SharedError<E>) -> Self {
+        SharedAssetError(err)
     }
 }

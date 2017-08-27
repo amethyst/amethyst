@@ -11,7 +11,7 @@ use amethyst_assets::*;
 use rayon::{Configuration, ThreadPool};
 
 struct DummyContext {
-    cache: Cache<DummyAsset>,
+    cache: Cache<AssetFuture<DummyAsset>>,
     prepend: &'static str,
 }
 
@@ -19,34 +19,35 @@ impl Context for DummyContext {
     type Asset = DummyAsset;
     type Data = String;
     type Error = NoError;
+    type Result = Result<DummyAsset, NoError>;
 
     fn category(&self) -> &'static str {
         "dummy"
     }
 
-    fn create_asset(&self, mut data: String) -> Result<DummyAsset, Self::Error> {
+    fn create_asset(&self, mut data: String, _: &ThreadPool) -> Result<DummyAsset, Self::Error> {
         data.insert_str(0, self.prepend);
 
         Ok(DummyAsset(Arc::new(data)))
     }
 
-    fn cache(&self, spec: AssetSpec, asset: &DummyAsset) {
+    fn cache(&self, spec: AssetSpec, asset: AssetFuture<Self::Asset>) {
         self.cache.insert(spec, asset.clone());
     }
 
-    fn retrieve(&self, spec: &AssetSpec) -> Option<DummyAsset> {
+    fn retrieve(&self, spec: &AssetSpec) -> Option<AssetFuture<Self::Asset>> {
         self.cache.get(spec)
     }
 
     fn clear(&self) {
-        self.cache.retain(|_, a| a.is_shared());
+        self.cache.retain(|_, _| false);
     }
 
     fn clear_all(&self) {
         self.cache.clear_all();
     }
 
-    fn update(&self, _spec: &AssetSpec, _asset: Self::Asset) {
+    fn update(&self, _spec: &AssetSpec, _asset: AssetFuture<Self::Asset>) {
         unimplemented!()
     }
 }
@@ -56,20 +57,6 @@ struct DummyAsset(Arc<String>);
 
 impl Asset for DummyAsset {
     type Context = DummyContext;
-    type Data = String;
-    type Error = NoError;
-
-    fn is_shared(&self) -> bool {
-        Arc::strong_count(&self.0) > 1
-    }
-
-    fn push_update(&self, _updated: Self) {
-        unimplemented!()
-    }
-
-    fn update(&mut self) {
-        unimplemented!()
-    }
 }
 
 struct DummyFormat;
@@ -77,12 +64,13 @@ struct DummyFormat;
 impl Format for DummyFormat {
     type Data = String;
     type Error = Utf8Error;
+    type Result = Result<Self::Data, Self::Error>;
 
     fn extension() -> &'static str {
         "dum"
     }
 
-    fn parse(&self, bytes: Vec<u8>) -> Result<Self::Data, Self::Error> {
+    fn parse(&self, bytes: Vec<u8>, _: &ThreadPool) -> Result<Self::Data, Self::Error> {
         from_utf8(bytes.as_slice()).map(|s| s.to_owned())
     }
 }
@@ -95,8 +83,7 @@ fn main() {
     let cfg = Configuration::new().num_threads(8);
     let pool = Arc::new(ThreadPool::new(cfg).expect("Invalid config"));
 
-    let alloc = Allocator::new();
-    let mut loader = Loader::new(&alloc, &path, pool);
+    let mut loader = Loader::new(&path, pool);
 
     loader.register(DummyContext {
         cache: Cache::new(),

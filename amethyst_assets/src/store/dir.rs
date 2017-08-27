@@ -3,7 +3,7 @@ use std::io::Error as IoError;
 use std::path::PathBuf;
 use std::time::UNIX_EPOCH;
 
-use store::{Allocator, Store, StoreId};
+use store::Store;
 
 /// Directory store.
 ///
@@ -14,17 +14,15 @@ use store::{Allocator, Store, StoreId};
 /// then.
 #[derive(Debug)]
 pub struct Directory {
-    id: StoreId,
     loc: PathBuf,
 }
 
 impl Directory {
     /// Creates a new directory storage.
-    pub fn new<P>(alloc: &Allocator, loc: P) -> Self
+    pub fn new<P>(loc: P) -> Self
         where P: Into<PathBuf>
     {
         Directory {
-            id: alloc.next_store_id(),
             loc: loc.into(),
         }
     }
@@ -32,6 +30,7 @@ impl Directory {
 
 impl Store for Directory {
     type Error = IoError;
+    type Result = Result<Vec<u8>, IoError>;
 
     fn modified(&self, category: &str, id: &str, ext: &str) -> Result<u64, IoError> {
         use std::fs::metadata;
@@ -43,10 +42,6 @@ impl Store for Directory {
         path.set_extension(ext);
 
         Ok(metadata(&path)?.modified()?.duration_since(UNIX_EPOCH).unwrap().as_secs())
-    }
-
-    fn store_id(&self) -> StoreId {
-        self.id
     }
 
     fn load(&self, category: &str, name: &str, ext: &str) -> Result<Vec<u8>, IoError> {

@@ -13,7 +13,7 @@ pub use self::button::{Button, ButtonState, ChangeState};
 pub use self::button::ButtonState::*;
 pub use self::button::ChangeState::*;
 pub use self::input_handler::InputHandler;
-use engine::{VirtualKeyCode, MouseButton};
+use event::{VirtualKeyCode, MouseButton};
 
 
 use std::iter::{Chain, Map, Iterator};

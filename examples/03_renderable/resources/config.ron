@@ -1,4 +1,4 @@
-DisplayConfig(
+(
   fullscreen: false,
   multisampling: 1,
   title: "Renderable Example",
