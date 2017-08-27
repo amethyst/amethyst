@@ -69,6 +69,7 @@ extern crate genmesh;
 extern crate imagefmt;
 extern crate num_cpus;
 extern crate rayon;
+extern crate rodio;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
@@ -84,6 +85,7 @@ pub use self::error::{Error, Result};
 pub use self::state::{State, StateMachine, Trans};
 
 pub mod assets;
+pub mod audio;
 pub mod ecs;
 pub mod event;
 pub mod prelude;

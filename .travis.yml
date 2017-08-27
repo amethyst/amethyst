@@ -18,6 +18,12 @@ sudo: false
 # needed.
 cache: cargo
 
+# Install linux audio libraries to allow alsa compilation.
+addons:
+  apt:
+    packages:
+    - libasound2-dev
+
 # Install the necessary crates for building and testing the engine.
 before_script:
     - export PATH=$PATH:/home/travis/.cargo/bin

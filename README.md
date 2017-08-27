@@ -70,6 +70,8 @@ is also an online crate-level [API reference][ar].
 
 [bk]: https://www.amethyst.rs/book/
 
+Linux developers: the libasound2-dev package will be required to compile amethyst.
+
 ## Quick Example
 
 See the [Getting Started][gs] chapter in the book for the full-blown "Hello,
