@@ -1,23 +1,23 @@
 //! The core engine framework.
 
-use std::sync::Arc;
-
-use rayon::ThreadPool;
-use renderer::PipelineBuilder;
-use shred::{Resource, ResourceId};
-use winit::{Event, EventsLoop};
 
 use assets::{Asset, Loader, Store};
 use ecs::{Component, Dispatcher, DispatcherBuilder, System, World};
 use engine::Engine;
 use error::{Error, Result};
 use input::InputHandler;
-use state::{State, StateMachine};
-use timing::{Stopwatch, Time};
+
+use rayon::ThreadPool;
 use renderer::Config as DisplayConfig;
+use renderer::PipelineBuilder;
+use shred::{Resource, ResourceId};
+use state::{State, StateMachine};
+use std::sync::Arc;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
+use timing::{Stopwatch, Time};
+use winit::{Event, EventsLoop};
 
 /// User-friendly facade for building games. Manages main loop.
 #[derive(Derivative)]
@@ -44,7 +44,8 @@ impl<'a, 'b> Application<'a, 'b> {
 
     /// Builds a new Application with the given settings.
     pub fn build<S>(initial_state: S) -> Result<ApplicationBuilder<'a, 'b, S>>
-        where S: State + 'a
+    where
+        S: State + 'a,
     {
         ApplicationBuilder::new(initial_state)
     }
@@ -84,16 +85,25 @@ impl<'a, 'b> Application<'a, 'b> {
         {
             let engine = &mut self.engine;
             let states = &mut self.states;
-            if engine.world.res.has_value(ResourceId::new::<InputHandler>()) {
-                engine.world.write_resource::<InputHandler>().advance_frame();
+            if engine.world.res.has_value(
+                ResourceId::new::<InputHandler>(),
+            )
+            {
+                engine
+                    .world
+                    .write_resource::<InputHandler>()
+                    .advance_frame();
             }
             #[cfg(feature = "profiler")]
             profile_scope!("handle_event");
 
             self.events.poll_events(|event| {
-                if engine.world.res.has_value(ResourceId::new::<InputHandler>()) {
+                if engine.world.res.has_value(
+                    ResourceId::new::<InputHandler>(),
+                )
+                {
                     let mut input = engine.world.write_resource::<InputHandler>();
-                    if let Event::WindowEvent {ref event, ..} = event {
+                    if let Event::WindowEvent { ref event, .. } = event {
                         input.send_event(&event);
                     }
                 }
@@ -158,7 +168,9 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
 
         let num_cores = num_cpus::get();
         let cfg = Configuration::new().num_threads(num_cores);
-        let pool = ThreadPool::new(cfg).map(|p| Arc::new(p)).map_err(|_| Error::Application)?;
+        let pool = ThreadPool::new(cfg).map(|p| Arc::new(p)).map_err(|_| {
+            Error::Application
+        })?;
         let mut world = World::new();
         let base_path = format!("{}/resources", env!("CARGO_MANIFEST_DIR"));
         world.add_resource(Loader::new(base_path, pool.clone()));
@@ -180,7 +192,8 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
 
     /// Adds an ECS resource which can be accessed from systems.
     pub fn add_resource<R>(mut self, res: R) -> Self
-        where R: Resource
+    where
+        R: Resource,
     {
         self.world.add_resource(res);
 
@@ -204,7 +217,8 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     /// If you want to register systems which can not be specified as dependencies,
     /// you can use "" as their name, which will not panic (using another name twice will).
     pub fn with<S>(mut self, sys: S, name: &str, dep: &[&str]) -> Self
-        where for<'c> S: System<'c> + Send + 'a + 'b
+    where
+        for<'c> S: System<'c> + Send + 'a + 'b,
     {
         self.disp_builder = self.disp_builder.add(sys, name, dep);
         self
@@ -215,31 +229,38 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     /// All thread-local systems are executed sequentially after all
     /// non-thread-local systems.
     pub fn with_thread_local<S>(mut self, sys: S) -> Self
-        where for<'c> S: System<'c> + 'a + 'b
+    where
+        for<'c> S: System<'c> + 'a + 'b,
     {
         self.disp_builder = self.disp_builder.add_thread_local(sys);
         self
     }
 
     /// Automatically registers components, adds resources and the rendering system.
-    pub fn with_renderer(mut self, pipe: PipelineBuilder, config: Option<DisplayConfig>) -> Result<Self> {
+    pub fn with_renderer(
+        mut self,
+        pipe: PipelineBuilder,
+        config: Option<DisplayConfig>,
+    ) -> Result<Self> {
         use ecs::SystemExt;
         use ecs::rendering::RenderSystem;
         let render_sys = RenderSystem::build((&self.events, pipe, config), &mut self.world)?;
         self = self.with_thread_local(render_sys);
 
-        Ok(self
-            .register_mesh_asset()
-            .register_texture_asset()
-            .register_material_not_yet_asset())
+        Ok(
+            self.register_mesh_asset()
+                .register_texture_asset()
+                .register_material_not_yet_asset(),
+        )
 
 
     }
 
     /// Add asset loader to resources
     pub fn add_store<I, S>(self, name: I, store: S) -> Self
-        where I: Into<String>,
-              S: Store + Send + Sync + 'static,
+    where
+        I: Into<String>,
+        S: Store + Send + Sync + 'static,
     {
         {
             let mut loader = self.world.write_resource::<Loader>();
@@ -250,8 +271,9 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
 
     /// Register new context within the loader
     pub fn register_asset<A, F>(mut self, make_context: F) -> Self
-        where A: Component + Asset + Clone + Send + Sync + 'static,
-              F: FnOnce(&mut World) -> A::Context,
+    where
+        A: Component + Asset + Clone + Send + Sync + 'static,
+        F: FnOnce(&mut World) -> A::Context,
     {
         use assets::AssetFuture;
         use specs::common::{Merge, Errors};
@@ -271,8 +293,7 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     /// Builds the Application and returns the result.
     pub fn build(self) -> Result<Application<'a, 'b>> {
 
-        #[cfg(feature = "profiler")]
-        register_thread_with_profiler("Main".into());
+        #[cfg(feature = "profiler")] register_thread_with_profiler("Main".into());
         #[cfg(feature = "profiler")]
         profile_scope!("new");
 

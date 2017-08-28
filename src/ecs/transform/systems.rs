@@ -1,10 +1,10 @@
 //! Scene graph system and types
 
 use cgmath::Matrix4;
-use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 
 use ecs::{Entities, Entity, Join, ReadStorage, System, WriteStorage};
 use ecs::transform::{LocalTransform, Transform, Child, Init};
+use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 
 /// Handles updating `Transform` components based on the `LocalTransform`
 /// component and parents.
@@ -87,7 +87,11 @@ impl<'a> System<'a> for TransformSystem {
         while index < self.sorted.len() {
             let (entity, parent_entity) = self.sorted[index];
 
-            match (children.get(entity), locals.get(entity), self.dead.contains(&entity)) {
+            match (
+                children.get(entity),
+                locals.get(entity),
+                self.dead.contains(&entity),
+            ) {
                 (Some(child), Some(local), false) => {
                     // Make sure the transform is also dirty if the parent has changed.
                     if child.is_dirty() && !self.swapped.contains(&entity) {
@@ -117,9 +121,11 @@ impl<'a> System<'a> for TransformSystem {
                     }
 
                     if local.is_dirty() || child.is_dirty() ||
-                       self.dirty.contains(&child.parent()) {
+                        self.dirty.contains(&child.parent())
+                    {
                         let combined_transform = if let Some(parent_global) =
-                            globals.get(child.parent()) {
+                            globals.get(child.parent())
+                        {
                             (Matrix4::from(parent_global.0) * Matrix4::from(local.matrix())).into()
                         } else {
                             local.matrix()

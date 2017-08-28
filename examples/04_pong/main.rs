@@ -6,25 +6,25 @@ extern crate cgmath;
 extern crate futures;
 extern crate rayon;
 
-use std::sync::Arc;
+use amethyst::assets::{AssetFuture, BoxedErr};
 
 use amethyst::assets::Loader;
 use amethyst::assets::formats::audio::OggFormat;
 use amethyst::audio::{Dj, AudioContext, Source};
 use amethyst::audio::output::{default_output, Output};
 use amethyst::audio::play::play_once;
-use amethyst::prelude::*;
-use amethyst::assets::{AssetFuture, BoxedErr};
 use amethyst::ecs::{Component, Fetch, FetchMut, Join, System, VecStorage, WriteStorage};
-use amethyst::ecs::transform::{Transform, LocalTransform, Child, Init, TransformSystem};
-use amethyst::ecs::rendering::{Factory, MeshComponent, MaterialComponent};
-use amethyst::ecs::input::{Bindings, InputHandler};
 use amethyst::ecs::audio::DjSystem;
+use amethyst::ecs::input::{Bindings, InputHandler};
+use amethyst::ecs::rendering::{Factory, MeshComponent, MaterialComponent};
+use amethyst::ecs::transform::{Transform, LocalTransform, Child, Init, TransformSystem};
+use amethyst::prelude::*;
 use amethyst::timing::Time;
-use amethyst_renderer::prelude::*;
 use amethyst_renderer::Config as DisplayConfig;
+use amethyst_renderer::prelude::*;
 
 use futures::{Future, IntoFuture};
+use std::sync::Arc;
 
 struct Pong;
 
@@ -105,8 +105,10 @@ impl<'a> System<'a> for PongSystem {
      Fetch<'a, InputHandler>,
      FetchMut<'a, Score>);
 
-    fn run(&mut self,
-           (mut balls, mut planks, mut locals, _, time, input, mut score): Self::SystemData) {
+    fn run(
+        &mut self,
+        (mut balls, mut planks, mut locals, _, time, input, mut score): Self::SystemData,
+    ) {
         // Properties of left paddle.
         let mut left_dimensions = [0.0, 0.0];
         let mut left_position = 0.0;
@@ -128,7 +130,7 @@ impl<'a> System<'a> for PongSystem {
                     left_dimensions = plank.dimensions;
                     // Move plank according to axis input.
                     if let Some(value) = input.axis_value("P1") {
-                            plank.position += plank.velocity * delta_time * value as f32;
+                        plank.position += plank.velocity * delta_time * value as f32;
                         if plank.position + plank.dimensions[1] / 2. > 1. {
                             plank.position = 1. - plank.dimensions[1] / 2.
                         }
@@ -173,9 +175,11 @@ impl<'a> System<'a> for PongSystem {
 
             // Check if the ball has collided with the right plank
             if ball.position[0] + ball.size / 2. > 1.0 - left_dimensions[0] &&
-               ball.position[0] + ball.size / 2. < 1.0 {
+                ball.position[0] + ball.size / 2. < 1.0
+            {
                 if ball.position[1] - ball.size / 2. < right_position + right_dimensions[1] / 2. &&
-                   ball.position[1] + ball.size / 2. > right_position - right_dimensions[1] / 2. {
+                    ball.position[1] + ball.size / 2. > right_position - right_dimensions[1] / 2.
+                {
                     ball.position[0] = 1.0 - right_dimensions[0] - ball.size / 2.;
                     ball.velocity[0] = -ball.velocity[0];
                     if let Some(ref output) = self.audio_output {
@@ -189,9 +193,11 @@ impl<'a> System<'a> for PongSystem {
             if ball.position[0] - ball.size / 2. > 1.0 {
                 ball.position[0] = 0.5;
                 score.score_left += 1;
-                println!("Left player score: {0}, Right player score {1}",
-                         score.score_left,
-                         score.score_right);
+                println!(
+                    "Left player score: {0}, Right player score {1}",
+                    score.score_left,
+                    score.score_right
+                );
                 if let Some(ref output) = self.audio_output {
                     play_once(&self.score_sfx, &output);
                 }
@@ -199,9 +205,11 @@ impl<'a> System<'a> for PongSystem {
 
             // Check if the ball has collided with the left plank
             if ball.position[0] - ball.size / 2. < left_dimensions[0] &&
-               ball.position[0] + ball.size / 2. > 0.0 {
+                ball.position[0] + ball.size / 2. > 0.0
+            {
                 if ball.position[1] - ball.size / 2. < left_position + left_dimensions[1] / 2. &&
-                   ball.position[1] + ball.size / 2. > left_position - left_dimensions[1] / 2. {
+                    ball.position[1] + ball.size / 2. > left_position - left_dimensions[1] / 2.
+                {
                     ball.position[0] = left_dimensions[0] + ball.size / 2.;
                     ball.velocity[0] = -ball.velocity[0];
                     if let Some(ref output) = self.audio_output {
@@ -215,9 +223,11 @@ impl<'a> System<'a> for PongSystem {
             if ball.position[0] + ball.size / 2. < 0.0 {
                 ball.position[0] = 0.5;
                 score.score_right += 1;
-                println!("Left player score: {0}, Right player score {1}",
-                         score.score_left,
-                         score.score_right);
+                println!(
+                    "Left player score: {0}, Right player score {1}",
+                    score.score_left,
+                    score.score_right
+                );
                 if let Some(ref output) = self.audio_output {
                     play_once(&self.score_sfx, &output);
                 }
@@ -251,12 +261,13 @@ impl<'a> System<'a> for PongSystem {
 }
 
 fn load_proc_asset<T, F>(engine: &mut Engine, f: F) -> AssetFuture<T::Item>
-    where T: IntoFuture<Error=BoxedErr>,
-          T::Future: 'static,
-          F: FnOnce(&mut Engine) -> T
+where
+    T: IntoFuture<Error = BoxedErr>,
+    T::Future: 'static,
+    F: FnOnce(&mut Engine) -> T,
 {
     let future = f(engine).into_future();
-    let future: Box<Future<Item=T::Item, Error=BoxedErr>> = Box::new(future);
+    let future: Box<Future<Item = T::Item, Error = BoxedErr>> = Box::new(future);
     AssetFuture(future.shared())
 }
 
@@ -272,10 +283,9 @@ impl State for Pong {
 
         let mesh = load_proc_asset(engine, move |engine| {
             let factory = engine.world.read_resource::<Factory>();
-            factory
-                .create_mesh(mesh)
-                .map(MeshComponent::new)
-                .map_err(BoxedErr::new)
+            factory.create_mesh(mesh).map(MeshComponent::new).map_err(
+                BoxedErr::new,
+            )
         });
 
         let mtl = load_proc_asset(engine, move |engine| {
@@ -300,8 +310,10 @@ impl State for Pong {
         // Add all resources
         world.add_resource(Score::new());
         let mut input = InputHandler::new();
-        input.bindings = Bindings::load(format!("{}/examples/04_pong/resources/input.ron",
-                                                env!("CARGO_MANIFEST_DIR")));
+        input.bindings = Bindings::load(format!(
+            "{}/examples/04_pong/resources/input.ron",
+            env!("CARGO_MANIFEST_DIR")
+        ));
 
         world.add_resource(input);
         world.add_resource(Time::default());
@@ -352,20 +364,17 @@ impl State for Pong {
             .build();
     }
 
-    fn handle_event(&mut self, engine: &mut Engine, event: Event) -> Trans {
+    fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
         match event {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::KeyboardInput {
-                    input: KeyboardInput {
-                        virtual_keycode: Some(VirtualKeyCode::Escape), ..
-                    }, ..
-                } | WindowEvent::Closed => {
-                    Trans::Quit
+            Event::WindowEvent { event, .. } => {
+                match event {
+                    WindowEvent::KeyboardInput {
+                        input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Escape), .. }, ..
+                    } |
+                    WindowEvent::Closed => Trans::Quit,
+                    _ => Trans::None,
                 }
-                _ => {
-                    Trans::None
-                }
-            },
+            }
             _ => Trans::None,
         }
     }
@@ -375,25 +384,30 @@ fn run() -> Result<(), amethyst::Error> {
     use futures::future::Future;
     use rayon::{Configuration, ThreadPool};
 
-    let path = format!("{}/examples/04_pong/resources/config.ron",
-                       env!("CARGO_MANIFEST_DIR"));
+    let path = format!(
+        "{}/examples/04_pong/resources/config.ron",
+        env!("CARGO_MANIFEST_DIR")
+    );
     let cfg = DisplayConfig::load(path);
-    let assets_dir = format!("{}/examples/04_pong/resources/",
-                                            env!("CARGO_MANIFEST_DIR"));
-    let mut loader = Loader::new(assets_dir, Arc::new(ThreadPool::new(Configuration::new()).unwrap()));
+    let assets_dir = format!("{}/examples/04_pong/resources/", env!("CARGO_MANIFEST_DIR"));
+    let mut loader = Loader::new(
+        assets_dir,
+        Arc::new(ThreadPool::new(Configuration::new()).unwrap()),
+    );
     loader.register(AudioContext::new());
-    let bounce_sfx = loader.load("bounce",
-                                OggFormat)
-        .wait().unwrap();
-    let score_sfx = loader.load("score",
-                               OggFormat)
-        .wait().unwrap();
-    let music_1: Source = loader.load("Computer_Music_All-Stars_-_Wheres_My_Jetpack.ogg",
-                               OggFormat)
-        .wait().unwrap();
-    let music_2: Source = loader.load("Computer_Music_All-Stars_-_Albatross_v2.ogg",
-                               OggFormat)
-        .wait().unwrap();
+    let bounce_sfx = loader.load("bounce", OggFormat).wait().unwrap();
+    let score_sfx = loader.load("score", OggFormat).wait().unwrap();
+    let music_1: Source = loader
+        .load(
+            "Computer_Music_All-Stars_-_Wheres_My_Jetpack.ogg",
+            OggFormat,
+        )
+        .wait()
+        .unwrap();
+    let music_2: Source = loader
+        .load("Computer_Music_All-Stars_-_Albatross_v2.ogg", OggFormat)
+        .wait()
+        .unwrap();
     let audio_output = default_output();
     let dj = match audio_output {
         Some(ref output) => {
@@ -424,21 +438,22 @@ fn run() -> Result<(), amethyst::Error> {
         score_sfx: score_sfx,
         audio_output: audio_output,
     };
-    let mut game = Application::build(Pong).unwrap()
+    let mut game = Application::build(Pong)
+        .unwrap()
         .register::<Ball>()
         .register::<Plank>()
         .with::<PongSystem>(pong, "pong_system", &[])
         .with::<TransformSystem>(TransformSystem::new(), "transform_system", &["pong_system"])
-        .with_renderer(Pipeline::build()
-                           .with_stage(Stage::with_backbuffer()
-                               .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-                               .with_model_pass(pass::DrawFlat::<PosNormTex>::new())
-                           ),
-                       Some(cfg)
+        .with_renderer(
+            Pipeline::build().with_stage(
+                Stage::with_backbuffer()
+                    .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
+                    .with_model_pass(pass::DrawFlat::<PosNormTex>::new()),
+            ),
+            Some(cfg),
         )?;
     if let Some(dj) = dj {
-        game = game.add_resource(dj)
-            .with(DjSystem, "dj_system", &[]);
+        game = game.add_resource(dj).with(DjSystem, "dj_system", &[]);
     }
     Ok(game.build()?.run())
 }
@@ -454,35 +469,37 @@ fn main() {
 
 
 fn gen_rectangle(w: f32, h: f32) -> Vec<PosNormTex> {
-    let data: Vec<PosNormTex> = vec![PosNormTex {
-                                              a_position: [-w / 2., -h / 2., 0.],
-                                              a_normal: [0., 0., 1.],
-                                              a_tex_coord: [0., 0.],
-                                          },
-                                          PosNormTex {
-                                              a_position: [w / 2., -h / 2., 0.],
-                                              a_normal: [0., 0., 1.],
-                                              a_tex_coord: [1., 0.],
-                                          },
-                                          PosNormTex {
-                                              a_position: [w / 2., h / 2., 0.],
-                                              a_normal: [0., 0., 1.],
-                                              a_tex_coord: [1., 1.],
-                                          },
-                                          PosNormTex {
-                                              a_position: [w / 2., h / 2., 0.],
-                                              a_normal: [0., 0., 1.],
-                                              a_tex_coord: [1., 1.],
-                                          },
-                                          PosNormTex {
-                                              a_position: [-w / 2., h / 2., 0.],
-                                              a_normal: [0., 0., 1.],
-                                              a_tex_coord: [1., 1.],
-                                          },
-                                          PosNormTex {
-                                              a_position: [-w / 2., -h / 2., 0.],
-                                              a_normal: [0., 0., 1.],
-                                              a_tex_coord: [1., 1.],
-                                          }];
+    let data: Vec<PosNormTex> = vec![
+        PosNormTex {
+            a_position: [-w / 2., -h / 2., 0.],
+            a_normal: [0., 0., 1.],
+            a_tex_coord: [0., 0.],
+        },
+        PosNormTex {
+            a_position: [w / 2., -h / 2., 0.],
+            a_normal: [0., 0., 1.],
+            a_tex_coord: [1., 0.],
+        },
+        PosNormTex {
+            a_position: [w / 2., h / 2., 0.],
+            a_normal: [0., 0., 1.],
+            a_tex_coord: [1., 1.],
+        },
+        PosNormTex {
+            a_position: [w / 2., h / 2., 0.],
+            a_normal: [0., 0., 1.],
+            a_tex_coord: [1., 1.],
+        },
+        PosNormTex {
+            a_position: [-w / 2., h / 2., 0.],
+            a_normal: [0., 0., 1.],
+            a_tex_coord: [1., 1.],
+        },
+        PosNormTex {
+            a_position: [-w / 2., -h / 2., 0.],
+            a_normal: [0., 0., 1.],
+            a_tex_coord: [1., 1.],
+        },
+    ];
     data
 }

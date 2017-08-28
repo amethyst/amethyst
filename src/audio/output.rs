@@ -3,11 +3,11 @@
 // We have to use types from this to provide an output iterator type.
 extern crate cpal;
 
-use std::fmt::{Debug, Formatter, Result as FmtResult};
-
-use rodio::Endpoint;
 use self::cpal::EndpointsIterator;
 use rodio::*;
+
+use rodio::Endpoint;
+use std::fmt::{Debug, Formatter, Result as FmtResult};
 
 /// A speaker(s) through which audio can be played.
 pub struct Output {

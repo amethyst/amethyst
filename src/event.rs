@@ -2,4 +2,3 @@
 //! types.
 
 pub use winit::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
-

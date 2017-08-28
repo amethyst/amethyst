@@ -1,12 +1,5 @@
 //! Texture resource handling.
 
-use std::error::Error;
-use std::fmt::{self, Display, Formatter};
-
-use futures::{Async, Future, Poll};
-use gfx::format::SurfaceType;
-use imagefmt::ColFmt;
-use rayon::ThreadPool;
 
 
 
@@ -14,7 +7,14 @@ use assets::{Asset, AssetFuture, AssetPtr, AssetSpec, Cache, Context};
 use assets::formats::textures::ImageData;
 use ecs::{Component, VecStorage};
 use ecs::rendering::resources::{Factory, FactoryFuture};
+
+use futures::{Async, Future, Poll};
+use gfx::format::SurfaceType;
+use imagefmt::ColFmt;
+use rayon::ThreadPool;
 use renderer::{Texture, TextureBuilder, Error as RendererError};
+use std::error::Error;
+use std::fmt::{self, Display, Formatter};
 
 
 
@@ -92,9 +92,9 @@ impl TextureFuture {
 
     fn unsupported_size(width: usize, height: usize) -> Self {
         Self::from_error(TextureError::UnsupportedSize {
-                             max: (u16::max_value() as usize, u16::max_value() as usize),
-                             got: (width, height),
-                         })
+            max: (u16::max_value() as usize, u16::max_value() as usize),
+            got: (width, height),
+        })
     }
 }
 
@@ -194,9 +194,12 @@ impl Context for TextureContext {
             return TextureFuture::unsupported_size(image.w, image.h);
         }
 
-        let tb = TextureBuilder::new(image.buf)
-            .with_format(fmt)
-            .with_size(image.w as u16, image.h as u16);
+        let tb = TextureBuilder::new(image.buf).with_format(fmt).with_size(
+            image.w as
+                u16,
+            image.h as
+                u16,
+        );
         TextureFuture::factory(self.factory.create_texture(tb))
     }
 
@@ -210,13 +213,15 @@ impl Context for TextureContext {
 
     fn update(&self, spec: &AssetSpec, asset: AssetFuture<TextureComponent>) {
         if let Some(asset) = self.cache
-               .access(spec, |a| match a.peek() {
-            Some(Ok(a)) => {
-                a.0.push_update(asset);
-                None
-            }
-            _ => Some(asset),
-        }).and_then(|a| a) {
+            .access(spec, |a| match a.peek() {
+                Some(Ok(a)) => {
+                    a.0.push_update(asset);
+                    None
+                }
+                _ => Some(asset),
+            })
+            .and_then(|a| a)
+        {
             self.cache.insert(spec.clone(), asset);
         }
     }
