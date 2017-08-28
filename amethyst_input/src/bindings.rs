@@ -1,8 +1,8 @@
 //! Defines binding structure used for saving and loading input settings.
 
-use smallvec::SmallVec;
-use fnv::FnvHashMap as HashMap;
 use super::{Axis, Button};
+use fnv::FnvHashMap as HashMap;
+use smallvec::SmallVec;
 
 /// Used for saving and loading input settings.
 #[derive(Default, Serialize, Deserialize)]
@@ -32,10 +32,7 @@ impl Bindings {
 
     /// Gets a list of all axes
     pub fn axes(&self) -> Vec<String> {
-        self.axes
-            .keys()
-            .cloned()
-            .collect::<Vec<String>>()
+        self.axes.keys().cloned().collect::<Vec<String>>()
     }
 
     /// Add a button to an action.
@@ -82,9 +79,6 @@ impl Bindings {
 
     /// Gets a list of all action bindings
     pub fn actions(&self) -> Vec<String> {
-        self.actions
-            .keys()
-            .cloned()
-            .collect::<Vec<String>>()
+        self.actions.keys().cloned().collect::<Vec<String>>()
     }
 }

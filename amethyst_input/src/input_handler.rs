@@ -1,8 +1,8 @@
 //! World resource that handles all user input.
 
-use winit::{ElementState, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
-use smallvec::SmallVec;
 use super::*;
+use smallvec::SmallVec;
+use winit::{ElementState, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
 
 /// This struct holds state information about input devices.
 ///
@@ -122,18 +122,13 @@ impl InputHandler {
                 button,
                 ..
             } => {
-                let index = self.pressed_mouse_buttons
-                    .iter()
-                    .position(|&b| b == button);
+                let index = self.pressed_mouse_buttons.iter().position(|&b| b == button);
                 if let Some(i) = index {
                     self.pressed_mouse_buttons.swap_remove(i);
                     self.released_mouse_buttons.push(button);
                 }
             }
-            WindowEvent::MouseMoved {
-                position: (x, y),
-                ..
-            } => {
+            WindowEvent::MouseMoved { position: (x, y), .. } => {
                 self.mouse_position = Some((x, y));
             }
             WindowEvent::Focused(false) => {
@@ -157,14 +152,11 @@ impl InputHandler {
     pub fn keys_that_are(&self, state: ButtonState) -> KeyCodes {
         if let Pressed(ThisFrame) = state {
             self.down_keys.iter()
-        }
-        else if let Pressed(Currently) = state {
+        } else if let Pressed(Currently) = state {
             self.pressed_keys.iter()
-        }
-        else if let Released(ThisFrame) = state {
+        } else if let Released(ThisFrame) = state {
             self.released_keys.iter()
-        }
-        else {
+        } else {
             panic!("Released(Currently) is not supported in this context.");
         }
     }
@@ -172,36 +164,27 @@ impl InputHandler {
     /// Checks if a key matches the description given by state.
     pub fn key_is(&self, key: VirtualKeyCode, state: ButtonState) -> bool {
         match state {
-            Pressed(ThisFrame) => {
-                self.down_keys.iter().any(|&k| k == key)
-            }
-            Pressed(Currently) => {
-                self.pressed_keys.iter().any(|&k| k == key)
-            }
-            Released(ThisFrame) => {
-                self.released_keys.iter().any(|&k| k == key)
-            }
-            Released(Currently) => {
-                self.pressed_keys.iter().all(|&k| k != key)
-            }
+            Pressed(ThisFrame) => self.down_keys.iter().any(|&k| k == key),
+            Pressed(Currently) => self.pressed_keys.iter().any(|&k| k == key),
+            Released(ThisFrame) => self.released_keys.iter().any(|&k| k == key),
+            Released(Currently) => self.pressed_keys.iter().all(|&k| k != key),
         }
     }
 
     /// Checks if the all the given keys are down and at least one was pressed on this frame.
     pub fn keys_down(&self, keys: &[VirtualKeyCode]) -> bool {
         keys.iter().any(|&key| self.key_is(key, Pressed(ThisFrame))) &&
-        keys.iter().all(|&key| self.key_is(key, Pressed(Currently)))
+            keys.iter().all(|&key| self.key_is(key, Pressed(Currently)))
     }
 
-    /// Returns an iterator over all mouse buttons in the given state, does not support Released(Currently).
+    /// Returns an iterator over all mouse buttons in the given state,
+    /// does not support Released(Currently).
     pub fn mouse_buttons_that_are(&self, state: ButtonState) -> MouseButtons {
         if let Pressed(ThisFrame) = state {
             return self.down_mouse_buttons.iter();
-        }
-        else if let Pressed(Currently) = state {
+        } else if let Pressed(Currently) = state {
             return self.pressed_mouse_buttons.iter();
-        }
-        else if let Released(ThisFrame) = state {
+        } else if let Released(ThisFrame) = state {
             return self.released_mouse_buttons.iter();
         }
         panic!("Released(Currently) is not supported in this context.");
@@ -210,25 +193,33 @@ impl InputHandler {
     /// Checks if a mouse button matches the description given by state.
     pub fn mouse_button_is(&self, mouse_button: MouseButton, state: ButtonState) -> bool {
         match state {
-            Pressed(ThisFrame) => {
-                self.down_mouse_buttons.iter().any(|&mb| mb == mouse_button)
-            }
+            Pressed(ThisFrame) => self.down_mouse_buttons.iter().any(|&mb| mb == mouse_button),
             Pressed(Currently) => {
-                self.pressed_mouse_buttons.iter().any(|&mb| mb == mouse_button)
+                self.pressed_mouse_buttons.iter().any(
+                    |&mb| mb == mouse_button,
+                )
             }
             Released(ThisFrame) => {
-                self.released_mouse_buttons.iter().any(|&mb| mb == mouse_button)
+                self.released_mouse_buttons.iter().any(
+                    |&mb| mb == mouse_button,
+                )
             }
             Released(Currently) => {
-                self.pressed_mouse_buttons.iter().all(|&mb| mb != mouse_button)
+                self.pressed_mouse_buttons.iter().all(
+                    |&mb| mb != mouse_button,
+                )
             }
         }
     }
 
     /// Checks if the all the given mouse buttons are down and at least one was pressed this frame.
     pub fn mouse_buttons_down(&self, buttons: &[MouseButton]) -> bool {
-        buttons.iter().any(|&btn| self.mouse_button_is(btn, Pressed(ThisFrame))) &&
-        buttons.iter().all(|&btn| self.mouse_button_is(btn, Pressed(Currently)))
+        buttons.iter().any(|&btn| {
+            self.mouse_button_is(btn, Pressed(ThisFrame))
+        }) &&
+            buttons.iter().all(|&btn| {
+                self.mouse_button_is(btn, Pressed(Currently))
+            })
     }
 
     /// Gets the current mouse position.
@@ -247,7 +238,8 @@ impl InputHandler {
         }
     }
 
-    /// Returns an iterator over all buttons in the given state, does not support Released(Currently).
+    /// Returns an iterator over all buttons in the given state,
+    /// does not support Released(Currently).
     pub fn buttons_that_are(&self, state: ButtonState) -> Buttons {
         let mouse_buttons;
         let keys;
@@ -268,12 +260,14 @@ impl InputHandler {
                 panic!("Released(Currently) is not supported in this context.");
             }
         }
-        let mouse_buttons = mouse_buttons
-            .iter()
-            .map((|&mb| Button::Mouse(mb)) as fn(&MouseButton) -> Button);
-        let keys = keys
-            .iter()
-            .map((|&k| Button::Key(k)) as fn(&VirtualKeyCode) -> Button);
+        let mouse_buttons = mouse_buttons.iter().map(
+            (|&mb| Button::Mouse(mb)) as
+                fn(&MouseButton) -> Button,
+        );
+        let keys = keys.iter().map(
+            (|&k| Button::Key(k)) as
+                fn(&VirtualKeyCode) -> Button,
+        );
         Buttons { iterator: mouse_buttons.chain(keys) }
     }
 
@@ -287,26 +281,27 @@ impl InputHandler {
 
     /// Checks if the all given buttons are being pressed and at least one was pressed this frame.
     pub fn buttons_down(&self, buttons: &[Button]) -> bool {
-        buttons.iter().any(|&b| self.button_is(b, Pressed(ThisFrame))) &&
-        buttons.iter().all(|&b| self.button_is(b, Pressed(Currently)))
+        buttons.iter().any(
+            |&b| self.button_is(b, Pressed(ThisFrame)),
+        ) &&
+            buttons.iter().all(
+                |&b| self.button_is(b, Pressed(Currently)),
+            )
     }
 
     /// Returns the value of an axis by the string id, if the id doesn't exist this returns None.
     pub fn axis_value<T: AsRef<str>>(&self, id: T) -> Option<f64> {
-        self.bindings
-            .axes
-            .get(id.as_ref())
-            .map(|a| {
-                let pos = self.button_is(a.pos, Pressed(Currently));
-                let neg = self.button_is(a.neg, Pressed(Currently));
-                if pos == neg {
-                    0.0
-                } else if pos {
-                    1.0
-                } else {
-                    -1.0
-                }
-            })
+        self.bindings.axes.get(id.as_ref()).map(|a| {
+            let pos = self.button_is(a.pos, Pressed(Currently));
+            let neg = self.button_is(a.neg, Pressed(Currently));
+            if pos == neg {
+                0.0
+            } else if pos {
+                1.0
+            } else {
+                -1.0
+            }
+        })
     }
 
     /// Returns true if any of the action is in the given state.  Returns None if
@@ -314,16 +309,18 @@ impl InputHandler {
     pub fn action_is<T: AsRef<str>>(&self, action: T, state: ButtonState) -> Option<bool> {
         match state {
             Released(Currently) => {
-                self.bindings
-                    .actions
-                    .get(action.as_ref())
-                    .map(|ref buttons| buttons.iter().all(|&b| self.button_is(b, state)))
+                self.bindings.actions.get(action.as_ref()).map(
+                    |ref buttons| {
+                        buttons.iter().all(|&b| self.button_is(b, state))
+                    },
+                )
             }
             _ => {
-                self.bindings
-                    .actions
-                    .get(action.as_ref())
-                    .map(|ref buttons| buttons.iter().any(|&b| self.button_is(b, state)))
+                self.bindings.actions.get(action.as_ref()).map(
+                    |ref buttons| {
+                        buttons.iter().any(|&b| self.button_is(b, state))
+                    },
+                )
             }
         }
 
@@ -339,12 +336,18 @@ impl InputHandler {
         for action in actions {
             if let Some(buttons) = self.bindings.actions.get(action.as_ref()) {
                 if !any_action_is_pressed_this_frame {
-                    if buttons.iter().any(|&b| self.button_is(b, Pressed(ThisFrame))) {
+                    if buttons.iter().any(
+                        |&b| self.button_is(b, Pressed(ThisFrame)),
+                    )
+                    {
                         any_action_is_pressed_this_frame = true;
                     }
                 }
                 if all_actions_are_pressed {
-                    if buttons.iter().all(|&b| self.button_is(b, Released(Currently))) {
+                    if buttons.iter().all(
+                        |&b| self.button_is(b, Released(Currently)),
+                    )
+                    {
                         all_actions_are_pressed = false;
                     }
                 }
