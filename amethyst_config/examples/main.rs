@@ -45,7 +45,7 @@ fn main() {
             if let Err(e) = cfg.write(&path) {
                 println!("{}", e);
             }
-        },
+        }
         Err(e) => println!("{:?}", e),
     }
 }
