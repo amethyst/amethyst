@@ -353,7 +353,6 @@ impl State for Pong {
     }
 
     fn handle_event(&mut self, engine: &mut Engine, event: Event) -> Trans {
-        let mut input = engine.world.write_resource::<InputHandler>();
         match event {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::KeyboardInput {
@@ -364,7 +363,6 @@ impl State for Pong {
                     Trans::Quit
                 }
                 _ => {
-                    input.update(&[event]);
                     Trans::None
                 }
             },

@@ -58,83 +58,90 @@ impl InputHandler {
         }
     }
 
-    /// Updates the input handler with new engine events.
-    pub fn update(&mut self, events: &[WindowEvent]) {
-        // Before processing these events clear the single frame vectors
+    /// Signals that a frame has begun.
+    ///
+    /// The Amethyst game engine will automatically call this if the InputHandler is attached to
+    /// the world as a resource with id 0.
+    pub fn advance_frame(&mut self) {
         self.down_keys.clear();
         self.released_keys.clear();
         self.down_mouse_buttons.clear();
         self.released_mouse_buttons.clear();
         self.previous_mouse_position = self.mouse_position;
         self.text_this_frame.clear();
-        for event in events {
-            match *event {
-                WindowEvent::ReceivedCharacter(c) => {
-                    self.text_this_frame.push(c);
-                }
-                WindowEvent::KeyboardInput {
-                    input: KeyboardInput {
-                        state: ElementState::Pressed,
-                        virtual_keycode: Some(key_code),
-                        ..
-                    },
-                    ..
-                } => {
-                    if self.pressed_keys.iter().all(|&k| k != key_code) {
-                        self.pressed_keys.push(key_code);
-                        self.down_keys.push(key_code);
-                    }
-                }
-                WindowEvent::KeyboardInput {
-                    input: KeyboardInput {
-                        state: ElementState::Released,
-                        virtual_keycode: Some(key_code),
-                        ..
-                    },
-                    ..
-                } => {
-                    let index = self.pressed_keys.iter().position(|&k| k == key_code);
-                    if let Some(i) = index {
-                        self.pressed_keys.swap_remove(i);
-                        self.released_keys.push(key_code);
-                    }
-                }
-                WindowEvent::MouseInput {
-                    state: ElementState::Pressed,
-                    button,
-                    ..
-                } => {
-                    if self.pressed_mouse_buttons.iter().all(|&b| b != button) {
-                        self.pressed_mouse_buttons.push(button);
-                        self.down_mouse_buttons.push(button);
-                    }
-                }
-                WindowEvent::MouseInput {
-                    state: ElementState::Released,
-                    button,
-                    ..
-                } => {
-                    let index = self.pressed_mouse_buttons
-                        .iter()
-                        .position(|&b| b == button);
-                    if let Some(i) = index {
-                        self.pressed_mouse_buttons.swap_remove(i);
-                        self.released_mouse_buttons.push(button);
-                    }
-                }
-                WindowEvent::MouseMoved {
-                    position: (x, y),
-                    ..
-                } => {
-                    self.mouse_position = Some((x, y));
-                }
-                WindowEvent::Focused(false) => {
-                    self.pressed_keys.clear();
-                    self.pressed_mouse_buttons.clear();
-                    self.mouse_position = None;
-                }
-                _ => {}
+    }
+
+    /// Updates the input handler with a new engine event.
+    ///
+    /// The Amethyst game engine will automatically call this if the InputHandler is attached to
+    /// the world as a resource with id 0.
+    pub fn send_event(&mut self, event: &WindowEvent) {
+        match *event {
+            WindowEvent::ReceivedCharacter(c) => {
+                self.text_this_frame.push(c);
             }
+            WindowEvent::KeyboardInput {
+                input: KeyboardInput {
+                    state: ElementState::Pressed,
+                    virtual_keycode: Some(key_code),
+                    ..
+                },
+                ..
+            } => {
+                if self.pressed_keys.iter().all(|&k| k != key_code) {
+                    self.pressed_keys.push(key_code);
+                    self.down_keys.push(key_code);
+                }
+            }
+            WindowEvent::KeyboardInput {
+                input: KeyboardInput {
+                    state: ElementState::Released,
+                    virtual_keycode: Some(key_code),
+                    ..
+                },
+                ..
+            } => {
+                let index = self.pressed_keys.iter().position(|&k| k == key_code);
+                if let Some(i) = index {
+                    self.pressed_keys.swap_remove(i);
+                    self.released_keys.push(key_code);
+                }
+            }
+            WindowEvent::MouseInput {
+                state: ElementState::Pressed,
+                button,
+                ..
+            } => {
+                if self.pressed_mouse_buttons.iter().all(|&b| b != button) {
+                    self.pressed_mouse_buttons.push(button);
+                    self.down_mouse_buttons.push(button);
+                }
+            }
+            WindowEvent::MouseInput {
+                state: ElementState::Released,
+                button,
+                ..
+            } => {
+                let index = self.pressed_mouse_buttons
+                    .iter()
+                    .position(|&b| b == button);
+                if let Some(i) = index {
+                    self.pressed_mouse_buttons.swap_remove(i);
+                    self.released_mouse_buttons.push(button);
+                }
+            }
+            WindowEvent::MouseMoved {
+                position: (x, y),
+                ..
+            } => {
+                self.mouse_position = Some((x, y));
+            }
+            WindowEvent::Focused(false) => {
+                self.pressed_keys.clear();
+                self.pressed_mouse_buttons.clear();
+                self.mouse_position = None;
+            }
+            _ => {}
         }
     }
 

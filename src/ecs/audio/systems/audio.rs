@@ -7,24 +7,23 @@ use std::time::Duration;
 use cgmath::{Matrix4, Transform, Point3};
 use rodio::{SpatialSink, Source, Sample};
 
-use ecs::{Join, System, ReadStorage, WriteStorage, Entity};
+use ecs::{Fetch, Join, System, ReadStorage, WriteStorage, Entity};
 use ecs::audio::components::{AudioEmitter, AudioListener};
 use ecs::transform::Transform as TransformComponent;
 
 /// Syncs 3D transform data with the audio engine to provide 3D audio.
-pub struct AudioSystem {
-    /// Entity which contains the AudioListener component that should be played for the player.
-    pub listener: Entity,
-}
+pub struct AudioSystem;
 
 impl AudioSystem {
     /// Produces a new AudioSystem that uses the given listener.
-    pub fn new(listener: Entity) -> AudioSystem {
-        AudioSystem {
-            listener
-        }
+    pub fn new() -> AudioSystem {
+        AudioSystem
     }
 }
+
+/// Add this structure to world as a resource with ID 0 to select an entity whose AudioListener
+/// component will be used.
+pub struct SelectedListener(pub Entity);
 
 // Wraps a source and signals to another thread when that source has ended.
 struct EndSignalSource<I: Source>
@@ -81,14 +80,16 @@ where
 }
 
 impl<'a> System<'a> for AudioSystem {
-    type SystemData = (ReadStorage<'a, TransformComponent>,
+    type SystemData = (Fetch<'a, SelectedListener>,
+     ReadStorage<'a, TransformComponent>,
      ReadStorage<'a, AudioListener>,
      WriteStorage<'a, AudioEmitter>);
 
-    fn run(&mut self, (transform, listener, mut audio_emitter): Self::SystemData) {
+    fn run(&mut self, (select_listener, transform, listener, mut audio_emitter): Self::SystemData) {
+
         // Process emitters and listener.
-        if let Some(listener) = listener.get(self.listener) {
-            if let Some(listener_transform) = transform.get(self.listener) {
+        if let Some(listener) = listener.get(select_listener.0) {
+            if let Some(listener_transform) = transform.get(select_listener.0) {
                 let listener_transform = Matrix4::from(listener_transform.0);
                 let left_ear_position = listener_transform
                     .transform_point(Point3::from(listener.left_ear))
