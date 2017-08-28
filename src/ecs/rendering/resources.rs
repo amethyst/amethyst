@@ -1,3 +1,5 @@
+//! `amethyst` rendering ecs resources
+
 use std::sync::Arc;
 
 use crossbeam::sync::MsQueue;
