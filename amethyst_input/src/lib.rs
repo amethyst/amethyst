@@ -32,8 +32,10 @@ pub type MouseButtons<'a> = Iter<'a, MouseButton>;
 
 /// An iterator over buttons
 pub struct Buttons<'a> {
-    iterator: Chain<Map<Iter<'a, MouseButton>, fn(&MouseButton) -> Button>,
-        Map<Iter<'a, VirtualKeyCode>, fn(&VirtualKeyCode) -> Button>>,
+    iterator: Chain<
+        Map<Iter<'a, MouseButton>, fn(&MouseButton) -> Button>,
+        Map<Iter<'a, VirtualKeyCode>, fn(&VirtualKeyCode) -> Button>,
+    >,
 }
 
 impl<'a> Iterator for Buttons<'a> {
