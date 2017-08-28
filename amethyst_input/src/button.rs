@@ -1,18 +1,23 @@
-use winit::{VirtualKeyCode, MouseButton};
+
 
 use super::local_mouse_button::LocalMouseButton;
 use super::local_virtual_key_code::LocalVirtualKeyCode;
+use winit::{VirtualKeyCode, MouseButton};
 
 /// A Button is any kind of digital input that the engine supports.
 #[derive(Eq, PartialEq, Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum Button {
     /// Keyboard keys
-    Key(#[serde(with = "LocalVirtualKeyCode")]
-        VirtualKeyCode),
+    Key(
+        #[serde(with = "LocalVirtualKeyCode")]
+        VirtualKeyCode
+    ),
 
     /// Mouse buttons
-    Mouse(#[serde(with = "LocalMouseButton")]
-          MouseButton),
+    Mouse(
+        #[serde(with = "LocalMouseButton")]
+        MouseButton
+    ),
     //TODO: Add controller buttons here when the engine has support.
 }
 
