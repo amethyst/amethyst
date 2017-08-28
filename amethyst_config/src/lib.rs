@@ -49,7 +49,7 @@ impl fmt::Display for ConfigError {
                     path.display().to_string(),
                     found,
                 )
-            },
+            }
         }
     }
 }
@@ -92,7 +92,10 @@ impl Error for ConfigError {
 }
 
 /// Trait implemented by the `config!` macro.
-pub trait Config where Self: Sized {
+pub trait Config
+where
+    Self: Sized,
+{
     /// Loads a configuration structure from a file.
     /// Defaults if the file fails in any way.
     fn load<P: AsRef<Path>>(path: P) -> Self;
@@ -105,15 +108,15 @@ pub trait Config where Self: Sized {
 }
 
 impl<T> Config for T
-    where T: for<'a> Deserialize<'a> + Serialize + Default
+where
+    T: for<'a> Deserialize<'a> + Serialize + Default,
 {
     fn load<P: AsRef<Path>>(path: P) -> Self {
-        Self::load_no_fallback(path.as_ref())
-            .unwrap_or_else(|e| {
-                println!("1: Failed to load config: {}", e);
+        Self::load_no_fallback(path.as_ref()).unwrap_or_else(|e| {
+            println!("1: Failed to load config: {}", e);
 
-                Self::default()
-            })
+            Self::default()
+        })
     }
 
     fn load_no_fallback<P: AsRef<Path>>(path: P) -> Result<Self, ConfigError> {
