@@ -4,13 +4,14 @@ use std::sync::Arc;
 
 use rayon::ThreadPool;
 use renderer::PipelineBuilder;
-use shred::Resource;
-use winit::EventsLoop;
+use shred::{Resource, ResourceId};
+use winit::{Event, EventsLoop};
 
 use assets::{Asset, Loader, Store};
 use ecs::{Component, Dispatcher, DispatcherBuilder, System, World};
 use engine::Engine;
 use error::{Error, Result};
+use input::InputHandler;
 use state::{State, StateMachine};
 use timing::{Stopwatch, Time};
 use renderer::Config as DisplayConfig;
@@ -83,10 +84,19 @@ impl<'a, 'b> Application<'a, 'b> {
         {
             let engine = &mut self.engine;
             let states = &mut self.states;
+            if engine.world.res.has_value(ResourceId::new::<InputHandler>()) {
+                engine.world.write_resource::<InputHandler>().advance_frame();
+            }
             #[cfg(feature = "profiler")]
             profile_scope!("handle_event");
 
             self.events.poll_events(|event| {
+                if engine.world.res.has_value(ResourceId::new::<InputHandler>()) {
+                    let mut input = engine.world.write_resource::<InputHandler>();
+                    if let Event::WindowEvent {ref event, ..} = event {
+                        input.send_event(&event);
+                    }
+                }
                 states.handle_event(engine, event);
             });
         }

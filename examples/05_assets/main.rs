@@ -134,7 +134,6 @@ impl State for AssetsExample {
     }
 
     fn handle_event(&mut self, engine: &mut Engine, event: Event) -> Trans {
-        let mut input = engine.world.write_resource::<InputHandler>();
         match event {
             Event::WindowEvent { event, .. } => {
                 match event {
@@ -151,8 +150,6 @@ impl State for AssetsExample {
                         Trans::Quit
                     }
                     _ => {
-                        // If we didn't handle the event, forward it to the input handler.
-                        input.update(&[event]);
                         Trans::None
                     }
                 }
