@@ -1,4 +1,4 @@
-use event::MouseButton;
+use winit::MouseButton;
 
 #[derive(Serialize, Deserialize)]
 #[serde(remote = "MouseButton")]

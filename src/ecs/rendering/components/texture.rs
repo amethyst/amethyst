@@ -13,7 +13,7 @@ use rayon::ThreadPool;
 use assets::{Asset, AssetFuture, AssetPtr, AssetSpec, Cache, Context};
 use assets::formats::textures::ImageData;
 use ecs::{Component, VecStorage};
-use ecs::resources::{Factory, FactoryFuture};
+use ecs::rendering::resources::{Factory, FactoryFuture};
 use renderer::{Texture, TextureBuilder, Error as RendererError};
 
 

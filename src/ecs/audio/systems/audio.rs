@@ -7,10 +7,9 @@ use std::time::Duration;
 use cgmath::{Matrix4, Transform, Point3};
 use rodio::{SpatialSink, Source, Sample};
 
-
 use ecs::{Join, System, ReadStorage, WriteStorage, Entity};
-use ecs::components::{AudioEmitter, AudioListener};
-use ecs::components::Transform as TransformComponent;
+use ecs::audio::components::{AudioEmitter, AudioListener};
+use ecs::transform::Transform as TransformComponent;
 
 /// Syncs 3D transform data with the audio engine to provide 3D audio.
 pub struct AudioSystem {

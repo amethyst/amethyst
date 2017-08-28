@@ -8,18 +8,18 @@ extern crate rayon;
 
 use std::sync::Arc;
 
-//use amethyst::{Application, State, Trans, VirtualKeyCode, WindowEvent};
-use amethyst::assets::*;
-use amethyst::audio::*;
+use amethyst::assets::Loader;
+use amethyst::assets::formats::audio::OggFormat;
+use amethyst::audio::{Dj, AudioContext, Source};
 use amethyst::audio::output::{default_output, Output};
-use amethyst::audio::play::*;
+use amethyst::audio::play::play_once;
 use amethyst::prelude::*;
 use amethyst::assets::{AssetFuture, BoxedErr};
 use amethyst::ecs::{Component, Fetch, FetchMut, Join, System, VecStorage, WriteStorage};
-use amethyst::ecs::components::*;
-use amethyst::ecs::resources::input::{Bindings, InputHandler};
-use amethyst::ecs::resources::Factory;
-use amethyst::ecs::systems::{DjSystem, TransformSystem};
+use amethyst::ecs::transform::{Transform, LocalTransform, Child, Init, TransformSystem};
+use amethyst::ecs::rendering::{Factory, MeshComponent, MaterialComponent};
+use amethyst::ecs::input::{Bindings, InputHandler};
+use amethyst::ecs::audio::DjSystem;
 use amethyst::timing::Time;
 use amethyst_renderer::prelude::*;
 use amethyst_renderer::Config as DisplayConfig;
@@ -385,16 +385,16 @@ fn run() -> Result<(), amethyst::Error> {
     let mut loader = Loader::new(assets_dir, Arc::new(ThreadPool::new(Configuration::new()).unwrap()));
     loader.register(AudioContext::new());
     let bounce_sfx = loader.load("bounce",
-                                formats::audio::OggFormat)
+                                OggFormat)
         .wait().unwrap();
     let score_sfx = loader.load("score",
-                               formats::audio::OggFormat)
+                               OggFormat)
         .wait().unwrap();
     let music_1: Source = loader.load("Computer_Music_All-Stars_-_Wheres_My_Jetpack.ogg",
-                               formats::audio::OggFormat)
+                               OggFormat)
         .wait().unwrap();
     let music_2: Source = loader.load("Computer_Music_All-Stars_-_Albatross_v2.ogg",
-                               formats::audio::OggFormat)
+                               OggFormat)
         .wait().unwrap();
     let audio_output = default_output();
     let dj = match audio_output {

@@ -4,16 +4,16 @@ use winit::EventsLoop;
 
 use assets::BoxedErr;
 use ecs::{Fetch, Join, ReadStorage, System, World};
-use ecs::components::*;
-use ecs::resources::Factory;
-use ecs::resources::AmbientColor;
+use ecs::transform::components::*;
+use ecs::rendering::components::*;
+use ecs::rendering::resources::{Factory, AmbientColor};
 
 use error::{Error, Result};
 use renderer::prelude::*;
 use renderer::Config as DisplayConfig;
 use renderer::Rgba;
 
-use super::SystemExt;
+use ecs::SystemExt;
 
 /// Rendering system.
 #[derive(Derivative)]
@@ -78,7 +78,6 @@ impl<'a, 'b> SystemExt<'a, (&'b EventsLoop, PipelineBuilder, Option<DisplayConfi
 
         use cgmath::Deg;
         use renderer::{Camera, Projection};
-        use ecs::resources::Factory;
 
         let cam = Camera {
             eye: [0.0, 0.0, -4.0].into(),
