@@ -29,7 +29,9 @@ impl Format for Custom {
     type Error = NoError;
     type Result = Result<Vec<PosNormTex>, NoError>;
 
-    fn extension() -> &'static str { "custom" }
+    fn extension() -> &'static str {
+        "custom"
+    }
 
     fn parse(&self, bytes: Vec<u8>, _: &ThreadPool) -> Self::Result {
         let data: String = String::from_utf8(bytes).unwrap();
@@ -41,13 +43,17 @@ impl Format for Custom {
         for line in trimmed {
             let nums: Vec<&str> = line.split_whitespace().collect();
 
-            let vertex = [nums[0].parse::<f32>().unwrap(),
-                           nums[1].parse::<f32>().unwrap(),
-                           nums[2].parse::<f32>().unwrap()];
+            let vertex = [
+                nums[0].parse::<f32>().unwrap(),
+                nums[1].parse::<f32>().unwrap(),
+                nums[2].parse::<f32>().unwrap(),
+            ];
 
-            let normal = [nums[3].parse::<f32>().unwrap(),
-                          nums[4].parse::<f32>().unwrap(),
-                          nums[5].parse::<f32>().unwrap()];
+            let normal = [
+                nums[3].parse::<f32>().unwrap(),
+                nums[4].parse::<f32>().unwrap(),
+                nums[5].parse::<f32>().unwrap(),
+            ];
 
             result.push(PosNormTex {
                 a_position: vertex,
@@ -80,7 +86,8 @@ impl State for AssetsExample {
             trans.translation = [5.0, 0.0, 5.0];
             let mesh = load_mesh(engine, mesh, ObjFormat);
             let mtl = make_material(engine, [0.0, 0.0, 1.0, 1.0]);
-            engine.world
+            engine
+                .world
                 .create_entity()
                 .with(mesh)
                 .with(mtl)
@@ -95,13 +102,14 @@ impl State for AssetsExample {
         let mut trans = LocalTransform::default();
         trans.translation = [-5.0, 0.0, 0.0];
         trans.scale = [2.0, 2.0, 2.0];
-        engine.world
+        engine
+            .world
             .create_entity()
             .with(mesh)
             .with(mtl)
             .with(trans)
             .with(Transform::default())
-        .build();
+            .build();
 
         // Add cube to scene
         let mesh = load_mesh(engine, "cube", ObjFormat);
@@ -109,13 +117,14 @@ impl State for AssetsExample {
         let mut trans = LocalTransform::default();
         trans.translation = [5.0, 0.0, 0.0];
         trans.scale = [2.0, 2.0, 2.0];
-        engine.world
+        engine
+            .world
             .create_entity()
             .with(mesh)
             .with(mtl)
             .with(trans)
             .with(Transform::default())
-        .build();
+            .build();
 
         // Add sphere to scene
         let mesh = load_mesh(engine, "sphere", ObjFormat);
@@ -124,34 +133,29 @@ impl State for AssetsExample {
         trans.translation = [-5.0, 0.0, 7.5];
         trans.rotation = Quaternion::from(Euler::new(Deg(90.0), Deg(0.0), Deg(0.0))).into();
         trans.scale = [0.15, 0.15, 0.15];
-        engine.world
+        engine
+            .world
             .create_entity()
             .with(mesh)
             .with(mtl)
             .with(trans)
             .with(Transform::default())
-        .build();
+            .build();
     }
 
-    fn handle_event(&mut self, engine: &mut Engine, event: Event) -> Trans {
+    fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
         match event {
             Event::WindowEvent { event, .. } => {
                 match event {
                     WindowEvent::Closed |
                     WindowEvent::KeyboardInput {
-                        input: KeyboardInput {
-                            virtual_keycode: Some(VirtualKeyCode::Escape),
-                            ..
-                        },
-                        ..
+                        input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Escape), .. }, ..
                     } => {
                         // If the user pressed the escape key, or requested the window to be closed,
                         // quit the application.
                         Trans::Quit
                     }
-                    _ => {
-                        Trans::None
-                    }
+                    _ => Trans::None,
                 }
             }
             _ => Trans::None,
@@ -240,26 +244,33 @@ fn initialise_lights(world: &mut World) {
 }
 
 fn load_material<F>(engine: &mut Engine, albedo: &str, format: F) -> AssetFuture<MaterialComponent>
-    where F: Format + 'static,
-          F::Data: Into<<TextureContext as Context>::Data>,
+where
+    F: Format + 'static,
+    F::Data: Into<<TextureContext as Context>::Data>,
 {
     let future = {
         let factory = engine.world.read_resource::<Factory>();
-        factory.create_material(MaterialBuilder::new()).map_err(BoxedErr::new)
+        factory.create_material(MaterialBuilder::new()).map_err(
+            BoxedErr::new,
+        )
     }.join({
         let loader = engine.world.read_resource::<Loader>();
         loader.load_from::<TextureComponent, _, _, _>(albedo, format, "resources")
-    }).map(|(mut mtl, albedo)| {
-        mtl.albedo = albedo.0.inner();
-        MaterialComponent(mtl)
-    });
+    })
+        .map(|(mut mtl, albedo)| {
+            mtl.albedo = albedo.0.inner();
+            MaterialComponent(mtl)
+        });
     AssetFuture::from_future(future)
 }
 
-fn make_material(engine: &mut Engine, albedo: [f32;4]) -> AssetFuture<MaterialComponent> {
+fn make_material(engine: &mut Engine, albedo: [f32; 4]) -> AssetFuture<MaterialComponent> {
     let future = {
         let factory = engine.world.read_resource::<Factory>();
-        factory.create_material(MaterialBuilder::new().with_albedo(TextureBuilder::from_color_val(albedo)))
+        factory
+            .create_material(MaterialBuilder::new().with_albedo(
+                TextureBuilder::from_color_val(albedo),
+            ))
             .map(MaterialComponent)
             .map_err(BoxedErr::new)
     };
@@ -267,8 +278,9 @@ fn make_material(engine: &mut Engine, albedo: [f32;4]) -> AssetFuture<MaterialCo
 }
 
 fn load_mesh<F>(engine: &mut Engine, name: &str, f: F) -> AssetFuture<MeshComponent>
-    where F: Format + 'static,
-          F::Data: Into<<MeshContext as Context>::Data>,
+where
+    F: Format + 'static,
+    F::Data: Into<<MeshContext as Context>::Data>,
 {
     let future = {
         let loader = engine.world.read_resource::<Loader>();

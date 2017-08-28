@@ -1,14 +1,15 @@
-use std::io::Cursor;
 
-use rodio::{Decoder, Sink};
 
 use audio::{DecoderError, Source};
 use audio::output::Output;
 
+use rodio::{Decoder, Sink};
+use std::io::Cursor;
+
 /// This structure provides a way to programmatically pick and play music.
 pub struct Dj {
     sink: Sink,
-    pub(crate) picker: Option<Box<FnMut(&mut Dj) -> bool + Send + Sync>>
+    pub(crate) picker: Option<Box<FnMut(&mut Dj) -> bool + Send + Sync>>,
 }
 
 impl Dj {
@@ -37,7 +38,13 @@ impl Dj {
 
     /// Adds a source to the Dj's queue of music to play.
     pub fn append(&self, source: &Source) -> Result<(), DecoderError> {
-        self.sink.append(Decoder::new(Cursor::new(source.clone())).map_err(|_| DecoderError)?);
+        self.sink.append(
+            Decoder::new(Cursor::new(source.clone())).map_err(
+                |_| {
+                    DecoderError
+                },
+            )?,
+        );
         Ok(())
     }
 

@@ -9,12 +9,12 @@ extern crate futures;
 extern crate genmesh;
 extern crate winit;
 
-use amethyst::prelude::*;
 use amethyst::assets::{AssetFuture, BoxedErr};
 use amethyst::ecs::rendering::{Factory, MeshComponent, MaterialComponent, LightComponent};
 use amethyst::ecs::transform::Transform;
-use amethyst::renderer::prelude::*;
+use amethyst::prelude::*;
 use amethyst::renderer::Config as DisplayConfig;
+use amethyst::renderer::prelude::*;
 
 use cgmath::{Deg, Vector3};
 use cgmath::prelude::InnerSpace;
@@ -25,12 +25,13 @@ use genmesh::generators::SphereUV;
 struct Example;
 
 fn load_proc_asset<T, F>(engine: &mut Engine, f: F) -> AssetFuture<T::Item>
-    where T: IntoFuture<Error=BoxedErr>,
-          T::Future: 'static,
-          F: FnOnce(&mut Engine) -> T
+where
+    T: IntoFuture<Error = BoxedErr>,
+    T::Future: 'static,
+    F: FnOnce(&mut Engine) -> T,
 {
     let future = f(engine).into_future();
-    let future: Box<Future<Item=T::Item, Error=BoxedErr>> = Box::new(future);
+    let future: Box<Future<Item = T::Item, Error = BoxedErr>> = Box::new(future);
     AssetFuture(future.shared())
 }
 
@@ -43,10 +44,9 @@ impl State for Example {
 
         let mesh = load_proc_asset(engine, move |engine| {
             let factory = engine.world.read_resource::<Factory>();
-            factory
-                .create_mesh(mesh)
-                .map(MeshComponent::new)
-                .map_err(BoxedErr::new)
+            factory.create_mesh(mesh).map(MeshComponent::new).map_err(
+                BoxedErr::new,
+            )
         });
 
         let mtl = load_proc_asset(engine, move |engine| {
@@ -57,19 +57,25 @@ impl State for Example {
                 .map_err(BoxedErr::new)
         });
 
-        engine.world.create_entity()
+        engine
+            .world
+            .create_entity()
             .with(Transform::default())
             .with(mesh)
             .with(mtl)
             .build();
 
-        engine.world.create_entity()
-            .with(LightComponent(PointLight {
-                center: [2.0, 2.0, 2.0].into(),
-                radius: 5.0,
-                intensity: 3.0,
-                ..Default::default()
-            }.into()))
+        engine
+            .world
+            .create_entity()
+            .with(LightComponent(
+                PointLight {
+                    center: [2.0, 2.0, 2.0].into(),
+                    radius: 5.0,
+                    intensity: 3.0,
+                    ..Default::default()
+                }.into(),
+            ))
             .build();
 
         engine.world.add_resource(Camera {
@@ -83,14 +89,15 @@ impl State for Example {
 
     fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
         match event {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::KeyboardInput {
-                    input: KeyboardInput {
-                        virtual_keycode: Some(VirtualKeyCode::Escape), ..
-                    }, ..
-                } | WindowEvent::Closed => Trans::Quit,
-                _ => Trans::None,
-            },
+            Event::WindowEvent { event, .. } => {
+                match event {
+                    WindowEvent::KeyboardInput {
+                        input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Escape), .. }, ..
+                    } |
+                    WindowEvent::Closed => Trans::Quit,
+                    _ => Trans::None,
+                }
+            }
             _ => Trans::None,
         }
     }
@@ -98,16 +105,19 @@ impl State for Example {
 
 
 fn run() -> Result<(), amethyst::Error> {
-    let path = format!("{}/examples/02_sphere/resources/config.ron",
-                       env!("CARGO_MANIFEST_DIR"));
+    let path = format!(
+        "{}/examples/02_sphere/resources/config.ron",
+        env!("CARGO_MANIFEST_DIR")
+    );
     let config = DisplayConfig::load(&path);
     let mut game = Application::build(Example)?
-        .with_renderer(Pipeline::build()
-            .with_stage(Stage::with_backbuffer()
-                .clear_target([0.00196, 0.23726, 0.21765, 1.0], 1.0)
-                .with_model_pass(pass::DrawFlat::<PosNormTex>::new())
+        .with_renderer(
+            Pipeline::build().with_stage(
+                Stage::with_backbuffer()
+                    .clear_target([0.00196, 0.23726, 0.21765, 1.0], 1.0)
+                    .with_model_pass(pass::DrawFlat::<PosNormTex>::new()),
             ),
-            Some(config)
+            Some(config),
         )?
         .build()?;
     Ok(game.run())

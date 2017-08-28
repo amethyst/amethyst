@@ -6,12 +6,12 @@ mod audio_context;
 mod dj;
 mod source;
 
-use std::error::Error;
-use std::fmt::{Display, Formatter, Result as FmtResult};
 
 pub use self::audio_context::AudioContext;
 pub use self::dj::Dj;
 pub use self::source::Source;
+use std::error::Error;
+use std::fmt::{Display, Formatter, Result as FmtResult};
 
 /// An error occurred while decoding the source.
 #[derive(Debug)]

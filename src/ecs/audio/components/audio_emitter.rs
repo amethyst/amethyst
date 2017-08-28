@@ -1,18 +1,19 @@
-use std::io::Cursor;
-use std::sync::Arc;
-use std::sync::atomic::AtomicBool;
 
-use smallvec::SmallVec;
-use rodio::{Decoder, SpatialSink};
 
 use audio::{DecoderError, Source};
 use ecs::{Component, BTreeStorage};
+use rodio::{Decoder, SpatialSink};
+
+use smallvec::SmallVec;
+use std::io::Cursor;
+use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
 
 /// An audio source, add this component to anything that emits sound.
 pub struct AudioEmitter {
     pub(crate) sinks: SmallVec<[(SpatialSink, Arc<AtomicBool>); 4]>,
     pub(crate) sound_queue: SmallVec<[Decoder<Cursor<Source>>; 4]>,
-    pub(crate) picker: Option<Box<FnMut(&mut AudioEmitter) -> bool + Send + Sync>>
+    pub(crate) picker: Option<Box<FnMut(&mut AudioEmitter) -> bool + Send + Sync>>,
 }
 
 impl AudioEmitter {

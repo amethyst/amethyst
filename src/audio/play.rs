@@ -1,13 +1,13 @@
 //! Provides functions used to play audio.
 
-use rodio::play_once as rplay_once;
-use rodio::Decoder;
-
-use std::io::Cursor;
+use super::DecoderError;
+use super::output::Output;
 
 use super::source::Source;
-use super::output::Output;
-use super::DecoderError;
+use rodio::Decoder;
+use rodio::play_once as rplay_once;
+
+use std::io::Cursor;
 
 /// Play a sound once.
 ///
@@ -22,7 +22,7 @@ pub fn try_play_once(source: &Source, endpoint: &Output) -> Result<(), DecoderEr
         /// There is one and only one error that can be returned, which is unrecognized format
         /// See documentation for DecoderError here:
         /// https://docs.rs/rodio/0.5.1/rodio/decoder/enum.DecoderError.html
-        Err(err) =>  {
+        Err(err) => {
             eprintln!("Error while playing sound: {:?}", err);
             Err(DecoderError)
         }
@@ -53,7 +53,9 @@ pub fn try_play_n_times(source: &Source, endpoint: &Output, n: u16) -> Result<()
         match rplay_once(&endpoint.endpoint, Cursor::new(source.clone())) {
             Ok(sink) => {
                 for _ in 1..n {
-                    sink.append(Decoder::new(Cursor::new(source.clone())).map_err(|_| DecoderError)?);
+                    sink.append(Decoder::new(Cursor::new(source.clone())).map_err(
+                        |_| DecoderError,
+                    )?);
                 }
                 sink.detach();
                 return Ok(());
@@ -62,7 +64,7 @@ pub fn try_play_n_times(source: &Source, endpoint: &Output, n: u16) -> Result<()
             /// There is one and only one error that can be returned, which is unrecognized format
             /// See documentation for DecoderError here:
             /// https://docs.rs/rodio/0.5.1/rodio/decoder/enum.DecoderError.html
-            Err(err) =>  {
+            Err(err) => {
                 eprintln!("Error while playing sound: {:?}", err);
                 return Err(DecoderError);
             }

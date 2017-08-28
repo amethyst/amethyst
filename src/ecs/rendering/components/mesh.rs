@@ -1,12 +1,12 @@
 //! Mesh resource handling.
 
-use futures::{Async, Future, Poll};
-use rayon::ThreadPool;
 
 
 use assets::{Asset, AssetFuture, AssetPtr, AssetSpec, Cache, Context};
 use ecs::{Component, VecStorage};
 use ecs::rendering::resources::{Factory, FactoryFuture};
+use futures::{Async, Future, Poll};
+use rayon::ThreadPool;
 use renderer::{Mesh, MeshBuilder, Error as RendererError};
 use renderer::vertex::*;
 
@@ -157,13 +157,15 @@ impl Context for MeshContext {
 
     fn update(&self, spec: &AssetSpec, asset: AssetFuture<MeshComponent>) {
         if let Some(asset) = self.cache
-               .access(spec, |a| match a.peek() {
-            Some(Ok(a)) => {
-                a.0.push_update(asset);
-                None
-            }
-            _ => Some(asset),
-        }).and_then(|a| a) {
+            .access(spec, |a| match a.peek() {
+                Some(Ok(a)) => {
+                    a.0.push_update(asset);
+                    None
+                }
+                _ => Some(asset),
+            })
+            .and_then(|a| a)
+        {
             self.cache.insert(spec.clone(), asset);
         }
     }
@@ -179,9 +181,3 @@ impl Context for MeshContext {
         self.cache.clear_all();
     }
 }
-
-
-
-
-
-
