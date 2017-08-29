@@ -2,9 +2,10 @@
 //!
 //! TODO: Remove redundant padding once `#[repr(align(...))]` stabilizes.
 
-use cgmath::{Deg, Point3, Vector3};
-use color::Rgba;
 use gfx;
+use cgmath::{Deg, Point3, Vector3};
+
+use color::Rgba;
 
 /// A light source.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]

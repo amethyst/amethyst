@@ -1,11 +1,12 @@
 //! Renderer error types.
 
-use gfx;
-use gfx_core;
 use std::error::Error as StdError;
 use std::fmt::{Display, Formatter};
 use std::fmt::Result as FmtResult;
 use std::result::Result as StdResult;
+
+use gfx;
+use gfx_core;
 
 /// Renderer result type.
 pub type Result<T> = StdResult<T, Error>;

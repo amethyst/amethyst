@@ -1,10 +1,11 @@
 //! Built-in vertex formats.
 
+use std::any::Any;
+
 use gfx;
 use gfx::format::Format;
 use gfx::pso::buffer::Structure;
 use gfx::traits::Pod;
-use std::any::Any;
 
 /// Handle to a vertex attribute.
 pub type Attribute = gfx::pso::buffer::Element<Format>;

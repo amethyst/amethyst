@@ -2,11 +2,13 @@
 
 pub use gfx::texture::{FilterMethod, WrapMode};
 
+use std::marker::PhantomData;
+
 use error::Result;
 use gfx::format::SurfaceType;
 use gfx::texture::{Info, SamplerInfo};
 use gfx::traits::Pod;
-use std::marker::PhantomData;
+
 use types::{Factory, RawShaderResourceView, RawTexture, Sampler};
 
 /// Handle to a GPU texture resource.
@@ -52,18 +54,21 @@ impl TextureBuilder<[u8; 4], u8> {
     /// Creates a new `TextureBuilder` from the given RGBA color value.
     pub fn from_color_val<C: Into<[f32; 4]>>(rgba: C) -> Self {
         let color = rgba.into();
-        let data: [u8; 4] = [(color[0] * 255.0) as u8,
-                                   (color[1] * 255.0) as u8,
-                                   (color[2] * 255.0) as u8,
-                                   (color[3] * 255.0) as u8];
+        let data: [u8; 4] = [
+            (color[0] * 255.0) as u8,
+            (color[1] * 255.0) as u8,
+            (color[2] * 255.0) as u8,
+            (color[3] * 255.0) as u8,
+        ];
 
         TextureBuilder::new(data)
     }
 }
 
 impl<D, T> TextureBuilder<D, T>
-    where D: AsRef<[T]>,
-          T: Pod,
+where
+    D: AsRef<[T]>,
+    T: Pod,
 {
     /// Creates a new `TextureBuilder` with the given raw texture data.
     pub fn new(data: D) -> Self {
@@ -121,7 +126,11 @@ impl<D, T> TextureBuilder<D, T>
         use gfx::texture::ResourceDesc;
 
         let chan = ChannelType::Srgb;
-        let tex = fac.create_texture_raw(self.info, Some(chan), Some(&[cast_slice(self.data.as_ref())]))?;
+        let tex = fac.create_texture_raw(
+            self.info,
+            Some(chan),
+            Some(&[cast_slice(self.data.as_ref())]),
+        )?;
 
         let desc = ResourceDesc {
             channel: ChannelType::Srgb,

@@ -19,15 +19,15 @@ fn main() {
     while running {
         let start = Instant::now();
 
-        events.poll_events(|e| {
-            match e {
-                Event::WindowEvent { event, .. } => match event {
+        events.poll_events(|e| match e {
+            Event::WindowEvent { event, .. } => {
+                match event {
                     WindowEvent::KeyboardInput { .. } |
                     WindowEvent::Closed => running = false,
                     _ => (),
-                },
-                _ => (),
+                }
             }
+            _ => (),
         });
 
         renderer.draw(&scene, &pipe, delta);

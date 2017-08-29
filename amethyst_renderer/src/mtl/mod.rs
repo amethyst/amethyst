@@ -1,7 +1,8 @@
 //! Physically-based material.
 
-use error::Result;
 use gfx::traits::Pod;
+
+use error::Result;
 use tex::{Texture, TextureBuilder};
 use types::Factory;
 
@@ -36,8 +37,24 @@ pub struct MaterialBuilder<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, T
     caveat: TextureBuilder<DC, TC>,
 }
 
-impl MaterialBuilder<[u8; 4], u8, [u8; 4], u8, [u8; 4], u8, [u8; 4], u8, [u8; 4], u8, [u8; 4], u8, [u8; 4], u8> {
-   /// Creates a new material builder.
+impl
+    MaterialBuilder<
+        [u8; 4],
+        u8,
+        [u8; 4],
+        u8,
+        [u8; 4],
+        u8,
+        [u8; 4],
+        u8,
+        [u8; 4],
+        u8,
+        [u8; 4],
+        u8,
+        [u8; 4],
+        u8,
+    > {
+    /// Creates a new material builder.
     pub fn new() -> Self {
         MaterialBuilder {
             albedo: TextureBuilder::from_color_val([0.0, 0.0, 0.5, 1.0]),
@@ -49,11 +66,15 @@ impl MaterialBuilder<[u8; 4], u8, [u8; 4], u8, [u8; 4], u8, [u8; 4], u8, [u8; 4]
             caveat: TextureBuilder::from_color_val([1.0; 4]),
         }
     }
-} 
+}
 
-impl<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC> MaterialBuilder<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC> {
+impl<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC>
+    MaterialBuilder<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC> {
     /// Sets the albedo to an existing texture map.
-    pub fn with_albedo<Y, U>(self, tex: TextureBuilder<Y, U>) -> MaterialBuilder<Y, U, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC> {
+    pub fn with_albedo<Y, U>(
+        self,
+        tex: TextureBuilder<Y, U>,
+    ) -> MaterialBuilder<Y, U, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC> {
         MaterialBuilder {
             albedo: tex,
             emission: self.emission,
@@ -66,7 +87,10 @@ impl<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC> MaterialBuilder<DA,
     }
 
     /// Sets the emission to an existing texture map.
-    pub fn with_emission<Y, U>(self, tex: TextureBuilder<Y, U>) -> MaterialBuilder<DA, TA, Y, U, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC> {
+    pub fn with_emission<Y, U>(
+        self,
+        tex: TextureBuilder<Y, U>,
+    ) -> MaterialBuilder<DA, TA, Y, U, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC> {
         MaterialBuilder {
             albedo: self.albedo,
             emission: tex,
@@ -79,7 +103,10 @@ impl<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC> MaterialBuilder<DA,
     }
 
     /// Sets the normal to an existing texture map.
-    pub fn with_normal<Y, U>(self, tex: TextureBuilder<Y, U>) -> MaterialBuilder<DA, TA, DE, TE, Y, U, DM, TM, DR, TR, DO, TO, DC, TC> {
+    pub fn with_normal<Y, U>(
+        self,
+        tex: TextureBuilder<Y, U>,
+    ) -> MaterialBuilder<DA, TA, DE, TE, Y, U, DM, TM, DR, TR, DO, TO, DC, TC> {
         MaterialBuilder {
             albedo: self.albedo,
             emission: self.emission,
@@ -92,7 +119,10 @@ impl<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC> MaterialBuilder<DA,
     }
 
     /// Sets the metallic to an existing texture map.
-    pub fn with_metallic<Y, U>(self, tex: TextureBuilder<Y, U>) -> MaterialBuilder<DA, TA, DE, TE, DN, TN, Y, U, DR, TR, DO, TO, DC, TC> {
+    pub fn with_metallic<Y, U>(
+        self,
+        tex: TextureBuilder<Y, U>,
+    ) -> MaterialBuilder<DA, TA, DE, TE, DN, TN, Y, U, DR, TR, DO, TO, DC, TC> {
         MaterialBuilder {
             albedo: self.albedo,
             emission: self.emission,
@@ -105,7 +135,10 @@ impl<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC> MaterialBuilder<DA,
     }
 
     /// Sets the roughness to an existing texture map.
-    pub fn with_roughness<Y, U>(self, tex: TextureBuilder<Y, U>) -> MaterialBuilder<DA, TA, DE, TE, DN, TN, DM, TM, Y, U, DO, TO, DC, TC> {
+    pub fn with_roughness<Y, U>(
+        self,
+        tex: TextureBuilder<Y, U>,
+    ) -> MaterialBuilder<DA, TA, DE, TE, DN, TN, DM, TM, Y, U, DO, TO, DC, TC> {
         MaterialBuilder {
             albedo: self.albedo,
             emission: self.emission,
@@ -118,7 +151,10 @@ impl<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC> MaterialBuilder<DA,
     }
 
     /// Sets the ambient_occlusion to an existing texture map.
-    pub fn with_ambient_occlusion<Y, U>(self, tex: TextureBuilder<Y, U>) -> MaterialBuilder<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, Y, U, DC, TC> {
+    pub fn with_ambient_occlusion<Y, U>(
+        self,
+        tex: TextureBuilder<Y, U>,
+    ) -> MaterialBuilder<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, Y, U, DC, TC> {
         MaterialBuilder {
             albedo: self.albedo,
             emission: self.emission,
@@ -131,7 +167,10 @@ impl<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC> MaterialBuilder<DA,
     }
 
     /// Sets the caveat to an existing texture map.
-    pub fn with_caveat<Y, U>(self, tex: TextureBuilder<Y, U>) -> MaterialBuilder<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, Y, U> {
+    pub fn with_caveat<Y, U>(
+        self,
+        tex: TextureBuilder<Y, U>,
+    ) -> MaterialBuilder<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, Y, U> {
         MaterialBuilder {
             albedo: self.albedo,
             emission: self.emission,
@@ -145,20 +184,21 @@ impl<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC> MaterialBuilder<DA,
 
     /// Builds and returns the new material.
     pub fn build(self, fac: &mut Factory) -> Result<Material>
-        where DA: AsRef<[TA]>,
-              TA: Pod,
-              DE: AsRef<[TE]>,
-              TE: Pod,
-              DN: AsRef<[TN]>,
-              TN: Pod,
-              DM: AsRef<[TM]>,
-              TM: Pod,
-              DR: AsRef<[TR]>,
-              TR: Pod,
-              DO: AsRef<[TO]>,
-              TO: Pod,
-              DC: AsRef<[TC]>,
-              TC: Pod,
+    where
+        DA: AsRef<[TA]>,
+        TA: Pod,
+        DE: AsRef<[TE]>,
+        TE: Pod,
+        DN: AsRef<[TN]>,
+        TN: Pod,
+        DM: AsRef<[TM]>,
+        TM: Pod,
+        DR: AsRef<[TR]>,
+        TR: Pod,
+        DO: AsRef<[TO]>,
+        TO: Pod,
+        DC: AsRef<[TC]>,
+        TC: Pod,
     {
         Ok(Material {
             albedo: self.albedo.build(fac)?,

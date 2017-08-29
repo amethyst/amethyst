@@ -5,7 +5,7 @@ extern crate cgmath;
 extern crate genmesh;
 extern crate winit;
 
-use cgmath::{Matrix4, Deg, Vector3};
+use cgmath::{Deg, Matrix4, Vector3};
 use cgmath::prelude::InnerSpace;
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
@@ -18,33 +18,47 @@ fn main() {
 
     let mut events = EventsLoop::new();
     let mut renderer = Renderer::new(&events).expect("Renderer create");
-    let pipe = renderer.create_pipe(
-        Pipeline::build()
-            .with_stage(Stage::with_backbuffer()
-                .clear_target([0.0, 0.0, 0.0, 1.0], 2.0)
-                .with_model_pass(pass::DrawShaded::<PosNormTangTex>::new())))
-            .expect("Pipeline create");
+    let pipe = renderer
+        .create_pipe(
+            Pipeline::build().with_stage(
+                Stage::with_backbuffer()
+                    .clear_target([0.0, 0.0, 0.0, 1.0], 2.0)
+                    .with_model_pass(pass::DrawShaded::<PosNormTangTex>::new()),
+            ),
+        )
+        .expect("Pipeline create");
 
     let verts = gen_sphere(64, 64);
-    let mesh = renderer.create_mesh(Mesh::build(&verts)).expect("Mesh create");
+    let mesh = renderer.create_mesh(Mesh::build(&verts)).expect(
+        "Mesh create",
+    );
 
     let mut scene = Scene::default();
     let alb = Texture::from_color_val([1.0; 4]);
-            
+
     for i in 0..5 {
         for j in 0..5 {
             let roughness = 1.0f32 * (i as f32 / 4.0f32);
             let metallic = 1.0f32 * (j as f32 / 4.0f32);
-            let pos = Matrix4::from_translation([2.0f32 * (i - 2) as f32, 2.0f32 * (j - 2) as f32, 0.0].into()) * Matrix4::from_scale(0.8);
+            let pos = Matrix4::from_translation(
+                [2.0f32 * (i - 2) as f32, 2.0f32 * (j - 2) as f32, 0.0].into(),
+            ) * Matrix4::from_scale(0.8);
 
             let rog = Texture::from_color_val([roughness; 4]);
             let met = Texture::from_color_val([metallic; 4]);
-            let mtl = renderer.create_material(MaterialBuilder::new()
-                .with_albedo(alb.clone())
-                .with_roughness(rog)
-                .with_metallic(met))
+            let mtl = renderer
+                .create_material(
+                    MaterialBuilder::new()
+                        .with_albedo(alb.clone())
+                        .with_roughness(rog)
+                        .with_metallic(met),
+                )
                 .expect("Material create");
-            let model = Model { mesh: mesh.clone(), material: mtl, pos: pos };
+            let model = Model {
+                mesh: mesh.clone(),
+                material: mtl,
+                pos: pos,
+            };
             scene.add_model(model);
         }
     }
@@ -78,15 +92,15 @@ fn main() {
     while running {
         let start = Instant::now();
 
-        events.poll_events(|e| {
-            match e {
-                Event::WindowEvent { event, .. } => match event {
+        events.poll_events(|e| match e {
+            Event::WindowEvent { event, .. } => {
+                match event {
                     WindowEvent::KeyboardInput { .. } |
                     WindowEvent::Closed => running = false,
                     _ => (),
-                },
-                _ => (),
+                }
             }
+            _ => (),
         });
 
         renderer.draw(&scene, &pipe, delta);
