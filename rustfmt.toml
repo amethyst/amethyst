@@ -1,1 +1,3 @@
 reorder_imports = true
+reorder_import_names = true
+reorder_imports_in_group = true

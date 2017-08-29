@@ -1,7 +1,7 @@
-
-use AssetSpec;
 use fnv::FnvHashMap;
 use parking_lot::RwLock;
+
+use AssetSpec;
 
 /// A basic implementation for a cache. This might be useful as the `Context` of
 /// an `Asset`, so that the same asset doesn't get imported twice.
@@ -13,8 +13,8 @@ pub struct Cache<T> {
 }
 
 impl<T> Cache<T>
-    where
-        T: Clone,
+where
+    T: Clone,
 {
     /// Creates a new `Cache` and initializes it with the default values.
     pub fn new() -> Self {
@@ -51,8 +51,8 @@ impl<T> Cache<T>
     ///
     /// Blocks the calling thread for getting write access to the hash map.
     pub fn retain<F>(&self, f: F)
-        where
-            F: FnMut(&AssetSpec, &mut T) -> bool,
+    where
+        F: FnMut(&AssetSpec, &mut T) -> bool,
     {
         self.map.write().retain(f);
     }

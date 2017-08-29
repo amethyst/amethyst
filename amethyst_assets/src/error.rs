@@ -1,8 +1,9 @@
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 
-use asset::AssetSpec;
 use futures::future::SharedError;
+
+use asset::AssetSpec;
 
 /// Error type returned when loading an asset.
 /// Includes the `AssetSpec` and the error (`LoadError`).
@@ -21,17 +22,20 @@ impl<A, F, S> AssetError<A, F, S> {
 }
 
 impl<A, F, S> Display for AssetError<A, F, S>
-    where A: Display,
-          F: Display,
-          S: Display
+where
+    A: Display,
+    F: Display,
+    S: Display,
 {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
-        write!(f,
-               "Failed to load asset \"{}\" of format \"{}\" from storage with id \"{}\": {}",
-               &self.asset.name,
-               &self.asset.ext,
-               &self.asset.store.id(),
-               &self.error)
+        write!(
+            f,
+            "Failed to load asset \"{}\" of format \"{}\" from storage with id \"{}\": {}",
+            &self.asset.name,
+            &self.asset.ext,
+            &self.asset.store.id(),
+            &self.error
+        )
     }
 }
 
@@ -49,9 +53,10 @@ pub enum LoadError<A, F, S> {
 }
 
 impl<A, F, S> Display for LoadError<A, F, S>
-    where A: Display,
-          F: Display,
-          S: Display
+where
+    A: Display,
+    F: Display,
+    S: Display,
 {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         match *self {
@@ -63,9 +68,10 @@ impl<A, F, S> Display for LoadError<A, F, S>
 }
 
 impl<A, F, S> Error for AssetError<A, F, S>
-    where A: Error,
-          F: Error,
-          S: Error
+where
+    A: Error,
+    F: Error,
+    S: Error,
 {
     fn description(&self) -> &str {
         "Failed to load asset"
@@ -77,9 +83,10 @@ impl<A, F, S> Error for AssetError<A, F, S>
 }
 
 impl<A, F, S> Error for LoadError<A, F, S>
-    where A: Error,
-          F: Error,
-          S: Error
+where
+    A: Error,
+    F: Error,
+    S: Error,
 {
     fn cause(&self) -> Option<&Error> {
         let cause: &Error = match *self {
@@ -129,7 +136,8 @@ impl<E> AsRef<E> for SharedAssetError<E> {
 }
 
 impl<E> Error for SharedAssetError<E>
-    where E: Error,
+where
+    E: Error,
 {
     fn description(&self) -> &str {
         self.as_ref().description()
@@ -141,7 +149,8 @@ impl<E> Error for SharedAssetError<E>
 }
 
 impl<E> Debug for SharedAssetError<E>
-    where E: Debug
+where
+    E: Debug,
 {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         self.as_ref().fmt(f)
@@ -149,7 +158,8 @@ impl<E> Debug for SharedAssetError<E>
 }
 
 impl<E> Display for SharedAssetError<E>
-    where E: Display
+where
+    E: Display,
 {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         self.as_ref().fmt(f)

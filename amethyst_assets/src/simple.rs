@@ -1,8 +1,6 @@
 //! Offers simple implementations which are applicable for
 //! many use-cases.
 
-use futures::Future;
-
 use std::borrow::Cow;
 use std::error::Error;
 use std::marker::PhantomData;
@@ -10,6 +8,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use futures::{Async, IntoFuture};
+use futures::Future;
 use parking_lot::RwLock;
 use rayon::ThreadPool;
 
@@ -32,8 +31,9 @@ impl<A, W> AssetUpdate<A, W> {
 }
 
 impl<A, W> AssetUpdate<A, W>
-    where A: Clone,
-          W: AsRef<A> + Clone,
+where
+    A: Clone,
+    W: AsRef<A> + Clone,
 {
     fn push_update(&self, mut updated: AssetFuture<W>) {
         match updated.poll() {
@@ -41,17 +41,18 @@ impl<A, W> AssetUpdate<A, W>
                 *self.ready.write() = Some(updated.as_ref().clone());
                 self.counter.fetch_add(1, Ordering::Release);
             }
-            Err(_) => {},
+            Err(_) => {}
             Ok(Async::NotReady) => {
                 let last = {
-                    let defer_lock = &mut*self.defer.write();
+                    let defer_lock = &mut *self.defer.write();
                     let last = defer_lock.take();
                     *defer_lock = Some(updated);
                     last
                 };
                 if let Some(mut last) = last {
                     match last.poll() {
-                        Err(_) | Ok(Async::NotReady) => {}
+                        Err(_) |
+                        Ok(Async::NotReady) => {}
                         Ok(Async::Ready(updated)) => {
                             *self.ready.write() = Some(updated.as_ref().clone());
                         }
@@ -65,13 +66,11 @@ impl<A, W> AssetUpdate<A, W>
     fn updated(&self, count: usize) -> Option<(A, usize)> {
         let new = self.counter.load(Ordering::Acquire);
         if new > count {
-            match self.defer.read().as_ref().map(AssetFuture::peek).and_then(|a|a) {
-                Some(Ok(updated)) => {
-                    Some((updated.as_ref().clone(), new))
-                }
-                Some(Err(_)) | None => {
-                    self.ready.read().as_ref().map(|a| (a.clone(), new))
-                }
+            match self.defer.read().as_ref().map(AssetFuture::peek).and_then(
+                |a| a,
+            ) {
+                Some(Ok(updated)) => Some((updated.as_ref().clone(), new)),
+                Some(Err(_)) | None => self.ready.read().as_ref().map(|a| (a.clone(), new)),
             }
         } else {
             None
@@ -135,8 +134,9 @@ impl<A, W> AssetPtr<A, W> {
 }
 
 impl<A, W> AssetPtr<A, W>
-    where A: Clone,
-          W: AsRef<A> + Clone,
+where
+    A: Clone,
+    W: AsRef<A> + Clone,
 {
     /// Pushes an update to the shared update container;
     /// this update can then be applied to all asset pointers by calling
@@ -189,12 +189,16 @@ impl<A, D, T> SimpleContext<A, D, T> {
 }
 
 unsafe impl<A, D, T> Send for SimpleContext<A, D, T>
-    where T: Send,
-{}
+where
+    T: Send,
+{
+}
 
 unsafe impl<A, D, T> Sync for SimpleContext<A, D, T>
-    where T: Sync,
-{}
+where
+    T: Sync,
+{
+}
 
 impl<A, D, E, R, T> Context for SimpleContext<A, D, T>
     where A: Clone,
