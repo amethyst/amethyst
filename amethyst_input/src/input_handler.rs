@@ -1,8 +1,9 @@
 //! World resource that handles all user input.
 
-use super::*;
 use smallvec::SmallVec;
 use winit::{ElementState, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
+
+use super::*;
 
 /// This struct holds state information about input devices.
 ///
