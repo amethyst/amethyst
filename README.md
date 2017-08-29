@@ -80,20 +80,6 @@ project with `cargo` and build it. Follow along below:
 
 [gs]: https://www.amethyst.rs/book/getting_started.html
 
-```
-$ cargo new mygame --template https://github.com/amethyst/project_template
-$ cd mygame
-$ cargo run
-```
-
-If everything goes well, you should see the following print out to the terminal:
-
-```
-Game started!
-Hello from Amethyst!
-Game stopped!
-```
-
 ## Building Documentation
 
 You can build the book locally with:
