@@ -1,9 +1,11 @@
 //! Engine context passed into the active game state.
 
-use ecs::World;
-use rayon::ThreadPool;
 use std::sync::Arc;
 use std::time::Duration;
+
+use rayon::ThreadPool;
+
+use ecs::World;
 
 /// User-facing engine handle.
 pub struct Engine {

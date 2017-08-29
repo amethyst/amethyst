@@ -1,23 +1,22 @@
 //! The core engine framework.
 
+use std::sync::Arc;
+
+use input::InputHandler;
+use rayon::ThreadPool;
+use renderer::Config as DisplayConfig;
+use renderer::PipelineBuilder;
+use shred::{Resource, ResourceId};
+#[cfg(feature = "profiler")]
+use thread_profiler::{register_thread_with_profiler, write_profile};
+use winit::{Event, EventsLoop};
 
 use assets::{Asset, Loader, Store};
 use ecs::{Component, Dispatcher, DispatcherBuilder, System, World};
 use engine::Engine;
 use error::{Error, Result};
-use input::InputHandler;
-
-use rayon::ThreadPool;
-use renderer::Config as DisplayConfig;
-use renderer::PipelineBuilder;
-use shred::{Resource, ResourceId};
 use state::{State, StateMachine};
-use std::sync::Arc;
-
-#[cfg(feature = "profiler")]
-use thread_profiler::{register_thread_with_profiler, write_profile};
 use timing::{Stopwatch, Time};
-use winit::{Event, EventsLoop};
 
 /// User-friendly facade for building games. Manages main loop.
 #[derive(Derivative)]

@@ -1,7 +1,8 @@
 //! Light resource handling.
 
-use ecs::{Component, VecStorage};
 use renderer::prelude::Light;
+
+use ecs::{Component, VecStorage};
 
 /// Wraps `Light` into component
 pub struct LightComponent(pub Light);

@@ -1,13 +1,13 @@
 //! Engine error types.
 
-use config::ConfigError;
-
-use specs::common::BoxedErr;
-
 use std::error::Error as StdError;
 use std::fmt::{Display, Formatter};
 use std::fmt::Result as FmtResult;
 use std::result::Result as StdResult;
+
+use specs::common::BoxedErr;
+
+use config::ConfigError;
 
 /// Engine result type.
 pub type Result<T> = StdResult<T, Error>;

@@ -1,7 +1,8 @@
 //! Graphical texture resource.
 
-use ecs::{Component, VecStorage};
 use renderer::Material;
+
+use ecs::{Component, VecStorage};
 
 /// Wraps `Material` into component
 #[derive(Clone, Debug)]

@@ -1,13 +1,12 @@
-
-
-use audio::{DecoderError, Source};
-use ecs::{Component, BTreeStorage};
-use rodio::{Decoder, SpatialSink};
-
-use smallvec::SmallVec;
 use std::io::Cursor;
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
+
+use rodio::{Decoder, SpatialSink};
+use smallvec::SmallVec;
+
+use audio::{DecoderError, Source};
+use ecs::{Component, BTreeStorage};
 
 /// An audio source, add this component to anything that emits sound.
 pub struct AudioEmitter {
@@ -40,7 +39,8 @@ impl AudioEmitter {
     /// An emitter's picker will be called by the AudioSystem whenever the emitter runs out of
     /// sounds to play.
     ///
-    /// During callback the picker is separated from the emitter in order to avoid multiple aliasing.
+    /// During callback the picker is separated from the emitter in order to avoid multiple
+    /// aliasing.
     /// After the callback is complete, if the picker returned true then the
     /// picker that just finished will be reattached.
     pub fn set_picker(&mut self, picker: Box<FnMut(&mut AudioEmitter) -> bool + Send + Sync>) {

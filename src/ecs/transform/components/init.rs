@@ -1,6 +1,4 @@
-extern crate specs;
-
-use self::specs::{Component, NullStorage};
+use ecs::{Component, NullStorage};
 
 /// Initialization flag.
 /// Added to entity with a `LocalTransform` component after the first update.

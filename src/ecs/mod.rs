@@ -7,8 +7,6 @@ pub mod transform;
 pub mod rendering;
 pub mod audio;
 
-// use config::Config;
-
 use error::Result;
 
 /// Extension trait for all systems.

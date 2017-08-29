@@ -1,10 +1,11 @@
 //! Provides a context for loading a file.
 
-use super::source::Source;
-use assets::*;
+use std::sync::Arc;
+
 use rayon::ThreadPool;
 
-use std::sync::Arc;
+use super::source::Source;
+use assets::*;
 
 /// A context for loading audio files
 pub struct AudioContext {

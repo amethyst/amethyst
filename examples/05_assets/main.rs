@@ -18,12 +18,12 @@ use amethyst::ecs::transform::{LocalTransform, Transform};
 use amethyst::prelude::*;
 use amethyst::renderer::{Camera, Rgba, Config as DisplayConfig};
 use amethyst::renderer::prelude::*;
-
 use cgmath::{Deg, Euler, Quaternion};
 use futures::Future;
 use rayon::ThreadPool;
 
 struct Custom;
+
 impl Format for Custom {
     type Data = Vec<PosNormTex>;
     type Error = NoError;

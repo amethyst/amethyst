@@ -15,7 +15,6 @@ use amethyst::ecs::transform::Transform;
 use amethyst::prelude::*;
 use amethyst::renderer::Config as DisplayConfig;
 use amethyst::renderer::prelude::*;
-
 use cgmath::{Deg, Vector3};
 use cgmath::prelude::InnerSpace;
 use futures::{Future, IntoFuture};

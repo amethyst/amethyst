@@ -1,16 +1,15 @@
-
-
-use cgmath::{Matrix4, Transform, Point3};
-
-use ecs::{Fetch, Join, System, ReadStorage, WriteStorage, Entity};
-use ecs::audio::components::{AudioEmitter, AudioListener};
-use ecs::transform::Transform as TransformComponent;
-use rodio::{SpatialSink, Source, Sample};
 use std::iter::Iterator;
 use std::mem::replace;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
+
+use cgmath::{Matrix4, Transform, Point3};
+use rodio::{SpatialSink, Source, Sample};
+
+use ecs::{Fetch, Join, System, ReadStorage, WriteStorage, Entity};
+use ecs::audio::components::{AudioEmitter, AudioListener};
+use ecs::transform::Transform as TransformComponent;
 
 /// Syncs 3D transform data with the audio engine to provide 3D audio.
 pub struct AudioSystem;

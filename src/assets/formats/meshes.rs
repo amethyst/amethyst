@@ -1,21 +1,18 @@
-
-
-
-use assets::{Format, SpawnedFuture};
+use std::error::Error;
+use std::fmt::{self, Display, Formatter};
+use std::string::FromUtf8Error;
 
 use cgmath::{InnerSpace, Vector3};
 use rayon::ThreadPool;
 use renderer::vertex::PosNormTex;
-use std::error::Error;
-use std::fmt::{self, Display, Formatter};
-use std::string::FromUtf8Error;
 use wavefront_obj::ParseError;
 use wavefront_obj::obj::{Normal, NormalIndex, Object, ObjSet, parse, Primitive, TVertex,
                          TextureIndex, Vertex, VertexIndex};
 
+use assets::{Format, SpawnedFuture};
+
 /// A future which will eventually have an vertices available.
 pub type VerticesFuture<V> = SpawnedFuture<Vec<V>, ObjError>;
-
 
 /// Error type of `ObjFormat`
 #[derive(Debug)]

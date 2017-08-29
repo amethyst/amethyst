@@ -1,14 +1,13 @@
 //! `amethyst` rendering ecs resources
 
+use std::sync::Arc;
 
 use crossbeam::sync::MsQueue;
 use futures::{Async, Future, Poll};
 use futures::sync::oneshot::{Receiver, Sender, channel};
 use gfx::traits::Pod;
-
 use renderer::{Error, Material, MaterialBuilder, Mesh, MeshBuilder, Texture, TextureBuilder};
 use renderer::Rgba;
-use std::sync::Arc;
 
 pub(crate) trait Exec: Send + Sync {
     fn exec(self: Box<Self>, factory: &mut ::renderer::Factory);

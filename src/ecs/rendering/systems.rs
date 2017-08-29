@@ -1,19 +1,17 @@
 //! Rendering system.
 
-
-use assets::BoxedErr;
-use ecs::{Fetch, Join, ReadStorage, System, World};
-
-use ecs::SystemExt;
-use ecs::rendering::components::*;
-use ecs::rendering::resources::{Factory, AmbientColor};
-use ecs::transform::components::*;
-
-use error::{Error, Result};
 use renderer::Config as DisplayConfig;
 use renderer::Rgba;
 use renderer::prelude::*;
 use winit::EventsLoop;
+
+use assets::BoxedErr;
+use ecs::{Fetch, Join, ReadStorage, System, World};
+use ecs::SystemExt;
+use ecs::rendering::components::*;
+use ecs::rendering::resources::{Factory, AmbientColor};
+use ecs::transform::components::*;
+use error::{Error, Result};
 
 /// Rendering system.
 #[derive(Derivative)]

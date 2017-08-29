@@ -7,6 +7,8 @@ extern crate amethyst;
 extern crate cgmath;
 extern crate futures;
 
+use std::str;
+
 use amethyst::{Application, Error, State, Trans};
 use amethyst::assets::{AssetFuture, BoxedErr, Context, Format, Loader};
 use amethyst::assets::formats::meshes::ObjFormat;
@@ -20,9 +22,7 @@ use amethyst::prelude::*;
 use amethyst::renderer::{Camera, Rgba, Config as DisplayConfig};
 use amethyst::renderer::prelude::*;
 use amethyst::timing::Time;
-
 use cgmath::{Deg, Euler, Quaternion};
-use std::str;
 
 struct DemoState {
     light_angle: f32,
