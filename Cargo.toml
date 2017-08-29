@@ -3,6 +3,7 @@ name = "amethyst"
 version = "0.5.0"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
 description = "Data-oriented game engine written in Rust"
+exclude = ["examples/*", "book/*"]
 keywords = ["game", "engine", "sdk", "amethyst"]
 categories = ["game-engines"]
 

@@ -3,6 +3,7 @@ name = "amethyst_renderer"
 version = "0.5.0"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
 description = "High-level rendering engine with multiple backends"
+exclude = ["examples/*"]
 keywords = ["game", "engine", "renderer", "3d", "amethyst"]
 categories = ["rendering", "rendering::engine"]
 
