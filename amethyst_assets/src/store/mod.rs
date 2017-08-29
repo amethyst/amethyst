@@ -1,5 +1,6 @@
 pub use self::dir::Directory;
 
+
 use std::error::Error;
 use std::ops::Deref;
 
@@ -13,25 +14,38 @@ mod dir;
 pub trait AnyStore: Send + Sync {
     fn modified(&self, category: &str, id: &str, ext: &str) -> Result<u64, BoxedErr>;
 
-    fn load(&self, category: &str, id: &str, ext: &str) -> Box<Future<Item = Vec<u8>, Error = BoxedErr>>;
+    fn load(
+        &self,
+        category: &str,
+        id: &str,
+        ext: &str,
+    ) -> Box<Future<Item = Vec<u8>, Error = BoxedErr>>;
 }
 
 impl<T> AnyStore for T
-    where T: Store + Send + Sync
+where
+    T: Store + Send + Sync,
 {
     fn modified(&self, category: &str, id: &str, ext: &str) -> Result<u64, BoxedErr> {
-        T::modified(self, category, id, ext)
-            .map_err(BoxedErr::new)
+        T::modified(self, category, id, ext).map_err(BoxedErr::new)
     }
 
-    fn load(&self, category: &str, id: &str, ext: &str) -> Box<Future<Item = Vec<u8>, Error = BoxedErr>> {
-        Box::new(T::load(self, category, id, ext).into_future().map_err(BoxedErr::new))
+    fn load(
+        &self,
+        category: &str,
+        id: &str,
+        ext: &str,
+    ) -> Box<Future<Item = Vec<u8>, Error = BoxedErr>> {
+        Box::new(T::load(self, category, id, ext).into_future().map_err(
+            BoxedErr::new,
+        ))
     }
 }
 
 impl<'a, T, S> Store for T
-    where T: Deref<Target=S> + Send + Sync,
-          S: AnyStore + ?Sized
+where
+    T: Deref<Target = S> + Send + Sync,
+    S: AnyStore + ?Sized,
 {
     type Error = BoxedErr;
     type Result = Box<Future<Item = Vec<u8>, Error = BoxedErr>>;

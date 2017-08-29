@@ -20,11 +20,10 @@ pub struct Directory {
 impl Directory {
     /// Creates a new directory storage.
     pub fn new<P>(loc: P) -> Self
-        where P: Into<PathBuf>
+    where
+        P: Into<PathBuf>,
     {
-        Directory {
-            loc: loc.into(),
-        }
+        Directory { loc: loc.into() }
     }
 }
 
@@ -41,7 +40,13 @@ impl Store for Directory {
         path.push(id);
         path.set_extension(ext);
 
-        Ok(metadata(&path)?.modified()?.duration_since(UNIX_EPOCH).unwrap().as_secs())
+        Ok(
+            metadata(&path)?
+                .modified()?
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
+        )
     }
 
     fn load(&self, category: &str, name: &str, ext: &str) -> Result<Vec<u8>, IoError> {
