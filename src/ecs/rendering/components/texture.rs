@@ -1,22 +1,18 @@
 //! Texture resource handling.
 
-
-
-
-use assets::{Asset, AssetFuture, AssetPtr, AssetSpec, Cache, Context};
-use assets::formats::textures::ImageData;
-use ecs::{Component, VecStorage};
-use ecs::rendering::resources::{Factory, FactoryFuture};
+use std::error::Error;
+use std::fmt::{self, Display, Formatter};
 
 use futures::{Async, Future, Poll};
 use gfx::format::SurfaceType;
 use imagefmt::ColFmt;
 use rayon::ThreadPool;
 use renderer::{Texture, TextureBuilder, Error as RendererError};
-use std::error::Error;
-use std::fmt::{self, Display, Formatter};
 
-
+use assets::{Asset, AssetFuture, AssetPtr, AssetSpec, Cache, Context};
+use assets::formats::textures::ImageData;
+use ecs::{Component, VecStorage};
+use ecs::rendering::resources::{Factory, FactoryFuture};
 
 /// Error that can occur during texture creation
 #[derive(Debug)]

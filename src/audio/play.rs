@@ -1,13 +1,13 @@
 //! Provides functions used to play audio.
 
-use super::DecoderError;
-use super::output::Output;
+use std::io::Cursor;
 
-use super::source::Source;
 use rodio::Decoder;
 use rodio::play_once as rplay_once;
 
-use std::io::Cursor;
+use super::DecoderError;
+use super::output::Output;
+use super::source::Source;
 
 /// Play a sound once.
 ///

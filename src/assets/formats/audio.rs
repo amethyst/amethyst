@@ -1,7 +1,8 @@
 //! Provides audio formats
 
-use assets::*;
 use rayon::ThreadPool;
+
+use assets::*;
 
 /// Loads audio from wav files.
 pub struct WavFormat;

@@ -1,17 +1,18 @@
 //! Loading and playing of audio files.
-pub mod play;
-pub mod output;
-
-mod audio_context;
-mod dj;
-mod source;
-
 
 pub use self::audio_context::AudioContext;
 pub use self::dj::Dj;
 pub use self::source::Source;
+
+pub mod play;
+pub mod output;
+
 use std::error::Error;
 use std::fmt::{Display, Formatter, Result as FmtResult};
+
+mod audio_context;
+mod dj;
+mod source;
 
 /// An error occurred while decoding the source.
 #[derive(Debug)]

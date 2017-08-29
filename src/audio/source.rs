@@ -1,8 +1,9 @@
 //! Provides structures used to load audio files.
 
+use std::sync::Arc;
+
 use super::AudioContext;
 use assets::*;
-use std::sync::Arc;
 
 /// A loaded audio file
 #[derive(Clone)]

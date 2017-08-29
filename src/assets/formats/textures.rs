@@ -1,13 +1,15 @@
 //! Provides texture formats
-
-
-use assets::{SpawnedFuture, Format};
-use imagefmt;
-use imagefmt::{Image, ColFmt};
+//!
 
 pub use imagefmt::Error as ImageError;
-use rayon::ThreadPool;
+
 use std::io::Cursor;
+
+use imagefmt;
+use imagefmt::{Image, ColFmt};
+use rayon::ThreadPool;
+
+use assets::{SpawnedFuture, Format};
 
 /// ImageData provided by formats, can be interpreted as a texture.
 #[derive(Clone, Debug)]

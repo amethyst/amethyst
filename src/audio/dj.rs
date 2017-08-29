@@ -1,10 +1,9 @@
+use std::io::Cursor;
 
+use rodio::{Decoder, Sink};
 
 use audio::{DecoderError, Source};
 use audio::output::Output;
-
-use rodio::{Decoder, Sink};
-use std::io::Cursor;
 
 /// This structure provides a way to programmatically pick and play music.
 pub struct Dj {

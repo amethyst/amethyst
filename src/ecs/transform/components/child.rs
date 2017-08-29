@@ -1,7 +1,6 @@
-extern crate specs;
-
-use self::specs::{Component, VecStorage, Entity};
 use std::sync::atomic::{AtomicBool, Ordering};
+
+use ecs::{Component, VecStorage, Entity};
 
 /// Component for defining a parent entity.
 pub struct Child {

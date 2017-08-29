@@ -6,8 +6,9 @@ extern crate cgmath;
 extern crate futures;
 extern crate rayon;
 
-use amethyst::assets::{AssetFuture, BoxedErr};
+use std::sync::Arc;
 
+use amethyst::assets::{AssetFuture, BoxedErr};
 use amethyst::assets::Loader;
 use amethyst::assets::formats::audio::OggFormat;
 use amethyst::audio::{Dj, AudioContext, Source};
@@ -22,9 +23,7 @@ use amethyst::prelude::*;
 use amethyst::timing::Time;
 use amethyst_renderer::Config as DisplayConfig;
 use amethyst_renderer::prelude::*;
-
 use futures::{Future, IntoFuture};
-use std::sync::Arc;
 
 struct Pong;
 

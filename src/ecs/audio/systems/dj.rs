@@ -1,8 +1,7 @@
-
+use std::mem::replace;
 
 use audio::Dj;
 use ecs::{FetchMut, System};
-use std::mem::replace;
 
 /// Calls a Dj's picker as soon as the Dj runs out of music to play.
 ///
