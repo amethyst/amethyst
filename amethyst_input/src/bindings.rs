@@ -1,8 +1,9 @@
 //! Defines binding structure used for saving and loading input settings.
 
-use super::{Axis, Button};
 use fnv::FnvHashMap as HashMap;
 use smallvec::SmallVec;
+
+use super::{Axis, Button};
 
 /// Used for saving and loading input settings.
 #[derive(Default, Serialize, Deserialize)]

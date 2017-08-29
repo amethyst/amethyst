@@ -12,6 +12,10 @@ pub use self::button::{Button, ButtonState, ChangeState};
 pub use self::button::ButtonState::*;
 pub use self::button::ChangeState::*;
 pub use self::input_handler::InputHandler;
+
+use std::iter::{Chain, Map, Iterator};
+use std::slice::Iter;
+
 use winit::{VirtualKeyCode, MouseButton};
 
 mod axis;
@@ -20,9 +24,6 @@ mod button;
 mod input_handler;
 mod local_mouse_button;
 mod local_virtual_key_code;
-
-use std::iter::{Chain, Map, Iterator};
-use std::slice::Iter;
 
 /// Iterator over keycodes
 pub type KeyCodes<'a> = Iter<'a, VirtualKeyCode>;
