@@ -9,9 +9,9 @@ extern crate ron;
 extern crate serde;
 
 use std::error::Error;
-use std::path::{Path, PathBuf};
-use std::io;
 use std::fmt;
+use std::io;
+use std::path::{Path, PathBuf};
 
 use ron::de::Error as DeError;
 use ron::ser::Error as SerError;
