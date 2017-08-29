@@ -45,10 +45,18 @@ impl Default for Config {
         }
     }
 }
-fn default_title() -> String { "Amethyst game".to_string() }
-fn default_vsync() -> bool { true }
-fn default_multisampling() -> u16 { 1 }
-fn default_visibility() -> bool { true }
+fn default_title() -> String {
+    "Amethyst game".to_string()
+}
+fn default_vsync() -> bool {
+    true
+}
+fn default_multisampling() -> u16 {
+    1
+}
+fn default_visibility() -> bool {
+    true
+}
 
 impl From<Config> for WindowBuilder {
     fn from(cfg: Config) -> Self {
@@ -60,7 +68,7 @@ impl From<Config> for WindowBuilder {
             min_dimensions: cfg.min_dimensions,
             title: cfg.title,
             visible: cfg.visibility,
-            .. Default::default()
+            ..Default::default()
         };
 
         let mut builder = WindowBuilder::new();
@@ -83,7 +91,7 @@ impl From<WindowBuilder> for Config {
             max_dimensions: wb.window.max_dimensions,
             min_dimensions: wb.window.min_dimensions,
             visibility: wb.window.visible,
-            .. Default::default()
+            ..Default::default()
         }
     }
 }

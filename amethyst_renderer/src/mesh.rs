@@ -1,9 +1,11 @@
 //! Mesh resource.
 
-use cgmath::{Deg, Matrix4, Point3, Transform, Vector3};
-use error::Result;
-use gfx::Primitive;
 use std::marker::PhantomData;
+
+use cgmath::{Deg, Matrix4, Point3, Transform, Vector3};
+use gfx::Primitive;
+
+use error::Result;
 use types::{Factory, RawBuffer, Slice};
 use vertex::{Attribute, VertexFormat};
 
@@ -20,8 +22,9 @@ pub struct Mesh {
 impl Mesh {
     /// Builds a new mesh from the given vertices.
     pub fn build<D, V>(verts: D) -> MeshBuilder<D, V>
-        where D: AsRef<[V]>,
-              V: VertexFormat,
+    where
+        D: AsRef<[V]>,
+        V: VertexFormat,
     {
         MeshBuilder::new(verts)
     }
@@ -56,8 +59,9 @@ pub struct MeshBuilder<D, V> {
 }
 
 impl<D, V> MeshBuilder<D, V>
-    where D: AsRef<[V]>,
-          V: VertexFormat,
+where
+    D: AsRef<[V]>,
+    V: VertexFormat,
 {
     /// Creates a new `MeshBuilder` with the given vertices.
     pub fn new(verts: D) -> Self {
@@ -90,8 +94,9 @@ impl<D, V> MeshBuilder<D, V>
 
     /// Rotates the mesh a certain number of degrees around the given axis.
     pub fn with_rotation<Ax, An>(mut self, axis: Ax, angle: An) -> Self
-        where Ax: Into<Vector3<f32>>,
-              An: Into<Deg<f32>>
+    where
+        Ax: Into<Vector3<f32>>,
+        An: Into<Deg<f32>>,
     {
         let rot = Matrix4::from_axis_angle(axis.into(), angle.into());
         self.transform.concat_self(&rot);
@@ -145,4 +150,3 @@ impl<D, V> MeshBuilder<D, V>
         })
     }
 }
-

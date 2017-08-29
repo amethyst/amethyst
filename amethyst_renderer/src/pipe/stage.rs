@@ -1,12 +1,13 @@
 //! A stage in the rendering pipeline.
 
-use error::{Error, Result};
-use pipe::{Target, Targets};
-use pipe::pass::{CompiledPass, Description, Pass};
 use rayon::iter::{IndexedParallelIterator, IntoParallelIterator, MapWith, ParallelIterator, Zip};
 use rayon::iter::internal::UnindexedConsumer;
 use rayon::slice::{Chunks, IterMut as ParIterMut};
 use rayon::vec::IntoIter;
+
+use error::{Error, Result};
+use pipe::{Target, Targets};
+use pipe::pass::{CompiledPass, Description, Pass};
 use scene::{Model, Scene};
 use types::{Encoder, Factory};
 
@@ -24,7 +25,8 @@ impl<'a> ParallelIterator for DrawUpdate<'a> {
     type Item = (&'a CompiledPass, &'a [Model], &'a mut Encoder);
 
     fn drive_unindexed<C>(self, consumer: C) -> C::Result
-        where C: UnindexedConsumer<Self::Item>
+    where
+        C: UnindexedConsumer<Self::Item>,
     {
         self.inner.flat_map(|i| i).drive_unindexed(consumer)
     }
@@ -69,7 +71,11 @@ impl Stage {
     /// Divides the given `Encoder`s into different sized chunks, pairs each
     /// chunk with a corresponding `Pass`, and returns the resulting batches as
     /// a `DrawUpdate`.
-    pub(crate) fn apply<'a>(&'a self, encoders: &'a mut[Encoder], scene: &'a Scene) -> DrawUpdate<'a> {
+    pub(crate) fn apply<'a>(
+        &'a self,
+        encoders: &'a mut [Encoder],
+        scene: &'a Scene,
+    ) -> DrawUpdate<'a> {
         use num_cpus;
 
         self.clear_color.map(|c| {
@@ -88,7 +94,9 @@ impl Stage {
             encoders = left.iter_mut();
             update.push(models.zip(taken).map_with(
                 pass,
-                (|pass, (models, enc)| (*pass, models, enc)) as ApplyPassFn<'a>,
+                (|pass, (models, enc)| {
+                     (*pass, models, enc)
+                 }) as ApplyPassFn<'a>,
             ));
         }
 
@@ -128,9 +136,10 @@ impl StageBuilder {
 
     /// Clears the stage's target.
     pub fn clear_target<R, C, D>(mut self, color_val: C, depth_val: D) -> Self
-        where R: Into<[f32; 4]>,
-              C: Into<Option<R>>,
-              D: Into<Option<f32>>,
+    where
+        R: Into<[f32; 4]>,
+        C: Into<Option<R>>,
+        D: Into<Option<f32>>,
     {
         self.clear_color = color_val.into().map(|c| c.into());
         self.clear_depth = depth_val.into();

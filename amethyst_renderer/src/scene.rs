@@ -1,12 +1,13 @@
 //! A fully renderable scene.
 
-use cam::Camera;
+use rayon::prelude::*;
+use rayon::slice::{Chunks, Iter};
 use cgmath::Matrix4;
+
+use cam::Camera;
 use light::Light;
 use mesh::Mesh;
 use mtl::Material;
-use rayon::prelude::*;
-use rayon::slice::{Chunks, Iter};
 use color::Rgba;
 
 /// Immutable parallel iterator of lights.
@@ -79,7 +80,7 @@ impl Scene {
     pub fn par_chunks_lights(&self, count: usize) -> LightsChunks {
         let size = self.lights.len();
         if size > 0 {
-            self.lights.par_chunks((size - 1)  / count + 1)
+            self.lights.par_chunks((size - 1) / count + 1)
         } else {
             self.lights.par_chunks(1)
         }

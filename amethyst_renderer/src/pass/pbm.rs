@@ -1,15 +1,17 @@
 //! Forward physically-based drawing pass.
 
+use std::marker::PhantomData;
+use std::mem;
+
 use cgmath::{Matrix4, One};
-use error::Result;
 use gfx::pso::buffer::ElemStride;
 use gfx::traits::Pod;
+
+use error::Result;
 use light::{DirectionalLight, Light, PointLight};
 use pipe::{DepthMode, Effect, NewEffect};
 use pipe::pass::Pass;
 use scene::{Model, Scene};
-use std::marker::PhantomData;
-use std::mem;
 use types::Encoder;
 use vertex::{Attribute, Normal, Position, Tangent, TextureCoord, VertexFormat, WithField};
 
@@ -24,13 +26,14 @@ pub struct DrawPbm<V> {
 }
 
 impl<V> DrawPbm<V>
-    where V: VertexFormat +
-          WithField<Position> +
-          WithField<Normal> +
-          WithField<Tangent> +
-          WithField<TextureCoord>
+where
+    V: VertexFormat
+        + WithField<Position>
+        + WithField<Normal>
+        + WithField<Tangent>
+        + WithField<TextureCoord>,
 {
-/// Create instance of `DrawPbm` pass
+    /// Create instance of `DrawPbm` pass
     pub fn new() -> Self {
         DrawPbm {
             vertex_attributes: [
@@ -77,7 +80,8 @@ unsafe impl Pod for PointLight2 {}
 
 impl<V: VertexFormat> Pass for DrawPbm<V> {
     fn compile(&self, effect: NewEffect) -> Result<Effect> {
-        effect.simple(VERT_SRC, FRAG_SRC)
+        effect
+            .simple(VERT_SRC, FRAG_SRC)
             .with_raw_vertex_buffer(self.vertex_attributes.as_ref(), V::size() as ElemStride, 0)
             .with_raw_constant_buffer("VertexArgs", mem::size_of::<VertexArgs>(), 1)
             .with_raw_constant_buffer("FragmentArgs", mem::size_of::<FragmentArgs>(), 1)
@@ -102,43 +106,41 @@ impl<V: VertexFormat> Pass for DrawPbm<V> {
         let vertex_args = scene
             .active_camera()
             .map(|cam| {
-                     VertexArgs {
-                         proj: cam.proj.into(),
-                         view: cam.to_view_matrix().into(),
-                         model: model.pos.into(),
-                     }
-                 })
+                VertexArgs {
+                    proj: cam.proj.into(),
+                    view: cam.to_view_matrix().into(),
+                    model: model.pos.into(),
+                }
+            })
             .unwrap_or_else(|| {
-                                VertexArgs {
-                                    proj: Matrix4::one().into(),
-                                    view: Matrix4::one().into(),
-                                    model: model.pos.into(),
-                                }
-                            });
+                VertexArgs {
+                    proj: Matrix4::one().into(),
+                    view: Matrix4::one().into(),
+                    model: model.pos.into(),
+                }
+            });
         effect.update_constant_buffer("VertexArgs", &vertex_args, enc);
 
-        let point_lights: Vec<PointLight2> = scene.par_iter_lights()
-            .filter_map(|light| {
-                if let Light::Point(ref light) = *light {
-                    Some(PointLight2 {
-                        position: pad(light.center.into()),
-                        color: pad(light.color.into()),
-                        intensity: light.intensity,
-                        _pad: [0.0; 3],
-                    })
-                } else {
-                    None
-                }
+        let point_lights: Vec<PointLight2> = scene
+            .par_iter_lights()
+            .filter_map(|light| if let Light::Point(ref light) = *light {
+                Some(PointLight2 {
+                    position: pad(light.center.into()),
+                    color: pad(light.color.into()),
+                    intensity: light.intensity,
+                    _pad: [0.0; 3],
+                })
+            } else {
+                None
             })
             .collect();
 
-        let directional_lights: Vec<DirectionalLight> = scene.par_iter_lights()
-            .filter_map(|light| {
-                if let Light::Directional(ref light) = *light {
-                    Some(light.clone())
-                } else {
-                    None
-                }
+        let directional_lights: Vec<DirectionalLight> = scene
+            .par_iter_lights()
+            .filter_map(|light| if let Light::Directional(ref light) = *light {
+                Some(light.clone())
+            } else {
+                None
             })
             .collect();
 
@@ -151,24 +153,78 @@ impl<V: VertexFormat> Pass for DrawPbm<V> {
         effect.update_buffer("PointLights", &point_lights[..], enc);
         effect.update_buffer("DirectionalLights", &directional_lights[..], enc);
 
-        effect.update_global("ambient_color", Into::<[f32; 3]>::into(scene.ambient_color()));
-        effect.update_global("camera_position", scene.active_camera()
-                                                    .map(|cam| cam.eye.into())
-                                                    .unwrap_or([0.0; 3]));
-        effect.data.textures.push(model.material.roughness.view().clone());
-        effect.data.samplers.push(model.material.roughness.sampler().clone());
-        effect.data.textures.push(model.material.caveat.view().clone());
-        effect.data.samplers.push(model.material.caveat.sampler().clone());
-        effect.data.textures.push(model.material.metallic.view().clone());
-        effect.data.samplers.push(model.material.metallic.sampler().clone());
-        effect.data.textures.push(model.material.ambient_occlusion.view().clone());
-        effect.data.samplers.push(model.material.ambient_occlusion.sampler().clone());
-        effect.data.textures.push(model.material.emission.view().clone());
-        effect.data.samplers.push(model.material.emission.sampler().clone());
-        effect.data.textures.push(model.material.normal.view().clone());
-        effect.data.samplers.push(model.material.normal.sampler().clone());
-        effect.data.textures.push(model.material.albedo.view().clone());
-        effect.data.samplers.push(model.material.albedo.sampler().clone());
+        effect.update_global(
+            "ambient_color",
+            Into::<[f32; 3]>::into(scene.ambient_color()),
+        );
+        effect.update_global(
+            "camera_position",
+            scene.active_camera().map(|cam| cam.eye.into()).unwrap_or(
+                [0.0; 3],
+            ),
+        );
+        effect.data.textures.push(
+            model.material.roughness.view().clone(),
+        );
+        effect.data.samplers.push(
+            model
+                .material
+                .roughness
+                .sampler()
+                .clone(),
+        );
+        effect.data.textures.push(
+            model.material.caveat.view().clone(),
+        );
+        effect.data.samplers.push(
+            model.material.caveat.sampler().clone(),
+        );
+        effect.data.textures.push(
+            model.material.metallic.view().clone(),
+        );
+        effect.data.samplers.push(
+            model
+                .material
+                .metallic
+                .sampler()
+                .clone(),
+        );
+        effect.data.textures.push(
+            model
+                .material
+                .ambient_occlusion
+                .view()
+                .clone(),
+        );
+        effect.data.samplers.push(
+            model
+                .material
+                .ambient_occlusion
+                .sampler()
+                .clone(),
+        );
+        effect.data.textures.push(
+            model.material.emission.view().clone(),
+        );
+        effect.data.samplers.push(
+            model
+                .material
+                .emission
+                .sampler()
+                .clone(),
+        );
+        effect.data.textures.push(
+            model.material.normal.view().clone(),
+        );
+        effect.data.samplers.push(
+            model.material.normal.sampler().clone(),
+        );
+        effect.data.textures.push(
+            model.material.albedo.view().clone(),
+        );
+        effect.data.samplers.push(
+            model.material.albedo.sampler().clone(),
+        );
 
         effect.draw(model, enc);
     }

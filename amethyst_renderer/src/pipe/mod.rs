@@ -20,14 +20,16 @@ pub use self::effect::{DepthMode, Effect, EffectBuilder, NewEffect};
 pub use self::stage::{Stage, StageBuilder};
 pub use self::target::{ColorBuffer, DepthBuffer, Target, TargetBuilder, Targets};
 
-use color::Rgba;
-use error::Result;
-use fnv::FnvHashMap as HashMap;
+pub mod pass;
+
 use std::iter::Filter;
 use std::slice::Iter;
-use types::Factory;
 
-pub mod pass;
+use fnv::FnvHashMap as HashMap;
+
+use color::Rgba;
+use error::Result;
+use types::Factory;
 
 mod effect;
 mod stage;
@@ -39,7 +41,7 @@ pub struct Stages<'s>(Filter<Iter<'s, Stage>, fn(&&Stage) -> bool>);
 
 impl<'s> Iterator for Stages<'s> {
     type Item = &'s Stage;
-    
+
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next()
     }
@@ -63,25 +65,33 @@ impl Pipeline {
     /// FIXME: Only generates a dummy pipeline for now.
     pub fn deferred() -> PipelineBuilder {
         PipelineBuilder::new()
-            .with_target(Target::named("gbuffer")
-                .with_num_color_bufs(4)
-                .with_depth_buf(true))
-            .with_stage(Stage::with_target("gbuffer")
-                .clear_target(Rgba::black(), None))
-            .with_stage(Stage::with_backbuffer()
-                .clear_target(Rgba::black(), None))
+            .with_target(
+                Target::named("gbuffer")
+                    .with_num_color_bufs(4)
+                    .with_depth_buf(true),
+            )
+            .with_stage(Stage::with_target("gbuffer").clear_target(
+                Rgba::black(),
+                None,
+            ))
+            .with_stage(Stage::with_backbuffer().clear_target(Rgba::black(), None))
     }
 
     /// Builds a default forward pipeline.
     ///
     /// FIXME: Only generates a dummy pipeline for now.
     pub fn forward<V>() -> PipelineBuilder
-        where V: 'static + ::vertex::VertexFormat + ::vertex::WithField<::vertex::Position> + ::vertex::WithField<::vertex::TextureCoord>
+    where
+        V: 'static
+            + ::vertex::VertexFormat
+            + ::vertex::WithField<::vertex::Position>
+            + ::vertex::WithField<::vertex::TextureCoord>,
     {
-        PipelineBuilder::new()
-            .with_stage(Stage::with_backbuffer()
+        PipelineBuilder::new().with_stage(
+            Stage::with_backbuffer()
                 .clear_target([1.0; 4], None)
-                .with_model_pass(::pass::DrawFlat::<V>::new()))
+                .with_model_pass(::pass::DrawFlat::<V>::new()),
+        )
     }
 
     /// Iterates over all enabled stages in the pipeline.
@@ -138,8 +148,8 @@ impl PipelineBuilder {
             .collect::<Result<_>>()?;
 
         Ok(Pipeline {
-           stages: stages,
-           targets: targets,
+            stages: stages,
+            targets: targets,
         })
     }
 }

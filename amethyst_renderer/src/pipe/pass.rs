@@ -2,11 +2,12 @@
 
 #![allow(missing_docs)]
 
+use std::fmt::{Debug, Formatter, Result as FmtResult};
+use std::sync::Arc;
+
 use error::Result;
 use pipe::{Effect, NewEffect, Target};
 use scene::{Model, Scene};
-use std::fmt::{Debug, Formatter, Result as FmtResult};
-use std::sync::Arc;
 use types::{Encoder, Factory};
 
 pub trait Pass: Send + Sync {
@@ -34,9 +35,7 @@ impl Description {
 
 impl Debug for Description {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
-        fmt.debug_tuple("PassDesc")
-            .field(&"[impl]")
-            .finish()
+        fmt.debug_tuple("PassDesc").field(&"[impl]").finish()
     }
 }
 
@@ -49,7 +48,12 @@ pub struct CompiledPass {
 impl CompiledPass {
     pub fn apply(&self, enc: &mut Encoder, scene: &Scene, model: &Model) {
         // TODO: Eliminate this clone.
-        self.inner.apply(enc, &mut self.effect.clone(), scene, model);
+        self.inner.apply(
+            enc,
+            &mut self.effect.clone(),
+            scene,
+            model,
+        );
     }
 }
 

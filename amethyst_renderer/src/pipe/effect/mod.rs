@@ -2,9 +2,8 @@
 
 #![allow(missing_docs)]
 
-use self::pso::{Data, Init, Meta};
+use std::mem;
 
-use error::{Error, Result};
 use fnv::FnvHashMap as HashMap;
 use gfx::Bind;
 use gfx::buffer::{Info as BufferInfo, Role as BufferRole};
@@ -16,9 +15,12 @@ use gfx::shade::{ProgramError, ToUniform};
 use gfx::shade::core::UniformValue;
 use gfx::state::{Rasterizer, Stencil};
 use gfx::traits::Pod;
+
+use self::pso::{Data, Init, Meta};
+
+use error::{Error, Result};
 use pipe::Target;
 use scene::Model;
-use std::mem;
 use types::{Encoder, Factory, PipelineState, Resources};
 use vertex::Attribute;
 
@@ -52,21 +54,28 @@ impl<'a> ProgramSource<'a> {
 
         match *self {
             ProgramSource::Simple(ref vs, ref ps) => {
-                fac.create_shader_set(vs, ps)
-                    .map_err(|e| Error::ProgramCreation(e))
+                fac.create_shader_set(vs, ps).map_err(
+                    |e| Error::ProgramCreation(e),
+                )
             }
             ProgramSource::Geometry(ref vs, ref gs, ref ps) => {
-                let v = fac.create_shader_vertex(vs)
-                    .map_err(|e| ProgramError::Vertex(e))?;
-                let g = fac.create_shader_geometry(gs)
-                    .expect("Geometry shader creation failed");
-                let p = fac.create_shader_pixel(ps)
-                    .map_err(|e| ProgramError::Pixel(e))?;
+                let v = fac.create_shader_vertex(vs).map_err(
+                    |e| ProgramError::Vertex(e),
+                )?;
+                let g = fac.create_shader_geometry(gs).expect(
+                    "Geometry shader creation failed",
+                );
+                let p = fac.create_shader_pixel(ps).map_err(
+                    |e| ProgramError::Pixel(e),
+                )?;
                 Ok(ShaderSet::Geometry(v, g, p))
             }
             ProgramSource::Tessellated(ref vs, ref hs, ref ds, ref ps) => {
-                fac.create_shader_set_tessellation(vs, hs, ds, ps)
-                    .map_err(|e| Error::ProgramCreation(e))
+                fac.create_shader_set_tessellation(vs, hs, ds, ps).map_err(
+                    |e| {
+                        Error::ProgramCreation(e)
+                    },
+                )
             }
         }
     }
@@ -92,11 +101,14 @@ impl Effect {
 
     /// FIXME: Update raw buffer without transmute, use `Result` somehow.
     pub fn update_buffer<N, T>(&self, name: N, data: &[T], enc: &mut Encoder)
-        where N: AsRef<str>, T: Pod
+    where
+        N: AsRef<str>,
+        T: Pod,
     {
         if let Some(i) = self.const_bufs.get(name.as_ref()) {
             let raw = &self.data.const_bufs[*i];
-            enc.update_buffer::<T>(unsafe { mem::transmute(raw) }, &data[..], 0).expect("Failed to update buffer (TODO: replace expect)");
+            enc.update_buffer::<T>(unsafe { mem::transmute(raw) }, &data[..], 0)
+                .expect("Failed to update buffer (TODO: replace expect)");
         }
         // FIXME: Don't silently ignore unknown update.
         // maybe `.expect(...)` would fit here
@@ -104,7 +116,9 @@ impl Effect {
 
     /// FIXME: Update raw buffer without transmute.
     pub fn update_constant_buffer<N, T>(&self, name: N, data: &T, enc: &mut Encoder)
-        where N: AsRef<str>, T: Copy
+    where
+        N: AsRef<str>,
+        T: Copy,
     {
         if let Some(i) = self.const_bufs.get(name.as_ref()) {
             let raw = &self.data.const_bufs[*i];
@@ -132,10 +146,7 @@ pub struct NewEffect<'f> {
 
 impl<'f> NewEffect<'f> {
     pub(crate) fn new(fac: &'f mut Factory, out: &'f Target) -> Self {
-        NewEffect {
-            factory: fac,
-            out,
-        }
+        NewEffect { factory: fac, out }
     }
 
     pub fn simple<S: Into<&'f [u8]>>(self, vs: S, ps: S) -> EffectBuilder<'f> {
@@ -186,7 +197,12 @@ impl<'a> EffectBuilder<'a> {
     /// Adds a raw uniform constant to this `Effect`.
     ///
     /// Requests a new constant buffer to be created
-    pub fn with_raw_constant_buffer(&mut self, name: &'a str, size: usize, num: usize) -> &mut Self {
+    pub fn with_raw_constant_buffer(
+        &mut self,
+        name: &'a str,
+        size: usize,
+        num: usize,
+    ) -> &mut Self {
         self.const_bufs.push(BufferInfo {
             role: BufferRole::Constant,
             bind: Bind::empty(),
@@ -203,10 +219,13 @@ impl<'a> EffectBuilder<'a> {
     /// If the target contains a depth buffer, its mode will be set by `depth`.
     pub fn with_output(&mut self, name: &'a str, depth: Option<DepthMode>) -> &mut Self {
         if let Some(depth) = depth {
-            self.init.out_depth = Some((match depth {
-                DepthMode::LessEqualTest => LESS_EQUAL_TEST,
-                DepthMode::LessEqualWrite => LESS_EQUAL_WRITE,
-            }, Stencil::default()));
+            self.init.out_depth = Some((
+                match depth {
+                    DepthMode::LessEqualTest => LESS_EQUAL_TEST,
+                    DepthMode::LessEqualWrite => LESS_EQUAL_WRITE,
+                },
+                Stencil::default(),
+            ));
         }
         self.init.out_colors.push(name);
         self
@@ -220,7 +239,12 @@ impl<'a> EffectBuilder<'a> {
     }
 
     /// Adds a vertex buffer to this `Effect`.
-    pub fn with_raw_vertex_buffer(&mut self, attrs: &'a [(&'a str, Attribute)], stride: ElemStride, rate: InstanceRate) -> &mut Self {
+    pub fn with_raw_vertex_buffer(
+        &mut self,
+        attrs: &'a [(&'a str, Attribute)],
+        stride: ElemStride,
+        rate: InstanceRate,
+    ) -> &mut Self {
         self.init.vertex_bufs.push((attrs, stride, rate));
         self
     }
@@ -232,11 +256,17 @@ impl<'a> EffectBuilder<'a> {
 
         let ref mut fac = self.factory;
         let prog = self.prog.compile(fac)?;
-        let pso = fac.create_pipeline_state(&prog, self.prim, self.rast, self.init.clone())?;
+        let pso = fac.create_pipeline_state(
+            &prog,
+            self.prim,
+            self.rast,
+            self.init.clone(),
+        )?;
 
         let mut data = Data::default();
 
-        let const_bufs = self.init.const_bufs
+        let const_bufs = self.init
+            .const_bufs
             .iter()
             .enumerate()
             .zip(self.const_bufs.drain(..))
@@ -247,7 +277,8 @@ impl<'a> EffectBuilder<'a> {
             })
             .collect::<Result<HashMap<_, _>>>()?;
 
-        let globals = self.init.globals
+        let globals = self.init
+            .globals
             .iter()
             .enumerate()
             .map(|(i, name)| {
@@ -257,8 +288,14 @@ impl<'a> EffectBuilder<'a> {
             })
             .collect::<HashMap<_, _>>();
 
-        data.out_colors.extend(self.out.color_bufs().iter().map(|cb| cb.as_output.clone()));
-        data.out_depth = self.out.depth_buf().map(|db| (db.as_output.clone(), (0, 0)));
+        data.out_colors.extend(
+            self.out.color_bufs().iter().map(|cb| {
+                cb.as_output.clone()
+            }),
+        );
+        data.out_depth = self.out.depth_buf().map(
+            |db| (db.as_output.clone(), (0, 0)),
+        );
 
         Ok(Effect {
             pso,

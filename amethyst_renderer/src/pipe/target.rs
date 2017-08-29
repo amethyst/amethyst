@@ -1,7 +1,8 @@
 //! Render target used for storing 2D pixel representations of 3D scenes.
 
-use error::Result;
 use fnv::FnvHashMap as HashMap;
+
+use error::Result;
 use types::{DepthStencilView, Encoder, Factory, RenderTargetView, ShaderResourceView};
 
 /// Target color buffer.
@@ -52,7 +53,7 @@ impl Target {
     }
 
     /// Clears all color buffers to the given value.
-    pub fn clear_color<V: Into<[f32; 4]>>(&self, enc:  &mut Encoder, value: V) {
+    pub fn clear_color<V: Into<[f32; 4]>>(&self, enc: &mut Encoder, value: V) {
         let val = value.into();
         for buf in self.color_bufs.iter() {
             enc.clear(&buf.as_output, val);

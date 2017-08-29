@@ -5,7 +5,7 @@ extern crate cgmath;
 extern crate genmesh;
 extern crate winit;
 
-use cgmath::{Matrix4, Deg, Vector3};
+use cgmath::{Deg, Matrix4, Vector3};
 use cgmath::prelude::{InnerSpace, Transform};
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
@@ -14,22 +14,34 @@ use renderer::vertex::PosNormTex;
 
 fn main() {
     use std::time::{Duration, Instant};
-    use winit::{EventsLoop, Event, WindowEvent};
+    use winit::{Event, EventsLoop, WindowEvent};
 
     let mut events = EventsLoop::new();
     let mut renderer = Renderer::new(&events).expect("Renderer create");
-    let pipe = renderer.create_pipe(Pipeline::build()
-            .with_stage(Stage::with_backbuffer()
-                .clear_target([0.00196, 0.23726, 0.21765, 1.0], 1.0)
-                .with_model_pass(pass::DrawFlat::<PosNormTex>::new())))
-            .expect("Pipeline create");
+    let pipe = renderer
+        .create_pipe(
+            Pipeline::build().with_stage(
+                Stage::with_backbuffer()
+                    .clear_target([0.00196, 0.23726, 0.21765, 1.0], 1.0)
+                    .with_model_pass(pass::DrawFlat::<PosNormTex>::new()),
+            ),
+        )
+        .expect("Pipeline create");
 
     let verts = gen_sphere(32, 32);
-    let mesh = renderer.create_mesh(Mesh::build(&verts)).expect("Mesh create");
+    let mesh = renderer.create_mesh(Mesh::build(&verts)).expect(
+        "Mesh create",
+    );
 
     let tex = Texture::from_color_val([0.88235, 0.09412, 0.21569, 1.0]);
-    let mtl = renderer.create_material(MaterialBuilder::new().with_albedo(tex)).expect("Material create");
-    let model = Model { mesh: mesh, material: mtl, pos: Matrix4::one() };
+    let mtl = renderer
+        .create_material(MaterialBuilder::new().with_albedo(tex))
+        .expect("Material create");
+    let model = Model {
+        mesh: mesh,
+        material: mtl,
+        pos: Matrix4::one(),
+    };
 
     let mut scene = Scene::default();
     scene.add_model(model);
@@ -47,15 +59,15 @@ fn main() {
     while running {
         let start = Instant::now();
 
-        events.poll_events(|e| {
-            match e {
-                Event::WindowEvent { event, .. } => match event {
+        events.poll_events(|e| match e {
+            Event::WindowEvent { event, .. } => {
+                match event {
                     WindowEvent::KeyboardInput { .. } |
                     WindowEvent::Closed => running = false,
                     _ => (),
-                },
-                _ => (),
+                }
             }
+            _ => (),
         });
 
         renderer.draw(&scene, &pipe, delta);

@@ -1,9 +1,10 @@
 use gfx::{handle, pso};
-use gfx::pso::{DataBind, DataLink, Descriptor, PipelineData, PipelineInit, InitError};
+use gfx::pso::{DataBind, DataLink, Descriptor, InitError, PipelineData, PipelineInit};
 use gfx::pso::buffer::{RawConstantBuffer, RawGlobal, RawVertexBuffer};
 use gfx::pso::resource::{RawShaderResource, Sampler};
 use gfx::pso::target;
 use gfx::shade::core::{BaseType, ContainerType, OutputVar, ProgramInfo};
+
 use types::{ColorFormat, DepthFormat, Resources};
 
 type AccessInfo = pso::AccessInfo<Resources>;
@@ -46,7 +47,9 @@ impl<'d> PipelineInit for Init<'d> {
             let mut meta_cbuf = <RawConstantBuffer as DataLink<'d>>::new();
             for info in info.constant_buffers.iter() {
                 if let Some(res) = meta_cbuf.link_constant_buffer(info, cbuf) {
-                    let d = res.map_err(|e| InitError::ConstantBuffer(info.name.as_str(), Some(e)))?;
+                    let d = res.map_err(|e| {
+                        InitError::ConstantBuffer(info.name.as_str(), Some(e))
+                    })?;
                     desc.constant_buffers[info.slot as usize] = Some(d);
                     break;
                 }
@@ -58,7 +61,9 @@ impl<'d> PipelineInit for Init<'d> {
             let mut meta_global = <RawGlobal as DataLink<'d>>::new();
             for info in info.globals.iter() {
                 if let Some(res) = meta_global.link_global_constant(info, global) {
-                    res.map_err(|e| InitError::GlobalConstant(info.name.as_str(), Some(e)))?;
+                    res.map_err(|e| {
+                        InitError::GlobalConstant(info.name.as_str(), Some(e))
+                    })?;
                     break;
                 }
             }
@@ -69,7 +74,9 @@ impl<'d> PipelineInit for Init<'d> {
             let mut meta_color = <RenderTarget as DataLink<'d>>::new();
             for info in info.outputs.iter() {
                 if let Some(res) = meta_color.link_output(info, color) {
-                    let d = res.map_err(|e| InitError::PixelExport(info.name.as_str(), Some(e)))?;
+                    let d = res.map_err(
+                        |e| InitError::PixelExport(info.name.as_str(), Some(e)),
+                    )?;
                     desc.color_targets[info.slot as usize] = Some(d);
                     break;
                 }
@@ -120,7 +127,9 @@ impl<'d> PipelineInit for Init<'d> {
             let mut meta_tex = <RawShaderResource as DataLink<'d>>::new();
             for info in info.textures.iter() {
                 if let Some(res) = meta_tex.link_resource_view(info, tex) {
-                    let d = res.map_err(|_| InitError::ResourceView(info.name.as_str(), Some(())))?;
+                    let d = res.map_err(
+                        |_| InitError::ResourceView(info.name.as_str(), Some(())),
+                    )?;
                     desc.resource_views[info.slot as usize] = Some(d);
                     break;
                 }
@@ -133,7 +142,9 @@ impl<'d> PipelineInit for Init<'d> {
             if let Some(d) = meta_vbuf.link_vertex_buffer(i as u8, vbuf) {
                 for attr in info.vertex_attributes.iter() {
                     if let Some(res) = meta_vbuf.link_input(attr, vbuf) {
-                        let d = res.map_err(|e| InitError::VertexImport(attr.name.as_str(), Some(e)))?;
+                        let d = res.map_err(
+                            |e| InitError::VertexImport(attr.name.as_str(), Some(e)),
+                        )?;
                         desc.attributes[attr.slot as usize] = Some(d);
                     }
                 }
@@ -160,7 +171,7 @@ pub struct Data {
 impl PipelineData<Resources> for Data {
     type Meta = Meta;
 
-    fn bake_to(&self, out: &mut RawDataSet, meta: &Meta, mgr: &mut Manager, acc: &mut AccessInfo) { 
+    fn bake_to(&self, out: &mut RawDataSet, meta: &Meta, mgr: &mut Manager, acc: &mut AccessInfo) {
         let const_bufs = meta.const_bufs.iter().zip(&self.const_bufs);
         for (meta_cbuf, cbuf) in const_bufs {
             meta_cbuf.bind_to(out, &cbuf, mgr, acc);
