@@ -7,6 +7,12 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [kc]: http://keepachangelog.com/
 [sv]: http://semver.org/
 
+## Unreleased
+
+## [0.5.1] - 2017-08-30
+
+* Fix syntax highlighting in documentation.
+
 ## [0.5.0] - 2017-08-29
 ### Added
 * Add audio support ([#265])
