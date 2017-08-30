@@ -11,7 +11,7 @@
 //!
 //! # Example
 //!
-//! ```Rust
+//! ```rust
 //! extern crate amethyst;
 //!
 //! use amethyst::prelude::*;
