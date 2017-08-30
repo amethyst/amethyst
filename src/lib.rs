@@ -23,19 +23,22 @@
 //!         println!("Starting game!");
 //!     }
 //!
-//!     fn handle_event(&mut self, _: &mut Engine, event: &Event) -> Trans {
+//!     fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
 //!         match event {
-//!             Event::Window(e) => match e {
-//!                 WindowEvent::KeyboardInput(_, _, Some(Key::Escape), _) |
+//!             Event::WindowEvent { event, .. } => match event {
+//!                 WindowEvent::KeyboardInput {
+//!                     input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Escape), .. }, ..
+//!                 } |
 //!                 WindowEvent::Closed => Trans::Quit,
 //!                 _ => Trans::None,
-//!             }
+//!             },
 //!             _ => Trans::None,
 //!         }
 //!     }
 //!
 //!     fn update(&mut self, _: &mut Engine) -> Trans {
 //!         println!("Computing some more whoop-ass...");
+//!         Trans::Quit
 //!     }
 //! }
 //!
