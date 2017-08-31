@@ -271,7 +271,7 @@ where
 {
     let name = name.into();
 
-    let spec = AssetSpec::new(name.clone(), F::extension(), store_id);
+    let spec = AssetSpec::new(name.clone(), F::EXTENSIONS, store_id);
 
     context.retrieve(&spec).unwrap_or_else(move || {
         load_asset_inner(context, format, spec, storage, pool)
@@ -302,7 +302,7 @@ where
 {
     let name = name.into();
 
-    let spec = AssetSpec::new(name.clone(), F::extension(), store_id);
+    let spec = AssetSpec::new(name.clone(), F::EXTENSIONS, store_id);
 
     load_asset_inner(context, format, spec, storage, pool)
 }
@@ -329,7 +329,7 @@ where
     let pool = pool.clone();
     let pool_clone = pool.clone();
     let future = store
-        .load(context.category(), &spec.name, spec.ext)
+        .load(context.category(), &spec.name, spec.exts)
         .into_future()
         .map_err(LoadError::StorageError::<C::Error, F::Error, S::Error>)
         .map_err(move |e| AssetError::new(spec_store_err, e))

@@ -18,7 +18,7 @@ pub trait AnyStore: Send + Sync {
         &self,
         category: &str,
         id: &str,
-        ext: &str,
+        exts: &[&str],
     ) -> Box<Future<Item = Vec<u8>, Error = BoxedErr>>;
 }
 
@@ -34,9 +34,9 @@ where
         &self,
         category: &str,
         id: &str,
-        ext: &str,
+        exts: &[&str],
     ) -> Box<Future<Item = Vec<u8>, Error = BoxedErr>> {
-        Box::new(T::load(self, category, id, ext).into_future().map_err(
+        Box::new(T::load(self, category, id, exts).into_future().map_err(
             BoxedErr::new,
         ))
     }
@@ -54,8 +54,8 @@ where
         AnyStore::modified(self, category, id, ext)
     }
 
-    fn load(&self, category: &str, id: &str, ext: &str) -> Self::Result {
-        AnyStore::load(&**self, category, id, ext)
+    fn load(&self, category: &str, id: &str, exts: &[&str]) -> Self::Result {
+        AnyStore::load(&**self, category, id, exts)
     }
 }
 
@@ -76,5 +76,5 @@ pub trait Store {
     /// Loads the bytes given a category, id and extension of the asset.
     ///
     /// The id should always use `/`as separator in paths.
-    fn load(&self, category: &str, id: &str, ext: &str) -> Self::Result;
+    fn load(&self, category: &str, id: &str, exts: &[&str]) -> Self::Result;
 }

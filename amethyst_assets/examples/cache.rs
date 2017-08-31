@@ -62,13 +62,10 @@ impl Asset for DummyAsset {
 struct DummyFormat;
 
 impl Format for DummyFormat {
+    const EXTENSIONS: &'static [&'static str] = &["dum"];
     type Data = String;
     type Error = Utf8Error;
     type Result = Result<Self::Data, Self::Error>;
-
-    fn extension() -> &'static str {
-        "dum"
-    }
 
     fn parse(&self, bytes: Vec<u8>, _: &ThreadPool) -> Result<Self::Data, Self::Error> {
         from_utf8(bytes.as_slice()).map(|s| s.to_owned())
