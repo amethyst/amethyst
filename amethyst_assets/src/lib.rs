@@ -13,7 +13,6 @@
 extern crate derivative;
 extern crate fnv;
 extern crate futures;
-extern crate log;
 extern crate parking_lot;
 extern crate rayon;
 extern crate specs;

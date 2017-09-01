@@ -31,7 +31,7 @@ struct DemoState {
     point_light: bool,
     directional_light: bool,
     camera_angle: f32,
-    pipeline_forward: bool,
+    pipeline_forward: bool, // TODO
 }
 
 struct ExampleSystem;
@@ -249,7 +249,7 @@ impl State for Example {
 
                                 if state.directional_light {
                                     state.directional_light = false;
-                                    for mut light in (&mut lights).join() {
+                                    for light in (&mut lights).join() {
                                         if let LightComponent(Light::Directional(ref mut d)) =
                                             *light
                                         {
@@ -258,7 +258,7 @@ impl State for Example {
                                     }
                                 } else {
                                     state.directional_light = true;
-                                    for mut light in (&mut lights).join() {
+                                    for light in (&mut lights).join() {
                                         if let LightComponent(Light::Directional(ref mut d)) =
                                             *light
                                         {
