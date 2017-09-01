@@ -63,20 +63,15 @@ pub extern crate amethyst_input as input;
 extern crate amethyst_assets;
 extern crate cgmath;
 extern crate crossbeam;
-extern crate dds;
 #[macro_use]
 extern crate derivative;
 extern crate fnv;
 extern crate futures;
 extern crate gfx;
-extern crate genmesh;
 extern crate imagefmt;
 extern crate num_cpus;
 extern crate rayon;
 extern crate rodio;
-extern crate serde;
-//#[macro_use]
-//extern crate serde_derive; // Only used in sub crates now
 extern crate smallvec;
 extern crate shred;
 extern crate specs;

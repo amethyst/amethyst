@@ -75,7 +75,7 @@ extern crate gfx_core;
 extern crate gfx_macros;
 extern crate num_cpus;
 extern crate rayon;
-extern crate serde;
+//extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate winit;
