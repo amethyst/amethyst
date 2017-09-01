@@ -18,6 +18,10 @@ sudo: false
 # needed.
 cache: cargo
 
+os:
+    - linux
+    - osx
+
 # Install linux audio libraries to allow alsa compilation.
 addons:
   apt:

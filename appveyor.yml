@@ -41,4 +41,7 @@ test_script:
 
 branches:
     only:
+        - master
         - develop
+        - release-0.5
+
