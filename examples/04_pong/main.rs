@@ -1,8 +1,6 @@
 //! TODO: Rewrite for new renderer.
 
 extern crate amethyst;
-extern crate amethyst_renderer;
-extern crate cgmath;
 extern crate futures;
 extern crate rayon;
 
@@ -21,8 +19,8 @@ use amethyst::ecs::rendering::{Factory, MeshComponent, MaterialComponent};
 use amethyst::ecs::transform::{Transform, LocalTransform, Child, Init, TransformSystem};
 use amethyst::prelude::*;
 use amethyst::timing::Time;
-use amethyst_renderer::Config as DisplayConfig;
-use amethyst_renderer::prelude::*;
+use amethyst::renderer::Config as DisplayConfig;
+use amethyst::renderer::prelude::*;
 use futures::{Future, IntoFuture};
 
 struct Pong;
@@ -457,15 +455,12 @@ fn run() -> Result<(), amethyst::Error> {
     Ok(game.build()?.run())
 }
 
-
-
 fn main() {
     if let Err(e) = run() {
         println!("Failed to execute example: {}", e);
         ::std::process::exit(1);
     }
 }
-
 
 fn gen_rectangle(w: f32, h: f32) -> Vec<PosNormTex> {
     let data: Vec<PosNormTex> = vec![
