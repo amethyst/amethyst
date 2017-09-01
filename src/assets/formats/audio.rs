@@ -8,13 +8,10 @@ use assets::*;
 pub struct WavFormat;
 
 impl Format for WavFormat {
+    const EXTENSIONS: &'static [&'static str] = &["wav"];
     type Data = Vec<u8>;
     type Error = NoError;
     type Result = Result<Self::Data, Self::Error>;
-
-    fn extension() -> &'static str {
-        "wav"
-    }
 
     fn parse(&self, bytes: Vec<u8>, _: &ThreadPool) -> Self::Result {
         Ok(bytes)
@@ -25,13 +22,10 @@ impl Format for WavFormat {
 pub struct OggFormat;
 
 impl Format for OggFormat {
+    const EXTENSIONS: &'static [&'static str] = &["ogg"];
     type Data = Vec<u8>;
     type Error = NoError;
     type Result = Result<Self::Data, Self::Error>;
-
-    fn extension() -> &'static str {
-        "ogg"
-    }
 
     fn parse(&self, bytes: Vec<u8>, _: &ThreadPool) -> Self::Result {
         Ok(bytes)
@@ -42,13 +36,10 @@ impl Format for OggFormat {
 pub struct FlacFormat;
 
 impl Format for FlacFormat {
+    const EXTENSIONS: &'static [&'static str] = &["flac"];
     type Data = Vec<u8>;
     type Error = NoError;
     type Result = Result<Self::Data, Self::Error>;
-
-    fn extension() -> &'static str {
-        "flac"
-    }
 
     fn parse(&self, bytes: Vec<u8>, _: &ThreadPool) -> Self::Result {
         Ok(bytes)

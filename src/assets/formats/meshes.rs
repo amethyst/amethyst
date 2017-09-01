@@ -53,13 +53,10 @@ impl Display for ObjError {
 pub struct ObjFormat;
 
 impl Format for ObjFormat {
+    const EXTENSIONS: &'static [&'static str] = &["obj"];
     type Data = Vec<PosNormTex>;
     type Error = ObjError;
     type Result = VerticesFuture<PosNormTex>;
-
-    fn extension() -> &'static str {
-        "obj"
-    }
 
     fn parse(&self, bytes: Vec<u8>, pool: &ThreadPool) -> Self::Result {
         VerticesFuture::spawn(pool, move || {

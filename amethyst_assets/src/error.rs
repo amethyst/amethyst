@@ -30,9 +30,9 @@ where
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         write!(
             f,
-            "Failed to load asset \"{}\" of format \"{}\" from storage with id \"{}\": {}",
+            "Failed to load asset \"{}\" of format \"{:?}\" from storage with id \"{}\": {}",
             &self.asset.name,
-            &self.asset.ext,
+            &self.asset.exts,
             &self.asset.store.id(),
             &self.error
         )

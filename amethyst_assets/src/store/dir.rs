@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::Error as IoError;
+use std::io::{Error as IoError, ErrorKind};
 use std::path::PathBuf;
 use std::time::UNIX_EPOCH;
 
@@ -49,18 +49,29 @@ impl Store for Directory {
         )
     }
 
-    fn load(&self, category: &str, name: &str, ext: &str) -> Result<Vec<u8>, IoError> {
+    fn load(&self, category: &str, name: &str, exts: &[&str]) -> Result<Vec<u8>, IoError> {
         use std::io::Read;
 
         let mut path = self.loc.clone();
 
         path.push(category);
         path.push(name);
-        path.set_extension(ext);
+        for ext in exts {
+            path.set_extension(ext);
 
-        let mut v = Vec::new();
-        File::open(&path)?.read_to_end(&mut v)?;
-
-        Ok(v)
+            let mut v = Vec::new();
+            match File::open(&path) {
+                Ok(mut file) => {
+                    file.read_to_end(&mut v)?;
+                    return Ok(v);
+                }
+                Err(io_error) => {
+                    if io_error.kind() != ErrorKind::NotFound {
+                        return Err(io_error);
+                    }
+                }
+            }
+        }
+        Err(IoError::new(ErrorKind::NotFound, "Unable to find a file matching that path and any of the extensions for the format."))
     }
 }
