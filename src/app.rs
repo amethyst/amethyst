@@ -528,9 +528,6 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
         })
     }
 
-
-
-
     /// Register new context within the loader
     fn register_mesh_asset(self) -> Self {
         use ecs::rendering::{MeshComponent, MeshContext, Factory};
