@@ -9,6 +9,12 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ## [Unreleased]
 
+## [0.5.2] - 2017-09-01
+
+* Remove several warnings from many crates. ([#324])
+
+[#324]: https://github.com/amethyst/amethyst/pull/324
+
 ## [0.5.1] - 2017-08-30
 
 * Fix syntax highlighting in documentation.
@@ -257,7 +263,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ## 0.1.0 - 2016-01-03
 * Initial release
 
-[Unreleased]: https://github.com/amethyst/amethyst/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/amethyst/amethyst/compare/v0.5.2...HEAD
+[0.5.2]: https://github.com/amethyst/amethyst/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/amethyst/amethyst/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/amethyst/amethyst/compare/v0.4.3...v0.5.0
 [0.4.3]: https://github.com/amethyst/amethyst/compare/v0.4.2...v0.4.3
