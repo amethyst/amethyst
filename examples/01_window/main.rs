@@ -1,8 +1,6 @@
 //! Opens an empty window.
 
 extern crate amethyst;
-extern crate amethyst_renderer;
-extern crate cgmath;
 
 use amethyst::event::{KeyboardInput, VirtualKeyCode};
 use amethyst::prelude::*;

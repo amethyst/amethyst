@@ -3,11 +3,9 @@
 //! TODO: Rewrite for new renderer.
 
 extern crate amethyst;
-extern crate amethyst_renderer;
 extern crate cgmath;
 extern crate futures;
 extern crate genmesh;
-extern crate winit;
 
 use amethyst::assets::{AssetFuture, BoxedErr};
 use amethyst::ecs::rendering::{Factory, MeshComponent, MaterialComponent, LightComponent};

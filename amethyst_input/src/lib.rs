@@ -1,4 +1,3 @@
-extern crate serde;
 extern crate winit;
 extern crate fnv;
 extern crate smallvec;
