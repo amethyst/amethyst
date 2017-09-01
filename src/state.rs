@@ -168,7 +168,7 @@ impl<'a> StateMachine<'a> {
                 state.on_stop(engine);
             }
 
-            if let Some(mut state) = self.state_stack.last_mut() {
+            if let Some(state) = self.state_stack.last_mut() {
                 state.on_resume(engine);
             } else {
                 self.running = false;
