@@ -479,6 +479,7 @@ fn gen_rectangle(w: f32, h: f32) -> Vec<PosNormTex> {
             a_normal: [0., 0., 1.],
             a_tex_coord: [1., 1.],
         },
+
         PosNormTex {
             a_position: [w / 2., h / 2., 0.],
             a_normal: [0., 0., 1.],
@@ -487,12 +488,12 @@ fn gen_rectangle(w: f32, h: f32) -> Vec<PosNormTex> {
         PosNormTex {
             a_position: [-w / 2., h / 2., 0.],
             a_normal: [0., 0., 1.],
-            a_tex_coord: [1., 1.],
+            a_tex_coord: [0., 1.],
         },
         PosNormTex {
             a_position: [-w / 2., -h / 2., 0.],
             a_normal: [0., 0., 1.],
-            a_tex_coord: [1., 1.],
+            a_tex_coord: [0., 0.],
         },
     ];
     data
