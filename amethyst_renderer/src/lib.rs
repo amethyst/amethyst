@@ -157,7 +157,10 @@ impl Renderer {
     pub fn new(el: &EventsLoop) -> Result<Renderer> {
         RendererBuilder::new(el).build()
     }
-
+	/// Gets the size of the window, if it still exists
+	pub fn window_size(&self)->Option<(u32,u32)>{
+		self.window.get_inner_size_pixels()
+	}
     /// Creates a new `RendererBuilder`, equivalent to `RendererBuilder::new()`.
     pub fn build(el: &EventsLoop) -> RendererBuilder {
         RendererBuilder::new(el)
@@ -209,7 +212,30 @@ impl Renderer {
     pub fn create_pipe(&mut self, pb: PipelineBuilder) -> Result<Pipeline> {
         pb.build(&mut self.factory, &self.main_target)
     }
-
+	/// Updates the rendering target (useful for resizes)
+	/// Works only on tux for now >_<
+	pub fn regen_target(&mut self)->Option<mut Target>{
+    	use gfx_window_glutin;
+    	let (new_color, new_depth) = gfx_window_glutin::new_views(&self.window);
+		if let Some(window_size) = self.window_size(){
+			let target = Target::new(
+    		    ColorBuffer {
+    		        as_input: None,
+    		        as_output: new_color,
+    		    },
+    		    DepthBuffer {
+    		        as_input: None,
+    		        as_output: new_depth,
+    		    },
+    		    window_size,
+	    	);
+			let copy = target.clone();
+			self.main_target = Arc::new(target);
+			return Some(copy);
+		}
+		return None;
+	}
+	
     /// Draws a scene with the given pipeline.
     pub fn draw(&mut self, scene: &Scene, pipe: &Pipeline, _delta: Duration) {
         use gfx::Device;
@@ -443,3 +469,4 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &Config) -> Result<B
 
     Ok(Backend(dev, fac, main_target, win))
 }
+

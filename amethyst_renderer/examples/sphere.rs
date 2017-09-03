@@ -62,7 +62,6 @@ fn main() {
         events.poll_events(|e| match e {
             Event::WindowEvent { event, .. } => {
                 match event {
-                    WindowEvent::KeyboardInput { .. } |
                     WindowEvent::Closed => running = false,
                     _ => (),
                 }

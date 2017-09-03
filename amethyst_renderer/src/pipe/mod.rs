@@ -103,6 +103,10 @@ impl Pipeline {
     pub fn targets(&self) -> &HashMap<String, Target> {
         &self.targets
     }
+	/// Returns a mutable reference to all targets and their name strings.
+	pub fn targets_mut(&mut self) -> &mut HashMap<String,Target>{
+		&mut self.targets
+	}
 }
 
 /// Constructs a new pipeline with the given render targets and layers.

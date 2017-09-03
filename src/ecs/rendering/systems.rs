@@ -13,6 +13,11 @@ use ecs::rendering::resources::{Factory, AmbientColor};
 use ecs::transform::components::*;
 use error::{Error, Result};
 
+use state::{State,Trans};
+use winit::{Event,WindowEvent};
+use engine::Engine;
+
+
 /// Rendering system.
 #[derive(Derivative)]
 #[derivative(Debug)]
@@ -22,7 +27,6 @@ pub struct RenderSystem {
     renderer: Renderer,
     scene: Scene,
 }
-
 impl<'a> System<'a> for RenderSystem {
     type SystemData = (Fetch<'a, Camera>,
      Fetch<'a, Factory>,
@@ -37,7 +41,22 @@ impl<'a> System<'a> for RenderSystem {
         (camera, factory, ambient_color, globals, lights, materials, meshes): Self::SystemData,
     ) {
         use std::time::Duration;
-
+		
+		//Fetch current window size for this rendersystem
+		//Compare with current target size
+		if let Some(cur_window_size) = self.renderer.window_size(){
+			for (name,mut target) in self.pipe.targets_mut(){
+				if cur_window_size != target.size(){
+                	//Window got resized, now we need to update the pipeline
+					target.resize(cur_window_size);
+					if let Some(t) = self.renderer.regen_target(){
+						target = t;
+					}
+                	println!("WINDOW RESIZED!!!");
+	            }
+			}
+		}
+		
         while let Some(job) = factory.jobs.try_pop() {
             job.exec(&mut self.renderer.factory);
         }
@@ -105,7 +124,7 @@ impl<'a, 'b> SystemExt<'a, (&'b EventsLoop, PipelineBuilder, Option<DisplayConfi
         world.register::<LightComponent>();
         world.register::<MaterialComponent>();
         world.register::<MeshComponent>();
-
+		
         Ok(RenderSystem {
             pipe: pipe,
             renderer: renderer,
