@@ -100,7 +100,9 @@ impl<V: VertexFormat> Pass for DrawPbm<V> {
             .build()
     }
 
-    fn apply(&self, enc: &mut Encoder, effect: &mut Effect, scene: &Scene, model: &Model) {
+    fn apply(&self, enc: &mut Encoder, effect: &mut Effect, scene: &Scene, model: &Model)
+        -> Result<()>
+    {
         use rayon::prelude::*;
 
         let vertex_args = scene
@@ -119,7 +121,7 @@ impl<V: VertexFormat> Pass for DrawPbm<V> {
                     model: model.pos.into(),
                 }
             });
-        effect.update_constant_buffer("VertexArgs", &vertex_args, enc);
+        effect.update_constant_buffer("VertexArgs", &vertex_args, enc)?;
 
         let point_lights: Vec<PointLight2> = scene
             .par_iter_lights()
@@ -149,20 +151,20 @@ impl<V: VertexFormat> Pass for DrawPbm<V> {
             directional_light_count: directional_lights.len() as i32,
         };
 
-        effect.update_constant_buffer("FragmentArgs", &fragment_args, enc);
-        effect.update_buffer("PointLights", &point_lights[..], enc);
-        effect.update_buffer("DirectionalLights", &directional_lights[..], enc);
+        effect.update_constant_buffer("FragmentArgs", &fragment_args, enc)?;
+        effect.update_buffer("PointLights", &point_lights[..], enc)?;
+        effect.update_buffer("DirectionalLights", &directional_lights[..], enc)?;
 
         effect.update_global(
             "ambient_color",
             Into::<[f32; 3]>::into(scene.ambient_color()),
-        );
+        )?;
         effect.update_global(
             "camera_position",
             scene.active_camera().map(|cam| cam.eye.into()).unwrap_or(
                 [0.0; 3],
             ),
-        );
+        )?;
         effect.data.textures.push(
             model.material.roughness.view().clone(),
         );
@@ -227,5 +229,6 @@ impl<V: VertexFormat> Pass for DrawPbm<V> {
         );
 
         effect.draw(model, enc);
+        Ok(())
     }
 }

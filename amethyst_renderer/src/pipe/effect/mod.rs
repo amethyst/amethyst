@@ -18,7 +18,7 @@ use gfx::traits::Pod;
 
 use self::pso::{Data, Init, Meta};
 
-use error::{Error, Result};
+use error::{Error, ErrorKind, Result, ResultExt};
 use pipe::Target;
 use scene::Model;
 use types::{Encoder, Factory, PipelineState, Resources};
@@ -55,16 +55,16 @@ impl<'a> ProgramSource<'a> {
         match *self {
             ProgramSource::Simple(ref vs, ref ps) => {
                 fac.create_shader_set(vs, ps).map_err(
-                    |e| Error::ProgramCreation(e),
+                    |e| Error::from(e),
                 )
             }
             ProgramSource::Geometry(ref vs, ref gs, ref ps) => {
                 let v = fac.create_shader_vertex(vs).map_err(
                     |e| ProgramError::Vertex(e),
                 )?;
-                let g = fac.create_shader_geometry(gs).expect(
-                    "Geometry shader creation failed",
-                );
+                let g = fac.create_shader_geometry(gs).map_err(
+                    |e| ProgramError::Geometry(e)
+                )?;
                 let p = fac.create_shader_pixel(ps).map_err(
                     |e| ProgramError::Pixel(e),
                 )?;
@@ -72,9 +72,7 @@ impl<'a> ProgramSource<'a> {
             }
             ProgramSource::Tessellated(ref vs, ref hs, ref ds, ref ps) => {
                 fac.create_shader_set_tessellation(vs, hs, ds, ps).map_err(
-                    |e| {
-                        Error::ProgramCreation(e)
-                    },
+                    |e| Error::from(e),
                 )
             }
         }
@@ -91,16 +89,17 @@ pub struct Effect {
 }
 
 impl Effect {
-    pub fn update_global<N: AsRef<str>, T: ToUniform>(&mut self, name: N, data: T) {
+    pub fn update_global<N: AsRef<str>, T: ToUniform>(&mut self, name: N, data: T) -> Result<()> {
         if let Some(i) = self.globals.get(name.as_ref()) {
             self.data.globals[*i] = data.convert();
+            Ok(())
+        } else {
+            bail!(ErrorKind::MissingGlobal(name.as_ref().to_owned()))
         }
-        // FIXME: Don't silently ignore unknown update.
-        // maybe `.expect(...)` would fit here
     }
 
     /// FIXME: Update raw buffer without transmute, use `Result` somehow.
-    pub fn update_buffer<N, T>(&self, name: N, data: &[T], enc: &mut Encoder)
+    pub fn update_buffer<N, T>(&self, name: N, data: &[T], enc: &mut Encoder) -> Result<()>
     where
         N: AsRef<str>,
         T: Pod,
@@ -108,14 +107,14 @@ impl Effect {
         if let Some(i) = self.const_bufs.get(name.as_ref()) {
             let raw = &self.data.const_bufs[*i];
             enc.update_buffer::<T>(unsafe { mem::transmute(raw) }, &data[..], 0)
-                .expect("Failed to update buffer (TODO: replace expect)");
+                .chain_err(|| ErrorKind::BufTexUpdate)
+        } else {
+            bail!(ErrorKind::MissingBuffer(name.as_ref().to_owned()))
         }
-        // FIXME: Don't silently ignore unknown update.
-        // maybe `.expect(...)` would fit here
     }
 
     /// FIXME: Update raw buffer without transmute.
-    pub fn update_constant_buffer<N, T>(&self, name: N, data: &T, enc: &mut Encoder)
+    pub fn update_constant_buffer<N, T>(&self, name: N, data: &T, enc: &mut Encoder) -> Result<()>
     where
         N: AsRef<str>,
         T: Copy,
@@ -123,9 +122,10 @@ impl Effect {
         if let Some(i) = self.const_bufs.get(name.as_ref()) {
             let raw = &self.data.const_bufs[*i];
             enc.update_constant_buffer::<T>(unsafe { mem::transmute(raw) }, &data);
+            Ok(())
+        } else {
+            bail!(ErrorKind::MissingConstBuffer(name.as_ref().to_owned()))
         }
-        // FIXME: Don't silently ignore unknown update.
-        // maybe `.expect(...)` would fit here
     }
 
     /// FIXME: Add support for arbitrary materials and textures.
