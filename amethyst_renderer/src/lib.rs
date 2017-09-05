@@ -281,7 +281,7 @@ impl Renderer {
         self.device.cleanup();
 
         #[cfg(feature = "opengl")]
-        self.window.swap_buffers().map_err(|e| Error::from(ErrorKind::BufferSwapFailed(e)))?;
+        self.window.swap_buffers()?;
         Ok(())
     }
 }

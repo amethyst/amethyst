@@ -5,52 +5,37 @@ use gfx_core;
 use glutin;
 
 error_chain! {
+
+    foreign_links {
+
+        BufferCreation(gfx::buffer::CreationError)
+            #[doc="Error occured during buffer creation"];
+        PipelineState(gfx::PipelineStateError<String>)
+            #[doc="Error occured in pipeline state"];
+        PsoCreation(gfx_core::pso::CreationError)
+            #[doc="Error occured during pipeline state object creation"];
+        ShaderProgram(gfx::shade::ProgramError)
+            #[doc="Error occured during shader compilation"];
+        ResourceView(gfx::ResourceViewError)
+            #[doc="Error occured in resource view"];
+        GfxCombined(gfx::CombinedError)
+            #[doc="Gfx combined error type"];
+        TextureCreation(gfx::texture::CreationError)
+            #[doc="Error occured during texture creation"];
+        GlutinContext(glutin::ContextError) // todo #[cfg(glutin)] only
+            #[doc="(gl specific) Error occured in gl context"];
+    }
+
     errors {
-        /// Failed to create a buffer.
-        BufferCreation(e: gfx::buffer::CreationError) {
-            description("Failed to create buffer!")
-            display("Buffer creation failed: {}", e)
-        }
         /// A render target with the given name does not exist.
         NoSuchTarget(e: String) {
             description("Target with this name does not exist!")
             display("Nonexistent target: {}", e)
         }
-        /// Failed to initialize a render pass.
-        PassInit(e: gfx::PipelineStateError<String>) {
-            description("Failed to initialize render pass!")
-            display("Pass initialization failed: {}", e)
-        }
-        /// Failed to create a pipeline state object (PSO).
-        PipelineCreation(e: gfx_core::pso::CreationError) {
-            description("Failed to create PSO!")
-            display("PSO creation failed: {}", e)
-        }
         /// Failed to create thread pool.
         PoolCreation(e: String) {
             description("Failed to create thread pool!")
             display("Thread pool creation failed: {}", e)
-        }
-        /// Failed to create and link a shader program.
-        ProgramCreation(e: gfx::shade::ProgramError) {
-            description("Failed to create shader program!")
-            display("Program compilation failed: {}", e)
-        }
-        /// Failed to create a resource view.
-        ResViewCreation(e: gfx::ResourceViewError) {
-            description("Failed to create resource view!")
-            display("Resource view creation failed: {}", e)
-        }
-
-        /// Failed to create a render target.
-        TargetCreation(e: gfx::CombinedError) {
-            description("Failed to create render target!")
-            display("Target creation failed: {}", e)
-        }
-        /// Failed to create a texture resource.
-        TextureCreation(e: gfx::texture::CreationError) {
-            description("Failed to create texture!")
-            display("Texture creation failed: {}", e)
         }
         /// An error occuring in buffer/texture updates.
         BufTexUpdate {
@@ -71,11 +56,6 @@ error_chain! {
             description("No constant buffer was found with the given name")
             display(r#"No constant buffer was found with the name "{}""#, name)
         }
-        /// (GL only) An error occured swapping buffers
-        BufferSwapFailed(e: glutin::ContextError) {
-            description("An error occured swapping the buffers")
-            display("An error occured swapping the buffers: {}", e)
-        }
         /// A list of all errors that occured during render
         DrawErrors(errors: Vec<Error>) {
             description("One or more errors occured during drawing")
@@ -88,44 +68,3 @@ error_chain! {
     }
 }
 
-impl From<gfx::CombinedError> for Error {
-    fn from(e: gfx::CombinedError) -> Error {
-        ErrorKind::TargetCreation(e).into()
-    }
-}
-
-impl From<gfx::PipelineStateError<String>> for Error {
-    fn from(e: gfx::PipelineStateError<String>) -> Error {
-        ErrorKind::PassInit(e).into()
-    }
-}
-
-impl From<gfx::ResourceViewError> for Error {
-    fn from(e: gfx::ResourceViewError) -> Error {
-        ErrorKind::ResViewCreation(e).into()
-    }
-}
-
-impl From<gfx::buffer::CreationError> for Error {
-    fn from(e: gfx::buffer::CreationError) -> Error {
-        ErrorKind::BufferCreation(e).into()
-    }
-}
-
-impl From<gfx::shade::ProgramError> for Error {
-    fn from(e: gfx::shade::ProgramError) -> Error {
-        ErrorKind::ProgramCreation(e).into()
-    }
-}
-
-impl From<gfx::texture::CreationError> for Error {
-    fn from(e: gfx::texture::CreationError) -> Error {
-        ErrorKind::TextureCreation(e).into()
-    }
-}
-
-impl From<gfx_core::pso::CreationError> for Error {
-    fn from(e: gfx_core::pso::CreationError) -> Error {
-        ErrorKind::PipelineCreation(e).into()
-    }
-}
