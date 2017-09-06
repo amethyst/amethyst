@@ -41,7 +41,7 @@ impl Debug for Description {
 
 #[derive(Clone)]
 pub struct CompiledPass {
-    effect: Effect,
+    pub effect: Effect,
     inner: Arc<Pass>,
 }
 
