@@ -98,7 +98,10 @@ impl Pipeline {
     pub fn enabled_stages(&self) -> Stages {
         Stages(self.stages.iter().filter(|s| s.is_enabled()))
     }
-
+	/// Get the mutable stages
+    pub fn stages_mut(&mut self)->&mut Vec<Stage>{
+        &mut self.stages
+    }
     /// Returns an immutable reference to all targets and their name strings.
     pub fn targets(&self) -> &HashMap<String, Target> {
         &self.targets

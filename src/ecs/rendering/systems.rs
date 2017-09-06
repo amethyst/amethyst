@@ -45,12 +45,20 @@ impl<'a> System<'a> for RenderSystem {
 		//Fetch current window size for this rendersystem
 		//Compare with current target size
 		if let Some(cur_window_size) = self.renderer.window_size(){
-			for (name,mut target) in self.pipe.targets_mut(){
+			//Window size changed
+			for (name,target) in self.pipe.targets_mut(){
 				if cur_window_size != target.size(){
-                	//Window got resized, now we need to update the pipeline
-					target.resize(cur_window_size);
-					if let Some(t) = self.renderer.regen_target(){
-						target = t;
+					if let Some(new_target) = self.renderer.regen_target(){
+						//Replace target in specific stage by name
+						for stage in self.pipe.stages_mut(){
+							if stage.get_target_name() == *name{
+								stage.set_target(new_target.clone());
+							}
+						}
+						if *name == ""{ //Means this is the main target reference of the pipeline
+							self.renderer.set_main_target(target.clone());
+						}
+						*target = new_target;
 					}
                 	println!("WINDOW RESIZED!!!");
 	            }

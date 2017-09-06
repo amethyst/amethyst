@@ -40,6 +40,7 @@ pub struct Stage {
     enabled: bool,
     passes: Vec<CompiledPass>,
     target: Target,
+	target_name: String,
 }
 
 impl Stage {
@@ -47,7 +48,18 @@ impl Stage {
     pub fn with_target<N: Into<String>>(target_name: N) -> StageBuilder {
         StageBuilder::new(target_name.into())
     }
-
+	/// Updates the stage target to a copy of some pipe.target
+	pub fn update_target(&mut self,updated:Target){
+		self.target = updated;
+	}
+	/// Get the target name, used to match them with pipe.targets
+	pub fn get_target_name(&self)->String{
+		return self.target_name.clone();
+	}
+	/// Updates the target, references pipe.targets
+	pub fn set_target(&mut self,updated:Target){
+		self.target = updated;
+	}
     /// Builds a new `Stage` which outputs straight into the backbuffer.
     pub fn with_backbuffer() -> StageBuilder {
         StageBuilder::new("")
@@ -160,9 +172,9 @@ impl StageBuilder {
 
     /// Builds and returns the stage.
     pub(crate) fn build(mut self, fac: &mut Factory, targets: &Targets) -> Result<Stage> {
-        let out = targets.get(&self.target_name).cloned().ok_or(
+        let out = targets.get(&self.target_name.clone()).cloned().ok_or(
             Error::NoSuchTarget(
-                self.target_name,
+                self.target_name.clone(),
             ),
         )?;
 
@@ -177,6 +189,7 @@ impl StageBuilder {
             enabled: self.enabled,
             passes: passes,
             target: out,
+			target_name: self.target_name.clone(),
         })
     }
 }

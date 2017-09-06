@@ -157,9 +157,17 @@ impl Renderer {
     pub fn new(el: &EventsLoop) -> Result<Renderer> {
         RendererBuilder::new(el).build()
     }
+	///Get immutable main target
+	//pub fn get_main_target(&self)->Target{
+	//	return *self.main_target.clone();
+	//}
 	/// Gets the size of the window, if it still exists
 	pub fn window_size(&self)->Option<(u32,u32)>{
 		self.window.get_inner_size_pixels()
+	}
+	/// Set renderer's main target
+	pub fn set_main_target(&mut self,target:Target){
+		self.main_target = Arc::new(target);
 	}
     /// Creates a new `RendererBuilder`, equivalent to `RendererBuilder::new()`.
     pub fn build(el: &EventsLoop) -> RendererBuilder {
@@ -214,7 +222,7 @@ impl Renderer {
     }
 	/// Updates the rendering target (useful for resizes)
 	/// Works only on tux for now >_<
-	pub fn regen_target(&mut self)->Option<mut Target>{
+	pub fn regen_target(&mut self)->Option<Target>{
     	use gfx_window_glutin;
     	let (new_color, new_depth) = gfx_window_glutin::new_views(&self.window);
 		if let Some(window_size) = self.window_size(){
@@ -229,9 +237,16 @@ impl Renderer {
     		    },
     		    window_size,
 	    	);
-			let copy = target.clone();
+			return Some(target);
+		}
+		return None;
+	}
+	/// Same as regen_target, but changes main target to the result of regen_target
+	pub fn regen_target_local(&mut self)->Option<Target>{
+		if let Some(target) = self.regen_target(){
+			let clone = target.clone();
 			self.main_target = Arc::new(target);
-			return Some(copy);
+			return Some(clone);
 		}
 		return None;
 	}
