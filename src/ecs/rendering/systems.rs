@@ -46,11 +46,11 @@ impl<'a> System<'a> for RenderSystem {
 		//Compare with current target size
 		if let Some(cur_window_size) = self.renderer.window_size(){
 			//Window size changed
-			for (name,target) in self.pipe.targets_mut(){
+			for (name,target) in self.pipe.targets.iter_mut(){
 				if cur_window_size != target.size(){
 					if let Some(new_target) = self.renderer.regen_target(){
 						//Replace target in specific stage by name
-						for stage in self.pipe.stages_mut(){
+						for stage in self.pipe.stages.iter_mut(){
 							if stage.get_target_name() == *name{
 								stage.set_target(new_target.clone());
 							}

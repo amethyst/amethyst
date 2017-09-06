@@ -50,8 +50,10 @@ impl<'s> Iterator for Stages<'s> {
 /// Defines how the rendering pipeline should be configured.
 #[derive(Clone, Debug)]
 pub struct Pipeline {
-    stages: Vec<Stage>,
-    targets: HashMap<String, Target>,
+	/// Stages of the pipeline
+    pub stages: Vec<Stage>,
+	/// Targets of the pipeline
+    pub targets: HashMap<String, Target>,
 }
 
 impl Pipeline {
