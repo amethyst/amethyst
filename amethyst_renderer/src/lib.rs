@@ -157,10 +157,6 @@ impl Renderer {
     pub fn new(el: &EventsLoop) -> Result<Renderer> {
         RendererBuilder::new(el).build()
     }
-	///Get immutable main target
-	//pub fn get_main_target(&self)->Target{
-	//	return *self.main_target.clone();
-	//}
 	/// Gets the size of the window, if it still exists
 	pub fn window_size(&self)->Option<(u32,u32)>{
 		self.window.get_inner_size_pixels()

@@ -38,7 +38,7 @@ pub struct Stage {
     clear_color: Option<[f32; 4]>,
     clear_depth: Option<f32>,
     enabled: bool,
-	/// Draw passes of the draw stage
+    /// Draw passes of the draw stage
     pub passes: Vec<CompiledPass>,
     target: Target,
 	target_name: String,
