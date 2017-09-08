@@ -15,3 +15,6 @@ block_labels = [
 
 # Clean up local feature branch after a successful merge.
 delete_merged_branches = true
+
+# Increase timeout to 5 hours as the default timeout is too short for our build
+timeout_sec = 18000
