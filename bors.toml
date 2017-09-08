@@ -1,0 +1,20 @@
+# Test suite must pass on both Travis and AppVeyor before merging into either
+# `develop` or `master`.
+status = [
+    "continuous-integration/travis-ci/push",
+    "continuous-integration/appveyor/branch"
+]
+
+# Do not allow pull requests with these labels to be merged.
+block_labels = [
+    "status: postponed",
+    "status: stalled",
+    "status: wontfix",
+    "status: working"
+]
+
+# Clean up local feature branch after a successful merge.
+delete_merged_branches = true
+
+# Increase timeout to 5 hours as the default timeout is too short for our build
+timeout_sec = 18000
