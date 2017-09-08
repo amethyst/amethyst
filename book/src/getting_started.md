@@ -47,20 +47,24 @@ just create a binary project and add a dependency for amethyst from crates.io.**
 
 Once you have that setup you'll need to make a new cargo binary project for your
 game to be written in.  You can do this with the following command
+
 ```
 $ cargo init --bin my_cool_game
 ```
+
 Where my_cool_game is the name of your project.
 
-Next you'll want to add a dependency to amethyst.  To do this visit
-[https://crates.io/crates/amethyst] and grab the latest version number from that
+Next, we need to pull in the `amethyst` crate as a dependency. To do this visit
+[our crates.io page](https://crates.io/crates/amethyst) and grab the latest version number from that
 page.  Now go to the Cargo.toml file inside your project directory and add
+
 ```toml
 [dependencies]
 amethyst = "x.x"
 ```
+
 where x.x are the first two sections of the version number you grabbed from
-amethyst.  This way you can receive non-breaking patches from us with
+Amethyst.  This way you can receive non-breaking patches from us with
 `cargo update` but you won't receive breaking changes unless you change your
 version number in Cargo.toml.
 This is because amethyst follows [semver](http://semver.org/spec/v2.0.0.html).
@@ -69,13 +73,14 @@ This is because amethyst follows [semver](http://semver.org/spec/v2.0.0.html).
 
 Next you'll need a resources folder that will contain the data for your game.
 You can call this anything, but our convention is just `resources`.  Stick it in
-your project directory next to Cargo.toml.
+your project directory nex to Cargo.toml.
 
 ### config.ron
 
   The first file you'll want to create in here is `config.ron` this file is
-written in the [RON](https://github.com/ron-rs/ron) format.  It's contents will
-look like this:
+written in the [RON](https://github.com/ron-rs/ron) format.  The format
+of these files is similar to Rust, so it shouldn't be too alien.
+Its contents will look like this:
 
 ```
 (
@@ -114,5 +119,5 @@ on startup.
 
 `vsync: true,` If this is true then the game will use [vertical synchronization](https://en.wikipedia.org/wiki/Screen_tearing#V-sync).
 
-This file is used to generate a `DisplayConfig` which we can then use to make a
+This file can be used to make a `DisplayConfig` which we can then use to make a
 window.
