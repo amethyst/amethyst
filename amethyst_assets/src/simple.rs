@@ -51,8 +51,7 @@ where
                 };
                 if let Some(mut last) = last {
                     match last.poll() {
-                        Err(_) |
-                        Ok(Async::NotReady) => {}
+                        Err(_) | Ok(Async::NotReady) => {}
                         Ok(Async::Ready(updated)) => {
                             *self.ready.write() = Some(updated.as_ref().clone());
                         }
@@ -66,9 +65,12 @@ where
     fn updated(&self, count: usize) -> Option<(A, usize)> {
         let new = self.counter.load(Ordering::Acquire);
         if new > count {
-            match self.defer.read().as_ref().map(AssetFuture::peek).and_then(
-                |a| a,
-            ) {
+            match self.defer
+                .read()
+                .as_ref()
+                .map(AssetFuture::peek)
+                .and_then(|a| a)
+            {
                 Some(Ok(updated)) => Some((updated.as_ref().clone(), new)),
                 Some(Err(_)) | None => self.ready.read().as_ref().map(|a| (a.clone(), new)),
             }
@@ -98,8 +100,7 @@ where
 pub struct AssetPtr<A, W> {
     inner: A,
     version: usize,
-    #[derivative(Debug = "ignore")]
-    update: Arc<AssetUpdate<A, W>>,
+    #[derivative(Debug = "ignore")] update: Arc<AssetUpdate<A, W>>,
 }
 
 impl<A, W> AssetPtr<A, W> {
@@ -201,13 +202,14 @@ where
 }
 
 impl<A, D, E, R, T> Context for SimpleContext<A, D, T>
-    where A: Clone,
-          R: Send + 'static,
-          D: Send + 'static,
-          T: Fn(D) -> R + Send + Sync + 'static,
-          SimpleAsset<A>: Asset + Clone + Send + 'static,
-          E: Error + Send + Sync,
-          R: IntoFuture<Item=SimpleAsset<A>, Error=E>,
+where
+    A: Clone,
+    R: Send + 'static,
+    D: Send + 'static,
+    T: Fn(D) -> R + Send + Sync + 'static,
+    SimpleAsset<A>: Asset + Clone + Send + 'static,
+    E: Error + Send + Sync,
+    R: IntoFuture<Item = SimpleAsset<A>, Error = E>,
 {
     type Asset = SimpleAsset<A>;
     type Data = D;
@@ -231,20 +233,24 @@ impl<A, D, E, R, T> Context for SimpleContext<A, D, T>
     }
 
     fn update(&self, spec: &AssetSpec, updated: AssetFuture<SimpleAsset<A>>) {
-        if let Some(updated) = self.cache.access(spec, |a| {
-            match a.peek() {
-                Some(Ok(a)) => { a.0.push_update(updated); None }
-                _ => { Some(updated) }
-            }
-        }).and_then(|a|a) {
+        if let Some(updated) = self.cache
+            .access(spec, |a| match a.peek() {
+                Some(Ok(a)) => {
+                    a.0.push_update(updated);
+                    None
+                }
+                _ => Some(updated),
+            })
+            .and_then(|a| a)
+        {
             self.cache.insert(spec.clone(), updated);
         }
     }
 
     fn clear(&self) {
         self.cache.retain(|_, a| match a.peek() {
-            Some(Ok(a)) => { a.0.is_shared() }
-            _ => { true }
+            Some(Ok(a)) => a.0.is_shared(),
+            _ => true,
         });
     }
 
