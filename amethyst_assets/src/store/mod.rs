@@ -36,9 +36,11 @@ where
         id: &str,
         exts: &[&str],
     ) -> Box<Future<Item = Vec<u8>, Error = BoxedErr>> {
-        Box::new(T::load(self, category, id, exts).into_future().map_err(
-            BoxedErr::new,
-        ))
+        Box::new(
+            T::load(self, category, id, exts)
+                .into_future()
+                .map_err(BoxedErr::new),
+        )
     }
 }
 
