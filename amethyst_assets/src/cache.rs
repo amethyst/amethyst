@@ -65,6 +65,8 @@ where
 
 impl<T> Default for Cache<T> {
     fn default() -> Self {
-        Cache { map: Default::default() }
+        Cache {
+            map: Default::default(),
+        }
     }
 }

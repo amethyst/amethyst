@@ -65,13 +65,14 @@ impl Store for Directory {
                     file.read_to_end(&mut v)?;
                     return Ok(v);
                 }
-                Err(io_error) => {
-                    if io_error.kind() != ErrorKind::NotFound {
-                        return Err(io_error);
-                    }
-                }
+                Err(io_error) => if io_error.kind() != ErrorKind::NotFound {
+                    return Err(io_error);
+                },
             }
         }
-        Err(IoError::new(ErrorKind::NotFound, "Unable to find a file matching that path and any of the extensions for the format."))
+        Err(IoError::new(
+            ErrorKind::NotFound,
+            "Unable to find a file matching that path and any of the extensions for the format.",
+        ))
     }
 }

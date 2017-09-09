@@ -1,7 +1,7 @@
 use std::error::Error;
 
 use futures::{Async, Poll};
-use futures::future::{Future, IntoFuture, Shared, SharedItem, SharedError};
+use futures::future::{Future, IntoFuture, Shared, SharedError, SharedItem};
 use rayon::ThreadPool;
 use specs::{Component, DenseVecStorage};
 
