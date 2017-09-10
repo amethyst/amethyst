@@ -211,7 +211,7 @@ impl Renderer {
     }
 
     /// Draws a scene with the given pipeline.
-    pub fn draw(&mut self, scene: &Scene, pipe: &Pipeline, _delta: Duration) {
+    pub fn draw(&mut self, scene: &mut Scene, pipe: &Pipeline, _delta: Duration) {
         use gfx::Device;
         #[cfg(feature = "opengl")]
         use glutin::GlContext;

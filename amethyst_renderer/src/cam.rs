@@ -1,6 +1,6 @@
 //! Camera type with support for perspective and orthographic projections.
 
-use cgmath::{Deg, Matrix4, Ortho, PerspectiveFov, Point3, Vector3};
+use cgmath::{Deg, EuclideanSpace, Euler, InnerSpace, Matrix4, Ortho, PerspectiveFov, Point3, Quaternion, Rotation, Vector3};
 
 /// The projection mode of a `Camera`.
 ///
@@ -53,25 +53,128 @@ impl From<Projection> for Matrix4<f32> {
 }
 
 /// Camera struct.
-///
-/// TODO: Add more convenience methods, refine API.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct Camera {
+    /// Initial forward vector of the camera.
+    pub base_forward: Vector3<f32>,
+    /// Calculated center point of the camera.
+    center: Vector3<f32>,
+    /// Trigger re-calculations if values were changed.
+    pub dirty: bool,
     /// Location of the camera in three-dimensional space.
     pub eye: Point3<f32>,
     /// Graphical projection of the camera.
     pub proj: Matrix4<f32>,
-    /// Forward vector of the camera.
-    pub forward: Vector3<f32>,
-    /// Right vector of the camera.
-    pub right: Vector3<f32>,
+    /// Rotation of the camera in three-dimensional space.
+    pub rotation: Quaternion<f32>,
     /// Upward elevation vector of the camera.
     pub up: Vector3<f32>,
 }
 
 impl Camera {
+    /// Create a new camera from the given values.
+    pub fn new(
+        projection: Matrix4<f32>,
+        position: Point3<f32>,
+        look_at: Point3<f32>,
+        up: Vector3<f32>
+    ) -> Self {
+        if position == look_at {
+            panic!("Position and LookAt cannot have the same coordinates!");
+        }
+        
+        let base_forward = (look_at - position);
+        Self {
+            base_forward: base_forward,
+            center: (position + base_forward).to_vec(),
+            dirty: false,
+            eye: position,
+            proj: projection,
+            rotation: Quaternion::look_at(base_forward, up).normalize(),
+            up: up,
+        }
+    }
+    
+    /// Move the camera relatively to its current position, but independently from its orientation.
+    pub fn move_absolute(&mut self, direction: Vector3<f32>) -> &mut Self {
+        self.dirty = true;
+        self.eye += direction;
+        self
+    }
+    
+    /// Move the camera relatively to its current position and orientation.
+    pub fn move_relative(&mut self, direction: Vector3<f32>) -> &mut Self {
+        self.dirty = true;
+        self.eye += self.rotation * direction;
+        self
+    }
+    
+    /// Pitch the camera relatively to the world.
+    pub fn pitch_absolute(&mut self, amount: Deg<f32>) -> &mut Self {
+        // tbd
+        self
+    }
+    
+    /// Pitch the camera relatively to its own rotation.
+    pub fn pitch_relative(&mut self, amount: Deg<f32>) -> &mut Self {
+        // tbd
+        self
+    }
+    
+    /// Roll the camera relatively to the world.
+    pub fn roll_absolute(&mut self, amount: Deg<f32>) -> &mut Self {
+        // tbd
+        self
+    }
+    
+    /// Roll the camera relatively to its own rotation.
+    pub fn roll_relative(&mut self, amount: Deg<f32>) -> &mut Self {
+        // tbd
+        self
+    }
+    
+    /// Set the position of the camera.
+    pub fn set_position(&mut self, position: Point3<f32>) -> &mut Self {
+        self.dirty = true;
+        self.eye = position;
+        self
+    }
+    
+    /// Set the rotation of the camera using Euler x, y, z.
+    pub fn set_rotation<D: Into<Deg<f32>>>(&mut self, x: D, y: D, z: D) -> &mut Self {
+        self.dirty = true;
+        //self.rotation = Quaternion::from::<f32>(Euler {
+        //    x: x,
+        //    y: y,
+        //    z: z,
+        //});
+        
+        self
+    }
+    
     /// Calculates the view matrix from the given data.
     pub fn to_view_matrix(&self) -> Matrix4<f32> {
-        Matrix4::look_at(self.eye, self.eye + self.forward, self.up)
+        if self.dirty { panic!("The camera needs to be updated before being queried!"); }
+
+        let center = Point3::new(self.center.x, self.center.y, self.center.z);
+        Matrix4::look_at(self.eye, center, self.up)
+    }
+    
+    /// Update center component of camera.
+    pub fn update(&mut self) {
+        self.center = (self.eye + self.rotation.rotate_vector(self.base_forward)).to_vec();
+        self.dirty = false;
+    }
+    
+    /// Yaw the camera relatively to the world.
+    pub fn yaw_absolute(&mut self, amount: Deg<f32>) -> &mut Self {
+        // tbd
+        self
+    }
+    
+    /// Yaw the camera relatively to its own rotation.
+    pub fn yaw_relative(&mut self, amount: Deg<f32>) -> &mut Self {
+        // tbd
+        self
     }
 }
