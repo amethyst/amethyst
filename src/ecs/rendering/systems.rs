@@ -6,7 +6,7 @@ use renderer::prelude::*;
 use winit::EventsLoop;
 
 use assets::BoxedErr;
-use ecs::{Fetch, Join, ReadStorage, System, World};
+use ecs::{Fetch, FetchMut, Join, ReadStorage, System, World};
 use ecs::SystemExt;
 use ecs::rendering::components::*;
 use ecs::rendering::resources::{Factory, AmbientColor};
@@ -24,7 +24,7 @@ pub struct RenderSystem {
 }
 
 impl<'a> System<'a> for RenderSystem {
-    type SystemData = (Fetch<'a, Camera>,
+    type SystemData = (FetchMut<'a, Camera>,
      Fetch<'a, Factory>,
      Fetch<'a, AmbientColor>,
      ReadStorage<'a, Transform>,
@@ -34,7 +34,7 @@ impl<'a> System<'a> for RenderSystem {
 
     fn run(
         &mut self,
-        (camera, factory, ambient_color, globals, lights, materials, meshes): Self::SystemData,
+        (mut camera, factory, ambient_color, globals, lights, materials, meshes): Self::SystemData,
     ) {
         use std::time::Duration;
 
@@ -58,10 +58,12 @@ impl<'a> System<'a> for RenderSystem {
             self.scene.add_light(light.0.clone());
         }
 
-        self.scene.add_camera(camera.clone());
+        let mut cam = camera.clone();
+        cam.update();
+        self.scene.add_camera(cam);
 
         self.renderer.draw(
-            &self.scene,
+            &mut self.scene,
             &self.pipe,
             Duration::from_secs(0),
         );
@@ -90,13 +92,12 @@ impl<'a, 'b> SystemExt<'a, (&'b EventsLoop, PipelineBuilder, Option<DisplayConfi
         use cgmath::Deg;
         use renderer::{Camera, Projection};
 
-        let cam = Camera {
-            eye: [0.0, 0.0, -4.0].into(),
-            proj: Projection::perspective(1.3, Deg(60.0)).into(),
-            forward: [0.0, 0.0, 1.0].into(),
-            right: [1.0, 0.0, 0.0].into(),
-            up: [0.0, 1.0, 0.0].into(),
-        };
+        let cam = Camera::new(
+            Projection::perspective(1.3, Deg(60.0)).into(),
+            [0.0, 0.0, -4.0].into(),
+                [0.0,0.0,0.0].into(),
+            [0.0, 1.0, 0.0].into(),
+        );
 
         world.add_resource(Factory::new());
         world.add_resource(cam);

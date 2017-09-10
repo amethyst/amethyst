@@ -105,7 +105,7 @@ impl Scene {
     ///
     /// TODO: Render to multiple viewports with possibly different cameras.
     pub fn active_camera(&mut self) -> Option<&mut Camera> {
-        self.cameras.first()
+        self.cameras.first_mut()
     }
 
     /// Remove all objects from `Scene`
