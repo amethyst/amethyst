@@ -2,7 +2,7 @@
 
 use std::borrow::Borrow;
 
-use specs::{Component, FlaggedStorage, VecStorage};
+use specs::{Component, DenseVecStorage, FlaggedStorage};
 
 /// Performs a global transformation on the entity (transform from origin).
 ///
@@ -15,7 +15,7 @@ use specs::{Component, FlaggedStorage, VecStorage};
 pub struct Transform(pub [[f32; 4]; 4]);
 
 impl Component for Transform {
-    type Storage = FlaggedStorage<Transform, VecStorage<Transform>>;
+    type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
 }
 
 impl Default for Transform {
