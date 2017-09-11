@@ -209,4 +209,82 @@ mod tests {
         let transform: Transform = primitive.into();
         assert_eq!(primitive, transform.0);
     }
+
+    fn transform_world<'a, 'b>() -> (World, Dispatcher<'a, 'b>) {
+        let mut world = World::new();
+        world.register::<LocalTransform>();
+        world.register::<Transform>();
+        world.register::<Init>();
+        world.register::<Child>();
+
+        let dispatcher = DispatcherBuilder::new()
+            .add(TransformSystem::new(), "amethyst/transform", &[])
+            .build();
+
+        (world, dispatcher)
+    }
+
+    // Basic default LocalTransform -> Transform (Should just be identity)
+    #[test]
+    fn zeroed() {
+        let (mut world, mut dispatcher) = transform_world();
+
+        let mut transform = LocalTransform::default();
+        transform.translation = [0.0, 0.0, 0.0];
+        transform.rotation = [1.0, 0.0, 0.0, 0.0];
+
+        let e1 = world.create_entity()
+            .with(transform)
+            .with(Transform::default())
+            .build();
+
+        dispatcher.dispatch(&mut world.res);
+        world.maintain();
+
+        let transform = world.read::<Transform>().get(e1).unwrap().clone();
+        let a1: [[f32; 4]; 4] = transform.into();
+        let a2: [[f32; 4]; 4] = Transform::default().into();
+        assert_eq!(a1, a2);
+    }
+
+    // Test basic LocalTransform -> Transform, no parent relationships
+    #[test]
+    fn basic() {
+        let (mut world, mut dispatcher) = transform_world();
+
+        let mut transform = LocalTransform::default();
+        transform.translation = [0.0, 0.0, 0.0];
+        transform.rotation = [1.0, 0.0, 0.0, 0.0];
+
+        let e1 = world.create_entity()
+            .with(transform)
+            .with(Transform::default())
+            .build();
+
+        dispatcher.dispatch(&mut world.res);
+        world.maintain();
+
+        let transform = world.read::<Transform>().get(e1).unwrap().clone();
+        let a1: [[f32; 4]; 4] = transform.into();
+        let a2: [[f32; 4]; 4] = Transform::default().into();
+        assert_eq!(a1, a2);
+    }
+
+    // Test Parent * LocalTransform -> Transform (Parent is before child)
+    #[test]
+    fn parent_before() {
+        let (mut world, mut dispatcher) = transform_world();
+    }
+
+    // Test Parent * LocalTransform -> Transform (Parent is after child, therefore must be special cased in list)
+    #[test]
+    fn parent_after() {
+        let (mut world, mut dispatcher) = transform_world();
+    }
+    
+    // If the entity has a parent entity, but the entity has died.
+    #[test]
+    fn parent_nonexistent() {
+        let (mut world, mut dispatcher) = transform_world();
+    }
 }
