@@ -53,9 +53,8 @@ pub fn try_play_n_times(source: &Source, endpoint: &Output, n: u16) -> Result<()
         match rplay_once(&endpoint.endpoint, Cursor::new(source.clone())) {
             Ok(sink) => {
                 for _ in 1..n {
-                    sink.append(Decoder::new(Cursor::new(source.clone())).map_err(
-                        |_| DecoderError,
-                    )?);
+                    sink.append(Decoder::new(Cursor::new(source.clone()))
+                        .map_err(|_| DecoderError)?);
                 }
                 sink.detach();
                 return Ok(());

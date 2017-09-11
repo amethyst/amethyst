@@ -1,6 +1,7 @@
 //! Provides structures and functions used to get audio outputs.
 
 // We have to use types from this to provide an output iterator type.
+
 extern crate cpal;
 
 use std::fmt::{Debug, Formatter, Result as FmtResult};
@@ -50,5 +51,7 @@ pub fn default_output() -> Option<Output> {
 
 /// Get a list of outputs available to the system.
 pub fn outputs() -> OutputIterator {
-    OutputIterator { input: get_endpoints_list() }
+    OutputIterator {
+        input: get_endpoints_list(),
+    }
 }
