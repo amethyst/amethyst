@@ -14,13 +14,10 @@ pub struct TransformSystem {
     indices: HashMap<Entity, usize>,
     /// Vec of entities with parents before children. Only contains entities
     /// with parents.
-    sorted: Vec<(Entity, Entity)>,
-    /// Initialized entities.
-    init: BitSet,
+    //sorted: Vec<(Entity, Entity)>,
+    sorted: Vec<Entity>,
     /// Entities that have been removed in current frame.
     dead: BitSet,
-    /// Child entities that were dirty.
-    dirty: BitSet,
     /// Prevent circular infinite loops with parents.
     swapped: BitSet,
 }
@@ -31,15 +28,8 @@ impl TransformSystem {
         TransformSystem {
             indices: HashMap::default(),
             sorted: Vec::new(),
-            init: BitSet::new(),
-            /*
-            dead: HashSet::default(),
-            dirty: HashSet::default(),
-            swapped: HashSet::default(),
-            */
-            dead: BitSet::new(),
-            dirty: BitSet::new(),
-            swapped: BitSet::new(),
+            dead: BitSet::default(),
+            swapped: BitSet::default(),
         }
     }
 }
@@ -49,36 +39,40 @@ impl<'a> System<'a> for TransformSystem {
         Entities<'a>,
         WriteStorage<'a, LocalTransform>,
         WriteStorage<'a, Parent>,
-        WriteStorage<'a, Transform>
+        WriteStorage<'a, Transform>,
     );
-
-    fn run(&mut self, (entities, locals, parents, mut globals): Self::SystemData) {
+    fn run(&mut self, (entities, mut locals, mut parents, mut globals): Self::SystemData) {
         #[cfg(feature = "profiler")]
         profile_scope!("transform_system");
-        // Checks for entities with a local transform and parent, but no
-        // `Init` component.
-        for (entity, _, parent, id) in (&*entities, &locals, &parents, &BitSetNot(&self.init.clone())).join() {
-            self.indices.insert(entity, self.sorted.len());
-            self.sorted.push((entity, parent.entity));
-            self.init.add(id);
+
+        // Clear dirty flags on `Transform` storage, before updates go in
+        (&mut globals).open().1.clear_flags();
+
+        println!("initial sorted: {:#?}", self.sorted);
+        println!("initial transforms: ");
+        for (entity, transform) in (&*entities, &globals).join() {
+            println!("{:?}: {:?}", entity, transform);
         }
 
-        // Deletes entities whose parents aren't alive.
-        for &(entity, _) in &self.sorted {
-            if let Some(parent) = parents.get(entity) {
-                if !entities.is_alive(parent.entity) || self.dead.contains(parent.entity.id()) {
-                    entities.delete(entity);
-                    self.dead.add(entity.id());
-                }
+        // Checks for entities with a local transform and parent, but isn't initialized yet.
+        for (entity, _, _) in (&*entities, &locals, &parents).join() {
+            let mut initialized = false;
+            if let Some(_) = self.indices.get(&entity) {
+                initialized = true;
+            }
+
+            if !initialized {
+                self.indices.insert(entity, self.sorted.len());
+                self.sorted.push(entity);
             }
         }
+
 
         {
             let locals_flagged = locals.open().1;
 
             // Compute transforms without parents.
             for (entity, local, global, _) in (&*entities, locals_flagged, &mut globals, !&parents).join() {
-                self.dirty.add(entity.id());
                 global.0 = local.matrix();
             }
         }
@@ -86,22 +80,18 @@ impl<'a> System<'a> for TransformSystem {
         // Compute transforms with parents.
         let mut index = 0;
         while index < self.sorted.len() {
-            let (entity, parent_entity) = self.sorted[index];
+            let entity = self.sorted[index];
             let local_dirty = locals.open().1.flagged(entity);
-            let parent_dirty = parents.open().1.flagged(parent_entity);
+            let parent_dirty = parents.open().1.flagged(entity);
 
             match (
                 parents.get(entity),
                 locals.get(entity),
                 self.dead.contains(entity.id()),
-            ) {
+                ) {
                 (Some(parent), Some(local), false) => {
                     // Make sure the transform is also dirty if the parent has changed.
-                    if parent_dirty && !self.swapped.contains(entity.id()) {
-                        if parent.entity != parent_entity {
-                            self.sorted[index] = (entity, parent.entity);
-                        }
-
+                    if parent_dirty {
                         let mut swap = None;
 
                         // If the index is none then the parent is an orphan or dead
@@ -116,16 +106,13 @@ impl<'a> System<'a> for TransformSystem {
                             self.sorted.swap(p, index);
                             self.indices.insert(parent.entity, index);
                             self.indices.insert(entity, p);
-                            self.swapped.add(entity.id());
 
                             // Swap took place, re-try this index.
                             continue;
                         }
                     }
 
-                    if local_dirty || parent_dirty ||
-                        self.dirty.contains(parent.entity.id())
-                    {
+                    if local_dirty || parent_dirty || globals.open().1.flagged(parent.entity) {
                         let combined_transform = if let Some(parent_global) =
                             globals.get(parent.entity)
                         {
@@ -137,20 +124,14 @@ impl<'a> System<'a> for TransformSystem {
                         if let Some(global) = globals.get_mut(entity) {
                             global.0 = combined_transform;
                         }
-
-                        self.dirty.add(entity.id());
                     }
                 }
                 _ => {
                     self.sorted.swap_remove(index); // swap with last to prevent shift
                     if let Some(swapped) = self.sorted.get(index) {
-                        self.indices.insert(swapped.0, index);
-
-                        // Make sure to check for parent swap next iteration
-                        parents.open().1.flag(swapped.0)
+                        self.indices.insert(*swapped, index);
                     }
                     self.indices.remove(&entity);
-                    self.init.remove(entity.id());
 
                     // Re-try index because swapped with last element.
                     continue;
@@ -160,9 +141,17 @@ impl<'a> System<'a> for TransformSystem {
             index += 1;
         }
 
-        self.dirty.clear();
         self.dead.clear();
         self.swapped.clear();
+
+        (&mut locals).open().1.clear_flags();
+        (&mut parents).open().1.clear_flags();
+
+
+        println!("after transforms: ");
+        for (entity, transform) in (&*entities, &globals).join() {
+            println!("{:?}: {:?}", entity, transform);
+        }
     }
 }
 
@@ -170,6 +159,7 @@ impl<'a> System<'a> for TransformSystem {
 mod tests {
     use specs::{World, Dispatcher, DispatcherBuilder};
     use transform::{Parent, LocalTransform, Transform, TransformSystem};
+    use cgmath::{Decomposed, Quaternion, Vector3, Matrix4};
 
     // If this works, then all other tests should work.
     #[test]
@@ -213,6 +203,10 @@ mod tests {
             .build();
 
         (world, dispatcher)
+    }
+
+    fn together(transform: Transform, local: LocalTransform) -> [[f32; 4]; 4] {
+        (Matrix4::from(transform.0) * Matrix4::from(local.matrix())).into()
     }
 
     // Basic default LocalTransform -> Transform (Should just be identity)
@@ -268,12 +262,12 @@ mod tests {
     fn parent_before() {
         let (mut world, mut dispatcher) = transform_world();
 
-        let mut local = LocalTransform::default();
-        local.translation = [5.0, 5.0, 5.0];
-        local.rotation = [1.0, 0.5, 0.5, 0.0];
+        let mut local1 = LocalTransform::default();
+        local1.translation = [5.0, 5.0, 5.0];
+        local1.rotation = [1.0, 0.5, 0.5, 0.0];
 
         let e1 = world.create_entity()
-            .with(local.clone())
+            .with(local1.clone())
             .with(Transform::default())
             .build();
 
@@ -282,24 +276,121 @@ mod tests {
         local2.rotation = [1.0, 0.5, 0.5, 0.0];
 
         let e2 = world.create_entity()
-            .with(local2)
+            .with(local2.clone())
             .with(Transform::default())
-            .with(Parent::new(e1))
+            .with(Parent { entity: e1 })
+            .build();
+
+        let mut local3 = LocalTransform::default();
+        local3.translation = [5.0, 5.0, 5.0];
+        local3.rotation = [1.0, 0.5, 0.5, 0.0];
+
+        let e3 = world.create_entity()
+            .with(local3.clone())
+            .with(Transform::default())
+            .with(Parent { entity: e2 })
             .build();
 
         dispatcher.dispatch(&mut world.res);
         world.maintain();
 
-        let transform = world.read::<Transform>().get(e1).unwrap().clone();
-        let a1: [[f32; 4]; 4] = transform.into();
-        let a2: [[f32; 4]; 4] = local.matrix().into();
-        assert_eq!(a1, a2);
+        let transforms = world.read::<Transform>();
+
+        let transform1 = {
+            // First entity (top level parent)
+            let transform1 = transforms.get(e1).unwrap().clone();
+            let a1: [[f32; 4]; 4] = transform1.into();
+            let a2: [[f32; 4]; 4] = local1.matrix().into();
+            assert_eq!(a1, a2);
+            transform1
+        };
+
+        let transform2 = {
+            let transform2 = transforms.get(e2).unwrap().clone();
+            let a1: [[f32; 4]; 4] = transform2.into();
+            let a2: [[f32; 4]; 4] = together(transform1, local2);
+            assert_eq!(a1, a2);
+            transform2
+        };
+
+        let transform3 = {
+            let transform3 = transforms.get(e3).unwrap().clone();
+            let a1: [[f32; 4]; 4] = transform3.into();
+            let a2: [[f32; 4]; 4] = together(transform2, local3);
+            assert_eq!(a1, a2);
+            transform3
+        };
     }
 
     // Test Parent * LocalTransform -> Transform (Parent is after child, therefore must be special cased in list)
     #[test]
     fn parent_after() {
         let (mut world, mut dispatcher) = transform_world();
+
+        let mut local3 = LocalTransform::default();
+        local3.translation = [5.0, 5.0, 5.0];
+        local3.rotation = [1.0, 0.5, 0.5, 0.0];
+
+        let e3 = world.create_entity()
+            .with(local3.clone())
+            .with(Transform::default())
+            .build();
+
+        let mut local2 = LocalTransform::default();
+        local2.translation = [5.0, 5.0, 5.0];
+        local2.rotation = [1.0, 0.5, 0.5, 0.0];
+
+        let e2 = world.create_entity()
+            .with(local2.clone())
+            .with(Transform::default())
+            .build();
+
+        let mut local1 = LocalTransform::default();
+        local1.translation = [5.0, 5.0, 5.0];
+        local1.rotation = [1.0, 0.5, 0.5, 0.0];
+
+        let e1 = world.create_entity()
+            .with(local1.clone())
+            .with(Transform::default())
+            .build();
+
+        {
+            let mut parents = world.write::<Parent>();
+            parents.insert(e2, Parent { entity: e1 }); 
+            parents.insert(e3, Parent { entity: e2 }); 
+        }
+
+        dispatcher.dispatch(&mut world.res);
+        world.maintain();
+        dispatcher.dispatch(&mut world.res);
+        world.maintain();
+
+        let transforms = world.read::<Transform>();
+
+        let transform1 = {
+            // First entity (top level parent)
+            let transform1 = transforms.get(e1).unwrap().clone();
+            let a1: [[f32; 4]; 4] = transform1.into();
+            let a2: [[f32; 4]; 4] = local1.matrix().into();
+            assert_eq!(a1, a2);
+            transform1
+        };
+
+        let transform2 = {
+            let transform2 = transforms.get(e2).unwrap().clone();
+            let a1: [[f32; 4]; 4] = transform2.into();
+            let a2: [[f32; 4]; 4] = together(transform1, local2);
+            assert_eq!(a1, a2);
+            transform2
+        };
+
+        let transform3 = {
+            let transform3 = transforms.get(e3).unwrap().clone();
+            let a1: [[f32; 4]; 4] = transform3.into();
+            let a2: [[f32; 4]; 4] = together(transform2, local3);
+            assert_eq!(a1, a2);
+            transform3
+        };
     }
     
     // If the entity has a parent entity, but the entity has died.

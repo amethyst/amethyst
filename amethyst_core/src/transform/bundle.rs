@@ -41,8 +41,7 @@ impl<'a, 'b, 'c> ECSBundle<'a, 'b> for TransformBundle<'c> {
         world: &mut World,
         builder: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
-        world.register::<Init>();
-        world.register::<Child>();
+        world.register::<Parent>();
         world.register::<LocalTransform>();
         world.register::<Transform>();
 
