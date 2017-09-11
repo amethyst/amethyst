@@ -183,7 +183,7 @@ impl<'a> System<'a> for PongSystem {
                     ball.position[0] = 1.0 - right_dimensions[0] - ball.size / 2.;
                     ball.velocity[0] = -ball.velocity[0];
                     if let Some(ref output) = *audio_output {
-                        play_once(&sounds.bounce_sfx, &output);
+                        play_once(&sounds.bounce_sfx, 1.0, &output);
                     }
                 }
             }
@@ -199,7 +199,7 @@ impl<'a> System<'a> for PongSystem {
                     score.score_right
                 );
                 if let Some(ref output) = *audio_output {
-                    play_once(&sounds.score_sfx, &output);
+                    play_once(&sounds.score_sfx, 1.0, &output);
                 }
             }
 
@@ -213,7 +213,7 @@ impl<'a> System<'a> for PongSystem {
                     ball.position[0] = left_dimensions[0] + ball.size / 2.;
                     ball.velocity[0] = -ball.velocity[0];
                     if let Some(ref output) = *audio_output {
-                        play_once(&sounds.bounce_sfx, &output);
+                        play_once(&sounds.bounce_sfx, 1.0, &output);
                     }
                 }
             }
@@ -229,7 +229,7 @@ impl<'a> System<'a> for PongSystem {
                     score.score_right
                 );
                 if let Some(ref output) = *audio_output {
-                    play_once(&sounds.score_sfx, &output);
+                    play_once(&sounds.score_sfx, 1.0, &output);
                 }
             }
 
@@ -238,7 +238,7 @@ impl<'a> System<'a> for PongSystem {
                 ball.position[1] = 1.0 - ball.size / 2.;
                 ball.velocity[1] = -ball.velocity[1];
                 if let Some(ref output) = *audio_output {
-                    play_once(&sounds.bounce_sfx, &output);
+                    play_once(&sounds.bounce_sfx, 1.0, &output);
                 }
             }
 
@@ -247,7 +247,7 @@ impl<'a> System<'a> for PongSystem {
                 ball.position[1] = ball.size / 2.;
                 ball.velocity[1] = -ball.velocity[1];
                 if let Some(ref output) = *audio_output {
-                    play_once(&sounds.bounce_sfx, &output);
+                    play_once(&sounds.bounce_sfx, 1.0, &output);
                 }
             }
 
