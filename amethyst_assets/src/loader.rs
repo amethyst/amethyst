@@ -7,10 +7,10 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use fnv::FnvHashMap;
 use futures::{Async, Future, IntoFuture, Poll};
-use futures::sync::oneshot::{Receiver, channel};
+use futures::sync::oneshot::{channel, Receiver};
 use rayon::ThreadPool;
 
-use {Asset, AssetFuture, BoxedErr, Context, Directory, Format, AssetError, LoadError, Store};
+use {Asset, AssetError, AssetFuture, BoxedErr, Context, Directory, Format, LoadError, Store};
 use asset::AssetSpec;
 use store::AnyStore;
 
@@ -150,10 +150,8 @@ impl Loader {
         A: Asset + 'static,
         C: Context<Asset = A>,
     {
-        self.contexts.insert(
-            TypeId::of::<A>(),
-            Box::new(Arc::new(context)),
-        );
+        self.contexts
+            .insert(TypeId::of::<A>(), Box::new(Arc::new(context)));
     }
 
     /// Like `load_from`, but doesn't ask the cache for the asset.
@@ -227,13 +225,32 @@ impl Loader {
         load_asset::<A, F, N, _>(context.clone(), format, name, id, store, &self.pool)
     }
 
+    /// Loads an asset with a given id and format from a custom store.
+    /// The actual work is done on a worker thread, thus this method immediately returns
+    /// a future.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the asset wasn't registered.
+    pub fn load_data<A>(&self, data: <A::Context as Context>::Data) -> AssetFuture<A>
+    where
+        A: Asset,
+    {
+        AssetFuture::from_future(
+            self.context::<A::Context>()
+                .create_asset(data, &self.pool)
+                .into_future()
+                .map_err(BoxedErr::new),
+        )
+    }
+
     fn context<C>(&self) -> &Arc<C>
     where
         C: Context,
     {
-        let context = self.contexts.get(&TypeId::of::<C::Asset>()).expect(
-            "Assets need to be registered with `Loader::register`.",
-        );
+        let context = self.contexts
+            .get(&TypeId::of::<C::Asset>())
+            .expect("Assets need to be registered with `Loader::register`.");
 
         // `Any + Send + Sync` doesn't have `downcast_ref`
         Any::downcast_ref(&**context).unwrap()
@@ -276,7 +293,6 @@ where
     context.retrieve(&spec).unwrap_or_else(move || {
         load_asset_inner(context, format, spec, storage, pool)
     })
-
 }
 
 /// Loads an asset with a given context, format, specifier and storage right now.

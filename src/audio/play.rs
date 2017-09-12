@@ -2,19 +2,20 @@
 
 use std::io::Cursor;
 
-use rodio::Decoder;
-use rodio::play_once as rplay_once;
+use rodio::{Decoder, Sink, Source as RSource};
 
 use super::DecoderError;
 use super::output::Output;
 use super::source::Source;
 
-/// Play a sound once.
+/// Play a sound once.  A volume of 1.0 is unchanged, while 0.0 is silent.
 ///
 /// This will return an Error if the loaded audio file in source could not be decoded.
-pub fn try_play_once(source: &Source, endpoint: &Output) -> Result<(), DecoderError> {
-    match rplay_once(&endpoint.endpoint, Cursor::new(source.clone())) {
-        Ok(sink) => {
+pub fn try_play_once(source: &Source, volume: f32, endpoint: &Output) -> Result<(), DecoderError> {
+    let sink = Sink::new(&endpoint.endpoint);
+    match Decoder::new(Cursor::new(source.clone())) {
+        Ok(source) => {
+            sink.append(source.amplify(volume));
             sink.detach();
             Ok(())
         }
@@ -29,46 +30,41 @@ pub fn try_play_once(source: &Source, endpoint: &Output) -> Result<(), DecoderEr
     }
 }
 
-/// Play a sound once.
+/// Play a sound once.  A volume of 1.0 is unchanged, while 0.0 is silent.
 ///
 /// This may silently fail, in order to get error information use `try_play_once`.
-pub fn play_once(source: &Source, endpoint: &Output) {
-    // This absurd construct is here to keep warnings about an unused result from appearing.
-    if let Ok(()) = try_play_once(source, endpoint) {}
+pub fn play_once(source: &Source, volume: f32, endpoint: &Output) {
+    if let Err(err) = try_play_once(source, volume, endpoint) {
+        eprintln!("An error occurred while trying to play a sound: {:?}", err);
+    }
 }
 
-/// Play a sound n times.
+/// Play a sound n times.  A volume of 1.0 is unchanged, while 0.0 is silent.
 ///
 /// This may silently fail, in order to get error information use `try_play_n_times`.
-pub fn play_n_times(source: &Source, endpoint: &Output, n: u16) {
-    // This absurd construct is here to keep warnings about an unused result from appearing.
-    if let Ok(()) = try_play_n_times(source, endpoint, n) {}
+pub fn play_n_times(source: &Source, volume: f32, endpoint: &Output, n: u16) {
+    if let Err(err) = try_play_n_times(source, volume, endpoint, n) {
+        eprintln!("An error occurred while trying to play a sound: {:?}", err);
+    }
 }
 
-/// Play a sound n times.
+/// Play a sound n times.  A volume of 1.0 is unchanged, while 0.0 is silent.
 ///
 /// This will return an Error if the loaded audio file in source could not be decoded.
-pub fn try_play_n_times(source: &Source, endpoint: &Output, n: u16) -> Result<(), DecoderError> {
-    if n > 0 {
-        match rplay_once(&endpoint.endpoint, Cursor::new(source.clone())) {
-            Ok(sink) => {
-                for _ in 1..n {
-                    sink.append(Decoder::new(Cursor::new(source.clone())).map_err(
-                        |_| DecoderError,
-                    )?);
-                }
-                sink.detach();
-                return Ok(());
-            }
-
-            // There is one and only one error that can be returned, which is unrecognized format
-            // See documentation for DecoderError here:
-            // https://docs.rs/rodio/0.5.1/rodio/decoder/enum.DecoderError.html
-            Err(err) => {
-                eprintln!("Error while playing sound: {:?}", err);
-                return Err(DecoderError);
-            }
-        }
+pub fn try_play_n_times(
+    source: &Source,
+    volume: f32,
+    endpoint: &Output,
+    n: u16,
+) -> Result<(), DecoderError> {
+    let sink = Sink::new(&endpoint.endpoint);
+    for _ in 0..n {
+        sink.append(
+            Decoder::new(Cursor::new(source.clone()))
+                .map_err(|_| DecoderError)?
+                .amplify(volume),
+        );
     }
+    sink.detach();
     Ok(())
 }

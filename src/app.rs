@@ -19,6 +19,8 @@ use state::{State, StateMachine};
 use timing::{Stopwatch, Time};
 
 /// User-friendly facade for building games. Manages main loop.
+///
+
 #[derive(Derivative)]
 #[derivative(Debug)]
 pub struct Application<'a, 'b> {
@@ -37,11 +39,62 @@ pub struct Application<'a, 'b> {
 
 impl<'a, 'b> Application<'a, 'b> {
     /// Creates a new Application with the given initial game state.
-    pub fn new<S: State + 'a>(initial_state: S) -> Result<Application<'a, 'b>> {
+    /// This will create and allocate all the needed resources for
+    /// the event loop of the game engine. It is a shortcut for convenience
+    /// if you need more control over how the engine is configured you should
+    /// be using [build](struct.Application.html#method.build) instead.
+    ///
+    /// # Parameters
+    /// - `initial_state`: The initial State handler of your game See
+    ///   [State](trait.State.html) for more information on what this is.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `Result` type wrapping the `Application` type. See
+    /// [errors](struct.Application.html#errors) for a full list of
+    /// possible errors that can happen in the creation of a Application object.
+    ///
+    /// # Type Parameters
+    ///
+    /// - `S`: A type that implements the `State` trait. e.g. Your initial
+    ///        game logic. 
+    ///
+    /// # Lifetimes
+    ///
+    /// - `a`: The lifetime of the `State` objects.
+    /// - `b`: This lifetime is inherited from `specs` and `shred`, it is
+    ///        the minimum lifetime of the systems used by `Application`
+    ///
+    /// # Errors
+    ///
+    /// Application will return an error if the internal threadpool fails
+    /// to initialize correctly because of systems resource limitations
+    ///
+    /// # Examples
+    ///
+    /// ~~~no_run
+    /// use amethyst::prelude::*;
+    ///
+    /// struct NullState;
+    /// 
+    /// impl State for NullState {}
+    /// 
+    /// fn main() {
+    ///     let mut game = Application::new(NullState).expect("Failed to initialize");
+    ///     game.run();
+    /// }
+    /// ~~~
+    pub fn new<S>(initial_state: S) -> Result<Application<'a, 'b>>
+    where
+        S: State + 'a
+    {
         ApplicationBuilder::new(initial_state)?.build()
     }
 
-    /// Builds a new Application with the given settings.
+
+    /// Creates a new ApplicationBuilder with the given initial game state.
+    ///
+    /// This is identical in function to [ApplicationBuilder::new](struct.ApplicationBuilder.html#method.new).
     pub fn build<S>(initial_state: S) -> Result<ApplicationBuilder<'a, 'b, S>>
     where
         S: State + 'a,
@@ -49,7 +102,15 @@ impl<'a, 'b> Application<'a, 'b> {
         ApplicationBuilder::new(initial_state)
     }
 
-    /// Starts the application and manages the game loop.
+    /// Run the gameloop until the game state indicates that the game is no
+    /// longer running. This is done via the `State` returning `Trans::Quit` or
+    /// `Trans::Pop` on the last state in from the stack. See full
+    /// documentation on this in [State](trait.State.html) documentation.
+    ///
+    /// # Examples
+    ///
+    /// See the example supplied in the
+    /// [`new`](struct.Application.html#examples) method.
     pub fn run(&mut self) {
         self.initialize();
 
@@ -159,8 +220,71 @@ pub struct ApplicationBuilder<'a, 'b, T: State + 'a> {
 }
 
 impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
-    /// Creates a new ApplicationBuilder with the given initial game state and
-    /// display configuration.
+    /// Creates a new [ApplicationBuilder](struct.ApplicationBuilder.html) instance
+    /// that wraps the initial_state. This is the more verbose way of initializing
+    /// your application if you require specific configuration details to be changed
+    /// away from the default.
+    ///
+    /// # Parameters
+    /// - `initial_state`: The initial State handler of your game. See
+    ///   [State](trait.State.html) for more information on what this is.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `Result` type wrapping the `Application` type. See
+    /// [errors](struct.Application.html#errors) for a full list of
+    /// possible errors that can happen in the creation of a Application object.
+    ///
+    /// # Type parameters
+    ///
+    /// - `S`: A type that implements the `State` trait. e.g. Your initial
+    ///        game logic. 
+    ///
+    /// # Lifetimes
+    ///
+    /// - `a`: The lifetime of the `State` objects.
+    /// - `b`: This lifetime is inherited from `specs` and `shred`, it is
+    ///        the minimum lifetime of the systems used by `Application`
+    ///
+    /// # Errors
+    ///
+    /// Application will return an error if the internal threadpool fails
+    /// to initialize correctly because of systems resource limitations
+    ///
+    /// # Examples
+    ///
+    /// ~~~no_run
+    /// use amethyst::prelude::*;
+    /// use amethyst::ecs::transform::{Child, LocalTransform, TransformSystem};
+    ///
+    /// struct NullState;
+    /// 
+    /// impl State for NullState {}
+    /// 
+    /// fn main() {
+    ///     // initialize the builder, the `ApplicationBuilder` object
+    ///     // follows the use pattern of most builder objects found
+    ///     // in the rust ecosystem. Each function modifies the object
+    ///     // returning a new object that with the modified configuration.
+    ///     let mut game = Application::build(NullState)
+    ///         .expect("Failed to initialize")
+    ///
+    ///     // components can be registered at this stage
+    ///         .register::<Child>()
+    ///         .register::<LocalTransform>()
+    ///
+    ///     // systems can be added before the game is run
+    ///         .with::<TransformSystem>(TransformSystem::new(), "transform_system", &[])
+    ///         
+    ///     // lastly we can build the Application object
+    ///         .build()
+    ///         .expect("Failed to create Application");
+    ///
+    ///     // the game instance can now be run, this exits only when the game is done
+    ///     game.run();
+    /// }
+    /// ~~~
+
     pub fn new(initial_state: T) -> Result<Self> {
         use num_cpus;
         use rayon::Configuration;
@@ -183,19 +307,116 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
         })
     }
 
-    /// Registers a given component type.
-    pub fn register<C: Component>(mut self) -> Self {
+    /// Registers a component into the entity-component-system. This method
+    /// takes no options other than the component type which is defined
+    /// using a 'turbofish'. See the example for what this looks like.
+    ///
+    /// You must register a component type before it can be used. If
+    /// code accesses a component that has not previously been registered
+    /// it will `panic`.
+    ///
+    /// # Type Parameters
+    ///
+    /// - `C`: The Component type that you are registering. This must
+    ///        implement the `Component` trait to be registered.
+    ///
+    /// # Returns
+    ///
+    /// This function returns ApplicationBuilder after it has modified it
+    ///
+    /// # Examples
+    ///
+    /// ~~~no_run
+    /// use amethyst::prelude::*;
+    /// use amethyst::ecs::{Component, HashMapStorage};
+    ///
+    /// struct NullState;
+    /// impl State for NullState {}
+    /// 
+    /// // define your custom type for the ECS
+    /// struct Velocity([f32; 3]);
+    ///
+    /// // the compiler must be told how to store every component, `Velocity`
+    /// // in this case. This is done via The `amethyst::ecs::Component` trait.
+    /// impl Component for Velocity {
+    ///     // To do this the `Component` trait has an associated type
+    ///     // which is used to associate the type back to the container type.
+    ///     // There are a few common containers, VecStorage and HashMapStorage
+    ///     // are the most common used.
+    ///     //
+    ///     // See the documentation on the specs::Storage trait for more information.
+    ///     // https://docs.rs/specs/0.9.5/specs/struct.Storage.html
+    ///     type Storage = HashMapStorage<Velocity>;
+    /// }
+    ///
+    /// fn main() {
+    ///     // After creating a builder, we can add any number of components
+    ///     // using the register method.
+    ///     Application::build(NullState)
+    ///         .expect("Failed to initialize")
+    ///         .register::<Velocity>();
+    ///
+    /// }
+    /// ~~~
+    ///
+    pub fn register<C>(mut self) -> Self
+    where
+        C: Component,
+    {
         self.world.register::<C>();
         self
     }
 
-    /// Adds an ECS resource which can be accessed from systems.
-    pub fn add_resource<R>(mut self, res: R) -> Self
+    /// Adds the supplied ECS resource which can be accessed from game systems.
+    ///
+    /// Resources are common data that is shared with one or more game system.
+    ///
+    /// If a resource is added with the identical type as an existing resource,
+    /// the new resource will replace the old one and the old resource will
+    /// be dropped.
+    /// 
+    /// # Parameters
+    /// `resource`: The initialized resource you wish to register
+    ///
+    /// # Type Parameters
+    ///
+    /// `R`: `resource` must implement the `Resource` trait. This trait will
+    ///      be automatically implemented if `Any` + `Send` + `Sync` traits
+    ///      exist for type `R`.
+    ///
+    /// # Returns
+    ///
+    /// This function returns ApplicationBuilder after it has modified it.
+    ///
+    /// # Examples
+    ///
+    /// ~~~no_run
+    /// use amethyst::prelude::*;
+    ///
+    /// struct NullState;
+    /// impl State for NullState {}
+    /// 
+    /// // your resource can be anything that can be safely stored in a `Arc`
+    /// // in this example, it is a vector of scores with a user name
+    /// struct HighScores(Vec<Score>);
+    ///
+    /// struct Score {
+    ///     score: u32,
+    ///     user: String   
+    /// }
+    ///
+    /// fn main() {
+    ///     let score_board = HighScores(Vec::new());
+    ///     Application::build(NullState)
+    ///         .expect("Failed to initialize")
+    ///         .add_resource(score_board);
+    /// }
+    /// ~~~
+    pub fn add_resource<R>(mut self, resource: R) -> Self
     where
         R: Resource,
     {
-        self.world.add_resource(res);
-
+        self.world.add_resource(resource);
         self
     }
 
