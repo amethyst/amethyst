@@ -80,12 +80,10 @@ where
 }
 
 impl<'a> System<'a> for AudioSystem {
-    type SystemData = (
-        Fetch<'a, SelectedListener>,
-        ReadStorage<'a, TransformComponent>,
-        ReadStorage<'a, AudioListener>,
-        WriteStorage<'a, AudioEmitter>,
-    );
+    type SystemData = (Fetch<'a, SelectedListener>,
+     ReadStorage<'a, TransformComponent>,
+     ReadStorage<'a, AudioListener>,
+     WriteStorage<'a, AudioEmitter>);
 
     fn run(&mut self, (select_listener, transform, listener, mut audio_emitter): Self::SystemData) {
         // Process emitters and listener.

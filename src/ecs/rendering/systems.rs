@@ -19,19 +19,18 @@ use error::{Error, Result};
 #[derivative(Debug)]
 pub struct RenderSystem {
     pipe: Pipeline,
-    #[derivative(Debug = "ignore")] renderer: Renderer,
+    #[derivative(Debug = "ignore")]
+    renderer: Renderer,
     scene: Scene,
 }
 impl<'a> System<'a> for RenderSystem {
-    type SystemData = (
-        Fetch<'a, Camera>,
-        Fetch<'a, Factory>,
-        Fetch<'a, AmbientColor>,
-        ReadStorage<'a, Transform>,
-        ReadStorage<'a, LightComponent>,
-        ReadStorage<'a, MaterialComponent>,
-        ReadStorage<'a, MeshComponent>,
-    );
+    type SystemData = (Fetch<'a, Camera>,
+     Fetch<'a, Factory>,
+     Fetch<'a, AmbientColor>,
+     ReadStorage<'a, Transform>,
+     ReadStorage<'a, LightComponent>,
+     ReadStorage<'a, MaterialComponent>,
+     ReadStorage<'a, MeshComponent>);
 
     fn run(
         &mut self,
@@ -56,15 +55,16 @@ impl<'a> System<'a> for RenderSystem {
                                 for pass in stage.passes.iter_mut() {
                                     let effect = &mut pass.effect.data;
                                     // Update Color Buffer
-                                    effect.out_colors = 
-                                        new_target
-                                            .color_bufs()
-                                            .iter()
-                                            .map(|cb| cb.as_output.clone()).collect();
+                                    effect.out_colors.clear();
+                                    effect.out_colors.extend(new_target
+                                        .color_bufs()
+                                        .iter()
+                                        .map(|cb| cb.as_output.clone())
+                                    );
                                     // Update Depth Stencil
-                                    effect.out_depth = new_target
-                                        .depth_buf()
-                                        .map(|db| (db.as_output.clone(), (0, 0)));
+                                    effect.out_depth = new_target.depth_buf().map(|db| {
+                                        (db.as_output.clone(), (0, 0))
+                                    });
                                 }
                             }
                         }
@@ -100,8 +100,11 @@ impl<'a> System<'a> for RenderSystem {
 
         self.scene.add_camera(camera.clone());
 
-        self.renderer
-            .draw(&self.scene, &self.pipe, Duration::from_secs(0));
+        self.renderer.draw(
+            &self.scene,
+            &self.pipe,
+            Duration::from_secs(0),
+        );
     }
 }
 
@@ -117,12 +120,12 @@ impl<'a, 'b> SystemExt<'a, (&'b EventsLoop, PipelineBuilder, Option<DisplayConfi
         if let Some(config) = config {
             renderer.with_config(config);
         }
-        let mut renderer = renderer
-            .build()
-            .map_err(|err| Error::System(BoxedErr::new(err)))?;
-        let pipe = renderer
-            .create_pipe(pipe)
-            .map_err(|err| Error::System(BoxedErr::new(err)))?;
+        let mut renderer = renderer.build().map_err(
+            |err| Error::System(BoxedErr::new(err)),
+        )?;
+        let pipe = renderer.create_pipe(pipe).map_err(|err| {
+            Error::System(BoxedErr::new(err))
+        })?;
 
         use cgmath::Deg;
         use renderer::{Camera, Projection};

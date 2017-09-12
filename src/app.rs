@@ -26,8 +26,10 @@ pub struct Application<'a, 'b> {
     #[derivative(Debug = "ignore")]
     pub engine: Engine,
 
-    #[derivative(Debug = "ignore")] dispatcher: Dispatcher<'a, 'b>,
-    #[derivative(Debug = "ignore")] events: EventsLoop,
+    #[derivative(Debug = "ignore")]
+    dispatcher: Dispatcher<'a, 'b>,
+    #[derivative(Debug = "ignore")]
+    events: EventsLoop,
     states: StateMachine<'a>,
     time: Time,
     timer: Stopwatch,
@@ -82,10 +84,9 @@ impl<'a, 'b> Application<'a, 'b> {
         {
             let engine = &mut self.engine;
             let states = &mut self.states;
-            if engine
-                .world
-                .res
-                .has_value(ResourceId::new::<InputHandler>())
+            if engine.world.res.has_value(
+                ResourceId::new::<InputHandler>(),
+            )
             {
                 engine
                     .world
@@ -96,10 +97,9 @@ impl<'a, 'b> Application<'a, 'b> {
             profile_scope!("handle_event");
 
             self.events.poll_events(|event| {
-                if engine
-                    .world
-                    .res
-                    .has_value(ResourceId::new::<InputHandler>())
+                if engine.world.res.has_value(
+                    ResourceId::new::<InputHandler>(),
+                )
                 {
                     let mut input = engine.world.write_resource::<InputHandler>();
                     if let Event::WindowEvent { ref event, .. } = event {
@@ -167,9 +167,9 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
 
         let num_cores = num_cpus::get();
         let cfg = Configuration::new().num_threads(num_cores);
-        let pool = ThreadPool::new(cfg)
-            .map(|p| Arc::new(p))
-            .map_err(|_| Error::Application)?;
+        let pool = ThreadPool::new(cfg).map(|p| Arc::new(p)).map_err(|_| {
+            Error::Application
+        })?;
         let mut world = World::new();
         let base_path = format!("{}/resources", env!("CARGO_MANIFEST_DIR"));
         world.add_resource(Loader::new(base_path, pool.clone()));
@@ -289,8 +289,7 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
 
     /// Builds the Application and returns the result.
     pub fn build(self) -> Result<Application<'a, 'b>> {
-        #[cfg(feature = "profiler")]
-        register_thread_with_profiler("Main".into());
+        #[cfg(feature = "profiler")] register_thread_with_profiler("Main".into());
         #[cfg(feature = "profiler")]
         profile_scope!("new");
 

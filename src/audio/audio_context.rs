@@ -15,9 +15,7 @@ pub struct AudioContext {
 impl AudioContext {
     /// Creates a new audio context.
     pub fn new() -> AudioContext {
-        AudioContext {
-            cache: Cache::new(),
-        }
+        AudioContext { cache: Cache::new() }
     }
 }
 
@@ -32,9 +30,7 @@ impl Context for AudioContext {
     }
 
     fn create_asset(&self, data: Vec<u8>, _: &ThreadPool) -> Result<Source, NoError> {
-        Ok(Source {
-            pointer: AssetPtr::new(Arc::new(data)),
-        })
+        Ok(Source { pointer: AssetPtr::new(Arc::new(data)) })
     }
 
     fn update(&self, spec: &AssetSpec, asset: AssetFuture<Source>) {

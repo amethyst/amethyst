@@ -40,13 +40,11 @@ impl TransformSystem {
 }
 
 impl<'a> System<'a> for TransformSystem {
-    type SystemData = (
-        Entities<'a>,
-        ReadStorage<'a, LocalTransform>,
-        ReadStorage<'a, Child>,
-        WriteStorage<'a, Init>,
-        WriteStorage<'a, Transform>,
-    );
+    type SystemData = (Entities<'a>,
+     ReadStorage<'a, LocalTransform>,
+     ReadStorage<'a, Child>,
+     WriteStorage<'a, Init>,
+     WriteStorage<'a, Transform>);
 
     fn run(&mut self, (entities, locals, children, mut init, mut globals): Self::SystemData) {
         // Checks for entities with a local transform and parent, but no
@@ -121,7 +119,8 @@ impl<'a> System<'a> for TransformSystem {
                         }
                     }
 
-                    if local.is_dirty() || child.is_dirty() || self.dirty.contains(&child.parent())
+                    if local.is_dirty() || child.is_dirty() ||
+                        self.dirty.contains(&child.parent())
                     {
                         let combined_transform = if let Some(parent_global) =
                             globals.get(child.parent())
