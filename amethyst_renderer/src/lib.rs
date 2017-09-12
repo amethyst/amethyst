@@ -219,8 +219,14 @@ impl Renderer {
 	/// Updates the rendering target (useful for resizes)
 	/// Works only on tux for now >_<
 	pub fn regen_target(&mut self)->Option<Target>{
-    	use gfx_window_glutin;
-    	let (new_color, new_depth) = gfx_window_glutin::new_views(&self.window);
+        #[cfg(all(feature = "d3d11", target_os = "windows"))]
+        use gfx_window_dxgi as win;
+        #[cfg(all(feature = "metal", target_os = "macos"))]
+        use gfx_window_metal as win;
+        #[cfg(feature = "opengl")]
+        use gfx_window_glutin as win;
+
+    	let (new_color, new_depth) = win::new_views(&self.window);
 		if let Some(window_size) = self.window_size(){
 			let target = Target::new(
     		    ColorBuffer {

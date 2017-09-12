@@ -54,14 +54,13 @@ impl<'a> System<'a> for RenderSystem {
                                 stage.set_target(new_target.clone());
                                 // Update stage effects, which are used to draw on the buffers
                                 for pass in stage.passes.iter_mut() {
-                                    let mut effect = &mut pass.effect.data;
+                                    let effect = &mut pass.effect.data;
                                     // Update Color Buffer
-                                    effect.out_colors.extend(
+                                    effect.out_colors = 
                                         new_target
                                             .color_bufs()
                                             .iter()
-                                            .map(|cb| cb.as_output.clone()),
-                                    );
+                                            .map(|cb| cb.as_output.clone()).collect();
                                     // Update Depth Stencil
                                     effect.out_depth = new_target
                                         .depth_buf()
