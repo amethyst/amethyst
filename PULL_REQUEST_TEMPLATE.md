@@ -17,7 +17,7 @@ Write an x in the below boxes if they are true.
     - [ ] Updated the corresponding doc comments if necessary.
 - [ ] I am providing an optimization to amethyst, and I have benchmarks proving it is an improvement.
 
-- [ ] This PR contains platform-specific code and I have tested it on:
+- [ ] This PR contains platform-specific code (possibly in a dependency) and I have tested it on:
     - [ ] Windows
     - [ ] OSX
     - [ ] Linux
