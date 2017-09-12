@@ -9,6 +9,7 @@
 # PR checklist
 Write an x in the below boxes if they are true.
 - [ ] I agree to dual-license my contribution under the MIT license and the Apache License version 2.0
+- [ ] I've tested my code on at least one supported platform
 - [ ] I ran rustfmt on my code
 - [ ] There were breaking changes in my PR so I:
     - [ ] Updated the book to reflect these changes.
