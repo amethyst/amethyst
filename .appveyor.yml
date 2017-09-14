@@ -13,6 +13,9 @@ matrix:
   fast_finish: true
   allow_failures:
     - channel: nightly
+    
+environment:
+  RUSTFLAGS: "-D warnings"
 
 # Set up the Rust toolchain.
 install:
@@ -43,6 +46,5 @@ build: false
 
 # Generate documentation, compile the engine, run tests.
 test_script:
-  - cargo doc --all --no-deps -v
   - cargo test --all -v
   - cargo test --all -v --features profiler
