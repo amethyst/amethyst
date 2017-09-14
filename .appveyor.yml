@@ -1,5 +1,6 @@
 # Set up the build environment.
 environment:
+  RUSTFLAGS: "-D warnings"
   matrix:
     - channel: stable
       target: x86_64-pc-windows-msvc
@@ -13,9 +14,6 @@ matrix:
   fast_finish: true
   allow_failures:
     - channel: nightly
-    
-environment:
-  RUSTFLAGS: "-D warnings"
 
 # Set up the Rust toolchain.
 install:
