@@ -4,6 +4,8 @@ rust:
   - stable
   - beta
   - nightly
+env:
+  - RUSTFLAGS="-D warnings"
 
 # Allow for occasional compiler breakage on nightly Rust.
 matrix:
@@ -45,7 +47,6 @@ before_script:
 
 # Generate documentation, compile the engine, run tests.
 script: |
-  cargo doc --all --no-deps -v &&
   # Build and test without profiler
   cargo test --all -v &&
   # Build and test with profiler
