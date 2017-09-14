@@ -409,10 +409,10 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     ///     let score_board = HighScores(Vec::new());
     ///     Application::build(NullState)
     ///         .expect("Failed to initialize")
-    ///         .add_resource(score_board);
+    ///         .with_resource(score_board);
     /// }
     /// ~~~
-    pub fn add_resource<R>(mut self, resource: R) -> Self
+    pub fn with_resource<R>(mut self, resource: R) -> Self
     where
         R: Resource,
     {
@@ -424,9 +424,9 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     /// barrier are executed before the ones after this barrier.
     ///
     /// Does nothing if there were no systems added since the last call to
-    /// `add_barrier()`. Thread-local systems are not affected by barriers;
+    /// `with_barrier()`. Thread-local systems are not affected by barriers;
     /// they're always executed at the end.
-    pub fn add_barrier(mut self) -> Self {
+    pub fn with_barrier(mut self) -> Self {
         self.disp_builder = self.disp_builder.add_barrier();
         self
     }
@@ -477,7 +477,7 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     }
 
     /// Add asset loader to resources
-    pub fn add_store<I, S>(self, name: I, store: S) -> Self
+    pub fn with_store<I, S>(self, name: I, store: S) -> Self
     where
         I: Into<String>,
         S: Store + Send + Sync + 'static,
