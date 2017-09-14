@@ -3,7 +3,9 @@
 use std::sync::Arc;
 
 use rayon::ThreadPool;
+use rodio::buffer::SamplesBuffer;
 
+use super::DecoderError;
 use super::source::Source;
 use assets::*;
 
@@ -21,7 +23,7 @@ impl AudioContext {
 
 impl Context for AudioContext {
     type Asset = Source;
-    type Data = Vec<u8>;
+    type Data = RawAudioData;
     type Error = NoError;
     type Result = Result<Self::Asset, Self::Error>;
 
@@ -29,8 +31,8 @@ impl Context for AudioContext {
         "audio"
     }
 
-    fn create_asset(&self, data: Vec<u8>, _: &ThreadPool) -> Result<Source, NoError> {
-        Ok(Source { pointer: AssetPtr::new(Arc::new(data)) })
+    fn create_asset(&self, data: Self::Data, _: &ThreadPool) -> Result<Source, NoError> {
+        Ok(Source { pointer: AssetPtr::new(Arc::new(SamplesBuffer::new(data.channels, data.sample_rate, data.samples))) })
     }
 
     fn update(&self, spec: &AssetSpec, asset: AssetFuture<Source>) {

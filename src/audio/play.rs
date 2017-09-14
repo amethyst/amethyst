@@ -61,9 +61,9 @@ pub fn try_play_n_times(source: &Source, endpoint: &Output, n: u16) -> Result<()
                 return Ok(());
             }
 
-            /// There is one and only one error that can be returned, which is unrecognized format
-            /// See documentation for DecoderError here:
-            /// https://docs.rs/rodio/0.5.1/rodio/decoder/enum.DecoderError.html
+            // There is one and only one error that can be returned, which is unrecognized format
+            // See documentation for DecoderError here:
+            // https://docs.rs/rodio/0.5.1/rodio/decoder/enum.DecoderError.html
             Err(err) => {
                 eprintln!("Error while playing sound: {:?}", err);
                 return Err(DecoderError);
