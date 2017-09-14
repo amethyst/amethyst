@@ -22,18 +22,22 @@
 //!     fn on_start(&mut self, _: &mut Engine) {
 //!         println!("Starting game!");
 //!     }
-//!
 //!     fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
 //!         match event {
-//!             Event::WindowEvent { event, .. } => match event {
-//!                 WindowEvent::KeyboardInput {
-//!                     input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Escape), .. }, ..
-//!                 } |
-//!                 WindowEvent::Closed => Trans::Quit,
-//!                 _ => Trans::None,
-//!             },
-//!             _ => Trans::None,
+//!            Event::WinitEvent(event) => {
+//!               if let WinitEvent::WindowEvent { event, .. } = event {
+//!                     match event {
+//!                         WindowEvent::KeyboardInput {
+//!                            input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Escape), .. }, ..
+//!                         } |
+//!                         WindowEvent::Closed => return Trans::Quit,
+//!                         _ => {},
+//!                     }
+//!                 }
+//!             }
+//!             _ => {},
 //!         }
+//!         Trans::None
 //!     }
 //!
 //!     fn update(&mut self, _: &mut Engine) -> Trans {
