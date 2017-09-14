@@ -1,14 +1,35 @@
 # Set up the Rust toolchain.
 language: rust
 rust:
-    - stable
-    - beta
-    - nightly
+  - stable
+  - beta
+  - nightly
 
-# Allow for occasional compiler breakage on Nightly.
+# Allow for occasional compiler breakage on nightly Rust.
 matrix:
-    allow_failures:
-        - rust: nightly
+  allow_failures:
+    - rust: nightly
+
+# Build the Bors staging and trying branches, plus PRs to develop, master, and
+# the latest release branch.
+branches:
+  only:
+    - staging
+    - trying
+    - develop
+    - master
+    - /release-.*/
+
+# Test on both Linux and OS X.
+os:
+  - linux
+  - osx
+
+# Install ALSA development libraries before compiling on Linux.
+addons:
+  apt:
+    packages:
+      - libasound2-dev
 
 # Since this build doesn't require sudo, we can turn it off and improve build
 # performance.
@@ -18,27 +39,20 @@ sudo: false
 # needed.
 cache: cargo
 
-# Install linux audio libraries to allow alsa compilation.
-addons:
-  apt:
-    packages:
-    - libasound2-dev
-
-# Install the necessary crates for building and testing the engine.
+# Allow binaries installed from Cargo.
 before_script:
-    - export PATH=$PATH:/home/travis/.cargo/bin
+  - export PATH=$PATH:/home/travis/.cargo/bin
 
-# Format the codebase, generate documentation, compile the engine, run tests.
+# Generate documentation, compile the engine, run tests.
 script: |
-      cargo doc --all --no-deps -v &&
-      cargo build --all -v &&
-      # Build and test without profiler
-      cargo test --all -v &&
-      # Build and test with profiler
-      cargo test --all --features profiler -v
+  cargo doc --all --no-deps -v &&
+  # Build and test without profiler
+  cargo test --all -v &&
+  # Build and test with profiler
+  cargo test --all --features profiler -v
 
 # Push notifications to `amethyst/general` and `amethyst/engine` Gitter chats.
 notifications:
-    webhooks:
-        urls:
-            - https://webhooks.gitter.im/e/9735c01977c1df3de5cb
+  webhooks:
+    urls:
+      - https://webhooks.gitter.im/e/9735c01977c1df3de5cb

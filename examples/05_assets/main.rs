@@ -25,13 +25,10 @@ use rayon::ThreadPool;
 struct Custom;
 
 impl Format for Custom {
+    const EXTENSIONS: &'static [&'static str] = &["custom"];
     type Data = Vec<PosNormTex>;
     type Error = NoError;
     type Result = Result<Vec<PosNormTex>, NoError>;
-
-    fn extension() -> &'static str {
-        "custom"
-    }
 
     fn parse(&self, bytes: Vec<u8>, _: &ThreadPool) -> Self::Result {
         let data: String = String::from_utf8(bytes).unwrap();

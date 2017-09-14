@@ -43,13 +43,10 @@ impl Context for DummyContext {
 struct DummyFormat;
 
 impl Format for DummyFormat {
+    const EXTENSIONS: &'static [&'static str] = &["dum"];
     type Result = Result<String, Utf8Error>;
     type Data = String;
     type Error = Utf8Error;
-
-    fn extension() -> &'static str {
-        "dum"
-    }
 
     fn parse(&self, bytes: Vec<u8>, _: &ThreadPool) -> Self::Result {
         from_utf8(bytes.as_slice()).map(|s| s.to_owned())

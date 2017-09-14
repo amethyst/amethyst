@@ -13,7 +13,6 @@
 extern crate derivative;
 extern crate fnv;
 extern crate futures;
-extern crate log;
 extern crate parking_lot;
 extern crate rayon;
 extern crate specs;
@@ -23,7 +22,7 @@ pub use specs::common::BoxedErr;
 pub use asset::{Asset, AssetFuture, AssetSpec, Context, Format};
 pub use cache::Cache;
 pub use error::{AssetError, LoadError, NoError, SharedAssetError};
-pub use loader::{Loader, load_asset, SpawnedFuture, StoreId};
+pub use loader::{load_asset, Loader, SpawnedFuture, StoreId};
 pub use simple::{AssetPtr, SimpleAsset, SimpleContext};
 pub use store::{Directory, Store};
 

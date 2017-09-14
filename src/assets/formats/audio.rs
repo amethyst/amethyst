@@ -33,13 +33,10 @@ fn decode_samples(bytes: Vec<u8>, pool: &ThreadPool) -> AudioFuture {
 pub struct WavFormat;
 
 impl Format for WavFormat {
+    const EXTENSIONS: &'static [&'static str] = &["wav"];
     type Data = RawAudioData;
     type Error = DecoderError;
     type Result = AudioFuture;
-
-    fn extension() -> &'static str {
-        "wav"
-    }
 
     fn parse(&self, bytes: Vec<u8>, pool: &ThreadPool) -> Self::Result {
         decode_samples(bytes, pool)
@@ -50,13 +47,10 @@ impl Format for WavFormat {
 pub struct OggFormat;
 
 impl Format for OggFormat {
+    const EXTENSIONS: &'static [&'static str] = &["ogg"];
     type Data = RawAudioData;
     type Error = DecoderError;
     type Result = AudioFuture;
-
-    fn extension() -> &'static str {
-        "ogg"
-    }
 
     fn parse(&self, bytes: Vec<u8>, pool: &ThreadPool) -> Self::Result {
         decode_samples(bytes, pool)
@@ -67,13 +61,10 @@ impl Format for OggFormat {
 pub struct FlacFormat;
 
 impl Format for FlacFormat {
+    const EXTENSIONS: &'static [&'static str] = &["flac"];
     type Data = RawAudioData;
     type Error = DecoderError;
     type Result = AudioFuture;
-
-    fn extension() -> &'static str {
-        "flac"
-    }
 
     fn parse(&self, bytes: Vec<u8>, pool: &ThreadPool) -> Self::Result {
         decode_samples(bytes, pool)

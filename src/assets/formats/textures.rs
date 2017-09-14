@@ -20,43 +20,19 @@ pub struct ImageData {
 /// A future which will eventually have an image available.
 pub type ImageFuture = SpawnedFuture<ImageData, ImageError>;
 
-fn parse_jpeg(bytes: Vec<u8>, pool: &ThreadPool) -> ImageFuture {
-    ImageFuture::spawn(pool, move || {
-        imagefmt::jpeg::read(&mut Cursor::new(bytes), ColFmt::RGBA).map(|raw| ImageData { raw })
-    })
-}
-
-/// Allows loading of Jpeg files.
-pub struct JpegFormat;
-
-impl Format for JpegFormat {
-    type Data = ImageData;
-    type Error = ImageError;
-    type Result = ImageFuture;
-
-    fn extension() -> &'static str {
-        "jpeg"
-    }
-
-    fn parse(&self, bytes: Vec<u8>, pool: &ThreadPool) -> Self::Result {
-        parse_jpeg(bytes, pool)
-    }
-}
-
-/// Allows loading of Jpg files.
+/// Allows loading of jpg or jpeg files.
 pub struct JpgFormat;
 
 impl Format for JpgFormat {
+    const EXTENSIONS: &'static [&'static str] = &["jpg", "jpeg"];
     type Data = ImageData;
     type Error = ImageError;
     type Result = ImageFuture;
 
-    fn extension() -> &'static str {
-        "jpg"
-    }
-
     fn parse(&self, bytes: Vec<u8>, pool: &ThreadPool) -> Self::Result {
-        parse_jpeg(bytes, pool)
+        ImageFuture::spawn(pool, move || {
+            imagefmt::jpeg::read(&mut Cursor::new(bytes), ColFmt::RGBA).map(|raw| ImageData { raw })
+        })
     }
 }
 
@@ -64,13 +40,10 @@ impl Format for JpgFormat {
 pub struct PngFormat;
 
 impl Format for PngFormat {
+    const EXTENSIONS: &'static [&'static str] = &["png"];
     type Data = ImageData;
     type Error = ImageError;
     type Result = ImageFuture;
-
-    fn extension() -> &'static str {
-        "png"
-    }
 
     fn parse(&self, bytes: Vec<u8>, pool: &ThreadPool) -> Self::Result {
         ImageFuture::spawn(pool, move || {
@@ -83,13 +56,10 @@ impl Format for PngFormat {
 pub struct BmpFormat;
 
 impl Format for BmpFormat {
+    const EXTENSIONS: &'static [&'static str] = &["bmp"];
     type Data = ImageData;
     type Error = ImageError;
     type Result = ImageFuture;
-
-    fn extension() -> &'static str {
-        "bmp"
-    }
 
     fn parse(&self, bytes: Vec<u8>, pool: &ThreadPool) -> Self::Result {
         ImageFuture::spawn(pool, move || {

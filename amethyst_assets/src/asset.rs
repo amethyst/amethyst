@@ -1,7 +1,7 @@
 use std::error::Error;
 
 use futures::{Async, Poll};
-use futures::future::{Future, IntoFuture, Shared, SharedItem, SharedError};
+use futures::future::{Future, IntoFuture, Shared, SharedError, SharedItem};
 use rayon::ThreadPool;
 use specs::{Component, DenseVecStorage};
 
@@ -91,8 +91,8 @@ impl<A> From<Shared<Box<Future<Item = A, Error = BoxedErr>>>> for AssetFuture<A>
 /// * the storage it was loaded from
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct AssetSpec {
-    /// The extension of this asset
-    pub ext: &'static str,
+    /// The possible extensions of this asset
+    pub exts: &'static [&'static str],
     /// The name of this asset.
     pub name: String,
     /// Unique identifier indicating the Storage from which the asset was loaded.
@@ -101,8 +101,8 @@ pub struct AssetSpec {
 
 impl AssetSpec {
     /// Creates a new asset specifier from the given parameters.
-    pub fn new(name: String, ext: &'static str, store: StoreId) -> Self {
-        AssetSpec { ext, name, store }
+    pub fn new(name: String, exts: &'static [&'static str], store: StoreId) -> Self {
+        AssetSpec { exts, name, store }
     }
 }
 
@@ -166,6 +166,14 @@ pub trait Context: Send + Sync + 'static {
 /// in turn accepted by `Asset::from_data`. Examples for formats are
 /// `Png`, `Obj` and `Wave`.
 pub trait Format {
+    /// A list of the extensions (without `.`).
+    ///
+    /// ## Examples
+    ///
+    /// * `"png"`
+    /// * `"obj"`
+    /// * `"wav"`
+    const EXTENSIONS: &'static [&'static str];
     /// The data type this format is able to load.
     type Data;
     /// The error that may be returned from `Format::parse`.
@@ -174,14 +182,7 @@ pub trait Format {
     /// `IntoFuture`.
     type Result: IntoFuture<Item = Self::Data, Error = Self::Error>;
 
-    /// Returns the extension (without `.`).
-    ///
-    /// ## Examples
-    ///
-    /// * `"png"`
-    /// * `"obj"`
-    /// * `"wav"`
-    fn extension() -> &'static str;
+
 
     /// Reads the given bytes and produces asset data.
     fn parse(&self, bytes: Vec<u8>, pool: &ThreadPool) -> Self::Result;
