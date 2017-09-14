@@ -1,14 +1,24 @@
-# Set up the Rust toolchain.
+---
+env: 
+  - FORMATTING=true
+  - FORMATTING=false
 language: rust
-rust:
+matrix: 
+  allow_failures: 
+      - env: "FORMATTING=false"
+        rust: nightly
+  exclude: 
+      - env: "FORMATTING=true"
+        rust: stable
+      - env: "FORMATTING=true"
+        rust: beta
+      - env: "FORMATTING=true"
+        os: osx
+        rust: nightly
+rust: 
   - stable
   - beta
   - nightly
-
-# Allow for occasional compiler breakage on nightly Rust.
-matrix:
-  allow_failures:
-    - rust: nightly
 
 # Build the Bors staging and trying branches, plus PRs to develop, master, and
 # the latest release branch.
@@ -30,6 +40,7 @@ addons:
   apt:
     packages:
       - libasound2-dev
+      - cmake
 
 # Since this build doesn't require sudo, we can turn it off and improve build
 # performance.
@@ -43,13 +54,7 @@ cache: cargo
 before_script:
   - export PATH=$PATH:/home/travis/.cargo/bin
 
-# Generate documentation, compile the engine, run tests.
-script: |
-  cargo doc --all --no-deps -v &&
-  # Build and test without profiler
-  cargo test --all -v &&
-  # Build and test with profiler
-  cargo test --all --features profiler -v
+script: ./travis_script.sh 
 
 # Push notifications to `amethyst/general` and `amethyst/engine` Gitter chats.
 notifications:

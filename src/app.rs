@@ -20,7 +20,6 @@ use timing::{Stopwatch, Time};
 
 /// User-friendly facade for building games. Manages main loop.
 ///
-
 #[derive(Derivative)]
 #[derivative(Debug)]
 pub struct Application<'a, 'b> {
@@ -57,7 +56,7 @@ impl<'a, 'b> Application<'a, 'b> {
     /// # Type Parameters
     ///
     /// - `S`: A type that implements the `State` trait. e.g. Your initial
-    ///        game logic. 
+    ///        game logic.
     ///
     /// # Lifetimes
     ///
@@ -76,9 +75,9 @@ impl<'a, 'b> Application<'a, 'b> {
     /// use amethyst::prelude::*;
     ///
     /// struct NullState;
-    /// 
+    ///
     /// impl State for NullState {}
-    /// 
+    ///
     /// fn main() {
     ///     let mut game = Application::new(NullState).expect("Failed to initialize");
     ///     game.run();
@@ -86,7 +85,7 @@ impl<'a, 'b> Application<'a, 'b> {
     /// ~~~
     pub fn new<S>(initial_state: S) -> Result<Application<'a, 'b>>
     where
-        S: State + 'a
+        S: State + 'a,
     {
         ApplicationBuilder::new(initial_state)?.build()
     }
@@ -238,7 +237,7 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     /// # Type parameters
     ///
     /// - `S`: A type that implements the `State` trait. e.g. Your initial
-    ///        game logic. 
+    ///        game logic.
     ///
     /// # Lifetimes
     ///
@@ -258,9 +257,9 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     /// use amethyst::ecs::transform::{Child, LocalTransform, TransformSystem};
     ///
     /// struct NullState;
-    /// 
+    ///
     /// impl State for NullState {}
-    /// 
+    ///
     /// fn main() {
     ///     // initialize the builder, the `ApplicationBuilder` object
     ///     // follows the use pattern of most builder objects found
@@ -275,7 +274,7 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     ///
     ///     // systems can be added before the game is run
     ///         .with::<TransformSystem>(TransformSystem::new(), "transform_system", &[])
-    ///         
+    ///
     ///     // lastly we can build the Application object
     ///         .build()
     ///         .expect("Failed to create Application");
@@ -332,7 +331,7 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     ///
     /// struct NullState;
     /// impl State for NullState {}
-    /// 
+    ///
     /// // define your custom type for the ECS
     /// struct Velocity([f32; 3]);
     ///
@@ -374,7 +373,7 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     /// If a resource is added with the identical type as an existing resource,
     /// the new resource will replace the old one and the old resource will
     /// be dropped.
-    /// 
+    ///
     /// # Parameters
     /// `resource`: The initialized resource you wish to register
     ///
@@ -395,14 +394,14 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     ///
     /// struct NullState;
     /// impl State for NullState {}
-    /// 
+    ///
     /// // your resource can be anything that can be safely stored in a `Arc`
     /// // in this example, it is a vector of scores with a user name
     /// struct HighScores(Vec<Score>);
     ///
     /// struct Score {
     ///     score: u32,
-    ///     user: String   
+    ///     user: String
     /// }
     ///
     /// fn main() {
