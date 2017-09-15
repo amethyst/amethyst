@@ -45,12 +45,19 @@ impl<'a> System<'a> for ExampleSystem {
     fn run(&mut self, (mut lights, time, mut camera, mut state): Self::SystemData) {
         let delta_time = time.delta_time.subsec_nanos() as f32 / 1.0e9;
 
-        state.light_angle -= delta_time;
-        state.camera_angle += delta_time / 10.0;
+        let light_angular_velocity = -1.0;
+        let light_orbit_radius = 15.0;
+        let light_z = 6.0;
+
+        let camera_angular_velocity = 0.1;
+        let camera_orbit_radius = 20.0;
+
+        state.light_angle += light_angular_velocity * delta_time;
+        state.camera_angle += camera_angular_velocity * delta_time;
 
         let target = camera.eye + camera.forward;
-        camera.eye[0] = 20.0 * state.camera_angle.cos();
-        camera.eye[1] = 20.0 * state.camera_angle.sin();
+        camera.eye[0] = camera_orbit_radius * state.camera_angle.cos();
+        camera.eye[1] = camera_orbit_radius * state.camera_angle.sin();
         camera.forward = target - camera.eye;
 
         for point_light in (&mut lights).join().filter_map(|light| {
@@ -61,9 +68,9 @@ impl<'a> System<'a> for ExampleSystem {
             }
         })
         {
-            point_light.center[0] = 15.0 * state.light_angle.cos();
-            point_light.center[1] = 15.0 * state.light_angle.sin();
-            point_light.center[2] = 6.0;
+            point_light.center[0] = light_orbit_radius * state.light_angle.cos();
+            point_light.center[1] = light_orbit_radius * state.light_angle.sin();
+            point_light.center[2] = light_z;
 
             point_light.color = state.light_color.into();
         }
