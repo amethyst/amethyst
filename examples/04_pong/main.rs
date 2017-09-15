@@ -466,12 +466,12 @@ fn run() -> Result<(), amethyst::Error> {
             ),
             Some(cfg),
         )?
-        .add_store("assets", Directory::new(assets_dir));
+        .with_store("assets", Directory::new(assets_dir));
 
     let audio_output = default_output();
     match audio_output {
         Some(ref output) => {
-            game = game.add_resource(Dj::new(&output)).with(
+            game = game.with_resource(Dj::new(&output)).with(
                 DjSystem,
                 "dj_system",
                 &[],
@@ -481,7 +481,7 @@ fn run() -> Result<(), amethyst::Error> {
             eprintln!("Audio device not found, no sound will be played.");
         }
     }
-    game = game.add_resource(audio_output);
+    game = game.with_resource(audio_output);
     Ok(game.build()?.run())
 }
 

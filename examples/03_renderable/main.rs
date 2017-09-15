@@ -330,8 +330,8 @@ fn run() -> Result<(), Error> {
         .with::<ExampleSystem>(ExampleSystem, "example_system", &[])
         .with::<TransformSystem>(TransformSystem::new(), "transform_system", &[])
         .with_renderer(pipeline_builder, Some(display_config))?
-        .add_store("resources", Directory::new(resources_directory))
-        .add_resource(Errors::new())
+        .with_store("resources", Directory::new(resources_directory))
+        .with_resource(Errors::new())
         .build()?;
 
     game.run();
