@@ -14,7 +14,8 @@ use assets::{Format, SpawnedFuture};
 /// ImageData provided by formats, can be interpreted as a texture.
 #[derive(Clone, Debug)]
 pub struct ImageData {
-    pub(crate) raw: Image<u8>,
+    /// The raw image data.
+    pub raw: Image<u8>,
 }
 
 /// A future which will eventually have an image available.
