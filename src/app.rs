@@ -187,7 +187,7 @@ impl<'a, 'b> Application<'a, 'b> {
         profile_scope!("dispatch");
         self.dispatcher.dispatch(&mut self.engine.world.res);
 
-        #[cfg(feature="profiler")]
+        #[cfg(feature = "profiler")]
         profile_scope!("maintain");
         self.engine.world.maintain();
     }
@@ -472,8 +472,6 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
                 .register_texture_asset()
                 .register_material_not_yet_asset(),
         )
-
-
     }
 
     /// Add asset loader to resources
@@ -496,7 +494,7 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
         F: FnOnce(&mut World) -> A::Context,
     {
         use assets::AssetFuture;
-        use specs::common::{Merge, Errors};
+        use specs::common::{Errors, Merge};
 
         self.world.register::<A>();
         self.world.register::<AssetFuture<A>>();
@@ -512,7 +510,6 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
 
     /// Builds the Application and returns the result.
     pub fn build(self) -> Result<Application<'a, 'b>> {
-
         #[cfg(feature = "profiler")] register_thread_with_profiler("Main".into());
         #[cfg(feature = "profiler")]
         profile_scope!("new");
@@ -533,7 +530,7 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
 
     /// Register new context within the loader
     fn register_mesh_asset(self) -> Self {
-        use ecs::rendering::{MeshComponent, MeshContext, Factory};
+        use ecs::rendering::{Factory, MeshComponent, MeshContext};
         self.register_asset::<MeshComponent, _>(|world| {
             let factory = world.read_resource::<Factory>();
             MeshContext::new((&*factory).clone())
@@ -554,7 +551,7 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
 
     /// Register new context within the loader
     fn register_texture_asset(self) -> Self {
-        use ecs::rendering::{TextureComponent, TextureContext, Factory};
+        use ecs::rendering::{Factory, TextureComponent, TextureContext};
         self.register_asset::<TextureComponent, _>(|world| {
             let factory = world.read_resource::<Factory>();
             TextureContext::new((&*factory).clone())

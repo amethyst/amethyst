@@ -7,14 +7,14 @@ extern crate rayon;
 use amethyst::assets::{AssetFuture, BoxedErr};
 use amethyst::assets::Loader;
 use amethyst::assets::formats::audio::OggFormat;
-use amethyst::audio::{Dj, AudioContext, Source};
+use amethyst::audio::{AudioContext, Dj, Source};
 use amethyst::audio::output::{default_output, Output};
 use amethyst::audio::play::play_once;
 use amethyst::ecs::{Component, Fetch, FetchMut, Join, System, VecStorage, WriteStorage};
 use amethyst::ecs::audio::DjSystem;
 use amethyst::ecs::input::{Bindings, InputHandler};
-use amethyst::ecs::rendering::{Factory, MeshComponent, MaterialComponent};
-use amethyst::ecs::transform::{Transform, LocalTransform, Child, Init, TransformSystem};
+use amethyst::ecs::rendering::{Factory, MaterialComponent, MeshComponent};
+use amethyst::ecs::transform::{Child, Init, LocalTransform, Transform, TransformSystem};
 use amethyst::prelude::*;
 use amethyst::renderer::Config as DisplayConfig;
 use amethyst::renderer::prelude::*;
@@ -346,9 +346,10 @@ impl State for Pong {
 
         let mesh = load_proc_asset(engine, move |engine| {
             let factory = engine.world.read_resource::<Factory>();
-            factory.create_mesh(mesh).map(MeshComponent::new).map_err(
-                BoxedErr::new,
-            )
+            factory
+                .create_mesh(mesh)
+                .map(MeshComponent::new)
+                .map_err(BoxedErr::new)
         });
 
         let mtl = load_proc_asset(engine, move |engine| {
@@ -428,15 +429,17 @@ impl State for Pong {
 
     fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
         match event {
-            Event::WindowEvent { event, .. } => {
-                match event {
-                    WindowEvent::KeyboardInput {
-                        input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Escape), .. }, ..
-                    } |
-                    WindowEvent::Closed => Trans::Quit,
-                    _ => Trans::None,
-                }
-            }
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::KeyboardInput {
+                    input: KeyboardInput {
+                        virtual_keycode: Some(VirtualKeyCode::Escape),
+                        ..
+                    },
+                    ..
+                } |
+                WindowEvent::Closed => Trans::Quit,
+                _ => Trans::None,
+            },
             _ => Trans::None,
         }
     }
@@ -509,7 +512,6 @@ fn gen_rectangle(w: f32, h: f32) -> Vec<PosNormTex> {
             a_normal: [0., 0., 1.],
             a_tex_coord: [1., 1.],
         },
-
         PosNormTex {
             a_position: [w / 2., h / 2., 0.],
             a_normal: [0., 0., 1.],

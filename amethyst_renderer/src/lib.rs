@@ -157,7 +157,14 @@ impl Renderer {
     pub fn new(el: &EventsLoop) -> Result<Renderer> {
         RendererBuilder::new(el).build()
     }
-
+	/// Gets the size of the window, if it still exists
+	pub fn window_size(&self)->Option<(u32,u32)>{
+		self.window.get_inner_size_pixels()
+	}
+	/// Set renderer's main target
+	pub fn set_main_target(&mut self,target:Target){
+		self.main_target = Arc::new(target);
+	}
     /// Creates a new `RendererBuilder`, equivalent to `RendererBuilder::new()`.
     pub fn build(el: &EventsLoop) -> RendererBuilder {
         RendererBuilder::new(el)
@@ -209,7 +216,43 @@ impl Renderer {
     pub fn create_pipe(&mut self, pb: PipelineBuilder) -> Result<Pipeline> {
         pb.build(&mut self.factory, &self.main_target)
     }
+	/// Updates the rendering target (useful for resizes)
+	/// Works only on tux for now >_<
+	pub fn regen_target(&mut self)->Option<Target>{
+        #[cfg(all(feature = "d3d11", target_os = "windows"))]
+        use gfx_window_dxgi as win;
+        #[cfg(all(feature = "metal", target_os = "macos"))]
+        use gfx_window_metal as win;
+        #[cfg(feature = "opengl")]
+        use gfx_window_glutin as win;
 
+    	let (new_color, new_depth) = win::new_views(&self.window);
+		if let Some(window_size) = self.window_size(){
+			let target = Target::new(
+    		    ColorBuffer {
+    		        as_input: None,
+    		        as_output: new_color,
+    		    },
+    		    DepthBuffer {
+    		        as_input: None,
+    		        as_output: new_depth,
+    		    },
+    		    window_size,
+	    	);
+			return Some(target);
+		}
+		return None;
+	}
+	/// Same as regen_target, but changes main target to the result of regen_target
+	pub fn regen_target_local(&mut self)->Option<Target>{
+		if let Some(target) = self.regen_target(){
+			let clone = target.clone();
+			self.main_target = Arc::new(target);
+			return Some(clone);
+		}
+		return None;
+	}
+	
     /// Draws a scene with the given pipeline.
     pub fn draw(&mut self, scene: &Scene, pipe: &Pipeline, _delta: Duration) {
         use gfx::Device;
@@ -443,3 +486,4 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &Config) -> Result<B
 
     Ok(Backend(dev, fac, main_target, win))
 }
+

@@ -1,6 +1,7 @@
 //! Provides structures and functions used to get audio outputs.
 
 // We have to use types from this to provide an output iterator type.
+
 extern crate cpal;
 
 use std::fmt::{Debug, Formatter, Result as FmtResult};

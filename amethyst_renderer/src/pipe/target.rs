@@ -73,6 +73,11 @@ impl Target {
     pub fn size(&self) -> (u32, u32) {
         self.size
     }
+	
+	///Update the render target size (Useful when resizing the window)
+	pub fn resize(&mut self,newsize:(u32,u32)){
+		self.size = newsize;
+	}
 
     /// Returns the color buffer with index `i`.
     pub fn color_buf(&self, i: usize) -> Option<&ColorBuffer> {

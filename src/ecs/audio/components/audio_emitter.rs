@@ -6,7 +6,7 @@ use rodio::{Decoder, SpatialSink};
 use smallvec::SmallVec;
 
 use audio::{DecoderError, Source};
-use ecs::{Component, BTreeStorage};
+use ecs::{BTreeStorage, Component};
 
 /// An audio source, add this component to anything that emits sound.
 pub struct AudioEmitter {

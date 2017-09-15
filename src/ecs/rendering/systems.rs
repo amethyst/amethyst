@@ -9,9 +9,10 @@ use assets::BoxedErr;
 use ecs::{Fetch, Join, ReadStorage, System, World};
 use ecs::SystemExt;
 use ecs::rendering::components::*;
-use ecs::rendering::resources::{Factory, AmbientColor};
+use ecs::rendering::resources::{AmbientColor, Factory};
 use ecs::transform::components::*;
 use error::{Error, Result};
+
 
 /// Rendering system.
 #[derive(Derivative)]
@@ -22,7 +23,6 @@ pub struct RenderSystem {
     renderer: Renderer,
     scene: Scene,
 }
-
 impl<'a> System<'a> for RenderSystem {
     type SystemData = (Fetch<'a, Camera>,
      Fetch<'a, Factory>,
@@ -37,6 +37,46 @@ impl<'a> System<'a> for RenderSystem {
         (camera, factory, ambient_color, globals, lights, materials, meshes): Self::SystemData,
     ) {
         use std::time::Duration;
+
+        // FIXME issue when running in debug mode:
+        //https://github.com/gfx-rs/gfx/blob/master/src/core/src/pso.rs#L279
+        //Fetch current window size for this rendersystem
+        //Compare with current target size
+        if let Some(cur_window_size) = self.renderer.window_size() {
+            //Window size changed
+            for (name, target) in self.pipe.targets.iter_mut() {
+                if cur_window_size != target.size() {
+                    if let Some(new_target) = self.renderer.regen_target() {
+                        //Replace target in specific stage by name
+                        for stage in self.pipe.stages.iter_mut() {
+                            if stage.get_target_name() == *name {
+                                stage.set_target(new_target.clone());
+                                // Update stage effects, which are used to draw on the buffers
+                                for pass in stage.passes.iter_mut() {
+                                    let effect = &mut pass.effect.data;
+                                    // Update Color Buffer
+                                    effect.out_colors.clear();
+                                    effect.out_colors.extend(new_target
+                                        .color_bufs()
+                                        .iter()
+                                        .map(|cb| cb.as_output.clone())
+                                    );
+                                    // Update Depth Stencil
+                                    effect.out_depth = new_target.depth_buf().map(|db| {
+                                        (db.as_output.clone(), (0, 0))
+                                    });
+                                }
+                            }
+                        }
+                        if *name == "" {
+                            //Means this is the main target reference of the pipeline
+                            self.renderer.set_main_target(target.clone());
+                        }
+                        *target = new_target;
+                    }
+                }
+            }
+        }
 
         while let Some(job) = factory.jobs.try_pop() {
             job.exec(&mut self.renderer.factory);

@@ -6,10 +6,10 @@ pub use imagefmt::Error as ImageError;
 use std::io::Cursor;
 
 use imagefmt;
-use imagefmt::{Image, ColFmt};
+use imagefmt::{ColFmt, Image};
 use rayon::ThreadPool;
 
-use assets::{SpawnedFuture, Format};
+use assets::{Format, SpawnedFuture};
 
 /// ImageData provided by formats, can be interpreted as a texture.
 #[derive(Clone, Debug)]

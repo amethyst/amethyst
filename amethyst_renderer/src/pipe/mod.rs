@@ -50,8 +50,10 @@ impl<'s> Iterator for Stages<'s> {
 /// Defines how the rendering pipeline should be configured.
 #[derive(Clone, Debug)]
 pub struct Pipeline {
-    stages: Vec<Stage>,
-    targets: HashMap<String, Target>,
+	/// Stages of the pipeline
+    pub stages: Vec<Stage>,
+	/// Targets of the pipeline
+    pub targets: HashMap<String, Target>,
 }
 
 impl Pipeline {
@@ -98,11 +100,18 @@ impl Pipeline {
     pub fn enabled_stages(&self) -> Stages {
         Stages(self.stages.iter().filter(|s| s.is_enabled()))
     }
-
+	/// Get the mutable stages
+    pub fn stages_mut(&mut self)->&mut Vec<Stage>{
+        &mut self.stages
+    }
     /// Returns an immutable reference to all targets and their name strings.
     pub fn targets(&self) -> &HashMap<String, Target> {
         &self.targets
     }
+	/// Returns a mutable reference to all targets and their name strings.
+	pub fn targets_mut(&mut self) -> &mut HashMap<String,Target>{
+		&mut self.targets
+	}
 }
 
 /// Constructs a new pipeline with the given render targets and layers.

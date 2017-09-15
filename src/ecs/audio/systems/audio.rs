@@ -4,10 +4,10 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
-use cgmath::{Matrix4, Transform, Point3};
-use rodio::{SpatialSink, Source, Sample};
+use cgmath::{Matrix4, Point3, Transform};
+use rodio::{Sample, Source, SpatialSink};
 
-use ecs::{Fetch, Join, System, ReadStorage, WriteStorage, Entity};
+use ecs::{Entity, Fetch, Join, ReadStorage, System, WriteStorage};
 use ecs::audio::components::{AudioEmitter, AudioListener};
 use ecs::transform::Transform as TransformComponent;
 
@@ -86,7 +86,6 @@ impl<'a> System<'a> for AudioSystem {
      WriteStorage<'a, AudioEmitter>);
 
     fn run(&mut self, (select_listener, transform, listener, mut audio_emitter): Self::SystemData) {
-
         // Process emitters and listener.
         if let Some(listener) = listener.get(select_listener.0) {
             if let Some(listener_transform) = transform.get(select_listener.0) {

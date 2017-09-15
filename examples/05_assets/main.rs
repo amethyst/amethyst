@@ -8,15 +8,15 @@ extern crate rayon;
 
 use amethyst::{Application, Error, State, Trans};
 use amethyst::assets::{AssetFuture, BoxedErr, Context, Format, Loader, NoError};
-use amethyst::assets::formats::textures::{PngFormat, BmpFormat};
+use amethyst::assets::formats::textures::{BmpFormat, PngFormat};
 use amethyst::config::Config;
 use amethyst::ecs::World;
 use amethyst::ecs::input::InputHandler;
-use amethyst::ecs::rendering::{MeshComponent, Factory, MeshContext, TextureComponent,
-                               MaterialComponent, TextureContext};
+use amethyst::ecs::rendering::{Factory, MaterialComponent, MeshComponent, MeshContext,
+                               TextureComponent, TextureContext};
 use amethyst::ecs::transform::{LocalTransform, Transform};
 use amethyst::prelude::*;
-use amethyst::renderer::{Camera, Rgba, Config as DisplayConfig};
+use amethyst::renderer::{Camera, Config as DisplayConfig, Rgba};
 use amethyst::renderer::prelude::*;
 use cgmath::{Deg, Euler, Quaternion};
 use futures::Future;
@@ -146,7 +146,11 @@ impl State for AssetsExample {
                 match event {
                     WindowEvent::Closed |
                     WindowEvent::KeyboardInput {
-                        input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Escape), .. }, ..
+                        input: KeyboardInput {
+                            virtual_keycode: Some(VirtualKeyCode::Escape),
+                            ..
+                        },
+                        ..
                     } => {
                         // If the user pressed the escape key, or requested the window to be closed,
                         // quit the application.
@@ -247,9 +251,9 @@ where
 {
     let future = {
         let factory = engine.world.read_resource::<Factory>();
-        factory.create_material(MaterialBuilder::new()).map_err(
-            BoxedErr::new,
-        )
+        factory
+            .create_material(MaterialBuilder::new())
+            .map_err(BoxedErr::new)
     }.join({
         let loader = engine.world.read_resource::<Loader>();
         loader.load_from::<TextureComponent, _, _, _>(albedo, format, "resources")
@@ -265,9 +269,9 @@ fn make_material(engine: &mut Engine, albedo: [f32; 4]) -> AssetFuture<MaterialC
     let future = {
         let factory = engine.world.read_resource::<Factory>();
         factory
-            .create_material(MaterialBuilder::new().with_albedo(
-                TextureBuilder::from_color_val(albedo),
-            ))
+            .create_material(
+                MaterialBuilder::new().with_albedo(TextureBuilder::from_color_val(albedo)),
+            )
             .map(MaterialComponent)
             .map_err(BoxedErr::new)
     };

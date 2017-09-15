@@ -7,7 +7,7 @@ use futures::{Async, Future, Poll};
 use gfx::format::SurfaceType;
 use imagefmt::ColFmt;
 use rayon::ThreadPool;
-use renderer::{Texture, TextureBuilder, Error as RendererError};
+use renderer::{Error as RendererError, Texture, TextureBuilder};
 
 use assets::{Asset, AssetFuture, AssetPtr, AssetSpec, Cache, Context};
 use assets::formats::textures::ImageData;

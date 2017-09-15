@@ -2,8 +2,9 @@ use gfx::{handle, pso};
 use gfx::pso::{DataBind, DataLink, Descriptor, InitError, PipelineData, PipelineInit};
 use gfx::pso::buffer::{RawConstantBuffer, RawGlobal, RawVertexBuffer};
 use gfx::pso::resource::{RawShaderResource, Sampler};
-use gfx::pso::target;
+use gfx::pso::{target};
 use gfx::shade::core::{BaseType, ContainerType, OutputVar, ProgramInfo};
+use gfx_core::pso::PixelTargetSet;
 
 use types::{ColorFormat, DepthFormat, Resources};
 
@@ -172,6 +173,7 @@ impl PipelineData<Resources> for Data {
     type Meta = Meta;
 
     fn bake_to(&self, out: &mut RawDataSet, meta: &Meta, mgr: &mut Manager, acc: &mut AccessInfo) {
+        out.pixel_targets = PixelTargetSet::new();
         let const_bufs = meta.const_bufs.iter().zip(&self.const_bufs);
         for (meta_cbuf, cbuf) in const_bufs {
             meta_cbuf.bind_to(out, &cbuf, mgr, acc);

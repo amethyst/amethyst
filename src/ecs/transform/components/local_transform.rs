@@ -3,7 +3,7 @@
 use std::ops::{Deref, DerefMut};
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use cgmath::{Quaternion, Vector3, Matrix3, Matrix4};
+use cgmath::{Matrix3, Matrix4, Quaternion, Vector3};
 
 use ecs::{Component, VecStorage};
 
