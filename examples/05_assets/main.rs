@@ -142,17 +142,17 @@ impl State for AssetsExample {
 
     fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
         match event {
-            Event::WindowEvent { event, .. } => {
-                match event {
-                    WindowEvent::Closed |
-                    WindowEvent::KeyboardInput {
-                        input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Escape), .. }, ..
-                    } => {
-                        // If the user pressed the escape key, or requested the window to be closed,
-                        // quit the application.
-                        Trans::Quit
+            Event::WinitEvent(event) => {
+                if let WinitEvent::WindowEvent { event, .. } = event {
+                    match event {
+                        WindowEvent::KeyboardInput {
+                            input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Escape), .. }, ..
+                        } |
+                        WindowEvent::Closed => Trans::Quit,
+                        _ => Trans::None,
                     }
-                    _ => Trans::None,
+                } else {
+                    Trans::None
                 }
             }
             _ => Trans::None,
