@@ -48,16 +48,16 @@ enum Side {
     Right,
 }
 
-struct Plank {
+struct Paddle {
     pub position: f32,
     pub velocity: f32,
     pub dimensions: [f32; 2],
     pub side: Side,
 }
 
-impl Plank {
-    pub fn new(side: Side) -> Plank {
-        Plank {
+impl Paddle {
+    pub fn new(side: Side) -> Paddle {
+        Paddle {
             position: 0.,
             velocity: 1.,
             dimensions: [1., 1.],
@@ -66,8 +66,8 @@ impl Plank {
     }
 }
 
-impl Component for Plank {
-    type Storage = VecStorage<Plank>;
+impl Component for Paddle {
+    type Storage = VecStorage<Paddle>;
 }
 
 struct Sounds {
@@ -94,7 +94,7 @@ impl Score {
 // Pong game system
 impl<'a> System<'a> for PongSystem {
     type SystemData = (WriteStorage<'a, Ball>,
-     WriteStorage<'a, Plank>,
+     WriteStorage<'a, Paddle>,
      WriteStorage<'a, LocalTransform>,
      Fetch<'a, Camera>,
      Fetch<'a, Time>,
@@ -398,7 +398,7 @@ impl State for Pong {
             .build();
 
         // Create a left plank entity
-        let mut plank = Plank::new(Side::Left);
+        let mut plank = Paddle::new(Side::Left);
         plank.dimensions[0] = 0.01;
         plank.dimensions[1] = 0.1;
         plank.velocity = 1.;
@@ -412,7 +412,7 @@ impl State for Pong {
             .build();
 
         // Create right plank entity
-        let mut plank = Plank::new(Side::Right);
+        let mut plank = Paddle::new(Side::Right);
         plank.dimensions[0] = 0.01;
         plank.dimensions[1] = 0.1;
         plank.velocity = 1.;
@@ -455,7 +455,7 @@ fn run() -> Result<(), amethyst::Error> {
     let mut game = Application::build(Pong)
         .unwrap()
         .register::<Ball>()
-        .register::<Plank>()
+        .register::<Paddle>()
         .with::<PongSystem>(pong, "pong_system", &[])
         .with::<TransformSystem>(TransformSystem::new(), "transform_system", &["pong_system"])
         .with_renderer(
