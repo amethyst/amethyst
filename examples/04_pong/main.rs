@@ -10,7 +10,7 @@ use amethyst::assets::formats::audio::OggFormat;
 use amethyst::audio::{Dj, AudioContext, Source};
 use amethyst::audio::output::{default_output, Output};
 use amethyst::audio::play::play_once;
-use amethyst::ecs::{Component, Fetch, FetchMut, Join, System, VecStorage, WriteStorage};
+use amethyst::ecs::{Component, Fetch, FetchMut, Join, System, DenseVecStorage, WriteStorage};
 use amethyst::ecs::audio::DjSystem;
 use amethyst::ecs::input::{Bindings, InputHandler};
 use amethyst::ecs::rendering::{Factory, MeshComponent, MaterialComponent};
@@ -40,7 +40,7 @@ impl Ball {
 }
 
 impl Component for Ball {
-    type Storage = VecStorage<Ball>;
+    type Storage = DenseVecStorage<Self>;
 }
 
 enum Side {
@@ -67,7 +67,7 @@ impl Paddle {
 }
 
 impl Component for Paddle {
-    type Storage = VecStorage<Paddle>;
+    type Storage = DenseVecStorage<Self>;
 }
 
 struct Sounds {
