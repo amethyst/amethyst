@@ -81,7 +81,7 @@ extern crate winit;
 pub use self::app::{Application, ApplicationBuilder};
 pub use self::engine::Engine;
 pub use self::error::{Error, Result};
-pub use self::state::{State, StateMachine, Trans};
+pub use self::state::{Loading, State, StateMachine, Trans};
 
 pub mod assets;
 pub mod audio;

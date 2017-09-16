@@ -1,7 +1,54 @@
 //! Utilities for game state management.
 
+use std::error::Error;
+
+use futures::Future;
+
 use engine::Engine;
 use event::Event;
+
+/// A state which allows to display a loading screen until a future
+/// is `Ready`.
+#[derive(Debug)]
+pub struct Loading<C, F> {
+    create_state: Option<C>,
+    future: F,
+}
+
+impl<C, F> Loading<C, F> {
+    /// Creates a new `Loading` state.
+    /// `create_state` is a closure which accepts the polled
+    /// item from the future; it's responsible for creating the new
+    /// `State`, which will be switched to.
+    pub fn new(future: F, create_state: C) -> Self {
+        Loading {
+            create_state: Some(create_state),
+            future,
+        }
+    }
+}
+
+impl<C, F, S, T> State for Loading<C, F>
+where C: FnOnce(T) -> S,
+      F: Future<Item = T>,
+      F::Error: Error,
+      S: State + 'static,
+{
+    fn update(&mut self, _: &mut Engine) -> Trans {
+        use futures::Async;
+
+        match self.future.poll() {
+            Ok(Async::NotReady) => Trans::None,
+            Ok(Async::Ready(x)) => Trans::Switch(Box::new((self.create_state.take().unwrap())(x))),
+            Err(e) => {
+                eprintln!("Loading did not complete successfully; Error: {}", e);
+                eprintln!("Returning to previous state.");
+
+                Trans::Pop
+            }
+        }
+    }
+}
 
 /// Types of state transitions.
 pub enum Trans {
