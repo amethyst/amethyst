@@ -205,22 +205,21 @@ impl State for Example {
         // Exit if user hits Escape or closes the window
         let mut state = w.write_resource::<DemoState>();
 
-        match event {
-            Event::WindowEvent { event, .. } => {
-                match event {
-                    WindowEvent::Closed => return Trans::Quit,
-                    WindowEvent::KeyboardInput {
-                        input: KeyboardInput {
-                            virtual_keycode,
-                            state: ElementState::Pressed,
-                            ..
-                        },
+        if let Event::WindowEvent(event) = event {
+            match event {
+                WindowEvent::Closed => return Trans::Quit,
+                WindowEvent::KeyboardInput {
+                    input: KeyboardInput {
+                        virtual_keycode,
+                        state: ElementState::Pressed,
                         ..
-                    } => {
-                        match virtual_keycode {
-                            Some(VirtualKeyCode::Escape) => return Trans::Quit,
-                            Some(VirtualKeyCode::Space) => {
-                                // TODO: figure out how to change pipeline
+                    },
+                    ..
+                } => {
+                    match virtual_keycode {
+                        Some(VirtualKeyCode::Escape) => return Trans::Quit,
+                        Some(VirtualKeyCode::Space) => {
+                            // TODO: figure out how to change pipeline
                             /*if state.pipeline_forward {
                                 state.pipeline_forward = false;
                                 set_pipeline_state(pipe, false);
@@ -228,68 +227,66 @@ impl State for Example {
                                 state.pipeline_forward = true;
                                 set_pipeline_state(pipe, true);
                             }*/
-                            }
-                            Some(VirtualKeyCode::R) => {
-                                state.light_color = [0.8, 0.2, 0.2, 1.0];
-                            }
-                            Some(VirtualKeyCode::G) => {
-                                state.light_color = [0.2, 0.8, 0.2, 1.0];
-                            }
-                            Some(VirtualKeyCode::B) => {
-                                state.light_color = [0.2, 0.2, 0.8, 1.0];
-                            }
-                            Some(VirtualKeyCode::W) => {
-                                state.light_color = [1.0, 1.0, 1.0, 1.0];
-                            }
-                            Some(VirtualKeyCode::A) => {
-                                let mut color = w.write_resource::<AmbientColor>();
-                                if state.ambient_light {
-                                    state.ambient_light = false;
-                                    color.0 = [0.0; 3].into();
-                                } else {
-                                    state.ambient_light = true;
-                                    color.0 = [0.01; 3].into();
-                                }
-                            }
-                            Some(VirtualKeyCode::D) => {
-                                let mut lights = w.write::<LightComponent>();
-
-                                if state.directional_light {
-                                    state.directional_light = false;
-                                    for light in (&mut lights).join() {
-                                        if let LightComponent(Light::Directional(ref mut d)) =
-                                            *light
-                                        {
-                                            d.color = [0.0; 4].into();
-                                        }
-                                    }
-                                } else {
-                                    state.directional_light = true;
-                                    for light in (&mut lights).join() {
-                                        if let LightComponent(Light::Directional(ref mut d)) =
-                                            *light
-                                        {
-                                            d.color = [0.2; 4].into();
-                                        }
-                                    }
-                                }
-                            }
-                            Some(VirtualKeyCode::P) => {
-                                if state.point_light {
-                                    state.point_light = false;
-                                    state.light_color = [0.0; 4].into();
-                                } else {
-                                    state.point_light = true;
-                                    state.light_color = [1.0; 4].into();
-                                }
-                            }
-                            _ => (),
                         }
+                        Some(VirtualKeyCode::R) => {
+                            state.light_color = [0.8, 0.2, 0.2, 1.0];
+                        }
+                        Some(VirtualKeyCode::G) => {
+                            state.light_color = [0.2, 0.8, 0.2, 1.0];
+                        }
+                        Some(VirtualKeyCode::B) => {
+                            state.light_color = [0.2, 0.2, 0.8, 1.0];
+                        }
+                        Some(VirtualKeyCode::W) => {
+                            state.light_color = [1.0, 1.0, 1.0, 1.0];
+                        }
+                        Some(VirtualKeyCode::A) => {
+                            let mut color = w.write_resource::<AmbientColor>();
+                            if state.ambient_light {
+                                state.ambient_light = false;
+                                color.0 = [0.0; 3].into();
+                            } else {
+                                state.ambient_light = true;
+                                color.0 = [0.01; 3].into();
+                            }
+                        }
+                        Some(VirtualKeyCode::D) => {
+                            let mut lights = w.write::<LightComponent>();
+
+                            if state.directional_light {
+                                state.directional_light = false;
+                                for light in (&mut lights).join() {
+                                    if let LightComponent(Light::Directional(ref mut d)) =
+                                        *light
+                                    {
+                                        d.color = [0.0; 4].into();
+                                    }
+                                }
+                            } else {
+                                state.directional_light = true;
+                                for light in (&mut lights).join() {
+                                    if let LightComponent(Light::Directional(ref mut d)) =
+                                        *light
+                                    {
+                                        d.color = [0.2; 4].into();
+                                    }
+                                }
+                            }
+                        }
+                        Some(VirtualKeyCode::P) => {
+                            if state.point_light {
+                                state.point_light = false;
+                                state.light_color = [0.0; 4].into();
+                            } else {
+                                state.point_light = true;
+                                state.light_color = [1.0; 4].into();
+                            }
+                        }
+                        _ => {},
                     }
-                    _ => (),
                 }
+                _ => {},
             }
-            _ => (),
         }
         Trans::None
     }
