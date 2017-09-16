@@ -27,7 +27,7 @@ pub struct Application<'a, 'b> {
     /// The `engine` struct, holding world and thread pool.
     #[derivative(Debug = "ignore")]
     pub engine: Engine,
-   #[derivative(Debug = "ignore")]
+    #[derivative(Debug = "ignore")]
     dispatcher: Dispatcher<'a, 'b>,
     #[derivative(Debug = "ignore")]
     events: EventsLoop,
@@ -167,12 +167,15 @@ impl<'a, 'b> Application<'a, 'b> {
                         input.send_event(event);
                     }
                 }
-                engine.world.write_resource::<Events>().0.push(
-                    Event::WinitEvent(
-                        event.clone(),
-                    ),
-                );
-                states.handle_event(engine, Event::WinitEvent(event));
+                let event = match event {
+                    WinitEvent::WindowEvent { event, .. } => Event::WindowEvent(event),
+                    WinitEvent::DeviceEvent { device_id, event } => {
+                        Event::DeviceEvent ( device_id, event )
+                    }
+                    WinitEvent::Awakened => Event::Awakened
+                };
+                engine.world.write_resource::<Events>().0.push(event.clone());
+                states.handle_event(engine, event);
             });
         }
         {
