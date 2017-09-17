@@ -12,7 +12,7 @@ use thread_profiler::{register_thread_with_profiler, write_profile};
 use winit::{Event, EventsLoop};
 
 use assets::{Asset, Loader, Store};
-use ecs::{Component, Dispatcher, DispatcherBuilder, System, World};
+use ecs::{Component, Dispatcher, DispatcherBuilder, System, World, ECSBundle};
 use engine::Engine;
 use error::{Error, Result};
 use state::{State, StateMachine};
@@ -60,7 +60,7 @@ impl<'a, 'b> Application<'a, 'b> {
     /// # Type Parameters
     ///
     /// - `S`: A type that implements the `State` trait. e.g. Your initial
-    ///        game logic. 
+    ///        game logic.
     ///
     /// # Lifetimes
     ///
@@ -80,13 +80,13 @@ impl<'a, 'b> Application<'a, 'b> {
     ///
     /// struct NullState;
     /// impl State for NullState {}
-    /// 
+    ///
     /// let mut game = Application::new(NullState).expect("Failed to initialize");
     /// game.run();
     /// ~~~
     pub fn new<S>(initial_state: S) -> Result<Application<'a, 'b>>
     where
-        S: State + 'a
+        S: State + 'a,
     {
         ApplicationBuilder::new(initial_state)?.build()
     }
@@ -94,7 +94,8 @@ impl<'a, 'b> Application<'a, 'b> {
 
     /// Creates a new ApplicationBuilder with the given initial game state.
     ///
-    /// This is identical in function to [ApplicationBuilder::new](struct.ApplicationBuilder.html#method.new).
+    /// This is identical in function to
+    /// [ApplicationBuilder::new](struct.ApplicationBuilder.html#method.new).
     pub fn build<S>(initial_state: S) -> Result<ApplicationBuilder<'a, 'b, S>>
     where
         S: State + 'a,
@@ -240,7 +241,7 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     /// # Type parameters
     ///
     /// - `S`: A type that implements the `State` trait. e.g. Your initial
-    ///        game logic. 
+    ///        game logic.
     ///
     /// # Lifetimes
     ///
@@ -261,25 +262,25 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     ///
     /// struct NullState;
     /// impl State for NullState {}
-    /// 
+    ///
     /// // initialize the builder, the `ApplicationBuilder` object
     /// // follows the use pattern of most builder objects found
     /// // in the rust ecosystem. Each function modifies the object
     /// // returning a new object with the modified configuration.
     /// let mut game = Application::build(NullState)
     ///     .expect("Failed to initialize")
-    /// 
+    ///
     /// // components can be registered at this stage
     ///     .register::<Child>()
     ///     .register::<LocalTransform>()
-    /// 
+    ///
     /// // systems can be added before the game is run
     ///     .with::<TransformSystem>(TransformSystem::new(), "transform_system", &[])
-    /// 
+    ///
     /// // lastly we can build the Application object
     ///     .build()
     ///     .expect("Failed to create Application");
-    /// 
+    ///
     /// // the game instance can now be run, this exits only when the game is done
     /// game.run();
     /// ~~~
@@ -331,7 +332,7 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     ///
     /// struct NullState;
     /// impl State for NullState {}
-    /// 
+    ///
     /// // define your custom type for the ECS
     /// struct Velocity([f32; 3]);
     ///
@@ -347,7 +348,7 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     ///     // https://docs.rs/specs/0.9.5/specs/struct.Storage.html
     ///     type Storage = HashMapStorage<Velocity>;
     /// }
-    /// 
+    ///
     /// // After creating a builder, we can add any number of components
     /// // using the register method.
     /// Application::build(NullState)
@@ -370,7 +371,7 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     /// If a resource is added with the identical type as an existing resource,
     /// the new resource will replace the old one and the old resource will
     /// be dropped.
-    /// 
+    ///
     /// # Parameters
     /// - `resource`: The initialized resource you wish to register
     ///
@@ -391,16 +392,16 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     ///
     /// struct NullState;
     /// impl State for NullState {}
-    /// 
+    ///
     /// // your resource can be anything that can be safely stored in a `Arc`
     /// // in this example, it is a vector of scores with a user name
     /// struct HighScores(Vec<Score>);
     ///
     /// struct Score {
     ///     score: u32,
-    ///     user: String   
+    ///     user: String
     /// }
-    /// 
+    ///
     /// let score_board = HighScores(Vec::new());
     /// Application::build(NullState)
     ///     .expect("Failed to initialize")
@@ -463,7 +464,7 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     /// # Parameters
     ///
     /// - `system`: The system that is to be added to the game loop.
-    /// - `name`: A unique string to identify the system by. This is used for 
+    /// - `name`: A unique string to identify the system by. This is used for
     ///         dependency tracking. This name may be empty `""` string in which
     ///         case it cannot be referenced as a dependency.
     /// - `dependencies`: A list of named system that _must_ have completed running
@@ -479,7 +480,7 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     /// - `S`: A type that implements the `System` trait.
     ///
     /// # Panics
-    /// 
+    ///
     /// If two system are added that share an identical name, this function will panic.
     /// Empty names are permitted, and this function will not panic if more then two are added.
     ///
@@ -555,7 +556,7 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     ///     type SystemData = ();
     ///     fn run(&mut self, _: Self::SystemData) {}
     /// }
-    /// 
+    ///
     /// Application::build(NullState)
     ///     .expect("Failed to initialize")
     ///     // the Nop system is registered here
@@ -567,6 +568,42 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     {
         self.disp_builder = self.disp_builder.add_thread_local(system);
         self
+    }
+
+    /// Add a given ECS bundle to the game loop.
+    ///
+    /// A bundle is a container for registering a bunch of ECS systems and their dependent
+    /// resources and components.
+    ///
+    /// # Parameters
+    ///
+    /// - `bundle`: The bundle to add
+    /// - `name`: The name to give any main system added by the bundle
+    /// - `dep`: Any dependencies the main system(s) added by the bundle should have.
+    ///
+    /// # Returns
+    ///
+    /// This function returns ApplicationBuilder after it has modified it, this is
+    /// wrapped in a `Result`.
+    ///
+    /// # Errors
+    ///
+    /// This function creates systems and resources, which use any number of dependent
+    /// crates or APIs, which could result in any number of errors.
+    /// See each individual bundle for a description of the errors it could produce.
+    ///
+    pub fn with_bundle<B>(mut self, bundle: B, name: &str, dep: &[&str]) -> Result<Self>
+    where
+        B: for<'c> ECSBundle<'a, 'b, (&'c EventsLoop)>,
+    {
+        self.disp_builder = bundle.build(
+            (&self.events),
+            &mut self.world,
+            self.disp_builder,
+            name,
+            dep,
+        )?;
+        Ok(self)
     }
 
     /// Automatically registers the rendering system and all required components
@@ -607,10 +644,10 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     /// use amethyst::prelude::*;
     /// use amethyst::renderer;
     /// use amethyst::renderer::prelude::*;
-    /// 
+    ///
     /// struct NullState;
     /// impl State for NullState {}
-    /// 
+    ///
     /// // Create a new display_config, we can tweak the configuration
     /// // here, or load it from a file.
     /// let mut display_config = renderer::Config::default();
@@ -623,7 +660,7 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     ///         .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
     ///         .with_model_pass(pass::DrawShaded::<PosNormTex>::new()),
     /// );
-    ///     
+    ///
     /// // finally we are able to add the renderer to our application.
     /// Application::build(NullState)
     ///     .expect("Failed to initialize")
@@ -655,7 +692,7 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     /// # Parameters
     ///
     /// - `name`: A unique name or key to identify the asset storage location. `name`
-    ///           is used later to specify where the asset should be loaded from. 
+    ///           is used later to specify where the asset should be loaded from.
     /// - `store`: The asset store being registered.
     ///
     /// # Type Parameters
@@ -757,7 +794,7 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     /// This function returns an Application object wrapped in the Result type.
     ///
     /// # Errors
-    /// 
+    ///
     /// This function currently will not produce an error, returning a result
     /// type was strictly for future possibilities.
     ///

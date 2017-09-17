@@ -23,6 +23,17 @@ pub struct RenderSystem {
     scene: Scene,
 }
 
+impl RenderSystem {
+    /// Create a new render system
+    pub fn new(pipe: Pipeline, renderer: Renderer, scene: Scene) -> Self {
+        Self {
+            pipe,
+            renderer,
+            scene,
+        }
+    }
+}
+
 impl<'a> System<'a> for RenderSystem {
     type SystemData = (Fetch<'a, Camera>,
      Fetch<'a, Factory>,
