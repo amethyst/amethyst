@@ -50,8 +50,6 @@ impl<'a, 'b, 'c> ECSBundle<'a, 'b, (&'c EventsLoop)> for RenderBundle {
         events: (&'c EventsLoop),
         world: &mut World,
         mut dispatcher: DispatcherBuilder<'a, 'b>,
-        _: &str,
-        _: &[&str],
     ) -> Result<DispatcherBuilder<'a, 'b>> {
         use specs::common::{Merge, Errors};
 

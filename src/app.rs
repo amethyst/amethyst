@@ -578,8 +578,6 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     /// # Parameters
     ///
     /// - `bundle`: The bundle to add
-    /// - `name`: The name to give any main system added by the bundle
-    /// - `dep`: Any dependencies the main system(s) added by the bundle should have.
     ///
     /// # Returns
     ///
@@ -592,7 +590,7 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     /// crates or APIs, which could result in any number of errors.
     /// See each individual bundle for a description of the errors it could produce.
     ///
-    pub fn with_bundle<B>(mut self, bundle: B, name: &str, dep: &[&str]) -> Result<Self>
+    pub fn with_bundle<B>(mut self, bundle: B) -> Result<Self>
     where
         B: for<'c> ECSBundle<'a, 'b, (&'c EventsLoop)>,
     {
@@ -600,8 +598,6 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
             (&self.events),
             &mut self.world,
             self.disp_builder,
-            name,
-            dep,
         )?;
         Ok(self)
     }

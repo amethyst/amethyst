@@ -28,7 +28,5 @@ pub trait ECSBundle<'a, 'b, A> {
         args: A,
         world: &mut World,
         dispatcher: DispatcherBuilder<'a, 'b>,
-        name: &str,
-        dep: &[&str],
     ) -> Result<DispatcherBuilder<'a, 'b>>;
 }
