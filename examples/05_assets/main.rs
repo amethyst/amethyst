@@ -193,7 +193,9 @@ fn run() -> Result<(), Error> {
     let mut game = Application::build(AssetsExample)
         .expect("Failed to build ApplicationBuilder for an unknown reason.")
         .with_bundle(TransformBundle::new())?
-        .with_bundle(RenderBundle::new(pipeline_builder).with_config(display_config))?
+        .with_bundle(RenderBundle::new(pipeline_builder).with_config(
+            display_config,
+        ))?
         .with_store("resources", Directory::new(resources_directory))
         .build()?;
 

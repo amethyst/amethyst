@@ -1,6 +1,7 @@
 //! ECS transform bundle
 
-use ecs::{ECSBundle, World, DispatcherBuilder};
+use app::ApplicationBuilder;
+use ecs::ECSBundle;
 use ecs::transform::*;
 use error::Result;
 
@@ -26,20 +27,18 @@ impl<'a> TransformBundle<'a> {
     }
 }
 
-impl<'a, 'b, 'c, A> ECSBundle<'a, 'b, A> for TransformBundle<'c> {
+impl<'a, 'b, 'c, T: ::state::State + 'a> ECSBundle<'a, 'b, T> for TransformBundle<'c> {
     fn build(
         &self,
-        _: A,
-        world: &mut World,
-        mut dispatcher: DispatcherBuilder<'a, 'b>,
-    ) -> Result<DispatcherBuilder<'a, 'b>> {
-        world.register::<Init>();
-        world.register::<Child>();
-        world.register::<LocalTransform>();
-        world.register::<Transform>();
-
-        dispatcher = dispatcher.add(TransformSystem::new(), "transform_system", self.dep);
-
-        Ok(dispatcher)
+        builder: ApplicationBuilder<'a, 'b, T>,
+    ) -> Result<ApplicationBuilder<'a, 'b, T>> {
+        Ok(
+            builder
+                .register::<Init>()
+                .register::<Child>()
+                .register::<LocalTransform>()
+                .register::<Transform>()
+                .with(TransformSystem::new(), "transform_system", self.dep),
+        )
     }
 }

@@ -213,7 +213,8 @@ pub struct ApplicationBuilder<'a, 'b, T: State + 'a> {
     // config: Config,
     disp_builder: DispatcherBuilder<'a, 'b>,
     initial_state: T,
-    world: World,
+    /// Used by bundles to access the world directly
+    pub world: World,
     pool: Arc<ThreadPool>,
     /// Allows to create `RenderSystem`
     // TODO: Come up with something clever
@@ -588,16 +589,11 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     /// crates or APIs, which could result in any number of errors.
     /// See each individual bundle for a description of the errors it could produce.
     ///
-    pub fn with_bundle<B>(mut self, bundle: B) -> Result<Self>
+    pub fn with_bundle<B>(self, bundle: B) -> Result<Self>
     where
-        B: for<'c> ECSBundle<'a, 'b, (&'c EventsLoop)>,
+        B: ECSBundle<'a, 'b, T>,
     {
-        self.disp_builder = bundle.build(
-            (&self.events),
-            &mut self.world,
-            self.disp_builder,
-        )?;
-        Ok(self)
+        bundle.build(self)
     }
 
     /// Register an asset store with the loader logic of the Application.

@@ -7,16 +7,15 @@ pub mod transform;
 pub mod rendering;
 pub mod audio;
 
+use app::ApplicationBuilder;
 use error::Result;
 
 /// Describes a bundle of ECS components, resources and systems
-pub trait ECSBundle<'a, 'b, A> {
+pub trait ECSBundle<'a, 'b, T: ::state::State + 'a> {
     /// Build and add ECS resources to the world, register components in the world,
     /// and create systems and register them in the dispatcher builder.
     fn build(
         &self,
-        args: A,
-        world: &mut World,
-        dispatcher: DispatcherBuilder<'a, 'b>,
-    ) -> Result<DispatcherBuilder<'a, 'b>>;
+        builder: ApplicationBuilder<'a, 'b, T>,
+    ) -> Result<ApplicationBuilder<'a, 'b, T>>;
 }

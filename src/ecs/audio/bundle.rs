@@ -1,8 +1,9 @@
 //! ECS audio bundles
 
+use app::ApplicationBuilder;
 use audio::Dj;
 use audio::output::{default_output, Output};
-use ecs::{ECSBundle, World, DispatcherBuilder};
+use ecs::ECSBundle;
 use ecs::audio::DjSystem;
 use error::Result;
 use shred::ResourceId;
@@ -28,31 +29,34 @@ impl<'a> DjBundle<'a> {
     }
 }
 
-impl<'a, 'b, 'c, A> ECSBundle<'a, 'b, A> for DjBundle<'c> {
+impl<'a, 'b, 'c, T: ::state::State + 'a> ECSBundle<'a, 'b, T> for DjBundle<'c> {
     fn build(
         &self,
-        _: A,
-        world: &mut World,
-        mut dispatcher: DispatcherBuilder<'a, 'b>,
-    ) -> Result<DispatcherBuilder<'a, 'b>> {
-
+        mut builder: ApplicationBuilder<'a, 'b, T>,
+    ) -> Result<ApplicationBuilder<'a, 'b, T>> {
         // Remove option here when specs get support for optional fetch in
         // released version
-        if !world.res.has_value(ResourceId::new::<Option<Output>>()) {
-            world.add_resource(default_output());
+        if !builder.world.res.has_value(
+            ResourceId::new::<Option<Output>>(),
+        )
+        {
+            builder = builder.with_resource(default_output());
         }
 
-        let dj = match *world.read_resource::<Option<Output>>() {
+        let dj = match *builder.world.read_resource::<Option<Output>>() {
             Some(ref audio_output) => Some(Dj::new(&audio_output)),
 
             None => None,
         };
 
         if let Some(dj) = dj {
-            world.add_resource(dj);
-            dispatcher = dispatcher.add(DjSystem, "dj_system", self.dep);
+            builder = builder.with_resource(dj).with(
+                DjSystem,
+                "dj_system",
+                self.dep,
+            );
         }
 
-        Ok(dispatcher)
+        Ok(builder)
     }
 }
