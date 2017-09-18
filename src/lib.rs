@@ -57,8 +57,8 @@
 pub extern crate thread_profiler;
 
 pub extern crate amethyst_config as config;
-pub extern crate amethyst_renderer as renderer;
 pub extern crate amethyst_input as input;
+pub extern crate amethyst_renderer as renderer;
 
 extern crate amethyst_assets;
 extern crate cgmath;
@@ -72,8 +72,8 @@ extern crate imagefmt;
 extern crate num_cpus;
 extern crate rayon;
 extern crate rodio;
-extern crate smallvec;
 extern crate shred;
+extern crate smallvec;
 extern crate specs;
 extern crate wavefront_obj;
 extern crate winit;
@@ -89,6 +89,7 @@ pub mod ecs;
 pub mod event;
 pub mod prelude;
 pub mod timing;
+pub mod util;
 
 mod app;
 mod engine;

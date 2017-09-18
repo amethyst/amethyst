@@ -2,7 +2,7 @@
 
 use futures::{Async, Future, Poll};
 use rayon::ThreadPool;
-use renderer::{Mesh, MeshBuilder, Error as RendererError};
+use renderer::{Error as RendererError, Mesh, MeshBuilder};
 use renderer::vertex::*;
 
 use assets::{Asset, AssetFuture, AssetPtr, AssetSpec, Cache, Context};

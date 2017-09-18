@@ -6,6 +6,7 @@ pub mod input;
 pub mod transform;
 pub mod rendering;
 pub mod audio;
+pub mod util;
 
 use app::ApplicationBuilder;
 use error::Result;

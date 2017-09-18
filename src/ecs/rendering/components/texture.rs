@@ -7,7 +7,7 @@ use futures::{Async, Future, Poll};
 use gfx::format::SurfaceType;
 use imagefmt::ColFmt;
 use rayon::ThreadPool;
-use renderer::{Texture, TextureBuilder, Error as RendererError};
+use renderer::{Error as RendererError, Texture, TextureBuilder};
 
 use assets::{Asset, AssetFuture, AssetPtr, AssetSpec, Cache, Context};
 use assets::formats::textures::ImageData;
@@ -100,13 +100,11 @@ impl Future for TextureFuture {
 
     fn poll(&mut self) -> Poll<TextureComponent, TextureError> {
         match self.0 {
-            Inner::Factory(ref mut future) => {
-                match future.poll() {
-                    Ok(Async::NotReady) => Ok(Async::NotReady),
-                    Ok(Async::Ready(texture)) => Ok(Async::Ready(TextureComponent::new(texture))),
-                    Err(err) => Err(TextureError::Renderer(err)),
-                }
-            }
+            Inner::Factory(ref mut future) => match future.poll() {
+                Ok(Async::NotReady) => Ok(Async::NotReady),
+                Ok(Async::Ready(texture)) => Ok(Async::Ready(TextureComponent::new(texture))),
+                Err(err) => Err(TextureError::Renderer(err)),
+            },
             Inner::Err(ref mut err) => Err(err.take().expect("polling completed future")),
         }
     }
@@ -190,12 +188,9 @@ impl Context for TextureContext {
             return TextureFuture::unsupported_size(image.w, image.h);
         }
 
-        let tb = TextureBuilder::new(image.buf).with_format(fmt).with_size(
-            image.w as
-                u16,
-            image.h as
-                u16,
-        );
+        let tb = TextureBuilder::new(image.buf)
+            .with_format(fmt)
+            .with_size(image.w as u16, image.h as u16);
         TextureFuture::factory(self.factory.create_texture(tb))
     }
 
