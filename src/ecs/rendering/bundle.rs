@@ -42,7 +42,7 @@ impl RenderBundle {
     }
 }
 
-impl<'a, 'b, T: ::state::State + 'a> ECSBundle<'a, 'b, T> for RenderBundle {
+impl<'a, 'b, T> ECSBundle<'a, 'b, T> for RenderBundle {
     fn build(
         &self,
         mut builder: ApplicationBuilder<'a, 'b, T>,

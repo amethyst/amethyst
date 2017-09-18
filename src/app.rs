@@ -209,7 +209,7 @@ impl<'a, 'b> Drop for Application<'a, 'b> {
 /// `ApplicationBuilder` is an interface that allows for creation of an [`Application`](struct.Application.html)
 /// using a custom set of configuration. This is the normal way an [`Application`](struct.Application.html)
 /// object is created.
-pub struct ApplicationBuilder<'a, 'b, T: State + 'a> {
+pub struct ApplicationBuilder<'a, 'b, T> {
     // config: Config,
     disp_builder: DispatcherBuilder<'a, 'b>,
     initial_state: T,
@@ -221,7 +221,7 @@ pub struct ApplicationBuilder<'a, 'b, T: State + 'a> {
     pub events: EventsLoop,
 }
 
-impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
+impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// Creates a new [ApplicationBuilder](struct.ApplicationBuilder.html) instance
     /// that wraps the initial_state. This is the more verbose way of initializing
     /// your application if you require specific configuration details to be changed
@@ -720,7 +720,10 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
     ///
     /// See the [example show for `ApplicationBuilder::new()`](struct.ApplicationBuilder.html#examples)
     /// for an example on how this method is used.
-    pub fn build(self) -> Result<Application<'a, 'b>> {
+    pub fn build(self) -> Result<Application<'a, 'b>>
+    where
+        T: State + 'a,
+    {
 
         #[cfg(feature = "profiler")] register_thread_with_profiler("Main".into());
         #[cfg(feature = "profiler")]

@@ -29,7 +29,7 @@ impl<'a> DjBundle<'a> {
     }
 }
 
-impl<'a, 'b, 'c, T: ::state::State + 'a> ECSBundle<'a, 'b, T> for DjBundle<'c> {
+impl<'a, 'b, 'c, T> ECSBundle<'a, 'b, T> for DjBundle<'c> {
     fn build(
         &self,
         mut builder: ApplicationBuilder<'a, 'b, T>,

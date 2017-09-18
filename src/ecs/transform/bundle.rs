@@ -27,7 +27,7 @@ impl<'a> TransformBundle<'a> {
     }
 }
 
-impl<'a, 'b, 'c, T: ::state::State + 'a> ECSBundle<'a, 'b, T> for TransformBundle<'c> {
+impl<'a, 'b, 'c, T> ECSBundle<'a, 'b, T> for TransformBundle<'c> {
     fn build(
         &self,
         builder: ApplicationBuilder<'a, 'b, T>,
