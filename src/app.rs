@@ -4,8 +4,6 @@ use std::sync::Arc;
 
 use input::InputHandler;
 use rayon::ThreadPool;
-use renderer::Config as DisplayConfig;
-use renderer::PipelineBuilder;
 use shred::{Resource, ResourceId};
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
@@ -602,83 +600,6 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
         Ok(self)
     }
 
-    /// Automatically registers the rendering system and all required components
-    /// and resources that the rendering system requires.
-    ///
-    /// # Parameters
-    /// - `pipeline`: A pipeline builder describing the render pipeline.
-    /// - `config`: An optional display configuration. If there is no supplied
-    ///             display configuration the configuration will use the default
-    ///             configuration created by `amethyst::renderer::Config::default()`
-    ///
-    /// # Returns
-    ///
-    /// This function returns ApplicationBuilder after it has modified it, this is
-    /// wrapped in a `Result`.
-    ///
-    /// # Errors
-    ///
-    /// This method initializes the renderer, which uses a number of system APIs
-    /// that we cannot guarantee will function correctly on every system.
-    ///
-    /// Sources of possible error (none exhaustive):
-    ///
-    /// - Failure to create a window
-    /// - Failure to initialize the lower level graphics context (OpenGL, DX)
-    /// - Failure to initialize the thread pool
-    /// - Failure to compile shaders for the target platform
-    /// - linking error between shader variables and framework
-    ///
-    /// # Examples
-    ///
-    /// See the `renderable` example supplied in the examples folder for a fully
-    /// working example that illustrates how to configure the renderer.
-    /// The example below is a brief example showing how and where to get the
-    /// types needed to initialize the renderer.
-    ///
-    /// ~~~no_run
-    /// use amethyst::prelude::*;
-    /// use amethyst::renderer;
-    /// use amethyst::renderer::prelude::*;
-    ///
-    /// struct NullState;
-    /// impl State for NullState {}
-    ///
-    /// // Create a new display_config, we can tweak the configuration
-    /// // here, or load it from a file.
-    /// let mut display_config = renderer::Config::default();
-    /// display_config.title = "An Amazing Amethyst Game!".into();
-    /// display_config.dimensions = Some((640, 480));
-    ///
-    /// // A pipeline needs to be built to initialize the renderer
-    /// let pipeline_builder = Pipeline::build().with_stage(
-    ///     Stage::with_backbuffer()
-    ///         .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-    ///         .with_model_pass(pass::DrawShaded::<PosNormTex>::new()),
-    /// );
-    ///
-    /// // finally we are able to add the renderer to our application.
-    /// Application::build(NullState)
-    ///     .expect("Failed to initialize")
-    ///     .with_renderer(pipeline_builder, Some(display_config))
-    ///     .expect("Failed to create render system for application");
-    /// ~~~
-    pub fn with_renderer(
-        mut self,
-        pipeline: PipelineBuilder,
-        config: Option<DisplayConfig>,
-    ) -> Result<Self> {
-        use ecs::SystemExt;
-        use ecs::rendering::RenderSystem;
-        let render_sys = RenderSystem::build((&self.events, pipeline, config), &mut self.world)?;
-        Ok(
-            self.with_thread_local(render_sys)
-                .register_mesh_asset()
-                .register_texture_asset()
-                .register_material_not_yet_asset(),
-        )
-    }
-
     /// Register an asset store with the loader logic of the Application.
     ///
     /// If the asset store exists, that shares a name with the new store the net
@@ -817,42 +738,6 @@ impl<'a, 'b, T: State + 'a> ApplicationBuilder<'a, 'b, T> {
             dispatcher: self.disp_builder.with_pool(self.pool).build(),
             time: Time::default(),
             timer: Stopwatch::new(),
-        })
-    }
-
-    // #########################################################################
-    //
-    // Internal functions
-    //
-    // #########################################################################
-
-    /// Register new context within the loader
-    fn register_mesh_asset(self) -> Self {
-        use ecs::rendering::{MeshComponent, MeshContext, Factory};
-        self.register_asset::<MeshComponent, _>(|world| {
-            let factory = world.read_resource::<Factory>();
-            MeshContext::new((&*factory).clone())
-        })
-    }
-
-    /// Register new context within the loader
-    fn register_material_not_yet_asset(mut self) -> Self {
-        use assets::AssetFuture;
-        use ecs::rendering::MaterialComponent;
-        use specs::common::Merge;
-
-        self.world.register::<MaterialComponent>();
-        self.world.register::<AssetFuture<MaterialComponent>>();
-        self = self.with(Merge::<AssetFuture<MaterialComponent>>::new(), "", &[]);
-        self
-    }
-
-    /// Register new context within the loader
-    fn register_texture_asset(self) -> Self {
-        use ecs::rendering::{TextureComponent, TextureContext, Factory};
-        self.register_asset::<TextureComponent, _>(|world| {
-            let factory = world.read_resource::<Factory>();
-            TextureContext::new((&*factory).clone())
         })
     }
 }

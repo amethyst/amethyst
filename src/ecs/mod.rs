@@ -9,16 +9,6 @@ pub mod audio;
 
 use error::Result;
 
-/// Extension trait for all systems.
-pub trait SystemExt<'a, A>: System<'a> {
-    /// Constructs a new system with the given arguments.
-    /// Registers all supported components with the World.
-    /// Puts resources into World.
-    fn build(args: A, world: &mut World) -> Result<Self>
-    where
-        Self: Sized;
-}
-
 /// Describes a bundle of ECS components, resources and systems
 pub trait ECSBundle<'a, 'b, A> {
     /// Build and add ECS resources to the world, register components in the world,
