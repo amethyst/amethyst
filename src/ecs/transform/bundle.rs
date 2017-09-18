@@ -10,6 +10,14 @@ use error::Result;
 /// Will register transform components, and the TransformSystem.
 /// TransformSystem will be registered with name "transform_system".
 ///
+/// # Errors
+///
+/// No errors will be returned by this bundle.
+///
+/// # Panics
+///
+/// Panics in TransformSystem registration if the bundle is applied twice in the same dispatcher.
+///
 pub struct TransformBundle<'a> {
     dep: &'a [&'a str],
 }

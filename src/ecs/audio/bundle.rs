@@ -10,8 +10,17 @@ use shred::ResourceId;
 
 /// DJ bundle
 ///
-/// Will only register the DjSystem if it can either get the default audio output,
-/// or fetch it from the world. DjSystem will be registered with name "dj_system".
+/// Will only register the DjSystem if it an audio output is found.
+/// DjSystem will be registered with name "dj_system".
+///
+/// # Errors
+///
+/// No errors returned by this bundle
+///
+/// # Panics
+///
+/// Panics during DjSystem registration if the bundle is applied twice.
+///
 pub struct DjBundle<'a> {
     dep: &'a [&'a str],
 }

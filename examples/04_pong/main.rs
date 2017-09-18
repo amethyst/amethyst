@@ -4,15 +4,17 @@ extern crate amethyst;
 extern crate futures;
 extern crate rayon;
 
+use amethyst::{ApplicationBuilder, Result};
 use amethyst::assets::{AssetFuture, BoxedErr};
 use amethyst::assets::Loader;
 use amethyst::assets::formats::audio::OggFormat;
 use amethyst::audio::{Dj, AudioContext, Source};
 use amethyst::audio::output::Output;
 use amethyst::audio::play::play_once;
-use amethyst::ecs::{Component, Fetch, FetchMut, Join, System, DenseVecStorage, WriteStorage};
+use amethyst::ecs::{Component, Fetch, FetchMut, Join, System, DenseVecStorage, WriteStorage,
+                    ECSBundle};
 use amethyst::ecs::audio::DjBundle;
-use amethyst::ecs::input::{Bindings, InputHandler};
+use amethyst::ecs::input::{InputHandler, InputBundle};
 use amethyst::ecs::rendering::{Factory, MeshComponent, MaterialComponent, RenderBundle};
 use amethyst::ecs::transform::{Transform, LocalTransform, TransformBundle};
 use amethyst::prelude::*;
@@ -88,6 +90,24 @@ impl Score {
             score_left: 0,
             score_right: 0,
         }
+    }
+}
+
+struct PongBundle;
+
+impl<'a, 'b, T> ECSBundle<'a, 'b, T> for PongBundle {
+    fn build(
+        &self,
+        builder: ApplicationBuilder<'a, 'b, T>,
+    ) -> Result<ApplicationBuilder<'a, 'b, T>> {
+        Ok(
+            builder
+                .with_resource(Score::new())
+                .with_resource(Time::default())
+                .register::<Ball>()
+                .register::<Paddle>()
+                .with(PongSystem, "pong_system", &[]),
+        )
     }
 }
 
@@ -369,17 +389,6 @@ impl State for Pong {
             up: [0., 1.0, 0.].into(),
         });
 
-        // Add all resources
-        world.add_resource(Score::new());
-        let mut input = InputHandler::new();
-        input.bindings = Bindings::load(format!(
-            "{}/examples/04_pong/resources/input.ron",
-            env!("CARGO_MANIFEST_DIR")
-        ));
-
-        world.add_resource(input);
-        world.add_resource(Time::default());
-
         // Create a ball entity
         let mut ball = Ball::new();
         ball.size = 0.02;
@@ -438,21 +447,22 @@ impl State for Pong {
     }
 }
 
-fn run() -> Result<(), amethyst::Error> {
+fn run() -> Result<()> {
     use amethyst::assets::Directory;
 
     let path = format!(
         "{}/examples/04_pong/resources/config.ron",
         env!("CARGO_MANIFEST_DIR")
     );
+    let bindings_path = format!(
+        "{}/examples/04_pong/resources/input.ron",
+        env!("CARGO_MANIFEST_DIR")
+    );
     let cfg = DisplayConfig::load(path);
     let assets_dir = format!("{}/examples/04_pong/resources/", env!("CARGO_MANIFEST_DIR"));
-    let pong = PongSystem;
-    let game = Application::build(Pong)
-        .unwrap()
-        .register::<Ball>()
-        .register::<Paddle>()
-        .with::<PongSystem>(pong, "pong_system", &[])
+    let game = Application::build(Pong)?
+        .with_bundle(InputBundle::new().with_bindings_from_file(&bindings_path))?
+        .with_bundle(PongBundle)?
         .with_bundle(TransformBundle::new().with_dep(&["pong_system"]))?
         .with_bundle(DjBundle::new())?
         .with_bundle(

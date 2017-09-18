@@ -21,6 +21,13 @@ use error::{Error, Result};
 ///
 /// Will add RenderSystem as a thread local system.
 ///
+/// # Errors
+///
+/// Returns errors related to:
+///
+/// * Renderer creation
+/// * Pipeline creation
+///
 pub struct RenderBundle {
     pipe: PipelineBuilder,
     display_config: Option<DisplayConfig>,

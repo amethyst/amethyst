@@ -10,10 +10,9 @@ pub mod audio;
 use app::ApplicationBuilder;
 use error::Result;
 
-/// Describes a bundle of ECS components, resources and systems
+/// A bundle of ECS components, resources and systems.
 pub trait ECSBundle<'a, 'b, T> {
-    /// Build and add ECS resources to the world, register components in the world,
-    /// and create systems and register them in the dispatcher builder.
+    /// Build and add ECS resources, register components, add systems etc to the Application.
     fn build(
         &self,
         builder: ApplicationBuilder<'a, 'b, T>,
