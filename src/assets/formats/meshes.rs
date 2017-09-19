@@ -6,7 +6,7 @@ use cgmath::{InnerSpace, Vector3};
 use rayon::ThreadPool;
 use renderer::vertex::PosNormTex;
 use wavefront_obj::ParseError;
-use wavefront_obj::obj::{Normal, NormalIndex, Object, ObjSet, parse, Primitive, TVertex,
+use wavefront_obj::obj::{parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex,
                          TextureIndex, Vertex, VertexIndex};
 
 use assets::{Format, SpawnedFuture};
@@ -96,15 +96,11 @@ fn convert(
 
 fn convert_primitive(object: &Object, prim: &Primitive) -> Option<[PosNormTex; 3]> {
     match *prim {
-        Primitive::Triangle(v1, v2, v3) => {
-            Some(
-                [
-                    convert(object, v1.0, v1.1, v1.2),
-                    convert(object, v2.0, v2.1, v2.2),
-                    convert(object, v3.0, v3.1, v3.2),
-                ],
-            )
-        }
+        Primitive::Triangle(v1, v2, v3) => Some([
+            convert(object, v1.0, v1.1, v1.2),
+            convert(object, v2.0, v2.1, v2.2),
+            convert(object, v3.0, v3.1, v3.2),
+        ]),
         _ => None,
     }
 }
@@ -118,9 +114,10 @@ fn from_data(obj_set: ObjSet) -> Vec<PosNormTex> {
     // them all as a single mesh.
     let vertices = obj_set.objects.iter().flat_map(|object| {
         object.geometry.iter().flat_map(move |geometry| {
-            geometry.shapes.iter().filter_map(move |s| {
-                convert_primitive(object, &s.primitive)
-            })
+            geometry
+                .shapes
+                .iter()
+                .filter_map(move |s| convert_primitive(object, &s.primitive))
         })
     });
 

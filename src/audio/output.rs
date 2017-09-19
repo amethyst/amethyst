@@ -50,5 +50,7 @@ pub fn default_output() -> Option<Output> {
 
 /// Get a list of outputs available to the system.
 pub fn outputs() -> OutputIterator {
-    OutputIterator { input: get_endpoints_list() }
+    OutputIterator {
+        input: get_endpoints_list(),
+    }
 }

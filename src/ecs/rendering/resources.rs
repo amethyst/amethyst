@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use crossbeam::sync::MsQueue;
 use futures::{Async, Future, Poll};
-use futures::sync::oneshot::{Receiver, Sender, channel};
+use futures::sync::oneshot::{channel, Receiver, Sender};
 use gfx::traits::Pod;
 use renderer::{Error, Material, MaterialBuilder, Mesh, MeshBuilder, Texture, TextureBuilder};
 use renderer::Rgba;
@@ -38,7 +38,9 @@ pub struct Factory {
 impl Factory {
     /// Creates a new factory resource.
     pub fn new() -> Self {
-        Factory { jobs: Arc::new(MsQueue::new()) }
+        Factory {
+            jobs: Arc::new(MsQueue::new()),
+        }
     }
 
     /// Creates a mesh asynchronously.
@@ -96,10 +98,7 @@ impl Factory {
 
         impl<F, T, E> Exec for Job<F, T, E>
         where
-            F: FnOnce(&mut ::renderer::Factory) -> Result<T, E>
-                + Send
-                + Sync
-                + 'static,
+            F: FnOnce(&mut ::renderer::Factory) -> Result<T, E> + Send + Sync + 'static,
             T: Send + Sync + 'static,
             E: Send + Sync + 'static,
         {
