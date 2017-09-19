@@ -17,12 +17,12 @@ use error::{Error, Result};
 /// Rendering bundle
 ///
 /// Will register all necessary components needed for rendering, along with any resources.
-/// Will also register asset contexts with the asset Loader, and add systems for merging
-/// AssetFutures into their respective component.
+/// Will also register asset contexts with the asset `Loader`, and add systems for merging
+/// `AssetFuture` into its related component.
 ///
-/// Will add RenderSystem as a thread local system.
+/// Will add `RenderSystem` as a thread local system.
 ///
-/// # Errors
+/// ## Errors
 ///
 /// Returns errors related to:
 ///
@@ -100,7 +100,7 @@ impl<'a, 'b, T, P> ECSBundle<'a, 'b, T> for RenderBundle<P>
             .register::<MeshComponent>()
             .register::<TextureComponent>();
 
-        // asset stuff, enable/disable flag for this?
+        // FIXME: asset stuff, enable/disable flag for this?
         {
             let (mesh_context, texture_context) = {
                 let factory = builder.world.read_resource::<Factory>();
