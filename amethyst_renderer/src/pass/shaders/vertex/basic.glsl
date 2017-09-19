@@ -24,6 +24,6 @@ void main() {
     vertex.position = model * vec4(position, 1.0);
     vertex.normal = mat3(model) * normal;
     vertex.tangent = mat3(model) * tangent;
-    vertex.tex_coord = tex_coord;
+    vertex.tex_coord = vec2(tex_coord.x, 1.0 - tex_coord.y);
     gl_Position = proj * view * vertex.position;
 }
