@@ -4,8 +4,6 @@ use std::sync::Arc;
 
 use input::InputHandler;
 use rayon::ThreadPool;
-use renderer::Config as DisplayConfig;
-use renderer::pipe::{PolyPipeline, PipelineBuild};
 use shred::{Resource, ResourceId};
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};

@@ -1,16 +1,9 @@
 //! Rendering system.
 
-use assets::BoxedErr;
-use ecs::{Fetch, System, World};
-use ecs::rendering::resources::{Factory, AmbientColor};
-use ecs::rendering::{LightComponent, MaterialComponent, MeshComponent};
-use ecs::transform::components::*;
-use error::{Error, Result};
-//use renderer::prelude::*;
-use renderer::{Config as DisplayConfig, Renderer, Rgba, Light, Mesh, Material};
-use renderer::pipe::{PolyPipeline, PipelineData, PipelineBuild};
-
-use winit::EventsLoop;
+use ecs::{Fetch, System};
+use ecs::rendering::resources::Factory;
+use renderer::Renderer;
+use renderer::pipe::{PolyPipeline, PipelineData};
 
 /// Rendering system.
 #[derive(Derivative)]
