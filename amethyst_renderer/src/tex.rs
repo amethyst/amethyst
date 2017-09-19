@@ -2,14 +2,16 @@
 
 pub use gfx::texture::{FilterMethod, WrapMode};
 
+use specs::{Component, DenseVecStorage};
+
 use std::marker::PhantomData;
 
 use error::Result;
-use gfx::format::SurfaceType;
+use gfx::format::{ChannelType, SurfaceType};
 use gfx::texture::{Info, SamplerInfo};
 use gfx::traits::Pod;
 
-use types::{Factory, RawShaderResourceView, RawTexture, Sampler};
+use types::{ChannelFormat, Factory, RawShaderResourceView, RawTexture, Sampler, SurfaceFormat};
 
 /// Handle to a GPU texture resource.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -46,6 +48,7 @@ impl Texture {
 pub struct TextureBuilder<D, T> {
     data: D,
     info: Info,
+    channel_type: ChannelType,
     sampler: SamplerInfo,
     pd: PhantomData<T>,
 }
@@ -75,16 +78,18 @@ where
         use gfx::SHADER_RESOURCE;
         use gfx::memory::Usage;
         use gfx::texture::{AaMode, Kind};
+        use gfx::format::{ChannelTyped, SurfaceTyped};
 
         TextureBuilder {
             data: data,
             info: Info {
                 kind: Kind::D2(1, 1, AaMode::Single),
                 levels: 1,
-                format: SurfaceType::R8_G8_B8_A8,
+                format: SurfaceFormat::get_surface_type(),
                 bind: SHADER_RESOURCE,
                 usage: Usage::Dynamic,
             },
+            channel_type: ChannelFormat::get_channel_type(),
             sampler: SamplerInfo::new(FilterMethod::Scale, WrapMode::Clamp),
             pd: PhantomData,
         }
@@ -118,22 +123,27 @@ where
         self
     }
 
+    /// Sets the texture channel type
+    pub fn with_channel_type(mut self, channel_type: ChannelType) -> Self {
+        self.channel_type = channel_type;
+        self
+    }
+
     /// Builds and returns the new texture.
     pub fn build(self, fac: &mut Factory) -> Result<Texture> {
         use gfx::Factory;
-        use gfx::format::{ChannelType, Swizzle};
+        use gfx::format::Swizzle;
         use gfx::memory::cast_slice;
         use gfx::texture::ResourceDesc;
 
-        let chan = ChannelType::Srgb;
         let tex = fac.create_texture_raw(
             self.info,
-            Some(chan),
+            Some(self.channel_type),
             Some(&[cast_slice(self.data.as_ref())]),
         )?;
 
         let desc = ResourceDesc {
-            channel: ChannelType::Srgb,
+            channel: self.channel_type,
             layer: None,
             min: 1,
             max: self.info.levels,
@@ -149,4 +159,8 @@ where
             view: view,
         })
     }
+}
+
+impl Component for Texture {
+    type Storage = DenseVecStorage<Self>;
 }

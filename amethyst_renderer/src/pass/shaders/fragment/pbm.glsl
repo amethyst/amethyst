@@ -21,8 +21,8 @@ layout (std140) uniform PointLights {
 };
 
 struct DirectionalLight {
-    vec3 direction;
     vec4 color;
+    vec4 direction;
 };
 
 layout (std140) uniform DirectionalLights {
@@ -59,7 +59,7 @@ float normal_distribution(vec3 N, vec3 H, float a) {
     float denom = (NdotH2 * (a2 - 1.0) + 1.0);
     denom = PI * denom * denom;
 
-    return a2 / denom;
+    return (a2 + 0.0000001) / denom;
 }
 
 float geometry(float NdotV, float NdotL, float r2) {
@@ -84,9 +84,6 @@ void main() {
     float roughness         = texture(roughness, vertex.tex_coord).r;
     float ambient_occlusion = texture(ambient_occlusion, vertex.tex_coord).r;
     float caveat            = texture(caveat, vertex.tex_coord).r; // TODO: Use caveat
-
-    // gamma correction
-    normal = pow(normal, vec3(1.0/2.33));
 
     // normal conversion
     normal = normal * 2 - 1;

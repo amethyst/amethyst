@@ -31,6 +31,7 @@ struct DemoState {
     point_light: bool,
     directional_light: bool,
     camera_angle: f32,
+    #[allow(dead_code)]
     pipeline_forward: bool, // TODO
 }
 
@@ -324,7 +325,7 @@ fn run() -> Result<(), Error> {
     let pipeline_builder = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_model_pass(pass::DrawShaded::<PosNormTex>::new()),
+            .with_pass(DrawShaded::new()),
     );
 
     let mut game = Application::build(Example)
@@ -341,6 +342,7 @@ fn run() -> Result<(), Error> {
     Ok(())
 }
 
+type DrawShaded = pass::DrawShaded<PosNormTex, AmbientColor, MeshComponent, MaterialComponent, Transform, LightComponent>;
 
 /// Initialises the camera structure.
 fn initialise_camera(camera: &mut Camera) {

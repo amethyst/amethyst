@@ -3,10 +3,12 @@
 extern crate amethyst;
 
 use amethyst::ecs::rendering::RenderBundle;
+use amethyst::ecs::transform::Transform;
+use amethyst::ecs::rendering::{MeshComponent, MaterialComponent};
 use amethyst::event::{KeyboardInput, VirtualKeyCode};
 use amethyst::prelude::*;
 use amethyst::renderer::Config as DisplayConfig;
-use amethyst::renderer::prelude::{Pipeline, PosNormTex};
+use amethyst::renderer::prelude::*;
 
 struct Example;
 
@@ -29,6 +31,9 @@ impl State for Example {
     }
 }
 
+
+type DrawFlat = pass::DrawFlat<PosNormTex, MeshComponent, MaterialComponent, Transform>;
+
 fn run() -> Result<(), amethyst::Error> {
     let path = format!(
         "{}/examples/01_window/resources/config.ron",
@@ -38,7 +43,11 @@ fn run() -> Result<(), amethyst::Error> {
 
     let mut game = Application::build(Example)?
         .with_bundle(
-            RenderBundle::new(Pipeline::forward::<PosNormTex>()).with_config(config),
+            RenderBundle::new(Pipeline::build().with_stage(
+                Stage::with_backbuffer()
+                    .clear_target([0.00196, 0.23726, 0.21765, 1.0], 1.0)
+                    .with_pass(DrawFlat::new()),
+            )).with_config(config),
         )?
         .build()
         .expect("Fatal error");
