@@ -2,6 +2,7 @@
 
 extern crate amethyst;
 
+use amethyst::ecs::rendering::RenderBundle;
 use amethyst::event::{KeyboardInput, VirtualKeyCode};
 use amethyst::prelude::*;
 use amethyst::renderer::Config as DisplayConfig;
@@ -34,7 +35,9 @@ fn run() -> Result<(), amethyst::Error> {
     let config = DisplayConfig::load(&path);
 
     let mut game = Application::build(Example)?
-        .with_renderer(Pipeline::forward::<PosNormTex>(), Some(config))?
+        .with_bundle(
+            RenderBundle::new(Pipeline::forward::<PosNormTex>()).with_config(config),
+        )?
         .build()
         .expect("Fatal error");
 

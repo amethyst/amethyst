@@ -6,7 +6,7 @@ use smallvec::SmallVec;
 use super::{Axis, Button};
 
 /// Used for saving and loading input settings.
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Default, Serialize, Deserialize, Clone)]
 pub struct Bindings {
     pub(super) axes: HashMap<String, Axis>,
     pub(super) actions: HashMap<String, SmallVec<[Button; 4]>>,

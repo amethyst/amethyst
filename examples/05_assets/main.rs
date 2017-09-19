@@ -13,8 +13,8 @@ use amethyst::config::Config;
 use amethyst::ecs::World;
 use amethyst::ecs::input::InputHandler;
 use amethyst::ecs::rendering::{MeshComponent, Factory, MeshContext, TextureComponent,
-                               MaterialComponent, TextureContext};
-use amethyst::ecs::transform::{LocalTransform, Transform};
+                               MaterialComponent, TextureContext, RenderBundle};
+use amethyst::ecs::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::{Camera, Rgba, Config as DisplayConfig};
 use amethyst::renderer::prelude::*;
@@ -171,8 +171,6 @@ fn main() {
 /// Wrapper around the main, so we can return errors easily.
 fn run() -> Result<(), Error> {
     use amethyst::assets::Directory;
-    use amethyst::ecs::common::Errors;
-    use amethyst::ecs::transform::{Child, Init, LocalTransform, TransformSystem};
 
     // Add our meshes directory to the asset loader.
     let resources_directory = format!(
@@ -194,13 +192,11 @@ fn run() -> Result<(), Error> {
 
     let mut game = Application::build(AssetsExample)
         .expect("Failed to build ApplicationBuilder for an unknown reason.")
-        .register::<Child>()
-        .register::<LocalTransform>()
-        .register::<Init>()
-        .with::<TransformSystem>(TransformSystem::new(), "transform_system", &[])
-        .with_renderer(pipeline_builder, Some(display_config))?
+        .with_bundle(TransformBundle::new())?
+        .with_bundle(RenderBundle::new(pipeline_builder).with_config(
+            display_config,
+        ))?
         .with_store("resources", Directory::new(resources_directory))
-        .with_resource(Errors::new())
         .build()?;
 
     game.run();

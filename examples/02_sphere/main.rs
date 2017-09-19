@@ -8,7 +8,8 @@ extern crate futures;
 extern crate genmesh;
 
 use amethyst::assets::{AssetFuture, BoxedErr};
-use amethyst::ecs::rendering::{Factory, MeshComponent, MaterialComponent, LightComponent};
+use amethyst::ecs::rendering::{Factory, MeshComponent, MaterialComponent, LightComponent,
+                               RenderBundle};
 use amethyst::ecs::transform::Transform;
 use amethyst::prelude::*;
 use amethyst::renderer::Config as DisplayConfig;
@@ -108,13 +109,14 @@ fn run() -> Result<(), amethyst::Error> {
     );
     let config = DisplayConfig::load(&path);
     let mut game = Application::build(Example)?
-        .with_renderer(
-            Pipeline::build().with_stage(
-                Stage::with_backbuffer()
-                    .clear_target([0.00196, 0.23726, 0.21765, 1.0], 1.0)
-                    .with_model_pass(pass::DrawFlat::<PosNormTex>::new()),
-            ),
-            Some(config),
+        .with_bundle(
+            RenderBundle::new(
+                Pipeline::build().with_stage(
+                    Stage::with_backbuffer()
+                        .clear_target([0.00196, 0.23726, 0.21765, 1.0], 1.0)
+                        .with_model_pass(pass::DrawFlat::<PosNormTex>::new()),
+                ),
+            ).with_config(config),
         )?
         .build()?;
     Ok(game.run())
