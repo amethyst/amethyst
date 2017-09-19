@@ -1,6 +1,4 @@
-//! Displays a multicolored sphere to the user.
-//!
-//! TODO: Rewrite for new renderer.
+//! Displays spheres with physically based materials.
 
 extern crate amethyst;
 extern crate cgmath;
@@ -8,19 +6,21 @@ extern crate futures;
 extern crate genmesh;
 
 use amethyst::assets::{AssetFuture, BoxedErr};
-use amethyst::ecs::rendering::{Factory, MeshComponent, MaterialComponent, LightComponent,
-                               RenderBundle};
+use amethyst::ecs::rendering::{LightComponent, MaterialComponent, AmbientColor,
+                               Factory, MeshComponent, RenderBundle};
 use amethyst::ecs::transform::Transform;
 use amethyst::prelude::*;
 use amethyst::renderer::Config as DisplayConfig;
 use amethyst::renderer::prelude::*;
-use cgmath::{Deg, Vector3};
+use cgmath::{Deg, Matrix4, Vector3};
 use cgmath::prelude::InnerSpace;
 use futures::{Future, IntoFuture};
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 
 struct Example;
+
+
 
 fn load_proc_asset<T, F>(engine: &mut Engine, f: F) -> AssetFuture<T::Item>
 where
@@ -37,7 +37,7 @@ impl State for Example {
     fn on_start(&mut self, engine: &mut Engine) {
         let verts = gen_sphere(32, 32);
         let mesh = Mesh::build(verts);
-        let tex = Texture::from_color_val([0.0, 0.0, 1.0, 1.0]);
+        let tex = Texture::from_color_val([1.0, 1.0, 1.0, 1.0]);
         let mtl = MaterialBuilder::new().with_albedo(tex);
 
         println!("Load mesh");
@@ -48,42 +48,69 @@ impl State for Example {
             )
         });
 
-        println!("Load material");
-        let mtl = load_proc_asset(engine, move |engine| {
-            let factory = engine.world.read_resource::<Factory>();
-            factory
-                .create_material(mtl)
-                .map(MaterialComponent)
-                .map_err(BoxedErr::new)
-        });
 
-        println!("Create sphere");
-        engine
-            .world
-            .create_entity()
-            .with(Transform::default())
-            .with(mesh)
-            .with(mtl)
-            .build();
+        println!("Create spheres");
+        for i in 0..5 {
+            for j in 0..5 {
+                let roughness = 1.0f32 * (i as f32 / 4.0f32);
+                let metallic = 1.0f32 * (j as f32 / 4.0f32);
+                let pos = Matrix4::from_translation(
+                    [2.0f32 * (i - 2) as f32, 2.0f32 * (j - 2) as f32, 0.0].into(),
+                );
+
+                let metallic = Texture::from_color_val([metallic, metallic, metallic, 1.0]);
+                let roughness = Texture::from_color_val([roughness, roughness, roughness, 1.0]);
+
+                let mtl = mtl.clone().with_metallic(metallic).with_roughness(roughness);
+
+                let mtl = load_proc_asset(engine, move |engine| {
+                    let factory = engine.world.read_resource::<Factory>();
+                    factory
+                        .create_material(mtl)
+                        .map(MaterialComponent)
+                        .map_err(BoxedErr::new)
+                });
+                engine
+                    .world
+                    .create_entity()
+                    .with(Transform(pos.into()))
+                    .with(mesh.clone())
+                    .with(mtl)
+                    .build();
+            }
+        }
 
 
-        println!("Create light");
+        println!("Create lights");
         engine
             .world
             .create_entity()
             .with(LightComponent(
                 PointLight {
-                    center: [2.0, 2.0, 2.0].into(),
-                    radius: 5.0,
-                    intensity: 3.0,
-                    ..Default::default()
+                    center: [6.0, 6.0, -6.0].into(),
+                    intensity: 6.0,
+                    color: [0.8, 0.0, 0.0].into(),
+                    ..PointLight::default()
+                }.into(),
+            ))
+            .build();
+
+        engine
+            .world
+            .create_entity()
+            .with(LightComponent(
+                PointLight {
+                    center: [6.0, -6.0, -6.0].into(),
+                    intensity: 5.0,
+                    color: [0.0, 0.3, 0.7].into(),
+                    ..PointLight::default()
                 }.into(),
             ))
             .build();
 
         println!("Put camera");
         engine.world.add_resource(Camera {
-            eye: [0.0, 0.0, -4.0].into(),
+            eye: [0.0, 0.0, -12.0].into(),
             proj: Projection::perspective(1.3, Deg(60.0)).into(),
             forward: [0.0, 0.0, 1.0].into(),
             right: [1.0, 0.0, 0.0].into(),
@@ -108,23 +135,21 @@ impl State for Example {
 }
 
 
-type DrawFlat = pass::DrawFlat<PosNormTex, MeshComponent, MaterialComponent, Transform>;
+type DrawPbm = pass::DrawPbm<PosNormTangTex, AmbientColor, MeshComponent, MaterialComponent, Transform, LightComponent>;
 
 fn run() -> Result<(), amethyst::Error> {
     let path = format!(
-        "{}/examples/02_sphere/resources/config.ron",
+        "{}/examples/06_material/resources/config.ron",
         env!("CARGO_MANIFEST_DIR")
     );
     let config = DisplayConfig::load(&path);
     let mut game = Application::build(Example)?
         .with_bundle(
-            RenderBundle::new(
-                Pipeline::build().with_stage(
-                    Stage::with_backbuffer()
-                        .clear_target([0.00196, 0.23726, 0.21765, 1.0], 1.0)
-                        .with_pass(DrawFlat::new()),
-                ),
-            ).with_config(config),
+            RenderBundle::new(Pipeline::build().with_stage(
+                Stage::with_backbuffer()
+                    .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
+                    .with_pass(DrawPbm::new()),
+            )).with_config(config)
         )?
         .build()?;
     Ok(game.run())
@@ -137,12 +162,16 @@ fn main() {
     }
 }
 
-fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTex> {
+fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTangTex> {
     SphereUV::new(u, v)
         .vertex(|(x, y, z)| {
-            PosNormTex {
+            let normal = Vector3::from([x, y, z]).normalize();
+            let up = Vector3::from([0.0, 1.0, 0.0]);
+            let tangent = normal.cross(up).cross(normal);
+            PosNormTangTex {
                 a_position: [x, y, z],
-                a_normal: Vector3::from([x, y, z]).normalize().into(),
+                a_normal: normal.into(),
+                a_tangent: tangent.into(),
                 a_tex_coord: [0.1, 0.1],
             }
         })

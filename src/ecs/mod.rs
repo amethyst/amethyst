@@ -2,10 +2,11 @@
 
 pub use specs::*;
 
-pub mod input;
-pub mod transform;
-pub mod rendering;
 pub mod audio;
+pub mod input;
+pub mod rendering;
+pub mod transform;
+
 
 use app::ApplicationBuilder;
 use error::Result;

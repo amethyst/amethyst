@@ -447,6 +447,8 @@ impl State for Pong {
     }
 }
 
+type DrawFlat = pass::DrawFlat<PosNormTex, MeshComponent, MaterialComponent, Transform>;
+
 fn run() -> Result<()> {
     use amethyst::assets::Directory;
 
@@ -470,7 +472,7 @@ fn run() -> Result<()> {
                 Pipeline::build().with_stage(
                     Stage::with_backbuffer()
                         .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-                        .with_model_pass(pass::DrawFlat::<PosNormTex>::new()),
+                        .with_pass(DrawFlat::new()),
                 ),
             ).with_config(cfg),
         )?

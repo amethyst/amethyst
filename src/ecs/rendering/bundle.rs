@@ -3,6 +3,7 @@
 use renderer::Config as DisplayConfig;
 use renderer::Rgba;
 use renderer::prelude::*;
+use renderer::pipe::PipelineBuild;
 
 use app::ApplicationBuilder;
 use assets::{BoxedErr, Loader, AssetFuture};
@@ -28,14 +29,16 @@ use error::{Error, Result};
 /// * Renderer creation
 /// * Pipeline creation
 ///
-pub struct RenderBundle {
-    pipe: PipelineBuilder,
+pub struct RenderBundle<P> {
+    pipe: P,
     display_config: Option<DisplayConfig>,
 }
 
-impl RenderBundle {
+impl<P> RenderBundle<P>
+    where P: PipelineBuild
+{
     /// Create a new render bundle with the given pipeline
-    pub fn new(pipe: PipelineBuilder) -> Self {
+    pub fn new(pipe: P) -> Self {
         Self {
             pipe,
             display_config: None,
@@ -49,7 +52,10 @@ impl RenderBundle {
     }
 }
 
-impl<'a, 'b, T> ECSBundle<'a, 'b, T> for RenderBundle {
+impl<'a, 'b, T, P> ECSBundle<'a, 'b, T> for RenderBundle<P>
+    where P: PipelineBuild + Clone,
+          P::Pipeline: 'b
+{
     fn build(
         &self,
         mut builder: ApplicationBuilder<'a, 'b, T>,
@@ -69,7 +75,7 @@ impl<'a, 'b, T> ECSBundle<'a, 'b, T> for RenderBundle {
             renderer
         };
 
-        let pipe = renderer.create_pipe(self.pipe.to_owned()).map_err(|err| {
+        let pipe = renderer.create_pipe(self.pipe.clone()).map_err(|err| {
             Error::System(BoxedErr::new(err))
         })?;
 
@@ -120,7 +126,7 @@ impl<'a, 'b, T> ECSBundle<'a, 'b, T> for RenderBundle {
                 .with(Merge::<AssetFuture<TextureComponent>>::new(), "", &[]);
         }
 
-        builder = builder.with_thread_local(RenderSystem::new(pipe, renderer, Scene::default()));
+        builder = builder.with_thread_local(RenderSystem::new(pipe, renderer));
 
         Ok(builder)
     }
