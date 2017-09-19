@@ -10,7 +10,7 @@ use shred::ResourceId;
 
 /// DJ bundle
 ///
-/// Will only register the `Dj` and the `DjSystem` if it an audio output is found.
+/// Will only register the `Dj` and the `DjSystem` if an audio output is found.
 /// `DjSystem` will be registered with name "dj_system".
 ///
 /// ## Errors
