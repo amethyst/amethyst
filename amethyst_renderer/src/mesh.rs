@@ -2,6 +2,8 @@
 
 use std::marker::PhantomData;
 
+use specs::{Component, DenseVecStorage};
+
 use cgmath::{Deg, Matrix4, Point3, Transform, Vector3};
 use gfx::Primitive;
 
@@ -149,4 +151,8 @@ where
             vbuf: vbuf,
         })
     }
+}
+
+impl Component for Mesh {
+    type Storage = DenseVecStorage<Self>;
 }

@@ -12,8 +12,8 @@ use amethyst::assets::formats::textures::{PngFormat, BmpFormat};
 use amethyst::config::Config;
 use amethyst::ecs::World;
 use amethyst::ecs::input::InputHandler;
-use amethyst::ecs::rendering::{MeshComponent, Factory, MeshContext, TextureComponent,
-                               MaterialComponent, TextureContext, RenderBundle};
+use amethyst::ecs::rendering::{AmbientColor, LightComponent, MeshComponent, Factory, MeshContext, TextureComponent,
+                               MaterialComponent, RenderBundle, TextureContext};
 use amethyst::ecs::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::{Camera, Rgba, Config as DisplayConfig};
@@ -168,6 +168,8 @@ fn main() {
     }
 }
 
+type DrawShaded = pass::DrawShaded<PosNormTex, AmbientColor, MeshComponent, MaterialComponent, Transform, LightComponent>;
+
 /// Wrapper around the main, so we can return errors easily.
 fn run() -> Result<(), Error> {
     use amethyst::assets::Directory;
@@ -187,7 +189,7 @@ fn run() -> Result<(), Error> {
     let pipeline_builder = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_model_pass(pass::DrawShaded::<PosNormTex>::new()),
+            .with_pass(DrawShaded::new()),
     );
 
     let mut game = Application::build(AssetsExample)

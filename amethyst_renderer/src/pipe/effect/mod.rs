@@ -19,8 +19,8 @@ use gfx::traits::Pod;
 use self::pso::{Data, Init, Meta};
 
 use error::{Error, Result};
+use mesh::Mesh;
 use pipe::Target;
-use scene::Model;
 use types::{Encoder, Factory, PipelineState, Resources};
 use vertex::Attribute;
 
@@ -128,11 +128,10 @@ impl Effect {
         // maybe `.expect(...)` would fit here
     }
 
-    /// FIXME: Add support for arbitrary materials and textures.
-    pub fn draw(&self, model: &Model, enc: &mut Encoder) {
+    pub fn draw(&self, mesh: &Mesh, enc: &mut Encoder) {
         let mut data = self.data.clone();
 
-        let (vbuf, slice) = model.mesh.geometry();
+        let (vbuf, slice) = mesh.geometry();
         data.vertex_bufs.push(vbuf.clone());
 
         enc.draw(&slice, &self.pso, &data);

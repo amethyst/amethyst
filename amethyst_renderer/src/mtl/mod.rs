@@ -2,6 +2,8 @@
 
 use gfx::traits::Pod;
 
+use specs::{Component, DenseVecStorage};
+
 use error::Result;
 use tex::{Texture, TextureBuilder};
 use types::Factory;
@@ -210,4 +212,9 @@ impl<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC>
             caveat: self.caveat.build(fac)?,
         })
     }
+}
+
+
+impl Component for Material {
+    type Storage = DenseVecStorage<Self>;
 }

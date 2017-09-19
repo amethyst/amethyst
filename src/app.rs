@@ -4,6 +4,8 @@ use std::sync::Arc;
 
 use input::InputHandler;
 use rayon::ThreadPool;
+use renderer::Config as DisplayConfig;
+use renderer::pipe::{PolyPipeline, PipelineBuild};
 use shred::{Resource, ResourceId};
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
@@ -513,7 +515,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// ~~~
     pub fn with<S>(mut self, system: S, name: &str, dependencies: &[&str]) -> Self
     where
-        for<'c> S: System<'c> + Send + 'a + 'b,
+        for<'c> S: System<'c> + Send + 'a,
     {
         self.disp_builder = self.disp_builder.add(system, name, dependencies);
         self
@@ -563,7 +565,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// ~~~
     pub fn with_thread_local<S>(mut self, system: S) -> Self
     where
-        for<'c> S: System<'c> + 'a + 'b,
+        for<'c> S: System<'c> + 'b,
     {
         self.disp_builder = self.disp_builder.add_thread_local(system);
         self

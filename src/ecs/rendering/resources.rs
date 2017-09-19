@@ -128,5 +128,11 @@ pub type MaterialFuture = FactoryFuture<Material, Error>;
 pub type MeshFuture = FactoryFuture<Mesh, Error>;
 
 /// The ambient color of a scene
-#[derive(Default)]
+#[derive(Clone, Debug, Default)]
 pub struct AmbientColor(pub Rgba);
+
+impl AsRef<Rgba> for AmbientColor {
+    fn as_ref(&self) -> &Rgba {
+        &self.0
+    }
+}
