@@ -1,5 +1,6 @@
 //! Launches a new renderer window.
 
+#[macro_use] extern crate error_chain;
 extern crate amethyst_renderer as renderer;
 extern crate cgmath;
 extern crate genmesh;
@@ -11,13 +12,14 @@ use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 use renderer::prelude::*;
 use renderer::vertex::PosNormTangTex;
+use renderer::Result;
 
-fn main() {
+fn run() -> Result<()> {
     use std::time::{Duration, Instant};
     use winit::{Event, EventsLoop, WindowEvent};
 
     let mut events = EventsLoop::new();
-    let mut renderer = Renderer::new(&events).expect("Renderer create");
+    let mut renderer = Renderer::new(&events)?;
     let pipe = renderer
         .create_pipe(
             Pipeline::build().with_stage(
@@ -25,13 +27,10 @@ fn main() {
                     .clear_target([0.0, 0.0, 0.0, 1.0], 2.0)
                     .with_model_pass(pass::DrawShaded::<PosNormTangTex>::new()),
             ),
-        )
-        .expect("Pipeline create");
+        )?;
 
     let verts = gen_sphere(64, 64);
-    let mesh = renderer.create_mesh(Mesh::build(&verts)).expect(
-        "Mesh create",
-    );
+    let mesh = renderer.create_mesh(Mesh::build(&verts))?;
 
     let mut scene = Scene::default();
     let alb = Texture::from_color_val([1.0; 4]);
@@ -52,8 +51,7 @@ fn main() {
                         .with_albedo(alb.clone())
                         .with_roughness(rog)
                         .with_metallic(met),
-                )
-                .expect("Material create");
+                )?;
             let model = Model {
                 mesh: mesh.clone(),
                 material: mtl,
@@ -103,10 +101,13 @@ fn main() {
             _ => (),
         });
 
-        renderer.draw(&scene, &pipe, delta);
+        renderer.draw(&scene, &pipe, delta)?;
         delta = Instant::now() - start;
     }
+    Ok(())
 }
+
+quick_main!(run);
 
 fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTangTex> {
     SphereUV::new(u, v)

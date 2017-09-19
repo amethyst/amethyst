@@ -37,6 +37,7 @@ rayon = "0.8"
 serde = "1.0"
 serde_derive = "1.0"
 winit = "0.7"
+error-chain = "0.10"
 
 gfx_device_gl = { version = "0.14", optional = true }
 gfx_window_glutin = { version = "0.17", optional = true }

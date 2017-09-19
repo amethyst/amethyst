@@ -57,7 +57,9 @@ impl<V: VertexFormat> Pass for DrawFlat<V> {
             .build()
     }
 
-    fn apply(&self, enc: &mut Encoder, effect: &mut Effect, scene: &Scene, model: &Model) {
+    fn apply(&self, enc: &mut Encoder, effect: &mut Effect, scene: &Scene, model: &Model)
+        -> Result<()>
+    {
         let vertex_args = scene
             .active_camera()
             .map(|cam| {
@@ -75,7 +77,7 @@ impl<V: VertexFormat> Pass for DrawFlat<V> {
                 }
             });
 
-        effect.update_constant_buffer("VertexArgs", &vertex_args, enc);
+        effect.update_constant_buffer("VertexArgs", &vertex_args, enc)?;
         effect.data.textures.push(
             model.material.albedo.view().clone(),
         );
@@ -84,5 +86,6 @@ impl<V: VertexFormat> Pass for DrawFlat<V> {
         );
 
         effect.draw(model, enc);
+        Ok(())
     }
 }

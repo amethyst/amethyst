@@ -12,7 +12,8 @@ use types::{Encoder, Factory};
 
 pub trait Pass: Send + Sync {
     fn compile(&self, effect: NewEffect) -> Result<Effect>;
-    fn apply(&self, enc: &mut Encoder, effect: &mut Effect, scene: &Scene, model: &Model);
+    fn apply(&self, enc: &mut Encoder, effect: &mut Effect, scene: &Scene, model: &Model)
+        -> Result<()>;
 }
 
 #[derive(Clone)]
@@ -46,14 +47,14 @@ pub struct CompiledPass {
 }
 
 impl CompiledPass {
-    pub fn apply(&self, enc: &mut Encoder, scene: &Scene, model: &Model) {
+    pub fn apply(&self, enc: &mut Encoder, scene: &Scene, model: &Model) -> Result<()> {
         // TODO: Eliminate this clone.
         self.inner.apply(
             enc,
             &mut self.effect.clone(),
             scene,
             model,
-        );
+        )
     }
 }
 

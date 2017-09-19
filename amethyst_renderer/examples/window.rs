@@ -1,5 +1,6 @@
 //! Launches a new renderer window.
 
+#[macro_use] extern crate error_chain;
 extern crate amethyst_renderer as renderer;
 extern crate winit;
 
@@ -7,11 +8,12 @@ use std::time::{Duration, Instant};
 
 use winit::{Event, EventsLoop, WindowEvent};
 use renderer::prelude::*;
+use renderer::Result;
 
-fn main() {
+fn run() -> Result<()> {
     let mut events = EventsLoop::new();
-    let mut renderer = Renderer::new(&events).unwrap();
-    let pipe = renderer.create_pipe(Pipeline::forward::<PosTex>()).unwrap();
+    let mut renderer = Renderer::new(&events)?;
+    let pipe = renderer.create_pipe(Pipeline::forward::<PosTex>())?;
     let scene = Scene::default();
 
     let mut delta = Duration::from_secs(0);
@@ -30,7 +32,10 @@ fn main() {
             _ => (),
         });
 
-        renderer.draw(&scene, &pipe, delta);
+        renderer.draw(&scene, &pipe, delta)?;
         delta = Instant::now() - start;
     }
+    Ok(())
 }
+
+quick_main!(run);

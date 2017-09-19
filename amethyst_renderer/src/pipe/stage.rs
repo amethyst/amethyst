@@ -5,7 +5,7 @@ use rayon::iter::internal::UnindexedConsumer;
 use rayon::slice::{Chunks, IterMut as ParIterMut};
 use rayon::vec::IntoIter;
 
-use error::{Error, Result};
+use error::{Error, ErrorKind, Result};
 use pipe::{Target, Targets};
 use pipe::pass::{CompiledPass, Description, Pass};
 use scene::{Model, Scene};
@@ -161,9 +161,9 @@ impl StageBuilder {
     /// Builds and returns the stage.
     pub(crate) fn build(mut self, fac: &mut Factory, targets: &Targets) -> Result<Stage> {
         let out = targets.get(&self.target_name).cloned().ok_or(
-            Error::NoSuchTarget(
+            Error::from(ErrorKind::NoSuchTarget(
                 self.target_name,
-            ),
+            )),
         )?;
 
         let passes = self.passes

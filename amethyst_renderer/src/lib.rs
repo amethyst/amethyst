@@ -65,6 +65,11 @@
 #![deny(missing_docs)]
 #![doc(html_logo_url = "https://tinyurl.com/jtmm43a")]
 
+// for error-chain
+#![recursion_limit="4096"]
+
+#[macro_use]
+extern crate error_chain;
 extern crate cgmath;
 #[macro_use]
 extern crate derivative;
@@ -104,7 +109,7 @@ extern crate gfx_window_vulkan;
 pub use cam::{Camera, Projection};
 pub use color::Rgba;
 pub use config::Config;
-pub use error::{Error, Result};
+pub use error::{Error, ErrorKind, Result};
 pub use light::Light;
 pub use mesh::{Mesh, MeshBuilder};
 pub use mtl::{Material, MaterialBuilder};
@@ -211,7 +216,7 @@ impl Renderer {
     }
 
     /// Draws a scene with the given pipeline.
-    pub fn draw(&mut self, scene: &Scene, pipe: &Pipeline, _delta: Duration) {
+    pub fn draw(&mut self, scene: &Scene, pipe: &Pipeline, _delta: Duration) -> Result<()> {
         use gfx::Device;
         #[cfg(feature = "opengl")]
         use glutin::GlContext;
@@ -234,7 +239,7 @@ impl Renderer {
 
         {
             let mut encoders = self.encoders.iter_mut();
-            self.pool.install(move || {
+            self.pool.install(move || -> Result<()> {
                 let mut updates = Vec::new();
                 for stage in pipe.enabled_stages() {
                     let needed = stage.encoders_required(num_threads);
@@ -244,12 +249,29 @@ impl Renderer {
                     updates.push(stage.apply(taken, scene));
                 }
 
-                updates.into_par_iter().flat_map(|update| update).for_each(
-                    |(pass, models, enc)| for model in models {
-                        pass.apply(enc, scene, model);
+                let errors = updates.into_par_iter().flat_map(|update| update).fold(
+                    || Vec::new(),
+                    |mut acc, (pass, models, enc)| {
+                        for model in models {
+                            if let Err(e) = pass.apply(enc, scene, model) {
+                                acc.push(e);
+                            };
+                        }
+                        acc
                     },
+                ).reduce(
+                    || Vec::new(),
+                    |mut acc, res| {
+                        acc.extend(res.into_iter());
+                        acc
+                    }
                 );
-            });
+
+                if errors.len() > 0 {
+                    bail!(ErrorKind::DrawErrors(errors));
+                }
+                Ok(())
+            })?;
         }
 
         for enc in self.encoders.iter_mut() {
@@ -259,9 +281,8 @@ impl Renderer {
         self.device.cleanup();
 
         #[cfg(feature = "opengl")]
-        self.window.swap_buffers().expect(
-            "OpenGL context has been lost",
-        );
+        self.window.swap_buffers()?;
+        Ok(())
     }
 }
 
@@ -345,7 +366,7 @@ impl<'a> RendererBuilder<'a> {
         let pool = self.pool.clone().map(|p| Ok(p)).unwrap_or_else(|| {
             let cfg = rayon::Configuration::new().num_threads(num_cores);
             ThreadPool::new(cfg).map(|p| Arc::new(p)).map_err(|e| {
-                Error::PoolCreation(format!("{}", e))
+                Error::from(ErrorKind::PoolCreation(format!("{}", e)))
             })
         })?;
 
@@ -428,7 +449,7 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &Config) -> Result<B
         .with_gl(GlRequest::Latest);
 
     let (win, dev, fac, color, depth) = win::init::<ColorFormat, DepthFormat>(wb, ctx, el);
-    let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
+    let size = win.get_inner_size_points().ok_or(Error::from(ErrorKind::WindowDestroyed))?;
     let main_target = Target::new(
         ColorBuffer {
             as_input: None,
