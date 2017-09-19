@@ -5,9 +5,11 @@ use timing::Time;
 use util::time::duration_to_nanos;
 ///FPSCounterSystem
 ///Add this system to your game to calculate FPS
-///Example:
-///counter.push(duration_to_secs(&time.delta_time)); //time.delta_time is a Duration of the delta time of this frame
-///println!("Cur FPS: {}, Sampled: {}",counter.frame_fps(),counter.sampled_fps());
+/// # Examples
+/// ~~~no_run
+/// counter.push(duration_to_secs(&time.delta_time)); //time.delta_time is a Duration of the delta time of this frame
+/// println!("Cur FPS: {}, Sampled: {}",counter.frame_fps(),counter.sampled_fps());
+/// ~~~
 pub struct FPSCounterSystem;
 impl<'a> System<'a> for FPSCounterSystem {
     type SystemData = (Fetch<'a, Time>, FetchMut<'a, FPSCounter>);
