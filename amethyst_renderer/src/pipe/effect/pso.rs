@@ -10,7 +10,7 @@ use types::{ColorFormat, DepthFormat, Resources};
 type AccessInfo = pso::AccessInfo<Resources>;
 type DepthStencilTarget = target::DepthStencilTarget<DepthFormat>;
 type Manager = handle::Manager<Resources>;
-type RenderTarget = target::RenderTarget<ColorFormat>;
+type BlendTarget = target::BlendTarget<ColorFormat>;
 type RawDataSet = pso::RawDataSet<Resources>;
 type InitResult<'r, M> = Result<M, InitError<&'r str>>;
 
@@ -18,7 +18,7 @@ type InitResult<'r, M> = Result<M, InitError<&'r str>>;
 pub struct Meta {
     const_bufs: Vec<RawConstantBuffer>,
     globals: Vec<RawGlobal>,
-    out_colors: Vec<RenderTarget>,
+    out_colors: Vec<BlendTarget>,
     out_depth: Option<DepthStencilTarget>,
     samplers: Vec<Sampler>,
     textures: Vec<RawShaderResource>,
@@ -30,7 +30,7 @@ pub struct Meta {
 pub struct Init<'d> {
     pub const_bufs: Vec<<RawConstantBuffer as DataLink<'d>>::Init>,
     pub globals: Vec<<RawGlobal as DataLink<'d>>::Init>,
-    pub out_colors: Vec<<RenderTarget as DataLink<'d>>::Init>,
+    pub out_colors: Vec<<BlendTarget as DataLink<'d>>::Init>,
     pub out_depth: Option<<DepthStencilTarget as DataLink<'d>>::Init>,
     pub samplers: Vec<<Sampler as DataLink<'d>>::Init>,
     pub textures: Vec<<RawShaderResource as DataLink<'d>>::Init>,
@@ -71,7 +71,7 @@ impl<'d> PipelineInit for Init<'d> {
         }
 
         for color in self.out_colors.iter() {
-            let mut meta_color = <RenderTarget as DataLink<'d>>::new();
+            let mut meta_color = <BlendTarget as DataLink<'d>>::new();
             for info in info.outputs.iter() {
                 if let Some(res) = meta_color.link_output(info, color) {
                     let d = res.map_err(
@@ -93,7 +93,7 @@ impl<'d> PipelineInit for Init<'d> {
             };
 
             for color in self.out_colors.iter() {
-                let mut meta_color = <RenderTarget as DataLink<'d>>::new();
+                let mut meta_color = <BlendTarget as DataLink<'d>>::new();
                 if let Some(res) = meta_color.link_output(&info, color) {
                     let d = res.map_err(|e| InitError::PixelExport("", Some(e)))?;
                     desc.color_targets[info.slot as usize] = Some(d);
@@ -161,7 +161,7 @@ impl<'d> PipelineInit for Init<'d> {
 pub struct Data {
     pub const_bufs: Vec<<RawConstantBuffer as DataBind<Resources>>::Data>,
     pub globals: Vec<<RawGlobal as DataBind<Resources>>::Data>,
-    pub out_colors: Vec<<RenderTarget as DataBind<Resources>>::Data>,
+    pub out_colors: Vec<<BlendTarget as DataBind<Resources>>::Data>,
     pub out_depth: Option<<DepthStencilTarget as DataBind<Resources>>::Data>,
     pub samplers: Vec<<Sampler as DataBind<Resources>>::Data>,
     pub textures: Vec<<RawShaderResource as DataBind<Resources>>::Data>,

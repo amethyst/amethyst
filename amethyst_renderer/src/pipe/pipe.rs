@@ -242,7 +242,7 @@ impl<'a, Q, L, Z, R> HetFnOnce<(StageBuilder<Q>,)> for BuildStage<'a>
           R: Passes,
 {
     type Output = Result<Stage<R>>;
-    fn call_once(mut self, (stage,): (StageBuilder<Q>,)) -> Result<Stage<R>> {
+    fn call_once(self, (stage,): (StageBuilder<Q>,)) -> Result<Stage<R>> {
         stage.build(self.factory, self.targets)
     }
 }
