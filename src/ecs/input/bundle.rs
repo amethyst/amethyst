@@ -1,14 +1,16 @@
 //! ECS input bundle
 
+use std::path::Path;
+
 use app::ApplicationBuilder;
 use config::Config;
 use ecs::ECSBundle;
 use ecs::input::{Bindings, InputHandler};
 use error::Result;
 
-/// Bundle for adding the InputHandler and input bindings
+/// Bundle for adding the `InputHandler` and input bindings
 ///
-/// # Errors
+/// ## Errors
 ///
 /// No errors returned from this bundle.
 ///
@@ -22,14 +24,14 @@ impl InputBundle {
         Self { bindings: None }
     }
 
-    /// Use the provided bindings with the InputHandler
+    /// Use the provided bindings with the `InputHandler`
     pub fn with_bindings(mut self, bindings: Bindings) -> Self {
         self.bindings = Some(bindings);
         self
     }
 
     /// Load bindings from file
-    pub fn with_bindings_from_file(self, file: &str) -> Self {
+    pub fn with_bindings_from_file<P: AsRef<Path>>(self, file: P) -> Self {
         self.with_bindings(Bindings::load(file))
     }
 }

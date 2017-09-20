@@ -2,7 +2,6 @@
 
 extern crate amethyst;
 extern crate futures;
-extern crate rayon;
 
 use amethyst::{ApplicationBuilder, Result};
 use amethyst::assets::{AssetFuture, BoxedErr};

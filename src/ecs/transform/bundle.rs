@@ -7,16 +7,16 @@ use error::Result;
 
 /// Transform bundle
 ///
-/// Will register transform components, and the TransformSystem.
-/// TransformSystem will be registered with name "transform_system".
+/// Will register transform components, and the `TransformSystem`.
+/// `TransformSystem` will be registered with name "transform_system".
 ///
-/// # Errors
+/// ## Errors
 ///
 /// No errors will be returned by this bundle.
 ///
-/// # Panics
+/// ## Panics
 ///
-/// Panics in TransformSystem registration if the bundle is applied twice in the same dispatcher.
+/// Panics in `TransformSystem` registration if the bundle is applied twice in the same dispatcher.
 ///
 pub struct TransformBundle<'a> {
     dep: &'a [&'a str],
@@ -28,7 +28,7 @@ impl<'a> TransformBundle<'a> {
         Self { dep: &[] }
     }
 
-    /// Set dependencies for the TransformSystem
+    /// Set dependencies for the `TransformSystem`
     pub fn with_dep(mut self, dep: &'a [&'a str]) -> Self {
         self.dep = dep;
         self
