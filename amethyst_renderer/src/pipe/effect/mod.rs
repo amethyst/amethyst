@@ -13,7 +13,7 @@ use gfx::preset::depth::{LESS_EQUAL_TEST, LESS_EQUAL_WRITE};
 use gfx::pso::buffer::{ElemStride, InstanceRate};
 use gfx::shade::{ProgramError, ToUniform};
 use gfx::shade::core::UniformValue;
-use gfx::state::{Rasterizer, Stencil};
+use gfx::state::{Blend, BlendValue, ColorMask, Equation, Factor, Rasterizer, Stencil};
 use gfx::traits::Pod;
 
 use self::pso::{Data, Init, Meta};
@@ -226,7 +226,7 @@ impl<'a> EffectBuilder<'a> {
                 Stencil::default(),
             ));
         }
-        self.init.out_colors.push(name);
+        self.init.out_colors.push((name, ColorMask::all(), Blend::new(Equation::Add, Factor::One, Factor::OneMinus(BlendValue::SourceAlpha))));
         self
     }
 

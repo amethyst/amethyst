@@ -259,7 +259,7 @@ impl<'a, P> HetFnOnce<(P,)> for CompilePass<'a>
     where P: Pass,
 {
     type Output = Result<CompiledPass<P>>;
-    fn call_once(mut self, (pass,): (P,)) -> Result<CompiledPass<P>> {
+    fn call_once(self, (pass,): (P,)) -> Result<CompiledPass<P>> {
         CompiledPass::compile(pass, self.factory, self.target)
     }
 }
