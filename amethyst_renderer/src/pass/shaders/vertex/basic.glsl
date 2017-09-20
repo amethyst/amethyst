@@ -24,6 +24,7 @@ void main() {
     vertex.position = model * vec4(position, 1.0);
     vertex.normal = mat3(model) * normal;
     vertex.tangent = mat3(model) * tangent;
+    // Horizontally flip the texture to compensate for OpenGL's inverted V axis.
     vertex.tex_coord = vec2(tex_coord.x, 1.0 - tex_coord.y);
     gl_Position = proj * view * vertex.position;
 }
