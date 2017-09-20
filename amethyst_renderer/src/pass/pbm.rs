@@ -282,9 +282,6 @@ impl<'a, V, A, M, N, T, L> ParallelIterator for DrawPbmApply<'a, V, A, M, N, T, 
                 ),
             );
 
-            effect.data.textures.clear();
-            effect.data.samplers.clear();
-
             effect.data.textures.push(
                 material.as_ref().roughness.view().clone(),
             );

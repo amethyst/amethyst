@@ -275,9 +275,6 @@ impl<'a, V, A, M, N, T, L> ParallelIterator for DrawShadedApply<'a, V, A, M, N, 
                 ),
             );
 
-            effect.data.textures.clear();
-            effect.data.samplers.clear();
-
             effect.data.textures.push(
                 material.as_ref()
                     .emission

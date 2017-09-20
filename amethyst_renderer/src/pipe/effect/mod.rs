@@ -100,7 +100,7 @@ impl Effect {
     }
 
     /// FIXME: Update raw buffer without transmute, use `Result` somehow.
-    pub fn update_buffer<N, T>(&self, name: N, data: &[T], enc: &mut Encoder)
+    pub fn update_buffer<N, T>(&mut self, name: N, data: &[T], enc: &mut Encoder)
     where
         N: AsRef<str>,
         T: Pod,
@@ -115,7 +115,7 @@ impl Effect {
     }
 
     /// FIXME: Update raw buffer without transmute.
-    pub fn update_constant_buffer<N, T>(&self, name: N, data: &T, enc: &mut Encoder)
+    pub fn update_constant_buffer<N, T>(&mut self, name: N, data: &T, enc: &mut Encoder)
     where
         N: AsRef<str>,
         T: Copy,
@@ -126,6 +126,11 @@ impl Effect {
         }
         // FIXME: Don't silently ignore unknown update.
         // maybe `.expect(...)` would fit here
+    }
+
+    pub fn clear(&mut self) {
+        self.data.textures.clear();
+        self.data.samplers.clear();
     }
 
     pub fn draw(&self, mesh: &Mesh, enc: &mut Encoder) {

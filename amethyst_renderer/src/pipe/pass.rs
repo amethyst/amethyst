@@ -73,6 +73,7 @@ impl<'a, I> ParallelIterator for Apply<'a, I>
         let Apply { inner, supplier } = self;
         inner.map(move |f| {
             let (encoder, effect) = unsafe { supplier.get() };
+            effect.clear();
             f(encoder, effect);
         }).drive_unindexed(consumer)
     }
