@@ -623,6 +623,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// use amethyst::prelude::*;
     /// use amethyst::assets::{Directory, Loader};
     /// use amethyst::assets::formats::meshes::ObjFormat;
+    /// use amethyst::ecs::DispatcherBuilder;
     /// use amethyst::ecs::rendering::MeshComponent;
     ///
     /// let mut game = Application::build(LoadingState)
@@ -635,11 +636,12 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// struct LoadingState;
     /// impl State for LoadingState {
-    ///     fn on_start(&mut self, engine: &mut Engine) {
+    ///     fn on_start<'a, 'b>(&mut self, engine: &mut Engine, _: &mut Scene) -> Option<DispatcherBuilder<'a, 'b>> {
     ///         let loader = engine.world.read_resource::<Loader>();
     ///         // With the `resources`, load a teapot mesh with the format MeshComponent
     ///         // from the directory that registered above.
     ///         let future = loader.load_from::<MeshComponent, _, _, _>("teapot", ObjFormat, "resources");
+    ///         None
     ///     }
     /// }
     /// ~~~
@@ -720,7 +722,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// See the [example show for `ApplicationBuilder::new()`](struct.ApplicationBuilder.html#examples)
     /// for an example on how this method is used.
-    pub fn build(self) -> Result<Application<'a, 'b>>
+    pub fn build<'c>(self) -> Result<Application<'a, 'b>>
     where
         T: State + 'a,
     {

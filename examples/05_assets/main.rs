@@ -10,7 +10,7 @@ use amethyst::{Application, Error, State, Trans};
 use amethyst::assets::{AssetFuture, BoxedErr, Context, Format, Loader, NoError};
 use amethyst::assets::formats::textures::{PngFormat, BmpFormat};
 use amethyst::config::Config;
-use amethyst::ecs::World;
+use amethyst::ecs::{DispatcherBuilder, World};
 use amethyst::ecs::input::InputHandler;
 use amethyst::ecs::rendering::{AmbientColor, LightComponent, MeshComponent, Factory, MeshContext, TextureComponent,
                                MaterialComponent, RenderBundle, TextureContext};
@@ -66,7 +66,7 @@ impl Format for Custom {
 struct AssetsExample;
 
 impl State for AssetsExample {
-    fn on_start(&mut self, engine: &mut Engine) {
+    fn on_start<'a, 'b>(&mut self, engine: &mut Engine, _: &mut Scene) -> Option<DispatcherBuilder<'a, 'b>> {
         use amethyst::assets::formats::meshes::ObjFormat;
 
         let input = InputHandler::new();
@@ -138,9 +138,10 @@ impl State for AssetsExample {
             .with(trans)
             .with(Transform::default())
             .build();
+        None
     }
 
-    fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
+    fn handle_event(&mut self, _: &mut Engine, _: &mut Scene, event: Event) -> Trans {
         match event {
             Event::WindowEvent { event, .. } => {
                 match event {

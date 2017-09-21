@@ -10,7 +10,7 @@ use amethyst::assets::formats::audio::OggFormat;
 use amethyst::audio::{Dj, AudioContext, Source};
 use amethyst::audio::output::Output;
 use amethyst::audio::play::play_once;
-use amethyst::ecs::{Component, Fetch, FetchMut, Join, System, DenseVecStorage, WriteStorage,
+use amethyst::ecs::{DispatcherBuilder, Component, Fetch, FetchMut, Join, System, DenseVecStorage, WriteStorage,
                     ECSBundle};
 use amethyst::ecs::audio::DjBundle;
 use amethyst::ecs::input::{InputHandler, InputBundle};
@@ -291,7 +291,7 @@ where
 }
 
 impl State for Pong {
-    fn on_start(&mut self, engine: &mut Engine) {
+    fn on_start<'a, 'b>(&mut self, engine: &mut Engine, _: &mut Scene) -> Option<DispatcherBuilder<'a, 'b>> {
 
         // Load audio assets
         // FIXME: do loading with futures, pending the Loading state
@@ -428,9 +428,10 @@ impl State for Pong {
             .with(LocalTransform::default())
             .with(Transform::default())
             .build();
+        None
     }
 
-    fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
+    fn handle_event(&mut self, _: &mut Engine, _: &mut Scene, event: Event) -> Trans {
         match event {
             Event::WindowEvent { event, .. } => {
                 match event {

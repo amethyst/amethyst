@@ -14,6 +14,7 @@ use amethyst::assets::{AssetFuture, BoxedErr, Context, Format, Loader};
 use amethyst::assets::formats::meshes::ObjFormat;
 use amethyst::assets::formats::textures::PngFormat;
 use amethyst::config::Config;
+use amethyst::ecs::DispatcherBuilder;
 use amethyst::ecs::{Fetch, FetchMut, Join, System, WriteStorage};
 use amethyst::ecs::rendering::{LightComponent, MaterialComponent, AmbientColor, TextureContext,
                                Factory, TextureComponent, MeshComponent, MeshContext, RenderBundle};
@@ -82,7 +83,7 @@ impl<'a> System<'a> for ExampleSystem {
 struct Example;
 
 impl State for Example {
-    fn on_start(&mut self, engine: &mut Engine) {
+    fn on_start<'a, 'b>(&mut self, engine: &mut Engine, _: &mut Scene) -> Option<DispatcherBuilder<'a, 'b>> {
 
         initialise_camera(&mut engine.world.write_resource::<Camera>());
 
@@ -199,9 +200,10 @@ impl State for Example {
             camera_angle: 0.0,
             pipeline_forward: true,
         });
+        None
     }
 
-    fn handle_event(&mut self, engine: &mut Engine, event: Event) -> Trans {
+    fn handle_event(&mut self, engine: &mut Engine, _: &mut Scene, event: Event) -> Trans {
         let w = &mut engine.world;
         // Exit if user hits Escape or closes the window
         let mut state = w.write_resource::<DemoState>();

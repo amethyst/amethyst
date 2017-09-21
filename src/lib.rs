@@ -14,16 +14,18 @@
 //! ```rust,no_run
 //! extern crate amethyst;
 //!
+//! use amethyst::ecs::DispatcherBuilder;
 //! use amethyst::prelude::*;
 //!
 //! struct GameState;
 //!
 //! impl State for GameState {
-//!     fn on_start(&mut self, _: &mut Engine) {
+//!     fn on_start<'a, 'b>(&mut self, _: &mut Engine, _: &mut Scene) -> Option<DispatcherBuilder<'a, 'b>> {
 //!         println!("Starting game!");
+//!         None
 //!     }
 //!
-//!     fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
+//!     fn handle_event(&mut self, _: &mut Engine, _: &mut Scene, event: Event) -> Trans {
 //!         match event {
 //!             Event::WindowEvent { event, .. } => match event {
 //!                 WindowEvent::KeyboardInput {
@@ -36,7 +38,7 @@
 //!         }
 //!     }
 //!
-//!     fn update(&mut self, _: &mut Engine) -> Trans {
+//!     fn update(&mut self, _: &mut Engine, _: &mut Scene) -> Trans {
 //!         println!("Computing some more whoop-ass...");
 //!         Trans::Quit
 //!     }

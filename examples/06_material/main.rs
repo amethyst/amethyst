@@ -6,6 +6,7 @@ extern crate futures;
 extern crate genmesh;
 
 use amethyst::assets::{AssetFuture, BoxedErr};
+use amethyst::ecs::DispatcherBuilder;
 use amethyst::ecs::rendering::{LightComponent, MaterialComponent, AmbientColor,
                                Factory, MeshComponent, RenderBundle};
 use amethyst::ecs::transform::Transform;
@@ -34,7 +35,7 @@ where
 }
 
 impl State for Example {
-    fn on_start(&mut self, engine: &mut Engine) {
+    fn on_start<'a, 'b>(&mut self, engine: &mut Engine, _: &mut Scene) -> Option<DispatcherBuilder<'a, 'b>> {
         let verts = gen_sphere(32, 32);
         let mesh = Mesh::build(verts);
         let tex = Texture::from_color_val([1.0, 1.0, 1.0, 1.0]);
@@ -116,9 +117,10 @@ impl State for Example {
             right: [1.0, 0.0, 0.0].into(),
             up: [0.0, 1.0, 0.0].into(),
         });
+        None
     }
 
-    fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
+    fn handle_event(&mut self, _: &mut Engine, _: &mut Scene, event: Event) -> Trans {
         match event {
             Event::WindowEvent { event, .. } => {
                 match event {

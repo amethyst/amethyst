@@ -3,20 +3,22 @@
 extern crate amethyst;
 
 use amethyst::prelude::*;
+use amethyst::ecs::DispatcherBuilder;
 
 struct Example;
 
 impl State for Example {
-    fn on_start(&mut self, _: &mut Engine) {
+    fn on_start<'a, 'b>(&mut self, _: &mut Engine, _: &mut Scene) -> Option<DispatcherBuilder<'a, 'b>> {
         println!("Begin!");
+        None
     }
 
-    fn update(&mut self, _: &mut Engine) -> Trans {
+    fn update(&mut self, _: &mut Engine, _: &mut Scene) -> Trans {
         println!("Hello from Amethyst!");
         Trans::Quit
     }
 
-    fn on_stop(&mut self, _: &mut Engine) {
+    fn on_stop(&mut self, _: &mut Engine, _: &mut Scene) {
         println!("End!");
     }
 }
