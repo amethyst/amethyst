@@ -51,7 +51,7 @@ impl Renderer {
     /// Builds a new texture resource.
     pub fn create_texture<D, T>(&mut self, tb: TextureBuilder<D, T>) -> Result<Texture>
         where D: AsRef<[T]>,
-              T: Pod,
+              T: Pod + Copy,
     {
         tb.build(&mut self.factory)
     }
@@ -59,19 +59,19 @@ impl Renderer {
     /// Builds a new material resource.
     pub fn create_material<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC>(&mut self, mb: MaterialBuilder<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC>) -> Result<Material>
         where DA: AsRef<[TA]>,
-              TA: Pod,
+              TA: Pod + Copy,
               DE: AsRef<[TE]>,
-              TE: Pod,
+              TE: Pod + Copy,
               DN: AsRef<[TN]>,
-              TN: Pod,
+              TN: Pod + Copy,
               DM: AsRef<[TM]>,
-              TM: Pod,
+              TM: Pod + Copy,
               DR: AsRef<[TR]>,
-              TR: Pod,
+              TR: Pod + Copy,
               DO: AsRef<[TO]>,
-              TO: Pod,
+              TO: Pod + Copy,
               DC: AsRef<[TC]>,
-              TC: Pod,
+              TC: Pod + Copy,
     {
         mb.build(&mut self.factory)
     }

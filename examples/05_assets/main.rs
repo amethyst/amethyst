@@ -12,8 +12,8 @@ use amethyst::assets::formats::textures::{PngFormat, BmpFormat};
 use amethyst::config::Config;
 use amethyst::ecs::World;
 use amethyst::ecs::input::InputHandler;
-use amethyst::ecs::rendering::{AmbientColor, LightComponent, MeshComponent, Factory, MeshContext, TextureComponent,
-                               MaterialComponent, RenderBundle, TextureContext};
+use amethyst::ecs::rendering::{AmbientColor, LightComponent, MeshComponent, Factory, MeshContext,
+                               TextureComponent, MaterialComponent, RenderBundle, TextureContext};
 use amethyst::ecs::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::{Camera, Rgba, Config as DisplayConfig};
@@ -168,7 +168,14 @@ fn main() {
     }
 }
 
-type DrawShaded = pass::DrawShaded<PosNormTex, AmbientColor, MeshComponent, MaterialComponent, Transform, LightComponent>;
+type DrawShaded = pass::DrawShaded<
+    PosNormTex,
+    AmbientColor,
+    MeshComponent,
+    MaterialComponent,
+    Transform,
+    LightComponent,
+>;
 
 /// Wrapper around the main, so we can return errors easily.
 fn run() -> Result<(), Error> {

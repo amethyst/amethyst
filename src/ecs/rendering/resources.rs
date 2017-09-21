@@ -56,7 +56,7 @@ impl Factory {
     pub fn create_texture<D, T>(&self, tb: TextureBuilder<D, T>) -> TextureFuture
     where
         D: AsRef<[T]> + Send + Sync + 'static,
-        T: Pod + Send + Sync + 'static,
+        T: Pod + Send + Sync + Copy + 'static,
     {
         self.execute(move |f| tb.build(f))
     }
@@ -68,19 +68,19 @@ impl Factory {
     ) -> MaterialFuture
     where
         DA: AsRef<[TA]> + Send + Sync + 'static,
-        TA: Pod + Send + Sync + 'static,
+        TA: Pod + Send + Sync + Copy + 'static,
         DE: AsRef<[TE]> + Send + Sync + 'static,
-        TE: Pod + Send + Sync + 'static,
+        TE: Pod + Send + Sync + Copy + 'static,
         DN: AsRef<[TN]> + Send + Sync + 'static,
-        TN: Pod + Send + Sync + 'static,
+        TN: Pod + Send + Sync + Copy + 'static,
         DM: AsRef<[TM]> + Send + Sync + 'static,
-        TM: Pod + Send + Sync + 'static,
+        TM: Pod + Send + Sync + Copy + 'static,
         DR: AsRef<[TR]> + Send + Sync + 'static,
-        TR: Pod + Send + Sync + 'static,
+        TR: Pod + Send + Sync + Copy + 'static,
         DO: AsRef<[TO]> + Send + Sync + 'static,
-        TO: Pod + Send + Sync + 'static,
+        TO: Pod + Send + Sync + Copy + 'static,
         DC: AsRef<[TC]> + Send + Sync + 'static,
-        TC: Pod + Send + Sync + 'static,
+        TC: Pod + Send + Sync + Copy + 'static,
     {
         self.execute(|f| mb.build(f))
     }

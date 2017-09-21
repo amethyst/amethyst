@@ -10,7 +10,7 @@ use thread_profiler::{register_thread_with_profiler, write_profile};
 use winit::{Event, EventsLoop};
 
 use assets::{Asset, Loader, Store};
-use ecs::{Component, Dispatcher, DispatcherBuilder, System, World, ECSBundle};
+use ecs::{Component, Dispatcher, DispatcherBuilder, ECSBundle, System, World};
 use engine::Engine;
 use error::{Error, Result};
 use state::{State, StateMachine};
@@ -29,10 +29,8 @@ pub struct Application<'a, 'b> {
     #[derivative(Debug = "ignore")]
     pub engine: Engine,
 
-    #[derivative(Debug = "ignore")]
-    dispatcher: Dispatcher<'a, 'b>,
-    #[derivative(Debug = "ignore")]
-    events: EventsLoop,
+    #[derivative(Debug = "ignore")] dispatcher: Dispatcher<'a, 'b>,
+    #[derivative(Debug = "ignore")] events: EventsLoop,
     states: StateMachine<'a>,
     time: Time,
     timer: Stopwatch,
@@ -144,9 +142,10 @@ impl<'a, 'b> Application<'a, 'b> {
         {
             let engine = &mut self.engine;
             let states = &mut self.states;
-            if engine.world.res.has_value(
-                ResourceId::new::<InputHandler>(),
-            )
+            if engine
+                .world
+                .res
+                .has_value(ResourceId::new::<InputHandler>())
             {
                 engine
                     .world
@@ -157,9 +156,10 @@ impl<'a, 'b> Application<'a, 'b> {
             profile_scope!("handle_event");
 
             self.events.poll_events(|event| {
-                if engine.world.res.has_value(
-                    ResourceId::new::<InputHandler>(),
-                )
+                if engine
+                    .world
+                    .res
+                    .has_value(ResourceId::new::<InputHandler>())
                 {
                     let mut input = engine.world.write_resource::<InputHandler>();
                     if let Event::WindowEvent { ref event, .. } = event {
@@ -186,7 +186,7 @@ impl<'a, 'b> Application<'a, 'b> {
         profile_scope!("dispatch");
         self.dispatcher.dispatch(&mut self.engine.world.res);
 
-        #[cfg(feature="profiler")]
+        #[cfg(feature = "profiler")]
         profile_scope!("maintain");
         self.engine.world.maintain();
     }
@@ -290,9 +290,9 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
 
         let num_cores = num_cpus::get();
         let cfg = Configuration::new().num_threads(num_cores);
-        let pool = ThreadPool::new(cfg).map(|p| Arc::new(p)).map_err(|_| {
-            Error::Application
-        })?;
+        let pool = ThreadPool::new(cfg)
+            .map(|p| Arc::new(p))
+            .map_err(|_| Error::Application)?;
         let mut world = World::new();
         let base_path = format!("{}/resources", env!("CARGO_MANIFEST_DIR"));
         world.add_resource(Loader::new(base_path, pool.clone()));
@@ -686,7 +686,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
         F: FnOnce(&mut World) -> A::Context,
     {
         use assets::AssetFuture;
-        use specs::common::{Merge, Errors};
+        use specs::common::{Errors, Merge};
 
         self.world.register::<A>();
         self.world.register::<AssetFuture<A>>();
@@ -724,8 +724,8 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     where
         T: State + 'a,
     {
-
-        #[cfg(feature = "profiler")] register_thread_with_profiler("Main".into());
+        #[cfg(feature = "profiler")]
+        register_thread_with_profiler("Main".into());
         #[cfg(feature = "profiler")]
         profile_scope!("new");
 

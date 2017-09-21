@@ -23,7 +23,7 @@ pub struct Texture {
 
 impl Texture {
     /// Builds a new texture with the given raw texture data.
-    pub fn from_data<T: Pod, D: AsRef<[T]>>(data: D) -> TextureBuilder<D, T> {
+    pub fn from_data<T: Pod + Copy, D: AsRef<[T]>>(data: D) -> TextureBuilder<D, T> {
         TextureBuilder::new(data)
     }
 
@@ -71,7 +71,7 @@ impl TextureBuilder<[u8; 4], u8> {
 impl<D, T> TextureBuilder<D, T>
 where
     D: AsRef<[T]>,
-    T: Pod,
+    T: Pod + Copy,
 {
     /// Creates a new `TextureBuilder` with the given raw texture data.
     pub fn new(data: D) -> Self {
@@ -136,10 +136,30 @@ where
         use gfx::memory::cast_slice;
         use gfx::texture::ResourceDesc;
 
+
+        // This variable has to live here to make sure the flipped
+        // buffer lives long enough. (If one exists)
+        let mut v_flip_buffer;
+        let mut data = self.data.as_ref();
+
+        if cfg!(feature = "opengl") {
+            let pixel_width = (self.info.format.get_total_bits() / 8) as usize;
+            v_flip_buffer = Vec::with_capacity(data.len());
+            let (w, h, _, _) = self.info.kind.get_dimensions();
+            let w = w as usize;
+            let h = h as usize;
+            for y in 0..h {
+                for x in 0..(w * pixel_width) {
+                    v_flip_buffer.push(data[x + (h - y - 1) * w * pixel_width]);
+                }
+            }
+            data = &v_flip_buffer;
+        }
+
         let tex = fac.create_texture_raw(
             self.info,
             Some(self.channel_type),
-            Some(&[cast_slice(self.data.as_ref())]),
+            Some(&[cast_slice(data)]),
         )?;
 
         let desc = ResourceDesc {

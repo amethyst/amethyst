@@ -45,9 +45,10 @@ impl<'a, 'b, 'c, T> ECSBundle<'a, 'b, T> for DjBundle<'c> {
     ) -> Result<ApplicationBuilder<'a, 'b, T>> {
         // Remove option here when specs get support for optional fetch in
         // released version
-        if !builder.world.res.has_value(
-            ResourceId::new::<Option<Output>>(),
-        )
+        if !builder
+            .world
+            .res
+            .has_value(ResourceId::new::<Option<Output>>())
         {
             builder = builder.with_resource(default_output());
         }
@@ -59,11 +60,9 @@ impl<'a, 'b, 'c, T> ECSBundle<'a, 'b, T> for DjBundle<'c> {
         };
 
         if let Some(dj) = dj {
-            builder = builder.with_resource(dj).with(
-                DjSystem,
-                "dj_system",
-                self.dep,
-            );
+            builder = builder
+                .with_resource(dj)
+                .with(DjSystem, "dj_system", self.dep);
         }
 
         Ok(builder)
