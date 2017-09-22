@@ -6,8 +6,8 @@ extern crate futures;
 extern crate genmesh;
 
 use amethyst::assets::{AssetFuture, BoxedErr};
-use amethyst::ecs::rendering::{LightComponent, MaterialComponent, AmbientColor,
-                               Factory, MeshComponent, RenderBundle};
+use amethyst::ecs::rendering::{LightComponent, MaterialComponent, AmbientColor, Factory,
+                               MeshComponent, RenderBundle};
 use amethyst::ecs::transform::Transform;
 use amethyst::prelude::*;
 use amethyst::renderer::Config as DisplayConfig;
@@ -61,7 +61,9 @@ impl State for Example {
                 let metallic = Texture::from_color_val([metallic, metallic, metallic, 1.0]);
                 let roughness = Texture::from_color_val([roughness, roughness, roughness, 1.0]);
 
-                let mtl = mtl.clone().with_metallic(metallic).with_roughness(roughness);
+                let mtl = mtl.clone().with_metallic(metallic).with_roughness(
+                    roughness,
+                );
 
                 let mtl = load_proc_asset(engine, move |engine| {
                     let factory = engine.world.read_resource::<Factory>();
@@ -135,7 +137,14 @@ impl State for Example {
 }
 
 
-type DrawPbm = pass::DrawPbm<PosNormTangTex, AmbientColor, MeshComponent, MaterialComponent, Transform, LightComponent>;
+type DrawPbm = pass::DrawPbm<
+    PosNormTangTex,
+    AmbientColor,
+    MeshComponent,
+    MaterialComponent,
+    Transform,
+    LightComponent,
+>;
 
 fn run() -> Result<(), amethyst::Error> {
     let path = format!(
@@ -145,11 +154,13 @@ fn run() -> Result<(), amethyst::Error> {
     let config = DisplayConfig::load(&path);
     let mut game = Application::build(Example)?
         .with_bundle(
-            RenderBundle::new(Pipeline::build().with_stage(
-                Stage::with_backbuffer()
-                    .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-                    .with_pass(DrawPbm::new()),
-            )).with_config(config)
+            RenderBundle::new(
+                Pipeline::build().with_stage(
+                    Stage::with_backbuffer()
+                        .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
+                        .with_pass(DrawPbm::new()),
+                ),
+            ).with_config(config),
         )?
         .build()?;
     Ok(game.run())

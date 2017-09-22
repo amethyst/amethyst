@@ -342,7 +342,14 @@ fn run() -> Result<(), Error> {
     Ok(())
 }
 
-type DrawShaded = pass::DrawShaded<PosNormTex, AmbientColor, MeshComponent, MaterialComponent, Transform, LightComponent>;
+type DrawShaded = pass::DrawShaded<
+    PosNormTex,
+    AmbientColor,
+    MeshComponent,
+    MaterialComponent,
+    Transform,
+    LightComponent,
+>;
 
 /// Initialises the camera structure.
 fn initialise_camera(camera: &mut Camera) {

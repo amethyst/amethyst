@@ -6,7 +6,7 @@ use util::circular_buffer::CircularBuffer;
 /// ## Examples
 /// Add it to your resources to be able to use the FPSCounterSystem
 /// world.add_resource(FPSCounter::new(20));
-/// 
+///
 /// Usage:
 /// Get the FPSCounter resource from the System or from the world.
 /// println!("Cur FPS: {}, Sampled: {}",counter.frame_fps(),counter.sampled_fps());

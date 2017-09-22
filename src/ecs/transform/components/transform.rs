@@ -1,4 +1,5 @@
 //! Global transform component.
+
 use std::borrow::Borrow;
 
 use ecs::{Component, VecStorage};

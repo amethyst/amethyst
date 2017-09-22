@@ -2,14 +2,14 @@
 
 use renderer::Config as DisplayConfig;
 use renderer::Rgba;
-use renderer::prelude::*;
 use renderer::pipe::PipelineBuild;
+use renderer::prelude::*;
 
 use app::ApplicationBuilder;
-use assets::{BoxedErr, Loader, AssetFuture};
+use assets::{AssetFuture, BoxedErr, Loader};
 use ecs::ECSBundle;
 use ecs::rendering::components::*;
-use ecs::rendering::resources::{Factory, AmbientColor};
+use ecs::rendering::resources::{AmbientColor, Factory};
 use ecs::rendering::systems::RenderSystem;
 use ecs::transform::components::*;
 use error::{Error, Result};
@@ -35,7 +35,8 @@ pub struct RenderBundle<P> {
 }
 
 impl<P> RenderBundle<P>
-    where P: PipelineBuild
+where
+    P: PipelineBuild,
 {
     /// Create a new render bundle with the given pipeline
     pub fn new(pipe: P) -> Self {
@@ -53,14 +54,15 @@ impl<P> RenderBundle<P>
 }
 
 impl<'a, 'b, T, P> ECSBundle<'a, 'b, T> for RenderBundle<P>
-    where P: PipelineBuild + Clone,
-          P::Pipeline: 'b
+where
+    P: PipelineBuild + Clone,
+    P::Pipeline: 'b,
 {
     fn build(
         &self,
         mut builder: ApplicationBuilder<'a, 'b, T>,
     ) -> Result<ApplicationBuilder<'a, 'b, T>> {
-        use specs::common::{Merge, Errors};
+        use specs::common::{Errors, Merge};
 
         let mut renderer = {
             let mut renderer = Renderer::build(&builder.events);
@@ -68,16 +70,16 @@ impl<'a, 'b, T, P> ECSBundle<'a, 'b, T> for RenderBundle<P>
             if let Some(config) = self.display_config.to_owned() {
                 renderer.with_config(config);
             }
-            let renderer = renderer.build().map_err(
-                |err| Error::System(BoxedErr::new(err)),
-            )?;
+            let renderer = renderer
+                .build()
+                .map_err(|err| Error::System(BoxedErr::new(err)))?;
 
             renderer
         };
 
-        let pipe = renderer.create_pipe(self.pipe.clone()).map_err(|err| {
-            Error::System(BoxedErr::new(err))
-        })?;
+        let pipe = renderer
+            .create_pipe(self.pipe.clone())
+            .map_err(|err| Error::System(BoxedErr::new(err)))?;
 
         use cgmath::Deg;
         use renderer::{Camera, Projection};
