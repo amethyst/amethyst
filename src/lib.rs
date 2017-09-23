@@ -69,7 +69,6 @@ extern crate fnv;
 extern crate futures;
 extern crate gfx;
 extern crate imagefmt;
-extern crate num_cpus;
 extern crate rayon;
 extern crate rodio;
 extern crate shred;
