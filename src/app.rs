@@ -1,6 +1,7 @@
 //! The core engine framework.
 
 use std::sync::Arc;
+use std::thread::yield_now;
 
 use input::InputHandler;
 use rayon::ThreadPool;
@@ -114,6 +115,8 @@ impl<'a, 'b> Application<'a, 'b> {
         while self.states.is_running() {
             self.timer.restart();
             self.advance_frame();
+            // Make sure we're not starving the CPU.
+            yield_now();
             self.timer.stop();
             self.time.delta_time = self.timer.elapsed();
         }

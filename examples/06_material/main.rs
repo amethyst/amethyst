@@ -6,7 +6,7 @@ extern crate futures;
 extern crate genmesh;
 
 use amethyst::assets::{AssetFuture, BoxedErr};
-use amethyst::ecs::rendering::{LightComponent, MaterialComponent, AmbientColor, Factory,
+use amethyst::ecs::rendering::{AmbientColor, Factory, LightComponent, MaterialComponent,
                                MeshComponent, RenderBundle};
 use amethyst::ecs::transform::Transform;
 use amethyst::prelude::*;
@@ -43,9 +43,10 @@ impl State for Example {
         println!("Load mesh");
         let mesh = load_proc_asset(engine, move |engine| {
             let factory = engine.world.read_resource::<Factory>();
-            factory.create_mesh(mesh).map(MeshComponent::new).map_err(
-                BoxedErr::new,
-            )
+            factory
+                .create_mesh(mesh)
+                .map(MeshComponent::new)
+                .map_err(BoxedErr::new)
         });
 
 
@@ -61,9 +62,9 @@ impl State for Example {
                 let metallic = Texture::from_color_val([metallic, metallic, metallic, 1.0]);
                 let roughness = Texture::from_color_val([roughness, roughness, roughness, 1.0]);
 
-                let mtl = mtl.clone().with_metallic(metallic).with_roughness(
-                    roughness,
-                );
+                let mtl = mtl.clone()
+                    .with_metallic(metallic)
+                    .with_roughness(roughness);
 
                 let mtl = load_proc_asset(engine, move |engine| {
                     let factory = engine.world.read_resource::<Factory>();
@@ -122,15 +123,18 @@ impl State for Example {
 
     fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
         match event {
-            Event::WindowEvent { event, .. } => {
-                match event {
-                    WindowEvent::KeyboardInput {
-                        input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Escape), .. }, ..
-                    } |
-                    WindowEvent::Closed => Trans::Quit,
-                    _ => Trans::None,
-                }
-            }
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::KeyboardInput {
+                    input:
+                        KeyboardInput {
+                            virtual_keycode: Some(VirtualKeyCode::Escape),
+                            ..
+                        },
+                    ..
+                } |
+                WindowEvent::Closed => Trans::Quit,
+                _ => Trans::None,
+            },
             _ => Trans::None,
         }
     }

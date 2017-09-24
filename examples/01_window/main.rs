@@ -2,7 +2,7 @@
 
 extern crate amethyst;
 
-use amethyst::ecs::rendering::{MeshComponent, MaterialComponent};
+use amethyst::ecs::rendering::{MaterialComponent, MeshComponent};
 use amethyst::ecs::rendering::RenderBundle;
 use amethyst::ecs::transform::Transform;
 use amethyst::event::{KeyboardInput, VirtualKeyCode};
@@ -15,15 +15,18 @@ struct Example;
 impl State for Example {
     fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
         match event {
-            Event::WindowEvent { event, .. } => {
-                match event {
-                    WindowEvent::KeyboardInput {
-                        input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Escape), .. }, ..
-                    } |
-                    WindowEvent::Closed => Trans::Quit,
-                    _ => Trans::None,
-                }
-            }
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::KeyboardInput {
+                    input:
+                        KeyboardInput {
+                            virtual_keycode: Some(VirtualKeyCode::Escape),
+                            ..
+                        },
+                    ..
+                } |
+                WindowEvent::Closed => Trans::Quit,
+                _ => Trans::None,
+            },
             _ => Trans::None,
         }
     }
