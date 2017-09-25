@@ -54,28 +54,41 @@ pub trait PassesData<'a> {
 }
 
 pub trait PassesApply<'a> {
-    type Apply: ParallelIterator<Item=()>;
+    type Apply: ParallelIterator<Item = ()>;
 }
 
 pub trait Passes: for<'a> PassesApply<'a> + for<'a> PassesData<'a> + Send + Sync {
-    fn apply<'a, 'b: 'a>(&'a mut self, encoders: &'a mut [Encoder], jobs_count: usize, data: <Self as PassesData<'b>>::Data) -> <Self as PassesApply<'a>>::Apply;
+    fn apply<'a, 'b: 'a>(
+        &'a mut self,
+        encoders: &'a mut [Encoder],
+        jobs_count: usize,
+        data: <Self as PassesData<'b>>::Data,
+    ) -> <Self as PassesApply<'a>>::Apply;
 }
 
 impl<'a, HP> PassesData<'a> for List<(CompiledPass<HP>, List<()>)>
-    where HP: Pass
+where
+    HP: Pass,
 {
     type Data = <HP as PassData<'a>>::Data;
 }
 
 impl<'a, HP> PassesApply<'a> for List<(CompiledPass<HP>, List<()>)>
-    where HP: Pass,
+where
+    HP: Pass,
 {
     type Apply = <HP as PassApply<'a>>::Apply;
 }
 impl<HP> Passes for List<(CompiledPass<HP>, List<()>)>
-    where HP: Pass,
+where
+    HP: Pass,
 {
-    fn apply<'a, 'b: 'a>(&'a mut self, encoders: &'a mut [Encoder], jobs_count: usize, hd: <HP as PassData<'b>>::Data) -> <HP as PassApply<'a>>::Apply {
+    fn apply<'a, 'b: 'a>(
+        &'a mut self,
+        encoders: &'a mut [Encoder],
+        jobs_count: usize,
+        hd: <HP as PassData<'b>>::Data,
+    ) -> <HP as PassApply<'a>>::Apply {
         let (encoders, _) = encoders.split_at_mut(jobs_count);
         let List((ref mut hp, _)) = *self;
         hp.apply(encoders, hd)
@@ -83,24 +96,32 @@ impl<HP> Passes for List<(CompiledPass<HP>, List<()>)>
 }
 
 impl<'a, HP, TP> PassesData<'a> for List<(CompiledPass<HP>, TP)>
-    where HP: Pass,
-          TP: Passes,
+where
+    HP: Pass,
+    TP: Passes,
 {
     type Data = (<HP as PassData<'a>>::Data, <TP as PassesData<'a>>::Data);
 }
 
 impl<'a, HP, TP> PassesApply<'a> for List<(CompiledPass<HP>, TP)>
-    where HP: Pass,
-          TP: Passes,
+where
+    HP: Pass,
+    TP: Passes,
 {
     type Apply = Chain<<HP as PassApply<'a>>::Apply, <TP as PassesApply<'a>>::Apply>;
 }
 
 impl<HP, TP> Passes for List<(CompiledPass<HP>, TP)>
-    where HP: Pass,
-          TP: Passes
+where
+    HP: Pass,
+    TP: Passes,
 {
-    fn apply<'a, 'b: 'a>(&'a mut self, encoders: &'a mut [Encoder], jobs_count: usize, (hd, td): (<HP as PassData<'b>>::Data, <TP as PassesData<'b>>::Data)) -> Chain<<HP as PassApply<'a>>::Apply, <TP as PassesApply<'a>>::Apply> {
+    fn apply<'a, 'b: 'a>(
+        &'a mut self,
+        encoders: &'a mut [Encoder],
+        jobs_count: usize,
+        (hd, td): (<HP as PassData<'b>>::Data, <TP as PassesData<'b>>::Data),
+    ) -> Chain<<HP as PassApply<'a>>::Apply, <TP as PassesApply<'a>>::Apply> {
         let (encoders, rest) = encoders.split_at_mut(jobs_count);
         let List((ref mut hp, ref mut tp)) = *self;
         hp.apply(encoders, hd).chain(tp.apply(rest, jobs_count, td))
@@ -114,38 +135,50 @@ pub trait StageData<'a> {
 
 ///
 pub trait StageApply<'a> {
-    type Apply: ParallelIterator<Item=()>;
+    type Apply: ParallelIterator<Item = ()>;
 }
 
 ///
-pub trait PolyStage: for<'a> StageApply<'a> + for<'a> StageData<'a> + Send + Sync {
+pub trait PolyStage
+    : for<'a> StageApply<'a> + for<'a> StageData<'a> + Send + Sync {
     ///
-    fn apply<'a, 'b: 'a>(&'a mut self, encoders: &'a mut [Encoder], jobs_count: usize, data: <Self as StageData<'b>>::Data) -> <Self as StageApply<'a>>::Apply;
+    fn apply<'a, 'b: 'a>(
+        &'a mut self,
+        encoders: &'a mut [Encoder],
+        jobs_count: usize,
+        data: <Self as StageData<'b>>::Data,
+    ) -> <Self as StageApply<'a>>::Apply;
     /// Get number of encoders needed for this stage.
     fn encoders_required(jobs_count: usize) -> usize;
 }
 
 impl<'a, L> StageData<'a> for Stage<L>
-    where L: Passes,
+where
+    L: Passes,
 {
     type Data = <L as PassesData<'a>>::Data;
 }
 
 impl<'a, L> StageApply<'a> for Stage<L>
-    where L: Passes + Length,
+where
+    L: Passes + Length,
 {
     type Apply = <L as PassesApply<'a>>::Apply;
 }
 impl<L> PolyStage for Stage<L>
-    where L: Passes + Length
+where
+    L: Passes + Length,
 {
-    fn apply<'a, 'b: 'a>(&'a mut self, encoders: &'a mut [Encoder], jobs_count: usize, data: <L as PassesData<'b>>::Data) -> <Self as StageApply<'a>>::Apply {
-        self.clear_color.map(|c| {
-            self.target.clear_color(&mut encoders[0], c)
-        });
-        self.clear_depth.map(|d| {
-            self.target.clear_depth_stencil(&mut encoders[0], d)
-        });
+    fn apply<'a, 'b: 'a>(
+        &'a mut self,
+        encoders: &'a mut [Encoder],
+        jobs_count: usize,
+        data: <L as PassesData<'b>>::Data,
+    ) -> <Self as StageApply<'a>>::Apply {
+        self.clear_color
+            .map(|c| self.target.clear_color(&mut encoders[0], c));
+        self.clear_depth
+            .map(|d| self.target.clear_depth_stencil(&mut encoders[0], d));
 
         assert_eq!(Self::encoders_required(jobs_count), encoders.len());
 
@@ -202,19 +235,26 @@ impl<Q> StageBuilder<Q> {
         self
     }
 
-    pub(crate) fn build<'a, L, Z, R>(self, fac: &'a mut Factory, targets: &'a Targets) -> Result<Stage<R>>
-        where Q: IntoList<List=L>,
-              L: for<'b> Functor<CompilePass<'b>, Output=Z>,
-              Z: Try<Error, Ok=R>,
-              R: Passes,
+    pub(crate) fn build<'a, L, Z, R>(
+        self,
+        fac: &'a mut Factory,
+        targets: &'a Targets,
+    ) -> Result<Stage<R>>
+    where
+        Q: IntoList<List = L>,
+        L: for<'b> Functor<CompilePass<'b>, Output = Z>,
+        Z: Try<Error, Ok = R>,
+        R: Passes,
     {
-        let out = targets.get(&self.target_name).cloned().ok_or(
-            Error::NoSuchTarget(
-                self.target_name,
-            ),
-        )?;
+        let out = targets
+            .get(&self.target_name)
+            .cloned()
+            .ok_or(Error::NoSuchTarget(self.target_name))?;
 
-        let passes = self.passes.into_list().fmap(CompilePass::new(fac, &out)).try()?;
+        let passes = self.passes
+            .into_list()
+            .fmap(CompilePass::new(fac, &out))
+            .try()?;
 
         Ok(Stage {
             clear_color: self.clear_color,
@@ -250,13 +290,14 @@ impl<'a> CompilePass<'a> {
     fn new(factory: &'a mut Factory, target: &'a Target) -> Self {
         CompilePass {
             factory: factory,
-            target: target
+            target: target,
         }
     }
 }
 
 impl<'a, P> HetFnOnce<(P,)> for CompilePass<'a>
-    where P: Pass,
+where
+    P: Pass,
 {
     type Output = Result<CompiledPass<P>>;
     fn call_once(mut self, (pass,): (P,)) -> Result<CompiledPass<P>> {
@@ -264,7 +305,8 @@ impl<'a, P> HetFnOnce<(P,)> for CompilePass<'a>
     }
 }
 impl<'a, P> HetFnMut<(P,)> for CompilePass<'a>
-    where P: Pass,
+where
+    P: Pass,
 {
     fn call_mut(&mut self, (pass,): (P,)) -> Result<CompiledPass<P>> {
         CompiledPass::compile(pass, self.factory, self.target)

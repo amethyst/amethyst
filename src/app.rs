@@ -32,8 +32,10 @@ pub struct Application<'a, 'b> {
     pub engine: Engine,
     dur_per_frame: Duration,
 
-    #[derivative(Debug = "ignore")] dispatcher: Dispatcher<'a, 'b>,
-    #[derivative(Debug = "ignore")] events: EventsLoop,
+    #[derivative(Debug = "ignore")]
+    dispatcher: Dispatcher<'a, 'b>,
+    #[derivative(Debug = "ignore")]
+    events: EventsLoop,
     states: StateMachine<'a>,
     time: Time,
     timer: Stopwatch,

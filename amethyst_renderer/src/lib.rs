@@ -56,7 +56,7 @@ pub use error::{Error, Result};
 pub use light::Light;
 pub use mesh::{Mesh, MeshBuilder};
 pub use mtl::{Material, MaterialBuilder};
-pub use pipe::{PolyPipeline, PipelineBuilder, PolyStage, Target};
+pub use pipe::{PipelineBuilder, PolyPipeline, PolyStage, Target};
 pub use renderer::Renderer;
 pub use tex::{Texture, TextureBuilder};
 pub use types::{Encoder, Factory};

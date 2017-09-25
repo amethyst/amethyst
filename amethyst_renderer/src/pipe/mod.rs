@@ -17,9 +17,10 @@
 //! ```
 
 pub use self::effect::{DepthMode, Effect, EffectBuilder, NewEffect};
-pub use self::stage::{PolyStage, StageBuilder, Stage};
+pub use self::stage::{PolyStage, Stage, StageBuilder};
 pub use self::target::{ColorBuffer, DepthBuffer, Target, TargetBuilder, Targets};
-pub use self::pipe::{PolyPipeline, PipelineApply, PipelineBuild, PipelineBuilder, PipelineData, Pipeline};
+pub use self::pipe::{Pipeline, PipelineApply, PipelineBuild, PipelineBuilder, PipelineData,
+                     PolyPipeline};
 
 pub mod pass;
 

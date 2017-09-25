@@ -13,7 +13,7 @@ use cam::Camera;
 use error::Result;
 use mesh::Mesh;
 use mtl::Material;
-use pipe::pass::{Supplier, Pass, PassApply, PassData};
+use pipe::pass::{Pass, PassApply, PassData, Supplier};
 use pipe::{DepthMode, Effect, NewEffect};
 use types::Encoder;
 use vertex::{Attribute, Position, TextureCoord, VertexFormat, WithField};
@@ -33,11 +33,12 @@ pub struct DrawFlat<V, M, N, T> {
 }
 
 impl<V, M, N, T> DrawFlat<V, M, N, T>
-    where V: VertexFormat + WithField<Position> + WithField<TextureCoord>,
-          T: Component + AsRef<[[f32;4];4]> + Send + Sync,
-          M: Component + AsRef<Mesh> + Send + Sync,
-          N: Component + AsRef<Material> + Send + Sync,
-          Self: Pass,
+where
+    V: VertexFormat + WithField<Position> + WithField<TextureCoord>,
+    T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
+    M: Component + AsRef<Mesh> + Send + Sync,
+    N: Component + AsRef<Material> + Send + Sync,
+    Self: Pass,
 {
     /// Create instance of `DrawFlat` pass
     pub fn new() -> Self {
@@ -59,10 +60,11 @@ struct VertexArgs {
 }
 
 impl<'a, V, M, N, T> PassData<'a> for DrawFlat<V, M, N, T>
-    where V: VertexFormat + WithField<Position> + WithField<TextureCoord>,
-          T: Component + AsRef<[[f32;4];4]> + Send + Sync,
-          M: Component + AsRef<Mesh> + Send + Sync,
-          N: Component + AsRef<Material> + Send + Sync,
+where
+    V: VertexFormat + WithField<Position> + WithField<TextureCoord>,
+    T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
+    M: Component + AsRef<Mesh> + Send + Sync,
+    N: Component + AsRef<Material> + Send + Sync,
 {
     type Data = (
         Option<Fetch<'a, Camera>>,
@@ -73,19 +75,21 @@ impl<'a, V, M, N, T> PassData<'a> for DrawFlat<V, M, N, T>
 }
 
 impl<'a, V, M, N, T> PassApply<'a> for DrawFlat<V, M, N, T>
-    where V: VertexFormat + WithField<Position> + WithField<TextureCoord>,
-          T: Component + AsRef<[[f32;4];4]> + Send + Sync,
-          M: Component + AsRef<Mesh> + Send + Sync,
-          N: Component + AsRef<Material> + Send + Sync,
+where
+    V: VertexFormat + WithField<Position> + WithField<TextureCoord>,
+    T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
+    M: Component + AsRef<Mesh> + Send + Sync,
+    N: Component + AsRef<Material> + Send + Sync,
 {
     type Apply = DrawFlatApply<'a, V, M, N, T>;
 }
 
 impl<V, M, N, T> Pass for DrawFlat<V, M, N, T>
-    where V: VertexFormat + WithField<Position> + WithField<TextureCoord>,
-          T: Component + AsRef<[[f32;4];4]> + Send + Sync,
-          M: Component + AsRef<Mesh> + Send + Sync,
-          N: Component + AsRef<Material> + Send + Sync,
+where
+    V: VertexFormat + WithField<Position> + WithField<TextureCoord>,
+    T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
+    M: Component + AsRef<Mesh> + Send + Sync,
+    N: Component + AsRef<Material> + Send + Sync,
 {
     fn compile(&self, effect: NewEffect) -> Result<Effect> {
         use std::mem;
@@ -98,13 +102,16 @@ impl<V, M, N, T> Pass for DrawFlat<V, M, N, T>
             .build()
     }
 
-    fn apply<'a, 'b: 'a>(&'a mut self, supplier: Supplier<'a>, 
-    (camera, mesh, material, global): (
-        Option<Fetch<'b, Camera>>,
-        ReadStorage<'b, M>,
-        ReadStorage<'b, N>,
-        ReadStorage<'b, T>,
-    )) -> DrawFlatApply<'a, V, M, N, T> {
+    fn apply<'a, 'b: 'a>(
+        &'a mut self,
+        supplier: Supplier<'a>,
+        (camera, mesh, material, global): (
+            Option<Fetch<'b, Camera>>,
+            ReadStorage<'b, M>,
+            ReadStorage<'b, N>,
+            ReadStorage<'b, T>,
+        ),
+    ) -> DrawFlatApply<'a, V, M, N, T> {
         DrawFlatApply {
             camera: camera,
             mesh: mesh,
@@ -126,15 +133,17 @@ pub struct DrawFlatApply<'a, V, M: Component, N: Component, T: Component> {
 }
 
 impl<'a, V, M, N, T> ParallelIterator for DrawFlatApply<'a, V, M, N, T>
-    where V: VertexFormat + WithField<Position> + WithField<TextureCoord>,
-          T: Component + AsRef<[[f32;4];4]> + Send + Sync,
-          M: Component + AsRef<Mesh> + Send + Sync,
-          N: Component + AsRef<Material> + Send + Sync,
+where
+    V: VertexFormat + WithField<Position> + WithField<TextureCoord>,
+    T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
+    M: Component + AsRef<Mesh> + Send + Sync,
+    N: Component + AsRef<Material> + Send + Sync,
 {
     type Item = ();
 
     fn drive_unindexed<C>(self, consumer: C) -> C::Result
-        where C: UnindexedConsumer<Self::Item>
+    where
+        C: UnindexedConsumer<Self::Item>,
     {
         let DrawFlatApply {
             camera,
@@ -147,40 +156,43 @@ impl<'a, V, M, N, T> ParallelIterator for DrawFlatApply<'a, V, M, N, T>
 
         let camera = &camera;
 
-        supplier.supply((&mesh, &material, &global).par_join().map(move |(mesh, material, global)| move |encoder: &mut Encoder, effect: &mut Effect| {
-            let mesh = mesh.as_ref();
-            let material = material.as_ref();
+        supplier
+            .supply((&mesh, &material, &global).par_join().map(
+                move |(mesh, material, global)| {
+                    move |encoder: &mut Encoder, effect: &mut Effect| {
+                        let mesh = mesh.as_ref();
+                        let material = material.as_ref();
 
-            if mesh.attributes() != V::attributes().as_ref() {
-                return;
-            }
+                        if mesh.attributes() != V::attributes().as_ref() {
+                            return;
+                        }
 
-            let vertex_args = camera.as_ref()
-                .map(|cam| {
-                    VertexArgs {
-                        proj: cam.proj.into(),
-                        view: cam.to_view_matrix().into(),
-                        model: *global.as_ref(),
+                        let vertex_args = camera
+                            .as_ref()
+                            .map(|cam| {
+                                VertexArgs {
+                                    proj: cam.proj.into(),
+                                    view: cam.to_view_matrix().into(),
+                                    model: *global.as_ref(),
+                                }
+                            })
+                            .unwrap_or_else(|| {
+                                VertexArgs {
+                                    proj: Matrix4::one().into(),
+                                    view: Matrix4::one().into(),
+                                    model: *global.as_ref(),
+                                }
+                            });
+
+                        effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
+                        effect.data.textures.push(material.albedo.view().clone());
+
+                        effect.data.samplers.push(material.albedo.sampler().clone());
+
+                        effect.draw(mesh, encoder);
                     }
-                })
-                .unwrap_or_else(|| {
-                    VertexArgs {
-                        proj: Matrix4::one().into(),
-                        view: Matrix4::one().into(),
-                        model: *global.as_ref(),
-                    }
-                });
-
-            effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
-            effect.data.textures.push(
-                material.albedo.view().clone(),
-            );
-
-            effect.data.samplers.push(
-                material.albedo.sampler().clone(),
-            );
-
-            effect.draw(mesh, encoder);
-        })).drive_unindexed(consumer)
+                },
+            ))
+            .drive_unindexed(consumer)
     }
 }

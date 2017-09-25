@@ -10,7 +10,8 @@ use renderer::pipe::{PipelineData, PolyPipeline};
 #[derivative(Debug)]
 pub struct RenderSystem<P> {
     pipe: P,
-    #[derivative(Debug = "ignore")] renderer: Renderer,
+    #[derivative(Debug = "ignore")]
+    renderer: Renderer,
 }
 
 impl<P> RenderSystem<P>
