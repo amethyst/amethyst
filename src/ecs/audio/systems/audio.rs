@@ -88,6 +88,8 @@ impl<'a> System<'a> for AudioSystem {
     );
 
     fn run(&mut self, (select_listener, transform, listener, mut audio_emitter): Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("audio_system");
         // Process emitters and listener.
         if let Some(listener) = listener.get(select_listener.0) {
             if let Some(listener_transform) = transform.get(select_listener.0) {

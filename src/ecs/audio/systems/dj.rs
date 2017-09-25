@@ -11,6 +11,8 @@ pub struct DjSystem;
 impl<'a> System<'a> for DjSystem {
     type SystemData = FetchMut<'a, Dj>;
     fn run(&mut self, mut dj: Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("dj_system");
         // Process Dj picker
         if dj.empty() {
             if let Some(mut picker) = replace(&mut dj.picker, None) {

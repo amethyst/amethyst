@@ -49,6 +49,8 @@ impl<'a> System<'a> for TransformSystem {
     );
 
     fn run(&mut self, (entities, locals, children, mut init, mut globals): Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("transform_system");
         // Checks for entities with a local transform and parent, but no
         // `Init` component.
         for (entity, _, child, _) in (&*entities, &locals, &children, !&init).join() {

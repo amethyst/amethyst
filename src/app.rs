@@ -285,14 +285,16 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// ~~~
 
     pub fn new(initial_state: T) -> Result<Self> {
-        use num_cpus;
         use rayon::Configuration;
 
-        let num_cores = num_cpus::get();
-        let cfg = Configuration::new().num_threads(num_cores);
-        let pool = ThreadPool::new(cfg)
-            .map(|p| Arc::new(p))
-            .map_err(|_| Error::Application)?;
+        let cfg = Configuration::new();
+        #[cfg(feature = "profiler")]
+        let cfg = cfg.start_handler(|index| {
+            register_thread_with_profiler(format!("thread_pool{}", index));
+        });
+        let pool = ThreadPool::new(cfg).map(|p| Arc::new(p)).map_err(|_| {
+            Error::Application
+        })?;
         let mut world = World::new();
         let base_path = format!("{}/resources", env!("CARGO_MANIFEST_DIR"));
         world.add_resource(Loader::new(base_path, pool.clone()));

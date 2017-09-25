@@ -30,6 +30,8 @@ where
     type SystemData = (Fetch<'a, Factory>, <P as PipelineData<'a>>::Data);
 
     fn run(&mut self, (factory, data): Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("render_system");
         use std::time::Duration;
 
         while let Some(job) = factory.jobs.try_pop() {
