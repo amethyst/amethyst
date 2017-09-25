@@ -1,6 +1,7 @@
 //! The core engine framework.
 
 use std::sync::Arc;
+use std::thread;
 use std::time::Duration;
 
 use input::InputHandler;
@@ -117,11 +118,11 @@ impl<'a, 'b> Application<'a, 'b> {
             self.advance_frame();
             // We are done with this frame, we can just rest for now.
             while self.timer.elapsed() < self.dur_per_frame {
-                ::std::thread::yield_now();
+                thread::yield_now();
             }
 
-            self.timer.stop();
             self.time.delta_time = self.timer.elapsed();
+            self.timer.stop();
             self.timer.restart();
         }
 
@@ -673,7 +674,12 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// This function returns the ApplicationBuilder after modifying it.
     pub fn with_max_fps(mut self, max_fps: u32) -> Self {
-        self.max_fps = max_fps;
+        use std::u32::MAX;
+        if max_fps == 0 {
+            self.max_fps = MAX;
+        } else {
+            self.max_fps = max_fps;
+        }
         self
     }
 
