@@ -29,9 +29,6 @@ pub struct Config {
     /// Sets the visibility of the window.
     #[serde(default = "default_visibility")]
     pub visibility: bool,
-    /// FPS will be restricted to this value. Defaults to 144.
-    #[serde(default = "default_max_fps")]
-    pub max_fps: u32,
 }
 
 impl Default for Config {
@@ -45,7 +42,6 @@ impl Default for Config {
             vsync: default_vsync(),
             multisampling: default_multisampling(),
             visibility: default_visibility(),
-            max_fps: default_max_fps(),
         }
     }
 }
@@ -60,9 +56,6 @@ fn default_multisampling() -> u16 {
 }
 fn default_visibility() -> bool {
     true
-}
-fn default_max_fps() -> u32 {
-    144
 }
 
 impl From<Config> for WindowBuilder {

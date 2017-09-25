@@ -1,7 +1,7 @@
 //! The core engine framework.
 
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use input::InputHandler;
 use rayon::ThreadPool;
@@ -29,8 +29,7 @@ pub struct Application<'a, 'b> {
     /// The `engine` struct, holding world and thread pool.
     #[derivative(Debug = "ignore")]
     pub engine: Engine,
-    /// The limit of how fast the game will run.
-    pub max_fps: u32,
+    dur_per_frame: Duration,
 
     #[derivative(Debug = "ignore")] dispatcher: Dispatcher<'a, 'b>,
     #[derivative(Debug = "ignore")] events: EventsLoop,
@@ -113,20 +112,17 @@ impl<'a, 'b> Application<'a, 'b> {
     /// [`new`](struct.Application.html#examples) method.
     pub fn run(&mut self) {
         self.initialize();
-
+        self.timer.start();
         while self.states.is_running() {
-            self.timer.restart();
-
-            let start = Instant::now();
             self.advance_frame();
-
             // We are done with this frame, we can just rest for now.
-            while start.elapsed() < Duration::from_secs(1) / self.max_fps {
+            while self.timer.elapsed() < self.dur_per_frame {
                 ::std::thread::yield_now();
             }
 
             self.timer.stop();
             self.time.delta_time = self.timer.elapsed();
+            self.timer.restart();
         }
 
         self.shutdown();
@@ -228,8 +224,8 @@ pub struct ApplicationBuilder<'a, 'b, T> {
     pub world: World,
     pool: Arc<ThreadPool>,
     /// Allows to create `RenderSystem`
-    // TODO: Come up with something clever
     pub events: EventsLoop,
+    max_fps: u32,
 }
 
 impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
@@ -314,6 +310,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
             world: world,
             events: EventsLoop::new(),
             pool: pool,
+            max_fps: 144,
         })
     }
 
@@ -666,6 +663,20 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
         self
     }
 
+    /// Sets the maximum frames per second of this game.
+    ///
+    /// # Parameters
+    ///
+    /// `max_fps`: the maximum frames per second this game will run at.
+    ///
+    /// # Returns
+    ///
+    /// This function returns the ApplicationBuilder after modifying it.
+    pub fn with_max_fps(mut self, max_fps: u32) -> Self {
+        self.max_fps = max_fps;
+        self
+    }
+
     /// Register a new asset type with the Application. All required components
     /// related to the storage of this asset type will be registered. Since
     /// Amethyst uses AssetFutures to allow for async content loading, Amethyst
@@ -744,11 +755,11 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
             engine: Engine::new(self.pool.clone(), self.world),
             // config: self.config,
             states: StateMachine::new(self.initial_state),
-            max_fps: 144,
             events: self.events,
             dispatcher: self.disp_builder.with_pool(self.pool).build(),
             time: Time::default(),
             timer: Stopwatch::new(),
+            dur_per_frame: Duration::from_secs(1) / self.max_fps,
         })
     }
 }
