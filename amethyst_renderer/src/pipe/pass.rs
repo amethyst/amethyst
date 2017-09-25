@@ -39,19 +39,23 @@ impl<'a> Supplier<'a> {
     /// Different threads gets different pair
     /// unsafe due to ability to call mulitple times
     /// causing it to return multiple mutable references to the same `Encoder` and `Effect`
-    /// `Apply` use this function once in each thread and 
+    /// `Apply` use this function once in each thread and
     /// drops references before calling it again
     unsafe fn get(&self) -> (&mut Encoder, &mut Effect) {
         let slice = &mut *self.encoders;
         let count = slice.len();
-        let encoder = slice
-            .get_mut(self.index())
-            .expect(&format!("Not enough objects. Index: {}, Supplier count: {}", self.index(), count));
+        let encoder = slice.get_mut(self.index()).expect(&format!(
+            "Not enough objects. Index: {}, Supplier count: {}",
+            self.index(),
+            count
+        ));
         let slice = &mut *self.effects;
         let count = slice.len();
-        let effect = slice
-            .get_mut(self.index())
-            .expect(&format!("Not enough objects. Index: {}, Supplier count: {}", self.index(), count));
+        let effect = slice.get_mut(self.index()).expect(&format!(
+            "Not enough objects. Index: {}, Supplier count: {}",
+            self.index(),
+            count
+        ));
         (encoder, effect)
     }
 }
@@ -62,27 +66,32 @@ pub struct Apply<'a, I> {
 }
 
 impl<'a, I> ParallelIterator for Apply<'a, I>
-    where I: ParallelIterator,
-          I::Item: FnOnce(&mut Encoder, &mut Effect),
+where
+    I: ParallelIterator,
+    I::Item: FnOnce(&mut Encoder, &mut Effect),
 {
     type Item = ();
 
     fn drive_unindexed<C>(self, consumer: C) -> C::Result
-        where C: UnindexedConsumer<()>
+    where
+        C: UnindexedConsumer<()>,
     {
         let Apply { inner, supplier } = self;
-        inner.map(move |f| {
-            let (encoder, effect) = unsafe { supplier.get() };
-            effect.clear();
-            f(encoder, effect);
-        }).drive_unindexed(consumer)
+        inner
+            .map(move |f| {
+                let (encoder, effect) = unsafe { supplier.get() };
+                effect.clear();
+                f(encoder, effect);
+            })
+            .drive_unindexed(consumer)
     }
 }
 
 impl<'a> Supplier<'a> {
     pub fn supply<I, F>(self, iter: I) -> Apply<'a, I>
-        where I: ParallelIterator<Item=F>,
-              F: FnOnce(&mut Encoder, &mut Effect) + Send,
+    where
+        I: ParallelIterator<Item = F>,
+        F: FnOnce(&mut Encoder, &mut Effect) + Send,
     {
         Apply {
             inner: iter,
@@ -96,7 +105,7 @@ unsafe impl<'a> Sync for Supplier<'a> {}
 
 
 pub trait PassApply<'a> {
-    type Apply: ParallelIterator<Item=()>;
+    type Apply: ParallelIterator<Item = ()>;
 }
 
 pub trait PassData<'a> {
@@ -105,7 +114,11 @@ pub trait PassData<'a> {
 
 pub trait Pass: for<'a> PassApply<'a> + for<'a> PassData<'a> + Send + Sync {
     fn compile(&self, effect: NewEffect) -> Result<Effect>;
-    fn apply<'a, 'b: 'a>(&'a mut self, supplier: Supplier<'a>, data: <Self as PassData<'b>>::Data) -> <Self as PassApply<'a>>::Apply;
+    fn apply<'a, 'b: 'a>(
+        &'a mut self,
+        supplier: Supplier<'a>,
+        data: <Self as PassData<'b>>::Data,
+    ) -> <Self as PassApply<'a>>::Apply;
 }
 
 #[derive(Clone)]
@@ -115,7 +128,8 @@ pub struct CompiledPass<P> {
 }
 
 impl<P> CompiledPass<P>
-    where P: Pass,
+where
+    P: Pass,
 {
     pub(super) fn compile(pass: P, fac: &mut Factory, out: &Target) -> Result<Self> {
         let effect = pass.compile(NewEffect::new(fac, out))?;
@@ -127,14 +141,20 @@ impl<P> CompiledPass<P>
 }
 
 impl<P> CompiledPass<P> {
-    pub fn apply<'a, 'b: 'a>(&'a mut self, encoders: &'a mut [Encoder], data: <P as PassData<'b>>::Data) -> <P as PassApply<'a>>::Apply
-        where P: Pass,
+    pub fn apply<'a, 'b: 'a>(
+        &'a mut self,
+        encoders: &'a mut [Encoder],
+        data: <P as PassData<'b>>::Data,
+    ) -> <P as PassApply<'a>>::Apply
+    where
+        P: Pass,
     {
         if encoders.len() > self.effects.len() {
             let effect = self.effects[0].clone();
             self.effects.resize(encoders.len(), effect);
         }
-        self.inner.apply(Supplier::new(encoders, &mut self.effects[..]), data)
+        self.inner
+            .apply(Supplier::new(encoders, &mut self.effects[..]), data)
     }
 }
 

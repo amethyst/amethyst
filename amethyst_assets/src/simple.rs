@@ -100,7 +100,8 @@ where
 pub struct AssetPtr<A, W> {
     inner: A,
     version: usize,
-    #[derivative(Debug = "ignore")] update: Arc<AssetUpdate<A, W>>,
+    #[derivative(Debug = "ignore")]
+    update: Arc<AssetUpdate<A, W>>,
 }
 
 impl<A, W> AssetPtr<A, W> {

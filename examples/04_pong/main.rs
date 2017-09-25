@@ -7,15 +7,15 @@ use amethyst::{ApplicationBuilder, Result};
 use amethyst::assets::{AssetFuture, BoxedErr};
 use amethyst::assets::Loader;
 use amethyst::assets::formats::audio::OggFormat;
-use amethyst::audio::{Dj, AudioContext, Source};
+use amethyst::audio::{AudioContext, Dj, Source};
 use amethyst::audio::output::Output;
 use amethyst::audio::play::play_once;
-use amethyst::ecs::{Component, Fetch, FetchMut, Join, System, DenseVecStorage, WriteStorage,
-                    ECSBundle};
+use amethyst::ecs::{Component, DenseVecStorage, ECSBundle, Fetch, FetchMut, Join, System,
+                    WriteStorage};
 use amethyst::ecs::audio::DjBundle;
-use amethyst::ecs::input::{InputHandler, InputBundle};
-use amethyst::ecs::rendering::{Factory, MeshComponent, MaterialComponent, RenderBundle};
-use amethyst::ecs::transform::{Transform, LocalTransform, TransformBundle};
+use amethyst::ecs::input::{InputBundle, InputHandler};
+use amethyst::ecs::rendering::{Factory, MaterialComponent, MeshComponent, RenderBundle};
+use amethyst::ecs::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::Config as DisplayConfig;
 use amethyst::renderer::prelude::*;
@@ -112,15 +112,17 @@ impl<'a, 'b, T> ECSBundle<'a, 'b, T> for PongBundle {
 
 // Pong game system
 impl<'a> System<'a> for PongSystem {
-    type SystemData = (WriteStorage<'a, Ball>,
-     WriteStorage<'a, Paddle>,
-     WriteStorage<'a, LocalTransform>,
-     Fetch<'a, Camera>,
-     Fetch<'a, Time>,
-     Fetch<'a, InputHandler>,
-     Fetch<'a, Sounds>,
-     Fetch<'a, Option<Output>>,
-     FetchMut<'a, Score>);
+    type SystemData = (
+        WriteStorage<'a, Ball>,
+        WriteStorage<'a, Paddle>,
+        WriteStorage<'a, LocalTransform>,
+        Fetch<'a, Camera>,
+        Fetch<'a, Time>,
+        Fetch<'a, InputHandler>,
+        Fetch<'a, Sounds>,
+        Fetch<'a, Option<Output>>,
+        FetchMut<'a, Score>,
+    );
 
     fn run(
         &mut self,
@@ -193,11 +195,11 @@ impl<'a> System<'a> for PongSystem {
             ball.position[1] += ball.velocity[1] * delta_time;
 
             // Check if the ball has collided with the right plank
-            if ball.position[0] + ball.size / 2. > 1.0 - left_dimensions[0] &&
-                ball.position[0] + ball.size / 2. < 1.0
+            if ball.position[0] + ball.size / 2. > 1.0 - left_dimensions[0]
+                && ball.position[0] + ball.size / 2. < 1.0
             {
-                if ball.position[1] - ball.size / 2. < right_position + right_dimensions[1] / 2. &&
-                    ball.position[1] + ball.size / 2. > right_position - right_dimensions[1] / 2.
+                if ball.position[1] - ball.size / 2. < right_position + right_dimensions[1] / 2.
+                    && ball.position[1] + ball.size / 2. > right_position - right_dimensions[1] / 2.
                 {
                     ball.position[0] = 1.0 - right_dimensions[0] - ball.size / 2.;
                     ball.velocity[0] = -ball.velocity[0];
@@ -223,11 +225,11 @@ impl<'a> System<'a> for PongSystem {
             }
 
             // Check if the ball has collided with the left plank
-            if ball.position[0] - ball.size / 2. < left_dimensions[0] &&
-                ball.position[0] + ball.size / 2. > 0.0
+            if ball.position[0] - ball.size / 2. < left_dimensions[0]
+                && ball.position[0] + ball.size / 2. > 0.0
             {
-                if ball.position[1] - ball.size / 2. < left_position + left_dimensions[1] / 2. &&
-                    ball.position[1] + ball.size / 2. > left_position - left_dimensions[1] / 2.
+                if ball.position[1] - ball.size / 2. < left_position + left_dimensions[1] / 2.
+                    && ball.position[1] + ball.size / 2. > left_position - left_dimensions[1] / 2.
                 {
                     ball.position[0] = left_dimensions[0] + ball.size / 2.;
                     ball.velocity[0] = -ball.velocity[0];
@@ -292,7 +294,6 @@ where
 
 impl State for Pong {
     fn on_start(&mut self, engine: &mut Engine) {
-
         // Load audio assets
         // FIXME: do loading with futures, pending the Loading state
         {
@@ -365,9 +366,10 @@ impl State for Pong {
 
         let mesh = load_proc_asset(engine, move |engine| {
             let factory = engine.world.read_resource::<Factory>();
-            factory.create_mesh(mesh).map(MeshComponent::new).map_err(
-                BoxedErr::new,
-            )
+            factory
+                .create_mesh(mesh)
+                .map(MeshComponent::new)
+                .map_err(BoxedErr::new)
         });
 
         let mtl = load_proc_asset(engine, move |engine| {
@@ -432,15 +434,18 @@ impl State for Pong {
 
     fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
         match event {
-            Event::WindowEvent { event, .. } => {
-                match event {
-                    WindowEvent::KeyboardInput {
-                        input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Escape), .. }, ..
-                    } |
-                    WindowEvent::Closed => Trans::Quit,
-                    _ => Trans::None,
-                }
-            }
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::KeyboardInput {
+                    input:
+                        KeyboardInput {
+                            virtual_keycode: Some(VirtualKeyCode::Escape),
+                            ..
+                        },
+                    ..
+                } |
+                WindowEvent::Closed => Trans::Quit,
+                _ => Trans::None,
+            },
             _ => Trans::None,
         }
     }
@@ -503,7 +508,6 @@ fn gen_rectangle(w: f32, h: f32) -> Vec<PosNormTex> {
             a_normal: [0., 0., 1.],
             a_tex_coord: [1., 1.],
         },
-
         PosNormTex {
             a_position: [w / 2., h / 2., 0.],
             a_normal: [0., 0., 1.],

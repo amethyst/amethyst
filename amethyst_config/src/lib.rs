@@ -120,9 +120,9 @@ where
     }
 
     fn load_no_fallback<P: AsRef<Path>>(path: P) -> Result<Self, ConfigError> {
+        use ron::de::Deserializer;
         use std::fs::File;
         use std::io::Read;
-        use ron::de::Deserializer;
 
         let path = path.as_ref();
 
@@ -146,9 +146,9 @@ where
     }
 
     fn write<P: AsRef<Path>>(&self, path: P) -> Result<(), ConfigError> {
-        use std::io::Write;
-        use std::fs::File;
         use ron::ser::pretty::to_string;
+        use std::fs::File;
+        use std::io::Write;
 
         let s = to_string(self)?;
         File::create(path)?.write(s.as_bytes())?;

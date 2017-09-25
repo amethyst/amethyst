@@ -11,9 +11,9 @@ use config::Config;
 use error::{Error, Result};
 use mesh::{Mesh, MeshBuilder};
 use mtl::{Material, MaterialBuilder};
-use pipe::{ColorBuffer, DepthBuffer, PolyPipeline, PipelineBuild, PipelineData, Target};
+use pipe::{ColorBuffer, DepthBuffer, PipelineBuild, PipelineData, PolyPipeline, Target};
 use tex::{Texture, TextureBuilder};
-use types::{ColorFormat, Device, DepthFormat, Window, Encoder, Factory};
+use types::{ColorFormat, DepthFormat, Device, Encoder, Factory, Window};
 use vertex::VertexFormat;
 use winit::{self, EventsLoop, WindowBuilder};
 
@@ -42,51 +42,63 @@ impl Renderer {
 
     /// Builds a new mesh from the given vertices.
     pub fn create_mesh<D, T>(&mut self, mb: MeshBuilder<D, T>) -> Result<Mesh>
-        where D: AsRef<[T]>,
-              T: VertexFormat,
+    where
+        D: AsRef<[T]>,
+        T: VertexFormat,
     {
         mb.build(&mut self.factory)
     }
 
     /// Builds a new texture resource.
     pub fn create_texture<D, T>(&mut self, tb: TextureBuilder<D, T>) -> Result<Texture>
-        where D: AsRef<[T]>,
-              T: Pod + Copy,
+    where
+        D: AsRef<[T]>,
+        T: Pod + Copy,
     {
         tb.build(&mut self.factory)
     }
 
     /// Builds a new material resource.
-    pub fn create_material<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC>(&mut self, mb: MaterialBuilder<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC>) -> Result<Material>
-        where DA: AsRef<[TA]>,
-              TA: Pod + Copy,
-              DE: AsRef<[TE]>,
-              TE: Pod + Copy,
-              DN: AsRef<[TN]>,
-              TN: Pod + Copy,
-              DM: AsRef<[TM]>,
-              TM: Pod + Copy,
-              DR: AsRef<[TR]>,
-              TR: Pod + Copy,
-              DO: AsRef<[TO]>,
-              TO: Pod + Copy,
-              DC: AsRef<[TC]>,
-              TC: Pod + Copy,
+    pub fn create_material<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC>(
+        &mut self,
+        mb: MaterialBuilder<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC>,
+    ) -> Result<Material>
+    where
+        DA: AsRef<[TA]>,
+        TA: Pod + Copy,
+        DE: AsRef<[TE]>,
+        TE: Pod + Copy,
+        DN: AsRef<[TN]>,
+        TN: Pod + Copy,
+        DM: AsRef<[TM]>,
+        TM: Pod + Copy,
+        DR: AsRef<[TR]>,
+        TR: Pod + Copy,
+        DO: AsRef<[TO]>,
+        TO: Pod + Copy,
+        DC: AsRef<[TC]>,
+        TC: Pod + Copy,
     {
         mb.build(&mut self.factory)
     }
 
     /// Builds a new renderer pipeline.
     pub fn create_pipe<B, P>(&mut self, pb: B) -> Result<P>
-        where P: PolyPipeline,
-              B: PipelineBuild<Pipeline=P>,
+    where
+        P: PolyPipeline,
+        B: PipelineBuild<Pipeline = P>,
     {
         pb.build(&mut self.factory, &self.main_target)
     }
 
     /// Draws a scene with the given pipeline.
-    pub fn draw<'a, P>(&mut self, pipe: &mut P, data: <P as PipelineData<'a>>::Data, _delta: Duration)
-        where P: PolyPipeline,
+    pub fn draw<'a, P>(
+        &mut self,
+        pipe: &mut P,
+        data: <P as PipelineData<'a>>::Data,
+        _delta: Duration,
+    ) where
+        P: PolyPipeline,
     {
         use gfx::Device;
         #[cfg(feature = "opengl")]
@@ -98,14 +110,17 @@ impl Renderer {
         let ref mut fac = self.factory;
         let encoders_count = self.encoders.len();
         if encoders_count < encoders_required {
-            self.encoders.extend((encoders_count..encoders_required)
-                                 .map(|_| fac.create_command_buffer().into()))
+            self.encoders.extend(
+                (encoders_count..encoders_required).map(|_| fac.create_command_buffer().into()),
+            )
         }
 
         {
             let mut encoders = self.encoders.as_mut();
             self.pool.install(move || {
-                PolyPipeline::apply(pipe, encoders, num_threads, data).into_par_iter().for_each(|()| {});
+                PolyPipeline::apply(pipe, encoders, num_threads, data)
+                    .into_par_iter()
+                    .for_each(|()| {});
             });
         }
 
@@ -116,7 +131,9 @@ impl Renderer {
         self.device.cleanup();
 
         #[cfg(feature = "opengl")]
-        self.window.swap_buffers().expect("OpenGL context has been lost");
+        self.window
+            .swap_buffers()
+            .expect("OpenGL context has been lost");
     }
 }
 
@@ -157,16 +174,22 @@ impl<'a> RendererBuilder<'a> {
             wb = wb.with_fullscreen(winit::get_primary_monitor());
         }
         match self.config.dimensions {
-            Some((width, height)) => { wb = wb.with_dimensions(width, height); },
-            _ => ()
+            Some((width, height)) => {
+                wb = wb.with_dimensions(width, height);
+            }
+            _ => (),
         }
         match self.config.min_dimensions {
-            Some((width, height)) => { wb = wb.with_min_dimensions(width, height); },
-            _ => ()
+            Some((width, height)) => {
+                wb = wb.with_min_dimensions(width, height);
+            }
+            _ => (),
         }
         match self.config.max_dimensions {
-            Some((width, height)) => { wb = wb.with_max_dimensions(width, height); },
-            _ => ()
+            Some((width, height)) => {
+                wb = wb.with_max_dimensions(width, height);
+            }
+            _ => (),
         }
         self.winit_builder = wb;
         self
@@ -185,27 +208,25 @@ impl<'a> RendererBuilder<'a> {
     }
 
     /// Consumes the builder and creates the new `Renderer`.
-    pub fn build(&self) -> Result<Renderer> {
-        let Backend(dev, fac, main, win) = init_backend(self.winit_builder.clone(), self.events, &self.config)?;
+    pub fn build(self) -> Result<Renderer> {
+        let Backend(dev, fac, main, win) =
+            init_backend(self.winit_builder.clone(), self.events, &self.config)?;
         let num_cores = num_cpus::get();
-        let pool = self.pool
-            .clone()
-            .map(|p| Ok(p))
-            .unwrap_or_else(|| {
-                                let cfg = rayon::Configuration::new().num_threads(num_cores);
-                                ThreadPool::new(cfg)
-                                    .map(|p| Arc::new(p))
-                                    .map_err(|e| Error::PoolCreation(format!("{}", e)))
-                            })?;
+        let pool = self.pool.clone().map(|p| Ok(p)).unwrap_or_else(|| {
+            let cfg = rayon::Configuration::new().num_threads(num_cores);
+            ThreadPool::new(cfg)
+                .map(|p| Arc::new(p))
+                .map_err(|e| Error::PoolCreation(format!("{}", e)))
+        })?;
 
         Ok(Renderer {
-               device: dev,
-               encoders: Vec::new(),
-               factory: fac,
-               main_target: Arc::new(main),
-               pool: pool,
-               window: win,
-           })
+            device: dev,
+            encoders: Vec::new(),
+            factory: fac,
+            main_target: Arc::new(main),
+            pool: pool,
+            window: win,
+        })
     }
 }
 
@@ -233,7 +254,7 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &Config) -> Result<B
             as_input: None,
             as_output: depth,
         },
-        size
+        size,
     );
 
     Ok(Backend(dev, fac, main_target, win))
@@ -258,7 +279,7 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &Config) -> Result<B
             as_input: None,
             as_output: depth,
         },
-        size
+        size,
     );
 
     Ok(Backend(dev, fac, main_target, win))
@@ -287,7 +308,7 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &Config) -> Result<B
             as_input: None,
             as_output: depth,
         },
-        size
+        size,
     );
 
     Ok(Backend(dev, fac, main_target, win))

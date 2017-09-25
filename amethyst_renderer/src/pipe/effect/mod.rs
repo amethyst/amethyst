@@ -53,29 +53,20 @@ impl<'a> ProgramSource<'a> {
         use gfx::traits::FactoryExt;
 
         match *self {
-            ProgramSource::Simple(ref vs, ref ps) => {
-                fac.create_shader_set(vs, ps).map_err(
-                    |e| Error::ProgramCreation(e),
-                )
-            }
+            ProgramSource::Simple(ref vs, ref ps) => fac.create_shader_set(vs, ps)
+                .map_err(|e| Error::ProgramCreation(e)),
             ProgramSource::Geometry(ref vs, ref gs, ref ps) => {
-                let v = fac.create_shader_vertex(vs).map_err(
-                    |e| ProgramError::Vertex(e),
-                )?;
-                let g = fac.create_shader_geometry(gs).expect(
-                    "Geometry shader creation failed",
-                );
-                let p = fac.create_shader_pixel(ps).map_err(
-                    |e| ProgramError::Pixel(e),
-                )?;
+                let v = fac.create_shader_vertex(vs)
+                    .map_err(|e| ProgramError::Vertex(e))?;
+                let g = fac.create_shader_geometry(gs)
+                    .expect("Geometry shader creation failed");
+                let p = fac.create_shader_pixel(ps)
+                    .map_err(|e| ProgramError::Pixel(e))?;
                 Ok(ShaderSet::Geometry(v, g, p))
             }
             ProgramSource::Tessellated(ref vs, ref hs, ref ds, ref ps) => {
-                fac.create_shader_set_tessellation(vs, hs, ds, ps).map_err(
-                    |e| {
-                        Error::ProgramCreation(e)
-                    },
-                )
+                fac.create_shader_set_tessellation(vs, hs, ds, ps)
+                    .map_err(|e| Error::ProgramCreation(e))
             }
         }
     }
@@ -260,12 +251,7 @@ impl<'a> EffectBuilder<'a> {
 
         let ref mut fac = self.factory;
         let prog = self.prog.compile(fac)?;
-        let pso = fac.create_pipeline_state(
-            &prog,
-            self.prim,
-            self.rast,
-            self.init.clone(),
-        )?;
+        let pso = fac.create_pipeline_state(&prog, self.prim, self.rast, self.init.clone())?;
 
         let mut data = Data::default();
 
@@ -292,14 +278,11 @@ impl<'a> EffectBuilder<'a> {
             })
             .collect::<HashMap<_, _>>();
 
-        data.out_colors.extend(
-            self.out.color_bufs().iter().map(|cb| {
-                cb.as_output.clone()
-            }),
-        );
-        data.out_depth = self.out.depth_buf().map(
-            |db| (db.as_output.clone(), (0, 0)),
-        );
+        data.out_colors
+            .extend(self.out.color_bufs().iter().map(|cb| cb.as_output.clone()));
+        data.out_depth = self.out
+            .depth_buf()
+            .map(|db| (db.as_output.clone(), (0, 0)));
 
         Ok(Effect {
             pso,

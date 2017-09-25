@@ -15,11 +15,12 @@ use amethyst::assets::formats::meshes::ObjFormat;
 use amethyst::assets::formats::textures::PngFormat;
 use amethyst::config::Config;
 use amethyst::ecs::{Fetch, FetchMut, Join, System, WriteStorage};
-use amethyst::ecs::rendering::{LightComponent, MaterialComponent, AmbientColor, TextureContext,
-                               Factory, TextureComponent, MeshComponent, MeshContext, RenderBundle};
+use amethyst::ecs::rendering::{AmbientColor, Factory, LightComponent, MaterialComponent,
+                               MeshComponent, MeshContext, RenderBundle, TextureComponent,
+                               TextureContext};
 use amethyst::ecs::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::prelude::*;
-use amethyst::renderer::{Camera, Rgba, Config as DisplayConfig};
+use amethyst::renderer::{Camera, Config as DisplayConfig, Rgba};
 use amethyst::renderer::prelude::*;
 use amethyst::timing::Time;
 use cgmath::{Deg, Euler, Quaternion};
@@ -38,10 +39,12 @@ struct DemoState {
 struct ExampleSystem;
 
 impl<'a> System<'a> for ExampleSystem {
-    type SystemData = (WriteStorage<'a, LightComponent>,
-     Fetch<'a, Time>,
-     FetchMut<'a, Camera>,
-     FetchMut<'a, DemoState>);
+    type SystemData = (
+        WriteStorage<'a, LightComponent>,
+        Fetch<'a, Time>,
+        FetchMut<'a, Camera>,
+        FetchMut<'a, DemoState>,
+    );
 
     fn run(&mut self, (mut lights, time, mut camera, mut state): Self::SystemData) {
         let delta_time = time.delta_time.subsec_nanos() as f32 / 1.0e9;
@@ -67,15 +70,13 @@ impl<'a> System<'a> for ExampleSystem {
             } else {
                 None
             }
-        })
-        {
+        }) {
             point_light.center[0] = light_orbit_radius * state.light_angle.cos();
             point_light.center[1] = light_orbit_radius * state.light_angle.sin();
             point_light.center[2] = light_z;
 
             point_light.color = state.light_color.into();
         }
-
     }
 }
 
@@ -83,7 +84,6 @@ struct Example;
 
 impl State for Example {
     fn on_start(&mut self, engine: &mut Engine) {
-
         initialise_camera(&mut engine.world.write_resource::<Camera>());
 
         // Add teapot and lid to scene
@@ -185,9 +185,9 @@ impl State for Example {
             .build();
 
         {
-            engine.world.add_resource(
-                AmbientColor(Rgba::from([0.01; 3])),
-            );
+            engine
+                .world
+                .add_resource(AmbientColor(Rgba::from([0.01; 3])));
         }
 
         engine.world.add_resource::<DemoState>(DemoState {
@@ -211,11 +211,12 @@ impl State for Example {
                 match event {
                     WindowEvent::Closed => return Trans::Quit,
                     WindowEvent::KeyboardInput {
-                        input: KeyboardInput {
-                            virtual_keycode,
-                            state: ElementState::Pressed,
-                            ..
-                        },
+                        input:
+                            KeyboardInput {
+                                virtual_keycode,
+                                state: ElementState::Pressed,
+                                ..
+                            },
                         ..
                     } => {
                         match virtual_keycode {
@@ -275,15 +276,13 @@ impl State for Example {
                                     }
                                 }
                             }
-                            Some(VirtualKeyCode::P) => {
-                                if state.point_light {
-                                    state.point_light = false;
-                                    state.light_color = [0.0; 4].into();
-                                } else {
-                                    state.point_light = true;
-                                    state.light_color = [1.0; 4].into();
-                                }
-                            }
+                            Some(VirtualKeyCode::P) => if state.point_light {
+                                state.point_light = false;
+                                state.light_color = [0.0; 4].into();
+                            } else {
+                                state.point_light = true;
+                                state.light_color = [1.0; 4].into();
+                            },
                             _ => (),
                         }
                     }
@@ -332,9 +331,7 @@ fn run() -> Result<(), Error> {
         .expect("Failed to build ApplicationBuilder for an unknown reason.")
         .with::<ExampleSystem>(ExampleSystem, "example_system", &[])
         .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
-        .with_bundle(RenderBundle::new(pipeline_builder).with_config(
-            display_config,
-        ))?
+        .with_bundle(RenderBundle::new(pipeline_builder).with_config(display_config))?
         .with_store("resources", Directory::new(resources_directory))
         .build()?;
 
@@ -372,9 +369,9 @@ where
     use futures::Future;
     let future = {
         let factory = engine.world.read_resource::<Factory>();
-        factory.create_material(MaterialBuilder::new()).map_err(
-            BoxedErr::new,
-        )
+        factory
+            .create_material(MaterialBuilder::new())
+            .map_err(BoxedErr::new)
     }.join({
         let loader = engine.world.read_resource::<Loader>();
         loader.load_from::<TextureComponent, _, _, _>(albedo, format, "resources")
@@ -391,9 +388,9 @@ fn make_material(engine: &mut Engine, albedo: [f32; 4]) -> AssetFuture<MaterialC
     let future = {
         let factory = engine.world.read_resource::<Factory>();
         factory
-            .create_material(MaterialBuilder::new().with_albedo(
-                TextureBuilder::from_color_val(albedo),
-            ))
+            .create_material(
+                MaterialBuilder::new().with_albedo(TextureBuilder::from_color_val(albedo)),
+            )
             .map(MaterialComponent)
             .map_err(BoxedErr::new)
     };
