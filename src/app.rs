@@ -1,7 +1,7 @@
 //! The core engine framework.
 
 use std::sync::Arc;
-use std::thread::yield_now;
+use std::time::{Duration, Instant};
 
 use input::InputHandler;
 use rayon::ThreadPool;
@@ -29,6 +29,8 @@ pub struct Application<'a, 'b> {
     /// The `engine` struct, holding world and thread pool.
     #[derivative(Debug = "ignore")]
     pub engine: Engine,
+    /// The limit of how fast the game will run.
+    pub max_fps: u32,
 
     #[derivative(Debug = "ignore")] dispatcher: Dispatcher<'a, 'b>,
     #[derivative(Debug = "ignore")] events: EventsLoop,
@@ -114,9 +116,15 @@ impl<'a, 'b> Application<'a, 'b> {
 
         while self.states.is_running() {
             self.timer.restart();
+
+            let start = Instant::now();
             self.advance_frame();
-            // Make sure we're not starving the CPU.
-            yield_now();
+
+            // We are done with this frame, we can just rest for now.
+            while start.elapsed() < Duration::from_secs(1) / self.max_fps {
+                ::std::thread::yield_now();
+            }
+
             self.timer.stop();
             self.time.delta_time = self.timer.elapsed();
         }
@@ -736,6 +744,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
             engine: Engine::new(self.pool.clone(), self.world),
             // config: self.config,
             states: StateMachine::new(self.initial_state),
+            max_fps: 144,
             events: self.events,
             dispatcher: self.disp_builder.with_pool(self.pool).build(),
             time: Time::default(),

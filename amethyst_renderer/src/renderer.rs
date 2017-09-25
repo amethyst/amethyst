@@ -1,8 +1,7 @@
 
 
 use std::sync::Arc;
-use std::thread::{sleep, yield_now};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use gfx::memory::Pod;
 use num_cpus;
@@ -22,8 +21,6 @@ use winit::{self, EventsLoop, WindowBuilder};
 pub struct Renderer {
     /// The gfx factory used for creation of buffers.
     pub factory: Factory,
-    /// The maximum frames per second the renderer will draw, defaults to 144.
-    pub max_fps: u32,
 
     device: Device,
     encoders: Vec<Encoder>,
@@ -94,7 +91,6 @@ impl Renderer {
         use gfx::Device;
         #[cfg(feature = "opengl")]
         use glutin::GlContext;
-        let start = Instant::now();
 
         let num_threads = self.pool.current_num_threads();
         let encoders_required = P::encoders_required(num_threads);
@@ -119,16 +115,6 @@ impl Renderer {
 
         self.device.cleanup();
 
-        // # Enforce maximum FPS
-        // Sleep if the time needed is > 10 ms for 9.5 ms
-        let time_remaining = Duration::from_secs(1) / self.max_fps - start.elapsed();
-        if time_remaining > Duration::new(0, 10000000) {
-            sleep(time_remaining * 95 / 100);
-        }
-        // Yield for the remainder of the time.
-        while start.elapsed() * self.max_fps < Duration::from_secs(1) {
-            yield_now();
-        }
         #[cfg(feature = "opengl")]
         self.window.swap_buffers().expect("OpenGL context has been lost");
     }
@@ -219,7 +205,6 @@ impl<'a> RendererBuilder<'a> {
                main_target: Arc::new(main),
                pool: pool,
                window: win,
-               max_fps: self.config.max_fps,
            })
     }
 }
