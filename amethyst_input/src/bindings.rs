@@ -13,6 +13,11 @@ pub struct Bindings {
 }
 
 impl Bindings {
+    /// Creates a new empty Bindings structure
+    pub fn new() -> Bindings {
+        Bindings::default()
+    }
+
     /// Assign an axis to an ID value
     ///
     /// This will insert a new axis if no entry for this id exists.

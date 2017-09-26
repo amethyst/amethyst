@@ -5,8 +5,9 @@ use std::path::Path;
 use app::ApplicationBuilder;
 use config::Config;
 use ecs::ECSBundle;
-use ecs::input::{Bindings, InputHandler};
+use ecs::input::{Bindings, InputEvent, InputHandler};
 use error::Result;
+use shrev::EventHandler;
 
 /// Bundle for adding the `InputHandler` and input bindings
 ///
@@ -45,6 +46,10 @@ impl<'a, 'b, T> ECSBundle<'a, 'b, T> for InputBundle {
         if let Some(ref bindings) = self.bindings {
             input.bindings = bindings.to_owned();
         }
-        Ok(builder.with_resource(input))
+        Ok(
+            builder
+            .with_resource(input)
+            .with_resource(EventHandler::<InputEvent>::new())
+        )
     }
 }

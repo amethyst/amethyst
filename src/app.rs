@@ -6,7 +6,8 @@ use std::time::Duration;
 
 use input::InputHandler;
 use rayon::ThreadPool;
-use shred::{Resource, ResourceId};
+use shred::Resource;
+use shrev::EventHandler;
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
 use winit::{Event, EventsLoop};
@@ -15,6 +16,7 @@ use assets::{Asset, Loader, Store};
 use ecs::{Component, Dispatcher, DispatcherBuilder, ECSBundle, System, World};
 use engine::Engine;
 use error::{Error, Result};
+use input::InputEvent;
 use state::{State, StateMachine};
 use timing::{Stopwatch, Time};
 
@@ -152,30 +154,18 @@ impl<'a, 'b> Application<'a, 'b> {
         {
             let engine = &mut self.engine;
             let states = &mut self.states;
-            if engine
-                .world
-                .res
-                .has_value(ResourceId::new::<InputHandler>())
-            {
-                engine
-                    .world
-                    .write_resource::<InputHandler>()
-                    .advance_frame();
-            }
             #[cfg(feature = "profiler")]
             profile_scope!("handle_event");
 
             self.events.poll_events(|event| {
-                if engine
-                    .world
-                    .res
-                    .has_value(ResourceId::new::<InputHandler>())
-                {
-                    let mut input = engine.world.write_resource::<InputHandler>();
-                    if let Event::WindowEvent { ref event, .. } = event {
-                        input.send_event(&event);
+                if let Event::WindowEvent { ref event, .. } = event {
+                    if let Some(mut handler) = engine.world.res.try_fetch_mut::<InputHandler>(0) {
+                        if let Some(mut event_handler) = engine.world.res.try_fetch_mut::<EventHandler<InputEvent>>(0) {
+                            handler.send_event(event, &mut event_handler);
+                        }
                     }
                 }
+                
                 states.handle_event(engine, event);
             });
         }
