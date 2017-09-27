@@ -71,6 +71,9 @@ extern crate gfx;
 extern crate imagefmt;
 extern crate rayon;
 extern crate rodio;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
 extern crate shred;
 extern crate smallvec;
 extern crate specs;
