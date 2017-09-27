@@ -5,8 +5,9 @@ pub use specs::*;
 pub mod audio;
 pub mod input;
 pub mod rendering;
-pub mod util;
+pub mod saveload;
 pub mod transform;
+pub mod util;
 
 use app::ApplicationBuilder;
 use error::Result;

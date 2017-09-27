@@ -2,6 +2,11 @@
 
 extern crate amethyst;
 extern crate futures;
+extern crate rayon;
+extern crate ron;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
 
 use amethyst::{ApplicationBuilder, Result};
 use amethyst::assets::{AssetFuture, BoxedErr};
@@ -15,15 +20,19 @@ use amethyst::ecs::{Component, DenseVecStorage, ECSBundle, Fetch, FetchMut, Join
 use amethyst::ecs::audio::DjBundle;
 use amethyst::ecs::input::{InputBundle, InputHandler};
 use amethyst::ecs::rendering::{Factory, MaterialComponent, MeshComponent, RenderBundle};
+use amethyst::ecs::saveload::{self, WorldDeserialize, WorldSerialize};
 use amethyst::ecs::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::Config as DisplayConfig;
 use amethyst::renderer::prelude::*;
 use amethyst::timing::Time;
 use futures::{Future, IntoFuture};
+use serde::de::DeserializeSeed;
+use serde::ser::Serialize;
 
 struct Pong;
 
+#[derive(Clone, Copy, Serialize, Deserialize)]
 struct Ball {
     pub position: [f32; 2],
     pub velocity: [f32; 2],
@@ -44,11 +53,13 @@ impl Component for Ball {
     type Storage = DenseVecStorage<Self>;
 }
 
+#[derive(Clone, Copy, Serialize, Deserialize)]
 enum Side {
     Left,
     Right,
 }
 
+#[derive(Clone, Copy, Serialize, Deserialize)]
 struct Paddle {
     pub position: f32,
     pub velocity: f32,
@@ -60,7 +71,7 @@ impl Paddle {
     pub fn new(side: Side) -> Paddle {
         Paddle {
             position: 0.,
-            velocity: 1.,
+            velocity: 0.,
             dimensions: [1., 1.],
             side: side,
         }
@@ -99,10 +110,14 @@ impl<'a, 'b, T> ECSBundle<'a, 'b, T> for PongBundle {
         &self,
         builder: ApplicationBuilder<'a, 'b, T>,
     ) -> Result<ApplicationBuilder<'a, 'b, T>> {
+        use saveload::marker::{U64Marker, U64MarkerAllocator};
         Ok(
             builder
+                .with_resource(U64MarkerAllocator::new())
+                .with_resource(Saved::default())
                 .with_resource(Score::new())
                 .with_resource(Time::default())
+                .register::<U64Marker>()
                 .register::<Ball>()
                 .register::<Paddle>()
                 .with(PongSystem, "pong_system", &[]),
@@ -133,10 +148,12 @@ impl<'a> System<'a> for PongSystem {
         // Properties of left paddle.
         let mut left_dimensions = [0.0, 0.0];
         let mut left_position = 0.0;
+        let mut left_velocity = 0.0;
 
         // Properties of right paddle.
         let mut right_dimensions = [0.0, 0.0];
         let mut right_position = 0.0;
+        let mut right_velocity = 0.0;
 
         let delta_time = time.delta_time.subsec_nanos() as f32 / 1.0e9;
 
@@ -145,41 +162,49 @@ impl<'a> System<'a> for PongSystem {
             match plank.side {
                 // If it is a left plank
                 Side::Left => {
-                    // Store left plank position for later use in ball processing
-                    left_position = plank.position;
-                    // Store left plank dimensions for later use in ball processing
-                    left_dimensions = plank.dimensions;
                     // Move plank according to axis input.
                     if let Some(value) = input.axis_value("P1") {
-                        plank.position += plank.velocity * delta_time * value as f32;
-                        if plank.position + plank.dimensions[1] / 2. > 1. {
-                            plank.position = 1. - plank.dimensions[1] / 2.
-                        }
-                        if plank.position - plank.dimensions[1] / 2. < 0. {
-                            plank.position = plank.dimensions[1] / 2.;
-                        }
+                        plank.velocity = value as f32 * 1.5;
+                    }
+                    plank.position += plank.velocity * delta_time;
+                    if plank.position + plank.dimensions[1] / 2. > 1. {
+                        plank.position = 1. - plank.dimensions[1] / 2.
+                    }
+                    if plank.position - plank.dimensions[1] / 2. < 0. {
+                        plank.position = plank.dimensions[1] / 2.;
                     }
                     // Set translation[0] of renderable corresponding to this plank
-                    local.translation[0] = plank.dimensions[0] / 2.0
+                    local.translation[0] = plank.dimensions[0] / 2.0;
+
+                    // Store left plank dimensions for later use in ball processing
+                    left_dimensions = plank.dimensions;
+                    // Store left plank position for later use in ball processing
+                    left_position = plank.position;
+                    // Store left plank current velocity for later use in ball processin
+                    left_velocity = plank.velocity;
                 }
                 // If it is a right plank
                 Side::Right => {
-                    // Store right plank position for later use in ball processing
-                    right_position = plank.position;
-                    // Store right plank dimensions for later use in ball processing
-                    right_dimensions = plank.dimensions;
                     // Move plank according to axis input.
                     if let Some(value) = input.axis_value("P2") {
-                        plank.position += plank.velocity * delta_time * value as f32;
-                        if plank.position + plank.dimensions[1] / 2. > 1. {
-                            plank.position = 1. - plank.dimensions[1] / 2.
-                        }
-                        if plank.position - plank.dimensions[1] / 2. < 0. {
-                            plank.position = plank.dimensions[1] / 2.;
-                        }
+                        plank.velocity = value as f32 * 1.5;
+                    }
+                    plank.position += plank.velocity * delta_time;
+                    if plank.position + plank.dimensions[1] / 2. > 1. {
+                        plank.position = 1. - plank.dimensions[1] / 2.
+                    }
+                    if plank.position - plank.dimensions[1] / 2. < 0. {
+                        plank.position = plank.dimensions[1] / 2.;
                     }
                     // Set translation[0] of renderable corresponding to this plank
-                    local.translation[0] = 1.0 - plank.dimensions[0] / 2.0
+                    local.translation[0] = 1.0 - plank.dimensions[0] / 2.0;
+
+                    // Store right plank dimensions for later use in ball processing
+                    right_dimensions = plank.dimensions;
+                    // Store right plank position for later use in ball processing
+                    right_position = plank.position;
+                    // Store right plank current velocity for later use in ball processin
+                    right_velocity = plank.velocity;
                 }
             };
             // Set translation[1] of renderable corresponding to this plank
@@ -195,32 +220,19 @@ impl<'a> System<'a> for PongSystem {
             ball.position[1] += ball.velocity[1] * delta_time;
 
             // Check if the ball has collided with the right plank
-            if ball.position[0] + ball.size / 2. > 1.0 - left_dimensions[0]
+            if ball.position[0] + ball.size / 2. > 1.0 - right_dimensions[0]
                 && ball.position[0] + ball.size / 2. < 1.0
             {
                 if ball.position[1] - ball.size / 2. < right_position + right_dimensions[1] / 2.
                     && ball.position[1] + ball.size / 2. > right_position - right_dimensions[1] / 2.
                 {
                     ball.position[0] = 1.0 - right_dimensions[0] - ball.size / 2.;
+                    ball.velocity[1] = ball.velocity[1] + right_velocity / 2.;
                     ball.velocity[0] = -ball.velocity[0];
+
                     if let Some(ref output) = *audio_output {
                         play_once(&sounds.bounce_sfx, 1.0, &output);
                     }
-                }
-            }
-
-            // Check if the ball is to the left of the right boundary
-            // if it is not reset it's position and score the left player
-            if ball.position[0] - ball.size / 2. > 1.0 {
-                ball.position[0] = 0.5;
-                score.score_left += 1;
-                println!(
-                    "Left player score: {0}, Right player score {1}",
-                    score.score_left,
-                    score.score_right
-                );
-                if let Some(ref output) = *audio_output {
-                    play_once(&sounds.score_sfx, 1.0, &output);
                 }
             }
 
@@ -232,7 +244,9 @@ impl<'a> System<'a> for PongSystem {
                     && ball.position[1] + ball.size / 2. > left_position - left_dimensions[1] / 2.
                 {
                     ball.position[0] = left_dimensions[0] + ball.size / 2.;
+                    ball.velocity[1] = ball.velocity[1] + left_velocity / 2.;
                     ball.velocity[0] = -ball.velocity[0];
+
                     if let Some(ref output) = *audio_output {
                         play_once(&sounds.bounce_sfx, 1.0, &output);
                     }
@@ -244,6 +258,21 @@ impl<'a> System<'a> for PongSystem {
             if ball.position[0] + ball.size / 2. < 0.0 {
                 ball.position[0] = 0.5;
                 score.score_right += 1;
+                println!(
+                    "Left player score: {0}, Right player score {1}",
+                    score.score_left,
+                    score.score_right
+                );
+                if let Some(ref output) = *audio_output {
+                    play_once(&sounds.score_sfx, 1.0, &output);
+                }
+            }
+
+            // Check if the ball is to the left of the right boundary
+            // if it is not reset it's position and score the left player
+            if ball.position[0] - ball.size / 2. > 1.0 {
+                ball.position[0] = 0.5;
+                score.score_left += 1;
                 println!(
                     "Left player score: {0}, Right player score {1}",
                     score.score_left,
@@ -272,6 +301,11 @@ impl<'a> System<'a> for PongSystem {
                 }
             }
 
+            // Normalize speed of this ball
+            let l = ball.velocity[1].hypot(ball.velocity[0]);
+            ball.velocity[1] /= l;
+            ball.velocity[0] /= l;
+
             // Update the renderable corresponding to this ball
             local.translation[0] = ball.position[0];
             local.translation[1] = ball.position[1];
@@ -294,6 +328,8 @@ where
 
 impl State for Pong {
     fn on_start(&mut self, engine: &mut Engine) {
+        use saveload::marker::{MarkerAllocator, U64Marker, U64MarkerAllocator};
+
         // Load audio assets
         // FIXME: do loading with futures, pending the Loading state
         {
@@ -394,7 +430,7 @@ impl State for Pong {
         let mut ball = Ball::new();
         ball.size = 0.02;
         ball.velocity = [0.5, 0.5];
-        world
+        let ball = world
             .create_entity()
             .with(mesh.clone())
             .with(mtl.clone())
@@ -408,7 +444,7 @@ impl State for Pong {
         plank.dimensions[0] = 0.01;
         plank.dimensions[1] = 0.1;
         plank.velocity = 1.;
-        world
+        let left_plank = world
             .create_entity()
             .with(mesh.clone())
             .with(mtl.clone())
@@ -422,7 +458,7 @@ impl State for Pong {
         plank.dimensions[0] = 0.01;
         plank.dimensions[1] = 0.1;
         plank.velocity = 1.;
-        world
+        let right_plank = world
             .create_entity()
             .with(mesh)
             .with(mtl)
@@ -430,6 +466,13 @@ impl State for Pong {
             .with(LocalTransform::default())
             .with(Transform::default())
             .build();
+
+
+        let mut allocator = world.write_resource::<U64MarkerAllocator>();
+        let mut markers = world.write::<U64Marker>();
+        allocator.mark(ball, &mut markers);
+        allocator.mark(left_plank, &mut markers);
+        allocator.mark(right_plank, &mut markers);
     }
 
     fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
@@ -447,6 +490,74 @@ impl State for Pong {
                 _ => Trans::None,
             },
             _ => Trans::None,
+        }
+    }
+}
+
+#[derive(Default)]
+struct Saved(Option<String>);
+impl Saved {
+    fn save<S>(&mut self, ser: &S)
+    where
+        S: Serialize,
+    {
+        use ron::ser::pretty::to_string;
+        self.0 = Some(to_string(ser).expect("Should be saved successfully"));
+    }
+
+    fn load<D>(&mut self, seed: D)
+    where
+        D: for<'de> DeserializeSeed<'de, Value = ()>,
+    {
+        use ron::de::Deserializer;
+        if let Some(saved) = self.0.as_ref() {
+            seed.deserialize(&mut Deserializer::from_str(saved))
+                .expect("Should be loaded successfully");
+        } else {
+            println!("Attemt to load without saving");
+        }
+    }
+
+    fn print(&self) {
+        if let Some(saved) = self.0.as_ref() {
+            println!("SAVED:\n{}", saved);
+        }
+    }
+}
+
+struct SaveSystem;
+
+impl<'a> System<'a> for SaveSystem {
+    type SystemData = (
+        WorldSerialize<'a, saveload::marker::U64Marker, saveload::NoError, (Ball, Paddle)>,
+        Fetch<'a, InputHandler>,
+        FetchMut<'a, Saved>,
+    );
+
+    fn run(&mut self, (world_serialize, input, mut saved): Self::SystemData) {
+        use amethyst::input::*;
+
+        if input.key_is(VirtualKeyCode::F5, Pressed(ThisFrame)) {
+            saved.save(&world_serialize);
+            saved.print();
+        }
+    }
+}
+
+struct LoadSystem;
+
+impl<'a> System<'a> for LoadSystem {
+    type SystemData = (
+        WorldDeserialize<'a, saveload::marker::U64Marker, saveload::NoError, (Ball, Paddle)>,
+        Fetch<'a, InputHandler>,
+        FetchMut<'a, Saved>,
+    );
+
+    fn run(&mut self, (world_deserialize, input, mut saved): Self::SystemData) {
+        use amethyst::input::*;
+
+        if input.key_is(VirtualKeyCode::F7, Pressed(ThisFrame)) {
+            saved.load(world_deserialize);
         }
     }
 }
@@ -480,6 +591,8 @@ fn run() -> Result<()> {
                 ),
             ).with_config(cfg),
         )?
+        .with(SaveSystem, "", &[])
+        .with(LoadSystem, "", &[])
         .with_store("assets", Directory::new(assets_dir));
     Ok(game.build()?.run())
 }

@@ -302,9 +302,9 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
         let cfg = cfg.start_handler(|index| {
             register_thread_with_profiler(format!("thread_pool{}", index));
         });
-        let pool = ThreadPool::new(cfg).map(|p| Arc::new(p)).map_err(|_| {
-            Error::Application
-        })?;
+        let pool = ThreadPool::new(cfg)
+            .map(|p| Arc::new(p))
+            .map_err(|_| Error::Application)?;
         let mut world = World::new();
         let base_path = format!("{}/resources", env!("CARGO_MANIFEST_DIR"));
         world.add_resource(Loader::new(base_path, pool.clone()));
