@@ -55,7 +55,7 @@ where
                 Self::process_event(d, &mut *handler, &mut *output);
             },
             Ok(EventReadData::Overflow(data, lost)) => {
-                eprintln!("WARNING: Event buffer overflow! {} events were lost!", lost); 
+                eprintln!("InputSystem: WARNING: Event buffer overflow! {} events were lost!", lost); 
                 for d in data {
                     Self::process_event(d, &mut *handler, &mut *output);
                 }
