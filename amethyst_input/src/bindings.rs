@@ -54,7 +54,10 @@ impl<AX, AC> Bindings<AX, AC> where AX: Hash + Eq + Clone, AC: Hash + Eq + Clone
     /// Add a button to an action.
     ///
     /// This will insert a new binding between this action and the button.
-    pub fn insert_action_binding(&mut self, id: AC, binding: Button) {
+    pub fn insert_action_binding<A>(&mut self, id: A, binding: Button)
+    where A: Hash + Eq + Into<AC>,
+          AC: Borrow<A>,
+    {
         let mut make_new = false;
         match self.actions.get_mut(&id) {
             Some(action_bindings) => {
@@ -69,7 +72,7 @@ impl<AX, AC> Bindings<AX, AC> where AX: Hash + Eq + Clone, AC: Hash + Eq + Clone
         if make_new {
             let mut bindings = SmallVec::new();
             bindings.push(binding);
-            self.actions.insert(id, bindings);
+            self.actions.insert(id.into(), bindings);
         }
     }
 
