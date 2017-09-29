@@ -64,7 +64,7 @@ where
             input.bindings = bindings.clone();
         }
 
-        let mut winit_handler = EventHandler::<Event>::new();
+        let winit_handler = EventHandler::<Event>::new();
         let reader_id = winit_handler.register_reader();
         Ok(
             builder
