@@ -1,5 +1,6 @@
 //! Defines binding structure used for saving and loading input settings.
 
+use std::borrow::Borrow;
 use std::hash::Hash;
 
 use fnv::FnvHashMap as HashMap;
@@ -9,12 +10,12 @@ use super::{Axis, Button};
 
 /// Used for saving and loading input settings.
 #[derive(Default, Serialize, Deserialize, Clone)]
-pub struct Bindings<T> where T : Hash + Eq {
-    pub(super) axes: HashMap<String, Axis>,
-    pub(super) actions: HashMap<T, SmallVec<[Button; 4]>>,
+pub struct Bindings<AX, AC> where AX: Hash + Eq, AC: Hash + Eq {
+    pub(super) axes: HashMap<AX, Axis>,
+    pub(super) actions: HashMap<AC, SmallVec<[Button; 4]>>,
 }
 
-impl<T> Bindings<T> where T: Hash + Eq + Clone {
+impl<AX, AC> Bindings<AX, AC> where AX: Hash + Eq + Clone, AC: Hash + Eq + Clone {
     /// Creates a new empty Bindings structure
     pub fn new() -> Self {
         Self {
@@ -27,29 +28,33 @@ impl<T> Bindings<T> where T: Hash + Eq + Clone {
     ///
     /// This will insert a new axis if no entry for this id exists.
     /// If one does exist this will replace the axis at that id and return it.
-    pub fn insert_axis<A: Into<String>>(&mut self, id: A, axis: Axis) -> Option<Axis> {
+    pub fn insert_axis<A: Into<AX>>(&mut self, id: A, axis: Axis) -> Option<Axis> {
         self.axes.insert(id.into(), axis)
     }
 
     /// Removes an axis, this will return the removed axis if successful.
-    pub fn remove_axis<A: AsRef<str>>(&mut self, id: A) -> Option<Axis> {
-        self.axes.remove(id.as_ref())
+    pub fn remove_axis<A: Hash + Eq + ?Sized>(&mut self, id: &A) -> Option<Axis> 
+    where AX: Borrow<A>,
+    {
+        self.axes.remove(id)
     }
 
     /// Returns a reference to an axis.
-    pub fn axis<A: AsRef<str>>(&mut self, id: A) -> Option<&Axis> {
-        self.axes.get(id.as_ref())
+    pub fn axis<A: Hash + Eq + ?Sized>(&mut self, id: &A) -> Option<&Axis> 
+    where AX: Borrow<A>,
+    {
+        self.axes.get(id)
     }
 
     /// Gets a list of all axes
-    pub fn axes(&self) -> Vec<String> {
-        self.axes.keys().cloned().collect::<Vec<String>>()
+    pub fn axes(&self) -> Vec<AX> {
+        self.axes.keys().cloned().collect::<Vec<AX>>()
     }
 
     /// Add a button to an action.
     ///
     /// This will insert a new binding between this action and the button.
-    pub fn insert_action_binding(&mut self, id: T, binding: Button) {
+    pub fn insert_action_binding(&mut self, id: AC, binding: Button) {
         let mut make_new = false;
         match self.actions.get_mut(&id) {
             Some(action_bindings) => {
@@ -69,7 +74,9 @@ impl<T> Bindings<T> where T: Hash + Eq + Clone {
     }
 
     /// Removes an action binding that was assigned previously.
-    pub fn remove_action_binding(&mut self, id: &T, binding: Button) {
+    pub fn remove_action_binding<T: Hash + Eq + ?Sized>(&mut self, id: &T, binding: Button) 
+    where AC: Borrow<T>,
+    {
         let mut kill_it = false;
         if let Some(action_bindings) = self.actions.get_mut(id) {
             let index = action_bindings.iter().position(|&b| b == binding);
@@ -84,12 +91,14 @@ impl<T> Bindings<T> where T: Hash + Eq + Clone {
     }
 
     /// Returns an action's bindings.
-    pub fn action_bindings(&self, id: &T) -> Option<&[Button]> {
+    pub fn action_bindings<T: Hash + Eq + ?Sized>(&self, id: &T) -> Option<&[Button]> 
+    where AC: Borrow<T>,
+    {
         self.actions.get(id).map(|a| &**a)
     }
 
     /// Gets a list of all action bindings
-    pub fn actions(&self) -> Vec<T> {
-        self.actions.keys().cloned().collect::<Vec<T>>()
+    pub fn actions(&self) -> Vec<AC> {
+        self.actions.keys().cloned().collect::<Vec<AC>>()
     }
 }

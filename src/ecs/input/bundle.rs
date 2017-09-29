@@ -20,16 +20,18 @@ use shrev::EventHandler;
 ///
 /// No errors returned from this bundle.
 ///
-pub struct InputBundle<T>
+pub struct InputBundle<AX, AC>
 where
-    T: Hash + Eq,
+    AX: Hash + Eq,
+    AC: Hash + Eq,
 {
-    bindings: Option<Bindings<T>>,
+    bindings: Option<Bindings<AX, AC>>,
 }
 
-impl<T> InputBundle<T>
+impl<AX, AC> InputBundle<AX, AC>
 where
-    T: Hash + Eq + DeserializeOwned + Serialize + Default,
+    AX: Hash + Eq + DeserializeOwned + Serialize + Default,
+    AC: Hash + Eq + DeserializeOwned + Serialize + Default,
 {
     /// Create a new input bundle with no bindings
     pub fn new() -> Self {
@@ -37,7 +39,7 @@ where
     }
 
     /// Use the provided bindings with the `InputHandler`
-    pub fn with_bindings(mut self, bindings: Bindings<T>) -> Self {
+    pub fn with_bindings(mut self, bindings: Bindings<AX, AC>) -> Self {
         self.bindings = Some(bindings);
         self
     }
@@ -48,9 +50,10 @@ where
     }
 }
 
-impl<'a, 'b, T, B> ECSBundle<'a, 'b, T> for InputBundle<B>
+impl<'a, 'b, T, AX, AC> ECSBundle<'a, 'b, T> for InputBundle<AX, AC>
 where
-    B: Hash + Eq + Clone + Send + Sync + 'static,
+    AX: Hash + Eq + Clone + Send + Sync + 'static,
+    AC: Hash + Eq + Clone + Send + Sync + 'static,
 {
     fn build(
         &self,
@@ -67,8 +70,8 @@ where
             builder
                 .with_resource(input)
                 .with_resource(winit_handler)
-                .with_resource(EventHandler::<InputEvent<B>>::new())
-                .with(InputSystem::<B>::new(reader_id), "input_system", &[]),
+                .with_resource(EventHandler::<InputEvent<AC>>::new())
+                .with(InputSystem::<AX, AC>::new(reader_id), "input_system", &[]),
         )
     }
 }

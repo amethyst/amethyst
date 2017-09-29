@@ -13,12 +13,12 @@ use ecs::{Fetch, FetchMut, System};
 ///
 /// Will read `winit::Event` from `EventHandler<winit::Event>`, process them with `InputHandler`,
 /// and push the results in `EventHandler<InputEvent>`.
-pub struct InputSystem<T> {
-    m: marker::PhantomData<T>,
+pub struct InputSystem<AX, AC> {
+    m: marker::PhantomData<(AX, AC)>,
     reader: ReaderId,
 }
 
-impl<T> InputSystem<T> {
+impl<AX, AC> InputSystem<AX, AC> {
     /// Create a new input system. Needs a reader id for `EventHandler<winit::Event>`.
     pub fn new(reader: ReaderId) -> Self {
         Self {
@@ -28,14 +28,15 @@ impl<T> InputSystem<T> {
     }
 }
 
-impl<'a, T> System<'a> for InputSystem<T>
+impl<'a, AX, AC> System<'a> for InputSystem<AX, AC>
 where
-    T: Hash + Eq + Clone + Send + Sync + 'static,
+    AX: Hash + Eq + Clone + Send + Sync + 'static,
+    AC: Hash + Eq + Clone + Send + Sync + 'static,
 {
     type SystemData = (
         Fetch<'a, EventHandler<Event>>,
-        FetchMut<'a, InputHandler<T>>,
-        FetchMut<'a, EventHandler<InputEvent<T>>>,
+        FetchMut<'a, InputHandler<AX, AC>>,
+        FetchMut<'a, EventHandler<InputEvent<AC>>>,
     );
 
     fn run(&mut self, (input, mut handler, mut output): Self::SystemData) {

@@ -1,5 +1,6 @@
 //! World resource that handles all user input.
 
+use std::borrow::Borrow;
 use std::hash::Hash;
 
 use shrev::EventHandler;
@@ -15,16 +16,16 @@ use super::event::InputEvent:: *;
 /// For example, if a key is pressed on the keyboard, this struct will record
 /// that the key is pressed until it is released again.
 #[derive(Default)]
-pub struct InputHandler<T> where T: Hash + Eq {
+pub struct InputHandler<AX, AC> where AX: Hash + Eq, AC: Hash + Eq {
     /// Maps inputs to actions and axes.
-    pub bindings: Bindings<T>,
+    pub bindings: Bindings<AX, AC>,
     /// Encodes the VirtualKeyCode and corresponding scancode.
     pressed_keys: SmallVec<[(VirtualKeyCode, u32); 12]>,
     pressed_mouse_buttons: SmallVec<[MouseButton; 12]>,
     mouse_position: Option<(f64, f64)>,
 }
 
-impl<T> InputHandler<T> where T: Hash + Eq + Clone + Send + Sync + 'static {
+impl<AX, AC> InputHandler<AX, AC> where AX: Hash + Eq + Clone + Send + Sync + 'static, AC: Hash + Eq + Clone + Send + Sync + 'static {
     /// Creates a new input handler.
     pub fn new() -> Self {
         Self {
@@ -39,7 +40,7 @@ impl<T> InputHandler<T> where T: Hash + Eq + Clone + Send + Sync + 'static {
     ///
     /// The Amethyst game engine will automatically call this if the InputHandler is attached to
     /// the world as a resource with id 0.
-    pub fn send_event(&mut self, event: &WindowEvent, event_handler: &mut EventHandler<InputEvent<T>>) {
+    pub fn send_event(&mut self, event: &WindowEvent, event_handler: &mut EventHandler<InputEvent<AC>>) {
         match *event {
             WindowEvent::ReceivedCharacter(c) => {
                 event_handler.write_single(KeyTyped(c));
@@ -208,8 +209,10 @@ impl<T> InputHandler<T> where T: Hash + Eq + Clone + Send + Sync + 'static {
     }
 
     /// Returns the value of an axis by the string id, if the id doesn't exist this returns None.
-    pub fn axis_value<A: AsRef<str>>(&self, id: A) -> Option<f64> {
-        self.bindings.axes.get(id.as_ref()).map(|a| {
+    pub fn axis_value<T: Hash + Eq + ?Sized>(&self, id: &T) -> Option<f64> 
+    where AX: Borrow<T>,
+    {
+        self.bindings.axes.get(id).map(|a| {
             let pos = self.button_is_down(a.pos);
             let neg = self.button_is_down(a.neg);
             if pos == neg {
@@ -223,8 +226,10 @@ impl<T> InputHandler<T> where T: Hash + Eq + Clone + Send + Sync + 'static {
     }
 
     /// Returns true if any of the action keys are down.
-    pub fn action_is_down(&self, action: T) -> Option<bool> {
-        self.bindings.actions.get(&action).map(
+    pub fn action_is_down<T: Hash + Eq + ?Sized>(&self, action: &T) -> Option<bool> 
+    where AC: Borrow<T>,
+    {
+        self.bindings.actions.get(action).map(
             |ref buttons| {
                 buttons.iter().any(|&b| self.button_is_down(b))
             },
