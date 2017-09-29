@@ -105,7 +105,7 @@ impl<'a, 'b, T> ECSBundle<'a, 'b, T> for PongBundle {
                 .with_resource(Time::default())
                 .register::<Ball>()
                 .register::<Paddle>()
-                .with(PongSystem, "pong_system", &[]),
+                .with(PongSystem, "pong_system", &["input_system"]),
         )
     }
 }
@@ -118,7 +118,7 @@ impl<'a> System<'a> for PongSystem {
         WriteStorage<'a, LocalTransform>,
         Fetch<'a, Camera>,
         Fetch<'a, Time>,
-        Fetch<'a, InputHandler>,
+        Fetch<'a, InputHandler<String>>,
         Fetch<'a, Sounds>,
         Fetch<'a, Option<Output>>,
         FetchMut<'a, Score>,
@@ -467,9 +467,9 @@ fn run() -> Result<()> {
     let cfg = DisplayConfig::load(path);
     let assets_dir = format!("{}/examples/04_pong/resources/", env!("CARGO_MANIFEST_DIR"));
     let game = Application::build(Pong)?
-        .with_bundle(InputBundle::new().with_bindings_from_file(&bindings_path))?
+        .with_bundle(InputBundle::<String>::new().with_bindings_from_file(&bindings_path))?
         .with_bundle(PongBundle)?
-        .with_bundle(TransformBundle::new().with_dep(&["pong_system"]))?
+        .with_bundle(TransformBundle::new().with_dep(&["input_system", "pong_system"]))?
         .with_bundle(DjBundle::new())?
         .with_bundle(
             RenderBundle::new(

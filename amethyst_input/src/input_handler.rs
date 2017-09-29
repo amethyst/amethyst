@@ -1,5 +1,7 @@
 //! World resource that handles all user input.
 
+use std::hash::Hash;
+
 use shrev::EventHandler;
 use smallvec::SmallVec;
 use winit::{ElementState, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
@@ -13,20 +15,20 @@ use super::event::InputEvent:: *;
 /// For example, if a key is pressed on the keyboard, this struct will record
 /// that the key is pressed until it is released again.
 #[derive(Default)]
-pub struct InputHandler {
+pub struct InputHandler<T> where T: Hash + Eq {
     /// Maps inputs to actions and axes.
-    pub bindings: Bindings,
+    pub bindings: Bindings<T>,
     /// Encodes the VirtualKeyCode and corresponding scancode.
     pressed_keys: SmallVec<[(VirtualKeyCode, u32); 12]>,
     pressed_mouse_buttons: SmallVec<[MouseButton; 12]>,
     mouse_position: Option<(f64, f64)>,
 }
 
-impl InputHandler {
+impl<T> InputHandler<T> where T: Hash + Eq + Clone + Send + Sync + 'static {
     /// Creates a new input handler.
-    pub fn new() -> InputHandler {
-        InputHandler {
-            bindings: Bindings::default(),
+    pub fn new() -> Self {
+        Self {
+            bindings: Bindings::new(),
             pressed_keys: SmallVec::new(),
             pressed_mouse_buttons: SmallVec::new(),
             mouse_position: None,
@@ -37,7 +39,7 @@ impl InputHandler {
     ///
     /// The Amethyst game engine will automatically call this if the InputHandler is attached to
     /// the world as a resource with id 0.
-    pub fn send_event(&mut self, event: &WindowEvent, event_handler: &mut EventHandler<InputEvent>) {
+    pub fn send_event(&mut self, event: &WindowEvent, event_handler: &mut EventHandler<InputEvent<T>>) {
         match *event {
             WindowEvent::ReceivedCharacter(c) => {
                 event_handler.write_single(KeyTyped(c));
@@ -206,7 +208,7 @@ impl InputHandler {
     }
 
     /// Returns the value of an axis by the string id, if the id doesn't exist this returns None.
-    pub fn axis_value<T: AsRef<str>>(&self, id: T) -> Option<f64> {
+    pub fn axis_value<A: AsRef<str>>(&self, id: A) -> Option<f64> {
         self.bindings.axes.get(id.as_ref()).map(|a| {
             let pos = self.button_is_down(a.pos);
             let neg = self.button_is_down(a.neg);
@@ -221,8 +223,8 @@ impl InputHandler {
     }
 
     /// Returns true if any of the action keys are down.
-    pub fn action_is_down<T: AsRef<str>>(&self, action: T) -> Option<bool> {
-        self.bindings.actions.get(action.as_ref()).map(
+    pub fn action_is_down(&self, action: T) -> Option<bool> {
+        self.bindings.actions.get(&action).map(
             |ref buttons| {
                 buttons.iter().any(|&b| self.button_is_down(b))
             },

@@ -72,6 +72,7 @@ extern crate gfx;
 extern crate imagefmt;
 extern crate rayon;
 extern crate rodio;
+extern crate serde;
 extern crate shred;
 extern crate smallvec;
 extern crate specs;

@@ -11,7 +11,7 @@ use amethyst::assets::{AssetFuture, BoxedErr, Context, Format, Loader, NoError};
 use amethyst::assets::formats::textures::{BmpFormat, PngFormat};
 use amethyst::config::Config;
 use amethyst::ecs::World;
-use amethyst::ecs::input::InputHandler;
+use amethyst::ecs::input::InputBundle;
 use amethyst::ecs::rendering::{AmbientColor, Factory, LightComponent, MaterialComponent,
                                MeshComponent, MeshContext, RenderBundle, TextureComponent,
                                TextureContext};
@@ -70,8 +70,6 @@ impl State for AssetsExample {
     fn on_start(&mut self, engine: &mut Engine) {
         use amethyst::assets::formats::meshes::ObjFormat;
 
-        let input = InputHandler::new();
-        engine.world.add_resource(input);
         engine.world.add_resource(0usize);
 
         initialise_camera(&mut engine.world.write_resource::<Camera>());
@@ -207,6 +205,7 @@ fn run() -> Result<(), Error> {
 
     let mut game = Application::build(AssetsExample)
         .expect("Failed to build ApplicationBuilder for an unknown reason.")
+        .with_bundle(InputBundle::<String>::new())?
         .with_bundle(TransformBundle::new())?
         .with_bundle(RenderBundle::new(pipeline_builder).with_config(display_config))?
         .with_store("resources", Directory::new(resources_directory))

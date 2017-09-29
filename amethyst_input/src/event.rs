@@ -4,7 +4,7 @@ use super::local_virtual_key_code::LocalVirtualKeyCode;
 use winit::{VirtualKeyCode, MouseButton};
 
 #[derive(Serialize, Deserialize, Clone)]
-pub enum InputEvent {
+pub enum InputEvent<T> {
     /// A key was pressed down, sent exactly once per key press.
     KeyPressed {
         #[serde(with = "LocalVirtualKeyCode")]
@@ -32,7 +32,7 @@ pub enum InputEvent {
     /// The mouse pointer moved on screen
     MouseMoved { delta_x: f64, delta_y: f64 },
     /// The associated action had one of its keys pressed.
-    ActionPressed(String),
+    ActionPressed(T),
     /// The associated action had one of its keys released.
-    ActionReleased(String),
+    ActionReleased(T),
 }

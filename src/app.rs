@@ -4,7 +4,6 @@ use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
-use input::InputHandler;
 use rayon::ThreadPool;
 use shred::Resource;
 use shrev::EventHandler;
@@ -16,7 +15,6 @@ use assets::{Asset, Loader, Store};
 use ecs::{Component, Dispatcher, DispatcherBuilder, ECSBundle, System, World};
 use engine::Engine;
 use error::{Error, Result};
-use input::InputEvent;
 use state::{State, StateMachine};
 use timing::{Stopwatch, Time};
 
@@ -157,17 +155,22 @@ impl<'a, 'b> Application<'a, 'b> {
             #[cfg(feature = "profiler")]
             profile_scope!("handle_event");
 
+            let mut events = Vec::default();
             self.events.poll_events(|event| {
-                if let Event::WindowEvent { ref event, .. } = event {
-                    if let Some(mut handler) = engine.world.res.try_fetch_mut::<InputHandler>(0) {
-                        if let Some(mut event_handler) = engine.world.res.try_fetch_mut::<EventHandler<InputEvent>>(0) {
-                            handler.send_event(event, &mut event_handler);
-                        }
-                    }
-                }
-                
+                events.push(event.clone());
                 states.handle_event(engine, event);
             });
+            if let Some(mut event_handler) =
+                engine.world.res.try_fetch_mut::<EventHandler<Event>>(0)
+            {
+                match event_handler.write(&mut events) {
+                    Ok(_) => (),
+                    // This only occurs if we try to write more than 200 window events in a single
+                    // frame, unlikely to happen. If needed we can up the storage for window
+                    // events.
+                    Err(_) => panic!(),
+                }
+            }
         }
         {
             #[cfg(feature = "profiler")]
@@ -292,9 +295,9 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
         let cfg = cfg.start_handler(|index| {
             register_thread_with_profiler(format!("thread_pool{}", index));
         });
-        let pool = ThreadPool::new(cfg).map(|p| Arc::new(p)).map_err(|_| {
-            Error::Application
-        })?;
+        let pool = ThreadPool::new(cfg)
+            .map(|p| Arc::new(p))
+            .map_err(|_| Error::Application)?;
         let mut world = World::new();
         let base_path = format!("{}/resources", env!("CARGO_MANIFEST_DIR"));
         world.add_resource(Loader::new(base_path, pool.clone()));
