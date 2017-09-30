@@ -40,6 +40,11 @@ impl Renderer {
         RendererBuilder::new(el)
     }
 
+    /// Gets a mutable window to modify
+    pub fn window_mut(&mut self)->&mut Window{
+        &mut self.window
+    }
+
     /// Builds a new mesh from the given vertices.
     pub fn create_mesh<D, T>(&mut self, mb: MeshBuilder<D, T>) -> Result<Mesh>
     where

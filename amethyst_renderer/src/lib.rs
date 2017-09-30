@@ -77,4 +77,4 @@ mod mesh;
 mod mtl;
 mod renderer;
 mod tex;
-mod types;
+pub mod types;
