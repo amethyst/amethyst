@@ -59,6 +59,7 @@ pub extern crate thread_profiler;
 pub extern crate amethyst_config as config;
 pub extern crate amethyst_input as input;
 pub extern crate amethyst_renderer as renderer;
+pub extern crate shrev;
 
 extern crate amethyst_assets;
 extern crate cgmath;
@@ -71,6 +72,7 @@ extern crate gfx;
 extern crate imagefmt;
 extern crate rayon;
 extern crate rodio;
+extern crate serde;
 extern crate shred;
 extern crate smallvec;
 extern crate specs;

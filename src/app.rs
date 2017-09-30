@@ -4,9 +4,9 @@ use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
-use input::InputHandler;
 use rayon::ThreadPool;
-use shred::{Resource, ResourceId};
+use shred::Resource;
+use shrev::EventHandler;
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
 use winit::{Event, EventsLoop};
@@ -152,29 +152,14 @@ impl<'a, 'b> Application<'a, 'b> {
         {
             let engine = &mut self.engine;
             let states = &mut self.states;
-            if engine
-                .world
-                .res
-                .has_value(ResourceId::new::<InputHandler>())
-            {
-                engine
-                    .world
-                    .write_resource::<InputHandler>()
-                    .advance_frame();
-            }
             #[cfg(feature = "profiler")]
             profile_scope!("handle_event");
 
             self.events.poll_events(|event| {
-                if engine
-                    .world
-                    .res
-                    .has_value(ResourceId::new::<InputHandler>())
+                if let Some(mut event_handler) =
+                    engine.world.res.try_fetch_mut::<EventHandler<Event>>(0)
                 {
-                    let mut input = engine.world.write_resource::<InputHandler>();
-                    if let Event::WindowEvent { ref event, .. } = event {
-                        input.send_event(&event);
-                    }
+                    event_handler.write_single(event.clone());
                 }
                 states.handle_event(engine, event);
             });
@@ -302,9 +287,9 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
         let cfg = cfg.start_handler(|index| {
             register_thread_with_profiler(format!("thread_pool{}", index));
         });
-        let pool = ThreadPool::new(cfg).map(|p| Arc::new(p)).map_err(|_| {
-            Error::Application
-        })?;
+        let pool = ThreadPool::new(cfg)
+            .map(|p| Arc::new(p))
+            .map_err(|_| Error::Application)?;
         let mut world = World::new();
         let base_path = format!("{}/resources", env!("CARGO_MANIFEST_DIR"));
         world.add_resource(Loader::new(base_path, pool.clone()));

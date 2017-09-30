@@ -36,12 +36,14 @@ gfx = "0.16"
 genmesh = "0.4"
 imagefmt = "4.0"
 shred = "0.4"
+shrev = "0.5"
 rayon = "0.7"
 rodio = "0.5.1"
 specs = "0.9.5"
 ticketed_lock = "0.1"
 wavefront_obj = "5.0"
 winit = "0.7"
+serde = "1"
 
 thread_profiler = { version = "0.1", optional = true }
 
