@@ -14,7 +14,17 @@ use ecs::input::{Bindings, InputEvent, InputHandler, InputSystem};
 use error::Result;
 use shrev::EventHandler;
 
-/// Bundle for adding the `InputHandler` and input bindings
+/// Bundle for adding the `InputHandler`.
+///
+/// This also adds the Winit EventHandler and the InputEvent<AC> EventHandler
+/// where AC is the type for Actions you have assigned here.
+///
+/// ## Type parameters
+///
+/// AX: The type used to identify input axes.
+/// AC: The type used to identify input actions.
+///
+/// String is appropriate for either of these if you don't know what to use.
 ///
 /// ## Errors
 ///

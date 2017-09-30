@@ -57,6 +57,8 @@ impl<AX, AC> InputHandler<AX, AC> where AX: Hash + Eq + Clone + Send + Sync + 's
                 if self.pressed_keys.iter().all(|&k| k.0 != key_code) {
                     self.pressed_keys.push((key_code, scancode));
                     event_handler.write_single(KeyPressed { key_code, scancode });
+                    event_handler.write_single(ButtonPressed(Button::Key(key_code)));
+                    event_handler.write_single(ButtonPressed(Button::ScanCode(scancode)));
                     for (k, v) in self.bindings.actions.iter() {
                         for &button in v {
                             if Button::Key(key_code) == button {
@@ -82,6 +84,8 @@ impl<AX, AC> InputHandler<AX, AC> where AX: Hash + Eq + Clone + Send + Sync + 's
                 if let Some(i) = index {
                     self.pressed_keys.swap_remove(i);
                     event_handler.write_single(KeyReleased { key_code, scancode });
+                    event_handler.write_single(ButtonReleased(Button::Key(key_code)));
+                    event_handler.write_single(ButtonReleased(Button::ScanCode(scancode)));
                     for (k, v) in self.bindings.actions.iter() {
                         for &button in v {
                             if Button::Key(key_code) == button {
@@ -103,6 +107,7 @@ impl<AX, AC> InputHandler<AX, AC> where AX: Hash + Eq + Clone + Send + Sync + 's
                 if self.pressed_mouse_buttons.iter().all(|&b| b != mouse_button) {
                     self.pressed_mouse_buttons.push(mouse_button);
                     event_handler.write_single(MouseButtonPressed(mouse_button));
+                    event_handler.write_single(ButtonPressed(Button::Mouse(mouse_button)));
                     for (k, v) in self.bindings.actions.iter() {
                         for &button in v {
                             if Button::Mouse(mouse_button) == button {
@@ -122,6 +127,7 @@ impl<AX, AC> InputHandler<AX, AC> where AX: Hash + Eq + Clone + Send + Sync + 's
                 if let Some(i) = index {
                     self.pressed_mouse_buttons.swap_remove(i);
                     event_handler.write_single(MouseButtonReleased(mouse_button));
+                    event_handler.write_single(ButtonReleased(Button::Mouse(mouse_button)));
                     for (k, v) in self.bindings.actions.iter() {
                         for &button in v {
                             if Button::Mouse(mouse_button) == button {
@@ -136,7 +142,6 @@ impl<AX, AC> InputHandler<AX, AC> where AX: Hash + Eq + Clone + Send + Sync + 's
                     event_handler.write_single(MouseMoved { delta_x: x - old_x, delta_y: y - old_y });
                 }
                 self.mouse_position = Some((x, y));
-                
             }
             WindowEvent::Focused(false) => {
                 self.pressed_keys.clear();

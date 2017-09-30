@@ -27,8 +27,11 @@ impl<AX, AC> InputSystem<AX, AC> {
         }
     }
 
-    fn process_event(event: &Event, handler: &mut InputHandler<AX, AC>, output: &mut EventHandler<InputEvent<AC>>)
-    where
+    fn process_event(
+        event: &Event,
+        handler: &mut InputHandler<AX, AC>,
+        output: &mut EventHandler<InputEvent<AC>>,
+    ) where
         AX: Hash + Eq + Clone + Send + Sync + 'static,
         AC: Hash + Eq + Clone + Send + Sync + 'static,
     {
@@ -55,14 +58,15 @@ where
                 Self::process_event(d, &mut *handler, &mut *output);
             },
             Ok(EventReadData::Overflow(data, lost)) => {
-                eprintln!("InputSystem: WARNING: Event buffer overflow! {} events were lost!", lost); 
+                eprintln!(
+                    "InputSystem: WARNING: Event buffer overflow! {} events were lost!",
+                    lost
+                );
                 for d in data {
                     Self::process_event(d, &mut *handler, &mut *output);
                 }
-            },
+            }
             _ => (),
         }
     }
 }
-
-
