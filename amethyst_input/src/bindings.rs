@@ -10,12 +10,20 @@ use super::{Axis, Button};
 
 /// Used for saving and loading input settings.
 #[derive(Default, Serialize, Deserialize, Clone)]
-pub struct Bindings<AX, AC> where AX: Hash + Eq, AC: Hash + Eq {
+pub struct Bindings<AX, AC>
+where
+    AX: Hash + Eq,
+    AC: Hash + Eq,
+{
     pub(super) axes: HashMap<AX, Axis>,
     pub(super) actions: HashMap<AC, SmallVec<[Button; 4]>>,
 }
 
-impl<AX, AC> Bindings<AX, AC> where AX: Hash + Eq + Clone, AC: Hash + Eq + Clone {
+impl<AX, AC> Bindings<AX, AC>
+where
+    AX: Hash + Eq + Clone,
+    AC: Hash + Eq + Clone,
+{
     /// Creates a new empty Bindings structure
     pub fn new() -> Self {
         Self {
@@ -33,15 +41,17 @@ impl<AX, AC> Bindings<AX, AC> where AX: Hash + Eq + Clone, AC: Hash + Eq + Clone
     }
 
     /// Removes an axis, this will return the removed axis if successful.
-    pub fn remove_axis<A: Hash + Eq + ?Sized>(&mut self, id: &A) -> Option<Axis> 
-    where AX: Borrow<A>,
+    pub fn remove_axis<A: Hash + Eq + ?Sized>(&mut self, id: &A) -> Option<Axis>
+    where
+        AX: Borrow<A>,
     {
         self.axes.remove(id)
     }
 
     /// Returns a reference to an axis.
-    pub fn axis<A: Hash + Eq + ?Sized>(&mut self, id: &A) -> Option<&Axis> 
-    where AX: Borrow<A>,
+    pub fn axis<A: Hash + Eq + ?Sized>(&mut self, id: &A) -> Option<&Axis>
+    where
+        AX: Borrow<A>,
     {
         self.axes.get(id)
     }
@@ -55,16 +65,15 @@ impl<AX, AC> Bindings<AX, AC> where AX: Hash + Eq + Clone, AC: Hash + Eq + Clone
     ///
     /// This will insert a new binding between this action and the button.
     pub fn insert_action_binding<A>(&mut self, id: A, binding: Button)
-    where A: Hash + Eq + Into<AC>,
-          AC: Borrow<A>,
+    where
+        A: Hash + Eq + Into<AC>,
+        AC: Borrow<A>,
     {
         let mut make_new = false;
         match self.actions.get_mut(&id) {
-            Some(action_bindings) => {
-                if action_bindings.iter().all(|&b| b != binding) {
-                    action_bindings.push(binding);
-                }
-            }
+            Some(action_bindings) => if action_bindings.iter().all(|&b| b != binding) {
+                action_bindings.push(binding);
+            },
             None => {
                 make_new = true;
             }
@@ -77,8 +86,9 @@ impl<AX, AC> Bindings<AX, AC> where AX: Hash + Eq + Clone, AC: Hash + Eq + Clone
     }
 
     /// Removes an action binding that was assigned previously.
-    pub fn remove_action_binding<T: Hash + Eq + ?Sized>(&mut self, id: &T, binding: Button) 
-    where AC: Borrow<T>,
+    pub fn remove_action_binding<T: Hash + Eq + ?Sized>(&mut self, id: &T, binding: Button)
+    where
+        AC: Borrow<T>,
     {
         let mut kill_it = false;
         if let Some(action_bindings) = self.actions.get_mut(id) {
@@ -94,8 +104,9 @@ impl<AX, AC> Bindings<AX, AC> where AX: Hash + Eq + Clone, AC: Hash + Eq + Clone
     }
 
     /// Returns an action's bindings.
-    pub fn action_bindings<T: Hash + Eq + ?Sized>(&self, id: &T) -> Option<&[Button]> 
-    where AC: Borrow<T>,
+    pub fn action_bindings<T: Hash + Eq + ?Sized>(&self, id: &T) -> Option<&[Button]>
+    where
+        AC: Borrow<T>,
     {
         self.actions.get(id).map(|a| &**a)
     }

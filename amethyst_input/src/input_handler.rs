@@ -9,14 +9,18 @@ use winit::{ElementState, KeyboardInput, MouseButton, VirtualKeyCode, WindowEven
 
 use super::*;
 use super::event::InputEvent;
-use super::event::InputEvent:: *;
+use super::event::InputEvent::*;
 
 /// This struct holds state information about input devices.
 ///
 /// For example, if a key is pressed on the keyboard, this struct will record
 /// that the key is pressed until it is released again.
 #[derive(Default)]
-pub struct InputHandler<AX, AC> where AX: Hash + Eq, AC: Hash + Eq {
+pub struct InputHandler<AX, AC>
+where
+    AX: Hash + Eq,
+    AC: Hash + Eq,
+{
     /// Maps inputs to actions and axes.
     pub bindings: Bindings<AX, AC>,
     /// Encodes the VirtualKeyCode and corresponding scancode.
@@ -25,7 +29,11 @@ pub struct InputHandler<AX, AC> where AX: Hash + Eq, AC: Hash + Eq {
     mouse_position: Option<(f64, f64)>,
 }
 
-impl<AX, AC> InputHandler<AX, AC> where AX: Hash + Eq + Clone + Send + Sync + 'static, AC: Hash + Eq + Clone + Send + Sync + 'static {
+impl<AX, AC> InputHandler<AX, AC>
+where
+    AX: Hash + Eq + Clone + Send + Sync + 'static,
+    AC: Hash + Eq + Clone + Send + Sync + 'static,
+{
     /// Creates a new input handler.
     pub fn new() -> Self {
         Self {
@@ -40,58 +48,64 @@ impl<AX, AC> InputHandler<AX, AC> where AX: Hash + Eq + Clone + Send + Sync + 's
     ///
     /// The Amethyst game engine will automatically call this if the InputHandler is attached to
     /// the world as a resource with id 0.
-    pub fn send_event(&mut self, event: &WindowEvent, event_handler: &mut EventHandler<InputEvent<AC>>) {
+    pub fn send_event(
+        &mut self,
+        event: &WindowEvent,
+        event_handler: &mut EventHandler<InputEvent<AC>>,
+    ) {
         match *event {
             WindowEvent::ReceivedCharacter(c) => {
                 event_handler.write_single(KeyTyped(c));
             }
             WindowEvent::KeyboardInput {
-                input: KeyboardInput {
-                    state: ElementState::Pressed,
-                    virtual_keycode: Some(key_code),
-                    scancode,
-                    ..
-                },
+                input:
+                    KeyboardInput {
+                        state: ElementState::Pressed,
+                        virtual_keycode: Some(key_code),
+                        scancode,
+                        ..
+                    },
                 ..
-            } => {
-                if self.pressed_keys.iter().all(|&k| k.0 != key_code) {
-                    self.pressed_keys.push((key_code, scancode));
-                    event_handler.write_slice(
-                    &[
+            } => if self.pressed_keys.iter().all(|&k| k.0 != key_code) {
+                self.pressed_keys.push((key_code, scancode));
+                event_handler
+                    .write_slice(&[
                         KeyPressed { key_code, scancode },
                         ButtonPressed(Button::Key(key_code)),
-                        ButtonPressed(Button::ScanCode(scancode))
-                    ]).expect("Input Event buffer is under 3 events.  That's far too small.");
-                    for (k, v) in self.bindings.actions.iter() {
-                        for &button in v {
-                            if Button::Key(key_code) == button {
-                                event_handler.write_single(ActionPressed(k.clone()));
-                            }
-                            if Button::ScanCode(scancode) == button {
-                                event_handler.write_single(ActionPressed(k.clone()));
-                            }
+                        ButtonPressed(Button::ScanCode(scancode)),
+                    ])
+                    .expect("Input Event buffer is under 3 events.  That's far too small.");
+                for (k, v) in self.bindings.actions.iter() {
+                    for &button in v {
+                        if Button::Key(key_code) == button {
+                            event_handler.write_single(ActionPressed(k.clone()));
+                        }
+                        if Button::ScanCode(scancode) == button {
+                            event_handler.write_single(ActionPressed(k.clone()));
                         }
                     }
                 }
-            }
+            },
             WindowEvent::KeyboardInput {
-                input: KeyboardInput {
-                    state: ElementState::Released,
-                    virtual_keycode: Some(key_code),
-                    scancode,
-                    ..
-                },
+                input:
+                    KeyboardInput {
+                        state: ElementState::Released,
+                        virtual_keycode: Some(key_code),
+                        scancode,
+                        ..
+                    },
                 ..
             } => {
                 let index = self.pressed_keys.iter().position(|&k| k.0 == key_code);
                 if let Some(i) = index {
                     self.pressed_keys.swap_remove(i);
-                    event_handler.write_slice(
-                    &[
-                        KeyReleased { key_code, scancode },
-                        ButtonReleased(Button::Key(key_code)),
-                        ButtonReleased(Button::ScanCode(scancode))
-                    ]).expect("Input Event buffer is under 3 events.  That's far too small.");
+                    event_handler
+                        .write_slice(&[
+                            KeyReleased { key_code, scancode },
+                            ButtonReleased(Button::Key(key_code)),
+                            ButtonReleased(Button::ScanCode(scancode)),
+                        ])
+                        .expect("Input Event buffer is under 3 events.  That's far too small.");
                     for (k, v) in self.bindings.actions.iter() {
                         for &button in v {
                             if Button::Key(key_code) == button {
@@ -110,13 +124,17 @@ impl<AX, AC> InputHandler<AX, AC> where AX: Hash + Eq + Clone + Send + Sync + 's
                 ..
             } => {
                 let mouse_button = button;
-                if self.pressed_mouse_buttons.iter().all(|&b| b != mouse_button) {
+                if self.pressed_mouse_buttons
+                    .iter()
+                    .all(|&b| b != mouse_button)
+                {
                     self.pressed_mouse_buttons.push(mouse_button);
-                    event_handler.write_slice(
-                    &[
-                        MouseButtonPressed(mouse_button),
-                        ButtonPressed(Button::Mouse(mouse_button)),
-                    ]).expect("Input Event buffer is under 2 events.  That's far too small.");
+                    event_handler
+                        .write_slice(&[
+                            MouseButtonPressed(mouse_button),
+                            ButtonPressed(Button::Mouse(mouse_button)),
+                        ])
+                        .expect("Input Event buffer is under 2 events.  That's far too small.");
                     for (k, v) in self.bindings.actions.iter() {
                         for &button in v {
                             if Button::Mouse(mouse_button) == button {
@@ -132,14 +150,17 @@ impl<AX, AC> InputHandler<AX, AC> where AX: Hash + Eq + Clone + Send + Sync + 's
                 ..
             } => {
                 let mouse_button = button;
-                let index = self.pressed_mouse_buttons.iter().position(|&b| b == mouse_button);
+                let index = self.pressed_mouse_buttons
+                    .iter()
+                    .position(|&b| b == mouse_button);
                 if let Some(i) = index {
                     self.pressed_mouse_buttons.swap_remove(i);
-                    event_handler.write_slice(
-                    &[
-                        MouseButtonReleased(mouse_button),
-                        ButtonReleased(Button::Mouse(mouse_button)),
-                    ]).expect("Input Event buffer is under 2 events.  That's far too small.");
+                    event_handler
+                        .write_slice(&[
+                            MouseButtonReleased(mouse_button),
+                            ButtonReleased(Button::Mouse(mouse_button)),
+                        ])
+                        .expect("Input Event buffer is under 2 events.  That's far too small.");
                     for (k, v) in self.bindings.actions.iter() {
                         for &button in v {
                             if Button::Mouse(mouse_button) == button {
@@ -149,9 +170,14 @@ impl<AX, AC> InputHandler<AX, AC> where AX: Hash + Eq + Clone + Send + Sync + 's
                     }
                 }
             }
-            WindowEvent::MouseMoved { position: (x, y), .. } => {
+            WindowEvent::MouseMoved {
+                position: (x, y), ..
+            } => {
                 if let Some((old_x, old_y)) = self.mouse_position {
-                    event_handler.write_single(MouseMoved { delta_x: x - old_x, delta_y: y - old_y });
+                    event_handler.write_single(MouseMoved {
+                        delta_x: x - old_x,
+                        delta_y: y - old_y,
+                    });
                 }
                 self.mouse_position = Some((x, y));
             }
@@ -166,7 +192,9 @@ impl<AX, AC> InputHandler<AX, AC> where AX: Hash + Eq + Clone + Send + Sync + 's
 
     /// Returns an iterator over all keys that are down.
     pub fn keys_that_are_down(&self) -> KeyCodes {
-        self.pressed_keys.iter().map((|k| k.0) as fn(&(VirtualKeyCode, u32)) -> VirtualKeyCode)
+        self.pressed_keys
+            .iter()
+            .map((|k| k.0) as fn(&(VirtualKeyCode, u32)) -> VirtualKeyCode)
     }
 
     /// Checks if a key is down.
@@ -181,14 +209,16 @@ impl<AX, AC> InputHandler<AX, AC> where AX: Hash + Eq + Clone + Send + Sync + 's
 
     /// Checks if a mouse button is down.
     pub fn mouse_button_is_down(&self, mouse_button: MouseButton) -> bool {
-        self.pressed_mouse_buttons.iter().any(
-            |&mb| mb == mouse_button,
-        )
+        self.pressed_mouse_buttons
+            .iter()
+            .any(|&mb| mb == mouse_button)
     }
 
     /// Returns an iterator over all pressed scan codes
     pub fn scan_codes_that_are_down(&self) -> ScanCodes {
-        self.pressed_keys.iter().map((|k| k.1) as fn(&(VirtualKeyCode, u32)) -> u32)
+        self.pressed_keys
+            .iter()
+            .map((|k| k.1) as fn(&(VirtualKeyCode, u32)) -> u32)
     }
 
     /// Checks if the key corresponding to a scan code is down.
@@ -206,14 +236,16 @@ impl<AX, AC> InputHandler<AX, AC> where AX: Hash + Eq + Clone + Send + Sync + 's
 
     /// Returns an iterator over all buttons that are down.
     pub fn buttons_that_are_down<'a>(&self) -> Buttons {
-        let mouse_buttons = self.pressed_mouse_buttons.iter().map(
-            (|&mb| Button::Mouse(mb)) as
-                fn(&MouseButton) -> Button,
-        );
+        let mouse_buttons = self.pressed_mouse_buttons
+            .iter()
+            .map((|&mb| Button::Mouse(mb)) as fn(&MouseButton) -> Button);
         let keys = self.pressed_keys.iter().flat_map(
-            (|v| KeyThenCode::new(v.clone())) as fn(&(VirtualKeyCode, u32)) -> KeyThenCode
+            (|v| KeyThenCode::new(v.clone()))
+                as fn(&(VirtualKeyCode, u32)) -> KeyThenCode,
         );
-        Buttons { iterator: mouse_buttons.chain(keys) }
+        Buttons {
+            iterator: mouse_buttons.chain(keys),
+        }
     }
 
     /// Checks if a button is down.
@@ -226,8 +258,9 @@ impl<AX, AC> InputHandler<AX, AC> where AX: Hash + Eq + Clone + Send + Sync + 's
     }
 
     /// Returns the value of an axis by the string id, if the id doesn't exist this returns None.
-    pub fn axis_value<T: Hash + Eq + ?Sized>(&self, id: &T) -> Option<f64> 
-    where AX: Borrow<T>,
+    pub fn axis_value<T: Hash + Eq + ?Sized>(&self, id: &T) -> Option<f64>
+    where
+        AX: Borrow<T>,
     {
         self.bindings.axes.get(id).map(|a| {
             let pos = self.button_is_down(a.pos);
@@ -243,13 +276,12 @@ impl<AX, AC> InputHandler<AX, AC> where AX: Hash + Eq + Clone + Send + Sync + 's
     }
 
     /// Returns true if any of the action keys are down.
-    pub fn action_is_down<T: Hash + Eq + ?Sized>(&self, action: &T) -> Option<bool> 
-    where AC: Borrow<T>,
+    pub fn action_is_down<T: Hash + Eq + ?Sized>(&self, action: &T) -> Option<bool>
+    where
+        AC: Borrow<T>,
     {
-        self.bindings.actions.get(action).map(
-            |ref buttons| {
-                buttons.iter().any(|&b| self.button_is_down(b))
-            },
-        )
+        self.bindings.actions.get(action).map(|ref buttons| {
+            buttons.iter().any(|&b| self.button_is_down(b))
+        })
     }
 }

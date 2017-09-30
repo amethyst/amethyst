@@ -1,6 +1,6 @@
-extern crate winit;
 extern crate fnv;
 extern crate smallvec;
+extern crate winit;
 
 #[macro_use]
 extern crate serde_derive;
@@ -12,10 +12,10 @@ pub use self::button::Button;
 pub use self::event::InputEvent;
 pub use self::input_handler::InputHandler;
 
-use std::iter::{Chain, FlatMap, Map, Iterator};
+use std::iter::{Chain, FlatMap, Iterator, Map};
 use std::slice::Iter;
 
-use winit::{VirtualKeyCode, MouseButton};
+use winit::{MouseButton, VirtualKeyCode};
 
 mod axis;
 mod bindings;
@@ -28,7 +28,10 @@ mod event;
 // This entire set ot types is to be eliminated once impl Trait is released.
 
 /// Iterator over keycodes
-pub type KeyCodes<'a> = Map<Iter<'a, (VirtualKeyCode, u32)>, fn(&(VirtualKeyCode, u32)) -> VirtualKeyCode>;
+pub type KeyCodes<'a> = Map<
+    Iter<'a, (VirtualKeyCode, u32)>,
+    fn(&(VirtualKeyCode, u32)) -> VirtualKeyCode,
+>;
 
 /// Iterator over key scan codes
 pub type ScanCodes<'a> = Map<Iter<'a, (VirtualKeyCode, u32)>, fn(&(VirtualKeyCode, u32)) -> u32>;
@@ -40,7 +43,11 @@ pub type MouseButtons<'a> = Iter<'a, MouseButton>;
 pub struct Buttons<'a> {
     iterator: Chain<
         Map<Iter<'a, MouseButton>, fn(&MouseButton) -> Button>,
-        FlatMap<Iter<'a, (VirtualKeyCode, u32)>, KeyThenCode, fn(&(VirtualKeyCode, u32)) -> KeyThenCode>,
+        FlatMap<
+            Iter<'a, (VirtualKeyCode, u32)>,
+            KeyThenCode,
+            fn(&(VirtualKeyCode, u32)) -> KeyThenCode,
+        >,
     >,
 }
 
@@ -51,10 +58,7 @@ struct KeyThenCode {
 
 impl KeyThenCode {
     pub fn new(value: (VirtualKeyCode, u32)) -> KeyThenCode {
-        KeyThenCode {
-            value,
-            index: 0,
-        }
+        KeyThenCode { value, index: 0 }
     }
 }
 

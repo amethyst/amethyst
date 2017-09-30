@@ -1,4 +1,4 @@
-use winit::{VirtualKeyCode, MouseButton};
+use winit::{MouseButton, VirtualKeyCode};
 
 use super::local_mouse_button::LocalMouseButton;
 use super::local_virtual_key_code::LocalVirtualKeyCode;
@@ -10,7 +10,7 @@ pub enum Button {
     /// more than the position of the key.
     Key(
         #[serde(with = "LocalVirtualKeyCode")]
-        VirtualKeyCode
+        VirtualKeyCode,
     ),
 
     /// Scan code from keyboard, use this when the position of the key matters
@@ -20,7 +20,7 @@ pub enum Button {
     /// Mouse buttons
     Mouse(
         #[serde(with = "LocalMouseButton")]
-        MouseButton
+        MouseButton,
     ),
     //TODO: Add controller buttons here when the engine has support.
 }
