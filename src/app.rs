@@ -155,22 +155,14 @@ impl<'a, 'b> Application<'a, 'b> {
             #[cfg(feature = "profiler")]
             profile_scope!("handle_event");
 
-            let mut events = Vec::default();
             self.events.poll_events(|event| {
-                events.push(event.clone());
+                if let Some(mut event_handler) =
+                    engine.world.res.try_fetch_mut::<EventHandler<Event>>(0)
+                {
+                    event_handler.write_single(event.clone());
+                }
                 states.handle_event(engine, event);
             });
-            if let Some(mut event_handler) =
-                engine.world.res.try_fetch_mut::<EventHandler<Event>>(0)
-            {
-                match event_handler.write(&mut events) {
-                    Ok(_) => (),
-                    // This only occurs if we try to write more than 200 window events in a single
-                    // frame, unlikely to happen. If needed we can up the storage for window
-                    // events.
-                    Err(_) => panic!(),
-                }
-            }
         }
         {
             #[cfg(feature = "profiler")]

@@ -56,9 +56,12 @@ impl<AX, AC> InputHandler<AX, AC> where AX: Hash + Eq + Clone + Send + Sync + 's
             } => {
                 if self.pressed_keys.iter().all(|&k| k.0 != key_code) {
                     self.pressed_keys.push((key_code, scancode));
-                    event_handler.write_single(KeyPressed { key_code, scancode });
-                    event_handler.write_single(ButtonPressed(Button::Key(key_code)));
-                    event_handler.write_single(ButtonPressed(Button::ScanCode(scancode)));
+                    event_handler.write_slice(
+                    &[
+                        KeyPressed { key_code, scancode },
+                        ButtonPressed(Button::Key(key_code)),
+                        ButtonPressed(Button::ScanCode(scancode))
+                    ]).expect("Input Event buffer is under 3 events.  That's far too small.");
                     for (k, v) in self.bindings.actions.iter() {
                         for &button in v {
                             if Button::Key(key_code) == button {
@@ -83,9 +86,12 @@ impl<AX, AC> InputHandler<AX, AC> where AX: Hash + Eq + Clone + Send + Sync + 's
                 let index = self.pressed_keys.iter().position(|&k| k.0 == key_code);
                 if let Some(i) = index {
                     self.pressed_keys.swap_remove(i);
-                    event_handler.write_single(KeyReleased { key_code, scancode });
-                    event_handler.write_single(ButtonReleased(Button::Key(key_code)));
-                    event_handler.write_single(ButtonReleased(Button::ScanCode(scancode)));
+                    event_handler.write_slice(
+                    &[
+                        KeyReleased { key_code, scancode },
+                        ButtonReleased(Button::Key(key_code)),
+                        ButtonReleased(Button::ScanCode(scancode))
+                    ]).expect("Input Event buffer is under 3 events.  That's far too small.");
                     for (k, v) in self.bindings.actions.iter() {
                         for &button in v {
                             if Button::Key(key_code) == button {
@@ -106,8 +112,11 @@ impl<AX, AC> InputHandler<AX, AC> where AX: Hash + Eq + Clone + Send + Sync + 's
                 let mouse_button = button;
                 if self.pressed_mouse_buttons.iter().all(|&b| b != mouse_button) {
                     self.pressed_mouse_buttons.push(mouse_button);
-                    event_handler.write_single(MouseButtonPressed(mouse_button));
-                    event_handler.write_single(ButtonPressed(Button::Mouse(mouse_button)));
+                    event_handler.write_slice(
+                    &[
+                        MouseButtonPressed(mouse_button),
+                        ButtonPressed(Button::Mouse(mouse_button)),
+                    ]).expect("Input Event buffer is under 2 events.  That's far too small.");
                     for (k, v) in self.bindings.actions.iter() {
                         for &button in v {
                             if Button::Mouse(mouse_button) == button {
@@ -126,8 +135,11 @@ impl<AX, AC> InputHandler<AX, AC> where AX: Hash + Eq + Clone + Send + Sync + 's
                 let index = self.pressed_mouse_buttons.iter().position(|&b| b == mouse_button);
                 if let Some(i) = index {
                     self.pressed_mouse_buttons.swap_remove(i);
-                    event_handler.write_single(MouseButtonReleased(mouse_button));
-                    event_handler.write_single(ButtonReleased(Button::Mouse(mouse_button)));
+                    event_handler.write_slice(
+                    &[
+                        MouseButtonReleased(mouse_button),
+                        ButtonReleased(Button::Mouse(mouse_button)),
+                    ]).expect("Input Event buffer is under 2 events.  That's far too small.");
                     for (k, v) in self.bindings.actions.iter() {
                         for &button in v {
                             if Button::Mouse(mouse_button) == button {
