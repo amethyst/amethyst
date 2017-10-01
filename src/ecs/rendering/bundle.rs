@@ -14,6 +14,9 @@ use ecs::rendering::systems::RenderSystem;
 use ecs::transform::components::*;
 use error::{Error, Result};
 
+use shrev::EventHandler;
+
+use ecs::rendering::events::WindowModifierEvent;
 /// Rendering bundle
 ///
 /// Will register all necessary components needed for rendering, along with any resources.
@@ -92,10 +95,14 @@ where
             up: [0.0, 1.0, 0.0].into(),
         };
 
+        let window_events = EventHandler::<WindowModifierEvent>::with_capacity(20);
+        let reader_id = window_events.register_reader();
+
         builder = builder
             .with_resource(Factory::new())
             .with_resource(cam)
             .with_resource(AmbientColor(Rgba::from([0.01; 3])))
+            .with_resource(window_events)
             .register::<Transform>()
             .register::<LightComponent>()
             .register::<MaterialComponent>()
@@ -128,7 +135,7 @@ where
                 .with(Merge::<AssetFuture<TextureComponent>>::new(), "", &[]);
         }
 
-        builder = builder.with_thread_local(RenderSystem::new(pipe, renderer));
+        builder = builder.with_thread_local(RenderSystem::new(pipe, renderer, reader_id));
 
         Ok(builder)
     }

@@ -25,7 +25,9 @@ mod vulkan;
 
 /// Color buffer format.
 pub type SurfaceFormat = gfx::format::R8_G8_B8_A8;
+/// Channel Format
 pub type ChannelFormat = gfx::format::Unorm;
+/// Color Format
 pub type ColorFormat = (SurfaceFormat, ChannelFormat);
 
 /// Depth buffer format.
