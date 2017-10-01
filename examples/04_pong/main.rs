@@ -345,11 +345,11 @@ impl State for Pong {
                 .try_fetch_mut::<EventHandler<WindowModifierEvent>>(0)
             {
                 window_events.write_single(WindowModifierEvent {
-                    modify: |win| {
+                    modify: Box::new(|win| {
                         win.set_cursor_state(winit::CursorState::Hide)
                             .ok()
-                            .expect("could not grab mouse cursor")
-                    },
+                            .expect("Could not hide mouse cursor")
+                    }),
                 });
             }
 

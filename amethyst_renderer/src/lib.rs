@@ -67,7 +67,7 @@ pub mod pass;
 pub mod prelude;
 pub mod pipe;
 pub mod vertex;
-
+pub mod types;
 
 mod cam;
 mod color;
@@ -77,4 +77,3 @@ mod mesh;
 mod mtl;
 mod renderer;
 mod tex;
-pub mod types;

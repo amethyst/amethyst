@@ -95,7 +95,7 @@ where
             up: [0.0, 1.0, 0.0].into(),
         };
 
-        let window_events = EventHandler::<WindowModifierEvent>::new();
+        let window_events = EventHandler::<WindowModifierEvent>::with_capacity(20);
         let reader_id = window_events.register_reader();
 
         builder = builder

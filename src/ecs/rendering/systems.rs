@@ -14,7 +14,7 @@ pub struct RenderSystem<P> {
     pipe: P,
     #[derivative(Debug = "ignore")]
     renderer: Renderer,
-    reader_id: ReaderId,
+    event_reader_id: ReaderId,
 }
 
 impl<P> RenderSystem<P>
@@ -22,11 +22,11 @@ where
     P: PolyPipeline,
 {
     /// Create a new render system
-    pub fn new(pipe: P, renderer: Renderer, reader_id: ReaderId) -> Self {
+    pub fn new(pipe: P, renderer: Renderer, event_reader_id: ReaderId) -> Self {
         Self {
             pipe,
             renderer,
-            reader_id,
+            event_reader_id,
         }
     }
 }
@@ -43,11 +43,22 @@ where
 
     fn run(&mut self, (factory, data, events): Self::SystemData) {
         //Read all window-modifying events
-        match events.read(&mut self.reader_id) {
+        match events.read(&mut self.event_reader_id) {
             Ok(EventReadData::Data(data)) => {
                 let mut win = self.renderer.window_mut();
-                for ev in data.collect::<Vec<_>>() {
-                    let closure = ev.modify;
+                for ev in data {
+                    let closure = &ev.modify;
+                    closure(win);
+                }
+            }
+            Ok(EventReadData::Overflow(data, lost)) => {
+                eprintln!(
+                    "RenderSys: WARNING: Event buffer overflow! {} events were lost!",
+                    lost
+                );
+                let mut win = self.renderer.window_mut();
+                for ev in data {
+                    let closure = &ev.modify;
                     closure(win);
                 }
             }

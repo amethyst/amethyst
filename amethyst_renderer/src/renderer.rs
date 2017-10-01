@@ -41,7 +41,7 @@ impl Renderer {
     }
 
     /// Gets a mutable window to modify
-    pub fn window_mut(&mut self)->&mut Window{
+    pub fn window_mut(&mut self) -> &mut Window {
         &mut self.window
     }
 
