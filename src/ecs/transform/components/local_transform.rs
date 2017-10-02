@@ -59,6 +59,13 @@ impl LocalTransform {
         self.dirty.load(Ordering::SeqCst)
     }
 
+    /// Returns the forward-vector of the transform
+    /// Useful for camera calculations
+    /// For the camera, the center-point can be calculated as position+forward
+    pub fn forward(&self) -> [f32; 3] {
+
+    }
+
     /// Returns the local object matrix for the transform.
     ///
     /// Combined with the parent's global `Transform` component it gives
@@ -74,6 +81,81 @@ impl LocalTransform {
         let mut matrix: Matrix4<f32> = (&quat * scale).into();
         matrix.w = Vector3::from(self.translation).extend(1.0f32);
         matrix.into()
+    }
+
+    /// Move the camera relatively to its current position, but independently from its orientation.
+    pub fn move_global(&mut self, direction: Vector3<f32>) -> &mut Self {
+        self.dirty = true;
+        self.eye += direction;
+        self
+    }
+
+    /// Move the camera relatively to its current position and orientation.
+    pub fn move_local(&mut self, direction: Vector3<f32>) -> &mut Self {
+        self.dirty = true;
+        self.eye += self.rotation * direction;
+        self
+    }
+
+    /// Pitch the camera relatively to the world.
+    pub fn pitch_global(&mut self, angle: Deg<f32>) -> &mut Self {
+        // tbd
+        self
+    }
+
+    /// Pitch the camera relatively to its own rotation.
+    pub fn pitch_local(&mut self, angle: Deg<f32>) -> &mut Self {
+        // tbd
+        self
+    }
+
+    /// Roll the camera relatively to the world.
+    pub fn roll_global(&mut self, angle: Deg<f32>) -> &mut Self {
+        // tbd
+        self
+    }
+
+    /// Roll the camera relatively to its own rotation.
+    pub fn roll_local(&mut self, angle: Deg<f32>) -> &mut Self {
+        // tbd
+        self
+    }
+
+    /// Set the position of the camera.
+    pub fn set_position(&mut self, position: Point3<f32>) -> &mut Self {
+        self.dirty = true;
+        self.eye = position;
+        self
+    }
+
+    /// Set the rotation of the camera using Euler x, y, z.
+    pub fn set_rotation<D: Into<Deg<f32>>>(&mut self, x: D, y: D, z: D) -> &mut Self {
+        self.dirty = true;
+        //self.rotation = Quaternion::from::<f32>(Euler {
+        //    x: x,
+        //    y: y,
+        //    z: z,
+        //});
+
+        self
+    }
+
+    /// Returns the up-vector of the transform
+    /// Useful for camera calculations
+    pub fn up(&self) -> [f32; 3] {
+
+    }
+
+    /// Yaw the camera relatively to the world.
+    pub fn yaw_global(&mut self, angle: Deg<f32>) -> &mut Self {
+        // tbd
+        self
+    }
+
+    /// Yaw the camera relatively to its own rotation.
+    pub fn yaw_local(&mut self, angle: Deg<f32>) -> &mut Self {
+        // tbd
+        self
     }
 }
 
