@@ -14,6 +14,11 @@ use ecs::rendering::systems::RenderSystem;
 use ecs::transform::components::*;
 use error::{Error, Result};
 
+/// Marker for active camera until we implement multi-viewports.
+/// At that point, every viewport should have its own active camera.
+pub struct ActiveCamera;
+impl Component for ActiveCamera { type Storage = NullStorage<Self>; }
+
 /// Rendering bundle
 ///
 /// Will register all necessary components needed for rendering, along with any resources.
@@ -87,6 +92,7 @@ where
         builder = builder
             .with_resource(Factory::new())
             .with_resource(AmbientColor(Rgba::from([0.01; 3])))
+            .register::<ActiveCamera>()
             .register::<Camera>()
             .register::<Transform>()
             .register::<LightComponent>()
@@ -105,6 +111,7 @@ where
             .create_entity()
             .with(cam)
             .with(cam_trans)
+            .with(ActiveCamera{})
             .build()
         ;
 
