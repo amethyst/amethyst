@@ -1,5 +1,6 @@
 //! Camera type with support for perspective and orthographic projections.
 
+use amethyst::ecs::transform::LocalTransform;
 use cgmath::{Deg, EuclideanSpace, Euler, InnerSpace, Matrix4, Ortho, PerspectiveFov, Point3, Quaternion, Rotation, Vector3};
 
 /// The projection mode of a `Camera`.
@@ -55,57 +56,26 @@ impl From<Projection> for Matrix4<f32> {
 /// Camera struct.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct Camera {
-    /// Initial forward vector of the camera.
-    pub base_forward: Vector3<f32>,
-    /// Calculated center point of the camera.
-    center: Vector3<f32>,
-    /// Trigger re-calculations if values were changed.
-    pub dirty: bool,
-    /// Location of the camera in three-dimensional space.
-    pub eye: Point3<f32>,
-    /// Graphical projection of the camera.
     pub proj: Matrix4<f32>,
-    /// Rotation of the camera in three-dimensional space.
-    pub rotation: Quaternion<f32>,
-    /// Upward elevation vector of the camera.
-    pub up: Vector3<f32>,
 }
 
 impl Camera {
     /// Create a new camera from the given values.
-    pub fn new(
-        projection: Matrix4<f32>,
-        position: Point3<f32>,
-        look_at: Point3<f32>,
-        up: Vector3<f32>
-    ) -> Self {
-        if position == look_at {
-            panic!("Position and LookAt cannot have the same coordinates!");
-        }
-
-        let base_forward = (look_at - position);
+    pub fn new(projection: Matrix4<f32>) -> Self {
         Self {
-            base_forward: base_forward,
-            center: (position + base_forward).to_vec(),
-            dirty: false,
-            eye: position,
             proj: projection,
-            rotation: Quaternion::look_at(base_forward, up).normalize(),
-            up: up,
         }
     }
 
     /// Calculates the view matrix from the given data.
-    pub fn to_view_matrix(&self) -> Matrix4<f32> {
-        if self.dirty { panic!("The camera needs to be updated before being queried!"); }
+    pub fn to_view_matrix(&self, local_transform: &LocalTransform) -> Matrix4<f32> {
+        let forward = local_transform.forward();
+        let center = Point3::new(
+            local_transform.translation.0 + forward.0,
+            local_transform.translation.1 + forward.1,
+            local_transform.translation.2 + forward.2,
+        );
 
-        let center = Point3::new(self.center.x, self.center.y, self.center.z);
-        Matrix4::look_at(self.eye, center, self.up)
-    }
-
-    /// Update center component of camera.
-    pub fn update(&mut self) {
-        self.center = (self.eye + self.rotation.rotate_vector(self.base_forward)).to_vec();
-        self.dirty = false;
+        Matrix4::look_at(local_transform.translation, center, local_transform.up())
     }
 }
