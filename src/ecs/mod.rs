@@ -2,19 +2,20 @@
 
 pub use specs::*;
 
-pub mod input;
-pub mod transform;
-pub mod rendering;
 pub mod audio;
+pub mod input;
+pub mod rendering;
+pub mod util;
+pub mod transform;
 
+use app::ApplicationBuilder;
 use error::Result;
 
-/// Extension trait for all systems.
-pub trait SystemExt<'a, A>: System<'a> {
-    /// Constructs a new system with the given arguments.
-    /// Registers all supported components with the World.
-    /// Puts resources into World.
-    fn build(args: A, world: &mut World) -> Result<Self>
-    where
-        Self: Sized;
+/// A bundle of ECS components, resources and systems.
+pub trait ECSBundle<'a, 'b, T> {
+    /// Build and add ECS resources, register components, add systems etc to the Application.
+    fn build(
+        &self,
+        builder: ApplicationBuilder<'a, 'b, T>,
+    ) -> Result<ApplicationBuilder<'a, 'b, T>>;
 }

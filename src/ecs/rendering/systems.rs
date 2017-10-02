@@ -1,116 +1,45 @@
 //! Rendering system.
 
-use renderer::Config as DisplayConfig;
-use renderer::Rgba;
-use renderer::prelude::*;
-use winit::EventsLoop;
-
-use assets::BoxedErr;
-use ecs::{Fetch, FetchMut, Join, ReadStorage, System, World};
-use ecs::SystemExt;
-use ecs::rendering::components::*;
-use ecs::rendering::resources::{Factory, AmbientColor};
-use ecs::transform::components::*;
-use error::{Error, Result};
+use ecs::{Fetch, System};
+use ecs::rendering::resources::Factory;
+use renderer::Renderer;
+use renderer::pipe::{PipelineData, PolyPipeline};
 
 /// Rendering system.
 #[derive(Derivative)]
 #[derivative(Debug)]
-pub struct RenderSystem {
-    pipe: Pipeline,
+pub struct RenderSystem<P> {
+    pipe: P,
     #[derivative(Debug = "ignore")]
     renderer: Renderer,
-    scene: Scene,
 }
 
-impl<'a> System<'a> for RenderSystem {
-    type SystemData = (FetchMut<'a, Camera>,
-     Fetch<'a, Factory>,
-     Fetch<'a, AmbientColor>,
-     ReadStorage<'a, Transform>,
-     ReadStorage<'a, LightComponent>,
-     ReadStorage<'a, MaterialComponent>,
-     ReadStorage<'a, MeshComponent>);
+impl<P> RenderSystem<P>
+where
+    P: PolyPipeline,
+{
+    /// Create a new render system
+    pub fn new(pipe: P, renderer: Renderer) -> Self {
+        Self { pipe, renderer }
+    }
+}
 
-    fn run(
-        &mut self,
-        (mut camera, factory, ambient_color, globals, lights, materials, meshes): Self::SystemData,
-    ) {
+impl<'a, P> System<'a> for RenderSystem<P>
+where
+    P: PolyPipeline,
+{
+    type SystemData = (Fetch<'a, Factory>, <P as PipelineData<'a>>::Data);
+
+    fn run(&mut self, (factory, data): Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("render_system");
         use std::time::Duration;
 
         while let Some(job) = factory.jobs.try_pop() {
             job.exec(&mut self.renderer.factory);
         }
 
-        self.scene.clear();
-
-        for (mesh, material, global) in (&meshes, &materials, &globals).join() {
-            self.scene.add_model(Model {
-                material: material.0.clone(),
-                mesh: mesh.as_ref().clone(),
-                pos: global.0.into(),
-            });
-        }
-
-        self.scene.set_ambient_color(ambient_color.0.clone());
-
-        for light in lights.join() {
-            self.scene.add_light(light.0.clone());
-        }
-
-        let mut cam = camera.clone();
-        cam.update();
-        self.scene.add_camera(cam);
-
-        self.renderer.draw(
-            &mut self.scene,
-            &self.pipe,
-            Duration::from_secs(0),
-        );
-    }
-}
-
-impl<'a, 'b> SystemExt<'a, (&'b EventsLoop, PipelineBuilder, Option<DisplayConfig>)>
-    for RenderSystem {
-    /// Create new `RenderSystem`
-    /// It creates window and do render into it
-    fn build(
-        (events, pipe, config): (&'b EventsLoop, PipelineBuilder, Option<DisplayConfig>),
-        world: &mut World,
-    ) -> Result<Self> {
-        let mut renderer = Renderer::build(events);
-        if let Some(config) = config {
-            renderer.with_config(config);
-        }
-        let mut renderer = renderer.build().map_err(
-            |err| Error::System(BoxedErr::new(err)),
-        )?;
-        let pipe = renderer.create_pipe(pipe).map_err(|err| {
-            Error::System(BoxedErr::new(err))
-        })?;
-
-        use cgmath::Deg;
-        use renderer::{Camera, Projection};
-
-        let cam = Camera::new(
-            Projection::perspective(1.3, Deg(60.0)).into(),
-            [0.0, 0.0, -4.0].into(),
-                [0.0,0.0,0.0].into(),
-            [0.0, 1.0, 0.0].into(),
-        );
-
-        world.add_resource(Factory::new());
-        world.add_resource(cam);
-        world.add_resource(AmbientColor(Rgba::from([0.01; 3])));
-        world.register::<Transform>();
-        world.register::<LightComponent>();
-        world.register::<MaterialComponent>();
-        world.register::<MeshComponent>();
-
-        Ok(RenderSystem {
-            pipe: pipe,
-            renderer: renderer,
-            scene: Scene::default(),
-        })
+        self.renderer
+            .draw(&mut self.pipe, data, Duration::from_secs(0));
     }
 }

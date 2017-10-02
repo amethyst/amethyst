@@ -261,9 +261,9 @@ impl Loader {
         S: Eq + Hash + ?Sized,
         String: Borrow<S>,
     {
-        self.stores.get(&store).expect(
-            "No such store. Maybe you forgot to add it with `Loader::add_store`?",
-        )
+        self.stores
+            .get(&store)
+            .expect("No such store. Maybe you forgot to add it with `Loader::add_store`?")
     }
 }
 

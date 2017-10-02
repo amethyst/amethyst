@@ -8,15 +8,16 @@ extern crate rayon;
 
 use amethyst::{Application, Error, State, Trans};
 use amethyst::assets::{AssetFuture, BoxedErr, Context, Format, Loader, NoError};
-use amethyst::assets::formats::textures::{PngFormat, BmpFormat};
+use amethyst::assets::formats::textures::{BmpFormat, PngFormat};
 use amethyst::config::Config;
 use amethyst::ecs::World;
-use amethyst::ecs::input::InputHandler;
-use amethyst::ecs::rendering::{MeshComponent, Factory, MeshContext, TextureComponent,
-                               MaterialComponent, TextureContext};
-use amethyst::ecs::transform::{LocalTransform, Transform};
+use amethyst::ecs::input::InputBundle;
+use amethyst::ecs::rendering::{AmbientColor, Factory, LightComponent, MaterialComponent,
+                               MeshComponent, MeshContext, RenderBundle, TextureComponent,
+                               TextureContext};
+use amethyst::ecs::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::prelude::*;
-use amethyst::renderer::{Camera, Rgba, Config as DisplayConfig};
+use amethyst::renderer::{Camera, Config as DisplayConfig, Rgba};
 use amethyst::renderer::prelude::*;
 use cgmath::{Deg, Euler, Quaternion};
 use futures::Future;
@@ -69,8 +70,6 @@ impl State for AssetsExample {
     fn on_start(&mut self, engine: &mut Engine) {
         use amethyst::assets::formats::meshes::ObjFormat;
 
-        let input = InputHandler::new();
-        engine.world.add_resource(input);
         engine.world.add_resource(0usize);
 
         initialise_camera(&mut engine.world.write_resource::<Camera>());
@@ -146,7 +145,12 @@ impl State for AssetsExample {
                 match event {
                     WindowEvent::Closed |
                     WindowEvent::KeyboardInput {
-                        input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Escape), .. }, ..
+                        input:
+                            KeyboardInput {
+                                virtual_keycode: Some(VirtualKeyCode::Escape),
+                                ..
+                            },
+                        ..
                     } => {
                         // If the user pressed the escape key, or requested the window to be closed,
                         // quit the application.
@@ -168,11 +172,18 @@ fn main() {
     }
 }
 
+type DrawShaded = pass::DrawShaded<
+    PosNormTex,
+    AmbientColor,
+    MeshComponent,
+    MaterialComponent,
+    Transform,
+    LightComponent,
+>;
+
 /// Wrapper around the main, so we can return errors easily.
 fn run() -> Result<(), Error> {
     use amethyst::assets::Directory;
-    use amethyst::ecs::common::Errors;
-    use amethyst::ecs::transform::{Child, Init, LocalTransform, TransformSystem};
 
     // Add our meshes directory to the asset loader.
     let resources_directory = format!(
@@ -189,18 +200,15 @@ fn run() -> Result<(), Error> {
     let pipeline_builder = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_model_pass(pass::DrawShaded::<PosNormTex>::new()),
+            .with_pass(DrawShaded::new()),
     );
 
     let mut game = Application::build(AssetsExample)
         .expect("Failed to build ApplicationBuilder for an unknown reason.")
-        .register::<Child>()
-        .register::<LocalTransform>()
-        .register::<Init>()
-        .with::<TransformSystem>(TransformSystem::new(), "transform_system", &[])
-        .with_renderer(pipeline_builder, Some(display_config))?
-        .add_store("resources", Directory::new(resources_directory))
-        .add_resource(Errors::new())
+        .with_bundle(InputBundle::<String, String>::new())?
+        .with_bundle(TransformBundle::new())?
+        .with_bundle(RenderBundle::new(pipeline_builder).with_config(display_config))?
+        .with_store("resources", Directory::new(resources_directory))
         .build()?;
 
     game.run();
@@ -247,9 +255,9 @@ where
 {
     let future = {
         let factory = engine.world.read_resource::<Factory>();
-        factory.create_material(MaterialBuilder::new()).map_err(
-            BoxedErr::new,
-        )
+        factory
+            .create_material(MaterialBuilder::new())
+            .map_err(BoxedErr::new)
     }.join({
         let loader = engine.world.read_resource::<Loader>();
         loader.load_from::<TextureComponent, _, _, _>(albedo, format, "resources")
@@ -265,9 +273,9 @@ fn make_material(engine: &mut Engine, albedo: [f32; 4]) -> AssetFuture<MaterialC
     let future = {
         let factory = engine.world.read_resource::<Factory>();
         factory
-            .create_material(MaterialBuilder::new().with_albedo(
-                TextureBuilder::from_color_val(albedo),
-            ))
+            .create_material(
+                MaterialBuilder::new().with_albedo(TextureBuilder::from_color_val(albedo)),
+            )
             .map(MaterialComponent)
             .map_err(BoxedErr::new)
     };

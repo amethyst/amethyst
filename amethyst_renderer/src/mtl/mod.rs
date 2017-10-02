@@ -2,6 +2,8 @@
 
 use gfx::traits::Pod;
 
+use specs::{Component, DenseVecStorage};
+
 use error::Result;
 use tex::{Texture, TextureBuilder};
 use types::Factory;
@@ -186,19 +188,19 @@ impl<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC>
     pub fn build(self, fac: &mut Factory) -> Result<Material>
     where
         DA: AsRef<[TA]>,
-        TA: Pod,
+        TA: Pod + Copy,
         DE: AsRef<[TE]>,
-        TE: Pod,
+        TE: Pod + Copy,
         DN: AsRef<[TN]>,
-        TN: Pod,
+        TN: Pod + Copy,
         DM: AsRef<[TM]>,
-        TM: Pod,
+        TM: Pod + Copy,
         DR: AsRef<[TR]>,
-        TR: Pod,
+        TR: Pod + Copy,
         DO: AsRef<[TO]>,
-        TO: Pod,
+        TO: Pod + Copy,
         DC: AsRef<[TC]>,
-        TC: Pod,
+        TC: Pod + Copy,
     {
         Ok(Material {
             albedo: self.albedo.build(fac)?,
@@ -210,4 +212,9 @@ impl<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC>
             caveat: self.caveat.build(fac)?,
         })
     }
+}
+
+
+impl Component for Material {
+    type Storage = DenseVecStorage<Self>;
 }

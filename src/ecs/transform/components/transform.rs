@@ -1,5 +1,7 @@
 //! Global transform component.
 
+use std::borrow::Borrow;
+
 use ecs::{Component, VecStorage};
 
 /// Performs a global transformation on the entity (transform from origin).
@@ -14,14 +16,12 @@ impl Component for Transform {
 
 impl Default for Transform {
     fn default() -> Self {
-        Transform(
-            [
-                [1.0, 0.0, 0.0, 0.0],
-                [0.0, 1.0, 0.0, 0.0],
-                [0.0, 0.0, 1.0, 0.0],
-                [0.0, 0.0, 0.0, 1.0],
-            ],
-        )
+        Transform([
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ])
     }
 }
 
@@ -34,5 +34,18 @@ impl From<[[f32; 4]; 4]> for Transform {
 impl Into<[[f32; 4]; 4]> for Transform {
     fn into(self) -> [[f32; 4]; 4] {
         self.0
+    }
+}
+
+impl AsRef<[[f32; 4]; 4]> for Transform {
+    fn as_ref(&self) -> &[[f32; 4]; 4] {
+        &self.0
+    }
+}
+
+
+impl Borrow<[[f32; 4]; 4]> for Transform {
+    fn borrow(&self) -> &[[f32; 4]; 4] {
+        &self.0
     }
 }

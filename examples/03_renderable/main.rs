@@ -15,11 +15,12 @@ use amethyst::assets::formats::meshes::ObjFormat;
 use amethyst::assets::formats::textures::PngFormat;
 use amethyst::config::Config;
 use amethyst::ecs::{Fetch, FetchMut, Join, System, WriteStorage};
-use amethyst::ecs::rendering::{LightComponent, MaterialComponent, AmbientColor, TextureContext,
-                               Factory, TextureComponent, MeshComponent, MeshContext};
-use amethyst::ecs::transform::{LocalTransform, Transform};
+use amethyst::ecs::rendering::{AmbientColor, Factory, LightComponent, MaterialComponent,
+                               MeshComponent, MeshContext, RenderBundle, TextureComponent,
+                               TextureContext};
+use amethyst::ecs::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::prelude::*;
-use amethyst::renderer::{Camera, Rgba, Config as DisplayConfig};
+use amethyst::renderer::{Camera, Config as DisplayConfig, Rgba};
 use amethyst::renderer::prelude::*;
 use amethyst::timing::Time;
 use cgmath::{Deg, Euler, Quaternion};
@@ -31,26 +32,36 @@ struct DemoState {
     point_light: bool,
     directional_light: bool,
     camera_angle: f32,
+    #[allow(dead_code)]
     pipeline_forward: bool, // TODO
 }
 
 struct ExampleSystem;
 
 impl<'a> System<'a> for ExampleSystem {
-    type SystemData = (WriteStorage<'a, LightComponent>,
-     Fetch<'a, Time>,
-     FetchMut<'a, Camera>,
-     FetchMut<'a, DemoState>);
+    type SystemData = (
+        WriteStorage<'a, LightComponent>,
+        Fetch<'a, Time>,
+        FetchMut<'a, Camera>,
+        FetchMut<'a, DemoState>,
+    );
 
     fn run(&mut self, (mut lights, time, mut camera, mut state): Self::SystemData) {
         let delta_time = time.delta_time.subsec_nanos() as f32 / 1.0e9;
 
-        state.light_angle -= delta_time;
-        state.camera_angle += delta_time / 10.0;
+        let light_angular_velocity = -1.0;
+        let light_orbit_radius = 15.0;
+        let light_z = 6.0;
+
+        let camera_angular_velocity = 0.1;
+        let camera_orbit_radius = 20.0;
+
+        state.light_angle += light_angular_velocity * delta_time;
+        state.camera_angle += camera_angular_velocity * delta_time;
 
         let target = camera.eye + camera.forward;
-        camera.eye[0] = 20.0 * state.camera_angle.cos();
-        camera.eye[1] = 20.0 * state.camera_angle.sin();
+        camera.eye[0] = camera_orbit_radius * state.camera_angle.cos();
+        camera.eye[1] = camera_orbit_radius * state.camera_angle.sin();
         camera.forward = target - camera.eye;
 
         for point_light in (&mut lights).join().filter_map(|light| {
@@ -59,15 +70,13 @@ impl<'a> System<'a> for ExampleSystem {
             } else {
                 None
             }
-        })
-        {
-            point_light.center[0] = 15.0 * state.light_angle.cos();
-            point_light.center[1] = 15.0 * state.light_angle.sin();
-            point_light.center[2] = 6.0;
+        }) {
+            point_light.center[0] = light_orbit_radius * state.light_angle.cos();
+            point_light.center[1] = light_orbit_radius * state.light_angle.sin();
+            point_light.center[2] = light_z;
 
             point_light.color = state.light_color.into();
         }
-
     }
 }
 
@@ -75,7 +84,6 @@ struct Example;
 
 impl State for Example {
     fn on_start(&mut self, engine: &mut Engine) {
-
         initialise_camera(&mut engine.world.write_resource::<Camera>());
 
         // Add teapot and lid to scene
@@ -177,9 +185,9 @@ impl State for Example {
             .build();
 
         {
-            engine.world.add_resource(
-                AmbientColor(Rgba::from([0.01; 3])),
-            );
+            engine
+                .world
+                .add_resource(AmbientColor(Rgba::from([0.01; 3])));
         }
 
         engine.world.add_resource::<DemoState>(DemoState {
@@ -203,11 +211,12 @@ impl State for Example {
                 match event {
                     WindowEvent::Closed => return Trans::Quit,
                     WindowEvent::KeyboardInput {
-                        input: KeyboardInput {
-                            virtual_keycode,
-                            state: ElementState::Pressed,
-                            ..
-                        },
+                        input:
+                            KeyboardInput {
+                                virtual_keycode,
+                                state: ElementState::Pressed,
+                                ..
+                            },
                         ..
                     } => {
                         match virtual_keycode {
@@ -267,15 +276,13 @@ impl State for Example {
                                     }
                                 }
                             }
-                            Some(VirtualKeyCode::P) => {
-                                if state.point_light {
-                                    state.point_light = false;
-                                    state.light_color = [0.0; 4].into();
-                                } else {
-                                    state.point_light = true;
-                                    state.light_color = [1.0; 4].into();
-                                }
-                            }
+                            Some(VirtualKeyCode::P) => if state.point_light {
+                                state.point_light = false;
+                                state.light_color = [0.0; 4].into();
+                            } else {
+                                state.point_light = true;
+                                state.light_color = [1.0; 4].into();
+                            },
                             _ => (),
                         }
                     }
@@ -301,8 +308,6 @@ fn main() {
 /// Wrapper around the main, so we can return errors easily.
 fn run() -> Result<(), Error> {
     use amethyst::assets::Directory;
-    use amethyst::ecs::transform::{Child, Init, LocalTransform, TransformSystem};
-    use amethyst::ecs::common::Errors;
 
     // Add our meshes directory to the asset loader.
     let resources_directory = format!(
@@ -319,25 +324,29 @@ fn run() -> Result<(), Error> {
     let pipeline_builder = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_model_pass(pass::DrawShaded::<PosNormTex>::new()),
+            .with_pass(DrawShaded::new()),
     );
 
     let mut game = Application::build(Example)
         .expect("Failed to build ApplicationBuilder for an unknown reason.")
-        .register::<Child>()
-        .register::<LocalTransform>()
-        .register::<Init>()
         .with::<ExampleSystem>(ExampleSystem, "example_system", &[])
-        .with::<TransformSystem>(TransformSystem::new(), "transform_system", &[])
-        .with_renderer(pipeline_builder, Some(display_config))?
-        .add_store("resources", Directory::new(resources_directory))
-        .add_resource(Errors::new())
+        .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
+        .with_bundle(RenderBundle::new(pipeline_builder).with_config(display_config))?
+        .with_store("resources", Directory::new(resources_directory))
         .build()?;
 
     game.run();
     Ok(())
 }
 
+type DrawShaded = pass::DrawShaded<
+    PosNormTex,
+    AmbientColor,
+    MeshComponent,
+    MaterialComponent,
+    Transform,
+    LightComponent,
+>;
 
 /// Initialises the camera structure.
 fn initialise_camera(camera: &mut Camera) {
@@ -360,9 +369,9 @@ where
     use futures::Future;
     let future = {
         let factory = engine.world.read_resource::<Factory>();
-        factory.create_material(MaterialBuilder::new()).map_err(
-            BoxedErr::new,
-        )
+        factory
+            .create_material(MaterialBuilder::new())
+            .map_err(BoxedErr::new)
     }.join({
         let loader = engine.world.read_resource::<Loader>();
         loader.load_from::<TextureComponent, _, _, _>(albedo, format, "resources")
@@ -379,9 +388,9 @@ fn make_material(engine: &mut Engine, albedo: [f32; 4]) -> AssetFuture<MaterialC
     let future = {
         let factory = engine.world.read_resource::<Factory>();
         factory
-            .create_material(MaterialBuilder::new().with_albedo(
-                TextureBuilder::from_color_val(albedo),
-            ))
+            .create_material(
+                MaterialBuilder::new().with_albedo(TextureBuilder::from_color_val(albedo)),
+            )
             .map(MaterialComponent)
             .map_err(BoxedErr::new)
     };

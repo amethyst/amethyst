@@ -4,7 +4,7 @@ use cgmath::Matrix4;
 use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 
 use ecs::{Entities, Entity, Join, ReadStorage, System, WriteStorage};
-use ecs::transform::{LocalTransform, Transform, Child, Init};
+use ecs::transform::{Child, Init, LocalTransform, Transform};
 
 /// Handles updating `Transform` components based on the `LocalTransform`
 /// component and parents.
@@ -40,14 +40,17 @@ impl TransformSystem {
 }
 
 impl<'a> System<'a> for TransformSystem {
-    type SystemData = (Entities<'a>,
-     ReadStorage<'a, LocalTransform>,
-     ReadStorage<'a, Child>,
-     WriteStorage<'a, Init>,
-     WriteStorage<'a, Transform>);
+    type SystemData = (
+        Entities<'a>,
+        ReadStorage<'a, LocalTransform>,
+        ReadStorage<'a, Child>,
+        WriteStorage<'a, Init>,
+        WriteStorage<'a, Transform>,
+    );
 
     fn run(&mut self, (entities, locals, children, mut init, mut globals): Self::SystemData) {
-
+        #[cfg(feature = "profiler")]
+        profile_scope!("transform_system");
         // Checks for entities with a local transform and parent, but no
         // `Init` component.
         for (entity, _, child, _) in (&*entities, &locals, &children, !&init).join() {
@@ -120,8 +123,7 @@ impl<'a> System<'a> for TransformSystem {
                         }
                     }
 
-                    if local.is_dirty() || child.is_dirty() ||
-                        self.dirty.contains(&child.parent())
+                    if local.is_dirty() || child.is_dirty() || self.dirty.contains(&child.parent())
                     {
                         let combined_transform = if let Some(parent_global) =
                             globals.get(child.parent())
@@ -169,7 +171,7 @@ impl<'a> System<'a> for TransformSystem {
 
 #[cfg(test)]
 mod tests {
-    use cgmath::{Decomposed, Quaternion, Vector3, Matrix4};
+    use cgmath::{Decomposed, Matrix4, Quaternion, Vector3};
     use ecs::transform::{LocalTransform, Transform};
 
     #[test]

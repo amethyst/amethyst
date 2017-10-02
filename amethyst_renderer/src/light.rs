@@ -4,6 +4,7 @@
 
 use gfx;
 use cgmath::{Deg, Point3, Vector3};
+use specs::{Component, DenseVecStorage};
 
 use color::Rgba;
 
@@ -172,4 +173,9 @@ impl From<SunLight> for Light {
     fn from(sun: SunLight) -> Self {
         Light::Sun(sun)
     }
+}
+
+
+impl Component for Light {
+    type Storage = DenseVecStorage<Self>;
 }

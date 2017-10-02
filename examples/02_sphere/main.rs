@@ -8,7 +8,8 @@ extern crate futures;
 extern crate genmesh;
 
 use amethyst::assets::{AssetFuture, BoxedErr};
-use amethyst::ecs::rendering::{Factory, MeshComponent, MaterialComponent, LightComponent};
+use amethyst::ecs::rendering::{Factory, LightComponent, MaterialComponent, MeshComponent,
+                               RenderBundle};
 use amethyst::ecs::transform::Transform;
 use amethyst::prelude::*;
 use amethyst::renderer::Config as DisplayConfig;
@@ -39,13 +40,16 @@ impl State for Example {
         let tex = Texture::from_color_val([0.0, 0.0, 1.0, 1.0]);
         let mtl = MaterialBuilder::new().with_albedo(tex);
 
+        println!("Load mesh");
         let mesh = load_proc_asset(engine, move |engine| {
             let factory = engine.world.read_resource::<Factory>();
-            factory.create_mesh(mesh).map(MeshComponent::new).map_err(
-                BoxedErr::new,
-            )
+            factory
+                .create_mesh(mesh)
+                .map(MeshComponent::new)
+                .map_err(BoxedErr::new)
         });
 
+        println!("Load material");
         let mtl = load_proc_asset(engine, move |engine| {
             let factory = engine.world.read_resource::<Factory>();
             factory
@@ -54,6 +58,7 @@ impl State for Example {
                 .map_err(BoxedErr::new)
         });
 
+        println!("Create sphere");
         engine
             .world
             .create_entity()
@@ -62,6 +67,8 @@ impl State for Example {
             .with(mtl)
             .build();
 
+
+        println!("Create light");
         engine
             .world
             .create_entity()
@@ -75,6 +82,7 @@ impl State for Example {
             ))
             .build();
 
+        println!("Put camera");
         engine.world.add_resource(Camera {
             eye: [0.0, 0.0, -4.0].into(),
             proj: Projection::perspective(1.3, Deg(60.0)).into(),
@@ -86,20 +94,25 @@ impl State for Example {
 
     fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
         match event {
-            Event::WindowEvent { event, .. } => {
-                match event {
-                    WindowEvent::KeyboardInput {
-                        input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Escape), .. }, ..
-                    } |
-                    WindowEvent::Closed => Trans::Quit,
-                    _ => Trans::None,
-                }
-            }
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::KeyboardInput {
+                    input:
+                        KeyboardInput {
+                            virtual_keycode: Some(VirtualKeyCode::Escape),
+                            ..
+                        },
+                    ..
+                } |
+                WindowEvent::Closed => Trans::Quit,
+                _ => Trans::None,
+            },
             _ => Trans::None,
         }
     }
 }
 
+
+type DrawFlat = pass::DrawFlat<PosNormTex, MeshComponent, MaterialComponent, Transform>;
 
 fn run() -> Result<(), amethyst::Error> {
     let path = format!(
@@ -108,13 +121,14 @@ fn run() -> Result<(), amethyst::Error> {
     );
     let config = DisplayConfig::load(&path);
     let mut game = Application::build(Example)?
-        .with_renderer(
-            Pipeline::build().with_stage(
-                Stage::with_backbuffer()
-                    .clear_target([0.00196, 0.23726, 0.21765, 1.0], 1.0)
-                    .with_model_pass(pass::DrawFlat::<PosNormTex>::new()),
-            ),
-            Some(config),
+        .with_bundle(
+            RenderBundle::new(
+                Pipeline::build().with_stage(
+                    Stage::with_backbuffer()
+                        .clear_target([0.00196, 0.23726, 0.21765, 1.0], 1.0)
+                        .with_pass(DrawFlat::new()),
+                ),
+            ).with_config(config),
         )?
         .build()?;
     Ok(game.run())

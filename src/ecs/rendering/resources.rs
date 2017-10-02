@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use crossbeam::sync::MsQueue;
 use futures::{Async, Future, Poll};
-use futures::sync::oneshot::{Receiver, Sender, channel};
+use futures::sync::oneshot::{channel, Receiver, Sender};
 use gfx::traits::Pod;
 use renderer::{Error, Material, MaterialBuilder, Mesh, MeshBuilder, Texture, TextureBuilder};
 use renderer::Rgba;
@@ -38,7 +38,9 @@ pub struct Factory {
 impl Factory {
     /// Creates a new factory resource.
     pub fn new() -> Self {
-        Factory { jobs: Arc::new(MsQueue::new()) }
+        Factory {
+            jobs: Arc::new(MsQueue::new()),
+        }
     }
 
     /// Creates a mesh asynchronously.
@@ -54,7 +56,7 @@ impl Factory {
     pub fn create_texture<D, T>(&self, tb: TextureBuilder<D, T>) -> TextureFuture
     where
         D: AsRef<[T]> + Send + Sync + 'static,
-        T: Pod + Send + Sync + 'static,
+        T: Pod + Send + Sync + Copy + 'static,
     {
         self.execute(move |f| tb.build(f))
     }
@@ -66,19 +68,19 @@ impl Factory {
     ) -> MaterialFuture
     where
         DA: AsRef<[TA]> + Send + Sync + 'static,
-        TA: Pod + Send + Sync + 'static,
+        TA: Pod + Send + Sync + Copy + 'static,
         DE: AsRef<[TE]> + Send + Sync + 'static,
-        TE: Pod + Send + Sync + 'static,
+        TE: Pod + Send + Sync + Copy + 'static,
         DN: AsRef<[TN]> + Send + Sync + 'static,
-        TN: Pod + Send + Sync + 'static,
+        TN: Pod + Send + Sync + Copy + 'static,
         DM: AsRef<[TM]> + Send + Sync + 'static,
-        TM: Pod + Send + Sync + 'static,
+        TM: Pod + Send + Sync + Copy + 'static,
         DR: AsRef<[TR]> + Send + Sync + 'static,
-        TR: Pod + Send + Sync + 'static,
+        TR: Pod + Send + Sync + Copy + 'static,
         DO: AsRef<[TO]> + Send + Sync + 'static,
-        TO: Pod + Send + Sync + 'static,
+        TO: Pod + Send + Sync + Copy + 'static,
         DC: AsRef<[TC]> + Send + Sync + 'static,
-        TC: Pod + Send + Sync + 'static,
+        TC: Pod + Send + Sync + Copy + 'static,
     {
         self.execute(|f| mb.build(f))
     }
@@ -96,10 +98,7 @@ impl Factory {
 
         impl<F, T, E> Exec for Job<F, T, E>
         where
-            F: FnOnce(&mut ::renderer::Factory) -> Result<T, E>
-                + Send
-                + Sync
-                + 'static,
+            F: FnOnce(&mut ::renderer::Factory) -> Result<T, E> + Send + Sync + 'static,
             T: Send + Sync + 'static,
             E: Send + Sync + 'static,
         {
@@ -128,5 +127,11 @@ pub type MaterialFuture = FactoryFuture<Material, Error>;
 pub type MeshFuture = FactoryFuture<Mesh, Error>;
 
 /// The ambient color of a scene
-#[derive(Default)]
+#[derive(Clone, Debug, Default)]
 pub struct AmbientColor(pub Rgba);
+
+impl AsRef<Rgba> for AmbientColor {
+    fn as_ref(&self) -> &Rgba {
+        &self.0
+    }
+}

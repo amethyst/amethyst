@@ -33,7 +33,8 @@ gfx = { version = "0.16", features = ["cgmath-types", "serialize"] }
 gfx_core = { version = "0.7", features = ["cgmath-types", "serialize"] }
 gfx_macros = "0.2"
 num_cpus = "1.0"
-rayon = "0.8"
+rayon = "0.7"
+rayon-core = "1.2"
 serde = "1.0"
 serde_derive = "1.0"
 winit = "0.7"
@@ -53,6 +54,12 @@ gfx_window_metal = { version = "0.3", optional = true }
 [target.'cfg(windows)'.dependencies]
 gfx_device_dx11 = { version = "0.6", optional = true }
 gfx_window_dxgi = { version = "0.7", optional = true }
+
+[dependencies.hetseq]
+version = "0.1.5"
+
+[dependencies.specs]
+version = "0.9.5"
 
 [dev-dependencies]
 genmesh = "0.4"

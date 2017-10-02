@@ -20,10 +20,9 @@ branches:
     - master
     - /release-.*/
 
-# Test on both Linux and OS X.
+# Test on Linux - OSX builds take in excess of 5 hours to start as of 2017-09-19.
 os:
   - linux
-  - osx
 
 # Install ALSA development libraries before compiling on Linux.
 addons:
