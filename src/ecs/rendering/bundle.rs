@@ -9,7 +9,7 @@ use app::ApplicationBuilder;
 use assets::{AssetFuture, BoxedErr, Loader};
 use ecs::ECSBundle;
 use ecs::rendering::components::*;
-use ecs::rendering::resources::{AmbientColor, Factory};
+use ecs::rendering::resources::{AmbientColor, Factory, WindowMessages};
 use ecs::rendering::systems::RenderSystem;
 use ecs::transform::components::*;
 use error::{Error, Result};
@@ -96,6 +96,7 @@ where
             .with_resource(Factory::new())
             .with_resource(cam)
             .with_resource(AmbientColor(Rgba::from([0.01; 3])))
+            .with_resource(WindowMessages::new())
             .register::<Transform>()
             .register::<LightComponent>()
             .register::<MaterialComponent>()

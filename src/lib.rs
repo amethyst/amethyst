@@ -60,6 +60,7 @@ pub extern crate amethyst_config as config;
 pub extern crate amethyst_input as input;
 pub extern crate amethyst_renderer as renderer;
 pub extern crate shrev;
+pub extern crate winit;
 
 extern crate amethyst_assets;
 extern crate cgmath;
@@ -77,7 +78,6 @@ extern crate shred;
 extern crate smallvec;
 extern crate specs;
 extern crate wavefront_obj;
-extern crate winit;
 
 pub use self::app::{Application, ApplicationBuilder};
 pub use self::engine::Engine;

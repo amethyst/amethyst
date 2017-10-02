@@ -8,6 +8,8 @@ use futures::sync::oneshot::{channel, Receiver, Sender};
 use gfx::traits::Pod;
 use renderer::{Error, Material, MaterialBuilder, Mesh, MeshBuilder, Texture, TextureBuilder};
 use renderer::Rgba;
+use smallvec::SmallVec;
+use winit::Window;
 
 pub(crate) trait Exec: Send + Sync {
     fn exec(self: Box<Self>, factory: &mut ::renderer::Factory);
@@ -133,5 +135,35 @@ pub struct AmbientColor(pub Rgba);
 impl AsRef<Rgba> for AmbientColor {
     fn as_ref(&self) -> &Rgba {
         &self.0
+    }
+}
+
+/// This specs resource with id 0 permits sending commands to the
+/// renderer internal window.
+pub struct WindowMessages {
+    // It's unlikely we'll get more than one command per frame
+    // 1 Box also makes this the same size as a Vec, so this costs
+    // no more space in the structure than a Vec would.
+    //
+    // NOTE TO FUTURE AUTHORS: This could be an FnOnce but that's not possible
+    // right now as of 2017-10-02 because FnOnce isn't object safe.  It might
+    // be possible as soon as FnBox stabilizes.  For now I'll use FnMut instead.
+    pub(crate) queue: SmallVec<[Box<FnMut(&Window) + Send + Sync + 'static>; 2]>,
+}
+
+impl WindowMessages {
+    /// Create a new `WindowMessages`
+    pub fn new() -> Self {
+        Self {
+            queue: SmallVec::new(),
+        }
+    }
+
+    /// Execute this closure on the `winit::Window` next frame.
+    pub fn send_command<F>(&mut self, command: F)
+    where
+        F: FnMut(&Window) + Send + Sync + 'static,
+    {
+        self.queue.push(Box::new(command));
     }
 }
