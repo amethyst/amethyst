@@ -66,6 +66,12 @@ impl LocalTransform {
 
     }
 
+    /// Rotate to look at a point in space (without rolling)
+    pub fn look_at(&mut self, position: Vector3<f32>) -> &mut Self {
+        // tbd
+        self
+    }
+
     /// Returns the local object matrix for the transform.
     ///
     /// Combined with the parent's global `Transform` component it gives

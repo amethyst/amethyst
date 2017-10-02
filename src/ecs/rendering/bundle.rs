@@ -82,25 +82,31 @@ where
             .map_err(|err| Error::System(BoxedErr::new(err)))?;
 
         use cgmath::Deg;
-        use renderer::{Camera, Projection};
-
-        let cam = Camera {
-            eye: [0.0, 0.0, -4.0].into(),
-            proj: Projection::perspective(1.3, Deg(60.0)).into(),
-            forward: [0.0, 0.0, 1.0].into(),
-            right: [1.0, 0.0, 0.0].into(),
-            up: [0.0, 1.0, 0.0].into(),
-        };
+        use renderer::{Camera, LocalTransform, Projection};
 
         builder = builder
             .with_resource(Factory::new())
-            .with_resource(cam)
             .with_resource(AmbientColor(Rgba::from([0.01; 3])))
+            .register::<Camera>()
             .register::<Transform>()
             .register::<LightComponent>()
             .register::<MaterialComponent>()
             .register::<MeshComponent>()
             .register::<TextureComponent>();
+
+        let cam = Camera::new(Projection::perspective(1.3, Deg(60.0)).into());
+        let mut cam_trans = LocalTransform::default();
+
+        cam_trans.translation = [0.0, 0.0, -4.0].into();
+        cam_trans.look_at([0.0, 0.0, 0.0].into());
+
+        builder
+            .world
+            .create_entity()
+            .with(cam)
+            .with(cam_trans)
+            .build()
+        ;
 
         // FIXME: asset stuff, enable/disable flag for this?
         {
