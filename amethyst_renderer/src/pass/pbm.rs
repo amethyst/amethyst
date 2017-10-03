@@ -19,7 +19,7 @@ use mtl::Material;
 use pipe::{DepthMode, Effect, NewEffect};
 use pipe::pass::{Pass, PassApply, PassData, Supplier};
 use types::Encoder;
-use vertex::{Attribute, Normal, Position, Tangent, TextureCoord, VertexFormat, WithField};
+use vertex::{AttributeFormat, Normal, Position, Tangent, TexCoord, VertexFormat, With};
 
 static VERT_SRC: &[u8] = include_bytes!("shaders/vertex/basic.glsl");
 static FRAG_SRC: &[u8] = include_bytes!("shaders/fragment/pbm.glsl");
@@ -33,17 +33,17 @@ static FRAG_SRC: &[u8] = include_bytes!("shaders/fragment/pbm.glsl");
 /// `L` is `Light` component
 #[derive(Clone, Debug, PartialEq)]
 pub struct DrawPbm<V, A, M, N, T, L> {
-    vertex_attributes: [(&'static str, Attribute); 4],
+    vertex_attributes: [(&'static str, AttributeFormat); 4],
     _pd: PhantomData<(V, A, M, N, T, L)>,
 }
 
 impl<V, A, M, N, T, L> DrawPbm<V, A, M, N, T, L>
 where
     V: VertexFormat
-        + WithField<Position>
-        + WithField<Normal>
-        + WithField<Tangent>
-        + WithField<TextureCoord>,
+        + With<Position>
+        + With<Normal>
+        + With<Tangent>
+        + With<TexCoord>,
     A: AsRef<Rgba> + Send + Sync + 'static,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     M: Component + AsRef<Mesh> + Send + Sync,
@@ -57,7 +57,7 @@ where
                 ("position", V::attribute::<Position>()),
                 ("normal", V::attribute::<Normal>()),
                 ("tangent", V::attribute::<Tangent>()),
-                ("tex_coord", V::attribute::<TextureCoord>()),
+                ("tex_coord", V::attribute::<TexCoord>()),
             ],
             _pd: PhantomData,
         }
@@ -107,10 +107,10 @@ unsafe impl Pod for DirectionalLightPod {}
 impl<'a, V, A, M, N, T, L> PassData<'a> for DrawPbm<V, A, M, N, T, L>
 where
     V: VertexFormat
-        + WithField<Position>
-        + WithField<Normal>
-        + WithField<Tangent>
-        + WithField<TextureCoord>,
+        + With<Position>
+        + With<Normal>
+        + With<Tangent>
+        + With<TexCoord>,
     A: AsRef<Rgba> + Send + Sync + 'static,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     M: Component + AsRef<Mesh> + Send + Sync,
@@ -130,10 +130,10 @@ where
 impl<'a, V, A, M, N, T, L> PassApply<'a> for DrawPbm<V, A, M, N, T, L>
 where
     V: VertexFormat
-        + WithField<Position>
-        + WithField<Normal>
-        + WithField<Tangent>
-        + WithField<TextureCoord>,
+        + With<Position>
+        + With<Normal>
+        + With<Tangent>
+        + With<TexCoord>,
     A: AsRef<Rgba> + Send + Sync + 'static,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     M: Component + AsRef<Mesh> + Send + Sync,
@@ -146,10 +146,10 @@ where
 impl<V, A, M, N, T, L> Pass for DrawPbm<V, A, M, N, T, L>
 where
     V: VertexFormat
-        + WithField<Position>
-        + WithField<Normal>
-        + WithField<Tangent>
-        + WithField<TextureCoord>,
+        + With<Position>
+        + With<Normal>
+        + With<Tangent>
+        + With<TexCoord>,
     A: AsRef<Rgba> + Send + Sync + 'static,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     M: Component + AsRef<Mesh> + Send + Sync,
@@ -216,10 +216,10 @@ pub struct DrawPbmApply<'a, V, A: 'static, M: Component, N: Component, T: Compon
 impl<'a, V, A, M, N, T, L> ParallelIterator for DrawPbmApply<'a, V, A, M, N, T, L>
 where
     V: VertexFormat
-        + WithField<Position>
-        + WithField<Normal>
-        + WithField<Tangent>
-        + WithField<TextureCoord>,
+        + With<Position>
+        + With<Normal>
+        + With<Tangent>
+        + With<TexCoord>,
     A: AsRef<Rgba> + Send + Sync + 'static,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     M: Component + AsRef<Mesh> + Send + Sync,

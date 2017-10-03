@@ -16,7 +16,7 @@ use mtl::Material;
 use pipe::pass::{Pass, PassApply, PassData, Supplier};
 use pipe::{DepthMode, Effect, NewEffect};
 use types::Encoder;
-use vertex::{Attribute, Position, TextureCoord, VertexFormat, WithField};
+use vertex::{AttributeFormat, Position, TexCoord, VertexFormat, With};
 
 static VERT_SRC: &[u8] = include_bytes!("shaders/vertex/basic.glsl");
 static FRAG_SRC: &[u8] = include_bytes!("shaders/fragment/flat.glsl");
@@ -28,13 +28,13 @@ static FRAG_SRC: &[u8] = include_bytes!("shaders/fragment/flat.glsl");
 /// `T` is transform matrix component
 #[derive(Clone, Debug, PartialEq)]
 pub struct DrawFlat<V, M, N, T> {
-    vertex_attributes: [(&'static str, Attribute); 2],
+    vertex_attributes: [(&'static str, AttributeFormat); 2],
     _pd: PhantomData<(V, M, N, T)>,
 }
 
 impl<V, M, N, T> DrawFlat<V, M, N, T>
 where
-    V: VertexFormat + WithField<Position> + WithField<TextureCoord>,
+    V: VertexFormat + With<Position> + With<TexCoord>,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     M: Component + AsRef<Mesh> + Send + Sync,
     N: Component + AsRef<Material> + Send + Sync,
@@ -45,7 +45,7 @@ where
         DrawFlat {
             vertex_attributes: [
                 ("position", V::attribute::<Position>()),
-                ("tex_coord", V::attribute::<TextureCoord>()),
+                ("tex_coord", V::attribute::<TexCoord>()),
             ],
             _pd: PhantomData,
         }
@@ -61,7 +61,7 @@ struct VertexArgs {
 
 impl<'a, V, M, N, T> PassData<'a> for DrawFlat<V, M, N, T>
 where
-    V: VertexFormat + WithField<Position> + WithField<TextureCoord>,
+    V: VertexFormat + With<Position> + With<TexCoord>,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     M: Component + AsRef<Mesh> + Send + Sync,
     N: Component + AsRef<Material> + Send + Sync,
@@ -76,7 +76,7 @@ where
 
 impl<'a, V, M, N, T> PassApply<'a> for DrawFlat<V, M, N, T>
 where
-    V: VertexFormat + WithField<Position> + WithField<TextureCoord>,
+    V: VertexFormat + With<Position> + With<TexCoord>,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     M: Component + AsRef<Mesh> + Send + Sync,
     N: Component + AsRef<Material> + Send + Sync,
@@ -86,7 +86,7 @@ where
 
 impl<V, M, N, T> Pass for DrawFlat<V, M, N, T>
 where
-    V: VertexFormat + WithField<Position> + WithField<TextureCoord>,
+    V: VertexFormat + With<Position> + With<TexCoord>,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     M: Component + AsRef<Mesh> + Send + Sync,
     N: Component + AsRef<Material> + Send + Sync,
@@ -134,7 +134,7 @@ pub struct DrawFlatApply<'a, V, M: Component, N: Component, T: Component> {
 
 impl<'a, V, M, N, T> ParallelIterator for DrawFlatApply<'a, V, M, N, T>
 where
-    V: VertexFormat + WithField<Position> + WithField<TextureCoord>,
+    V: VertexFormat + With<Position> + With<TexCoord>,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     M: Component + AsRef<Mesh> + Send + Sync,
     N: Component + AsRef<Material> + Send + Sync,
@@ -163,7 +163,7 @@ where
                         let mesh = mesh.as_ref();
                         let material = material.as_ref();
 
-                        if mesh.attributes() != V::attributes().as_ref() {
+                        if mesh.attributes() != V::ATTRIBUTES {
                             return;
                         }
 

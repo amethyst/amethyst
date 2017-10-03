@@ -184,10 +184,10 @@ fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTangTex> {
             let up = Vector3::from([0.0, 1.0, 0.0]);
             let tangent = normal.cross(up).cross(normal);
             PosNormTangTex {
-                a_position: [x, y, z],
-                a_normal: normal.into(),
-                a_tangent: tangent.into(),
-                a_tex_coord: [0.1, 0.1],
+                position: [x, y, z],
+                normal: normal.into(),
+                tangent: tangent.into(),
+                tex_coord: [0.1, 0.1],
             }
         })
         .triangulate()

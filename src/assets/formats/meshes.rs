@@ -77,17 +77,17 @@ fn convert(
     ni: Option<NormalIndex>,
 ) -> PosNormTex {
     PosNormTex {
-        a_position: {
+        position: {
             let vertex: Vertex = object.vertices[vi];
             [vertex.x as f32, vertex.y as f32, vertex.z as f32]
         },
-        a_normal: ni.map(|i| {
+        normal: ni.map(|i| {
             let normal: Normal = object.normals[i];
             Vector3::from([normal.x as f32, normal.y as f32, normal.z as f32])
                 .normalize()
                 .into()
         }).unwrap_or([0.0, 0.0, 0.0]),
-        a_tex_coord: ti.map(|i| {
+        tex_coord: ti.map(|i| {
             let tvertex: TVertex = object.tex_vertices[i];
             [tvertex.u as f32, tvertex.v as f32]
         }).unwrap_or([0.0, 0.0]),

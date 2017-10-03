@@ -22,7 +22,7 @@ use error::{Error, Result};
 use mesh::Mesh;
 use pipe::Target;
 use types::{Encoder, Factory, PipelineState, Resources};
-use vertex::Attribute;
+use vertex::AttributeFormat;
 
 mod pso;
 
@@ -236,7 +236,7 @@ impl<'a> EffectBuilder<'a> {
     /// Adds a vertex buffer to this `Effect`.
     pub fn with_raw_vertex_buffer(
         &mut self,
-        attrs: &'a [(&'a str, Attribute)],
+        attrs: &'a [(&'a str, AttributeFormat)],
         stride: ElemStride,
         rate: InstanceRate,
     ) -> &mut Self {

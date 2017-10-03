@@ -9,12 +9,12 @@ use gfx::Primitive;
 
 use error::Result;
 use types::{Factory, RawBuffer, Slice};
-use vertex::{Attribute, VertexFormat};
+use vertex::{AttributeFormat, VertexFormat};
 
 /// Represents a polygonal mesh.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Mesh {
-    attrs: Vec<Attribute>,
+    attrs: &'static [(&'static str, AttributeFormat)],
     prim: Primitive,
     slice: Slice,
     transform: Matrix4<f32>,
@@ -32,8 +32,8 @@ impl Mesh {
     }
 
     /// Returns a list of all vertex attributes needed by this mesh.
-    pub fn attributes(&self) -> &[Attribute] {
-        self.attrs.as_ref()
+    pub fn attributes(&self) -> &[(&'static str, AttributeFormat)] {
+        self.attrs
     }
 
     /// Returns the mesh's vertex buffer and associated buffer slice.
@@ -144,7 +144,7 @@ where
         };
 
         Ok(Mesh {
-            attrs: V::attributes().as_ref().to_vec(),
+            attrs: V::ATTRIBUTES,
             prim: self.prim,
             slice: slice,
             transform: self.transform,
