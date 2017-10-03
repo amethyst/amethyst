@@ -15,11 +15,13 @@ use amethyst::ecs::{Component, DenseVecStorage, ECSBundle, Fetch, FetchMut, Join
 use amethyst::ecs::audio::DjBundle;
 use amethyst::ecs::input::{InputBundle, InputHandler};
 use amethyst::ecs::rendering::{Factory, MaterialComponent, MeshComponent, RenderBundle};
+use amethyst::ecs::rendering::resources::WindowMessages;
 use amethyst::ecs::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::Config as DisplayConfig;
 use amethyst::renderer::prelude::*;
 use amethyst::timing::Time;
+use amethyst::winit::CursorState;
 use futures::{Future, IntoFuture};
 
 struct Pong;
@@ -294,6 +296,14 @@ where
 
 impl State for Pong {
     fn on_start(&mut self, engine: &mut Engine) {
+        // Hide the cursor
+        engine.world.write_resource::<WindowMessages>().send_command(
+            |win| {
+                if let Err(err) = win.set_cursor_state(CursorState::Hide) {
+                    eprintln!("Unable to make cursor hidden! Error: {:?}", err);
+                }
+            }
+        );
         // Load audio assets
         // FIXME: do loading with futures, pending the Loading state
         {

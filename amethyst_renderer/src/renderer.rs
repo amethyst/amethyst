@@ -15,7 +15,7 @@ use pipe::{ColorBuffer, DepthBuffer, PipelineBuild, PipelineData, PolyPipeline, 
 use tex::{Texture, TextureBuilder};
 use types::{ColorFormat, DepthFormat, Device, Encoder, Factory, Window};
 use vertex::VertexFormat;
-use winit::{self, EventsLoop, WindowBuilder};
+use winit::{self, EventsLoop, Window as WinitWindow, WindowBuilder};
 
 /// Generic renderer.
 pub struct Renderer {
@@ -134,6 +134,25 @@ impl Renderer {
         self.window
             .swap_buffers()
             .expect("OpenGL context has been lost");
+    }
+
+    /// Retrieves an immutable borrow of the window.
+    ///
+    /// No operations require a mutable borrow as of 2017-10-02
+    #[cfg(feature = "opengl")]
+    pub fn window(&self) -> &WinitWindow {
+        self.window.window()
+    }
+
+    #[cfg(feature = "metal")]
+    #[cfg(feature = "vulkan")]
+    pub fn window(&self) -> &WinitWindow {
+        &self.window.0
+    }
+
+    #[cfg(feature = "d3d11")]
+    pub fn window(&self) -> &WinitWindow {
+        &*self.window.0
     }
 }
 

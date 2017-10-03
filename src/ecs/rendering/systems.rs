@@ -1,7 +1,7 @@
 //! Rendering system.
 
-use ecs::{Fetch, System};
-use ecs::rendering::resources::Factory;
+use ecs::{Fetch, FetchMut, System};
+use ecs::rendering::resources::{Factory, WindowMessages};
 use renderer::Renderer;
 use renderer::pipe::{PipelineData, PolyPipeline};
 
@@ -28,12 +28,20 @@ impl<'a, P> System<'a> for RenderSystem<P>
 where
     P: PolyPipeline,
 {
-    type SystemData = (Fetch<'a, Factory>, <P as PipelineData<'a>>::Data);
+    type SystemData = (
+        Fetch<'a, Factory>,
+        FetchMut<'a, WindowMessages>,
+        <P as PipelineData<'a>>::Data,
+    );
 
-    fn run(&mut self, (factory, data): Self::SystemData) {
+    fn run(&mut self, (factory, mut window_messages, data): Self::SystemData) {
         #[cfg(feature = "profiler")]
         profile_scope!("render_system");
         use std::time::Duration;
+
+        for mut command in window_messages.queue.drain() {
+            command(self.renderer.window());
+        }
 
         while let Some(job) = factory.jobs.try_pop() {
             job.exec(&mut self.renderer.factory);
