@@ -3,19 +3,25 @@
 use std::ops::{Deref, DerefMut};
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use cgmath::{Matrix3, Matrix4, Quaternion, Vector3};
+use cgmath::{Euler, Matrix3, Matrix4, Quaternion, Vector3, Vector4};
 
 use ecs::{Component, VecStorage};
 
 /// Raw transform data.
 #[derive(Debug)]
 pub struct InnerTransform {
-    /// Translation/position vector [x, y, z]
-    pub translation: [f32; 3],
+    /// Forward vector [x, y, z]
+    pub forward: [f32; 3],
+    /// Right vector [x, y, z]
+    pub right: [f32; 3],
     /// Quaternion [w (scalar), x, y, z]
     pub rotation: [f32; 4],
     /// Scale vector [x, y, z]
     pub scale: [f32; 3],
+    /// Translation/position vector [x, y, z]
+    pub translation: [f32; 3],
+    /// Up vector [x, y, z]
+    pub up: [f32; 3],
 }
 
 /// Local position, rotation, and scale (from parent if it exists).
@@ -59,16 +65,14 @@ impl LocalTransform {
         self.dirty.load(Ordering::SeqCst)
     }
 
-    /// Returns the forward-vector of the transform
-    /// Useful for camera calculations
-    /// For the camera, the center-point can be calculated as position+forward
-    pub fn forward(&self) -> [f32; 3] {
-
-    }
-
     /// Rotate to look at a point in space (without rolling)
     pub fn look_at(&mut self, position: Vector3<f32>) -> &mut Self {
-        // tbd
+        let cam_quat = Quaternion::from(self.rotation);
+        let pos_vec = Vector3::from(self.translation;
+
+        self.rotation = cam_quat.look_at(position - pos_vec, self.up).into();
+        self.flag(true);
+
         self
     }
 
@@ -89,79 +93,122 @@ impl LocalTransform {
         matrix.into()
     }
 
-    /// Move the camera relatively to its current position, but independently from its orientation.
+    /// Move relatively to its current position and orientation.
+    pub fn move_forward(&mut self, amount: f32) -> &mut Self {
+        self.move_local(self.forward, amount)
+    }
+
+    /// Move relatively to its current position, but independently from its orientation.
+    /// Ideally, first normalize the direction and then multiply it
+    /// by whatever amount you want to move before passing the vector to this method
+    #[inline]
     pub fn move_global(&mut self, direction: Vector3<f32>) -> &mut Self {
-        self.dirty = true;
-        self.eye += direction;
+        self.translation = (Vector3::from(self.translation) + direction).into();
+        self.flag(true);
         self
     }
 
-    /// Move the camera relatively to its current position and orientation.
-    pub fn move_local(&mut self, direction: Vector3<f32>) -> &mut Self {
-        self.dirty = true;
-        self.eye += self.rotation * direction;
+    /// Move relatively to its current position and orientation.
+    #[inline]
+    pub fn move_local(&mut self, axis: Vector3<f32>, amount: f32) -> &mut Self {
+        self.translation += Quaternion::from(self.rotation).conjugate() * axis.normalize() * amount;
         self
     }
 
-    /// Pitch the camera relatively to the world.
+    /// Move relatively to its current position and orientation.
+    pub fn move_right(&mut self, amount: f32) -> &mut Self {
+        self.move_local(self.right, amount)
+    }
+
+    /// Move relatively to its current position and orientation.
+    pub fn move_up(&mut self, amount: f32) -> &mut Self {
+        self.move_local(self.up, amount)
+    }
+
+    /// Pitch relatively to the world.
     pub fn pitch_global(&mut self, angle: Deg<f32>) -> &mut Self {
-        // tbd
-        self
+        self.rotate_global(self.right, angle)
     }
 
-    /// Pitch the camera relatively to its own rotation.
+    /// Pitch relatively to its own rotation.
     pub fn pitch_local(&mut self, angle: Deg<f32>) -> &mut Self {
-        // tbd
-        self
+        self.rotate_local(self.right, angle)
     }
 
-    /// Roll the camera relatively to the world.
+    /// Roll relatively to the world.
     pub fn roll_global(&mut self, angle: Deg<f32>) -> &mut Self {
-        // tbd
-        self
+        self.rotate_global(self.forward, angle)
     }
 
-    /// Roll the camera relatively to its own rotation.
+    /// Roll relatively to its own rotation.
     pub fn roll_local(&mut self, angle: Deg<f32>) -> &mut Self {
-        // tbd
+        self.rotate_local(self.forward, angle);
+    }
+
+    /// Add a rotation to the current rotation
+    #[inline]
+    pub fn rotate(&mut self, quat: Quaternion<f32>) -> &mut Self {
+        self.rotation = quat * Quaternion::from(self.rotation);
+        self.flag(true);
         self
     }
 
-    /// Set the position of the camera.
+    /// Rotate relatively to the world
+    #[inline]
+    pub fn rotate_global(&mut self, axis: Vector3<f32>, angle: Deg<f32>) -> &mut Self {
+        let axis_normalized = Vectro3::from(axis).normalize();
+        let q = Quaternion::from::<f32>(Euler {
+            x: axis_normalized.x * angle,
+            y: axis_normalized.y * angle,
+            z: axis_normalized.z * angle,
+        });
+
+        self.rotate(q)
+    }
+
+    /// Rotate relatively to the current orientation
+    #[inline]
+    pub fn rotate_local(&mut self, axis: Vector3<f32>, angle: Deg<f32>) -> &mut Self {
+        let rel_axis_normalized = Quaternion::from(self.rotation)
+            .rotate_vector(Vector3::from(axis))
+            .normalize();
+        let q = Quaternion::from::<f32>(Euler {
+            x: rel_axis_normalized.x * angle,
+            y: rel_axis_normalized.y * angle,
+            z: rel_axis_normalized.z * angle,
+        });
+
+        self.rotate(q)
+    }
+
+    /// Set the position.
     pub fn set_position(&mut self, position: Point3<f32>) -> &mut Self {
-        self.dirty = true;
-        self.eye = position;
+        self.translation = position.into();
+        self.flag(true);
+
         self
     }
 
-    /// Set the rotation of the camera using Euler x, y, z.
+    /// Set the rotation using Euler x, y, z.
     pub fn set_rotation<D: Into<Deg<f32>>>(&mut self, x: D, y: D, z: D) -> &mut Self {
-        self.dirty = true;
-        //self.rotation = Quaternion::from::<f32>(Euler {
-        //    x: x,
-        //    y: y,
-        //    z: z,
-        //});
+        self.rotation = Quaternion::from::<f32>(Euler {
+            x: x,
+            y: y,
+            z: z,
+        }).into();
 
+        self.flag(true);
         self
     }
 
-    /// Returns the up-vector of the transform
-    /// Useful for camera calculations
-    pub fn up(&self) -> [f32; 3] {
-
-    }
-
-    /// Yaw the camera relatively to the world.
+    /// Yaw relatively to the world.
     pub fn yaw_global(&mut self, angle: Deg<f32>) -> &mut Self {
-        // tbd
-        self
+        self.rotate_global(self.up, angle)
     }
 
-    /// Yaw the camera relatively to its own rotation.
+    /// Yaw relatively to its own rotation.
     pub fn yaw_local(&mut self, angle: Deg<f32>) -> &mut Self {
-        // tbd
-        self
+        self.rotate_local(self.up, angle)
     }
 }
 
@@ -169,9 +216,13 @@ impl Default for LocalTransform {
     fn default() -> Self {
         LocalTransform {
             wrapped: InnerTransform {
+                up:          [0.0, 0.0, 1.0],
+                forward:     [1.0, 0.0, 0.0],
+                right:       [0.0,-1.0, 0.0],
+
+                rotation:    [1.0, 0.0, 0.0, 0.0],
+                scale:       [1.0, 1.0, 1.0],
                 translation: [0.0, 0.0, 0.0],
-                rotation: [1.0, 0.0, 0.0, 0.0],
-                scale: [1.0, 1.0, 1.0],
             },
             dirty: AtomicBool::new(true),
         }
