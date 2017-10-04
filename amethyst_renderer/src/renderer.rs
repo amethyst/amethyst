@@ -41,7 +41,8 @@ impl Renderer {
 
     /// Builds a new mesh from the given vertices.
     pub fn create_mesh<T>(&mut self, mb: MeshBuilder<T>) -> Result<Mesh>
-        where T: VertexDataSet,
+    where
+        T: VertexDataSet,
     {
         mb.build(&mut self.factory)
     }

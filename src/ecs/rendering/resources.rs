@@ -7,8 +7,8 @@ use futures::{Async, Future, Poll};
 use futures::sync::oneshot::{channel, Receiver, Sender};
 use gfx::traits::Pod;
 use renderer::{Error, Material, MaterialBuilder, Texture, TextureBuilder};
-use renderer::mesh::{Mesh, MeshBuilder, VertexDataSet};
 use renderer::Rgba;
+use renderer::mesh::{Mesh, MeshBuilder, VertexDataSet};
 use smallvec::SmallVec;
 use winit::Window;
 
@@ -48,7 +48,8 @@ impl Factory {
 
     /// Creates a mesh asynchronously.
     pub fn create_mesh<T>(&self, mb: MeshBuilder<T>) -> MeshFuture
-        where T: VertexDataSet + Send + 'static,
+    where
+        T: VertexDataSet + Send + 'static,
     {
         self.execute(move |f| mb.build(f))
     }

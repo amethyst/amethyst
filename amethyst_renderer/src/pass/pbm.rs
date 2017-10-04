@@ -19,7 +19,7 @@ use mtl::Material;
 use pipe::{DepthMode, Effect, NewEffect};
 use pipe::pass::{Pass, PassApply, PassData, Supplier};
 use types::Encoder;
-use vertex::{Normal, Position, Tangent, TexCoord, Query};
+use vertex::{Normal, Position, Query, Tangent, TexCoord};
 
 static VERT_SRC: &[u8] = include_bytes!("shaders/vertex/basic.glsl");
 static FRAG_SRC: &[u8] = include_bytes!("shaders/fragment/pbm.glsl");
@@ -47,9 +47,7 @@ where
 {
     /// Create instance of `DrawPbm` pass
     pub fn new() -> Self {
-        DrawPbm {
-            _pd: PhantomData,
-        }
+        DrawPbm { _pd: PhantomData }
     }
 }
 
@@ -224,9 +222,8 @@ where
             .supply((&mesh, &material, &global).par_join().map(
                 |(mesh, material, global)| {
                     move |encoder: &mut Encoder, effect: &mut Effect| {
-
                         let mesh = mesh.as_ref();
-                        
+
                         let vbuf = match mesh.buffer(V::QUERIED_ATTRIBUTES) {
                             Some(vbuf) => vbuf.clone(),
                             None => return,
@@ -302,26 +299,14 @@ where
                                 .unwrap_or([0.0; 3]),
                         );
 
-                        effect
-                            .data
-                            .textures
-                            .push(material.roughness.view().clone());
+                        effect.data.textures.push(material.roughness.view().clone());
                         effect
                             .data
                             .samplers
                             .push(material.roughness.sampler().clone());
-                        effect
-                            .data
-                            .textures
-                            .push(material.caveat.view().clone());
-                        effect
-                            .data
-                            .samplers
-                            .push(material.caveat.sampler().clone());
-                        effect
-                            .data
-                            .textures
-                            .push(material.metallic.view().clone());
+                        effect.data.textures.push(material.caveat.view().clone());
+                        effect.data.samplers.push(material.caveat.sampler().clone());
+                        effect.data.textures.push(material.metallic.view().clone());
                         effect
                             .data
                             .samplers
@@ -334,31 +319,16 @@ where
                             .data
                             .samplers
                             .push(material.ambient_occlusion.sampler().clone());
-                        effect
-                            .data
-                            .textures
-                            .push(material.emission.view().clone());
+                        effect.data.textures.push(material.emission.view().clone());
                         effect
                             .data
                             .samplers
                             .push(material.emission.sampler().clone());
-                        effect
-                            .data
-                            .textures
-                            .push(material.normal.view().clone());
-                        effect
-                            .data
-                            .samplers
-                            .push(material.normal.sampler().clone());
-                        effect
-                            .data
-                            .textures
-                            .push(material.albedo.view().clone());
-                        effect
-                            .data
-                            .samplers
-                            .push(material.albedo.sampler().clone());
-                        
+                        effect.data.textures.push(material.normal.view().clone());
+                        effect.data.samplers.push(material.normal.sampler().clone());
+                        effect.data.textures.push(material.albedo.view().clone());
+                        effect.data.samplers.push(material.albedo.sampler().clone());
+
                         effect.data.vertex_bufs.push(vbuf);
 
                         effect.draw(mesh.slice(), encoder);

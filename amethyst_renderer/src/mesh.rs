@@ -1,6 +1,6 @@
 //! Mesh resource.
 
-use std::iter::{Chain, once, Once};
+use std::iter::{once, Chain, Once};
 use std::marker::PhantomData;
 
 use specs::{Component, DenseVecStorage};
@@ -35,15 +35,17 @@ pub trait VertexData {
 
 /// Construct new vertex data from raw data and vertex format
 pub fn vertex_data<D, V>(data: D) -> (D, PhantomData<V>)
-    where D: AsRef<[V]>,
-          V: VertexFormat,
+where
+    D: AsRef<[V]>,
+    V: VertexFormat,
 {
     (data, PhantomData)
 }
 
 impl<D, V> VertexData for (D, PhantomData<V>)
-    where D: AsRef<[V]>,
-          V: VertexFormat,
+where
+    D: AsRef<[V]>,
+    V: VertexFormat,
 {
     const ATTRIBUTES: Attributes<'static> = V::ATTRIBUTES;
 
@@ -53,7 +55,7 @@ impl<D, V> VertexData for (D, PhantomData<V>)
 
     fn build(&self, factory: &mut Factory) -> Result<VertexBuffer> {
         use gfx::Factory;
-        use gfx::memory::{Bind, cast_slice};
+        use gfx::memory::{cast_slice, Bind};
         use gfx::buffer::Role;
 
         let verts = self.0.as_ref();
@@ -74,7 +76,7 @@ impl<D, V> VertexData for (D, PhantomData<V>)
 #[doc(hidden)]
 pub trait VertexDataSet {
     /// Iterator for `VertexBuffer`s built
-    type VertexBufferIter: Iterator<Item=VertexBuffer>;
+    type VertexBufferIter: Iterator<Item = VertexBuffer>;
 
     /// Get smalles vertex count across buffers
     fn len(&self) -> usize;
@@ -84,7 +86,8 @@ pub trait VertexDataSet {
 }
 
 impl<H> VertexDataSet for (H, ())
-    where H: VertexData,
+where
+    H: VertexData,
 {
     type VertexBufferIter = Once<VertexBuffer>;
 
@@ -99,8 +102,9 @@ impl<H> VertexDataSet for (H, ())
 }
 
 impl<H, T> VertexDataSet for (H, T)
-    where H: VertexData,
-          T: VertexDataSet,
+where
+    H: VertexData,
+    T: VertexDataSet,
 {
     type VertexBufferIter = Chain<Once<VertexBuffer>, T::VertexBufferIter>;
 
@@ -148,10 +152,10 @@ impl Mesh {
                             // continue searching
                             i += 1;
                         }
-                    },
+                    }
                     None => {
                         // All atributes found
-                        return Some(&vbuf.raw)
+                        return Some(&vbuf.raw);
                     }
                 }
             }
@@ -189,8 +193,9 @@ pub struct MeshBuilder<T> {
 }
 
 impl<D, V> MeshBuilder<((D, PhantomData<V>), ())>
-    where D: AsRef<[V]>,
-          V: VertexFormat,
+where
+    D: AsRef<[V]>,
+    V: VertexFormat,
 {
     /// Creates a new `MeshBuilder` with the given vertices.
     pub fn new(verts: D) -> Self {
@@ -205,12 +210,14 @@ impl<D, V> MeshBuilder<((D, PhantomData<V>), ())>
 }
 
 impl<T> MeshBuilder<T>
-    where T: VertexDataSet,
+where
+    T: VertexDataSet,
 {
     /// Add another vertices to the `MeshBuilder`
     pub fn with_buffer<D, V>(self, verts: D) -> MeshBuilder<((D, PhantomData<V>), T)>
-        where D: AsRef<[V]>,
-              V: VertexFormat,
+    where
+        D: AsRef<[V]>,
+        V: VertexFormat,
     {
         assert!(check_attributes_are_sorted(V::ATTRIBUTES));
         MeshBuilder {

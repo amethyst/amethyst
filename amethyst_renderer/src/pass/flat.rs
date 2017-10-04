@@ -16,7 +16,7 @@ use mtl::Material;
 use pipe::pass::{Pass, PassApply, PassData, Supplier};
 use pipe::{DepthMode, Effect, NewEffect};
 use types::Encoder;
-use vertex::{Position, TexCoord, Query};
+use vertex::{Position, Query, TexCoord};
 
 static VERT_SRC: &[u8] = include_bytes!("shaders/vertex/basic.glsl");
 static FRAG_SRC: &[u8] = include_bytes!("shaders/fragment/flat.glsl");
@@ -41,9 +41,7 @@ where
 {
     /// Create instance of `DrawFlat` pass
     pub fn new() -> Self {
-        DrawFlat {
-            _pd: PhantomData,
-        }
+        DrawFlat { _pd: PhantomData }
     }
 }
 
@@ -156,7 +154,7 @@ where
                 move |(mesh, material, global)| {
                     move |encoder: &mut Encoder, effect: &mut Effect| {
                         let mesh = mesh.as_ref();
-                        
+
                         let vbuf = match mesh.buffer(V::QUERIED_ATTRIBUTES) {
                             Some(vbuf) => vbuf.clone(),
                             None => return,
@@ -183,7 +181,7 @@ where
                         effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
                         effect.data.textures.push(material.albedo.view().clone());
                         effect.data.samplers.push(material.albedo.sampler().clone());
-                        
+
                         effect.data.vertex_bufs.push(vbuf);
 
                         effect.draw(mesh.slice(), encoder);

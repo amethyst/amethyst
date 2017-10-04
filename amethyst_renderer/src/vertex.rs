@@ -105,20 +105,29 @@ pub trait With<F: Attribute>: VertexFormat {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Separate<T: Attribute>(T::Repr);
-unsafe impl<T> Pod for Separate<T> where T: Attribute {}
+unsafe impl<T> Pod for Separate<T>
+where
+    T: Attribute,
+{
+}
 impl<T> VertexFormat for Separate<T>
-    where T: Attribute
+where
+    T: Attribute,
 {
     const ATTRIBUTES: Attributes<'static> = &[
-        (T::NAME, Element {
-            offset: 0,
-            format: T::FORMAT,
-        })
+        (
+            T::NAME,
+            Element {
+                offset: 0,
+                format: T::FORMAT,
+            },
+        ),
     ];
 }
 
 impl<T> With<T> for Separate<T>
-    where T: Attribute
+where
+    T: Attribute,
 {
     const FORMAT: AttributeFormat = Element {
         offset: 0,

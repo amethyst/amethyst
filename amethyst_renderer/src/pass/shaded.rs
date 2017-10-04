@@ -19,7 +19,7 @@ use mtl::Material;
 use pipe::{DepthMode, Effect, NewEffect};
 use pipe::pass::{Pass, PassApply, PassData, Supplier};
 use types::Encoder;
-use vertex::{Normal, Position, TexCoord, Query};
+use vertex::{Normal, Position, Query, TexCoord};
 
 static VERT_SRC: &[u8] = include_bytes!("shaders/vertex/basic.glsl");
 static FRAG_SRC: &[u8] = include_bytes!("shaders/fragment/shaded.glsl");
@@ -47,9 +47,7 @@ where
 {
     /// Create instance of `DrawShaded` pass
     pub fn new() -> Self {
-        DrawShaded {
-            _pd: PhantomData,
-        }
+        DrawShaded { _pd: PhantomData }
     }
 }
 
@@ -228,9 +226,8 @@ where
             .supply((&mesh, &material, &global).par_join().map(
                 |(mesh, material, global)| {
                     move |encoder: &mut Encoder, effect: &mut Effect| {
-
                         let mesh = mesh.as_ref();
-                        
+
                         let vbuf = match mesh.buffer(V::QUERIED_ATTRIBUTES) {
                             Some(vbuf) => vbuf.clone(),
                             None => return,
@@ -305,25 +302,16 @@ where
                                 .unwrap_or([0.0; 3]),
                         );
 
-                        effect
-                            .data
-                            .textures
-                            .push(material.emission.view().clone());
+                        effect.data.textures.push(material.emission.view().clone());
 
                         effect
                             .data
                             .samplers
                             .push(material.emission.sampler().clone());
 
-                        effect
-                            .data
-                            .textures
-                            .push(material.albedo.view().clone());
+                        effect.data.textures.push(material.albedo.view().clone());
 
-                        effect
-                            .data
-                            .samplers
-                            .push(material.albedo.sampler().clone());
+                        effect.data.samplers.push(material.albedo.sampler().clone());
 
                         effect.data.vertex_bufs.push(vbuf);
 
