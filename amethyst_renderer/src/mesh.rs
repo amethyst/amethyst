@@ -129,6 +129,14 @@ pub struct Mesh {
 }
 
 impl Mesh {
+    /// Builds a new mesh from the given vertices.
+    pub fn build<D, V>(verts: D) -> MeshBuilder<((D, PhantomData<V>), ())>
+        where D: AsRef<[V]>,
+              V: VertexFormat,
+    {
+        MeshBuilder::new(verts)
+    }
+
     /// Returns the mesh's vertex buffer which matches requested attributes
     pub fn buffer(&self, attributes: Attributes) -> Option<&RawBuffer> {
         for vbuf in self.vbufs.iter() {
@@ -165,7 +173,7 @@ impl Mesh {
         None
     }
 
-    /// Returns assotiated `Slice`
+    /// Returns associated `Slice`
     pub fn slice(&self) -> &Slice {
         &self.slice
     }
