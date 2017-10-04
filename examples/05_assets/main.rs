@@ -54,9 +54,9 @@ impl Format for Custom {
             ];
 
             result.push(PosNormTex {
-                a_position: vertex,
-                a_normal: normal,
-                a_tex_coord: [0.0, 0.0],
+                position: vertex,
+                normal: normal,
+                tex_coord: [0.0, 0.0],
             });
         }
         Ok(result)

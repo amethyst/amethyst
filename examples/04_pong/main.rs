@@ -297,13 +297,14 @@ where
 impl State for Pong {
     fn on_start(&mut self, engine: &mut Engine) {
         // Hide the cursor
-        engine.world.write_resource::<WindowMessages>().send_command(
-            |win| {
+        engine
+            .world
+            .write_resource::<WindowMessages>()
+            .send_command(|win| {
                 if let Err(err) = win.set_cursor_state(CursorState::Hide) {
                     eprintln!("Unable to make cursor hidden! Error: {:?}", err);
                 }
-            }
-        );
+            });
         // Load audio assets
         // FIXME: do loading with futures, pending the Loading state
         {
@@ -504,34 +505,34 @@ fn main() {
 fn gen_rectangle(w: f32, h: f32) -> Vec<PosNormTex> {
     let data: Vec<PosNormTex> = vec![
         PosNormTex {
-            a_position: [-w / 2., -h / 2., 0.],
-            a_normal: [0., 0., 1.],
-            a_tex_coord: [0., 0.],
+            position: [-w / 2., -h / 2., 0.],
+            normal: [0., 0., 1.],
+            tex_coord: [0., 0.],
         },
         PosNormTex {
-            a_position: [w / 2., -h / 2., 0.],
-            a_normal: [0., 0., 1.],
-            a_tex_coord: [1., 0.],
+            position: [w / 2., -h / 2., 0.],
+            normal: [0., 0., 1.],
+            tex_coord: [1., 0.],
         },
         PosNormTex {
-            a_position: [w / 2., h / 2., 0.],
-            a_normal: [0., 0., 1.],
-            a_tex_coord: [1., 1.],
+            position: [w / 2., h / 2., 0.],
+            normal: [0., 0., 1.],
+            tex_coord: [1., 1.],
         },
         PosNormTex {
-            a_position: [w / 2., h / 2., 0.],
-            a_normal: [0., 0., 1.],
-            a_tex_coord: [1., 1.],
+            position: [w / 2., h / 2., 0.],
+            normal: [0., 0., 1.],
+            tex_coord: [1., 1.],
         },
         PosNormTex {
-            a_position: [-w / 2., h / 2., 0.],
-            a_normal: [0., 0., 1.],
-            a_tex_coord: [0., 1.],
+            position: [-w / 2., h / 2., 0.],
+            normal: [0., 0., 1.],
+            tex_coord: [0., 1.],
         },
         PosNormTex {
-            a_position: [-w / 2., -h / 2., 0.],
-            a_normal: [0., 0., 1.],
-            a_tex_coord: [0., 0.],
+            position: [-w / 2., -h / 2., 0.],
+            normal: [0., 0., 1.],
+            tex_coord: [0., 0.],
         },
     ];
     data

@@ -19,7 +19,7 @@ use mtl::Material;
 use pipe::{DepthMode, Effect, NewEffect};
 use pipe::pass::{Pass, PassApply, PassData, Supplier};
 use types::Encoder;
-use vertex::{Attribute, Normal, Position, TextureCoord, VertexFormat, WithField};
+use vertex::{AttributeFormat, Normal, Position, TexCoord, VertexFormat, With};
 
 static VERT_SRC: &[u8] = include_bytes!("shaders/vertex/basic.glsl");
 static FRAG_SRC: &[u8] = include_bytes!("shaders/fragment/shaded.glsl");
@@ -33,13 +33,13 @@ static FRAG_SRC: &[u8] = include_bytes!("shaders/fragment/shaded.glsl");
 /// `L` is `Light` component
 #[derive(Clone, Debug, PartialEq)]
 pub struct DrawShaded<V, A, M, N, T, L> {
-    vertex_attributes: [(&'static str, Attribute); 3],
+    vertex_attributes: [(&'static str, AttributeFormat); 3],
     _pd: PhantomData<(V, A, M, N, T, L)>,
 }
 
 impl<V, A, M, N, T, L> DrawShaded<V, A, M, N, T, L>
 where
-    V: VertexFormat + WithField<Position> + WithField<Normal> + WithField<TextureCoord>,
+    V: VertexFormat + With<Position> + With<Normal> + With<TexCoord>,
     A: AsRef<Rgba> + Send + Sync + 'static,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     M: Component + AsRef<Mesh> + Send + Sync,
@@ -52,7 +52,7 @@ where
             vertex_attributes: [
                 ("position", V::attribute::<Position>()),
                 ("normal", V::attribute::<Normal>()),
-                ("tex_coord", V::attribute::<TextureCoord>()),
+                ("tex_coord", V::attribute::<TexCoord>()),
             ],
             _pd: PhantomData,
         }
@@ -101,7 +101,7 @@ unsafe impl Pod for DirectionalLightPod {}
 
 impl<'a, V, A, M, N, T, L> PassData<'a> for DrawShaded<V, A, M, N, T, L>
 where
-    V: VertexFormat + WithField<Position> + WithField<Normal> + WithField<TextureCoord>,
+    V: VertexFormat + With<Position> + With<Normal> + With<TexCoord>,
     A: AsRef<Rgba> + Send + Sync + 'static,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     M: Component + AsRef<Mesh> + Send + Sync,
@@ -120,7 +120,7 @@ where
 
 impl<'a, V, A, M, N, T, L> PassApply<'a> for DrawShaded<V, A, M, N, T, L>
 where
-    V: VertexFormat + WithField<Position> + WithField<Normal> + WithField<TextureCoord>,
+    V: VertexFormat + With<Position> + With<Normal> + With<TexCoord>,
     A: AsRef<Rgba> + Send + Sync + 'static,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     M: Component + AsRef<Mesh> + Send + Sync,
@@ -133,7 +133,7 @@ where
 
 impl<V, A, M, N, T, L> Pass for DrawShaded<V, A, M, N, T, L>
 where
-    V: VertexFormat + WithField<Position> + WithField<Normal> + WithField<TextureCoord>,
+    V: VertexFormat + With<Position> + With<Normal> + With<TexCoord>,
     A: AsRef<Rgba> + Send + Sync + 'static,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     M: Component + AsRef<Mesh> + Send + Sync,
@@ -202,7 +202,7 @@ pub struct DrawShadedApply<
 
 impl<'a, V, A, M, N, T, L> ParallelIterator for DrawShadedApply<'a, V, A, M, N, T, L>
 where
-    V: VertexFormat + WithField<Position> + WithField<Normal> + WithField<TextureCoord>,
+    V: VertexFormat + With<Position> + With<Normal> + With<TexCoord>,
     A: AsRef<Rgba> + Send + Sync + 'static,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     M: Component + AsRef<Mesh> + Send + Sync,
