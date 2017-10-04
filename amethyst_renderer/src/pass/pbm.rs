@@ -19,7 +19,7 @@ use mtl::Material;
 use pipe::{DepthMode, Effect, NewEffect};
 use pipe::pass::{Pass, PassApply, PassData, Supplier};
 use types::Encoder;
-use vertex::{AttributeFormat, Normal, Position, Tangent, TexCoord, VertexFormat, With};
+use vertex::{Normal, Position, Tangent, TexCoord, Query};
 
 static VERT_SRC: &[u8] = include_bytes!("shaders/vertex/basic.glsl");
 static FRAG_SRC: &[u8] = include_bytes!("shaders/fragment/pbm.glsl");
@@ -33,17 +33,12 @@ static FRAG_SRC: &[u8] = include_bytes!("shaders/fragment/pbm.glsl");
 /// `L` is `Light` component
 #[derive(Clone, Debug, PartialEq)]
 pub struct DrawPbm<V, A, M, N, T, L> {
-    vertex_attributes: [(&'static str, AttributeFormat); 4],
     _pd: PhantomData<(V, A, M, N, T, L)>,
 }
 
 impl<V, A, M, N, T, L> DrawPbm<V, A, M, N, T, L>
 where
-    V: VertexFormat
-        + With<Position>
-        + With<Normal>
-        + With<Tangent>
-        + With<TexCoord>,
+    V: Query<(Position, Normal, Tangent, TexCoord)>,
     A: AsRef<Rgba> + Send + Sync + 'static,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     M: Component + AsRef<Mesh> + Send + Sync,
@@ -53,12 +48,6 @@ where
     /// Create instance of `DrawPbm` pass
     pub fn new() -> Self {
         DrawPbm {
-            vertex_attributes: [
-                ("position", V::attribute::<Position>()),
-                ("normal", V::attribute::<Normal>()),
-                ("tangent", V::attribute::<Tangent>()),
-                ("tex_coord", V::attribute::<TexCoord>()),
-            ],
             _pd: PhantomData,
         }
     }
@@ -106,11 +95,7 @@ unsafe impl Pod for DirectionalLightPod {}
 
 impl<'a, V, A, M, N, T, L> PassData<'a> for DrawPbm<V, A, M, N, T, L>
 where
-    V: VertexFormat
-        + With<Position>
-        + With<Normal>
-        + With<Tangent>
-        + With<TexCoord>,
+    V: Query<(Position, Normal, Tangent, TexCoord)>,
     A: AsRef<Rgba> + Send + Sync + 'static,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     M: Component + AsRef<Mesh> + Send + Sync,
@@ -129,11 +114,7 @@ where
 
 impl<'a, V, A, M, N, T, L> PassApply<'a> for DrawPbm<V, A, M, N, T, L>
 where
-    V: VertexFormat
-        + With<Position>
-        + With<Normal>
-        + With<Tangent>
-        + With<TexCoord>,
+    V: Query<(Position, Normal, Tangent, TexCoord)>,
     A: AsRef<Rgba> + Send + Sync + 'static,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     M: Component + AsRef<Mesh> + Send + Sync,
@@ -145,11 +126,7 @@ where
 
 impl<V, A, M, N, T, L> Pass for DrawPbm<V, A, M, N, T, L>
 where
-    V: VertexFormat
-        + With<Position>
-        + With<Normal>
-        + With<Tangent>
-        + With<TexCoord>,
+    V: Query<(Position, Normal, Tangent, TexCoord)>,
     A: AsRef<Rgba> + Send + Sync + 'static,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     M: Component + AsRef<Mesh> + Send + Sync,
@@ -159,7 +136,7 @@ where
     fn compile(&self, effect: NewEffect) -> Result<Effect> {
         effect
             .simple(VERT_SRC, FRAG_SRC)
-            .with_raw_vertex_buffer(self.vertex_attributes.as_ref(), V::size() as ElemStride, 0)
+            .with_raw_vertex_buffer(V::QUERIED_ATTRIBUTES, V::size() as ElemStride, 0)
             .with_raw_constant_buffer("VertexArgs", mem::size_of::<VertexArgs>(), 1)
             .with_raw_constant_buffer("FragmentArgs", mem::size_of::<FragmentArgs>(), 1)
             .with_raw_constant_buffer("PointLights", mem::size_of::<PointLight>(), 512)
@@ -215,11 +192,7 @@ pub struct DrawPbmApply<'a, V, A: 'static, M: Component, N: Component, T: Compon
 
 impl<'a, V, A, M, N, T, L> ParallelIterator for DrawPbmApply<'a, V, A, M, N, T, L>
 where
-    V: VertexFormat
-        + With<Position>
-        + With<Normal>
-        + With<Tangent>
-        + With<TexCoord>,
+    V: Query<(Position, Normal, Tangent, TexCoord)>,
     A: AsRef<Rgba> + Send + Sync + 'static,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     M: Component + AsRef<Mesh> + Send + Sync,
@@ -251,6 +224,16 @@ where
             .supply((&mesh, &material, &global).par_join().map(
                 |(mesh, material, global)| {
                     move |encoder: &mut Encoder, effect: &mut Effect| {
+
+                        let mesh = mesh.as_ref();
+                        
+                        let vbuf = match mesh.buffer(V::QUERIED_ATTRIBUTES) {
+                            Some(vbuf) => vbuf.clone(),
+                            None => return,
+                        };
+
+                        let material = material.as_ref();
+
                         let vertex_args = camera
                             .as_ref()
                             .map(|cam| {
@@ -322,61 +305,63 @@ where
                         effect
                             .data
                             .textures
-                            .push(material.as_ref().roughness.view().clone());
+                            .push(material.roughness.view().clone());
                         effect
                             .data
                             .samplers
-                            .push(material.as_ref().roughness.sampler().clone());
+                            .push(material.roughness.sampler().clone());
                         effect
                             .data
                             .textures
-                            .push(material.as_ref().caveat.view().clone());
+                            .push(material.caveat.view().clone());
                         effect
                             .data
                             .samplers
-                            .push(material.as_ref().caveat.sampler().clone());
+                            .push(material.caveat.sampler().clone());
                         effect
                             .data
                             .textures
-                            .push(material.as_ref().metallic.view().clone());
+                            .push(material.metallic.view().clone());
                         effect
                             .data
                             .samplers
-                            .push(material.as_ref().metallic.sampler().clone());
+                            .push(material.metallic.sampler().clone());
                         effect
                             .data
                             .textures
-                            .push(material.as_ref().ambient_occlusion.view().clone());
+                            .push(material.ambient_occlusion.view().clone());
                         effect
                             .data
                             .samplers
-                            .push(material.as_ref().ambient_occlusion.sampler().clone());
+                            .push(material.ambient_occlusion.sampler().clone());
                         effect
                             .data
                             .textures
-                            .push(material.as_ref().emission.view().clone());
+                            .push(material.emission.view().clone());
                         effect
                             .data
                             .samplers
-                            .push(material.as_ref().emission.sampler().clone());
+                            .push(material.emission.sampler().clone());
                         effect
                             .data
                             .textures
-                            .push(material.as_ref().normal.view().clone());
+                            .push(material.normal.view().clone());
                         effect
                             .data
                             .samplers
-                            .push(material.as_ref().normal.sampler().clone());
+                            .push(material.normal.sampler().clone());
                         effect
                             .data
                             .textures
-                            .push(material.as_ref().albedo.view().clone());
+                            .push(material.albedo.view().clone());
                         effect
                             .data
                             .samplers
-                            .push(material.as_ref().albedo.sampler().clone());
+                            .push(material.albedo.sampler().clone());
+                        
+                        effect.data.vertex_bufs.push(vbuf);
 
-                        effect.draw(mesh.as_ref(), encoder);
+                        effect.draw(mesh.slice(), encoder);
                     }
                 },
             ))

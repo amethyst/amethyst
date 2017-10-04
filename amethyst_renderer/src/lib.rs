@@ -24,6 +24,7 @@ extern crate rayon_core;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
+extern crate smallvec;
 extern crate specs;
 extern crate winit;
 
@@ -63,6 +64,7 @@ pub use types::{Encoder, Factory};
 pub use vertex::VertexFormat;
 
 pub mod light;
+pub mod mesh;
 pub mod pass;
 pub mod prelude;
 pub mod pipe;
@@ -73,7 +75,6 @@ mod cam;
 mod color;
 mod config;
 mod error;
-mod mesh;
 mod mtl;
 mod renderer;
 mod tex;

@@ -58,6 +58,9 @@ gfx_window_dxgi = { version = "0.7", optional = true }
 [dependencies.hetseq]
 version = "0.1.5"
 
+[dependencies.smallvec]
+version = "0.4.2"
+
 [dependencies.specs]
 version = "0.9.5"
 

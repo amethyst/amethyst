@@ -16,7 +16,7 @@ use mtl::Material;
 use pipe::pass::{Pass, PassApply, PassData, Supplier};
 use pipe::{DepthMode, Effect, NewEffect};
 use types::Encoder;
-use vertex::{AttributeFormat, Position, TexCoord, VertexFormat, With};
+use vertex::{Position, TexCoord, Query};
 
 static VERT_SRC: &[u8] = include_bytes!("shaders/vertex/basic.glsl");
 static FRAG_SRC: &[u8] = include_bytes!("shaders/fragment/flat.glsl");
@@ -28,13 +28,12 @@ static FRAG_SRC: &[u8] = include_bytes!("shaders/fragment/flat.glsl");
 /// `T` is transform matrix component
 #[derive(Clone, Debug, PartialEq)]
 pub struct DrawFlat<V, M, N, T> {
-    vertex_attributes: [(&'static str, AttributeFormat); 2],
     _pd: PhantomData<(V, M, N, T)>,
 }
 
 impl<V, M, N, T> DrawFlat<V, M, N, T>
 where
-    V: VertexFormat + With<Position> + With<TexCoord>,
+    V: Query<(Position, TexCoord)>,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     M: Component + AsRef<Mesh> + Send + Sync,
     N: Component + AsRef<Material> + Send + Sync,
@@ -43,10 +42,6 @@ where
     /// Create instance of `DrawFlat` pass
     pub fn new() -> Self {
         DrawFlat {
-            vertex_attributes: [
-                ("position", V::attribute::<Position>()),
-                ("tex_coord", V::attribute::<TexCoord>()),
-            ],
             _pd: PhantomData,
         }
     }
@@ -61,7 +56,7 @@ struct VertexArgs {
 
 impl<'a, V, M, N, T> PassData<'a> for DrawFlat<V, M, N, T>
 where
-    V: VertexFormat + With<Position> + With<TexCoord>,
+    V: Query<(Position, TexCoord)>,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     M: Component + AsRef<Mesh> + Send + Sync,
     N: Component + AsRef<Material> + Send + Sync,
@@ -76,7 +71,7 @@ where
 
 impl<'a, V, M, N, T> PassApply<'a> for DrawFlat<V, M, N, T>
 where
-    V: VertexFormat + With<Position> + With<TexCoord>,
+    V: Query<(Position, TexCoord)>,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     M: Component + AsRef<Mesh> + Send + Sync,
     N: Component + AsRef<Material> + Send + Sync,
@@ -86,7 +81,7 @@ where
 
 impl<V, M, N, T> Pass for DrawFlat<V, M, N, T>
 where
-    V: VertexFormat + With<Position> + With<TexCoord>,
+    V: Query<(Position, TexCoord)>,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     M: Component + AsRef<Mesh> + Send + Sync,
     N: Component + AsRef<Material> + Send + Sync,
@@ -96,7 +91,7 @@ where
         effect
             .simple(VERT_SRC, FRAG_SRC)
             .with_raw_constant_buffer("VertexArgs", mem::size_of::<VertexArgs>(), 1)
-            .with_raw_vertex_buffer(self.vertex_attributes.as_ref(), V::size() as ElemStride, 0)
+            .with_raw_vertex_buffer(V::QUERIED_ATTRIBUTES, V::size() as ElemStride, 0)
             .with_texture("albedo")
             .with_output("color", Some(DepthMode::LessEqualWrite))
             .build()
@@ -134,7 +129,7 @@ pub struct DrawFlatApply<'a, V, M: Component, N: Component, T: Component> {
 
 impl<'a, V, M, N, T> ParallelIterator for DrawFlatApply<'a, V, M, N, T>
 where
-    V: VertexFormat + With<Position> + With<TexCoord>,
+    V: Query<(Position, TexCoord)>,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     M: Component + AsRef<Mesh> + Send + Sync,
     N: Component + AsRef<Material> + Send + Sync,
@@ -161,12 +156,13 @@ where
                 move |(mesh, material, global)| {
                     move |encoder: &mut Encoder, effect: &mut Effect| {
                         let mesh = mesh.as_ref();
+                        
+                        let vbuf = match mesh.buffer(V::QUERIED_ATTRIBUTES) {
+                            Some(vbuf) => vbuf.clone(),
+                            None => return,
+                        };
+
                         let material = material.as_ref();
-
-                        if mesh.attributes() != V::ATTRIBUTES {
-                            return;
-                        }
-
                         let vertex_args = camera
                             .as_ref()
                             .map(|cam| {
@@ -186,10 +182,11 @@ where
 
                         effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
                         effect.data.textures.push(material.albedo.view().clone());
-
                         effect.data.samplers.push(material.albedo.sampler().clone());
+                        
+                        effect.data.vertex_bufs.push(vbuf);
 
-                        effect.draw(mesh, encoder);
+                        effect.draw(mesh.slice(), encoder);
                     }
                 },
             ))

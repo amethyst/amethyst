@@ -6,12 +6,13 @@ use crossbeam::sync::MsQueue;
 use futures::{Async, Future, Poll};
 use futures::sync::oneshot::{channel, Receiver, Sender};
 use gfx::traits::Pod;
-use renderer::{Error, Material, MaterialBuilder, Mesh, MeshBuilder, Texture, TextureBuilder};
+use renderer::{Error, Material, MaterialBuilder, Texture, TextureBuilder};
+use renderer::mesh::{Mesh, MeshBuilder, VertexDataSet};
 use renderer::Rgba;
 use smallvec::SmallVec;
 use winit::Window;
 
-pub(crate) trait Exec: Send + Sync {
+pub(crate) trait Exec: Send {
     fn exec(self: Box<Self>, factory: &mut ::renderer::Factory);
 }
 
@@ -46,10 +47,8 @@ impl Factory {
     }
 
     /// Creates a mesh asynchronously.
-    pub fn create_mesh<D, V>(&self, mb: MeshBuilder<D, V>) -> MeshFuture
-    where
-        D: AsRef<[V]> + Send + Sync + 'static,
-        V: ::renderer::VertexFormat + Send + Sync + 'static,
+    pub fn create_mesh<T>(&self, mb: MeshBuilder<T>) -> MeshFuture
+        where T: VertexDataSet + Send + 'static,
     {
         self.execute(move |f| mb.build(f))
     }
@@ -57,8 +56,8 @@ impl Factory {
     /// Creates a texture asynchronously.
     pub fn create_texture<D, T>(&self, tb: TextureBuilder<D, T>) -> TextureFuture
     where
-        D: AsRef<[T]> + Send + Sync + 'static,
-        T: Pod + Send + Sync + Copy + 'static,
+        D: AsRef<[T]> + Send + 'static,
+        T: Pod + Send + Copy + 'static,
     {
         self.execute(move |f| tb.build(f))
     }
@@ -69,20 +68,20 @@ impl Factory {
         mb: MaterialBuilder<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC>,
     ) -> MaterialFuture
     where
-        DA: AsRef<[TA]> + Send + Sync + 'static,
-        TA: Pod + Send + Sync + Copy + 'static,
-        DE: AsRef<[TE]> + Send + Sync + 'static,
-        TE: Pod + Send + Sync + Copy + 'static,
-        DN: AsRef<[TN]> + Send + Sync + 'static,
-        TN: Pod + Send + Sync + Copy + 'static,
-        DM: AsRef<[TM]> + Send + Sync + 'static,
-        TM: Pod + Send + Sync + Copy + 'static,
-        DR: AsRef<[TR]> + Send + Sync + 'static,
-        TR: Pod + Send + Sync + Copy + 'static,
-        DO: AsRef<[TO]> + Send + Sync + 'static,
-        TO: Pod + Send + Sync + Copy + 'static,
-        DC: AsRef<[TC]> + Send + Sync + 'static,
-        TC: Pod + Send + Sync + Copy + 'static,
+        DA: AsRef<[TA]> + Send + 'static,
+        TA: Pod + Send + Copy + 'static,
+        DE: AsRef<[TE]> + Send + 'static,
+        TE: Pod + Send + Copy + 'static,
+        DN: AsRef<[TN]> + Send + 'static,
+        TN: Pod + Send + Copy + 'static,
+        DM: AsRef<[TM]> + Send + 'static,
+        TM: Pod + Send + Copy + 'static,
+        DR: AsRef<[TR]> + Send + 'static,
+        TR: Pod + Send + Copy + 'static,
+        DO: AsRef<[TO]> + Send + 'static,
+        TO: Pod + Send + Copy + 'static,
+        DC: AsRef<[TC]> + Send + 'static,
+        TC: Pod + Send + Copy + 'static,
     {
         self.execute(|f| mb.build(f))
     }
@@ -90,9 +89,9 @@ impl Factory {
     /// Execute a closure which takes in the real factory.
     pub fn execute<F, T, E>(&self, fun: F) -> FactoryFuture<T, E>
     where
-        F: FnOnce(&mut ::renderer::Factory) -> Result<T, E> + Send + Sync + 'static,
-        T: Send + Sync + 'static,
-        E: Send + Sync + 'static,
+        F: FnOnce(&mut ::renderer::Factory) -> Result<T, E> + Send + 'static,
+        T: Send + 'static,
+        E: Send + 'static,
     {
         let (send, recv) = channel();
 
@@ -100,9 +99,9 @@ impl Factory {
 
         impl<F, T, E> Exec for Job<F, T, E>
         where
-            F: FnOnce(&mut ::renderer::Factory) -> Result<T, E> + Send + Sync + 'static,
-            T: Send + Sync + 'static,
-            E: Send + Sync + 'static,
+            F: FnOnce(&mut ::renderer::Factory) -> Result<T, E> + Send + 'static,
+            T: Send + 'static,
+            E: Send + 'static,
         {
             fn exec(self: Box<Self>, factory: &mut ::renderer::Factory) {
                 let job = *self;

@@ -9,12 +9,11 @@ use rayon::{self, ThreadPool};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use config::Config;
 use error::{Error, Result};
-use mesh::{Mesh, MeshBuilder};
+use mesh::{Mesh, MeshBuilder, VertexDataSet};
 use mtl::{Material, MaterialBuilder};
 use pipe::{ColorBuffer, DepthBuffer, PipelineBuild, PipelineData, PolyPipeline, Target};
 use tex::{Texture, TextureBuilder};
 use types::{ColorFormat, DepthFormat, Device, Encoder, Factory, Window};
-use vertex::VertexFormat;
 use winit::{self, EventsLoop, Window as WinitWindow, WindowBuilder};
 
 /// Generic renderer.
@@ -41,10 +40,8 @@ impl Renderer {
     }
 
     /// Builds a new mesh from the given vertices.
-    pub fn create_mesh<D, T>(&mut self, mb: MeshBuilder<D, T>) -> Result<Mesh>
-    where
-        D: AsRef<[T]>,
-        T: VertexFormat,
+    pub fn create_mesh<T>(&mut self, mb: MeshBuilder<T>) -> Result<Mesh>
+        where T: VertexDataSet,
     {
         mb.build(&mut self.factory)
     }
