@@ -306,16 +306,16 @@ pub trait Query<T>: VertexFormat {
 
 macro_rules! impl_query {
     ($($a:ident),*) => {
-        impl<V $(,$a)*> Query<($($a,)*)> for V
-            where V: VertexFormat,
+        impl<VF $(,$a)*> Query<($($a,)*)> for VF
+            where VF: VertexFormat,
             $(
                 $a: Attribute,
-                V: With<$a>,
+                VF: With<$a>,
             )*
         {
             const QUERIED_ATTRIBUTES: Attributes<'static> = &[
                 $(
-                    ($a::NAME, <V as With<$a>>::FORMAT),
+                    ($a::NAME, <VF as With<$a>>::FORMAT),
                 )*
             ];
         }
@@ -328,4 +328,4 @@ macro_rules! impl_query {
     };
 }
 
-impl_query!(A, B, C, D);
+impl_query!(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z);
