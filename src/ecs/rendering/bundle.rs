@@ -92,6 +92,7 @@ where
         builder = builder
             .with_resource(Factory::new())
             .with_resource(AmbientColor(Rgba::from([0.01; 3])))
+            .with_resource(Orientation::default())
             .register::<ActiveCamera>()
             .register::<Camera>()
             .register::<Transform>()

@@ -10,18 +10,12 @@ use ecs::{Component, VecStorage};
 /// Raw transform data.
 #[derive(Debug)]
 pub struct InnerTransform {
-    /// Forward vector [x, y, z]
-    pub forward: [f32; 3],
-    /// Right vector [x, y, z]
-    pub right: [f32; 3],
     /// Quaternion [w (scalar), x, y, z]
     pub rotation: [f32; 4],
     /// Scale vector [x, y, z]
     pub scale: [f32; 3],
     /// Translation/position vector [x, y, z]
     pub translation: [f32; 3],
-    /// Up vector [x, y, z]
-    pub up: [f32; 3],
 }
 
 /// Local position, rotation, and scale (from parent if it exists).
@@ -66,11 +60,11 @@ impl LocalTransform {
     }
 
     /// Rotate to look at a point in space (without rolling)
-    pub fn look_at(&mut self, position: Vector3<f32>) -> &mut Self {
+    pub fn look_at(&mut self, orientation: &Orientation, position: Vector3<f32>) -> &mut Self {
         let cam_quat = Quaternion::from(self.rotation);
-        let pos_vec = Vector3::from(self.translation;
+        let pos_vec = Vector3::from(self.translation);
 
-        self.rotation = cam_quat.look_at(position - pos_vec, self.up).into();
+        self.rotation = cam_quat.look_at(position - pos_vec, orientation.up).into();
         self.flag(true);
 
         self
@@ -94,8 +88,8 @@ impl LocalTransform {
     }
 
     /// Move relatively to its current position and orientation.
-    pub fn move_forward(&mut self, amount: f32) -> &mut Self {
-        self.move_local(self.forward, amount)
+    pub fn move_forward(&mut self, orientation: &Orientation, amount: f32) -> &mut Self {
+        self.move_local(orientation.forward, amount)
     }
 
     /// Move relatively to its current position, but independently from its orientation.
@@ -116,33 +110,33 @@ impl LocalTransform {
     }
 
     /// Move relatively to its current position and orientation.
-    pub fn move_right(&mut self, amount: f32) -> &mut Self {
-        self.move_local(self.right, amount)
+    pub fn move_right(&mut self, orientation: &Orientation, amount: f32) -> &mut Self {
+        self.move_local(orientation.right, amount)
     }
 
     /// Move relatively to its current position and orientation.
-    pub fn move_up(&mut self, amount: f32) -> &mut Self {
-        self.move_local(self.up, amount)
+    pub fn move_up(&mut self, orientation: &Orientation, amount: f32) -> &mut Self {
+        self.move_local(orientation.up, amount)
     }
 
     /// Pitch relatively to the world.
-    pub fn pitch_global(&mut self, angle: Deg<f32>) -> &mut Self {
-        self.rotate_global(self.right, angle)
+    pub fn pitch_global(&mut self, orientation: &Orientation, angle: Deg<f32>) -> &mut Self {
+        self.rotate_global(orientation.right, angle)
     }
 
     /// Pitch relatively to its own rotation.
-    pub fn pitch_local(&mut self, angle: Deg<f32>) -> &mut Self {
-        self.rotate_local(self.right, angle)
+    pub fn pitch_local(&mut self, orientation: &Orientation, angle: Deg<f32>) -> &mut Self {
+        self.rotate_local(orientation.right, angle)
     }
 
     /// Roll relatively to the world.
-    pub fn roll_global(&mut self, angle: Deg<f32>) -> &mut Self {
-        self.rotate_global(self.forward, angle)
+    pub fn roll_global(&mut self, orientation: &Orientation, angle: Deg<f32>) -> &mut Self {
+        self.rotate_global(orientation.forward, angle)
     }
 
     /// Roll relatively to its own rotation.
-    pub fn roll_local(&mut self, angle: Deg<f32>) -> &mut Self {
-        self.rotate_local(self.forward, angle);
+    pub fn roll_local(&mut self, orientation: &Orientation, angle: Deg<f32>) -> &mut Self {
+        self.rotate_local(orientation.forward, angle);
     }
 
     /// Add a rotation to the current rotation
@@ -202,13 +196,13 @@ impl LocalTransform {
     }
 
     /// Yaw relatively to the world.
-    pub fn yaw_global(&mut self, angle: Deg<f32>) -> &mut Self {
-        self.rotate_global(self.up, angle)
+    pub fn yaw_global(&mut self, orientation: &Orientation, angle: Deg<f32>) -> &mut Self {
+        self.rotate_global(orientation.up, angle)
     }
 
     /// Yaw relatively to its own rotation.
-    pub fn yaw_local(&mut self, angle: Deg<f32>) -> &mut Self {
-        self.rotate_local(self.up, angle)
+    pub fn yaw_local(&mut self, orientation: &Orientation, angle: Deg<f32>) -> &mut Self {
+        self.rotate_local(orientation.up, angle)
     }
 }
 
@@ -216,10 +210,6 @@ impl Default for LocalTransform {
     fn default() -> Self {
         LocalTransform {
             wrapped: InnerTransform {
-                up:          [0.0, 0.0, 1.0],
-                forward:     [1.0, 0.0, 0.0],
-                right:       [0.0,-1.0, 0.0],
-
                 rotation:    [1.0, 0.0, 0.0, 0.0],
                 scale:       [1.0, 1.0, 1.0],
                 translation: [0.0, 0.0, 0.0],

@@ -63,6 +63,7 @@ pub use types::{Encoder, Factory};
 pub use vertex::VertexFormat;
 
 pub mod light;
+pub mod orientation;
 pub mod pass;
 pub mod prelude;
 pub mod pipe;
