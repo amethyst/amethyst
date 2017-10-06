@@ -13,6 +13,7 @@ use cam::Camera;
 use error::Result;
 use mesh::Mesh;
 use mtl::Material;
+use orientation::Orientation;
 use pipe::pass::{Pass, PassApply, PassData, Supplier};
 use pipe::{DepthMode, Effect, NewEffect};
 use types::Encoder;
@@ -67,7 +68,10 @@ where
     N: Component + AsRef<Material> + Send + Sync,
 {
     type Data = (
-        Option<Fetch<'a, Camera>>,
+        Fetch<'a, Orientation>,
+        ReadStorage<'a, ActiveCamera>,
+        ReadStorage<'a, Camera>,
+        ReadStorage<'a, LocalTransform>,
         ReadStorage<'a, M>,
         ReadStorage<'a, N>,
         ReadStorage<'a, T>,
@@ -105,18 +109,24 @@ where
     fn apply<'a, 'b: 'a>(
         &'a mut self,
         supplier: Supplier<'a>,
-        (camera, mesh, material, global): (
-            Option<Fetch<'b, Camera>>,
+        (orientation, active_cameras, cameras, local_transforms, meshes, materials, globals): (
+            Fetch<'a, Orientation>,
+            ReadStorage<'a, ActiveCamera>,
+            ReadStorage<'a, Camera>,
+            ReadStorage<'a, LocalTransform>,
             ReadStorage<'b, M>,
             ReadStorage<'b, N>,
             ReadStorage<'b, T>,
         ),
     ) -> DrawFlatApply<'a, V, M, N, T> {
         DrawFlatApply {
-            camera: camera,
-            mesh: mesh,
-            material: material,
-            global: global,
+            orientation: orientation,
+            active_camera: active_cameras,
+            camera: cameras,
+            camera_transform: local_transforms,
+            mesh: meshes,
+            material: materials,
+            global: globals,
             supplier: supplier,
             pd: PhantomData,
         }
@@ -124,7 +134,10 @@ where
 }
 
 pub struct DrawFlatApply<'a, V, M: Component, N: Component, T: Component> {
-    camera: Option<Fetch<'a, Camera>>,
+    orientation: Orientation,
+    active_camera: ReadStorage<'a, ActiveCamera>,
+    camera: ReadStorage<'a, Camera>,
+    camera_transform: ReadStorage<'a, LocalTransform>,
     mesh: ReadStorage<'a, M>,
     material: ReadStorage<'a, N>,
     global: ReadStorage<'a, T>,
@@ -146,7 +159,10 @@ where
         C: UnindexedConsumer<Self::Item>,
     {
         let DrawFlatApply {
-            camera,
+            orientation,
+            active_cameras,
+            cameras,
+            camera_transforms,
             mesh,
             material,
             global,
@@ -154,7 +170,22 @@ where
             ..
         } = self;
 
+        let active_camera = (active_cameras, cameras, camera_transforms).join().next();
+        let (proj_matrix, view_matrix) = {
+            if active_camera.is_some() {
+                let (_, camera, trans) = active_camera.unwrap();
+
+                (camera.proj, trans.to_view_matrix(orientation))
+            }
+            else {
+                (Matrix4::one(), Matrix4::one())
+            }
+        };
+
         let camera = &camera;
+        let trans = &trans;
+        let proj_matrix = &proj_matrix;
+        let view_matrix = &view_matrix;
 
         supplier
             .supply((&mesh, &material, &global).par_join().map(
@@ -167,12 +198,13 @@ where
                             return;
                         }
 
+                        let view_matrix = trans.to_view_matrix(orientation);
                         let vertex_args = camera
                             .as_ref()
                             .map(|cam| {
                                 VertexArgs {
-                                    proj: cam.proj.into(),
-                                    view: cam.to_view_matrix().into(),
+                                    proj: proj_matrix.into(),
+                                    view: view_matrix.into(),
                                     model: *global.as_ref(),
                                 }
                             })
