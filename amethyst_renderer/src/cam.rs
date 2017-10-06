@@ -66,16 +66,4 @@ impl Camera {
             proj: projection,
         }
     }
-
-    /// Calculates the view matrix from the given data.
-    pub fn to_view_matrix(&self, local_transform: &LocalTransform) -> Matrix4<f32> {
-        let forward = local_transform.forward();
-        let center = Point3::new(
-            local_transform.translation.0 + forward.0,
-            local_transform.translation.1 + forward.1,
-            local_transform.translation.2 + forward.2,
-        );
-
-        Matrix4::look_at(local_transform.translation, center, local_transform.up())
-    }
 }

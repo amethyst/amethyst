@@ -195,6 +195,19 @@ impl LocalTransform {
         self
     }
 
+    /// Calculate the view matrix from the given data.
+    pub fn to_view_matrix(&self, orientation: &Orientation) -> Matrix4<f32> {
+        let forward = orientation.forward;
+        let trans = self.translation;
+        let center = Point3::new(
+            trans.0 + forward.0,
+            trans.1 + forward.1,
+            trans.2 + forward.2,
+        );
+
+        Matrix4::look_at(trans, center, orientation.up)
+    }
+
     /// Yaw relatively to the world.
     pub fn yaw_global(&mut self, orientation: &Orientation, angle: Deg<f32>) -> &mut Self {
         self.rotate_global(orientation.up, angle)
