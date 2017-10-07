@@ -184,20 +184,20 @@ impl<'a, 'b> Application<'a, 'b> {
                         },
 
                         &WindowEvent::AxisMotion {
-                            device_id, axis, ..
+                            device_id, axis, value
                         } => for mut stored_event in &mut events {
                             if let &mut Event::WindowEvent {
                                 event:
                                     WindowEvent::AxisMotion {
                                         axis: stored_axis,
                                         device_id: stored_device,
-                                        ..
+                                        value: ref mut stored_value,
                                     },
                                 ..
                             } = stored_event
                             {
                                 if device_id == stored_device && axis == stored_axis {
-                                    mem::replace(stored_event, new_event.clone());
+                                    *stored_value += value;
                                     write_new_event = false;
                                     break;
                                 }
@@ -209,18 +209,19 @@ impl<'a, 'b> Application<'a, 'b> {
 
                     Event::DeviceEvent {
                         device_id,
-                        event: DeviceEvent::Motion { axis, .. },
+                        event: DeviceEvent::Motion { axis, value },
                     } => for stored_event in &mut events {
                         if let &mut Event::DeviceEvent {
                             device_id: stored_device,
                             event:
                                 DeviceEvent::Motion {
-                                    axis: stored_axis, ..
+                                    axis: stored_axis,
+                                    value: ref mut stored_value,
                                 },
                         } = stored_event
                         {
                             if device_id == stored_device && axis == stored_axis {
-                                mem::replace(stored_event, new_event.clone());
+                                *stored_value += value;
                                 write_new_event = false;
                                 break;
                             }
