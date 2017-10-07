@@ -19,7 +19,7 @@ use mtl::Material;
 use pipe::{DepthMode, Effect, NewEffect};
 use pipe::pass::{Pass, PassApply, PassData, Supplier};
 use types::Encoder;
-use vertex::{AttributeFormat, Normal, Position, TexCoord, VertexFormat, With};
+use vertex::{Normal, Position, Query, TexCoord};
 
 static VERT_SRC: &[u8] = include_bytes!("shaders/vertex/basic.glsl");
 static FRAG_SRC: &[u8] = include_bytes!("shaders/fragment/shaded.glsl");
@@ -33,13 +33,12 @@ static FRAG_SRC: &[u8] = include_bytes!("shaders/fragment/shaded.glsl");
 /// `L` is `Light` component
 #[derive(Clone, Debug, PartialEq)]
 pub struct DrawShaded<V, A, M, N, T, L> {
-    vertex_attributes: [(&'static str, AttributeFormat); 3],
     _pd: PhantomData<(V, A, M, N, T, L)>,
 }
 
 impl<V, A, M, N, T, L> DrawShaded<V, A, M, N, T, L>
 where
-    V: VertexFormat + With<Position> + With<Normal> + With<TexCoord>,
+    V: Query<(Position, Normal, TexCoord)>,
     A: AsRef<Rgba> + Send + Sync + 'static,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     M: Component + AsRef<Mesh> + Send + Sync,
@@ -48,14 +47,7 @@ where
 {
     /// Create instance of `DrawShaded` pass
     pub fn new() -> Self {
-        DrawShaded {
-            vertex_attributes: [
-                ("position", V::attribute::<Position>()),
-                ("normal", V::attribute::<Normal>()),
-                ("tex_coord", V::attribute::<TexCoord>()),
-            ],
-            _pd: PhantomData,
-        }
+        DrawShaded { _pd: PhantomData }
     }
 }
 
@@ -101,7 +93,7 @@ unsafe impl Pod for DirectionalLightPod {}
 
 impl<'a, V, A, M, N, T, L> PassData<'a> for DrawShaded<V, A, M, N, T, L>
 where
-    V: VertexFormat + With<Position> + With<Normal> + With<TexCoord>,
+    V: Query<(Position, Normal, TexCoord)>,
     A: AsRef<Rgba> + Send + Sync + 'static,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     M: Component + AsRef<Mesh> + Send + Sync,
@@ -120,7 +112,7 @@ where
 
 impl<'a, V, A, M, N, T, L> PassApply<'a> for DrawShaded<V, A, M, N, T, L>
 where
-    V: VertexFormat + With<Position> + With<Normal> + With<TexCoord>,
+    V: Query<(Position, Normal, TexCoord)>,
     A: AsRef<Rgba> + Send + Sync + 'static,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     M: Component + AsRef<Mesh> + Send + Sync,
@@ -133,7 +125,7 @@ where
 
 impl<V, A, M, N, T, L> Pass for DrawShaded<V, A, M, N, T, L>
 where
-    V: VertexFormat + With<Position> + With<Normal> + With<TexCoord>,
+    V: Query<(Position, Normal, TexCoord)>,
     A: AsRef<Rgba> + Send + Sync + 'static,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     M: Component + AsRef<Mesh> + Send + Sync,
@@ -143,7 +135,7 @@ where
     fn compile(&self, effect: NewEffect) -> Result<Effect> {
         effect
             .simple(VERT_SRC, FRAG_SRC)
-            .with_raw_vertex_buffer(self.vertex_attributes.as_ref(), V::size() as ElemStride, 0)
+            .with_raw_vertex_buffer(V::QUERIED_ATTRIBUTES, V::size() as ElemStride, 0)
             .with_raw_constant_buffer("VertexArgs", mem::size_of::<VertexArgs>(), 1)
             .with_raw_constant_buffer("FragmentArgs", mem::size_of::<FragmentArgs>(), 1)
             .with_raw_constant_buffer("PointLights", mem::size_of::<PointLight>(), 512)
@@ -202,7 +194,7 @@ pub struct DrawShadedApply<
 
 impl<'a, V, A, M, N, T, L> ParallelIterator for DrawShadedApply<'a, V, A, M, N, T, L>
 where
-    V: VertexFormat + With<Position> + With<Normal> + With<TexCoord>,
+    V: Query<(Position, Normal, TexCoord)>,
     A: AsRef<Rgba> + Send + Sync + 'static,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     M: Component + AsRef<Mesh> + Send + Sync,
@@ -234,6 +226,15 @@ where
             .supply((&mesh, &material, &global).par_join().map(
                 |(mesh, material, global)| {
                     move |encoder: &mut Encoder, effect: &mut Effect| {
+                        let mesh = mesh.as_ref();
+
+                        let vbuf = match mesh.buffer(V::QUERIED_ATTRIBUTES) {
+                            Some(vbuf) => vbuf.clone(),
+                            None => return,
+                        };
+
+                        let material = material.as_ref();
+
                         let vertex_args = camera
                             .as_ref()
                             .map(|cam| {
@@ -301,27 +302,20 @@ where
                                 .unwrap_or([0.0; 3]),
                         );
 
-                        effect
-                            .data
-                            .textures
-                            .push(material.as_ref().emission.view().clone());
+                        effect.data.textures.push(material.emission.view().clone());
 
                         effect
                             .data
                             .samplers
-                            .push(material.as_ref().emission.sampler().clone());
+                            .push(material.emission.sampler().clone());
 
-                        effect
-                            .data
-                            .textures
-                            .push(material.as_ref().albedo.view().clone());
+                        effect.data.textures.push(material.albedo.view().clone());
 
-                        effect
-                            .data
-                            .samplers
-                            .push(material.as_ref().albedo.sampler().clone());
+                        effect.data.samplers.push(material.albedo.sampler().clone());
 
-                        effect.draw(mesh.as_ref(), encoder);
+                        effect.data.vertex_bufs.push(vbuf);
+
+                        effect.draw(mesh.slice(), encoder);
                     }
                 },
             ))

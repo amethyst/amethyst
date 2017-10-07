@@ -7,6 +7,9 @@ use gfx::traits::Pod;
 /// Format for vertex attribute
 pub type AttributeFormat = Element<Format>;
 
+/// Slice of attributes
+pub type Attributes<'a> = &'a [(&'a str, AttributeFormat)];
+
 /// Trait for vertex attributes to implement
 pub trait Attribute {
     /// Name of the attribute
@@ -72,7 +75,7 @@ impl Attribute for Tangent {
 /// Trait implemented by all valid vertex formats.
 pub trait VertexFormat: Pod + Sized + Send + Sync {
     /// List of all attributes formats with name and offset.
-    const ATTRIBUTES: &'static [(&'static str, AttributeFormat)];
+    const ATTRIBUTES: Attributes<'static>;
 
     /// Returns the size of a single vertex in bytes.
     #[inline]
@@ -85,6 +88,7 @@ pub trait VertexFormat: Pod + Sized + Send + Sync {
     #[inline]
     fn attribute<F>() -> AttributeFormat
     where
+        F: Attribute,
         Self: With<F>,
     {
         <Self as With<F>>::FORMAT
@@ -92,30 +96,38 @@ pub trait VertexFormat: Pod + Sized + Send + Sync {
 }
 
 /// Trait implemented by all valid vertex formats for each field
-pub trait With<F>: VertexFormat {
+pub trait With<F: Attribute>: VertexFormat {
     /// Individual format of the attribute for this vertex format
     const FORMAT: AttributeFormat;
 }
-
 
 /// Vertex format for attributes in separate buffers
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Separate<T: Attribute>(T::Repr);
-unsafe impl<T> Pod for Separate<T> where T: Attribute {}
-impl<T> VertexFormat for Separate<T>
-    where T: Attribute
+unsafe impl<T> Pod for Separate<T>
+where
+    T: Attribute,
 {
-    const ATTRIBUTES: &'static [(&'static str, AttributeFormat)] = &[
-        (T::NAME, Element {
-            offset: 0,
-            format: T::FORMAT,
-        })
+}
+impl<T> VertexFormat for Separate<T>
+where
+    T: Attribute,
+{
+    const ATTRIBUTES: Attributes<'static> = &[
+        (
+            T::NAME,
+            Element {
+                offset: 0,
+                format: T::FORMAT,
+            },
+        ),
     ];
 }
 
 impl<T> With<T> for Separate<T>
-    where T: Attribute
+where
+    T: Attribute,
 {
     const FORMAT: AttributeFormat = Element {
         offset: 0,
@@ -136,7 +148,7 @@ pub struct PosColor {
 unsafe impl Pod for PosColor {}
 
 impl VertexFormat for PosColor {
-    const ATTRIBUTES: &'static [(&'static str, AttributeFormat)] = &[
+    const ATTRIBUTES: Attributes<'static> = &[
         (Position::NAME, <Self as With<Position>>::FORMAT),
         (Color::NAME, <Self as With<Color>>::FORMAT),
     ];
@@ -169,7 +181,7 @@ pub struct PosTex {
 unsafe impl Pod for PosTex {}
 
 impl VertexFormat for PosTex {
-    const ATTRIBUTES: &'static [(&'static str, AttributeFormat)] = &[
+    const ATTRIBUTES: Attributes<'static> = &[
         (Position::NAME, <Self as With<Position>>::FORMAT),
         (TexCoord::NAME, <Self as With<TexCoord>>::FORMAT),
     ];
@@ -204,7 +216,7 @@ pub struct PosNormTex {
 unsafe impl Pod for PosNormTex {}
 
 impl VertexFormat for PosNormTex {
-    const ATTRIBUTES: &'static [(&'static str, AttributeFormat)] = &[
+    const ATTRIBUTES: Attributes<'static> = &[
         (Position::NAME, <Self as With<Position>>::FORMAT),
         (Normal::NAME, <Self as With<Normal>>::FORMAT),
         (TexCoord::NAME, <Self as With<TexCoord>>::FORMAT),
@@ -249,7 +261,7 @@ pub struct PosNormTangTex {
 unsafe impl Pod for PosNormTangTex {}
 
 impl VertexFormat for PosNormTangTex {
-    const ATTRIBUTES: &'static [(&'static str, AttributeFormat)] = &[
+    const ATTRIBUTES: Attributes<'static> = &[
         (Position::NAME, <Self as With<Position>>::FORMAT),
         (Normal::NAME, <Self as With<Normal>>::FORMAT),
         (Tangent::NAME, <Self as With<Tangent>>::FORMAT),
@@ -284,3 +296,63 @@ impl With<TexCoord> for PosNormTangTex {
         format: TexCoord::FORMAT,
     };
 }
+
+
+/// Allows to query specific `Attribute`s of `VertexFormat`
+pub trait Query<T>: VertexFormat {
+    /// Attributes from tuple `T`
+    const QUERIED_ATTRIBUTES: Attributes<'static>;
+}
+
+macro_rules! impl_query {
+    ($($a:ident),*) => {
+        impl<VF $(,$a)*> Query<($($a,)*)> for VF
+            where VF: VertexFormat,
+            $(
+                $a: Attribute,
+                VF: With<$a>,
+            )*
+        {
+            const QUERIED_ATTRIBUTES: Attributes<'static> = &[
+                $(
+                    ($a::NAME, <VF as With<$a>>::FORMAT),
+                )*
+            ];
+        }
+
+        impl_query!(@ $($a),*);
+    };
+    (@) => {};
+    (@ $head:ident $(,$tail:ident)*) => {
+        impl_query!($($tail),*);
+    };
+}
+
+impl_query!(
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+    G,
+    H,
+    I,
+    J,
+    K,
+    L,
+    M,
+    N,
+    O,
+    P,
+    Q,
+    R,
+    S,
+    T,
+    U,
+    V,
+    W,
+    X,
+    Y,
+    Z
+);

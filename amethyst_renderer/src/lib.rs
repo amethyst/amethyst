@@ -63,6 +63,7 @@ pub use types::{Encoder, Factory};
 pub use vertex::VertexFormat;
 
 pub mod light;
+pub mod mesh;
 pub mod pass;
 pub mod prelude;
 pub mod pipe;
@@ -73,7 +74,6 @@ mod cam;
 mod color;
 mod config;
 mod error;
-mod mesh;
 mod mtl;
 mod renderer;
 mod tex;

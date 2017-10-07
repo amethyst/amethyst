@@ -19,10 +19,9 @@ use gfx::traits::Pod;
 use self::pso::{Data, Init, Meta};
 
 use error::{Error, Result};
-use mesh::Mesh;
 use pipe::Target;
-use types::{Encoder, Factory, PipelineState, Resources};
-use vertex::AttributeFormat;
+use types::{Encoder, Factory, PipelineState, Resources, Slice};
+use vertex::Attributes;
 
 mod pso;
 
@@ -122,15 +121,11 @@ impl Effect {
     pub fn clear(&mut self) {
         self.data.textures.clear();
         self.data.samplers.clear();
+        self.data.vertex_bufs.clear();
     }
 
-    pub fn draw(&self, mesh: &Mesh, enc: &mut Encoder) {
-        let mut data = self.data.clone();
-
-        let (vbuf, slice) = mesh.geometry();
-        data.vertex_bufs.push(vbuf.clone());
-
-        enc.draw(&slice, &self.pso, &data);
+    pub fn draw(&mut self, slice: &Slice, enc: &mut Encoder) {
+        enc.draw(&slice, &self.pso, &self.data);
     }
 }
 
@@ -236,7 +231,7 @@ impl<'a> EffectBuilder<'a> {
     /// Adds a vertex buffer to this `Effect`.
     pub fn with_raw_vertex_buffer(
         &mut self,
-        attrs: &'a [(&'a str, AttributeFormat)],
+        attrs: Attributes<'a>,
         stride: ElemStride,
         rate: InstanceRate,
     ) -> &mut Self {
