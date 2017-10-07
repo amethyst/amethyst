@@ -1,5 +1,6 @@
 //! The core engine framework.
 
+use std::mem;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
@@ -9,7 +10,7 @@ use shred::Resource;
 use shrev::EventHandler;
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
-use winit::{Event, EventsLoop};
+use winit::{DeviceEvent, Event, EventsLoop, WindowEvent};
 
 use assets::{Asset, Loader, Store};
 use ecs::{Component, Dispatcher, DispatcherBuilder, ECSBundle, System, World};
@@ -155,14 +156,94 @@ impl<'a, 'b> Application<'a, 'b> {
             #[cfg(feature = "profiler")]
             profile_scope!("handle_event");
 
-            self.events.poll_events(|event| {
-                if let Some(mut event_handler) =
-                    engine.world.res.try_fetch_mut::<EventHandler<Event>>(0)
-                {
+            // Input devices can sometimes generate a lot of motion events per frame, these are
+            // useless as the extra precision is wasted and these events tend to overflow our
+            // otherwise very adequate event buffers.  So we're going to only keep the most recent
+            // motion axis event per axis, per device, per frame.
+
+            // Allocate a place to store events, we need this so we can compare events
+            // against previous events and determine if we need to discard older events
+            //
+            // NOTE: Type is explicit here to make sure we're not pushing references in later code.
+            let mut events: Vec<Event> = Vec::new();
+            self.events.poll_events(|new_event| {
+                // This boolean helps us avoid writing the same piece of code over and over.
+                let mut write_new_event = true;
+                match new_event {
+                    Event::WindowEvent { ref event, .. } => match event {
+                        &WindowEvent::MouseMoved { .. } => for mut stored_event in &mut events {
+                            if let &mut Event::WindowEvent {
+                                event: WindowEvent::MouseMoved { .. },
+                                ..
+                            } = stored_event
+                            {
+                                mem::replace(stored_event, new_event.clone());
+                                write_new_event = false;
+                                break;
+                            }
+                        },
+
+                        &WindowEvent::AxisMotion {
+                            device_id, axis, ..
+                        } => for mut stored_event in &mut events {
+                            if let &mut Event::WindowEvent {
+                                event:
+                                    WindowEvent::AxisMotion {
+                                        axis: stored_axis,
+                                        device_id: stored_device,
+                                        ..
+                                    },
+                                ..
+                            } = stored_event
+                            {
+                                if device_id == stored_device && axis == stored_axis {
+                                    mem::replace(stored_event, new_event.clone());
+                                    write_new_event = false;
+                                    break;
+                                }
+                            }
+                        },
+
+                        _ => {}
+                    },
+
+                    Event::DeviceEvent {
+                        device_id,
+                        event: DeviceEvent::Motion { axis, .. },
+                    } => for stored_event in &mut events {
+                        if let &mut Event::DeviceEvent {
+                            device_id: stored_device,
+                            event:
+                                DeviceEvent::Motion {
+                                    axis: stored_axis, ..
+                                },
+                        } = stored_event
+                        {
+                            if device_id == stored_device && axis == stored_axis {
+                                mem::replace(stored_event, new_event.clone());
+                                write_new_event = false;
+                                break;
+                            }
+                        }
+                    },
+
+                    _ => {}
+                }
+                if write_new_event {
+                    events.push(new_event);
+                }
+            });
+
+            if let Some(mut event_handler) =
+                engine.world.res.try_fetch_mut::<EventHandler<Event>>(0)
+            {
+                for event in &events {
                     event_handler.write_single(event.clone());
                 }
+            }
+            for event in events.drain(..) {
                 states.handle_event(engine, event);
-            });
+            }
         }
         {
             #[cfg(feature = "profiler")]
