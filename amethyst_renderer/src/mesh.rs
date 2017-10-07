@@ -131,8 +131,9 @@ pub struct Mesh {
 impl Mesh {
     /// Builds a new mesh from the given vertices.
     pub fn build<D, V>(verts: D) -> MeshBuilder<((D, PhantomData<V>), ())>
-        where D: AsRef<[V]>,
-              V: VertexFormat,
+    where
+        D: AsRef<[V]>,
+        V: VertexFormat,
     {
         MeshBuilder::new(verts)
     }
