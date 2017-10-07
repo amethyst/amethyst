@@ -156,93 +156,22 @@ impl<'a, 'b> Application<'a, 'b> {
             #[cfg(feature = "profiler")]
             profile_scope!("handle_event");
 
-            // Input devices can sometimes generate a lot of motion events per frame, these are
-            // useless as the extra precision is wasted and these events tend to overflow our
-            // otherwise very adequate event buffers.  So we're going to only keep the most recent
-            // motion axis event per axis, per device, per frame.
-
-            // Allocate a place to store events, we need this so we can compare events
-            // against previous events and determine if we need to discard older events
-            //
-            // NOTE: Type is explicit here to make sure we're not pushing references in later code.
             let mut events: Vec<Event> = Vec::new();
             self.events.poll_events(|new_event| {
-                // This boolean helps us avoid writing the same piece of code over and over.
-                let mut write_new_event = true;
-                match new_event {
-                    Event::WindowEvent { ref event, .. } => match event {
-                        &WindowEvent::MouseMoved { .. } => for mut stored_event in &mut events {
-                            if let &mut Event::WindowEvent {
-                                event: WindowEvent::MouseMoved { .. },
-                                ..
-                            } = stored_event
-                            {
-                                mem::replace(stored_event, new_event.clone());
-                                write_new_event = false;
-                                break;
-                            }
-                        },
-
-                        &WindowEvent::AxisMotion {
-                            device_id, axis, value
-                        } => for mut stored_event in &mut events {
-                            if let &mut Event::WindowEvent {
-                                event:
-                                    WindowEvent::AxisMotion {
-                                        axis: stored_axis,
-                                        device_id: stored_device,
-                                        value: ref mut stored_value,
-                                    },
-                                ..
-                            } = stored_event
-                            {
-                                if device_id == stored_device && axis == stored_axis {
-                                    *stored_value += value;
-                                    write_new_event = false;
-                                    break;
-                                }
-                            }
-                        },
-
-                        _ => {}
-                    },
-
-                    Event::DeviceEvent {
-                        device_id,
-                        event: DeviceEvent::Motion { axis, value },
-                    } => for stored_event in &mut events {
-                        if let &mut Event::DeviceEvent {
-                            device_id: stored_device,
-                            event:
-                                DeviceEvent::Motion {
-                                    axis: stored_axis,
-                                    value: ref mut stored_value,
-                                },
-                        } = stored_event
-                        {
-                            if device_id == stored_device && axis == stored_axis {
-                                *stored_value += value;
-                                write_new_event = false;
-                                break;
-                            }
-                        }
-                    },
-
-                    _ => {}
-                }
-                if write_new_event {
-                    events.push(new_event);
-                }
+                Self::compress_events(&mut events, new_event);
             });
 
             if let Some(mut event_handler) =
                 engine.world.res.try_fetch_mut::<EventHandler<Event>>(0)
             {
-                for event in &events {
-                    event_handler.write_single(event.clone());
+                if let Err(err) = event_handler.write_slice(&events) {
+                    eprintln!(
+                        "WARNING: Writing too many window events this frame! {:?}",
+                        err
+                    );
                 }
             }
-            for event in events.drain(..) {
+            for event in events {
                 states.handle_event(engine, event);
             }
         }
@@ -266,6 +195,74 @@ impl<'a, 'b> Application<'a, 'b> {
         #[cfg(feature = "profiler")]
         profile_scope!("maintain");
         self.engine.world.maintain();
+    }
+
+    /// Input devices can sometimes generate a lot of motion events per frame, these are
+    /// useless as the extra precision is wasted and these events tend to overflow our
+    /// otherwise very adequate event buffers.  So this function removes and compresses redundant
+    /// events.
+    fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
+        match new_event {
+            Event::WindowEvent { ref event, .. } => match event {
+                &WindowEvent::MouseMoved { .. } => for mut stored_event in vec.iter_mut() {
+                    if let &mut Event::WindowEvent {
+                        event: WindowEvent::MouseMoved { .. },
+                        ..
+                    } = stored_event
+                    {
+                        mem::replace(stored_event, new_event.clone());
+                        return;
+                    }
+                },
+
+                &WindowEvent::AxisMotion {
+                    device_id,
+                    axis,
+                    value,
+                } => for mut stored_event in vec.iter_mut() {
+                    if let &mut Event::WindowEvent {
+                        event:
+                            WindowEvent::AxisMotion {
+                                axis: stored_axis,
+                                device_id: stored_device,
+                                value: ref mut stored_value,
+                            },
+                        ..
+                    } = stored_event
+                    {
+                        if device_id == stored_device && axis == stored_axis {
+                            *stored_value += value;
+                            return;
+                        }
+                    }
+                },
+
+                _ => {}
+            },
+
+            Event::DeviceEvent {
+                device_id,
+                event: DeviceEvent::Motion { axis, value },
+            } => for stored_event in vec.iter_mut() {
+                if let &mut Event::DeviceEvent {
+                    device_id: stored_device,
+                    event:
+                        DeviceEvent::Motion {
+                            axis: stored_axis,
+                            value: ref mut stored_value,
+                        },
+                } = stored_event
+                {
+                    if device_id == stored_device && axis == stored_axis {
+                        *stored_value += value;
+                        return;
+                    }
+                }
+            },
+
+            _ => {}
+        }
+        vec.push(new_event);
     }
 
     /// Cleans up after the quit signal is received.
