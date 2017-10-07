@@ -24,7 +24,6 @@ extern crate rayon_core;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
-extern crate smallvec;
 extern crate specs;
 extern crate winit;
 

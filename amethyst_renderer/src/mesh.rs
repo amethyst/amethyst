@@ -7,7 +7,6 @@ use specs::{Component, DenseVecStorage};
 
 use cgmath::{Deg, Matrix4, Point3, Transform, Vector3};
 use gfx::Primitive;
-use smallvec::SmallVec;
 
 use error::Result;
 use types::{Factory, RawBuffer, Slice};
@@ -125,7 +124,7 @@ where
 pub struct Mesh {
     slice: Slice,
     transform: Matrix4<f32>,
-    vbufs: SmallVec<[VertexBuffer; 4]>,
+    vbufs: Vec<VertexBuffer>,
 }
 
 impl Mesh {

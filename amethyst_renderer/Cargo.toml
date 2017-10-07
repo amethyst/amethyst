@@ -37,7 +37,6 @@ rayon = "0.7"
 rayon-core = "1.2"
 serde = "1.0"
 serde_derive = "1.0"
-smallvec = "0.4.2"
 winit = "0.7"
 
 gfx_device_gl = { version = "0.14", optional = true }
