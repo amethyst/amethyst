@@ -49,6 +49,10 @@ impl<'a> System<'a> for TransformSystem {
     );
 
     fn run(&mut self, (entities, locals, children, mut init, mut globals): Self::SystemData) {
+
+        // Clear dirty flags on `Transform` storage, before updates go in
+        (&mut globals).open().1.clear_flags();
+
         #[cfg(feature = "profiler")]
         profile_scope!("transform_system");
         // Checks for entities with a local transform and parent, but no
@@ -76,10 +80,13 @@ impl<'a> System<'a> for TransformSystem {
 
         {
             // Compute transforms without parents.
-            for (ent, local, global, _) in (&*entities, &locals, &mut globals, !&children).join() {
+            for (ent, local, _, _) in (&*entities, &locals, &globals.check(), !&children).join() {
                 if local.is_dirty() {
                     self.dirty.insert(ent);
-                    global.0 = local.matrix();
+                    match globals.get_mut(ent) {
+                        Some(global) => global.0 = local.matrix(),
+                        None => (),
+                    }
                     local.flag(false);
                 }
             }
