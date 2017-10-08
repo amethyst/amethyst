@@ -5,7 +5,7 @@ use std::fmt::{Display, Formatter};
 use std::fmt::Result as FmtResult;
 use std::result::Result as StdResult;
 
-use specs::common::BoxedErr;
+use specs::error::BoxedErr;
 
 use config::ConfigError;
 

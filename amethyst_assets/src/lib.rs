@@ -17,7 +17,7 @@ extern crate parking_lot;
 extern crate rayon;
 extern crate specs;
 
-pub use specs::common::BoxedErr;
+pub use specs::error::BoxedErr;
 
 pub use asset::{Asset, AssetFuture, AssetSpec, Context, Format};
 pub use cache::Cache;

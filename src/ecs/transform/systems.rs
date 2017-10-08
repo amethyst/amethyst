@@ -49,7 +49,6 @@ impl<'a> System<'a> for TransformSystem {
     );
 
     fn run(&mut self, (entities, locals, children, mut init, mut globals): Self::SystemData) {
-
         // Clear dirty flags on `Transform` storage, before updates go in
         (&mut globals).open().1.clear_flags();
 
@@ -67,7 +66,7 @@ impl<'a> System<'a> for TransformSystem {
         for &(entity, _) in &self.sorted {
             if let Some(child) = children.get(entity) {
                 if !entities.is_alive(child.parent()) || self.dead.contains(&child.parent()) {
-                    entities.delete(entity);
+                    let _ = entities.delete(entity);
                     self.dead.insert(entity);
                 }
             }
@@ -80,13 +79,13 @@ impl<'a> System<'a> for TransformSystem {
 
         {
             // Compute transforms without parents.
-            for (ent, local, _, _) in (&*entities, &locals, &globals.check(), !&children).join() {
+            for (ent, local, (mut global_entry, global_restrict), _) in
+                (&*entities, &locals, &mut globals.restrict(), !&children).join()
+            {
                 if local.is_dirty() {
                     self.dirty.insert(ent);
-                    match globals.get_mut(ent) {
-                        Some(global) => global.0 = local.matrix(),
-                        None => (),
-                    }
+                    let global = global_restrict.get_mut_unchecked(&mut global_entry);
+                    global.0 = local.matrix();
                     local.flag(false);
                 }
             }
