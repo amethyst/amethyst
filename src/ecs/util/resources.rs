@@ -2,14 +2,13 @@
 
 use util::circular_buffer::CircularBuffer;
 
-/// The FPSCounter resource needed by the FPSCounterSystem
-/// ## Examples
-/// Add it to your resources to be able to use the FPSCounterSystem
-/// world.add_resource(FPSCounter::new(20));
+/// The FPSCounter resource needed by the FPSCounterSystem.
 ///
-/// Usage:
-/// Get the FPSCounter resource from the System or from the world.
-/// println!("Cur FPS: {}, Sampled: {}",counter.frame_fps(),counter.sampled_fps());
+/// Add it to your resources with id 0 to be able to use the FPSCounterSystem.
+///
+/// ## Usage:
+/// Get the FPSCounter resource from the world then call either `frame_fps` or `sampled_fps` to
+/// get the FPS.
 pub struct FPSCounter {
     buf: CircularBuffer<u64>,
     sum: u64,

@@ -5,16 +5,8 @@ use specs::{Fetch, FetchMut, System};
 use timing::Time;
 use util::time::duration_to_nanos;
 
-///FPSCounterSystem
-///Add this system to your game to calculate FPS
-/// ## Examples
-/// ~~~no_run
-/// use ecs::util::resources::FPSCounter;
-/// let counter = FPSCounter::new(10);
-/// counter.push(duration_to_secs(&time.delta_time)); //time.delta_time is a Duration of the delta time of this frame
-/// println!("Cur FPS: {}, Sampled: {}",counter.frame_fps(),counter.sampled_fps());
-/// ~~~
-
+/// Add this system to your game to automatically push FPS values
+/// to the [FPSCounter](../resources/struct.FPSCounter.html) resource with id 0
 pub struct FPSCounterSystem;
 
 impl<'a> System<'a> for FPSCounterSystem {
