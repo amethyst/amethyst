@@ -204,38 +204,72 @@ impl<'a, 'b> Application<'a, 'b> {
     fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
         match new_event {
             Event::WindowEvent { ref event, .. } => match event {
-                &WindowEvent::MouseMoved { .. } => for mut stored_event in vec.iter_mut() {
-                    if let &mut Event::WindowEvent {
-                        event: WindowEvent::MouseMoved { .. },
-                        ..
-                    } = stored_event
-                    {
-                        mem::replace(stored_event, new_event.clone());
-                        return;
+                &WindowEvent::MouseMoved { .. } => {
+                    let mut iter = vec.iter_mut();
+                    while let Some(stored_event) = iter.next_back() {
+                        match stored_event {
+                            &mut Event::WindowEvent {
+                                event: WindowEvent::MouseMoved { .. },
+                                ..
+                            } => {
+                                mem::replace(stored_event, new_event.clone());
+                                return;
+                            }
+
+                            &mut Event::WindowEvent {
+                                event: WindowEvent::AxisMotion { .. },
+                                ..
+                            } => {}
+
+                            &mut Event::DeviceEvent {
+                                event: DeviceEvent::Motion { .. },
+                                ..
+                            } => {}
+
+                            _ => {
+                                break;
+                            }
+                        }
                     }
-                },
+                }
 
                 &WindowEvent::AxisMotion {
                     device_id,
                     axis,
                     value,
-                } => for mut stored_event in vec.iter_mut() {
-                    if let &mut Event::WindowEvent {
-                        event:
-                            WindowEvent::AxisMotion {
-                                axis: stored_axis,
-                                device_id: stored_device,
-                                value: ref mut stored_value,
+                } => {
+                    let mut iter = vec.iter_mut();
+                    while let Some(stored_event) = iter.next_back() {
+                        match stored_event {
+                            &mut Event::WindowEvent {
+                                event:
+                                    WindowEvent::AxisMotion {
+                                        axis: stored_axis,
+                                        device_id: stored_device,
+                                        value: ref mut stored_value,
+                                    },
+                                ..
+                            } => if device_id == stored_device && axis == stored_axis {
+                                *stored_value += value;
+                                return;
                             },
-                        ..
-                    } = stored_event
-                    {
-                        if device_id == stored_device && axis == stored_axis {
-                            *stored_value += value;
-                            return;
+
+                            &mut Event::WindowEvent {
+                                event: WindowEvent::MouseMoved { .. },
+                                ..
+                            } => {}
+
+                            &mut Event::DeviceEvent {
+                                event: DeviceEvent::Motion { .. },
+                                ..
+                            } => {}
+
+                            _ => {
+                                break;
+                            }
                         }
                     }
-                },
+                }
 
                 _ => {}
             },
@@ -243,22 +277,38 @@ impl<'a, 'b> Application<'a, 'b> {
             Event::DeviceEvent {
                 device_id,
                 event: DeviceEvent::Motion { axis, value },
-            } => for stored_event in vec.iter_mut() {
-                if let &mut Event::DeviceEvent {
-                    device_id: stored_device,
-                    event:
-                        DeviceEvent::Motion {
-                            axis: stored_axis,
-                            value: ref mut stored_value,
+            } => {
+                let mut iter = vec.iter_mut();
+                while let Some(stored_event) = iter.next_back() {
+                    match stored_event {
+                        &mut Event::DeviceEvent {
+                            device_id: stored_device,
+                            event:
+                                DeviceEvent::Motion {
+                                    axis: stored_axis,
+                                    value: ref mut stored_value,
+                                },
+                        } => if device_id == stored_device && axis == stored_axis {
+                            *stored_value += value;
+                            return;
                         },
-                } = stored_event
-                {
-                    if device_id == stored_device && axis == stored_axis {
-                        *stored_value += value;
-                        return;
+
+                        &mut Event::WindowEvent {
+                            event: WindowEvent::MouseMoved { .. },
+                            ..
+                        } => {}
+
+                        &mut Event::WindowEvent {
+                            event: WindowEvent::AxisMotion { .. },
+                            ..
+                        } => {}
+
+                        _ => {
+                            break;
+                        }
                     }
                 }
-            },
+            }
 
             _ => {}
         }
