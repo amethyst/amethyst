@@ -94,5 +94,6 @@ pub mod util;
 
 mod app;
 mod engine;
-mod state;
 mod error;
+mod state;
+mod vergen;

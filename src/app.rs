@@ -17,6 +17,7 @@ use engine::Engine;
 use error::{Error, Result};
 use state::{State, StateMachine};
 use timing::{Stopwatch, Time};
+use vergen;
 
 /// An Application is the root object of the game engine. It binds the OS
 /// event loop, state machines, timers and other core components in a central place.
@@ -281,7 +282,10 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
 
     pub fn new(initial_state: T) -> Result<Self> {
         use rayon::Configuration;
-
+        println!("Initializing Amethyst...");
+        println!("Version: {}", vergen::semver());
+        println!("Platform: {}", vergen::target());
+        println!("Git commit: {}", vergen::sha());
         let cfg = Configuration::new();
         #[cfg(feature = "profiler")]
         let cfg = cfg.start_handler(|index| {
