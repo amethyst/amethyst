@@ -6,7 +6,7 @@ use timing::Time;
 use util::time::duration_to_nanos;
 
 /// Add this system to your game to automatically push FPS values
-/// to the [FPSCounter](FPSCounter.html) resource with id 0
+/// to the [FPSCounter](../resources/struct.FPSCounter.html) resource with id 0
 pub struct FPSCounterSystem;
 
 impl<'a> System<'a> for FPSCounterSystem {
