@@ -1,5 +1,6 @@
 //! The core engine framework.
 
+use std::mem;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
@@ -9,7 +10,7 @@ use shred::Resource;
 use shrev::EventHandler;
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
-use winit::{Event, EventsLoop};
+use winit::{DeviceEvent, Event, EventsLoop, WindowEvent};
 
 use assets::{Asset, Loader, Store};
 use ecs::{Component, Dispatcher, DispatcherBuilder, ECSBundle, System, World};
@@ -156,14 +157,24 @@ impl<'a, 'b> Application<'a, 'b> {
             #[cfg(feature = "profiler")]
             profile_scope!("handle_event");
 
-            self.events.poll_events(|event| {
-                if let Some(mut event_handler) =
-                    engine.world.res.try_fetch_mut::<EventHandler<Event>>(0)
-                {
-                    event_handler.write_single(event.clone());
-                }
-                states.handle_event(engine, event);
+            let mut events: Vec<Event> = Vec::new();
+            self.events.poll_events(|new_event| {
+                Self::compress_events(&mut events, new_event);
             });
+
+            if let Some(mut event_handler) =
+                engine.world.res.try_fetch_mut::<EventHandler<Event>>(0)
+            {
+                if let Err(err) = event_handler.write_slice(&events) {
+                    eprintln!(
+                        "WARNING: Writing too many window events this frame! {:?}",
+                        err
+                    );
+                }
+            }
+            for event in events {
+                states.handle_event(engine, event);
+            }
         }
         {
             #[cfg(feature = "profiler")]
@@ -185,6 +196,124 @@ impl<'a, 'b> Application<'a, 'b> {
         #[cfg(feature = "profiler")]
         profile_scope!("maintain");
         self.engine.world.maintain();
+    }
+
+    /// Input devices can sometimes generate a lot of motion events per frame, these are
+    /// useless as the extra precision is wasted and these events tend to overflow our
+    /// otherwise very adequate event buffers.  So this function removes and compresses redundant
+    /// events.
+    fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
+        match new_event {
+            Event::WindowEvent { ref event, .. } => match event {
+                &WindowEvent::MouseMoved { .. } => {
+                    let mut iter = vec.iter_mut();
+                    while let Some(stored_event) = iter.next_back() {
+                        match stored_event {
+                            &mut Event::WindowEvent {
+                                event: WindowEvent::MouseMoved { .. },
+                                ..
+                            } => {
+                                mem::replace(stored_event, new_event.clone());
+                                return;
+                            }
+
+                            &mut Event::WindowEvent {
+                                event: WindowEvent::AxisMotion { .. },
+                                ..
+                            } => {}
+
+                            &mut Event::DeviceEvent {
+                                event: DeviceEvent::Motion { .. },
+                                ..
+                            } => {}
+
+                            _ => {
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                &WindowEvent::AxisMotion {
+                    device_id,
+                    axis,
+                    value,
+                } => {
+                    let mut iter = vec.iter_mut();
+                    while let Some(stored_event) = iter.next_back() {
+                        match stored_event {
+                            &mut Event::WindowEvent {
+                                event:
+                                    WindowEvent::AxisMotion {
+                                        axis: stored_axis,
+                                        device_id: stored_device,
+                                        value: ref mut stored_value,
+                                    },
+                                ..
+                            } => if device_id == stored_device && axis == stored_axis {
+                                *stored_value += value;
+                                return;
+                            },
+
+                            &mut Event::WindowEvent {
+                                event: WindowEvent::MouseMoved { .. },
+                                ..
+                            } => {}
+
+                            &mut Event::DeviceEvent {
+                                event: DeviceEvent::Motion { .. },
+                                ..
+                            } => {}
+
+                            _ => {
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                _ => {}
+            },
+
+            Event::DeviceEvent {
+                device_id,
+                event: DeviceEvent::Motion { axis, value },
+            } => {
+                let mut iter = vec.iter_mut();
+                while let Some(stored_event) = iter.next_back() {
+                    match stored_event {
+                        &mut Event::DeviceEvent {
+                            device_id: stored_device,
+                            event:
+                                DeviceEvent::Motion {
+                                    axis: stored_axis,
+                                    value: ref mut stored_value,
+                                },
+                        } => if device_id == stored_device && axis == stored_axis {
+                            *stored_value += value;
+                            return;
+                        },
+
+                        &mut Event::WindowEvent {
+                            event: WindowEvent::MouseMoved { .. },
+                            ..
+                        } => {}
+
+                        &mut Event::WindowEvent {
+                            event: WindowEvent::AxisMotion { .. },
+                            ..
+                        } => {}
+
+                        _ => {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            _ => {}
+        }
+        vec.push(new_event);
     }
 
     /// Cleans up after the quit signal is received.
