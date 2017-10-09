@@ -33,7 +33,7 @@ gfx = { version = "0.16", features = ["cgmath-types", "serialize"] }
 gfx_core = { version = "0.7", features = ["cgmath-types", "serialize"] }
 gfx_macros = "0.2"
 num_cpus = "1.0"
-rayon = "0.7"
+rayon = "0.8"
 rayon-core = "1.2"
 serde = "1.0"
 serde_derive = "1.0"
@@ -59,7 +59,7 @@ gfx_window_dxgi = { version = "0.7", optional = true }
 version = "0.1.5"
 
 [dependencies.specs]
-version = "0.9.5"
+version = "0.10"
 
 [dev-dependencies]
 genmesh = "0.4"

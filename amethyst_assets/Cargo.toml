@@ -25,5 +25,5 @@ fnv = "1"
 futures = "0.1.14"
 log = "0.3.8"
 parking_lot = "0.4.4"
-rayon = "0.7"
-specs = { version = "0.9.5", features = ["common"] }
+rayon = "0.8"
+specs = { version = "0.10", features = ["common"] }
