@@ -7,7 +7,7 @@ use shrev::EventChannel;
 use winit::{DeviceEvent, Event, WindowEvent};
 
 use ecs::{Fetch, FetchMut, System};
-use ecs::rendering::resources::{Factory, WindowMessages};
+use ecs::rendering::resources::{Factory, ScreenDimensions, WindowMessages};
 use renderer::Renderer;
 use renderer::pipe::{PipelineData, PolyPipeline};
 
@@ -18,6 +18,7 @@ pub struct RenderSystem<P> {
     pipe: P,
     #[derivative(Debug = "ignore")]
     renderer: Renderer,
+    cached_size: (u32, u32),
 }
 
 impl<P> RenderSystem<P>
@@ -26,7 +27,12 @@ where
 {
     /// Create a new render system
     pub fn new(pipe: P, renderer: Renderer) -> Self {
-        Self { pipe, renderer }
+        let cached_size = renderer.window().get_inner_size_pixels().unwrap();
+        Self {
+            pipe,
+            renderer,
+            cached_size,
+        }
     }
 }
 
@@ -38,16 +44,52 @@ where
         Fetch<'a, Factory>,
         FetchMut<'a, EventChannel<Event>>,
         FetchMut<'a, WindowMessages>,
+        FetchMut<'a, ScreenDimensions>,
         <P as PipelineData<'a>>::Data,
     );
 
-    fn run(&mut self, (factory, mut event_handler, mut window_messages, data): Self::SystemData) {
+    fn run(
+        &mut self,
+        (
+            factory,
+            mut event_handler,
+            mut window_messages,
+            mut screen_dimensions,
+            data
+        ): Self::SystemData
+    )
+    {
         #[cfg(feature = "profiler")]
         profile_scope!("render_system");
         use std::time::Duration;
 
+        // Process window commands
         for mut command in window_messages.queue.drain() {
             command(self.renderer.window());
+        }
+
+        if let Some(size) = self.renderer.window().get_inner_size_pixels() {
+            // Send window size changes to the resource
+            if size
+                != (
+                    screen_dimensions.width() as u32,
+                    screen_dimensions.height() as u32,
+                ) {
+                screen_dimensions.update(size.0, size.1);
+
+                // We don't need to send the updated size of the window back to the window itself,
+                // so set dirty to false.
+                screen_dimensions.dirty = false;
+            }
+        }
+
+        // Send resource size changes to the window
+        if screen_dimensions.dirty {
+            self.renderer.window().set_inner_size(
+                screen_dimensions.width() as u32,
+                screen_dimensions.height() as u32,
+            );
+            screen_dimensions.dirty = false;
         }
 
         while let Some(job) = factory.jobs.try_pop() {

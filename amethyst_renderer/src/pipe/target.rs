@@ -3,7 +3,7 @@
 use fnv::FnvHashMap as HashMap;
 
 use error::Result;
-use types::{DepthStencilView, Encoder, Factory, RenderTargetView, ShaderResourceView};
+use types::{DepthStencilView, Encoder, Factory, RenderTargetView, ShaderResourceView, Window};
 
 /// Target color buffer.
 #[derive(Clone, Debug, PartialEq)]
@@ -87,6 +87,28 @@ impl Target {
     /// Returns the render target's depth-stencil buffer, if it has one.
     pub fn depth_buf(&self) -> Option<&DepthBuffer> {
         self.depth_buf.as_ref()
+    }
+
+    /// Creates the Direct3D 11 backend.
+    #[cfg(all(feature = "d3d11", target_os = "windows"))]
+    pub fn resize_main_target(window: &Window) -> Result<(Device, Factory, Target)> {
+        unimplemented!()
+    }
+
+    #[cfg(all(feature = "metal", target_os = "macos"))]
+    pub fn resize_main_target(window: &Window) -> Result<(Device, Factory, Target)> {
+        unimplemented!()
+    }
+
+    /// Creates the OpenGL backend.
+    #[cfg(feature = "opengl")]
+    pub fn resize_main_target(&mut self, window: &Window) {
+        if let Some(depth_buf) = self.depth_buf.as_mut() {
+            for ref mut color_buf in &mut self.color_bufs {
+                use gfx_window_glutin as win;
+                win::update_views(window, &mut color_buf.as_output, &mut depth_buf.as_output);
+            }
+        }
     }
 }
 

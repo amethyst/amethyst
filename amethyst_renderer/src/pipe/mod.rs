@@ -20,7 +20,7 @@ pub use self::effect::{DepthMode, Effect, EffectBuilder, NewEffect};
 pub use self::stage::{PolyStage, Stage, StageBuilder};
 pub use self::target::{ColorBuffer, DepthBuffer, Target, TargetBuilder, Targets};
 pub use self::pipe::{Pipeline, PipelineApply, PipelineBuild, PipelineBuilder, PipelineData,
-                     PolyPipeline};
+                     PolyPipeline, PolyStages};
 
 pub mod pass;
 

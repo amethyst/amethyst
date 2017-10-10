@@ -9,7 +9,7 @@ use app::ApplicationBuilder;
 use assets::{AssetFuture, BoxedErr, Loader};
 use ecs::ECSBundle;
 use ecs::rendering::components::*;
-use ecs::rendering::resources::{AmbientColor, Factory, WindowMessages};
+use ecs::rendering::resources::{AmbientColor, Factory, ScreenDimensions, WindowMessages};
 use ecs::rendering::systems::RenderSystem;
 use ecs::transform::components::*;
 use error::{Error, Result};
@@ -92,11 +92,14 @@ where
             up: [0.0, 1.0, 0.0].into(),
         };
 
+        let (w, h) = renderer.window().get_inner_size_pixels().unwrap();
+
         builder = builder
             .with_resource(Factory::new())
             .with_resource(cam)
             .with_resource(AmbientColor(Rgba::from([0.01; 3])))
             .with_resource(WindowMessages::new())
+            .with_resource(ScreenDimensions::new(w, h))
             .register::<Transform>()
             .register::<LightComponent>()
             .register::<MaterialComponent>()

@@ -156,6 +156,17 @@ impl<P> CompiledPass<P> {
         self.inner
             .apply(Supplier::new(encoders, &mut self.effects[..]), data)
     }
+
+    pub fn new_target(&mut self, target: &Target) {
+        for mut effect in &mut self.effects {
+            effect.data.out_colors.clear();
+            effect
+                .data
+                .out_colors
+                .extend(target.color_bufs().iter().map(|cb| cb.as_output.clone()));
+            effect.data.out_depth = target.depth_buf().map(|db| (db.as_output.clone(), (0, 0)));
+        }
+    }
 }
 
 impl<P> Debug for CompiledPass<P> {

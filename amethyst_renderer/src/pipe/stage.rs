@@ -5,6 +5,7 @@ use hetseq::*;
 use error::{Error, Result};
 use pipe::{Target, Targets};
 use pipe::pass::{CompiledPass, Pass, PassApply, PassData};
+use fnv::FnvHashMap as HashMap;
 use rayon::iter::{Chain, ParallelIterator};
 use specs::SystemData;
 
@@ -17,6 +18,7 @@ pub struct Stage<L> {
     clear_depth: Option<f32>,
     enabled: bool,
     passes: L,
+    target_name: String,
     target: Target,
 }
 
@@ -64,6 +66,9 @@ pub trait Passes: for<'a> PassesApply<'a> + for<'a> PassesData<'a> + Send + Sync
         jobs_count: usize,
         data: <Self as PassesData<'b>>::Data,
     ) -> <Self as PassesApply<'a>>::Apply;
+
+    /// Distributes new targets
+    fn new_target(&mut self, new_target: &Target);
 }
 
 impl<'a, HP> PassesData<'a> for List<(CompiledPass<HP>, List<()>)>
@@ -92,6 +97,11 @@ where
         let (encoders, _) = encoders.split_at_mut(jobs_count);
         let List((ref mut hp, _)) = *self;
         hp.apply(encoders, hd)
+    }
+
+    fn new_target(&mut self, new_target: &Target) {
+        let List((ref mut hp, _)) = *self;
+        hp.new_target(new_target);
     }
 }
 
@@ -126,6 +136,12 @@ where
         let List((ref mut hp, ref mut tp)) = *self;
         hp.apply(encoders, hd).chain(tp.apply(rest, jobs_count, td))
     }
+
+    fn new_target(&mut self, new_target: &Target) {
+        let List((ref mut hp, ref mut tp)) = *self;
+        hp.new_target(new_target);
+        tp.new_target(new_target);
+    }
 }
 
 ///
@@ -150,6 +166,9 @@ pub trait PolyStage
     ) -> <Self as StageApply<'a>>::Apply;
     /// Get number of encoders needed for this stage.
     fn encoders_required(jobs_count: usize) -> usize;
+
+    /// Distributes new targets
+    fn new_targets(&mut self, new_targets: &HashMap<String, Target>);
 }
 
 impl<'a, L> StageData<'a> for Stage<L>
@@ -189,6 +208,18 @@ where
     fn encoders_required(jobs_count: usize) -> usize {
         use std::cmp;
         cmp::max(L::len() * jobs_count, 1)
+    }
+
+    fn new_targets(&mut self, new_targets: &HashMap<String, Target>) {
+        match new_targets.get(&self.target_name) {
+            Some(target) => {
+                self.target = target.clone();
+                self.passes.new_target(target);
+            }
+            None => {
+                eprintln!("Target name {:?} not found!", self.target_name);
+            }
+        }
     }
 }
 
@@ -249,7 +280,7 @@ impl<Q> StageBuilder<Q> {
         let out = targets
             .get(&self.target_name)
             .cloned()
-            .ok_or(Error::NoSuchTarget(self.target_name))?;
+            .ok_or(Error::NoSuchTarget(self.target_name.clone()))?;
 
         let passes = self.passes
             .into_list()
@@ -262,6 +293,7 @@ impl<Q> StageBuilder<Q> {
             enabled: self.enabled,
             passes: passes,
             target: out,
+            target_name: self.target_name,
         })
     }
 }

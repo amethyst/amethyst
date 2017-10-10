@@ -167,3 +167,50 @@ impl WindowMessages {
         self.queue.push(Box::new(command));
     }
 }
+
+/// World resource that stores screen dimensions.
+pub struct ScreenDimensions {
+    /// Screen width in pixels (px).
+    w: f32,
+    /// Screen height in pixels (px).
+    h: f32,
+    /// Width divided by height.
+    aspect_ratio: f32,
+    pub(crate) dirty: bool,
+}
+
+impl ScreenDimensions {
+    /// Creates a new screen dimensions object with the given width and height.
+    pub fn new(w: u32, h: u32) -> ScreenDimensions {
+        ScreenDimensions {
+            w: w as f32,
+            h: h as f32,
+            aspect_ratio: w as f32 / h as f32,
+            dirty: false,
+        }
+    }
+
+    /// Returns the current width of the window.
+    pub fn width(&self) -> f32 {
+        self.w
+    }
+
+    /// Returns the current height of the window.
+    pub fn height(&self) -> f32 {
+        self.h
+    }
+
+    /// Returns the current aspect ratio of the window.
+    pub fn aspect_ratio(&self) -> f32 {
+        self.aspect_ratio
+    }
+
+    /// Updates the width and height of the screen and recomputes the aspect
+    /// ratio.
+    pub fn update(&mut self, w: u32, h: u32) {
+        self.w = w as f32;
+        self.h = h as f32;
+        self.aspect_ratio = w as f32 / h as f32;
+        self.dirty = true;
+    }
+}
