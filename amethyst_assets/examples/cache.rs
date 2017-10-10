@@ -11,7 +11,7 @@ use amethyst_assets::*;
 use rayon::{Configuration, ThreadPool};
 
 struct DummyContext {
-    cache: Cache<AssetFuture<DummyAsset>>,
+    cache: Cache<AssetUpdates<DummyAsset>>,
     prepend: &'static str,
 }
 
@@ -31,11 +31,11 @@ impl Context for DummyContext {
         Ok(DummyAsset(Arc::new(data)))
     }
 
-    fn cache(&self, spec: AssetSpec, asset: AssetFuture<Self::Asset>) {
+    fn cache(&self, spec: AssetSpec, asset: AssetUpdates<Self::Asset>) {
         self.cache.insert(spec, asset.clone());
     }
 
-    fn retrieve(&self, spec: &AssetSpec) -> Option<AssetFuture<Self::Asset>> {
+    fn retrieve(&self, spec: &AssetSpec) -> Option<AssetUpdates<Self::Asset>> {
         self.cache.get(spec)
     }
 
@@ -47,7 +47,7 @@ impl Context for DummyContext {
         self.cache.clear_all();
     }
 
-    fn update(&self, _spec: &AssetSpec, _asset: AssetFuture<Self::Asset>) {
+    fn update(&self, _spec: &AssetSpec, _asset: AssetUpdates<Self::Asset>) {
         unimplemented!()
     }
 }
