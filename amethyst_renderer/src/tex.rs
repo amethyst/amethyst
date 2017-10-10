@@ -95,6 +95,12 @@ where
         }
     }
 
+    /// Sets the `SamplerInfo` for the texture
+    pub fn with_sampler(mut self, sampler: SamplerInfo) -> Self {
+        self.sampler = sampler;
+        self
+    }
+
     /// Sets the number of mipmap levels to generate.
     ///
     /// FIXME: Only encoders can generate mipmap levels.
