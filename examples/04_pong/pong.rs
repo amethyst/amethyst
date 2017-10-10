@@ -119,15 +119,13 @@ fn initialise_paddles(world: &mut World) {
 
 /// Initialises one ball in the middle-ish of the arena.
 fn initialise_balls(world: &mut World) {
-    use {ARENA_HEIGHT, ARENA_WIDTH, BALL_COLOUR, BALL_RADIUS, BALL_VELOCITY};
+    use {ARENA_HEIGHT, ARENA_WIDTH, BALL_COLOUR, BALL_RADIUS, BALL_VELOCITY_X, BALL_VELOCITY_Y};
 
-    // Create the mesh, material and translation. We don't spawn the ball
-    // completely in the middle, as otherwise it will just bounce between two
-    // corners.
+    // Create the mesh, material and translation.
     let mesh = create_mesh(world, generate_circle_vertices(BALL_RADIUS, 16));
     let material = create_colour_material(world, BALL_COLOUR);
     let mut local_transform = LocalTransform::default();
-    local_transform.translation = [ARENA_WIDTH / 2.0, ARENA_HEIGHT / 3.0, 0.0];
+    local_transform.translation = [ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0];
 
     world
         .create_entity()
@@ -135,7 +133,7 @@ fn initialise_balls(world: &mut World) {
         .with(material)
         .with(Ball {
             radius: BALL_RADIUS,
-            velocity: [BALL_VELOCITY, BALL_VELOCITY],
+            velocity: [BALL_VELOCITY_X, BALL_VELOCITY_Y],
         })
         .with(local_transform)
         .with(Transform::default())

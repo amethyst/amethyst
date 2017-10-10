@@ -20,23 +20,20 @@ impl<'s> System<'s> for BounceSystem {
     fn run(&mut self, (mut balls, paddles, transforms, sounds, audio_output): Self::SystemData) {
         // Check whether a ball collided, and bounce off accordingly.
         //
-        // It might seem intuitive to just negate the horizontal or vertical velocity of the ball
-        // to represent a bounce, but because of the variable time frame, this could result in
-        // a ball being stuck inside the wall. This happens when the first time step is
-        // signficantly larger than the second one, as that will make the second time step
-        // unable to move the ball back out, causing its velocity to be negated again, and again...
+        // We also check for the velocity of the ball every time, to prevent multiple collisions
+        // from occuring.
         for (ball, transform) in (&mut balls, &transforms).join() {
             use ARENA_HEIGHT;
 
             let ball_x = transform.translation[0];
             let ball_y = transform.translation[1];
 
-            // Bounce at the top of the bottom of the arena.
-            if ball_y <= ball.radius {
-                ball.velocity[1] = ball.velocity[1].abs();
+            // Bounce at the top or the bottom of the arena.
+            if ball_y <= ball.radius && ball.velocity[1] < 0.0 {
+                ball.velocity[1] = -ball.velocity[1];
                 play_bounce(&*sounds, &*audio_output);
-            } else if ball_y >= ARENA_HEIGHT - ball.radius {
-                ball.velocity[1] = -ball.velocity[1].abs();
+            } else if ball_y >= ARENA_HEIGHT - ball.radius && ball.velocity[1] > 0.0 {
+                ball.velocity[1] = -ball.velocity[1];
                 play_bounce(&*sounds, &*audio_output);
             }
 
@@ -58,12 +55,13 @@ impl<'s> System<'s> for BounceSystem {
                     paddle_x + paddle.width + ball.radius,
                     paddle_y + paddle.height + ball.radius,
                 ) {
-                    if paddle.side == Side::Left {
-                        ball.velocity[0] = ball.velocity[0].abs();
-                    } else {
-                        ball.velocity[0] = -ball.velocity[0].abs();
+                    if paddle.side == Side::Left && ball.velocity[0] < 0.0 {
+                        ball.velocity[0] = -ball.velocity[0];
+                        play_bounce(&*sounds, &*audio_output);
+                    } else if paddle.side == Side::Right && ball.velocity[0] > 0.0 {
+                        ball.velocity[0] = -ball.velocity[0];
+                        play_bounce(&*sounds, &*audio_output);
                     }
-                    play_bounce(&*sounds, &*audio_output);
                 }
             }
         }
@@ -71,8 +69,7 @@ impl<'s> System<'s> for BounceSystem {
 }
 
 // A point is in a box when its coordinates are smaller or equal than the top
-// right, but
-// larger or equal than the bottom left.
+// right, but larger or equal than the bottom left.
 fn point_in_rect(x: f32, y: f32, left: f32, bottom: f32, right: f32, top: f32) -> bool {
     x >= left && x <= right && y >= bottom && y <= top
 }
