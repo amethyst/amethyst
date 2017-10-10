@@ -3,7 +3,7 @@ use amethyst::Result;
 use amethyst::ecs::ECSBundle;
 use amethyst::prelude::*;
 use amethyst::timing::Time;
-use systems::{CollisionSystem, MoveBallsSystem, PaddleSystem, WinnerSystem};
+use systems::{BounceSystem, MoveBallsSystem, PaddleSystem, WinnerSystem};
 
 /// A bundle is a convenient way to initialise related resources, components and systems in a
 /// world. This bundle prepares the world for a game of pong.
@@ -23,7 +23,7 @@ impl<'a, 'b, T> ECSBundle<'a, 'b, T> for PongBundle {
                 .with(PaddleSystem, "paddle_system", &["input_system"])
                 .with(MoveBallsSystem, "ball_system", &[])
                 .with(
-                    CollisionSystem,
+                    BounceSystem,
                     "collision_system",
                     &["paddle_system", "ball_system"],
                 )

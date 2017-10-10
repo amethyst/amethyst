@@ -91,6 +91,7 @@ impl Component for Ball {
     type Storage = DenseVecStorage<Self>;
 }
 
+#[derive(PartialEq, Eq)]
 pub enum Side {
     Left,
     Right,

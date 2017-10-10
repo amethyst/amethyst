@@ -1,5 +1,6 @@
-use amethyst::audio::{AudioContext, Dj, Source};
 use amethyst::assets::Loader;
+use amethyst::audio::{AudioContext, Dj, Source};
+use amethyst::audio::output::Output;
 use amethyst::ecs::World;
 use futures::prelude::*;
 
@@ -56,4 +57,13 @@ pub fn initialise_audio(world: &mut World) {
     // Add sound effects to the world. We have to do this in another scope because
     // world won't let us insert new resources as long as `Loader` is borrowed.
     world.add_resource(sound_effects);
+}
+
+/// Plays the bounce sound when a ball hits a side or a paddle.
+pub fn play_bounce(sounds: &Sounds, audio_output: &Option<Output>) {
+    use amethyst::audio::play::play_once;
+
+    if let Some(ref audio_output) = *audio_output {
+        play_once(&sounds.bounce_sfx, 1.0, &audio_output);
+    }
 }
