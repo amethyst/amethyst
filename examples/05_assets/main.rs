@@ -8,7 +8,7 @@ extern crate rayon;
 
 use amethyst::{Application, Error, State, Trans};
 use amethyst::assets::{AssetFuture, BoxedErr, Context, Format, Loader, NoError};
-use amethyst::assets::formats::textures::{BmpFormat, PngFormat};
+use amethyst::renderer::formats::{BmpFormat, PngFormat};
 use amethyst::config::Config;
 use amethyst::ecs::World;
 use amethyst::ecs::input::InputBundle;
@@ -68,7 +68,7 @@ struct AssetsExample;
 
 impl State for AssetsExample {
     fn on_start(&mut self, engine: &mut Engine) {
-        use amethyst::assets::formats::meshes::ObjFormat;
+        use amethyst::renderer::formats::ObjFormat;
 
         engine.world.add_resource(0usize);
 
