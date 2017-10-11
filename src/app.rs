@@ -120,7 +120,16 @@ impl<'a, 'b> Application<'a, 'b> {
         self.timer.start();
         while self.states.is_running() {
             self.advance_frame();
+
             // We are done with this frame, we can just rest for now.
+            if self.timer.elapsed() < self.dur_per_frame {
+                let sleep_time = self.dur_per_frame - self.timer.elapsed();
+
+                if let Some(amount) = sleep_time.checked_sub(Duration::from_millis(1)) {
+                    thread::sleep(amount);
+                }
+            }
+
             while self.timer.elapsed() < self.dur_per_frame {
                 thread::yield_now();
             }
