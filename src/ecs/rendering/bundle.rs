@@ -65,7 +65,7 @@ where
         use specs::common::{Errors, Merge};
 
         let mut renderer = {
-            let mut renderer = Renderer::build(&builder.events);
+            let mut renderer = Renderer::build();
 
             if let Some(config) = self.display_config.to_owned() {
                 renderer.with_config(config);

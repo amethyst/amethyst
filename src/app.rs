@@ -1,16 +1,15 @@
 //! The core engine framework.
 
-use std::mem;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
 use rayon::ThreadPool;
 use shred::Resource;
-use shrev::EventHandler;
+use shrev::{EventChannel, ReaderId};
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
-use winit::{DeviceEvent, Event, EventsLoop, WindowEvent};
+use winit::Event;
 
 use assets::{Asset, Loader, Store};
 use ecs::{Component, Dispatcher, DispatcherBuilder, ECSBundle, System, World};
@@ -36,8 +35,7 @@ pub struct Application<'a, 'b> {
 
     #[derivative(Debug = "ignore")]
     dispatcher: Dispatcher<'a, 'b>,
-    #[derivative(Debug = "ignore")]
-    events: EventsLoop,
+    events_reader_id: ReaderId,
     states: StateMachine<'a>,
     time: Time,
     timer: Stopwatch,
@@ -157,21 +155,15 @@ impl<'a, 'b> Application<'a, 'b> {
             #[cfg(feature = "profiler")]
             profile_scope!("handle_event");
 
-            let mut events: Vec<Event> = Vec::new();
-            self.events.poll_events(|new_event| {
-                Self::compress_events(&mut events, new_event);
-            });
-
-            if let Some(mut event_handler) =
-                engine.world.res.try_fetch_mut::<EventHandler<Event>>(0)
+            let events = match engine
+                .world
+                .read_resource::<EventChannel<Event>>()
+                .lossy_read(&mut self.events_reader_id)
             {
-                if let Err(err) = event_handler.write_slice(&events) {
-                    eprintln!(
-                        "WARNING: Writing too many window events this frame! {:?}",
-                        err
-                    );
-                }
-            }
+                Ok(data) => data.cloned().collect(),
+                _ => Vec::default(),
+            };
+
             for event in events {
                 states.handle_event(engine, event);
             }
@@ -196,124 +188,6 @@ impl<'a, 'b> Application<'a, 'b> {
         #[cfg(feature = "profiler")]
         profile_scope!("maintain");
         self.engine.world.maintain();
-    }
-
-    /// Input devices can sometimes generate a lot of motion events per frame, these are
-    /// useless as the extra precision is wasted and these events tend to overflow our
-    /// otherwise very adequate event buffers.  So this function removes and compresses redundant
-    /// events.
-    fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
-        match new_event {
-            Event::WindowEvent { ref event, .. } => match event {
-                &WindowEvent::MouseMoved { .. } => {
-                    let mut iter = vec.iter_mut();
-                    while let Some(stored_event) = iter.next_back() {
-                        match stored_event {
-                            &mut Event::WindowEvent {
-                                event: WindowEvent::MouseMoved { .. },
-                                ..
-                            } => {
-                                mem::replace(stored_event, new_event.clone());
-                                return;
-                            }
-
-                            &mut Event::WindowEvent {
-                                event: WindowEvent::AxisMotion { .. },
-                                ..
-                            } => {}
-
-                            &mut Event::DeviceEvent {
-                                event: DeviceEvent::Motion { .. },
-                                ..
-                            } => {}
-
-                            _ => {
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                &WindowEvent::AxisMotion {
-                    device_id,
-                    axis,
-                    value,
-                } => {
-                    let mut iter = vec.iter_mut();
-                    while let Some(stored_event) = iter.next_back() {
-                        match stored_event {
-                            &mut Event::WindowEvent {
-                                event:
-                                    WindowEvent::AxisMotion {
-                                        axis: stored_axis,
-                                        device_id: stored_device,
-                                        value: ref mut stored_value,
-                                    },
-                                ..
-                            } => if device_id == stored_device && axis == stored_axis {
-                                *stored_value += value;
-                                return;
-                            },
-
-                            &mut Event::WindowEvent {
-                                event: WindowEvent::MouseMoved { .. },
-                                ..
-                            } => {}
-
-                            &mut Event::DeviceEvent {
-                                event: DeviceEvent::Motion { .. },
-                                ..
-                            } => {}
-
-                            _ => {
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                _ => {}
-            },
-
-            Event::DeviceEvent {
-                device_id,
-                event: DeviceEvent::Motion { axis, value },
-            } => {
-                let mut iter = vec.iter_mut();
-                while let Some(stored_event) = iter.next_back() {
-                    match stored_event {
-                        &mut Event::DeviceEvent {
-                            device_id: stored_device,
-                            event:
-                                DeviceEvent::Motion {
-                                    axis: stored_axis,
-                                    value: ref mut stored_value,
-                                },
-                        } => if device_id == stored_device && axis == stored_axis {
-                            *stored_value += value;
-                            return;
-                        },
-
-                        &mut Event::WindowEvent {
-                            event: WindowEvent::MouseMoved { .. },
-                            ..
-                        } => {}
-
-                        &mut Event::WindowEvent {
-                            event: WindowEvent::AxisMotion { .. },
-                            ..
-                        } => {}
-
-                        _ => {
-                            break;
-                        }
-                    }
-                }
-            }
-
-            _ => {}
-        }
-        vec.push(new_event);
     }
 
     /// Cleans up after the quit signal is received.
@@ -342,7 +216,7 @@ pub struct ApplicationBuilder<'a, 'b, T> {
     pub world: World,
     pool: Arc<ThreadPool>,
     /// Allows to create `RenderSystem`
-    pub events: EventsLoop,
+    events_reader_id: ReaderId,
     max_fps: u32,
 }
 
@@ -426,12 +300,15 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
         let mut world = World::new();
         let base_path = format!("{}/resources", env!("CARGO_MANIFEST_DIR"));
         world.add_resource(Loader::new(base_path, pool.clone()));
+        let events = EventChannel::<Event>::new();
+        let reader_id = events.register_reader();
+        world.add_resource(events);
 
         Ok(ApplicationBuilder {
             disp_builder: DispatcherBuilder::new(),
             initial_state: initial_state,
             world: world,
-            events: EventsLoop::new(),
+            events_reader_id: reader_id,
             pool: pool,
             max_fps: 144,
         })
@@ -883,7 +760,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
             engine: Engine::new(self.pool.clone(), self.world),
             // config: self.config,
             states: StateMachine::new(self.initial_state),
-            events: self.events,
+            events_reader_id: self.events_reader_id,
             dispatcher: self.disp_builder.with_pool(self.pool).build(),
             time: Time::default(),
             timer: Stopwatch::new(),

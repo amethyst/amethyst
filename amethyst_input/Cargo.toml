@@ -19,7 +19,7 @@ winit = "0.7"
 fnv = "1.0"
 serde = "1"
 serde_derive = "1"
-shrev = "0.5"
+shrev = "0.6"
 
 [dependencies.smallvec]
 version = "0.4.2"

@@ -12,7 +12,7 @@ use config::Config;
 use ecs::ECSBundle;
 use ecs::input::{Bindings, InputEvent, InputHandler, InputSystem};
 use error::Result;
-use shrev::EventHandler;
+use shrev::EventChannel;
 
 /// Bundle for adding the `InputHandler`.
 ///
@@ -74,13 +74,14 @@ where
             input.bindings = bindings.clone();
         }
 
-        let winit_handler = EventHandler::<Event>::new();
-        let reader_id = winit_handler.register_reader();
+        let reader_id = builder
+            .world
+            .read_resource::<EventChannel<Event>>()
+            .register_reader();
         Ok(
             builder
                 .with_resource(input)
-                .with_resource(winit_handler)
-                .with_resource(EventHandler::<InputEvent<AC>>::new())
+                .with_resource(EventChannel::<InputEvent<AC>>::new())
                 .with(InputSystem::<AX, AC>::new(reader_id), "input_system", &[]),
         )
     }
