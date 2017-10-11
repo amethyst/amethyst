@@ -302,7 +302,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///     .expect("Failed to initialize")
     ///
     /// // components can be registered at this stage
-    ///     .register::<Child>()
+    ///     .register::<Parent>()
     ///     .register::<LocalTransform>()
     ///
     /// // systems can be added before the game is run
