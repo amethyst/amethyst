@@ -8,6 +8,7 @@ use std::fmt::{self, Display, Formatter};
 use std::io::Cursor;
 use std::string::FromUtf8Error;
 
+use amethyst_assets::{Format, SpawnedFuture};
 use cgmath::{InnerSpace, Vector3};
 use imagefmt;
 use imagefmt::{ColFmt, Image};
@@ -15,7 +16,6 @@ use rayon::ThreadPool;
 use wavefront_obj::ParseError;
 use wavefront_obj::obj::{parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex,
                          TextureIndex, Vertex, VertexIndex};
-use amethyst_assets::{Format, SpawnedFuture};
 
 use vertex::PosNormTex;
 
