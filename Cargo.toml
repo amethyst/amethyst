@@ -12,7 +12,7 @@ homepage = "https://www.amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
 readme = "README.md"
-license = "MIT OR Apache-2.0"
+license = "MIT/Apache-2.0"
 
 [badges]
 appveyor = { repository = "amethyst/amethyst", branch = "develop" }
@@ -35,15 +35,14 @@ futures = "0.1.14"
 gfx = "0.16"
 genmesh = "0.4"
 imagefmt = "4.0"
+serde = "1"
 shred = "0.5"
 shrev = "0.6"
 rayon = "0.8"
 rodio = "0.5.1"
 specs = "0.10"
 ticketed_lock = "0.1"
-wavefront_obj = "5.0"
 winit = "0.7"
-serde = "1"
 
 thread_profiler = { version = "0.1", optional = true }
 
@@ -83,4 +82,4 @@ name = "material"
 path = "examples/06_material/main.rs"
 
 [workspace]
-members = ["amethyst_assets", "amethyst_config", "amethyst_renderer", "amethyst_input"]
+members = ["amethyst_assets", "amethyst_config", "amethyst_input", "amethyst_renderer"]

@@ -77,7 +77,6 @@ extern crate serde;
 extern crate shred;
 extern crate smallvec;
 extern crate specs;
-extern crate wavefront_obj;
 
 pub use self::app::{Application, ApplicationBuilder};
 pub use self::engine::Engine;

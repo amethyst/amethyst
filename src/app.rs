@@ -630,8 +630,8 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// ~~~no_run
     /// use amethyst::prelude::*;
     /// use amethyst::assets::{Directory, Loader};
-    /// use amethyst::assets::formats::meshes::ObjFormat;
     /// use amethyst::ecs::rendering::MeshComponent;
+    /// use amethyst::renderer::formats::ObjFormat;
     ///
     /// let mut game = Application::build(LoadingState)
     ///     .expect("Failed to initialize")

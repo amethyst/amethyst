@@ -10,9 +10,9 @@ use rayon::ThreadPool;
 use renderer::{Error as RendererError, Texture, TextureBuilder};
 
 use assets::{Asset, AssetFuture, AssetPtr, AssetSpec, Cache, Context};
-use assets::formats::textures::ImageData;
 use ecs::{Component, VecStorage};
 use ecs::rendering::resources::{Factory, FactoryFuture};
+use renderer::formats::ImageData;
 
 /// Error that can occur during texture creation
 #[derive(Debug)]

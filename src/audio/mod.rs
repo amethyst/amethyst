@@ -2,6 +2,7 @@
 
 pub use self::audio_context::AudioContext;
 pub use self::dj::Dj;
+pub use self::formats::{FlacFormat, OggFormat, WavFormat};
 pub use self::source::Source;
 
 pub mod play;
@@ -12,6 +13,7 @@ use std::fmt::{Display, Formatter, Result as FmtResult};
 
 mod audio_context;
 mod dj;
+mod formats;
 mod source;
 
 /// An error occurred while decoding the source.
