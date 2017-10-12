@@ -75,7 +75,7 @@ fn initialise_paddles(world: &mut World) {
     let mut right_transform = LocalTransform::default();
 
     // Correctly position the paddles.
-    let y = ARENA_HEIGHT / 2.0 - PADDLE_HEIGHT / 2.0;
+    let y = (ARENA_HEIGHT - PADDLE_HEIGHT) / 2.0;
     left_transform.translation = [0.0, y, 0.0];
     right_transform.translation = [ARENA_WIDTH - PADDLE_WIDTH, y, 0.0];
 
