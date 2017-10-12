@@ -81,7 +81,7 @@ where
         Ok(
             builder
                 .with_resource(input)
-                .with_resource(EventChannel::<InputEvent<AC>>::new())
+                .with_resource(EventChannel::<InputEvent<AC>>::with_capacity(2000))
                 .with(InputSystem::<AX, AC>::new(reader_id), "input_system", &[]),
         )
     }

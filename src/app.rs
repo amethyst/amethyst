@@ -300,7 +300,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
         let mut world = World::new();
         let base_path = format!("{}/resources", env!("CARGO_MANIFEST_DIR"));
         world.add_resource(Loader::new(base_path, pool.clone()));
-        let events = EventChannel::<Event>::new();
+        let events = EventChannel::<Event>::with_capacity(2000);
         let reader_id = events.register_reader();
         world.add_resource(events);
 
