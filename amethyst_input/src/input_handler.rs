@@ -3,7 +3,7 @@
 use std::borrow::Borrow;
 use std::hash::Hash;
 
-use shrev::EventHandler;
+use shrev::EventChannel;
 use smallvec::SmallVec;
 use winit::{ElementState, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
 
@@ -51,11 +51,11 @@ where
     pub fn send_event(
         &mut self,
         event: &WindowEvent,
-        event_handler: &mut EventHandler<InputEvent<AC>>,
+        event_handler: &mut EventChannel<InputEvent<AC>>,
     ) {
         match *event {
             WindowEvent::ReceivedCharacter(c) => {
-                event_handler.write_single(KeyTyped(c));
+                event_handler.single_write(KeyTyped(c));
             }
             WindowEvent::KeyboardInput {
                 input:
@@ -69,7 +69,7 @@ where
             } => if self.pressed_keys.iter().all(|&k| k.0 != key_code) {
                 self.pressed_keys.push((key_code, scancode));
                 event_handler
-                    .write_slice(&[
+                    .slice_write(&[
                         KeyPressed { key_code, scancode },
                         ButtonPressed(Button::Key(key_code)),
                         ButtonPressed(Button::ScanCode(scancode)),
@@ -78,10 +78,10 @@ where
                 for (k, v) in self.bindings.actions.iter() {
                     for &button in v {
                         if Button::Key(key_code) == button {
-                            event_handler.write_single(ActionPressed(k.clone()));
+                            event_handler.single_write(ActionPressed(k.clone()));
                         }
                         if Button::ScanCode(scancode) == button {
-                            event_handler.write_single(ActionPressed(k.clone()));
+                            event_handler.single_write(ActionPressed(k.clone()));
                         }
                     }
                 }
@@ -100,7 +100,7 @@ where
                 if let Some(i) = index {
                     self.pressed_keys.swap_remove(i);
                     event_handler
-                        .write_slice(&[
+                        .slice_write(&[
                             KeyReleased { key_code, scancode },
                             ButtonReleased(Button::Key(key_code)),
                             ButtonReleased(Button::ScanCode(scancode)),
@@ -109,10 +109,10 @@ where
                     for (k, v) in self.bindings.actions.iter() {
                         for &button in v {
                             if Button::Key(key_code) == button {
-                                event_handler.write_single(ActionReleased(k.clone()));
+                                event_handler.single_write(ActionReleased(k.clone()));
                             }
                             if Button::ScanCode(scancode) == button {
-                                event_handler.write_single(ActionReleased(k.clone()));
+                                event_handler.single_write(ActionReleased(k.clone()));
                             }
                         }
                     }
@@ -130,7 +130,7 @@ where
                 {
                     self.pressed_mouse_buttons.push(mouse_button);
                     event_handler
-                        .write_slice(&[
+                        .slice_write(&[
                             MouseButtonPressed(mouse_button),
                             ButtonPressed(Button::Mouse(mouse_button)),
                         ])
@@ -138,7 +138,7 @@ where
                     for (k, v) in self.bindings.actions.iter() {
                         for &button in v {
                             if Button::Mouse(mouse_button) == button {
-                                event_handler.write_single(ActionPressed(k.clone()));
+                                event_handler.single_write(ActionPressed(k.clone()));
                             }
                         }
                     }
@@ -156,7 +156,7 @@ where
                 if let Some(i) = index {
                     self.pressed_mouse_buttons.swap_remove(i);
                     event_handler
-                        .write_slice(&[
+                        .slice_write(&[
                             MouseButtonReleased(mouse_button),
                             ButtonReleased(Button::Mouse(mouse_button)),
                         ])
@@ -164,7 +164,7 @@ where
                     for (k, v) in self.bindings.actions.iter() {
                         for &button in v {
                             if Button::Mouse(mouse_button) == button {
-                                event_handler.write_single(ActionReleased(k.clone()));
+                                event_handler.single_write(ActionReleased(k.clone()));
                             }
                         }
                     }
@@ -174,7 +174,7 @@ where
                 position: (x, y), ..
             } => {
                 if let Some((old_x, old_y)) = self.mouse_position {
-                    event_handler.write_single(MouseMoved {
+                    event_handler.single_write(MouseMoved {
                         delta_x: x - old_x,
                         delta_y: y - old_y,
                     });

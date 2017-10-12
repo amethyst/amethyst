@@ -8,7 +8,11 @@ use amethyst::timing::Time;
 pub struct MoveBallsSystem;
 
 impl<'s> System<'s> for MoveBallsSystem {
-    type SystemData = (WriteStorage<'s, Ball>, WriteStorage<'s, LocalTransform>, Fetch<'s, Time>);
+    type SystemData = (
+        WriteStorage<'s, Ball>,
+        WriteStorage<'s, LocalTransform>,
+        Fetch<'s, Time>,
+    );
 
     fn run(&mut self, (mut balls, mut locals, time): Self::SystemData) {
         let delta_time = time.delta_time.subsec_nanos() as f32 / 1.0e9;

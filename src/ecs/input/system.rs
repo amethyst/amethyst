@@ -4,7 +4,7 @@ use std::hash::Hash;
 use std::marker;
 
 use input::{InputEvent, InputHandler};
-use shrev::{EventHandler, EventReadData, ReaderId};
+use shrev::{EventChannel, ReaderId};
 use winit::Event;
 
 use ecs::{Fetch, FetchMut, System};
@@ -30,7 +30,7 @@ impl<AX, AC> InputSystem<AX, AC> {
     fn process_event(
         event: &Event,
         handler: &mut InputHandler<AX, AC>,
-        output: &mut EventHandler<InputEvent<AC>>,
+        output: &mut EventChannel<InputEvent<AC>>,
     ) where
         AX: Hash + Eq + Clone + Send + Sync + 'static,
         AC: Hash + Eq + Clone + Send + Sync + 'static,
@@ -47,25 +47,16 @@ where
     AC: Hash + Eq + Clone + Send + Sync + 'static,
 {
     type SystemData = (
-        Fetch<'a, EventHandler<Event>>,
+        Fetch<'a, EventChannel<Event>>,
         FetchMut<'a, InputHandler<AX, AC>>,
-        FetchMut<'a, EventHandler<InputEvent<AC>>>,
+        FetchMut<'a, EventChannel<InputEvent<AC>>>,
     );
 
     fn run(&mut self, (input, mut handler, mut output): Self::SystemData) {
-        match input.read(&mut self.reader) {
-            Ok(EventReadData::Data(data)) => for d in data {
+        match input.lossy_read(&mut self.reader) {
+            Ok(data) => for d in data {
                 Self::process_event(d, &mut *handler, &mut *output);
             },
-            Ok(EventReadData::Overflow(data, lost)) => {
-                eprintln!(
-                    "InputSystem: WARNING: Event buffer overflow! {} events were lost!",
-                    lost
-                );
-                for d in data {
-                    Self::process_event(d, &mut *handler, &mut *output);
-                }
-            }
             _ => (),
         }
     }

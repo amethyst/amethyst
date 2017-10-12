@@ -26,17 +26,23 @@ pub struct Renderer {
     main_target: Arc<Target>,
     pool: Arc<ThreadPool>,
     window: Window,
+    events: EventsLoop,
 }
 
 impl Renderer {
     /// Creates a `Renderer` with default window settings.
-    pub fn new(el: &EventsLoop) -> Result<Renderer> {
-        RendererBuilder::new(el).build()
+    pub fn new() -> Result<Renderer> {
+        Self::build().build()
     }
 
     /// Creates a new `RendererBuilder`, equivalent to `RendererBuilder::new()`.
-    pub fn build(el: &EventsLoop) -> RendererBuilder {
+    pub fn build_with_loop(el: EventsLoop) -> RendererBuilder {
         RendererBuilder::new(el)
+    }
+
+    /// Creates a new `RendererBuilder`, equivalent to `RendererBuilder::new()`.
+    pub fn build() -> RendererBuilder {
+        Self::build_with_loop(EventsLoop::new())
     }
 
     /// Builds a new mesh from the given vertices.
@@ -134,6 +140,11 @@ impl Renderer {
             .expect("OpenGL context has been lost");
     }
 
+    /// Retrieve a mutable borrow of the events loop
+    pub fn events_mut(&mut self) -> &mut EventsLoop {
+        &mut self.events
+    }
+
     /// Retrieves an immutable borrow of the window.
     ///
     /// No operations require a mutable borrow as of 2017-10-02
@@ -162,16 +173,16 @@ impl Drop for Renderer {
 }
 
 /// Constructs a new `Renderer`.
-pub struct RendererBuilder<'a> {
+pub struct RendererBuilder {
     config: Config,
-    events: &'a EventsLoop,
+    events: EventsLoop,
     pool: Option<Arc<ThreadPool>>,
     winit_builder: WindowBuilder,
 }
 
-impl<'a> RendererBuilder<'a> {
+impl RendererBuilder {
     /// Creates a new `RendererBuilder`.
-    pub fn new(el: &'a EventsLoop) -> Self {
+    pub fn new(el: EventsLoop) -> Self {
         RendererBuilder {
             config: Config::default(),
             events: el,
@@ -227,7 +238,7 @@ impl<'a> RendererBuilder<'a> {
     /// Consumes the builder and creates the new `Renderer`.
     pub fn build(self) -> Result<Renderer> {
         let Backend(dev, fac, main, win) =
-            init_backend(self.winit_builder.clone(), self.events, &self.config)?;
+            init_backend(self.winit_builder.clone(), &self.events, &self.config)?;
         let num_cores = num_cpus::get();
         let pool = self.pool.clone().map(|p| Ok(p)).unwrap_or_else(|| {
             let cfg = rayon::Configuration::new().num_threads(num_cores);
@@ -243,6 +254,7 @@ impl<'a> RendererBuilder<'a> {
             main_target: Arc::new(main),
             pool: pool,
             window: win,
+            events: self.events
         })
     }
 }
