@@ -169,6 +169,7 @@ impl WindowMessages {
 }
 
 /// World resource that stores screen dimensions.
+#[derive(Debug)]
 pub struct ScreenDimensions {
     /// Screen width in pixels (px).
     w: f32,
