@@ -26,17 +26,20 @@ opengl = ["gfx_device_gl", "gfx_window_glutin", "glutin"]
 #vulkan = ["gfx_device_vulkan", "gfx_window_vulkan"]
 
 [dependencies]
+amethyst_assets = { path = "../amethyst_assets", version = "0.1" }
 cgmath = { version = "0.14", features = ["eders"] }
 derivative = "1.0"
 fnv = "1.0"
 gfx = { version = "0.16", features = ["cgmath-types", "serialize"] }
 gfx_core = { version = "0.7", features = ["cgmath-types", "serialize"] }
 gfx_macros = "0.2"
+imagefmt = "4.0"
 num_cpus = "1.0"
 rayon = "0.8"
 rayon-core = "1.2"
 serde = "1.0"
 serde_derive = "1.0"
+wavefront_obj = "5.0"
 winit = "0.7"
 
 gfx_device_gl = { version = "0.14", optional = true }

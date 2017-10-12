@@ -1,15 +1,81 @@
+//! Provides texture formats
+//!
+
+pub use imagefmt::Error as ImageError;
+
 use std::error::Error;
 use std::fmt::{self, Display, Formatter};
+use std::io::Cursor;
 use std::string::FromUtf8Error;
 
+use amethyst_assets::{Format, SpawnedFuture};
 use cgmath::{InnerSpace, Vector3};
+use imagefmt;
+use imagefmt::{ColFmt, Image};
 use rayon::ThreadPool;
-use renderer::vertex::PosNormTex;
 use wavefront_obj::ParseError;
 use wavefront_obj::obj::{parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex,
                          TextureIndex, Vertex, VertexIndex};
 
-use assets::{Format, SpawnedFuture};
+use vertex::PosNormTex;
+
+/// ImageData provided by formats, can be interpreted as a texture.
+#[derive(Clone, Debug)]
+pub struct ImageData {
+    /// The raw image data.
+    pub raw: Image<u8>,
+}
+
+/// A future which will eventually have an image available.
+pub type ImageFuture = SpawnedFuture<ImageData, ImageError>;
+
+/// Allows loading of jpg or jpeg files.
+pub struct JpgFormat;
+
+impl Format for JpgFormat {
+    const EXTENSIONS: &'static [&'static str] = &["jpg", "jpeg"];
+    type Data = ImageData;
+    type Error = ImageError;
+    type Result = ImageFuture;
+
+    fn parse(&self, bytes: Vec<u8>, pool: &ThreadPool) -> Self::Result {
+        ImageFuture::spawn(pool, move || {
+            imagefmt::jpeg::read(&mut Cursor::new(bytes), ColFmt::RGBA).map(|raw| ImageData { raw })
+        })
+    }
+}
+
+/// Allows loading of PNG files.
+pub struct PngFormat;
+
+impl Format for PngFormat {
+    const EXTENSIONS: &'static [&'static str] = &["png"];
+    type Data = ImageData;
+    type Error = ImageError;
+    type Result = ImageFuture;
+
+    fn parse(&self, bytes: Vec<u8>, pool: &ThreadPool) -> Self::Result {
+        ImageFuture::spawn(pool, move || {
+            imagefmt::png::read(&mut Cursor::new(bytes), ColFmt::RGBA).map(|raw| ImageData { raw })
+        })
+    }
+}
+
+/// Allows loading of BMP files.
+pub struct BmpFormat;
+
+impl Format for BmpFormat {
+    const EXTENSIONS: &'static [&'static str] = &["bmp"];
+    type Data = ImageData;
+    type Error = ImageError;
+    type Result = ImageFuture;
+
+    fn parse(&self, bytes: Vec<u8>, pool: &ThreadPool) -> Self::Result {
+        ImageFuture::spawn(pool, move || {
+            imagefmt::bmp::read(&mut Cursor::new(bytes), ColFmt::RGBA).map(|raw| ImageData { raw })
+        })
+    }
+}
 
 /// A future which will eventually have an vertices available.
 pub type VerticesFuture<V> = SpawnedFuture<Vec<V>, ObjError>;
@@ -68,8 +134,6 @@ impl Format for ObjFormat {
     }
 }
 
-
-
 fn convert(
     object: &Object,
     vi: VertexIndex,
@@ -104,7 +168,6 @@ fn convert_primitive(object: &Object, prim: &Primitive) -> Option<[PosNormTex; 3
         _ => None,
     }
 }
-
 
 fn from_data(obj_set: ObjSet) -> Vec<PosNormTex> {
     // Takes a list of objects that contain geometries that contain shapes that contain

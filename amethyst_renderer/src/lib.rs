@@ -9,6 +9,7 @@
 #![deny(missing_docs)]
 #![doc(html_logo_url = "https://tinyurl.com/jtmm43a")]
 
+extern crate amethyst_assets;
 extern crate cgmath;
 #[macro_use]
 extern crate derivative;
@@ -18,6 +19,7 @@ extern crate gfx_core;
 #[macro_use]
 extern crate gfx_macros;
 extern crate hetseq;
+extern crate imagefmt;
 extern crate num_cpus;
 extern crate rayon;
 extern crate rayon_core;
@@ -25,6 +27,7 @@ extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate specs;
+extern crate wavefront_obj;
 extern crate winit;
 
 #[cfg(all(feature = "d3d11", target_os = "windows"))]
@@ -62,6 +65,7 @@ pub use tex::{Texture, TextureBuilder};
 pub use types::{Encoder, Factory};
 pub use vertex::VertexFormat;
 
+pub mod formats;
 pub mod light;
 pub mod mesh;
 pub mod pass;

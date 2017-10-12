@@ -11,8 +11,6 @@ use std::str;
 
 use amethyst::{Application, Error, State, Trans};
 use amethyst::assets::{AssetFuture, BoxedErr, Context, Format, Loader};
-use amethyst::assets::formats::meshes::ObjFormat;
-use amethyst::assets::formats::textures::PngFormat;
 use amethyst::config::Config;
 use amethyst::ecs::{Fetch, FetchMut, Join, System, WriteStorage};
 use amethyst::ecs::rendering::{AmbientColor, Factory, LightComponent, MaterialComponent,
@@ -21,6 +19,7 @@ use amethyst::ecs::rendering::{AmbientColor, Factory, LightComponent, MaterialCo
 use amethyst::ecs::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::{Camera, Config as DisplayConfig, Rgba};
+use amethyst::renderer::formats::{ObjFormat, PngFormat};
 use amethyst::renderer::prelude::*;
 use amethyst::timing::Time;
 use cgmath::{Deg, Euler, Quaternion};

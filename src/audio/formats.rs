@@ -1,5 +1,3 @@
-//! Provides audio formats
-
 use rayon::ThreadPool;
 
 use assets::*;

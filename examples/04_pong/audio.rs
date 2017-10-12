@@ -11,7 +11,7 @@ pub struct Sounds {
 
 /// Loads an ogg audio track.
 fn load_audio_track(loader: &mut Loader, file: &str) -> Source {
-    use amethyst::assets::formats::audio::OggFormat;
+    use amethyst::audio::OggFormat;
 
     loader
         .load_from(file, OggFormat, "assets")
