@@ -75,8 +75,8 @@ fn initialise_paddles(world: &mut World) {
     let mut right_transform = LocalTransform::default();
 
     // Correctly position the paddles.
-    left_transform.translation = [0.0, 0.0, 0.0];
-    right_transform.translation = [ARENA_WIDTH - PADDLE_WIDTH, 0.0, 0.0];
+    left_transform.translation = [0.0, ARENA_HEIGHT / 2.0, 0.0];
+    right_transform.translation = [ARENA_WIDTH - PADDLE_WIDTH, ARENA_HEIGHT / 2.0, 0.0];
 
     // Create the mesh and the material needed.
     let mesh = create_mesh(
