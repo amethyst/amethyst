@@ -78,6 +78,9 @@ extern crate shred;
 extern crate smallvec;
 extern crate specs;
 
+#[macro_use]
+extern crate serde_derive;
+
 pub use self::app::{Application, ApplicationBuilder};
 pub use self::engine::Engine;
 pub use self::error::{Error, Result};

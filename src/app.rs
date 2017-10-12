@@ -1,8 +1,6 @@
 //! The core engine framework.
 
 use std::sync::Arc;
-use std::thread;
-use std::time::Duration;
 
 use rayon::ThreadPool;
 use shred::Resource;
@@ -17,6 +15,7 @@ use engine::Engine;
 use error::{Error, Result};
 use state::{State, StateMachine};
 use timing::{Stopwatch, Time};
+use util::frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy};
 use vergen;
 
 /// An Application is the root object of the game engine. It binds the OS
@@ -31,7 +30,7 @@ pub struct Application<'a, 'b> {
     /// The `engine` struct, holding world and thread pool.
     #[derivative(Debug = "ignore")]
     pub engine: Engine,
-    dur_per_frame: Duration,
+    frame_limiter: FrameLimiter,
 
     #[derivative(Debug = "ignore")]
     dispatcher: Dispatcher<'a, 'b>,
@@ -118,10 +117,8 @@ impl<'a, 'b> Application<'a, 'b> {
         self.timer.start();
         while self.states.is_running() {
             self.advance_frame();
-            // We are done with this frame, we can just rest for now.
-            while self.timer.elapsed() < self.dur_per_frame {
-                thread::yield_now();
-            }
+
+            self.frame_limiter.wait();
 
             self.time.delta_time = self.timer.elapsed();
             self.timer.stop();
@@ -217,7 +214,7 @@ pub struct ApplicationBuilder<'a, 'b, T> {
     pool: Arc<ThreadPool>,
     /// Allows to create `RenderSystem`
     events_reader_id: ReaderId,
-    max_fps: u32,
+    frame_limiter: FrameLimiter,
 }
 
 impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
@@ -310,7 +307,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
             world: world,
             events_reader_id: reader_id,
             pool: pool,
-            max_fps: 144,
+            frame_limiter: FrameLimiter::default(),
         })
     }
 
@@ -667,18 +664,28 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// # Parameters
     ///
+    /// `strategy`: the frame limit strategy to use
     /// `max_fps`: the maximum frames per second this game will run at.
     ///
     /// # Returns
     ///
     /// This function returns the ApplicationBuilder after modifying it.
-    pub fn with_max_fps(mut self, max_fps: u32) -> Self {
-        use std::u32::MAX;
-        if max_fps == 0 {
-            self.max_fps = MAX;
-        } else {
-            self.max_fps = max_fps;
-        }
+    pub fn with_frame_limit(mut self, strategy: FrameRateLimitStrategy, max_fps: u32) -> Self {
+        self.frame_limiter = FrameLimiter::new(strategy, max_fps);
+        self
+    }
+
+    /// Sets the maximum frames per second of this game, based on the given config.
+    ///
+    /// # Parameters
+    ///
+    /// `config`: the frame limiter config
+    ///
+    /// # Returns
+    ///
+    /// This function returns the ApplicationBuilder after modifying it.
+    pub fn with_frame_limit_config(mut self, config: FrameRateLimitConfig) -> Self {
+        self.frame_limiter = FrameLimiter::from_config(config);
         self
     }
 
@@ -764,7 +771,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
             dispatcher: self.disp_builder.with_pool(self.pool).build(),
             time: Time::default(),
             timer: Stopwatch::new(),
-            dur_per_frame: Duration::from_secs(1) / self.max_fps,
+            frame_limiter: self.frame_limiter,
         })
     }
 }

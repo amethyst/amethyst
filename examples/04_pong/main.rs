@@ -8,6 +8,8 @@ mod systems;
 mod bundle;
 mod audio;
 
+use std::time::Duration;
+
 use amethyst::Result;
 use amethyst::ecs::{Component, DenseVecStorage};
 use amethyst::ecs::audio::DjBundle;
@@ -18,6 +20,7 @@ use amethyst::prelude::*;
 use amethyst::renderer::Config as DisplayConfig;
 use amethyst::renderer::prelude::*;
 use bundle::PongBundle;
+use amethyst::util::frame_limiter::FrameRateLimitStrategy;
 
 const ARENA_HEIGHT: f32 = 100.0;
 const ARENA_WIDTH: f32 = 100.0;
@@ -64,6 +67,7 @@ fn run() -> Result<()> {
     let assets_dir = format!("{}/examples/04_pong/resources/", env!("CARGO_MANIFEST_DIR"));
 
     let game = Application::build(Pong)?
+        .with_frame_limit(FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)), 144)
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path),
         )?
