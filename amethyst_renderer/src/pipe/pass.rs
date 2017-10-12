@@ -1,7 +1,6 @@
 //! Types for constructing render passes.
 
 #![allow(missing_docs)]
-use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::marker::PhantomData;
 
 use rayon::iter::ParallelIterator;
@@ -121,7 +120,7 @@ pub trait Pass: for<'a> PassApply<'a> + for<'a> PassData<'a> + Send + Sync {
     ) -> <Self as PassApply<'a>>::Apply;
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct CompiledPass<P> {
     effects: Vec<Effect>,
     inner: P,
@@ -156,13 +155,15 @@ impl<P> CompiledPass<P> {
         self.inner
             .apply(Supplier::new(encoders, &mut self.effects[..]), data)
     }
-}
 
-impl<P> Debug for CompiledPass<P> {
-    fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
-        fmt.debug_struct("CompiledPass")
-            .field("effects", &self.effects)
-            .field("inner", &"[impl]")
-            .finish()
+    pub fn new_target(&mut self, target: &Target) {
+        for effect in &mut self.effects {
+            effect.data.out_colors.clear();
+            effect
+                .data
+                .out_colors
+                .extend(target.color_bufs().iter().map(|cb| &cb.as_output).cloned());
+            effect.data.out_depth = target.depth_buf().map(|db| (db.as_output.clone(), (0, 0)));
+        }
     }
 }

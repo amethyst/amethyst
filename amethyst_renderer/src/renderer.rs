@@ -11,9 +11,11 @@ use config::Config;
 use error::{Error, Result};
 use mesh::{Mesh, MeshBuilder, VertexDataSet};
 use mtl::{Material, MaterialBuilder};
-use pipe::{ColorBuffer, DepthBuffer, PipelineBuild, PipelineData, PolyPipeline, Target};
+use pipe::{ColorBuffer, DepthBuffer, PipelineBuild, PipelineData, PolyPipeline, Target,
+           TargetBuilder};
 use tex::{Texture, TextureBuilder};
 use types::{ColorFormat, DepthFormat, Device, Encoder, Factory, Window};
+use fnv::FnvHashMap as HashMap;
 use winit::{self, EventsLoop, Window as WinitWindow, WindowBuilder};
 
 /// Generic renderer.
@@ -23,10 +25,11 @@ pub struct Renderer {
 
     device: Device,
     encoders: Vec<Encoder>,
-    main_target: Arc<Target>,
+    main_target: Target,
     pool: Arc<ThreadPool>,
     window: Window,
     events: EventsLoop,
+    cached_size: (u32, u32),
 }
 
 impl Renderer {
@@ -108,6 +111,13 @@ impl Renderer {
         #[cfg(feature = "opengl")]
         use glutin::GlContext;
 
+        if let Some(size) = self.window().get_inner_size_pixels() {
+            if size != self.cached_size {
+                self.cached_size = size;
+                self.resize(pipe, size);
+            }
+        }
+
         let num_threads = self.pool.current_num_threads();
         let encoders_required = P::encoders_required(num_threads);
 
@@ -143,6 +153,22 @@ impl Renderer {
     /// Retrieve a mutable borrow of the events loop
     pub fn events_mut(&mut self) -> &mut EventsLoop {
         &mut self.events
+    }
+
+    /// Resize the targets associated with this renderer and pipeline.
+    pub fn resize<P: PolyPipeline>(&mut self, pipe: &mut P, new_size: (u32, u32)) {
+        self.main_target.resize_main_target(&self.window);
+        let mut targets = HashMap::default();
+        targets.insert("".to_string(), self.main_target.clone());
+        for (key, value) in pipe.targets().iter().filter(|&(k, _)| !k.is_empty()) {
+            let (key, target) = TargetBuilder::new(key.clone())
+                .with_num_color_bufs(value.color_bufs().len())
+                .with_depth_buf(value.depth_buf().is_some())
+                .build(&mut self.factory, new_size)
+                .unwrap();
+            targets.insert(key, target);
+        }
+        pipe.new_targets(targets);
     }
 
     /// Retrieves an immutable borrow of the window.
@@ -247,14 +273,18 @@ impl RendererBuilder {
                 .map_err(|e| Error::PoolCreation(format!("{}", e)))
         })?;
 
+        let size = win.get_inner_size_pixels()
+            .expect("Unable to fetch window size, as the window went away!");
+
         Ok(Renderer {
             device: dev,
             encoders: Vec::new(),
             factory: fac,
-            main_target: Arc::new(main),
+            main_target: main,
             pool: pool,
             window: win,
-            events: self.events
+            events: self.events,
+            cached_size: size,
         })
     }
 }
