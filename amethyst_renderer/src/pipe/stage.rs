@@ -291,7 +291,7 @@ impl<Q> StageBuilder<Q> {
             clear_color: self.clear_color,
             clear_depth: self.clear_depth,
             enabled: self.enabled,
-            passes: passes,
+            passes,
             target: out,
             target_name: self.target_name,
         })
@@ -321,8 +321,8 @@ pub struct CompilePass<'a> {
 impl<'a> CompilePass<'a> {
     fn new(factory: &'a mut Factory, target: &'a Target) -> Self {
         CompilePass {
-            factory: factory,
-            target: target,
+            factory,
+            target,
         }
     }
 }
@@ -332,7 +332,7 @@ where
     P: Pass,
 {
     type Output = Result<CompiledPass<P>>;
-    fn call_once(mut self, (pass,): (P,)) -> Result<CompiledPass<P>> {
+    fn call_once(self, (pass,): (P,)) -> Result<CompiledPass<P>> {
         CompiledPass::compile(pass, self.factory, self.target)
     }
 }

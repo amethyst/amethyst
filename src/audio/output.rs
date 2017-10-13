@@ -6,7 +6,7 @@ extern crate cpal;
 use std::fmt::{Debug, Formatter, Result as FmtResult};
 
 use self::cpal::EndpointsIterator;
-use rodio::*;
+use self::cpal::{default_endpoint, endpoints};
 use rodio::Endpoint;
 
 /// A speaker(s) through which audio can be played.
@@ -17,7 +17,7 @@ pub struct Output {
 impl Output {
     /// Gets the name of the output
     pub fn name(&self) -> String {
-        self.endpoint.get_name()
+        self.endpoint.name()
     }
 }
 
@@ -45,12 +45,12 @@ impl Iterator for OutputIterator {
 
 /// Get the default output, returns none if no outputs are available.
 pub fn default_output() -> Option<Output> {
-    get_default_endpoint().map(|re| Output { endpoint: re })
+    default_endpoint().map(|re| Output { endpoint: re })
 }
 
 /// Get a list of outputs available to the system.
 pub fn outputs() -> OutputIterator {
     OutputIterator {
-        input: get_endpoints_list(),
+        input: endpoints(),
     }
 }

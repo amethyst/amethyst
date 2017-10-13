@@ -163,7 +163,7 @@ pub trait PolyPipeline
     /// Retuns `ParallelIterator` which apply data to all stages
     fn apply<'a, 'b: 'a>(
         &'a mut self,
-        &'a mut [Encoder],
+        encoder: &'a mut [Encoder],
         jobs_count: usize,
         data: <Self as PipelineData<'b>>::Data,
     ) -> <Self as PipelineApply<'a>>::Apply;
@@ -290,8 +290,8 @@ where
             .try()?;
 
         Ok(Pipeline {
-            stages: stages,
-            targets: targets,
+            stages,
+            targets,
         })
     }
 }
@@ -304,8 +304,8 @@ pub struct BuildStage<'a> {
 impl<'a> BuildStage<'a> {
     fn new(factory: &'a mut Factory, targets: &'a Targets) -> Self {
         BuildStage {
-            factory: factory,
-            targets: targets,
+            factory,
+            targets,
         }
     }
 }
@@ -318,7 +318,7 @@ where
     R: Passes,
 {
     type Output = Result<Stage<R>>;
-    fn call_once(mut self, (stage,): (StageBuilder<Q>,)) -> Result<Stage<R>> {
+    fn call_once(self, (stage,): (StageBuilder<Q>,)) -> Result<Stage<R>> {
         stage.build(self.factory, self.targets)
     }
 }

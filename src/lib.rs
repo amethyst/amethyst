@@ -44,7 +44,6 @@
 //!
 //! fn main() {
 //!     let mut game = Application::new(GameState).expect("Fatal error");
-
 //!     game.run();
 //! }
 //! ```
