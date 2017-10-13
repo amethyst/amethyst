@@ -293,9 +293,9 @@ impl<'a> EffectBuilder<'a> {
             .collect::<HashMap<_, _>>();
 
         data.out_colors
-            .extend(self.out.color_bufs().iter().map(|cb| cb.as_output.clone()));
+            .extend(self.out.color_bufs().iter().map(|cb| &cb.as_output).cloned());
         data.out_blends
-            .extend(self.out.color_bufs().iter().map(|cb| cb.as_output.clone()));
+            .extend(self.out.color_bufs().iter().map(|cb| &cb.as_output).cloned());
         data.out_depth = self.out
             .depth_buf()
             .map(|db| (db.as_output.clone(), (0, 0)));
