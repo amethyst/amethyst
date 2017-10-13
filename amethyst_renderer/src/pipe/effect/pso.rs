@@ -11,6 +11,7 @@ type AccessInfo = pso::AccessInfo<Resources>;
 type DepthStencilTarget = target::DepthStencilTarget<DepthFormat>;
 type Manager = handle::Manager<Resources>;
 type RenderTarget = target::RenderTarget<ColorFormat>;
+type BlendTarget = target::BlendTarget<ColorFormat>;
 type RawDataSet = pso::RawDataSet<Resources>;
 type InitResult<'r, M> = Result<M, InitError<&'r str>>;
 
@@ -19,6 +20,7 @@ pub struct Meta {
     const_bufs: Vec<RawConstantBuffer>,
     globals: Vec<RawGlobal>,
     out_colors: Vec<RenderTarget>,
+    out_blends: Vec<BlendTarget>,
     out_depth: Option<DepthStencilTarget>,
     samplers: Vec<Sampler>,
     textures: Vec<RawShaderResource>,
@@ -31,6 +33,7 @@ pub struct Init<'d> {
     pub const_bufs: Vec<<RawConstantBuffer as DataLink<'d>>::Init>,
     pub globals: Vec<<RawGlobal as DataLink<'d>>::Init>,
     pub out_colors: Vec<<RenderTarget as DataLink<'d>>::Init>,
+    pub out_blends: Vec<<BlendTarget as DataLink<'d>>::Init>,
     pub out_depth: Option<<DepthStencilTarget as DataLink<'d>>::Init>,
     pub samplers: Vec<<Sampler as DataLink<'d>>::Init>,
     pub textures: Vec<<RawShaderResource as DataLink<'d>>::Init>,
@@ -79,6 +82,18 @@ impl<'d> PipelineInit for Init<'d> {
             meta.out_colors.push(meta_color);
         }
 
+        for blend in self.out_blends.iter() {
+            let mut meta_blend = <BlendTarget as DataLink<'d>>::new();
+            for info in info.outputs.iter() {
+                if let Some(res) = meta_blend.link_output(info, blend) {
+                    let d = res.map_err(|e| InitError::PixelExport(info.name.as_str(), Some(e)))?;
+                    desc.color_targets[info.slot as usize] = Some(d);
+                    break;
+                }
+            }
+            meta.out_blends.push(meta_blend);
+        }
+
         if !info.knows_outputs {
             let mut info = OutputVar {
                 name: String::new(),
@@ -95,6 +110,16 @@ impl<'d> PipelineInit for Init<'d> {
                     info.slot += 1;
                 }
                 meta.out_colors.push(meta_color);
+            }
+
+            for blend in self.out_blends.iter() {
+                let mut meta_blend = <BlendTarget as DataLink<'d>>::new();
+                if let Some(res) = meta_blend.link_output(&info, blend) {
+                    let d = res.map_err(|e| InitError::PixelExport("", Some(e)))?;
+                    desc.color_targets[info.slot as usize] = Some(d);
+                    info.slot += 1;
+                }
+                meta.out_blends.push(meta_blend);
             }
         }
 
@@ -154,6 +179,7 @@ pub struct Data {
     pub const_bufs: Vec<<RawConstantBuffer as DataBind<Resources>>::Data>,
     pub globals: Vec<<RawGlobal as DataBind<Resources>>::Data>,
     pub out_colors: Vec<<RenderTarget as DataBind<Resources>>::Data>,
+    pub out_blends: Vec<<BlendTarget as DataBind<Resources>>::Data>,
     pub out_depth: Option<<DepthStencilTarget as DataBind<Resources>>::Data>,
     pub samplers: Vec<<Sampler as DataBind<Resources>>::Data>,
     pub textures: Vec<<RawShaderResource as DataBind<Resources>>::Data>,
@@ -177,6 +203,11 @@ impl PipelineData<Resources> for Data {
         let out_colors = meta.out_colors.iter().zip(&self.out_colors);
         for (meta_color, color) in out_colors {
             meta_color.bind_to(out, &color, mgr, acc);
+        }
+
+        let out_blends = meta.out_blends.iter().zip(&self.out_blends);
+        for (meta_blend, blend) in out_blends {
+            meta_blend.bind_to(out, &blend, mgr, acc);
         }
 
         let out_depth = (meta.out_depth.as_ref(), self.out_depth.as_ref());
