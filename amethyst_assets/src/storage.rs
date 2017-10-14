@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use crossbeam::sync::MsQueue;
 use hibitset::BitSet;
-use specs::{UnprotectedStorage, VecStorage};
+use specs::{Component, DenseVecStorage, UnprotectedStorage, VecStorage};
 use specs::common::Errors;
 
 use BoxedErr;
@@ -152,6 +152,13 @@ impl<A> Handle<A> {
 }
 
 impl<A> Eq for Handle<A> {}
+
+impl<A> Component for Handle<A>
+where
+    A: Send + Sync + 'static,
+{
+    type Storage = DenseVecStorage<Self>;
+}
 
 impl<A> PartialEq for Handle<A> {
     fn eq(&self, other: &Handle<A>) -> bool {

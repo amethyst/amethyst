@@ -40,13 +40,18 @@ fn main() {
     let loader = Loader::new(&path, pool);
     let mut storage = AssetStorage::new();
 
-    let dummy = loader.load("dummy/whatever.dum", DummyFormat, &storage);
+    let mut progress = Progress::new();
 
+    let dummy = loader.load("dummy/whatever.dum", DummyFormat, &mut progress, &storage);
+
+    // Game loop
     loop {
-        if storage.get(&dummy).is_some() {
+        // If loading is done, end the game loop and print the asset
+        if progress.is_complete() {
             break;
         }
 
+        // Do per-frame stuff (display loading screen, ..)
         use std::thread::sleep_ms;
         sleep_ms(100);
 

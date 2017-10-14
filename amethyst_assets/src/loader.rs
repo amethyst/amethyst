@@ -63,13 +63,19 @@ impl Loader {
     ///
     /// The actual work is done on a worker thread, thus this method immediately returns
     /// a future.
-    pub fn load<A, F, N>(&self, id: N, format: F, storage: &AssetStorage<A>) -> Handle<A>
+    pub fn load<A, F, N>(
+        &self,
+        id: N,
+        format: F,
+        progress: &mut Progress,
+        storage: &AssetStorage<A>,
+    ) -> Handle<A>
     where
         A: Asset,
         F: Format<A>,
         N: Into<String>,
     {
-        self.load_from::<A, F, _, _>(id, format, "", storage)
+        self.load_from::<A, F, _, _>(id, format, "", progress, storage)
     }
 
     /// Loads an asset with a given id and format from a custom store.
@@ -84,6 +90,7 @@ impl Loader {
         name: N,
         format: F,
         source: &S,
+        progress: &mut Progress,
         storage: &AssetStorage<A>,
     ) -> Handle<A>
     where
@@ -98,6 +105,9 @@ impl Loader {
             source => self.source(source),
         };
 
+        progress.num_assets += 1;
+        let progress_arc = progress.num_loading.clone();
+
         let handle = storage.allocate();
         let handle_clone = handle.clone();
         let processed = storage.processed.clone();
@@ -107,6 +117,7 @@ impl Loader {
         self.pool.spawn(move || {
             let data = format.import(name, source);
             processed.push((handle, data));
+            drop(progress_arc);
         });
 
         handle_clone
@@ -128,5 +139,40 @@ impl Loader {
             .get(source)
             .expect("No such source. Maybe you forgot to add it with `Loader::add_source`?")
             .clone()
+    }
+}
+
+/// A progress tracker which is passed to the `Loader`
+/// in order to check how many asssets are loaded.
+#[derive(Default)]
+pub struct Progress {
+    num_assets: usize,
+    num_loading: Arc<()>,
+}
+
+impl Progress {
+    /// Creates a new `Progress` struct.
+    pub fn new() -> Self {
+        Default::default()
+    }
+
+    /// Returns the number of assets this struct is tracking.
+    pub fn num_assets(&self) -> usize {
+        self.num_assets
+    }
+
+    /// Returns the number of assets that are still loading.
+    pub fn num_loading(&self) -> usize {
+        Arc::strong_count(&self.num_loading) - 1
+    }
+
+    /// Returns the number of assets this struct is tracking.
+    pub fn num_finished(&self) -> usize {
+        self.num_assets - self.num_loading()
+    }
+
+    /// Returns `true` if all tracked assets are finished.
+    pub fn is_complete(&self) -> bool {
+        self.num_loading() == 0
     }
 }

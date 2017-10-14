@@ -23,7 +23,7 @@ pub use specs::error::BoxedErr;
 pub use asset::{Asset, AssetSpec, Format};
 pub use cache::Cache;
 pub use error::{AssetError, LoadError, NoError};
-pub use loader::{Loader, SourceId};
+pub use loader::{Loader, Progress, SourceId};
 pub use source::{Directory, Source};
 pub use storage::{AssetStorage, Handle};
 
@@ -31,6 +31,6 @@ mod asset;
 mod cache;
 mod error;
 mod loader;
-mod reload;
+//mod reload;
 mod source;
 mod storage;
