@@ -5,30 +5,32 @@
 //!
 //! * extensibility
 //! * asynchronous & parallel using rayon and futures
-//! * allow different stores
+//! * allow different sources
 
 #![warn(missing_docs)]
 
+extern crate crossbeam;
 #[macro_use]
 extern crate derivative;
 extern crate fnv;
-extern crate futures;
+extern crate hibitset;
 extern crate parking_lot;
 extern crate rayon;
 extern crate specs;
 
 pub use specs::error::BoxedErr;
 
-pub use asset::{Asset, AssetFuture, AssetSpec, Context, Format};
+pub use asset::{Asset, AssetSpec, Format};
 pub use cache::Cache;
-pub use error::{AssetError, LoadError, NoError, SharedAssetError};
-pub use loader::{load_asset, Loader, SpawnedFuture, StoreId};
-pub use simple::{AssetPtr, SimpleAsset, SimpleContext};
-pub use store::{Directory, Store};
+pub use error::{AssetError, LoadError, NoError};
+pub use loader::{Loader, SourceId};
+pub use source::{Directory, Source};
+pub use storage::{AssetStorage, Handle};
 
 mod asset;
 mod cache;
 mod error;
 mod loader;
-mod simple;
-mod store;
+mod reload;
+mod source;
+mod storage;

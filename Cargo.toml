@@ -22,7 +22,7 @@ travis-ci = { repository = "amethyst/amethyst", branch = "develop" }
 profiler = ["thread_profiler/thread_profiler"]
 
 [dependencies]
-amethyst_assets = { path = "amethyst_assets", version = "0.1.0" }
+amethyst_assets = { path = "amethyst_assets", version = "0.2.0" }
 amethyst_config = { path = "amethyst_config", version = "0.4.0" }
 amethyst_renderer = { path = "amethyst_renderer", version = "0.5" }
 amethyst_input = { path = "amethyst_input", version = "0.1" }

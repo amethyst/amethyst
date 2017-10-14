@@ -26,7 +26,7 @@ opengl = ["gfx_device_gl", "gfx_window_glutin", "glutin"]
 #vulkan = ["gfx_device_vulkan", "gfx_window_vulkan"]
 
 [dependencies]
-amethyst_assets = { path = "../amethyst_assets", version = "0.1" }
+amethyst_assets = { path = "../amethyst_assets", version = "0.2.0" }
 cgmath = { version = "0.14", features = ["eders"] }
 derivative = "1.0"
 fnv = "1.0"
