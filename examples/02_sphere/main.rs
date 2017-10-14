@@ -5,17 +5,15 @@ extern crate cgmath;
 extern crate futures;
 extern crate genmesh;
 
-use amethyst::assets::{AssetFuture, BoxedErr};
+use amethyst::assets::{Loader};
 use amethyst::ecs::World;
-use amethyst::ecs::rendering::{AmbientColor, Factory, LightComponent, MaterialComponent,
-                               MeshComponent, RenderBundle};
+use amethyst::ecs::rendering::{AmbientColor, RenderBundle};
 use amethyst::ecs::transform::Transform;
 use amethyst::prelude::*;
-use amethyst::renderer::{Config as DisplayConfig, Rgba};
+use amethyst::renderer::{Config as DisplayConfig, Rgba, Mesh, Texture};
 use amethyst::renderer::prelude::*;
 use cgmath::{Deg, Vector3};
 use cgmath::prelude::InnerSpace;
-use futures::{Future, IntoFuture};
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 
@@ -28,17 +26,6 @@ const LIGHT_RADIUS: f32 = 5.0;
 const LIGHT_INTENSITY: f32 = 3.0;
 
 struct Example;
-
-fn load_proc_asset<T, F>(world: &mut World, f: F) -> AssetFuture<T::Item>
-where
-    T: IntoFuture<Error = BoxedErr>,
-    T::Future: 'static,
-    F: FnOnce(&mut World) -> T,
-{
-    let future = f(world).into_future();
-    let future: Box<Future<Item = T::Item, Error = BoxedErr>> = Box::new(future);
-    AssetFuture(future.shared())
-}
 
 impl State for Example {
     fn on_start(&mut self, engine: &mut Engine) {
@@ -71,10 +58,10 @@ impl State for Example {
 type DrawShaded = pass::DrawShaded<
     PosNormTex,
     AmbientColor,
-    MeshComponent,
-    MaterialComponent,
+    Mesh,
+    Material,
     Transform,
-    LightComponent,
+    Light,
 >;
 
 fn run() -> Result<(), amethyst::Error> {
@@ -121,36 +108,34 @@ fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTex> {
 /// This function initialises a sphere and adds it to the world.
 fn initialise_sphere(world: &mut World) {
     // Create a sphere mesh and material.
-    let mesh = Mesh::build(gen_sphere(32, 32));
-    let material = MaterialBuilder::new().with_albedo(Texture::from_color_val(SPHERE_COLOUR));
 
-    // Load the mesh.
-    let mesh = load_proc_asset(world, move |world| {
-        let factory = world.read_resource::<Factory>();
-        factory
-            .create_mesh(mesh)
-            .map(MeshComponent::new)
-            .map_err(BoxedErr::new)
-    });
+    let (mesh, material) = {
+        let loader = world.read_resource::<Loader>();
 
-    // Load the material.
-    let material = load_proc_asset(world, move |world| {
-        let factory = world.read_resource::<Factory>();
-        factory
-            .create_material(material)
-            .map(MaterialComponent)
-            .map_err(BoxedErr::new)
-    });
+        let mesh = loader.load_from_data(gen_sphere(32, 32), &world.read_resource());
+        //let material = MaterialBuilder::new().with_albedo(Texture::from_color_val(SPHERE_COLOUR));
+        //
+        //// Load the material.
+        //let material = load_proc_asset(world, move |world| {
+        //    let factory = world.read_resource::<Factory>();
+        //    factory
+        //        .create_material(material)
+        //        .map(MaterialComponent)
+        //        .map_err(BoxedErr::new)
+        //});
+
+        (mesh, ())
+    };
+
 
     // Create a sphere entity using the mesh and the material.
     world
         .create_entity()
         .with(Transform::default())
         .with(mesh)
-        .with(material)
+        //.with(material)
         .build();
 }
-
 
 /// This function adds an ambient light and a point light to the world.
 fn initialise_lights(world: &mut World) {
@@ -160,15 +145,14 @@ fn initialise_lights(world: &mut World) {
     // Add point light.
     world
         .create_entity()
-        .with(LightComponent(
-            PointLight {
+        .with(PointLight {
                 center: LIGHT_POSITION.into(),
                 radius: LIGHT_RADIUS,
                 intensity: LIGHT_INTENSITY,
                 color: POINT_LIGHT_COLOUR,
                 ..Default::default()
             }.into(),
-        ))
+        )
         .build();
 }
 
