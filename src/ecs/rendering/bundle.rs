@@ -8,7 +8,7 @@ use renderer::prelude::*;
 use app::ApplicationBuilder;
 use assets::{BoxedErr};
 use ecs::ECSBundle;
-use ecs::rendering::resources::{AmbientColor, Factory, ScreenDimensions, WindowMessages};
+use ecs::rendering::resources::{AmbientColor, ScreenDimensions, WindowMessages};
 use ecs::rendering::systems::RenderSystem;
 use ecs::transform::components::*;
 use error::{Error, Result};
@@ -92,7 +92,6 @@ where
         let (w, h) = renderer.window().get_inner_size_pixels().unwrap();
 
         builder = builder
-            .with_resource(Factory::new())
             .with_resource(cam)
             .with_resource(AmbientColor(Rgba::from([0.01; 3])))
             .with_resource(WindowMessages::new())

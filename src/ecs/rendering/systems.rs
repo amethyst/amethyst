@@ -6,8 +6,8 @@ use std::mem;
 use shrev::EventChannel;
 use winit::{DeviceEvent, Event, WindowEvent};
 
-use ecs::{Fetch, FetchMut, System};
-use ecs::rendering::resources::{Factory, ScreenDimensions, WindowMessages};
+use ecs::{FetchMut, System};
+use ecs::rendering::resources::{ScreenDimensions, WindowMessages};
 use renderer::Renderer;
 use renderer::pipe::{PipelineData, PolyPipeline};
 
@@ -41,7 +41,6 @@ where
     P: PolyPipeline,
 {
     type SystemData = (
-        Fetch<'a, Factory>,
         FetchMut<'a, EventChannel<Event>>,
         FetchMut<'a, WindowMessages>,
         FetchMut<'a, ScreenDimensions>,
@@ -51,7 +50,6 @@ where
     fn run(
         &mut self,
         (
-            factory,
             mut event_handler,
             mut window_messages,
             mut screen_dimensions,
@@ -90,10 +88,6 @@ where
                 screen_dimensions.height() as u32,
             );
             screen_dimensions.dirty = false;
-        }
-
-        while let Some(job) = factory.jobs.try_pop() {
-            job.exec(&mut self.renderer.factory);
         }
 
         self.renderer
