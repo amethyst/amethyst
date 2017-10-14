@@ -8,7 +8,6 @@ use renderer::prelude::*;
 use app::ApplicationBuilder;
 use assets::{BoxedErr, Loader};
 use ecs::ECSBundle;
-use ecs::rendering::components::*;
 use ecs::rendering::resources::{AmbientColor, Factory, ScreenDimensions, WindowMessages};
 use ecs::rendering::systems::RenderSystem;
 use ecs::transform::components::*;

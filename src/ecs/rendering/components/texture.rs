@@ -3,15 +3,12 @@
 use std::error::Error;
 use std::fmt::{self, Display, Formatter};
 
-use futures::{Async, Future, Poll};
 use gfx::format::SurfaceType;
 use imagefmt::ColFmt;
 use rayon::ThreadPool;
 use renderer::{Error as RendererError, Texture, TextureBuilder};
 
-use assets::{Asset, BoxedErr};
-use ecs::{Component, VecStorage};
-use ecs::rendering::resources::{Factory, FactoryFuture};
+use assets::{ BoxedErr};
 use renderer::formats::ImageData;
 
 /// Error that can occur during texture creation
@@ -69,8 +66,6 @@ pub fn create_texture_asset(
     image: ImageData,
     renderer: &mut ::renderer::Renderer,
 ) -> Result<Texture, BoxedErr> {
-    use gfx::Factory;
-
     fn convert_color_format(fmt: ColFmt) -> Option<SurfaceType> {
         match fmt {
             ColFmt::Auto => unreachable!(),
