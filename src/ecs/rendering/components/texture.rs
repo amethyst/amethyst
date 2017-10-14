@@ -5,7 +5,6 @@ use std::fmt::{self, Display, Formatter};
 
 use gfx::format::SurfaceType;
 use imagefmt::ColFmt;
-use rayon::ThreadPool;
 use renderer::{Error as RendererError, Texture, TextureBuilder};
 
 use assets::{ BoxedErr};

@@ -6,7 +6,7 @@ use renderer::pipe::PipelineBuild;
 use renderer::prelude::*;
 
 use app::ApplicationBuilder;
-use assets::{BoxedErr, Loader};
+use assets::{BoxedErr};
 use ecs::ECSBundle;
 use ecs::rendering::resources::{AmbientColor, Factory, ScreenDimensions, WindowMessages};
 use ecs::rendering::systems::RenderSystem;
@@ -61,8 +61,6 @@ where
         &self,
         mut builder: ApplicationBuilder<'a, 'b, T>,
     ) -> Result<ApplicationBuilder<'a, 'b, T>> {
-        use specs::common::{Errors, Merge};
-
         let mut renderer = {
             let mut renderer = Renderer::build();
 
