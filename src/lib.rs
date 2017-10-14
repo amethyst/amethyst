@@ -57,6 +57,7 @@ pub extern crate thread_profiler;
 
 pub extern crate amethyst_assets as assets;
 pub extern crate amethyst_config as config;
+pub extern crate amethyst_core as core;
 pub extern crate amethyst_input as input;
 pub extern crate amethyst_renderer as renderer;
 pub extern crate shrev;

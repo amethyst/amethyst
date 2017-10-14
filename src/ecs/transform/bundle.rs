@@ -1,9 +1,10 @@
 //! ECS transform bundle
 
-use app::ApplicationBuilder;
-use ecs::ECSBundle;
+use core::bundle::{ECSBundle, Result};
+
+use ecs::{World, DispatcherBuilder};
 use ecs::transform::*;
-use error::Result;
+
 
 /// Transform bundle
 ///
@@ -35,18 +36,19 @@ impl<'a> TransformBundle<'a> {
     }
 }
 
-impl<'a, 'b, 'c, T> ECSBundle<'a, 'b, T> for TransformBundle<'c> {
+impl<'a, 'b, 'c> ECSBundle<'a, 'b> for TransformBundle<'c> {
     fn build(
         &self,
-        builder: ApplicationBuilder<'a, 'b, T>,
-    ) -> Result<ApplicationBuilder<'a, 'b, T>> {
+        world: &mut World,
+        builder: DispatcherBuilder<'a, 'b>,
+    ) -> Result<DispatcherBuilder<'a, 'b>> {
+        world.register::<Init>();
+        world.register::<Child>();
+        world.register::<LocalTransform>();
+        world.register::<Transform>();
+
         Ok(
-            builder
-                .register::<Init>()
-                .register::<Child>()
-                .register::<LocalTransform>()
-                .register::<Transform>()
-                .with(TransformSystem::new(), "transform_system", self.dep),
+            builder.add(TransformSystem::new(), "transform_system", self.dep),
         )
     }
 }

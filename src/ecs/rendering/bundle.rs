@@ -4,15 +4,15 @@ use renderer::Config as DisplayConfig;
 use renderer::Rgba;
 use renderer::pipe::PipelineBuild;
 use renderer::prelude::*;
+use core::bundle::{ECSBundle, Result};
 
-use app::ApplicationBuilder;
 use assets::{AssetFuture, BoxedErr, Loader};
-use ecs::ECSBundle;
+use ecs::{World, DispatcherBuilder};
 use ecs::rendering::components::*;
 use ecs::rendering::resources::{AmbientColor, Factory, ScreenDimensions, WindowMessages};
 use ecs::rendering::systems::RenderSystem;
 use ecs::transform::components::*;
-use error::{Error, Result};
+
 
 /// Rendering bundle
 ///
@@ -53,15 +53,16 @@ where
     }
 }
 
-impl<'a, 'b, T, P> ECSBundle<'a, 'b, T> for RenderBundle<P>
+impl<'a, 'b, P> ECSBundle<'a, 'b> for RenderBundle<P>
 where
     P: PipelineBuild + Clone,
     P::Pipeline: 'b,
 {
     fn build(
         &self,
-        mut builder: ApplicationBuilder<'a, 'b, T>,
-    ) -> Result<ApplicationBuilder<'a, 'b, T>> {
+        world: &mut World,
+        mut builder: DispatcherBuilder<'a, 'b>,
+    ) -> Result<DispatcherBuilder<'a, 'b>> {
         use specs::common::{Errors, Merge};
 
         let mut renderer = {
@@ -72,14 +73,14 @@ where
             }
             let renderer = renderer
                 .build()
-                .map_err(|err| Error::System(BoxedErr::new(err)))?;
+                .map_err(|err| BoxedErr::new(err))?;
 
             renderer
         };
 
         let pipe = renderer
             .create_pipe(self.pipe.clone())
-            .map_err(|err| Error::System(BoxedErr::new(err)))?;
+            .map_err(|err| BoxedErr::new(err))?;
 
         use cgmath::Deg;
         use renderer::{Camera, Projection};
@@ -94,22 +95,22 @@ where
 
         let (w, h) = renderer.window().get_inner_size_pixels().unwrap();
 
-        builder = builder
-            .with_resource(Factory::new())
-            .with_resource(cam)
-            .with_resource(AmbientColor(Rgba::from([0.01; 3])))
-            .with_resource(WindowMessages::new())
-            .with_resource(ScreenDimensions::new(w, h))
-            .register::<Transform>()
-            .register::<LightComponent>()
-            .register::<MaterialComponent>()
-            .register::<MeshComponent>()
-            .register::<TextureComponent>();
+        world.add_resource(Factory::new());
+        world.add_resource(cam);
+        world.add_resource(AmbientColor(Rgba::from([0.01; 3])));
+        world.add_resource(WindowMessages::new());
+        world.add_resource(ScreenDimensions::new(w, h));
+
+        world.register::<Transform>();
+        world.register::<LightComponent>();
+        world.register::<MaterialComponent>();
+        world.register::<MeshComponent>();
+        world.register::<TextureComponent>();
 
         // FIXME: asset stuff, enable/disable flag for this?
         {
             let (mesh_context, texture_context) = {
-                let factory = builder.world.read_resource::<Factory>();
+                let factory = world.read_resource::<Factory>();
                 (
                     MeshContext::new((&*factory).clone()),
                     TextureContext::new((&*factory).clone()),
@@ -117,22 +118,23 @@ where
             };
 
             {
-                let mut loader = builder.world.write_resource::<Loader>();
+                let mut loader = world.write_resource::<Loader>();
                 loader.register(mesh_context);
                 loader.register(texture_context);
             }
 
+            world.register::<AssetFuture<MeshComponent>>();
+            world.register::<AssetFuture<TextureComponent>>();
+            world.register::<AssetFuture<MaterialComponent>>();
+            world.add_resource(Errors::new());
+
             builder = builder
-                .register::<AssetFuture<MeshComponent>>()
-                .register::<AssetFuture<TextureComponent>>()
-                .register::<AssetFuture<MaterialComponent>>()
-                .with_resource(Errors::new())
-                .with(Merge::<AssetFuture<MaterialComponent>>::new(), "", &[])
-                .with(Merge::<AssetFuture<MeshComponent>>::new(), "", &[])
-                .with(Merge::<AssetFuture<TextureComponent>>::new(), "", &[]);
+                .add(Merge::<AssetFuture<MaterialComponent>>::new(), "", &[])
+                .add(Merge::<AssetFuture<MeshComponent>>::new(), "", &[])
+                .add(Merge::<AssetFuture<TextureComponent>>::new(), "", &[]);
         }
 
-        builder = builder.with_thread_local(RenderSystem::new(pipe, renderer));
+        builder = builder.add_thread_local(RenderSystem::new(pipe, renderer));
 
         Ok(builder)
     }
