@@ -58,7 +58,7 @@ impl Loader {
         }
     }
 
-    /// Loads an asset with a given format from the default (directory) store.
+    /// Loads an asset with a given format from the default (directory) source.
     /// If you want to load from a custom source instead, use `load_from`.
     ///
     /// The actual work is done on a worker thread, thus this method immediately returns
@@ -78,13 +78,9 @@ impl Loader {
         self.load_from::<A, F, _, _>(id, format, "", progress, storage)
     }
 
-    /// Loads an asset with a given id and format from a custom store.
+    /// Loads an asset with a given id and format from a custom source.
     /// The actual work is done on a worker thread, thus this method immediately returns
     /// a future.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the asset wasn't registered.
     pub fn load_from<A, F, N, S>(
         &self,
         name: N,
@@ -129,7 +125,7 @@ impl Loader {
     }
 
     /// Load an asset from data and return a handle.
-    pub fn load_data<A>(&self, data: A::Data, storage: &AssetStorage<A>) -> Handle<A>
+    pub fn load_from_data<A>(&self, data: A::Data, storage: &AssetStorage<A>) -> Handle<A>
     where
         A: Asset,
     {

@@ -25,7 +25,7 @@ pub use cache::Cache;
 pub use error::{AssetError, NoError};
 pub use loader::{Loader, Progress, SourceId};
 pub use source::{Directory, Source};
-pub use storage::{AssetStorage, Handle};
+pub use storage::{AssetStorage, Handle, Processor};
 
 mod asset;
 mod cache;

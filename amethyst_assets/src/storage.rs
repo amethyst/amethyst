@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use crossbeam::sync::MsQueue;
 use hibitset::BitSet;
-use specs::{Component, DenseVecStorage, UnprotectedStorage, VecStorage};
+use specs::{Component, DenseVecStorage, Fetch, FetchMut, System, UnprotectedStorage, VecStorage};
 use specs::common::Errors;
 
 use BoxedErr;
@@ -128,6 +128,28 @@ impl<A: Asset> Drop for AssetStorage<A> {
     fn drop(&mut self) {
         let bitset = &self.bitset;
         unsafe { self.assets.clean(|id| bitset.contains(id)) }
+    }
+}
+
+/// A default implementation for an asset processing system
+/// which converts data to assets and maintains the asset storage
+/// for `A`.
+///
+/// This system can only be used if the asset data implements
+/// `Into<Result<A, BoxedErr>>`.
+pub struct Processor<A> {
+    marker: PhantomData<A>,
+}
+
+impl<'a, A> System<'a> for Processor<A>
+where
+    A: Asset,
+    A::Data: Into<Result<A, BoxedErr>>,
+{
+    type SystemData = (FetchMut<'a, AssetStorage<A>>, Fetch<'a, Errors>);
+
+    fn run(&mut self, (mut storage, errors): Self::SystemData) {
+        storage.process(Into::into, &errors);
     }
 }
 
