@@ -6,7 +6,7 @@ use renderer::pipe::PipelineBuild;
 use renderer::prelude::*;
 
 use app::ApplicationBuilder;
-use assets::{AssetFuture, BoxedErr, Loader};
+use assets::{BoxedErr, Loader};
 use ecs::ECSBundle;
 use ecs::rendering::components::*;
 use ecs::rendering::resources::{AmbientColor, Factory, ScreenDimensions, WindowMessages};
@@ -101,36 +101,12 @@ where
             .with_resource(WindowMessages::new())
             .with_resource(ScreenDimensions::new(w, h))
             .register::<Transform>()
-            .register::<LightComponent>()
-            .register::<MaterialComponent>()
-            .register::<MeshComponent>()
-            .register::<TextureComponent>();
+            .register::<Light>()
+            .register::<Material>()
+            .register::<Mesh>()
+            .register::<Texture>();
 
-        // FIXME: asset stuff, enable/disable flag for this?
-        {
-            let (mesh_context, texture_context) = {
-                let factory = builder.world.read_resource::<Factory>();
-                (
-                    MeshContext::new((&*factory).clone()),
-                    TextureContext::new((&*factory).clone()),
-                )
-            };
-
-            {
-                let mut loader = builder.world.write_resource::<Loader>();
-                loader.register(mesh_context);
-                loader.register(texture_context);
-            }
-
-            builder = builder
-                .register::<AssetFuture<MeshComponent>>()
-                .register::<AssetFuture<TextureComponent>>()
-                .register::<AssetFuture<MaterialComponent>>()
-                .with_resource(Errors::new())
-                .with(Merge::<AssetFuture<MaterialComponent>>::new(), "", &[])
-                .with(Merge::<AssetFuture<MeshComponent>>::new(), "", &[])
-                .with(Merge::<AssetFuture<TextureComponent>>::new(), "", &[]);
-        }
+        // TODO: register assets with loader, eventually.
 
         builder = builder.with_thread_local(RenderSystem::new(pipe, renderer));
 

@@ -7,17 +7,23 @@ use std::error::Error;
 use std::fmt::{self, Display, Formatter};
 use std::io::Cursor;
 use std::string::FromUtf8Error;
+use std::sync::Arc;
 
-use amethyst_assets::{Format, SpawnedFuture};
+use amethyst_assets::{Asset, BoxedErr, Format, Source};
 use cgmath::{InnerSpace, Vector3};
 use imagefmt;
 use imagefmt::{ColFmt, Image};
-use rayon::ThreadPool;
 use wavefront_obj::ParseError;
 use wavefront_obj::obj::{parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex,
                          TextureIndex, Vertex, VertexIndex};
 
+use mesh::Mesh;
+use tex::Texture;
 use vertex::PosNormTex;
+
+impl Asset for Texture {
+    type Data = ImageData;
+}
 
 /// ImageData provided by formats, can be interpreted as a texture.
 #[derive(Clone, Debug)]
@@ -25,60 +31,44 @@ pub struct ImageData {
     /// The raw image data.
     pub raw: Image<u8>,
 }
-
-/// A future which will eventually have an image available.
-pub type ImageFuture = SpawnedFuture<ImageData, ImageError>;
-
 /// Allows loading of jpg or jpeg files.
 pub struct JpgFormat;
 
-impl Format for JpgFormat {
-    const EXTENSIONS: &'static [&'static str] = &["jpg", "jpeg"];
-    type Data = ImageData;
-    type Error = ImageError;
-    type Result = ImageFuture;
+impl Format<Texture> for JpgFormat {
+    const NAME: &'static str = "JPEG";
 
-    fn parse(&self, bytes: Vec<u8>, pool: &ThreadPool) -> Self::Result {
-        ImageFuture::spawn(pool, move || {
-            imagefmt::jpeg::read(&mut Cursor::new(bytes), ColFmt::RGBA).map(|raw| ImageData { raw })
-        })
+    fn import(&self, name: String, source: Arc<Source>) -> Result<ImageData, BoxedErr> {
+        imagefmt::jpeg::read(&mut Cursor::new(source.load(&name)?), ColFmt::RGBA)
+            .map(|raw| ImageData { raw })
+            .map_err(BoxedErr::new)
     }
 }
 
 /// Allows loading of PNG files.
 pub struct PngFormat;
 
-impl Format for PngFormat {
-    const EXTENSIONS: &'static [&'static str] = &["png"];
-    type Data = ImageData;
-    type Error = ImageError;
-    type Result = ImageFuture;
+impl Format<Texture> for PngFormat {
+    const NAME: &'static str = "JPEG";
 
-    fn parse(&self, bytes: Vec<u8>, pool: &ThreadPool) -> Self::Result {
-        ImageFuture::spawn(pool, move || {
-            imagefmt::png::read(&mut Cursor::new(bytes), ColFmt::RGBA).map(|raw| ImageData { raw })
-        })
+    fn import(&self, name: String, source: Arc<Source>) -> Result<ImageData, BoxedErr> {
+        imagefmt::png::read(&mut Cursor::new(source.load(&name)?), ColFmt::RGBA)
+            .map(|raw| ImageData { raw })
+            .map_err(BoxedErr::new)
     }
 }
 
 /// Allows loading of BMP files.
 pub struct BmpFormat;
 
-impl Format for BmpFormat {
-    const EXTENSIONS: &'static [&'static str] = &["bmp"];
-    type Data = ImageData;
-    type Error = ImageError;
-    type Result = ImageFuture;
+impl Format<Texture> for BmpFormat {
+    const NAME: &'static str = "BMP";
 
-    fn parse(&self, bytes: Vec<u8>, pool: &ThreadPool) -> Self::Result {
-        ImageFuture::spawn(pool, move || {
-            imagefmt::bmp::read(&mut Cursor::new(bytes), ColFmt::RGBA).map(|raw| ImageData { raw })
-        })
+    fn import(&self, name: String, source: Arc<Source>) -> Result<ImageData, BoxedErr> {
+        imagefmt::bmp::read(&mut Cursor::new(source.load(&name)?), ColFmt::RGBA)
+            .map(|raw| ImageData { raw })
+            .map_err(BoxedErr::new)
     }
 }
-
-/// A future which will eventually have an vertices available.
-pub type VerticesFuture<V> = SpawnedFuture<Vec<V>, ObjError>;
 
 /// Error type of `ObjFormat`
 #[derive(Debug)]
@@ -114,23 +104,23 @@ impl Display for ObjError {
     }
 }
 
+impl Asset for Mesh {
+    type Data = Vec<PosNormTex>;
+}
+
 /// Allows loading from Wavefront files
 /// see: https://en.wikipedia.org/wiki/Wavefront_.obj_file
 pub struct ObjFormat;
 
-impl Format for ObjFormat {
-    const EXTENSIONS: &'static [&'static str] = &["obj"];
-    type Data = Vec<PosNormTex>;
-    type Error = ObjError;
-    type Result = VerticesFuture<PosNormTex>;
+impl Format<Mesh> for ObjFormat {
+    const NAME: &'static str = "WAVEFRONT_OBJ";
 
-    fn parse(&self, bytes: Vec<u8>, pool: &ThreadPool) -> Self::Result {
-        VerticesFuture::spawn(pool, move || {
-            String::from_utf8(bytes)
-                .map_err(ObjError::Utf8)
-                .and_then(|string| parse(string).map_err(ObjError::Parse))
-                .map(|set| from_data(set))
-        })
+    fn import(&self, name: String, source: Arc<Source>) -> Result<Vec<PosNormTex>, BoxedErr> {
+        String::from_utf8(source.load(&name)?)
+            .map_err(ObjError::Utf8)
+            .and_then(|string| parse(string).map_err(ObjError::Parse))
+            .map(|set| from_data(set))
+            .map_err(BoxedErr::new)
     }
 }
 

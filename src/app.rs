@@ -9,7 +9,7 @@ use shrev::{EventChannel, ReaderId};
 use thread_profiler::{register_thread_with_profiler, write_profile};
 use winit::Event;
 
-use assets::{Asset, Loader, Store};
+use assets::{Asset, Loader, Source};
 use ecs::{Component, Dispatcher, DispatcherBuilder, ECSBundle, System, World};
 use engine::Engine;
 use error::{Error, Result};
@@ -282,6 +282,8 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
 
     pub fn new(initial_state: T) -> Result<Self> {
         use rayon::Configuration;
+        use specs::common::Errors;
+
         println!("Initializing Amethyst...");
         println!("Version: {}", vergen::semver());
         println!("Platform: {}", vergen::target());
@@ -300,6 +302,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
         let events = EventChannel::<Event>::with_capacity(2000);
         let reader_id = events.register_reader();
         world.add_resource(events);
+        world.add_resource(Errors::new());
 
         Ok(ApplicationBuilder {
             disp_builder: DispatcherBuilder::new(),
@@ -648,14 +651,14 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///     }
     /// }
     /// ~~~
-    pub fn with_store<I, S>(self, name: I, store: S) -> Self
+    pub fn with_source<I, S>(self, name: I, store: S) -> Self
     where
         I: Into<String>,
-        S: Store + Send + Sync + 'static,
+        S: Source,
     {
         {
             let mut loader = self.world.write_resource::<Loader>();
-            loader.add_store(name, store);
+            loader.add_source(name, store);
         }
         self
     }
@@ -714,23 +717,16 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     // TODO: Create example of this function. It might be easier to build a large
     //       example of a custom type in the `Asset` trait docs
-    pub fn register_asset<A, F>(mut self, make_context: F) -> Self
+    pub fn register_asset<A>(mut self) -> Self
     where
-        A: Component + Asset + Clone + Send + Sync + 'static,
-        F: FnOnce(&mut World) -> A::Context,
+        A: Asset,
     {
-        use assets::AssetFuture;
-        use specs::common::{Errors, Merge};
+        use assets::{AssetStorage, Handle};
 
-        self.world.register::<A>();
-        self.world.register::<AssetFuture<A>>();
-        self.world.add_resource(Errors::new());
-        self = self.with(Merge::<AssetFuture<A>>::new(), "", &[]);
-        {
-            let context = make_context(&mut self.world);
-            let mut loader = self.world.write_resource::<Loader>();
-            loader.register(context);
-        }
+        self.world.add_resource(AssetStorage::<A>::new());
+        self.world.register::<Handle<A>>();
+        // TODO: eventually register loader?
+
         self
     }
 
