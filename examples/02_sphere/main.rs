@@ -5,12 +5,12 @@ extern crate cgmath;
 extern crate futures;
 extern crate genmesh;
 
-use amethyst::assets::{Loader};
+use amethyst::assets::Loader;
 use amethyst::ecs::World;
 use amethyst::ecs::rendering::{AmbientColor, RenderBundle};
 use amethyst::ecs::transform::Transform;
 use amethyst::prelude::*;
-use amethyst::renderer::{Config as DisplayConfig, Rgba, Mesh, Texture};
+use amethyst::renderer::{Config as DisplayConfig, Mesh, Rgba, Texture};
 use amethyst::renderer::prelude::*;
 use cgmath::{Deg, Vector3};
 use cgmath::prelude::InnerSpace;
@@ -55,14 +55,7 @@ impl State for Example {
 }
 
 
-type DrawShaded = pass::DrawShaded<
-    PosNormTex,
-    AmbientColor,
-    Mesh,
-    Material,
-    Transform,
-    Light,
->;
+type DrawShaded = pass::DrawShaded<PosNormTex, AmbientColor, Mesh, Material, Transform, Light>;
 
 fn run() -> Result<(), amethyst::Error> {
     let display_config_path = format!(
@@ -145,7 +138,8 @@ fn initialise_lights(world: &mut World) {
     // Add point light.
     world
         .create_entity()
-        .with(PointLight {
+        .with(
+            PointLight {
                 center: LIGHT_POSITION.into(),
                 radius: LIGHT_RADIUS,
                 intensity: LIGHT_INTENSITY,

@@ -3,7 +3,7 @@
 use std::sync::Arc;
 
 use rayon::ThreadPool;
-use shred::Resource;
+use shred::{Resource, RunNow};
 use shrev::{EventChannel, ReaderId};
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
@@ -38,6 +38,8 @@ pub struct Application<'a, 'b> {
     states: StateMachine<'a>,
     time: Time,
     timer: Stopwatch,
+    #[derivative(Debug = "ignore")]
+    locals: Vec<Box<for<'c> RunNow<'c> + 'b>>,
 }
 
 impl<'a, 'b> Application<'a, 'b> {
@@ -182,6 +184,10 @@ impl<'a, 'b> Application<'a, 'b> {
         profile_scope!("dispatch");
         self.dispatcher.dispatch(&mut self.engine.world.res);
 
+        for local in &mut self.locals {
+            local.run_now(&self.engine.world.res);
+        }
+
         #[cfg(feature = "profiler")]
         profile_scope!("maintain");
         self.engine.world.maintain();
@@ -215,6 +221,7 @@ pub struct ApplicationBuilder<'a, 'b, T> {
     /// Allows to create `RenderSystem`
     events_reader_id: ReaderId,
     frame_limiter: FrameLimiter,
+    locals: Vec<Box<for<'c> RunNow<'c> + 'b>>,
 }
 
 impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
@@ -311,6 +318,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
             events_reader_id: reader_id,
             pool: pool,
             frame_limiter: FrameLimiter::default(),
+            locals: Vec::default(),
         })
     }
 
@@ -577,6 +585,15 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
         self
     }
 
+    /// Add a local `RunNow` system.
+    pub fn with_local<S>(mut self, system: S) -> Self
+    where
+        for<'c> S: RunNow<'c> + 'b,
+    {
+        self.locals.push(Box::new(system));
+        self
+    }
+
     /// Add a given ECS bundle to the game loop.
     ///
     /// A bundle is a container for registering a bunch of ECS systems and their dependent
@@ -768,6 +785,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
             time: Time::default(),
             timer: Stopwatch::new(),
             frame_limiter: self.frame_limiter,
+            locals: self.locals,
         })
     }
 }

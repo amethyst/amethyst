@@ -59,8 +59,13 @@ impl Loader {
     }
 
     /// Add a source to the `Loader`, given an id and the source.
-    pub fn add_source<I, S>(&mut self, id: I, source: S) where I: Into<String>, S: Source {
-        self.sources.insert(id.into(), Arc::new(source) as Arc<Source>);
+    pub fn add_source<I, S>(&mut self, id: I, source: S)
+    where
+        I: Into<String>,
+        S: Source,
+    {
+        self.sources
+            .insert(id.into(), Arc::new(source) as Arc<Source>);
     }
 
     /// Loads an asset with a given format from the default (directory) source.

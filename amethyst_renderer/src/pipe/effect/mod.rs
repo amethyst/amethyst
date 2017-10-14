@@ -77,8 +77,10 @@ impl Effect {
         match self.globals.get(name.as_ref()) {
             Some(i) => self.data.globals[*i] = data.convert(),
             None => {
-                eprintln!("WARNING: Global update for effect failed! Global not found: {:?}",
-                    name.as_ref());
+                eprintln!(
+                    "WARNING: Global update for effect failed! Global not found: {:?}",
+                    name.as_ref()
+                );
             }
         }
     }
@@ -96,8 +98,10 @@ impl Effect {
                     .expect("Failed to update buffer (TODO: replace expect)");
             }
             None => {
-                eprintln!("WARNING: Buffer update for effect failed! Buffer not found: {:?}",
-                    name.as_ref());
+                eprintln!(
+                    "WARNING: Buffer update for effect failed! Buffer not found: {:?}",
+                    name.as_ref()
+                );
             }
         }
     }
@@ -114,8 +118,10 @@ impl Effect {
                 enc.update_constant_buffer::<T>(unsafe { mem::transmute(raw) }, &data)
             }
             None => {
-                eprintln!("WARNING: Buffer update for effect failed! Buffer not found: {:?}",
-                    name.as_ref());
+                eprintln!(
+                    "WARNING: Buffer update for effect failed! Buffer not found: {:?}",
+                    name.as_ref()
+                );
             }
         }
     }
@@ -226,7 +232,13 @@ impl<'a> EffectBuilder<'a> {
     /// Sets the output target of the PSO.
     ///
     /// If the target contains a depth buffer, its mode will be set by `depth`.
-    pub fn with_blended_output(&mut self, name: &'a str, mask: ColorMask, blend: Blend, depth: Option<DepthMode>) -> &mut Self {
+    pub fn with_blended_output(
+        &mut self,
+        name: &'a str,
+        mask: ColorMask,
+        blend: Blend,
+        depth: Option<DepthMode>,
+    ) -> &mut Self {
         if let Some(depth) = depth {
             self.init.out_depth = Some((
                 match depth {
@@ -292,10 +304,20 @@ impl<'a> EffectBuilder<'a> {
             })
             .collect::<HashMap<_, _>>();
 
-        data.out_colors
-            .extend(self.out.color_bufs().iter().map(|cb| &cb.as_output).cloned());
-        data.out_blends
-            .extend(self.out.color_bufs().iter().map(|cb| &cb.as_output).cloned());
+        data.out_colors.extend(
+            self.out
+                .color_bufs()
+                .iter()
+                .map(|cb| &cb.as_output)
+                .cloned(),
+        );
+        data.out_blends.extend(
+            self.out
+                .color_bufs()
+                .iter()
+                .map(|cb| &cb.as_output)
+                .cloned(),
+        );
         data.out_depth = self.out
             .depth_buf()
             .map(|db| (db.as_output.clone(), (0, 0)));
