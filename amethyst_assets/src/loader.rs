@@ -8,7 +8,7 @@ use fnv::FnvHashMap;
 use rayon::ThreadPool;
 
 use {Asset, Directory, Format, Source};
-use storage::{AssetStorage, Handle};
+use storage::{AssetStorage, Handle, Processed};
 
 /// A unique store id, used to identify the storage in `AssetSpec`.
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -115,8 +115,13 @@ impl Loader {
         let name = name.into();
 
         self.pool.spawn(move || {
-            let data = format.import(name, source);
-            processed.push((handle, data));
+            let data = format.import(name.clone(), source);
+            processed.push(Processed {
+                data,
+                format: F::NAME.into(),
+                handle,
+                name,
+            });
             drop(progress_arc);
         });
 
@@ -129,7 +134,12 @@ impl Loader {
         A: Asset,
     {
         let handle = storage.allocate();
-        storage.processed.push((handle.clone(), Ok(data)));
+        storage.processed.push(Processed {
+            data: Ok(data),
+            format: "".to_owned(),
+            handle: handle.clone(),
+            name: "<Data>".into(),
+        });
 
         handle
     }

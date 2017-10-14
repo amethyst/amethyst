@@ -22,7 +22,7 @@ pub use specs::error::BoxedErr;
 
 pub use asset::{Asset, AssetSpec, Format};
 pub use cache::Cache;
-pub use error::{AssetError, LoadError, NoError};
+pub use error::{AssetError, NoError};
 pub use loader::{Loader, Progress, SourceId};
 pub use source::{Directory, Source};
 pub use storage::{AssetStorage, Handle};

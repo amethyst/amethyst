@@ -8,6 +8,7 @@ use specs::common::Errors;
 
 use BoxedErr;
 use asset::Asset;
+use error::AssetError;
 use loader::Allocator;
 
 /// An asset storage, storing the actual assets and allocating
@@ -18,7 +19,7 @@ pub struct AssetStorage<A: Asset> {
     handles: Vec<Handle<A>>,
     handle_alloc: Allocator,
     //new_handles: MsQueue<Handle<A>>, // TODO: maybe not necessary
-    pub(crate) processed: Arc<MsQueue<(Handle<A>, Result<A::Data, BoxedErr>)>>,
+    pub(crate) processed: Arc<MsQueue<Processed<A>>>,
     unused_handles: MsQueue<Handle<A>>,
 }
 
@@ -81,18 +82,24 @@ impl<A: Asset> AssetStorage<A> {
     where
         F: FnMut(A::Data) -> Result<A, BoxedErr>,
     {
-        while let Some((handle, data)) = self.processed.try_pop() {
+        while let Some(processed) = self.processed.try_pop() {
+            let Processed {
+                data,
+                format,
+                handle,
+                name,
+            } = processed;
             let assets = &mut self.assets;
             let bitset = &mut self.bitset;
             let handles = &mut self.handles;
-            errors.execute::<BoxedErr, _>(|| {
-                // TODO: wrap errors
-                let asset = f(data?)?;
-                // TODO: maybe add handle here instead of in allocate?
-                // EDIT: done
+            errors.execute::<AssetError, _>(|| {
+                let asset = data.and_then(|d| f(d))
+                    .map_err(|e| AssetError::new(name, format, e))?;
+
                 let id = handle.id();
                 bitset.add(id);
                 handles.push(handle);
+
                 // NOTE: the loader has to ensure that a handle will be used
                 // together with a `Data` only once.
                 unsafe {
@@ -164,4 +171,12 @@ impl<A> PartialEq for Handle<A> {
     fn eq(&self, other: &Handle<A>) -> bool {
         *self.id.as_ref() == *other.id.as_ref()
     }
+}
+
+// TODO: may change with hot reloading
+pub struct Processed<A: Asset> {
+    pub data: Result<A::Data, BoxedErr>,
+    pub format: String,
+    pub handle: Handle<A>,
+    pub name: String,
 }
