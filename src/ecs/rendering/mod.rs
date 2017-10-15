@@ -1,6 +1,6 @@
 //! `amethyst` rendering ecs module
 
-pub use self::bundle::RenderBundle;
+pub use self::bundle::{RenderBundle, create_render_system};
 pub use self::components::*;
 pub use self::resources::*;
 pub use self::systems::*;

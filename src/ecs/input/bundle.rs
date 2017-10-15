@@ -6,12 +6,11 @@ use std::path::Path;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use winit::Event;
+use core::bundle::{ECSBundle, Result};
 
-use app::ApplicationBuilder;
 use config::Config;
-use ecs::ECSBundle;
+use ecs::{World, DispatcherBuilder};
 use ecs::input::{Bindings, InputEvent, InputHandler, InputSystem};
-use error::Result;
 use shrev::EventChannel;
 
 /// Bundle for adding the `InputHandler`.
@@ -60,29 +59,30 @@ where
     }
 }
 
-impl<'a, 'b, T, AX, AC> ECSBundle<'a, 'b, T> for InputBundle<AX, AC>
+impl<'a, 'b, AX, AC> ECSBundle<'a, 'b> for InputBundle<AX, AC>
 where
     AX: Hash + Eq + Clone + Send + Sync + 'static,
     AC: Hash + Eq + Clone + Send + Sync + 'static,
 {
     fn build(
         self,
-        builder: ApplicationBuilder<'a, 'b, T>,
-    ) -> Result<ApplicationBuilder<'a, 'b, T>> {
+        world: &mut World,
+        builder: DispatcherBuilder<'a, 'b>,
+    ) -> Result<DispatcherBuilder<'a, 'b>> {
         let mut input = InputHandler::new();
         if let Some(bindings) = self.bindings {
             input.bindings = bindings;
         }
 
-        let reader_id = builder
-            .world
+        let reader_id = world
             .read_resource::<EventChannel<Event>>()
             .register_reader();
+
+        world.add_resource(input);
+        world.add_resource(EventChannel::<InputEvent<AC>>::with_capacity(2000));
         Ok(
             builder
-                .with_resource(input)
-                .with_resource(EventChannel::<InputEvent<AC>>::with_capacity(2000))
-                .with(InputSystem::<AX, AC>::new(reader_id), "input_system", &[]),
+                .add(InputSystem::<AX, AC>::new(reader_id), "input_system", &[]),
         )
     }
 }

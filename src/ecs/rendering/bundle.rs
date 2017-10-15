@@ -1,18 +1,18 @@
 //! ECS rendering bundle
 
+use assets::{AssetStorage, Handle};
 use renderer::Config as DisplayConfig;
 use renderer::Rgba;
 use renderer::formats::TextureData;
 use renderer::pipe::PipelineBuild;
 use renderer::prelude::*;
+use core::bundle::{ECSBundle, Result};
 
-use app::ApplicationBuilder;
 use assets::{BoxedErr, Loader};
-use ecs::{ECSBundle, World};
+use ecs::{DispatcherBuilder, World};
 use ecs::rendering::resources::{AmbientColor, ScreenDimensions, WindowMessages};
 use ecs::rendering::systems::RenderSystem;
 use ecs::transform::components::*;
-use error::{Error, Result};
 use renderer::MaterialDefaults;
 
 /// Rendering bundle
@@ -21,20 +21,17 @@ use renderer::MaterialDefaults;
 /// Will also register asset contexts with the asset `Loader`, and add systems for merging
 /// `AssetFuture` into its related component.
 ///
-pub struct RenderBundle<P> {
-    config: Option<DisplayConfig>,
-    pipe: P,
-}
+pub struct RenderBundle;
 
-impl<P: PipelineBuild + Clone> RenderBundle<P> {
+impl RenderBundle {
     /// Create a new render bundle
-    pub fn new(pipe: P, config: Option<DisplayConfig>) -> Self {
-        RenderBundle { config, pipe }
+    pub fn new() -> Self {
+        RenderBundle
     }
 }
 
 /// Create render system
-fn create_render_system<P>(
+pub fn create_render_system<P>(
     pipe: P,
     display_config: Option<DisplayConfig>,
 ) -> Result<RenderSystem<P::Pipeline>>
@@ -49,28 +46,25 @@ where
         }
         let renderer = renderer
             .build()
-            .map_err(|err| Error::System(BoxedErr::new(err)))?;
+            .map_err(BoxedErr::new)?;
 
         renderer
     };
 
     let pipe = renderer
         .create_pipe(pipe.clone())
-        .map_err(|err| Error::System(BoxedErr::new(err)))?;
+        .map_err(BoxedErr::new)?;
 
     Ok(RenderSystem::new(pipe, renderer))
 }
 
-impl<'a, 'b, P, T> ECSBundle<'a, 'b, T> for RenderBundle<P>
-where
-    P: PipelineBuild + Clone,
-    <P as PipelineBuild>::Pipeline: 'b,
-{
+
+impl<'a, 'b> ECSBundle<'a, 'b> for RenderBundle {
     fn build(
         self,
-        mut builder: ApplicationBuilder<'a, 'b, T>,
-    ) -> Result<ApplicationBuilder<'a, 'b, T>> {
-        use assets::{AssetStorage, Handle};
+        world: &mut World,
+        builder: DispatcherBuilder<'a, 'b>,
+    ) -> Result<DispatcherBuilder<'a, 'b>> {
         use cgmath::Deg;
         use renderer::{Camera, Projection};
 
@@ -82,24 +76,21 @@ where
             up: [0.0, 1.0, 0.0].into(),
         };
 
-        builder = builder
-            .with_resource(cam)
-            .with_resource(AmbientColor(Rgba::from([0.01; 3])))
-            .with_resource(WindowMessages::new())
-            .with_resource(ScreenDimensions::new(100, 100))
-            .register::<Transform>()
-            .register::<Light>()
-            .register::<Material>()
-            .register::<Handle<Mesh>>()
-            .register::<Handle<Texture>>()
-            .with_resource(AssetStorage::<Mesh>::new())
-            .with_resource(AssetStorage::<Texture>::new())
-            .with_local(create_render_system(self.pipe, self.config)?);
+        world.add_resource(cam);
+        world.add_resource(AmbientColor(Rgba::from([0.01; 3])));
+        world.add_resource(WindowMessages::new());
+        world.add_resource(ScreenDimensions::new(100, 100));
+        world.add_resource(AssetStorage::<Mesh>::new());
+        world.add_resource(AssetStorage::<Texture>::new());
 
-        let mat = create_default_mat(&builder.world);
-        builder = builder.with_resource(MaterialDefaults(mat));
+        let mat = create_default_mat(world);
+        world.add_resource(MaterialDefaults(mat));
 
-        // TODO: register assets with loader, eventually.
+        world.register::<Transform>();
+        world.register::<Light>();
+        world.register::<Material>();
+        world.register::<Handle<Mesh>>();
+        world.register::<Handle<Texture>>();
 
         Ok(builder)
     }

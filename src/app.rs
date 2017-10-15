@@ -9,9 +9,10 @@ use shrev::{EventChannel, ReaderId};
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
 use winit::Event;
+use core::ECSBundle;
 
 use assets::{Asset, Loader, Source};
-use ecs::{Component, Dispatcher, DispatcherBuilder, ECSBundle, System, World};
+use ecs::{Component, Dispatcher, DispatcherBuilder, System, World};
 use ecs::common::Errors;
 use engine::Engine;
 use error::{Error, Result};
@@ -629,11 +630,14 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// crates or APIs, which could result in any number of errors.
     /// See each individual bundle for a description of the errors it could produce.
     ///
-    pub fn with_bundle<B>(self, bundle: B) -> Result<Self>
+    pub fn with_bundle<B>(mut self, bundle: B) -> Result<Self>
     where
-        B: ECSBundle<'a, 'b, T>,
+        B: ECSBundle<'a, 'b>,
     {
-        bundle.build(self)
+        self.disp_builder = bundle
+            .build(&mut self.world, self.disp_builder)
+            .map_err(|err| Error::System(err))?;
+        Ok(self)
     }
 
     /// Register an asset store with the loader logic of the Application.

@@ -1,7 +1,6 @@
 use {Ball, Paddle, ScoreBoard};
-use amethyst::Result;
-use amethyst::ecs::ECSBundle;
-use amethyst::prelude::*;
+use amethyst::core::bundle::{ECSBundle, Result};
+use amethyst::ecs::{World, DispatcherBuilder};
 use amethyst::timing::Time;
 use systems::{BounceSystem, MoveBallsSystem, PaddleSystem, WinnerSystem};
 
@@ -9,25 +8,28 @@ use systems::{BounceSystem, MoveBallsSystem, PaddleSystem, WinnerSystem};
 /// world. This bundle prepares the world for a game of pong.
 pub struct PongBundle;
 
-impl<'a, 'b, T> ECSBundle<'a, 'b, T> for PongBundle {
+impl<'a, 'b> ECSBundle<'a, 'b> for PongBundle {
     fn build(
         self,
-        builder: ApplicationBuilder<'a, 'b, T>,
-    ) -> Result<ApplicationBuilder<'a, 'b, T>> {
+        world: &mut World,
+        builder: DispatcherBuilder<'a, 'b>,
+    ) -> Result<DispatcherBuilder<'a, 'b>> {
+
+        world.add_resource(ScoreBoard::new());
+        world.add_resource(Time::default());
+        world.register::<Ball>();
+        world.register::<Paddle>();
+
         Ok(
             builder
-                .with_resource(ScoreBoard::new())
-                .with_resource(Time::default())
-                .register::<Ball>()
-                .register::<Paddle>()
-                .with(PaddleSystem, "paddle_system", &["input_system"])
-                .with(MoveBallsSystem, "ball_system", &[])
-                .with(
+                .add(PaddleSystem, "paddle_system", &["input_system"])
+                .add(MoveBallsSystem, "ball_system", &[])
+                .add(
                     BounceSystem,
                     "collision_system",
                     &["paddle_system", "ball_system"],
                 )
-                .with(
+                .add(
                     WinnerSystem,
                     "winner_system",
                     &["paddle_system", "ball_system"],

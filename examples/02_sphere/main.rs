@@ -7,7 +7,7 @@ extern crate genmesh;
 
 use amethyst::assets::Loader;
 use amethyst::ecs::World;
-use amethyst::ecs::rendering::{AmbientColor, RenderBundle};
+use amethyst::ecs::rendering::{AmbientColor, RenderBundle, create_render_system};
 use amethyst::ecs::transform::Transform;
 use amethyst::prelude::*;
 use amethyst::renderer::{Config as DisplayConfig, Mesh, Rgba};
@@ -77,7 +77,8 @@ fn run() -> Result<(), amethyst::Error> {
     let config = DisplayConfig::load(&display_config_path);
 
     let mut game = Application::build(resources, Example)?
-        .with_bundle(RenderBundle::new(pipe, Some(config)))?
+        .with_bundle(RenderBundle::new())?
+        .with_local(create_render_system(pipe, Some(config))?)
         .build()?;
     Ok(game.run())
 }
