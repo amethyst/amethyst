@@ -151,12 +151,11 @@ fn create_colour_material(world: &World, colour: [f32; 4]) -> Material {
     // TODO: optimize
 
     use amethyst::renderer::MaterialDefaults;
-    use amethyst::renderer::formats::TextureData;
 
     let mat_defaults = world.read_resource::<MaterialDefaults>();
     let loader = world.read_resource::<Loader>();
 
-    let albedo = loader.load_from_data(TextureData::color(colour), &world.read_resource());
+    let albedo = loader.load_from_data(colour.into(), &world.read_resource());
 
     Material {
         albedo,

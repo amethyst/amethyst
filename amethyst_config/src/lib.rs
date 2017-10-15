@@ -146,11 +146,11 @@ where
     }
 
     fn write<P: AsRef<Path>>(&self, path: P) -> Result<(), ConfigError> {
-        use ron::ser::pretty::to_string;
+        use ron::ser::to_string_pretty;
         use std::fs::File;
         use std::io::Write;
 
-        let s = to_string(self)?;
+        let s = to_string_pretty(self, Default::default())?;
         File::create(path)?.write(s.as_bytes())?;
 
         Ok(())

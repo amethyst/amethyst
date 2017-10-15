@@ -30,6 +30,57 @@ pub struct TextureMetadata {
     pub channel: Option<ChannelType>,
 }
 
+impl Default for TextureMetadata {
+    fn default() -> Self {
+        Self {
+            sampler: None,
+            mip_levels: None,
+            size: None,
+            dynamic: false,
+            format: None,
+            channel: None,
+        }
+    }
+}
+
+impl TextureMetadata {
+    /// Sampler info
+    pub fn with_sampler(mut self, info: SamplerInfo) -> Self {
+        self.sampler = Some(info);
+        self
+    }
+
+    /// Mipmapping
+    pub fn with_mip_levels(mut self, mip_levels: u8) -> Self {
+        self.mip_levels = Some(mip_levels);
+        self
+    }
+
+    /// Texture size
+    pub fn with_size(mut self, width: u16, height: u16) -> Self {
+        self.size = Some((width, height));
+        self
+    }
+
+    /// Surface type
+    pub fn with_format(mut self, format: SurfaceType) -> Self {
+        self.format = Some(format);
+        self
+    }
+
+    /// Channel type
+    pub fn with_channel(mut self, channel: ChannelType) -> Self {
+        self.channel = Some(channel);
+        self
+    }
+
+    /// Texture is dynamic
+    pub fn dynamic(mut self, d: bool) -> Self {
+        self.dynamic = d;
+        self
+    }
+}
+
 /// Texture data for loading
 pub enum TextureData {
     /// Image data
@@ -57,6 +108,12 @@ pub enum TextureData {
     U64(Vec<u64>, Option<TextureMetadata>),
 }
 
+impl From<[f32; 4]> for TextureData {
+    fn from(color: [f32; 4]) -> Self {
+        TextureData::Rgba(color, None)
+    }
+}
+
 impl TextureData {
     /// Creates texture data from color.
     pub fn color(value: [f32; 4]) -> Self {
@@ -76,11 +133,16 @@ pub struct JpgFormat;
 impl Format<Texture> for JpgFormat {
     const NAME: &'static str = "JPEG";
 
-    type Options = ();
+    type Options = TextureMetadata;
 
-    fn import(&self, name: String, source: Arc<Source>, _: ()) -> Result<TextureData, BoxedErr> {
+    fn import(
+        &self,
+        name: String,
+        source: Arc<Source>,
+        options: TextureMetadata,
+    ) -> Result<TextureData, BoxedErr> {
         imagefmt::jpeg::read(&mut Cursor::new(source.load(&name)?), ColFmt::RGBA)
-            .map(|raw| TextureData::Image(ImageData { raw }, None))
+            .map(|raw| TextureData::Image(ImageData { raw }, Some(options)))
             .map_err(BoxedErr::new)
     }
 }
@@ -91,11 +153,16 @@ pub struct PngFormat;
 impl Format<Texture> for PngFormat {
     const NAME: &'static str = "JPEG";
 
-    type Options = ();
+    type Options = TextureMetadata;
 
-    fn import(&self, name: String, source: Arc<Source>, _: ()) -> Result<TextureData, BoxedErr> {
+    fn import(
+        &self,
+        name: String,
+        source: Arc<Source>,
+        options: TextureMetadata,
+    ) -> Result<TextureData, BoxedErr> {
         imagefmt::png::read(&mut Cursor::new(source.load(&name)?), ColFmt::RGBA)
-            .map(|raw| TextureData::Image(ImageData { raw }, None))
+            .map(|raw| TextureData::Image(ImageData { raw }, Some(options)))
             .map_err(BoxedErr::new)
     }
 }
@@ -106,11 +173,16 @@ pub struct BmpFormat;
 impl Format<Texture> for BmpFormat {
     const NAME: &'static str = "BMP";
 
-    type Options = ();
+    type Options = TextureMetadata;
 
-    fn import(&self, name: String, source: Arc<Source>, _: ()) -> Result<TextureData, BoxedErr> {
+    fn import(
+        &self,
+        name: String,
+        source: Arc<Source>,
+        options: TextureMetadata,
+    ) -> Result<TextureData, BoxedErr> {
         imagefmt::bmp::read(&mut Cursor::new(source.load(&name)?), ColFmt::RGBA)
-            .map(|raw| TextureData::Image(ImageData { raw }, None))
+            .map(|raw| TextureData::Image(ImageData { raw }, Some(options)))
             .map_err(BoxedErr::new)
     }
 }

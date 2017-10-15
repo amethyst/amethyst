@@ -14,7 +14,7 @@ use amethyst::ecs::rendering::{create_render_system, AmbientColor, RenderBundle}
 use amethyst::ecs::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::{Camera, Config as DisplayConfig, MaterialDefaults, MeshHandle, Rgba};
-use amethyst::renderer::formats::{ObjFormat, PngFormat, TextureData};
+use amethyst::renderer::formats::{ObjFormat, PngFormat};
 use amethyst::renderer::prelude::*;
 use amethyst::timing::Time;
 use cgmath::{Deg, Euler, Quaternion};
@@ -293,20 +293,26 @@ fn load_assets(world: &World) -> Assets {
     let loader = world.read_resource::<Loader>();
     let mut progress = Progress::new();
 
-    let red = loader.load_from_data(TextureData::color([1.0, 0.0, 0.0, 1.0]), &tex_storage);
+    let red = loader.load_from_data([1.0, 0.0, 0.0, 1.0].into(), &tex_storage);
     let red = Material {
         albedo: red,
         ..mat_defaults.0.clone()
     };
 
-    let white = loader.load_from_data(TextureData::color([1.0, 1.0, 1.0, 1.0]), &tex_storage);
+    let white = loader.load_from_data([1.0, 1.0, 1.0, 1.0].into(), &tex_storage);
     let white = Material {
         albedo: white,
         ..mat_defaults.0.clone()
     };
 
     let logo = Material {
-        albedo: loader.load("logo.png", PngFormat, (), &mut progress, &tex_storage),
+        albedo: loader.load(
+            "logo.png",
+            PngFormat,
+            Default::default(),
+            &mut progress,
+            &tex_storage,
+        ),
         ..mat_defaults.0.clone()
     };
 
