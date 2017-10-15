@@ -143,6 +143,16 @@ pub struct Processor<A> {
     marker: PhantomData<A>,
 }
 
+impl<A> Processor<A> {
+    /// Creates a new asset processor for
+    /// assets of type `A`.
+    pub fn new() -> Self {
+        Processor {
+            marker: PhantomData,
+        }
+    }
+}
+
 impl<'a, A> System<'a> for Processor<A>
 where
     A: Asset,

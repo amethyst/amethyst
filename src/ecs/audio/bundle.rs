@@ -2,16 +2,19 @@
 
 use core::bundle::{ECSBundle, Result};
 
-use audio::{AudioSink, SourceHandle};
+use assets::Processor;
+use audio::{AudioSink, Source, SourceHandle};
 use audio::output::{default_output, Output};
-use ecs::{World, DispatcherBuilder};
+use ecs::{DispatcherBuilder, World};
 use ecs::audio::DjSystem;
 use shred::ResourceId;
 
-/// Dj bundle
+/// Audio bundle
 ///
-/// Will only register the `Dj` and the `DjSystem` if an audio output is found.
+/// Will only register the `AudioSink` and the `DjSystem` if an audio output is found.
 /// `DjSystem` will be registered with name "dj_system".
+///
+/// This will also add the asset processor for `Source`.
 ///
 /// ## Errors
 ///
@@ -21,15 +24,15 @@ use shred::ResourceId;
 ///
 /// Panics during `DjSystem` registration if the bundle is applied twice.
 ///
-pub struct DjBundle<'a, F> {
+pub struct AudioBundle<'a, F> {
     dep: &'a [&'a str],
     picker: F,
 }
 
-impl<'a, F> DjBundle<'a, F> {
+impl<'a, F> AudioBundle<'a, F> {
     /// Create a new DJ bundle
     pub fn new(picker: F) -> Self {
-        DjBundle { dep: &[], picker }
+        AudioBundle { dep: &[], picker }
     }
 
     /// Set dependencies for the `DjSystem`
@@ -39,9 +42,9 @@ impl<'a, F> DjBundle<'a, F> {
     }
 }
 
-impl<'a, 'b, 'c, F> ECSBundle<'a, 'b> for DjBundle<'c, F>
+impl<'a, 'b, 'c, F> ECSBundle<'a, 'b> for AudioBundle<'c, F>
 where
-    F: FnMut() -> Option<SourceHandle> + Send + 'static
+    F: FnMut() -> Option<SourceHandle> + Send + 'static,
 {
     fn build(
         self,
@@ -50,10 +53,7 @@ where
     ) -> Result<DispatcherBuilder<'a, 'b>> {
         // Remove option here when specs get support for optional fetch in
         // released version
-        if !world
-            .res
-            .has_value(ResourceId::new::<Option<Output>>())
-        {
+        if !world.res.has_value(ResourceId::new::<Option<Output>>()) {
             world.add_resource(default_output());
         }
 
@@ -64,7 +64,9 @@ where
 
         if let Some(sink) = sink {
             world.add_resource(sink);
-            builder = builder.add(DjSystem::new(self.picker), "dj_system", self.dep);
+            builder = builder
+                .add(Processor::<Source>::new(), "source_processor", &[])
+                .add(DjSystem::new(self.picker), "dj_system", self.dep);
         }
 
         Ok(builder)

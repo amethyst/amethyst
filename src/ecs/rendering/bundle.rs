@@ -1,12 +1,12 @@
 //! ECS rendering bundle
 
 use assets::{AssetStorage, Handle};
+use core::bundle::{ECSBundle, Result};
 use renderer::Config as DisplayConfig;
 use renderer::Rgba;
 use renderer::formats::TextureData;
 use renderer::pipe::PipelineBuild;
 use renderer::prelude::*;
-use core::bundle::{ECSBundle, Result};
 
 use assets::{BoxedErr, Loader};
 use ecs::{DispatcherBuilder, World};
@@ -44,16 +44,12 @@ where
         if let Some(config) = display_config.to_owned() {
             renderer.with_config(config);
         }
-        let renderer = renderer
-            .build()
-            .map_err(BoxedErr::new)?;
+        let renderer = renderer.build().map_err(BoxedErr::new)?;
 
         renderer
     };
 
-    let pipe = renderer
-        .create_pipe(pipe.clone())
-        .map_err(BoxedErr::new)?;
+    let pipe = renderer.create_pipe(pipe.clone()).map_err(BoxedErr::new)?;
 
     Ok(RenderSystem::new(pipe, renderer))
 }

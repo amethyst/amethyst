@@ -11,9 +11,7 @@ pub struct DjSystem<F> {
 impl<F> DjSystem<F> {
     /// Creates a new `DjSystem` with the music picker being `f`.
     pub fn new(f: F) -> Self {
-        DjSystem {
-            f
-        }
+        DjSystem { f }
     }
 }
 
@@ -21,9 +19,11 @@ impl<'a, F> System<'a> for DjSystem<F>
 where
     F: FnMut() -> Option<SourceHandle>,
 {
-    type SystemData = (Fetch<'a, AssetStorage<Source>>,
-                       Fetch<'a, Errors>,
-                       Fetch<'a, AudioSink>);
+    type SystemData = (
+        Fetch<'a, AssetStorage<Source>>,
+        Fetch<'a, Errors>,
+        Fetch<'a, AudioSink>,
+    );
 
     fn run(&mut self, (storage, errors, sink): Self::SystemData) {
         #[cfg(feature = "profiler")]

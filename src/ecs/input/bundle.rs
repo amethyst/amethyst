@@ -3,13 +3,13 @@
 use std::hash::Hash;
 use std::path::Path;
 
+use core::bundle::{ECSBundle, Result};
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use winit::Event;
-use core::bundle::{ECSBundle, Result};
 
 use config::Config;
-use ecs::{World, DispatcherBuilder};
+use ecs::{DispatcherBuilder, World};
 use ecs::input::{Bindings, InputEvent, InputHandler, InputSystem};
 use shrev::EventChannel;
 
@@ -80,9 +80,10 @@ where
 
         world.add_resource(input);
         world.add_resource(EventChannel::<InputEvent<AC>>::with_capacity(2000));
-        Ok(
-            builder
-                .add(InputSystem::<AX, AC>::new(reader_id), "input_system", &[]),
-        )
+        Ok(builder.add(
+            InputSystem::<AX, AC>::new(reader_id),
+            "input_system",
+            &[],
+        ))
     }
 }

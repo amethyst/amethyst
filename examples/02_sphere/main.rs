@@ -7,7 +7,7 @@ extern crate genmesh;
 
 use amethyst::assets::Loader;
 use amethyst::ecs::World;
-use amethyst::ecs::rendering::{AmbientColor, RenderBundle, create_render_system};
+use amethyst::ecs::rendering::{create_render_system, AmbientColor, RenderBundle};
 use amethyst::ecs::transform::Transform;
 use amethyst::prelude::*;
 use amethyst::renderer::{Config as DisplayConfig, Mesh, Rgba};

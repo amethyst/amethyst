@@ -1,6 +1,6 @@
 use std::result::Result as StdResult;
 
-use specs::{World, DispatcherBuilder};
+use specs::{DispatcherBuilder, World};
 use specs::error::BoxedErr;
 
 /// Bundle result type.
@@ -12,6 +12,6 @@ pub trait ECSBundle<'a, 'b> {
     fn build(
         self,
         world: &mut World,
-        dispatcher: DispatcherBuilder<'a, 'b>
+        dispatcher: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>>;
 }

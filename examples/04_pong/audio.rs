@@ -13,7 +13,13 @@ pub struct Sounds {
 fn load_audio_track(loader: &Loader, world: &World, file: &str) -> SourceHandle {
     use amethyst::audio::OggFormat;
 
-    loader.load(file, OggFormat, (), &mut Progress::new(), &world.read_resource())
+    loader.load(
+        file,
+        OggFormat,
+        (),
+        &mut Progress::new(),
+        &world.read_resource(),
+    )
 }
 
 /// Initialise audio in the world. This includes the background track and the

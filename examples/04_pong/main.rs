@@ -11,7 +11,7 @@ use std::time::Duration;
 
 use amethyst::Result;
 use amethyst::ecs::{Component, DenseVecStorage};
-use amethyst::ecs::audio::DjBundle;
+use amethyst::ecs::audio::AudioBundle;
 use amethyst::ecs::input::InputBundle;
 use amethyst::ecs::rendering::{MaterialComponent, MeshComponent, RenderBundle};
 use amethyst::ecs::transform::{Transform, TransformBundle};
@@ -82,7 +82,7 @@ fn run() -> Result<()> {
         )?
         .with_bundle(PongBundle)?
         .with_bundle(TransformBundle::new().with_dep(&["ball_system", "paddle_system"]))?
-        .with_bundle(DjBundle::new())?
+        .with_bundle(AudioBundle::new())?
         .with_bundle(RenderBundle::new(pipe, Some(display_config)))?;
     Ok(game.build()?.run())
 }

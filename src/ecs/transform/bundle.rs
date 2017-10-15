@@ -2,7 +2,7 @@
 
 use core::bundle::{ECSBundle, Result};
 
-use ecs::{World, DispatcherBuilder};
+use ecs::{DispatcherBuilder, World};
 use ecs::transform::*;
 
 /// Transform bundle
@@ -46,8 +46,10 @@ impl<'a, 'b, 'c> ECSBundle<'a, 'b> for TransformBundle<'c> {
         world.register::<LocalTransform>();
         world.register::<Transform>();
 
-        Ok(
-            builder.add(TransformSystem::new(), "transform_system", self.dep),
-        )
+        Ok(builder.add(
+            TransformSystem::new(),
+            "transform_system",
+            self.dep,
+        ))
     }
 }

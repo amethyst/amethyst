@@ -3,13 +3,13 @@
 use std::path::Path;
 use std::sync::Arc;
 
+use core::ECSBundle;
 use rayon::ThreadPool;
 use shred::{Resource, RunNow};
 use shrev::{EventChannel, ReaderId};
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
 use winit::Event;
-use core::ECSBundle;
 
 use assets::{Asset, Loader, Source};
 use ecs::{Component, Dispatcher, DispatcherBuilder, System, World};
