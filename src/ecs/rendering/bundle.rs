@@ -26,7 +26,7 @@ pub struct RenderBundle<P> {
 
 impl<P: PipelineBuild + Clone> RenderBundle<P> {
     /// Create a new render bundle
-    pub fn new(config: Option<DisplayConfig>, pipe: P) -> Self {
+    pub fn new(pipe: P, config: Option<DisplayConfig>) -> Self {
         RenderBundle { config, pipe }
     }
 }

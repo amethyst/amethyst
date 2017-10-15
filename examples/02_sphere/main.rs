@@ -55,7 +55,7 @@ impl State for Example {
 }
 
 
-type DrawShaded = pass::DrawShaded<PosNormTex, AmbientColor, Mesh, Material, Transform, Light>;
+type DrawShaded = pass::DrawShaded<PosNormTex, AmbientColor, Transform>;
 
 fn run() -> Result<(), amethyst::Error> {
     let display_config_path = format!(
@@ -63,15 +63,17 @@ fn run() -> Result<(), amethyst::Error> {
         env!("CARGO_MANIFEST_DIR")
     );
 
+    let pipe = Pipeline::build().with_stage(
+        Stage::with_backbuffer()
+            .clear_target(BACKGROUND_COLOUR, 1.0)
+            .with_pass(DrawShaded::new()),
+    );
+
+    let config = DisplayConfig::load(&display_config_path);
+
     let mut game = Application::build(Example)?
         .with_bundle(
-            RenderBundle::new(
-                Pipeline::build().with_stage(
-                    Stage::with_backbuffer()
-                        .clear_target(BACKGROUND_COLOUR, 1.0)
-                        .with_pass(DrawShaded::new()),
-                ),
-            ).with_config(DisplayConfig::load(&display_config_path)),
+            RenderBundle::new(pipe, Some(config)),
         )?
         .build()?;
     Ok(game.run())
@@ -102,10 +104,13 @@ fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTex> {
 fn initialise_sphere(world: &mut World) {
     // Create a sphere mesh and material.
 
+    use amethyst::assets::Handle;
+
     let (mesh, material) = {
         let loader = world.read_resource::<Loader>();
 
-        let mesh = loader.load_from_data(gen_sphere(32, 32), &world.read_resource());
+        let mesh: Handle<Mesh> = loader.load_from_data(gen_sphere(32, 32).into(),
+                                                       &world.read_resource());
         //let material = MaterialBuilder::new().with_albedo(Texture::from_color_val(SPHERE_COLOUR));
         //
         //// Load the material.
@@ -135,18 +140,18 @@ fn initialise_lights(world: &mut World) {
     // Add ambient light.
     world.add_resource(AmbientColor(AMBIENT_LIGHT_COLOUR));
 
+    let light: Light = PointLight {
+        center: LIGHT_POSITION.into(),
+        radius: LIGHT_RADIUS,
+        intensity: LIGHT_INTENSITY,
+        color: POINT_LIGHT_COLOUR,
+        ..Default::default()
+    }.into();
+
     // Add point light.
     world
         .create_entity()
-        .with(
-            PointLight {
-                center: LIGHT_POSITION.into(),
-                radius: LIGHT_RADIUS,
-                intensity: LIGHT_INTENSITY,
-                color: POINT_LIGHT_COLOUR,
-                ..Default::default()
-            }.into(),
-        )
+        .with(light)
         .build();
 }
 
