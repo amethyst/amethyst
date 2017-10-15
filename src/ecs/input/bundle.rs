@@ -66,12 +66,12 @@ where
     AC: Hash + Eq + Clone + Send + Sync + 'static,
 {
     fn build(
-        &self,
+        self,
         builder: ApplicationBuilder<'a, 'b, T>,
     ) -> Result<ApplicationBuilder<'a, 'b, T>> {
         let mut input = InputHandler::new();
-        if let Some(ref bindings) = self.bindings {
-            input.bindings = bindings.clone();
+        if let Some(bindings) = self.bindings {
+            input.bindings = bindings;
         }
 
         let reader_id = builder

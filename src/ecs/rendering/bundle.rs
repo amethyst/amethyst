@@ -19,17 +19,20 @@ use error::{Error, Result};
 /// Will also register asset contexts with the asset `Loader`, and add systems for merging
 /// `AssetFuture` into its related component.
 ///
-pub struct RenderBundle;
+pub struct RenderBundle<P> {
+    config: Option<DisplayConfig>,
+    pipe: P,
+}
 
-impl RenderBundle {
+impl<P: PipelineBuild + Clone> RenderBundle<P> {
     /// Create a new render bundle
-    pub fn new() -> Self {
-        Self {}
+    pub fn new(config: Option<DisplayConfig>, pipe: P) -> Self {
+        RenderBundle { config, pipe }
     }
 }
 
 /// Create render system
-pub fn create_render_system<P>(
+fn create_render_system<P>(
     pipe: P,
     display_config: Option<DisplayConfig>,
 ) -> Result<RenderSystem<P::Pipeline>>
@@ -56,9 +59,13 @@ where
     Ok(RenderSystem::new(pipe, renderer))
 }
 
-impl<'a, 'b, T> ECSBundle<'a, 'b, T> for RenderBundle {
+impl<'a, 'b, P, T> ECSBundle<'a, 'b, T> for RenderBundle<P>
+where
+    P: PipelineBuild + Clone,
+    <P as PipelineBuild>::Pipeline: 'b,
+{
     fn build(
-        &self,
+        self,
         mut builder: ApplicationBuilder<'a, 'b, T>,
     ) -> Result<ApplicationBuilder<'a, 'b, T>> {
         use assets::{AssetStorage, Handle};
@@ -86,7 +93,8 @@ impl<'a, 'b, T> ECSBundle<'a, 'b, T> for RenderBundle {
             .register::<Handle<Mesh>>()
             .register::<Handle<Texture>>()
             .with_resource(AssetStorage::<Mesh>::new())
-            .with_resource(AssetStorage::<Texture>::new());
+            .with_resource(AssetStorage::<Texture>::new())
+            .with_local(create_render_system(self.pipe, self.config)?);
 
         // TODO: register assets with loader, eventually.
 

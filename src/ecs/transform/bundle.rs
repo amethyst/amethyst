@@ -37,7 +37,7 @@ impl<'a> TransformBundle<'a> {
 
 impl<'a, 'b, 'c, T> ECSBundle<'a, 'b, T> for TransformBundle<'c> {
     fn build(
-        &self,
+        self,
         builder: ApplicationBuilder<'a, 'b, T>,
     ) -> Result<ApplicationBuilder<'a, 'b, T>> {
         Ok(

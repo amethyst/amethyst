@@ -40,7 +40,7 @@ impl<'a> DjBundle<'a> {
 
 impl<'a, 'b, 'c, T> ECSBundle<'a, 'b, T> for DjBundle<'c> {
     fn build(
-        &self,
+        self,
         mut builder: ApplicationBuilder<'a, 'b, T>,
     ) -> Result<ApplicationBuilder<'a, 'b, T>> {
         // Remove option here when specs get support for optional fetch in
