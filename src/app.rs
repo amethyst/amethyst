@@ -1,5 +1,6 @@
 //! The core engine framework.
 
+use std::path::Path;
 use std::sync::Arc;
 
 use rayon::ThreadPool;
@@ -50,6 +51,9 @@ impl<'a, 'b> Application<'a, 'b> {
     /// be using [build](struct.Application.html#method.build) instead.
     ///
     /// # Parameters
+    ///
+    /// - `path`: The default path for asset loading.
+    ///
     /// - `initial_state`: The initial State handler of your game See
     ///   [State](trait.State.html) for more information on what this is.
     ///
@@ -60,6 +64,8 @@ impl<'a, 'b> Application<'a, 'b> {
     /// possible errors that can happen in the creation of a Application object.
     ///
     /// # Type Parameters
+    ///
+    /// - `P`: The path type for your standard asset path.
     ///
     /// - `S`: A type that implements the `State` trait. e.g. Your initial
     ///        game logic.
@@ -72,7 +78,7 @@ impl<'a, 'b> Application<'a, 'b> {
     ///
     /// # Errors
     ///
-    /// Application will return an error if the internal threadpool fails
+    /// Application will return an error if the internal thread pool fails
     /// to initialize correctly because of systems resource limitations
     ///
     /// # Examples
@@ -83,14 +89,15 @@ impl<'a, 'b> Application<'a, 'b> {
     /// struct NullState;
     /// impl State for NullState {}
     ///
-    /// let mut game = Application::new(NullState).expect("Failed to initialize");
+    /// let mut game = Application::new("assets/", NullState).expect("Failed to initialize");
     /// game.run();
     /// ~~~
-    pub fn new<S>(initial_state: S) -> Result<Application<'a, 'b>>
+    pub fn new<P, S>(path: P, initial_state: S) -> Result<Application<'a, 'b>>
     where
+        P: AsRef<Path>,
         S: State + 'a,
     {
-        ApplicationBuilder::new(initial_state)?.build()
+        ApplicationBuilder::new(path, initial_state)?.build()
     }
 
 
@@ -98,11 +105,12 @@ impl<'a, 'b> Application<'a, 'b> {
     ///
     /// This is identical in function to
     /// [ApplicationBuilder::new](struct.ApplicationBuilder.html#method.new).
-    pub fn build<S>(initial_state: S) -> Result<ApplicationBuilder<'a, 'b, S>>
+    pub fn build<P, S>(path: P, initial_state: S) -> Result<ApplicationBuilder<'a, 'b, S>>
     where
+        P: AsRef<Path>,
         S: State + 'a,
     {
-        ApplicationBuilder::new(initial_state)
+        ApplicationBuilder::new(path, initial_state)
     }
 
     /// Run the gameloop until the game state indicates that the game is no
@@ -287,7 +295,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// game.run();
     /// ~~~
 
-    pub fn new(initial_state: T) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P, initial_state: T) -> Result<Self> {
         use rayon::Configuration;
         use specs::common::Errors;
 
@@ -304,8 +312,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
             .map(|p| Arc::new(p))
             .map_err(|_| Error::Application)?;
         let mut world = World::new();
-        let base_path = format!("{}/resources", env!("CARGO_MANIFEST_DIR"));
-        world.add_resource(Loader::new(base_path, pool.clone()));
+        world.add_resource(Loader::new(path.as_ref(), pool.clone()));
         let events = EventChannel::<Event>::with_capacity(2000);
         let reader_id = events.register_reader();
         world.add_resource(events);

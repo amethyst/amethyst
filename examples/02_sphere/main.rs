@@ -10,7 +10,7 @@ use amethyst::ecs::World;
 use amethyst::ecs::rendering::{AmbientColor, RenderBundle};
 use amethyst::ecs::transform::Transform;
 use amethyst::prelude::*;
-use amethyst::renderer::{Config as DisplayConfig, Mesh, Rgba, Texture};
+use amethyst::renderer::{Config as DisplayConfig, Mesh, Rgba};
 use amethyst::renderer::prelude::*;
 use cgmath::{Deg, Vector3};
 use cgmath::prelude::InnerSpace;
@@ -63,6 +63,11 @@ fn run() -> Result<(), amethyst::Error> {
         env!("CARGO_MANIFEST_DIR")
     );
 
+    let resources = format!(
+        "{}/examples/02_sphere/resources/",
+        env!("CARGO_MANIFEST_DIR")
+    );;
+
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target(BACKGROUND_COLOUR, 1.0)
@@ -71,7 +76,7 @@ fn run() -> Result<(), amethyst::Error> {
 
     let config = DisplayConfig::load(&display_config_path);
 
-    let mut game = Application::build(Example)?
+    let mut game = Application::build(resources, Example)?
         .with_bundle(RenderBundle::new(pipe, Some(config)))?
         .build()?;
     Ok(game.run())

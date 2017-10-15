@@ -57,11 +57,11 @@ pub use color::Rgba;
 pub use config::Config;
 pub use error::{Error, Result};
 pub use light::Light;
-pub use mesh::{Mesh, MeshBuilder};
+pub use mesh::{Mesh, MeshBuilder, MeshHandle};
 pub use mtl::{Material, MaterialDefaults};
 pub use pipe::{PipelineBuilder, PolyPipeline, PolyStage, Target};
 pub use renderer::Renderer;
-pub use tex::{Texture, TextureBuilder};
+pub use tex::{Texture, TextureBuilder, TextureHandle};
 pub use types::{Encoder, Factory};
 pub use vertex::VertexFormat;
 

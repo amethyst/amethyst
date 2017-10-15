@@ -14,6 +14,7 @@ use gfx::traits::Pod;
 use formats::TextureData;
 use types::{ChannelFormat, Factory, RawShaderResourceView, RawTexture, Sampler, SurfaceFormat};
 
+/// A handle to a `Texture` asset.
 pub type TextureHandle = Handle<Texture>;
 
 /// Handle to a GPU texture resource.
