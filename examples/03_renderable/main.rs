@@ -11,7 +11,7 @@ use amethyst::{Application, Error, State, Trans};
 use amethyst::assets::{Loader, Progress};
 use amethyst::config::Config;
 use amethyst::ecs::{Fetch, FetchMut, Join, System, World, WriteStorage};
-use amethyst::ecs::rendering::{AmbientColor, RenderBundle};
+use amethyst::ecs::rendering::{create_render_system, AmbientColor, RenderBundle};
 use amethyst::ecs::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::{Camera, Config as DisplayConfig, MaterialDefaults, MeshHandle, Rgba};
@@ -75,15 +75,13 @@ impl<'a> System<'a> for ExampleSystem {
     }
 }
 
-struct Example(Option<Progress>);
+struct Example;
 
 impl State for Example {
     fn on_start(&mut self, engine: &mut Engine) {
         initialise_camera(&mut engine.world.write_resource::<Camera>());
 
-        let (assets, progress) = load_assets(&engine.world);
-
-        self.0 = Some(progress);
+        let assets = load_assets(&engine.world);
 
         // Add teapot and lid to scene
         for mesh in vec![assets.lid.clone(), assets.teapot.clone()] {
@@ -289,7 +287,7 @@ struct Assets {
     logo: Material,
 }
 
-fn load_assets(world: &World) -> (Assets, Progress) {
+fn load_assets(world: &World) -> Assets {
     let mesh_storage = world.read_resource();
     let tex_storage = world.read_resource();
     let mat_defaults = world.read_resource::<MaterialDefaults>();
@@ -319,7 +317,7 @@ fn load_assets(world: &World) -> (Assets, Progress) {
     let teapot = loader.load("teapot.obj", ObjFormat, (), &mut progress, &mesh_storage);
     let rectangle = loader.load("rectangle.obj", ObjFormat, (), &mut progress, &mesh_storage);
 
-    let a = Assets {
+    Assets {
         cube,
         cone,
         lid,
@@ -329,9 +327,7 @@ fn load_assets(world: &World) -> (Assets, Progress) {
         red,
         white,
         logo,
-    };
-
-    (a, progress)
+    }
 }
 
 fn main() {
@@ -362,10 +358,14 @@ fn run() -> Result<(), Error> {
             .with_pass(DrawShaded::new()),
     );
 
-    let mut game = Application::build(resources_directory, Example(None))?
+    let mut game = Application::build(resources_directory, Example)?
         .with::<ExampleSystem>(ExampleSystem, "example_system", &[])
         .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
-        .with_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?
+        .with_bundle(RenderBundle::new())?
+        .with_local(create_render_system(
+            pipeline_builder,
+            Some(display_config),
+        )?)
         .build()?;
 
     game.run();
