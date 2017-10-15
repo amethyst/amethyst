@@ -29,7 +29,7 @@ impl App {
         // Note: in an actual application, you'd want to share the thread pool.
         let pool = Arc::new(ThreadPool::new(Default::default()).expect("Invalid config"));
 
-        world.register::<Mesh>();
+        world.register::<MeshHandle>();
 
         world.add_resource(Errors::new());
         world.add_resource(AssetStorage::<MeshAsset>::new());
@@ -60,10 +60,7 @@ impl App {
     }
 }
 
-/// This is a convention.
-/// The user will almost never use `MeshAsset`,
-/// so one should export the shorter name for the handle.
-type Mesh = Handle<MeshAsset>;
+type MeshHandle = Handle<MeshAsset>;
 
 pub struct MeshAsset {
     /// Left out for simplicity
@@ -81,7 +78,9 @@ struct Ron;
 impl Format<MeshAsset> for Ron {
     const NAME: &'static str = "RON";
 
-    fn import(&self, name: String, source: Arc<Source>) -> Result<VertexData, BoxedErr> {
+    type Options = ();
+
+    fn import(&self, name: String, source: Arc<Source>, _: ()) -> Result<VertexData, BoxedErr> {
         use ron::de::from_str;
         use std::str::from_utf8;
 
@@ -127,7 +126,7 @@ impl State {
                 let (mesh, progress) = {
                     let mut progress = Progress::new();
                     let loader = world.read_resource::<Loader>();
-                    let a = loader.load("mesh.ron", Ron, &mut progress, &world.read_resource());
+                    let a = loader.load("mesh.ron", Ron, (), &mut progress, &world.read_resource());
 
                     (a, progress)
                 };

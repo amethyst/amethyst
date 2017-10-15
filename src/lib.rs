@@ -43,7 +43,7 @@
 //! }
 //!
 //! fn main() {
-//!     let mut game = Application::new(GameState).expect("Fatal error");
+//!     let mut game = Application::new("assets/", GameState).expect("Fatal error");
 //!     game.run();
 //! }
 //! ```

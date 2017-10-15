@@ -6,6 +6,8 @@ extern crate specs;
 
 use std::str::from_utf8;
 use std::sync::Arc;
+use std::thread::sleep;
+use std::time::Duration;
 
 use amethyst_assets::*;
 use rayon::{Configuration, ThreadPool};
@@ -23,7 +25,9 @@ struct DummyFormat;
 impl Format<DummyAsset> for DummyFormat {
     const NAME: &'static str = "DUMMY";
 
-    fn import(&self, name: String, source: Arc<Source>) -> Result<String, BoxedErr> {
+    type Options = ();
+
+    fn import(&self, name: String, source: Arc<Source>, _: ()) -> Result<String, BoxedErr> {
         from_utf8(source.load(&name)?.as_slice())
             .map(|s| s.to_owned())
             .map_err(BoxedErr::new)
@@ -42,7 +46,13 @@ fn main() {
 
     let mut progress = Progress::new();
 
-    let dummy = loader.load("dummy/whatever.dum", DummyFormat, &mut progress, &storage);
+    let dummy = loader.load(
+        "dummy/whatever.dum",
+        DummyFormat,
+        (),
+        &mut progress,
+        &storage,
+    );
 
     // Game loop
     loop {
@@ -52,8 +62,7 @@ fn main() {
         }
 
         // Do per-frame stuff (display loading screen, ..)
-        use std::thread::sleep_ms;
-        sleep_ms(100);
+        sleep(Duration::new(1, 0));
 
         storage.process(
             |mut s| {

@@ -1,6 +1,6 @@
 use {ARENA_HEIGHT, ARENA_WIDTH};
 use {Ball, Paddle, Side};
-use amethyst::assets::{BoxedErr, Loader};
+use amethyst::assets::Loader;
 use amethyst::ecs::World;
 use amethyst::ecs::transform::{LocalTransform, Transform};
 use amethyst::prelude::*;

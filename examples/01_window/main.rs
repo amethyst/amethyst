@@ -2,7 +2,7 @@
 
 extern crate amethyst;
 
-use amethyst::ecs::rendering::RenderBundle;
+use amethyst::ecs::rendering::{create_render_system, RenderBundle};
 use amethyst::ecs::transform::Transform;
 use amethyst::event::{KeyboardInput, VirtualKeyCode};
 use amethyst::prelude::*;
@@ -47,8 +47,9 @@ fn run() -> Result<(), amethyst::Error> {
             .with_pass(DrawFlat::new()),
     );
 
-    let mut game = Application::build(Example)?
-        .with_bundle(RenderBundle::new(pipe, Some(config)))?
+    let mut game = Application::build("./", Example)?
+        .with_bundle(RenderBundle::new())?
+        .with_local(create_render_system(pipe, Some(config))?)
         .build()
         .expect("Fatal error");
 

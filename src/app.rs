@@ -286,7 +286,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// // follows the use pattern of most builder objects found
     /// // in the rust ecosystem. Each function modifies the object
     /// // returning a new object with the modified configuration.
-    /// let mut game = Application::build(NullState)
+    /// let mut game = Application::build("assets/", NullState)
     ///     .expect("Failed to initialize")
     ///
     /// // components can be registered at this stage
@@ -382,7 +382,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// // After creating a builder, we can add any number of components
     /// // using the register method.
-    /// Application::build(NullState)
+    /// Application::build("assets/", NullState)
     ///     .expect("Failed to initialize")
     ///     .register::<Velocity>();
     /// ~~~
@@ -434,7 +434,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// }
     ///
     /// let score_board = HighScores(Vec::new());
-    /// Application::build(NullState)
+    /// Application::build("assets/", NullState)
     ///     .expect("Failed to initialize")
     ///     .with_resource(score_board);
     ///
@@ -476,7 +476,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// // Three systems are added in this example. The "tabby cat" & "tom cat"
     /// // systems will both run in parallel. Only after both cat systems have
     /// // run is the "doggo" system permitted to run them.
-    /// Application::build(NullState)
+    /// Application::build("assets/", NullState)
     ///     .expect("Failed to initialize")
     ///     .with(NopSystem, "tabby cat", &[])
     ///     .with(NopSystem, "tom cat", &[])
@@ -533,7 +533,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///     fn run(&mut self, _: Self::SystemData) {}
     /// }
     ///
-    /// Application::build(NullState)
+    /// Application::build("assets/", NullState)
     ///     .expect("Failed to initialize")
     ///     // This will add the "foo" system to the game loop, in this case
     ///     // the "foo" system will not depend on any systems.
@@ -588,7 +588,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///     fn run(&mut self, _: Self::SystemData) {}
     /// }
     ///
-    /// Application::build(NullState)
+    /// Application::build("assets/", NullState)
     ///     .expect("Failed to initialize")
     ///     // the Nop system is registered here
     ///     .with_thread_local(NopSystem);
@@ -665,14 +665,14 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// ~~~no_run
     /// use amethyst::prelude::*;
-    /// use amethyst::assets::{Directory, Loader};
+    /// use amethyst::assets::{Directory, Loader, Progress};
     /// use amethyst::ecs::rendering::MeshComponent;
     /// use amethyst::renderer::formats::ObjFormat;
     ///
-    /// let mut game = Application::build(LoadingState)
+    /// let mut game = Application::build("assets/", LoadingState)
     ///     .expect("Failed to initialize")
-    ///     // Register the directory "Game Assets" under the name "resources".
-    ///     .with_store("resources", Directory::new("Game Assets"))
+    ///     // Register the directory "custom_directory" under the name "resources".
+    ///     .with_source("custom_store", Directory::new("custom_directory"))
     ///     .build()
     ///     .expect("Failed to build game")
     ///     .run();
@@ -680,10 +680,13 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// struct LoadingState;
     /// impl State for LoadingState {
     ///     fn on_start(&mut self, engine: &mut Engine) {
+    ///         let mut progress = Progress::new();
+    ///         let storage = engine.world.read_resource();
+    ///
     ///         let loader = engine.world.read_resource::<Loader>();
-    ///         // With the `resources`, load a teapot mesh with the format MeshComponent
-    ///         // from the directory that registered above.
-    ///         let future = loader.load_from::<MeshComponent, _, _, _>("teapot", ObjFormat, "resources");
+    ///         // Load a teapot mesh from the directory that registered above.
+    ///         let mesh = loader.load_from("teapot", ObjFormat, (), "custom_directory",
+    ///                                     &mut progress, &storage);
     ///     }
     /// }
     /// ~~~
