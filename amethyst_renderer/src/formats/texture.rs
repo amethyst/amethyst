@@ -5,7 +5,7 @@ use std::fmt::{self, Display, Formatter};
 use std::io::Cursor;
 use std::sync::Arc;
 
-use amethyst_assets::{ BoxedErr, Format, Source};
+use amethyst_assets::{BoxedErr, Format, Source};
 use imagefmt;
 use imagefmt::{ColFmt, Image};
 use gfx::format::{ChannelType, SurfaceType};

@@ -13,9 +13,10 @@ use specs::{Component, Fetch, ParJoin, ReadStorage};
 use cam::Camera;
 use error::Result;
 use mesh::{Mesh, MeshHandle};
-use mtl::Material;
+use mtl::{Material, MaterialDefaults};
 use pipe::pass::{Pass, PassApply, PassData, Supplier};
 use pipe::{DepthMode, Effect, NewEffect};
+use tex::Texture;
 use types::Encoder;
 use vertex::{Position, Query, TexCoord};
 
@@ -59,6 +60,8 @@ where
     type Data = (
         Option<Fetch<'a, Camera>>,
         Fetch<'a, AssetStorage<Mesh>>,
+        Fetch<'a, AssetStorage<Texture>>,
+        Fetch<'a, MaterialDefaults>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
         ReadStorage<'a, T>,
@@ -92,9 +95,11 @@ where
     fn apply<'a, 'b: 'a>(
         &'a mut self,
         supplier: Supplier<'a>,
-        (camera, mesh_storage, mesh, material, global): (
+        (camera, mesh_storage, tex_storage, material_defaults, mesh, material, global): (
             Option<Fetch<'b, Camera>>,
             Fetch<'a, AssetStorage<Mesh>>,
+            Fetch<'a, AssetStorage<Texture>>,
+            Fetch<'a, MaterialDefaults>,
             ReadStorage<'b, MeshHandle>,
             ReadStorage<'b, Material>,
             ReadStorage<'b, T>,
@@ -103,6 +108,8 @@ where
         DrawFlatApply {
             camera,
             mesh_storage,
+            tex_storage,
+            material_defaults,
             mesh,
             material,
             global,
@@ -115,6 +122,8 @@ where
 pub struct DrawFlatApply<'a, V, T: Component> {
     camera: Option<Fetch<'a, Camera>>,
     mesh_storage: Fetch<'a, AssetStorage<Mesh>>,
+    tex_storage: Fetch<'a, AssetStorage<Texture>>,
+    material_defaults: Fetch<'a, MaterialDefaults>,
     mesh: ReadStorage<'a, MeshHandle>,
     material: ReadStorage<'a, Material>,
     global: ReadStorage<'a, T>,
@@ -136,6 +145,8 @@ where
         let DrawFlatApply {
             camera,
             mesh_storage,
+            tex_storage,
+            material_defaults,
             mesh,
             material,
             global,
@@ -145,6 +156,8 @@ where
 
         let camera = &camera;
         let mesh_storage = &mesh_storage;
+        let tex_storage = &tex_storage;
+        let material_defaults = &material_defaults;
 
         supplier
             .supply((&mesh, &material, &global).par_join().map(
@@ -174,9 +187,14 @@ where
                                 }
                             });
 
+                        let albedo = tex_storage
+                            .get(&material.albedo)
+                            .or_else(|| tex_storage.get(&material_defaults.0.albedo))
+                            .unwrap();
+
                         effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
-                        effect.data.textures.push(material.albedo.view().clone());
-                        effect.data.samplers.push(material.albedo.sampler().clone());
+                        effect.data.textures.push(albedo.view().clone());
+                        effect.data.samplers.push(albedo.sampler().clone());
 
                         effect.data.vertex_bufs.push(vbuf);
 

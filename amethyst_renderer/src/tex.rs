@@ -3,7 +3,6 @@
 pub use gfx::texture::{FilterMethod, WrapMode};
 
 use amethyst_assets::{Asset, Handle};
-use specs::{Component, DenseVecStorage};
 
 use std::marker::PhantomData;
 

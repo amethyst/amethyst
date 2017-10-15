@@ -17,7 +17,7 @@ use cgmath::prelude::InnerSpace;
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 
-const SPHERE_COLOUR: Rgba = Rgba(0.0, 0.0, 1.0, 1.0); // blue
+const SPHERE_COLOUR: [f32; 4] = [0.0, 0.0, 1.0, 1.0]; // blue
 const AMBIENT_LIGHT_COLOUR: Rgba = Rgba(0.01, 0.01, 0.01, 1.0); // near-black
 const POINT_LIGHT_COLOUR: Rgba = Rgba(1.0, 1.0, 1.0, 1.0); // white
 const BACKGROUND_COLOUR: [f32; 4] = [0.0, 0.0, 0.0, 0.0]; // black
@@ -103,7 +103,7 @@ fn initialise_sphere(world: &mut World) {
     // Create a sphere mesh and material.
 
     use amethyst::assets::Handle;
-    use amethyst::renderer::Material;
+    use amethyst::renderer::{Material, MaterialDefaults};
     use amethyst::renderer::formats::TextureData;
 
     let (mesh, material) = {
@@ -112,35 +112,19 @@ fn initialise_sphere(world: &mut World) {
         let mesh: Handle<Mesh> =
             loader.load_from_data(gen_sphere(32, 32).into(), &world.read_resource());
 
-        let albedo = TextureData::from_color([0.0, 0.0, 0.5, 1.0]);
-        let emission = TextureData::from_color([0.0; 4]);
-        let normal = TextureData::from_color([0.5, 0.5, 1.0, 1.0]);
-        let metallic = TextureData::from_color([0.0; 4]);
-        let roughness = TextureData::from_color([0.5; 4]);
-        let ambient_occlusion = TextureData::from_color([1.0; 4]);
-        let caveat = TextureData::from_color([1.0; 4]);
+        let albedo = TextureData::color(SPHERE_COLOUR);
 
         let tex_storage = world.read_resource();
+        let mat_defaults = world.read_resource::<MaterialDefaults>();
 
         let albedo = loader.load_from_data(albedo, &tex_storage);
-        let emission = loader.load_from_data(emission, &tex_storage);
-        let normal = loader.load_from_data(normal, &tex_storage);
-        let metallic = loader.load_from_data(metallic, &tex_storage);
-        let roughness = loader.load_from_data(roughness, &tex_storage);
-        let ambient_occlusion = loader.load_from_data(ambient_occlusion, &tex_storage);
-        let caveat = loader.load_from_data(caveat, &tex_storage);
 
         let mat = Material {
             albedo,
-            emission,
-            normal,
-            metallic,
-            roughness,
-            ambient_occlusion,
-            caveat,
+            ..mat_defaults.0.clone()
         };
 
-        (mesh, ())
+        (mesh, mat)
     };
 
 
@@ -149,7 +133,7 @@ fn initialise_sphere(world: &mut World) {
         .create_entity()
         .with(Transform::default())
         .with(mesh)
-        //.with(material)
+        .with(material)
         .build();
 }
 

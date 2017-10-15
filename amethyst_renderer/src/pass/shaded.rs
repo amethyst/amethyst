@@ -16,10 +16,11 @@ use color::Rgba;
 use error::Result;
 use light::{DirectionalLight, Light, PointLight};
 use mesh::{Mesh, MeshHandle};
-use mtl::Material;
+use mtl::{Material, MaterialDefaults};
 use pipe::{DepthMode, Effect, NewEffect};
 use pipe::pass::{Pass, PassApply, PassData, Supplier};
 use types::Encoder;
+use tex::Texture;
 use vertex::{Normal, Position, Query, TexCoord};
 
 static VERT_SRC: &[u8] = include_bytes!("shaders/vertex/basic.glsl");
@@ -96,6 +97,8 @@ where
         Option<Fetch<'a, Camera>>,
         Fetch<'a, A>,
         Fetch<'a, AssetStorage<Mesh>>,
+        Fetch<'a, AssetStorage<Texture>>,
+        Fetch<'a, MaterialDefaults>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
         ReadStorage<'a, T>,
@@ -138,19 +141,24 @@ where
     fn apply<'a, 'b: 'a>(
         &'a mut self,
         supplier: Supplier<'a>,
-        (camera, ambient, mesh_storage, mesh, material, global, light): (
+        (camera, ambient, mesh_storage, tex_storage, material_defaults,
+            mesh, material, global, light): (
             Option<Fetch<'a, Camera>>,
             Fetch<'a, A>,
             Fetch<'a, AssetStorage<Mesh>>,
+            Fetch<'a, AssetStorage<Texture>>,
+            Fetch<'a, MaterialDefaults>,
             ReadStorage<'a, MeshHandle>,
             ReadStorage<'a, Material>,
             ReadStorage<'a, T>,
             ReadStorage<'a, Light>,
         ),
-    ) -> DrawShadedApply<'a, V, A, T> {
+) -> DrawShadedApply<'a, V, A, T>{
         DrawShadedApply {
             camera,
             mesh_storage,
+            tex_storage,
+            material_defaults,
             mesh,
             material,
             global,
@@ -167,6 +175,7 @@ pub struct DrawShadedApply<'a, V, A: 'static, T: Component> {
     ambient: Fetch<'a, A>,
     mesh_storage: Fetch<'a, AssetStorage<Mesh>>,
     tex_storage: Fetch<'a, AssetStorage<Texture>>,
+    material_defaults: Fetch<'a, MaterialDefaults>,
     mesh: ReadStorage<'a, MeshHandle>,
     material: ReadStorage<'a, Material>,
     global: ReadStorage<'a, T>,
@@ -190,6 +199,8 @@ where
         let DrawShadedApply {
             camera,
             mesh_storage,
+            tex_storage,
+            material_defaults,
             mesh,
             material,
             global,
@@ -203,6 +214,8 @@ where
         let ambient = &ambient;
         let light = &light;
         let mesh_storage = &mesh_storage;
+        let tex_storage = &tex_storage;
+        let material_defaults = &material_defaults;
 
         supplier
             .supply((&mesh, &material, &global).par_join().map(
@@ -280,16 +293,22 @@ where
                                 .unwrap_or([0.0; 3]),
                         );
 
-                        effect.data.textures.push(material.emission.view().clone());
+                        let albedo = tex_storage
+                            .get(&material.albedo)
+                            .or_else(|| tex_storage.get(&material_defaults.0.albedo))
+                            .unwrap();
 
-                        effect
-                            .data
-                            .samplers
-                            .push(material.emission.sampler().clone());
+                        let emission = tex_storage
+                            .get(&material.emission)
+                            .or_else(|| tex_storage.get(&material_defaults.0.emission))
+                            .unwrap();
 
-                        effect.data.textures.push(material.albedo.view().clone());
+                        effect.data.textures.push(emission.view().clone());
 
-                        effect.data.samplers.push(material.albedo.sampler().clone());
+                        effect.data.samplers.push(emission.sampler().clone());
+
+                        effect.data.textures.push(albedo.view().clone());
+                        effect.data.samplers.push(albedo.sampler().clone());
 
                         effect.data.vertex_bufs.push(vbuf);
 

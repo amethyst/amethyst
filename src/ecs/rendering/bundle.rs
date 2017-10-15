@@ -2,16 +2,18 @@
 
 use renderer::Config as DisplayConfig;
 use renderer::Rgba;
+use renderer::formats::TextureData;
 use renderer::pipe::PipelineBuild;
 use renderer::prelude::*;
 
 use app::ApplicationBuilder;
-use assets::BoxedErr;
-use ecs::ECSBundle;
+use assets::{BoxedErr, Loader};
+use ecs::{ECSBundle, World};
 use ecs::rendering::resources::{AmbientColor, ScreenDimensions, WindowMessages};
 use ecs::rendering::systems::RenderSystem;
 use ecs::transform::components::*;
 use error::{Error, Result};
+use renderer::MaterialDefaults;
 
 /// Rendering bundle
 ///
@@ -94,8 +96,43 @@ where
             .with_resource(AssetStorage::<Texture>::new())
             .with_local(create_render_system(self.pipe, self.config)?);
 
+        let mat = create_default_mat(&builder.world);
+        builder = builder.with_resource(MaterialDefaults(mat));
+
         // TODO: register assets with loader, eventually.
 
         Ok(builder)
+    }
+}
+
+fn create_default_mat(world: &World) -> Material {
+    let loader = world.read_resource::<Loader>();
+
+    let albedo = TextureData::color([0.5, 0.5, 0.5, 1.0]);
+    let emission = TextureData::color([0.0; 4]);
+    let normal = TextureData::color([0.5, 0.5, 1.0, 1.0]);
+    let metallic = TextureData::color([0.0; 4]);
+    let roughness = TextureData::color([0.5; 4]);
+    let ambient_occlusion = TextureData::color([1.0; 4]);
+    let caveat = TextureData::color([1.0; 4]);
+
+    let tex_storage = world.read_resource();
+
+    let albedo = loader.load_from_data(albedo, &tex_storage);
+    let emission = loader.load_from_data(emission, &tex_storage);
+    let normal = loader.load_from_data(normal, &tex_storage);
+    let metallic = loader.load_from_data(metallic, &tex_storage);
+    let roughness = loader.load_from_data(roughness, &tex_storage);
+    let ambient_occlusion = loader.load_from_data(ambient_occlusion, &tex_storage);
+    let caveat = loader.load_from_data(caveat, &tex_storage);
+
+    Material {
+        albedo,
+        emission,
+        normal,
+        metallic,
+        roughness,
+        ambient_occlusion,
+        caveat,
     }
 }

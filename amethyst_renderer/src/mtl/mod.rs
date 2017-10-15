@@ -1,12 +1,8 @@
 //! Physically-based material.
 
-use gfx::traits::Pod;
-
 use specs::{Component, DenseVecStorage};
 
-use error::Result;
-use tex::{Texture, TextureHandle, TextureBuilder};
-use types::Factory;
+use tex::TextureHandle;
 
 /// Material struct.
 #[derive(Clone, Eq, Hash, PartialEq)]
@@ -30,3 +26,11 @@ pub struct Material {
 impl Component for Material {
     type Storage = DenseVecStorage<Self>;
 }
+
+/// A resource providing default textures for `Material`.
+/// These will be be used by the renderer in case a texture
+/// handle points to a texture which is not loaded already.
+/// Additionally, you can use it to fill up the fields of
+/// `Material` you don't want to specify.
+#[derive(Clone)]
+pub struct MaterialDefaults(pub Material);
