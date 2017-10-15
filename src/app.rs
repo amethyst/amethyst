@@ -12,6 +12,7 @@ use winit::Event;
 
 use assets::{Asset, Loader, Source};
 use ecs::{Component, Dispatcher, DispatcherBuilder, ECSBundle, System, World};
+use ecs::common::Errors;
 use engine::Engine;
 use error::{Error, Result};
 use state::{State, StateMachine};
@@ -199,6 +200,10 @@ impl<'a, 'b> Application<'a, 'b> {
         #[cfg(feature = "profiler")]
         profile_scope!("maintain");
         self.engine.world.maintain();
+
+        // TODO: replace
+        // TODO: let the user handle
+        self.engine.world.write_resource::<Errors>().print_and_exit();
     }
 
     /// Cleans up after the quit signal is received.

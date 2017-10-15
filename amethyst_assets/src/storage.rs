@@ -93,6 +93,8 @@ impl<A: Asset> AssetStorage<A> {
             let bitset = &mut self.bitset;
             let handles = &mut self.handles;
             errors.execute::<AssetError, _>(|| {
+                println!("Got asset with name {}", &name);
+
                 let asset = data.and_then(|d| f(d))
                     .map_err(|e| AssetError::new(name, format, e))?;
 

@@ -76,13 +76,15 @@ impl<'a> System<'a> for ExampleSystem {
     }
 }
 
-struct Example;
+struct Example(Option<Progress>);
 
 impl State for Example {
     fn on_start(&mut self, engine: &mut Engine) {
         initialise_camera(&mut engine.world.write_resource::<Camera>());
 
-        let assets = load_assets(&engine.world);
+        let (assets, progress) = load_assets(&engine.world);
+
+        self.0 = Some(progress);
 
         // Add teapot and lid to scene
         for mesh in vec![assets.lid.clone(), assets.teapot.clone()] {
@@ -299,7 +301,7 @@ struct Assets {
     logo: Material,
 }
 
-fn load_assets(world: &World) -> Assets {
+fn load_assets(world: &World) -> (Assets, Progress) {
     let mesh_storage = world.read_resource();
     let tex_storage = world.read_resource();
     let mat_defaults = world.read_resource::<MaterialDefaults>();
@@ -329,7 +331,7 @@ fn load_assets(world: &World) -> Assets {
     let teapot = loader.load("teapot.obj", ObjFormat, &mut progress, &mesh_storage);
     let rectangle = loader.load("rectangle.obj", ObjFormat, &mut progress, &mesh_storage);
 
-    Assets {
+    let a = Assets {
         cube,
         cone,
         lid,
@@ -339,7 +341,9 @@ fn load_assets(world: &World) -> Assets {
         red,
         white,
         logo,
-    }
+    };
+
+    (a, progress)
 }
 
 fn main() {
@@ -370,7 +374,7 @@ fn run() -> Result<(), Error> {
             .with_pass(DrawShaded::new()),
     );
 
-    let mut game = Application::build(resources_directory, Example)?
+    let mut game = Application::build(resources_directory, Example(None))?
         .with::<ExampleSystem>(ExampleSystem, "example_system", &[])
         .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
         .with_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?
