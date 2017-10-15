@@ -1,24 +1,36 @@
-use std::mem::replace;
+use assets::AssetStorage;
+use audio::{AudioSink, Source, SourceHandle};
+use ecs::{Fetch, System};
+use ecs::common::Errors;
 
-use audio::Dj;
-use ecs::{FetchMut, System};
+/// Calls a closure if the `AudioSink` is empty.
+pub struct DjSystem<F> {
+    f: F,
+}
 
-/// Calls a Dj's picker as soon as the Dj runs out of music to play.
-///
-/// This will only operate on a Dj if it has been added to the world as a resource with id 0.
-pub struct DjSystem;
+impl<F> DjSystem<F> {
+    /// Creates a new `DjSystem` with the music picker being `f`.
+    pub fn new(f: F) -> Self {
+        DjSystem {
+            f
+        }
+    }
+}
 
-impl<'a> System<'a> for DjSystem {
-    type SystemData = FetchMut<'a, Dj>;
-    fn run(&mut self, mut dj: Self::SystemData) {
+impl<'a, F> System<'a> for DjSystem<F>
+where
+    F: FnMut() -> Option<SourceHandle>,
+{
+    type SystemData = (Fetch<'a, AssetStorage<Source>>,
+                       Fetch<'a, Errors>,
+                       Fetch<'a, AudioSink>);
+
+    fn run(&mut self, (storage, errors, sink): Self::SystemData) {
         #[cfg(feature = "profiler")]
         profile_scope!("dj_system");
-        // Process Dj picker
-        if dj.empty() {
-            if let Some(mut picker) = replace(&mut dj.picker, None) {
-                if picker(&mut dj) {
-                    dj.picker = Some(picker);
-                }
+        if sink.empty() {
+            if let Some(source) = (&mut self.f)().and_then(|h| storage.get(&h)) {
+                errors.execute(|| sink.append(source));
             }
         }
     }

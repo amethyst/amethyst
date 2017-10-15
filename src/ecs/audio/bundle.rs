@@ -2,13 +2,13 @@
 
 use core::bundle::{ECSBundle, Result};
 
-use audio::Dj;
+use audio::{AudioSink, SourceHandle};
 use audio::output::{default_output, Output};
 use ecs::{World, DispatcherBuilder};
 use ecs::audio::DjSystem;
 use shred::ResourceId;
 
-/// DJ bundle
+/// Dj bundle
 ///
 /// Will only register the `Dj` and the `DjSystem` if an audio output is found.
 /// `DjSystem` will be registered with name "dj_system".
@@ -21,14 +21,15 @@ use shred::ResourceId;
 ///
 /// Panics during `DjSystem` registration if the bundle is applied twice.
 ///
-pub struct DjBundle<'a> {
+pub struct DjBundle<'a, F> {
     dep: &'a [&'a str],
+    picker: F,
 }
 
-impl<'a> DjBundle<'a> {
+impl<'a, F> DjBundle<'a, F> {
     /// Create a new DJ bundle
-    pub fn new() -> Self {
-        Self { dep: &[] }
+    pub fn new(picker: F) -> Self {
+        DjBundle { dep: &[], picker }
     }
 
     /// Set dependencies for the `DjSystem`
@@ -38,7 +39,10 @@ impl<'a> DjBundle<'a> {
     }
 }
 
-impl<'a, 'b, 'c> ECSBundle<'a, 'b> for DjBundle<'c> {
+impl<'a, 'b, 'c, F> ECSBundle<'a, 'b> for DjBundle<'c, F>
+where
+    F: FnMut() -> Option<SourceHandle> + Send + 'static
+{
     fn build(
         self,
         world: &mut World,
@@ -53,14 +57,14 @@ impl<'a, 'b, 'c> ECSBundle<'a, 'b> for DjBundle<'c> {
             world.add_resource(default_output());
         }
 
-        let dj = world
+        let sink = world
             .read_resource::<Option<Output>>()
             .as_ref()
-            .map(|audio_output| Dj::new(audio_output));
+            .map(|audio_output| AudioSink::new(audio_output));
 
-        if let Some(dj) = dj {
-            world.add_resource(dj);
-            builder = builder.add(DjSystem, "dj_system", self.dep);
+        if let Some(sink) = sink {
+            world.add_resource(sink);
+            builder = builder.add(DjSystem::new(self.picker), "dj_system", self.dep);
         }
 
         Ok(builder)
