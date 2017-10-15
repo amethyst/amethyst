@@ -10,7 +10,7 @@ use futures::{Async, Future, IntoFuture, Poll};
 use futures::sync::oneshot::{channel, Receiver};
 use rayon::ThreadPool;
 
-use {Asset, AssetError, AssetFuture, BoxedErr, Context, Directory, Format, LoadError, Store};
+use {Asset, AssetError, AssetUpdates, BoxedErr, Context, Directory, Format, LoadError, Store};
 use asset::AssetSpec;
 use store::AnyStore;
 
@@ -154,37 +154,12 @@ impl Loader {
             .insert(TypeId::of::<A>(), Box::new(Arc::new(context)));
     }
 
-    /// Like `load_from`, but doesn't ask the cache for the asset.
-    pub fn reload<A, F, N, S>(&self, name: N, format: F, store: &S) -> AssetFuture<A>
-    where
-        A: Asset,
-        F: Format + 'static,
-        F::Data: Into<<A::Context as Context>::Data>,
-        F::Error: 'static,
-        N: Into<String>,
-        S: Eq + Hash + ?Sized,
-        String: Borrow<S>,
-    {
-        let context = self.context::<A::Context>();
-
-        let si = self.store(store);
-
-        reload_asset::<A, F, N, _>(
-            context.clone(),
-            format,
-            name,
-            si.id(),
-            si.store(),
-            &self.pool,
-        )
-    }
-
     /// Loads an asset with a given format from the default (directory) store.
     /// If you want to load from a custom source instead, use `load_from`.
     ///
     /// The actual work is done on a worker thread, thus this method immediately returns
     /// a future.
-    pub fn load<A, F, N>(&self, id: N, format: F) -> AssetFuture<A>
+    pub fn load<A, F, N>(&self, id: N, format: F) -> AssetUpdates<A>
     where
         A: Asset,
         F: Format + 'static,
@@ -201,7 +176,7 @@ impl Loader {
     /// # Panics
     ///
     /// Panics if the asset wasn't registered.
-    pub fn load_from<A, F, N, S>(&self, name: N, format: F, store: &S) -> AssetFuture<A>
+    pub fn load_from<A, F, N, S>(&self, name: N, format: F, store: &S) -> AssetUpdates<A>
     where
         A: Asset,
         F: Format + 'static,
@@ -232,11 +207,11 @@ impl Loader {
     /// # Panics
     ///
     /// Panics if the asset wasn't registered.
-    pub fn load_data<A>(&self, data: <A::Context as Context>::Data) -> AssetFuture<A>
+    pub fn load_data<A>(&self, data: <A::Context as Context>::Data) -> AssetUpdates<A>
     where
         A: Asset,
     {
-        AssetFuture::from_future(
+        AssetUpdates::from_future(
             self.context::<A::Context>()
                 .create_asset(data, &self.pool)
                 .into_future()
@@ -275,7 +250,7 @@ pub fn load_asset<A, F, N, S>(
     store_id: StoreId,
     storage: &S,
     pool: &Arc<ThreadPool>,
-) -> AssetFuture<A>
+) -> AssetUpdates<A>
 where
     A: Asset,
     A::Context: Context,
@@ -295,41 +270,13 @@ where
     })
 }
 
-/// Loads an asset with a given context, format, specifier and storage right now.
-/// Note that this method does not ask for a cached version of the asset, but just
-/// reloads the asset.
-pub fn reload_asset<A, F, N, S>(
-    context: Arc<A::Context>,
-    format: F,
-    name: N,
-    store_id: StoreId,
-    storage: &S,
-    pool: &Arc<ThreadPool>,
-) -> AssetFuture<A>
-where
-    A: Asset,
-    A::Context: Context,
-    F: Format + 'static,
-    F::Data: Into<<A::Context as Context>::Data>,
-    F::Error: 'static,
-    N: Into<String>,
-    S: Store + ?Sized,
-    <S::Result as IntoFuture>::Future: 'static,
-{
-    let name = name.into();
-
-    let spec = AssetSpec::new(name.clone(), F::EXTENSIONS, store_id);
-
-    load_asset_inner(context, format, spec, storage, pool)
-}
-
 fn load_asset_inner<C, F, S>(
     context: Arc<C>,
     format: F,
     spec: AssetSpec,
     store: &S,
     pool: &Arc<ThreadPool>,
-) -> AssetFuture<C::Asset>
+) -> AssetUpdates<C::Asset>
 where
     C: Context,
     F: Format + 'static,
@@ -367,7 +314,7 @@ where
         .map_err(BoxedErr::new);
 
     let future: Box<Future<Item = C::Asset, Error = BoxedErr>> = Box::new(future);
-    let future = AssetFuture::from(future.shared());
+    let future = AssetUpdates::from_future(future);
 
     context_clone.cache(spec, future.clone());
 

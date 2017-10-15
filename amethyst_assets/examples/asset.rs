@@ -35,7 +35,7 @@ impl Context for DummyContext {
         Ok(DummyAsset(data))
     }
 
-    fn update(&self, _spec: &AssetSpec, _asset: AssetFuture<Self::Asset>) {
+    fn update(&self, _spec: &AssetSpec, _asset: AssetUpdates<Self::Asset>) {
         unimplemented!()
     }
 }
