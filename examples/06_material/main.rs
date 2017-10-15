@@ -2,53 +2,39 @@
 
 extern crate amethyst;
 extern crate cgmath;
-extern crate futures;
 extern crate genmesh;
 
-use amethyst::assets::{AssetFuture, BoxedErr};
-use amethyst::ecs::rendering::{AmbientColor, Factory, LightComponent, MaterialComponent,
-                               MeshComponent, RenderBundle};
+use amethyst::assets::Loader;
+use amethyst::ecs::rendering::{create_render_system, AmbientColor, RenderBundle};
 use amethyst::ecs::transform::Transform;
 use amethyst::prelude::*;
-use amethyst::renderer::Config as DisplayConfig;
+use amethyst::renderer::{Config as DisplayConfig, MaterialDefaults, MeshHandle};
+use amethyst::renderer::formats::{MeshData, TextureData};
 use amethyst::renderer::prelude::*;
 use cgmath::{Deg, Matrix4, Vector3};
 use cgmath::prelude::InnerSpace;
-use futures::{Future, IntoFuture};
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 
 struct Example;
 
-
-
-fn load_proc_asset<T, F>(engine: &mut Engine, f: F) -> AssetFuture<T::Item>
-where
-    T: IntoFuture<Error = BoxedErr>,
-    T::Future: 'static,
-    F: FnOnce(&mut Engine) -> T,
-{
-    let future = f(engine).into_future();
-    let future: Box<Future<Item = T::Item, Error = BoxedErr>> = Box::new(future);
-    AssetFuture(future.shared())
-}
-
 impl State for Example {
     fn on_start(&mut self, engine: &mut Engine) {
-        let verts = gen_sphere(32, 32);
-        let mesh = Mesh::build(verts);
-        let tex = Texture::from_color_val([1.0, 1.0, 1.0, 1.0]);
-        let mtl = MaterialBuilder::new().with_albedo(tex);
+        let mat_defaults = engine.world.read_resource::<MaterialDefaults>().0.clone();
+        let verts: MeshData = gen_sphere(32, 32).into();
+        let albedo = TextureData::color([1.0, 1.0, 1.0, 1.0]);
 
         println!("Load mesh");
-        let mesh = load_proc_asset(engine, move |engine| {
-            let factory = engine.world.read_resource::<Factory>();
-            factory
-                .create_mesh(mesh)
-                .map(MeshComponent::new)
-                .map_err(BoxedErr::new)
-        });
+        let (mesh, albedo) = {
+            let loader = engine.world.read_resource::<Loader>();
 
+            let meshes = &engine.world.read_resource();
+            let textures = &engine.world.read_resource();
+            let mesh: MeshHandle = loader.load_from_data(verts, meshes);
+            let albedo = loader.load_from_data(albedo, textures);
+
+            (mesh, albedo)
+        };
 
         println!("Create spheres");
         for i in 0..5 {
@@ -59,20 +45,26 @@ impl State for Example {
                     [2.0f32 * (i - 2) as f32, 2.0f32 * (j - 2) as f32, 0.0].into(),
                 );
 
-                let metallic = Texture::from_color_val([metallic, metallic, metallic, 1.0]);
-                let roughness = Texture::from_color_val([roughness, roughness, roughness, 1.0]);
+                let metallic = TextureData::color([metallic, metallic, metallic, 1.0]);
+                let roughness = TextureData::color([roughness, roughness, roughness, 1.0]);
 
-                let mtl = mtl.clone()
-                    .with_metallic(metallic)
-                    .with_roughness(roughness);
+                let (metallic, roughness) = {
+                    let loader = engine.world.read_resource::<Loader>();
+                    let textures = &engine.world.read_resource();
 
-                let mtl = load_proc_asset(engine, move |engine| {
-                    let factory = engine.world.read_resource::<Factory>();
-                    factory
-                        .create_material(mtl)
-                        .map(MaterialComponent)
-                        .map_err(BoxedErr::new)
-                });
+                    let metallic = loader.load_from_data(metallic, textures);
+                    let roughness = loader.load_from_data(roughness, textures);
+
+                    (metallic, roughness)
+                };
+
+                let mtl = Material {
+                    albedo: albedo.clone(),
+                    metallic,
+                    roughness,
+                    ..mat_defaults.clone()
+                };
+
                 engine
                     .world
                     .create_entity()
@@ -83,33 +75,24 @@ impl State for Example {
             }
         }
 
-
         println!("Create lights");
-        engine
-            .world
-            .create_entity()
-            .with(LightComponent(
-                PointLight {
-                    center: [6.0, 6.0, -6.0].into(),
-                    intensity: 6.0,
-                    color: [0.8, 0.0, 0.0].into(),
-                    ..PointLight::default()
-                }.into(),
-            ))
-            .build();
+        let light1: Light = PointLight {
+            center: [6.0, 6.0, -6.0].into(),
+            intensity: 6.0,
+            color: [0.8, 0.0, 0.0].into(),
+            ..PointLight::default()
+        }.into();
 
-        engine
-            .world
-            .create_entity()
-            .with(LightComponent(
-                PointLight {
-                    center: [6.0, -6.0, -6.0].into(),
-                    intensity: 5.0,
-                    color: [0.0, 0.3, 0.7].into(),
-                    ..PointLight::default()
-                }.into(),
-            ))
-            .build();
+        let light2: Light = PointLight {
+            center: [6.0, -6.0, -6.0].into(),
+            intensity: 5.0,
+            color: [0.0, 0.3, 0.7].into(),
+            ..PointLight::default()
+        }.into();
+
+        engine.world.create_entity().with(light1).build();
+
+        engine.world.create_entity().with(light2).build();
 
         println!("Put camera");
         engine.world.add_resource(Camera {
@@ -141,14 +124,7 @@ impl State for Example {
 }
 
 
-type DrawPbm = pass::DrawPbm<
-    PosNormTangTex,
-    AmbientColor,
-    MeshComponent,
-    MaterialComponent,
-    Transform,
-    LightComponent,
->;
+type DrawPbm = pass::DrawPbm<PosNormTangTex, AmbientColor, Transform>;
 
 fn run() -> Result<(), amethyst::Error> {
     let path = format!(
@@ -156,16 +132,20 @@ fn run() -> Result<(), amethyst::Error> {
         env!("CARGO_MANIFEST_DIR")
     );
     let config = DisplayConfig::load(&path);
-    let mut game = Application::build(Example)?
-        .with_bundle(
-            RenderBundle::new(
-                Pipeline::build().with_stage(
-                    Stage::with_backbuffer()
-                        .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-                        .with_pass(DrawPbm::new()),
-                ),
-            ).with_config(config),
-        )?
+
+    let resources = format!(
+        "{}/examples/06_material/resources/",
+        env!("CARGO_MANIFEST_DIR")
+    );
+
+    let pipe = Pipeline::build().with_stage(
+        Stage::with_backbuffer()
+            .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
+            .with_pass(DrawPbm::new()),
+    );
+    let mut game = Application::build(&resources, Example)?
+        .with_bundle(RenderBundle::new())?
+        .with_local(create_render_system(pipe, Some(config))?)
         .build()?;
     Ok(game.run())
 }
