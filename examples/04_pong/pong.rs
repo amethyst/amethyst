@@ -1,13 +1,11 @@
 use {ARENA_HEIGHT, ARENA_WIDTH};
 use {Ball, Paddle, Side};
-use amethyst::assets::{AssetFuture, BoxedErr, Loader};
+use amethyst::assets::{BoxedErr, Loader};
 use amethyst::ecs::World;
-use amethyst::ecs::rendering::{Factory, MaterialComponent, MeshComponent};
 use amethyst::ecs::transform::{LocalTransform, Transform};
 use amethyst::prelude::*;
 use amethyst::renderer::MeshHandle;
 use amethyst::renderer::prelude::*;
-use futures::prelude::*;
 
 pub struct Pong;
 
@@ -149,17 +147,22 @@ fn create_mesh(world: &World, vertices: Vec<PosTex>) -> MeshHandle {
 }
 
 /// Creates a solid material of the specified colour.
-fn create_colour_material(world: &mut World, colour: [f32; 4]) -> AssetFuture<MaterialComponent> {
-    let texture = Texture::from_color_val(colour);
-    let material = MaterialBuilder::new().with_albedo(texture);
+fn create_colour_material(world: &World, colour: [f32; 4]) -> Material {
+    // TODO: optimize
 
-    load_asset(world, move |world| {
-        let factory = world.read_resource::<Factory>();
-        factory
-            .create_material(material)
-            .map(MaterialComponent)
-            .map_err(BoxedErr::new)
-    })
+    use amethyst::renderer::{MaterialDefaults};
+    use amethyst::renderer::formats::TextureData;
+
+    let mat_defaults = world.read_resource::<MaterialDefaults>();
+    let loader = world.read_resource::<Loader>();
+
+    let albedo = loader.load_from_data(TextureData::color(colour), &world.read_resource());
+
+    Material {
+        albedo,
+        ..mat_defaults.0.clone()
+
+    }
 }
 
 /// Generates vertices for a circle. The circle will be made of `resolution`

@@ -13,7 +13,7 @@ use amethyst::Result;
 use amethyst::ecs::{Component, DenseVecStorage};
 use amethyst::ecs::audio::AudioBundle;
 use amethyst::ecs::input::InputBundle;
-use amethyst::ecs::rendering::{MaterialComponent, MeshComponent, RenderBundle};
+use amethyst::ecs::rendering::{ RenderBundle, create_render_system};
 use amethyst::ecs::transform::{Transform, TransformBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::Config as DisplayConfig;
@@ -37,8 +37,8 @@ const AUDIO_MUSIC: &'static [&'static str] = &[
     "Computer_Music_All-Stars_-_Wheres_My_Jetpack.ogg",
     "Computer_Music_All-Stars_-_Albatross_v2.ogg",
 ];
-const AUDIO_BOUNCE: &'static str = "bounce.ogg";
-const AUDIO_SCORE: &'static str = "score.ogg";
+const AUDIO_BOUNCE: &'static str = "audio/bounce.ogg";
+const AUDIO_SCORE: &'static str = "audio/score.ogg";
 
 type DrawFlat = pass::DrawFlat<PosTex, Transform>;
 
@@ -50,7 +50,6 @@ fn main() {
 }
 
 fn run() -> Result<()> {
-    use amethyst::assets::Directory;
     use pong::Pong;
 
     let display_config_path = format!(
@@ -82,8 +81,9 @@ fn run() -> Result<()> {
         )?
         .with_bundle(PongBundle)?
         .with_bundle(TransformBundle::new().with_dep(&["ball_system", "paddle_system"]))?
-        .with_bundle(AudioBundle::new())?
-        .with_bundle(RenderBundle::new(pipe, Some(display_config)))?;
+        .with_bundle(AudioBundle::new(|| None))?
+        .with_bundle(RenderBundle::new())?
+        .with_local(create_render_system(pipe, Some(display_config))?);
     Ok(game.build()?.run())
 }
 

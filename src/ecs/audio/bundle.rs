@@ -2,7 +2,7 @@
 
 use core::bundle::{ECSBundle, Result};
 
-use assets::Processor;
+use assets::{AssetStorage, Processor};
 use audio::{AudioSink, Source, SourceHandle};
 use audio::output::{default_output, Output};
 use ecs::{DispatcherBuilder, World};
@@ -61,6 +61,8 @@ where
             .read_resource::<Option<Output>>()
             .as_ref()
             .map(|audio_output| AudioSink::new(audio_output));
+
+        world.add_resource(AssetStorage::<Source>::new());
 
         if let Some(sink) = sink {
             world.add_resource(sink);
