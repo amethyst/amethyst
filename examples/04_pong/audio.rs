@@ -1,4 +1,4 @@
-use amethyst::assets::{AssetStorage, Progress, Loader};
+use amethyst::assets::{AssetStorage, Loader, Progress};
 use amethyst::audio::{Source, SourceHandle};
 use amethyst::audio::output::Output;
 use amethyst::ecs::World;
@@ -30,24 +30,24 @@ pub fn initialise_audio(world: &mut World) {
     let sound_effects = {
         let loader = world.read_resource::<Loader>();
 
-//        // Add a DJ if we have sound output and background music tracks.
-//        if world.read_resource::<Option<Output>>().is_some() && AUDIO_MUSIC.len() > 0 {
-//            let mut dj = world.write_resource::<Dj>();
-//            dj.set_volume(0.25); // Music is a bit loud, reduce the volume.
-//            let mut next_track_index = 0;
-//
-//            let music_tracks: Vec<_> = AUDIO_MUSIC
-//                .iter()
-//                .map(|file| load_audio_track(&loader, &world, file))
-//                .collect();
-//
-//            dj.set_picker(Box::new(move |ref mut dj| {
-//                dj.append(&music_tracks[next_track_index])
-//                    .expect("Decoder error occurred!");
-//                next_track_index = (next_track_index + 1) % music_tracks.len();
-//                true
-//            }));
-//        }
+        //        // Add a DJ if we have sound output and background music tracks.
+        //        if world.read_resource::<Option<Output>>().is_some() && AUDIO_MUSIC.len() > 0 {
+        //            let mut dj = world.write_resource::<Dj>();
+        //            dj.set_volume(0.25); // Music is a bit loud, reduce the volume.
+        //            let mut next_track_index = 0;
+        //
+        //            let music_tracks: Vec<_> = AUDIO_MUSIC
+        //                .iter()
+        //                .map(|file| load_audio_track(&loader, &world, file))
+        //                .collect();
+        //
+        //            dj.set_picker(Box::new(move |ref mut dj| {
+        //                dj.append(&music_tracks[next_track_index])
+        //                    .expect("Decoder error occurred!");
+        //                next_track_index = (next_track_index + 1) % music_tracks.len();
+        //                true
+        //            }));
+        //        }
 
         Sounds {
             bounce_sfx: load_audio_track(&loader, &world, AUDIO_BOUNCE),

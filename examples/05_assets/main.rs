@@ -3,35 +3,32 @@
 
 extern crate amethyst;
 extern crate cgmath;
-extern crate futures;
 extern crate rayon;
 
+use std::sync::Arc;
+
 use amethyst::{Application, Error, State, Trans};
-use amethyst::assets::{AssetFuture, BoxedErr, Context, Format, Loader, NoError};
+use amethyst::assets::{BoxedErr, Format, Loader, Progress, Source};
 use amethyst::config::Config;
 use amethyst::ecs::World;
 use amethyst::ecs::input::InputBundle;
-use amethyst::ecs::rendering::{AmbientColor, Factory, LightComponent, MaterialComponent,
-                               MeshComponent, MeshContext, RenderBundle, TextureComponent,
-                               TextureContext};
+use amethyst::ecs::rendering::{create_render_system, AmbientColor, RenderBundle};
 use amethyst::ecs::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::{Camera, Config as DisplayConfig, Rgba};
-use amethyst::renderer::formats::{BmpFormat, PngFormat};
+use amethyst::renderer::formats::MeshData;
 use amethyst::renderer::prelude::*;
-use cgmath::{Deg, Euler, Quaternion};
-use futures::Future;
-use rayon::ThreadPool;
 
 struct Custom;
 
-impl Format for Custom {
-    const EXTENSIONS: &'static [&'static str] = &["custom"];
-    type Data = Vec<PosNormTex>;
-    type Error = NoError;
-    type Result = Result<Vec<PosNormTex>, NoError>;
+impl Format<Mesh> for Custom {
+    const NAME: &'static str = "CUSTOM";
 
-    fn parse(&self, bytes: Vec<u8>, _: &ThreadPool) -> Self::Result {
+    type Options = ();
+
+    /// Reads the given bytes and produces asset data.
+    fn import(&self, name: String, source: Arc<Source>, _: ()) -> Result<MeshData, BoxedErr> {
+        let bytes = source.load(&name)?;
         let data: String = String::from_utf8(bytes).unwrap();
 
         let trimmed: Vec<&str> = data.lines().filter(|line| line.len() >= 1).collect();
@@ -41,7 +38,7 @@ impl Format for Custom {
         for line in trimmed {
             let nums: Vec<&str> = line.split_whitespace().collect();
 
-            let vertex = [
+            let position = [
                 nums[0].parse::<f32>().unwrap(),
                 nums[1].parse::<f32>().unwrap(),
                 nums[2].parse::<f32>().unwrap(),
@@ -54,12 +51,12 @@ impl Format for Custom {
             ];
 
             result.push(PosNormTex {
-                position: vertex,
-                normal: normal,
+                position,
+                normal,
                 tex_coord: [0.0, 0.0],
             });
         }
-        Ok(result)
+        Ok(result.into())
     }
 }
 
@@ -68,67 +65,37 @@ struct AssetsExample;
 
 impl State for AssetsExample {
     fn on_start(&mut self, engine: &mut Engine) {
-        use amethyst::renderer::formats::ObjFormat;
+        use amethyst::renderer::MaterialDefaults;
+        use amethyst::renderer::formats::TextureData;
 
         engine.world.add_resource(0usize);
 
         initialise_camera(&mut engine.world.write_resource::<Camera>());
         initialise_lights(&mut engine.world);
 
-        // Add teapot and lid to scene
-        for mesh in vec!["lid", "teapot"].iter() {
-            let mut trans = LocalTransform::default();
-            trans.rotation = Quaternion::from(Euler::new(Deg(90.0), Deg(-90.0), Deg(0.0))).into();
-            trans.translation = [5.0, 0.0, 5.0];
-            let mesh = load_mesh(engine, mesh, ObjFormat);
-            let mtl = make_material(engine, [0.0, 0.0, 1.0, 1.0]);
-            engine
-                .world
-                .create_entity()
-                .with(mesh)
-                .with(mtl)
-                .with(trans)
-                .with(Transform::default())
-                .build();
-        }
-
         // Add custom cube object to scene
-        let mesh = load_mesh(engine, "cuboid", Custom);
-        let mtl = make_material(engine, [0.0, 0.0, 1.0, 1.0]);
+        let (mesh, mtl) = {
+            let mut p = Progress::new();
+
+            let mat_defaults = engine.world.read_resource::<MaterialDefaults>();
+            let loader = engine.world.read_resource::<Loader>();
+
+            let meshes = &engine.world.read_resource();
+            let textures = &engine.world.read_resource();
+
+            let mesh = loader.load("cuboid.custom", Custom, (), &mut p, meshes);
+            let albedo = loader.load_from_data(TextureData::color([0.0, 0.0, 1.0, 0.0]), textures);
+            let mat = Material {
+                albedo,
+                ..mat_defaults.0.clone()
+            };
+
+            (mesh, mat)
+        };
+
         let mut trans = LocalTransform::default();
         trans.translation = [-5.0, 0.0, 0.0];
         trans.scale = [2.0, 2.0, 2.0];
-        engine
-            .world
-            .create_entity()
-            .with(mesh)
-            .with(mtl)
-            .with(trans)
-            .with(Transform::default())
-            .build();
-
-        // Add cube to scene
-        let mesh = load_mesh(engine, "cube", ObjFormat);
-        let mtl = load_material(engine, "crate", PngFormat);
-        let mut trans = LocalTransform::default();
-        trans.translation = [5.0, 0.0, 0.0];
-        trans.scale = [2.0, 2.0, 2.0];
-        engine
-            .world
-            .create_entity()
-            .with(mesh)
-            .with(mtl)
-            .with(trans)
-            .with(Transform::default())
-            .build();
-
-        // Add sphere to scene
-        let mesh = load_mesh(engine, "sphere", ObjFormat);
-        let mtl = load_material(engine, "grass", BmpFormat);
-        let mut trans = LocalTransform::default();
-        trans.translation = [-5.0, 0.0, 7.5];
-        trans.rotation = Quaternion::from(Euler::new(Deg(90.0), Deg(0.0), Deg(0.0))).into();
-        trans.scale = [0.15, 0.15, 0.15];
         engine
             .world
             .create_entity()
@@ -172,19 +139,10 @@ fn main() {
     }
 }
 
-type DrawShaded = pass::DrawShaded<
-    PosNormTex,
-    AmbientColor,
-    MeshComponent,
-    MaterialComponent,
-    Transform,
-    LightComponent,
->;
+type DrawShaded = pass::DrawShaded<PosNormTex, AmbientColor, Transform>;
 
 /// Wrapper around the main, so we can return errors easily.
 fn run() -> Result<(), Error> {
-    use amethyst::assets::Directory;
-
     // Add our meshes directory to the asset loader.
     let resources_directory = format!(
         "{}/examples/05_assets/resources",
@@ -203,18 +161,20 @@ fn run() -> Result<(), Error> {
             .with_pass(DrawShaded::new()),
     );
 
-    let mut game = Application::build(AssetsExample)
+    let mut game = Application::build(resources_directory, AssetsExample)
         .expect("Failed to build ApplicationBuilder for an unknown reason.")
         .with_bundle(InputBundle::<String, String>::new())?
         .with_bundle(TransformBundle::new())?
-        .with_bundle(RenderBundle::new(pipeline_builder).with_config(display_config))?
-        .with_store("resources", Directory::new(resources_directory))
+        .with_bundle(RenderBundle::new())?
+        .with_local(create_render_system(
+            pipeline_builder,
+            Some(display_config),
+        )?)
         .build()?;
 
     game.run();
     Ok(())
 }
-
 
 /// Initialises the camera structure.
 fn initialise_camera(camera: &mut Camera) {
@@ -231,65 +191,15 @@ fn initialise_camera(camera: &mut Camera) {
 
 /// Adds lights to the scene.
 fn initialise_lights(world: &mut World) {
-    use amethyst::ecs::rendering::LightComponent;
-    use amethyst::renderer::light::PointLight;
+    use amethyst::renderer::light::{Light, PointLight};
 
-    let light = PointLight {
+    let light: Light = PointLight {
         center: [5.0, -20.0, 15.0].into(),
         intensity: 100.0,
         radius: 1.0,
         color: Rgba::white(),
         ..Default::default()
-    };
+    }.into();
 
-    world
-        .create_entity()
-        .with(LightComponent(light.into()))
-        .build();
-}
-
-fn load_material<F>(engine: &mut Engine, albedo: &str, format: F) -> AssetFuture<MaterialComponent>
-where
-    F: Format + 'static,
-    F::Data: Into<<TextureContext as Context>::Data>,
-{
-    let future = {
-        let factory = engine.world.read_resource::<Factory>();
-        factory
-            .create_material(MaterialBuilder::new())
-            .map_err(BoxedErr::new)
-    }.join({
-        let loader = engine.world.read_resource::<Loader>();
-        loader.load_from::<TextureComponent, _, _, _>(albedo, format, "resources")
-    })
-        .map(|(mut mtl, albedo)| {
-            mtl.albedo = albedo.0.inner();
-            MaterialComponent(mtl)
-        });
-    AssetFuture::from_future(future)
-}
-
-fn make_material(engine: &mut Engine, albedo: [f32; 4]) -> AssetFuture<MaterialComponent> {
-    let future = {
-        let factory = engine.world.read_resource::<Factory>();
-        factory
-            .create_material(
-                MaterialBuilder::new().with_albedo(TextureBuilder::from_color_val(albedo)),
-            )
-            .map(MaterialComponent)
-            .map_err(BoxedErr::new)
-    };
-    AssetFuture::from_future(future)
-}
-
-fn load_mesh<F>(engine: &mut Engine, name: &str, f: F) -> AssetFuture<MeshComponent>
-where
-    F: Format + 'static,
-    F::Data: Into<<MeshContext as Context>::Data>,
-{
-    let future = {
-        let loader = engine.world.read_resource::<Loader>();
-        loader.load_from::<MeshComponent, _, _, _>(name, f, "resources")
-    };
-    future
+    world.create_entity().with(light).build();
 }

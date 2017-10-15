@@ -150,7 +150,7 @@ fn create_mesh(world: &World, vertices: Vec<PosTex>) -> MeshHandle {
 fn create_colour_material(world: &World, colour: [f32; 4]) -> Material {
     // TODO: optimize
 
-    use amethyst::renderer::{MaterialDefaults};
+    use amethyst::renderer::MaterialDefaults;
     use amethyst::renderer::formats::TextureData;
 
     let mat_defaults = world.read_resource::<MaterialDefaults>();
@@ -161,7 +161,6 @@ fn create_colour_material(world: &World, colour: [f32; 4]) -> Material {
     Material {
         albedo,
         ..mat_defaults.0.clone()
-
     }
 }
 

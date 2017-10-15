@@ -1,5 +1,5 @@
 use {Ball, Paddle, Side};
-use amethyst::assets::{AssetStorage};
+use amethyst::assets::AssetStorage;
 use amethyst::audio::Source;
 use amethyst::audio::output::Output;
 use amethyst::ecs::{Fetch, Join, ReadStorage, System, WriteStorage};
@@ -20,9 +20,10 @@ impl<'s> System<'s> for BounceSystem {
         Fetch<'s, Option<Output>>,
     );
 
-    fn run(&mut self, (mut balls, paddles, transforms,  storage, sounds, audio_output):
-                        Self::SystemData)
-    {
+    fn run(
+        &mut self,
+        (mut balls, paddles, transforms, storage, sounds, audio_output): Self::SystemData,
+    ) {
         // Check whether a ball collided, and bounce off accordingly.
         //
         // We also check for the velocity of the ball every time, to prevent multiple collisions

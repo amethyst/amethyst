@@ -1,5 +1,5 @@
 use {Ball, ScoreBoard};
-use amethyst::assets::{AssetStorage};
+use amethyst::assets::AssetStorage;
 use amethyst::audio::Source;
 use amethyst::audio::output::Output;
 use amethyst::ecs::{Fetch, FetchMut, Join, System, WriteStorage};
@@ -25,7 +25,7 @@ impl<'s> System<'s> for WinnerSystem {
         &mut self,
         (mut balls, mut transforms, mut score_board, storage, sounds, audio_output):
         Self::SystemData,
-    ) {
+){
         for (ball, transform) in (&mut balls, &mut transforms).join() {
             use ARENA_WIDTH;
 
