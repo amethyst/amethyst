@@ -2,7 +2,6 @@
 
 extern crate amethyst;
 
-use amethyst::ecs::rendering::{MaterialComponent, MeshComponent};
 use amethyst::ecs::rendering::{create_render_system, RenderBundle};
 use amethyst::ecs::transform::Transform;
 use amethyst::event::{KeyboardInput, VirtualKeyCode};
@@ -33,7 +32,7 @@ impl State for Example {
 }
 
 
-type DrawFlat = pass::DrawFlat<PosNormTex, MeshComponent, MaterialComponent, Transform>;
+type DrawFlat = pass::DrawFlat<PosNormTex, Transform>;
 
 fn run() -> Result<(), amethyst::Error> {
     let path = format!(

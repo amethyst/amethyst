@@ -7,7 +7,6 @@ use assets::AssetStorage;
 use shred::Resources;
 use shrev::EventChannel;
 use specs::common::Errors;
-use specs::error::BoxedErr;
 use winit::{DeviceEvent, Event, WindowEvent};
 
 use ecs::{Fetch, FetchMut, RunNow, SystemData};
@@ -44,18 +43,9 @@ where
         &mut self,
         (errors, mut mesh_storage, mut texture_storage): AssetLoadingData,
     ) {
-        mesh_storage.process(
-            |mesh_data| {
-                Ok(create_mesh_asset(mesh_data, &mut self.renderer)
-                    .map_err(|err| BoxedErr::new(err))?)
-            },
-            &*errors,
-        );
+        mesh_storage.process(|d| create_mesh_asset(d, &mut self.renderer), &errors);
 
-        texture_storage.process(
-            |texture_data| Ok(create_texture_asset(texture_data, &mut self.renderer)?),
-            &*errors,
-        );
+        texture_storage.process(|d| create_texture_asset(d, &mut self.renderer), &errors);
     }
 
     fn do_render(

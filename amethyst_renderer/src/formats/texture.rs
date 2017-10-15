@@ -208,9 +208,9 @@ fn apply_options<D, T>(
     mut tb: TextureBuilder<D, T>,
     options: Option<TextureMetadata>,
 ) -> TextureBuilder<D, T>
-    where
-        D: AsRef<[T]>,
-        T: Pod + Copy,
+where
+    D: AsRef<[T]>,
+    T: Pod + Copy,
 {
     match options {
         Some(metadata) => {

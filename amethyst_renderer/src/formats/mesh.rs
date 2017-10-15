@@ -166,9 +166,10 @@ fn from_data(obj_set: ObjSet) -> Vec<PosNormTex> {
 }
 
 /// Create mesh
-pub fn create_mesh_asset(data: MeshData, renderer: &mut Renderer) -> ::error::Result<Mesh> {
+pub fn create_mesh_asset(data: MeshData, renderer: &mut Renderer) -> Result<Mesh, BoxedErr> {
     use MeshBuilder;
-    match data {
+
+    let data = match data {
         MeshData::PosColor(ref vertices) => {
             let mb = MeshBuilder::new(vertices);
             renderer.create_mesh(mb)
@@ -185,6 +186,7 @@ pub fn create_mesh_asset(data: MeshData, renderer: &mut Renderer) -> ::error::Re
             let mb = MeshBuilder::new(vertices);
             renderer.create_mesh(mb)
         }
-    }
-}
+    };
 
+    data.map_err(|err| BoxedErr::new(err))
+}

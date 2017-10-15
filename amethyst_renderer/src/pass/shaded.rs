@@ -27,23 +27,17 @@ static FRAG_SRC: &[u8] = include_bytes!("shaders/fragment/shaded.glsl");
 /// Draw mesh with simple lighting technique
 /// `V` is `VertexFormat`
 /// `A` is ambient light resource
-/// `M` is `Mesh` component
-/// `N` is `Material` component
 /// `T` is transform matrix component
-/// `L` is `Light` component
 #[derive(Clone, Debug, PartialEq)]
-pub struct DrawShaded<V, A, M, N, T, L> {
-    _pd: PhantomData<(V, A, M, N, T, L)>,
+pub struct DrawShaded<V, A, T> {
+    _pd: PhantomData<(V, A, T)>,
 }
 
-impl<V, A, M, N, T, L> DrawShaded<V, A, M, N, T, L>
+impl<V, A, T> DrawShaded<V, A, T>
 where
     V: Query<(Position, Normal, TexCoord)>,
     A: AsRef<Rgba> + Send + Sync + 'static,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
-    M: Component + AsRef<Mesh> + Send + Sync,
-    N: Component + AsRef<Material> + Send + Sync,
-    L: Component + AsRef<Light> + Send + Sync,
 {
     /// Create instance of `DrawShaded` pass
     pub fn new() -> Self {
@@ -91,46 +85,37 @@ struct DirectionalLightPod {
 
 unsafe impl Pod for DirectionalLightPod {}
 
-impl<'a, V, A, M, N, T, L> PassData<'a> for DrawShaded<V, A, M, N, T, L>
+impl<'a, V, A, T> PassData<'a> for DrawShaded<V, A, T>
 where
     V: Query<(Position, Normal, TexCoord)>,
     A: AsRef<Rgba> + Send + Sync + 'static,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
-    M: Component + AsRef<Mesh> + Send + Sync,
-    N: Component + AsRef<Material> + Send + Sync,
-    L: Component + AsRef<Light> + Send + Sync,
 {
     type Data = (
         Option<Fetch<'a, Camera>>,
         Fetch<'a, A>,
-        ReadStorage<'a, M>,
-        ReadStorage<'a, N>,
+        ReadStorage<'a, Mesh>,
+        ReadStorage<'a, Material>,
         ReadStorage<'a, T>,
-        ReadStorage<'a, L>,
+        ReadStorage<'a, Light>,
     );
 }
 
-impl<'a, V, A, M, N, T, L> PassApply<'a> for DrawShaded<V, A, M, N, T, L>
+impl<'a, V, A, T> PassApply<'a> for DrawShaded<V, A, T>
 where
     V: Query<(Position, Normal, TexCoord)>,
     A: AsRef<Rgba> + Send + Sync + 'static,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
-    M: Component + AsRef<Mesh> + Send + Sync,
-    N: Component + AsRef<Material> + Send + Sync,
-    L: Component + AsRef<Light> + Send + Sync,
 {
-    type Apply = DrawShadedApply<'a, V, A, M, N, T, L>;
+    type Apply = DrawShadedApply<'a, V, A, T>;
 }
 
 
-impl<V, A, M, N, T, L> Pass for DrawShaded<V, A, M, N, T, L>
+impl<V, A, T> Pass for DrawShaded<V, A, T>
 where
     V: Query<(Position, Normal, TexCoord)>,
     A: AsRef<Rgba> + Send + Sync + 'static,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
-    M: Component + AsRef<Mesh> + Send + Sync,
-    N: Component + AsRef<Material> + Send + Sync,
-    L: Component + AsRef<Light> + Send + Sync,
 {
     fn compile(&self, effect: NewEffect) -> Result<Effect> {
         effect
@@ -154,52 +139,41 @@ where
         (camera, ambient, mesh, material, global, light): (
             Option<Fetch<'a, Camera>>,
             Fetch<'a, A>,
-            ReadStorage<'a, M>,
-            ReadStorage<'a, N>,
+            ReadStorage<'a, Mesh>,
+            ReadStorage<'a, Material>,
             ReadStorage<'a, T>,
-            ReadStorage<'a, L>,
+            ReadStorage<'a, Light>,
         ),
-    ) -> DrawShadedApply<'a, V, A, M, N, T, L> {
+    ) -> DrawShadedApply<'a, V, A, T> {
         DrawShadedApply {
-            camera: camera,
-            mesh: mesh,
-            material: material,
-            global: global,
-            ambient: ambient,
-            light: light,
-            supplier: supplier,
+            camera,
+            mesh,
+            material,
+            global,
+            ambient,
+            light,
+            supplier,
             pd: PhantomData,
         }
     }
 }
 
-pub struct DrawShadedApply<
-    'a,
-    V,
-    A: 'static,
-    M: Component,
-    N: Component,
-    T: Component,
-    L: Component,
-> {
+pub struct DrawShadedApply<'a, V, A: 'static, T: Component> {
     camera: Option<Fetch<'a, Camera>>,
     ambient: Fetch<'a, A>,
-    mesh: ReadStorage<'a, M>,
-    material: ReadStorage<'a, N>,
+    mesh: ReadStorage<'a, Mesh>,
+    material: ReadStorage<'a, Material>,
     global: ReadStorage<'a, T>,
-    light: ReadStorage<'a, L>,
+    light: ReadStorage<'a, Light>,
     supplier: Supplier<'a>,
     pd: PhantomData<V>,
 }
 
-impl<'a, V, A, M, N, T, L> ParallelIterator for DrawShadedApply<'a, V, A, M, N, T, L>
+impl<'a, V, A, T> ParallelIterator for DrawShadedApply<'a, V, A, T>
 where
     V: Query<(Position, Normal, TexCoord)>,
     A: AsRef<Rgba> + Send + Sync + 'static,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
-    M: Component + AsRef<Mesh> + Send + Sync,
-    N: Component + AsRef<Material> + Send + Sync,
-    L: Component + AsRef<Light> + Send + Sync,
 {
     type Item = ();
 
@@ -226,14 +200,10 @@ where
             .supply((&mesh, &material, &global).par_join().map(
                 |(mesh, material, global)| {
                     move |encoder: &mut Encoder, effect: &mut Effect| {
-                        let mesh = mesh.as_ref();
-
                         let vbuf = match mesh.buffer(V::QUERIED_ATTRIBUTES) {
                             Some(vbuf) => vbuf.clone(),
                             None => return,
                         };
-
-                        let material = material.as_ref();
 
                         let vertex_args = camera
                             .as_ref()
@@ -255,7 +225,7 @@ where
 
                         let point_lights: Vec<PointLightPod> = light
                             .join()
-                            .filter_map(|light| if let Light::Point(ref light) = *light.as_ref() {
+                            .filter_map(|light| if let Light::Point(ref light) = *light {
                                 Some(PointLightPod {
                                     position: pad(light.center.into()),
                                     color: pad(light.color.into()),
@@ -269,15 +239,13 @@ where
 
                         let directional_lights: Vec<DirectionalLightPod> = light
                             .join()
-                            .filter_map(|light| {
-                                if let Light::Directional(ref light) = *light.as_ref() {
-                                    Some(DirectionalLightPod {
-                                        color: pad(light.color.into()),
-                                        direction: pad(light.direction.into()),
-                                    })
-                                } else {
-                                    None
-                                }
+                            .filter_map(|light| if let Light::Directional(ref light) = *light {
+                                Some(DirectionalLightPod {
+                                    color: pad(light.color.into()),
+                                    direction: pad(light.direction.into()),
+                                })
+                            } else {
+                                None
                             })
                             .collect();
 
