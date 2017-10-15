@@ -76,7 +76,9 @@ pub struct JpgFormat;
 impl Format<Texture> for JpgFormat {
     const NAME: &'static str = "JPEG";
 
-    fn import(&self, name: String, source: Arc<Source>) -> Result<TextureData, BoxedErr> {
+    type Options = ();
+
+    fn import(&self, name: String, source: Arc<Source>, _: ()) -> Result<TextureData, BoxedErr> {
         imagefmt::jpeg::read(&mut Cursor::new(source.load(&name)?), ColFmt::RGBA)
             .map(|raw| TextureData::Image(ImageData { raw }, None))
             .map_err(BoxedErr::new)
@@ -89,7 +91,9 @@ pub struct PngFormat;
 impl Format<Texture> for PngFormat {
     const NAME: &'static str = "JPEG";
 
-    fn import(&self, name: String, source: Arc<Source>) -> Result<TextureData, BoxedErr> {
+    type Options = ();
+
+    fn import(&self, name: String, source: Arc<Source>, _: ()) -> Result<TextureData, BoxedErr> {
         imagefmt::png::read(&mut Cursor::new(source.load(&name)?), ColFmt::RGBA)
             .map(|raw| TextureData::Image(ImageData { raw }, None))
             .map_err(BoxedErr::new)
@@ -102,7 +106,9 @@ pub struct BmpFormat;
 impl Format<Texture> for BmpFormat {
     const NAME: &'static str = "BMP";
 
-    fn import(&self, name: String, source: Arc<Source>) -> Result<TextureData, BoxedErr> {
+    type Options = ();
+
+    fn import(&self, name: String, source: Arc<Source>, _: ()) -> Result<TextureData, BoxedErr> {
         imagefmt::bmp::read(&mut Cursor::new(source.load(&name)?), ColFmt::RGBA)
             .map(|raw| TextureData::Image(ImageData { raw }, None))
             .map_err(BoxedErr::new)

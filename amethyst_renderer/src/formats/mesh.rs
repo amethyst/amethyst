@@ -97,7 +97,9 @@ pub struct ObjFormat;
 impl Format<Mesh> for ObjFormat {
     const NAME: &'static str = "WAVEFRONT_OBJ";
 
-    fn import(&self, name: String, source: Arc<Source>) -> Result<MeshData, BoxedErr> {
+    type Options = ();
+
+    fn import(&self, name: String, source: Arc<Source>, _: ()) -> Result<MeshData, BoxedErr> {
         String::from_utf8(source.load(&name)?)
             .map_err(ObjError::Utf8)
             .and_then(|string| parse(string).map_err(ObjError::Parse))

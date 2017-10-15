@@ -11,7 +11,9 @@ pub struct WavFormat;
 impl Format<Audio> for WavFormat {
     const NAME: &'static str = "WAV";
 
-    fn import(&self, name: String, source: Arc<Source>) -> Result<AudioData, BoxedErr> {
+    type Options = ();
+
+    fn import(&self, name: String, source: Arc<Source>, _: ()) -> Result<AudioData, BoxedErr> {
         source.load(&name).map(AudioData)
     }
 }
@@ -22,7 +24,9 @@ pub struct OggFormat;
 impl Format<Audio> for OggFormat {
     const NAME: &'static str = "OGG";
 
-    fn import(&self, name: String, source: Arc<Source>) -> Result<AudioData, BoxedErr> {
+    type Options = ();
+
+    fn import(&self, name: String, source: Arc<Source>, _: ()) -> Result<AudioData, BoxedErr> {
         source.load(&name).map(AudioData)
     }
 }
@@ -33,7 +37,9 @@ pub struct FlacFormat;
 impl Format<Audio> for FlacFormat {
     const NAME: &'static str = "FLAC";
 
-    fn import(&self, name: String, source: Arc<Source>) -> Result<AudioData, BoxedErr> {
+    type Options = ();
+
+    fn import(&self, name: String, source: Arc<Source>, _: ()) -> Result<AudioData, BoxedErr> {
         source.load(&name).map(AudioData)
     }
 }

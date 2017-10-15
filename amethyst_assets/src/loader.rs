@@ -34,14 +34,11 @@ impl Allocator {
     }
 }
 
-/// The asset loader, holding the contexts,
-/// the default (directory) store and a reference to the
-/// `ThreadPool`.
+/// The asset loader, holding the sources and a reference to the `ThreadPool`.
 pub struct Loader {
     directory: Arc<Directory>,
     pool: Arc<ThreadPool>,
     sources: FnvHashMap<String, Arc<Source>>,
-    //allocator: Allocator,
 }
 
 impl Loader {
@@ -77,6 +74,7 @@ impl Loader {
         &self,
         id: N,
         format: F,
+        options: F::Options,
         progress: &mut Progress,
         storage: &AssetStorage<A>,
     ) -> Handle<A>
@@ -85,7 +83,7 @@ impl Loader {
         F: Format<A>,
         N: Into<String>,
     {
-        self.load_from::<A, F, _, _>(id, format, "", progress, storage)
+        self.load_from::<A, F, _, _>(id, format, options, "", progress, storage)
     }
 
     /// Loads an asset with a given id and format from a custom source.
@@ -95,6 +93,7 @@ impl Loader {
         &self,
         name: N,
         format: F,
+        options: F::Options,
         source: &S,
         progress: &mut Progress,
         storage: &AssetStorage<A>,
@@ -121,7 +120,7 @@ impl Loader {
         let name = name.into();
 
         self.pool.spawn(move || {
-            let data = format.import(name.clone(), source);
+            let data = format.import(name.clone(), source, options);
             processed.push(Processed {
                 data,
                 format: F::NAME.into(),

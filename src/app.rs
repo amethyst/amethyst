@@ -203,7 +203,10 @@ impl<'a, 'b> Application<'a, 'b> {
 
         // TODO: replace
         // TODO: let the user handle
-        self.engine.world.write_resource::<Errors>().print_and_exit();
+        self.engine
+            .world
+            .write_resource::<Errors>()
+            .print_and_exit();
     }
 
     /// Cleans up after the quit signal is received.

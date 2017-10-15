@@ -14,8 +14,7 @@ use amethyst::ecs::{Fetch, FetchMut, Join, System, World, WriteStorage};
 use amethyst::ecs::rendering::{AmbientColor, RenderBundle};
 use amethyst::ecs::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::prelude::*;
-use amethyst::renderer::{Camera, Config as DisplayConfig, Rgba,
-                         MeshHandle, MaterialDefaults};
+use amethyst::renderer::{Camera, Config as DisplayConfig, MaterialDefaults, MeshHandle, Rgba};
 use amethyst::renderer::formats::{ObjFormat, PngFormat, TextureData};
 use amethyst::renderer::prelude::*;
 use amethyst::timing::Time;
@@ -60,13 +59,13 @@ impl<'a> System<'a> for ExampleSystem {
         camera.eye[1] = camera_orbit_radius * state.camera_angle.sin();
         camera.forward = target - camera.eye;
 
-        for point_light in (&mut lights).join().filter_map(|light| {
-            if let Light::Point(ref mut point_light) = *light {
+        for point_light in (&mut lights).join().filter_map(
+            |light| if let Light::Point(ref mut point_light) = *light {
                 Some(point_light)
             } else {
                 None
-            }
-        }) {
+            },
+        ) {
             point_light.center[0] = light_orbit_radius * state.light_angle.cos();
             point_light.center[1] = light_orbit_radius * state.light_angle.sin();
             point_light.center[2] = light_z;
@@ -146,7 +145,8 @@ impl State for Example {
         let mut trans = LocalTransform::default();
         trans.scale = [10.0; 3];
 
-        engine.world
+        engine
+            .world
             .create_entity()
             .with(assets.rectangle.clone())
             .with(assets.white.clone())
@@ -161,22 +161,14 @@ impl State for Example {
         }.into();
 
         // Add lights to scene
-        engine
-            .world
-            .create_entity()
-            .with(light)
-            .build();
+        engine.world.create_entity().with(light).build();
 
         let light: Light = DirectionalLight {
             color: [0.2; 4].into(),
             direction: [-1.0; 3].into(),
         }.into();
 
-        engine
-            .world
-            .create_entity()
-            .with(light)
-            .build();
+        engine.world.create_entity().with(light).build();
 
         {
             engine
@@ -253,18 +245,14 @@ impl State for Example {
                                 if state.directional_light {
                                     state.directional_light = false;
                                     for light in (&mut lights).join() {
-                                        if let Light::Directional(ref mut d) =
-                                            *light
-                                        {
+                                        if let Light::Directional(ref mut d) = *light {
                                             d.color = [0.0; 4].into();
                                         }
                                     }
                                 } else {
                                     state.directional_light = true;
                                     for light in (&mut lights).join() {
-                                        if let Light::Directional(ref mut d) =
-                                            *light
-                                        {
+                                        if let Light::Directional(ref mut d) = *light {
                                             d.color = [0.2; 4].into();
                                         }
                                     }
@@ -321,15 +309,15 @@ fn load_assets(world: &World) -> (Assets, Progress) {
     };
 
     let logo = Material {
-        albedo: loader.load("logo.png", PngFormat, &mut progress, &tex_storage),
+        albedo: loader.load("logo.png", PngFormat, (), &mut progress, &tex_storage),
         ..mat_defaults.0.clone()
     };
 
-    let cube = loader.load("cube.obj", ObjFormat, &mut progress, &mesh_storage);
-    let cone = loader.load("cone.obj", ObjFormat, &mut progress, &mesh_storage);
-    let lid = loader.load("lid.obj", ObjFormat, &mut progress, &mesh_storage);
-    let teapot = loader.load("teapot.obj", ObjFormat, &mut progress, &mesh_storage);
-    let rectangle = loader.load("rectangle.obj", ObjFormat, &mut progress, &mesh_storage);
+    let cube = loader.load("cube.obj", ObjFormat, (), &mut progress, &mesh_storage);
+    let cone = loader.load("cone.obj", ObjFormat, (), &mut progress, &mesh_storage);
+    let lid = loader.load("lid.obj", ObjFormat, (), &mut progress, &mesh_storage);
+    let teapot = loader.load("teapot.obj", ObjFormat, (), &mut progress, &mesh_storage);
+    let rectangle = loader.load("rectangle.obj", ObjFormat, (), &mut progress, &mesh_storage);
 
     let a = Assets {
         cube,
@@ -384,11 +372,7 @@ fn run() -> Result<(), Error> {
     Ok(())
 }
 
-type DrawShaded = pass::DrawShaded<
-    PosNormTex,
-    AmbientColor,
-    Transform,
->;
+type DrawShaded = pass::DrawShaded<PosNormTex, AmbientColor, Transform>;
 
 /// Initialises the camera structure.
 fn initialise_camera(camera: &mut Camera) {
@@ -402,4 +386,3 @@ fn initialise_camera(camera: &mut Camera) {
     camera.right = [1.0, 0.0, 0.0].into();
     camera.up = [0.0, 0.0, 1.0].into();
 }
-

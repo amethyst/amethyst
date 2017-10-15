@@ -66,7 +66,7 @@ fn run() -> Result<(), amethyst::Error> {
     let resources = format!(
         "{}/examples/02_sphere/resources/",
         env!("CARGO_MANIFEST_DIR")
-    );;
+    );
 
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()

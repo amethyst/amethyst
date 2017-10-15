@@ -49,7 +49,16 @@ impl AssetSpec {
 pub trait Format<A: Asset>: Send + 'static {
     /// A unique identifier for this format.
     const NAME: &'static str;
+    /// Options specific to the format, which are passed to `import`.
+    /// E.g. for textures this would be stuff like mipmap levels and
+    /// sampler info.
+    type Options: Send + 'static;
 
     /// Reads the given bytes and produces asset data.
-    fn import(&self, name: String, source: Arc<Source>) -> Result<A::Data, BoxedErr>;
+    fn import(
+        &self,
+        name: String,
+        source: Arc<Source>,
+        options: Self::Options,
+    ) -> Result<A::Data, BoxedErr>;
 }
