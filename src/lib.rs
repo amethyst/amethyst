@@ -68,7 +68,6 @@ extern crate crossbeam;
 #[macro_use]
 extern crate derivative;
 extern crate fnv;
-extern crate futures;
 extern crate gfx;
 extern crate rayon;
 extern crate rodio;

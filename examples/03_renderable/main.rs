@@ -5,7 +5,6 @@
 
 extern crate amethyst;
 extern crate cgmath;
-extern crate futures;
 
 use amethyst::{Application, Error, State, Trans};
 use amethyst::assets::{Loader, Progress};

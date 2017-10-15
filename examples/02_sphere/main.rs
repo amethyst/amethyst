@@ -2,7 +2,6 @@
 
 extern crate amethyst;
 extern crate cgmath;
-extern crate futures;
 extern crate genmesh;
 
 use amethyst::assets::Loader;
