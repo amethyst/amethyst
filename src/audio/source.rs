@@ -1,8 +1,11 @@
 //! Provides structures used to load audio files.
 
-use assets::{Asset, BoxedErr};
+use assets::{Asset, BoxedErr, Handle};
 
 use audio::formats::AudioData;
+
+/// A handle to a source asset.
+pub type SourceHandle = Handle<Source>;
 
 /// A loaded audio file
 #[derive(Clone)]

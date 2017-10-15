@@ -1,7 +1,6 @@
 //! TODO: Rewrite for new renderer.
 
 extern crate amethyst;
-extern crate futures;
 
 mod pong;
 mod systems;
@@ -41,7 +40,7 @@ const AUDIO_MUSIC: &'static [&'static str] = &[
 const AUDIO_BOUNCE: &'static str = "bounce.ogg";
 const AUDIO_SCORE: &'static str = "score.ogg";
 
-type DrawFlat = pass::DrawFlat<PosTex, MeshComponent, MaterialComponent, Transform>;
+type DrawFlat = pass::DrawFlat<PosTex, Transform>;
 
 fn main() {
     if let Err(e) = run() {
@@ -58,6 +57,7 @@ fn run() -> Result<()> {
         "{}/examples/04_pong/resources/display.ron",
         env!("CARGO_MANIFEST_DIR")
     );
+    let display_config = DisplayConfig::load(display_config_path);
 
     let key_bindings_path = format!(
         "{}/examples/04_pong/resources/input.ron",
@@ -66,7 +66,13 @@ fn run() -> Result<()> {
 
     let assets_dir = format!("{}/examples/04_pong/resources/", env!("CARGO_MANIFEST_DIR"));
 
-    let game = Application::build(Pong)?
+    let pipe = Pipeline::build().with_stage(
+        Stage::with_backbuffer()
+            .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
+            .with_pass(DrawFlat::new()),
+    );
+
+    let game = Application::build(assets_dir, Pong)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             144,
@@ -77,16 +83,7 @@ fn run() -> Result<()> {
         .with_bundle(PongBundle)?
         .with_bundle(TransformBundle::new().with_dep(&["ball_system", "paddle_system"]))?
         .with_bundle(DjBundle::new())?
-        .with_bundle(
-            RenderBundle::new(
-                Pipeline::build().with_stage(
-                    Stage::with_backbuffer()
-                        .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-                        .with_pass(DrawFlat::new()),
-                ),
-            ).with_config(DisplayConfig::load(display_config_path)),
-        )?
-        .with_store("assets", Directory::new(assets_dir));
+        .with_bundle(RenderBundle::new(pipe, Some(display_config)))?;
     Ok(game.build()?.run())
 }
 

@@ -11,7 +11,7 @@ pub struct PongBundle;
 
 impl<'a, 'b, T> ECSBundle<'a, 'b, T> for PongBundle {
     fn build(
-        &self,
+        self,
         builder: ApplicationBuilder<'a, 'b, T>,
     ) -> Result<ApplicationBuilder<'a, 'b, T>> {
         Ok(

@@ -1,5 +1,5 @@
 use amethyst::assets::Loader;
-use amethyst::audio::{AudioContext, Dj, Source};
+use amethyst::audio::{AudioContext, Dj, Source, SourceHandle};
 use amethyst::audio::output::Output;
 use amethyst::ecs::World;
 use futures::prelude::*;
@@ -10,13 +10,10 @@ pub struct Sounds {
 }
 
 /// Loads an ogg audio track.
-fn load_audio_track(loader: &mut Loader, file: &str) -> Source {
+fn load_audio_track(loader: &Loader, world: &World, file: &str) -> SourceHandle {
     use amethyst::audio::OggFormat;
 
-    loader
-        .load_from(file, OggFormat, "assets")
-        .wait()
-        .expect(&format!("Could not load audio track: '{}'", file))
+    loader.load(file, OggFormat, (), &mut Progress::new(), &world.read_resource())
 }
 
 /// Initialise audio in the world. This includes the background track and the
@@ -26,8 +23,7 @@ pub fn initialise_audio(world: &mut World) {
     use amethyst::audio::output::Output;
 
     let sound_effects = {
-        let mut loader = world.write_resource::<Loader>();
-        loader.register(AudioContext::new());
+        let loader = world.read_resource::<Loader>();
 
         // Add a DJ if we have sound output and background music tracks.
         if world.read_resource::<Option<Output>>().is_some() && AUDIO_MUSIC.len() > 0 {
@@ -37,7 +33,7 @@ pub fn initialise_audio(world: &mut World) {
 
             let music_tracks: Vec<_> = AUDIO_MUSIC
                 .iter()
-                .map(|file| load_audio_track(&mut loader, file))
+                .map(|file| load_audio_track(&mut loader, &world, file))
                 .collect();
 
             dj.set_picker(Box::new(move |ref mut dj| {
@@ -49,8 +45,8 @@ pub fn initialise_audio(world: &mut World) {
         }
 
         Sounds {
-            bounce_sfx: load_audio_track(&mut loader, AUDIO_BOUNCE),
-            score_sfx: load_audio_track(&mut loader, AUDIO_SCORE),
+            bounce_sfx: load_audio_track(&loader, &world, AUDIO_BOUNCE),
+            score_sfx: load_audio_track(&loader, &world, AUDIO_SCORE),
         }
     };
 

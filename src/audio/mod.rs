@@ -2,7 +2,7 @@
 
 pub use self::dj::Dj;
 pub use self::formats::{FlacFormat, OggFormat, WavFormat};
-pub use self::source::Source;
+pub use self::source::{Source, SourceHandle};
 
 pub mod play;
 pub mod output;
