@@ -1,5 +1,6 @@
 use std::marker::PhantomData;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use crossbeam::sync::MsQueue;
 use hibitset::BitSet;
@@ -9,7 +10,20 @@ use specs::common::Errors;
 use BoxedErr;
 use asset::Asset;
 use error::AssetError;
-use loader::Allocator;
+
+/// An `Allocator`, holding a counter for producing unique IDs.
+#[derive(Debug, Default)]
+pub struct Allocator {
+    store_count: AtomicUsize,
+}
+
+impl Allocator {
+    /// Produces a new id.
+    pub fn next_id(&self) -> usize {
+        self.store_count.fetch_add(1, Ordering::Relaxed)
+    }
+}
+
 
 /// An asset storage, storing the actual assets and allocating
 /// handles to them.

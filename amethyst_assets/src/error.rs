@@ -4,7 +4,11 @@ use std::fmt::{Display, Formatter, Result as FmtResult};
 use BoxedErr;
 
 /// Error type returned when loading an asset.
-/// Includes the `AssetSpec` and the error (`LoadError`).
+/// Includes
+///
+/// * the `name` of the asset,
+/// * the `format` identifier and
+/// * and the error that occurred during loading.
 #[derive(Debug)]
 pub struct AssetError {
     /// The specifier of the asset which failed to load
@@ -44,23 +48,5 @@ impl Error for AssetError {
 
     fn cause(&self) -> Option<&Error> {
         Some(&self.error)
-    }
-}
-
-/// An error type which cannot be instantiated.
-/// Used as a placeholder for associated error types if
-/// something cannot fail.
-#[derive(Debug)]
-pub enum NoError {}
-
-impl Display for NoError {
-    fn fmt(&self, _: &mut Formatter) -> FmtResult {
-        match *self {}
-    }
-}
-
-impl Error for NoError {
-    fn description(&self) -> &str {
-        match *self {}
     }
 }

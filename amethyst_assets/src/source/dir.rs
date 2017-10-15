@@ -10,8 +10,7 @@ use source::Source;
 /// Please note that there is a default directory source
 /// inside the `Loader`, which is automatically used when you call
 /// `load`. In case you want another, second, directory for assets,
-/// you can instantiate one yourself, too. Please use `Loader::load_from`
-/// then.
+/// you can instantiate one yourself, too. Please use `Loader::load_from` then.
 #[derive(Debug)]
 pub struct Directory {
     loc: PathBuf,

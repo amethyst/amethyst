@@ -12,8 +12,8 @@ pub trait Source: Send + Sync + 'static {
     /// Returns the modification time as seconds since `UNIX_EPOCH`.
     fn modified(&self, path: &str) -> Result<u64, BoxedErr>;
 
-    /// Loads the bytes given a category, id and extension of the asset.
+    /// Loads the bytes given a path.
     ///
-    /// The id should always use `/`as separator in paths.
+    /// The id should always use `/` as separator in paths.
     fn load(&self, path: &str) -> Result<Vec<u8>, BoxedErr>;
 }

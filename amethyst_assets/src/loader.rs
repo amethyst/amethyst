@@ -2,37 +2,12 @@ use std::borrow::Borrow;
 use std::hash::Hash;
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicUsize, Ordering};
 
 use fnv::FnvHashMap;
 use rayon::ThreadPool;
 
 use {Asset, Directory, Format, Source};
 use storage::{AssetStorage, Handle, Processed};
-
-/// A unique store id, used to identify the storage in `AssetSpec`.
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct SourceId(usize);
-
-impl SourceId {
-    /// Returns a copy of the internal id.
-    pub fn id(&self) -> usize {
-        self.0
-    }
-}
-
-/// An `Allocator`, holding a counter for producing unique IDs.
-#[derive(Debug, Default)]
-pub struct Allocator {
-    store_count: AtomicUsize,
-}
-
-impl Allocator {
-    /// Produces a new id.
-    pub fn next_id(&self) -> usize {
-        self.store_count.fetch_add(1, Ordering::Relaxed)
-    }
-}
 
 /// The asset loader, holding the sources and a reference to the `ThreadPool`.
 pub struct Loader {
@@ -68,8 +43,7 @@ impl Loader {
     /// Loads an asset with a given format from the default (directory) source.
     /// If you want to load from a custom source instead, use `load_from`.
     ///
-    /// The actual work is done on a worker thread, thus this method immediately returns
-    /// a future.
+    /// The actual work is done in a worker thread, thus this method immediately returns a handle.
     pub fn load<A, F, N>(
         &self,
         id: N,
@@ -87,8 +61,7 @@ impl Loader {
     }
 
     /// Loads an asset with a given id and format from a custom source.
-    /// The actual work is done on a worker thread, thus this method immediately returns
-    /// a future.
+    /// The actual work is done in a worker thread, thus this method immediately returns a handle.
     pub fn load_from<A, F, N, S>(
         &self,
         name: N,
