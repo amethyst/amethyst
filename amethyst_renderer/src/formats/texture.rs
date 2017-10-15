@@ -5,7 +5,7 @@ use std::fmt::{self, Display, Formatter};
 use std::io::Cursor;
 use std::sync::Arc;
 
-use amethyst_assets::{Asset, BoxedErr, Format, Source};
+use amethyst_assets::{ BoxedErr, Format, Source};
 use imagefmt;
 use imagefmt::{ColFmt, Image};
 use gfx::format::{ChannelType, SurfaceType};
@@ -57,8 +57,11 @@ pub enum TextureData {
     U64(Vec<u64>, Option<TextureMetadata>),
 }
 
-impl Asset for Texture {
-    type Data = TextureData;
+impl TextureData {
+    /// Creates texture data from color.
+    pub fn color(value: [f32; 4]) -> Self {
+        TextureData::Rgba(value, None)
+    }
 }
 
 /// ImageData provided by formats, can be interpreted as a texture.

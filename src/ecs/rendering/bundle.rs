@@ -88,8 +88,6 @@ where
             .register::<Transform>()
             .register::<Light>()
             .register::<Material>()
-            .register::<Mesh>()
-            .register::<Texture>()
             .register::<Handle<Mesh>>()
             .register::<Handle<Texture>>()
             .with_resource(AssetStorage::<Mesh>::new())

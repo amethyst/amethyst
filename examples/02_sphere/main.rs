@@ -72,9 +72,7 @@ fn run() -> Result<(), amethyst::Error> {
     let config = DisplayConfig::load(&display_config_path);
 
     let mut game = Application::build(Example)?
-        .with_bundle(
-            RenderBundle::new(pipe, Some(config)),
-        )?
+        .with_bundle(RenderBundle::new(pipe, Some(config)))?
         .build()?;
     Ok(game.run())
 }
@@ -105,22 +103,42 @@ fn initialise_sphere(world: &mut World) {
     // Create a sphere mesh and material.
 
     use amethyst::assets::Handle;
+    use amethyst::renderer::Material;
+    use amethyst::renderer::formats::TextureData;
 
     let (mesh, material) = {
         let loader = world.read_resource::<Loader>();
 
-        let mesh: Handle<Mesh> = loader.load_from_data(gen_sphere(32, 32).into(),
-                                                       &world.read_resource());
-        //let material = MaterialBuilder::new().with_albedo(Texture::from_color_val(SPHERE_COLOUR));
-        //
-        //// Load the material.
-        //let material = load_proc_asset(world, move |world| {
-        //    let factory = world.read_resource::<Factory>();
-        //    factory
-        //        .create_material(material)
-        //        .map(MaterialComponent)
-        //        .map_err(BoxedErr::new)
-        //});
+        let mesh: Handle<Mesh> =
+            loader.load_from_data(gen_sphere(32, 32).into(), &world.read_resource());
+
+        let albedo = TextureData::from_color([0.0, 0.0, 0.5, 1.0]);
+        let emission = TextureData::from_color([0.0; 4]);
+        let normal = TextureData::from_color([0.5, 0.5, 1.0, 1.0]);
+        let metallic = TextureData::from_color([0.0; 4]);
+        let roughness = TextureData::from_color([0.5; 4]);
+        let ambient_occlusion = TextureData::from_color([1.0; 4]);
+        let caveat = TextureData::from_color([1.0; 4]);
+
+        let tex_storage = world.read_resource();
+
+        let albedo = loader.load_from_data(albedo, &tex_storage);
+        let emission = loader.load_from_data(emission, &tex_storage);
+        let normal = loader.load_from_data(normal, &tex_storage);
+        let metallic = loader.load_from_data(metallic, &tex_storage);
+        let roughness = loader.load_from_data(roughness, &tex_storage);
+        let ambient_occlusion = loader.load_from_data(ambient_occlusion, &tex_storage);
+        let caveat = loader.load_from_data(caveat, &tex_storage);
+
+        let mat = Material {
+            albedo,
+            emission,
+            normal,
+            metallic,
+            roughness,
+            ambient_occlusion,
+            caveat,
+        };
 
         (mesh, ())
     };
@@ -149,10 +167,7 @@ fn initialise_lights(world: &mut World) {
     }.into();
 
     // Add point light.
-    world
-        .create_entity()
-        .with(light)
-        .build();
+    world.create_entity().with(light).build();
 }
 
 

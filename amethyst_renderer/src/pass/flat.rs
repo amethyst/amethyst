@@ -2,6 +2,7 @@
 
 use std::marker::PhantomData;
 
+use amethyst_assets::AssetStorage;
 use cgmath::{Matrix4, One};
 use gfx::pso::buffer::ElemStride;
 
@@ -11,7 +12,7 @@ use specs::{Component, Fetch, ParJoin, ReadStorage};
 
 use cam::Camera;
 use error::Result;
-use mesh::Mesh;
+use mesh::{Mesh, MeshHandle};
 use mtl::Material;
 use pipe::pass::{Pass, PassApply, PassData, Supplier};
 use pipe::{DepthMode, Effect, NewEffect};
@@ -57,7 +58,8 @@ where
 {
     type Data = (
         Option<Fetch<'a, Camera>>,
-        ReadStorage<'a, Mesh>,
+        Fetch<'a, AssetStorage<Mesh>>,
+        ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
         ReadStorage<'a, T>,
     );
@@ -90,15 +92,17 @@ where
     fn apply<'a, 'b: 'a>(
         &'a mut self,
         supplier: Supplier<'a>,
-        (camera, mesh, material, global): (
+        (camera, mesh_storage, mesh, material, global): (
             Option<Fetch<'b, Camera>>,
-            ReadStorage<'b, Mesh>,
+            Fetch<'a, AssetStorage<Mesh>>,
+            ReadStorage<'b, MeshHandle>,
             ReadStorage<'b, Material>,
             ReadStorage<'b, T>,
         ),
     ) -> DrawFlatApply<'a, V, T> {
         DrawFlatApply {
             camera,
+            mesh_storage,
             mesh,
             material,
             global,
@@ -110,7 +114,8 @@ where
 
 pub struct DrawFlatApply<'a, V, T: Component> {
     camera: Option<Fetch<'a, Camera>>,
-    mesh: ReadStorage<'a, Mesh>,
+    mesh_storage: Fetch<'a, AssetStorage<Mesh>>,
+    mesh: ReadStorage<'a, MeshHandle>,
     material: ReadStorage<'a, Material>,
     global: ReadStorage<'a, T>,
     supplier: Supplier<'a>,
@@ -130,6 +135,7 @@ where
     {
         let DrawFlatApply {
             camera,
+            mesh_storage,
             mesh,
             material,
             global,
@@ -138,11 +144,14 @@ where
         } = self;
 
         let camera = &camera;
+        let mesh_storage = &mesh_storage;
 
         supplier
             .supply((&mesh, &material, &global).par_join().map(
                 move |(mesh, material, global)| {
-                    move |encoder: &mut Encoder, effect: &mut Effect| {
+                    move |encoder: &mut Encoder, effect: &mut Effect| if let Some(mesh) =
+                        mesh_storage.get(mesh)
+                    {
                         let vbuf = match mesh.buffer(V::QUERIED_ATTRIBUTES) {
                             Some(vbuf) => vbuf.clone(),
                             None => return,

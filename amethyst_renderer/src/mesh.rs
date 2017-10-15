@@ -3,7 +3,7 @@
 use std::iter::{once, Chain, Once};
 use std::marker::PhantomData;
 
-use specs::{Component, DenseVecStorage};
+use amethyst_assets::Handle;
 
 use cgmath::{Deg, Matrix4, Point3, Transform, Vector3};
 use gfx::Primitive;
@@ -11,7 +11,6 @@ use gfx::Primitive;
 use error::Result;
 use types::{Factory, RawBuffer, Slice};
 use vertex::{Attributes, VertexFormat};
-
 
 /// Raw buffer with its attributes
 #[derive(Clone, Debug)]
@@ -118,6 +117,8 @@ where
     }
 }
 
+/// A handle to a mesh.
+pub type MeshHandle = Handle<Mesh>;
 
 /// Represents a polygonal mesh.
 #[derive(Clone, Debug)]
@@ -186,10 +187,6 @@ impl Mesh {
     pub fn transform(&self) -> Matrix4<f32> {
         self.transform
     }
-}
-
-impl Component for Mesh {
-    type Storage = DenseVecStorage<Self>;
 }
 
 /// Builds new meshes.

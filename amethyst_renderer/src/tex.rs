@@ -2,6 +2,7 @@
 
 pub use gfx::texture::{FilterMethod, WrapMode};
 
+use amethyst_assets::{Asset, Handle};
 use specs::{Component, DenseVecStorage};
 
 use std::marker::PhantomData;
@@ -11,7 +12,10 @@ use gfx::format::{ChannelType, SurfaceType};
 use gfx::texture::{Info, SamplerInfo};
 use gfx::traits::Pod;
 
+use formats::TextureData;
 use types::{ChannelFormat, Factory, RawShaderResourceView, RawTexture, Sampler, SurfaceFormat};
+
+pub type TextureHandle = Handle<Texture>;
 
 /// Handle to a GPU texture resource.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -41,6 +45,10 @@ impl Texture {
     pub fn view(&self) -> &RawShaderResourceView {
         &self.view
     }
+}
+
+impl Asset for Texture {
+    type Data = TextureData;
 }
 
 /// Builds new textures.
@@ -185,8 +193,4 @@ where
             view: view,
         })
     }
-}
-
-impl Component for Texture {
-    type Storage = DenseVecStorage<Self>;
 }

@@ -3,6 +3,7 @@
 use std::marker::PhantomData;
 use std::mem;
 
+use amethyst_assets::AssetStorage;
 use cgmath::{Matrix4, One};
 use gfx::pso::buffer::ElemStride;
 use gfx::traits::Pod;
@@ -14,7 +15,7 @@ use cam::Camera;
 use color::Rgba;
 use error::Result;
 use light::{DirectionalLight, Light, PointLight};
-use mesh::Mesh;
+use mesh::{Mesh, MeshHandle};
 use mtl::Material;
 use pipe::{DepthMode, Effect, NewEffect};
 use pipe::pass::{Pass, PassApply, PassData, Supplier};
@@ -94,7 +95,8 @@ where
     type Data = (
         Option<Fetch<'a, Camera>>,
         Fetch<'a, A>,
-        ReadStorage<'a, Mesh>,
+        Fetch<'a, AssetStorage<Mesh>>,
+        ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
         ReadStorage<'a, T>,
         ReadStorage<'a, Light>,
@@ -136,10 +138,11 @@ where
     fn apply<'a, 'b: 'a>(
         &'a mut self,
         supplier: Supplier<'a>,
-        (camera, ambient, mesh, material, global, light): (
+        (camera, ambient, mesh_storage, mesh, material, global, light): (
             Option<Fetch<'a, Camera>>,
             Fetch<'a, A>,
-            ReadStorage<'a, Mesh>,
+            Fetch<'a, AssetStorage<Mesh>>,
+            ReadStorage<'a, MeshHandle>,
             ReadStorage<'a, Material>,
             ReadStorage<'a, T>,
             ReadStorage<'a, Light>,
@@ -147,6 +150,7 @@ where
     ) -> DrawShadedApply<'a, V, A, T> {
         DrawShadedApply {
             camera,
+            mesh_storage,
             mesh,
             material,
             global,
@@ -161,7 +165,9 @@ where
 pub struct DrawShadedApply<'a, V, A: 'static, T: Component> {
     camera: Option<Fetch<'a, Camera>>,
     ambient: Fetch<'a, A>,
-    mesh: ReadStorage<'a, Mesh>,
+    mesh_storage: Fetch<'a, AssetStorage<Mesh>>,
+    tex_storage: Fetch<'a, AssetStorage<Texture>>,
+    mesh: ReadStorage<'a, MeshHandle>,
     material: ReadStorage<'a, Material>,
     global: ReadStorage<'a, T>,
     light: ReadStorage<'a, Light>,
@@ -183,6 +189,7 @@ where
     {
         let DrawShadedApply {
             camera,
+            mesh_storage,
             mesh,
             material,
             global,
@@ -195,11 +202,14 @@ where
         let camera = &camera;
         let ambient = &ambient;
         let light = &light;
+        let mesh_storage = &mesh_storage;
 
         supplier
             .supply((&mesh, &material, &global).par_join().map(
                 |(mesh, material, global)| {
-                    move |encoder: &mut Encoder, effect: &mut Effect| {
+                    move |encoder: &mut Encoder, effect: &mut Effect| if let Some(mesh) =
+                        mesh_storage.get(mesh)
+                    {
                         let vbuf = match mesh.buffer(V::QUERIED_ATTRIBUTES) {
                             Some(vbuf) => vbuf.clone(),
                             None => return,

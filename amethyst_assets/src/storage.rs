@@ -157,7 +157,7 @@ where
 /// user deals with, the actual asset (`A`) is stored
 /// in an `AssetStorage`.
 #[derive(Derivative)]
-#[derivative(Clone(bound = ""))]
+#[derivative(Clone(bound=""), Hash(bound=""))]
 pub struct Handle<A> {
     id: Arc<u32>,
     marker: PhantomData<A>,
