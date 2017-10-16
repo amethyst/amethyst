@@ -1,18 +1,18 @@
 //! ECS rendering bundle
 
+use assets::{AssetStorage, Handle};
+use core::bundle::{ECSBundle, Result};
 use renderer::Config as DisplayConfig;
 use renderer::Rgba;
 use renderer::pipe::PipelineBuild;
 use renderer::prelude::*;
-use core::bundle::{ECSBundle, Result};
 
-use assets::{AssetFuture, BoxedErr, Loader};
-use ecs::{World, DispatcherBuilder};
-use ecs::rendering::components::*;
-use ecs::rendering::resources::{AmbientColor, Factory, ScreenDimensions, WindowMessages};
+use assets::{BoxedErr, Loader};
+use ecs::{DispatcherBuilder, World};
+use ecs::rendering::resources::{AmbientColor, ScreenDimensions, WindowMessages};
 use ecs::rendering::systems::RenderSystem;
 use ecs::transform::components::*;
-
+use renderer::MaterialDefaults;
 
 /// Rendering bundle
 ///
@@ -20,68 +20,46 @@ use ecs::transform::components::*;
 /// Will also register asset contexts with the asset `Loader`, and add systems for merging
 /// `AssetFuture` into its related component.
 ///
-/// Will add `RenderSystem` as a thread local system.
-///
-/// ## Errors
-///
-/// Returns errors related to:
-///
-/// * Renderer creation
-/// * Pipeline creation
-///
-pub struct RenderBundle<P> {
+pub struct RenderBundle;
+
+impl RenderBundle {
+    /// Create a new render bundle
+    pub fn new() -> Self {
+        RenderBundle
+    }
+}
+
+/// Create render system
+pub fn create_render_system<P>(
     pipe: P,
     display_config: Option<DisplayConfig>,
-}
-
-impl<P> RenderBundle<P>
-where
-    P: PipelineBuild,
-{
-    /// Create a new render bundle with the given pipeline
-    pub fn new(pipe: P) -> Self {
-        Self {
-            pipe,
-            display_config: None,
-        }
-    }
-
-    /// Use the given display config for configuring window and render properties
-    pub fn with_config(mut self, config: DisplayConfig) -> Self {
-        self.display_config = Some(config);
-        self
-    }
-}
-
-impl<'a, 'b, P> ECSBundle<'a, 'b> for RenderBundle<P>
+) -> Result<RenderSystem<P::Pipeline>>
 where
     P: PipelineBuild + Clone,
-    P::Pipeline: 'b,
 {
+    let mut renderer = {
+        let mut renderer = Renderer::build();
+
+        if let Some(config) = display_config.to_owned() {
+            renderer.with_config(config);
+        }
+        let renderer = renderer.build().map_err(BoxedErr::new)?;
+
+        renderer
+    };
+
+    let pipe = renderer.create_pipe(pipe.clone()).map_err(BoxedErr::new)?;
+
+    Ok(RenderSystem::new(pipe, renderer))
+}
+
+
+impl<'a, 'b> ECSBundle<'a, 'b> for RenderBundle {
     fn build(
-        &self,
+        self,
         world: &mut World,
-        mut builder: DispatcherBuilder<'a, 'b>,
+        builder: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
-        use specs::common::{Errors, Merge};
-
-        let mut renderer = {
-            let mut renderer = Renderer::build();
-
-            if let Some(config) = self.display_config.to_owned() {
-                renderer.with_config(config);
-            }
-            let renderer = renderer
-                .build()
-                .map_err(|err| BoxedErr::new(err))?;
-
-            renderer
-        };
-
-        let pipe = renderer
-            .create_pipe(self.pipe.clone())
-            .map_err(|err| BoxedErr::new(err))?;
-
         use cgmath::Deg;
         use renderer::{Camera, Projection};
 
@@ -93,49 +71,54 @@ where
             up: [0.0, 1.0, 0.0].into(),
         };
 
-        let (w, h) = renderer.window().get_inner_size_pixels().unwrap();
-
-        world.add_resource(Factory::new());
         world.add_resource(cam);
         world.add_resource(AmbientColor(Rgba::from([0.01; 3])));
         world.add_resource(WindowMessages::new());
-        world.add_resource(ScreenDimensions::new(w, h));
+        world.add_resource(ScreenDimensions::new(100, 100));
+        world.add_resource(AssetStorage::<Mesh>::new());
+        world.add_resource(AssetStorage::<Texture>::new());
+
+        let mat = create_default_mat(world);
+        world.add_resource(MaterialDefaults(mat));
 
         world.register::<Transform>();
-        world.register::<LightComponent>();
-        world.register::<MaterialComponent>();
-        world.register::<MeshComponent>();
-        world.register::<TextureComponent>();
-
-        // FIXME: asset stuff, enable/disable flag for this?
-        {
-            let (mesh_context, texture_context) = {
-                let factory = world.read_resource::<Factory>();
-                (
-                    MeshContext::new((&*factory).clone()),
-                    TextureContext::new((&*factory).clone()),
-                )
-            };
-
-            {
-                let mut loader = world.write_resource::<Loader>();
-                loader.register(mesh_context);
-                loader.register(texture_context);
-            }
-
-            world.register::<AssetFuture<MeshComponent>>();
-            world.register::<AssetFuture<TextureComponent>>();
-            world.register::<AssetFuture<MaterialComponent>>();
-            world.add_resource(Errors::new());
-
-            builder = builder
-                .add(Merge::<AssetFuture<MaterialComponent>>::new(), "", &[])
-                .add(Merge::<AssetFuture<MeshComponent>>::new(), "", &[])
-                .add(Merge::<AssetFuture<TextureComponent>>::new(), "", &[]);
-        }
-
-        builder = builder.add_thread_local(RenderSystem::new(pipe, renderer));
+        world.register::<Light>();
+        world.register::<Material>();
+        world.register::<Handle<Mesh>>();
+        world.register::<Handle<Texture>>();
 
         Ok(builder)
+    }
+}
+
+fn create_default_mat(world: &World) -> Material {
+    let loader = world.read_resource::<Loader>();
+
+    let albedo = [0.5, 0.5, 0.5, 1.0].into();
+    let emission = [0.0; 4].into();
+    let normal = [0.5, 0.5, 1.0, 1.0].into();
+    let metallic = [0.0; 4].into();
+    let roughness = [0.5; 4].into();
+    let ambient_occlusion = [1.0; 4].into();
+    let caveat = [1.0; 4].into();
+
+    let tex_storage = world.read_resource();
+
+    let albedo = loader.load_from_data(albedo, &tex_storage);
+    let emission = loader.load_from_data(emission, &tex_storage);
+    let normal = loader.load_from_data(normal, &tex_storage);
+    let metallic = loader.load_from_data(metallic, &tex_storage);
+    let roughness = loader.load_from_data(roughness, &tex_storage);
+    let ambient_occlusion = loader.load_from_data(ambient_occlusion, &tex_storage);
+    let caveat = loader.load_from_data(caveat, &tex_storage);
+
+    Material {
+        albedo,
+        emission,
+        normal,
+        metallic,
+        roughness,
+        ambient_occlusion,
+        caveat,
     }
 }

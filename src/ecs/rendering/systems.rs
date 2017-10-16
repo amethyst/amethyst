@@ -3,12 +3,16 @@
 
 use std::mem;
 
+use assets::AssetStorage;
+use shred::Resources;
 use shrev::EventChannel;
+use specs::common::Errors;
 use winit::{DeviceEvent, Event, WindowEvent};
 
-use ecs::{Fetch, FetchMut, System};
-use ecs::rendering::resources::{Factory, ScreenDimensions, WindowMessages};
-use renderer::Renderer;
+use ecs::{Fetch, FetchMut, RunNow, SystemData};
+use ecs::rendering::resources::{ScreenDimensions, WindowMessages};
+use renderer::{Mesh, Renderer, Texture};
+use renderer::formats::{create_mesh_asset, create_texture_asset};
 use renderer::pipe::{PipelineData, PolyPipeline};
 
 /// Rendering system.
@@ -34,31 +38,20 @@ where
             cached_size,
         }
     }
-}
 
-impl<'a, P> System<'a> for RenderSystem<P>
-where
-    P: PolyPipeline,
-{
-    type SystemData = (
-        Fetch<'a, Factory>,
-        FetchMut<'a, EventChannel<Event>>,
-        FetchMut<'a, WindowMessages>,
-        FetchMut<'a, ScreenDimensions>,
-        <P as PipelineData<'a>>::Data,
-    );
-
-    fn run(
+    fn do_asset_loading(
         &mut self,
-        (
-            factory,
-            mut event_handler,
-            mut window_messages,
-            mut screen_dimensions,
-            data
-        ): Self::SystemData
-    )
-    {
+        (errors, mut mesh_storage, mut texture_storage): AssetLoadingData,
+    ) {
+        mesh_storage.process(|d| create_mesh_asset(d, &mut self.renderer), &errors);
+
+        texture_storage.process(|d| create_texture_asset(d, &mut self.renderer), &errors);
+    }
+
+    fn do_render(
+        &mut self,
+        (mut event_handler, mut window_messages, mut screen_dimensions, data): RenderData<P>,
+    ) {
         #[cfg(feature = "profiler")]
         profile_scope!("render_system");
         use std::time::Duration;
@@ -92,10 +85,6 @@ where
             screen_dimensions.dirty = false;
         }
 
-        while let Some(job) = factory.jobs.try_pop() {
-            job.exec(&mut self.renderer.factory);
-        }
-
         self.renderer
             .draw(&mut self.pipe, data, Duration::from_secs(0));
 
@@ -110,6 +99,29 @@ where
                 err
             );
         }
+    }
+}
+
+type AssetLoadingData<'a> = (
+    Fetch<'a, Errors>,
+    FetchMut<'a, AssetStorage<Mesh>>,
+    FetchMut<'a, AssetStorage<Texture>>,
+);
+
+type RenderData<'a, P> = (
+    FetchMut<'a, EventChannel<Event>>,
+    FetchMut<'a, WindowMessages>,
+    FetchMut<'a, ScreenDimensions>,
+    <P as PipelineData<'a>>::Data,
+);
+
+impl<'a, P> RunNow<'a> for RenderSystem<P>
+where
+    P: PolyPipeline,
+{
+    fn run_now(&mut self, res: &'a Resources) {
+        self.do_asset_loading(AssetLoadingData::<'a>::fetch(res, 0));
+        self.do_render(RenderData::<'a, P>::fetch(res, 0));
     }
 }
 

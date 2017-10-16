@@ -22,6 +22,6 @@ impl State for Example {
 }
 
 fn main() {
-    let mut game = Application::new(Example).expect("Fatal error");
+    let mut game = Application::new("./", Example).expect("Fatal error");
     game.run();
 }

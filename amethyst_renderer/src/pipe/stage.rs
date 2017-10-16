@@ -320,10 +320,7 @@ pub struct CompilePass<'a> {
 
 impl<'a> CompilePass<'a> {
     fn new(factory: &'a mut Factory, target: &'a Target) -> Self {
-        CompilePass {
-            factory,
-            target,
-        }
+        CompilePass { factory, target }
     }
 }
 

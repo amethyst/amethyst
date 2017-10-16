@@ -1,34 +1,37 @@
 //! # amethyst_assets
 //!
-//! Asset management crate. Designed with the following goals
-//! in mind:
+//! Asset management crate.
+//! Designed with the following goals in mind:
 //!
 //! * extensibility
-//! * asynchronous & parallel using rayon and futures
-//! * allow different stores
+//! * asynchronous & parallel using rayon
+//! * allow different sources
 
 #![warn(missing_docs)]
 
+extern crate crossbeam;
 #[macro_use]
 extern crate derivative;
 extern crate fnv;
-extern crate futures;
+extern crate hibitset;
 extern crate parking_lot;
 extern crate rayon;
 extern crate specs;
 
 pub use specs::error::BoxedErr;
 
-pub use asset::{Asset, AssetFuture, AssetSpec, Context, Format};
-pub use cache::Cache;
-pub use error::{AssetError, LoadError, NoError, SharedAssetError};
-pub use loader::{load_asset, Loader, SpawnedFuture, StoreId};
-pub use simple::{AssetPtr, SimpleAsset, SimpleContext};
-pub use store::{Directory, Store};
+pub use asset::{Asset, Format};
+pub use error::AssetError;
+pub use loader::Loader;
+pub use progress::{Completion, Progress, ProgressCounter, Tracker};
+pub use source::{Directory, Source};
+pub use storage::{AssetStorage, Handle, Processor};
 
 mod asset;
-mod cache;
+//mod cache;
 mod error;
 mod loader;
-mod simple;
-mod store;
+mod progress;
+//mod reload;
+mod source;
+mod storage;

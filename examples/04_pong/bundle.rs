@@ -1,6 +1,6 @@
 use {Ball, Paddle, ScoreBoard};
 use amethyst::core::bundle::{ECSBundle, Result};
-use amethyst::ecs::{World, DispatcherBuilder};
+use amethyst::ecs::{DispatcherBuilder, World};
 use amethyst::timing::Time;
 use systems::{BounceSystem, MoveBallsSystem, PaddleSystem, WinnerSystem};
 
@@ -10,15 +10,15 @@ pub struct PongBundle;
 
 impl<'a, 'b> ECSBundle<'a, 'b> for PongBundle {
     fn build(
-        &self,
+        self,
         world: &mut World,
         builder: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
-
         world.add_resource(ScoreBoard::new());
         world.add_resource(Time::default());
         world.register::<Ball>();
         world.register::<Paddle>();
+
         Ok(
             builder
                 .add(PaddleSystem, "paddle_system", &["input_system"])

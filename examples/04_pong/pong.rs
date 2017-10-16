@@ -1,12 +1,11 @@
 use {ARENA_HEIGHT, ARENA_WIDTH};
 use {Ball, Paddle, Side};
-use amethyst::assets::{AssetFuture, BoxedErr};
+use amethyst::assets::Loader;
 use amethyst::ecs::World;
-use amethyst::ecs::rendering::{Factory, MaterialComponent, MeshComponent};
 use amethyst::ecs::transform::{LocalTransform, Transform};
 use amethyst::prelude::*;
+use amethyst::renderer::MeshHandle;
 use amethyst::renderer::prelude::*;
-use futures::prelude::*;
 
 pub struct Pong;
 
@@ -141,43 +140,27 @@ fn initialise_balls(world: &mut World) {
         .build();
 }
 
-
-fn load_asset<T, F>(world: &mut World, f: F) -> AssetFuture<T::Item>
-where
-    T: IntoFuture<Error = BoxedErr>,
-    T::Future: 'static,
-    F: FnOnce(&mut World) -> T,
-{
-    let future = f(world).into_future();
-    let future: Box<Future<Item = T::Item, Error = BoxedErr>> = Box::new(future);
-    AssetFuture(future.shared())
-}
-
 /// Converts a vector of vertices into a mesh.
-fn create_mesh(world: &mut World, vertices: Vec<PosTex>) -> AssetFuture<MeshComponent> {
-    let mesh = Mesh::build(vertices);
-
-    load_asset(world, move |world| {
-        let factory = world.read_resource::<Factory>();
-        factory
-            .create_mesh(mesh)
-            .map(MeshComponent::new)
-            .map_err(BoxedErr::new)
-    })
+fn create_mesh(world: &World, vertices: Vec<PosTex>) -> MeshHandle {
+    let loader = world.read_resource::<Loader>();
+    loader.load_from_data(vertices.into(), &world.read_resource())
 }
 
 /// Creates a solid material of the specified colour.
-fn create_colour_material(world: &mut World, colour: [f32; 4]) -> AssetFuture<MaterialComponent> {
-    let texture = Texture::from_color_val(colour);
-    let material = MaterialBuilder::new().with_albedo(texture);
+fn create_colour_material(world: &World, colour: [f32; 4]) -> Material {
+    // TODO: optimize
 
-    load_asset(world, move |world| {
-        let factory = world.read_resource::<Factory>();
-        factory
-            .create_material(material)
-            .map(MaterialComponent)
-            .map_err(BoxedErr::new)
-    })
+    use amethyst::renderer::MaterialDefaults;
+
+    let mat_defaults = world.read_resource::<MaterialDefaults>();
+    let loader = world.read_resource::<Loader>();
+
+    let albedo = loader.load_from_data(colour.into(), &world.read_resource());
+
+    Material {
+        albedo,
+        ..mat_defaults.0.clone()
+    }
 }
 
 /// Generates vertices for a circle. The circle will be made of `resolution`

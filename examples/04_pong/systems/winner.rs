@@ -1,4 +1,6 @@
 use {Ball, ScoreBoard};
+use amethyst::assets::AssetStorage;
+use amethyst::audio::Source;
 use amethyst::audio::output::Output;
 use amethyst::ecs::{Fetch, FetchMut, Join, System, WriteStorage};
 use amethyst::ecs::transform::LocalTransform;
@@ -14,14 +16,16 @@ impl<'s> System<'s> for WinnerSystem {
         WriteStorage<'s, Ball>,
         WriteStorage<'s, LocalTransform>,
         FetchMut<'s, ScoreBoard>,
+        Fetch<'s, AssetStorage<Source>>,
         Fetch<'s, Sounds>,
         Fetch<'s, Option<Output>>,
     );
 
     fn run(
         &mut self,
-        (mut balls, mut transforms, mut score_board, sounds, audio_output): Self::SystemData,
-    ) {
+        (mut balls, mut transforms, mut score_board, storage, sounds, audio_output):
+        Self::SystemData,
+){
         for (ball, transform) in (&mut balls, &mut transforms).join() {
             use ARENA_WIDTH;
 
@@ -55,7 +59,9 @@ impl<'s> System<'s> for WinnerSystem {
 
                 // Play audio.
                 if let Some(ref audio_output) = *audio_output {
-                    play_once(&sounds.score_sfx, 1.0, &audio_output);
+                    if let Some(sound) = storage.get(&sounds.score_sfx) {
+                        play_once(sound, 1.0, &audio_output);
+                    }
                 }
             }
         }

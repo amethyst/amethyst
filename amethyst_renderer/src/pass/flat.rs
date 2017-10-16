@@ -2,6 +2,7 @@
 
 use std::marker::PhantomData;
 
+use amethyst_assets::AssetStorage;
 use cgmath::{Matrix4, One};
 use gfx::pso::buffer::ElemStride;
 
@@ -11,10 +12,11 @@ use specs::{Component, Fetch, ParJoin, ReadStorage};
 
 use cam::Camera;
 use error::Result;
-use mesh::Mesh;
-use mtl::Material;
+use mesh::{Mesh, MeshHandle};
+use mtl::{Material, MaterialDefaults};
 use pipe::pass::{Pass, PassApply, PassData, Supplier};
 use pipe::{DepthMode, Effect, NewEffect};
+use tex::Texture;
 use types::Encoder;
 use vertex::{Position, Query, TexCoord};
 
@@ -23,20 +25,16 @@ static FRAG_SRC: &[u8] = include_bytes!("shaders/fragment/flat.glsl");
 
 /// Draw mesh without lighting
 /// `V` is `VertexFormat`
-/// `M` is `Mesh` component
-/// `N` is `Material` component
 /// `T` is transform matrix component
 #[derive(Clone, Debug, PartialEq)]
-pub struct DrawFlat<V, M, N, T> {
-    _pd: PhantomData<(V, M, N, T)>,
+pub struct DrawFlat<V, T> {
+    _pd: PhantomData<(V, T)>,
 }
 
-impl<V, M, N, T> DrawFlat<V, M, N, T>
+impl<V, T> DrawFlat<V, T>
 where
     V: Query<(Position, TexCoord)>,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
-    M: Component + AsRef<Mesh> + Send + Sync,
-    N: Component + AsRef<Material> + Send + Sync,
     Self: Pass,
 {
     /// Create instance of `DrawFlat` pass
@@ -52,37 +50,34 @@ struct VertexArgs {
     model: [[f32; 4]; 4],
 }
 
-impl<'a, V, M, N, T> PassData<'a> for DrawFlat<V, M, N, T>
+impl<'a, V, T> PassData<'a> for DrawFlat<V, T>
 where
     V: Query<(Position, TexCoord)>,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
-    M: Component + AsRef<Mesh> + Send + Sync,
-    N: Component + AsRef<Material> + Send + Sync,
 {
     type Data = (
         Option<Fetch<'a, Camera>>,
-        ReadStorage<'a, M>,
-        ReadStorage<'a, N>,
+        Fetch<'a, AssetStorage<Mesh>>,
+        Fetch<'a, AssetStorage<Texture>>,
+        Fetch<'a, MaterialDefaults>,
+        ReadStorage<'a, MeshHandle>,
+        ReadStorage<'a, Material>,
         ReadStorage<'a, T>,
     );
 }
 
-impl<'a, V, M, N, T> PassApply<'a> for DrawFlat<V, M, N, T>
+impl<'a, V, T> PassApply<'a> for DrawFlat<V, T>
 where
     V: Query<(Position, TexCoord)>,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
-    M: Component + AsRef<Mesh> + Send + Sync,
-    N: Component + AsRef<Material> + Send + Sync,
 {
-    type Apply = DrawFlatApply<'a, V, M, N, T>;
+    type Apply = DrawFlatApply<'a, V, T>;
 }
 
-impl<V, M, N, T> Pass for DrawFlat<V, M, N, T>
+impl<V, T> Pass for DrawFlat<V, T>
 where
     V: Query<(Position, TexCoord)>,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
-    M: Component + AsRef<Mesh> + Send + Sync,
-    N: Component + AsRef<Material> + Send + Sync,
 {
     fn compile(&self, effect: NewEffect) -> Result<Effect> {
         use std::mem;
@@ -98,39 +93,46 @@ where
     fn apply<'a, 'b: 'a>(
         &'a mut self,
         supplier: Supplier<'a>,
-        (camera, mesh, material, global): (
+        (camera, mesh_storage, tex_storage, material_defaults, mesh, material, global): (
             Option<Fetch<'b, Camera>>,
-            ReadStorage<'b, M>,
-            ReadStorage<'b, N>,
+            Fetch<'a, AssetStorage<Mesh>>,
+            Fetch<'a, AssetStorage<Texture>>,
+            Fetch<'a, MaterialDefaults>,
+            ReadStorage<'b, MeshHandle>,
+            ReadStorage<'b, Material>,
             ReadStorage<'b, T>,
         ),
-    ) -> DrawFlatApply<'a, V, M, N, T> {
+    ) -> DrawFlatApply<'a, V, T> {
         DrawFlatApply {
-            camera: camera,
-            mesh: mesh,
-            material: material,
-            global: global,
-            supplier: supplier,
+            camera,
+            mesh_storage,
+            tex_storage,
+            material_defaults,
+            mesh,
+            material,
+            global,
+            supplier,
             pd: PhantomData,
         }
     }
 }
 
-pub struct DrawFlatApply<'a, V, M: Component, N: Component, T: Component> {
+pub struct DrawFlatApply<'a, V, T: Component> {
     camera: Option<Fetch<'a, Camera>>,
-    mesh: ReadStorage<'a, M>,
-    material: ReadStorage<'a, N>,
+    mesh_storage: Fetch<'a, AssetStorage<Mesh>>,
+    tex_storage: Fetch<'a, AssetStorage<Texture>>,
+    material_defaults: Fetch<'a, MaterialDefaults>,
+    mesh: ReadStorage<'a, MeshHandle>,
+    material: ReadStorage<'a, Material>,
     global: ReadStorage<'a, T>,
     supplier: Supplier<'a>,
     pd: PhantomData<V>,
 }
 
-impl<'a, V, M, N, T> ParallelIterator for DrawFlatApply<'a, V, M, N, T>
+impl<'a, V, T> ParallelIterator for DrawFlatApply<'a, V, T>
 where
     V: Query<(Position, TexCoord)>,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
-    M: Component + AsRef<Mesh> + Send + Sync,
-    N: Component + AsRef<Material> + Send + Sync,
 {
     type Item = ();
 
@@ -140,6 +142,9 @@ where
     {
         let DrawFlatApply {
             camera,
+            mesh_storage,
+            tex_storage,
+            material_defaults,
             mesh,
             material,
             global,
@@ -148,19 +153,21 @@ where
         } = self;
 
         let camera = &camera;
+        let mesh_storage = &mesh_storage;
+        let tex_storage = &tex_storage;
+        let material_defaults = &material_defaults;
 
         supplier
             .supply((&mesh, &material, &global).par_join().map(
                 move |(mesh, material, global)| {
-                    move |encoder: &mut Encoder, effect: &mut Effect| {
-                        let mesh = mesh.as_ref();
-
+                    move |encoder: &mut Encoder, effect: &mut Effect| if let Some(mesh) =
+                        mesh_storage.get(mesh)
+                    {
                         let vbuf = match mesh.buffer(V::QUERIED_ATTRIBUTES) {
                             Some(vbuf) => vbuf.clone(),
                             None => return,
                         };
 
-                        let material = material.as_ref();
                         let vertex_args = camera
                             .as_ref()
                             .map(|cam| {
@@ -178,9 +185,14 @@ where
                                 }
                             });
 
+                        let albedo = tex_storage
+                            .get(&material.albedo)
+                            .or_else(|| tex_storage.get(&material_defaults.0.albedo))
+                            .unwrap();
+
                         effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
-                        effect.data.textures.push(material.albedo.view().clone());
-                        effect.data.samplers.push(material.albedo.sampler().clone());
+                        effect.data.textures.push(albedo.view().clone());
+                        effect.data.samplers.push(albedo.sampler().clone());
 
                         effect.data.vertex_bufs.push(vbuf);
 

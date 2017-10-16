@@ -51,3 +51,9 @@ impl Display for Error {
         }
     }
 }
+
+impl From<BoxedErr> for Error {
+    fn from(e: BoxedErr) -> Self {
+        Error::System(e)
+    }
+}

@@ -1,17 +1,22 @@
 //! ECS audio bundles
 
+use std::marker::PhantomData;
+
 use core::bundle::{ECSBundle, Result};
 
-use audio::Dj;
+use assets::{AssetStorage, Processor};
+use audio::{AudioSink, Source, SourceHandle};
 use audio::output::{default_output, Output};
-use ecs::{World, DispatcherBuilder};
+use ecs::{DispatcherBuilder, World};
 use ecs::audio::DjSystem;
 use shred::ResourceId;
 
-/// DJ bundle
+/// Audio bundle
 ///
-/// Will only register the `Dj` and the `DjSystem` if an audio output is found.
+/// Will only register the `AudioSink` and the `DjSystem` if an audio output is found.
 /// `DjSystem` will be registered with name "dj_system".
+///
+/// This will also add the asset processor for `Source`.
 ///
 /// ## Errors
 ///
@@ -21,14 +26,20 @@ use shred::ResourceId;
 ///
 /// Panics during `DjSystem` registration if the bundle is applied twice.
 ///
-pub struct DjBundle<'a> {
+pub struct AudioBundle<'a, F, R> {
     dep: &'a [&'a str],
+    marker: PhantomData<R>,
+    picker: F,
 }
 
-impl<'a> DjBundle<'a> {
+impl<'a, F, R> AudioBundle<'a, F, R> {
     /// Create a new DJ bundle
-    pub fn new() -> Self {
-        Self { dep: &[] }
+    pub fn new(picker: F) -> Self {
+        AudioBundle {
+            dep: &[],
+            marker: PhantomData,
+            picker,
+        }
     }
 
     /// Set dependencies for the `DjSystem`
@@ -38,29 +49,34 @@ impl<'a> DjBundle<'a> {
     }
 }
 
-impl<'a, 'b, 'c> ECSBundle<'a, 'b> for DjBundle<'c> {
+impl<'a, 'b, 'c, F, R> ECSBundle<'a, 'b> for AudioBundle<'c, F, R>
+where
+    F: FnMut(&mut R) -> Option<SourceHandle> + Send + 'static,
+    R: Send + Sync + 'static,
+{
     fn build(
-        &self,
+        self,
         world: &mut World,
         mut builder: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
         // Remove option here when specs get support for optional fetch in
         // released version
-        if !world
-            .res
-            .has_value(ResourceId::new::<Option<Output>>())
-        {
+        if !world.res.has_value(ResourceId::new::<Option<Output>>()) {
             world.add_resource(default_output());
         }
 
-        let dj = world
+        let sink = world
             .read_resource::<Option<Output>>()
             .as_ref()
-            .map(|audio_output| Dj::new(audio_output));
+            .map(|audio_output| AudioSink::new(audio_output));
 
-        if let Some(dj) = dj {
-            world.add_resource(dj);
-            builder = builder.add(DjSystem, "dj_system", self.dep);
+        world.add_resource(AssetStorage::<Source>::new());
+
+        if let Some(sink) = sink {
+            world.add_resource(sink);
+            builder = builder
+                .add(Processor::<Source>::new(), "source_processor", &[])
+                .add(DjSystem::new(self.picker), "dj_system", self.dep);
         }
 
         Ok(builder)

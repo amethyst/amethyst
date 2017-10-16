@@ -1,6 +1,6 @@
 //! `amethyst` audio ecs module
 
-pub use self::bundle::DjBundle;
+pub use self::bundle::AudioBundle;
 pub use self::components::*;
 pub use self::systems::*;
 

@@ -1,9 +1,8 @@
 //! Loading and playing of audio files.
 
-pub use self::audio_context::AudioContext;
-pub use self::dj::Dj;
 pub use self::formats::{FlacFormat, OggFormat, WavFormat};
-pub use self::source::Source;
+pub use self::sink::AudioSink;
+pub use self::source::{Source, SourceHandle};
 
 pub mod play;
 pub mod output;
@@ -11,9 +10,8 @@ pub mod output;
 use std::error::Error;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
-mod audio_context;
-mod dj;
 mod formats;
+mod sink;
 mod source;
 
 /// An error occurred while decoding the source.

@@ -6,7 +6,7 @@ pub use Renderer;
 pub use cam::{Camera, Projection};
 pub use light::*;
 pub use mesh::{Mesh, MeshBuilder};
-pub use mtl::{Material, MaterialBuilder};
+pub use mtl::Material;
 pub use pipe::{Pipeline, PipelineBuilder, PolyPipeline, PolyStage, Stage, StageBuilder, Target};
 pub use tex::{Texture, TextureBuilder};
 pub use pass;

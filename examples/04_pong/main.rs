@@ -1,7 +1,6 @@
 //! TODO: Rewrite for new renderer.
 
 extern crate amethyst;
-extern crate futures;
 
 mod pong;
 mod systems;
@@ -12,15 +11,17 @@ use std::time::Duration;
 
 use amethyst::Result;
 use amethyst::ecs::{Component, DenseVecStorage};
-use amethyst::ecs::audio::DjBundle;
+use amethyst::ecs::audio::AudioBundle;
 use amethyst::ecs::input::InputBundle;
-use amethyst::ecs::rendering::{MaterialComponent, MeshComponent, RenderBundle};
+use amethyst::ecs::rendering::{create_render_system, RenderBundle};
 use amethyst::ecs::transform::{Transform, TransformBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::Config as DisplayConfig;
 use amethyst::renderer::prelude::*;
-use bundle::PongBundle;
 use amethyst::util::frame_limiter::FrameRateLimitStrategy;
+
+use audio::Music;
+use bundle::PongBundle;
 
 const ARENA_HEIGHT: f32 = 100.0;
 const ARENA_WIDTH: f32 = 100.0;
@@ -35,13 +36,13 @@ const BALL_RADIUS: f32 = 2.5;
 const BALL_COLOUR: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
 
 const AUDIO_MUSIC: &'static [&'static str] = &[
-    "Computer_Music_All-Stars_-_Wheres_My_Jetpack.ogg",
-    "Computer_Music_All-Stars_-_Albatross_v2.ogg",
+    "audio/Computer_Music_All-Stars_-_Wheres_My_Jetpack.ogg",
+    "audio/Computer_Music_All-Stars_-_Albatross_v2.ogg",
 ];
-const AUDIO_BOUNCE: &'static str = "bounce.ogg";
-const AUDIO_SCORE: &'static str = "score.ogg";
+const AUDIO_BOUNCE: &'static str = "audio/bounce.ogg";
+const AUDIO_SCORE: &'static str = "audio/score.ogg";
 
-type DrawFlat = pass::DrawFlat<PosTex, MeshComponent, MaterialComponent, Transform>;
+type DrawFlat = pass::DrawFlat<PosTex, Transform>;
 
 fn main() {
     if let Err(e) = run() {
@@ -51,13 +52,13 @@ fn main() {
 }
 
 fn run() -> Result<()> {
-    use amethyst::assets::Directory;
     use pong::Pong;
 
     let display_config_path = format!(
         "{}/examples/04_pong/resources/display.ron",
         env!("CARGO_MANIFEST_DIR")
     );
+    let display_config = DisplayConfig::load(display_config_path);
 
     let key_bindings_path = format!(
         "{}/examples/04_pong/resources/input.ron",
@@ -66,24 +67,25 @@ fn run() -> Result<()> {
 
     let assets_dir = format!("{}/examples/04_pong/resources/", env!("CARGO_MANIFEST_DIR"));
 
-    let game = Application::build(Pong)?
-        .with_frame_limit(FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)), 144)
+    let pipe = Pipeline::build().with_stage(
+        Stage::with_backbuffer()
+            .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
+            .with_pass(DrawFlat::new()),
+    );
+
+    let game = Application::build(assets_dir, Pong)?
+        .with_frame_limit(
+            FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
+            144,
+        )
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path),
         )?
         .with_bundle(PongBundle)?
         .with_bundle(TransformBundle::new().with_dep(&["ball_system", "paddle_system"]))?
-        .with_bundle(DjBundle::new())?
-        .with_bundle(
-            RenderBundle::new(
-                Pipeline::build().with_stage(
-                    Stage::with_backbuffer()
-                        .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-                        .with_pass(DrawFlat::new()),
-                ),
-            ).with_config(DisplayConfig::load(display_config_path)),
-        )?
-        .with_store("assets", Directory::new(assets_dir));
+        .with_bundle(AudioBundle::new(|music: &mut Music| music.music.next()))?
+        .with_bundle(RenderBundle::new())?
+        .with_local(create_render_system(pipe, Some(display_config))?);
     Ok(game.build()?.run())
 }
 

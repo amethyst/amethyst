@@ -1,45 +1,45 @@
-use rayon::ThreadPool;
+use std::sync::Arc;
 
+use super::Source as Audio;
 use assets::*;
+
+pub struct AudioData(pub Vec<u8>);
 
 /// Loads audio from wav files.
 pub struct WavFormat;
 
-impl Format for WavFormat {
-    const EXTENSIONS: &'static [&'static str] = &["wav"];
-    type Data = Vec<u8>;
-    type Error = NoError;
-    type Result = Result<Self::Data, Self::Error>;
+impl Format<Audio> for WavFormat {
+    const NAME: &'static str = "WAV";
 
-    fn parse(&self, bytes: Vec<u8>, _: &ThreadPool) -> Self::Result {
-        Ok(bytes)
+    type Options = ();
+
+    fn import(&self, name: String, source: Arc<Source>, _: ()) -> Result<AudioData, BoxedErr> {
+        source.load(&name).map(AudioData)
     }
 }
 
 /// Loads audio from Ogg Vorbis files
 pub struct OggFormat;
 
-impl Format for OggFormat {
-    const EXTENSIONS: &'static [&'static str] = &["ogg"];
-    type Data = Vec<u8>;
-    type Error = NoError;
-    type Result = Result<Self::Data, Self::Error>;
+impl Format<Audio> for OggFormat {
+    const NAME: &'static str = "OGG";
 
-    fn parse(&self, bytes: Vec<u8>, _: &ThreadPool) -> Self::Result {
-        Ok(bytes)
+    type Options = ();
+
+    fn import(&self, name: String, source: Arc<Source>, _: ()) -> Result<AudioData, BoxedErr> {
+        source.load(&name).map(AudioData)
     }
 }
 
 /// Loads audio from Flac files.
 pub struct FlacFormat;
 
-impl Format for FlacFormat {
-    const EXTENSIONS: &'static [&'static str] = &["flac"];
-    type Data = Vec<u8>;
-    type Error = NoError;
-    type Result = Result<Self::Data, Self::Error>;
+impl Format<Audio> for FlacFormat {
+    const NAME: &'static str = "FLAC";
 
-    fn parse(&self, bytes: Vec<u8>, _: &ThreadPool) -> Self::Result {
-        Ok(bytes)
+    type Options = ();
+
+    fn import(&self, name: String, source: Arc<Source>, _: ()) -> Result<AudioData, BoxedErr> {
+        source.load(&name).map(AudioData)
     }
 }

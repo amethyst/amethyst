@@ -289,10 +289,7 @@ where
             .fmap(BuildStage::new(fac, &targets))
             .try()?;
 
-        Ok(Pipeline {
-            stages,
-            targets,
-        })
+        Ok(Pipeline { stages, targets })
     }
 }
 
@@ -303,10 +300,7 @@ pub struct BuildStage<'a> {
 
 impl<'a> BuildStage<'a> {
     fn new(factory: &'a mut Factory, targets: &'a Targets) -> Self {
-        BuildStage {
-            factory,
-            targets,
-        }
+        BuildStage { factory, targets }
     }
 }
 

@@ -43,7 +43,7 @@
 //! }
 //!
 //! fn main() {
-//!     let mut game = Application::new(GameState).expect("Fatal error");
+//!     let mut game = Application::new("assets/", GameState).expect("Fatal error");
 //!     game.run();
 //! }
 //! ```
@@ -68,9 +68,7 @@ extern crate crossbeam;
 #[macro_use]
 extern crate derivative;
 extern crate fnv;
-extern crate futures;
 extern crate gfx;
-extern crate imagefmt;
 extern crate rayon;
 extern crate rodio;
 extern crate serde;
