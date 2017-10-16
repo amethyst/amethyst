@@ -110,6 +110,15 @@ where
     T: Attribute,
 {
 }
+
+impl<T> Separate<T>
+where
+    T: Attribute
+{
+    /// Create a new Separate vertex attribute
+    pub fn new(data: T::Repr) -> Self { Separate(data) }
+}
+
 impl<T> VertexFormat for Separate<T>
 where
     T: Attribute,
@@ -297,6 +306,14 @@ impl With<TexCoord> for PosNormTangTex {
     };
 }
 
+/// Vertex combo
+pub type VertexBufferCombination = (
+    Vec<Separate<Position>>,
+    Option<Vec<Separate<Color>>>,
+    Option<Vec<Separate<TexCoord>>>,
+    Option<Vec<Separate<Normal>>>,
+    Option<Vec<Separate<Tangent>>>,
+);
 
 /// Allows to query specific `Attribute`s of `VertexFormat`
 pub trait Query<T>: VertexFormat {
