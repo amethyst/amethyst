@@ -1,6 +1,6 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use ecs::{Component, Entity, VecStorage};
+use specs::{Component, Entity, VecStorage};
 
 /// Component for defining a parent entity.
 pub struct Child {

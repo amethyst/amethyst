@@ -1,9 +1,9 @@
 //! ECS transform bundle
 
-use core::bundle::{ECSBundle, Result};
+use specs::{DispatcherBuilder, World};
 
-use ecs::{DispatcherBuilder, World};
-use ecs::transform::*;
+use bundle::{ECSBundle, Result};
+use transform::*;
 
 /// Transform bundle
 ///
