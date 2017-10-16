@@ -4,8 +4,7 @@ use std::ops::{Deref, DerefMut};
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use cgmath::{Matrix3, Matrix4, Quaternion, Vector3};
-
-use ecs::{Component, VecStorage};
+use specs::{Component, VecStorage};
 
 /// Raw transform data.
 #[derive(Debug)]

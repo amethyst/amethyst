@@ -1,4 +1,4 @@
-use ecs::{Component, NullStorage};
+use specs::{Component, NullStorage};
 
 /// Initialization flag.
 /// Added to entity with a `LocalTransform` component after the first update.

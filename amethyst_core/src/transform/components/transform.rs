@@ -2,7 +2,7 @@
 
 use std::borrow::Borrow;
 
-use ecs::{Component, FlaggedStorage, VecStorage};
+use specs::{Component, FlaggedStorage, VecStorage};
 
 /// Performs a global transformation on the entity (transform from origin).
 ///
