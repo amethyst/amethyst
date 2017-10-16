@@ -29,10 +29,7 @@ static FRAG_SRC: &[u8] = include_bytes!("shaders/fragment/pbm.glsl");
 /// Draw mesh with physically based lighting
 /// `V` is `VertexFormat`
 /// `A` is ambient light resource
-/// `M` is `Mesh` component
-/// `N` is `Material` component
 /// `T` is transform matrix component
-/// `L` is `Light` component
 #[derive(Clone, Debug, PartialEq)]
 pub struct DrawPbm<V, A, T> {
     _pd: PhantomData<(V, A, T)>,

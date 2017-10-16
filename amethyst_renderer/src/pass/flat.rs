@@ -25,8 +25,6 @@ static FRAG_SRC: &[u8] = include_bytes!("shaders/fragment/flat.glsl");
 
 /// Draw mesh without lighting
 /// `V` is `VertexFormat`
-/// `M` is `Mesh` component
-/// `N` is `Material` component
 /// `T` is transform matrix component
 #[derive(Clone, Debug, PartialEq)]
 pub struct DrawFlat<V, T> {

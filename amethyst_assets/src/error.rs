@@ -33,7 +33,7 @@ impl Display for AssetError {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         write!(
             f,
-            "Failed to load asset \"{}\" of format \"{}\": {}",
+            "Failed to load asset {:?} of format {:?}: {}",
             &self.name,
             &self.format,
             &self.error

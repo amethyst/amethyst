@@ -32,7 +32,6 @@ pub struct AssetStorage<A: Asset> {
     bitset: BitSet,
     handles: Vec<Handle<A>>,
     handle_alloc: Allocator,
-    //new_handles: MsQueue<Handle<A>>, // TODO: maybe not necessary
     pub(crate) processed: Arc<MsQueue<Processed<A>>>,
     unused_handles: MsQueue<Handle<A>>,
 }
@@ -64,11 +63,6 @@ impl<A: Asset> AssetStorage<A> {
             id: Arc::new(id),
             marker: PhantomData,
         };
-        // TODO: we could optimize this by removing the handles queue
-        // and ensuring that for every handle, `process` is indeed called.
-        // Then, we could add the handle in `process`.
-        // EDIT: done.
-        // OLD: self.new_handles.push(handle.clone());
 
         handle
     }
@@ -107,8 +101,6 @@ impl<A: Asset> AssetStorage<A> {
             let bitset = &mut self.bitset;
             let handles = &mut self.handles;
             errors.execute::<AssetError, _>(|| {
-                println!("Got asset with name {}", &name);
-
                 let asset = data.and_then(|d| f(d))
                     .map_err(|e| AssetError::new(name, format, e))?;
 
@@ -183,7 +175,7 @@ where
 /// user deals with, the actual asset (`A`) is stored
 /// in an `AssetStorage`.
 #[derive(Derivative)]
-#[derivative(Clone(bound = ""), Hash(bound = ""))]
+#[derivative(Clone(bound = ""), Eq(bound = ""), Hash(bound = ""), PartialEq(bound = ""))]
 pub struct Handle<A> {
     id: Arc<u32>,
     marker: PhantomData<A>,
@@ -206,19 +198,11 @@ impl<A> Handle<A> {
     }
 }
 
-impl<A> Eq for Handle<A> {}
-
 impl<A> Component for Handle<A>
 where
     A: Send + Sync + 'static,
 {
     type Storage = DenseVecStorage<Self>;
-}
-
-impl<A> PartialEq for Handle<A> {
-    fn eq(&self, other: &Handle<A>) -> bool {
-        *self.id.as_ref() == *other.id.as_ref()
-    }
 }
 
 // TODO: may change with hot reloading

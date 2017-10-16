@@ -43,10 +43,10 @@ impl Loader {
     /// Loads an asset with a given format from the default (directory) source.
     /// If you want to load from a custom source instead, use `load_from`.
     ///
-    /// The actual work is done in a worker thread, thus this method immediately returns a handle.
+    /// See `load_from` for more information.
     pub fn load<A, F, N>(
         &self,
-        id: N,
+        name: N,
         format: F,
         options: F::Options,
         progress: &mut Progress,
@@ -57,11 +57,24 @@ impl Loader {
         F: Format<A>,
         N: Into<String>,
     {
-        self.load_from::<A, F, _, _>(id, format, options, "", progress, storage)
+        self.load_from::<A, F, _, _>(name, format, options, "", progress, storage)
     }
 
     /// Loads an asset with a given id and format from a custom source.
     /// The actual work is done in a worker thread, thus this method immediately returns a handle.
+    ///
+    /// ## Parameters
+    ///
+    /// * `name`: this is just an identifier for the asset, most likely a file name e.g.
+    ///   `"meshes/a.obj"`
+    /// * `format`: A format struct which loads bytes from a `source` and produces `Asset::Data`
+    ///   with them
+    /// * `options`: Additional parameter to `format` to configure how exactly the data will
+    ///   be created. This could e.g. be mipmap levels for textures.
+    /// * `source`: An identifier for a source which has previously been added using `with_source`
+    /// * `progress`: A tracker which will be notified of assets which have been imported
+    /// * `storage`: The asset storage which can be fetched from the ECS `World` using
+    ///   `read_resource`.
     pub fn load_from<A, F, N, S>(
         &self,
         name: N,

@@ -602,6 +602,35 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     }
 
     /// Add a local `RunNow` system.
+    ///
+    /// The added system will be dispatched after all normal
+    /// and thread local systems. This is special because it does
+    /// accept types implementing only `RunNow`, but not
+    /// `System`, which is needed for e.g. the `RenderSystem`.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use amethyst::ecs::rendering::{RenderBundle, create_render_system};
+    /// use amethyst::prelude::*;
+    /// use amethyst::renderer::{Config as DisplayConfig, Pipeline};
+    ///
+    /// # fn run() -> Result<(), ::amethyst::Error> {
+    /// let pipe = Pipeline::build().with_stage(
+    ///     Stage::with_backbuffer()
+    ///         .clear_target(BACKGROUND_COLOUR, 1.0)
+    ///         .with_pass(DrawShaded::new()),
+    /// );
+    ///
+    /// let config = DisplayConfig::load(&display_config_path);
+    ///
+    /// let mut game = Application::build(resources, Example)?
+    /// .with_bundle(RenderBundle::new())?
+    /// .with_local(create_render_system(pipe, Some(config))?)
+    /// .build()?;
+    /// # }
+    /// # fn main() { run().unwrap(); }
+    /// ```
     pub fn with_local<S>(mut self, system: S) -> Self
     where
         for<'c> S: RunNow<'c> + 'b,
