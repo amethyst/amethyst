@@ -628,6 +628,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// .with_bundle(RenderBundle::new())?
     /// .with_local(create_render_system(pipe, Some(config))?)
     /// .build()?;
+    /// # Ok(())
     /// # }
     /// # fn main() { run().unwrap(); }
     /// ```
