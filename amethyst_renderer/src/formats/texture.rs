@@ -84,40 +84,40 @@ impl TextureMetadata {
 /// Texture data for loading
 pub enum TextureData {
     /// Image data
-    Image(ImageData, Option<TextureMetadata>),
+    Image(ImageData, TextureMetadata),
 
     /// Color
-    Rgba([f32; 4], Option<TextureMetadata>),
+    Rgba([f32; 4], TextureMetadata),
 
     /// Float data
-    F32(Vec<f32>, Option<TextureMetadata>),
+    F32(Vec<f32>, TextureMetadata),
 
     /// Float data
-    F64(Vec<f64>, Option<TextureMetadata>),
+    F64(Vec<f64>, TextureMetadata),
 
     /// Byte data
-    U8(Vec<u8>, Option<TextureMetadata>),
+    U8(Vec<u8>, TextureMetadata),
 
     /// Byte data
-    U16(Vec<u16>, Option<TextureMetadata>),
+    U16(Vec<u16>, TextureMetadata),
 
     /// Byte data
-    U32(Vec<u32>, Option<TextureMetadata>),
+    U32(Vec<u32>, TextureMetadata),
 
     /// Byte data
-    U64(Vec<u64>, Option<TextureMetadata>),
+    U64(Vec<u64>, TextureMetadata),
 }
 
 impl From<[f32; 4]> for TextureData {
     fn from(color: [f32; 4]) -> Self {
-        TextureData::Rgba(color, None)
+        TextureData::Rgba(color, Default::default())
     }
 }
 
 impl TextureData {
     /// Creates texture data from color.
     pub fn color(value: [f32; 4]) -> Self {
-        TextureData::Rgba(value, None)
+        TextureData::Rgba(value, Default::default())
     }
 }
 
@@ -142,7 +142,7 @@ impl Format<Texture> for JpgFormat {
         options: TextureMetadata,
     ) -> Result<TextureData, BoxedErr> {
         imagefmt::jpeg::read(&mut Cursor::new(source.load(&name)?), ColFmt::RGBA)
-            .map(|raw| TextureData::Image(ImageData { raw }, Some(options)))
+            .map(|raw| TextureData::Image(ImageData { raw }, options))
             .map_err(BoxedErr::new)
     }
 }
@@ -162,7 +162,7 @@ impl Format<Texture> for PngFormat {
         options: TextureMetadata,
     ) -> Result<TextureData, BoxedErr> {
         imagefmt::png::read(&mut Cursor::new(source.load(&name)?), ColFmt::RGBA)
-            .map(|raw| TextureData::Image(ImageData { raw }, Some(options)))
+            .map(|raw| TextureData::Image(ImageData { raw }, options))
             .map_err(BoxedErr::new)
     }
 }
@@ -182,7 +182,7 @@ impl Format<Texture> for BmpFormat {
         options: TextureMetadata,
     ) -> Result<TextureData, BoxedErr> {
         imagefmt::bmp::read(&mut Cursor::new(source.load(&name)?), ColFmt::RGBA)
-            .map(|raw| TextureData::Image(ImageData { raw }, Some(options)))
+            .map(|raw| TextureData::Image(ImageData { raw }, options))
             .map_err(BoxedErr::new)
     }
 }
@@ -287,45 +287,34 @@ pub fn create_texture_asset(
 
 fn apply_options<D, T>(
     mut tb: TextureBuilder<D, T>,
-    options: Option<TextureMetadata>,
+    metadata: TextureMetadata,
 ) -> TextureBuilder<D, T>
 where
     D: AsRef<[T]>,
     T: Pod + Copy,
 {
-    match options {
-        Some(metadata) => {
-            match metadata.sampler {
-                Some(sampler) => tb = tb.with_sampler(sampler),
-                _ => (),
-            }
-
-            match metadata.mip_levels {
-                Some(mip) => tb = tb.mip_levels(mip),
-                _ => (),
-            }
-
-            match metadata.size {
-                Some((w, h)) => tb = tb.with_size(w, h),
-                _ => (),
-            }
-
-            if metadata.dynamic {
-                tb = tb.dynamic(true);
-            }
-
-            match metadata.format {
-                Some(format) => tb = tb.with_format(format),
-                _ => (),
-            }
-
-            match metadata.channel {
-                Some(channel) => tb = tb.with_channel_type(channel),
-                _ => (),
-            }
-        }
-
-        None => (),
+    match metadata.sampler {
+        Some(sampler) => tb = tb.with_sampler(sampler),
+        _ => (),
+    }
+    match metadata.mip_levels {
+        Some(mip) => tb = tb.mip_levels(mip),
+        _ => (),
+    }
+    match metadata.size {
+        Some((w, h)) => tb = tb.with_size(w, h),
+        _ => (),
+    }
+    if metadata.dynamic {
+        tb = tb.dynamic(true);
+    }
+    match metadata.format {
+        Some(format) => tb = tb.with_format(format),
+        _ => (),
+    }
+    match metadata.channel {
+        Some(channel) => tb = tb.with_channel_type(channel),
+        _ => (),
     }
 
     tb
@@ -333,7 +322,7 @@ where
 
 fn create_texture_asset_from_image(
     image: ImageData,
-    options: Option<TextureMetadata>,
+    options: TextureMetadata,
     renderer: &mut Renderer,
 ) -> Result<Texture, BoxedErr> {
     fn convert_color_format(fmt: ColFmt) -> Option<SurfaceType> {
