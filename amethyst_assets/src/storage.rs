@@ -101,7 +101,7 @@ impl<A: Asset> AssetStorage<A> {
             let bitset = &mut self.bitset;
             let handles = &mut self.handles;
             errors.execute::<AssetError, _>(|| {
-                let asset = data.and_then(|d| f(d))
+                let asset = data.and_then(&mut f)
                     .map_err(|e| AssetError::new(name, format, e))?;
 
                 let id = handle.id();
