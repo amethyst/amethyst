@@ -66,7 +66,6 @@ struct AssetsExample;
 impl State for AssetsExample {
     fn on_start(&mut self, engine: &mut Engine) {
         use amethyst::renderer::MaterialDefaults;
-        use amethyst::renderer::formats::TextureData;
 
         engine.world.add_resource(0usize);
 
@@ -84,7 +83,7 @@ impl State for AssetsExample {
             let textures = &engine.world.read_resource();
 
             let mesh = loader.load("cuboid.custom", Custom, (), &mut p, meshes);
-            let albedo = loader.load_from_data(TextureData::color([0.0, 0.0, 1.0, 0.0]), textures);
+            let albedo = loader.load_from_data([0.0, 0.0, 1.0, 0.0].into(), textures);
             let mat = Material {
                 albedo,
                 ..mat_defaults.0.clone()

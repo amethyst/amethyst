@@ -4,7 +4,6 @@ use assets::{AssetStorage, Handle};
 use core::bundle::{ECSBundle, Result};
 use renderer::Config as DisplayConfig;
 use renderer::Rgba;
-use renderer::formats::TextureData;
 use renderer::pipe::PipelineBuild;
 use renderer::prelude::*;
 
@@ -95,13 +94,13 @@ impl<'a, 'b> ECSBundle<'a, 'b> for RenderBundle {
 fn create_default_mat(world: &World) -> Material {
     let loader = world.read_resource::<Loader>();
 
-    let albedo = TextureData::color([0.5, 0.5, 0.5, 1.0]);
-    let emission = TextureData::color([0.0; 4]);
-    let normal = TextureData::color([0.5, 0.5, 1.0, 1.0]);
-    let metallic = TextureData::color([0.0; 4]);
-    let roughness = TextureData::color([0.5; 4]);
-    let ambient_occlusion = TextureData::color([1.0; 4]);
-    let caveat = TextureData::color([1.0; 4]);
+    let albedo = [0.5, 0.5, 0.5, 1.0].into();
+    let emission = [0.0; 4].into();
+    let normal = [0.5, 0.5, 1.0, 1.0].into();
+    let metallic = [0.0; 4].into();
+    let roughness = [0.5; 4].into();
+    let ambient_occlusion = [1.0; 4].into();
+    let caveat = [1.0; 4].into();
 
     let tex_storage = world.read_resource();
 

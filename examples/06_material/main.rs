@@ -9,7 +9,6 @@ use amethyst::ecs::rendering::{create_render_system, AmbientColor, RenderBundle}
 use amethyst::ecs::transform::Transform;
 use amethyst::prelude::*;
 use amethyst::renderer::{Config as DisplayConfig, MaterialDefaults, MeshHandle};
-use amethyst::renderer::formats::{MeshData, TextureData};
 use amethyst::renderer::prelude::*;
 use cgmath::{Deg, Matrix4, Vector3};
 use cgmath::prelude::InnerSpace;
@@ -21,8 +20,8 @@ struct Example;
 impl State for Example {
     fn on_start(&mut self, engine: &mut Engine) {
         let mat_defaults = engine.world.read_resource::<MaterialDefaults>().0.clone();
-        let verts: MeshData = gen_sphere(32, 32).into();
-        let albedo = TextureData::color([1.0, 1.0, 1.0, 1.0]);
+        let verts = gen_sphere(32, 32).into();
+        let albedo = [1.0, 1.0, 1.0, 1.0].into();
 
         println!("Load mesh");
         let (mesh, albedo) = {
@@ -45,8 +44,8 @@ impl State for Example {
                     [2.0f32 * (i - 2) as f32, 2.0f32 * (j - 2) as f32, 0.0].into(),
                 );
 
-                let metallic = TextureData::color([metallic, metallic, metallic, 1.0]);
-                let roughness = TextureData::color([roughness, roughness, roughness, 1.0]);
+                let metallic = [metallic, metallic, metallic, 1.0].into();
+                let roughness = [roughness, roughness, roughness, 1.0].into();
 
                 let (metallic, roughness) = {
                     let loader = engine.world.read_resource::<Loader>();

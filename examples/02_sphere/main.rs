@@ -109,7 +109,6 @@ fn initialise_sphere(world: &mut World) {
 
     use amethyst::assets::Handle;
     use amethyst::renderer::{Material, MaterialDefaults};
-    use amethyst::renderer::formats::TextureData;
 
     let (mesh, material) = {
         let loader = world.read_resource::<Loader>();
@@ -117,7 +116,7 @@ fn initialise_sphere(world: &mut World) {
         let mesh: Handle<Mesh> =
             loader.load_from_data(gen_sphere(32, 32).into(), &world.read_resource());
 
-        let albedo = TextureData::color(SPHERE_COLOUR);
+        let albedo = SPHERE_COLOUR.into();
 
         let tex_storage = world.read_resource();
         let mat_defaults = world.read_resource::<MaterialDefaults>();
