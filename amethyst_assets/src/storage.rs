@@ -126,8 +126,6 @@ impl<A: Asset> AssetStorage<A> {
             }
             self.bitset.remove(id);
             self.unused_handles.push(old);
-
-            println!("Removed value!");
         }
     }
 }

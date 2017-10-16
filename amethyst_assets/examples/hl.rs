@@ -119,7 +119,7 @@ enum State {
 }
 
 impl State {
-    /// Returns `true` if the app should quit.
+    /// Returns `Some` if the app should quit.
     fn update(self, world: &mut World) -> Option<Self> {
         match self {
             State::Start => {
