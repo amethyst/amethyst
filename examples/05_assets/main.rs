@@ -8,7 +8,7 @@ extern crate rayon;
 use std::sync::Arc;
 
 use amethyst::{Application, Error, State, Trans};
-use amethyst::assets::{BoxedErr, Format, Loader, Progress, Source};
+use amethyst::assets::{BoxedErr, Format, Loader, Source};
 use amethyst::config::Config;
 use amethyst::ecs::World;
 use amethyst::ecs::input::InputBundle;
@@ -74,15 +74,13 @@ impl State for AssetsExample {
 
         // Add custom cube object to scene
         let (mesh, mtl) = {
-            let mut p = Progress::new();
-
             let mat_defaults = engine.world.read_resource::<MaterialDefaults>();
             let loader = engine.world.read_resource::<Loader>();
 
             let meshes = &engine.world.read_resource();
             let textures = &engine.world.read_resource();
 
-            let mesh = loader.load("cuboid.custom", Custom, (), &mut p, meshes);
+            let mesh = loader.load("cuboid.custom", Custom, (), (), meshes);
             let albedo = loader.load_from_data([0.0, 0.0, 1.0, 0.0].into(), textures);
             let mat = Material {
                 albedo,

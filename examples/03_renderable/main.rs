@@ -7,7 +7,7 @@ extern crate amethyst;
 extern crate cgmath;
 
 use amethyst::{Application, Error, State, Trans};
-use amethyst::assets::{Loader, Progress};
+use amethyst::assets::{Loader,};
 use amethyst::config::Config;
 use amethyst::ecs::{Fetch, FetchMut, Join, System, World, WriteStorage};
 use amethyst::ecs::rendering::{create_render_system, AmbientColor, RenderBundle};
@@ -291,7 +291,6 @@ fn load_assets(world: &World) -> Assets {
     let tex_storage = world.read_resource();
     let mat_defaults = world.read_resource::<MaterialDefaults>();
     let loader = world.read_resource::<Loader>();
-    let mut progress = Progress::new();
 
     let red = loader.load_from_data([1.0, 0.0, 0.0, 1.0].into(), &tex_storage);
     let red = Material {
@@ -310,17 +309,17 @@ fn load_assets(world: &World) -> Assets {
             "logo.png",
             PngFormat,
             Default::default(),
-            &mut progress,
+            (),
             &tex_storage,
         ),
         ..mat_defaults.0.clone()
     };
 
-    let cube = loader.load("cube.obj", ObjFormat, (), &mut progress, &mesh_storage);
-    let cone = loader.load("cone.obj", ObjFormat, (), &mut progress, &mesh_storage);
-    let lid = loader.load("lid.obj", ObjFormat, (), &mut progress, &mesh_storage);
-    let teapot = loader.load("teapot.obj", ObjFormat, (), &mut progress, &mesh_storage);
-    let rectangle = loader.load("rectangle.obj", ObjFormat, (), &mut progress, &mesh_storage);
+    let cube = loader.load("cube.obj", ObjFormat, (), (), &mesh_storage);
+    let cone = loader.load("cone.obj", ObjFormat, (), (), &mesh_storage);
+    let lid = loader.load("lid.obj", ObjFormat, (), (), &mesh_storage);
+    let teapot = loader.load("teapot.obj", ObjFormat, (), (), &mesh_storage);
+    let rectangle = loader.load("rectangle.obj", ObjFormat, (), (), &mesh_storage);
 
     Assets {
         cube,

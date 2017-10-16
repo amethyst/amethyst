@@ -114,7 +114,7 @@ impl<'a> System<'a> for RenderingSystem {
 
 enum State {
     Start,
-    Loading(Progress),
+    Loading(ProgressCounter),
     SomethingElse,
 }
 
@@ -124,7 +124,7 @@ impl State {
         match self {
             State::Start => {
                 let (mesh, progress) = {
-                    let mut progress = Progress::new();
+                    let mut progress = ProgressCounter::new();
                     let loader = world.read_resource::<Loader>();
                     let a = loader.load("mesh.ron", Ron, (), &mut progress, &world.read_resource());
 

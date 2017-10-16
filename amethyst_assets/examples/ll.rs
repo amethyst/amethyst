@@ -44,7 +44,7 @@ fn main() {
     let loader = Loader::new(&path, pool);
     let mut storage = AssetStorage::new();
 
-    let mut progress = Progress::new();
+    let mut progress = ProgressCounter::new();
 
     let dummy = loader.load(
         "dummy/whatever.dum",

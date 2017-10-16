@@ -1,4 +1,4 @@
-use amethyst::assets::{AssetStorage, Loader, Progress};
+use amethyst::assets::{AssetStorage, Loader};
 use amethyst::audio::{Source, SourceHandle};
 use amethyst::audio::output::Output;
 use amethyst::ecs::World;
@@ -16,7 +16,7 @@ fn load_audio_track(loader: &Loader, world: &World, file: &str) -> SourceHandle 
         file,
         OggFormat,
         (),
-        &mut Progress::new(),
+        (),
         &world.read_resource(),
     )
 }

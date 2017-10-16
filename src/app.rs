@@ -202,8 +202,9 @@ impl<'a, 'b> Application<'a, 'b> {
         profile_scope!("maintain");
         self.engine.world.maintain();
 
-        // TODO: replace
-        // TODO: let the user handle
+        // TODO: replace this with a more customizable method.
+        // TODO: effectively, the user should have more control over error handling here
+        // TODO: because right now the app will just exit in case of an error.
         self.engine
             .world
             .write_resource::<Errors>()
@@ -611,20 +612,29 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// # Examples
     ///
     /// ```no_run
-    /// use amethyst::ecs::rendering::{RenderBundle, create_render_system};
+    /// use amethyst::ecs::rendering::{AmbientColor, RenderBundle, create_render_system};
+    /// use amethyst::ecs::transform::Transform;
     /// use amethyst::prelude::*;
-    /// use amethyst::renderer::{Config as DisplayConfig, Pipeline};
+    /// use amethyst::renderer::{Config as DisplayConfig};
+    /// use amethyst::renderer::pass;
+    /// use amethyst::renderer::pipe::{Pipeline, Stage};
+    /// use amethyst::renderer::vertex::PosNormTex;
     ///
+    /// type DrawShaded = pass::DrawShaded<PosNormTex, AmbientColor, Transform>;
+    ///
+    /// # struct Example;
+    /// # impl State for Example {}
+    /// #
     /// # fn run() -> Result<(), ::amethyst::Error> {
     /// let pipe = Pipeline::build().with_stage(
     ///     Stage::with_backbuffer()
-    ///         .clear_target(BACKGROUND_COLOUR, 1.0)
+    ///         .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
     ///         .with_pass(DrawShaded::new()),
     /// );
     ///
-    /// let config = DisplayConfig::load(&display_config_path);
+    /// let config = DisplayConfig::load("config_path.ron");
     ///
-    /// let mut game = Application::build(resources, Example)?
+    /// let mut game = Application::build("resources/", Example)?
     /// .with_bundle(RenderBundle::new())?
     /// .with_local(create_render_system(pipe, Some(config))?)
     /// .build()?;
@@ -695,8 +705,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// ~~~no_run
     /// use amethyst::prelude::*;
-    /// use amethyst::assets::{Directory, Loader, Progress};
-    /// use amethyst::ecs::rendering::MeshComponent;
+    /// use amethyst::assets::{Directory, Loader};
     /// use amethyst::renderer::formats::ObjFormat;
     ///
     /// let mut game = Application::build("assets/", LoadingState)
@@ -710,13 +719,12 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// struct LoadingState;
     /// impl State for LoadingState {
     ///     fn on_start(&mut self, engine: &mut Engine) {
-    ///         let mut progress = Progress::new();
     ///         let storage = engine.world.read_resource();
     ///
     ///         let loader = engine.world.read_resource::<Loader>();
     ///         // Load a teapot mesh from the directory that registered above.
     ///         let mesh = loader.load_from("teapot", ObjFormat, (), "custom_directory",
-    ///                                     &mut progress, &storage);
+    ///                                     (), &storage);
     ///     }
     /// }
     /// ~~~
@@ -794,7 +802,6 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
 
         self.world.add_resource(AssetStorage::<A>::new());
         self.world.register::<Handle<A>>();
-        // TODO: eventually register loader?
 
         self
     }

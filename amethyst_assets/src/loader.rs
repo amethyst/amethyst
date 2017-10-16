@@ -6,7 +6,7 @@ use std::sync::Arc;
 use fnv::FnvHashMap;
 use rayon::ThreadPool;
 
-use {Asset, Directory, Format, Source};
+use {Asset, Directory, Format, Progress, Source};
 use storage::{AssetStorage, Handle, Processed};
 
 /// The asset loader, holding the sources and a reference to the `ThreadPool`.
@@ -44,20 +44,21 @@ impl Loader {
     /// If you want to load from a custom source instead, use `load_from`.
     ///
     /// See `load_from` for more information.
-    pub fn load<A, F, N>(
+    pub fn load<A, F, N, P>(
         &self,
         name: N,
         format: F,
         options: F::Options,
-        progress: &mut Progress,
+        progress: P,
         storage: &AssetStorage<A>,
     ) -> Handle<A>
     where
         A: Asset,
         F: Format<A>,
         N: Into<String>,
+        P: Progress,
     {
-        self.load_from::<A, F, _, _>(name, format, options, "", progress, storage)
+        self.load_from::<A, F, _, _, _>(name, format, options, "", progress, storage)
     }
 
     /// Loads an asset with a given id and format from a custom source.
@@ -75,29 +76,32 @@ impl Loader {
     /// * `progress`: A tracker which will be notified of assets which have been imported
     /// * `storage`: The asset storage which can be fetched from the ECS `World` using
     ///   `read_resource`.
-    pub fn load_from<A, F, N, S>(
+    pub fn load_from<A, F, N, P, S>(
         &self,
         name: N,
         format: F,
         options: F::Options,
         source: &S,
-        progress: &mut Progress,
+        mut progress: P,
         storage: &AssetStorage<A>,
     ) -> Handle<A>
     where
         A: Asset,
         F: Format<A> + 'static,
         N: Into<String>,
+        P: Progress,
         S: AsRef<str> + Eq + Hash + ?Sized,
         String: Borrow<S>,
     {
+        use progress::Tracker;
+
         let source = match source.as_ref() {
             "" => self.directory.clone(),
             source => self.source(source),
         };
 
-        progress.num_assets += 1;
-        let progress_arc = progress.num_loading.clone();
+        progress.add_assets(1);
+        let tracker = progress.create_tracker();
 
         let handle = storage.allocate();
         let handle_clone = handle.clone();
@@ -107,13 +111,17 @@ impl Loader {
 
         self.pool.spawn(move || {
             let data = format.import(name.clone(), source, options);
+            match data {
+                Ok(_) => tracker.success(),
+                Err(_) => tracker.fail(),
+            }
+
             processed.push(Processed {
                 data,
                 format: F::NAME.into(),
                 handle,
                 name,
             });
-            drop(progress_arc);
         });
 
         handle_clone
@@ -140,40 +148,5 @@ impl Loader {
             .get(source)
             .expect("No such source. Maybe you forgot to add it with `Loader::add_source`?")
             .clone()
-    }
-}
-
-/// A progress tracker which is passed to the `Loader`
-/// in order to check how many asssets are loaded.
-#[derive(Default)]
-pub struct Progress {
-    num_assets: usize,
-    num_loading: Arc<()>,
-}
-
-impl Progress {
-    /// Creates a new `Progress` struct.
-    pub fn new() -> Self {
-        Default::default()
-    }
-
-    /// Returns the number of assets this struct is tracking.
-    pub fn num_assets(&self) -> usize {
-        self.num_assets
-    }
-
-    /// Returns the number of assets that are still loading.
-    pub fn num_loading(&self) -> usize {
-        Arc::strong_count(&self.num_loading) - 1
-    }
-
-    /// Returns the number of assets this struct is tracking.
-    pub fn num_finished(&self) -> usize {
-        self.num_assets - self.num_loading()
-    }
-
-    /// Returns `true` if all tracked assets are finished.
-    pub fn is_complete(&self) -> bool {
-        self.num_loading() == 0
     }
 }
