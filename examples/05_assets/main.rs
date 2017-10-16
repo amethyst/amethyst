@@ -80,7 +80,7 @@ impl State for AssetsExample {
             let meshes = &engine.world.read_resource();
             let textures = &engine.world.read_resource();
 
-            let mesh = loader.load("cuboid.custom", Custom, (), (), meshes);
+            let mesh = loader.load("mesh/cuboid.custom", Custom, (), (), meshes);
             let albedo = loader.load_from_data([0.0, 0.0, 1.0, 0.0].into(), textures);
             let mat = Material {
                 albedo,
@@ -141,10 +141,7 @@ type DrawShaded = pass::DrawShaded<PosNormTex, AmbientColor, Transform>;
 /// Wrapper around the main, so we can return errors easily.
 fn run() -> Result<(), Error> {
     // Add our meshes directory to the asset loader.
-    let resources_directory = format!(
-        "{}/examples/05_assets/resources",
-        env!("CARGO_MANIFEST_DIR")
-    );
+    let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
 
     let display_config_path = format!(
         "{}/examples/05_assets/resources/config.ron",

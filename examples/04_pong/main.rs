@@ -65,7 +65,7 @@ fn run() -> Result<()> {
         env!("CARGO_MANIFEST_DIR")
     );
 
-    let assets_dir = format!("{}/examples/04_pong/resources/", env!("CARGO_MANIFEST_DIR"));
+    let assets_dir = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
 
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()

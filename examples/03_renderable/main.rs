@@ -305,15 +305,21 @@ fn load_assets(world: &World) -> Assets {
     };
 
     let logo = Material {
-        albedo: loader.load("logo.png", PngFormat, Default::default(), (), &tex_storage),
+        albedo: loader.load(
+            "texture/logo.png",
+            PngFormat,
+            Default::default(),
+            (),
+            &tex_storage,
+        ),
         ..mat_defaults.0.clone()
     };
 
-    let cube = loader.load("cube.obj", ObjFormat, (), (), &mesh_storage);
-    let cone = loader.load("cone.obj", ObjFormat, (), (), &mesh_storage);
-    let lid = loader.load("lid.obj", ObjFormat, (), (), &mesh_storage);
-    let teapot = loader.load("teapot.obj", ObjFormat, (), (), &mesh_storage);
-    let rectangle = loader.load("rectangle.obj", ObjFormat, (), (), &mesh_storage);
+    let cube = loader.load("mesh/cube.obj", ObjFormat, (), (), &mesh_storage);
+    let cone = loader.load("mesh/cone.obj", ObjFormat, (), (), &mesh_storage);
+    let lid = loader.load("mesh/lid.obj", ObjFormat, (), (), &mesh_storage);
+    let teapot = loader.load("mesh/teapot.obj", ObjFormat, (), (), &mesh_storage);
+    let rectangle = loader.load("mesh/rectangle.obj", ObjFormat, (), (), &mesh_storage);
 
     Assets {
         cube,
@@ -339,10 +345,7 @@ fn main() {
 /// Wrapper around the main, so we can return errors easily.
 fn run() -> Result<(), Error> {
     // Add our meshes directory to the asset loader.
-    let resources_directory = format!(
-        "{}/examples/03_renderable/resources",
-        env!("CARGO_MANIFEST_DIR")
-    );
+    let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
 
     let display_config_path = format!(
         "{}/examples/03_renderable/resources/config.ron",
