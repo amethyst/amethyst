@@ -39,7 +39,6 @@ pub fn initialise_audio(world: &mut World) {
             .collect::<Vec<_>>()
             .into_iter()
             .cycle();
-        let music = Box::new(music);
         let music = Music { music };
 
         let sound = Sounds {
