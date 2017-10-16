@@ -1,5 +1,7 @@
 //! ECS audio bundles
 
+use std::marker::PhantomData;
+
 use core::bundle::{ECSBundle, Result};
 
 use assets::{AssetStorage, Processor};
@@ -24,15 +26,20 @@ use shred::ResourceId;
 ///
 /// Panics during `DjSystem` registration if the bundle is applied twice.
 ///
-pub struct AudioBundle<'a, F> {
+pub struct AudioBundle<'a, F, R> {
     dep: &'a [&'a str],
+    marker: PhantomData<R>,
     picker: F,
 }
 
-impl<'a, F> AudioBundle<'a, F> {
+impl<'a, F, R> AudioBundle<'a, F, R> {
     /// Create a new DJ bundle
     pub fn new(picker: F) -> Self {
-        AudioBundle { dep: &[], picker }
+        AudioBundle {
+            dep: &[],
+            marker: PhantomData,
+            picker,
+        }
     }
 
     /// Set dependencies for the `DjSystem`
@@ -42,9 +49,10 @@ impl<'a, F> AudioBundle<'a, F> {
     }
 }
 
-impl<'a, 'b, 'c, F> ECSBundle<'a, 'b> for AudioBundle<'c, F>
+impl<'a, 'b, 'c, F, R> ECSBundle<'a, 'b> for AudioBundle<'c, F, R>
 where
-    F: FnMut() -> Option<SourceHandle> + Send + 'static,
+    F: FnMut(&mut R) -> Option<SourceHandle> + Send + 'static,
+    R: Send + Sync + 'static,
 {
     fn build(
         self,

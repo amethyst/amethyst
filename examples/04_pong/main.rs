@@ -19,6 +19,8 @@ use amethyst::prelude::*;
 use amethyst::renderer::Config as DisplayConfig;
 use amethyst::renderer::prelude::*;
 use amethyst::util::frame_limiter::FrameRateLimitStrategy;
+
+use audio::Music;
 use bundle::PongBundle;
 
 const ARENA_HEIGHT: f32 = 100.0;
@@ -34,8 +36,8 @@ const BALL_RADIUS: f32 = 2.5;
 const BALL_COLOUR: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
 
 const AUDIO_MUSIC: &'static [&'static str] = &[
-    "Computer_Music_All-Stars_-_Wheres_My_Jetpack.ogg",
-    "Computer_Music_All-Stars_-_Albatross_v2.ogg",
+    "audio/Computer_Music_All-Stars_-_Wheres_My_Jetpack.ogg",
+    "audio/Computer_Music_All-Stars_-_Albatross_v2.ogg",
 ];
 const AUDIO_BOUNCE: &'static str = "audio/bounce.ogg";
 const AUDIO_SCORE: &'static str = "audio/score.ogg";
@@ -81,7 +83,7 @@ fn run() -> Result<()> {
         )?
         .with_bundle(PongBundle)?
         .with_bundle(TransformBundle::new().with_dep(&["ball_system", "paddle_system"]))?
-        .with_bundle(AudioBundle::new(|| None))?
+        .with_bundle(AudioBundle::new(|music: &mut Music| music.music.next()))?
         .with_bundle(RenderBundle::new())?
         .with_local(create_render_system(pipe, Some(display_config))?);
     Ok(game.build()?.run())

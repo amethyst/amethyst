@@ -1,5 +1,8 @@
+use std::iter::Cycle;
+use std::vec::IntoIter;
+
 use amethyst::assets::{AssetStorage, Loader};
-use amethyst::audio::{Source, SourceHandle};
+use amethyst::audio::{AudioSink, Source, SourceHandle};
 use amethyst::audio::output::Output;
 use amethyst::ecs::World;
 
@@ -8,56 +11,49 @@ pub struct Sounds {
     pub bounce_sfx: SourceHandle,
 }
 
+pub struct Music {
+    pub music: Cycle<IntoIter<SourceHandle>>,
+}
+
 /// Loads an ogg audio track.
 fn load_audio_track(loader: &Loader, world: &World, file: &str) -> SourceHandle {
     use amethyst::audio::OggFormat;
 
-    loader.load(
-        file,
-        OggFormat,
-        (),
-        (),
-        &world.read_resource(),
-    )
+    loader.load(file, OggFormat, (), (), &world.read_resource())
 }
 
 /// Initialise audio in the world. This includes the background track and the
 /// sound effects.
 pub fn initialise_audio(world: &mut World) {
     use {AUDIO_BOUNCE, AUDIO_MUSIC, AUDIO_SCORE};
-    //use amethyst::audio::output::Output;
 
-    let sound_effects = {
+    let (sound_effects, music) = {
         let loader = world.read_resource::<Loader>();
 
-        //        // Add a DJ if we have sound output and background music tracks.
-        //        if world.read_resource::<Option<Output>>().is_some() && AUDIO_MUSIC.len() > 0 {
-        //            let mut dj = world.write_resource::<Dj>();
-        //            dj.set_volume(0.25); // Music is a bit loud, reduce the volume.
-        //            let mut next_track_index = 0;
-        //
-        //            let music_tracks: Vec<_> = AUDIO_MUSIC
-        //                .iter()
-        //                .map(|file| load_audio_track(&loader, &world, file))
-        //                .collect();
-        //
-        //            dj.set_picker(Box::new(move |ref mut dj| {
-        //                dj.append(&music_tracks[next_track_index])
-        //                    .expect("Decoder error occurred!");
-        //                next_track_index = (next_track_index + 1) % music_tracks.len();
-        //                true
-        //            }));
-        //        }
+        let mut sink = world.write_resource::<AudioSink>();
+        sink.set_volume(0.25); // Music is a bit loud, reduce the volume.
 
-        Sounds {
+        let music = AUDIO_MUSIC
+            .iter()
+            .map(|file| load_audio_track(&loader, &world, file))
+            .collect::<Vec<_>>()
+            .into_iter()
+            .cycle();
+        let music = Box::new(music);
+        let music = Music { music };
+
+        let sound = Sounds {
             bounce_sfx: load_audio_track(&loader, &world, AUDIO_BOUNCE),
             score_sfx: load_audio_track(&loader, &world, AUDIO_SCORE),
-        }
+        };
+
+        (sound, music)
     };
 
     // Add sound effects to the world. We have to do this in another scope because
     // world won't let us insert new resources as long as `Loader` is borrowed.
     world.add_resource(sound_effects);
+    world.add_resource(music);
 }
 
 /// Plays the bounce sound when a ball hits a side or a paddle.

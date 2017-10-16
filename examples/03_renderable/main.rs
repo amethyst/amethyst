@@ -7,7 +7,7 @@ extern crate amethyst;
 extern crate cgmath;
 
 use amethyst::{Application, Error, State, Trans};
-use amethyst::assets::{Loader,};
+use amethyst::assets::Loader;
 use amethyst::config::Config;
 use amethyst::ecs::{Fetch, FetchMut, Join, System, World, WriteStorage};
 use amethyst::ecs::rendering::{create_render_system, AmbientColor, RenderBundle};
@@ -305,13 +305,7 @@ fn load_assets(world: &World) -> Assets {
     };
 
     let logo = Material {
-        albedo: loader.load(
-            "logo.png",
-            PngFormat,
-            Default::default(),
-            (),
-            &tex_storage,
-        ),
+        albedo: loader.load("logo.png", PngFormat, Default::default(), (), &tex_storage),
         ..mat_defaults.0.clone()
     };
 
