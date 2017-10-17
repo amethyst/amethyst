@@ -17,8 +17,8 @@ use ecs::common::Errors;
 use engine::Engine;
 use error::{Error, Result};
 use state::{State, StateMachine};
-use timing::{Stopwatch, Time};
-use util::frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy};
+use core::timing::{Stopwatch, Time};
+use core::frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy};
 use vergen;
 
 /// An Application is the root object of the game engine. It binds the OS
