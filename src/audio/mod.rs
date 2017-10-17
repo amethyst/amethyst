@@ -4,7 +4,6 @@ pub use self::formats::{FlacFormat, OggFormat, WavFormat};
 pub use self::sink::AudioSink;
 pub use self::source::{Source, SourceHandle};
 
-pub mod play;
 pub mod output;
 
 use std::error::Error;

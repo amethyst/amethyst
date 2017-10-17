@@ -64,6 +64,7 @@ pub extern crate shrev;
 pub extern crate winit;
 
 extern crate cgmath;
+extern crate cpal;
 extern crate crossbeam;
 #[macro_use]
 extern crate derivative;
