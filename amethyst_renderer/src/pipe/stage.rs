@@ -1,6 +1,7 @@
 //! A stage in the rendering pipeline.
 
 use hetseq::*;
+use shred::Resources;
 
 use error::{Error, Result};
 use pipe::{Target, Targets};
@@ -64,7 +65,7 @@ pub trait Passes: for<'a> PassesApply<'a> + for<'a> PassesData<'a> + Send + Sync
         &'a mut self,
         encoders: &'a mut [Encoder],
         jobs_count: usize,
-        data: <Self as PassesData<'b>>::Data,
+        res: &'a Resources,
     ) -> <Self as PassesApply<'a>>::Apply;
 
     /// Distributes new targets
@@ -92,11 +93,11 @@ where
         &'a mut self,
         encoders: &'a mut [Encoder],
         jobs_count: usize,
-        hd: <HP as PassData<'b>>::Data,
+        res: &'a Resources,
     ) -> <HP as PassApply<'a>>::Apply {
         let (encoders, _) = encoders.split_at_mut(jobs_count);
         let List((ref mut hp, _)) = *self;
-        hp.apply(encoders, hd)
+        hp.apply(encoders, res)
     }
 
     fn new_target(&mut self, new_target: &Target) {
@@ -130,11 +131,11 @@ where
         &'a mut self,
         encoders: &'a mut [Encoder],
         jobs_count: usize,
-        (hd, td): (<HP as PassData<'b>>::Data, <TP as PassesData<'b>>::Data),
+        res: &'a Resources,
     ) -> Chain<<HP as PassApply<'a>>::Apply, <TP as PassesApply<'a>>::Apply> {
         let (encoders, rest) = encoders.split_at_mut(jobs_count);
         let List((ref mut hp, ref mut tp)) = *self;
-        hp.apply(encoders, hd).chain(tp.apply(rest, jobs_count, td))
+        hp.apply(encoders, res).chain(tp.apply(rest, jobs_count, res))
     }
 
     fn new_target(&mut self, new_target: &Target) {
@@ -162,7 +163,7 @@ pub trait PolyStage
         &'a mut self,
         encoders: &'a mut [Encoder],
         jobs_count: usize,
-        data: <Self as StageData<'b>>::Data,
+        res: &'a Resources,
     ) -> <Self as StageApply<'a>>::Apply;
     /// Get number of encoders needed for this stage.
     fn encoders_required(jobs_count: usize) -> usize;
@@ -192,7 +193,7 @@ where
         &'a mut self,
         encoders: &'a mut [Encoder],
         jobs_count: usize,
-        data: <L as PassesData<'b>>::Data,
+        res: &'a Resources,
     ) -> <Self as StageApply<'a>>::Apply {
         self.clear_color
             .map(|c| self.target.clear_color(&mut encoders[0], c));
@@ -201,7 +202,7 @@ where
 
         assert_eq!(Self::encoders_required(jobs_count), encoders.len());
 
-        self.passes.apply(encoders, jobs_count, data)
+        self.passes.apply(encoders, jobs_count, res)
     }
 
     #[inline]

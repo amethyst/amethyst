@@ -7,10 +7,11 @@ use gfx::memory::Pod;
 use num_cpus;
 use rayon::{self, ThreadPool};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
+use shred::Resources;
 use config::Config;
 use error::{Error, Result};
 use mesh::{Mesh, MeshBuilder, VertexDataSet};
-use pipe::{ColorBuffer, DepthBuffer, PipelineBuild, PipelineData, PolyPipeline, Target,
+use pipe::{ColorBuffer, DepthBuffer, PipelineBuild, PolyPipeline, Target,
            TargetBuilder};
 use tex::{Texture, TextureBuilder};
 use types::{ColorFormat, DepthFormat, Device, Encoder, Factory, Window};
@@ -77,7 +78,7 @@ impl Renderer {
     pub fn draw<'a, P>(
         &mut self,
         pipe: &mut P,
-        data: <P as PipelineData<'a>>::Data,
+        res: &Resources,
         _delta: Duration,
     ) where
         P: PolyPipeline,
@@ -107,7 +108,7 @@ impl Renderer {
         {
             let mut encoders = self.encoders.as_mut();
             self.pool.install(move || {
-                PolyPipeline::apply(pipe, encoders, num_threads, data)
+                PolyPipeline::apply(pipe, encoders, num_threads, res)
                     .into_par_iter()
                     .for_each(|()| {});
             });

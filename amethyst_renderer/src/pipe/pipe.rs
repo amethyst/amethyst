@@ -1,6 +1,7 @@
 
 use hetseq::*;
 use rayon::iter::{Chain, ParallelIterator};
+use shred::Resources;
 use specs::SystemData;
 
 use super::stage::*;
@@ -53,7 +54,7 @@ pub trait PolyStages
         &'a mut self,
         encoders: &'a mut [Encoder],
         jobs_count: usize,
-        data: <Self as StagesData<'b>>::Data,
+        res: &'a Resources,
     ) -> <Self as StagesApply<'a>>::Apply;
     ///
     fn encoders_required(jobs_count: usize) -> usize;
@@ -84,11 +85,11 @@ where
         &'a mut self,
         encoders: &'a mut [Encoder],
         jobs_count: usize,
-        hd: <HS as StageData<'b>>::Data,
+        res: &'a Resources,
     ) -> <HS as StageApply<'a>>::Apply {
         let (encoders, _) = encoders.split_at_mut(HS::encoders_required(jobs_count));
         let List((ref mut hs, _)) = *self;
-        hs.apply(encoders, jobs_count, hd)
+        hs.apply(encoders, jobs_count, res)
     }
 
     fn encoders_required(jobs_count: usize) -> usize {
@@ -126,12 +127,12 @@ where
         &'a mut self,
         encoders: &'a mut [Encoder],
         jobs_count: usize,
-        (hd, td): <Self as StagesData<'b>>::Data,
+        res: &'a Resources,
     ) -> <Self as StagesApply<'a>>::Apply {
         let (encoders, left) = encoders.split_at_mut(HS::encoders_required(jobs_count));
         let List((ref mut hs, ref mut ts)) = *self;
-        hs.apply(encoders, jobs_count, hd)
-            .chain(ts.apply(left, jobs_count, td))
+        hs.apply(encoders, jobs_count, res)
+            .chain(ts.apply(left, jobs_count, res))
     }
 
     fn encoders_required(jobs_count: usize) -> usize {
@@ -165,7 +166,7 @@ pub trait PolyPipeline
         &'a mut self,
         encoder: &'a mut [Encoder],
         jobs_count: usize,
-        data: <Self as PipelineData<'b>>::Data,
+        res: &'a Resources,
     ) -> <Self as PipelineApply<'a>>::Apply;
 
     /// Returns number of `Encoder`s required
@@ -200,9 +201,9 @@ where
         &'a mut self,
         encoders: &'a mut [Encoder],
         jobs_count: usize,
-        data: <L as StagesData<'b>>::Data,
+        res: &'a Resources,
     ) -> <L as StagesApply<'a>>::Apply {
-        self.stages.apply(encoders, jobs_count, data)
+        self.stages.apply(encoders, jobs_count, res)
     }
 
     fn encoders_required(jobs_count: usize) -> usize {
