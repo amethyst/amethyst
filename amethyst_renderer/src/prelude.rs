@@ -16,3 +16,4 @@ pub use vertex::{Color, Normal, PosColor, PosNormTangTex, PosNormTex, PosTex, Po
 pub use formats::{MeshData, TextureData, TextureMetadata};
 pub use resources::*;
 pub use system::RenderSystem;
+pub use input;

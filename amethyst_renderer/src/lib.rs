@@ -79,6 +79,7 @@ pub mod vertex;
 pub mod resources;
 pub mod system;
 pub mod bundle;
+pub mod input;
 
 mod cam;
 mod color;
