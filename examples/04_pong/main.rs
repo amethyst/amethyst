@@ -13,7 +13,7 @@ use amethyst::Result;
 use amethyst::core::transform::TransformBundle;
 use amethyst::ecs::{Component, DenseVecStorage};
 use amethyst::audio::AudioBundle;
-use amethyst::ecs::input::InputBundle;
+use amethyst::input::InputBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::Config as DisplayConfig;
 use amethyst::renderer::bundle::RenderBundle;

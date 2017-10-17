@@ -12,7 +12,7 @@ use amethyst::assets::{BoxedErr, Format, Loader, Source};
 use amethyst::config::Config;
 use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::ecs::World;
-use amethyst::ecs::input::InputBundle;
+use amethyst::input::InputBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::Config as DisplayConfig;
 use amethyst::renderer::bundle::RenderBundle;

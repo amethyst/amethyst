@@ -3,11 +3,11 @@
 use std::hash::Hash;
 use std::marker;
 
-use input::{InputEvent, InputHandler};
 use shrev::{EventChannel, ReaderId};
 use winit::Event;
+use specs::{Fetch, FetchMut, System};
 
-use ecs::{Fetch, FetchMut, System};
+use {InputEvent, InputHandler};
 
 /// Input system
 ///
