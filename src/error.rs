@@ -6,8 +6,7 @@ use std::fmt::Result as FmtResult;
 use std::result::Result as StdResult;
 
 use renderer;
-use specs::error::BoxedErr;
-
+use ecs::error::BoxedErr;
 use config::ConfigError;
 
 /// Engine result type.

@@ -63,6 +63,7 @@ pub extern crate amethyst_input as input;
 pub extern crate amethyst_renderer as renderer;
 pub extern crate amethyst_utils as utils;
 pub extern crate shrev;
+pub extern crate specs as ecs;
 pub extern crate winit;
 
 extern crate cgmath;
@@ -77,14 +78,12 @@ extern crate rodio;
 extern crate serde;
 extern crate shred;
 extern crate smallvec;
-extern crate specs;
 
 pub use self::app::{Application, ApplicationBuilder};
 pub use self::engine::Engine;
 pub use self::error::{Error, Result};
 pub use self::state::{State, StateMachine, Trans};
 
-pub mod ecs;
 pub mod event;
 pub mod prelude;
 

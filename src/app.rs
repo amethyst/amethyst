@@ -314,7 +314,6 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
 
     pub fn new<P: AsRef<Path>>(path: P, initial_state: T) -> Result<Self> {
         use rayon::Configuration;
-        use specs::common::Errors;
 
         println!("Initializing Amethyst...");
         println!("Version: {}", vergen::semver());
