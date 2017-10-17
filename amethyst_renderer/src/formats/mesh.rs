@@ -9,7 +9,7 @@ use wavefront_obj::ParseError;
 use wavefront_obj::obj::{parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex,
                          TextureIndex, Vertex, VertexIndex};
 
-use mesh::Mesh;
+use mesh::{Mesh, MeshBuilder};
 use vertex::*;
 use Renderer;
 
@@ -48,6 +48,7 @@ impl Display for ObjError {
 }
 
 /// Mesh data for loading
+#[derive(Debug)]
 pub enum MeshData {
     /// Position and color
     PosColor(Vec<PosColor>),
@@ -60,6 +61,9 @@ pub enum MeshData {
 
     /// Position, normal, tangent and texture coordinates
     PosNormTangTex(Vec<PosNormTangTex>),
+
+    /// Combination of separate vertex buffers
+    Combination(VertexBufferCombination),
 }
 
 impl From<Vec<PosColor>> for MeshData {
@@ -83,6 +87,12 @@ impl From<Vec<PosNormTex>> for MeshData {
 impl From<Vec<PosNormTangTex>> for MeshData {
     fn from(data: Vec<PosNormTangTex>) -> Self {
         MeshData::PosNormTangTex(data)
+    }
+}
+
+impl From<VertexBufferCombination> for MeshData {
+    fn from(data: VertexBufferCombination) -> Self {
+        MeshData::Combination(data)
     }
 }
 
@@ -169,8 +179,6 @@ fn from_data(obj_set: ObjSet) -> Vec<PosNormTex> {
 
 /// Create mesh
 pub fn create_mesh_asset(data: MeshData, renderer: &mut Renderer) -> Result<Mesh, BoxedErr> {
-    use MeshBuilder;
-
     let data = match data {
         MeshData::PosColor(ref vertices) => {
             let mb = MeshBuilder::new(vertices);
@@ -188,7 +196,36 @@ pub fn create_mesh_asset(data: MeshData, renderer: &mut Renderer) -> Result<Mesh
             let mb = MeshBuilder::new(vertices);
             renderer.create_mesh(mb)
         }
+        MeshData::Combination(combo) => build_mesh_with_combo(combo, renderer),
     };
 
     data.map_err(|err| BoxedErr::new(err))
+}
+
+macro_rules! build_mesh_with_some {
+    ($builder:expr, $factory:expr, $h:expr $(,$t:expr)*) => {
+        match $h {
+            Some(vertices) => build_mesh_with_some!($builder.with_buffer(vertices), $factory $(,$t)*),
+            None => build_mesh_with_some!($builder, $factory $(,$t)*),
+        }
+    };
+
+    ($builder:expr, $factory:expr ) => {
+        $factory.create_mesh($builder)
+    };
+}
+
+/// Build Mesh with vertex buffer combination
+pub fn build_mesh_with_combo(
+    combo: VertexBufferCombination,
+    renderer: &mut Renderer,
+) -> ::error::Result<Mesh> {
+    build_mesh_with_some!(
+        MeshBuilder::new(combo.0),
+        renderer,
+        combo.1,
+        combo.2,
+        combo.3,
+        combo.4
+    )
 }

@@ -28,6 +28,7 @@ pub trait Attribute {
 }
 
 /// Type for position attribute of vertex
+#[derive(Debug)]
 pub enum Position {}
 impl Attribute for Position {
     const NAME: &'static str = "position";
@@ -37,6 +38,7 @@ impl Attribute for Position {
 }
 
 /// Type for color attribute of vertex
+#[derive(Debug)]
 pub enum Color {}
 impl Attribute for Color {
     const NAME: &'static str = "color";
@@ -46,6 +48,7 @@ impl Attribute for Color {
 }
 
 /// Type for texture coord attribute of vertex
+#[derive(Debug)]
 pub enum TexCoord {}
 impl Attribute for TexCoord {
     const NAME: &'static str = "tex_coord";
@@ -55,6 +58,7 @@ impl Attribute for TexCoord {
 }
 
 /// Type for texture coord attribute of vertex
+#[derive(Debug)]
 pub enum Normal {}
 impl Attribute for Normal {
     const NAME: &'static str = "normal";
@@ -64,6 +68,7 @@ impl Attribute for Normal {
 }
 
 /// Type for tangent attribute of vertex
+#[derive(Debug)]
 pub enum Tangent {}
 impl Attribute for Tangent {
     const NAME: &'static str = "tangent";
@@ -110,6 +115,17 @@ where
     T: Attribute,
 {
 }
+
+impl<T> Separate<T>
+where
+    T: Attribute,
+{
+    /// Create a new Separate vertex attribute
+    pub fn new(data: T::Repr) -> Self {
+        Separate(data)
+    }
+}
+
 impl<T> VertexFormat for Separate<T>
 where
     T: Attribute,
@@ -297,6 +313,14 @@ impl With<TexCoord> for PosNormTangTex {
     };
 }
 
+/// Vertex combo
+pub type VertexBufferCombination = (
+    Vec<Separate<Position>>,
+    Option<Vec<Separate<Color>>>,
+    Option<Vec<Separate<TexCoord>>>,
+    Option<Vec<Separate<Normal>>>,
+    Option<Vec<Separate<Tangent>>>,
+);
 
 /// Allows to query specific `Attribute`s of `VertexFormat`
 pub trait Query<T>: VertexFormat {

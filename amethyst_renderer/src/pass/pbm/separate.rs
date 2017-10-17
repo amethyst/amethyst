@@ -6,7 +6,6 @@ use std::mem;
 use amethyst_assets::AssetStorage;
 use cgmath::{Matrix4, One};
 use gfx::pso::buffer::ElemStride;
-use gfx::traits::Pod;
 use rayon::iter::ParallelIterator;
 use rayon::iter::internal::UnindexedConsumer;
 use specs::{Component, Fetch, Join, ParJoin, ReadStorage};
@@ -21,75 +20,30 @@ use pipe::{DepthMode, Effect, NewEffect};
 use pipe::pass::{Pass, PassApply, PassData, Supplier};
 use tex::Texture;
 use types::Encoder;
-use vertex::{Normal, Position, Query, Tangent, TexCoord};
-
-static VERT_SRC: &[u8] = include_bytes!("shaders/vertex/basic.glsl");
-static FRAG_SRC: &[u8] = include_bytes!("shaders/fragment/pbm.glsl");
+use vertex::{Normal, Position, Separate, Tangent, TexCoord, VertexFormat};
+use super::*;
 
 /// Draw mesh with physically based lighting
-/// `V` is `VertexFormat`
 /// `A` is ambient light resource
 /// `T` is transform matrix component
 #[derive(Clone, Debug, PartialEq)]
-pub struct DrawPbm<V, A, T> {
-    _pd: PhantomData<(V, A, T)>,
+pub struct DrawPbmSeparate<A, T> {
+    _pd: PhantomData<(A, T)>,
 }
 
-impl<V, A, T> DrawPbm<V, A, T>
+impl<A, T> DrawPbmSeparate<A, T>
 where
-    V: Query<(Position, Normal, Tangent, TexCoord)>,
     A: AsRef<Rgba> + Send + Sync + 'static,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
 {
     /// Create instance of `DrawPbm` pass
     pub fn new() -> Self {
-        DrawPbm { _pd: PhantomData }
+        DrawPbmSeparate { _pd: PhantomData }
     }
 }
 
-fn pad(x: [f32; 3]) -> [f32; 4] {
-    [x[0], x[1], x[2], 1.0]
-}
-
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug)]
-struct VertexArgs {
-    proj: [[f32; 4]; 4],
-    view: [[f32; 4]; 4],
-    model: [[f32; 4]; 4],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug)]
-struct FragmentArgs {
-    point_light_count: i32,
-    directional_light_count: i32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug)]
-struct PointLightPod {
-    position: [f32; 4],
-    color: [f32; 4],
-    intensity: f32,
-    _pad: [f32; 3],
-}
-
-unsafe impl Pod for PointLightPod {}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug)]
-struct DirectionalLightPod {
-    color: [f32; 4],
-    direction: [f32; 4],
-}
-
-unsafe impl Pod for DirectionalLightPod {}
-
-impl<'a, V, A, T> PassData<'a> for DrawPbm<V, A, T>
+impl<'a, A, T> PassData<'a> for DrawPbmSeparate<A, T>
 where
-    V: Query<(Position, Normal, Tangent, TexCoord)>,
     A: AsRef<Rgba> + Send + Sync + 'static,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
 {
@@ -106,25 +60,44 @@ where
     );
 }
 
-impl<'a, V, A, T> PassApply<'a> for DrawPbm<V, A, T>
+impl<'a, A, T> PassApply<'a> for DrawPbmSeparate<A, T>
 where
-    V: Query<(Position, Normal, Tangent, TexCoord)>,
     A: AsRef<Rgba> + Send + Sync + 'static,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
 {
-    type Apply = DrawPbmApply<'a, V, A, T>;
+    type Apply = DrawPbmSeparateApply<'a, A, T>;
 }
 
-impl<V, A, T> Pass for DrawPbm<V, A, T>
+impl<A, T> Pass for DrawPbmSeparate<A, T>
 where
-    V: Query<(Position, Normal, Tangent, TexCoord)>,
     A: AsRef<Rgba> + Send + Sync + 'static,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
 {
     fn compile(&self, effect: NewEffect) -> Result<Effect> {
         effect
             .simple(VERT_SRC, FRAG_SRC)
-            .with_raw_vertex_buffer(V::QUERIED_ATTRIBUTES, V::size() as ElemStride, 0)
+            // Pos, norm, tangent, tex
+            //.with_raw_vertex_buffer(V::QUERIED_ATTRIBUTES, V::size() as ElemStride, 0)
+            .with_raw_vertex_buffer(
+                Separate::<Position>::ATTRIBUTES,
+                Separate::<Position>::size() as ElemStride,
+                0,
+            )
+            .with_raw_vertex_buffer(
+                Separate::<Normal>::ATTRIBUTES,
+                Separate::<Normal>::size() as ElemStride,
+                0,
+            )
+            .with_raw_vertex_buffer(
+                Separate::<Tangent>::ATTRIBUTES,
+                Separate::<Tangent>::size() as ElemStride,
+                0,
+            )
+            .with_raw_vertex_buffer(
+                Separate::<TexCoord>::ATTRIBUTES,
+                Separate::<TexCoord>::size() as ElemStride,
+                0,
+            )
             .with_raw_constant_buffer("VertexArgs", mem::size_of::<VertexArgs>(), 1)
             .with_raw_constant_buffer("FragmentArgs", mem::size_of::<FragmentArgs>(), 1)
             .with_raw_constant_buffer("PointLights", mem::size_of::<PointLight>(), 512)
@@ -157,8 +130,8 @@ where
             ReadStorage<'a, T>,
             ReadStorage<'a, Light>,
         ),
-) -> DrawPbmApply<'a, V, A, T>{
-        DrawPbmApply {
+) -> DrawPbmSeparateApply<'a, A, T>{
+        DrawPbmSeparateApply {
             camera,
             mesh_storage,
             tex_storage,
@@ -169,12 +142,11 @@ where
             ambient,
             light,
             supplier,
-            pd: PhantomData,
         }
     }
 }
 
-pub struct DrawPbmApply<'a, V, A: 'static, T: Component> {
+pub struct DrawPbmSeparateApply<'a, A: 'static, T: Component> {
     camera: Option<Fetch<'a, Camera>>,
     ambient: Fetch<'a, A>,
     mesh_storage: Fetch<'a, AssetStorage<Mesh>>,
@@ -185,12 +157,10 @@ pub struct DrawPbmApply<'a, V, A: 'static, T: Component> {
     global: ReadStorage<'a, T>,
     light: ReadStorage<'a, Light>,
     supplier: Supplier<'a>,
-    pd: PhantomData<V>,
 }
 
-impl<'a, V, A, T> ParallelIterator for DrawPbmApply<'a, V, A, T>
+impl<'a, A, T> ParallelIterator for DrawPbmSeparateApply<'a, A, T>
 where
-    V: Query<(Position, Normal, Tangent, TexCoord)>,
     A: AsRef<Rgba> + Send + Sync + 'static,
     T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
 {
@@ -200,7 +170,7 @@ where
     where
         C: UnindexedConsumer<Self::Item>,
     {
-        let DrawPbmApply {
+        let DrawPbmSeparateApply {
             camera,
             mesh,
             mesh_storage,
@@ -227,10 +197,18 @@ where
                     move |encoder: &mut Encoder, effect: &mut Effect| if let Some(mesh) =
                         mesh_storage.get(mesh)
                     {
-                        let vbuf = match mesh.buffer(V::QUERIED_ATTRIBUTES) {
-                            Some(vbuf) => vbuf.clone(),
-                            None => return,
-                        };
+                        for attrs in [
+                            Separate::<Position>::ATTRIBUTES,
+                            Separate::<Normal>::ATTRIBUTES,
+                            Separate::<Tangent>::ATTRIBUTES,
+                            Separate::<TexCoord>::ATTRIBUTES,
+                        ].iter()
+                        {
+                            match mesh.buffer(attrs) {
+                                Some(vbuf) => effect.data.vertex_bufs.push(vbuf.clone()),
+                                None => return,
+                            }
+                        }
 
                         let vertex_args = camera
                             .as_ref()
@@ -350,8 +328,6 @@ where
                         effect.data.samplers.push(normal.sampler().clone());
                         effect.data.textures.push(albedo.view().clone());
                         effect.data.samplers.push(albedo.sampler().clone());
-
-                        effect.data.vertex_bufs.push(vbuf);
 
                         effect.draw(mesh.slice(), encoder);
                     }
