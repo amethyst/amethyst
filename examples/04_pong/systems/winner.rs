@@ -44,8 +44,6 @@ impl<'s> System<'s> for WinnerSystem {
             };
 
             if did_hit {
-                use amethyst::audio::play::play_once;
-
                 // Reset the ball.
                 ball.velocity[0] = -ball.velocity[0];
                 transform.translation[0] = ARENA_WIDTH / 2.0;
@@ -58,9 +56,9 @@ impl<'s> System<'s> for WinnerSystem {
                 );
 
                 // Play audio.
-                if let Some(ref audio_output) = *audio_output {
+                if let Some(ref output) = *audio_output {
                     if let Some(sound) = storage.get(&sounds.score_sfx) {
-                        play_once(sound, 1.0, &audio_output);
+                        output.play_once(sound, 1.0);
                     }
                 }
             }
