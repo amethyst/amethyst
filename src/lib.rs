@@ -56,6 +56,7 @@
 pub extern crate thread_profiler;
 
 pub extern crate amethyst_assets as assets;
+pub extern crate amethyst_audio as audio;
 pub extern crate amethyst_config as config;
 pub extern crate amethyst_core as core;
 pub extern crate amethyst_input as input;
@@ -85,7 +86,6 @@ pub use self::engine::Engine;
 pub use self::error::{Error, Result};
 pub use self::state::{State, StateMachine, Trans};
 
-pub mod audio;
 pub mod ecs;
 pub mod event;
 pub mod prelude;

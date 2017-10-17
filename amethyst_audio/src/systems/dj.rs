@@ -1,11 +1,12 @@
 use std::marker::PhantomData;
 
+use amethyst_assets::AssetStorage;
 use shred::Resource;
+use specs::{Fetch, FetchMut, System};
+use specs::common::Errors;
 
-use assets::AssetStorage;
-use audio::{AudioSink, Source, SourceHandle};
-use ecs::{Fetch, FetchMut, System};
-use ecs::common::Errors;
+use sink::AudioSink;
+use source::{Source, SourceHandle};
 
 /// Calls a closure if the `AudioSink` is empty.
 pub struct DjSystem<F, R> {

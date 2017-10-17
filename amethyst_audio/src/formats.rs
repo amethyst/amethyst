@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use super::Source as Audio;
-use assets::*;
+use amethyst_assets::*;
 
 pub struct AudioData(pub Vec<u8>);
 

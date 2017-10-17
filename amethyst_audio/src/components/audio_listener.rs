@@ -1,5 +1,6 @@
-use audio::output::Output;
-use ecs::{Component, HashMapStorage};
+use specs::{Component, HashMapStorage};
+
+use output::Output;
 
 /// An audio listener, add this component to the local player character.
 #[derive(Debug)]
