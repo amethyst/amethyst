@@ -1,6 +1,6 @@
-extern crate specs;
 extern crate cgmath;
 extern crate fnv;
+extern crate specs;
 
 pub use bundle::ECSBundle;
 

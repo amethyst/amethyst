@@ -10,6 +10,7 @@
 #![doc(html_logo_url = "https://tinyurl.com/jtmm43a")]
 
 extern crate amethyst_assets;
+extern crate amethyst_core;
 extern crate cgmath;
 #[macro_use]
 extern crate derivative;
@@ -26,6 +27,9 @@ extern crate rayon_core;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
+extern crate shred;
+extern crate shrev;
+extern crate smallvec;
 extern crate specs;
 extern crate wavefront_obj;
 extern crate winit;
@@ -72,7 +76,9 @@ pub mod pass;
 pub mod prelude;
 pub mod pipe;
 pub mod vertex;
-
+pub mod resources;
+pub mod system;
+pub mod bundle;
 
 mod cam;
 mod color;

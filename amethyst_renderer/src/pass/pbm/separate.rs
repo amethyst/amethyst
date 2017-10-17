@@ -1,78 +1,58 @@
 //! Forward physically-based drawing pass.
 
-use std::marker::PhantomData;
 use std::mem;
 
 use amethyst_assets::AssetStorage;
+use amethyst_core::transform::Transform;
 use cgmath::{Matrix4, One};
 use gfx::pso::buffer::ElemStride;
 use rayon::iter::ParallelIterator;
 use rayon::iter::internal::UnindexedConsumer;
-use specs::{Component, Fetch, Join, ParJoin, ReadStorage};
+use specs::{Fetch, Join, ParJoin, ReadStorage};
 
 use cam::Camera;
-use color::Rgba;
 use error::Result;
 use light::{DirectionalLight, Light, PointLight};
 use mesh::{Mesh, MeshHandle};
 use mtl::{Material, MaterialDefaults};
 use pipe::{DepthMode, Effect, NewEffect};
 use pipe::pass::{Pass, PassApply, PassData, Supplier};
+use resources::AmbientColor;
 use tex::Texture;
 use types::Encoder;
 use vertex::{Normal, Position, Separate, Tangent, TexCoord, VertexFormat};
 use super::*;
 
 /// Draw mesh with physically based lighting
-/// `A` is ambient light resource
-/// `T` is transform matrix component
 #[derive(Clone, Debug, PartialEq)]
-pub struct DrawPbmSeparate<A, T> {
-    _pd: PhantomData<(A, T)>,
-}
+pub struct DrawPbmSeparate;
 
-impl<A, T> DrawPbmSeparate<A, T>
-where
-    A: AsRef<Rgba> + Send + Sync + 'static,
-    T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
-{
+impl DrawPbmSeparate {
     /// Create instance of `DrawPbm` pass
     pub fn new() -> Self {
-        DrawPbmSeparate { _pd: PhantomData }
+        DrawPbmSeparate {}
     }
 }
 
-impl<'a, A, T> PassData<'a> for DrawPbmSeparate<A, T>
-where
-    A: AsRef<Rgba> + Send + Sync + 'static,
-    T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
-{
+impl<'a> PassData<'a> for DrawPbmSeparate {
     type Data = (
         Option<Fetch<'a, Camera>>,
-        Fetch<'a, A>,
+        Fetch<'a, AmbientColor>,
         Fetch<'a, AssetStorage<Mesh>>,
         Fetch<'a, AssetStorage<Texture>>,
         Fetch<'a, MaterialDefaults>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
-        ReadStorage<'a, T>,
+        ReadStorage<'a, Transform>,
         ReadStorage<'a, Light>,
     );
 }
 
-impl<'a, A, T> PassApply<'a> for DrawPbmSeparate<A, T>
-where
-    A: AsRef<Rgba> + Send + Sync + 'static,
-    T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
-{
-    type Apply = DrawPbmSeparateApply<'a, A, T>;
+impl<'a> PassApply<'a> for DrawPbmSeparate {
+    type Apply = DrawPbmSeparateApply<'a>;
 }
 
-impl<A, T> Pass for DrawPbmSeparate<A, T>
-where
-    A: AsRef<Rgba> + Send + Sync + 'static,
-    T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
-{
+impl Pass for DrawPbmSeparate {
     fn compile(&self, effect: NewEffect) -> Result<Effect> {
         effect
             .simple(VERT_SRC, FRAG_SRC)
@@ -121,16 +101,16 @@ where
         (camera, ambient, mesh_storage, tex_storage, material_defaults,
             mesh, material, global, light): (
             Option<Fetch<'a, Camera>>,
-            Fetch<'a, A>,
+            Fetch<'a, AmbientColor>,
             Fetch<'a, AssetStorage<Mesh>>,
             Fetch<'a, AssetStorage<Texture>>,
             Fetch<'a, MaterialDefaults>,
             ReadStorage<'a, MeshHandle>,
             ReadStorage<'a, Material>,
-            ReadStorage<'a, T>,
+            ReadStorage<'a, Transform>,
             ReadStorage<'a, Light>,
         ),
-) -> DrawPbmSeparateApply<'a, A, T>{
+) -> DrawPbmSeparateApply<'a>{
         DrawPbmSeparateApply {
             camera,
             mesh_storage,
@@ -146,24 +126,20 @@ where
     }
 }
 
-pub struct DrawPbmSeparateApply<'a, A: 'static, T: Component> {
+pub struct DrawPbmSeparateApply<'a> {
     camera: Option<Fetch<'a, Camera>>,
-    ambient: Fetch<'a, A>,
+    ambient: Fetch<'a, AmbientColor>,
     mesh_storage: Fetch<'a, AssetStorage<Mesh>>,
     tex_storage: Fetch<'a, AssetStorage<Texture>>,
     material_defaults: Fetch<'a, MaterialDefaults>,
     mesh: ReadStorage<'a, MeshHandle>,
     material: ReadStorage<'a, Material>,
-    global: ReadStorage<'a, T>,
+    global: ReadStorage<'a, Transform>,
     light: ReadStorage<'a, Light>,
     supplier: Supplier<'a>,
 }
 
-impl<'a, A, T> ParallelIterator for DrawPbmSeparateApply<'a, A, T>
-where
-    A: AsRef<Rgba> + Send + Sync + 'static,
-    T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
-{
+impl<'a> ParallelIterator for DrawPbmSeparateApply<'a> {
     type Item = ();
 
     fn drive_unindexed<C>(self, consumer: C) -> C::Result

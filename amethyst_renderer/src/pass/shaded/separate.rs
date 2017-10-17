@@ -1,17 +1,17 @@
 //! Simple shaded pass
 
-use std::marker::PhantomData;
 use std::mem;
 
 use amethyst_assets::AssetStorage;
+use amethyst_core::transform::Transform;
 use cgmath::{Matrix4, One};
 use gfx::pso::buffer::ElemStride;
 use rayon::iter::ParallelIterator;
 use rayon::iter::internal::UnindexedConsumer;
-use specs::{Component, Fetch, Join, ParJoin, ReadStorage};
+use specs::{Fetch, Join, ParJoin, ReadStorage};
 
 use cam::Camera;
-use color::Rgba;
+use resources::AmbientColor;
 use error::Result;
 use light::{DirectionalLight, Light, PointLight};
 use mesh::{Mesh, MeshHandle};
@@ -24,57 +24,35 @@ use vertex::{Normal, Position, Separate, TexCoord, VertexFormat};
 use super::*;
 
 /// Draw mesh with simple lighting technique
-/// `A` is ambient light resource
-/// `T` is transform matrix component
 #[derive(Clone, Debug, PartialEq)]
-pub struct DrawShadedSeparate<A, T> {
-    _pd: PhantomData<(A, T)>,
-}
+pub struct DrawShadedSeparate;
 
-impl<A, T> DrawShadedSeparate<A, T>
-where
-    A: AsRef<Rgba> + Send + Sync + 'static,
-    T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
-{
+impl DrawShadedSeparate {
     /// Create instance of `DrawShaded` pass
     pub fn new() -> Self {
-        DrawShadedSeparate { _pd: PhantomData }
+        DrawShadedSeparate {}
     }
 }
 
-impl<'a, A, T> PassData<'a> for DrawShadedSeparate<A, T>
-where
-    A: AsRef<Rgba> + Send + Sync + 'static,
-    T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
-{
+impl<'a> PassData<'a> for DrawShadedSeparate {
     type Data = (
         Option<Fetch<'a, Camera>>,
-        Fetch<'a, A>,
+        Fetch<'a, AmbientColor>,
         Fetch<'a, AssetStorage<Mesh>>,
         Fetch<'a, AssetStorage<Texture>>,
         Fetch<'a, MaterialDefaults>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
-        ReadStorage<'a, T>,
+        ReadStorage<'a, Transform>,
         ReadStorage<'a, Light>,
     );
 }
 
-impl<'a, A, T> PassApply<'a> for DrawShadedSeparate<A, T>
-where
-    A: AsRef<Rgba> + Send + Sync + 'static,
-    T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
-{
-    type Apply = DrawShadedSeparateApply<'a, A, T>;
+impl<'a> PassApply<'a> for DrawShadedSeparate {
+    type Apply = DrawShadedSeparateApply<'a>;
 }
 
-
-
-impl<A, T> Pass for DrawShadedSeparate<A, T>
-where
-    A: AsRef<Rgba> + Send + Sync + 'static,
-    T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
-{
+impl Pass for DrawShadedSeparate {
     fn compile(&self, effect: NewEffect) -> Result<Effect> {
         effect
             .simple(VERT_SRC, FRAG_SRC)
@@ -111,16 +89,16 @@ where
         (camera, ambient, mesh_storage, tex_storage, material_defaults,
             mesh, material, global, light): (
             Option<Fetch<'a, Camera>>,
-            Fetch<'a, A>,
+            Fetch<'a, AmbientColor>,
             Fetch<'a, AssetStorage<Mesh>>,
             Fetch<'a, AssetStorage<Texture>>,
             Fetch<'a, MaterialDefaults>,
             ReadStorage<'a, MeshHandle>,
             ReadStorage<'a, Material>,
-            ReadStorage<'a, T>,
+            ReadStorage<'a, Transform>,
             ReadStorage<'a, Light>,
         ),
-) -> DrawShadedSeparateApply<'a, A, T>{
+) -> DrawShadedSeparateApply<'a>{
         DrawShadedSeparateApply {
             camera,
             mesh_storage,
@@ -136,24 +114,20 @@ where
     }
 }
 
-pub struct DrawShadedSeparateApply<'a, A: 'static, T: Component> {
+pub struct DrawShadedSeparateApply<'a> {
     camera: Option<Fetch<'a, Camera>>,
-    ambient: Fetch<'a, A>,
+    ambient: Fetch<'a, AmbientColor>,
     mesh_storage: Fetch<'a, AssetStorage<Mesh>>,
     tex_storage: Fetch<'a, AssetStorage<Texture>>,
     material_defaults: Fetch<'a, MaterialDefaults>,
     mesh: ReadStorage<'a, MeshHandle>,
     material: ReadStorage<'a, Material>,
-    global: ReadStorage<'a, T>,
+    global: ReadStorage<'a, Transform>,
     light: ReadStorage<'a, Light>,
     supplier: Supplier<'a>,
 }
 
-impl<'a, A, T> ParallelIterator for DrawShadedSeparateApply<'a, A, T>
-where
-    A: AsRef<Rgba> + Send + Sync + 'static,
-    T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
-{
+impl<'a> ParallelIterator for DrawShadedSeparateApply<'a> {
     type Item = ();
 
     fn drive_unindexed<C>(self, consumer: C) -> C::Result

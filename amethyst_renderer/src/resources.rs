@@ -1,8 +1,9 @@
 //! `amethyst` rendering ecs resources
 
-use renderer::Rgba;
 use smallvec::SmallVec;
 use winit::Window;
+
+use color::Rgba;
 
 /// The ambient color of a scene
 #[derive(Clone, Debug, Default)]

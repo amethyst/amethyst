@@ -4,20 +4,21 @@ use std::marker::PhantomData;
 use std::mem;
 
 use amethyst_assets::AssetStorage;
+use amethyst_core::transform::Transform;
 use cgmath::{Matrix4, One};
 use gfx::pso::buffer::ElemStride;
 use rayon::iter::ParallelIterator;
 use rayon::iter::internal::UnindexedConsumer;
-use specs::{Component, Fetch, Join, ParJoin, ReadStorage};
+use specs::{Fetch, Join, ParJoin, ReadStorage};
 
 use cam::Camera;
-use color::Rgba;
 use error::Result;
 use light::{DirectionalLight, Light, PointLight};
 use mesh::{Mesh, MeshHandle};
 use mtl::{Material, MaterialDefaults};
 use pipe::{DepthMode, Effect, NewEffect};
 use pipe::pass::{Pass, PassApply, PassData, Supplier};
+use resources::AmbientColor;
 use tex::Texture;
 use types::Encoder;
 use vertex::{Normal, Position, Query, Tangent, TexCoord};
@@ -25,18 +26,14 @@ use super::*;
 
 /// Draw mesh with physically based lighting
 /// `V` is `VertexFormat`
-/// `A` is ambient light resource
-/// `T` is transform matrix component
 #[derive(Clone, Debug, PartialEq)]
-pub struct DrawPbm<V, A, T> {
-    _pd: PhantomData<(V, A, T)>,
+pub struct DrawPbm<V> {
+    _pd: PhantomData<V>,
 }
 
-impl<V, A, T> DrawPbm<V, A, T>
+impl<V> DrawPbm<V>
 where
     V: Query<(Position, Normal, Tangent, TexCoord)>,
-    A: AsRef<Rgba> + Send + Sync + 'static,
-    T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
 {
     /// Create instance of `DrawPbm` pass
     pub fn new() -> Self {
@@ -44,39 +41,33 @@ where
     }
 }
 
-impl<'a, V, A, T> PassData<'a> for DrawPbm<V, A, T>
+impl<'a, V> PassData<'a> for DrawPbm<V>
 where
     V: Query<(Position, Normal, Tangent, TexCoord)>,
-    A: AsRef<Rgba> + Send + Sync + 'static,
-    T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
 {
     type Data = (
         Option<Fetch<'a, Camera>>,
-        Fetch<'a, A>,
+        Fetch<'a, AmbientColor>,
         Fetch<'a, AssetStorage<Mesh>>,
         Fetch<'a, AssetStorage<Texture>>,
         Fetch<'a, MaterialDefaults>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
-        ReadStorage<'a, T>,
+        ReadStorage<'a, Transform>,
         ReadStorage<'a, Light>,
     );
 }
 
-impl<'a, V, A, T> PassApply<'a> for DrawPbm<V, A, T>
+impl<'a, V> PassApply<'a> for DrawPbm<V>
 where
     V: Query<(Position, Normal, Tangent, TexCoord)>,
-    A: AsRef<Rgba> + Send + Sync + 'static,
-    T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
 {
-    type Apply = DrawPbmApply<'a, V, A, T>;
+    type Apply = DrawPbmApply<'a, V>;
 }
 
-impl<V, A, T> Pass for DrawPbm<V, A, T>
+impl<V> Pass for DrawPbm<V>
 where
     V: Query<(Position, Normal, Tangent, TexCoord)>,
-    A: AsRef<Rgba> + Send + Sync + 'static,
-    T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
 {
     fn compile(&self, effect: NewEffect) -> Result<Effect> {
         effect
@@ -105,16 +96,16 @@ where
         (camera, ambient, mesh_storage, tex_storage, material_defaults,
             mesh, material, global, light): (
             Option<Fetch<'a, Camera>>,
-            Fetch<'a, A>,
+            Fetch<'a, AmbientColor>,
             Fetch<'a, AssetStorage<Mesh>>,
             Fetch<'a, AssetStorage<Texture>>,
             Fetch<'a, MaterialDefaults>,
             ReadStorage<'a, MeshHandle>,
             ReadStorage<'a, Material>,
-            ReadStorage<'a, T>,
+            ReadStorage<'a, Transform>,
             ReadStorage<'a, Light>,
         ),
-) -> DrawPbmApply<'a, V, A, T>{
+) -> DrawPbmApply<'a, V>{
         DrawPbmApply {
             camera,
             mesh_storage,
@@ -131,25 +122,23 @@ where
     }
 }
 
-pub struct DrawPbmApply<'a, V, A: 'static, T: Component> {
+pub struct DrawPbmApply<'a, V> {
     camera: Option<Fetch<'a, Camera>>,
-    ambient: Fetch<'a, A>,
+    ambient: Fetch<'a, AmbientColor>,
     mesh_storage: Fetch<'a, AssetStorage<Mesh>>,
     tex_storage: Fetch<'a, AssetStorage<Texture>>,
     material_defaults: Fetch<'a, MaterialDefaults>,
     mesh: ReadStorage<'a, MeshHandle>,
     material: ReadStorage<'a, Material>,
-    global: ReadStorage<'a, T>,
+    global: ReadStorage<'a, Transform>,
     light: ReadStorage<'a, Light>,
     supplier: Supplier<'a>,
     pd: PhantomData<V>,
 }
 
-impl<'a, V, A, T> ParallelIterator for DrawPbmApply<'a, V, A, T>
+impl<'a, V> ParallelIterator for DrawPbmApply<'a, V>
 where
     V: Query<(Position, Normal, Tangent, TexCoord)>,
-    A: AsRef<Rgba> + Send + Sync + 'static,
-    T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
 {
     type Item = ();
 

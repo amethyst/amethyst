@@ -5,11 +5,12 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 use cgmath::{Matrix4, Point3, Transform};
+use core::transform::Transform as TransformComponent;
 use rodio::{Sample, Source, SpatialSink};
 
 use ecs::{Entity, Fetch, Join, ReadStorage, System, WriteStorage};
 use ecs::audio::components::{AudioEmitter, AudioListener};
-use ecs::transform::Transform as TransformComponent;
+
 
 /// Syncs 3D transform data with the audio engine to provide 3D audio.
 pub struct AudioSystem;
