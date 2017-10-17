@@ -60,18 +60,6 @@ impl<'a, 'b> ECSBundle<'a, 'b> for RenderBundle {
         world: &mut World,
         builder: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
-        use cgmath::Deg;
-        use renderer::{Camera, Projection};
-
-        let cam = Camera {
-            eye: [0.0, 0.0, -4.0].into(),
-            proj: Projection::perspective(1.3, Deg(60.0)).into(),
-            forward: [0.0, 0.0, 1.0].into(),
-            right: [1.0, 0.0, 0.0].into(),
-            up: [0.0, 1.0, 0.0].into(),
-        };
-
-        world.add_resource(cam);
         world.add_resource(AmbientColor(Rgba::from([0.01; 3])));
         world.add_resource(WindowMessages::new());
         world.add_resource(ScreenDimensions::new(100, 100));

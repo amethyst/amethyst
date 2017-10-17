@@ -48,6 +48,7 @@ impl Display for ObjError {
 }
 
 /// Mesh data for loading
+#[derive(Debug)]
 pub enum MeshData {
     /// Position and color
     PosColor(Vec<PosColor>),
@@ -62,7 +63,7 @@ pub enum MeshData {
     PosNormTangTex(Vec<PosNormTangTex>),
 
     /// Combination of separate vertex buffers
-    Combination(VertexBufferCombination)
+    Combination(VertexBufferCombination),
 }
 
 impl From<Vec<PosColor>> for MeshData {
@@ -178,7 +179,6 @@ fn from_data(obj_set: ObjSet) -> Vec<PosNormTex> {
 
 /// Create mesh
 pub fn create_mesh_asset(data: MeshData, renderer: &mut Renderer) -> Result<Mesh, BoxedErr> {
-
     let data = match data {
         MeshData::PosColor(ref vertices) => {
             let mb = MeshBuilder::new(vertices);
@@ -196,9 +196,7 @@ pub fn create_mesh_asset(data: MeshData, renderer: &mut Renderer) -> Result<Mesh
             let mb = MeshBuilder::new(vertices);
             renderer.create_mesh(mb)
         }
-        MeshData::Combination(combo) => {
-            build_mesh_with_combo(combo, renderer)
-        }
+        MeshData::Combination(combo) => build_mesh_with_combo(combo, renderer),
     };
 
     data.map_err(|err| BoxedErr::new(err))
@@ -218,6 +216,16 @@ macro_rules! build_mesh_with_some {
 }
 
 /// Build Mesh with vertex buffer combination
-pub fn build_mesh_with_combo(combo: VertexBufferCombination, renderer: &mut Renderer) -> ::error::Result<Mesh> {
-    build_mesh_with_some!(MeshBuilder::new(combo.0), renderer, combo.1, combo.2, combo.3, combo.4)
+pub fn build_mesh_with_combo(
+    combo: VertexBufferCombination,
+    renderer: &mut Renderer,
+) -> ::error::Result<Mesh> {
+    build_mesh_with_some!(
+        MeshBuilder::new(combo.0),
+        renderer,
+        combo.1,
+        combo.2,
+        combo.3,
+        combo.4
+    )
 }

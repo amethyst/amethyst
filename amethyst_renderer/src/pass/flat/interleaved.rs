@@ -19,9 +19,7 @@ use pipe::{DepthMode, Effect, NewEffect};
 use tex::Texture;
 use types::Encoder;
 use vertex::{Position, Query, TexCoord};
-
-static VERT_SRC: &[u8] = include_bytes!("shaders/vertex/basic.glsl");
-static FRAG_SRC: &[u8] = include_bytes!("shaders/fragment/flat.glsl");
+use super::*;
 
 /// Draw mesh without lighting
 /// `V` is `VertexFormat`
@@ -41,13 +39,6 @@ where
     pub fn new() -> Self {
         DrawFlat { _pd: PhantomData }
     }
-}
-
-#[derive(Clone, Copy, Debug)]
-struct VertexArgs {
-    proj: [[f32; 4]; 4],
-    view: [[f32; 4]; 4],
-    model: [[f32; 4]; 4],
 }
 
 impl<'a, V, T> PassData<'a> for DrawFlat<V, T>

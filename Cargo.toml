@@ -82,5 +82,9 @@ path = "examples/05_assets/main.rs"
 name = "material"
 path = "examples/06_material/main.rs"
 
+[[example]]
+name = "sphere_separate"
+path = "examples/07_separate_sphere/main.rs"
+
 [workspace]
 members = ["amethyst_assets", "amethyst_config", "amethyst_core", "amethyst_input", "amethyst_renderer"]
