@@ -11,7 +11,7 @@ use amethyst::{Application, Error, State, Trans};
 use amethyst::assets::{BoxedErr, Format, Loader, Source};
 use amethyst::config::Config;
 use amethyst::ecs::World;
-use amethyst::ecs::input::InputBundle;
+use amethyst::input::InputBundle;
 use amethyst::ecs::rendering::{create_render_system, AmbientColor, RenderBundle};
 use amethyst::ecs::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::prelude::*;

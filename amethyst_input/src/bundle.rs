@@ -3,15 +3,15 @@
 use std::hash::Hash;
 use std::path::Path;
 
-use core::bundle::{ECSBundle, Result};
+use amethyst_core::bundle::{ECSBundle, Result};
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use winit::Event;
-
-use config::Config;
-use ecs::{DispatcherBuilder, World};
-use ecs::input::{Bindings, InputEvent, InputHandler, InputSystem};
+use amethyst_config::Config;
+use specs::{DispatcherBuilder, World};
 use shrev::EventChannel;
+
+use {Bindings, InputEvent, InputHandler, InputSystem};
 
 /// Bundle for adding the `InputHandler`.
 ///
