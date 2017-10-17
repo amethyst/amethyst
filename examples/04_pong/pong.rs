@@ -31,8 +31,7 @@ impl State for Pong {
                             ..
                         },
                     ..
-                } |
-                WindowEvent::Closed => Trans::Quit,
+                } => Trans::Quit,
                 _ => Trans::None,
             },
             _ => Trans::None,

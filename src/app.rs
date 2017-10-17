@@ -9,7 +9,7 @@ use shred::{Resource, RunNow};
 use shrev::{EventChannel, ReaderId};
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
-use winit::Event;
+use winit::{ Event, WindowEvent };
 
 use assets::{Asset, Loader, Source};
 use ecs::{Component, Dispatcher, DispatcherBuilder, System, World};
@@ -174,7 +174,11 @@ impl<'a, 'b> Application<'a, 'b> {
             };
 
             for event in events {
-                states.handle_event(engine, event);
+                states.handle_event(engine, event.clone());
+                if let &Event::WindowEvent { event: WindowEvent::Closed, .. } = &event {
+                    states.stop(engine);
+                }
+
             }
         }
         {
