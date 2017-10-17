@@ -2,14 +2,15 @@
 
 use std::marker::PhantomData;
 
-use core::bundle::{ECSBundle, Result};
-
-use assets::{AssetStorage, Processor};
-use audio::{AudioSink, Source, SourceHandle};
-use audio::output::{default_output, Output};
-use ecs::{DispatcherBuilder, World};
-use ecs::audio::DjSystem;
+use amethyst_core::bundle::{ECSBundle, Result};
+use amethyst_assets::{AssetStorage, Processor};
 use shred::ResourceId;
+use specs::{DispatcherBuilder, World};
+
+use sink::AudioSink;
+use source::*;
+use output::{default_output, Output};
+use systems::DjSystem;
 
 /// Audio bundle
 ///

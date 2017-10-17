@@ -12,7 +12,7 @@ use std::time::Duration;
 use amethyst::Result;
 use amethyst::core::transform::TransformBundle;
 use amethyst::ecs::{Component, DenseVecStorage};
-use amethyst::ecs::audio::AudioBundle;
+use amethyst::audio::AudioBundle;
 use amethyst::ecs::input::InputBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::Config as DisplayConfig;

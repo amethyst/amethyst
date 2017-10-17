@@ -1,5 +1,6 @@
 //! Provides structures and functions used to get audio outputs.
 
+// We have to use types from this to provide an output iterator type.
 use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::io::Cursor;
 
@@ -7,8 +8,8 @@ use cpal::{default_endpoint, endpoints};
 use cpal::EndpointsIterator;
 use rodio::{Decoder, Endpoint, Sink, Source as RSource};
 
-use super::DecoderError;
-use super::source::Source;
+use DecoderError;
+use source::Source;
 
 /// A speaker(s) through which audio can be played.
 ///

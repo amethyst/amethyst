@@ -1,8 +1,8 @@
 //! Provides structures used to load audio files.
 
-use assets::{Asset, BoxedErr, Handle};
+use amethyst_assets::{Asset, BoxedErr, Handle};
 
-use audio::formats::AudioData;
+use formats::AudioData;
 
 /// A handle to a source asset.
 pub type SourceHandle = Handle<Source>;
