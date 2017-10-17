@@ -1,6 +1,11 @@
 //! Util Resources
 
-use util::circular_buffer::CircularBuffer;
+use std::time::Duration;
+
+use specs::{Fetch, FetchMut, System};
+use amethyst_core::timing::Time;
+
+use circular_buffer::CircularBuffer;
 
 /// The FPSCounter resource needed by the FPSCounterSystem.
 ///
@@ -46,4 +51,22 @@ impl FPSCounter {
         }
         1.0e9 * self.buf.queue().len() as f32 / self.sum as f32
     }
+}
+
+/// Add this system to your game to automatically push FPS values
+/// to the [FPSCounter](../resources/struct.FPSCounter.html) resource with id 0
+pub struct FPSCounterSystem;
+
+impl<'a> System<'a> for FPSCounterSystem {
+    type SystemData = (Fetch<'a, Time>, FetchMut<'a, FPSCounter>);
+    fn run(&mut self, (time, mut counter): Self::SystemData) {
+        counter.push(duration_to_nanos(time.delta_time));
+        //Enable this to debug performance engine wide.
+        //println!("Cur FPS: {}, Sampled: {}",counter.frame_fps(),counter.sampled_fps());
+    }
+}
+
+///Converts a Duration to nanoseconds
+fn duration_to_nanos(duration: Duration) -> u64 {
+    (duration.as_secs() * 1_000_000_000) + duration.subsec_nanos() as u64
 }

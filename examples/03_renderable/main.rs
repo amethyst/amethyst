@@ -16,7 +16,7 @@ use amethyst::renderer::{Camera, Config as DisplayConfig, MaterialDefaults, Mesh
 use amethyst::renderer::bundle::RenderBundle;
 use amethyst::renderer::formats::{ObjFormat, PngFormat};
 use amethyst::renderer::prelude::*;
-use amethyst::timing::Time;
+use amethyst::core::timing::Time;
 use cgmath::{Deg, Euler, Quaternion};
 
 struct DemoState {
