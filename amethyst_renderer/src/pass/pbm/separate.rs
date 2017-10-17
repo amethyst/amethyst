@@ -24,7 +24,6 @@ use vertex::{Normal, Position, Separate, Tangent, TexCoord, VertexFormat};
 use super::*;
 
 /// Draw mesh with physically based lighting
-/// `V` is `VertexFormat`
 /// `A` is ambient light resource
 /// `T` is transform matrix component
 #[derive(Clone, Debug, PartialEq)]

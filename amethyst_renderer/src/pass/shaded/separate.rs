@@ -24,7 +24,6 @@ use vertex::{Normal, Position, Separate, TexCoord, VertexFormat};
 use super::*;
 
 /// Draw mesh with simple lighting technique
-/// `V` is `VertexFormat`
 /// `A` is ambient light resource
 /// `T` is transform matrix component
 #[derive(Clone, Debug, PartialEq)]
