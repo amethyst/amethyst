@@ -67,6 +67,32 @@ impl<A: Asset> AssetStorage<A> {
         handle
     }
 
+    /// When cloning an asset handle, you'll get another handle,
+    /// but pointing to the same asset. If you instead want to
+    /// indeed create a new asset, you can use this method.
+    /// Note however, that it needs a mutable borrow of `self`,
+    /// so it can't be used in parallel.
+    pub fn clone_asset(&mut self, handle: &Handle<A>) -> Option<Handle<A>>
+    where
+        A: Clone,
+    {
+        if let Some(asset) = self.get(handle).map(A::clone) {
+            let h = self.allocate();
+
+            let id = h.id();
+            self.bitset.add(id);
+            self.handles.push(h.clone());
+
+            unsafe {
+                self.assets.insert(id, asset);
+            }
+
+            Some(h)
+        } else {
+            None
+        }
+    }
+
     /// Get an asset from a given asset handle.
     pub fn get(&self, handle: &Handle<A>) -> Option<&A> {
         if self.bitset.contains(handle.id()) {
