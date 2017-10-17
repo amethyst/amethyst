@@ -13,7 +13,7 @@ use ecs::{Fetch, FetchMut, RunNow, SystemData};
 use ecs::rendering::resources::{ScreenDimensions, WindowMessages};
 use renderer::{Mesh, Renderer, Texture};
 use renderer::formats::{create_mesh_asset, create_texture_asset};
-use renderer::pipe::{PipelineData, PolyPipeline};
+use renderer::pipe::PolyPipeline;
 
 /// Rendering system.
 #[derive(Derivative)]
@@ -50,7 +50,8 @@ where
 
     fn do_render(
         &mut self,
-        (mut event_handler, mut window_messages, mut screen_dimensions, data): RenderData<P>,
+        (mut event_handler, mut window_messages, mut screen_dimensions): RenderData,
+        res: &Resources,
     ) {
         #[cfg(feature = "profiler")]
         profile_scope!("render_system");
@@ -86,7 +87,7 @@ where
         }
 
         self.renderer
-            .draw(&mut self.pipe, data, Duration::from_secs(0));
+            .draw(&mut self.pipe, res, Duration::from_secs(0));
 
         let mut events: Vec<Event> = Vec::new();
         self.renderer.events_mut().poll_events(|new_event| {
@@ -108,11 +109,10 @@ type AssetLoadingData<'a> = (
     FetchMut<'a, AssetStorage<Texture>>,
 );
 
-type RenderData<'a, P> = (
+type RenderData<'a> = (
     FetchMut<'a, EventChannel<Event>>,
     FetchMut<'a, WindowMessages>,
     FetchMut<'a, ScreenDimensions>,
-    <P as PipelineData<'a>>::Data,
 );
 
 impl<'a, P> RunNow<'a> for RenderSystem<P>
@@ -121,7 +121,7 @@ where
 {
     fn run_now(&mut self, res: &'a Resources) {
         self.do_asset_loading(AssetLoadingData::<'a>::fetch(res, 0));
-        self.do_render(RenderData::<'a, P>::fetch(res, 0));
+        self.do_render(SystemData::fetch(res, 0), res);
     }
 }
 

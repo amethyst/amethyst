@@ -6,6 +6,7 @@ use std::marker::PhantomData;
 use rayon::iter::ParallelIterator;
 use rayon::iter::internal::UnindexedConsumer;
 use rayon_core;
+use shred::Resources;
 use specs::SystemData;
 
 use error::Result;
@@ -143,7 +144,7 @@ impl<P> CompiledPass<P> {
     pub fn apply<'a, 'b: 'a>(
         &'a mut self,
         encoders: &'a mut [Encoder],
-        data: <P as PassData<'b>>::Data,
+        res: &'a Resources,
     ) -> <P as PassApply<'a>>::Apply
     where
         P: Pass,
@@ -153,7 +154,7 @@ impl<P> CompiledPass<P> {
             self.effects.resize(encoders.len(), effect);
         }
         self.inner
-            .apply(Supplier::new(encoders, &mut self.effects[..]), data)
+            .apply(Supplier::new(encoders, &mut self.effects[..]), SystemData::fetch(res, 0))
     }
 
     pub fn new_target(&mut self, target: &Target) {
