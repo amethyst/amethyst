@@ -278,7 +278,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// ~~~no_run
     /// use amethyst::prelude::*;
-    /// use amethyst::ecs::transform::{Child, LocalTransform, TransformSystem};
+    /// use amethyst::core::transform::{Child, LocalTransform, TransformSystem};
     ///
     /// struct NullState;
     /// impl State for NullState {}
@@ -612,15 +612,13 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// # Examples
     ///
     /// ```no_run
-    /// use amethyst::ecs::rendering::{AmbientColor, RenderBundle, create_render_system};
-    /// use amethyst::ecs::transform::Transform;
+    /// use amethyst::renderer::bundle::RenderBundle;
+    /// use amethyst::core::transform::Transform;
     /// use amethyst::prelude::*;
-    /// use amethyst::renderer::{Config as DisplayConfig};
-    /// use amethyst::renderer::pass;
-    /// use amethyst::renderer::pipe::{Pipeline, Stage};
-    /// use amethyst::renderer::vertex::PosNormTex;
+    /// use amethyst::renderer::Config as DisplayConfig;
+    /// use amethyst::renderer::prelude::*;
     ///
-    /// type DrawShaded = pass::DrawShaded<PosNormTex, AmbientColor, Transform>;
+    /// type DrawShaded = pass::DrawShaded<PosNormTex>;
     ///
     /// # struct Example;
     /// # impl State for Example {}
@@ -636,7 +634,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// let mut game = Application::build("resources/", Example)?
     /// .with_bundle(RenderBundle::new())?
-    /// .with_local(create_render_system(pipe, Some(config))?)
+    /// .with_local(RenderSystem::build(pipe, Some(config))?)
     /// .build()?;
     /// # Ok(())
     /// # }

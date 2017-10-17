@@ -5,11 +5,11 @@ extern crate cgmath;
 extern crate genmesh;
 
 use amethyst::assets::Loader;
+use amethyst::core::transform::Transform;
 use amethyst::ecs::World;
-use amethyst::ecs::rendering::{create_render_system, AmbientColor, RenderBundle};
-use amethyst::ecs::transform::Transform;
 use amethyst::prelude::*;
-use amethyst::renderer::{Config as DisplayConfig, Mesh, Rgba};
+use amethyst::renderer::Config as DisplayConfig;
+use amethyst::renderer::bundle::RenderBundle;
 use amethyst::renderer::prelude::*;
 use cgmath::{Deg, Vector3};
 use cgmath::prelude::InnerSpace;
@@ -54,7 +54,7 @@ impl State for Example {
 }
 
 
-type DrawShaded = pass::DrawShadedSeparate<AmbientColor, Transform>;
+type DrawShaded = pass::DrawShadedSeparate;
 
 fn run() -> Result<(), amethyst::Error> {
     let display_config_path = format!(
@@ -77,7 +77,7 @@ fn run() -> Result<(), amethyst::Error> {
 
     let mut game = Application::build(resources, Example)?
         .with_bundle(RenderBundle::new())?
-        .with_local(create_render_system(pipe, Some(config))?)
+        .with_local(RenderSystem::build(pipe, Some(config))?)
         .build()?;
     Ok(game.run())
 }

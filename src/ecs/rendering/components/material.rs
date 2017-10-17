@@ -1,1 +1,0 @@
-//! Graphical texture resource.

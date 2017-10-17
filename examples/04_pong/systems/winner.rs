@@ -2,8 +2,8 @@ use {Ball, ScoreBoard};
 use amethyst::assets::AssetStorage;
 use amethyst::audio::Source;
 use amethyst::audio::output::Output;
+use amethyst::core::transform::LocalTransform;
 use amethyst::ecs::{Fetch, FetchMut, Join, System, WriteStorage};
-use amethyst::ecs::transform::LocalTransform;
 use audio::Sounds;
 
 /// This system is responsible for checking if a ball has moved into a left or

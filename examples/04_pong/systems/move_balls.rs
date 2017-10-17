@@ -1,6 +1,6 @@
 use Ball;
+use amethyst::core::transform::LocalTransform;
 use amethyst::ecs::{Fetch, Join, System, WriteStorage};
-use amethyst::ecs::transform::LocalTransform;
 use amethyst::timing::Time;
 
 /// This system is responsible for moving all balls according to their speed

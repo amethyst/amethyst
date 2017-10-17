@@ -1,10 +1,9 @@
 use {ARENA_HEIGHT, ARENA_WIDTH};
 use {Ball, Paddle, Side};
 use amethyst::assets::Loader;
+use amethyst::core::transform::{LocalTransform, Transform};
 use amethyst::ecs::World;
-use amethyst::ecs::transform::{LocalTransform, Transform};
 use amethyst::prelude::*;
-use amethyst::renderer::MeshHandle;
 use amethyst::renderer::prelude::*;
 
 pub struct Pong;
@@ -54,7 +53,6 @@ fn initialise_camera(world: &mut World) {
 
 /// Hide the cursor so it's invisible while playing.
 fn hide_cursor(world: &mut World) {
-    use amethyst::ecs::rendering::resources::WindowMessages;
     use amethyst::winit::CursorState;
 
     world

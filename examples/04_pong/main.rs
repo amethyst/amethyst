@@ -10,13 +10,13 @@ mod audio;
 use std::time::Duration;
 
 use amethyst::Result;
+use amethyst::core::transform::TransformBundle;
 use amethyst::ecs::{Component, DenseVecStorage};
 use amethyst::ecs::audio::AudioBundle;
 use amethyst::ecs::input::InputBundle;
-use amethyst::ecs::rendering::{create_render_system, RenderBundle};
-use amethyst::ecs::transform::{Transform, TransformBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::Config as DisplayConfig;
+use amethyst::renderer::bundle::RenderBundle;
 use amethyst::renderer::prelude::*;
 use amethyst::util::frame_limiter::FrameRateLimitStrategy;
 
@@ -42,7 +42,7 @@ const AUDIO_MUSIC: &'static [&'static str] = &[
 const AUDIO_BOUNCE: &'static str = "audio/bounce.ogg";
 const AUDIO_SCORE: &'static str = "audio/score.ogg";
 
-type DrawFlat = pass::DrawFlat<PosTex, Transform>;
+type DrawFlat = pass::DrawFlat<PosTex>;
 
 fn main() {
     if let Err(e) = run() {
@@ -85,7 +85,7 @@ fn run() -> Result<()> {
         .with_bundle(TransformBundle::new().with_dep(&["ball_system", "paddle_system"]))?
         .with_bundle(AudioBundle::new(|music: &mut Music| music.music.next()))?
         .with_bundle(RenderBundle::new())?
-        .with_local(create_render_system(pipe, Some(display_config))?);
+        .with_local(RenderSystem::build(pipe, Some(display_config))?);
     Ok(game.build()?.run())
 }
 
