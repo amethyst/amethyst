@@ -1,16 +1,20 @@
+extern crate amethyst_core;
+extern crate amethyst_config;
 extern crate fnv;
 extern crate smallvec;
-extern crate winit;
-
 #[macro_use]
-extern crate serde_derive;
+extern crate serde;
 extern crate shrev;
+extern crate specs;
+extern crate winit;
 
 pub use self::axis::Axis;
 pub use self::bindings::Bindings;
 pub use self::button::Button;
 pub use self::event::InputEvent;
 pub use self::input_handler::InputHandler;
+pub use self::system::InputSystem;
+pub use self::bundle::InputBundle;
 
 use std::iter::{Chain, FlatMap, Iterator, Map};
 use std::slice::Iter;
@@ -24,6 +28,8 @@ mod input_handler;
 mod local_mouse_button;
 mod local_virtual_key_code;
 mod event;
+mod system;
+mod bundle;
 
 // This entire set ot types is to be eliminated once impl Trait is released.
 
