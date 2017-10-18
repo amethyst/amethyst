@@ -4,9 +4,10 @@ use std::sync::atomic::AtomicBool;
 
 use rodio::{Decoder, SpatialSink};
 use smallvec::SmallVec;
+use specs::{BTreeStorage, Component};
 
-use audio::{DecoderError, Source};
-use ecs::{BTreeStorage, Component};
+use DecoderError;
+use source::Source;
 
 /// An audio source, add this component to anything that emits sound.
 pub struct AudioEmitter {

@@ -23,6 +23,7 @@ profiler = ["thread_profiler/thread_profiler"]
 
 [dependencies]
 amethyst_assets = { path = "amethyst_assets", version = "0.2.0" }
+amethyst_audio = { path = "amethyst_audio", version = "0.1.0" }
 amethyst_config = { path = "amethyst_config", version = "0.4.0" }
 amethyst_core = { path = "amethyst_core", version = "0.1.0" }
 amethyst_renderer = { path = "amethyst_renderer", version = "0.5" }
@@ -87,4 +88,4 @@ name = "sphere_separate"
 path = "examples/07_separate_sphere/main.rs"
 
 [workspace]
-members = ["amethyst_assets", "amethyst_config", "amethyst_core", "amethyst_input", "amethyst_renderer"]
+members = ["amethyst_assets", "amethyst_audio", "amethyst_config", "amethyst_core", "amethyst_input", "amethyst_renderer"]
