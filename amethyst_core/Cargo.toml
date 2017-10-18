@@ -15,7 +15,10 @@ appveyor = { repository = "amethyst/amethyst" }
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
-specs = "0.10"
-fnv = "1.0"
 cgmath = "0.14"
+fnv = "1.0"
+hibitset = "0.3.1"
 serde = { version = "1", features = ["serde_derive"] }
+shred = "0.5"
+specs = "0.10"
+quickcheck = "0.4.1"

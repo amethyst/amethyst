@@ -1,15 +1,12 @@
 //! Local transform component.
 
-use std::ops::{Deref, DerefMut};
-use std::sync::atomic::{AtomicBool, Ordering};
-
 use cgmath::{Matrix3, Matrix4, Quaternion, Vector3};
 use specs::{Component, DenseVecStorage, FlaggedStorage};
 
 /// Local position, rotation, and scale (from parent if it exists).
 ///
 /// Used for rendering position and orientation.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub struct LocalTransform {
     /// Translation/position vector [x, y, z]
     pub translation: [f32; 3],

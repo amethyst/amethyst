@@ -110,11 +110,13 @@ impl State for AssetsExample {
                             KeyboardInput {
                                 virtual_keycode: Some(VirtualKeyCode::Escape),
                                 ..
-                        } => {
-                            // If the user pressed the escape key, or requested the window to be closed,
-                            // quit the application.
-                            Trans::Quit
-                        }
+                            },
+                        ..
+                    } => {
+                        // If the user pressed the escape key, or requested the window to be closed,
+                        // quit the application.
+                        Trans::Quit
+                    }
                     _ => Trans::None,
                 }
             }
