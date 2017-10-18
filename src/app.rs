@@ -9,16 +9,16 @@ use shred::{Resource, RunNow};
 use shrev::{EventChannel, ReaderId};
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
-use winit::{ Event, WindowEvent };
+use winit::{Event, WindowEvent};
 
 use assets::{Asset, Loader, Source};
+use core::frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy};
+use core::timing::{Stopwatch, Time};
 use ecs::{Component, Dispatcher, DispatcherBuilder, System, World};
 use ecs::common::Errors;
 use engine::Engine;
 use error::{Error, Result};
 use state::{State, StateMachine};
-use core::timing::{Stopwatch, Time};
-use core::frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy};
 use vergen;
 
 /// An Application is the root object of the game engine. It binds the OS
@@ -177,7 +177,11 @@ impl<'a, 'b> Application<'a, 'b> {
             for event in events {
                 states.handle_event(engine, event.clone());
                 if !self.ignore_window_close {
-                    if let &Event::WindowEvent { event: WindowEvent::Closed, .. } = &event {
+                    if let &Event::WindowEvent {
+                        event: WindowEvent::Closed,
+                        ..
+                    } = &event
+                    {
                         states.stop(engine);
                     }
                 }

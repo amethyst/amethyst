@@ -10,15 +10,15 @@ mod audio;
 use std::time::Duration;
 
 use amethyst::Result;
+use amethyst::audio::AudioBundle;
+use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::transform::TransformBundle;
 use amethyst::ecs::{Component, DenseVecStorage};
-use amethyst::audio::AudioBundle;
 use amethyst::input::InputBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::Config as DisplayConfig;
 use amethyst::renderer::bundle::RenderBundle;
 use amethyst::renderer::prelude::*;
-use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 
 use audio::Music;
 use bundle::PongBundle;

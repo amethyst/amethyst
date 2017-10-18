@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
-use shred::Resource;
 use amethyst_assets::AssetStorage;
+use shred::Resource;
 use specs::{Fetch, FetchMut, System};
 use specs::common::Errors;
 

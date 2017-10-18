@@ -3,13 +3,13 @@
 use std::hash::Hash;
 use std::path::Path;
 
+use amethyst_config::Config;
 use amethyst_core::bundle::{ECSBundle, Result};
 use serde::Serialize;
 use serde::de::DeserializeOwned;
-use winit::Event;
-use amethyst_config::Config;
-use specs::{DispatcherBuilder, World};
 use shrev::EventChannel;
+use specs::{DispatcherBuilder, World};
+use winit::Event;
 
 use {Bindings, InputEvent, InputHandler, InputSystem};
 

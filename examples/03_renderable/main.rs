@@ -9,6 +9,7 @@ extern crate cgmath;
 use amethyst::{Application, Error, State, Trans};
 use amethyst::assets::Loader;
 use amethyst::config::Config;
+use amethyst::core::timing::Time;
 use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::ecs::{Fetch, FetchMut, Join, System, World, WriteStorage};
 use amethyst::prelude::*;
@@ -16,7 +17,6 @@ use amethyst::renderer::{Camera, Config as DisplayConfig, MaterialDefaults, Mesh
 use amethyst::renderer::bundle::RenderBundle;
 use amethyst::renderer::formats::{ObjFormat, PngFormat};
 use amethyst::renderer::prelude::*;
-use amethyst::core::timing::Time;
 use cgmath::{Deg, Euler, Quaternion};
 
 struct DemoState {

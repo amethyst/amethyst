@@ -2,8 +2,8 @@
 
 use std::time::Duration;
 
-use specs::{Fetch, FetchMut, System};
 use amethyst_core::timing::Time;
+use specs::{Fetch, FetchMut, System};
 
 use circular_buffer::CircularBuffer;
 

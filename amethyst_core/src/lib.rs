@@ -5,8 +5,8 @@ extern crate serde;
 extern crate specs;
 
 pub use bundle::ECSBundle;
-pub use transform::*;
 pub use timing::*;
+pub use transform::*;
 
 pub mod bundle;
 pub mod transform;

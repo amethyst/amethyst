@@ -1,20 +1,20 @@
-extern crate amethyst_core;
 extern crate amethyst_config;
+extern crate amethyst_core;
 extern crate fnv;
-extern crate smallvec;
 #[macro_use]
 extern crate serde;
 extern crate shrev;
+extern crate smallvec;
 extern crate specs;
 extern crate winit;
 
 pub use self::axis::Axis;
 pub use self::bindings::Bindings;
+pub use self::bundle::InputBundle;
 pub use self::button::Button;
 pub use self::event::InputEvent;
 pub use self::input_handler::InputHandler;
 pub use self::system::InputSystem;
-pub use self::bundle::InputBundle;
 
 use std::iter::{Chain, FlatMap, Iterator, Map};
 use std::slice::Iter;

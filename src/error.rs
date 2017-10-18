@@ -5,9 +5,9 @@ use std::fmt::{Display, Formatter};
 use std::fmt::Result as FmtResult;
 use std::result::Result as StdResult;
 
-use renderer;
-use ecs::error::BoxedErr;
 use config::ConfigError;
+use ecs::error::BoxedErr;
+use renderer;
 
 /// Engine result type.
 pub type Result<T> = StdResult<T, Error>;

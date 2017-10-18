@@ -2,10 +2,10 @@
 
 extern crate amethyst;
 
-use amethyst::renderer::input::{KeyboardInput, VirtualKeyCode};
 use amethyst::prelude::*;
 use amethyst::renderer::Config as DisplayConfig;
 use amethyst::renderer::bundle::RenderBundle;
+use amethyst::renderer::input::{KeyboardInput, VirtualKeyCode};
 use amethyst::renderer::prelude::*;
 
 struct Example;

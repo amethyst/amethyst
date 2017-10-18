@@ -8,12 +8,12 @@ extern crate shred;
 extern crate smallvec;
 extern crate specs;
 
+pub use self::bundle::AudioBundle;
+pub use self::components::*;
 pub use self::formats::{FlacFormat, OggFormat, WavFormat};
 pub use self::sink::AudioSink;
 pub use self::source::{Source, SourceHandle};
-pub use self::components::*;
 pub use self::systems::*;
-pub use self::bundle::AudioBundle;
 
 pub mod output;
 

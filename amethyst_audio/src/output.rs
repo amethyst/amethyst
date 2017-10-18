@@ -27,8 +27,7 @@ impl Output {
     /// Play a sound once.  A volume of 1.0 is unchanged, while 0.0 is silent.
     ///
     /// This will return an Error if the loaded audio file in source could not be decoded.
-    pub fn try_play_once(&self, source: &Source, volume: f32)
-        -> Result<(), DecoderError> {
+    pub fn try_play_once(&self, source: &Source, volume: f32) -> Result<(), DecoderError> {
         let sink = Sink::new(&self.endpoint);
         match Decoder::new(Cursor::new(source.clone())) {
             Ok(source) => {
@@ -85,7 +84,6 @@ impl Output {
         sink.detach();
         Ok(())
     }
-
 }
 
 impl Debug for Output {

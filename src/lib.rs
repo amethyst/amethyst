@@ -62,8 +62,8 @@ pub extern crate amethyst_core as core;
 pub extern crate amethyst_input as input;
 pub extern crate amethyst_renderer as renderer;
 pub extern crate amethyst_utils as utils;
-pub extern crate shrev;
 pub extern crate shred;
+pub extern crate shrev;
 pub extern crate specs as ecs;
 pub extern crate winit;
 

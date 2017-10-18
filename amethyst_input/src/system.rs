@@ -4,8 +4,8 @@ use std::hash::Hash;
 use std::marker;
 
 use shrev::{EventChannel, ReaderId};
-use winit::Event;
 use specs::{Fetch, FetchMut, System};
+use winit::Event;
 
 use {InputEvent, InputHandler};
 
