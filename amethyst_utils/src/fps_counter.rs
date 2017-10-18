@@ -3,7 +3,7 @@
 use std::time::Duration;
 
 use specs::{Fetch, FetchMut, System};
-use amethyst_core::timing::Time;
+use amethyst_core::timing::{Time, duration_to_nanos};
 
 use circular_buffer::CircularBuffer;
 
@@ -64,9 +64,4 @@ impl<'a> System<'a> for FPSCounterSystem {
         //Enable this to debug performance engine wide.
         //println!("Cur FPS: {}, Sampled: {}",counter.frame_fps(),counter.sampled_fps());
     }
-}
-
-///Converts a Duration to nanoseconds
-fn duration_to_nanos(duration: Duration) -> u64 {
-    (duration.as_secs() * 1_000_000_000) + duration.subsec_nanos() as u64
 }
