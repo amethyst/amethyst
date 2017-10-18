@@ -9,7 +9,7 @@ use shred::{Resource, RunNow};
 use shrev::{EventChannel, ReaderId};
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
-use winit::Event;
+use winit::{ Event, WindowEvent };
 
 use assets::{Asset, Loader, Source};
 use ecs::{Component, Dispatcher, DispatcherBuilder, System, World};
@@ -43,6 +43,7 @@ pub struct Application<'a, 'b> {
     timer: Stopwatch,
     #[derivative(Debug = "ignore")]
     locals: Vec<Box<for<'c> RunNow<'c> + 'b>>,
+    ignore_window_close: bool,
 }
 
 impl<'a, 'b> Application<'a, 'b> {
@@ -174,7 +175,12 @@ impl<'a, 'b> Application<'a, 'b> {
             };
 
             for event in events {
-                states.handle_event(engine, event);
+                states.handle_event(engine, event.clone());
+                if !self.ignore_window_close {
+                    if let &Event::WindowEvent { event: WindowEvent::Closed, .. } = &event {
+                        states.stop(engine);
+                    }
+                }
             }
         }
         {
@@ -240,6 +246,7 @@ pub struct ApplicationBuilder<'a, 'b, T> {
     events_reader_id: ReaderId,
     frame_limiter: FrameLimiter,
     locals: Vec<Box<for<'c> RunNow<'c> + 'b>>,
+    ignore_window_close: bool,
 }
 
 impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
@@ -336,6 +343,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
             pool: pool,
             frame_limiter: FrameLimiter::default(),
             locals: Vec::default(),
+            ignore_window_close: false,
         })
     }
 
@@ -769,6 +777,22 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
         self
     }
 
+    /// Tells the resulting application window to ignore close events if ignore is true.
+    /// This will make your game window unresponsive to operating system close commands.
+    /// Use with caution.
+    ///
+    /// # Parameters
+    ///
+    /// `ignore`: Whether or not the window should ignore these events.  False by default.
+    ///
+    /// # Returns
+    ///
+    /// This function returns the ApplicationBuilder after modifying it.
+    pub fn ignore_window_close(mut self, ignore: bool) -> Self {
+        self.ignore_window_close = ignore;
+        self
+    }
+
     /// Register a new asset type with the Application. All required components
     /// related to the storage of this asset type will be registered. Since
     /// Amethyst uses AssetFutures to allow for async content loading, Amethyst
@@ -845,6 +869,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
             timer: Stopwatch::new(),
             frame_limiter: self.frame_limiter,
             locals: self.locals,
+            ignore_window_close: self.ignore_window_close,
         })
     }
 }

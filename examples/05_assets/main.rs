@@ -107,7 +107,6 @@ impl State for AssetsExample {
         match event {
             Event::WindowEvent { event, .. } => {
                 match event {
-                    WindowEvent::Closed |
                     WindowEvent::KeyboardInput {
                         input:
                             KeyboardInput {

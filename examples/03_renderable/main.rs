@@ -192,7 +192,6 @@ impl State for Example {
         match event {
             Event::WindowEvent { event, .. } => {
                 match event {
-                    WindowEvent::Closed => return Trans::Quit,
                     WindowEvent::KeyboardInput {
                         input:
                             KeyboardInput {
