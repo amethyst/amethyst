@@ -9,16 +9,16 @@ use shred::{Resource, RunNow};
 use shrev::{EventChannel, ReaderId};
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
-use winit::{ Event, WindowEvent };
+use winit::{Event, WindowEvent};
 
 use assets::{Asset, Loader, Source};
+use core::frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy};
+use core::timing::{Stopwatch, Time};
 use ecs::{Component, Dispatcher, DispatcherBuilder, System, World};
 use ecs::common::Errors;
 use engine::Engine;
 use error::{Error, Result};
 use state::{State, StateMachine};
-use timing::{Stopwatch, Time};
-use util::frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy};
 use vergen;
 
 /// An Application is the root object of the game engine. It binds the OS
@@ -177,7 +177,11 @@ impl<'a, 'b> Application<'a, 'b> {
             for event in events {
                 states.handle_event(engine, event.clone());
                 if !self.ignore_window_close {
-                    if let &Event::WindowEvent { event: WindowEvent::Closed, .. } = &event {
+                    if let &Event::WindowEvent {
+                        event: WindowEvent::Closed,
+                        ..
+                    } = &event
+                    {
                         states.stop(engine);
                     }
                 }
@@ -285,7 +289,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// ~~~no_run
     /// use amethyst::prelude::*;
-    /// use amethyst::ecs::transform::{Child, LocalTransform, TransformSystem};
+    /// use amethyst::core::transform::{Child, LocalTransform, TransformSystem};
     ///
     /// struct NullState;
     /// impl State for NullState {}
@@ -314,7 +318,6 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
 
     pub fn new<P: AsRef<Path>>(path: P, initial_state: T) -> Result<Self> {
         use rayon::Configuration;
-        use specs::common::Errors;
 
         println!("Initializing Amethyst...");
         println!("Version: {}", vergen::semver());
@@ -620,15 +623,13 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// # Examples
     ///
     /// ```no_run
-    /// use amethyst::ecs::rendering::{AmbientColor, RenderBundle, create_render_system};
-    /// use amethyst::ecs::transform::Transform;
+    /// use amethyst::renderer::bundle::RenderBundle;
+    /// use amethyst::core::transform::Transform;
     /// use amethyst::prelude::*;
-    /// use amethyst::renderer::{Config as DisplayConfig};
-    /// use amethyst::renderer::pass;
-    /// use amethyst::renderer::pipe::{Pipeline, Stage};
-    /// use amethyst::renderer::vertex::PosNormTex;
+    /// use amethyst::renderer::Config as DisplayConfig;
+    /// use amethyst::renderer::prelude::*;
     ///
-    /// type DrawShaded = pass::DrawShaded<PosNormTex, AmbientColor, Transform>;
+    /// type DrawShaded = pass::DrawShaded<PosNormTex>;
     ///
     /// # struct Example;
     /// # impl State for Example {}
@@ -644,7 +645,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// let mut game = Application::build("resources/", Example)?
     /// .with_bundle(RenderBundle::new())?
-    /// .with_local(create_render_system(pipe, Some(config))?)
+    /// .with_local(RenderSystem::build(pipe, Some(config))?)
     /// .build()?;
     /// # Ok(())
     /// # }

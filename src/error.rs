@@ -5,9 +5,9 @@ use std::fmt::{Display, Formatter};
 use std::fmt::Result as FmtResult;
 use std::result::Result as StdResult;
 
-use specs::error::BoxedErr;
-
 use config::ConfigError;
+use ecs::error::BoxedErr;
+use renderer;
 
 /// Engine result type.
 pub type Result<T> = StdResult<T, Error>;
@@ -55,5 +55,11 @@ impl Display for Error {
 impl From<BoxedErr> for Error {
     fn from(e: BoxedErr) -> Self {
         Error::System(e)
+    }
+}
+
+impl From<renderer::Error> for Error {
+    fn from(err: renderer::Error) -> Self {
+        Error::System(BoxedErr::new(err))
     }
 }

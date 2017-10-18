@@ -1,14 +1,13 @@
 //! Simple flat forward drawing pass.
 
-use std::marker::PhantomData;
-
 use amethyst_assets::AssetStorage;
+use amethyst_core::transform::Transform;
 use cgmath::{Matrix4, One};
 use gfx::pso::buffer::ElemStride;
 
 use rayon::iter::ParallelIterator;
 use rayon::iter::internal::UnindexedConsumer;
-use specs::{Component, Fetch, ParJoin, ReadStorage};
+use specs::{Fetch, ParJoin, ReadStorage};
 
 use cam::Camera;
 use error::Result;
@@ -22,27 +21,20 @@ use vertex::{Position, Separate, TexCoord, VertexFormat};
 use super::*;
 
 /// Draw mesh without lighting
-/// `T` is transform matrix component
 #[derive(Clone, Debug, PartialEq)]
-pub struct DrawFlatSeparate<T> {
-    _pd: PhantomData<T>,
-}
+pub struct DrawFlatSeparate;
 
-impl<T> DrawFlatSeparate<T>
+impl DrawFlatSeparate
 where
-    T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     Self: Pass,
 {
     /// Create instance of `DrawFlat` pass
     pub fn new() -> Self {
-        DrawFlatSeparate { _pd: PhantomData }
+        DrawFlatSeparate {}
     }
 }
 
-impl<'a, T> PassData<'a> for DrawFlatSeparate<T>
-where
-    T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
-{
+impl<'a> PassData<'a> for DrawFlatSeparate {
     type Data = (
         Option<Fetch<'a, Camera>>,
         Fetch<'a, AssetStorage<Mesh>>,
@@ -50,21 +42,15 @@ where
         Fetch<'a, MaterialDefaults>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
-        ReadStorage<'a, T>,
+        ReadStorage<'a, Transform>,
     );
 }
 
-impl<'a, T> PassApply<'a> for DrawFlatSeparate<T>
-where
-    T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
-{
-    type Apply = DrawFlatSeparateApply<'a, T>;
+impl<'a> PassApply<'a> for DrawFlatSeparate {
+    type Apply = DrawFlatSeparateApply<'a>;
 }
 
-impl<T> Pass for DrawFlatSeparate<T>
-where
-    T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
-{
+impl Pass for DrawFlatSeparate {
     fn compile(&self, effect: NewEffect) -> Result<Effect> {
         use std::mem;
         effect
@@ -95,9 +81,9 @@ where
             Fetch<'a, MaterialDefaults>,
             ReadStorage<'b, MeshHandle>,
             ReadStorage<'b, Material>,
-            ReadStorage<'b, T>,
+            ReadStorage<'b, Transform>,
         ),
-    ) -> DrawFlatSeparateApply<'a, T> {
+    ) -> DrawFlatSeparateApply<'a> {
         DrawFlatSeparateApply {
             camera,
             mesh_storage,
@@ -111,21 +97,18 @@ where
     }
 }
 
-pub struct DrawFlatSeparateApply<'a, T: Component> {
+pub struct DrawFlatSeparateApply<'a> {
     camera: Option<Fetch<'a, Camera>>,
     mesh_storage: Fetch<'a, AssetStorage<Mesh>>,
     tex_storage: Fetch<'a, AssetStorage<Texture>>,
     material_defaults: Fetch<'a, MaterialDefaults>,
     mesh: ReadStorage<'a, MeshHandle>,
     material: ReadStorage<'a, Material>,
-    global: ReadStorage<'a, T>,
+    global: ReadStorage<'a, Transform>,
     supplier: Supplier<'a>,
 }
 
-impl<'a, T> ParallelIterator for DrawFlatSeparateApply<'a, T>
-where
-    T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
-{
+impl<'a> ParallelIterator for DrawFlatSeparateApply<'a> {
     type Item = ();
 
     fn drive_unindexed<C>(self, consumer: C) -> C::Result

@@ -56,41 +56,27 @@
 pub extern crate thread_profiler;
 
 pub extern crate amethyst_assets as assets;
+pub extern crate amethyst_audio as audio;
 pub extern crate amethyst_config as config;
 pub extern crate amethyst_core as core;
 pub extern crate amethyst_input as input;
 pub extern crate amethyst_renderer as renderer;
+pub extern crate amethyst_utils as utils;
+pub extern crate shred;
 pub extern crate shrev;
+pub extern crate specs as ecs;
 pub extern crate winit;
 
-extern crate cgmath;
-extern crate cpal;
-extern crate crossbeam;
 #[macro_use]
 extern crate derivative;
-extern crate fnv;
-extern crate gfx;
 extern crate rayon;
-extern crate rodio;
-extern crate serde;
-extern crate shred;
-extern crate smallvec;
-extern crate specs;
-
-#[macro_use]
-extern crate serde_derive;
 
 pub use self::app::{Application, ApplicationBuilder};
 pub use self::engine::Engine;
 pub use self::error::{Error, Result};
 pub use self::state::{State, StateMachine, Trans};
 
-pub mod audio;
-pub mod ecs;
-pub mod event;
 pub mod prelude;
-pub mod timing;
-pub mod util;
 
 mod app;
 mod engine;

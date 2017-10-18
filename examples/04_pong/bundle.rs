@@ -1,7 +1,7 @@
 use {Ball, Paddle, ScoreBoard};
 use amethyst::core::bundle::{ECSBundle, Result};
+use amethyst::core::timing::Time;
 use amethyst::ecs::{DispatcherBuilder, World};
-use amethyst::timing::Time;
 use systems::{BounceSystem, MoveBallsSystem, PaddleSystem, WinnerSystem};
 
 /// A bundle is a convenient way to initialise related resources, components and systems in a

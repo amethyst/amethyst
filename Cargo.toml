@@ -23,33 +23,24 @@ profiler = ["thread_profiler/thread_profiler"]
 
 [dependencies]
 amethyst_assets = { path = "amethyst_assets", version = "0.2.0" }
+amethyst_audio = { path = "amethyst_audio", version = "0.1.0" }
 amethyst_config = { path = "amethyst_config", version = "0.4.0" }
 amethyst_core = { path = "amethyst_core", version = "0.1.0" }
 amethyst_renderer = { path = "amethyst_renderer", version = "0.5" }
 amethyst_input = { path = "amethyst_input", version = "0.1" }
-cgmath = "0.14"
-cpal = "0.4"
-crossbeam = "0.3"
+amethyst_utils = { path = "amethyst_utils", version = "0.1" }
 derivative = "1.0"
-fnv = "1.0"
-gfx = "0.16"
-genmesh = "0.4"
-imagefmt = "4.0"
 rayon = "0.8"
-rodio = "0.5.1"
-serde = "1"
-serde_derive = "1"
 shred = "0.5"
 shrev = "0.6"
 specs = "0.10"
-ticketed_lock = "0.1"
 winit = "0.7"
 
 thread_profiler = { version = "0.1", optional = true }
 
-[dependencies.smallvec]
-version = "0.4.2"
-features = ["serde"]
+[dev-dependencies]
+cgmath = "0.14"
+genmesh = "0.4"
 
 [build-dependencies]
 vergen = "0.1"
@@ -87,4 +78,4 @@ name = "sphere_separate"
 path = "examples/07_separate_sphere/main.rs"
 
 [workspace]
-members = ["amethyst_assets", "amethyst_config", "amethyst_core", "amethyst_input", "amethyst_renderer"]
+members = ["amethyst_assets", "amethyst_audio", "amethyst_config", "amethyst_core", "amethyst_input", "amethyst_renderer", "amethyst_utils"]

@@ -9,14 +9,14 @@ extern crate cgmath;
 use amethyst::{Application, Error, State, Trans};
 use amethyst::assets::Loader;
 use amethyst::config::Config;
+use amethyst::core::timing::Time;
+use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::ecs::{Fetch, FetchMut, Join, System, World, WriteStorage};
-use amethyst::ecs::rendering::{create_render_system, AmbientColor, RenderBundle};
-use amethyst::ecs::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::{Camera, Config as DisplayConfig, MaterialDefaults, MeshHandle, Rgba};
+use amethyst::renderer::bundle::RenderBundle;
 use amethyst::renderer::formats::{ObjFormat, PngFormat};
 use amethyst::renderer::prelude::*;
-use amethyst::timing::Time;
 use cgmath::{Deg, Euler, Quaternion};
 
 struct DemoState {
@@ -362,17 +362,14 @@ fn run() -> Result<(), Error> {
         .with::<ExampleSystem>(ExampleSystem, "example_system", &[])
         .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
         .with_bundle(RenderBundle::new())?
-        .with_local(create_render_system(
-            pipeline_builder,
-            Some(display_config),
-        )?)
+        .with_local(RenderSystem::build(pipeline_builder, Some(display_config))?)
         .build()?;
 
     game.run();
     Ok(())
 }
 
-type DrawShaded = pass::DrawShaded<PosNormTex, AmbientColor, Transform>;
+type DrawShaded = pass::DrawShaded<PosNormTex>;
 
 /// Initialises the camera structure.
 fn initialise_camera(camera: &mut Camera) {

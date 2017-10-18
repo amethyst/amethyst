@@ -10,13 +10,12 @@ use std::sync::Arc;
 use amethyst::{Application, Error, State, Trans};
 use amethyst::assets::{BoxedErr, Format, Loader, Source};
 use amethyst::config::Config;
+use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::ecs::World;
-use amethyst::ecs::input::InputBundle;
-use amethyst::ecs::rendering::{create_render_system, AmbientColor, RenderBundle};
-use amethyst::ecs::transform::{LocalTransform, Transform, TransformBundle};
+use amethyst::input::InputBundle;
 use amethyst::prelude::*;
-use amethyst::renderer::{Camera, Config as DisplayConfig, Rgba};
-use amethyst::renderer::formats::MeshData;
+use amethyst::renderer::Config as DisplayConfig;
+use amethyst::renderer::bundle::RenderBundle;
 use amethyst::renderer::prelude::*;
 
 struct Custom;
@@ -135,7 +134,7 @@ fn main() {
     }
 }
 
-type DrawShaded = pass::DrawShaded<PosNormTex, AmbientColor, Transform>;
+type DrawShaded = pass::DrawShaded<PosNormTex>;
 
 /// Wrapper around the main, so we can return errors easily.
 fn run() -> Result<(), Error> {
@@ -159,10 +158,7 @@ fn run() -> Result<(), Error> {
         .with_bundle(InputBundle::<String, String>::new())?
         .with_bundle(TransformBundle::new())?
         .with_bundle(RenderBundle::new())?
-        .with_local(create_render_system(
-            pipeline_builder,
-            Some(display_config),
-        )?)
+        .with_local(RenderSystem::build(pipeline_builder, Some(display_config))?)
         .build()?;
 
     game.run();
