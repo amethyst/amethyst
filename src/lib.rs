@@ -87,7 +87,6 @@ pub use self::state::{State, StateMachine, Trans};
 
 pub mod audio;
 pub mod ecs;
-pub mod event;
 pub mod prelude;
 pub mod timing;
 pub mod util;

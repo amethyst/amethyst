@@ -3,17 +3,21 @@
 
 use std::mem;
 
-use assets::AssetStorage;
+use amethyst_assets::AssetStorage;
 use shred::Resources;
 use shrev::EventChannel;
 use specs::common::Errors;
 use winit::{DeviceEvent, Event, WindowEvent};
+use specs::{Fetch, FetchMut, RunNow, SystemData};
 
-use ecs::{Fetch, FetchMut, RunNow, SystemData};
-use ecs::rendering::resources::{ScreenDimensions, WindowMessages};
-use renderer::{Mesh, Renderer, Texture};
-use renderer::formats::{create_mesh_asset, create_texture_asset};
-use renderer::pipe::{PipelineData, PolyPipeline};
+use resources::{ScreenDimensions, WindowMessages};
+use mesh::Mesh;
+use renderer::Renderer;
+use tex::Texture;
+use formats::{create_mesh_asset, create_texture_asset};
+use pipe::{PipelineBuild, PipelineData, PolyPipeline};
+use config::Config;
+use error::Result;
 
 /// Rendering system.
 #[derive(Derivative)]
@@ -29,6 +33,27 @@ impl<P> RenderSystem<P>
 where
     P: PolyPipeline,
 {
+    /// Build a new `RenderSystem` from the given pipeline builder and config
+    pub fn build<B>(pipe: B, config: Option<Config>) -> Result<Self>
+    where
+        B: PipelineBuild<Pipeline = P>,
+    {
+        let mut renderer = {
+            let mut renderer = Renderer::build();
+
+            if let Some(config) = config.to_owned() {
+                renderer.with_config(config);
+            }
+            let renderer = renderer.build()?;
+
+            renderer
+        };
+
+        let pipe = renderer.create_pipe(pipe)?;
+
+        Ok(Self::new(pipe, renderer))
+    }
+
     /// Create a new render system
     pub fn new(pipe: P, renderer: Renderer) -> Self {
         let cached_size = renderer.window().get_inner_size_pixels().unwrap();

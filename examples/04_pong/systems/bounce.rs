@@ -2,8 +2,8 @@ use {Ball, Paddle, Side};
 use amethyst::assets::AssetStorage;
 use amethyst::audio::Source;
 use amethyst::audio::output::Output;
+use amethyst::core::transform::LocalTransform;
 use amethyst::ecs::{Fetch, Join, ReadStorage, System, WriteStorage};
-use amethyst::ecs::transform::LocalTransform;
 use audio::{play_bounce, Sounds};
 
 /// This system is responsible for detecing collisions between balls and

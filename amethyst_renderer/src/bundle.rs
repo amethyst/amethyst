@@ -1,18 +1,11 @@
 //! ECS rendering bundle
 
-use assets::{AssetStorage, Handle};
-use core::bundle::{ECSBundle, Result};
-use renderer::Config as DisplayConfig;
-use renderer::Rgba;
-use renderer::pipe::PipelineBuild;
-use renderer::prelude::*;
+use amethyst_assets::{AssetStorage, Handle, Loader};
+use amethyst_core::bundle::{ECSBundle, Result};
+use amethyst_core::transform::components::*;
+use specs::{DispatcherBuilder, World};
 
-use assets::{BoxedErr, Loader};
-use ecs::{DispatcherBuilder, World};
-use ecs::rendering::resources::{AmbientColor, ScreenDimensions, WindowMessages};
-use ecs::rendering::systems::RenderSystem;
-use ecs::transform::components::*;
-use renderer::MaterialDefaults;
+use prelude::*;
 
 /// Rendering bundle
 ///
@@ -28,31 +21,6 @@ impl RenderBundle {
         RenderBundle
     }
 }
-
-/// Create render system
-pub fn create_render_system<P>(
-    pipe: P,
-    display_config: Option<DisplayConfig>,
-) -> Result<RenderSystem<P::Pipeline>>
-where
-    P: PipelineBuild + Clone,
-{
-    let mut renderer = {
-        let mut renderer = Renderer::build();
-
-        if let Some(config) = display_config.to_owned() {
-            renderer.with_config(config);
-        }
-        let renderer = renderer.build().map_err(BoxedErr::new)?;
-
-        renderer
-    };
-
-    let pipe = renderer.create_pipe(pipe.clone()).map_err(BoxedErr::new)?;
-
-    Ok(RenderSystem::new(pipe, renderer))
-}
-
 
 impl<'a, 'b> ECSBundle<'a, 'b> for RenderBundle {
     fn build(

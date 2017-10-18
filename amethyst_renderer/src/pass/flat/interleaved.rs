@@ -3,12 +3,13 @@
 use std::marker::PhantomData;
 
 use amethyst_assets::AssetStorage;
+use amethyst_core::transform::Transform;
 use cgmath::{Matrix4, One};
 use gfx::pso::buffer::ElemStride;
 
 use rayon::iter::ParallelIterator;
 use rayon::iter::internal::UnindexedConsumer;
-use specs::{Component, Fetch, ParJoin, ReadStorage};
+use specs::{Fetch, ParJoin, ReadStorage};
 
 use cam::Camera;
 use error::Result;
@@ -23,16 +24,14 @@ use super::*;
 
 /// Draw mesh without lighting
 /// `V` is `VertexFormat`
-/// `T` is transform matrix component
 #[derive(Clone, Debug, PartialEq)]
-pub struct DrawFlat<V, T> {
-    _pd: PhantomData<(V, T)>,
+pub struct DrawFlat<V> {
+    _pd: PhantomData<V>,
 }
 
-impl<V, T> DrawFlat<V, T>
+impl<V> DrawFlat<V>
 where
     V: Query<(Position, TexCoord)>,
-    T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
     Self: Pass,
 {
     /// Create instance of `DrawFlat` pass
@@ -41,10 +40,9 @@ where
     }
 }
 
-impl<'a, V, T> PassData<'a> for DrawFlat<V, T>
+impl<'a, V> PassData<'a> for DrawFlat<V>
 where
     V: Query<(Position, TexCoord)>,
-    T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
 {
     type Data = (
         Option<Fetch<'a, Camera>>,
@@ -53,22 +51,20 @@ where
         Fetch<'a, MaterialDefaults>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
-        ReadStorage<'a, T>,
+        ReadStorage<'a, Transform>,
     );
 }
 
-impl<'a, V, T> PassApply<'a> for DrawFlat<V, T>
+impl<'a, V> PassApply<'a> for DrawFlat<V>
 where
     V: Query<(Position, TexCoord)>,
-    T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
 {
-    type Apply = DrawFlatApply<'a, V, T>;
+    type Apply = DrawFlatApply<'a, V>;
 }
 
-impl<V, T> Pass for DrawFlat<V, T>
+impl<V> Pass for DrawFlat<V>
 where
     V: Query<(Position, TexCoord)>,
-    T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
 {
     fn compile(&self, effect: NewEffect) -> Result<Effect> {
         use std::mem;
@@ -91,9 +87,9 @@ where
             Fetch<'a, MaterialDefaults>,
             ReadStorage<'b, MeshHandle>,
             ReadStorage<'b, Material>,
-            ReadStorage<'b, T>,
+            ReadStorage<'b, Transform>,
         ),
-    ) -> DrawFlatApply<'a, V, T> {
+    ) -> DrawFlatApply<'a, V> {
         DrawFlatApply {
             camera,
             mesh_storage,
@@ -108,22 +104,21 @@ where
     }
 }
 
-pub struct DrawFlatApply<'a, V, T: Component> {
+pub struct DrawFlatApply<'a, V> {
     camera: Option<Fetch<'a, Camera>>,
     mesh_storage: Fetch<'a, AssetStorage<Mesh>>,
     tex_storage: Fetch<'a, AssetStorage<Texture>>,
     material_defaults: Fetch<'a, MaterialDefaults>,
     mesh: ReadStorage<'a, MeshHandle>,
     material: ReadStorage<'a, Material>,
-    global: ReadStorage<'a, T>,
+    global: ReadStorage<'a, Transform>,
     supplier: Supplier<'a>,
     pd: PhantomData<V>,
 }
 
-impl<'a, V, T> ParallelIterator for DrawFlatApply<'a, V, T>
+impl<'a, V> ParallelIterator for DrawFlatApply<'a, V>
 where
     V: Query<(Position, TexCoord)>,
-    T: Component + AsRef<[[f32; 4]; 4]> + Send + Sync,
 {
     type Item = ();
 

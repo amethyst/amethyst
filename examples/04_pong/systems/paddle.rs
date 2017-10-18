@@ -1,6 +1,6 @@
 use Paddle;
+use amethyst::core::transform::LocalTransform;
 use amethyst::ecs::{Fetch, Join, System, WriteStorage};
-use amethyst::ecs::transform::LocalTransform;
 use amethyst::input::InputHandler;
 use amethyst::timing::Time;
 
