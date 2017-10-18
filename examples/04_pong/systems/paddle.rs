@@ -2,7 +2,7 @@ use Paddle;
 use amethyst::ecs::{Fetch, Join, System, WriteStorage};
 use amethyst::ecs::transform::LocalTransform;
 use amethyst::input::InputHandler;
-use amethyst::timing::Time;
+use amethyst::core::timing::Time;
 
 /// This system is responsible for moving all the paddles according to the user
 /// provided input.

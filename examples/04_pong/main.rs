@@ -18,7 +18,7 @@ use amethyst::ecs::transform::{Transform, TransformBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::Config as DisplayConfig;
 use amethyst::renderer::prelude::*;
-use amethyst::util::frame_limiter::FrameRateLimitStrategy;
+use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 
 use audio::Music;
 use bundle::PongBundle;
