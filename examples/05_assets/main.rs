@@ -68,7 +68,7 @@ impl State for AssetsExample {
 
         engine.world.add_resource(0usize);
 
-        initialise_camera(&mut engine.world.write_resource::<Camera>());
+        initialise_camera(&mut engine.world);
         initialise_lights(&mut engine.world);
 
         // Add custom cube object to scene
@@ -165,17 +165,15 @@ fn run() -> Result<(), Error> {
     Ok(())
 }
 
-/// Initialises the camera structure.
-fn initialise_camera(camera: &mut Camera) {
+fn initialise_camera(world: &mut World) {
     use cgmath::Deg;
-
-    // TODO: Fix the aspect ratio.
-    camera.proj = Projection::perspective(1.0, Deg(60.0)).into();
-    camera.eye = [0.0, -20.0, 10.0].into();
-
-    camera.forward = [0.0, 20.0, -5.0].into();
-    camera.right = [1.0, 0.0, 0.0].into();
-    camera.up = [0.0, 0.0, 1.0].into();
+    world.add_resource(Camera {
+        eye: [0.0, -20.0, 10.0].into(),
+        proj: Projection::perspective(1.0, Deg(60.0)).into(),
+        forward: [0.0, 20.0, -5.0].into(),
+        right: [1.0, 0.0, 0.0].into(),
+        up: [0.0, 0.0, 1.0].into(),
+    });
 }
 
 /// Adds lights to the scene.
