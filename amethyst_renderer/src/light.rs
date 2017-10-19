@@ -2,8 +2,8 @@
 //!
 //! TODO: Remove redundant padding once `#[repr(align(...))]` stabilizes.
 
-use gfx;
 use cgmath::{Deg, Point3, Vector3};
+use gfx;
 use specs::{Component, DenseVecStorage};
 
 use color::Rgba;

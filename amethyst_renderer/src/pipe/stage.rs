@@ -3,9 +3,9 @@
 use hetseq::*;
 
 use error::{Error, Result};
+use fnv::FnvHashMap as HashMap;
 use pipe::{Target, Targets};
 use pipe::pass::{CompiledPass, Pass, PassApply, PassData};
-use fnv::FnvHashMap as HashMap;
 use rayon::iter::{Chain, ParallelIterator};
 use specs::SystemData;
 

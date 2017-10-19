@@ -11,16 +11,16 @@ use rayon::iter::ParallelIterator;
 use rayon::iter::internal::UnindexedConsumer;
 use specs::{Fetch, ParJoin, ReadStorage};
 
+use super::*;
 use cam::Camera;
 use error::Result;
 use mesh::{Mesh, MeshHandle};
 use mtl::{Material, MaterialDefaults};
-use pipe::pass::{Pass, PassApply, PassData, Supplier};
 use pipe::{DepthMode, Effect, NewEffect};
+use pipe::pass::{Pass, PassApply, PassData, Supplier};
 use tex::Texture;
 use types::Encoder;
 use vertex::{Position, Query, TexCoord};
-use super::*;
 
 /// Draw mesh without lighting
 /// `V` is `VertexFormat`

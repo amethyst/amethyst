@@ -11,6 +11,7 @@ use rayon::iter::ParallelIterator;
 use rayon::iter::internal::UnindexedConsumer;
 use specs::{Fetch, Join, ParJoin, ReadStorage};
 
+use super::*;
 use cam::Camera;
 use error::Result;
 use light::{DirectionalLight, Light, PointLight};
@@ -22,7 +23,6 @@ use resources::AmbientColor;
 use tex::Texture;
 use types::Encoder;
 use vertex::{Normal, Position, Query, Tangent, TexCoord};
-use super::*;
 
 /// Draw mesh with physically based lighting
 /// `V` is `VertexFormat`

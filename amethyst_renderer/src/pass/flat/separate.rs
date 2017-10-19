@@ -9,16 +9,16 @@ use rayon::iter::ParallelIterator;
 use rayon::iter::internal::UnindexedConsumer;
 use specs::{Fetch, ParJoin, ReadStorage};
 
+use super::*;
 use cam::Camera;
 use error::Result;
 use mesh::{Mesh, MeshHandle};
 use mtl::{Material, MaterialDefaults};
-use pipe::pass::{Pass, PassApply, PassData, Supplier};
 use pipe::{DepthMode, Effect, NewEffect};
+use pipe::pass::{Pass, PassApply, PassData, Supplier};
 use tex::Texture;
 use types::Encoder;
 use vertex::{Position, Separate, TexCoord, VertexFormat};
-use super::*;
 
 /// Draw mesh without lighting
 #[derive(Clone, Debug, PartialEq)]

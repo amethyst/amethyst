@@ -1,5 +1,7 @@
 reorder_imports = true
 reorder_import_names = true
+reorder_imported_names = true
 reorder_imports_in_group = true
 attributes_on_same_line_as_variant = false
 attributes_on_same_line_as_field = false
+take_source_hints = true

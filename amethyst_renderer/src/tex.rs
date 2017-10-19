@@ -84,9 +84,9 @@ where
     /// Creates a new `TextureBuilder` with the given raw texture data.
     pub fn new(data: D) -> Self {
         use gfx::SHADER_RESOURCE;
+        use gfx::format::{ChannelTyped, SurfaceTyped};
         use gfx::memory::Usage;
         use gfx::texture::{AaMode, Kind};
-        use gfx::format::{ChannelTyped, SurfaceTyped};
 
         TextureBuilder {
             data: data,

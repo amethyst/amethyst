@@ -3,18 +3,18 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use gfx::memory::Pod;
-use num_cpus;
-use rayon::{self, ThreadPool};
-use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use config::Config;
 use error::{Error, Result};
+use fnv::FnvHashMap as HashMap;
+use gfx::memory::Pod;
 use mesh::{Mesh, MeshBuilder, VertexDataSet};
+use num_cpus;
 use pipe::{ColorBuffer, DepthBuffer, PipelineBuild, PipelineData, PolyPipeline, Target,
            TargetBuilder};
+use rayon::{self, ThreadPool};
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use tex::{Texture, TextureBuilder};
 use types::{ColorFormat, DepthFormat, Device, Encoder, Factory, Window};
-use fnv::FnvHashMap as HashMap;
 use winit::{self, EventsLoop, Window as WinitWindow, WindowBuilder};
 
 /// Generic renderer.
@@ -322,8 +322,8 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &Config) -> Result<B
 /// Creates the OpenGL backend.
 #[cfg(feature = "opengl")]
 fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &Config) -> Result<Backend> {
-    use glutin::{self, GlProfile, GlRequest};
     use gfx_window_glutin as win;
+    use glutin::{self, GlProfile, GlRequest};
 
     let ctx = glutin::ContextBuilder::new()
         .with_multisampling(config.multisampling)

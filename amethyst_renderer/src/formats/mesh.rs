@@ -9,9 +9,9 @@ use wavefront_obj::ParseError;
 use wavefront_obj::obj::{parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex,
                          TextureIndex, Vertex, VertexIndex};
 
+use Renderer;
 use mesh::{Mesh, MeshBuilder};
 use vertex::*;
-use Renderer;
 
 /// Error type of `ObjFormat`
 #[derive(Debug)]
