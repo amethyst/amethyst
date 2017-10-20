@@ -78,4 +78,3 @@ name = "sphere_separate"
 path = "examples/07_separate_sphere/main.rs"
 
 [workspace]
-members = ["amethyst_assets", "amethyst_audio", "amethyst_config", "amethyst_core", "amethyst_input", "amethyst_renderer", "amethyst_utils"]
