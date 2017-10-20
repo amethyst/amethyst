@@ -1,22 +1,25 @@
 //! The core engine framework.
 
+use std::path::Path;
 use std::sync::Arc;
-use std::thread;
-use std::time::Duration;
 
+use core::ECSBundle;
 use rayon::ThreadPool;
-use shred::Resource;
-use shrev::EventHandler;
+use shred::{Resource, RunNow};
+use shrev::{EventChannel, ReaderId};
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
-use winit::{Event, EventsLoop};
+use winit::{Event, WindowEvent};
 
-use assets::{Asset, Loader, Store};
-use ecs::{Component, Dispatcher, DispatcherBuilder, ECSBundle, System, World};
+use assets::{Asset, Loader, Source};
+use core::frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy};
+use core::timing::{Stopwatch, Time};
+use ecs::{Component, Dispatcher, DispatcherBuilder, System, World};
+use ecs::common::Errors;
 use engine::Engine;
 use error::{Error, Result};
 use state::{State, StateMachine};
-use timing::{Stopwatch, Time};
+use vergen;
 
 /// An Application is the root object of the game engine. It binds the OS
 /// event loop, state machines, timers and other core components in a central place.
@@ -30,15 +33,17 @@ pub struct Application<'a, 'b> {
     /// The `engine` struct, holding world and thread pool.
     #[derivative(Debug = "ignore")]
     pub engine: Engine,
-    dur_per_frame: Duration,
+    frame_limiter: FrameLimiter,
 
     #[derivative(Debug = "ignore")]
     dispatcher: Dispatcher<'a, 'b>,
-    #[derivative(Debug = "ignore")]
-    events: EventsLoop,
+    events_reader_id: ReaderId,
     states: StateMachine<'a>,
     time: Time,
     timer: Stopwatch,
+    #[derivative(Debug = "ignore")]
+    locals: Vec<Box<for<'c> RunNow<'c> + 'b>>,
+    ignore_window_close: bool,
 }
 
 impl<'a, 'b> Application<'a, 'b> {
@@ -49,6 +54,9 @@ impl<'a, 'b> Application<'a, 'b> {
     /// be using [build](struct.Application.html#method.build) instead.
     ///
     /// # Parameters
+    ///
+    /// - `path`: The default path for asset loading.
+    ///
     /// - `initial_state`: The initial State handler of your game See
     ///   [State](trait.State.html) for more information on what this is.
     ///
@@ -59,6 +67,8 @@ impl<'a, 'b> Application<'a, 'b> {
     /// possible errors that can happen in the creation of a Application object.
     ///
     /// # Type Parameters
+    ///
+    /// - `P`: The path type for your standard asset path.
     ///
     /// - `S`: A type that implements the `State` trait. e.g. Your initial
     ///        game logic.
@@ -71,7 +81,7 @@ impl<'a, 'b> Application<'a, 'b> {
     ///
     /// # Errors
     ///
-    /// Application will return an error if the internal threadpool fails
+    /// Application will return an error if the internal thread pool fails
     /// to initialize correctly because of systems resource limitations
     ///
     /// # Examples
@@ -82,14 +92,15 @@ impl<'a, 'b> Application<'a, 'b> {
     /// struct NullState;
     /// impl State for NullState {}
     ///
-    /// let mut game = Application::new(NullState).expect("Failed to initialize");
+    /// let mut game = Application::new("assets/", NullState).expect("Failed to initialize");
     /// game.run();
     /// ~~~
-    pub fn new<S>(initial_state: S) -> Result<Application<'a, 'b>>
+    pub fn new<P, S>(path: P, initial_state: S) -> Result<Application<'a, 'b>>
     where
+        P: AsRef<Path>,
         S: State + 'a,
     {
-        ApplicationBuilder::new(initial_state)?.build()
+        ApplicationBuilder::new(path, initial_state)?.build()
     }
 
 
@@ -97,11 +108,12 @@ impl<'a, 'b> Application<'a, 'b> {
     ///
     /// This is identical in function to
     /// [ApplicationBuilder::new](struct.ApplicationBuilder.html#method.new).
-    pub fn build<S>(initial_state: S) -> Result<ApplicationBuilder<'a, 'b, S>>
+    pub fn build<P, S>(path: P, initial_state: S) -> Result<ApplicationBuilder<'a, 'b, S>>
     where
+        P: AsRef<Path>,
         S: State + 'a,
     {
-        ApplicationBuilder::new(initial_state)
+        ApplicationBuilder::new(path, initial_state)
     }
 
     /// Run the gameloop until the game state indicates that the game is no
@@ -118,10 +130,8 @@ impl<'a, 'b> Application<'a, 'b> {
         self.timer.start();
         while self.states.is_running() {
             self.advance_frame();
-            // We are done with this frame, we can just rest for now.
-            while self.timer.elapsed() < self.dur_per_frame {
-                thread::yield_now();
-            }
+
+            self.frame_limiter.wait();
 
             self.time.delta_time = self.timer.elapsed();
             self.timer.stop();
@@ -155,14 +165,27 @@ impl<'a, 'b> Application<'a, 'b> {
             #[cfg(feature = "profiler")]
             profile_scope!("handle_event");
 
-            self.events.poll_events(|event| {
-                if let Some(mut event_handler) =
-                    engine.world.res.try_fetch_mut::<EventHandler<Event>>(0)
-                {
-                    event_handler.write_single(event.clone());
+            let events = match engine
+                .world
+                .read_resource::<EventChannel<Event>>()
+                .lossy_read(&mut self.events_reader_id)
+            {
+                Ok(data) => data.cloned().collect(),
+                _ => Vec::default(),
+            };
+
+            for event in events {
+                states.handle_event(engine, event.clone());
+                if !self.ignore_window_close {
+                    if let &Event::WindowEvent {
+                        event: WindowEvent::Closed,
+                        ..
+                    } = &event
+                    {
+                        states.stop(engine);
+                    }
                 }
-                states.handle_event(engine, event);
-            });
+            }
         }
         {
             #[cfg(feature = "profiler")]
@@ -181,9 +204,21 @@ impl<'a, 'b> Application<'a, 'b> {
         profile_scope!("dispatch");
         self.dispatcher.dispatch(&mut self.engine.world.res);
 
+        for local in &mut self.locals {
+            local.run_now(&self.engine.world.res);
+        }
+
         #[cfg(feature = "profiler")]
         profile_scope!("maintain");
         self.engine.world.maintain();
+
+        // TODO: replace this with a more customizable method.
+        // TODO: effectively, the user should have more control over error handling here
+        // TODO: because right now the app will just exit in case of an error.
+        self.engine
+            .world
+            .write_resource::<Errors>()
+            .print_and_exit();
     }
 
     /// Cleans up after the quit signal is received.
@@ -212,8 +247,10 @@ pub struct ApplicationBuilder<'a, 'b, T> {
     pub world: World,
     pool: Arc<ThreadPool>,
     /// Allows to create `RenderSystem`
-    pub events: EventsLoop,
-    max_fps: u32,
+    events_reader_id: ReaderId,
+    frame_limiter: FrameLimiter,
+    locals: Vec<Box<for<'c> RunNow<'c> + 'b>>,
+    ignore_window_close: bool,
 }
 
 impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
@@ -252,7 +289,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// ~~~no_run
     /// use amethyst::prelude::*;
-    /// use amethyst::ecs::transform::{Child, LocalTransform, TransformSystem};
+    /// use amethyst::core::transform::{Child, LocalTransform, TransformSystem};
     ///
     /// struct NullState;
     /// impl State for NullState {}
@@ -261,7 +298,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// // follows the use pattern of most builder objects found
     /// // in the rust ecosystem. Each function modifies the object
     /// // returning a new object with the modified configuration.
-    /// let mut game = Application::build(NullState)
+    /// let mut game = Application::build("assets/", NullState)
     ///     .expect("Failed to initialize")
     ///
     /// // components can be registered at this stage
@@ -279,9 +316,13 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// game.run();
     /// ~~~
 
-    pub fn new(initial_state: T) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P, initial_state: T) -> Result<Self> {
         use rayon::Configuration;
 
+        println!("Initializing Amethyst...");
+        println!("Version: {}", vergen::semver());
+        println!("Platform: {}", vergen::target());
+        println!("Git commit: {}", vergen::sha());
         let cfg = Configuration::new();
         #[cfg(feature = "profiler")]
         let cfg = cfg.start_handler(|index| {
@@ -291,16 +332,21 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
             .map(|p| Arc::new(p))
             .map_err(|_| Error::Application)?;
         let mut world = World::new();
-        let base_path = format!("{}/resources", env!("CARGO_MANIFEST_DIR"));
-        world.add_resource(Loader::new(base_path, pool.clone()));
+        world.add_resource(Loader::new(path.as_ref(), pool.clone()));
+        let events = EventChannel::<Event>::with_capacity(2000);
+        let reader_id = events.register_reader();
+        world.add_resource(events);
+        world.add_resource(Errors::new());
 
         Ok(ApplicationBuilder {
             disp_builder: DispatcherBuilder::new(),
             initial_state: initial_state,
             world: world,
-            events: EventsLoop::new(),
+            events_reader_id: reader_id,
             pool: pool,
-            max_fps: 144,
+            frame_limiter: FrameLimiter::default(),
+            locals: Vec::default(),
+            ignore_window_close: false,
         })
     }
 
@@ -348,7 +394,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// // After creating a builder, we can add any number of components
     /// // using the register method.
-    /// Application::build(NullState)
+    /// Application::build("assets/", NullState)
     ///     .expect("Failed to initialize")
     ///     .register::<Velocity>();
     /// ~~~
@@ -400,7 +446,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// }
     ///
     /// let score_board = HighScores(Vec::new());
-    /// Application::build(NullState)
+    /// Application::build("assets/", NullState)
     ///     .expect("Failed to initialize")
     ///     .with_resource(score_board);
     ///
@@ -442,7 +488,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// // Three systems are added in this example. The "tabby cat" & "tom cat"
     /// // systems will both run in parallel. Only after both cat systems have
     /// // run is the "doggo" system permitted to run them.
-    /// Application::build(NullState)
+    /// Application::build("assets/", NullState)
     ///     .expect("Failed to initialize")
     ///     .with(NopSystem, "tabby cat", &[])
     ///     .with(NopSystem, "tom cat", &[])
@@ -499,7 +545,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///     fn run(&mut self, _: Self::SystemData) {}
     /// }
     ///
-    /// Application::build(NullState)
+    /// Application::build("assets/", NullState)
     ///     .expect("Failed to initialize")
     ///     // This will add the "foo" system to the game loop, in this case
     ///     // the "foo" system will not depend on any systems.
@@ -554,7 +600,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///     fn run(&mut self, _: Self::SystemData) {}
     /// }
     ///
-    /// Application::build(NullState)
+    /// Application::build("assets/", NullState)
     ///     .expect("Failed to initialize")
     ///     // the Nop system is registered here
     ///     .with_thread_local(NopSystem);
@@ -564,6 +610,52 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
         for<'c> S: System<'c> + 'b,
     {
         self.disp_builder = self.disp_builder.add_thread_local(system);
+        self
+    }
+
+    /// Add a local `RunNow` system.
+    ///
+    /// The added system will be dispatched after all normal
+    /// and thread local systems. This is special because it does
+    /// accept types implementing only `RunNow`, but not
+    /// `System`, which is needed for e.g. the `RenderSystem`.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use amethyst::renderer::bundle::RenderBundle;
+    /// use amethyst::core::transform::Transform;
+    /// use amethyst::prelude::*;
+    /// use amethyst::renderer::Config as DisplayConfig;
+    /// use amethyst::renderer::prelude::*;
+    ///
+    /// type DrawShaded = pass::DrawShaded<PosNormTex>;
+    ///
+    /// # struct Example;
+    /// # impl State for Example {}
+    /// #
+    /// # fn run() -> Result<(), ::amethyst::Error> {
+    /// let pipe = Pipeline::build().with_stage(
+    ///     Stage::with_backbuffer()
+    ///         .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
+    ///         .with_pass(DrawShaded::new()),
+    /// );
+    ///
+    /// let config = DisplayConfig::load("config_path.ron");
+    ///
+    /// let mut game = Application::build("resources/", Example)?
+    /// .with_bundle(RenderBundle::new())?
+    /// .with_local(RenderSystem::build(pipe, Some(config))?)
+    /// .build()?;
+    /// # Ok(())
+    /// # }
+    /// # fn main() { run().unwrap(); }
+    /// ```
+    pub fn with_local<S>(mut self, system: S) -> Self
+    where
+        for<'c> S: RunNow<'c> + 'b,
+    {
+        self.locals.push(Box::new(system));
         self
     }
 
@@ -587,11 +679,14 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// crates or APIs, which could result in any number of errors.
     /// See each individual bundle for a description of the errors it could produce.
     ///
-    pub fn with_bundle<B>(self, bundle: B) -> Result<Self>
+    pub fn with_bundle<B>(mut self, bundle: B) -> Result<Self>
     where
-        B: ECSBundle<'a, 'b, T>,
+        B: ECSBundle<'a, 'b>,
     {
-        bundle.build(self)
+        self.disp_builder = bundle
+            .build(&mut self.world, self.disp_builder)
+            .map_err(|err| Error::System(err))?;
+        Ok(self)
     }
 
     /// Register an asset store with the loader logic of the Application.
@@ -620,13 +715,12 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// ~~~no_run
     /// use amethyst::prelude::*;
     /// use amethyst::assets::{Directory, Loader};
-    /// use amethyst::assets::formats::meshes::ObjFormat;
-    /// use amethyst::ecs::rendering::MeshComponent;
+    /// use amethyst::renderer::formats::ObjFormat;
     ///
-    /// let mut game = Application::build(LoadingState)
+    /// let mut game = Application::build("assets/", LoadingState)
     ///     .expect("Failed to initialize")
-    ///     // Register the directory "Game Assets" under the name "resources".
-    ///     .with_store("resources", Directory::new("Game Assets"))
+    ///     // Register the directory "custom_directory" under the name "resources".
+    ///     .with_source("custom_store", Directory::new("custom_directory"))
     ///     .build()
     ///     .expect("Failed to build game")
     ///     .run();
@@ -634,21 +728,23 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// struct LoadingState;
     /// impl State for LoadingState {
     ///     fn on_start(&mut self, engine: &mut Engine) {
+    ///         let storage = engine.world.read_resource();
+    ///
     ///         let loader = engine.world.read_resource::<Loader>();
-    ///         // With the `resources`, load a teapot mesh with the format MeshComponent
-    ///         // from the directory that registered above.
-    ///         let future = loader.load_from::<MeshComponent, _, _, _>("teapot", ObjFormat, "resources");
+    ///         // Load a teapot mesh from the directory that registered above.
+    ///         let mesh = loader.load_from("teapot", ObjFormat, (), "custom_directory",
+    ///                                     (), &storage);
     ///     }
     /// }
     /// ~~~
-    pub fn with_store<I, S>(self, name: I, store: S) -> Self
+    pub fn with_source<I, S>(self, name: I, store: S) -> Self
     where
         I: Into<String>,
-        S: Store + Send + Sync + 'static,
+        S: Source,
     {
         {
             let mut loader = self.world.write_resource::<Loader>();
-            loader.add_store(name, store);
+            loader.add_source(name, store);
         }
         self
     }
@@ -657,18 +753,44 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// # Parameters
     ///
+    /// `strategy`: the frame limit strategy to use
     /// `max_fps`: the maximum frames per second this game will run at.
     ///
     /// # Returns
     ///
     /// This function returns the ApplicationBuilder after modifying it.
-    pub fn with_max_fps(mut self, max_fps: u32) -> Self {
-        use std::u32::MAX;
-        if max_fps == 0 {
-            self.max_fps = MAX;
-        } else {
-            self.max_fps = max_fps;
-        }
+    pub fn with_frame_limit(mut self, strategy: FrameRateLimitStrategy, max_fps: u32) -> Self {
+        self.frame_limiter = FrameLimiter::new(strategy, max_fps);
+        self
+    }
+
+    /// Sets the maximum frames per second of this game, based on the given config.
+    ///
+    /// # Parameters
+    ///
+    /// `config`: the frame limiter config
+    ///
+    /// # Returns
+    ///
+    /// This function returns the ApplicationBuilder after modifying it.
+    pub fn with_frame_limit_config(mut self, config: FrameRateLimitConfig) -> Self {
+        self.frame_limiter = FrameLimiter::from_config(config);
+        self
+    }
+
+    /// Tells the resulting application window to ignore close events if ignore is true.
+    /// This will make your game window unresponsive to operating system close commands.
+    /// Use with caution.
+    ///
+    /// # Parameters
+    ///
+    /// `ignore`: Whether or not the window should ignore these events.  False by default.
+    ///
+    /// # Returns
+    ///
+    /// This function returns the ApplicationBuilder after modifying it.
+    pub fn ignore_window_close(mut self, ignore: bool) -> Self {
+        self.ignore_window_close = ignore;
         self
     }
 
@@ -697,23 +819,15 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     // TODO: Create example of this function. It might be easier to build a large
     //       example of a custom type in the `Asset` trait docs
-    pub fn register_asset<A, F>(mut self, make_context: F) -> Self
+    pub fn register_asset<A>(mut self) -> Self
     where
-        A: Component + Asset + Clone + Send + Sync + 'static,
-        F: FnOnce(&mut World) -> A::Context,
+        A: Asset,
     {
-        use assets::AssetFuture;
-        use specs::common::{Errors, Merge};
+        use assets::{AssetStorage, Handle};
 
-        self.world.register::<A>();
-        self.world.register::<AssetFuture<A>>();
-        self.world.add_resource(Errors::new());
-        self = self.with(Merge::<AssetFuture<A>>::new(), "", &[]);
-        {
-            let context = make_context(&mut self.world);
-            let mut loader = self.world.write_resource::<Loader>();
-            loader.register(context);
-        }
+        self.world.add_resource(AssetStorage::<A>::new());
+        self.world.register::<Handle<A>>();
+
         self
     }
 
@@ -750,11 +864,13 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
             engine: Engine::new(self.pool.clone(), self.world),
             // config: self.config,
             states: StateMachine::new(self.initial_state),
-            events: self.events,
+            events_reader_id: self.events_reader_id,
             dispatcher: self.disp_builder.with_pool(self.pool).build(),
             time: Time::default(),
             timer: Stopwatch::new(),
-            dur_per_frame: Duration::from_secs(1) / self.max_fps,
+            frame_limiter: self.frame_limiter,
+            locals: self.locals,
+            ignore_window_close: self.ignore_window_close,
         })
     }
 }

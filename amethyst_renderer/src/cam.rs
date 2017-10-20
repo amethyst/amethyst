@@ -2,6 +2,7 @@
 
 use amethyst::ecs::transform::LocalTransform;
 use cgmath::{Deg, EuclideanSpace, Euler, InnerSpace, Matrix4, Ortho, PerspectiveFov, Point3, Quaternion, Rotation, Vector3};
+use specs::{NullStorage, VecStorage};
 
 /// The projection mode of a `Camera`.
 ///
@@ -65,5 +66,42 @@ impl Camera {
         Self {
             proj: projection,
         }
+    }
+
+    /// Create a normalized camera for 2D.
+    ///
+    /// Will use an orthographic projection with lower left corner being (-1., -1.) and
+    /// upper right (1., 1.).
+    /// View transformation will be multiplicative identity.
+    pub fn standard_2d() -> Self {
+        Self::new(Projection::orthographic(-1., 1., 1., -1.))
+    }
+
+    /// Create a standard camera for 3D.
+    ///
+    /// Will use a perspective projection with aspect from the given screen dimensions and a field
+    /// of view of 60 degrees.
+    /// View transformation will be multiplicative identity.
+    pub fn standard_3d(width: f32, height: f32) -> Self {
+        use cgmath::Deg;
+        Self::new(Projection::perspective(width / height, Deg(60.)))
+    }
+}
+impl Component for Camera { type Storage = VecStorage<Self>; }
+
+/// Marker for active camera until we implement multi-viewports.
+/// At that point, every viewport should have its own active camera.
+pub struct ActiveCamera;
+impl Component for ActiveCamera { type Storage = NullStorage<Self>; }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_identity_cam() {
+        use cgmath::SquareMatrix;
+        let cam = Camera::standard_2d();
+        assert!(cam.to_view_matrix().is_identity());
     }
 }

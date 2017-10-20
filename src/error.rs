@@ -5,9 +5,9 @@ use std::fmt::{Display, Formatter};
 use std::fmt::Result as FmtResult;
 use std::result::Result as StdResult;
 
-use specs::common::BoxedErr;
-
 use config::ConfigError;
+use ecs::error::BoxedErr;
+use renderer;
 
 /// Engine result type.
 pub type Result<T> = StdResult<T, Error>;
@@ -49,5 +49,17 @@ impl Display for Error {
             Error::Config(ref e) => write!(fmt, "Configuration loading failed: {}", e),
             Error::System(ref e) => write!(fmt, "System creation failed: {}", e),
         }
+    }
+}
+
+impl From<BoxedErr> for Error {
+    fn from(e: BoxedErr) -> Self {
+        Error::System(e)
+    }
+}
+
+impl From<renderer::Error> for Error {
+    fn from(err: renderer::Error) -> Self {
+        Error::System(BoxedErr::new(err))
     }
 }

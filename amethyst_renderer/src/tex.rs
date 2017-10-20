@@ -2,7 +2,7 @@
 
 pub use gfx::texture::{FilterMethod, WrapMode};
 
-use specs::{Component, DenseVecStorage};
+use amethyst_assets::{Asset, Handle};
 
 use std::marker::PhantomData;
 
@@ -11,7 +11,11 @@ use gfx::format::{ChannelType, SurfaceType};
 use gfx::texture::{Info, SamplerInfo};
 use gfx::traits::Pod;
 
+use formats::TextureData;
 use types::{ChannelFormat, Factory, RawShaderResourceView, RawTexture, Sampler, SurfaceFormat};
+
+/// A handle to a `Texture` asset.
+pub type TextureHandle = Handle<Texture>;
 
 /// Handle to a GPU texture resource.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -41,6 +45,10 @@ impl Texture {
     pub fn view(&self) -> &RawShaderResourceView {
         &self.view
     }
+}
+
+impl Asset for Texture {
+    type Data = TextureData;
 }
 
 /// Builds new textures.
@@ -76,9 +84,9 @@ where
     /// Creates a new `TextureBuilder` with the given raw texture data.
     pub fn new(data: D) -> Self {
         use gfx::SHADER_RESOURCE;
+        use gfx::format::{ChannelTyped, SurfaceTyped};
         use gfx::memory::Usage;
         use gfx::texture::{AaMode, Kind};
-        use gfx::format::{ChannelTyped, SurfaceTyped};
 
         TextureBuilder {
             data: data,
@@ -93,6 +101,12 @@ where
             sampler: SamplerInfo::new(FilterMethod::Scale, WrapMode::Clamp),
             pd: PhantomData,
         }
+    }
+
+    /// Sets the `SamplerInfo` for the texture
+    pub fn with_sampler(mut self, sampler: SamplerInfo) -> Self {
+        self.sampler = sampler;
+        self
     }
 
     /// Sets the number of mipmap levels to generate.
@@ -179,8 +193,4 @@ where
             view: view,
         })
     }
-}
-
-impl Component for Texture {
-    type Storage = DenseVecStorage<Self>;
 }

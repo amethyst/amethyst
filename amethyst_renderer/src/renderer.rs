@@ -3,19 +3,19 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use gfx::memory::Pod;
-use num_cpus;
-use rayon::{self, ThreadPool};
-use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use config::Config;
 use error::{Error, Result};
-use mesh::{Mesh, MeshBuilder};
-use mtl::{Material, MaterialBuilder};
-use pipe::{ColorBuffer, DepthBuffer, PipelineBuild, PipelineData, PolyPipeline, Target};
+use fnv::FnvHashMap as HashMap;
+use gfx::memory::Pod;
+use mesh::{Mesh, MeshBuilder, VertexDataSet};
+use num_cpus;
+use pipe::{ColorBuffer, DepthBuffer, PipelineBuild, PipelineData, PolyPipeline, Target,
+           TargetBuilder};
+use rayon::{self, ThreadPool};
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use tex::{Texture, TextureBuilder};
 use types::{ColorFormat, DepthFormat, Device, Encoder, Factory, Window};
-use vertex::VertexFormat;
-use winit::{self, EventsLoop, WindowBuilder};
+use winit::{self, EventsLoop, Window as WinitWindow, WindowBuilder};
 
 /// Generic renderer.
 pub struct Renderer {
@@ -24,27 +24,33 @@ pub struct Renderer {
 
     device: Device,
     encoders: Vec<Encoder>,
-    main_target: Arc<Target>,
+    main_target: Target,
     pool: Arc<ThreadPool>,
     window: Window,
+    events: EventsLoop,
+    cached_size: (u32, u32),
 }
 
 impl Renderer {
     /// Creates a `Renderer` with default window settings.
-    pub fn new(el: &EventsLoop) -> Result<Renderer> {
-        RendererBuilder::new(el).build()
+    pub fn new() -> Result<Renderer> {
+        Self::build().build()
     }
 
     /// Creates a new `RendererBuilder`, equivalent to `RendererBuilder::new()`.
-    pub fn build(el: &EventsLoop) -> RendererBuilder {
+    pub fn build_with_loop(el: EventsLoop) -> RendererBuilder {
         RendererBuilder::new(el)
     }
 
+    /// Creates a new `RendererBuilder`, equivalent to `RendererBuilder::new()`.
+    pub fn build() -> RendererBuilder {
+        Self::build_with_loop(EventsLoop::new())
+    }
+
     /// Builds a new mesh from the given vertices.
-    pub fn create_mesh<D, T>(&mut self, mb: MeshBuilder<D, T>) -> Result<Mesh>
+    pub fn create_mesh<T>(&mut self, mb: MeshBuilder<T>) -> Result<Mesh>
     where
-        D: AsRef<[T]>,
-        T: VertexFormat,
+        T: VertexDataSet,
     {
         mb.build(&mut self.factory)
     }
@@ -56,30 +62,6 @@ impl Renderer {
         T: Pod + Copy,
     {
         tb.build(&mut self.factory)
-    }
-
-    /// Builds a new material resource.
-    pub fn create_material<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC>(
-        &mut self,
-        mb: MaterialBuilder<DA, TA, DE, TE, DN, TN, DM, TM, DR, TR, DO, TO, DC, TC>,
-    ) -> Result<Material>
-    where
-        DA: AsRef<[TA]>,
-        TA: Pod + Copy,
-        DE: AsRef<[TE]>,
-        TE: Pod + Copy,
-        DN: AsRef<[TN]>,
-        TN: Pod + Copy,
-        DM: AsRef<[TM]>,
-        TM: Pod + Copy,
-        DR: AsRef<[TR]>,
-        TR: Pod + Copy,
-        DO: AsRef<[TO]>,
-        TO: Pod + Copy,
-        DC: AsRef<[TC]>,
-        TC: Pod + Copy,
-    {
-        mb.build(&mut self.factory)
     }
 
     /// Builds a new renderer pipeline.
@@ -103,6 +85,13 @@ impl Renderer {
         use gfx::Device;
         #[cfg(feature = "opengl")]
         use glutin::GlContext;
+
+        if let Some(size) = self.window().get_inner_size_pixels() {
+            if size != self.cached_size {
+                self.cached_size = size;
+                self.resize(pipe, size);
+            }
+        }
 
         let num_threads = self.pool.current_num_threads();
         let encoders_required = P::encoders_required(num_threads);
@@ -135,6 +124,46 @@ impl Renderer {
             .swap_buffers()
             .expect("OpenGL context has been lost");
     }
+
+    /// Retrieve a mutable borrow of the events loop
+    pub fn events_mut(&mut self) -> &mut EventsLoop {
+        &mut self.events
+    }
+
+    /// Resize the targets associated with this renderer and pipeline.
+    pub fn resize<P: PolyPipeline>(&mut self, pipe: &mut P, new_size: (u32, u32)) {
+        self.main_target.resize_main_target(&self.window);
+        let mut targets = HashMap::default();
+        targets.insert("".to_string(), self.main_target.clone());
+        for (key, value) in pipe.targets().iter().filter(|&(k, _)| !k.is_empty()) {
+            let (key, target) = TargetBuilder::new(key.clone())
+                .with_num_color_bufs(value.color_bufs().len())
+                .with_depth_buf(value.depth_buf().is_some())
+                .build(&mut self.factory, new_size)
+                .unwrap();
+            targets.insert(key, target);
+        }
+        pipe.new_targets(targets);
+    }
+
+    /// Retrieves an immutable borrow of the window.
+    ///
+    /// No operations require a mutable borrow as of 2017-10-02
+    #[cfg(feature = "opengl")]
+    pub fn window(&self) -> &WinitWindow {
+        self.window.window()
+    }
+
+    #[cfg(feature = "metal")]
+    #[cfg(feature = "vulkan")]
+    pub fn window(&self) -> &WinitWindow {
+        &self.window.0
+    }
+
+    #[cfg(feature = "d3d11")]
+    pub fn window(&self) -> &WinitWindow {
+        &*self.window.0
+    }
 }
 
 impl Drop for Renderer {
@@ -145,16 +174,16 @@ impl Drop for Renderer {
 }
 
 /// Constructs a new `Renderer`.
-pub struct RendererBuilder<'a> {
+pub struct RendererBuilder {
     config: Config,
-    events: &'a EventsLoop,
+    events: EventsLoop,
     pool: Option<Arc<ThreadPool>>,
     winit_builder: WindowBuilder,
 }
 
-impl<'a> RendererBuilder<'a> {
+impl RendererBuilder {
     /// Creates a new `RendererBuilder`.
-    pub fn new(el: &'a EventsLoop) -> Self {
+    pub fn new(el: EventsLoop) -> Self {
         RendererBuilder {
             config: Config::default(),
             events: el,
@@ -210,7 +239,7 @@ impl<'a> RendererBuilder<'a> {
     /// Consumes the builder and creates the new `Renderer`.
     pub fn build(self) -> Result<Renderer> {
         let Backend(dev, fac, main, win) =
-            init_backend(self.winit_builder.clone(), self.events, &self.config)?;
+            init_backend(self.winit_builder.clone(), &self.events, &self.config)?;
         let num_cores = num_cpus::get();
         let pool = self.pool.clone().map(|p| Ok(p)).unwrap_or_else(|| {
             let cfg = rayon::Configuration::new().num_threads(num_cores);
@@ -219,13 +248,18 @@ impl<'a> RendererBuilder<'a> {
                 .map_err(|e| Error::PoolCreation(format!("{}", e)))
         })?;
 
+        let size = win.get_inner_size_pixels()
+            .expect("Unable to fetch window size, as the window went away!");
+
         Ok(Renderer {
             device: dev,
             encoders: Vec::new(),
             factory: fac,
-            main_target: Arc::new(main),
+            main_target: main,
             pool: pool,
             window: win,
+            events: self.events,
+            cached_size: size,
         })
     }
 }
@@ -288,8 +322,8 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &Config) -> Result<B
 /// Creates the OpenGL backend.
 #[cfg(feature = "opengl")]
 fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &Config) -> Result<Backend> {
-    use glutin::{self, GlProfile, GlRequest};
     use gfx_window_glutin as win;
+    use glutin::{self, GlProfile, GlRequest};
 
     let ctx = glutin::ContextBuilder::new()
         .with_multisampling(config.multisampling)

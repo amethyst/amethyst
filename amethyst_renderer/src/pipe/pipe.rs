@@ -57,6 +57,9 @@ pub trait PolyStages
     ) -> <Self as StagesApply<'a>>::Apply;
     ///
     fn encoders_required(jobs_count: usize) -> usize;
+
+    /// Distributes new targets
+    fn new_targets(&mut self, new_targets: &HashMap<String, Target>);
 }
 
 impl<'a, HS> StagesData<'a> for List<(HS, List<()>)>
@@ -87,8 +90,14 @@ where
         let List((ref mut hs, _)) = *self;
         hs.apply(encoders, jobs_count, hd)
     }
+
     fn encoders_required(jobs_count: usize) -> usize {
         HS::encoders_required(jobs_count)
+    }
+
+    fn new_targets(&mut self, new_targets: &HashMap<String, Target>) {
+        let List((ref mut hs, _)) = *self;
+        HS::new_targets(hs, new_targets);
     }
 }
 
@@ -128,6 +137,12 @@ where
     fn encoders_required(jobs_count: usize) -> usize {
         HS::encoders_required(jobs_count) + TS::encoders_required(jobs_count)
     }
+
+    fn new_targets(&mut self, new_targets: &HashMap<String, Target>) {
+        let List((ref mut hs, ref mut ts)) = *self;
+        HS::new_targets(hs, new_targets);
+        TS::new_targets(ts, new_targets);
+    }
 }
 
 ///
@@ -148,13 +163,19 @@ pub trait PolyPipeline
     /// Retuns `ParallelIterator` which apply data to all stages
     fn apply<'a, 'b: 'a>(
         &'a mut self,
-        &'a mut [Encoder],
+        encoder: &'a mut [Encoder],
         jobs_count: usize,
         data: <Self as PipelineData<'b>>::Data,
     ) -> <Self as PipelineApply<'a>>::Apply;
 
     /// Returns number of `Encoder`s required
     fn encoders_required(jobs_count: usize) -> usize;
+
+    /// Resizes the pipeline targets
+    fn new_targets(&mut self, new_targets: HashMap<String, Target>);
+
+    /// Returns an immutable reference to all targets and their name strings.
+    fn targets(&self) -> &HashMap<String, Target>;
 }
 
 impl<'a, L> PipelineData<'a> for Pipeline<L>
@@ -186,6 +207,16 @@ where
 
     fn encoders_required(jobs_count: usize) -> usize {
         L::encoders_required(jobs_count)
+    }
+
+    fn new_targets(&mut self, new_targets: HashMap<String, Target>) {
+        self.stages.new_targets(&new_targets);
+        self.targets = new_targets;
+    }
+
+    /// Returns an immutable reference to all targets and their name strings.
+    fn targets(&self) -> &HashMap<String, Target> {
+        self.targets()
     }
 }
 
@@ -258,10 +289,7 @@ where
             .fmap(BuildStage::new(fac, &targets))
             .try()?;
 
-        Ok(Pipeline {
-            stages: stages,
-            targets: targets,
-        })
+        Ok(Pipeline { stages, targets })
     }
 }
 
@@ -272,10 +300,7 @@ pub struct BuildStage<'a> {
 
 impl<'a> BuildStage<'a> {
     fn new(factory: &'a mut Factory, targets: &'a Targets) -> Self {
-        BuildStage {
-            factory: factory,
-            targets: targets,
-        }
+        BuildStage { factory, targets }
     }
 }
 
@@ -287,7 +312,7 @@ where
     R: Passes,
 {
     type Output = Result<Stage<R>>;
-    fn call_once(mut self, (stage,): (StageBuilder<Q>,)) -> Result<Stage<R>> {
+    fn call_once(self, (stage,): (StageBuilder<Q>,)) -> Result<Stage<R>> {
         stage.build(self.factory, self.targets)
     }
 }
