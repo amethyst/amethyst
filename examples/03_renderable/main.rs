@@ -78,7 +78,7 @@ struct Example;
 
 impl State for Example {
     fn on_start(&mut self, engine: &mut Engine) {
-        initialise_camera(&mut engine.world.write_resource::<Camera>());
+        initialise_camera(&mut engine.world);
 
         let assets = load_assets(&engine.world);
 
@@ -371,15 +371,13 @@ fn run() -> Result<(), Error> {
 
 type DrawShaded = pass::DrawShaded<PosNormTex>;
 
-/// Initialises the camera structure.
-fn initialise_camera(camera: &mut Camera) {
+fn initialise_camera(world: &mut World) {
     use cgmath::Deg;
-
-    // TODO: Fix the aspect ratio.
-    camera.proj = Projection::perspective(1.0, Deg(60.0)).into();
-    camera.eye = [0.0, -20.0, 10.0].into();
-
-    camera.forward = [0.0, 20.0, -5.0].into();
-    camera.right = [1.0, 0.0, 0.0].into();
-    camera.up = [0.0, 0.0, 1.0].into();
+    world.add_resource(Camera {
+        eye: [0.0, -20.0, 10.0].into(),
+        proj: Projection::perspective(1.0, Deg(60.0)).into(),
+        forward: [0.0, 20.0, -5.0].into(),
+        right: [1.0, 0.0, 0.0].into(),
+        up: [0.0, 0.0, 1.0].into(),
+    });
 }
