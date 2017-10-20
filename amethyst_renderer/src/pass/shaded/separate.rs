@@ -10,18 +10,18 @@ use rayon::iter::ParallelIterator;
 use rayon::iter::internal::UnindexedConsumer;
 use specs::{Fetch, Join, ParJoin, ReadStorage};
 
+use super::*;
 use cam::Camera;
-use resources::AmbientColor;
 use error::Result;
 use light::{DirectionalLight, Light, PointLight};
 use mesh::{Mesh, MeshHandle};
 use mtl::{Material, MaterialDefaults};
 use pipe::{DepthMode, Effect, NewEffect};
 use pipe::pass::{Pass, PassApply, PassData, Supplier};
-use types::Encoder;
+use resources::AmbientColor;
 use tex::Texture;
+use types::Encoder;
 use vertex::{Normal, Position, Separate, TexCoord, VertexFormat};
-use super::*;
 
 /// Draw mesh with simple lighting technique
 #[derive(Clone, Debug, PartialEq)]

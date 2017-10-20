@@ -6,18 +6,18 @@ use std::mem;
 use amethyst_assets::AssetStorage;
 use shred::Resources;
 use shrev::EventChannel;
+use specs::{Fetch, FetchMut, RunNow, SystemData};
 use specs::common::Errors;
 use winit::{DeviceEvent, Event, WindowEvent};
-use specs::{Fetch, FetchMut, RunNow, SystemData};
 
-use resources::{ScreenDimensions, WindowMessages};
-use mesh::Mesh;
-use renderer::Renderer;
-use tex::Texture;
-use formats::{create_mesh_asset, create_texture_asset};
-use pipe::{PipelineBuild, PipelineData, PolyPipeline};
 use config::Config;
 use error::Result;
+use formats::{create_mesh_asset, create_texture_asset};
+use mesh::Mesh;
+use pipe::{PipelineBuild, PipelineData, PolyPipeline};
+use renderer::Renderer;
+use resources::{ScreenDimensions, WindowMessages};
+use tex::Texture;
 
 /// Rendering system.
 #[derive(Derivative)]

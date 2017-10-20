@@ -5,14 +5,14 @@ use std::fmt::{self, Display, Formatter};
 use std::io::Cursor;
 use std::sync::Arc;
 
+use Renderer;
 use amethyst_assets::{BoxedErr, Format, Source};
-use imagefmt;
-use imagefmt::{ColFmt, Image};
 use gfx::format::{ChannelType, SurfaceType};
 use gfx::texture::SamplerInfo;
 use gfx::traits::Pod;
+use imagefmt;
+use imagefmt::{ColFmt, Image};
 use tex::{Texture, TextureBuilder};
-use Renderer;
 
 /// Texture metadata, used while loading
 pub struct TextureMetadata {

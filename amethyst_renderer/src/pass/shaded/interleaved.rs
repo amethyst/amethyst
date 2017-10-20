@@ -11,6 +11,7 @@ use rayon::iter::ParallelIterator;
 use rayon::iter::internal::UnindexedConsumer;
 use specs::{Fetch, Join, ParJoin, ReadStorage};
 
+use super::*;
 use cam::Camera;
 use error::Result;
 use light::{DirectionalLight, Light, PointLight};
@@ -19,10 +20,9 @@ use mtl::{Material, MaterialDefaults};
 use pipe::{DepthMode, Effect, NewEffect};
 use pipe::pass::{Pass, PassApply, PassData, Supplier};
 use resources::AmbientColor;
-use types::Encoder;
 use tex::Texture;
+use types::Encoder;
 use vertex::{Normal, Position, Query, TexCoord};
-use super::*;
 
 /// Draw mesh with simple lighting technique
 /// `V` is `VertexFormat`
