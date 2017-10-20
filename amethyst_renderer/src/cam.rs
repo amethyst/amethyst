@@ -70,8 +70,54 @@ pub struct Camera {
 }
 
 impl Camera {
+    /// Create a camera from the given projection, and with the view matrix as multiplicative identity.
+    pub fn with_identity_view<P>(proj: P) -> Self
+    where
+        P: Into<Matrix4<f32>>,
+    {
+        use cgmath::EuclideanSpace;
+        Self {
+            eye: Point3::origin(),
+            proj: proj.into(),
+            forward: -Vector3::unit_z(),
+            right: Vector3::unit_x(),
+            up: Vector3::unit_y(),
+        }
+    }
+
+    /// Create a normalized camera for 2D.
+    ///
+    /// Will use an orthographic projection with lower left corner being (-1., -1.) and
+    /// upper right (1., 1.).
+    /// View transformation will be multiplicative identity.
+    pub fn standard_2d() -> Self {
+        Self::with_identity_view(Projection::orthographic(-1., 1., 1., -1.))
+    }
+
+    /// Create a standard camera for 3D.
+    ///
+    /// Will use a perspective projection with aspect from the given screen dimensions and a field
+    /// of view of 60 degrees.
+    /// View transformation will be multiplicative identity.
+    pub fn standard_3d(width: f32, height: f32) -> Self {
+        use cgmath::Deg;
+        Self::with_identity_view(Projection::perspective(width / height, Deg(60.)))
+    }
+
     /// Calculates the view matrix from the given data.
     pub fn to_view_matrix(&self) -> Matrix4<f32> {
         Matrix4::look_at(self.eye, self.eye + self.forward, self.up)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_identity_cam() {
+        use cgmath::SquareMatrix;
+        let cam = Camera::standard_2d();
+        assert!(cam.to_view_matrix().is_identity());
     }
 }
