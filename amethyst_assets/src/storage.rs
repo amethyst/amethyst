@@ -38,13 +38,6 @@ pub struct AssetStorage<A: Asset> {
 
 impl<A: Asset> Default for AssetStorage<A> {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl<A: Asset> AssetStorage<A> {
-    /// Creates a new asset storage.
-    pub fn new() -> Self {
         AssetStorage {
             assets: Default::default(),
             bitset: Default::default(),
@@ -54,6 +47,13 @@ impl<A: Asset> AssetStorage<A> {
             processed: Arc::new(MsQueue::new()),
             unused_handles: MsQueue::new(),
         }
+    }
+}
+
+impl<A: Asset> AssetStorage<A> {
+    /// Creates a new asset storage.
+    pub fn new() -> Self {
+        Default::default()
     }
 
     /// Allocate a new handle.

@@ -26,18 +26,10 @@ use vertex::{Normal, Position, Query, Tangent, TexCoord};
 
 /// Draw mesh with physically based lighting
 /// `V` is `VertexFormat`
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Derivative, Clone, Debug, PartialEq)]
+#[derivative(Default(bound = "V: Query<(Position, Normal, Tangent, TexCoord)>"))]
 pub struct DrawPbm<V> {
     _pd: PhantomData<V>,
-}
-
-impl<V> Default for DrawPbm<V>
-where
-    V: Query<(Position, Normal, Tangent, TexCoord)>,
-{
-    fn default() -> Self {
-        Self::new()
-    }
 }
 
 impl<V> DrawPbm<V>
@@ -46,7 +38,7 @@ where
 {
     /// Create instance of `DrawPbm` pass
     pub fn new() -> Self {
-        DrawPbm { _pd: PhantomData }
+        Default::default()
     }
 }
 

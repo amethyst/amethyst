@@ -227,15 +227,15 @@ pub struct PipelineBuilder<Q> {
     targets: Vec<TargetBuilder>,
 }
 
-impl Default for PipelineBuilder<Queue<()>> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl PipelineBuilder<Queue<()>> {
     /// Creates a new PipelineBuilder.
     pub fn new() -> Self {
+        Default::default()
+    }
+}
+
+impl Default for PipelineBuilder<Queue<()>> {
+    fn default() -> Self {
         PipelineBuilder {
             stages: Queue::new(),
             targets: Vec::new(),

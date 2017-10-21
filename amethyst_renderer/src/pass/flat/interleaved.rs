@@ -24,19 +24,10 @@ use vertex::{Position, Query, TexCoord};
 
 /// Draw mesh without lighting
 /// `V` is `VertexFormat`
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Derivative, Clone, Debug, PartialEq)]
+#[derivative(Default(bound = "V: Query<(Position, TexCoord)>, Self: Pass"))]
 pub struct DrawFlat<V> {
     _pd: PhantomData<V>,
-}
-
-impl<V> Default for DrawFlat<V>
-where
-    V: Query<(Position, TexCoord)>,
-    Self: Pass,
-{
-    fn default() -> Self {
-        Self::new()
-    }
 }
 
 impl<V> DrawFlat<V>
@@ -46,7 +37,7 @@ where
 {
     /// Create instance of `DrawFlat` pass
     pub fn new() -> Self {
-        DrawFlat { _pd: PhantomData }
+        Default::default()
     }
 }
 
