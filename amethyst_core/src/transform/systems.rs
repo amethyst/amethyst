@@ -58,10 +58,6 @@ impl<'a> System<'a> for TransformSystem {
         #[cfg(feature = "profiler")]
         profile_scope!("transform_system");
 
-        let mut parented = Vec::new();
-        let mut noparents = Vec::new();
-        let mut initted = Vec::new();
-
         // Clear dirty flags on `Transform` storage, before updates go in
         (&mut globals).open().1.clear_flags();
 
@@ -87,11 +83,7 @@ impl<'a> System<'a> for TransformSystem {
                 self.indices.insert(entity, self.sorted.len());
                 self.sorted.push(entity);
                 self.frame_init.add(entity.id());
-
-                initted.push(entity.id());
             }
-
-            println!("Initialized: {:?}", initted);
         }
 
         {
@@ -100,13 +92,7 @@ impl<'a> System<'a> for TransformSystem {
             // Compute transforms without parents.
             for (_entity, local, global, _) in (&*entities, locals_flagged, &mut globals, !&parents).join() {
                 global.0 = local.matrix();
-                noparents.push(_entity.id());
-                #[cfg(debug_assertions)]
-                {
-                    if global.0 != global.0 {
-                        panic!("Entity {:?} has an invalid transform (NaN data)", _entity);
-                    }
-                }
+                debug_assert!(global.0 == global.0, format!("Entity {:?} had NaN transform.", _entity));
             }
         }
 
@@ -164,7 +150,6 @@ impl<'a> System<'a> for TransformSystem {
                             local.matrix()
                         };
                         
-                        parented.push(((local_dirty, parent_dirty, globals.open().1.flagged(parent.entity)), entity.id()));
                         if let Some(global) = globals.get_mut(entity) {
                             global.0 = combined_transform;
                         }
@@ -185,13 +170,10 @@ impl<'a> System<'a> for TransformSystem {
             index += 1;
         }
 
-        println!("with parent updated: {:?}", parented);
-        println!("no parent updated: {:?}", noparents);
-
         (&mut locals).open().1.clear_flags();
         (&mut parents).open().1.clear_flags();
 
-        for bit in (&self.frame_init).iter() {
+        for bit in &self.frame_init {
             self.init.add(bit);
         }
         self.frame_init.clear();
@@ -508,227 +490,4 @@ mod tests {
         assert_eq!(world.is_alive(e4), false);
         assert_eq!(world.is_alive(e5), false);
     }
-
-    /*
-    struct LocalShrinker {
-        transform: LocalTransform,
-    }
-
-    fn check_identity(transform: &LocalTransform) -> bool {
-        LocalTransform::default() == *transform
-    }
-
-    fn pretty_matrix(matrix: [[f32; 4]; 4]) -> String {
-        format!("[\n\t[{}, {}, {}, {}],\n\t[{}, {}, {}, {}],\n\t[{}, {}, {}, {}],\n\t[{}, {}, {}, {}],\n]",
-                matrix[0][0], matrix[0][1], matrix[0][2], matrix[0][3],
-                matrix[1][0], matrix[1][1], matrix[1][2], matrix[1][3],
-                matrix[2][0], matrix[2][1], matrix[2][2], matrix[2][3],
-                matrix[3][0], matrix[3][1], matrix[3][2], matrix[3][3],)
-    }
-
-    impl Iterator for LocalShrinker {
-        type Item = LocalTransform;
-        fn next(&mut self) -> Option<Self::Item> {
-            let translationx = self.transform.translation[0].shrink().next().unwrap_or(0.0);
-            let translationy = self.transform.translation[1].shrink().next().unwrap_or(0.0);    
-            let translationz = self.transform.translation[2].shrink().next().unwrap_or(0.0);    
-
-            let mut rotw = self.transform.rotation[0].shrink().next().unwrap_or(1.0);
-            if rotw < 1.0 { rotw = 1.0; }
-
-            let rotx = self.transform.rotation[1].shrink().next().unwrap_or(0.0);
-            let roty = self.transform.rotation[2].shrink().next().unwrap_or(0.0);
-            let rotz = self.transform.rotation[3].shrink().next().unwrap_or(0.0);
-
-            let mut scalex = self.transform.scale[0].shrink().next().unwrap_or(1.0);
-            if scalex < 1.0 { scalex = 1.0; }
-            let mut scaley = self.transform.scale[1].shrink().next().unwrap_or(1.0);    
-            if scaley < 1.0 { scaley = 1.0; }
-            let mut scalez = self.transform.scale[2].shrink().next().unwrap_or(1.0);
-            if scalez < 1.0 { scalez = 1.0; }
-
-            let transform = LocalTransform {
-                translation: [translationx, translationy, translationz],
-                rotation: [rotw, rotx, roty, rotz],
-                scale: [scalex, scaley, scalez],
-            };
-            
-            self.transform = transform;
-
-            if self.transform != self.transform || check_identity(&self.transform) {
-                None
-            }
-            else {
-                Some(self.transform.clone())
-            }
-        }
-    }
-
-    impl Arbitrary for LocalTransform {
-        fn arbitrary<G: Gen>(g: &mut G) -> Self {
-            LocalTransform {
-                translation: [f32::arbitrary(g), f32::arbitrary(g), f32::arbitrary(g)],
-                rotation: [f32::arbitrary(g), f32::arbitrary(g), f32::arbitrary(g), f32::arbitrary(g)],
-                scale: [f32::arbitrary(g), f32::arbitrary(g), f32::arbitrary(g)],
-            }
-        }
-
-        fn shrink(&self) -> Box<Iterator<Item=Self>> {
-            if self != self || check_identity(self) {
-                Box::new(::quickcheck::empty_shrinker())
-            }
-            else {
-                Box::new(LocalShrinker { transform: self.clone() })
-            }
-        }
-    }
-
-    type Phase = (Vec<u8>, Vec<(Option<u32>, LocalTransform)>);
-
-    fn insert_into((delete, list): &Phase, LocalTransform)>, world: &mut World) -> Vec<(Entity, Option<Entity>)> {
-        let entities = world.create_iter().take(list.len()).collect::<Vec<Entity>>();
-        let mut locals = world.write::<LocalTransform>();
-        let mut transforms = world.write::<Transform>();
-        let mut parents = world.write::<Parent>();
-
-        let mut result = Vec::new();
-
-        println!("valid relations: {:?}", list.iter().enumerate().filter_map(|(index, &(relation, _))| {
-            match relation {
-                Some(relation) if entities.len() <= relation as usize => Some((index, relation)),
-                _ => None,
-            }
-        }).collect::<Vec<(usize, u32)>>());
-
-        let mut inserted = Vec::new();
-
-        for (index, &(ref relation, ref transform)) in (&list).iter().enumerate() {
-            inserted.push(index);
-            if entities.len() <= index as usize {
-                continue;
-            }
-
-            locals.insert(entities[index], transform.clone()); 
-            transforms.insert(entities[index], Transform::default());
-
-            let mut parent = None;
-            if let Some(relation) = *relation {
-                if entities.len() <= relation as usize {
-                    continue;
-                }
-
-                parents.insert(entities[index], Parent { entity: entities[relation as usize] });
-                parent = Some(entities[relation as usize]);
-            }
-
-            result.push((entities[index], parent));
-        }
-
-        for (index, num) in delete.iter().enumerate() {
-            if num > 200 {
-                world.delete_entity(entities[index]);
-            }
-        }
-        
-        println!("inserting for indices {:?}", inserted);
-
-        result
-    }
-
-
-    quickcheck! {
-        fn fuzzy_test(list: Vec<Phase>) -> bool {
-            let result = ::std::panic::catch_unwind(|| {
-                println!();
-                println!("Input: {:#?}", list);
-                let (mut world, mut system) = transform_world();
-                let entities = insert_into(&list, &mut world);
-                println!("Entities: {:?}", entities);
-
-                system.run_now(&mut world.res);
-
-                let locals = world.read::<LocalTransform>();
-                let transforms = world.read::<Transform>();
-                let parents = world.read::<Parent>();
-
-                for &(entity, parent) in entities.iter() {
-                    let local_entity = match locals.get(entity) {
-                        Some(transform) => transform,
-                        None => {
-                            println!("No local transform for {:?}", entity); 
-                            println!("Failed");
-                            return false;
-                        },
-                    };
-
-                    let world_entity = match transforms.get(entity) {
-                        Some(transform) => transform,
-                        None => {
-                            println!("No world transform for {:?}", entity); 
-                            println!("Failed");
-                            return false;
-                        },
-                    };
-
-                    match parent {
-                        Some(parent_entity) if parents.get(entity).is_some() => {
-                            println!("Has parent");
-                            let world_parent = match transforms.get(parent_entity) {
-                                Some(transform) => transform,
-                                None => {
-                                    println!("No world transform for parent {:?}", parent); 
-                                    println!("Failed");
-                                    return false;
-                                },
-                            };
-
-                            let combined = together(world_parent.clone(), local_entity.clone());
-
-                            let result = combined == world_entity.0;
-                            if !result {
-                                println!("Incorrect transform for {:?} -> {:?}: correct: {}, actual: {}",
-                                         parent,
-                                         entity, 
-                                         pretty_matrix(combined),
-                                         pretty_matrix(world_entity.0)
-                                        ); 
-                                println!("Failed");
-                                return false;
-                            }
-                        }
-                        _ => {
-                            println!("Has no parent");
-                            let result = local_entity.matrix() == world_entity.0;
-                            if !result {
-                                println!("Incorrect transform for {:?}:\nlocal:{:?}\ncorrect:\n{}\nactual:\n{}",
-                                         entity,
-                                         local_entity,
-                                         pretty_matrix(local_entity.matrix()),
-                                         pretty_matrix(world_entity.0)
-                                        ); 
-                                println!("Failed");
-                                return false;
-                            }
-                        }
-                    }
-                }
-
-                println!("Succeeded");
-                true
-            });
-
-            match result {
-                Ok(b) => {
-                    if b { println!("Succeeded"); } else { println!("Failed"); }
-                    b
-                }
-                Err(_) => {
-                    println!("Thread panicked on NaN data.");
-                    println!("Succeeded");
-                    true
-                }
-            }
-        }
-    }
-    */
 }
