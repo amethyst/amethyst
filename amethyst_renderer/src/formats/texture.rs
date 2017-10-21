@@ -214,7 +214,8 @@ impl Format<Texture> for BmpFormat {
 /// Error that can occur during texture creation
 #[derive(Debug)]
 pub enum TextureError {
-    /// Error occured in renderer
+    /// Error occurred in renderer
+    // TODO: seems to be unused?
     Renderer(::error::Error),
 
     /// Color format unsupported

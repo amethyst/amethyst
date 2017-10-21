@@ -15,6 +15,7 @@
 //! extern crate amethyst;
 //!
 //! use amethyst::prelude::*;
+//! use amethyst::renderer::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 //!
 //! struct GameState;
 //!

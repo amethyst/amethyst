@@ -1,4 +1,4 @@
-//! Demostrates loading custom assets using the Amethyst engine.
+//! Demonstrates loading custom assets using the Amethyst engine.
 // TODO: Add asset loader directory store for the meshes.
 
 extern crate amethyst;
@@ -14,9 +14,10 @@ use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::ecs::World;
 use amethyst::input::InputBundle;
 use amethyst::prelude::*;
-use amethyst::renderer::Config as DisplayConfig;
-use amethyst::renderer::bundle::RenderBundle;
-use amethyst::renderer::prelude::*;
+use amethyst::renderer::{Camera, DisplayConfig as DisplayConfig, DrawShaded, Event, KeyboardInput,
+                         Light, Material, MaterialDefaults, Mesh, MeshData, Pipeline, PointLight,
+                         PosNormTex, Projection, RenderBundle, RenderSystem, Rgba, Stage,
+                         VirtualKeyCode, WindowEvent};
 
 struct Custom;
 
@@ -64,8 +65,6 @@ struct AssetsExample;
 
 impl State for AssetsExample {
     fn on_start(&mut self, engine: &mut Engine) {
-        use amethyst::renderer::MaterialDefaults;
-
         engine.world.add_resource(0usize);
 
         initialise_camera(&mut engine.world);
@@ -134,8 +133,6 @@ fn main() {
     }
 }
 
-type DrawShaded = pass::DrawShaded<PosNormTex>;
-
 /// Wrapper around the main, so we can return errors easily.
 fn run() -> Result<(), Error> {
     // Add our meshes directory to the asset loader.
@@ -150,7 +147,7 @@ fn run() -> Result<(), Error> {
     let pipeline_builder = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawShaded::new()),
+            .with_pass(DrawShaded::<PosNormTex>::new()),
     );
 
     let mut game = Application::build(resources_directory, AssetsExample)
@@ -178,8 +175,6 @@ fn initialise_camera(world: &mut World) {
 
 /// Adds lights to the scene.
 fn initialise_lights(world: &mut World) {
-    use amethyst::renderer::light::{Light, PointLight};
-
     let light: Light = PointLight {
         center: [5.0, -20.0, 15.0].into(),
         intensity: 100.0,

@@ -13,10 +13,11 @@ use amethyst::core::timing::Time;
 use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::ecs::{Fetch, FetchMut, Join, System, World, WriteStorage};
 use amethyst::prelude::*;
-use amethyst::renderer::{Camera, Config as DisplayConfig, MaterialDefaults, MeshHandle, Rgba};
-use amethyst::renderer::bundle::RenderBundle;
-use amethyst::renderer::formats::{ObjFormat, PngFormat};
-use amethyst::renderer::prelude::*;
+use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, DisplayConfig as DisplayConfig,
+                         DrawShaded, ElementState, Event, KeyboardInput, Light, Material,
+                         MaterialDefaults, MeshHandle, ObjFormat, Pipeline, PngFormat, PointLight,
+                         PosNormTex, Projection, RenderBundle, RenderSystem, Rgba, Stage,
+                         VirtualKeyCode, WindowEvent};
 use cgmath::{Deg, Euler, Quaternion};
 
 struct DemoState {
@@ -355,7 +356,7 @@ fn run() -> Result<(), Error> {
     let pipeline_builder = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawShaded::new()),
+            .with_pass(DrawShaded::<PosNormTex>::new()),
     );
 
     let mut game = Application::build(resources_directory, Example)?
@@ -368,8 +369,6 @@ fn run() -> Result<(), Error> {
     game.run();
     Ok(())
 }
-
-type DrawShaded = pass::DrawShaded<PosNormTex>;
 
 fn initialise_camera(world: &mut World) {
     use cgmath::Deg;
