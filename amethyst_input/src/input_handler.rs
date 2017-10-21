@@ -15,7 +15,6 @@ use super::event::InputEvent::*;
 ///
 /// For example, if a key is pressed on the keyboard, this struct will record
 /// that the key is pressed until it is released again.
-#[derive(Default)]
 pub struct InputHandler<AX, AC>
 where
     AX: Hash + Eq,
@@ -29,21 +28,37 @@ where
     mouse_position: Option<(f64, f64)>,
 }
 
+impl<AX, AC> Default for InputHandler<AX, AC>
+where
+    AX: Hash + Eq,
+    AC: Hash + Eq,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<AX, AC> InputHandler<AX, AC>
 where
-    AX: Hash + Eq + Clone + Send + Sync + 'static,
-    AC: Hash + Eq + Clone + Send + Sync + 'static,
+    AX: Hash + Eq,
+    AC: Hash + Eq,
 {
     /// Creates a new input handler.
     pub fn new() -> Self {
         Self {
-            bindings: Bindings::new(),
+            bindings: Bindings::default(),
             pressed_keys: SmallVec::new(),
             pressed_mouse_buttons: SmallVec::new(),
             mouse_position: None,
         }
     }
+}
 
+impl<AX, AC> InputHandler<AX, AC>
+where
+    AX: Hash + Eq + Clone + Send + Sync + 'static,
+    AC: Hash + Eq + Clone + Send + Sync + 'static,
+{
     /// Updates the input handler with a new engine event.
     ///
     /// The Amethyst game engine will automatically call this if the InputHandler is attached to

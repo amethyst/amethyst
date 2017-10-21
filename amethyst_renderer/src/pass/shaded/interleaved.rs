@@ -31,6 +31,15 @@ pub struct DrawShaded<V> {
     _pd: PhantomData<V>,
 }
 
+impl<V> Default for DrawShaded<V>
+where
+    V: Query<(Position, Normal, TexCoord)>,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<V> DrawShaded<V>
 where
     V: Query<(Position, Normal, TexCoord)>,

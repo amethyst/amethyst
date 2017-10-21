@@ -29,6 +29,16 @@ pub struct DrawFlat<V> {
     _pd: PhantomData<V>,
 }
 
+impl<V> Default for DrawFlat<V>
+where
+    V: Query<(Position, TexCoord)>,
+    Self: Pass,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<V> DrawFlat<V>
 where
     V: Query<(Position, TexCoord)>,

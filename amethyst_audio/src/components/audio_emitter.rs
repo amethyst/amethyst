@@ -10,6 +10,7 @@ use DecoderError;
 use source::Source;
 
 /// An audio source, add this component to anything that emits sound.
+#[derive(Default)]
 pub struct AudioEmitter {
     pub(crate) sinks: SmallVec<[(SpatialSink, Arc<AtomicBool>); 4]>,
     pub(crate) sound_queue: SmallVec<[Decoder<Cursor<Source>>; 4]>,
@@ -21,11 +22,7 @@ impl AudioEmitter {
     /// These positions will stay synced with Transform if the Transform component is available
     /// on this entity.
     pub fn new() -> AudioEmitter {
-        AudioEmitter {
-            sinks: SmallVec::new(),
-            sound_queue: SmallVec::new(),
-            picker: None,
-        }
+        Default::default()
     }
 
     /// Plays an audio source from this emitter.

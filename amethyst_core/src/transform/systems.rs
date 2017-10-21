@@ -28,14 +28,7 @@ pub struct TransformSystem {
 impl TransformSystem {
     /// Creates a new transform processor.
     pub fn new() -> TransformSystem {
-        TransformSystem {
-            indices: HashMap::default(),
-            sorted: Vec::new(),
-            new: Vec::new(),
-            dead: HashSet::default(),
-            dirty: HashSet::default(),
-            swapped: HashSet::default(),
-        }
+        Default::default()
     }
 }
 

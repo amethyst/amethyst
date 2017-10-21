@@ -89,6 +89,15 @@ impl Default for LocalTransform {
     }
 }
 
+impl LocalTransform {
+    /// Create a new `LocalTransform`.
+    ///
+    /// If you call `matrix` on this, then you would get an identity matrix.
+    pub fn new() -> Self {
+        Default::default()
+    }
+}
+
 impl Component for LocalTransform {
     type Storage = VecStorage<LocalTransform>;
 }

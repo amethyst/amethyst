@@ -36,6 +36,12 @@ pub struct AssetStorage<A: Asset> {
     unused_handles: MsQueue<Handle<A>>,
 }
 
+impl<A: Asset> Default for AssetStorage<A> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<A: Asset> AssetStorage<A> {
     /// Creates a new asset storage.
     pub fn new() -> Self {

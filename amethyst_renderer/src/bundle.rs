@@ -13,12 +13,13 @@ use prelude::*;
 /// Will also register asset contexts with the asset `Loader`, and add systems for merging
 /// `AssetFuture` into its related component.
 ///
+#[derive(Default)]
 pub struct RenderBundle;
 
 impl RenderBundle {
     /// Create a new render bundle
     pub fn new() -> Self {
-        RenderBundle
+        Default::default()
     }
 }
 

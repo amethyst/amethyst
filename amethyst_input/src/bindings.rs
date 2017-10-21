@@ -9,7 +9,7 @@ use smallvec::SmallVec;
 use super::{Axis, Button};
 
 /// Used for saving and loading input settings.
-#[derive(Default, Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Bindings<AX, AC>
 where
     AX: Hash + Eq,
@@ -19,10 +19,20 @@ where
     pub(super) actions: HashMap<AC, SmallVec<[Button; 4]>>,
 }
 
+impl<AX, AC> Default for Bindings<AX, AC>
+where
+    AX: Hash + Eq,
+    AC: Hash + Eq,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<AX, AC> Bindings<AX, AC>
 where
-    AX: Hash + Eq + Clone,
-    AC: Hash + Eq + Clone,
+    AX: Hash + Eq,
+    AC: Hash + Eq,
 {
     /// Creates a new empty Bindings structure
     pub fn new() -> Self {
@@ -31,7 +41,13 @@ where
             actions: HashMap::default(),
         }
     }
+}
 
+impl<AX, AC> Bindings<AX, AC>
+where
+    AX: Hash + Eq + Clone,
+    AC: Hash + Eq + Clone,
+{
     /// Assign an axis to an ID value
     ///
     /// This will insert a new axis if no entry for this id exists.

@@ -24,6 +24,15 @@ use vertex::{Position, Separate, TexCoord, VertexFormat};
 #[derive(Clone, Debug, PartialEq)]
 pub struct DrawFlatSeparate;
 
+impl Default for DrawFlatSeparate
+where
+    Self: Pass,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl DrawFlatSeparate
 where
     Self: Pass,

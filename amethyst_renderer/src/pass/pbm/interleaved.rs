@@ -31,6 +31,15 @@ pub struct DrawPbm<V> {
     _pd: PhantomData<V>,
 }
 
+impl<V> Default for DrawPbm<V>
+where
+    V: Query<(Position, Normal, Tangent, TexCoord)>,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<V> DrawPbm<V>
 where
     V: Query<(Position, Normal, Tangent, TexCoord)>,

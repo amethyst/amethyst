@@ -24,13 +24,13 @@ use types::Encoder;
 use vertex::{Normal, Position, Separate, TexCoord, VertexFormat};
 
 /// Draw mesh with simple lighting technique
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Default, Clone, Debug, PartialEq)]
 pub struct DrawShadedSeparate;
 
 impl DrawShadedSeparate {
     /// Create instance of `DrawShaded` pass
     pub fn new() -> Self {
-        DrawShadedSeparate {}
+        Default::default()
     }
 }
 

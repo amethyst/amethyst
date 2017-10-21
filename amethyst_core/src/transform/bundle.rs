@@ -18,6 +18,7 @@ use transform::*;
 ///
 /// Panics in `TransformSystem` registration if the bundle is applied twice in the same dispatcher.
 ///
+#[derive(Default)]
 pub struct TransformBundle<'a> {
     dep: &'a [&'a str],
 }
@@ -25,7 +26,7 @@ pub struct TransformBundle<'a> {
 impl<'a> TransformBundle<'a> {
     /// Create a new transform bundle
     pub fn new() -> Self {
-        Self { dep: &[] }
+        Default::default()
     }
 
     /// Set dependencies for the `TransformSystem`

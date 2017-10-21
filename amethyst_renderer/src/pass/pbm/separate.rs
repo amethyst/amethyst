@@ -24,13 +24,13 @@ use types::Encoder;
 use vertex::{Normal, Position, Separate, Tangent, TexCoord, VertexFormat};
 
 /// Draw mesh with physically based lighting
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Default, Clone, Debug, PartialEq)]
 pub struct DrawPbmSeparate;
 
 impl DrawPbmSeparate {
     /// Create instance of `DrawPbm` pass
     pub fn new() -> Self {
-        DrawPbmSeparate {}
+        Default::default()
     }
 }
 
