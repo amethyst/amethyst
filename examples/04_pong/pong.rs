@@ -41,14 +41,19 @@ impl State for Pong {
 
 /// Initialise the camera.
 fn initialise_camera(world: &mut World) {
-    world.add_resource(Camera {
-        eye: [0.0, 0.0, 1.0].into(),
-        // Make the arena fit perfectly in the view of the camera.
-        proj: Projection::orthographic(0.0, ARENA_WIDTH, ARENA_HEIGHT, 0.0).into(),
-        forward: [0., 0., -1.0].into(),
-        right: [1.0, 0.0, 0.0].into(),
-        up: [0., 1.0, 0.].into(),
-    });
+    use cgmath::{Matrix4, Vector3};
+    world
+        .create_entity()
+        .with(Camera::from(Projection::orthographic(
+            0.0,
+            ARENA_WIDTH,
+            ARENA_HEIGHT,
+            0.0,
+        )))
+        .with(Transform(
+            Matrix4::from_translation(Vector3::new(0.0, 0.0, 1.0)).into(),
+        ))
+        .build();
 }
 
 /// Hide the cursor so it's invisible while playing.

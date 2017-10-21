@@ -157,11 +157,12 @@ fn initialise_lights(world: &mut World) {
 
 /// This function initialises a camera and adds it to the world.
 fn initialise_camera(world: &mut World) {
-    world.add_resource(Camera {
-        eye: [0.0, 0.0, -4.0].into(),
-        proj: Projection::perspective(1.3, Deg(60.0)).into(),
-        forward: [0.0, 0.0, 1.0].into(),
-        right: [1.0, 0.0, 0.0].into(),
-        up: [0.0, 1.0, 0.0].into(),
-    });
+    use cgmath::Matrix4;
+    let transform =
+        Matrix4::from_translation([0.0, 0.0, -4.0].into()) * Matrix4::from_angle_y(Deg(180.));
+    world
+        .create_entity()
+        .with(Camera::from(Projection::perspective(1.3, Deg(60.0))))
+        .with(Transform(transform.into()))
+        .build();
 }

@@ -43,6 +43,7 @@ impl<'a, 'b> ECSBundle<'a, 'b> for RenderBundle {
         world.register::<Material>();
         world.register::<Handle<Mesh>>();
         world.register::<Handle<Texture>>();
+        world.register::<Camera>();
 
         Ok(builder)
     }

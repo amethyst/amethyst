@@ -163,14 +163,14 @@ fn run() -> Result<(), Error> {
 }
 
 fn initialise_camera(world: &mut World) {
-    use cgmath::Deg;
-    world.add_resource(Camera {
-        eye: [0.0, -20.0, 10.0].into(),
-        proj: Projection::perspective(1.0, Deg(60.0)).into(),
-        forward: [0.0, 20.0, -5.0].into(),
-        right: [1.0, 0.0, 0.0].into(),
-        up: [0.0, 0.0, 1.0].into(),
-    });
+    use cgmath::{Deg, Matrix4};
+    let transform =
+        Matrix4::from_translation([0., -20., 10.].into()) * Matrix4::from_angle_x(Deg(75.96));
+    world
+        .create_entity()
+        .with(Camera::from(Projection::perspective(1.0, Deg(60.0))))
+        .with(Transform(transform.into()))
+        .build();
 }
 
 /// Adds lights to the scene.
