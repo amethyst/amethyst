@@ -41,7 +41,7 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
         WriteStorage<'a, Handle<Mesh>>,
         WriteStorage<'a, LocalTransform>,
         WriteStorage<'a, Transform>,
-        WriteStorage<'a, Child>,
+        WriteStorage<'a, Parent>,
         WriteStorage<'a, Material>,
     );
 
@@ -107,7 +107,7 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
                     // for each root node and set their parent reference to the attached entity
                     for root_node_index in &scene.root_nodes {
                         let root_entity = entities.create();
-                        parents.insert(root_entity, Child::new(entity));
+                        parents.insert(root_entity, Parent { entity: entity });
                         transforms.insert(root_entity, Transform::default());
                         load_node(
                             *root_node_index,
@@ -188,7 +188,7 @@ fn load_node(
     scene_asset: &GltfSceneAsset,
     local_transforms: &mut WriteStorage<LocalTransform>,
     transforms: &mut WriteStorage<Transform>,
-    parents: &mut WriteStorage<Child>,
+    parents: &mut WriteStorage<Parent>,
     entities: &Entities,
     loader: &Loader,
     meshes: &mut WriteStorage<Handle<Mesh>>,
@@ -211,7 +211,7 @@ fn load_node(
     // Load child entities
     for child_node_index in &node.children {
         let child_entity = entities.create();
-        parents.insert(child_entity, Child::new(*node_entity));
+        parents.insert(child_entity, Parent { entity: *node_entity });
         transforms.insert(child_entity, Transform::default());
         load_node(
             *child_node_index,
@@ -257,7 +257,7 @@ fn load_node(
                 let primitive_entity = entities.create();
                 local_transforms.insert(primitive_entity, LocalTransform::default());
                 transforms.insert(primitive_entity, Transform::default());
-                parents.insert(primitive_entity, Child::new(*node_entity));
+                parents.insert(primitive_entity, Parent { entity: *node_entity });
                 load_primitive(
                     node_index,
                     primitive_index,
