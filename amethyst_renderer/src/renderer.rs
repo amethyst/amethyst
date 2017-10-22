@@ -3,7 +3,7 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use config::Config;
+use config::DisplayConfig;
 use error::{Error, Result};
 use fnv::FnvHashMap as HashMap;
 use gfx::memory::Pod;
@@ -175,7 +175,7 @@ impl Drop for Renderer {
 
 /// Constructs a new `Renderer`.
 pub struct RendererBuilder {
-    config: Config,
+    config: DisplayConfig,
     events: EventsLoop,
     pool: Option<Arc<ThreadPool>>,
     winit_builder: WindowBuilder,
@@ -185,7 +185,7 @@ impl RendererBuilder {
     /// Creates a new `RendererBuilder`.
     pub fn new(el: EventsLoop) -> Self {
         RendererBuilder {
-            config: Config::default(),
+            config: DisplayConfig::default(),
             events: el,
             pool: None,
             winit_builder: WindowBuilder::new().with_title("Amethyst"),
@@ -193,7 +193,7 @@ impl RendererBuilder {
     }
 
     /// Applies configuration from `Config`
-    pub fn with_config(&mut self, config: Config) -> &mut Self {
+    pub fn with_config(&mut self, config: DisplayConfig) -> &mut Self {
         self.config = config;
         let mut wb = self.winit_builder.clone();
         wb = wb.with_title(self.config.title.clone())
@@ -269,7 +269,7 @@ struct Backend(pub Device, pub Factory, pub Target, pub Window);
 
 /// Creates the Direct3D 11 backend.
 #[cfg(all(feature = "d3d11", target_os = "windows"))]
-fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &Config) -> Result<Backend> {
+fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> Result<Backend> {
     use gfx_window_dxgi as win;
 
     // FIXME: vsync + multisampling from config
@@ -295,7 +295,7 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &Config) -> Result<B
 }
 
 #[cfg(all(feature = "metal", target_os = "macos"))]
-fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &Config) -> Result<Backend> {
+fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> Result<Backend> {
     use gfx_window_metal as win;
 
     // FIXME: vsync + multisampling from config
@@ -321,7 +321,7 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &Config) -> Result<B
 
 /// Creates the OpenGL backend.
 #[cfg(feature = "opengl")]
-fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &Config) -> Result<Backend> {
+fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> Result<Backend> {
     use gfx_window_glutin as win;
     use glutin::{self, GlProfile, GlRequest};
 

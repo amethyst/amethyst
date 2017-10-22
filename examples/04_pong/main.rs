@@ -16,9 +16,8 @@ use amethyst::core::transform::TransformBundle;
 use amethyst::ecs::{Component, DenseVecStorage};
 use amethyst::input::InputBundle;
 use amethyst::prelude::*;
-use amethyst::renderer::Config as DisplayConfig;
-use amethyst::renderer::bundle::RenderBundle;
-use amethyst::renderer::prelude::*;
+use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline, PosTex, RenderBundle, RenderSystem,
+                         Stage};
 
 use audio::Music;
 use bundle::PongBundle;
@@ -41,8 +40,6 @@ const AUDIO_MUSIC: &'static [&'static str] = &[
 ];
 const AUDIO_BOUNCE: &'static str = "audio/bounce.ogg";
 const AUDIO_SCORE: &'static str = "audio/score.ogg";
-
-type DrawFlat = pass::DrawFlat<PosTex>;
 
 fn main() {
     if let Err(e) = run() {
@@ -70,7 +67,7 @@ fn run() -> Result<()> {
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawFlat::new()),
+            .with_pass(DrawFlat::<PosTex>::new()),
     );
 
     let game = Application::build(assets_dir, Pong)?

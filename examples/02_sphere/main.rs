@@ -8,9 +8,9 @@ use amethyst::assets::Loader;
 use amethyst::core::transform::Transform;
 use amethyst::ecs::World;
 use amethyst::prelude::*;
-use amethyst::renderer::{Config as DisplayConfig, Mesh, Rgba};
-use amethyst::renderer::bundle::RenderBundle;
-use amethyst::renderer::prelude::*;
+use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Event, KeyboardInput,
+                         Light, Mesh, Pipeline, PointLight, PosNormTex, Projection, RenderBundle,
+                         RenderSystem, Rgba, Stage, VirtualKeyCode, WindowEvent};
 use cgmath::{Deg, Vector3};
 use cgmath::prelude::InnerSpace;
 use genmesh::{MapToVertices, Triangulate, Vertices};
@@ -52,9 +52,6 @@ impl State for Example {
     }
 }
 
-
-type DrawShaded = pass::DrawShaded<PosNormTex>;
-
 fn run() -> Result<(), amethyst::Error> {
     let display_config_path = format!(
         "{}/examples/02_sphere/resources/display.ron",
@@ -69,7 +66,7 @@ fn run() -> Result<(), amethyst::Error> {
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target(BACKGROUND_COLOUR, 1.0)
-            .with_pass(DrawShaded::new()),
+            .with_pass(DrawShaded::<PosNormTex>::new()),
     );
 
     let config = DisplayConfig::load(&display_config_path);

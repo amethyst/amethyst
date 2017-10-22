@@ -13,7 +13,8 @@ use gfx::texture::SamplerInfo;
 use gltf;
 use gltf::Gltf;
 use itertools::Itertools;
-use renderer::vertex::*;
+use renderer::{Color, JpgFormat, Normal, PngFormat, Position, Separate, Tangent, TexCoord,
+               TextureMetadata};
 
 use super::*;
 
@@ -315,7 +316,6 @@ fn load_texture(
     source: Arc<Source>,
     name: &str,
 ) -> Result<TextureData, GltfError> {
-    use renderer::formats::{JpgFormat, PngFormat, TextureMetadata};
     let (data, format) = get_image_data(&texture.source(), buffers, source, name.as_ref())?;
     let metadata = TextureMetadata::default().with_sampler(load_sampler_info(&texture.sampler()));
     Ok(match format {

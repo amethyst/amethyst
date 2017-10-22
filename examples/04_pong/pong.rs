@@ -4,7 +4,8 @@ use amethyst::assets::Loader;
 use amethyst::core::transform::{LocalTransform, Transform};
 use amethyst::ecs::World;
 use amethyst::prelude::*;
-use amethyst::renderer::prelude::*;
+use amethyst::renderer::{Camera, Event, KeyboardInput, Material, MeshHandle, PosTex, Projection,
+                         VirtualKeyCode, WindowEvent, WindowMessages};
 
 pub struct Pong;
 

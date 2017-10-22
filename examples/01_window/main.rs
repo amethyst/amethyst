@@ -3,10 +3,8 @@
 extern crate amethyst;
 
 use amethyst::prelude::*;
-use amethyst::renderer::Config as DisplayConfig;
-use amethyst::renderer::bundle::RenderBundle;
-use amethyst::renderer::input::{KeyboardInput, VirtualKeyCode};
-use amethyst::renderer::prelude::*;
+use amethyst::renderer::{DisplayConfig, DrawFlat, Event, KeyboardInput, Pipeline, PosNormTex,
+                         RenderBundle, RenderSystem, Stage, VirtualKeyCode, WindowEvent};
 
 struct Example;
 
@@ -29,9 +27,6 @@ impl State for Example {
     }
 }
 
-
-type DrawFlat = pass::DrawFlat<PosNormTex>;
-
 fn run() -> Result<(), amethyst::Error> {
     let path = format!(
         "{}/examples/01_window/resources/config.ron",
@@ -42,7 +37,7 @@ fn run() -> Result<(), amethyst::Error> {
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.00196, 0.23726, 0.21765, 1.0], 1.0)
-            .with_pass(DrawFlat::new()),
+            .with_pass(DrawFlat::<PosNormTex>::new()),
     );
 
     let mut game = Application::build("./", Example)?

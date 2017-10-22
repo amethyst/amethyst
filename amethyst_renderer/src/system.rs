@@ -10,7 +10,7 @@ use specs::{Fetch, FetchMut, RunNow, SystemData};
 use specs::common::Errors;
 use winit::{DeviceEvent, Event, WindowEvent};
 
-use config::Config;
+use config::DisplayConfig;
 use error::Result;
 use formats::{create_mesh_asset, create_texture_asset};
 use mesh::Mesh;
@@ -34,7 +34,7 @@ where
     P: PolyPipeline,
 {
     /// Build a new `RenderSystem` from the given pipeline builder and config
-    pub fn build<B>(pipe: B, config: Option<Config>) -> Result<Self>
+    pub fn build<B>(pipe: B, config: Option<DisplayConfig>) -> Result<Self>
     where
         B: PipelineBuild<Pipeline = P>,
     {

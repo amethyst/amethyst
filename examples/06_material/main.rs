@@ -7,9 +7,7 @@ extern crate genmesh;
 use amethyst::assets::Loader;
 use amethyst::core::transform::Transform;
 use amethyst::prelude::*;
-use amethyst::renderer::Config as DisplayConfig;
-use amethyst::renderer::bundle::RenderBundle;
-use amethyst::renderer::prelude::*;
+use amethyst::renderer::*;
 use cgmath::{Deg, Matrix4, Vector3};
 use cgmath::prelude::InnerSpace;
 use genmesh::{MapToVertices, Triangulate, Vertices};
@@ -121,9 +119,6 @@ impl State for Example {
     }
 }
 
-
-type DrawPbm = pass::DrawPbm<PosNormTangTex>;
-
 fn run() -> Result<(), amethyst::Error> {
     let path = format!(
         "{}/examples/06_material/resources/config.ron",
@@ -139,7 +134,7 @@ fn run() -> Result<(), amethyst::Error> {
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawPbm::new()),
+            .with_pass(DrawPbm::<PosNormTangTex>::new()),
     );
     let mut game = Application::build(&resources, Example)?
         .with_bundle(RenderBundle::new())?

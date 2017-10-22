@@ -1,7 +1,7 @@
 //! Utilities for game state management.
 
 use engine::Engine;
-use renderer::input::Event;
+use renderer::Event;
 
 /// Types of state transitions.
 pub enum Trans {

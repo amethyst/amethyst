@@ -15,9 +15,7 @@ pub use systems::GltfSceneLoaderSystem;
 use assets::{Asset, BoxedErr};
 use core::transform::LocalTransform;
 use gfx::Primitive;
-use renderer::{MeshHandle, TextureHandle};
-use renderer::formats::TextureData;
-use renderer::vertex::VertexBufferCombination;
+use renderer::{MeshHandle, TextureData, TextureHandle, VertexBufferCombination};
 
 mod format;
 mod systems;

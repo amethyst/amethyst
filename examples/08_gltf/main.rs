@@ -7,9 +7,7 @@ use amethyst::assets::{AssetStorage, Handle, Loader};
 use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystem, GltfSceneOptions};
 use amethyst::prelude::*;
-use amethyst::renderer::Config as DisplayConfig;
-use amethyst::renderer::bundle::RenderBundle;
-use amethyst::renderer::prelude::*;
+use amethyst::renderer::*;
 use cgmath::Deg;
 
 struct Example;
@@ -91,8 +89,6 @@ impl State for Example {
     }
 }
 
-type DrawPass = pass::DrawShadedSeparate;
-
 fn run() -> Result<(), amethyst::Error> {
     let path = format!(
         "{}/examples/06_material/resources/config.ron",
@@ -105,7 +101,7 @@ fn run() -> Result<(), amethyst::Error> {
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawPass::new()),
+            .with_pass(DrawShadedSeparate::new()),
     );
 
     let mut game = Application::build(resources_directory, Example)?
