@@ -12,10 +12,11 @@ extern crate specs;
 pub use format::GltfSceneFormat;
 pub use systems::GltfSceneLoaderSystem;
 
-use assets::{Asset, BoxedErr};
+use assets::{Asset, BoxedErr, Handle};
 use core::transform::LocalTransform;
 use gfx::Primitive;
 use renderer::{MeshHandle, TextureData, TextureHandle, VertexBufferCombination};
+use specs::DenseVecStorage;
 
 mod format;
 mod systems;
@@ -103,4 +104,6 @@ impl Into<Result<GltfSceneAsset, BoxedErr>> for GltfSceneAsset {
 
 impl Asset for GltfSceneAsset {
     type Data = Self;
+    // TODO: replace by tracked storage
+    type HandleStorage = DenseVecStorage<Handle<Self>>;
 }

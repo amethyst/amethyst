@@ -3,6 +3,7 @@
 pub use gfx::texture::{FilterMethod, WrapMode};
 
 use amethyst_assets::{Asset, Handle};
+use specs::DenseVecStorage;
 
 use std::marker::PhantomData;
 
@@ -49,6 +50,7 @@ impl Texture {
 
 impl Asset for Texture {
     type Data = TextureData;
+    type HandleStorage = DenseVecStorage<TextureHandle>;
 }
 
 /// Builds new textures.

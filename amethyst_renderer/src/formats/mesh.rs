@@ -5,12 +5,13 @@ use std::sync::Arc;
 
 use amethyst_assets::{Asset, BoxedErr, Format, Source};
 use cgmath::{InnerSpace, Vector3};
+use specs::DenseVecStorage;
 use wavefront_obj::ParseError;
 use wavefront_obj::obj::{parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex,
                          TextureIndex, Vertex, VertexIndex};
 
 use Renderer;
-use mesh::{Mesh, MeshBuilder};
+use mesh::{Mesh, MeshBuilder, MeshHandle};
 use vertex::*;
 
 /// Error type of `ObjFormat`
@@ -98,6 +99,7 @@ impl From<VertexBufferCombination> for MeshData {
 
 impl Asset for Mesh {
     type Data = MeshData;
+    type HandleStorage = DenseVecStorage<MeshHandle>;
 }
 
 /// Allows loading from Wavefront files

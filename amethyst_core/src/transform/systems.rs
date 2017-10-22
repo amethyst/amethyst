@@ -2,9 +2,9 @@
 
 use cgmath::Matrix4;
 use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
+use hibitset::BitSet;
 use specs::{Entities, Entity, Join, System, WriteStorage};
-use hibitset::{BitSet, BitSetLike};
-use transform::{LocalTransform, Transform, Parent};
+use transform::{LocalTransform, Parent, Transform};
 
 /// Handles updating `Transform` components based on the `LocalTransform`
 /// component and parents.
@@ -64,7 +64,7 @@ impl<'a> System<'a> for TransformSystem {
         {
             for (entity, parent) in (&*entities, parents.open().1).join() {
                 if parent.entity == entity {
-                    self.remove_parent.push(entity);   
+                    self.remove_parent.push(entity);
                 }
             }
 
@@ -90,9 +90,14 @@ impl<'a> System<'a> for TransformSystem {
             let locals_flagged = locals.open().1;
 
             // Compute transforms without parents.
-            for (_entity, local, global, _) in (&*entities, locals_flagged, &mut globals, !&parents).join() {
+            for (_entity, local, global, _) in
+                (&*entities, locals_flagged, &mut globals, !&parents).join()
+            {
                 global.0 = local.matrix();
-                debug_assert!(global.is_finite(), format!("Entity {:?} had a non-finite `Transform`", _entity));
+                debug_assert!(
+                    global.is_finite(),
+                    format!("Entity {:?} had a non-finite `Transform`", _entity)
+                );
             }
         }
 
@@ -149,13 +154,14 @@ impl<'a> System<'a> for TransformSystem {
                         } else {
                             local.matrix()
                         };
-                        
+
                         if let Some(global) = globals.get_mut(entity) {
                             global.0 = combined_transform;
                         }
                     }
                 }
-                (_, _, dead @ _) => { // This entity should not be in the sorted list, so remove it.
+                (_, _, dead @ _) => {
+                    // This entity should not be in the sorted list, so remove it.
                     self.remove(index);
 
                     if !dead && !entities.is_alive(entity) {
@@ -183,10 +189,10 @@ impl<'a> System<'a> for TransformSystem {
 
 #[cfg(test)]
 mod tests {
-    use specs::World;
-    use transform::{Parent, LocalTransform, Transform, TransformSystem};
-    use cgmath::{Decomposed, Quaternion, Vector3, Matrix4};
+    use cgmath::{Decomposed, Matrix4, Quaternion, Vector3};
     use shred::RunNow;
+    use specs::World;
+    use transform::{LocalTransform, Parent, Transform, TransformSystem};
     //use quickcheck::{Arbitrary, Gen};
 
     // If this works, then all other tests should work.
@@ -242,7 +248,8 @@ mod tests {
         transform.translation = [0.0, 0.0, 0.0];
         transform.rotation = [1.0, 0.0, 0.0, 0.0];
 
-        let e1 = world.create_entity()
+        let e1 = world
+            .create_entity()
             .with(transform)
             .with(Transform::default())
             .build();
@@ -266,7 +273,8 @@ mod tests {
         local.translation = [5.0, 5.0, 5.0];
         local.rotation = [1.0, 0.5, 0.5, 0.0];
 
-        let e1 = world.create_entity()
+        let e1 = world
+            .create_entity()
             .with(local.clone())
             .with(Transform::default())
             .build();
@@ -288,7 +296,8 @@ mod tests {
         local1.translation = [5.0, 5.0, 5.0];
         local1.rotation = [1.0, 0.5, 0.5, 0.0];
 
-        let e1 = world.create_entity()
+        let e1 = world
+            .create_entity()
             .with(local1.clone())
             .with(Transform::default())
             .build();
@@ -297,7 +306,8 @@ mod tests {
         local2.translation = [5.0, 5.0, 5.0];
         local2.rotation = [1.0, 0.5, 0.5, 0.0];
 
-        let e2 = world.create_entity()
+        let e2 = world
+            .create_entity()
             .with(local2.clone())
             .with(Transform::default())
             .with(Parent { entity: e1 })
@@ -307,7 +317,8 @@ mod tests {
         local3.translation = [5.0, 5.0, 5.0];
         local3.rotation = [1.0, 0.5, 0.5, 0.0];
 
-        let e3 = world.create_entity()
+        let e3 = world
+            .create_entity()
             .with(local3.clone())
             .with(Transform::default())
             .with(Parent { entity: e2 })
@@ -351,7 +362,8 @@ mod tests {
         local3.translation = [5.0, 5.0, 5.0];
         local3.rotation = [1.0, 0.5, 0.5, 0.0];
 
-        let e3 = world.create_entity()
+        let e3 = world
+            .create_entity()
             .with(local3.clone())
             .with(Transform::default())
             .build();
@@ -360,7 +372,8 @@ mod tests {
         local2.translation = [5.0, 5.0, 5.0];
         local2.rotation = [1.0, 0.5, 0.5, 0.0];
 
-        let e2 = world.create_entity()
+        let e2 = world
+            .create_entity()
             .with(local2.clone())
             .with(Transform::default())
             .build();
@@ -369,15 +382,16 @@ mod tests {
         local1.translation = [5.0, 5.0, 5.0];
         local1.rotation = [1.0, 0.5, 0.5, 0.0];
 
-        let e1 = world.create_entity()
+        let e1 = world
+            .create_entity()
             .with(local1.clone())
             .with(Transform::default())
             .build();
 
         {
             let mut parents = world.write::<Parent>();
-            parents.insert(e2, Parent { entity: e1 }); 
-            parents.insert(e3, Parent { entity: e2 }); 
+            parents.insert(e2, Parent { entity: e1 });
+            parents.insert(e3, Parent { entity: e2 });
         }
 
         system.run_now(&mut world.res);
@@ -418,7 +432,8 @@ mod tests {
         // Release the indeterminate forms!
         local.translation = [0.0 / 0.0, 0.0 / 0.0, 0.0 / 0.0];
 
-        world.create_entity()
+        world
+            .create_entity()
             .with(local.clone())
             .with(Transform::default())
             .build();
@@ -434,7 +449,8 @@ mod tests {
         let mut local = LocalTransform::default();
         // Release the indeterminate forms!
         local.translation = [1.0 / 0.0, 1.0 / 0.0, 1.0 / 0.0];
-        world.create_entity()
+        world
+            .create_entity()
             .with(local.clone())
             .with(Transform::default())
             .build();
@@ -446,7 +462,8 @@ mod tests {
     fn entity_is_parent() {
         let (mut world, mut system) = transform_world();
 
-        let e3 = world.create_entity()
+        let e3 = world
+            .create_entity()
             .with(LocalTransform::default())
             .with(Transform::default())
             .build();
@@ -462,29 +479,34 @@ mod tests {
     fn parent_removed() {
         let (mut world, mut system) = transform_world();
 
-        let e1 = world.create_entity()
+        let e1 = world
+            .create_entity()
             .with(LocalTransform::default())
             .with(Transform::default())
             .build();
 
-        let e2 = world.create_entity()
+        let e2 = world
+            .create_entity()
             .with(LocalTransform::default())
             .with(Transform::default())
             .with(Parent { entity: e1 })
             .build();
 
-        let e3 = world.create_entity()
+        let e3 = world
+            .create_entity()
             .with(LocalTransform::default())
             .with(Transform::default())
             .build();
 
-        let e4 = world.create_entity()
+        let e4 = world
+            .create_entity()
             .with(LocalTransform::default())
             .with(Transform::default())
             .with(Parent { entity: e3 })
             .build();
 
-        let e5 = world.create_entity()
+        let e5 = world
+            .create_entity()
             .with(LocalTransform::default())
             .with(Transform::default())
             .with(Parent { entity: e4 })
