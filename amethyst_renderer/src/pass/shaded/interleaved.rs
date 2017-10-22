@@ -12,7 +12,7 @@ use rayon::iter::internal::UnindexedConsumer;
 use specs::{Fetch, Join, ParJoin, ReadStorage};
 
 use super::*;
-use cam::Camera;
+use cam::{ActiveCamera, Camera};
 use error::Result;
 use light::{DirectionalLight, Light, PointLight};
 use mesh::{Mesh, MeshHandle};
@@ -46,6 +46,7 @@ where
     V: Query<(Position, Normal, TexCoord)>,
 {
     type Data = (
+        Option<Fetch<'a, ActiveCamera>>,
         ReadStorage<'a, Camera>,
         Fetch<'a, AmbientColor>,
         Fetch<'a, AssetStorage<Mesh>>,
@@ -89,8 +90,9 @@ where
     fn apply<'a, 'b: 'a>(
         &'a mut self,
         supplier: Supplier<'a>,
-        (camera, ambient, mesh_storage, tex_storage, material_defaults,
+        (active,camera, ambient, mesh_storage, tex_storage, material_defaults,
             mesh, material, global, light): (
+            Option<Fetch<'a, ActiveCamera>>,
             ReadStorage<'a, Camera>,
             Fetch<'a, AmbientColor>,
             Fetch<'a, AssetStorage<Mesh>>,
@@ -103,6 +105,7 @@ where
         ),
 ) -> DrawShadedApply<'a, V>{
         DrawShadedApply {
+            active,
             camera,
             mesh_storage,
             tex_storage,
@@ -119,6 +122,7 @@ where
 }
 
 pub struct DrawShadedApply<'a, V> {
+    active: Option<Fetch<'a, ActiveCamera>>,
     camera: ReadStorage<'a, Camera>,
     ambient: Fetch<'a, AmbientColor>,
     mesh_storage: Fetch<'a, AssetStorage<Mesh>>,
@@ -143,6 +147,7 @@ where
         C: UnindexedConsumer<Self::Item>,
     {
         let DrawShadedApply {
+            active,
             camera,
             mesh_storage,
             tex_storage,
@@ -156,8 +161,14 @@ where
             ..
         } = self;
 
-        // TODO: multiple cameras
-        let camera = (&camera, &global).join().next();
+        let camera: Option<(&Camera, &Transform)> = active
+            .and_then(|a| {
+                let cam = camera.get(a.entity);
+                let transform = global.get(a.entity);
+                cam.into_iter().zip(transform.into_iter()).next()
+            })
+            .or_else(|| (&camera, &global).join().next());
+
         let ambient = &ambient;
         let light = &light;
         let mesh_storage = &mesh_storage;

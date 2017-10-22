@@ -1,7 +1,7 @@
 //! Camera type with support for perspective and orthographic projections.
 
 use cgmath::{Deg, Matrix4, Ortho, PerspectiveFov};
-use specs::{Component, DenseVecStorage};
+use specs::{Component, DenseVecStorage, Entity};
 
 /// The projection mode of a `Camera`.
 ///
@@ -91,4 +91,12 @@ impl Camera {
 
 impl Component for Camera {
     type Storage = DenseVecStorage<Self>;
+}
+
+/// Active camera resource, used by the renderer to choose which camera to get the view matrix from.
+/// If no active camera is found, the first camera will be used as a fallback.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ActiveCamera {
+    /// Camera entity
+    pub entity: Entity,
 }

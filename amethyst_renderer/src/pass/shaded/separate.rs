@@ -11,7 +11,7 @@ use rayon::iter::internal::UnindexedConsumer;
 use specs::{Fetch, Join, ParJoin, ReadStorage};
 
 use super::*;
-use cam::Camera;
+use cam::{ActiveCamera, Camera};
 use error::Result;
 use light::{DirectionalLight, Light, PointLight};
 use mesh::{Mesh, MeshHandle};
@@ -36,6 +36,7 @@ impl DrawShadedSeparate {
 
 impl<'a> PassData<'a> for DrawShadedSeparate {
     type Data = (
+        Option<Fetch<'a, ActiveCamera>>,
         ReadStorage<'a, Camera>,
         Fetch<'a, AmbientColor>,
         Fetch<'a, AssetStorage<Mesh>>,
@@ -86,8 +87,9 @@ impl Pass for DrawShadedSeparate {
     fn apply<'a, 'b: 'a>(
         &'a mut self,
         supplier: Supplier<'a>,
-        (camera, ambient, mesh_storage, tex_storage, material_defaults,
+        (active, camera, ambient, mesh_storage, tex_storage, material_defaults,
             mesh, material, global, light): (
+            Option<Fetch<'a, ActiveCamera>>,
             ReadStorage<'a, Camera>,
             Fetch<'a, AmbientColor>,
             Fetch<'a, AssetStorage<Mesh>>,
@@ -100,6 +102,7 @@ impl Pass for DrawShadedSeparate {
         ),
 ) -> DrawShadedSeparateApply<'a>{
         DrawShadedSeparateApply {
+            active,
             camera,
             mesh_storage,
             tex_storage,
@@ -115,6 +118,7 @@ impl Pass for DrawShadedSeparate {
 }
 
 pub struct DrawShadedSeparateApply<'a> {
+    active: Option<Fetch<'a, ActiveCamera>>,
     camera: ReadStorage<'a, Camera>,
     ambient: Fetch<'a, AmbientColor>,
     mesh_storage: Fetch<'a, AssetStorage<Mesh>>,
@@ -135,6 +139,7 @@ impl<'a> ParallelIterator for DrawShadedSeparateApply<'a> {
         C: UnindexedConsumer<Self::Item>,
     {
         let DrawShadedSeparateApply {
+            active,
             camera,
             mesh_storage,
             tex_storage,
@@ -148,8 +153,14 @@ impl<'a> ParallelIterator for DrawShadedSeparateApply<'a> {
             ..
         } = self;
 
-        // TODO: multiple cameras
-        let camera = (&camera, &global).join().next();
+        let camera: Option<(&Camera, &Transform)> = active
+            .and_then(|a| {
+                let cam = camera.get(a.entity);
+                let transform = global.get(a.entity);
+                cam.into_iter().zip(transform.into_iter()).next()
+            })
+            .or_else(|| (&camera, &global).join().next());
+
         let ambient = &ambient;
         let light = &light;
         let mesh_storage = &mesh_storage;

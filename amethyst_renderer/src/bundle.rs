@@ -5,8 +5,8 @@ use amethyst_core::bundle::{ECSBundle, Result};
 use amethyst_core::transform::components::*;
 use specs::{DispatcherBuilder, World};
 
-use {AmbientColor, Light, Material, MaterialDefaults, Mesh, Rgba, ScreenDimensions, Texture,
-     WindowMessages};
+use {AmbientColor, Camera, Light, Material, MaterialDefaults, Mesh, Rgba, ScreenDimensions,
+     Texture, WindowMessages};
 
 /// Rendering bundle
 ///

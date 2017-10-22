@@ -10,7 +10,7 @@ use rayon::iter::internal::UnindexedConsumer;
 use specs::{Fetch, Join, ParJoin, ReadStorage};
 
 use super::*;
-use cam::Camera;
+use cam::{ActiveCamera, Camera};
 use error::Result;
 use mesh::{Mesh, MeshHandle};
 use mtl::{Material, MaterialDefaults};
@@ -36,6 +36,7 @@ where
 
 impl<'a> PassData<'a> for DrawFlatSeparate {
     type Data = (
+        Option<Fetch<'a, ActiveCamera>>,
         ReadStorage<'a, Camera>,
         Fetch<'a, AssetStorage<Mesh>>,
         Fetch<'a, AssetStorage<Texture>>,
@@ -74,7 +75,8 @@ impl Pass for DrawFlatSeparate {
     fn apply<'a, 'b: 'a>(
         &'a mut self,
         supplier: Supplier<'a>,
-        (camera, mesh_storage, tex_storage, material_defaults, mesh, material, global): (
+        (active, camera, mesh_storage, tex_storage, material_defaults, mesh, material, global): (
+            Option<Fetch<'a, ActiveCamera>>,
             ReadStorage<'a, Camera>,
             Fetch<'a, AssetStorage<Mesh>>,
             Fetch<'a, AssetStorage<Texture>>,
@@ -85,6 +87,7 @@ impl Pass for DrawFlatSeparate {
         ),
     ) -> DrawFlatSeparateApply<'a> {
         DrawFlatSeparateApply {
+            active,
             camera,
             mesh_storage,
             tex_storage,
@@ -98,6 +101,7 @@ impl Pass for DrawFlatSeparate {
 }
 
 pub struct DrawFlatSeparateApply<'a> {
+    active: Option<Fetch<'a, ActiveCamera>>,
     camera: ReadStorage<'a, Camera>,
     mesh_storage: Fetch<'a, AssetStorage<Mesh>>,
     tex_storage: Fetch<'a, AssetStorage<Texture>>,
@@ -116,6 +120,7 @@ impl<'a> ParallelIterator for DrawFlatSeparateApply<'a> {
         C: UnindexedConsumer<Self::Item>,
     {
         let DrawFlatSeparateApply {
+            active,
             camera,
             mesh_storage,
             tex_storage,
@@ -127,8 +132,14 @@ impl<'a> ParallelIterator for DrawFlatSeparateApply<'a> {
             ..
         } = self;
 
-        // TODO: multiple cameras
-        let camera = (&camera, &global).join().next();
+        let camera: Option<(&Camera, &Transform)> = active
+            .and_then(|a| {
+                let cam = camera.get(a.entity);
+                let transform = global.get(a.entity);
+                cam.into_iter().zip(transform.into_iter()).next()
+            })
+            .or_else(|| (&camera, &global).join().next());
+
         let mesh_storage = &mesh_storage;
         let tex_storage = &tex_storage;
         let material_defaults = &material_defaults;

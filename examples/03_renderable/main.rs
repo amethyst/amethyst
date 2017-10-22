@@ -56,9 +56,12 @@ impl<'a> System<'a> for ExampleSystem {
 
         let delta_rot = Quaternion::from_angle_z(Rad(camera_angular_velocity * delta_time));
         for (_, transform) in (&camera, &mut transforms).join() {
+            // rotate the camera, using the origin as a pivot point
             transform.translation = delta_rot
                 .rotate_point(Point3::from(transform.translation))
                 .into();
+            // add the delta rotation for the frame to the total rotation (quaternion multiplication
+            // is the same as rotational addition)
             transform.rotation = (delta_rot * Quaternion::from(transform.rotation)).into();
         }
 

@@ -8,7 +8,7 @@ use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystem, GltfSceneOptions};
 use amethyst::prelude::*;
 use amethyst::renderer::*;
-use cgmath::Deg;
+use cgmath::{Deg, Quaternion, Rotation3};
 
 struct Example;
 
@@ -56,14 +56,20 @@ impl State for Example {
 
         println!("Put camera");
 
-        engine.world.add_resource(Camera {
-            eye: [-2.0, 2.0, 2.0].into(),
-            // Make the arena fit perfectly in the view of the camera.
-            proj: Projection::perspective(1024. / 768., Deg(60.)).into(),
-            forward: [1.0, -1.0, -1.0].into(),
-            right: [1.0, 0.0, 0.0].into(),
-            up: [0., 1.0, 0.].into(),
-        });
+        let mut camera_transform = LocalTransform::default();
+        camera_transform.translation = [-2.0, 2.0, 2.0];
+        let camera_orientation =
+            Quaternion::from_angle_y(Deg(-45.)) * Quaternion::from_angle_x(Deg(-35.));
+        camera_transform.rotation = camera_orientation.into();
+        engine
+            .world
+            .create_entity()
+            .with(Camera::from(
+                Projection::perspective(1024. / 768., Deg(60.)),
+            ))
+            .with(Transform::default())
+            .with(camera_transform)
+            .build();
 
         engine
             .world
