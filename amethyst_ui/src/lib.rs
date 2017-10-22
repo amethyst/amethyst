@@ -5,10 +5,16 @@
 
 extern crate amethyst_assets;
 extern crate amethyst_renderer;
+extern crate cgmath;
+extern crate gfx;
+extern crate hibitset;
+extern crate rayon;
 extern crate specs;
 
 mod image;
+mod pass;
 mod transform;
 
 pub use self::image::UiImage;
+pub use self::pass::DrawUi;
 pub use self::transform::UiTransform;
