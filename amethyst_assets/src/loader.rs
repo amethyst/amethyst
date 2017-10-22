@@ -120,12 +120,11 @@ impl Loader {
                 Err(_) => tracker.fail(),
             }
 
-            processed.push(Processed {
+            processed.push(Processed::NewAsset {
                 data,
                 format: F::NAME.into(),
                 handle,
                 name,
-                reload: false,
             });
         };
         self.pool.spawn(cl);
@@ -139,12 +138,11 @@ impl Loader {
         A: Asset,
     {
         let handle = storage.allocate();
-        storage.processed.push(Processed {
+        storage.processed.push(Processed::NewAsset {
             data: Ok((data, None)),
             format: "".to_owned(),
             handle: handle.clone(),
             name: "<Data>".into(),
-            reload: false,
         });
 
         handle

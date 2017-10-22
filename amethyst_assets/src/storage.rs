@@ -139,41 +139,66 @@ impl<A: Asset> AssetStorage<A> {
         F: FnMut(A::Data) -> Result<A, BoxedErr>,
     {
         while let Some(processed) = self.processed.try_pop() {
-            let Processed {
-                data,
-                format,
-                handle,
-                name,
-                reload,
-            } = processed;
             let assets = &mut self.assets;
             let bitset = &mut self.bitset;
             let handles = &mut self.handles;
             let reloads = &mut self.reloads;
-            errors.execute::<AssetError, _>(|| {
-                let (asset, reload_obj) = data.and_then(|(d, rel)| f(d).map(|a| (a, rel)))
-                    .map_err(|e| AssetError::new(name, format, e))?;
 
-                if reload {
-                    // Asset has been hot-reloaded
+            let f = &mut f;
+            errors.execute::<AssetError, _>(move || {
+                let (reload_obj, handle) = match processed {
+                    Processed::NewAsset {
+                        data,
+                        format,
+                        handle,
+                        name,
+                    } => {
+                        let (asset, reload_obj) = data.and_then(|(d, rel)| f(d).map(|a| (a, rel)))
+                            .map_err(|e| AssetError::new(name, format, e))?;
 
-                    let id = handle.id();
-                    assert!(bitset.contains(id));
-                    unsafe {
-                        let old = assets.get_mut(id);
-                        *old = asset;
+                        let id = handle.id();
+                        bitset.add(id);
+                        handles.push(handle.downgrade());
+
+                        // NOTE: the loader has to ensure that a handle will be used
+                        // together with a `Data` only once.
+                        unsafe {
+                            assets.insert(id, asset);
+                        }
+
+                        (reload_obj, handle)
                     }
-                } else {
-                    let id = handle.id();
-                    bitset.add(id);
-                    handles.push(handle.downgrade());
+                    Processed::HotReload {
+                        data,
+                        format,
+                        handle,
+                        name,
+                        old_reload,
+                    } => {
+                        let (asset, reload_obj) = match data.and_then(
+                            |(d, rel)| f(d).map(|a| (a, rel)),
+                        ).map_err(|e| AssetError::new(name, format, e))
+                        {
+                            Ok(x) => x,
+                            Err(e) => {
+                                eprintln!("Failed to hot-reload: {}", e);
 
-                    // NOTE: the loader has to ensure that a handle will be used
-                    // together with a `Data` only once.
-                    unsafe {
-                        assets.insert(id, asset);
+                                reloads.push((handle.downgrade(), old_reload));
+
+                                return Ok(());
+                            }
+                        };
+
+                        let id = handle.id();
+                        assert!(bitset.contains(id));
+                        unsafe {
+                            let old = assets.get_mut(id);
+                            *old = asset;
+                        }
+
+                        (reload_obj, handle)
                     }
-                }
+                };
 
                 // Add the reload obj if it is `Some`.
                 if let Some(reload_obj) = reload_obj {
@@ -217,16 +242,17 @@ impl<A: Asset> AssetStorage<A> {
                 if let Some(handle) = handle.upgrade() {
                     let processed = self.processed.clone();
                     pool.spawn(move || {
+                        let old_reload = rel.clone();
                         let name = rel.name();
                         let format = rel.format();
                         let data = rel.reload();
 
-                        let p = Processed {
+                        let p = Processed::HotReload {
                             data,
                             name,
                             format,
                             handle,
-                            reload: true,
+                            old_reload,
                         };
                         processed.push(p);
                     });
@@ -319,13 +345,20 @@ where
     type Storage = A::HandleStorage;
 }
 
-pub struct Processed<A: Asset> {
-    pub data: Result<(A::Data, Option<Box<Reload<A>>>), BoxedErr>,
-    pub format: String,
-    pub handle: Handle<A>,
-    pub name: String,
-    /// `true` if this is a hot-reloaded asset.
-    pub reload: bool,
+pub enum Processed<A: Asset> {
+    NewAsset {
+        data: Result<(A::Data, Option<Box<Reload<A>>>), BoxedErr>,
+        format: String,
+        handle: Handle<A>,
+        name: String,
+    },
+    HotReload {
+        data: Result<(A::Data, Option<Box<Reload<A>>>), BoxedErr>,
+        format: String,
+        handle: Handle<A>,
+        name: String,
+        old_reload: Box<Reload<A>>,
+    },
 }
 
 /// A weak handle, which is useful if you don't directly need the asset
