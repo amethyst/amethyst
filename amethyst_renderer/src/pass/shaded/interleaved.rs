@@ -91,8 +91,18 @@ where
     fn apply<'a, 'b: 'a>(
         &'a mut self,
         supplier: Supplier<'a>,
-        (active,camera, ambient, mesh_storage, tex_storage, material_defaults,
-            mesh, material, global, light): (
+        (
+            active,
+            camera,
+            ambient,
+            mesh_storage,
+            tex_storage,
+            material_defaults,
+            mesh,
+            material,
+            global,
+            light,
+        ): (
             Option<Fetch<'a, ActiveCamera>>,
             ReadStorage<'a, Camera>,
             Fetch<'a, AmbientColor>,
@@ -104,7 +114,7 @@ where
             ReadStorage<'a, Transform>,
             ReadStorage<'a, Light>,
         ),
-) -> DrawShadedApply<'a, V>{
+    ) -> DrawShadedApply<'a, V> {
         DrawShadedApply {
             active,
             camera,

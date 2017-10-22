@@ -5,6 +5,7 @@ authors = ["Jacob Kiesel <kieseljake@gmail.com>"]
 
 [dependencies]
 amethyst_assets = { path = "../amethyst_assets", version = "0.2"}
+amethyst_core = { path = "../amethyst_core", version = "0.1"}
 amethyst_renderer = { path = "../amethyst_renderer", version = "0.5"}
 cgmath = { version = "0.14", features = ["eders"] }
 gfx = { version = "0.16", features = ["cgmath-types", "serialize"] }

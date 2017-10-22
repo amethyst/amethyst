@@ -92,14 +92,7 @@ where
         );
     }
 
-    fn do_render(
-        &mut self,
-        (mut event_handler, mut window_messages, mut screen_dimensions, data): RenderData<P>,
-    ) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("render_system");
-        use std::time::Duration;
-
+    fn do_window_management(&mut self, (mut window_messages, mut screen_dimensions): WindowData) {
         // Process window commands
         for mut command in window_messages.queue.drain() {
             command(self.renderer.window());
@@ -128,6 +121,12 @@ where
             );
             screen_dimensions.dirty = false;
         }
+    }
+
+    fn do_render(&mut self, (mut event_handler, data): RenderData<P>) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("render_system");
+        use std::time::Duration;
 
         self.renderer
             .draw(&mut self.pipe, data, Duration::from_secs(0));
@@ -155,10 +154,10 @@ type AssetLoadingData<'a> = (
     FetchMut<'a, AssetStorage<Texture>>,
 );
 
+type WindowData<'a> = (FetchMut<'a, WindowMessages>, FetchMut<'a, ScreenDimensions>);
+
 type RenderData<'a, P> = (
     FetchMut<'a, EventChannel<Event>>,
-    FetchMut<'a, WindowMessages>,
-    FetchMut<'a, ScreenDimensions>,
     <P as PipelineData<'a>>::Data,
 );
 
@@ -168,6 +167,7 @@ where
 {
     fn run_now(&mut self, res: &'a Resources) {
         self.do_asset_loading(AssetLoadingData::<'a>::fetch(res, 0));
+        self.do_window_management(WindowData::<'a>::fetch(res, 0));
         self.do_render(RenderData::<'a, P>::fetch(res, 0));
     }
 }

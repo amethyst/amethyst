@@ -157,7 +157,6 @@ impl<'a, 'b> Application<'a, 'b> {
 
     /// Advances the game world by one tick.
     fn advance_frame(&mut self) {
-
         {
             let engine = &mut self.engine;
             let states = &mut self.states;
@@ -195,7 +194,10 @@ impl<'a, 'b> Application<'a, 'b> {
             profile_scope!("fixed_update");
             if do_fixed {
                 self.states.fixed_update(&mut self.engine);
-                self.engine.world.write_resource::<Time>().finish_fixed_update();
+                self.engine
+                    .world
+                    .write_resource::<Time>()
+                    .finish_fixed_update();
             }
 
             #[cfg(feature = "profiler")]

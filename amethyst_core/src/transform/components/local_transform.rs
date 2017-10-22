@@ -131,10 +131,8 @@ impl LocalTransform {
 
     /// Set the rotation using Euler x, y, z.
     pub fn set_rotation<D: Into<Deg<f32>>>(&mut self, x: D, y: D, z: D) -> &mut Self {
-        let rotation =
-            Quaternion::from_angle_x(x.into()) *
-            Quaternion::from_angle_y(y.into()) *
-            Quaternion::from_angle_z(z.into());
+        let rotation = Quaternion::from_angle_x(x.into()) * Quaternion::from_angle_y(y.into())
+            * Quaternion::from_angle_z(z.into());
 
         self.rotation = rotation.into();
         self

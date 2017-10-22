@@ -83,5 +83,9 @@ path = "examples/07_separate_sphere/main.rs"
 name = "gltf"
 path = "examples/08_gltf/main.rs"
 
+[[example]]
+name = "ui"
+path = "examples/09_ui/main.rs"
+
 [workspace]
 members = ["amethyst_gltf"]

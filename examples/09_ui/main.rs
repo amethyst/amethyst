@@ -8,7 +8,11 @@ use amethyst::assets::Loader;
 use amethyst::core::transform::Transform;
 use amethyst::ecs::World;
 use amethyst::prelude::*;
-use amethyst::renderer::*;
+use amethyst::renderer::{Config as DisplayConfig, Mesh, Rgba};
+use amethyst::renderer::bundle::RenderBundle;
+use amethyst::renderer::formats::PngFormat;
+use amethyst::renderer::prelude::*;
+use amethyst::ui::{DrawUi, UiBundle, UiImage, UiTransform};
 use cgmath::{Deg, Vector3};
 use cgmath::prelude::InnerSpace;
 use genmesh::{MapToVertices, Triangulate, Vertices};
@@ -30,6 +34,30 @@ impl State for Example {
         initialise_sphere(&mut engine.world);
         initialise_lights(&mut engine.world);
         initialise_camera(&mut engine.world);
+
+        let logo = engine.world.read_resource::<Loader>().load(
+            "texture/logo.png",
+            PngFormat,
+            Default::default(),
+            (),
+            &engine.world.read_resource(),
+        );
+
+        engine
+            .world
+            .create_entity()
+            .with(UiTransform {
+                x: 0.,
+                y: 0.,
+                z: 0.,
+                width: 232.,
+                height: 266.,
+            })
+            .with(UiImage {
+                texture: logo,
+                preserve_aspect_ratio: true,
+            })
+            .build();
     }
 
     fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
@@ -42,8 +70,7 @@ impl State for Example {
                             ..
                         },
                     ..
-                } |
-                WindowEvent::Closed => Trans::Quit,
+                } => Trans::Quit,
                 _ => Trans::None,
             },
             _ => Trans::None,
@@ -51,27 +78,37 @@ impl State for Example {
     }
 }
 
+
+type DrawShaded = pass::DrawShaded<PosNormTex>;
+
 fn run() -> Result<(), amethyst::Error> {
     let display_config_path = format!(
-        "{}/examples/07_separate_sphere/resources/display.ron",
+        "{}/examples/09_ui/resources/display.ron",
         env!("CARGO_MANIFEST_DIR")
     );
 
-    let resources = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
+    let resources = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
 
-    let pipe = Pipeline::build().with_stage(
-        Stage::with_backbuffer()
-            .clear_target(BACKGROUND_COLOUR, 1.0)
-            .with_pass(DrawShadedSeparate::new()),
-    );
+
 
     let config = DisplayConfig::load(&display_config_path);
 
     let mut game = Application::build(resources, Example)?
         .with_bundle(RenderBundle::new())?
-        .with_local(RenderSystem::build(pipe, Some(config))?)
-        .build()?;
-    Ok(game.run())
+        .with_bundle(UiBundle::new())?;
+    let pipe = {
+        let loader = game.world.read_resource();
+        let mesh_storage = game.world.read_resource();
+
+        Pipeline::build().with_stage(
+            Stage::with_backbuffer()
+                .clear_target(BACKGROUND_COLOUR, 1.0)
+                .with_pass(DrawShaded::new())
+                .with_pass(DrawUi::new(&loader, &mesh_storage)),
+        )
+    };
+    game = game.with_local(RenderSystem::build(pipe, Some(config))?);
+    Ok(game.build()?.run())
 }
 
 fn main() {
@@ -81,30 +118,18 @@ fn main() {
     }
 }
 
-fn gen_sphere(u: usize, v: usize) -> ComboMeshCreator {
-    let positions = SphereUV::new(u, v)
-        .vertex(|(x, y, z)| [x, y, z])
+fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTex> {
+    SphereUV::new(u, v)
+        .vertex(|(x, y, z)| {
+            PosNormTex {
+                position: [x, y, z],
+                normal: Vector3::from([x, y, z]).normalize().into(),
+                tex_coord: [0.1, 0.1],
+            }
+        })
         .triangulate()
         .vertices()
-        .collect::<Vec<_>>();
-
-    let normals = positions
-        .iter()
-        .map(|pos| {
-            Separate::<Normal>::new(Vector3::from(*pos).normalize().into())
-        })
-        .collect::<Vec<_>>();
-    let tex_coords = positions
-        .iter()
-        .map(|_| Separate::<TexCoord>::new([0.1, 0.1]))
-        .collect::<Vec<_>>();
-    let positions = positions
-        .into_iter()
-        .map(|pos| Separate::<Position>::new(pos))
-        .collect::<Vec<_>>();
-
-    println!("{:?}, {:?}, {:?}", positions, tex_coords, normals);
-    (positions, None, Some(tex_coords), Some(normals), None).into()
+        .collect()
 }
 
 /// This function initialises a sphere and adds it to the world.
@@ -165,12 +190,11 @@ fn initialise_lights(world: &mut World) {
 
 /// This function initialises a camera and adds it to the world.
 fn initialise_camera(world: &mut World) {
-    use cgmath::Matrix4;
-    let transform =
-        Matrix4::from_translation([0.0, 0.0, -4.0].into()) * Matrix4::from_angle_y(Deg(180.));
-    world
-        .create_entity()
-        .with(Camera::from(Projection::perspective(1.3, Deg(60.0))))
-        .with(Transform(transform.into()))
-        .build();
+    world.add_resource(Camera {
+        eye: [0.0, 0.0, -4.0].into(),
+        proj: Projection::perspective(1.3, Deg(60.0)).into(),
+        forward: [0.0, 0.0, 1.0].into(),
+        right: [1.0, 0.0, 0.0].into(),
+        up: [0.0, 1.0, 0.0].into(),
+    });
 }

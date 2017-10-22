@@ -52,7 +52,8 @@ impl<'a> System<'a> for ExampleSystem {
         state.light_angle += light_angular_velocity * time.delta_seconds();
         state.camera_angle += camera_angular_velocity * time.delta_seconds();
 
-        let delta_rot = Quaternion::from_angle_z(Rad(camera_angular_velocity * time.delta_seconds()));
+        let delta_rot =
+            Quaternion::from_angle_z(Rad(camera_angular_velocity * time.delta_seconds()));
         for (_, transform) in (&camera, &mut transforms).join() {
             // rotate the camera, using the origin as a pivot point
             transform.translation = delta_rot
