@@ -1,5 +1,5 @@
 use std::marker::PhantomData;
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use crossbeam::sync::MsQueue;
@@ -31,10 +31,10 @@ impl Allocator {
 pub struct AssetStorage<A: Asset> {
     assets: VecStorage<A>,
     bitset: BitSet,
-    handles: Vec<Handle<A>>,
+    handles: Vec<WeakHandle<A>>,
     handle_alloc: Allocator,
     pub(crate) processed: Arc<MsQueue<Processed<A>>>,
-    reloads: Vec<Box<Reload<A>>>,
+    reloads: Vec<(WeakHandle<A>, Box<Reload<A>>)>,
     unused_handles: MsQueue<Handle<A>>,
 }
 
@@ -89,7 +89,7 @@ impl<A: Asset> AssetStorage<A> {
 
             let id = h.id();
             self.bitset.add(id);
-            self.handles.push(h.clone());
+            self.handles.push(h.downgrade());
 
             unsafe {
                 self.assets.insert(id, asset);
@@ -163,7 +163,7 @@ impl<A: Asset> AssetStorage<A> {
                 } else {
                     let id = handle.id();
                     bitset.add(id);
-                    handles.push(handle);
+                    handles.push(handle.downgrade());
 
                     // NOTE: the loader has to ensure that a handle will be used
                     // together with a `Data` only once.
@@ -172,21 +172,29 @@ impl<A: Asset> AssetStorage<A> {
                     }
                 }
 
-                // Add the reload obh if it is `Some`.
-                reloads.extend(reload_obj);
+                // Add the reload obj if it is `Some`.
+                if let Some(reload_obj) = reload_obj {
+                    reloads.push((handle.downgrade(), reload_obj));
+                }
 
                 Ok(())
             });
         }
 
-        while let Some(i) = self.handles.iter().position(Handle::is_unused) {
-            let old = self.handles.swap_remove(i);
+        while let Some(i) = self.handles.iter().position(WeakHandle::is_dead) {
+            self.handles.swap_remove(i);
             let id = i as u32;
             unsafe {
                 drop_fn(self.assets.remove(id));
             }
             self.bitset.remove(id);
-            self.unused_handles.push(old);
+
+            // Can't reuse old handle here, because otherwise weak handles would still be valid.
+            // TODO: maybe just store u32?
+            self.unused_handles.push(Handle {
+                id: Arc::new(id),
+                marker: PhantomData,
+            });
         }
     }
 }
@@ -247,14 +255,19 @@ impl<A> Handle<A> {
         *self.id.as_ref()
     }
 
-    /// Returns `true` if this is the only handle to the asset its pointing at
-    /// (excluding the handle owned by the asset storage).
+    /// Returns `true` if this is the only handle to the asset its pointing at.
     pub fn is_unique(&self) -> bool {
-        Arc::strong_count(&self.id) == 2
+        Arc::strong_count(&self.id) == 1
     }
 
-    fn is_unused(&self) -> bool {
-        Arc::strong_count(&self.id) == 1
+    /// Downgrades the handle and creates a `WeakHandle`.
+    pub fn downgrade(&self) -> WeakHandle<A> {
+        let id = Arc::downgrade(&self.id);
+
+        WeakHandle {
+            id,
+            marker: PhantomData,
+        }
     }
 }
 
@@ -272,4 +285,32 @@ pub struct Processed<A: Asset> {
     pub name: String,
     /// `true` if this is a hot-reloaded asset.
     pub reload: bool,
+}
+
+/// A weak handle, which is useful if you don't directly need the asset
+/// like in caches. This way, the asset can still get dropped (if you want that).
+#[derive(Derivative)]
+#[derivative(Clone(bound = ""))]
+pub struct WeakHandle<A> {
+    id: Weak<u32>,
+    marker: PhantomData<A>,
+}
+
+impl<A> WeakHandle<A> {
+    /// Tries to upgrade to a `Handle`.
+    #[inline]
+    pub fn upgrade(&self) -> Option<Handle<A>> {
+        self.id.upgrade().map(|id| {
+            Handle {
+                id,
+                marker: PhantomData,
+            }
+        })
+    }
+
+    /// Returns `true` if the original handle is dead.
+    #[inline]
+    pub fn is_dead(&self) -> bool {
+        self.upgrade().is_none()
+    }
 }

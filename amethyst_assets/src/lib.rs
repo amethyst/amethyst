@@ -26,7 +26,7 @@ pub use loader::Loader;
 pub use progress::{Completion, Progress, ProgressCounter, Tracker};
 pub use reload::{Reload, SingleFile};
 pub use source::{Directory, Source};
-pub use storage::{AssetStorage, Handle, Processor};
+pub use storage::{AssetStorage, Handle, Processor, WeakHandle};
 
 mod asset;
 //mod cache;
