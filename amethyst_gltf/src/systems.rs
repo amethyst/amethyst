@@ -1,6 +1,7 @@
 use assets::{AssetStorage, Handle, Loader};
 use core::transform::*;
 use renderer::{Material, MaterialDefaults, Mesh, Texture};
+use renderer::formats::ComboMeshCreator;
 use specs::{Entities, Entity, Fetch, FetchMut, Join, System, WriteStorage};
 use specs::common::Errors;
 
@@ -295,7 +296,8 @@ fn load_primitive(
     texture_handles: &mut Vec<(usize, TextureHandleLocation, Handle<Texture>)>,
 ) {
     let mesh = primitive.handle.as_ref().cloned().unwrap_or_else(|| {
-        let handle = loader.load_from_data(primitive.attributes.clone().into(), mesh_storage);
+        let mesh_creator = ComboMeshCreator::new(primitive.attributes.clone());
+        let handle = loader.load_from_data(mesh_creator.into(), mesh_storage);
         mesh_handles.push((node_index, primitive_index, handle.clone()));
         handle
     });
