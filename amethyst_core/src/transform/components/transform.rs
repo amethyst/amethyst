@@ -14,6 +14,21 @@ use specs::{Component, DenseVecStorage, FlaggedStorage};
 #[derive(Debug, Copy, Clone)]
 pub struct Transform(pub [[f32; 4]; 4]);
 
+impl Transform {
+    /// Checks whether each `f32` of the `Transform` is finite (not NaN or inf).
+    pub fn is_finite(&self) -> bool {
+        for i in 0..4 {
+            for j in 0..4 {
+                if !self.0[i][j].is_finite() {
+                    return false
+                }
+            }
+        }
+
+        true
+    }
+}
+
 impl Component for Transform {
     type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
 }
@@ -53,3 +68,4 @@ impl Borrow<[[f32; 4]; 4]> for Transform {
         &self.0
     }
 }
+

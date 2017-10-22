@@ -92,7 +92,7 @@ impl<'a> System<'a> for TransformSystem {
             // Compute transforms without parents.
             for (_entity, local, global, _) in (&*entities, locals_flagged, &mut globals, !&parents).join() {
                 global.0 = local.matrix();
-                debug_assert!(global.0 == global.0, format!("Entity {:?} had NaN transform.", _entity));
+                debug_assert!(global.is_finite(), format!("Entity {:?} had a non-finite `Transform`", _entity));
             }
         }
 
@@ -131,7 +131,7 @@ impl<'a> System<'a> for TransformSystem {
                         }
                     }
 
-                    // Kill the entity is the parent is dead.
+                    // Kill the entity if the parent is dead.
                     if self.dead.contains(&parent.entity) || !entities.is_alive(parent.entity) {
                         self.remove(index);
                         let _ = entities.delete(entity);
@@ -418,6 +418,22 @@ mod tests {
         // Release the indeterminate forms!
         local.translation = [0.0 / 0.0, 0.0 / 0.0, 0.0 / 0.0];
 
+        world.create_entity()
+            .with(local.clone())
+            .with(Transform::default())
+            .build();
+
+        system.run_now(&mut world.res);
+    }
+
+    #[test]
+    #[should_panic]
+    fn is_finite_transform() {
+        let (mut world, mut system) = transform_world();
+
+        let mut local = LocalTransform::default();
+        // Release the indeterminate forms!
+        local.translation = [1.0 / 0.0, 1.0 / 0.0, 1.0 / 0.0];
         world.create_entity()
             .with(local.clone())
             .with(Transform::default())
