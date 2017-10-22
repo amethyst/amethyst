@@ -264,3 +264,9 @@ impl MeshCreator for ComboMeshCreator {
         build_mesh_with_combo(self.combo, renderer)
     }
 }
+
+impl From<VertexBufferCombination> for ComboMeshCreator {
+    fn from(combo: VertexBufferCombination) -> Self {
+        Self::new(combo)
+    }
+}
