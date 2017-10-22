@@ -75,7 +75,7 @@ name = "material"
 path = "examples/06_material/main.rs"
 
 [[example]]
-name = "sphere_separate"
+name = "separate_sphere"
 path = "examples/07_separate_sphere/main.rs"
 
 [[example]]
