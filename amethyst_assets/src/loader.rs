@@ -12,6 +12,7 @@ use storage::{AssetStorage, Handle, Processed};
 /// The asset loader, holding the sources and a reference to the `ThreadPool`.
 pub struct Loader {
     directory: Arc<Directory>,
+    hot_reload: bool,
     pool: Arc<ThreadPool>,
     sources: FnvHashMap<String, Arc<Source>>,
 }
@@ -25,6 +26,7 @@ impl Loader {
     {
         Loader {
             directory: Arc::new(Directory::new(directory)),
+            hot_reload: true, // TODO: allow disabling
             pool,
             sources: Default::default(),
         }
@@ -109,8 +111,10 @@ impl Loader {
 
         let name = name.into();
 
-        self.pool.spawn(move || {
-            let data = format.import(name.clone(), source, options);
+        let hot_reload = self.hot_reload;
+
+        let cl = move || {
+            let data = format.import(name.clone(), source, options, hot_reload);
             match data {
                 Ok(_) => tracker.success(),
                 Err(_) => tracker.fail(),
@@ -121,8 +125,10 @@ impl Loader {
                 format: F::NAME.into(),
                 handle,
                 name,
+                reload: false,
             });
-        });
+        };
+        self.pool.spawn(cl);
 
         handle_clone
     }
@@ -134,10 +140,11 @@ impl Loader {
     {
         let handle = storage.allocate();
         storage.processed.push(Processed {
-            data: Ok(data),
+            data: Ok((data, None)),
             format: "".to_owned(),
             handle: handle.clone(),
             name: "<Data>".into(),
+            reload: false,
         });
 
         handle

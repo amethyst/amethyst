@@ -74,18 +74,18 @@ impl Asset for MeshAsset {
 }
 
 /// A format the mesh data could be stored with.
+#[derive(Clone)]
 struct Ron;
 
-impl Format<MeshAsset> for Ron {
+impl SimpleFormat<MeshAsset> for Ron {
     const NAME: &'static str = "RON";
 
     type Options = ();
 
-    fn import(&self, name: String, source: Arc<Source>, _: ()) -> Result<VertexData, BoxedErr> {
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<VertexData, BoxedErr> {
         use ron::de::from_str;
         use std::str::from_utf8;
 
-        let bytes = source.load(&name)?;
         let s = from_utf8(&bytes).map_err(BoxedErr::new)?;
 
         from_str(s).map_err(BoxedErr::new)

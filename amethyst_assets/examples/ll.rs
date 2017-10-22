@@ -29,10 +29,18 @@ impl Format<DummyAsset> for DummyFormat {
 
     type Options = ();
 
-    fn import(&self, name: String, source: Arc<Source>, _: ()) -> Result<String, BoxedErr> {
-        from_utf8(source.load(&name)?.as_slice())
+    fn import(
+        &self,
+        name: String,
+        source: Arc<Source>,
+        _: (),
+        _create_reload: bool,
+    ) -> Result<(String, Option<Box<Reload<DummyAsset>>>), BoxedErr> {
+        let dummy = from_utf8(source.load(&name)?.as_slice())
             .map(|s| s.to_owned())
-            .map_err(BoxedErr::new)
+            .map_err(BoxedErr::new)?;
+
+        Ok((dummy, None))
     }
 }
 

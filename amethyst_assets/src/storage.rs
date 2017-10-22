@@ -10,6 +10,7 @@ use specs::common::Errors;
 use BoxedErr;
 use asset::Asset;
 use error::AssetError;
+use reload::Reload;
 
 /// An `Allocator`, holding a counter for producing unique IDs.
 #[derive(Debug, Default)]
@@ -33,6 +34,7 @@ pub struct AssetStorage<A: Asset> {
     handles: Vec<Handle<A>>,
     handle_alloc: Allocator,
     pub(crate) processed: Arc<MsQueue<Processed<A>>>,
+    reloads: Vec<Box<Reload<A>>>,
     unused_handles: MsQueue<Handle<A>>,
 }
 
@@ -43,8 +45,8 @@ impl<A: Asset> Default for AssetStorage<A> {
             bitset: Default::default(),
             handles: Default::default(),
             handle_alloc: Default::default(),
-            //new_handles: MsQueue::new(),
             processed: Arc::new(MsQueue::new()),
+            reloads: Vec::new(),
             unused_handles: MsQueue::new(),
         }
     }
@@ -139,23 +141,39 @@ impl<A: Asset> AssetStorage<A> {
                 format,
                 handle,
                 name,
+                reload,
             } = processed;
             let assets = &mut self.assets;
             let bitset = &mut self.bitset;
             let handles = &mut self.handles;
+            let reloads = &mut self.reloads;
             errors.execute::<AssetError, _>(|| {
-                let asset = data.and_then(&mut f)
+                let (asset, reload_obj) = data.and_then(|(d, rel)| f(d).map(|a| (a, rel)))
                     .map_err(|e| AssetError::new(name, format, e))?;
 
-                let id = handle.id();
-                bitset.add(id);
-                handles.push(handle);
+                if reload {
+                    // Asset has been hot-reloaded
 
-                // NOTE: the loader has to ensure that a handle will be used
-                // together with a `Data` only once.
-                unsafe {
-                    assets.insert(id, asset);
+                    let id = handle.id();
+                    assert!(bitset.contains(id));
+                    unsafe {
+                        let old = assets.get_mut(id);
+                        *old = asset;
+                    }
+                } else {
+                    let id = handle.id();
+                    bitset.add(id);
+                    handles.push(handle);
+
+                    // NOTE: the loader has to ensure that a handle will be used
+                    // together with a `Data` only once.
+                    unsafe {
+                        assets.insert(id, asset);
+                    }
                 }
+
+                // Add the reload obh if it is `Some`.
+                reloads.extend(reload_obj);
 
                 Ok(())
             });
@@ -247,10 +265,11 @@ where
     type Storage = A::HandleStorage;
 }
 
-// TODO: may change with hot reloading
 pub struct Processed<A: Asset> {
-    pub data: Result<A::Data, BoxedErr>,
+    pub data: Result<(A::Data, Option<Box<Reload<A>>>), BoxedErr>,
     pub format: String,
     pub handle: Handle<A>,
     pub name: String,
+    /// `true` if this is a hot-reloaded asset.
+    pub reload: bool,
 }

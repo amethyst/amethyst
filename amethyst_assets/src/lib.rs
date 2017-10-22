@@ -20,10 +20,11 @@ extern crate specs;
 
 pub use specs::error::BoxedErr;
 
-pub use asset::{Asset, Format};
+pub use asset::{Asset, Format, SimpleFormat};
 pub use error::AssetError;
 pub use loader::Loader;
 pub use progress::{Completion, Progress, ProgressCounter, Tracker};
+pub use reload::{Reload, SingleFile};
 pub use source::{Directory, Source};
 pub use storage::{AssetStorage, Handle, Processor};
 
@@ -32,6 +33,6 @@ mod asset;
 mod error;
 mod loader;
 mod progress;
-//mod reload;
+mod reload;
 mod source;
 mod storage;

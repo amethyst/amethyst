@@ -2,9 +2,8 @@ use std::error::Error;
 use std::fmt::{self, Display, Formatter};
 use std::fmt::Debug;
 use std::string::FromUtf8Error;
-use std::sync::Arc;
 
-use amethyst_assets::{Asset, BoxedErr, Format, Source};
+use amethyst_assets::{Asset, BoxedErr, SimpleFormat};
 use cgmath::{InnerSpace, Vector3};
 use specs::DenseVecStorage;
 use wavefront_obj::ParseError;
@@ -108,15 +107,16 @@ impl Asset for Mesh {
 
 /// Allows loading from Wavefront files
 /// see: https://en.wikipedia.org/wiki/Wavefront_.obj_file
+#[derive(Clone)]
 pub struct ObjFormat;
 
-impl Format<Mesh> for ObjFormat {
+impl SimpleFormat<Mesh> for ObjFormat {
     const NAME: &'static str = "WAVEFRONT_OBJ";
 
     type Options = ();
 
-    fn import(&self, name: String, source: Arc<Source>, _: ()) -> Result<MeshData, BoxedErr> {
-        String::from_utf8(source.load(&name)?)
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<MeshData, BoxedErr> {
+        String::from_utf8(bytes)
             .map_err(ObjError::Utf8)
             .and_then(|string| parse(string).map_err(ObjError::Parse))
             .map(|set| from_data(set).into())

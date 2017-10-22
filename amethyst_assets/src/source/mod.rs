@@ -16,4 +16,14 @@ pub trait Source: Send + Sync + 'static {
     ///
     /// The id should always use `/` as separator in paths.
     fn load(&self, path: &str) -> Result<Vec<u8>, BoxedErr>;
+
+    /// Returns both the result of `load` and `modified` as a tuple.
+    /// There's a default implementation which just calls both methods,
+    /// but you may be able to provide a more optimized version yourself.
+    fn load_with_metadata(&self, path: &str) -> Result<(Vec<u8>, u64), BoxedErr> {
+        let m = self.modified(path)?;
+        let b = self.load(path)?;
+
+        Ok((b, m))
+    }
 }

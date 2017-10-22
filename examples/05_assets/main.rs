@@ -5,10 +5,8 @@ extern crate amethyst;
 extern crate cgmath;
 extern crate rayon;
 
-use std::sync::Arc;
-
 use amethyst::{Application, Error, State, Trans};
-use amethyst::assets::{BoxedErr, Format, Loader, Source};
+use amethyst::assets::{BoxedErr, Loader, SimpleFormat};
 use amethyst::config::Config;
 use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::ecs::World;
@@ -19,16 +17,16 @@ use amethyst::renderer::{Camera, DisplayConfig as DisplayConfig, DrawShaded, Eve
                          PosNormTex, Projection, RenderBundle, RenderSystem, Rgba, Stage,
                          VirtualKeyCode, WindowEvent};
 
+#[derive(Clone)]
 struct Custom;
 
-impl Format<Mesh> for Custom {
+impl SimpleFormat<Mesh> for Custom {
     const NAME: &'static str = "CUSTOM";
 
     type Options = ();
 
     /// Reads the given bytes and produces asset data.
-    fn import(&self, name: String, source: Arc<Source>, _: ()) -> Result<MeshData, BoxedErr> {
-        let bytes = source.load(&name)?;
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<MeshData, BoxedErr> {
         let data: String = String::from_utf8(bytes).unwrap();
 
         let trimmed: Vec<&str> = data.lines().filter(|line| line.len() >= 1).collect();

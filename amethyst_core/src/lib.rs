@@ -7,9 +7,8 @@ extern crate serde;
 extern crate shred;
 extern crate specs;
 
-#[cfg(test)]
-#[cfg_attr(test, macro_use)]
-extern crate quickcheck;
+//#[cfg(test)]
+//extern crate quickcheck;
 
 pub use bundle::ECSBundle;
 pub use timing::*;

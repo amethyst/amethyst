@@ -3,10 +3,9 @@ pub use imagefmt::Error as ImageError;
 use std::error::Error;
 use std::fmt::{self, Display, Formatter};
 use std::io::Cursor;
-use std::sync::Arc;
 
 use Renderer;
-use amethyst_assets::{BoxedErr, Format, Source};
+use amethyst_assets::{BoxedErr, SimpleFormat};
 use gfx::format::{ChannelType, SurfaceType};
 use gfx::texture::SamplerInfo;
 use gfx::traits::Pod;
@@ -130,6 +129,7 @@ pub struct ImageData {
     pub raw: Image<u8>,
 }
 /// Allows loading of jpg or jpeg files.
+#[derive(Clone)]
 pub struct JpgFormat;
 
 impl JpgFormat {
@@ -145,22 +145,22 @@ impl JpgFormat {
     }
 }
 
-impl Format<Texture> for JpgFormat {
+impl SimpleFormat<Texture> for JpgFormat {
     const NAME: &'static str = "JPEG";
 
     type Options = TextureMetadata;
 
     fn import(
         &self,
-        name: String,
-        source: Arc<Source>,
+        bytes: Vec<u8>,
         options: TextureMetadata,
     ) -> Result<TextureData, BoxedErr> {
-        self.from_data(source.load(&name)?, options)
+        self.from_data(bytes, options)
     }
 }
 
 /// Allows loading of PNG files.
+#[derive(Clone)]
 pub struct PngFormat;
 
 impl PngFormat {
@@ -176,36 +176,35 @@ impl PngFormat {
     }
 }
 
-impl Format<Texture> for PngFormat {
+impl SimpleFormat<Texture> for PngFormat {
     const NAME: &'static str = "JPEG";
 
     type Options = TextureMetadata;
 
     fn import(
         &self,
-        name: String,
-        source: Arc<Source>,
+        bytes: Vec<u8>,
         options: TextureMetadata,
     ) -> Result<TextureData, BoxedErr> {
-        self.from_data(source.load(&name)?, options)
+        self.from_data(bytes, options)
     }
 }
 
 /// Allows loading of BMP files.
+#[derive(Clone)]
 pub struct BmpFormat;
 
-impl Format<Texture> for BmpFormat {
+impl SimpleFormat<Texture> for BmpFormat {
     const NAME: &'static str = "BMP";
 
     type Options = TextureMetadata;
 
     fn import(
         &self,
-        name: String,
-        source: Arc<Source>,
+        bytes: Vec<u8>,
         options: TextureMetadata,
     ) -> Result<TextureData, BoxedErr> {
-        imagefmt::bmp::read(&mut Cursor::new(source.load(&name)?), ColFmt::RGBA)
+        imagefmt::bmp::read(&mut Cursor::new(bytes), ColFmt::RGBA)
             .map(|raw| TextureData::Image(ImageData { raw }, options))
             .map_err(BoxedErr::new)
     }
