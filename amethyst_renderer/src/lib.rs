@@ -77,12 +77,11 @@ pub use resources::{AmbientColor, ScreenDimensions, WindowMessages};
 pub use system::RenderSystem;
 pub use tex::{Texture, TextureBuilder, TextureHandle};
 pub use types::{Encoder, Factory};
-pub use vertex::{Attribute, AttributeFormat, Attributes, Normal, PosColor, PosNormTangTex,
+pub use vertex::{Attribute, AttributeFormat, Attributes, Color, Normal, PosColor, PosNormTangTex,
                  PosNormTex, PosTex, Position, Query, Separate, Tangent, TexCoord,
                  VertexBufferCombination, VertexFormat, With};
 
 pub mod error;
-mod pass;
 pub mod pipe;
 
 mod bundle;
@@ -94,6 +93,7 @@ mod input;
 mod light;
 mod mesh;
 mod mtl;
+mod pass;
 mod renderer;
 mod resources;
 mod system;
