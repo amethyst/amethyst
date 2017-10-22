@@ -33,7 +33,8 @@ impl App {
 
         world.add_resource(Errors::new());
         world.add_resource(AssetStorage::<MeshAsset>::new());
-        world.add_resource(Loader::new(path, pool));
+        world.add_resource(Loader::new(path, pool.clone()));
+        world.add_resource(pool);
 
         App {
             dispatcher,
@@ -98,10 +99,10 @@ impl<'a> System<'a> for RenderingSystem {
     type SystemData = (
         FetchMut<'a, AssetStorage<MeshAsset>>,
         Fetch<'a, Errors>,
-                       /* texture storage, transforms, .. */
+        Fetch<'a, Arc<ThreadPool>>, /* texture storage, transforms, .. */
     );
 
-    fn run(&mut self, (mut mesh_storage, errors): Self::SystemData) {
+    fn run(&mut self, (mut mesh_storage, errors, pool): Self::SystemData) {
         mesh_storage.process(
             |vertex_data| {
                 // Upload vertex data to GPU and give back an asset
@@ -109,6 +110,7 @@ impl<'a> System<'a> for RenderingSystem {
                 Ok(MeshAsset { buffer: () })
             },
             &errors,
+            &**pool,
         );
     }
 }

@@ -18,6 +18,7 @@ travis-ci = { repository = "amethyst/amethyst" }
 cgmath = "0.14"
 fnv = "1.0"
 hibitset = "0.3.2"
+rayon = "0.8"
 serde = { version = "1", features = ["serde_derive"] }
 shred = "0.5"
 specs = "0.10"

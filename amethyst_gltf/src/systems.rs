@@ -1,4 +1,5 @@
 use assets::{AssetStorage, Handle, Loader};
+use core::ThreadPool;
 use core::transform::*;
 use renderer::{Material, MaterialDefaults, Mesh, Texture};
 use renderer::ComboMeshCreator;
@@ -37,6 +38,7 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
         Fetch<'a, Loader>,
         Fetch<'a, Errors>,
         Fetch<'a, MaterialDefaults>,
+        Fetch<'a, ThreadPool>,
         FetchMut<'a, AssetStorage<GltfSceneAsset>>,
         WriteStorage<'a, Handle<GltfSceneAsset>>,
         WriteStorage<'a, Handle<Mesh>>,
@@ -55,6 +57,7 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
             loader,
             errors,
             material_defaults,
+            pool,
             mut scene_storage,
             mut scenes,
             mut meshes,
@@ -64,7 +67,7 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
             mut materials,
         ) = data;
 
-        scene_storage.process(Into::into, &errors);
+        scene_storage.process(Into::into, &errors, &**pool);
 
         let mut deletes = vec![];
 

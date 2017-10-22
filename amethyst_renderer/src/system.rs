@@ -2,8 +2,10 @@
 //!
 
 use std::mem;
+use std::sync::Arc;
 
 use amethyst_assets::AssetStorage;
+use rayon::ThreadPool;
 use shred::Resources;
 use shrev::EventChannel;
 use specs::{Fetch, FetchMut, RunNow, SystemData};
@@ -66,11 +68,19 @@ where
 
     fn do_asset_loading(
         &mut self,
-        (errors, mut mesh_storage, mut texture_storage): AssetLoadingData,
+        (errors, pool, mut mesh_storage, mut texture_storage): AssetLoadingData,
     ) {
-        mesh_storage.process(|d| create_mesh_asset(d, &mut self.renderer), &errors);
+        mesh_storage.process(
+            |d| create_mesh_asset(d, &mut self.renderer),
+            &errors,
+            &**pool,
+        );
 
-        texture_storage.process(|d| create_texture_asset(d, &mut self.renderer), &errors);
+        texture_storage.process(
+            |d| create_texture_asset(d, &mut self.renderer),
+            &errors,
+            &**pool,
+        );
     }
 
     fn do_render(
@@ -129,6 +139,7 @@ where
 
 type AssetLoadingData<'a> = (
     Fetch<'a, Errors>,
+    Fetch<'a, Arc<ThreadPool>>,
     FetchMut<'a, AssetStorage<Mesh>>,
     FetchMut<'a, AssetStorage<Texture>>,
 );

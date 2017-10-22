@@ -51,7 +51,7 @@ fn main() {
     let pool = Arc::new(ThreadPool::new(cfg).expect("Invalid config"));
 
     let mut errors = Errors::new();
-    let loader = Loader::new(&path, pool);
+    let loader = Loader::new(&path, pool.clone());
     let mut storage = AssetStorage::new();
 
     let mut progress = ProgressCounter::new();
@@ -81,6 +81,7 @@ fn main() {
                 Ok(DummyAsset(s))
             },
             &errors,
+            &*pool,
         );
 
         errors.print_and_exit();

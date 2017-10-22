@@ -1,9 +1,11 @@
 use std::marker::PhantomData;
 use std::sync::{Arc, Weak};
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::time::Instant;
 
 use crossbeam::sync::MsQueue;
 use hibitset::BitSet;
+use rayon::ThreadPool;
 use specs::{Component, Fetch, FetchMut, System, UnprotectedStorage, VecStorage};
 use specs::common::Errors;
 
@@ -33,6 +35,7 @@ pub struct AssetStorage<A: Asset> {
     bitset: BitSet,
     handles: Vec<WeakHandle<A>>,
     handle_alloc: Allocator,
+    last_reload: Instant,
     pub(crate) processed: Arc<MsQueue<Processed<A>>>,
     reloads: Vec<(WeakHandle<A>, Box<Reload<A>>)>,
     unused_handles: MsQueue<Handle<A>>,
@@ -45,6 +48,7 @@ impl<A: Asset> Default for AssetStorage<A> {
             bitset: Default::default(),
             handles: Default::default(),
             handle_alloc: Default::default(),
+            last_reload: Instant::now(),
             processed: Arc::new(MsQueue::new()),
             reloads: Vec::new(),
             unused_handles: MsQueue::new(),
@@ -120,20 +124,19 @@ impl<A: Asset> AssetStorage<A> {
     }
 
     /// Process finished asset data and maintain the storage.
-    pub fn process<F>(&mut self, f: F, errors: &Errors)
+    pub fn process<F>(&mut self, f: F, errors: &Errors, pool: &ThreadPool)
     where
         F: FnMut(A::Data) -> Result<A, BoxedErr>,
     {
-
         self.process_custom_drop(f, |_| {}, errors);
     }
 
     /// Process finished asset data and maintain the storage.
     /// This calls the `drop_fn` closure for assets that were removed from the storage.
     pub fn process_custom_drop<F, D>(&mut self, mut f: F, mut drop_fn: D, errors: &Errors)
-        where
-            D: FnMut(A),
-            F: FnMut(A::Data) -> Result<A, BoxedErr>,
+    where
+        D: FnMut(A),
+        F: FnMut(A::Data) -> Result<A, BoxedErr>,
     {
         while let Some(processed) = self.processed.try_pop() {
             let Processed {
@@ -196,6 +199,40 @@ impl<A: Asset> AssetStorage<A> {
                 marker: PhantomData,
             });
         }
+
+        // Reload every seconds
+        // TODO: more configuration
+        let elapsed = self.last_reload.elapsed().as_secs();
+
+        if elapsed >= 1 {
+            self.last_reload = Instant::now();
+
+            self.reloads.retain(|&(ref handle, _)| !handle.is_dead());
+            while let Some(p) = self.reloads
+                .iter()
+                .position(|&(_, ref rel)| rel.needs_reload())
+            {
+                let (handle, rel) = self.reloads.swap_remove(p);
+
+                if let Some(handle) = handle.upgrade() {
+                    let processed = self.processed.clone();
+                    pool.spawn(move || {
+                        let name = rel.name();
+                        let format = rel.format();
+                        let data = rel.reload();
+
+                        let p = Processed {
+                            data,
+                            name,
+                            format,
+                            handle,
+                            reload: true,
+                        };
+                        processed.push(p);
+                    });
+                }
+            }
+        }
     }
 }
 
@@ -231,10 +268,14 @@ where
     A: Asset,
     A::Data: Into<Result<A, BoxedErr>>,
 {
-    type SystemData = (FetchMut<'a, AssetStorage<A>>, Fetch<'a, Errors>);
+    type SystemData = (
+        FetchMut<'a, AssetStorage<A>>,
+        Fetch<'a, Arc<ThreadPool>>,
+        Fetch<'a, Errors>,
+    );
 
-    fn run(&mut self, (mut storage, errors): Self::SystemData) {
-        storage.process(Into::into, &errors);
+    fn run(&mut self, (mut storage, pool, errors): Self::SystemData) {
+        storage.process(Into::into, &errors, &**pool);
     }
 }
 

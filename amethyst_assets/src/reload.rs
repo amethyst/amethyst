@@ -8,8 +8,12 @@ use {Asset, BoxedErr, Format, Source};
 pub trait Reload<A: Asset>: Send + Sync + 'static {
     /// Checks if a reload is necessary.
     fn needs_reload(&self) -> bool;
-    /// Reloads the asset
-    fn reload(self) -> Result<(A::Data, Option<Box<Reload<A>>>), BoxedErr>;
+    /// Returns the asset name.
+    fn name(&self) -> String;
+    /// Returns the format name.
+    fn format(&self) -> String;
+    /// Reloads the asset.
+    fn reload(self: Box<Self>) -> Result<(A::Data, Option<Box<Reload<A>>>), BoxedErr>;
 }
 
 /// An implementation of `Reload` which just stores the modification time
@@ -24,8 +28,13 @@ pub struct SingleFile<A: Asset, F: Format<A>> {
 
 impl<A: Asset, F: Format<A>> SingleFile<A, F> {
     /// Creates a new `SingleFile` reload object.
-    pub fn new(format: F, modified: u64, options: F::Options,
-               path: String, source: Arc<Source>) -> Self {
+    pub fn new(
+        format: F,
+        modified: u64,
+        options: F::Options,
+        path: String,
+        source: Arc<Source>,
+    ) -> Self {
         SingleFile {
             format,
             modified,
@@ -46,7 +55,24 @@ where
         self.modified != 0 && (self.source.modified(&self.path).unwrap_or(0) > self.modified)
     }
 
-    fn reload(self) -> Result<(A::Data, Option<Box<Reload<A>>>), BoxedErr> {
-        self.format.import(self.path, self.source, self.options, true)
+    fn reload(self: Box<Self>) -> Result<(A::Data, Option<Box<Reload<A>>>), BoxedErr> {
+        let this: SingleFile<_, _> = *self;
+        let SingleFile {
+            format,
+            path,
+            source,
+            options,
+            ..
+        } = this;
+
+        format.import(path, source, options, true)
+    }
+
+    fn name(&self) -> String {
+        self.path.clone()
+    }
+
+    fn format(&self) -> String {
+        F::NAME.to_owned()
     }
 }

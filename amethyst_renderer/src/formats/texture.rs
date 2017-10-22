@@ -150,11 +150,7 @@ impl SimpleFormat<Texture> for JpgFormat {
 
     type Options = TextureMetadata;
 
-    fn import(
-        &self,
-        bytes: Vec<u8>,
-        options: TextureMetadata,
-    ) -> Result<TextureData, BoxedErr> {
+    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData, BoxedErr> {
         self.from_data(bytes, options)
     }
 }
@@ -181,11 +177,7 @@ impl SimpleFormat<Texture> for PngFormat {
 
     type Options = TextureMetadata;
 
-    fn import(
-        &self,
-        bytes: Vec<u8>,
-        options: TextureMetadata,
-    ) -> Result<TextureData, BoxedErr> {
+    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData, BoxedErr> {
         self.from_data(bytes, options)
     }
 }
@@ -199,11 +191,7 @@ impl SimpleFormat<Texture> for BmpFormat {
 
     type Options = TextureMetadata;
 
-    fn import(
-        &self,
-        bytes: Vec<u8>,
-        options: TextureMetadata,
-    ) -> Result<TextureData, BoxedErr> {
+    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData, BoxedErr> {
         imagefmt::bmp::read(&mut Cursor::new(bytes), ColFmt::RGBA)
             .map(|raw| TextureData::Image(ImageData { raw }, options))
             .map_err(BoxedErr::new)

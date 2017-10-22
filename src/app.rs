@@ -338,6 +338,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
         let reader_id = events.register_reader();
         world.add_resource(events);
         world.add_resource(Errors::new());
+        world.add_resource(pool.clone());
 
         Ok(ApplicationBuilder {
             disp_builder: DispatcherBuilder::new(),

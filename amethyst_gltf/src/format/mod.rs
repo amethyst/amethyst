@@ -105,7 +105,7 @@ impl Format<GltfSceneAsset> for GltfSceneFormat {
         name: String,
         source: Arc<Source>,
         options: GltfSceneOptions,
-        _create_reload: bool
+        _create_reload: bool,
     ) -> Result<(GltfSceneAsset, Option<Box<Reload<GltfSceneAsset>>>), BoxedErr> {
         let gltf = load_gltf(source, &name, options).map_err(|err| BoxedErr::new(err))?;
         if gltf.default_scene.is_some() || gltf.scenes.len() == 1 {
