@@ -20,7 +20,6 @@ pub struct LocalTransform {
 impl LocalTransform {
     /// Rotate to look at a point in space (without rolling)
     pub fn look_at(&mut self, orientation: &Orientation, position: Vector3<f32>) -> &mut Self {
-        let cam_quat = Quaternion::from(self.rotation);
         let pos_vec = Vector3::from(self.translation);
 
         self.rotation = Quaternion::look_at(position - pos_vec, orientation.up.into()).into();
@@ -40,6 +39,7 @@ impl LocalTransform {
             z: [0.0, 0.0, self.scale[2]].into(),
         };
         let mut matrix: Matrix4<f32> = (&quat * scale).into();
+
         matrix.w = Vector3::from(self.translation).extend(1.0f32);
         matrix.into()
     }
@@ -137,7 +137,6 @@ impl LocalTransform {
     /// Set the position.
     pub fn set_position(&mut self, position: Point3<f32>) -> &mut Self {
         self.translation = position.into();
-
         self
     }
 
