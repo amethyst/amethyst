@@ -64,6 +64,9 @@ fn main() {
         &storage,
     );
 
+    // Hot-reload every three seconds.
+    let strategy = HotReloadStrategy::every(3);
+
     // Game loop
     loop {
         // If loading is done, end the game loop and print the asset
@@ -82,6 +85,7 @@ fn main() {
             },
             &errors,
             &*pool,
+            Some(&strategy),
         );
 
         errors.print_and_exit();

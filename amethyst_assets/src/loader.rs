@@ -26,7 +26,7 @@ impl Loader {
     {
         Loader {
             directory: Arc::new(Directory::new(directory)),
-            hot_reload: true, // TODO: allow disabling
+            hot_reload: true,
             pool,
             sources: Default::default(),
         }
@@ -40,6 +40,15 @@ impl Loader {
     {
         self.sources
             .insert(id.into(), Arc::new(source) as Arc<Source>);
+    }
+
+    /// If set to `true`, this `Loader` will ask formats to
+    /// generate "reload instructions" which *allow* reloading.
+    /// Calling `set_hot_reload(true)` does not actually enable
+    /// hot reloading; this is controlled by the `HotReloadStrategy`
+    /// resource.
+    pub fn set_hot_reload(&mut self, value: bool) {
+        self.hot_reload = value;
     }
 
     /// Loads an asset with a given format from the default (directory) source.

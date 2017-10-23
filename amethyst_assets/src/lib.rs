@@ -24,7 +24,7 @@ pub use asset::{Asset, Format, FormatValue, SimpleFormat};
 pub use error::AssetError;
 pub use loader::Loader;
 pub use progress::{Completion, Progress, ProgressCounter, Tracker};
-pub use reload::{Reload, SingleFile};
+pub use reload::{HotReloadStrategy, Reload, SingleFile};
 pub use source::{Directory, Source};
 pub use storage::{AssetStorage, Handle, Processor, WeakHandle};
 

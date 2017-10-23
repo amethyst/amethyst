@@ -12,7 +12,7 @@ use specs::common::Errors;
 use BoxedErr;
 use asset::{Asset, FormatValue};
 use error::AssetError;
-use reload::Reload;
+use reload::{HotReloadStrategy, Reload};
 
 /// An `Allocator`, holding a counter for producing unique IDs.
 #[derive(Debug, Default)]
@@ -37,12 +37,16 @@ pub struct AssetStorage<A: Asset> {
     handle_alloc: Allocator,
     last_reload: Instant,
     pub(crate) processed: Arc<MsQueue<Processed<A>>>,
+    reload_counter: u64,
     reloads: Vec<(WeakHandle<A>, Box<Reload<A>>)>,
     unused_handles: MsQueue<Handle<A>>,
 }
 
-impl<A: Asset> Default for AssetStorage<A> {
-    fn default() -> Self {
+impl<A: Asset> AssetStorage<A> {
+    /// Creates a new asset storage.
+    pub fn new() -> Self {
+        use std::u8::MAX;
+
         AssetStorage {
             assets: Default::default(),
             bitset: Default::default(),
@@ -50,6 +54,7 @@ impl<A: Asset> Default for AssetStorage<A> {
             handle_alloc: Default::default(),
             last_reload: Instant::now(),
             processed: Arc::new(MsQueue::new()),
+            reload_counter: MAX as u64 + 1,
             reloads: Vec::new(),
             unused_handles: MsQueue::new(),
         }
@@ -124,8 +129,13 @@ impl<A: Asset> AssetStorage<A> {
     }
 
     /// Process finished asset data and maintain the storage.
-    pub fn process<F>(&mut self, f: F, errors: &Errors, pool: &ThreadPool)
-    where
+    pub fn process<F>(
+        &mut self,
+        f: F,
+        errors: &Errors,
+        pool: &ThreadPool,
+        strategy: Option<&HotReloadStrategy>,
+    ) where
         F: FnMut(A::Data) -> Result<A, BoxedErr>,
     {
         self.process_custom_drop(f, |_| {}, errors);
@@ -230,8 +240,15 @@ impl<A: Asset> AssetStorage<A> {
             });
         }
 
-        // Reload every seconds
-        // TODO: more configuration
+        if strategy
+            .map(|s| s.needs_reload(&mut self.reload_counter))
+            .unwrap_or(false)
+        {
+            self.hot_reload(pool);
+        }
+    }
+
+    fn hot_reload(&mut self, pool: &ThreadPool) {
         let elapsed = self.last_reload.elapsed().as_secs();
 
         if elapsed >= 1 {
@@ -303,10 +320,18 @@ where
         FetchMut<'a, AssetStorage<A>>,
         Fetch<'a, Arc<ThreadPool>>,
         Fetch<'a, Errors>,
+        Option<Fetch<'a, HotReloadStrategy>>,
     );
 
-    fn run(&mut self, (mut storage, pool, errors): Self::SystemData) {
-        storage.process(Into::into, &errors, &**pool);
+    fn run(&mut self, (mut storage, pool, errors, strategy): Self::SystemData) {
+        use std::ops::Deref;
+
+        storage.process(
+            Into::into,
+            &errors,
+            &**pool,
+            strategy.as_ref().map(Deref::deref),
+        );
     }
 }
 

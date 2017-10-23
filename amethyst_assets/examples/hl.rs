@@ -99,10 +99,16 @@ impl<'a> System<'a> for RenderingSystem {
     type SystemData = (
         FetchMut<'a, AssetStorage<MeshAsset>>,
         Fetch<'a, Errors>,
-        Fetch<'a, Arc<ThreadPool>>, /* texture storage, transforms, .. */
+        Fetch<'a, Arc<ThreadPool>>,
+        Option<Fetch<'a, HotReloadStrategy>>,
+        /* texture storage, transforms, .. */
     );
 
-    fn run(&mut self, (mut mesh_storage, errors, pool): Self::SystemData) {
+    fn run(&mut self, (mut mesh_storage, errors, pool, strategy): Self::SystemData) {
+        use std::ops::Deref;
+
+        let strategy = strategy.as_ref().map(Deref::deref);
+
         mesh_storage.process(
             |vertex_data| {
                 // Upload vertex data to GPU and give back an asset
@@ -111,6 +117,7 @@ impl<'a> System<'a> for RenderingSystem {
             },
             &errors,
             &**pool,
+            strategy,
         );
     }
 }
