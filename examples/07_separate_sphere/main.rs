@@ -84,7 +84,7 @@ fn main() {
     }
 }
 
-fn gen_sphere(u: usize, v: usize) -> VertexBufferCombination {
+fn gen_sphere(u: usize, v: usize) -> ComboMeshCreator {
     let positions = SphereUV::new(u, v)
         .vertex(|(x, y, z)| [x, y, z])
         .triangulate()
@@ -107,7 +107,7 @@ fn gen_sphere(u: usize, v: usize) -> VertexBufferCombination {
         .collect::<Vec<_>>();
 
     println!("{:?}, {:?}, {:?}", positions, tex_coords, normals);
-    (positions, None, Some(tex_coords), Some(normals), None)
+    (positions, None, Some(tex_coords), Some(normals), None).into()
 }
 
 /// This function initialises a sphere and adds it to the world.
