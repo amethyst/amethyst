@@ -11,6 +11,8 @@ pub struct Time {
     pub fixed_step: Duration,
     /// Time at which `State::fixed_update` was last called.
     pub last_fixed_update: Instant,
+    /// The total number of frames that have been played in this session.
+    pub frame_number: u64,
 }
 
 impl Default for Time {
@@ -19,6 +21,7 @@ impl Default for Time {
             delta_time: Duration::from_secs(0),
             fixed_step: Duration::new(0, 16666666),
             last_fixed_update: Instant::now(),
+            frame_number: 0,
         }
     }
 }

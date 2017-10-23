@@ -154,6 +154,7 @@ impl<'a, 'b> Application<'a, 'b> {
     fn advance_frame(&mut self) {
         {
             let mut time = self.engine.world.write_resource::<Time>();
+            time.frame_number += 1;
             time.delta_time = self.time.delta_time;
             time.fixed_step = self.time.fixed_step;
             time.last_fixed_update = self.time.last_fixed_update;
