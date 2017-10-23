@@ -57,7 +57,7 @@ extern crate gfx_device_vulkan;
 extern crate gfx_window_vulkan;
 
 pub use bundle::RenderBundle;
-pub use cam::{Camera, Projection};
+pub use cam::{ActiveCamera, Camera, Projection};
 pub use color::Rgba;
 pub use config::DisplayConfig;
 pub use formats::{build_mesh_with_combo, create_mesh_asset, create_texture_asset, BmpFormat,

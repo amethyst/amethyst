@@ -1,6 +1,7 @@
 //! Camera type with support for perspective and orthographic projections.
 
-use cgmath::{Deg, Matrix4, Ortho, PerspectiveFov, Point3, Vector3};
+use cgmath::{Deg, Matrix4, Ortho, PerspectiveFov};
+use specs::{Component, DenseVecStorage, Entity};
 
 /// The projection mode of a `Camera`.
 ///
@@ -52,46 +53,29 @@ impl From<Projection> for Matrix4<f32> {
     }
 }
 
+impl From<Projection> for Camera {
+    fn from(proj: Projection) -> Self {
+        Self { proj: proj.into() }
+    }
+}
+
 /// Camera struct.
 ///
 /// TODO: Add more convenience methods, refine API.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct Camera {
-    /// Location of the camera in three-dimensional space.
-    pub eye: Point3<f32>,
     /// Graphical projection of the camera.
     pub proj: Matrix4<f32>,
-    /// Forward vector of the camera.
-    pub forward: Vector3<f32>,
-    /// Right vector of the camera.
-    pub right: Vector3<f32>,
-    /// Upward elevation vector of the camera.
-    pub up: Vector3<f32>,
 }
 
 impl Camera {
-    /// Create a camera from the given projection, and with the view matrix as multiplicative identity.
-    pub fn with_identity_view<P>(proj: P) -> Self
-    where
-        P: Into<Matrix4<f32>>,
-    {
-        use cgmath::EuclideanSpace;
-        Self {
-            eye: Point3::origin(),
-            proj: proj.into(),
-            forward: -Vector3::unit_z(),
-            right: Vector3::unit_x(),
-            up: Vector3::unit_y(),
-        }
-    }
-
     /// Create a normalized camera for 2D.
     ///
     /// Will use an orthographic projection with lower left corner being (-1., -1.) and
     /// upper right (1., 1.).
     /// View transformation will be multiplicative identity.
     pub fn standard_2d() -> Self {
-        Self::with_identity_view(Projection::orthographic(-1., 1., 1., -1.))
+        Self::from(Projection::orthographic(-1., 1., 1., -1.))
     }
 
     /// Create a standard camera for 3D.
@@ -101,23 +85,18 @@ impl Camera {
     /// View transformation will be multiplicative identity.
     pub fn standard_3d(width: f32, height: f32) -> Self {
         use cgmath::Deg;
-        Self::with_identity_view(Projection::perspective(width / height, Deg(60.)))
-    }
-
-    /// Calculates the view matrix from the given data.
-    pub fn to_view_matrix(&self) -> Matrix4<f32> {
-        Matrix4::look_at(self.eye, self.eye + self.forward, self.up)
+        Self::from(Projection::perspective(width / height, Deg(60.)))
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+impl Component for Camera {
+    type Storage = DenseVecStorage<Self>;
+}
 
-    #[test]
-    fn test_identity_cam() {
-        use cgmath::SquareMatrix;
-        let cam = Camera::standard_2d();
-        assert!(cam.to_view_matrix().is_identity());
-    }
+/// Active camera resource, used by the renderer to choose which camera to get the view matrix from.
+/// If no active camera is found, the first camera will be used as a fallback.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ActiveCamera {
+    /// Camera entity
+    pub entity: Entity,
 }

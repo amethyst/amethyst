@@ -5,14 +5,14 @@ use std::mem;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::transform::Transform;
-use cgmath::{Matrix4, One};
+use cgmath::{Matrix4, One, SquareMatrix};
 use gfx::pso::buffer::ElemStride;
 use rayon::iter::ParallelIterator;
 use rayon::iter::internal::UnindexedConsumer;
 use specs::{Fetch, Join, ParJoin, ReadStorage};
 
 use super::*;
-use cam::Camera;
+use cam::{ActiveCamera, Camera};
 use error::Result;
 use light::{DirectionalLight, Light, PointLight};
 use mesh::{Mesh, MeshHandle};
@@ -46,7 +46,8 @@ where
     V: Query<(Position, Normal, TexCoord)>,
 {
     type Data = (
-        Option<Fetch<'a, Camera>>,
+        Option<Fetch<'a, ActiveCamera>>,
+        ReadStorage<'a, Camera>,
         Fetch<'a, AmbientColor>,
         Fetch<'a, AssetStorage<Mesh>>,
         Fetch<'a, AssetStorage<Texture>>,
@@ -89,9 +90,10 @@ where
     fn apply<'a, 'b: 'a>(
         &'a mut self,
         supplier: Supplier<'a>,
-        (camera, ambient, mesh_storage, tex_storage, material_defaults,
+        (active,camera, ambient, mesh_storage, tex_storage, material_defaults,
             mesh, material, global, light): (
-            Option<Fetch<'a, Camera>>,
+            Option<Fetch<'a, ActiveCamera>>,
+            ReadStorage<'a, Camera>,
             Fetch<'a, AmbientColor>,
             Fetch<'a, AssetStorage<Mesh>>,
             Fetch<'a, AssetStorage<Texture>>,
@@ -103,6 +105,7 @@ where
         ),
 ) -> DrawShadedApply<'a, V>{
         DrawShadedApply {
+            active,
             camera,
             mesh_storage,
             tex_storage,
@@ -119,7 +122,8 @@ where
 }
 
 pub struct DrawShadedApply<'a, V> {
-    camera: Option<Fetch<'a, Camera>>,
+    active: Option<Fetch<'a, ActiveCamera>>,
+    camera: ReadStorage<'a, Camera>,
     ambient: Fetch<'a, AmbientColor>,
     mesh_storage: Fetch<'a, AssetStorage<Mesh>>,
     tex_storage: Fetch<'a, AssetStorage<Texture>>,
@@ -143,6 +147,7 @@ where
         C: UnindexedConsumer<Self::Item>,
     {
         let DrawShadedApply {
+            active,
             camera,
             mesh_storage,
             tex_storage,
@@ -156,7 +161,14 @@ where
             ..
         } = self;
 
-        let camera = &camera;
+        let camera: Option<(&Camera, &Transform)> = active
+            .and_then(|a| {
+                let cam = camera.get(a.entity);
+                let transform = global.get(a.entity);
+                cam.into_iter().zip(transform.into_iter()).next()
+            })
+            .or_else(|| (&camera, &global).join().next());
+
         let ambient = &ambient;
         let light = &light;
         let mesh_storage = &mesh_storage;
@@ -176,10 +188,10 @@ where
 
                         let vertex_args = camera
                             .as_ref()
-                            .map(|cam| {
+                            .map(|&(ref cam, ref transform)| {
                                 VertexArgs {
                                     proj: cam.proj.into(),
-                                    view: cam.to_view_matrix().into(),
+                                    view: Matrix4::from(transform.0).invert().unwrap().into(),
                                     model: *global.as_ref(),
                                 }
                             })
@@ -235,7 +247,9 @@ where
                             "camera_position",
                             camera
                                 .as_ref()
-                                .map(|cam| cam.eye.into())
+                                .map(|&(_, ref trans)| {
+                                    [trans.0[3][0], trans.0[3][1], trans.0[3][2]]
+                                })
                                 .unwrap_or([0.0; 3]),
                         );
 

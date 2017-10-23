@@ -11,14 +11,14 @@ use amethyst::assets::Loader;
 use amethyst::config::Config;
 use amethyst::core::timing::Time;
 use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
-use amethyst::ecs::{Fetch, FetchMut, Join, System, World, WriteStorage};
+use amethyst::ecs::{Fetch, FetchMut, Join, ReadStorage, System, World, WriteStorage};
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, DisplayConfig as DisplayConfig,
                          DrawShaded, ElementState, Event, KeyboardInput, Light, Material,
                          MaterialDefaults, MeshHandle, ObjFormat, Pipeline, PngFormat, PointLight,
                          PosNormTex, Projection, RenderBundle, RenderSystem, Rgba, Stage,
                          VirtualKeyCode, WindowEvent};
-use cgmath::{Deg, Euler, Quaternion};
+use cgmath::{Deg, Euler, Point3, Quaternion, Rad, Rotation, Rotation3};
 
 struct DemoState {
     light_angle: f32,
@@ -37,11 +37,12 @@ impl<'a> System<'a> for ExampleSystem {
     type SystemData = (
         WriteStorage<'a, Light>,
         Fetch<'a, Time>,
-        FetchMut<'a, Camera>,
+        ReadStorage<'a, Camera>,
+        WriteStorage<'a, LocalTransform>,
         FetchMut<'a, DemoState>,
     );
 
-    fn run(&mut self, (mut lights, time, mut camera, mut state): Self::SystemData) {
+    fn run(&mut self, (mut lights, time, camera, mut transforms, mut state): Self::SystemData) {
         let delta_time = time.delta_time.subsec_nanos() as f32 / 1.0e9;
 
         let light_angular_velocity = -1.0;
@@ -49,15 +50,20 @@ impl<'a> System<'a> for ExampleSystem {
         let light_z = 6.0;
 
         let camera_angular_velocity = 0.1;
-        let camera_orbit_radius = 20.0;
 
         state.light_angle += light_angular_velocity * delta_time;
         state.camera_angle += camera_angular_velocity * delta_time;
 
-        let target = camera.eye + camera.forward;
-        camera.eye[0] = camera_orbit_radius * state.camera_angle.cos();
-        camera.eye[1] = camera_orbit_radius * state.camera_angle.sin();
-        camera.forward = target - camera.eye;
+        let delta_rot = Quaternion::from_angle_z(Rad(camera_angular_velocity * delta_time));
+        for (_, transform) in (&camera, &mut transforms).join() {
+            // rotate the camera, using the origin as a pivot point
+            transform.translation = delta_rot
+                .rotate_point(Point3::from(transform.translation))
+                .into();
+            // add the delta rotation for the frame to the total rotation (quaternion multiplication
+            // is the same as rotational addition)
+            transform.rotation = (delta_rot * Quaternion::from(transform.rotation)).into();
+        }
 
         for point_light in (&mut lights).join().filter_map(
             |light| if let Light::Point(ref mut point_light) = *light {
@@ -371,12 +377,13 @@ fn run() -> Result<(), Error> {
 }
 
 fn initialise_camera(world: &mut World) {
-    use cgmath::Deg;
-    world.add_resource(Camera {
-        eye: [0.0, -20.0, 10.0].into(),
-        proj: Projection::perspective(1.0, Deg(60.0)).into(),
-        forward: [0.0, 20.0, -5.0].into(),
-        right: [1.0, 0.0, 0.0].into(),
-        up: [0.0, 0.0, 1.0].into(),
-    });
+    let mut local = LocalTransform::default();
+    local.translation = [0., -20., 10.];
+    local.rotation = Quaternion::from_angle_x(Deg(75.)).into();
+    world
+        .create_entity()
+        .with(Camera::from(Projection::perspective(1.3, Deg(60.0))))
+        .with(local)
+        .with(Transform::default())
+        .build();
 }

@@ -92,13 +92,15 @@ impl State for Example {
         engine.world.create_entity().with(light2).build();
 
         println!("Put camera");
-        engine.world.add_resource(Camera {
-            eye: [0.0, 0.0, -12.0].into(),
-            proj: Projection::perspective(1.3, Deg(60.0)).into(),
-            forward: [0.0, 0.0, 1.0].into(),
-            right: [1.0, 0.0, 0.0].into(),
-            up: [0.0, 1.0, 0.0].into(),
-        });
+
+        let transform =
+            Matrix4::from_translation([0.0, 0.0, -12.0].into()) * Matrix4::from_angle_y(Deg(180.));
+        engine
+            .world
+            .create_entity()
+            .with(Camera::from(Projection::perspective(1.3, Deg(60.0))))
+            .with(Transform(transform.into()))
+            .build();
     }
 
     fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
