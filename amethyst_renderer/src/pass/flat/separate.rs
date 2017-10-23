@@ -21,7 +21,8 @@ use types::Encoder;
 use vertex::{Position, Separate, TexCoord, VertexFormat};
 
 /// Draw mesh without lighting
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Derivative, Clone, Debug, PartialEq)]
+#[derivative(Default(bound = "Self: Pass"))]
 pub struct DrawFlatSeparate;
 
 impl DrawFlatSeparate
@@ -30,7 +31,7 @@ where
 {
     /// Create instance of `DrawFlat` pass
     pub fn new() -> Self {
-        DrawFlatSeparate {}
+        Default::default()
     }
 }
 

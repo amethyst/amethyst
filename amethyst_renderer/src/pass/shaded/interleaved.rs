@@ -26,7 +26,8 @@ use vertex::{Normal, Position, Query, TexCoord};
 
 /// Draw mesh with simple lighting technique
 /// `V` is `VertexFormat`
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Derivative, Clone, Debug, PartialEq)]
+#[derivative(Default(bound = "V: Query<(Position, Normal, TexCoord)>"))]
 pub struct DrawShaded<V> {
     _pd: PhantomData<V>,
 }
@@ -37,7 +38,7 @@ where
 {
     /// Create instance of `DrawShaded` pass
     pub fn new() -> Self {
-        DrawShaded { _pd: PhantomData }
+        Default::default()
     }
 }
 

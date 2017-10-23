@@ -17,6 +17,7 @@ travis-ci = { repository = "amethyst/amethyst" }
 [dependencies]
 amethyst_core = { path = "../amethyst_core/", version = "0.1.0" }
 amethyst_config = { path = "../amethyst_config/", version = "0.4.0" }
+derivative = "1.0"
 winit = "0.7"
 fnv = "1.0"
 serde = { version = "1", features = ["serde_derive"] }

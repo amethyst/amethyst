@@ -12,12 +12,13 @@ use specs::{Entity, Fetch, Join, ReadStorage, System, WriteStorage};
 use components::{AudioEmitter, AudioListener};
 
 /// Syncs 3D transform data with the audio engine to provide 3D audio.
+#[derive(Default)]
 pub struct AudioSystem;
 
 impl AudioSystem {
     /// Produces a new AudioSystem that uses the given listener.
     pub fn new() -> AudioSystem {
-        AudioSystem
+        Default::default()
     }
 }
 

@@ -26,14 +26,7 @@ pub struct TransformSystem {
 impl TransformSystem {
     /// Creates a new transform processor.
     pub fn new() -> TransformSystem {
-        TransformSystem {
-            indices: HashMap::default(),
-            sorted: Vec::new(),
-            init: BitSet::new(),
-            frame_init: BitSet::new(),
-            dead: HashSet::default(),
-            remove_parent: Vec::new(),
-        }
+        Default::default()
     }
 
     fn remove(&mut self, index: usize) {

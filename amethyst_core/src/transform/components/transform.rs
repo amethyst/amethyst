@@ -44,6 +44,13 @@ impl Default for Transform {
     }
 }
 
+impl Transform {
+    /// Creates a new `Transform` in the form of an identity matrix.
+    pub fn new() -> Self {
+        Default::default()
+    }
+}
+
 impl From<[[f32; 4]; 4]> for Transform {
     fn from(matrix: [[f32; 4]; 4]) -> Self {
         Transform(matrix)

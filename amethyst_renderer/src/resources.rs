@@ -17,6 +17,7 @@ impl AsRef<Rgba> for AmbientColor {
 
 /// This specs resource with id 0 permits sending commands to the
 /// renderer internal window.
+#[derive(Default)]
 pub struct WindowMessages {
     // It's unlikely we'll get more than one command per frame
     // 1 Box also makes this the same size as a Vec, so this costs
@@ -31,9 +32,7 @@ pub struct WindowMessages {
 impl WindowMessages {
     /// Create a new `WindowMessages`
     pub fn new() -> Self {
-        Self {
-            queue: SmallVec::new(),
-        }
+        Default::default()
     }
 
     /// Execute this closure on the `winit::Window` next frame.

@@ -29,6 +29,7 @@ use {Bindings, InputEvent, InputHandler, InputSystem};
 ///
 /// No errors returned from this bundle.
 ///
+#[derive(Default)]
 pub struct InputBundle<AX, AC>
 where
     AX: Hash + Eq,
@@ -44,7 +45,7 @@ where
 {
     /// Create a new input bundle with no bindings
     pub fn new() -> Self {
-        Self { bindings: None }
+        Default::default()
     }
 
     /// Use the provided bindings with the `InputHandler`
