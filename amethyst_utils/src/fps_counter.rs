@@ -1,7 +1,5 @@
 //! Util Resources
 
-use std::time::Duration;
-
 use amethyst_core::timing::{duration_to_nanos, Time};
 use specs::{Fetch, FetchMut, System};
 

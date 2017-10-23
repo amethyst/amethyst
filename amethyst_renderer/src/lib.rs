@@ -56,36 +56,47 @@ extern crate gfx_device_vulkan;
 #[cfg(feature = "vulkan")]
 extern crate gfx_window_vulkan;
 
-pub use cam::{Camera, Projection};
+pub use bundle::RenderBundle;
+pub use cam::{ActiveCamera, Camera, Projection};
 pub use color::Rgba;
-pub use config::Config;
-pub use error::{Error, Result};
-pub use light::Light;
-pub use mesh::{Mesh, MeshBuilder, MeshHandle};
+pub use config::DisplayConfig;
+pub use formats::{build_mesh_with_combo, create_mesh_asset, create_texture_asset, BmpFormat,
+                  ImageData, ImageError, JpgFormat, MeshData, ObjError, ObjFormat, PngFormat,
+                  TextureData, TextureMetadata, ComboMeshCreator, MeshCreator};
+pub use input::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
+pub use light::{DirectionalLight, Light, PointLight, SpotLight, SunLight};
+pub use mesh::{vertex_data, Mesh, MeshHandle, VertexBuffer};
 pub use mtl::{Material, MaterialDefaults};
-pub use pipe::{PipelineBuilder, PolyPipeline, PolyStage, Target};
+pub use pass::{DrawFlat, DrawFlatSeparate, DrawPbm, DrawPbmSeparate, DrawShaded,
+               DrawShadedSeparate};
+pub use pipe::{ColorBuffer, DepthBuffer, DepthMode, Effect, EffectBuilder, NewEffect, Pipeline,
+               PipelineApply, PipelineBuild, PipelineBuilder, PipelineData, PolyPipeline,
+               PolyStage, PolyStages, Stage, StageBuilder, Target, TargetBuilder, Targets};
 pub use renderer::Renderer;
+pub use resources::{AmbientColor, ScreenDimensions, WindowMessages};
+pub use system::RenderSystem;
 pub use tex::{Texture, TextureBuilder, TextureHandle};
 pub use types::{Encoder, Factory};
-pub use vertex::VertexFormat;
+pub use vertex::{Attribute, AttributeFormat, Attributes, Color, Normal, PosColor, PosNormTangTex,
+                 PosNormTex, PosTex, Position, Query, Separate, Tangent, TexCoord,
+                 VertexBufferCombination, VertexFormat, With};
 
-pub mod formats;
-pub mod light;
-pub mod mesh;
-pub mod pass;
-pub mod prelude;
+pub mod error;
 pub mod pipe;
-pub mod vertex;
-pub mod resources;
-pub mod system;
-pub mod bundle;
-pub mod input;
 
+mod bundle;
 mod cam;
 mod color;
 mod config;
-mod error;
+mod formats;
+mod input;
+mod light;
+mod mesh;
 mod mtl;
+mod pass;
 mod renderer;
+mod resources;
+mod system;
 mod tex;
 mod types;
+mod vertex;

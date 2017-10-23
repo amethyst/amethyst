@@ -2,15 +2,15 @@
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::transform::Transform;
-use cgmath::{Matrix4, One};
+use cgmath::{Matrix4, One, SquareMatrix};
 use gfx::pso::buffer::ElemStride;
 
 use rayon::iter::ParallelIterator;
 use rayon::iter::internal::UnindexedConsumer;
-use specs::{Fetch, ParJoin, ReadStorage};
+use specs::{Fetch, Join, ParJoin, ReadStorage};
 
 use super::*;
-use cam::Camera;
+use cam::{ActiveCamera, Camera};
 use error::Result;
 use mesh::{Mesh, MeshHandle};
 use mtl::{Material, MaterialDefaults};
@@ -37,7 +37,8 @@ where
 
 impl<'a> PassData<'a> for DrawFlatSeparate {
     type Data = (
-        Option<Fetch<'a, Camera>>,
+        Option<Fetch<'a, ActiveCamera>>,
+        ReadStorage<'a, Camera>,
         Fetch<'a, AssetStorage<Mesh>>,
         Fetch<'a, AssetStorage<Texture>>,
         Fetch<'a, MaterialDefaults>,
@@ -75,8 +76,9 @@ impl Pass for DrawFlatSeparate {
     fn apply<'a, 'b: 'a>(
         &'a mut self,
         supplier: Supplier<'a>,
-        (camera, mesh_storage, tex_storage, material_defaults, mesh, material, global): (
-            Option<Fetch<'b, Camera>>,
+        (active, camera, mesh_storage, tex_storage, material_defaults, mesh, material, global): (
+            Option<Fetch<'a, ActiveCamera>>,
+            ReadStorage<'a, Camera>,
             Fetch<'a, AssetStorage<Mesh>>,
             Fetch<'a, AssetStorage<Texture>>,
             Fetch<'a, MaterialDefaults>,
@@ -86,6 +88,7 @@ impl Pass for DrawFlatSeparate {
         ),
     ) -> DrawFlatSeparateApply<'a> {
         DrawFlatSeparateApply {
+            active,
             camera,
             mesh_storage,
             tex_storage,
@@ -99,7 +102,8 @@ impl Pass for DrawFlatSeparate {
 }
 
 pub struct DrawFlatSeparateApply<'a> {
-    camera: Option<Fetch<'a, Camera>>,
+    active: Option<Fetch<'a, ActiveCamera>>,
+    camera: ReadStorage<'a, Camera>,
     mesh_storage: Fetch<'a, AssetStorage<Mesh>>,
     tex_storage: Fetch<'a, AssetStorage<Texture>>,
     material_defaults: Fetch<'a, MaterialDefaults>,
@@ -117,6 +121,7 @@ impl<'a> ParallelIterator for DrawFlatSeparateApply<'a> {
         C: UnindexedConsumer<Self::Item>,
     {
         let DrawFlatSeparateApply {
+            active,
             camera,
             mesh_storage,
             tex_storage,
@@ -128,7 +133,14 @@ impl<'a> ParallelIterator for DrawFlatSeparateApply<'a> {
             ..
         } = self;
 
-        let camera = &camera;
+        let camera: Option<(&Camera, &Transform)> = active
+            .and_then(|a| {
+                let cam = camera.get(a.entity);
+                let transform = global.get(a.entity);
+                cam.into_iter().zip(transform.into_iter()).next()
+            })
+            .or_else(|| (&camera, &global).join().next());
+
         let mesh_storage = &mesh_storage;
         let tex_storage = &tex_storage;
         let material_defaults = &material_defaults;
@@ -152,10 +164,10 @@ impl<'a> ParallelIterator for DrawFlatSeparateApply<'a> {
 
                         let vertex_args = camera
                             .as_ref()
-                            .map(|cam| {
+                            .map(|&(ref cam, ref transform)| {
                                 VertexArgs {
                                     proj: cam.proj.into(),
-                                    view: cam.to_view_matrix().into(),
+                                    view: Matrix4::from(transform.0).invert().unwrap().into(),
                                     model: *global.as_ref(),
                                 }
                             })

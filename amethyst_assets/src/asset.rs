@@ -1,6 +1,8 @@
 use std::sync::Arc;
 
-use {BoxedErr, Source};
+use specs::UnprotectedStorage;
+
+use {BoxedErr, Handle, Source};
 
 /// One of the three core traits of this crate.
 ///
@@ -19,6 +21,9 @@ use {BoxedErr, Source};
 pub trait Asset: Send + Sync + 'static {
     /// The `Data` type the asset can be created from.
     type Data: Send + Sync + 'static;
+
+    /// The ECS storage type to be used. You'll want to use `DenseVecStorage` in most cases.
+    type HandleStorage: UnprotectedStorage<Handle<Self>> + Send + Sync;
 }
 
 /// A format, providing a conversion from bytes to asset data, which is then

@@ -1,16 +1,18 @@
 use std::error::Error;
 use std::fmt::{self, Display, Formatter};
+use std::fmt::Debug;
 use std::string::FromUtf8Error;
 use std::sync::Arc;
 
 use amethyst_assets::{Asset, BoxedErr, Format, Source};
 use cgmath::{InnerSpace, Vector3};
+use specs::DenseVecStorage;
 use wavefront_obj::ParseError;
 use wavefront_obj::obj::{parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex,
                          TextureIndex, Vertex, VertexIndex};
 
 use Renderer;
-use mesh::{Mesh, MeshBuilder};
+use mesh::{Mesh, MeshBuilder, MeshHandle};
 use vertex::*;
 
 /// Error type of `ObjFormat`
@@ -62,8 +64,8 @@ pub enum MeshData {
     /// Position, normal, tangent and texture coordinates
     PosNormTangTex(Vec<PosNormTangTex>),
 
-    /// Combination of separate vertex buffers
-    Combination(VertexBufferCombination),
+    /// Create a mesh from a given creator
+    Creator(Box<MeshCreator>),
 }
 
 impl From<Vec<PosColor>> for MeshData {
@@ -90,14 +92,18 @@ impl From<Vec<PosNormTangTex>> for MeshData {
     }
 }
 
-impl From<VertexBufferCombination> for MeshData {
-    fn from(data: VertexBufferCombination) -> Self {
-        MeshData::Combination(data)
+impl<M> From<M> for MeshData
+where
+    M: MeshCreator,
+{
+    fn from(creator: M) -> Self {
+        MeshData::Creator(Box::new(creator))
     }
 }
 
 impl Asset for Mesh {
     type Data = MeshData;
+    type HandleStorage = DenseVecStorage<MeshHandle>;
 }
 
 /// Allows loading from Wavefront files
@@ -196,7 +202,7 @@ pub fn create_mesh_asset(data: MeshData, renderer: &mut Renderer) -> Result<Mesh
             let mb = MeshBuilder::new(vertices);
             renderer.create_mesh(mb)
         }
-        MeshData::Combination(combo) => build_mesh_with_combo(combo, renderer),
+        MeshData::Creator(creator) => creator.build(renderer),
     };
 
     data.map_err(|err| BoxedErr::new(err))
@@ -205,7 +211,8 @@ pub fn create_mesh_asset(data: MeshData, renderer: &mut Renderer) -> Result<Mesh
 macro_rules! build_mesh_with_some {
     ($builder:expr, $factory:expr, $h:expr $(,$t:expr)*) => {
         match $h {
-            Some(vertices) => build_mesh_with_some!($builder.with_buffer(vertices), $factory $(,$t)*),
+            Some(vertices) => build_mesh_with_some!($builder.with_buffer(vertices),
+                                                    $factory $(,$t)*),
             None => build_mesh_with_some!($builder, $factory $(,$t)*),
         }
     };
@@ -228,4 +235,40 @@ pub fn build_mesh_with_combo(
         combo.3,
         combo.4
     )
+}
+
+/// Trait used by the asset processor to convert any user supplied mesh representation into an
+/// actual `Mesh`.
+///
+/// This allows the user to create their own vertex attributes, and have the amethyst asset and
+/// render systems be able to convert it into a `Mesh` that can be used from any applicable
+/// pass.
+pub trait MeshCreator: Send + Sync + Debug + 'static {
+    /// Build a mesh given a `Renderer`
+    fn build(self: Box<Self>, renderer: &mut Renderer) -> ::error::Result<Mesh>;
+}
+
+/// Mesh creator for `VertexBufferCombination`.
+#[derive(Debug)]
+pub struct ComboMeshCreator {
+    combo: VertexBufferCombination,
+}
+
+impl ComboMeshCreator {
+    /// Create a new combo mesh creator with the given combo
+    pub fn new(combo: VertexBufferCombination) -> Self {
+        Self { combo }
+    }
+}
+
+impl MeshCreator for ComboMeshCreator {
+    fn build(self: Box<Self>, renderer: &mut Renderer) -> ::error::Result<Mesh> {
+        build_mesh_with_combo(self.combo, renderer)
+    }
+}
+
+impl From<VertexBufferCombination> for ComboMeshCreator {
+    fn from(combo: VertexBufferCombination) -> Self {
+        Self::new(combo)
+    }
 }

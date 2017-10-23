@@ -4,7 +4,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use crossbeam::sync::MsQueue;
 use hibitset::BitSet;
-use specs::{Component, DenseVecStorage, Fetch, FetchMut, System, UnprotectedStorage, VecStorage};
+use specs::{Component, Fetch, FetchMut, System, UnprotectedStorage, VecStorage};
 use specs::common::Errors;
 
 use BoxedErr;
@@ -118,9 +118,20 @@ impl<A: Asset> AssetStorage<A> {
     }
 
     /// Process finished asset data and maintain the storage.
-    pub fn process<F>(&mut self, mut f: F, errors: &Errors)
+    pub fn process<F>(&mut self, f: F, errors: &Errors)
     where
         F: FnMut(A::Data) -> Result<A, BoxedErr>,
+    {
+
+        self.process_custom_drop(f, |_| {}, errors);
+    }
+
+    /// Process finished asset data and maintain the storage.
+    /// This calls the `drop_fn` closure for assets that were removed from the storage.
+    pub fn process_custom_drop<F, D>(&mut self, mut f: F, mut drop_fn: D, errors: &Errors)
+        where
+            D: FnMut(A),
+            F: FnMut(A::Data) -> Result<A, BoxedErr>,
     {
         while let Some(processed) = self.processed.try_pop() {
             let Processed {
@@ -154,7 +165,7 @@ impl<A: Asset> AssetStorage<A> {
             let old = self.handles.swap_remove(i);
             let id = i as u32;
             unsafe {
-                self.assets.remove(id);
+                drop_fn(self.assets.remove(id));
             }
             self.bitset.remove(id);
             self.unused_handles.push(old);
@@ -205,8 +216,9 @@ where
 /// user deals with, the actual asset (`A`) is stored
 /// in an `AssetStorage`.
 #[derive(Derivative)]
-#[derivative(Clone(bound = ""), Eq(bound = ""), Hash(bound = ""), PartialEq(bound = ""))]
-pub struct Handle<A> {
+#[derivative(Clone(bound = ""), Eq(bound = ""), Hash(bound = ""), PartialEq(bound = ""),
+             Debug(bound = ""))]
+pub struct Handle<A: ?Sized> {
     id: Arc<u32>,
     marker: PhantomData<A>,
 }
@@ -230,9 +242,9 @@ impl<A> Handle<A> {
 
 impl<A> Component for Handle<A>
 where
-    A: Send + Sync + 'static,
+    A: Asset,
 {
-    type Storage = DenseVecStorage<Self>;
+    type Storage = A::HandleStorage;
 }
 
 // TODO: may change with hot reloading

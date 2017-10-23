@@ -2,7 +2,7 @@
 
 use std::borrow::Borrow;
 
-use specs::{Component, FlaggedStorage, VecStorage};
+use specs::{Component, DenseVecStorage, FlaggedStorage};
 
 /// Performs a global transformation on the entity (transform from origin).
 ///
@@ -14,8 +14,23 @@ use specs::{Component, FlaggedStorage, VecStorage};
 #[derive(Debug, Copy, Clone)]
 pub struct Transform(pub [[f32; 4]; 4]);
 
+impl Transform {
+    /// Checks whether each `f32` of the `Transform` is finite (not NaN or inf).
+    pub fn is_finite(&self) -> bool {
+        for i in 0..4 {
+            for j in 0..4 {
+                if !self.0[i][j].is_finite() {
+                    return false
+                }
+            }
+        }
+
+        true
+    }
+}
+
 impl Component for Transform {
-    type Storage = FlaggedStorage<Transform, VecStorage<Transform>>;
+    type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
 }
 
 impl Default for Transform {
@@ -60,3 +75,4 @@ impl Borrow<[[f32; 4]; 4]> for Transform {
         &self.0
     }
 }
+

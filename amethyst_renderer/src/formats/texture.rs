@@ -15,6 +15,7 @@ use imagefmt::{ColFmt, Image};
 use tex::{Texture, TextureBuilder};
 
 /// Texture metadata, used while loading
+#[derive(Debug, Clone)]
 pub struct TextureMetadata {
     /// Sampler info
     pub sampler: Option<SamplerInfo>,
@@ -82,6 +83,7 @@ impl TextureMetadata {
 }
 
 /// Texture data for loading
+#[derive(Debug, Clone)]
 pub enum TextureData {
     /// Image data
     Image(ImageData, TextureMetadata),
@@ -130,6 +132,19 @@ pub struct ImageData {
 /// Allows loading of jpg or jpeg files.
 pub struct JpgFormat;
 
+impl JpgFormat {
+    /// Load Jpg from memory buffer
+    pub fn from_data(
+        &self,
+        data: Vec<u8>,
+        options: TextureMetadata,
+    ) -> Result<TextureData, BoxedErr> {
+        imagefmt::jpeg::read(&mut Cursor::new(data), ColFmt::RGBA)
+            .map(|raw| TextureData::Image(ImageData { raw }, options))
+            .map_err(BoxedErr::new)
+    }
+}
+
 impl Format<Texture> for JpgFormat {
     const NAME: &'static str = "JPEG";
 
@@ -141,14 +156,25 @@ impl Format<Texture> for JpgFormat {
         source: Arc<Source>,
         options: TextureMetadata,
     ) -> Result<TextureData, BoxedErr> {
-        imagefmt::jpeg::read(&mut Cursor::new(source.load(&name)?), ColFmt::RGBA)
-            .map(|raw| TextureData::Image(ImageData { raw }, options))
-            .map_err(BoxedErr::new)
+        self.from_data(source.load(&name)?, options)
     }
 }
 
 /// Allows loading of PNG files.
 pub struct PngFormat;
+
+impl PngFormat {
+    /// Load Png from memory buffer
+    pub fn from_data(
+        &self,
+        data: Vec<u8>,
+        options: TextureMetadata,
+    ) -> Result<TextureData, BoxedErr> {
+        imagefmt::png::read(&mut Cursor::new(data), ColFmt::RGBA)
+            .map(|raw| TextureData::Image(ImageData { raw }, options))
+            .map_err(BoxedErr::new)
+    }
+}
 
 impl Format<Texture> for PngFormat {
     const NAME: &'static str = "JPEG";
@@ -161,9 +187,7 @@ impl Format<Texture> for PngFormat {
         source: Arc<Source>,
         options: TextureMetadata,
     ) -> Result<TextureData, BoxedErr> {
-        imagefmt::png::read(&mut Cursor::new(source.load(&name)?), ColFmt::RGBA)
-            .map(|raw| TextureData::Image(ImageData { raw }, options))
-            .map_err(BoxedErr::new)
+        self.from_data(source.load(&name)?, options)
     }
 }
 
@@ -190,7 +214,8 @@ impl Format<Texture> for BmpFormat {
 /// Error that can occur during texture creation
 #[derive(Debug)]
 pub enum TextureError {
-    /// Error occured in renderer
+    /// Error occurred in renderer
+    // TODO: seems to be unused?
     Renderer(::error::Error),
 
     /// Color format unsupported
