@@ -4,7 +4,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use crossbeam::sync::MsQueue;
 use hibitset::BitSet;
-use specs::{Component, DenseVecStorage, Fetch, FetchMut, System, UnprotectedStorage, VecStorage};
+use specs::{Component, Fetch, FetchMut, System, UnprotectedStorage, VecStorage};
 use specs::common::Errors;
 
 use BoxedErr;
@@ -201,7 +201,7 @@ where
 #[derive(Derivative)]
 #[derivative(Clone(bound = ""), Eq(bound = ""), Hash(bound = ""), PartialEq(bound = ""),
              Debug(bound = ""))]
-pub struct Handle<A> {
+pub struct Handle<A: ?Sized> {
     id: Arc<u32>,
     marker: PhantomData<A>,
 }
@@ -225,9 +225,9 @@ impl<A> Handle<A> {
 
 impl<A> Component for Handle<A>
 where
-    A: Send + Sync + 'static,
+    A: Asset,
 {
-    type Storage = DenseVecStorage<Self>;
+    type Storage = A::HandleStorage;
 }
 
 // TODO: may change with hot reloading
