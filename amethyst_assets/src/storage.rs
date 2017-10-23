@@ -35,7 +35,6 @@ pub struct AssetStorage<A: Asset> {
     handles: Vec<Handle<A>>,
     handle_alloc: Allocator,
     pub(crate) processed: Arc<MsQueue<Processed<A>>>,
-    reload_counter: u64,
     reloads: Vec<(WeakHandle<A>, Box<Reload<A>>)>,
     unused_handles: MsQueue<Handle<A>>,
 }
@@ -43,15 +42,12 @@ pub struct AssetStorage<A: Asset> {
 impl<A: Asset> AssetStorage<A> {
     /// Creates a new asset storage.
     pub fn new() -> Self {
-        use std::u8::MAX;
-
         AssetStorage {
             assets: Default::default(),
             bitset: Default::default(),
             handles: Default::default(),
             handle_alloc: Default::default(),
             processed: Arc::new(MsQueue::new()),
-            reload_counter: MAX as u64 + 1,
             reloads: Vec::new(),
             unused_handles: MsQueue::new(),
         }
@@ -244,7 +240,7 @@ impl<A: Asset> AssetStorage<A> {
         }
 
         if strategy
-            .map(|s| s.needs_reload(&mut self.reload_counter))
+            .map(|s| s.needs_reload())
             .unwrap_or(false)
         {
             self.hot_reload(pool);
