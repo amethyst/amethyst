@@ -1,7 +1,7 @@
 use assets::{AssetStorage, Handle, Loader};
 use core::transform::*;
 use renderer::{Material, MaterialDefaults, Mesh, Texture};
-use renderer::formats::ComboMeshCreator;
+use renderer::ComboMeshCreator;
 use specs::{Entities, Entity, Fetch, FetchMut, Join, System, WriteStorage};
 use specs::common::Errors;
 
