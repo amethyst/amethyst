@@ -44,9 +44,7 @@ impl HotReloadStrategy {
         }
     }
 
-    /// No periodical hot-reloading is performed.
-    /// Instead, you can `trigger` it to check for changed assets
-    /// in one specific frame.
+    /// Never do any hot-reloading.
     pub fn never() -> Self {
         HotReloadStrategy {
             inner: HotReloadStrategyInner::Never,

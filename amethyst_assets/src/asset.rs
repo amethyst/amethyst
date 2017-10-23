@@ -69,7 +69,7 @@ impl<A: Asset> FormatValue<A> {
     }
 }
 
-/// This is a simplified version of `Format`, which doesn't give you as much as freedom,
+/// This is a simplified version of `Format`, which doesn't give you as much freedom,
 /// but in return is simpler to implement.
 /// All `SimpleFormat` types automatically implement `Format`.
 /// This format assumes that the asset name is the full path and the asset is only
