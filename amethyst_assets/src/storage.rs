@@ -1,7 +1,6 @@
 use std::marker::PhantomData;
 use std::sync::{Arc, Weak};
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::time::Instant;
 
 use crossbeam::sync::MsQueue;
 use hibitset::BitSet;
@@ -35,7 +34,6 @@ pub struct AssetStorage<A: Asset> {
     bitset: BitSet,
     handles: Vec<Handle<A>>,
     handle_alloc: Allocator,
-    last_reload: Instant,
     pub(crate) processed: Arc<MsQueue<Processed<A>>>,
     reload_counter: u64,
     reloads: Vec<(WeakHandle<A>, Box<Reload<A>>)>,
@@ -52,7 +50,6 @@ impl<A: Asset> AssetStorage<A> {
             bitset: Default::default(),
             handles: Default::default(),
             handle_alloc: Default::default(),
-            last_reload: Instant::now(),
             processed: Arc::new(MsQueue::new()),
             reload_counter: MAX as u64 + 1,
             reloads: Vec::new(),
@@ -249,36 +246,30 @@ impl<A: Asset> AssetStorage<A> {
     }
 
     fn hot_reload(&mut self, pool: &ThreadPool) {
-        let elapsed = self.last_reload.elapsed().as_secs();
+        self.reloads.retain(|&(ref handle, _)| !handle.is_dead());
+        while let Some(p) = self.reloads
+            .iter()
+            .position(|&(_, ref rel)| rel.needs_reload())
+        {
+            let (handle, rel) = self.reloads.swap_remove(p);
 
-        if elapsed >= 1 {
-            self.last_reload = Instant::now();
+            if let Some(handle) = handle.upgrade() {
+                let processed = self.processed.clone();
+                pool.spawn(move || {
+                    let old_reload = rel.clone();
+                    let name = rel.name();
+                    let format = rel.format();
+                    let data = rel.reload();
 
-            self.reloads.retain(|&(ref handle, _)| !handle.is_dead());
-            while let Some(p) = self.reloads
-                .iter()
-                .position(|&(_, ref rel)| rel.needs_reload())
-            {
-                let (handle, rel) = self.reloads.swap_remove(p);
-
-                if let Some(handle) = handle.upgrade() {
-                    let processed = self.processed.clone();
-                    pool.spawn(move || {
-                        let old_reload = rel.clone();
-                        let name = rel.name();
-                        let format = rel.format();
-                        let data = rel.reload();
-
-                        let p = Processed::HotReload {
-                            data,
-                            name,
-                            format,
-                            handle,
-                            old_reload,
-                        };
-                        processed.push(p);
-                    });
-                }
+                    let p = Processed::HotReload {
+                        data,
+                        name,
+                        format,
+                        handle,
+                        old_reload,
+                    };
+                    processed.push(p);
+                });
             }
         }
     }
@@ -375,7 +366,7 @@ where
     type Storage = A::HandleStorage;
 }
 
-pub enum Processed<A: Asset> {
+pub(crate) enum Processed<A: Asset> {
     NewAsset {
         data: Result<FormatValue<A>, BoxedErr>,
         format: &'static str,

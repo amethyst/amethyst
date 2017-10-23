@@ -20,7 +20,7 @@ impl Transform {
         for i in 0..4 {
             for j in 0..4 {
                 if !self.0[i][j].is_finite() {
-                    return false
+                    return false;
                 }
             }
         }
@@ -75,4 +75,3 @@ impl Borrow<[[f32; 4]; 4]> for Transform {
         &self.0
     }
 }
-

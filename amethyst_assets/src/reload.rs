@@ -37,6 +37,13 @@ impl HotReloadStrategy {
         }
     }
 
+    /// This allows to use `trigger` for hot reloading.
+    pub fn when_triggered() -> Self {
+        HotReloadStrategy {
+            inner: HotReloadStrategyInner::Trigger { counter: 0 },
+        }
+    }
+
     /// No periodical hot-reloading is performed.
     /// Instead, you can `trigger` it to check for changed assets
     /// in one specific frame.
@@ -47,10 +54,11 @@ impl HotReloadStrategy {
     }
 
     /// The frame after calling this, all changed assets will be reloaded.
+    /// Doesn't do anything if the strategy wasn't created with `when_triggered`.
     pub fn trigger(&mut self) {
         let counter = match self.inner {
-            HotReloadStrategyInner::Trigger { counter } => counter.checked_add(1).unwrap_or(0),
-            _ => 0,
+            HotReloadStrategyInner::Trigger { counter } => counter.wrapping_add(1),
+            _ => return,
         };
 
         self.inner = HotReloadStrategyInner::Trigger { counter };

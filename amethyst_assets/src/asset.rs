@@ -72,7 +72,8 @@ impl<A: Asset> FormatValue<A> {
 /// This is a simplified version of `Format`, which doesn't give you as much as freedom,
 /// but in return is simpler to implement.
 /// All `SimpleFormat` types automatically implement `Format`.
-/// This format assumes that the asset name is the full path and also the only file.
+/// This format assumes that the asset name is the full path and the asset is only
+/// contained in one file.
 pub trait SimpleFormat<A: Asset> {
     /// A unique identifier for this format.
     const NAME: &'static str;
