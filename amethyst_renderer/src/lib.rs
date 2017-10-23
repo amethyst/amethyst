@@ -82,7 +82,6 @@ pub use vertex::{Attribute, AttributeFormat, Attributes, Color, Normal, PosColor
                  VertexBufferCombination, VertexFormat, With};
 
 pub mod error;
-pub mod orientation;
 pub mod pipe;
 
 mod bundle;

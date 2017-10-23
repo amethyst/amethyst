@@ -1,7 +1,8 @@
 //! Local transform component.
 
-use cgmath::{Euler, Matrix3, Matrix4, Quaternion, Vector3, Vector4};
-use specs::{Component, DenseVecStorage, FlaggedStorage, VecStorage};
+use cgmath::{Angle, Deg, Euler, InnerSpace, Matrix3, Matrix4, Point3, Quaternion, Rotation, Rotation3, Vector3};
+use orientation::Orientation;
+use specs::{Component, DenseVecStorage, FlaggedStorage};
 
 /// Local position, rotation, and scale (from parent if it exists).
 ///
@@ -22,9 +23,7 @@ impl LocalTransform {
         let cam_quat = Quaternion::from(self.rotation);
         let pos_vec = Vector3::from(self.translation);
 
-        self.rotation = cam_quat.look_at(position - pos_vec, orientation.up).into();
-        self.flag(true);
-
+        self.rotation = Quaternion::look_at(position - pos_vec, orientation.up.into()).into();
         self
     }
 
@@ -47,7 +46,7 @@ impl LocalTransform {
 
     /// Move relatively to its current position and orientation.
     pub fn move_forward(&mut self, orientation: &Orientation, amount: f32) -> &mut Self {
-        self.move_local(orientation.forward, amount)
+        self.move_local(orientation.forward.into(), amount)
     }
 
     /// Move relatively to its current position, but independently from its orientation.
@@ -56,63 +55,65 @@ impl LocalTransform {
     #[inline]
     pub fn move_global(&mut self, direction: Vector3<f32>) -> &mut Self {
         self.translation = (Vector3::from(self.translation) + direction).into();
-        self.flag(true);
         self
     }
 
     /// Move relatively to its current position and orientation.
     #[inline]
     pub fn move_local(&mut self, axis: Vector3<f32>, amount: f32) -> &mut Self {
-        self.translation += Quaternion::from(self.rotation).conjugate() * axis.normalize() * amount;
+        let delta = Quaternion::from(self.rotation).conjugate() * axis.normalize() * amount;
+
+        self.translation[0] += delta[0];
+        self.translation[1] += delta[1];
+        self.translation[2] += delta[2];
         self
     }
 
     /// Move relatively to its current position and orientation.
     pub fn move_right(&mut self, orientation: &Orientation, amount: f32) -> &mut Self {
-        self.move_local(orientation.right, amount)
+        self.move_local(orientation.right.into(), amount)
     }
 
     /// Move relatively to its current position and orientation.
     pub fn move_up(&mut self, orientation: &Orientation, amount: f32) -> &mut Self {
-        self.move_local(orientation.up, amount)
+        self.move_local(orientation.up.into(), amount)
     }
 
     /// Pitch relatively to the world.
     pub fn pitch_global(&mut self, orientation: &Orientation, angle: Deg<f32>) -> &mut Self {
-        self.rotate_global(orientation.right, angle)
+        self.rotate_global(orientation.right.into(), angle)
     }
 
     /// Pitch relatively to its own rotation.
     pub fn pitch_local(&mut self, orientation: &Orientation, angle: Deg<f32>) -> &mut Self {
-        self.rotate_local(orientation.right, angle)
+        self.rotate_local(orientation.right.into(), angle)
     }
 
     /// Roll relatively to the world.
     pub fn roll_global(&mut self, orientation: &Orientation, angle: Deg<f32>) -> &mut Self {
-        self.rotate_global(orientation.forward, angle)
+        self.rotate_global(orientation.forward.into(), angle)
     }
 
     /// Roll relatively to its own rotation.
     pub fn roll_local(&mut self, orientation: &Orientation, angle: Deg<f32>) -> &mut Self {
-        self.rotate_local(orientation.forward, angle);
+        self.rotate_local(orientation.forward.into(), angle)
     }
 
     /// Add a rotation to the current rotation
     #[inline]
     pub fn rotate(&mut self, quat: Quaternion<f32>) -> &mut Self {
-        self.rotation = quat * Quaternion::from(self.rotation);
-        self.flag(true);
+        self.rotation = (quat * Quaternion::from(self.rotation)).into();
         self
     }
 
     /// Rotate relatively to the world
     #[inline]
     pub fn rotate_global(&mut self, axis: Vector3<f32>, angle: Deg<f32>) -> &mut Self {
-        let axis_normalized = Vectro3::from(axis).normalize();
-        let q = Quaternion::from::<f32>(Euler {
-            x: axis_normalized.x * angle,
-            y: axis_normalized.y * angle,
-            z: axis_normalized.z * angle,
+        let axis_normalized = Vector3::from(axis).normalize();
+        let q = Quaternion::from(Euler {
+            x: angle * axis_normalized.x,
+            y: angle * axis_normalized.y,
+            z: angle * axis_normalized.z,
         });
 
         self.rotate(q)
@@ -124,10 +125,10 @@ impl LocalTransform {
         let rel_axis_normalized = Quaternion::from(self.rotation)
             .rotate_vector(Vector3::from(axis))
             .normalize();
-        let q = Quaternion::from::<f32>(Euler {
-            x: rel_axis_normalized.x * angle,
-            y: rel_axis_normalized.y * angle,
-            z: rel_axis_normalized.z * angle,
+        let q = Quaternion::from(Euler {
+            x: angle * rel_axis_normalized.x,
+            y: angle * rel_axis_normalized.y,
+            z: angle * rel_axis_normalized.z,
         });
 
         self.rotate(q)
@@ -136,20 +137,18 @@ impl LocalTransform {
     /// Set the position.
     pub fn set_position(&mut self, position: Point3<f32>) -> &mut Self {
         self.translation = position.into();
-        self.flag(true);
 
         self
     }
 
     /// Set the rotation using Euler x, y, z.
-    pub fn set_rotation<D: Into<Deg<f32>>>(&mut self, x: D, y: D, z: D) -> &mut Self {
-        self.rotation = Quaternion::from::<f32>(Euler {
-            x: x,
-            y: y,
-            z: z,
-        }).into();
+    pub fn set_rotation<D: Into<Deg<f32>> + Angle>(&mut self, x: D, y: D, z: D) -> &mut Self {
+        let rotation =
+            Quaternion::from_angle_x(x.into()) *
+            Quaternion::from_angle_y(y.into()) *
+            Quaternion::from_angle_z(z.into());
 
-        self.flag(true);
+        self.rotation = rotation.into();
         self
     }
 
@@ -158,22 +157,22 @@ impl LocalTransform {
         let forward = orientation.forward;
         let trans = self.translation;
         let center = Point3::new(
-            trans.0 + forward.0,
-            trans.1 + forward.1,
-            trans.2 + forward.2,
+            trans[0] + forward[0],
+            trans[1] + forward[1],
+            trans[2] + forward[2],
         );
 
-        Matrix4::look_at(trans, center, orientation.up)
+        Matrix4::look_at(trans.into(), center, orientation.up.into())
     }
 
     /// Yaw relatively to the world.
     pub fn yaw_global(&mut self, orientation: &Orientation, angle: Deg<f32>) -> &mut Self {
-        self.rotate_global(orientation.up, angle)
+        self.rotate_global(orientation.up.into(), angle)
     }
 
     /// Yaw relatively to its own rotation.
     pub fn yaw_local(&mut self, orientation: &Orientation, angle: Deg<f32>) -> &mut Self {
-        self.rotate_local(orientation.up, angle)
+        self.rotate_local(orientation.up.into(), angle)
     }
 }
 

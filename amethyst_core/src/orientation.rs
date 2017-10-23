@@ -14,8 +14,10 @@ pub struct Orientation {
 
 impl Default for Orientation {
     fn default() -> Self {
-        forward:     [1.0, 0.0, 0.0],
-        right:       [0.0,-1.0, 0.0],
-        up:          [0.0, 0.0, 1.0],
+        Self {
+            forward: [1.0, 0.0, 0.0],
+            right: [0.0, -1.0, 0.0],
+            up: [0.0, 0.0, 1.0],
+        }
     }
 }

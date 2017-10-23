@@ -2,6 +2,7 @@
 
 use amethyst_assets::{AssetStorage, Handle, Loader};
 use amethyst_core::bundle::{ECSBundle, Result};
+use amethyst_core::orientation::Orientation;
 use amethyst_core::transform::components::*;
 use specs::{DispatcherBuilder, World};
 
