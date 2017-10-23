@@ -122,7 +122,7 @@ impl Loader {
 
             processed.push(Processed::NewAsset {
                 data,
-                format: F::NAME.into(),
+                format: F::NAME,
                 handle,
                 name,
             });
@@ -140,7 +140,7 @@ impl Loader {
         let handle = storage.allocate();
         storage.processed.push(Processed::NewAsset {
             data: Ok(FormatValue::data(data)),
-            format: "".to_owned(),
+            format: "",
             handle: handle.clone(),
             name: "<Data>".into(),
         });

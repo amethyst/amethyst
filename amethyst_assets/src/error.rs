@@ -14,13 +14,13 @@ pub struct AssetError {
     /// The specifier of the asset which failed to load
     pub name: String,
     /// The format identifier.
-    pub format: String,
+    pub format: &'static str,
     /// The error that's been raised.
     pub error: BoxedErr,
 }
 
 impl AssetError {
-    pub(crate) fn new(name: String, format: String, error: BoxedErr) -> Self {
+    pub(crate) fn new(name: String, format: &'static str, error: BoxedErr) -> Self {
         AssetError {
             name,
             format,

@@ -11,7 +11,7 @@ pub trait Reload<A: Asset>: ReloadClone<A> + Send + Sync + 'static {
     /// Returns the asset name.
     fn name(&self) -> String;
     /// Returns the format name.
-    fn format(&self) -> String;
+    fn format(&self) -> &'static str;
     /// Reloads the asset.
     fn reload(self: Box<Self>) -> Result<FormatValue<A>, BoxedErr>;
 }
@@ -109,7 +109,7 @@ where
         self.path.clone()
     }
 
-    fn format(&self) -> String {
-        F::NAME.to_owned()
+    fn format(&self) -> &'static str {
+        F::NAME
     }
 }

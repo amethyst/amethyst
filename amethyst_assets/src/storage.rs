@@ -33,7 +33,7 @@ impl Allocator {
 pub struct AssetStorage<A: Asset> {
     assets: VecStorage<A>,
     bitset: BitSet,
-    handles: Vec<WeakHandle<A>>,
+    handles: Vec<Handle<A>>,
     handle_alloc: Allocator,
     last_reload: Instant,
     pub(crate) processed: Arc<MsQueue<Processed<A>>>,
@@ -93,7 +93,7 @@ impl<A: Asset> AssetStorage<A> {
 
             let id = h.id();
             self.bitset.add(id);
-            self.handles.push(h.downgrade());
+            self.handles.push(h.clone());
 
             unsafe {
                 self.assets.insert(id, asset);
@@ -160,7 +160,7 @@ impl<A: Asset> AssetStorage<A> {
 
                         let id = handle.id();
                         bitset.add(id);
-                        handles.push(handle.downgrade());
+                        handles.push(handle.clone());
 
                         // NOTE: the loader has to ensure that a handle will be used
                         // together with a `Data` only once.
@@ -212,9 +212,9 @@ impl<A: Asset> AssetStorage<A> {
             });
         }
 
-        while let Some(i) = self.handles.iter().position(WeakHandle::is_dead) {
-            self.handles.swap_remove(i);
-            let id = i as u32;
+        while let Some(i) = self.handles.iter().position(Handle::is_unique) {
+            let handle = self.handles.swap_remove(i);
+            let id = handle.id();
             unsafe {
                 drop_fn(self.assets.remove(id));
             }
@@ -325,11 +325,6 @@ impl<A> Handle<A> {
         *self.id.as_ref()
     }
 
-    /// Returns `true` if this is the only handle to the asset its pointing at.
-    pub fn is_unique(&self) -> bool {
-        Arc::strong_count(&self.id) == 1
-    }
-
     /// Downgrades the handle and creates a `WeakHandle`.
     pub fn downgrade(&self) -> WeakHandle<A> {
         let id = Arc::downgrade(&self.id);
@@ -338,6 +333,11 @@ impl<A> Handle<A> {
             id,
             marker: PhantomData,
         }
+    }
+
+    /// Returns `true` if this is the only handle to the asset its pointing at.
+    fn is_unique(&self) -> bool {
+        Arc::strong_count(&self.id) == 1
     }
 }
 
@@ -351,13 +351,13 @@ where
 pub enum Processed<A: Asset> {
     NewAsset {
         data: Result<FormatValue<A>, BoxedErr>,
-        format: String,
+        format: &'static str,
         handle: Handle<A>,
         name: String,
     },
     HotReload {
         data: Result<FormatValue<A>, BoxedErr>,
-        format: String,
+        format: &'static str,
         handle: Handle<A>,
         name: String,
         old_reload: Box<Reload<A>>,
