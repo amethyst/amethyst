@@ -212,7 +212,9 @@ impl<A: Asset> AssetStorage<A> {
             });
         }
 
-        while let Some(i) = self.handles.iter().position(Handle::is_unique) {
+        let mut skip = 0;
+        while let Some(i) = self.handles.iter().skip(skip).position(Handle::is_unique) {
+            skip = i;
             let handle = self.handles.swap_remove(i);
             let id = handle.id();
             unsafe {
