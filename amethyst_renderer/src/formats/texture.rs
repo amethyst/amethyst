@@ -192,6 +192,8 @@ impl SimpleFormat<Texture> for BmpFormat {
     type Options = TextureMetadata;
 
     fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData, BoxedErr> {
+        // TODO: consider reading directly into GPU-visible memory
+        // TODO: as noted by @omni-viral.
         imagefmt::bmp::read(&mut Cursor::new(bytes), ColFmt::RGBA)
             .map(|raw| TextureData::Image(ImageData { raw }, options))
             .map_err(BoxedErr::new)
