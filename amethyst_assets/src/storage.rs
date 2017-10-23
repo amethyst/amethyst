@@ -135,13 +135,19 @@ impl<A: Asset> AssetStorage<A> {
     ) where
         F: FnMut(A::Data) -> Result<A, BoxedErr>,
     {
-        self.process_custom_drop(f, |_| {}, errors);
+        self.process_custom_drop(f, |_| {}, errors, pool, strategy);
     }
 
     /// Process finished asset data and maintain the storage.
     /// This calls the `drop_fn` closure for assets that were removed from the storage.
-    pub fn process_custom_drop<F, D>(&mut self, mut f: F, mut drop_fn: D, errors: &Errors)
-    where
+    pub fn process_custom_drop<F, D>(
+        &mut self,
+        mut f: F,
+        mut drop_fn: D,
+        errors: &Errors,
+        pool: &ThreadPool,
+        strategy: Option<&HotReloadStrategy>,
+    ) where
         D: FnMut(A),
         F: FnMut(A::Data) -> Result<A, BoxedErr>,
     {
