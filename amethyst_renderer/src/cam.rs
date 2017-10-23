@@ -86,12 +86,6 @@ impl Camera {
         Self::from(Projection::perspective(width / height, Deg(60.)))
     }
 }
-impl Component for Camera { type Storage = VecStorage<Self>; }
-
-/// Marker for active camera until we implement multi-viewports.
-/// At that point, every viewport should have its own active camera.
-pub struct ActiveCamera;
-impl Component for ActiveCamera { type Storage = NullStorage<Self>; }
 
 impl Component for Camera {
     type Storage = DenseVecStorage<Self>;
