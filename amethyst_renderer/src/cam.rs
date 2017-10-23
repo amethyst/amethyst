@@ -60,8 +60,6 @@ impl From<Projection> for Camera {
 }
 
 /// Camera struct.
-///
-/// TODO: Add more convenience methods, refine API.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct Camera {
     /// Graphical projection of the camera.
