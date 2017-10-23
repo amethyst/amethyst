@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use {Asset, BoxedErr, Format, Source};
+use {Asset, BoxedErr, Format, FormatValue, Source};
 
 /// The `Reload` trait provides a method which checks if an asset needs to be reloaded.
 pub trait Reload<A: Asset>: ReloadClone<A> + Send + Sync + 'static {
@@ -13,7 +13,7 @@ pub trait Reload<A: Asset>: ReloadClone<A> + Send + Sync + 'static {
     /// Returns the format name.
     fn format(&self) -> String;
     /// Reloads the asset.
-    fn reload(self: Box<Self>) -> Result<(A::Data, Option<Box<Reload<A>>>), BoxedErr>;
+    fn reload(self: Box<Self>) -> Result<FormatValue<A>, BoxedErr>;
 }
 
 pub trait ReloadClone<A> {
@@ -92,7 +92,7 @@ where
         self.modified != 0 && (self.source.modified(&self.path).unwrap_or(0) > self.modified)
     }
 
-    fn reload(self: Box<Self>) -> Result<(A::Data, Option<Box<Reload<A>>>), BoxedErr> {
+    fn reload(self: Box<Self>) -> Result<FormatValue<A>, BoxedErr> {
         let this: SingleFile<_, _> = *self;
         let SingleFile {
             format,

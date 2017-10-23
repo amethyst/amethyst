@@ -51,7 +51,22 @@ pub trait Format<A: Asset>: Send + 'static {
         source: Arc<Source>,
         options: Self::Options,
         create_reload: bool,
-    ) -> Result<(A::Data, Option<Box<Reload<A>>>), BoxedErr>;
+    ) -> Result<FormatValue<A>, BoxedErr>;
+}
+
+/// The `Ok` return value of `Format::import` for a given asset type `A`.
+pub struct FormatValue<A: Asset> {
+    /// The format data.
+    pub data: A::Data,
+    /// An optional reload structure
+    pub reload: Option<Box<Reload<A>>>,
+}
+
+impl<A: Asset> FormatValue<A> {
+    /// Creates a `FormatValue` from only the data (setting `reload` to `None`).
+    pub fn data(data: A::Data) -> Self {
+        FormatValue { data, reload: None }
+    }
 }
 
 /// This is a simplified version of `Format`, which doesn't give you as much as freedom,
@@ -84,18 +99,19 @@ where
         source: Arc<Source>,
         options: Self::Options,
         create_reload: bool,
-    ) -> Result<(A::Data, Option<Box<Reload<A>>>), BoxedErr> {
+    ) -> Result<FormatValue<A>, BoxedErr> {
         if create_reload {
             let (b, m) = source.load_with_metadata(&name)?;
             let data = T::import(&self, b, options.clone())?;
             let reload = SingleFile::new(self.clone(), m, options, name, source);
+            let reload = Some(Box::new(reload) as Box<Reload<A>>);
 
-            Ok((data, Some(Box::new(reload))))
+            Ok(FormatValue { data, reload })
         } else {
             let b = source.load(&name)?;
             let data = T::import(&self, b, options)?;
 
-            Ok((data, None))
+            Ok(FormatValue::data(data))
         }
     }
 }

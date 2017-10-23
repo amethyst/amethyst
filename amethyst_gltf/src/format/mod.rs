@@ -6,7 +6,7 @@ use std::fmt;
 use std::sync::Arc;
 
 use self::importer::{get_image_data, import, Buffers, ImageFormat};
-use assets::{BoxedErr, Format, Reload, Source};
+use assets::{BoxedErr, Format, FormatValue, Source};
 use core::transform::LocalTransform;
 use gfx::Primitive;
 use gfx::texture::SamplerInfo;
@@ -106,10 +106,10 @@ impl Format<GltfSceneAsset> for GltfSceneFormat {
         source: Arc<Source>,
         options: GltfSceneOptions,
         _create_reload: bool,
-    ) -> Result<(GltfSceneAsset, Option<Box<Reload<GltfSceneAsset>>>), BoxedErr> {
+    ) -> Result<FormatValue<GltfSceneAsset>, BoxedErr> {
         let gltf = load_gltf(source, &name, options).map_err(|err| BoxedErr::new(err))?;
         if gltf.default_scene.is_some() || gltf.scenes.len() == 1 {
-            Ok((gltf, None)) // TODO: create `Reload` object
+            Ok(FormatValue::data(gltf)) // TODO: create `Reload` object
         } else {
             Err(BoxedErr::new(
                 GltfError::InvalidSceneGltf(gltf.scenes.len()),

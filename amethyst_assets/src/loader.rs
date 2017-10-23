@@ -6,7 +6,7 @@ use std::sync::Arc;
 use fnv::FnvHashMap;
 use rayon::ThreadPool;
 
-use {Asset, Directory, Format, Progress, Source};
+use {Asset, Directory, Format, FormatValue, Progress, Source};
 use storage::{AssetStorage, Handle, Processed};
 
 /// The asset loader, holding the sources and a reference to the `ThreadPool`.
@@ -139,7 +139,7 @@ impl Loader {
     {
         let handle = storage.allocate();
         storage.processed.push(Processed::NewAsset {
-            data: Ok((data, None)),
+            data: Ok(FormatValue::data(data)),
             format: "".to_owned(),
             handle: handle.clone(),
             name: "<Data>".into(),

@@ -35,12 +35,12 @@ impl Format<DummyAsset> for DummyFormat {
         source: Arc<Source>,
         _: (),
         _create_reload: bool,
-    ) -> Result<(String, Option<Box<Reload<DummyAsset>>>), BoxedErr> {
+    ) -> Result<FormatValue<DummyAsset>, BoxedErr> {
         let dummy = from_utf8(source.load(&name)?.as_slice())
             .map(|s| s.to_owned())
             .map_err(BoxedErr::new)?;
 
-        Ok((dummy, None))
+        Ok(FormatValue::data(dummy))
     }
 }
 

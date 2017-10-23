@@ -20,7 +20,7 @@ extern crate specs;
 
 pub use specs::error::BoxedErr;
 
-pub use asset::{Asset, Format, SimpleFormat};
+pub use asset::{Asset, Format, FormatValue, SimpleFormat};
 pub use error::AssetError;
 pub use loader::Loader;
 pub use progress::{Completion, Progress, ProgressCounter, Tracker};

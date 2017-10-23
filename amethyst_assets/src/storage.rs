@@ -10,7 +10,7 @@ use specs::{Component, Fetch, FetchMut, System, UnprotectedStorage, VecStorage};
 use specs::common::Errors;
 
 use BoxedErr;
-use asset::Asset;
+use asset::{Asset, FormatValue};
 use error::AssetError;
 use reload::Reload;
 
@@ -153,7 +153,9 @@ impl<A: Asset> AssetStorage<A> {
                         handle,
                         name,
                     } => {
-                        let (asset, reload_obj) = data.and_then(|(d, rel)| f(d).map(|a| (a, rel)))
+                        let (asset, reload_obj) = data.map(
+                            |FormatValue { data, reload }| (data, reload),
+                        ).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
                             .map_err(|e| AssetError::new(name, format, e))?;
 
                         let id = handle.id();
@@ -175,9 +177,10 @@ impl<A: Asset> AssetStorage<A> {
                         name,
                         old_reload,
                     } => {
-                        let (asset, reload_obj) = match data.and_then(
-                            |(d, rel)| f(d).map(|a| (a, rel)),
-                        ).map_err(|e| AssetError::new(name, format, e))
+                        let (asset, reload_obj) = match data.map(
+                            |FormatValue { data, reload }| (data, reload),
+                        ).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
+                            .map_err(|e| AssetError::new(name, format, e))
                         {
                             Ok(x) => x,
                             Err(e) => {
@@ -347,13 +350,13 @@ where
 
 pub enum Processed<A: Asset> {
     NewAsset {
-        data: Result<(A::Data, Option<Box<Reload<A>>>), BoxedErr>,
+        data: Result<FormatValue<A>, BoxedErr>,
         format: String,
         handle: Handle<A>,
         name: String,
     },
     HotReload {
-        data: Result<(A::Data, Option<Box<Reload<A>>>), BoxedErr>,
+        data: Result<FormatValue<A>, BoxedErr>,
         format: String,
         handle: Handle<A>,
         name: String,
