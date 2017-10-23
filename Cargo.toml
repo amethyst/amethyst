@@ -12,7 +12,7 @@ homepage = "https://www.amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
 readme = "README.md"
-license = "MIT OR Apache-2.0"
+license = "MIT/Apache-2.0"
 
 [badges]
 appveyor = { repository = "amethyst/amethyst", branch = "develop" }
@@ -22,33 +22,29 @@ travis-ci = { repository = "amethyst/amethyst", branch = "develop" }
 profiler = ["thread_profiler/thread_profiler"]
 
 [dependencies]
-amethyst_assets = { path = "amethyst_assets", version = "0.1.0" }
+amethyst_assets = { path = "amethyst_assets", version = "0.2.0" }
+amethyst_audio = { path = "amethyst_audio", version = "0.1.0" }
 amethyst_config = { path = "amethyst_config", version = "0.4.0" }
+amethyst_core = { path = "amethyst_core", version = "0.1.0" }
+amethyst_gltf = { path = "amethyst_gltf", version = "0.1" }
 amethyst_renderer = { path = "amethyst_renderer", version = "0.5" }
 amethyst_input = { path = "amethyst_input", version = "0.1" }
-cgmath = "0.14"
-cpal = "0.4"
-crossbeam = "0.3"
+amethyst_utils = { path = "amethyst_utils", version = "0.1" }
 derivative = "1.0"
-fnv = "1.0"
-futures = "0.1.14"
-gfx = "0.16"
-num_cpus = "1.2"
-genmesh = "0.4"
-imagefmt = "4.0"
-shred = "0.4"
-specs = "0.9.5"
 rayon = "0.8"
-rodio = "0.5.1"
-ticketed_lock = "0.1"
-wavefront_obj = "5.0"
+shred = "0.5"
+shrev = "0.6"
+specs = "0.10"
 winit = "0.7"
 
 thread_profiler = { version = "0.1", optional = true }
 
-[dependencies.smallvec]
-version = "0.4.2"
-features = ["serde"]
+[dev-dependencies]
+cgmath = "0.14"
+genmesh = "0.4"
+
+[build-dependencies]
+vergen = "0.1"
 
 [[example]]
 name = "hello_world"
@@ -74,5 +70,16 @@ path = "examples/04_pong/main.rs"
 name = "assets"
 path = "examples/05_assets/main.rs"
 
+[[example]]
+name = "material"
+path = "examples/06_material/main.rs"
+
+[[example]]
+name = "separate_sphere"
+path = "examples/07_separate_sphere/main.rs"
+
+[[example]]
+name = "gltf"
+path = "examples/08_gltf/main.rs"
+
 [workspace]
-members = ["amethyst_assets", "amethyst_config", "amethyst_renderer", "amethyst_input"]

@@ -1,12 +1,12 @@
 (
     axes: {
-        "P2": (
-            pos: Key(Up),
-            neg: Key(Down),
-        ),
-        "P1": (
+        "left_paddle": (
             pos: Key(W),
             neg: Key(S),
+        ),
+        "right_paddle": (
+            pos: Key(Up),
+            neg: Key(Down),
         ),
     },
     actions: {

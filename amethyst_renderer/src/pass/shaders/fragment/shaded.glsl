@@ -22,7 +22,7 @@ layout (std140) uniform PointLights {
 
 struct DirectionalLight {
     vec4 color;
-    vec3 direction;
+    vec4 direction;
 };
 
 layout (std140) uniform DirectionalLights {
@@ -61,7 +61,7 @@ void main() {
         lighting += diffuse * attenuation;
     }
     for (int i = 0; i < directional_light_count; i++) {
-        vec4 dir = vec4(dlight[i].direction, 1.0);
+        vec4 dir = dlight[i].direction;
         float diff = max(dot(-dir, normal), 0.0);
         vec4 diffuse = diff * dlight[i].color;
         lighting += diffuse;

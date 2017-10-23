@@ -24,7 +24,9 @@ mod vulkan;
 // pub type Buffer<V> = gfx::handle::Buffer<Resources, V>;
 
 /// Color buffer format.
-pub type ColorFormat = gfx::format::Srgba8;
+pub type SurfaceFormat = gfx::format::R8_G8_B8_A8;
+pub type ChannelFormat = gfx::format::Unorm;
+pub type ColorFormat = (SurfaceFormat, ChannelFormat);
 
 /// Depth buffer format.
 #[cfg(feature = "metal")]

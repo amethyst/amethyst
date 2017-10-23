@@ -27,7 +27,7 @@ Read a summary of what happened this past week at [*This Week in Amethyst*][tw].
 
 ## Vision
 
-Amethyst aims to be a fast, [data-oriented](https://www.amethyst.rs/book/master/html/glossary.html#data-driven-design), and data-driven game engine suitable
+Amethyst is a fast, [data-oriented](https://www.amethyst.rs/book/master/html/glossary.html#data-driven-design), and data-driven game engine suitable
 for rapid prototyping and iteration. It also tries to push the
 [Rust programming language][rs] to its limits, driving further improvement and
 hopefully attracting more game developers toward the young and vibrant Rust
@@ -65,12 +65,14 @@ does not aim to be API-compatible with it in any way. Some goals include:
 
 ## Usage
 
+**Linux developers: the libasound2-dev package will be required to compile Amethyst.**
+
 Read the [online book][bk] for a comprehensive tutorial to using Amethyst. There
 is also an online crate-level [API reference][ar].
 
 [bk]: https://www.amethyst.rs/book/master/html/
 
-Linux developers: the libasound2-dev package will be required to compile amethyst.
+
 
 ## Quick Example
 

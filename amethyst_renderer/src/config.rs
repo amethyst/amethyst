@@ -4,7 +4,7 @@ use winit::WindowBuilder;
 
 /// Structure for holding the renderer configuration.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-pub struct Config {
+pub struct DisplayConfig {
     /// Name of the application window.
     #[serde(default = "default_title")]
     pub title: String,
@@ -31,9 +31,9 @@ pub struct Config {
     pub visibility: bool,
 }
 
-impl Default for Config {
+impl Default for DisplayConfig {
     fn default() -> Self {
-        Config {
+        DisplayConfig {
             title: default_title(),
             fullscreen: false,
             dimensions: None,
@@ -58,8 +58,8 @@ fn default_visibility() -> bool {
     true
 }
 
-impl From<Config> for WindowBuilder {
-    fn from(cfg: Config) -> Self {
+impl From<DisplayConfig> for WindowBuilder {
+    fn from(cfg: DisplayConfig) -> Self {
         use winit::{self, WindowAttributes};
 
         let attrs = WindowAttributes {
@@ -82,9 +82,9 @@ impl From<Config> for WindowBuilder {
     }
 }
 
-impl From<WindowBuilder> for Config {
+impl From<WindowBuilder> for DisplayConfig {
     fn from(wb: WindowBuilder) -> Self {
-        Config {
+        DisplayConfig {
             title: wb.window.title,
             fullscreen: wb.window.monitor.is_some(),
             dimensions: wb.window.dimensions,

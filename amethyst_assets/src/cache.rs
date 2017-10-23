@@ -1,3 +1,5 @@
+//! MODULE DISABLED, will be reused later!
+
 use fnv::FnvHashMap;
 use parking_lot::RwLock;
 

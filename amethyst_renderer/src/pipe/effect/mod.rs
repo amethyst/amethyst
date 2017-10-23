@@ -5,34 +5,25 @@
 use std::mem;
 
 use fnv::FnvHashMap as HashMap;
+use gfx::{Primitive, ShaderSet};
 use gfx::Bind;
 use gfx::buffer::{Info as BufferInfo, Role as BufferRole};
 use gfx::memory::Usage;
-use gfx::{Primitive, ShaderSet};
 use gfx::preset::depth::{LESS_EQUAL_TEST, LESS_EQUAL_WRITE};
 use gfx::pso::buffer::{ElemStride, InstanceRate};
 use gfx::shade::{ProgramError, ToUniform};
 use gfx::shade::core::UniformValue;
-use gfx::state::{Rasterizer, Stencil};
+use gfx::state::{Blend, ColorMask, Rasterizer, Stencil};
 use gfx::traits::Pod;
 
 use self::pso::{Data, Init, Meta};
 
 use error::{Error, Result};
 use pipe::Target;
-use scene::Model;
-use types::{Encoder, Factory, PipelineState, Resources};
-use vertex::Attribute;
+use types::{Encoder, Factory, PipelineState, Resources, Slice};
+use vertex::Attributes;
 
 mod pso;
-
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-pub enum BlendMode {
-    Add,
-    Alpha,
-    Invert,
-    Multiply,
-}
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum DepthMode {
@@ -53,29 +44,20 @@ impl<'a> ProgramSource<'a> {
         use gfx::traits::FactoryExt;
 
         match *self {
-            ProgramSource::Simple(ref vs, ref ps) => {
-                fac.create_shader_set(vs, ps).map_err(
-                    |e| Error::ProgramCreation(e),
-                )
-            }
+            ProgramSource::Simple(ref vs, ref ps) => fac.create_shader_set(vs, ps)
+                .map_err(|e| Error::ProgramCreation(e)),
             ProgramSource::Geometry(ref vs, ref gs, ref ps) => {
-                let v = fac.create_shader_vertex(vs).map_err(
-                    |e| ProgramError::Vertex(e),
-                )?;
-                let g = fac.create_shader_geometry(gs).expect(
-                    "Geometry shader creation failed",
-                );
-                let p = fac.create_shader_pixel(ps).map_err(
-                    |e| ProgramError::Pixel(e),
-                )?;
+                let v = fac.create_shader_vertex(vs)
+                    .map_err(|e| ProgramError::Vertex(e))?;
+                let g = fac.create_shader_geometry(gs)
+                    .expect("Geometry shader creation failed");
+                let p = fac.create_shader_pixel(ps)
+                    .map_err(|e| ProgramError::Pixel(e))?;
                 Ok(ShaderSet::Geometry(v, g, p))
             }
             ProgramSource::Tessellated(ref vs, ref hs, ref ds, ref ps) => {
-                fac.create_shader_set_tessellation(vs, hs, ds, ps).map_err(
-                    |e| {
-                        Error::ProgramCreation(e)
-                    },
-                )
+                fac.create_shader_set_tessellation(vs, hs, ds, ps)
+                    .map_err(|e| Error::ProgramCreation(e))
             }
         }
     }
@@ -92,50 +74,66 @@ pub struct Effect {
 
 impl Effect {
     pub fn update_global<N: AsRef<str>, T: ToUniform>(&mut self, name: N, data: T) {
-        if let Some(i) = self.globals.get(name.as_ref()) {
-            self.data.globals[*i] = data.convert();
+        match self.globals.get(name.as_ref()) {
+            Some(i) => self.data.globals[*i] = data.convert(),
+            None => {
+                eprintln!(
+                    "WARNING: Global update for effect failed! Global not found: {:?}",
+                    name.as_ref()
+                );
+            }
         }
-        // FIXME: Don't silently ignore unknown update.
-        // maybe `.expect(...)` would fit here
     }
 
     /// FIXME: Update raw buffer without transmute, use `Result` somehow.
-    pub fn update_buffer<N, T>(&self, name: N, data: &[T], enc: &mut Encoder)
+    pub fn update_buffer<N, T>(&mut self, name: N, data: &[T], enc: &mut Encoder)
     where
         N: AsRef<str>,
         T: Pod,
     {
-        if let Some(i) = self.const_bufs.get(name.as_ref()) {
-            let raw = &self.data.const_bufs[*i];
-            enc.update_buffer::<T>(unsafe { mem::transmute(raw) }, &data[..], 0)
-                .expect("Failed to update buffer (TODO: replace expect)");
+        match self.const_bufs.get(name.as_ref()) {
+            Some(i) => {
+                let raw = &self.data.const_bufs[*i];
+                enc.update_buffer::<T>(unsafe { mem::transmute(raw) }, &data[..], 0)
+                    .expect("Failed to update buffer (TODO: replace expect)");
+            }
+            None => {
+                eprintln!(
+                    "WARNING: Buffer update for effect failed! Buffer not found: {:?}",
+                    name.as_ref()
+                );
+            }
         }
-        // FIXME: Don't silently ignore unknown update.
-        // maybe `.expect(...)` would fit here
     }
 
     /// FIXME: Update raw buffer without transmute.
-    pub fn update_constant_buffer<N, T>(&self, name: N, data: &T, enc: &mut Encoder)
+    pub fn update_constant_buffer<N, T>(&mut self, name: N, data: &T, enc: &mut Encoder)
     where
         N: AsRef<str>,
         T: Copy,
     {
-        if let Some(i) = self.const_bufs.get(name.as_ref()) {
-            let raw = &self.data.const_bufs[*i];
-            enc.update_constant_buffer::<T>(unsafe { mem::transmute(raw) }, &data);
+        match self.const_bufs.get(name.as_ref()) {
+            Some(i) => {
+                let raw = &self.data.const_bufs[*i];
+                enc.update_constant_buffer::<T>(unsafe { mem::transmute(raw) }, &data)
+            }
+            None => {
+                eprintln!(
+                    "WARNING: Buffer update for effect failed! Buffer not found: {:?}",
+                    name.as_ref()
+                );
+            }
         }
-        // FIXME: Don't silently ignore unknown update.
-        // maybe `.expect(...)` would fit here
     }
 
-    /// FIXME: Add support for arbitrary materials and textures.
-    pub fn draw(&self, model: &Model, enc: &mut Encoder) {
-        let mut data = self.data.clone();
+    pub fn clear(&mut self) {
+        self.data.textures.clear();
+        self.data.samplers.clear();
+        self.data.vertex_bufs.clear();
+    }
 
-        let (vbuf, slice) = model.mesh.geometry();
-        data.vertex_bufs.push(vbuf.clone());
-
-        enc.draw(&slice, &self.pso, &data);
+    pub fn draw(&mut self, slice: &Slice, enc: &mut Encoder) {
+        enc.draw(&slice, &self.pso, &self.data);
     }
 }
 
@@ -231,6 +229,29 @@ impl<'a> EffectBuilder<'a> {
         self
     }
 
+    /// Sets the output target of the PSO.
+    ///
+    /// If the target contains a depth buffer, its mode will be set by `depth`.
+    pub fn with_blended_output(
+        &mut self,
+        name: &'a str,
+        mask: ColorMask,
+        blend: Blend,
+        depth: Option<DepthMode>,
+    ) -> &mut Self {
+        if let Some(depth) = depth {
+            self.init.out_depth = Some((
+                match depth {
+                    DepthMode::LessEqualTest => LESS_EQUAL_TEST,
+                    DepthMode::LessEqualWrite => LESS_EQUAL_WRITE,
+                },
+                Stencil::default(),
+            ));
+        }
+        self.init.out_blends.push((name, mask, blend));
+        self
+    }
+
     /// Adds a texture sampler to this `Effect`.
     pub fn with_texture(&mut self, name: &'a str) -> &mut Self {
         self.init.samplers.push(name);
@@ -241,7 +262,7 @@ impl<'a> EffectBuilder<'a> {
     /// Adds a vertex buffer to this `Effect`.
     pub fn with_raw_vertex_buffer(
         &mut self,
-        attrs: &'a [(&'a str, Attribute)],
+        attrs: Attributes<'a>,
         stride: ElemStride,
         rate: InstanceRate,
     ) -> &mut Self {
@@ -256,12 +277,7 @@ impl<'a> EffectBuilder<'a> {
 
         let ref mut fac = self.factory;
         let prog = self.prog.compile(fac)?;
-        let pso = fac.create_pipeline_state(
-            &prog,
-            self.prim,
-            self.rast,
-            self.init.clone(),
-        )?;
+        let pso = fac.create_pipeline_state(&prog, self.prim, self.rast, self.init.clone())?;
 
         let mut data = Data::default();
 
@@ -289,13 +305,22 @@ impl<'a> EffectBuilder<'a> {
             .collect::<HashMap<_, _>>();
 
         data.out_colors.extend(
-            self.out.color_bufs().iter().map(|cb| {
-                cb.as_output.clone()
-            }),
+            self.out
+                .color_bufs()
+                .iter()
+                .map(|cb| &cb.as_output)
+                .cloned(),
         );
-        data.out_depth = self.out.depth_buf().map(
-            |db| (db.as_output.clone(), (0, 0)),
+        data.out_blends.extend(
+            self.out
+                .color_bufs()
+                .iter()
+                .map(|cb| &cb.as_output)
+                .cloned(),
         );
+        data.out_depth = self.out
+            .depth_buf()
+            .map(|db| (db.as_output.clone(), (0, 0)));
 
         Ok(Effect {
             pso,

@@ -1,7 +1,7 @@
 //! Utilities for game state management.
 
 use engine::Engine;
-use event::Event;
+use renderer::Event;
 
 /// Types of state transitions.
 pub enum Trans {
@@ -177,7 +177,7 @@ impl<'a> StateMachine<'a> {
     }
 
     /// Shuts the state machine down.
-    fn stop(&mut self, engine: &mut Engine) {
+    pub(crate) fn stop(&mut self, engine: &mut Engine) {
         if self.running {
             while let Some(mut state) = self.state_stack.pop() {
                 state.on_stop(engine);

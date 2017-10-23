@@ -15,6 +15,7 @@
 //! extern crate amethyst;
 //!
 //! use amethyst::prelude::*;
+//! use amethyst::renderer::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 //!
 //! struct GameState;
 //!
@@ -43,8 +44,7 @@
 //! }
 //!
 //! fn main() {
-//!     let mut game = Application::new(GameState).expect("Fatal error");
-
+//!     let mut game = Application::new("assets/", GameState).expect("Fatal error");
 //!     game.run();
 //! }
 //! ```
@@ -56,41 +56,32 @@
 #[cfg(feature = "profiler")]
 pub extern crate thread_profiler;
 
+pub extern crate amethyst_assets as assets;
+pub extern crate amethyst_audio as audio;
 pub extern crate amethyst_config as config;
-pub extern crate amethyst_renderer as renderer;
+pub extern crate amethyst_core as core;
+pub extern crate amethyst_gltf as gltf;
 pub extern crate amethyst_input as input;
+pub extern crate amethyst_renderer as renderer;
+pub extern crate amethyst_utils as utils;
+pub extern crate shred;
+pub extern crate shrev;
+pub extern crate specs as ecs;
+pub extern crate winit;
 
-extern crate amethyst_assets;
-extern crate cgmath;
-extern crate crossbeam;
 #[macro_use]
 extern crate derivative;
-extern crate fnv;
-extern crate futures;
-extern crate gfx;
-extern crate imagefmt;
-extern crate num_cpus;
 extern crate rayon;
-extern crate rodio;
-extern crate smallvec;
-extern crate shred;
-extern crate specs;
-extern crate wavefront_obj;
-extern crate winit;
 
 pub use self::app::{Application, ApplicationBuilder};
 pub use self::engine::Engine;
 pub use self::error::{Error, Result};
 pub use self::state::{State, StateMachine, Trans};
 
-pub mod assets;
-pub mod audio;
-pub mod ecs;
-pub mod event;
 pub mod prelude;
-pub mod timing;
 
 mod app;
 mod engine;
-mod state;
 mod error;
+mod state;
+mod vergen;

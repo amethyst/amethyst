@@ -1,0 +1,24 @@
+[package]
+name = "amethyst_core"
+version = "0.1.0"
+authors = ["Simon Rönnberg <seamonr@gmail.com>"]
+description = "Amethyst core"
+
+documentation = "https://www.amethyst.rs/doc/master/amethyst_core/"
+homepage = "https://www.amethyst.rs/"
+repository = "https://github.com/amethyst/amethyst"
+
+license = "MIT/Apache-2.0"
+
+[badges]
+appveyor = { repository = "amethyst/amethyst" }
+travis-ci = { repository = "amethyst/amethyst" }
+
+[dependencies]
+cgmath = "0.14"
+fnv = "1.0"
+hibitset = "0.3.2"
+serde = { version = "1", features = ["serde_derive"] }
+shred = "0.5"
+specs = "0.10"
+quickcheck = "0.4.1"

@@ -1,7 +1,5 @@
 //! A fully renderable scene.
 
-use rayon::prelude::*;
-use rayon::slice::{Chunks, Iter};
 use cgmath::Matrix4;
 
 use cam::Camera;
@@ -9,18 +7,6 @@ use light::Light;
 use mesh::Mesh;
 use mtl::Material;
 use color::Rgba;
-
-/// Immutable parallel iterator of lights.
-pub type Lights<'l> = Iter<'l, Light>;
-
-/// Immutable parallel iterator of models.
-pub type Models<'l> = Iter<'l, Model>;
-
-/// Immutable parallel iterator of models.
-pub type ModelsChunks<'l> = Chunks<'l, Model>;
-
-/// Immutable parallel iterator of models.
-pub type LightsChunks<'l> = Chunks<'l, Light>;
 
 /// Collection of lights and meshes to render.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -71,41 +57,16 @@ impl Scene {
         &self.lights
     }
 
-    /// Iterates through all stored lights in parallel.
-    pub fn par_iter_lights(&self) -> Lights {
-        self.lights.par_iter()
-    }
-
-    /// Iterates through all stored lights in parallel in chunks.
-    pub fn par_chunks_lights(&self, count: usize) -> LightsChunks {
-        let size = self.lights.len();
-        if size > 0 {
-            self.lights.par_chunks((size - 1) / count + 1)
-        } else {
-            self.lights.par_chunks(1)
-        }
-    }
-
-    /// Iterates through all stored models in parallel.
-    pub fn par_iter_models(&self) -> Models {
-        self.models.par_iter()
-    }
-
-    /// Iterates through all stored models in parallel in chunks.
-    pub fn par_chunks_models(&self, count: usize) -> ModelsChunks {
-        let size = self.models.len();
-        if size > 0 {
-            self.models.par_chunks((size - 1) / count + 1)
-        } else {
-            self.models.par_chunks(1)
-        }
+    /// Get all models on scene
+    pub fn models(&self) -> &[Model] {
+        &self.models
     }
 
     /// Returns the active camera in the scene.
     ///
     /// TODO: Render to multiple viewports with possibly different cameras.
-    pub fn active_camera(&self) -> Option<&Camera> {
-        self.cameras.first()
+    pub fn active_camera(&mut self) -> Option<&mut Camera> {
+        self.cameras.first_mut()
     }
 
     /// Remove all objects from `Scene`
