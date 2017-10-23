@@ -63,9 +63,7 @@ impl LocalTransform {
     pub fn move_local(&mut self, axis: Vector3<f32>, amount: f32) -> &mut Self {
         let delta = Quaternion::from(self.rotation).conjugate() * axis.normalize() * amount;
 
-        self.translation[0] += delta[0];
-        self.translation[1] += delta[1];
-        self.translation[2] += delta[2];
+        self.translation = (Vector3::from(self.translation) + delta).into();
         self
     }
 
@@ -110,11 +108,7 @@ impl LocalTransform {
     #[inline]
     pub fn rotate_global(&mut self, axis: Vector3<f32>, angle: Deg<f32>) -> &mut Self {
         let axis_normalized = Vector3::from(axis).normalize();
-        let q = Quaternion::from(Euler {
-            x: angle * axis_normalized.x,
-            y: angle * axis_normalized.y,
-            z: angle * axis_normalized.z,
-        });
+        let q = Quaternion::from_axis_angle(axis_normalized, angle);
 
         self.rotate(q)
     }
@@ -125,11 +119,7 @@ impl LocalTransform {
         let rel_axis_normalized = Quaternion::from(self.rotation)
             .rotate_vector(Vector3::from(axis))
             .normalize();
-        let q = Quaternion::from(Euler {
-            x: angle * rel_axis_normalized.x,
-            y: angle * rel_axis_normalized.y,
-            z: angle * rel_axis_normalized.z,
-        });
+        let q = Quaternion::from_axis_angle(rel_axis_normalized, angle);
 
         self.rotate(q)
     }
@@ -141,8 +131,8 @@ impl LocalTransform {
     }
 
     /// Set the rotation using Euler x, y, z.
-    pub fn set_rotation<D: Into<Deg<f32>> + Angle>(&mut self, x: D, y: D, z: D) -> &mut Self {
-        let rotation =
+    pub fn set_rotation<D: Into<Deg<f32>>>(&mut self, x: D, y: D, z: D) -> &mut Self {
+        let rotation = //Quaternion::from(Euler{x, y, z}).into();
             Quaternion::from_angle_x(x.into()) *
             Quaternion::from_angle_y(y.into()) *
             Quaternion::from_angle_z(z.into());
@@ -155,11 +145,7 @@ impl LocalTransform {
     pub fn to_view_matrix(&self, orientation: &Orientation) -> Matrix4<f32> {
         let forward = orientation.forward;
         let trans = self.translation;
-        let center = Point3::new(
-            trans[0] + forward[0],
-            trans[1] + forward[1],
-            trans[2] + forward[2],
-        );
+        let center = Point3::from(trans) + Vector3::from(forward);
 
         Matrix4::look_at(trans.into(), center, orientation.up.into())
     }
