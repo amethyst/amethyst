@@ -58,8 +58,8 @@ impl From<BoxedErr> for Error {
     }
 }
 
-impl From<renderer::Error> for Error {
-    fn from(err: renderer::Error) -> Self {
+impl From<renderer::error::Error> for Error {
+    fn from(err: renderer::error::Error) -> Self {
         Error::System(BoxedErr::new(err))
     }
 }

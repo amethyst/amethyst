@@ -1,14 +1,13 @@
 //! Local transform component.
 
-use std::ops::{Deref, DerefMut};
-use std::sync::atomic::{AtomicBool, Ordering};
-
 use cgmath::{Euler, Matrix3, Matrix4, Quaternion, Vector3, Vector4};
-use specs::{Component, VecStorage};
+use specs::{Component, DenseVecStorage, FlaggedStorage, VecStorage};
 
-/// Raw transform data.
-#[derive(Debug)]
-pub struct InnerTransform {
+/// Local position, rotation, and scale (from parent if it exists).
+///
+/// Used for rendering position and orientation.
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
+pub struct LocalTransform {
     /// Quaternion [w (scalar), x, y, z]
     pub rotation: [f32; 4],
     /// Scale vector [x, y, z]
@@ -17,47 +16,7 @@ pub struct InnerTransform {
     pub translation: [f32; 3],
 }
 
-/// Local position, rotation, and scale (from parent if it exists).
-///
-/// Used for rendering position and orientation.
-#[derive(Debug)]
-pub struct LocalTransform {
-    /// Wrapper around the transform data for dirty flag setting.
-    wrapped: InnerTransform,
-    /// Flag for re-computation
-    dirty: AtomicBool,
-}
-
-impl Deref for LocalTransform {
-    type Target = InnerTransform;
-    fn deref(&self) -> &InnerTransform {
-        &self.wrapped
-    }
-}
-
-impl DerefMut for LocalTransform {
-    fn deref_mut(&mut self) -> &mut InnerTransform {
-        self.flag(true);
-        &mut self.wrapped
-    }
-}
-
 impl LocalTransform {
-    /// Flags the current transform for re-computation.
-    ///
-    /// Note: All `set_*` methods will automatically flag the component.
-    #[inline]
-    pub fn flag(&self, dirty: bool) {
-        self.dirty.store(dirty, Ordering::SeqCst);
-    }
-
-    /// Returns whether or not the current transform is flagged for
-    /// re-computation or "dirty".
-    #[inline]
-    pub fn is_dirty(&self) -> bool {
-        self.dirty.load(Ordering::SeqCst)
-    }
-
     /// Rotate to look at a point in space (without rolling)
     pub fn look_at(&mut self, orientation: &Orientation, position: Vector3<f32>) -> &mut Self {
         let cam_quat = Quaternion::from(self.rotation);
@@ -221,16 +180,13 @@ impl LocalTransform {
 impl Default for LocalTransform {
     fn default() -> Self {
         LocalTransform {
-            wrapped: InnerTransform {
-                rotation:    [1.0, 0.0, 0.0, 0.0],
-                scale:       [1.0, 1.0, 1.0],
-                translation: [0.0, 0.0, 0.0],
-            },
-            dirty: AtomicBool::new(true),
+            rotation:    [1.0, 0.0, 0.0, 0.0],
+            scale:       [1.0, 1.0, 1.0],
+            translation: [0.0, 0.0, 0.0],
         }
     }
 }
 
 impl Component for LocalTransform {
-    type Storage = VecStorage<LocalTransform>;
+    type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
 }

@@ -289,7 +289,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// ~~~no_run
     /// use amethyst::prelude::*;
-    /// use amethyst::core::transform::{Child, LocalTransform, TransformSystem};
+    /// use amethyst::core::transform::{Parent, LocalTransform, TransformSystem};
     ///
     /// struct NullState;
     /// impl State for NullState {}
@@ -302,7 +302,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///     .expect("Failed to initialize")
     ///
     /// // components can be registered at this stage
-    ///     .register::<Child>()
+    ///     .register::<Parent>()
     ///     .register::<LocalTransform>()
     ///
     /// // systems can be added before the game is run
@@ -340,10 +340,10 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
 
         Ok(ApplicationBuilder {
             disp_builder: DispatcherBuilder::new(),
-            initial_state: initial_state,
-            world: world,
+            initial_state,
+            world,
             events_reader_id: reader_id,
-            pool: pool,
+            pool,
             frame_limiter: FrameLimiter::default(),
             locals: Vec::default(),
             ignore_window_close: false,
@@ -623,13 +623,9 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// # Examples
     ///
     /// ```no_run
-    /// use amethyst::renderer::bundle::RenderBundle;
     /// use amethyst::core::transform::Transform;
     /// use amethyst::prelude::*;
-    /// use amethyst::renderer::Config as DisplayConfig;
-    /// use amethyst::renderer::prelude::*;
-    ///
-    /// type DrawShaded = pass::DrawShaded<PosNormTex>;
+    /// use amethyst::renderer::*;
     ///
     /// # struct Example;
     /// # impl State for Example {}
@@ -638,7 +634,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// let pipe = Pipeline::build().with_stage(
     ///     Stage::with_backbuffer()
     ///         .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-    ///         .with_pass(DrawShaded::new()),
+    ///         .with_pass(DrawShaded::<PosNormTex>::new()),
     /// );
     ///
     /// let config = DisplayConfig::load("config_path.ron");
@@ -715,7 +711,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// ~~~no_run
     /// use amethyst::prelude::*;
     /// use amethyst::assets::{Directory, Loader};
-    /// use amethyst::renderer::formats::ObjFormat;
+    /// use amethyst::renderer::ObjFormat;
     ///
     /// let mut game = Application::build("assets/", LoadingState)
     ///     .expect("Failed to initialize")

@@ -5,7 +5,8 @@ use amethyst_core::bundle::{ECSBundle, Result};
 use amethyst_core::transform::components::*;
 use specs::{DispatcherBuilder, World};
 
-use prelude::*;
+use {AmbientColor, Camera, Light, Material, MaterialDefaults, Mesh, Rgba, ScreenDimensions,
+     Texture, WindowMessages};
 
 /// Rendering bundle
 ///
@@ -44,7 +45,6 @@ impl<'a, 'b> ECSBundle<'a, 'b> for RenderBundle {
         world.register::<Handle<Mesh>>();
         world.register::<Handle<Texture>>();
         world.register::<Camera>();
-        world.register::<ActiveCamera>();
 
         Ok(builder)
     }

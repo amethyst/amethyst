@@ -15,6 +15,7 @@
 //! extern crate amethyst;
 //!
 //! use amethyst::prelude::*;
+//! use amethyst::renderer::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 //!
 //! struct GameState;
 //!
@@ -59,6 +60,7 @@ pub extern crate amethyst_assets as assets;
 pub extern crate amethyst_audio as audio;
 pub extern crate amethyst_config as config;
 pub extern crate amethyst_core as core;
+pub extern crate amethyst_gltf as gltf;
 pub extern crate amethyst_input as input;
 pub extern crate amethyst_renderer as renderer;
 pub extern crate amethyst_utils as utils;
