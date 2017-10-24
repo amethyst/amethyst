@@ -16,6 +16,7 @@ pub use timing::*;
 pub use transform::*;
 
 pub mod bundle;
+pub mod orientation;
 pub mod transform;
 pub mod timing;
 pub mod frame_limiter;
