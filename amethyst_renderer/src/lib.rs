@@ -61,8 +61,8 @@ pub use cam::{ActiveCamera, Camera, Projection};
 pub use color::Rgba;
 pub use config::DisplayConfig;
 pub use formats::{build_mesh_with_combo, create_mesh_asset, create_texture_asset, BmpFormat,
-                  ImageData, ImageError, JpgFormat, MeshData, ObjError, ObjFormat, PngFormat,
-                  TextureData, TextureMetadata, ComboMeshCreator, MeshCreator};
+                  ComboMeshCreator, ImageData, ImageError, JpgFormat, MeshCreator, MeshData,
+                  ObjError, ObjFormat, PngFormat, TextureData, TextureMetadata};
 pub use input::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
 pub use light::{DirectionalLight, Light, PointLight, SpotLight, SunLight};
 pub use mesh::{vertex_data, Mesh, MeshHandle, VertexBuffer};

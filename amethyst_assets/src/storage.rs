@@ -2,6 +2,7 @@ use std::marker::PhantomData;
 use std::sync::{Arc, Weak};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+use amethyst_core::Time;
 use crossbeam::sync::MsQueue;
 use hibitset::BitSet;
 use rayon::ThreadPool;
@@ -37,21 +38,6 @@ pub struct AssetStorage<A: Asset> {
     pub(crate) processed: Arc<MsQueue<Processed<A>>>,
     reloads: Vec<(WeakHandle<A>, Box<Reload<A>>)>,
     unused_handles: MsQueue<Handle<A>>,
-}
-
-impl<A: Asset> AssetStorage<A> {
-    /// Creates a new asset storage.
-    pub fn new() -> Self {
-        AssetStorage {
-            assets: Default::default(),
-            bitset: Default::default(),
-            handles: Default::default(),
-            handle_alloc: Default::default(),
-            processed: Arc::new(MsQueue::new()),
-            reloads: Vec::new(),
-            unused_handles: MsQueue::new(),
-        }
-    }
 }
 
 impl<A: Asset> AssetStorage<A> {
@@ -126,12 +112,13 @@ impl<A: Asset> AssetStorage<A> {
         &mut self,
         f: F,
         errors: &Errors,
+        frame_number: u64,
         pool: &ThreadPool,
         strategy: Option<&HotReloadStrategy>,
     ) where
         F: FnMut(A::Data) -> Result<A, BoxedErr>,
     {
-        self.process_custom_drop(f, |_| {}, errors, pool, strategy);
+        self.process_custom_drop(f, |_| {}, errors, frame_number, pool, strategy);
     }
 
     /// Process finished asset data and maintain the storage.
@@ -141,6 +128,7 @@ impl<A: Asset> AssetStorage<A> {
         mut f: F,
         mut drop_fn: D,
         errors: &Errors,
+        frame_number: u64,
         pool: &ThreadPool,
         strategy: Option<&HotReloadStrategy>,
     ) where
@@ -240,7 +228,7 @@ impl<A: Asset> AssetStorage<A> {
         }
 
         if strategy
-            .map(|s| s.needs_reload())
+            .map(|s| s.needs_reload(frame_number))
             .unwrap_or(false)
         {
             self.hot_reload(pool);
@@ -273,6 +261,20 @@ impl<A: Asset> AssetStorage<A> {
                     processed.push(p);
                 });
             }
+        }
+    }
+}
+
+impl<A: Asset> Default for AssetStorage<A> {
+    fn default() -> Self {
+        AssetStorage {
+            assets: Default::default(),
+            bitset: Default::default(),
+            handles: Default::default(),
+            handle_alloc: Default::default(),
+            processed: Arc::new(MsQueue::new()),
+            reloads: Default::default(),
+            unused_handles: MsQueue::new(),
         }
     }
 }
@@ -313,15 +315,17 @@ where
         FetchMut<'a, AssetStorage<A>>,
         Fetch<'a, Arc<ThreadPool>>,
         Fetch<'a, Errors>,
+        Fetch<'a, Time>,
         Option<Fetch<'a, HotReloadStrategy>>,
     );
 
-    fn run(&mut self, (mut storage, pool, errors, strategy): Self::SystemData) {
+    fn run(&mut self, (mut storage, pool, errors, time, strategy): Self::SystemData) {
         use std::ops::Deref;
 
         storage.process(
             Into::into,
             &errors,
+            time.frame_number,
             &**pool,
             strategy.as_ref().map(Deref::deref),
         );

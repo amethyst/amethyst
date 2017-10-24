@@ -3,6 +3,7 @@
 #![allow(unused)]
 
 extern crate amethyst_assets;
+extern crate amethyst_core;
 extern crate rayon;
 extern crate ron;
 #[macro_use]
@@ -12,6 +13,7 @@ extern crate specs;
 use std::sync::Arc;
 
 use amethyst_assets::*;
+use amethyst_core::Time;
 use rayon::ThreadPool;
 use specs::{DenseVecStorage, Dispatcher, DispatcherBuilder, Fetch, FetchMut, System, World};
 use specs::common::Errors;
@@ -99,12 +101,13 @@ impl<'a> System<'a> for RenderingSystem {
     type SystemData = (
         FetchMut<'a, AssetStorage<MeshAsset>>,
         Fetch<'a, Errors>,
+        Fetch<'a, Time>,
         Fetch<'a, Arc<ThreadPool>>,
         Option<Fetch<'a, HotReloadStrategy>>,
         /* texture storage, transforms, .. */
     );
 
-    fn run(&mut self, (mut mesh_storage, errors, pool, strategy): Self::SystemData) {
+    fn run(&mut self, (mut mesh_storage, errors, time, pool, strategy): Self::SystemData) {
         use std::ops::Deref;
 
         let strategy = strategy.as_ref().map(Deref::deref);
@@ -116,6 +119,7 @@ impl<'a> System<'a> for RenderingSystem {
                 Ok(MeshAsset { buffer: () })
             },
             &errors,
+            time.frame_number,
             &**pool,
             strategy,
         );

@@ -3,15 +3,13 @@
 use std::sync::Arc;
 use std::time::Instant;
 
-use amethyst_core::ECSBundle;
-use specs::{DispatcherBuilder, FetchMut, System, World};
+use amethyst_core::{ECSBundle, Time};
+use specs::{DispatcherBuilder, Fetch, FetchMut, System, World};
 
 use {Asset, BoxedErr, Format, FormatValue, Loader, Source};
 
 /// This bundle activates hot reload for the `Loader`,
 /// adds a `HotReloadStrategy` and the `HotReloadSystem`.
-///
-/// **NOTE:** Add this only after all the asset processing systems.
 #[derive(Default)]
 pub struct HotReloadBundle {
     strategy: HotReloadStrategy,
@@ -61,19 +59,23 @@ pub struct HotReloadStrategy {
 impl HotReloadStrategy {
     /// Causes hot reloads every `n` seconds.
     pub fn every(n: u8) -> Self {
+        use std::u64::MAX;
+
         HotReloadStrategy {
             inner: HotReloadStrategyInner::Every {
                 interval: n,
                 last: Instant::now(),
-                do_reload: false,
+                frame_number: MAX,
             },
         }
     }
 
     /// This allows to use `trigger` for hot reloading.
     pub fn when_triggered() -> Self {
+        use std::u64::MAX;
+
         HotReloadStrategy {
-            inner: HotReloadStrategyInner::Trigger { triggered: false },
+            inner: HotReloadStrategyInner::Trigger { triggered: false, frame_number: MAX },
         }
     }
 
@@ -87,7 +89,7 @@ impl HotReloadStrategy {
     /// The frame after calling this, all changed assets will be reloaded.
     /// Doesn't do anything if the strategy wasn't created with `when_triggered`.
     pub fn trigger(&mut self) {
-        if let HotReloadStrategyInner::Trigger { ref mut triggered } = self.inner {
+        if let HotReloadStrategyInner::Trigger { ref mut triggered, .. } = self.inner {
             *triggered = true;
         }
     }
@@ -95,10 +97,10 @@ impl HotReloadStrategy {
     /// Crate-internal method to check if reload is necessary.
     /// `reload_counter` is a per-storage value which is only used
     /// for and by this method.
-    pub(crate) fn needs_reload(&self) -> bool {
+    pub(crate) fn needs_reload(&self, current_frame: u64) -> bool {
         match self.inner {
-            HotReloadStrategyInner::Every { do_reload, .. } => do_reload,
-            HotReloadStrategyInner::Trigger { triggered } => triggered,
+            HotReloadStrategyInner::Every { frame_number, .. } => frame_number == current_frame,
+            HotReloadStrategyInner::Trigger { frame_number, .. } => frame_number == current_frame,
             HotReloadStrategyInner::Never => false,
         }
     }
@@ -114,33 +116,36 @@ enum HotReloadStrategyInner {
     Every {
         interval: u8,
         last: Instant,
-        do_reload: bool,
+        frame_number: u64,
     },
-    Trigger { triggered: bool },
+    Trigger { triggered: bool, frame_number: u64 },
     Never,
 }
 
 /// System for updating `HotReloadStrategy`.
-/// **NOTE:** You have to add this after all asset processing systems.
 pub struct HotReloadSystem;
 
 impl<'a> System<'a> for HotReloadSystem {
-    type SystemData = FetchMut<'a, HotReloadStrategy>;
+    type SystemData = (Fetch<'a, Time>, FetchMut<'a, HotReloadStrategy>);
 
-    fn run(&mut self, mut strategy: Self::SystemData) {
+    fn run(&mut self, (time, mut strategy): Self::SystemData) {
         match strategy.inner {
-            HotReloadStrategyInner::Trigger { ref mut triggered } => {
+            HotReloadStrategyInner::Trigger {
+                ref mut triggered,
+                ref mut frame_number,
+            } => {
+                if *triggered {
+                    *frame_number = time.frame_number + 1;
+                }
                 *triggered = false;
             }
             HotReloadStrategyInner::Every {
                 interval,
                 ref mut last,
-                ref mut do_reload,
+                ref mut frame_number,
             } => if last.elapsed().as_secs() > interval as u64 {
-                *do_reload = true;
+                *frame_number = time.frame_number + 1;
                 *last = Instant::now();
-            } else {
-                *do_reload = false
             },
             HotReloadStrategyInner::Never => {}
         }

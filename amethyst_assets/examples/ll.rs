@@ -68,7 +68,11 @@ fn main() {
     let strategy = HotReloadStrategy::every(3);
 
     // Game loop
+    let mut frame_number = 0;
+
     loop {
+        frame_number += 1;
+
         // If loading is done, end the game loop and print the asset
         if progress.is_complete() {
             break;
@@ -84,6 +88,7 @@ fn main() {
                 Ok(DummyAsset(s))
             },
             &errors,
+            frame_number,
             &*pool,
             Some(&strategy),
         );

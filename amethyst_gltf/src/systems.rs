@@ -1,5 +1,5 @@
 use assets::{AssetStorage, Handle, HotReloadStrategy, Loader};
-use core::ThreadPool;
+use core::{ThreadPool, Time};
 use core::transform::*;
 use renderer::{Material, MaterialDefaults, Mesh, Texture};
 use renderer::ComboMeshCreator;
@@ -38,6 +38,7 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
         Fetch<'a, Loader>,
         Fetch<'a, Errors>,
         Fetch<'a, MaterialDefaults>,
+        Fetch<'a, Time>,
         Fetch<'a, ThreadPool>,
         Option<Fetch<'a, HotReloadStrategy>>,
         FetchMut<'a, AssetStorage<GltfSceneAsset>>,
@@ -60,6 +61,7 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
             loader,
             errors,
             material_defaults,
+            time,
             pool,
             strategy,
             mut scene_storage,
@@ -72,7 +74,7 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
         ) = data;
 
         let strategy = strategy.as_ref().map(Deref::deref);
-        scene_storage.process(Into::into, &errors, &**pool, strategy);
+        scene_storage.process(Into::into, &errors, time.frame_number, &**pool, strategy);
 
         let mut deletes = vec![];
 

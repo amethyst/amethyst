@@ -5,6 +5,7 @@ use std::mem;
 use std::sync::Arc;
 
 use amethyst_assets::{AssetStorage, HotReloadStrategy};
+use amethyst_core::Time;
 use rayon::ThreadPool;
 use shred::Resources;
 use shrev::EventChannel;
@@ -68,7 +69,7 @@ where
 
     fn do_asset_loading(
         &mut self,
-        (errors, pool, strategy, mut mesh_storage, mut texture_storage): AssetLoadingData,
+        (errors, time, pool, strategy, mut mesh_storage, mut texture_storage): AssetLoadingData,
     ) {
         use std::ops::Deref;
 
@@ -77,6 +78,7 @@ where
         mesh_storage.process(
             |d| create_mesh_asset(d, &mut self.renderer),
             &errors,
+            time.frame_number,
             &**pool,
             strategy,
         );
@@ -84,6 +86,7 @@ where
         texture_storage.process(
             |d| create_texture_asset(d, &mut self.renderer),
             &errors,
+            time.frame_number,
             &**pool,
             strategy,
         );
@@ -145,6 +148,7 @@ where
 
 type AssetLoadingData<'a> = (
     Fetch<'a, Errors>,
+    Fetch<'a, Time>,
     Fetch<'a, Arc<ThreadPool>>,
     Option<Fetch<'a, HotReloadStrategy>>,
     FetchMut<'a, AssetStorage<Mesh>>,
