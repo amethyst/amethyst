@@ -325,7 +325,7 @@ where
         storage.process(
             Into::into,
             &errors,
-            time.frame_number,
+            time.frame_number(),
             &**pool,
             strategy.as_ref().map(Deref::deref),
         );

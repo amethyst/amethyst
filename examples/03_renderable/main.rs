@@ -43,18 +43,16 @@ impl<'a> System<'a> for ExampleSystem {
     );
 
     fn run(&mut self, (mut lights, time, camera, mut transforms, mut state): Self::SystemData) {
-        let delta_time = time.delta_time.subsec_nanos() as f32 / 1.0e9;
-
         let light_angular_velocity = -1.0;
         let light_orbit_radius = 15.0;
         let light_z = 6.0;
 
         let camera_angular_velocity = 0.1;
 
-        state.light_angle += light_angular_velocity * delta_time;
-        state.camera_angle += camera_angular_velocity * delta_time;
+        state.light_angle += light_angular_velocity * time.delta_seconds();
+        state.camera_angle += camera_angular_velocity * time.delta_seconds();
 
-        let delta_rot = Quaternion::from_angle_z(Rad(camera_angular_velocity * delta_time));
+        let delta_rot = Quaternion::from_angle_z(Rad(camera_angular_velocity * time.delta_seconds()));
         for (_, transform) in (&camera, &mut transforms).join() {
             // rotate the camera, using the origin as a pivot point
             transform.translation = delta_rot

@@ -74,7 +74,7 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
         ) = data;
 
         let strategy = strategy.as_ref().map(Deref::deref);
-        scene_storage.process(Into::into, &errors, time.frame_number, &**pool, strategy);
+        scene_storage.process(Into::into, &errors, time.frame_number(), &**pool, strategy);
 
         let mut deletes = vec![];
 

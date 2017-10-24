@@ -15,12 +15,10 @@ impl<'s> System<'s> for MoveBallsSystem {
     );
 
     fn run(&mut self, (mut balls, mut locals, time): Self::SystemData) {
-        let delta_time = time.delta_time.subsec_nanos() as f32 / 1.0e9;
-
         // Move every ball according to its speed, and the time passed.
         for (ball, local) in (&mut balls, &mut locals).join() {
-            local.translation[0] += ball.velocity[0] * delta_time;
-            local.translation[1] += ball.velocity[1] * delta_time;
+            local.translation[0] += ball.velocity[0] * time.delta_seconds();
+            local.translation[1] += ball.velocity[1] * time.delta_seconds();
         }
     }
 }
