@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use specs::UnprotectedStorage;
 
-use {BoxedErr, Handle, Source};
+use {BoxedErr, Handle, Reload, SingleFile, Source};
 
 /// One of the three core traits of this crate.
 ///
@@ -38,10 +38,81 @@ pub trait Format<A: Asset>: Send + 'static {
     type Options: Send + 'static;
 
     /// Reads the given bytes and produces asset data.
+    ///
+    /// ## Reload
+    ///
+    /// The reload structure has metadata which allows the asset management
+    /// to reload assets if necessary (for hot reloading).
+    /// You should only create this if `create_reload` is `true`.
+    /// Also, the parameter is just a request, which means you can also return `None`.
     fn import(
         &self,
         name: String,
         source: Arc<Source>,
         options: Self::Options,
-    ) -> Result<A::Data, BoxedErr>;
+        create_reload: bool,
+    ) -> Result<FormatValue<A>, BoxedErr>;
+}
+
+/// The `Ok` return value of `Format::import` for a given asset type `A`.
+pub struct FormatValue<A: Asset> {
+    /// The format data.
+    pub data: A::Data,
+    /// An optional reload structure
+    pub reload: Option<Box<Reload<A>>>,
+}
+
+impl<A: Asset> FormatValue<A> {
+    /// Creates a `FormatValue` from only the data (setting `reload` to `None`).
+    pub fn data(data: A::Data) -> Self {
+        FormatValue { data, reload: None }
+    }
+}
+
+/// This is a simplified version of `Format`, which doesn't give you as much freedom,
+/// but in return is simpler to implement.
+/// All `SimpleFormat` types automatically implement `Format`.
+/// This format assumes that the asset name is the full path and the asset is only
+/// contained in one file.
+pub trait SimpleFormat<A: Asset> {
+    /// A unique identifier for this format.
+    const NAME: &'static str;
+    /// Options specific to the format, which are passed to `import`.
+    /// E.g. for textures this would be stuff like mipmap levels and
+    /// sampler info.
+    type Options: Clone + Send + Sync + 'static;
+
+    /// Produces asset data from given bytes.
+    fn import(&self, bytes: Vec<u8>, options: Self::Options) -> Result<A::Data, BoxedErr>;
+}
+
+impl<A, T> Format<A> for T
+where
+    A: Asset,
+    T: SimpleFormat<A> + Clone + Send + Sync + 'static,
+{
+    const NAME: &'static str = T::NAME;
+    type Options = T::Options;
+
+    fn import(
+        &self,
+        name: String,
+        source: Arc<Source>,
+        options: Self::Options,
+        create_reload: bool,
+    ) -> Result<FormatValue<A>, BoxedErr> {
+        if create_reload {
+            let (b, m) = source.load_with_metadata(&name)?;
+            let data = T::import(&self, b, options.clone())?;
+            let reload = SingleFile::new(self.clone(), m, options, name, source);
+            let reload = Some(Box::new(reload) as Box<Reload<A>>);
+
+            Ok(FormatValue { data, reload })
+        } else {
+            let b = source.load(&name)?;
+            let data = T::import(&self, b, options)?;
+
+            Ok(FormatValue::data(data))
+        }
+    }
 }

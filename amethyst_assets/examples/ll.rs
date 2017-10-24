@@ -29,10 +29,18 @@ impl Format<DummyAsset> for DummyFormat {
 
     type Options = ();
 
-    fn import(&self, name: String, source: Arc<Source>, _: ()) -> Result<String, BoxedErr> {
-        from_utf8(source.load(&name)?.as_slice())
+    fn import(
+        &self,
+        name: String,
+        source: Arc<Source>,
+        _: (),
+        _create_reload: bool,
+    ) -> Result<FormatValue<DummyAsset>, BoxedErr> {
+        let dummy = from_utf8(source.load(&name)?.as_slice())
             .map(|s| s.to_owned())
-            .map_err(BoxedErr::new)
+            .map_err(BoxedErr::new)?;
+
+        Ok(FormatValue::data(dummy))
     }
 }
 
@@ -43,7 +51,7 @@ fn main() {
     let pool = Arc::new(ThreadPool::new(cfg).expect("Invalid config"));
 
     let mut errors = Errors::new();
-    let loader = Loader::new(&path, pool);
+    let loader = Loader::new(&path, pool.clone());
     let mut storage = AssetStorage::new();
 
     let mut progress = ProgressCounter::new();
@@ -56,8 +64,15 @@ fn main() {
         &storage,
     );
 
+    // Hot-reload every three seconds.
+    let strategy = HotReloadStrategy::every(3);
+
     // Game loop
+    let mut frame_number = 0;
+
     loop {
+        frame_number += 1;
+
         // If loading is done, end the game loop and print the asset
         if progress.is_complete() {
             break;
@@ -73,6 +88,9 @@ fn main() {
                 Ok(DummyAsset(s))
             },
             &errors,
+            frame_number,
+            &*pool,
+            Some(&strategy),
         );
 
         errors.print_and_exit();

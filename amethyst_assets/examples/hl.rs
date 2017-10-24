@@ -3,6 +3,7 @@
 #![allow(unused)]
 
 extern crate amethyst_assets;
+extern crate amethyst_core;
 extern crate rayon;
 extern crate ron;
 #[macro_use]
@@ -12,6 +13,7 @@ extern crate specs;
 use std::sync::Arc;
 
 use amethyst_assets::*;
+use amethyst_core::Time;
 use rayon::ThreadPool;
 use specs::{DenseVecStorage, Dispatcher, DispatcherBuilder, Fetch, FetchMut, System, World};
 use specs::common::Errors;
@@ -33,7 +35,8 @@ impl App {
 
         world.add_resource(Errors::new());
         world.add_resource(AssetStorage::<MeshAsset>::new());
-        world.add_resource(Loader::new(path, pool));
+        world.add_resource(Loader::new(path, pool.clone()));
+        world.add_resource(pool);
 
         App {
             dispatcher,
@@ -74,18 +77,18 @@ impl Asset for MeshAsset {
 }
 
 /// A format the mesh data could be stored with.
+#[derive(Clone)]
 struct Ron;
 
-impl Format<MeshAsset> for Ron {
+impl SimpleFormat<MeshAsset> for Ron {
     const NAME: &'static str = "RON";
 
     type Options = ();
 
-    fn import(&self, name: String, source: Arc<Source>, _: ()) -> Result<VertexData, BoxedErr> {
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<VertexData, BoxedErr> {
         use ron::de::from_str;
         use std::str::from_utf8;
 
-        let bytes = source.load(&name)?;
         let s = from_utf8(&bytes).map_err(BoxedErr::new)?;
 
         from_str(s).map_err(BoxedErr::new)
@@ -98,10 +101,17 @@ impl<'a> System<'a> for RenderingSystem {
     type SystemData = (
         FetchMut<'a, AssetStorage<MeshAsset>>,
         Fetch<'a, Errors>,
-                       /* texture storage, transforms, .. */
+        Fetch<'a, Time>,
+        Fetch<'a, Arc<ThreadPool>>,
+        Option<Fetch<'a, HotReloadStrategy>>,
+        /* texture storage, transforms, .. */
     );
 
-    fn run(&mut self, (mut mesh_storage, errors): Self::SystemData) {
+    fn run(&mut self, (mut mesh_storage, errors, time, pool, strategy): Self::SystemData) {
+        use std::ops::Deref;
+
+        let strategy = strategy.as_ref().map(Deref::deref);
+
         mesh_storage.process(
             |vertex_data| {
                 // Upload vertex data to GPU and give back an asset
@@ -109,6 +119,9 @@ impl<'a> System<'a> for RenderingSystem {
                 Ok(MeshAsset { buffer: () })
             },
             &errors,
+            time.frame_number,
+            &**pool,
+            strategy,
         );
     }
 }

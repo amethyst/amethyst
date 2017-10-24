@@ -20,6 +20,7 @@ appveyor = { repository = "amethyst/amethyst", branch = "develop" }
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
+amethyst_core = { path = "../amethyst_core", version = "0.1" }
 crossbeam = "0.3.0"
 derivative = "1.0"
 fnv = "1"

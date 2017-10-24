@@ -1,15 +1,18 @@
 use std::marker::PhantomData;
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+use amethyst_core::Time;
 use crossbeam::sync::MsQueue;
 use hibitset::BitSet;
+use rayon::ThreadPool;
 use specs::{Component, Fetch, FetchMut, System, UnprotectedStorage, VecStorage};
 use specs::common::Errors;
 
 use BoxedErr;
-use asset::Asset;
+use asset::{Asset, FormatValue};
 use error::AssetError;
+use reload::{HotReloadStrategy, Reload};
 
 /// An `Allocator`, holding a counter for producing unique IDs.
 #[derive(Debug, Default)]
@@ -33,21 +36,8 @@ pub struct AssetStorage<A: Asset> {
     handles: Vec<Handle<A>>,
     handle_alloc: Allocator,
     pub(crate) processed: Arc<MsQueue<Processed<A>>>,
+    reloads: Vec<(WeakHandle<A>, Box<Reload<A>>)>,
     unused_handles: MsQueue<Handle<A>>,
-}
-
-impl<A: Asset> Default for AssetStorage<A> {
-    fn default() -> Self {
-        AssetStorage {
-            assets: Default::default(),
-            bitset: Default::default(),
-            handles: Default::default(),
-            handle_alloc: Default::default(),
-            //new_handles: MsQueue::new(),
-            processed: Arc::new(MsQueue::new()),
-            unused_handles: MsQueue::new(),
-        }
-    }
 }
 
 impl<A: Asset> AssetStorage<A> {
@@ -118,57 +108,173 @@ impl<A: Asset> AssetStorage<A> {
     }
 
     /// Process finished asset data and maintain the storage.
-    pub fn process<F>(&mut self, f: F, errors: &Errors)
-    where
+    pub fn process<F>(
+        &mut self,
+        f: F,
+        errors: &Errors,
+        frame_number: u64,
+        pool: &ThreadPool,
+        strategy: Option<&HotReloadStrategy>,
+    ) where
         F: FnMut(A::Data) -> Result<A, BoxedErr>,
     {
-
-        self.process_custom_drop(f, |_| {}, errors);
+        self.process_custom_drop(f, |_| {}, errors, frame_number, pool, strategy);
     }
 
     /// Process finished asset data and maintain the storage.
     /// This calls the `drop_fn` closure for assets that were removed from the storage.
-    pub fn process_custom_drop<F, D>(&mut self, mut f: F, mut drop_fn: D, errors: &Errors)
-        where
-            D: FnMut(A),
-            F: FnMut(A::Data) -> Result<A, BoxedErr>,
+    pub fn process_custom_drop<F, D>(
+        &mut self,
+        mut f: F,
+        mut drop_fn: D,
+        errors: &Errors,
+        frame_number: u64,
+        pool: &ThreadPool,
+        strategy: Option<&HotReloadStrategy>,
+    ) where
+        D: FnMut(A),
+        F: FnMut(A::Data) -> Result<A, BoxedErr>,
     {
         while let Some(processed) = self.processed.try_pop() {
-            let Processed {
-                data,
-                format,
-                handle,
-                name,
-            } = processed;
             let assets = &mut self.assets;
             let bitset = &mut self.bitset;
             let handles = &mut self.handles;
-            errors.execute::<AssetError, _>(|| {
-                let asset = data.and_then(&mut f)
-                    .map_err(|e| AssetError::new(name, format, e))?;
+            let reloads = &mut self.reloads;
 
-                let id = handle.id();
-                bitset.add(id);
-                handles.push(handle);
+            let f = &mut f;
+            errors.execute::<AssetError, _>(move || {
+                let (reload_obj, handle) = match processed {
+                    Processed::NewAsset {
+                        data,
+                        format,
+                        handle,
+                        name,
+                    } => {
+                        let (asset, reload_obj) = data.map(
+                            |FormatValue { data, reload }| (data, reload),
+                        ).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
+                            .map_err(|e| AssetError::new(name, format, e))?;
 
-                // NOTE: the loader has to ensure that a handle will be used
-                // together with a `Data` only once.
-                unsafe {
-                    assets.insert(id, asset);
+                        let id = handle.id();
+                        bitset.add(id);
+                        handles.push(handle.clone());
+
+                        // NOTE: the loader has to ensure that a handle will be used
+                        // together with a `Data` only once.
+                        unsafe {
+                            assets.insert(id, asset);
+                        }
+
+                        (reload_obj, handle)
+                    }
+                    Processed::HotReload {
+                        data,
+                        format,
+                        handle,
+                        name,
+                        old_reload,
+                    } => {
+                        let (asset, reload_obj) = match data.map(
+                            |FormatValue { data, reload }| (data, reload),
+                        ).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
+                            .map_err(|e| AssetError::new(name, format, e))
+                        {
+                            Ok(x) => x,
+                            Err(e) => {
+                                eprintln!("Failed to hot-reload: {}", e);
+
+                                reloads.push((handle.downgrade(), old_reload));
+
+                                return Ok(());
+                            }
+                        };
+
+                        let id = handle.id();
+                        assert!(bitset.contains(id));
+                        unsafe {
+                            let old = assets.get_mut(id);
+                            *old = asset;
+                        }
+
+                        (reload_obj, handle)
+                    }
+                };
+
+                // Add the reload obj if it is `Some`.
+                if let Some(reload_obj) = reload_obj {
+                    reloads.push((handle.downgrade(), reload_obj));
                 }
 
                 Ok(())
             });
         }
 
-        while let Some(i) = self.handles.iter().position(Handle::is_unused) {
-            let old = self.handles.swap_remove(i);
-            let id = i as u32;
+        let mut skip = 0;
+        while let Some(i) = self.handles.iter().skip(skip).position(Handle::is_unique) {
+            skip = i;
+            let handle = self.handles.swap_remove(i);
+            let id = handle.id();
             unsafe {
                 drop_fn(self.assets.remove(id));
             }
             self.bitset.remove(id);
-            self.unused_handles.push(old);
+
+            // Can't reuse old handle here, because otherwise weak handles would still be valid.
+            // TODO: maybe just store u32?
+            self.unused_handles.push(Handle {
+                id: Arc::new(id),
+                marker: PhantomData,
+            });
+        }
+
+        if strategy
+            .map(|s| s.needs_reload(frame_number))
+            .unwrap_or(false)
+        {
+            self.hot_reload(pool);
+        }
+    }
+
+    fn hot_reload(&mut self, pool: &ThreadPool) {
+        self.reloads.retain(|&(ref handle, _)| !handle.is_dead());
+        while let Some(p) = self.reloads
+            .iter()
+            .position(|&(_, ref rel)| rel.needs_reload())
+        {
+            let (handle, rel) = self.reloads.swap_remove(p);
+
+            if let Some(handle) = handle.upgrade() {
+                let processed = self.processed.clone();
+                pool.spawn(move || {
+                    let old_reload = rel.clone();
+                    let name = rel.name();
+                    let format = rel.format();
+                    let data = rel.reload();
+
+                    let p = Processed::HotReload {
+                        data,
+                        name,
+                        format,
+                        handle,
+                        old_reload,
+                    };
+                    processed.push(p);
+                });
+            }
+        }
+    }
+}
+
+impl<A: Asset> Default for AssetStorage<A> {
+    fn default() -> Self {
+        AssetStorage {
+            assets: Default::default(),
+            bitset: Default::default(),
+            handles: Default::default(),
+            handle_alloc: Default::default(),
+            processed: Arc::new(MsQueue::new()),
+            reloads: Default::default(),
+            unused_handles: MsQueue::new(),
         }
     }
 }
@@ -205,10 +311,24 @@ where
     A: Asset,
     A::Data: Into<Result<A, BoxedErr>>,
 {
-    type SystemData = (FetchMut<'a, AssetStorage<A>>, Fetch<'a, Errors>);
+    type SystemData = (
+        FetchMut<'a, AssetStorage<A>>,
+        Fetch<'a, Arc<ThreadPool>>,
+        Fetch<'a, Errors>,
+        Fetch<'a, Time>,
+        Option<Fetch<'a, HotReloadStrategy>>,
+    );
 
-    fn run(&mut self, (mut storage, errors): Self::SystemData) {
-        storage.process(Into::into, &errors);
+    fn run(&mut self, (mut storage, pool, errors, time, strategy): Self::SystemData) {
+        use std::ops::Deref;
+
+        storage.process(
+            Into::into,
+            &errors,
+            time.frame_number,
+            &**pool,
+            strategy.as_ref().map(Deref::deref),
+        );
     }
 }
 
@@ -229,13 +349,18 @@ impl<A> Handle<A> {
         *self.id.as_ref()
     }
 
-    /// Returns `true` if this is the only handle to the asset its pointing at
-    /// (excluding the handle owned by the asset storage).
-    pub fn is_unique(&self) -> bool {
-        Arc::strong_count(&self.id) == 2
+    /// Downgrades the handle and creates a `WeakHandle`.
+    pub fn downgrade(&self) -> WeakHandle<A> {
+        let id = Arc::downgrade(&self.id);
+
+        WeakHandle {
+            id,
+            marker: PhantomData,
+        }
     }
 
-    fn is_unused(&self) -> bool {
+    /// Returns `true` if this is the only handle to the asset its pointing at.
+    fn is_unique(&self) -> bool {
         Arc::strong_count(&self.id) == 1
     }
 }
@@ -247,10 +372,46 @@ where
     type Storage = A::HandleStorage;
 }
 
-// TODO: may change with hot reloading
-pub struct Processed<A: Asset> {
-    pub data: Result<A::Data, BoxedErr>,
-    pub format: String,
-    pub handle: Handle<A>,
-    pub name: String,
+pub(crate) enum Processed<A: Asset> {
+    NewAsset {
+        data: Result<FormatValue<A>, BoxedErr>,
+        format: &'static str,
+        handle: Handle<A>,
+        name: String,
+    },
+    HotReload {
+        data: Result<FormatValue<A>, BoxedErr>,
+        format: &'static str,
+        handle: Handle<A>,
+        name: String,
+        old_reload: Box<Reload<A>>,
+    },
+}
+
+/// A weak handle, which is useful if you don't directly need the asset
+/// like in caches. This way, the asset can still get dropped (if you want that).
+#[derive(Derivative)]
+#[derivative(Clone(bound = ""))]
+pub struct WeakHandle<A> {
+    id: Weak<u32>,
+    marker: PhantomData<A>,
+}
+
+impl<A> WeakHandle<A> {
+    /// Tries to upgrade to a `Handle`.
+    #[inline]
+    pub fn upgrade(&self) -> Option<Handle<A>> {
+        self.id.upgrade().map(|id| {
+            Handle {
+                id,
+                marker: PhantomData,
+            }
+        })
+    }
+
+    /// Returns `true` if the original handle is dead.
+    #[inline]
+    pub fn is_dead(&self) -> bool {
+        self.upgrade().is_none()
+    }
 }

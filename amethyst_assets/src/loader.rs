@@ -6,12 +6,13 @@ use std::sync::Arc;
 use fnv::FnvHashMap;
 use rayon::ThreadPool;
 
-use {Asset, Directory, Format, Progress, Source};
+use {Asset, Directory, Format, FormatValue, Progress, Source};
 use storage::{AssetStorage, Handle, Processed};
 
 /// The asset loader, holding the sources and a reference to the `ThreadPool`.
 pub struct Loader {
     directory: Arc<Directory>,
+    hot_reload: bool,
     pool: Arc<ThreadPool>,
     sources: FnvHashMap<String, Arc<Source>>,
 }
@@ -25,6 +26,7 @@ impl Loader {
     {
         Loader {
             directory: Arc::new(Directory::new(directory)),
+            hot_reload: true,
             pool,
             sources: Default::default(),
         }
@@ -38,6 +40,15 @@ impl Loader {
     {
         self.sources
             .insert(id.into(), Arc::new(source) as Arc<Source>);
+    }
+
+    /// If set to `true`, this `Loader` will ask formats to
+    /// generate "reload instructions" which *allow* reloading.
+    /// Calling `set_hot_reload(true)` does not actually enable
+    /// hot reloading; this is controlled by the `HotReloadStrategy`
+    /// resource.
+    pub fn set_hot_reload(&mut self, value: bool) {
+        self.hot_reload = value;
     }
 
     /// Loads an asset with a given format from the default (directory) source.
@@ -109,20 +120,23 @@ impl Loader {
 
         let name = name.into();
 
-        self.pool.spawn(move || {
-            let data = format.import(name.clone(), source, options);
+        let hot_reload = self.hot_reload;
+
+        let cl = move || {
+            let data = format.import(name.clone(), source, options, hot_reload);
             match data {
                 Ok(_) => tracker.success(),
                 Err(_) => tracker.fail(),
             }
 
-            processed.push(Processed {
+            processed.push(Processed::NewAsset {
                 data,
-                format: F::NAME.into(),
+                format: F::NAME,
                 handle,
                 name,
             });
-        });
+        };
+        self.pool.spawn(cl);
 
         handle_clone
     }
@@ -133,9 +147,9 @@ impl Loader {
         A: Asset,
     {
         let handle = storage.allocate();
-        storage.processed.push(Processed {
-            data: Ok(data),
-            format: "".to_owned(),
+        storage.processed.push(Processed::NewAsset {
+            data: Ok(FormatValue::data(data)),
+            format: "",
             handle: handle.clone(),
             name: "<Data>".into(),
         });

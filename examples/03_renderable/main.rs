@@ -7,7 +7,7 @@ extern crate amethyst;
 extern crate cgmath;
 
 use amethyst::{Application, Error, State, Trans};
-use amethyst::assets::Loader;
+use amethyst::assets::{HotReloadBundle, Loader};
 use amethyst::config::Config;
 use amethyst::core::timing::Time;
 use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
@@ -369,6 +369,7 @@ fn run() -> Result<(), Error> {
         .with::<ExampleSystem>(ExampleSystem, "example_system", &[])
         .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
         .with_bundle(RenderBundle::new())?
+        .with_bundle(HotReloadBundle::default())?
         .with_local(RenderSystem::build(pipeline_builder, Some(display_config))?)
         .build()?;
 

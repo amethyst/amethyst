@@ -1,4 +1,5 @@
-use assets::{AssetStorage, Handle, Loader};
+use assets::{AssetStorage, Handle, HotReloadStrategy, Loader};
+use core::{ThreadPool, Time};
 use core::transform::*;
 use renderer::{Material, MaterialDefaults, Mesh, Texture};
 use renderer::ComboMeshCreator;
@@ -37,6 +38,9 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
         Fetch<'a, Loader>,
         Fetch<'a, Errors>,
         Fetch<'a, MaterialDefaults>,
+        Fetch<'a, Time>,
+        Fetch<'a, ThreadPool>,
+        Option<Fetch<'a, HotReloadStrategy>>,
         FetchMut<'a, AssetStorage<GltfSceneAsset>>,
         WriteStorage<'a, Handle<GltfSceneAsset>>,
         WriteStorage<'a, Handle<Mesh>>,
@@ -48,6 +52,8 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
 
     #[allow(unused)]
     fn run(&mut self, data: Self::SystemData) {
+        use std::ops::Deref;
+
         let (
             entities,
             mesh_storage,
@@ -55,6 +61,9 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
             loader,
             errors,
             material_defaults,
+            time,
+            pool,
+            strategy,
             mut scene_storage,
             mut scenes,
             mut meshes,
@@ -64,7 +73,8 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
             mut materials,
         ) = data;
 
-        scene_storage.process(Into::into, &errors);
+        let strategy = strategy.as_ref().map(Deref::deref);
+        scene_storage.process(Into::into, &errors, time.frame_number, &**pool, strategy);
 
         let mut deletes = vec![];
 
@@ -212,7 +222,12 @@ fn load_node(
     // Load child entities
     for child_node_index in &node.children {
         let child_entity = entities.create();
-        parents.insert(child_entity, Parent { entity: *node_entity });
+        parents.insert(
+            child_entity,
+            Parent {
+                entity: *node_entity,
+            },
+        );
         transforms.insert(child_entity, Transform::default());
         load_node(
             *child_node_index,
@@ -258,7 +273,12 @@ fn load_node(
                 let primitive_entity = entities.create();
                 local_transforms.insert(primitive_entity, LocalTransform::default());
                 transforms.insert(primitive_entity, Transform::default());
-                parents.insert(primitive_entity, Parent { entity: *node_entity });
+                parents.insert(
+                    primitive_entity,
+                    Parent {
+                        entity: *node_entity,
+                    },
+                );
                 load_primitive(
                     node_index,
                     primitive_index,
