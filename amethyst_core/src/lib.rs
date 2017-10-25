@@ -18,6 +18,7 @@ pub use transform::*;
 use std::sync::Arc;
 
 pub mod bundle;
+pub mod orientation;
 pub mod transform;
 pub mod timing;
 pub mod frame_limiter;

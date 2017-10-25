@@ -2,6 +2,7 @@
 
 use amethyst_assets::{AssetStorage, Handle, Loader};
 use amethyst_core::bundle::{ECSBundle, Result};
+use amethyst_core::orientation::Orientation;
 use amethyst_core::transform::components::*;
 use specs::{DispatcherBuilder, World};
 
@@ -35,6 +36,7 @@ impl<'a, 'b> ECSBundle<'a, 'b> for RenderBundle {
         world.add_resource(ScreenDimensions::new(100, 100));
         world.add_resource(AssetStorage::<Mesh>::new());
         world.add_resource(AssetStorage::<Texture>::new());
+        world.add_resource(Orientation::default());
 
         let mat = create_default_mat(world);
         world.add_resource(MaterialDefaults(mat));
