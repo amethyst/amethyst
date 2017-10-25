@@ -2,6 +2,7 @@
 
 use std::path::Path;
 use std::sync::Arc;
+use std::time::Duration;
 
 use core::ECSBundle;
 use rayon::ThreadPool;
@@ -39,7 +40,7 @@ pub struct Application<'a, 'b> {
     dispatcher: Dispatcher<'a, 'b>,
     events_reader_id: ReaderId,
     states: StateMachine<'a>,
-    time: Time,
+    fixed_time: Duration,
     timer: Stopwatch,
     #[derivative(Debug = "ignore")]
     locals: Vec<Box<for<'c> RunNow<'c> + 'b>>,
@@ -132,8 +133,11 @@ impl<'a, 'b> Application<'a, 'b> {
             self.advance_frame();
 
             self.frame_limiter.wait();
-
-            self.time.delta_time = self.timer.elapsed();
+            {
+                let mut time = self.engine.world.write_resource::<Time>();
+                time.increment_frame_number();
+                time.set_delta_time(self.timer.elapsed());
+            }
             self.timer.stop();
             self.timer.restart();
         }
@@ -145,20 +149,14 @@ impl<'a, 'b> Application<'a, 'b> {
     fn initialize(&mut self) {
         #[cfg(feature = "profiler")]
         profile_scope!("initialize");
-
-        self.engine.world.add_resource(self.time.clone());
+        let mut time = Time::default();
+        time.set_fixed_time(self.fixed_time);
+        self.engine.world.add_resource(time);
         self.states.start(&mut self.engine);
     }
 
     /// Advances the game world by one tick.
     fn advance_frame(&mut self) {
-        {
-            let mut time = self.engine.world.write_resource::<Time>();
-            time.frame_number += 1;
-            time.delta_time = self.time.delta_time;
-            time.fixed_step = self.time.fixed_step;
-            time.last_fixed_update = self.time.last_fixed_update;
-        }
 
         {
             let engine = &mut self.engine;
@@ -189,11 +187,15 @@ impl<'a, 'b> Application<'a, 'b> {
             }
         }
         {
+            let do_fixed = {
+                let time = self.engine.world.write_resource::<Time>();
+                time.last_fixed_update().elapsed() >= time.fixed_time()
+            };
             #[cfg(feature = "profiler")]
             profile_scope!("fixed_update");
-            if self.time.last_fixed_update.elapsed() >= self.time.fixed_step {
+            if do_fixed {
                 self.states.fixed_update(&mut self.engine);
-                self.time.last_fixed_update += self.time.fixed_step;
+                self.engine.world.write_resource::<Time>().finish_fixed_update();
             }
 
             #[cfg(feature = "profiler")]
@@ -252,6 +254,7 @@ pub struct ApplicationBuilder<'a, 'b, T> {
     frame_limiter: FrameLimiter,
     locals: Vec<Box<for<'c> RunNow<'c> + 'b>>,
     ignore_window_close: bool,
+    fixed_time: Duration,
 }
 
 impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
@@ -349,6 +352,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
             frame_limiter: FrameLimiter::default(),
             locals: Vec::default(),
             ignore_window_close: false,
+            fixed_time: Duration::new(0, 16666666),
         })
     }
 
@@ -776,6 +780,20 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
         self
     }
 
+    /// Sets the duration between fixed updates, defaults to one sixtieth of a second.
+    ///
+    /// # Parameters
+    ///
+    /// `duration`: The duration between fixed updates.
+    ///
+    /// # Returns
+    ///
+    /// This function returns the ApplicationBuilder after modifying it.
+    pub fn with_fixed_step_length(mut self, duration: Duration) -> Self {
+        self.fixed_time = duration;
+        self
+    }
+
     /// Tells the resulting application window to ignore close events if ignore is true.
     /// This will make your game window unresponsive to operating system close commands.
     /// Use with caution.
@@ -864,7 +882,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
             states: StateMachine::new(self.initial_state),
             events_reader_id: self.events_reader_id,
             dispatcher: self.disp_builder.with_pool(self.pool).build(),
-            time: Time::default(),
+            fixed_time: self.fixed_time,
             timer: Stopwatch::new(),
             frame_limiter: self.frame_limiter,
             locals: self.locals,

@@ -119,7 +119,7 @@ impl<'a> System<'a> for RenderingSystem {
                 Ok(MeshAsset { buffer: () })
             },
             &errors,
-            time.frame_number,
+            time.frame_number(),
             &**pool,
             strategy,
         );

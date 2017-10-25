@@ -78,7 +78,7 @@ where
         mesh_storage.process(
             |d| create_mesh_asset(d, &mut self.renderer),
             &errors,
-            time.frame_number,
+            time.frame_number(),
             &**pool,
             strategy,
         );
@@ -86,7 +86,7 @@ where
         texture_storage.process(
             |d| create_texture_asset(d, &mut self.renderer),
             &errors,
-            time.frame_number,
+            time.frame_number(),
             &**pool,
             strategy,
         );

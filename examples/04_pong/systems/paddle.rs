@@ -19,11 +19,6 @@ impl<'s> System<'s> for PaddleSystem {
     fn run(&mut self, (mut paddles, mut transforms, time, input): Self::SystemData) {
         use Side;
 
-        // Because the time between frames is not always constant, we use the time
-        // difference between this frame and the previous one to make sure the movement
-        // speed of the paddles does remain stable.
-        let delta_time = time.delta_time.subsec_nanos() as f32 / 1.0e9;
-
         // Iterate over all planks and move them according to the input the user
         // provided.
         for (paddle, transform) in (&mut paddles, &mut transforms).join() {
@@ -34,7 +29,7 @@ impl<'s> System<'s> for PaddleSystem {
 
             if let Some(movement) = opt_movement {
                 use ARENA_HEIGHT;
-                transform.translation[1] += paddle.velocity * delta_time * movement as f32;
+                transform.translation[1] += paddle.velocity * time.delta_seconds() * movement as f32;
 
                 // We make sure the paddle remains in the arena.
                 transform.translation[1] = transform.translation[1]

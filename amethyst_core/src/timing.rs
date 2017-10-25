@@ -3,23 +3,112 @@
 use std::time::{Duration, Instant};
 
 /// Frame timing values.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Time {
+    /// Time elapsed since the last frame in seconds.
+    delta_seconds: f32,
     /// Time elapsed since the last frame.
-    pub delta_time: Duration,
+    delta_time: Duration,
+    /// Rate at which `State::fixed_update` is called in seconds.
+    fixed_seconds: f32,
     /// Rate at which `State::fixed_update` is called.
-    pub fixed_step: Duration,
+    fixed_time: Duration,
     /// Time at which `State::fixed_update` was last called.
     pub last_fixed_update: Instant,
     /// The total number of frames that have been played in this session.
-    pub frame_number: u64,
+    frame_number: u64,
+}
+
+impl Time {
+
+    /// Gets the time difference between frames in seconds
+    pub fn delta_seconds(&self) -> f32 {
+        self.delta_seconds
+    }
+
+    /// Gets the time difference between frames
+    pub fn delta_time(&self) -> Duration {
+        self.delta_time
+    }
+
+    /// Gets the fixed time step in seconds
+    pub fn fixed_seconds(&self) -> f32 {
+        self.fixed_seconds
+    }
+
+    /// Gets the fixed time step
+    pub fn fixed_time(&self) -> Duration {
+        self.fixed_time
+    }
+
+    /// Gets the current frame number.  This increments by 1 every frame.  There is no frame 0.
+    pub fn frame_number(&self) -> u64 {
+        self.frame_number
+    }
+
+    /// Gets the time at which the last fixed update was called.
+    pub fn last_fixed_update(&self) -> Instant {
+        self.last_fixed_update
+    }
+
+    /// Gets the total number of frames that have been played in this session.
+
+    /// Sets both `delta_seconds` and `delta_time` based on the seconds given.
+    ///
+    /// This should only be called by the engine.  Bad things might happen if you call this in
+    /// your game.
+    pub fn set_delta_seconds(&mut self, secs: f32) {
+        self.delta_seconds = secs;
+        self.delta_time = secs_to_duration(secs);
+    }
+
+    /// Sets both `delta_time` and `delta_seconds` based on the duration given.
+    ///
+    /// This should only be called by the engine.  Bad things might happen if you call this in
+    /// your game.
+    pub fn set_delta_time(&mut self, time: Duration) {
+        self.delta_seconds = duration_to_secs(time);
+        self.delta_time = time;
+    }
+
+
+
+    /// Sets both `fixed_seconds` and `fixed_time` based on the seconds given.
+    pub fn set_fixed_seconds(&mut self, secs: f32) {
+        self.fixed_seconds = secs;
+        self.fixed_time = secs_to_duration(secs);
+    }
+
+    /// Sets both `fixed_time` and `fixed_seconds` based on the duration given.
+    pub fn set_fixed_time(&mut self, time: Duration) {
+        self.fixed_seconds = duration_to_secs(time);
+        self.fixed_time = time;
+    }
+
+    /// Increments the current frame number by 1.
+    ///
+    /// This should only be called by the engine.  Bad things might happen if you call this in
+    /// your game.
+    pub fn increment_frame_number(&mut self) {
+        self.frame_number += 1;
+    }
+
+    /// Indicates a fixed update just finished.
+    ///
+    /// This should only be called by the engine.  Bad things might happen if you call this in
+    /// your game.
+    pub fn finish_fixed_update(&mut self) {
+        self.last_fixed_update += self.fixed_time
+    }
 }
 
 impl Default for Time {
     fn default() -> Time {
         Time {
+            delta_seconds: 0.0,
             delta_time: Duration::from_secs(0),
-            fixed_step: Duration::new(0, 16666666),
+            fixed_seconds: duration_to_secs(Duration::new(0, 16666666)),
+            fixed_time: Duration::new(0, 16666666),
             last_fixed_update: Instant::now(),
             frame_number: 0,
         }
@@ -195,12 +284,17 @@ mod tests {
     }
 }
 
-///Converts a Duration to the time in seconds.
+/// Converts a Duration to the time in seconds.
 pub fn duration_to_secs(duration: Duration) -> f32 {
     duration.as_secs() as f32 + (duration.subsec_nanos() as f32 / 1.0e9)
 }
 
-///Converts a Duration to nanoseconds
+/// Converts a time in seconds to a duration
+pub fn secs_to_duration(secs: f32) -> Duration {
+    Duration::new((secs as u64), ((secs % 1.0) * 1.0e9) as u32)
+}
+
+/// Converts a Duration to nanoseconds
 pub fn duration_to_nanos(duration: Duration) -> u64 {
     (duration.as_secs() * 1_000_000_000) + duration.subsec_nanos() as u64
 }
