@@ -137,7 +137,7 @@ fn run() -> Result<(), Error> {
     let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
 
     let display_config_path = format!(
-        "{}/examples/05_assets/resources/config.ron",
+        "{}/examples/05_assets/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
     );
 
