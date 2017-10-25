@@ -123,13 +123,13 @@ impl State for Example {
 
 fn run() -> Result<(), amethyst::Error> {
     let path = format!(
-        "{}/examples/06_material/resources/config.ron",
+        "{}/examples/06_material/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
     );
     let config = DisplayConfig::load(&path);
 
     let resources = format!(
-        "{}/examples/06_material/resources/",
+        "{}/examples/assets/",
         env!("CARGO_MANIFEST_DIR")
     );
 

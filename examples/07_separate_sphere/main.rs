@@ -53,12 +53,12 @@ impl State for Example {
 
 fn run() -> Result<(), amethyst::Error> {
     let display_config_path = format!(
-        "{}/examples/02_sphere/resources/display.ron",
+        "{}/examples/07_separate_sphere/resources/display.ron",
         env!("CARGO_MANIFEST_DIR")
     );
 
     let resources = format!(
-        "{}/examples/02_sphere/resources/",
+        "{}/examples/assets/",
         env!("CARGO_MANIFEST_DIR")
     );
 
