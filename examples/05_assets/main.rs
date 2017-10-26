@@ -17,6 +17,8 @@ use amethyst::renderer::{Camera, DisplayConfig as DisplayConfig, DrawShaded, Eve
                          PosNormTex, Projection, RenderBundle, RenderSystem, Rgba, Stage,
                          VirtualKeyCode, WindowEvent};
 
+use cgmath::Point3;
+
 #[derive(Clone)]
 struct Custom;
 
@@ -87,8 +89,8 @@ impl State for AssetsExample {
         };
 
         let mut trans = LocalTransform::default();
-        trans.translation = [-5.0, 0.0, 0.0];
-        trans.scale = [2.0, 2.0, 2.0];
+        trans.translation = Point3::new(-5.0, 0.0, 0.0);
+        trans.scale = [2.0; 3].into();
         engine
             .world
             .create_entity()

@@ -1,28 +1,38 @@
 //! Local transform component.
 
-use cgmath::{Deg, InnerSpace, Matrix3, Matrix4, Point3, Quaternion, Rotation, Rotation3, Vector3};
+use cgmath::{
+    Deg,
+    EuclideanSpace,
+    InnerSpace,
+    Matrix3,
+    Matrix4,
+    Point3,
+    Quaternion,
+    Rotation,
+    Rotation3,
+    Vector3
+};
 use orientation::Orientation;
 use specs::{Component, DenseVecStorage, FlaggedStorage};
 
 /// Local position, rotation, and scale (from parent if it exists).
 ///
 /// Used for rendering position and orientation.
-#[derive(Clone, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct LocalTransform {
     /// Quaternion [w (scalar), x, y, z]
-    pub rotation: [f32; 4],
+    pub rotation: Quaternion<f32>,
     /// Scale vector [x, y, z]
-    pub scale: [f32; 3],
+    pub scale: Vector3<f32>,
     /// Translation/position vector [x, y, z]
-    pub translation: [f32; 3],
+    pub translation: Point3<f32>,
 }
 
 impl LocalTransform {
     /// Rotate to look at a point in space (without rolling)
-    pub fn look_at(&mut self, orientation: &Orientation, position: Vector3<f32>) -> &mut Self {
-        let pos_vec = Vector3::from(self.translation);
+    pub fn look_at(&mut self, orientation: &Orientation, position: Point3<f32>) -> &mut Self {
 
-        self.rotation = Quaternion::look_at(position - pos_vec, orientation.up.into()).into();
+        self.rotation = Quaternion::look_at(position - self.translation, orientation.up.into()).into();
         self
     }
 
@@ -31,7 +41,7 @@ impl LocalTransform {
     /// Combined with the parent's global `Transform` component it gives
     /// the global (or world) matrix for the current entity.
     #[inline]
-    pub fn matrix(&self) -> [[f32; 4]; 4] {
+    pub fn matrix(&self) -> Matrix4<f32> {
         let quat: Matrix3<f32> = Quaternion::from(self.rotation).into();
         let scale: Matrix3<f32> = Matrix3::<f32> {
             x: [self.scale[0], 0.0, 0.0].into(),
@@ -39,8 +49,8 @@ impl LocalTransform {
             z: [0.0, 0.0, self.scale[2]].into(),
         };
         let mut matrix: Matrix4<f32> = (&quat * scale).into();
-        matrix.w = Vector3::from(self.translation).extend(1.0f32);
-        matrix.into()
+        matrix.w = Point3::to_vec(self.translation).extend(1.0f32);
+        matrix
     }
 
     /// Move relatively to its current position and orientation.
@@ -53,7 +63,7 @@ impl LocalTransform {
     /// by whatever amount you want to move before passing the vector to this method
     #[inline]
     pub fn move_global(&mut self, direction: Vector3<f32>) -> &mut Self {
-        self.translation = (Vector3::from(self.translation) + direction).into();
+        self.translation = Point3::from_vec(Point3::to_vec(self.translation) + direction);
         self
     }
 
@@ -62,7 +72,7 @@ impl LocalTransform {
     pub fn move_local(&mut self, axis: Vector3<f32>, amount: f32) -> &mut Self {
         let delta = Quaternion::from(self.rotation).conjugate() * axis.normalize() * amount;
 
-        self.translation = (Vector3::from(self.translation) + delta).into();
+        self.translation = self.translation + delta;
         self
     }
 
@@ -125,7 +135,7 @@ impl LocalTransform {
 
     /// Set the position.
     pub fn set_position(&mut self, position: Point3<f32>) -> &mut Self {
-        self.translation = position.into();
+        self.translation = position;
         self
     }
 
@@ -142,11 +152,8 @@ impl LocalTransform {
 
     /// Calculate the view matrix from the given data.
     pub fn to_view_matrix(&self, orientation: &Orientation) -> Matrix4<f32> {
-        let forward = orientation.forward;
-        let trans = self.translation;
-        let center = Point3::from(trans) + Vector3::from(forward);
-
-        Matrix4::look_at(trans.into(), center, orientation.up.into())
+        let center = self.translation + orientation.forward;
+        Matrix4::look_at(self.translation, center, orientation.up)
     }
 
     /// Yaw relatively to the world.
@@ -163,9 +170,9 @@ impl LocalTransform {
 impl Default for LocalTransform {
     fn default() -> Self {
         LocalTransform {
-            translation: [0.0, 0.0, 0.0],
-            rotation: [1.0, 0.0, 0.0, 0.0],
-            scale: [1.0, 1.0, 1.0],
+            translation: [0.0, 0.0, 0.0].into(),
+            rotation: [1.0, 0.0, 0.0, 0.0].into(),
+            scale: [1.0, 1.0, 1.0].into(),
         }
     }
 }

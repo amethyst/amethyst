@@ -28,11 +28,11 @@ opengl = ["gfx_device_gl", "gfx_window_glutin", "glutin"]
 [dependencies]
 amethyst_assets = { path = "../amethyst_assets", version = "0.2.0" }
 amethyst_core = { path = "../amethyst_core", version = "0.1.0" }
-cgmath = { version = "0.14", features = ["eders"] }
+cgmath = { version = "0.15", features = ["serde", "mint"] }
 derivative = "1.0"
 fnv = "1.0"
-gfx = { version = "0.16", features = ["cgmath-types", "serialize"] }
-gfx_core = { version = "0.7", features = ["cgmath-types", "serialize"] }
+gfx = { version = "0.16", features = ["serialize"] }
+gfx_core = { version = "0.7", features = ["serialize"] }
 gfx_macros = "0.2"
 imagefmt = "4.0"
 num_cpus = "1.0"

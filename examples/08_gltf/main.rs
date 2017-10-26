@@ -9,7 +9,7 @@ use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst_gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystem, GltfSceneOptions};
 use amethyst::prelude::*;
 use amethyst::renderer::*;
-use cgmath::{Deg, Quaternion, Rotation3};
+use cgmath::{Deg, Point3, Quaternion, Rotation3};
 
 struct Example;
 
@@ -58,7 +58,7 @@ impl State for Example {
         println!("Put camera");
 
         let mut camera_transform = LocalTransform::default();
-        camera_transform.translation = [-2.0, 2.0, 2.0];
+        camera_transform.translation = Point3::new(-2.0, 2.0, 2.0);
         let camera_orientation =
             Quaternion::from_angle_y(Deg(-45.)) * Quaternion::from_angle_x(Deg(-35.));
         camera_transform.rotation = camera_orientation.into();

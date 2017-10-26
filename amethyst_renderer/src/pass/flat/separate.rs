@@ -167,7 +167,7 @@ impl<'a> ParallelIterator for DrawFlatSeparateApply<'a> {
                             .map(|&(ref cam, ref transform)| {
                                 VertexArgs {
                                     proj: cam.proj.into(),
-                                    view: Matrix4::from(transform.0).invert().unwrap().into(),
+                                    view: transform.0.invert().unwrap().into(),
                                     model: *global.as_ref(),
                                 }
                             })
