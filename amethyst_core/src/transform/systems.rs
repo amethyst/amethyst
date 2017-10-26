@@ -233,7 +233,7 @@ mod tests {
     }
 
     fn together(transform: Transform, local: LocalTransform) -> [[f32; 4]; 4] {
-        (Matrix4::from(transform.0) * Matrix4::from(local.matrix())).into()
+        (transform.0 * local.matrix()).into()
     }
 
     // Basic default LocalTransform -> Transform (Should just be identity)
