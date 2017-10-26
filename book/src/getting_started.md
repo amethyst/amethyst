@@ -1,41 +1,39 @@
-# Getting Started
+# Getting started
 
-These instructions will help you set up a working Amethyst game development
-environment. Then we'll test this environment by compiling a simple "Hello,
-World" application.
+## Setting up Rust
 
-Amethyst should compile hassle-free on any platform properly supported by the
-Rust compiler. Here are the system requirements (they're pretty modest):
+Make sure to have the latest stable of Rust installed.
+We recommend using [rustup][ru] for that.
 
-* Minimum:
-  * CPU: 1GHz, the more cores the better
-  * RAM: 512 MiB
-  * HDD: 17 MiB free disk space
-  * OS: Windows Vista and newer, Linux, BSD, Mac OS X
-  * Rust: Nightly (1.6.0 or newer)
-* Renderer Backends:
-  * OpenGL 4.0 or newer
+After you did that, Rust should be fully installed.
 
-## Setting Up
+[ru]: https://rustup.rs
 
-> Note: This guide assumes you have nightly Rust and Cargo installed, and also
-> have a working Internet connection.
-> Please take care of these prerequisites first before proceeding.
-> See [rustup][ru] for handling multiple rust toolchains.
+## Required dependencies
 
-[ru]: https://www.rustup.rs/
+If you are on Linux, you'll need to install `libasound2-dev`.
 
-There are two ways to get started working with Amethyst:
+## Setting up Amethyst
 
-1. [Use the Amethyst CLI tool to generate a new game project][as].
-2. [Create the Cargo crate and the "resources" folder structure yourself][ms].
+You can either use the [Amethyst CLI][cl] or just cargo to set up your project.
+After executing
 
-[as]: ./getting_started/automatic_setup.html
-[ms]: ./getting_started/manual_cargo_setup.html
+```
+amethyst new game
+```
 
-Since we're just getting started, it's fastest and highly recommended to use
-[Amethyst CLI][ac], which is included in the [amethyst_tools][at] crate. If
-you're of the intrepid type, you may go the vanilla Cargo route if you wish.
+you should get `Cargo.toml`, `src/main.rs` and `resources/display_config.ron`.
+In case you're doing this with `cargo`, here's what you need to do:
 
-[ac]: https://github.com/amethyst/tools/tree/master/src/cli
-[at]: https://github.com/amethyst/tools
+* Add `amethyst` as dependency in your `Cargo.toml`.
+* Create a `resources` folder and put a `display_config.ron` in it.
+* Start with one of the [examples][ex] from the Amethyst repository (e.g. `window`)
+  for the source code. Watch out to use the right example for the version of Amethyst
+  you specified in `Cargo.toml`.
+
+We don't have any tutorials yet, but there's a [Gitter room][gi] where you can
+ask in case you want an explanation for something. If you'd like to help out,
+a tutorial would be much appreciated!
+
+[cl]: https://github.com/amethyst/tools
+[gi]: https://gitter.im/amethyst/general

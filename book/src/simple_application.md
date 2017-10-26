@@ -1,4 +1,4 @@
-# Writing a Simple Application
+# [DRAFT] Writing a Simple Application
 
 In this section, I'll walk you through implementing a simple 3D Pong clone using
 Amethyst. You will learn a bit more about game states and also basic
