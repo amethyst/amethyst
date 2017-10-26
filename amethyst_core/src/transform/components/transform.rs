@@ -2,7 +2,7 @@
 
 use std::borrow::Borrow;
 
-use cgmath::Matrix4;
+use cgmath::{Matrix4, One};
 use specs::{Component, DenseVecStorage, FlaggedStorage};
 
 /// Performs a global transformation on the entity (transform from origin).
@@ -36,14 +36,7 @@ impl Component for Transform {
 
 impl Default for Transform {
     fn default() -> Self {
-        Transform(
-            [
-                [1.0, 0.0, 0.0, 0.0],
-                [0.0, 1.0, 0.0, 0.0],
-                [0.0, 0.0, 1.0, 0.0],
-                [0.0, 0.0, 0.0, 1.0],
-            ].into(),
-        )
+        Transform(Matrix4::one())
     }
 }
 
