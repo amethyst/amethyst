@@ -164,7 +164,8 @@ impl Loader {
         handle
     }
 
-    fn source(&self, source: &str) -> Arc<Source> {
+    // TODO: consider exposing
+    pub(crate) fn source(&self, source: &str) -> Arc<Source> {
         self.sources
             .get(source)
             .expect("No such source. Maybe you forgot to add it with `Loader::add_source`?")

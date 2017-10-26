@@ -24,5 +24,12 @@ error_chain! {
             description("Format could not load asset")
             display("Format {:?} could not load asset", format)
         }
+
+        /// Returned from `AssetsDeserializer` if the assets file
+        /// specified a format which is not registered.
+        NoSuchFormat(format: String) {
+            description("Assets file specified format which is not registered")
+            display("Format {:?} is not registered", format)
+        }
     }
 }
