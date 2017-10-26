@@ -28,7 +28,6 @@ opengl = ["gfx_device_gl", "gfx_window_glutin", "glutin"]
 [dependencies]
 amethyst_assets = { path = "../amethyst_assets", version = "0.2.0" }
 amethyst_core = { path = "../amethyst_core", version = "0.1.0" }
-cgmath = { version = "0.15", features = ["serde", "mint"] }
 derivative = "1.0"
 fnv = "1.0"
 gfx = { version = "0.16", features = ["serialize"] }

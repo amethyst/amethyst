@@ -2,12 +2,11 @@ use {ARENA_HEIGHT, ARENA_WIDTH};
 use {Ball, Paddle, Side};
 use amethyst::assets::Loader;
 use amethyst::core::transform::{LocalTransform, Transform};
+use amethyst::core::cgmath::Vector3;
 use amethyst::ecs::World;
 use amethyst::prelude::*;
 use amethyst::renderer::{Camera, Event, KeyboardInput, Material, MeshHandle, PosTex, Projection,
                          VirtualKeyCode, WindowEvent, WindowMessages};
-
-use cgmath::Vector3;
 
 pub struct Pong;
 
@@ -43,7 +42,7 @@ impl State for Pong {
 
 /// Initialise the camera.
 fn initialise_camera(world: &mut World) {
-    use cgmath::{Matrix4, Vector3};
+    use amethyst::core::cgmath::{Matrix4, Vector3};
     world
         .create_entity()
         .with(Camera::from(Projection::orthographic(

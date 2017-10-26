@@ -16,9 +16,9 @@ pub struct Orientation {
 impl Default for Orientation {
     fn default() -> Self {
         Self {
-            forward: [1.0, 0.0, 0.0].into(),
-            right: [0.0, -1.0, 0.0].into(),
-            up: [0.0, 0.0, 1.0].into(),
+            forward: Vector3::unit_x(),
+            right: -Vector3::unit_y(),
+            up: Vector3::unit_z(),
         }
     }
 }

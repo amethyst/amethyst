@@ -1,7 +1,7 @@
 //! Local transform component.
 
-use cgmath::{Deg, EuclideanSpace, InnerSpace, Matrix3, Matrix4, Point3, Quaternion, Rotation,
-             Rotation3, Vector3};
+use cgmath::{Array, Deg, EuclideanSpace, InnerSpace, Matrix3, Matrix4, One, Point3, Quaternion, Rotation,
+             Rotation3, SquareMatrix, Vector3, Zero};
 use orientation::Orientation;
 use specs::{Component, DenseVecStorage, FlaggedStorage};
 
@@ -35,11 +35,7 @@ impl LocalTransform {
     #[inline]
     pub fn matrix(&self) -> Matrix4<f32> {
         let quat: Matrix3<f32> = Quaternion::from(self.rotation).into();
-        let scale: Matrix3<f32> = Matrix3::<f32> {
-            x: [self.scale[0], 0.0, 0.0].into(),
-            y: [0.0, self.scale[1], 0.0].into(),
-            z: [0.0, 0.0, self.scale[2]].into(),
-        };
+        let scale: Matrix3<f32> = Matrix3::from_diagonal(self.scale);
         let mut matrix: Matrix4<f32> = (&quat * scale).into();
         matrix.w = self.translation.extend(1.0f32);
         matrix
@@ -164,9 +160,9 @@ impl LocalTransform {
 impl Default for LocalTransform {
     fn default() -> Self {
         LocalTransform {
-            translation: [0.0, 0.0, 0.0].into(),
-            rotation: [1.0, 0.0, 0.0, 0.0].into(),
-            scale: [1.0, 1.0, 1.0].into(),
+            translation: Vector3::zero(),
+            rotation: Quaternion::one(),
+            scale: Vector3::from_value(1.),
         }
     }
 }

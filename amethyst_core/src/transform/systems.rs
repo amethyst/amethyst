@@ -181,7 +181,7 @@ impl<'a> System<'a> for TransformSystem {
 
 #[cfg(test)]
 mod tests {
-    use cgmath::{Decomposed, Matrix4, Quaternion, Vector3, Zero};
+    use cgmath::{Decomposed, Matrix4, One, Quaternion, Vector3, Zero};
     use shred::RunNow;
     use specs::World;
     use transform::{LocalTransform, Parent, Transform, TransformSystem};
@@ -243,7 +243,7 @@ mod tests {
 
         let mut transform = LocalTransform::default();
         transform.translation = Vector3::zero();
-        transform.rotation = Quaternion::new(1.0, 0.0, 0.0, 0.0);
+        transform.rotation = Quaternion::one();
 
         let e1 = world
             .create_entity()

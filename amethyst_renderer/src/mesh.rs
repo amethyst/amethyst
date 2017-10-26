@@ -5,7 +5,7 @@ use std::marker::PhantomData;
 
 use amethyst_assets::Handle;
 
-use cgmath::{Deg, Matrix4, Point3, Transform, Vector3};
+use amethyst_core::cgmath::{Deg, Matrix4, Point3, Transform, Vector3};
 use gfx::Primitive;
 
 use error::Result;
@@ -204,7 +204,7 @@ where
 {
     /// Creates a new `MeshBuilder` with the given vertices.
     pub fn new(verts: D) -> Self {
-        use cgmath::SquareMatrix;
+        use amethyst_core::cgmath::SquareMatrix;
         assert!(check_attributes_are_sorted(V::ATTRIBUTES));
         MeshBuilder {
             prim: Primitive::TriangleList,
@@ -242,7 +242,7 @@ where
 
     /// Sets the position of the mesh in 3D space.
     pub fn with_position<P: Into<Point3<f32>>>(mut self, pos: P) -> Self {
-        use cgmath::EuclideanSpace;
+        use amethyst_core::cgmath::EuclideanSpace;
 
         let trans = Matrix4::from_translation(pos.into().to_vec());
         self.transform.concat_self(&trans);

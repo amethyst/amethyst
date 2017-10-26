@@ -5,7 +5,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 use amethyst_core::transform::Transform as TransformComponent;
-use cgmath::Transform;
+use amethyst_core::cgmath::Transform;
 use rodio::{Sample, Source, SpatialSink};
 use specs::{Entity, Fetch, Join, ReadStorage, System, WriteStorage};
 

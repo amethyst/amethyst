@@ -4,11 +4,11 @@
 //! TODO: Rewrite for new renderer.
 
 extern crate amethyst;
-extern crate cgmath;
 
 use amethyst::{Application, Error, State, Trans};
 use amethyst::assets::{HotReloadBundle, Loader};
 use amethyst::config::Config;
+use amethyst::core::cgmath::{Array, Deg, Euler, Quaternion, Rad, Rotation, Rotation3, Vector3};
 use amethyst::core::timing::Time;
 use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::ecs::{Fetch, FetchMut, Join, ReadStorage, System, World, WriteStorage};
@@ -18,7 +18,6 @@ use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, DisplayConfig a
                          MaterialDefaults, MeshHandle, ObjFormat, Pipeline, PngFormat, PointLight,
                          PosNormTex, Projection, RenderBundle, RenderSystem, Rgba, Stage,
                          VirtualKeyCode, WindowEvent};
-use cgmath::{Deg, EuclideanSpace, Euler, Point3, Quaternion, Rad, Rotation, Rotation3, Vector3};
 
 struct DemoState {
     light_angle: f32,
@@ -57,7 +56,7 @@ impl<'a> System<'a> for ExampleSystem {
         for (_, transform) in (&camera, &mut transforms).join() {
             // rotate the camera, using the origin as a pivot point
             transform.translation = delta_rot
-                .rotate_point(Point3::from_vec(transform.translation)).to_vec();
+                .rotate_vector(transform.translation);
             // add the delta rotation for the frame to the total rotation (quaternion multiplication
             // is the same as rotational addition)
             transform.rotation = (delta_rot * Quaternion::from(transform.rotation)).into();
@@ -145,7 +144,7 @@ impl State for Example {
 
         // Create base rectangle as floor
         let mut trans = LocalTransform::default();
-        trans.scale = [10.0; 3].into();
+        trans.scale = Vector3::from_value(10.);
 
         engine
             .world

@@ -1,4 +1,4 @@
-use cgmath::Point3;
+use amethyst_core::cgmath::Point3;
 use specs::{Component, HashMapStorage};
 
 use output::Output;

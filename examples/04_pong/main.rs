@@ -1,7 +1,6 @@
 //! TODO: Rewrite for new renderer.
 
 extern crate amethyst;
-extern crate cgmath;
 
 mod pong;
 mod systems;
