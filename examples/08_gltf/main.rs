@@ -1,11 +1,12 @@
 //! Displays a 2D GLTF scene
 
 extern crate amethyst;
+extern crate amethyst_gltf;
 extern crate cgmath;
 
 use amethyst::assets::{AssetStorage, Handle, Loader};
 use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
-use amethyst::gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystem, GltfSceneOptions};
+use amethyst_gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystem, GltfSceneOptions};
 use amethyst::prelude::*;
 use amethyst::renderer::*;
 use cgmath::{Deg, Quaternion, Rotation3};
