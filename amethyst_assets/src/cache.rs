@@ -1,74 +1,48 @@
-//! MODULE DISABLED, will be reused later!
+use std::borrow::Borrow;
+use std::hash::Hash;
 
 use fnv::FnvHashMap;
-use parking_lot::RwLock;
 
-use AssetSpec;
+use {Handle, WeakHandle};
 
-/// A basic implementation for a cache. This might be useful as the `Context` of
-/// an `Asset`, so that the same asset doesn't get imported twice.
-///
-/// Because contexts have to be immutable, a `RwLock` is used. Therefore, all
-/// operations are blocking (but shouldn't block for a long time).
-pub struct Cache<T> {
-    map: RwLock<FnvHashMap<AssetSpec, T>>,
+/// A simple cache for asset handles of type `A`.
+/// This stores `WeakHandle`, so it doesn't keep the assets alive.
+#[derive(Derivative)]
+#[derivative(Default(bound = ""))]
+pub struct Cache<A> {
+    map: FnvHashMap<String, WeakHandle<A>>,
 }
 
-impl<T> Cache<T>
+impl<A> Cache<A>
 where
-    T: Clone,
+    A: Clone,
 {
     /// Creates a new `Cache` and initializes it with the default values.
     pub fn new() -> Self {
         Default::default()
     }
 
-    /// Inserts an asset, locking the internal `RwLock` to get write access to the hash map.
-    ///
-    /// Returns the previous value in case there was any.
-    pub fn insert(&self, spec: AssetSpec, asset: T) -> Option<T> {
-        self.map.write().insert(spec, asset)
+    /// Inserts an asset with a given `key` and returns the old value (if any).
+    pub fn insert<K: Into<String>>(&mut self, key: K, asset: &Handle<A>) -> Option<WeakHandle<A>> {
+        self.map.insert(key.into(), asset.downgrade())
     }
 
-    /// Retrieves an asset, locking the internal `RwLock` to get read access to the hash map.
-    /// In case this asset has been inserted previously, it will be cloned and returned.
-    /// Otherwise, you'll receive `None`.
-    pub fn get(&self, spec: &AssetSpec) -> Option<T> {
-        self.map.read().get(spec).map(Clone::clone)
-    }
-
-    /// Accesses a cached asset, locking the internal `RwLock` to get read access to the hash map.
-    /// In case the asset exists, `f` gets called with a reference to the cached asset and this
-    /// method returns `true`.
-    pub fn access<O, F: FnOnce(&T) -> O>(&self, spec: &AssetSpec, f: F) -> Option<O> {
-        if let Some(a) = self.map.read().get(spec) {
-            Some(f(a))
-        } else {
-            None
-        }
-    }
-
-    /// Deletes all cached values, except the ones `f` returned `true` for.
-    /// May be used when you're about to clear unused assets (see `Asset::clear`).
-    ///
-    /// Blocks the calling thread for getting write access to the hash map.
-    pub fn retain<F>(&self, f: F)
+    /// Retrieves an asset handle using a given `key`.
+    pub fn get<K>(&self, key: &K) -> Option<Handle<A>>
     where
-        F: FnMut(&AssetSpec, &mut T) -> bool,
+        K: ?Sized + Hash + Eq,
+        String: Borrow<K>,
     {
-        self.map.write().retain(f);
+        self.map.get(key).and_then(WeakHandle::upgrade)
     }
 
-    /// Deletes all cached values after locking the `RwLock`.
-    pub fn clear_all(&self) {
-        self.map.write().clear();
+    /// Deletes all cached handles which are invalid.
+    pub fn clear_dead<F>(&mut self) {
+        self.map.retain(|_, h| !h.is_dead());
     }
-}
 
-impl<T> Default for Cache<T> {
-    fn default() -> Self {
-        Cache {
-            map: Default::default(),
-        }
+    /// Clears all values.
+    pub fn clear_all(&mut self) {
+        self.map.clear();
     }
 }
