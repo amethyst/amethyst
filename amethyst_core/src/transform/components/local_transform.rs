@@ -1,17 +1,7 @@
 //! Local transform component.
 
-use cgmath::{
-    Deg,
-    EuclideanSpace,
-    InnerSpace,
-    Matrix3,
-    Matrix4,
-    Point3,
-    Quaternion,
-    Rotation,
-    Rotation3,
-    Vector3
-};
+use cgmath::{Deg, EuclideanSpace, InnerSpace, Matrix3, Matrix4, Point3, Quaternion, Rotation,
+             Rotation3, Vector3};
 use orientation::Orientation;
 use specs::{Component, DenseVecStorage, FlaggedStorage};
 
@@ -25,14 +15,16 @@ pub struct LocalTransform {
     /// Scale vector [x, y, z]
     pub scale: Vector3<f32>,
     /// Translation/position vector [x, y, z]
-    pub translation: Point3<f32>,
+    pub translation: Vector3<f32>,
 }
 
 impl LocalTransform {
     /// Rotate to look at a point in space (without rolling)
     pub fn look_at(&mut self, orientation: &Orientation, position: Point3<f32>) -> &mut Self {
-
-        self.rotation = Quaternion::look_at(position - self.translation, orientation.up.into()).into();
+        self.rotation = Quaternion::look_at(
+            position - Point3::from_vec(self.translation),
+            orientation.up.into(),
+        ).into();
         self
     }
 
@@ -49,7 +41,7 @@ impl LocalTransform {
             z: [0.0, 0.0, self.scale[2]].into(),
         };
         let mut matrix: Matrix4<f32> = (&quat * scale).into();
-        matrix.w = Point3::to_vec(self.translation).extend(1.0f32);
+        matrix.w = self.translation.extend(1.0f32);
         matrix
     }
 
@@ -63,7 +55,7 @@ impl LocalTransform {
     /// by whatever amount you want to move before passing the vector to this method
     #[inline]
     pub fn move_global(&mut self, direction: Vector3<f32>) -> &mut Self {
-        self.translation = Point3::from_vec(Point3::to_vec(self.translation) + direction);
+        self.translation = self.translation + direction;
         self
     }
 
@@ -134,17 +126,15 @@ impl LocalTransform {
     }
 
     /// Set the position.
-    pub fn set_position(&mut self, position: Point3<f32>) -> &mut Self {
+    pub fn set_position(&mut self, position: Vector3<f32>) -> &mut Self {
         self.translation = position;
         self
     }
 
     /// Set the rotation using Euler x, y, z.
     pub fn set_rotation<D: Into<Deg<f32>>>(&mut self, x: D, y: D, z: D) -> &mut Self {
-        let rotation =
-            Quaternion::from_angle_x(x.into()) *
-            Quaternion::from_angle_y(y.into()) *
-            Quaternion::from_angle_z(z.into());
+        let rotation = Quaternion::from_angle_x(x.into()) * Quaternion::from_angle_y(y.into())
+            * Quaternion::from_angle_z(z.into());
 
         self.rotation = rotation.into();
         self
@@ -153,7 +143,11 @@ impl LocalTransform {
     /// Calculate the view matrix from the given data.
     pub fn to_view_matrix(&self, orientation: &Orientation) -> Matrix4<f32> {
         let center = self.translation + orientation.forward;
-        Matrix4::look_at(self.translation, center, orientation.up)
+        Matrix4::look_at(
+            Point3::from_vec(self.translation),
+            Point3::from_vec(center),
+            orientation.up,
+        )
     }
 
     /// Yaw relatively to the world.

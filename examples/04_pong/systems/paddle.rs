@@ -29,7 +29,8 @@ impl<'s> System<'s> for PaddleSystem {
 
             if let Some(movement) = opt_movement {
                 use ARENA_HEIGHT;
-                transform.translation[1] += paddle.velocity * time.delta_seconds() * movement as f32;
+                transform.translation[1] +=
+                    paddle.velocity * time.delta_seconds() * movement as f32;
 
                 // We make sure the paddle remains in the arena.
                 transform.translation[1] = transform.translation[1]

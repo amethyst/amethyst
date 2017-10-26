@@ -75,7 +75,10 @@ impl HotReloadStrategy {
         use std::u64::MAX;
 
         HotReloadStrategy {
-            inner: HotReloadStrategyInner::Trigger { triggered: false, frame_number: MAX },
+            inner: HotReloadStrategyInner::Trigger {
+                triggered: false,
+                frame_number: MAX,
+            },
         }
     }
 
@@ -89,7 +92,10 @@ impl HotReloadStrategy {
     /// The frame after calling this, all changed assets will be reloaded.
     /// Doesn't do anything if the strategy wasn't created with `when_triggered`.
     pub fn trigger(&mut self) {
-        if let HotReloadStrategyInner::Trigger { ref mut triggered, .. } = self.inner {
+        if let HotReloadStrategyInner::Trigger {
+            ref mut triggered, ..
+        } = self.inner
+        {
             *triggered = true;
         }
     }

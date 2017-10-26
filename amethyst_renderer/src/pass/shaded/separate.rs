@@ -87,8 +87,18 @@ impl Pass for DrawShadedSeparate {
     fn apply<'a, 'b: 'a>(
         &'a mut self,
         supplier: Supplier<'a>,
-        (active, camera, ambient, mesh_storage, tex_storage, material_defaults,
-            mesh, material, global, light): (
+        (
+            active,
+            camera,
+            ambient,
+            mesh_storage,
+            tex_storage,
+            material_defaults,
+            mesh,
+            material,
+            global,
+            light,
+        ): (
             Option<Fetch<'a, ActiveCamera>>,
             ReadStorage<'a, Camera>,
             Fetch<'a, AmbientColor>,
@@ -100,7 +110,7 @@ impl Pass for DrawShadedSeparate {
             ReadStorage<'a, Transform>,
             ReadStorage<'a, Light>,
         ),
-) -> DrawShadedSeparateApply<'a>{
+    ) -> DrawShadedSeparateApply<'a> {
         DrawShadedSeparateApply {
             active,
             camera,
