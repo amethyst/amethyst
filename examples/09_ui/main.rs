@@ -36,7 +36,7 @@ impl State for Example {
         initialise_camera(&mut engine.world);
 
         let logo = engine.world.read_resource::<Loader>().load(
-            "texture/logo.png",
+            "texture/logo_transparent.png",
             PngFormat,
             Default::default(),
             (),

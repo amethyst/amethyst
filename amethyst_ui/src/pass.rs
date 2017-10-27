@@ -3,7 +3,6 @@
 use std::cmp::{Ordering, PartialOrd};
 
 use amethyst_assets::{AssetStorage, Loader};
-use cgmath::{Matrix4, Ortho};
 use gfx::preset::blend;
 use gfx::pso::buffer::ElemStride;
 use gfx::state::ColorMask;
@@ -31,7 +30,6 @@ const FRAG_SRC: &[u8] = include_bytes!("frag.glsl");
 #[allow(dead_code)] // This is used by the shaders
 #[repr(C)]
 struct VertexArgs {
-    proj: [[f32; 4]; 4],
     coord: [f32; 2],
     dimension: [f32; 2],
     screen_dimensions: [f32; 2],
@@ -54,28 +52,28 @@ where
         // Initialize a single unit quad, we'll use this mesh when drawing quads later
         let data = vec![
             PosTex {
-                position: [0., 0., 0.],
+                position: [-1., 0., 0.],
                 tex_coord: [0., 0.],
             },
             PosTex {
-                position: [0., 1., 0.],
+                position: [0., 0., 0.],
+                tex_coord: [1., 0.],
+            },
+            PosTex {
+                position: [-1., 1., 0.],
                 tex_coord: [0., 1.],
             },
             PosTex {
-                position: [1., 1., 0.],
-                tex_coord: [1., 1.],
+                position: [-1., 1., 0.],
+                tex_coord: [0., 1.],
             },
             PosTex {
                 position: [0., 0., 0.],
-                tex_coord: [0., 0.],
-            },
-            PosTex {
-                position: [1., 1., 0.],
-                tex_coord: [1., 1.],
-            },
-            PosTex {
-                position: [1., 0., 0.],
                 tex_coord: [1., 0.],
+            },
+            PosTex {
+                position: [0., 1., 0.],
+                tex_coord: [1., 1.],
             },
         ].into();
         let mesh_handle = loader.load_from_data(data, mesh_storage);
@@ -219,15 +217,6 @@ impl<'a> ParallelIterator for DrawUiApply<'a> {
         let mut bitset = BitSet::new();
         bitset.add(0);
 
-        let proj = Ortho {
-            left: -screen_dimensions.width() / 2.0,
-            right: screen_dimensions.width() / 2.0,
-            bottom: -screen_dimensions.height() / 2.0,
-            top: screen_dimensions.height() / 2.0,
-            near: 0.1,
-            far: 2000.0,
-        };
-
         let cached_draw_order = &cached_draw_order;
 
         supplier
@@ -245,10 +234,8 @@ impl<'a> ParallelIterator for DrawUiApply<'a> {
                         };
 
                         if let Some(image) = tex_storage.get(&ui_image.texture) {
-                            let proj: Matrix4<f32> = proj.into();
 
                             let vertex_args = VertexArgs {
-                                proj: proj.into(),
                                 coord: [ui_transform.x, ui_transform.y],
                                 dimension: [ui_transform.width, ui_transform.height],
                                 screen_dimensions: [
