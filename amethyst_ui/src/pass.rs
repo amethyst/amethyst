@@ -3,6 +3,7 @@
 use std::cmp::{Ordering, PartialOrd};
 
 use amethyst_assets::{AssetStorage, Loader};
+use cgmath::vec2;
 use gfx::preset::blend;
 use gfx::pso::buffer::ElemStride;
 use gfx::state::ColorMask;
@@ -30,7 +31,7 @@ const FRAG_SRC: &[u8] = include_bytes!("frag.glsl");
 #[allow(dead_code)] // This is used by the shaders
 #[repr(C)]
 struct VertexArgs {
-    screen_dimensions: [f32; 2],
+    proj_vec: [f32; 4],
     coord: [f32; 2],
     dimension: [f32; 2],
 }
@@ -219,6 +220,8 @@ impl<'a> ParallelIterator for DrawUiApply<'a> {
 
         let cached_draw_order = &cached_draw_order;
 
+        let proj_vec = vec2(2. / screen_dimensions.width(), -2. / screen_dimensions.height()).extend(-2.).extend(1.);
+
         supplier
             .supply(bitset.par_join().map(move |_id| {
                 move |encoder: &mut Encoder, effect: &mut Effect| for &(_z, entity) in
@@ -236,7 +239,7 @@ impl<'a> ParallelIterator for DrawUiApply<'a> {
                         if let Some(image) = tex_storage.get(&ui_image.texture) {
 
                             let vertex_args = VertexArgs {
-                                screen_dimensions: [screen_dimensions.width(), screen_dimensions.height()],
+                                proj_vec: proj_vec.into(),
                                 coord: [ui_transform.x, ui_transform.y],
                                 dimension: [ui_transform.width, ui_transform.height],
                             };
