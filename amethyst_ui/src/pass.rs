@@ -56,27 +56,27 @@ where
         let data = vec![
             PosTex {
                 position: [0., 1., 0.],
-                tex_coord: [0., 1.],
+                tex_coord: [0., 0.],
             },
             PosTex {
                 position: [1., 1., 0.],
+                tex_coord: [1., 0.],
+            },
+            PosTex {
+                position: [1., 0., 0.],
                 tex_coord: [1., 1.],
             },
             PosTex {
-                position: [1., 0., 0.],
-                tex_coord: [1., 0.],
-            },
-            PosTex {
                 position: [0., 1., 0.],
-                tex_coord: [0., 1.],
+                tex_coord: [0., 0.],
             },
             PosTex {
                 position: [1., 0., 0.],
-                tex_coord: [1., 0.],
+                tex_coord: [1., 1.],
             },
             PosTex {
                 position: [0., 0., 0.],
-                tex_coord: [0., 0.],
+                tex_coord: [0., 1.],
             },
         ].into();
         let mesh_handle = loader.load_from_data(data, mesh_storage);
