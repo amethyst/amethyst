@@ -21,7 +21,7 @@ use amethyst_renderer::Texture;
 use amethyst_renderer::VertexFormat;
 use amethyst_renderer::Projection;
 use amethyst_renderer::error::Result;
-use amethyst_renderer::pipe::{DepthMode, Effect, NewEffect};
+use amethyst_renderer::pipe::{Effect, NewEffect};
 use amethyst_renderer::pipe::pass::{Pass, PassApply, PassData, Supplier};
 
 use cgmath::{Matrix4, Ortho};
@@ -110,7 +110,7 @@ impl Pass for DrawUi {
             .with_raw_constant_buffer("VertexArgs", mem::size_of::<VertexArgs>(), 1)
             .with_raw_vertex_buffer(PosTex::ATTRIBUTES, PosTex::size() as ElemStride, 0)
             .with_texture("albedo")
-            .with_blended_output("color", ColorMask::all(), blend::ALPHA, Some(DepthMode::LessEqualWrite))
+            .with_blended_output("color", ColorMask::all(), blend::ALPHA, None)
             .build()
     }
 
