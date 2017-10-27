@@ -19,12 +19,9 @@ use amethyst_renderer::PosTex;
 use amethyst_renderer::ScreenDimensions;
 use amethyst_renderer::Texture;
 use amethyst_renderer::VertexFormat;
-use amethyst_renderer::Projection;
 use amethyst_renderer::error::Result;
 use amethyst_renderer::pipe::{Effect, NewEffect};
 use amethyst_renderer::pipe::pass::{Pass, PassApply, PassData, Supplier};
-
-use cgmath::{Matrix4, Ortho};
 
 const VERT_SRC: &[u8] = include_bytes!("vertex.glsl");
 const FRAG_SRC: &[u8] = include_bytes!("frag.glsl");
@@ -33,7 +30,7 @@ const FRAG_SRC: &[u8] = include_bytes!("frag.glsl");
 #[allow(dead_code)] // This is used by the shaders
 #[repr(C)]
 struct VertexArgs {
-    proj: [[f32; 4]; 4],
+    screen_dimensions: [f32; 2],
     coord: [f32; 2],
     dimension: [f32; 2],
 }
@@ -239,14 +236,7 @@ impl<'a> ParallelIterator for DrawUiApply<'a> {
                         if let Some(image) = tex_storage.get(&ui_image.texture) {
 
                             let vertex_args = VertexArgs {
-                                proj: Matrix4::from(Projection::Orthographic(Ortho::<f32> {
-                                    left: 0.0,
-                                    right: screen_dimensions.width(),
-                                    bottom: screen_dimensions.height(),
-                                    top: 0.0,
-                                    near: 0.0,
-                                    far: 1.0,
-                                })).into(),
+                                screen_dimensions: [screen_dimensions.width(), screen_dimensions.height()],
                                 coord: [ui_transform.x, ui_transform.y],
                                 dimension: [ui_transform.width, ui_transform.height],
                             };
