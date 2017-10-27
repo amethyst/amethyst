@@ -21,7 +21,7 @@ use amethyst_renderer::Texture;
 use amethyst_renderer::VertexFormat;
 use amethyst_renderer::Projection;
 use amethyst_renderer::error::Result;
-use amethyst_renderer::pipe::{Effect, NewEffect};
+use amethyst_renderer::pipe::{DepthMode, Effect, NewEffect};
 use amethyst_renderer::pipe::pass::{Pass, PassApply, PassData, Supplier};
 
 use cgmath::{Matrix4, Ortho};
@@ -55,28 +55,28 @@ where
         // Initialize a single unit quad, we'll use this mesh when drawing quads later
         let data = vec![
             PosTex {
-                position: [0., 0., 0.],
-                tex_coord: [0., 0.],
-            },
-            PosTex {
-                position: [1., 0., 0.],
-                tex_coord: [1., 0.],
-            },
-            PosTex {
                 position: [0., 1., 0.],
                 tex_coord: [0., 1.],
-            },
-            PosTex {
-                position: [0., 1., 0.],
-                tex_coord: [0., 1.],
-            },
-            PosTex {
-                position: [1., 0., 0.],
-                tex_coord: [1., 0.],
             },
             PosTex {
                 position: [1., 1., 0.],
                 tex_coord: [1., 1.],
+            },
+            PosTex {
+                position: [1., 0., 0.],
+                tex_coord: [1., 0.],
+            },
+            PosTex {
+                position: [0., 1., 0.],
+                tex_coord: [0., 1.],
+            },
+            PosTex {
+                position: [1., 0., 0.],
+                tex_coord: [1., 0.],
+            },
+            PosTex {
+                position: [0., 0., 0.],
+                tex_coord: [0., 0.],
             },
         ].into();
         let mesh_handle = loader.load_from_data(data, mesh_storage);
@@ -110,7 +110,7 @@ impl Pass for DrawUi {
             .with_raw_constant_buffer("VertexArgs", mem::size_of::<VertexArgs>(), 1)
             .with_raw_vertex_buffer(PosTex::ATTRIBUTES, PosTex::size() as ElemStride, 0)
             .with_texture("albedo")
-            .with_blended_output("color", ColorMask::all(), blend::ALPHA, None)
+            .with_blended_output("color", ColorMask::all(), blend::ALPHA, Some(DepthMode::LessEqualWrite))
             .build()
     }
 
@@ -244,8 +244,8 @@ impl<'a> ParallelIterator for DrawUiApply<'a> {
                                     right: screen_dimensions.width(),
                                     bottom: screen_dimensions.height(),
                                     top: 0.0,
-                                    near: -1.0,
-                                    far: 2000.0,
+                                    near: 0.0,
+                                    far: 1.0,
                                 })).into(),
                                 coord: [ui_transform.x, ui_transform.y],
                                 dimension: [ui_transform.width, ui_transform.height],
