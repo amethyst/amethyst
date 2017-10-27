@@ -1,52 +1,14 @@
-use std::error::Error;
-use std::fmt::{self, Display, Formatter};
 use std::fmt::Debug;
-use std::string::FromUtf8Error;
 
-use amethyst_assets::{Asset, BoxedErr, SimpleFormat};
+use amethyst_assets::{Asset,  Error, Result, ResultExt, SimpleFormat};
 use amethyst_core::cgmath::{InnerSpace, Vector3};
 use specs::DenseVecStorage;
-use wavefront_obj::ParseError;
 use wavefront_obj::obj::{parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex,
                          TextureIndex, Vertex, VertexIndex};
 
 use Renderer;
 use mesh::{Mesh, MeshBuilder, MeshHandle};
 use vertex::*;
-
-/// Error type of `ObjFormat`
-#[derive(Debug)]
-pub enum ObjError {
-    /// Coundn't convert bytes to `String`
-    Utf8(FromUtf8Error),
-    /// Cound't parse obj file
-    Parse(ParseError),
-}
-
-impl Error for ObjError {
-    fn description(&self) -> &str {
-        match *self {
-            ObjError::Utf8(ref err) => err.description(),
-            ObjError::Parse(_) => "Obj parsing error",
-        }
-    }
-
-    fn cause(&self) -> Option<&Error> {
-        match *self {
-            ObjError::Utf8(ref err) => Some(err),
-            ObjError::Parse(_) => None,
-        }
-    }
-}
-
-impl Display for ObjError {
-    fn fmt(&self, fmt: &mut Formatter) -> fmt::Result {
-        match *self {
-            ObjError::Utf8(ref err) => write!(fmt, "Obj file not a unicode: {:?}", err),
-            ObjError::Parse(ref err) => write!(fmt, "Obj parsing error: {}", err.message),
-        }
-    }
-}
 
 /// Mesh data for loading
 #[derive(Debug)]
@@ -115,12 +77,14 @@ impl SimpleFormat<Mesh> for ObjFormat {
 
     type Options = ();
 
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<MeshData, BoxedErr> {
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<MeshData> {
         String::from_utf8(bytes)
-            .map_err(ObjError::Utf8)
-            .and_then(|string| parse(string).map_err(ObjError::Parse))
+            .chain_err(|| "Bytes are invalid UTF-8")
+            .and_then(|string| {
+                parse(string).map_err(|e| Error::from(format!("In line {}: {:?}", e.line_number, e.message)))
+                    .chain_err(|| "Failed to parse OBJ")
+            })
             .map(|set| from_data(set).into())
-            .map_err(BoxedErr::new)
     }
 }
 
@@ -184,7 +148,7 @@ fn from_data(obj_set: ObjSet) -> Vec<PosNormTex> {
 }
 
 /// Create mesh
-pub fn create_mesh_asset(data: MeshData, renderer: &mut Renderer) -> Result<Mesh, BoxedErr> {
+pub fn create_mesh_asset(data: MeshData, renderer: &mut Renderer) -> Result<Mesh> {
     let data = match data {
         MeshData::PosColor(ref vertices) => {
             let mb = MeshBuilder::new(vertices);
@@ -205,7 +169,7 @@ pub fn create_mesh_asset(data: MeshData, renderer: &mut Renderer) -> Result<Mesh
         MeshData::Creator(creator) => creator.build(renderer),
     };
 
-    data.map_err(|err| BoxedErr::new(err))
+    data.chain_err(|| "Failed to build mesh")
 }
 
 macro_rules! build_mesh_with_some {

@@ -147,7 +147,7 @@ fn initialise_balls(world: &mut World) {
 /// Converts a vector of vertices into a mesh.
 fn create_mesh(world: &World, vertices: Vec<PosTex>) -> MeshHandle {
     let loader = world.read_resource::<Loader>();
-    loader.load_from_data(vertices.into(), &world.read_resource())
+    loader.load_from_data(vertices.into(), (), &world.read_resource())
 }
 
 /// Creates a solid material of the specified colour.
@@ -159,7 +159,7 @@ fn create_colour_material(world: &World, colour: [f32; 4]) -> Material {
     let mat_defaults = world.read_resource::<MaterialDefaults>();
     let loader = world.read_resource::<Loader>();
 
-    let albedo = loader.load_from_data(colour.into(), &world.read_resource());
+    let albedo = loader.load_from_data(colour.into(), (), &world.read_resource());
 
     Material {
         albedo,

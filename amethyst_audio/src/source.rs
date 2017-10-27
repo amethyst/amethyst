@@ -1,6 +1,6 @@
 //! Provides structures used to load audio files.
 
-use amethyst_assets::{Asset, BoxedErr, Handle};
+use amethyst_assets::{Asset, Handle, Result};
 use specs::DenseVecStorage;
 
 use formats::AudioData;
@@ -26,8 +26,8 @@ impl Asset for Source {
     type HandleStorage = DenseVecStorage<SourceHandle>;
 }
 
-impl Into<Result<Source, BoxedErr>> for AudioData {
-    fn into(self) -> Result<Source, BoxedErr> {
+impl Into<Result<Source>> for AudioData {
+    fn into(self) -> Result<Source> {
         Ok(Source { bytes: self.0 })
     }
 }

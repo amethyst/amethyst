@@ -12,7 +12,6 @@ use std::time::Duration;
 use amethyst_assets::*;
 use rayon::{Configuration, ThreadPool};
 use specs::DenseVecStorage;
-use specs::common::Errors;
 
 #[derive(Clone, Debug)]
 struct DummyAsset(String);
@@ -35,10 +34,10 @@ impl Format<DummyAsset> for DummyFormat {
         source: Arc<Source>,
         _: (),
         _create_reload: bool,
-    ) -> Result<FormatValue<DummyAsset>, BoxedErr> {
+    ) -> Result<FormatValue<DummyAsset>> {
         let dummy = from_utf8(source.load(&name)?.as_slice())
             .map(|s| s.to_owned())
-            .map_err(BoxedErr::new)?;
+            .chain_err(|| "Bytes are invalid UTF-8")?;
 
         Ok(FormatValue::data(dummy))
     }
@@ -50,7 +49,6 @@ fn main() {
     let cfg = Configuration::new().num_threads(8);
     let pool = Arc::new(ThreadPool::new(cfg).expect("Invalid config"));
 
-    let mut errors = Errors::new();
     let loader = Loader::new(&path, pool.clone());
     let mut storage = AssetStorage::new();
 
@@ -87,13 +85,10 @@ fn main() {
 
                 Ok(DummyAsset(s))
             },
-            &errors,
             frame_number,
             &*pool,
             Some(&strategy),
         );
-
-        errors.print_and_exit();
     }
 
     println!("dummy: {:?}", storage.get(&dummy));

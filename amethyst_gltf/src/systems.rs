@@ -4,7 +4,6 @@ use core::transform::*;
 use renderer::{Material, MaterialDefaults, Mesh, Texture};
 use renderer::ComboMeshCreator;
 use specs::{Entities, Entity, Fetch, FetchMut, Join, System, WriteStorage};
-use specs::common::Errors;
 
 use {GltfMaterial, GltfPrimitive, GltfSceneAsset};
 
@@ -36,7 +35,6 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
         Fetch<'a, AssetStorage<Mesh>>,
         Fetch<'a, AssetStorage<Texture>>,
         Fetch<'a, Loader>,
-        Fetch<'a, Errors>,
         Fetch<'a, MaterialDefaults>,
         Fetch<'a, Time>,
         Fetch<'a, ThreadPool>,
@@ -59,7 +57,6 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
             mesh_storage,
             texture_storage,
             loader,
-            errors,
             material_defaults,
             time,
             pool,
@@ -74,7 +71,7 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
         ) = data;
 
         let strategy = strategy.as_ref().map(Deref::deref);
-        scene_storage.process(Into::into, &errors, time.frame_number(), &**pool, strategy);
+        scene_storage.process(Into::into, time.frame_number(), &**pool, strategy);
 
         let mut deletes = vec![];
 
@@ -317,7 +314,7 @@ fn load_primitive(
 ) {
     let mesh = primitive.handle.as_ref().cloned().unwrap_or_else(|| {
         let mesh_creator = ComboMeshCreator::new(primitive.attributes.clone());
-        let handle = loader.load_from_data(mesh_creator.into(), mesh_storage);
+        let handle = loader.load_from_data(mesh_creator.into(), (), mesh_storage);
         mesh_handles.push((node_index, primitive_index, handle.clone()));
         handle
     });
@@ -364,7 +361,8 @@ fn load_material(
         .as_ref()
         .cloned()
         .unwrap_or_else(|| {
-            let handle = loader.load_from_data(material.base_color.0.data.clone(), texture_storage);
+            let handle =
+                loader.load_from_data(material.base_color.0.data.clone(), (), texture_storage);
             texture_handles.push((material_index, BaseColor, handle.clone()));
             handle
         });
@@ -376,7 +374,8 @@ fn load_material(
         .as_ref()
         .cloned()
         .unwrap_or_else(|| {
-            let handle = loader.load_from_data(material.metallic.0.data.clone(), texture_storage);
+            let handle =
+                loader.load_from_data(material.metallic.0.data.clone(), (), texture_storage);
             texture_handles.push((material_index, Metallic, handle.clone()));
             handle
         });
@@ -388,14 +387,15 @@ fn load_material(
         .as_ref()
         .cloned()
         .unwrap_or_else(|| {
-            let handle = loader.load_from_data(material.roughness.0.data.clone(), texture_storage);
+            let handle =
+                loader.load_from_data(material.roughness.0.data.clone(), (), texture_storage);
             texture_handles.push((material_index, Roughness, handle.clone()));
             handle
         });
 
     let normal = material.normal.as_ref().map(|&(ref normal, _)| {
         normal.handle.as_ref().cloned().unwrap_or_else(|| {
-            let handle = loader.load_from_data(normal.data.clone(), texture_storage);
+            let handle = loader.load_from_data(normal.data.clone(), (), texture_storage);
             texture_handles.push((material_index, Normal, handle.clone()));
             handle
         })
@@ -403,7 +403,7 @@ fn load_material(
 
     let ambient_occlusion = material.occlusion.as_ref().map(|&(ref occlusion, _)| {
         occlusion.handle.as_ref().cloned().unwrap_or_else(|| {
-            let handle = loader.load_from_data(occlusion.data.clone(), texture_storage);
+            let handle = loader.load_from_data(occlusion.data.clone(), (), texture_storage);
             texture_handles.push((material_index, Occlusion, handle.clone()));
             handle
         })
@@ -416,7 +416,8 @@ fn load_material(
         .as_ref()
         .cloned()
         .unwrap_or_else(|| {
-            let handle = loader.load_from_data(material.emissive.0.data.clone(), texture_storage);
+            let handle =
+                loader.load_from_data(material.emissive.0.data.clone(), (), texture_storage);
             texture_handles.push((material_index, Emissive, handle.clone()));
             handle
         });

@@ -13,17 +13,17 @@ extern crate amethyst_core;
 extern crate crossbeam;
 #[macro_use]
 extern crate derivative;
+#[macro_use]
+extern crate error_chain;
 extern crate fnv;
 extern crate hibitset;
 extern crate parking_lot;
 extern crate rayon;
 extern crate specs;
 
-pub use specs::error::BoxedErr;
-
 pub use asset::{Asset, Format, FormatValue, SimpleFormat};
 pub use cache::Cache;
-pub use error::AssetError;
+pub use error::{Error, ErrorKind, Result, ResultExt};
 pub use loader::Loader;
 pub use progress::{Completion, Progress, ProgressCounter, Tracker};
 pub use reload::{HotReloadBundle, HotReloadStrategy, HotReloadSystem, Reload, SingleFile};

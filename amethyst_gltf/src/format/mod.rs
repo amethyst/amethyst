@@ -6,7 +6,7 @@ use std::fmt;
 use std::sync::Arc;
 
 use self::importer::{get_image_data, import, Buffers, ImageFormat};
-use assets::{BoxedErr, Format, FormatValue, Source};
+use assets::{Error as AssetError, Format, FormatValue, Result as AssetResult, ResultExt, Source};
 use core::transform::LocalTransform;
 use gfx::Primitive;
 use gfx::texture::SamplerInfo;
@@ -43,7 +43,7 @@ pub enum GltfError {
     MissingPositions,
 
     /// External file failed loading
-    LoadError(BoxedErr),
+    Asset(AssetError),
 }
 
 impl StdError for GltfError {
@@ -54,14 +54,14 @@ impl StdError for GltfError {
             InvalidSceneGltf(_) => "Gltf has no default scene, and the number of scenes is not 1",
             PrimitiveMissingInGfx(_) => "Primitive missing in gfx",
             MissingPositions => "Primitive missing positions",
-            LoadError(_) => "File loading error",
+            Asset(_) => "File loading error",
         }
     }
 
     fn cause(&self) -> Option<&StdError> {
         match *self {
             GltfError::GltfImporterError(ref err) => Some(err),
-            GltfError::LoadError(ref err) => Some(err),
+            GltfError::Asset(ref err) => Some(err),
             _ => None,
         }
     }
@@ -76,7 +76,7 @@ impl fmt::Display for GltfError {
                 write!(f, "{}: {}", self.description(), err.description())
             }
             PrimitiveMissingInGfx(ref err) => write!(f, "{}: {}", self.description(), err),
-            LoadError(ref err) => write!(f, "{}: {}", self.description(), err.description()),
+            Asset(ref err) => write!(f, "{}: {}", self.description(), err.description()),
             InvalidSceneGltf(size) => write!(f, "{}: {}", self.description(), size),
             MissingPositions => write!(f, "{}", self.description()),
         }
@@ -89,9 +89,9 @@ impl From<self::importer::Error> for GltfError {
     }
 }
 
-impl From<BoxedErr> for GltfError {
-    fn from(err: BoxedErr) -> Self {
-        GltfError::LoadError(err)
+impl From<AssetError> for GltfError {
+    fn from(err: AssetError) -> Self {
+        GltfError::Asset(err)
     }
 }
 
@@ -106,14 +106,12 @@ impl Format<GltfSceneAsset> for GltfSceneFormat {
         source: Arc<Source>,
         options: GltfSceneOptions,
         _create_reload: bool,
-    ) -> Result<FormatValue<GltfSceneAsset>, BoxedErr> {
-        let gltf = load_gltf(source, &name, options).map_err(|err| BoxedErr::new(err))?;
+    ) -> AssetResult<FormatValue<GltfSceneAsset>> {
+        let gltf = load_gltf(source, &name, options).chain_err(|| "Failed to import gltf scene")?;
         if gltf.default_scene.is_some() || gltf.scenes.len() == 1 {
             Ok(FormatValue::data(gltf)) // TODO: create `Reload` object
         } else {
-            Err(BoxedErr::new(
-                GltfError::InvalidSceneGltf(gltf.scenes.len()),
-            ))
+            Err(GltfError::InvalidSceneGltf(gltf.scenes.len())).chain_err(|| "Invalid GLTF scene")
         }
     }
 }

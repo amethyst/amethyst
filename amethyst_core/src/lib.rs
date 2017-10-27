@@ -1,5 +1,7 @@
 
 pub extern crate cgmath;
+#[macro_use]
+extern crate error_chain;
 extern crate fnv;
 extern crate hibitset;
 extern crate rayon;
@@ -11,7 +13,7 @@ extern crate specs;
 //#[cfg(test)]
 //extern crate quickcheck;
 
-pub use bundle::ECSBundle;
+pub use bundle::{ECSBundle, Error, ErrorKind, Result};
 pub use timing::*;
 pub use transform::*;
 

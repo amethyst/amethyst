@@ -6,9 +6,9 @@ extern crate amethyst_gltf;
 use amethyst::assets::{AssetStorage, Handle, Loader};
 use amethyst::core::cgmath::{Deg, Quaternion, Rotation3, Vector3};
 use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
-use amethyst_gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystem, GltfSceneOptions};
 use amethyst::prelude::*;
 use amethyst::renderer::*;
+use amethyst_gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystem, GltfSceneOptions};
 
 struct Example;
 
