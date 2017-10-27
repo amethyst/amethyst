@@ -220,7 +220,11 @@ impl<'a> ParallelIterator for DrawUiApply<'a> {
 
         let cached_draw_order = &cached_draw_order;
 
-        let proj_vec = vec2(2. / screen_dimensions.width(), -2. / screen_dimensions.height()).extend(-2.).extend(1.);
+        let proj_vec = vec2(
+            2. / screen_dimensions.width(),
+            -2. / screen_dimensions.height(),
+        ).extend(-2.)
+            .extend(1.);
 
         supplier
             .supply(bitset.par_join().map(move |_id| {
@@ -237,7 +241,6 @@ impl<'a> ParallelIterator for DrawUiApply<'a> {
                         };
 
                         if let Some(image) = tex_storage.get(&ui_image.texture) {
-
                             let vertex_args = VertexArgs {
                                 proj_vec: proj_vec.into(),
                                 coord: [ui_transform.x, ui_transform.y],

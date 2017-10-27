@@ -10,7 +10,7 @@ use amethyst::ecs::World;
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light, Mesh, Pipeline,
                          PngFormat, PointLight, PosNormTex, RenderBundle, RenderSystem, Rgba,
-                         Stage, ScreenDimensions};
+                         ScreenDimensions, Stage};
 use amethyst::ui::{DrawUi, UiBundle, UiImage, UiTransform};
 use amethyst::winit::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use cgmath::Vector3;
