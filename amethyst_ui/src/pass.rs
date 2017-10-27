@@ -14,26 +14,27 @@ use rayon::iter::internal::UnindexedConsumer;
 use specs::{Entities, Entity, Fetch, Join, ParJoin, ReadStorage};
 
 use super::*;
+use amethyst_renderer::{Mesh, MeshHandle};
 use amethyst_renderer::Encoder;
-use amethyst_renderer::Result;
+use amethyst_renderer::PosTex;
+use amethyst_renderer::ScreenDimensions;
 use amethyst_renderer::Texture;
 use amethyst_renderer::VertexFormat;
-use amethyst_renderer::mesh::{Mesh, MeshHandle};
+use amethyst_renderer::error::Result;
 use amethyst_renderer::pipe::{Effect, NewEffect};
 use amethyst_renderer::pipe::pass::{Pass, PassApply, PassData, Supplier};
-use amethyst_renderer::resources::ScreenDimensions;
-use amethyst_renderer::vertex::PosTex;
 
 const VERT_SRC: &[u8] = include_bytes!("vertex.glsl");
 const FRAG_SRC: &[u8] = include_bytes!("frag.glsl");
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 #[allow(dead_code)] // This is used by the shaders
 #[repr(C)]
 struct VertexArgs {
     proj: [[f32; 4]; 4],
     coord: [f32; 2],
     dimension: [f32; 2],
+    screen_dimensions: [f32; 2],
 }
 
 /// Draw Ui elements, this uses target with name "amethyst_ui"
@@ -53,28 +54,28 @@ where
         // Initialize a single unit quad, we'll use this mesh when drawing quads later
         let data = vec![
             PosTex {
+                position: [0., 0., 0.],
+                tex_coord: [0., 0.],
+            },
+            PosTex {
                 position: [0., 1., 0.],
+                tex_coord: [0., 1.],
+            },
+            PosTex {
+                position: [1., 1., 0.],
+                tex_coord: [1., 1.],
+            },
+            PosTex {
+                position: [0., 0., 0.],
                 tex_coord: [0., 0.],
             },
             PosTex {
                 position: [1., 1., 0.],
+                tex_coord: [1., 1.],
+            },
+            PosTex {
+                position: [1., 0., 0.],
                 tex_coord: [1., 0.],
-            },
-            PosTex {
-                position: [0., 0., 0.],
-                tex_coord: [1., 1.],
-            },
-            PosTex {
-                position: [1., 0., 0.],
-                tex_coord: [1., 1.],
-            },
-            PosTex {
-                position: [0., 0., 0.],
-                tex_coord: [0., 1.],
-            },
-            PosTex {
-                position: [1., 0., 0.],
-                tex_coord: [0., 0.],
             },
         ].into();
         let mesh_handle = loader.load_from_data(data, mesh_storage);
@@ -250,6 +251,10 @@ impl<'a> ParallelIterator for DrawUiApply<'a> {
                                 proj: proj.into(),
                                 coord: [ui_transform.x, ui_transform.y],
                                 dimension: [ui_transform.width, ui_transform.height],
+                                screen_dimensions: [
+                                    screen_dimensions.width(),
+                                    screen_dimensions.height(),
+                                ],
                             };
 
                             effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);

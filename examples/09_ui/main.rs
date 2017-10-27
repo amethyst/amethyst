@@ -8,12 +8,12 @@ use amethyst::assets::Loader;
 use amethyst::core::transform::Transform;
 use amethyst::ecs::World;
 use amethyst::prelude::*;
-use amethyst::renderer::{Config as DisplayConfig, Mesh, Rgba};
-use amethyst::renderer::bundle::RenderBundle;
-use amethyst::renderer::formats::PngFormat;
-use amethyst::renderer::prelude::*;
+use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light, Mesh, Pipeline,
+                         PngFormat, PointLight, PosNormTex, RenderBundle, RenderSystem, Rgba,
+                         Stage, ScreenDimensions};
 use amethyst::ui::{DrawUi, UiBundle, UiImage, UiTransform};
-use cgmath::{Deg, Vector3};
+use amethyst::winit::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
+use cgmath::Vector3;
 use cgmath::prelude::InnerSpace;
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
@@ -78,9 +78,6 @@ impl State for Example {
     }
 }
 
-
-type DrawShaded = pass::DrawShaded<PosNormTex>;
-
 fn run() -> Result<(), amethyst::Error> {
     let display_config_path = format!(
         "{}/examples/09_ui/resources/display.ron",
@@ -103,7 +100,7 @@ fn run() -> Result<(), amethyst::Error> {
         Pipeline::build().with_stage(
             Stage::with_backbuffer()
                 .clear_target(BACKGROUND_COLOUR, 1.0)
-                .with_pass(DrawShaded::new())
+                .with_pass(DrawShaded::<PosNormTex>::new())
                 .with_pass(DrawUi::new(&loader, &mesh_storage)),
         )
     };
@@ -190,11 +187,9 @@ fn initialise_lights(world: &mut World) {
 
 /// This function initialises a camera and adds it to the world.
 fn initialise_camera(world: &mut World) {
-    world.add_resource(Camera {
-        eye: [0.0, 0.0, -4.0].into(),
-        proj: Projection::perspective(1.3, Deg(60.0)).into(),
-        forward: [0.0, 0.0, 1.0].into(),
-        right: [1.0, 0.0, 0.0].into(),
-        up: [0.0, 1.0, 0.0].into(),
-    });
+    let (width, height) = {
+        let dim = world.read_resource::<ScreenDimensions>();
+        (dim.width(), dim.height())
+    };
+    world.add_resource(Camera::standard_3d(width, height));
 }
