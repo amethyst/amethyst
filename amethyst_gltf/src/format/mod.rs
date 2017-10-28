@@ -403,10 +403,10 @@ fn load_node(
 
     let (translation, rotation, scale) = node.transform().decomposed();
     let mut local_transform = LocalTransform::default();
-    local_transform.translation = translation;
+    local_transform.translation = translation.into();
     // gltf quat format: [x, y, z, w], our quat format: [w, x, y, z]
-    local_transform.rotation = [rotation[3], rotation[0], rotation[1], rotation[2]];
-    local_transform.scale = scale;
+    local_transform.rotation = [rotation[3], rotation[0], rotation[1], rotation[2]].into();
+    local_transform.scale = scale.into();
 
 
     Ok(GltfNode {

@@ -4,7 +4,7 @@ use std::fmt::Debug;
 use std::string::FromUtf8Error;
 
 use amethyst_assets::{Asset, BoxedErr, SimpleFormat};
-use cgmath::{InnerSpace, Vector3};
+use amethyst_core::cgmath::{InnerSpace, Vector3};
 use specs::DenseVecStorage;
 use wavefront_obj::ParseError;
 use wavefront_obj::obj::{parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex,

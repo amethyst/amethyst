@@ -2,9 +2,9 @@
 
 extern crate amethyst;
 extern crate amethyst_gltf;
-extern crate cgmath;
 
 use amethyst::assets::{AssetStorage, Handle, Loader};
+use amethyst::core::cgmath::{Deg, Quaternion, Rotation3, Vector3};
 use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::*;
@@ -58,7 +58,7 @@ impl State for Example {
         println!("Put camera");
 
         let mut camera_transform = LocalTransform::default();
-        camera_transform.translation = [-2.0, 2.0, 2.0];
+        camera_transform.translation = Vector3::new(-2.0, 2.0, 2.0);
         let camera_orientation =
             Quaternion::from_angle_y(Deg(-45.)) * Quaternion::from_angle_x(Deg(-35.));
         camera_transform.rotation = camera_orientation.into();

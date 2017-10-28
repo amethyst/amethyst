@@ -1,23 +1,24 @@
 //! Orientation of objects
 
+use cgmath::Vector3;
 
 /// Orientation struct.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct Orientation {
     /// Forward vector [x, y, z]
-    pub forward: [f32; 3],
+    pub forward: Vector3<f32>,
     /// Right vector [x, y, z]
-    pub right: [f32; 3],
+    pub right: Vector3<f32>,
     /// Up vector [x, y, z]
-    pub up: [f32; 3],
+    pub up: Vector3<f32>,
 }
 
 impl Default for Orientation {
     fn default() -> Self {
         Self {
-            forward: [1.0, 0.0, 0.0],
-            right: [0.0, -1.0, 0.0],
-            up: [0.0, 0.0, 1.0],
+            forward: Vector3::unit_x(),
+            right: -Vector3::unit_y(),
+            up: Vector3::unit_z(),
         }
     }
 }

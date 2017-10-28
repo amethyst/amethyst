@@ -21,7 +21,6 @@ travis-ci = { repository = "amethyst/amethyst" }
 [dependencies]
 amethyst_assets = { path = "../amethyst_assets", version = "0.2.0"}
 amethyst_core = { path = "../amethyst_core", version = "0.1.0"}
-cgmath = "0.14"
 cpal = "0.4"
 rodio = "0.5.1"
 shred = "0.5"

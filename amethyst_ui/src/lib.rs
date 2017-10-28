@@ -10,14 +10,20 @@ extern crate cgmath;
 extern crate gfx;
 extern crate hibitset;
 extern crate rayon;
+extern crate rusttype;
 extern crate specs;
+extern crate unicode_normalization;
 
 mod bundle;
+mod format;
 mod image;
 mod pass;
+mod text;
 mod transform;
 
 pub use self::bundle::UiBundle;
+pub use self::format::FontFormat;
 pub use self::image::UiImage;
 pub use self::pass::DrawUi;
+pub use self::text::UiText;
 pub use self::transform::UiTransform;

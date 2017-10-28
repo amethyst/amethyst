@@ -1,5 +1,5 @@
 
-extern crate cgmath;
+pub extern crate cgmath;
 extern crate fnv;
 extern crate hibitset;
 extern crate rayon;

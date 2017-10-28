@@ -41,7 +41,6 @@ thread_profiler = { version = "0.1", optional = true }
 
 [dev-dependencies]
 amethyst_gltf = { path = "amethyst_gltf", version = "0.1" }
-cgmath = "0.14"
 genmesh = "0.4"
 
 [build-dependencies]

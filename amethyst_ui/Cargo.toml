@@ -11,4 +11,6 @@ cgmath = { version = "0.14", features = ["eders"] }
 gfx = { version = "0.16", features = ["cgmath-types", "serialize"] }
 hibitset = "0.3"
 rayon = "0.8"
+rusttype = "0.2"
 specs = "0.10"
+unicode-normalization = "0.1"

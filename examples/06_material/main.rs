@@ -1,15 +1,13 @@
 //! Displays spheres with physically based materials.
 
 extern crate amethyst;
-extern crate cgmath;
 extern crate genmesh;
 
 use amethyst::assets::Loader;
 use amethyst::core::transform::Transform;
 use amethyst::prelude::*;
 use amethyst::renderer::*;
-use cgmath::{Deg, Matrix4, Vector3};
-use cgmath::prelude::InnerSpace;
+use amethyst::core::cgmath::{Deg, InnerSpace, Matrix4, Vector3};
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 

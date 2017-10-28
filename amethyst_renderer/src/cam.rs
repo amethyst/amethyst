@@ -1,6 +1,6 @@
 //! Camera type with support for perspective and orthographic projections.
 
-use cgmath::{Deg, Matrix4, Ortho, PerspectiveFov};
+use amethyst_core::cgmath::{Deg, Matrix4, Ortho, PerspectiveFov};
 use specs::{Component, DenseVecStorage, Entity};
 
 /// The projection mode of a `Camera`.
@@ -82,7 +82,7 @@ impl Camera {
     /// of view of 60 degrees.
     /// View transformation will be multiplicative identity.
     pub fn standard_3d(width: f32, height: f32) -> Self {
-        use cgmath::Deg;
+        use amethyst_core::cgmath::Deg;
         Self::from(Projection::perspective(width / height, Deg(60.)))
     }
 }

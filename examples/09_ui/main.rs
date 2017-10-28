@@ -54,6 +54,22 @@ impl State for Example {
                 height: 266.,
             })
             .with(UiImage {
+                texture: logo.clone(),
+                preserve_aspect_ratio: true,
+            })
+            .build();
+
+        engine
+            .world
+            .create_entity()
+            .with(UiTransform {
+                x: 100.,
+                y: 100.,
+                z: -1.,
+                width: 232.,
+                height: 266.,
+            })
+            .with(UiImage {
                 texture: logo,
                 preserve_aspect_ratio: true,
             })

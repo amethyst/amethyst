@@ -2,6 +2,7 @@ use {ARENA_HEIGHT, ARENA_WIDTH};
 use {Ball, Paddle, Side};
 use amethyst::assets::Loader;
 use amethyst::core::transform::{LocalTransform, Transform};
+use amethyst::core::cgmath::Vector3;
 use amethyst::ecs::World;
 use amethyst::prelude::*;
 use amethyst::renderer::{Camera, Event, KeyboardInput, Material, MeshHandle, PosTex, Projection,
@@ -41,7 +42,7 @@ impl State for Pong {
 
 /// Initialise the camera.
 fn initialise_camera(world: &mut World) {
-    use cgmath::{Matrix4, Vector3};
+    use amethyst::core::cgmath::{Matrix4, Vector3};
     world
         .create_entity()
         .with(Camera::from(Projection::orthographic(
@@ -78,8 +79,8 @@ fn initialise_paddles(world: &mut World) {
 
     // Correctly position the paddles.
     let y = (ARENA_HEIGHT - PADDLE_HEIGHT) / 2.0;
-    left_transform.translation = [0.0, y, 0.0];
-    right_transform.translation = [ARENA_WIDTH - PADDLE_WIDTH, y, 0.0];
+    left_transform.translation = Vector3::new(0.0, y, 0.0);
+    right_transform.translation = Vector3::new(ARENA_WIDTH - PADDLE_WIDTH, y, 0.0);
 
     // Create the mesh and the material needed.
     let mesh = create_mesh(
@@ -128,7 +129,7 @@ fn initialise_balls(world: &mut World) {
     let mesh = create_mesh(world, generate_circle_vertices(BALL_RADIUS, 16));
     let material = create_colour_material(world, BALL_COLOUR);
     let mut local_transform = LocalTransform::default();
-    local_transform.translation = [ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0];
+    local_transform.translation = Vector3::new(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
 
     world
         .create_entity()

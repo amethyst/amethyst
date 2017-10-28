@@ -5,7 +5,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 use amethyst_core::transform::Transform as TransformComponent;
-use cgmath::{Matrix4, Point3, Transform};
+use amethyst_core::cgmath::Transform;
 use rodio::{Sample, Source, SpatialSink};
 use specs::{Entity, Fetch, Join, ReadStorage, System, WriteStorage};
 
@@ -94,12 +94,12 @@ impl<'a> System<'a> for AudioSystem {
         // Process emitters and listener.
         if let Some(listener) = listener.get(select_listener.0) {
             if let Some(listener_transform) = transform.get(select_listener.0) {
-                let listener_transform = Matrix4::from(listener_transform.0);
+                let listener_transform = listener_transform.0;
                 let left_ear_position = listener_transform
-                    .transform_point(Point3::from(listener.left_ear))
+                    .transform_point(listener.left_ear)
                     .into();
                 let right_ear_position = listener_transform
-                    .transform_point(Point3::from(listener.right_ear))
+                    .transform_point(listener.right_ear)
                     .into();
                 for (transform, mut audio_emitter) in (&transform, &mut audio_emitter).join() {
                     let x = transform.0[3][0];

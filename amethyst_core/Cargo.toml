@@ -15,7 +15,7 @@ appveyor = { repository = "amethyst/amethyst" }
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
-cgmath = "0.14"
+cgmath = { version = "0.15", features = ["serde", "mint"] }
 fnv = "1.0"
 hibitset = "0.3.2"
 rayon = "0.8"
