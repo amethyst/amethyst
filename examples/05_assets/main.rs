@@ -2,12 +2,12 @@
 // TODO: Add asset loader directory store for the meshes.
 
 extern crate amethyst;
-extern crate cgmath;
 extern crate rayon;
 
 use amethyst::{Application, Error, State, Trans};
 use amethyst::assets::{BoxedErr, Loader, SimpleFormat};
 use amethyst::config::Config;
+use amethyst::core::cgmath::{Array, Vector3};
 use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::ecs::World;
 use amethyst::input::InputBundle;
@@ -16,6 +16,8 @@ use amethyst::renderer::{Camera, DisplayConfig as DisplayConfig, DrawShaded, Eve
                          Light, Material, MaterialDefaults, Mesh, MeshData, Pipeline, PointLight,
                          PosNormTex, Projection, RenderBundle, RenderSystem, Rgba, Stage,
                          VirtualKeyCode, WindowEvent};
+
+
 
 #[derive(Clone)]
 struct Custom;
@@ -87,8 +89,8 @@ impl State for AssetsExample {
         };
 
         let mut trans = LocalTransform::default();
-        trans.translation = [-5.0, 0.0, 0.0];
-        trans.scale = [2.0, 2.0, 2.0];
+        trans.translation = Vector3::new(-5.0, 0.0, 0.0);
+        trans.scale = Vector3::from_value(2.);
         engine
             .world
             .create_entity()
@@ -161,7 +163,7 @@ fn run() -> Result<(), Error> {
 }
 
 fn initialise_camera(world: &mut World) {
-    use cgmath::{Deg, Matrix4};
+    use amethyst::core::cgmath::{Deg, Matrix4};
     let transform =
         Matrix4::from_translation([0., -20., 10.].into()) * Matrix4::from_angle_x(Deg(75.96));
     world

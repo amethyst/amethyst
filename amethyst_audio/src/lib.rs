@@ -1,7 +1,6 @@
 //! Loading and playing of audio files.
 extern crate amethyst_assets;
 extern crate amethyst_core;
-extern crate cgmath;
 extern crate cpal;
 extern crate rodio;
 extern crate shred;

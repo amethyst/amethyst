@@ -2,6 +2,7 @@
 
 use std::borrow::Borrow;
 
+use cgmath::{Matrix4, One};
 use specs::{Component, DenseVecStorage, FlaggedStorage};
 
 /// Performs a global transformation on the entity (transform from origin).
@@ -12,7 +13,7 @@ use specs::{Component, DenseVecStorage, FlaggedStorage};
 /// on the `FlaggedStorage` at the appropriate times (before updating any `Transform` in the frame).
 /// See documentation on `FlaggedStorage` for more information.
 #[derive(Debug, Copy, Clone)]
-pub struct Transform(pub [[f32; 4]; 4]);
+pub struct Transform(pub Matrix4<f32>);
 
 impl Transform {
     /// Checks whether each `f32` of the `Transform` is finite (not NaN or inf).
@@ -35,12 +36,7 @@ impl Component for Transform {
 
 impl Default for Transform {
     fn default() -> Self {
-        Transform([
-            [1.0, 0.0, 0.0, 0.0],
-            [0.0, 1.0, 0.0, 0.0],
-            [0.0, 0.0, 1.0, 0.0],
-            [0.0, 0.0, 0.0, 1.0],
-        ])
+        Transform(Matrix4::one())
     }
 }
 
@@ -53,25 +49,25 @@ impl Transform {
 
 impl From<[[f32; 4]; 4]> for Transform {
     fn from(matrix: [[f32; 4]; 4]) -> Self {
-        Transform(matrix)
+        Transform(matrix.into())
     }
 }
 
 impl Into<[[f32; 4]; 4]> for Transform {
     fn into(self) -> [[f32; 4]; 4] {
-        self.0
+        self.0.into()
     }
 }
 
 impl AsRef<[[f32; 4]; 4]> for Transform {
     fn as_ref(&self) -> &[[f32; 4]; 4] {
-        &self.0
+        self.0.as_ref()
     }
 }
 
 
 impl Borrow<[[f32; 4]; 4]> for Transform {
     fn borrow(&self) -> &[[f32; 4]; 4] {
-        &self.0
+        self.0.as_ref()
     }
 }

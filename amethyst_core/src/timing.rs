@@ -20,7 +20,6 @@ pub struct Time {
 }
 
 impl Time {
-
     /// Gets the time difference between frames in seconds
     pub fn delta_seconds(&self) -> f32 {
         self.delta_seconds

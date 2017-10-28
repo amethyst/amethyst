@@ -1,15 +1,13 @@
 //! Displays spheres with physically based materials.
 
 extern crate amethyst;
-extern crate cgmath;
 extern crate genmesh;
 
 use amethyst::assets::Loader;
 use amethyst::core::transform::Transform;
 use amethyst::prelude::*;
 use amethyst::renderer::*;
-use cgmath::{Deg, Matrix4, Vector3};
-use cgmath::prelude::InnerSpace;
+use amethyst::core::cgmath::{Deg, InnerSpace, Matrix4, Vector3};
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 
@@ -128,10 +126,7 @@ fn run() -> Result<(), amethyst::Error> {
     );
     let config = DisplayConfig::load(&path);
 
-    let resources = format!(
-        "{}/examples/assets/",
-        env!("CARGO_MANIFEST_DIR")
-    );
+    let resources = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
 
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()

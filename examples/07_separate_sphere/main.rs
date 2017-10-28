@@ -1,7 +1,6 @@
 //! Displays a shaded sphere to the user.
 
 extern crate amethyst;
-extern crate cgmath;
 extern crate genmesh;
 
 use amethyst::assets::Loader;
@@ -9,8 +8,7 @@ use amethyst::core::transform::Transform;
 use amethyst::ecs::World;
 use amethyst::prelude::*;
 use amethyst::renderer::*;
-use cgmath::{Deg, Vector3};
-use cgmath::prelude::InnerSpace;
+use amethyst::core::cgmath::{Deg, InnerSpace, Vector3};
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 
@@ -57,10 +55,7 @@ fn run() -> Result<(), amethyst::Error> {
         env!("CARGO_MANIFEST_DIR")
     );
 
-    let resources = format!(
-        "{}/examples/assets/",
-        env!("CARGO_MANIFEST_DIR")
-    );
+    let resources = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
 
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
@@ -168,7 +163,7 @@ fn initialise_lights(world: &mut World) {
 
 /// This function initialises a camera and adds it to the world.
 fn initialise_camera(world: &mut World) {
-    use cgmath::Matrix4;
+    use amethyst::core::cgmath::Matrix4;
     let transform =
         Matrix4::from_translation([0.0, 0.0, -4.0].into()) * Matrix4::from_angle_y(Deg(180.));
     world

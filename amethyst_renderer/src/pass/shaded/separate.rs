@@ -4,7 +4,7 @@ use std::mem;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::transform::Transform;
-use cgmath::{Matrix4, One, SquareMatrix};
+use amethyst_core::cgmath::{Matrix4, One, SquareMatrix};
 use gfx::pso::buffer::ElemStride;
 use rayon::iter::ParallelIterator;
 use rayon::iter::internal::UnindexedConsumer;
@@ -87,8 +87,18 @@ impl Pass for DrawShadedSeparate {
     fn apply<'a, 'b: 'a>(
         &'a mut self,
         supplier: Supplier<'a>,
-        (active, camera, ambient, mesh_storage, tex_storage, material_defaults,
-            mesh, material, global, light): (
+        (
+            active,
+            camera,
+            ambient,
+            mesh_storage,
+            tex_storage,
+            material_defaults,
+            mesh,
+            material,
+            global,
+            light,
+        ): (
             Option<Fetch<'a, ActiveCamera>>,
             ReadStorage<'a, Camera>,
             Fetch<'a, AmbientColor>,
@@ -100,7 +110,7 @@ impl Pass for DrawShadedSeparate {
             ReadStorage<'a, Transform>,
             ReadStorage<'a, Light>,
         ),
-) -> DrawShadedSeparateApply<'a>{
+    ) -> DrawShadedSeparateApply<'a> {
         DrawShadedSeparateApply {
             active,
             camera,
@@ -190,7 +200,7 @@ impl<'a> ParallelIterator for DrawShadedSeparateApply<'a> {
                             .map(|&(ref cam, ref transform)| {
                                 VertexArgs {
                                     proj: cam.proj.into(),
-                                    view: Matrix4::from(transform.0).invert().unwrap().into(),
+                                    view: transform.0.invert().unwrap().into(),
                                     model: *global.as_ref(),
                                 }
                             })

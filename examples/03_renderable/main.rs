@@ -4,11 +4,11 @@
 //! TODO: Rewrite for new renderer.
 
 extern crate amethyst;
-extern crate cgmath;
 
 use amethyst::{Application, Error, State, Trans};
 use amethyst::assets::{HotReloadBundle, Loader};
 use amethyst::config::Config;
+use amethyst::core::cgmath::{Array, Deg, Euler, Quaternion, Rad, Rotation, Rotation3, Vector3};
 use amethyst::core::timing::Time;
 use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::ecs::{Fetch, FetchMut, Join, ReadStorage, System, World, WriteStorage};
@@ -18,7 +18,6 @@ use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, DisplayConfig a
                          MaterialDefaults, MeshHandle, ObjFormat, Pipeline, PngFormat, PointLight,
                          PosNormTex, Projection, RenderBundle, RenderSystem, Rgba, Stage,
                          VirtualKeyCode, WindowEvent};
-use cgmath::{Deg, Euler, Point3, Quaternion, Rad, Rotation, Rotation3};
 
 struct DemoState {
     light_angle: f32,
@@ -52,12 +51,12 @@ impl<'a> System<'a> for ExampleSystem {
         state.light_angle += light_angular_velocity * time.delta_seconds();
         state.camera_angle += camera_angular_velocity * time.delta_seconds();
 
-        let delta_rot = Quaternion::from_angle_z(Rad(camera_angular_velocity * time.delta_seconds()));
+        let delta_rot =
+            Quaternion::from_angle_z(Rad(camera_angular_velocity * time.delta_seconds()));
         for (_, transform) in (&camera, &mut transforms).join() {
             // rotate the camera, using the origin as a pivot point
             transform.translation = delta_rot
-                .rotate_point(Point3::from(transform.translation))
-                .into();
+                .rotate_vector(transform.translation);
             // add the delta rotation for the frame to the total rotation (quaternion multiplication
             // is the same as rotational addition)
             transform.rotation = (delta_rot * Quaternion::from(transform.rotation)).into();
@@ -91,7 +90,7 @@ impl State for Example {
         for mesh in vec![assets.lid.clone(), assets.teapot.clone()] {
             let mut trans = LocalTransform::default();
             trans.rotation = Quaternion::from(Euler::new(Deg(90.0), Deg(-90.0), Deg(0.0))).into();
-            trans.translation = [5.0, 5.0, 0.0];
+            trans.translation = Vector3::new(5.0, 5.0, 0.0);
 
             engine
                 .world
@@ -105,8 +104,8 @@ impl State for Example {
 
         // Add cube to scene
         let mut trans = LocalTransform::default();
-        trans.translation = [5.0, -5.0, 2.0];
-        trans.scale = [2.0; 3];
+        trans.translation = Vector3::new(5.0, -5.0, 2.0);
+        trans.scale = [2.0; 3].into();
 
         engine
             .world
@@ -119,8 +118,8 @@ impl State for Example {
 
         // Add cone to scene
         let mut trans = LocalTransform::default();
-        trans.translation = [-5.0, 5.0, 0.0];
-        trans.scale = [2.0; 3];
+        trans.translation = Vector3::new(-5.0, 5.0, 0.0);
+        trans.scale = [2.0; 3].into();
 
         engine
             .world
@@ -133,7 +132,7 @@ impl State for Example {
 
         // Add custom cube object to scene
         let mut trans = LocalTransform::default();
-        trans.translation = [-5.0, -5.0, 1.0];
+        trans.translation = Vector3::new(-5.0, -5.0, 1.0);
         engine
             .world
             .create_entity()
@@ -145,7 +144,7 @@ impl State for Example {
 
         // Create base rectangle as floor
         let mut trans = LocalTransform::default();
-        trans.scale = [10.0; 3];
+        trans.scale = Vector3::from_value(10.);
 
         engine
             .world
@@ -167,7 +166,7 @@ impl State for Example {
 
         let light: Light = DirectionalLight {
             color: [0.2; 4].into(),
-            direction: [-1.0; 3].into(),
+            direction: [-1.0; 3],
         }.into();
 
         engine.world.create_entity().with(light).build();
@@ -377,7 +376,7 @@ fn run() -> Result<(), Error> {
 
 fn initialise_camera(world: &mut World) {
     let mut local = LocalTransform::default();
-    local.translation = [0., -20., 10.];
+    local.translation = Vector3::new(0., -20., 10.);
     local.rotation = Quaternion::from_angle_x(Deg(75.)).into();
     world
         .create_entity()

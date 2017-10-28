@@ -4,7 +4,7 @@ use std::marker::PhantomData;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::transform::Transform;
-use cgmath::{Matrix4, One, SquareMatrix};
+use amethyst_core::cgmath::{Matrix4, One, SquareMatrix};
 use gfx::pso::buffer::ElemStride;
 
 use rayon::iter::ParallelIterator;
@@ -174,7 +174,7 @@ where
                             .map(|&(ref cam, ref transform)| {
                                 VertexArgs {
                                     proj: cam.proj.into(),
-                                    view: Matrix4::from(transform.0).invert().unwrap().into(),
+                                    view: transform.0.invert().unwrap().into(),
                                     model: *global.as_ref(),
                                 }
                             })
