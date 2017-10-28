@@ -158,11 +158,21 @@ impl<P> CompiledPass<P> {
 
     pub fn new_target(&mut self, target: &Target) {
         for effect in &mut self.effects {
+            // Distribute new no blend targets
             effect.data.out_colors.clear();
             effect
                 .data
                 .out_colors
                 .extend(target.color_bufs().iter().map(|cb| &cb.as_output).cloned());
+
+            // Distribute new blend targets
+            effect.data.out_blends.clear();
+            effect
+                .data
+                .out_blends
+                .extend(target.color_bufs().iter().map(|cb| &cb.as_output).cloned());
+
+            // Distribute new depth buffer
             effect.data.out_depth = target.depth_buf().map(|db| (db.as_output.clone(), (0, 0)));
         }
     }

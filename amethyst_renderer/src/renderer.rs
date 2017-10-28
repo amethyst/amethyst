@@ -136,7 +136,7 @@ impl Renderer {
         let mut targets = HashMap::default();
         targets.insert("".to_string(), self.main_target.clone());
         for (key, value) in pipe.targets().iter().filter(|&(k, _)| !k.is_empty()) {
-            let (key, target) = TargetBuilder::new(key.clone())
+            let (key, mut target) = TargetBuilder::new(key.clone())
                 .with_num_color_bufs(value.color_bufs().len())
                 .with_depth_buf(value.depth_buf().is_some())
                 .build(&mut self.factory, new_size)
