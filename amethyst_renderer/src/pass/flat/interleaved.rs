@@ -3,8 +3,8 @@
 use std::marker::PhantomData;
 
 use amethyst_assets::AssetStorage;
-use amethyst_core::transform::Transform;
 use amethyst_core::cgmath::{Matrix4, One, SquareMatrix};
+use amethyst_core::transform::Transform;
 use gfx::pso::buffer::ElemStride;
 
 use rayon::iter::ParallelIterator;

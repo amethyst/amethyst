@@ -4,11 +4,11 @@ extern crate amethyst;
 extern crate genmesh;
 
 use amethyst::assets::Loader;
+use amethyst::core::cgmath::{Deg, InnerSpace, Vector3};
 use amethyst::core::transform::Transform;
 use amethyst::ecs::World;
 use amethyst::prelude::*;
 use amethyst::renderer::*;
-use amethyst::core::cgmath::{Deg, InnerSpace, Vector3};
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 

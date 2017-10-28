@@ -3,8 +3,8 @@
 use std::mem;
 
 use amethyst_assets::AssetStorage;
-use amethyst_core::transform::Transform;
 use amethyst_core::cgmath::{Matrix4, One, SquareMatrix};
+use amethyst_core::transform::Transform;
 use gfx::pso::buffer::ElemStride;
 use rayon::iter::ParallelIterator;
 use rayon::iter::internal::UnindexedConsumer;
@@ -110,7 +110,7 @@ impl Pass for DrawShadedSeparate {
             ReadStorage<'a, Transform>,
             ReadStorage<'a, Light>,
         ),
-    ) -> DrawShadedSeparateApply<'a> {
+) -> DrawShadedSeparateApply<'a>{
         DrawShadedSeparateApply {
             active,
             camera,

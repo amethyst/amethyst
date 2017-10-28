@@ -4,10 +4,10 @@ extern crate amethyst;
 extern crate genmesh;
 
 use amethyst::assets::Loader;
+use amethyst::core::cgmath::{Deg, InnerSpace, Matrix4, Vector3};
 use amethyst::core::transform::Transform;
 use amethyst::prelude::*;
 use amethyst::renderer::*;
-use amethyst::core::cgmath::{Deg, InnerSpace, Matrix4, Vector3};
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 

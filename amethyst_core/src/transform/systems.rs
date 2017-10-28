@@ -139,13 +139,12 @@ impl<'a> System<'a> for TransformSystem {
                     }
 
                     if local_dirty || parent_dirty || globals.open().1.flagged(parent.entity) {
-                        let combined_transform = if let Some(parent_global) =
-                            globals.get(parent.entity)
-                        {
-                            (parent_global.0 * local.matrix()).into()
-                        } else {
-                            local.matrix()
-                        };
+                        let combined_transform =
+                            if let Some(parent_global) = globals.get(parent.entity) {
+                                (parent_global.0 * local.matrix()).into()
+                            } else {
+                                local.matrix()
+                            };
 
                         if let Some(global) = globals.get_mut(entity) {
                             global.0 = combined_transform.into();
