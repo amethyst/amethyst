@@ -89,7 +89,7 @@ impl SimpleFormat<MeshAsset> for Ron {
         use ron::de::from_str;
         use std::str::from_utf8;
 
-        let s = from_utf8(&bytes).chain_err(|| "Bytes are invalid UTF-8")?;
+        let s = from_utf8(&bytes)?;
 
         from_str(s).chain_err(|| "Failed to decode mesh file")
     }

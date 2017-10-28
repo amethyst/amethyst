@@ -79,9 +79,10 @@ impl SimpleFormat<Mesh> for ObjFormat {
 
     fn import(&self, bytes: Vec<u8>, _: ()) -> Result<MeshData> {
         String::from_utf8(bytes)
-            .chain_err(|| "Bytes are invalid UTF-8")
+            .map_err(Into::into)
             .and_then(|string| {
-                parse(string).map_err(|e| Error::from(format!("In line {}: {:?}", e.line_number, e.message)))
+                parse(string)
+                    .map_err(|e| Error::from(format!("In line {}: {:?}", e.line_number, e.message)))
                     .chain_err(|| "Failed to parse OBJ")
             })
             .map(|set| from_data(set).into())

@@ -29,7 +29,7 @@ impl SimpleFormat<Mesh> for Custom {
 
     /// Reads the given bytes and produces asset data.
     fn import(&self, bytes: Vec<u8>, _: ()) -> AssetResult<MeshData> {
-        let data: String = String::from_utf8(bytes).chain_err(|| "Bytes are invalid UTF-8")?;
+        let data: String = String::from_utf8(bytes)?;
 
         let trimmed: Vec<&str> = data.lines().filter(|line| line.len() >= 1).collect();
 

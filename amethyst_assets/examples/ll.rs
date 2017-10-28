@@ -36,8 +36,7 @@ impl Format<DummyAsset> for DummyFormat {
         _create_reload: bool,
     ) -> Result<FormatValue<DummyAsset>> {
         let dummy = from_utf8(source.load(&name)?.as_slice())
-            .map(|s| s.to_owned())
-            .chain_err(|| "Bytes are invalid UTF-8")?;
+            .map(|s| s.to_owned())?;
 
         Ok(FormatValue::data(dummy))
     }

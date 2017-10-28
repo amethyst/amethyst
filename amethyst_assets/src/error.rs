@@ -1,5 +1,12 @@
+use std::str::Utf8Error;
+use std::string::FromUtf8Error;
 
 error_chain! {
+    foreign_links {
+        FromUtf8(FromUtf8Error) #[doc = "Wraps a UTF-8 error"];
+        Utf8(Utf8Error) #[doc = "Wraps a UTF-8 error"];
+    }
+
     errors {
         /// Returned if an asset with a given name failed to load.
         Asset(name: String) {
