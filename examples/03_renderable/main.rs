@@ -290,6 +290,8 @@ struct Assets {
 }
 
 fn load_assets(world: &World) -> Assets {
+    use amethyst::assets::AssetsDeserializer;
+
     let mesh_storage = world.read_resource();
     let tex_storage = world.read_resource();
     let mat_defaults = world.read_resource::<MaterialDefaults>();
@@ -318,11 +320,17 @@ fn load_assets(world: &World) -> Assets {
         ..mat_defaults.0.clone()
     };
 
-    let cube = loader.load("mesh/cube.obj", ObjFormat, (), (), &mesh_storage);
-    let cone = loader.load("mesh/cone.obj", ObjFormat, (), (), &mesh_storage);
-    let lid = loader.load("mesh/lid.obj", ObjFormat, (), (), &mesh_storage);
-    let teapot = loader.load("mesh/teapot.obj", ObjFormat, (), (), &mesh_storage);
-    let rectangle = loader.load("mesh/rectangle.obj", ObjFormat, (), (), &mesh_storage);
+    // You can also specify meshes in a RON file:
+    let meshes = AssetsDeserializer::new(&loader, &mesh_storage)
+        .with_format("obj", ObjFormat)
+        .load("mesh/renderable_collection.ron")
+        .expect("Failed to decode");
+
+    let cube = meshes.get("cube").unwrap().clone();
+    let cone = meshes.get("cone").unwrap().clone();
+    let lid = meshes.get("lid").unwrap().clone();
+    let teapot = meshes.get("teapot").unwrap().clone();
+    let rectangle = meshes.get("rectangle").unwrap().clone();
 
     Assets {
         cube,

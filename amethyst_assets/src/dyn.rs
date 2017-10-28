@@ -45,7 +45,12 @@ where
         self
     }
 
-    /// Loads a mapping of `String` to asset handles from a given `source`.
+    /// Loads a mapping of `String` to `Handle<A>` from the default directory source.
+    pub fn load(&mut self, name: &str) -> Result<FnvHashMap<String, Handle<A>>> {
+        self.load_from(name, "")
+    }
+
+    /// Loads a mapping of `String` to `Handle<A>` from a given `source`.
     pub fn load_from(&mut self, name: &str, source: &str) -> Result<FnvHashMap<String, Handle<A>>> {
         let bytes = self.loader.source(source).load(name)?;
         let s = String::from_utf8(bytes)?;
@@ -173,10 +178,10 @@ impl<'a> Progress for &'a mut DynProgress {
     type Tracker = ();
 
     fn add_assets(&mut self, _num: usize) {
-        unimplemented!()
+        // TODO
     }
 
     fn create_tracker(self) -> Self::Tracker {
-        unimplemented!()
+        ()
     }
 }

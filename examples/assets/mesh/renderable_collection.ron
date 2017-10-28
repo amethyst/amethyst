@@ -1,0 +1,7 @@
+{
+    "cube": (name: "mesh/cube.obj", format: "obj"),
+    "cone": (name: "mesh/cone.obj", format: "obj"),
+    "teapot": (name: "mesh/teapot.obj", format: "obj"),
+    "lid": (name: "mesh/lid.obj", format: "obj"),
+    "rectangle": (name: "mesh/rectangle.obj", format: "obj"),
+}
