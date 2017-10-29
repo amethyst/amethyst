@@ -158,7 +158,7 @@ impl<P> CompiledPass<P> {
 
     pub fn new_target(&mut self, target: &Target) {
         for effect in &mut self.effects {
-            // Distribute new no blend targets
+            // Distribute new targets that don't blend.
             effect.data.out_colors.clear();
             effect
                 .data
