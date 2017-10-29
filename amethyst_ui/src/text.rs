@@ -128,7 +128,7 @@ impl<'a> System<'a> for UiTextRenderer {
                             glyph.draw(|x, y, v| {
                                 if v > 0.01 {
                                     let x = x + pos_x;
-                                    if x < (width * 4) && y < height {
+                                    if x < width && y < height {
                                         let start = ((x + y * width) * 4) as usize;
                                         render_buffer[start] = text.color[0];
                                         render_buffer[start + 1] = text.color[1];
