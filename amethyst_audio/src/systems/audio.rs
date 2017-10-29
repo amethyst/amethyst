@@ -4,8 +4,8 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
-use amethyst_core::transform::Transform as TransformComponent;
 use amethyst_core::cgmath::Transform;
+use amethyst_core::transform::Transform as TransformComponent;
 use rodio::{Sample, Source, SpatialSink};
 use specs::{Entity, Fetch, Join, ReadStorage, System, WriteStorage};
 
@@ -95,9 +95,8 @@ impl<'a> System<'a> for AudioSystem {
         if let Some(listener) = listener.get(select_listener.0) {
             if let Some(listener_transform) = transform.get(select_listener.0) {
                 let listener_transform = listener_transform.0;
-                let left_ear_position = listener_transform
-                    .transform_point(listener.left_ear)
-                    .into();
+                let left_ear_position =
+                    listener_transform.transform_point(listener.left_ear).into();
                 let right_ear_position = listener_transform
                     .transform_point(listener.right_ear)
                     .into();

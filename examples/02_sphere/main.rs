@@ -4,14 +4,14 @@ extern crate amethyst;
 extern crate genmesh;
 
 use amethyst::assets::Loader;
+use amethyst::core::cgmath::{Deg, Vector3};
+use amethyst::core::cgmath::prelude::InnerSpace;
 use amethyst::core::transform::Transform;
 use amethyst::ecs::World;
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Event, KeyboardInput,
                          Light, Mesh, Pipeline, PointLight, PosNormTex, Projection, RenderBundle,
                          RenderSystem, Rgba, Stage, VirtualKeyCode, WindowEvent};
-use amethyst::core::cgmath::{Deg, Vector3};
-use amethyst::core::cgmath::prelude::InnerSpace;
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 

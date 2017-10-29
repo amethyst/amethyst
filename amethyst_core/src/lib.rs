@@ -1,5 +1,6 @@
-
+#[macro_use]
 pub extern crate cgmath;
+
 #[macro_use]
 extern crate error_chain;
 extern crate fnv;

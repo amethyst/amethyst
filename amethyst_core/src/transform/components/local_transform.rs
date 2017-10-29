@@ -1,7 +1,7 @@
 //! Local transform component.
 
-use cgmath::{Array, Deg, EuclideanSpace, InnerSpace, Matrix3, Matrix4, One, Point3, Quaternion, Rotation,
-             Rotation3, SquareMatrix, Vector3, Zero};
+use cgmath::{Array, Deg, ElementWise, EuclideanSpace, InnerSpace, Matrix3, Matrix4, One, Point3,
+             Quaternion, Rotation, Rotation3, SquareMatrix, Transform, Vector3, Zero};
 use orientation::Orientation;
 use specs::{Component, DenseVecStorage, FlaggedStorage};
 
@@ -178,4 +178,57 @@ impl LocalTransform {
 
 impl Component for LocalTransform {
     type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
+}
+
+impl Transform<Point3<f32>> for LocalTransform {
+    fn one() -> Self {
+        Default::default()
+    }
+
+    fn look_at(eye: Point3<f32>, center: Point3<f32>, up: Vector3<f32>) -> Self {
+        let rotation = Quaternion::look_at(center - eye, up);
+        let translation = rotation.rotate_vector(Point3::origin() - eye);
+        Self {
+            scale: Vector3::from_value(1.),
+            rotation,
+            translation,
+        }
+    }
+
+    fn transform_vector(&self, vec: Vector3<f32>) -> Vector3<f32> {
+        self.rotation
+            .rotate_vector(vec.mul_element_wise(self.scale))
+    }
+
+    fn transform_point(&self, point: Point3<f32>) -> Point3<f32> {
+        let p = Point3::from_vec(point.to_vec().mul_element_wise(self.scale));
+        self.rotation.rotate_point(p) + self.translation
+    }
+
+    fn concat(&self, other: &Self) -> Self {
+        Self {
+            scale: self.scale.mul_element_wise(other.scale),
+            rotation: self.rotation * other.rotation,
+            translation: self.rotation
+                .rotate_vector(other.translation.mul_element_wise(self.scale))
+                + self.translation,
+        }
+    }
+
+    fn inverse_transform(&self) -> Option<Self> {
+        if ulps_eq!(self.scale, Vector3::zero()) {
+            None
+        } else {
+            let scale = 1. / self.scale;
+            let rotation = self.rotation.invert();
+            let translation = rotation
+                .rotate_vector(self.translation)
+                .mul_element_wise(-scale);
+            Some(Self {
+                translation,
+                rotation,
+                scale,
+            })
+        }
+    }
 }
