@@ -13,6 +13,8 @@ extern crate amethyst_assets;
 extern crate amethyst_core;
 #[macro_use]
 extern crate derivative;
+#[macro_use]
+extern crate error_chain;
 extern crate fnv;
 extern crate gfx;
 extern crate gfx_core;
@@ -61,7 +63,7 @@ pub use color::Rgba;
 pub use config::DisplayConfig;
 pub use formats::{build_mesh_with_combo, create_mesh_asset, create_texture_asset, BmpFormat,
                   ComboMeshCreator, ImageData, ImageError, JpgFormat, MeshCreator, MeshData,
-                  ObjError, ObjFormat, PngFormat, TextureData, TextureMetadata};
+                  ObjFormat, PngFormat, TextureData, TextureMetadata};
 pub use input::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
 pub use light::{DirectionalLight, Light, PointLight, SpotLight, SunLight};
 pub use mesh::{vertex_data, Mesh, MeshHandle, VertexBuffer};

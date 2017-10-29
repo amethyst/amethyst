@@ -4,8 +4,7 @@ use std::fmt;
 use std::path::Path;
 use std::sync::Arc;
 
-use assets::BoxedErr;
-use assets::Source as AssetSource;
+use assets::{Error as AssetError, Result as AssetResult, Source as AssetSource};
 use base64;
 use gltf;
 use gltf::Gltf;
@@ -75,7 +74,7 @@ where
     }
 }
 
-fn read_to_end<P: AsRef<Path>>(source: Arc<AssetSource>, path: P) -> Result<Vec<u8>, BoxedErr> {
+fn read_to_end<P: AsRef<Path>>(source: Arc<AssetSource>, path: P) -> AssetResult<Vec<u8>> {
     let path = path.as_ref();
     Ok(source.load(path.to_str().unwrap())?)
 }
@@ -236,13 +235,13 @@ pub enum Error {
     /// The .gltf data is invalid.
     Validation(Vec<(json::Path, validation::Error)>),
 
-    /// Load error
-    Load(BoxedErr),
+    /// Asset error
+    Asset(AssetError),
 }
 
-impl From<BoxedErr> for Error {
-    fn from(err: BoxedErr) -> Self {
-        Error::Load(err)
+impl From<AssetError> for Error {
+    fn from(err: AssetError) -> Self {
+        Error::Asset(err)
     }
 }
 
@@ -299,7 +298,7 @@ impl StdError for Error {
             Gltf(_) => "Error from gltf crate",
             MalformedJson(_) => "Malformed .gltf / .glb JSON",
             Validation(_) => "Asset failed validation tests",
-            Load(_) => "Failed loading file from source",
+            Asset(_) => "Failed loading file from source",
         }
     }
 

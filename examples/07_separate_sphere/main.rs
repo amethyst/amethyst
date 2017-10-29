@@ -116,14 +116,14 @@ fn initialise_sphere(world: &mut World) {
         let loader = world.read_resource::<Loader>();
 
         let mesh: Handle<Mesh> =
-            loader.load_from_data(gen_sphere(32, 32).into(), &world.read_resource());
+            loader.load_from_data(gen_sphere(32, 32).into(), (), &world.read_resource());
 
         let albedo = SPHERE_COLOUR.into();
 
         let tex_storage = world.read_resource();
         let mat_defaults = world.read_resource::<MaterialDefaults>();
 
-        let albedo = loader.load_from_data(albedo, &tex_storage);
+        let albedo = loader.load_from_data(albedo, (), &tex_storage);
 
         let mat = Material {
             albedo,

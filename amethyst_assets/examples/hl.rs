@@ -85,13 +85,13 @@ impl SimpleFormat<MeshAsset> for Ron {
 
     type Options = ();
 
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<VertexData, BoxedErr> {
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<VertexData> {
         use ron::de::from_str;
         use std::str::from_utf8;
 
-        let s = from_utf8(&bytes).map_err(BoxedErr::new)?;
+        let s = from_utf8(&bytes)?;
 
-        from_str(s).map_err(BoxedErr::new)
+        from_str(s).chain_err(|| "Failed to decode mesh file")
     }
 }
 
@@ -100,14 +100,13 @@ pub struct RenderingSystem;
 impl<'a> System<'a> for RenderingSystem {
     type SystemData = (
         FetchMut<'a, AssetStorage<MeshAsset>>,
-        Fetch<'a, Errors>,
         Fetch<'a, Time>,
         Fetch<'a, Arc<ThreadPool>>,
         Option<Fetch<'a, HotReloadStrategy>>,
         /* texture storage, transforms, .. */
     );
 
-    fn run(&mut self, (mut mesh_storage, errors, time, pool, strategy): Self::SystemData) {
+    fn run(&mut self, (mut mesh_storage, time, pool, strategy): Self::SystemData) {
         use std::ops::Deref;
 
         let strategy = strategy.as_ref().map(Deref::deref);
@@ -118,7 +117,6 @@ impl<'a> System<'a> for RenderingSystem {
 
                 Ok(MeshAsset { buffer: () })
             },
-            &errors,
             time.frame_number(),
             &**pool,
             strategy,

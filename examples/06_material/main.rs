@@ -25,8 +25,8 @@ impl State for Example {
 
             let meshes = &engine.world.read_resource();
             let textures = &engine.world.read_resource();
-            let mesh: MeshHandle = loader.load_from_data(verts, meshes);
-            let albedo = loader.load_from_data(albedo, textures);
+            let mesh: MeshHandle = loader.load_from_data(verts, (), meshes);
+            let albedo = loader.load_from_data(albedo, (), textures);
 
             (mesh, albedo)
         };
@@ -47,8 +47,8 @@ impl State for Example {
                     let loader = engine.world.read_resource::<Loader>();
                     let textures = &engine.world.read_resource();
 
-                    let metallic = loader.load_from_data(metallic, textures);
-                    let roughness = loader.load_from_data(roughness, textures);
+                    let metallic = loader.load_from_data(metallic, (), textures);
+                    let roughness = loader.load_from_data(roughness, (), textures);
 
                     (metallic, roughness)
                 };

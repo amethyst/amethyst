@@ -12,7 +12,7 @@ impl SimpleFormat<Audio> for WavFormat {
 
     type Options = ();
 
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<AudioData, BoxedErr> {
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<AudioData> {
         Ok(AudioData(bytes))
     }
 }
@@ -26,7 +26,7 @@ impl SimpleFormat<Audio> for OggFormat {
 
     type Options = ();
 
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<AudioData, BoxedErr> {
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<AudioData> {
         Ok(AudioData(bytes))
     }
 }
@@ -40,7 +40,7 @@ impl SimpleFormat<Audio> for FlacFormat {
 
     type Options = ();
 
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<AudioData, BoxedErr> {
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<AudioData> {
         Ok(AudioData(bytes))
     }
 }

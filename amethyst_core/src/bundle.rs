@@ -1,10 +1,6 @@
-use std::result::Result as StdResult;
-
 use specs::{DispatcherBuilder, World};
-use specs::error::BoxedErr;
 
-/// Bundle result type.
-pub type Result<T> = StdResult<T, BoxedErr>;
+error_chain! {}
 
 /// A bundle of ECS components, resources and systems.
 pub trait ECSBundle<'a, 'b> {

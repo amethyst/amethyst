@@ -689,7 +689,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     {
         self.disp_builder = bundle
             .build(&mut self.world, self.disp_builder)
-            .map_err(|err| Error::System(err))?;
+            .map_err(|err| Error::Core(err))?;
         Ok(self)
     }
 

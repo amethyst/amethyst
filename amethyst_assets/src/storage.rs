@@ -7,11 +7,10 @@ use crossbeam::sync::MsQueue;
 use hibitset::BitSet;
 use rayon::ThreadPool;
 use specs::{Component, Fetch, FetchMut, System, UnprotectedStorage, VecStorage};
-use specs::common::Errors;
 
-use BoxedErr;
 use asset::{Asset, FormatValue};
-use error::AssetError;
+use error::{ErrorKind, Result, ResultExt};
+use progress::Tracker;
 use reload::{HotReloadStrategy, Reload};
 
 /// An `Allocator`, holding a counter for producing unique IDs.
@@ -111,14 +110,13 @@ impl<A: Asset> AssetStorage<A> {
     pub fn process<F>(
         &mut self,
         f: F,
-        errors: &Errors,
         frame_number: u64,
         pool: &ThreadPool,
         strategy: Option<&HotReloadStrategy>,
     ) where
-        F: FnMut(A::Data) -> Result<A, BoxedErr>,
+        F: FnMut(A::Data) -> Result<A>,
     {
-        self.process_custom_drop(f, |_| {}, errors, frame_number, pool, strategy);
+        self.process_custom_drop(f, |_| {}, frame_number, pool, strategy);
     }
 
     /// Process finished asset data and maintain the storage.
@@ -127,13 +125,12 @@ impl<A: Asset> AssetStorage<A> {
         &mut self,
         mut f: F,
         mut drop_fn: D,
-        errors: &Errors,
         frame_number: u64,
         pool: &ThreadPool,
         strategy: Option<&HotReloadStrategy>,
     ) where
         D: FnMut(A),
-        F: FnMut(A::Data) -> Result<A, BoxedErr>,
+        F: FnMut(A::Data) -> Result<A>,
     {
         while let Some(processed) = self.processed.try_pop() {
             let assets = &mut self.assets;
@@ -142,71 +139,78 @@ impl<A: Asset> AssetStorage<A> {
             let reloads = &mut self.reloads;
 
             let f = &mut f;
-            errors.execute::<AssetError, _>(move || {
-                let (reload_obj, handle) = match processed {
-                    Processed::NewAsset {
-                        data,
-                        format,
-                        handle,
-                        name,
-                    } => {
-                        let (asset, reload_obj) = data.map(
-                            |FormatValue { data, reload }| (data, reload),
-                        ).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
-                            .map_err(|e| AssetError::new(name, format, e))?;
+            let (reload_obj, handle) = match processed {
+                Processed::NewAsset {
+                    data,
+                    handle,
+                    name,
+                    tracker,
+                } => {
+                    let (asset, reload_obj) = match data.map(
+                        |FormatValue { data, reload }| (data, reload),
+                    ).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
+                        .chain_err(|| ErrorKind::Asset(name))
+                    {
+                        Ok(x) => {
+                            tracker.success();
 
-                        let id = handle.id();
-                        bitset.add(id);
-                        handles.push(handle.clone());
-
-                        // NOTE: the loader has to ensure that a handle will be used
-                        // together with a `Data` only once.
-                        unsafe {
-                            assets.insert(id, asset);
+                            x
                         }
+                        Err(e) => {
+                            tracker.fail(e);
 
-                        (reload_obj, handle)
-                    }
-                    Processed::HotReload {
-                        data,
-                        format,
-                        handle,
-                        name,
-                        old_reload,
-                    } => {
-                        let (asset, reload_obj) = match data.map(
-                            |FormatValue { data, reload }| (data, reload),
-                        ).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
-                            .map_err(|e| AssetError::new(name, format, e))
-                        {
-                            Ok(x) => x,
-                            Err(e) => {
-                                eprintln!("Failed to hot-reload: {}", e);
-
-                                reloads.push((handle.downgrade(), old_reload));
-
-                                return Ok(());
-                            }
-                        };
-
-                        let id = handle.id();
-                        assert!(bitset.contains(id));
-                        unsafe {
-                            let old = assets.get_mut(id);
-                            *old = asset;
+                            continue;
                         }
+                    };
 
-                        (reload_obj, handle)
+                    let id = handle.id();
+                    bitset.add(id);
+                    handles.push(handle.clone());
+
+                    // NOTE: the loader has to ensure that a handle will be used
+                    // together with a `Data` only once.
+                    unsafe {
+                        assets.insert(id, asset);
                     }
-                };
 
-                // Add the reload obj if it is `Some`.
-                if let Some(reload_obj) = reload_obj {
-                    reloads.push((handle.downgrade(), reload_obj));
+                    (reload_obj, handle)
                 }
+                Processed::HotReload {
+                    data,
+                    handle,
+                    name,
+                    old_reload,
+                } => {
+                    let (asset, reload_obj) = match data.map(
+                        |FormatValue { data, reload }| (data, reload),
+                    ).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
+                        .chain_err(|| ErrorKind::Asset(name))
+                    {
+                        Ok(x) => x,
+                        Err(e) => {
+                            eprintln!("Failed to hot-reload: {}", e);
 
-                Ok(())
-            });
+                            reloads.push((handle.downgrade(), old_reload));
+
+                            continue;
+                        }
+                    };
+
+                    let id = handle.id();
+                    assert!(bitset.contains(id));
+                    unsafe {
+                        let old = assets.get_mut(id);
+                        *old = asset;
+                    }
+
+                    (reload_obj, handle)
+                }
+            };
+
+            // Add the reload obj if it is `Some`.
+            if let Some(reload_obj) = reload_obj {
+                reloads.push((handle.downgrade(), reload_obj));
+            }
         }
 
         let mut skip = 0;
@@ -249,12 +253,11 @@ impl<A: Asset> AssetStorage<A> {
                     let old_reload = rel.clone();
                     let name = rel.name();
                     let format = rel.format();
-                    let data = rel.reload();
+                    let data = rel.reload().chain_err(|| ErrorKind::Format(format));
 
                     let p = Processed::HotReload {
                         data,
                         name,
-                        format,
                         handle,
                         old_reload,
                     };
@@ -309,22 +312,20 @@ impl<A> Processor<A> {
 impl<'a, A> System<'a> for Processor<A>
 where
     A: Asset,
-    A::Data: Into<Result<A, BoxedErr>>,
+    A::Data: Into<Result<A>>,
 {
     type SystemData = (
         FetchMut<'a, AssetStorage<A>>,
         Fetch<'a, Arc<ThreadPool>>,
-        Fetch<'a, Errors>,
         Fetch<'a, Time>,
         Option<Fetch<'a, HotReloadStrategy>>,
     );
 
-    fn run(&mut self, (mut storage, pool, errors, time, strategy): Self::SystemData) {
+    fn run(&mut self, (mut storage, pool, time, strategy): Self::SystemData) {
         use std::ops::Deref;
 
         storage.process(
             Into::into,
-            &errors,
             time.frame_number(),
             &**pool,
             strategy.as_ref().map(Deref::deref),
@@ -374,14 +375,13 @@ where
 
 pub(crate) enum Processed<A: Asset> {
     NewAsset {
-        data: Result<FormatValue<A>, BoxedErr>,
-        format: &'static str,
+        data: Result<FormatValue<A>>,
         handle: Handle<A>,
         name: String,
+        tracker: Box<Tracker>,
     },
     HotReload {
-        data: Result<FormatValue<A>, BoxedErr>,
-        format: &'static str,
+        data: Result<FormatValue<A>>,
         handle: Handle<A>,
         name: String,
         old_reload: Box<Reload<A>>,

@@ -6,7 +6,7 @@ use std::sync::Arc;
 use fnv::FnvHashMap;
 use rayon::ThreadPool;
 
-use {Asset, Directory, Format, FormatValue, Progress, Source};
+use {Asset, Directory, Format, ErrorKind, FormatValue,  ResultExt,Progress, Source};
 use storage::{AssetStorage, Handle, Processed};
 
 /// The asset loader, holding the sources and a reference to the `ThreadPool`.
@@ -123,17 +123,15 @@ impl Loader {
         let hot_reload = self.hot_reload;
 
         let cl = move || {
-            let data = format.import(name.clone(), source, options, hot_reload);
-            match data {
-                Ok(_) => tracker.success(),
-                Err(_) => tracker.fail(),
-            }
+            let data = format.import(name.clone(), source, options, hot_reload)
+                .chain_err(|| ErrorKind::Format(F::NAME));
+            let tracker = Box::new(tracker) as Box<Tracker>;
 
             processed.push(Processed::NewAsset {
                 data,
-                format: F::NAME,
                 handle,
                 name,
+                tracker,
             });
         };
         self.pool.spawn(cl);
@@ -142,16 +140,25 @@ impl Loader {
     }
 
     /// Load an asset from data and return a handle.
-    pub fn load_from_data<A>(&self, data: A::Data, storage: &AssetStorage<A>) -> Handle<A>
+    pub fn load_from_data<A, P>(
+        &self,
+        data: A::Data,
+        mut progress: P,
+        storage: &AssetStorage<A>,
+    ) -> Handle<A>
     where
         A: Asset,
+        P: Progress,
     {
+        progress.add_assets(1);
+        let tracker = progress.create_tracker();
+        let tracker = Box::new(tracker);
         let handle = storage.allocate();
         storage.processed.push(Processed::NewAsset {
             data: Ok(FormatValue::data(data)),
-            format: "",
             handle: handle.clone(),
             name: "<Data>".into(),
+            tracker,
         });
 
         handle
