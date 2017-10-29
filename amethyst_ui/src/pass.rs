@@ -125,7 +125,7 @@ impl Pass for DrawUi {
             ReadStorage<'a, UiTransform>,
             ReadStorage<'a, UiText>,
         ),
-    ) -> DrawUiApply<'a> {
+) -> DrawUiApply<'a>{
         DrawUiApply {
             entities,
             screen_dimensions,
@@ -251,24 +251,25 @@ impl<'a> ParallelIterator for DrawUiApply<'a> {
                         };
                         effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
                         effect.data.vertex_bufs.push(vbuf);
-                        if let Some(ui_image) = ui_image.get(entity) {
-                            if let Some(image) = tex_storage.get(&ui_image.texture) {
-                                effect.data.textures.push(image.view().clone());
-                                effect.data.samplers.push(image.sampler().clone());
-                                effect.draw(mesh.slice(), encoder);
-                                effect.clear();
-                            }
+                        if let Some(image) = ui_image
+                            .get(entity)
+                            .and_then(|image| tex_storage.get(&image.texture))
+                        {
+                            effect.data.textures.push(image.view().clone());
+                            effect.data.samplers.push(image.sampler().clone());
+                            effect.draw(mesh.slice(), encoder);
+                            effect.clear();
                         }
 
-                        if let Some(ui_text) = ui_text.get(entity) {
-                            if let Some(ref texture) = ui_text.texture {
-                                if let Some(image) = tex_storage.get(texture) {
-                                    effect.data.textures.push(image.view().clone());
-                                    effect.data.samplers.push(image.sampler().clone());
-                                    effect.draw(mesh.slice(), encoder);
-                                    effect.clear();
-                                }
-                            }
+                        if let Some(image) = ui_text
+                            .get(entity)
+                            .and_then(|ref ui_text| ui_text.texture.as_ref())
+                            .and_then(|texture| tex_storage.get(texture))
+                        {
+                            effect.data.textures.push(image.view().clone());
+                            effect.data.samplers.push(image.sampler().clone());
+                            effect.draw(mesh.slice(), encoder);
+                            effect.clear();
                         }
                     }
                 }
