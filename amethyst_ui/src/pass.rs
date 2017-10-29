@@ -93,6 +93,7 @@ impl<'a> PassData<'a> for DrawUi {
         Fetch<'a, AssetStorage<Texture>>,
         ReadStorage<'a, UiImage>,
         ReadStorage<'a, UiTransform>,
+        ReadStorage<'a, UiText>,
     );
 }
 
@@ -115,13 +116,14 @@ impl Pass for DrawUi {
     fn apply<'a, 'b: 'a>(
         &'a mut self,
         supplier: Supplier<'a>,
-        (entities, screen_dimensions, mesh_storage, tex_storage, ui_image, ui_transform): (
+        (entities, screen_dimensions, mesh_storage, tex_storage, ui_image, ui_transform, ui_text): (
             Entities<'a>,
             Fetch<'a, ScreenDimensions>,
             Fetch<'a, AssetStorage<Mesh>>,
             Fetch<'a, AssetStorage<Texture>>,
             ReadStorage<'a, UiImage>,
             ReadStorage<'a, UiTransform>,
+            ReadStorage<'a, UiText>,
         ),
     ) -> DrawUiApply<'a> {
         DrawUiApply {
@@ -131,6 +133,7 @@ impl Pass for DrawUi {
             tex_storage,
             ui_image,
             ui_transform,
+            ui_text,
             unit_mesh: self.mesh_handle.clone(),
             cached_draw_order: &mut self.cached_draw_order,
             supplier,
@@ -145,6 +148,7 @@ pub struct DrawUiApply<'a> {
     tex_storage: Fetch<'a, AssetStorage<Texture>>,
     ui_image: ReadStorage<'a, UiImage>,
     ui_transform: ReadStorage<'a, UiTransform>,
+    ui_text: ReadStorage<'a, UiText>,
     unit_mesh: MeshHandle,
     cached_draw_order: &'a mut Vec<(f32, Entity)>,
     supplier: Supplier<'a>,
@@ -164,6 +168,7 @@ impl<'a> ParallelIterator for DrawUiApply<'a> {
             tex_storage,
             ui_image,
             ui_transform,
+            ui_text,
             unit_mesh,
             cached_draw_order,
             supplier,
@@ -175,6 +180,7 @@ impl<'a> ParallelIterator for DrawUiApply<'a> {
         let mesh_storage = &mesh_storage;
         let tex_storage = &tex_storage;
         let ui_image = &ui_image;
+        let ui_text = &ui_text;
         let ui_transform = &ui_transform;
         let unit_mesh = &unit_mesh;
 
@@ -191,7 +197,7 @@ impl<'a> ParallelIterator for DrawUiApply<'a> {
 
         // Attempt to insert the new entities in sorted position.  Should reduce work during
         // the sorting step.
-        for (entity, _image, transform) in (entities, ui_image, ui_transform).join() {
+        for (entity, transform) in (entities, ui_transform).join() {
             if cached_draw_order
                 .iter()
                 .position(|&(_z, cached_entity)| entity == cached_entity)
@@ -233,27 +239,36 @@ impl<'a> ParallelIterator for DrawUiApply<'a> {
                 {
                     // These are safe as we guaranteed earlier these entities are present.
                     let ui_transform = ui_transform.get(entity).unwrap();
-                    let ui_image = ui_image.get(entity).unwrap();
                     if let Some(mesh) = mesh_storage.get(unit_mesh) {
                         let vbuf = match mesh.buffer(PosTex::ATTRIBUTES) {
                             Some(vbuf) => vbuf.clone(),
                             None => continue,
                         };
+                        let vertex_args = VertexArgs {
+                            proj_vec: proj_vec.into(),
+                            coord: [ui_transform.x, ui_transform.y],
+                            dimension: [ui_transform.width, ui_transform.height],
+                        };
+                        effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
+                        effect.data.vertex_bufs.push(vbuf);
+                        if let Some(ui_image) = ui_image.get(entity) {
+                            if let Some(image) = tex_storage.get(&ui_image.texture) {
+                                effect.data.textures.push(image.view().clone());
+                                effect.data.samplers.push(image.sampler().clone());
+                                effect.draw(mesh.slice(), encoder);
+                                effect.clear();
+                            }
+                        }
 
-                        if let Some(image) = tex_storage.get(&ui_image.texture) {
-                            let vertex_args = VertexArgs {
-                                proj_vec: proj_vec.into(),
-                                coord: [ui_transform.x, ui_transform.y],
-                                dimension: [ui_transform.width, ui_transform.height],
-                            };
-
-                            effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
-                            effect.data.textures.push(image.view().clone());
-                            effect.data.samplers.push(image.sampler().clone());
-
-                            effect.data.vertex_bufs.push(vbuf);
-
-                            effect.draw(mesh.slice(), encoder);
+                        if let Some(ui_text) = ui_text.get(entity) {
+                            if let Some(ref texture) = ui_text.texture {
+                                if let Some(image) = tex_storage.get(texture) {
+                                    effect.data.textures.push(image.view().clone());
+                                    effect.data.samplers.push(image.sampler().clone());
+                                    effect.draw(mesh.slice(), encoder);
+                                    effect.clear();
+                                }
+                            }
                         }
                     }
                 }

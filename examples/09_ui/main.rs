@@ -1,20 +1,19 @@
 //! Displays a shaded sphere to the user.
 
 extern crate amethyst;
-extern crate cgmath;
 extern crate genmesh;
 
-use amethyst::assets::Loader;
+use amethyst::assets::{AssetStorage, Handle, Loader};
 use amethyst::core::transform::Transform;
 use amethyst::ecs::World;
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light, Mesh, Pipeline,
                          PngFormat, PointLight, PosNormTex, RenderBundle, RenderSystem, Rgba,
                          ScreenDimensions, Stage};
-use amethyst::ui::{DrawUi, UiBundle, UiImage, UiTransform};
+use amethyst::ui::{DrawUi, FontFileAsset, FontFormat, UiBundle, UiImage, UiText, UiTransform};
 use amethyst::winit::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
-use cgmath::Vector3;
-use cgmath::prelude::InnerSpace;
+use amethyst::core::cgmath::Vector3;
+use amethyst::core::cgmath::prelude::InnerSpace;
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 
@@ -26,7 +25,10 @@ const LIGHT_POSITION: [f32; 3] = [2.0, 2.0, -2.0];
 const LIGHT_RADIUS: f32 = 5.0;
 const LIGHT_INTENSITY: f32 = 3.0;
 
-struct Example;
+struct Example {
+    font_loaded: bool,
+    font: Option<Handle<FontFileAsset>>,
+}
 
 impl State for Example {
     fn on_start(&mut self, engine: &mut Engine) {
@@ -34,14 +36,27 @@ impl State for Example {
         initialise_sphere(&mut engine.world);
         initialise_lights(&mut engine.world);
         initialise_camera(&mut engine.world);
+        let (logo, font) = {
+            let loader = engine.world.read_resource::<Loader>();
 
-        let logo = engine.world.read_resource::<Loader>().load(
-            "texture/logo_transparent.png",
-            PngFormat,
-            Default::default(),
-            (),
-            &engine.world.read_resource(),
-        );
+            let logo = loader.load(
+                "texture/logo_transparent.png",
+                PngFormat,
+                Default::default(),
+                (),
+                &engine.world.read_resource(),
+            );
+
+            let font = loader.load(
+                "font/square.ttf",
+                FontFormat,
+                Default::default(),
+                (),
+                &engine.world.read_resource(),
+            );
+            (logo, font)
+        };
+        self.font = Some(font);
 
         engine
             .world
@@ -55,25 +70,39 @@ impl State for Example {
             })
             .with(UiImage {
                 texture: logo.clone(),
-                preserve_aspect_ratio: true,
             })
             .build();
+    }
 
-        engine
-            .world
-            .create_entity()
-            .with(UiTransform {
-                x: 100.,
-                y: 100.,
-                z: -1.,
-                width: 232.,
-                height: 266.,
-            })
-            .with(UiImage {
-                texture: logo,
-                preserve_aspect_ratio: true,
-            })
-            .build();
+    fn update(&mut self, engine: &mut Engine) -> Trans {
+        if !self.font_loaded {
+            let font = {
+                let font_storage = engine.world.read_resource::<AssetStorage<FontFileAsset>>();
+                font_storage.get(self.font.as_ref().unwrap()).map(|f| f.0[0].clone())
+            };
+
+            if let Some(font) = font {
+                self.font_loaded = true;
+                engine
+                    .world
+                    .create_entity()
+                    .with(UiTransform {
+                        x: 300.,
+                        y: 300.,
+                        z: 1.,
+                        width: 500.,
+                        height: 500.,
+                    })
+                    .with(UiText::new(
+                        font,
+                        "Hello world!".to_string(),
+                        [1.0, 0.0, 0.0, 1.0],
+                        75.,
+                    ))
+                    .build();
+            }
+        }
+        Trans::None
     }
 
     fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
@@ -106,9 +135,9 @@ fn run() -> Result<(), amethyst::Error> {
 
     let config = DisplayConfig::load(&display_config_path);
 
-    let mut game = Application::build(resources, Example)?
+    let mut game = Application::build(resources, Example{ font_loaded: false, font: None })?
         .with_bundle(RenderBundle::new())?
-        .with_bundle(UiBundle::new())?;
+        .with_bundle(UiBundle::new(&[]))?;
     let pipe = {
         let loader = game.world.read_resource();
         let mesh_storage = game.world.read_resource();

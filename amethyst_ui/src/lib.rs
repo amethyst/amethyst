@@ -22,8 +22,8 @@ mod text;
 mod transform;
 
 pub use self::bundle::UiBundle;
-pub use self::format::FontFormat;
+pub use self::format::{FontFileAsset, FontFormat};
 pub use self::image::UiImage;
 pub use self::pass::DrawUi;
-pub use self::text::UiText;
+pub use self::text::{UiText, UiTextRenderer};
 pub use self::transform::UiTransform;
