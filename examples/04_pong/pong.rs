@@ -1,13 +1,13 @@
 use {ARENA_HEIGHT, ARENA_WIDTH};
 use {Ball, Paddle, Side};
 use amethyst::assets::Loader;
-use amethyst::core::transform::{LocalTransform, Transform};
 use amethyst::core::cgmath::Vector3;
+use amethyst::core::transform::{LocalTransform, Transform};
 use amethyst::ecs::World;
 use amethyst::prelude::*;
 use amethyst::renderer::{Camera, Event, KeyboardInput, Material, MeshHandle, PosTex, Projection,
                          ScreenDimensions, VirtualKeyCode, WindowEvent, WindowMessages};
-use amethyst::ui::{FontFormat, UiText, UiTransform};
+use amethyst::ui::{TtfFormat, UiText, UiTransform};
 
 pub struct Pong;
 
@@ -147,8 +147,9 @@ fn initialise_balls(world: &mut World) {
 }
 
 fn initialise_score(world: &mut World) {
-    let font = world.read_resource::<Loader>().load("font/square.ttf",
-        FontFormat,
+    let font = world.read_resource::<Loader>().load(
+        "font/square.ttf",
+        TtfFormat,
         Default::default(),
         (),
         &world.read_resource(),
@@ -163,7 +164,7 @@ fn initialise_score(world: &mut World) {
         resize_fn: None,
     };
     let p1_size_fn = |transform: &mut UiTransform, (width, _height)| {
-         transform.x = (width / 2.) - 100. - transform.width / 2.;
+        transform.x = (width / 2.) - 100. - transform.width / 2.;
     };
     let mut p2_transform = UiTransform {
         id: "P2".to_string(),
@@ -175,7 +176,7 @@ fn initialise_score(world: &mut World) {
         resize_fn: None,
     };
     let p2_size_fn = |transform: &mut UiTransform, (width, _height)| {
-         transform.x = (width / 2.) + 100. - transform.width / 2.;
+        transform.x = (width / 2.) + 100. - transform.width / 2.;
     };
     {
         let dim = world.read_resource::<ScreenDimensions>();

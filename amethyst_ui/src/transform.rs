@@ -7,7 +7,7 @@ use winit::{Event, WindowEvent};
 /// TODO: Eventually this should be either replaced by a citrine type, or citrine may just
 /// populate it.
 pub struct UiTransform {
-    /// An identifier.  Serves no purpose other than to help you distinguish between UI elements.
+    /// An identifier. Serves no purpose other than to help you distinguish between UI elements.
     pub id: String,
     /// X coordinate, 0 is the left edge, while the width of the screen is the right edge.
     pub x: f32,
@@ -48,17 +48,28 @@ impl ResizeSystem {
 impl<'a> System<'a> for ResizeSystem {
     type SystemData = (
         WriteStorage<'a, UiTransform>,
-        Fetch<'a, EventChannel<Event>>
+        Fetch<'a, EventChannel<Event>>,
     );
 
     fn run(&mut self, (mut transform, events): Self::SystemData) {
         use std::mem::replace;
-        for event in events.lossy_read(&mut self.event_reader).expect("ResizeSystem failed!") {
-            if let &Event::WindowEvent {event: WindowEvent::Resized(width, height), ..} = event {
+
+        for event in events
+            .lossy_read(&mut self.event_reader)
+            .expect("ResizeSystem failed!")
+        {
+            if let &Event::WindowEvent {
+                event: WindowEvent::Resized(width, height),
+                ..
+            } = event
+            {
                 for mut transform in (&mut transform).join() {
                     if transform.resize_fn.is_some() {
                         let mut resize_fn = replace(&mut transform.resize_fn, None);
-                        (resize_fn.as_mut().unwrap())(&mut transform, (width as f32, height as f32));
+                        (resize_fn.as_mut().unwrap())(
+                            &mut transform,
+                            (width as f32, height as f32),
+                        );
                         transform.resize_fn = resize_fn;
                     }
                 }

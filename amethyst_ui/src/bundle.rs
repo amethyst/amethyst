@@ -12,7 +12,7 @@ use super::*;
 ///
 /// Will register all necessary components and systems needed for UI, along with any resources.
 ///
-/// UiTextRenderer is registered with name "ui_text".
+/// `UiTextRenderer` is registered with name `"ui_text"`.
 pub struct UiBundle {
     deps: &'static [&'static str],
 }

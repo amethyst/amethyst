@@ -24,8 +24,8 @@ use amethyst_renderer::error::Result;
 use amethyst_renderer::pipe::{Effect, NewEffect};
 use amethyst_renderer::pipe::pass::{Pass, PassApply, PassData, Supplier};
 
-const VERT_SRC: &[u8] = include_bytes!("vertex.glsl");
-const FRAG_SRC: &[u8] = include_bytes!("frag.glsl");
+const VERT_SRC: &[u8] = include_bytes!("shaders/vertex.glsl");
+const FRAG_SRC: &[u8] = include_bytes!("shaders/frag.glsl");
 
 #[derive(Copy, Clone, Debug)]
 #[allow(dead_code)] // This is used by the shaders

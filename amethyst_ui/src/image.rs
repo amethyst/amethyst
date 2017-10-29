@@ -1,7 +1,7 @@
 use amethyst_renderer::TextureHandle;
 use specs::{Component, DenseVecStorage};
 
-/// A component with the texture to display in this entities UiTransform
+/// A component with the texture to display in this entity's `UiTransform`
 pub struct UiImage {
     /// The texture to display
     pub texture: TextureHandle,

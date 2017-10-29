@@ -4,16 +4,16 @@ extern crate amethyst;
 extern crate genmesh;
 
 use amethyst::assets::Loader;
+use amethyst::core::cgmath::Vector3;
+use amethyst::core::cgmath::prelude::InnerSpace;
 use amethyst::core::transform::Transform;
 use amethyst::ecs::World;
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light, Mesh, Pipeline,
                          PngFormat, PointLight, PosNormTex, RenderBundle, RenderSystem, Rgba,
                          ScreenDimensions, Stage};
-use amethyst::ui::{DrawUi, FontFormat, UiBundle, UiImage, UiText, UiTransform};
+use amethyst::ui::{DrawUi, TtfFormat, UiBundle, UiImage, UiText, UiTransform};
 use amethyst::winit::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
-use amethyst::core::cgmath::Vector3;
-use amethyst::core::cgmath::prelude::InnerSpace;
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 
@@ -46,7 +46,7 @@ impl State for Example {
 
             let font = loader.load(
                 "font/square.ttf",
-                FontFormat,
+                TtfFormat,
                 Default::default(),
                 (),
                 &engine.world.read_resource(),

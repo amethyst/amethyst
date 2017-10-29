@@ -5,7 +5,7 @@ use specs::DenseVecStorage;
 /// A loaded set of fonts from a file.
 pub struct FontAsset(pub Font<'static>);
 
-/// A handle to font data stored with `amethyst_assets`
+/// A handle to font data stored with `amethyst_assets`.
 pub type FontHandle = Handle<FontAsset>;
 
 pub struct FontData(Font<'static>);
@@ -27,10 +27,10 @@ impl Into<Result<FontAsset, Error>> for FontData {
 /// exist in TrueType this will fail.  This will only load the first font contained in a file.
 /// If this is a problem for you please file an issue with Amethyst on GitHub.
 #[derive(Clone)]
-pub struct FontFormat;
+pub struct TtfFormat;
 
-impl SimpleFormat<FontAsset> for FontFormat {
-    const NAME: &'static str = "FONT";
+impl SimpleFormat<FontAsset> for TtfFormat {
+    const NAME: &'static str = "TTF";
     type Options = ();
 
     fn import(&self, bytes: Vec<u8>, _: ()) -> Result<FontData, Error> {
