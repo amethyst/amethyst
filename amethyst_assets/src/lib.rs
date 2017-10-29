@@ -33,6 +33,7 @@ pub use storage::{AssetStorage, Handle, Processor, WeakHandle};
 mod asset;
 mod cache;
 mod error;
+mod library;
 mod loader;
 mod progress;
 mod reload;

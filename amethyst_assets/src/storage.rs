@@ -10,6 +10,7 @@ use specs::{Component, Fetch, FetchMut, System, UnprotectedStorage, VecStorage};
 
 use asset::{Asset, FormatValue};
 use error::{ErrorKind, Result, ResultExt};
+use library::LibraryHandle;
 use progress::Tracker;
 use reload::{HotReloadStrategy, Reload};
 
@@ -32,11 +33,11 @@ impl Allocator {
 pub struct AssetStorage<A: Asset> {
     assets: VecStorage<A>,
     bitset: BitSet,
-    handles: Vec<Handle<A>>,
+    handles: Vec<HandleAlloc<A>>,
     handle_alloc: Allocator,
     pub(crate) processed: Arc<MsQueue<Processed<A>>>,
     reloads: Vec<(WeakHandle<A>, Box<Reload<A>>)>,
-    unused_handles: MsQueue<Handle<A>>,
+    unused_handles: MsQueue<HandleAlloc<A>>,
 }
 
 impl<A: Asset> AssetStorage<A> {
@@ -49,12 +50,12 @@ impl<A: Asset> AssetStorage<A> {
     pub(crate) fn allocate(&self) -> Handle<A> {
         self.unused_handles
             .try_pop()
-            .unwrap_or_else(|| self.allocate_new())
+            .unwrap_or_else(|| self.allocate_new()).into()
     }
 
-    fn allocate_new(&self) -> Handle<A> {
+    fn allocate_new(&self) -> HandleAlloc<A> {
         let id = self.handle_alloc.next_id() as u32;
-        let handle = Handle {
+        let handle = HandleAlloc {
             id: Arc::new(id),
             marker: PhantomData,
         };
@@ -340,11 +341,58 @@ where
 #[derivative(Clone(bound = ""), Eq(bound = ""), Hash(bound = ""), PartialEq(bound = ""),
              Debug(bound = ""))]
 pub struct Handle<A: ?Sized> {
+    inner: HandleInner<A>,
+}
+
+impl<A> Handle<A> {
+//    /// Return the 32 bit id of this handle.
+//    pub fn id(&self) -> u32 {
+//        *self.id.as_ref()
+//    }
+//
+//    /// Downgrades the handle and creates a `WeakHandle`.
+//    pub fn downgrade(&self) -> WeakHandle<A> {
+//        let id = Arc::downgrade(&self.id);
+//
+//        WeakHandle {
+//            id,
+//            marker: PhantomData,
+//        }
+//    }
+}
+
+impl<A> Component for Handle<A>
+where
+    A: Asset,
+{
+    type Storage = A::HandleStorage;
+}
+
+impl<A> From<HandleAlloc<A>> for Handle<A> {
+    fn from(h: HandleAlloc<A>) -> Self {
+        Handle {
+            inner: HandleInner::Alloc(h)
+        }
+    }
+}
+
+impl<A> From<LibraryHandle<A>> for Handle<A> {
+    fn from(h: LibraryHandle<A>) -> Self {
+        Handle {
+            inner: HandleInner::Library(h)
+        }
+    }
+}
+
+#[derive(Derivative)]
+#[derivative(Clone(bound = ""), Eq(bound = ""), Hash(bound = ""), PartialEq(bound = ""),
+Debug(bound = ""))]
+struct HandleAlloc<A: ?Sized> {
     id: Arc<u32>,
     marker: PhantomData<A>,
 }
 
-impl<A> Handle<A> {
+impl<A> HandleAlloc<A> {
     /// Return the 32 bit id of this handle.
     pub fn id(&self) -> u32 {
         *self.id.as_ref()
@@ -366,11 +414,12 @@ impl<A> Handle<A> {
     }
 }
 
-impl<A> Component for Handle<A>
-where
-    A: Asset,
-{
-    type Storage = A::HandleStorage;
+#[derive(Derivative)]
+#[derivative(Clone(bound = ""), Eq(bound = ""), Hash(bound = ""), PartialEq(bound = ""),
+Debug(bound = ""))]
+enum HandleInner<A> {
+    Alloc(HandleAlloc<A>),
+    Library(LibraryHandle<A>),
 }
 
 pub(crate) enum Processed<A: Asset> {
