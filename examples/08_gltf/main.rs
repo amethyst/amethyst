@@ -9,7 +9,6 @@ use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::*;
 use amethyst_gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystem, GltfSceneOptions};
-use cgmath::{Deg, Quaternion, Rotation3};
 
 struct Example;
 

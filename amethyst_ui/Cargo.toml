@@ -12,5 +12,7 @@ gfx = { version = "0.16", features = ["cgmath-types", "serialize"] }
 hibitset = "0.3"
 rayon = "0.8"
 rusttype = "0.2"
+shrev = "0.6"
 specs = "0.10"
 unicode-normalization = "0.1"
+winit = "0.7"

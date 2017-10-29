@@ -2,7 +2,9 @@
 
 use amethyst_assets::{AssetStorage, Handle, Processor};
 use amethyst_core::bundle::{ECSBundle, Result};
+use shrev::EventChannel;
 use specs::{DispatcherBuilder, World};
+use winit::Event;
 
 use super::*;
 
@@ -34,11 +36,13 @@ impl<'a, 'b> ECSBundle<'a, 'b> for UiBundle {
         world.register::<UiImage>();
         world.register::<UiTransform>();
         world.register::<UiText>();
-        world.register::<Handle<FontFileAsset>>();
-        world.add_resource(AssetStorage::<FontFileAsset>::new());
+        world.register::<Handle<FontAsset>>();
+        world.add_resource(AssetStorage::<FontAsset>::new());
+        let reader = world.read_resource::<EventChannel<Event>>().register_reader();
         Ok(builder
             .add(UiTextRenderer, "ui_text", self.deps)
-            .add(Processor::<FontFileAsset>::new(), "font_processor", &[])
+            .add(Processor::<FontAsset>::new(), "font_processor", &[])
+            .add(ResizeSystem::new(reader), "ui_resize_system", &[])
         )
     }
 }

@@ -11,8 +11,10 @@ extern crate gfx;
 extern crate hibitset;
 extern crate rayon;
 extern crate rusttype;
+extern crate shrev;
 extern crate specs;
 extern crate unicode_normalization;
+extern crate winit;
 
 mod bundle;
 mod format;
@@ -22,8 +24,8 @@ mod text;
 mod transform;
 
 pub use self::bundle::UiBundle;
-pub use self::format::{FontFileAsset, FontFormat};
+pub use self::format::{FontAsset, FontFormat, FontHandle, FontParseError};
 pub use self::image::UiImage;
 pub use self::pass::DrawUi;
 pub use self::text::{UiText, UiTextRenderer};
-pub use self::transform::UiTransform;
+pub use self::transform::{ResizeSystem, UiTransform};

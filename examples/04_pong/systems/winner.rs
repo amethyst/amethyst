@@ -3,7 +3,8 @@ use amethyst::assets::AssetStorage;
 use amethyst::audio::Source;
 use amethyst::audio::output::Output;
 use amethyst::core::transform::LocalTransform;
-use amethyst::ecs::{Fetch, FetchMut, Join, System, WriteStorage};
+use amethyst::ecs::{Fetch, FetchMut, Join, ReadStorage, System, WriteStorage};
+use amethyst::ui::{UiText, UiTransform};
 use audio::Sounds;
 
 /// This system is responsible for checking if a ball has moved into a left or
@@ -15,6 +16,8 @@ impl<'s> System<'s> for WinnerSystem {
     type SystemData = (
         WriteStorage<'s, Ball>,
         WriteStorage<'s, LocalTransform>,
+        ReadStorage<'s, UiTransform>,
+        WriteStorage<'s, UiText>,
         FetchMut<'s, ScoreBoard>,
         Fetch<'s, AssetStorage<Source>>,
         Fetch<'s, Sounds>,
@@ -23,7 +26,7 @@ impl<'s> System<'s> for WinnerSystem {
 
     fn run(
         &mut self,
-        (mut balls, mut transforms, mut score_board, storage, sounds, audio_output):
+        (mut balls, mut transforms, ui_transform, mut text, mut score_board, storage, sounds, audio_output):
         Self::SystemData,
 ){
         for (ball, transform) in (&mut balls, &mut transforms).join() {
@@ -34,10 +37,20 @@ impl<'s> System<'s> for WinnerSystem {
             let did_hit = if ball_x <= ball.radius {
                 // Right player scored on the left side.
                 score_board.score_right += 1;
+                for (transform, text) in (&ui_transform, &mut text).join() {
+                    if "P2" == transform.id {
+                        *text.text_mut() = score_board.score_right.to_string();
+                    }
+                }
                 true
             } else if ball_x >= ARENA_WIDTH - ball.radius {
                 // Left player scored on the right side.
                 score_board.score_left += 1;
+                for (transform, text) in (&ui_transform, &mut text).join() {
+                    if "P1" == transform.id  {
+                        *text.text_mut() = score_board.score_left.to_string();
+                    }
+                }
                 true
             } else {
                 false
