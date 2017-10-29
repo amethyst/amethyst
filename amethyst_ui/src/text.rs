@@ -29,7 +29,7 @@ impl UiText {
     ///
     /// * `font`: A handle to a `Font` asset
     /// * `text`: the glyphs to render
-    /// * `color`: normalized RGBA color (meaning R + G + B = `1.0`)
+    /// * `color`: RGBA color with a maximum of 1.0 and a minimum of 0.0 for each channel
     /// * `font_size`: a uniform scale applied to the glyphs
     pub fn new(font: FontHandle, text: String, color: [f32; 4], font_size: f32) -> UiText {
         UiText {
@@ -68,12 +68,12 @@ impl UiText {
         &mut self.text
     }
 
-    /// The normalized RGBA color of the text being displayed.
+    /// The RGBA color with a maximum of 1.0 and a minimum of 0.0 for each channel of the text.
     pub fn color(&self) -> [f32; 4] {
         self.color
     }
 
-    /// Set the normalized RGBA color of the text being displayed.
+    /// Set the RGBA color with a maximum of 1.0 and a minimum of 0.0 for each channel.
     pub fn set_color(&mut self, color: [f32; 4]) {
         self.color = color;
         self.dirty = true;

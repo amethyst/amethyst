@@ -21,6 +21,15 @@ impl Into<Result<FontAsset, Error>> for FontData {
     }
 }
 
+/// Identical to TtfFormat.
+///
+/// Loads font files, supports TrueType and **some** OpenType files.
+///
+/// OpenType is a superset of TrueType, so if your OpenType file uses any features that don't
+/// exist in TrueType this will fail.  This will only load the first font contained in a file.
+/// If this is a problem for you please file an issue with Amethyst on GitHub.
+pub type OtfFormat = TtfFormat;
+
 /// Loads font files, supports TrueType and **some** OpenType files.
 ///
 /// OpenType is a superset of TrueType, so if your OpenType file uses any features that don't
