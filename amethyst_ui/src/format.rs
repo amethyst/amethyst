@@ -1,7 +1,4 @@
-use std::error::Error;
-use std::fmt::{Display, Formatter, self};
-
-use amethyst_assets::{Asset, BoxedErr, Handle, SimpleFormat};
+use amethyst_assets::{Asset, Error, ErrorKind, Handle, SimpleFormat};
 use rusttype::{Font, FontCollection};
 use specs::DenseVecStorage;
 
@@ -18,8 +15,8 @@ impl Asset for FontAsset {
     type HandleStorage = DenseVecStorage<Handle<Self>>;
 }
 
-impl Into<Result<FontAsset, BoxedErr>> for FontData {
-    fn into(self) -> Result<FontAsset, BoxedErr> {
+impl Into<Result<FontAsset, Error>> for FontData {
+    fn into(self) -> Result<FontAsset, Error> {
         Ok(FontAsset(self.0))
     }
 }
@@ -36,34 +33,11 @@ impl SimpleFormat<FontAsset> for FontFormat {
     const NAME: &'static str = "FONT";
     type Options = ();
 
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<FontData, BoxedErr> {
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<FontData, Error> {
         FontCollection::from_bytes(bytes)
             .into_fonts()
             .nth(0)
             .map(|f| FontData(f))
-            .ok_or(BoxedErr::new(FontParseError))
-    }
-}
-
-/// This error is returned if there was a problem parsing the font from the file.
-///
-/// More detailed diagnostics are unavailable.  If the FontFormat is rejecting valid fonts
-/// in ttf format please report it as a bug.
-#[derive(Debug)]
-pub struct FontParseError;
-
-impl Display for FontParseError {
-    fn fmt(&self, fmt: &mut Formatter) -> Result<(), fmt::Error> {
-        write!(fmt, "Font parsing error")
-    }
-}
-
-impl Error for FontParseError {
-    fn description(&self) -> &str {
-        "No font found in the file given."
-    }
-
-    fn cause(&self) -> Option<&Error> {
-        None
+            .ok_or(Error::from_kind(ErrorKind::Format("Font parsing error")))
     }
 }

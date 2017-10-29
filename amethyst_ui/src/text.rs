@@ -148,7 +148,7 @@ impl<'a> System<'a> for UiTextRenderer {
                         channel: Some(ChannelType::Float),
                     };
                     let data = TextureData::F32(render_buffer, meta);
-                    text.texture = Some(loader.load_from_data(data, &tex_storage));
+                    text.texture = Some(loader.load_from_data(data, (), &tex_storage));
                 }
             }
         }

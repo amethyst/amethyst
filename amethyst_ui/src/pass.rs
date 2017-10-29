@@ -77,7 +77,7 @@ where
                 tex_coord: [0., 1.],
             },
         ].into();
-        let mesh_handle = loader.load_from_data(data, mesh_storage);
+        let mesh_handle = loader.load_from_data(data, (), mesh_storage);
         DrawUi {
             mesh_handle,
             cached_draw_order: Vec::new(),
