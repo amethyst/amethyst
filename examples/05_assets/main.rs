@@ -5,7 +5,7 @@ extern crate amethyst;
 extern crate rayon;
 
 use amethyst::{Application, Error, State, Trans};
-use amethyst::assets::{BoxedErr, Loader, SimpleFormat};
+use amethyst::assets::{Loader, Result as AssetResult, ResultExt, SimpleFormat};
 use amethyst::config::Config;
 use amethyst::core::cgmath::{Array, Vector3};
 use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
@@ -28,8 +28,8 @@ impl SimpleFormat<Mesh> for Custom {
     type Options = ();
 
     /// Reads the given bytes and produces asset data.
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<MeshData, BoxedErr> {
-        let data: String = String::from_utf8(bytes).unwrap();
+    fn import(&self, bytes: Vec<u8>, _: ()) -> AssetResult<MeshData> {
+        let data: String = String::from_utf8(bytes)?;
 
         let trimmed: Vec<&str> = data.lines().filter(|line| line.len() >= 1).collect();
 
@@ -79,7 +79,7 @@ impl State for AssetsExample {
             let textures = &engine.world.read_resource();
 
             let mesh = loader.load("mesh/cuboid.custom", Custom, (), (), meshes);
-            let albedo = loader.load_from_data([0.0, 0.0, 1.0, 0.0].into(), textures);
+            let albedo = loader.load_from_data([0.0, 0.0, 1.0, 0.0].into(), (), textures);
             let mat = Material {
                 albedo,
                 ..mat_defaults.0.clone()

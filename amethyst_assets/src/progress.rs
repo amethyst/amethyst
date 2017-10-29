@@ -1,6 +1,10 @@
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+use parking_lot::Mutex;
+
+use Error;
+
 /// Completion status, returned by `ProgressCounter::complete`.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Completion {
@@ -41,6 +45,7 @@ impl Progress for () {
 /// in order to check how many assets are loaded.
 #[derive(Default)]
 pub struct ProgressCounter {
+    errors: Arc<Mutex<Vec<Error>>>,
     num_assets: usize,
     num_failed: Arc<AtomicUsize>,
     num_loading: Arc<AtomicUsize>,
@@ -50,6 +55,14 @@ impl ProgressCounter {
     /// Creates a new `Progress` struct.
     pub fn new() -> Self {
         Default::default()
+    }
+
+    /// Removes all errors and returns them.
+    pub fn errors(&self) -> Vec<Error> {
+        let mut lock = self.errors.lock();
+        let rv = lock.drain(..).collect();
+
+        rv
     }
 
     /// Returns the number of assets this struct is tracking.
@@ -84,7 +97,7 @@ impl ProgressCounter {
         }
     }
 
-    /// Returns `true` if all asssets have been imported without error.
+    /// Returns `true` if all assets have been imported without error.
     pub fn is_complete(&self) -> bool {
         self.complete() == Completion::Complete
     }
@@ -98,11 +111,13 @@ impl<'a> Progress for &'a mut ProgressCounter {
     }
 
     fn create_tracker(self) -> Self::Tracker {
+        let errors = self.errors.clone();
         let num_failed = self.num_failed.clone();
         let num_loading = self.num_loading.clone();
         num_loading.fetch_add(1, Ordering::Relaxed);
 
         ProgressCounterTracker {
+            errors,
             num_failed,
             num_loading,
         }
@@ -112,16 +127,18 @@ impl<'a> Progress for &'a mut ProgressCounter {
 /// Progress tracker for `ProgressCounter`.
 #[derive(Default)]
 pub struct ProgressCounterTracker {
+    errors: Arc<Mutex<Vec<Error>>>,
     num_failed: Arc<AtomicUsize>,
     num_loading: Arc<AtomicUsize>,
 }
 
 impl Tracker for ProgressCounterTracker {
-    fn success(self) {
+    fn success(self: Box<Self>) {
         self.num_loading.fetch_sub(1, Ordering::Relaxed);
     }
 
-    fn fail(self) {
+    fn fail(self: Box<Self>, e: Error) {
+        self.errors.lock().push(e);
         self.num_failed.fetch_add(1, Ordering::Relaxed);
     }
 }
@@ -129,15 +146,18 @@ impl Tracker for ProgressCounterTracker {
 /// The `Tracker` trait which will be used by the loader to report
 /// back to `Progress`.
 pub trait Tracker: Send + 'static {
-    // TODO: better error handling
     // TODO: maybe add handles as parameters?
     /// Called if the asset could be imported.
-    fn success(self);
+    fn success(self: Box<Self>);
     /// Called if the asset couldn't be imported to an error.
-    fn fail(self);
+    fn fail(self: Box<Self>, e: Error);
 }
 
 impl Tracker for () {
-    fn success(self) {}
-    fn fail(self) {}
+    fn success(self: Box<Self>) {}
+    fn fail(self: Box<Self>, e: Error) {
+        eprintln!("error: {}", e);
+        e.iter().skip(1).for_each(|e| eprintln!("caused by: {}", e));
+        eprintln!("note: to handle the error, use a `Progress` other than `()`");
+    }
 }

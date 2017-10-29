@@ -12,7 +12,7 @@ extern crate specs;
 pub use format::GltfSceneFormat;
 pub use systems::GltfSceneLoaderSystem;
 
-use assets::{Asset, BoxedErr, Handle};
+use assets::{Asset, Error as AssetError, Handle};
 use core::transform::LocalTransform;
 use gfx::Primitive;
 use renderer::{MeshHandle, TextureData, TextureHandle, VertexBufferCombination};
@@ -96,8 +96,8 @@ pub struct GltfSceneAsset {
     pub options: GltfSceneOptions,
 }
 
-impl Into<Result<GltfSceneAsset, BoxedErr>> for GltfSceneAsset {
-    fn into(self) -> Result<GltfSceneAsset, BoxedErr> {
+impl Into<Result<GltfSceneAsset, AssetError>> for GltfSceneAsset {
+    fn into(self) -> Result<GltfSceneAsset, AssetError> {
         Ok(self)
     }
 }

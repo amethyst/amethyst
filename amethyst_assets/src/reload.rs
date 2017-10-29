@@ -3,10 +3,11 @@
 use std::sync::Arc;
 use std::time::Instant;
 
+use amethyst_core as core;
 use amethyst_core::{ECSBundle, Time};
 use specs::{DispatcherBuilder, Fetch, FetchMut, System, World};
 
-use {Asset, BoxedErr, Format, FormatValue, Loader, Source};
+use {Asset, Format, FormatValue, Loader, Result, Source};
 
 /// This bundle activates hot reload for the `Loader`,
 /// adds a `HotReloadStrategy` and the `HotReloadSystem`.
@@ -27,7 +28,7 @@ impl<'a, 'b> ECSBundle<'a, 'b> for HotReloadBundle {
         self,
         world: &mut World,
         dispatcher: DispatcherBuilder<'a, 'b>,
-    ) -> Result<DispatcherBuilder<'a, 'b>, BoxedErr> {
+    ) -> core::Result<DispatcherBuilder<'a, 'b>> {
         world.write_resource::<Loader>().set_hot_reload(true);
         world.add_resource(self.strategy);
 
@@ -167,7 +168,7 @@ pub trait Reload<A: Asset>: ReloadClone<A> + Send + Sync + 'static {
     /// Returns the format name.
     fn format(&self) -> &'static str;
     /// Reloads the asset.
-    fn reload(self: Box<Self>) -> Result<FormatValue<A>, BoxedErr>;
+    fn reload(self: Box<Self>) -> Result<FormatValue<A>>;
 }
 
 pub trait ReloadClone<A> {
@@ -246,7 +247,7 @@ where
         self.modified != 0 && (self.source.modified(&self.path).unwrap_or(0) > self.modified)
     }
 
-    fn reload(self: Box<Self>) -> Result<FormatValue<A>, BoxedErr> {
+    fn reload(self: Box<Self>) -> Result<FormatValue<A>> {
         let this: SingleFile<_, _> = *self;
         let SingleFile {
             format,

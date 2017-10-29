@@ -295,13 +295,13 @@ fn load_assets(world: &World) -> Assets {
     let mat_defaults = world.read_resource::<MaterialDefaults>();
     let loader = world.read_resource::<Loader>();
 
-    let red = loader.load_from_data([1.0, 0.0, 0.0, 1.0].into(), &tex_storage);
+    let red = loader.load_from_data([1.0, 0.0, 0.0, 1.0].into(), (), &tex_storage);
     let red = Material {
         albedo: red,
         ..mat_defaults.0.clone()
     };
 
-    let white = loader.load_from_data([1.0, 1.0, 1.0, 1.0].into(), &tex_storage);
+    let white = loader.load_from_data([1.0, 1.0, 1.0, 1.0].into(), (), &tex_storage);
     let white = Material {
         albedo: white,
         ..mat_defaults.0.clone()

@@ -65,13 +65,13 @@ fn create_default_mat(world: &World) -> Material {
 
     let tex_storage = world.read_resource();
 
-    let albedo = loader.load_from_data(albedo, &tex_storage);
-    let emission = loader.load_from_data(emission, &tex_storage);
-    let normal = loader.load_from_data(normal, &tex_storage);
-    let metallic = loader.load_from_data(metallic, &tex_storage);
-    let roughness = loader.load_from_data(roughness, &tex_storage);
-    let ambient_occlusion = loader.load_from_data(ambient_occlusion, &tex_storage);
-    let caveat = loader.load_from_data(caveat, &tex_storage);
+    let albedo = loader.load_from_data(albedo, (), &tex_storage);
+    let emission = loader.load_from_data(emission, (), &tex_storage);
+    let normal = loader.load_from_data(normal, (), &tex_storage);
+    let metallic = loader.load_from_data(metallic, (), &tex_storage);
+    let roughness = loader.load_from_data(roughness, (), &tex_storage);
+    let ambient_occlusion = loader.load_from_data(ambient_occlusion, (), &tex_storage);
+    let caveat = loader.load_from_data(caveat, (), &tex_storage);
 
     Material {
         albedo,
