@@ -9,10 +9,12 @@ use amethyst::input::InputHandler;
 pub struct PaddleSystem;
 
 impl<'s> System<'s> for PaddleSystem {
-    type SystemData = (WriteStorage<'s, Paddle>,
-     WriteStorage<'s, LocalTransform>,
-     Fetch<'s, Time>,
-     Fetch<'s, InputHandler<String, String>>);
+    type SystemData = (
+        WriteStorage<'s, Paddle>,
+        WriteStorage<'s, LocalTransform>,
+        Fetch<'s, Time>,
+        Fetch<'s, InputHandler<String, String>>,
+    );
 
     fn run(&mut self, (mut paddles, mut transforms, time, input): Self::SystemData) {
         use Side;
@@ -27,14 +29,13 @@ impl<'s> System<'s> for PaddleSystem {
 
             if let Some(movement) = opt_movement {
                 use ARENA_HEIGHT;
-                transform.translation[1] += paddle.velocity * time.delta_seconds() *
-                    movement as f32;
+                transform.translation[1] +=
+                    paddle.velocity * time.delta_seconds() * movement as f32;
 
                 // We make sure the paddle remains in the arena.
-                transform.translation[1] = transform.translation[1].max(0.0).min(
-                    ARENA_HEIGHT -
-                        paddle.height,
-                );
+                transform.translation[1] = transform.translation[1]
+                    .max(0.0)
+                    .min(ARENA_HEIGHT - paddle.height);
             }
         }
     }

@@ -24,14 +24,17 @@ impl State for Pong {
 
     fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
         match event {
-            Event::WindowEvent { event, .. } => {
-                match event {
-                    WindowEvent::KeyboardInput {
-                        input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Escape), .. }, ..
-                    } => Trans::Quit,
-                    _ => Trans::None,
-                }
-            }
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::KeyboardInput {
+                    input:
+                        KeyboardInput {
+                            virtual_keycode: Some(VirtualKeyCode::Escape),
+                            ..
+                        },
+                    ..
+                } => Trans::Quit,
+                _ => Trans::None,
+            },
             _ => Trans::None,
         }
     }
@@ -49,8 +52,7 @@ fn initialise_camera(world: &mut World) {
             0.0,
         )))
         .with(Transform(
-            Matrix4::from_translation(Vector3::new(0.0, 0.0, 1.0))
-                .into(),
+            Matrix4::from_translation(Vector3::new(0.0, 0.0, 1.0)).into(),
         ))
         .build();
 }
@@ -59,13 +61,13 @@ fn initialise_camera(world: &mut World) {
 fn hide_cursor(world: &mut World) {
     use amethyst::winit::CursorState;
 
-    world.write_resource::<WindowMessages>().send_command(
-        |win| {
+    world
+        .write_resource::<WindowMessages>()
+        .send_command(|win| {
             if let Err(err) = win.set_cursor_state(CursorState::Hide) {
                 eprintln!("Unable to make cursor hidden! Error: {:?}", err);
             }
-        },
-    );
+        });
 }
 
 /// Initialises one paddle on the left, and one paddle on the right.

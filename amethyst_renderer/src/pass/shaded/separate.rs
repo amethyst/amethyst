@@ -110,7 +110,7 @@ impl Pass for DrawShadedSeparate {
             ReadStorage<'a, Transform>,
             ReadStorage<'a, Light>,
         ),
-) -> DrawShadedSeparateApply<'a>{
+    ) -> DrawShadedSeparateApply<'a> {
         DrawShadedSeparateApply {
             active,
             camera,

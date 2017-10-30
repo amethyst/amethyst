@@ -114,7 +114,7 @@ where
             ReadStorage<'a, Transform>,
             ReadStorage<'a, Light>,
         ),
-) -> DrawShadedApply<'a, V>{
+    ) -> DrawShadedApply<'a, V> {
         DrawShadedApply {
             active,
             camera,

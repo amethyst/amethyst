@@ -91,8 +91,8 @@ impl State for Example {
 
         println!("Put camera");
 
-        let transform = Matrix4::from_translation([0.0, 0.0, -12.0].into()) *
-            Matrix4::from_angle_y(Deg(180.));
+        let transform =
+            Matrix4::from_translation([0.0, 0.0, -12.0].into()) * Matrix4::from_angle_y(Deg(180.));
         engine
             .world
             .create_entity()
@@ -103,14 +103,17 @@ impl State for Example {
 
     fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
         match event {
-            Event::WindowEvent { event, .. } => {
-                match event {
-                    WindowEvent::KeyboardInput {
-                        input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Escape), .. }, ..
-                    } => Trans::Quit,
-                    _ => Trans::None,
-                }
-            }
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::KeyboardInput {
+                    input:
+                        KeyboardInput {
+                            virtual_keycode: Some(VirtualKeyCode::Escape),
+                            ..
+                        },
+                    ..
+                } => Trans::Quit,
+                _ => Trans::None,
+            },
             _ => Trans::None,
         }
     }

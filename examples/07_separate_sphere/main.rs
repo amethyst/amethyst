@@ -32,15 +32,18 @@ impl State for Example {
 
     fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
         match event {
-            Event::WindowEvent { event, .. } => {
-                match event {
-                    WindowEvent::KeyboardInput {
-                        input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Escape), .. }, ..
-                    } |
-                    WindowEvent::Closed => Trans::Quit,
-                    _ => Trans::None,
-                }
-            }
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::KeyboardInput {
+                    input:
+                        KeyboardInput {
+                            virtual_keycode: Some(VirtualKeyCode::Escape),
+                            ..
+                        },
+                    ..
+                } |
+                WindowEvent::Closed => Trans::Quit,
+                _ => Trans::None,
+            },
             _ => Trans::None,
         }
     }
@@ -161,8 +164,8 @@ fn initialise_lights(world: &mut World) {
 /// This function initialises a camera and adds it to the world.
 fn initialise_camera(world: &mut World) {
     use amethyst::core::cgmath::Matrix4;
-    let transform = Matrix4::from_translation([0.0, 0.0, -4.0].into()) *
-        Matrix4::from_angle_y(Deg(180.));
+    let transform =
+        Matrix4::from_translation([0.0, 0.0, -4.0].into()) * Matrix4::from_angle_y(Deg(180.));
     world
         .create_entity()
         .with(Camera::from(Projection::perspective(1.3, Deg(60.0))))

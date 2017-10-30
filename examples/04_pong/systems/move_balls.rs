@@ -8,7 +8,11 @@ use amethyst::ecs::{Fetch, Join, System, WriteStorage};
 pub struct MoveBallsSystem;
 
 impl<'s> System<'s> for MoveBallsSystem {
-    type SystemData = (WriteStorage<'s, Ball>, WriteStorage<'s, LocalTransform>, Fetch<'s, Time>);
+    type SystemData = (
+        WriteStorage<'s, Ball>,
+        WriteStorage<'s, LocalTransform>,
+        Fetch<'s, Time>,
+    );
 
     fn run(&mut self, (mut balls, mut locals, time): Self::SystemData) {
         // Move every ball according to its speed, and the time passed.

@@ -4,19 +4,21 @@ use amethyst::audio::Source;
 use amethyst::audio::output::Output;
 use amethyst::core::transform::LocalTransform;
 use amethyst::ecs::{Fetch, Join, ReadStorage, System, WriteStorage};
-use audio::{Sounds, play_bounce};
+use audio::{play_bounce, Sounds};
 
 /// This system is responsible for detecing collisions between balls and
 /// paddles, as well as balls and the top and bottom edges of the arena.
 pub struct BounceSystem;
 
 impl<'s> System<'s> for BounceSystem {
-    type SystemData = (WriteStorage<'s, Ball>,
-     ReadStorage<'s, Paddle>,
-     ReadStorage<'s, LocalTransform>,
-     Fetch<'s, AssetStorage<Source>>,
-     Fetch<'s, Sounds>,
-     Fetch<'s, Option<Output>>);
+    type SystemData = (
+        WriteStorage<'s, Ball>,
+        ReadStorage<'s, Paddle>,
+        ReadStorage<'s, LocalTransform>,
+        Fetch<'s, AssetStorage<Source>>,
+        Fetch<'s, Sounds>,
+        Fetch<'s, Option<Output>>,
+    );
 
     fn run(
         &mut self,
@@ -58,8 +60,7 @@ impl<'s> System<'s> for BounceSystem {
                     paddle_y - ball.radius,
                     paddle_x + paddle.width + ball.radius,
                     paddle_y + paddle.height + ball.radius,
-                )
-                {
+                ) {
                     if paddle.side == Side::Left && ball.velocity[0] < 0.0 {
                         ball.velocity[0] = -ball.velocity[0];
                         play_bounce(&*sounds, &storage, &*audio_output);

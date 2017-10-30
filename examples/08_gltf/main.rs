@@ -18,7 +18,9 @@ impl State for Example {
             engine,
             &*engine.world.read_resource(),
             "mesh/Box.gltf",
-            GltfSceneOptions { generate_tex_coords: Some((0.1, 0.1)) },
+            GltfSceneOptions {
+                generate_tex_coords: Some((0.1, 0.1)),
+            },
         );
 
         engine
@@ -56,8 +58,8 @@ impl State for Example {
 
         let mut camera_transform = LocalTransform::default();
         camera_transform.translation = Vector3::new(-2.0, 2.0, 2.0);
-        let camera_orientation = Quaternion::from_angle_y(Deg(-45.)) *
-            Quaternion::from_angle_x(Deg(-35.));
+        let camera_orientation =
+            Quaternion::from_angle_y(Deg(-45.)) * Quaternion::from_angle_x(Deg(-35.));
         camera_transform.rotation = camera_orientation.into();
         engine
             .world
@@ -69,22 +71,25 @@ impl State for Example {
             .with(camera_transform)
             .build();
 
-        engine.world.add_resource(
-            AmbientColor(Rgba(0.2, 0.2, 0.2, 0.2)),
-        );
+        engine
+            .world
+            .add_resource(AmbientColor(Rgba(0.2, 0.2, 0.2, 0.2)));
     }
 
     fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
         match event {
-            Event::WindowEvent { event, .. } => {
-                match event {
-                    WindowEvent::KeyboardInput {
-                        input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Escape), .. }, ..
-                    } |
-                    WindowEvent::Closed => Trans::Quit,
-                    _ => Trans::None,
-                }
-            }
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::KeyboardInput {
+                    input:
+                        KeyboardInput {
+                            virtual_keycode: Some(VirtualKeyCode::Escape),
+                            ..
+                        },
+                    ..
+                } |
+                WindowEvent::Closed => Trans::Quit,
+                _ => Trans::None,
+            },
             _ => Trans::None,
         }
     }

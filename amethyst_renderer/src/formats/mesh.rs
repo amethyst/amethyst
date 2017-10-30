@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use amethyst_assets::{Asset,  Error, Result, ResultExt, SimpleFormat};
+use amethyst_assets::{Asset, Error, Result, ResultExt, SimpleFormat};
 use amethyst_core::cgmath::{InnerSpace, Vector3};
 use specs::DenseVecStorage;
 use wavefront_obj::obj::{parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex,
@@ -82,7 +82,9 @@ impl SimpleFormat<Mesh> for ObjFormat {
             .map_err(Into::into)
             .and_then(|string| {
                 parse(string)
-                    .map_err(|e| Error::from(format!("In line {}: {:?}", e.line_number, e.message)))
+                    .map_err(|e| {
+                        Error::from(format!("In line {}: {:?}", e.line_number, e.message))
+                    })
                     .chain_err(|| "Failed to parse OBJ")
             })
             .map(|set| from_data(set).into())

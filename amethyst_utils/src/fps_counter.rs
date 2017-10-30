@@ -1,9 +1,9 @@
 //! Util Resources
 
+use amethyst_core::{ECSBundle, Result};
 use amethyst_core::timing::{duration_to_nanos, Time};
-use amethyst_core::{ECSBundle,Result};
-use specs::{Fetch, FetchMut, System,World,DispatcherBuilder};
 use circular_buffer::CircularBuffer;
+use specs::{DispatcherBuilder, Fetch, FetchMut, System, World};
 
 /// The FPSCounter resource needed by the FPSCounterSystem.
 ///
@@ -68,27 +68,24 @@ pub struct FPSCounterBundle {
     samplesize: usize,
 }
 impl FPSCounterBundle {
-	///Creates a new FPSCounterBundle with the specified sample size.
+    ///Creates a new FPSCounterBundle with the specified sample size.
     pub fn new(samplesize: usize) -> Self {
         Self {
             samplesize: samplesize,
         }
     }
-	///Same as FPSCounterBundle::new(20).
-    pub fn default()->Self{
+    ///Same as FPSCounterBundle::new(20).
+    pub fn default() -> Self {
         Self::new(20)
     }
 }
 impl<'a, 'b> ECSBundle<'a, 'b> for FPSCounterBundle {
     fn build(
         self,
-        world:&mut World,
+        world: &mut World,
         builder: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
         world.add_resource(FPSCounter::new(self.samplesize));
-        Ok(
-            builder
-                .add(FPSCounterSystem, "fps_counter_system", &[]),
-        )
+        Ok(builder.add(FPSCounterSystem, "fps_counter_system", &[]))
     }
 }
