@@ -63,24 +63,28 @@ impl<'a> System<'a> for FPSCounterSystem {
         //println!("Cur FPS: {}, Sampled: {}",counter.frame_fps(),counter.sampled_fps());
     }
 }
+
 ///Automatically adds a FPSCounterSystem and a FPSCounter resource with the specified sample size.
 pub struct FPSCounterBundle {
     samplesize: usize,
 }
+
 impl FPSCounterBundle {
     ///Creates a new FPSCounterBundle with the specified sample size.
     pub fn new(samplesize: usize) -> Self {
         Self {
-            samplesize: samplesize,
+            samplesize,
         }
     }
 }
+
 impl Default for FPSCounterBundle {
     ///Same as FPSCounterBundle::new(20).
     fn default() -> Self {
         Self::new(20)
     }
 }
+
 impl<'a, 'b> ECSBundle<'a, 'b> for FPSCounterBundle {
     fn build(
         self,
