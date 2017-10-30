@@ -1,35 +1,49 @@
 //! Displays a 2D GLTF scene
 
 extern crate amethyst;
+extern crate amethyst_animation;
 extern crate amethyst_gltf;
 
 use amethyst::assets::{AssetStorage, Handle, Loader};
 use amethyst::core::cgmath::{Deg, Quaternion, Rotation3, Vector3};
 use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
+use amethyst::ecs::Entity;
 use amethyst::prelude::*;
 use amethyst::renderer::*;
+use amethyst_animation::{toggle_animation, AnimationBundle, AnimationSet, EndControl};
 use amethyst_gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystem, GltfSceneOptions};
 
 struct Example;
+
+struct Scene {
+    entity: Entity,
+    animation_index: usize,
+}
 
 impl State for Example {
     fn on_start(&mut self, engine: &mut Engine) {
         let gltf_scene = load_gltf_mesh(
             engine,
             &*engine.world.read_resource(),
-            "mesh/Box.gltf",
+            "mesh/v2-locrotscale-cube-embedded-buffers.gltf",
             GltfSceneOptions {
                 generate_tex_coords: Some((0.1, 0.1)),
+                load_animations: true,
             },
         );
 
-        engine
+        let entity = engine
             .world
             .create_entity()
             .with(gltf_scene)
             .with(LocalTransform::default())
             .with(Transform::default())
             .build();
+
+        engine.world.add_resource(Scene {
+            entity,
+            animation_index: 0,
+        });
 
         println!("Create lights");
         engine
@@ -76,7 +90,7 @@ impl State for Example {
             .add_resource(AmbientColor(Rgba(0.2, 0.2, 0.2, 0.2)));
     }
 
-    fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
+    fn handle_event(&mut self, engine: &mut Engine, event: Event) -> Trans {
         match event {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::KeyboardInput {
@@ -88,6 +102,33 @@ impl State for Example {
                     ..
                 } |
                 WindowEvent::Closed => Trans::Quit,
+                WindowEvent::KeyboardInput {
+                    input:
+                        KeyboardInput {
+                            virtual_keycode: Some(VirtualKeyCode::Space),
+                            state: ElementState::Released,
+                            ..
+                        },
+                    ..
+                } => {
+                    let mut scene = engine.world.write_resource::<Scene>();
+                    let sets = engine.world.read::<AnimationSet>();
+                    let animations = sets.get(scene.entity).unwrap();
+                    if animations.animations.len() > 0 {
+                        if scene.animation_index >= animations.animations.len() {
+                            scene.animation_index = 0;
+                        }
+                        let animation = &animations.animations[scene.animation_index];
+                        scene.animation_index += 1;
+                        toggle_animation(
+                            &mut engine.world.write(),
+                            animation,
+                            scene.entity,
+                            EndControl::Normal,
+                        );
+                    }
+                    Trans::None
+                }
                 _ => Trans::None,
             },
             _ => Trans::None,
@@ -112,7 +153,8 @@ fn run() -> Result<(), amethyst::Error> {
 
     let mut game = Application::build(resources_directory, Example)?
         .with_bundle(RenderBundle::new())?
-        .with_bundle(TransformBundle::new())?
+        .with_bundle(AnimationBundle::new())?
+        .with_bundle(TransformBundle::new().with_dep(&["animation_control_system"]))?
         .with_local(RenderSystem::build(pipe, Some(config))?)
         .with_resource(AssetStorage::<GltfSceneAsset>::new())
         .with(GltfSceneLoaderSystem::new(), "", &[])

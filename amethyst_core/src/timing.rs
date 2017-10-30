@@ -297,3 +297,8 @@ pub fn secs_to_duration(secs: f32) -> Duration {
 pub fn duration_to_nanos(duration: Duration) -> u64 {
     (duration.as_secs() * 1_000_000_000) + duration.subsec_nanos() as u64
 }
+
+/// Converts nanoseconds to a Duration
+pub fn nanos_to_duration(nanos: u64) -> Duration {
+    Duration::new(nanos / 1_000_000_000, (nanos % 1_000_000_000) as u32)
+}

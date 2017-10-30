@@ -1,6 +1,10 @@
+use std::collections::{HashMap, HashSet};
+
+use animation::{Animation, AnimationHierarchy, AnimationSet, Sampler};
 use assets::{AssetStorage, Handle, HotReloadStrategy, Loader};
 use core::{ThreadPool, Time};
 use core::transform::*;
+use fnv::FnvHashMap;
 use renderer::{Material, MaterialDefaults, Mesh, Texture};
 use renderer::ComboMeshCreator;
 use specs::{Entities, Entity, Fetch, FetchMut, Join, System, WriteStorage};
@@ -34,6 +38,8 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
         Entities<'a>,
         Fetch<'a, AssetStorage<Mesh>>,
         Fetch<'a, AssetStorage<Texture>>,
+        Fetch<'a, AssetStorage<Animation>>,
+        Fetch<'a, AssetStorage<Sampler>>,
         Fetch<'a, Loader>,
         Fetch<'a, MaterialDefaults>,
         Fetch<'a, Time>,
@@ -46,6 +52,8 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
         WriteStorage<'a, Transform>,
         WriteStorage<'a, Parent>,
         WriteStorage<'a, Material>,
+        WriteStorage<'a, AnimationHierarchy>,
+        WriteStorage<'a, AnimationSet>,
     );
 
     #[allow(unused)]
@@ -56,6 +64,8 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
             entities,
             mesh_storage,
             texture_storage,
+            animation_storage,
+            sampler_storage,
             loader,
             material_defaults,
             time,
@@ -68,6 +78,8 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
             mut transforms,
             mut parents,
             mut materials,
+            mut animation_hierarchies,
+            mut animation_sets,
         ) = data;
 
         let strategy = strategy.as_ref().map(Deref::deref);
@@ -83,6 +95,7 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
                 let mut texture_handles: Vec<
                     (usize, TextureHandleLocation, Handle<Texture>),
                 > = Vec::default();
+                let mut node_map = HashMap::default();
 
                 // Use the default scene if set, otherwise use the first scene.
                 // Note that the format will throw an error if the default scene is not set,
@@ -109,13 +122,14 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
                         &*material_defaults,
                         &mut mesh_handles,
                         &mut texture_handles,
+                        &mut node_map,
                     );
                 } else {
                     // If we have multiple root nodes in the scene, we need to create new entities
                     // for each root node and set their parent reference to the attached entity
                     for root_node_index in &scene.root_nodes {
                         let root_entity = entities.create();
-                        parents.insert(root_entity, Parent { entity: entity });
+                        parents.insert(root_entity, Parent { entity });
                         transforms.insert(root_entity, Transform::default());
                         load_node(
                             *root_node_index,
@@ -133,6 +147,7 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
                             &*material_defaults,
                             &mut mesh_handles,
                             &mut texture_handles,
+                            &mut node_map,
                         );
                     }
                 }
@@ -177,6 +192,60 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
                         _ => unreachable!(),
                     }
                 }
+
+                // Load animations
+                if scene_asset.options.load_animations && scene_asset.animations.len() > 0 {
+                    // if handle doesn't exist, load animation data
+                    let mut node_indices: HashSet<usize> = HashSet::default();
+                    for animation in &mut scene_asset.animations {
+                        node_indices.extend(animation.nodes.iter());
+                        if let None = animation.handle {
+                            let samplers = animation
+                                .samplers
+                                .iter()
+                                .cloned()
+                                .map(|sampler| {
+                                    loader.load_from_data(sampler, (), &*sampler_storage)
+                                })
+                                .collect::<Vec<_>>();
+                            let sampler_map = samplers
+                                .into_iter()
+                                .enumerate()
+                                .map(|(index, sampler)| (animation.nodes[index].clone(), sampler))
+                                .collect::<Vec<_>>();
+                            /*let mut sampler_map = vec![];*/
+                            animation.handle = Some(loader.load_from_data(
+                                Animation { nodes: sampler_map },
+                                (),
+                                &*animation_storage,
+                            ));
+                        }
+                    }
+                    // create animation hierarchy
+                    animation_hierarchies.insert(
+                        entity,
+                        AnimationHierarchy {
+                            nodes: node_indices
+                                .into_iter()
+                                .map(|node_index| {
+                                    (node_index, node_map.get(&node_index).cloned().unwrap())
+                                })
+                                .collect::<FnvHashMap<_, _>>(),
+                        },
+                    );
+                    // create animation set
+                    animation_sets.insert(
+                        entity,
+                        AnimationSet {
+                            animations: scene_asset
+                                .animations
+                                .iter()
+                                .filter_map(|a| a.handle.as_ref())
+                                .cloned()
+                                .collect::<Vec<_>>(),
+                        },
+                    );
+                }
                 deletes.push(entity);
             }
         }
@@ -206,8 +275,10 @@ fn load_node(
     material_defaults: &MaterialDefaults,
     mesh_handles: &mut Vec<(usize, usize, Handle<Mesh>)>,
     texture_handles: &mut Vec<(usize, TextureHandleLocation, Handle<Texture>)>,
+    node_map: &mut HashMap<usize, Entity>,
 ) {
     let node = &scene_asset.nodes[node_index];
+    node_map.insert(node_index, node_entity.clone());
 
     // Load the node-to-parent transformation
     let mut local = LocalTransform::default();
@@ -242,6 +313,7 @@ fn load_node(
             material_defaults,
             mesh_handles,
             texture_handles,
+            node_map,
         );
     }
 

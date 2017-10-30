@@ -1,7 +1,9 @@
+extern crate amethyst_animation as animation;
 extern crate amethyst_assets as assets;
 extern crate amethyst_core as core;
 extern crate amethyst_renderer as renderer;
 extern crate base64;
+extern crate fnv;
 extern crate gfx;
 extern crate gltf;
 extern crate gltf_utils;
@@ -12,6 +14,7 @@ extern crate specs;
 pub use format::GltfSceneFormat;
 pub use systems::GltfSceneLoaderSystem;
 
+use animation::{Animation, Sampler};
 use assets::{Asset, Error as AssetError, Handle};
 use core::transform::LocalTransform;
 use gfx::Primitive;
@@ -80,10 +83,21 @@ pub struct GltfScene {
     pub root_nodes: Vec<usize>,
 }
 
+/// A single animation
+#[derive(Debug)]
+pub struct GltfAnimation {
+    // node index, vec will be same size as samplers, and reference the sampler at the same index
+    pub nodes: Vec<usize>,
+    pub samplers: Vec<Sampler>,
+    pub handle: Option<Handle<Animation>>,
+    //pub hierarchy_root: usize,
+}
+
 /// Options used when loading a GLTF file
 #[derive(Debug, Clone, Default)]
 pub struct GltfSceneOptions {
     pub generate_tex_coords: Option<(f32, f32)>,
+    pub load_animations: bool,
 }
 
 /// Actual asset produced on finished loading of a GLTF scene file.
@@ -92,6 +106,7 @@ pub struct GltfSceneAsset {
     pub nodes: Vec<GltfNode>,
     pub scenes: Vec<GltfScene>,
     pub materials: Vec<GltfMaterial>,
+    pub animations: Vec<GltfAnimation>,
     pub default_scene: Option<usize>,
     pub options: GltfSceneOptions,
 }
