@@ -74,8 +74,10 @@ impl FPSCounterBundle {
             samplesize: samplesize,
         }
     }
+}
+impl Default for FPSCounterBundle {
     ///Same as FPSCounterBundle::new(20).
-    pub fn default() -> Self {
+    fn default() -> Self {
         Self::new(20)
     }
 }
