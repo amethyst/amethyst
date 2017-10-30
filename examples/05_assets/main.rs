@@ -106,12 +106,7 @@ impl State for AssetsExample {
             Event::WindowEvent { event, .. } => {
                 match event {
                     WindowEvent::KeyboardInput {
-                        input:
-                            KeyboardInput {
-                                virtual_keycode: Some(VirtualKeyCode::Escape),
-                                ..
-                            },
-                        ..
+                        input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Escape), .. }, ..
                     } => {
                         // If the user pressed the escape key, or requested the window to be closed,
                         // quit the application.
@@ -164,8 +159,8 @@ fn run() -> Result<(), Error> {
 
 fn initialise_camera(world: &mut World) {
     use amethyst::core::cgmath::{Deg, Matrix4};
-    let transform =
-        Matrix4::from_translation([0., -20., 10.].into()) * Matrix4::from_angle_x(Deg(75.96));
+    let transform = Matrix4::from_translation([0., -20., 10.].into()) *
+        Matrix4::from_angle_x(Deg(75.96));
     world
         .create_entity()
         .with(Camera::from(Projection::perspective(1.0, Deg(60.0))))

@@ -166,8 +166,7 @@ impl<'a, 'b> Application<'a, 'b> {
             let events = match engine
                 .world
                 .read_resource::<EventChannel<Event>>()
-                .lossy_read(&mut self.events_reader_id)
-            {
+                .lossy_read(&mut self.events_reader_id) {
                 Ok(data) => data.cloned().collect(),
                 _ => Vec::default(),
             };
@@ -175,11 +174,7 @@ impl<'a, 'b> Application<'a, 'b> {
             for event in events {
                 states.handle_event(engine, event.clone());
                 if !self.ignore_window_close {
-                    if let &Event::WindowEvent {
-                        event: WindowEvent::Closed,
-                        ..
-                    } = &event
-                    {
+                    if let &Event::WindowEvent { event: WindowEvent::Closed, .. } = &event {
                         states.stop(engine);
                     }
                 }
@@ -334,9 +329,9 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
         let cfg = cfg.start_handler(|index| {
             register_thread_with_profiler(format!("thread_pool{}", index));
         });
-        let pool = ThreadPool::new(cfg)
-            .map(|p| Arc::new(p))
-            .map_err(|_| Error::Application)?;
+        let pool = ThreadPool::new(cfg).map(|p| Arc::new(p)).map_err(|_| {
+            Error::Application
+        })?;
         let mut world = World::new();
         world.add_resource(Loader::new(path.as_ref(), pool.clone()));
         let events = EventChannel::<Event>::with_capacity(2000);
@@ -687,9 +682,11 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     where
         B: ECSBundle<'a, 'b>,
     {
-        self.disp_builder = bundle
-            .build(&mut self.world, self.disp_builder)
-            .map_err(|err| Error::Core(err))?;
+        self.disp_builder = bundle.build(&mut self.world, self.disp_builder).map_err(
+            |err| {
+                Error::Core(err)
+            },
+        )?;
         Ok(self)
     }
 
@@ -873,8 +870,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     where
         T: State + 'a,
     {
-        #[cfg(feature = "profiler")]
-        register_thread_with_profiler("Main".into());
+        #[cfg(feature = "profiler")] register_thread_with_profiler("Main".into());
         #[cfg(feature = "profiler")]
         profile_scope!("new");
 

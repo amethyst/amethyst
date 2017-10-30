@@ -1,8 +1,8 @@
 //! Util Resources
 
 use amethyst_core::timing::{duration_to_nanos, Time};
-use specs::{Fetch, FetchMut, System};
-
+use amethyst_core::{ECSBundle,Result};
+use specs::{Fetch, FetchMut, System,World,DispatcherBuilder};
 use circular_buffer::CircularBuffer;
 
 /// The FPSCounter resource needed by the FPSCounterSystem.
@@ -61,5 +61,34 @@ impl<'a> System<'a> for FPSCounterSystem {
         counter.push(duration_to_nanos(time.delta_time()));
         //Enable this to debug performance engine wide.
         //println!("Cur FPS: {}, Sampled: {}",counter.frame_fps(),counter.sampled_fps());
+    }
+}
+///Automatically adds a FPSCounterSystem and a FPSCounter resource with the specified sample size.
+pub struct FPSCounterBundle {
+    samplesize: usize,
+}
+impl FPSCounterBundle {
+	///Creates a new FPSCounterBundle with the specified sample size.
+    pub fn new(samplesize: usize) -> Self {
+        Self {
+            samplesize: samplesize,
+        }
+    }
+	///Same as FPSCounterBundle::new(20).
+    pub fn default()->Self{
+        Self::new(20)
+    }
+}
+impl<'a, 'b> ECSBundle<'a, 'b> for FPSCounterBundle {
+    fn build(
+        self,
+        world:&mut World,
+        builder: DispatcherBuilder<'a, 'b>,
+    ) -> Result<DispatcherBuilder<'a, 'b>> {
+        world.add_resource(FPSCounter::new(self.samplesize));
+        Ok(
+            builder
+                .add(FPSCounterSystem, "fps_counter_system", &[]),
+        )
     }
 }

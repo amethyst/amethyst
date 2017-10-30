@@ -12,14 +12,12 @@ use audio::Sounds;
 pub struct WinnerSystem;
 
 impl<'s> System<'s> for WinnerSystem {
-    type SystemData = (
-        WriteStorage<'s, Ball>,
-        WriteStorage<'s, LocalTransform>,
-        FetchMut<'s, ScoreBoard>,
-        Fetch<'s, AssetStorage<Source>>,
-        Fetch<'s, Sounds>,
-        Fetch<'s, Option<Output>>,
-    );
+    type SystemData = (WriteStorage<'s, Ball>,
+     WriteStorage<'s, LocalTransform>,
+     FetchMut<'s, ScoreBoard>,
+     Fetch<'s, AssetStorage<Source>>,
+     Fetch<'s, Sounds>,
+     Fetch<'s, Option<Output>>);
 
     fn run(
         &mut self,
