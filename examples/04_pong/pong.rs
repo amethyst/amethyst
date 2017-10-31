@@ -1,5 +1,6 @@
 use {ARENA_HEIGHT, ARENA_WIDTH};
 use {Ball, Paddle, Side};
+use systems::ScoreText;
 use amethyst::assets::Loader;
 use amethyst::core::cgmath::Vector3;
 use amethyst::core::transform::{LocalTransform, Transform};
@@ -7,7 +8,7 @@ use amethyst::ecs::World;
 use amethyst::prelude::*;
 use amethyst::renderer::{Camera, Event, KeyboardInput, Material, MeshHandle, PosTex, Projection,
                          ScreenDimensions, VirtualKeyCode, WindowEvent, WindowMessages};
-use amethyst::ui::{TtfFormat, UiText, UiTransform};
+use amethyst::ui::{TtfFormat, UiResize, UiText, UiTransform};
 
 pub struct Pong;
 
@@ -161,7 +162,6 @@ fn initialise_score(world: &mut World) {
         z: 1.,
         width: 55.,
         height: 50.,
-        resize_fn: None,
     };
     let p1_size_fn = |transform: &mut UiTransform, (width, _height)| {
         transform.x = (width / 2.) - 100. - transform.width / 2.;
@@ -173,7 +173,6 @@ fn initialise_score(world: &mut World) {
         z: 1.,
         width: 55.,
         height: 50.,
-        resize_fn: None,
     };
     let p2_size_fn = |transform: &mut UiTransform, (width, _height)| {
         transform.x = (width / 2.) + 100. - transform.width / 2.;
@@ -182,10 +181,8 @@ fn initialise_score(world: &mut World) {
         let dim = world.read_resource::<ScreenDimensions>();
         p1_size_fn(&mut p1_transform, (dim.width(), dim.height()));
         p2_size_fn(&mut p2_transform, (dim.width(), dim.height()));
-        p1_transform.resize_fn = Some(Box::new(p1_size_fn));
-        p2_transform.resize_fn = Some(Box::new(p2_size_fn));
     }
-    world
+    let p1_score = world
         .create_entity()
         .with(p1_transform)
         .with(UiText::new(
@@ -194,8 +191,9 @@ fn initialise_score(world: &mut World) {
             [1.0, 1.0, 1.0, 1.0],
             50.,
         ))
+        .with(UiResize(Box::new(p1_size_fn)))
         .build();
-    world
+    let p2_score = world
         .create_entity()
         .with(p2_transform)
         .with(UiText::new(
@@ -204,7 +202,12 @@ fn initialise_score(world: &mut World) {
             [1.0, 1.0, 1.0, 1.0],
             50.,
         ))
+        .with(UiResize(Box::new(p2_size_fn)))
         .build();
+    world.add_resource(ScoreText {
+        p1_score,
+        p2_score,
+    });
 }
 
 /// Converts a vector of vertices into a mesh.

@@ -2,6 +2,14 @@
 name = "amethyst_ui"
 version = "0.1.0"
 authors = ["Jacob Kiesel <kieseljake@gmail.com>"]
+description = "Amethyst UI crate"
+keywords = ["ui", "specs", "ecs", "amethyst"]
+categories = ["game-engines"]
+
+documentation = "https://www.amethyst.rs/doc/develop/doc/amethyst_ui/index.html"
+homepage = "https://www.amethyst.rs/"
+repository = "https://github.com/amethyst/amethyst"
+license = "MIT/Apache-2.0"
 
 [dependencies]
 amethyst_assets = { path = "../amethyst_assets", version = "0.2"}

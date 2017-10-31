@@ -1,4 +1,4 @@
-use amethyst_assets::{Asset, Error, ErrorKind, Handle, SimpleFormat};
+use amethyst_assets::{Asset, Error, Handle, ResultExt, SimpleFormat};
 use rusttype::{Font, FontCollection};
 use specs::DenseVecStorage;
 
@@ -39,7 +39,7 @@ pub type OtfFormat = TtfFormat;
 pub struct TtfFormat;
 
 impl SimpleFormat<FontAsset> for TtfFormat {
-    const NAME: &'static str = "TTF";
+    const NAME: &'static str = "TTF/OTF";
     type Options = ();
 
     fn import(&self, bytes: Vec<u8>, _: ()) -> Result<FontData, Error> {
@@ -47,6 +47,6 @@ impl SimpleFormat<FontAsset> for TtfFormat {
             .into_fonts()
             .nth(0)
             .map(|f| FontData(f))
-            .ok_or(Error::from_kind(ErrorKind::Format("Font parsing error")))
+            .chain_err(|| "Font parsing error")
     }
 }

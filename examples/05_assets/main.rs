@@ -5,7 +5,7 @@ extern crate amethyst;
 extern crate rayon;
 
 use amethyst::{Application, Error, State, Trans};
-use amethyst::assets::{Loader, Result as AssetResult, ResultExt, SimpleFormat};
+use amethyst::assets::{Loader, Result as AssetResult, SimpleFormat};
 use amethyst::config::Config;
 use amethyst::core::cgmath::{Array, Vector3};
 use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};

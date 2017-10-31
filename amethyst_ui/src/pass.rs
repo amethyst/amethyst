@@ -7,15 +7,14 @@ use amethyst_renderer::{Encoder, Mesh, MeshHandle, PosTex, ScreenDimensions, Tex
 use amethyst_renderer::error::Result;
 use amethyst_renderer::pipe::{Effect, NewEffect};
 use amethyst_renderer::pipe::pass::{Pass, PassApply, PassData, Supplier};
-use cgmath::vec2;
+use cgmath::vec4;
 use gfx::preset::blend;
 use gfx::pso::buffer::ElemStride;
 use gfx::state::ColorMask;
-use hibitset::BitSet;
 
-use rayon::iter::ParallelIterator;
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use rayon::iter::internal::UnindexedConsumer;
-use specs::{Entities, Entity, Fetch, Join, ParJoin, ReadStorage};
+use specs::{Entities, Entity, Fetch, Join, ReadStorage};
 
 use super::*;
 
@@ -213,59 +212,61 @@ impl<'a> ParallelIterator for DrawUiApply<'a> {
             z2.partial_cmp(&z1).unwrap_or(Ordering::Equal)
         });
 
+        //let cached_draw_order = &cached_draw_order;
+
+        let proj_vec = vec4(
+            2. / screen_dimensions.width(),
+            -2. / screen_dimensions.height(),
+            -2.,
+            1.
+        );
+
+        let cached_draw_order = &*cached_draw_order;
+
         // This pass can't be executed in parallel, so we use a dumby bitset of a
         // single element to provide a fake parallel iterator that performs the entire
         // pass in the first iteration.
-        let mut bitset = BitSet::new();
-        bitset.add(0);
-
-        let cached_draw_order = &cached_draw_order;
-
-        let proj_vec = vec2(
-            2. / screen_dimensions.width(),
-            -2. / screen_dimensions.height(),
-        ).extend(-2.)
-            .extend(1.);
-
         supplier
-            .supply(bitset.par_join().map(move |_id| {
+            .supply((0..1).into_par_iter().map(move |_id| {
                 move |encoder: &mut Encoder, effect: &mut Effect| for &(_z, entity) in
-                    cached_draw_order.iter()
+                    cached_draw_order
                 {
-                    // These are safe as we guaranteed earlier these entities are present.
+                    // This won't panic as we guaranteed earlier these entities are present.
                     let ui_transform = ui_transform.get(entity).unwrap();
-                    if let Some(mesh) = mesh_storage.get(unit_mesh) {
-                        let vbuf = match mesh.buffer(PosTex::ATTRIBUTES) {
-                            Some(vbuf) => vbuf.clone(),
-                            None => continue,
-                        };
-                        let vertex_args = VertexArgs {
-                            proj_vec: proj_vec.into(),
-                            coord: [ui_transform.x, ui_transform.y],
-                            dimension: [ui_transform.width, ui_transform.height],
-                        };
-                        effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
-                        effect.data.vertex_bufs.push(vbuf);
-                        if let Some(image) = ui_image
-                            .get(entity)
-                            .and_then(|image| tex_storage.get(&image.texture))
-                        {
-                            effect.data.textures.push(image.view().clone());
-                            effect.data.samplers.push(image.sampler().clone());
-                            effect.draw(mesh.slice(), encoder);
-                            effect.clear();
-                        }
+                    let mesh = match mesh_storage.get(unit_mesh) {
+                        Some(mesh) => mesh,
+                        None => return,
+                    };
+                    let vbuf = match mesh.buffer(PosTex::ATTRIBUTES) {
+                        Some(vbuf) => vbuf.clone(),
+                        None => continue,
+                    };
+                    let vertex_args = VertexArgs {
+                        proj_vec: proj_vec.into(),
+                        coord: [ui_transform.x, ui_transform.y],
+                        dimension: [ui_transform.width, ui_transform.height],
+                    };
+                    effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
+                    effect.data.vertex_bufs.push(vbuf);
+                    if let Some(image) = ui_image
+                        .get(entity)
+                        .and_then(|image| tex_storage.get(&image.texture))
+                    {
+                        effect.data.textures.push(image.view().clone());
+                        effect.data.samplers.push(image.sampler().clone());
+                        effect.draw(mesh.slice(), encoder);
+                        effect.clear();
+                    }
 
-                        if let Some(image) = ui_text
-                            .get(entity)
-                            .and_then(|ref ui_text| ui_text.texture.as_ref())
-                            .and_then(|texture| tex_storage.get(texture))
-                        {
-                            effect.data.textures.push(image.view().clone());
-                            effect.data.samplers.push(image.sampler().clone());
-                            effect.draw(mesh.slice(), encoder);
-                            effect.clear();
-                        }
+                    if let Some(image) = ui_text
+                        .get(entity)
+                        .and_then(|ref ui_text| ui_text.texture.as_ref())
+                        .and_then(|texture| tex_storage.get(texture))
+                    {
+                        effect.data.textures.push(image.view().clone());
+                        effect.data.samplers.push(image.sampler().clone());
+                        effect.draw(mesh.slice(), encoder);
+                        effect.clear();
                     }
                 }
             }))

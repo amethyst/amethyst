@@ -3,7 +3,7 @@
 extern crate amethyst;
 extern crate genmesh;
 
-use amethyst::assets::Loader;
+use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::cgmath::Vector3;
 use amethyst::core::cgmath::prelude::InnerSpace;
 use amethyst::core::transform::Transform;
@@ -11,8 +11,8 @@ use amethyst::ecs::World;
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light, Mesh, Pipeline,
                          PngFormat, PointLight, PosNormTex, RenderBundle, RenderSystem, Rgba,
-                         ScreenDimensions, Stage};
-use amethyst::ui::{DrawUi, TtfFormat, UiBundle, UiImage, UiText, UiTransform};
+                         ScreenDimensions, Stage, Texture};
+use amethyst::ui::{DrawUi, FontAsset, TtfFormat, UiBundle, UiImage, UiText, UiTransform};
 use amethyst::winit::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
@@ -41,7 +41,7 @@ impl State for Example {
                 PngFormat,
                 Default::default(),
                 (),
-                &engine.world.read_resource(),
+                &engine.world.read_resource::<AssetStorage<Texture>>(),
             );
 
             let font = loader.load(
@@ -49,7 +49,7 @@ impl State for Example {
                 TtfFormat,
                 Default::default(),
                 (),
-                &engine.world.read_resource(),
+                &engine.world.read_resource::<AssetStorage<FontAsset>>(),
             );
             (logo, font)
         };
@@ -64,7 +64,6 @@ impl State for Example {
                 z: 0.,
                 width: 232.,
                 height: 266.,
-                resize_fn: None,
             })
             .with(UiImage {
                 texture: logo.clone(),
@@ -80,7 +79,6 @@ impl State for Example {
                 z: 1.,
                 width: 500.,
                 height: 500.,
-                resize_fn: None,
             })
             .with(UiText::new(
                 font,
@@ -116,9 +114,6 @@ fn run() -> Result<(), amethyst::Error> {
     );
 
     let resources = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
-
-
-
     let config = DisplayConfig::load(&display_config_path);
 
     let mut game = Application::build(resources, Example)?

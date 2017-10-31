@@ -2,6 +2,7 @@
 
 #version 150 core
 
+// std140 is a cross platform layout.
 layout (std140) uniform VertexArgs {
     uniform vec4 proj_vec;
     uniform vec2 coord;

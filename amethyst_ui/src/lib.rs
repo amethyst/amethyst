@@ -20,6 +20,7 @@ mod bundle;
 mod format;
 mod image;
 mod pass;
+mod resize;
 mod text;
 mod transform;
 
@@ -27,5 +28,6 @@ pub use self::bundle::UiBundle;
 pub use self::format::{FontAsset, FontHandle, OtfFormat, TtfFormat};
 pub use self::image::UiImage;
 pub use self::pass::DrawUi;
+pub use self::resize::{UiResize, ResizeSystem};
 pub use self::text::{UiText, UiTextRenderer};
-pub use self::transform::{ResizeSystem, UiTransform};
+pub use self::transform::UiTransform;

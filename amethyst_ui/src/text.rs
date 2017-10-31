@@ -99,7 +99,7 @@ impl Component for UiText {
     type Storage = DenseVecStorage<Self>;
 }
 
-/// This system renders `UiTex`t.
+/// This system renders `UiText`.
 /// Make sure it's called after changes are made to `UiText` but before
 /// the `RenderSystem` from `amethyst_renderer` gets invoked.
 pub struct UiTextRenderer;
@@ -114,52 +114,52 @@ impl<'a> System<'a> for UiTextRenderer {
     );
 
     fn run(&mut self, (transform, mut text, loader, tex_storage, font_storage): Self::SystemData) {
-        for (transform, text) in (&transform, &mut text).join() {
-            if text.dirty {
-                // TODO: use `TrackedStorage`
-                if let Some(font) = font_storage.get(&text.font) {
-                    text.dirty = false;
-                    if (*text.text).chars().any(|c| is_combining_mark(c)) {
-                        let normalized = text.text.nfd().collect::<String>();
-                        text.text = normalized;
-                    }
-                    let num_floats = (transform.width * transform.height) as usize * 4;
-                    let mut render_buffer = vec![0.0; num_floats];
-                    let height = transform.height as u32;
-                    let width = transform.width as u32;
-                    if text.color[3] > 0.01 {
-                        for glyph in font.0.layout(
-                            &text.text,
-                            Scale::uniform(text.font_size),
-                            Point::<f32>{x: 0., y: 0.}
-                        ) {
-                            let position = glyph.position();
-                            let pos_x = position.x as u32;
-                            glyph.draw(|x, y, v| {
-                                if v > 0.01 {
-                                    let x = x + pos_x;
-                                    if x < width && y < height {
-                                        let start = ((x + y * width) * 4) as usize;
-                                        render_buffer[start] = text.color[0];
-                                        render_buffer[start + 1] = text.color[1];
-                                        render_buffer[start + 2] = text.color[2];
-                                        render_buffer[start + 3] = text.color[3] * v;
-                                    }
-                                }
-                            });
-                        }
-                    }
-                    let meta = TextureMetadata {
-                        sampler: None,
-                        mip_levels: Some(1),
-                        size: Some((transform.width as u16, transform.height as u16)),
-                        dynamic: false,
-                        format: Some(SurfaceType::R32_G32_B32_A32),
-                        channel: Some(ChannelType::Float),
-                    };
-                    let data = TextureData::F32(render_buffer, meta);
-                    text.texture = Some(loader.load_from_data(data, (), &tex_storage));
+        for (transform, text) in (&transform, &mut text).join()
+        .filter(|&(_transform, ref text)| text.dirty)
+        {
+            // TODO: use `TrackedStorage`
+            if let Some(font) = font_storage.get(&text.font) {
+                text.dirty = false;
+                if (*text.text).chars().any(|c| is_combining_mark(c)) {
+                    let normalized = text.text.nfd().collect::<String>();
+                    text.text = normalized;
                 }
+                let num_floats = (transform.width * transform.height) as usize * 4;
+                let mut render_buffer = vec![0.0; num_floats];
+                let height = transform.height as u32;
+                let width = transform.width as u32;
+                if text.color[3] > 0.01 {
+                    for glyph in font.0.layout(
+                        &text.text,
+                        Scale::uniform(text.font_size),
+                        Point::<f32>{x: 0., y: 0.}
+                    ) {
+                        let position = glyph.position();
+                        let pos_x = position.x as u32;
+                        glyph.draw(|x, y, v| {
+                            if v > 0.01 {
+                                let x = x + pos_x;
+                                if x < width && y < height {
+                                    let start = ((x + y * width) * 4) as usize;
+                                    render_buffer[start] = text.color[0];
+                                    render_buffer[start + 1] = text.color[1];
+                                    render_buffer[start + 2] = text.color[2];
+                                    render_buffer[start + 3] = text.color[3] * v;
+                                }
+                            }
+                        });
+                    }
+                }
+                let meta = TextureMetadata {
+                    sampler: None,
+                    mip_levels: Some(1),
+                    size: Some((transform.width as u16, transform.height as u16)),
+                    dynamic: false,
+                    format: Some(SurfaceType::R32_G32_B32_A32),
+                    channel: Some(ChannelType::Float),
+                };
+                let data = TextureData::F32(render_buffer, meta);
+                text.texture = Some(loader.load_from_data(data, (), &tex_storage));
             }
         }
     }

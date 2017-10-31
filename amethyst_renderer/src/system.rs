@@ -121,8 +121,6 @@ where
     }
 
     fn render(&mut self, (mut event_handler, data): RenderData<P>) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("render_system");
         use std::time::Duration;
 
         self.renderer
@@ -162,9 +160,11 @@ where
     P: PolyPipeline,
 {
     fn run_now(&mut self, res: &'a Resources) {
-        self.asset_loading(AssetLoadingData::<'a>::fetch(res, 0));
-        self.window_management(WindowData::<'a>::fetch(res, 0));
-        self.render(RenderData::<'a, P>::fetch(res, 0));
+        #[cfg(feature = "profiler")]
+        profile_scope!("render_system");
+        self.asset_loading(AssetLoadingData::fetch(res, 0));
+        self.window_management(WindowData::fetch(res, 0));
+        self.render(RenderData::<P>::fetch(res, 0));
     }
 }
 
