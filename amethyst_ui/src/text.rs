@@ -3,6 +3,8 @@ use amethyst_renderer::{Texture, TextureData, TextureHandle, TextureMetadata};
 use gfx::format::{ChannelType, SurfaceType};
 use rusttype::{Point, Scale};
 use specs::{Component, DenseVecStorage, Fetch, Join, ReadStorage, System, WriteStorage};
+use unicode_normalization::UnicodeNormalization;
+use unicode_normalization::char::is_combining_mark;
 
 use super::*;
 
@@ -117,6 +119,10 @@ impl<'a> System<'a> for UiTextRenderer {
                 // TODO: use `TrackedStorage`
                 if let Some(font) = font_storage.get(&text.font) {
                     text.dirty = false;
+                    if (*text.text).chars().any(|c| is_combining_mark(c)) {
+                        let normalized = text.text.nfd().collect::<String>();
+                        text.text = normalized;
+                    }
                     let num_floats = (transform.width * transform.height) as usize * 4;
                     let mut render_buffer = vec![0.0; num_floats];
                     let height = transform.height as u32;

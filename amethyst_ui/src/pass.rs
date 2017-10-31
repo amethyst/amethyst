@@ -3,6 +3,10 @@
 use std::cmp::{Ordering, PartialOrd};
 
 use amethyst_assets::{AssetStorage, Loader};
+use amethyst_renderer::{Encoder, Mesh, MeshHandle, PosTex, ScreenDimensions, Texture, VertexFormat};
+use amethyst_renderer::error::Result;
+use amethyst_renderer::pipe::{Effect, NewEffect};
+use amethyst_renderer::pipe::pass::{Pass, PassApply, PassData, Supplier};
 use cgmath::vec2;
 use gfx::preset::blend;
 use gfx::pso::buffer::ElemStride;
@@ -14,15 +18,6 @@ use rayon::iter::internal::UnindexedConsumer;
 use specs::{Entities, Entity, Fetch, Join, ParJoin, ReadStorage};
 
 use super::*;
-use amethyst_renderer::{Mesh, MeshHandle};
-use amethyst_renderer::Encoder;
-use amethyst_renderer::PosTex;
-use amethyst_renderer::ScreenDimensions;
-use amethyst_renderer::Texture;
-use amethyst_renderer::VertexFormat;
-use amethyst_renderer::error::Result;
-use amethyst_renderer::pipe::{Effect, NewEffect};
-use amethyst_renderer::pipe::pass::{Pass, PassApply, PassData, Supplier};
 
 const VERT_SRC: &[u8] = include_bytes!("shaders/vertex.glsl");
 const FRAG_SRC: &[u8] = include_bytes!("shaders/frag.glsl");
