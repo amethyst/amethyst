@@ -5,8 +5,8 @@ use std::fmt::{Display, Formatter};
 use std::fmt::Result as FmtResult;
 use std::result::Result as StdResult;
 
-use core;
 use config::ConfigError;
+use core;
 use renderer;
 
 /// Engine result type.

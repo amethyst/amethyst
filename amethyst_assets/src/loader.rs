@@ -6,7 +6,7 @@ use std::sync::Arc;
 use fnv::FnvHashMap;
 use rayon::ThreadPool;
 
-use {Asset, Directory, Format, ErrorKind, FormatValue,  ResultExt,Progress, Source};
+use {Asset, Directory, ErrorKind, Format, FormatValue, Progress, ResultExt, Source};
 use storage::{AssetStorage, Handle, Processed};
 
 /// The asset loader, holding the sources and a reference to the `ThreadPool`.
@@ -123,7 +123,8 @@ impl Loader {
         let hot_reload = self.hot_reload;
 
         let cl = move || {
-            let data = format.import(name.clone(), source, options, hot_reload)
+            let data = format
+                .import(name.clone(), source, options, hot_reload)
                 .chain_err(|| ErrorKind::Format(F::NAME));
             let tracker = Box::new(tracker) as Box<Tracker>;
 

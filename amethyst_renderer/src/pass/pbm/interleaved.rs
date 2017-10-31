@@ -118,7 +118,7 @@ where
             ReadStorage<'a, Transform>,
             ReadStorage<'a, Light>,
         ),
-) -> DrawPbmApply<'a, V>{
+    ) -> DrawPbmApply<'a, V> {
         DrawPbmApply {
             active,
             camera,

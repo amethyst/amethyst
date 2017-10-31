@@ -1,6 +1,6 @@
 use specs::{DispatcherBuilder, World};
 
-error_chain! {}
+error_chain!{}
 
 /// A bundle of ECS components, resources and systems.
 pub trait ECSBundle<'a, 'b> {

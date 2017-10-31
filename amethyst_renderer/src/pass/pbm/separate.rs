@@ -122,7 +122,7 @@ impl Pass for DrawPbmSeparate {
             ReadStorage<'a, Transform>,
             ReadStorage<'a, Light>,
         ),
-) -> DrawPbmSeparateApply<'a>{
+    ) -> DrawPbmSeparateApply<'a> {
         DrawPbmSeparateApply {
             active,
             camera,
