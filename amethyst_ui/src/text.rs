@@ -13,7 +13,7 @@ pub struct UiText {
     /// The texture that text is rendered onto.  None if text isn't rendered yet.
     pub(crate) texture: Option<TextureHandle>,
     /// The font used to display the text.
-    font: FontHandle,
+    font: FontHandle, //TODO: Mark this component dirty when the font is reloaded.
     /// The text being displayed
     text: String,
     /// The normalized RGBA color of the text being displayed
