@@ -57,14 +57,14 @@ impl State for Example {
         engine
             .world
             .create_entity()
-            .with(UiTransform {
-                id: "logo".to_string(),
-                x: 300.,
-                y: 300.,
-                z: 0.,
-                width: 232.,
-                height: 266.,
-            })
+            .with(UiTransform::new(
+                "logo".to_string(),
+                300.,
+                300.,
+                0.,
+                232.,
+                266.,
+            ))
             .with(UiImage {
                 texture: logo.clone(),
             })
@@ -72,14 +72,14 @@ impl State for Example {
         engine
             .world
             .create_entity()
-            .with(UiTransform {
-                id: "hello_world".to_string(),
-                x: 0.,
-                y: 0.,
-                z: 1.,
-                width: 500.,
-                height: 500.,
-            })
+            .with(UiTransform::new(
+                "hello_world".to_string(),
+                0.,
+                0.,
+                1.,
+                500.,
+                500.,
+            ))
             .with(UiText::new(
                 font,
                 "Hello world!".to_string(),

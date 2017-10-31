@@ -1,4 +1,5 @@
-use specs::{Component, DenseVecStorage};
+use std::marker::PhantomData;
+use specs::{Component, DenseVecStorage, FlaggedStorage};
 
 
 /// The raw pixels on screen that are populated.
@@ -19,8 +20,25 @@ pub struct UiTransform {
     pub width: f32,
     /// The height of this UI element
     pub height: f32,
+    /// A private field to keep this from being initialized without new.
+    pd: PhantomData<u8>,
+}
+
+impl UiTransform {
+    /// Creates a new UiTransform
+    pub fn new(id: String, x: f32, y: f32, z: f32, width: f32, height: f32) -> UiTransform {
+        UiTransform {
+            id,
+            x,
+            y,
+            z,
+            width,
+            height,
+            pd: PhantomData,
+        }
+    }
 }
 
 impl Component for UiTransform {
-    type Storage = DenseVecStorage<Self>;
+    type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
 }

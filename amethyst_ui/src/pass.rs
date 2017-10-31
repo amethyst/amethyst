@@ -11,7 +11,7 @@ use cgmath::vec4;
 use gfx::preset::blend;
 use gfx::pso::buffer::ElemStride;
 use gfx::state::ColorMask;
-
+use hibitset::BitSet;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use rayon::iter::internal::UnindexedConsumer;
 use specs::{Entities, Entity, Fetch, Join, ReadStorage};
@@ -30,12 +30,18 @@ struct VertexArgs {
     dimension: [f32; 2],
 }
 
+#[derive(Clone, Debug)]
+struct CachedDrawOrder {
+    pub cached: BitSet,
+    pub cache: Vec<(f32, Entity)>,
+}
+
 /// Draw Ui elements, this uses target with name "amethyst_ui"
 /// `V` is `VertexFormat`
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct DrawUi {
     mesh_handle: MeshHandle,
-    cached_draw_order: Vec<(f32, Entity)>,
+    cached_draw_order: CachedDrawOrder,
 }
 
 impl DrawUi
@@ -74,7 +80,10 @@ where
         let mesh_handle = loader.load_from_data(data, (), mesh_storage);
         DrawUi {
             mesh_handle,
-            cached_draw_order: Vec::new(),
+            cached_draw_order: CachedDrawOrder {
+                cached: BitSet::new(),
+                cache: Vec::new(),
+            },
         }
     }
 }
@@ -144,7 +153,7 @@ pub struct DrawUiApply<'a> {
     ui_transform: ReadStorage<'a, UiTransform>,
     ui_text: ReadStorage<'a, UiText>,
     unit_mesh: MeshHandle,
-    cached_draw_order: &'a mut Vec<(f32, Entity)>,
+    cached_draw_order: &'a mut CachedDrawOrder,
     supplier: Supplier<'a>,
 }
 
@@ -181,34 +190,43 @@ impl<'a> ParallelIterator for DrawUiApply<'a> {
         // Populate and update the draw order cache.
         // TODO: Replace all of this with code taking advantage of specs::TrackedStorage.
         // TrackedStorage doesn't exist yet but it will in a later version of specs.
-        cached_draw_order.retain(|&(_z, entity)| {
-            ui_image.get(entity).is_some() && ui_transform.get(entity).is_some()
-        });
+        {
+            let bitset = &mut cached_draw_order.cached;
+            cached_draw_order.cache.retain(|&(_z, entity)| {
+                let rm = ui_transform.check().contains(entity.id());
+                if rm {
+                    bitset.remove(entity.id());
+                }
+                rm
+            });
+        }
 
-        for &mut (ref mut z, entity) in cached_draw_order.iter_mut() {
+
+        for &mut (ref mut z, entity) in &mut cached_draw_order.cache {
             *z = ui_transform.get(entity).unwrap().z;
         }
 
         // Attempt to insert the new entities in sorted position.  Should reduce work during
         // the sorting step.
-        for (entity, transform) in (entities, ui_transform).join() {
-            if cached_draw_order
-                .iter()
-                .position(|&(_z, cached_entity)| entity == cached_entity)
-                .is_none()
-            {
-                let pos = cached_draw_order
+        {
+            // Create a bitset containing only the new indices.
+            let new = (ui_transform.check() ^ &cached_draw_order.cached) & ui_transform.check();
+            for (entity, transform, _new) in (entities, ui_transform, &new).join() {
+                let pos = cached_draw_order.cache
                     .iter()
                     .position(|&(cached_z, _)| transform.z >= cached_z);
                 match pos {
-                    Some(pos) => cached_draw_order.insert(pos, (transform.z, entity)),
-                    None => cached_draw_order.push((transform.z, entity)),
+                    Some(pos) => cached_draw_order.cache.insert(pos, (transform.z, entity)),
+                    None => cached_draw_order.cache.push((transform.z, entity)),
                 }
             }
         }
+        cached_draw_order.cached = ui_transform.check();
 
         // Sort from largest z value to smallest z value.
-        cached_draw_order.sort_unstable_by(|&(z1, _), &(z2, _)| {
+        // Most of the time this shouldn't do anything but you still need it for if the z values
+        // change.
+        cached_draw_order.cache.sort_unstable_by(|&(z1, _), &(z2, _)| {
             z2.partial_cmp(&z1).unwrap_or(Ordering::Equal)
         });
 
@@ -221,7 +239,7 @@ impl<'a> ParallelIterator for DrawUiApply<'a> {
             1.
         );
 
-        let cached_draw_order = &*cached_draw_order;
+        let cached_draw_order = &*cached_draw_order.cache;
 
         // This pass can't be executed in parallel, so we use a dumby bitset of a
         // single element to provide a fake parallel iterator that performs the entire

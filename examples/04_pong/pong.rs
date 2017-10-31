@@ -155,25 +155,25 @@ fn initialise_score(world: &mut World) {
         (),
         &world.read_resource(),
     );
-    let mut p1_transform = UiTransform {
-        id: "P1".to_string(),
-        x: 0.,
-        y: 0.,
-        z: 1.,
-        width: 55.,
-        height: 50.,
-    };
+    let mut p1_transform = UiTransform::new(
+        "P1".to_string(),
+        0.,
+        0.,
+        1.,
+        55.,
+        50.,
+    );
     let p1_size_fn = |transform: &mut UiTransform, (width, _height)| {
         transform.x = (width / 2.) - 100. - transform.width / 2.;
     };
-    let mut p2_transform = UiTransform {
-        id: "P2".to_string(),
-        x: 0.,
-        y: 0.,
-        z: 1.,
-        width: 55.,
-        height: 50.,
-    };
+    let mut p2_transform = UiTransform::new(
+        "P2".to_string(),
+        0.,
+        0.,
+        1.,
+        55.,
+        50.,
+    );
     let p2_size_fn = |transform: &mut UiTransform, (width, _height)| {
         transform.x = (width / 2.) + 100. - transform.width / 2.;
     };
