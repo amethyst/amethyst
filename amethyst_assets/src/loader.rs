@@ -106,10 +106,7 @@ impl Loader {
     {
         use progress::Tracker;
 
-        let source = match source.as_ref() {
-            "" => self.directory.clone(),
-            source => self.source(source),
-        };
+        let source = self.source(source.as_ref());
 
         progress.add_assets(1);
         let tracker = progress.create_tracker();
@@ -165,7 +162,13 @@ impl Loader {
         handle
     }
 
-    fn source(&self, source: &str) -> Arc<Source> {
+    /// Retrieves an assset source with a given name.
+    /// If `source` is an empty string, the default directory store will be returned.
+    pub fn source(&self, source: &str) -> Arc<Source> {
+        if source.is_empty() {
+            return self.directory.clone();
+        }
+
         self.sources
             .get(source)
             .expect("No such source. Maybe you forgot to add it with `Loader::add_source`?")
