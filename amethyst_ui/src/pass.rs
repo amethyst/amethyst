@@ -191,7 +191,7 @@ impl<'a> ParallelIterator for DrawUiApply<'a> {
         {
             let bitset = &mut cached_draw_order.cached;
             cached_draw_order.cache.retain(|&(_z, entity)| {
-                let keep = ui_transform.check().contains(entity.id());
+                let keep = ui_transform.get(entity).is_some();
                 if !keep {
                     bitset.remove(entity.id());
                 }
@@ -206,9 +206,10 @@ impl<'a> ParallelIterator for DrawUiApply<'a> {
 
         // Attempt to insert the new entities in sorted position.  Should reduce work during
         // the sorting step.
+        let transform_set = ui_transform.check();
         {
             // Create a bitset containing only the new indices.
-            let new = (ui_transform.check() ^ &cached_draw_order.cached) & ui_transform.check();
+            let new = (&transform_set ^ &cached_draw_order.cached) & &transform_set;
             for (entity, transform, _new) in (entities, ui_transform, &new).join() {
                 let pos = cached_draw_order.cache
                     .iter()
@@ -219,7 +220,7 @@ impl<'a> ParallelIterator for DrawUiApply<'a> {
                 }
             }
         }
-        cached_draw_order.cached = ui_transform.check();
+        cached_draw_order.cached = transform_set;
 
         // Sort from largest z value to smallest z value.
         // Most of the time this shouldn't do anything but you still need it for if the z values
