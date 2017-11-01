@@ -3,17 +3,12 @@
 extern crate amethyst;
 extern crate genmesh;
 
-use amethyst::assets::{AssetStorage, Loader};
-use amethyst::core::cgmath::Vector3;
-use amethyst::core::cgmath::prelude::InnerSpace;
+use amethyst::assets::Loader;
+use amethyst::core::cgmath::{Deg, InnerSpace, Vector3};
 use amethyst::core::transform::Transform;
 use amethyst::ecs::World;
 use amethyst::prelude::*;
-use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light, Mesh, Pipeline,
-                         PngFormat, PointLight, PosNormTex, RenderBundle, RenderSystem, Rgba,
-                         ScreenDimensions, Stage, Texture};
-use amethyst::ui::{DrawUi, FontAsset, TtfFormat, UiBundle, UiImage, UiText, UiTransform};
-use amethyst::winit::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
+use amethyst::renderer::*;
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 
@@ -33,60 +28,6 @@ impl State for Example {
         initialise_sphere(&mut engine.world);
         initialise_lights(&mut engine.world);
         initialise_camera(&mut engine.world);
-        let (logo, font) = {
-            let loader = engine.world.read_resource::<Loader>();
-
-            let logo = loader.load(
-                "texture/logo_transparent.png",
-                PngFormat,
-                Default::default(),
-                (),
-                &engine.world.read_resource::<AssetStorage<Texture>>(),
-            );
-
-            let font = loader.load(
-                "font/square.ttf",
-                TtfFormat,
-                Default::default(),
-                (),
-                &engine.world.read_resource::<AssetStorage<FontAsset>>(),
-            );
-            (logo, font)
-        };
-
-        engine
-            .world
-            .create_entity()
-            .with(UiTransform::new(
-                "logo".to_string(),
-                300.,
-                300.,
-                0.,
-                232.,
-                266.,
-            ))
-            .with(UiImage {
-                texture: logo.clone(),
-            })
-            .build();
-        engine
-            .world
-            .create_entity()
-            .with(UiTransform::new(
-                "hello_world".to_string(),
-                0.,
-                0.,
-                1.,
-                500.,
-                500.,
-            ))
-            .with(UiText::new(
-                font,
-                "Hello world!".to_string(),
-                [1.0, 1.0, 1.0, 1.0],
-                75.,
-            ))
-            .build();
     }
 
     fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
@@ -99,7 +40,8 @@ impl State for Example {
                             ..
                         },
                     ..
-                } => Trans::Quit,
+                } |
+                WindowEvent::Closed => Trans::Quit,
                 _ => Trans::None,
             },
             _ => Trans::None,
@@ -109,29 +51,25 @@ impl State for Example {
 
 fn run() -> Result<(), amethyst::Error> {
     let display_config_path = format!(
-        "{}/examples/09_ui/resources/display.ron",
+        "{}/examples/separate_sphere/resources/display.ron",
         env!("CARGO_MANIFEST_DIR")
     );
 
-    let resources = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
+    let resources = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
+
+    let pipe = Pipeline::build().with_stage(
+        Stage::with_backbuffer()
+            .clear_target(BACKGROUND_COLOUR, 1.0)
+            .with_pass(DrawShadedSeparate::new()),
+    );
+
     let config = DisplayConfig::load(&display_config_path);
 
     let mut game = Application::build(resources, Example)?
         .with_bundle(RenderBundle::new())?
-        .with_bundle(UiBundle::new(&[]))?;
-    let pipe = {
-        let loader = game.world.read_resource();
-        let mesh_storage = game.world.read_resource();
-
-        Pipeline::build().with_stage(
-            Stage::with_backbuffer()
-                .clear_target(BACKGROUND_COLOUR, 1.0)
-                .with_pass(DrawShaded::<PosNormTex>::new())
-                .with_pass(DrawUi::new(&loader, &mesh_storage)),
-        )
-    };
-    game = game.with_local(RenderSystem::build(pipe, Some(config))?);
-    Ok(game.build()?.run())
+        .with_local(RenderSystem::build(pipe, Some(config))?)
+        .build()?;
+    Ok(game.run())
 }
 
 fn main() {
@@ -141,18 +79,29 @@ fn main() {
     }
 }
 
-fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTex> {
-    SphereUV::new(u, v)
-        .vertex(|(x, y, z)| {
-            PosNormTex {
-                position: [x, y, z],
-                normal: Vector3::from([x, y, z]).normalize().into(),
-                tex_coord: [0.1, 0.1],
-            }
-        })
+fn gen_sphere(u: usize, v: usize) -> ComboMeshCreator {
+    let positions = SphereUV::new(u, v)
+        .vertex(|(x, y, z)| [x, y, z])
         .triangulate()
         .vertices()
-        .collect()
+        .collect::<Vec<_>>();
+
+    let normals = positions
+        .iter()
+        .map(|pos| {
+            Separate::<Normal>::new(Vector3::from(*pos).normalize().into())
+        })
+        .collect::<Vec<_>>();
+    let tex_coords = positions
+        .iter()
+        .map(|_| Separate::<TexCoord>::new([0.1, 0.1]))
+        .collect::<Vec<_>>();
+    let positions = positions
+        .into_iter()
+        .map(|pos| Separate::<Position>::new(pos))
+        .collect::<Vec<_>>();
+
+    (positions, None, Some(tex_coords), Some(normals), None).into()
 }
 
 /// This function initialises a sphere and adds it to the world.
@@ -213,9 +162,12 @@ fn initialise_lights(world: &mut World) {
 
 /// This function initialises a camera and adds it to the world.
 fn initialise_camera(world: &mut World) {
-    let (width, height) = {
-        let dim = world.read_resource::<ScreenDimensions>();
-        (dim.width(), dim.height())
-    };
-    world.add_resource(Camera::standard_3d(width, height));
+    use amethyst::core::cgmath::Matrix4;
+    let transform =
+        Matrix4::from_translation([0.0, 0.0, -4.0].into()) * Matrix4::from_angle_y(Deg(180.));
+    world
+        .create_entity()
+        .with(Camera::from(Projection::perspective(1.3, Deg(60.0))))
+        .with(Transform(transform.into()))
+        .build();
 }

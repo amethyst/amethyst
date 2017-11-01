@@ -350,7 +350,7 @@ fn run() -> Result<(), Error> {
     let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
 
     let display_config_path = format!(
-        "{}/examples/03_renderable/resources/display_config.ron",
+        "{}/examples/renderable/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
     );
 
