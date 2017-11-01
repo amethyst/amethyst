@@ -221,6 +221,11 @@ fn load_channel(
         }
         Rotation => {
             let output = AccessorIter::new(sampler.output(), buffers).collect::<Vec<[f32; 4]>>();
+            let ty = if ty == InterpolationType::Linear {
+                InterpolationType::SphericalLinear
+            } else {
+                ty
+            };
             Ok((
                 node_index,
                 Sampler {

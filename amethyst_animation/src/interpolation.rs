@@ -23,10 +23,12 @@ pub trait InterpolationFunction
 }
 
 /// Supported interpolation functions
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub enum InterpolationType {
     /// Linear interpolation
     Linear,
+    /// Spherical linear interpolation
+    SphericalLinear,
     /// Step interpolation
     Step,
     /// Catmull-Rom spline interpolation
@@ -48,6 +50,7 @@ impl Interpolate<[f32; 3]> for InterpolationType {
     ) -> [f32; 3] {
         match *self {
             InterpolationType::Linear => linear_interpolate(input, inputs, outputs, normalize),
+            InterpolationType::SphericalLinear => spherical_linear_interpolate(input, inputs, outputs, normalize),
             InterpolationType::Step => step_interpolate(input, inputs, outputs, normalize),
             InterpolationType::CubicSpline => {
                 cubic_spline_interpolate(input, inputs, outputs, normalize)
@@ -70,6 +73,7 @@ impl Interpolate<[f32; 4]> for InterpolationType {
     ) -> [f32; 4] {
         match *self {
             InterpolationType::Linear => linear_interpolate(input, inputs, outputs, normalize),
+            InterpolationType::SphericalLinear => spherical_linear_interpolate(input, inputs, outputs, normalize),
             InterpolationType::Step => step_interpolate(input, inputs, outputs, normalize),
             InterpolationType::CubicSpline => {
                 cubic_spline_interpolate(input, inputs, outputs, normalize)
