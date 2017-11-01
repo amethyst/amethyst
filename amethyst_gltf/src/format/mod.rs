@@ -6,6 +6,7 @@ use std::fmt;
 use std::sync::Arc;
 
 use self::importer::{get_image_data, import, Buffers, ImageFormat};
+use animation::{AnimationOutput, InterpolationType, Sampler};
 use assets::{Error as AssetError, Format, FormatValue, Result as AssetResult, ResultExt, Source};
 use core::transform::LocalTransform;
 use gfx::Primitive;
@@ -44,6 +45,9 @@ pub enum GltfError {
 
     /// External file failed loading
     Asset(AssetError),
+
+    /// Not implemented yet
+    NotImplemented,
 }
 
 impl StdError for GltfError {
@@ -55,6 +59,7 @@ impl StdError for GltfError {
             PrimitiveMissingInGfx(_) => "Primitive missing in gfx",
             MissingPositions => "Primitive missing positions",
             Asset(_) => "File loading error",
+            NotImplemented => "Not implemented",
         }
     }
 
@@ -78,7 +83,7 @@ impl fmt::Display for GltfError {
             PrimitiveMissingInGfx(ref err) => write!(f, "{}: {}", self.description(), err),
             Asset(ref err) => write!(f, "{}: {}", self.description(), err.description()),
             InvalidSceneGltf(size) => write!(f, "{}: {}", self.description(), size),
-            MissingPositions => write!(f, "{}", self.description()),
+            MissingPositions | NotImplemented => write!(f, "{}", self.description()),
         }
     }
 }
@@ -138,22 +143,106 @@ fn load_data(
     // TODO: skins, animations, morph targets, cameras
     // TODO: KHR_materials_common extension
     let nodes = load_nodes(gltf, buffers, options)?;
-    let mut scenes = vec![];
-    for scene in gltf.scenes() {
-        scenes.push(load_scene(&scene)?);
-    }
+    let scenes = gltf.scenes()
+        .map(|ref scene| load_scene(scene))
+        .collect::<Result<Vec<GltfScene>, GltfError>>()?;
     let default_scene = gltf.default_scene().map(|s| s.index());
-    let mut materials = vec![];
-    for material in gltf.materials() {
-        materials.push(load_material(&material, buffers, source.clone(), name)?);
-    }
+    let materials = gltf.materials()
+        .map(|ref m| load_material(m, buffers, source.clone(), name))
+        .collect::<Result<Vec<GltfMaterial>, GltfError>>()?;
+    let animations = if options.load_animations {
+        gltf.animations()
+            .map(|ref animation| load_animation(animation, buffers))
+            .collect::<Result<Vec<GltfAnimation>, GltfError>>()?
+    } else {
+        Vec::default()
+    };
     Ok(GltfSceneAsset {
         nodes,
         scenes,
         materials,
+        animations,
         default_scene,
         options: options.clone(),
     })
+}
+
+fn load_animation(
+    animation: &gltf::Animation,
+    buffers: &Buffers,
+) -> Result<GltfAnimation, GltfError> {
+    let (nodes, samplers) = animation
+        .channels()
+        .map(|ref channel| load_channel(channel, buffers))
+        .collect::<Result<Vec<(usize, Sampler)>, GltfError>>()?
+        .into_iter()
+        .unzip();
+    Ok(GltfAnimation {
+        nodes,
+        samplers,
+        handle: None,
+    })
+}
+
+fn load_channel(
+    channel: &gltf::animation::Channel,
+    buffers: &Buffers,
+) -> Result<(usize, Sampler), GltfError> {
+    use gltf::animation::TrsProperty::*;
+    use gltf_utils::AccessorIter;
+    let sampler = channel.sampler();
+    let target = channel.target();
+    let input = gltf_utils::AccessorIter::new(sampler.input(), buffers).collect::<Vec<f32>>();
+    let node_index = target.node().index();
+    let ty = map_interpolation_type(&sampler.interpolation());
+
+    match target.path() {
+        Translation => {
+            let output = AccessorIter::new(sampler.output(), buffers).collect::<Vec<[f32; 3]>>();
+            Ok((
+                node_index,
+                Sampler {
+                    input,
+                    ty,
+                    output: AnimationOutput::Translation(output),
+                },
+            ))
+        }
+        Scale => {
+            let output = AccessorIter::new(sampler.output(), buffers).collect::<Vec<[f32; 3]>>();
+            Ok((
+                node_index,
+                Sampler {
+                    input,
+                    ty,
+                    output: AnimationOutput::Scale(output),
+                },
+            ))
+        }
+        Rotation => {
+            let output = AccessorIter::new(sampler.output(), buffers).collect::<Vec<[f32; 4]>>();
+            Ok((
+                node_index,
+                Sampler {
+                    input,
+                    ty,
+                    output: AnimationOutput::Rotation(output),
+                },
+            ))
+        }
+        Weights => Err(GltfError::NotImplemented),
+    }
+}
+
+fn map_interpolation_type(ty: &gltf::animation::InterpolationAlgorithm) -> InterpolationType {
+    use gltf::animation::InterpolationAlgorithm::*;
+
+    match *ty {
+        Linear => InterpolationType::Linear,
+        Step => InterpolationType::Step,
+        CubicSpline => InterpolationType::CubicSpline,
+        CatmullRomSpline => InterpolationType::CatmullRomSpline,
+    }
 }
 
 // Load a single material, and transform into a format usable by the engine

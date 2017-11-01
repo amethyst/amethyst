@@ -1,7 +1,7 @@
 //! Local transform component.
 
-use cgmath::{Array, Deg, ElementWise, EuclideanSpace, InnerSpace, Matrix3, Matrix4, One, Point3,
-             Quaternion, Rotation, Rotation3, SquareMatrix, Transform, Vector3, Zero};
+use cgmath::{Array, Deg, ElementWise,EuclideanSpace, InnerSpace, Matrix3, Matrix4, One, Point3, Quaternion, Rotation,
+             Rotation3, SquareMatrix, Transform,Vector3, Zero};
 use orientation::Orientation;
 use specs::{Component, DenseVecStorage, FlaggedStorage};
 
