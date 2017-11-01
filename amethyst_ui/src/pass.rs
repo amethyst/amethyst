@@ -188,16 +188,14 @@ impl<'a> ParallelIterator for DrawUiApply<'a> {
         let unit_mesh = &unit_mesh;
 
         // Populate and update the draw order cache.
-        // TODO: Replace all of this with code taking advantage of specs::TrackedStorage.
-        // TrackedStorage doesn't exist yet but it will in a later version of specs.
         {
             let bitset = &mut cached_draw_order.cached;
             cached_draw_order.cache.retain(|&(_z, entity)| {
-                let rm = ui_transform.check().contains(entity.id());
-                if rm {
+                let keep = ui_transform.check().contains(entity.id());
+                if !keep {
                     bitset.remove(entity.id());
                 }
-                rm
+                keep
             });
         }
 
