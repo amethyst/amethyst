@@ -77,7 +77,7 @@ where
             .with_raw_vertex_buffer(V::QUERIED_ATTRIBUTES, V::size() as ElemStride, 0)
             .with_raw_constant_buffer("VertexArgs", mem::size_of::<VertexArgs>(), 1)
             .with_raw_constant_buffer("FragmentArgs", mem::size_of::<FragmentArgs>(), 1)
-            .with_raw_constant_buffer("PointLights", mem::size_of::<PointLight>(), 512)
+            .with_raw_constant_buffer("PointLights", mem::size_of::<PointLight>(), 128)
             .with_raw_constant_buffer("DirectionalLights", mem::size_of::<DirectionalLight>(), 16)
             .with_raw_global("ambient_color")
             .with_raw_global("camera_position")
