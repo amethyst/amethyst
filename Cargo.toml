@@ -28,6 +28,7 @@ amethyst_config = { path = "amethyst_config", version = "0.4.0" }
 amethyst_core = { path = "amethyst_core", version = "0.1.0" }
 amethyst_renderer = { path = "amethyst_renderer", version = "0.5" }
 amethyst_input = { path = "amethyst_input", version = "0.1" }
+amethyst_ui = { path = "amethyst_ui", version = "0.1" }
 amethyst_utils = { path = "amethyst_utils", version = "0.1" }
 derivative = "1.0"
 rayon = "0.8"
@@ -80,6 +81,10 @@ path = "examples/07_separate_sphere/main.rs"
 [[example]]
 name = "gltf"
 path = "examples/08_gltf/main.rs"
+
+[[example]]
+name = "ui"
+path = "examples/09_ui/main.rs"
 
 [workspace]
 members = ["amethyst_gltf"]

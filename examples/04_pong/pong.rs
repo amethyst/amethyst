@@ -1,12 +1,14 @@
 use {ARENA_HEIGHT, ARENA_WIDTH};
 use {Ball, Paddle, Side};
+use systems::ScoreText;
 use amethyst::assets::Loader;
 use amethyst::core::cgmath::Vector3;
 use amethyst::core::transform::{LocalTransform, Transform};
 use amethyst::ecs::World;
 use amethyst::prelude::*;
 use amethyst::renderer::{Camera, Event, KeyboardInput, Material, MeshHandle, PosTex, Projection,
-                         VirtualKeyCode, WindowEvent, WindowMessages};
+                         ScreenDimensions, VirtualKeyCode, WindowEvent, WindowMessages};
+use amethyst::ui::{TtfFormat, UiResize, UiText, UiTransform};
 
 pub struct Pong;
 
@@ -19,6 +21,7 @@ impl State for Pong {
         initialise_balls(&mut engine.world);
         initialise_camera(&mut engine.world);
         initialise_audio(&mut engine.world);
+        initialise_score(&mut engine.world);
         hide_cursor(&mut engine.world);
     }
 
@@ -142,6 +145,69 @@ fn initialise_balls(world: &mut World) {
         .with(local_transform)
         .with(Transform::default())
         .build();
+}
+
+fn initialise_score(world: &mut World) {
+    let font = world.read_resource::<Loader>().load(
+        "font/square.ttf",
+        TtfFormat,
+        Default::default(),
+        (),
+        &world.read_resource(),
+    );
+    let mut p1_transform = UiTransform::new(
+        "P1".to_string(),
+        0.,
+        0.,
+        1.,
+        55.,
+        50.,
+    );
+    let p1_size_fn = |transform: &mut UiTransform, (width, _height)| {
+        transform.x = (width / 2.) - 100. - transform.width / 2.;
+    };
+    let mut p2_transform = UiTransform::new(
+        "P2".to_string(),
+        0.,
+        0.,
+        1.,
+        55.,
+        50.,
+    );
+    let p2_size_fn = |transform: &mut UiTransform, (width, _height)| {
+        transform.x = (width / 2.) + 100. - transform.width / 2.;
+    };
+    {
+        let dim = world.read_resource::<ScreenDimensions>();
+        p1_size_fn(&mut p1_transform, (dim.width(), dim.height()));
+        p2_size_fn(&mut p2_transform, (dim.width(), dim.height()));
+    }
+    let p1_score = world
+        .create_entity()
+        .with(p1_transform)
+        .with(UiText::new(
+            font.clone(),
+            "0".to_string(),
+            [1.0, 1.0, 1.0, 1.0],
+            50.,
+        ))
+        .with(UiResize(Box::new(p1_size_fn)))
+        .build();
+    let p2_score = world
+        .create_entity()
+        .with(p2_transform)
+        .with(UiText::new(
+            font,
+            "0".to_string(),
+            [1.0, 1.0, 1.0, 1.0],
+            50.,
+        ))
+        .with(UiResize(Box::new(p2_size_fn)))
+        .build();
+    world.add_resource(ScoreText {
+        p1_score,
+        p2_score,
+    });
 }
 
 /// Converts a vector of vertices into a mesh.

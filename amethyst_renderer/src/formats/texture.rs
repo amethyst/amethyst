@@ -163,7 +163,7 @@ impl PngFormat {
 }
 
 impl SimpleFormat<Texture> for PngFormat {
-    const NAME: &'static str = "JPEG";
+    const NAME: &'static str = "PNG";
 
     type Options = TextureMetadata;
 

@@ -147,6 +147,7 @@ where
 
     /// Builds and returns the new texture.
     pub fn build(self, fac: &mut Factory) -> Result<Texture> {
+        use std::mem::size_of;
         use gfx::Factory;
         use gfx::format::Swizzle;
         use gfx::memory::cast_slice;
@@ -159,7 +160,7 @@ where
         let mut data = self.data.as_ref();
 
         if cfg!(feature = "opengl") {
-            let pixel_width = (self.info.format.get_total_bits() / 8) as usize;
+            let pixel_width = (self.info.format.get_total_bits() / 8) as usize / size_of::<T>();
             v_flip_buffer = Vec::with_capacity(data.len());
             let (w, h, _, _) = self.info.kind.get_dimensions();
             let w = w as usize;
