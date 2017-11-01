@@ -22,7 +22,7 @@ extern crate rayon;
 extern crate specs;
 
 pub use asset::{Asset, Format, FormatValue, SimpleFormat};
-pub use cache::Cache;
+//pub use cache::Cache;
 pub use error::{Error, ErrorKind, Result, ResultExt};
 pub use loader::Loader;
 pub use progress::{Completion, Progress, ProgressCounter, Tracker};
@@ -31,7 +31,7 @@ pub use source::{Directory, Source};
 pub use storage::{AssetStorage, Handle, Processor, WeakHandle};
 
 mod asset;
-mod cache;
+//mod cache;
 mod error;
 mod library;
 mod loader;

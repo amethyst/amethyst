@@ -1,3 +1,4 @@
+use std::hash;
 use std::marker::PhantomData;
 use std::sync::{Arc, Weak};
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -47,10 +48,10 @@ impl<A: Asset> AssetStorage<A> {
     }
 
     /// Allocate a new handle.
-    pub(crate) fn allocate(&self) -> Handle<A> {
+    pub(crate) fn allocate(&self) -> HandleAlloc<A> {
         self.unused_handles
             .try_pop()
-            .unwrap_or_else(|| self.allocate_new()).into()
+            .unwrap_or_else(|| self.allocate_new())
     }
 
     fn allocate_new(&self) -> HandleAlloc<A> {
@@ -72,38 +73,45 @@ impl<A: Asset> AssetStorage<A> {
     where
         A: Clone,
     {
-        if let Some(asset) = self.get(handle).map(A::clone) {
-            let h = self.allocate();
-
-            let id = h.id();
-            self.bitset.add(id);
-            self.handles.push(h.clone());
-
-            unsafe {
-                self.assets.insert(id, asset);
-            }
-
-            Some(h)
-        } else {
-            None
-        }
+//        if let Some(asset) = self.get(handle).map(A::clone) {
+//            let h = self.allocate();
+//
+//            let id = h.id();
+//            self.bitset.add(id);
+//            self.handles.push(h.clone());
+//
+//            unsafe {
+//                self.assets.insert(id, asset);
+//            }
+//
+//            Some(h)
+//        } else {
+//            None
+//        }
+        unimplemented!()
     }
 
     /// Get an asset from a given asset handle.
     pub fn get(&self, handle: &Handle<A>) -> Option<&A> {
-        if self.bitset.contains(handle.id()) {
-            Some(unsafe { self.assets.get(handle.id()) })
-        } else {
-            None
+        match handle.inner {
+            HandleInner::Alloc(ref h) => if self.bitset.contains(h.id()) {
+                Some(unsafe { self.assets.get(h.id()) })
+            } else {
+                None
+            },
+            _ => unimplemented!(),
         }
     }
 
     /// Get an asset mutably from a given asset handle.
     pub fn get_mut(&mut self, handle: &Handle<A>) -> Option<&mut A> {
-        if self.bitset.contains(handle.id()) {
-            Some(unsafe { self.assets.get_mut(handle.id()) })
-        } else {
-            None
+        match handle.inner {
+            HandleInner::Alloc(ref h) => if self.bitset.contains(h.id()) {
+                Some(unsafe { self.assets.get_mut(h.id()) })
+            } else {
+                None
+            },
+            _ => unimplemented!(),
         }
     }
 
@@ -174,7 +182,7 @@ impl<A: Asset> AssetStorage<A> {
                         assets.insert(id, asset);
                     }
 
-                    (reload_obj, handle)
+                    (reload_obj, handle.into())
                 }
                 Processed::HotReload {
                     data,
@@ -191,17 +199,24 @@ impl<A: Asset> AssetStorage<A> {
                         Err(e) => {
                             eprintln!("Failed to hot-reload: {}", e);
 
-                            reloads.push((handle.downgrade(), old_reload));
+                            //reloads.push((handle.downgrade(), old_reload));
+                            // TODO
+                            unimplemented!();
 
                             continue;
                         }
                     };
 
-                    let id = handle.id();
-                    assert!(bitset.contains(id));
-                    unsafe {
-                        let old = assets.get_mut(id);
-                        *old = asset;
+                    match handle.inner {
+                        HandleInner::Alloc(ref h) => {
+                            let id = h.id();
+                            assert!(bitset.contains(id));
+                            unsafe {
+                                let old = assets.get_mut(id);
+                                *old = asset;
+                            }
+                        }
+                        _ => unimplemented!(),
                     }
 
                     (reload_obj, handle)
@@ -210,12 +225,18 @@ impl<A: Asset> AssetStorage<A> {
 
             // Add the reload obj if it is `Some`.
             if let Some(reload_obj) = reload_obj {
-                reloads.push((handle.downgrade(), reload_obj));
+                //reloads.push((handle.downgrade(), reload_obj));
+                // TODO
+                unimplemented!();
             }
         }
 
         let mut skip = 0;
-        while let Some(i) = self.handles.iter().skip(skip).position(Handle::is_unique) {
+        while let Some(i) = self.handles
+            .iter()
+            .skip(skip)
+            .position(HandleAlloc::is_unique)
+        {
             skip = i;
             let handle = self.handles.swap_remove(i);
             let id = handle.id();
@@ -226,7 +247,7 @@ impl<A: Asset> AssetStorage<A> {
 
             // Can't reuse old handle here, because otherwise weak handles would still be valid.
             // TODO: maybe just store u32?
-            self.unused_handles.push(Handle {
+            self.unused_handles.push(HandleAlloc {
                 id: Arc::new(id),
                 marker: PhantomData,
             });
@@ -340,25 +361,25 @@ where
 #[derive(Derivative)]
 #[derivative(Clone(bound = ""), Eq(bound = ""), Hash(bound = ""), PartialEq(bound = ""),
              Debug(bound = ""))]
-pub struct Handle<A: ?Sized> {
+pub struct Handle<A> {
     inner: HandleInner<A>,
 }
 
 impl<A> Handle<A> {
-//    /// Return the 32 bit id of this handle.
-//    pub fn id(&self) -> u32 {
-//        *self.id.as_ref()
-//    }
-//
-//    /// Downgrades the handle and creates a `WeakHandle`.
-//    pub fn downgrade(&self) -> WeakHandle<A> {
-//        let id = Arc::downgrade(&self.id);
-//
-//        WeakHandle {
-//            id,
-//            marker: PhantomData,
-//        }
-//    }
+    //    /// Return the 32 bit id of this handle.
+    //    pub fn id(&self) -> u32 {
+    //        *self.id.as_ref()
+    //    }
+    //
+    //    /// Downgrades the handle and creates a `WeakHandle`.
+    //    pub fn downgrade(&self) -> WeakHandle<A> {
+    //        let id = Arc::downgrade(&self.id);
+    //
+    //        WeakHandle {
+    //            id,
+    //            marker: PhantomData,
+    //        }
+    //    }
 }
 
 impl<A> Component for Handle<A>
@@ -371,7 +392,7 @@ where
 impl<A> From<HandleAlloc<A>> for Handle<A> {
     fn from(h: HandleAlloc<A>) -> Self {
         Handle {
-            inner: HandleInner::Alloc(h)
+            inner: HandleInner::Alloc(h),
         }
     }
 }
@@ -379,15 +400,15 @@ impl<A> From<HandleAlloc<A>> for Handle<A> {
 impl<A> From<LibraryHandle<A>> for Handle<A> {
     fn from(h: LibraryHandle<A>) -> Self {
         Handle {
-            inner: HandleInner::Library(h)
+            inner: HandleInner::Library(h),
         }
     }
 }
 
 #[derive(Derivative)]
 #[derivative(Clone(bound = ""), Eq(bound = ""), Hash(bound = ""), PartialEq(bound = ""),
-Debug(bound = ""))]
-struct HandleAlloc<A: ?Sized> {
+             Debug(bound = ""))]
+pub struct HandleAlloc<A> {
     id: Arc<u32>,
     marker: PhantomData<A>,
 }
@@ -415,17 +436,50 @@ impl<A> HandleAlloc<A> {
 }
 
 #[derive(Derivative)]
-#[derivative(Clone(bound = ""), Eq(bound = ""), Hash(bound = ""), PartialEq(bound = ""),
-Debug(bound = ""))]
+#[derivative(Debug(bound = ""))]
 enum HandleInner<A> {
     Alloc(HandleAlloc<A>),
     Library(LibraryHandle<A>),
 }
 
+impl<A> Clone for HandleInner<A> {
+    fn clone(&self) -> Self {
+        match *self {
+            HandleInner::Alloc(ref a) => HandleInner::Alloc(a.clone()),
+            HandleInner::Library(ref a) => HandleInner::Library(a.clone()),
+        }
+    }
+}
+
+impl<A> hash::Hash for HandleInner<A> {
+    fn hash<H: hash::Hasher>(&self, state: &mut H) {
+        match *self {
+            HandleInner::Alloc(ref a) => {
+                state.write_u8(0);
+                hash::Hash::hash(a, state);
+            },
+            HandleInner::Library(ref a) => {
+                state.write_u8(0);
+                hash::Hash::hash(a, state);
+            },
+        }
+    }
+}
+
+impl<A> PartialEq for HandleInner<A> {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (&HandleInner::Alloc(ref a), &HandleInner::Alloc(ref b)) => PartialEq::eq(a, b),
+            (&HandleInner::Library(ref a), &HandleInner::Library(ref b)) => PartialEq::eq(a, b),
+            _ => false,
+        }
+    }
+}
+
 pub(crate) enum Processed<A: Asset> {
     NewAsset {
         data: Result<FormatValue<A>>,
-        handle: Handle<A>,
+        handle: HandleAlloc<A>,
         name: String,
         tracker: Box<Tracker>,
     },
@@ -450,12 +504,15 @@ impl<A> WeakHandle<A> {
     /// Tries to upgrade to a `Handle`.
     #[inline]
     pub fn upgrade(&self) -> Option<Handle<A>> {
-        self.id.upgrade().map(|id| {
-            Handle {
-                id,
-                marker: PhantomData,
-            }
-        })
+        self.id
+            .upgrade()
+            .map(|id| {
+                HandleAlloc {
+                    id,
+                    marker: PhantomData,
+                }
+            })
+            .map(Into::into)
     }
 
     /// Returns `true` if the original handle is dead.
