@@ -26,14 +26,14 @@ const LIGHT_INTENSITY: f32 = 3.0;
 struct Example;
 
 impl State for Example {
-    fn on_start(&mut self, engine: &mut Engine) {
+    fn on_start(&mut self, world: &mut World) {
         // Initialise the scene with an object, a light and a camera.
-        initialise_sphere(&mut engine.world);
-        initialise_lights(&mut engine.world);
-        initialise_camera(&mut engine.world);
+        initialise_sphere(world);
+        initialise_lights(world);
+        initialise_camera(world);
     }
 
-    fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
+    fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
         match event {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::KeyboardInput {

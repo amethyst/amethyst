@@ -32,15 +32,15 @@ struct Example {
 }
 
 impl State for Example {
-    fn on_start(&mut self, engine: &mut Engine) {
+    fn on_start(&mut self, world: &mut World) {
         // Initialise the scene with an object, a light and a camera.
-        self.sphere = Some(initialise_sphere(&mut engine.world));
-        self.animation = Some(initialise_animation(&mut engine.world));
-        initialise_lights(&mut engine.world);
-        initialise_camera(&mut engine.world);
+        self.sphere = Some(initialise_sphere(world));
+        self.animation = Some(initialise_animation(world));
+        initialise_lights(world);
+        initialise_camera(world);
     }
 
-    fn handle_event(&mut self, engine: &mut Engine, event: Event) -> Trans {
+    fn handle_event(&mut self, world: &mut World, event: Event) -> Trans {
         match event {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::KeyboardInput {
@@ -60,7 +60,7 @@ impl State for Example {
                     ..
                 } => {
                     play_animation(
-                        &mut engine.world.write(),
+                        &mut world.write(),
                         self.animation.as_ref().unwrap(),
                         self.sphere.unwrap().clone(),
                         EndControl::Loop(None),

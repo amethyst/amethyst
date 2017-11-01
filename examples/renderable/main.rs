@@ -12,7 +12,6 @@ use amethyst::core::cgmath::{Array, Deg, Euler, Quaternion, Rad, Rotation, Rotat
 use amethyst::core::timing::Time;
 use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::ecs::{Fetch, FetchMut, Join, ReadStorage, System, World, WriteStorage};
-use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, DisplayConfig as DisplayConfig,
                          DrawShaded, ElementState, Event, KeyboardInput, Light, Material,
                          MaterialDefaults, MeshHandle, ObjFormat, Pipeline, PngFormat, PointLight,
@@ -80,10 +79,10 @@ impl<'a> System<'a> for ExampleSystem {
 struct Example;
 
 impl State for Example {
-    fn on_start(&mut self, engine: &mut Engine) {
-        initialise_camera(&mut engine.world);
+    fn on_start(&mut self, world: &mut World) {
+        initialise_camera(world);
 
-        let assets = load_assets(&engine.world);
+        let assets = load_assets(&world);
 
         // Add teapot and lid to scene
         for mesh in vec![assets.lid.clone(), assets.teapot.clone()] {
@@ -91,8 +90,7 @@ impl State for Example {
             trans.rotation = Quaternion::from(Euler::new(Deg(90.0), Deg(-90.0), Deg(0.0))).into();
             trans.translation = Vector3::new(5.0, 5.0, 0.0);
 
-            engine
-                .world
+            world
                 .create_entity()
                 .with(mesh)
                 .with(assets.red.clone())
@@ -106,8 +104,7 @@ impl State for Example {
         trans.translation = Vector3::new(5.0, -5.0, 2.0);
         trans.scale = [2.0; 3].into();
 
-        engine
-            .world
+        world
             .create_entity()
             .with(assets.cube.clone())
             .with(assets.logo.clone())
@@ -120,8 +117,7 @@ impl State for Example {
         trans.translation = Vector3::new(-5.0, 5.0, 0.0);
         trans.scale = [2.0; 3].into();
 
-        engine
-            .world
+        world
             .create_entity()
             .with(assets.cone.clone())
             .with(assets.white.clone())
@@ -132,8 +128,7 @@ impl State for Example {
         // Add custom cube object to scene
         let mut trans = LocalTransform::default();
         trans.translation = Vector3::new(-5.0, -5.0, 1.0);
-        engine
-            .world
+        world
             .create_entity()
             .with(assets.cube.clone())
             .with(assets.red.clone())
@@ -145,8 +140,7 @@ impl State for Example {
         let mut trans = LocalTransform::default();
         trans.scale = Vector3::from_value(10.);
 
-        engine
-            .world
+        world
             .create_entity()
             .with(assets.rectangle.clone())
             .with(assets.white.clone())
@@ -161,22 +155,21 @@ impl State for Example {
         }.into();
 
         // Add lights to scene
-        engine.world.create_entity().with(light).build();
+        world.create_entity().with(light).build();
 
         let light: Light = DirectionalLight {
             color: [0.2; 4].into(),
             direction: [-1.0; 3],
         }.into();
 
-        engine.world.create_entity().with(light).build();
+        world.create_entity().with(light).build();
 
         {
-            engine
-                .world
+            world
                 .add_resource(AmbientColor(Rgba::from([0.01; 3])));
         }
 
-        engine.world.add_resource::<DemoState>(DemoState {
+        world.add_resource::<DemoState>(DemoState {
             light_angle: 0.0,
             light_color: [1.0; 4],
             ambient_light: true,
@@ -187,8 +180,8 @@ impl State for Example {
         });
     }
 
-    fn handle_event(&mut self, engine: &mut Engine, event: Event) -> Trans {
-        let w = &mut engine.world;
+    fn handle_event(&mut self, world: &mut World, event: Event) -> Trans {
+        let w = world;
         // Exit if user hits Escape or closes the window
         let mut state = w.write_resource::<DemoState>();
 

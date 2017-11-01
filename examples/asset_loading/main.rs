@@ -11,7 +11,6 @@ use amethyst::core::cgmath::{Array, Vector3};
 use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::ecs::World;
 use amethyst::input::InputBundle;
-use amethyst::prelude::*;
 use amethyst::renderer::{Camera, DisplayConfig as DisplayConfig, DrawShaded, Event, KeyboardInput,
                          Light, Material, MaterialDefaults, Mesh, MeshData, Pipeline, PointLight,
                          PosNormTex, Projection, RenderBundle, RenderSystem, Rgba, Stage,
@@ -64,19 +63,19 @@ impl SimpleFormat<Mesh> for Custom {
 struct AssetsExample;
 
 impl State for AssetsExample {
-    fn on_start(&mut self, engine: &mut Engine) {
-        engine.world.add_resource(0usize);
+    fn on_start(&mut self, world: &mut World) {
+        world.add_resource(0usize);
 
-        initialise_camera(&mut engine.world);
-        initialise_lights(&mut engine.world);
+        initialise_camera(world);
+        initialise_lights(world);
 
         // Add custom cube object to scene
         let (mesh, mtl) = {
-            let mat_defaults = engine.world.read_resource::<MaterialDefaults>();
-            let loader = engine.world.read_resource::<Loader>();
+            let mat_defaults = world.read_resource::<MaterialDefaults>();
+            let loader = world.read_resource::<Loader>();
 
-            let meshes = &engine.world.read_resource();
-            let textures = &engine.world.read_resource();
+            let meshes = &world.read_resource();
+            let textures = &world.read_resource();
 
             let mesh = loader.load("mesh/cuboid.custom", Custom, (), (), meshes);
             let albedo = loader.load_from_data([0.0, 0.0, 1.0, 0.0].into(), (), textures);
@@ -91,8 +90,7 @@ impl State for AssetsExample {
         let mut trans = LocalTransform::default();
         trans.translation = Vector3::new(-5.0, 0.0, 0.0);
         trans.scale = Vector3::from_value(2.);
-        engine
-            .world
+        world
             .create_entity()
             .with(mesh)
             .with(mtl)
@@ -101,7 +99,7 @@ impl State for AssetsExample {
             .build();
     }
 
-    fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
+    fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
         match event {
             Event::WindowEvent { event, .. } => {
                 match event {

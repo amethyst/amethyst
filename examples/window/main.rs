@@ -9,7 +9,7 @@ use amethyst::renderer::{DisplayConfig, DrawFlat, Event, KeyboardInput, Pipeline
 struct Example;
 
 impl State for Example {
-    fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
+    fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
         match event {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::KeyboardInput {
