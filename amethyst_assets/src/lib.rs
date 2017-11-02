@@ -28,12 +28,11 @@ pub use loader::Loader;
 pub use progress::{Completion, Progress, ProgressCounter, Tracker};
 pub use reload::{HotReloadBundle, HotReloadStrategy, HotReloadSystem, Reload, SingleFile};
 pub use source::{Directory, Source};
-pub use storage::{AssetStorage, Handle, Processor, WeakHandle};
+pub use storage::{AssetStorage, Handle, Processor, WeakAllocHandle};
 
 mod asset;
 //mod cache;
 mod error;
-mod library;
 mod loader;
 mod progress;
 mod reload;

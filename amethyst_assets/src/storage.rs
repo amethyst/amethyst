@@ -6,36 +6,92 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use amethyst_core::Time;
 use crossbeam::sync::MsQueue;
 use hibitset::BitSet;
+use fnv::FnvHashMap;
 use rayon::ThreadPool;
 use specs::{Component, Fetch, FetchMut, System, UnprotectedStorage, VecStorage};
 
 use asset::{Asset, FormatValue};
 use error::{ErrorKind, Result, ResultExt};
-use library::LibraryHandle;
 use progress::Tracker;
 use reload::{HotReloadStrategy, Reload};
 
 /// An `Allocator`, holding a counter for producing unique IDs.
 #[derive(Debug, Default)]
 pub struct Allocator {
-    store_count: AtomicUsize,
+    count: AtomicUsize,
 }
 
 impl Allocator {
     /// Produces a new id.
     pub fn next_id(&self) -> usize {
-        self.store_count.fetch_add(1, Ordering::Relaxed)
+        self.count.fetch_add(1, Ordering::Relaxed)
     }
 }
 
+#[derive(Derivative)]
+#[derivative(Default(bound = ""))]
+struct AllocStorage<A> {
+    assets: VecStorage<A>,
+    bitset: BitSet,
+}
+
+impl<A> AllocStorage<A> {
+    fn get(&self, h: &HandleAlloc<A>) -> Option<&A> {
+        if self.bitset.contains(h.id()) {
+            Some(unsafe { self.assets.get(h.id()) })
+        } else {
+            None
+        }
+    }
+
+    fn get_mut(&mut self, h: &HandleAlloc<A>) -> Option<&mut A> {
+        if self.bitset.contains(h.id()) {
+            Some(unsafe { self.assets.get_mut(h.id()) })
+        } else {
+            None
+        }
+    }
+
+    fn insert(&mut self, h: &HandleAlloc<A>, val: A) {
+        let id = h.id();
+        // NOTE: the loader has to ensure that a handle will be used
+        // together with a `Data` only once.
+        debug_assert!(
+            !self.bitset.contains(id),
+            "Insertion has already been made!"
+        );
+        unsafe {
+            self.assets.insert(id, val);
+        }
+        self.bitset.add(id);
+    }
+
+    fn remove(&mut self, h: &HandleAlloc<A>) -> A {
+        let id = h.id();
+        debug_assert!(
+            self.bitset.contains(id),
+            "Can't remove asset which wasn't inserted"
+        );
+        self.bitset.remove(id);
+
+        unsafe { self.assets.remove(id) }
+    }
+}
+
+impl<A> Drop for AllocStorage<A> {
+    fn drop(&mut self) {
+        let bitset = &self.bitset;
+        unsafe { self.assets.clean(|id| bitset.contains(id)) }
+    }
+}
 
 /// An asset storage, storing the actual assets and allocating
 /// handles to them.
 pub struct AssetStorage<A: Asset> {
-    assets: VecStorage<A>,
-    bitset: BitSet,
+    alloc_storage: AllocStorage<A>,
     handles: Vec<HandleAlloc<A>>,
     handle_alloc: Allocator,
+    library_storage: LibraryStorage<A>,
     pub(crate) processed: Arc<MsQueue<Processed<A>>>,
     reloads: Vec<(WeakHandle<A>, Box<Reload<A>>)>,
     unused_handles: MsQueue<HandleAlloc<A>>,
@@ -73,45 +129,43 @@ impl<A: Asset> AssetStorage<A> {
     where
         A: Clone,
     {
-//        if let Some(asset) = self.get(handle).map(A::clone) {
-//            let h = self.allocate();
-//
-//            let id = h.id();
-//            self.bitset.add(id);
-//            self.handles.push(h.clone());
-//
-//            unsafe {
-//                self.assets.insert(id, asset);
-//            }
-//
-//            Some(h)
-//        } else {
-//            None
-//        }
+        //        if let Some(asset) = self.get(handle).map(A::clone) {
+        //            let h = self.allocate();
+        //
+        //            let id = h.id();
+        //            self.bitset.add(id);
+        //            self.handles.push(h.clone());
+        //
+        //            unsafe {
+        //                self.assets.insert(id, asset);
+        //            }
+        //
+        //            Some(h)
+        //        } else {
+        //            None
+        //        }
         unimplemented!()
     }
 
     /// Get an asset from a given asset handle.
     pub fn get(&self, handle: &Handle<A>) -> Option<&A> {
         match handle.inner {
-            HandleInner::Alloc(ref h) => if self.bitset.contains(h.id()) {
-                Some(unsafe { self.assets.get(h.id()) })
-            } else {
-                None
-            },
-            _ => unimplemented!(),
+            HandleInner::Alloc(ref h) => self.alloc_storage.get(h),
+            HandleInner::Library(ref h) => self.library_storage
+                .get(h)
+                .and_then(move |h| self.alloc_storage.get(h)),
         }
     }
 
     /// Get an asset mutably from a given asset handle.
     pub fn get_mut(&mut self, handle: &Handle<A>) -> Option<&mut A> {
+        let alloc = &mut self.alloc_storage;
+
         match handle.inner {
-            HandleInner::Alloc(ref h) => if self.bitset.contains(h.id()) {
-                Some(unsafe { self.assets.get_mut(h.id()) })
-            } else {
-                None
-            },
-            _ => unimplemented!(),
+            HandleInner::Alloc(ref h) => alloc.get_mut(h),
+            HandleInner::Library(ref h) => self.library_storage
+                .get(h)
+                .and_then(move |h| alloc.get_mut(h)),
         }
     }
 
@@ -142,8 +196,7 @@ impl<A: Asset> AssetStorage<A> {
         F: FnMut(A::Data) -> Result<A>,
     {
         while let Some(processed) = self.processed.try_pop() {
-            let assets = &mut self.assets;
-            let bitset = &mut self.bitset;
+            let alloc = &mut self.alloc_storage;
             let handles = &mut self.handles;
             let reloads = &mut self.reloads;
 
@@ -172,15 +225,8 @@ impl<A: Asset> AssetStorage<A> {
                         }
                     };
 
-                    let id = handle.id();
-                    bitset.add(id);
+                    alloc.insert(&handle, asset);
                     handles.push(handle.clone());
-
-                    // NOTE: the loader has to ensure that a handle will be used
-                    // together with a `Data` only once.
-                    unsafe {
-                        assets.insert(id, asset);
-                    }
 
                     (reload_obj, handle.into())
                 }
@@ -199,9 +245,7 @@ impl<A: Asset> AssetStorage<A> {
                         Err(e) => {
                             eprintln!("Failed to hot-reload: {}", e);
 
-                            //reloads.push((handle.downgrade(), old_reload));
-                            // TODO
-                            unimplemented!();
+                            reloads.push((handle.downgrade(), old_reload));
 
                             continue;
                         }
@@ -209,12 +253,7 @@ impl<A: Asset> AssetStorage<A> {
 
                     match handle.inner {
                         HandleInner::Alloc(ref h) => {
-                            let id = h.id();
-                            assert!(bitset.contains(id));
-                            unsafe {
-                                let old = assets.get_mut(id);
-                                *old = asset;
-                            }
+                            *alloc.get_mut(h).unwrap() = asset;
                         }
                         _ => unimplemented!(),
                     }
@@ -225,9 +264,7 @@ impl<A: Asset> AssetStorage<A> {
 
             // Add the reload obj if it is `Some`.
             if let Some(reload_obj) = reload_obj {
-                //reloads.push((handle.downgrade(), reload_obj));
-                // TODO
-                unimplemented!();
+                reloads.push((handle.downgrade(), reload_obj));
             }
         }
 
@@ -239,16 +276,12 @@ impl<A: Asset> AssetStorage<A> {
         {
             skip = i;
             let handle = self.handles.swap_remove(i);
-            let id = handle.id();
-            unsafe {
-                drop_fn(self.assets.remove(id));
-            }
-            self.bitset.remove(id);
+            drop_fn(self.alloc_storage.remove(&handle));
 
             // Can't reuse old handle here, because otherwise weak handles would still be valid.
             // TODO: maybe just store u32?
             self.unused_handles.push(HandleAlloc {
-                id: Arc::new(id),
+                id: Arc::new(handle.id()),
                 marker: PhantomData,
             });
         }
@@ -293,21 +326,15 @@ impl<A: Asset> AssetStorage<A> {
 impl<A: Asset> Default for AssetStorage<A> {
     fn default() -> Self {
         AssetStorage {
-            assets: Default::default(),
-            bitset: Default::default(),
+            alloc_storage: Default::default(),
             handles: Default::default(),
             handle_alloc: Default::default(),
+            library_alloc: Default::default(),
+            library_storage: Default::default(),
             processed: Arc::new(MsQueue::new()),
             reloads: Default::default(),
             unused_handles: MsQueue::new(),
         }
-    }
-}
-
-impl<A: Asset> Drop for AssetStorage<A> {
-    fn drop(&mut self) {
-        let bitset = &self.bitset;
-        unsafe { self.assets.clean(|id| bitset.contains(id)) }
     }
 }
 
@@ -366,20 +393,13 @@ pub struct Handle<A> {
 }
 
 impl<A> Handle<A> {
-    //    /// Return the 32 bit id of this handle.
-    //    pub fn id(&self) -> u32 {
-    //        *self.id.as_ref()
-    //    }
-    //
-    //    /// Downgrades the handle and creates a `WeakHandle`.
-    //    pub fn downgrade(&self) -> WeakHandle<A> {
-    //        let id = Arc::downgrade(&self.id);
-    //
-    //        WeakHandle {
-    //            id,
-    //            marker: PhantomData,
-    //        }
-    //    }
+    /// Downgrades the handle and creates a `WeakHandle`.
+    pub fn downgrade(&self) -> WeakHandle<A> {
+        match self.inner {
+            HandleInner::Alloc(ref a) => a.downgrade().into(),
+            HandleInner::Library(ref a) => a.downgrade().into(),
+        }
+    }
 }
 
 impl<A> Component for Handle<A>
@@ -420,10 +440,10 @@ impl<A> HandleAlloc<A> {
     }
 
     /// Downgrades the handle and creates a `WeakHandle`.
-    pub fn downgrade(&self) -> WeakHandle<A> {
+    pub fn downgrade(&self) -> WeakAllocHandle<A> {
         let id = Arc::downgrade(&self.id);
 
-        WeakHandle {
+        WeakAllocHandle {
             id,
             marker: PhantomData,
         }
@@ -457,11 +477,11 @@ impl<A> hash::Hash for HandleInner<A> {
             HandleInner::Alloc(ref a) => {
                 state.write_u8(0);
                 hash::Hash::hash(a, state);
-            },
+            }
             HandleInner::Library(ref a) => {
                 state.write_u8(0);
                 hash::Hash::hash(a, state);
-            },
+            }
         }
     }
 }
@@ -494,13 +514,13 @@ pub(crate) enum Processed<A: Asset> {
 /// A weak handle, which is useful if you don't directly need the asset
 /// like in caches. This way, the asset can still get dropped (if you want that).
 #[derive(Derivative)]
-#[derivative(Clone(bound = ""))]
-pub struct WeakHandle<A> {
+#[derivative(Clone(bound = ""), Debug(bound = ""))]
+pub struct WeakAllocHandle<A> {
     id: Weak<u32>,
     marker: PhantomData<A>,
 }
 
-impl<A> WeakHandle<A> {
+impl<A> WeakAllocHandle<A> {
     /// Tries to upgrade to a `Handle`.
     #[inline]
     pub fn upgrade(&self) -> Option<Handle<A>> {
@@ -514,10 +534,126 @@ impl<A> WeakHandle<A> {
             })
             .map(Into::into)
     }
+}
+
+pub struct WeakHandle<A> {
+    inner: WeakInner<A>,
+}
+
+impl<A> WeakHandle<A> {
+    pub fn upgrade(&self) -> Option<Handle<A>> {
+        match self.inner {
+            WeakInner::Alloc(ref a) => a.upgrade().map(Into::into),
+            WeakInner::Library(ref a) => a.upgrade().map(Into::into),
+        }
+    }
 
     /// Returns `true` if the original handle is dead.
     #[inline]
     pub fn is_dead(&self) -> bool {
         self.upgrade().is_none()
+    }
+}
+
+impl<A> From<WeakAllocHandle<A>> for WeakHandle<A> {
+    fn from(h: WeakAllocHandle<A>) -> Self {
+        WeakHandle {
+            inner: WeakInner::Alloc(h),
+        }
+    }
+}
+
+impl<A> From<WeakLibraryHandle<A>> for WeakHandle<A> {
+    fn from(h: WeakLibraryHandle<A>) -> Self {
+        WeakHandle {
+            inner: WeakInner::Library(h),
+        }
+    }
+}
+
+#[derive(Derivative)]
+#[derivative(Clone(bound = ""), Debug(bound = ""))]
+enum WeakInner<A> {
+    Alloc(WeakAllocHandle<A>),
+    Library(WeakLibraryHandle<A>),
+}
+
+struct Library {
+    id: Arc<u32>,
+}
+
+impl Library {
+    pub fn handle<A, S>(s: S) -> Handle<A> {
+        unimplemented!()
+    }
+}
+
+pub struct LibraryAllocator {
+    alloc: Allocator,
+}
+
+#[derive(Derivative)]
+#[derivative(Default(bound = ""))]
+pub struct LibraryData<A> {
+    // TODO: reconsider `String`
+    map: FnvHashMap<String, HandleAlloc<A>>,
+}
+
+#[derive(Derivative)]
+#[derivative(Clone(bound = ""), Eq(bound = ""), Hash(bound = ""), PartialEq(bound = ""),
+Debug(bound = ""))]
+pub struct LibraryHandle<A> {
+    id: Arc<u32>,
+    key: String,
+    marker: PhantomData<A>,
+}
+
+impl<A> LibraryHandle<A> {
+    /// Downgrades the library handle.
+    pub fn downgrade(&self) -> WeakLibraryHandle<A> {
+        WeakLibraryHandle {
+            id: Arc::downgrade(&self.id),
+            key: self.key.clone(),
+            marker: PhantomData,
+        }
+    }
+}
+
+#[derive(Derivative)]
+#[derivative(Clone(bound = ""), Debug(bound = ""))]
+pub struct WeakLibraryHandle<A> {
+    id: Weak<u32>,
+    key: String,
+    marker: PhantomData<A>,
+}
+
+impl<A> WeakLibraryHandle<A> {
+    pub fn upgrade(&self) -> Option<LibraryHandle<A>> {
+        self.id.upgrade().map(|id| {
+            LibraryHandle {
+                id,
+                key: self.key.clone(),
+                marker: PhantomData,
+            }
+        })
+    }
+}
+
+#[derive(Derivative)]
+#[derivative(Default(bound = ""))]
+pub struct LibraryStorage<A> {
+    bitset: BitSet,
+    libs: VecStorage<LibraryData<A>>,
+}
+
+impl<A> LibraryStorage<A> {
+    pub fn get(&self, h: &LibraryHandle<A>) -> Option<&HandleAlloc<A>> {
+        let id = *h.id.as_ref();
+
+        if self.bitset.contains(id) {
+            unsafe { self.libs.get(id).map.get(&h.key) }
+        } else {
+            None
+        }
     }
 }

@@ -28,6 +28,6 @@ pub use self::bundle::UiBundle;
 pub use self::format::{FontAsset, FontHandle, OtfFormat, TtfFormat};
 pub use self::image::UiImage;
 pub use self::pass::DrawUi;
-pub use self::resize::{UiResize, ResizeSystem};
+pub use self::resize::{ResizeSystem, UiResize};
 pub use self::text::{UiText, UiTextRenderer};
 pub use self::transform::UiTransform;
