@@ -29,7 +29,7 @@ impl State for Example {
 
 fn run() -> Result<(), amethyst::Error> {
     let path = format!(
-        "{}/examples/01_window/resources/display_config.ron",
+        "{}/examples/window/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
     );
     let config = DisplayConfig::load(&path);

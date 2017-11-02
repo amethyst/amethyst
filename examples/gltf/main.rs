@@ -138,7 +138,7 @@ impl State for Example {
 
 fn run() -> Result<(), amethyst::Error> {
     let path = format!(
-        "{}/examples/08_gltf/resources/display_config.ron",
+        "{}/examples/gltf/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
     );
 

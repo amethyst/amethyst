@@ -49,47 +49,47 @@ vergen = "0.1"
 
 [[example]]
 name = "hello_world"
-path = "examples/00_hello_world/main.rs"
+path = "examples/hello_world/main.rs"
 
 [[example]]
 name = "window"
-path = "examples/01_window/main.rs"
+path = "examples/window/main.rs"
 
 [[example]]
 name = "sphere"
-path = "examples/02_sphere/main.rs"
+path = "examples/sphere/main.rs"
 
 [[example]]
 name = "renderable"
-path = "examples/03_renderable/main.rs"
+path = "examples/renderable/main.rs"
 
 [[example]]
 name = "pong"
-path = "examples/04_pong/main.rs"
+path = "examples/pong/main.rs"
 
 [[example]]
-name = "assets"
-path = "examples/05_assets/main.rs"
+name = "asset_loading"
+path = "examples/asset_loading/main.rs"
 
 [[example]]
 name = "material"
-path = "examples/06_material/main.rs"
+path = "examples/material/main.rs"
 
 [[example]]
 name = "separate_sphere"
-path = "examples/07_separate_sphere/main.rs"
+path = "examples/separate_sphere/main.rs"
 
 [[example]]
 name = "gltf"
-path = "examples/08_gltf/main.rs"
+path = "examples/gltf/main.rs"
 
 [[example]]
 name = "ui"
-path = "examples/09_ui/main.rs"
+path = "examples/ui/main.rs"
 
 [[example]]
 name = "animation"
-path = "examples/10_animation/main.rs"
+path = "examples/animation/main.rs"
 
 [workspace]
 members = ["amethyst_animation", "amethyst_gltf"]

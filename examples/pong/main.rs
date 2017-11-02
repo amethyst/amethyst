@@ -53,13 +53,13 @@ fn run() -> Result<()> {
     use pong::Pong;
 
     let display_config_path = format!(
-        "{}/examples/04_pong/resources/display.ron",
+        "{}/examples/pong/resources/display.ron",
         env!("CARGO_MANIFEST_DIR")
     );
     let display_config = DisplayConfig::load(display_config_path);
 
     let key_bindings_path = format!(
-        "{}/examples/04_pong/resources/input.ron",
+        "{}/examples/pong/resources/input.ron",
         env!("CARGO_MANIFEST_DIR")
     );
 
