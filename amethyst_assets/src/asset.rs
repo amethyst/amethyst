@@ -69,6 +69,24 @@ impl<A: Asset> FormatValue<A> {
     }
 }
 
+pub trait LibraryFormat {
+    /// A unique identifier for this format.
+    const NAME: &'static str;
+    /// The storages required for this format.
+    type Storages: Send + 'static;
+    /// Options specific to the format, which are passed to `import`.
+    type Options: Send + 'static;
+
+    /// Imports the library.
+    fn import(
+        &self,
+        name: String,
+        source: Arc<Source>,
+        options: Self::Options,
+        storages: Self::Storages,
+    ) -> Result<()>;
+}
+
 /// This is a simplified version of `Format`, which doesn't give you as much freedom,
 /// but in return is simpler to implement.
 /// All `SimpleFormat` types automatically implement `Format`.

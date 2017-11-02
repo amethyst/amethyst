@@ -147,6 +147,10 @@ impl<A: Asset> AssetStorage<A> {
         unimplemented!()
     }
 
+    pub fn desc_storage(&self) -> DescStorage<A> {
+        unimplemented!()
+    }
+
     /// Get an asset from a given asset handle.
     pub fn get(&self, handle: &Handle<A>) -> Option<&A> {
         match handle.inner {
@@ -329,13 +333,16 @@ impl<A: Asset> Default for AssetStorage<A> {
             alloc_storage: Default::default(),
             handles: Default::default(),
             handle_alloc: Default::default(),
-            library_alloc: Default::default(),
             library_storage: Default::default(),
             processed: Arc::new(MsQueue::new()),
             reloads: Default::default(),
             unused_handles: MsQueue::new(),
         }
     }
+}
+
+pub struct DescStorage<A> {
+    marker: PhantomData<A>,
 }
 
 /// A default implementation for an asset processing system
@@ -583,8 +590,16 @@ struct Library {
 }
 
 impl Library {
-    pub fn handle<A, S>(s: S) -> Handle<A> {
-        unimplemented!()
+    pub fn handle<A, S>(&mut self, s: S) -> Handle<A>
+    where
+        A: Asset,
+        S: Into<String>,
+    {
+        LibraryHandle {
+            id: self.id.clone(),
+            key: s.into(),
+            marker: PhantomData,
+        }.into()
     }
 }
 

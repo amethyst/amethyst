@@ -38,3 +38,4 @@ mod progress;
 mod reload;
 mod source;
 mod storage;
+mod storages;
