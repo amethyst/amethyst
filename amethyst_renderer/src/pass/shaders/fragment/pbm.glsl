@@ -17,7 +17,7 @@ struct PointLight {
 };
 
 layout (std140) uniform PointLights {
-    PointLight plight[512];
+    PointLight plight[128];
 };
 
 struct DirectionalLight {
