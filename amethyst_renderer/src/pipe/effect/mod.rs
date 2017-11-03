@@ -13,7 +13,7 @@ use gfx::preset::depth::{LESS_EQUAL_TEST, LESS_EQUAL_WRITE};
 use gfx::pso::buffer::{ElemStride, InstanceRate};
 use gfx::shade::{ProgramError, ToUniform};
 use gfx::shade::core::UniformValue;
-use gfx::state::{Blend, ColorMask, Rasterizer, Stencil};
+use gfx::state::{Blend, ColorMask, Comparison, Depth, Rasterizer, Stencil};
 use gfx::traits::Pod;
 
 use self::pso::{Data, Init, Meta};
@@ -225,6 +225,15 @@ impl<'a> EffectBuilder<'a> {
                 Stencil::default(),
             ));
         }
+        // OSX doesn't seem to work without a depth test, so here's a workaround.
+        if cfg!(target_os = "macos") && depth.is_none() {
+            self.init.out_depth = Some((Depth {
+                    fun: Comparison::Always,
+                    write: true
+                },
+                Stencil::default()
+            ));
+        }
         self.init.out_colors.push(name);
         self
     }
@@ -246,6 +255,15 @@ impl<'a> EffectBuilder<'a> {
                     DepthMode::LessEqualWrite => LESS_EQUAL_WRITE,
                 },
                 Stencil::default(),
+            ));
+        }
+        // OSX doesn't seem to work without a depth test, so here's a workaround.
+        if cfg!(target_os = "macos") && depth.is_none() {
+            self.init.out_depth = Some((Depth {
+                    fun: Comparison::Always,
+                    write: true
+                },
+                Stencil::default()
             ));
         }
         self.init.out_blends.push((name, mask, blend));
