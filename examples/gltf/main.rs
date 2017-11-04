@@ -21,10 +21,10 @@ struct Scene {
 }
 
 impl State for Example {
-    fn on_start(&mut self, engine: &mut Engine) {
+    fn on_start(&mut self, world: &mut World) {
         let gltf_scene = load_gltf_mesh(
-            engine,
-            &*engine.world.read_resource(),
+            &world,
+            &*world.read_resource(),
             "mesh/v2-locrotscale-cube-embedded-buffers.gltf",
             GltfSceneOptions {
                 generate_tex_coords: Some((0.1, 0.1)),
@@ -32,22 +32,20 @@ impl State for Example {
             },
         );
 
-        let entity = engine
-            .world
+        let entity = world
             .create_entity()
             .with(gltf_scene)
             .with(LocalTransform::default())
             .with(Transform::default())
             .build();
 
-        engine.world.add_resource(Scene {
+        world.add_resource(Scene {
             entity,
             animation_index: 0,
         });
 
         println!("Create lights");
-        engine
-            .world
+        world
             .create_entity()
             .with(Light::from(PointLight {
                 center: [6.0, 6.0, -6.0].into(),
@@ -57,8 +55,7 @@ impl State for Example {
             }))
             .build();
 
-        engine
-            .world
+        world
             .create_entity()
             .with(Light::from(PointLight {
                 center: [0.0, 4.0, 4.0].into(),
@@ -75,8 +72,7 @@ impl State for Example {
         let camera_orientation =
             Quaternion::from_angle_y(Deg(-45.)) * Quaternion::from_angle_x(Deg(-35.));
         camera_transform.rotation = camera_orientation.into();
-        engine
-            .world
+        world
             .create_entity()
             .with(Camera::from(
                 Projection::perspective(1024. / 768., Deg(60.)),
@@ -85,12 +81,10 @@ impl State for Example {
             .with(camera_transform)
             .build();
 
-        engine
-            .world
-            .add_resource(AmbientColor(Rgba(0.2, 0.2, 0.2, 0.2)));
+        world.add_resource(AmbientColor(Rgba(0.2, 0.2, 0.2, 0.2)));
     }
 
-    fn handle_event(&mut self, engine: &mut Engine, event: Event) -> Trans {
+    fn handle_event(&mut self, world: &mut World, event: Event) -> Trans {
         match event {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::KeyboardInput {
@@ -111,8 +105,8 @@ impl State for Example {
                         },
                     ..
                 } => {
-                    let mut scene = engine.world.write_resource::<Scene>();
-                    let sets = engine.world.read::<AnimationSet>();
+                    let mut scene = world.write_resource::<Scene>();
+                    let sets = world.read::<AnimationSet>();
                     let animations = sets.get(scene.entity).unwrap();
                     if animations.animations.len() > 0 {
                         if scene.animation_index >= animations.animations.len() {
@@ -121,7 +115,7 @@ impl State for Example {
                         let animation = &animations.animations[scene.animation_index];
                         scene.animation_index += 1;
                         toggle_animation(
-                            &mut engine.world.write(),
+                            &mut world.write(),
                             animation,
                             scene.entity,
                             EndControl::Normal,
@@ -172,7 +166,7 @@ fn main() {
 }
 
 fn load_gltf_mesh(
-    engine: &Engine,
+    world: &World,
     loader: &Loader,
     name: &str,
     options: GltfSceneOptions,
@@ -182,6 +176,6 @@ fn load_gltf_mesh(
         GltfSceneFormat,
         options,
         (),
-        &engine.world.read_resource(),
+        &world.read_resource(),
     )
 }

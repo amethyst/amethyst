@@ -13,19 +13,19 @@ use amethyst::ui::{TtfFormat, UiResize, UiText, UiTransform};
 pub struct Pong;
 
 impl State for Pong {
-    fn on_start(&mut self, engine: &mut Engine) {
+    fn on_start(&mut self, world: &mut World) {
         use audio::initialise_audio;
 
         // Setup our game.
-        initialise_paddles(&mut engine.world);
-        initialise_balls(&mut engine.world);
-        initialise_camera(&mut engine.world);
-        initialise_audio(&mut engine.world);
-        initialise_score(&mut engine.world);
-        hide_cursor(&mut engine.world);
+        initialise_paddles(world);
+        initialise_balls(world);
+        initialise_camera(world);
+        initialise_audio(world);
+        initialise_score(world);
+        hide_cursor(world);
     }
 
-    fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
+    fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
         match event {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::KeyboardInput {

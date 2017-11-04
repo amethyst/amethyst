@@ -20,11 +20,11 @@
 //! struct GameState;
 //!
 //! impl State for GameState {
-//!     fn on_start(&mut self, _: &mut Engine) {
+//!     fn on_start(&mut self, _: &mut World) {
 //!         println!("Starting game!");
 //!     }
 //!
-//!     fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
+//!     fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
 //!         match event {
 //!             Event::WindowEvent { event, .. } => match event {
 //!                 WindowEvent::KeyboardInput {
@@ -37,7 +37,7 @@
 //!         }
 //!     }
 //!
-//!     fn update(&mut self, _: &mut Engine) -> Trans {
+//!     fn update(&mut self, _: &mut World) -> Trans {
 //!         println!("Computing some more whoop-ass...");
 //!         Trans::Quit
 //!     }
@@ -74,14 +74,12 @@ extern crate derivative;
 extern crate rayon;
 
 pub use self::app::{Application, ApplicationBuilder};
-pub use self::engine::Engine;
 pub use self::error::{Error, Result};
 pub use self::state::{State, StateMachine, Trans};
 
 pub mod prelude;
 
 mod app;
-mod engine;
 mod error;
 mod state;
 mod vergen;

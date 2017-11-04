@@ -14,17 +14,17 @@ use genmesh::generators::SphereUV;
 struct Example;
 
 impl State for Example {
-    fn on_start(&mut self, engine: &mut Engine) {
-        let mat_defaults = engine.world.read_resource::<MaterialDefaults>().0.clone();
+    fn on_start(&mut self, world: &mut World) {
+        let mat_defaults = world.read_resource::<MaterialDefaults>().0.clone();
         let verts = gen_sphere(32, 32).into();
         let albedo = [1.0, 1.0, 1.0, 1.0].into();
 
         println!("Load mesh");
         let (mesh, albedo) = {
-            let loader = engine.world.read_resource::<Loader>();
+            let loader = world.read_resource::<Loader>();
 
-            let meshes = &engine.world.read_resource();
-            let textures = &engine.world.read_resource();
+            let meshes = &world.read_resource();
+            let textures = &world.read_resource();
             let mesh: MeshHandle = loader.load_from_data(verts, (), meshes);
             let albedo = loader.load_from_data(albedo, (), textures);
 
@@ -44,8 +44,8 @@ impl State for Example {
                 let roughness = [roughness, roughness, roughness, 1.0].into();
 
                 let (metallic, roughness) = {
-                    let loader = engine.world.read_resource::<Loader>();
-                    let textures = &engine.world.read_resource();
+                    let loader = world.read_resource::<Loader>();
+                    let textures = &world.read_resource();
 
                     let metallic = loader.load_from_data(metallic, (), textures);
                     let roughness = loader.load_from_data(roughness, (), textures);
@@ -60,8 +60,7 @@ impl State for Example {
                     ..mat_defaults.clone()
                 };
 
-                engine
-                    .world
+                world
                     .create_entity()
                     .with(Transform(pos.into()))
                     .with(mesh.clone())
@@ -85,23 +84,22 @@ impl State for Example {
             ..PointLight::default()
         }.into();
 
-        engine.world.create_entity().with(light1).build();
+        world.create_entity().with(light1).build();
 
-        engine.world.create_entity().with(light2).build();
+        world.create_entity().with(light2).build();
 
         println!("Put camera");
 
         let transform =
             Matrix4::from_translation([0.0, 0.0, -12.0].into()) * Matrix4::from_angle_y(Deg(180.));
-        engine
-            .world
+        world
             .create_entity()
             .with(Camera::from(Projection::perspective(1.3, Deg(60.0))))
             .with(Transform(transform.into()))
             .build();
     }
 
-    fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
+    fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
         match event {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::KeyboardInput {

@@ -28,20 +28,20 @@ const LIGHT_INTENSITY: f32 = 3.0;
 struct Example;
 
 impl State for Example {
-    fn on_start(&mut self, engine: &mut Engine) {
+    fn on_start(&mut self, world: &mut World) {
         // Initialise the scene with an object, a light and a camera.
-        initialise_sphere(&mut engine.world);
-        initialise_lights(&mut engine.world);
-        initialise_camera(&mut engine.world);
+        initialise_sphere(world);
+        initialise_lights(world);
+        initialise_camera(world);
         let (logo, font) = {
-            let loader = engine.world.read_resource::<Loader>();
+            let loader = world.read_resource::<Loader>();
 
             let logo = loader.load(
                 "texture/logo_transparent.png",
                 PngFormat,
                 Default::default(),
                 (),
-                &engine.world.read_resource::<AssetStorage<Texture>>(),
+                &world.read_resource::<AssetStorage<Texture>>(),
             );
 
             let font = loader.load(
@@ -49,13 +49,12 @@ impl State for Example {
                 TtfFormat,
                 Default::default(),
                 (),
-                &engine.world.read_resource::<AssetStorage<FontAsset>>(),
+                &world.read_resource::<AssetStorage<FontAsset>>(),
             );
             (logo, font)
         };
 
-        engine
-            .world
+        world
             .create_entity()
             .with(UiTransform::new(
                 "logo".to_string(),
@@ -69,8 +68,8 @@ impl State for Example {
                 texture: logo.clone(),
             })
             .build();
-        engine
-            .world
+
+        world
             .create_entity()
             .with(UiTransform::new(
                 "hello_world".to_string(),
@@ -89,7 +88,7 @@ impl State for Example {
             .build();
     }
 
-    fn handle_event(&mut self, _: &mut Engine, event: Event) -> Trans {
+    fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
         match event {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::KeyboardInput {

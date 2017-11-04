@@ -17,7 +17,6 @@ use core::frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStra
 use core::timing::{Stopwatch, Time};
 use ecs::{Component, Dispatcher, DispatcherBuilder, System, World};
 use ecs::common::Errors;
-use engine::Engine;
 use error::{Error, Result};
 use state::{State, StateMachine};
 use vergen;
@@ -31,9 +30,10 @@ use vergen;
 #[derive(Derivative)]
 #[derivative(Debug)]
 pub struct Application<'a, 'b> {
-    /// The `engine` struct, holding world and thread pool.
+    /// The world
     #[derivative(Debug = "ignore")]
-    pub engine: Engine,
+    pub world: World,
+    /// The `engine` struct, holding world and thread pool.
     frame_limiter: FrameLimiter,
 
     #[derivative(Debug = "ignore")]
@@ -134,7 +134,7 @@ impl<'a, 'b> Application<'a, 'b> {
 
             self.frame_limiter.wait();
             {
-                let mut time = self.engine.world.write_resource::<Time>();
+                let mut time = self.world.write_resource::<Time>();
                 time.increment_frame_number();
                 time.set_delta_time(self.timer.elapsed());
             }
@@ -151,20 +151,19 @@ impl<'a, 'b> Application<'a, 'b> {
         profile_scope!("initialize");
         let mut time = Time::default();
         time.set_fixed_time(self.fixed_time);
-        self.engine.world.add_resource(time);
-        self.states.start(&mut self.engine);
+        self.world.add_resource(time);
+        self.states.start(&mut self.world);
     }
 
     /// Advances the game world by one tick.
     fn advance_frame(&mut self) {
         {
-            let engine = &mut self.engine;
+            let world = &mut self.world;
             let states = &mut self.states;
             #[cfg(feature = "profiler")]
             profile_scope!("handle_event");
 
-            let events = match engine
-                .world
+            let events = match world
                 .read_resource::<EventChannel<Event>>()
                 .lossy_read(&mut self.events_reader_id)
             {
@@ -173,55 +172,53 @@ impl<'a, 'b> Application<'a, 'b> {
             };
 
             for event in events {
-                states.handle_event(engine, event.clone());
+                states.handle_event(world, event.clone());
                 if !self.ignore_window_close {
                     if let &Event::WindowEvent {
                         event: WindowEvent::Closed,
                         ..
                     } = &event
                     {
-                        states.stop(engine);
+                        states.stop(world);
                     }
                 }
             }
         }
         {
             let do_fixed = {
-                let time = self.engine.world.write_resource::<Time>();
+                let time = self.world.write_resource::<Time>();
                 time.last_fixed_update().elapsed() >= time.fixed_time()
             };
             #[cfg(feature = "profiler")]
             profile_scope!("fixed_update");
             if do_fixed {
-                self.states.fixed_update(&mut self.engine);
-                self.engine
-                    .world
+                self.states.fixed_update(&mut self.world);
+                self.world
                     .write_resource::<Time>()
                     .finish_fixed_update();
             }
 
             #[cfg(feature = "profiler")]
             profile_scope!("update");
-            self.states.update(&mut self.engine);
+            self.states.update(&mut self.world);
         }
 
         #[cfg(feature = "profiler")]
         profile_scope!("dispatch");
-        self.dispatcher.dispatch(&mut self.engine.world.res);
+        self.dispatcher.dispatch(&mut self.world.res);
 
         for local in &mut self.locals {
-            local.run_now(&self.engine.world.res);
+            local.run_now(&self.world.res);
         }
 
         #[cfg(feature = "profiler")]
         profile_scope!("maintain");
-        self.engine.world.maintain();
+        self.world.maintain();
 
         // TODO: replace this with a more customizable method.
         // TODO: effectively, the user should have more control over error handling here
         // TODO: because right now the app will just exit in case of an error.
-        self.engine
-            .world
+        self.world
             .write_resource::<Errors>()
             .print_and_exit();
     }
@@ -720,6 +717,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// use amethyst::prelude::*;
     /// use amethyst::assets::{Directory, Loader};
     /// use amethyst::renderer::ObjFormat;
+    /// use amethyst::ecs::World;
     ///
     /// let mut game = Application::build("assets/", LoadingState)
     ///     .expect("Failed to initialize")
@@ -731,10 +729,10 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// struct LoadingState;
     /// impl State for LoadingState {
-    ///     fn on_start(&mut self, engine: &mut Engine) {
-    ///         let storage = engine.world.read_resource();
+    ///     fn on_start(&mut self, world: &mut World) {
+    ///         let storage = world.read_resource();
     ///
-    ///         let loader = engine.world.read_resource::<Loader>();
+    ///         let loader = world.read_resource::<Loader>();
     ///         // Load a teapot mesh from the directory that registered above.
     ///         let mesh = loader.load_from("teapot", ObjFormat, (), "custom_directory",
     ///                                     (), &storage);
@@ -879,7 +877,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
         profile_scope!("new");
 
         Ok(Application {
-            engine: Engine::new(self.pool.clone(), self.world),
+            world: self.world,
             // config: self.config,
             states: StateMachine::new(self.initial_state),
             events_reader_id: self.events_reader_id,
