@@ -83,3 +83,4 @@ mod app;
 mod error;
 mod state;
 mod vergen;
+mod bundle;

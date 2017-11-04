@@ -33,15 +33,11 @@ pub struct Application<'a, 'b> {
     /// The world
     #[derivative(Debug = "ignore")]
     pub world: World,
-    /// The `engine` struct, holding world and thread pool.
-    frame_limiter: FrameLimiter,
 
     #[derivative(Debug = "ignore")]
     dispatcher: Dispatcher<'a, 'b>,
     events_reader_id: ReaderId,
     states: StateMachine<'a>,
-    fixed_time: Duration,
-    timer: Stopwatch,
     #[derivative(Debug = "ignore")]
     locals: Vec<Box<for<'c> RunNow<'c> + 'b>>,
     ignore_window_close: bool,
@@ -128,18 +124,20 @@ impl<'a, 'b> Application<'a, 'b> {
     /// [`new`](struct.Application.html#examples) method.
     pub fn run(&mut self) {
         self.initialize();
-        self.timer.start();
+        self.world.write_resource::<Stopwatch>().start();
         while self.states.is_running() {
             self.advance_frame();
 
-            self.frame_limiter.wait();
+            self.world.write_resource::<FrameLimiter>().wait();
             {
+                let elapsed = self.world.read_resource::<Stopwatch>().elapsed();
                 let mut time = self.world.write_resource::<Time>();
                 time.increment_frame_number();
-                time.set_delta_time(self.timer.elapsed());
+                time.set_delta_time(elapsed);
             }
-            self.timer.stop();
-            self.timer.restart();
+            let mut stopwatch = self.world.write_resource::<Stopwatch>();
+            stopwatch.stop();
+            stopwatch.restart();
         }
 
         self.shutdown();
@@ -149,9 +147,6 @@ impl<'a, 'b> Application<'a, 'b> {
     fn initialize(&mut self) {
         #[cfg(feature = "profiler")]
         profile_scope!("initialize");
-        let mut time = Time::default();
-        time.set_fixed_time(self.fixed_time);
-        self.world.add_resource(time);
         self.states.start(&mut self.world);
     }
 
@@ -193,9 +188,7 @@ impl<'a, 'b> Application<'a, 'b> {
             profile_scope!("fixed_update");
             if do_fixed {
                 self.states.fixed_update(&mut self.world);
-                self.world
-                    .write_resource::<Time>()
-                    .finish_fixed_update();
+                self.world.write_resource::<Time>().finish_fixed_update();
             }
 
             #[cfg(feature = "profiler")]
@@ -218,9 +211,7 @@ impl<'a, 'b> Application<'a, 'b> {
         // TODO: replace this with a more customizable method.
         // TODO: effectively, the user should have more control over error handling here
         // TODO: because right now the app will just exit in case of an error.
-        self.world
-            .write_resource::<Errors>()
-            .print_and_exit();
+        self.world.write_resource::<Errors>().print_and_exit();
     }
 
     /// Cleans up after the quit signal is received.
@@ -247,13 +238,8 @@ pub struct ApplicationBuilder<'a, 'b, T> {
     initial_state: T,
     /// Used by bundles to access the world directly
     pub world: World,
-    pool: Arc<ThreadPool>,
-    /// Allows to create `RenderSystem`
-    events_reader_id: ReaderId,
-    frame_limiter: FrameLimiter,
     locals: Vec<Box<for<'c> RunNow<'c> + 'b>>,
     ignore_window_close: bool,
-    fixed_time: Duration,
 }
 
 impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
@@ -320,38 +306,23 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// ~~~
 
     pub fn new<P: AsRef<Path>>(path: P, initial_state: T) -> Result<Self> {
-        use rayon::Configuration;
+        use bundle::AppBundle;
 
         println!("Initializing Amethyst...");
         println!("Version: {}", vergen::semver());
         println!("Platform: {}", vergen::target());
         println!("Git commit: {}", vergen::sha());
-        let cfg = Configuration::new();
-        #[cfg(feature = "profiler")]
-        let cfg = cfg.start_handler(|index| {
-            register_thread_with_profiler(format!("thread_pool{}", index));
-        });
-        let pool = ThreadPool::new(cfg)
-            .map(|p| Arc::new(p))
-            .map_err(|_| Error::Application)?;
+
+        let mut disp_builder = DispatcherBuilder::new();
         let mut world = World::new();
-        world.add_resource(Loader::new(path.as_ref(), pool.clone()));
-        let events = EventChannel::<Event>::with_capacity(2000);
-        let reader_id = events.register_reader();
-        world.add_resource(events);
-        world.add_resource(Errors::new());
-        world.add_resource(pool.clone());
+        disp_builder = AppBundle::new(path).build(&mut world, disp_builder)?;
 
         Ok(ApplicationBuilder {
-            disp_builder: DispatcherBuilder::new(),
+            disp_builder,
             initial_state,
             world,
-            events_reader_id: reader_id,
-            pool,
-            frame_limiter: FrameLimiter::default(),
             locals: Vec::default(),
             ignore_window_close: false,
-            fixed_time: Duration::new(0, 16666666),
         })
     }
 
@@ -762,7 +733,8 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// This function returns the ApplicationBuilder after modifying it.
     pub fn with_frame_limit(mut self, strategy: FrameRateLimitStrategy, max_fps: u32) -> Self {
-        self.frame_limiter = FrameLimiter::new(strategy, max_fps);
+        self.world
+            .add_resource(FrameLimiter::new(strategy, max_fps));
         self
     }
 
@@ -776,7 +748,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// This function returns the ApplicationBuilder after modifying it.
     pub fn with_frame_limit_config(mut self, config: FrameRateLimitConfig) -> Self {
-        self.frame_limiter = FrameLimiter::from_config(config);
+        self.world.add_resource(FrameLimiter::from_config(config));
         self
     }
 
@@ -789,8 +761,8 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// # Returns
     ///
     /// This function returns the ApplicationBuilder after modifying it.
-    pub fn with_fixed_step_length(mut self, duration: Duration) -> Self {
-        self.fixed_time = duration;
+    pub fn with_fixed_step_length(self, duration: Duration) -> Self {
+        self.world.write_resource::<Time>().set_fixed_time(duration);
         self
     }
 
@@ -876,15 +848,17 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
         #[cfg(feature = "profiler")]
         profile_scope!("new");
 
+        let pool = self.world.read_resource::<Arc<ThreadPool>>().clone();
+        let reader_id = self.world
+            .write_resource::<EventChannel<Event>>()
+            .register_reader();
+
         Ok(Application {
             world: self.world,
             // config: self.config,
             states: StateMachine::new(self.initial_state),
-            events_reader_id: self.events_reader_id,
-            dispatcher: self.disp_builder.with_pool(self.pool).build(),
-            fixed_time: self.fixed_time,
-            timer: Stopwatch::new(),
-            frame_limiter: self.frame_limiter,
+            events_reader_id: reader_id,
+            dispatcher: self.disp_builder.with_pool(pool).build(),
             locals: self.locals,
             ignore_window_close: self.ignore_window_close,
         })
