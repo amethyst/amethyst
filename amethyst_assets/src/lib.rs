@@ -10,6 +10,7 @@
 #![warn(missing_docs)]
 
 extern crate amethyst_core;
+extern crate atom;
 extern crate crossbeam;
 #[macro_use]
 extern crate derivative;

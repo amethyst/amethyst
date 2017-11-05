@@ -5,8 +5,8 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use amethyst_core::Time;
 use crossbeam::sync::MsQueue;
-use hibitset::BitSet;
 use fnv::FnvHashMap;
+use hibitset::BitSet;
 use rayon::ThreadPool;
 use specs::{Component, Fetch, FetchMut, System, UnprotectedStorage, VecStorage};
 
@@ -93,6 +93,7 @@ pub struct AssetStorage<A: Asset> {
     handle_alloc: Allocator,
     library_storage: LibraryStorage<A>,
     pub(crate) processed: Arc<MsQueue<Processed<A>>>,
+    processed_descs: Arc<MsQueue<ProcessedDesc<A>>>,
     reloads: Vec<(WeakHandle<A>, Box<Reload<A>>)>,
     unused_handles: MsQueue<HandleAlloc<A>>,
 }
@@ -147,29 +148,53 @@ impl<A: Asset> AssetStorage<A> {
         unimplemented!()
     }
 
+    /// Returns a `DescStorage` which pushes to this asset storage.
     pub fn desc_storage(&self) -> DescStorage<A> {
-        unimplemented!()
+        DescStorage {
+            marker: PhantomData,
+            processed: self.processed_descs.clone(),
+        }
+    }
+
+    fn fetch_from_lib(&self, h: &LibraryHandle<A>) -> Option<&A> {
+        let library_storage = &self.library_storage;
+        let alloc_storage = &self.alloc_storage;
+
+        library_storage
+            .get(h)
+            .and_then(|h| match *h {
+                LibraryDataElement::Desc(_) => None,
+                LibraryDataElement::Handle(ref h) => Some(h),
+            })
+            .and_then(|h| alloc_storage.get(h))
+    }
+
+    fn fetch_from_lib_mut(&mut self, h: &LibraryHandle<A>) -> Option<&mut A> {
+        let library_storage = &self.library_storage;
+        let alloc_storage = &mut self.alloc_storage;
+
+        library_storage
+            .get(h)
+            .and_then(|h| match *h {
+                LibraryDataElement::Desc(_) => None,
+                LibraryDataElement::Handle(ref h) => Some(h),
+            })
+            .and_then(move |h| alloc_storage.get_mut(h))
     }
 
     /// Get an asset from a given asset handle.
     pub fn get(&self, handle: &Handle<A>) -> Option<&A> {
         match handle.inner {
             HandleInner::Alloc(ref h) => self.alloc_storage.get(h),
-            HandleInner::Library(ref h) => self.library_storage
-                .get(h)
-                .and_then(move |h| self.alloc_storage.get(h)),
+            HandleInner::Library(ref h) => self.fetch_from_lib(h),
         }
     }
 
     /// Get an asset mutably from a given asset handle.
     pub fn get_mut(&mut self, handle: &Handle<A>) -> Option<&mut A> {
-        let alloc = &mut self.alloc_storage;
-
         match handle.inner {
-            HandleInner::Alloc(ref h) => alloc.get_mut(h),
-            HandleInner::Library(ref h) => self.library_storage
-                .get(h)
-                .and_then(move |h| alloc.get_mut(h)),
+            HandleInner::Alloc(ref h) => self.alloc_storage.get_mut(h),
+            HandleInner::Library(ref h) => self.fetch_from_lib_mut(h),
         }
     }
 
@@ -272,6 +297,13 @@ impl<A: Asset> AssetStorage<A> {
             }
         }
 
+        while let Some(desc) = self.processed_descs.try_pop() {
+            match desc {
+                ProcessedDesc::Lazy { lib, key, desc } => {}
+                ProcessedDesc::Loaded { lib, key, data } => {}
+            }
+        }
+
         let mut skip = 0;
         while let Some(i) = self.handles
             .iter()
@@ -335,14 +367,51 @@ impl<A: Asset> Default for AssetStorage<A> {
             handle_alloc: Default::default(),
             library_storage: Default::default(),
             processed: Arc::new(MsQueue::new()),
+            processed_descs: Arc::new(MsQueue::new()),
             reloads: Default::default(),
             unused_handles: MsQueue::new(),
         }
     }
 }
 
-pub struct DescStorage<A> {
+enum ProcessedDesc<A: Asset> {
+    Lazy {
+        lib: Arc<u32>,
+        desc: Box<Descriptor<A>>,
+        key: String,
+    },
+    Loaded {
+        lib: Arc<u32>,
+        data: Result<A::Data>,
+        key: String,
+    },
+}
+
+pub trait Descriptor<A: Asset>: Send + Sync + 'static {
+    fn load(self) -> Result<A::Data>;
+}
+
+pub struct DescStorage<A: Asset> {
     marker: PhantomData<A>,
+    processed: Arc<MsQueue<ProcessedDesc<A>>>,
+}
+
+impl<A: Asset> DescStorage<A> {
+    pub fn push_lazy(&self, lib: &Library, key: String, desc: Box<Descriptor<A>>) {
+        self.processed.push(ProcessedDesc::Lazy {
+            lib: lib.id.clone(),
+            key,
+            desc,
+        });
+    }
+
+    pub fn push_data(&self, lib: &Library, key: String, data: Result<A::Data>) {
+        self.processed.push(ProcessedDesc::Loaded {
+            lib: lib.id.clone(),
+            data,
+            key,
+        });
+    }
 }
 
 /// A default implementation for an asset processing system
@@ -585,7 +654,7 @@ enum WeakInner<A> {
     Library(WeakLibraryHandle<A>),
 }
 
-struct Library {
+pub struct Library {
     id: Arc<u32>,
 }
 
@@ -611,12 +680,43 @@ pub struct LibraryAllocator {
 #[derivative(Default(bound = ""))]
 pub struct LibraryData<A> {
     // TODO: reconsider `String`
-    map: FnvHashMap<String, HandleAlloc<A>>,
+    map: FnvHashMap<String, LibraryDataElement<A>>,
+}
+
+enum LibraryDataElement<A> {
+    Desc(Box<Descriptor<A>>),
+    Handle(HandleAlloc<A>),
+}
+
+impl<A> LibraryDataElement<A> {
+    fn retrieve_handle<F, G>(&mut self, f: F, g: G) -> &HandleAlloc<A>
+    where
+        F: FnOnce() -> HandleAlloc<A>,
+        G: FnOnce(HandleAlloc<A>, Box<Descriptor<A>>),
+    {
+        use std::mem;
+
+        if let LibraryDataElement::Desc(_) = *self {
+            let handle = f();
+            let desc = mem::replace(self, LibraryDataElement::Handle(handle.clone()));
+            let desc = match desc {
+                LibraryDataElement::Desc(d) => d,
+                LibraryDataElement::Handle(_) => unreachable!(),
+            };
+
+            g(handle, desc);
+        }
+
+        match *self {
+            LibraryDataElement::Handle(ref h) => h,
+            LibraryDataElement::Desc(_) => unreachable!(),
+        }
+    }
 }
 
 #[derive(Derivative)]
 #[derivative(Clone(bound = ""), Eq(bound = ""), Hash(bound = ""), PartialEq(bound = ""),
-Debug(bound = ""))]
+             Debug(bound = ""))]
 pub struct LibraryHandle<A> {
     id: Arc<u32>,
     key: String,
@@ -656,19 +756,47 @@ impl<A> WeakLibraryHandle<A> {
 
 #[derive(Derivative)]
 #[derivative(Default(bound = ""))]
-pub struct LibraryStorage<A> {
+struct LibraryStorage<A> {
     bitset: BitSet,
     libs: VecStorage<LibraryData<A>>,
 }
 
 impl<A> LibraryStorage<A> {
-    pub fn get(&self, h: &LibraryHandle<A>) -> Option<&HandleAlloc<A>> {
+    fn get<'a>(&'a self, h: &LibraryHandle<A>) -> Option<&'a LibraryDataElement<A>> {
         let id = *h.id.as_ref();
 
         if self.bitset.contains(id) {
             unsafe { self.libs.get(id).map.get(&h.key) }
         } else {
             None
+        }
+    }
+
+    fn get_mut<'a>(&'a mut self, h: &LibraryHandle<A>) -> Option<&'a mut LibraryDataElement<A>> {
+        let id = *h.id.as_ref();
+
+        if self.bitset.contains(id) {
+            unsafe { self.libs.get_mut(id).map.get_mut(&h.key) }
+        } else {
+            None
+        }
+    }
+
+    fn insert(&mut self, h: u32, key: String, element: LibraryDataElement<A>) {
+        if !self.bitset.add(h) {
+            unsafe {
+                self.libs.insert(
+                    h,
+                    LibraryData {
+                        map: Default::default(),
+                    },
+                )
+            }
+        }
+
+        unsafe {
+            let data = self.libs.get_mut(h);
+            data.map.insert(key, element);
         }
     }
 }
