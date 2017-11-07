@@ -1,0 +1,52 @@
+[package]
+name = "amethyst_renderer_new"
+version = "0.6.0"
+authors = ["Eyal Kalderon <ebkalderon@gmail.com>", "<scareaangel@gmail.com>"]
+description = "High-level rendering engine with multiple backends"
+exclude = ["examples/*"]
+keywords = ["game", "engine", "renderer", "3d", "amethyst", "gfx", "gfx_hal"]
+categories = ["rendering", "rendering::engine"]
+
+documentation = "https://docs.rs/amethyst_renderer/0.1.0/amethyst_renderer/"
+homepage = "https://www.amethyst.rs/"
+repository = "https://github.com/amethyst/amethyst"
+
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+
+[badges]
+appveyor = { repository = "amethyst/amethyst", branch = "develop" }
+travis-ci = { repository = "amethyst/amethyst" }
+
+[features]
+metal = ["gfx-backend-metal"]
+vulkan = ["gfx-backend-vulkan"]
+default = ["metal"]
+
+[dependencies]
+amethyst_core = { path = "../amethyst_core" }
+amethyst_assets = { path = "../amethyst_assets" }
+cgmath = { version = "0.15", features = ["serde", "mint"] }
+derivative = "1.0"
+error-chain = "0.11"
+fnv = "1.0"
+gfx-hal = { version = "0.1.0", features = ["mint", "serde"], git = "https://github.com/omni-viral/gfx.git", branch = "debug" }
+imagefmt = "4.0"
+mint = "0.4"
+num_cpus = "1.0"
+rayon = "0.8"
+rayon-core = "1.2"
+smallvec = "*"
+serde = { version = "1.0", features = ["serde_derive"] }
+specs = "0.10"
+wavefront_obj = "5.0"
+winit = "0.7"
+
+[target.'cfg(not(target_os = "macos"))'.dependencies]
+gfx-backend-vulkan = { version = "0.1", optional = true, git = "https://github.com/omni-viral/gfx.git", branch = "debug" }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+gfx-backend-metal = { version = "0.1", optional = true, git = "https://github.com/omni-viral/gfx.git", branch = "debug" }
+
+[dev-dependencies]
+genmesh = "0.4"
