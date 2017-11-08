@@ -47,12 +47,11 @@ where
     type PrepareData: SystemData<'a>;
 }
 
+
 pub trait Pass<B>: for<'a> Data<'a, B> + Debug
 where
     B: Backend,
 {
-    fn build() -> B::PipelineLayout;
-
     /// This function designed for
     ///
     /// * allocating buffers and textures

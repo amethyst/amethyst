@@ -6,13 +6,12 @@ use std::mem::replace;
 use std::iter::Empty;
 
 use gfx_hal::Backend;
-use gfx_hal::command::{Rect, SubpassContents,
-                       Viewport};
+use gfx_hal::command::{ClearValue, Rect, SubpassContents, Viewport};
 use gfx_hal::device::{Device, WaitFor};
 use gfx_hal::pso::{BlendState, PipelineStage};
 use gfx_hal::queue::CommandQueue;
 use gfx_hal::queue::capability::{Graphics, Supports, Transfer};
-use gfx_hal::window::{Backbuffer, Swapchain};
+use gfx_hal::window::{Backbuffer, Frame, Swapchain};
 
 use smallvec::SmallVec;
 
@@ -23,9 +22,24 @@ use self::pass::AnyPass;
 
 #[derive(Derivative)]
 #[derivative(Clone, Debug)]
-enum Frame<'a, B: Backend> {
+enum SuperFrame<'a, B: Backend> {
     Index(usize),
     Buffer(&'a B::Framebuffer),
+}
+
+impl<'a, B> SuperFrame<'a, B>
+where
+    B: Backend,
+{
+    fn new(backbuffer: &'a Backbuffer<B>, frame: Frame) -> Self {
+        // Check if we have `Framebuffer` from `Surface` (OpenGL) or `Image`s
+        // In case it's `Image`s we need to pick `Framebuffer` for `RenderPass`es
+        // that renders onto surface.
+        match *backbuffer {
+            Backbuffer::Images(_) => SuperFrame::Index(frame.id()),
+            Backbuffer::Framebuffer(ref single) => SuperFrame::Buffer(single),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -42,7 +56,7 @@ enum SuperFramebuffer<B: Backend> {
 
 impl<B> SuperFramebuffer<B>
 where
-    B: Backend
+    B: Backend,
 {
     fn is_acquired(&self) -> bool {
         use self::SuperFramebuffer::*;
@@ -53,22 +67,24 @@ where
     }
 }
 
-fn pick<'a, B>(framebuffer: &'a SuperFramebuffer<B>, frame: Frame<'a, B>) -> &'a B::Framebuffer
+fn pick<'a, B>(framebuffer: &'a SuperFramebuffer<B>, frame: SuperFrame<'a, B>) -> &'a B::Framebuffer
 where
     B: Backend,
 {
     use self::SuperFramebuffer::*;
-    use self::Frame::*;
+    use self::SuperFrame::*;
     match (framebuffer, frame) {
         (&TargetOwned(ref owned), _) => owned,
         (&TargetAcquired(ref acquired), Index(index)) => &acquired[index],
         (&Single, Buffer(ref target)) => target,
-        _ => unreachable!("This combination can't happen")
+        _ => unreachable!("This combination can't happen"),
     }
 }
 
 #[derive(Debug)]
 pub struct PassNode<B: Backend> {
+    clears: Vec<ClearValue>,
+    descriptors: B::DescriptorSetLayout,
     layout: B::PipelineLayout,
     pipeline: B::GraphicsPipeline,
     render_pass: B::RenderPass,
@@ -87,13 +103,13 @@ where
         device: &mut B::Device,
         world: &World,
         rect: Rect,
-        frame: Frame<B>,
+        frame: SuperFrame<B>,
     ) -> bool {
         use gfx_hal::command::RawCommandBuffer;
 
         // Bind pipeline
         cbuf.bind_graphics_pipeline(&self.pipeline);
-        
+
         // Run custom preparation
         // * Write descriptor sets
         // * Store caches
@@ -104,7 +120,7 @@ where
             &self.render_pass,
             pick(&self.framebuffer, frame),
             rect,
-            &[], // TODO: Put clear values here
+            &self.clears, // TODO: Put clear values here
             SubpassContents::Inline,
         );
         // Record custom drawing calls
@@ -162,19 +178,12 @@ where
         let count = self.passes.len();
 
         // Start frame acquisition
-        let frame = swapchain.acquire_frame(FrameSync::Semaphore(acquire));
+        let frame = SuperFrame::new(
+            &self.backbuffer,
+            swapchain.acquire_frame(FrameSync::Semaphore(acquire)),
+        );
 
-        // Check if we have `Framebuffer` from `Surface` (OpenGL) or `Image`s
-        // In case it's `Image`s we need to pick `Framebuffer` for `RenderPass`es
-        // that renders onto surface.
-        let frame = match self.backbuffer {
-            Backbuffer::Images(ref images) => {
-                Frame::Index(frame.id())
-            },
-            Backbuffer::Framebuffer(ref single) => {
-                Frame::Buffer(single)
-            }
-        };
+
 
         // Allocate enough command buffers
         if cbufs.len() < self.passes.len() {
@@ -221,7 +230,7 @@ where
                             .map(|&(id, stage)| (&signals[id], stage))
                             .chain(wait_acuired)
                             .collect::<SmallVec<[_; 32]>>(),
-                        
+
                         // Each pass singnals to associated `Semaphore`
                         signal_semaphores: &[&signals[id]],
                     },
