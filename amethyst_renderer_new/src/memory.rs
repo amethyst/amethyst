@@ -1,12 +1,11 @@
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use gfx_hal::Backend;
+use gfx_hal::{Backend, Device, MemoryType};
 use gfx_hal::buffer::{CreationError, Usage, ViewError};
 use gfx_hal::device::{BindError, OutOfMemory};
 use gfx_hal::mapping::Error as MappingError;
-use gfx_hal::memory::{Properties, Requirements};
-use gfx_hal::{Device as GfxDevice, MemoryType};
+use gfx_hal::memory::{Pod, Properties, Requirements};
 
 error_chain! {
     foreign_links {
@@ -185,5 +184,33 @@ where
                 .allocate_buffer(device, ubuf, size, alignment)
                 .expect("Hey!"),
         )
+    }
+}
+
+
+/// Cast `Vec` of one `Pod` type into `Vec` of another `Pod` type
+/// Align and size of input type must be divisible by align and size of output type
+/// Converting from arbitrary `T: Pod` into `u8` is always possible
+/// as `u8` has size and align equal to 1
+pub fn cast_pod_vec<T, Y>(mut vec: Vec<T>) -> Vec<Y>
+where
+    T: Pod,
+    Y: Pod,
+{
+    use std::mem::{align_of, forget, size_of};
+
+    debug_assert_eq!(align_of::<T>() % align_of::<Y>(), 0);
+    debug_assert_eq!(size_of::<T>() % size_of::<Y>(), 0);
+
+    let tsize = size_of::<T>();
+    let ysize = size_of::<Y>();
+
+    let p = vec.as_mut_ptr();
+    let s = vec.len();
+    let c = vec.capacity();
+
+    unsafe {
+        forget(vec);
+        Vec::from_raw_parts(p as *mut Y, (s * tsize) / ysize, (c * tsize) / ysize)
     }
 }

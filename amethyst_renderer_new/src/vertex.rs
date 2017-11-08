@@ -2,7 +2,7 @@
 use std::fmt::Debug;
 
 use gfx_hal::format::{BufferFormat, ChannelType, Format, Formatted, SurfaceType, Vec2, Vec3, Vec4};
-use gfx_hal::pso::Element;
+use gfx_hal::pso::{ElemStride, Element};
 use gfx_hal::memory::Pod;
 
 /// Format for vertex attribute
@@ -10,7 +10,6 @@ pub type AttributeFormat = Element<Format>;
 
 /// Slice of attributes
 pub type Attributes<'a> = &'a [(&'a str, AttributeFormat)];
-pub type AttributesSet<'a> = &'a [Attributes<'a>];
 
 /// Trait for vertex attributes to implement
 pub trait Attribute: BufferFormat + Debug + PartialEq + Pod + Send + Sync {
@@ -20,7 +19,7 @@ pub trait Attribute: BufferFormat + Debug + PartialEq + Pod + Send + Sync {
 
     /// Size of the attribue
     /// TODO: Remove when `std::mem_size_of` became const fn
-    const SIZE: u32; // Has to be equal to `std::mem::size_of::<Self>() as u32`
+    const SIZE: ElemStride; // Has to be equal to `std::mem::size_of::<Self>() as ElemStride`
 }
 
 /// Type for position attribute of vertex
@@ -36,7 +35,7 @@ impl Formatted for Position {
 unsafe impl Pod for Position {}
 impl Attribute for Position {
     const NAME: &'static str = "position";
-    const SIZE: u32 = 12;
+    const SIZE: ElemStride = 12;
 }
 
 /// Type for color attribute of vertex
@@ -52,7 +51,7 @@ impl Formatted for Color {
 unsafe impl Pod for Color {}
 impl Attribute for Color {
     const NAME: &'static str = "color";
-    const SIZE: u32 = 16;
+    const SIZE: ElemStride = 16;
 }
 
 /// Type for texture coord attribute of vertex
@@ -68,7 +67,7 @@ impl Formatted for TexCoord {
 unsafe impl Pod for TexCoord {}
 impl Attribute for TexCoord {
     const NAME: &'static str = "tex_coord";
-    const SIZE: u32 = 8;
+    const SIZE: ElemStride = 8;
 }
 
 /// Type for texture coord attribute of vertex
@@ -84,7 +83,7 @@ impl Formatted for Normal {
 unsafe impl Pod for Normal {}
 impl Attribute for Normal {
     const NAME: &'static str = "normal";
-    const SIZE: u32 = 12;
+    const SIZE: ElemStride = 12;
 }
 
 /// Type for tangent attribute of vertex
@@ -100,20 +99,21 @@ impl Formatted for Tangent {
 unsafe impl Pod for Tangent {}
 impl Attribute for Tangent {
     const NAME: &'static str = "tangent";
-    const SIZE: u32 = 12;
+    const SIZE: ElemStride = 12;
 }
 
-/// Trait implemented by all valid vertex formats.
-pub trait VertexFormat: Pod + Sized + Send + Sync {
-    /// List of all attributes formats with name and offset.
-    const ATTRIBUTES: Attributes<'static>;
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct VertexFormat<'a> {
+    pub attributes: Attributes<'a>,
+    pub size: ElemStride,
+}
 
-    /// Returns the size of a single vertex in bytes.
-    #[inline]
-    fn size() -> usize {
-        use std::mem;
-        mem::size_of::<Self>()
-    }
+pub type VertexFormatSet<'a> = &'a [VertexFormat<'a>];
+
+/// Trait implemented by all valid vertex formats.
+pub trait VertexFormatted: Pod + Sized + Send + Sync {
+    /// List of all attributes formats with name and offset.
+    const VERTEX_FORMAT: VertexFormat<'static>;
 
     /// Returns attribute of vertex by type
     #[inline]
@@ -126,23 +126,26 @@ pub trait VertexFormat: Pod + Sized + Send + Sync {
     }
 }
 
-impl<T> VertexFormat for T
+impl<T> VertexFormatted for T
 where
     T: Attribute,
 {
-    const ATTRIBUTES: Attributes<'static> = &[
-        (
-            T::NAME,
-            Element {
-                format: T::SELF,
-                offset: 0,
-            },
-        ),
-    ];
+    const VERTEX_FORMAT: VertexFormat<'static> = VertexFormat {
+        attributes: &[
+            (
+                T::NAME,
+                Element {
+                    format: T::SELF,
+                    offset: 0,
+                },
+            ),
+        ],
+        size: T::SIZE,
+    };
 }
 
 /// Trait implemented by all valid vertex formats for each field
-pub trait With<F: Attribute>: VertexFormat {
+pub trait With<F: Attribute>: VertexFormatted {
     /// Individual format of the attribute for this vertex format
     const FORMAT: AttributeFormat;
 }
@@ -169,11 +172,14 @@ pub struct PosColor {
 
 unsafe impl Pod for PosColor {}
 
-impl VertexFormat for PosColor {
-    const ATTRIBUTES: Attributes<'static> = &[
-        (Position::NAME, <Self as With<Position>>::FORMAT),
-        (Color::NAME, <Self as With<Color>>::FORMAT),
-    ];
+impl VertexFormatted for PosColor {
+    const VERTEX_FORMAT: VertexFormat<'static> = VertexFormat {
+        attributes: &[
+            (Position::NAME, <Self as With<Position>>::FORMAT),
+            (Color::NAME, <Self as With<Color>>::FORMAT),
+        ],
+        size: Position::SIZE + Color::SIZE,
+    };
 }
 
 impl With<Position> for PosColor {
@@ -202,11 +208,14 @@ pub struct PosTex {
 
 unsafe impl Pod for PosTex {}
 
-impl VertexFormat for PosTex {
-    const ATTRIBUTES: Attributes<'static> = &[
-        (Position::NAME, <Self as With<Position>>::FORMAT),
-        (TexCoord::NAME, <Self as With<TexCoord>>::FORMAT),
-    ];
+impl VertexFormatted for PosTex {
+    const VERTEX_FORMAT: VertexFormat<'static> = VertexFormat {
+        attributes: &[
+            (Position::NAME, <Self as With<Position>>::FORMAT),
+            (TexCoord::NAME, <Self as With<TexCoord>>::FORMAT),
+        ],
+        size: Position::SIZE + TexCoord::SIZE,
+    };
 }
 
 impl With<Position> for PosTex {
@@ -237,12 +246,15 @@ pub struct PosNormTex {
 
 unsafe impl Pod for PosNormTex {}
 
-impl VertexFormat for PosNormTex {
-    const ATTRIBUTES: Attributes<'static> = &[
-        (Position::NAME, <Self as With<Position>>::FORMAT),
-        (Normal::NAME, <Self as With<Normal>>::FORMAT),
-        (TexCoord::NAME, <Self as With<TexCoord>>::FORMAT),
-    ];
+impl VertexFormatted for PosNormTex {
+    const VERTEX_FORMAT: VertexFormat<'static> = VertexFormat {
+        attributes: &[
+            (Position::NAME, <Self as With<Position>>::FORMAT),
+            (Normal::NAME, <Self as With<Normal>>::FORMAT),
+            (TexCoord::NAME, <Self as With<TexCoord>>::FORMAT),
+        ],
+        size: Position::SIZE + Normal::SIZE + TexCoord::SIZE,
+    };
 }
 
 impl With<Position> for PosNormTex {
@@ -282,13 +294,16 @@ pub struct PosNormTangTex {
 
 unsafe impl Pod for PosNormTangTex {}
 
-impl VertexFormat for PosNormTangTex {
-    const ATTRIBUTES: Attributes<'static> = &[
-        (Position::NAME, <Self as With<Position>>::FORMAT),
-        (Normal::NAME, <Self as With<Normal>>::FORMAT),
-        (Tangent::NAME, <Self as With<Tangent>>::FORMAT),
-        (TexCoord::NAME, <Self as With<TexCoord>>::FORMAT),
-    ];
+impl VertexFormatted for PosNormTangTex {
+    const VERTEX_FORMAT: VertexFormat<'static> = VertexFormat {
+        attributes: &[
+            (Position::NAME, <Self as With<Position>>::FORMAT),
+            (Normal::NAME, <Self as With<Normal>>::FORMAT),
+            (Tangent::NAME, <Self as With<Tangent>>::FORMAT),
+            (TexCoord::NAME, <Self as With<TexCoord>>::FORMAT),
+        ],
+        size: Position::SIZE + Normal::SIZE + Tangent::SIZE + TexCoord::SIZE,
+    };
 }
 
 impl With<Position> for PosNormTangTex {
@@ -320,8 +335,8 @@ impl With<TexCoord> for PosNormTangTex {
 }
 
 
-/// Allows to query specific `Attribute`s of `VertexFormat`
-pub trait Query<T>: VertexFormat {
+/// Allows to query specific `Attribute`s of `VertexFormatted`
+pub trait Query<T>: VertexFormatted {
     /// Attributes from tuple `T`
     const QUERIED_ATTRIBUTES: Attributes<'static>;
 }
@@ -329,7 +344,7 @@ pub trait Query<T>: VertexFormat {
 macro_rules! impl_query {
     ($($a:ident),*) => {
         impl<VF $(,$a)*> Query<($($a,)*)> for VF
-            where VF: VertexFormat,
+            where VF: VertexFormatted,
             $(
                 $a: Attribute,
                 VF: With<$a>,
