@@ -45,11 +45,11 @@ where
     }
 
     pub fn size(&self) -> usize {
-        self.data.as_ref().len() * V::VERTEX_FORMAT.size as usize
+        self.data.as_ref().len() * V::VERTEX_FORMAT.stride as usize
     }
 
     pub fn stride(&self) -> ElemStride {
-        V::VERTEX_FORMAT.size
+        V::VERTEX_FORMAT.stride
     }
 
     pub(crate) fn build<A, B>(
@@ -64,7 +64,7 @@ where
         Ok(VertexBuffer {
             buffer: make_buffer(
                 cast_slice(self.data.as_ref()),
-                V::VERTEX_FORMAT.size,
+                V::VERTEX_FORMAT.stride,
                 allocator,
                 device,
             )?,
@@ -455,23 +455,23 @@ impl MeshBuilder {
                 .into_iter()
                 .map(|(v, f)| {
                     Ok(VertexBuffer {
-                        buffer: make_buffer(&v, f.size, allocator, device)?,
+                        buffer: make_buffer(&v, f.stride, allocator, device)?,
                         format: f,
-                        len: v.len() / f.size as usize,
+                        len: v.len() / f.stride as usize,
                     })
                 })
                 .collect::<Result<_>>()?,
             ibuf: match self.indices {
                 None => None,
                 Some((i, t)) => {
-                    let size = match t {
+                    let stride = match t {
                         IndexType::U16 => size_of::<u16>(),
                         IndexType::U32 => size_of::<u32>(),
                     };
                     Some(IndexBuffer {
-                        buffer: make_buffer(&i, size as _, allocator, device)?,
+                        buffer: make_buffer(&i, stride as _, allocator, device)?,
                         index_type: t,
-                        len: i.len() / size,
+                        len: i.len() / stride,
                     })
                 }
             },
@@ -538,7 +538,7 @@ where
 }
 
 fn is_compatible(left: &VertexFormat, right: &VertexFormat) -> bool {
-    if left.size != right.size {
+    if left.stride != right.stride {
         return false;
     }
 

@@ -105,7 +105,7 @@ impl Attribute for Tangent {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct VertexFormat<'a> {
     pub attributes: Attributes<'a>,
-    pub size: ElemStride,
+    pub stride: ElemStride,
 }
 
 pub type VertexFormatSet<'a> = &'a [VertexFormat<'a>];
@@ -140,7 +140,7 @@ where
                 },
             ),
         ],
-        size: T::SIZE,
+        stride: T::SIZE,
     };
 }
 
@@ -178,7 +178,7 @@ impl VertexFormatted for PosColor {
             (Position::NAME, <Self as With<Position>>::FORMAT),
             (Color::NAME, <Self as With<Color>>::FORMAT),
         ],
-        size: Position::SIZE + Color::SIZE,
+        stride: Position::SIZE + Color::SIZE,
     };
 }
 
@@ -214,7 +214,7 @@ impl VertexFormatted for PosTex {
             (Position::NAME, <Self as With<Position>>::FORMAT),
             (TexCoord::NAME, <Self as With<TexCoord>>::FORMAT),
         ],
-        size: Position::SIZE + TexCoord::SIZE,
+        stride: Position::SIZE + TexCoord::SIZE,
     };
 }
 
@@ -253,7 +253,7 @@ impl VertexFormatted for PosNormTex {
             (Normal::NAME, <Self as With<Normal>>::FORMAT),
             (TexCoord::NAME, <Self as With<TexCoord>>::FORMAT),
         ],
-        size: Position::SIZE + Normal::SIZE + TexCoord::SIZE,
+        stride: Position::SIZE + Normal::SIZE + TexCoord::SIZE,
     };
 }
 
@@ -302,7 +302,7 @@ impl VertexFormatted for PosNormTangTex {
             (Tangent::NAME, <Self as With<Tangent>>::FORMAT),
             (TexCoord::NAME, <Self as With<TexCoord>>::FORMAT),
         ],
-        size: Position::SIZE + Normal::SIZE + Tangent::SIZE + TexCoord::SIZE,
+        stride: Position::SIZE + Normal::SIZE + Tangent::SIZE + TexCoord::SIZE,
     };
 }
 
