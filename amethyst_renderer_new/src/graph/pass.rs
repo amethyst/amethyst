@@ -28,14 +28,15 @@ use std::fmt::Debug;
 
 use core::Transform;
 use gfx_hal::Backend;
+use gfx_hal::format::Format;
 use gfx_hal::memory::cast_slice;
-use gfx_hal::pso::{GraphicsShaderSet, PipelineStage};
+use gfx_hal::pso::{DescriptorSetLayoutBinding, GraphicsShaderSet, PipelineStage};
 use gfx_hal::queue::capability::{Supports, Transfer};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use rayon_core::current_thread_index;
 use specs::{SystemData, World};
 
-use uniform::UniformFormat;
+use vertex::VertexFormat;
 
 error_chain!{}
 
@@ -52,6 +53,21 @@ pub trait Pass<B>: for<'a> Data<'a, B> + Debug
 where
     B: Backend,
 {
+    /// Input attachments format
+    const INPUTS: &'static [Format];
+
+    /// Color attachments format
+    const COLORS: &'static [Format];
+
+    /// DepthStencil attachment format
+    const DEPTH_STENCIL: Option<Format>;
+
+    /// Bindings
+    const BINDINGS: &'static [DescriptorSetLayoutBinding];
+
+    /// Vertices format
+    const VERTICES: &'static [VertexFormat<'static>];
+
     /// This function designed for
     ///
     /// * allocating buffers and textures

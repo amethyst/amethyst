@@ -5,12 +5,12 @@ use cgmath::{Deg, Matrix4, Point3, SquareMatrix, Transform, Vector3};
 
 use gfx_hal::{Backend, Device, IndexType, Primitive};
 use gfx_hal::buffer::Usage;
-use gfx_hal::memory::{cast_slice, Pod};
+use gfx_hal::memory::{Pod, cast_slice};
 use gfx_hal::pso::{ElemStride, VertexBufferSet};
 
 use smallvec::SmallVec;
 
-use memory::{self, cast_pod_vec, Allocator};
+use memory::{self, Allocator, cast_pod_vec};
 use utils::{is_slice_sorted, is_slice_sorted_by_key};
 use vertex::{Attributes, VertexFormat, VertexFormatSet, VertexFormatted};
 
@@ -394,8 +394,9 @@ impl MeshBuilder {
     where
         V: VertexFormatted,
     {
-        self.vertices
-            .push((cast_pod_vec(vertices), V::VERTEX_FORMAT));
+        self.vertices.push(
+            (cast_pod_vec(vertices), V::VERTEX_FORMAT),
+        );
         self
     }
 
@@ -506,7 +507,7 @@ where
         debug_assert!(is_slice_sorted(format_set));
         debug_assert!(is_slice_sorted_by_key(
             &self.vbufs,
-            |vbuf| vbuf.format.attributes
+            |vbuf| vbuf.format.attributes,
         ));
         debug_assert!(output.0.is_empty());
 
@@ -521,6 +522,10 @@ where
             }
         }
         Ok(())
+    }
+
+    fn transformt(&self) -> &Matrix4<f32> {
+        &self.transform
     }
 }
 
@@ -567,7 +572,12 @@ where
     B: Backend,
 {
     let size = data.len();
-    let buffer = allocator.allocate_buffer(device, size, stride as _, Usage::VERTEX)?;
+    let buffer = allocator.allocate_buffer(
+        device,
+        size,
+        stride as _,
+        Usage::VERTEX,
+    )?;
     {
         // Copy vertex data
         let mut writer = device

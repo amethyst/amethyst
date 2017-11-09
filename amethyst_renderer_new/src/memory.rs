@@ -7,6 +7,8 @@ use gfx_hal::device::{BindError, OutOfMemory};
 use gfx_hal::mapping::Error as MappingError;
 use gfx_hal::memory::{Pod, Properties, Requirements};
 
+use std::result::Result as StdResult;
+
 error_chain! {
     foreign_links {
         BindError(BindError);
@@ -67,6 +69,7 @@ pub trait Allocator<B: Backend> {
         size: usize,
         stride: usize,
         usage: Usage,
+        fill: Option<&[u8]>,
     ) -> Result<B::Buffer>;
 }
 
@@ -88,9 +91,11 @@ where
         ubuf: B::UnboundBuffer,
         size: usize,
         alignment: usize,
-    ) -> ::std::result::Result<B::Buffer, B::UnboundBuffer> {
-        let pos = self.allocated
-            .fetch_add(size + alignment, Ordering::Acquire) - size;
+    ) -> StdResult<B::Buffer, B::UnboundBuffer> {
+        let pos = self.allocated.fetch_add(
+            size + alignment,
+            Ordering::Acquire,
+        ) - size;
         if self.size - size >= pos {
             let shift = pos % alignment;
             let pos = pos - shift;
@@ -121,13 +126,8 @@ where
             nodes: Vec::new(),
         }
     }
-}
 
-impl<B> Allocator<B> for DumbAllocator<B>
-where
-    B: Backend,
-{
-    fn allocate_buffer(
+    fn allocate_buffer_unfilled(
         &mut self,
         device: &mut B::Device,
         size: usize,
@@ -184,6 +184,32 @@ where
                 .allocate_buffer(device, ubuf, size, alignment)
                 .expect("Hey!"),
         )
+    }
+}
+
+impl<B> Allocator<B> for DumbAllocator<B>
+where
+    B: Backend,
+{
+    fn allocate_buffer(
+        &mut self,
+        device: &mut B::Device,
+        size: usize,
+        stride: usize,
+        usage: Usage,
+        fill: Option<&[u8]>,
+    ) -> Result<B::Buffer>
+    {
+        let buffer = self.allocate_buffer_unfilled(device, size, stride, usage);
+        match fill {
+            Some(data) => {
+                let mut writer = device
+                    .acquire_mapping_writer::<u8>(&buffer, 0..data.len() as u64)
+                    .map_err(memory::Error::from)?;
+                writer.copy_from_slice(data);
+            }
+        };
+        Ok(buffer)
     }
 }
 

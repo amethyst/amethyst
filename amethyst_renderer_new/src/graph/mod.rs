@@ -1,5 +1,6 @@
 
 pub mod pass;
+pub mod compositor;
 
 use std::marker::PhantomData;
 use std::mem::replace;
@@ -18,6 +19,13 @@ use smallvec::SmallVec;
 use specs::World;
 
 use self::pass::AnyPass;
+
+
+error_chain!{
+    foreign_links {
+        CreationError(::gfx_hal::pso::CreationError);
+    }
+}
 
 
 #[derive(Derivative)]
@@ -61,7 +69,8 @@ where
     fn is_acquired(&self) -> bool {
         use self::SuperFramebuffer::*;
         match *self {
-            TargetAcquired(_) | Single => true,
+            TargetAcquired(_) |
+            Single => true,
             TargetOwned(_) => false,
         }
     }
