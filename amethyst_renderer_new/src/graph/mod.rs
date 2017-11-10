@@ -9,16 +9,18 @@ use std::iter::Empty;
 use gfx_hal::Backend;
 use gfx_hal::command::{ClearValue, Rect, SubpassContents, Viewport};
 use gfx_hal::device::{Device, FramebufferError, WaitFor};
+use gfx_hal::format::{Format, Swizzle};
+use gfx_hal::image;
 use gfx_hal::pso::{BlendState, CreationError, PipelineStage};
 use gfx_hal::queue::CommandQueue;
 use gfx_hal::queue::capability::{Graphics, Supports, Transfer};
 use gfx_hal::window::{Backbuffer, Frame, Swapchain};
 
 use smallvec::SmallVec;
-
 use specs::World;
 
 use self::pass::AnyPass;
+use self::build::PassBuilder;
 
 
 error_chain!{
@@ -31,9 +33,16 @@ error_chain!{
 
     foreign_links {
         CreationError(CreationError);
+        ViewError(image::ViewError);
     }
 }
 
+
+const COLOR_RANGE: image::SubresourceRange = image::SubresourceRange {
+    aspects: image::AspectFlags::COLOR,
+    levels: 0..1,
+    layers: 0..1,
+};
 
 #[derive(Derivative)]
 #[derivative(Clone, Debug)]
@@ -268,5 +277,31 @@ where
 
         // Rest command buffers
         pool.reset();
+    }
+
+    fn build<S>(
+        pass: &PassBuilder<B>,
+        backbuffer: Backbuffer<B>,
+        color: Format,
+        depth_stencil: Option<Format>,
+        device: &mut B::Device,
+    ) -> Result<Self> {
+        let mut backbuffer_image_views = 0;
+        let mut image_views = vec![];
+
+        match backbuffer {
+            Backbuffer::Images(ref images) => {
+                image_views = images
+                    .iter()
+                    .map(|image| {
+                        device.create_image_view(image, color, Swizzle::NO, COLOR_RANGE.clone()).map_err(Into::into)
+                    })
+                    .collect::<Result<_>>()?;
+                backbuffer_image_views = image_views.len();
+            }
+            Backbuffer::Framebuffer(_) => {}
+        }
+
+        unimplemented!()
     }
 }
