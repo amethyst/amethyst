@@ -8,8 +8,8 @@ use std::iter::Empty;
 
 use gfx_hal::Backend;
 use gfx_hal::command::{ClearValue, Rect, SubpassContents, Viewport};
-use gfx_hal::device::{Device, WaitFor};
-use gfx_hal::pso::{BlendState, PipelineStage};
+use gfx_hal::device::{Device, FramebufferError, WaitFor};
+use gfx_hal::pso::{BlendState, CreationError, PipelineStage};
 use gfx_hal::queue::CommandQueue;
 use gfx_hal::queue::capability::{Graphics, Supports, Transfer};
 use gfx_hal::window::{Backbuffer, Frame, Swapchain};
@@ -22,15 +22,22 @@ use self::pass::AnyPass;
 
 
 error_chain!{
+    errors {
+        FramebufferError {
+            description("Failed to create framebuffer")
+            display("Failed to create framebuffer")
+        }
+    }
+
     foreign_links {
-        CreationError(::gfx_hal::pso::CreationError);
+        CreationError(CreationError);
     }
 }
 
 
 #[derive(Derivative)]
 #[derivative(Clone, Debug)]
-enum SuperFrame<'a, B: Backend> {
+pub enum SuperFrame<'a, B: Backend> {
     Index(usize),
     Buffer(&'a B::Framebuffer),
 }
@@ -51,7 +58,7 @@ where
 }
 
 #[derive(Debug)]
-enum SuperFramebuffer<B: Backend> {
+pub enum SuperFramebuffer<B: Backend> {
     /// Target is owned by `RenderGraph`
     Owned(B::Framebuffer),
 
@@ -92,9 +99,9 @@ where
 #[derive(Debug)]
 pub struct PassNode<B: Backend> {
     clears: Vec<ClearValue>,
-    descriptors: B::DescriptorSetLayout,
-    layout: B::PipelineLayout,
-    pipeline: B::GraphicsPipeline,
+    descriptor_set_layout: B::DescriptorSetLayout,
+    pipeline_layout: B::PipelineLayout,
+    graphics_pipeline: B::GraphicsPipeline,
     render_pass: B::RenderPass,
     framebuffer: SuperFramebuffer<B>,
     pass: Box<AnyPass<B>>,
@@ -116,12 +123,17 @@ where
         use gfx_hal::command::RawCommandBuffer;
 
         // Bind pipeline
-        cbuf.bind_graphics_pipeline(&self.pipeline);
+        cbuf.bind_graphics_pipeline(&self.graphics_pipeline);
 
         // Run custom preparation
         // * Write descriptor sets
         // * Store caches
-        self.pass.prepare(cbuf, &self.layout, device, world);
+        self.pass.prepare(
+            cbuf,
+            &self.pipeline_layout,
+            device,
+            world,
+        );
 
         // Begin render pass with single inline subpass
         cbuf.begin_renderpass(

@@ -1,6 +1,7 @@
 
 use gfx_hal::{Backend, Device, Primitive};
 use gfx_hal::command::{ClearColor, ClearDepthStencil, ClearValue, ColorValue};
+use gfx_hal::device::Extent;
 use gfx_hal::format::Format;
 use gfx_hal::pso;
 use gfx_hal::pass;
@@ -8,9 +9,8 @@ use gfx_hal::image;
 
 use specs::{Component, Entity, World};
 
-
 use graph::pass::{AnyPass, Pass};
-use graph::{Error, ErrorKind, PassNode, Result};
+use graph::{Error, ErrorKind, PassNode, Result, SuperFramebuffer};
 use vertex::VertexFormat;
 use uniform::IntoUniform;
 
@@ -40,7 +40,7 @@ pub enum AttachmentImageView<'a, B: Backend> {
 #[derive(Debug)]
 pub struct InputAttachmentDesc<'a, B: Backend> {
     format: Format,
-    view: AttachmentImageView<'a, B>,
+    view: &'a B::ImageView,
 }
 
 #[derive(Debug)]
@@ -53,7 +53,7 @@ pub struct ColorAttachmentDesc<'a, B: Backend> {
 #[derive(Debug)]
 pub struct DepthStencilAttachmentDesc<'a, B: Backend> {
     format: Format,
-    view: AttachmentImageView<'a, B>,
+    view: &'a B::ImageView,
     clear: Option<ClearDepthStencil>,
 }
 
@@ -67,6 +67,7 @@ where
         inputs: &[InputAttachmentDesc<B>],
         colors: &[ColorAttachmentDesc<B>],
         depth_stencil: Option<DepthStencilAttachmentDesc<B>>,
+        extent: Extent,
     ) -> Result<PassNode<B>> {
 
         // This is enforced by `RenderGraphBuilder`
@@ -171,7 +172,7 @@ where
         let pipeline_layout = device.create_pipeline_layout(&[&descriptor_set_layout]);
 
         // Create `GraphicsPipeline`
-        let pipeline = {
+        let graphics_pipeline = {
             // Init basic configuration
             let mut pipeline_desc = pso::GraphicsPipelineDesc::new(
                 self.shaders,
@@ -232,8 +233,63 @@ where
             ClearValue::DepthStencil,
         ));
 
-        // TODO: Construct `PassNode`
-        unimplemented!()
+        // create framebuffers
+        let framebuffer: SuperFramebuffer<B> = {
+            if colors.len() == 1 &&
+                match colors[0].view {
+                    AttachmentImageView::Single => true,
+                    _ => false,
+                }
+            {
+                SuperFramebuffer::Single
+            } else {
+                let mut acquired = None;
+                let mut targets = colors
+                    .iter()
+                    .enumerate()
+                    .map(|(index, color)| match color.view {
+                        AttachmentImageView::Owned(ref image) => image,
+                        AttachmentImageView::Acquired(ref images) => {
+                            match acquired {
+                                Some(_) => unreachable!("Only one acquried target"),
+                                ref mut acquired @ None => *acquired = Some((index, images)),
+                            }
+                            &images[0]
+                        }
+                        AttachmentImageView::Single => {
+                            unreachable!("Single framebuffer isn't valid for multicolor output")
+                        }
+                    })
+                    .collect::<Vec<_>>();
+
+                if let Some((index, images)) = acquired {
+                    SuperFramebuffer::Acquired(images
+                        .iter()
+                        .map(|image| {
+                            targets[index] = image;
+                            device
+                                .create_framebuffer(&render_pass, &targets[..], extent)
+                                .map_err(|_| ErrorKind::FramebufferError.into())
+                        })
+                        .collect::<Result<Vec<_>>>()?)
+                } else {
+                    SuperFramebuffer::Owned(device
+                        .create_framebuffer(&render_pass, &targets[..], extent)
+                        .map_err(|_| ErrorKind::FramebufferError)?)
+                }
+            }
+        };
+
+        Ok(PassNode {
+            clears,
+            descriptor_set_layout,
+            pipeline_layout,
+            graphics_pipeline,
+            render_pass,
+            framebuffer,
+            pass: self.pass,
+            depends: vec![],
+        })
     }
 }
 
