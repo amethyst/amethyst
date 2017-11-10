@@ -198,16 +198,16 @@ where
         stride: usize,
         usage: Usage,
         fill: Option<&[u8]>,
-    ) -> Result<B::Buffer>
-    {
-        let buffer = self.allocate_buffer_unfilled(device, size, stride, usage);
+    ) -> Result<B::Buffer> {
+        let buffer = self.allocate_buffer_unfilled(device, size, stride, usage)?;
         match fill {
             Some(data) => {
                 let mut writer = device
                     .acquire_mapping_writer::<u8>(&buffer, 0..data.len() as u64)
-                    .map_err(memory::Error::from)?;
+                    .map_err(Error::from)?;
                 writer.copy_from_slice(data);
             }
+            None => {}
         };
         Ok(buffer)
     }

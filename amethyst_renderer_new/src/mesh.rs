@@ -61,12 +61,14 @@ where
         A: Allocator<B>,
         B: Backend,
     {
+        let slice = cast_slice(self.data.as_ref());
         Ok(VertexBuffer {
-            buffer: make_buffer(
-                cast_slice(self.data.as_ref()),
-                V::VERTEX_FORMAT.stride,
-                allocator,
+            buffer: allocator.allocate_buffer(
                 device,
+                slice.len(),
+                V::VERTEX_FORMAT.stride as _,
+                Usage::VERTEX,
+                Some(slice),
             )?,
             format: V::VERTEX_FORMAT,
             len: self.data.as_ref().len(),
@@ -165,12 +167,14 @@ where
         A: Allocator<B>,
         B: Backend,
     {
+        let slice = cast_slice(self.data.as_ref());
         Ok(Some(IndexBuffer {
-            buffer: make_buffer(
-                cast_slice(self.data.as_ref()),
-                size_of::<u16>() as _,
-                allocator,
+            buffer: allocator.allocate_buffer(
                 device,
+                slice.len() as _,
+                size_of::<u16>() as _,
+                Usage::INDEX,
+                Some(slice),
             )?,
             len: self.data.as_ref().len(),
             index_type: IndexType::U16,
@@ -191,12 +195,14 @@ where
         A: Allocator<B>,
         B: Backend,
     {
+        let slice = cast_slice(self.data.as_ref());
         Ok(Some(IndexBuffer {
-            buffer: make_buffer(
-                cast_slice(self.data.as_ref()),
-                size_of::<u32>() as _,
-                allocator,
+            buffer: allocator.allocate_buffer(
                 device,
+                slice.len() as _,
+                size_of::<u32>() as _,
+                Usage::INDEX,
+                Some(slice),
             )?,
             len: self.data.as_ref().len(),
             index_type: IndexType::U32,
@@ -456,7 +462,13 @@ impl MeshBuilder {
                 .into_iter()
                 .map(|(v, f)| {
                     Ok(VertexBuffer {
-                        buffer: make_buffer(&v, f.stride, allocator, device)?,
+                        buffer: allocator.allocate_buffer(
+                            device,
+                            v.len(),
+                            f.stride as _,
+                            Usage::VERTEX,
+                            Some(&v),
+                        )?,
                         format: f,
                         len: v.len() / f.stride as usize,
                     })
@@ -470,7 +482,13 @@ impl MeshBuilder {
                         IndexType::U32 => size_of::<u32>(),
                     };
                     Some(IndexBuffer {
-                        buffer: make_buffer(&i, stride as _, allocator, device)?,
+                        buffer: allocator.allocate_buffer(
+                            device,
+                            i.len(),
+                            stride as _,
+                            Usage::INDEX,
+                            Some(&i),
+                        )?,
                         index_type: t,
                         len: i.len() / stride,
                     })
@@ -558,33 +576,4 @@ fn is_compatible(left: &VertexFormat, right: &VertexFormat) -> bool {
                 true
             })
     })
-}
-
-
-fn make_buffer<A, B>(
-    data: &[u8],
-    stride: ElemStride,
-    allocator: &mut A,
-    device: &mut B::Device,
-) -> Result<B::Buffer>
-where
-    A: Allocator<B>,
-    B: Backend,
-{
-    let size = data.len();
-    let buffer = allocator.allocate_buffer(
-        device,
-        size,
-        stride as _,
-        Usage::VERTEX,
-    )?;
-    {
-        // Copy vertex data
-        let mut writer = device
-            .acquire_mapping_writer::<u8>(&buffer, 0..size as u64)
-            .map_err(memory::Error::from)?;
-        writer.copy_from_slice(data);
-    }
-
-    Ok(buffer)
 }

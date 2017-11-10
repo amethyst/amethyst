@@ -1,6 +1,6 @@
 
+pub mod build;
 pub mod pass;
-pub mod compositor;
 
 use std::marker::PhantomData;
 use std::mem::replace;
@@ -53,10 +53,10 @@ where
 #[derive(Debug)]
 enum SuperFramebuffer<B: Backend> {
     /// Target is owned by `RenderGraph`
-    TargetOwned(B::Framebuffer),
+    Owned(B::Framebuffer),
 
     /// Target is acquired from `Swapchain`
-    TargetAcquired(Vec<B::Framebuffer>),
+    Acquired(Vec<B::Framebuffer>),
 
     /// Target is single `Framebuffer`
     Single,
@@ -69,9 +69,8 @@ where
     fn is_acquired(&self) -> bool {
         use self::SuperFramebuffer::*;
         match *self {
-            TargetAcquired(_) |
-            Single => true,
-            TargetOwned(_) => false,
+            Acquired(_) | Single => true,
+            Owned(_) => false,
         }
     }
 }
@@ -83,8 +82,8 @@ where
     use self::SuperFramebuffer::*;
     use self::SuperFrame::*;
     match (framebuffer, frame) {
-        (&TargetOwned(ref owned), _) => owned,
-        (&TargetAcquired(ref acquired), Index(index)) => &acquired[index],
+        (&Owned(ref owned), _) => owned,
+        (&Acquired(ref acquired), Index(index)) => &acquired[index],
         (&Single, Buffer(ref target)) => target,
         _ => unreachable!("This combination can't happen"),
     }
@@ -98,7 +97,7 @@ pub struct PassNode<B: Backend> {
     pipeline: B::GraphicsPipeline,
     render_pass: B::RenderPass,
     framebuffer: SuperFramebuffer<B>,
-    binder: Box<AnyPass<B>>,
+    pass: Box<AnyPass<B>>,
     depends: Vec<(usize, PipelineStage)>,
 }
 
@@ -122,7 +121,7 @@ where
         // Run custom preparation
         // * Write descriptor sets
         // * Store caches
-        self.binder.prepare(cbuf, &self.layout, device, world);
+        self.pass.prepare(cbuf, &self.layout, device, world);
 
         // Begin render pass with single inline subpass
         cbuf.begin_renderpass(
@@ -133,7 +132,7 @@ where
             SubpassContents::Inline,
         );
         // Record custom drawing calls
-        self.binder.draw(cbuf, world);
+        self.pass.draw(cbuf, world);
 
         // End the only renderpass
         cbuf.end_renderpass();
