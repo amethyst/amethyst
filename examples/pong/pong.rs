@@ -60,7 +60,7 @@ fn initialise_camera(world: &mut World) {
         .build();
 }
 
-/// Hide the cursor so it's invisible while playing.
+/// Hide the cursor, so it's invisible while playing.
 fn hide_cursor(world: &mut World) {
     use amethyst::winit::CursorState;
 

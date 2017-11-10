@@ -6,7 +6,7 @@ use amethyst::core::transform::LocalTransform;
 use amethyst::ecs::{Fetch, Join, ReadStorage, System, WriteStorage};
 use audio::{play_bounce, Sounds};
 
-/// This system is responsible for detecing collisions between balls and
+/// This system is responsible for detecting collisions between balls and
 /// paddles, as well as balls and the top and bottom edges of the arena.
 pub struct BounceSystem;
 
@@ -27,7 +27,7 @@ impl<'s> System<'s> for BounceSystem {
         // Check whether a ball collided, and bounce off accordingly.
         //
         // We also check for the velocity of the ball every time, to prevent multiple collisions
-        // from occuring.
+        // from occurring.
         for (ball, transform) in (&mut balls, &transforms).join() {
             use ARENA_HEIGHT;
 
