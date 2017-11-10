@@ -25,9 +25,9 @@ pub struct PassBuilder<'a, B: Backend> {
     rasterizer: pso::Rasterizer,
 
     primitive: Primitive,
-
-    connect: Vec<(&'a PassBuilder<'a, B>, usize)>,
     pass: Box<AnyPass<B>>,
+
+    connects: Vec<(&'a PassBuilder<'a, B>, usize)>,
 }
 
 #[derive(Debug)]
@@ -70,7 +70,13 @@ where
         extent: Extent,
     ) -> Result<PassNode<B>> {
 
-        // This is enforced by `RenderGraphBuilder`
+        /// Check connects
+        assert_eq!(self.inputs.len(), self.connects.len());
+        for (input, &(pass, output)) in self.connects.iter().enumerate() {
+            assert_eq!(pass.colors[output], self.inputs[input]);
+        }
+
+        // Check attachments
         assert_eq!(inputs.len(), self.inputs.len());
         assert_eq!(colors.len(), self.colors.len());
         assert_eq!(depth_stencil.is_some(), self.depth_stencil.is_some());
