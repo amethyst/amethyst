@@ -1,16 +1,10 @@
-use std::sync::Arc;
-use std::time::Duration;
-
 use config::DisplayConfig;
 use error::{Error, Result};
 use fnv::FnvHashMap as HashMap;
 use gfx::memory::Pod;
 use mesh::{Mesh, MeshBuilder, VertexDataSet};
-use num_cpus;
 use pipe::{ColorBuffer, DepthBuffer, PipelineBuild, PipelineData, PolyPipeline, Target,
            TargetBuilder};
-use rayon::{self, ThreadPool};
-use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use tex::{Texture, TextureBuilder};
 use types::{ColorFormat, DepthFormat, Device, Encoder, Factory, Window};
 use winit::{self, EventsLoop, Window as WinitWindow, WindowBuilder};
@@ -21,9 +15,8 @@ pub struct Renderer {
     pub factory: Factory,
 
     device: Device,
-    encoders: Vec<Encoder>,
+    encoder: Encoder,
     main_target: Target,
-    pool: Arc<ThreadPool>,
     window: Window,
     events: EventsLoop,
     cached_size: (u32, u32),
@@ -72,12 +65,8 @@ impl Renderer {
     }
 
     /// Draws a scene with the given pipeline.
-    pub fn draw<'a, P>(
-        &mut self,
-        pipe: &mut P,
-        data: <P as PipelineData<'a>>::Data,
-        _delta: Duration,
-    ) where
+    pub fn draw<'a, P>(&mut self, pipe: &mut P, data: <P as PipelineData<'a>>::Data)
+    where
         P: PolyPipeline,
     {
         use gfx::Device;
@@ -91,30 +80,8 @@ impl Renderer {
             }
         }
 
-        let num_threads = self.pool.current_num_threads();
-        let encoders_required = P::encoders_required(num_threads);
-
-        let ref mut fac = self.factory;
-        let encoders_count = self.encoders.len();
-        if encoders_count < encoders_required {
-            self.encoders.extend(
-                (encoders_count..encoders_required).map(|_| fac.create_command_buffer().into()),
-            )
-        }
-
-        {
-            let mut encoders = self.encoders.as_mut();
-            self.pool.install(move || {
-                PolyPipeline::apply(pipe, encoders, num_threads, data)
-                    .into_par_iter()
-                    .for_each(|()| {});
-            });
-        }
-
-        for enc in self.encoders.iter_mut() {
-            enc.flush(&mut self.device);
-        }
-
+        pipe.apply(&mut self.encoder, self.factory.clone(), data);
+        self.encoder.flush(&mut self.device);
         self.device.cleanup();
 
         #[cfg(feature = "opengl")]
@@ -175,7 +142,6 @@ impl Drop for Renderer {
 pub struct RendererBuilder {
     config: DisplayConfig,
     events: EventsLoop,
-    pool: Option<Arc<ThreadPool>>,
     winit_builder: WindowBuilder,
 }
 
@@ -185,7 +151,6 @@ impl RendererBuilder {
         RendererBuilder {
             config: DisplayConfig::default(),
             events: el,
-            pool: None,
             winit_builder: WindowBuilder::new().with_title("Amethyst"),
         }
     }
@@ -228,36 +193,23 @@ impl RendererBuilder {
         self
     }
 
-    /// Specifies an existing thread pool for the `Renderer` to use.
-    pub fn with_pool(&mut self, pool: Arc<ThreadPool>) -> &mut Self {
-        self.pool = Some(pool);
-        self
-    }
-
     /// Consumes the builder and creates the new `Renderer`.
     pub fn build(self) -> Result<Renderer> {
-        let Backend(dev, fac, main, win) =
+        let Backend(device, mut factory, main_target, window) =
             init_backend(self.winit_builder.clone(), &self.events, &self.config)?;
-        let num_cores = num_cpus::get();
-        let pool = self.pool.clone().map(|p| Ok(p)).unwrap_or_else(|| {
-            let cfg = rayon::Configuration::new().num_threads(num_cores);
-            ThreadPool::new(cfg)
-                .map(|p| Arc::new(p))
-                .map_err(|e| Error::PoolCreation(format!("{}", e)))
-        })?;
 
-        let size = win.get_inner_size_pixels()
+        let cached_size = window
+            .get_inner_size_pixels()
             .expect("Unable to fetch window size, as the window went away!");
-
+        let encoder = factory.create_command_buffer().into();
         Ok(Renderer {
-            device: dev,
-            encoders: Vec::new(),
-            factory: fac,
-            main_target: main,
-            pool: pool,
-            window: win,
+            device,
+            encoder,
+            factory,
+            main_target,
+            window,
             events: self.events,
-            cached_size: size,
+            cached_size,
         })
     }
 }

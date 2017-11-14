@@ -8,15 +8,17 @@ extern crate amethyst_core;
 extern crate amethyst_renderer;
 extern crate cgmath;
 extern crate gfx;
+extern crate gfx_glyph;
 extern crate hibitset;
-extern crate rayon;
 extern crate rusttype;
 extern crate shrev;
 extern crate specs;
 extern crate unicode_normalization;
+extern crate unicode_segmentation;
 extern crate winit;
 
 mod bundle;
+mod focused;
 mod format;
 mod image;
 mod pass;
@@ -25,9 +27,13 @@ mod text;
 mod transform;
 
 pub use self::bundle::UiBundle;
+pub use self::focused::UiFocused;
 pub use self::format::{FontAsset, FontHandle, OtfFormat, TtfFormat};
 pub use self::image::UiImage;
 pub use self::pass::DrawUi;
 pub use self::resize::{ResizeSystem, UiResize};
-pub use self::text::{UiText, UiTextRenderer};
+pub use self::text::{TextNormalizer, UiText, TextEditing};
 pub use self::transform::UiTransform;
+
+/// How many times the cursor blinks per second while editing text.
+const CURSOR_BLINK_RATE: f32 = 2.0;

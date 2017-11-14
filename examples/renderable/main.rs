@@ -8,15 +8,18 @@ extern crate amethyst;
 use amethyst::{Application, Error, State, Trans};
 use amethyst::assets::{HotReloadBundle, Loader};
 use amethyst::config::Config;
+use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::cgmath::{Array, Deg, Euler, Quaternion, Rad, Rotation, Rotation3, Vector3};
 use amethyst::core::timing::Time;
 use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
-use amethyst::ecs::{Fetch, FetchMut, Join, ReadStorage, System, World, WriteStorage};
+use amethyst::ecs::{Entity, Fetch, FetchMut, Join, ReadStorage, System, World, WriteStorage};
 use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, DisplayConfig as DisplayConfig,
                          DrawShaded, ElementState, Event, KeyboardInput, Light, Material,
                          MaterialDefaults, MeshHandle, ObjFormat, Pipeline, PngFormat, PointLight,
                          PosNormTex, Projection, RenderBundle, RenderSystem, Rgba, Stage,
                          VirtualKeyCode, WindowEvent};
+use amethyst::ui::{DrawUi, FontHandle, TtfFormat, UiBundle, UiText, UiTransform};
+use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 
 struct DemoState {
     light_angle: f32,
@@ -25,6 +28,7 @@ struct DemoState {
     point_light: bool,
     directional_light: bool,
     camera_angle: f32,
+    fps_display: Entity,
     #[allow(dead_code)]
     pipeline_forward: bool, // TODO
 }
@@ -38,9 +42,11 @@ impl<'a> System<'a> for ExampleSystem {
         ReadStorage<'a, Camera>,
         WriteStorage<'a, LocalTransform>,
         FetchMut<'a, DemoState>,
+        WriteStorage<'a, UiText>,
+        Fetch<'a, FPSCounter>,
     );
 
-    fn run(&mut self, (mut lights, time, camera, mut transforms, mut state): Self::SystemData) {
+    fn run(&mut self, (mut lights, time, camera, mut transforms, mut state, mut ui_text, fps_counter): Self::SystemData) {
         let light_angular_velocity = -1.0;
         let light_orbit_radius = 15.0;
         let light_z = 6.0;
@@ -72,6 +78,13 @@ impl<'a> System<'a> for ExampleSystem {
             point_light.center[2] = light_z;
 
             point_light.color = state.light_color.into();
+        }
+
+        if let Some(fps_display) = ui_text.get_mut(state.fps_display) {
+            if time.frame_number() % 20 == 0 {
+                let fps = fps_counter.sampled_fps();
+                fps_display.text = format!("FPS: {:.*}", 2, fps);
+            }
         }
     }
 }
@@ -168,6 +181,24 @@ impl State for Example {
             world.add_resource(AmbientColor(Rgba::from([0.01; 3])));
         }
 
+        let fps_display = world
+            .create_entity()
+            .with(UiTransform::new(
+                "fps".to_string(),
+                0.,
+                0.,
+                1.,
+                200.,
+                50.,
+            ))
+            .with(UiText::new(
+                assets.font.clone(),
+                "N/A".to_string(),
+                [1.0, 1.0, 1.0, 1.0],
+                25.,
+            ))
+            .build();
+
         world.add_resource::<DemoState>(DemoState {
             light_angle: 0.0,
             light_color: [1.0; 4],
@@ -175,6 +206,7 @@ impl State for Example {
             point_light: true,
             directional_light: true,
             camera_angle: 0.0,
+            fps_display,
             pipeline_forward: true,
         });
     }
@@ -274,15 +306,16 @@ struct Assets {
     lid: MeshHandle,
     rectangle: MeshHandle,
     teapot: MeshHandle,
-
     red: Material,
     white: Material,
     logo: Material,
+    font: FontHandle,
 }
 
 fn load_assets(world: &World) -> Assets {
     let mesh_storage = world.read_resource();
     let tex_storage = world.read_resource();
+    let font_storage = world.read_resource();
     let mat_defaults = world.read_resource::<MaterialDefaults>();
     let loader = world.read_resource::<Loader>();
 
@@ -314,6 +347,7 @@ fn load_assets(world: &World) -> Assets {
     let lid = loader.load("mesh/lid.obj", ObjFormat, (), (), &mesh_storage);
     let teapot = loader.load("mesh/teapot.obj", ObjFormat, (), (), &mesh_storage);
     let rectangle = loader.load("mesh/rectangle.obj", ObjFormat, (), (), &mesh_storage);
+    let font = loader.load("font/square.ttf", TtfFormat, (), (), &font_storage);
 
     Assets {
         cube,
@@ -321,10 +355,10 @@ fn load_assets(world: &World) -> Assets {
         lid,
         rectangle,
         teapot,
-
         red,
         white,
         logo,
+        font,
     }
 }
 
@@ -347,17 +381,28 @@ fn run() -> Result<(), Error> {
     );
 
     let display_config = DisplayConfig::load(display_config_path);
-    let pipeline_builder = Pipeline::build().with_stage(
-        Stage::with_backbuffer()
-            .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawShaded::<PosNormTex>::new()),
-    );
 
-    let mut game = Application::build(resources_directory, Example)?
+
+    let game = Application::build(resources_directory, Example)?
         .with::<ExampleSystem>(ExampleSystem, "example_system", &[])
+        .with_frame_limit(FrameRateLimitStrategy::Unlimited, 0)
         .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
         .with_bundle(RenderBundle::new())?
+        .with_bundle(UiBundle::new())?
         .with_bundle(HotReloadBundle::default())?
+        .with_bundle(FPSCounterBundle::default())?;
+    let pipeline_builder = {
+        let loader = game.world.read_resource();
+        let mesh_storage = game.world.read_resource();
+
+        Pipeline::build().with_stage(
+            Stage::with_backbuffer()
+                .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
+                .with_pass(DrawShaded::<PosNormTex>::new())
+                .with_pass(DrawUi::new(&loader, &mesh_storage)),
+        )
+    };
+    let mut game = game
         .with_local(RenderSystem::build(pipeline_builder, Some(display_config))?)
         .build()?;
 

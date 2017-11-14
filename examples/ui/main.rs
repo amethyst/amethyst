@@ -7,12 +7,14 @@ use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::cgmath::Vector3;
 use amethyst::core::cgmath::prelude::InnerSpace;
 use amethyst::core::transform::Transform;
-use amethyst::ecs::World;
+use amethyst::core::Time;
+use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
+use amethyst::ecs::{Entity, World};
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light, Mesh, Pipeline,
                          PngFormat, PointLight, PosNormTex, RenderBundle, RenderSystem, Rgba,
                          ScreenDimensions, Stage, Texture};
-use amethyst::ui::{DrawUi, FontAsset, TtfFormat, UiBundle, UiImage, UiText, UiTransform};
+use amethyst::ui::{DrawUi, FontAsset, TextEditing, TtfFormat, UiBundle, UiFocused, UiImage, UiText, UiTransform};
 use amethyst::winit::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
@@ -25,7 +27,9 @@ const LIGHT_POSITION: [f32; 3] = [2.0, 2.0, -2.0];
 const LIGHT_RADIUS: f32 = 5.0;
 const LIGHT_INTENSITY: f32 = 3.0;
 
-struct Example;
+struct Example {
+    fps_display: Option<Entity>,
+}
 
 impl State for Example {
     fn on_start(&mut self, world: &mut World) {
@@ -69,10 +73,33 @@ impl State for Example {
             })
             .build();
 
-        world
+        let text = world
             .create_entity()
             .with(UiTransform::new(
                 "hello_world".to_string(),
+                0.,
+                200.,
+                1.,
+                500.,
+                500.,
+            ))
+            .with(UiText::new(
+                font.clone(),
+                "Hello world!".to_string(),
+                [1.0, 1.0, 1.0, 1.0],
+                75.,
+            ))
+            .with(TextEditing {
+                text_selected: 1..3,
+                selected_text_color: [0.0, 0.0, 0.0, 1.0],
+                selected_background_color: [1.0, 1.0, 1.0, 1.0],
+                use_block_cursor: true,
+            })
+            .build();
+        let fps = world
+            .create_entity()
+            .with(UiTransform::new(
+                "fps".to_string(),
                 0.,
                 0.,
                 1.,
@@ -81,11 +108,25 @@ impl State for Example {
             ))
             .with(UiText::new(
                 font,
-                "Hello world!".to_string(),
+                "N/A".to_string(),
                 [1.0, 1.0, 1.0, 1.0],
                 75.,
             ))
             .build();
+        self.fps_display = Some(fps);
+        world.write_resource::<UiFocused>().entity = Some(text);
+    }
+
+    fn update(&mut self, world: &mut World) -> Trans {
+        let mut ui_text = world.write::<UiText>();
+        if let Some(fps_display) = self.fps_display.and_then(|entity| ui_text.get_mut(entity)) {
+            if world.read_resource::<Time>().frame_number() % 20 == 0 {
+                let fps = world.read_resource::<FPSCounter>().sampled_fps();
+                fps_display.text = format!("FPS: {:.*}", 2, fps);
+            }
+        }
+
+        Trans::None
     }
 
     fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
@@ -115,9 +156,10 @@ fn run() -> Result<(), amethyst::Error> {
     let resources = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
     let config = DisplayConfig::load(&display_config_path);
 
-    let mut game = Application::build(resources, Example)?
+    let mut game = Application::build(resources, Example{fps_display: None})?
         .with_bundle(RenderBundle::new())?
-        .with_bundle(UiBundle::new(&[]))?;
+        .with_bundle(UiBundle::new())?
+        .with_bundle(FPSCounterBundle::default())?;
     let pipe = {
         let loader = game.world.read_resource();
         let mesh_storage = game.world.read_resource();

@@ -1,5 +1,4 @@
 use hetseq::*;
-use rayon::iter::{Chain, ParallelIterator};
 use specs::SystemData;
 
 use super::stage::*;
@@ -39,23 +38,14 @@ pub trait StagesData<'a> {
 }
 
 ///
-pub trait StagesApply<'a> {
-    ///
-    type Apply: ParallelIterator<Item = ()>;
-}
-
-///
-pub trait PolyStages
-    : for<'a> StagesApply<'a> + for<'a> StagesData<'a> + Send + Sync {
+pub trait PolyStages: for<'a> StagesData<'a> {
     ///
     fn apply<'a, 'b: 'a>(
         &'a mut self,
-        encoders: &'a mut [Encoder],
-        jobs_count: usize,
+        encoders: &mut Encoder,
+        factory: Factory,
         data: <Self as StagesData<'b>>::Data,
-    ) -> <Self as StagesApply<'a>>::Apply;
-    ///
-    fn encoders_required(jobs_count: usize) -> usize;
+    );
 
     /// Distributes new targets
     fn new_targets(&mut self, new_targets: &HashMap<String, Target>);
@@ -68,30 +58,18 @@ where
     type Data = <HS as StageData<'a>>::Data;
 }
 
-impl<'a, HS> StagesApply<'a> for List<(HS, List<()>)>
-where
-    HS: PolyStage,
-{
-    type Apply = <HS as StageApply<'a>>::Apply;
-}
-
 impl<HS> PolyStages for List<(HS, List<()>)>
 where
     HS: PolyStage,
 {
     fn apply<'a, 'b: 'a>(
         &'a mut self,
-        encoders: &'a mut [Encoder],
-        jobs_count: usize,
+        encoders: &mut Encoder,
+        factory: Factory,
         hd: <HS as StageData<'b>>::Data,
-    ) -> <HS as StageApply<'a>>::Apply {
-        let (encoders, _) = encoders.split_at_mut(HS::encoders_required(jobs_count));
+    ) {
         let List((ref mut hs, _)) = *self;
-        hs.apply(encoders, jobs_count, hd)
-    }
-
-    fn encoders_required(jobs_count: usize) -> usize {
-        HS::encoders_required(jobs_count)
+        hs.apply(encoders, factory, hd);
     }
 
     fn new_targets(&mut self, new_targets: &HashMap<String, Target>) {
@@ -108,14 +86,6 @@ where
     type Data = (<HS as StageData<'a>>::Data, <TS as StagesData<'a>>::Data);
 }
 
-impl<'a, HS, TS> StagesApply<'a> for List<(HS, TS)>
-where
-    HS: PolyStage,
-    TS: PolyStages,
-{
-    type Apply = Chain<<HS as StageApply<'a>>::Apply, <TS as StagesApply<'a>>::Apply>;
-}
-
 impl<HS, TS> PolyStages for List<(HS, TS)>
 where
     HS: PolyStage,
@@ -123,18 +93,13 @@ where
 {
     fn apply<'a, 'b: 'a>(
         &'a mut self,
-        encoders: &'a mut [Encoder],
-        jobs_count: usize,
+        encoders: &mut Encoder,
+        factory: Factory,
         (hd, td): <Self as StagesData<'b>>::Data,
-    ) -> <Self as StagesApply<'a>>::Apply {
-        let (encoders, left) = encoders.split_at_mut(HS::encoders_required(jobs_count));
+    ) {
         let List((ref mut hs, ref mut ts)) = *self;
-        hs.apply(encoders, jobs_count, hd)
-            .chain(ts.apply(left, jobs_count, td))
-    }
-
-    fn encoders_required(jobs_count: usize) -> usize {
-        HS::encoders_required(jobs_count) + TS::encoders_required(jobs_count)
+        hs.apply(encoders, factory.clone(), hd);
+        ts.apply(encoders, factory, td);
     }
 
     fn new_targets(&mut self, new_targets: &HashMap<String, Target>) {
@@ -144,31 +109,21 @@ where
     }
 }
 
-///
+/// The data requested from the `specs::World` by the Pipeline.
 pub trait PipelineData<'a> {
-    ///
+    /// The data itself
     type Data: SystemData<'a> + Send;
 }
 
-///
-pub trait PipelineApply<'a> {
-    ///
-    type Apply: ParallelIterator<Item = ()>;
-}
-
-///
-pub trait PolyPipeline
-    : for<'a> PipelineApply<'a> + for<'a> PipelineData<'a> + Send + Sync {
+/// Trait used for the pipeline.
+pub trait PolyPipeline: for<'a> PipelineData<'a> {
     /// Retuns `ParallelIterator` which apply data to all stages
     fn apply<'a, 'b: 'a>(
         &'a mut self,
-        encoder: &'a mut [Encoder],
-        jobs_count: usize,
+        encoder: &mut Encoder,
+        factory: Factory,
         data: <Self as PipelineData<'b>>::Data,
-    ) -> <Self as PipelineApply<'a>>::Apply;
-
-    /// Returns number of `Encoder`s required
-    fn encoders_required(jobs_count: usize) -> usize;
+    );
 
     /// Resizes the pipeline targets
     fn new_targets(&mut self, new_targets: HashMap<String, Target>);
@@ -184,28 +139,17 @@ where
     type Data = <L as StagesData<'a>>::Data;
 }
 
-impl<'a, L> PipelineApply<'a> for Pipeline<L>
-where
-    L: PolyStages,
-{
-    type Apply = <L as StagesApply<'a>>::Apply;
-}
-
 impl<L> PolyPipeline for Pipeline<L>
 where
     L: PolyStages,
 {
     fn apply<'a, 'b: 'a>(
         &'a mut self,
-        encoders: &'a mut [Encoder],
-        jobs_count: usize,
+        encoders: &mut Encoder,
+        factory: Factory,
         data: <L as StagesData<'b>>::Data,
-    ) -> <L as StagesApply<'a>>::Apply {
-        self.stages.apply(encoders, jobs_count, data)
-    }
-
-    fn encoders_required(jobs_count: usize) -> usize {
-        L::encoders_required(jobs_count)
+    ) {
+        self.stages.apply(encoders, factory, data);
     }
 
     fn new_targets(&mut self, new_targets: HashMap<String, Target>) {

@@ -12,7 +12,8 @@ impl Component for UiResize {
     type Storage = DenseVecStorage<Self>;
 }
 
-/// This system rearranges UI elements whenever the screen is resized using their resize_fn.
+/// This system rearranges UI elements whenever the screen is resized using their `UiResize`
+/// component.
 pub struct ResizeSystem {
     event_reader: ReaderId,
 }

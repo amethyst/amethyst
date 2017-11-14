@@ -11,17 +11,12 @@ use super::*;
 /// UI bundle
 ///
 /// Will register all necessary components and systems needed for UI, along with any resources.
-///
-/// `UiTextRenderer` is registered with name `"ui_text"`.
-pub struct UiBundle {
-    deps: &'static [&'static str],
-}
+pub struct UiBundle;
 
 impl UiBundle {
-    /// Create a new UI bundle, the dependencies given will be the dependencies for the
-    /// UiTextRenderer system.
-    pub fn new(deps: &'static [&'static str]) -> Self {
-        UiBundle { deps }
+    /// Create a new UI bundle
+    pub fn new() -> Self {
+        UiBundle
     }
 }
 
@@ -34,15 +29,17 @@ impl<'a, 'b> ECSBundle<'a, 'b> for UiBundle {
         world.register::<UiImage>();
         world.register::<UiTransform>();
         world.register::<UiText>();
+        world.register::<TextEditing>();
         world.register::<UiResize>();
         world.register::<Handle<FontAsset>>();
         world.add_resource(AssetStorage::<FontAsset>::new());
+        world.add_resource(UiFocused { entity: None });
         let reader = world
             .read_resource::<EventChannel<Event>>()
             .register_reader();
         Ok(
             builder
-                .add(UiTextRenderer, "ui_text", self.deps)
+                .add(TextNormalizer, "text_normalizer", &[])
                 .add(Processor::<FontAsset>::new(), "font_processor", &[])
                 .add(ResizeSystem::new(reader), "ui_resize_system", &[]),
         )

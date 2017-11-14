@@ -121,10 +121,7 @@ where
     }
 
     fn render(&mut self, (mut event_handler, data): RenderData<P>) {
-        use std::time::Duration;
-
-        self.renderer
-            .draw(&mut self.pipe, data, Duration::from_secs(0));
+        self.renderer.draw(&mut self.pipe, data);
 
         let mut events: Vec<Event> = Vec::new();
         self.renderer.events_mut().poll_events(|new_event| {
