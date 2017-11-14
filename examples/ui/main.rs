@@ -90,7 +90,7 @@ impl State for Example {
                 75.,
             ))
             .with(TextEditing {
-                text_selected: 1..3,
+                text_selected: 1..1,
                 selected_text_color: [0.0, 0.0, 0.0, 1.0],
                 selected_background_color: [1.0, 1.0, 1.0, 1.0],
                 use_block_cursor: true,

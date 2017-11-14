@@ -7,6 +7,7 @@ extern crate amethyst_assets;
 extern crate amethyst_core;
 extern crate amethyst_renderer;
 extern crate cgmath;
+extern crate fnv;
 extern crate gfx;
 extern crate gfx_glyph;
 extern crate hibitset;

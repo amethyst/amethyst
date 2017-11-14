@@ -168,6 +168,8 @@ where
             for y in 0..h {
                 for x in 0..(w * pixel_width) {
                     v_flip_buffer.push(data[x + (h - y - 1) * w * pixel_width]);
+                    // Uncomment this if you need to debug this.
+                    //println!("x: {}, y: {}, w: {}, h: {}, pw: {}", x, y, w, h, pixel_width);
                 }
             }
             data = &v_flip_buffer;
