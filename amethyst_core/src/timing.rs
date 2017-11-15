@@ -148,7 +148,13 @@ impl Time {
 
     /// Sets the time multiplier that affects how time values are computed,
     /// effectively slowing or speeding up your game.
+    ///
+    /// ## Panics
+    /// This will panic if multiplier is NaN, Infinity, or less than 0.
     pub fn set_time_multiplier(&mut self, multiplier: f32) {
+        use std::f32::INFINITY;
+        assert!(multiplier >= 0.0);
+        assert!(multiplier != INFINITY);
         self.time_multiplier = multiplier;
     }
 
