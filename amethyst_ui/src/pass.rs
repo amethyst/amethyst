@@ -211,7 +211,8 @@ impl<'a> ParallelIterator for DrawUiApply<'a> {
             // Create a bitset containing only the new indices.
             let new = (&transform_set ^ &cached_draw_order.cached) & &transform_set;
             for (entity, transform, _new) in (entities, ui_transform, &new).join() {
-                let pos = cached_draw_order.cache
+                let pos = cached_draw_order
+                    .cache
                     .iter()
                     .position(|&(cached_z, _)| transform.z >= cached_z);
                 match pos {
@@ -225,9 +226,11 @@ impl<'a> ParallelIterator for DrawUiApply<'a> {
         // Sort from largest z value to smallest z value.
         // Most of the time this shouldn't do anything but you still need it for if the z values
         // change.
-        cached_draw_order.cache.sort_unstable_by(|&(z1, _), &(z2, _)| {
-            z2.partial_cmp(&z1).unwrap_or(Ordering::Equal)
-        });
+        cached_draw_order
+            .cache
+            .sort_unstable_by(|&(z1, _), &(z2, _)| {
+                z2.partial_cmp(&z1).unwrap_or(Ordering::Equal)
+            });
 
         //let cached_draw_order = &cached_draw_order;
 
@@ -235,7 +238,7 @@ impl<'a> ParallelIterator for DrawUiApply<'a> {
             2. / screen_dimensions.width(),
             -2. / screen_dimensions.height(),
             -2.,
-            1.
+            1.,
         );
 
         let cached_draw_order = &*cached_draw_order.cache;

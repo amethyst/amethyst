@@ -26,9 +26,17 @@ impl<'s> System<'s> for WinnerSystem {
 
     fn run(
         &mut self,
-        (mut balls, mut transforms, mut text, mut score_board, storage, sounds, score_text, audio_output):
-        Self::SystemData,
-){
+        (
+            mut balls,
+            mut transforms,
+            mut text,
+            mut score_board,
+            storage,
+            sounds,
+            score_text,
+            audio_output,
+        ): Self::SystemData,
+    ) {
         for (ball, transform) in (&mut balls, &mut transforms).join() {
             use ARENA_WIDTH;
 

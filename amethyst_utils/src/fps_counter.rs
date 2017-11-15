@@ -72,9 +72,7 @@ pub struct FPSCounterBundle {
 impl FPSCounterBundle {
     ///Creates a new FPSCounterBundle with the specified sample size.
     pub fn new(samplesize: usize) -> Self {
-        Self {
-            samplesize,
-        }
+        Self { samplesize }
     }
 }
 

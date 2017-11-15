@@ -40,7 +40,7 @@ impl Time {
         self.delta_time
     }
 
-	/// Gets the time difference between frames in seconds ignoring the time speed multiplier.
+    /// Gets the time difference between frames in seconds ignoring the time speed multiplier.
     pub fn delta_real_seconds(&self) -> f32 {
         self.delta_real_seconds
     }
@@ -71,28 +71,28 @@ impl Time {
     }
 
     /// Gets the time since the start of the game, taking into account the speed multiplier.
-    pub fn absolute_time(&self) -> Duration{
-    	self.absolute_time
+    pub fn absolute_time(&self) -> Duration {
+        self.absolute_time
     }
 
     /// Gets the time since the start of the game as seconds, taking into account the speed multiplier.
-    pub fn absolute_time_seconds(&self) -> f32{
-    	duration_to_secs(self.absolute_time)
+    pub fn absolute_time_seconds(&self) -> f32 {
+        duration_to_secs(self.absolute_time)
     }
 
     /// Gets the time since the start of the game, ignoring the speed multiplier.
-    pub fn absolute_real_time(&self) -> Duration{
-    	self.absolute_real_time
+    pub fn absolute_real_time(&self) -> Duration {
+        self.absolute_real_time
     }
 
     /// Gets the time since the start of the game as seconds, ignoring the speed multiplier.
-    pub fn absolute_real_time_seconds(&self) -> f32{
-    	duration_to_secs(self.absolute_real_time)
+    pub fn absolute_real_time_seconds(&self) -> f32 {
+        duration_to_secs(self.absolute_real_time)
     }
 
     /// Gets the current time speed multiplier.
-    pub fn time_multiplier(&self) -> f32{
-    	self.time_multiplier
+    pub fn time_multiplier(&self) -> f32 {
+        self.time_multiplier
     }
 
     /// Gets the total number of frames that have been played in this session.
@@ -102,7 +102,7 @@ impl Time {
     /// your game.
     pub fn set_delta_seconds(&mut self, secs: f32) {
         self.delta_seconds = secs * self.time_multiplier;
-        self.delta_time = secs_to_duration(secs* self.time_multiplier);
+        self.delta_time = secs_to_duration(secs * self.time_multiplier);
         self.delta_real_seconds = secs;
         self.delta_real_time = secs_to_duration(secs);
 
@@ -148,8 +148,8 @@ impl Time {
 
     /// Sets the time multiplier that affects how time values are computed,
     /// effectively slowing or speeding up your game.
-    pub fn set_time_multiplier(&mut self,multiplier:f32){
-    	self.time_multiplier = multiplier;
+    pub fn set_time_multiplier(&mut self, multiplier: f32) {
+        self.time_multiplier = multiplier;
     }
 
     /// Indicates a fixed update just finished.

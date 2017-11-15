@@ -1,5 +1,5 @@
-use std::marker::PhantomData;
 use specs::{Component, DenseVecStorage, FlaggedStorage};
+use std::marker::PhantomData;
 
 
 /// The raw pixels on screen that are populated.

@@ -114,8 +114,9 @@ impl<'a> System<'a> for UiTextRenderer {
     );
 
     fn run(&mut self, (transform, mut text, loader, tex_storage, font_storage): Self::SystemData) {
-        for (transform, text) in (&transform, &mut text).join()
-        .filter(|&(_transform, ref text)| text.dirty)
+        for (transform, text) in (&transform, &mut text)
+            .join()
+            .filter(|&(_transform, ref text)| text.dirty)
         {
             // TODO: use `TrackedStorage`
             if let Some(font) = font_storage.get(&text.font) {
@@ -132,7 +133,7 @@ impl<'a> System<'a> for UiTextRenderer {
                     for glyph in font.0.layout(
                         &text.text,
                         Scale::uniform(text.font_size),
-                        Point::<f32>{x: 0., y: 0.}
+                        Point::<f32> { x: 0., y: 0. },
                     ) {
                         let position = glyph.position();
                         let pos_x = position.x as u32;

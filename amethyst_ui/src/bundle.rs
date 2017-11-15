@@ -21,9 +21,7 @@ impl UiBundle {
     /// Create a new UI bundle, the dependencies given will be the dependencies for the
     /// UiTextRenderer system.
     pub fn new(deps: &'static [&'static str]) -> Self {
-        UiBundle {
-            deps
-        }
+        UiBundle { deps }
     }
 }
 
@@ -39,11 +37,14 @@ impl<'a, 'b> ECSBundle<'a, 'b> for UiBundle {
         world.register::<UiResize>();
         world.register::<Handle<FontAsset>>();
         world.add_resource(AssetStorage::<FontAsset>::new());
-        let reader = world.read_resource::<EventChannel<Event>>().register_reader();
-        Ok(builder
-            .add(UiTextRenderer, "ui_text", self.deps)
-            .add(Processor::<FontAsset>::new(), "font_processor", &[])
-            .add(ResizeSystem::new(reader), "ui_resize_system", &[])
+        let reader = world
+            .read_resource::<EventChannel<Event>>()
+            .register_reader();
+        Ok(
+            builder
+                .add(UiTextRenderer, "ui_text", self.deps)
+                .add(Processor::<FontAsset>::new(), "font_processor", &[])
+                .add(ResizeSystem::new(reader), "ui_resize_system", &[]),
         )
     }
 }
