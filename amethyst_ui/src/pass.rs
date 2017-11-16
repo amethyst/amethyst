@@ -12,7 +12,6 @@ use amethyst_renderer::pipe::{Effect, NewEffect};
 use amethyst_renderer::pipe::pass::{Pass, PassData};
 use cgmath::vec4;
 use fnv::FnvHashMap as HashMap;
-use gfx::format::{ChannelType, SurfaceType};
 use gfx::preset::blend;
 use gfx::pso::buffer::ElemStride;
 use gfx::state::ColorMask;
@@ -265,8 +264,8 @@ impl Pass for DrawUi {
                     };
                     let mut new_id = None;
 
-                    // This piece of code should be used once Font implements Eq.
-                    // Xaeroxe is going to try and contribute this implementation.
+                    // This needs a replacement since it's not possible to implement Eq for Font
+                    // in a reasonable manner.
                     /*self.glyph_brushes.iter().position(|brush| {
                         // GlyphBrush guarantees font 0 will be available.
                         brush.fonts().get(&FontId(0)).unwrap() == font
@@ -284,24 +283,23 @@ impl Pass for DrawUi {
                 let editing = editing.get(entity);
                 let text = editing
                     .and_then(|editing| {
-                        if editing.text_selected.start == editing.text_selected.end {
+                        if editing.highlight_vector == 0 {
                             return None;
                         }
-                        let start_byte = ui_text
-                            .text
-                            .grapheme_indices(true)
-                            .nth(editing.text_selected.start)
-                            .map(|i| i.0);
-                        let end_byte = ui_text
-                            .text
-                            .grapheme_indices(true)
-                            .nth(editing.text_selected.end)
-                            .map(|i| i.0);
+                        let start = editing
+                            .cursor_position
+                            .min(editing.cursor_position + editing.highlight_vector)
+                            as usize;
+                        let end = editing
+                            .cursor_position
+                            .max(editing.cursor_position + editing.highlight_vector)
+                            as usize;
+                        let start_byte =
+                            ui_text.text.grapheme_indices(true).nth(start).map(|i| i.0);
+                        let end_byte = ui_text.text.grapheme_indices(true).nth(end).map(|i| i.0)
+                            .unwrap_or(ui_text.text.len());
                         start_byte
-                            .into_iter()
-                            .zip(end_byte.into_iter())
-                            .next()
-                            .map(|indices| (editing, indices))
+                            .map(|start_byte| (editing, (start_byte, end_byte)))
                     })
                     .map(|(editing, (start_byte, end_byte))| {
                         vec![
@@ -348,15 +346,21 @@ impl Pass for DrawUi {
                 // Render background highlight
                 let brush = &mut self.glyph_brushes[ui_text.brush_id.unwrap()];
                 let cache = &mut self.cached_color_textures;
-                if let Some((texture, selected)) = editing.and_then(|ed| {
-                    tex_storage
-                        .get(&cached_color_texture(
-                            cache,
-                            ed.selected_background_color,
-                            &loader,
-                            &tex_storage,
-                        ))
-                        .map(|tex| (tex, ed.text_selected.clone()))
+                if let Some((texture, (start, end))) = editing.and_then(|ed| {
+                    let start = ed
+                        .cursor_position
+                        .min(ed.cursor_position + ed.highlight_vector)
+                        as usize;
+                    let end = ed
+                        .cursor_position
+                        .max(ed.cursor_position + ed.highlight_vector)
+                        as usize;
+                    tex_storage.get(&cached_color_texture(
+                        cache,
+                        ed.selected_background_color,
+                        &loader,
+                        &tex_storage,
+                    )).map(|tex| (tex, (start, end)))
                 }) {
                     effect.data.textures.push(texture.view().clone());
                     effect.data.samplers.push(texture.sampler().clone());
@@ -369,7 +373,7 @@ impl Pass for DrawUi {
                     for glyph in brush
                         .glyphs(&section)
                         .enumerate()
-                        .filter(|&(i, _g)| selected.start <= i && i < selected.end)
+                        .filter(|&(i, _g)| start <= i && i < end)
                         .map(|(_i, g)| g)
                     {
                         let height = glyph.scale().y;
@@ -406,8 +410,9 @@ impl Pass for DrawUi {
                         ))
                         .map(|tex| (tex, ed))
                 }) {
-                    let blink_on = time.total_game_time_seconds() % (1.0 / CURSOR_BLINK_RATE) < 0.5 / CURSOR_BLINK_RATE;
-                    if editing.text_selected.start == editing.text_selected.end && (editing.use_block_cursor || blink_on) {
+                    let blink_on = time.total_game_time_seconds() % (1.0 / CURSOR_BLINK_RATE)
+                        < 0.5 / CURSOR_BLINK_RATE;
+                    if editing.use_block_cursor || blink_on {
                         effect.data.textures.push(texture.view().clone());
                         effect.data.samplers.push(texture.sampler().clone());
                         let ascent = brush
@@ -416,11 +421,13 @@ impl Pass for DrawUi {
                             .unwrap()
                             .v_metrics(Scale::uniform(ui_text.font_size))
                             .ascent;
-                        for glyph in brush
-                            .glyphs(&section)
-                            .enumerate()
-                            .filter(|&(i, _g)| editing.text_selected.start == i)
-                            .map(|(_i, g)| g)
+                        let glyph_len = brush.glyphs(&section).count();
+                        let glyph = if editing.cursor_position as usize >= glyph_len {
+                            (brush.glyphs(&section).last(), true)
+                        } else {
+                            (brush.glyphs(&section).nth(editing.cursor_position as usize), false)
+                        };
+                        if let (Some(glyph), at_end) = glyph
                         {
                             let height;
                             let width;
@@ -436,13 +443,17 @@ impl Pass for DrawUi {
                                 width = 1.0;
                             }
                             let pos = glyph.position();
+                            let mut x = pos.x;
+                            if at_end {
+                                x += glyph.unpositioned().h_metrics().advance_width;
+                            }
                             let mut y = pos.y - ascent;
                             if editing.use_block_cursor && !blink_on {
                                 y += glyph.scale().y * 0.9;
                             }
                             let vertex_args = VertexArgs {
                                 proj_vec: proj_vec.into(),
-                                coord: [pos.x, y],
+                                coord: [x, y],
                                 dimension: [width, height],
                             };
                             effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);

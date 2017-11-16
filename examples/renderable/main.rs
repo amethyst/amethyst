@@ -8,8 +8,8 @@ extern crate amethyst;
 use amethyst::{Application, Error, State, Trans};
 use amethyst::assets::{HotReloadBundle, Loader};
 use amethyst::config::Config;
-use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::cgmath::{Array, Deg, Euler, Quaternion, Rad, Rotation, Rotation3, Vector3};
+use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::timing::Time;
 use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::ecs::{Entity, Fetch, FetchMut, Join, ReadStorage, System, World, WriteStorage};
@@ -46,7 +46,7 @@ impl<'a> System<'a> for ExampleSystem {
         Fetch<'a, FPSCounter>,
     );
 
-    fn run(&mut self, (mut lights, time, camera, mut transforms, mut state, mut ui_text, fps_counter): Self::SystemData) {
+fn run(&mut self, (mut lights, time, camera, mut transforms, mut state, mut ui_text, fps_counter): Self::SystemData){
         let light_angular_velocity = -1.0;
         let light_orbit_radius = 15.0;
         let light_z = 6.0;
@@ -183,14 +183,7 @@ impl State for Example {
 
         let fps_display = world
             .create_entity()
-            .with(UiTransform::new(
-                "fps".to_string(),
-                0.,
-                0.,
-                1.,
-                200.,
-                50.,
-            ))
+            .with(UiTransform::new("fps".to_string(), 0., 0., 1., 200., 50.))
             .with(UiText::new(
                 assets.font.clone(),
                 "N/A".to_string(),
@@ -402,8 +395,7 @@ fn run() -> Result<(), Error> {
                 .with_pass(DrawUi::new(&loader, &mesh_storage)),
         )
     };
-    let mut game = game
-        .with_local(RenderSystem::build(pipeline_builder, Some(display_config))?)
+    let mut game = game.with_local(RenderSystem::build(pipeline_builder, Some(display_config))?)
         .build()?;
 
     game.run();

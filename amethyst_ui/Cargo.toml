@@ -12,9 +12,9 @@ repository = "https://github.com/amethyst/amethyst"
 license = "MIT/Apache-2.0"
 
 [dependencies]
-amethyst_assets = { path = "../amethyst_assets", version = "0.2"}
-amethyst_core = { path = "../amethyst_core", version = "0.1"}
-amethyst_renderer = { path = "../amethyst_renderer", version = "0.5"}
+amethyst_assets = { path = "../amethyst_assets", version = "0.2" }
+amethyst_core = { path = "../amethyst_core", version = "0.1" }
+amethyst_renderer = { path = "../amethyst_renderer", version = "0.5" }
 cgmath = { version = "0.14", features = ["eders"] }
 fnv = "1"
 gfx = { version = "0.16", features = ["serialize"] }

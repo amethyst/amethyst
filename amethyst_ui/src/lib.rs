@@ -33,7 +33,7 @@ pub use self::format::{FontAsset, FontHandle, OtfFormat, TtfFormat};
 pub use self::image::UiImage;
 pub use self::pass::DrawUi;
 pub use self::resize::{ResizeSystem, UiResize};
-pub use self::text::{TextNormalizer, UiText, TextEditing};
+pub use self::text::{TextEditing, UiSystem, UiText};
 pub use self::transform::UiTransform;
 
 /// How many times the cursor blinks per second while editing text.

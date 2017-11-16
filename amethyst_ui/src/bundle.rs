@@ -39,7 +39,7 @@ impl<'a, 'b> ECSBundle<'a, 'b> for UiBundle {
             .register_reader();
         Ok(
             builder
-                .add(TextNormalizer, "text_normalizer", &[])
+                .add(UiSystem::new(reader.clone()), "ui_system", &[])
                 .add(Processor::<FontAsset>::new(), "font_processor", &[])
                 .add(ResizeSystem::new(reader), "ui_resize_system", &[]),
         )

@@ -4,17 +4,18 @@ extern crate amethyst;
 extern crate genmesh;
 
 use amethyst::assets::{AssetStorage, Loader};
+use amethyst::core::Time;
 use amethyst::core::cgmath::Vector3;
 use amethyst::core::cgmath::prelude::InnerSpace;
 use amethyst::core::transform::Transform;
-use amethyst::core::Time;
-use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::ecs::{Entity, World};
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light, Mesh, Pipeline,
                          PngFormat, PointLight, PosNormTex, RenderBundle, RenderSystem, Rgba,
                          ScreenDimensions, Stage, Texture};
-use amethyst::ui::{DrawUi, FontAsset, TextEditing, TtfFormat, UiBundle, UiFocused, UiImage, UiText, UiTransform};
+use amethyst::ui::{DrawUi, FontAsset, TextEditing, TtfFormat, UiBundle, UiFocused, UiImage,
+                   UiText, UiTransform};
+use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::winit::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
@@ -90,22 +91,16 @@ impl State for Example {
                 75.,
             ))
             .with(TextEditing {
-                text_selected: 1..1,
+                cursor_position: 1,
+                highlight_vector: 0,
                 selected_text_color: [0.0, 0.0, 0.0, 1.0],
                 selected_background_color: [1.0, 1.0, 1.0, 1.0],
-                use_block_cursor: true,
+                use_block_cursor: false,
             })
             .build();
         let fps = world
             .create_entity()
-            .with(UiTransform::new(
-                "fps".to_string(),
-                0.,
-                0.,
-                1.,
-                500.,
-                500.,
-            ))
+            .with(UiTransform::new("fps".to_string(), 0., 0., 1., 500., 500.))
             .with(UiText::new(
                 font,
                 "N/A".to_string(),
@@ -156,7 +151,7 @@ fn run() -> Result<(), amethyst::Error> {
     let resources = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
     let config = DisplayConfig::load(&display_config_path);
 
-    let mut game = Application::build(resources, Example{fps_display: None})?
+    let mut game = Application::build(resources, Example { fps_display: None })?
         .with_bundle(RenderBundle::new())?
         .with_bundle(UiBundle::new())?
         .with_bundle(FPSCounterBundle::default())?;

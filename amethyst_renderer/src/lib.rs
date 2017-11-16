@@ -68,9 +68,9 @@ pub use mesh::{vertex_data, Mesh, MeshHandle, VertexBuffer};
 pub use mtl::{Material, MaterialDefaults};
 pub use pass::{DrawFlat, DrawFlatSeparate, DrawPbm, DrawPbmSeparate, DrawShaded,
                DrawShadedSeparate};
-pub use pipe::{ColorBuffer, Data, DepthBuffer, DepthMode, Effect, EffectBuilder, Init, Meta, NewEffect, Pipeline,
-               PipelineBuild, PipelineBuilder, PipelineData, PolyPipeline, PolyStage, PolyStages,
-               Stage, StageBuilder, Target, TargetBuilder, Targets};
+pub use pipe::{ColorBuffer, Data, DepthBuffer, DepthMode, Effect, EffectBuilder, Init, Meta,
+               NewEffect, Pipeline, PipelineBuild, PipelineBuilder, PipelineData, PolyPipeline,
+               PolyStage, PolyStages, Stage, StageBuilder, Target, TargetBuilder, Targets};
 pub use renderer::Renderer;
 pub use resources::{AmbientColor, ScreenDimensions, WindowMessages};
 pub use system::RenderSystem;
