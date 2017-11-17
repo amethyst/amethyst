@@ -171,11 +171,5 @@ fn load_gltf_mesh(
     name: &str,
     options: GltfSceneOptions,
 ) -> Handle<GltfSceneAsset> {
-    loader.load(
-        name,
-        GltfSceneFormat,
-        options,
-        (),
-        &world.read_resource(),
-    )
+    loader.load(name, GltfSceneFormat, options, (), &world.read_resource())
 }

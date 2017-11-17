@@ -227,11 +227,12 @@ impl<'a> EffectBuilder<'a> {
         }
         // OSX doesn't seem to work without a depth test, so here's a workaround.
         if cfg!(target_os = "macos") && depth.is_none() {
-            self.init.out_depth = Some((Depth {
+            self.init.out_depth = Some((
+                Depth {
                     fun: Comparison::Always,
-                    write: true
+                    write: true,
                 },
-                Stencil::default()
+                Stencil::default(),
             ));
         }
         self.init.out_colors.push(name);
@@ -259,11 +260,12 @@ impl<'a> EffectBuilder<'a> {
         }
         // OSX doesn't seem to work without a depth test, so here's a workaround.
         if cfg!(target_os = "macos") && depth.is_none() {
-            self.init.out_depth = Some((Depth {
+            self.init.out_depth = Some((
+                Depth {
                     fun: Comparison::Always,
-                    write: true
+                    write: true,
                 },
-                Stencil::default()
+                Stencil::default(),
             ));
         }
         self.init.out_blends.push((name, mask, blend));

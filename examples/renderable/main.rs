@@ -60,13 +60,13 @@ impl<'a> System<'a> for ExampleSystem {
             transform.rotation = (delta_rot * Quaternion::from(transform.rotation)).into();
         }
 
-        for point_light in (&mut lights).join().filter_map(
-            |light| if let Light::Point(ref mut point_light) = *light {
+        for point_light in (&mut lights).join().filter_map(|light| {
+            if let Light::Point(ref mut point_light) = *light {
                 Some(point_light)
             } else {
                 None
-            },
-        ) {
+            }
+        }) {
             point_light.center[0] = light_orbit_radius * state.light_angle.cos();
             point_light.center[1] = light_orbit_radius * state.light_angle.sin();
             point_light.center[2] = light_z;
@@ -165,8 +165,7 @@ impl State for Example {
         world.create_entity().with(light).build();
 
         {
-            world
-                .add_resource(AmbientColor(Rgba::from([0.01; 3])));
+            world.add_resource(AmbientColor(Rgba::from([0.01; 3])));
         }
 
         world.add_resource::<DemoState>(DemoState {

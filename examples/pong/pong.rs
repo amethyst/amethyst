@@ -1,6 +1,5 @@
 use {ARENA_HEIGHT, ARENA_WIDTH};
 use {Ball, Paddle, Side};
-use systems::ScoreText;
 use amethyst::assets::Loader;
 use amethyst::core::cgmath::Vector3;
 use amethyst::core::transform::{LocalTransform, Transform};
@@ -9,6 +8,7 @@ use amethyst::prelude::*;
 use amethyst::renderer::{Camera, Event, KeyboardInput, Material, MeshHandle, PosTex, Projection,
                          ScreenDimensions, VirtualKeyCode, WindowEvent, WindowMessages};
 use amethyst::ui::{TtfFormat, UiResize, UiText, UiTransform};
+use systems::ScoreText;
 
 pub struct Pong;
 
@@ -155,25 +155,11 @@ fn initialise_score(world: &mut World) {
         (),
         &world.read_resource(),
     );
-    let mut p1_transform = UiTransform::new(
-        "P1".to_string(),
-        0.,
-        0.,
-        1.,
-        55.,
-        50.,
-    );
+    let mut p1_transform = UiTransform::new("P1".to_string(), 0., 0., 1., 55., 50.);
     let p1_size_fn = |transform: &mut UiTransform, (width, _height)| {
         transform.x = (width / 2.) - 100. - transform.width / 2.;
     };
-    let mut p2_transform = UiTransform::new(
-        "P2".to_string(),
-        0.,
-        0.,
-        1.,
-        55.,
-        50.,
-    );
+    let mut p2_transform = UiTransform::new("P2".to_string(), 0., 0., 1., 55., 50.);
     let p2_size_fn = |transform: &mut UiTransform, (width, _height)| {
         transform.x = (width / 2.) + 100. - transform.width / 2.;
     };
@@ -204,10 +190,7 @@ fn initialise_score(world: &mut World) {
         ))
         .with(UiResize(Box::new(p2_size_fn)))
         .build();
-    world.add_resource(ScoreText {
-        p1_score,
-        p2_score,
-    });
+    world.add_resource(ScoreText { p1_score, p2_score });
 }
 
 /// Converts a vector of vertices into a mesh.

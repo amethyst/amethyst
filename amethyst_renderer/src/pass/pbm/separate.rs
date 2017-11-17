@@ -229,27 +229,31 @@ impl<'a> ParallelIterator for DrawPbmSeparateApply<'a> {
 
                         let point_lights: Vec<PointLightPod> = light
                             .join()
-                            .filter_map(|light| if let Light::Point(ref light) = *light {
-                                Some(PointLightPod {
-                                    position: pad(light.center.into()),
-                                    color: pad(light.color.into()),
-                                    intensity: light.intensity,
-                                    _pad: [0.0; 3],
-                                })
-                            } else {
-                                None
+                            .filter_map(|light| {
+                                if let Light::Point(ref light) = *light {
+                                    Some(PointLightPod {
+                                        position: pad(light.center.into()),
+                                        color: pad(light.color.into()),
+                                        intensity: light.intensity,
+                                        _pad: [0.0; 3],
+                                    })
+                                } else {
+                                    None
+                                }
                             })
                             .collect();
 
                         let directional_lights: Vec<DirectionalLightPod> = light
                             .join()
-                            .filter_map(|light| if let Light::Directional(ref light) = *light {
-                                Some(DirectionalLightPod {
-                                    color: pad(light.color.into()),
-                                    direction: pad(light.direction.into()),
-                                })
-                            } else {
-                                None
+                            .filter_map(|light| {
+                                if let Light::Directional(ref light) = *light {
+                                    Some(DirectionalLightPod {
+                                        color: pad(light.color.into()),
+                                        direction: pad(light.direction.into()),
+                                    })
+                                } else {
+                                    None
+                                }
                             })
                             .collect();
 

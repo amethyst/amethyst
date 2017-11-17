@@ -58,7 +58,7 @@ pub struct FPSCounterSystem;
 impl<'a> System<'a> for FPSCounterSystem {
     type SystemData = (Fetch<'a, Time>, FetchMut<'a, FPSCounter>);
     fn run(&mut self, (time, mut counter): Self::SystemData) {
-        counter.push(duration_to_nanos(time.delta_time()));
+        counter.push(duration_to_nanos(time.delta_real_time()));
         //Enable this to debug performance engine wide.
         //println!("Cur FPS: {}, Sampled: {}",counter.frame_fps(),counter.sampled_fps());
     }
@@ -72,9 +72,7 @@ pub struct FPSCounterBundle {
 impl FPSCounterBundle {
     ///Creates a new FPSCounterBundle with the specified sample size.
     pub fn new(samplesize: usize) -> Self {
-        Self {
-            samplesize,
-        }
+        Self { samplesize }
     }
 }
 

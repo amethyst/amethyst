@@ -86,11 +86,15 @@ fn run() -> Result<()> {
             Stage::with_backbuffer()
                 .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
                 .with_pass(DrawFlat::<PosTex>::new())
-                .with_pass(DrawUi::new(&loader, &mesh_storage))
+                .with_pass(DrawUi::new(&loader, &mesh_storage)),
         )
     };
 
-    Ok(game.with_local(RenderSystem::build(pipe, Some(display_config))?).build()?.run())
+    Ok(
+        game.with_local(RenderSystem::build(pipe, Some(display_config))?)
+            .build()?
+            .run(),
+    )
 }
 
 pub struct Ball {
