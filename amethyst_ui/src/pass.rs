@@ -3,7 +3,7 @@
 use std::cmp::{Ordering, PartialOrd};
 use std::hash::{Hash, Hasher};
 
-use amethyst_assets::{AssetStorage, Loader};
+use amethyst_assets::{AssetStorage, Loader, WeakHandle};
 use amethyst_core::Time;
 use amethyst_renderer::{Encoder, Factory, Mesh, MeshHandle, PosTex, Resources, ScreenDimensions,
                         Texture, TextureData, TextureHandle, TextureMetadata, VertexFormat};
@@ -18,6 +18,7 @@ use gfx::state::ColorMask;
 use gfx_glyph::{BuiltInLineBreaker, FontId, GlyphBrush, GlyphBrushBuilder, HorizontalAlign,
                 Layout, Scale, SectionText, VariedSection, VerticalAlign};
 use hibitset::BitSet;
+use rusttype::Point;
 use specs::{Entities, Entity, Fetch, Join, ReadStorage, WriteStorage};
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -59,12 +60,19 @@ impl Hash for KeyColor {
     }
 }
 
-/// Draw Ui elements.  UI won't display without this.  Ir's recommended this be your last pass.
+/// Draw Ui elements.  UI won't display without this.  It's recommended this be your last pass.
 pub struct DrawUi {
     mesh_handle: MeshHandle,
     cached_draw_order: CachedDrawOrder,
     cached_color_textures: HashMap<KeyColor, TextureHandle>,
-    glyph_brushes: Vec<GlyphBrush<'static, Resources, Factory>>,
+    glyph_brushes: HashMap<
+        u32,
+        (
+            GlyphBrush<'static, Resources, Factory>,
+            WeakHandle<FontAsset>,
+        ),
+    >,
+    next_brush_cache_id: u32,
 }
 
 impl DrawUi {
@@ -105,7 +113,8 @@ impl DrawUi {
                 cache: Vec::new(),
             },
             cached_color_textures: HashMap::default(),
-            glyph_brushes: Vec::new(),
+            glyph_brushes: HashMap::default(),
+            next_brush_cache_id: 0,
         }
     }
 }
@@ -216,8 +225,6 @@ impl Pass for DrawUi {
                 z2.partial_cmp(&z1).unwrap_or(Ordering::Equal)
             });
 
-        //let cached_draw_order = &cached_draw_order;
-
         let proj_vec = vec4(
             2. / screen_dimensions.width(),
             -2. / screen_dimensions.height(),
@@ -235,6 +242,11 @@ impl Pass for DrawUi {
             None => return,
         };
         effect.data.vertex_bufs.push(vbuf);
+
+        // Remove brushes whose fonts have been dropped.
+        self.glyph_brushes
+            .retain(|&_id, ref mut value| !value.1.is_dead());
+
         for &(_z, entity) in &self.cached_draw_order.cache {
             // This won't panic as we guaranteed earlier these entities are present.
             let ui_transform = ui_transform.get(entity).unwrap();
@@ -262,19 +274,23 @@ impl Pass for DrawUi {
                         Some(font) => font,
                         None => continue,
                     };
-                    let mut new_id = None;
+                    let mut new_id = self.glyph_brushes
+                        .iter()
+                        .filter_map(|(id, ref value)| value.1.upgrade().map(|h| (id, h)))
+                        .find(|&(_id, ref handle)| *handle == ui_text.font)
+                        .map(|(id, _handle)| *id);
 
-                    // This needs a replacement since it's not possible to implement Eq for Font
-                    // in a reasonable manner.
-                    /*self.glyph_brushes.iter().position(|brush| {
-                        // GlyphBrush guarantees font 0 will be available.
-                        brush.fonts().get(&FontId(0)).unwrap() == font
-                    });*/
                     if new_id.is_none() {
-                        new_id = Some(self.glyph_brushes.len());
-                        self.glyph_brushes.push(
-                            GlyphBrushBuilder::using_font(font.0.clone()).build(factory.clone()),
+                        new_id = Some(self.next_brush_cache_id);
+                        self.glyph_brushes.insert(
+                            self.next_brush_cache_id,
+                            (
+                                GlyphBrushBuilder::using_font(font.0.clone())
+                                    .build(factory.clone()),
+                                ui_text.font.downgrade(),
+                            ),
                         );
+                        self.next_brush_cache_id += 1;
                     }
                     ui_text.brush_id = new_id;
                     ui_text.cached_font = ui_text.font.clone();
@@ -296,10 +312,13 @@ impl Pass for DrawUi {
                             as usize;
                         let start_byte =
                             ui_text.text.grapheme_indices(true).nth(start).map(|i| i.0);
-                        let end_byte = ui_text.text.grapheme_indices(true).nth(end).map(|i| i.0)
+                        let end_byte = ui_text
+                            .text
+                            .grapheme_indices(true)
+                            .nth(end)
+                            .map(|i| i.0)
                             .unwrap_or(ui_text.text.len());
-                        start_byte
-                            .map(|start_byte| (editing, (start_byte, end_byte)))
+                        start_byte.map(|start_byte| (editing, (start_byte, end_byte)))
                     })
                     .map(|(editing, (start_byte, end_byte))| {
                         vec![
@@ -344,23 +363,26 @@ impl Pass for DrawUi {
                     text,
                 };
                 // Render background highlight
-                let brush = &mut self.glyph_brushes[ui_text.brush_id.unwrap()];
+                let brush = &mut self.glyph_brushes
+                    .get_mut(&ui_text.brush_id.unwrap())
+                    .unwrap()
+                    .0;
                 let cache = &mut self.cached_color_textures;
                 if let Some((texture, (start, end))) = editing.and_then(|ed| {
-                    let start = ed
-                        .cursor_position
+                    let start = ed.cursor_position
                         .min(ed.cursor_position + ed.highlight_vector)
                         as usize;
-                    let end = ed
-                        .cursor_position
+                    let end = ed.cursor_position
                         .max(ed.cursor_position + ed.highlight_vector)
                         as usize;
-                    tex_storage.get(&cached_color_texture(
-                        cache,
-                        ed.selected_background_color,
-                        &loader,
-                        &tex_storage,
-                    )).map(|tex| (tex, (start, end)))
+                    tex_storage
+                        .get(&cached_color_texture(
+                            cache,
+                            ed.selected_background_color,
+                            &loader,
+                            &tex_storage,
+                        ))
+                        .map(|tex| (tex, (start, end)))
                 }) {
                     effect.data.textures.push(texture.view().clone());
                     effect.data.samplers.push(texture.sampler().clone());
@@ -415,6 +437,21 @@ impl Pass for DrawUi {
                     if editing.use_block_cursor || blink_on {
                         effect.data.textures.push(texture.view().clone());
                         effect.data.samplers.push(texture.sampler().clone());
+                        // Calculate the width of a space for use with the block cursor.
+                        let space_width = if editing.use_block_cursor {
+                            brush
+                                .fonts()
+                                .get(&FontId(0))
+                                .unwrap()
+                                .glyph(' ')
+                                .unwrap()
+                                .scaled(Scale::uniform(ui_text.font_size))
+                                .h_metrics()
+                                .advance_width
+                        } else {
+                            // If we aren't using the block cursor, don't bother.
+                            0.0
+                        };
                         let ascent = brush
                             .fonts()
                             .get(&FontId(0))
@@ -422,46 +459,51 @@ impl Pass for DrawUi {
                             .v_metrics(Scale::uniform(ui_text.font_size))
                             .ascent;
                         let glyph_len = brush.glyphs(&section).count();
-                        let glyph = if editing.cursor_position as usize >= glyph_len {
+                        let (glyph, at_end) = if editing.cursor_position as usize >= glyph_len {
                             (brush.glyphs(&section).last(), true)
                         } else {
-                            (brush.glyphs(&section).nth(editing.cursor_position as usize), false)
+                            (
+                                brush.glyphs(&section).nth(editing.cursor_position as usize),
+                                false,
+                            )
                         };
-                        if let (Some(glyph), at_end) = glyph
-                        {
-                            let height;
-                            let width;
-                            if editing.use_block_cursor {
-                                height = if blink_on {
-                                    glyph.scale().y
-                                } else {
-                                    glyph.scale().y / 10.0
-                                };
-                                width = glyph.unpositioned().h_metrics().advance_width;
+                        let height;
+                        let width;
+                        if editing.use_block_cursor {
+                            height = if blink_on {
+                                ui_text.font_size
                             } else {
-                                height = glyph.scale().y;
-                                width = 1.0;
-                            }
-                            let pos = glyph.position();
-                            let mut x = pos.x;
+                                ui_text.font_size / 10.0
+                            };
+                            width = space_width;
+                        } else {
+                            height = ui_text.font_size;
+                            width = 2.0;
+                        }
+                        let pos = glyph.map(|g| g.position()).unwrap_or(Point {
+                            x: ui_transform.x,
+                            y: ui_transform.y + ascent,
+                        });
+                        let mut x = pos.x;
+                        if let Some(glyph) = glyph {
                             if at_end {
                                 x += glyph.unpositioned().h_metrics().advance_width;
                             }
-                            let mut y = pos.y - ascent;
-                            if editing.use_block_cursor && !blink_on {
-                                y += glyph.scale().y * 0.9;
-                            }
-                            let vertex_args = VertexArgs {
-                                proj_vec: proj_vec.into(),
-                                coord: [x, y],
-                                dimension: [width, height],
-                            };
-                            effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
-                            effect.draw(mesh.slice(), encoder);
                         }
-                        effect.data.textures.clear();
-                        effect.data.samplers.clear();
+                        let mut y = pos.y - ascent;
+                        if editing.use_block_cursor && !blink_on {
+                            y += ui_text.font_size * 0.9;
+                        }
+                        let vertex_args = VertexArgs {
+                            proj_vec: proj_vec.into(),
+                            coord: [x, y],
+                            dimension: [width, height],
+                        };
+                        effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
+                        effect.draw(mesh.slice(), encoder);
                     }
+                    effect.data.textures.clear();
+                    effect.data.samplers.clear();
                 }
             }
         }

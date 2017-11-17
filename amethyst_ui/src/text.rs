@@ -1,9 +1,12 @@
+use std::ops::Range;
+
+use clipboard::{ClipboardContext, ClipboardProvider};
 use shrev::{EventChannel, ReaderId};
 use specs::{Component, DenseVecStorage, Fetch, FetchMut, Join, System, WriteStorage};
 use unicode_normalization::UnicodeNormalization;
 use unicode_normalization::char::is_combining_mark;
 use unicode_segmentation::UnicodeSegmentation;
-use winit::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
+use winit::{ElementState, Event, KeyboardInput, ModifiersState, VirtualKeyCode, WindowEvent};
 
 use super::*;
 
@@ -20,7 +23,7 @@ pub struct UiText {
     /// Cached FontHandle, used to detect changes to the font.
     pub(crate) cached_font: FontHandle,
     /// Cached id used to retrieve the `GlyphBrush` in the `UiPass`.
-    pub(crate) brush_id: Option<usize>,
+    pub(crate) brush_id: Option<u32>,
 }
 
 impl UiText {
@@ -112,41 +115,21 @@ impl<'a> System<'a> for UiSystem {
                         if input < '\u{8}' || (input > '\u{D}' && input < '\u{20}') {
                             continue;
                         }
-                        let deleted = focused_edit.highlight_vector != 0;
-                        if deleted {
-                            let start = focused_edit
-                                .cursor_position
-                                .min(focused_edit.cursor_position + focused_edit.highlight_vector)
-                                as usize;
-                            let end = focused_edit
-                                .cursor_position
-                                .max(focused_edit.cursor_position + focused_edit.highlight_vector)
-                                as usize;
-                            let start_delete_byte =
-                                focused_text.text.grapheme_indices(true).nth(start).map(|i| i.0);
-                            let end_delete_byte = focused_text.text.grapheme_indices(true).nth(end).map(|i| i.0)
-                                .unwrap_or(focused_text.text.len());;
-                            focused_edit.cursor_position = start as isize;
-                            focused_edit.highlight_vector = 0;
-                            if let Some(start_delete_byte) = start_delete_byte {
-                                focused_text.text.drain(start_delete_byte..end_delete_byte);
-                            }
+                        // Since delete character isn't emitted on windows, ignore it too.
+                        // We'll handle this with the KeyboardInput event instead.
+                        if input == '\u{7F}' {
+                            continue;
                         }
-
-                        let (start_byte, start_glyph_len) = focused_text
+                        let deleted = delete_highlighted(focused_edit, focused_text);
+                        let start_byte = focused_text
                             .text
                             .grapheme_indices(true)
                             .nth(focused_edit.cursor_position as usize)
-                            .map(|i| (i.0, i.1.len()))
+                            .map(|i| i.0)
                             .unwrap_or_else(|| {
-                                // Text is 0 length so has no graphemes
-                                let len = focused_text.text.len();
-                                if len == 0 {
-                                    (0, 0)
-                                } else {
-                                    // Text has length, so cursor position must be at the end.
-                                    (len, 0)
-                                }
+                                // We are either in a 0 length string, or at the end of a string
+                                // This line returns the correct byte index for both.
+                                focused_text.text.len()
                             });
                         match input {
                             '\u{8}' /*Backspace*/ => if !deleted {
@@ -162,9 +145,6 @@ impl<'a> System<'a> for UiSystem {
                                             focused_edit.cursor_position -= 1;
                                     }
                                 }
-                            },
-                            '\u{7F}' /*Delete*/ => if !deleted {
-                                focused_text.text.drain(start_byte..(start_byte + start_glyph_len));
                             },
                             _ => {
                                 focused_text.text.insert(start_byte, input);
@@ -186,32 +166,121 @@ impl<'a> System<'a> for UiSystem {
                             },
                         ..
                     } => match v_keycode {
-                        VirtualKeyCode::Left => {
-                            if focused_edit.cursor_position > 0 {
-                                focused_edit.cursor_position -= 1;
-                                if modifiers.shift {
-                                    focused_edit.highlight_vector += 1;
-                                } else {
-                                    focused_edit.highlight_vector = 0;
+                        VirtualKeyCode::Home => {
+                            focused_edit.highlight_vector = if modifiers.shift {
+                                focused_edit.cursor_position
+                            } else {
+                                0
+                            };
+                            focused_edit.cursor_position = 0;
+                        }
+                        VirtualKeyCode::End => {
+                            let glyph_len = focused_text.text.graphemes(true).count() as isize;
+                            focused_edit.highlight_vector = if modifiers.shift {
+                                focused_edit.cursor_position - glyph_len
+                            } else {
+                                0
+                            };
+                            focused_edit.cursor_position = glyph_len;
+                        }
+                        VirtualKeyCode::Delete => {
+                            if !delete_highlighted(focused_edit, focused_text) {
+                                if let Some((start_byte, start_glyph_len)) = focused_text
+                                    .text
+                                    .grapheme_indices(true)
+                                    .nth(focused_edit.cursor_position as usize)
+                                    .map(|i| (i.0, i.1.len()))
+                                {
+                                    focused_text
+                                        .text
+                                        .drain(start_byte..(start_byte + start_glyph_len));
                                 }
                             }
+                        }
+                        VirtualKeyCode::Left => if focused_edit.highlight_vector == 0
+                            || modifiers.shift
+                        {
+                            if focused_edit.cursor_position > 0 {
+                                let delta = if ctrl_or_cmd(&modifiers) {
+                                    let mut graphemes = 0;
+                                    for word in focused_text.text.split_word_bounds() {
+                                        let word_graphemes = word.graphemes(true).count() as isize;
+                                        if graphemes + word_graphemes
+                                            >= focused_edit.cursor_position
+                                        {
+                                            break;
+                                        }
+                                        graphemes += word_graphemes;
+                                    }
+                                    focused_edit.cursor_position - graphemes
+                                } else {
+                                    1
+                                };
+                                focused_edit.cursor_position -= delta;
+                                if modifiers.shift {
+                                    focused_edit.highlight_vector += delta;
+                                }
+                            }
+                        } else {
+                            focused_edit.cursor_position = focused_edit
+                                .cursor_position
+                                .min(focused_edit.cursor_position + focused_edit.highlight_vector);
+                            focused_edit.highlight_vector = 0;
                         },
                         VirtualKeyCode::Right => {
-                            let glyph_len = focused_text.text.graphemes(true).count();
-                            if (focused_edit.cursor_position as usize) < glyph_len {
-                                focused_edit.cursor_position += 1;
-                                if modifiers.shift {
-                                    focused_edit.highlight_vector -= 1;
-                                } else {
-                                    focused_edit.highlight_vector = 0;
+                            if focused_edit.highlight_vector == 0 || modifiers.shift {
+                                let glyph_len = focused_text.text.graphemes(true).count();
+                                if (focused_edit.cursor_position as usize) < glyph_len {
+                                    let delta = if ctrl_or_cmd(&modifiers) {
+                                        let mut graphemes = 0;
+                                        for word in focused_text.text.split_word_bounds() {
+                                            graphemes += word.graphemes(true).count() as isize;
+                                            if graphemes > focused_edit.cursor_position {
+                                                break;
+                                            }
+                                        }
+                                        graphemes - focused_edit.cursor_position
+                                    } else {
+                                        1
+                                    };
+                                    focused_edit.cursor_position += delta;
+                                    if modifiers.shift {
+                                        focused_edit.highlight_vector -= delta;
+                                    }
                                 }
+                            } else {
+                                focused_edit.cursor_position = focused_edit.cursor_position.max(
+                                    focused_edit.cursor_position + focused_edit.highlight_vector,
+                                );
+                                focused_edit.highlight_vector = 0;
                             }
                         },
-                        VirtualKeyCode::A => {
-                            if modifiers.ctrl {
-                                let glyph_len = focused_text.text.graphemes(true).count();
-                                focused_edit.cursor_position = glyph_len as isize;
-                                focused_edit.highlight_vector = -(glyph_len as isize);
+                        VirtualKeyCode::A => if ctrl_or_cmd(&modifiers) {
+                            let glyph_len = focused_text.text.graphemes(true).count() as isize;
+                            focused_edit.cursor_position = glyph_len;
+                            focused_edit.highlight_vector = -glyph_len;
+                        },
+                        VirtualKeyCode::X => if ctrl_or_cmd(&modifiers) {
+                            let new_clip = extract_highlighted(focused_edit, focused_text);
+                            if new_clip.len() > 0 {
+                                let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
+                                ctx.set_contents(new_clip).unwrap();
+                            }
+                        },
+                        VirtualKeyCode::C => if ctrl_or_cmd(&modifiers) {
+                            let new_clip = read_highlighted(focused_edit, focused_text);
+                            if new_clip.len() > 0 {
+                                let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
+                                ctx.set_contents(new_clip.to_owned()).unwrap();
+                            }
+                        },
+                        VirtualKeyCode::V => if ctrl_or_cmd(&modifiers) {
+                            delete_highlighted(focused_edit, focused_text);
+                            let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
+                            if let Ok(contents) = ctx.get_contents() {
+                                let index = cursor_byte_index(focused_edit, focused_text);
+                                focused_text.text.insert_str(index, &contents);
+                                focused_edit.cursor_position += contents.graphemes(true).count() as isize;
                             }
                         }
                         _ => {}
@@ -221,4 +290,55 @@ impl<'a> System<'a> for UiSystem {
             }
         }
     }
+}
+
+/// Returns if the command key is down on OSX, and the CTRL key for everything else.
+fn ctrl_or_cmd(modifiers: &ModifiersState) -> bool {
+    (cfg!(target_os = "macos") && modifiers.logo)
+        || (cfg!(not(target_os = "macos")) && modifiers.ctrl)
+}
+
+fn read_highlighted<'a>(edit: &TextEditing, text: &'a UiText) -> &'a str {
+    let range = highlighted_bytes(edit, text);
+    &text.text[range]
+}
+
+/// Removes the highlighted text and returns it in a String.
+fn extract_highlighted(edit: &mut TextEditing, text: &mut UiText) -> String {
+    let range = highlighted_bytes(edit, text);
+    edit.cursor_position = range.start as isize;
+    edit.highlight_vector = 0;
+    text.text.drain(range).collect::<String>()
+}
+
+/// Removes the highlighted text and returns true if anything was deleted..
+fn delete_highlighted(edit: &mut TextEditing, text: &mut UiText) -> bool {
+    if edit.highlight_vector != 0 {
+        let range = highlighted_bytes(edit, text);
+        edit.cursor_position = range.start as isize;
+        edit.highlight_vector = 0;
+        text.text.drain(range);
+        return true;
+    }
+    false
+}
+
+// Gets the byte index of the cursor.
+fn cursor_byte_index(edit: &TextEditing, text: &UiText) -> usize {
+    text.text.grapheme_indices(true).nth(edit.cursor_position as usize).map(|i| i.0).unwrap_or(text.text.len())
+}
+
+/// Returns the byte indices that are highlighted in the string.
+fn highlighted_bytes(edit: &TextEditing, text: &UiText) -> Range<usize> {
+    let start = edit.cursor_position
+        .min(edit.cursor_position + edit.highlight_vector) as usize;
+    let end = edit.cursor_position
+        .max(edit.cursor_position + edit.highlight_vector) as usize;
+    let start_byte = text.text.grapheme_indices(true).nth(start).map(|i| i.0).unwrap_or(text.text.len());
+    let end_byte = text.text
+        .grapheme_indices(true)
+        .nth(end)
+        .map(|i| i.0)
+        .unwrap_or(text.text.len());
+    start_byte..end_byte
 }
