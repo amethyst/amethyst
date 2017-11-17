@@ -26,7 +26,7 @@ pub struct Time {
     ///Time elapsed since game start, taking the speed multiplier into account.
     absolute_time: Duration,
     ///Time multiplier. Affects returned delta_seconds, delta_time and absolute_time.
-    time_multiplier: f32,
+    time_scale: f32,
 }
 
 impl Time {
@@ -91,8 +91,8 @@ impl Time {
     }
 
     /// Gets the current time speed multiplier.
-    pub fn time_multiplier(&self) -> f32 {
-        self.time_multiplier
+    pub fn time_scale(&self) -> f32 {
+        self.time_scale
     }
 
     /// Gets the total number of frames that have been played in this session.
@@ -101,8 +101,8 @@ impl Time {
     /// This should only be called by the engine.  Bad things might happen if you call this in
     /// your game.
     pub fn set_delta_seconds(&mut self, secs: f32) {
-        self.delta_seconds = secs * self.time_multiplier;
-        self.delta_time = secs_to_duration(secs * self.time_multiplier);
+        self.delta_seconds = secs * self.time_scale;
+        self.delta_time = secs_to_duration(secs * self.time_scale);
         self.delta_real_seconds = secs;
         self.delta_real_time = secs_to_duration(secs);
 
@@ -115,8 +115,8 @@ impl Time {
     /// This should only be called by the engine.  Bad things might happen if you call this in
     /// your game.
     pub fn set_delta_time(&mut self, time: Duration) {
-        self.delta_seconds = duration_to_secs(time) * self.time_multiplier;
-        self.delta_time = secs_to_duration(duration_to_secs(time) * self.time_multiplier);
+        self.delta_seconds = duration_to_secs(time) * self.time_scale;
+        self.delta_time = secs_to_duration(duration_to_secs(time) * self.time_scale);
         self.delta_real_seconds = duration_to_secs(time);
         self.delta_real_time = time;
 
@@ -151,11 +151,11 @@ impl Time {
     ///
     /// ## Panics
     /// This will panic if multiplier is NaN, Infinity, or less than 0.
-    pub fn set_time_multiplier(&mut self, multiplier: f32) {
+    pub fn set_time_scale(&mut self, multiplier: f32) {
         use std::f32::INFINITY;
         assert!(multiplier >= 0.0);
         assert!(multiplier != INFINITY);
-        self.time_multiplier = multiplier;
+        self.time_scale = multiplier;
     }
 
     /// Indicates a fixed update just finished.
@@ -180,7 +180,7 @@ impl Default for Time {
             frame_number: 0,
             absolute_real_time: Duration::default(),
             absolute_time: Duration::default(),
-            time_multiplier: 1.0,
+            time_scale: 1.0,
         }
     }
 }
