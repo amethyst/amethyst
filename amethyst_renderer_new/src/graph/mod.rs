@@ -1,6 +1,7 @@
 
 pub mod build;
 pub mod pass;
+pub mod flat;
 
 use std::collections::{HashMap, HashSet};
 use std::collections::hash_map::Entry::{Occupied, Vacant};
