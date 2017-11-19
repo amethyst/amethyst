@@ -79,11 +79,7 @@ pub trait Allocator<B: Backend> {
         level: Level,
         format: Format,
         usage: ImageUsage,
-    ) -> Result<B::Image> {
-        let image = device.create_image(kind, level, format, usage);
-
-        unimplemented!()
-    }
+    ) -> Result<B::Image>;
 }
 
 
@@ -98,13 +94,7 @@ impl<B> DumbAllocatorNode<B>
 where
     B: Backend,
 {
-    fn allocate_buffer(
-        &self,
-        device: &mut B::Device,
-        ubuf: B::UnboundBuffer,
-        size: usize,
-        alignment: usize,
-    ) -> StdResult<B::Buffer, B::UnboundBuffer> {
+    fn allocate(&self, size: usize, alignment: usize) -> Option<(&B::Memory, usize)> {
         let pos = self.allocated.fetch_add(
             size + alignment,
             Ordering::Acquire,
@@ -112,12 +102,9 @@ where
         if self.size - size >= pos {
             let shift = pos % alignment;
             let pos = pos - shift;
-            let buf = device
-                .bind_buffer_memory(&self.memory, pos as u64, ubuf)
-                .expect("Bounds and types are checked");
-            Ok(buf)
+            Some((&self.memory, pos))
         } else {
-            Err(ubuf)
+            None
         }
     }
 }
@@ -162,13 +149,11 @@ where
         let size = size as usize;
         let alignment = alignment as usize;
 
-        let ubuf = if let Some(node) = self.nodes.last() {
-            match node.allocate_buffer(device, ubuf, size, alignment) {
-                Ok(buf) => return Ok(buf),
-                Err(ubuf) => ubuf,
-            }
-        } else {
-            ubuf
+        let ubuf = match self.nodes.last().and_then(
+            |node| node.allocate(size, alignment),
+        ) {
+            Some((memory, offset)) => return Ok(device.bind_buffer_memory(memory, offset as u64, ubuf)?),
+            None => ubuf,
         };
 
         let node_size = (size + alignment - 1) / self.granularity + self.granularity;
@@ -188,13 +173,67 @@ where
         };
         self.nodes.push(Arc::new(node));
 
-        Ok(
-            self.nodes
-                .last()
-                .unwrap()
-                .allocate_buffer(device, ubuf, size, alignment)
-                .expect("Hey!"),
-        )
+        let (memory, offset) = self.nodes
+            .last()
+            .unwrap()
+            .allocate(size, alignment)
+            .expect("Hey!");
+        Ok(device.bind_buffer_memory(memory, offset as u64, ubuf)?)
+    }
+
+    fn allocate_image_unfilled(
+        &mut self,
+        device: &mut B::Device,
+        kind: Kind,
+        level: Level,
+        format: Format,
+        usage: ImageUsage,
+    ) -> Result<B::Image> {
+        let uimg = device.create_image(kind, level, format, usage)?;
+
+        let Requirements {
+            size,
+            alignment,
+            type_mask,
+        } = device.get_image_requirements(&uimg);
+
+        if size > usize::max_value() as u64 || alignment > usize::max_value() as u64 {
+            return Err(ErrorKind::OutOfMemory.into());
+        }
+
+        let size = size as usize;
+        let alignment = alignment as usize;
+
+        let uimg = match self.nodes.last().and_then(
+            |node| node.allocate(size, alignment),
+        ) {
+            Some((memory, offset)) => return Ok(device.bind_image_memory(memory, offset as u64, uimg)?),
+            None => uimg,
+        };
+
+        let node_size = (size + alignment - 1) / self.granularity + self.granularity;
+
+        let node = DumbAllocatorNode {
+            memory: device.allocate_memory(
+                &MemoryType {
+                    id: 0,
+                    properties: Properties::DEVICE_LOCAL,
+                    heap_index: 0,
+                },
+                node_size as u64,
+            )?,
+            size: node_size,
+            allocated: AtomicUsize::new(0),
+            freed: AtomicUsize::new(0),
+        };
+        self.nodes.push(Arc::new(node));
+
+        let (memory, offset) = self.nodes
+            .last()
+            .unwrap()
+            .allocate(size, alignment)
+            .expect("Hey!");
+        Ok(device.bind_image_memory(memory, offset as u64, uimg)?)
     }
 }
 
@@ -221,6 +260,17 @@ where
             None => {}
         };
         Ok(buffer)
+    }
+
+    fn allocate_image(
+        &mut self,
+        device: &mut B::Device,
+        kind: Kind,
+        level: Level,
+        format: Format,
+        usage: ImageUsage,
+    ) -> Result<B::Image> {
+        self.allocate_image_unfilled(device, kind, level, format, usage)
     }
 }
 

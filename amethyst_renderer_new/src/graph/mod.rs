@@ -381,7 +381,7 @@ where
         }
 
         // Build pass nodes from pass builders
-        let nodes: Vec<PassNode<B>> = passes
+        let passes: Vec<PassNode<B>> = passes
             .into_iter()
             .map(|(pass, deps)| {
                 // Collect input targets
@@ -478,17 +478,34 @@ where
                     }
                 });
 
-                let mut node = pass.build(device, &inputs[..], &colors[..], depth_stencil, extent)?;
+                let mut node = pass.build(
+                    device,
+                    &inputs[..],
+                    &colors[..],
+                    depth_stencil,
+                    extent,
+                )?;
 
-                node.depends = deps.into_iter().map(|dep| {
-                    (dep, PipelineStage::TOP_OF_PIPE) // Pick better
-                }).collect();
+                node.depends = deps.into_iter()
+                    .map(|dep| {
+                        (dep, PipelineStage::TOP_OF_PIPE) // Pick better
+                    })
+                    .collect();
                 Ok(node)
             })
             .collect::<Result<_>>()?;
 
+        let count = passes.len();
 
-        unimplemented!()
+        Ok(RenderGraph {
+            passes: passes,
+            signals: (0..count).map(|_| device.create_semaphore()).collect(),
+            acquire: device.create_semaphore(),
+            finish: device.create_fence(false),
+            backbuffer,
+            images,
+            views: image_views,
+        })
     }
 }
 
