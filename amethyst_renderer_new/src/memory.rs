@@ -152,7 +152,9 @@ where
         let ubuf = match self.nodes.last().and_then(
             |node| node.allocate(size, alignment),
         ) {
-            Some((memory, offset)) => return Ok(device.bind_buffer_memory(memory, offset as u64, ubuf)?),
+            Some((memory, offset)) => {
+                return Ok(device.bind_buffer_memory(memory, offset as u64, ubuf)?)
+            }
             None => ubuf,
         };
 
@@ -207,7 +209,9 @@ where
         let uimg = match self.nodes.last().and_then(
             |node| node.allocate(size, alignment),
         ) {
-            Some((memory, offset)) => return Ok(device.bind_image_memory(memory, offset as u64, uimg)?),
+            Some((memory, offset)) => {
+                return Ok(device.bind_image_memory(memory, offset as u64, uimg)?)
+            }
             None => uimg,
         };
 
