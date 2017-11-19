@@ -432,7 +432,7 @@ impl Pass for DrawUi {
                         ))
                         .map(|tex| (tex, ed))
                 }) {
-                    let blink_on = time.total_game_time_seconds() % (1.0 / CURSOR_BLINK_RATE)
+                    let blink_on = time.absolute_real_time_seconds() % (1.0 / CURSOR_BLINK_RATE)
                         < 0.5 / CURSOR_BLINK_RATE;
                     if editing.use_block_cursor || blink_on {
                         effect.data.textures.push(texture.view().clone());

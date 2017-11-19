@@ -138,16 +138,6 @@ impl Time {
         self.fixed_time = time;
     }
 
-    /// How long it's been since the game was started.
-    pub fn total_game_time(&self) -> Duration {
-        self.start_time.elapsed()
-    }
-
-    /// How long it's been since the game was started, in seconds.
-    pub fn total_game_time_seconds(&self) -> f32 {
-        duration_to_secs(self.start_time.elapsed())
-    }
-
     /// Increments the current frame number by 1.
     ///
     /// This should only be called by the engine.  Bad things might happen if you call this in
@@ -188,13 +178,9 @@ impl Default for Time {
             fixed_time: Duration::new(0, 16666666),
             last_fixed_update: Instant::now(),
             frame_number: 0,
-<<<<<<< HEAD
             absolute_real_time: Duration::default(),
             absolute_time: Duration::default(),
             time_scale: 1.0,
-=======
-            start_time: Instant::now(),
->>>>>>> def3ced... Single threaded rendering and use gfx_glyph
         }
     }
 }
