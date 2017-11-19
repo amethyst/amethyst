@@ -18,7 +18,7 @@ where
 }
 
 #[derive(Debug)]
-struct Flat;
+pub struct Flat;
 impl<'a, B> Data<'a, B> for Flat
 where
     B: Backend,

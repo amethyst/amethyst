@@ -74,6 +74,10 @@ where
 
     fn new() -> Self;
 
+    fn box_new() -> Box<NewAnyPass<B>> where Self: Sized + 'static {
+        Box::new(NewPass::<B, Self>::new())
+    }
+
     /// This function designed for
     ///
     /// * allocating buffers and textures
@@ -94,13 +98,19 @@ where
     fn draw<'a>(&mut self, cbuf: &mut B::CommandBuffer, data: <Self as Data<'a, B>>::DrawData);
 }
 
-pub struct NewPass<B, P>(PhantomData<(B, P)>);
-
 pub trait NewAnyPass<B>: Debug
 where
     B: Backend,
 {
     fn new_any_pass(&self) -> Box<AnyPass<B>>;
+}
+
+
+pub struct NewPass<B, P>(PhantomData<(B, P)>);
+impl<B, P> NewPass<B, P> {
+    pub fn new() -> Self {
+        NewPass(PhantomData)
+    }
 }
 
 impl<B, P> Debug for NewPass<B, P>

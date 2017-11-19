@@ -11,7 +11,7 @@ use gfx_hal::image;
 
 use specs::{Component, Entity, World};
 
-use graph::pass::{AnyPass, NewAnyPass, Pass};
+use graph::pass::{AnyPass, NewAnyPass, NewPass, Pass};
 use graph::{Error, ErrorKind, PassNode, Result, SuperFramebuffer};
 use vertex::VertexFormat;
 use uniform::IntoUniform;
@@ -62,6 +62,24 @@ impl<'a, B> PassBuilder<'a, B>
 where
     B: Backend,
 {
+    pub fn new<P>(vert: pso::EntryPoint<'a, B>, frag: pso::EntryPoint<'a, B>) -> Self
+    where
+        P: Pass<B> + 'static
+    {
+        PassBuilder {
+            inputs: P::INPUTS,
+            colors: P::COLORS,
+            depth_stencil: P::DEPTH_STENCIL,
+            bindings: P::BINDINGS,
+            vertices: P::VERTICES,
+            shaders: pso::GraphicsShaderSet { vertex: vert, fragment: Some(frag), hull: None, domain: None, geometry: None },
+            rasterizer: pso::Rasterizer::FILL,
+            primitive: Primitive::TriangleList,
+            connects: vec![],
+            pass: P::box_new(),
+        }
+    }
+
     pub fn build(
         &self,
         device: &mut B::Device,
