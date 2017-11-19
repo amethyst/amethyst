@@ -2,8 +2,10 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use gfx_hal::{Backend, Device, MemoryType};
-use gfx_hal::buffer::{CreationError, Usage, ViewError};
+use gfx_hal::buffer::{Usage as BufferUsage, ViewError};
 use gfx_hal::device::{BindError, OutOfMemory};
+use gfx_hal::format::Format;
+use gfx_hal::image::{Kind, Level, Usage as ImageUsage};
 use gfx_hal::mapping::Error as MappingError;
 use gfx_hal::memory::{Pod, Properties, Requirements};
 
@@ -13,6 +15,8 @@ error_chain! {
     foreign_links {
         BindError(BindError);
         ViewError(ViewError);
+        BufferCreationError(::gfx_hal::buffer::CreationError);
+        ImageCreationError(::gfx_hal::image::CreationError);
     }
 
     errors {
@@ -27,10 +31,6 @@ error_chain! {
         OutOfMemory {
             description("Out of memory"),
             display("Out of memory"),
-        }
-        CreationError(inner: CreationError) {
-            description("Buffer creation error"),
-            display("Can't create buffer: {:?}", inner),
         }
     }
 }
@@ -68,9 +68,22 @@ pub trait Allocator<B: Backend> {
         device: &mut B::Device,
         size: usize,
         stride: usize,
-        usage: Usage,
+        usage: BufferUsage,
         fill: Option<&[u8]>,
     ) -> Result<B::Buffer>;
+
+    fn allocate_image(
+        &mut self,
+        device: &mut B::Device,
+        kind: Kind,
+        level: Level,
+        format: Format,
+        usage: ImageUsage,
+    ) -> Result<B::Image> {
+        let image = device.create_image(kind, level, format, usage);
+
+        unimplemented!()
+    }
 }
 
 
@@ -132,11 +145,9 @@ where
         device: &mut B::Device,
         size: usize,
         stride: usize,
-        usage: Usage,
+        usage: BufferUsage,
     ) -> Result<B::Buffer> {
-        let ubuf = device
-            .create_buffer(size as u64, stride as u64, usage)
-            .map_err(ErrorKind::CreationError)?;
+        let ubuf = device.create_buffer(size as u64, stride as u64, usage)?;
 
         let Requirements {
             size,
@@ -196,7 +207,7 @@ where
         device: &mut B::Device,
         size: usize,
         stride: usize,
-        usage: Usage,
+        usage: BufferUsage,
         fill: Option<&[u8]>,
     ) -> Result<B::Buffer> {
         let buffer = self.allocate_buffer_unfilled(device, size, stride, usage)?;

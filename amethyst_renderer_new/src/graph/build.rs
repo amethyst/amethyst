@@ -1,4 +1,6 @@
 
+use std::collections::HashSet;
+
 use gfx_hal::{Backend, Device, Primitive};
 use gfx_hal::command::{ClearColor, ClearDepthStencil, ClearValue, ColorValue};
 use gfx_hal::device::Extent;
@@ -9,25 +11,24 @@ use gfx_hal::image;
 
 use specs::{Component, Entity, World};
 
-use graph::pass::{AnyPass, Pass};
+use graph::pass::{AnyPass, NewAnyPass, Pass};
 use graph::{Error, ErrorKind, PassNode, Result, SuperFramebuffer};
 use vertex::VertexFormat;
 use uniform::IntoUniform;
 
+#[derive(Debug)]
 pub struct PassBuilder<'a, B: Backend> {
-    inputs: &'a [Format],
-    colors: &'a [Format],
-    depth_stencil: Option<Format>,
-    bindings: &'a [pso::DescriptorSetLayoutBinding],
-    vertices: &'a [VertexFormat<'a>],
+    pub(super) inputs: &'a [Format],
+    pub(super) colors: &'a [Format],
+    pub(super) depth_stencil: Option<Format>,
+    pub(super) bindings: &'a [pso::DescriptorSetLayoutBinding],
+    pub(super) vertices: &'a [VertexFormat<'a>],
+    pub(super) shaders: pso::GraphicsShaderSet<'a, B>,
+    pub(super) rasterizer: pso::Rasterizer,
+    pub(super) primitive: Primitive,
+    pub(super) connects: Vec<Pin<'a, B>>,
 
-    shaders: pso::GraphicsShaderSet<'a, B>,
-    rasterizer: pso::Rasterizer,
-
-    primitive: Primitive,
-    pass: Box<AnyPass<B>>,
-
-    connects: Vec<(&'a PassBuilder<'a, B>, usize)>,
+    pub(super) pass: Box<NewAnyPass<B>>,
 }
 
 #[derive(Debug)]
@@ -39,22 +40,22 @@ pub enum AttachmentImageView<'a, B: Backend> {
 
 #[derive(Debug)]
 pub struct InputAttachmentDesc<'a, B: Backend> {
-    format: Format,
-    view: &'a B::ImageView,
+    pub format: Format,
+    pub view: &'a B::ImageView,
 }
 
 #[derive(Debug)]
 pub struct ColorAttachmentDesc<'a, B: Backend> {
-    format: Format,
-    view: AttachmentImageView<'a, B>,
-    clear: Option<ClearColor>,
+    pub format: Format,
+    pub view: AttachmentImageView<'a, B>,
+    pub clear: Option<ClearColor>,
 }
 
 #[derive(Debug)]
 pub struct DepthStencilAttachmentDesc<'a, B: Backend> {
-    format: Format,
-    view: &'a B::ImageView,
-    clear: Option<ClearDepthStencil>,
+    pub format: Format,
+    pub view: AttachmentImageView<'a, B>,
+    pub clear: Option<ClearDepthStencil>,
 }
 
 impl<'a, B> PassBuilder<'a, B>
@@ -62,7 +63,7 @@ where
     B: Backend,
 {
     pub fn build(
-        self,
+        &self,
         device: &mut B::Device,
         inputs: &[InputAttachmentDesc<B>],
         colors: &[ColorAttachmentDesc<B>],
@@ -72,8 +73,8 @@ where
 
         /// Check connects
         assert_eq!(self.inputs.len(), self.connects.len());
-        for (input, &(pass, output)) in self.connects.iter().enumerate() {
-            assert_eq!(pass.colors[output], self.inputs[input]);
+        for (input, pin) in self.connects.iter().enumerate() {
+            assert_eq!(pin.format(), self.inputs[input]);
         }
 
         // Check attachments
@@ -85,7 +86,7 @@ where
         // with single `Subpass` for now
         let render_pass = {
             // Configure input attachments first
-            let inputs = self.inputs.iter().cloned().enumerate().map(|(i, format)| {
+            let inputs = self.inputs.iter().enumerate().map(|(i, &format)| {
                 assert_eq!(inputs[i].format, format);
                 pass::Attachment {
                     format,
@@ -99,7 +100,7 @@ where
             });
 
             // Configure color attachments next to input
-            let colors = self.colors.iter().cloned().enumerate().map(|(i, format)| {
+            let colors = self.colors.iter().enumerate().map(|(i, &format)| {
                 assert_eq!(colors[i].format, format);
                 pass::Attachment {
                     format,
@@ -144,17 +145,22 @@ where
             });
 
             let depth_stencil_ref = depth_stencil.as_ref().map(|_| {
-                (inputs.len() + colors.len(), image::ImageLayout::General)
+                (
+                    inputs.len() + colors.len(),
+                    image::ImageLayout::DepthStencilAttachmentOptimal,
+                )
             });
 
             // Configure the only `Subpass` using all attachments
             let subpass = pass::SubpassDesc {
                 colors: &(0..colors.len())
-                    .map(|i| (i + inputs.len(), image::ImageLayout::General))
+                    .map(|i| {
+                        (i + inputs.len(), image::ImageLayout::ColorAttachmentOptimal)
+                    })
                     .collect::<Vec<_>>(),
                 depth_stencil: depth_stencil_ref.as_ref(),
                 inputs: &(0..inputs.len())
-                    .map(|i| (i, image::ImageLayout::General))
+                    .map(|i| (i, image::ImageLayout::ShaderReadOnlyOptimal))
                     .collect::<Vec<_>>(),
                 preserves: &[],
             };
@@ -181,9 +187,9 @@ where
         let graphics_pipeline = {
             // Init basic configuration
             let mut pipeline_desc = pso::GraphicsPipelineDesc::new(
-                self.shaders,
+                self.shaders.clone(),
                 self.primitive,
-                self.rasterizer,
+                self.rasterizer.clone(),
                 &pipeline_layout,
                 pass::Subpass {
                     index: 0,
@@ -235,7 +241,7 @@ where
         );
 
         // And depth-stencil
-        clears.extend(depth_stencil.and_then(|ds| ds.clear).map(
+        clears.extend(depth_stencil.as_ref().and_then(|ds| ds.clear).map(
             ClearValue::DepthStencil,
         ));
 
@@ -252,8 +258,10 @@ where
                 let mut acquired = None;
                 let mut targets = colors
                     .iter()
+                    .map(|c| &c.view)
+                    .chain(depth_stencil.iter().map(|ds| &ds.view))
                     .enumerate()
-                    .map(|(index, color)| match color.view {
+                    .map(|(index, view)| match *view {
                         AttachmentImageView::Owned(ref image) => image,
                         AttachmentImageView::Acquired(ref images) => {
                             match acquired {
@@ -293,9 +301,104 @@ where
             graphics_pipeline,
             render_pass,
             framebuffer,
-            pass: self.pass,
+            pass: self.pass.new_any_pass(),
             depends: vec![],
         })
+    }
+}
+
+
+
+#[derive(Clone, Debug)]
+pub struct Merge<'a, B: Backend> {
+    pub(super) clear_color: Option<ClearColor>,
+    pub(super) clear_depth: Option<ClearDepthStencil>,
+    pub(super) passes: &'a [&'a PassBuilder<'a, B>],
+}
+
+impl<'a, B> Merge<'a, B>
+where
+    B: Backend,
+{
+    pub fn colors(&self) -> usize {
+        self.passes[0].colors.len()
+    }
+
+    pub fn color_format(&self, index: usize) -> Format {
+        self.passes[0].colors[index]
+    }
+
+    pub fn depth_format(&self) -> Option<Format> {
+        self.passes[0].depth_stencil
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct ColorPin<'a, B: Backend> {
+    pub(super) merge: &'a Merge<'a, B>,
+    pub(super) index: usize,
+}
+
+impl<'a, B> ColorPin<'a, B>
+where
+    B: Backend,
+{
+    fn format(&self) -> Format {
+        self.merge.color_format(self.index)
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct DepthPin<'a, B: Backend> {
+    pub(super) merge: &'a Merge<'a, B>,
+}
+
+impl<'a, B> DepthPin<'a, B>
+where
+    B: Backend,
+{
+    fn format(&self) -> Format {
+        self.merge.depth_format().unwrap()
+    }
+}
+
+#[derive(Clone, Debug)]
+pub enum Pin<'a, B: Backend> {
+    Color(ColorPin<'a, B>),
+    Depth(DepthPin<'a, B>),
+}
+
+impl<'a, B> Pin<'a, B>
+where
+    B: Backend,
+{
+    fn format(&self) -> Format {
+        match *self {
+            Pin::Color(ref color) => color.format(),
+            Pin::Depth(ref depth) => depth.format(),
+        }
+    }
+
+    fn merge(&'a self) -> &'a Merge<'a, B> {
+        match *self {
+            Pin::Color(ref color) => &color.merge,
+            Pin::Depth(ref depth) => &depth.merge,
+        }
+    }
+}
+
+
+#[derive(Debug)]
+pub struct Present<'a, B: Backend> {
+    pub(super) pin: ColorPin<'a, B>,
+}
+
+impl<'a, B> Present<'a, B>
+where
+    B: Backend,
+{
+    fn format(&self) -> Format {
+        self.pin.format()
     }
 }
 
@@ -311,7 +414,11 @@ where
         rate: 0,
     });
 
-    let mut location = 0;
+    let mut location = pipeline_desc
+        .attributes
+        .last()
+        .map(|a| a.location)
+        .unwrap_or(0);
     for attribute in format.attributes.iter() {
         pipeline_desc.attributes.push(pso::AttributeDesc {
             location,
@@ -320,4 +427,108 @@ where
         });
         location += 1;
     }
+}
+
+pub fn dependency_search<T>(left: &[&T], right: &[&T]) -> Option<Vec<usize>> {
+    use std::result::Result as StdResult;
+
+    fn _search<T>(left: &[&T], right: &[&T]) -> StdResult<Vec<usize>, ()> {
+        let mut positions = right
+            .iter()
+            .map(|&r| {
+                left.iter()
+                    .rposition(|&l| l as *const _ == r as *const _)
+                    .ok_or(())
+            })
+            .collect::<StdResult<Vec<_>, _>>()?;
+        positions.sort();
+        Ok(positions)
+    };
+    _search(left, right).ok()
+}
+
+fn walk_dependencies<'a, B>(pass: &'a PassBuilder<'a, B>) -> Vec<&'a PassBuilder<'a, B>>
+where
+    B: Backend,
+{
+    use std::iter::once;
+    pass.connects
+        .iter()
+        .flat_map(|pin| {
+            pin.merge().passes.iter().flat_map(|&pass| {
+                once(pass).chain(walk_dependencies(pass))
+            })
+        })
+        .collect()
+}
+
+pub fn dependencies<'a, B>(pass: &'a PassBuilder<'a, B>) -> Vec<&'a PassBuilder<'a, B>>
+where
+    B: Backend,
+{
+    let mut deps = walk_dependencies(pass);
+    deps.sort_by_key(|p| p as *const _);
+    deps.dedup_by_key(|p| p as *const _);
+    deps
+}
+
+pub fn direct_dependencies<'a, B>(pass: &'a PassBuilder<'a, B>) -> Vec<&'a PassBuilder<'a, B>>
+where
+    B: Backend,
+{
+    let mut alldeps = dependencies(pass);
+    let mut newdeps = vec![];
+    while let Some(dep) = alldeps.pop() {
+        newdeps.push(dep);
+        let other = dependencies(dep);
+        alldeps.retain(|dep| dependency_search(&other, &[dep]).is_none());
+        newdeps.retain(|dep| dependency_search(&other, &[dep]).is_none());
+    }
+    newdeps
+}
+
+pub fn traverse<'a, B>(present: &'a Present<'a, B>) -> Vec<&'a PassBuilder<'a, B>>
+where
+    B: Backend,
+{
+    let mut passes = present
+        .pin
+        .merge
+        .passes
+        .iter()
+        .flat_map(|&pass| {
+            let mut passes = walk_dependencies(pass);
+            passes.push(pass);
+            passes
+        })
+        .collect::<Vec<_>>();
+    passes.sort_by_key(|p| p as *const _);
+    passes.dedup_by_key(|p| p as *const _);
+    passes
+}
+
+fn walk_merges<'a, B>(merge: &'a Merge<'a, B>) -> Vec<&'a Merge<'a, B>>
+where
+    B: Backend,
+{
+    use std::iter::once;
+    once(merge)
+        .chain(merge.passes.iter().flat_map(|&pass| {
+            pass.connects.iter().map(|pin| pin.merge()).flat_map(
+                |merge| {
+                    walk_merges(merge)
+                },
+            )
+        }))
+        .collect()
+}
+
+pub fn merges<'a, B>(present: &'a Present<'a, B>) -> Vec<&'a Merge<'a, B>>
+where
+    B: Backend,
+{
+    let mut merges = walk_merges(present.pin.merge);
+    merges.sort_by_key(|p| p as *const _);
+    merges.dedup_by_key(|p| p as *const _);
+    merges
 }

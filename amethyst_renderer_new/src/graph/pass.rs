@@ -24,7 +24,8 @@
 //!
 //!
 
-use std::fmt::Debug;
+use std::fmt::{self, Debug};
+use std::marker::PhantomData;
 
 use core::Transform;
 use gfx_hal::Backend;
@@ -53,6 +54,9 @@ pub trait Pass<B>: for<'a> Data<'a, B> + Debug
 where
     B: Backend,
 {
+    /// Name of the pass
+    const NAME: &'static str;
+
     /// Input attachments format
     const INPUTS: &'static [Format];
 
@@ -67,6 +71,8 @@ where
 
     /// Vertices format
     const VERTICES: &'static [VertexFormat<'static>];
+
+    fn new() -> Self;
 
     /// This function designed for
     ///
@@ -88,6 +94,34 @@ where
     fn draw<'a>(&mut self, cbuf: &mut B::CommandBuffer, data: <Self as Data<'a, B>>::DrawData);
 }
 
+pub struct NewPass<B, P>(PhantomData<(B, P)>);
+
+pub trait NewAnyPass<B>: Debug
+where
+    B: Backend,
+{
+    fn new_any_pass(&self) -> Box<AnyPass<B>>;
+}
+
+impl<B, P> Debug for NewPass<B, P>
+where
+    B: Backend,
+    P: Pass<B>,
+{
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "NewPass({})", P::NAME)
+    }
+}
+
+impl<B, P> NewAnyPass<B> for NewPass<B, P>
+where
+    B: Backend,
+    P: Pass<B> + 'static,
+{
+    fn new_any_pass(&self) -> Box<AnyPass<B>> {
+        Box::new(P::new())
+    }
+}
 
 pub trait AnyPass<B>: Debug
 where
