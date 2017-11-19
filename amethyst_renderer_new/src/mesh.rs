@@ -3,8 +3,8 @@ use std::mem::size_of;
 
 use cgmath::{Deg, Matrix4, Point3, SquareMatrix, Transform, Vector3};
 
-use gfx_hal::{Backend, Device, IndexType, Primitive};
-use gfx_hal::buffer::Usage;
+use gfx_hal::{Backend, Device, IndexCount, IndexType, Primitive, VertexCount};
+use gfx_hal::buffer::{IndexBufferView, Usage};
 use gfx_hal::memory::{Pod, cast_slice};
 use gfx_hal::pso::{ElemStride, VertexBufferSet};
 
@@ -71,7 +71,7 @@ where
                 Some(slice),
             )?,
             format: V::VERTEX_FORMAT,
-            len: self.data.as_ref().len(),
+            len: self.data.as_ref().len() as VertexCount,
         })
     }
 }
@@ -176,7 +176,7 @@ where
                 Usage::INDEX,
                 Some(slice),
             )?,
-            len: self.data.as_ref().len(),
+            len: self.data.as_ref().len() as IndexCount,
             index_type: IndexType::U16,
         }))
     }
@@ -204,7 +204,7 @@ where
                 Usage::INDEX,
                 Some(slice),
             )?,
-            len: self.data.as_ref().len(),
+            len: self.data.as_ref().len() as IndexCount,
             index_type: IndexType::U32,
         }))
     }
@@ -213,13 +213,13 @@ where
 pub struct VertexBuffer<B: Backend> {
     buffer: B::Buffer,
     format: VertexFormat<'static>,
-    len: usize,
+    len: VertexCount,
 }
 
 pub struct IndexBuffer<B: Backend> {
     buffer: B::Buffer,
     index_type: IndexType,
-    len: usize,
+    len: IndexCount,
 }
 
 pub struct HMeshBuilder<V, I> {
@@ -470,7 +470,7 @@ impl MeshBuilder {
                             Some(&v),
                         )?,
                         format: f,
-                        len: v.len() / f.stride as usize,
+                        len: v.len() as VertexCount / f.stride as VertexCount,
                     })
                 })
                 .collect::<Result<_>>()?,
@@ -490,7 +490,7 @@ impl MeshBuilder {
                             Some(&i),
                         )?,
                         index_type: t,
-                        len: i.len() / stride,
+                        len: i.len() as IndexCount / stride as IndexCount,
                     })
                 }
             },
@@ -508,6 +508,34 @@ pub struct Mesh<B: Backend> {
     transform: Matrix4<f32>,
 }
 
+pub enum Bind<'a, B: Backend> {
+    Indexed {
+        index: IndexBufferView<'a, B>,
+        count: IndexCount,
+    },
+    Unindexed { count: VertexCount },
+}
+
+impl<'a, B> Bind<'a, B>
+where
+    B: Backend,
+{
+    pub fn draw(self, vertex: VertexBufferSet<B>, cbuf: &mut B::CommandBuffer) {
+        use gfx_hal::command::RawCommandBuffer;
+
+        cbuf.bind_vertex_buffers(vertex);
+        match self {
+            Bind::Indexed { index, count } => {
+                cbuf.bind_index_buffer(index);
+                cbuf.draw_indexed(0..count, 0, 0..1);
+            }
+            Bind::Unindexed { count } => {
+                cbuf.draw(0..count, 0..1);
+            }
+        }
+    }
+}
+
 impl<B> Mesh<B>
 where
     B: Backend,
@@ -520,26 +548,43 @@ where
     pub fn bind<'a>(
         &'a self,
         format_set: VertexFormatSet,
-        output: &mut VertexBufferSet<'a, B>,
-    ) -> Result<()> {
+        vertex: &mut VertexBufferSet<'a, B>,
+    ) -> Result<Bind<B>> {
         debug_assert!(is_slice_sorted(format_set));
         debug_assert!(is_slice_sorted_by_key(
             &self.vbufs,
             |vbuf| vbuf.format.attributes,
         ));
-        debug_assert!(output.0.is_empty());
+        debug_assert!(vertex.0.is_empty());
 
         let mut last = 0;
+        let mut vertex_count = None;
         for format in format_set {
             if let Some(index) = find_compatible_buffer(&self.vbufs[last..], format) {
-                output.0.push((&self.vbufs[index].buffer, 0));
+                vertex.0.push((&self.vbufs[index].buffer, 0));
                 last = index;
+                assert!(vertex_count == None || vertex_count == Some(self.vbufs[index].len));
+                vertex_count = Some(self.vbufs[index].len);
             } else {
                 // Can't bind
                 return Err(ErrorKind::Incompatible.into());
             }
         }
-        Ok(())
+        Ok(
+            self.ibuf
+                .as_ref()
+                .map(|ibuf| {
+                    Bind::Indexed {
+                        index: IndexBufferView {
+                            buffer: &ibuf.buffer,
+                            offset: 0,
+                            index_type: ibuf.index_type,
+                        },
+                        count: ibuf.len,
+                    }
+                })
+                .unwrap_or(Bind::Unindexed { count: vertex_count.unwrap_or(0) }),
+        )
     }
 
     fn transformt(&self) -> &Matrix4<f32> {
