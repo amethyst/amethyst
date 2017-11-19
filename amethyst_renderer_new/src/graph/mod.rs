@@ -478,7 +478,12 @@ where
                     }
                 });
 
-                pass.build(device, &inputs[..], &colors[..], depth_stencil, extent)
+                let mut node = pass.build(device, &inputs[..], &colors[..], depth_stencil, extent)?;
+
+                node.depends = deps.into_iter().map(|dep| {
+                    (dep, PipelineStage::TOP_OF_PIPE) // Pick better
+                }).collect();
+                Ok(node)
             })
             .collect::<Result<_>>()?;
 
