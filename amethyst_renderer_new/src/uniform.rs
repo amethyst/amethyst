@@ -4,7 +4,7 @@ use core::Transform;
 use gfx_hal::Backend;
 use gfx_hal::buffer::Usage;
 use gfx_hal::command::RawCommandBuffer;
-use gfx_hal::memory::{Pod, cast_slice};
+use gfx_hal::memory::{cast_slice, Pod};
 
 use memory::{self, Allocator};
 use cam::Camera;
@@ -23,7 +23,7 @@ pub trait IntoUniform<B: Backend>: Sized {
     fn into_uniform(&self) -> Self::Uniform;
 
     /// Create cache
-    fn create_cache<A>(allocator: &mut A, device: &mut B::Device) -> Result<Self::Cache>
+    fn create_cache<A>(allocator: &mut A, device: &B::Device) -> Result<Self::Cache>
     where
         A: Allocator<B>;
 
@@ -44,7 +44,7 @@ where
         *self
     }
 
-    fn create_cache<A>(allocator: &mut A, device: &mut B::Device) -> Result<Self::Cache>
+    fn create_cache<A>(allocator: &mut A, device: &B::Device) -> Result<Self::Cache>
     where
         A: Allocator<B>,
     {
@@ -67,7 +67,7 @@ where
         self.proj.into()
     }
 
-    fn create_cache<A>(allocator: &mut A, device: &mut B::Device) -> Result<Self::Cache>
+    fn create_cache<A>(allocator: &mut A, device: &B::Device) -> Result<Self::Cache>
     where
         A: Allocator<B>,
     {
@@ -89,7 +89,7 @@ where
     B: Backend,
     T: IntoUniform<B>,
 {
-    fn new<A>(allocator: &mut A, device: &mut B::Device) -> Result<Self>
+    fn new<A>(allocator: &mut A, device: &B::Device) -> Result<Self>
     where
         A: Allocator<B>,
     {

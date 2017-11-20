@@ -64,7 +64,7 @@ where
 {
     pub fn new<P>(vert: pso::EntryPoint<'a, B>, frag: pso::EntryPoint<'a, B>) -> Self
     where
-        P: Pass<B> + 'static
+        P: Pass<B> + 'static,
     {
         PassBuilder {
             inputs: P::INPUTS,
@@ -72,7 +72,13 @@ where
             depth_stencil: P::DEPTH_STENCIL,
             bindings: P::BINDINGS,
             vertices: P::VERTICES,
-            shaders: pso::GraphicsShaderSet { vertex: vert, fragment: Some(frag), hull: None, domain: None, geometry: None },
+            shaders: pso::GraphicsShaderSet {
+                vertex: vert,
+                fragment: Some(frag),
+                hull: None,
+                domain: None,
+                geometry: None,
+            },
             rasterizer: pso::Rasterizer::FILL,
             primitive: Primitive::TriangleList,
             connects: vec![],
@@ -82,13 +88,12 @@ where
 
     pub fn build(
         &self,
-        device: &mut B::Device,
+        device: &B::Device,
         inputs: &[InputAttachmentDesc<B>],
         colors: &[ColorAttachmentDesc<B>],
         depth_stencil: Option<DepthStencilAttachmentDesc<B>>,
         extent: Extent,
     ) -> Result<PassNode<B>> {
-
         /// Check connects
         assert_eq!(self.inputs.len(), self.connects.len());
         for (input, pin) in self.connects.iter().enumerate() {
@@ -259,18 +264,19 @@ where
         );
 
         // And depth-stencil
-        clears.extend(depth_stencil.as_ref().and_then(|ds| ds.clear).map(
-            ClearValue::DepthStencil,
-        ));
+        clears.extend(
+            depth_stencil
+                .as_ref()
+                .and_then(|ds| ds.clear)
+                .map(ClearValue::DepthStencil),
+        );
 
         // create framebuffers
         let framebuffer: SuperFramebuffer<B> = {
-            if colors.len() == 1 &&
-                match colors[0].view {
-                    AttachmentImageView::Single => true,
-                    _ => false,
-                }
-            {
+            if colors.len() == 1 && match colors[0].view {
+                AttachmentImageView::Single => true,
+                _ => false,
+            } {
                 SuperFramebuffer::Single
             } else {
                 let mut acquired = None;
@@ -338,6 +344,21 @@ impl<'a, B> Merge<'a, B>
 where
     B: Backend,
 {
+    pub fn new(clear_color: Option<ClearColor>, clear_depth: Option<ClearDepthStencil>, passes: &'a [&'a PassBuilder<'a, B>]) -> Self {
+        assert!(!passes.is_empty());
+        let colors = passes[0].colors;
+        let depth_stencil = passes[0].depth_stencil;
+        for pass in &passes[1..] {
+            assert_eq!(colors, pass.colors);
+            assert_eq!(depth_stencil, pass.depth_stencil);
+        }
+        Merge {
+            clear_color,
+            clear_depth,
+            passes,
+        }
+    }
+
     pub fn colors(&self) -> usize {
         self.passes[0].colors.len()
     }
@@ -361,7 +382,14 @@ impl<'a, B> ColorPin<'a, B>
 where
     B: Backend,
 {
-    fn format(&self) -> Format {
+    pub fn new(merge: &'a Merge<'a, B>, index: usize) -> Self {
+        assert!(merge.colors() > index);
+        ColorPin {
+            merge,
+            index,
+        }
+    }
+    pub fn format(&self) -> Format {
         self.merge.color_format(self.index)
     }
 }
@@ -415,7 +443,12 @@ impl<'a, B> Present<'a, B>
 where
     B: Backend,
 {
-    fn format(&self) -> Format {
+    pub fn new(pin: ColorPin<'a, B>) -> Self {
+        Present {
+            pin,
+        }
+    }
+    pub fn format(&self) -> Format {
         self.pin.format()
     }
 }
@@ -473,9 +506,10 @@ where
     pass.connects
         .iter()
         .flat_map(|pin| {
-            pin.merge().passes.iter().flat_map(|&pass| {
-                once(pass).chain(walk_dependencies(pass))
-            })
+            pin.merge()
+                .passes
+                .iter()
+                .flat_map(|&pass| once(pass).chain(walk_dependencies(pass)))
         })
         .collect()
 }
@@ -532,11 +566,10 @@ where
     use std::iter::once;
     once(merge)
         .chain(merge.passes.iter().flat_map(|&pass| {
-            pass.connects.iter().map(|pin| pin.merge()).flat_map(
-                |merge| {
-                    walk_merges(merge)
-                },
-            )
+            pass.connects
+                .iter()
+                .map(|pin| pin.merge())
+                .flat_map(|merge| walk_merges(merge))
         }))
         .collect()
 }

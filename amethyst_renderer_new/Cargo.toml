@@ -21,7 +21,7 @@ travis-ci = { repository = "amethyst/amethyst" }
 [features]
 metal = ["gfx-backend-metal"]
 vulkan = ["gfx-backend-vulkan"]
-default = ["metal"]
+default = ["vulkan"]
 
 [dependencies]
 amethyst_core = { path = "../amethyst_core" }

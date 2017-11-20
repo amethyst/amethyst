@@ -65,7 +65,7 @@ pub trait Allocator<B: Backend> {
     /// TODO: Add options to this function to choose memory types and startegies
     fn allocate_buffer(
         &mut self,
-        device: &mut B::Device,
+        device: &B::Device,
         size: usize,
         stride: usize,
         usage: BufferUsage,
@@ -74,12 +74,14 @@ pub trait Allocator<B: Backend> {
 
     fn allocate_image(
         &mut self,
-        device: &mut B::Device,
+        device: &B::Device,
         kind: Kind,
         level: Level,
         format: Format,
         usage: ImageUsage,
     ) -> Result<B::Image>;
+
+    fn commit_transfers(&mut self, cbuf: &mut B::CommandBuffer) {}
 }
 
 
@@ -95,10 +97,8 @@ where
     B: Backend,
 {
     fn allocate(&self, size: usize, alignment: usize) -> Option<(&B::Memory, usize)> {
-        let pos = self.allocated.fetch_add(
-            size + alignment,
-            Ordering::Acquire,
-        ) - size;
+        let pos = self.allocated
+            .fetch_add(size + alignment, Ordering::Acquire) + alignment;
         if self.size - size >= pos {
             let shift = pos % alignment;
             let pos = pos - shift;
@@ -109,30 +109,43 @@ where
     }
 }
 
+struct DumbAllocatorNodes<B: Backend> {
+    memory_type: MemoryType,
+    nodes: Vec<Arc<DumbAllocatorNode<B>>>,
+}
 
 /// This allocator is do dumb it can't even free memory
 pub struct DumbAllocator<B: Backend> {
     granularity: usize,
-    nodes: Vec<Arc<DumbAllocatorNode<B>>>,
+    nodes: Vec<DumbAllocatorNodes<B>>,
+    commits: Vec<Box<Fn(&mut B::CommandBuffer)>>,
 }
 
 impl<B> DumbAllocator<B>
 where
     B: Backend,
 {
-    pub fn new() -> Self {
+    pub fn new(mut memory_types: Vec<MemoryType>) -> Self {
         DumbAllocator {
             granularity: 268_435_456, // 256 MB
-            nodes: Vec::new(),
+            nodes: memory_types.into_iter().map(|t| DumbAllocatorNodes { memory_type: t, nodes: vec![] }).collect(),
+            commits: vec![],
         }
+    }
+
+    fn find_nodes(&mut self, type_mask: u64, properties: Properties) -> &mut DumbAllocatorNodes<B> {
+        self.nodes.iter_mut().find(|nodes| {
+            type_mask & (1 << nodes.memory_type.id) != 0 && nodes.memory_type.properties.contains(properties)
+        }).unwrap()
     }
 
     fn allocate_buffer_unfilled(
         &mut self,
-        device: &mut B::Device,
+        device: &B::Device,
         size: usize,
         stride: usize,
         usage: BufferUsage,
+        properties: Properties,
     ) -> Result<B::Buffer> {
         let ubuf = device.create_buffer(size as u64, stride as u64, usage)?;
 
@@ -142,6 +155,8 @@ where
             type_mask,
         } = device.get_buffer_requirements(&ubuf);
 
+        println!("Creating buffer. type_mask<{:b}>", type_mask);
+
         if size > usize::max_value() as u64 || alignment > usize::max_value() as u64 {
             return Err(ErrorKind::OutOfMemory.into());
         }
@@ -149,33 +164,35 @@ where
         let size = size as usize;
         let alignment = alignment as usize;
 
-        let ubuf = match self.nodes.last().and_then(
-            |node| node.allocate(size, alignment),
-        ) {
+        let granularity = self.granularity;
+        let nodes = self.find_nodes(type_mask, properties);
+        let memory_type = nodes.memory_type;
+        let ref mut nodes = nodes.nodes;
+
+        let ubuf = match nodes
+            .last()
+            .and_then(|node| node.allocate(size, alignment))
+        {
             Some((memory, offset)) => {
                 return Ok(device.bind_buffer_memory(memory, offset as u64, ubuf)?)
             }
             None => ubuf,
         };
 
-        let node_size = (size + alignment - 1) / self.granularity + self.granularity;
+        let node_size = (size + alignment - 1) / granularity + granularity;
 
         let node = DumbAllocatorNode {
             memory: device.allocate_memory(
-                &MemoryType {
-                    id: 0,
-                    properties: Properties::COHERENT | Properties::CPU_VISIBLE,
-                    heap_index: 0,
-                },
+                &memory_type,
                 node_size as u64,
             )?,
             size: node_size,
             allocated: AtomicUsize::new(0),
             freed: AtomicUsize::new(0),
         };
-        self.nodes.push(Arc::new(node));
+        nodes.push(Arc::new(node));
 
-        let (memory, offset) = self.nodes
+        let (memory, offset) = nodes
             .last()
             .unwrap()
             .allocate(size, alignment)
@@ -185,11 +202,12 @@ where
 
     fn allocate_image_unfilled(
         &mut self,
-        device: &mut B::Device,
+        device: &B::Device,
         kind: Kind,
         level: Level,
         format: Format,
         usage: ImageUsage,
+        properties: Properties,
     ) -> Result<B::Image> {
         let uimg = device.create_image(kind, level, format, usage)?;
 
@@ -199,6 +217,8 @@ where
             type_mask,
         } = device.get_image_requirements(&uimg);
 
+        println!("Creating image. type_mask<{:b}>", type_mask);
+
         if size > usize::max_value() as u64 || alignment > usize::max_value() as u64 {
             return Err(ErrorKind::OutOfMemory.into());
         }
@@ -206,33 +226,35 @@ where
         let size = size as usize;
         let alignment = alignment as usize;
 
-        let uimg = match self.nodes.last().and_then(
-            |node| node.allocate(size, alignment),
-        ) {
+        let granularity = self.granularity;
+        let nodes = self.find_nodes(type_mask, properties);
+        let memory_type = nodes.memory_type;
+        let ref mut nodes = nodes.nodes;
+
+        let uimg = match nodes
+            .last()
+            .and_then(|node| node.allocate(size, alignment))
+        {
             Some((memory, offset)) => {
                 return Ok(device.bind_image_memory(memory, offset as u64, uimg)?)
             }
             None => uimg,
         };
 
-        let node_size = (size + alignment - 1) / self.granularity + self.granularity;
+        let node_size = (size + alignment - 1) / granularity + granularity;
 
         let node = DumbAllocatorNode {
             memory: device.allocate_memory(
-                &MemoryType {
-                    id: 0,
-                    properties: Properties::DEVICE_LOCAL,
-                    heap_index: 0,
-                },
+                &memory_type,
                 node_size as u64,
             )?,
             size: node_size,
             allocated: AtomicUsize::new(0),
             freed: AtomicUsize::new(0),
         };
-        self.nodes.push(Arc::new(node));
+        nodes.push(Arc::new(node));
 
-        let (memory, offset) = self.nodes
+        let (memory, offset) = nodes
             .last()
             .unwrap()
             .allocate(size, alignment)
@@ -247,19 +269,20 @@ where
 {
     fn allocate_buffer(
         &mut self,
-        device: &mut B::Device,
+        device: &B::Device,
         size: usize,
         stride: usize,
         usage: BufferUsage,
         fill: Option<&[u8]>,
     ) -> Result<B::Buffer> {
-        let buffer = self.allocate_buffer_unfilled(device, size, stride, usage)?;
+        let buffer = self.allocate_buffer_unfilled(device, size, stride, usage, Properties::CPU_VISIBLE | Properties::COHERENT)?;
         match fill {
             Some(data) => {
                 let mut writer = device
                     .acquire_mapping_writer::<u8>(&buffer, 0..data.len() as u64)
                     .map_err(Error::from)?;
                 writer.copy_from_slice(data);
+                device.release_mapping_writer(writer);
             }
             None => {}
         };
@@ -268,13 +291,19 @@ where
 
     fn allocate_image(
         &mut self,
-        device: &mut B::Device,
+        device: &B::Device,
         kind: Kind,
         level: Level,
         format: Format,
         usage: ImageUsage,
     ) -> Result<B::Image> {
-        self.allocate_image_unfilled(device, kind, level, format, usage)
+        self.allocate_image_unfilled(device, kind, level, format, usage, Properties::DEVICE_LOCAL)
+    }
+
+    fn commit_transfers(&mut self, cbuf: &mut B::CommandBuffer) {
+        for commit in self.commits.drain(..) {
+            commit(cbuf);
+        }
     }
 }
 

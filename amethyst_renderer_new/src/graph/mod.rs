@@ -133,7 +133,7 @@ where
     fn draw(
         &mut self,
         cbuf: &mut B::CommandBuffer,
-        device: &mut B::Device,
+        device: &B::Device,
         world: &World,
         rect: Rect,
         frame: SuperFrame<B>,
@@ -146,12 +146,8 @@ where
         // Run custom preparation
         // * Write descriptor sets
         // * Store caches
-        self.pass.prepare(
-            cbuf,
-            &self.pipeline_layout,
-            device,
-            world,
-        );
+        self.pass
+            .prepare(cbuf, &self.pipeline_layout, device, world);
 
         // Begin render pass with single inline subpass
         cbuf.begin_renderpass(
@@ -187,14 +183,14 @@ impl<B> RenderGraph<B>
 where
     B: Backend,
 {
-    fn draw<S, C>(
+    pub fn draw<S, C>(
         &mut self,
         pool: &mut B::CommandPool,
         cbufs: &mut Vec<B::CommandBuffer>,
         queue: &mut CommandQueue<B, C>,
         swapchain: &mut S,
-        device: &mut B::Device,
-        viewport: &Viewport,
+        device: &B::Device,
+        viewport: Viewport,
         world: &World,
     ) where
         S: Swapchain<B>,
@@ -225,7 +221,7 @@ where
             cbufs.append(&mut pool.allocate(add));
         }
 
-        // Store `Semaphore`s that `Surface::repsent` needs to wait for
+        // Store `Semaphore`s that `Surface::present` needs to wait for
         let mut presents: SmallVec<[_; 32]> = SmallVec::new();
 
         // Record commands for all passes
@@ -247,7 +243,7 @@ where
                 // Presenting has to wait for it
                 presents.push(&signals[id]);
                 // And it should wait for acqusition
-                Some((acquire, PipelineStage::COLOR_ATTACHMENT_OUTPUT))
+                Some((acquire, PipelineStage::TOP_OF_PIPE))
             } else {
                 None
             };
@@ -284,30 +280,30 @@ where
         pool.reset();
     }
 
-    fn build<A>(
+    pub fn build<A>(
         present: Present<B>,
         backbuffer: Backbuffer<B>,
         color: Format,
         depth_stencil: Option<Format>,
         extent: Extent,
         allocator: &mut A,
-        device: &mut B::Device,
+        device: &B::Device,
     ) -> Result<Self>
     where
         A: Allocator<B>,
     {
+        assert_eq!(present.format(), color);
+
         // Create views for backbuffer
         let mut image_views = match backbuffer {
-            Backbuffer::Images(ref images) => {
-                images
-                    .iter()
-                    .map(|image| {
-                        device
-                            .create_image_view(image, color, Swizzle::NO, COLOR_RANGE.clone())
-                            .map_err(Into::into)
-                    })
-                    .collect::<Result<Vec<_>>>()?
-            }
+            Backbuffer::Images(ref images) => images
+                .iter()
+                .map(|image| {
+                    device
+                        .create_image_view(image, color, Swizzle::NO, COLOR_RANGE.clone())
+                        .map_err(Into::into)
+                })
+                .collect::<Result<Vec<_>>>()?,
             Backbuffer::Framebuffer(_) => vec![],
         };
 
@@ -390,24 +386,20 @@ where
                     .iter()
                     .map(|pin| {
                         let (index, format) = match *pin {
-                            Pin::Color(ColorPin { merge, index }) => {
-                                (
-                                    targets.get(&(merge as *const _)).unwrap().colors[index]
-                                        .index
-                                        .unwrap(),
-                                    merge.color_format(index),
-                                )
-                            }
-                            Pin::Depth(DepthPin { merge }) => {
-                                (
-                                    targets
-                                        .get(&(merge as *const _))
-                                        .and_then(|targets| targets.depth.as_ref())
-                                        .map(|depth| depth.index)
-                                        .unwrap(),
-                                    merge.depth_format().unwrap(),
-                                )
-                            }
+                            Pin::Color(ColorPin { merge, index }) => (
+                                targets.get(&(merge as *const _)).unwrap().colors[index]
+                                    .index
+                                    .unwrap(),
+                                merge.color_format(index),
+                            ),
+                            Pin::Depth(DepthPin { merge }) => (
+                                targets
+                                    .get(&(merge as *const _))
+                                    .and_then(|targets| targets.depth.as_ref())
+                                    .map(|depth| depth.index)
+                                    .unwrap(),
+                                merge.depth_format().unwrap(),
+                            ),
                         };
                         let ref view = image_views[index];
                         InputAttachmentDesc { format, view }
@@ -418,9 +410,10 @@ where
                 let merge = *merges
                     .iter()
                     .find(|&merge| {
-                        merge.passes.iter().any(
-                            |&p| p as *const _ == pass as *const _,
-                        )
+                        merge
+                            .passes
+                            .iter()
+                            .any(|&p| p as *const _ == pass as *const _)
                     })
                     .expect("All passes comes from merges");
                 let key = merge as *const _;
@@ -453,11 +446,9 @@ where
                                 (
                                     // It's backbuffer image
                                     match backbuffer {
-                                        Backbuffer::Images(_) => {
-                                            AttachmentImageView::Acquired(
-                                                &image_views[0..backbuffer_image_views],
-                                            )
-                                        }
+                                        Backbuffer::Images(_) => AttachmentImageView::Acquired(
+                                            &image_views[0..backbuffer_image_views],
+                                        ),
                                         Backbuffer::Framebuffer(_) => AttachmentImageView::Single,
                                     },
                                     color,
@@ -479,13 +470,7 @@ where
                     }
                 });
 
-                let mut node = pass.build(
-                    device,
-                    &inputs[..],
-                    &colors[..],
-                    depth_stencil,
-                    extent,
-                )?;
+                let mut node = pass.build(device, &inputs[..], &colors[..], depth_stencil, extent)?;
 
                 node.depends = deps.into_iter()
                     .map(|dep| {
@@ -529,7 +514,7 @@ struct DepthIndex {
 
 fn create_targets<A, B, F>(
     allocator: &mut A,
-    device: &mut B::Device,
+    device: &B::Device,
     merge: &Merge<B>,
     images: &mut Vec<B::Image>,
     views: &mut Vec<B::ImageView>,
@@ -547,19 +532,9 @@ where
             extent.height as u16,
             image::AaMode::Single,
         );
-        let img = allocator.allocate_image(
-            device,
-            kind,
-            1,
-            format,
-            image::Usage::COLOR_ATTACHMENT,
-        )?;
-        let view = device.create_image_view(
-            &img,
-            format,
-            Swizzle::NO,
-            COLOR_RANGE.clone(),
-        )?;
+        let img =
+            allocator.allocate_image(device, kind, 1, format, image::Usage::COLOR_ATTACHMENT)?;
+        let view = device.create_image_view(&img, format, Swizzle::NO, COLOR_RANGE.clone())?;
         views.push(view);
         images.push(img);
         Ok(views.len() - 1)
@@ -570,7 +545,9 @@ where
             Ok(if f(i) {
                 ColorIndex { index: None }
             } else {
-                ColorIndex { index: Some(make_view(merge.color_format(i))?) }
+                ColorIndex {
+                    index: Some(make_view(merge.color_format(i))?),
+                }
             })
         })
         .collect::<Result<_>>()?;
@@ -578,7 +555,9 @@ where
     Ok(if let Some(format) = merge.depth_format() {
         Targets {
             colors,
-            depth: Some(DepthIndex { index: make_view(format)? }),
+            depth: Some(DepthIndex {
+                index: make_view(format)?,
+            }),
         }
     } else {
         Targets {

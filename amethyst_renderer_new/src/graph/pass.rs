@@ -74,7 +74,10 @@ where
 
     fn new() -> Self;
 
-    fn box_new() -> Box<NewAnyPass<B>> where Self: Sized + 'static {
+    fn box_new() -> Box<NewAnyPass<B>>
+    where
+        Self: Sized + 'static,
+    {
         Box::new(NewPass::<B, Self>::new())
     }
 
@@ -87,7 +90,7 @@ where
         &mut self,
         cbuf: &mut B::CommandBuffer,
         layout: &B::PipelineLayout,
-        device: &mut B::Device,
+        device: &B::Device,
         data: <Self as Data<'a, B>>::PrepareData,
     );
 
@@ -144,7 +147,7 @@ where
         &mut self,
         cbuf: &mut B::CommandBuffer,
         layout: &B::PipelineLayout,
-        device: &mut B::Device,
+        device: &B::Device,
         world: &'a World,
     );
 
@@ -163,7 +166,7 @@ where
         &mut self,
         cbuf: &mut B::CommandBuffer,
         layout: &B::PipelineLayout,
-        device: &mut B::Device,
+        device: &B::Device,
         world: &'a World,
     ) {
         <P as Pass<B>>::prepare(

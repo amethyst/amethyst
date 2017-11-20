@@ -26,6 +26,15 @@ pub trait Attribute: BufferFormat + Debug + PartialEq + Pod + Send + Sync {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Position(Vec3<f32>);
+impl<T> From<T> for Position
+where
+    T: Into<Vec3<f32>>,
+{
+    fn from(from: T) -> Self {
+        Position(from.into())
+    }
+}
+
 impl Formatted for Position {
     type Surface = <Vec3<f32> as Formatted>::Surface;
     type Channel = <Vec3<f32> as Formatted>::Channel;
@@ -34,7 +43,7 @@ impl Formatted for Position {
 }
 unsafe impl Pod for Position {}
 impl Attribute for Position {
-    const NAME: &'static str = "position";
+    const NAME: &'static str = "0_position";
     const SIZE: ElemStride = 12;
 }
 
@@ -42,6 +51,15 @@ impl Attribute for Position {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Color(Vec4<f32>);
+impl<T> From<T> for Color
+where
+    T: Into<Vec4<f32>>,
+{
+    fn from(from: T) -> Self {
+        Color(from.into())
+    }
+}
+
 impl Formatted for Color {
     type Surface = <Vec4<f32> as Formatted>::Surface;
     type Channel = <Vec4<f32> as Formatted>::Channel;
@@ -50,30 +68,22 @@ impl Formatted for Color {
 }
 unsafe impl Pod for Color {}
 impl Attribute for Color {
-    const NAME: &'static str = "color";
+    const NAME: &'static str = "1_color";
     const SIZE: ElemStride = 16;
 }
 
 /// Type for texture coord attribute of vertex
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct TexCoord(Vec2<f32>);
-impl Formatted for TexCoord {
-    type Surface = <Vec2<f32> as Formatted>::Surface;
-    type Channel = <Vec2<f32> as Formatted>::Channel;
-    type View = <Vec2<f32> as Formatted>::View;
-    const SELF: Format = Vec2::<f32>::SELF;
-}
-unsafe impl Pod for TexCoord {}
-impl Attribute for TexCoord {
-    const NAME: &'static str = "tex_coord";
-    const SIZE: ElemStride = 8;
-}
-
-/// Type for texture coord attribute of vertex
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Normal(Vec3<f32>);
+impl<T> From<T> for Normal
+where
+    T: Into<Vec3<f32>>,
+{
+    fn from(from: T) -> Self {
+        Normal(from.into())
+    }
+}
 impl Formatted for Normal {
     type Surface = <Vec3<f32> as Formatted>::Surface;
     type Channel = <Vec3<f32> as Formatted>::Channel;
@@ -82,7 +92,7 @@ impl Formatted for Normal {
 }
 unsafe impl Pod for Normal {}
 impl Attribute for Normal {
-    const NAME: &'static str = "normal";
+    const NAME: &'static str = "2_normal";
     const SIZE: ElemStride = 12;
 }
 
@@ -90,6 +100,14 @@ impl Attribute for Normal {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Tangent(Vec3<f32>);
+impl<T> From<T> for Tangent
+where
+    T: Into<Vec3<f32>>,
+{
+    fn from(from: T) -> Self {
+        Tangent(from.into())
+    }
+}
 impl Formatted for Tangent {
     type Surface = <Vec3<f32> as Formatted>::Surface;
     type Channel = <Vec3<f32> as Formatted>::Channel;
@@ -98,8 +116,32 @@ impl Formatted for Tangent {
 }
 unsafe impl Pod for Tangent {}
 impl Attribute for Tangent {
-    const NAME: &'static str = "tangent";
+    const NAME: &'static str = "3_tangent";
     const SIZE: ElemStride = 12;
+}
+
+/// Type for texture coord attribute of vertex
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct TexCoord(Vec2<f32>);
+impl<T> From<T> for TexCoord
+where
+    T: Into<Vec2<f32>>,
+{
+    fn from(from: T) -> Self {
+        TexCoord(from.into())
+    }
+}
+impl Formatted for TexCoord {
+    type Surface = <Vec2<f32> as Formatted>::Surface;
+    type Channel = <Vec2<f32> as Formatted>::Channel;
+    type View = <Vec2<f32> as Formatted>::View;
+    const SELF: Format = Vec2::<f32>::SELF;
+}
+unsafe impl Pod for TexCoord {}
+impl Attribute for TexCoord {
+    const NAME: &'static str = "4_tex_coord";
+    const SIZE: ElemStride = 8;
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]

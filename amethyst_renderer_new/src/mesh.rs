@@ -5,12 +5,12 @@ use cgmath::{Deg, Matrix4, Point3, SquareMatrix, Transform, Vector3};
 
 use gfx_hal::{Backend, Device, IndexCount, IndexType, Primitive, VertexCount};
 use gfx_hal::buffer::{IndexBufferView, Usage};
-use gfx_hal::memory::{Pod, cast_slice};
+use gfx_hal::memory::{cast_slice, Pod};
 use gfx_hal::pso::{ElemStride, VertexBufferSet};
 
 use smallvec::SmallVec;
 
-use memory::{self, Allocator, cast_pod_vec};
+use memory::{self, cast_pod_vec, Allocator};
 use utils::{is_slice_sorted, is_slice_sorted_by_key};
 use vertex::{Attributes, VertexFormat, VertexFormatSet, VertexFormatted};
 
@@ -55,7 +55,7 @@ where
     pub(crate) fn build<A, B>(
         self,
         allocator: &mut A,
-        device: &mut B::Device,
+        device: &B::Device,
     ) -> Result<VertexBuffer<B>>
     where
         A: Allocator<B>,
@@ -83,7 +83,7 @@ pub trait VertexDataList {
     fn build<A, B>(
         self,
         allocator: &mut A,
-        device: &mut B::Device,
+        device: &B::Device,
         output: &mut Vec<VertexBuffer<B>>,
     ) -> Result<()>
     where
@@ -96,7 +96,7 @@ impl VertexDataList for () {
     fn build<A, B>(
         self,
         allocator: &mut A,
-        device: &mut B::Device,
+        device: &B::Device,
         output: &mut Vec<VertexBuffer<B>>,
     ) -> Result<()>
     where
@@ -117,7 +117,7 @@ where
     fn build<A, B>(
         self,
         allocator: &mut A,
-        device: &mut B::Device,
+        device: &B::Device,
         output: &mut Vec<VertexBuffer<B>>,
     ) -> Result<()>
     where
@@ -134,7 +134,7 @@ pub trait IndexDataMaybe {
     fn build<A, B>(
         self,
         allocator: &mut A,
-        device: &mut B::Device,
+        device: &B::Device,
     ) -> Result<Option<IndexBuffer<B>>>
     where
         A: Allocator<B>,
@@ -145,7 +145,7 @@ impl IndexDataMaybe for () {
     fn build<A, B>(
         self,
         allocator: &mut A,
-        device: &mut B::Device,
+        device: &B::Device,
     ) -> Result<Option<IndexBuffer<B>>>
     where
         B: Backend,
@@ -161,7 +161,7 @@ where
     fn build<A, B>(
         self,
         allocator: &mut A,
-        device: &mut B::Device,
+        device: &B::Device,
     ) -> Result<Option<IndexBuffer<B>>>
     where
         A: Allocator<B>,
@@ -189,7 +189,7 @@ where
     fn build<A, B>(
         self,
         allocator: &mut A,
-        device: &mut B::Device,
+        device: &B::Device,
     ) -> Result<Option<IndexBuffer<B>>>
     where
         A: Allocator<B>,
@@ -329,7 +329,7 @@ where
     I: IndexDataMaybe,
 {
     /// Builds and returns the new mesh.
-    pub fn build<A, B>(self, allocator: &mut A, device: &mut B::Device) -> Result<Mesh<B>>
+    pub fn build<A, B>(self, allocator: &mut A, device: &B::Device) -> Result<Mesh<B>>
     where
         A: Allocator<B>,
         B: Backend,
@@ -373,7 +373,7 @@ pub struct MeshBuilder {
 }
 
 impl MeshBuilder {
-    fn new() -> Self {
+    pub fn new() -> Self {
         MeshBuilder {
             vertices: SmallVec::new(),
             indices: None,
@@ -400,9 +400,8 @@ impl MeshBuilder {
     where
         V: VertexFormatted,
     {
-        self.vertices.push(
-            (cast_pod_vec(vertices), V::VERTEX_FORMAT),
-        );
+        self.vertices
+            .push((cast_pod_vec(vertices), V::VERTEX_FORMAT));
         self
     }
 
@@ -452,7 +451,7 @@ impl MeshBuilder {
     }
 
     /// Builds and returns the new mesh.
-    pub fn build<A, B>(self, allocator: &mut A, device: &mut B::Device) -> Result<Mesh<B>>
+    pub fn build<A, B>(self, allocator: &mut A, device: &B::Device) -> Result<Mesh<B>>
     where
         A: Allocator<B>,
         B: Backend,
@@ -583,7 +582,9 @@ where
                         count: ibuf.len,
                     }
                 })
-                .unwrap_or(Bind::Unindexed { count: vertex_count.unwrap_or(0) }),
+                .unwrap_or(Bind::Unindexed {
+                    count: vertex_count.unwrap_or(0),
+                }),
         )
     }
 

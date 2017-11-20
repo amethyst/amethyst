@@ -26,9 +26,9 @@ pub mod texture;
 pub mod vertex;
 pub mod uniform;
 
-mod memory;
-// mod staging;
-mod utils;
+pub mod memory;
+// pub mod staging;
+pub mod utils;
 
 
 pub use graph::pass::Pass;

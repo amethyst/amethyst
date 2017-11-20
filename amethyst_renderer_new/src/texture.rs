@@ -47,16 +47,14 @@ impl TextureBuilder<[[u8; 4]; 1], Rgba8> {
         let g = rgba[1];
         let b = rgba[2];
         let a = rgba[3];
-        TextureBuilder::new(
+        TextureBuilder::new([
             [
-                [
-                    (r * 255.0) as u8,
-                    (g * 255.0) as u8,
-                    (b * 255.0) as u8,
-                    (a * 255.0) as u8,
-                ],
+                (r * 255.0) as u8,
+                (g * 255.0) as u8,
+                (b * 255.0) as u8,
+                (a * 255.0) as u8,
             ],
-        )
+        ])
     }
 }
 

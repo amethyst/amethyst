@@ -1,7 +1,7 @@
 
 use gfx_hal::Backend;
 use gfx_hal::command::RawCommandBuffer;
-use gfx_hal::format::{Depth32F, Format, Formatted, Rgba8};
+use gfx_hal::format::{Bgra8, Depth32F, Format, Formatted, Rgba8};
 use gfx_hal::pso::{DescriptorSetLayoutBinding, VertexBufferSet};
 use specs::{Component, DenseVecStorage, Join, ReadStorage, SystemData, World};
 
@@ -39,7 +39,7 @@ where
     const INPUTS: &'static [Format] = &[];
 
     /// Color attachments format
-    const COLORS: &'static [Format] = &[Rgba8::SELF];
+    const COLORS: &'static [Format] = &[Bgra8::SELF];
 
     /// DepthStencil attachment format
     const DEPTH_STENCIL: Option<Format> = Some(Depth32F::SELF);
@@ -63,7 +63,7 @@ where
         &mut self,
         cbuf: &mut B::CommandBuffer,
         layout: &B::PipelineLayout,
-        device: &mut B::Device,
+        device: &B::Device,
         data: (),
     ) {
     }
@@ -75,11 +75,11 @@ where
     fn draw<'a>(&mut self, cbuf: &mut B::CommandBuffer, meshes: ReadStorage<'a, Mesh<B>>) {
         for mesh in meshes.join() {
             let mut vertex = VertexBufferSet(vec![]);
-            mesh.bind(&[PosColor::VERTEX_FORMAT], &mut vertex).map(
-                |bind| {
+            mesh.bind(&[PosColor::VERTEX_FORMAT], &mut vertex)
+                .map(|bind| {
                     bind.draw(vertex, cbuf);
-                },
-            ).unwrap_or(());
+                })
+                .unwrap_or(());
         }
     }
 }
