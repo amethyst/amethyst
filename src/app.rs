@@ -307,11 +307,18 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
 
     pub fn new<P: AsRef<Path>>(path: P, initial_state: T) -> Result<Self> {
         use bundle::AppBundle;
+        use rustc_version;
 
         println!("Initializing Amethyst...");
         println!("Version: {}", vergen::semver());
         println!("Platform: {}", vergen::target());
-        println!("Git commit: {}", vergen::sha());
+        println!("Amethyst git commit: {}", vergen::sha());
+        if let Ok(rustc_meta) = rustc_version::version_meta() {
+            println!("Rustc version: {} {:?}", rustc_meta.semver, rustc_meta.channel);
+            if let Some(hash) = rustc_meta.commit_hash {
+                println!("Rustc git commit: {}", hash);
+            }
+        }
 
         let mut disp_builder = DispatcherBuilder::new();
         let mut world = World::new();

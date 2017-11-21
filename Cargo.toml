@@ -32,6 +32,7 @@ amethyst_ui = { path = "amethyst_ui", version = "0.1" }
 amethyst_utils = { path = "amethyst_utils", version = "0.1" }
 derivative = "1.0"
 rayon = "0.8"
+rustc_version = "0.2"
 shred = "0.5"
 shrev = "0.6"
 specs = "0.10"
