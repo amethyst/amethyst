@@ -91,5 +91,13 @@ path = "examples/ui/main.rs"
 name = "animation"
 path = "examples/animation/main.rs"
 
+[[example]]
+name = "pong_tutorial_01"
+path = "examples/pong_tutorial_01/main.rs"
+
+[[example]]
+name = "pong_tutorial_02"
+path = "examples/pong_tutorial_02/main.rs"
+
 [workspace]
 members = ["amethyst_animation", "amethyst_gltf"]
