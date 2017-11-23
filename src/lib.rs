@@ -72,6 +72,7 @@ pub extern crate winit;
 #[macro_use]
 extern crate derivative;
 extern crate rayon;
+extern crate rustc_version_runtime;
 
 pub use self::app::{Application, ApplicationBuilder};
 pub use self::error::{Error, Result};
