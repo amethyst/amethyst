@@ -74,6 +74,15 @@ impl State for Example {
             })
             .build();
 
+        let mut text = UiText::new(
+            font.clone(),
+            "Hello world!".to_string(),
+            [1.0, 1.0, 1.0, 1.0],
+            75.,
+        );
+
+        text.password = false;
+
         let text = world
             .create_entity()
             .with(UiTransform::new(
@@ -84,19 +93,12 @@ impl State for Example {
                 500.,
                 500.,
             ))
-            .with(UiText::new(
-                font.clone(),
-                "Hello world!".to_string(),
+            .with(text)
+            .with(TextEditing::new(
+                [0.0, 0.0, 0.0, 1.0],
                 [1.0, 1.0, 1.0, 1.0],
-                75.,
+                false,
             ))
-            .with(TextEditing {
-                cursor_position: 1,
-                highlight_vector: 0,
-                selected_text_color: [0.0, 0.0, 0.0, 1.0],
-                selected_background_color: [1.0, 1.0, 1.0, 1.0],
-                use_block_cursor: false,
-            })
             .build();
         let fps = world
             .create_entity()

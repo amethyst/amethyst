@@ -4,7 +4,6 @@ use std::cmp::{Ordering, PartialOrd};
 use std::hash::{Hash, Hasher};
 
 use amethyst_assets::{AssetStorage, Loader, WeakHandle};
-use amethyst_core::Time;
 use amethyst_renderer::{Encoder, Factory, Mesh, MeshHandle, PosTex, Resources, ScreenDimensions,
                         Texture, TextureData, TextureHandle, TextureMetadata, VertexFormat};
 use amethyst_renderer::error::Result;
@@ -123,7 +122,6 @@ impl<'a> PassData<'a> for DrawUi {
     type Data = (
         Entities<'a>,
         Fetch<'a, Loader>,
-        Fetch<'a, Time>,
         Fetch<'a, ScreenDimensions>,
         Fetch<'a, AssetStorage<Mesh>>,
         Fetch<'a, AssetStorage<Texture>>,
@@ -155,7 +153,6 @@ impl Pass for DrawUi {
         (
             entities,
             loader,
-            time,
             screen_dimensions,
             mesh_storage,
             tex_storage,
@@ -167,7 +164,6 @@ impl Pass for DrawUi {
         ): (
             Entities<'a>,
             Fetch<'a, Loader>,
-            Fetch<'a, Time>,
             Fetch<'a, ScreenDimensions>,
             Fetch<'a, AssetStorage<Mesh>>,
             Fetch<'a, AssetStorage<Texture>>,
@@ -297,6 +293,16 @@ impl Pass for DrawUi {
                 }
                 // Build text sections.
                 let editing = editing.get(entity);
+                let rendered_string = if ui_text.password {
+                    // Build a string composed of black dot characters.
+                    let mut ret = String::with_capacity(ui_text.text.len());
+                    for _grapheme in ui_text.text.graphemes(true) {
+                        ret.push('\u{2022}');
+                    }
+                    ret
+                } else {
+                    ui_text.text.clone()
+                };
                 let text = editing
                     .and_then(|editing| {
                         if editing.highlight_vector == 0 {
@@ -311,31 +317,30 @@ impl Pass for DrawUi {
                             .max(editing.cursor_position + editing.highlight_vector)
                             as usize;
                         let start_byte =
-                            ui_text.text.grapheme_indices(true).nth(start).map(|i| i.0);
-                        let end_byte = ui_text
-                            .text
+                            rendered_string.grapheme_indices(true).nth(start).map(|i| i.0);
+                        let end_byte = rendered_string
                             .grapheme_indices(true)
                             .nth(end)
                             .map(|i| i.0)
-                            .unwrap_or(ui_text.text.len());
+                            .unwrap_or(rendered_string.len());
                         start_byte.map(|start_byte| (editing, (start_byte, end_byte)))
                     })
                     .map(|(editing, (start_byte, end_byte))| {
                         vec![
                             SectionText {
-                                text: &((&ui_text.text)[0..start_byte]),
+                                text: &((&rendered_string)[0..start_byte]),
                                 scale: Scale::uniform(ui_text.font_size),
                                 color: ui_text.color,
                                 font_id: FontId(0),
                             },
                             SectionText {
-                                text: &((&ui_text.text)[start_byte..end_byte]),
+                                text: &((&rendered_string)[start_byte..end_byte]),
                                 scale: Scale::uniform(ui_text.font_size),
                                 color: editing.selected_text_color,
                                 font_id: FontId(0),
                             },
                             SectionText {
-                                text: &((&ui_text.text)[end_byte..]),
+                                text: &((&rendered_string)[end_byte..]),
                                 scale: Scale::uniform(ui_text.font_size),
                                 color: ui_text.color,
                                 font_id: FontId(0),
@@ -344,7 +349,7 @@ impl Pass for DrawUi {
                     })
                     .unwrap_or(vec![
                         SectionText {
-                            text: &ui_text.text,
+                            text: &rendered_string,
                             scale: Scale::uniform(ui_text.font_size),
                             color: ui_text.color,
                             font_id: FontId(0),
@@ -432,8 +437,7 @@ impl Pass for DrawUi {
                         ))
                         .map(|tex| (tex, ed))
                 }) {
-                    let blink_on = time.absolute_real_time_seconds() % (1.0 / CURSOR_BLINK_RATE)
-                        < 0.5 / CURSOR_BLINK_RATE;
+                    let blink_on = editing.cursor_blink_timer < 0.5 / CURSOR_BLINK_RATE;
                     if editing.use_block_cursor || blink_on {
                         effect.data.textures.push(texture.view().clone());
                         effect.data.samplers.push(texture.sampler().clone());

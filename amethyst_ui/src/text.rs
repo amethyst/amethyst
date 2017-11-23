@@ -1,5 +1,6 @@
 use std::ops::Range;
 
+use amethyst_core::timing::Time;
 use clipboard::{ClipboardContext, ClipboardProvider};
 use shrev::{EventChannel, ReaderId};
 use specs::{Component, DenseVecStorage, Fetch, FetchMut, Join, System, WriteStorage};
@@ -20,6 +21,8 @@ pub struct UiText {
     pub color: [f32; 4],
     /// The font used for rendering.
     pub font: FontHandle,
+    /// If true this will be rendered as dots instead of the text.
+    pub password: bool,
     /// Cached FontHandle, used to detect changes to the font.
     pub(crate) cached_font: FontHandle,
     /// Cached id used to retrieve the `GlyphBrush` in the `UiPass`.
@@ -41,6 +44,7 @@ impl UiText {
             color,
             font_size,
             font: font.clone(),
+            password: false,
             cached_font: font,
             brush_id: None,
         }
@@ -65,6 +69,27 @@ pub struct TextEditing {
     /// If this is true the text will use a block cursor for editing.  Otherwise this uses a
     /// standard line cursor.  This is not recommended if your font is not monospace.
     pub use_block_cursor: bool,
+
+    /// This value is used to control cursor blinking.
+    ///
+    /// When it is greater than 0.5 / CURSOR_BLINK_RATE the cursor should not display, when it
+    /// is greater than or equal to 1.0 / CURSOR_BLINK_RATE it should be reset to 0.  When the
+    /// player types it should be reset to 0.
+    pub(crate) cursor_blink_timer: f32,
+}
+
+impl TextEditing {
+    /// Create a new TextEditing Component
+    pub fn new(selected_text_color: [f32; 4], selected_background_color: [f32; 4], use_block_cursor: bool) -> TextEditing {
+        TextEditing {
+            cursor_position: 0,
+            highlight_vector: 0,
+            selected_text_color,
+            selected_background_color,
+            use_block_cursor,
+            cursor_blink_timer: 0.0,
+        }
+    }
 }
 
 impl Component for TextEditing {
@@ -89,23 +114,31 @@ impl<'a> System<'a> for UiSystem {
         WriteStorage<'a, TextEditing>,
         FetchMut<'a, UiFocused>,
         Fetch<'a, EventChannel<Event>>,
+        Fetch<'a, Time>,
     );
 
-    fn run(&mut self, (mut text, mut editable, mut focused, events): Self::SystemData) {
+    fn run(&mut self, (mut text, mut editable, focused, events, time): Self::SystemData) {
         for text in (&mut text).join() {
             if (*text.text).chars().any(|c| is_combining_mark(c)) {
                 let normalized = text.text.nfd().collect::<String>();
                 text.text = normalized;
             }
         }
+        let mut focused_text_edit = focused.entity.and_then(|entity| {
+            text.get_mut(entity)
+                .into_iter()
+                .zip(editable.get_mut(entity).into_iter())
+                .next()
+        });
+        if let Some((ref mut _focused_text, ref mut focused_edit)) = focused_text_edit {
+            focused_edit.cursor_blink_timer += time.delta_real_seconds();
+            if focused_edit.cursor_blink_timer >= 1.0 / CURSOR_BLINK_RATE {
+                focused_edit.cursor_blink_timer = 0.0;
+            }
+        }
+
         for event in events.lossy_read(&mut self.reader).unwrap() {
-            if let Some((ref mut focused_text, ref mut focused_edit)) =
-                focused.entity.and_then(|entity| {
-                    text.get_mut(entity)
-                        .into_iter()
-                        .zip(editable.get_mut(entity).into_iter())
-                        .next()
-                }) {
+            if let Some((ref mut focused_text, ref mut focused_edit)) = focused_text_edit {
                 match *event {
                     Event::WindowEvent {
                         event: WindowEvent::ReceivedCharacter(input),
@@ -120,6 +153,7 @@ impl<'a> System<'a> for UiSystem {
                         if input == '\u{7F}' {
                             continue;
                         }
+                        focused_edit.cursor_blink_timer = 0.0;
                         let deleted = delete_highlighted(focused_edit, focused_text);
                         let start_byte = focused_text
                             .text
@@ -173,6 +207,7 @@ impl<'a> System<'a> for UiSystem {
                                 0
                             };
                             focused_edit.cursor_position = 0;
+                            focused_edit.cursor_blink_timer = 0.0;
                         }
                         VirtualKeyCode::End => {
                             let glyph_len = focused_text.text.graphemes(true).count() as isize;
@@ -182,6 +217,7 @@ impl<'a> System<'a> for UiSystem {
                                 0
                             };
                             focused_edit.cursor_position = glyph_len;
+                            focused_edit.cursor_blink_timer = 0.0;
                         }
                         VirtualKeyCode::Delete => {
                             if !delete_highlighted(focused_edit, focused_text) {
@@ -191,6 +227,7 @@ impl<'a> System<'a> for UiSystem {
                                     .nth(focused_edit.cursor_position as usize)
                                     .map(|i| (i.0, i.1.len()))
                                 {
+                                    focused_edit.cursor_blink_timer = 0.0;
                                     focused_text
                                         .text
                                         .drain(start_byte..(start_byte + start_glyph_len));
@@ -220,6 +257,7 @@ impl<'a> System<'a> for UiSystem {
                                 if modifiers.shift {
                                     focused_edit.highlight_vector += delta;
                                 }
+                                focused_edit.cursor_blink_timer = 0.0;
                             }
                         } else {
                             focused_edit.cursor_position = focused_edit
@@ -247,6 +285,7 @@ impl<'a> System<'a> for UiSystem {
                                     if modifiers.shift {
                                         focused_edit.highlight_vector -= delta;
                                     }
+                                    focused_edit.cursor_blink_timer = 0.0;
                                 }
                             } else {
                                 focused_edit.cursor_position = focused_edit.cursor_position.max(
