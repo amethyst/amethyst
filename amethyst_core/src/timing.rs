@@ -76,8 +76,8 @@ impl Time {
     }
 
     /// Gets the time since the start of the game as seconds, taking into account the speed multiplier.
-    pub fn absolute_time_seconds(&self) -> f32 {
-        duration_to_secs(self.absolute_time)
+    pub fn absolute_time_seconds(&self) -> f64 {
+        duration_to_secs_f64(self.absolute_time)
     }
 
     /// Gets the time since the start of the game, ignoring the speed multiplier.
@@ -86,8 +86,8 @@ impl Time {
     }
 
     /// Gets the time since the start of the game as seconds, ignoring the speed multiplier.
-    pub fn absolute_real_time_seconds(&self) -> f32 {
-        duration_to_secs(self.absolute_real_time)
+    pub fn absolute_real_time_seconds(&self) -> f64 {
+        duration_to_secs_f64(self.absolute_real_time)
     }
 
     /// Gets the current time speed multiplier.
@@ -357,6 +357,11 @@ mod tests {
 /// Converts a Duration to the time in seconds.
 pub fn duration_to_secs(duration: Duration) -> f32 {
     duration.as_secs() as f32 + (duration.subsec_nanos() as f32 / 1.0e9)
+}
+
+/// Converts a Duration to the time in seconds in an f64.
+pub fn duration_to_secs_f64(duration: Duration) -> f64 {
+    duration.as_secs() as f64 + (duration.subsec_nanos() as f64 / 1.0e9)
 }
 
 /// Converts a time in seconds to a duration
