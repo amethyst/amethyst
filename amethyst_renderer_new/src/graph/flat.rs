@@ -1,36 +1,39 @@
 
+use core::Transform;
 use gfx_hal::Backend;
 use gfx_hal::command::RawCommandBuffer;
 use gfx_hal::format::{Bgra8, Depth32F, Format, Formatted, Rgba8};
-use gfx_hal::pso::{DescriptorSetLayoutBinding, VertexBufferSet};
-use specs::{Component, DenseVecStorage, Join, ReadStorage, SystemData, World};
+use gfx_hal::pso::{DescriptorSetLayoutBinding, Stage, VertexBufferSet, GraphicsShaderSet};
+use specs::{Fetch, Join, ReadStorage, SystemData, World, WriteStorage};
 
+use cam::{ActiveCamera, Camera};
 use graph::pass::{Data, Pass};
 use mesh::{Bind as MeshBind, Mesh};
+use shaders::{ShaderManager, ShaderLoader, GraphicsShaderNameSet};
 use vertex::{PosColor, VertexFormat, VertexFormatted};
+use uniform::{IntoUniform, UniformCache};
 
-
-impl<B> Component for Mesh<B>
-where
-    B: Backend,
-{
-    type Storage = DenseVecStorage<Self>;
-}
-
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Flat;
 impl<'a, B> Data<'a, B> for Flat
 where
     B: Backend,
 {
-    type DrawData = ReadStorage<'a, Mesh<B>>;
-    type PrepareData = ();
+    type DrawData = (Fetch<'a, ActiveCamera>,
+     ReadStorage<'a, UniformCache<B, Camera>>,
+     ReadStorage<'a, UniformCache<B, Transform>>,
+     ReadStorage<'a, Mesh<B>>);
+    type PrepareData = (Fetch<'a, ActiveCamera>,
+     ReadStorage<'a, Camera>,
+     WriteStorage<'a, UniformCache<B, Camera>>,
+     ReadStorage<'a, Transform>,
+     WriteStorage<'a, UniformCache<B, Transform>>);
 }
 
 
 impl<B> Pass<B> for Flat
 where
-    B: Backend,
+    B: Backend + ShaderLoader,
 {
     /// Name of the pass
     const NAME: &'static str = "Flat";
@@ -50,8 +53,9 @@ where
     /// Vertices format
     const VERTICES: &'static [VertexFormat<'static>] = &[PosColor::VERTEX_FORMAT];
 
-    fn new() -> Self {
-        Flat
+    /// Load shaders
+    fn shaders<'a>(manager: &'a mut ShaderManager<B>, device: &B::Device) -> Result<GraphicsShaderSet<'a, B>, ::shaders::Error> {
+        manager.load_shader_set(GraphicsShaderNameSet::new("flat", false, false, false, true), device)
     }
 
     /// This function designed for
@@ -64,21 +68,24 @@ where
         cbuf: &mut B::CommandBuffer,
         layout: &B::PipelineLayout,
         device: &B::Device,
-        data: (),
+        data: <Self as Data<'a, B>>::PrepareData,
     ) {
+
     }
 
     /// This function designed for
     ///
     /// * binding `DescriptorSet`s
     /// * recording `Transfer` and `Graphics` commands to `CommandBuffer`
-    fn draw<'a>(&mut self, cbuf: &mut B::CommandBuffer, meshes: ReadStorage<'a, Mesh<B>>) {
+    fn draw<'a>(
+        &mut self,
+        cbuf: &mut B::CommandBuffer,
+        (_, _, _, meshes): <Self as Data<'a, B>>::DrawData,
+    ) {
         for mesh in meshes.join() {
             let mut vertex = VertexBufferSet(vec![]);
             mesh.bind(&[PosColor::VERTEX_FORMAT], &mut vertex)
-                .map(|bind| {
-                    bind.draw(vertex, cbuf);
-                })
+                .map(|bind| { bind.draw(vertex, cbuf); })
                 .unwrap_or(());
         }
     }

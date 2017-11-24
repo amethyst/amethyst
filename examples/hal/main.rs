@@ -6,6 +6,7 @@ extern crate amethyst_renderer_new as renderer;
 extern crate amethyst_utils as utils;
 extern crate genmesh;
 extern crate gfx_backend_vulkan as back;
+extern crate gfx_backend_metal as back;
 extern crate gfx_hal;
 extern crate specs;
 extern crate winit;

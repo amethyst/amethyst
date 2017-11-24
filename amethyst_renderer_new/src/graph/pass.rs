@@ -37,9 +37,8 @@ use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use rayon_core::current_thread_index;
 use specs::{SystemData, World};
 
+use shaders::ShaderManager;
 use vertex::VertexFormat;
-
-error_chain!{}
 
 pub trait Data<'a, B>
 where
@@ -50,7 +49,7 @@ where
 }
 
 
-pub trait Pass<B>: for<'a> Data<'a, B> + Debug
+pub trait Pass<B>: for<'a> Data<'a, B> + Debug + Default
 where
     B: Backend,
 {
@@ -72,14 +71,8 @@ where
     /// Vertices format
     const VERTICES: &'static [VertexFormat<'static>];
 
-    fn new() -> Self;
-
-    fn box_new() -> Box<NewAnyPass<B>>
-    where
-        Self: Sized + 'static,
-    {
-        Box::new(NewPass::<B, Self>::new())
-    }
+    /// Load shaders
+    fn shaders<'a>(manager: &'a mut ShaderManager<B>, device: &B::Device) -> Result<GraphicsShaderSet<'a, B>, ::shaders::Error>;
 
     /// This function designed for
     ///
@@ -101,45 +94,38 @@ where
     fn draw<'a>(&mut self, cbuf: &mut B::CommandBuffer, data: <Self as Data<'a, B>>::DrawData);
 }
 
-pub trait NewAnyPass<B>: Debug
-where
-    B: Backend,
-{
-    fn new_any_pass(&self) -> Box<AnyPass<B>>;
-}
-
-
-pub struct NewPass<B, P>(PhantomData<(B, P)>);
-impl<B, P> NewPass<B, P> {
-    pub fn new() -> Self {
-        NewPass(PhantomData)
-    }
-}
-
-impl<B, P> Debug for NewPass<B, P>
-where
-    B: Backend,
-    P: Pass<B>,
-{
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "NewPass({})", P::NAME)
-    }
-}
-
-impl<B, P> NewAnyPass<B> for NewPass<B, P>
-where
-    B: Backend,
-    P: Pass<B> + 'static,
-{
-    fn new_any_pass(&self) -> Box<AnyPass<B>> {
-        Box::new(P::new())
-    }
-}
-
 pub trait AnyPass<B>: Debug
 where
     B: Backend,
 {
+    fn maker() -> Box<Fn() -> Box<AnyPass<B>>>
+    where
+        Self: Default + Sized + 'static,
+    {
+        Box::new(|| Box::new(Self::default()))
+    }
+
+    /// Name of the pass
+    fn name(&self) -> &'static str;
+
+    /// Input attachments format
+    fn inputs(&self) -> &'static [Format];
+
+    /// Color attachments format
+    fn colors(&self) -> &'static [Format];
+
+    /// DepthStencil attachment format
+    fn depth_stencil(&self) -> Option<Format>;
+
+    /// Bindings
+    fn bindings(&self) -> &'static [DescriptorSetLayoutBinding];
+
+    /// Vertices format
+    fn vertices(&self) -> &'static [VertexFormat<'static>];
+
+    /// Load shaders
+    fn shaders<'a>(&self, manager: &'a mut ShaderManager<B>, device: &B::Device) -> Result<GraphicsShaderSet<'a, B>, ::shaders::Error>;
+
     /// Reflects [`Pass::prepare`] function
     ///
     /// [`Pass::prepare`]: trait.Pass.html#tymethod.prepare
@@ -162,6 +148,41 @@ where
     P: Pass<B>,
     B: Backend,
 {
+    /// Name of the pass
+    fn name(&self) -> &'static str {
+        P::NAME
+    }
+
+    /// Input attachments format
+    fn inputs(&self) -> &'static [Format] {
+        P::INPUTS
+    }
+
+    /// Color attachments format
+    fn colors(&self) -> &'static [Format] {
+        P::COLORS
+    }
+
+    /// DepthStencil attachment format
+    fn depth_stencil(&self) -> Option<Format> {
+        P::DEPTH_STENCIL
+    }
+
+    /// Bindings
+    fn bindings(&self) -> &'static [DescriptorSetLayoutBinding] {
+        P::BINDINGS
+    }
+
+    /// Vertices format
+    fn vertices(&self) -> &'static [VertexFormat<'static>] {
+        P::VERTICES
+    }
+
+    /// Load shaders
+    fn shaders<'a>(&self, manager: &'a mut ShaderManager<B>, device: &B::Device) -> Result<GraphicsShaderSet<'a, B>, ::shaders::Error> {
+        P::shaders(manager, device)
+    }
+
     fn prepare<'a>(
         &mut self,
         cbuf: &mut B::CommandBuffer,

@@ -1,10 +1,12 @@
 
+use std::any::Any;
+use std::fmt::Debug;
 
 use core::Transform;
 use gfx_hal::Backend;
 use gfx_hal::buffer::Usage;
 use gfx_hal::command::RawCommandBuffer;
-use gfx_hal::memory::{cast_slice, Pod};
+use gfx_hal::memory::{Pod, cast_slice};
 
 use memory::{self, Allocator};
 use cam::Camera;
@@ -15,9 +17,9 @@ error_chain! {
     }
 }
 
-pub trait IntoUniform<B: Backend>: Sized {
-    type Uniform: Pod + PartialEq;
-    type Cache;
+pub trait IntoUniform<B: Backend>: Debug + Sized {
+    type Uniform: Any + Debug + Pod + PartialEq + Send + Sync;
+    type Cache: Any + Debug;
 
     /// Get uniform representation of the value.
     fn into_uniform(&self) -> Self::Uniform;
@@ -32,16 +34,17 @@ pub trait IntoUniform<B: Backend>: Sized {
     fn update_cached(&self, cache: &mut Self::Cache, cbuf: &mut B::CommandBuffer);
 }
 
-impl<B, T> IntoUniform<B> for T
+pub type UniformCache<B: Backend, T: IntoUniform<B>> = <T as IntoUniform<B>>::Cache;
+
+impl<B> IntoUniform<B> for Transform
 where
     B: Backend,
-    T: Pod + PartialEq,
 {
-    type Uniform = T;
-    type Cache = BasicUniformCache<B, T>;
+    type Uniform = [[f32; 4]; 4];
+    type Cache = BasicUniformCache<B, Transform>;
 
-    fn into_uniform(&self) -> T {
-        *self
+    fn into_uniform(&self) -> [[f32; 4]; 4] {
+        self.0.into()
     }
 
     fn create_cache<A>(allocator: &mut A, device: &B::Device) -> Result<Self::Cache>
@@ -79,6 +82,7 @@ where
     }
 }
 
+#[derive(Debug)]
 pub struct BasicUniformCache<B: Backend, T: IntoUniform<B>> {
     cached: Option<T::Uniform>,
     buffer: B::Buffer,

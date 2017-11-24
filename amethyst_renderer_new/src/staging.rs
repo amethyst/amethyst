@@ -2,51 +2,23 @@
 use gfx_hal::command::BufferCopy;
 use gfx_hal::RawCommandBuffer;
 
-use back::*;
 
-pub enum StagingBuffer {
-    Unstaged {
-        size: usize,
-        src: Buffer,
-        dst: Buffer,
-    },
-    Staged {
-        size: usize,
-        src: Buffer,
-        dst: Buffer,
-    },
-    Loaded { size: usize, buffer: Buffer },
+pub struct Staging<B: Backend> {
+    src: Eh<Buffer<B>>,
+    dst: Ec<Buffer<B>>,
 }
 
-impl StagingBuffer {
-    fn drive(self, cbuf: &mut CommandBuffer) -> Self {
-        use self::StagingBuffer::*;
-        match self {
-            Unstaged { size, src, dst } => {
-                cbuf.copy_buffer(
-                    &src,
-                    &dst,
-                    &[
-                        BufferCopy {
-                            src: 0,
-                            dst: 0,
-                            size: size as u64,
-                        },
-                    ],
-                );
-                Staged { size, src, dst }
-            }
-            Staged { size, dst, .. } => Loaded { size, buffer: dst },
-            loaded => loaded,
+impl<B> Staging<B: Backend> {
+    fn new(src: Eh<Buffer<B>>, dst: Eh<Buffer<B>>, ec: &EpochCounter) {
+        Staging {
+            src,
+            dst: Eh::borrow_for(dst, ec.now() + 2),
         }
     }
 
-    fn buffer(&self) -> &Buffer {
-        use self::StagingBuffer::*;
-        match *self {
-            Unstaged { ref dst, .. } => dst,
-            Staged { ref dst, .. } => dst,
-            Loaded { ref buffer, .. } => buffer,
-        }
+    fn commit(self, cbuf: &mut B::CommandBuffer, ec: &EpochCounter) {
+        let ref dst = *st.get(ec).unwrap();
+        assert_eq!(dst.size, src.size);
+        cbuf.copy_buffer(&*src, dst, &[BufferCopy { src: 0, dst: 0, size: dst.size }]);
     }
 }

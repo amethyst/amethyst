@@ -18,10 +18,20 @@ extern crate rayon_core;
 extern crate serde;
 extern crate smallvec;
 extern crate specs;
+extern crate winit;
+
+#[cfg(feature = "vulkan")]
+extern crate gfx_backend_vulkan as vulkan;
+
+#[cfg(feature = "metal")]
+extern crate gfx_backend_metal as metal;
+
 
 pub mod cam;
 pub mod graph;
 pub mod mesh;
+pub mod relevant;
+pub mod shaders;
 pub mod texture;
 pub mod vertex;
 pub mod uniform;
@@ -30,6 +40,8 @@ pub mod memory;
 // pub mod staging;
 pub mod utils;
 
+mod components;
 
 pub use graph::pass::Pass;
 pub use graph::RenderGraph;
+pub use relevant::Relevant;

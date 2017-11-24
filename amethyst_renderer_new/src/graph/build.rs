@@ -11,24 +11,23 @@ use gfx_hal::image;
 
 use specs::{Component, Entity, World};
 
-use graph::pass::{AnyPass, NewAnyPass, NewPass, Pass};
+use graph::pass::{AnyPass, Pass};
 use graph::{Error, ErrorKind, PassNode, Result, SuperFramebuffer};
 use vertex::VertexFormat;
 use uniform::IntoUniform;
 
-#[derive(Debug)]
+#[derive(Derivative)]
+#[derivative(Debug)]
 pub struct PassBuilder<'a, B: Backend> {
     pub(super) inputs: &'a [Format],
     pub(super) colors: &'a [Format],
     pub(super) depth_stencil: Option<Format>,
-    pub(super) bindings: &'a [pso::DescriptorSetLayoutBinding],
-    pub(super) vertices: &'a [VertexFormat<'a>],
-    pub(super) shaders: pso::GraphicsShaderSet<'a, B>,
     pub(super) rasterizer: pso::Rasterizer,
     pub(super) primitive: Primitive,
     pub(super) connects: Vec<Pin<'a, B>>,
-
-    pub(super) pass: Box<NewAnyPass<B>>,
+    name: &'a str,
+    #[derivative(Debug="ignore")]
+    pub(super) maker: Box<Fn() -> Box<AnyPass<B>>>,
 }
 
 #[derive(Debug)]
@@ -62,7 +61,7 @@ impl<'a, B> PassBuilder<'a, B>
 where
     B: Backend,
 {
-    pub fn new<P>(vert: pso::EntryPoint<'a, B>, frag: pso::EntryPoint<'a, B>) -> Self
+    pub fn new<P>() -> Self
     where
         P: Pass<B> + 'static,
     {
@@ -70,19 +69,11 @@ where
             inputs: P::INPUTS,
             colors: P::COLORS,
             depth_stencil: P::DEPTH_STENCIL,
-            bindings: P::BINDINGS,
-            vertices: P::VERTICES,
-            shaders: pso::GraphicsShaderSet {
-                vertex: vert,
-                fragment: Some(frag),
-                hull: None,
-                domain: None,
-                geometry: None,
-            },
             rasterizer: pso::Rasterizer::FILL,
             primitive: Primitive::TriangleList,
             connects: vec![],
-            pass: P::box_new(),
+            name: P::NAME,
+            maker: P::maker(),
         }
     }
 
@@ -94,22 +85,23 @@ where
         depth_stencil: Option<DepthStencilAttachmentDesc<B>>,
         extent: Extent,
     ) -> Result<PassNode<B>> {
+        let pass = (self.maker)();
         /// Check connects
-        assert_eq!(self.inputs.len(), self.connects.len());
-        for (input, pin) in self.connects.iter().enumerate() {
-            assert_eq!(pin.format(), self.inputs[input]);
+        assert_eq!(pass.inputs().len(), self.connects.len());
+        for (i, pin) in self.connects.iter().enumerate() {
+            assert_eq!(pin.format(), pass.inputs()[i]);
         }
 
         // Check attachments
-        assert_eq!(inputs.len(), self.inputs.len());
-        assert_eq!(colors.len(), self.colors.len());
-        assert_eq!(depth_stencil.is_some(), self.depth_stencil.is_some());
+        assert_eq!(inputs.len(), pass.inputs().len());
+        assert_eq!(colors.len(), pass.colors().len());
+        assert_eq!(depth_stencil.is_some(), pass.depth_stencil().is_some());
 
         // Construct `RenderPass`
         // with single `Subpass` for now
         let render_pass = {
             // Configure input attachments first
-            let inputs = self.inputs.iter().enumerate().map(|(i, &format)| {
+            let inputs = pass.inputs().iter().enumerate().map(|(i, &format)| {
                 assert_eq!(inputs[i].format, format);
                 pass::Attachment {
                     format,
@@ -123,7 +115,7 @@ where
             });
 
             // Configure color attachments next to input
-            let colors = self.colors.iter().enumerate().map(|(i, &format)| {
+            let colors = pass.colors().iter().enumerate().map(|(i, &format)| {
                 assert_eq!(colors[i].format, format);
                 pass::Attachment {
                     format,
@@ -145,7 +137,7 @@ where
             });
 
             // Configure depth-stencil attachments last
-            let depth_stencil = self.depth_stencil.clone().map(|format| {
+            let depth_stencil = pass.depth_stencil().clone().map(|format| {
                 let depth_stencil = depth_stencil.as_ref().unwrap();
                 assert_eq!(depth_stencil.format, format);
                 pass::Attachment {
@@ -201,7 +193,7 @@ where
         };
 
         // Create `DescriptorSetLayout` from bindings
-        let descriptor_set_layout = device.create_descriptor_set_layout(self.bindings);
+        let descriptor_set_layout = device.create_descriptor_set_layout(pass.bindings());
 
         // Create `PipelineLayout` from single `DescriptorSetLayout`
         let pipeline_layout = device.create_pipeline_layout(&[&descriptor_set_layout]);
@@ -210,7 +202,7 @@ where
         let graphics_pipeline = {
             // Init basic configuration
             let mut pipeline_desc = pso::GraphicsPipelineDesc::new(
-                self.shaders.clone(),
+                pass.shaders(unimplemented!(), device)?,
                 self.primitive,
                 self.rasterizer.clone(),
                 &pipeline_layout,
@@ -224,7 +216,7 @@ where
             pipeline_desc.blender.targets =
                 vec![
                     pso::ColorBlendDesc(pso::ColorMask::ALL, pso::BlendState::ALPHA);
-                    self.colors.len()
+                    pass.colors().len()
                 ];
 
             // Default configuration for depth-stencil
@@ -238,7 +230,7 @@ where
             });
 
             // Add all vertex descriptors
-            for vertex in self.vertices {
+            for vertex in pass.vertices() {
                 push_vertex_desc(vertex, &mut pipeline_desc);
             }
 
@@ -264,19 +256,18 @@ where
         );
 
         // And depth-stencil
-        clears.extend(
-            depth_stencil
-                .as_ref()
-                .and_then(|ds| ds.clear)
-                .map(ClearValue::DepthStencil),
-        );
+        clears.extend(depth_stencil.as_ref().and_then(|ds| ds.clear).map(
+            ClearValue::DepthStencil,
+        ));
 
         // create framebuffers
         let framebuffer: SuperFramebuffer<B> = {
-            if colors.len() == 1 && match colors[0].view {
-                AttachmentImageView::Single => true,
-                _ => false,
-            } {
+            if colors.len() == 1 &&
+                match colors[0].view {
+                    AttachmentImageView::Single => true,
+                    _ => false,
+                }
+            {
                 SuperFramebuffer::Single
             } else {
                 let mut acquired = None;
@@ -325,7 +316,7 @@ where
             graphics_pipeline,
             render_pass,
             framebuffer,
-            pass: self.pass.new_any_pass(),
+            pass,
             depends: vec![],
         })
     }
@@ -344,7 +335,11 @@ impl<'a, B> Merge<'a, B>
 where
     B: Backend,
 {
-    pub fn new(clear_color: Option<ClearColor>, clear_depth: Option<ClearDepthStencil>, passes: &'a [&'a PassBuilder<'a, B>]) -> Self {
+    pub fn new(
+        clear_color: Option<ClearColor>,
+        clear_depth: Option<ClearDepthStencil>,
+        passes: &'a [&'a PassBuilder<'a, B>],
+    ) -> Self {
         assert!(!passes.is_empty());
         let colors = passes[0].colors;
         let depth_stencil = passes[0].depth_stencil;
@@ -384,10 +379,7 @@ where
 {
     pub fn new(merge: &'a Merge<'a, B>, index: usize) -> Self {
         assert!(merge.colors() > index);
-        ColorPin {
-            merge,
-            index,
-        }
+        ColorPin { merge, index }
     }
     pub fn format(&self) -> Format {
         self.merge.color_format(self.index)
@@ -444,9 +436,7 @@ where
     B: Backend,
 {
     pub fn new(pin: ColorPin<'a, B>) -> Self {
-        Present {
-            pin,
-        }
+        Present { pin }
     }
     pub fn format(&self) -> Format {
         self.pin.format()
@@ -506,10 +496,9 @@ where
     pass.connects
         .iter()
         .flat_map(|pin| {
-            pin.merge()
-                .passes
-                .iter()
-                .flat_map(|&pass| once(pass).chain(walk_dependencies(pass)))
+            pin.merge().passes.iter().flat_map(|&pass| {
+                once(pass).chain(walk_dependencies(pass))
+            })
         })
         .collect()
 }
@@ -566,10 +555,11 @@ where
     use std::iter::once;
     once(merge)
         .chain(merge.passes.iter().flat_map(|&pass| {
-            pass.connects
-                .iter()
-                .map(|pin| pin.merge())
-                .flat_map(|merge| walk_merges(merge))
+            pass.connects.iter().map(|pin| pin.merge()).flat_map(
+                |merge| {
+                    walk_merges(merge)
+                },
+            )
         }))
         .collect()
 }
