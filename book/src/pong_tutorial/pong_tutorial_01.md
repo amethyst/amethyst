@@ -5,7 +5,9 @@ Let's start a new project:
 `amethyst new pong`
 
 If you run this project with `cargo run`, you'll end up with a window titled 
-"pong" that renders a really delightful shade of green. Press `Esc` to quit.
+"pong" that renders a really delightful shade of green. Press `Esc` to quit. If 
+you're having getting the project to run, double check the [Getting Started][gs] 
+guide.
 
 We've opened and closed a window, so we're basically done! But let's write this 
 functionality ourselves so we're sure we know what's going on.
@@ -165,3 +167,4 @@ It should look something like this:
 
 [st]: https://www.amethyst.rs/doc/develop/doc/amethyst/trait.State.html
 [ap]: https://www.amethyst.rs/doc/develop/doc/amethyst/struct.Application.html
+[gs]: ./getting_started.html
