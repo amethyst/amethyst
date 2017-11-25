@@ -27,7 +27,7 @@ Now we create our core game struct:
 struct Pong; 
 ```
 
-We'll be implementing the State trait on this struct, which is used by Amethyst's state machine to start, stop, and update the game. But for now we'll just implement one method: 
+We'll be implementing the [State][st] trait on this struct, which is used by Amethyst's state machine to start, stop, and update the game. But for now we'll just implement one method: 
 
 ```rust,ignore
 impl State for Pong {
@@ -114,7 +114,7 @@ Now let's pack everything up and run it:
   game.run();
 ```
 
-We've discovered Amethyst's root object: [`Application`](https://www.amethyst.rs/doc/develop/doc/amethyst/struct.Application.html). It binds the OS event loop, state machines, timers and other core components in a central place. Here we're creating a new RenderBundle, adding the Pipeline we created, along with our config, and building.
+We've discovered Amethyst's root object: [Application][ap]. It binds the OS event loop, state machines, timers and other core components in a central place. Here we're creating a new RenderBundle, adding the Pipeline we created, along with our config, and building.
 
 Then we call `.run()` on `game` which begins the gameloop. The game will continue to run until our State returns Trans::Quit.
 
@@ -133,4 +133,7 @@ Success! Now we should be able to compile and run this code and get a window. It
 
 ![Step one](./images/pong_tutorial/pong_01.png)
 
+(TODO: switch links to master)
 
+[st]: https://www.amethyst.rs/doc/develop/doc/amethyst/trait.State.html
+[ap]: https://www.amethyst.rs/doc/develop/doc/amethyst/struct.Application.html
