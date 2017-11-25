@@ -1,5 +1,6 @@
 extern crate amethyst;
 
+use amethyst::Result;
 use amethyst::prelude::*;
 use amethyst::renderer::{DisplayConfig, DrawFlat, Event, KeyboardInput, Pipeline, PosTex,
                          RenderBundle, RenderSystem, Stage, VirtualKeyCode, WindowEvent};
@@ -27,7 +28,7 @@ impl State for Pong {
     }
 }
 
-fn run() -> Result<(), amethyst::Error> {
+fn run() -> Result<()> {
     let path = format!("{}/examples/pong_tutorial_01/resources/display_config.ron",
                        env!("CARGO_MANIFEST_DIR"));
     let config = DisplayConfig::load(&path);
