@@ -19,7 +19,7 @@ use amethyst::renderer::{DisplayConfig, DrawFlat, Event, KeyboardInput,
                          Stage, VirtualKeyCode, WindowEvent};
 ```
 
-We'll be learning more about these as we go through this tutorial. The prelude includes the basic (and most important) types like Application, World, and State.
+We'll be learning more about these as we go through this tutorial. The prelude includes the basic (and most important) types like `Application`, `World`, and `State`.
 
 Now we create our core game struct:
 
@@ -27,7 +27,7 @@ Now we create our core game struct:
 struct Pong; 
 ```
 
-We'll be implementing the [State][st] trait on this struct, which is used by Amethyst's state machine to start, stop, and update the game. But for now we'll just implement one method: 
+We'll be implementing the [`State`][st] trait on this struct, which is used by Amethyst's state machine to start, stop, and update the game. But for now we'll just implement one method: 
 
 ```rust,ignore
 impl State for Pong {
@@ -50,14 +50,14 @@ impl State for Pong {
 }
 ```
 
-The `handle_event` method is executed on every frame before updating, and it's used to react to events. It returns a `Trans`, which is an enum of state machine transitions. In this case, we're watching for the Escape keycode from the Window. If we receive it, we'll return `Trans::Quit` which will be used to clean up the State and close the application. All other keyboard input is ignored for now.
+The `handle_event` method is executed on every frame before updating, and it's used to react to events. It returns a `Trans`, which is an enum of state machine transitions. In this case, we're watching for the Escape keycode from the Window. If we receive it, we'll return `Trans::Quit` which will be used to clean up the `State` and close the application. All other keyboard input is ignored for now.
 
 Now that we know we can quit, let's add some code to actually get things started! We'll use a `run()` function, which allows for bettor Error handling:
 
 ```rust,ignore
 fn run() -> Result<(), amethyst::Error> {
 
-//We'll put the rest of the code here
+  //We'll put the rest of the code here
 
   Ok(())
 }
@@ -114,9 +114,9 @@ Now let's pack everything up and run it:
   game.run();
 ```
 
-We've discovered Amethyst's root object: [Application][ap]. It binds the OS event loop, state machines, timers and other core components in a central place. Here we're creating a new RenderBundle, adding the Pipeline we created, along with our config, and building.
+We've discovered Amethyst's root object: [Application][ap]. It binds the OS event loop, state machines, timers and other core components in a central place. Here we're creating a new `RenderBundle`, adding the `Pipeline` we created, along with our config, and building.
 
-Then we call `.run()` on `game` which begins the gameloop. The game will continue to run until our State returns Trans::Quit.
+Then we call `.run()` on `game` which begins the gameloop. The game will continue to run until our `State` returns `Trans::Quit`, or when all states have been popped off the state machine's stack.
 
 Now all that's left is to write a `main()` function to call our `run()` function:
 
