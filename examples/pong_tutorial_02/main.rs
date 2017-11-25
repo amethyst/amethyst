@@ -18,16 +18,13 @@ fn run() -> Result<(), amethyst::Error> {
         .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
         .with_pass(DrawFlat::<PosNormTex>::new()));
 
-    let mut game = Application::build("./", Pong)
-        ?
+    let mut game = Application::build("./", Pong)?
         .with_bundle(RenderBundle::new())?
         .with_local(RenderSystem::build(pipe, Some(config))?)
         .build()
         .expect("Fatal error");
 
-    game.run();
-
-    Ok(())
+    Ok(game.run())
 }
 
 fn main() {
