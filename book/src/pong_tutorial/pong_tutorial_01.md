@@ -19,7 +19,7 @@ extern crate amethyst;
 
 use amethyst::prelude::*;
 use amethyst::renderer::{DisplayConfig, DrawFlat, Event, KeyboardInput,
-                         Pipeline, PosNormTex, RenderBundle, RenderSystem,
+                         Pipeline, PosTex, RenderBundle, RenderSystem,
                          Stage, VirtualKeyCode, WindowEvent};
 ```
 
@@ -116,7 +116,7 @@ chapter will cover rendering more in depth.
 let pipe = Pipeline::build().with_stage(
     Stage::with_backbuffer()
         .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-        .with_pass(DrawFlat::<PosNormTex>::new()),
+        .with_pass(DrawFlat::<PosTex>::new()),
 );
 ```
 
