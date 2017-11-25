@@ -17,6 +17,7 @@ In `src` there's a `main.rs` file. Delete everything, then add these imports:
 ```rust,ignore
 extern crate amethyst;
 
+use amethyst::Result;
 use amethyst::prelude::*;
 use amethyst::renderer::{DisplayConfig, DrawFlat, Event, KeyboardInput,
                          Pipeline, PosTex, RenderBundle, RenderSystem,
@@ -69,7 +70,7 @@ Now that we know we can quit, let's add some code to actually get things
 started! We'll use a `run()` function, which allows for bettor Error handling:
 
 ```rust,ignore
-fn run() -> Result<(), amethyst::Error> {
+fn run() -> Result<()> {
 
   //We'll put the rest of the code here
 
