@@ -39,12 +39,9 @@ fn run() -> Result<(), amethyst::Error> {
     let mut game = Application::build("./", Pong)?
         .with_bundle(RenderBundle::new())?
         .with_local(RenderSystem::build(pipe, Some(config))?)
-        .build()
-        .expect("Fatal error");
+        .build()?;
 
-    game.run();
-
-    Ok(())
+    Ok(game.run())
 }
 
 fn main() {
