@@ -4,13 +4,14 @@ use amethyst::prelude::*;
 use amethyst::renderer::{DisplayConfig, DrawFlat, Event, KeyboardInput, Pipeline, PosNormTex,
                          RenderBundle, RenderSystem, Stage, VirtualKeyCode, WindowEvent};
 
-struct Pong; 
+struct Pong;
 
 impl State for Pong {
     fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
         match event {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::KeyboardInput {
+            Event::WindowEvent { event, .. } => {
+                match event {
+                    WindowEvent::KeyboardInput {
                     input:
                         KeyboardInput {
                             virtual_keycode: Some(VirtualKeyCode::Escape),
@@ -18,27 +19,25 @@ impl State for Pong {
                         },
                     ..
                 } => Trans::Quit,
-                _ => Trans::None,
-            },
+                    _ => Trans::None,
+                }
+            }
             _ => Trans::None,
         }
     }
 }
 
 fn run() -> Result<(), amethyst::Error> {
-    let path = format!(
-        "{}/examples/pong_tutorial_01/resources/display_config.ron",
-        env!("CARGO_MANIFEST_DIR")
-    );
+    let path = format!("{}/examples/pong_tutorial_01/resources/display_config.ron",
+                       env!("CARGO_MANIFEST_DIR"));
     let config = DisplayConfig::load(&path);
 
-    let pipe = Pipeline::build().with_stage(
-        Stage::with_backbuffer()
-            .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawFlat::<PosNormTex>::new()),
-    );
+    let pipe = Pipeline::build().with_stage(Stage::with_backbuffer()
+        .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
+        .with_pass(DrawFlat::<PosNormTex>::new()));
 
-    let mut game = Application::build("./", Pong)?
+    let mut game = Application::build("./", Pong)
+        ?
         .with_bundle(RenderBundle::new())?
         .with_local(RenderSystem::build(pipe, Some(config))?)
         .build()
