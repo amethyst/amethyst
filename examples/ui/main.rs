@@ -68,6 +68,7 @@ impl State for Example {
                 0.,
                 232.,
                 266.,
+                0,
             ))
             .with(UiImage {
                 texture: logo.clone(),
@@ -92,9 +93,11 @@ impl State for Example {
                 1.,
                 500.,
                 500.,
+                1,
             ))
             .with(text)
             .with(TextEditing::new(
+                12,
                 [0.0, 0.0, 0.0, 1.0],
                 [1.0, 1.0, 1.0, 1.0],
                 false,
@@ -102,7 +105,7 @@ impl State for Example {
             .build();
         let fps = world
             .create_entity()
-            .with(UiTransform::new("fps".to_string(), 0., 0., 1., 500., 500.))
+            .with(UiTransform::new("fps".to_string(), 0., 0., 1., 500., 500., 2))
             .with(UiText::new(
                 font,
                 "N/A".to_string(),

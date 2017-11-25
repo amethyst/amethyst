@@ -1,9 +1,11 @@
+use std::cmp::Ordering;
 use std::ops::Range;
 
 use amethyst_core::timing::Time;
 use clipboard::{ClipboardContext, ClipboardProvider};
+use hibitset::BitSet;
 use shrev::{EventChannel, ReaderId};
-use specs::{Component, DenseVecStorage, Fetch, FetchMut, Join, System, WriteStorage};
+use specs::{Component, DenseVecStorage, Entities, Entity, Fetch, FetchMut, Join, ReadStorage, System, WriteStorage};
 use unicode_normalization::UnicodeNormalization;
 use unicode_normalization::char::is_combining_mark;
 use unicode_segmentation::UnicodeSegmentation;
@@ -60,6 +62,8 @@ impl Component for UiText {
 pub struct TextEditing {
     /// The current editing cursor position, specified in terms of glyphs, not characters.
     pub cursor_position: isize,
+    /// The maximum graphemes permitted in this string.
+    pub max_length: usize,
     /// The amount and direction of glyphs highlighted relative to the cursor.
     pub highlight_vector: isize,
     /// The color of the text itself when highlighted.
@@ -80,9 +84,10 @@ pub struct TextEditing {
 
 impl TextEditing {
     /// Create a new TextEditing Component
-    pub fn new(selected_text_color: [f32; 4], selected_background_color: [f32; 4], use_block_cursor: bool) -> TextEditing {
+    pub fn new(max_length: usize, selected_text_color: [f32; 4], selected_background_color: [f32; 4], use_block_cursor: bool) -> TextEditing {
         TextEditing {
             cursor_position: 0,
+            max_length,
             highlight_vector: 0,
             selected_text_color,
             selected_background_color,
@@ -96,56 +101,169 @@ impl Component for TextEditing {
     type Storage = DenseVecStorage<Self>;
 }
 
+struct CachedTabOrder {
+    pub cached: BitSet,
+    pub cache: Vec<(i32, Entity)>,
+}
+
 /// This system processes the underlying UI data as needed.
 pub struct UiSystem {
+    /// A reader for winit events.
     reader: ReaderId,
+    /// A cache sorted by tab order, and then by Entity.
+    tab_order_cache: CachedTabOrder,
 }
 
 impl UiSystem {
     /// Initializes a new UiSystem that uses the given reader id.
     pub fn new(reader: ReaderId) -> Self {
-        Self { reader }
+        Self {
+            reader,
+            tab_order_cache: CachedTabOrder {
+                cached: BitSet::new(),
+                cache: Vec::new(),
+            }
+        }
     }
 }
 
 impl<'a> System<'a> for UiSystem {
     type SystemData = (
+        Entities<'a>,
         WriteStorage<'a, UiText>,
         WriteStorage<'a, TextEditing>,
+        ReadStorage<'a, UiTransform>,
         FetchMut<'a, UiFocused>,
         Fetch<'a, EventChannel<Event>>,
         Fetch<'a, Time>,
     );
 
-    fn run(&mut self, (mut text, mut editable, focused, events, time): Self::SystemData) {
+    fn run(&mut self, (entities, mut text, mut editable, transform, mut focused, events, time): Self::SystemData) {
+        // Populate and update the tab order cache.
+        {
+            let bitset = &mut self.tab_order_cache.cached;
+            self.tab_order_cache.cache.retain(|&(_t, entity)| {
+                let keep = transform.get(entity).is_some();
+                if !keep {
+                    bitset.remove(entity.id());
+                }
+                keep
+            });
+        }
+
+
+        for &mut (ref mut t, entity) in &mut self.tab_order_cache.cache {
+            *t = transform.get(entity).unwrap().tab_order;
+        }
+
+        // Attempt to insert the new entities in sorted position.  Should reduce work during
+        // the sorting step.
+        let transform_set = transform.check();
+        {
+            // Create a bitset containing only the new indices.
+            let new = (&transform_set ^ &self.tab_order_cache.cached) & &transform_set;
+            for (entity, transform, _new) in (&*entities, &transform, &new).join() {
+                let pos = self.tab_order_cache
+                    .cache
+                    .iter()
+                    .position(|&(cached_t, _)| transform.tab_order < cached_t);
+                match pos {
+                    Some(pos) => self.tab_order_cache
+                        .cache
+                        .insert(pos, (transform.tab_order, entity)),
+                    None => self.tab_order_cache.cache.push((transform.tab_order, entity)),
+                }
+            }
+        }
+        self.tab_order_cache.cached = transform_set;
+
+        // Sort from smallest tab order to largest tab order, then by entity creation time.
+        // Most of the time this shouldn't do anything but you still need it for if the tab orders
+        // change.
+        self.tab_order_cache
+            .cache
+            .sort_unstable_by(|&(t1, ref e1), &(t2, ref e2)| {
+                let ret = t1.cmp(&t2);
+                if ret == Ordering::Equal {
+                    return e1.cmp(e2);
+                }
+                ret
+            });
+
+
         for text in (&mut text).join() {
             if (*text.text).chars().any(|c| is_combining_mark(c)) {
                 let normalized = text.text.nfd().collect::<String>();
                 text.text = normalized;
             }
         }
-        let mut focused_text_edit = focused.entity.and_then(|entity| {
-            text.get_mut(entity)
-                .into_iter()
-                .zip(editable.get_mut(entity).into_iter())
-                .next()
-        });
-        if let Some((ref mut _focused_text, ref mut focused_edit)) = focused_text_edit {
-            focused_edit.cursor_blink_timer += time.delta_real_seconds();
-            if focused_edit.cursor_blink_timer >= 1.0 / CURSOR_BLINK_RATE {
-                focused_edit.cursor_blink_timer = 0.0;
+        
+        {
+            let mut focused_text_edit = focused.entity.and_then(|entity| {
+                text.get_mut(entity)
+                    .into_iter()
+                    .zip(editable.get_mut(entity).into_iter())
+                    .next()
+            });
+            if let Some((ref mut _focused_text, ref mut focused_edit)) = focused_text_edit {
+                focused_edit.cursor_blink_timer += time.delta_real_seconds();
+                if focused_edit.cursor_blink_timer >= 1.0 / CURSOR_BLINK_RATE {
+                    focused_edit.cursor_blink_timer = 0.0;
+                }
             }
         }
-
         for event in events.lossy_read(&mut self.reader).unwrap() {
+            if let Event::WindowEvent {
+                event:
+                    WindowEvent::KeyboardInput {
+                        input:
+                            KeyboardInput {
+                                state: ElementState::Pressed,
+                                virtual_keycode: Some(VirtualKeyCode::Tab),
+                                modifiers,
+                                ..
+                            },
+                        ..
+                    },
+                ..
+            } = *event {
+                if let Some(focused) = focused.entity.as_mut() {
+                    if let Some((i, _)) = self.tab_order_cache.cache.iter().enumerate().find(|&(_i, &(_, entity))| entity == *focused) {
+                        if self.tab_order_cache.cache.len() != 0 {
+                            if modifiers.shift {
+                                if i == 0 {
+                                    let new_i = self.tab_order_cache.cache.len() - 1;
+                                    *focused = self.tab_order_cache.cache[new_i].1;
+                                } else {
+                                    *focused = self.tab_order_cache.cache[i - 1].1;
+                                }
+                            } else {
+                                if i + 1 == self.tab_order_cache.cache.len() {
+                                    *focused = self.tab_order_cache.cache[0].1;
+                                } else {
+                                    *focused = self.tab_order_cache.cache[i + 1].1;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            let mut focused_text_edit = focused.entity.and_then(|entity| {
+                text.get_mut(entity)
+                    .into_iter()
+                    .zip(editable.get_mut(entity).into_iter())
+                    .next()
+            });
             if let Some((ref mut focused_text, ref mut focused_edit)) = focused_text_edit {
                 match *event {
                     Event::WindowEvent {
                         event: WindowEvent::ReceivedCharacter(input),
                         ..
                     } => {
-                        // Ignore obsolete control characters
-                        if input < '\u{8}' || (input > '\u{D}' && input < '\u{20}') {
+                        // Ignore obsolete control characters, and tab characters we can't render
+                        // properly anyways.  Also ignore newline characters since we don't
+                        // support multi-line text at the moment.
+                        if input < '\u{8}' || (input > '\u{8}' && input < '\u{20}') {
                             continue;
                         }
                         // Since delete character isn't emitted on windows, ignore it too.
@@ -181,8 +299,10 @@ impl<'a> System<'a> for UiSystem {
                                 }
                             },
                             _ => {
-                                focused_text.text.insert(start_byte, input);
-                                focused_edit.cursor_position += 1;
+                                if focused_text.text.graphemes(true).count() < focused_edit.max_length {
+                                    focused_text.text.insert(start_byte, input);
+                                    focused_edit.cursor_position += 1;
+                                }
                             }
                         }
                     }
@@ -200,7 +320,7 @@ impl<'a> System<'a> for UiSystem {
                             },
                         ..
                     } => match v_keycode {
-                        VirtualKeyCode::Home => {
+                        VirtualKeyCode::Home | VirtualKeyCode::Up => {
                             focused_edit.highlight_vector = if modifiers.shift {
                                 focused_edit.cursor_position
                             } else {
@@ -209,7 +329,7 @@ impl<'a> System<'a> for UiSystem {
                             focused_edit.cursor_position = 0;
                             focused_edit.cursor_blink_timer = 0.0;
                         }
-                        VirtualKeyCode::End => {
+                        VirtualKeyCode::End | VirtualKeyCode::Down => {
                             let glyph_len = focused_text.text.graphemes(true).count() as isize;
                             focused_edit.highlight_vector = if modifiers.shift {
                                 focused_edit.cursor_position - glyph_len
@@ -318,6 +438,11 @@ impl<'a> System<'a> for UiSystem {
                             let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
                             if let Ok(contents) = ctx.get_contents() {
                                 let index = cursor_byte_index(focused_edit, focused_text);
+                                let empty_space = focused_edit.max_length - focused_text.text.graphemes(true).count();
+                                let contents = contents.graphemes(true).take(empty_space).fold(String::new(), |mut init, new| {
+                                    init.push_str(new);
+                                    init
+                                });
                                 focused_text.text.insert_str(index, &contents);
                                 focused_edit.cursor_position += contents.graphemes(true).count() as isize;
                             }

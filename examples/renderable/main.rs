@@ -183,7 +183,7 @@ impl State for Example {
 
         let fps_display = world
             .create_entity()
-            .with(UiTransform::new("fps".to_string(), 0., 0., 1., 200., 50.))
+            .with(UiTransform::new("fps".to_string(), 0., 0., 1., 200., 50., 0))
             .with(UiText::new(
                 assets.font.clone(),
                 "N/A".to_string(),

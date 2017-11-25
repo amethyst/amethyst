@@ -126,6 +126,7 @@ impl<'a> PassData<'a> for DrawUi {
         Fetch<'a, AssetStorage<Mesh>>,
         Fetch<'a, AssetStorage<Texture>>,
         Fetch<'a, AssetStorage<FontAsset>>,
+        Fetch<'a, UiFocused>,
         ReadStorage<'a, UiImage>,
         ReadStorage<'a, UiTransform>,
         WriteStorage<'a, UiText>,
@@ -157,6 +158,7 @@ impl Pass for DrawUi {
             mesh_storage,
             tex_storage,
             font_storage,
+            focused,
             ui_image,
             ui_transform,
             mut ui_text,
@@ -168,6 +170,7 @@ impl Pass for DrawUi {
             Fetch<'a, AssetStorage<Mesh>>,
             Fetch<'a, AssetStorage<Texture>>,
             Fetch<'a, AssetStorage<FontAsset>>,
+            Fetch<'a, UiFocused>,
             ReadStorage<'a, UiImage>,
             ReadStorage<'a, UiTransform>,
             WriteStorage<'a, UiText>,
@@ -355,7 +358,9 @@ impl Pass for DrawUi {
                             font_id: FontId(0),
                         },
                     ]);
-                let layout = Layout::Wrap {
+                // TODO: If you're adding multi-line support you need to change this to use
+                // Layout::Wrap.
+                let layout = Layout::SingleLine {
                     line_breaker: BuiltInLineBreaker::UnicodeLineBreaker,
                     h_align: HorizontalAlign::Left,
                     v_align: VerticalAlign::Top,
@@ -427,87 +432,89 @@ impl Pass for DrawUi {
                     eprintln!("Unable to draw text! Error: {:?}", err);
                 }
                 // Render cursor
-                if let Some((texture, editing)) = editing.as_ref().and_then(|ed| {
-                    tex_storage
-                        .get(&cached_color_texture(
-                            cache,
-                            ui_text.color,
-                            &loader,
-                            &tex_storage,
-                        ))
-                        .map(|tex| (tex, ed))
-                }) {
-                    let blink_on = editing.cursor_blink_timer < 0.5 / CURSOR_BLINK_RATE;
-                    if editing.use_block_cursor || blink_on {
-                        effect.data.textures.push(texture.view().clone());
-                        effect.data.samplers.push(texture.sampler().clone());
-                        // Calculate the width of a space for use with the block cursor.
-                        let space_width = if editing.use_block_cursor {
-                            brush
+                if focused.entity == Some(entity) {
+                    if let Some((texture, editing)) = editing.as_ref().and_then(|ed| {
+                        tex_storage
+                            .get(&cached_color_texture(
+                                cache,
+                                ui_text.color,
+                                &loader,
+                                &tex_storage,
+                            ))
+                            .map(|tex| (tex, ed))
+                    }) {
+                        let blink_on = editing.cursor_blink_timer < 0.5 / CURSOR_BLINK_RATE;
+                        if editing.use_block_cursor || blink_on {
+                            effect.data.textures.push(texture.view().clone());
+                            effect.data.samplers.push(texture.sampler().clone());
+                            // Calculate the width of a space for use with the block cursor.
+                            let space_width = if editing.use_block_cursor {
+                                brush
+                                    .fonts()
+                                    .get(&FontId(0))
+                                    .unwrap()
+                                    .glyph(' ')
+                                    .unwrap()
+                                    .scaled(Scale::uniform(ui_text.font_size))
+                                    .h_metrics()
+                                    .advance_width
+                            } else {
+                                // If we aren't using the block cursor, don't bother.
+                                0.0
+                            };
+                            let ascent = brush
                                 .fonts()
                                 .get(&FontId(0))
                                 .unwrap()
-                                .glyph(' ')
-                                .unwrap()
-                                .scaled(Scale::uniform(ui_text.font_size))
-                                .h_metrics()
-                                .advance_width
-                        } else {
-                            // If we aren't using the block cursor, don't bother.
-                            0.0
-                        };
-                        let ascent = brush
-                            .fonts()
-                            .get(&FontId(0))
-                            .unwrap()
-                            .v_metrics(Scale::uniform(ui_text.font_size))
-                            .ascent;
-                        let glyph_len = brush.glyphs(&section).count();
-                        let (glyph, at_end) = if editing.cursor_position as usize >= glyph_len {
-                            (brush.glyphs(&section).last(), true)
-                        } else {
-                            (
-                                brush.glyphs(&section).nth(editing.cursor_position as usize),
-                                false,
-                            )
-                        };
-                        let height;
-                        let width;
-                        if editing.use_block_cursor {
-                            height = if blink_on {
-                                ui_text.font_size
+                                .v_metrics(Scale::uniform(ui_text.font_size))
+                                .ascent;
+                            let glyph_len = brush.glyphs(&section).count();
+                            let (glyph, at_end) = if editing.cursor_position as usize >= glyph_len {
+                                (brush.glyphs(&section).last(), true)
                             } else {
-                                ui_text.font_size / 10.0
+                                (
+                                    brush.glyphs(&section).nth(editing.cursor_position as usize),
+                                    false,
+                                )
                             };
-                            width = space_width;
-                        } else {
-                            height = ui_text.font_size;
-                            width = 2.0;
-                        }
-                        let pos = glyph.map(|g| g.position()).unwrap_or(Point {
-                            x: ui_transform.x,
-                            y: ui_transform.y + ascent,
-                        });
-                        let mut x = pos.x;
-                        if let Some(glyph) = glyph {
-                            if at_end {
-                                x += glyph.unpositioned().h_metrics().advance_width;
+                            let height;
+                            let width;
+                            if editing.use_block_cursor {
+                                height = if blink_on {
+                                    ui_text.font_size
+                                } else {
+                                    ui_text.font_size / 10.0
+                                };
+                                width = space_width;
+                            } else {
+                                height = ui_text.font_size;
+                                width = 2.0;
                             }
+                            let pos = glyph.map(|g| g.position()).unwrap_or(Point {
+                                x: ui_transform.x,
+                                y: ui_transform.y + ascent,
+                            });
+                            let mut x = pos.x;
+                            if let Some(glyph) = glyph {
+                                if at_end {
+                                    x += glyph.unpositioned().h_metrics().advance_width;
+                                }
+                            }
+                            let mut y = pos.y - ascent;
+                            if editing.use_block_cursor && !blink_on {
+                                y += ui_text.font_size * 0.9;
+                            }
+                            let vertex_args = VertexArgs {
+                                proj_vec: proj_vec.into(),
+                                coord: [x, y],
+                                dimension: [width, height],
+                            };
+                            effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
+                            effect.draw(mesh.slice(), encoder);
                         }
-                        let mut y = pos.y - ascent;
-                        if editing.use_block_cursor && !blink_on {
-                            y += ui_text.font_size * 0.9;
-                        }
-                        let vertex_args = VertexArgs {
-                            proj_vec: proj_vec.into(),
-                            coord: [x, y],
-                            dimension: [width, height],
-                        };
-                        effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
-                        effect.draw(mesh.slice(), encoder);
+                        effect.data.textures.clear();
+                        effect.data.samplers.clear();
                     }
-                    effect.data.textures.clear();
-                    effect.data.samplers.clear();
                 }
             }
         }
