@@ -296,16 +296,17 @@ impl Pass for DrawUi {
                 }
                 // Build text sections.
                 let editing = editing.get(entity);
-                let rendered_string = if ui_text.password {
+                let password_string = if ui_text.password {
                     // Build a string composed of black dot characters.
                     let mut ret = String::with_capacity(ui_text.text.len());
                     for _grapheme in ui_text.text.graphemes(true) {
                         ret.push('\u{2022}');
                     }
-                    ret
+                    Some(ret)
                 } else {
-                    ui_text.text.clone()
+                    None
                 };
+                let rendered_string = password_string.as_ref().unwrap_or(&ui_text.text);
                 let text = editing
                     .and_then(|editing| {
                         if editing.highlight_vector == 0 {
@@ -331,19 +332,19 @@ impl Pass for DrawUi {
                     .map(|(editing, (start_byte, end_byte))| {
                         vec![
                             SectionText {
-                                text: &((&rendered_string)[0..start_byte]),
+                                text: &((rendered_string)[0..start_byte]),
                                 scale: Scale::uniform(ui_text.font_size),
                                 color: ui_text.color,
                                 font_id: FontId(0),
                             },
                             SectionText {
-                                text: &((&rendered_string)[start_byte..end_byte]),
+                                text: &((rendered_string)[start_byte..end_byte]),
                                 scale: Scale::uniform(ui_text.font_size),
                                 color: editing.selected_text_color,
                                 font_id: FontId(0),
                             },
                             SectionText {
-                                text: &((&rendered_string)[end_byte..]),
+                                text: &((rendered_string)[end_byte..]),
                                 scale: Scale::uniform(ui_text.font_size),
                                 color: ui_text.color,
                                 font_id: FontId(0),
@@ -352,7 +353,7 @@ impl Pass for DrawUi {
                     })
                     .unwrap_or(vec![
                         SectionText {
-                            text: &rendered_string,
+                            text: rendered_string,
                             scale: Scale::uniform(ui_text.font_size),
                             color: ui_text.color,
                             font_id: FontId(0),

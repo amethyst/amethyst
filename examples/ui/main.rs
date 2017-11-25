@@ -75,15 +75,6 @@ impl State for Example {
             })
             .build();
 
-        let mut text = UiText::new(
-            font.clone(),
-            "Hello world!".to_string(),
-            [1.0, 1.0, 1.0, 1.0],
-            75.,
-        );
-
-        text.password = false;
-
         let text = world
             .create_entity()
             .with(UiTransform::new(
@@ -95,7 +86,12 @@ impl State for Example {
                 500.,
                 1,
             ))
-            .with(text)
+            .with(UiText::new(
+                font.clone(),
+                "Hello world!".to_string(),
+                [1.0, 1.0, 1.0, 1.0],
+                75.,
+            ))
             .with(TextEditing::new(
                 12,
                 [0.0, 0.0, 0.0, 1.0],
