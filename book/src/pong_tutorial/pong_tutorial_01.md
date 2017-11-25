@@ -127,13 +127,12 @@ instance, you can try `[0.00196, 0.23726, 0.21765, 1.0]`.
 Now let's pack everything up and run it:
 
 ```rust,ignore
-  let mut game = Application::build("./", Pong)?
-      .with_bundle(RenderBundle::new())?
-      .with_local(RenderSystem::build(pipe, Some(config))?)
-      .build()
-      .expect("Fatal error");
+let mut game = Application::build("./", Pong)?
+    .with_bundle(RenderBundle::new())?
+    .with_local(RenderSystem::build(pipe, Some(config))?)
+    .build()?;
 
-  game.run();
+Ok(game.run())
 ```
 
 We've discovered Amethyst's root object: [Application][ap]. It binds the OS 
