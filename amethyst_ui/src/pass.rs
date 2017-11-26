@@ -320,8 +320,10 @@ impl Pass for DrawUi {
                             .cursor_position
                             .max(editing.cursor_position + editing.highlight_vector)
                             as usize;
-                        let start_byte =
-                            rendered_string.grapheme_indices(true).nth(start).map(|i| i.0);
+                        let start_byte = rendered_string
+                            .grapheme_indices(true)
+                            .nth(start)
+                            .map(|i| i.0);
                         let end_byte = rendered_string
                             .grapheme_indices(true)
                             .nth(end)
@@ -373,11 +375,17 @@ impl Pass for DrawUi {
                     layout,
                     text,
                 };
+
                 // Render background highlight
                 let brush = &mut self.glyph_brushes
                     .get_mut(&ui_text.brush_id.unwrap())
                     .unwrap()
                     .0;
+                // Maintain the glyph cache (used by the input code).
+                ui_text.cached_glyphs.clear();
+                ui_text
+                    .cached_glyphs
+                    .extend(brush.glyphs(&section).cloned());
                 let cache = &mut self.cached_color_textures;
                 if let Some((texture, (start, end))) = editing.and_then(|ed| {
                     let start = ed.cursor_position

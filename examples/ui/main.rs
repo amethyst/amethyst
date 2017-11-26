@@ -83,7 +83,7 @@ impl State for Example {
                 200.,
                 1.,
                 500.,
-                500.,
+                75.,
                 1,
             ))
             .with(UiText::new(
@@ -101,7 +101,15 @@ impl State for Example {
             .build();
         let fps = world
             .create_entity()
-            .with(UiTransform::new("fps".to_string(), 0., 0., 1., 500., 500., 2))
+            .with(UiTransform::new(
+                "fps".to_string(),
+                0.,
+                0.,
+                1.,
+                500.,
+                75.,
+                2,
+            ))
             .with(UiText::new(
                 font,
                 "N/A".to_string(),

@@ -6,6 +6,7 @@ use std::marker::PhantomData;
 ///
 /// TODO: Eventually this should be either replaced by a citrine type, or citrine may just
 /// populate it.
+#[derive(Clone, Debug)]
 pub struct UiTransform {
     /// An identifier. Serves no purpose other than to help you distinguish between UI elements.
     pub id: String,
@@ -31,7 +32,15 @@ pub struct UiTransform {
 
 impl UiTransform {
     /// Creates a new UiTransform
-    pub fn new(id: String, x: f32, y: f32, z: f32, width: f32, height: f32, tab_order: i32) -> UiTransform {
+    pub fn new(
+        id: String,
+        x: f32,
+        y: f32,
+        z: f32,
+        width: f32,
+        height: f32,
+        tab_order: i32,
+    ) -> UiTransform {
         UiTransform {
             id,
             x,

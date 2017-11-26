@@ -17,6 +17,7 @@ amethyst_core = { path = "../amethyst_core", version = "0.1" }
 amethyst_renderer = { path = "../amethyst_renderer", version = "0.5" }
 cgmath = { version = "0.14", features = ["eders"] }
 clipboard = "0.4"
+derivative = "1.0"
 fnv = "1"
 gfx = { version = "0.16", features = ["serialize"] }
 gfx_glyph = "0.6"
