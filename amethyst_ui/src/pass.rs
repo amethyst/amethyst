@@ -394,10 +394,18 @@ impl Pass for DrawUi {
                     let end = ed.cursor_position
                         .max(ed.cursor_position + ed.highlight_vector)
                         as usize;
+                    let color = if focused.entity == Some(entity) {
+                        ed.selected_background_color
+                    } else {
+                        [ed.selected_background_color[0] * 0.5,
+                        ed.selected_background_color[1] * 0.5,
+                        ed.selected_background_color[2] * 0.5,
+                        ed.selected_background_color[3] * 0.5,]
+                    };
                     tex_storage
                         .get(&cached_color_texture(
                             cache,
-                            ed.selected_background_color,
+                            color,
                             &loader,
                             &tex_storage,
                         ))
