@@ -110,8 +110,8 @@ This will set the default window dimensions to 500 x 500, and make the title bar
 say "Pong!" instead of the sad, lowercase default of "pong".
 
 Now, back inside our run() function in main.rs, let's copy and paste some 
-rendering code we don't fully understand, just so we can keep moving. The next 
-chapter will cover rendering more in depth.
+rendering code so we can keep moving. The next chapter will cover rendering more 
+in depth.
 
 ```rust,ignore
 let pipe = Pipeline::build().with_stage(
@@ -121,11 +121,11 @@ let pipe = Pipeline::build().with_stage(
 );
 ```
 
-The important part of this code is that it renders a black background, because 
-pong is traditionally played on a black background, but you can choose any color 
-you'd like by tweaking the RGBA values inside the `.clear_target` method. Values 
-range from 0.0 to 1.0, so to get that cool green color we started with back, for 
-instance, you can try `[0.00196, 0.23726, 0.21765, 1.0]`.
+The important thing to know right now is that this renders a black background. 
+If you want a different color you can tweak the RGBA values inside the 
+`.clear_target` method. Values range from 0.0 to 1.0, so to get that cool green 
+color we started with back, for instance, you can try 
+`[0.00196, 0.23726, 0.21765, 1.0]`.
 
 Now let's pack everything up and run it:
 
