@@ -3,17 +3,17 @@ extern crate amethyst;
 mod pong;
 
 use amethyst::Result;
-use amethyst::core::transform::TransformBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline, PosTex, RenderBundle, RenderSystem,
                          Stage};
+use amethyst::core::transform::TransformBundle;
 
 
 
 fn run() -> Result<()> {
     use pong::Pong;
 
-    let path = format!("{}/resources/display_config.ron",
+    let path = format!("{}/examples/pong_tutorial_02/resources/display_config.ron",
                        env!("CARGO_MANIFEST_DIR"));
 
     let config = DisplayConfig::load(&path);
