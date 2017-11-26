@@ -1,4 +1,3 @@
-
 use hetseq::*;
 use rayon::iter::{Chain, ParallelIterator};
 use specs::SystemData;

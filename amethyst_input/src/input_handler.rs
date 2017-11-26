@@ -242,8 +242,7 @@ where
             .iter()
             .map((|&mb| Button::Mouse(mb)) as fn(&MouseButton) -> Button);
         let keys = self.pressed_keys.iter().flat_map(
-            (|v| KeyThenCode::new(v.clone()))
-                as fn(&(VirtualKeyCode, u32)) -> KeyThenCode,
+            (|v| KeyThenCode::new(v.clone())) as fn(&(VirtualKeyCode, u32)) -> KeyThenCode,
         );
         Buttons {
             iterator: mouse_buttons.chain(keys),

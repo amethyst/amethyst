@@ -94,8 +94,8 @@ impl State for Example {
                             ..
                         },
                     ..
-                } |
-                WindowEvent::Closed => Trans::Quit,
+                }
+                | WindowEvent::Closed => Trans::Quit,
                 WindowEvent::KeyboardInput {
                     input:
                         KeyboardInput {

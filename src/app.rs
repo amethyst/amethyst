@@ -314,7 +314,11 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
         println!("Platform: {}", vergen::target());
         println!("Amethyst git commit: {}", vergen::sha());
         let rustc_meta = rustc_version_runtime::version_meta();
-        println!("Rustc version: {} {:?}", rustc_meta.semver, rustc_meta.channel);
+        println!(
+            "Rustc version: {} {:?}",
+            rustc_meta.semver,
+            rustc_meta.channel
+        );
         if let Some(hash) = rustc_meta.commit_hash {
             println!("Rustc git commit: {}", hash);
         }
