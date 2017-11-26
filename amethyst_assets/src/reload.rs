@@ -125,7 +125,10 @@ enum HotReloadStrategyInner {
         last: Instant,
         frame_number: u64,
     },
-    Trigger { triggered: bool, frame_number: u64 },
+    Trigger {
+        triggered: bool,
+        frame_number: u64,
+    },
     Never,
 }
 

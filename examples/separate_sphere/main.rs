@@ -40,8 +40,8 @@ impl State for Example {
                             ..
                         },
                     ..
-                } |
-                WindowEvent::Closed => Trans::Quit,
+                }
+                | WindowEvent::Closed => Trans::Quit,
                 _ => Trans::None,
             },
             _ => Trans::None,

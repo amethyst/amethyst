@@ -1,4 +1,3 @@
-
 extern crate amethyst_config;
 extern crate amethyst_core;
 #[macro_use]
