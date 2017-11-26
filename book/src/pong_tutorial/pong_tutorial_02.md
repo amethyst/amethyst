@@ -356,7 +356,7 @@ use amethyst::core::transform::TransformBundle;
 
 Now when we run the game we should get something that looks like this:
 
-`SCREENSHOT HERE`
+![Step two](./images/pong_tutorial/pong_02.png)
 
 In the next chapter we'll explore the "S" in ECS and actually get these paddles 
 moving!
