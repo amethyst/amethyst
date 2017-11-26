@@ -6,7 +6,17 @@ Components.
 
 Amethyst uses Specs for its ECS (Entity-component system), which is a parallel 
 Entity-component system written in Rust. You can learn more about Specs in the 
-[The Specs Book][sb].
+[The Specs Book][sb]. Here's a basic explanation of ECS from there:
+
+> The term ECS is a shorthand for Entity-component system. These are the three 
+> core concepts. Each entity is associated with some components. Those entities 
+> and components are processed by systems. This way, you have your data 
+> (components) completely separated from the behaviour (systems). An entity just 
+> logically groups components; so a Velocity component can be applied to the 
+> Position component of the same entity.
+
+I recommend at least skimming the rest of The Specs Book to get a good intuition 
+of how Amethyst works, especially if you're new to ECS.
 
 ## A quick refactor
 
