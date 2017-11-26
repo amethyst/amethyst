@@ -118,7 +118,7 @@ include that component and add them to our `World`.
 First let's look at our math imports:
 
 ```rust,ignore
-use amethyst::core::cgmath::{Vector3};
+use amethyst::core::cgmath::Vector3;
 use amethyst::core::transform::{LocalTransform, Transform};
 ```
 
@@ -126,7 +126,7 @@ Amethyst uses the [cgmath crate][cg] under the hood and exposes it for our use.
 Today we just grabbed the `Vector3` type, which is a very good math thing to have.
 
 `LocalTransform` and `Transform` are Amethyst ECS components which carry 
-position and orientation information for rendering. `LocalTransform` is relative 
+position and orientation information. `LocalTransform` is relative 
 to a parent if one exists, while `Transform` is global.
 
 Let's also define some constants for convenience:
@@ -346,19 +346,27 @@ Let's run this and see what happens. On my machine I get a panic that reads:
 'No component with the given id. Did you forget to register the component with `World::register::<ComponentName>()`?'
 ```
 
-The component we're missing is all these `Transform` components we've been 
-referring to. Let's switch over to `main.rs` and update our 
-`Application::build`:
+It looks like we're missing at least one component registration.In addition to 
+components we define ourselves, Amethyst has a lot of internal systems and 
+components it uses to keep things running. For simplicity, these have been 
+wrapped up into Bundles which add a set of related components, systems, and 
+resources to the world. We can add these to our Application using the 
+`with_bundle` method, and in fact we already have one of these in `main.rs`: the 
+`RenderBundle`.
+
+As it turns out, the components we're missing are `Transform` and 
+`LocalTransform`, and we can add those with the `TransformBundle`, which will 
+also add the `TransformSystem` for working with those components:
 
 ```rust,ignore
 let mut game = Application::build("./", Pong)?
-    .with_bundle(TransformBundle::new())? 
+    .with_bundle(TransformBundle::new())? //Add this bundle
     .with_bundle(RenderBundle::new())?
     .with_local(RenderSystem::build(pipe, Some(config))?)
     .build()?;
 ```
 
-And we'll need to import that component:
+Also we'll need to import that structure:
 
 ```rust,ignore
 use amethyst::core::transform::TransformBundle;
