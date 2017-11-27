@@ -10,6 +10,7 @@
 #![warn(missing_docs)]
 
 extern crate amethyst_core;
+extern crate atom;
 extern crate crossbeam;
 #[macro_use]
 extern crate derivative;
@@ -22,19 +23,20 @@ extern crate rayon;
 extern crate specs;
 
 pub use asset::{Asset, Format, FormatValue, SimpleFormat};
-pub use cache::Cache;
+//pub use cache::Cache;
 pub use error::{Error, ErrorKind, Result, ResultExt};
 pub use loader::Loader;
 pub use progress::{Completion, Progress, ProgressCounter, Tracker};
 pub use reload::{HotReloadBundle, HotReloadStrategy, HotReloadSystem, Reload, SingleFile};
 pub use source::{Directory, Source};
-pub use storage::{AssetStorage, Handle, Processor, WeakHandle};
+pub use storage::{AssetStorage, Handle, Processor, WeakAllocHandle};
 
 mod asset;
-mod cache;
+//mod cache;
 mod error;
 mod loader;
 mod progress;
 mod reload;
 mod source;
 mod storage;
+mod storages;

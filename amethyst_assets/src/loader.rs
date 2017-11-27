@@ -137,7 +137,7 @@ impl Loader {
         };
         self.pool.spawn(cl);
 
-        handle_clone
+        handle_clone.into()
     }
 
     /// Load an asset from data and return a handle.
@@ -162,7 +162,7 @@ impl Loader {
             tracker,
         });
 
-        handle
+        handle.into()
     }
 
     fn source(&self, source: &str) -> Arc<Source> {
