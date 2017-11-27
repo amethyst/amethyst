@@ -50,27 +50,32 @@ where
     type Tag = (Type, usize);
     type Error = OutOfMemory;
 
-    fn alloc(&mut self, device: &B::Device, info: Type, reqs: Requirements) -> Result<Block<B, (Type, usize)>, Self::Error> {
+    fn alloc(
+        &mut self,
+        device: &B::Device,
+        info: Type,
+        reqs: Requirements,
+    ) -> Result<Block<B, (Type, usize)>, Self::Error> {
         match info {
             Type::Arena => {
-                self.arenas.alloc(&mut self.memory, device, (), reqs).map(|block| block.push_tag(Type::Arena))
+                self.arenas.alloc(&mut self.memory, device, (), reqs).map(
+                    |block| block.push_tag(Type::Arena),
+                )
             }
             Type::Chunk => {
-                self.chunks.alloc(&mut self.memory, device, (), reqs).map(|block| block.push_tag(Type::Chunk))
+                self.chunks.alloc(&mut self.memory, device, (), reqs).map(
+                    |block| block.push_tag(Type::Chunk),
+                )
             }
         }
-        
+
     }
 
     fn free(&mut self, device: &B::Device, block: Block<B, (Type, usize)>) {
         let (block, ty) = block.pop_tag();
         match ty {
-            Type::Arena => {
-                self.arenas.free(&mut self.memory, device, block)
-            }
-            Type::Chunk => {
-                self.chunks.free(&mut self.memory, device, block)
-            }
+            Type::Arena => self.arenas.free(&mut self.memory, device, block),
+            Type::Chunk => self.chunks.free(&mut self.memory, device, block),
         }
     }
 

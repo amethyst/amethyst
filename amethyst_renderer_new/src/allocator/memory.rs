@@ -45,7 +45,7 @@ impl<B> MemoryAllocator<B> {
     }
 
     pub fn tag(&mut self) -> Tag {
-        Tag(self as *const _ as * const _)
+        Tag(self as *const _ as *const _)
     }
 }
 
@@ -57,13 +57,20 @@ where
     type Info = ();
     type Error = OutOfMemory;
 
-    fn alloc(&mut self, device: &B::Device, _: (), reqs: Requirements) -> Result<Block<B, Tag>, OutOfMemory> {
-        assert_eq!((1 << self.memory_type.id) & reqs.type_mask, 1 << self.memory_type.id);
-        let memory = device
-            .allocate_memory(&self.memory_type, reqs.size)?;
+    fn alloc(
+        &mut self,
+        device: &B::Device,
+        _: (),
+        reqs: Requirements,
+    ) -> Result<Block<B, Tag>, OutOfMemory> {
+        assert_eq!(
+            (1 << self.memory_type.id) & reqs.type_mask,
+            1 << self.memory_type.id
+        );
+        let memory = device.allocate_memory(&self.memory_type, reqs.size)?;
         let memory = Box::into_raw(Box::new(memory)); // Unoptimal
         self.allocations += 1;
-        Ok(Block::new(memory, 0 .. reqs.size).set_tag(self.tag()))
+        Ok(Block::new(memory, 0..reqs.size).set_tag(self.tag()))
     }
 
     fn free(&mut self, device: &B::Device, block: Block<B, Tag>) {
@@ -79,8 +86,6 @@ where
 
     fn dispose(self, _: &B::Device) {
         assert!(self.is_unused());
-        unsafe {
-            self.relevant.dispose()
-        }
+        unsafe { self.relevant.dispose() }
     }
 }

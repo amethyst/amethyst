@@ -1,12 +1,13 @@
 
 /// Type that can't be silently dropped.
-/// If structure has field with type `Relevant` than this structure can't be silently dropped either.
+/// If structure has field with type `Relevant`
+/// than this structure can't be silently dropped either.
 /// User has to deconstruct such types and call `Relevant::dispose`.
-/// 
+///
 /// # Panics
-/// 
+///
 /// Panics when dropped.
-/// 
+///
 #[derive(Clone, Debug, PartialOrd, PartialEq, Ord, Eq, Hash)]
 pub struct Relevant;
 

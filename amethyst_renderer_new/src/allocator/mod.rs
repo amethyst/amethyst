@@ -2,12 +2,9 @@
 use std::cmp::Eq;
 use std::error::Error;
 use std::fmt::{Debug, Display};
-use std::ops::{Add, Sub, Rem, Range};
+use std::ops::{Add, Range, Rem, Sub};
 
 use gfx_hal::{Backend, Device, MemoryType};
-use gfx_hal::buffer::{Usage as BufferUsage, complete_requirements};
-use gfx_hal::format::Format;
-use gfx_hal::image::{Kind, Level, Usage as ImageUsage};
 use gfx_hal::memory::{Properties, Requirements};
 use relevant::Relevant;
 
@@ -19,6 +16,7 @@ mod smart;
 
 
 pub use self::smart::SmartAllocator;
+pub use self::combined::Type as AllocationType;
 
 /// Tagged block of memory.
 /// It is relevant type and can't be silently dropped.
@@ -26,8 +24,8 @@ pub use self::smart::SmartAllocator;
 #[derive(Debug)]
 pub struct Block<B: Backend, T> {
     relevant: Relevant,
-    memory: *mut B::Memory,
     tag: T,
+    memory: *mut B::Memory,
     offset: u64,
     size: u64,
 }
@@ -41,8 +39,8 @@ where
         assert!(range.start <= range.end);
         Block {
             relevant: Relevant,
-            memory,
             tag: (),
+            memory,
             offset: range.start,
             size: range.end - range.start,
         }
@@ -56,37 +54,84 @@ where
     /// Free this block returning it to the origin
     pub fn free<A>(self, origin: &mut A, device: &B::Device)
     where
-        A: Allocator<B, Tag=T>,
+        A: Allocator<B, Tag = T>,
         T: Debug + Copy + Send + Sync,
     {
         origin.free(device, self);
     }
 
+    pub fn memory(&self) -> &B::Memory {
+        // Has to be valid
+        unsafe { &*self.memory }
+    }
+
+    pub fn range(&self) -> Range<u64> {
+        self.offset..self.size + self.offset
+    }
+
     /// Helper merthod to check if `other` block is sub-block of `self`
     pub fn contains<Y>(&self, other: &Block<B, Y>) -> bool {
-        self.memory == other.memory &&
-        self.offset <= other.offset &&
-        self.offset + self.size >= other.offset + other.size
+        self.memory == other.memory && self.offset <= other.offset &&
+            self.offset + self.size >= other.offset + other.size
     }
-    
+
     /// Push additional tag value to this block.
     /// Tags form a stack - e.g. LIFO
     pub fn push_tag<Y>(self, value: Y) -> Block<B, (Y, T)> {
-        let Block { relevant, memory, tag, offset, size } = self;
-        Block { relevant, memory, tag: (value, tag), offset, size, }
+        let Block {
+            relevant,
+            memory,
+            tag,
+            offset,
+            size,
+        } = self;
+        Block {
+            relevant,
+            memory,
+            tag: (value, tag),
+            offset,
+            size,
+        }
     }
 
     /// Replace tag attached to this block
     pub fn replace_tag<Y>(self, value: Y) -> (Block<B, Y>, T) {
-        let Block { relevant, memory, tag, offset, size } = self;
-        (Block { relevant, memory, tag: value, offset, size, }, tag)
+        let Block {
+            relevant,
+            memory,
+            tag,
+            offset,
+            size,
+        } = self;
+        (
+            Block {
+                relevant,
+                memory,
+                tag: value,
+                offset,
+                size,
+            },
+            tag,
+        )
     }
 
     /// Set tag to this block.
     /// Drops old tag.
     pub fn set_tag<Y>(self, value: Y) -> Block<B, Y> {
-        let Block { relevant, memory, tag, offset, size } = self;
-        Block { relevant, memory, tag: value, offset, size, }
+        let Block {
+            relevant,
+            memory,
+            tag,
+            offset,
+            size,
+        } = self;
+        Block {
+            relevant,
+            memory,
+            tag: value,
+            offset,
+            size,
+        }
     }
 
     /// Dispose this block. Returns tag value.
@@ -104,8 +149,23 @@ where
     /// Tags form a stack - e.g. LIFO
     fn pop_tag(self) -> (Block<B, T>, Y) {
         let Block { .. } = self;
-        let Block { relevant, memory, tag: (value, tag), offset, size } = self;
-        (Block { relevant, memory, tag, offset, size, }, value)
+        let Block {
+            relevant,
+            memory,
+            tag: (value, tag),
+            offset,
+            size,
+        } = self;
+        (
+            Block {
+                relevant,
+                memory,
+                tag,
+                offset,
+                size,
+            },
+            value,
+        )
     }
 }
 
@@ -113,8 +173,13 @@ pub trait Allocator<B: Backend> {
     type Info;
     type Tag: Debug + Copy + Send + Sync;
     type Error: Error;
-    
-    fn alloc(&mut self, device: &B::Device, info: Self::Info, reqs: Requirements) -> Result<Block<B, Self::Tag>, Self::Error>;
+
+    fn alloc(
+        &mut self,
+        device: &B::Device,
+        info: Self::Info,
+        reqs: Requirements,
+    ) -> Result<Block<B, Self::Tag>, Self::Error>;
     fn free(&mut self, device: &B::Device, block: Block<B, Self::Tag>);
     fn is_unused(&self) -> bool;
     fn dispose(self, device: &B::Device);
@@ -125,17 +190,23 @@ pub trait SubAllocator<B: Backend> {
     type Info;
     type Tag: Debug + Copy + Send + Sync;
     type Error: Error;
-    
-    fn alloc(&mut self, owner: &mut Self::Owner, device: &B::Device, info: Self::Info, reqs: Requirements) -> Result<Block<B, Self::Tag>, Self::Error>;
+
+    fn alloc(
+        &mut self,
+        owner: &mut Self::Owner,
+        device: &B::Device,
+        info: Self::Info,
+        reqs: Requirements,
+    ) -> Result<Block<B, Self::Tag>, Self::Error>;
     fn free(&mut self, owner: &mut Self::Owner, device: &B::Device, block: Block<B, Self::Tag>);
     fn is_unused(&self) -> bool;
     fn dispose(self, owner: &mut Self::Owner, device: &B::Device);
 }
 
 
-fn calc_alignment_shift<T>(alignment: T, offset: T) -> T
+pub fn calc_alignment_shift<T>(alignment: T, offset: T) -> T
 where
-    T: From<u8> + Add<Output=T> + Sub<Output=T> + Rem<Output=T> + Eq + Copy,
+    T: From<u8> + Add<Output = T> + Sub<Output = T> + Rem<Output = T> + Eq + Copy,
 {
     if offset == 0.into() {
         0.into()
@@ -145,9 +216,9 @@ where
 }
 
 
-fn shift_for_alignment<T>(alignment: T, offset: T) -> T
+pub fn shift_for_alignment<T>(alignment: T, offset: T) -> T
 where
-    T: From<u8> + Add<Output=T> + Sub<Output=T> + Rem<Output=T> + Eq + Copy,
+    T: From<u8> + Add<Output = T> + Sub<Output = T> + Rem<Output = T> + Eq + Copy,
 {
     offset + calc_alignment_shift(alignment, offset)
 }

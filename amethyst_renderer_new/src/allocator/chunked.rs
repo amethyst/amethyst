@@ -60,7 +60,10 @@ where
     fn alloc_no_grow(&mut self, owner: &mut A, device: &B::Device) -> Option<Block<B, usize>> {
         self.free.pop_front().map(|(block_index, chunk_index)| {
             let offset = self.blocks[block_index].1 + chunk_index * self.chunk_size;
-            let block = Block::new(self.blocks[block_index].0.memory, offset .. self.chunk_size + offset);
+            let block = Block::new(
+                self.blocks[block_index].0.memory,
+                offset..self.chunk_size + offset,
+            );
             block.set_tag(block_index)
         })
     }
@@ -77,7 +80,13 @@ where
     type Tag = usize;
     type Error = A::Error;
 
-    fn alloc(&mut self, owner: &mut A, device: &B::Device, info: A::Info, reqs: Requirements) -> Result<Block<B, usize>, A::Error> {
+    fn alloc(
+        &mut self,
+        owner: &mut A,
+        device: &B::Device,
+        info: A::Info,
+        reqs: Requirements,
+    ) -> Result<Block<B, usize>, A::Error> {
         assert_eq!((1 << self.id) & reqs.type_mask, 1 << self.id);
         assert!(self.chunk_size >= reqs.size);
         assert!(self.chunk_size >= reqs.alignment);
@@ -126,9 +135,9 @@ where
     A: Allocator<B>,
 {
     /// # Panics
-    /// 
+    ///
     /// Panics if `chunk_size` or `min_size` is not power of 2.
-    /// 
+    ///
     pub fn new(chunk_size: u64, min_size: u64, id: usize) -> Self {
         let bits = (::std::mem::size_of::<usize>() * 8) as u32;
         let chunk_size_bit = (bits - chunk_size.leading_zeros() - 1) as u8;
@@ -155,7 +164,7 @@ where
         let chunks_per_block = 1 << self.chunk_size_bit;
         let id = self.id;
         let len = self.nodes.len() as u8;
-        self.nodes.extend((len .. size).map(|index| {
+        self.nodes.extend((len..size).map(|index| {
             ChunkListNode::new(chunk_size(index), chunks_per_block, id)
         }));
     }
@@ -172,7 +181,13 @@ where
     type Tag = usize;
     type Error = A::Error;
 
-    fn alloc(&mut self, owner: &mut A, device: &B::Device, info: A::Info, reqs: Requirements) -> Result<Block<B, usize>, A::Error> {
+    fn alloc(
+        &mut self,
+        owner: &mut A,
+        device: &B::Device,
+        info: A::Info,
+        reqs: Requirements,
+    ) -> Result<Block<B, usize>, A::Error> {
         let index = self.pick_node(reqs.size);
         self.grow(owner, index + 1);
         self.nodes[index as usize].alloc(owner, device, info, reqs)

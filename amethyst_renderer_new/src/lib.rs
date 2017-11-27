@@ -28,6 +28,7 @@ extern crate gfx_backend_metal as metal;
 
 
 pub mod allocator;
+pub mod epoch;
 // pub mod cam;
 // pub mod graph;
 // pub mod mesh;

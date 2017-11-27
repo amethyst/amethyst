@@ -29,7 +29,7 @@ where
             freed: 0,
         }
     }
-  
+
     fn alloc(&mut self, reqs: Requirements) -> Option<Block<B, ()>> {
         let offset = self.block.offset + self.used;
         let total_size = reqs.size + calc_alignment_shift(reqs.alignment, offset);
@@ -38,16 +38,14 @@ where
             None
         } else {
             self.used += total_size;
-            Some(Block::new(self.block.memory, offset .. total_size + offset))
+            Some(Block::new(self.block.memory, offset..total_size + offset))
         }
     }
 
     fn free(&mut self, block: Block<B, ()>) {
         assert!(self.block.contains(&block));
         self.freed += block.size;
-        unsafe {
-            block.dispose()
-        }
+        unsafe { block.dispose() }
     }
 
     fn is_unused(&self) -> bool {
@@ -89,18 +87,29 @@ where
     }
 
     fn cleanup(&mut self, owner: &mut A, device: &B::Device) {
-        while self.nodes.front().map(|node| node.is_unused()).unwrap_or(false) {
-            self.nodes.pop_front().map(|node| node.dispose(owner, device));
+        while self.nodes.front().map(|node| node.is_unused()).unwrap_or(
+            false,
+        )
+        {
+            self.nodes.pop_front().map(
+                |node| node.dispose(owner, device),
+            );
             self.freed += 1;
         }
     }
 
-    fn allocate_node(&mut self, owner: &mut A, device: &B::Device, info: A::Info, reqs: Requirements) -> Result<ArenaNode<B, A>, A::Error> {
+    fn allocate_node(
+        &mut self,
+        owner: &mut A,
+        device: &B::Device,
+        info: A::Info,
+        reqs: Requirements,
+    ) -> Result<ArenaNode<B, A>, A::Error> {
         let arena_size = ((reqs.size - 1) / self.arena_size + 1) * self.arena_size;
         let arena_requirements = Requirements {
             type_mask: 1 << self.id,
             size: arena_size,
-            alignment: reqs.alignment
+            alignment: reqs.alignment,
         };
         let arena_block = owner.alloc(device, info, arena_requirements)?;
         Ok(ArenaNode::new(arena_block))
@@ -117,7 +126,13 @@ where
     type Tag = usize;
     type Error = A::Error;
 
-    fn alloc(&mut self, owner: &mut A, device: &B::Device, info: A::Info, reqs: Requirements) -> Result<Block<B, Self::Tag>, A::Error> {
+    fn alloc(
+        &mut self,
+        owner: &mut A,
+        device: &B::Device,
+        info: A::Info,
+        reqs: Requirements,
+    ) -> Result<Block<B, Self::Tag>, A::Error> {
         assert_eq!((1 << self.id) & reqs.type_mask, 1 << self.id);
         let count = self.nodes.len();
         if let Some(ref mut hot) = self.hot.as_mut() {
@@ -148,18 +163,19 @@ where
             len if len == index => {
                 self.hot.as_mut().unwrap().free(block);
             }
-            len if len > index =>  {
+            len if len > index => {
                 self.nodes[index].free(block);
                 self.cleanup(owner, device);
             }
-            _ => {
-                unreachable!()
-            }
+            _ => unreachable!(),
         }
     }
 
     fn is_unused(&self) -> bool {
-        self.nodes.is_empty() && self.hot.as_ref().map(|node| node.is_unused()).unwrap_or(true)
+        self.nodes.is_empty() &&
+            self.hot.as_ref().map(|node| node.is_unused()).unwrap_or(
+                true,
+            )
     }
 
     fn dispose(mut self, owner: &mut A, device: &B::Device) {
@@ -169,4 +185,3 @@ where
         }
     }
 }
-
