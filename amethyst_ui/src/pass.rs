@@ -64,15 +64,18 @@ pub struct DrawUi {
     mesh_handle: MeshHandle,
     cached_draw_order: CachedDrawOrder,
     cached_color_textures: HashMap<KeyColor, TextureHandle>,
-    glyph_brushes: HashMap<
+    glyph_brushes: GlyphBrushCache,
+    next_brush_cache_id: u32,
+}
+
+type GlyphBrushCache =
+    HashMap<
         u32,
         (
             GlyphBrush<'static, Resources, Factory>,
             WeakHandle<FontAsset>,
         ),
-    >,
-    next_brush_cache_id: u32,
-}
+    >;
 
 impl DrawUi {
     /// Create instance of `DrawUi` pass
