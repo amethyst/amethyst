@@ -1,7 +1,7 @@
 
 
-use std::cmp::{max, PartialOrd};
-use std::ops::Deref;
+use std::cmp::{max, PartialOrd, Ordering};
+use std::ops::{Add, Deref};
 
 use specs::{Fetch, FetchMut};
 
@@ -23,15 +23,6 @@ impl PartialEq<EpochCounter> for Epoch {
     #[inline]
     fn eq(&self, other: &EpochCounter) -> bool {
         self.0.eq(&other.0)
-    }
-}
-
-impl Eq<EpochCounter> for Epoch {}
-
-impl Ord<EpochCounter> for Epoch {
-    #[inline]
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.0.cmp(&other.0)
     }
 }
 
@@ -71,7 +62,7 @@ impl<T> Ec<T> {
     /// Returns `None` otherwise
     #[inline]
     fn get<'a>(&'a self, ec: &EpochCounter) -> Option<&'a T> {
-        if self.valid_for < ec {
+        if self.valid_for < *ec {
             unsafe { Some(&*self.ptr) }
         } else {
             None
@@ -119,7 +110,7 @@ impl<T> Eh<T> {
     /// Borrow `Ec` from this `Eh`
     /// `Ec` will expire after specified `Epoch`
     fn borrow(this: &mut Self, epoch: Epoch) -> Ec<T> {
-        this.make_valid_for(epoch);
+        Self::make_valid_for(this, epoch);
         Ec {
             ptr: this.ptr,
             valid_for: this.drop_after,

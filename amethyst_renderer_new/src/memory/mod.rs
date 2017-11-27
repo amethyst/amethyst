@@ -4,10 +4,9 @@ use gfx_hal::buffer::ViewError;
 use gfx_hal::device::{BindError, OutOfMemory};
 use gfx_hal::mapping::Error as MappingError;
 
-mod allocator;
 mod epoch;
 
-use self::allocator::{Block, SmartAllocator, AllocationType};
+// use self::allocator::{Block, SmartAllocator, AllocationType};
 
 error_chain! {
     foreign_links {
@@ -15,6 +14,7 @@ error_chain! {
         ViewError(ViewError);
         BufferCreationError(::gfx_hal::buffer::CreationError);
         ImageCreationError(::gfx_hal::image::CreationError);
+        OutOfMemory(::gfx_hal::device::OutOfMemory);
     }
 
     errors {
@@ -26,32 +26,16 @@ error_chain! {
             description("Out of bounds"),
             display("Out of bounds"),
         }
-        OutOfMemory {
-            description("Out of memory"),
-            display("Out of memory"),
-        }
-    }
-}
-
-impl From<MappingError> for ErrorKind {
-    fn from(error: MappingError) -> ErrorKind {
-        match error {
-            MappingError::InvalidAccess => ErrorKind::InvalidAccess,
-            MappingError::OutOfBounds => ErrorKind::OutOfBounds,
-            MappingError::OutOfMemory => ErrorKind::OutOfMemory,
-        }
     }
 }
 
 impl From<MappingError> for Error {
     fn from(error: MappingError) -> Error {
-        ErrorKind::from(error).into()
-    }
-}
-
-impl From<OutOfMemory> for Error {
-    fn from(_: OutOfMemory) -> Error {
-        ErrorKind::OutOfMemory.into()
+        match error {
+            MappingError::InvalidAccess => ErrorKind::InvalidAccess.into(),
+            MappingError::OutOfBounds => ErrorKind::OutOfBounds.into(),
+            MappingError::OutOfMemory => OutOfMemory.into(),
+        }
     }
 }
 
