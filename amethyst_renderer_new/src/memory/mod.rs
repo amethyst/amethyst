@@ -1,6 +1,8 @@
 
 
 use std::collections::VecDeque;
+use std::cmp::min;
+use std::ops::{Deref, DerefMut};
 
 use gfx_hal::{Backend, Device, MemoryType};
 use gfx_hal::memory::{Pod, Properties, Requirements};
@@ -11,7 +13,7 @@ use gfx_hal::device::{BindError, OutOfMemory};
 use gfx_hal::mapping::Error as MappingError;
 
 use allocator::{AllocationType, Allocator, Block, SmartAllocator, shift_for_alignment};
-use epoch::{CurrentEpoch, Ec, Eh, Epoch, ValidThrough};
+use epoch::{CurrentEpoch, Epoch};
 
 error_chain! {
     foreign_links {
@@ -53,6 +55,65 @@ pub struct Epochal<B: Backend, T> {
     valid_through: Epoch,
 }
 
+impl<B, T> Deref for Epochal<B, T>
+where
+    B: Backend,
+{
+    type Target = T;
+    fn deref(&self) -> &T {
+        &self.inner
+    }
+}
+
+impl<B, T> DerefMut for Epochal<B, T>
+where
+    B: Backend,
+{
+    fn deref_mut(&mut self) -> &mut T {
+        &mut self.inner
+    }
+}
+
+struct EpochalDeletionQueue<B: Backend, T> {
+    offset: u64,
+    queue: VecDeque<Vec<Epochal<B, T>>>,
+    clean_vecs: Vec<Vec<Epochal<B, T>>>,
+}
+
+impl<B, T> EpochalDeletionQueue<B, T>
+where
+    B: Backend,
+{
+    fn add(&mut self, item: Epochal<B, T>) {
+        let index = (item.valid_through.0 - self.offset) as usize;
+        let ref mut queue = self.queue;
+        let ref mut clean_vecs = self.clean_vecs;
+
+        let len = queue.len();
+        queue.extend((len..index).map(|_| {
+            clean_vecs.pop().unwrap_or_else(|| Vec::new())
+        }));
+        queue[index].push(item);
+    }
+
+    fn clean<F>(&mut self, current: &CurrentEpoch, mut f: F)
+    where
+        F: FnMut(Epochal<B, T>),
+    {
+        let index = (current.now().0 - self.offset) as usize;
+        let len = self.queue.len();
+
+        for mut vec in self.queue.drain(..min(index, len)) {
+            for item in vec.drain(..) {
+                f(item);
+            }
+            self.clean_vecs.push(vec);
+        }
+        self.offset += index as u64;
+    }
+}
+
+
 pub type Buffer<B: Backend> = Epochal<B, B::Buffer>;
 pub type Image<B: Backend> = Epochal<B, B::Image>;
 
@@ -60,11 +121,8 @@ pub type Image<B: Backend> = Epochal<B, B::Image>;
 pub struct BufferManager<B: Backend> {
     allocator: SmartAllocator<B>,
 
-    buffer_destruction_offset: u64,
-    buffer_destruction_queue: VecDeque<Vec<Buffer<B>>>,
-
-    image_destruction_offset: u64,
-    image_destruction_queue: VecDeque<Vec<Image<B>>>,
+    buffer_deletion_queue: EpochalDeletionQueue<B, B::Buffer>,
+    image_deletion_queue: EpochalDeletionQueue<B, B::Image>,
 }
 
 impl<B> BufferManager<B>
@@ -137,42 +195,25 @@ where
     }
 
     fn destroy_buffer(&mut self, buffer: Buffer<B>) {
-        let index = (buffer.valid_through.0 - self.buffer_destruction_offset) as usize;
-        let len = self.buffer_destruction_queue.len();
-        self.buffer_destruction_queue.extend((len..index).map(
-            |_| Vec::new(),
-        ));
-        self.buffer_destruction_queue[index].push(buffer);
+        self.buffer_deletion_queue.add(buffer);
     }
 
     fn destroy_image(&mut self, image: Image<B>) {
-        let index = (image.valid_through.0 - self.image_destruction_offset) as usize;
-        let len = self.image_destruction_queue.len();
-        self.image_destruction_queue.extend(
-            (len..index).map(|_| Vec::new()),
-        );
-        self.image_destruction_queue[index].push(image);
+        self.image_deletion_queue.add(image);
     }
 
     fn cleanup(&mut self, device: &B::Device, current: &CurrentEpoch) {
-        let index = (current.now().0 - self.buffer_destruction_offset) as usize;
-        if index <= self.buffer_destruction_queue.len() {
-            for buf in self.buffer_destruction_queue.drain(..index).flat_map(|x| x) {
-                assert!(current.now() > buf.valid_through);
-                device.destroy_buffer(buf.inner);
-                self.allocator.free(device, buf.block);
-            }
-            self.buffer_destruction_offset += index as u64;
-        }
-        let index = (current.now().0 - self.image_destruction_offset) as usize;
-        if index <= self.image_destruction_queue.len() {
-            for img in self.image_destruction_queue.drain(..index).flat_map(|x| x) {
-                assert!(current.now() > img.valid_through);
-                device.destroy_image(img.inner);
-                self.allocator.free(device, img.block);
-            }
-            self.image_destruction_offset += index as u64;
-        }
+        let ref mut allocator = self.allocator;
+        self.image_deletion_queue.clean(current, |image| {
+            assert!(current.now() > image.valid_through);
+            device.destroy_image(image.inner);
+            allocator.free(device, image.block);
+        });
+        self.buffer_deletion_queue.clean(current, |buffer| {
+            assert!(current.now() > buffer.valid_through);
+            device.destroy_buffer(buffer.inner);
+            allocator.free(device, buffer.block);
+        });
     }
 }
 

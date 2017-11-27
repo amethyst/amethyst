@@ -134,7 +134,10 @@ where
         }
     }
 
-    /// Dispose this block. Returns tag value.
+    /// Dispose of this block.
+    /// Returns tag value.
+    /// This is unsafe as the caller must ensure that
+    /// memory was freed
     pub unsafe fn dispose(self) -> T {
         self.relevant.dispose();
         self.tag

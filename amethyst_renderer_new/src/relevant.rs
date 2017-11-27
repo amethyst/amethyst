@@ -13,7 +13,7 @@ pub struct Relevant;
 
 impl Relevant {
     /// Dispose this value.
-    pub unsafe fn dispose(self) {
+    pub fn dispose(self) {
         ::std::mem::forget(self)
     }
 }

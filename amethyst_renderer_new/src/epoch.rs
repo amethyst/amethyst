@@ -45,28 +45,6 @@ impl CurrentEpoch {
     }
 }
 
-/// Validation marker.
-/// It say that marked item is valid through the `Epoch` but may become invalid after.
-/// Primarily to use in `Ec` and `Eh` or any custom "Epoch countered" resource wrappers.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct ValidThrough(pub u64);
-
-impl ValidThrough {
-    pub fn new() -> Self {
-        ValidThrough(0)
-    }
-
-    /// Make marer `ValidThrough` next `amount` of `Epoch`s
-    pub fn for_next(current: &CurrentEpoch, amount: u64) -> Self {
-        ValidThrough(current.0 + amount)
-    }
-
-    /// Check if marked item is valid in current `Epoch`
-    pub fn is_valid(&self, current: &CurrentEpoch) -> bool {
-        self.0 <= current.0
-    }
-}
-
 /// Weak epoch pointer to `T`.
 /// It will expire after some `Epoch`.
 pub struct Ec<T> {
@@ -147,7 +125,7 @@ impl<T> Eh<T> {
     ///
     pub fn dispose(self, current: &CurrentEpoch) {
         assert!(self.valid_through < current.0);
-        unsafe { self.relevant.dispose() }
+        self.relevant.dispose()
     }
 }
 

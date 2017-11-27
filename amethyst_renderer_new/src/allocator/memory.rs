@@ -86,6 +86,6 @@ where
 
     fn dispose(self, _: &B::Device) {
         assert!(self.is_unused());
-        unsafe { self.relevant.dispose() }
+        self.relevant.dispose()
     }
 }
