@@ -6,7 +6,7 @@ use error::Result;
 use pipe::{Effect, NewEffect, Target};
 use types::{Encoder, Factory};
 
-/// Used to fetch data from the game world for rendering in your pass.
+/// Used to fetch data from the game world for rendering in the pass.
 pub trait PassData<'a> {
     /// The data itself.
     type Data: SystemData<'a> + Send;
@@ -28,8 +28,8 @@ pub trait Pass: for<'a> PassData<'a> {
     );
 }
 
-/// A compiled pass.  These are created and managed by the `Renderer`.  You should never need to
-/// use this.
+/// A compiled pass.  These are created and managed by the `Renderer`.  This should not be
+/// used directly outside of the renderer.
 #[derive(Clone, Debug)]
 pub struct CompiledPass<P> {
     effect: Effect,
