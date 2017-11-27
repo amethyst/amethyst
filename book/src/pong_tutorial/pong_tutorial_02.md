@@ -139,7 +139,9 @@ const PADDLE_COLOUR: [f32; 4] = [0.0, 0.0, 1.0, 1.0];
 
 Okay, let's make some entities! We'll define an `initialise_paddles` function 
 which will create left and right paddle entities and attach `LocalTransform` 
-components to them to position them in our world.
+components to them to position them in our world. Our canvas goes from 
+`-1.0,-1.0` on the bottom left to `1.0,1.0` on the top right, which will make 
+more sense when we define the camera.
 
 ```rust,ignore
 /// Initialises one paddle on the left, and one paddle on the right.
@@ -152,7 +154,6 @@ fn initialise_paddles(world: &mut World) {
     let y = -PADDLE_HEIGHT / 2.0;
     left_transform.translation = Vector3::new(-1.0, y, 0.0);
     right_transform.translation = Vector3::new(1.0 - PADDLE_WIDTH, y, 0.0);
-
 
     // Create a left plank entity.
     world
@@ -291,7 +292,7 @@ world
 ```
 
 We're almost done! We just need to create a camera to view all our beautiful 
-graphics with.
+graphics (two blue pong paddles) with.
 
 ```rust,ignore
 fn initialise_camera(world: &mut World) {
@@ -346,7 +347,7 @@ Let's run this and see what happens. On my machine I get a panic that reads:
 'No component with the given id. Did you forget to register the component with `World::register::<ComponentName>()`?'
 ```
 
-It looks like we're missing at least one component registration.In addition to 
+It looks like we're missing at least one component registration. In addition to 
 components we define ourselves, Amethyst has a lot of internal systems and 
 components it uses to keep things running. For simplicity, these have been 
 wrapped up into Bundles which add a set of related components, systems, and 
