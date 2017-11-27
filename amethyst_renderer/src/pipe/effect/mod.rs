@@ -16,7 +16,7 @@ use gfx::shade::core::UniformValue;
 use gfx::state::{Blend, ColorMask, Comparison, Depth, Rasterizer, Stencil};
 use gfx::traits::Pod;
 
-use self::pso::{Data, Init, Meta};
+pub use self::pso::{Data, Init, Meta};
 
 use error::{Error, Result};
 use pipe::Target;

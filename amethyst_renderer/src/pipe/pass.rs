@@ -1,128 +1,38 @@
 //! Types for constructing render passes.
 
-#![allow(missing_docs)]
-use std::marker::PhantomData;
-
-use rayon::iter::ParallelIterator;
-use rayon::iter::internal::UnindexedConsumer;
-use rayon_core;
 use specs::SystemData;
 
 use error::Result;
 use pipe::{Effect, NewEffect, Target};
 use types::{Encoder, Factory};
 
-/// Is used to pass different `Encoder` and `Effect` into closure in different threads
-pub struct Supplier<'a> {
-    encoders: *mut [Encoder],
-    effects: *mut [Effect],
-    pd: PhantomData<&'a ()>,
-}
-
-impl<'a> Supplier<'a> {
-    /// Create `Supplier` by passing enough `Encoder`s and `Effect`s
-    /// The number is equal to thread count in `ThreadPool`
-    fn new(encoders: &'a mut [Encoder], effects: &'a mut [Effect]) -> Self {
-        Supplier {
-            encoders: encoders,
-            effects: effects,
-            pd: PhantomData,
-        }
-    }
-
-    fn index(&self) -> usize {
-        rayon_core::current_thread_index().expect("Should be called from ThreadPool")
-    }
-
-    /// Dispense mutable references to `Encoder` and `Effect` for slice
-    /// Different threads gets different pair
-    /// unsafe due to ability to call mulitple times
-    /// causing it to return multiple mutable references to the same `Encoder` and `Effect`
-    /// `Apply` use this function once in each thread and
-    /// drops references before calling it again
-    unsafe fn get(&self) -> (&mut Encoder, &mut Effect) {
-        let slice = &mut *self.encoders;
-        let count = slice.len();
-        let encoder = slice.get_mut(self.index()).expect(&format!(
-            "Not enough objects. Index: {}, Supplier count: {}",
-            self.index(),
-            count
-        ));
-        let slice = &mut *self.effects;
-        let count = slice.len();
-        let effect = slice.get_mut(self.index()).expect(&format!(
-            "Not enough objects. Index: {}, Supplier count: {}",
-            self.index(),
-            count
-        ));
-        (encoder, effect)
-    }
-}
-
-pub struct Apply<'a, I> {
-    inner: I,
-    supplier: Supplier<'a>,
-}
-
-impl<'a, I> ParallelIterator for Apply<'a, I>
-where
-    I: ParallelIterator,
-    I::Item: FnOnce(&mut Encoder, &mut Effect),
-{
-    type Item = ();
-
-    fn drive_unindexed<C>(self, consumer: C) -> C::Result
-    where
-        C: UnindexedConsumer<()>,
-    {
-        let Apply { inner, supplier } = self;
-        inner
-            .map(move |f| {
-                let (encoder, effect) = unsafe { supplier.get() };
-                effect.clear();
-                f(encoder, effect);
-            })
-            .drive_unindexed(consumer)
-    }
-}
-
-impl<'a> Supplier<'a> {
-    pub fn supply<I, F>(self, iter: I) -> Apply<'a, I>
-    where
-        I: ParallelIterator<Item = F>,
-        F: FnOnce(&mut Encoder, &mut Effect) + Send,
-    {
-        Apply {
-            inner: iter,
-            supplier: self,
-        }
-    }
-}
-
-unsafe impl<'a> Send for Supplier<'a> {}
-unsafe impl<'a> Sync for Supplier<'a> {}
-
-
-pub trait PassApply<'a> {
-    type Apply: ParallelIterator<Item = ()>;
-}
-
+/// Used to fetch data from the game world for rendering in the pass.
 pub trait PassData<'a> {
+    /// The data itself.
     type Data: SystemData<'a> + Send;
 }
 
-pub trait Pass: for<'a> PassApply<'a> + for<'a> PassData<'a> + Send + Sync {
+/// Structures implementing this provide a renderer pass.
+pub trait Pass: for<'a> PassData<'a> {
+    /// The pass is given an opportunity to compile shaders and store them in an `Effect`
+    /// which is then passed to the pass in `apply`.
     fn compile(&self, effect: NewEffect) -> Result<Effect>;
+    /// Called whenever the renderer is ready to apply the pass.  Feed commands into the
+    /// encoder here.
     fn apply<'a, 'b: 'a>(
         &'a mut self,
-        supplier: Supplier<'a>,
+        encoder: &mut Encoder,
+        effect: &mut Effect,
+        factory: Factory,
         data: <Self as PassData<'b>>::Data,
-    ) -> <Self as PassApply<'a>>::Apply;
+    );
 }
 
+/// A compiled pass.  These are created and managed by the `Renderer`.  This should not be
+/// used directly outside of the renderer.
 #[derive(Clone, Debug)]
 pub struct CompiledPass<P> {
-    effects: Vec<Effect>,
+    effect: Effect,
     inner: P,
 }
 
@@ -133,47 +43,42 @@ where
     pub(super) fn compile(pass: P, fac: &mut Factory, out: &Target) -> Result<Self> {
         let effect = pass.compile(NewEffect::new(fac, out))?;
         Ok(CompiledPass {
-            effects: vec![effect],
+            effect: effect,
             inner: pass,
         })
     }
 }
 
 impl<P> CompiledPass<P> {
+    /// Applies the inner pass.
     pub fn apply<'a, 'b: 'a>(
         &'a mut self,
-        encoders: &'a mut [Encoder],
+        encoder: &mut Encoder,
+        factory: Factory,
         data: <P as PassData<'b>>::Data,
-    ) -> <P as PassApply<'a>>::Apply
-    where
+    ) where
         P: Pass,
     {
-        if encoders.len() > self.effects.len() {
-            let effect = self.effects[0].clone();
-            self.effects.resize(encoders.len(), effect);
-        }
-        self.inner
-            .apply(Supplier::new(encoders, &mut self.effects[..]), data)
+        self.inner.apply(encoder, &mut self.effect, factory, data)
     }
 
+    /// Distributes new target data to the pass.
     pub fn new_target(&mut self, target: &Target) {
-        for effect in &mut self.effects {
-            // Distribute new targets that don't blend.
-            effect.data.out_colors.clear();
-            effect
-                .data
-                .out_colors
-                .extend(target.color_bufs().iter().map(|cb| &cb.as_output).cloned());
+        // Distribute new targets that don't blend.
+        self.effect.data.out_colors.clear();
+        self.effect
+            .data
+            .out_colors
+            .extend(target.color_bufs().iter().map(|cb| &cb.as_output).cloned());
 
-            // Distribute new blend targets
-            effect.data.out_blends.clear();
-            effect
-                .data
-                .out_blends
-                .extend(target.color_bufs().iter().map(|cb| &cb.as_output).cloned());
+        // Distribute new blend targets
+        self.effect.data.out_blends.clear();
+        self.effect
+            .data
+            .out_blends
+            .extend(target.color_bufs().iter().map(|cb| &cb.as_output).cloned());
 
-            // Distribute new depth buffer
-            effect.data.out_depth = target.depth_buf().map(|db| (db.as_output.clone(), (0, 0)));
-        }
+        // Distribute new depth buffer
+        self.effect.data.out_depth = target.depth_buf().map(|db| (db.as_output.clone(), (0, 0)));
     }
 }

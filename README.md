@@ -43,7 +43,7 @@ does not aim to be API-compatible with it in any way. Some goals include:
 [sr]: http://stingrayengine.com/
 
 * Simple game state management in the form of a [pushdown automaton][pa].
-* Massively parallel architecture, especially in rendering.
+* Massively parallel architecture.
 * [Correct entity-component-system model][em], with entities and prefabs largely
   defined in [Ron files][rn].
 * Abstract scripting API that can be bound to a variety of embedded languages,

@@ -22,9 +22,7 @@ extern crate gfx_core;
 extern crate gfx_macros;
 extern crate hetseq;
 extern crate imagefmt;
-extern crate num_cpus;
 extern crate rayon;
-extern crate rayon_core;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
@@ -70,14 +68,14 @@ pub use mesh::{vertex_data, Mesh, MeshHandle, VertexBuffer};
 pub use mtl::{Material, MaterialDefaults};
 pub use pass::{DrawFlat, DrawFlatSeparate, DrawPbm, DrawPbmSeparate, DrawShaded,
                DrawShadedSeparate};
-pub use pipe::{ColorBuffer, DepthBuffer, DepthMode, Effect, EffectBuilder, NewEffect, Pipeline,
-               PipelineApply, PipelineBuild, PipelineBuilder, PipelineData, PolyPipeline,
+pub use pipe::{ColorBuffer, Data, DepthBuffer, DepthMode, Effect, EffectBuilder, Init, Meta,
+               NewEffect, Pipeline, PipelineBuild, PipelineBuilder, PipelineData, PolyPipeline,
                PolyStage, PolyStages, Stage, StageBuilder, Target, TargetBuilder, Targets};
 pub use renderer::Renderer;
 pub use resources::{AmbientColor, ScreenDimensions, WindowMessages};
 pub use system::RenderSystem;
 pub use tex::{Texture, TextureBuilder, TextureHandle};
-pub use types::{Encoder, Factory};
+pub use types::{Encoder, Factory, PipelineState, Resources};
 pub use vertex::{Attribute, AttributeFormat, Attributes, Color, Normal, PosColor, PosNormTangTex,
                  PosNormTex, PosTex, Position, Query, Separate, Tangent, TexCoord,
                  VertexBufferCombination, VertexFormat, With};

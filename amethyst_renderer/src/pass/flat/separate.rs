@@ -4,10 +4,7 @@ use amethyst_assets::AssetStorage;
 use amethyst_core::cgmath::{Matrix4, One, SquareMatrix};
 use amethyst_core::transform::Transform;
 use gfx::pso::buffer::ElemStride;
-
-use rayon::iter::ParallelIterator;
-use rayon::iter::internal::UnindexedConsumer;
-use specs::{Fetch, Join, ParJoin, ReadStorage};
+use specs::{Fetch, Join, ReadStorage};
 
 use super::*;
 use cam::{ActiveCamera, Camera};
@@ -15,9 +12,9 @@ use error::Result;
 use mesh::{Mesh, MeshHandle};
 use mtl::{Material, MaterialDefaults};
 use pipe::{DepthMode, Effect, NewEffect};
-use pipe::pass::{Pass, PassApply, PassData, Supplier};
+use pipe::pass::{Pass, PassData};
 use tex::Texture;
-use types::Encoder;
+use types::{Encoder, Factory};
 use vertex::{Position, Separate, TexCoord, VertexFormat};
 
 /// Draw mesh without lighting
@@ -48,10 +45,6 @@ impl<'a> PassData<'a> for DrawFlatSeparate {
     );
 }
 
-impl<'a> PassApply<'a> for DrawFlatSeparate {
-    type Apply = DrawFlatSeparateApply<'a>;
-}
-
 impl Pass for DrawFlatSeparate {
     fn compile(&self, effect: NewEffect) -> Result<Effect> {
         use std::mem;
@@ -75,7 +68,9 @@ impl Pass for DrawFlatSeparate {
 
     fn apply<'a, 'b: 'a>(
         &'a mut self,
-        supplier: Supplier<'a>,
+        encoder: &mut Encoder,
+        effect: &mut Effect,
+        _factory: Factory,
         (active, camera, mesh_storage, tex_storage, material_defaults, mesh, material, global): (
             Option<Fetch<'a, ActiveCamera>>,
             ReadStorage<'a, Camera>,
@@ -86,53 +81,7 @@ impl Pass for DrawFlatSeparate {
             ReadStorage<'b, Material>,
             ReadStorage<'b, Transform>,
         ),
-    ) -> DrawFlatSeparateApply<'a> {
-        DrawFlatSeparateApply {
-            active,
-            camera,
-            mesh_storage,
-            tex_storage,
-            material_defaults,
-            mesh,
-            material,
-            global,
-            supplier,
-        }
-    }
-}
-
-pub struct DrawFlatSeparateApply<'a> {
-    active: Option<Fetch<'a, ActiveCamera>>,
-    camera: ReadStorage<'a, Camera>,
-    mesh_storage: Fetch<'a, AssetStorage<Mesh>>,
-    tex_storage: Fetch<'a, AssetStorage<Texture>>,
-    material_defaults: Fetch<'a, MaterialDefaults>,
-    mesh: ReadStorage<'a, MeshHandle>,
-    material: ReadStorage<'a, Material>,
-    global: ReadStorage<'a, Transform>,
-    supplier: Supplier<'a>,
-}
-
-impl<'a> ParallelIterator for DrawFlatSeparateApply<'a> {
-    type Item = ();
-
-    fn drive_unindexed<C>(self, consumer: C) -> C::Result
-    where
-        C: UnindexedConsumer<Self::Item>,
-    {
-        let DrawFlatSeparateApply {
-            active,
-            camera,
-            mesh_storage,
-            tex_storage,
-            material_defaults,
-            mesh,
-            material,
-            global,
-            supplier,
-            ..
-        } = self;
-
+    ) {
         let camera: Option<(&Camera, &Transform)> = active
             .and_then(|a| {
                 let cam = camera.get(a.entity);
@@ -141,57 +90,50 @@ impl<'a> ParallelIterator for DrawFlatSeparateApply<'a> {
             })
             .or_else(|| (&camera, &global).join().next());
 
-        let mesh_storage = &mesh_storage;
-        let tex_storage = &tex_storage;
-        let material_defaults = &material_defaults;
+        for (mesh, material, global) in (&mesh, &material, &global).join() {
+            let mesh = match mesh_storage.get(mesh) {
+                Some(mesh) => mesh,
+                None => continue,
+            };
+            for attrs in [
+                Separate::<Position>::ATTRIBUTES,
+                Separate::<TexCoord>::ATTRIBUTES,
+            ].iter()
+            {
+                match mesh.buffer(attrs) {
+                    Some(vbuf) => effect.data.vertex_bufs.push(vbuf.clone()),
+                    None => return,
+                }
+            }
 
-        supplier
-            .supply((&mesh, &material, &global).par_join().map(
-                move |(mesh, material, global)| {
-                    move |encoder: &mut Encoder, effect: &mut Effect| if let Some(mesh) =
-                        mesh_storage.get(mesh)
-                    {
-                        for attrs in [
-                            Separate::<Position>::ATTRIBUTES,
-                            Separate::<TexCoord>::ATTRIBUTES,
-                        ].iter()
-                        {
-                            match mesh.buffer(attrs) {
-                                Some(vbuf) => effect.data.vertex_bufs.push(vbuf.clone()),
-                                None => return,
-                            }
-                        }
-
-                        let vertex_args = camera
-                            .as_ref()
-                            .map(|&(ref cam, ref transform)| {
-                                VertexArgs {
-                                    proj: cam.proj.into(),
-                                    view: transform.0.invert().unwrap().into(),
-                                    model: *global.as_ref(),
-                                }
-                            })
-                            .unwrap_or_else(|| {
-                                VertexArgs {
-                                    proj: Matrix4::one().into(),
-                                    view: Matrix4::one().into(),
-                                    model: *global.as_ref(),
-                                }
-                            });
-
-                        let albedo = tex_storage
-                            .get(&material.albedo)
-                            .or_else(|| tex_storage.get(&material_defaults.0.albedo))
-                            .unwrap();
-
-                        effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
-                        effect.data.textures.push(albedo.view().clone());
-                        effect.data.samplers.push(albedo.sampler().clone());
-
-                        effect.draw(mesh.slice(), encoder);
+            let vertex_args = camera
+                .as_ref()
+                .map(|&(ref cam, ref transform)| {
+                    VertexArgs {
+                        proj: cam.proj.into(),
+                        view: transform.0.invert().unwrap().into(),
+                        model: *global.as_ref(),
                     }
-                },
-            ))
-            .drive_unindexed(consumer)
+                })
+                .unwrap_or_else(|| {
+                    VertexArgs {
+                        proj: Matrix4::one().into(),
+                        view: Matrix4::one().into(),
+                        model: *global.as_ref(),
+                    }
+                });
+
+            let albedo = tex_storage
+                .get(&material.albedo)
+                .or_else(|| tex_storage.get(&material_defaults.0.albedo))
+                .unwrap();
+
+            effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
+            effect.data.textures.push(albedo.view().clone());
+            effect.data.samplers.push(albedo.sampler().clone());
+
+            effect.draw(mesh.slice(), encoder);
+            effect.clear();
+        }
     }
 }

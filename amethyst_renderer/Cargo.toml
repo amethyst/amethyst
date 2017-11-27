@@ -35,9 +35,7 @@ gfx = { version = "0.16", features = ["serialize"] }
 gfx_core = { version = "0.7", features = ["serialize"] }
 gfx_macros = "0.2"
 imagefmt = "4.0"
-num_cpus = "1.0"
 rayon = "0.8"
-rayon-core = "1.2"
 serde = "1.0"
 serde_derive = "1.0"
 shred = "0.5"

@@ -46,14 +46,14 @@ impl<'s> System<'s> for WinnerSystem {
                 // Right player scored on the left side.
                 score_board.score_right += 1;
                 if let Some(text) = text.get_mut(score_text.p2_score) {
-                    *text.text_mut() = score_board.score_right.to_string();
+                    text.text = score_board.score_right.to_string();
                 }
                 true
             } else if ball_x >= ARENA_WIDTH - ball.radius {
                 // Left player scored on the right side.
                 score_board.score_left += 1;
                 if let Some(text) = text.get_mut(score_text.p1_score) {
-                    *text.text_mut() = score_board.score_left.to_string();
+                    text.text = score_board.score_left.to_string();
                 }
                 true
             } else {

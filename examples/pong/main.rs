@@ -77,7 +77,7 @@ fn run() -> Result<()> {
         .with_bundle(TransformBundle::new().with_dep(&["ball_system", "paddle_system"]))?
         .with_bundle(AudioBundle::new(|music: &mut Music| music.music.next()))?
         .with_bundle(RenderBundle::new())?
-        .with_bundle(UiBundle::new(&[]))?;
+        .with_bundle(UiBundle::new())?;
 
     let pipe = {
         let loader = game.world.read_resource();
