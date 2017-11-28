@@ -3,7 +3,7 @@ use std::cmp::min;
 
 use gfx_hal::{Backend, Device, Gpu, Instance};
 use gfx_hal::adapter::{Adapter, PhysicalDevice};
-use gfx_hal::format::{Format, ChannelType, Srgba8, Formatted};
+use gfx_hal::format::{ChannelType, Format, Formatted, Srgba8};
 use gfx_hal::queue::{Compute, General, Graphics, QueueFamily, QueueGroup, QueueType,
                      RawQueueGroup, Transfer};
 use gfx_hal::pool::CommandPool;
@@ -12,7 +12,7 @@ use gfx_hal::window::{Surface, SwapchainConfig};
 use winit::{EventsLoop, Window, WindowBuilder};
 
 
-use epoch::EpochalManager;
+use memory::Factory;
 // use graph::{Graph, Present};
 
 
@@ -107,7 +107,7 @@ struct RendererBuilder<'a> {
 pub struct Hal9000<B: Backend, I> {
     instance: I,
     device: B::Device,
-    epochal: EpochalManager<B>,
+    epochal: Factory<B>,
     center: CommandCenter<B>,
     renderer: Option<Renderer<B>>,
     // graphs: Vec<Graph<B>>,
@@ -125,30 +125,54 @@ pub struct HalBuilder<'a> {
 
 
 impl<'a> HalBuilder<'a> {
-
-    fn init_adapter<B: Backend>(&self, adapter: Adapter<B>) -> (B::Device, EpochalManager<B>, CommandCenter<B>) {
+    fn init_adapter<B: Backend>(
+        &self,
+        adapter: Adapter<B>,
+    ) -> (B::Device, Factory<B>, CommandCenter<B>) {
         println!("Try adapter: {:?}", adapter.info);
 
         let qf = adapter.queue_families;
 
-        let (transfer, qf) = qf.into_iter().partition::<Vec<_>, _>(|qf| qf.queue_type() == QueueType::Transfer);
-        let (compute, qf) = qf.into_iter().partition::<Vec<_>, _>(|qf| qf.queue_type() == QueueType::Compute);
-        let (graphics, qf) = qf.into_iter().partition::<Vec<_>, _>(|qf| qf.queue_type() == QueueType::Graphics);
-        let (general, _) = qf.into_iter().partition::<Vec<_>, _>(|qf| qf.queue_type() == QueueType::General);
+        let (transfer, qf) = qf.into_iter().partition::<Vec<_>, _>(
+            |qf| qf.queue_type() == QueueType::Transfer,
+        );
+        let (compute, qf) = qf.into_iter().partition::<Vec<_>, _>(
+            |qf| qf.queue_type() == QueueType::Compute,
+        );
+        let (graphics, qf) = qf.into_iter().partition::<Vec<_>, _>(
+            |qf| qf.queue_type() == QueueType::Graphics,
+        );
+        let (general, _) = qf.into_iter().partition::<Vec<_>, _>(
+            |qf| qf.queue_type() == QueueType::General,
+        );
 
-        let mut transfer = transfer.into_iter().map(|qf| (qf.max_queues(), 0, qf)).next();
-        let mut compute = compute.into_iter().map(|qf| (qf.max_queues(), 0, qf)).next();
-        let mut graphics = graphics.into_iter().map(|qf| (qf.max_queues(), 0, qf)).next();
-        let mut general = general.into_iter().map(|qf| (qf.max_queues(), 0, qf)).next();
+        let mut transfer = transfer
+            .into_iter()
+            .map(|qf| (qf.max_queues(), 0, qf))
+            .next();
+        let mut compute = compute
+            .into_iter()
+            .map(|qf| (qf.max_queues(), 0, qf))
+            .next();
+        let mut graphics = graphics
+            .into_iter()
+            .map(|qf| (qf.max_queues(), 0, qf))
+            .next();
+        let mut general = general
+            .into_iter()
+            .map(|qf| (qf.max_queues(), 0, qf))
+            .next();
 
         if self.compute {
-            compute.as_mut().map(|qmr| qmr.1 += 1)
-                .or_else(|| general.as_mut().map(|qmr| qmr.1 +=1));
+            compute.as_mut().map(|qmr| qmr.1 += 1).or_else(|| {
+                general.as_mut().map(|qmr| qmr.1 += 1)
+            });
         }
 
         if self.renderer.is_some() {
-            graphics.as_mut().map(|qmr| qmr.1 += 1)
-                .or_else(|| general.as_mut().map(|qmr| qmr.1 +=1));
+            graphics.as_mut().map(|qmr| qmr.1 += 1).or_else(|| {
+                general.as_mut().map(|qmr| qmr.1 += 1)
+            });
         }
 
         match (&mut transfer, &mut compute, &mut graphics, &mut general) {
@@ -179,10 +203,18 @@ impl<'a> HalBuilder<'a> {
             push_requests(general);
         }
 
-        let Gpu { device, queue_groups, memory_types, memory_heaps } = adapter.physical_device.open(
-            requests
+        let Gpu {
+            device,
+            queue_groups,
+            memory_types,
+            memory_heaps,
+        } = adapter.physical_device.open(requests);
+        let epochal = Factory::new(
+            memory_types,
+            self.arena_size,
+            self.chunk_size,
+            self.min_chunk_size,
         );
-        let epochal = EpochalManager::new(memory_types, self.arena_size, self.chunk_size, self.min_chunk_size);
         let center = CommandCenter::new(queue_groups);
 
         (device, epochal, center)
@@ -193,16 +225,19 @@ impl<'a> HalBuilder<'a> {
         #[cfg(feature = "metal")]
         let instance = metal::Instance::create("amethyst-hal", 1);
 
-        let mut window_surface_format = self.renderer.as_ref().map(|renderer| -> Result<_> {
-            let window = WindowBuilder::new()
-                .with_dimensions(renderer.width as u32, renderer.height as u32)
-                .with_title(renderer.title)
-                .build(&renderer.events)
-                .chain_err(|| "Failed to create rendering window")?;
+        let mut window_surface_format = self.renderer
+            .as_ref()
+            .map(|renderer| -> Result<_> {
+                let window = WindowBuilder::new()
+                    .with_dimensions(renderer.width as u32, renderer.height as u32)
+                    .with_title(renderer.title)
+                    .build(&renderer.events)
+                    .chain_err(|| "Failed to create rendering window")?;
 
-            let surface = instance.create_surface(&window);
-            Ok(Some((window, surface, Srgba8::SELF)))
-        }).unwrap_or(Ok(None))?;
+                let surface = instance.create_surface(&window);
+                Ok(Some((window, surface, Srgba8::SELF)))
+            })
+            .unwrap_or(Ok(None))?;
 
         let adapters = instance.enumerate_adapters();
 
@@ -210,15 +245,19 @@ impl<'a> HalBuilder<'a> {
         for adapter in &adapters {
             println!("\t{:?}", adapter.info);
         }
-        let (soft, hard) = adapters.into_iter().partition::<Vec<_>, _>(|adapter| adapter.info.software_rendering);
-        let (device, epochal, center) = hard.into_iter().chain(soft).filter_map(|adapter| {
-            if let Some((_, ref surface, ref mut surface_format)) = window_surface_format {
-                *surface_format = find_good_surface_format(surface, &adapter)?;
-            }
-            Some(self.init_adapter(adapter))
-        })
-        .next()
-        .ok_or(ErrorKind::NoValidAdaptersFound)?;
+        let (soft, hard) = adapters.into_iter().partition::<Vec<_>, _>(|adapter| {
+            adapter.info.software_rendering
+        });
+        let (device, epochal, center) = hard.into_iter()
+            .chain(soft)
+            .filter_map(|adapter| {
+                if let Some((_, ref surface, ref mut surface_format)) = window_surface_format {
+                    *surface_format = find_good_surface_format(surface, &adapter)?;
+                }
+                Some(self.init_adapter(adapter))
+            })
+            .next()
+            .ok_or(ErrorKind::NoValidAdaptersFound)?;
 
         let renderer = if let Some((window, mut surface, surface_format)) = window_surface_format {
             let swapchain_config = SwapchainConfig {
@@ -251,7 +290,11 @@ impl<'a> HalBuilder<'a> {
 }
 
 
-fn find_surface_format<B: Backend>(surface: &B::Surface, adapter: &Adapter<B>, channel: ChannelType) -> Option<Format> {
+fn find_surface_format<B: Backend>(
+    surface: &B::Surface,
+    adapter: &Adapter<B>,
+    channel: ChannelType,
+) -> Option<Format> {
     surface
         .capabilities_and_formats(&adapter.physical_device)
         .1
@@ -259,7 +302,10 @@ fn find_surface_format<B: Backend>(surface: &B::Surface, adapter: &Adapter<B>, c
         .find(|format| format.1 == channel)
 }
 
-fn find_good_surface_format<B: Backend>(surface: &B::Surface, adapter: &Adapter<B>) -> Option<Format> {
+fn find_good_surface_format<B: Backend>(
+    surface: &B::Surface,
+    adapter: &Adapter<B>,
+) -> Option<Format> {
     find_surface_format(surface, adapter, ChannelType::Srgb)
         .or_else(|| find_surface_format(surface, adapter, ChannelType::Unorm))
 }

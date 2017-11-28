@@ -1,6 +1,6 @@
 use std::any::{Any, TypeId};
 use std::borrow::Borrow;
-use std::collections::hash_map::{HashMap, Entry};
+use std::collections::hash_map::{Entry, HashMap};
 use std::path::{Path, PathBuf};
 
 use gfx_hal::Backend;
@@ -28,12 +28,8 @@ error_chain!{
 
 fn map_shader_error(err: ShaderError) -> Error {
     match err {
-        ShaderError::CompilationFailed(msg) => {
-            ErrorKind::CompilationFailed(msg).into()
-        },
-        ShaderError::MissingEntryPoint(msg) => {
-            ErrorKind::MissingEntryPoint(msg).into()
-        }
+        ShaderError::CompilationFailed(msg) => ErrorKind::CompilationFailed(msg).into(),
+        ShaderError::MissingEntryPoint(msg) => ErrorKind::MissingEntryPoint(msg).into(),
     }
 }
 
@@ -59,7 +55,7 @@ impl<'a> GraphicsShaderNameSet<'a> {
 }
 
 #[derive(Derivative)]
-#[derivative(Debug, Default(bound=""))]
+#[derivative(Debug, Default(bound = ""))]
 pub struct ShaderManager<B: Backend> {
     shaders_dir: PathBuf,
     shaders: HashMap<PathBuf, B::ShaderModule>,
@@ -73,7 +69,11 @@ where
         ShaderManager::default()
     }
 
-    pub fn load_shader_set<'a>(&'a mut self, names: GraphicsShaderNameSet, device: &B::Device) -> Result<GraphicsShaderSet<'a, B>> {
+    pub fn load_shader_set<'a>(
+        &'a mut self,
+        names: GraphicsShaderNameSet,
+        device: &B::Device,
+    ) -> Result<GraphicsShaderSet<'a, B>> {
         let GraphicsShaderNameSet {
             vertex,
             hull,
@@ -99,12 +99,15 @@ where
         self.get_shader_set(names)
     }
 
-    pub fn load_shader<'a>(&'a mut self, name: &str, stage: Stage, device: &B::Device) -> Result<EntryPoint<'a, B>> {
+    pub fn load_shader<'a>(
+        &'a mut self,
+        name: &str,
+        stage: Stage,
+        device: &B::Device,
+    ) -> Result<EntryPoint<'a, B>> {
         let path = B::get_shader_path(name, stage);
         let module = match self.shaders.entry(path) {
-            Entry::Occupied(occupied) => {
-                occupied.into_mut()
-            }
+            Entry::Occupied(occupied) => occupied.into_mut(),
             Entry::Vacant(vacant) => {
                 let module = B::create_shader_module(device, name, stage)?;
                 vacant.insert(module)
@@ -117,7 +120,10 @@ where
         })
     }
 
-    pub fn get_shader_set<'a>(&'a self, names: GraphicsShaderNameSet) -> Result<GraphicsShaderSet<'a, B>> {
+    pub fn get_shader_set<'a>(
+        &'a self,
+        names: GraphicsShaderNameSet,
+    ) -> Result<GraphicsShaderSet<'a, B>> {
         let GraphicsShaderNameSet {
             vertex,
             hull,
@@ -128,30 +134,48 @@ where
 
         let set = GraphicsShaderSet {
             vertex: self.get_shader(vertex, Stage::Vertex)?,
-            hull: hull.map(|hull| self.get_shader(hull, Stage::Hull).map(Some)).unwrap_or(Ok(None))?,
-            domain: domain.map(|domain| self.get_shader(domain, Stage::Domain).map(Some)).unwrap_or(Ok(None))?,
-            geometry: geometry.map(|geometry| self.get_shader(geometry, Stage::Geometry).map(Some)).unwrap_or(Ok(None))?,
-            fragment: fragment.map(|fragment| self.get_shader(fragment, Stage::Fragment).map(Some)).unwrap_or(Ok(None))?,
+            hull: hull.map(|hull| self.get_shader(hull, Stage::Hull).map(Some))
+                .unwrap_or(Ok(None))?,
+            domain: domain
+                .map(|domain| self.get_shader(domain, Stage::Domain).map(Some))
+                .unwrap_or(Ok(None))?,
+            geometry: geometry
+                .map(|geometry| {
+                    self.get_shader(geometry, Stage::Geometry).map(Some)
+                })
+                .unwrap_or(Ok(None))?,
+            fragment: fragment
+                .map(|fragment| {
+                    self.get_shader(fragment, Stage::Fragment).map(Some)
+                })
+                .unwrap_or(Ok(None))?,
         };
         Ok(set)
     }
 
     pub fn get_shader<'a>(&'a self, name: &str, stage: Stage) -> Result<EntryPoint<'a, B>> {
         let path = B::get_shader_path(name, stage);
-        self.shaders.get(&path).map(|module| {
-            EntryPoint {
-                entry: B::get_shader_entry(stage),
-                module,
-                specialization: &[],
-            }
-        }).ok_or_else(|| ErrorKind::ShaderNotFound(name.into(), stage).into())
+        self.shaders
+            .get(&path)
+            .map(|module| {
+                EntryPoint {
+                    entry: B::get_shader_entry(stage),
+                    module,
+                    specialization: &[],
+                }
+            })
+            .ok_or_else(|| ErrorKind::ShaderNotFound(name.into(), stage).into())
     }
 }
 
 pub trait ShaderLoader: Backend {
     fn get_shader_path(name: &str, stage: Stage) -> PathBuf;
     fn get_shader_entry(stage: Stage) -> &'static str;
-    fn create_shader_module(device: &Self::Device, name: &str, stage: Stage) -> Result<Self::ShaderModule>;
+    fn create_shader_module(
+        device: &Self::Device,
+        name: &str,
+        stage: Stage,
+    ) -> Result<Self::ShaderModule>;
 }
 
 #[cfg(feature = "metal")]
@@ -162,21 +186,22 @@ impl ShaderLoader for ::metal::Backend {
 
     fn get_shader_entry(stage: Stage) -> &'static str {
         match stage {
-            Stage::Vertex => {
-                "vs_main"
-            }
-            Stage::Fragment => {
-                "ps_main"
-            }
-            _ => { unimplemented!() }
+            Stage::Vertex => "vs_main",
+            Stage::Fragment => "ps_main",
+            _ => unimplemented!(),
         }
     }
 
-    fn create_shader_module(device: &<::metal::Backend as Backend>::Device, name: &str, stage: Stage) -> Result<<::metal::Backend as Backend>::ShaderModule> {
+    fn create_shader_module(
+        device: &<::metal::Backend as Backend>::Device,
+        name: &str,
+        stage: Stage,
+    ) -> Result<<::metal::Backend as Backend>::ShaderModule> {
         let path = Self::get_shader_path(name, stage);
         let code = load_shader_code(&path)?;
         let version = ::metal::LanguageVersion::new(2, 0);
-        let module = device.create_shader_library_from_source(&code, version)
+        let module = device
+            .create_shader_library_from_source(&code, version)
             .map_err(map_shader_error)?;
         Ok(module)
     }
@@ -189,26 +214,27 @@ impl ShaderLoader for ::vulkan::Backend {
         match stage {
             Stage::Vertex => format!("{}.vert", name),
             Stage::Fragment => format!("{}.frag", name),
-            _ => unimplemented!()
+            _ => unimplemented!(),
         }.into()
     }
 
     fn get_shader_entry(stage: Stage) -> &'static str {
         match stage {
-            Stage::Vertex => {
-                "vs_main"
-            }
-            Stage::Fragment => {
-                "ps_main"
-            }
-            _ => { unimplemented!() }
+            Stage::Vertex => "vs_main",
+            Stage::Fragment => "ps_main",
+            _ => unimplemented!(),
         }
     }
 
-    fn create_shader_module(device: &<::vulkan::Backend as Backend>::Device, name: &str, stage: Stage) -> Result<<::vulkan::Backend as Backend>::ShaderModule> {
+    fn create_shader_module(
+        device: &<::vulkan::Backend as Backend>::Device,
+        name: &str,
+        stage: Stage,
+    ) -> Result<<::vulkan::Backend as Backend>::ShaderModule> {
         let path = Self::get_shader_path(name, stage);
         let code = load_shader_code(&path)?;
-        let module = device.create_shader_module_from_glsl(&code, stage)
+        let module = device
+            .create_shader_module_from_glsl(&code, stage)
             .map_err(map_shader_error)?;
         Ok(module)
     }
@@ -218,8 +244,12 @@ impl ShaderLoader for ::vulkan::Backend {
 fn load_shader_code(path: &Path) -> Result<String> {
     use std::fs::File;
     use std::io::Read;
-    let mut file = File::open(path).chain_err(|| format!("Failed to open shader file {:?}", path))?;
+    let mut file = File::open(path).chain_err(|| {
+        format!("Failed to open shader file {:?}", path)
+    })?;
     let mut code = String::new();
-    file.read_to_string(&mut code).chain_err(|| format!("Failed to read shader file {:?}", path))?;
+    file.read_to_string(&mut code).chain_err(|| {
+        format!("Failed to read shader file {:?}", path)
+    })?;
     Ok(code)
 }

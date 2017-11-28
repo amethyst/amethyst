@@ -1,7 +1,7 @@
 
 pub mod build;
 pub mod pass;
-pub mod flat;
+// pub mod flat;
 
 use std::collections::{HashMap, HashSet};
 use std::collections::hash_map::Entry::{Occupied, Vacant};
@@ -11,7 +11,7 @@ use std::iter::Empty;
 use std::ops::Range;
 
 use gfx_hal::Backend;
-use gfx_hal::command::{ClearValue, Rect, SubpassContents, Viewport};
+use gfx_hal::command::{CommandBuffer, ClearValue, Rect, SubpassContents, Viewport};
 use gfx_hal::device::{Device, Extent, FramebufferError, WaitFor};
 use gfx_hal::format::{Format, Swizzle};
 use gfx_hal::image;
@@ -23,7 +23,7 @@ use gfx_hal::window::{Backbuffer, Frame, Swapchain};
 use smallvec::SmallVec;
 use specs::World;
 
-use memory::Allocator;
+use memory::Factory;
 use self::pass::AnyPass;
 
 pub use self::build::*;
@@ -140,7 +140,8 @@ where
         rect: Rect,
         frame: SuperFrame<B>,
     ) -> bool
-        where C: Supports<Graphics> + Supports<Transfer>
+    where
+        C: Supports<Graphics> + Supports<Transfer>,
     {
         // Bind pipeline
         cbuf.bind_graphics_pipeline(&self.graphics_pipeline);
@@ -160,9 +161,9 @@ where
             &self.render_pass,
             pick(&self.framebuffer, frame),
             rect,
-            &self.clears, // TODO: Put clear values here
-            SubpassContents::Inline,
+            &self.clears,
         );
+
         // Record custom drawing calls
         self.pass.draw(encoder, world);
 
@@ -278,12 +279,9 @@ where
         color: Format,
         depth_stencil: Option<Format>,
         extent: Extent,
-        allocator: &mut A,
+        manager: &mut Factory<B>,
         device: &B::Device,
-    ) -> Result<Self>
-    where
-        A: Allocator<B>,
-    {
+    ) -> Result<Self> {
         assert_eq!(present.format(), color);
 
         // Create views for backbuffer

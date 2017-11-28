@@ -10,7 +10,7 @@ use gfx_hal::pso::{ElemStride, VertexBufferSet};
 
 use smallvec::SmallVec;
 
-use epoch::{Buffer, EpochalManager, Image};
+use memory::{Buffer, Factory, Image};
 use memory::cast_pod_vec;
 use utils::{is_slice_sorted, is_slice_sorted_by_key};
 use vertex::{Attributes, VertexFormat, VertexFormatSet, VertexFormatted};
@@ -55,7 +55,7 @@ where
 
     pub(crate) fn build<B>(
         self,
-        manager: EpochalManager<B>,
+        manager: Factory<B>,
         uploader: &mut Uploader,
         device: &B::Device,
     ) -> Result<VertexBuffer<B>>
@@ -86,7 +86,7 @@ pub trait VertexDataList {
     const LENGTH: usize;
     fn build<B>(
         self,
-        manager: EpochalManager<B>,
+        manager: Factory<B>,
         device: &B::Device,
         output: &mut Vec<VertexBuffer<B>>,
     ) -> Result<()>
@@ -98,7 +98,7 @@ impl VertexDataList for () {
     const LENGTH: usize = 0;
     fn build<B>(
         self,
-        manager: EpochalManager<B>,
+        manager: Factory<B>,
         device: &B::Device,
         output: &mut Vec<VertexBuffer<B>>,
     ) -> Result<()>
@@ -118,7 +118,7 @@ where
     const LENGTH: usize = 1 + L::LENGTH;
     fn build<B>(
         self,
-        manager: EpochalManager<B>,
+        manager: Factory<B>,
         device: &B::Device,
         output: &mut Vec<VertexBuffer<B>>,
     ) -> Result<()>
@@ -134,7 +134,7 @@ where
 pub trait IndexDataMaybe {
     fn build<B>(
         self,
-        manager: EpochalManager<B>,
+        manager: Factory<B>,
         device: &B::Device,
     ) -> Result<Option<IndexBuffer<B>>>
     where
@@ -144,7 +144,7 @@ pub trait IndexDataMaybe {
 impl IndexDataMaybe for () {
     fn build<B>(
         self,
-        manager: EpochalManager<B>,
+        manager: Factory<B>,
         device: &B::Device,
     ) -> Result<Option<IndexBuffer<B>>>
     where
@@ -160,7 +160,7 @@ where
 {
     fn build<B>(
         self,
-        manager: EpochalManager<B>,
+        manager: Factory<B>,
         device: &B::Device,
     ) -> Result<Option<IndexBuffer<B>>>
     where
@@ -187,7 +187,7 @@ where
 {
     fn build<B>(
         self,
-        manager: EpochalManager<B>,
+        manager: Factory<B>,
         device: &B::Device,
     ) -> Result<Option<IndexBuffer<B>>>
     where
@@ -327,7 +327,7 @@ where
     I: IndexDataMaybe,
 {
     /// Builds and returns the new mesh.
-    pub fn build<B>(self, manager: EpochalManager<B>, device: &B::Device) -> Result<Mesh<B>>
+    pub fn build<B>(self, manager: Factory<B>, device: &B::Device) -> Result<Mesh<B>>
     where
         B: Backend,
     {
@@ -449,7 +449,7 @@ impl MeshBuilder {
     }
 
     /// Builds and returns the new mesh.
-    pub fn build<B>(self, manager: EpochalManager<B>, device: &B::Device) -> Result<Mesh<B>>
+    pub fn build<B>(self, manager: Factory<B>, device: &B::Device) -> Result<Mesh<B>>
     where
         B: Backend,
     {

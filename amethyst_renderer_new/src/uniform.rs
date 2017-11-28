@@ -7,15 +7,10 @@ use gfx_hal::Backend;
 use gfx_hal::buffer::Usage;
 use gfx_hal::command::RawCommandBuffer;
 use gfx_hal::memory::{Pod, cast_slice};
+use gfx_hal::queue::{Supports, Transfer};
 
-use memory::{self, Allocator};
+use memory::{Buffer, Factory, Image, Result};
 use cam::Camera;
-
-error_chain! {
-    links {
-        Memory(memory::Error, memory::ErrorKind);
-    }
-}
 
 pub trait IntoUniform<B: Backend>: Debug + Sized {
     type Uniform: Any + Debug + Pod + PartialEq + Send + Sync;
@@ -25,13 +20,13 @@ pub trait IntoUniform<B: Backend>: Debug + Sized {
     fn into_uniform(&self) -> Self::Uniform;
 
     /// Create cache
-    fn create_cache<A>(allocator: &mut A, device: &B::Device) -> Result<Self::Cache>
-    where
-        A: Allocator<B>;
+    fn create_cache(manager: &mut Factory<B>, device: &B::Device) -> Result<Self::Cache>;
 
     /// Update cached value.
     /// Writes updating command into command buffer
-    fn update_cached(&self, cache: &mut Self::Cache, cbuf: &mut B::CommandBuffer);
+    fn update_cached<C>(&self, cache: &mut Self::Cache, cbuf: &mut CommandBuffer<B, C>)
+    where
+        C: Supports<Transfer>;
 }
 
 pub type UniformCache<B: Backend, T: IntoUniform<B>> = <T as IntoUniform<B>>::Cache;
@@ -47,14 +42,14 @@ where
         self.0.into()
     }
 
-    fn create_cache<A>(allocator: &mut A, device: &B::Device) -> Result<Self::Cache>
-    where
-        A: Allocator<B>,
-    {
-        BasicUniformCache::new(allocator, device)
+    fn create_cache(manager: &mut Factory<B>, device: &B::Device) -> Result<Self::Cache> {
+        BasicUniformCache::new(manager, device)
     }
 
-    fn update_cached(&self, cache: &mut Self::Cache, cbuf: &mut B::CommandBuffer) {
+    fn update_cached(&self, cache: &mut Self::Cache, cbuf: &mut CommandBuffer<B, C>)
+    where
+        C: Supports<Transfer>,
+    {
         cache.update(cbuf, self);
     }
 }
@@ -93,20 +88,16 @@ where
     B: Backend,
     T: IntoUniform<B>,
 {
-    fn new<A>(allocator: &mut A, device: &B::Device) -> Result<Self>
-    where
-        A: Allocator<B>,
-    {
+    fn new(manager: &mut Factory<B>, device: &B::Device) -> Result<Self> {
         use std::mem::{align_of, size_of};
 
         Ok(BasicUniformCache {
             cached: None,
-            buffer: allocator.allocate_buffer(
+            buffer: manager.create_buffer(
                 device,
                 size_of::<T>(),
                 align_of::<T>(),
                 Usage::UNIFORM,
-                None,
             )?,
         })
     }

@@ -27,8 +27,8 @@ extern crate gfx_backend_vulkan as vulkan;
 extern crate gfx_backend_metal as metal;
 
 
-pub mod memory;
 pub mod epoch;
+pub mod memory;
 
 pub mod relevant;
 pub mod hal;

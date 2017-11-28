@@ -6,7 +6,7 @@ use std::ops::{Add, Deref, DerefMut, Range, Rem, Sub};
 
 use gfx_hal::{Backend, Device, MemoryType};
 use gfx_hal::memory::{Pod, Properties, Requirements};
-use gfx_hal::buffer::{Usage as BufferUsage, complete_requirements};
+use gfx_hal::buffer::{Usage as BufferUsage};
 use gfx_hal::format::Format;
 use gfx_hal::image::{Kind, Level, Usage as ImageUsage};
 use relevant::Relevant;
@@ -14,11 +14,12 @@ use relevant::Relevant;
 mod arena;
 mod chunked;
 mod combined;
+mod factory;
 mod memory;
 mod smart;
 
 pub use self::smart::SmartAllocator;
-use self::combined::Type as AllocationType;
+pub use self::factory::{Factory, Buffer, Image};
 
 
 error_chain! {
@@ -273,111 +274,3 @@ where
     }
 }
 
-
-pub struct Item<B: Backend, T> {
-    inner: T,
-    block: Block<B, <SmartAllocator<B> as Allocator<B>>::Tag>,
-    properties: Properties,
-    requirements: Requirements,
-}
-
-impl<B, T> Deref for Item<B, T>
-where
-    B: Backend,
-{
-    type Target = T;
-    fn deref(&self) -> &T {
-        &self.inner
-    }
-}
-
-impl<B, T> DerefMut for Item<B, T>
-where
-    B: Backend,
-{
-    fn deref_mut(&mut self) -> &mut T {
-        &mut self.inner
-    }
-}
-
-pub type Buffer<B: Backend> = Item<B, B::Buffer>;
-pub type Image<B: Backend> = Item<B, B::Image>;
-
-
-pub fn create_buffer<B: Backend>(
-    allocator: &mut SmartAllocator<B>,
-    device: &B::Device,
-    size: u64,
-    stride: u64,
-    usage: BufferUsage,
-    properties: Properties,
-    transient: bool,
-) -> MemoryResult<Buffer<B>> {
-    let ubuf = device.create_buffer(size, stride, usage)?;
-    let requirements = complete_requirements::<B>(device, &ubuf, usage);
-    let ty = if transient {
-        AllocationType::Arena
-    } else {
-        AllocationType::Chunk
-    };
-    let block = allocator.alloc(device, (ty, properties), requirements)?;
-    let buf = device
-        .bind_buffer_memory(
-            block.memory(),
-            shift_for_alignment(requirements.alignment, block.range().start),
-            ubuf,
-        )
-        .unwrap();
-    Ok(Item {
-        inner: buf,
-        block,
-        properties,
-        requirements,
-    })
-}
-pub fn create_image<B: Backend>(
-    allocator: &mut SmartAllocator<B>,
-    device: &B::Device,
-    kind: Kind,
-    level: Level,
-    format: Format,
-    usage: ImageUsage,
-    properties: Properties,
-) -> MemoryResult<Image<B>> {
-    let uimg = device.create_image(kind, level, format, usage)?;
-    let requirements = device.get_image_requirements(&uimg);
-    let block = allocator.alloc(
-        device,
-        (AllocationType::Chunk, properties),
-        requirements,
-    )?;
-    let img = device
-        .bind_image_memory(
-            block.memory(),
-            shift_for_alignment(requirements.alignment, block.range().start),
-            uimg,
-        )
-        .unwrap();
-    Ok(Item {
-        inner: img,
-        block,
-        properties,
-        requirements,
-    })
-}
-pub fn destroy_buffer<B: Backend>(
-    allocator: &mut SmartAllocator<B>,
-    device: &B::Device,
-    buffer: Buffer<B>,
-) {
-    device.destroy_buffer(buffer.inner);
-    allocator.free(device, buffer.block);
-}
-pub fn destroy_image<B: Backend>(
-    allocator: &mut SmartAllocator<B>,
-    device: &B::Device,
-    image: Image<B>,
-) {
-    device.destroy_image(image.inner);
-    allocator.free(device, image.block);
-}

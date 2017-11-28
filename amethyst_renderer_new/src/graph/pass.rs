@@ -29,10 +29,11 @@ use std::marker::PhantomData;
 
 use core::Transform;
 use gfx_hal::Backend;
+use gfx_hal::command::{CommandBuffer, RenderPassInlineEncoder};
 use gfx_hal::format::Format;
 use gfx_hal::memory::cast_slice;
 use gfx_hal::pso::{DescriptorSetLayoutBinding, GraphicsShaderSet, PipelineStage};
-use gfx_hal::queue::capability::{Supports, Transfer, Graphics};
+use gfx_hal::queue::capability::{Graphics, Supports, Transfer};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use rayon_core::current_thread_index;
 use specs::{SystemData, World};
@@ -72,7 +73,10 @@ where
     const VERTICES: &'static [VertexFormat<'static>];
 
     /// Load shaders
-    fn shaders<'a>(manager: &'a mut ShaderManager<B>, device: &B::Device) -> Result<GraphicsShaderSet<'a, B>, ::shaders::Error>;
+    fn shaders<'a>(
+        manager: &'a mut ShaderManager<B>,
+        device: &B::Device,
+    ) -> Result<GraphicsShaderSet<'a, B>, ::shaders::Error>;
 
     /// This function designed for
     ///
@@ -85,16 +89,18 @@ where
         layout: &B::PipelineLayout,
         device: &B::Device,
         data: <Self as Data<'a, B>>::PrepareData,
-    )
-        where C: Supports<Transfer>
-    ;
+    ) where
+        C: Supports<Transfer>;
 
     /// This function designed for
     ///
     /// * binding `DescriptorSet`s
     /// * recording `Graphics` commands to `CommandBuffer`
-    fn draw_inline<'a>(&mut self, encoder: RenderPassInlineEncoder<B>, data: <Self as Data<'a, B>>::DrawData);
-    
+    fn draw_inline<'a>(
+        &mut self,
+        encoder: RenderPassInlineEncoder<B>,
+        data: <Self as Data<'a, B>>::DrawData,
+    );
 }
 
 pub trait AnyPass<B>: Debug
@@ -127,7 +133,11 @@ where
     fn vertices(&self) -> &'static [VertexFormat<'static>];
 
     /// Load shaders
-    fn shaders<'a>(&self, manager: &'a mut ShaderManager<B>, device: &B::Device) -> Result<GraphicsShaderSet<'a, B>, ::shaders::Error>;
+    fn shaders<'a>(
+        &self,
+        manager: &'a mut ShaderManager<B>,
+        device: &B::Device,
+    ) -> Result<GraphicsShaderSet<'a, B>, ::shaders::Error>;
 
     /// Reflects [`Pass::prepare`] function
     ///
@@ -182,7 +192,11 @@ where
     }
 
     /// Load shaders
-    fn shaders<'a>(&self, manager: &'a mut ShaderManager<B>, device: &B::Device) -> Result<GraphicsShaderSet<'a, B>, ::shaders::Error> {
+    fn shaders<'a>(
+        &self,
+        manager: &'a mut ShaderManager<B>,
+        device: &B::Device,
+    ) -> Result<GraphicsShaderSet<'a, B>, ::shaders::Error> {
         P::shaders(manager, device)
     }
 
@@ -203,7 +217,7 @@ where
     }
 
     fn draw_inline<'a>(&mut self, encoder: RenderPassInlineEncoder, world: &'a World) {
-        <P as Pass<B>>::draw(
+        <P as Pass<B>>::draw_inline(
             self,
             encoder,
             <P as Data<'a, B>>::DrawData::fetch(&world.res, 0),

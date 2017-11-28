@@ -14,7 +14,6 @@ use specs::{Component, Entity, World};
 use graph::pass::{AnyPass, Pass};
 use graph::{Error, ErrorKind, PassNode, Result, SuperFramebuffer};
 use vertex::VertexFormat;
-use uniform::IntoUniform;
 
 #[derive(Derivative)]
 #[derivative(Debug)]
