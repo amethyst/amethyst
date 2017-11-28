@@ -14,6 +14,11 @@ error_chain!{
             display("Shader compilation failed:\n{}", msg)
         }
 
+        MissingEntryPoint(msg: String) {
+            description("Missing entry point")
+            display("Missing entry point:\n{}", msg)
+        }
+
         ShaderNotFound(name: String, stage: Stage) {
             description("Shader not found")
             display("Shader {}:{:?} not found", name, stage)
@@ -25,6 +30,9 @@ fn map_shader_error(err: ShaderError) -> Error {
     match err {
         ShaderError::CompilationFailed(msg) => {
             ErrorKind::CompilationFailed(msg).into()
+        },
+        ShaderError::MissingEntryPoint(msg) => {
+            ErrorKind::MissingEntryPoint(msg).into()
         }
     }
 }
@@ -105,6 +113,7 @@ where
         Ok(EntryPoint {
             entry: B::get_shader_entry(stage),
             module,
+            specialization: &[],
         })
     }
 
@@ -133,6 +142,7 @@ where
             EntryPoint {
                 entry: B::get_shader_entry(stage),
                 module,
+                specialization: &[],
             }
         }).ok_or_else(|| ErrorKind::ShaderNotFound(name.into(), stage).into())
     }
