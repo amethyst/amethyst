@@ -7,7 +7,7 @@ use gfx_hal::{Backend, Device};
 use gfx_hal::memory::Requirements;
 
 
-use allocator::{Allocator, Block, SubAllocator, calc_alignment_shift};
+use memory::{Allocator, Block, SubAllocator, calc_alignment_shift};
 
 
 #[derive(Debug)]

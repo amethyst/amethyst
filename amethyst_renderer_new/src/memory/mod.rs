@@ -1,223 +1,249 @@
 
-
-use std::collections::VecDeque;
-use std::cmp::min;
-use std::ops::{Deref, DerefMut};
+use std::cmp::Eq;
+use std::error::Error;
+use std::fmt::{Debug, Display};
+use std::ops::{Add, Deref, DerefMut, Range, Rem, Sub};
 
 use gfx_hal::{Backend, Device, MemoryType};
 use gfx_hal::memory::{Pod, Properties, Requirements};
-use gfx_hal::buffer::{Usage as BufferUsage, ViewError, complete_requirements};
+use gfx_hal::buffer::{Usage as BufferUsage, complete_requirements};
 use gfx_hal::format::Format;
 use gfx_hal::image::{Kind, Level, Usage as ImageUsage};
-use gfx_hal::device::{BindError, OutOfMemory};
-use gfx_hal::mapping::Error as MappingError;
+use relevant::Relevant;
 
-use allocator::{AllocationType, Allocator, Block, SmartAllocator, shift_for_alignment};
-use epoch::{CurrentEpoch, Epoch};
+mod arena;
+mod chunked;
+mod combined;
+mod memory;
+mod smart;
+
+pub use self::smart::SmartAllocator;
+use self::combined::Type as AllocationType;
+
 
 error_chain! {
+    types {
+        MemoryError, MemoryErrorKind, MemoryResultExt, MemoryResult;
+    }
+
     foreign_links {
-        BindError(BindError);
-        ViewError(ViewError);
+        BindError(::gfx_hal::device::BindError);
+        ViewError(::gfx_hal::buffer::ViewError);
         BufferCreationError(::gfx_hal::buffer::CreationError);
         ImageCreationError(::gfx_hal::image::CreationError);
         OutOfMemory(::gfx_hal::device::OutOfMemory);
     }
-
-    errors {
-        InvalidAccess {
-            description("Invalid access"),
-            display("Invalid access"),
-        }
-        OutOfBounds {
-            description("Out of bounds"),
-            display("Out of bounds"),
-        }
-    }
-}
-
-impl From<MappingError> for Error {
-    fn from(error: MappingError) -> Error {
-        match error {
-            MappingError::InvalidAccess => ErrorKind::InvalidAccess.into(),
-            MappingError::OutOfBounds => ErrorKind::OutOfBounds.into(),
-            MappingError::OutOfMemory => OutOfMemory.into(),
-        }
-    }
 }
 
 
-pub struct Epochal<B: Backend, T> {
-    inner: T,
-    block: Block<B, <SmartAllocator<B> as Allocator<B>>::Tag>,
-    properties: Properties,
-    requirements: Requirements,
-    valid_through: Epoch,
-}
-
-impl<B, T> Deref for Epochal<B, T>
-where
-    B: Backend,
-{
-    type Target = T;
-    fn deref(&self) -> &T {
-        &self.inner
-    }
-}
-
-impl<B, T> DerefMut for Epochal<B, T>
-where
-    B: Backend,
-{
-    fn deref_mut(&mut self) -> &mut T {
-        &mut self.inner
-    }
-}
-
-struct EpochalDeletionQueue<B: Backend, T> {
+/// Tagged block of memory.
+/// It is relevant type and can't be silently dropped.
+/// User must return this block to the same `Allocator` it came from.
+#[derive(Debug)]
+pub struct Block<B: Backend, T> {
+    relevant: Relevant,
+    tag: T,
+    memory: *mut B::Memory,
     offset: u64,
-    queue: VecDeque<Vec<Epochal<B, T>>>,
-    clean_vecs: Vec<Vec<Epochal<B, T>>>,
+    size: u64,
 }
 
-impl<B, T> EpochalDeletionQueue<B, T>
+
+impl<B> Block<B, ()>
 where
     B: Backend,
 {
-    fn add(&mut self, item: Epochal<B, T>) {
-        let index = (item.valid_through.0 - self.offset) as usize;
-        let ref mut queue = self.queue;
-        let ref mut clean_vecs = self.clean_vecs;
-
-        let len = queue.len();
-        queue.extend((len..index).map(|_| {
-            clean_vecs.pop().unwrap_or_else(|| Vec::new())
-        }));
-        queue[index].push(item);
-    }
-
-    fn clean<F>(&mut self, current: &CurrentEpoch, mut f: F)
-    where
-        F: FnMut(Epochal<B, T>),
-    {
-        let index = (current.now().0 - self.offset) as usize;
-        let len = self.queue.len();
-
-        for mut vec in self.queue.drain(..min(index, len)) {
-            for item in vec.drain(..) {
-                f(item);
-            }
-            self.clean_vecs.push(vec);
+    pub fn new(memory: *mut B::Memory, range: Range<u64>) -> Self {
+        assert!(range.start <= range.end);
+        Block {
+            relevant: Relevant,
+            tag: (),
+            memory,
+            offset: range.start,
+            size: range.end - range.start,
         }
-        self.offset += index as u64;
     }
 }
 
 
-pub type Buffer<B: Backend> = Epochal<B, B::Buffer>;
-pub type Image<B: Backend> = Epochal<B, B::Image>;
-
-
-pub struct BufferManager<B: Backend> {
-    allocator: SmartAllocator<B>,
-
-    buffer_deletion_queue: EpochalDeletionQueue<B, B::Buffer>,
-    image_deletion_queue: EpochalDeletionQueue<B, B::Image>,
-}
-
-impl<B> BufferManager<B>
+impl<B, T> Block<B, T>
 where
     B: Backend,
 {
-    fn create_buffer(
+    /// Free this block returning it to the origin
+    pub fn free<A>(self, origin: &mut A, device: &B::Device)
+    where
+        A: Allocator<B, Tag = T>,
+        T: Debug + Copy + Send + Sync,
+    {
+        origin.free(device, self);
+    }
+
+    pub fn memory(&self) -> &B::Memory {
+        // Has to be valid
+        unsafe { &*self.memory }
+    }
+
+    pub fn range(&self) -> Range<u64> {
+        self.offset..self.size + self.offset
+    }
+
+    /// Helper merthod to check if `other` block is sub-block of `self`
+    pub fn contains<Y>(&self, other: &Block<B, Y>) -> bool {
+        self.memory == other.memory && self.offset <= other.offset &&
+            self.offset + self.size >= other.offset + other.size
+    }
+
+    /// Push additional tag value to this block.
+    /// Tags form a stack - e.g. LIFO
+    pub fn push_tag<Y>(self, value: Y) -> Block<B, (Y, T)> {
+        let Block {
+            relevant,
+            memory,
+            tag,
+            offset,
+            size,
+        } = self;
+        Block {
+            relevant,
+            memory,
+            tag: (value, tag),
+            offset,
+            size,
+        }
+    }
+
+    /// Replace tag attached to this block
+    pub fn replace_tag<Y>(self, value: Y) -> (Block<B, Y>, T) {
+        let Block {
+            relevant,
+            memory,
+            tag,
+            offset,
+            size,
+        } = self;
+        (
+            Block {
+                relevant,
+                memory,
+                tag: value,
+                offset,
+                size,
+            },
+            tag,
+        )
+    }
+
+    /// Set tag to this block.
+    /// Drops old tag.
+    pub fn set_tag<Y>(self, value: Y) -> Block<B, Y> {
+        let Block {
+            relevant,
+            memory,
+            tag,
+            offset,
+            size,
+        } = self;
+        Block {
+            relevant,
+            memory,
+            tag: value,
+            offset,
+            size,
+        }
+    }
+
+    /// Dispose of this block.
+    /// Returns tag value.
+    /// This is unsafe as the caller must ensure that
+    /// memory was freed
+    pub unsafe fn dispose(self) -> T {
+        self.relevant.dispose();
+        self.tag
+    }
+}
+
+impl<B, T, Y> Block<B, (Y, T)>
+where
+    B: Backend,
+{
+    /// Pop top tag value from this block
+    /// Tags form a stack - e.g. LIFO
+    fn pop_tag(self) -> (Block<B, T>, Y) {
+        let Block { .. } = self;
+        let Block {
+            relevant,
+            memory,
+            tag: (value, tag),
+            offset,
+            size,
+        } = self;
+        (
+            Block {
+                relevant,
+                memory,
+                tag,
+                offset,
+                size,
+            },
+            value,
+        )
+    }
+}
+
+pub trait Allocator<B: Backend> {
+    type Info;
+    type Tag: Debug + Copy + Send + Sync;
+    type Error: Error;
+
+    fn alloc(
         &mut self,
         device: &B::Device,
-        size: u64,
-        stride: u64,
-        usage: BufferUsage,
-        properties: Properties,
-        transient: bool,
-    ) -> Result<Buffer<B>> {
-        let ubuf = device.create_buffer(size, stride, usage)?;
-        let requirements = complete_requirements::<B>(device, &ubuf, usage);
-        let ty = if transient {
-            AllocationType::Arena
-        } else {
-            AllocationType::Chunk
-        };
-        let block = self.allocator.alloc(device, (ty, properties), requirements)?;
-        let buf = device
-            .bind_buffer_memory(
-                block.memory(),
-                shift_for_alignment(requirements.alignment, block.range().start),
-                ubuf,
-            )
-            .unwrap();
-        Ok(Epochal {
-            inner: buf,
-            block,
-            properties,
-            requirements,
-            valid_through: Epoch::new(),
-        })
-    }
+        info: Self::Info,
+        reqs: Requirements,
+    ) -> Result<Block<B, Self::Tag>, Self::Error>;
+    fn free(&mut self, device: &B::Device, block: Block<B, Self::Tag>);
+    fn is_unused(&self) -> bool;
+    fn dispose(self, device: &B::Device);
+}
 
-    fn create_image(
+pub trait SubAllocator<B: Backend> {
+    type Owner;
+    type Info;
+    type Tag: Debug + Copy + Send + Sync;
+    type Error: Error;
+
+    fn alloc(
         &mut self,
+        owner: &mut Self::Owner,
         device: &B::Device,
-        kind: Kind,
-        level: Level,
-        format: Format,
-        usage: ImageUsage,
-        properties: Properties,
-    ) -> Result<Image<B>> {
-        let uimg = device.create_image(kind, level, format, usage)?;
-        let requirements = device.get_image_requirements(&uimg);
-        let block = self.allocator.alloc(
-            device,
-            (AllocationType::Chunk, properties),
-            requirements,
-        )?;
-        let img = device
-            .bind_image_memory(
-                block.memory(),
-                shift_for_alignment(requirements.alignment, block.range().start),
-                uimg,
-            )
-            .unwrap();
-        Ok(Epochal {
-            inner: img,
-            block,
-            properties,
-            requirements,
-            valid_through: Epoch::new(),
-        })
-    }
+        info: Self::Info,
+        reqs: Requirements,
+    ) -> Result<Block<B, Self::Tag>, Self::Error>;
+    fn free(&mut self, owner: &mut Self::Owner, device: &B::Device, block: Block<B, Self::Tag>);
+    fn is_unused(&self) -> bool;
+    fn dispose(self, owner: &mut Self::Owner, device: &B::Device);
+}
 
-    fn destroy_buffer(&mut self, buffer: Buffer<B>) {
-        self.buffer_deletion_queue.add(buffer);
-    }
 
-    fn destroy_image(&mut self, image: Image<B>) {
-        self.image_deletion_queue.add(image);
-    }
-
-    fn cleanup(&mut self, device: &B::Device, current: &CurrentEpoch) {
-        let ref mut allocator = self.allocator;
-        self.image_deletion_queue.clean(current, |image| {
-            assert!(current.now() > image.valid_through);
-            device.destroy_image(image.inner);
-            allocator.free(device, image.block);
-        });
-        self.buffer_deletion_queue.clean(current, |buffer| {
-            assert!(current.now() > buffer.valid_through);
-            device.destroy_buffer(buffer.inner);
-            allocator.free(device, buffer.block);
-        });
+pub fn calc_alignment_shift<T>(alignment: T, offset: T) -> T
+where
+    T: From<u8> + Add<Output = T> + Sub<Output = T> + Rem<Output = T> + Eq + Copy,
+{
+    if offset == 0.into() {
+        0.into()
+    } else {
+        alignment - (offset - 1.into()) % alignment - 1.into()
     }
 }
 
 
+pub fn shift_for_alignment<T>(alignment: T, offset: T) -> T
+where
+    T: From<u8> + Add<Output = T> + Sub<Output = T> + Rem<Output = T> + Eq + Copy,
+{
+    offset + calc_alignment_shift(alignment, offset)
+}
 
 
 /// Cast `Vec` of one `Pod` type into `Vec` of another `Pod` type
@@ -245,4 +271,113 @@ where
         forget(vec);
         Vec::from_raw_parts(p as *mut Y, (s * tsize) / ysize, (c * tsize) / ysize)
     }
+}
+
+
+pub struct Item<B: Backend, T> {
+    inner: T,
+    block: Block<B, <SmartAllocator<B> as Allocator<B>>::Tag>,
+    properties: Properties,
+    requirements: Requirements,
+}
+
+impl<B, T> Deref for Item<B, T>
+where
+    B: Backend,
+{
+    type Target = T;
+    fn deref(&self) -> &T {
+        &self.inner
+    }
+}
+
+impl<B, T> DerefMut for Item<B, T>
+where
+    B: Backend,
+{
+    fn deref_mut(&mut self) -> &mut T {
+        &mut self.inner
+    }
+}
+
+pub type Buffer<B: Backend> = Item<B, B::Buffer>;
+pub type Image<B: Backend> = Item<B, B::Image>;
+
+
+pub fn create_buffer<B: Backend>(
+    allocator: &mut SmartAllocator<B>,
+    device: &B::Device,
+    size: u64,
+    stride: u64,
+    usage: BufferUsage,
+    properties: Properties,
+    transient: bool,
+) -> MemoryResult<Buffer<B>> {
+    let ubuf = device.create_buffer(size, stride, usage)?;
+    let requirements = complete_requirements::<B>(device, &ubuf, usage);
+    let ty = if transient {
+        AllocationType::Arena
+    } else {
+        AllocationType::Chunk
+    };
+    let block = allocator.alloc(device, (ty, properties), requirements)?;
+    let buf = device
+        .bind_buffer_memory(
+            block.memory(),
+            shift_for_alignment(requirements.alignment, block.range().start),
+            ubuf,
+        )
+        .unwrap();
+    Ok(Item {
+        inner: buf,
+        block,
+        properties,
+        requirements,
+    })
+}
+pub fn create_image<B: Backend>(
+    allocator: &mut SmartAllocator<B>,
+    device: &B::Device,
+    kind: Kind,
+    level: Level,
+    format: Format,
+    usage: ImageUsage,
+    properties: Properties,
+) -> MemoryResult<Image<B>> {
+    let uimg = device.create_image(kind, level, format, usage)?;
+    let requirements = device.get_image_requirements(&uimg);
+    let block = allocator.alloc(
+        device,
+        (AllocationType::Chunk, properties),
+        requirements,
+    )?;
+    let img = device
+        .bind_image_memory(
+            block.memory(),
+            shift_for_alignment(requirements.alignment, block.range().start),
+            uimg,
+        )
+        .unwrap();
+    Ok(Item {
+        inner: img,
+        block,
+        properties,
+        requirements,
+    })
+}
+pub fn destroy_buffer<B: Backend>(
+    allocator: &mut SmartAllocator<B>,
+    device: &B::Device,
+    buffer: Buffer<B>,
+) {
+    device.destroy_buffer(buffer.inner);
+    allocator.free(device, buffer.block);
+}
+pub fn destroy_image<B: Backend>(
+    allocator: &mut SmartAllocator<B>,
+    device: &B::Device,
+    image: Image<B>,
+) {
+    device.destroy_image(image.inner);
+    allocator.free(device, image.block);
 }

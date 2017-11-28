@@ -27,18 +27,20 @@ extern crate gfx_backend_vulkan as vulkan;
 extern crate gfx_backend_metal as metal;
 
 
-pub mod allocator;
+pub mod memory;
 pub mod epoch;
+
+pub mod relevant;
+pub mod hal;
+
+// pub mod mesh;
 // pub mod cam;
 // pub mod graph;
-// pub mod mesh;
-pub mod relevant;
 // pub mod shaders;
 // pub mod texture;
-// pub mod vertex;
+pub mod vertex;
 // pub mod uniform;
 
-pub mod memory;
 // pub mod staging;
 pub mod utils;
 

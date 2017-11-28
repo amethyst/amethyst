@@ -6,8 +6,8 @@ use gfx_hal::{Backend, Device, MemoryType};
 use gfx_hal::device::OutOfMemory;
 use gfx_hal::memory::{Properties, Requirements};
 
-use allocator::{Allocator, Block, SubAllocator};
-use allocator::combined::{CombinedAllocator, Type};
+use memory::{Allocator, Block, SubAllocator};
+use memory::combined::{CombinedAllocator, Type};
 
 
 
@@ -20,16 +20,16 @@ where
     B: Backend,
 {
     pub fn new(
-        memory_type: Vec<MemoryType>,
+        memory_types: Vec<MemoryType>,
         arena_size: u64,
         chunk_size: u64,
-        min_size: u64,
+        min_chunk_size: u64,
     ) -> Self {
         SmartAllocator {
-            allocators: memory_type
+            allocators: memory_types
                 .into_iter()
                 .map(|mt| {
-                    CombinedAllocator::new(mt, arena_size, chunk_size, min_size)
+                    CombinedAllocator::new(mt, arena_size, chunk_size, min_chunk_size)
                 })
                 .collect(),
         }

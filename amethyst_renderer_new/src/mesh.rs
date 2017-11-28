@@ -10,7 +10,8 @@ use gfx_hal::pso::{ElemStride, VertexBufferSet};
 
 use smallvec::SmallVec;
 
-use memory::{self, Allocator, cast_pod_vec};
+use epoch::{Buffer, EpochalManager, Image};
+use memory::cast_pod_vec;
 use utils::{is_slice_sorted, is_slice_sorted_by_key};
 use vertex::{Attributes, VertexFormat, VertexFormatSet, VertexFormatted};
 
@@ -52,24 +53,27 @@ where
         V::VERTEX_FORMAT.stride
     }
 
-    pub(crate) fn build<A, B>(
+    pub(crate) fn build<B>(
         self,
-        allocator: &mut A,
+        manager: EpochalManager<B>,
+        uploader: &mut Uploader,
         device: &B::Device,
     ) -> Result<VertexBuffer<B>>
     where
-        A: Allocator<B>,
         B: Backend,
     {
         let slice = cast_slice(self.data.as_ref());
+
+        let mut buffer = manager.create_buffer(
+            device,
+            slice.len(),
+            V::VERTEX_FORMAT.stride as _,
+            Usage::VERTEX,
+        )?;
+        uploader.upload_direct(&mut buffer, data);
+
         Ok(VertexBuffer {
-            buffer: allocator.allocate_buffer(
-                device,
-                slice.len(),
-                V::VERTEX_FORMAT.stride as _,
-                Usage::VERTEX,
-                Some(slice),
-            )?,
+            buffer,
             format: V::VERTEX_FORMAT,
             len: self.data.as_ref().len() as VertexCount,
         })
@@ -80,27 +84,25 @@ where
 /// List of vertex data
 pub trait VertexDataList {
     const LENGTH: usize;
-    fn build<A, B>(
+    fn build<B>(
         self,
-        allocator: &mut A,
+        manager: EpochalManager<B>,
         device: &B::Device,
         output: &mut Vec<VertexBuffer<B>>,
     ) -> Result<()>
     where
-        A: Allocator<B>,
         B: Backend;
 }
 
 impl VertexDataList for () {
     const LENGTH: usize = 0;
-    fn build<A, B>(
+    fn build<B>(
         self,
-        allocator: &mut A,
+        manager: EpochalManager<B>,
         device: &B::Device,
         output: &mut Vec<VertexBuffer<B>>,
     ) -> Result<()>
     where
-        A: Allocator<B>,
         B: Backend,
     {
         Ok(())
@@ -114,14 +116,13 @@ where
     L: VertexDataList,
 {
     const LENGTH: usize = 1 + L::LENGTH;
-    fn build<A, B>(
+    fn build<B>(
         self,
-        allocator: &mut A,
+        manager: EpochalManager<B>,
         device: &B::Device,
         output: &mut Vec<VertexBuffer<B>>,
     ) -> Result<()>
     where
-        A: Allocator<B>,
         B: Backend,
     {
         let (head, tail) = self;
@@ -131,14 +132,21 @@ where
 }
 
 pub trait IndexDataMaybe {
-    fn build<A, B>(self, allocator: &mut A, device: &B::Device) -> Result<Option<IndexBuffer<B>>>
+    fn build<B>(
+        self,
+        manager: EpochalManager<B>,
+        device: &B::Device,
+    ) -> Result<Option<IndexBuffer<B>>>
     where
-        A: Allocator<B>,
         B: Backend;
 }
 
 impl IndexDataMaybe for () {
-    fn build<A, B>(self, allocator: &mut A, device: &B::Device) -> Result<Option<IndexBuffer<B>>>
+    fn build<B>(
+        self,
+        manager: EpochalManager<B>,
+        device: &B::Device,
+    ) -> Result<Option<IndexBuffer<B>>>
     where
         B: Backend,
     {
@@ -150,14 +158,17 @@ impl<D> IndexDataMaybe for Data<D, u16>
 where
     D: AsRef<[u16]>,
 {
-    fn build<A, B>(self, allocator: &mut A, device: &B::Device) -> Result<Option<IndexBuffer<B>>>
+    fn build<B>(
+        self,
+        manager: EpochalManager<B>,
+        device: &B::Device,
+    ) -> Result<Option<IndexBuffer<B>>>
     where
-        A: Allocator<B>,
         B: Backend,
     {
         let slice = cast_slice(self.data.as_ref());
         Ok(Some(IndexBuffer {
-            buffer: allocator.allocate_buffer(
+            buffer: manager.create_buffer(
                 device,
                 slice.len() as _,
                 size_of::<u16>() as _,
@@ -174,14 +185,17 @@ impl<D> IndexDataMaybe for Data<D, u32>
 where
     D: AsRef<[u32]>,
 {
-    fn build<A, B>(self, allocator: &mut A, device: &B::Device) -> Result<Option<IndexBuffer<B>>>
+    fn build<B>(
+        self,
+        manager: EpochalManager<B>,
+        device: &B::Device,
+    ) -> Result<Option<IndexBuffer<B>>>
     where
-        A: Allocator<B>,
         B: Backend,
     {
         let slice = cast_slice(self.data.as_ref());
         Ok(Some(IndexBuffer {
-            buffer: allocator.allocate_buffer(
+            buffer: manager.create_buffer(
                 device,
                 slice.len() as _,
                 size_of::<u32>() as _,
@@ -313,9 +327,8 @@ where
     I: IndexDataMaybe,
 {
     /// Builds and returns the new mesh.
-    pub fn build<A, B>(self, allocator: &mut A, device: &B::Device) -> Result<Mesh<B>>
+    pub fn build<B>(self, manager: EpochalManager<B>, device: &B::Device) -> Result<Mesh<B>>
     where
-        A: Allocator<B>,
         B: Backend,
     {
         Ok(Mesh {
@@ -436,9 +449,8 @@ impl MeshBuilder {
     }
 
     /// Builds and returns the new mesh.
-    pub fn build<A, B>(self, allocator: &mut A, device: &B::Device) -> Result<Mesh<B>>
+    pub fn build<B>(self, manager: EpochalManager<B>, device: &B::Device) -> Result<Mesh<B>>
     where
-        A: Allocator<B>,
         B: Backend,
     {
         Ok(Mesh {
@@ -446,7 +458,7 @@ impl MeshBuilder {
                 .into_iter()
                 .map(|(v, f)| {
                     Ok(VertexBuffer {
-                        buffer: allocator.allocate_buffer(
+                        buffer: manager.create_buffer(
                             device,
                             v.len(),
                             f.stride as _,
@@ -466,7 +478,7 @@ impl MeshBuilder {
                         IndexType::U32 => size_of::<u32>(),
                     };
                     Some(IndexBuffer {
-                        buffer: allocator.allocate_buffer(
+                        buffer: manager.create_buffer(
                             device,
                             i.len(),
                             stride as _,

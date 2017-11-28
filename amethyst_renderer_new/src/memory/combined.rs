@@ -4,10 +4,10 @@ use gfx_hal::{Backend, Device, MemoryType};
 use gfx_hal::device::OutOfMemory;
 use gfx_hal::memory::Requirements;
 
-use allocator::{Allocator, Block, SubAllocator, calc_alignment_shift};
-use allocator::memory::MemoryAllocator;
-use allocator::arena::ArenaAllocator;
-use allocator::chunked::ChunkListAllocator;
+use memory::{Allocator, Block, SubAllocator, calc_alignment_shift};
+use memory::memory::MemoryAllocator;
+use memory::arena::ArenaAllocator;
+use memory::chunked::ChunkListAllocator;
 
 #[derive(Clone, Copy, Debug)]
 pub enum Type {
@@ -29,11 +29,16 @@ impl<B> CombinedAllocator<B>
 where
     B: Backend,
 {
-    pub fn new(memory_type: MemoryType, arena_size: u64, chunk_size: u64, min_size: u64) -> Self {
+    pub fn new(
+        memory_type: MemoryType,
+        arena_size: u64,
+        chunk_size: u64,
+        min_chunk_size: u64,
+    ) -> Self {
         CombinedAllocator {
             memory: MemoryAllocator::new(memory_type),
             arenas: ArenaAllocator::new(arena_size, memory_type.id),
-            chunks: ChunkListAllocator::new(chunk_size, min_size, memory_type.id),
+            chunks: ChunkListAllocator::new(chunk_size, min_chunk_size, memory_type.id),
         }
     }
 

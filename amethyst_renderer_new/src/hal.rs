@@ -1,0 +1,265 @@
+
+use std::cmp::min;
+
+use gfx_hal::{Backend, Device, Gpu, Instance};
+use gfx_hal::adapter::{Adapter, PhysicalDevice};
+use gfx_hal::format::{Format, ChannelType, Srgba8, Formatted};
+use gfx_hal::queue::{Compute, General, Graphics, QueueFamily, QueueGroup, QueueType,
+                     RawQueueGroup, Transfer};
+use gfx_hal::pool::CommandPool;
+use gfx_hal::window::{Surface, SwapchainConfig};
+
+use winit::{EventsLoop, Window, WindowBuilder};
+
+
+use epoch::EpochalManager;
+// use graph::{Graph, Present};
+
+
+#[cfg(feature = "metal")]
+use metal;
+
+
+error_chain!{
+    errors {
+        NoValidAdaptersFound {
+            description("No valid adapters queues found")
+            display("No valid adapters queues found")
+        }
+    }
+}
+
+struct CommandGroups<B: Backend, C> {
+    group: QueueGroup<B, C>,
+    pools: Vec<CommandPool<B, C>>,
+}
+
+struct CommandCenter<B: Backend> {
+    transfer: Option<CommandGroups<B, Transfer>>,
+    compute: Option<CommandGroups<B, Compute>>,
+    graphics: Option<CommandGroups<B, Graphics>>,
+    general: Option<CommandGroups<B, General>>,
+}
+
+impl<B> CommandCenter<B>
+where
+    B: Backend,
+{
+    fn new(raw: Vec<RawQueueGroup<B>>) -> Self {
+        let mut center = CommandCenter {
+            transfer: None,
+            compute: None,
+            graphics: None,
+            general: None,
+        };
+
+        for raw in raw {
+            match raw.family().queue_type() {
+                QueueType::Transfer => {
+                    center.transfer = Some(CommandGroups {
+                        group: QueueGroup::new(raw),
+                        pools: Vec::new(),
+                    })
+                }
+
+                QueueType::Compute => {
+                    center.compute = Some(CommandGroups {
+                        group: QueueGroup::new(raw),
+                        pools: Vec::new(),
+                    })
+                }
+
+                QueueType::Graphics => {
+                    center.graphics = Some(CommandGroups {
+                        group: QueueGroup::new(raw),
+                        pools: Vec::new(),
+                    })
+                }
+
+                QueueType::General => {
+                    center.general = Some(CommandGroups {
+                        group: QueueGroup::new(raw),
+                        pools: Vec::new(),
+                    })
+                }
+            }
+        }
+
+        center
+    }
+}
+
+
+struct Renderer<B: Backend> {
+    window: Window,
+    surface: B::Surface,
+    surface_format: Format,
+    swapchain: B::Swapchain,
+}
+
+struct RendererBuilder<'a> {
+    title: &'a str,
+    width: u16,
+    height: u16,
+    events: &'a EventsLoop,
+}
+
+pub struct Hal9000<B: Backend, I> {
+    instance: I,
+    device: B::Device,
+    epochal: EpochalManager<B>,
+    center: CommandCenter<B>,
+    renderer: Option<Renderer<B>>,
+    // graphs: Vec<Graph<B>>,
+}
+
+pub struct HalBuilder<'a> {
+    adapter: Option<&'a str>,
+    arena_size: u64,
+    chunk_size: u64,
+    min_chunk_size: u64,
+    compute: bool,
+    renderer: Option<RendererBuilder<'a>>,
+}
+
+
+
+impl<'a> HalBuilder<'a> {
+
+    fn init_adapter<B: Backend>(&self, adapter: Adapter<B>) -> (B::Device, EpochalManager<B>, CommandCenter<B>) {
+        println!("Try adapter: {:?}", adapter.info);
+
+        let qf = adapter.queue_families;
+
+        let (transfer, qf) = qf.into_iter().partition::<Vec<_>, _>(|qf| qf.queue_type() == QueueType::Transfer);
+        let (compute, qf) = qf.into_iter().partition::<Vec<_>, _>(|qf| qf.queue_type() == QueueType::Compute);
+        let (graphics, qf) = qf.into_iter().partition::<Vec<_>, _>(|qf| qf.queue_type() == QueueType::Graphics);
+        let (general, _) = qf.into_iter().partition::<Vec<_>, _>(|qf| qf.queue_type() == QueueType::General);
+
+        let mut transfer = transfer.into_iter().map(|qf| (qf.max_queues(), 0, qf)).next();
+        let mut compute = compute.into_iter().map(|qf| (qf.max_queues(), 0, qf)).next();
+        let mut graphics = graphics.into_iter().map(|qf| (qf.max_queues(), 0, qf)).next();
+        let mut general = general.into_iter().map(|qf| (qf.max_queues(), 0, qf)).next();
+
+        if self.compute {
+            compute.as_mut().map(|qmr| qmr.1 += 1)
+                .or_else(|| general.as_mut().map(|qmr| qmr.1 +=1));
+        }
+
+        if self.renderer.is_some() {
+            graphics.as_mut().map(|qmr| qmr.1 += 1)
+                .or_else(|| general.as_mut().map(|qmr| qmr.1 +=1));
+        }
+
+        match (&mut transfer, &mut compute, &mut graphics, &mut general) {
+            (&mut Some((_, ref mut req, _)), _, _, _) => *req += 1,
+            (_, &mut Some((count, ref mut req, _)), _, _) if count > 1 => *req += 1,
+            (_, _, &mut Some((count, ref mut req, _)), _) if count > 1 => *req += 1,
+            (_, _, _, &mut Some((count, ref mut req, _))) if count > 2 => *req += 1,
+            _ => {}
+        };
+
+        let mut requests = vec![];
+
+        {
+            let mut push_requests = |qt: Option<(usize, usize, _)>| {
+                requests.extend(qt.and_then(|(max, req, qf)| {
+                    let count = min(max, req);
+                    if count > 0 {
+                        Some((qf, vec![1.0; count]))
+                    } else {
+                        None
+                    }
+                }));
+            };
+
+            push_requests(transfer);
+            push_requests(compute);
+            push_requests(graphics);
+            push_requests(general);
+        }
+
+        let Gpu { device, queue_groups, memory_types, memory_heaps } = adapter.physical_device.open(
+            requests
+        );
+        let epochal = EpochalManager::new(memory_types, self.arena_size, self.chunk_size, self.min_chunk_size);
+        let center = CommandCenter::new(queue_groups);
+
+        (device, epochal, center)
+    }
+
+    #[cfg(feature = "metal")]
+    pub fn build(self) -> Result<Hal9000<metal::Backend, metal::Instance>> {
+        #[cfg(feature = "metal")]
+        let instance = metal::Instance::create("amethyst-hal", 1);
+
+        let mut window_surface_format = self.renderer.as_ref().map(|renderer| -> Result<_> {
+            let window = WindowBuilder::new()
+                .with_dimensions(renderer.width as u32, renderer.height as u32)
+                .with_title(renderer.title)
+                .build(&renderer.events)
+                .chain_err(|| "Failed to create rendering window")?;
+
+            let surface = instance.create_surface(&window);
+            Ok(Some((window, surface, Srgba8::SELF)))
+        }).unwrap_or(Ok(None))?;
+
+        let adapters = instance.enumerate_adapters();
+
+        println!("Adapters:");
+        for adapter in &adapters {
+            println!("\t{:?}", adapter.info);
+        }
+        let (soft, hard) = adapters.into_iter().partition::<Vec<_>, _>(|adapter| adapter.info.software_rendering);
+        let (device, epochal, center) = hard.into_iter().chain(soft).filter_map(|adapter| {
+            if let Some((_, ref surface, ref mut surface_format)) = window_surface_format {
+                *surface_format = find_good_surface_format(surface, &adapter)?;
+            }
+            Some(self.init_adapter(adapter))
+        })
+        .next()
+        .ok_or(ErrorKind::NoValidAdaptersFound)?;
+
+        let renderer = if let Some((window, mut surface, surface_format)) = window_surface_format {
+            let swapchain_config = SwapchainConfig {
+                color_format: surface_format,
+                depth_stencil_format: None,
+                image_count: 3,
+            };
+
+            let (swapchain, backbuffer) = device.create_swapchain(&mut surface, swapchain_config);
+
+            Some(Renderer {
+                window,
+                surface,
+                surface_format,
+                swapchain,
+            })
+        } else {
+            None
+        };
+
+        Ok(Hal9000 {
+            instance,
+            device,
+            epochal,
+            center,
+            renderer,
+            // graphs: Vec::new(),
+        })
+    }
+}
+
+
+fn find_surface_format<B: Backend>(surface: &B::Surface, adapter: &Adapter<B>, channel: ChannelType) -> Option<Format> {
+    surface
+        .capabilities_and_formats(&adapter.physical_device)
+        .1
+        .into_iter()
+        .find(|format| format.1 == channel)
+}
+
+fn find_good_surface_format<B: Backend>(surface: &B::Surface, adapter: &Adapter<B>) -> Option<Format> {
+    find_surface_format(surface, adapter, ChannelType::Srgb)
+        .or_else(|| find_surface_format(surface, adapter, ChannelType::Unorm))
+}

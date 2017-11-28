@@ -6,7 +6,7 @@ use gfx_hal::{Backend, Device};
 use gfx_hal::memory::Requirements;
 
 use relevant::Relevant;
-use allocator::{Allocator, Block, SubAllocator, shift_for_alignment};
+use memory::{Allocator, Block, SubAllocator, shift_for_alignment};
 
 
 #[derive(Debug)]
@@ -136,14 +136,14 @@ where
 {
     /// # Panics
     ///
-    /// Panics if `chunk_size` or `min_size` is not power of 2.
+    /// Panics if `chunk_size` or `min_chunk_size` is not power of 2.
     ///
-    pub fn new(chunk_size: u64, min_size: u64, id: usize) -> Self {
+    pub fn new(chunk_size: u64, min_chunk_size: u64, id: usize) -> Self {
         let bits = (::std::mem::size_of::<usize>() * 8) as u32;
         let chunk_size_bit = (bits - chunk_size.leading_zeros() - 1) as u8;
         assert_eq!(1u64 << chunk_size_bit, chunk_size);
-        let min_size_bit = (bits - min_size.leading_zeros() - 1) as u8;
-        assert_eq!(1u64 << min_size_bit, min_size);
+        let min_size_bit = (bits - min_chunk_size.leading_zeros() - 1) as u8;
+        assert_eq!(1u64 << min_size_bit, min_chunk_size);
         ChunkListAllocator {
             id,
             chunk_size_bit,

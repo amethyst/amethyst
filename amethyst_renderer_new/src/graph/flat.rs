@@ -63,29 +63,27 @@ where
     /// * allocating buffers and textures
     /// * storing caches in `World`
     /// * filling `DescriptorSet`s
-    fn prepare<'a>(
+    fn prepare<'a, C>(
         &mut self,
-        cbuf: &mut B::CommandBuffer,
+        cbuf: &mut CommandBuffer<B, C>,
         layout: &B::PipelineLayout,
         device: &B::Device,
         data: <Self as Data<'a, B>>::PrepareData,
-    ) {
-
-    }
+    ) {}
 
     /// This function designed for
     ///
     /// * binding `DescriptorSet`s
     /// * recording `Transfer` and `Graphics` commands to `CommandBuffer`
-    fn draw<'a>(
+    fn draw_inline<'a>(
         &mut self,
-        cbuf: &mut B::CommandBuffer,
+        encoder: RenderPassInlineEncoder,
         (_, _, _, meshes): <Self as Data<'a, B>>::DrawData,
     ) {
         for mesh in meshes.join() {
             let mut vertex = VertexBufferSet(vec![]);
             mesh.bind(&[PosColor::VERTEX_FORMAT], &mut vertex)
-                .map(|bind| { bind.draw(vertex, cbuf); })
+                .map(|bind| { encoder.draw(vertex, cbuf); })
                 .unwrap_or(());
         }
     }

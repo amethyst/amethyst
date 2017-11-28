@@ -25,7 +25,8 @@ use specs::World;
 
 use memory::Allocator;
 use self::pass::AnyPass;
-use self::build::*;
+
+pub use self::build::*;
 
 
 error_chain!{
@@ -78,7 +79,7 @@ where
 
 #[derive(Debug)]
 pub enum SuperFramebuffer<B: Backend> {
-    /// Target is owned by `RenderGraph`
+    /// Target is owned by `Graph`
     Owned(B::Framebuffer),
 
     /// Target is acquired from `Swapchain`
@@ -131,16 +132,16 @@ impl<B> PassNode<B>
 where
     B: Backend,
 {
-    fn draw(
+    fn draw<C>(
         &mut self,
-        cbuf: &mut B::CommandBuffer,
+        cbuf: &mut CommandBuffer<B, C>,
         device: &B::Device,
         world: &World,
         rect: Rect,
         frame: SuperFrame<B>,
-    ) -> bool {
-        use gfx_hal::command::RawCommandBuffer;
-
+    ) -> bool
+        where C: Supports<Graphics> + Supports<Transfer>
+    {
         // Bind pipeline
         cbuf.bind_graphics_pipeline(&self.graphics_pipeline);
 
@@ -148,14 +149,14 @@ where
         // * Write descriptor sets
         // * Store caches
         self.pass.prepare(
-            cbuf,
+            unsafe { transmute(cbuf) },
             &self.pipeline_layout,
             device,
             world,
         );
 
         // Begin render pass with single inline subpass
-        cbuf.begin_renderpass(
+        let encoder = cbuf.begin_renderpass(
             &self.render_pass,
             pick(&self.framebuffer, frame),
             rect,
@@ -163,10 +164,7 @@ where
             SubpassContents::Inline,
         );
         // Record custom drawing calls
-        self.pass.draw(cbuf, world);
-
-        // End the renderpass
-        cbuf.end_renderpass();
+        self.pass.draw(encoder, world);
 
         // Return if this pass renders to the acquired image
         self.framebuffer.is_acquired()
@@ -174,7 +172,7 @@ where
 }
 
 #[derive(Debug)]
-pub struct RenderGraph<B: Backend> {
+pub struct Graph<B: Backend> {
     passes: Vec<PassNode<B>>,
     signals: Vec<B::Semaphore>,
     acquire: B::Semaphore,
@@ -184,14 +182,13 @@ pub struct RenderGraph<B: Backend> {
     views: Vec<B::ImageView>,
 }
 
-impl<B> RenderGraph<B>
+impl<B> Graph<B>
 where
     B: Backend,
 {
     pub fn draw<S, C>(
         &mut self,
-        pool: &mut B::CommandPool,
-        cbufs: &mut Vec<B::CommandBuffer>,
+        pool: &mut CommandPool<B, C>,
         queue: &mut CommandQueue<B, C>,
         swapchain: &mut S,
         device: &B::Device,
@@ -202,11 +199,8 @@ where
         C: Supports<Graphics> + Supports<Transfer>,
     {
         use std::iter::once;
-        use gfx_hal::command::RawCommandBuffer;
         use gfx_hal::image::ImageLayout;
-        use gfx_hal::pool::RawCommandPool;
-        use gfx_hal::queue::RawCommandQueue;
-        use gfx_hal::queue::submission::RawSubmission;
+        use gfx_hal::queue::submission::Submission;
         use gfx_hal::window::FrameSync;
 
         let ref signals = self.signals;
@@ -232,10 +226,8 @@ where
         // Record commands for all passes
         self.passes.iter_mut().enumerate().for_each(|(id, pass)| {
             // Pick buffer
-            let ref mut cbuf = cbufs[id];
+            let mut cbuf = pool.acquire_command_buffer();
 
-            // Begin writing
-            cbuf.begin();
             // Setup
             cbuf.set_viewports(&[viewport.clone()]);
             cbuf.set_scissors(&[viewport.rect]);
@@ -253,26 +245,21 @@ where
                 None
             };
 
-            // finish buffer recording
-            cbuf.finish();
-            unsafe {
-                // Submit buffer
-                queue.as_mut().submit_raw(
-                    RawSubmission {
-                        cmd_buffers: &[cbuf.clone()],
-                        wait_semaphores: &pass.depends
-                            .iter()
-                            .map(|&(id, stage)| (&signals[id], stage))
-                            .chain(wait_acuired)
-                            .collect::<SmallVec<[_; 32]>>(),
-
-                        // Each pass singnals to associated `Semaphore`
-                        signal_semaphores: &[&signals[id]],
-                    },
-                    // Signal the fence in last submission
-                    if id == count - 1 { Some(finish) } else { None },
-                );
-            }
+            // Submit buffer
+            queue.submit(
+                Submission::new()
+                    .submit(&[cbuf.finish()])
+                    .wait(&pass.depends
+                        .iter()
+                        .map(|&(id, stage)| (&signals[id], stage))
+                        .chain(wait_acuired)
+                        .collect::<SmallVec<[_; 32]>>()
+                    )
+                    // Each pass singnals to associated `Semaphore`
+                    .signal(&[&signals[id]]),
+                // Signal the fence in last submission
+                if id == count - 1 { Some(finish) } else { None },
+            );
         });
 
         // Present queue
@@ -500,7 +487,7 @@ where
 
         let count = passes.len();
 
-        Ok(RenderGraph {
+        Ok(Graph {
             passes: passes,
             signals: (0..count).map(|_| device.create_semaphore()).collect(),
             acquire: device.create_semaphore(),

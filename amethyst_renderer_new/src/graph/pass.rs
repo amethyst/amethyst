@@ -32,7 +32,7 @@ use gfx_hal::Backend;
 use gfx_hal::format::Format;
 use gfx_hal::memory::cast_slice;
 use gfx_hal::pso::{DescriptorSetLayoutBinding, GraphicsShaderSet, PipelineStage};
-use gfx_hal::queue::capability::{Supports, Transfer};
+use gfx_hal::queue::capability::{Supports, Transfer, Graphics};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use rayon_core::current_thread_index;
 use specs::{SystemData, World};
@@ -79,19 +79,22 @@ where
     /// * allocating buffers and textures
     /// * storing caches in `World`
     /// * filling `DescriptorSet`s
-    fn prepare<'a>(
+    fn prepare<'a, C>(
         &mut self,
-        cbuf: &mut B::CommandBuffer,
+        cbuf: &mut CommandBuffer<B, C>,
         layout: &B::PipelineLayout,
         device: &B::Device,
         data: <Self as Data<'a, B>>::PrepareData,
-    );
+    )
+        where C: Supports<Transfer>
+    ;
 
     /// This function designed for
     ///
     /// * binding `DescriptorSet`s
-    /// * recording `Transfer` and `Graphics` commands to `CommandBuffer`
-    fn draw<'a>(&mut self, cbuf: &mut B::CommandBuffer, data: <Self as Data<'a, B>>::DrawData);
+    /// * recording `Graphics` commands to `CommandBuffer`
+    fn draw_inline<'a>(&mut self, encoder: RenderPassInlineEncoder<B>, data: <Self as Data<'a, B>>::DrawData);
+    
 }
 
 pub trait AnyPass<B>: Debug
@@ -131,16 +134,16 @@ where
     /// [`Pass::prepare`]: trait.Pass.html#tymethod.prepare
     fn prepare<'a>(
         &mut self,
-        cbuf: &mut B::CommandBuffer,
+        cbuf: &mut CommandBuffer<B, Transfer>,
         layout: &B::PipelineLayout,
         device: &B::Device,
         world: &'a World,
     );
 
-    /// Reflects [`Pass::draw`] function
+    /// Reflects [`Pass::draw_inline`] function
     ///
-    /// [`Pass::draw`]: trait.Pass.html#tymethod.draw
-    fn draw<'a>(&mut self, cbuf: &mut B::CommandBuffer, world: &'a World);
+    /// [`Pass::draw_inline`]: trait.Pass.html#tymethod.draw_inline
+    fn draw_inline<'a>(&mut self, encoder: RenderPassInlineEncoder, world: &'a World);
 }
 
 impl<P, B> AnyPass<B> for P
@@ -185,7 +188,7 @@ where
 
     fn prepare<'a>(
         &mut self,
-        cbuf: &mut B::CommandBuffer,
+        cbuf: &mut CommandBuffer<B, Transfer>,
         layout: &B::PipelineLayout,
         device: &B::Device,
         world: &'a World,
@@ -199,10 +202,10 @@ where
         );
     }
 
-    fn draw<'a>(&mut self, cbuf: &mut B::CommandBuffer, world: &'a World) {
+    fn draw_inline<'a>(&mut self, encoder: RenderPassInlineEncoder, world: &'a World) {
         <P as Pass<B>>::draw(
             self,
-            cbuf,
+            encoder,
             <P as Data<'a, B>>::DrawData::fetch(&world.res, 0),
         );
     }
