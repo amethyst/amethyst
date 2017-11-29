@@ -93,7 +93,7 @@ where
 struct Renderer<B: Backend> {
     window: Window,
     surface: B::Surface,
-    surface_format: Format,
+    format: Format,
     swapchain: B::Swapchain,
 }
 
@@ -104,14 +104,21 @@ struct RendererBuilder<'a> {
     events: &'a EventsLoop,
 }
 
-pub struct Hal9000<B: Backend, I> {
-    instance: I,
+pub struct Hal9000<B: Backend> {
     device: B::Device,
     epochal: Factory<B>,
     center: CommandCenter<B>,
     renderer: Option<Renderer<B>>,
     // graphs: Vec<Graph<B>>,
 }
+
+impl<B> Hal9000<B>
+where
+    B: Backend,
+{
+    
+}
+
 
 pub struct HalBuilder<'a> {
     adapter: Option<&'a str>,
@@ -123,12 +130,43 @@ pub struct HalBuilder<'a> {
 }
 
 
+/// Helper trait to initialize backend
+pub trait Initialize<B: Backend> {
+    fn create_window_and_adapters(&self) -> Result<(Option<(Window, B::Surface)>, Vec<Adapter<B>>)>;
+}
+
+#[cfg(feature = "metal")]
+impl<'a> Initialize<metal::Backend> for HalBuilder<'a> {
+    fn create_window_and_adapters(&self) -> Result<(Option<(Window, metal::Surface)>, Vec<Adapter<metal::Backend>>)> {
+        let instance = metal::Instance::create("amethyst-hal", 1);
+
+        let window_surface = self.renderer
+            .as_ref()
+            .map(|renderer| -> Result<_> {
+                let window = WindowBuilder::new()
+                    .with_dimensions(renderer.width as u32, renderer.height as u32)
+                    .with_title(renderer.title)
+                    .build(&renderer.events)
+                    .chain_err(|| "Failed to create rendering window")?;
+
+                let surface = instance.create_surface(&window);
+                Ok(Some((window, surface)))
+            })
+            .unwrap_or(Ok(None))?;
+
+        Ok((window_surface, instance.enumerate_adapters()))
+    }
+}
+
 
 impl<'a> HalBuilder<'a> {
-    fn init_adapter<B: Backend>(
+    fn init_adapter<B>(
         &self,
         adapter: Adapter<B>,
-    ) -> (B::Device, Factory<B>, CommandCenter<B>) {
+    ) -> (B::Device, Factory<B>, CommandCenter<B>)
+    where
+        B: Backend,
+    {
         println!("Try adapter: {:?}", adapter.info);
 
         let qf = adapter.queue_families;
@@ -220,26 +258,14 @@ impl<'a> HalBuilder<'a> {
         (device, epochal, center)
     }
 
-    #[cfg(feature = "metal")]
-    pub fn build(self) -> Result<Hal9000<metal::Backend, metal::Instance>> {
-        #[cfg(feature = "metal")]
-        let instance = metal::Instance::create("amethyst-hal", 1);
+    fn build<B>(self) -> Result<Hal9000<B>>
+    where
+        B: Backend,
+        Self: Initialize<B>,
+    {
+        let (window_surface, adapters) = self.create_window_and_adapters()?;
 
-        let mut window_surface_format = self.renderer
-            .as_ref()
-            .map(|renderer| -> Result<_> {
-                let window = WindowBuilder::new()
-                    .with_dimensions(renderer.width as u32, renderer.height as u32)
-                    .with_title(renderer.title)
-                    .build(&renderer.events)
-                    .chain_err(|| "Failed to create rendering window")?;
-
-                let surface = instance.create_surface(&window);
-                Ok(Some((window, surface, Srgba8::SELF)))
-            })
-            .unwrap_or(Ok(None))?;
-
-        let adapters = instance.enumerate_adapters();
+        let mut window_surface_format = window_surface.map(|(window, surface)| (window, surface, Srgba8::SELF));
 
         println!("Adapters:");
         for adapter in &adapters {
@@ -251,35 +277,32 @@ impl<'a> HalBuilder<'a> {
         let (device, epochal, center) = hard.into_iter()
             .chain(soft)
             .filter_map(|adapter| {
-                if let Some((_, ref surface, ref mut surface_format)) = window_surface_format {
-                    *surface_format = find_good_surface_format(surface, &adapter)?;
+                if let Some((_, ref surface, ref mut format)) = window_surface_format {
+                    *format = find_good_surface_format(surface, &adapter)?;
                 }
                 Some(self.init_adapter(adapter))
             })
             .next()
             .ok_or(ErrorKind::NoValidAdaptersFound)?;
 
-        let renderer = if let Some((window, mut surface, surface_format)) = window_surface_format {
+        let renderer = window_surface_format.map(|(window, mut surface, format)| {
             let swapchain_config = SwapchainConfig {
-                color_format: surface_format,
+                color_format: format,
                 depth_stencil_format: None,
                 image_count: 3,
             };
 
             let (swapchain, backbuffer) = device.create_swapchain(&mut surface, swapchain_config);
 
-            Some(Renderer {
+            Renderer {
                 window,
                 surface,
-                surface_format,
+                format,
                 swapchain,
-            })
-        } else {
-            None
-        };
+            }
+        });
 
         Ok(Hal9000 {
-            instance,
             device,
             epochal,
             center,
@@ -288,6 +311,8 @@ impl<'a> HalBuilder<'a> {
         })
     }
 }
+
+
 
 
 fn find_surface_format<B: Backend>(
