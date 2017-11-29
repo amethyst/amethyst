@@ -21,112 +21,18 @@ use memory::{Allocator, Block, MemoryError, MemoryErrorKind, SmartAllocator, Mem
 use memory::combined::Type as AllocationType;
 use relevant::Relevant;
 
-pub struct Piece<B: Backend, T> {
+pub type Buffer<B: Backend> = Item<B, B::Buffer>;
+pub type Image<B: Backend> = Item<B, B::Image>;
+
+pub struct Inner<B: Backend, T> {
     inner: T,
     block: Block<B, <SmartAllocator<B> as Allocator<B>>::Tag>,
     properties: Properties,
     requirements: Requirements,
 }
 
-impl<B, T> Deref for Piece<B, T>
-where
-    B: Backend,
-{
-    type Target = T;
-    fn deref(&self) -> &T {
-        &self.inner
-    }
-}
-
-impl<B, T> DerefMut for Piece<B, T>
-where
-    B: Backend,
-{
-    fn deref_mut(&mut self) -> &mut T {
-        &mut self.inner
-    }
-}
-
-fn create_buffer<B: Backend>(
-    allocator: &mut SmartAllocator<B>,
-    device: &B::Device,
-    size: u64,
-    stride: u64,
-    usage: BufferUsage,
-    properties: Properties,
-    transient: bool,
-) -> MemoryResult<Piece<B, B::Buffer>> {
-    let ubuf = device.create_buffer(size, stride, usage)?;
-    let requirements = complete_requirements::<B>(device, &ubuf, usage);
-    let ty = if transient {
-        AllocationType::Arena
-    } else {
-        AllocationType::Chunk
-    };
-    let block = allocator.alloc(device, (ty, properties), requirements)?;
-    let buf = device
-        .bind_buffer_memory(
-            block.memory(),
-            shift_for_alignment(requirements.alignment, block.range().start),
-            ubuf,
-        )
-        .unwrap();
-    Ok(Piece {
-        inner: buf,
-        block,
-        properties,
-        requirements,
-    })
-}
-fn create_image<B: Backend>(
-    allocator: &mut SmartAllocator<B>,
-    device: &B::Device,
-    kind: Kind,
-    level: Level,
-    format: Format,
-    usage: ImageUsage,
-    properties: Properties,
-) -> MemoryResult<Piece<B, B::Image>> {
-    let uimg = device.create_image(kind, level, format, usage)?;
-    let requirements = device.get_image_requirements(&uimg);
-    let block = allocator.alloc(
-        device,
-        (AllocationType::Chunk, properties),
-        requirements,
-    )?;
-    let img = device
-        .bind_image_memory(
-            block.memory(),
-            shift_for_alignment(requirements.alignment, block.range().start),
-            uimg,
-        )
-        .unwrap();
-    Ok(Piece {
-        inner: img,
-        block,
-        properties,
-        requirements,
-    })
-}
-fn destroy_buffer<B: Backend>(
-    allocator: &mut SmartAllocator<B>,
-    device: &B::Device,
-    buffer: Piece<B, B::Buffer>,
-) {
-    device.destroy_buffer(buffer.inner);
-    allocator.free(device, buffer.block);
-}
-fn destroy_image<B: Backend>(
-    allocator: &mut SmartAllocator<B>,
-    device: &B::Device,
-    image: Piece<B, B::Image>,
-) {
-    device.destroy_image(image.inner);
-    allocator.free(device, image.block);
-}
-
 pub struct Item<B: Backend, T> {
-    item: Piece<B, T>,
+    item: Inner<B, T>,
     valid_through: Epoch,
 }
 
@@ -139,36 +45,19 @@ where
     pub fn make_valid_through(this: &mut Self, epoch: Epoch) {
         this.valid_through = max(this.valid_through, epoch);
     }
-
-    /// Convert `Item` into `Eh` so that user can get shared
-    /// reference to it as `Ec`
-    pub fn into_shared(this: Self) -> Eh<Piece<B, T>> {
-        let mut eh = Eh::new(this.item);
-        Eh::make_valid_through(&mut eh, this.valid_through);
-        eh
-    }
-
-    pub fn from_shared(shared: Eh<Piece<B, T>>, current: &CurrentEpoch) -> Result<Self, Eh<Piece<B, T>>> {
-        shared.dispose(current).map(|item| {
-            Item {
-                item,
-                valid_through: Epoch::new(),
-            }
-        })
-    }
 }
 
 impl<B, T> ValidThrough for Item<B, T>
 where
     B: Backend,
 {
-    type Data = Piece<B, T>;
+    type Data = Inner<B, T>;
 
     fn valid_through(&self) -> Epoch {
         self.valid_through
     }
 
-    fn dispose(self, current: &CurrentEpoch) -> Result<Piece<B, T>, Self> {
+    fn dispose(self, current: &CurrentEpoch) -> Result<Inner<B, T>, Self> {
         if self.valid_through < current.now() {
             Ok(self.item)
         } else {
@@ -176,10 +65,6 @@ where
         }
     }
 }
-
-pub type Buffer<B: Backend> = Item<B, B::Buffer>;
-pub type Image<B: Backend> = Item<B, B::Image>;
-
 
 impl<B, T> Deref for Item<B, T>
 where
@@ -289,4 +174,83 @@ where
             destroy_buffer(allocator, device, buffer);
         });
     }
+}
+
+
+fn create_buffer<B: Backend>(
+    allocator: &mut SmartAllocator<B>,
+    device: &B::Device,
+    size: u64,
+    stride: u64,
+    usage: BufferUsage,
+    properties: Properties,
+    transient: bool,
+) -> MemoryResult<Inner<B, B::Buffer>> {
+    let ubuf = device.create_buffer(size, stride, usage)?;
+    let requirements = complete_requirements::<B>(device, &ubuf, usage);
+    let ty = if transient {
+        AllocationType::Arena
+    } else {
+        AllocationType::Chunk
+    };
+    let block = allocator.alloc(device, (ty, properties), requirements)?;
+    let buf = device
+        .bind_buffer_memory(
+            block.memory(),
+            shift_for_alignment(requirements.alignment, block.range().start),
+            ubuf,
+        )
+        .unwrap();
+    Ok(Inner {
+        inner: buf,
+        block,
+        properties,
+        requirements,
+    })
+}
+fn create_image<B: Backend>(
+    allocator: &mut SmartAllocator<B>,
+    device: &B::Device,
+    kind: Kind,
+    level: Level,
+    format: Format,
+    usage: ImageUsage,
+    properties: Properties,
+) -> MemoryResult<Inner<B, B::Image>> {
+    let uimg = device.create_image(kind, level, format, usage)?;
+    let requirements = device.get_image_requirements(&uimg);
+    let block = allocator.alloc(
+        device,
+        (AllocationType::Chunk, properties),
+        requirements,
+    )?;
+    let img = device
+        .bind_image_memory(
+            block.memory(),
+            shift_for_alignment(requirements.alignment, block.range().start),
+            uimg,
+        )
+        .unwrap();
+    Ok(Inner {
+        inner: img,
+        block,
+        properties,
+        requirements,
+    })
+}
+fn destroy_buffer<B: Backend>(
+    allocator: &mut SmartAllocator<B>,
+    device: &B::Device,
+    buffer: Inner<B, B::Buffer>,
+) {
+    device.destroy_buffer(buffer.inner);
+    allocator.free(device, buffer.block);
+}
+fn destroy_image<B: Backend>(
+    allocator: &mut SmartAllocator<B>,
+    device: &B::Device,
+    image: Inner<B, B::Image>,
+) {
+    device.destroy_image(image.inner);
+    allocator.free(device, image.block);
 }
