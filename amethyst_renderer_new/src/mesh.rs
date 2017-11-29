@@ -55,7 +55,7 @@ where
 
     pub(crate) fn build<B>(
         self,
-        manager: Factory<B>,
+        factory: Factory<B>,
         uploader: &mut Uploader,
         device: &B::Device,
     ) -> Result<VertexBuffer<B>>
@@ -64,7 +64,7 @@ where
     {
         let slice = cast_slice(self.data.as_ref());
 
-        let mut buffer = manager.create_buffer(
+        let mut buffer = factory.create_buffer(
             device,
             slice.len(),
             V::VERTEX_FORMAT.stride as _,
@@ -86,7 +86,7 @@ pub trait VertexDataList {
     const LENGTH: usize;
     fn build<B>(
         self,
-        manager: Factory<B>,
+        factory: Factory<B>,
         device: &B::Device,
         output: &mut Vec<VertexBuffer<B>>,
     ) -> Result<()>
@@ -98,7 +98,7 @@ impl VertexDataList for () {
     const LENGTH: usize = 0;
     fn build<B>(
         self,
-        manager: Factory<B>,
+        factory: Factory<B>,
         device: &B::Device,
         output: &mut Vec<VertexBuffer<B>>,
     ) -> Result<()>
@@ -118,7 +118,7 @@ where
     const LENGTH: usize = 1 + L::LENGTH;
     fn build<B>(
         self,
-        manager: Factory<B>,
+        factory: Factory<B>,
         device: &B::Device,
         output: &mut Vec<VertexBuffer<B>>,
     ) -> Result<()>
@@ -132,13 +132,13 @@ where
 }
 
 pub trait IndexDataMaybe {
-    fn build<B>(self, manager: Factory<B>, device: &B::Device) -> Result<Option<IndexBuffer<B>>>
+    fn build<B>(self, factory: Factory<B>, device: &B::Device) -> Result<Option<IndexBuffer<B>>>
     where
         B: Backend;
 }
 
 impl IndexDataMaybe for () {
-    fn build<B>(self, manager: Factory<B>, device: &B::Device) -> Result<Option<IndexBuffer<B>>>
+    fn build<B>(self, factory: Factory<B>, device: &B::Device) -> Result<Option<IndexBuffer<B>>>
     where
         B: Backend,
     {
@@ -150,13 +150,13 @@ impl<D> IndexDataMaybe for Data<D, u16>
 where
     D: AsRef<[u16]>,
 {
-    fn build<B>(self, manager: Factory<B>, device: &B::Device) -> Result<Option<IndexBuffer<B>>>
+    fn build<B>(self, factory: Factory<B>, device: &B::Device) -> Result<Option<IndexBuffer<B>>>
     where
         B: Backend,
     {
         let slice = cast_slice(self.data.as_ref());
         Ok(Some(IndexBuffer {
-            buffer: manager.create_buffer(
+            buffer: factory.create_buffer(
                 device,
                 slice.len() as _,
                 size_of::<u16>() as _,
@@ -173,13 +173,13 @@ impl<D> IndexDataMaybe for Data<D, u32>
 where
     D: AsRef<[u32]>,
 {
-    fn build<B>(self, manager: Factory<B>, device: &B::Device) -> Result<Option<IndexBuffer<B>>>
+    fn build<B>(self, factory: Factory<B>, device: &B::Device) -> Result<Option<IndexBuffer<B>>>
     where
         B: Backend,
     {
         let slice = cast_slice(self.data.as_ref());
         Ok(Some(IndexBuffer {
-            buffer: manager.create_buffer(
+            buffer: factory.create_buffer(
                 device,
                 slice.len() as _,
                 size_of::<u32>() as _,
@@ -311,7 +311,7 @@ where
     I: IndexDataMaybe,
 {
     /// Builds and returns the new mesh.
-    pub fn build<B>(self, manager: Factory<B>, device: &B::Device) -> Result<Mesh<B>>
+    pub fn build<B>(self, factory: Factory<B>, device: &B::Device) -> Result<Mesh<B>>
     where
         B: Backend,
     {
@@ -433,7 +433,7 @@ impl MeshBuilder {
     }
 
     /// Builds and returns the new mesh.
-    pub fn build<B>(self, manager: Factory<B>, device: &B::Device) -> Result<Mesh<B>>
+    pub fn build<B>(self, factory: Factory<B>, device: &B::Device) -> Result<Mesh<B>>
     where
         B: Backend,
     {
@@ -442,7 +442,7 @@ impl MeshBuilder {
                 .into_iter()
                 .map(|(v, f)| {
                     Ok(VertexBuffer {
-                        buffer: manager.create_buffer(
+                        buffer: factory.create_buffer(
                             device,
                             v.len(),
                             f.stride as _,
@@ -462,7 +462,7 @@ impl MeshBuilder {
                         IndexType::U32 => size_of::<u32>(),
                     };
                     Some(IndexBuffer {
-                        buffer: manager.create_buffer(
+                        buffer: factory.create_buffer(
                             device,
                             i.len(),
                             stride as _,

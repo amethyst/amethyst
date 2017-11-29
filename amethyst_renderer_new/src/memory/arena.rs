@@ -7,7 +7,7 @@ use gfx_hal::{Backend, Device};
 use gfx_hal::memory::Requirements;
 
 
-use memory::{Allocator, Block, SubAllocator, calc_alignment_shift};
+use memory::{Allocator, Block, SubAllocator, calc_alignment_shift, Result};
 
 
 #[derive(Debug)]
@@ -104,7 +104,7 @@ where
         device: &B::Device,
         info: A::Info,
         reqs: Requirements,
-    ) -> Result<ArenaNode<B, A>, A::Error> {
+    ) -> Result<ArenaNode<B, A>> {
         let arena_size = ((reqs.size - 1) / self.arena_size + 1) * self.arena_size;
         let arena_requirements = Requirements {
             type_mask: 1 << self.id,
@@ -124,7 +124,6 @@ where
     type Owner = A;
     type Info = A::Info;
     type Tag = usize;
-    type Error = A::Error;
 
     fn alloc(
         &mut self,
@@ -132,7 +131,7 @@ where
         device: &B::Device,
         info: A::Info,
         reqs: Requirements,
-    ) -> Result<Block<B, Self::Tag>, A::Error> {
+    ) -> Result<Block<B, Self::Tag>> {
         assert_eq!((1 << self.id) & reqs.type_mask, 1 << self.id);
         let count = self.nodes.len();
         if let Some(ref mut hot) = self.hot.as_mut() {

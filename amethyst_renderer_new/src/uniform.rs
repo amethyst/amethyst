@@ -5,7 +5,7 @@ use std::fmt::Debug;
 use core::Transform;
 use gfx_hal::Backend;
 use gfx_hal::buffer::Usage;
-use gfx_hal::command::RawCommandBuffer;
+use gfx_hal::command::CommandBuffer;
 use gfx_hal::memory::{Pod, cast_slice};
 use gfx_hal::queue::{Supports, Transfer};
 
@@ -72,7 +72,10 @@ where
         BasicUniformCache::new(allocator, device)
     }
 
-    fn update_cached(&self, cache: &mut Self::Cache, cbuf: &mut B::CommandBuffer) {
+    fn update_cached(&self, cache: &mut Self::Cache, cbuf: &mut CommandBuffer<B, C>)
+    where
+        C: Supports<Transfer>,
+    {
         cache.update(cbuf, self);
     }
 }
@@ -102,7 +105,10 @@ where
         })
     }
 
-    fn update(&mut self, cbuf: &mut B::CommandBuffer, value: &T) {
+    fn update<C>(&mut self, cbuf: &mut CommandBuffer<B, C>, value: &T)
+    where
+        C: Supports<Transfer>,
+    {
         let value = value.into_uniform();
         if self.cached.map_or(false, |c| c == value) {
             self.cached = Some(value);

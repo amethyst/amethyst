@@ -6,7 +6,7 @@ use gfx_hal::{Backend, Device};
 use gfx_hal::memory::Requirements;
 
 use relevant::Relevant;
-use memory::{Allocator, Block, SubAllocator, shift_for_alignment};
+use memory::{Allocator, Block, SubAllocator, shift_for_alignment, Result};
 
 
 #[derive(Debug)]
@@ -38,7 +38,7 @@ where
         self.blocks.len() * self.chunks_per_block
     }
 
-    fn grow(&mut self, owner: &mut A, device: &B::Device, info: A::Info) -> Result<(), A::Error> {
+    fn grow(&mut self, owner: &mut A, device: &B::Device, info: A::Info) -> Result<()> {
         let reqs = Requirements {
             type_mask: 1 << self.id,
             size: self.chunk_size * self.chunks_per_block as u64,
@@ -78,7 +78,6 @@ where
     type Owner = A;
     type Info = A::Info;
     type Tag = usize;
-    type Error = A::Error;
 
     fn alloc(
         &mut self,
@@ -86,7 +85,7 @@ where
         device: &B::Device,
         info: A::Info,
         reqs: Requirements,
-    ) -> Result<Block<B, usize>, A::Error> {
+    ) -> Result<Block<B, usize>> {
         assert_eq!((1 << self.id) & reqs.type_mask, 1 << self.id);
         assert!(self.chunk_size >= reqs.size);
         assert!(self.chunk_size >= reqs.alignment);
@@ -179,7 +178,6 @@ where
     type Owner = A;
     type Info = A::Info;
     type Tag = usize;
-    type Error = A::Error;
 
     fn alloc(
         &mut self,
@@ -187,7 +185,7 @@ where
         device: &B::Device,
         info: A::Info,
         reqs: Requirements,
-    ) -> Result<Block<B, usize>, A::Error> {
+    ) -> Result<Block<B, usize>> {
         let index = self.pick_node(reqs.size);
         self.grow(owner, index + 1);
         self.nodes[index as usize].alloc(owner, device, info, reqs)

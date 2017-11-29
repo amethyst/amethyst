@@ -1,6 +1,5 @@
 
 use std::cmp::Eq;
-use std::error::Error;
 use std::fmt::{Debug, Display};
 use std::ops::{Add, Deref, DerefMut, Range, Rem, Sub};
 
@@ -23,10 +22,6 @@ pub use self::factory::{Buffer, Factory, Image};
 
 
 error_chain! {
-    types {
-        MemoryError, MemoryErrorKind, MemoryResultExt, MemoryResult;
-    }
-
     foreign_links {
         BindError(::gfx_hal::device::BindError);
         ViewError(::gfx_hal::buffer::ViewError);
@@ -195,14 +190,13 @@ where
 pub trait Allocator<B: Backend> {
     type Info;
     type Tag: Debug + Copy + Send + Sync;
-    type Error: Error;
 
     fn alloc(
         &mut self,
         device: &B::Device,
         info: Self::Info,
         reqs: Requirements,
-    ) -> Result<Block<B, Self::Tag>, Self::Error>;
+    ) -> Result<Block<B, Self::Tag>>;
     fn free(&mut self, device: &B::Device, block: Block<B, Self::Tag>);
     fn is_unused(&self) -> bool;
     fn dispose(self, device: &B::Device);
@@ -212,7 +206,6 @@ pub trait SubAllocator<B: Backend> {
     type Owner;
     type Info;
     type Tag: Debug + Copy + Send + Sync;
-    type Error: Error;
 
     fn alloc(
         &mut self,
@@ -220,7 +213,7 @@ pub trait SubAllocator<B: Backend> {
         device: &B::Device,
         info: Self::Info,
         reqs: Requirements,
-    ) -> Result<Block<B, Self::Tag>, Self::Error>;
+    ) -> Result<Block<B, Self::Tag>>;
     fn free(&mut self, owner: &mut Self::Owner, device: &B::Device, block: Block<B, Self::Tag>);
     fn is_unused(&self) -> bool;
     fn dispose(self, owner: &mut Self::Owner, device: &B::Device);

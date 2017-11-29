@@ -7,13 +7,15 @@ use gfx_hal::format::{ChannelType, Format, Formatted, Srgba8};
 use gfx_hal::queue::{CommandQueue, Compute, General, Graphics, QueueFamily, QueueGroup, QueueType,
                      RawQueueGroup, Transfer};
 use gfx_hal::pool::CommandPool;
-use gfx_hal::window::{Surface, SwapchainConfig};
+use gfx_hal::window::{Backbuffer, Surface, SwapchainConfig};
 
 use winit::{EventsLoop, Window, WindowBuilder};
 
 
+use command::CommandCenter;
 use memory::Factory;
-// use graph::{Graph, Present};
+use graph::{Graph, Present};
+use shaders::{ShaderLoader, ShaderManager};
 
 
 #[cfg(feature = "metal")]
@@ -29,80 +31,6 @@ error_chain!{
     }
 }
 
-struct CommandGroups<B: Backend, C> {
-    group: QueueGroup<B, C>,
-    pools: Vec<CommandPool<B, C>>,
-}
-
-pub struct CommandCenter<B: Backend> {
-    transfer: Option<CommandGroups<B, Transfer>>,
-    compute: Option<CommandGroups<B, Compute>>,
-    graphics: Option<CommandGroups<B, Graphics>>,
-    general: Option<CommandGroups<B, General>>,
-}
-
-impl<B> CommandCenter<B>
-where
-    B: Backend,
-{
-    fn new(raw: Vec<RawQueueGroup<B>>) -> Self {
-        let mut center = CommandCenter {
-            transfer: None,
-            compute: None,
-            graphics: None,
-            general: None,
-        };
-
-        for raw in raw {
-            match raw.family().queue_type() {
-                QueueType::Transfer => {
-                    center.transfer = Some(CommandGroups {
-                        group: QueueGroup::new(raw),
-                        pools: Vec::new(),
-                    })
-                }
-
-                QueueType::Compute => {
-                    center.compute = Some(CommandGroups {
-                        group: QueueGroup::new(raw),
-                        pools: Vec::new(),
-                    })
-                }
-
-                QueueType::Graphics => {
-                    center.graphics = Some(CommandGroups {
-                        group: QueueGroup::new(raw),
-                        pools: Vec::new(),
-                    })
-                }
-
-                QueueType::General => {
-                    center.general = Some(CommandGroups {
-                        group: QueueGroup::new(raw),
-                        pools: Vec::new(),
-                    })
-                }
-            }
-        }
-
-        center
-    }
-}
-
-pub struct Renderer<B: Backend> {
-    window: Window,
-    surface: B::Surface,
-    format: Format,
-    swapchain: B::Swapchain,
-    // graph: Graph<B>,
-}
-
-pub struct RendererBuilder<'a> {
-    title: &'a str,
-    width: u16,
-    height: u16,
-    events: &'a EventsLoop,
-}
 
 pub struct Hal9000<B: Backend> {
     pub device: B::Device,
@@ -122,19 +50,21 @@ pub struct HalBuilder<'a> {
 
 
 /// Helper trait to initialize backend
-pub trait Initialize<B: Backend> {
-    fn create_window_and_adapters(&self)
-        -> Result<(Option<(Window, B::Surface)>, Vec<Adapter<B>>)>;
+pub trait BackendEx: ShaderLoader {
+    fn create_window_and_adapters(
+        builder: &HalBuilder,
+    ) -> Result<(Option<(Window, Self::Surface)>, Vec<Adapter<Self>>)>;
 }
 
 #[cfg(feature = "metal")]
-impl<'a> Initialize<metal::Backend> for HalBuilder<'a> {
+impl BackendEx for metal::Backend {
     fn create_window_and_adapters(
-        &self,
+        builder: &HalBuilder,
     ) -> Result<(Option<(Window, metal::Surface)>, Vec<Adapter<metal::Backend>>)> {
         let instance = metal::Instance::create("amethyst-hal", 1);
 
-        let window_surface = self.renderer
+        let window_surface = builder
+            .renderer
             .as_ref()
             .map(|renderer| -> Result<_> {
                 let window = WindowBuilder::new()
@@ -251,10 +181,9 @@ impl<'a> HalBuilder<'a> {
 
     fn build<B>(self) -> Result<Hal9000<B>>
     where
-        B: Backend,
-        Self: Initialize<B>,
+        B: BackendEx,
     {
-        let (window_surface, adapters) = self.create_window_and_adapters()?;
+        let (window_surface, adapters) = B::create_window_and_adapters(&self)?;
 
         let mut window_surface_format =
             window_surface.map(|(window, surface)| (window, surface, Srgba8::SELF));
@@ -291,6 +220,9 @@ impl<'a> HalBuilder<'a> {
                 surface,
                 format,
                 swapchain,
+                backbuffer,
+                shaders: ShaderManager::new(),
+                graphs: Vec::new(),
             }
         });
 
@@ -303,6 +235,23 @@ impl<'a> HalBuilder<'a> {
     }
 }
 
+
+pub struct Renderer<B: Backend> {
+    window: Window,
+    surface: B::Surface,
+    format: Format,
+    swapchain: B::Swapchain,
+    backbuffer: Backbuffer<B>,
+    shaders: ShaderManager<B>,
+    graphs: Vec<Graph<B>>,
+}
+
+pub struct RendererBuilder<'a> {
+    title: &'a str,
+    width: u16,
+    height: u16,
+    events: &'a EventsLoop,
+}
 
 
 

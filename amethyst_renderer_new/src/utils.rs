@@ -3,18 +3,26 @@
 #[inline(always)]
 pub fn is_slice_sorted<T>(slice: &[T]) -> bool
 where
-    T: Clone + Ord,
+    T: Ord,
 {
-    let mut clone = slice.to_vec();
-    clone.sort();
-    &clone[..] == slice
+    for i in 0..slice.len() - 2 {
+        if slice[i] > slice[i + 1] {
+            return false;
+        }
+    }
+    return true;
 }
 
 #[inline(always)]
-pub fn is_slice_sorted_by_key<T, K, F>(slice: &[T], f: F) -> bool
+pub fn is_slice_sorted_by_key<T, K, F>(slice: &[T], mut f: F) -> bool
 where
-    K: Clone + Ord,
+    K: Ord,
     F: FnMut(&T) -> K,
 {
-    is_slice_sorted(&slice.iter().map(f).collect::<Vec<K>>())
+    for i in 0..slice.len() - 2 {
+        if f(&slice[i]) > f(&slice[i + 1]) {
+            return false;
+        }
+    }
+    return true;
 }

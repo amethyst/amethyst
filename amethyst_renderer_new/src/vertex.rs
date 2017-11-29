@@ -9,12 +9,15 @@ use gfx_hal::memory::Pod;
 pub type AttributeFormat = Element<Format>;
 
 /// Slice of attributes
-pub type Attributes<'a> = &'a [(&'a str, AttributeFormat)];
+pub type Attributes<'a> = &'a [(u32, &'a str, AttributeFormat)];
 
 /// Trait for vertex attributes to implement
 pub trait Attribute: BufferFormat + Debug + PartialEq + Pod + Send + Sync {
-    /// Name of the attribute
+    /// Binding index of attribute type
     /// It is used to bind to the attributes in shaders
+    const BINDING: u32;
+
+    /// Name of the attribute
     const NAME: &'static str;
 
     /// Size of the attribue
@@ -43,7 +46,8 @@ impl Formatted for Position {
 }
 unsafe impl Pod for Position {}
 impl Attribute for Position {
-    const NAME: &'static str = "0_position";
+    const BINDING: u32 = 0;
+    const NAME: &'static str = "position";
     const SIZE: ElemStride = 12;
 }
 
@@ -68,7 +72,8 @@ impl Formatted for Color {
 }
 unsafe impl Pod for Color {}
 impl Attribute for Color {
-    const NAME: &'static str = "1_color";
+    const BINDING: u32 = 1;
+    const NAME: &'static str = "color";
     const SIZE: ElemStride = 16;
 }
 
@@ -92,7 +97,8 @@ impl Formatted for Normal {
 }
 unsafe impl Pod for Normal {}
 impl Attribute for Normal {
-    const NAME: &'static str = "2_normal";
+    const BINDING: u32 = 2;
+    const NAME: &'static str = "normal";
     const SIZE: ElemStride = 12;
 }
 
@@ -116,7 +122,8 @@ impl Formatted for Tangent {
 }
 unsafe impl Pod for Tangent {}
 impl Attribute for Tangent {
-    const NAME: &'static str = "3_tangent";
+    const BINDING: u32 = 3;
+    const NAME: &'static str = "tangent";
     const SIZE: ElemStride = 12;
 }
 
@@ -140,7 +147,8 @@ impl Formatted for TexCoord {
 }
 unsafe impl Pod for TexCoord {}
 impl Attribute for TexCoord {
-    const NAME: &'static str = "4_tex_coord";
+    const BINDING: u32 = 4;
+    const NAME: &'static str = "tex_coord";
     const SIZE: ElemStride = 8;
 }
 
@@ -175,6 +183,7 @@ where
     const VERTEX_FORMAT: VertexFormat<'static> = VertexFormat {
         attributes: &[
             (
+                T::BINDING,
                 T::NAME,
                 Element {
                     format: T::SELF,
@@ -217,8 +226,12 @@ unsafe impl Pod for PosColor {}
 impl VertexFormatted for PosColor {
     const VERTEX_FORMAT: VertexFormat<'static> = VertexFormat {
         attributes: &[
-            (Position::NAME, <Self as With<Position>>::FORMAT),
-            (Color::NAME, <Self as With<Color>>::FORMAT),
+            (
+                Position::BINDING,
+                Position::NAME,
+                <Self as With<Position>>::FORMAT,
+            ),
+            (Color::BINDING, Color::NAME, <Self as With<Color>>::FORMAT),
         ],
         stride: Position::SIZE + Color::SIZE,
     };
@@ -253,8 +266,16 @@ unsafe impl Pod for PosTex {}
 impl VertexFormatted for PosTex {
     const VERTEX_FORMAT: VertexFormat<'static> = VertexFormat {
         attributes: &[
-            (Position::NAME, <Self as With<Position>>::FORMAT),
-            (TexCoord::NAME, <Self as With<TexCoord>>::FORMAT),
+            (
+                Position::BINDING,
+                Position::NAME,
+                <Self as With<Position>>::FORMAT,
+            ),
+            (
+                TexCoord::BINDING,
+                TexCoord::NAME,
+                <Self as With<TexCoord>>::FORMAT,
+            ),
         ],
         stride: Position::SIZE + TexCoord::SIZE,
     };
@@ -291,9 +312,21 @@ unsafe impl Pod for PosNormTex {}
 impl VertexFormatted for PosNormTex {
     const VERTEX_FORMAT: VertexFormat<'static> = VertexFormat {
         attributes: &[
-            (Position::NAME, <Self as With<Position>>::FORMAT),
-            (Normal::NAME, <Self as With<Normal>>::FORMAT),
-            (TexCoord::NAME, <Self as With<TexCoord>>::FORMAT),
+            (
+                Position::BINDING,
+                Position::NAME,
+                <Self as With<Position>>::FORMAT,
+            ),
+            (
+                Normal::BINDING,
+                Normal::NAME,
+                <Self as With<Normal>>::FORMAT,
+            ),
+            (
+                TexCoord::BINDING,
+                TexCoord::NAME,
+                <Self as With<TexCoord>>::FORMAT,
+            ),
         ],
         stride: Position::SIZE + Normal::SIZE + TexCoord::SIZE,
     };
@@ -339,10 +372,26 @@ unsafe impl Pod for PosNormTangTex {}
 impl VertexFormatted for PosNormTangTex {
     const VERTEX_FORMAT: VertexFormat<'static> = VertexFormat {
         attributes: &[
-            (Position::NAME, <Self as With<Position>>::FORMAT),
-            (Normal::NAME, <Self as With<Normal>>::FORMAT),
-            (Tangent::NAME, <Self as With<Tangent>>::FORMAT),
-            (TexCoord::NAME, <Self as With<TexCoord>>::FORMAT),
+            (
+                Position::BINDING,
+                Position::NAME,
+                <Self as With<Position>>::FORMAT,
+            ),
+            (
+                Normal::BINDING,
+                Normal::NAME,
+                <Self as With<Normal>>::FORMAT,
+            ),
+            (
+                Tangent::BINDING,
+                Tangent::NAME,
+                <Self as With<Tangent>>::FORMAT,
+            ),
+            (
+                TexCoord::BINDING,
+                TexCoord::NAME,
+                <Self as With<TexCoord>>::FORMAT,
+            ),
         ],
         stride: Position::SIZE + Normal::SIZE + Tangent::SIZE + TexCoord::SIZE,
     };
@@ -394,7 +443,7 @@ macro_rules! impl_query {
         {
             const QUERIED_ATTRIBUTES: Attributes<'static> = &[
                 $(
-                    ($a::NAME, <VF as With<$a>>::FORMAT),
+                    ($a::BINDING, $a::NAME, <VF as With<$a>>::FORMAT),
                 )*
             ];
         }

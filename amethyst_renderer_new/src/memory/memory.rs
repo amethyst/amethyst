@@ -3,9 +3,8 @@ use std::fmt;
 use std::marker::PhantomData;
 
 use gfx_hal::{Backend, Device, MemoryType};
-use gfx_hal::device::OutOfMemory;
 use gfx_hal::memory::Requirements;
-use memory::{Allocator, Block, SubAllocator, calc_alignment_shift};
+use memory::{Allocator, Block, SubAllocator, calc_alignment_shift, Result};
 use relevant::Relevant;
 
 
@@ -20,7 +19,6 @@ impl fmt::Debug for Tag {
 
 unsafe impl Send for Tag {}
 unsafe impl Sync for Tag {}
-
 
 #[derive(Debug)]
 pub struct MemoryAllocator<B> {
@@ -55,14 +53,13 @@ where
 {
     type Tag = Tag;
     type Info = ();
-    type Error = OutOfMemory;
 
     fn alloc(
         &mut self,
         device: &B::Device,
         _: (),
         reqs: Requirements,
-    ) -> Result<Block<B, Tag>, OutOfMemory> {
+    ) -> Result<Block<B, Tag>> {
         assert_eq!(
             (1 << self.memory_type.id) & reqs.type_mask,
             1 << self.memory_type.id

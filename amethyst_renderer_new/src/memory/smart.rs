@@ -6,10 +6,8 @@ use gfx_hal::{Backend, Device, MemoryType};
 use gfx_hal::device::OutOfMemory;
 use gfx_hal::memory::{Properties, Requirements};
 
-use memory::{Allocator, Block, SubAllocator};
+use memory::{Allocator, Block, SubAllocator, Result};
 use memory::combined::{CombinedAllocator, Type};
-
-
 
 pub struct SmartAllocator<B: Backend> {
     allocators: Vec<CombinedAllocator<B>>,
@@ -42,14 +40,13 @@ where
 {
     type Info = (Type, Properties);
     type Tag = (usize, (Type, usize));
-    type Error = OutOfMemory;
 
     fn alloc(
         &mut self,
         device: &B::Device,
         (ty, prop): (Type, Properties),
         reqs: Requirements,
-    ) -> Result<Block<B, Self::Tag>, OutOfMemory> {
+    ) -> Result<Block<B, Self::Tag>> {
         let (index, allocator) = self.allocators
             .iter_mut()
             .enumerate()

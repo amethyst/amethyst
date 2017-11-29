@@ -13,6 +13,7 @@ use specs::{Component, Entity, World};
 
 use graph::pass::{AnyPass, Pass};
 use graph::{Error, ErrorKind, PassNode, Result, SuperFramebuffer};
+use shaders::ShaderManager;
 use vertex::VertexFormat;
 
 #[derive(Derivative)]
@@ -79,6 +80,7 @@ where
     pub fn build(
         &self,
         device: &B::Device,
+        shaders: &mut ShaderManager<B>,
         inputs: &[InputAttachmentDesc<B>],
         colors: &[ColorAttachmentDesc<B>],
         depth_stencil: Option<DepthStencilAttachmentDesc<B>>,
@@ -201,7 +203,7 @@ where
         let graphics_pipeline = {
             // Init basic configuration
             let mut pipeline_desc = pso::GraphicsPipelineDesc::new(
-                pass.shaders(unimplemented!(), device)?,
+                pass.shaders(shaders, device)?,
                 self.primitive,
                 self.rasterizer.clone(),
                 &pipeline_layout,
@@ -462,8 +464,8 @@ where
     for attribute in format.attributes.iter() {
         pipeline_desc.attributes.push(pso::AttributeDesc {
             location,
-            binding: index,
-            element: attribute.1,
+            binding: attribute.0,
+            element: attribute.2,
         });
         location += 1;
     }

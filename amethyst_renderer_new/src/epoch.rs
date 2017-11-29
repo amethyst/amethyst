@@ -64,6 +64,7 @@ fn is_valid_through<T: ValidThrough>(value: &T, epoch: Epoch) -> bool {
 
 /// Weak epoch pointer to `T`.
 /// It will expire after some `Epoch`.
+#[derive(Debug)]
 pub struct Ec<T> {
     ptr: *const T,
     valid_through: u64,
@@ -125,6 +126,7 @@ impl<T> Ec<T> {
 /// Strong epoch pointer to `T`.
 /// It will hold value alive and can't be dropped until `CurrentEpoch`
 /// is equal to last `Epoch` spcified in `make_valid_through` and `borrow`
+#[derive(Debug)]
 pub struct Eh<T> {
     relevant: Relevant,
     ptr: *const T,

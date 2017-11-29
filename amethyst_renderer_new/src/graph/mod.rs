@@ -25,10 +25,11 @@ use gfx_hal::window::{Backbuffer, Frame, Swapchain};
 use smallvec::SmallVec;
 use specs::World;
 
+use graph::pass::AnyPass;
 use memory::{Factory, Image};
-use self::pass::AnyPass;
+use shaders::ShaderManager;
 
-pub use self::build::*;
+pub use graph::build::*;
 
 
 error_chain!{
@@ -40,7 +41,7 @@ error_chain!{
     }
 
     links {
-        Memory(::memory::MemoryError, ::memory::MemoryErrorKind);
+        Memory(::memory::Error, ::memory::ErrorKind);
         Shader(::shaders::Error, ::shaders::ErrorKind);
     }
 
@@ -180,7 +181,6 @@ pub struct Graph<B: Backend> {
     signals: Vec<B::Semaphore>,
     acquire: B::Semaphore,
     finish: B::Fence,
-    backbuffer: Backbuffer<B>,
     images: Vec<Image<B>>,
     views: Vec<B::ImageView>,
 }
@@ -194,6 +194,7 @@ where
         pool: &mut CommandPool<B, C>,
         queue: &mut CommandQueue<B, C>,
         swapchain: &mut S,
+        backbuffer: &Backbuffer<B>,
         device: &B::Device,
         viewport: Viewport,
         world: &World,
@@ -213,7 +214,7 @@ where
 
         // Start frame acquisition
         let frame = SuperFrame::new(
-            &self.backbuffer,
+            backbuffer,
             swapchain.acquire_frame(FrameSync::Semaphore(acquire)),
         );
 
@@ -272,17 +273,18 @@ where
 
     pub fn build<A>(
         present: Present<B>,
-        backbuffer: Backbuffer<B>,
+        backbuffer: &Backbuffer<B>,
         color: Format,
         depth_stencil: Option<Format>,
         extent: Extent,
         factory: &mut Factory<B>,
         device: &B::Device,
+        shaders: &mut ShaderManager<B>,
     ) -> Result<Self> {
         assert_eq!(present.format(), color);
 
         // Create views for backbuffer
-        let mut image_views = match backbuffer {
+        let mut image_views = match *backbuffer {
             Backbuffer::Images(ref images) => {
                 images
                     .iter()
@@ -437,7 +439,7 @@ where
                             .unwrap_or_else(|| {
                                 (
                                     // It's backbuffer image
-                                    match backbuffer {
+                                    match *backbuffer {
                                         Backbuffer::Images(_) => AttachmentImageView::Acquired(
                                             &image_views
                                                 [0..backbuffer_image_views],
@@ -465,6 +467,7 @@ where
 
                 let mut node = pass.build(
                     device,
+                    shaders,
                     &inputs[..],
                     &colors[..],
                     depth_stencil,
@@ -487,7 +490,6 @@ where
             signals: (0..count).map(|_| device.create_semaphore()).collect(),
             acquire: device.create_semaphore(),
             finish: device.create_fence(false),
-            backbuffer,
             images,
             views: image_views,
         })

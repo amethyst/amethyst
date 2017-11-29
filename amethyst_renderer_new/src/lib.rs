@@ -26,13 +26,11 @@ extern crate gfx_backend_vulkan as vulkan;
 #[cfg(feature = "metal")]
 extern crate gfx_backend_metal as metal;
 
-
+pub mod command;
 pub mod epoch;
 pub mod memory;
-
 pub mod relevant;
 pub mod hal;
-
 // pub mod mesh;
 // pub mod cam;
 pub mod graph;
