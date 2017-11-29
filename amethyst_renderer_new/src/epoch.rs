@@ -52,7 +52,9 @@ pub trait ValidThrough {
     fn valid_through(&self) -> Epoch;
 
     /// Try to dispose of this value.
-    fn dispose(self, current: &CurrentEpoch) -> Result<Self::Data, Self> where Self: Sized;
+    fn dispose(self, current: &CurrentEpoch) -> Result<Self::Data, Self>
+    where
+        Self: Sized;
 }
 
 /// Check if this value valid through specified `Epoch`
@@ -67,8 +69,16 @@ pub struct Ec<T> {
     valid_through: u64,
 }
 
-unsafe impl<T> Send for Ec<T> where T: Sync {}
-unsafe impl<T> Sync for Ec<T> where T: Sync {}
+unsafe impl<T> Send for Ec<T>
+where
+    T: Sync,
+{
+}
+unsafe impl<T> Sync for Ec<T>
+where
+    T: Sync,
+{
+}
 
 impl<T> Copy for Ec<T> {}
 
@@ -101,10 +111,12 @@ impl<T> Ec<T> {
     #[inline]
     pub fn part<Y, F>(&self, current: &CurrentEpoch, f: F) -> Ec<Y>
     where
-        F: FnOnce(&T) -> &Y
+        F: FnOnce(&T) -> &Y,
     {
         Ec {
-            ptr: self.get(current).map(|t| f(t) as *const _).unwrap_or(null()),
+            ptr: self.get(current).map(|t| f(t) as *const _).unwrap_or(
+                null(),
+            ),
             valid_through: self.valid_through,
         }
     }
@@ -149,8 +161,16 @@ impl<T> Eh<T> {
     }
 }
 
-unsafe impl<T> Send for Eh<T> where T: Sync {}
-unsafe impl<T> Sync for Eh<T> where T: Sync {}
+unsafe impl<T> Send for Eh<T>
+where
+    T: Sync,
+{
+}
+unsafe impl<T> Sync for Eh<T>
+where
+    T: Sync,
+{
+}
 
 impl<T> ValidThrough for Eh<T> {
     type Data = T;
@@ -198,7 +218,7 @@ pub struct DeletionQueue<T> {
 
 impl<T> DeletionQueue<T>
 where
-    T: ValidThrough
+    T: ValidThrough,
 {
     #[inline]
     pub fn new() -> Self {

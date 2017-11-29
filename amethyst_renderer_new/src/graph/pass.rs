@@ -153,7 +153,7 @@ where
     /// Reflects [`Pass::draw_inline`] function
     ///
     /// [`Pass::draw_inline`]: trait.Pass.html#tymethod.draw_inline
-    fn draw_inline<'a>(&mut self, encoder: RenderPassInlineEncoder, world: &'a World);
+    fn draw_inline<'a>(&mut self, encoder: RenderPassInlineEncoder<B>, world: &'a World);
 }
 
 impl<P, B> AnyPass<B> for P
@@ -216,7 +216,7 @@ where
         );
     }
 
-    fn draw_inline<'a>(&mut self, encoder: RenderPassInlineEncoder, world: &'a World) {
+    fn draw_inline<'a>(&mut self, encoder: RenderPassInlineEncoder<B>, world: &'a World) {
         <P as Pass<B>>::draw_inline(
             self,
             encoder,

@@ -6,7 +6,7 @@ use std::ops::{Add, Deref, DerefMut, Range, Rem, Sub};
 
 use gfx_hal::{Backend, Device, MemoryType};
 use gfx_hal::memory::{Pod, Properties, Requirements};
-use gfx_hal::buffer::{Usage as BufferUsage};
+use gfx_hal::buffer::Usage as BufferUsage;
 use gfx_hal::format::Format;
 use gfx_hal::image::{Kind, Level, Usage as ImageUsage};
 use relevant::Relevant;
@@ -19,7 +19,7 @@ mod memory;
 mod smart;
 
 pub use self::smart::SmartAllocator;
-pub use self::factory::{Factory, Buffer, Image};
+pub use self::factory::{Buffer, Factory, Image};
 
 
 error_chain! {
@@ -273,4 +273,3 @@ where
         Vec::from_raw_parts(p as *mut Y, (s * tsize) / ysize, (c * tsize) / ysize)
     }
 }
-

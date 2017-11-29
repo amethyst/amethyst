@@ -25,7 +25,7 @@ pub struct PassBuilder<'a, B: Backend> {
     pub(super) primitive: Primitive,
     pub(super) connects: Vec<Pin<'a, B>>,
     name: &'a str,
-    #[derivative(Debug="ignore")]
+    #[derivative(Debug = "ignore")]
     pub(super) maker: Box<Fn() -> Box<AnyPass<B>>>,
 }
 
@@ -195,7 +195,7 @@ where
         let descriptor_set_layout = device.create_descriptor_set_layout(pass.bindings());
 
         // Create `PipelineLayout` from single `DescriptorSetLayout`
-        let pipeline_layout = device.create_pipeline_layout(&[&descriptor_set_layout]);
+        let pipeline_layout = device.create_pipeline_layout(&[&descriptor_set_layout], &[]);
 
         // Create `GraphicsPipeline`
         let graphics_pipeline = {

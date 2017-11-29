@@ -4,7 +4,7 @@ use std::cmp::min;
 use gfx_hal::{Backend, Device, Gpu, Instance};
 use gfx_hal::adapter::{Adapter, PhysicalDevice};
 use gfx_hal::format::{ChannelType, Format, Formatted, Srgba8};
-use gfx_hal::queue::{Compute, General, Graphics, QueueFamily, QueueGroup, QueueType,
+use gfx_hal::queue::{CommandQueue, Compute, General, Graphics, QueueFamily, QueueGroup, QueueType,
                      RawQueueGroup, Transfer};
 use gfx_hal::pool::CommandPool;
 use gfx_hal::window::{Surface, SwapchainConfig};
@@ -34,7 +34,7 @@ struct CommandGroups<B: Backend, C> {
     pools: Vec<CommandPool<B, C>>,
 }
 
-struct CommandCenter<B: Backend> {
+pub struct CommandCenter<B: Backend> {
     transfer: Option<CommandGroups<B, Transfer>>,
     compute: Option<CommandGroups<B, Compute>>,
     graphics: Option<CommandGroups<B, Graphics>>,
@@ -89,15 +89,15 @@ where
     }
 }
 
-
-struct Renderer<B: Backend> {
+pub struct Renderer<B: Backend> {
     window: Window,
     surface: B::Surface,
     format: Format,
     swapchain: B::Swapchain,
+    // graph: Graph<B>,
 }
 
-struct RendererBuilder<'a> {
+pub struct RendererBuilder<'a> {
     title: &'a str,
     width: u16,
     height: u16,
@@ -105,20 +105,11 @@ struct RendererBuilder<'a> {
 }
 
 pub struct Hal9000<B: Backend> {
-    device: B::Device,
-    epochal: Factory<B>,
-    center: CommandCenter<B>,
-    renderer: Option<Renderer<B>>,
-    // graphs: Vec<Graph<B>>,
+    pub device: B::Device,
+    pub factory: Factory<B>,
+    pub center: CommandCenter<B>,
+    pub renderer: Option<Renderer<B>>,
 }
-
-impl<B> Hal9000<B>
-where
-    B: Backend,
-{
-    
-}
-
 
 pub struct HalBuilder<'a> {
     adapter: Option<&'a str>,
@@ -132,12 +123,15 @@ pub struct HalBuilder<'a> {
 
 /// Helper trait to initialize backend
 pub trait Initialize<B: Backend> {
-    fn create_window_and_adapters(&self) -> Result<(Option<(Window, B::Surface)>, Vec<Adapter<B>>)>;
+    fn create_window_and_adapters(&self)
+        -> Result<(Option<(Window, B::Surface)>, Vec<Adapter<B>>)>;
 }
 
 #[cfg(feature = "metal")]
 impl<'a> Initialize<metal::Backend> for HalBuilder<'a> {
-    fn create_window_and_adapters(&self) -> Result<(Option<(Window, metal::Surface)>, Vec<Adapter<metal::Backend>>)> {
+    fn create_window_and_adapters(
+        &self,
+    ) -> Result<(Option<(Window, metal::Surface)>, Vec<Adapter<metal::Backend>>)> {
         let instance = metal::Instance::create("amethyst-hal", 1);
 
         let window_surface = self.renderer
@@ -160,10 +154,7 @@ impl<'a> Initialize<metal::Backend> for HalBuilder<'a> {
 
 
 impl<'a> HalBuilder<'a> {
-    fn init_adapter<B>(
-        &self,
-        adapter: Adapter<B>,
-    ) -> (B::Device, Factory<B>, CommandCenter<B>)
+    fn init_adapter<B>(&self, adapter: Adapter<B>) -> (B::Device, Factory<B>, CommandCenter<B>)
     where
         B: Backend,
     {
@@ -247,7 +238,7 @@ impl<'a> HalBuilder<'a> {
             memory_types,
             memory_heaps,
         } = adapter.physical_device.open(requests);
-        let epochal = Factory::new(
+        let factory = Factory::new(
             memory_types,
             self.arena_size,
             self.chunk_size,
@@ -255,7 +246,7 @@ impl<'a> HalBuilder<'a> {
         );
         let center = CommandCenter::new(queue_groups);
 
-        (device, epochal, center)
+        (device, factory, center)
     }
 
     fn build<B>(self) -> Result<Hal9000<B>>
@@ -265,7 +256,8 @@ impl<'a> HalBuilder<'a> {
     {
         let (window_surface, adapters) = self.create_window_and_adapters()?;
 
-        let mut window_surface_format = window_surface.map(|(window, surface)| (window, surface, Srgba8::SELF));
+        let mut window_surface_format =
+            window_surface.map(|(window, surface)| (window, surface, Srgba8::SELF));
 
         println!("Adapters:");
         for adapter in &adapters {
@@ -274,7 +266,7 @@ impl<'a> HalBuilder<'a> {
         let (soft, hard) = adapters.into_iter().partition::<Vec<_>, _>(|adapter| {
             adapter.info.software_rendering
         });
-        let (device, epochal, center) = hard.into_iter()
+        let (device, factory, center) = hard.into_iter()
             .chain(soft)
             .filter_map(|adapter| {
                 if let Some((_, ref surface, ref mut format)) = window_surface_format {
@@ -304,10 +296,9 @@ impl<'a> HalBuilder<'a> {
 
         Ok(Hal9000 {
             device,
-            epochal,
+            factory,
             center,
             renderer,
-            // graphs: Vec::new(),
         })
     }
 }

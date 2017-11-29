@@ -6,15 +6,17 @@ pub mod pass;
 use std::collections::{HashMap, HashSet};
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::marker::PhantomData;
-use std::mem::replace;
+use std::mem::{replace, transmute};
 use std::iter::Empty;
 use std::ops::Range;
 
 use gfx_hal::Backend;
-use gfx_hal::command::{CommandBuffer, ClearValue, Rect, SubpassContents, Viewport};
+use gfx_hal::command::{ClearValue, CommandBuffer, Rect, Viewport};
 use gfx_hal::device::{Device, Extent, FramebufferError, WaitFor};
 use gfx_hal::format::{Format, Swizzle};
+use gfx_hal::memory::Properties;
 use gfx_hal::image;
+use gfx_hal::pool::CommandPool;
 use gfx_hal::pso::{BlendState, CreationError, PipelineStage};
 use gfx_hal::queue::CommandQueue;
 use gfx_hal::queue::capability::{Graphics, Supports, Transfer};
@@ -23,7 +25,7 @@ use gfx_hal::window::{Backbuffer, Frame, Swapchain};
 use smallvec::SmallVec;
 use specs::World;
 
-use memory::Factory;
+use memory::{Factory, Image};
 use self::pass::AnyPass;
 
 pub use self::build::*;
@@ -38,7 +40,7 @@ error_chain!{
     }
 
     links {
-        Memory(::memory::Error, ::memory::ErrorKind);
+        Memory(::memory::MemoryError, ::memory::MemoryErrorKind);
         Shader(::shaders::Error, ::shaders::ErrorKind);
     }
 
@@ -150,14 +152,14 @@ where
         // * Write descriptor sets
         // * Store caches
         self.pass.prepare(
-            unsafe { transmute(cbuf) },
+            unsafe { transmute(&mut *cbuf) }, // Should be OK
             &self.pipeline_layout,
             device,
             world,
         );
 
         // Begin render pass with single inline subpass
-        let encoder = cbuf.begin_renderpass(
+        let encoder = cbuf.begin_renderpass_inline(
             &self.render_pass,
             pick(&self.framebuffer, frame),
             rect,
@@ -165,7 +167,7 @@ where
         );
 
         // Record custom drawing calls
-        self.pass.draw(encoder, world);
+        self.pass.draw_inline(encoder, world);
 
         // Return if this pass renders to the acquired image
         self.framebuffer.is_acquired()
@@ -179,7 +181,7 @@ pub struct Graph<B: Backend> {
     acquire: B::Semaphore,
     finish: B::Fence,
     backbuffer: Backbuffer<B>,
-    images: Vec<B::Image>,
+    images: Vec<Image<B>>,
     views: Vec<B::ImageView>,
 }
 
@@ -215,12 +217,6 @@ where
             swapchain.acquire_frame(FrameSync::Semaphore(acquire)),
         );
 
-        // Allocate enough command buffers
-        if cbufs.len() < self.passes.len() {
-            let add = self.passes.len() - cbufs.len();
-            cbufs.append(&mut pool.allocate(add));
-        }
-
         // Store `Semaphore`s that `Surface::present` needs to wait for
         let mut presents: SmallVec<[_; 32]> = SmallVec::new();
 
@@ -234,7 +230,7 @@ where
             cbuf.set_scissors(&[viewport.rect]);
 
             // Record commands for pass
-            let acquires = pass.draw(cbuf, device, world, viewport.rect, frame.clone());
+            let acquires = pass.draw(&mut cbuf, device, world, viewport.rect, frame.clone());
 
             // If it renders to acquired image
             let wait_acuired = if acquires {
@@ -249,8 +245,9 @@ where
             // Submit buffer
             queue.submit(
                 Submission::new()
+                    .promote::<C>()
                     .submit(&[cbuf.finish()])
-                    .wait(&pass.depends
+                    .wait_on(&pass.depends
                         .iter()
                         .map(|&(id, stage)| (&signals[id], stage))
                         .chain(wait_acuired)
@@ -279,7 +276,7 @@ where
         color: Format,
         depth_stencil: Option<Format>,
         extent: Extent,
-        manager: &mut Factory<B>,
+        factory: &mut Factory<B>,
         device: &B::Device,
     ) -> Result<Self> {
         assert_eq!(present.format(), color);
@@ -303,7 +300,7 @@ where
         let backbuffer_image_views = image_views.len();
 
         // Collect all passes by walking dependecy tree
-        let mut passes = traverse(&present);
+        let passes = traverse(&present);
 
         // Reorder passes to increase overlapping
         let passes = {
@@ -358,7 +355,7 @@ where
             targets.insert(
                 key,
                 create_targets(
-                    allocator,
+                    factory,
                     device,
                     merge,
                     &mut images,
@@ -514,17 +511,16 @@ struct DepthIndex {
 }
 
 
-fn create_targets<A, B, F>(
-    allocator: &mut A,
+fn create_targets<B, F>(
+    factory: &mut Factory<B>,
     device: &B::Device,
     merge: &Merge<B>,
-    images: &mut Vec<B::Image>,
+    images: &mut Vec<Image<B>>,
     views: &mut Vec<B::ImageView>,
     extent: Extent,
     f: F,
 ) -> Result<Targets>
 where
-    A: Allocator<B>,
     B: Backend,
     F: Fn(usize) -> bool,
 {
@@ -534,21 +530,22 @@ where
             extent.height as u16,
             image::AaMode::Single,
         );
-        let img = allocator.allocate_image(
+        let image = factory.create_image(
             device,
             kind,
             1,
             format,
             image::Usage::COLOR_ATTACHMENT,
+            Properties::DEVICE_LOCAL,
         )?;
         let view = device.create_image_view(
-            &img,
+            &image,
             format,
             Swizzle::NO,
             COLOR_RANGE.clone(),
         )?;
         views.push(view);
-        images.push(img);
+        images.push(image);
         Ok(views.len() - 1)
     };
 

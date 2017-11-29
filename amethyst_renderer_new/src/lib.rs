@@ -35,7 +35,7 @@ pub mod hal;
 
 // pub mod mesh;
 // pub mod cam;
-// pub mod graph;
+pub mod graph;
 pub mod shaders;
 // pub mod texture;
 pub mod vertex;

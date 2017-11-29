@@ -132,21 +132,13 @@ where
 }
 
 pub trait IndexDataMaybe {
-    fn build<B>(
-        self,
-        manager: Factory<B>,
-        device: &B::Device,
-    ) -> Result<Option<IndexBuffer<B>>>
+    fn build<B>(self, manager: Factory<B>, device: &B::Device) -> Result<Option<IndexBuffer<B>>>
     where
         B: Backend;
 }
 
 impl IndexDataMaybe for () {
-    fn build<B>(
-        self,
-        manager: Factory<B>,
-        device: &B::Device,
-    ) -> Result<Option<IndexBuffer<B>>>
+    fn build<B>(self, manager: Factory<B>, device: &B::Device) -> Result<Option<IndexBuffer<B>>>
     where
         B: Backend,
     {
@@ -158,11 +150,7 @@ impl<D> IndexDataMaybe for Data<D, u16>
 where
     D: AsRef<[u16]>,
 {
-    fn build<B>(
-        self,
-        manager: Factory<B>,
-        device: &B::Device,
-    ) -> Result<Option<IndexBuffer<B>>>
+    fn build<B>(self, manager: Factory<B>, device: &B::Device) -> Result<Option<IndexBuffer<B>>>
     where
         B: Backend,
     {
@@ -185,11 +173,7 @@ impl<D> IndexDataMaybe for Data<D, u32>
 where
     D: AsRef<[u32]>,
 {
-    fn build<B>(
-        self,
-        manager: Factory<B>,
-        device: &B::Device,
-    ) -> Result<Option<IndexBuffer<B>>>
+    fn build<B>(self, manager: Factory<B>, device: &B::Device) -> Result<Option<IndexBuffer<B>>>
     where
         B: Backend,
     {

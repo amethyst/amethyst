@@ -16,21 +16,23 @@ use gfx_hal::mapping::Error as MappingError;
 use specs::{Fetch, FetchMut};
 
 
-use epoch::{DeletionQueue, Epoch, CurrentEpoch, Eh, ValidThrough};
-use memory::{Allocator, Block, MemoryError, MemoryErrorKind, SmartAllocator, MemoryResult, shift_for_alignment};
+use epoch::{CurrentEpoch, DeletionQueue, Eh, Epoch, ValidThrough};
+use memory::{Allocator, Block, MemoryError, MemoryErrorKind, MemoryResult, SmartAllocator,
+             shift_for_alignment};
 use memory::combined::Type as AllocationType;
 use relevant::Relevant;
 
 pub type Buffer<B: Backend> = Item<B, B::Buffer>;
 pub type Image<B: Backend> = Item<B, B::Image>;
 
+#[derive(Debug)]
 pub struct Inner<B: Backend, T> {
     inner: T,
     block: Block<B, <SmartAllocator<B> as Allocator<B>>::Tag>,
     properties: Properties,
     requirements: Requirements,
 }
-
+#[derive(Debug)]
 pub struct Item<B: Backend, T> {
     item: Inner<B, T>,
     valid_through: Epoch,
