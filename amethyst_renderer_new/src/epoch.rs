@@ -3,6 +3,7 @@
 use std::cmp::{Ordering, PartialOrd, max, min};
 use std::collections::VecDeque;
 use std::ops::{Add, Deref, DerefMut};
+use std::ptr::null;
 
 use relevant::Relevant;
 
@@ -66,8 +67,20 @@ pub struct Ec<T> {
     valid_through: u64,
 }
 
+unsafe impl<T> Send for Ec<T> where T: Sync {}
+unsafe impl<T> Sync for Ec<T> where T: Sync {}
+
+impl<T> Copy for Ec<T> {}
+
+impl<T> Clone for Ec<T> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
 impl<T> Ec<T> {
     /// Get `Epoch` after which this `Ec` will expire.
+    #[inline]
     pub fn valid_through(&self) -> Epoch {
         Epoch(self.valid_through)
     }
@@ -77,11 +90,22 @@ impl<T> Ec<T> {
     /// (CurrentEpoch is less than `self.valid_through()`).
     /// Returns `None` otherwise.
     #[inline]
-    pub fn get<'a>(&'a self, current: &CurrentEpoch) -> Option<&'a T> {
+    pub fn get<'a>(&self, current: &'a CurrentEpoch) -> Option<&'a T> {
         if self.valid_through <= current.0 {
             unsafe { Some(&*self.ptr) }
         } else {
             None
+        }
+    }
+
+    #[inline]
+    pub fn part<Y, F>(&self, current: &CurrentEpoch, f: F) -> Ec<Y>
+    where
+        F: FnOnce(&T) -> &Y
+    {
+        Ec {
+            ptr: self.get(current).map(|t| f(t) as *const _).unwrap_or(null()),
+            valid_through: self.valid_through,
         }
     }
 }
@@ -97,6 +121,7 @@ pub struct Eh<T> {
 
 impl<T> Eh<T> {
     /// Wrap value into `Eh`
+    #[inline]
     pub fn new(value: T) -> Self {
         Eh {
             relevant: Relevant,
@@ -107,12 +132,14 @@ impl<T> Eh<T> {
 
     /// Make all new `Ec` from this to be valid
     /// until specifyed `Epoch` expired
+    #[inline]
     pub fn make_valid_through(this: &mut Self, epoch: Epoch) {
         this.valid_through = max(this.valid_through, epoch.0);
     }
 
     /// Borrow `Ec` from this `Eh`
     /// `Ec` will expire after specified `Epoch`
+    #[inline]
     pub fn borrow(this: &mut Self, epoch: Epoch) -> Ec<T> {
         Self::make_valid_through(this, epoch);
         Ec {
@@ -122,13 +149,18 @@ impl<T> Eh<T> {
     }
 }
 
+unsafe impl<T> Send for Eh<T> where T: Sync {}
+unsafe impl<T> Sync for Eh<T> where T: Sync {}
+
 impl<T> ValidThrough for Eh<T> {
     type Data = T;
 
+    #[inline]
     fn valid_through(&self) -> Epoch {
         Epoch(self.valid_through)
     }
 
+    #[inline]
     fn dispose(self, current: &CurrentEpoch) -> Result<T, Self> {
         if self.valid_through < current.0 {
             self.relevant.dispose();
@@ -140,6 +172,7 @@ impl<T> ValidThrough for Eh<T> {
 }
 
 impl<T> From<Box<T>> for Eh<T> {
+    #[inline]
     fn from(b: Box<T>) -> Self {
         Eh {
             relevant: Relevant,
@@ -151,6 +184,7 @@ impl<T> From<Box<T>> for Eh<T> {
 
 impl<T> Deref for Eh<T> {
     type Target = T;
+    #[inline]
     fn deref(&self) -> &T {
         unsafe { &*self.ptr }
     }
@@ -166,6 +200,7 @@ impl<T> DeletionQueue<T>
 where
     T: ValidThrough
 {
+    #[inline]
     pub fn new() -> Self {
         DeletionQueue {
             offset: 0,
