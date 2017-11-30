@@ -5,17 +5,17 @@ pub mod pass;
 
 use std::collections::{HashMap, HashSet};
 use std::collections::hash_map::Entry::{Occupied, Vacant};
+use std::iter::Empty;
 use std::marker::PhantomData;
 use std::mem::{replace, transmute};
-use std::iter::Empty;
 use std::ops::Range;
 
 use gfx_hal::Backend;
 use gfx_hal::command::{ClearValue, CommandBuffer, Rect, Viewport};
 use gfx_hal::device::{Device, Extent, FramebufferError, WaitFor};
 use gfx_hal::format::{Format, Swizzle};
-use gfx_hal::memory::Properties;
 use gfx_hal::image;
+use gfx_hal::memory::Properties;
 use gfx_hal::pool::CommandPool;
 use gfx_hal::pso::{BlendState, CreationError, PipelineStage};
 use gfx_hal::queue::CommandQueue;
@@ -58,6 +58,10 @@ const COLOR_RANGE: image::SubresourceRange = image::SubresourceRange {
     layers: 0..1,
 };
 
+
+/// This wrapper allow to abstract over two cases.
+/// `Index` => index to one of multiple `Framebuffer`s created by the engine.
+/// `Buffer` => Single `Framebuffer` associated with `Swapchain`.
 #[derive(Derivative)]
 #[derivative(Clone, Debug)]
 pub enum SuperFrame<'a, B: Backend> {
@@ -69,8 +73,9 @@ impl<'a, B> SuperFrame<'a, B>
 where
     B: Backend,
 {
+    /// Create `SuperFrame` from `Backbuffer` and `Frame` index.
     fn new(backbuffer: &'a Backbuffer<B>, frame: Frame) -> Self {
-        // Check if we have `Framebuffer` from `Surface` (OpenGL) or `Image`s
+        // Check if we have `Framebuffer` from `Surface` (usually with OpenGL backend) or `Image`s
         // In case it's `Image`s we need to pick `Framebuffer` for `RenderPass`es
         // that renders onto surface.
         match *backbuffer {
@@ -80,15 +85,17 @@ where
     }
 }
 
+
+/// Framebuffer wrapper
 #[derive(Debug)]
 pub enum SuperFramebuffer<B: Backend> {
     /// Target is owned by `Graph`
     Owned(B::Framebuffer),
 
-    /// Target is acquired from `Swapchain`
+    /// Target is multiple `Framebuffer`s created over `ImageView`s from `Swapchain`
     Acquired(Vec<B::Framebuffer>),
 
-    /// Target is single `Framebuffer`
+    /// Target is single `Framebuffer` associated with `Swapchain`
     Single,
 }
 
@@ -105,6 +112,7 @@ where
     }
 }
 
+/// Picks correct framebuffer
 fn pick<'a, B>(framebuffer: &'a SuperFramebuffer<B>, frame: SuperFrame<'a, B>) -> &'a B::Framebuffer
 where
     B: Backend,
@@ -119,6 +127,10 @@ where
     }
 }
 
+
+/// Single node in rendering graph.
+/// Nodes can use output of other nodes as input.
+/// Such connection called `dependency`
 #[derive(Debug)]
 pub struct PassNode<B: Backend> {
     clears: Vec<ClearValue>,
@@ -135,6 +147,7 @@ impl<B> PassNode<B>
 where
     B: Backend,
 {
+    /// Record drawing command for this node.
     fn draw<C>(
         &mut self,
         cbuf: &mut CommandBuffer<B, C>,
@@ -175,6 +188,8 @@ where
     }
 }
 
+/// Directed acyclic rendering graph.
+/// It holds all rendering nodes and auxilary data.
 #[derive(Debug)]
 pub struct Graph<B: Backend> {
     passes: Vec<PassNode<B>>,
@@ -189,10 +204,17 @@ impl<B> Graph<B>
 where
     B: Backend,
 {
+    /// Walk over graph recording drawing commands and submitting them to `queue`.
+    /// This function handles synchronization between dependent rendering nodes.
+    ///
+    /// `queue` must come from same `QueueGroup` with witch `pool` is associated.
+    /// `swapchain` must be created with `backbuffer`.
+    /// `backbuffer` must be the same that was used in `build` function.
+    /// All those should be created by `device`.
     pub fn draw<S, C>(
         &mut self,
-        pool: &mut CommandPool<B, C>,
         queue: &mut CommandQueue<B, C>,
+        pool: &mut CommandPool<B, C>,
         swapchain: &mut S,
         backbuffer: &Backbuffer<B>,
         device: &B::Device,
@@ -271,14 +293,17 @@ where
         pool.reset();
     }
 
+
+    /// Build rendering graph from `ColorPin`
+    /// for specified `backbuffer`.
     pub fn build<A>(
-        present: Present<B>,
+        present: ColorPin<B>,
         backbuffer: &Backbuffer<B>,
         color: Format,
         depth_stencil: Option<Format>,
         extent: Extent,
-        allocator: &mut Allocator<B>,
         device: &B::Device,
+        allocator: &mut Allocator<B>,
         shaders: &mut ShaderManager<B>,
     ) -> Result<Self> {
         assert_eq!(present.format(), color);
@@ -352,7 +377,7 @@ where
         // Initialize all targets
         let mut targets = HashMap::<*const _, Targets>::new();
         for &merge in merges.iter() {
-            let present_key = present.pin.merge as *const _;
+            let present_key = present.merge as *const _;
             let key = merge as *const _;
             targets.insert(
                 key,
@@ -363,7 +388,7 @@ where
                     &mut images,
                     &mut image_views,
                     extent,
-                    |index| key == present_key && present.pin.index == index,
+                    |index| key == present_key && present.index == index,
                 )?,
             );
         }
@@ -541,7 +566,7 @@ where
             Properties::DEVICE_LOCAL,
         )?;
         let view = device.create_image_view(
-            &image,
+            image.raw(),
             format,
             Swizzle::NO,
             COLOR_RANGE.clone(),

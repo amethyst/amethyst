@@ -5,104 +5,171 @@ use cgmath::{Deg, Matrix4, Point3, SquareMatrix, Transform, Vector3};
 
 use gfx_hal::{Backend, Device, IndexCount, IndexType, Primitive, VertexCount};
 use gfx_hal::buffer::{IndexBufferView, Usage};
-use gfx_hal::memory::{Pod, cast_slice};
+use gfx_hal::memory::{Pod, Properties};
 use gfx_hal::pso::{ElemStride, VertexBufferSet};
 
 use smallvec::SmallVec;
 
-use memory::{Buffer, Allocator, Image};
+use epoch::CurrentEpoch;
+use hal::Hal;
+use memory::{Allocator, Buffer, Image};
 use memory::cast_pod_vec;
-use upload::Uploader;
+use upload::{self, Uploader};
 use utils::{is_slice_sorted, is_slice_sorted_by_key};
 use vertex::{Attributes, VertexFormat, VertexFormatSet, VertexFormatted};
 
-error_chain! {
-    links {
-        Memory(memory::Error, memory::ErrorKind);
-    }
 
-    errors {
-        Incompatible {
-            description("Incompatible"),
-            display("Incompatible"),
-        }
-    }
-}
-
+/// Wraps container type (Like `Vec<V>`, `&[V]`, Box<[V]>, Cow<[V]> etc)
+/// providing methods to build `VertexBuffer<B>` if `V` is `VertexFormatted`
+/// or `IndexBuffer<B>` if `V` is `u16` or `u32`
 pub struct Data<D, V> {
     data: D,
-    pd: PhantomData<(V)>,
+    pd: PhantomData<V>,
 }
 
 impl<D, V> Data<D, V>
 where
-    D: AsRef<[V]>,
+    D: AsRef<[V]> + Into<Vec<V>>,
     V: VertexFormatted,
 {
-    pub fn new(data: D) -> Self {
+    fn new(data: D) -> Self {
         Data {
             data,
             pd: PhantomData,
         }
     }
 
-    pub fn size(&self) -> usize {
+    fn size(&self) -> usize {
         self.data.as_ref().len() * V::VERTEX_FORMAT.stride as usize
     }
 
-    pub fn stride(&self) -> ElemStride {
+    fn stride(&self) -> ElemStride {
         V::VERTEX_FORMAT.stride
     }
 
-    pub(crate) fn build<B>(
+    fn build_vertex<B>(
         self,
-        allocator: Allocator<B>,
-        uploader: &mut Uploader,
+        allocator: &mut Allocator<B>,
+        uploader: &mut Uploader<B>,
+        current: &CurrentEpoch,
         device: &B::Device,
-    ) -> Result<VertexBuffer<B>>
+    ) -> upload::Result<VertexBuffer<B>>
     where
         B: Backend,
     {
-        let slice = cast_slice(self.data.as_ref());
-
+        let len = self.data.as_ref().len() as VertexCount;
         let mut buffer = allocator.create_buffer(
             device,
-            slice.len(),
+            len as _,
             V::VERTEX_FORMAT.stride as _,
             Usage::VERTEX,
+            Properties::DEVICE_LOCAL,
+            false,
         )?;
-        uploader.upload_direct(&mut buffer, data);
-
+        uploader.upload_buffer(allocator, current, device, &mut buffer, 0, self.data)?;
         Ok(VertexBuffer {
             buffer,
             format: V::VERTEX_FORMAT,
-            len: self.data.as_ref().len() as VertexCount,
+            len,
         })
     }
 }
 
+impl<D> Data<D, u16>
+where
+    D: AsRef<[u16]> + Into<Vec<u16>>,
+{
+    fn build_index<B>(
+        self,
+        allocator: &mut Allocator<B>,
+        uploader: &mut Uploader<B>,
+        current: &CurrentEpoch,
+        device: &B::Device,
+    ) -> upload::Result<IndexBuffer<B>>
+    where
+        B: Backend,
+    {
+        let len = self.data.as_ref().len() as IndexCount;
+        let mut buffer = allocator.create_buffer(
+            device,
+            len as _,
+            size_of::<u16>() as _,
+            Usage::INDEX,
+            Properties::DEVICE_LOCAL,
+            false,
+        )?;
+        uploader.upload_buffer(allocator, current, device, &mut buffer, 0, self.data)?;
+        Ok(IndexBuffer {
+            buffer,
+            len,
+            index_type: IndexType::U16,
+        })
+    }
+}
 
-/// List of vertex data
+impl<D> Data<D, u32>
+where
+    D: AsRef<[u32]> + Into<Vec<u32>>,
+{
+    fn build_index<B>(
+        self,
+        allocator: &mut Allocator<B>,
+        uploader: &mut Uploader<B>,
+        current: &CurrentEpoch,
+        device: &B::Device,
+    ) -> upload::Result<IndexBuffer<B>>
+    where
+        B: Backend,
+    {
+        let len = self.data.as_ref().len() as IndexCount;
+
+        let mut buffer = allocator.create_buffer(
+            device,
+            len as _,
+            size_of::<u32>() as _,
+            Usage::INDEX,
+            Properties::DEVICE_LOCAL,
+            false,
+        )?;
+        uploader.upload_buffer(allocator, current, device, &mut buffer, 0, self.data)?;
+
+        Ok(IndexBuffer {
+            buffer,
+            len,
+            index_type: IndexType::U32,
+        })
+    }
+}
+
+/// Heterogenous list of vertex data.
 pub trait VertexDataList {
+    /// Length of the list
     const LENGTH: usize;
+
+    /// Build buffers from data.
     fn build<B>(
         self,
-        allocator: Allocator<B>,
+        allocator: &mut Allocator<B>,
+        uploader: &mut Uploader<B>,
+        current: &CurrentEpoch,
         device: &B::Device,
         output: &mut Vec<VertexBuffer<B>>,
-    ) -> Result<()>
+    ) -> upload::Result<()>
     where
         B: Backend;
 }
 
+/// Empty list implementation
 impl VertexDataList for () {
     const LENGTH: usize = 0;
     fn build<B>(
         self,
-        allocator: Allocator<B>,
-        device: &B::Device,
-        output: &mut Vec<VertexBuffer<B>>,
-    ) -> Result<()>
+        _allocator: &mut Allocator<B>,
+        _uploader: &mut Uploader<B>,
+        _current: &CurrentEpoch,
+        _device: &B::Device,
+        _output: &mut Vec<VertexBuffer<B>>,
+    ) -> upload::Result<()>
     where
         B: Backend,
     {
@@ -110,36 +177,56 @@ impl VertexDataList for () {
     }
 }
 
+
+/// Non-empty list implementation
 impl<D, V, L> VertexDataList for (Data<D, V>, L)
 where
-    D: AsRef<[V]>,
+    D: AsRef<[V]> + Into<Vec<V>>,
     V: VertexFormatted,
     L: VertexDataList,
 {
     const LENGTH: usize = 1 + L::LENGTH;
     fn build<B>(
         self,
-        allocator: Allocator<B>,
+        allocator: &mut Allocator<B>,
+        uploader: &mut Uploader<B>,
+        current: &CurrentEpoch,
         device: &B::Device,
         output: &mut Vec<VertexBuffer<B>>,
-    ) -> Result<()>
+    ) -> upload::Result<()>
     where
         B: Backend,
     {
         let (head, tail) = self;
-        output.push(head.build(allocator, device)?);
-        tail.build(allocator, device, output)
+        output.push(head.build_vertex(allocator, uploader, current, device)?);
+        tail.build(allocator, uploader, current, device, output)
     }
 }
 
+/// Optional index data type.
 pub trait IndexDataMaybe {
-    fn build<B>(self, allocator: Allocator<B>, device: &B::Device) -> Result<Option<IndexBuffer<B>>>
+    /// Build buffer (or don't) from data.
+    fn build<B>(
+        self,
+        allocator: &mut Allocator<B>,
+        uploader: &mut Uploader<B>,
+        current: &CurrentEpoch,
+        device: &B::Device,
+    ) -> upload::Result<Option<IndexBuffer<B>>>
     where
         B: Backend;
 }
 
+/// None index data implementation
 impl IndexDataMaybe for () {
-    fn build<B>(self, allocator: Allocator<B>, device: &B::Device) -> Result<Option<IndexBuffer<B>>>
+    /// No data - no buffer
+    fn build<B>(
+        self,
+        _allocator: &mut Allocator<B>,
+        _uploader: &mut Uploader<B>,
+        _current: &CurrentEpoch,
+        _device: &B::Device,
+    ) -> upload::Result<Option<IndexBuffer<B>>>
     where
         B: Backend,
     {
@@ -149,64 +236,62 @@ impl IndexDataMaybe for () {
 
 impl<D> IndexDataMaybe for Data<D, u16>
 where
-    D: AsRef<[u16]>,
+    D: AsRef<[u16]> + Into<Vec<u16>>,
 {
-    fn build<B>(self, device: &B::Device, allocator: &mut Allocator<B>, uploader: &mut Uploader<B>) -> Result<Option<IndexBuffer<B>>>
+    /// Build `u16` index buffer.
+    fn build<B>(
+        self,
+        allocator: &mut Allocator<B>,
+        uploader: &mut Uploader<B>,
+        current: &CurrentEpoch,
+        device: &B::Device,
+    ) -> upload::Result<Option<IndexBuffer<B>>>
     where
         B: Backend,
     {
-        Ok(Some(IndexBuffer {
-            {
-                let mut buffer: allocator.create_buffer(
-                device,
-                slice.len() as _,
-                size_of::<u16>() as _,
-                Usage::INDEX,
-                )?,
-                uploader.upload_buffer(&mut buffer, allocator, device, ec, 0, self.data);
-                buffer
-            }
-            len: self.data.as_ref().len() as IndexCount,
-            index_type: IndexType::U16,
-        }))
+        self.build_index(allocator, uploader, current, device).map(
+            Some,
+        )
     }
 }
 
 impl<D> IndexDataMaybe for Data<D, u32>
 where
-    D: AsRef<[u32]>,
+    D: AsRef<[u32]> + Into<Vec<u32>>,
 {
-    fn build<B>(self, allocator: Allocator<B>, device: &B::Device) -> Result<Option<IndexBuffer<B>>>
+    /// Build `u32` index buffer.
+    fn build<B>(
+        self,
+        allocator: &mut Allocator<B>,
+        uploader: &mut Uploader<B>,
+        current: &CurrentEpoch,
+        device: &B::Device,
+    ) -> upload::Result<Option<IndexBuffer<B>>>
     where
         B: Backend,
     {
-        let slice = cast_slice(self.data.as_ref());
-        Ok(Some(IndexBuffer {
-            buffer: allocator.create_buffer(
-                device,
-                slice.len() as _,
-                size_of::<u32>() as _,
-                Usage::INDEX,
-                Some(slice),
-            )?,
-            len: self.data.as_ref().len() as IndexCount,
-            index_type: IndexType::U32,
-        }))
+        self.build_index(allocator, uploader, current, device).map(
+            Some,
+        )
     }
 }
 
+/// Vertex buffer with it's format
 pub struct VertexBuffer<B: Backend> {
-    buffer: B::Buffer,
+    buffer: Buffer<B>,
     format: VertexFormat<'static>,
     len: VertexCount,
 }
 
+/// Index buffer with it's type
 pub struct IndexBuffer<B: Backend> {
-    buffer: B::Buffer,
+    buffer: Buffer<B>,
     index_type: IndexType,
     len: IndexCount,
 }
 
+/// Mesh builder based on heterogenous lists.
+/// It doesn't require data for buffers to be in `Vec`.
 pub struct HMeshBuilder<V, I> {
     vertices: V,
     indices: I,
@@ -215,6 +300,7 @@ pub struct HMeshBuilder<V, I> {
 }
 
 impl HMeshBuilder<(), ()> {
+    /// Create empty builder.
     fn new() -> Self {
         HMeshBuilder {
             vertices: (),
@@ -229,7 +315,7 @@ impl<L> HMeshBuilder<L, ()>
 where
     L: VertexDataList,
 {
-    /// Add indices buffer to the `MeshBuiler`
+    /// Add indices buffer to the `HMeshBuilder`
     pub fn with_indices<I>(self, indices: I) -> HMeshBuilder<L, I>
     where
         I: IndexDataMaybe,
@@ -251,7 +337,7 @@ where
     /// Add another vertices to the `HMeshBuilder`
     pub fn with_vertices<D, V>(self, vertices: D) -> HMeshBuilder<(Data<D, V>, L), I>
     where
-        D: AsRef<[V]>,
+        D: AsRef<[V]> + Into<Vec<V>>,
         V: VertexFormatted,
     {
         HMeshBuilder {
@@ -314,23 +400,36 @@ where
     I: IndexDataMaybe,
 {
     /// Builds and returns the new mesh.
-    pub fn build<B>(self, allocator: Allocator<B>, device: &B::Device) -> Result<Mesh<B>>
+    pub fn build<B>(self, hal: &mut Hal<B>) -> upload::Result<Mesh<B>>
     where
         B: Backend,
     {
         Ok(Mesh {
             vbufs: {
                 let mut vbufs = Vec::with_capacity(L::LENGTH);
-                self.vertices.build(allocator, device, &mut vbufs)?;
+                self.vertices.build(
+                    &mut hal.allocator,
+                    &mut hal.uploader,
+                    &hal.current_epoch,
+                    &hal.device,
+                    &mut vbufs,
+                )?;
                 vbufs
             },
-            ibuf: self.indices.build(allocator, device)?,
+            ibuf: self.indices.build(
+                &mut hal.allocator,
+                &mut hal.uploader,
+                &hal.current_epoch,
+                &hal.device,
+            )?,
             prim: self.prim,
             transform: self.transform,
         })
     }
 }
 
+
+/// Abstacts over two types of indices and their absence.
 pub enum Indices {
     None,
     U16(Vec<u16>),
@@ -349,6 +448,9 @@ impl From<Vec<u32>> for Indices {
     }
 }
 
+/// Generics-free mesh builder.
+/// Usefult for creating mesh from non-predefined set of data.
+/// Like from glTF.
 pub struct MeshBuilder {
     vertices: SmallVec<[(Vec<u8>, VertexFormat<'static>); 16]>,
     indices: Option<(Vec<u8>, IndexType)>,
@@ -357,6 +459,7 @@ pub struct MeshBuilder {
 }
 
 impl MeshBuilder {
+    /// Create empty builder.
     pub fn new() -> Self {
         MeshBuilder {
             vertices: SmallVec::new(),
@@ -436,7 +539,13 @@ impl MeshBuilder {
     }
 
     /// Builds and returns the new mesh.
-    pub fn build<B>(self, allocator: Allocator<B>, device: &B::Device) -> Result<Mesh<B>>
+    pub fn build<B>(
+        self,
+        allocator: &mut Allocator<B>,
+        uploader: &mut Uploader<B>,
+        current: &CurrentEpoch,
+        device: &B::Device,
+    ) -> upload::Result<Mesh<B>>
     where
         B: Backend,
     {
@@ -444,19 +553,25 @@ impl MeshBuilder {
             vbufs: self.vertices
                 .into_iter()
                 .map(|(v, f)| {
+                    let len = v.len() as VertexCount / f.stride as VertexCount;
                     Ok(VertexBuffer {
-                        buffer: allocator.create_buffer(
-                            device,
-                            v.len(),
-                            f.stride as _,
-                            Usage::VERTEX,
-                            Some(&v),
-                        )?,
+                        buffer: {
+                            let mut buffer = allocator.create_buffer(
+                                device,
+                                v.len() as _,
+                                f.stride as _,
+                                Usage::VERTEX,
+                                Properties::DEVICE_LOCAL,
+                                false,
+                            )?;
+                            uploader.upload_buffer(allocator, current, device, &mut buffer, 0, v)?;
+                            buffer
+                        },
                         format: f,
-                        len: v.len() as VertexCount / f.stride as VertexCount,
+                        len,
                     })
                 })
-                .collect::<Result<_>>()?,
+                .collect::<upload::Result<_>>()?,
             ibuf: match self.indices {
                 None => None,
                 Some((i, t)) => {
@@ -464,16 +579,22 @@ impl MeshBuilder {
                         IndexType::U16 => size_of::<u16>(),
                         IndexType::U32 => size_of::<u32>(),
                     };
+                    let len = i.len() as IndexCount / stride as IndexCount;
                     Some(IndexBuffer {
-                        buffer: allocator.create_buffer(
-                            device,
-                            i.len(),
-                            stride as _,
-                            Usage::INDEX,
-                            Some(&i),
-                        )?,
+                        buffer: {
+                            let mut buffer = allocator.create_buffer(
+                                device,
+                                i.len() as _,
+                                stride as _,
+                                Usage::INDEX,
+                                Properties::DEVICE_LOCAL,
+                                false,
+                            )?;
+                            uploader.upload_buffer(allocator, current, device, &mut buffer, 0, i)?;
+                            buffer
+                        },
                         index_type: t,
-                        len: i.len() as IndexCount / stride as IndexCount,
+                        len,
                     })
                 }
             },
@@ -483,7 +604,8 @@ impl MeshBuilder {
     }
 }
 
-
+/// Single mesh is a collection of buffers that provides available attributes.
+/// Exactly one mesh is used per drawing call in common.
 pub struct Mesh<B: Backend> {
     vbufs: Vec<VertexBuffer<B>>,
     ibuf: Option<IndexBuffer<B>>,
@@ -491,6 +613,81 @@ pub struct Mesh<B: Backend> {
     transform: Matrix4<f32>,
 }
 
+
+impl<B> Mesh<B>
+where
+    B: Backend,
+{
+    /// Build new mesh with `HMeshBuilder`
+    pub fn new() -> HMeshBuilder<(), ()> {
+        HMeshBuilder::new()
+    }
+
+    /// Bind buffers to specified attribute locations.
+    pub fn bind<'a>(
+        &'a self,
+        format_set: VertexFormatSet<'static>,
+        vertex: &mut VertexBufferSet<'a, B>,
+    ) -> BindResult<Bind<B>> {
+        debug_assert!(is_slice_sorted(format_set));
+        debug_assert!(is_slice_sorted_by_key(
+            &self.vbufs,
+            |vbuf| vbuf.format.attributes,
+        ));
+        debug_assert!(vertex.0.is_empty());
+
+        let mut last = 0;
+        let mut vertex_count = None;
+        for format in format_set {
+            if let Some(index) = find_compatible_buffer(&self.vbufs[last..], format) {
+                vertex.0.push((self.vbufs[index].buffer.raw(), 0));
+                last = index;
+                assert!(vertex_count == None || vertex_count == Some(self.vbufs[index].len));
+                vertex_count = Some(self.vbufs[index].len);
+            } else {
+                // Can't bind
+                return Err(BindErrorKind::Incompatible(format_set).into());
+            }
+        }
+        Ok(
+            self.ibuf
+                .as_ref()
+                .map(|ibuf| {
+                    Bind::Indexed {
+                        index: IndexBufferView {
+                            buffer: ibuf.buffer.raw(),
+                            offset: 0,
+                            index_type: ibuf.index_type,
+                        },
+                        count: ibuf.len,
+                    }
+                })
+                .unwrap_or(Bind::Unindexed { count: vertex_count.unwrap_or(0) }),
+        )
+    }
+
+    fn transformt(&self) -> &Matrix4<f32> {
+        &self.transform
+    }
+}
+
+error_chain! {
+    types {
+        BindError, BindErrorKind, BindResultExt, BindResult;
+    }
+    errors {
+        Incompatible(format: VertexFormatSet<'static>) {
+            description("Mesh is incompatible with requested format"),
+            display("Mesh is incompatible with format: {:?}", format),
+        }
+    }
+}
+
+
+/// Result of buffers bindings.
+/// It only contains `IndexBufferView` (if index buffers exists)
+/// and vertex count.
+/// Vertex buffers are in separate `VertexBufferSet`
 pub enum Bind<'a, B: Backend> {
     Indexed {
         index: IndexBufferView<'a, B>,
@@ -503,6 +700,7 @@ impl<'a, B> Bind<'a, B>
 where
     B: Backend,
 {
+    /// Record drawing command for this biding.
     pub fn draw(self, vertex: VertexBufferSet<B>, cbuf: &mut B::CommandBuffer) {
         use gfx_hal::command::RawCommandBuffer;
 
@@ -519,62 +717,8 @@ where
     }
 }
 
-impl<B> Mesh<B>
-where
-    B: Backend,
-{
-    /// Builde new mesh with `HMeshBuilder`
-    pub fn new() -> HMeshBuilder<(), ()> {
-        HMeshBuilder::new()
-    }
 
-    pub fn bind<'a>(
-        &'a self,
-        format_set: VertexFormatSet,
-        vertex: &mut VertexBufferSet<'a, B>,
-    ) -> Result<Bind<B>> {
-        debug_assert!(is_slice_sorted(format_set));
-        debug_assert!(is_slice_sorted_by_key(
-            &self.vbufs,
-            |vbuf| vbuf.format.attributes,
-        ));
-        debug_assert!(vertex.0.is_empty());
-
-        let mut last = 0;
-        let mut vertex_count = None;
-        for format in format_set {
-            if let Some(index) = find_compatible_buffer(&self.vbufs[last..], format) {
-                vertex.0.push((&self.vbufs[index].buffer, 0));
-                last = index;
-                assert!(vertex_count == None || vertex_count == Some(self.vbufs[index].len));
-                vertex_count = Some(self.vbufs[index].len);
-            } else {
-                // Can't bind
-                return Err(ErrorKind::Incompatible.into());
-            }
-        }
-        Ok(
-            self.ibuf
-                .as_ref()
-                .map(|ibuf| {
-                    Bind::Indexed {
-                        index: IndexBufferView {
-                            buffer: &ibuf.buffer,
-                            offset: 0,
-                            index_type: ibuf.index_type,
-                        },
-                        count: ibuf.len,
-                    }
-                })
-                .unwrap_or(Bind::Unindexed { count: vertex_count.unwrap_or(0) }),
-        )
-    }
-
-    fn transformt(&self) -> &Matrix4<f32> {
-        &self.transform
-    }
-}
-
+/// Helper function to find buffer with compatible format.
 fn find_compatible_buffer<B>(vbufs: &[VertexBuffer<B>], format: &VertexFormat) -> Option<usize>
 where
     B: Backend,
@@ -588,6 +732,9 @@ where
     None
 }
 
+
+/// Check is vertex format `left` is compatible with `right`.
+/// `left` must have same `stride` and contain all attributes from `right`.
 fn is_compatible(left: &VertexFormat, right: &VertexFormat) -> bool {
     if left.stride != right.stride {
         return false;

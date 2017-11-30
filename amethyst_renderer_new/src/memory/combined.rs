@@ -4,10 +4,10 @@ use gfx_hal::{Backend, Device, MemoryType};
 use gfx_hal::device::OutOfMemory;
 use gfx_hal::memory::Requirements;
 
-use memory::{MemoryAllocator, Block, Result, MemorySubAllocator, calc_alignment_shift};
-use memory::root::RootAllocator;
+use memory::{Block, MemoryAllocator, MemorySubAllocator, Result, calc_alignment_shift};
 use memory::arena::ArenaAllocator;
 use memory::chunked::ChunkListAllocator;
+use memory::root::RootAllocator;
 
 #[derive(Clone, Copy, Debug)]
 pub enum Type {

@@ -1,10 +1,9 @@
-
 use std::fmt;
 use std::marker::PhantomData;
 
 use gfx_hal::{Backend, Device, MemoryType};
 use gfx_hal::memory::Requirements;
-use memory::{MemoryAllocator, Block, Result, MemorySubAllocator, calc_alignment_shift};
+use memory::{Block, MemoryAllocator, MemorySubAllocator, Result, calc_alignment_shift};
 use relevant::Relevant;
 
 

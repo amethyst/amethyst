@@ -32,7 +32,7 @@ pub mod command;
 pub mod epoch;
 pub mod hal;
 pub mod memory;
-// pub mod mesh;
+pub mod mesh;
 pub mod relevant;
 pub mod graph;
 pub mod shaders;

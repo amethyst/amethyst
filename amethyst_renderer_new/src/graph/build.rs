@@ -1,18 +1,17 @@
-
 use std::collections::HashSet;
 
 use gfx_hal::{Backend, Device, Primitive};
 use gfx_hal::command::{ClearColor, ClearDepthStencil, ClearValue, ColorValue};
 use gfx_hal::device::Extent;
 use gfx_hal::format::Format;
-use gfx_hal::pso;
-use gfx_hal::pass;
 use gfx_hal::image;
+use gfx_hal::pass;
+use gfx_hal::pso;
 
 use specs::{Component, Entity, World};
 
-use graph::pass::{AnyPass, Pass};
 use graph::{Error, ErrorKind, PassNode, Result, SuperFramebuffer};
+use graph::pass::{AnyPass, Pass};
 use shaders::ShaderManager;
 use vertex::VertexFormat;
 
@@ -427,6 +426,7 @@ where
 }
 
 
+///
 #[derive(Debug)]
 pub struct Present<'a, B: Backend> {
     pub(super) pin: ColorPin<'a, B>,
@@ -529,13 +529,11 @@ where
     newdeps
 }
 
-pub fn traverse<'a, B>(present: &'a Present<'a, B>) -> Vec<&'a PassBuilder<'a, B>>
+pub fn traverse<'a, B>(pin: &'a ColorPin<'a, B>) -> Vec<&'a PassBuilder<'a, B>>
 where
     B: Backend,
 {
-    let mut passes = present
-        .pin
-        .merge
+    let mut passes = pin.merge
         .passes
         .iter()
         .flat_map(|&pass| {
@@ -565,11 +563,11 @@ where
         .collect()
 }
 
-pub fn merges<'a, B>(present: &'a Present<'a, B>) -> Vec<&'a Merge<'a, B>>
+pub fn merges<'a, B>(pin: &'a ColorPin<'a, B>) -> Vec<&'a Merge<'a, B>>
 where
     B: Backend,
 {
-    let mut merges = walk_merges(present.pin.merge);
+    let mut merges = walk_merges(pin.merge);
     merges.sort_by_key(|p| p as *const _);
     merges.dedup_by_key(|p| p as *const _);
     merges

@@ -1,4 +1,3 @@
-
 use gfx_hal::{Backend, Device};
 use gfx_hal::buffer::Usage as BufferUsage;
 use gfx_hal::command::{BufferCopy, CommandBuffer};
@@ -6,7 +5,7 @@ use gfx_hal::memory::{Pod, Properties};
 use gfx_hal::queue::{Supports, Transfer};
 
 use epoch::{CurrentEpoch, Eh};
-use memory::{Buffer, Allocator, Image, WeakBuffer, WeakImage, cast_pod_vec};
+use memory::{Allocator, Buffer, Image, WeakBuffer, WeakImage, cast_pod_vec};
 
 const DIRECT_TRESHOLD: u64 = 1024;
 
@@ -39,10 +38,10 @@ where
     B: Backend,
 {
     pub fn new<D, T>(
-        dst: &mut Buffer<B>,
         allocator: &mut Allocator<B>,
-        device: &B::Device,
         ec: &CurrentEpoch,
+        device: &B::Device,
+        dst: &mut Buffer<B>,
         offset: u64,
         data: D,
     ) -> Result<Self>
@@ -64,7 +63,7 @@ where
             )?;
 
             {
-                let mut writer = device.acquire_mapping_writer(&src, 0..bytes)?;
+                let mut writer = device.acquire_mapping_writer(src.raw(), 0..bytes)?;
                 writer.copy_from_slice(data.as_ref());
                 device.release_mapping_writer(writer);
             }
@@ -90,10 +89,10 @@ where
         match self {
             Upload::BufferStaging { dst, offset, src } => {
                 cbuf.copy_buffer(
-                    &src,
-                    &*dst.get(ec).expect(
+                    src.raw(),
+                    dst.get(ec).expect(
                         "Expected to be commited before dst expires",
-                    ),
+                    ).raw(),
                     &[
                         BufferCopy {
                             src: 0,
@@ -105,9 +104,9 @@ where
             }
             Upload::BufferDirect { dst, offset, data } => {
                 cbuf.update_buffer(
-                    &*dst.get(ec).expect(
+                    dst.get(ec).expect(
                         "Expected to be commited before dst expires",
-                    ),
+                    ).raw(),
                     offset,
                     &data,
                 )
@@ -133,10 +132,10 @@ where
 
     pub fn upload_buffer<T, D>(
         &mut self,
-        dst: &mut Buffer<B>,
         allocator: &mut Allocator<B>,
-        device: &B::Device,
         ec: &CurrentEpoch,
+        device: &B::Device,
+        dst: &mut Buffer<B>,
         offset: u64,
         data: D,
     ) -> Result<()>
@@ -145,10 +144,10 @@ where
         T: Pod,
     {
         Ok(self.uploads.push(Upload::new(
-            dst,
             allocator,
-            device,
             ec,
+            device,
+            dst,
             offset,
             data,
         )?))

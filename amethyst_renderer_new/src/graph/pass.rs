@@ -2,26 +2,20 @@
 //! Pass tells renderer how to convert inputs to image.
 //!
 //! # Definition
-//! Pass - is a box which get some:
-//!
-//! * Inputs
+//! Pass is a trait that takes these inputs
 //!   * Attachments
 //!   * Meshes combined with:
 //!     * Sampled images
 //!     * Uniform buffers
 //!     * Push constants
-//! * Outputs
+//! and provides these outputs:
 //!  * Attachments
-//!  * Results of queries (Let's forget about it for now)
+//!  * Results of queries (Not implemented)
 //!
-//! But it gets executed on the GPU.
-//! So instead of writing it as a function and calling with arguments needed
-//! we have to record commands into buffers and send them to the GPU.
+//! The pass prepares and sends data to GPU
 //!
-//! We want a way to define a box which will record all necessarry commands in declarative fasion.
-//! In order to feed this box with data we also need define `World -> [Input]` conversion
-//! (in declarative fasion where possible).
-//!
+//! We want a way to define a pass which will record all necessarry commands in declarative fashion.
+//! In order to feed this pass with data we also need define `World -> [Input]` conversion.
 //!
 
 use std::fmt::{self, Debug};
@@ -41,11 +35,18 @@ use specs::{SystemData, World};
 use shaders::ShaderManager;
 use vertex::VertexFormat;
 
+
+/// Helper trait to declare associated types with lifetime parameter.
 pub trait Data<'a, B>
 where
     B: Backend,
 {
+    /// Data fetched from `World` during `draw` phase. It shouldn't write anything.
+    /// There is no way to guarantee that.
+    /// Just don't put here any `FetchMut` or `WriteStorage`.
     type DrawData: SystemData<'a>;
+
+    /// Data fetched from `World` during `prepare` phase. It can both read and write.
     type PrepareData: SystemData<'a>;
 }
 
@@ -58,12 +59,15 @@ where
     const NAME: &'static str;
 
     /// Input attachments format
+    /// TODO: Replace with simple `usize`
     const INPUTS: &'static [Format];
 
     /// Color attachments format
+    /// /// TODO: Replace with simple `usize`
     const COLORS: &'static [Format];
 
     /// DepthStencil attachment format
+    /// /// TODO: Replace with simple `bool`
     const DEPTH_STENCIL: Option<Format>;
 
     /// Bindings
@@ -73,6 +77,8 @@ where
     const VERTICES: &'static [VertexFormat<'static>];
 
     /// Load shaders
+    ///
+    /// This function gets called during `Graph` build process.
     fn shaders<'a>(
         manager: &'a mut ShaderManager<B>,
         device: &B::Device,
@@ -103,6 +109,9 @@ where
     );
 }
 
+
+/// Object-safe trait that mirrors `Pass` trait.
+/// It's implemented for any type that implements `Pass`.
 pub trait AnyPass<B>: Debug
 where
     B: Backend,

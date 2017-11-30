@@ -1,13 +1,13 @@
 
 
-use std::mem::replace;
 use std::collections::VecDeque;
+use std::mem::replace;
 
 use gfx_hal::{Backend, Device};
 use gfx_hal::memory::Requirements;
 
 
-use memory::{MemoryAllocator, Block, Result, MemorySubAllocator, calc_alignment_shift};
+use memory::{Block, MemoryAllocator, MemorySubAllocator, Result, calc_alignment_shift};
 
 
 #[derive(Debug)]

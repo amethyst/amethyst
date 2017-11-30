@@ -1,13 +1,12 @@
-
 use std::cmp::Eq;
 use std::fmt::{Debug, Display};
 use std::ops::{Add, Deref, DerefMut, Range, Rem, Sub};
 
 use gfx_hal::{Backend, Device, MemoryType};
-use gfx_hal::memory::{Pod, Properties, Requirements};
 use gfx_hal::buffer::Usage as BufferUsage;
 use gfx_hal::format::Format;
 use gfx_hal::image::{Kind, Level, Usage as ImageUsage};
+use gfx_hal::memory::{Pod, Properties, Requirements};
 use relevant::Relevant;
 
 mod arena;
@@ -17,8 +16,8 @@ mod allocator;
 mod root;
 mod smart;
 
+pub use self::allocator::{Allocator, Buffer, Image, WeakBuffer, WeakImage};
 pub use self::smart::SmartAllocator;
-pub use self::allocator::{Buffer, Allocator, Image, WeakBuffer, WeakImage};
 
 
 error_chain! {

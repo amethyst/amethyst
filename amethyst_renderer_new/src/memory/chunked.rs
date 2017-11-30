@@ -5,8 +5,8 @@ use std::collections::VecDeque;
 use gfx_hal::{Backend, Device};
 use gfx_hal::memory::Requirements;
 
+use memory::{Block, MemoryAllocator, MemorySubAllocator, Result, shift_for_alignment};
 use relevant::Relevant;
-use memory::{MemoryAllocator, Block, Result, MemorySubAllocator, shift_for_alignment};
 
 
 #[derive(Debug)]

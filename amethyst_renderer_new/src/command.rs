@@ -1,8 +1,7 @@
-
 use gfx_hal::Backend;
+use gfx_hal::pool::CommandPool;
 use gfx_hal::queue::{CommandQueue, Compute, General, Graphics, QueueFamily, QueueGroup, QueueType,
                      RawQueueGroup, Transfer};
-use gfx_hal::pool::CommandPool;
 
 
 struct CommandGroups<B: Backend, C> {

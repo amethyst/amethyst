@@ -6,18 +6,18 @@ use std::ops::{Add, Deref, DerefMut};
 
 
 use gfx_hal::{Backend, Device, MemoryType};
-use gfx_hal::memory::{Properties, Requirements};
 use gfx_hal::buffer::{Usage as BufferUsage, complete_requirements};
+use gfx_hal::device::OutOfMemory;
 use gfx_hal::format::Format;
 use gfx_hal::image::{Kind, Level, Usage as ImageUsage};
-use gfx_hal::device::OutOfMemory;
 use gfx_hal::mapping::Error as MappingError;
+use gfx_hal::memory::{Properties, Requirements};
 
 use specs::{Fetch, FetchMut};
 
 
 use epoch::{CurrentEpoch, DeletionQueue, Ec, Eh, Epoch, ValidThrough};
-use memory::{MemoryAllocator, Block, ErrorKind, Result, SmartAllocator, shift_for_alignment};
+use memory::{Block, ErrorKind, MemoryAllocator, Result, SmartAllocator, shift_for_alignment};
 use memory::combined::Type as AllocationType;
 use relevant::Relevant;
 
@@ -52,24 +52,9 @@ where
     pub fn writeable(&self) -> bool {
         self.properties.contains(Properties::CPU_VISIBLE)
     }
-}
 
-impl<B, T> Deref for Item<B, T>
-where
-    B: Backend,
-{
-    type Target = T;
-    fn deref(&self) -> &T {
+    pub fn raw(&self) -> &T {
         &self.inner
-    }
-}
-
-impl<B, T> DerefMut for Item<B, T>
-where
-    B: Backend,
-{
-    fn deref_mut(&mut self) -> &mut T {
-        &mut self.inner
     }
 }
 
