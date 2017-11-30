@@ -6,7 +6,7 @@ use gfx_hal::memory::{Pod, Properties};
 use gfx_hal::queue::{Supports, Transfer};
 
 use epoch::{CurrentEpoch, Eh};
-use memory::{Buffer, Factory, Image, WeakBuffer, WeakImage, cast_pod_vec};
+use memory::{Buffer, Allocator, Image, WeakBuffer, WeakImage, cast_pod_vec};
 
 const DIRECT_TRESHOLD: u64 = 1024;
 
@@ -19,7 +19,8 @@ error_chain! {
     }
 }
 
-enum Upload<B: Backend> {
+#[derive(Debug)]
+pub enum Upload<B: Backend> {
     BufferStaging {
         dst: WeakBuffer<B>,
         offset: u64,
@@ -37,9 +38,9 @@ impl<B> Upload<B>
 where
     B: Backend,
 {
-    fn new<D, T>(
+    pub fn new<D, T>(
         dst: &mut Buffer<B>,
-        factory: &mut Factory<B>,
+        factory: &mut Allocator<B>,
         device: &B::Device,
         ec: &CurrentEpoch,
         offset: u64,
@@ -82,7 +83,7 @@ where
         }
     }
 
-    fn commit<C>(self, cbuf: &mut CommandBuffer<B, C>, ec: &CurrentEpoch)
+    pub fn commit<C>(self, cbuf: &mut CommandBuffer<B, C>, ec: &CurrentEpoch)
     where
         C: Supports<Transfer>,
     {
@@ -112,6 +113,53 @@ where
                 )
             }
             _ => unimplemented!(),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct Uploader<B: Backend> {
+    uploads: Vec<Upload<B>>,
+}
+
+
+impl<B> Uploader<B>
+where
+    B: Backend,
+{
+    pub fn new() -> Self {
+        Uploader { uploads: Vec::new() }
+    }
+
+    pub fn upload_buffer<T, D>(
+        &mut self,
+        dst: &mut Buffer<B>,
+        factory: &mut Allocator<B>,
+        device: &B::Device,
+        ec: &CurrentEpoch,
+        offset: u64,
+        data: D,
+    ) -> Result<()>
+    where
+        D: AsRef<[T]> + Into<Vec<T>>,
+        T: Pod,
+    {
+        Ok(self.uploads.push(Upload::new(
+            dst,
+            factory,
+            device,
+            ec,
+            offset,
+            data,
+        )?))
+    }
+
+    pub fn commit<C>(&mut self, cbuf: &mut CommandBuffer<B, C>, ec: &CurrentEpoch)
+    where
+        C: Supports<Transfer>,
+    {
+        for upload in self.uploads.drain(..) {
+            upload.commit(cbuf, ec);
         }
     }
 }

@@ -14,11 +14,11 @@ mod arena;
 mod chunked;
 mod combined;
 mod factory;
-mod memory;
+mod root;
 mod smart;
 
 pub use self::smart::SmartAllocator;
-pub use self::factory::{Buffer, Factory, Image, WeakBuffer, WeakImage};
+pub use self::factory::{Buffer, Allocator, Image, WeakBuffer, WeakImage};
 
 
 error_chain! {
@@ -48,7 +48,7 @@ error_chain! {
 
 /// Tagged block of memory.
 /// It is relevant type and can't be silently dropped.
-/// User must return this block to the same `Allocator` it came from.
+/// User must return this block to the same `MemoryAllocator` it came from.
 #[derive(Debug)]
 pub struct Block<B: Backend, T> {
     relevant: Relevant,
@@ -83,7 +83,7 @@ where
     /// Free this block returning it to the origin
     pub fn free<A>(self, origin: &mut A, device: &B::Device)
     where
-        A: Allocator<B, Tag = T>,
+        A: MemoryAllocator<B, Tag = T>,
         T: Debug + Copy + Send + Sync,
     {
         origin.free(device, self);
@@ -201,7 +201,7 @@ where
     }
 }
 
-pub trait Allocator<B: Backend> {
+pub trait MemoryAllocator<B: Backend> {
     type Info;
     type Tag: Debug + Copy + Send + Sync;
 
@@ -216,7 +216,7 @@ pub trait Allocator<B: Backend> {
     fn dispose(self, device: &B::Device);
 }
 
-pub trait SubAllocator<B: Backend> {
+pub trait MemorySubAllocator<B: Backend> {
     type Owner;
     type Info;
     type Tag: Debug + Copy + Send + Sync;

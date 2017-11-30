@@ -30,6 +30,7 @@ use renderer::cam::{ActiveCamera, Camera};
 use renderer::graph::RenderGraph;
 use renderer::graph::build::{PassBuilder, ColorPin, Merge, Present};
 use renderer::graph::flat::Flat;
+use renderer::hal::{HalBuilder, RendererBuilder, Hal9000};
 use renderer::memory::DumbAllocator;
 use renderer::mesh::{MeshBuilder, Mesh};
 use renderer::vertex::PosColor;
@@ -37,78 +38,27 @@ use renderer::vertex::PosColor;
 fn main() {
     let mut events_loop = winit::EventsLoop::new();
 
-    let wb = winit::WindowBuilder::new()
-        .with_dimensions(1024, 768)
-        .with_title("hal".to_string());
-    let window = wb.build(&events_loop).unwrap();
-
-    let window_size = window.get_inner_size_pixels().unwrap();
-    let pixel_width = window_size.0;
-    let pixel_height = window_size.1;
-
-    let (_instance, mut adapters, mut surface) = {
-        let instance = back::Instance::create("gfx-rs quad", 1);
-        let surface = instance.create_surface(&window);
-        let adapters = instance.enumerate_adapters();
-        (instance, adapters, surface)
-    };
-
-    for adapter in &adapters {
-        println!("{:?}", adapter.info);
-    }
-    let adapter = adapters.remove(0);
-
-    let surface_format = surface
-        .capabilities_and_formats(&adapter.physical_device)
-        .1
-        .into_iter()
-        .find(|&format| {
-            println!("Supported format: {:?}", format);
-            format == Bgra8::SELF
-        })
-        .unwrap();
-
-    let gfx_hal::Gpu {
+    let Hal9000 {
         device,
-        mut queue_groups,
-        memory_types,
-        ..
-    } = adapter.open_with(|family| {
-        if family.supports_graphics() && surface.supports_queue_family(family) {
-            Some(1)
-        } else {
-            None
-        }
-    });
-
-    for memory_type in &memory_types {
-        println!("{:?}", memory_type);
-    }
-
-    let mut allocator = DumbAllocator::new(memory_types);
-
-    let mut queue_group = gfx_hal::QueueGroup::<_, gfx_hal::Graphics>::new(queue_groups.remove(0));
-    let mut command_pool = device.create_command_pool_typed(
-        &queue_group,
-        gfx_hal::pool::CommandPoolCreateFlags::empty(),
-        16,
-    ).downgrade();
-    let ref mut queue = queue_group.queues[0];
-
-    println!("{:?}", surface_format);
-    let swap_config = gfx_hal::window::SwapchainConfig::new().with_color(surface_format);
-    let (mut swap_chain, backbuffer) = surface.build_swapchain(swap_config, &queue);
-
-    let vs_module = device
-        .create_shader_module_from_glsl(include_str!("hal.vert"), Stage::Vertex)
-        .unwrap();
-
-    let fs_module = device
-        .create_shader_module_from_glsl(include_str!("hal.frag"), Stage::Fragment)
-        .unwrap();
+        factory,
+        center,
+        renderer,
+    } = HalBuilder {
+        adapter: None,
+        arena_size: 1024 * 1024 * 16,
+        chunk_size: 1024,
+        min_chunk_size: 512,
+        compute: false,
+        renderer: Some(RendererBuilder {
+            title: "Amethyst Hal Example",
+            width: 1024,
+            height: 768,
+            events: &events_loop,
+        })
+    }.build();
 
     let mut render = {
-        let pass = PassBuilder::<back::Backend>::new::<Flat>(
+        /*let pass = PassBuilder::<back::Backend>::new::<Flat>(
             EntryPoint {
                 entry: "main",
                 module: &vs_module,
@@ -118,7 +68,8 @@ fn main() {
                 module: &fs_module,
             },
         );
-        let passes = [&pass];
+        */
+        let passes = [&unimplemented!()];
         let merge = Merge::new(Some(ClearColor::Float([0.15, 0.1, 0.2, 1.0])), Some(ClearDepthStencil(0.0, 0)), &passes);
         let present = Present::new(ColorPin::new(&merge, 0));
         RenderGraph::build(present, backbuffer, surface_format, None, Extent { width: pixel_width, height: pixel_height, depth: 1 }, &mut allocator, &device).unwrap()

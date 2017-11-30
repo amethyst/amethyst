@@ -6,7 +6,7 @@ use gfx_hal::{Backend, Device, MemoryType};
 use gfx_hal::device::OutOfMemory;
 use gfx_hal::memory::{Properties, Requirements};
 
-use memory::{Allocator, Block, Error, ErrorKind, Result, SubAllocator};
+use memory::{MemoryAllocator, Block, Error, ErrorKind, Result, MemorySubAllocator};
 use memory::combined::{CombinedAllocator, Type};
 
 pub struct SmartAllocator<B: Backend> {
@@ -34,7 +34,7 @@ where
     }
 }
 
-impl<B> Allocator<B> for SmartAllocator<B>
+impl<B> MemoryAllocator<B> for SmartAllocator<B>
 where
     B: Backend,
 {
@@ -66,7 +66,7 @@ where
     }
 
     fn is_unused(&self) -> bool {
-        self.allocators.iter().all(Allocator::is_unused)
+        self.allocators.iter().all(MemoryAllocator::is_unused)
     }
 
     fn dispose(mut self, device: &B::Device) {

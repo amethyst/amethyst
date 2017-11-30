@@ -13,9 +13,11 @@ use winit::{EventsLoop, Window, WindowBuilder};
 
 
 use command::CommandCenter;
-use memory::Factory;
+use memory::Allocator;
 use graph::{Graph, Present};
 use shaders::{ShaderLoader, ShaderManager};
+use upload::Uploader;
+
 
 
 #[cfg(feature = "metal")]
@@ -32,10 +34,11 @@ error_chain!{
 }
 
 
-pub struct Hal9000<B: Backend> {
+pub struct Hal<B: Backend> {
     pub device: B::Device,
-    pub factory: Factory<B>,
+    pub factory: Allocator<B>,
     pub center: CommandCenter<B>,
+    pub uploader: Uploader<B>,
     pub renderer: Option<Renderer<B>>,
 }
 
@@ -84,7 +87,7 @@ impl BackendEx for metal::Backend {
 
 
 impl<'a> HalBuilder<'a> {
-    fn init_adapter<B>(&self, adapter: Adapter<B>) -> (B::Device, Factory<B>, CommandCenter<B>)
+    fn init_adapter<B>(&self, adapter: Adapter<B>) -> (B::Device, Allocator<B>, CommandCenter<B>)
     where
         B: Backend,
     {
@@ -168,7 +171,7 @@ impl<'a> HalBuilder<'a> {
             memory_types,
             memory_heaps,
         } = adapter.physical_device.open(requests);
-        let factory = Factory::new(
+        let factory = Allocator::new(
             memory_types,
             self.arena_size,
             self.chunk_size,
@@ -179,7 +182,7 @@ impl<'a> HalBuilder<'a> {
         (device, factory, center)
     }
 
-    fn build<B>(self) -> Result<Hal9000<B>>
+    pub fn build<B>(self) -> Result<Hal<B>>
     where
         B: BackendEx,
     {
@@ -226,11 +229,14 @@ impl<'a> HalBuilder<'a> {
             }
         });
 
-        Ok(Hal9000 {
+        let uploader = Uploader::new();
+
+        Ok(Hal {
             device,
             factory,
             center,
             renderer,
+            uploader,
         })
     }
 }

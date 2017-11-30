@@ -10,8 +10,9 @@ use gfx_hal::pso::{ElemStride, VertexBufferSet};
 
 use smallvec::SmallVec;
 
-use memory::{Buffer, Factory, Image};
+use memory::{Buffer, Allocator, Image};
 use memory::cast_pod_vec;
+use upload::Uploader;
 use utils::{is_slice_sorted, is_slice_sorted_by_key};
 use vertex::{Attributes, VertexFormat, VertexFormatSet, VertexFormatted};
 
@@ -55,7 +56,7 @@ where
 
     pub(crate) fn build<B>(
         self,
-        factory: Factory<B>,
+        factory: Allocator<B>,
         uploader: &mut Uploader,
         device: &B::Device,
     ) -> Result<VertexBuffer<B>>
@@ -86,7 +87,7 @@ pub trait VertexDataList {
     const LENGTH: usize;
     fn build<B>(
         self,
-        factory: Factory<B>,
+        factory: Allocator<B>,
         device: &B::Device,
         output: &mut Vec<VertexBuffer<B>>,
     ) -> Result<()>
@@ -98,7 +99,7 @@ impl VertexDataList for () {
     const LENGTH: usize = 0;
     fn build<B>(
         self,
-        factory: Factory<B>,
+        factory: Allocator<B>,
         device: &B::Device,
         output: &mut Vec<VertexBuffer<B>>,
     ) -> Result<()>
@@ -118,7 +119,7 @@ where
     const LENGTH: usize = 1 + L::LENGTH;
     fn build<B>(
         self,
-        factory: Factory<B>,
+        factory: Allocator<B>,
         device: &B::Device,
         output: &mut Vec<VertexBuffer<B>>,
     ) -> Result<()>
@@ -132,13 +133,13 @@ where
 }
 
 pub trait IndexDataMaybe {
-    fn build<B>(self, factory: Factory<B>, device: &B::Device) -> Result<Option<IndexBuffer<B>>>
+    fn build<B>(self, factory: Allocator<B>, device: &B::Device) -> Result<Option<IndexBuffer<B>>>
     where
         B: Backend;
 }
 
 impl IndexDataMaybe for () {
-    fn build<B>(self, factory: Factory<B>, device: &B::Device) -> Result<Option<IndexBuffer<B>>>
+    fn build<B>(self, factory: Allocator<B>, device: &B::Device) -> Result<Option<IndexBuffer<B>>>
     where
         B: Backend,
     {
@@ -150,19 +151,21 @@ impl<D> IndexDataMaybe for Data<D, u16>
 where
     D: AsRef<[u16]>,
 {
-    fn build<B>(self, factory: Factory<B>, device: &B::Device) -> Result<Option<IndexBuffer<B>>>
+    fn build<B>(self, device: &B::Device, factory: &mut Allocator<B>, uploader: &mut Uploader<B>) -> Result<Option<IndexBuffer<B>>>
     where
         B: Backend,
     {
-        let slice = cast_slice(self.data.as_ref());
         Ok(Some(IndexBuffer {
-            buffer: factory.create_buffer(
+            {
+                let mut buffer: factory.create_buffer(
                 device,
                 slice.len() as _,
                 size_of::<u16>() as _,
                 Usage::INDEX,
-                Some(slice),
-            )?,
+                )?,
+                uploader.upload_buffer(&mut buffer, factory, device, ec, 0, self.data);
+                buffer
+            }
             len: self.data.as_ref().len() as IndexCount,
             index_type: IndexType::U16,
         }))
@@ -173,7 +176,7 @@ impl<D> IndexDataMaybe for Data<D, u32>
 where
     D: AsRef<[u32]>,
 {
-    fn build<B>(self, factory: Factory<B>, device: &B::Device) -> Result<Option<IndexBuffer<B>>>
+    fn build<B>(self, factory: Allocator<B>, device: &B::Device) -> Result<Option<IndexBuffer<B>>>
     where
         B: Backend,
     {
@@ -311,7 +314,7 @@ where
     I: IndexDataMaybe,
 {
     /// Builds and returns the new mesh.
-    pub fn build<B>(self, factory: Factory<B>, device: &B::Device) -> Result<Mesh<B>>
+    pub fn build<B>(self, factory: Allocator<B>, device: &B::Device) -> Result<Mesh<B>>
     where
         B: Backend,
     {
@@ -433,7 +436,7 @@ impl MeshBuilder {
     }
 
     /// Builds and returns the new mesh.
-    pub fn build<B>(self, factory: Factory<B>, device: &B::Device) -> Result<Mesh<B>>
+    pub fn build<B>(self, factory: Allocator<B>, device: &B::Device) -> Result<Mesh<B>>
     where
         B: Backend,
     {

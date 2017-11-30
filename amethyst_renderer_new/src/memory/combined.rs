@@ -4,8 +4,8 @@ use gfx_hal::{Backend, Device, MemoryType};
 use gfx_hal::device::OutOfMemory;
 use gfx_hal::memory::Requirements;
 
-use memory::{Allocator, Block, Result, SubAllocator, calc_alignment_shift};
-use memory::memory::MemoryAllocator;
+use memory::{MemoryAllocator, Block, Result, MemorySubAllocator, calc_alignment_shift};
+use memory::root::RootAllocator;
 use memory::arena::ArenaAllocator;
 use memory::chunked::ChunkListAllocator;
 
@@ -20,9 +20,9 @@ pub struct CombinedAllocator<B>
 where
     B: Backend,
 {
-    memory: MemoryAllocator<B>,
-    arenas: ArenaAllocator<B, MemoryAllocator<B>>,
-    chunks: ChunkListAllocator<B, MemoryAllocator<B>>,
+    memory: RootAllocator<B>,
+    arenas: ArenaAllocator<B, RootAllocator<B>>,
+    chunks: ChunkListAllocator<B, RootAllocator<B>>,
 }
 
 impl<B> CombinedAllocator<B>
@@ -36,7 +36,7 @@ where
         min_chunk_size: u64,
     ) -> Self {
         CombinedAllocator {
-            memory: MemoryAllocator::new(memory_type),
+            memory: RootAllocator::new(memory_type),
             arenas: ArenaAllocator::new(arena_size, memory_type.id),
             chunks: ChunkListAllocator::new(chunk_size, min_chunk_size, memory_type.id),
         }
@@ -47,7 +47,7 @@ where
     }
 }
 
-impl<B> Allocator<B> for CombinedAllocator<B>
+impl<B> MemoryAllocator<B> for CombinedAllocator<B>
 where
     B: Backend,
 {

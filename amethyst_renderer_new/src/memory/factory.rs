@@ -17,7 +17,7 @@ use specs::{Fetch, FetchMut};
 
 
 use epoch::{CurrentEpoch, DeletionQueue, Ec, Eh, Epoch, ValidThrough};
-use memory::{Allocator, Block, ErrorKind, Result, SmartAllocator, shift_for_alignment};
+use memory::{MemoryAllocator, Block, ErrorKind, Result, SmartAllocator, shift_for_alignment};
 use memory::combined::Type as AllocationType;
 use relevant::Relevant;
 
@@ -27,7 +27,7 @@ pub type Image<B: Backend> = Eh<Item<B, B::Image>>;
 pub type WeakBuffer<B: Backend> = Ec<Item<B, B::Buffer>>;
 pub type WeakImage<B: Backend> = Ec<Item<B, B::Image>>;
 
-type BlockTag<B: Backend> = <SmartAllocator<B> as Allocator<B>>::Tag;
+type BlockTag<B: Backend> = <SmartAllocator<B> as MemoryAllocator<B>>::Tag;
 
 #[derive(Debug)]
 pub struct Item<B: Backend, T> {
@@ -73,13 +73,13 @@ where
     }
 }
 
-pub struct Factory<B: Backend> {
+pub struct Allocator<B: Backend> {
     allocator: SmartAllocator<B>,
     buffer_deletion_queue: DeletionQueue<Eh<Item<B, B::Buffer>>>,
     image_deletion_queue: DeletionQueue<Eh<Item<B, B::Image>>>,
 }
 
-impl<B> Factory<B>
+impl<B> Allocator<B>
 where
     B: Backend,
 {
@@ -89,7 +89,7 @@ where
         chunk_size: u64,
         min_chunk_size: u64,
     ) -> Self {
-        Factory {
+        Allocator {
             allocator: SmartAllocator::new(memory_types, arena_size, chunk_size, min_chunk_size),
             buffer_deletion_queue: DeletionQueue::new(),
             image_deletion_queue: DeletionQueue::new(),

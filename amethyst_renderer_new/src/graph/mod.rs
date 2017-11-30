@@ -26,7 +26,7 @@ use smallvec::SmallVec;
 use specs::World;
 
 use graph::pass::AnyPass;
-use memory::{Factory, Image};
+use memory::{Allocator, Image};
 use shaders::ShaderManager;
 
 pub use graph::build::*;
@@ -277,7 +277,7 @@ where
         color: Format,
         depth_stencil: Option<Format>,
         extent: Extent,
-        factory: &mut Factory<B>,
+        factory: &mut Allocator<B>,
         device: &B::Device,
         shaders: &mut ShaderManager<B>,
     ) -> Result<Self> {
@@ -514,7 +514,7 @@ struct DepthIndex {
 
 
 fn create_targets<B, F>(
-    factory: &mut Factory<B>,
+    factory: &mut Allocator<B>,
     device: &B::Device,
     merge: &Merge<B>,
     images: &mut Vec<Image<B>>,

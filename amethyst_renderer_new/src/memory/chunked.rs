@@ -6,11 +6,11 @@ use gfx_hal::{Backend, Device};
 use gfx_hal::memory::Requirements;
 
 use relevant::Relevant;
-use memory::{Allocator, Block, Result, SubAllocator, shift_for_alignment};
+use memory::{MemoryAllocator, Block, Result, MemorySubAllocator, shift_for_alignment};
 
 
 #[derive(Debug)]
-struct ChunkListNode<B: Backend, A: Allocator<B>> {
+struct ChunkListNode<B: Backend, A: MemoryAllocator<B>> {
     id: usize,
     chunks_per_block: usize,
     chunk_size: u64,
@@ -22,7 +22,7 @@ struct ChunkListNode<B: Backend, A: Allocator<B>> {
 impl<B, A> ChunkListNode<B, A>
 where
     B: Backend,
-    A: Allocator<B>,
+    A: MemoryAllocator<B>,
 {
     fn new(chunk_size: u64, chunks_per_block: usize, id: usize) -> Self {
         ChunkListNode {
@@ -70,10 +70,10 @@ where
 }
 
 
-impl<B, A> SubAllocator<B> for ChunkListNode<B, A>
+impl<B, A> MemorySubAllocator<B> for ChunkListNode<B, A>
 where
     B: Backend,
-    A: Allocator<B>,
+    A: MemoryAllocator<B>,
 {
     type Owner = A;
     type Info = A::Info;
@@ -121,7 +121,7 @@ where
 
 
 #[derive(Debug)]
-pub struct ChunkListAllocator<B: Backend, A: Allocator<B>> {
+pub struct ChunkListAllocator<B: Backend, A: MemoryAllocator<B>> {
     id: usize,
     chunk_size_bit: u8,
     min_size_bit: u8,
@@ -131,7 +131,7 @@ pub struct ChunkListAllocator<B: Backend, A: Allocator<B>> {
 impl<B, A> ChunkListAllocator<B, A>
 where
     B: Backend,
-    A: Allocator<B>,
+    A: MemoryAllocator<B>,
 {
     /// # Panics
     ///
@@ -170,10 +170,10 @@ where
 }
 
 
-impl<B, A> SubAllocator<B> for ChunkListAllocator<B, A>
+impl<B, A> MemorySubAllocator<B> for ChunkListAllocator<B, A>
 where
     B: Backend,
-    A: Allocator<B>,
+    A: MemoryAllocator<B>,
 {
     type Owner = A;
     type Info = A::Info;

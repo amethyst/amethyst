@@ -7,11 +7,11 @@ use gfx_hal::{Backend, Device};
 use gfx_hal::memory::Requirements;
 
 
-use memory::{Allocator, Block, Result, SubAllocator, calc_alignment_shift};
+use memory::{MemoryAllocator, Block, Result, MemorySubAllocator, calc_alignment_shift};
 
 
 #[derive(Debug)]
-struct ArenaNode<B: Backend, A: Allocator<B>> {
+struct ArenaNode<B: Backend, A: MemoryAllocator<B>> {
     block: Block<B, A::Tag>,
     used: u64,
     freed: u64,
@@ -20,7 +20,7 @@ struct ArenaNode<B: Backend, A: Allocator<B>> {
 impl<B, A> ArenaNode<B, A>
 where
     B: Backend,
-    A: Allocator<B>,
+    A: MemoryAllocator<B>,
 {
     fn new(block: Block<B, A::Tag>) -> Self {
         ArenaNode {
@@ -62,7 +62,7 @@ where
 
 /// Linear allocator for transient memory
 #[derive(Debug)]
-pub struct ArenaAllocator<B: Backend, A: Allocator<B>> {
+pub struct ArenaAllocator<B: Backend, A: MemoryAllocator<B>> {
     id: usize,
     arena_size: u64,
     hot: Option<Box<ArenaNode<B, A>>>,
@@ -73,7 +73,7 @@ pub struct ArenaAllocator<B: Backend, A: Allocator<B>> {
 impl<B, A> ArenaAllocator<B, A>
 where
     B: Backend,
-    A: Allocator<B>,
+    A: MemoryAllocator<B>,
 {
     /// Construct allocator.
     pub fn new(arena_size: u64, id: usize) -> Self {
@@ -116,10 +116,10 @@ where
     }
 }
 
-impl<B, A> SubAllocator<B> for ArenaAllocator<B, A>
+impl<B, A> MemorySubAllocator<B> for ArenaAllocator<B, A>
 where
     B: Backend,
-    A: Allocator<B>,
+    A: MemoryAllocator<B>,
 {
     type Owner = A;
     type Info = A::Info;

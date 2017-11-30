@@ -9,7 +9,7 @@ use gfx_hal::command::CommandBuffer;
 use gfx_hal::memory::{Pod, cast_slice};
 use gfx_hal::queue::{Supports, Transfer};
 
-use memory::{Buffer, Factory, Image, Result};
+use memory::{Buffer, Allocator, Image, Result};
 use cam::Camera;
 
 pub trait IntoUniform<B: Backend>: Debug + Sized {
@@ -20,7 +20,7 @@ pub trait IntoUniform<B: Backend>: Debug + Sized {
     fn into_uniform(&self) -> Self::Uniform;
 
     /// Create cache
-    fn create_cache(manager: &mut Factory<B>, device: &B::Device) -> Result<Self::Cache>;
+    fn create_cache(manager: &mut Allocator<B>, device: &B::Device) -> Result<Self::Cache>;
 
     /// Update cached value.
     /// Writes updating command into command buffer
@@ -42,7 +42,7 @@ where
         self.0.into()
     }
 
-    fn create_cache(manager: &mut Factory<B>, device: &B::Device) -> Result<Self::Cache> {
+    fn create_cache(manager: &mut Allocator<B>, device: &B::Device) -> Result<Self::Cache> {
         BasicUniformCache::new(manager, device)
     }
 
@@ -91,7 +91,7 @@ where
     B: Backend,
     T: IntoUniform<B>,
 {
-    fn new(manager: &mut Factory<B>, device: &B::Device) -> Result<Self> {
+    fn new(manager: &mut Allocator<B>, device: &B::Device) -> Result<Self> {
         use std::mem::{align_of, size_of};
 
         Ok(BasicUniformCache {

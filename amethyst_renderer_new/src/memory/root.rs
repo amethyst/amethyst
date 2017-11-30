@@ -4,7 +4,7 @@ use std::marker::PhantomData;
 
 use gfx_hal::{Backend, Device, MemoryType};
 use gfx_hal::memory::Requirements;
-use memory::{Allocator, Block, Result, SubAllocator, calc_alignment_shift};
+use memory::{MemoryAllocator, Block, Result, MemorySubAllocator, calc_alignment_shift};
 use relevant::Relevant;
 
 
@@ -21,16 +21,16 @@ unsafe impl Send for Tag {}
 unsafe impl Sync for Tag {}
 
 #[derive(Debug)]
-pub struct MemoryAllocator<B> {
+pub struct RootAllocator<B> {
     relevant: Relevant,
     memory_type: MemoryType,
     allocations: usize,
     pd: PhantomData<B>,
 }
 
-impl<B> MemoryAllocator<B> {
+impl<B> RootAllocator<B> {
     pub fn new(memory_type: MemoryType) -> Self {
-        MemoryAllocator {
+        RootAllocator {
             relevant: Relevant,
             memory_type,
             allocations: 0,
@@ -47,7 +47,7 @@ impl<B> MemoryAllocator<B> {
     }
 }
 
-impl<B> Allocator<B> for MemoryAllocator<B>
+impl<B> MemoryAllocator<B> for RootAllocator<B>
 where
     B: Backend,
 {
