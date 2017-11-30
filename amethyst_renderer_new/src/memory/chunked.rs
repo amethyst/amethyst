@@ -6,7 +6,7 @@ use gfx_hal::{Backend, Device};
 use gfx_hal::memory::Requirements;
 
 use relevant::Relevant;
-use memory::{Allocator, Block, SubAllocator, shift_for_alignment, Result};
+use memory::{Allocator, Block, Result, SubAllocator, shift_for_alignment};
 
 
 #[derive(Debug)]

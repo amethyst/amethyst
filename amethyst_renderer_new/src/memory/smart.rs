@@ -6,7 +6,7 @@ use gfx_hal::{Backend, Device, MemoryType};
 use gfx_hal::device::OutOfMemory;
 use gfx_hal::memory::{Properties, Requirements};
 
-use memory::{Allocator, Block, SubAllocator, Result};
+use memory::{Allocator, Block, Error, ErrorKind, Result, SubAllocator};
 use memory::combined::{CombinedAllocator, Type};
 
 pub struct SmartAllocator<B: Backend> {
@@ -55,7 +55,7 @@ where
                 ((1 << memory_type.id) & reqs.type_mask) == (1 << memory_type.id) &&
                     memory_type.properties.contains(prop)
             })
-            .unwrap();
+            .ok_or(Error::from(ErrorKind::NoCompatibleMemoryType))?;
         let block = allocator.alloc(device, ty, reqs)?;
         Ok(block.push_tag(index))
     }

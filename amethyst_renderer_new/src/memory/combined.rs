@@ -4,7 +4,7 @@ use gfx_hal::{Backend, Device, MemoryType};
 use gfx_hal::device::OutOfMemory;
 use gfx_hal::memory::Requirements;
 
-use memory::{Allocator, Block, SubAllocator, calc_alignment_shift, Result};
+use memory::{Allocator, Block, Result, SubAllocator, calc_alignment_shift};
 use memory::memory::MemoryAllocator;
 use memory::arena::ArenaAllocator;
 use memory::chunked::ChunkListAllocator;

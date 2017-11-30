@@ -4,7 +4,7 @@ use std::marker::PhantomData;
 
 use gfx_hal::{Backend, Device, MemoryType};
 use gfx_hal::memory::Requirements;
-use memory::{Allocator, Block, SubAllocator, calc_alignment_shift, Result};
+use memory::{Allocator, Block, Result, SubAllocator, calc_alignment_shift};
 use relevant::Relevant;
 
 
@@ -54,12 +54,7 @@ where
     type Tag = Tag;
     type Info = ();
 
-    fn alloc(
-        &mut self,
-        device: &B::Device,
-        _: (),
-        reqs: Requirements,
-    ) -> Result<Block<B, Tag>> {
+    fn alloc(&mut self, device: &B::Device, _: (), reqs: Requirements) -> Result<Block<B, Tag>> {
         assert_eq!(
             (1 << self.memory_type.id) & reqs.type_mask,
             1 << self.memory_type.id

@@ -18,16 +18,30 @@ mod memory;
 mod smart;
 
 pub use self::smart::SmartAllocator;
-pub use self::factory::{Buffer, Factory, Image};
+pub use self::factory::{Buffer, Factory, Image, WeakBuffer, WeakImage};
 
 
 error_chain! {
     foreign_links {
         BindError(::gfx_hal::device::BindError);
-        ViewError(::gfx_hal::buffer::ViewError);
+        // ViewError(::gfx_hal::buffer::ViewError);
         BufferCreationError(::gfx_hal::buffer::CreationError);
         ImageCreationError(::gfx_hal::image::CreationError);
         OutOfMemory(::gfx_hal::device::OutOfMemory);
+    }
+
+    errors {
+        NoCompatibleMemoryType {}
+        BufferUsageAndProperties(usage: BufferUsage, properties: Properties) {
+            description("No memory type supports both usage and properties specified")
+            display("No memory type supports both
+                usage ({:?}) and properties ({:?}) specified", usage, properties)
+        }
+        ImageUsageAndProperties(usage: ImageUsage, properties: Properties) {
+            description("No memory type supports both usage and properties specified")
+            display("No memory type supports both
+                usage ({:?}) and properties ({:?}) specified", usage, properties)
+        }
     }
 }
 

@@ -16,21 +16,42 @@ use gfx_hal::mapping::Error as MappingError;
 use specs::{Fetch, FetchMut};
 
 
-use epoch::{CurrentEpoch, DeletionQueue, Eh, Epoch, ValidThrough};
-use memory::{Allocator, Block, Result, SmartAllocator,
-             shift_for_alignment};
+use epoch::{CurrentEpoch, DeletionQueue, Ec, Eh, Epoch, ValidThrough};
+use memory::{Allocator, Block, ErrorKind, Result, SmartAllocator, shift_for_alignment};
 use memory::combined::Type as AllocationType;
 use relevant::Relevant;
 
 pub type Buffer<B: Backend> = Eh<Item<B, B::Buffer>>;
 pub type Image<B: Backend> = Eh<Item<B, B::Image>>;
 
+pub type WeakBuffer<B: Backend> = Ec<Item<B, B::Buffer>>;
+pub type WeakImage<B: Backend> = Ec<Item<B, B::Image>>;
+
+type BlockTag<B: Backend> = <SmartAllocator<B> as Allocator<B>>::Tag;
+
 #[derive(Debug)]
 pub struct Item<B: Backend, T> {
     inner: T,
-    block: Block<B, <SmartAllocator<B> as Allocator<B>>::Tag>,
+    block: Block<B, BlockTag<B>>,
     properties: Properties,
     requirements: Requirements,
+}
+
+impl<B, T> Item<B, T>
+where
+    B: Backend,
+{
+    pub fn get_alignment(&self) -> u64 {
+        self.requirements.alignment
+    }
+
+    pub fn get_size(&self) -> u64 {
+        self.requirements.size
+    }
+
+    pub fn writeable(&self) -> bool {
+        self.properties.contains(Properties::CPU_VISIBLE)
+    }
 }
 
 impl<B, T> Deref for Item<B, T>
@@ -91,7 +112,15 @@ where
         } else {
             AllocationType::Chunk
         };
-        let block = self.allocator.alloc(device, (ty, properties), requirements)?;
+        let block = self.allocator
+            .alloc(device, (ty, properties), requirements)
+            .map_err(|err| if let &ErrorKind::NoCompatibleMemoryType =
+                err.kind()
+            {
+                ErrorKind::BufferUsageAndProperties(usage, properties).into()
+            } else {
+                err
+            })?;
         let buf = device
             .bind_buffer_memory(
                 block.memory(),
@@ -118,11 +147,16 @@ where
     ) -> Result<Image<B>> {
         let uimg = device.create_image(kind, level, format, usage)?;
         let requirements = device.get_image_requirements(&uimg);
-        let block = self.allocator.alloc(
-            device,
-            (AllocationType::Chunk, properties),
-            requirements,
-        )?;
+        let ty = AllocationType::Chunk;
+        let block = self.allocator
+            .alloc(device, (ty, properties), requirements)
+            .map_err(|err| if let &ErrorKind::NoCompatibleMemoryType =
+                err.kind()
+            {
+                ErrorKind::ImageUsageAndProperties(usage, properties).into()
+            } else {
+                err
+            })?;
         let img = device
             .bind_image_memory(
                 block.memory(),
