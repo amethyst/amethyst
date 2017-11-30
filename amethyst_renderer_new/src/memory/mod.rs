@@ -13,12 +13,12 @@ use relevant::Relevant;
 mod arena;
 mod chunked;
 mod combined;
-mod factory;
+mod allocator;
 mod root;
 mod smart;
 
 pub use self::smart::SmartAllocator;
-pub use self::factory::{Buffer, Allocator, Image, WeakBuffer, WeakImage};
+pub use self::allocator::{Buffer, Allocator, Image, WeakBuffer, WeakImage};
 
 
 error_chain! {

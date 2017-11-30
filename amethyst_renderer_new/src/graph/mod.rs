@@ -277,7 +277,7 @@ where
         color: Format,
         depth_stencil: Option<Format>,
         extent: Extent,
-        factory: &mut Allocator<B>,
+        allocator: &mut Allocator<B>,
         device: &B::Device,
         shaders: &mut ShaderManager<B>,
     ) -> Result<Self> {
@@ -357,7 +357,7 @@ where
             targets.insert(
                 key,
                 create_targets(
-                    factory,
+                    allocator,
                     device,
                     merge,
                     &mut images,
@@ -514,7 +514,7 @@ struct DepthIndex {
 
 
 fn create_targets<B, F>(
-    factory: &mut Allocator<B>,
+    allocator: &mut Allocator<B>,
     device: &B::Device,
     merge: &Merge<B>,
     images: &mut Vec<Image<B>>,
@@ -532,7 +532,7 @@ where
             extent.height as u16,
             image::AaMode::Single,
         );
-        let image = factory.create_image(
+        let image = allocator.create_image(
             device,
             kind,
             1,

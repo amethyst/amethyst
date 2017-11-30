@@ -40,7 +40,7 @@ where
 {
     pub fn new<D, T>(
         dst: &mut Buffer<B>,
-        factory: &mut Allocator<B>,
+        allocator: &mut Allocator<B>,
         device: &B::Device,
         ec: &CurrentEpoch,
         offset: u64,
@@ -54,7 +54,7 @@ where
         assert!(dst.get_size() >= bytes + offset);
 
         if bytes > DIRECT_TRESHOLD {
-            let src = factory.create_buffer(
+            let src = allocator.create_buffer(
                 device,
                 bytes,
                 bytes,
@@ -134,7 +134,7 @@ where
     pub fn upload_buffer<T, D>(
         &mut self,
         dst: &mut Buffer<B>,
-        factory: &mut Allocator<B>,
+        allocator: &mut Allocator<B>,
         device: &B::Device,
         ec: &CurrentEpoch,
         offset: u64,
@@ -146,7 +146,7 @@ where
     {
         Ok(self.uploads.push(Upload::new(
             dst,
-            factory,
+            allocator,
             device,
             ec,
             offset,
