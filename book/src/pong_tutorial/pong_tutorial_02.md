@@ -50,7 +50,7 @@ use amethyst::renderer::{Camera, Material, MaterialDefaults, PosTex, MeshHandle,
 
 ## Our first Component
 
-In pong.rs let's create our first `Component`, a definition of a paddle.
+In `pong.rs` let's create our first `Component`, a definition of a paddle.
 
 
 ```rust,ignore
@@ -99,7 +99,7 @@ Inside this function, we'll `register` our `Paddle` component on the mutable
 
 ```rust,ignore
 fn on_start(&mut self, world: &mut World) {
-  world.register::<Paddle>();
+    world.register::<Paddle>();
 }
 ```
 
@@ -246,9 +246,9 @@ frame, but if, for instance, we were loading a large asset from disk, we could
 still attach the `Handle` right away, which will give us access to the asset 
 once it's ready.
 
-In addition to the `Loader` to read our mesh data, we also need a material to 
-draw our mesh with. We'll use the Amethyst renderer's `MaterialDefaults` 
-(another resource) and only change the albedo color:
+In addition to mesh data, we also need a material to draw our mesh with. 
+We'll use the Amethyst renderer's `MaterialDefaults` (another resource) and only 
+change the albedo color:
 
 ```rust,ignore
 /// Creates a solid material of the specified colour.
@@ -342,9 +342,9 @@ for Pong`.
 
 ```rust,ignore
 fn on_start(&mut self, world: &mut World) {
-  world.register::<Paddle>();
-  initialise_paddles(world);
-  initialise_camera(world);
+    world.register::<Paddle>();
+    initialise_paddles(world);
+    initialise_camera(world);
 }
 ```
 
@@ -356,13 +356,14 @@ paddles to the world, along with a camera.
 Let's run this and see what happens. On my machine I get a panic that reads:
 
 ```
-'No component with the given id. Did you forget to register the component with `World::register::<ComponentName>()`?'
+No component with the given id. Did you forget to register the component with 
+`World::register::<ComponentName>()`?
 ```
 
 It looks like we're missing at least one component registration. In addition to 
 components we define ourselves, Amethyst has a lot of internal systems and 
 components it uses to keep things running. For simplicity, these have been 
-wrapped up into Bundles which add a set of related components, systems, and 
+wrapped up into "Bundles" which add a set of related components, systems, and 
 resources to the world. We can add these to our Application using the 
 `with_bundle` method, and in fact we already have one of these in `main.rs`: the 
 `RenderBundle`.
