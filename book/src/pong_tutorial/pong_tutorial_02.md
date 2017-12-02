@@ -104,11 +104,11 @@ fn on_start(&mut self, world: &mut World) {
 ```
 
 This `World` gets passed around everywhere. It carries with it all the 
-components and resources in our game. Not only the components and resources we 
-create, but the ones the Amethyst engine itself relies on. For instance, in our 
-`main.rs` we added a `RenderBundle::new()` to our game before calling `run()`. 
-That added default rendering components like `Camera`, `Material`, and `Mesh` to 
-the `World`, some of which we'll be using soon.
+components in our game. Not only the components we create, but the ones the 
+Amethyst engine itself relies on. For instance, in our `main.rs` we added a 
+`RenderBundle::new()` to our game before calling `run()`. That added default 
+rendering components like `Camera`, `Material`, and `Mesh` to the `World`, some 
+of which we'll be using soon.
 
 ## Initialise some entities
 
@@ -234,9 +234,21 @@ The `Loader` is an asset loader which is defined as a `resource` (not a `Entity`
 when we built our Application in `main.rs`, and it can read assets like .obj 
 files, but also it can `load_from_data` as in our use case.
 
-We'll also need a material to draw our mesh with. We'll use the Amethyst 
-renderer's `MaterialDefaults` (another resource) and only change the albedo 
-color:
+> Resources in Specs are a type of data which can be shared between systems, 
+> while being independent from entities, in contrast to components, which are 
+> attached to specific entities. We'll explore this more later on.
+
+The `load_from_data` function returns a `Handle<Mesh>`, also known as a 
+`MeshHandle`. Since `Handle` implements component, we can attach it to our 
+entity right away, and once the mesh is fully loaded, it will be added to the 
+entity as well. In this minimal scenario, the mesh will be available on the next 
+frame, but if, for instance, we were loading a large asset from disk, we could 
+still attach the `Handle` right away, which will give us access to the asset 
+once it's ready.
+
+In addition to the `Loader` to read our mesh data, we also need a material to 
+draw our mesh with. We'll use the Amethyst renderer's `MaterialDefaults` 
+(another resource) and only change the albedo color:
 
 ```rust,ignore
 /// Creates a solid material of the specified colour.
