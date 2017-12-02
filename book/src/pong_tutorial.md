@@ -3,12 +3,12 @@
 To get a better feeling for how Amethyst works, we're going to implement a 
 Pong clone. You can find a full Pong example (our end goal) in Amethyst's 
 examples folder. This tutorial breaks that project up into discrete steps so 
-it's easier to understand what everything is doing. You can run any of the 
-examples like so:
+it's easier to understand what everything is doing. If you've cloned the 
+Amethyst repo, you can run any of the examples like so:
 
 ```cargo run --example pong_tutorial_01```
 
-The main difference between your code and the example code is where the 
+The main difference between real game code and the example code is where the 
 `resources` and `assets` folders are located.
 
 For instance, in the pong_tutorial_01 example we have:
@@ -19,7 +19,7 @@ let path = format!(
     env!("CARGO_MANIFEST_DIR"));
 ```
 
-But for your own project you'll want something like this:
+But for your own project you'll probably want something like this:
 
 ```rust,ignore
 let path = format!(
