@@ -1,67 +1,84 @@
 //! Types for constructing render passes.
 
-#![allow(missing_docs)]
-
-use std::fmt::{Debug, Formatter, Result as FmtResult};
-use std::sync::Arc;
+use specs::SystemData;
 
 use error::Result;
 use pipe::{Effect, NewEffect, Target};
-use scene::{Model, Scene};
 use types::{Encoder, Factory};
 
-pub trait Pass: Send + Sync {
-    fn compile(&self, effect: NewEffect) -> Result<Effect>;
-    fn apply(&self, enc: &mut Encoder, effect: &mut Effect, scene: &Scene, model: &Model);
+/// Used to fetch data from the game world for rendering in the pass.
+pub trait PassData<'a> {
+    /// The data itself.
+    type Data: SystemData<'a> + Send;
 }
 
-#[derive(Clone)]
-pub(crate) struct Description(Arc<Pass>);
+/// Structures implementing this provide a renderer pass.
+pub trait Pass: for<'a> PassData<'a> {
+    /// The pass is given an opportunity to compile shaders and store them in an `Effect`
+    /// which is then passed to the pass in `apply`.
+    fn compile(&self, effect: NewEffect) -> Result<Effect>;
+    /// Called whenever the renderer is ready to apply the pass.  Feed commands into the
+    /// encoder here.
+    fn apply<'a, 'b: 'a>(
+        &'a mut self,
+        encoder: &mut Encoder,
+        effect: &mut Effect,
+        factory: Factory,
+        data: <Self as PassData<'b>>::Data,
+    );
+}
 
-impl Description {
-    pub fn new<P: Pass + 'static>(pass: P) -> Self {
-        Description(Arc::new(pass))
-    }
+/// A compiled pass.  These are created and managed by the `Renderer`.  This should not be
+/// used directly outside of the renderer.
+#[derive(Clone, Debug)]
+pub struct CompiledPass<P> {
+    effect: Effect,
+    inner: P,
+}
 
-    pub fn compile(self, fac: &mut Factory, out: &Target) -> Result<CompiledPass> {
-        let eb = NewEffect::new(fac, out);
-        let effect = self.0.compile(eb)?;
+impl<P> CompiledPass<P>
+where
+    P: Pass,
+{
+    pub(super) fn compile(pass: P, fac: &mut Factory, out: &Target) -> Result<Self> {
+        let effect = pass.compile(NewEffect::new(fac, out))?;
         Ok(CompiledPass {
-            effect,
-            inner: self.0,
+            effect: effect,
+            inner: pass,
         })
     }
 }
 
-impl Debug for Description {
-    fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
-        fmt.debug_tuple("PassDesc").field(&"[impl]").finish()
+impl<P> CompiledPass<P> {
+    /// Applies the inner pass.
+    pub fn apply<'a, 'b: 'a>(
+        &'a mut self,
+        encoder: &mut Encoder,
+        factory: Factory,
+        data: <P as PassData<'b>>::Data,
+    ) where
+        P: Pass,
+    {
+        self.inner.apply(encoder, &mut self.effect, factory, data)
     }
-}
 
-#[derive(Clone)]
-pub struct CompiledPass {
-    effect: Effect,
-    inner: Arc<Pass>,
-}
+    /// Distributes new target data to the pass.
+    pub fn new_target(&mut self, target: &Target) {
+        // Distribute new targets that don't blend.
+        self.effect.data.out_colors.clear();
+        self.effect
+            .data
+            .out_colors
+            .extend(target.color_bufs().iter().map(|cb| &cb.as_output).cloned());
 
-impl CompiledPass {
-    pub fn apply(&self, enc: &mut Encoder, scene: &Scene, model: &Model) {
-        // TODO: Eliminate this clone.
-        self.inner.apply(
-            enc,
-            &mut self.effect.clone(),
-            scene,
-            model,
-        );
-    }
-}
+        // Distribute new blend targets
+        self.effect.data.out_blends.clear();
+        self.effect
+            .data
+            .out_blends
+            .extend(target.color_bufs().iter().map(|cb| &cb.as_output).cloned());
 
-impl Debug for CompiledPass {
-    fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
-        fmt.debug_struct("CompiledPass")
-            .field("effect", &self.effect)
-            .field("inner", &"[impl]")
-            .finish()
+        // Distribute new depth buffer
+        self.effect.data.out_depth = target.depth_buf().map(|db| (db.as_output.clone(), (0, 0)));
     }
 }

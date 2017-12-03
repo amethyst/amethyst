@@ -1,0 +1,27 @@
+[package]
+name = "amethyst_animation"
+version = "0.1.0"
+authors = ["Simon Rönnberg <seamonr@gmail.com>"]
+description = "Animation support for Amethyst"
+keywords = ["game", "engine", "animation", "3d", "amethyst"]
+
+documentation = "https://www.amethyst.rs/doc/master/amethyst_animation/"
+homepage = "https://www.amethyst.rs/"
+repository = "https://github.com/amethyst/amethyst"
+
+readme = "README.md"
+license = "MIT/Apache-2.0"
+
+[badges]
+appveyor = { repository = "amethyst/amethyst", branch = "develop" }
+travis-ci = { repository = "amethyst/amethyst" }
+
+[dependencies]
+amethyst_assets = { path = "../amethyst_assets/", version = "0.2.0" }
+amethyst_core = { path = "../amethyst_core/", version = "0.1.0" }
+fnv = "1"
+minterpolate = "0.2"
+serde = { version = "1.0", features = ["derive"] }
+specs = "0.10"
+
+[dev-dependencies]

@@ -5,9 +5,9 @@ use std::fmt::{Display, Formatter};
 use std::fmt::Result as FmtResult;
 use std::result::Result as StdResult;
 
-use specs::common::BoxedErr;
-
 use config::ConfigError;
+use core;
+use renderer;
 
 /// Engine result type.
 pub type Result<T> = StdResult<T, Error>;
@@ -21,8 +21,8 @@ pub enum Error {
     // Asset(AssetError),
     /// Configuration error.
     Config(ConfigError),
-    /// System error.
-    System(BoxedErr),
+    /// Core error.
+    Core(core::Error),
 }
 
 impl StdError for Error {
@@ -30,7 +30,7 @@ impl StdError for Error {
         match *self {
             Error::Application => "Application error!",
             Error::Config(_) => "Configuration error!",
-            Error::System(_) => "System error!",
+            Error::Core(_) => "Core error!",
         }
     }
 
@@ -47,7 +47,19 @@ impl Display for Error {
         match *self {
             Error::Application => write!(fmt, "Application initialization failed!"),
             Error::Config(ref e) => write!(fmt, "Configuration loading failed: {}", e),
-            Error::System(ref e) => write!(fmt, "System creation failed: {}", e),
+            Error::Core(ref e) => write!(fmt, "System creation failed: {}", e),
         }
+    }
+}
+
+impl From<core::Error> for Error {
+    fn from(e: core::Error) -> Self {
+        Error::Core(e)
+    }
+}
+
+impl From<renderer::error::Error> for Error {
+    fn from(err: renderer::error::Error) -> Self {
+        Error::Core(core::Error::with_chain(err, "Renderer error"))
     }
 }

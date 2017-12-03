@@ -139,7 +139,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [gm]: https://github.com/gfx-rs/genmesh
 [wo]: https://github.com/PistonDevelopers/wavefront_obj
 [if]: https://github.com/lgvz/imagefmt
-[pg]: examples/04_pong/
+[pg]: examples/pong/
 
 ### Changed
 * Relicense under the terms of both MIT/Apache-2.0.

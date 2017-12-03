@@ -35,7 +35,7 @@ pub struct ExampleConfig {
 }
 
 fn main() {
-    let path = format!("{}/examples/config.ron", env!("CARGO_MANIFEST_DIR"));
+    let path = format!("{}/examples/display_config.ron", env!("CARGO_MANIFEST_DIR"));
     let res = ExampleConfig::load_no_fallback(&path);
 
     match res {

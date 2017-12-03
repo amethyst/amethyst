@@ -1,0 +1,29 @@
+[package]
+name = "amethyst_gltf"
+version = "0.1.0"
+authors = ["Rhuagh <seamonr@gmail.com>"]
+description = "GLTF asset loading"
+
+documentation = "https://www.amethyst.rs/doc/master/amethyst_gltf/"
+homepage = "https://www.amethyst.rs/"
+repository = "https://github.com/amethyst/amethyst"
+
+license = "MIT/Apache-2.0"
+
+[badges]
+appveyor = { repository = "amethyst/amethyst" }
+travis-ci = { repository = "amethyst/amethyst" }
+
+[dependencies]
+amethyst_assets = { path = "../amethyst_assets/", version = "0.2.0" }
+amethyst_animation = { path = "../amethyst_animation/", version = "0.1.0" }
+amethyst_renderer = { path = "../amethyst_renderer/", version = "0.5.0" }
+amethyst_core = { path = "../amethyst_core/", version = "0.1.0" }
+base64 = "0.7"
+fnv = "1"
+gltf = "0.9"
+gltf-utils = "0.9"
+gfx = "0.16"
+imagefmt = "4.0"
+itertools = "0.7"
+specs = "0.10"

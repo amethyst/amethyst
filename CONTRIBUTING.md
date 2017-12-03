@@ -114,19 +114,12 @@ done the following things first:
 
 1. You have ensured the pull request is based on a recent version of your
    respective branch.
-2. If your pull request adds new methods or functions to the codebase, you have
-   written test cases for them.
-   * Unit tests are placed at the bottom of the same .rs file in a submodule
-     called `tests`. For an example, see the unit tests in the [state.rs][st]
-     file in the top-level `amethyst` crate.
-   * Integration tests are placed in a separate .rs file in the `tests`
-     subdirectory.
-3. You have processed your source code with `cargo fmt`.
-4. All of the following commands completed without errors.
+2. You have processed your source code with `cargo fmt`.
+3. All of the following commands completed without errors.
    * `cargo build`
    * `cargo test --all`
    * `cargo run --example {example-name}`
-5. You have granted non-exclusive right to your source code under both the
+4. You have granted non-exclusive right to your source code under both the
    [MIT License][lm] and the [Apache License 2.0][la]. Unless you explicitly
    state otherwise, any contribution intentionally submitted for inclusion in
    the work by you, as defined in the Apache 2.0 license, shall be dual
@@ -174,6 +167,42 @@ feedback on it. If no one responds, feel free to @-mention a developer or post
 publicly on the [appropriate chat room][gi] on Gitter asking for a review. Once
 your code has been reviewed, revised if necessary, and then signed-off by a
 developer, it will be merged into the source tree.
+
+### Protocol for merging pull requests
+* Pull Requests shall not be merged before at least 24 hours have passed.
+* Pull Requests shall be approved by at least two members (two approvals from contributors can count as one member approval.)
+* Merging a PR shall be done with `bors r+`
+* If a member self-requested a review, the PR shall not be merged until they reviewed the PR (exception: the member becomes inactive)
+
+Note: The author of a PR cannot approve their own PR.
+
+##### Special cases
+
+###### Urgent fixes
+
+* If something went wrong (like a broken version has been released, the website doesn't work at all, ..) no approval is required for merging
+* Merging can be performed instant (but still with bors)
+
+###### Grammar fixes, style improvements, ..
+
+* Same here, no approval is required for merging
+* There is no reason to wait 24 hours here
+
+###### Documentation, tests, benchmarks
+
+* Unless it's a major rewrite in our testing / benchmarking architecture, one review is sufficient.
+* Please still wait one day before merging the PR
+
+###### Experimental branches
+
+* If there are very experimental branches, there's no need to use bors; in fact, CI may even fail if that makes working on it easier.
+* A review would be good prior to merging, but rules don't need to be strict here
+
+###### Architecture changes, API which influences the workflow / general design of the engine
+
+* Should be labeled with `type: RFC`
+* Needs at least three approvals by members only
+* Should be left open for reviews for a couple of days
 
 ### Dealing With Upstream Changes
 
@@ -254,8 +283,8 @@ There are two types of documentation in Amethyst you can work on:
 1. [API documentation][ad]
 2. [The Amethyst book][ab]
 
-[ad]: https://www.amethyst.rs/doc/amethyst/
-[ab]: https://www.amethyst.rs/book/
+[ad]: https://www.amethyst.rs/doc/master/doc/amethyst/index.html
+[ab]: https://www.amethyst.rs/book/master/html/index.html
 
 Our Rust API documentation is generated directly from source code comments
 marked with either `///` or `//!` using  a tool called Rustdoc. See

@@ -1,7 +1,0 @@
-(
-  fullscreen: false,
-  multisampling: 1,
-  title: "Renderable Example",
-  visibility: true,
-  vsync: true,
-)

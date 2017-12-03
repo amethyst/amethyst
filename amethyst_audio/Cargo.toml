@@ -1,0 +1,31 @@
+[package]
+name = "amethyst_audio"
+version = "0.1.0"
+authors = ["Xaeroxe <kieseljake@gmail.com>"]
+description = "Audio support for Amethyst"
+exclude = ["examples/*"]
+keywords = ["game", "engine", "audio","amethyst"]
+categories = ["audio"]
+
+documentation = "https://www.amethyst.rs/doc/master/amethyst_audio/"
+homepage = "https://www.amethyst.rs/"
+repository = "https://github.com/amethyst/amethyst"
+
+readme = "README.md"
+license = "MIT/Apache-2.0"
+
+[badges]
+appveyor = { repository = "amethyst/amethyst", branch = "develop" }
+travis-ci = { repository = "amethyst/amethyst" }
+
+[dependencies]
+amethyst_assets = { path = "../amethyst_assets", version = "0.2.0"}
+amethyst_core = { path = "../amethyst_core", version = "0.1.0"}
+cpal = "0.4"
+rodio = "0.5.1"
+shred = "0.5"
+specs = "0.10"
+
+[dependencies.smallvec]
+version = "0.4.2"
+features = ["serde"]
