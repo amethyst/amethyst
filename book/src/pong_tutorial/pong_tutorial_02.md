@@ -240,11 +240,10 @@ files, but also it can `load_from_data` as in our use case.
 
 The `load_from_data` function returns a `Handle<Mesh>`, also known as a 
 `MeshHandle`. Since `Handle` implements component, we can attach it to our 
-entity right away, and once the mesh is fully loaded, it will be added to the 
-entity as well. In this minimal scenario, the mesh will be available on the next 
-frame, but if, for instance, we were loading a large asset from disk, we could 
-still attach the `Handle` right away, which will give us access to the asset 
-once it's ready.
+entity. Once the mesh is fully loaded, a system which asks the handle for the 
+mesh will receive it. If the mesh isn't loaded yet, the handle will return 
+`None`. In this minimal scenario, the mesh will be available on the next 
+frame.
 
 In addition to mesh data, we also need a material to draw our mesh with. 
 We'll use the Amethyst renderer's `MaterialDefaults` (another resource) and only 
@@ -363,10 +362,9 @@ No component with the given id. Did you forget to register the component with
 It looks like we're missing at least one component registration. In addition to 
 components we define ourselves, Amethyst has a lot of internal systems and 
 components it uses to keep things running. For simplicity, these have been 
-wrapped up into "Bundles" which add a set of related components, systems, and 
-resources to the world. We can add these to our Application using the 
-`with_bundle` method, and in fact we already have one of these in `main.rs`: the 
-`RenderBundle`.
+wrapped up into "Bundles" which include related components, systems, and 
+resources. We can add these to our Application using the `with_bundle` method, 
+and in fact we already have one of these in `main.rs`: the `RenderBundle`.
 
 As it turns out, the components we're missing are `Transform` and 
 `LocalTransform`, and we can add those with the `TransformBundle`, which will 
