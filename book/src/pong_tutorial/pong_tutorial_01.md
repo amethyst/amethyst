@@ -67,7 +67,7 @@ up the `State` and close the application. All other keyboard input is ignored
 for now.
 
 Now that we know we can quit, let's add some code to actually get things 
-started! We'll use a `run()` function, which which returns a Result and thus 
+started! We'll use a `run()` function, which returns a Result and thus 
 allows us to use `?`.
 
 ```rust,ignore
@@ -82,10 +82,8 @@ fn run() -> Result<()> {
 Inside run() we first define a path for our display_config.ron file and load it.
 
 ```rust,ignore
-let path = format!(
-    "{}/resources/display_config.ron",
-    env!("CARGO_MANIFEST_DIR")
-);
+let path = "./resources/display_config.ron";
+
 let config = DisplayConfig::load(&path);
 ```
 
@@ -111,8 +109,8 @@ This will set the default window dimensions to 500 x 500, and make the title bar
 say "Pong!" instead of the sad, lowercase default of "pong".
 
 Now, back inside our run() function in main.rs, let's copy and paste some 
-rendering code so we can keep moving. We'll eventually cover rendering in more 
-in depth.
+rendering code so we can keep moving. We'll cover rendering in more depth later 
+in this tutorial.
 
 ```rust,ignore
 let pipe = Pipeline::build().with_stage(
