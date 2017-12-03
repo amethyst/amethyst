@@ -11,14 +11,14 @@ use std::time::Duration;
 
 use amethyst_assets::*;
 use rayon::{Configuration, ThreadPool};
-use specs::DenseVecStorage;
+use specs::VecStorage;
 
 #[derive(Clone, Debug)]
 struct DummyAsset(String);
 
 impl Asset for DummyAsset {
     type Data = String;
-    type HandleStorage = DenseVecStorage<Handle<DummyAsset>>;
+    type HandleStorage = VecStorage<Handle<DummyAsset>>;
 }
 
 struct DummyFormat;

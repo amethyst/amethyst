@@ -22,7 +22,7 @@ pub trait Asset: Send + Sync + 'static {
     /// The `Data` type the asset can be created from.
     type Data: Send + Sync + 'static;
 
-    /// The ECS storage type to be used. You'll want to use `DenseVecStorage` in most cases.
+    /// The ECS storage type to be used. You'll want to use `VecStorage` in most cases.
     type HandleStorage: UnprotectedStorage<Handle<Self>> + Send + Sync;
 }
 

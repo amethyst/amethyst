@@ -1,5 +1,5 @@
 use amethyst_renderer::TextureHandle;
-use specs::{Component, DenseVecStorage};
+use specs::{Component, VecStorage};
 
 /// A component with the texture to display in this entity's `UiTransform`
 #[derive(Clone)]
@@ -9,5 +9,5 @@ pub struct UiImage {
 }
 
 impl Component for UiImage {
-    type Storage = DenseVecStorage<Self>;
+    type Storage = VecStorage<Self>;
 }

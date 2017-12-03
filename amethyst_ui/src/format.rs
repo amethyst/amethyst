@@ -1,6 +1,6 @@
 use amethyst_assets::{Asset, Error, Handle, ResultExt, SimpleFormat};
 use rusttype::{Font, FontCollection};
-use specs::DenseVecStorage;
+use specs::VecStorage;
 
 /// A loaded set of fonts from a file.
 pub struct FontAsset(pub Font<'static>);
@@ -12,7 +12,7 @@ pub struct FontData(Font<'static>);
 
 impl Asset for FontAsset {
     type Data = FontData;
-    type HandleStorage = DenseVecStorage<Handle<Self>>;
+    type HandleStorage = VecStorage<Handle<Self>>;
 }
 
 impl Into<Result<FontAsset, Error>> for FontData {
