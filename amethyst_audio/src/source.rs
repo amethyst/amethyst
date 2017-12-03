@@ -1,7 +1,7 @@
 //! Provides structures used to load audio files.
 
 use amethyst_assets::{Asset, Handle, Result};
-use specs::DenseVecStorage;
+use specs::VecStorage;
 
 use formats::AudioData;
 
@@ -23,7 +23,7 @@ impl AsRef<[u8]> for Source {
 
 impl Asset for Source {
     type Data = AudioData;
-    type HandleStorage = DenseVecStorage<SourceHandle>;
+    type HandleStorage = VecStorage<SourceHandle>;
 }
 
 impl Into<Result<Source>> for AudioData {

@@ -19,7 +19,7 @@ use assets::{Asset, Error as AssetError, Handle};
 use core::transform::LocalTransform;
 use gfx::Primitive;
 use renderer::{MeshHandle, TextureData, TextureHandle, VertexBufferCombination};
-use specs::DenseVecStorage;
+use specs::VecStorage;
 
 mod format;
 mod systems;
@@ -120,5 +120,5 @@ impl Into<Result<GltfSceneAsset, AssetError>> for GltfSceneAsset {
 impl Asset for GltfSceneAsset {
     type Data = Self;
     // TODO: replace by tracked storage
-    type HandleStorage = DenseVecStorage<Handle<Self>>;
+    type HandleStorage = VecStorage<Handle<Self>>;
 }
