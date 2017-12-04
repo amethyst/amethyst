@@ -212,6 +212,12 @@ impl<'a> EffectBuilder<'a> {
         self
     }
 
+    /// Set the pipeline primitive type.
+    pub fn with_primitive_type(&mut self, prim: Primitive) -> &mut Self {
+        self.prim = prim;
+        self
+    }
+
     /// Sets the output target of the PSO.
     ///
     /// If the target contains a depth buffer, its mode will be set by `depth`.
