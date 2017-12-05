@@ -97,5 +97,6 @@ mod renderer;
 mod resources;
 mod system;
 mod tex;
+mod tex_animation;
 mod types;
 mod vertex;
