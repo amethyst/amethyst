@@ -1,5 +1,6 @@
-use amethyst_assets::Handle;
+use amethyst_assets::{Asset, Handle};
 use fnv::FnvHashMap as HashMap;
+use specs::VecStorage;
 
 
 /// An asset handle to sprite sheet metadata.
@@ -10,17 +11,31 @@ pub type SpriteSheetDataHandle = Handle<SpriteSheetData>;
 #[derive(Clone, Debug)]
 pub struct SpriteSheetData {
     /// A list of frames in this spritesheet.
-    frames: Vec<Frame>,
+    pub frames: Vec<Frame>,
     /// A collection of animations, the first layer contains a list of "animations" and the second
     /// layer contains a list of frame indices within the animation.
-    animations: Vec<Vec<usize>>,
+    pub animations: Vec<Vec<usize>>,
     /// A mapping between string names and indexes into the first layer of the animations member.
     /// This should only be used when switching animation by string name.
-    animation_mapping: HashMap<String, usize>,
+    pub animation_mapping: HashMap<String, usize>,
+}
+
+impl Asset for SpriteSheetData {
+    type Data = Self;
+    type HandleStorage = VecStorage<Handle<Self>>;
+}
+
+impl Into<Result<SpriteSheetData>> for SpriteSheetData {
+    fn into(data: Self) -> Result<SpriteSheetData> {
+        Ok(data)
+    }
 }
 
 /// A component describing the current state of animation for a sprite sheet.
+#[derive(Clone, Debug)]
 pub struct SpriteSheetAnimation {
+    /// The multiplier for playback speed.  1.0 is normal speed.
+    pub playback_speed: f32,
     /// The SpriteSheetData we are animating.
     sprite_sheet_data: SpriteSheetDataHandle,
     /// The animation currently playing, this is an index into the first layer of the animations
@@ -31,8 +46,6 @@ pub struct SpriteSheetAnimation {
     current_frame: usize,
     /// How long the current frame has been played for.
     frame_timer: f32,
-    /// The multiplier for playback speed.  1.0 is normal speed.
-    playback_speed: f32,
 }
 
 /// A description of a frame in a spritesheet.
