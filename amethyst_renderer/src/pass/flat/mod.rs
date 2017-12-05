@@ -12,4 +12,6 @@ struct VertexArgs {
     proj: [[f32; 4]; 4],
     view: [[f32; 4]; 4],
     model: [[f32; 4]; 4],
+    tex_xy: [f32; 2],
+    tex_wh: [f32; 2],
 }

@@ -65,7 +65,7 @@ pub use formats::{build_mesh_with_combo, create_mesh_asset, create_texture_asset
 pub use input::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
 pub use light::{DirectionalLight, Light, PointLight, SpotLight, SunLight};
 pub use mesh::{vertex_data, Mesh, MeshHandle, VertexBuffer};
-pub use mtl::{Material, MaterialDefaults};
+pub use mtl::{Material, MaterialAnimation, MaterialDefaults};
 pub use pass::{DrawFlat, DrawFlatSeparate, DrawPbm, DrawPbmSeparate, DrawShaded,
                DrawShadedSeparate};
 pub use pipe::{ColorBuffer, Data, DepthBuffer, DepthMode, Effect, EffectBuilder, Init, Meta,
@@ -75,6 +75,7 @@ pub use renderer::Renderer;
 pub use resources::{AmbientColor, ScreenDimensions, WindowMessages};
 pub use system::RenderSystem;
 pub use tex::{Texture, TextureBuilder, TextureHandle};
+pub use tex_animation::{Frame, SpriteSheetAnimation, SpriteSheetData, SpriteSheetDataHandle};
 pub use types::{Encoder, Factory, PipelineState, Resources};
 pub use vertex::{Attribute, AttributeFormat, Attributes, Color, Normal, PosColor, PosNormTangTex,
                  PosNormTex, PosTex, Position, Query, Separate, Tangent, TexCoord,
@@ -97,5 +98,6 @@ mod renderer;
 mod resources;
 mod system;
 mod tex;
+mod tex_animation;
 mod types;
 mod vertex;
