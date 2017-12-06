@@ -19,7 +19,9 @@ appveyor = { repository = "amethyst/amethyst", branch = "develop" }
 travis-ci = { repository = "amethyst/amethyst", branch = "develop" }
 
 [features]
-profiler = ["thread_profiler/thread_profiler"]
+profiler = ["thread_profiler/thread_profiler", "amethyst_renderer_new/profiler"]
+metal = ["amethyst_renderer_new/metal"]
+vulkan = ["amethyst_renderer_new/vulkan"]
 
 [dependencies]
 amethyst_assets = { path = "amethyst_assets", version = "0.2.0" }
@@ -27,6 +29,7 @@ amethyst_audio = { path = "amethyst_audio", version = "0.1.0" }
 amethyst_config = { path = "amethyst_config", version = "0.4.0" }
 amethyst_core = { path = "amethyst_core", version = "0.1.0" }
 amethyst_renderer = { path = "amethyst_renderer", version = "0.5" }
+amethyst_renderer_new = { path = "amethyst_renderer_new", version = "0.6" }
 amethyst_input = { path = "amethyst_input", version = "0.1" }
 amethyst_ui = { path = "amethyst_ui", version = "0.1" }
 amethyst_utils = { path = "amethyst_utils", version = "0.1" }
@@ -38,12 +41,14 @@ shrev = "0.6"
 specs = "0.10"
 winit = "0.7"
 
-thread_profiler = { version = "0.1", optional = true }
+thread_profiler = { version = "0.1" }
 
 [dev-dependencies]
 amethyst_gltf = { path = "amethyst_gltf", version = "0.1" }
+error-chain = "0.11"
 genmesh = "0.4"
 amethyst_animation = { path = "amethyst_animation", version = "0.1.0" }
+
 
 [build-dependencies]
 vergen = "0.1"
@@ -91,6 +96,10 @@ path = "examples/ui/main.rs"
 [[example]]
 name = "animation"
 path = "examples/animation/main.rs"
+
+[[example]]
+name = "hal"
+path = "examples/hal/main.rs"
 
 [workspace]
 members = ["amethyst_animation", "amethyst_gltf"]
