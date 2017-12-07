@@ -199,6 +199,12 @@ where
         D: AsRef<[T]> + Into<Vec<T>>,
         T: Pod,
     {
+        if dst.visible() {
+            let mut writer = device.acquire_mapping_writer(dst.raw(), 0..dst.get_size())?;
+            writer.copy_from_slice(data.as_ref());
+            device.release_mapping_writer(writer);
+        }
+
         Ok(self.uploads.push(Upload::buffer(
             allocator,
             current,

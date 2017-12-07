@@ -47,7 +47,7 @@ where
         self.requirements.size
     }
 
-    pub fn writeable(&self) -> bool {
+    pub fn visible(&self) -> bool {
         self.properties.contains(Properties::CPU_VISIBLE)
     }
 
@@ -101,6 +101,21 @@ where
         properties: Properties,
         transient: bool,
     ) -> Result<Buffer<B>> {
+
+        // Remove this when metal will support buffer copy operation.
+        #[cfg(feature="metal")]
+        let properties = {
+            use std::any::Any;
+            if let Some(device) = Any::downcast_ref::<<::metal::Backend as Backend>::Device>(device) {
+                let mut properties = properties;
+                properties.insert(Properties::CPU_VISIBLE);
+                properties.remove(Properties::DEVICE_LOCAL);
+                properties
+            } else {
+                properties
+            }
+        };
+
         let ubuf = device.create_buffer(size, stride, usage)?;
         let requirements = complete_requirements::<B>(device, &ubuf, usage);
         let ty = if transient {
