@@ -31,6 +31,7 @@ use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use rayon_core::current_thread_index;
 use specs::{SystemData, World};
 
+use epoch::Epoch;
 use shaders::ShaderManager;
 use vertex::VertexFormat;
 
@@ -90,6 +91,7 @@ where
     /// * filling `DescriptorSet`s
     fn prepare<'a, C>(
         &mut self,
+        through: Epoch,
         cbuf: &mut CommandBuffer<B, C>,
         layout: &B::PipelineLayout,
         device: &B::Device,
@@ -103,6 +105,7 @@ where
     /// * recording `Graphics` commands to `CommandBuffer`
     fn draw_inline<'a>(
         &mut self,
+        through: Epoch,
         encoder: RenderPassInlineEncoder<B>,
         data: <Self as Data<'a, B>>::DrawData,
     );
@@ -152,6 +155,7 @@ where
     /// [`Pass::prepare`]: trait.Pass.html#tymethod.prepare
     fn prepare<'a>(
         &mut self,
+        through: Epoch,
         cbuf: &mut CommandBuffer<B, Transfer>,
         layout: &B::PipelineLayout,
         device: &B::Device,
@@ -161,7 +165,7 @@ where
     /// Reflects [`Pass::draw_inline`] function
     ///
     /// [`Pass::draw_inline`]: trait.Pass.html#tymethod.draw_inline
-    fn draw_inline<'a>(&mut self, encoder: RenderPassInlineEncoder<B>, world: &'a World);
+    fn draw_inline<'a>(&mut self, through: Epoch, encoder: RenderPassInlineEncoder<B>, world: &'a World);
 }
 
 impl<P, B> AnyPass<B> for P
@@ -210,6 +214,7 @@ where
 
     fn prepare<'a>(
         &mut self,
+        through: Epoch,
         cbuf: &mut CommandBuffer<B, Transfer>,
         layout: &B::PipelineLayout,
         device: &B::Device,
@@ -217,6 +222,7 @@ where
     ) {
         <P as Pass<B>>::prepare(
             self,
+            through,
             cbuf,
             layout,
             device,
@@ -224,9 +230,10 @@ where
         );
     }
 
-    fn draw_inline<'a>(&mut self, encoder: RenderPassInlineEncoder<B>, world: &'a World) {
+    fn draw_inline<'a>(&mut self, through: Epoch, encoder: RenderPassInlineEncoder<B>, world: &'a World) {
         <P as Pass<B>>::draw_inline(
             self,
+            through,
             encoder,
             <P as Data<'a, B>>::DrawData::fetch(&world.res, 0),
         );

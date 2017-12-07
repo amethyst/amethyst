@@ -6,6 +6,7 @@ use gfx_hal::pso::{DescriptorSetLayoutBinding, GraphicsShaderSet, Stage, VertexB
 use specs::{Fetch, Join, ReadStorage, SystemData, World, WriteStorage};
 
 use cam::{ActiveCamera, Camera};
+use epoch::Epoch;
 use graph::pass::{Data, Pass};
 use mesh::{Bind as MeshBind, Mesh};
 use shaders::{GraphicsShaderNameSet, ShaderLoader, ShaderManager};
@@ -76,6 +77,7 @@ where
     /// * filling `DescriptorSet`s
     fn prepare<'a, C>(
         &mut self,
+        finish: Epoch,
         cbuf: &mut CommandBuffer<B, C>,
         layout: &B::PipelineLayout,
         device: &B::Device,
@@ -89,12 +91,13 @@ where
     /// * recording `Transfer` and `Graphics` commands to `CommandBuffer`
     fn draw_inline<'a>(
         &mut self,
+        finish: Epoch,
         mut encoder: RenderPassInlineEncoder<B>,
         (meshes,): <Self as Data<'a, B>>::DrawData,
     ) {
         for mesh in meshes.join() {
             let mut vertex = VertexBufferSet(vec![]);
-            mesh.bind(&[PosColor::VERTEX_FORMAT], &mut vertex)
+            mesh.bind(finish, &[PosColor::VERTEX_FORMAT], &mut vertex)
                 .map(|bind| {
                     bind.draw_inline(vertex, &mut encoder);
                 })

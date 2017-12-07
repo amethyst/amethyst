@@ -12,7 +12,7 @@ use gfx_hal::queue::{Graphics, Supports};
 
 use smallvec::SmallVec;
 
-use epoch::CurrentEpoch;
+use epoch::{CurrentEpoch, Epoch, Eh};
 use hal::Hal;
 use memory::{cast_pod_vec, Allocator, Buffer};
 use upload::{self, Uploader};
@@ -624,6 +624,7 @@ where
     /// Bind buffers to specified attribute locations.
     pub fn bind<'a>(
         &'a self,
+        through: Epoch,
         format_set: VertexFormatSet<'static>,
         vertex: &mut VertexBufferSet<'a, B>,
     ) -> BindResult<Bind<B>> {
@@ -638,6 +639,8 @@ where
         let mut vertex_count = None;
         for format in format_set {
             if let Some(index) = find_compatible_buffer(&self.vbufs[last..], format) {
+                // Ensure buffer is valid
+                Eh::make_valid_through(&self.vbufs[index].buffer, through);
                 vertex.0.push((self.vbufs[index].buffer.raw(), 0));
                 last = index;
                 assert!(vertex_count.is_none() || vertex_count == Some(self.vbufs[index].len));
@@ -651,6 +654,7 @@ where
             self.ibuf
                 .as_ref()
                 .map(|ibuf| {
+                    Eh::make_valid_through(&ibuf.buffer, through);
                     Bind::Indexed {
                         index: IndexBufferView {
                             buffer: ibuf.buffer.raw(),

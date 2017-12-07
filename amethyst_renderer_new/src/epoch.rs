@@ -1,7 +1,9 @@
-use std::cmp::{max, min, Ordering, PartialOrd};
+
+use std::cmp::min;
 use std::collections::VecDeque;
 use std::ops::{Add, AddAssign, Deref, DerefMut};
 use std::ptr::null;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use relevant::Relevant;
 
@@ -10,6 +12,7 @@ use relevant::Relevant;
 /// Primary used with `ValidThrough` implmenetations.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Epoch(pub u64);
+
 
 impl Epoch {
     /// Create new `Epoch` that never compared as "later" to any other.
@@ -78,7 +81,7 @@ fn is_valid_through<T: ValidThrough>(value: &T, epoch: Epoch) -> bool {
 #[derive(Debug)]
 pub struct Ec<T> {
     ptr: *const T,
-    valid_through: u64,
+    valid_through: Epoch,
 }
 
 unsafe impl<T> Send for Ec<T>
@@ -104,7 +107,7 @@ impl<T> Ec<T> {
     /// Get `Epoch` after which this `Ec` will expire.
     #[inline]
     pub fn valid_through(&self) -> Epoch {
-        Epoch(self.valid_through)
+        self.valid_through
     }
 
     /// Get reference to the pointer value.
@@ -113,7 +116,7 @@ impl<T> Ec<T> {
     /// Returns `None` otherwise.
     #[inline]
     pub fn get<'a>(&self, current: &'a CurrentEpoch) -> Option<&'a T> {
-        if self.valid_through <= current.0 {
+        if self.valid_through <= current.now() {
             unsafe { Some(&*self.ptr) }
         } else {
             None
@@ -129,7 +132,7 @@ impl<T> Ec<T> {
 pub struct Eh<T> {
     relevant: Relevant,
     ptr: *const T,
-    valid_through: u64,
+    valid_through: AtomicEpoch,
 }
 
 impl<T> Eh<T> {
@@ -139,25 +142,25 @@ impl<T> Eh<T> {
         Eh {
             relevant: Relevant,
             ptr: Box::into_raw(Box::new(value)),
-            valid_through: 0,
+            valid_through: AtomicEpoch::new(Epoch::new()),
         }
     }
 
     /// Make all new `Ec` borrowed from this `Eh` to be valid
     /// until `CurrentEpoch` advances further than specified `Epoch`.
     #[inline]
-    pub fn make_valid_through(this: &mut Self, epoch: Epoch) {
-        this.valid_through = max(this.valid_through, epoch.0);
+    pub fn make_valid_through(this: &Self, epoch: Epoch) {
+        this.valid_through.advance_to(epoch);
     }
 
     /// Borrow `Ec` from this `Eh`
     /// `Ec` will expire after specified `Epoch`
     #[inline]
-    pub fn borrow(this: &mut Self, epoch: Epoch) -> Ec<T> {
+    pub fn borrow(this: &Self, epoch: Epoch) -> Ec<T> {
         Self::make_valid_through(this, epoch);
         Ec {
             ptr: this.ptr,
-            valid_through: this.valid_through,
+            valid_through: this.valid_through.epoch(),
         }
     }
 }
@@ -178,12 +181,12 @@ impl<T> ValidThrough for Eh<T> {
 
     #[inline]
     fn valid_through(&self) -> Epoch {
-        Epoch(self.valid_through)
+        self.valid_through.epoch()
     }
 
     #[inline]
     fn dispose(self, current: &CurrentEpoch) -> Result<T, Self> {
-        if self.valid_through < current.0 {
+        if self.valid_through.epoch() < current.now() {
             self.relevant.dispose();
             Ok(unsafe { *Box::from_raw(self.ptr as *mut _) })
         } else {
@@ -198,7 +201,7 @@ impl<T> From<Box<T>> for Eh<T> {
         Eh {
             relevant: Relevant,
             ptr: Box::into_raw(b),
-            valid_through: 0,
+            valid_through: AtomicEpoch::new(Epoch::new()),
         }
     }
 }
@@ -266,3 +269,29 @@ where
         self.offset += index as u64;
     }
 }
+
+
+
+#[cfg(target_pointer_width = "64")]
+#[derive(Debug)]
+struct AtomicEpoch(AtomicUsize);
+impl AtomicEpoch {
+    fn new(epoch: Epoch) -> Self {
+        AtomicEpoch(AtomicUsize::new(epoch.0 as usize))
+    }
+
+    /// Advance epoch if it less then specified.
+    fn advance_to(&self, other: Epoch) {
+        let value = other.0 as usize;
+        if self.0.load(Ordering::Relaxed) < value {
+            self.0.store(value as usize, Ordering::Relaxed);
+        }
+    }
+
+    fn epoch(&self) -> Epoch {
+        Epoch(self.0.load(Ordering::Relaxed) as u64)
+    }
+}
+
+#[cfg(not(target_pointer_width = "64"))]
+const ERROR: () = "Your pointers are too small. Please try again with a more expensive computer.";

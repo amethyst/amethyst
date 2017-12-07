@@ -64,7 +64,6 @@ where
         world: &World,
     ) {
         let start = self.graphs[graph].1;
-        let span = self.graphs[graph].0.get_frames_number();
         center.execute_graphics(
             Draw {
                 renderer: self,
@@ -72,7 +71,6 @@ where
                 graph,
             },
             start,
-            span,
             current,
             device,
         );
@@ -122,10 +120,11 @@ where
         self,
         queue: &mut CommandQueue<B, C>,
         pools: &mut [CommandPool<B, C>],
+        current: &CurrentEpoch,
         fence: &B::Fence,
         device: &B::Device,
-    ) {
-        let ref mut graph = self.renderer.graphs[self.graph].0;
+    ) -> Epoch {
+        let (ref mut graph, ref mut start) = self.renderer.graphs[self.graph];
         let ref mut swapchain = self.renderer.swapchain;
         let ref backbuffer = self.renderer.backbuffer;
         let (width, height) = self.renderer.window.get_inner_size_pixels().unwrap();
@@ -138,7 +137,13 @@ where
             },
             depth: 0.0..1.0,
         };
+
         let ref world = *self.world;
+
+        // This execuiton needs to finsish before we will draw same frame again.
+        // And we want to give space for all frames in all graphs.
+        // If there is only one frame this execution have to finish in current epoch
+        let finish = current.now() + (graph.get_frames_number() - 1) as u64;
         graph.draw(
             queue,
             &mut pools[0],
@@ -148,6 +153,9 @@ where
             viewport,
             world,
             fence,
+            finish,
         );
+        *start = current.now() + 1;
+        finish
     }
 }

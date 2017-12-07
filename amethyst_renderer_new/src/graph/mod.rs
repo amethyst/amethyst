@@ -24,6 +24,7 @@ use gfx_hal::window::{Backbuffer, Frame, Swapchain};
 use smallvec::SmallVec;
 use specs::World;
 
+use epoch::{CurrentEpoch, Epoch};
 use graph::pass::AnyPass;
 use memory::{Allocator, Image};
 use shaders::ShaderManager;
@@ -139,6 +140,7 @@ where
         world: &World,
         rect: Rect,
         frame: SuperFrame<B>,
+        through: Epoch,
     ) -> bool
     where
         C: Supports<Graphics> + Supports<Transfer>,
@@ -157,7 +159,8 @@ where
         {
             profile_scope!("AnyPass::prepare");
             self.pass.prepare(
-                unsafe { transmute(&mut *cbuf) }, // Should be OK
+                through,
+                cbuf.downgrade(),
                 &self.pipeline_layout,
                 device,
                 world,
@@ -177,7 +180,7 @@ where
         
         profile_scope!("AnyPass::draw_inline");
         // Record custom drawing calls
-        self.pass.draw_inline(encoder, world);
+        self.pass.draw_inline(through, encoder, world);
 
         // Return if this pass renders to the surface image
         self.draws_to_surface
@@ -222,6 +225,7 @@ where
         viewport: Viewport,
         world: &World,
         finish: &B::Fence,
+        through: Epoch,
     ) where
         S: Swapchain<B>,
         C: Supports<Graphics> + Supports<Transfer>,
@@ -259,7 +263,7 @@ where
 
             // Record commands for pass
             let draws_to_surface =
-                pass.draw(&mut cbuf, device, world, viewport.rect, frame.clone());
+                pass.draw(&mut cbuf, device, world, viewport.rect, frame.clone(), through);
 
             // If it renders to acquired image
             let wait_surface = if draws_to_surface {
@@ -284,7 +288,7 @@ where
                             .chain(wait_surface)
                             .collect::<SmallVec<[_; 32]>>()) // Each pass singnals to associated `Semaphore`
                         .signal(&[&signals[id]]),
-                    // Signal the fence in last submission
+                    // Signal the finish fence in last submission
                     if id == count - 1 { Some(finish) } else { None },
                 );
             }

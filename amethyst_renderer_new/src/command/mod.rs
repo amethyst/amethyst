@@ -14,15 +14,37 @@ use smallvec::SmallVec;
 use self::family::Family;
 use epoch::{CurrentEpoch, Epoch};
 
+pub trait GeneralExecution<B: Backend>: Execution<B, General> {}
+impl<T, B> GeneralExecution<B> for T
+where
+    B: Backend,
+    T: Execution<B, General>,
+{}
+
+pub trait GraphicsExecution<B: Backend>: Execution<B, Graphics> + GeneralExecution<B> {}
+impl<T, B> GraphicsExecution<B> for T
+where
+    B: Backend,
+    T: Execution<B, Graphics> + Execution<B, General>,
+{}
+
+pub trait TransferExecution<B: Backend>: Execution<B, Transfer> + GraphicsExecution<B> {}
+impl<T, B> TransferExecution<B> for T
+where
+    B: Backend,
+    T: Execution<B, Transfer> + Execution<B, Graphics> + Execution<B, General>,
+{}
+
 
 pub trait Execution<B: Backend, C> {
     fn execute(
         self,
         queue: &mut CommandQueue<B, C>,
         pools: &mut [CommandPool<B, C>],
+        current: &CurrentEpoch,
         fence: &B::Fence,
         device: &B::Device,
-    );
+    ) -> Epoch;
 }
 
 
@@ -75,15 +97,13 @@ where
         &mut self,
         execution: E,
         start: Epoch,
-        span: usize,
         current: &mut CurrentEpoch,
         device: &B::Device,
     ) where
-        E: Execution<B, Graphics> + Execution<B, General>,
+        E: GraphicsExecution<B>,
     {
         profile_scope!("CommandCenter::execute_graphics");
         self.wait(device, current, start);
-        let index = span - 1;
 
         let fence = self.fences
             .pop()
@@ -92,16 +112,16 @@ where
         if let Some(ref mut family) = self.graphics.as_mut() {
             profile_scope!("CommandCenter::execute_graphics :: execute");
             let (mut queue, mut pools) = family.acquire(1, device);
-            execution.execute(&mut queue, &mut pools, &fence, device);
-            family.release(queue, pools, fence, index, device);
+            let finish = execution.execute(&mut queue, &mut pools, &*current, &fence, device);
+            family.release(queue, pools, fence, (finish.0 - current.now().0) as usize, device);
             return;
         }
 
         if let Some(ref mut family) = self.general.as_mut() {
             profile_scope!("CommandCenter::execute_graphics :: execute");
             let (mut queue, mut pools) = family.acquire(1, device);
-            execution.execute(&mut queue, &mut pools, &fence, device);
-            family.release(queue, pools, fence, index, device);
+            let finish = execution.execute(&mut queue, &mut pools, &*current, &fence, device);
+            family.release(queue, pools, fence, (finish.0 - current.now().0) as usize, device);
             return;
         }
     }
@@ -154,7 +174,7 @@ where
 
     fn wait_step(&mut self, device: &B::Device, depth: usize) {
         profile_scope!("CommandCenter::wait_step");
-        let mut fences: SmallVec<[_; 32]> = SmallVec::new();
+        let mut fences: SmallVec<[_; 128]> = SmallVec::new();
         self.transfer
             .as_mut()
             .map(|family| family.collect_fences(&mut fences, depth));
@@ -178,7 +198,7 @@ where
         self.cleanup(device, current);
 
         while epoch > current.now() {
-            self.wait_step(device, (epoch.0 - current.now().0) as usize);
+            self.wait_step(device, min(32, (epoch.0 - current.now().0) as usize));
             self.cleanup(device, current);
         }
     }
