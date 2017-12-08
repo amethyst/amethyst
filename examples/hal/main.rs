@@ -1,4 +1,3 @@
-
 extern crate amethyst_core as core;
 extern crate amethyst_renderer_new as renderer;
 extern crate amethyst_utils as utils;
@@ -30,18 +29,17 @@ use renderer::cam::{ActiveCamera, Camera};
 use renderer::graph::Graph;
 use renderer::graph::build::{ColorPin, Merge, PassBuilder, Present};
 use renderer::graph::flat::DrawFlat;
-use renderer::hal::{Hal, HalBuilder};
+use renderer::hal::{Hal, HalConfig};
 use renderer::memory::Allocator;
 use renderer::mesh::{Mesh, MeshBuilder};
-use renderer::renderer::{Renderer, RendererBuilder};
+use renderer::renderer::{Renderer, RendererConfig};
 use renderer::vertex::PosColor;
 
-error_chain! {}
+error_chain!{}
 
 quick_main!(run);
 
 fn run() -> Result<()> {
-
     #[cfg(feature = "profiler")]
     ::thread_profiler::register_thread_with_profiler("main".into());
     let mut events_loop = winit::EventsLoop::new();
@@ -55,19 +53,20 @@ fn run() -> Result<()> {
         ref mut renderer,
         ref mut current,
         ref mut shaders,
-    } = HalBuilder {
+    } = HalConfig {
         adapter: None,
         arena_size: 1024 * 1024 * 16,
         chunk_size: 1024,
         min_chunk_size: 512,
         compute: false,
-        renderer: Some(RendererBuilder {
+        renderer: Some(RendererConfig {
             title: "Amethyst Hal Example",
             width: 1024,
             height: 768,
             events: &events_loop,
         }),
-    }.build::<metal::Backend>().chain_err(|| "Can't init HAL")?;
+    }.build::<metal::Backend>()
+        .chain_err(|| "Can't init HAL")?;
 
     let ref mut renderer = *renderer.as_mut().unwrap();
 
@@ -85,12 +84,8 @@ fn run() -> Result<()> {
         );
         let present = Present::new(ColorPin::new(&merge, 0));
         renderer
-            .add_graph(
-                ColorPin::new(&merge, 0),
-                &device,
-                allocator,
-                shaders,
-            ).chain_err(|| "Can't build graph")?
+            .add_graph(ColorPin::new(&merge, 0), &device, allocator, shaders)
+            .chain_err(|| "Can't build graph")?
     };
 
     println!("Create mesh");
@@ -140,8 +135,12 @@ fn run() -> Result<()> {
             // 7, 6, 5,
             // 2, 6, 3,
             // 6, 7, 3,
-            1, 5, 2,
-            5, 6, 2,
+            1,
+            5,
+            2,
+            5,
+            6,
+            2,
         ];
         MeshBuilder::new()
             .with_indices(indices)
@@ -182,7 +181,7 @@ fn run() -> Result<()> {
 
     let mut first = true;
 
-    for _ in 0 .. 1000 {
+    for _ in 0..1000 {
         events_loop.poll_events(|_| {});
         renderer.draw(0, current, center, device, &world);
 
@@ -197,8 +196,15 @@ fn run() -> Result<()> {
         instant = now;
     }
 
+    world
+        .write::<Mesh<metal::Backend>>()
+        .remove(cube)
+        .unwrap()
+        .dispose(allocator);
+
     #[cfg(feature = "profiler")]
     ::thread_profiler::write_profile(&format!("{}/prf.", env!("CARGO_MANIFEST_DIR")));
+
 
     Ok(())
 }
