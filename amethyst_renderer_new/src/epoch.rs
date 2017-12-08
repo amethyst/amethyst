@@ -261,7 +261,11 @@ where
         for mut vec in self.queue.drain(..min(index, len)) {
             for value in vec.drain(..) {
                 if is_valid_through(&value, current.now()) {
-                    panic!("Value is valid through {:?}, current {:?}", value.valid_through(), current);
+                    panic!(
+                        "Value is valid through {:?}, current {:?}",
+                        value.valid_through(),
+                        current
+                    );
                 }
                 f(value.dispose(current).unwrap_or_else(|_| unreachable!()));
             }

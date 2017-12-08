@@ -670,9 +670,7 @@ where
         )
     }
 
-    pub fn dispose(self,
-        allocator: &mut Allocator<B>,)
-    {
+    pub fn dispose(self, allocator: &mut Allocator<B>) {
         if let Some(ibuf) = self.ibuf {
             allocator.destroy_buffer(ibuf.buffer);
         }

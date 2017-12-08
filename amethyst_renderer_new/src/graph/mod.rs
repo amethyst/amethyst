@@ -195,11 +195,9 @@ where
     fn dispose(self, allocator: &mut Allocator<B>, device: &B::Device) {
         // self.pass.dispose(allocator, device);
         match self.framebuffer {
-            SuperFramebuffer::Owned(framebuffers) => {
-                for framebuffer in framebuffers {
-                    device.destroy_framebuffer(framebuffer);
-                }
-            }
+            SuperFramebuffer::Owned(framebuffers) => for framebuffer in framebuffers {
+                device.destroy_framebuffer(framebuffer);
+            },
             _ => {}
         }
         device.destroy_renderpass(self.render_pass);
@@ -561,7 +559,7 @@ where
         for pass in self.passes {
             pass.dispose(allocator, device);
         }
-        for signal in self.signals.into_iter().filter_map(|x|x) {
+        for signal in self.signals.into_iter().filter_map(|x| x) {
             device.destroy_semaphore(signal);
         }
         for view in self.views {
@@ -640,19 +638,17 @@ where
         })
         .collect::<Result<_>>()?;
 
-    Ok(if let Some(format) = merge.depth_format() {
-        Targets {
-            colors,
-            depth: Some(DepthIndices {
+    let target = Targets {
+        colors,
+        depth: match merge.depth_format() {
+            Some(format) => Some(DepthIndices {
                 indices: make_views(format)?,
             }),
-        }
-    } else {
-        Targets {
-            colors,
-            depth: None,
-        }
-    })
+            None => None,
+        },
+    };
+
+    Ok(target)
 }
 
 

@@ -1,7 +1,7 @@
 pub mod build;
 
 use std::cmp::min;
-use std::mem::{ManuallyDrop};
+use std::mem::ManuallyDrop;
 use std::ptr::read;
 
 use gfx_hal::{Backend, Device, Gpu, Instance};
@@ -47,9 +47,10 @@ where
         unsafe {
             ManuallyDrop::into_inner(read(&mut self.uploader)).dispose(&mut self.allocator);
         }
-        self.renderer.take().map(|renderer| renderer.dispose(&mut self.allocator, &self.device));
+        self.renderer.take().map(|renderer| {
+            renderer.dispose(&mut self.allocator, &self.device)
+        });
         self.shaders.unload(&self.device);
         self.allocator.cleanup(&self.device, &self.current);
     }
 }
-

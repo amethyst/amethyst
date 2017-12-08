@@ -173,7 +173,7 @@ where
         match self {
             Upload::BufferStaging { src, .. } => allocator.destroy_buffer(src),
             Upload::ImageStaging { src, .. } => allocator.destroy_buffer(src),
-            _ => {},
+            _ => {}
         }
     }
 }
