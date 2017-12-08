@@ -191,6 +191,22 @@ where
         // Record custom drawing calls
         self.pass.draw_inline(through, encoder, world);
     }
+
+    fn dispose(self, allocator: &mut Allocator<B>, device: &B::Device) {
+        // self.pass.dispose(allocator, device);
+        match self.framebuffer {
+            SuperFramebuffer::Owned(framebuffers) => {
+                for framebuffer in framebuffers {
+                    device.destroy_framebuffer(framebuffer);
+                }
+            }
+            _ => {}
+        }
+        device.destroy_renderpass(self.render_pass);
+        device.destroy_graphics_pipeline(self.graphics_pipeline);
+        device.destroy_pipeline_layout(self.pipeline_layout);
+        device.destroy_descriptor_set_layout(self.descriptor_set_layout);
+    }
 }
 
 /// Directed acyclic rendering graph.
@@ -539,6 +555,21 @@ where
             views: image_views,
             frames,
         })
+    }
+
+    pub fn dispose(self, allocator: &mut Allocator<B>, device: &B::Device) {
+        for pass in self.passes {
+            pass.dispose(allocator, device);
+        }
+        for signal in self.signals.into_iter().filter_map(|x|x) {
+            device.destroy_semaphore(signal);
+        }
+        for view in self.views {
+            device.destroy_image_view(view);
+        }
+        for image in self.images {
+            allocator.destroy_image(image);
+        }
     }
 }
 

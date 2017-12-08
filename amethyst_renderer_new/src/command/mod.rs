@@ -145,9 +145,11 @@ where
     }
 
     /// Wait for all commands to finish
-    pub fn wait_finish(&mut self, device: &B::Device) {
+    pub fn wait_finish(&mut self, device: &B::Device, current: &mut CurrentEpoch) {
         self.wait_step(device, usize::max_value());
-        self.cleanup(device);
+        if let Some(ready) = self.cleanup(device) {
+            current.advance(ready as u64);
+        }
     }
 
     /// Check finished operation and advance current epoch.

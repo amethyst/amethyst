@@ -168,6 +168,14 @@ where
             _ => unimplemented!(),
         }
     }
+
+    pub fn dispose(self, allocator: &mut Allocator<B>) {
+        match self {
+            Upload::BufferStaging { src, .. } => allocator.destroy_buffer(src),
+            Upload::ImageStaging { src, .. } => allocator.destroy_buffer(src),
+            _ => {},
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -246,6 +254,12 @@ where
     {
         for upload in self.uploads.drain(..) {
             upload.commit(cbuf, current);
+        }
+    }
+
+    pub fn dispose(self, allocator: &mut Allocator<B>) {
+        for upload in self.uploads {
+            upload.dispose(allocator);
         }
     }
 }

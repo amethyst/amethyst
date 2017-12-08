@@ -1,6 +1,6 @@
 use std::fmt;
 
-use gfx_hal::Backend;
+use gfx_hal::{Backend, Device};
 use gfx_hal::command::{Rect, Viewport};
 use gfx_hal::device::Extent;
 use gfx_hal::format::Format;
@@ -45,8 +45,6 @@ pub struct Renderer<B: Backend> {
     pub acquire: B::Semaphore,
     pub release: B::Semaphore,
     pub start_epoch: Epoch,
-
-    pub shaders: ShaderManager<B>,
     pub graphs: Vec<Graph<B>>,
 }
 
@@ -106,6 +104,14 @@ where
 
         self.graphs.push(graph);
         Ok(self.graphs.len() - 1)
+    }
+
+    pub fn dispose(self, allocator: &mut Allocator<B>, device: &B::Device) {
+        for graph in self.graphs {
+            graph.dispose(allocator, device);
+        }
+        device.destroy_semaphore(self.acquire);
+        device.destroy_semaphore(self.release);
     }
 
     fn get_frames_number(&self) -> usize {

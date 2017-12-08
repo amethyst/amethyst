@@ -670,7 +670,19 @@ where
         )
     }
 
-    fn transformt(&self) -> &Matrix4<f32> {
+    pub fn dispose(self,
+        allocator: &mut Allocator<B>,)
+    {
+        if let Some(ibuf) = self.ibuf {
+            allocator.destroy_buffer(ibuf.buffer);
+        }
+
+        for vbuf in self.vbufs {
+            allocator.destroy_buffer(vbuf.buffer);
+        }
+    }
+
+    pub fn transform(&self) -> &Matrix4<f32> {
         &self.transform
     }
 }

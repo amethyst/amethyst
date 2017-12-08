@@ -183,7 +183,6 @@ impl<'a> HalConfig<'a> {
                 format,
                 swapchain,
                 backbuffer,
-                shaders: ShaderManager::new(),
                 graphs: Vec::new(),
                 acquire: device.create_semaphore(),
                 release: device.create_semaphore(),
@@ -193,12 +192,13 @@ impl<'a> HalConfig<'a> {
 
         let uploader = Uploader::new();
 
+        use std::mem::ManuallyDrop;
         Ok(Hal {
             device,
             allocator,
             center,
             renderer,
-            uploader,
+            uploader: ManuallyDrop::new(uploader),
             current: CurrentEpoch::new(),
             shaders: ShaderManager::new(),
         })

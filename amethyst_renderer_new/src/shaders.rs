@@ -3,7 +3,7 @@ use std::borrow::Borrow;
 use std::collections::hash_map::{Entry, HashMap};
 use std::path::{Path, PathBuf};
 
-use gfx_hal::Backend;
+use gfx_hal::{Backend, Device};
 use gfx_hal::device::ShaderError;
 use gfx_hal::pso::{EntryPoint, GraphicsShaderSet, Stage};
 
@@ -176,6 +176,17 @@ where
                 }
             })
             .ok_or_else(|| ErrorKind::ShaderNotFound(name.into(), stage).into())
+    }
+}
+
+impl<B> ShaderManager<B>
+where
+    B: Backend,
+{
+    pub fn unload(&mut self, device: &B::Device) {
+        for (_, shader) in self.shaders.drain() {
+            device.destroy_shader_module(shader);
+        }
     }
 }
 
