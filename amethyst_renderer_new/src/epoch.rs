@@ -71,7 +71,7 @@ pub trait ValidThrough {
 
 /// Check if this value valid through specified `Epoch`
 fn is_valid_through<T: ValidThrough>(value: &T, epoch: Epoch) -> bool {
-    value.valid_through() <= epoch
+    value.valid_through() >= epoch
 }
 
 /// Weak epoch pointer to `T`.
@@ -260,7 +260,9 @@ where
 
         for mut vec in self.queue.drain(..min(index, len)) {
             for value in vec.drain(..) {
-                assert!(!is_valid_through(&value, current.now()));
+                if is_valid_through(&value, current.now()) {
+                    panic!("Value is valid through {:?}, current {:?}", value.valid_through(), current);
+                }
                 f(value.dispose(current).unwrap_or_else(|_| unreachable!()));
             }
             self.clean_vecs.push(vec);
