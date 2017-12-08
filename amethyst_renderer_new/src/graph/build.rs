@@ -468,7 +468,7 @@ where
     let mut location = pipeline_desc
         .attributes
         .last()
-        .map(|a| a.location)
+        .map(|a| a.location + 1)
         .unwrap_or(0);
     for attribute in format.attributes.iter() {
         pipeline_desc.attributes.push(pso::AttributeDesc {
