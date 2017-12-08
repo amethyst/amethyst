@@ -101,12 +101,12 @@ where
         properties: Properties,
         transient: bool,
     ) -> Result<Buffer<B>> {
-
         // Remove this when metal will support buffer copy operation.
-        #[cfg(feature="metal")]
+        #[cfg(feature = "metal")]
         let properties = {
             use std::any::Any;
-            if let Some(device) = Any::downcast_ref::<<::metal::Backend as Backend>::Device>(device) {
+            if let Some(device) = Any::downcast_ref::<<::metal::Backend as Backend>::Device>(device)
+            {
                 let mut properties = properties;
                 properties.insert(Properties::CPU_VISIBLE);
                 properties.remove(Properties::DEVICE_LOCAL);

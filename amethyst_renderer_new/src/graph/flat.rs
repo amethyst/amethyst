@@ -27,13 +27,7 @@ where
         //ReadStorage<'a, UniformCache<B, Transform>>,
         ReadStorage<'a, Mesh<B>>,
     );
-    type PrepareData = (
-        //Fetch<'a, ActiveCamera>,
-        //ReadStorage<'a, Camera>,
-        //WriteStorage<'a, UniformCache<B, Camera>>,
-        //ReadStorage<'a, Transform>,
-        //WriteStorage<'a, UniformCache<B, Transform>>,
-    );
+    type PrepareData = ();
 }
 
 

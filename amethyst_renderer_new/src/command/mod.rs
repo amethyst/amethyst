@@ -19,21 +19,28 @@ impl<T, B> GeneralExecution<B> for T
 where
     B: Backend,
     T: Execution<B, General>,
-{}
+{
+}
 
-pub trait GraphicsExecution<B: Backend>: Execution<B, Graphics> + GeneralExecution<B> {}
+pub trait GraphicsExecution<B: Backend>
+    : Execution<B, Graphics> + GeneralExecution<B> {
+}
 impl<T, B> GraphicsExecution<B> for T
 where
     B: Backend,
     T: Execution<B, Graphics> + Execution<B, General>,
-{}
+{
+}
 
-pub trait TransferExecution<B: Backend>: Execution<B, Transfer> + GraphicsExecution<B> {}
+pub trait TransferExecution<B: Backend>
+    : Execution<B, Transfer> + GraphicsExecution<B> {
+}
 impl<T, B> TransferExecution<B> for T
 where
     B: Backend,
     T: Execution<B, Transfer> + Execution<B, Graphics> + Execution<B, General>,
-{}
+{
+}
 
 
 pub trait Execution<B: Backend, C> {
@@ -113,7 +120,13 @@ where
             profile_scope!("CommandCenter::execute_graphics :: execute");
             let (mut queue, mut pools) = family.acquire(1, device);
             let finish = execution.execute(&mut queue, &mut pools, &*current, &fence, device);
-            family.release(queue, pools, fence, (finish.0 - current.now().0) as usize, device);
+            family.release(
+                queue,
+                pools,
+                fence,
+                (finish.0 - current.now().0) as usize,
+                device,
+            );
             return;
         }
 
@@ -121,7 +134,13 @@ where
             profile_scope!("CommandCenter::execute_graphics :: execute");
             let (mut queue, mut pools) = family.acquire(1, device);
             let finish = execution.execute(&mut queue, &mut pools, &*current, &fence, device);
-            family.release(queue, pools, fence, (finish.0 - current.now().0) as usize, device);
+            family.release(
+                queue,
+                pools,
+                fence,
+                (finish.0 - current.now().0) as usize,
+                device,
+            );
             return;
         }
     }

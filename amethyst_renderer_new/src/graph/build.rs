@@ -325,7 +325,7 @@ where
             render_pass,
             framebuffer,
             pass,
-            depends: vec![],
+            depends: None,
             draws_to_surface,
         })
     }
@@ -480,22 +480,21 @@ where
     }
 }
 
-pub fn dependency_search<T>(left: &[&T], right: &[&T]) -> Option<Vec<usize>> {
+
+/// Searchs items from `right` in `left`
+/// Returns indices of them.
+/// Returns `None` if at least one item in `right` is not found.
+pub fn indices_in_of<T>(left: &[&T], right: &[&T]) -> Option<Vec<usize>> {
     use std::result::Result as StdResult;
 
-    fn _search<T>(left: &[&T], right: &[&T]) -> StdResult<Vec<usize>, ()> {
-        let mut positions = right
-            .iter()
-            .map(|&r| {
-                left.iter()
-                    .rposition(|&l| l as *const _ == r as *const _)
-                    .ok_or(())
-            })
-            .collect::<StdResult<Vec<_>, _>>()?;
-        positions.sort();
-        Ok(positions)
-    };
-    _search(left, right).ok()
+    let mut positions = right
+        .iter()
+        .map(|&r| {
+            left.iter().rposition(|&l| l as *const _ == r as *const _)
+        })
+        .collect::<Option<Vec<_>>>()?;
+    positions.sort();
+    Some(positions)
 }
 
 fn walk_dependencies<'a, B>(pass: &'a PassBuilder<'a, B>) -> Vec<&'a PassBuilder<'a, B>>
@@ -514,6 +513,7 @@ where
         .collect()
 }
 
+/// Get all dependencies of pass.
 pub fn dependencies<'a, B>(pass: &'a PassBuilder<'a, B>) -> Vec<&'a PassBuilder<'a, B>>
 where
     B: Backend,
@@ -524,6 +524,7 @@ where
     deps
 }
 
+/// Get dependencies of pass that aren't dependency of dependency.
 pub fn direct_dependencies<'a, B>(pass: &'a PassBuilder<'a, B>) -> Vec<&'a PassBuilder<'a, B>>
 where
     B: Backend,
@@ -533,12 +534,15 @@ where
     while let Some(dep) = alldeps.pop() {
         newdeps.push(dep);
         let other = dependencies(dep);
-        alldeps.retain(|dep| dependency_search(&other, &[dep]).is_none());
-        newdeps.retain(|dep| dependency_search(&other, &[dep]).is_none());
+        alldeps.retain(|dep| indices_in_of(&other, &[dep]).is_none());
+        newdeps.retain(|dep| indices_in_of(&other, &[dep]).is_none());
     }
     newdeps
 }
 
+
+/// Walk from pin over merges and dependencies.
+/// And collect all passes
 pub fn traverse<'a, B>(pin: &'a ColorPin<'a, B>) -> Vec<&'a PassBuilder<'a, B>>
 where
     B: Backend,
@@ -567,7 +571,7 @@ where
             pass.connects
                 .iter()
                 .map(|pin| pin.merge())
-                .flat_map(|merge| walk_merges(merge))
+                .flat_map(walk_merges)
         }))
         .collect()
 }

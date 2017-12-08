@@ -6,7 +6,7 @@ use gfx_hal::device::Extent;
 use gfx_hal::format::Format;
 use gfx_hal::pool::CommandPool;
 use gfx_hal::queue::{CommandQueue, Graphics, Supports, Transfer};
-use gfx_hal::window::{Backbuffer, Surface};
+use gfx_hal::window::{Backbuffer, Surface, Swapchain};
 
 use specs::World;
 
@@ -14,7 +14,7 @@ use winit::{EventsLoop, Window};
 
 use command::{CommandCenter, Execution};
 use epoch::{CurrentEpoch, Epoch};
-use graph::Graph;
+use graph::{Graph, SuperFrame};
 use graph::build::ColorPin;
 use memory::Allocator;
 use shaders::ShaderManager;
@@ -30,20 +30,24 @@ pub struct RendererBuilder<'a> {
     pub events: &'a EventsLoop,
 }
 
-
 #[derive(Derivative)]
 #[derivative(Debug)]
 pub struct Renderer<B: Backend> {
     #[derivative(Debug(format_with = "fmt_window"))]
     pub window: Window,
+    pub format: Format,
+
     #[derivative(Debug = "ignore")]
     pub surface: B::Surface,
-    pub format: Format,
     #[derivative(Debug = "ignore")]
     pub swapchain: B::Swapchain,
     pub backbuffer: Backbuffer<B>,
+    pub acquire: B::Semaphore,
+    pub release: B::Semaphore,
+    pub start_epoch: Epoch,
+
     pub shaders: ShaderManager<B>,
-    pub graphs: Vec<(Graph<B>, Epoch)>,
+    pub graphs: Vec<Graph<B>>,
 }
 
 
@@ -63,18 +67,18 @@ where
         device: &B::Device,
         world: &World,
     ) {
-        let start = self.graphs[graph].1;
+        let start_epoch = self.start_epoch;
         center.execute_graphics(
             Draw {
                 renderer: self,
                 world,
                 graph,
             },
-            start,
+            start_epoch,
             current,
             device,
         );
-        self.graphs[graph].1 = current.now() + 1;
+        self.start_epoch = current.now() + 1;
     }
 
     pub fn add_graph(
@@ -100,8 +104,15 @@ where
             shaders,
         )?;
 
-        self.graphs.push((graph, Epoch::new()));
+        self.graphs.push(graph);
         Ok(self.graphs.len() - 1)
+    }
+
+    fn get_frames_number(&self) -> usize {
+        match self.backbuffer {
+            Backbuffer::Images(ref images) => images.len(),
+            Backbuffer::Framebuffer(_) => 1,
+        }
     }
 }
 
@@ -124,7 +135,10 @@ where
         fence: &B::Fence,
         device: &B::Device,
     ) -> Epoch {
-        let (ref mut graph, ref mut start) = self.renderer.graphs[self.graph];
+        use gfx_hal::window::FrameSync;
+
+        let frames = self.renderer.get_frames_number();
+        let ref mut graph = self.renderer.graphs[self.graph];
         let ref mut swapchain = self.renderer.swapchain;
         let ref backbuffer = self.renderer.backbuffer;
         let (width, height) = self.renderer.window.get_inner_size_pixels().unwrap();
@@ -140,22 +154,32 @@ where
 
         let ref world = *self.world;
 
+
+        // Start frame acquisition
+        let frame = SuperFrame::new(
+            backbuffer,
+            swapchain.acquire_frame(FrameSync::Semaphore(&self.renderer.acquire)),
+        );
+
         // This execuiton needs to finsish before we will draw same frame again.
-        // And we want to give space for all frames in all graphs.
         // If there is only one frame this execution have to finish in current epoch
-        let finish = current.now() + (graph.get_frames_number() - 1) as u64;
-        graph.draw(
+        let finish = current.now() + (frames - 1) as u64;
+        graph.draw_inline(
             queue,
             &mut pools[0],
-            swapchain,
-            backbuffer,
+            frame,
+            &self.renderer.acquire,
+            &self.renderer.release,
             device,
             viewport,
             world,
             fence,
             finish,
         );
-        *start = current.now() + 1;
+
+        // Present queue
+        profile_scope!("Graph::draw :: present");
+        swapchain.present(queue, &[&self.renderer.release]);
         finish
     }
 }

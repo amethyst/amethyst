@@ -12,7 +12,7 @@ use winit::{EventsLoop, Window, WindowBuilder};
 
 
 use command::CommandCenter;
-use epoch::CurrentEpoch;
+use epoch::{CurrentEpoch, Epoch};
 use graph::{Graph, Present};
 use memory::Allocator;
 use renderer::{Renderer, RendererBuilder};
@@ -220,6 +220,9 @@ impl<'a> HalBuilder<'a> {
                 backbuffer,
                 shaders: ShaderManager::new(),
                 graphs: Vec::new(),
+                acquire: device.create_semaphore(),
+                release: device.create_semaphore(),
+                start_epoch: Epoch::new(),
             }
         });
 

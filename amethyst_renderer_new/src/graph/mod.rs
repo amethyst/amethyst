@@ -7,7 +7,7 @@ use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::iter::Empty;
 use std::marker::PhantomData;
 use std::mem::{replace, transmute};
-use std::ops::Range;
+use std::ops::{Index, Range};
 
 use gfx_hal::Backend;
 use gfx_hal::command::{ClearValue, CommandBuffer, Rect, Viewport};
@@ -74,7 +74,7 @@ where
     B: Backend,
 {
     /// Create `SuperFrame` from `Backbuffer` and `Frame` index.
-    fn new(backbuffer: &'a Backbuffer<B>, frame: Frame) -> Self {
+    pub fn new(backbuffer: &'a Backbuffer<B>, frame: Frame) -> Self {
         // Check if we have `Framebuffer` from `Surface` (usually with OpenGL backend) or `Image`s
         // In case it's `Image`s we need to pick `Framebuffer` for `RenderPass`es
         // that renders onto surface.
@@ -124,7 +124,7 @@ pub struct PassNode<B: Backend> {
     render_pass: B::RenderPass,
     framebuffer: SuperFramebuffer<B>,
     pass: Box<AnyPass<B>>,
-    depends: Vec<(usize, PipelineStage)>,
+    depends: Option<(usize, PipelineStage)>,
     draws_to_surface: bool,
 }
 
@@ -132,8 +132,17 @@ impl<B> PassNode<B>
 where
     B: Backend,
 {
-    /// Record drawing command for this node.
-    fn draw<C>(
+    /// Binds pipeline and renderpass to the command buffer `cbuf`.
+    /// Executes `Pass::prepare` and `Pass::draw_inline` of the inner `Pass`
+    /// to record transfer and draw commands.
+    ///
+    /// `world` - primary source of data (`Mesh`es, `Texture`s etc) for the `Pass`es.
+    /// `rect` - area to draw in.
+    /// `frame` - soecifies which framebuffer and descriptor sets to use.
+    /// `through` - commands will be executed through this epoch. Pass should ensure all resources
+    /// are valid for it.
+    ///
+    fn draw_inline<C>(
         &mut self,
         cbuf: &mut CommandBuffer<B, C>,
         device: &B::Device,
@@ -141,8 +150,7 @@ where
         rect: Rect,
         frame: SuperFrame<B>,
         through: Epoch,
-    ) -> bool
-    where
+    ) where
         C: Supports<Graphics> + Supports<Transfer>,
     {
         profile_scope!("PassNode::draw");
@@ -156,6 +164,7 @@ where
         // Run custom preparation
         // * Write descriptor sets
         // * Store caches
+        // * Bind pipeline layout with descriptors sets
         {
             profile_scope!("AnyPass::prepare");
             self.pass.prepare(
@@ -177,13 +186,10 @@ where
                 &self.clears,
             )
         };
-        
+
         profile_scope!("AnyPass::draw_inline");
         // Record custom drawing calls
         self.pass.draw_inline(through, encoder, world);
-
-        // Return if this pass renders to the surface image
-        self.draws_to_surface
     }
 }
 
@@ -192,8 +198,7 @@ where
 #[derive(Debug)]
 pub struct Graph<B: Backend> {
     passes: Vec<PassNode<B>>,
-    signals: Vec<B::Semaphore>,
-    acquire: B::Semaphore,
+    signals: Vec<Option<B::Semaphore>>,
     images: Vec<Image<B>>,
     views: Vec<B::ImageView>,
     frames: usize,
@@ -211,45 +216,41 @@ where
     /// Walk over graph recording drawing commands and submitting them to `queue`.
     /// This function handles synchronization between dependent rendering nodes.
     ///
-    /// `queue` must come from same `QueueGroup` with witch `pool` is associated.
-    /// `swapchain` must be created with `backbuffer`.
-    /// `backbuffer` must be the same that was used in `build` function.
+    /// `queue` must come from same `QueueGroup` with which `pool` is associated.
     /// All those should be created by `device`.
-    pub fn draw<S, C>(
+    ///
+    /// `frame` - frame index that should be drawn.
+    /// (or `Framebuffer` reference that corresponds to index `0`)
+    /// `acquire` - semaphore that should be waited on by submissions which
+    /// contains commands from passes that draw to the surface
+    /// `device` - you need this guy everywhere =^_^=
+    /// `viewport` - portion of framebuffers to draw
+    /// `world` - primary source of stuff to draw
+    /// `finish` - last submission should set this fence
+    /// `through` - all commands will be finished before this epoch ends.
+    pub fn draw_inline<C>(
         &mut self,
         queue: &mut CommandQueue<B, C>,
         pool: &mut CommandPool<B, C>,
-        swapchain: &mut S,
-        backbuffer: &Backbuffer<B>,
+        frame: SuperFrame<B>,
+        acquire: &B::Semaphore,
+        release: &B::Semaphore,
         device: &B::Device,
         viewport: Viewport,
         world: &World,
         finish: &B::Fence,
         through: Epoch,
     ) where
-        S: Swapchain<B>,
         C: Supports<Graphics> + Supports<Transfer>,
     {
         use gfx_hal::image::ImageLayout;
         use gfx_hal::queue::submission::Submission;
-        use gfx_hal::window::FrameSync;
         use std::iter::once;
 
         profile_scope!("Graph::draw");
 
         let ref signals = self.signals;
-        let ref acquire = self.acquire;
         let count = self.passes.len();
-
-        // Start frame acquisition
-        let frame = SuperFrame::new(
-            backbuffer,
-            swapchain.acquire_frame(FrameSync::Semaphore(acquire)),
-            // Frame::new(0),
-        );
-
-        // Store `Semaphore`s that `Surface::present` needs to wait for
-        let mut presents: SmallVec<[_; 32]> = SmallVec::new();
 
         // Record commands for all passes
         self.passes.iter_mut().enumerate().for_each(|(id, pass)| {
@@ -262,41 +263,58 @@ where
             cbuf.set_scissors(&[viewport.rect]);
 
             // Record commands for pass
-            let draws_to_surface =
-                pass.draw(&mut cbuf, device, world, viewport.rect, frame.clone(), through);
-
-            // If it renders to acquired image
-            let wait_surface = if draws_to_surface {
-                // Presenting has to wait for it
-                presents.push(&signals[id]);
-                // And it should wait for acqusition
-                Some((acquire, PipelineStage::TOP_OF_PIPE))
-            } else {
-                None
-            };
+            pass.draw_inline(
+                &mut cbuf,
+                device,
+                world,
+                viewport.rect,
+                frame.clone(),
+                through,
+            );
 
             {
                 profile_scope!("Graph::draw :: pass :: submit");
+
+
+                // If it renders to acquired image
+                let wait_surface = if pass.draws_to_surface {
+                    // And it should wait for acqusition
+                    Some((acquire, PipelineStage::TOP_OF_PIPE))
+                } else {
+                    None
+                };
+
+                let to_wait = pass.depends
+                    .as_ref()
+                    .map(|&(id, stage)| (signals[id].as_ref().unwrap(), stage))
+                    .into_iter()
+                    .chain(wait_surface)
+                    .collect::<SmallVec<[_; 2]>>();
+
+                let mut to_singnal = SmallVec::<[_; 1]>::new();
+                if id == count - 1 {
+                    // The last one has to draw to surface.
+                    // Also it depends on all others that draws to surface.
+                    assert!(pass.draws_to_surface);
+                    to_singnal.push(release);
+                } else if let Some(signal) = signals[id].as_ref() {
+                    to_singnal.push(signal);
+                };
+
+                // Signal the finish fence in last submission
+                let fence = if id == count - 1 { Some(finish) } else { None };
+
                 // Submit buffer
                 queue.submit(
                     Submission::new()
                         .promote::<C>()
                         .submit(&[cbuf.finish()])
-                        .wait_on(&pass.depends
-                            .iter()
-                            .map(|&(id, stage)| (&signals[id], stage))
-                            .chain(wait_surface)
-                            .collect::<SmallVec<[_; 32]>>()) // Each pass singnals to associated `Semaphore`
-                        .signal(&[&signals[id]]),
-                    // Signal the finish fence in last submission
-                    if id == count - 1 { Some(finish) } else { None },
+                        .wait_on(&to_wait)
+                        .signal(&to_singnal),
+                    fence,
                 );
             }
         });
-
-        // Present queue
-        profile_scope!("Graph::draw :: present");
-        swapchain.present(queue, &presents);
     }
 
 
@@ -334,43 +352,7 @@ where
         let passes = traverse(&present);
 
         // Reorder passes to increase overlapping
-        let passes = {
-            let mut unscheduled = passes;
-            // Ordered passes
-            let mut scheduled = vec![];
-
-            // Same scheduled passes but with dependencies as indices
-            let mut passes = vec![];
-
-            // Until we schedule all unscheduled passes
-            while !unscheduled.is_empty() {
-                // Walk over unscheduled
-                let (deps, index) = (0..unscheduled.len())
-                    .filter_map(|index| {
-                        // Sanity check. This pass wasn't scheduled yet
-                        assert_eq!(None, dependency_search(&scheduled, &[unscheduled[index]]));
-                        // Find indices for all direct dependencies of the pass
-                        dependency_search(&scheduled, &direct_dependencies(unscheduled[index]))
-                            .map(|deps| (deps, index))
-                    })
-                    // Smallest index of last dependency wins. `None < Some(0)`
-                    .min_by_key(|&(ref deps, _)| deps.last().cloned())
-                    // At least one pass with all dependencies scheduled must be found.
-                    // Or there is dependency circle in unscheduled left.
-                    .expect("Circular dependency encountered");
-
-                // Sanity check. All dependencies must be scheduled if all direct dependencies are
-                assert!(dependency_search(&scheduled, &dependencies(unscheduled[index])).is_some());
-
-                // Store
-                scheduled.push(unscheduled[index]);
-                passes.push((unscheduled[index], deps));
-
-                // remove from unscheduled
-                unscheduled.swap_remove(index);
-            }
-            passes
-        };
+        let passes = reorder_passes(passes);
 
         // Get all merges
         let merges = merges(&present);
@@ -399,124 +381,160 @@ where
         }
 
         // Build pass nodes from pass builders
-        let passes: Vec<PassNode<B>> = passes
-            .into_iter()
-            .map(|(pass, deps)| {
-                // Collect input targets
-                let inputs = pass.connects
-                    .iter()
-                    .map(|pin| {
-                        let (indices, format) = match *pin {
-                            Pin::Color(ColorPin { merge, index }) => (
-                                targets.get(&(merge as *const _)).unwrap().colors[index]
-                                    .indices
-                                    .clone()
-                                    .unwrap(),
-                                merge.color_format(index),
-                            ),
-                            Pin::Depth(DepthPin { merge }) => (
-                                targets
-                                    .get(&(merge as *const _))
-                                    .and_then(|targets| targets.depth.as_ref())
-                                    .map(|depth| depth.indices.clone())
-                                    .unwrap(),
-                                merge.depth_format().unwrap(),
-                            ),
-                        };
-                        let ref view = image_views[indices];
-                        InputAttachmentDesc { format, view }
-                    })
-                    .collect::<Vec<_>>();
+        let mut pass_nodes: Vec<PassNode<B>> = Vec::new();
 
-                // Find where this pass going
-                let merge = *merges
-                    .iter()
-                    .find(|&merge| {
-                        merge
-                            .passes
-                            .iter()
-                            .any(|&p| p as *const _ == pass as *const _)
-                    })
-                    .expect("All passes comes from merges");
-                let key = merge as *const _;
+        for (pass, last_dep) in passes.into_iter() {
+            // Collect input targets
+            let inputs = pass.connects
+                .iter()
+                .map(|pin| {
+                    let (indices, format) = match *pin {
+                        Pin::Color(ColorPin { merge, index }) => (
+                            targets.get(&(merge as *const _)).unwrap().colors[index]
+                                .indices
+                                .clone()
+                                .unwrap(),
+                            merge.color_format(index),
+                        ),
+                        Pin::Depth(DepthPin { merge }) => (
+                            targets
+                                .get(&(merge as *const _))
+                                .and_then(|targets| targets.depth.as_ref())
+                                .map(|depth| depth.indices.clone())
+                                .unwrap(),
+                            merge.depth_format().unwrap(),
+                        ),
+                    };
+                    let ref view = image_views[indices];
+                    InputAttachmentDesc { format, view }
+                })
+                .collect::<Vec<_>>();
 
-                let is_first = merge.passes[0] as *const _ == pass as *const _;
-                let clear_color = if is_first { merge.clear_color } else { None };
-                let clear_depth = if is_first { merge.clear_depth } else { None };
+            // Find where this pass going
+            let merge = *merges
+                .iter()
+                .find(|&merge| {
+                    merge
+                        .passes
+                        .iter()
+                        .any(|&p| p as *const _ == pass as *const _)
+                })
+                .expect("All passes comes from merges");
+            let key = merge as *const _;
 
-                // Try to guess why this line is absolutely required.
-                let ref image_views = image_views;
+            let is_first = merge.passes[0] as *const _ == pass as *const _;
+            let clear_color = if is_first { merge.clear_color } else { None };
+            let clear_depth = if is_first { merge.clear_depth } else { None };
 
-                // Collect color targets
-                let ref target = targets[&key];
-                let colors = target
-                    .colors
-                    .iter()
-                    .enumerate()
-                    .map(|(attachment_index, color_indices)| {
-                        // Get image view and format
-                        let (view, format) = color_indices
-                            .indices
-                            .clone()
-                            .map(|indices| {
-                                (
-                                    // It's owned image
-                                    AttachmentImageViews::Owned(&image_views[indices]),
-                                    merge.color_format(attachment_index),
-                                )
-                            })
-                            .unwrap_or_else(|| {
-                                (
-                                    // It's backbuffer image
-                                    match *backbuffer {
-                                        Backbuffer::Images(_) => {
-                                            AttachmentImageViews::Acquired(&image_views[0..frames])
-                                        }
-                                        Backbuffer::Framebuffer(_) => AttachmentImageViews::External,
-                                    },
-                                    color,
-                                )
-                            });
-                        ColorAttachmentDesc {
-                            format,
-                            view,
-                            clear: clear_color,
-                        }
-                    })
-                    .collect::<Vec<_>>();
+            // Try to guess why this line is absolutely required.
+            let ref image_views = image_views;
 
-                let depth_stencil = target.depth.clone().map(|depth| {
-                    DepthStencilAttachmentDesc {
-                        format: merge.depth_format().unwrap(),
-                        view: AttachmentImageViews::Owned(&image_views[depth.indices]),
-                        clear: clear_depth,
+            // Collect color targets
+            let ref target = targets[&key];
+            let colors = target
+                .colors
+                .iter()
+                .enumerate()
+                .map(|(attachment_index, color_indices)| {
+                    // Get image view and format
+                    let (view, format) = color_indices
+                        .indices
+                        .clone()
+                        .map(|indices| {
+                            (
+                                // It's owned image
+                                AttachmentImageViews::Owned(&image_views[indices]),
+                                merge.color_format(attachment_index),
+                            )
+                        })
+                        .unwrap_or_else(|| {
+                            (
+                                // It's backbuffer image
+                                match *backbuffer {
+                                    Backbuffer::Images(_) => {
+                                        AttachmentImageViews::Acquired(&image_views[0..frames])
+                                    }
+                                    Backbuffer::Framebuffer(_) => AttachmentImageViews::External,
+                                },
+                                color,
+                            )
+                        });
+                    ColorAttachmentDesc {
+                        format,
+                        view,
+                        clear: clear_color,
                     }
-                });
+                })
+                .collect::<Vec<_>>();
 
-                let mut node = pass.build(
-                    device,
-                    shaders,
-                    &inputs[..],
-                    &colors[..],
-                    depth_stencil,
-                    extent,
-                )?;
+            let depth_stencil = target.depth.clone().map(|depth| {
+                DepthStencilAttachmentDesc {
+                    format: merge.depth_format().unwrap(),
+                    view: AttachmentImageViews::Owned(&image_views[depth.indices]),
+                    clear: clear_depth,
+                }
+            });
 
-                node.depends = deps.into_iter()
-                    .map(|dep| {
-                        (dep, PipelineStage::TOP_OF_PIPE) // Pick better
+            let mut node = pass.build(
+                device,
+                shaders,
+                &inputs[..],
+                &colors[..],
+                depth_stencil,
+                extent,
+            )?;
+
+            if let Some(last_dep) = last_dep {
+                node.depends = if pass_nodes
+                    .iter()
+                    .find(|node| {
+                        node.depends
+                            .as_ref()
+                            .map(|&(id, _)| id == last_dep)
+                            .unwrap_or(false)
                     })
-                    .collect();
-                Ok(node)
-            })
-            .collect::<Result<_>>()?;
+                    .is_none()
+                {
+                    // No passes prior this depends on `last_dep`
+                    Some((last_dep, PipelineStage::TOP_OF_PIPE)) // Pick better
+                } else {
+                    None
+                };
+            }
 
-        let count = passes.len();
+            pass_nodes.push(node);
+        }
+
+        let mut signals = Vec::new();
+        for i in 0..pass_nodes.len() {
+            if let Some(j) = pass_nodes.iter().position(|node| {
+                node.depends
+                    .as_ref()
+                    .map(|&(id, _)| id == i)
+                    .unwrap_or(false)
+            }) {
+                // j depends on i
+                assert!(
+                    pass_nodes
+                        .iter()
+                        .skip(j + 1)
+                        .find(|node| {
+                            node.depends
+                                .as_ref()
+                                .map(|&(id, _)| id == i)
+                                .unwrap_or(false)
+                        })
+                        .is_none()
+                );
+                signals.push(Some(device.create_semaphore()));
+            } else {
+                signals.push(None);
+            }
+        }
 
         Ok(Graph {
-            passes: passes,
-            signals: (0..count).map(|_| device.create_semaphore()).collect(),
-            acquire: device.create_semaphore(),
+            passes: pass_nodes,
+            signals,
             images,
             views: image_views,
             frames,
@@ -604,4 +622,48 @@ where
             depth: None,
         }
     })
+}
+
+
+
+fn reorder_passes<'a, B>(
+    mut unscheduled: Vec<&'a PassBuilder<'a, B>>,
+) -> Vec<(&'a PassBuilder<'a, B>, Option<usize>)>
+where
+    B: Backend,
+{
+    // Ordered passes
+    let mut scheduled = vec![];
+
+    // Same scheduled passes but with dependencies as indices
+    let mut passes = vec![];
+
+    // Until we schedule all unscheduled passes
+    while !unscheduled.is_empty() {
+        // Walk over unscheduled
+        let (last_dep, index) = (0..unscheduled.len())
+            .filter_map(|index| {
+                // Sanity check. This pass wasn't scheduled yet
+                debug_assert_eq!(None, indices_in_of(&scheduled, &[unscheduled[index]]));
+                // Find indices for all direct dependencies of the pass
+                indices_in_of(&scheduled, &direct_dependencies(unscheduled[index]))
+                    .map(|deps| (deps.iter().cloned().max(), index))
+            })
+            // Smallest index of last dependency wins. `None < Some(0)`
+            .min_by_key(|&(last_dep, _)| last_dep)
+            // At least one pass with all dependencies scheduled must be found.
+            // Or there is dependency circle in unscheduled left.
+            .expect("Circular dependency encountered");
+
+        // Sanity check. All dependencies must be scheduled if all direct dependencies are
+        debug_assert!(indices_in_of(&scheduled, &dependencies(unscheduled[index])).is_some());
+
+        // Store
+        scheduled.push(unscheduled[index]);
+        passes.push((unscheduled[index], last_dep));
+
+        // remove from unscheduled
+        unscheduled.swap_remove(index);
+    }
+    passes
 }

@@ -12,7 +12,7 @@ use gfx_hal::queue::{Graphics, Supports};
 
 use smallvec::SmallVec;
 
-use epoch::{CurrentEpoch, Epoch, Eh};
+use epoch::{CurrentEpoch, Eh, Epoch};
 use hal::Hal;
 use memory::{cast_pod_vec, Allocator, Buffer};
 use upload::{self, Uploader};
