@@ -16,8 +16,8 @@ use vertex::{PosColor, VertexFormat, VertexFormatted};
 type Sbgra8 = (B8_G8_R8_A8, Srgb);
 
 #[derive(Debug, Default)]
-pub struct Flat;
-impl<'a, B> Data<'a, B> for Flat
+pub struct DrawFlat;
+impl<'a, B> Data<'a, B> for DrawFlat
 where
     B: Backend,
 {
@@ -37,12 +37,12 @@ where
 }
 
 
-impl<B> Pass<B> for Flat
+impl<B> Pass<B> for DrawFlat
 where
     B: Backend + ShaderLoader,
 {
     /// Name of the pass
-    const NAME: &'static str = "Flat";
+    const NAME: &'static str = "DrawFlat";
 
     /// Input attachments format
     const INPUTS: &'static [Format] = &[];

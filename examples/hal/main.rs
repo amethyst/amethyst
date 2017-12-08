@@ -29,7 +29,7 @@ use renderer::*;
 use renderer::cam::{ActiveCamera, Camera};
 use renderer::graph::Graph;
 use renderer::graph::build::{ColorPin, Merge, PassBuilder, Present};
-use renderer::graph::flat::Flat;
+use renderer::graph::flat::DrawFlat;
 use renderer::hal::{Hal, HalBuilder};
 use renderer::memory::Allocator;
 use renderer::mesh::{Mesh, MeshBuilder};
@@ -75,7 +75,7 @@ fn run() -> Result<()> {
 
     println!("Build graph");
     let mut graph = {
-        let pass = PassBuilder::<metal::Backend>::new::<Flat>();
+        let pass = PassBuilder::<metal::Backend>::new::<DrawFlat>();
 
         let passes = [&pass];
         let merge = Merge::new(
@@ -130,42 +130,18 @@ fn run() -> Result<()> {
             },
         ];
         let indices: Vec<u16> = vec![
-            0,
-            1,
-            3,
-            1,
-            2,
-            3,
-            1,
-            0,
-            5,
-            0,
-            4,
-            5,
-            0,
-            3,
-            4,
-            3,
-            7,
-            4,
-            4,
-            7,
-            5,
-            7,
-            6,
-            5,
-            2,
-            6,
-            3,
-            6,
-            7,
-            3,
-            1,
-            5,
-            2,
-            5,
-            6,
-            2,
+            // 0, 1, 3,
+            // 1, 2, 3,
+            // 1, 0, 5,
+            // 0, 4, 5,
+            // 0, 3, 4,
+            // 3, 7, 4,
+            // 4, 7, 5,
+            // 7, 6, 5,
+            // 2, 6, 3,
+            // 6, 7, 3,
+            1, 5, 2,
+            5, 6, 2,
         ];
         MeshBuilder::new()
             .with_indices(indices)

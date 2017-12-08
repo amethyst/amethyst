@@ -126,7 +126,7 @@ impl<T> Ec<T> {
 
 /// Strong pointer to `T`.
 /// It will hold value alive and can't be disposed until `CurrentEpoch`
-/// advances further than the last `Epoch` spcified in `make_valid_through`
+/// advances further than the last `Epoch` specified in `make_valid_through`
 /// and `borrow` calls
 #[derive(Debug)]
 pub struct Eh<T> {

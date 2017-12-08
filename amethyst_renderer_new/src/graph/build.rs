@@ -30,7 +30,7 @@ pub struct PassBuilder<'a, B: Backend> {
 }
 
 #[derive(Debug)]
-pub enum AttachmentImageView<'a, B: Backend> {
+pub enum AttachmentImageViews<'a, B: Backend> {
     Owned(&'a [B::ImageView]),
     Acquired(&'a [B::ImageView]),
     External,
@@ -45,14 +45,14 @@ pub struct InputAttachmentDesc<'a, B: Backend> {
 #[derive(Debug)]
 pub struct ColorAttachmentDesc<'a, B: Backend> {
     pub format: Format,
-    pub view: AttachmentImageView<'a, B>,
+    pub view: AttachmentImageViews<'a, B>,
     pub clear: Option<ClearColor>,
 }
 
 #[derive(Debug)]
 pub struct DepthStencilAttachmentDesc<'a, B: Backend> {
     pub format: Format,
-    pub view: AttachmentImageView<'a, B>,
+    pub view: AttachmentImageViews<'a, B>,
     pub clear: Option<ClearDepthStencil>,
 }
 
@@ -267,7 +267,7 @@ where
         // create framebuffers
         let framebuffer: SuperFramebuffer<B> = {
             if colors.len() == 1 && match colors[0].view {
-                AttachmentImageView::External => true,
+                AttachmentImageViews::External => true,
                 _ => false,
             } {
                 SuperFramebuffer::External
@@ -279,12 +279,12 @@ where
                     .map(|c| &c.view)
                     .chain(depth_stencil.iter().map(|ds| &ds.view))
                     .map(|view| match *view {
-                        AttachmentImageView::Acquired(ref images) => {
+                        AttachmentImageViews::Acquired(ref images) => {
                             draws_to_surface = true;
                             images
                         }
-                        AttachmentImageView::Owned(ref images) => images,
-                        AttachmentImageView::External => {
+                        AttachmentImageViews::Owned(ref images) => images,
+                        AttachmentImageViews::External => {
                             unreachable!("External framebuffer isn't valid for multicolor output")
                         }
                     })

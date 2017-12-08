@@ -27,6 +27,6 @@ impl Relevant {
 
 impl Drop for Relevant {
     fn drop(&mut self) {
-        println!("This type can't be dropped!")
+        println!("Values of this type can't be dropped!")
     }
 }

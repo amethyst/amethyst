@@ -461,7 +461,7 @@ where
                             .map(|indices| {
                                 (
                                     // It's owned image
-                                    AttachmentImageView::Owned(&image_views[indices]),
+                                    AttachmentImageViews::Owned(&image_views[indices]),
                                     merge.color_format(attachment_index),
                                 )
                             })
@@ -470,9 +470,9 @@ where
                                     // It's backbuffer image
                                     match *backbuffer {
                                         Backbuffer::Images(_) => {
-                                            AttachmentImageView::Acquired(&image_views[0..frames])
+                                            AttachmentImageViews::Acquired(&image_views[0..frames])
                                         }
-                                        Backbuffer::Framebuffer(_) => AttachmentImageView::External,
+                                        Backbuffer::Framebuffer(_) => AttachmentImageViews::External,
                                     },
                                     color,
                                 )
@@ -488,7 +488,7 @@ where
                 let depth_stencil = target.depth.clone().map(|depth| {
                     DepthStencilAttachmentDesc {
                         format: merge.depth_format().unwrap(),
-                        view: AttachmentImageView::Owned(&image_views[depth.indices]),
+                        view: AttachmentImageViews::Owned(&image_views[depth.indices]),
                         clear: clear_depth,
                     }
                 });
