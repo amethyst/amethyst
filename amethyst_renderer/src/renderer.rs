@@ -28,13 +28,13 @@ impl Renderer {
         Self::build().build()
     }
 
-    /// Creates a new `RendererBuilder`, equivalent to `RendererBuilder::new()`.
-    pub fn build_with_loop(el: EventsLoop) -> RendererBuilder {
-        RendererBuilder::new(el)
+    /// Creates a new `RendererConfig`, equivalent to `RendererConfig::new()`.
+    pub fn build_with_loop(el: EventsLoop) -> RendererConfig {
+        RendererConfig::new(el)
     }
 
-    /// Creates a new `RendererBuilder`, equivalent to `RendererBuilder::new()`.
-    pub fn build() -> RendererBuilder {
+    /// Creates a new `RendererConfig`, equivalent to `RendererConfig::new()`.
+    pub fn build() -> RendererConfig {
         Self::build_with_loop(EventsLoop::new())
     }
 
@@ -139,16 +139,16 @@ impl Drop for Renderer {
 }
 
 /// Constructs a new `Renderer`.
-pub struct RendererBuilder {
+pub struct RendererConfig {
     config: DisplayConfig,
     events: EventsLoop,
     winit_builder: WindowBuilder,
 }
 
-impl RendererBuilder {
-    /// Creates a new `RendererBuilder`.
+impl RendererConfig {
+    /// Creates a new `RendererConfig`.
     pub fn new(el: EventsLoop) -> Self {
-        RendererBuilder {
+        RendererConfig {
             config: DisplayConfig::default(),
             events: el,
             winit_builder: WindowBuilder::new().with_title("Amethyst"),

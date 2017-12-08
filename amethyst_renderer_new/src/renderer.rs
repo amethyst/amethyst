@@ -21,7 +21,7 @@ use shaders::ShaderManager;
 
 #[derive(Derivative)]
 #[derivative(Debug)]
-pub struct RendererBuilder<'a> {
+pub struct RendererConfig<'a> {
     pub title: &'a str,
     pub width: u16,
     pub height: u16,

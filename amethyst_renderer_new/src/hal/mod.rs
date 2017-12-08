@@ -23,7 +23,7 @@ use renderer::Renderer;
 use shaders::{ShaderLoader, ShaderManager};
 use upload::Uploader;
 
-pub use self::build::{Error, ErrorKind, HalBuilder};
+pub use self::build::{Error, ErrorKind, HalConfig};
 
 pub struct Hal<B: Backend> {
     pub device: B::Device,
@@ -41,6 +41,6 @@ where
     B: Backend,
 {
     fn drop(&mut self) {
-        // self.center.wait_finish(&self.device);
+        self.center.wait_finish(&self.device);
     }
 }

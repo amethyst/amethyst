@@ -54,7 +54,6 @@ pub trait Execution<B: Backend, C> {
     ) -> Epoch;
 }
 
-
 pub struct CommandCenter<B: Backend> {
     transfer: Option<Family<B, Transfer>>,
     compute: Option<Family<B, Compute>>,
@@ -145,50 +144,49 @@ where
         }
     }
 
+    /// Wait for all commands to finish
+    pub fn wait_finish(&mut self, device: &B::Device) {
+        self.wait_step(device, usize::max_value());
+        self.cleanup(device);
+    }
+
     /// Check finished operation and advance current epoch.
-    fn cleanup(&mut self, device: &B::Device, current: &mut CurrentEpoch) {
+    fn cleanup(&mut self, device: &B::Device) -> Option<usize> {
         profile_scope!("CommandCenter::cleanup");
-        let mut ready = 32;
+        let mut to_clean = None;
 
-        if let Some(ref mut family) = self.transfer.as_mut() {
-            match family.check_ready(device, &mut self.fences) {
-                Some(r) => ready = min(ready, r),
-                None => {}
-            }
-        }
-        if let Some(ref mut family) = self.compute.as_mut() {
-            match family.check_ready(device, &mut self.fences) {
-                Some(r) => ready = min(ready, r),
-                None => {}
-            }
-        }
-        if let Some(ref mut family) = self.graphics.as_mut() {
-            match family.check_ready(device, &mut self.fences) {
-                Some(r) => ready = min(ready, r),
-                None => {}
-            }
-        }
-        if let Some(ref mut family) = self.general.as_mut() {
-            match family.check_ready(device, &mut self.fences) {
-                Some(r) => ready = min(ready, r),
-                None => {}
+        fn get_ready<B: Backend, C>(
+            family: &mut Option<Family<B, C>>,
+            clean: &mut Option<usize>,
+            device: &B::Device,
+            fences: &mut Vec<B::Fence>,
+        ) {
+            if let Some(ref mut family) = family.as_mut() {
+                match (family.check_ready(device, fences), *clean) {
+                    (Some(checked), Some(ready)) => *clean = Some(min(ready, checked)),
+                    (Some(checked), None) => *clean = Some(checked),
+                    (None, _) => {}
+                }
             }
         }
 
-        if let Some(ref mut family) = self.transfer.as_mut() {
-            family.shift_ready(ready);
-        }
-        if let Some(ref mut family) = self.compute.as_mut() {
-            family.shift_ready(ready);
-        }
-        if let Some(ref mut family) = self.graphics.as_mut() {
-            family.shift_ready(ready);
-        }
-        if let Some(ref mut family) = self.general.as_mut() {
-            family.shift_ready(ready);
+        get_ready(&mut self.transfer, &mut to_clean, device, &mut self.fences);
+        get_ready(&mut self.compute, &mut to_clean, device, &mut self.fences);
+        get_ready(&mut self.graphics, &mut to_clean, device, &mut self.fences);
+        get_ready(&mut self.general, &mut to_clean, device, &mut self.fences);
+
+        fn shift_ready<B: Backend, C>(family: &mut Option<Family<B, C>>, clean: Option<usize>) {
+            if let Some(family) = family.as_mut() {
+                family.shift_ready(clean.unwrap_or(usize::max_value()));
+            }
         }
 
-        current.advance(ready as u64);
+        shift_ready(&mut self.transfer, to_clean);
+        shift_ready(&mut self.compute, to_clean);
+        shift_ready(&mut self.graphics, to_clean);
+        shift_ready(&mut self.general, to_clean);
+
+        to_clean
     }
 
     fn wait_step(&mut self, device: &B::Device, depth: usize) {
@@ -214,11 +212,21 @@ where
 
     fn wait(&mut self, device: &B::Device, current: &mut CurrentEpoch, epoch: Epoch) {
         profile_scope!("CommandCenter::wait");
-        self.cleanup(device, current);
+        if let Some(ready) = self.cleanup(device) {
+            current.advance(ready as u64);
+        } else if epoch > current.now() {
+            let now = current.now();
+            current.advance(epoch.0 - now.0);
+        }
 
         while epoch > current.now() {
             self.wait_step(device, min(32, (epoch.0 - current.now().0) as usize));
-            self.cleanup(device, current);
+            if let Some(ready) = self.cleanup(device) {
+                current.advance(ready as u64);
+            } else {
+                let now = current.now();
+                current.advance(epoch.0 - now.0);
+            }
         }
     }
 }

@@ -15,7 +15,7 @@ use command::CommandCenter;
 use epoch::{CurrentEpoch, Epoch};
 use graph::{Graph, Present};
 use memory::Allocator;
-use renderer::{Renderer, RendererBuilder};
+use renderer::{Renderer, RendererConfig};
 use shaders::{ShaderLoader, ShaderManager};
 use upload::Uploader;
 
@@ -33,26 +33,26 @@ error_chain!{
     }
 }
 
-pub struct HalBuilder<'a> {
+pub struct HalConfig<'a> {
     pub adapter: Option<&'a str>,
     pub arena_size: u64,
     pub chunk_size: u64,
     pub min_chunk_size: u64,
     pub compute: bool,
-    pub renderer: Option<RendererBuilder<'a>>,
+    pub renderer: Option<RendererConfig<'a>>,
 }
 
 /// Helper trait to initialize backend
 pub trait BackendEx: ShaderLoader {
     fn create_window_and_adapters(
-        builder: &HalBuilder,
+        builder: &HalConfig,
     ) -> Result<(Option<(Window, Self::Surface)>, Vec<Adapter<Self>>)>;
 }
 
 #[cfg(feature = "metal")]
 impl BackendEx for metal::Backend {
     fn create_window_and_adapters(
-        builder: &HalBuilder,
+        builder: &HalConfig,
     ) -> Result<
         (
             Option<(Window, metal::Surface)>,
@@ -82,7 +82,7 @@ impl BackendEx for metal::Backend {
 }
 
 
-impl<'a> HalBuilder<'a> {
+impl<'a> HalConfig<'a> {
     fn init_adapter<B>(&self, adapter: Adapter<B>) -> (B::Device, Allocator<B>, CommandCenter<B>)
     where
         B: Backend,
@@ -100,51 +100,16 @@ impl<'a> HalBuilder<'a> {
         let (general, _) = qf.into_iter()
             .partition::<Vec<_>, _>(|qf| qf.queue_type() == QueueType::General);
 
-        let mut transfer = transfer
-            .into_iter()
-            .map(|qf| (qf.max_queues(), 0, qf))
-            .next();
-        let mut compute = compute
-            .into_iter()
-            .map(|qf| (qf.max_queues(), 0, qf))
-            .next();
-        let mut graphics = graphics
-            .into_iter()
-            .map(|qf| (qf.max_queues(), 0, qf))
-            .next();
-        let mut general = general
-            .into_iter()
-            .map(|qf| (qf.max_queues(), 0, qf))
-            .next();
-
-        if self.compute {
-            compute
-                .as_mut()
-                .map(|qmr| qmr.1 += 1)
-                .or_else(|| general.as_mut().map(|qmr| qmr.1 += 1));
-        }
-
-        if self.renderer.is_some() {
-            graphics
-                .as_mut()
-                .map(|qmr| qmr.1 += 1)
-                .or_else(|| general.as_mut().map(|qmr| qmr.1 += 1));
-        }
-
-        match (&mut transfer, &mut compute, &mut graphics, &mut general) {
-            (&mut Some((_, ref mut req, _)), _, _, _) => *req += 1,
-            (_, &mut Some((count, ref mut req, _)), _, _) if count > 1 => *req += 1,
-            (_, _, &mut Some((count, ref mut req, _)), _) if count > 1 => *req += 1,
-            (_, _, _, &mut Some((count, ref mut req, _))) if count > 2 => *req += 1,
-            _ => {}
-        };
+        let mut transfer = transfer.into_iter().map(|qf| (1, qf)).next();
+        let mut compute = compute.into_iter().map(|qf| (1, qf)).next();
+        let mut graphics = graphics.into_iter().map(|qf| (1, qf)).next();
+        let mut general = general.into_iter().map(|qf| (1, qf)).next();
 
         let mut requests = vec![];
 
         {
-            let mut push_requests = |qt: Option<(usize, usize, _)>| {
-                requests.extend(qt.and_then(|(max, req, qf)| {
-                    let count = min(max, req);
+            let mut push_requests = |qt: Option<(usize, _)>| {
+                requests.extend(qt.and_then(|(count, qf)| {
                     if count > 0 {
                         Some((qf, vec![1.0; count]))
                     } else {
