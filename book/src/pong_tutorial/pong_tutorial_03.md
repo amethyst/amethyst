@@ -49,33 +49,16 @@ type SystemData = (
 );
 ```
 
-Now we're done worrying about liftimes! Painless, right? Also, you might notice 
+Now we're done worrying about lifetimes! Painless, right? Also, you might notice 
 that this `SystemData` tuple is a nice and succinct description of what we want 
 to do with this `System`: we want to change the `LocalTransform` of a `Paddle` 
 over `Time` based on keyboard `Input`.
 
-But we don't have `Time` or an `InputHandler` yet. Let's fix that. 
+`Time` is a resource that's included by the engine automatically, but we don't 
+have `InputHandler` yet. We'll fix that soon! 
 
-In `pong.rs` we'll import `Time`:
-
-```rust,ignore
-use amethyst::core::timing::Time;
-```
-
-And add it as a resource to our `on_start` method.
-
-```rust,ignore
-fn on_start(&mut self, world: &mut World) {
-    world.add_resource(Time::default()); //Add this line
-    world.register::<Paddle>();
-    initialise_paddles(world);
-    initialise_camera(world);
-}
-```
-
-While we're in `pong.rs` let's make a few other small additions. First, we'll 
-need to know how fast to move the paddles over time, so let's add a velocity 
-constant:
+First we're going to make a few small tweaks to `pong.rs`. We need to know how 
+fast to move the paddles over time, so let's add a velocity constant:
 
 ```rust,ignore
 const PADDLE_VELOCITY: f32 = 1.0;
@@ -111,7 +94,7 @@ impl Paddle {
 }
 ```
 
-In `main.rs` we can import the `InputBundle`, which includes the `InputHandler` 
+Okay, now for that mysterious `InputHandler`. In `main.rs` we can import the `InputBundle`, which includes the `InputHandler` 
 resource.
 
 ```rust,ignore

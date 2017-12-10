@@ -3,7 +3,6 @@ use amethyst::ecs::{Component, DenseVecStorage};
 use amethyst::assets::Loader;
 use amethyst::core::cgmath::Vector3;
 use amethyst::core::transform::{LocalTransform, Transform};
-use amethyst::core::timing::Time;
 use amethyst::renderer::{Camera, Material, MaterialDefaults, PosTex, MeshHandle, Event,
                          KeyboardInput, VirtualKeyCode, WindowEvent};
 
@@ -16,7 +15,6 @@ pub struct Pong;
 
 impl State for Pong {
     fn on_start(&mut self, world: &mut World) {
-        world.add_resource(Time::default());
         world.register::<Paddle>();
         initialise_paddles(world);
         initialise_camera(world);
