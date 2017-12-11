@@ -102,7 +102,7 @@ where
         transient: bool,
     ) -> Result<Buffer<B>> {
         // Remove this when metal will support buffer copy operation.
-        #[cfg(feature = "metal")]
+        #[cfg(feature = "gfx-backend-metal")]
         let properties = {
             use std::any::Any;
             if let Some(device) = Any::downcast_ref::<<::metal::Backend as Backend>::Device>(device)

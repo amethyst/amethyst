@@ -1,73 +1,52 @@
 [package]
 name = "amethyst_renderer"
-version = "0.5.0"
-authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
+version = "0.6.0"
+authors = ["Eyal Kalderon <ebkalderon@gmail.com>", "<scareaangel@gmail.com>"]
 description = "High-level rendering engine with multiple backends"
 exclude = ["examples/*"]
-keywords = ["game", "engine", "renderer", "3d", "amethyst"]
+keywords = ["game", "engine", "renderer", "3d", "amethyst", "gfx", "gfx_hal"]
 categories = ["rendering", "rendering::engine"]
 
-documentation = "https://www.amethyst.rs/doc/master/amethyst_renderer/"
+documentation = "https://docs.rs/amethyst_renderer/0.1.0/amethyst_renderer/"
 homepage = "https://www.amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
 readme = "README.md"
-license = "MIT OR Apache-2.0"
+license = "MIT/Apache-2.0"
 
 [badges]
 appveyor = { repository = "amethyst/amethyst", branch = "develop" }
 travis-ci = { repository = "amethyst/amethyst" }
 
 [features]
-default = ["opengl"]
-#d3d11 = ["gfx_device_dx11", "gfx_window_dxgi"]
-#metal = ["gfx_device_metal", "gfx_window_metal"]
-opengl = ["gfx_device_gl", "gfx_window_glutin", "glutin"]
-#vulkan = ["gfx_device_vulkan", "gfx_window_vulkan"]
+default = []
+profiler = ["thread_profiler/thread_profiler"]
 
 [dependencies]
-amethyst_assets = { path = "../amethyst_assets", version = "0.2.0" }
-amethyst_core = { path = "../amethyst_core", version = "0.1.0" }
+amethyst_core = { path = "../amethyst_core" }
+amethyst_assets = { path = "../amethyst_assets" }
+cgmath = { version = "0.15", features = ["serde", "mint"] }
 derivative = "1.0"
 error-chain = "0.11"
 fnv = "1.0"
-gfx = { version = "0.16", features = ["serialize"] }
-gfx_core = { version = "0.7", features = ["serialize"] }
-gfx_macros = "0.2"
+gfx-hal = { version = "0.1.0", features = ["mint", "serde"], git = "https://github.com/gfx-rs/gfx.git" }
 imagefmt = "4.0"
+mint = "0.4"
+num_cpus = "1.0"
 rayon = "0.8"
-serde = "1.0"
-serde_derive = "1.0"
-shred = "0.5"
-shrev = "0.6"
+rayon-core = "1.2"
+smallvec = "0.4"
+serde = { version = "1.0", features = ["serde_derive"] }
+specs = "0.10"
+thread_profiler = { version = "0.1" }
 wavefront_obj = "5.0"
 winit = "0.7"
 
-gfx_device_gl = { version = "0.14", optional = true }
-gfx_window_glutin = { version = "0.17", optional = true }
-glutin = { version = "0.9", optional = true }
-
 [target.'cfg(not(target_os = "macos"))'.dependencies]
-gfx_device_vulkan = { version = "0.1", optional = true }
-gfx_window_vulkan = { version = "0.1", optional = true }
+gfx-backend-vulkan = { version = "0.1", optional = true, features = ["glsl-to-spirv"], git = "https://github.com/gfx-rs/gfx.git" }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-gfx_device_metal = { version = "0.2", optional = true }
-gfx_window_metal = { version = "0.3", optional = true }
-
-[target.'cfg(windows)'.dependencies]
-gfx_device_dx11 = { version = "0.6", optional = true }
-gfx_window_dxgi = { version = "0.7", optional = true }
-
-[dependencies.hetseq]
-version = "0.1.5"
-
-[dependencies.specs]
-version = "0.10"
+gfx-backend-metal = { version = "0.1", optional = true, features = ["winit"], git = "https://github.com/gfx-rs/gfx.git" }
 
 [dev-dependencies]
 genmesh = "0.4"
-
-[dependencies.smallvec]
-version = "0.4"
-features = ["serde"]

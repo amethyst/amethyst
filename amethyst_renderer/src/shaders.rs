@@ -201,7 +201,7 @@ pub trait ShaderLoader: Backend {
     ) -> Result<Self::ShaderModule>;
 }
 
-#[cfg(feature = "metal")]
+#[cfg(feature = "gfx-backend-metal")]
 impl ShaderLoader for ::metal::Backend {
     fn get_shader_path(prefix: &PathBuf, name: &str, _stage: Stage) -> PathBuf {
         let mut path = prefix.clone();
@@ -235,7 +235,7 @@ impl ShaderLoader for ::metal::Backend {
 }
 
 
-#[cfg(feature = "vulkan")]
+#[cfg(feature = "gfx-backend-vulkan")]
 impl ShaderLoader for ::vulkan::Backend {
     fn get_shader_path(prefix: &PathBuf, name: &str, stage: Stage) -> PathBuf {
         let mut path = prefix.clone();

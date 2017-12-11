@@ -1,5 +1,5 @@
 extern crate amethyst_core as core;
-extern crate amethyst_renderer_new as renderer;
+extern crate amethyst_renderer as renderer;
 extern crate amethyst_utils as utils;
 #[macro_use]
 extern crate error_chain;
@@ -9,6 +9,8 @@ extern crate thread_profiler;
 
 extern crate specs;
 extern crate winit;
+
+mod flat;
 
 // use amethyst::assets::Loader;
 use core::cgmath::{Deg, Matrix4, Point3, Vector3};
@@ -28,12 +30,14 @@ use renderer::*;
 use renderer::cam::{ActiveCamera, Camera};
 use renderer::graph::Graph;
 use renderer::graph::build::{ColorPin, Merge, PassBuilder, Present};
-use renderer::graph::flat::DrawFlat;
 use renderer::hal::{Hal, HalConfig};
 use renderer::memory::Allocator;
 use renderer::mesh::{Mesh, MeshBuilder};
 use renderer::renderer::{Renderer, RendererConfig};
 use renderer::vertex::PosColor;
+
+
+use flat::DrawFlat;
 
 error_chain!{}
 

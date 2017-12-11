@@ -19,7 +19,7 @@ use renderer::{Renderer, RendererConfig};
 use shaders::{ShaderLoader, ShaderManager};
 use upload::Uploader;
 
-#[cfg(feature = "metal")]
+#[cfg(feature = "gfx-backend-metal")]
 use metal;
 
 use hal::Hal;
@@ -49,7 +49,7 @@ pub trait BackendEx: ShaderLoader {
     ) -> Result<(Option<(Window, Self::Surface)>, Vec<Adapter<Self>>)>;
 }
 
-#[cfg(feature = "metal")]
+#[cfg(feature = "gfx-backend-metal")]
 impl BackendEx for metal::Backend {
     fn create_window_and_adapters(
         builder: &HalConfig,
