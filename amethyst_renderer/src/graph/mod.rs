@@ -23,6 +23,7 @@ use gfx_hal::window::{Backbuffer, Frame, Swapchain};
 use smallvec::SmallVec;
 use specs::World;
 
+use descriptors::Descriptors;
 use epoch::{CurrentEpoch, Epoch};
 use graph::pass::AnyPass;
 use memory::{Allocator, Image};
@@ -117,7 +118,7 @@ where
 #[derive(Debug)]
 pub struct PassNode<B: Backend> {
     clears: Vec<ClearValue>,
-    descriptor_set_layout: B::DescriptorSetLayout,
+    descriptors: Descriptors<B>,
     pipeline_layout: B::PipelineLayout,
     graphics_pipeline: B::GraphicsPipeline,
     render_pass: B::RenderPass,
@@ -137,18 +138,20 @@ where
     ///
     /// `world` - primary source of data (`Mesh`es, `Texture`s etc) for the `Pass`es.
     /// `rect` - area to draw in.
-    /// `frame` - soecifies which framebuffer and descriptor sets to use.
+    /// `frame` - specifies which framebuffer and descriptor sets to use.
     /// `through` - commands will be executed through this epoch. Pass should ensure all resources
     /// are valid for it.
     ///
     fn draw_inline<C>(
         &mut self,
         cbuf: &mut CommandBuffer<B, C>,
+        allocator: &mut Allocator<B>,
         device: &B::Device,
         world: &World,
         rect: Rect,
         frame: SuperFrame<B>,
         through: Epoch,
+        current: &CurrentEpoch,
     ) where
         C: Supports<Graphics> + Supports<Transfer>,
     {
@@ -166,13 +169,7 @@ where
         // * Bind pipeline layout with descriptors sets
         {
             profile_scope!("AnyPass::prepare");
-            self.pass.prepare(
-                through,
-                cbuf.downgrade(),
-                &self.pipeline_layout,
-                device,
-                world,
-            );
+            self.pass.prepare(through, current, &mut self.descriptors, cbuf.downgrade(), allocator, device, world);
         }
 
         let encoder = {
@@ -188,7 +185,8 @@ where
 
         profile_scope!("AnyPass::draw_inline");
         // Record custom drawing calls
-        self.pass.draw_inline(through, encoder, world);
+        self.pass
+            .draw_inline(through, &self.pipeline_layout, encoder, world);
     }
 
     fn dispose(self, allocator: &mut Allocator<B>, device: &B::Device) {
@@ -202,12 +200,12 @@ where
         device.destroy_renderpass(self.render_pass);
         device.destroy_graphics_pipeline(self.graphics_pipeline);
         device.destroy_pipeline_layout(self.pipeline_layout);
-        device.destroy_descriptor_set_layout(self.descriptor_set_layout);
+        self.descriptors.dispose(device);
     }
 }
 
 /// Directed acyclic rendering graph.
-/// It holds all rendering nodes and auxilary data.
+/// It holds all rendering nodes and auxiliary data.
 #[derive(Debug)]
 pub struct Graph<B: Backend> {
     passes: Vec<PassNode<B>>,
@@ -221,7 +219,7 @@ impl<B> Graph<B>
 where
     B: Backend,
 {
-    /// Get number of frames that can be renderered in parallel with this graph
+    /// Get number of frames that can be rendered in parallel with this graph
     pub fn get_frames_number(&self) -> usize {
         self.frames
     }
@@ -248,11 +246,13 @@ where
         frame: SuperFrame<B>,
         acquire: &B::Semaphore,
         release: &B::Semaphore,
+        allocator: &mut Allocator<B>,
         device: &B::Device,
         viewport: Viewport,
         world: &World,
         finish: &B::Fence,
         through: Epoch,
+        current: &CurrentEpoch,
     ) where
         C: Supports<Graphics> + Supports<Transfer>,
     {
@@ -278,11 +278,13 @@ where
             // Record commands for pass
             pass.draw_inline(
                 &mut cbuf,
+                allocator,
                 device,
                 world,
                 viewport.rect,
                 frame.clone(),
                 through,
+                current,
             );
 
             {
@@ -291,7 +293,7 @@ where
 
                 // If it renders to acquired image
                 let wait_surface = if pass.draws_to_surface {
-                    // And it should wait for acqusition
+                    // And it should wait for acquisition
                     Some((acquire, PipelineStage::TOP_OF_PIPE))
                 } else {
                     None
@@ -304,14 +306,14 @@ where
                     .chain(wait_surface)
                     .collect::<SmallVec<[_; 2]>>();
 
-                let mut to_singnal = SmallVec::<[_; 1]>::new();
+                let mut to_signal = SmallVec::<[_; 1]>::new();
                 if id == count - 1 {
                     // The last one has to draw to surface.
                     // Also it depends on all others that draws to surface.
                     assert!(pass.draws_to_surface);
-                    to_singnal.push(release);
+                    to_signal.push(release);
                 } else if let Some(signal) = signals[id].as_ref() {
-                    to_singnal.push(signal);
+                    to_signal.push(signal);
                 };
 
                 // Signal the finish fence in last submission
@@ -323,7 +325,7 @@ where
                         .promote::<C>()
                         .submit(&[cbuf.finish()])
                         .wait_on(&to_wait)
-                        .signal(&to_singnal),
+                        .signal(&to_signal),
                     fence,
                 );
             }
@@ -361,7 +363,7 @@ where
             Backbuffer::Framebuffer(_) => (vec![], 1),
         };
 
-        // Collect all passes by walking dependecy tree
+        // Collect all passes by walking dependency tree
         let passes = traverse(&present);
 
         // Reorder passes to increase overlapping

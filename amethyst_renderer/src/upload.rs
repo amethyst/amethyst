@@ -208,19 +208,21 @@ where
         T: Pod,
     {
         if dst.visible() {
-            let mut writer = device.acquire_mapping_writer(dst.raw(), 0..dst.get_size())?;
+            let size = (data.as_ref().len() * ::std::mem::size_of::<T>()) as u64;
+            let mut writer = device.acquire_mapping_writer(dst.raw(), offset..(offset + size))?;
             writer.copy_from_slice(data.as_ref());
             device.release_mapping_writer(writer);
+        } else {
+            self.uploads.push(Upload::buffer(
+                allocator,
+                current,
+                device,
+                dst,
+                offset,
+                data,
+            )?);
         }
-
-        Ok(self.uploads.push(Upload::buffer(
-            allocator,
-            current,
-            device,
-            dst,
-            offset,
-            data,
-        )?))
+        Ok(())
     }
 
     pub fn upload_image<T, D>(

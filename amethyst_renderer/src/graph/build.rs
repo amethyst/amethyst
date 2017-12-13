@@ -10,6 +10,7 @@ use gfx_hal::pso;
 
 use specs::{Component, Entity, World};
 
+use descriptors::Descriptors;
 use graph::{Error, ErrorKind, PassNode, Result, SuperFramebuffer};
 use graph::pass::{AnyPass, Pass};
 use shaders::ShaderManager;
@@ -192,11 +193,10 @@ where
             )
         };
 
-        // Create `DescriptorSetLayout` from bindings
-        let descriptor_set_layout = device.create_descriptor_set_layout(pass.bindings());
+        let descriptors = Descriptors::new(pass.bindings(), device);
 
         // Create `PipelineLayout` from single `DescriptorSetLayout`
-        let pipeline_layout = device.create_pipeline_layout(&[&descriptor_set_layout], &[]);
+        let pipeline_layout = device.create_pipeline_layout(&[descriptors.layout()], &[]);
 
         // Create `GraphicsPipeline`
         let graphics_pipeline = {
@@ -319,7 +319,7 @@ where
 
         Ok(PassNode {
             clears,
-            descriptor_set_layout,
+            descriptors,
             pipeline_layout,
             graphics_pipeline,
             render_pass,
@@ -481,7 +481,7 @@ where
 }
 
 
-/// Searchs items from `right` in `left`
+/// Searches items from `right` in `left`
 /// Returns indices of them.
 /// Returns `None` if at least one item in `right` is not found.
 pub fn indices_in_of<T>(left: &[&T], right: &[&T]) -> Option<Vec<usize>> {

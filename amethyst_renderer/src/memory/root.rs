@@ -59,7 +59,7 @@ where
             1 << self.memory_type.id
         );
         let memory = device.allocate_memory(&self.memory_type, reqs.size)?;
-        let memory = Box::into_raw(Box::new(memory)); // Unoptimal
+        let memory = Box::into_raw(Box::new(memory)); // Suboptimal
         self.allocations += 1;
         Ok(Block::new(memory, 0..reqs.size).set_tag(self.tag()))
     }

@@ -7,8 +7,8 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use relevant::Relevant;
 
 /// Epoch identifier.
-/// User can compre `Epoch`s with one another to check which is "earlier".
-/// Primary used with `ValidThrough` implmenetations.
+/// User can compare `Epoch`s with one another to check which is "earlier".
+/// Primary used with `ValidThrough` implementations.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Epoch(pub u64);
 
@@ -214,7 +214,7 @@ impl<T> Deref for Eh<T> {
 }
 
 
-/// This queue can be used to thash unused `Eh` and other implementors of `ValidThrough`.
+/// This queue can be used to trash unused `Eh` and other implementors of `ValidThrough`.
 /// It can be `clean`ed to drop all enqueued `ValidThrough` implementors that has been expired.
 pub struct DeletionQueue<T> {
     offset: u64,

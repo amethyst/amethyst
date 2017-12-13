@@ -428,7 +428,7 @@ where
 }
 
 
-/// Abstacts over two types of indices and their absence.
+/// Abstracts over two types of indices and their absence.
 pub enum Indices {
     None,
     U16(Vec<u16>),
@@ -448,7 +448,7 @@ impl From<Vec<u32>> for Indices {
 }
 
 /// Generics-free mesh builder.
-/// Usefult for creating mesh from non-predefined set of data.
+/// Useful for creating mesh from non-predefined set of data.
 /// Like from glTF.
 pub struct MeshBuilder {
     vertices: SmallVec<[(Vec<u8>, VertexFormat<'static>); 16]>,
@@ -468,7 +468,7 @@ impl MeshBuilder {
         }
     }
 
-    /// Add indices buffer to the `MeshBuiler`
+    /// Add indices buffer to the `MeshBuilder`
     pub fn with_indices<I>(mut self, indices: I) -> Self
     where
         I: Into<Indices>,

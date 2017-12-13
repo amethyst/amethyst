@@ -104,7 +104,7 @@ where
     }
 
     /// Shift inner pools'n'fences queue.
-    /// `ready` should be not greater then value retured by `check_ready`
+    /// `ready` should be not greater then value returned by `check_ready`
     /// If `check_ready` returned `None` - `ready` can be anything.
     pub fn shift_ready(&mut self, ready: usize) {
         let len = self.executions.len();

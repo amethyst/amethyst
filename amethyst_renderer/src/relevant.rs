@@ -2,7 +2,7 @@
 /// If struct or enum has field with type `Relevant`,
 /// it can't be automatically dropped either. And so considered relevant too.
 /// User has to deconstruct such values and call `Relevant::dispose`.
-/// If relevant filed is private it means that user has to move value into some public method.
+/// If relevant field is private it means that user has to move value into some public method.
 /// For example `memory::Block` should be returned to the `MemoryAllocator` it came from.
 ///
 /// User of the engine won't usually deal with real relevant types.

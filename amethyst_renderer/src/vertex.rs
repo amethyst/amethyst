@@ -21,7 +21,7 @@ pub trait Attribute: BufferFormat + Debug + PartialEq + Pod + Send + Sync {
     /// Name of the attribute
     const NAME: &'static str;
 
-    /// Size of the attribue
+    /// Size of the attribute
     /// TODO: Remove when `std::mem_size_of` became const fn
     const SIZE: ElemStride; // Has to be equal to `std::mem::size_of::<Self>() as ElemStride`
 }
@@ -354,7 +354,7 @@ impl With<TexCoord> for PosNormTex {
     };
 }
 
-/// Vertex format with position, normal, and UV texture coordinate attributes.
+/// Vertex format with position, normal, tangent, and UV texture coordinate attributes.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct PosNormTangTex {

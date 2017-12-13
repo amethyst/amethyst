@@ -21,6 +21,8 @@ use upload::Uploader;
 
 #[cfg(feature = "gfx-backend-metal")]
 use metal;
+#[cfg(feature = "gfx-backend-vulkan")]
+use vulkan;
 
 use hal::Hal;
 
@@ -60,6 +62,38 @@ impl BackendEx for metal::Backend {
         ),
     > {
         let instance = metal::Instance::create("amethyst-hal", 1);
+
+        let window_surface = builder
+            .renderer
+            .as_ref()
+            .map(|renderer| -> Result<_> {
+                let window = WindowBuilder::new()
+                    .with_dimensions(renderer.width as u32, renderer.height as u32)
+                    .with_title(renderer.title)
+                    .with_visibility(true)
+                    .build(&renderer.events)
+                    .chain_err(|| "Failed to create rendering window")?;
+
+                let surface = instance.create_surface(&window);
+                Ok(Some((window, surface)))
+            })
+            .unwrap_or(Ok(None))?;
+
+        Ok((window_surface, instance.enumerate_adapters()))
+    }
+}
+
+#[cfg(feature = "gfx-backend-vulkan")]
+impl BackendEx for vulkan::Backend {
+    fn create_window_and_adapters(
+        builder: &HalConfig,
+    ) -> Result<
+        (
+            Option<(Window, <vulkan::Backend as Backend>::Surface)>,
+            Vec<Adapter<vulkan::Backend>>,
+        ),
+    > {
+        let instance = vulkan::Instance::create("amethyst-hal", 1);
 
         let window_surface = builder
             .renderer

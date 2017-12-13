@@ -13,7 +13,7 @@
 //!
 //! The pass prepares and sends data to GPU
 //!
-//! We want a way to define a pass which will record all necessarry commands in declarative fashion.
+//! We want a way to define a pass which will record all necessary commands in declarative fashion.
 //! In order to feed this pass with data we also need define `World -> [Input]` conversion.
 //!
 
@@ -31,7 +31,9 @@ use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use rayon_core::current_thread_index;
 use specs::{SystemData, World};
 
-use epoch::Epoch;
+use descriptors::Descriptors;
+use epoch::{CurrentEpoch, Epoch};
+use memory::Allocator;
 use shaders::ShaderManager;
 use vertex::VertexFormat;
 
@@ -49,7 +51,6 @@ where
     /// Data fetched from `World` during `prepare` phase. It can both read and write.
     type PrepareData: SystemData<'a>;
 }
-
 
 pub trait Pass<B>: for<'a> Data<'a, B> + Debug + Default
 where
@@ -92,8 +93,10 @@ where
     fn prepare<'a, C>(
         &mut self,
         through: Epoch,
+        current: &CurrentEpoch,
+        descriptors: &mut Descriptors<B>,
         cbuf: &mut CommandBuffer<B, C>,
-        layout: &B::PipelineLayout,
+        allocator: &mut Allocator<B>,
         device: &B::Device,
         data: <Self as Data<'a, B>>::PrepareData,
     ) where
@@ -106,6 +109,7 @@ where
     fn draw_inline<'a>(
         &mut self,
         through: Epoch,
+        layout: &B::PipelineLayout,
         encoder: RenderPassInlineEncoder<B>,
         data: <Self as Data<'a, B>>::DrawData,
     );
@@ -156,8 +160,10 @@ where
     fn prepare<'a>(
         &mut self,
         through: Epoch,
+        current: &CurrentEpoch,
+        descriptors: &mut Descriptors<B>,
         cbuf: &mut CommandBuffer<B, Transfer>,
-        layout: &B::PipelineLayout,
+        allocator: &mut Allocator<B>,
         device: &B::Device,
         world: &'a World,
     );
@@ -168,6 +174,7 @@ where
     fn draw_inline<'a>(
         &mut self,
         through: Epoch,
+        layout: &B::PipelineLayout,
         encoder: RenderPassInlineEncoder<B>,
         world: &'a World,
     );
@@ -220,16 +227,20 @@ where
     fn prepare<'a>(
         &mut self,
         through: Epoch,
+        current: &CurrentEpoch,
+        descriptors: &mut Descriptors<B>,
         cbuf: &mut CommandBuffer<B, Transfer>,
-        layout: &B::PipelineLayout,
+        allocator: &mut Allocator<B>,
         device: &B::Device,
         world: &'a World,
     ) {
         <P as Pass<B>>::prepare(
             self,
             through,
+            current,
+            descriptors,
             cbuf,
-            layout,
+            allocator,
             device,
             <P as Data<'a, B>>::PrepareData::fetch(&world.res, 0),
         );
@@ -238,12 +249,14 @@ where
     fn draw_inline<'a>(
         &mut self,
         through: Epoch,
+        layout: &B::PipelineLayout,
         encoder: RenderPassInlineEncoder<B>,
         world: &'a World,
     ) {
         <P as Pass<B>>::draw_inline(
             self,
             through,
+            layout,
             encoder,
             <P as Data<'a, B>>::DrawData::fetch(&world.res, 0),
         );

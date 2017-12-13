@@ -14,6 +14,8 @@ use smallvec::SmallVec;
 use self::family::Family;
 use epoch::{CurrentEpoch, Epoch};
 
+
+// Execution that needs `CommandQueue<B, C> where C: Supports<General>` to be executed.
 pub trait GeneralExecution<B: Backend>: Execution<B, General> {}
 impl<T, B> GeneralExecution<B> for T
 where
@@ -22,6 +24,18 @@ where
 {
 }
 
+// Execution that needs `CommandQueue<B, C> where C: Supports<Compute>` to be executed.
+pub trait ComputeExecution<B: Backend>
+    : Execution<B, Compute> + GeneralExecution<B> {
+}
+impl<T, B> ComputeExecution<B> for T
+where
+    B: Backend,
+    T: Execution<B, Compute> + Execution<B, General>,
+{
+}
+
+// Execution that needs `CommandQueue<B, C> where C: Supports<Graphics>` to be executed.
 pub trait GraphicsExecution<B: Backend>
     : Execution<B, Graphics> + GeneralExecution<B> {
 }
@@ -32,6 +46,7 @@ where
 {
 }
 
+// Execution that needs `CommandQueue<B, C> where C: Supports<Transfer>` to be executed.
 pub trait TransferExecution<B: Backend>
     : Execution<B, Transfer> + GraphicsExecution<B> {
 }
@@ -43,6 +58,7 @@ where
 }
 
 
+/// Execution that can be executed on `CommandQueue<B, C>`.
 pub trait Execution<B: Backend, C> {
     fn execute(
         self,
@@ -54,6 +70,8 @@ pub trait Execution<B: Backend, C> {
     ) -> Epoch;
 }
 
+/// Orchestrate `CommandQueue`s and `CommandPool`s.
+/// Starts `Execution`s on appropriate queues.
 pub struct CommandCenter<B: Backend> {
     transfer: Option<Family<B, Transfer>>,
     compute: Option<Family<B, Compute>>,
@@ -90,15 +108,10 @@ where
     /// Execute graphics operation
     ///
     /// This operation can't start before `start` epoch.
-    /// This operation will be finished for `span` epochs.
-    /// Technically epochs won't advance to `start + span` before this operation get finished.
-    /// This means that it will wait until all other operations with `other_start + other_span < this_start` are finished.
+    /// It will wait for operations that should finish before `start`.
+    /// And then advance `CurrentEpoch` to the `start` or further.
+    /// This operation will be finished in epoch returned by `execution.execute` method (`finish`).
     ///
-    /// Typically `span` of the graphics operations equals to number of surface framebuffers.
-    /// And each new instance of operation have `start` equals to prev's `start` + 1.
-    /// So that N instances of same graphics operation can run simulteneously and (N+1)th will wait for 1st to finish.
-    ///
-    /// `span` can't be less than 1
     pub fn execute_graphics<E>(
         &mut self,
         execution: E,

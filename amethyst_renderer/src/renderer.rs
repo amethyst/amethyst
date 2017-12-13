@@ -62,12 +62,14 @@ where
         graph: usize,
         current: &mut CurrentEpoch,
         center: &mut CommandCenter<B>,
+        allocator: &mut Allocator<B>,
         device: &B::Device,
         world: &World,
     ) {
         let start_epoch = self.start_epoch;
         center.execute_graphics(
             Draw {
+                allocator,
                 renderer: self,
                 world,
                 graph,
@@ -123,6 +125,7 @@ where
 }
 
 struct Draw<'a, B: Backend> {
+    allocator: &'a mut Allocator<B>,
     renderer: &'a mut Renderer<B>,
     world: &'a World,
     graph: usize,
@@ -176,11 +179,13 @@ where
             frame,
             &self.renderer.acquire,
             &self.renderer.release,
+            self.allocator,
             device,
             viewport,
             world,
             fence,
             finish,
+            current,
         );
 
         // Present queue

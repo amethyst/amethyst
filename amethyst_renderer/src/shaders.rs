@@ -201,7 +201,43 @@ pub trait ShaderLoader: Backend {
     ) -> Result<Self::ShaderModule>;
 }
 
-#[cfg(feature = "gfx-backend-metal")]
+#[cfg(feature = "spirv")]
+impl<B> ShaderLoader for B
+where
+    B: Backend,
+{
+    fn get_shader_path(prefix: &PathBuf, name: &str, stage: Stage) -> PathBuf {
+        let mut path = prefix.clone();
+        path.push(name);
+        match stage {
+            Stage::Vertex => path.push("vert"),
+            Stage::Fragment => path.push("frag"),
+            _ => unimplemented!(),
+        }
+        path.set_extension("spv");
+        path
+    }
+
+    fn get_shader_entry(stage: Stage) -> &'static str {
+        "main"
+    }
+
+    fn create_shader_module(
+        device: &B::Device,
+        prefix: &PathBuf,
+        name: &str,
+        stage: Stage,
+    ) -> Result<B::ShaderModule> {
+        let path = Self::get_shader_path(prefix, name, stage);
+        let code = load_shader_bytes(&path)?;
+        let module = device
+            .create_shader_module(&code)
+            .map_err(map_shader_error)?;
+        Ok(module)
+    }
+}
+
+#[cfg(all(feature = "gfx-backend-metal", not(feature = "spirv")))]
 impl ShaderLoader for ::metal::Backend {
     fn get_shader_path(prefix: &PathBuf, name: &str, _stage: Stage) -> PathBuf {
         let mut path = prefix.clone();
@@ -235,7 +271,7 @@ impl ShaderLoader for ::metal::Backend {
 }
 
 
-#[cfg(feature = "gfx-backend-vulkan")]
+#[cfg(all(feature = "gfx-backend-vulkan", not(feature = "spirv")))]
 impl ShaderLoader for ::vulkan::Backend {
     fn get_shader_path(prefix: &PathBuf, name: &str, stage: Stage) -> PathBuf {
         let mut path = prefix.clone();
@@ -244,16 +280,12 @@ impl ShaderLoader for ::vulkan::Backend {
             Stage::Vertex => path.set_extension("vert"),
             Stage::Fragment => path.set_extension("frag"),
             _ => unimplemented!(),
-        }
+        };
         path
     }
 
     fn get_shader_entry(stage: Stage) -> &'static str {
-        match stage {
-            Stage::Vertex => "vs_main",
-            Stage::Fragment => "ps_main",
-            _ => unimplemented!(),
-        }
+        "main"
     }
 
     fn create_shader_module(
@@ -278,6 +310,17 @@ fn load_shader_code(path: &Path) -> Result<String> {
     let mut file = File::open(path).chain_err(|| format!("Failed to open shader file {:?}", path))?;
     let mut code = String::new();
     file.read_to_string(&mut code)
+        .chain_err(|| format!("Failed to read shader file {:?}", path))?;
+    Ok(code)
+}
+
+
+fn load_shader_bytes(path: &Path) -> Result<Vec<u8>> {
+    use std::fs::File;
+    use std::io::Read;
+    let mut file = File::open(path).chain_err(|| format!("Failed to open shader file {:?}", path))?;
+    let mut code = Vec::new();
+    file.read_to_end(&mut code)
         .chain_err(|| format!("Failed to read shader file {:?}", path))?;
     Ok(code)
 }

@@ -33,7 +33,7 @@ pub mod cam;
 pub mod command;
 mod components;
 pub mod epoch;
-
+pub mod descriptors;
 pub mod hal;
 pub mod memory;
 pub mod mesh;

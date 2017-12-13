@@ -2,7 +2,7 @@ use gfx_hal::Backend;
 use specs::{Component, DenseVecStorage};
 
 use mesh::Mesh;
-use uniform::{BasicUniformCache, IntoUniform};
+use uniform::{BasicUniformCache};
 
 impl<B> Component for Mesh<B>
 where
@@ -14,7 +14,7 @@ where
 impl<B, T> Component for BasicUniformCache<B, T>
 where
     B: Backend,
-    T: IntoUniform<B, Cache = Self> + Component,
+    T: Send + Sync + 'static,
 {
     type Storage = DenseVecStorage<Self>;
 }

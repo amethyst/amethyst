@@ -97,7 +97,7 @@ where
         self.offset..self.size + self.offset
     }
 
-    /// Helper merthod to check if `other` block is sub-block of `self`
+    /// Helper method to check if `other` block is sub-block of `self`
     pub fn contains<Y>(&self, other: &Block<B, Y>) -> bool {
         self.memory == other.memory && self.offset <= other.offset
             && self.offset + self.size >= other.offset + other.size

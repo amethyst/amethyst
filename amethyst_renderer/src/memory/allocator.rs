@@ -98,9 +98,11 @@ where
         size: u64,
         stride: u64,
         usage: BufferUsage,
-        properties: Properties,
+        mut properties: Properties,
         transient: bool,
     ) -> Result<Buffer<B>> {
+                properties.insert(Properties::CPU_VISIBLE);
+                properties.remove(Properties::DEVICE_LOCAL);
         // Remove this when metal will support buffer copy operation.
         #[cfg(feature = "gfx-backend-metal")]
         let properties = {

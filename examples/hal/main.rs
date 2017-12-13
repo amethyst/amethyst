@@ -34,6 +34,7 @@ use renderer::hal::{Hal, HalConfig};
 use renderer::memory::Allocator;
 use renderer::mesh::{Mesh, MeshBuilder};
 use renderer::renderer::{Renderer, RendererConfig};
+use renderer::uniform::BasicUniformCache;
 use renderer::vertex::PosColor;
 
 
@@ -69,7 +70,7 @@ fn run() -> Result<()> {
             height: 768,
             events: &events_loop,
         }),
-    }.build::<metal::Backend>()
+    }.build::<vulkan::Backend>()
         .chain_err(|| "Can't init HAL")?;
 
     let ref mut renderer = *renderer.as_mut().unwrap();
@@ -78,7 +79,7 @@ fn run() -> Result<()> {
 
     println!("Build graph");
     let mut graph = {
-        let pass = PassBuilder::<metal::Backend>::new::<DrawFlat>();
+        let pass = PassBuilder::<vulkan::Backend>::new::<DrawFlat>();
 
         let passes = [&pass];
         let merge = Merge::new(
@@ -155,9 +156,11 @@ fn run() -> Result<()> {
 
     println!("Fill world");
     let mut world = World::new();
-    world.register::<Mesh<metal::Backend>>();
+    world.register::<Mesh<vulkan::Backend>>();
     world.register::<Camera>();
     world.register::<Transform>();
+    world.register::<BasicUniformCache<vulkan::Backend, flat::TrProjView>>();
+    world.register::<flat::Desc<vulkan::Backend>>();
 
     let cube = world
         .create_entity()
@@ -177,6 +180,8 @@ fn run() -> Result<()> {
         )))
         .build();
 
+    world.add_resource(ActiveCamera { entity: cam });
+
     let mut counter = utils::fps_counter::FPSCounter::new(1024);
     let mut instant = ::std::time::Instant::now();
     let mut last = instant;
@@ -187,7 +192,7 @@ fn run() -> Result<()> {
 
     for _ in 0..1000 {
         events_loop.poll_events(|_| {});
-        renderer.draw(0, current, center, device, &world);
+        renderer.draw(0, current, center, allocator, device, &world);
 
         let now = ::std::time::Instant::now();
         let delta = now - instant;
@@ -201,7 +206,7 @@ fn run() -> Result<()> {
     }
 
     world
-        .write::<Mesh<metal::Backend>>()
+        .write::<Mesh<vulkan::Backend>>()
         .remove(cube)
         .unwrap()
         .dispose(allocator);
@@ -209,6 +214,6 @@ fn run() -> Result<()> {
     #[cfg(feature = "profiler")]
     ::thread_profiler::write_profile(&format!("{}/prf.", env!("CARGO_MANIFEST_DIR")));
 
-
+    ::std::process::exit(0);
     Ok(())
 }
