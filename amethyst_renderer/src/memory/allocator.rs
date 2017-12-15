@@ -1,23 +1,12 @@
-use std::cmp::{max, min, Ordering, PartialOrd};
-use std::collections::VecDeque;
-use std::ops::{Add, Deref, DerefMut};
-
-
 use gfx_hal::{Backend, Device, MemoryType};
 use gfx_hal::buffer::{complete_requirements, Usage as BufferUsage};
-use gfx_hal::device::OutOfMemory;
 use gfx_hal::format::Format;
 use gfx_hal::image::{Kind, Level, Usage as ImageUsage};
-use gfx_hal::mapping::Error as MappingError;
 use gfx_hal::memory::{Properties, Requirements};
 
-use specs::{Fetch, FetchMut};
-
-
-use epoch::{CurrentEpoch, DeletionQueue, Ec, Eh, Epoch, ValidThrough};
+use epoch::{CurrentEpoch, DeletionQueue, Ec, Eh};
 use memory::{shift_for_alignment, Block, ErrorKind, MemoryAllocator, Result, SmartAllocator};
 use memory::combined::Type as AllocationType;
-use relevant::Relevant;
 
 pub type Buffer<B: Backend> = Eh<Item<B, B::Buffer>>;
 pub type Image<B: Backend> = Eh<Item<B, B::Image>>;

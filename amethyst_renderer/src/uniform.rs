@@ -1,20 +1,16 @@
-use std::any::Any;
 use std::collections::VecDeque;
-use std::fmt::Debug;
 use std::ops::{DerefMut, Range};
 
-use core::Transform;
 use gfx_hal::{Backend, Device};
 use gfx_hal::buffer::Usage;
 use gfx_hal::command::CommandBuffer;
 use gfx_hal::memory::{cast_slice, Pod, Properties};
 use gfx_hal::queue::{Supports, Transfer};
 
-use specs::{Component, Entity, MaskedStorage, Storage};
+use specs::{Entity, MaskedStorage, Storage};
 
-use cam::Camera;
 use epoch::{CurrentEpoch, Eh, Epoch};
-use memory::{shift_for_alignment, Allocator, Buffer, Image, Result};
+use memory::{shift_for_alignment, Allocator, Buffer, Result};
 
 
 pub trait UniformCache<B: Backend, T>: Sized {

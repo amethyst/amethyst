@@ -1,8 +1,7 @@
-use gfx_hal::{Backend, Device, MemoryType};
-use gfx_hal::device::OutOfMemory;
+use gfx_hal::{Backend, MemoryType};
 use gfx_hal::memory::{Properties, Requirements};
 
-use memory::{Block, Error, ErrorKind, MemoryAllocator, MemorySubAllocator, Result};
+use memory::{Block, Error, ErrorKind, MemoryAllocator, Result};
 use memory::combined::{CombinedAllocator, Type};
 
 pub struct SmartAllocator<B: Backend> {

@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 use std::mem::replace;
 
-use gfx_hal::{Backend, Device};
+use gfx_hal::{Backend};
 use gfx_hal::memory::Requirements;
 
 

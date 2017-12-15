@@ -1,7 +1,5 @@
 use gfx_hal::{Backend, Device};
 use gfx_hal::pso::{DescriptorPool, DescriptorRangeDesc, DescriptorSetLayoutBinding, DescriptorType};
-use std::ops::Range;
-use std::rc::Weak;
 
 const CAPACITY: usize = 1024;
 

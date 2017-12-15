@@ -17,18 +17,13 @@
 //! In order to feed this pass with data we also need define `World -> [Input]` conversion.
 //!
 
-use std::fmt::{self, Debug};
-use std::marker::PhantomData;
+use std::fmt::{Debug};
 
-use core::Transform;
 use gfx_hal::Backend;
 use gfx_hal::command::{CommandBuffer, RenderPassInlineEncoder};
 use gfx_hal::format::Format;
-use gfx_hal::memory::cast_slice;
-use gfx_hal::pso::{DescriptorSetLayoutBinding, GraphicsShaderSet, PipelineStage};
-use gfx_hal::queue::capability::{Graphics, Supports, Transfer};
-use rayon::iter::{IntoParallelIterator, ParallelIterator};
-use rayon_core::current_thread_index;
+use gfx_hal::pso::{DescriptorSetLayoutBinding, GraphicsShaderSet};
+use gfx_hal::queue::capability::{Supports, Transfer};
 use specs::{SystemData, World};
 
 use descriptors::Descriptors;
@@ -38,6 +33,8 @@ use shaders::ShaderManager;
 use vertex::VertexFormat;
 
 pub mod build;
+
+use self::build::PassBuilder;
 
 /// Helper trait to declare associated types with lifetime parameter.
 pub trait Data<'a, B>
@@ -77,6 +74,11 @@ where
 
     /// Vertices format
     const VERTICES: &'static [VertexFormat<'static>];
+
+    /// Build render pass
+    fn build() -> PassBuilder<'static, B> where Self: 'static {
+        PassBuilder::new::<Self>()
+    }
 
     /// Load shaders
     ///

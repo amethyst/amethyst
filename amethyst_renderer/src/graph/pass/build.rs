@@ -1,17 +1,13 @@
-use std::collections::HashSet;
-
 use gfx_hal::{Backend, Device, Primitive};
-use gfx_hal::command::{ClearColor, ClearDepthStencil, ClearValue, ColorValue};
+use gfx_hal::command::{ClearColor, ClearDepthStencil, ClearValue};
 use gfx_hal::device::Extent;
 use gfx_hal::format::Format;
 use gfx_hal::image;
 use gfx_hal::pass;
 use gfx_hal::pso;
 
-use specs::{Component, Entity, World};
-
 use descriptors::Descriptors;
-use graph::{Error, ErrorKind, PassNode, Result, SuperFramebuffer};
+use graph::{ErrorKind, PassNode, Result, SuperFramebuffer};
 use graph::pass::{AnyPass, Pass};
 use shaders::ShaderManager;
 use vertex::VertexFormat;
@@ -477,8 +473,6 @@ where
 /// Returns indices of them.
 /// Returns `None` if at least one item in `right` is not found.
 pub fn indices_in_of<T>(left: &[&T], right: &[&T]) -> Option<Vec<usize>> {
-    use std::result::Result as StdResult;
-
     let mut positions = right
         .iter()
         .map(|&r| {

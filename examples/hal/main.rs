@@ -29,7 +29,7 @@ use renderer::gfx_hal::pso::{EntryPoint, Stage};
 
 use renderer::*;
 use renderer::cam::{ActiveCamera, Camera};
-use renderer::graph::{ColorPin, Graph, Merge, PassBuilder};
+use renderer::graph::{ColorPin, Graph, Merge, Pass};
 use renderer::hal::{Hal, HalConfig};
 use renderer::memory::Allocator;
 use renderer::mesh::{Mesh, MeshBuilder};
@@ -87,13 +87,11 @@ fn run() -> Result<()> {
 
     println!("Build graph");
     let mut graph = {
-        let pass = PassBuilder::<Backend>::new::<DrawFlat>();
-
-        let passes = [&pass];
+        let pass = [&DrawFlat::build()];
         let merge = Merge::new(
             Some(ClearColor::Float([0.15, 0.1, 0.2, 1.0])),
             Some(ClearDepthStencil(1.0, 0)),
-            &passes,
+            &pass,
         );
         renderer
             .add_graph(merge.color(0), &device, allocator, shaders)
@@ -267,7 +265,6 @@ fn run() -> Result<()> {
         .create_entity()
         .with(cam)
         .with(Transform(view))
-        // .with(Transform(Matrix4::from_angle_z(Deg(30.0))))
         .build();
 
     world.add_resource(ActiveCamera { entity: cam });
@@ -280,7 +277,7 @@ fn run() -> Result<()> {
 
     let mut first = true;
 
-    for _ in 0..3000 {
+    for i in 0.. {
         events_loop.poll_events(|_| {});
         renderer.draw(0, current, center, allocator, device, &world);
 
@@ -289,7 +286,7 @@ fn run() -> Result<()> {
         let delta = (delta.as_secs() * 1_000_000_000) + delta.subsec_nanos() as u64;
         counter.push(delta);
         if (now - last) > ::std::time::Duration::from_secs(3) {
-            println!("FPS: {}", counter.sampled_fps());
+            println!("FPS: {}, frame: {}", counter.sampled_fps(), i);
             last = now;
         }
         instant = now;

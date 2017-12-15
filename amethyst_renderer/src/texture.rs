@@ -6,13 +6,13 @@ use std::mem::size_of;
 use gfx_hal::{Backend, Device};
 use gfx_hal::command::{BufferImageCopy, Offset};
 use gfx_hal::device::Extent;
-use gfx_hal::format::{Format, ImageFormat, Rgba8, SurfaceTyped, Swizzle};
-use gfx_hal::image::{AaMode, AspectFlags, FilterMethod, ImageLayout, Kind, Level, SamplerInfo,
+use gfx_hal::format::{ImageFormat, Rgba8, SurfaceTyped, Swizzle};
+use gfx_hal::image::{AspectFlags, FilterMethod, ImageLayout, Kind, Level, SamplerInfo,
                      SubresourceLayers, SubresourceRange, Usage, ViewError, WrapMode};
 use gfx_hal::memory::{Pod, Properties};
 
 use epoch::CurrentEpoch;
-use memory::{cast_pod_vec, shift_for_alignment, Allocator, Image};
+use memory::{Allocator, Image};
 use relevant::Relevant;
 use upload::Uploader;
 

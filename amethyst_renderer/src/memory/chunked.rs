@@ -1,11 +1,9 @@
 use std::collections::VecDeque;
 
-use gfx_hal::{Backend, Device};
+use gfx_hal::{Backend};
 use gfx_hal::memory::Requirements;
 
 use memory::{shift_for_alignment, Block, MemoryAllocator, MemorySubAllocator, Result};
-use relevant::Relevant;
-
 
 #[derive(Debug)]
 struct ChunkListNode<B: Backend, A: MemoryAllocator<B>> {

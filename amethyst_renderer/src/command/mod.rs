@@ -1,13 +1,12 @@
 mod family;
 
 use std::cmp::min;
-use std::collections::VecDeque;
 
 use gfx_hal::{Backend, Device};
 use gfx_hal::device::WaitFor;
 use gfx_hal::pool::CommandPool;
 use gfx_hal::queue::{CommandQueue, Compute, General, Graphics, QueueFamily, QueueGroup, QueueType,
-                     RawQueueGroup, Supports, Transfer};
+                     RawQueueGroup, Transfer};
 
 use smallvec::SmallVec;
 

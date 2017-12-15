@@ -6,7 +6,7 @@ use gfx_hal::device::Extent;
 use gfx_hal::format::Format;
 use gfx_hal::pool::CommandPool;
 use gfx_hal::queue::{CommandQueue, Graphics, Supports, Transfer};
-use gfx_hal::window::{Backbuffer, Surface, Swapchain};
+use gfx_hal::window::{Backbuffer, Swapchain};
 
 use specs::World;
 

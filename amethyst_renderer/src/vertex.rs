@@ -2,7 +2,7 @@
 
 use std::fmt::Debug;
 
-use gfx_hal::format::{BufferFormat, ChannelType, Format, Formatted, SurfaceType, Vec2, Vec3, Vec4};
+use gfx_hal::format::{BufferFormat, Format, Formatted, Vec2, Vec3, Vec4};
 use gfx_hal::memory::Pod;
 use gfx_hal::pso::{ElemStride, Element};
 

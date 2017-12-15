@@ -3,12 +3,11 @@ use std::mem::size_of;
 
 use cgmath::{Deg, Matrix4, Point3, SquareMatrix, Transform, Vector3};
 
-use gfx_hal::{Backend, Device, IndexCount, IndexType, Primitive, VertexCount};
+use gfx_hal::{Backend, IndexCount, IndexType, Primitive, VertexCount};
 use gfx_hal::buffer::{IndexBufferView, Usage};
-use gfx_hal::command::{CommandBuffer, RenderPassInlineEncoder};
-use gfx_hal::memory::{Pod, Properties};
+use gfx_hal::command::{RenderPassInlineEncoder};
+use gfx_hal::memory::{Properties};
 use gfx_hal::pso::{ElemStride, VertexBufferSet};
-use gfx_hal::queue::{Graphics, Supports};
 
 use smallvec::SmallVec;
 
@@ -17,7 +16,7 @@ use hal::Hal;
 use memory::{cast_pod_vec, Allocator, Buffer};
 use upload::{self, Uploader};
 use utils::{is_slice_sorted, is_slice_sorted_by_key};
-use vertex::{Attributes, VertexFormat, VertexFormatSet, VertexFormatted};
+use vertex::{VertexFormat, VertexFormatSet, VertexFormatted};
 
 
 /// Wraps container type (Like `Vec<V>`, `&[V]`, Box<[V]>, Cow<[V]> etc)

@@ -1,8 +1,7 @@
-use gfx_hal::{Backend, Device, MemoryType};
-use gfx_hal::device::OutOfMemory;
+use gfx_hal::{Backend, MemoryType};
 use gfx_hal::memory::Requirements;
 
-use memory::{calc_alignment_shift, Block, MemoryAllocator, MemorySubAllocator, Result};
+use memory::{Block, MemoryAllocator, MemorySubAllocator, Result};
 use memory::arena::ArenaAllocator;
 use memory::chunked::ChunkListAllocator;
 use memory::root::RootAllocator;

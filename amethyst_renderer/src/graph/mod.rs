@@ -1,23 +1,19 @@
 pub mod pass;
 
-use std::collections::{HashMap, HashSet};
-use std::collections::hash_map::Entry::{Occupied, Vacant};
-use std::iter::Empty;
-use std::marker::PhantomData;
-use std::mem::{replace, transmute};
-use std::ops::{Index, Range};
+use std::collections::{HashMap};
+use std::ops::{Range};
 
 use gfx_hal::Backend;
 use gfx_hal::command::{ClearValue, CommandBuffer, Rect, Viewport};
-use gfx_hal::device::{Device, Extent, FramebufferError, WaitFor};
+use gfx_hal::device::{Device, Extent};
 use gfx_hal::format::{Format, Swizzle};
 use gfx_hal::image;
 use gfx_hal::memory::Properties;
 use gfx_hal::pool::CommandPool;
-use gfx_hal::pso::{BlendState, CreationError, PipelineStage};
+use gfx_hal::pso::{CreationError, PipelineStage};
 use gfx_hal::queue::CommandQueue;
 use gfx_hal::queue::capability::{Graphics, Supports, Transfer};
-use gfx_hal::window::{Backbuffer, Frame, Swapchain};
+use gfx_hal::window::{Backbuffer, Frame};
 
 use smallvec::SmallVec;
 use specs::World;
@@ -28,6 +24,7 @@ use graph::pass::AnyPass;
 use memory::{Allocator, Image};
 use shaders::ShaderManager;
 
+pub use graph::pass::*;
 pub use graph::pass::build::*;
 
 
@@ -263,9 +260,7 @@ where
     ) where
         C: Supports<Graphics> + Supports<Transfer>,
     {
-        use gfx_hal::image::ImageLayout;
         use gfx_hal::queue::submission::Submission;
-        use std::iter::once;
 
         profile_scope!("Graph::draw");
 

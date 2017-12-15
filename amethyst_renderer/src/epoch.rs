@@ -1,7 +1,6 @@
 use std::cmp::min;
 use std::collections::VecDeque;
-use std::ops::{Add, AddAssign, Deref, DerefMut};
-use std::ptr::null;
+use std::ops::{Add, AddAssign, Deref};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use relevant::Relevant;
