@@ -412,19 +412,20 @@ where
                 .map(|pin| {
                     let (indices, format) = match *pin {
                         Pin::Color(ColorPin { merge, index }) => (
-                            targets.get(&(merge as *const _)).unwrap().colors[index]
+                            targets[&(merge as *const _)]
+                                .colors[index]
                                 .indices
                                 .clone()
                                 .unwrap(),
-                            merge.color_format(index),
+                            pin.format(),
                         ),
                         Pin::Depth(DepthPin { merge }) => (
-                            targets
-                                .get(&(merge as *const _))
-                                .and_then(|targets| targets.depth.as_ref())
-                                .map(|depth| depth.indices.clone())
-                                .unwrap(),
-                            merge.depth_format().unwrap(),
+                            targets[&(merge as *const _)]
+                                .depth.as_ref()
+                                .unwrap()
+                                .indices
+                                .clone(),
+                            pin.format(),
                         ),
                     };
                     let ref view = image_views[indices];
@@ -466,7 +467,7 @@ where
                             (
                                 // It's owned image
                                 AttachmentImageViews::Owned(&image_views[indices]),
-                                merge.color_format(attachment_index),
+                                merge.color(attachment_index).format(),
                             )
                         })
                         .unwrap_or_else(|| {
@@ -491,7 +492,7 @@ where
 
             let depth_stencil = target.depth.clone().map(|depth| {
                 DepthStencilAttachmentDesc {
-                    format: merge.depth_format().unwrap(),
+                    format: merge.depth().unwrap().format(),
                     view: AttachmentImageViews::Owned(&image_views[depth.indices]),
                     clear: clear_depth,
                 }
@@ -640,7 +641,7 @@ where
                 ColorIndices { indices: None }
             } else {
                 ColorIndices {
-                    indices: Some(make_views(merge.color_format(i))?),
+                    indices: Some(make_views(merge.color(i).format())?),
                 }
             })
         })
@@ -648,7 +649,7 @@ where
 
     let target = Targets {
         colors,
-        depth: match merge.depth_format() {
+        depth: match merge.depth().as_ref().map(DepthPin::format) {
             Some(format) => Some(DepthIndices {
                 indices: make_views(format)?,
             }),

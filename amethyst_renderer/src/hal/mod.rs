@@ -19,10 +19,9 @@ use winit::{EventsLoop, Window, WindowBuilder};
 
 use command::CommandCenter;
 use epoch::CurrentEpoch;
-use graph::{Graph, Present};
 use memory::Allocator;
 use renderer::Renderer;
-use shaders::{ShaderLoader, ShaderManager};
+use shaders::ShaderManager;
 use upload::Uploader;
 
 pub use self::build::{Error, ErrorKind, HalConfig};

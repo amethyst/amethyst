@@ -13,7 +13,6 @@ use winit::{EventsLoop, Window, WindowBuilder};
 
 use command::CommandCenter;
 use epoch::{CurrentEpoch, Epoch};
-use graph::{Graph, Present};
 use memory::Allocator;
 use renderer::{Renderer, RendererConfig};
 use shaders::{ShaderLoader, ShaderManager};

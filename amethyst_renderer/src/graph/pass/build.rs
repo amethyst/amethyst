@@ -16,6 +16,8 @@ use graph::pass::{AnyPass, Pass};
 use shaders::ShaderManager;
 use vertex::VertexFormat;
 
+
+/// Collection of data required to construct rendering pass
 #[derive(Derivative)]
 #[derivative(Debug)]
 pub struct PassBuilder<'a, B: Backend> {
@@ -27,40 +29,41 @@ pub struct PassBuilder<'a, B: Backend> {
     pub(crate) connects: Vec<Pin<'a, B>>,
     name: &'a str,
     #[derivative(Debug = "ignore")]
-    pub(crate) maker: Box<Fn() -> Box<AnyPass<B>>>,
+    pub(crate) maker: fn() -> Box<AnyPass<B>>,
 }
 
 #[derive(Debug)]
-pub enum AttachmentImageViews<'a, B: Backend> {
+pub(crate) enum AttachmentImageViews<'a, B: Backend> {
     Owned(&'a [B::ImageView]),
     Acquired(&'a [B::ImageView]),
     External,
 }
 
 #[derive(Debug)]
-pub struct InputAttachmentDesc<'a, B: Backend> {
-    pub format: Format,
-    pub view: &'a [B::ImageView],
+pub(crate) struct InputAttachmentDesc<'a, B: Backend> {
+    pub(crate) format: Format,
+    pub(crate) view: &'a [B::ImageView],
 }
 
 #[derive(Debug)]
-pub struct ColorAttachmentDesc<'a, B: Backend> {
-    pub format: Format,
-    pub view: AttachmentImageViews<'a, B>,
-    pub clear: Option<ClearColor>,
+pub(crate) struct ColorAttachmentDesc<'a, B: Backend> {
+    pub(crate) format: Format,
+    pub(crate) view: AttachmentImageViews<'a, B>,
+    pub(crate) clear: Option<ClearColor>,
 }
 
 #[derive(Debug)]
-pub struct DepthStencilAttachmentDesc<'a, B: Backend> {
-    pub format: Format,
-    pub view: AttachmentImageViews<'a, B>,
-    pub clear: Option<ClearDepthStencil>,
+pub(crate) struct DepthStencilAttachmentDesc<'a, B: Backend> {
+    pub(crate) format: Format,
+    pub(crate) view: AttachmentImageViews<'a, B>,
+    pub(crate) clear: Option<ClearDepthStencil>,
 }
 
 impl<'a, B> PassBuilder<'a, B>
 where
     B: Backend,
 {
+    /// Construct `PassBuilder` from `Pass` type.
     pub fn new<P>() -> Self
     where
         P: Pass<B> + 'static,
@@ -73,11 +76,12 @@ where
             primitive: Primitive::TriangleList,
             connects: vec![],
             name: P::NAME,
-            maker: P::maker(),
+            maker: P::maker,
         }
     }
 
-    pub fn build(
+    /// Build `PassNode`
+    pub(crate) fn build(
         &self,
         device: &B::Device,
         shaders: &mut ShaderManager<B>,
@@ -334,7 +338,7 @@ where
 }
 
 
-
+/// Merges output of several passes to the single set of targets.
 #[derive(Clone, Debug)]
 pub struct Merge<'a, B: Backend> {
     pub(crate) clear_color: Option<ClearColor>,
@@ -365,19 +369,24 @@ where
         }
     }
 
-    pub fn colors(&self) -> usize {
+    pub(crate) fn colors(&self) -> usize {
         self.passes[0].colors.len()
     }
 
-    pub fn color_format(&self, index: usize) -> Format {
-        self.passes[0].colors[index]
+    pub fn color(&self, index: usize) -> ColorPin<B> {
+        ColorPin { merge: self, index, }
     }
 
-    pub fn depth_format(&self) -> Option<Format> {
-        self.passes[0].depth_stencil
+    pub fn depth(&self) -> Option<DepthPin<B>> {
+        self.passes[0].depth_stencil.map(|_| {
+            DepthPin { merge: self }
+        })
     }
 }
 
+
+/// Single output target of `Merge`.
+/// It can be connected to the input of the `PassBuilder`
 #[derive(Clone, Debug)]
 pub struct ColorPin<'a, B: Backend> {
     pub(crate) merge: &'a Merge<'a, B>,
@@ -388,15 +397,13 @@ impl<'a, B> ColorPin<'a, B>
 where
     B: Backend,
 {
-    pub fn new(merge: &'a Merge<'a, B>, index: usize) -> Self {
-        assert!(merge.colors() > index);
-        ColorPin { merge, index }
-    }
     pub fn format(&self) -> Format {
-        self.merge.color_format(self.index)
+        self.merge.passes[0].colors[self.index]
     }
 }
 
+/// Depth output target of the `Merge`
+/// It can be connected to the input of the `PassBuilder`
 #[derive(Clone, Debug)]
 pub struct DepthPin<'a, B: Backend> {
     pub(crate) merge: &'a Merge<'a, B>,
@@ -406,11 +413,13 @@ impl<'a, B> DepthPin<'a, B>
 where
     B: Backend,
 {
-    fn format(&self) -> Format {
-        self.merge.depth_format().unwrap()
+    pub fn format(&self) -> Format {
+        self.merge.passes[0].depth_stencil.unwrap()
     }
 }
 
+/// Common connection pin.
+/// `ColorPin` or `DepthPin`.
 #[derive(Clone, Debug)]
 pub enum Pin<'a, B: Backend> {
     Color(ColorPin<'a, B>),
@@ -421,37 +430,18 @@ impl<'a, B> Pin<'a, B>
 where
     B: Backend,
 {
-    fn format(&self) -> Format {
-        match *self {
-            Pin::Color(ref color) => color.format(),
-            Pin::Depth(ref depth) => depth.format(),
-        }
-    }
-
-    fn merge(&'a self) -> &'a Merge<'a, B> {
+    fn merge(&self) -> &Merge<'a, B> {
         match *self {
             Pin::Color(ref color) => &color.merge,
             Pin::Depth(ref depth) => &depth.merge,
         }
     }
-}
 
-
-///
-#[derive(Debug)]
-pub struct Present<'a, B: Backend> {
-    pub(crate) pin: ColorPin<'a, B>,
-}
-
-impl<'a, B> Present<'a, B>
-where
-    B: Backend,
-{
-    pub fn new(pin: ColorPin<'a, B>) -> Self {
-        Present { pin }
-    }
     pub fn format(&self) -> Format {
-        self.pin.format()
+        match *self {
+            Pin::Color(ref color) => color.format(),
+            Pin::Depth(ref depth) => depth.format(),
+        }
     }
 }
 

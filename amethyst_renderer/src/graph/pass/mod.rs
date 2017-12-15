@@ -123,11 +123,11 @@ pub trait AnyPass<B>: Debug
 where
     B: Backend,
 {
-    fn maker() -> Box<Fn() -> Box<AnyPass<B>>>
+    fn maker() -> Box<AnyPass<B>>
     where
         Self: Default + Sized + 'static,
     {
-        Box::new(|| Box::new(Self::default()))
+        Box::new(Self::default())
     }
 
     /// Name of the pass

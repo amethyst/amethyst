@@ -29,7 +29,7 @@ use renderer::gfx_hal::pso::{EntryPoint, Stage};
 
 use renderer::*;
 use renderer::cam::{ActiveCamera, Camera};
-use renderer::graph::{ColorPin, Graph, Merge, PassBuilder, Present};
+use renderer::graph::{ColorPin, Graph, Merge, PassBuilder};
 use renderer::hal::{Hal, HalConfig};
 use renderer::memory::Allocator;
 use renderer::mesh::{Mesh, MeshBuilder};
@@ -95,9 +95,8 @@ fn run() -> Result<()> {
             Some(ClearDepthStencil(1.0, 0)),
             &passes,
         );
-        let present = Present::new(ColorPin::new(&merge, 0));
         renderer
-            .add_graph(ColorPin::new(&merge, 0), &device, allocator, shaders)
+            .add_graph(merge.color(0), &device, allocator, shaders)
             .chain_err(|| "Can't build graph")?
     };
 
