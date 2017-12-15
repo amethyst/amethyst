@@ -196,10 +196,8 @@ where
 
     fn dispose(mut self, owner: &mut A, device: &B::Device) {
         assert!(self.is_unused());
-        unsafe {
-            for node in self.nodes.drain(..) {
-                node.dispose(owner, device);
-            }
+        for node in self.nodes.drain(..) {
+            node.dispose(owner, device);
         }
     }
 }

@@ -1,5 +1,5 @@
 #![deny(unused_imports)]
-#![allow(unused_unsafe)]
+#![deny(unused_unsafe)]
 #![allow(unused_variables)]
 #![allow(dead_code)]
 
