@@ -2,7 +2,7 @@ use gfx_hal::Backend;
 use specs::{Component, DenseVecStorage};
 
 use mesh::Mesh;
-use uniform::{BasicUniformCache};
+use uniform::BasicUniformCache;
 
 impl<B> Component for Mesh<B>
 where

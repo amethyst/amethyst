@@ -13,7 +13,8 @@ extern crate winit;
 mod flat;
 
 // use amethyst::assets::Loader;
-use core::cgmath::{Deg, Matrix4, Point3, Vector3};
+
+use core::cgmath::{Deg, Matrix, Matrix4, Point3, SquareMatrix, Vector3};
 use core::cgmath::prelude::InnerSpace;
 use core::transform::Transform;
 use genmesh::{MapToVertices, Triangulate, Vertices};
@@ -36,6 +37,14 @@ use renderer::mesh::{Mesh, MeshBuilder};
 use renderer::renderer::{Renderer, RendererConfig};
 use renderer::uniform::BasicUniformCache;
 use renderer::vertex::PosColor;
+
+
+#[cfg(feature = "gfx-metal")]
+use metal::Backend;
+
+
+#[cfg(feature = "gfx-vulkan")]
+use Backend;
 
 
 use flat::DrawFlat;
@@ -70,7 +79,7 @@ fn run() -> Result<()> {
             height: 768,
             events: &events_loop,
         }),
-    }.build::<vulkan::Backend>()
+    }.build::<Backend>()
         .chain_err(|| "Can't init HAL")?;
 
     let ref mut renderer = *renderer.as_mut().unwrap();
@@ -79,12 +88,12 @@ fn run() -> Result<()> {
 
     println!("Build graph");
     let mut graph = {
-        let pass = PassBuilder::<vulkan::Backend>::new::<DrawFlat>();
+        let pass = PassBuilder::<Backend>::new::<DrawFlat>();
 
         let passes = [&pass];
         let merge = Merge::new(
             Some(ClearColor::Float([0.15, 0.1, 0.2, 1.0])),
-            None,
+            Some(ClearDepthStencil(1.0, 0)),
             &passes,
         );
         let present = Present::new(ColorPin::new(&merge, 0));
@@ -96,57 +105,134 @@ fn run() -> Result<()> {
     println!("Create mesh");
     let mesh = {
         let vertices = vec![
+            // Right
             PosColor {
                 position: [0.5, -0.5, -0.5].into(),
                 color: [1.0, 0.0, 0.0, 1.0].into(),
             },
             PosColor {
                 position: [0.5, -0.5, 0.5].into(),
+                color: [1.0, 0.0, 0.0, 1.0].into(),
+            },
+            PosColor {
+                position: [0.5, 0.5, -0.5].into(),
+                color: [1.0, 0.0, 0.0, 1.0].into(),
+            },
+            PosColor {
+                position: [0.5, 0.5, 0.5].into(),
+                color: [1.0, 0.0, 0.0, 1.0].into(),
+            },
+            // Left
+            PosColor {
+                position: [-0.5, -0.5, -0.5].into(),
+                color: [1.0, 0.0, 0.0, 1.0].into(),
+            },
+            PosColor {
+                position: [-0.5, -0.5, 0.5].into(),
+                color: [1.0, 0.0, 0.0, 1.0].into(),
+            },
+            PosColor {
+                position: [-0.5, 0.5, -0.5].into(),
+                color: [1.0, 0.0, 0.0, 1.0].into(),
+            },
+            PosColor {
+                position: [-0.5, 0.5, 0.5].into(),
+                color: [1.0, 0.0, 0.0, 1.0].into(),
+            },
+            // Top
+            PosColor {
+                position: [-0.5, 0.5, -0.5].into(),
                 color: [0.0, 1.0, 0.0, 1.0].into(),
+            },
+            PosColor {
+                position: [-0.5, 0.5, 0.5].into(),
+                color: [0.0, 1.0, 0.0, 1.0].into(),
+            },
+            PosColor {
+                position: [0.5, 0.5, -0.5].into(),
+                color: [0.0, 1.0, 0.0, 1.0].into(),
+            },
+            PosColor {
+                position: [0.5, 0.5, 0.5].into(),
+                color: [0.0, 1.0, 0.0, 1.0].into(),
+            },
+            // Bottom
+            PosColor {
+                position: [-0.5, -0.5, -0.5].into(),
+                color: [0.0, 1.0, 0.0, 1.0].into(),
+            },
+            PosColor {
+                position: [-0.5, -0.5, 0.5].into(),
+                color: [0.0, 1.0, 0.0, 1.0].into(),
+            },
+            PosColor {
+                position: [0.5, -0.5, -0.5].into(),
+                color: [0.0, 1.0, 0.0, 1.0].into(),
+            },
+            PosColor {
+                position: [0.5, -0.5, 0.5].into(),
+                color: [0.0, 1.0, 0.0, 1.0].into(),
+            },
+            // Front
+            PosColor {
+                position: [-0.5, -0.5, 0.5].into(),
+                color: [0.0, 0.0, 1.0, 1.0].into(),
+            },
+            PosColor {
+                position: [-0.5, 0.5, 0.5].into(),
+                color: [0.0, 0.0, 1.0, 1.0].into(),
+            },
+            PosColor {
+                position: [0.5, -0.5, 0.5].into(),
+                color: [0.0, 0.0, 1.0, 1.0].into(),
             },
             PosColor {
                 position: [0.5, 0.5, 0.5].into(),
                 color: [0.0, 0.0, 1.0, 1.0].into(),
             },
-            PosColor {
-                position: [0.5, 0.5, -0.5].into(),
-                color: [1.0, 1.0, 0.0, 1.0].into(),
-            },
+            // Back
             PosColor {
                 position: [-0.5, -0.5, -0.5].into(),
-                color: [1.0, 0.0, 1.0, 1.0].into(),
-            },
-            PosColor {
-                position: [-0.5, -0.5, 0.5].into(),
-                color: [0.0, 1.0, 1.0, 1.0].into(),
-            },
-            PosColor {
-                position: [-0.5, 0.5, 0.5].into(),
-                color: [1.0, 0.3, 0.3, 1.0].into(),
+                color: [0.0, 0.0, 1.0, 1.0].into(),
             },
             PosColor {
                 position: [-0.5, 0.5, -0.5].into(),
-                color: [0.3, 1.0, 0.3, 1.0].into(),
+                color: [0.0, 0.0, 1.0, 1.0].into(),
+            },
+            PosColor {
+                position: [0.5, -0.5, -0.5].into(),
+                color: [0.0, 0.0, 1.0, 1.0].into(),
+            },
+            PosColor {
+                position: [0.5, 0.5, -0.5].into(),
+                color: [0.0, 0.0, 1.0, 1.0].into(),
             },
         ];
         let indices: Vec<u16> = vec![
-            // 0, 1, 3,
-            // 1, 2, 3,
-            // 1, 0, 5,
-            // 0, 4, 5,
-            // 0, 3, 4,
-            // 3, 7, 4,
-            // 4, 7, 5,
-            // 7, 6, 5,
-            // 2, 6, 3,
-            // 6, 7, 3,
-            1,
-            5,
-            2,
-            5,
-            6,
-            2,
-        ];
+            // Left
+            vec![0, 1, 2],
+            vec![1, 2, 3],
+
+            // Right
+            vec![4, 5, 6],
+            vec![5, 6, 7],
+
+            // Top
+            vec![8, 9, 10],
+            vec![9, 10, 11],
+            
+            // Bottom
+            vec![12, 13, 14],
+            vec![13, 14, 15],
+
+            // Front
+            vec![16, 17, 18],
+            vec![17, 18, 19],
+            
+            // Back
+            vec![20, 21, 22],
+            vec![21, 22, 23],
+        ].into_iter().flat_map(|x|x).collect();
         MeshBuilder::new()
             .with_indices(indices)
             .with_vertices(vertices)
@@ -156,11 +242,11 @@ fn run() -> Result<()> {
 
     println!("Fill world");
     let mut world = World::new();
-    world.register::<Mesh<vulkan::Backend>>();
+    world.register::<Mesh<Backend>>();
     world.register::<Camera>();
     world.register::<Transform>();
-    world.register::<BasicUniformCache<vulkan::Backend, flat::TrProjView>>();
-    world.register::<flat::Desc<vulkan::Backend>>();
+    world.register::<BasicUniformCache<Backend, flat::TrProjView>>();
+    world.register::<flat::Desc<Backend>>();
 
     let cube = world
         .create_entity()
@@ -170,14 +256,20 @@ fn run() -> Result<()> {
 
     let (width, height) = renderer.window.get_inner_size_pixels().unwrap();
 
+    let view = Matrix4::from_translation([0.0, 0.0, -5.0].into());
+    let view = view * Matrix4::from_angle_x(Deg(-45.0));
+    let view = view * Matrix4::from_angle_y(Deg(25.0));
+
+    let cam = Camera::standard_3d(width as f32, height as f32);
+
+    println!("View: {:?}", view);
+    println!("Proj: {:?}", cam.proj);
+
     let cam = world
         .create_entity()
-        .with(Camera::standard_3d(width as f32, height as f32))
-        .with(Transform(Matrix4::look_at(
-            [1.0, 1.0, -5.0].into(),
-            [0.0, 0.0, 0.0].into(),
-            [0.0, 1.0, 0.0].into(),
-        )))
+        .with(cam)
+        .with(Transform(view))
+        // .with(Transform(Matrix4::from_angle_z(Deg(30.0))))
         .build();
 
     world.add_resource(ActiveCamera { entity: cam });
@@ -190,7 +282,7 @@ fn run() -> Result<()> {
 
     let mut first = true;
 
-    for _ in 0..1000 {
+    for _ in 0..3000 {
         events_loop.poll_events(|_| {});
         renderer.draw(0, current, center, allocator, device, &world);
 
@@ -206,7 +298,7 @@ fn run() -> Result<()> {
     }
 
     world
-        .write::<Mesh<vulkan::Backend>>()
+        .write::<Mesh<Backend>>()
         .remove(cube)
         .unwrap()
         .dispose(allocator);

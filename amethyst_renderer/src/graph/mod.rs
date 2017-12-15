@@ -169,7 +169,15 @@ where
         // * Bind pipeline layout with descriptors sets
         {
             profile_scope!("AnyPass::prepare");
-            self.pass.prepare(through, current, &mut self.descriptors, cbuf.downgrade(), allocator, device, world);
+            self.pass.prepare(
+                through,
+                current,
+                &mut self.descriptors,
+                cbuf.downgrade(),
+                allocator,
+                device,
+                world,
+            );
         }
 
         let encoder = {

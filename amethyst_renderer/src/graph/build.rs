@@ -141,7 +141,7 @@ where
             let depth_stencil = pass.depth_stencil().clone().map(|format| {
                 let depth_stencil = depth_stencil.as_ref().unwrap();
                 assert_eq!(depth_stencil.format, format);
-                pass::Attachment {
+                let attachment = pass::Attachment {
                     format,
                     ops: pass::AttachmentOps {
                         load: if depth_stencil.clear.is_some() {
@@ -157,7 +157,9 @@ where
                     } else {
                         image::ImageLayout::General
                     }..image::ImageLayout::General,
-                }
+                };
+                println!("Init depth attachment {:?}", attachment);
+                attachment
             });
 
             let depth_stencil_ref = depth_stencil.as_ref().map(|_| {

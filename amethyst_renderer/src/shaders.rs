@@ -229,6 +229,7 @@ where
         stage: Stage,
     ) -> Result<B::ShaderModule> {
         let path = Self::get_shader_path(prefix, name, stage);
+        println!("Load shader {:?}", path);
         let code = load_shader_bytes(&path)?;
         let module = device
             .create_shader_module(&code)
@@ -261,6 +262,7 @@ impl ShaderLoader for ::metal::Backend {
         stage: Stage,
     ) -> Result<<::metal::Backend as Backend>::ShaderModule> {
         let path = Self::get_shader_path(prefix, name, stage);
+        println!("Load shader {:?}", path);
         let code = load_shader_code(&path)?;
         let version = ::metal::LanguageVersion::new(1, 2);
         let module = device
@@ -295,6 +297,7 @@ impl ShaderLoader for ::vulkan::Backend {
         stage: Stage,
     ) -> Result<<::vulkan::Backend as Backend>::ShaderModule> {
         let path = Self::get_shader_path(prefix, name, stage);
+        println!("Load shader {:?}", path);
         let code = load_shader_code(&path)?;
         let module = device
             .create_shader_module_from_glsl(&code, stage)

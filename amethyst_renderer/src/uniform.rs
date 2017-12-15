@@ -14,7 +14,7 @@ use specs::{Component, Entity, MaskedStorage, Storage};
 
 use cam::Camera;
 use epoch::{CurrentEpoch, Eh, Epoch};
-use memory::{Allocator, Buffer, Image, Result, shift_for_alignment};
+use memory::{shift_for_alignment, Allocator, Buffer, Image, Result};
 
 
 pub trait UniformCache<B: Backend, T>: Sized {
@@ -81,7 +81,10 @@ where
         if let Some(cache) = self.get_mut(entity) {
             return cache.update(value, through, current, cbuf, allocator, device);
         }
-        self.insert(entity, BasicUniformCache::new(value, through, current, cbuf, allocator, device)?);
+        self.insert(
+            entity,
+            BasicUniformCache::new(value, through, current, cbuf, allocator, device)?,
+        );
         Ok(())
     }
 }
@@ -149,7 +152,7 @@ where
     fn get_cached(&self) -> (&Buffer<B>, Range<u64>) {
         let size = shift_for_alignment(self.align, ::std::mem::size_of::<T>() as u64);
         let offset = self.offsets.back().unwrap();
-        (&self.buffer, offset.0 .. (offset.0 + size))
+        (&self.buffer, offset.0..(offset.0 + size))
     }
 }
 
@@ -187,7 +190,9 @@ where
 
         let (offset, _) = self.offsets.pop_front().unwrap();
         if self.buffer.visible() {
-            let mut writer = device.acquire_mapping_writer(self.buffer.raw(), offset..(offset + size_of::<T>() as u64)).unwrap();
+            let mut writer = device
+                .acquire_mapping_writer(self.buffer.raw(), offset..(offset + size_of::<T>() as u64))
+                .unwrap();
             writer.copy_from_slice(&[self.cached]);
             device.release_mapping_writer(writer);
         } else {
@@ -221,9 +226,7 @@ where
             false,
         )?;
 
-        let offsets = (0..span)
-            .map(|i| (i * stride, Epoch::new()))
-            .collect();
+        let offsets = (0..span).map(|i| (i * stride, Epoch::new())).collect();
         Ok((buffer, offsets))
     }
 }

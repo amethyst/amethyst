@@ -42,7 +42,9 @@ where
     }
 
     pub fn get(&mut self) -> B::DescriptorSet {
-        self.sets.pop().unwrap_or_else(|| self.pool.allocate_sets(&[&self.layout]).pop().unwrap())
+        self.sets
+            .pop()
+            .unwrap_or_else(|| self.pool.allocate_sets(&[&self.layout]).pop().unwrap())
     }
 
     pub fn put(&mut self, set: B::DescriptorSet) {
@@ -69,5 +71,3 @@ fn bindings_to_desc(bindings: &[DescriptorSetLayoutBinding]) -> Vec<DescriptorRa
     }
     desc
 }
-
-
