@@ -1,4 +1,3 @@
-pub mod build;
 pub mod pass;
 
 use std::collections::{HashMap, HashSet};
@@ -29,7 +28,7 @@ use graph::pass::AnyPass;
 use memory::{Allocator, Image};
 use shaders::ShaderManager;
 
-pub use graph::build::*;
+pub use graph::pass::build::*;
 
 
 error_chain!{

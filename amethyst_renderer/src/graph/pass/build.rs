@@ -19,15 +19,15 @@ use vertex::VertexFormat;
 #[derive(Derivative)]
 #[derivative(Debug)]
 pub struct PassBuilder<'a, B: Backend> {
-    pub(super) inputs: &'a [Format],
-    pub(super) colors: &'a [Format],
-    pub(super) depth_stencil: Option<Format>,
-    pub(super) rasterizer: pso::Rasterizer,
-    pub(super) primitive: Primitive,
-    pub(super) connects: Vec<Pin<'a, B>>,
+    pub(crate) inputs: &'a [Format],
+    pub(crate) colors: &'a [Format],
+    pub(crate) depth_stencil: Option<Format>,
+    pub(crate) rasterizer: pso::Rasterizer,
+    pub(crate) primitive: Primitive,
+    pub(crate) connects: Vec<Pin<'a, B>>,
     name: &'a str,
     #[derivative(Debug = "ignore")]
-    pub(super) maker: Box<Fn() -> Box<AnyPass<B>>>,
+    pub(crate) maker: Box<Fn() -> Box<AnyPass<B>>>,
 }
 
 #[derive(Debug)]
@@ -337,9 +337,9 @@ where
 
 #[derive(Clone, Debug)]
 pub struct Merge<'a, B: Backend> {
-    pub(super) clear_color: Option<ClearColor>,
-    pub(super) clear_depth: Option<ClearDepthStencil>,
-    pub(super) passes: &'a [&'a PassBuilder<'a, B>],
+    pub(crate) clear_color: Option<ClearColor>,
+    pub(crate) clear_depth: Option<ClearDepthStencil>,
+    pub(crate) passes: &'a [&'a PassBuilder<'a, B>],
 }
 
 impl<'a, B> Merge<'a, B>
@@ -380,8 +380,8 @@ where
 
 #[derive(Clone, Debug)]
 pub struct ColorPin<'a, B: Backend> {
-    pub(super) merge: &'a Merge<'a, B>,
-    pub(super) index: usize,
+    pub(crate) merge: &'a Merge<'a, B>,
+    pub(crate) index: usize,
 }
 
 impl<'a, B> ColorPin<'a, B>
@@ -399,7 +399,7 @@ where
 
 #[derive(Clone, Debug)]
 pub struct DepthPin<'a, B: Backend> {
-    pub(super) merge: &'a Merge<'a, B>,
+    pub(crate) merge: &'a Merge<'a, B>,
 }
 
 impl<'a, B> DepthPin<'a, B>
@@ -440,7 +440,7 @@ where
 ///
 #[derive(Debug)]
 pub struct Present<'a, B: Backend> {
-    pub(super) pin: ColorPin<'a, B>,
+    pub(crate) pin: ColorPin<'a, B>,
 }
 
 impl<'a, B> Present<'a, B>

@@ -29,8 +29,7 @@ use renderer::gfx_hal::pso::{EntryPoint, Stage};
 
 use renderer::*;
 use renderer::cam::{ActiveCamera, Camera};
-use renderer::graph::Graph;
-use renderer::graph::build::{ColorPin, Merge, PassBuilder, Present};
+use renderer::graph::{ColorPin, Graph, Merge, PassBuilder, Present};
 use renderer::hal::{Hal, HalConfig};
 use renderer::memory::Allocator;
 use renderer::mesh::{Mesh, MeshBuilder};

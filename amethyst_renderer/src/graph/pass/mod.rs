@@ -37,6 +37,7 @@ use memory::Allocator;
 use shaders::ShaderManager;
 use vertex::VertexFormat;
 
+pub mod build;
 
 /// Helper trait to declare associated types with lifetime parameter.
 pub trait Data<'a, B>

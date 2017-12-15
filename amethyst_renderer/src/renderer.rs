@@ -15,7 +15,7 @@ use winit::{EventsLoop, Window};
 use command::{CommandCenter, Execution};
 use epoch::{CurrentEpoch, Epoch};
 use graph::{Graph, SuperFrame};
-use graph::build::ColorPin;
+use graph::ColorPin;
 use memory::Allocator;
 use shaders::ShaderManager;
 
