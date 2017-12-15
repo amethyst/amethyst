@@ -148,9 +148,9 @@ where
         let Block {
             relevant,
             memory,
-            tag,
             offset,
             size,
+            ..
         } = self;
         Block {
             relevant,

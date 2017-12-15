@@ -216,7 +216,7 @@ where
         path
     }
 
-    fn get_shader_entry(stage: Stage) -> &'static str {
+    fn get_shader_entry(_stage: Stage) -> &'static str {
         "main"
     }
 

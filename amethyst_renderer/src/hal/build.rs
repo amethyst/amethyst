@@ -157,7 +157,7 @@ impl<'a> HalConfig<'a> {
             device,
             queue_groups,
             memory_types,
-            memory_heaps,
+            ..
         } = adapter.physical_device.open(requests);
         let allocator = Allocator::new(
             memory_types,

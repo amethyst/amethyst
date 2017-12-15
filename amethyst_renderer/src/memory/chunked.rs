@@ -53,7 +53,7 @@ where
         Ok(())
     }
 
-    fn alloc_no_grow(&mut self, owner: &mut A, device: &B::Device) -> Option<Block<B, usize>> {
+    fn alloc_no_grow(&mut self) -> Option<Block<B, usize>> {
         self.free.pop_front().map(|(block_index, chunk_index)| {
             let offset = self.blocks[block_index].1 + chunk_index * self.chunk_size;
             let block = Block::new(
@@ -85,15 +85,15 @@ where
         assert_eq!((1 << self.id) & reqs.type_mask, 1 << self.id);
         assert!(self.chunk_size >= reqs.size);
         assert!(self.chunk_size >= reqs.alignment);
-        if let Some(block) = self.alloc_no_grow(owner, device) {
+        if let Some(block) = self.alloc_no_grow() {
             Ok(block)
         } else {
             self.grow(owner, device, info)?;
-            Ok(self.alloc_no_grow(owner, device).unwrap())
+            Ok(self.alloc_no_grow().unwrap())
         }
     }
 
-    fn free(&mut self, owner: &mut A, device: &B::Device, block: Block<B, usize>) {
+    fn free(&mut self, _owner: &mut A, _device: &B::Device, block: Block<B, usize>) {
         assert_eq!(block.offset % self.chunk_size, 0);
         assert_eq!(block.size, self.chunk_size);
         let offset = block.offset;
@@ -153,7 +153,7 @@ where
         (bits - ((size - 1) >> self.min_size_bit).leading_zeros() as usize) as u8
     }
 
-    fn grow(&mut self, owner: &mut A, size: u8) {
+    fn grow(&mut self, size: u8) {
         let min_size_bit = self.min_size_bit;
         let chunk_size = |index: u8| 1u64 << (min_size_bit + index as u8);
         let chunks_per_block = 1 << self.chunk_size_bit;
@@ -183,7 +183,7 @@ where
         reqs: Requirements,
     ) -> Result<Block<B, usize>> {
         let index = self.pick_node(reqs.size);
-        self.grow(owner, index + 1);
+        self.grow(index + 1);
         self.nodes[index as usize].alloc(owner, device, info, reqs)
     }
     fn free(&mut self, owner: &mut A, device: &B::Device, block: Block<B, usize>) {

@@ -92,7 +92,6 @@ where
     /// Creates a new `TextureBuilder` with the given raw texture data.
     pub fn new(data: D) -> Self {
         let len = data.as_ref().len();
-        let bytes = len * size_of::<P>();
         TextureBuilder {
             image: ImageInfo {
                 kind: Kind::D1(len as u16),
@@ -129,7 +128,7 @@ where
     }
 
     /// Sets the number of mipmap levels to generate.
-    pub fn mip_levels(mut self, val: u8) -> Self {
+    pub fn mip_levels(mut self, _val: u8) -> Self {
         unimplemented!()
     }
 

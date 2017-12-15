@@ -193,7 +193,7 @@ where
             .draw_inline(through, &self.pipeline_layout, encoder, world);
     }
 
-    fn dispose(self, allocator: &mut Allocator<B>, device: &B::Device) {
+    fn dispose(self, _allocator: &mut Allocator<B>, device: &B::Device) {
         // self.pass.dispose(allocator, device);
         match self.framebuffer {
             SuperFramebuffer::Owned(framebuffers) => for framebuffer in framebuffers {
@@ -341,7 +341,7 @@ where
         present: ColorPin<B>,
         backbuffer: &Backbuffer<B>,
         color: Format,
-        depth_stencil: Option<Format>,
+        _depth_stencil: Option<Format>,
         extent: Extent,
         device: &B::Device,
         allocator: &mut Allocator<B>,
@@ -613,7 +613,7 @@ where
             image::AaMode::Single,
         );
         let start = views.len();
-        for i in 0..frames {
+        for _ in 0..frames {
             let image = allocator.create_image(
                 device,
                 kind,

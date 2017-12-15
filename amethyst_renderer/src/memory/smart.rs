@@ -45,7 +45,7 @@ where
         let (index, allocator) = self.allocators
             .iter_mut()
             .enumerate()
-            .find(|&(index, ref allocator)| {
+            .find(|&(_, ref allocator)| {
                 let memory_type = allocator.memory_type();
                 ((1 << memory_type.id) & reqs.type_mask) == (1 << memory_type.id)
                     && memory_type.properties.contains(prop)

@@ -52,7 +52,7 @@ where
 
     fn dispose(self, owner: &mut A, device: &B::Device) {
         assert!(self.is_unused());
-        let ArenaNode { block, used, freed } = self;
+        let ArenaNode { block, .. } = self;
         owner.free(device, block);
     }
 }

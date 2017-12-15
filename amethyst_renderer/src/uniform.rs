@@ -169,7 +169,6 @@ where
         C: Supports<Transfer>,
     {
         use std::mem::{replace, size_of};
-        let stride = Self::stride(self.align);
         if self.offsets
             .front()
             .map(|&(_, through)| through >= current.now())
