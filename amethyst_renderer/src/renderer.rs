@@ -1,299 +1,199 @@
-use config::DisplayConfig;
-use error::{Error, Result};
-use fnv::FnvHashMap as HashMap;
-use gfx::memory::Pod;
-use mesh::{Mesh, MeshBuilder, VertexDataSet};
-use pipe::{ColorBuffer, DepthBuffer, PipelineBuild, PipelineData, PolyPipeline, Target,
-           TargetBuilder};
-use tex::{Texture, TextureBuilder};
-use types::{ColorFormat, DepthFormat, Device, Encoder, Factory, Window};
-use winit::{self, EventsLoop, Window as WinitWindow, WindowBuilder};
+//! Encapsulation for external rendering resources.
+//! 
 
-/// Generic renderer.
-pub struct Renderer {
-    /// The gfx factory used for creation of buffers.
-    pub factory: Factory,
+use std::fmt;
 
-    device: Device,
-    encoder: Encoder,
-    main_target: Target,
-    window: Window,
-    events: EventsLoop,
-    cached_size: (u32, u32),
+use gfx_hal::{Backend, Device};
+use gfx_hal::command::{Rect, Viewport};
+use gfx_hal::device::Extent;
+use gfx_hal::format::Format;
+use gfx_hal::pool::CommandPool;
+use gfx_hal::queue::{CommandQueue, Graphics, Supports, Transfer};
+use gfx_hal::window::{Backbuffer, Swapchain};
+
+use specs::World;
+
+use winit::{EventsLoop, Window};
+
+use command::{CommandCenter, Execution};
+use epoch::{CurrentEpoch, Epoch};
+use graph::{Graph, SuperFrame};
+use graph::ColorPin;
+use memory::Allocator;
+use shaders::ShaderManager;
+
+#[derive(Derivative)]
+#[derivative(Debug)]
+pub struct RendererConfig<'a> {
+    pub title: &'a str,
+    pub width: u16,
+    pub height: u16,
+
+    #[derivative(Debug = "ignore")]
+    pub events: &'a EventsLoop,
 }
 
-impl Renderer {
-    /// Creates a `Renderer` with default window settings.
-    pub fn new() -> Result<Renderer> {
-        Self::build().build()
-    }
+#[derive(Derivative)]
+#[derivative(Debug)]
+pub struct Renderer<B: Backend> {
+    #[derivative(Debug(format_with = "fmt_window"))]
+    pub window: Window,
+    pub format: Format,
 
-    /// Creates a new `RendererBuilder`, equivalent to `RendererBuilder::new()`.
-    pub fn build_with_loop(el: EventsLoop) -> RendererBuilder {
-        RendererBuilder::new(el)
-    }
-
-    /// Creates a new `RendererBuilder`, equivalent to `RendererBuilder::new()`.
-    pub fn build() -> RendererBuilder {
-        Self::build_with_loop(EventsLoop::new())
-    }
-
-    /// Builds a new mesh from the given vertices.
-    pub fn create_mesh<T>(&mut self, mb: MeshBuilder<T>) -> Result<Mesh>
-    where
-        T: VertexDataSet,
-    {
-        mb.build(&mut self.factory)
-    }
-
-    /// Builds a new texture resource.
-    pub fn create_texture<D, T>(&mut self, tb: TextureBuilder<D, T>) -> Result<Texture>
-    where
-        D: AsRef<[T]>,
-        T: Pod + Copy,
-    {
-        tb.build(&mut self.factory)
-    }
-
-    /// Builds a new renderer pipeline.
-    pub fn create_pipe<B, P>(&mut self, pb: B) -> Result<P>
-    where
-        P: PolyPipeline,
-        B: PipelineBuild<Pipeline = P>,
-    {
-        pb.build(&mut self.factory, &self.main_target)
-    }
-
-    /// Draws a scene with the given pipeline.
-    pub fn draw<'a, P>(&mut self, pipe: &mut P, data: <P as PipelineData<'a>>::Data)
-    where
-        P: PolyPipeline,
-    {
-        use gfx::Device;
-        #[cfg(feature = "opengl")]
-        use glutin::GlContext;
-
-        if let Some(size) = self.window().get_inner_size_pixels() {
-            if size != self.cached_size {
-                self.cached_size = size;
-                self.resize(pipe, size);
-            }
-        }
-
-        pipe.apply(&mut self.encoder, self.factory.clone(), data);
-        self.encoder.flush(&mut self.device);
-        self.device.cleanup();
-
-        #[cfg(feature = "opengl")]
-        self.window
-            .swap_buffers()
-            .expect("OpenGL context has been lost");
-    }
-
-    /// Retrieve a mutable borrow of the events loop
-    pub fn events_mut(&mut self) -> &mut EventsLoop {
-        &mut self.events
-    }
-
-    /// Resize the targets associated with this renderer and pipeline.
-    pub fn resize<P: PolyPipeline>(&mut self, pipe: &mut P, new_size: (u32, u32)) {
-        self.main_target.resize_main_target(&self.window);
-        let mut targets = HashMap::default();
-        targets.insert("".to_string(), self.main_target.clone());
-        for (key, value) in pipe.targets().iter().filter(|&(k, _)| !k.is_empty()) {
-            let (key, target) = TargetBuilder::new(key.clone())
-                .with_num_color_bufs(value.color_bufs().len())
-                .with_depth_buf(value.depth_buf().is_some())
-                .build(&mut self.factory, new_size)
-                .unwrap();
-            targets.insert(key, target);
-        }
-        pipe.new_targets(targets);
-    }
-
-    /// Retrieves an immutable borrow of the window.
-    ///
-    /// No operations require a mutable borrow as of 2017-10-02
-    #[cfg(feature = "opengl")]
-    pub fn window(&self) -> &WinitWindow {
-        self.window.window()
-    }
-
-    #[cfg(feature = "metal")]
-    #[cfg(feature = "vulkan")]
-    pub fn window(&self) -> &WinitWindow {
-        &self.window.0
-    }
-
-    #[cfg(feature = "d3d11")]
-    pub fn window(&self) -> &WinitWindow {
-        &*self.window.0
-    }
+    #[derivative(Debug = "ignore")]
+    pub surface: B::Surface,
+    #[derivative(Debug = "ignore")]
+    pub swapchain: B::Swapchain,
+    pub backbuffer: Backbuffer<B>,
+    pub acquire: B::Semaphore,
+    pub release: B::Semaphore,
+    pub start_epoch: Epoch,
+    pub graphs: Vec<Graph<B>>, // Move it to `Hal`.
 }
 
-impl Drop for Renderer {
-    fn drop(&mut self) {
-        use gfx::Device;
-        self.device.cleanup();
-    }
+
+fn fmt_window(window: &Window, fmt: &mut fmt::Formatter) -> fmt::Result {
+    write!(fmt, "Window({:?})", window.id())
 }
 
-/// Constructs a new `Renderer`.
-pub struct RendererBuilder {
-    config: DisplayConfig,
-    events: EventsLoop,
-    winit_builder: WindowBuilder,
-}
-
-impl RendererBuilder {
-    /// Creates a new `RendererBuilder`.
-    pub fn new(el: EventsLoop) -> Self {
-        RendererBuilder {
-            config: DisplayConfig::default(),
-            events: el,
-            winit_builder: WindowBuilder::new().with_title("Amethyst"),
-        }
-    }
-
-    /// Applies configuration from `Config`
-    pub fn with_config(&mut self, config: DisplayConfig) -> &mut Self {
-        self.config = config;
-        let mut wb = self.winit_builder.clone();
-        wb = wb.with_title(self.config.title.clone())
-            .with_visibility(self.config.visibility);
-
-        if self.config.fullscreen {
-            wb = wb.with_fullscreen(winit::get_primary_monitor());
-        }
-        match self.config.dimensions {
-            Some((width, height)) => {
-                wb = wb.with_dimensions(width, height);
-            }
-            _ => (),
-        }
-        match self.config.min_dimensions {
-            Some((width, height)) => {
-                wb = wb.with_min_dimensions(width, height);
-            }
-            _ => (),
-        }
-        match self.config.max_dimensions {
-            Some((width, height)) => {
-                wb = wb.with_max_dimensions(width, height);
-            }
-            _ => (),
-        }
-        self.winit_builder = wb;
-        self
-    }
-
-    /// Applies window settings from the given `glutin::WindowBuilder`.
-    pub fn use_winit_builder(&mut self, wb: WindowBuilder) -> &mut Self {
-        self.winit_builder = wb;
-        self
-    }
-
-    /// Consumes the builder and creates the new `Renderer`.
-    pub fn build(self) -> Result<Renderer> {
-        let Backend(device, mut factory, main_target, window) =
-            init_backend(self.winit_builder.clone(), &self.events, &self.config)?;
-
-        let cached_size = window
-            .get_inner_size_pixels()
-            .expect("Unable to fetch window size, as the window went away!");
-        let encoder = factory.create_command_buffer().into();
-        Ok(Renderer {
+impl<B> Renderer<B>
+where
+    B: Backend,
+{
+    pub fn draw(
+        &mut self,
+        graph: usize,
+        current: &mut CurrentEpoch,
+        center: &mut CommandCenter<B>,
+        allocator: &mut Allocator<B>,
+        device: &B::Device,
+        world: &World,
+    ) {
+        let start_epoch = self.start_epoch;
+        center.execute_graphics(
+            Draw {
+                allocator,
+                renderer: self,
+                world,
+                graph,
+            },
+            start_epoch,
+            current,
             device,
-            encoder,
-            factory,
-            main_target,
-            window,
-            events: self.events,
-            cached_size,
-        })
+        );
+        self.start_epoch = current.now() + 1;
+    }
+
+    pub fn add_graph(
+        &mut self,
+        present: ColorPin<B>,
+        device: &B::Device,
+        allocator: &mut Allocator<B>,
+        shaders: &mut ShaderManager<B>,
+    ) -> ::graph::Result<usize> {
+        let (width, height) = self.window.get_inner_size_pixels().unwrap();
+        let graph = Graph::build(
+            present,
+            &self.backbuffer,
+            self.format,
+            None,
+            Extent {
+                width,
+                height,
+                depth: 1,
+            },
+            device,
+            allocator,
+            shaders,
+        )?;
+
+        self.graphs.push(graph);
+        Ok(self.graphs.len() - 1)
+    }
+
+    pub fn dispose(self, allocator: &mut Allocator<B>, device: &B::Device) {
+        for graph in self.graphs {
+            graph.dispose(allocator, device);
+        }
+        device.destroy_semaphore(self.acquire);
+        device.destroy_semaphore(self.release);
+    }
+
+    fn get_frames_number(&self) -> usize {
+        match self.backbuffer {
+            Backbuffer::Images(ref images) => images.len(),
+            Backbuffer::Framebuffer(_) => 1,
+        }
     }
 }
 
-/// Represents a graphics backend for the renderer.
-struct Backend(pub Device, pub Factory, pub Target, pub Window);
-
-/// Creates the Direct3D 11 backend.
-#[cfg(all(feature = "d3d11", target_os = "windows"))]
-fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> Result<Backend> {
-    use gfx_window_dxgi as win;
-
-    // FIXME: vsync + multisampling from config
-    let (win, dev, mut fac, color) = win::init::<ColorFormat>(wb, el).unwrap();
-    let dev = gfx_device_dx11::Deferred::from(dev);
-
-    let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
-    let (w, h) = (size.0 as u16, size.1 as u16);
-    let depth = fac.create_depth_stencil_view_only::<DepthFormat>(w, h)?;
-    let main_target = Target::new(
-        ColorBuffer {
-            as_input: None,
-            as_output: color,
-        },
-        DepthBuffer {
-            as_input: None,
-            as_output: depth,
-        },
-        size,
-    );
-
-    Ok(Backend(dev, fac, main_target, win))
+struct Draw<'a, B: Backend> {
+    allocator: &'a mut Allocator<B>,
+    renderer: &'a mut Renderer<B>,
+    world: &'a World,
+    graph: usize,
 }
 
-#[cfg(all(feature = "metal", target_os = "macos"))]
-fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> Result<Backend> {
-    use gfx_window_metal as win;
+impl<'a, B, C> Execution<B, C> for Draw<'a, B>
+where
+    B: Backend,
+    C: Supports<Graphics> + Supports<Transfer>,
+{
+    fn execute(
+        self,
+        queue: &mut CommandQueue<B, C>,
+        pools: &mut [CommandPool<B, C>],
+        current: &CurrentEpoch,
+        fence: &B::Fence,
+        device: &B::Device,
+    ) -> Epoch {
+        use gfx_hal::window::FrameSync;
 
-    // FIXME: vsync + multisampling from config
-    let (win, dev, mut fac, color) = win::init::<ColorFormat>(wb, el).unwrap();
+        let frames = self.renderer.get_frames_number();
+        let ref mut graph = self.renderer.graphs[self.graph];
+        let ref mut swapchain = self.renderer.swapchain;
+        let ref backbuffer = self.renderer.backbuffer;
+        let (width, height) = self.renderer.window.get_inner_size_pixels().unwrap();
+        let viewport = Viewport {
+            rect: Rect {
+                x: 0,
+                y: 0,
+                w: width as _,
+                h: height as _,
+            },
+            depth: 0.0..1.0,
+        };
 
-    let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
-    let (w, h) = (size.0 as u16, size.1 as u16);
-    let depth = fac.create_depth_stencil_view_only::<DepthFormat>(w, h)?;
-    let main_target = Target::new(
-        ColorBuffer {
-            as_input: None,
-            as_output: color,
-        },
-        DepthBuffer {
-            as_input: None,
-            as_output: depth,
-        },
-        size,
-    );
+        let ref world = *self.world;
 
-    Ok(Backend(dev, fac, main_target, win))
-}
 
-/// Creates the OpenGL backend.
-#[cfg(feature = "opengl")]
-fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> Result<Backend> {
-    use gfx_window_glutin as win;
-    use glutin::{self, GlProfile, GlRequest};
+        // Start frame acquisition
+        let frame = SuperFrame::new(
+            backbuffer,
+            swapchain.acquire_frame(FrameSync::Semaphore(&self.renderer.acquire)),
+        );
 
-    let ctx = glutin::ContextBuilder::new()
-        .with_multisampling(config.multisampling)
-        .with_vsync(config.vsync)
-        .with_gl_profile(GlProfile::Core)
-        .with_gl(GlRequest::Latest);
+        // This execuiton needs to finsish before we will draw same frame again.
+        // If there is only one frame this execution have to finish in current epoch
+        let finish = current.now() + (frames - 1) as u64;
+        graph.draw_inline(
+            queue,
+            &mut pools[0],
+            frame,
+            &self.renderer.acquire,
+            &self.renderer.release,
+            self.allocator,
+            device,
+            viewport,
+            world,
+            fence,
+            finish,
+            current,
+        );
 
-    let (win, dev, fac, color, depth) = win::init::<ColorFormat, DepthFormat>(wb, ctx, el);
-    let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
-    let main_target = Target::new(
-        ColorBuffer {
-            as_input: None,
-            as_output: color,
-        },
-        DepthBuffer {
-            as_input: None,
-            as_output: depth,
-        },
-        size,
-    );
-
-    Ok(Backend(dev, fac, main_target, win))
+        // Present queue
+        profile_scope!("Graph::draw :: present");
+        swapchain.present(queue, &[&self.renderer.release]);
+        finish
+    }
 }

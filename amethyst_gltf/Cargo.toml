@@ -15,10 +15,10 @@ appveyor = { repository = "amethyst/amethyst" }
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
-amethyst_assets = { path = "../amethyst_assets/", version = "0.2.0" }
-amethyst_animation = { path = "../amethyst_animation/", version = "0.1.0" }
-amethyst_renderer = { path = "../amethyst_renderer/", version = "0.5.0" }
-amethyst_core = { path = "../amethyst_core/", version = "0.1.0" }
+amethyst_assets = { path = "../amethyst_assets/", version = "0.2" }
+amethyst_animation = { path = "../amethyst_animation/", version = "0.1" }
+amethyst_renderer = { path = "../amethyst_renderer/", version = "0.6" }
+amethyst_core = { path = "../amethyst_core/", version = "0.1" }
 base64 = "0.7"
 fnv = "1"
 gltf = "0.9"
