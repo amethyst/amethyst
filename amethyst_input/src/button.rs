@@ -8,10 +8,8 @@ use super::local_virtual_key_code::LocalVirtualKeyCode;
 pub enum Button {
     /// Virtual Keyboard keys, use this when the letter on the key matters
     /// more than the position of the key.
-    Key(
-        #[serde(with = "LocalVirtualKeyCode")]
-        VirtualKeyCode,
-    ),
+    Key(#[serde(with = "LocalVirtualKeyCode")]
+    VirtualKeyCode),
 
     /// Scan code from keyboard, use this when the position of the key matters
     /// more than letter on the key.

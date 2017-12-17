@@ -75,8 +75,19 @@ impl Pass for DrawFlatSeparate {
         encoder: &mut Encoder,
         effect: &mut Effect,
         _factory: Factory,
-        (active, camera, mesh_storage, tex_storage, sprite_sheet_storage, material_defaults, entities, mesh, material, material_animation, global):
-        <Self as PassData<'b>>::Data,
+        (
+            active,
+            camera,
+            mesh_storage,
+            tex_storage,
+            sprite_sheet_storage,
+            material_defaults,
+            entities,
+            mesh,
+            material,
+            material_animation,
+            global,
+        ): <Self as PassData<'b>>::Data,
     ) {
         let camera: Option<(&Camera, &Transform)> = active
             .and_then(|a| {
@@ -103,33 +114,29 @@ impl Pass for DrawFlatSeparate {
             }
 
             let (tex_x, tex_y, tex_w, tex_h) = material_animation
-                                                .get(entity)
-                                                .and_then(|anim| anim.albedo_animation.as_ref())
-                                                .and_then(|anim| {
-                                                    let frame = anim.current_frame(&sprite_sheet_storage);
-                                                    frame.map(|f| (f.x, f.y, f.width, f.height))
-                                                })
-                                                .unwrap_or((0., 0., 1., 1.));
+                .get(entity)
+                .and_then(|anim| anim.albedo_animation.as_ref())
+                .and_then(|anim| {
+                    let frame = anim.current_frame(&sprite_sheet_storage);
+                    frame.map(|f| (f.x, f.y, f.width, f.height))
+                })
+                .unwrap_or((0., 0., 1., 1.));
 
             let vertex_args = camera
                 .as_ref()
-                .map(|&(ref cam, ref transform)| {
-                    VertexArgs {
-                        proj: cam.proj.into(),
-                        view: transform.0.invert().unwrap().into(),
-                        model: *global.as_ref(),
-                        tex_xy: [tex_x, tex_y],
-                        tex_wh: [tex_w, tex_h],
-                    }
+                .map(|&(ref cam, ref transform)| VertexArgs {
+                    proj: cam.proj.into(),
+                    view: transform.0.invert().unwrap().into(),
+                    model: *global.as_ref(),
+                    tex_xy: [tex_x, tex_y],
+                    tex_wh: [tex_w, tex_h],
                 })
-                .unwrap_or_else(|| {
-                    VertexArgs {
-                        proj: Matrix4::one().into(),
-                        view: Matrix4::one().into(),
-                        model: *global.as_ref(),
-                        tex_xy: [tex_x, tex_y],
-                        tex_wh: [tex_w, tex_h],
-                    }
+                .unwrap_or_else(|| VertexArgs {
+                    proj: Matrix4::one().into(),
+                    view: Matrix4::one().into(),
+                    model: *global.as_ref(),
+                    tex_xy: [tex_x, tex_y],
+                    tex_wh: [tex_w, tex_h],
                 });
 
             let albedo = tex_storage

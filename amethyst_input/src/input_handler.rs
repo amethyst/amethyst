@@ -281,8 +281,9 @@ where
     where
         AC: Borrow<T>,
     {
-        self.bindings.actions.get(action).map(|ref buttons| {
-            buttons.iter().any(|&b| self.button_is_down(b))
-        })
+        self.bindings
+            .actions
+            .get(action)
+            .map(|ref buttons| buttons.iter().any(|&b| self.button_is_down(b)))
     }
 }

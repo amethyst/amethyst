@@ -4,7 +4,6 @@ use amethyst_assets::{Asset, AssetStorage, Handle};
 use fnv::FnvHashMap as HashMap;
 use specs::VecStorage;
 
-
 /// An asset handle to sprite sheet metadata.
 pub type SpriteSheetDataHandle = Handle<SpriteSheetData>;
 
@@ -70,17 +69,22 @@ impl SpriteSheetAnimation {
     /// existence.
     /// - An animation with the name from `starting_animation` wasn't found in `sprite_sheet_data`.
     /// - The `sprite_sheet_data` handle wasn't made with the `sheet_storage` AssetStorage.
-    pub fn new(playback_speed: f32, sprite_sheet_data: SpriteSheetDataHandle, sheet_storage: &AssetStorage<SpriteSheetData>, starting_animation: &str) -> Option<SpriteSheetAnimation> {
-        sheet_storage.get(&sprite_sheet_data).and_then(|data| data.animation_mapping.get(starting_animation).map(|i| *i)).map(|current_animation| {
-            SpriteSheetAnimation {
+    pub fn new(
+        playback_speed: f32,
+        sprite_sheet_data: SpriteSheetDataHandle,
+        sheet_storage: &AssetStorage<SpriteSheetData>,
+        starting_animation: &str,
+    ) -> Option<SpriteSheetAnimation> {
+        sheet_storage
+            .get(&sprite_sheet_data)
+            .and_then(|data| data.animation_mapping.get(starting_animation).map(|i| *i))
+            .map(|current_animation| SpriteSheetAnimation {
                 playback_speed,
                 sprite_sheet_data,
                 current_animation,
                 current_frame: 0,
                 frame_timer: Duration::from_secs(0),
-            }
-        })
-
+            })
     }
 
     /// Sets the animation to the named case-sensitive animation from the `SpriteSheetData`.
@@ -89,8 +93,14 @@ impl SpriteSheetAnimation {
     ///
     /// If the name provided can't be found in the `SpriteSheetData` for this component then this
     /// will return `Err` otherwise it will return `Ok`.
-    pub fn set_animation(&mut self, sheet_storage: &AssetStorage<SpriteSheetData>, animation: &str) -> Result<(), ()> {
-        let animation = sheet_storage.get(&self.sprite_sheet_data).and_then(|data| data.animation_mapping.get(animation).map(|i| *i));
+    pub fn set_animation(
+        &mut self,
+        sheet_storage: &AssetStorage<SpriteSheetData>,
+        animation: &str,
+    ) -> Result<(), ()> {
+        let animation = sheet_storage
+            .get(&self.sprite_sheet_data)
+            .and_then(|data| data.animation_mapping.get(animation).map(|i| *i));
         match animation {
             Some(animation) => {
                 self.current_animation = animation;
@@ -98,9 +108,7 @@ impl SpriteSheetAnimation {
                 self.frame_timer = Duration::from_secs(0);
                 Ok(())
             }
-            None => {
-                Err(())
-            }
+            None => Err(()),
         }
     }
 
@@ -113,7 +121,9 @@ impl SpriteSheetAnimation {
     /// invalid.  Because handles take at least one frame to become valid after being loaded the
     /// handle is the most likely point of failure.
     pub fn current_frame(&self, sheet_storage: &AssetStorage<SpriteSheetData>) -> Option<Frame> {
-        sheet_storage.get(&self.sprite_sheet_data).map(|data| data.frames[data.animations[self.current_animation][self.current_frame]].clone())
+        sheet_storage.get(&self.sprite_sheet_data).map(|data| {
+            data.frames[data.animations[self.current_animation][self.current_frame]].clone()
+        })
     }
 }
 

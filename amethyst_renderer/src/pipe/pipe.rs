@@ -9,7 +9,6 @@ use error::{Error, Result};
 use fnv::FnvHashMap as HashMap;
 use types::{Encoder, Factory};
 
-
 /// Defines how the rendering pipeline should be configured.
 #[derive(Clone, Debug)]
 pub struct Pipeline<L> {
@@ -198,7 +197,6 @@ impl<Q> PipelineBuilder<Queue<Q>> {
         }
     }
 }
-
 
 impl<Q> PipelineBuilder<Q> {
     /// Constructs a new render target for this pipeline.

@@ -174,7 +174,6 @@ impl<'a> System<'a> for UiSystem {
             });
         }
 
-
         for &mut (ref mut t, entity) in &mut self.tab_order_cache.cache {
             *t = transform.get(entity).unwrap().tab_order;
         }
@@ -214,7 +213,6 @@ impl<'a> System<'a> for UiSystem {
                 }
                 ret
             });
-
 
         for text in (&mut text).join() {
             if (*text.text).chars().any(|c| is_combining_mark(c)) {
@@ -291,7 +289,7 @@ impl<'a> System<'a> for UiSystem {
                                 .next()
                         });
                         if let Some((ref mut focused_text, ref mut focused_edit)) =
-                            focused_text_edit 
+                            focused_text_edit
                         {
                             use std::f32::NAN;
 
@@ -306,8 +304,7 @@ impl<'a> System<'a> for UiSystem {
                                     let pos = g.position();
                                     // Use Pythagorean theorem to compute distance
                                     if ((x - mouse_x).powi(2) + (y - mouse_y).powi(2)).sqrt()
-                                        < ((pos.x - mouse_x).powi(2)
-                                            + (pos.y - mouse_y).powi(2))
+                                        < ((pos.x - mouse_x).powi(2) + (pos.y - mouse_y).powi(2))
                                             .sqrt()
                                     {
                                         (index, (x, y))
@@ -316,7 +313,8 @@ impl<'a> System<'a> for UiSystem {
                                     }
                                 })
                                 .0
-                                as isize - focused_edit.cursor_position;
+                                as isize
+                                - focused_edit.cursor_position;
                             // The end of the text, while not a glyph, is still something
                             // you'll likely want to click your cursor to, so if the cursor is
                             // near the end of the text, check if we should put it at the end
@@ -324,15 +322,10 @@ impl<'a> System<'a> for UiSystem {
                             if focused_edit.cursor_position + focused_edit.highlight_vector + 1
                                 == focused_text.cached_glyphs.len() as isize
                             {
-                                if let Some(last_glyph) =
-                                    focused_text.cached_glyphs.iter().last()
-                                {
+                                if let Some(last_glyph) = focused_text.cached_glyphs.iter().last() {
                                     if (last_glyph.position().x - mouse_x).abs()
                                         > ((last_glyph.position().x
-                                            + last_glyph
-                                                .unpositioned()
-                                                .h_metrics()
-                                                .advance_width)
+                                            + last_glyph.unpositioned().h_metrics().advance_width)
                                             - mouse_x)
                                             .abs()
                                     {

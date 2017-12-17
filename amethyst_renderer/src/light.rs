@@ -174,7 +174,6 @@ impl From<SunLight> for Light {
     }
 }
 
-
 impl Component for Light {
     type Storage = DenseVecStorage<Self>;
 }

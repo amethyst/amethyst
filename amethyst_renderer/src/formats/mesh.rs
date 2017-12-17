@@ -82,9 +82,7 @@ impl SimpleFormat<Mesh> for ObjFormat {
             .map_err(Into::into)
             .and_then(|string| {
                 parse(string)
-                    .map_err(|e| {
-                        Error::from(format!("In line {}: {:?}", e.line_number, e.message))
-                    })
+                    .map_err(|e| Error::from(format!("In line {}: {:?}", e.line_number, e.message)))
                     .chain_err(|| "Failed to parse OBJ")
             })
             .map(|set| from_data(set).into())

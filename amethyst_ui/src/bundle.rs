@@ -37,11 +37,13 @@ impl<'a, 'b> ECSBundle<'a, 'b> for UiBundle {
         let reader = world
             .read_resource::<EventChannel<Event>>()
             .register_reader();
-        Ok(
-            builder
-                .add(Processor::<FontAsset>::new(), "font_processor", &[])
-                .add(UiSystem::new(reader.clone()), "ui_system", &["font_processor"])
-                .add(ResizeSystem::new(reader), "ui_resize_system", &[]),
-        )
+        Ok(builder
+            .add(Processor::<FontAsset>::new(), "font_processor", &[])
+            .add(
+                UiSystem::new(reader.clone()),
+                "ui_system",
+                &["font_processor"],
+            )
+            .add(ResizeSystem::new(reader), "ui_resize_system", &[]))
     }
 }

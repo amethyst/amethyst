@@ -28,8 +28,7 @@ impl AudioEmitter {
     /// Plays an audio source from this emitter.
     pub fn play(&mut self, source: &Source) -> Result<(), DecoderError> {
         self.sound_queue
-            .push(Decoder::new(Cursor::new(source.clone()))
-                .map_err(|_| DecoderError)?);
+            .push(Decoder::new(Cursor::new(source.clone())).map_err(|_| DecoderError)?);
         Ok(())
     }
 

@@ -269,8 +269,6 @@ impl<Q> StageBuilder<Queue<Q>> {
     }
 }
 
-
-
 pub struct CompilePass<'a> {
     factory: &'a mut Factory,
     target: &'a Target,
