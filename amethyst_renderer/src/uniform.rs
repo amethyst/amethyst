@@ -1,3 +1,8 @@
+//!
+//! Semi-automatic tracking of uniform caches and updates.
+//! 
+
+
 use std::collections::VecDeque;
 use std::ops::{DerefMut, Range};
 

@@ -1,3 +1,7 @@
+//!
+//! Memory management for rendering.
+//! 
+
 use std::cmp::Eq;
 use std::fmt::Debug;
 use std::ops::{Add, Range, Rem, Sub};

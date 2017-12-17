@@ -1,3 +1,7 @@
+//!
+//! Manage vertex and index buffers of single objects with ease.
+//! 
+
 use std::marker::PhantomData;
 use std::mem::size_of;
 

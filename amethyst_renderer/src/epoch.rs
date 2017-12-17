@@ -1,3 +1,7 @@
+//!
+//! Lifetime-like runtime borrow checker.
+//! 
+
 use std::cmp::min;
 use std::collections::VecDeque;
 use std::ops::{Add, AddAssign, Deref};

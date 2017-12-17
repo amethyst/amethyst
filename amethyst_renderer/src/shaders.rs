@@ -1,3 +1,8 @@
+//!
+//! Loading and caching of shader-modules by name.
+//! 
+
+
 use std::collections::hash_map::{Entry, HashMap};
 use std::path::{Path, PathBuf};
 

@@ -1,3 +1,7 @@
+//!
+//! Implements `Component` for types in rendering engine.
+//! 
+
 use gfx_hal::Backend;
 use specs::{Component, DenseVecStorage};
 

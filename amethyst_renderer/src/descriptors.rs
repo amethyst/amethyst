@@ -1,3 +1,8 @@
+//!
+//! Everything you want to do with descriptors but afraid to do it manually.
+//! 
+
+
 use gfx_hal::{Backend, Device};
 use gfx_hal::pso::{DescriptorPool, DescriptorRangeDesc, DescriptorSetLayoutBinding, DescriptorType};
 

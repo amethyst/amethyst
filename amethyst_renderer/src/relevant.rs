@@ -1,3 +1,6 @@
+//! Defines `Relevant` type to use in types that requires
+//! custom dealocation.
+
 /// Values of this type can't be automatically dropped.
 /// If struct or enum has field with type `Relevant`,
 /// it can't be automatically dropped either. And so considered relevant too.

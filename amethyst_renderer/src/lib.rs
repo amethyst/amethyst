@@ -36,7 +36,6 @@ pub extern crate thread_profiler;
 
 pub mod cam;
 pub mod command;
-mod components;
 pub mod epoch;
 pub mod descriptors;
 pub mod hal;
@@ -50,4 +49,6 @@ pub mod upload;
 pub mod texture;
 pub mod vertex;
 pub mod uniform;
-pub mod utils;
+
+mod components;
+mod utils;

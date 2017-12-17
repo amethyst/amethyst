@@ -1,3 +1,7 @@
+//!
+//! Simplifies loading of data to the buffer and images
+//! 
+
 use gfx_hal::{Backend, Device};
 use gfx_hal::buffer::Usage as BufferUsage;
 use gfx_hal::command::{BufferCopy, BufferImageCopy, CommandBuffer};

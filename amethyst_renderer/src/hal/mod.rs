@@ -1,5 +1,6 @@
 //!
-//! Defines `Hal` - top-level structure that encapsulates all pieces of rendering engine.
+//! Top-level structure that encapsulates all pieces of rendering engine.
+//! `HalConfig` to instantiate `Hal`.
 //!
 
 mod build;

@@ -1,3 +1,6 @@
+//! Encapsulation for external rendering resources.
+//! 
+
 use std::fmt;
 
 use gfx_hal::{Backend, Device};
@@ -45,7 +48,7 @@ pub struct Renderer<B: Backend> {
     pub acquire: B::Semaphore,
     pub release: B::Semaphore,
     pub start_epoch: Epoch,
-    pub graphs: Vec<Graph<B>>,
+    pub graphs: Vec<Graph<B>>, // Move it to `Hal`.
 }
 
 
