@@ -103,6 +103,8 @@ path = "examples/pong_tutorial_01/main.rs"
 [[example]]
 name = "pong_tutorial_02"
 path = "examples/pong_tutorial_02/main.rs"
+
+[[example]]
 name = "hal"
 path = "examples/hal/main.rs"
 
