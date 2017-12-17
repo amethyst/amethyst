@@ -6,16 +6,17 @@ use amethyst_assets::AssetStorage;
 use amethyst_core::cgmath::{Matrix4, One, SquareMatrix};
 use amethyst_core::transform::Transform;
 use gfx::pso::buffer::ElemStride;
-use specs::{Fetch, Join, ReadStorage};
+use specs::{Entities, Fetch, Join, ReadStorage};
 
 use super::*;
 use cam::{ActiveCamera, Camera};
 use error::Result;
 use mesh::{Mesh, MeshHandle};
-use mtl::{Material, MaterialDefaults};
+use mtl::{Material, MaterialAnimation, MaterialDefaults};
 use pipe::{DepthMode, Effect, NewEffect};
 use pipe::pass::{Pass, PassData};
 use tex::Texture;
+use tex_animation::SpriteSheetData;
 use types::{Encoder, Factory};
 use vertex::{Position, Query, TexCoord};
 
@@ -47,9 +48,12 @@ where
         ReadStorage<'a, Camera>,
         Fetch<'a, AssetStorage<Mesh>>,
         Fetch<'a, AssetStorage<Texture>>,
+        Fetch<'a, AssetStorage<SpriteSheetData>>,
         Fetch<'a, MaterialDefaults>,
+        Entities<'a>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
+        ReadStorage<'a, MaterialAnimation>,
         ReadStorage<'a, Transform>,
     );
 }
@@ -74,16 +78,8 @@ where
         encoder: &mut Encoder,
         effect: &mut Effect,
         _factory: Factory,
-        (active, camera, mesh_storage, tex_storage, material_defaults, mesh, material, global): (
-            Option<Fetch<'a, ActiveCamera>>,
-            ReadStorage<'a, Camera>,
-            Fetch<'a, AssetStorage<Mesh>>,
-            Fetch<'a, AssetStorage<Texture>>,
-            Fetch<'a, MaterialDefaults>,
-            ReadStorage<'b, MeshHandle>,
-            ReadStorage<'b, Material>,
-            ReadStorage<'b, Transform>,
-        ),
+        (active, camera, mesh_storage, tex_storage, sprite_sheet_storage, material_defaults, entities, mesh, material, material_animation, global):
+        <Self as PassData<'b>>::Data,
     ) {
         let camera: Option<(&Camera, &Transform)> = active
             .and_then(|a| {
@@ -93,7 +89,7 @@ where
             })
             .or_else(|| (&camera, &global).join().next());
 
-        for (mesh, material, global) in (&mesh, &material, &global).join() {
+        for (entity, mesh, material, global) in (&*entities, &mesh, &material, &global).join() {
             let mesh = match mesh_storage.get(mesh) {
                 Some(mesh) => mesh,
                 None => continue,
@@ -103,6 +99,15 @@ where
                 None => continue,
             };
 
+            let (tex_x, tex_y, tex_w, tex_h) = material_animation
+                                                .get(entity)
+                                                .and_then(|anim| anim.albedo_animation.as_ref())
+                                                .and_then(|anim| {
+                                                    let frame = anim.current_frame(&sprite_sheet_storage);
+                                                    frame.map(|f| (f.x, f.y, f.width, f.height))
+                                                })
+                                                .unwrap_or((0., 0., 1., 1.));
+
             let vertex_args = camera
                 .as_ref()
                 .map(|&(ref cam, ref transform)| {
@@ -110,6 +115,8 @@ where
                         proj: cam.proj.into(),
                         view: transform.0.invert().unwrap().into(),
                         model: *global.as_ref(),
+                        tex_xy: [tex_x, tex_y],
+                        tex_wh: [tex_w, tex_h],
                     }
                 })
                 .unwrap_or_else(|| {
@@ -117,6 +124,8 @@ where
                         proj: Matrix4::one().into(),
                         view: Matrix4::one().into(),
                         model: *global.as_ref(),
+                        tex_xy: [tex_x, tex_y],
+                        tex_wh: [tex_w, tex_h],
                     }
                 });
 
