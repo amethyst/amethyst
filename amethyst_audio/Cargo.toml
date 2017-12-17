@@ -27,5 +27,5 @@ shred = "0.5"
 specs = "0.10"
 
 [dependencies.smallvec]
-version = "0.4.2"
+version = "0.4"
 features = ["serde"]

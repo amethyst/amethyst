@@ -8,7 +8,7 @@ use core::ECSBundle;
 use rayon::ThreadPool;
 use shred::{Resource, RunNow};
 use shrev::{EventChannel, ReaderId};
-#[cfg(feature = "profiler")]
+
 use thread_profiler::{register_thread_with_profiler, write_profile};
 use winit::{Event, WindowEvent};
 
@@ -144,7 +144,7 @@ impl<'a, 'b> Application<'a, 'b> {
 
     /// Sets up the application.
     fn initialize(&mut self) {
-        #[cfg(feature = "profiler")]
+        
         profile_scope!("initialize");
         self.states.start(&mut self.world);
     }
@@ -154,7 +154,7 @@ impl<'a, 'b> Application<'a, 'b> {
         {
             let world = &mut self.world;
             let states = &mut self.states;
-            #[cfg(feature = "profiler")]
+            
             profile_scope!("handle_event");
 
             let events = world
@@ -181,19 +181,19 @@ impl<'a, 'b> Application<'a, 'b> {
                 let time = self.world.write_resource::<Time>();
                 time.last_fixed_update().elapsed() >= time.fixed_time()
             };
-            #[cfg(feature = "profiler")]
+            
             profile_scope!("fixed_update");
             if do_fixed {
                 self.states.fixed_update(&mut self.world);
                 self.world.write_resource::<Time>().finish_fixed_update();
             }
 
-            #[cfg(feature = "profiler")]
+            
             profile_scope!("update");
             self.states.update(&mut self.world);
         }
 
-        #[cfg(feature = "profiler")]
+        
         profile_scope!("dispatch");
         self.dispatcher.dispatch(&mut self.world.res);
 
@@ -201,7 +201,7 @@ impl<'a, 'b> Application<'a, 'b> {
             local.run_now(&self.world.res);
         }
 
-        #[cfg(feature = "profiler")]
+        
         profile_scope!("maintain");
         self.world.maintain();
 
@@ -217,7 +217,7 @@ impl<'a, 'b> Application<'a, 'b> {
     }
 }
 
-#[cfg(feature = "profiler")]
+
 impl<'a, 'b> Drop for Application<'a, 'b> {
     fn drop(&mut self) {
         // TODO: Specify filename in config.
@@ -849,9 +849,9 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     where
         T: State + 'a,
     {
-        #[cfg(feature = "profiler")]
+        
         register_thread_with_profiler("Main".into());
-        #[cfg(feature = "profiler")]
+        
         profile_scope!("new");
 
         let pool = self.world.read_resource::<Arc<ThreadPool>>().clone();

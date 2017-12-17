@@ -1,101 +1,54 @@
-//! A data parallel rendering engine developed by the [Amethyst][am] project.
-//! The source code is available for download on [GitHub][gh]. See the
-//! [online book][bk] for a complete guide to using Amethyst.
 //!
-//! [am]: https://www.amethyst.rs/
-//! [gh]: https://github.com/amethyst/amethyst/tree/develop/src/renderer
-//! [bk]: https://www.amethyst.rs/book/
+//! Rendering engine for Amethyst.
+//!
 
-#![deny(missing_docs)]
-#![doc(html_logo_url = "https://tinyurl.com/jtmm43a")]
+#![allow(missing_docs)]
+#![deny(unused_imports)]
+#![deny(unused_unsafe)]
+#![deny(unused_variables)]
+#![deny(dead_code)]
 
-extern crate amethyst_assets;
-extern crate amethyst_core;
+
+extern crate amethyst_core as core;
+extern crate cgmath;
 #[macro_use]
 extern crate derivative;
 #[macro_use]
 extern crate error_chain;
-extern crate fnv;
-extern crate gfx;
-extern crate gfx_core;
-#[macro_use]
-extern crate gfx_macros;
-extern crate hetseq;
-extern crate imagefmt;
+extern crate mint;
 extern crate rayon;
-extern crate serde;
+extern crate rayon_core;
 #[macro_use]
-extern crate serde_derive;
-extern crate shred;
-extern crate shrev;
+extern crate serde;
 extern crate smallvec;
 extern crate specs;
-extern crate wavefront_obj;
 extern crate winit;
+pub extern crate gfx_hal;
 
-#[cfg(all(feature = "d3d11", target_os = "windows"))]
-extern crate gfx_device_dx11;
-#[cfg(all(feature = "d3d11", target_os = "windows"))]
-extern crate gfx_window_dxgi;
+#[cfg(feature = "gfx-backend-vulkan")]
+pub extern crate gfx_backend_vulkan as vulkan;
 
-#[cfg(all(feature = "metal", target_os = "macos"))]
-extern crate gfx_device_metal;
-#[cfg(all(feature = "metal", target_os = "macos"))]
-extern crate gfx_window_metal;
+#[cfg(feature = "gfx-backend-metal")]
+pub extern crate gfx_backend_metal as metal;
 
-#[cfg(feature = "opengl")]
-extern crate gfx_device_gl;
-#[cfg(feature = "opengl")]
-extern crate gfx_window_glutin;
-#[cfg(feature = "opengl")]
-extern crate glutin;
+#[macro_use]
+extern crate thread_profiler;
 
-#[cfg(feature = "vulkan")]
-extern crate gfx_device_vulkan;
-#[cfg(feature = "vulkan")]
-extern crate gfx_window_vulkan;
+pub mod cam;
+pub mod command;
+pub mod epoch;
+pub mod descriptors;
+pub mod hal;
+pub mod memory;
+pub mod mesh;
+pub mod relevant;
+pub mod graph;
+pub mod renderer;
+pub mod shaders;
+pub mod upload;
+pub mod texture;
+pub mod vertex;
+pub mod uniform;
 
-pub use bundle::RenderBundle;
-pub use cam::{ActiveCamera, Camera, Projection};
-pub use color::Rgba;
-pub use config::DisplayConfig;
-pub use formats::{build_mesh_with_combo, create_mesh_asset, create_texture_asset, BmpFormat,
-                  ComboMeshCreator, ImageData, ImageError, JpgFormat, MeshCreator, MeshData,
-                  ObjFormat, PngFormat, TextureData, TextureMetadata};
-pub use input::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
-pub use light::{DirectionalLight, Light, PointLight, SpotLight, SunLight};
-pub use mesh::{vertex_data, Mesh, MeshHandle, VertexBuffer};
-pub use mtl::{Material, MaterialDefaults};
-pub use pass::{DrawFlat, DrawFlatSeparate, DrawPbm, DrawPbmSeparate, DrawShaded,
-               DrawShadedSeparate};
-pub use pipe::{ColorBuffer, Data, DepthBuffer, DepthMode, Effect, EffectBuilder, Init, Meta,
-               NewEffect, Pipeline, PipelineBuild, PipelineBuilder, PipelineData, PolyPipeline,
-               PolyStage, PolyStages, Stage, StageBuilder, Target, TargetBuilder, Targets};
-pub use renderer::Renderer;
-pub use resources::{AmbientColor, ScreenDimensions, WindowMessages};
-pub use system::RenderSystem;
-pub use tex::{Texture, TextureBuilder, TextureHandle};
-pub use types::{Encoder, Factory, PipelineState, Resources};
-pub use vertex::{Attribute, AttributeFormat, Attributes, Color, Normal, PosColor, PosNormTangTex,
-                 PosNormTex, PosTex, Position, Query, Separate, Tangent, TexCoord,
-                 VertexBufferCombination, VertexFormat, With};
-
-pub mod error;
-pub mod pipe;
-
-mod bundle;
-mod cam;
-mod color;
-mod config;
-mod formats;
-mod input;
-mod light;
-mod mesh;
-mod mtl;
-mod pass;
-mod renderer;
-mod resources;
-mod system;
-mod tex;
-mod types;
-mod vertex;
+mod components;
+mod utils;

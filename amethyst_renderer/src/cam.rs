@@ -60,6 +60,8 @@ impl From<Projection> for Camera {
 }
 
 /// Camera struct.
+///
+/// TODO: Add more convenience methods, refine API.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct Camera {
     /// Graphical projection of the camera.
@@ -82,13 +84,19 @@ impl Camera {
     /// of view of 60 degrees.
     /// View transformation will be multiplicative identity.
     pub fn standard_3d(width: f32, height: f32) -> Self {
-        use amethyst_core::cgmath::Deg;
+        use cgmath::Deg;
         Self::from(Projection::perspective(width / height, Deg(60.)))
     }
 }
 
 impl Component for Camera {
     type Storage = HashMapStorage<Self>;
+}
+
+impl From<Camera> for [[f32; 4]; 4] {
+    fn from(camera: Camera) -> [[f32; 4]; 4] {
+        camera.proj.into()
+    }
 }
 
 /// Active camera resource, used by the renderer to choose which camera to get the view matrix from.
