@@ -15,12 +15,12 @@ use {InputEvent, InputHandler};
 /// and push the results in `EventHandler<InputEvent>`.
 pub struct InputSystem<AX, AC> {
     m: marker::PhantomData<(AX, AC)>,
-    reader: ReaderId,
+    reader: ReaderId<Event>,
 }
 
 impl<AX, AC> InputSystem<AX, AC> {
     /// Create a new input system. Needs a reader id for `EventHandler<winit::Event>`.
-    pub fn new(reader: ReaderId) -> Self {
+    pub fn new(reader: ReaderId<Event>) -> Self {
         Self {
             m: marker::PhantomData,
             reader,
@@ -53,11 +53,8 @@ where
     );
 
     fn run(&mut self, (input, mut handler, mut output): Self::SystemData) {
-        match input.lossy_read(&mut self.reader) {
-            Ok(data) => for d in data {
-                Self::process_event(d, &mut *handler, &mut *output);
-            },
-            _ => (),
+        for d in input.read(&mut self.reader) {
+            Self::process_event(d, &mut *handler, &mut *output);
         }
     }
 }

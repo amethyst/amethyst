@@ -34,14 +34,17 @@ impl<'a, 'b> ECSBundle<'a, 'b> for UiBundle {
         world.register::<Handle<FontAsset>>();
         world.add_resource(AssetStorage::<FontAsset>::new());
         world.add_resource(UiFocused { entity: None });
-        let reader = world
-            .read_resource::<EventChannel<Event>>()
+        let reader_1 = world
+            .write_resource::<EventChannel<Event>>()
+            .register_reader();
+        let reader_2 = world
+            .write_resource::<EventChannel<Event>>()
             .register_reader();
         Ok(
             builder
                 .add(Processor::<FontAsset>::new(), "font_processor", &[])
-                .add(UiSystem::new(reader.clone()), "ui_system", &["font_processor"])
-                .add(ResizeSystem::new(reader), "ui_resize_system", &[]),
+                .add(UiSystem::new(reader_1), "ui_system", &["font_processor"])
+                .add(ResizeSystem::new(reader_2), "ui_resize_system", &[]),
         )
     }
 }

@@ -23,7 +23,7 @@ gfx = { version = "0.16", features = ["serialize"] }
 gfx_glyph = "0.6"
 hibitset = "0.3"
 rusttype = "0.2"
-shrev = "0.6"
+shrev = "0.8"
 specs = "0.10"
 unicode-normalization = "0.1"
 unicode-segmentation = "1.2"

@@ -34,7 +34,7 @@ derivative = "1.0"
 rayon = "0.8"
 rustc_version_runtime = "0.1"
 shred = "0.5"
-shrev = "0.6"
+shrev = "0.8"
 specs = "0.10"
 winit = "0.7"
 

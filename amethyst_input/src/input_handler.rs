@@ -71,12 +71,11 @@ where
             } => if self.pressed_keys.iter().all(|&k| k.0 != key_code) {
                 self.pressed_keys.push((key_code, scancode));
                 event_handler
-                    .slice_write(&[
+                    .iter_write([
                         KeyPressed { key_code, scancode },
                         ButtonPressed(Button::Key(key_code)),
                         ButtonPressed(Button::ScanCode(scancode)),
-                    ])
-                    .expect("Input Event buffer is under 3 events.  That's far too small.");
+                    ].iter().cloned());
                 for (k, v) in self.bindings.actions.iter() {
                     for &button in v {
                         if Button::Key(key_code) == button {
@@ -102,12 +101,11 @@ where
                 if let Some(i) = index {
                     self.pressed_keys.swap_remove(i);
                     event_handler
-                        .slice_write(&[
+                        .iter_write([
                             KeyReleased { key_code, scancode },
                             ButtonReleased(Button::Key(key_code)),
                             ButtonReleased(Button::ScanCode(scancode)),
-                        ])
-                        .expect("Input Event buffer is under 3 events.  That's far too small.");
+                        ].iter().cloned());
                     for (k, v) in self.bindings.actions.iter() {
                         for &button in v {
                             if Button::Key(key_code) == button {
@@ -132,11 +130,10 @@ where
                 {
                     self.pressed_mouse_buttons.push(mouse_button);
                     event_handler
-                        .slice_write(&[
+                        .iter_write([
                             MouseButtonPressed(mouse_button),
                             ButtonPressed(Button::Mouse(mouse_button)),
-                        ])
-                        .expect("Input Event buffer is under 2 events.  That's far too small.");
+                        ].iter().cloned());
                     for (k, v) in self.bindings.actions.iter() {
                         for &button in v {
                             if Button::Mouse(mouse_button) == button {
@@ -158,11 +155,10 @@ where
                 if let Some(i) = index {
                     self.pressed_mouse_buttons.swap_remove(i);
                     event_handler
-                        .slice_write(&[
+                        .iter_write([
                             MouseButtonReleased(mouse_button),
                             ButtonReleased(Button::Mouse(mouse_button)),
-                        ])
-                        .expect("Input Event buffer is under 2 events.  That's far too small.");
+                        ].iter().cloned());
                     for (k, v) in self.bindings.actions.iter() {
                         for &button in v {
                             if Button::Mouse(mouse_button) == button {
