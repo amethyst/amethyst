@@ -7,7 +7,7 @@ layout (std140) uniform VertexArgs {
     uniform mat4 view;
     uniform mat4 model;
     uniform vec2 tex_xy;
-    uniform vec2 tex_wh
+    uniform vec2 tex_wh;
 };
 
 in vec3 position;
