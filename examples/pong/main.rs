@@ -44,7 +44,7 @@ const AUDIO_SCORE: &'static str = "audio/score.ogg";
 
 fn main() {
     if let Err(e) = run() {
-        println!("Failed to execute example: {}", e);
+        println!("Failed to execute example: {:?}", e);
         ::std::process::exit(1);
     }
 }
