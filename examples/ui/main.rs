@@ -181,7 +181,7 @@ fn run() -> Result<(), amethyst::Error> {
 
 fn main() {
     if let Err(e) = run() {
-        println!("Failed to execute example: {}", e);
+        println!("Failed to execute example: {:?}", e);
         ::std::process::exit(1);
     }
 }
