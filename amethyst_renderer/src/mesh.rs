@@ -5,9 +5,9 @@ use cgmath::{Deg, Matrix4, Point3, SquareMatrix, Transform, Vector3};
 
 use gfx_hal::{Backend, IndexCount, IndexType, Primitive, VertexCount};
 use gfx_hal::buffer::{IndexBufferView, Usage};
-use gfx_hal::command::{RenderPassInlineEncoder};
-use gfx_hal::memory::{Properties};
-use gfx_hal::pso::{ElemStride, VertexBufferSet};
+use gfx_hal::command::RenderPassInlineEncoder;
+use gfx_hal::memory::Properties;
+use gfx_hal::pso::VertexBufferSet;
 
 use smallvec::SmallVec;
 
@@ -37,14 +37,6 @@ where
             data,
             pd: PhantomData,
         }
-    }
-
-    fn size(&self) -> usize {
-        self.data.as_ref().len() * V::VERTEX_FORMAT.stride as usize
-    }
-
-    fn stride(&self) -> ElemStride {
-        V::VERTEX_FORMAT.stride
     }
 
     fn build_vertex<B>(
@@ -618,6 +610,11 @@ where
     /// Build new mesh with `HMeshBuilder`
     pub fn new() -> HMeshBuilder<(), ()> {
         HMeshBuilder::new()
+    }
+
+    /// Primitive type of the `Mesh`
+    pub fn primitive(&self) -> Primitive {
+        self.prim
     }
 
     /// Bind buffers to specified attribute locations.

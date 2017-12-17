@@ -17,7 +17,7 @@
 //! In order to feed this pass with data we also need define `World -> [Input]` conversion.
 //!
 
-use std::fmt::{Debug};
+use std::fmt::Debug;
 
 use gfx_hal::Backend;
 use gfx_hal::command::{CommandBuffer, RenderPassInlineEncoder};
@@ -76,7 +76,10 @@ where
     const VERTICES: &'static [VertexFormat<'static>];
 
     /// Build render pass
-    fn build() -> PassBuilder<'static, B> where Self: 'static {
+    fn build() -> PassBuilder<'static, B>
+    where
+        Self: 'static,
+    {
         PassBuilder::new::<Self>()
     }
 

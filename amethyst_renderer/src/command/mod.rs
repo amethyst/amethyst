@@ -1,3 +1,8 @@
+//!
+//! This module provides `CommandCenter` structure
+//! and auxiliary traits to use with it.
+//!
+
 mod family;
 
 use std::cmp::min;

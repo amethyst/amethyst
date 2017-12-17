@@ -208,27 +208,24 @@ fn run() -> Result<()> {
             // Left
             vec![0, 1, 2],
             vec![1, 2, 3],
-
             // Right
             vec![4, 5, 6],
             vec![5, 6, 7],
-
             // Top
             vec![8, 9, 10],
             vec![9, 10, 11],
-            
             // Bottom
             vec![12, 13, 14],
             vec![13, 14, 15],
-
             // Front
             vec![16, 17, 18],
             vec![17, 18, 19],
-            
             // Back
             vec![20, 21, 22],
             vec![21, 22, 23],
-        ].into_iter().flat_map(|x|x).collect();
+        ].into_iter()
+            .flat_map(|x| x)
+            .collect();
         MeshBuilder::new()
             .with_indices(indices)
             .with_vertices(vertices)

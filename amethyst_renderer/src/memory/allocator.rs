@@ -94,8 +94,7 @@ where
         #[cfg(feature = "gfx-backend-metal")]
         let properties = {
             use std::any::Any;
-            if Any::is::<<::metal::Backend as Backend>::Device>(device)
-            {
+            if Any::is::<<::metal::Backend as Backend>::Device>(device) {
                 let mut properties = properties;
                 properties.insert(Properties::CPU_VISIBLE);
                 properties.remove(Properties::DEVICE_LOCAL);

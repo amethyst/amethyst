@@ -1,7 +1,12 @@
+//!
+//! Rendering engine for Amethyst.
+//!
+
+#![allow(missing_docs)]
 #![deny(unused_imports)]
 #![deny(unused_unsafe)]
 #![deny(unused_variables)]
-#![allow(dead_code)]
+#![deny(dead_code)]
 
 
 extern crate amethyst_core as core;

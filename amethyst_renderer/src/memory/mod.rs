@@ -1,10 +1,10 @@
 use std::cmp::Eq;
-use std::fmt::{Debug};
+use std::fmt::Debug;
 use std::ops::{Add, Range, Rem, Sub};
 
-use gfx_hal::{Backend};
+use gfx_hal::Backend;
 use gfx_hal::buffer::Usage as BufferUsage;
-use gfx_hal::image::{Usage as ImageUsage};
+use gfx_hal::image::Usage as ImageUsage;
 use gfx_hal::memory::{Pod, Properties, Requirements};
 use relevant::Relevant;
 

@@ -304,7 +304,7 @@ impl ShaderLoader for ::vulkan::Backend {
     }
 }
 
-
+#[cfg(not(feature = "spirv"))]
 fn load_shader_code(path: &Path) -> Result<String> {
     use std::fs::File;
     use std::io::Read;
@@ -316,6 +316,7 @@ fn load_shader_code(path: &Path) -> Result<String> {
 }
 
 
+#[cfg(feature = "spirv")]
 fn load_shader_bytes(path: &Path) -> Result<Vec<u8>> {
     use std::fs::File;
     use std::io::Read;

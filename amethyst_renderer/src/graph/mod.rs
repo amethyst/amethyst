@@ -1,7 +1,12 @@
+//!
+//! Defines `Graph` - complex rendering graph.
+//! And `Pass` - building block for `Graph`.
+//! TODO: compute.
+
 pub mod pass;
 
-use std::collections::{HashMap};
-use std::ops::{Range};
+use std::collections::HashMap;
+use std::ops::Range;
 
 use gfx_hal::Backend;
 use gfx_hal::command::{ClearValue, CommandBuffer, Rect, Viewport};
@@ -21,11 +26,14 @@ use specs::World;
 use descriptors::Descriptors;
 use epoch::{CurrentEpoch, Epoch};
 use graph::pass::AnyPass;
+use graph::pass::build::{dependencies, direct_dependencies, indices_in_of, merges,
+                         some_indices_in_of, traverse, AttachmentImageViews, ColorAttachmentDesc,
+                         DepthStencilAttachmentDesc, InputAttachmentDesc};
 use memory::{Allocator, Image};
 use shaders::ShaderManager;
 
-pub use graph::pass::*;
-pub use graph::pass::build::*;
+pub use graph::pass::Pass;
+pub use graph::pass::build::{ColorPin, DepthPin, Merge, PassBuilder, Pin};
 
 
 error_chain!{
@@ -368,11 +376,11 @@ where
         // Collect all passes by walking dependency tree
         let passes = traverse(&present);
 
-        // Reorder passes to increase overlapping
-        let passes = reorder_passes(passes);
-
         // Get all merges
         let merges = merges(&present);
+
+        // Reorder passes to increase overlapping
+        let passes = reorder_passes(passes, &merges);
 
         // Setup image storage
         let mut images = vec![];
@@ -407,8 +415,7 @@ where
                 .map(|pin| {
                     let (indices, format) = match *pin {
                         Pin::Color(ColorPin { merge, index }) => (
-                            targets[&(merge as *const _)]
-                                .colors[index]
+                            targets[&(merge as *const _)].colors[index]
                                 .indices
                                 .clone()
                                 .unwrap(),
@@ -416,7 +423,8 @@ where
                         ),
                         Pin::Depth(DepthPin { merge }) => (
                             targets[&(merge as *const _)]
-                                .depth.as_ref()
+                                .depth
+                                .as_ref()
                                 .unwrap()
                                 .indices
                                 .clone(),
@@ -655,10 +663,24 @@ where
     Ok(target)
 }
 
-
+fn merge_of<'a, B>(pass: &'a PassBuilder<'a, B>, merges: &[&'a Merge<'a, B>]) -> &'a Merge<'a, B>
+where
+    B: Backend,
+{
+    *merges
+        .iter()
+        .find(|&merge| {
+            merge
+                .passes
+                .iter()
+                .any(|&p| p as *const _ == pass as *const _)
+        })
+        .expect("All passes comes from merges")
+}
 
 fn reorder_passes<'a, B>(
     mut unscheduled: Vec<&'a PassBuilder<'a, B>>,
+    merges: &[&'a Merge<'a, B>],
 ) -> Vec<(&'a PassBuilder<'a, B>, Option<usize>)>
 where
     B: Backend,
@@ -678,7 +700,12 @@ where
                 debug_assert_eq!(None, indices_in_of(&scheduled, &[unscheduled[index]]));
                 // Find indices for all direct dependencies of the pass
                 indices_in_of(&scheduled, &direct_dependencies(unscheduled[index]))
-                    .map(|deps| (deps.iter().cloned().max(), index))
+                    .map(|deps| {
+                        // Add all already scheduled passes from same `Merge`.
+                        let merge = merge_of(unscheduled[index], merges);
+                        let siblings = some_indices_in_of(&scheduled, merge.passes);
+                        (deps.into_iter().chain(siblings).max(), index)
+                    })
             })
             // Smallest index of last dependency wins. `None < Some(0)`
             .min_by_key(|&(last_dep, _)| last_dep)

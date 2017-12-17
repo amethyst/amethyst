@@ -1,4 +1,8 @@
-pub mod build;
+//!
+//! Defines `Hal` - top-level structure that encapsulates all pieces of rendering engine.
+//!
+
+mod build;
 
 use std::mem::ManuallyDrop;
 use std::ptr::read;
@@ -13,6 +17,7 @@ use shaders::ShaderManager;
 use upload::Uploader;
 
 pub use self::build::{Error, ErrorKind, HalConfig};
+
 
 pub struct Hal<B: Backend> {
     pub device: B::Device,

@@ -370,13 +370,13 @@ where
     }
 
     pub fn color(&self, index: usize) -> ColorPin<B> {
-        ColorPin { merge: self, index, }
+        ColorPin { merge: self, index }
     }
 
     pub fn depth(&self) -> Option<DepthPin<B>> {
-        self.passes[0].depth_stencil.map(|_| {
-            DepthPin { merge: self }
-        })
+        self.passes[0]
+            .depth_stencil
+            .map(|_| DepthPin { merge: self })
     }
 }
 
@@ -468,7 +468,6 @@ where
     }
 }
 
-
 /// Searches items from `right` in `left`
 /// Returns indices of them.
 /// Returns `None` if at least one item in `right` is not found.
@@ -481,6 +480,19 @@ pub fn indices_in_of<T>(left: &[&T], right: &[&T]) -> Option<Vec<usize>> {
         .collect::<Option<Vec<_>>>()?;
     positions.sort();
     Some(positions)
+}
+
+/// Searches items from `right` in `left`
+/// Returns found indices of them.
+pub fn some_indices_in_of<T>(left: &[&T], right: &[&T]) -> Vec<usize> {
+    let mut positions = right
+        .iter()
+        .filter_map(|&r| {
+            left.iter().rposition(|&l| l as *const _ == r as *const _)
+        })
+        .collect::<Vec<_>>();
+    positions.sort();
+    positions
 }
 
 fn walk_dependencies<'a, B>(pass: &'a PassBuilder<'a, B>) -> Vec<&'a PassBuilder<'a, B>>

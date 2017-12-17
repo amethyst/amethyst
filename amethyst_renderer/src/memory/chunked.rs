@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-use gfx_hal::{Backend};
+use gfx_hal::Backend;
 use gfx_hal::memory::Requirements;
 
 use memory::{shift_for_alignment, Block, MemoryAllocator, MemorySubAllocator, Result};

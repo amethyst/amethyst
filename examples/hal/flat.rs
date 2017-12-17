@@ -2,7 +2,7 @@ use core::Transform;
 use core::cgmath::{Deg, Matrix, Matrix4, SquareMatrix};
 use gfx_hal::{Backend, Device};
 use gfx_hal::command::{CommandBuffer, RenderPassInlineEncoder};
-use gfx_hal::format::{B8_G8_R8_A8, Bgra8, Depth32F, Depth, Format, Formatted, Rgba8, Srgb, Srgba8};
+use gfx_hal::format::{B8_G8_R8_A8, Bgra8, Depth, Depth32F, Format, Formatted, Rgba8, Srgb, Srgba8};
 use gfx_hal::memory::Pod;
 use gfx_hal::pso::{DescriptorSetLayoutBinding, DescriptorSetWrite, DescriptorType,
                    DescriptorWrite, GraphicsShaderSet, ShaderStageFlags, Stage, VertexBufferSet};
@@ -121,7 +121,7 @@ where
             uni.update_cache(
                 ent,
                 TrProjView {
-                    transform: Matrix4::identity().into(),  // (*tr).into(),
+                    transform: Matrix4::identity().into(), // (*tr).into(),
                     projection: cam.get(ac.entity).unwrap().proj.into(),
                     view: (*trs.get(ac.entity).unwrap()).into(),
                 },
