@@ -36,7 +36,7 @@ pub struct Application<'a, 'b> {
 
     #[derivative(Debug = "ignore")]
     dispatcher: Dispatcher<'a, 'b>,
-    events_reader_id: ReaderId,
+    events_reader_id: ReaderId<Event>,
     states: StateMachine<'a>,
     #[derivative(Debug = "ignore")]
     locals: Vec<Box<for<'c> RunNow<'c> + 'b>>,
@@ -158,13 +158,11 @@ impl<'a, 'b> Application<'a, 'b> {
             #[cfg(feature = "profiler")]
             profile_scope!("handle_event");
 
-            let events = match world
+            let events = world
                 .read_resource::<EventChannel<Event>>()
-                .lossy_read(&mut self.events_reader_id)
-            {
-                Ok(data) => data.cloned().collect(),
-                _ => Vec::default(),
-            };
+                .read(&mut self.events_reader_id)
+                .cloned()
+                .collect::<Vec<_>>();
 
             for event in events {
                 states.handle_event(world, event.clone());

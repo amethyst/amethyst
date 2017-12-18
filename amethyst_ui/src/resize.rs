@@ -15,12 +15,12 @@ impl Component for UiResize {
 /// This system rearranges UI elements whenever the screen is resized using their `UiResize`
 /// component.
 pub struct ResizeSystem {
-    event_reader: ReaderId,
+    event_reader: ReaderId<Event>,
 }
 
 impl ResizeSystem {
     /// Creates a new ResizeSystem that listens with the given reader Id.
-    pub fn new(winit_event_reader: ReaderId) -> ResizeSystem {
+    pub fn new(winit_event_reader: ReaderId<Event>) -> ResizeSystem {
         ResizeSystem {
             event_reader: winit_event_reader,
         }
@@ -36,8 +36,7 @@ impl<'a> System<'a> for ResizeSystem {
 
     fn run(&mut self, (mut transform, mut resize, events): Self::SystemData) {
         for event in events
-            .lossy_read(&mut self.event_reader)
-            .expect("ResizeSystem failed!")
+            .read(&mut self.event_reader)
         {
             if let &Event::WindowEvent {
                 event: WindowEvent::Resized(width, height),

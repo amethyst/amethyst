@@ -76,7 +76,7 @@ where
         }
 
         let reader_id = world
-            .read_resource::<EventChannel<Event>>()
+            .write_resource::<EventChannel<Event>>()
             .register_reader();
 
         world.add_resource(input);

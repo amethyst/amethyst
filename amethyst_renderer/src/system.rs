@@ -128,12 +128,7 @@ where
             compress_events(&mut events, new_event);
         });
 
-        if let Err(err) = event_handler.slice_write(&events) {
-            eprintln!(
-                "WARNING: Writing too many window events this frame! {:?}",
-                err
-            );
-        }
+        event_handler.iter_write(events);
     }
 }
 
