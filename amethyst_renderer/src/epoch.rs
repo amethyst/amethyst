@@ -4,14 +4,14 @@
 
 use std::cmp::min;
 use std::collections::VecDeque;
-use std::ops::{Add, AddAssign, Deref};
+use std::ops::{Add, AddAssign, Deref, Sub};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use relevant::Relevant;
 
 /// Epoch identifier.
 /// User can compare `Epoch`s with one another to check which is "earlier".
-/// Primary used with `ValidThrough` implementations.
+/// Primary used with `ValidUntil` implementations.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Epoch(pub u64);
 
@@ -33,6 +33,13 @@ impl Add<u64> for Epoch {
 impl AddAssign<u64> for Epoch {
     fn add_assign(&mut self, add: u64) {
         self.0 += add;
+    }
+}
+
+impl Sub<Epoch> for Epoch {
+    type Output = u64;
+    fn sub(self, sub: Epoch) -> u64 {
+        self.0 - sub.0
     }
 }
 
@@ -59,12 +66,12 @@ impl CurrentEpoch {
     }
 }
 
-pub trait ValidThrough {
+pub trait ValidUntil {
     /// Encapsulated data.
     type Data;
 
-    /// Get last epoch this value has to be valid through.
-    fn valid_through(&self) -> Epoch;
+    /// Get last epoch this value has to be valid until.
+    fn valid_until(&self) -> Epoch;
 
     /// Try to dispose of this value.
     fn dispose(self, current: &CurrentEpoch) -> Result<Self::Data, Self>
@@ -72,18 +79,18 @@ pub trait ValidThrough {
         Self: Sized;
 }
 
-/// Check if this value valid through specified `Epoch`
-fn is_valid_through<T: ValidThrough>(value: &T, epoch: Epoch) -> bool {
-    value.valid_through() >= epoch
+/// Check if this value valid until specified `Epoch`
+fn is_valid_until<T: ValidUntil>(value: &T, epoch: Epoch) -> bool {
+    value.valid_until() > epoch
 }
 
 /// Weak epoch pointer to `T`.
 /// It will expire after `CurrentEpoch` will advance further
-/// than `Epoch` `valid_through` returns.
+/// than `Epoch` `valid_until` returns.
 #[derive(Debug)]
 pub struct Ec<T> {
     ptr: *const T,
-    valid_through: Epoch,
+    valid_until: Epoch,
 }
 
 unsafe impl<T> Send for Ec<T>
@@ -108,18 +115,28 @@ impl<T> Clone for Ec<T> {
 impl<T> Ec<T> {
     /// Get `Epoch` after which this `Ec` will expire.
     #[inline]
-    pub fn valid_through(&self) -> Epoch {
-        self.valid_through
+    pub fn valid_until(&self) -> Epoch {
+        self.valid_until
     }
 
-    /// Get reference to the pointer value.
+    /// Get reference to the pointed value.
     /// Returns `Some` if `Ec` hasn't expired yet
-    /// (`CurrentEpoch::now()` is "earlier" than `self.valid_through()`).
+    /// (`CurrentEpoch::now()` is "earlier" than `self.valid_until()`).
     /// Returns `None` otherwise.
     #[inline]
     pub fn get<'a>(&self, current: &'a CurrentEpoch) -> Option<&'a T> {
-        if self.valid_through <= current.now() {
-            unsafe { Some(&*self.ptr) }
+        unsafe {
+            self.get_unsafe(current.now())
+        }
+    }
+
+    /// Get reference to the pointed value.
+    /// Returns `Some` if `Ec` won't be expired until specified epoch.
+    /// Returns `None` otherwise.
+    #[inline]
+    pub unsafe fn get_unsafe<'a>(&self, until: Epoch) -> Option<&'a T> {
+        if self.valid_until >= until {
+            Some(&*self.ptr)
         } else {
             None
         }
@@ -128,13 +145,13 @@ impl<T> Ec<T> {
 
 /// Strong pointer to `T`.
 /// It will hold value alive and can't be disposed until `CurrentEpoch`
-/// advances further than the last `Epoch` specified in `make_valid_through`
+/// advances further than the last `Epoch` specified in `make_valid_until`
 /// and `borrow` calls
 #[derive(Debug)]
 pub struct Eh<T> {
     relevant: Relevant,
     ptr: *const T,
-    valid_through: AtomicEpoch,
+    valid_until: AtomicEpoch,
 }
 
 impl<T> Eh<T> {
@@ -144,25 +161,25 @@ impl<T> Eh<T> {
         Eh {
             relevant: Relevant,
             ptr: Box::into_raw(Box::new(value)),
-            valid_through: AtomicEpoch::new(Epoch::new()),
+            valid_until: AtomicEpoch::new(Epoch::new()),
         }
     }
 
     /// Make all new `Ec` borrowed from this `Eh` to be valid
     /// until `CurrentEpoch` advances further than specified `Epoch`.
     #[inline]
-    pub fn make_valid_through(this: &Self, epoch: Epoch) {
-        this.valid_through.advance_to(epoch);
+    pub fn make_valid_until(this: &Self, epoch: Epoch) {
+        this.valid_until.advance_to(epoch);
     }
 
     /// Borrow `Ec` from this `Eh`
     /// `Ec` will expire after specified `Epoch`
     #[inline]
     pub fn borrow(this: &Self, epoch: Epoch) -> Ec<T> {
-        Self::make_valid_through(this, epoch);
+        Self::make_valid_until(this, epoch);
         Ec {
             ptr: this.ptr,
-            valid_through: this.valid_through.epoch(),
+            valid_until: this.valid_until.epoch(),
         }
     }
 }
@@ -178,17 +195,17 @@ where
 {
 }
 
-impl<T> ValidThrough for Eh<T> {
+impl<T> ValidUntil for Eh<T> {
     type Data = T;
 
     #[inline]
-    fn valid_through(&self) -> Epoch {
-        self.valid_through.epoch()
+    fn valid_until(&self) -> Epoch {
+        self.valid_until.epoch()
     }
 
     #[inline]
     fn dispose(self, current: &CurrentEpoch) -> Result<T, Self> {
-        if self.valid_through.epoch() < current.now() {
+        if self.valid_until.epoch() <= current.now() {
             self.relevant.dispose();
             Ok(unsafe { *Box::from_raw(self.ptr as *mut _) })
         } else {
@@ -203,7 +220,7 @@ impl<T> From<Box<T>> for Eh<T> {
         Eh {
             relevant: Relevant,
             ptr: Box::into_raw(b),
-            valid_through: AtomicEpoch::new(Epoch::new()),
+            valid_until: AtomicEpoch::new(Epoch::new()),
         }
     }
 }
@@ -217,8 +234,8 @@ impl<T> Deref for Eh<T> {
 }
 
 
-/// This queue can be used to trash unused `Eh` and other implementors of `ValidThrough`.
-/// It can be `clean`ed to drop all enqueued `ValidThrough` implementors that has been expired.
+/// This queue can be used to trash unused `Eh` and other implementors of `ValidUntil`.
+/// It can be `clean`ed to drop all enqueued `ValidUntil` implementors that has been expired.
 pub struct DeletionQueue<T> {
     offset: u64,
     queue: VecDeque<Vec<T>>,
@@ -227,7 +244,7 @@ pub struct DeletionQueue<T> {
 
 impl<T> DeletionQueue<T>
 where
-    T: ValidThrough,
+    T: ValidUntil,
 {
     /// Create empty queue.
     #[inline]
@@ -243,7 +260,7 @@ where
     /// After the value expires it will be disposed
     /// with next `clean` call.
     pub fn add(&mut self, value: T) {
-        let index = (value.valid_through().0 - self.offset) as usize;
+        let index = (value.valid_until().0 - self.offset) as usize;
         let ref mut queue = self.queue;
         let ref mut clean_vecs = self.clean_vecs;
 
@@ -253,7 +270,7 @@ where
     }
 
     /// Dispose all expired enqueued values.
-    /// i.e. if `value.valid_through() < current.now()`
+    /// i.e. if `value.valid_until() < current.now()`
     pub fn clean<F>(&mut self, current: &CurrentEpoch, mut f: F)
     where
         F: FnMut(T::Data),
@@ -263,10 +280,10 @@ where
 
         for mut vec in self.queue.drain(..min(index, len)) {
             for value in vec.drain(..) {
-                if is_valid_through(&value, current.now()) {
+                if is_valid_until(&value, current.now()) {
                     panic!(
-                        "Value is valid through {:?}, current {:?}",
-                        value.valid_through(),
+                        "Value is valid until {:?}, current {:?}",
+                        value.valid_until(),
                         current
                     );
                 }
@@ -292,7 +309,7 @@ impl AtomicEpoch {
     fn advance_to(&self, other: Epoch) {
         let value = other.0 as usize;
         if self.0.load(Ordering::Relaxed) < value {
-            self.0.store(value as usize, Ordering::Relaxed);
+            self.0.store(value as usize, Ordering::Relaxed); // TODO: Use `fetch_add`.
         }
     }
 

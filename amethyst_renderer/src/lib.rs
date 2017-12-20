@@ -3,11 +3,12 @@
 //!
 
 #![allow(missing_docs)]
-#![deny(unused_imports)]
-#![deny(unused_unsafe)]
-#![deny(unused_variables)]
-#![deny(dead_code)]
+#![allow(unused_imports)]
+#![allow(unused_unsafe)]
+#![allow(unused_variables)]
+#![allow(dead_code)]
 
+#![deny(unused_must_use)]
 
 extern crate amethyst_core as core;
 extern crate cgmath;
@@ -35,6 +36,7 @@ pub extern crate gfx_backend_metal as metal;
 extern crate thread_profiler;
 
 pub mod cam;
+pub mod cirque;
 pub mod command;
 pub mod epoch;
 pub mod descriptors;
@@ -43,7 +45,6 @@ pub mod memory;
 pub mod mesh;
 pub mod relevant;
 pub mod graph;
-pub mod renderer;
 pub mod shaders;
 pub mod upload;
 pub mod texture;

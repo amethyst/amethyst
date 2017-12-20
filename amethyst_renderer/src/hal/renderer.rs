@@ -8,19 +8,21 @@ use gfx_hal::command::{Rect, Viewport};
 use gfx_hal::device::Extent;
 use gfx_hal::format::Format;
 use gfx_hal::pool::CommandPool;
-use gfx_hal::queue::{CommandQueue, Graphics, Supports, Transfer};
+use gfx_hal::queue::{CommandQueue, Graphics, Supports, Transfer, Submission};
 use gfx_hal::window::{Backbuffer, Swapchain};
 
 use specs::World;
 
 use winit::{EventsLoop, Window};
 
+use cirque::Cirque;
 use command::{CommandCenter, Execution};
 use epoch::{CurrentEpoch, Epoch};
 use graph::{Graph, SuperFrame};
 use graph::ColorPin;
 use memory::Allocator;
 use shaders::ShaderManager;
+use upload::Uploader;
 
 #[derive(Derivative)]
 #[derivative(Debug)]
@@ -45,8 +47,7 @@ pub struct Renderer<B: Backend> {
     #[derivative(Debug = "ignore")]
     pub swapchain: B::Swapchain,
     pub backbuffer: Backbuffer<B>,
-    pub acquire: B::Semaphore,
-    pub release: B::Semaphore,
+    pub surface_semaphores: Cirque<(B::Semaphore, B::Semaphore)>,
     pub start_epoch: Epoch,
     pub graphs: Vec<Graph<B>>, // Move it to `Hal`.
 }
@@ -66,6 +67,7 @@ where
         current: &mut CurrentEpoch,
         center: &mut CommandCenter<B>,
         allocator: &mut Allocator<B>,
+        uploader: Option<&mut Uploader<B>>,
         device: &B::Device,
         world: &World,
     ) {
@@ -76,6 +78,7 @@ where
                 renderer: self,
                 world,
                 graph,
+                uploader,
             },
             start_epoch,
             current,
@@ -111,12 +114,14 @@ where
         Ok(self.graphs.len() - 1)
     }
 
-    pub fn dispose(self, allocator: &mut Allocator<B>, device: &B::Device) {
+    pub fn dispose(mut self, allocator: &mut Allocator<B>, device: &B::Device) {
         for graph in self.graphs {
             graph.dispose(allocator, device);
         }
-        device.destroy_semaphore(self.acquire);
-        device.destroy_semaphore(self.release);
+        for (_, (acq, rel)) in unsafe { self.surface_semaphores.take() } {
+            device.destroy_semaphore(acq);
+            device.destroy_semaphore(rel);
+        }
     }
 
     fn get_frames_number(&self) -> usize {
@@ -130,6 +135,7 @@ where
 struct Draw<'a, B: Backend> {
     allocator: &'a mut Allocator<B>,
     renderer: &'a mut Renderer<B>,
+    uploader: Option<&'a mut Uploader<B>>,
     world: &'a World,
     graph: usize,
 }
@@ -167,33 +173,42 @@ where
         let ref world = *self.world;
 
 
-        // Start frame acquisition
-        let frame = SuperFrame::new(
-            backbuffer,
-            swapchain.acquire_frame(FrameSync::Semaphore(&self.renderer.acquire)),
-        );
-
         // This execuiton needs to finsish before we will draw same frame again.
         // If there is only one frame this execution have to finish in current epoch
         let finish = current.now() + (frames - 1) as u64;
+        let span = current.now() .. finish;
+
+        let acq_rel = self.renderer.surface_semaphores.get_or_insert(span.clone(), || (
+            device.create_semaphore(),
+            device.create_semaphore(),
+        ));
+
+        // Start frame acquisition
+        let frame = SuperFrame::new(
+            backbuffer,
+            swapchain.acquire_frame(FrameSync::Semaphore(&acq_rel.0)),
+        );
+
+        let upload = self.uploader.and_then(|uploader| uploader.commit(span.clone(), device, queue, &mut pools[0]));
+
         graph.draw_inline(
             queue,
             &mut pools[0],
             frame,
-            &self.renderer.acquire,
-            &self.renderer.release,
+            upload.as_ref().map(|x|&**x),
+            &acq_rel.0,
+            &acq_rel.1,
             self.allocator,
             device,
             viewport,
             world,
             fence,
-            finish,
-            current,
+            span,
         );
 
         // Present queue
         profile_scope!("Graph::draw :: present");
-        swapchain.present(queue, &[&self.renderer.release]);
+        swapchain.present(queue, &[&acq_rel.1]);
         finish
     }
 }

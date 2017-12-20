@@ -265,7 +265,6 @@ where
                 .map(ClearValue::DepthStencil),
         );
 
-        let mut draws_to_surface = false;
         // create framebuffers
         let framebuffer: SuperFramebuffer<B> = {
             if colors.len() == 1 && match colors[0].view {
@@ -282,7 +281,6 @@ where
                     .chain(depth_stencil.iter().map(|ds| &ds.view))
                     .map(|view| match *view {
                         AttachmentImageViews::Acquired(ref images) => {
-                            draws_to_surface = true;
                             images
                         }
                         AttachmentImageViews::Owned(ref images) => images,
@@ -328,7 +326,6 @@ where
             framebuffer,
             pass,
             depends: None,
-            draws_to_surface,
         })
     }
 }

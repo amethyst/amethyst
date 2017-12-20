@@ -24,7 +24,7 @@ use smallvec::SmallVec;
 use specs::World;
 
 use descriptors::Descriptors;
-use epoch::{CurrentEpoch, Epoch};
+use epoch::Epoch;
 use graph::pass::AnyPass;
 use graph::pass::build::{PassBuilder, dependencies, direct_dependencies, indices_in_of, merges,
                          some_indices_in_of, traverse, AttachmentImageViews, ColorAttachmentDesc,
@@ -129,7 +129,6 @@ pub struct PassNode<B: Backend> {
     framebuffer: SuperFramebuffer<B>,
     pass: Box<AnyPass<B>>,
     depends: Option<(usize, PipelineStage)>,
-    draws_to_surface: bool,
 }
 
 impl<B> PassNode<B>
@@ -143,8 +142,8 @@ where
     /// `world` - primary source of data (`Mesh`es, `Texture`s etc) for the `Pass`es.
     /// `rect` - area to draw in.
     /// `frame` - specifies which framebuffer and descriptor sets to use.
-    /// `through` - commands will be executed through this epoch. Pass should ensure all resources
-    /// are valid for it.
+    /// `span` - commands will be executed in specified epoch range. Pass should ensure all resources
+    /// are valid for execution span.
     ///
     fn draw_inline<C>(
         &mut self,
@@ -154,8 +153,7 @@ where
         world: &World,
         rect: Rect,
         frame: SuperFrame<B>,
-        through: Epoch,
-        current: &CurrentEpoch,
+        span: Range<Epoch>,
     ) where
         C: Supports<Graphics> + Supports<Transfer>,
     {
@@ -174,8 +172,7 @@ where
         {
             profile_scope!("AnyPass::prepare");
             self.pass.prepare(
-                through,
-                current,
+                span.clone(),
                 &mut self.descriptors,
                 cbuf.downgrade(),
                 allocator,
@@ -198,7 +195,7 @@ where
         profile_scope!("AnyPass::draw_inline");
         // Record custom drawing calls
         self.pass
-            .draw_inline(through, &self.pipeline_layout, encoder, world);
+            .draw_inline(span, &self.pipeline_layout, encoder, world);
     }
 
     fn dispose(self, _allocator: &mut Allocator<B>, device: &B::Device) {
@@ -225,6 +222,7 @@ pub struct Graph<B: Backend> {
     images: Vec<Image<B>>,
     views: Vec<B::ImageView>,
     frames: usize,
+    first_draws_to_surface: usize,
 }
 
 impl<B> Graph<B>
@@ -243,6 +241,7 @@ where
     /// All those should be created by `device`.
     ///
     /// `frame` - frame index that should be drawn.
+    /// `upload` - semaphore that will be signaled when all data will be uploaded.
     /// (or `Framebuffer` reference that corresponds to index `0`)
     /// `acquire` - semaphore that should be waited on by submissions which
     /// contains commands from passes that draw to the surface
@@ -250,12 +249,13 @@ where
     /// `viewport` - portion of framebuffers to draw
     /// `world` - primary source of stuff to draw
     /// `finish` - last submission should set this fence
-    /// `through` - all commands will be finished before this epoch ends.
+    /// `span` - all commands will be finished before this epoch ends.
     pub fn draw_inline<C>(
         &mut self,
         queue: &mut CommandQueue<B, C>,
         pool: &mut CommandPool<B, C>,
         frame: SuperFrame<B>,
+        upload: Option<&B::Semaphore>,
         acquire: &B::Semaphore,
         release: &B::Semaphore,
         allocator: &mut Allocator<B>,
@@ -263,17 +263,16 @@ where
         viewport: Viewport,
         world: &World,
         finish: &B::Fence,
-        through: Epoch,
-        current: &CurrentEpoch,
+        span: Range<Epoch>,
     ) where
         C: Supports<Graphics> + Supports<Transfer>,
     {
         use gfx_hal::queue::submission::Submission;
 
         profile_scope!("Graph::draw");
-
         let ref signals = self.signals;
         let count = self.passes.len();
+        let first_draws_to_surface = self.first_draws_to_surface;
 
         // Record commands for all passes
         self.passes.iter_mut().enumerate().for_each(|(id, pass)| {
@@ -293,18 +292,21 @@ where
                 world,
                 viewport.rect,
                 frame.clone(),
-                through,
-                current,
+                span.clone(),
             );
 
             {
                 profile_scope!("Graph::draw :: pass :: submit");
-
-
                 // If it renders to acquired image
-                let wait_surface = if pass.draws_to_surface {
+                let wait_surface = if id == first_draws_to_surface {
                     // And it should wait for acquisition
                     Some((acquire, PipelineStage::TOP_OF_PIPE))
+                } else {
+                    None
+                };
+
+                let wait_for_upload = if id == 0 {
+                    upload.map(|upload| (upload, PipelineStage::TOP_OF_PIPE))
                 } else {
                     None
                 };
@@ -314,13 +316,13 @@ where
                     .map(|&(id, stage)| (signals[id].as_ref().unwrap(), stage))
                     .into_iter()
                     .chain(wait_surface)
-                    .collect::<SmallVec<[_; 2]>>();
+                    .chain(wait_for_upload)
+                    .collect::<SmallVec<[_; 3]>>();
 
                 let mut to_signal = SmallVec::<[_; 1]>::new();
                 if id == count - 1 {
                     // The last one has to draw to surface.
                     // Also it depends on all others that draws to surface.
-                    assert!(pass.draws_to_surface);
                     to_signal.push(release);
                 } else if let Some(signal) = signals[id].as_ref() {
                     to_signal.push(signal);
@@ -379,7 +381,8 @@ where
         // Get all merges
         let merges = merges(&present);
 
-        // Reorder passes to increase overlapping
+        // Reorder passes to maximise overlapping
+        // while keeping all dependencies before dependants.
         let passes = reorder_passes(passes, &merges);
 
         // Setup image storage
@@ -408,7 +411,9 @@ where
         // Build pass nodes from pass builders
         let mut pass_nodes: Vec<PassNode<B>> = Vec::new();
 
-        for (pass, last_dep) in passes.into_iter() {
+        let mut first_draws_to_surface = None;
+
+        for (id, (pass, last_dep)) in passes.into_iter().enumerate() {
             // Collect input targets
             let inputs = pass.connects
                 .iter()
@@ -448,7 +453,15 @@ where
                 .expect("All passes comes from merges");
             let key = merge as *const _;
 
-            let is_first = merge.passes[0] as *const _ == pass as *const _;
+            let is_first = {
+                let ref mut first = targets.get_mut(&(merge as *const _)).unwrap().first_pass;
+                if first.is_none() {
+                    *first = Some(id);
+                    true
+                } else {
+                    false
+                }
+            };
             let clear_color = if is_first { merge.clear_color } else { None };
             let clear_depth = if is_first { merge.clear_depth } else { None };
 
@@ -474,16 +487,17 @@ where
                             )
                         })
                         .unwrap_or_else(|| {
-                            (
-                                // It's backbuffer image
-                                match *backbuffer {
-                                    Backbuffer::Images(_) => {
-                                        AttachmentImageViews::Acquired(&image_views[0..frames])
-                                    }
-                                    Backbuffer::Framebuffer(_) => AttachmentImageViews::External,
-                                },
-                                color,
-                            )
+                            if first_draws_to_surface.is_none() {
+                                first_draws_to_surface = Some(id);
+                            }
+                            // It's backbuffer image
+                            let views = match *backbuffer {
+                                Backbuffer::Images(_) => {
+                                    AttachmentImageViews::Acquired(&image_views[0..frames])
+                                }
+                                Backbuffer::Framebuffer(_) => AttachmentImageViews::External,
+                            };
+                            (views, color)
                         });
                     ColorAttachmentDesc {
                         format,
@@ -564,6 +578,7 @@ where
             images,
             views: image_views,
             frames,
+            first_draws_to_surface: first_draws_to_surface.unwrap(),
         })
     }
 
@@ -587,6 +602,7 @@ where
 struct Targets {
     colors: Vec<ColorIndices>,
     depth: Option<DepthIndices>,
+    first_pass: Option<usize>,
 }
 
 #[derive(Clone)]
@@ -658,6 +674,7 @@ where
             }),
             None => None,
         },
+        first_pass: None,
     };
 
     Ok(target)

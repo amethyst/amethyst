@@ -2,8 +2,6 @@
 //! Semi-automatic tracking of uniform caches and updates.
 //! 
 
-
-use std::collections::VecDeque;
 use std::ops::{DerefMut, Range};
 
 use gfx_hal::{Backend, Device};
@@ -14,15 +12,15 @@ use gfx_hal::queue::{Supports, Transfer};
 
 use specs::{Entity, MaskedStorage, Storage};
 
-use epoch::{CurrentEpoch, Eh, Epoch};
+use cirque::Cirque;
+use epoch::{Eh, Epoch};
 use memory::{shift_for_alignment, Allocator, Buffer, Result};
 
 
 pub trait UniformCache<B: Backend, T>: Sized {
     fn new<C>(
         value: T,
-        through: Epoch,
-        current: &CurrentEpoch,
+        span: Range<Epoch>,
         cbuf: &mut CommandBuffer<B, C>,
         allocator: &mut Allocator<B>,
         device: &B::Device,
@@ -33,16 +31,15 @@ pub trait UniformCache<B: Backend, T>: Sized {
     fn update<C>(
         &mut self,
         value: T,
-        through: Epoch,
-        current: &CurrentEpoch,
+        span: Range<Epoch>,
         cbuf: &mut CommandBuffer<B, C>,
         allocator: &mut Allocator<B>,
         device: &B::Device,
     ) -> Result<()>
     where
         C: Supports<Transfer>;
-
-    fn get_cached(&self) -> (&Buffer<B>, Range<u64>);
+        
+        fn get_cached(&self) -> (&Buffer<B>, Range<u64>);
 }
 
 pub trait UniformCacheStorage<B: Backend, T> {
@@ -50,8 +47,7 @@ pub trait UniformCacheStorage<B: Backend, T> {
         &mut self,
         entity: Entity,
         value: T,
-        through: Epoch,
-        current: &CurrentEpoch,
+        span: Range<Epoch>,
         cbuf: &mut CommandBuffer<B, C>,
         allocator: &mut Allocator<B>,
         device: &B::Device,
@@ -70,8 +66,7 @@ where
         &mut self,
         entity: Entity,
         value: T,
-        through: Epoch,
-        current: &CurrentEpoch,
+        span: Range<Epoch>,
         cbuf: &mut CommandBuffer<B, C>,
         allocator: &mut Allocator<B>,
         device: &B::Device,
@@ -80,11 +75,11 @@ where
         C: Supports<Transfer>,
     {
         if let Some(cache) = self.get_mut(entity) {
-            return cache.update(value, through, current, cbuf, allocator, device);
+            return cache.update(value, span, cbuf, allocator, device);
         }
         self.insert(
             entity,
-            BasicUniformCache::new(value, through, current, cbuf, allocator, device)?,
+            BasicUniformCache::new(value, span, cbuf, allocator, device)?,
         );
         Ok(())
     }
@@ -96,7 +91,7 @@ pub struct BasicUniformCache<B: Backend, T> {
     align: u64,
     cached: T,
     buffer: Buffer<B>,
-    offsets: VecDeque<(u64, Epoch)>,
+    offsets: Cirque<u64>,
 }
 
 impl<B, T> UniformCache<B, T> for BasicUniformCache<B, T>
@@ -106,8 +101,7 @@ where
 {
     fn new<C>(
         value: T,
-        through: Epoch,
-        current: &CurrentEpoch,
+        span: Range<Epoch>,
         cbuf: &mut CommandBuffer<B, C>,
         allocator: &mut Allocator<B>,
         device: &B::Device,
@@ -116,25 +110,25 @@ where
         C: Supports<Transfer>,
     {
         let align = device.get_limits().min_uniform_buffer_offset_alignment as u64;
-        let span = through.0 - current.now().0 + 1;
-        let (buffer, offsets) = Self::allocate(align, span, allocator, device)?;
+        let stride = Self::stride(align);
+        let count = span.end - span.start;
+        let buffer = Self::allocate(align, count as usize, allocator, device)?;
 
         let mut cache = BasicUniformCache {
             align,
             cached: value,
             buffer,
-            offsets,
+            offsets: Cirque::create((0..count).map(|i| i * stride)),
         };
 
-        cache.update_from_cached(through, current, cbuf, allocator, device);
+        cache.update_from_cached(span, cbuf, allocator, device)?;
         Ok(cache)
     }
 
     fn update<C>(
         &mut self,
         value: T,
-        through: Epoch,
-        current: &CurrentEpoch,
+        span: Range<Epoch>,
         cbuf: &mut CommandBuffer<B, C>,
         allocator: &mut Allocator<B>,
         device: &B::Device,
@@ -144,16 +138,16 @@ where
     {
         if self.cached != value {
             self.cached = value;
-            self.update_from_cached(through, current, cbuf, allocator, device)
+            self.update_from_cached(span, cbuf, allocator, device)
         } else {
             Ok(())
         }
     }
 
     fn get_cached(&self) -> (&Buffer<B>, Range<u64>) {
-        let size = shift_for_alignment(self.align, ::std::mem::size_of::<T>() as u64);
-        let offset = self.offsets.back().unwrap();
-        (&self.buffer, offset.0..(offset.0 + size))
+        let stride = Self::stride(self.align);
+        let offset = *self.offsets.last().unwrap();
+        (&self.buffer, offset..(offset + stride))
     }
 }
 
@@ -164,8 +158,7 @@ where
 {
     fn update_from_cached<C>(
         &mut self,
-        through: Epoch,
-        current: &CurrentEpoch,
+        span: Range<Epoch>,
         cbuf: &mut CommandBuffer<B, C>,
         allocator: &mut Allocator<B>,
         device: &B::Device,
@@ -174,33 +167,27 @@ where
         C: Supports<Transfer>,
     {
         use std::mem::{replace, size_of};
-        if self.offsets
-            .front()
-            .map(|&(_, through)| through >= current.now())
-            .unwrap_or(true)
-        {
-            let span = through.0 - current.now().0 + 1;
-            assert!((self.offsets.len() as u64) < span);
+        let ref mut buffer = self.buffer;
+        let align = self.align;
+        let offset = *self.offsets.get_or_try_replace(span.clone(), |count| -> Result<_> {
+            let new = Self::allocate(align, count, allocator, device)?;
+            let old = replace(buffer, new);
+            allocator.destroy_buffer(old);
+            let stride = Self::stride(align);
+            Ok((0..count).map(move |i| i as u64 * stride))
+        })?;
 
-            let (buffer, offsets) = Self::allocate(self.align, span, allocator, device)?;
-            self.offsets = offsets;
-            let buffer = replace(&mut self.buffer, buffer);
-            allocator.destroy_buffer(buffer);
-        }
-
-        let (offset, _) = self.offsets.pop_front().unwrap();
-        if self.buffer.visible() {
+        if buffer.visible() {
             let mut writer = device
-                .acquire_mapping_writer(self.buffer.raw(), offset..(offset + size_of::<T>() as u64))
+                .acquire_mapping_writer(buffer.raw(), offset..(offset + size_of::<T>() as u64))
                 .unwrap();
             writer.copy_from_slice(&[self.cached]);
             device.release_mapping_writer(writer);
         } else {
-            cbuf.update_buffer(self.buffer.raw(), offset, cast_slice(&[self.cached]));
+            cbuf.update_buffer(buffer.raw(), offset, cast_slice(&[self.cached]));
         }
 
-        self.offsets.push_back((offset, through));
-        Eh::make_valid_through(&self.buffer, through);
+        Eh::make_valid_until(&buffer, span.end);
         Ok(())
     }
 
@@ -212,21 +199,20 @@ where
 
     fn allocate(
         align: u64,
-        span: u64,
+        span: usize,
         allocator: &mut Allocator<B>,
         device: &B::Device,
-    ) -> Result<(Buffer<B>, VecDeque<(u64, Epoch)>)> {
+    ) -> Result<Buffer<B>> {
         let stride = Self::stride(align);
         let buffer = allocator.create_buffer(
             device,
-            span * stride,
-            span * stride,
+            span as u64 * stride,
+            span as u64 * stride,
             Usage::UNIFORM,
             Properties::DEVICE_LOCAL,
             false,
         )?;
 
-        let offsets = (0..span).map(|i| (i * stride, Epoch::new())).collect();
-        Ok((buffer, offsets))
+        Ok(buffer)
     }
 }
