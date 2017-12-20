@@ -30,7 +30,7 @@ where
         }
     }
 
-    pub fn dispose(mut self, device: &B::Device) {
+    pub fn dispose(self, device: &B::Device) {
         #[cfg(feature = "gfx-metal")]
         {
             if device.downcast_ref::<::metal::Device>().is_none() {

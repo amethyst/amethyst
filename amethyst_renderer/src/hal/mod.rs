@@ -4,6 +4,7 @@
 //!
 
 mod build;
+mod renderer;
 
 use std::mem::ManuallyDrop;
 use std::ptr::read;
@@ -13,12 +14,11 @@ use gfx_hal::Backend;
 use command::CommandCenter;
 use epoch::CurrentEpoch;
 use memory::Allocator;
-use renderer::Renderer;
 use shaders::ShaderManager;
 use upload::Uploader;
 
-pub use self::build::{Error, ErrorKind, HalConfig};
-
+pub use hal::build::{Error, ErrorKind, HalConfig};
+pub use hal::renderer::{Renderer, RendererConfig};
 
 pub struct Hal<B: Backend> {
     pub device: B::Device,

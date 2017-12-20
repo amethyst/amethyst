@@ -18,6 +18,7 @@
 //!
 
 use std::fmt::Debug;
+use std::ops::Range;
 
 use gfx_hal::Backend;
 use gfx_hal::command::{CommandBuffer, RenderPassInlineEncoder};
@@ -27,7 +28,7 @@ use gfx_hal::queue::capability::{Supports, Transfer};
 use specs::{SystemData, World};
 
 use descriptors::Descriptors;
-use epoch::{CurrentEpoch, Epoch};
+use epoch::Epoch;
 use memory::Allocator;
 use shaders::ShaderManager;
 use vertex::VertexFormat;
@@ -98,8 +99,7 @@ where
     /// * filling `DescriptorSet`s
     fn prepare<'a, C>(
         &mut self,
-        through: Epoch,
-        current: &CurrentEpoch,
+        span: Range<Epoch>,
         descriptors: &mut Descriptors<B>,
         cbuf: &mut CommandBuffer<B, C>,
         allocator: &mut Allocator<B>,
@@ -114,7 +114,7 @@ where
     /// * recording `Graphics` commands to `CommandBuffer`
     fn draw_inline<'a>(
         &mut self,
-        through: Epoch,
+        span: Range<Epoch>,
         layout: &B::PipelineLayout,
         encoder: RenderPassInlineEncoder<B>,
         data: <Self as Data<'a, B>>::DrawData,
@@ -165,8 +165,7 @@ where
     /// [`Pass::prepare`]: trait.Pass.html#tymethod.prepare
     fn prepare<'a>(
         &mut self,
-        through: Epoch,
-        current: &CurrentEpoch,
+        span: Range<Epoch>,
         descriptors: &mut Descriptors<B>,
         cbuf: &mut CommandBuffer<B, Transfer>,
         allocator: &mut Allocator<B>,
@@ -179,7 +178,7 @@ where
     /// [`Pass::draw_inline`]: trait.Pass.html#tymethod.draw_inline
     fn draw_inline<'a>(
         &mut self,
-        through: Epoch,
+        span: Range<Epoch>,
         layout: &B::PipelineLayout,
         encoder: RenderPassInlineEncoder<B>,
         world: &'a World,
@@ -232,8 +231,7 @@ where
 
     fn prepare<'a>(
         &mut self,
-        through: Epoch,
-        current: &CurrentEpoch,
+        span: Range<Epoch>,
         descriptors: &mut Descriptors<B>,
         cbuf: &mut CommandBuffer<B, Transfer>,
         allocator: &mut Allocator<B>,
@@ -242,8 +240,7 @@ where
     ) {
         <P as Pass<B>>::prepare(
             self,
-            through,
-            current,
+            span,
             descriptors,
             cbuf,
             allocator,
@@ -254,14 +251,14 @@ where
 
     fn draw_inline<'a>(
         &mut self,
-        through: Epoch,
+        span: Range<Epoch>,
         layout: &B::PipelineLayout,
         encoder: RenderPassInlineEncoder<B>,
         world: &'a World,
     ) {
         <P as Pass<B>>::draw_inline(
             self,
-            through,
+            span,
             layout,
             encoder,
             <P as Data<'a, B>>::DrawData::fetch(&world.res, 0),

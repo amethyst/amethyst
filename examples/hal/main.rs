@@ -30,10 +30,9 @@ use renderer::gfx_hal::pso::{EntryPoint, Stage};
 use renderer::*;
 use renderer::cam::{ActiveCamera, Camera};
 use renderer::graph::{ColorPin, Graph, Merge, Pass};
-use renderer::hal::{Hal, HalConfig};
+use renderer::hal::{Hal, HalConfig, Renderer, RendererConfig};
 use renderer::memory::Allocator;
 use renderer::mesh::{Mesh, MeshBuilder};
-use renderer::renderer::{Renderer, RendererConfig};
 use renderer::uniform::BasicUniformCache;
 use renderer::vertex::PosColor;
 
@@ -276,7 +275,7 @@ fn run() -> Result<()> {
 
     for i in 0.. {
         events_loop.poll_events(|_| {});
-        renderer.draw(0, current, center, allocator, device, &world);
+        renderer.draw(0, current, center, allocator, None, device, &world);
 
         let now = ::std::time::Instant::now();
         let delta = now - instant;

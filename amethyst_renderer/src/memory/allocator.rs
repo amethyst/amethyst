@@ -88,7 +88,7 @@ where
         size: u64,
         stride: u64,
         usage: BufferUsage,
-        mut properties: Properties,
+        properties: Properties,
         transient: bool,
     ) -> Result<Buffer<B>> {
         // Remove this when metal will support buffer copy operation.

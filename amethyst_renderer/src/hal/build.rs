@@ -1,16 +1,17 @@
-use gfx_hal::{Backend, Device, Gpu, Instance};
+use gfx_hal::{Backend, Device, Gpu};
 use gfx_hal::adapter::{Adapter, PhysicalDevice};
 use gfx_hal::format::{ChannelType, Format, Formatted, Srgba8};
 use gfx_hal::queue::{QueueFamily, QueueType};
 use gfx_hal::window::{Surface, SwapchainConfig};
 
-use winit::{Window, WindowBuilder};
+use winit::Window;
 
 
+use cirque::Cirque;
 use command::CommandCenter;
 use epoch::{CurrentEpoch, Epoch};
+use hal::renderer::{Renderer, RendererConfig};
 use memory::Allocator;
-use renderer::{Renderer, RendererConfig};
 use shaders::{ShaderLoader, ShaderManager};
 use upload::Uploader;
 
@@ -56,8 +57,10 @@ impl BackendEx for metal::Backend {
             Vec<Adapter<metal::Backend>>,
         ),
     > {
-        let instance = metal::Instance::create("amethyst-hal", 1);
+        use gfx_hal::Instance;
+        use winit::WindowBuilder;
 
+        let instance = metal::Instance::create("amethyst-hal", 1);
         let window_surface = builder
             .renderer
             .as_ref()
@@ -88,8 +91,10 @@ impl BackendEx for vulkan::Backend {
             Vec<Adapter<vulkan::Backend>>,
         ),
     > {
-        let instance = vulkan::Instance::create("amethyst-hal", 1);
+        use gfx_hal::Instance;
+        use winit::WindowBuilder;
 
+        let instance = vulkan::Instance::create("amethyst-hal", 1);
         let window_surface = builder
             .renderer
             .as_ref()
@@ -129,10 +134,10 @@ impl<'a> HalConfig<'a> {
         let (general, _) = qf.into_iter()
             .partition::<Vec<_>, _>(|qf| qf.queue_type() == QueueType::General);
 
-        let mut transfer = transfer.into_iter().map(|qf| (1, qf)).next();
-        let mut compute = compute.into_iter().map(|qf| (1, qf)).next();
-        let mut graphics = graphics.into_iter().map(|qf| (1, qf)).next();
-        let mut general = general.into_iter().map(|qf| (1, qf)).next();
+        let transfer = transfer.into_iter().map(|qf| (1, qf)).next();
+        let compute = compute.into_iter().map(|qf| (1, qf)).next();
+        let graphics = graphics.into_iter().map(|qf| (1, qf)).next();
+        let general = general.into_iter().map(|qf| (1, qf)).next();
 
         let mut requests = vec![];
 
@@ -213,8 +218,7 @@ impl<'a> HalConfig<'a> {
                 swapchain,
                 backbuffer,
                 graphs: Vec::new(),
-                acquire: device.create_semaphore(),
-                release: device.create_semaphore(),
+                surface_semaphores: Cirque::new(),
                 start_epoch: Epoch::new(),
             }
         });

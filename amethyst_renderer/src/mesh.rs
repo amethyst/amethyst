@@ -624,7 +624,7 @@ where
     /// Bind buffers to specified attribute locations.
     pub fn bind<'a>(
         &'a self,
-        through: Epoch,
+        until: Epoch,
         format_set: VertexFormatSet<'static>,
         vertex: &mut VertexBufferSet<'a, B>,
     ) -> BindResult<Bind<B>> {
@@ -640,7 +640,7 @@ where
         for format in format_set {
             if let Some(index) = find_compatible_buffer(&self.vbufs[last..], format) {
                 // Ensure buffer is valid
-                Eh::make_valid_through(&self.vbufs[index].buffer, through);
+                Eh::make_valid_until(&self.vbufs[index].buffer, until);
                 vertex.0.push((self.vbufs[index].buffer.raw(), 0));
                 last = index;
                 assert!(vertex_count.is_none() || vertex_count == Some(self.vbufs[index].len));
@@ -654,7 +654,7 @@ where
             self.ibuf
                 .as_ref()
                 .map(|ibuf| {
-                    Eh::make_valid_through(&ibuf.buffer, through);
+                    Eh::make_valid_until(&ibuf.buffer, until);
                     Bind::Indexed {
                         index: IndexBufferView {
                             buffer: ibuf.buffer.raw(),
