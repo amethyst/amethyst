@@ -2,14 +2,18 @@
 //! Simplifies loading of data to the buffer and images
 //! 
 
+use std::ops::Range;
+
 use gfx_hal::{Backend, Device};
 use gfx_hal::buffer::Usage as BufferUsage;
 use gfx_hal::command::{BufferCopy, BufferImageCopy, CommandBuffer};
 use gfx_hal::image::ImageLayout;
 use gfx_hal::memory::{Pod, Properties};
-use gfx_hal::queue::{Supports, Transfer};
+use gfx_hal::pool::CommandPool;
+use gfx_hal::queue::{Supports, Transfer, CommandQueue, Submission};
 
-use epoch::{CurrentEpoch, Eh};
+use cirque::{Cirque, CirqueRef};
+use epoch::{CurrentEpoch, Eh, Epoch};
 use memory::{cast_pod_vec, Allocator, Buffer, Image, WeakBuffer, WeakImage};
 
 const DIRECT_TRESHOLD: u64 = 1024;
@@ -80,13 +84,13 @@ where
             }
 
             Ok(Upload::BufferStaging {
-                dst: Eh::borrow(dst, current.now() + 2),
+                dst: Eh::borrow(dst, current.now() + 5),
                 src,
                 offset,
             })
         } else {
             Ok(Upload::BufferDirect {
-                dst: Eh::borrow(dst, current.now() + 2),
+                dst: Eh::borrow(dst, current.now() + 5),
                 data: cast_pod_vec(data.into()),
                 offset,
             })
@@ -131,13 +135,13 @@ where
         })
     }
 
-    pub fn commit<C>(self, cbuf: &mut CommandBuffer<B, C>, current: &CurrentEpoch)
+    pub fn commit<C>(self, cbuf: &mut CommandBuffer<B, C>, span: Range<Epoch>)
     where
         C: Supports<Transfer>,
     {
         match self {
             Upload::BufferDirect { dst, offset, data } => cbuf.update_buffer(
-                dst.get(current)
+                unsafe {dst.get_unsafe(span.end)}
                     .expect("Expected to be commited before dst expires")
                     .raw(),
                 offset,
@@ -145,7 +149,7 @@ where
             ),
             Upload::BufferStaging { dst, offset, src } => cbuf.copy_buffer(
                 src.raw(),
-                dst.get(current)
+                unsafe {dst.get_unsafe(span.end)}
                     .expect("Expected to be commited before dst expires")
                     .raw(),
                 &[
@@ -163,7 +167,7 @@ where
                 src,
             } => cbuf.copy_buffer_to_image(
                 src.raw(),
-                dst.get(current)
+                unsafe {dst.get_unsafe(span.end)}
                     .expect("Expected to be commited before dst expires")
                     .raw(),
                 dst_layout,
@@ -185,6 +189,7 @@ where
 #[derive(Debug)]
 pub struct Uploader<B: Backend> {
     uploads: Vec<Upload<B>>,
+    semaphores: Cirque<B::Semaphore>,
 }
 
 
@@ -195,6 +200,7 @@ where
     pub fn new() -> Self {
         Uploader {
             uploads: Vec::new(),
+            semaphores: Cirque::new(),
         }
     }
 
@@ -254,13 +260,30 @@ where
         )?))
     }
 
-    pub fn commit<C>(&mut self, cbuf: &mut CommandBuffer<B, C>, current: &CurrentEpoch)
+    pub fn commit<C>(&mut self, span: Range<Epoch>, device: &B::Device, queue: &mut CommandQueue<B, C>, pool: &mut CommandPool<B, C>) -> Option<CirqueRef<B::Semaphore>>
     where
         C: Supports<Transfer>,
     {
-        for upload in self.uploads.drain(..) {
-            upload.commit(cbuf, current);
+        if self.uploads.is_empty() {
+            return None;
         }
+
+        let mut cbuf = pool.acquire_command_buffer();
+        for upload in self.uploads.drain(..) {
+            upload.commit(&mut cbuf, span.clone());
+        }
+
+        let semaphore = self.semaphores.get_or_insert(span, || device.create_semaphore());
+
+        queue.submit::<C>(
+            Submission::new()
+                .promote()
+                .submit(&[cbuf.finish()])
+                .signal(&[&*semaphore]),
+            None,
+        );
+
+        Some(semaphore)
     }
 
     pub fn dispose(self, allocator: &mut Allocator<B>) {

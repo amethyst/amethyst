@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 use core::Transform;
 use core::cgmath::{Deg, Matrix, Matrix4, SquareMatrix};
 use gfx_hal::{Backend, Device};
@@ -107,8 +109,7 @@ where
     /// * filling `DescriptorSet`s
     fn prepare<'a, C>(
         &mut self,
-        finish: Epoch,
-        current: &CurrentEpoch,
+        span: Range<Epoch>,
         descriptors: &mut Descriptors<B>,
         cbuf: &mut CommandBuffer<B, C>,
         allocator: &mut Allocator<B>,
@@ -125,8 +126,7 @@ where
                     projection: cam.get(ac.entity).unwrap().proj.into(),
                     view: (*trs.get(ac.entity).unwrap()).into(),
                 },
-                finish,
-                current,
+                span.clone(),
                 cbuf,
                 allocator,
                 device,
@@ -157,7 +157,7 @@ where
     /// * recording `Transfer` and `Graphics` commands to `CommandBuffer`
     fn draw_inline<'a>(
         &mut self,
-        finish: Epoch,
+        span: Range<Epoch>,
         layout: &B::PipelineLayout,
         mut encoder: RenderPassInlineEncoder<B>,
         (meshes, descs): <Self as Data<'a, B>>::DrawData,
@@ -166,7 +166,7 @@ where
             encoder.bind_graphics_descriptor_sets(layout, 0, &[desc]);
 
             let mut vertex = VertexBufferSet(vec![]);
-            mesh.bind(finish, &[PosColor::VERTEX_FORMAT], &mut vertex)
+            mesh.bind(span.end, &[PosColor::VERTEX_FORMAT], &mut vertex)
                 .map(|bind| {
                     bind.draw_inline(vertex, &mut encoder);
                 })
