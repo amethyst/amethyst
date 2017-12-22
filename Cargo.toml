@@ -31,6 +31,7 @@ amethyst_input = { path = "amethyst_input", version = "0.1" }
 amethyst_ui = { path = "amethyst_ui", version = "0.1" }
 amethyst_utils = { path = "amethyst_utils", version = "0.1" }
 derivative = "1.0"
+log = "0.3.8"
 rayon = "0.8"
 rustc_version_runtime = "0.1"
 shred = "0.5"

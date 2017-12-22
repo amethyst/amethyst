@@ -22,6 +22,7 @@ impl AsRef<[u8]> for Source {
 }
 
 impl Asset for Source {
+    const NAME: &'static str = "audio::Source";
     type Data = AudioData;
     type HandleStorage = VecStorage<SourceHandle>;
 }
