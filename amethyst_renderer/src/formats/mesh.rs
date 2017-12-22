@@ -63,6 +63,7 @@ where
 }
 
 impl Asset for Mesh {
+    const NAME: &'static str = "renderer::Mesh";
     type Data = MeshData;
     type HandleStorage = VecStorage<MeshHandle>;
 }

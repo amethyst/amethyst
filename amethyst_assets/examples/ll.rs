@@ -17,6 +17,7 @@ use specs::VecStorage;
 struct DummyAsset(String);
 
 impl Asset for DummyAsset {
+    const NAME: &'static str = "example::DummyAsset";
     type Data = String;
     type HandleStorage = VecStorage<Handle<DummyAsset>>;
 }

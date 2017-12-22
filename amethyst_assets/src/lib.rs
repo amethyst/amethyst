@@ -17,6 +17,8 @@ extern crate derivative;
 extern crate error_chain;
 extern crate fnv;
 extern crate hibitset;
+#[macro_use]
+extern crate log;
 extern crate parking_lot;
 extern crate rayon;
 extern crate specs;

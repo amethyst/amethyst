@@ -151,11 +151,24 @@ impl<A: Asset> AssetStorage<A> {
                         .chain_err(|| ErrorKind::Asset(name))
                     {
                         Ok(x) => {
+                            debug!(
+                                "{:?}: Asset {:?} (handle id: {:?}) has been loaded successfully",
+                                A::NAME,
+                                name,
+                                handle,
+                            );
                             tracker.success();
 
                             x
                         }
                         Err(e) => {
+                            error!(
+                                "{:?}: Asset {:?} (handle id: {:?}) could not be loaded: {}",
+                                A::NAME,
+                                name,
+                                handle,
+                                e,
+                            );
                             tracker.fail(e);
 
                             continue;
@@ -172,6 +185,7 @@ impl<A: Asset> AssetStorage<A> {
                         assets.insert(id, asset);
                     }
 
+
                     (reload_obj, handle)
                 }
                 Processed::HotReload {
@@ -180,14 +194,28 @@ impl<A: Asset> AssetStorage<A> {
                     name,
                     old_reload,
                 } => {
+<<<<<<< d20f6b362c277c49a53871d8370975dbf8be9553
                     let (asset, reload_obj) = match data.map(|FormatValue { data, reload }| {
                         (data, reload)
                     }).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
                         .chain_err(|| ErrorKind::Asset(name))
+=======
+                    let (asset, reload_obj) = match data.map(
+                        |FormatValue { data, reload }| (data, reload),
+                    ).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
+                        .chain_err(|| ErrorKind::Asset(name.clone()))
+>>>>>>> Setup basic logging
                     {
                         Ok(x) => x,
                         Err(e) => {
-                            eprintln!("Failed to hot-reload: {}", e);
+                            error!(
+                                "{:?}: Failed to hot-reload asset {:?} (handle id: {:?}): {}\n\
+                                 Falling back to old reload object.",
+                                A::NAME,
+                                name,
+                                handle,
+                                e,
+                            );
 
                             reloads.push((handle.downgrade(), old_reload));
 
@@ -196,7 +224,11 @@ impl<A: Asset> AssetStorage<A> {
                     };
 
                     let id = handle.id();
-                    assert!(bitset.contains(id));
+                    assert!(
+                        bitset.contains(id),
+                        "Expected handle {:?} to be valid, but the asset storage says otherwise",
+                        handle,
+                    );
                     unsafe {
                         let old = assets.get_mut(id);
                         *old = asset;
@@ -212,8 +244,10 @@ impl<A: Asset> AssetStorage<A> {
             }
         }
 
+        let mut count = 0;
         let mut skip = 0;
         while let Some(i) = self.handles.iter().skip(skip).position(Handle::is_unique) {
+            count += 1;
             skip = i;
             let handle = self.handles.swap_remove(i);
             let id = handle.id();
@@ -229,11 +263,17 @@ impl<A: Asset> AssetStorage<A> {
                 marker: PhantomData,
             });
         }
+        debug!(
+            "{:?}: Freed {} handle ids",
+            A::NAME,
+            count,
+        );
 
         if strategy
             .map(|s| s.needs_reload(frame_number))
             .unwrap_or(false)
         {
+            trace!("Testing for asset reloads..");
             self.hot_reload(pool);
         }
     }
@@ -244,14 +284,23 @@ impl<A: Asset> AssetStorage<A> {
             .iter()
             .position(|&(_, ref rel)| rel.needs_reload())
         {
-            let (handle, rel) = self.reloads.swap_remove(p);
+            let (handle, rel): (WeakHandle<_>, Box<Reload<_>>) = self.reloads.swap_remove(p);
 
-            if let Some(handle) = handle.upgrade() {
+            let name = rel.name();
+            let format = rel.format();
+            let handle = handle.upgrade();
+
+            debug!(
+                "Asset {:?} (handle id: {:?}) was determined to need a reload using format {:?}",
+                name,
+                handle,
+                format,
+            );
+
+            if let Some(handle) = handle {
                 let processed = self.processed.clone();
                 pool.spawn(move || {
                     let old_reload = rel.clone();
-                    let name = rel.name();
-                    let format = rel.format();
                     let data = rel.reload().chain_err(|| ErrorKind::Format(format));
 
                     let p = Processed::HotReload {

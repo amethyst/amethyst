@@ -11,6 +11,7 @@ pub type FontHandle = Handle<FontAsset>;
 pub struct FontData(Font<'static>);
 
 impl Asset for FontAsset {
+    const NAME: &'static str = "ui::Font";
     type Data = FontData;
     type HandleStorage = VecStorage<Handle<Self>>;
 }

@@ -151,6 +151,8 @@ impl<'a, 'b> Application<'a, 'b> {
 
     /// Advances the game world by one tick.
     fn advance_frame(&mut self) {
+        trace!("Advancing frame (`Application::advance_frame`)");
+
         {
             let world = &mut self.world;
             let states = &mut self.states;
@@ -213,6 +215,8 @@ impl<'a, 'b> Application<'a, 'b> {
 
     /// Cleans up after the quit signal is received.
     fn shutdown(&mut self) {
+        info!("Engine is shutting down");
+
         // Placeholder.
     }
 }
@@ -306,17 +310,17 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
         use bundle::AppBundle;
         use rustc_version_runtime;
 
-        println!("Initializing Amethyst...");
-        println!("Version: {}", vergen::semver());
-        println!("Platform: {}", vergen::target());
-        println!("Amethyst git commit: {}", vergen::sha());
+        info!("Initializing Amethyst...");
+        info!("Version: {}", vergen::semver());
+        info!("Platform: {}", vergen::target());
+        info!("Amethyst git commit: {}", vergen::sha());
         let rustc_meta = rustc_version_runtime::version_meta();
-        println!(
+        info!(
             "Rustc version: {} {:?}",
             rustc_meta.semver, rustc_meta.channel
         );
         if let Some(hash) = rustc_meta.commit_hash {
-            println!("Rustc git commit: {}", hash);
+            info!("Rustc git commit: {}", hash);
         }
 
         let mut disp_builder = DispatcherBuilder::new();
@@ -849,6 +853,8 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     where
         T: State + 'a,
     {
+        trace!("Entering `ApplicationBuilder::build`");
+
         #[cfg(feature = "profiler")]
         register_thread_with_profiler("Main".into());
         #[cfg(feature = "profiler")]
