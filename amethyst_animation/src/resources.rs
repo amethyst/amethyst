@@ -30,6 +30,7 @@ pub struct Sampler {
 }
 
 impl Asset for Sampler {
+    const NAME: &'static str = "animation::Sampler";
     type Data = Self;
     type HandleStorage = VecStorage<Handle<Self>>;
 }
@@ -62,6 +63,7 @@ pub struct Animation {
 }
 
 impl Asset for Animation {
+    const NAME: &'static str = "animation::Animation";
     type Data = Self;
     type HandleStorage = VecStorage<Handle<Self>>;
 }

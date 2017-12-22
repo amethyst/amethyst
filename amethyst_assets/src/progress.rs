@@ -156,8 +156,8 @@ pub trait Tracker: Send + 'static {
 impl Tracker for () {
     fn success(self: Box<Self>) {}
     fn fail(self: Box<Self>, e: Error) {
-        eprintln!("error: {}", e);
-        e.iter().skip(1).for_each(|e| eprintln!("caused by: {}", e));
-        eprintln!("note: to handle the error, use a `Progress` other than `()`");
+        error!("error: {}", e);
+        e.iter().skip(1).for_each(|e| error!("caused by: {}", e));
+        error!("note: to handle the error, use a `Progress` other than `()`");
     }
 }

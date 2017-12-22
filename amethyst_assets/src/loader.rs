@@ -106,7 +106,27 @@ impl Loader {
     {
         use progress::Tracker;
 
-        let source = match source.as_ref() {
+        let name = name.into();
+        let source = source.as_ref();
+
+        let format_name = F::NAME;
+        let source_name = match source {
+            "" => "[default source]",
+            other => other,
+        };
+
+        let handle = storage.allocate();
+
+        debug!(
+            "{:?}: Loading asset {:?} with format {:?} from source {:?} (handle id: {:?})",
+            A::NAME,
+            name,
+            format_name,
+            source_name,
+            handle,
+        );
+
+        let source = match source {
             "" => self.directory.clone(),
             source => self.source(source),
         };
@@ -114,11 +134,8 @@ impl Loader {
         progress.add_assets(1);
         let tracker = progress.create_tracker();
 
-        let handle = storage.allocate();
         let handle_clone = handle.clone();
         let processed = storage.processed.clone();
-
-        let name = name.into();
 
         let hot_reload = self.hot_reload;
 

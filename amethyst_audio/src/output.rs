@@ -40,7 +40,7 @@ impl Output {
             // See documentation for DecoderError here:
             // https://docs.rs/rodio/0.5.1/rodio/decoder/enum.DecoderError.html
             Err(err) => {
-                eprintln!("Error while playing sound: {:?}", err);
+                error!("Error while playing sound: {:?}", err);
                 Err(DecoderError)
             }
         }
@@ -51,7 +51,7 @@ impl Output {
     /// This may silently fail, in order to get error information use `try_play_once`.
     pub fn play_once(&self, source: &Source, volume: f32) {
         if let Err(err) = self.try_play_once(source, volume) {
-            eprintln!("An error occurred while trying to play a sound: {:?}", err);
+            error!("An error occurred while trying to play a sound: {:?}", err);
         }
     }
 
@@ -60,7 +60,7 @@ impl Output {
     /// This may silently fail, in order to get error information use `try_play_n_times`.
     pub fn play_n_times(&self, source: &Source, volume: f32, n: u16) {
         if let Err(err) = self.try_play_n_times(source, volume, n) {
-            eprintln!("An error occurred while trying to play a sound: {:?}", err);
+            error!("An error occurred while trying to play a sound: {:?}", err);
         }
     }
 
@@ -87,11 +87,10 @@ impl Output {
 }
 
 impl Debug for Output {
-    fn fmt(&self, formatter: &mut Formatter) -> FmtResult {
-        formatter.write_str("Output { endpoint: ")?;
-        formatter.write_str(self.name().as_str())?;
-        formatter.write_str(" }")?;
-        Ok(())
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        f.debug_struct("Output")
+            .field("endpoint", &self.name())
+            .finish()
     }
 }
 

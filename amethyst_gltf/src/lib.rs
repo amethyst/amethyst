@@ -118,6 +118,7 @@ impl Into<Result<GltfSceneAsset, AssetError>> for GltfSceneAsset {
 }
 
 impl Asset for GltfSceneAsset {
+    const NAME: &'static str = "gltf::Scene";
     type Data = Self;
     // TODO: replace by tracked storage
     type HandleStorage = VecStorage<Handle<Self>>;

@@ -3,6 +3,8 @@ extern crate amethyst_assets;
 extern crate amethyst_core;
 extern crate cpal;
 extern crate rodio;
+#[macro_use]
+extern crate log;
 extern crate shred;
 extern crate smallvec;
 extern crate specs;

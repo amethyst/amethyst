@@ -49,6 +49,7 @@ impl Texture {
 }
 
 impl Asset for Texture {
+    const NAME: &'static str = "renderer::Texture";
     type Data = TextureData;
     type HandleStorage = DenseVecStorage<TextureHandle>;
 }
