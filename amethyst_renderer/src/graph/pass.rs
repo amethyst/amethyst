@@ -33,9 +33,7 @@ use memory::Allocator;
 use shaders::ShaderManager;
 use vertex::VertexFormat;
 
-pub mod build;
-
-use self::build::PassBuilder;
+use graph::build::PassBuilder;
 
 /// Helper trait to declare associated types with lifetime parameter.
 pub trait Data<'a, B>
@@ -58,17 +56,20 @@ where
     /// Name of the pass
     const NAME: &'static str;
 
-    /// Input attachments format
-    /// TODO: Replace with simple `usize`
-    const INPUTS: &'static [Format];
+    /// Input attachments desired format.
+    /// Format of actual attachment may be different.
+    /// It may be larger if another consumer expects larger format.
+    /// It may be smaller because of hardware limitations.
+    const INPUTS: usize;
 
-    /// Color attachments format
-    /// /// TODO: Replace with simple `usize`
-    const COLORS: &'static [Format];
+    /// Number of colors to write
+    const COLORS: usize;
 
-    /// DepthStencil attachment format
-    /// /// TODO: Replace with simple `bool`
-    const DEPTH_STENCIL: Option<Format>;
+    /// Does pass writes into depth buffer?
+    const DEPTH: bool;
+
+    /// Does pass uses stencil?
+    const STENCIL: bool;
 
     /// Bindings
     const BINDINGS: &'static [DescriptorSetLayoutBinding];
@@ -139,13 +140,16 @@ where
     fn name(&self) -> &'static str;
 
     /// Input attachments format
-    fn inputs(&self) -> &'static [Format];
+    fn inputs(&self) -> usize;
 
-    /// Color attachments format
-    fn colors(&self) -> &'static [Format];
+    /// Colors count
+    fn colors(&self) -> usize;
 
-    /// DepthStencil attachment format
-    fn depth_stencil(&self) -> Option<Format>;
+    /// Uses depth?
+    fn depth(&self) -> bool;
+
+    /// Uses stencil?
+    fn stencil(&self) -> bool;
 
     /// Bindings
     fn bindings(&self) -> &'static [DescriptorSetLayoutBinding];
@@ -196,18 +200,23 @@ where
     }
 
     /// Input attachments format
-    fn inputs(&self) -> &'static [Format] {
+    fn inputs(&self) -> usize {
         P::INPUTS
     }
 
-    /// Color attachments format
-    fn colors(&self) -> &'static [Format] {
+    /// Colors count
+    fn colors(&self) -> usize {
         P::COLORS
     }
 
-    /// DepthStencil attachment format
-    fn depth_stencil(&self) -> Option<Format> {
-        P::DEPTH_STENCIL
+    /// Uses depth?
+    fn depth(&self) -> bool {
+        P::DEPTH
+    }
+
+    /// Uses stencil?
+    fn stencil(&self) -> bool {
+        P::STENCIL
     }
 
     /// Bindings

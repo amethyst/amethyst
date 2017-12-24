@@ -13,13 +13,13 @@ use gfx_hal::window::{Backbuffer, Swapchain};
 
 use specs::World;
 
+
 use winit::{EventsLoop, Window};
 
 use cirque::Cirque;
 use command::{CommandCenter, Execution};
 use epoch::{CurrentEpoch, Epoch};
-use graph::{Graph, SuperFrame};
-use graph::ColorPin;
+use graph::{Graph, SuperFrame, PassBuilder, ColorAttachment};
 use memory::Allocator;
 use shaders::ShaderManager;
 use upload::Uploader;
@@ -40,8 +40,7 @@ pub struct RendererConfig<'a> {
 pub struct Renderer<B: Backend> {
     #[derivative(Debug(format_with = "fmt_window"))]
     pub window: Window,
-    pub format: Format,
-
+    pub present: ColorAttachment,
     #[derivative(Debug = "ignore")]
     pub surface: B::Surface,
     #[derivative(Debug = "ignore")]
@@ -89,17 +88,16 @@ where
 
     pub fn add_graph(
         &mut self,
-        present: ColorPin<B>,
+        passes: &[&PassBuilder<B>],
         device: &B::Device,
         allocator: &mut Allocator<B>,
         shaders: &mut ShaderManager<B>,
     ) -> ::graph::Result<usize> {
         let (width, height) = self.window.get_inner_size_pixels().unwrap();
         let graph = Graph::build(
-            present,
+            passes,
+            &self.present,
             &self.backbuffer,
-            self.format,
-            None,
             Extent {
                 width,
                 height,

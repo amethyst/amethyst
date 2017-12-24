@@ -3,6 +3,7 @@
 //! And `Pass` - building block for `Graph`.
 //! TODO: compute.
 
+mod build;
 mod pass;
 
 use std::collections::HashMap;
@@ -26,15 +27,13 @@ use specs::World;
 use descriptors::Descriptors;
 use epoch::Epoch;
 use graph::pass::AnyPass;
-use graph::pass::build::{PassBuilder, dependencies, direct_dependencies, indices_in_of, merges,
-                         some_indices_in_of, traverse, AttachmentImageViews, ColorAttachmentDesc,
-                         DepthStencilAttachmentDesc, InputAttachmentDesc};
+// use graph::build::{AttachmentImageViews, InputAttachmentDesc, ColorAttachmentDesc, DepthStencilAttachmentDesc, reorder_passes, create_target, COLOR_RANGE, outputs, indices_in_of, some_indices_in_of, siblings, dependencies, direct_dependencies, linear_dependencies};
+use graph::build::*;
 use memory::{Allocator, Image};
 use shaders::ShaderManager;
 
+pub use graph::build::{ColorAttachment, DepthStencilAttachment, PassBuilder};
 pub use graph::pass::{Data, Pass};
-pub use graph::pass::build::{ColorPin, DepthPin, Merge, Pin};
-
 
 error_chain!{
     errors {
@@ -54,13 +53,6 @@ error_chain!{
         ViewError(image::ViewError);
     }
 }
-
-
-const COLOR_RANGE: image::SubresourceRange = image::SubresourceRange {
-    aspects: image::AspectFlags::COLOR,
-    levels: 0..1,
-    layers: 0..1,
-};
 
 
 /// This wrapper allow to abstract over two cases.
@@ -348,17 +340,14 @@ where
     /// Build rendering graph from `ColorPin`
     /// for specified `backbuffer`.
     pub fn build(
-        present: ColorPin<B>,
+        passes: &[&PassBuilder<B>],
+        present: &ColorAttachment,
         backbuffer: &Backbuffer<B>,
-        color: Format,
-        _depth_stencil: Option<Format>,
         extent: Extent,
         device: &B::Device,
         allocator: &mut Allocator<B>,
         shaders: &mut ShaderManager<B>,
     ) -> Result<Self> {
-        assert_eq!(present.format(), color);
-
         // Create views for backbuffer
         let (mut image_views, frames) = match *backbuffer {
             Backbuffer::Images(ref images) => (
@@ -366,7 +355,7 @@ where
                     .iter()
                     .map(|image| {
                         device
-                            .create_image_view(image, color, Swizzle::NO, COLOR_RANGE.clone())
+                            .create_image_view(image, present.format, Swizzle::NO, COLOR_RANGE.clone())
                             .map_err(Into::into)
                     })
                     .collect::<Result<Vec<_>>>()?,
@@ -375,36 +364,59 @@ where
             Backbuffer::Framebuffer(_) => (vec![], 1),
         };
 
-        // Collect all passes by walking dependency tree
-        let passes = traverse(&present);
-
-        // Get all merges
-        let merges = merges(&present);
-
         // Reorder passes to maximise overlapping
         // while keeping all dependencies before dependants.
-        let passes = reorder_passes(passes, &merges);
+        let (passes, deps) = reorder_passes(passes);
+
+        let color_attachments = color_attachments(&passes);
+        let depth_stencil_attachments = depth_stencil_attachments(&passes);
 
         // Setup image storage
         let mut images = vec![];
 
         // Initialize all targets
-        let mut targets = HashMap::<*const _, Targets>::new();
-        for &merge in merges.iter() {
-            let present_key = present.merge as *const _;
-            let key = merge as *const _;
-            targets.insert(
+        let mut color_targets = HashMap::<*const (), (Range<usize>, usize)>::new();
+        let present_key = present.key();
+        color_targets.insert(present_key, (0..image_views.len(), 0));
+        for &attachment in color_attachments.iter() {
+            let key = attachment.key();
+            if key != present_key {
+                color_targets.insert(
+                    key,
+                    (
+                        create_target(
+                            attachment.format,
+                            allocator,
+                            device,
+                            &mut images,
+                            &mut image_views,
+                            extent,
+                            frames,
+                        )?,
+                        0,
+                    ),
+                );
+            }
+        }
+
+
+        let mut depth_stencil_targets = HashMap::<*const (), (Range<usize>, usize)>::new();
+        for &attachment in depth_stencil_attachments.iter() {
+            let key = attachment.key();
+            depth_stencil_targets.insert(
                 key,
-                create_targets(
-                    allocator,
-                    device,
-                    merge,
-                    &mut images,
-                    &mut image_views,
-                    extent,
-                    frames,
-                    |index| key == present_key && present.index == index,
-                )?,
+                (
+                    create_target(
+                        attachment.format,
+                        allocator,
+                        device,
+                        &mut images,
+                        &mut image_views,
+                        extent,
+                        frames,
+                    )?,
+                    0,
+                ),
             );
         }
 
@@ -413,105 +425,77 @@ where
 
         let mut first_draws_to_surface = None;
 
-        for (id, (pass, last_dep)) in passes.into_iter().enumerate() {
+        for (id, (pass, last_dep)) in passes.into_iter().zip(deps).enumerate() {
             // Collect input targets
-            let inputs = pass.connects
+            let inputs = pass.inputs
                 .iter()
-                .map(|pin| {
-                    let (indices, format) = match *pin {
-                        Pin::Color(ColorPin { merge, index }) => (
-                            targets[&(merge as *const _)].colors[index]
-                                .indices
-                                .clone()
-                                .unwrap(),
-                            pin.format(),
-                        ),
-                        Pin::Depth(DepthPin { merge }) => (
-                            targets[&(merge as *const _)]
-                                .depth
-                                .as_ref()
-                                .unwrap()
-                                .indices
-                                .clone(),
-                            pin.format(),
-                        ),
+                .map(|input| {
+                    let input = input.unwrap();
+                    let (ref indices, ref written) = *match input {
+                        Attachment::Color(color) => {
+                            &color_targets[&color.key()]
+                        },
+                        Attachment::DepthStencil(depth_stencil) => {
+                            &depth_stencil_targets[&depth_stencil.key()]
+                        }
                     };
+                    let indices = indices.clone();
+                    debug_assert!(*written > 0);
                     let ref view = image_views[indices];
-                    InputAttachmentDesc { format, view }
+                    InputAttachmentDesc { format: input.format(), view }
                 })
                 .collect::<Vec<_>>();
 
-            // Find where this pass going
-            let merge = *merges
-                .iter()
-                .find(|&merge| {
-                    merge
-                        .passes
-                        .iter()
-                        .any(|&p| p as *const _ == pass as *const _)
-                })
-                .expect("All passes comes from merges");
-            let key = merge as *const _;
-
-            let is_first = {
-                let ref mut first = targets.get_mut(&(merge as *const _)).unwrap().first_pass;
-                if first.is_none() {
-                    *first = Some(id);
-                    true
-                } else {
-                    false
-                }
-            };
-            let clear_color = if is_first { merge.clear_color } else { None };
-            let clear_depth = if is_first { merge.clear_depth } else { None };
-
-            // Try to guess why this line is absolutely required.
-            let ref image_views = image_views;
-
-            // Collect color targets
-            let ref target = targets[&key];
-            let colors = target
-                .colors
+            let colors = pass.colors
                 .iter()
                 .enumerate()
-                .map(|(attachment_index, color_indices)| {
-                    // Get image view and format
-                    let (view, format) = color_indices
-                        .indices
-                        .clone()
-                        .map(|indices| {
-                            (
-                                // It's owned image
-                                AttachmentImageViews::Owned(&image_views[indices]),
-                                merge.color(attachment_index).format(),
-                            )
-                        })
-                        .unwrap_or_else(|| {
-                            if first_draws_to_surface.is_none() {
-                                first_draws_to_surface = Some(id);
-                            }
-                            // It's backbuffer image
-                            let views = match *backbuffer {
-                                Backbuffer::Images(_) => {
-                                    AttachmentImageViews::Acquired(&image_views[0..frames])
-                                }
-                                Backbuffer::Framebuffer(_) => AttachmentImageViews::External,
-                            };
-                            (views, color)
-                        });
+                .map(|(index, color)| {
+                    let color = color.unwrap();
+                    if first_draws_to_surface.is_none() && (color.key()) == present_key {
+                        first_draws_to_surface = Some(index);
+                    }
+                    let (ref indices, ref mut written) = *color_targets.get_mut(&color.key()).unwrap();
+                    let indices = indices.clone();
+                    let clear = if *written == 0 {
+                        color.clear
+                    } else {
+                        None
+                    };
+
+                    *written += 1;
+
                     ColorAttachmentDesc {
-                        format,
-                        view,
-                        clear: clear_color,
+                        format: color.format,
+                        view: if indices != (0..0) {
+                            AttachmentImageViews::Owned(&image_views[indices])
+                        } else {
+                            AttachmentImageViews::External
+                        },
+                        clear,
                     }
                 })
                 .collect::<Vec<_>>();
 
-            let depth_stencil = target.depth.clone().map(|depth| {
+            let depth_stencil = pass.depth_stencil.clone().map(|(depth, stencil)| {
+                let depth = depth.unwrap();
+                let (ref indices, ref mut written) = *depth_stencil_targets.get_mut(&depth.key()).unwrap();
+                let indices = indices.clone();
+                let clear = if *written == 0 {
+                    depth.clear
+                } else {
+                    None
+                };
+
+                *written += 1;
+
                 DepthStencilAttachmentDesc {
-                    format: merge.depth().unwrap().format(),
-                    view: AttachmentImageViews::Owned(&image_views[depth.indices]),
-                    clear: clear_depth,
+                    format: depth.format,
+                    view: if indices != (0..0) {
+                        AttachmentImageViews::Owned(&image_views[indices])
+                    } else {
+                        AttachmentImageViews::External
+                    },
+                    clear,
                 }
             });
 
@@ -596,149 +580,4 @@ where
             allocator.destroy_image(image);
         }
     }
-}
-
-#[derive(Clone)]
-struct Targets {
-    colors: Vec<ColorIndices>,
-    depth: Option<DepthIndices>,
-    first_pass: Option<usize>,
-}
-
-#[derive(Clone)]
-struct ColorIndices {
-    indices: Option<Range<usize>>,
-}
-
-#[derive(Clone)]
-struct DepthIndices {
-    indices: Range<usize>,
-}
-
-
-fn create_targets<B, F>(
-    allocator: &mut Allocator<B>,
-    device: &B::Device,
-    merge: &Merge<B>,
-    images: &mut Vec<Image<B>>,
-    views: &mut Vec<B::ImageView>,
-    extent: Extent,
-    frames: usize,
-    f: F,
-) -> Result<Targets>
-where
-    B: Backend,
-    F: Fn(usize) -> bool,
-{
-    let mut make_views = |format: Format| -> Result<Range<usize>> {
-        let kind = image::Kind::D2(
-            extent.width as u16,
-            extent.height as u16,
-            image::AaMode::Single,
-        );
-        let start = views.len();
-        for _ in 0..frames {
-            let image = allocator.create_image(
-                device,
-                kind,
-                1,
-                format,
-                image::Usage::COLOR_ATTACHMENT,
-                Properties::DEVICE_LOCAL,
-            )?;
-            let view =
-                device.create_image_view(image.raw(), format, Swizzle::NO, COLOR_RANGE.clone())?;
-            views.push(view);
-            images.push(image);
-        }
-        Ok(start..views.len())
-    };
-
-    let colors = (0..merge.colors())
-        .map(|i| -> Result<_> {
-            Ok(if f(i) {
-                ColorIndices { indices: None }
-            } else {
-                ColorIndices {
-                    indices: Some(make_views(merge.color(i).format())?),
-                }
-            })
-        })
-        .collect::<Result<_>>()?;
-
-    let target = Targets {
-        colors,
-        depth: match merge.depth().as_ref().map(DepthPin::format) {
-            Some(format) => Some(DepthIndices {
-                indices: make_views(format)?,
-            }),
-            None => None,
-        },
-        first_pass: None,
-    };
-
-    Ok(target)
-}
-
-fn merge_of<'a, B>(pass: &'a PassBuilder<'a, B>, merges: &[&'a Merge<'a, B>]) -> &'a Merge<'a, B>
-where
-    B: Backend,
-{
-    *merges
-        .iter()
-        .find(|&merge| {
-            merge
-                .passes
-                .iter()
-                .any(|&p| p as *const _ == pass as *const _)
-        })
-        .expect("All passes comes from merges")
-}
-
-fn reorder_passes<'a, B>(
-    mut unscheduled: Vec<&'a PassBuilder<'a, B>>,
-    merges: &[&'a Merge<'a, B>],
-) -> Vec<(&'a PassBuilder<'a, B>, Option<usize>)>
-where
-    B: Backend,
-{
-    // Ordered passes
-    let mut scheduled = vec![];
-
-    // Same scheduled passes but with dependencies as indices
-    let mut passes = vec![];
-
-    // Until we schedule all unscheduled passes
-    while !unscheduled.is_empty() {
-        // Walk over unscheduled
-        let (last_dep, index) = (0..unscheduled.len())
-            .filter_map(|index| {
-                // Sanity check. This pass wasn't scheduled yet
-                debug_assert_eq!(None, indices_in_of(&scheduled, &[unscheduled[index]]));
-                // Find indices for all direct dependencies of the pass
-                indices_in_of(&scheduled, &direct_dependencies(unscheduled[index]))
-                    .map(|deps| {
-                        // Add all already scheduled passes from same `Merge`.
-                        let merge = merge_of(unscheduled[index], merges);
-                        let siblings = some_indices_in_of(&scheduled, merge.passes);
-                        (deps.into_iter().chain(siblings).max(), index)
-                    })
-            })
-            // Smallest index of last dependency wins. `None < Some(0)`
-            .min_by_key(|&(last_dep, _)| last_dep)
-            // At least one pass with all dependencies scheduled must be found.
-            // Or there is dependency circle in unscheduled left.
-            .expect("Circular dependency encountered");
-
-        // Sanity check. All dependencies must be scheduled if all direct dependencies are
-        debug_assert!(indices_in_of(&scheduled, &dependencies(unscheduled[index])).is_some());
-
-        // Store
-        scheduled.push(unscheduled[index]);
-        passes.push((unscheduled[index], last_dep));
-
-        // remove from unscheduled
-        unscheduled.swap_remove(index);
-    }
-    passes
 }

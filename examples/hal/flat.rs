@@ -69,14 +69,17 @@ where
     /// Name of the pass
     const NAME: &'static str = "DrawFlat";
 
-    /// Input attachments format
-    const INPUTS: &'static [Format] = &[];
+    /// Input attachments
+    const INPUTS: usize = 0;
 
-    /// Color attachments format
-    const COLORS: &'static [Format] = &[Srgba8::SELF];
+    /// Color attachments
+    const COLORS: usize = 1;
 
-    /// DepthStencil attachment format
-    const DEPTH_STENCIL: Option<Format> = Some(Depth32F::SELF);
+    /// Uses depth attachment
+    const DEPTH: bool = true;
+
+    /// Uses stencil attachment
+    const STENCIL: bool = false;
 
     /// Bindings
     const BINDINGS: &'static [DescriptorSetLayoutBinding] = &[
