@@ -10,6 +10,7 @@ use winit::Window;
 use cirque::Cirque;
 use command::CommandCenter;
 use epoch::{CurrentEpoch, Epoch};
+use graph::ColorAttachment;
 use hal::renderer::{Renderer, RendererConfig};
 use memory::Allocator;
 use shaders::{ShaderLoader, ShaderManager};
@@ -214,7 +215,10 @@ impl<'a> HalConfig<'a> {
             Renderer {
                 window,
                 surface,
-                format,
+                present: ColorAttachment {
+                    clear: None,
+                    format,
+                },
                 swapchain,
                 backbuffer,
                 graphs: Vec::new(),

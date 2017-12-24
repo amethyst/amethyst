@@ -32,7 +32,7 @@ impl<T> Cirque<T> {
     pub fn get(&mut self, span: Range<Epoch>) -> Option<CirqueRef<T>> {
         if self.values
             .front()
-            .map(|&(until, _)| until > span.start)
+            .map(|&(until, _)| until >= span.start)
             .unwrap_or(true)
         {
             return None;
@@ -52,7 +52,7 @@ impl<T> Cirque<T> {
     {
         if self.values
             .front()
-            .map(|&(until, _)| until > span.start)
+            .map(|&(until, _)| until >= span.start)
             .unwrap_or(true)
         {
             let count = span.end - span.start;
@@ -76,7 +76,7 @@ impl<T> Cirque<T> {
     {
         if self.values
             .front()
-            .map(|&(until, _)| until > span.start)
+            .map(|&(until, _)| until >= span.start)
             .unwrap_or(true)
         {
             let count = span.end - span.start;
@@ -101,7 +101,7 @@ impl<T> Cirque<T> {
     {
         if self.values
             .front()
-            .map(|&(until, _)| until > span.start)
+            .map(|&(until, _)| until >= span.start)
             .unwrap_or(true)
         {
             let count = span.end - span.start;
@@ -125,7 +125,7 @@ impl<T> Cirque<T> {
     {
         if self.values
             .front()
-            .map(|&(until, _)| until > span.start)
+            .map(|&(until, _)| until >= span.start)
             .unwrap_or(true)
         {
             let count = span.end - span.start;
