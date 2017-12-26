@@ -80,7 +80,7 @@ pub trait ValidUntil {
 }
 
 /// Check if this value valid until specified `Epoch`
-fn is_valid_until<T: ValidUntil>(value: &T, epoch: Epoch) -> bool {
+fn is_valid<T: ValidUntil>(value: &T, epoch: Epoch) -> bool {
     value.valid_until() > epoch
 }
 
@@ -126,16 +126,20 @@ impl<T> Ec<T> {
     #[inline]
     pub fn get<'a>(&self, current: &'a CurrentEpoch) -> Option<&'a T> {
         unsafe {
-            self.get_unsafe(current.now())
+            if self.valid_until > current.now() {
+                Some(&*self.ptr)
+            } else {
+                None
+            }
         }
     }
 
     /// Get reference to the pointed value.
-    /// Returns `Some` if `Ec` won't be expired until specified epoch.
+    /// Returns `Some` if `Ec` won't be expired withing specified epoch range.
     /// Returns `None` otherwise.
     #[inline]
-    pub unsafe fn get_unsafe<'a>(&self, until: Epoch) -> Option<&'a T> {
-        if self.valid_until >= until {
+    pub unsafe fn get_span<'a>(&self, span: Range<Epoch>) -> Option<&'a T> {
+        if self.valid_until >= span.end {
             Some(&*self.ptr)
         } else {
             None
@@ -280,7 +284,7 @@ where
 
         for mut vec in self.queue.drain(..min(index, len)) {
             for value in vec.drain(..) {
-                if is_valid_until(&value, current.now()) {
+                if is_valid(&value, current.now()) {
                     panic!(
                         "Value is valid until {:?}, current {:?}",
                         value.valid_until(),
