@@ -40,7 +40,7 @@ pub struct RendererConfig<'a> {
 pub struct Renderer<B: Backend> {
     #[derivative(Debug(format_with = "fmt_window"))]
     pub window: Window,
-    pub present: ColorAttachment,
+    pub format: Format,
     #[derivative(Debug = "ignore")]
     pub surface: B::Surface,
     #[derivative(Debug = "ignore")]
@@ -89,14 +89,16 @@ where
     pub fn add_graph(
         &mut self,
         passes: &[&PassBuilder<B>],
+        present: &ColorAttachment,
         device: &B::Device,
         allocator: &mut Allocator<B>,
         shaders: &mut ShaderManager<B>,
     ) -> ::graph::Result<usize> {
+        assert_eq!(present.format, self.format);
         let (width, height) = self.window.get_inner_size_pixels().unwrap();
         let graph = Graph::build(
             passes,
-            &self.present,
+            present,
             &self.backbuffer,
             Extent {
                 width,

@@ -215,10 +215,7 @@ impl<'a> HalConfig<'a> {
             Renderer {
                 window,
                 surface,
-                present: ColorAttachment {
-                    clear: None,
-                    format,
-                },
+                format,
                 swapchain,
                 backbuffer,
                 graphs: Vec::new(),
