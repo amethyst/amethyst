@@ -128,7 +128,7 @@ where
         }
 
         Ok(Upload::ImageStaging {
-            dst: Eh::borrow(dst, current.now() + 2),
+            dst: Eh::borrow(dst, current.now() + 5),
             dst_layout,
             src,
             copy,
@@ -141,7 +141,7 @@ where
     {
         match self {
             Upload::BufferDirect { dst, offset, data } => cbuf.update_buffer(
-                unsafe {dst.get_unsafe(span.end)}
+                unsafe {dst.get_span(span)}
                     .expect("Expected to be commited before dst expires")
                     .raw(),
                 offset,
@@ -149,7 +149,7 @@ where
             ),
             Upload::BufferStaging { dst, offset, src } => cbuf.copy_buffer(
                 src.raw(),
-                unsafe {dst.get_unsafe(span.end)}
+                unsafe {dst.get_span(span)}
                     .expect("Expected to be commited before dst expires")
                     .raw(),
                 &[
@@ -167,7 +167,7 @@ where
                 src,
             } => cbuf.copy_buffer_to_image(
                 src.raw(),
-                unsafe {dst.get_unsafe(span.end)}
+                unsafe {dst.get_span(span)}
                     .expect("Expected to be commited before dst expires")
                     .raw(),
                 dst_layout,
