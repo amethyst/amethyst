@@ -31,6 +31,27 @@ pub struct ColorAttachment {
 }
 
 impl ColorAttachment {
+    pub fn new(format: Format) -> Self {
+        ColorAttachment {
+            format,
+            clear: None,
+        }
+    }
+
+    pub fn with_clear(mut self, clear: ClearColor) -> Self {
+        self.set_clear(clear);
+        self
+    }
+
+    pub fn set_clear(&mut self, clear: ClearColor) {
+        self.clear = Some(clear);
+    }
+
+    pub fn clear(mut self, clear: ClearColor) -> Self {
+        self.set_clear(clear);
+        self
+    }
+
     pub(crate) fn is(&self, other: &ColorAttachment) -> bool {
         self.key() == other.key()
     }
@@ -48,6 +69,22 @@ pub struct DepthStencilAttachment {
 }
 
 impl DepthStencilAttachment {
+    pub fn new(format: Format) -> Self {
+        DepthStencilAttachment {
+            format,
+            clear: None,
+        }
+    }
+
+    pub fn set_clear(&mut self, clear: ClearDepthStencil) {
+        self.clear = Some(clear);
+    }
+
+    pub fn clear(mut self, clear: ClearDepthStencil) -> Self {
+        self.set_clear(clear);
+        self
+    }
+
     pub(crate) fn is(&self, other: &DepthStencilAttachment) -> bool {
         self.key() == other.key()
     }
@@ -91,11 +128,11 @@ impl<'a> Attachment<'a> {
 #[derive(Derivative)]
 #[derivative(Debug)]
 pub struct PassBuilder<'a, B: Backend> {
-    pub(crate) inputs: Vec<Option<Attachment<'a>>>,
-    pub(crate) colors: Vec<Option<&'a ColorAttachment>>,
-    pub(crate) depth_stencil: Option<(Option<&'a DepthStencilAttachment>, bool)>,
-    pub(crate) rasterizer: pso::Rasterizer,
-    pub(crate) primitive: Primitive,
+    pub inputs: Vec<Option<Attachment<'a>>>,
+    pub colors: Vec<Option<&'a ColorAttachment>>,
+    pub depth_stencil: Option<(Option<&'a DepthStencilAttachment>, bool)>,
+    pub rasterizer: pso::Rasterizer,
+    pub primitive: Primitive,
     name: &'a str,
     #[derivative(Debug = "ignore")]
     pub(crate) maker: fn() -> Box<AnyPass<B>>,
@@ -144,6 +181,27 @@ where
             primitive: Primitive::TriangleList,
             name: P::NAME,
             maker: P::maker,
+        }
+    }
+
+    pub fn with_color(mut self, index: usize, color: &'a ColorAttachment) -> Self {
+        self.set_color(index, color);
+        self
+    }
+
+    pub fn set_color(&mut self, index: usize, color: &'a ColorAttachment) {
+        self.colors[index] = Some(color);
+    }
+
+    pub fn with_depth(mut self, depth_stencil: &'a DepthStencilAttachment) -> Self {
+        self.set_depth(depth_stencil);
+        self
+    }
+
+    pub fn set_depth(&mut self, depth_stencil: &'a DepthStencilAttachment) {
+        match self.depth_stencil {
+            Some((ref mut attachment, _)) => *attachment = Some(depth_stencil),
+            None => {}
         }
     }
 

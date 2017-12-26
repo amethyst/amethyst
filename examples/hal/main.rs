@@ -24,12 +24,12 @@ use specs::World;
 use renderer::gfx_hal::{Device, Instance, QueueFamily, Surface, Swapchain};
 use renderer::gfx_hal::command::{ClearColor, ClearDepthStencil, Rect, Viewport};
 use renderer::gfx_hal::device::Extent;
-use renderer::gfx_hal::format::{Bgra8, ChannelType, Formatted, Rgba8};
+use renderer::gfx_hal::format::{Bgra8, ChannelType, Formatted, Rgba8, Depth32F};
 use renderer::gfx_hal::pso::{EntryPoint, Stage};
 
 use renderer::*;
 use renderer::cam::{ActiveCamera, Camera};
-use renderer::graph::{ColorPin, Graph, Merge, Pass};
+use renderer::graph::{Graph, Pass, ColorAttachment, DepthStencilAttachment};
 use renderer::hal::{Hal, HalConfig, Renderer, RendererConfig};
 use renderer::memory::Allocator;
 use renderer::mesh::{Mesh, MeshBuilder};
@@ -84,16 +84,17 @@ fn run() -> Result<()> {
 
     shaders.set_shaders_dir(format!("{}/examples/hal", env!("CARGO_MANIFEST_DIR")));
 
-    println!("Build graph");
+    println!("Build graph");    
     let mut graph = {
-        let pass = [&DrawFlat::build()];
-        let merge = Merge::new(
-            Some(ClearColor::Float([0.15, 0.1, 0.2, 1.0])),
-            Some(ClearDepthStencil(1.0, 0)),
-            &pass,
-        );
+        let depth = DepthStencilAttachment::new(Depth32F::SELF).clear(ClearDepthStencil(1.0, 0));
+        let present = ColorAttachment::new(renderer.format)
+            .with_clear(ClearColor::Float([0.15, 0.1, 0.2, 1.0]));
+        let mut pass = DrawFlat::build()
+            .with_color(0, &present)
+            .with_depth(&depth);
+
         renderer
-            .add_graph(merge.color(0), &device, allocator, shaders)
+            .add_graph(&[&pass], &present, &device, allocator, shaders)
             .chain_err(|| "Can't build graph")?
     };
 
