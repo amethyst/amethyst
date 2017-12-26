@@ -22,8 +22,6 @@ use shaders::{GraphicsShaderNameSet, ShaderLoader, ShaderManager};
 use uniform::{BasicUniformCache, UniformCache, UniformCacheStorage};
 use vertex::{PosColor, VertexFormat, VertexFormatted};
 
-type Sbgra8 = (B8_G8_R8_A8, Srgb);
-
 pub struct Desc<B: Backend>(B::DescriptorSet);
 
 impl<B> Component for Desc<B>
