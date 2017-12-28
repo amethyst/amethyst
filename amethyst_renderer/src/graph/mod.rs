@@ -24,7 +24,7 @@ use gfx_hal::window::{Backbuffer, Frame};
 use smallvec::SmallVec;
 use specs::World;
 
-use descriptors::Descriptors;
+use descriptors::DescriptorPool;
 use epoch::Epoch;
 use graph::pass::AnyPass;
 // use graph::build::{AttachmentImageViews, InputAttachmentDesc, ColorAttachmentDesc, DepthStencilAttachmentDesc, reorder_passes, create_target, COLOR_RANGE, outputs, indices_in_of, some_indices_in_of, siblings, dependencies, direct_dependencies, linear_dependencies};
@@ -33,7 +33,7 @@ use memory::{Allocator, Image};
 use shaders::ShaderManager;
 
 pub use graph::build::{ColorAttachment, DepthStencilAttachment, PassBuilder};
-pub use graph::pass::{Data, Pass};
+pub use graph::pass::{Data, Pass, PassTag};
 
 error_chain!{
     errors {
@@ -114,7 +114,7 @@ where
 #[derive(Debug)]
 pub struct PassNode<B: Backend> {
     clears: Vec<ClearValue>,
-    descriptors: Descriptors<B>,
+    descriptors: DescriptorPool<B>,
     pipeline_layout: B::PipelineLayout,
     graphics_pipeline: B::GraphicsPipeline,
     render_pass: B::RenderPass,

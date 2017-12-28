@@ -4,7 +4,7 @@
 
 use std::cmp::min;
 use std::collections::VecDeque;
-use std::ops::{Add, AddAssign, Deref, Sub};
+use std::ops::{Add, AddAssign, Deref, Range, Sub};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use relevant::Relevant;

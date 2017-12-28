@@ -29,7 +29,8 @@ use renderer::gfx_hal::pso::{EntryPoint, Stage};
 
 use renderer::*;
 use renderer::cam::{ActiveCamera, Camera};
-use renderer::graph::{Graph, Pass, ColorAttachment, DepthStencilAttachment};
+use renderer::graph::{Graph, Pass, ColorAttachment, DepthStencilAttachment, PassTag};
+use renderer::descriptors::DescriptorSet;
 use renderer::hal::{Hal, HalConfig, Renderer, RendererConfig};
 use renderer::memory::Allocator;
 use renderer::mesh::{Mesh, MeshBuilder};
@@ -45,7 +46,7 @@ use metal::Backend;
 use Backend;
 
 
-use flat::DrawFlat;
+use flat::{DrawFlat, TrProjView};
 
 error_chain!{}
 
@@ -238,13 +239,15 @@ fn run() -> Result<()> {
     world.register::<Mesh<Backend>>();
     world.register::<Camera>();
     world.register::<Transform>();
-    world.register::<BasicUniformCache<Backend, flat::TrProjView>>();
-    world.register::<flat::Desc<Backend>>();
+    world.register::<BasicUniformCache<Backend, TrProjView>>();
+    world.register::<DescriptorSet<Backend, DrawFlat>>();
+    world.register::<PassTag<DrawFlat>>();
 
     let cube = world
         .create_entity()
         .with(mesh)
         .with(Transform::default())
+        .with(<DrawFlat as Pass<Backend>>::tag())
         .build();
 
     let (width, height) = renderer.window.get_inner_size_pixels().unwrap();
