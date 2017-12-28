@@ -1,37 +1,4 @@
 
-
-/// The type to use in associated constants for iterables
-/// when simple array is not enough.
-/// For recursive implementations for example.
-#[derive(Derivative)]
-#[derivative(Clone, Debug)]
-pub enum ConstantList<T: 'static> {
-    Node(T, &'static ConstantList<T>),
-    End,
-}
-
-impl<T> Iterator for ConstantList<T>
-where
-    T: Clone,
-{
-    type Item = T;
-
-    fn next(&mut self) -> Option<T> {
-        use self::ConstantList::*;
-
-        let next = match *self {
-            End => return None,
-            Node(_, next) => next.clone(),
-        };
-
-        match ::std::mem::replace(self, next) {
-            End => unreachable!(),
-            Node(item, _) => Some(item),
-        }
-    }
-}
-
-
 #[inline(always)]
 pub fn is_slice_sorted<T>(slice: &[T]) -> bool
 where
