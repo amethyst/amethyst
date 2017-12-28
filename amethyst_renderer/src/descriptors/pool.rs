@@ -1,28 +1,40 @@
-//!
-//! Everything you want to do with descriptors but afraid to do it manually.
-//! 
 
+use std::marker::PhantomData;
+use std::iter::{Once, Chain, once, empty};
 
 use gfx_hal::{Backend, Device};
-use gfx_hal::pso::{DescriptorPool, DescriptorRangeDesc, DescriptorSetLayoutBinding, DescriptorType};
+use gfx_hal::pso::{DescriptorPool as RawDescriptorPool, DescriptorRangeDesc, DescriptorSetLayoutBinding, DescriptorType};
+
+use stage::ShaderStage;
 
 const CAPACITY: usize = 1024;
 
+
+pub struct DescriptorSet<B: Backend, P>(B::DescriptorSet, PhantomData<fn() -> P>);
+impl<B, P> DescriptorSet<B, P>
+where
+    B: Backend,
+{
+    pub fn raw(&self) -> &B::DescriptorSet {
+        &self.0
+    }
+}
+
 #[derive(Debug)]
-pub struct Descriptors<B: Backend> {
+pub struct DescriptorPool<B: Backend> {
     range: Vec<DescriptorRangeDesc>,
     layout: B::DescriptorSetLayout,
     pool: B::DescriptorPool,
     sets: Vec<B::DescriptorSet>,
 }
 
-impl<B> Descriptors<B>
+impl<B> DescriptorPool<B>
 where
     B: Backend,
 {
     pub fn new(bindings: &[DescriptorSetLayoutBinding], device: &B::Device) -> Self {
-        let range = bindings_to_desc(bindings);
-        Descriptors {
+        let range = bindings_to_range_desc(bindings);
+        DescriptorPool {
             layout: device.create_descriptor_set_layout(bindings),
             pool: device.create_descriptor_pool(CAPACITY, &range),
             sets: Vec::new(),
@@ -44,14 +56,15 @@ where
         &self.layout
     }
 
-    pub fn get(&mut self) -> B::DescriptorSet {
-        self.sets
+    pub fn get<P>(&mut self) -> DescriptorSet<B, P> {
+        let raw = self.sets
             .pop()
-            .unwrap_or_else(|| self.pool.allocate_sets(&[&self.layout]).pop().unwrap())
+            .unwrap_or_else(|| self.pool.allocate_sets(&[&self.layout]).pop().unwrap());
+        DescriptorSet(raw, PhantomData)
     }
 
-    pub fn put(&mut self, set: B::DescriptorSet) {
-        self.sets.push(set);
+    pub fn put<P>(&mut self, set: DescriptorSet<B, P>) {
+        self.sets.push(set.0);
     }
 
     pub unsafe fn reset(&mut self) {
@@ -59,7 +72,7 @@ where
     }
 }
 
-fn bindings_to_desc(bindings: &[DescriptorSetLayoutBinding]) -> Vec<DescriptorRangeDesc> {
+fn bindings_to_range_desc(bindings: &[DescriptorSetLayoutBinding]) -> Vec<DescriptorRangeDesc> {
     let mut desc: Vec<DescriptorRangeDesc> = Vec::new();
     for binding in bindings {
         let desc_len = desc.len();
@@ -74,3 +87,4 @@ fn bindings_to_desc(bindings: &[DescriptorSetLayoutBinding]) -> Vec<DescriptorRa
     }
     desc
 }
+

@@ -46,6 +46,7 @@ pub mod mesh;
 pub mod relevant;
 pub mod graph;
 pub mod shaders;
+pub mod stage;
 pub mod upload;
 pub mod texture;
 pub mod vertex;

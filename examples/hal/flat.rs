@@ -13,23 +13,15 @@ use specs::{Component, DenseVecStorage, Entities, Fetch, Join, ReadStorage, Syst
             WriteStorage};
 
 use cam::{ActiveCamera, Camera};
-use descriptors::Descriptors;
+use descriptors::{DescriptorSet, DescriptorPool, Binder, Layout, Uniform};
 use epoch::{CurrentEpoch, Epoch};
-use graph::{Data, Pass};
+use graph::{Data, Pass, PassTag};
 use memory::Allocator;
 use mesh::{Bind as MeshBind, Mesh};
 use shaders::{GraphicsShaderNameSet, ShaderLoader, ShaderManager};
 use uniform::{BasicUniformCache, UniformCache, UniformCacheStorage};
 use vertex::{PosColor, VertexFormat, VertexFormatted};
 
-pub struct Desc<B: Backend>(B::DescriptorSet);
-
-impl<B> Component for Desc<B>
-where
-    B: Backend,
-{
-    type Storage = DenseVecStorage<Desc<B>>;
-}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -47,15 +39,16 @@ impl<'a, B> Data<'a, B> for DrawFlat
 where
     B: Backend,
 {
-    type DrawData = (ReadStorage<'a, Mesh<B>>, ReadStorage<'a, Desc<B>>);
+    type DrawData = (ReadStorage<'a, Mesh<B>>, ReadStorage<'a, DescriptorSet<B, Self>>);
     type PrepareData = (
+        ReadStorage<'a, PassTag<Self>>,
         Entities<'a>,
         Fetch<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
         ReadStorage<'a, Mesh<B>>,
         ReadStorage<'a, Transform>,
         WriteStorage<'a, BasicUniformCache<B, TrProjView>>,
-        WriteStorage<'a, Desc<B>>,
+        WriteStorage<'a, DescriptorSet<B, Self>>,
     );
 }
 
@@ -79,18 +72,15 @@ where
     /// Uses stencil attachment
     const STENCIL: bool = false;
 
-    /// Bindings
-    const BINDINGS: &'static [DescriptorSetLayoutBinding] = &[
-        DescriptorSetLayoutBinding {
-            binding: 0,
-            ty: DescriptorType::UniformBuffer,
-            count: 1,
-            stage_flags: ShaderStageFlags::VERTEX,
-        },
-    ];
-
     /// Vertices format
     const VERTICES: &'static [VertexFormat<'static>] = &[PosColor::VERTEX_FORMAT];
+
+    type Bindings = (Uniform<TrProjView>, ());
+
+    fn layout(layout: Layout<()>) -> Layout<Self::Bindings> {
+        layout
+            .uniform::<TrProjView, _>(0, Stage::Vertex)
+    }
 
     /// Load shaders
     fn shaders<'a>(
@@ -110,16 +100,17 @@ where
     /// * filling `DescriptorSet`s
     fn prepare<'a, C>(
         &mut self,
+        binder: Binder<Self::Bindings>,
         span: Range<Epoch>,
-        descriptors: &mut Descriptors<B>,
+        pool: &mut DescriptorPool<B>,
         cbuf: &mut CommandBuffer<B, C>,
         allocator: &mut Allocator<B>,
         device: &B::Device,
-        (ent, ac, cam, mesh, trs, mut uni, mut desc): <Self as Data<'a, B>>::PrepareData,
+        (tag, ent, ac, cam, mesh, trs, mut uni, mut desc): <Self as Data<'a, B>>::PrepareData,
     ) where
         C: Supports<Transfer>,
     {
-        for (ent, _, tr) in (&*ent, &mesh.check(), &trs).join() {
+        for (_, _, tr, ent) in (&tag, &mesh.check(), &trs, &*ent).join() {
             uni.update_cache(
                 ent,
                 TrProjView {
@@ -134,22 +125,9 @@ where
             ).unwrap();
         }
 
-        for (ent, _, _, uni) in (&*ent, &mesh.check(), &trs, &uni).join() {
-            if desc.get(ent).is_none() {
-                let set = descriptors.get();
-                {
-                    let (buf, range) = uni.get_cached();
-                    let write = DescriptorSetWrite {
-                        set: &set,
-                        binding: 0,
-                        array_offset: 0,
-                        write: DescriptorWrite::UniformBuffer(vec![(buf.raw(), range)]),
-                    };
-                    device.update_descriptor_sets(&[write]);
-                }
-                desc.insert(ent, Desc(set));
-            }
-        }
+        binder.entities(&tag, &uni, &*ent, &mut desc, pool, |binder, uni| {
+            binder.uniform(uni).bind(device);
+        });
     }
 
     /// This function designed for
@@ -163,8 +141,8 @@ where
         mut encoder: RenderPassInlineEncoder<B>,
         (meshes, descs): <Self as Data<'a, B>>::DrawData,
     ) {
-        for (&Desc(ref desc), mesh) in (&descs, &meshes).join() {
-            encoder.bind_graphics_descriptor_sets(layout, 0, &[desc]);
+        for (ref desc, mesh) in (&descs, &meshes).join() {
+            encoder.bind_graphics_descriptor_sets(layout, 0, &[desc.raw()]);
 
             let mut vertex = VertexBufferSet(vec![]);
             mesh.bind(span.end, &[PosColor::VERTEX_FORMAT], &mut vertex)

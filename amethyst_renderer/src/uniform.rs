@@ -39,7 +39,7 @@ pub trait UniformCache<B: Backend, T>: Sized {
     where
         C: Supports<Transfer>;
         
-        fn get_cached(&self) -> (&Buffer<B>, Range<u64>);
+    fn get_cached(&self) -> (&Buffer<B>, Range<u64>);
 }
 
 pub trait UniformCacheStorage<B: Backend, T> {
@@ -54,6 +54,8 @@ pub trait UniformCacheStorage<B: Backend, T> {
     ) -> Result<()>
     where
         C: Supports<Transfer>;
+
+    fn get_cached(&self, entity: Entity) -> (&Buffer<B>, Range<u64>);
 }
 
 impl<'a, B, T, D> UniformCacheStorage<B, T> for Storage<'a, BasicUniformCache<B, T>, D>
@@ -82,6 +84,10 @@ where
             BasicUniformCache::new(value, span, cbuf, allocator, device)?,
         );
         Ok(())
+    }
+
+    fn get_cached(&self, entity: Entity) -> (&Buffer<B>, Range<u64>) {
+        self.get(entity).unwrap().get_cached()
     }
 }
 

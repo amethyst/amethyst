@@ -9,7 +9,7 @@ use gfx_hal::memory::Properties;
 use gfx_hal::pass;
 use gfx_hal::pso;
 
-use descriptors::Descriptors;
+use descriptors::DescriptorPool;
 use graph::{ErrorKind, PassNode, Result, SuperFramebuffer};
 use graph::pass::{AnyPass, Pass};
 use memory::{Allocator, Image};
@@ -341,7 +341,7 @@ where
             )
         };
 
-        let descriptors = Descriptors::new(pass.bindings(), device);
+        let descriptors = DescriptorPool::new(&pass.bindings(), device);
 
         // Create `PipelineLayout` from single `DescriptorSetLayout`
         let pipeline_layout = device.create_pipeline_layout(&[descriptors.layout()], &[]);
