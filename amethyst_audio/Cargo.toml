@@ -24,7 +24,7 @@ amethyst_core = { path = "../amethyst_core", version = "0.1.0"}
 cpal = "0.4"
 rodio = "0.5.1"
 shred = "0.5"
-specs = "0.10"
+specs = { version = "0.10", git = "https://github.com/slide-rs/specs.git" }
 
 [dependencies.smallvec]
 version = "0.4"

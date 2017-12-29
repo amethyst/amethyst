@@ -137,6 +137,9 @@ impl<T> Ec<T> {
     /// Get reference to the pointed value.
     /// Returns `Some` if `Ec` won't be expired withing specified epoch range.
     /// Returns `None` otherwise.
+    /// 
+    /// User must guarantee that `CurrentEpoch` won't be advanced to `span.end`
+    /// while `T` is in use.
     #[inline]
     pub unsafe fn get_span<'a>(&self, span: Range<Epoch>) -> Option<&'a T> {
         if self.valid_until >= span.end {
@@ -190,7 +193,7 @@ impl<T> Eh<T> {
 
 unsafe impl<T> Send for Eh<T>
 where
-    T: Sync,
+    T: Send + Sync,
 {
 }
 unsafe impl<T> Sync for Eh<T>

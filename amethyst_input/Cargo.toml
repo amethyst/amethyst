@@ -22,7 +22,7 @@ winit = "0.7"
 fnv = "1.0"
 serde = { version = "1", features = ["serde_derive"] }
 shrev = "0.8"
-specs = "0.10"
+specs = { version = "0.10", git = "https://github.com/slide-rs/specs.git" }
 
 [dependencies.smallvec]
 version = "0.4"

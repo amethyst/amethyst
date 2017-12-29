@@ -12,7 +12,7 @@ use gfx_hal::memory::{Pod, Properties};
 use gfx_hal::pool::CommandPool;
 use gfx_hal::queue::{Supports, Transfer, CommandQueue, Submission};
 
-use cirque::{Cirque, CirqueRef};
+use cirque::{Cirque, Entry};
 use epoch::{CurrentEpoch, Eh, Epoch};
 use memory::{cast_pod_vec, Allocator, Buffer, Image, WeakBuffer, WeakImage};
 
@@ -260,7 +260,7 @@ where
         )?))
     }
 
-    pub fn commit<C>(&mut self, span: Range<Epoch>, device: &B::Device, queue: &mut CommandQueue<B, C>, pool: &mut CommandPool<B, C>) -> Option<CirqueRef<B::Semaphore>>
+    pub fn commit<'a, C>(&'a mut self, span: Range<Epoch>, device: &B::Device, queue: &mut CommandQueue<B, C>, pool: &mut CommandPool<B, C>) -> Option<&'a B::Semaphore>
     where
         C: Supports<Transfer>,
     {
@@ -279,7 +279,7 @@ where
             Submission::new()
                 .promote()
                 .submit(&[cbuf.finish()])
-                .signal(&[&*semaphore]),
+                .signal(&[semaphore]),
             None,
         );
 

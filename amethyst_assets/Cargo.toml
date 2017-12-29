@@ -25,11 +25,11 @@ crossbeam = "0.3.0"
 derivative = "1.0"
 error-chain = "0.11"
 fnv = "1"
-hibitset = "0.3.1"
+hibitset = { version = "0.3.1", git = "https://github.com/slide-rs/hibitset.git" }
 log = "0.3.8"
 parking_lot = "0.4.4"
 rayon = "0.8"
-specs = { version = "0.10", features = ["common"] }
+specs = { version = "0.10", features = ["common"], git = "https://github.com/slide-rs/specs.git" }
 
 [dev-dependencies]
 ron = "0.1.4"

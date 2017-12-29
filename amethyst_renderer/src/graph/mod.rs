@@ -165,10 +165,9 @@ where
             profile_scope!("AnyPass::prepare");
             self.pass.prepare(
                 span.clone(),
-                &mut self.descriptors,
-                cbuf.downgrade(),
                 allocator,
                 device,
+                cbuf.downgrade(),
                 world,
             );
         }
@@ -187,7 +186,7 @@ where
         profile_scope!("AnyPass::draw_inline");
         // Record custom drawing calls
         self.pass
-            .draw_inline(span, &self.pipeline_layout, encoder, world);
+            .draw_inline(span, &self.pipeline_layout, &mut self.descriptors, device, encoder, world);
     }
 
     fn dispose(self, _allocator: &mut Allocator<B>, device: &B::Device) {

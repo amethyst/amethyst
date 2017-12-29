@@ -15,7 +15,7 @@ impl<T> Cirque<T> {
         }
     }
 
-    pub fn create<I>(iter: I) -> Self
+    pub fn from_iter<I>(iter: I) -> Self
     where
         I: IntoIterator<Item=T>,
     {
@@ -29,120 +29,45 @@ impl<T> Cirque<T> {
         self.values.clear()
     }
 
-    pub fn get(&mut self, span: Range<Epoch>) -> Option<CirqueRef<T>> {
+    pub fn get_mut(&mut self, span: Range<Epoch>) -> EntryMut<T> {
         if self.values
             .front()
             .map(|&(until, _)| until >= span.start)
             .unwrap_or(true)
         {
-            return None;
+            EntryMut::Vacant(VacantEntry {
+                cirque: self,
+                until: span.end,
+            })
+        } else {
+            let (_, value) = self.values.pop_front().unwrap();
+            self.values.push_back((span.end, value));
+            let (_, ref mut value) = *self.values.back_mut().unwrap();
+            EntryMut::Occupied(value)
         }
-
-        let value = self.values.pop_front().unwrap().1;
-        Some(CirqueRef {
-            cirque: self,
-            value: Some(value),
-            until: span.end,
-        })
     }
 
-    pub fn get_or_try_insert<F, E>(&mut self, span: Range<Epoch>, mut f: F) -> Result<CirqueRef<T>, E>
+    pub fn get(&mut self, span: Range<Epoch>) -> Entry<T> {
+        if self.values.is_empty() {
+            Entry::Vacant(VacantEntry {
+                cirque: self,
+                until: span.end,
+            })
+        } else {
+            let (ref mut until, ref mut value) = *self.values.back_mut().unwrap();
+            *until = span.end;
+            Entry::Occupied(value)
+        }
+    }
+
+    pub fn get_or_insert<F>(&mut self, span: Range<Epoch>, f: F) -> &T
     where
-        F: FnMut() -> Result<T, E>,
+        F: FnOnce() -> T,
     {
-        if self.values
-            .front()
-            .map(|&(until, _)| until >= span.start)
-            .unwrap_or(true)
-        {
-            let count = span.end - span.start;
-            let len = self.values.len() as u64;
-            for _ in len .. count {
-                self.values.push_front((Epoch::new(), f()?));
-            }
+        match self.get(span) {
+            Entry::Occupied(occupied) => occupied,
+            Entry::Vacant(vacant) => vacant.insert(f())
         }
-
-        let value = self.values.pop_front().unwrap().1;
-        Ok(CirqueRef {
-            cirque: self,
-            value: Some(value),
-            until: span.end,
-        })
-    }
-
-    pub fn get_or_insert<F>(&mut self, span: Range<Epoch>, mut f: F) -> CirqueRef<T>
-    where
-        F: FnMut() -> T,
-    {
-        if self.values
-            .front()
-            .map(|&(until, _)| until >= span.start)
-            .unwrap_or(true)
-        {
-            let count = span.end - span.start;
-            let len = self.values.len() as u64;
-            for _ in len .. count {
-                self.values.push_front((Epoch::new(), f()));
-            }
-        }
-
-        let value = self.values.pop_front().unwrap().1;
-        CirqueRef {
-            cirque: self,
-            value: Some(value),
-            until: span.end,
-        }
-    }
-
-    pub fn get_or_try_replace<F, I, E>(&mut self, span: Range<Epoch>, f: F) -> Result<CirqueRef<T>, E>
-    where
-        F: FnOnce(usize) -> Result<I, E>,
-        I: IntoIterator<Item=T>,
-    {
-        if self.values
-            .front()
-            .map(|&(until, _)| until >= span.start)
-            .unwrap_or(true)
-        {
-            let count = span.end - span.start;
-            let mut new = VecDeque::new();
-            new.extend(f(count as usize)?.into_iter().map(|v| (Epoch::new(), v)));
-            self.values = new;
-        }
-
-        let value = self.values.pop_front().unwrap().1;
-        Ok(CirqueRef {
-            cirque: self,
-            value: Some(value),
-            until: span.end,
-        })
-    }
-
-    pub fn get_or_replace<F, I>(&mut self, span: Range<Epoch>, f: F) -> CirqueRef<T>
-    where
-        F: FnOnce(usize) -> I,
-        I: IntoIterator<Item=T>,
-    {
-        if self.values
-            .front()
-            .map(|&(until, _)| until >= span.start)
-            .unwrap_or(true)
-        {
-            let count = span.end - span.start;
-            self.values.clear();
-            self.values.extend(f(count as usize).into_iter().map(|v| (Epoch::new(), v)));
-        }
-
-        let value = self.values.pop_front().unwrap().1;
-        CirqueRef {
-            cirque: self,
-            value: Some(value),
-            until: span.end,
-        }
-    }
-
-    pub fn last(&self) -> Option<&T> {
-        self.values.back().map(|&(_, ref value)| value)
     }
 
     pub unsafe fn take(&mut self) -> VecDeque<(Epoch, T)> {
@@ -150,28 +75,59 @@ impl<T> Cirque<T> {
     }
 }
 
-pub struct CirqueRef<'a, T: 'a> {
+pub struct VacantEntry<'a, T: 'a> {
     cirque: &'a mut Cirque<T>,
-    value: Option<T>,
     until: Epoch,
 }
 
-impl<'a, T> Deref for CirqueRef<'a, T> {
-    type Target = T;
+impl<'a, T: 'a> VacantEntry<'a, T> {
+    /// Replace values in cirque with new ones.
+    /// 
+    /// # Panics
+    /// 
+    /// This function will panic if the iterator yields no items.
+    pub fn replace<I>(self, iter: I) -> &'a mut T
+    where
+        I: IntoIterator<Item=T>,
+    {
+        self.cirque.values.clear();
+        self.cirque.values.extend(iter.into_iter().map(|value| (Epoch::new(), value)));
+        let (ref mut until, ref mut value) = *self.cirque.values.back_mut().expect("Provided iterator must be non-empty");
+        *until = self.until;
+        value
+    }
 
-    fn deref(&self) -> &T {
-        self.value.as_ref().unwrap()
+    /// Insert new value to the `Cirque`
+    pub fn insert(self, value: T) -> &'a mut T {
+        self.cirque.values.push_back((self.until, value));
+        &mut self.cirque.values.back_mut().unwrap().1
     }
 }
 
-impl<'a, T> DerefMut for CirqueRef<'a, T> {
-    fn deref_mut(&mut self) -> &mut T {
-        self.value.as_mut().unwrap()
+pub enum EntryMut<'a, T: 'a> {
+    Vacant(VacantEntry<'a, T>),
+    Occupied(&'a mut T),
+}
+
+impl<'a, T: 'a> EntryMut<'a, T> {
+    pub fn occupied(self) -> Option<&'a mut T> {
+        match self {
+            EntryMut::Occupied(occupied) => Some(occupied),
+            EntryMut::Vacant(_) => None,
+        }
     }
 }
 
-impl<'a, T> Drop for CirqueRef<'a, T> {
-    fn drop(&mut self) {
-        self.cirque.values.push_back((self.until, self.value.take().unwrap()));
+pub enum Entry<'a, T: 'a> {
+    Vacant(VacantEntry<'a, T>),
+    Occupied(&'a T),
+}
+
+impl<'a, T: 'a> Entry<'a, T> {
+    pub fn occupied(self) -> Option<&'a T> {
+        match self {
+            Entry::Occupied(occupied) => Some(occupied),
+            Entry::Vacant(_) => None,
+        }
     }
 }
