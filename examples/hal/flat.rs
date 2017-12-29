@@ -10,16 +10,17 @@ use gfx_hal::pso::{DescriptorSetLayoutBinding, DescriptorSetWrite, DescriptorTyp
                    DescriptorWrite, GraphicsShaderSet, ShaderStageFlags, Stage, VertexBufferSet};
 use gfx_hal::queue::{Supports, Transfer};
 use specs::{Component, DenseVecStorage, Entities, Fetch, Join, ReadStorage, SystemData, World,
-            WriteStorage};
+            WriteStorage, StorageEntry};
 
 use cam::{ActiveCamera, Camera};
+use cirque::Entry;
 use descriptors::{DescriptorSet, DescriptorPool, Binder, Layout, Uniform};
 use epoch::{CurrentEpoch, Epoch};
 use graph::{Data, Pass, PassTag};
 use memory::Allocator;
 use mesh::{Bind as MeshBind, Mesh};
 use shaders::{GraphicsShaderNameSet, ShaderLoader, ShaderManager};
-use uniform::{BasicUniformCache, UniformCache, UniformCacheStorage};
+use uniform::{BasicUniformCache, UniformCache};
 use vertex::{PosColor, VertexFormat, VertexFormatted};
 
 
@@ -39,14 +40,19 @@ impl<'a, B> Data<'a, B> for DrawFlat
 where
     B: Backend,
 {
-    type DrawData = (ReadStorage<'a, Mesh<B>>, ReadStorage<'a, DescriptorSet<B, Self>>);
-    type PrepareData = (
-        ReadStorage<'a, PassTag<Self>>,
+    type PassData = (
         Entities<'a>,
+
+        // Tag
+        ReadStorage<'a, PassTag<Self>>,
+
+        // Data
         Fetch<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
         ReadStorage<'a, Mesh<B>>,
         ReadStorage<'a, Transform>,
+
+        // Pass specific components.
         WriteStorage<'a, BasicUniformCache<B, TrProjView>>,
         WriteStorage<'a, DescriptorSet<B, Self>>,
     );
@@ -93,59 +99,65 @@ where
         )
     }
 
-    /// This function designed for
-    ///
-    /// * allocating buffers and textures
-    /// * storing caches in `World`
-    /// * filling `DescriptorSet`s
     fn prepare<'a, C>(
         &mut self,
-        binder: Binder<Self::Bindings>,
         span: Range<Epoch>,
-        pool: &mut DescriptorPool<B>,
-        cbuf: &mut CommandBuffer<B, C>,
         allocator: &mut Allocator<B>,
         device: &B::Device,
-        (tag, ent, ac, cam, mesh, trs, mut uni, mut desc): <Self as Data<'a, B>>::PrepareData,
-    ) where
+        cbuf: &mut CommandBuffer<B, C>,
+        (ent, tag, ac, cam, mesh, trs, mut uni, _): <Self as Data<'a, B>>::PassData,
+    )
+    where
         C: Supports<Transfer>,
     {
-        for (_, _, tr, ent) in (&tag, &mesh.check(), &trs, &*ent).join() {
-            uni.update_cache(
-                ent,
-                TrProjView {
-                    transform: Matrix4::identity().into(), // (*tr).into(),
-                    projection: cam.get(ac.entity).unwrap().proj.into(),
-                    view: (*trs.get(ac.entity).unwrap()).into(),
+        /// Update uniform cache
+        for (_, _, tr, ent) in (&tag, mesh.check(), &trs, &*ent).join() {
+            let trprojview = TrProjView {
+                transform: (*tr).into(),
+                projection: cam.get(ac.entity).unwrap().proj.into(),
+                view: (*trs.get(ac.entity).unwrap()).into(),
+            };
+            match uni.entry(ent).unwrap() {
+                StorageEntry::Occupied(mut entry) => {
+                    entry.get_mut().update(trprojview, span.clone(), cbuf, allocator, device).unwrap();
                 },
-                span.clone(),
-                cbuf,
-                allocator,
-                device,
-            ).unwrap();
+                StorageEntry::Vacant(entry) => {
+                    entry.insert(BasicUniformCache::new(trprojview, span.clone(), cbuf, allocator, device).unwrap());
+                }
+            };
         }
-
-        binder.entities(&tag, &uni, &*ent, &mut desc, pool, |binder, uni| {
-            binder.uniform(uni).bind(device);
-        });
     }
 
-    /// This function designed for
-    ///
-    /// * binding `DescriptorSet`s
-    /// * recording `Transfer` and `Graphics` commands to `CommandBuffer`
     fn draw_inline<'a>(
         &mut self,
         span: Range<Epoch>,
-        layout: &B::PipelineLayout,
+        binder: Binder<B, Self::Bindings>,
+        pool: &mut DescriptorPool<B>,
+        device: &B::Device,
         mut encoder: RenderPassInlineEncoder<B>,
-        (meshes, descs): <Self as Data<'a, B>>::DrawData,
+        (ent, tag, acam, cam, mesh, tr, mut uni, mut desc): <Self as Data<'a, B>>::PassData,
     ) {
-        for (ref desc, mesh) in (&descs, &meshes).join() {
-            encoder.bind_graphics_descriptor_sets(layout, 0, &[desc.raw()]);
+        for (_, mesh, uni, e) in (&tag, &mesh, &mut uni, &*ent).join() {
+            if  desc.get(e).is_none() {
+                desc.insert(e, DescriptorSet::new());
+            }
+
+            let desc = desc.get_mut(e).unwrap();
+            let set = match desc.get(span.clone()) {
+                Entry::Vacant(vacant) => {
+                    let mut set = pool.get();
+                    binder.set(&mut set)
+                        .uniform(span.clone(), uni)
+                        .bind(device);
+                    vacant.insert(set)
+                }
+                Entry::Occupied(occupied) => occupied,
+            };
+
+            encoder.bind_graphics_descriptor_sets(binder.layout(), 0, &[set]);
 
             let mut vertex = VertexBufferSet(vec![]);
-            mesh.bind(span.end, &[PosColor::VERTEX_FORMAT], &mut vertex)
+            mesh.bind(span.end, <Self as Pass<B>>::VERTICES, &mut vertex)
                 .map(|bind| {
                     bind.draw_inline(vertex, &mut encoder);
                 })

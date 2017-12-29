@@ -1,7 +1,7 @@
 
 use std::marker::PhantomData;
 use std::iter::once;
-use std::ops::{Deref, DerefMut};
+use std::ops::{Deref, DerefMut, Range};
 
 use gfx_hal::{Backend, Device};
 use gfx_hal::pso::{
@@ -16,6 +16,7 @@ use smallvec::SmallVec;
 use specs::{EntitiesRes, Join, MaskedStorage, Storage};
 
 use descriptors::{DescriptorSet, DescriptorPool};
+use epoch::Epoch;
 use graph::PassTag;
 use relevant::Relevant;
 use uniform::UniformCache;
@@ -47,12 +48,13 @@ pub struct Uniform<T> {
 }
 
 impl<T> Uniform<T> {
-    fn bind<'a, 'b, B, C>(self, set: &'a B::DescriptorSet, cache: &'b C) -> DescriptorSetWrite<'a, 'b, B>
+    /// Bind uniform to the set.
+    fn bind<'a, 'b, B, C>(self, span: Range<Epoch>, set: &'a B::DescriptorSet, cache: &'b mut C) -> DescriptorSetWrite<'a, 'b, B>
     where
         B: Backend,
         C: UniformCache<B, T>,
     {
-        let (buf, range) = cache.get_cached();
+        let (buf, range) = cache.get_cached(span);
         DescriptorSetWrite {
             set,
             binding: self.binding(),
@@ -149,15 +151,25 @@ where
 
 
 /// Binder can be used to bind bindings. =^___^=
-pub struct Binder<L> {
+pub struct Binder<'a, B: Backend, L> {
+    layout: &'a B::PipelineLayout,
     bindings: L,
 }
 
-impl<L> Binder<L>
+impl<'a, B, L> Binder<'a, B, L>
 where
+    B: Backend,
     L: Clone,
 {
-    pub fn set<'a, 'b, B>(&self, set: &'a B::DescriptorSet) -> SetBinder<'a, 'b, B, L>
+    pub(crate) fn new(layout: &'a B::PipelineLayout, bindings: Layout<L>) -> Self {
+        Binder {
+            layout,
+            bindings: bindings.bindings,
+        }
+    }
+
+    /// Specify set to start write bindings.
+    pub fn set<'b, 'c>(&self, set: &'b mut B::DescriptorSet) -> SetBinder<'b, 'c, B, L>
     where
         B: Backend,
     {
@@ -169,33 +181,14 @@ where
         }
     }
 
-    pub fn entities<'a, B, P, T, J, D, F>(&self, tag: &Storage<PassTag<P>, T>, join: J, entities: &EntitiesRes, descriptors: &mut Storage<DescriptorSet<B, P>, D>, pool: &mut DescriptorPool<B>, f: F)
-    where
-        B: Backend,
-        P: Send + Sync + 'static,
-        T: Deref<Target = MaskedStorage<PassTag<P>>>,
-        J: Join,
-        D: DerefMut<Target = MaskedStorage<DescriptorSet<B, P>>>,
-        F: for<'b> Fn(SetBinder<'b, 'a, B, L>, J::Type),
-    {
-        for (_, j, e) in (tag, join, entities).join() {
-            if descriptors.get(e).is_none() {
-                let set = pool.get::<P>();
-                f(self.set(set.raw()), j);
-                descriptors.insert(e, set);
-            }
-        }
+    /// Get pipeline layout
+    pub fn layout(&self) -> &B::PipelineLayout {
+        &self.layout
     }
 }
 
-impl<L> From<Layout<L>> for Binder<L> {
-    fn from(layout: Layout<L>) -> Self {
-        Binder {
-            bindings: layout.bindings,
-        }
-    }
-}
 
+/// Allows to bind descriptors to the contained set.
 pub struct SetBinder<'a, 'b, B: Backend, L> {
     relevant: Relevant,
     bindings: L,
@@ -207,6 +200,7 @@ impl<'a, 'b, B> SetBinder<'a, 'b, B, ()>
 where
     B: Backend,
 {
+    /// Bind all written descriptor bindings.
     pub fn bind(self, device: &B::Device) {
         device.update_descriptor_sets(&self.writes);
     }
@@ -216,7 +210,8 @@ impl<'a, 'b, B, H, T> SetBinder<'a, 'b, B, (Uniform<H>, T)>
 where
     B: Backend,
 {
-    pub fn uniform<C>(self, cache: &'b C) -> SetBinder<'a, 'b, B, T>
+    /// Add uniform binding.
+    pub fn uniform<C>(self, span: Range<Epoch>, cache: &'b mut C) -> SetBinder<'a, 'b, B, T>
     where
         C: UniformCache<B, H>,
     {
@@ -227,7 +222,7 @@ where
             mut writes,
         } = self;
 
-        writes.push(head.bind(set, cache));
+        writes.push(head.bind(span, set, cache));
         SetBinder {
             relevant,
             bindings: tail,
@@ -237,3 +232,17 @@ where
     }
 }
 
+impl<'a, 'b, B, H, T> SetBinder<'a, 'b, B, (H, T)>
+where
+    B: Backend,
+{
+    /// Intentionally skip one binding.
+    pub fn skip<C>(self) -> SetBinder<'a, 'b, B, T> {
+        SetBinder {
+            relevant: self.relevant,
+            bindings: self.bindings.1,
+            set: self.set,
+            writes: self.writes,
+        }
+    }
+}

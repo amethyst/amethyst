@@ -18,9 +18,9 @@ travis-ci = { repository = "amethyst/amethyst" }
 cgmath = { version = "0.16", features = ["serde", "mint"] }
 error-chain = "0.11"
 fnv = "1.0"
-hibitset = "0.3.2"
+hibitset = { version = "0.3.2", git = "https://github.com/slide-rs/hibitset.git" }
 rayon = "0.8"
 serde = { version = "1", features = ["serde_derive"] }
 shred = "0.5"
-specs = "0.10"
+specs = { version = "0.10", git = "https://github.com/slide-rs/specs.git" }
 quickcheck = "0.4.1"

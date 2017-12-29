@@ -56,13 +56,10 @@ pub trait Data<'a, B>
 where
     B: Backend,
 {
-    /// Data fetched from `World` during `draw` phase. It shouldn't write anything.
-    /// There is no way to guarantee that.
-    /// Just don't put here any `FetchMut` or `WriteStorage`.
-    type DrawData: SystemData<'a>;
-
-    /// Data fetched from `World` during `prepare` phase. It can both read and write.
-    type PrepareData: SystemData<'a>;
+    /// Data fetched from `World` during draw. It shouldn't write anything.
+    /// Except for components that belong to the pass.
+    /// There is no way to guarantee that now.
+    type PassData: SystemData<'a>;
 }
 
 pub trait Pass<B>: for<'a> Data<'a, B> + Debug + Default
@@ -113,18 +110,15 @@ where
 
     /// This function designed for
     ///
-    /// * allocating buffers and textures
-    /// * storing caches in `World`
-    /// * filling `DescriptorSet`s
+    /// * binding `DescriptorSet`s
+    /// * recording `Graphics` commands to `CommandBuffer`
     fn prepare<'a, C>(
         &mut self,
-        binder: Binder<Self::Bindings>,
         span: Range<Epoch>,
-        descriptors: &mut DescriptorPool<B>,
-        cbuf: &mut CommandBuffer<B, C>,
         allocator: &mut Allocator<B>,
         device: &B::Device,
-        data: <Self as Data<'a, B>>::PrepareData,
+        cbuf: &mut CommandBuffer<B, C>,
+        data: <Self as Data<'a, B>>::PassData,
     ) where
         C: Supports<Transfer>;
 
@@ -135,9 +129,11 @@ where
     fn draw_inline<'a>(
         &mut self,
         span: Range<Epoch>,
-        layout: &B::PipelineLayout,
+        binder: Binder<B, Self::Bindings>,
+        pool: &mut DescriptorPool<B>,
+        device: &B::Device,
         encoder: RenderPassInlineEncoder<B>,
-        data: <Self as Data<'a, B>>::DrawData,
+        data: <Self as Data<'a, B>>::PassData,
     );
 
     fn tag() -> PassTag<Self> {
@@ -193,10 +189,9 @@ where
     fn prepare<'a>(
         &mut self,
         span: Range<Epoch>,
-        descriptors: &mut DescriptorPool<B>,
-        cbuf: &mut CommandBuffer<B, Transfer>,
         allocator: &mut Allocator<B>,
         device: &B::Device,
+        cbuf: &mut CommandBuffer<B, Transfer>,
         world: &'a World,
     );
 
@@ -207,6 +202,8 @@ where
         &mut self,
         span: Range<Epoch>,
         layout: &B::PipelineLayout,
+        pool: &mut DescriptorPool<B>,
+        device: &B::Device,
         encoder: RenderPassInlineEncoder<B>,
         world: &'a World,
     );
@@ -264,21 +261,18 @@ where
     fn prepare<'a>(
         &mut self,
         span: Range<Epoch>,
-        descriptors: &mut DescriptorPool<B>,
-        cbuf: &mut CommandBuffer<B, Transfer>,
         allocator: &mut Allocator<B>,
         device: &B::Device,
+        cbuf: &mut CommandBuffer<B, Transfer>,
         world: &'a World,
     ) {
         <P as Pass<B>>::prepare(
             self,
-            Self::layout(Layout::new()).into(),
             span,
-            descriptors,
-            cbuf,
             allocator,
             device,
-            <P as Data<'a, B>>::PrepareData::fetch(&world.res, 0),
+            cbuf,
+            <P as Data<'a, B>>::PassData::fetch(&world.res, 0),
         );
     }
 
@@ -286,15 +280,19 @@ where
         &mut self,
         span: Range<Epoch>,
         layout: &B::PipelineLayout,
+        pool: &mut DescriptorPool<B>,
+        device: &B::Device,
         encoder: RenderPassInlineEncoder<B>,
         world: &'a World,
     ) {
         <P as Pass<B>>::draw_inline(
             self,
             span,
-            layout,
+            Binder::<B, P::Bindings>::new(layout, P::layout(Layout::new())),
+            pool,
+            device,
             encoder,
-            <P as Data<'a, B>>::DrawData::fetch(&world.res, 0),
+            <P as Data<'a, B>>::PassData::fetch(&world.res, 0),
         );
     }
 }

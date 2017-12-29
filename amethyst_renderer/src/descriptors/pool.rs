@@ -1,22 +1,36 @@
 
 use std::marker::PhantomData;
 use std::iter::{Once, Chain, once, empty};
+use std::ops::Range;
 
 use gfx_hal::{Backend, Device};
 use gfx_hal::pso::{DescriptorPool as RawDescriptorPool, DescriptorRangeDesc, DescriptorSetLayoutBinding, DescriptorType};
 
+
+use cirque::{Cirque, Entry, EntryMut};
+use epoch::Epoch;
 use stage::ShaderStage;
 
 const CAPACITY: usize = 1024;
 
 
-pub struct DescriptorSet<B: Backend, P>(B::DescriptorSet, PhantomData<fn() -> P>);
+/// Descriptor set tagged by type.
+/// So that multiple descriptor sets can be attached to the entity.
+pub struct DescriptorSet<B: Backend, P>(Cirque<B::DescriptorSet>, PhantomData<fn() -> P>);
 impl<B, P> DescriptorSet<B, P>
 where
     B: Backend,
 {
-    pub fn raw(&self) -> &B::DescriptorSet {
-        &self.0
+    pub fn new() -> Self {
+        DescriptorSet(Cirque::new(), PhantomData)
+    }
+
+    pub fn get_mut<'a>(&'a mut self, span: Range<Epoch>) -> EntryMut<'a, B::DescriptorSet> {
+        self.0.get_mut(span)
+    }
+
+    pub fn get<'a>(&'a mut self, span: Range<Epoch>) -> Entry<'a, B::DescriptorSet> {
+        self.0.get(span)
     }
 }
 
@@ -56,15 +70,14 @@ where
         &self.layout
     }
 
-    pub fn get<P>(&mut self) -> DescriptorSet<B, P> {
-        let raw = self.sets
+    pub fn get(&mut self) -> B::DescriptorSet {
+        self.sets
             .pop()
-            .unwrap_or_else(|| self.pool.allocate_sets(&[&self.layout]).pop().unwrap());
-        DescriptorSet(raw, PhantomData)
+            .unwrap_or_else(|| self.pool.allocate_sets(&[&self.layout]).pop().unwrap())
     }
 
-    pub fn put<P>(&mut self, set: DescriptorSet<B, P>) {
-        self.sets.push(set.0);
+    pub fn put(&mut self, set: B::DescriptorSet) {
+        self.sets.push(set);
     }
 
     pub unsafe fn reset(&mut self) {

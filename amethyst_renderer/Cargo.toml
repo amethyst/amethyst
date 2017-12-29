@@ -38,7 +38,7 @@ rayon = "0.8"
 rayon-core = "1.2"
 smallvec = "0.4"
 serde = { version = "1.0", features = ["serde_derive"] }
-specs = "0.10"
+specs = { version = "0.10", git = "https://github.com/slide-rs/specs.git" }
 thread_profiler = { version = "0.1" }
 wavefront_obj = "5.0"
 winit = "0.10"

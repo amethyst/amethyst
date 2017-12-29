@@ -4,7 +4,7 @@ pub fn is_slice_sorted<T>(slice: &[T]) -> bool
 where
     T: Ord,
 {
-    if slice.len() == 0 {
+    if slice.len() < 2 {
         return true;
     }
     for i in 0..slice.len() - 1 {
@@ -21,7 +21,7 @@ where
     K: Ord,
     F: FnMut(&T) -> K,
 {
-    if slice.len() == 0 {
+    if slice.len() < 2 {
         return true;
     }
     for i in 0..slice.len() - 1 {
