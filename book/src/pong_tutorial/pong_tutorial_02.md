@@ -391,7 +391,7 @@ Now when we run the game we should get something that looks like this:
 In the next chapter we'll explore the "S" in ECS and actually get these paddles 
 moving!
 
-[sb]: https://slide-rs.github.io/specs-website/docs/book/master/
-[sb-storage]: https://slide-rs.github.io/specs-website/docs/book/master/05_storages.html#densevecstorage
+[sb]: https://slide-rs.github.io/specs/
+[sb-storage]: https://slide-rs.github.io/specs/05_storages.html#densevecstorage
 [cg]: https://docs.rs/cgmath/0.15.0/cgmath/
 [2d]: https://www.amethyst.rs/doc/develop/doc/amethyst_renderer/struct.Camera.html#method.standard_2d
