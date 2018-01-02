@@ -164,9 +164,12 @@ fn initialise_score(world: &mut World) {
         transform.x = (width / 2.) + 100. - transform.width / 2.;
     };
     {
-        let dim = world.read_resource::<ScreenDimensions>();
-        p1_size_fn(&mut p1_transform, (dim.width(), dim.height()));
-        p2_size_fn(&mut p2_transform, (dim.width(), dim.height()));
+        let dim = {
+            let dim = world.read_resource::<ScreenDimensions>();
+            (dim.width() as f32, dim.height() as f32)
+        };
+        p1_size_fn(&mut p1_transform, dim);
+        p2_size_fn(&mut p2_transform, dim);
     }
     let p1_score = world
         .create_entity()

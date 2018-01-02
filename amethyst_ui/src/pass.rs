@@ -228,8 +228,8 @@ impl Pass for DrawUi {
             });
 
         let proj_vec = vec4(
-            2. / screen_dimensions.width(),
-            -2. / screen_dimensions.height(),
+            2. / screen_dimensions.width() as f32,
+            -2. / screen_dimensions.height() as f32,
             -2.,
             1.,
         );

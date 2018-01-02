@@ -81,9 +81,9 @@ impl Camera {
     /// Will use a perspective projection with aspect from the given screen dimensions and a field
     /// of view of 60 degrees.
     /// View transformation will be multiplicative identity.
-    pub fn standard_3d(width: f32, height: f32) -> Self {
+    pub fn standard_3d(width: u32, height: u32) -> Self {
         use amethyst_core::cgmath::Deg;
-        Self::from(Projection::perspective(width / height, Deg(60.)))
+        Self::from(Projection::perspective(width as f32 / height as f32, Deg(60.)))
     }
 }
 
