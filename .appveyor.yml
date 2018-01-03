@@ -43,6 +43,5 @@ build: false
 
 # Generate documentation, compile the engine, run tests.
 test_script:
-  - cargo doc --all --no-deps -v
   - cargo test --all -v
   - cargo test --all -v --features profiler
