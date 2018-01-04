@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use amethyst_assets::{Asset, Error, Result, ResultExt, SimpleFormat};
 use amethyst_core::cgmath::{InnerSpace, Vector3};
-use specs::DenseVecStorage;
+use specs::VecStorage;
 use wavefront_obj::obj::{parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex,
                          TextureIndex, Vertex, VertexIndex};
 
@@ -64,7 +64,7 @@ where
 
 impl Asset for Mesh {
     type Data = MeshData;
-    type HandleStorage = DenseVecStorage<MeshHandle>;
+    type HandleStorage = VecStorage<MeshHandle>;
 }
 
 /// Allows loading from Wavefront files

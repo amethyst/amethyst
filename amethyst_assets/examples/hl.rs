@@ -15,7 +15,7 @@ use std::sync::Arc;
 use amethyst_assets::*;
 use amethyst_core::Time;
 use rayon::ThreadPool;
-use specs::{DenseVecStorage, Dispatcher, DispatcherBuilder, Fetch, FetchMut, System, World};
+use specs::{Dispatcher, DispatcherBuilder, Fetch, FetchMut, System, VecStorage, World};
 use specs::common::Errors;
 
 struct App {
@@ -73,7 +73,7 @@ pub struct MeshAsset {
 
 impl Asset for MeshAsset {
     type Data = VertexData;
-    type HandleStorage = DenseVecStorage<MeshHandle>;
+    type HandleStorage = VecStorage<MeshHandle>;
 }
 
 /// A format the mesh data could be stored with.

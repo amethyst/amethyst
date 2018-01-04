@@ -123,7 +123,7 @@ struct CachedTabOrder {
 /// This system processes the underlying UI data as needed.
 pub struct UiSystem {
     /// A reader for winit events.
-    reader: ReaderId,
+    reader: ReaderId<Event>,
     /// A cache sorted by tab order, and then by Entity.
     tab_order_cache: CachedTabOrder,
     /// This is set to true while the left mouse button is pressed.
@@ -134,7 +134,7 @@ pub struct UiSystem {
 
 impl UiSystem {
     /// Initializes a new UiSystem that uses the given reader id.
-    pub fn new(reader: ReaderId) -> Self {
+    pub fn new(reader: ReaderId<Event>) -> Self {
         Self {
             reader,
             tab_order_cache: CachedTabOrder {
@@ -235,7 +235,7 @@ impl<'a> System<'a> for UiSystem {
                 }
             }
         }
-        for event in events.lossy_read(&mut self.reader).unwrap() {
+        for event in events.read(&mut self.reader) {
             // Process events for the whole UI.
             match *event {
                 Event::WindowEvent {

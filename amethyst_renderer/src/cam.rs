@@ -1,7 +1,7 @@
 //! Camera type with support for perspective and orthographic projections.
 
 use amethyst_core::cgmath::{Deg, Matrix4, Ortho, PerspectiveFov};
-use specs::{Component, DenseVecStorage, Entity};
+use specs::{Component, HashMapStorage, Entity};
 
 /// The projection mode of a `Camera`.
 ///
@@ -88,7 +88,7 @@ impl Camera {
 }
 
 impl Component for Camera {
-    type Storage = DenseVecStorage<Self>;
+    type Storage = HashMapStorage<Self>;
 }
 
 /// Active camera resource, used by the renderer to choose which camera to get the view matrix from.

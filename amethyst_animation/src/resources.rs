@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use amethyst_assets::{Asset, Handle, Result};
 use fnv::FnvHashMap;
-use specs::{Component, DenseVecStorage, Entity};
+use specs::{Component, DenseVecStorage, Entity, VecStorage};
 
 use interpolation::InterpolationType;
 
@@ -31,7 +31,7 @@ pub struct Sampler {
 
 impl Asset for Sampler {
     type Data = Self;
-    type HandleStorage = DenseVecStorage<Handle<Self>>;
+    type HandleStorage = VecStorage<Handle<Self>>;
 }
 
 impl Into<Result<Sampler>> for Sampler {
@@ -63,7 +63,7 @@ pub struct Animation {
 
 impl Asset for Animation {
     type Data = Self;
-    type HandleStorage = DenseVecStorage<Handle<Self>>;
+    type HandleStorage = VecStorage<Handle<Self>>;
 }
 
 impl Into<Result<Animation>> for Animation {

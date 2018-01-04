@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_renderer"
-version = "0.5.0"
+version = "0.6.0"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
 description = "High-level rendering engine with multiple backends"
 exclude = ["examples/*"]
@@ -39,7 +39,7 @@ rayon = "0.8"
 serde = "1.0"
 serde_derive = "1.0"
 shred = "0.5"
-shrev = "0.6"
+shrev = "0.8"
 wavefront_obj = "5.0"
 winit = "0.7"
 
