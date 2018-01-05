@@ -378,3 +378,8 @@ pub fn duration_to_nanos(duration: Duration) -> u64 {
 pub fn nanos_to_duration(nanos: u64) -> Duration {
     Duration::new(nanos / 1_000_000_000, (nanos % 1_000_000_000) as u32)
 }
+
+/// Multiplies a given Duration by the float provided.
+pub fn duration_f32_mul(duration: Duration, float: f32) -> Duration {
+    Duration::new((duration.as_secs() as f32 * float) as u64, (duration.subsec_nanos() as f32 * float) as u32)
+}

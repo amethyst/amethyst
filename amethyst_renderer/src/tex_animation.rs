@@ -1,8 +1,11 @@
 use std::time::Duration;
 
 use amethyst_assets::{Asset, AssetStorage, Handle};
+use amethyst_core::Time;
 use fnv::FnvHashMap as HashMap;
-use specs::VecStorage;
+use specs::{Fetch, Join, System, VecStorage, WriteStorage};
+
+use MaterialAnimation;
 
 
 /// An asset handle to sprite sheet metadata.
@@ -115,6 +118,25 @@ impl SpriteSheetAnimation {
     pub fn current_frame(&self, sheet_storage: &AssetStorage<SpriteSheetData>) -> Option<Frame> {
         sheet_storage.get(&self.sprite_sheet_data).map(|data| data.frames[data.animations[self.current_animation][self.current_frame]].clone())
     }
+
+    /// Advance the current animation by the time given.  Normally this will be called by the
+    /// engine by default using the regularly running game clock.  This function is made public so
+    /// that you can manually advance the animation if you require.
+    pub fn advance(&mut self, time: Duration, sheet_storage: &AssetStorage<SpriteSheetData>) -> Result<(), ()> {
+        use amethyst_core::timing::duration_f32_mul;
+        self.frame_timer += duration_f32_mul(time, self.playback_speed);
+        let mut frame_time = self.current_frame(sheet_storage).ok_or(())?.duration;
+        while self.frame_timer >= frame_time {
+            self.current_frame += 1;
+            let max_frame = sheet_storage.get(&self.sprite_sheet_data).map(|data| data.animations[self.current_animation].len() - 1).ok_or(())?;
+            if self.current_frame > max_frame {
+                self.current_frame = 0;
+            }
+            self.frame_timer -= frame_time;
+            frame_time = self.current_frame(sheet_storage).ok_or(())?.duration;
+        }
+        Ok(())
+    }
 }
 
 /// A description of a frame in a spritesheet.
@@ -130,4 +152,27 @@ pub struct Frame {
     pub height: f32,
     /// The duration this frame should be played for.
     pub duration: Duration,
+}
+
+/// A system that automatically advances animations per the system clock.
+pub struct TexAnimationSystem;
+
+impl<'a> System<'a> for TexAnimationSystem {
+    type SystemData = (
+        Fetch<'a, Time>,
+        Fetch<'a, AssetStorage<SpriteSheetData>>,
+        WriteStorage<'a, MaterialAnimation>
+    );
+
+    fn run(&mut self, (time, sheet_storage, mut mat_animation): Self::SystemData) {
+        for mat_animation in (&mut mat_animation).join() {
+            mat_animation.albedo_animation.as_mut().map(|anim| anim.advance(time.delta_time(), &sheet_storage));
+            mat_animation.emission_animation.as_mut().map(|anim| anim.advance(time.delta_time(), &sheet_storage));
+            mat_animation.normal_animation.as_mut().map(|anim| anim.advance(time.delta_time(), &sheet_storage));
+            mat_animation.metallic_animation.as_mut().map(|anim| anim.advance(time.delta_time(), &sheet_storage));
+            mat_animation.roughness_animation.as_mut().map(|anim| anim.advance(time.delta_time(), &sheet_storage));
+            mat_animation.ambient_occlusion_animation.as_mut().map(|anim| anim.advance(time.delta_time(), &sheet_storage));
+            mat_animation.caveat_animation.as_mut().map(|anim| anim.advance(time.delta_time(), &sheet_storage));
+        }
+    }
 }
