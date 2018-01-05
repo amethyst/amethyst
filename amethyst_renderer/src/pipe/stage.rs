@@ -228,6 +228,7 @@ impl<Q> StageBuilder<Q> {
         self,
         fac: &'a mut Factory,
         targets: &'a Targets,
+        multisampling: u16,
     ) -> Result<Stage<R>>
     where
         Q: IntoList<List = L>,
@@ -242,7 +243,7 @@ impl<Q> StageBuilder<Q> {
 
         let passes = self.passes
             .into_list()
-            .fmap(CompilePass::new(fac, &out))
+            .fmap(CompilePass::new(fac, &out, multisampling))
             .try()?;
 
         Ok(Stage {
@@ -274,11 +275,12 @@ impl<Q> StageBuilder<Queue<Q>> {
 pub struct CompilePass<'a> {
     factory: &'a mut Factory,
     target: &'a Target,
+    multisampling: u16,
 }
 
 impl<'a> CompilePass<'a> {
-    fn new(factory: &'a mut Factory, target: &'a Target) -> Self {
-        CompilePass { factory, target }
+    fn new(factory: &'a mut Factory, target: &'a Target, multisampling: u16) -> Self {
+        CompilePass { factory, target, multisampling }
     }
 }
 
@@ -288,7 +290,7 @@ where
 {
     type Output = Result<CompiledPass<P>>;
     fn call_once(self, (pass,): (P,)) -> Result<CompiledPass<P>> {
-        CompiledPass::compile(pass, self.factory, self.target)
+        CompiledPass::compile(pass, self.factory, self.target, self.multisampling)
     }
 }
 impl<'a, P> HetFnMut<(P,)> for CompilePass<'a>
@@ -296,6 +298,6 @@ where
     P: Pass,
 {
     fn call_mut(&mut self, (pass,): (P,)) -> Result<CompiledPass<P>> {
-        CompiledPass::compile(pass, self.factory, self.target)
+        CompiledPass::compile(pass, self.factory, self.target, self.multisampling)
     }
 }
