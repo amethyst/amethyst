@@ -70,7 +70,7 @@ impl ScreenDimensions {
     /// Returns the current width of the window.
     ///
     /// This is returned as a float for user convenience, as this is typically used with other
-    /// float values.  This will only ever be a positive integer though.
+    /// float values.  This will only ever be a non-negative integer though.
     pub fn width(&self) -> f32 {
         self.w
     }
@@ -78,7 +78,7 @@ impl ScreenDimensions {
     /// Returns the current height of the window.
     ///
     /// This is returned as a float for user convenience, as this is typically used with other
-    /// float values.  This will only ever be a positive integer though.
+    /// float values.  This will only ever be a non-negative integer though.
     pub fn height(&self) -> f32 {
         self.h
     }
