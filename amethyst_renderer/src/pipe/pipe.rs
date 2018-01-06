@@ -214,7 +214,7 @@ pub trait PipelineBuild {
     type Pipeline: PolyPipeline;
 
     /// Build pipeline
-    fn build(self, fac: &mut Factory, out: &Target) -> Result<Self::Pipeline>;
+    fn build(self, fac: &mut Factory, out: &Target, multisampling: u16) -> Result<Self::Pipeline>;
 }
 
 impl<L, Z, R, Q> PipelineBuild for PipelineBuilder<Q>
@@ -225,7 +225,7 @@ where
     R: PolyStages,
 {
     type Pipeline = Pipeline<R>;
-    fn build(mut self, fac: &mut Factory, out: &Target) -> Result<Pipeline<R>> {
+    fn build(mut self, fac: &mut Factory, out: &Target, multisampling: u16) -> Result<Pipeline<R>> {
         let mut targets = self.targets
             .drain(..)
             .map(|tb| tb.build(fac, out.size()))
@@ -235,7 +235,7 @@ where
 
         let stages = self.stages
             .into_list()
-            .fmap(BuildStage::new(fac, &targets))
+            .fmap(BuildStage::new(fac, &targets, multisampling))
             .try()?;
 
         Ok(Pipeline { stages, targets })
@@ -245,11 +245,12 @@ where
 pub struct BuildStage<'a> {
     factory: &'a mut Factory,
     targets: &'a Targets,
+    multisampling: u16,
 }
 
 impl<'a> BuildStage<'a> {
-    fn new(factory: &'a mut Factory, targets: &'a Targets) -> Self {
-        BuildStage { factory, targets }
+    fn new(factory: &'a mut Factory, targets: &'a Targets, multisampling: u16) -> Self {
+        BuildStage { factory, targets, multisampling }
     }
 }
 
@@ -262,7 +263,7 @@ where
 {
     type Output = Result<Stage<R>>;
     fn call_once(self, (stage,): (StageBuilder<Q>,)) -> Result<Stage<R>> {
-        stage.build(self.factory, self.targets)
+        stage.build(self.factory, self.targets, self.multisampling)
     }
 }
 
@@ -274,6 +275,6 @@ where
     R: Passes,
 {
     fn call_mut(&mut self, (stage,): (StageBuilder<Q>,)) -> Result<Stage<R>> {
-        stage.build(self.factory, self.targets)
+        stage.build(self.factory, self.targets, self.multisampling)
     }
 }

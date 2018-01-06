@@ -13,7 +13,7 @@ use gfx::preset::depth::{LESS_EQUAL_TEST, LESS_EQUAL_WRITE};
 use gfx::pso::buffer::{ElemStride, InstanceRate};
 use gfx::shade::{ProgramError, ToUniform};
 use gfx::shade::core::UniformValue;
-use gfx::state::{Blend, ColorMask, Comparison, Depth, Rasterizer, Stencil};
+use gfx::state::{Blend, ColorMask, Comparison, Depth, MultiSample, Rasterizer, Stencil};
 use gfx::traits::Pod;
 
 pub use self::pso::{Data, Init, Meta};
@@ -140,26 +140,27 @@ impl Effect {
 pub struct NewEffect<'f> {
     factory: &'f mut Factory,
     out: &'f Target,
+    multisampling: u16,
 }
 
 impl<'f> NewEffect<'f> {
-    pub(crate) fn new(fac: &'f mut Factory, out: &'f Target) -> Self {
-        NewEffect { factory: fac, out }
+    pub(crate) fn new(fac: &'f mut Factory, out: &'f Target, multisampling: u16) -> Self {
+        NewEffect { factory: fac, out, multisampling }
     }
 
     pub fn simple<S: Into<&'f [u8]>>(self, vs: S, ps: S) -> EffectBuilder<'f> {
         let src = ProgramSource::Simple(vs.into(), ps.into());
-        EffectBuilder::new(self.factory, self.out, src)
+        EffectBuilder::new(self.factory, self.out, self.multisampling, src)
     }
 
     pub fn geom<S: Into<&'f [u8]>>(self, vs: S, gs: S, ps: S) -> EffectBuilder<'f> {
         let src = ProgramSource::Geometry(vs.into(), gs.into(), ps.into());
-        EffectBuilder::new(self.factory, self.out, src)
+        EffectBuilder::new(self.factory, self.out, self.multisampling, src)
     }
 
     pub fn tess<S: Into<&'f [u8]>>(self, vs: S, hs: S, ds: S, ps: S) -> EffectBuilder<'f> {
         let src = ProgramSource::Tessellated(vs.into(), hs.into(), ds.into(), ps.into());
-        EffectBuilder::new(self.factory, self.out, src)
+        EffectBuilder::new(self.factory, self.out, self.multisampling, src)
     }
 }
 
@@ -174,13 +175,17 @@ pub struct EffectBuilder<'a> {
 }
 
 impl<'a> EffectBuilder<'a> {
-    pub(crate) fn new(fac: &'a mut Factory, out: &'a Target, src: ProgramSource<'a>) -> Self {
+    pub(crate) fn new(fac: &'a mut Factory, out: &'a Target, multisampling: u16, src: ProgramSource<'a>) -> Self {
+        let mut rast = Rasterizer::new_fill().with_cull_back();
+        if multisampling > 0 {
+            rast.samples = Some(MultiSample);
+        }
         EffectBuilder {
             factory: fac,
             out: out,
             init: Init::default(),
             prim: Primitive::TriangleList,
-            rast: Rasterizer::new_fill().with_cull_back(),
+            rast,
             prog: src,
             const_bufs: Vec::new(),
         }

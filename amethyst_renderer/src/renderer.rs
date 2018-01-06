@@ -19,6 +19,7 @@ pub struct Renderer {
     main_target: Target,
     window: Window,
     events: EventsLoop,
+    multisampling: u16,
     cached_size: (u32, u32),
 }
 
@@ -61,7 +62,7 @@ impl Renderer {
         P: PolyPipeline,
         B: PipelineBuild<Pipeline = P>,
     {
-        pb.build(&mut self.factory, &self.main_target)
+        pb.build(&mut self.factory, &self.main_target, self.multisampling)
     }
 
     /// Draws a scene with the given pipeline.
@@ -209,6 +210,7 @@ impl RendererBuilder {
             main_target,
             window,
             events: self.events,
+            multisampling: self.config.multisampling,
             cached_size,
         })
     }
