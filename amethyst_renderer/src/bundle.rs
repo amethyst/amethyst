@@ -33,7 +33,7 @@ impl<'a, 'b> ECSBundle<'a, 'b> for RenderBundle {
     ) -> Result<DispatcherBuilder<'a, 'b>> {
         world.add_resource(AmbientColor(Rgba::from([0.01; 3])));
         world.add_resource(WindowMessages::new());
-        world.add_resource(ScreenDimensions::new(100, 100));
+        world.add_resource(ScreenDimensions::new(0, 0));
         world.add_resource(AssetStorage::<Mesh>::new());
         world.add_resource(AssetStorage::<Texture>::new());
         world.add_resource(Orientation::default());
