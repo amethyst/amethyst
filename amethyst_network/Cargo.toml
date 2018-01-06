@@ -1,0 +1,20 @@
+[package]
+name = "amethyst_network"
+version = "0.0.1"
+authors = ["Joël Lupien (Jojolepro) <jojolepromain@gmail.com>"]
+description = "Amethyst network crate"
+keywords = ["network", "specs", "ecs", "amethyst", "serialization"]
+categories = ["game-engines"]
+
+documentation = "https://www.amethyst.rs/doc/develop/doc/amethyst_network/index.html"
+homepage = "https://www.amethyst.rs/"
+repository = "https://github.com/amethyst/amethyst"
+license = "MIT/Apache-2.0"
+
+[dependencies]
+amethyst_assets = { path = "../amethyst_assets", version = "0.2" }
+amethyst_core = { path = "../amethyst_core", version = "0.1" }
+cgmath = { version = "0.14", features = ["eders"] }
+serde = { version = "1", features = ["serde_derive"] }
+shrev = "0.8"
+specs = "0.10"

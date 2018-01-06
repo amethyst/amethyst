@@ -27,6 +27,7 @@ amethyst_audio = { path = "amethyst_audio", version = "0.1.0" }
 amethyst_config = { path = "amethyst_config", version = "0.5.0" }
 amethyst_core = { path = "amethyst_core", version = "0.1.0" }
 amethyst_renderer = { path = "amethyst_renderer", version = "0.6" }
+amethyst_network = { path = "amethyst_network", version = "0.0.1" }
 amethyst_input = { path = "amethyst_input", version = "0.2" }
 amethyst_ui = { path = "amethyst_ui", version = "0.1" }
 amethyst_utils = { path = "amethyst_utils", version = "0.1" }
@@ -99,6 +100,14 @@ path = "examples/pong_tutorial_01/main.rs"
 [[example]]
 name = "pong_tutorial_02"
 path = "examples/pong_tutorial_02/main.rs"
+
+[[example]]
+name = "net_client"
+path = "examples/net_client/main.rs"
+
+[[example]]
+name = "net_server"
+path = "examples/net_server/main.rs"
 
 [workspace]
 members = ["amethyst_animation", "amethyst_gltf"]
