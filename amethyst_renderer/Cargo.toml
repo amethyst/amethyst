@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_renderer"
-version = "0.6.0"
+version = "0.6.1"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
 description = "High-level rendering engine with multiple backends"
 exclude = ["examples/*"]
