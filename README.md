@@ -80,7 +80,7 @@ See the [Getting Started][gs] chapter in the book for the full-blown "Hello,
 World!" tutorial. For the sake of brevity, you can generate an empty game
 project with `cargo` and build it. Follow along below:
 
-[gs]: https://www.amethyst.rs/book/master/html/getting_started.html
+[gs]: https://www.amethyst.rs/book/master/book/getting_started.html
 
 ## Building Documentation
 
