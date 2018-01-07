@@ -18,3 +18,4 @@ cgmath = { version = "0.14", features = ["eders"] }
 serde = { version = "1", features = ["serde_derive"] }
 shrev = "0.8"
 specs = "0.10"
+ron = "0.1.3"

@@ -5,9 +5,11 @@
 extern crate amethyst_assets;
 extern crate amethyst_core;
 extern crate cgmath;
+#[macro_use]
 extern crate serde;
 extern crate shrev;
 extern crate specs;
+extern crate ron;
 
 pub mod systems;
 pub mod resources;

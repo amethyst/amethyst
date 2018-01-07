@@ -1,7 +1,13 @@
+extern crate ron;
+
 use specs::{Entities, Entity, Join, System, WriteStorage};
 use std::net::UdpSocket;
 use std::net::IpAddr;
 use std::str;
+
+use amethyst_core::transform::*;
+
+use ::components::netsync::*;
 
 pub struct NetClientSystem {
     pub socket:UdpSocket,
@@ -15,12 +21,19 @@ impl NetClientSystem {
         let srv = "127.0.0.1:34255";
 
         //let mut buf = [0; 10];
-        let mut buf = "yeet xD".as_bytes().clone();
+        /*let mut buf = "yeet xD".as_bytes().clone();
         socket.send_to(buf, &srv).expect("Failed to send data.");
 
         let mut buf = [0;50];
         let (amt, src) = socket.recv_from(&mut buf).expect("Failed to receive data.");
-        println!("{}",str::from_utf8(&buf).expect("Failed to read string from bytes"));
+        println!("{}",str::from_utf8(&buf).expect("Failed to read string from bytes"));*/
+
+
+        let ser = Transform::default();
+        let s = ron::ser::pretty::to_string(&ser).unwrap();
+        println!("{}",s);
+        let mut buf = s.as_bytes();
+        socket.send_to(buf, &srv).expect("Failed to send data.");
 
         NetClientSystem{
             socket
