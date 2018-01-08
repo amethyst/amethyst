@@ -13,8 +13,8 @@ block_labels = [
     "status: working"
 ]
 
-# Clean up local feature branch after a successful merge.
-delete_merged_branches = true
+# This feature is rarely useful and more often problematic, so we turn it off.
+delete_merged_branches = false
 
 # Increase timeout to 5 hours as the default timeout is too short for our build
 timeout_sec = 18000
