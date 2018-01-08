@@ -17,7 +17,7 @@ use {AmbientColor, Camera, Light, Material, MaterialAnimation, MaterialDefaults,
 ///
 #[derive(Default)]
 pub struct RenderBundle {
-    /// defaults to false, meaning texture_animation is included by default
+    // defaults to false, meaning Texture Animation is included by default
     without_texture_animation: bool,
 }
 
@@ -25,6 +25,12 @@ impl RenderBundle {
     /// Create a new render bundle
     pub fn new() -> Self {
         Default::default()
+    }
+
+    /// Remove Texture Animation from bundle (included by default)
+    pub fn without_texture_animation(mut self) -> Self {
+        self.without_texture_animation = true;
+        self
     }
 }
 
