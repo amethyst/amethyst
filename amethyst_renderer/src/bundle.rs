@@ -6,8 +6,8 @@ use amethyst_core::orientation::Orientation;
 use amethyst_core::transform::components::*;
 use specs::{DispatcherBuilder, World};
 
-use {AmbientColor, Camera, Light, Material, MaterialAnimation, MaterialDefaults, Mesh, Rgba, ScreenDimensions,
-     SpriteSheetData, Texture, WindowMessages};
+use {AmbientColor, Camera, Light, Material, MaterialAnimation, MaterialDefaults, Mesh, Rgba,
+     ScreenDimensions, SpriteSheetData, TexAnimationSystem, Texture, WindowMessages};
 
 /// Rendering bundle
 ///
@@ -16,7 +16,10 @@ use {AmbientColor, Camera, Light, Material, MaterialAnimation, MaterialDefaults,
 /// `AssetFuture` into its related component.
 ///
 #[derive(Default)]
-pub struct RenderBundle;
+pub struct RenderBundle {
+    /// defaults to false, meaning texture_animation is included by default
+    without_texture_animation: bool,
+}
 
 impl RenderBundle {
     /// Create a new render bundle
@@ -29,14 +32,13 @@ impl<'a, 'b> ECSBundle<'a, 'b> for RenderBundle {
     fn build(
         self,
         world: &mut World,
-        builder: DispatcherBuilder<'a, 'b>,
+        mut builder: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
         world.add_resource(AmbientColor(Rgba::from([0.01; 3])));
         world.add_resource(WindowMessages::new());
         world.add_resource(ScreenDimensions::new(100, 100));
         world.add_resource(AssetStorage::<Mesh>::new());
         world.add_resource(AssetStorage::<Texture>::new());
-        world.add_resource(AssetStorage::<SpriteSheetData>::new());
         world.add_resource(Orientation::default());
 
         let mat = create_default_mat(world);
@@ -45,11 +47,16 @@ impl<'a, 'b> ECSBundle<'a, 'b> for RenderBundle {
         world.register::<Transform>();
         world.register::<Light>();
         world.register::<Material>();
-        world.register::<MaterialAnimation>();
         world.register::<Handle<Mesh>>();
         world.register::<Handle<Texture>>();
-        world.register::<Handle<SpriteSheetData>>();
         world.register::<Camera>();
+
+        if !self.without_texture_animation {
+            world.add_resource(AssetStorage::<SpriteSheetData>::new());
+            world.register::<MaterialAnimation>();
+            world.register::<Handle<SpriteSheetData>>();
+            builder = builder.add(TexAnimationSystem {}, "texture_animation_system", &[])
+        };
 
         Ok(builder)
     }
