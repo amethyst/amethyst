@@ -7,6 +7,7 @@ extern crate amethyst_core;
 extern crate cgmath;
 #[macro_use]
 extern crate serde;
+extern crate serde_json;
 extern crate shrev;
 extern crate specs;
 extern crate ron;
