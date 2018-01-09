@@ -5,6 +5,14 @@ use std::net::UdpSocket;
 use std::str;
 use std::io::{Error,ErrorKind};
 use amethyst_core::transform::*;
+use std::any::Any;
+
+#[derive(Debug,Serialize,Deserialize)]
+pub enum TestEvent{
+    A{a:i32},
+    B,
+    C{c1:i32,c2:String}
+}
 
 pub struct NetServerSystem {
     pub socket:UdpSocket,
@@ -68,9 +76,24 @@ impl<'a> System<'a> for NetServerSystem {
 
                     let strin = str::from_utf8(&buf2).expect("Failed to get string from bytes");
 
-                    let tr:Transform = ron::de::from_str(strin).expect("Failed to get transform from string");
 
-                    println!("{:?}",tr);
+                    //let tr:Transform = ron::de::from_str(strin).expect("Failed to get transform from string");
+                    //let tr = ron::de::from_str(strin).expect("Failed to get transform from string");
+                    let tr:TestEvent = ron::de::from_str(strin).expect("Failed to get transform from string");
+                    /*match tr{
+                        Transform(..)=>println!("TransformYEET: {:?}",tr),
+                        //LocalTransform{..}=>println!("LocalTransformYEET: {:?}",tr),
+                        _=>println!("other type"),
+                    }*/
+                    match tr{
+                        TestEvent::A{a}=>println!("Received A:{}",a),
+                        TestEvent::B=>println!("Received B"),
+                        TestEvent::C{c1,c2}=>println!("Received C:{},{}",c1,c2),
+                    }
+
+                    //let tr:Transform = ron::de::from_bytes(&buf2).expect("Failed to get transform from string");
+
+                    //println!("{:?}",tr);
 
                     /*let buf = &mut buf[..amt];
                     buf.reverse();

@@ -16,6 +16,7 @@ amethyst_assets = { path = "../amethyst_assets", version = "0.2" }
 amethyst_core = { path = "../amethyst_core", version = "0.1" }
 cgmath = { version = "0.14", features = ["eders"] }
 serde = { version = "1", features = ["serde_derive"] }
+serde_json = "1.0.9"
 shrev = "0.8"
 specs = "0.10"
 ron = "0.1.3"
