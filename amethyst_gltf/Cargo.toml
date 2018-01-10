@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Rhuagh <seamonr@gmail.com>"]
 description = "GLTF asset loading"
 
-documentation = "https://www.amethyst.rs/doc/master/amethyst_gltf/"
+documentation = "https://www.amethyst.rs/doc/master/doc/amethyst_gltf/"
 homepage = "https://www.amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
