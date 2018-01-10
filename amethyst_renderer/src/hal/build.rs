@@ -13,6 +13,7 @@ use epoch::{CurrentEpoch, Epoch};
 use graph::ColorAttachment;
 use hal::renderer::{Renderer, RendererConfig};
 use memory::Allocator;
+use relevant::Relevant;
 use shaders::{ShaderLoader, ShaderManager};
 use upload::Uploader;
 
@@ -228,11 +229,12 @@ impl<'a> HalConfig<'a> {
 
         use std::mem::ManuallyDrop;
         Ok(Hal {
+            relevant: Relevant,
             device,
             allocator,
             center,
             renderer,
-            uploader: ManuallyDrop::new(uploader),
+            uploader,
             current: CurrentEpoch::new(),
             shaders: ShaderManager::new(),
         })

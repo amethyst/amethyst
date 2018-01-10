@@ -16,11 +16,13 @@ extern crate cgmath;
 extern crate derivative;
 #[macro_use]
 extern crate error_chain;
+extern crate hibitset;
 extern crate mint;
 extern crate rayon;
 extern crate rayon_core;
 #[macro_use]
 extern crate serde;
+extern crate shred;
 extern crate smallvec;
 extern crate specs;
 extern crate winit;

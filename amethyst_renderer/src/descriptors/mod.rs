@@ -5,6 +5,7 @@
 
 mod pool;
 mod bindings;
+mod storage;
 
 pub use self::pool::{DescriptorPool, DescriptorSet};
 pub use self::bindings::{Binding, Uniform, BindingsList, Layout, Binder, SetBinder};

@@ -29,9 +29,10 @@ use gfx_hal::queue::capability::{Supports, Transfer};
 
 use smallvec::SmallVec;
 
+use shred::Resources;
 use specs::{SystemData, World};
 
-use descriptors::DescriptorPool;
+use descriptors::{DescriptorSet, DescriptorPool};
 use epoch::Epoch;
 use memory::Allocator;
 use shaders::ShaderManager;
@@ -136,9 +137,15 @@ where
         data: <Self as Data<'a, B>>::PassData,
     );
 
+    /// Cleanup when this pass is removed from graph.
+    fn cleanup(&mut self, pool: &mut DescriptorPool<B>, res: &Resources);
+
     fn tag() -> PassTag<Self> {
         PassTag::default()
     }
+
+    /// Register whatever is required
+    fn register(world: &mut World);
 }
 
 
@@ -192,7 +199,7 @@ where
         allocator: &mut Allocator<B>,
         device: &B::Device,
         cbuf: &mut CommandBuffer<B, Transfer>,
-        world: &'a World,
+        res: &'a Resources,
     );
 
     /// Reflects [`Pass::draw_inline`] function
@@ -205,13 +212,16 @@ where
         pool: &mut DescriptorPool<B>,
         device: &B::Device,
         encoder: RenderPassInlineEncoder<B>,
-        world: &'a World,
+        res: &'a Resources,
     );
+
+    /// Cleanup when this pass is removed from graph.
+    fn cleanup(&mut self, pool: &mut DescriptorPool<B>, res: &Resources);
 }
 
 impl<P, B> AnyPass<B> for P
 where
-    P: Pass<B>,
+    P: Pass<B> + 'static,
     B: Backend,
 {
     /// Name of the pass
@@ -264,7 +274,7 @@ where
         allocator: &mut Allocator<B>,
         device: &B::Device,
         cbuf: &mut CommandBuffer<B, Transfer>,
-        world: &'a World,
+        res: &'a Resources,
     ) {
         <P as Pass<B>>::prepare(
             self,
@@ -272,7 +282,7 @@ where
             allocator,
             device,
             cbuf,
-            <P as Data<'a, B>>::PassData::fetch(&world.res, 0),
+            <P as Data<'a, B>>::PassData::fetch(res, 0),
         );
     }
 
@@ -283,7 +293,7 @@ where
         pool: &mut DescriptorPool<B>,
         device: &B::Device,
         encoder: RenderPassInlineEncoder<B>,
-        world: &'a World,
+        res: &'a Resources,
     ) {
         <P as Pass<B>>::draw_inline(
             self,
@@ -292,7 +302,11 @@ where
             pool,
             device,
             encoder,
-            <P as Data<'a, B>>::PassData::fetch(&world.res, 0),
+            <P as Data<'a, B>>::PassData::fetch(res, 0),
         );
+    }
+
+    fn cleanup(&mut self, pool: &mut DescriptorPool<B>, res: &Resources) {
+        <P as Pass<B>>::cleanup(self, pool, res)
     }
 }

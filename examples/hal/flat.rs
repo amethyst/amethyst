@@ -9,6 +9,7 @@ use gfx_hal::memory::Pod;
 use gfx_hal::pso::{DescriptorSetLayoutBinding, DescriptorSetWrite, DescriptorType,
                    DescriptorWrite, GraphicsShaderSet, ShaderStageFlags, Stage, VertexBufferSet};
 use gfx_hal::queue::{Supports, Transfer};
+use shred::Resources;
 use specs::{Component, DenseVecStorage, Entities, Fetch, Join, ReadStorage, SystemData, World,
             WriteStorage, StorageEntry};
 
@@ -135,17 +136,17 @@ where
         pool: &mut DescriptorPool<B>,
         device: &B::Device,
         mut encoder: RenderPassInlineEncoder<B>,
-        (ent, tag, acam, cam, mesh, tr, mut uni, mut desc): <Self as Data<'a, B>>::PassData,
+        (ent, tag, acam, cam, mesh, tr, mut uni, mut descs): <Self as Data<'a, B>>::PassData,
     ) {
         for (_, mesh, uni, e) in (&tag, &mesh, &mut uni, &*ent).join() {
-            if  desc.get(e).is_none() {
-                desc.insert(e, DescriptorSet::new());
+            if  descs.get(e).is_none() {
+                descs.insert(e, DescriptorSet::new());
             }
 
-            let desc = desc.get_mut(e).unwrap();
+            let desc = descs.get_mut(e).unwrap();
             let set = match desc.get(span.clone()) {
                 Entry::Vacant(vacant) => {
-                    let mut set = pool.get();
+                    let mut set = pool.allocate(device);
                     binder.set(&mut set)
                         .uniform(span.clone(), uni)
                         .bind(device);
@@ -163,5 +164,11 @@ where
                 })
                 .unwrap_or(());
         }
+    }
+
+    fn cleanup(&mut self, pool: &mut DescriptorPool<B>, res: &Resources) {}
+
+    fn register(world: &mut World) {
+        world.register::<DescriptorSet<B, Self>>();
     }
 }
