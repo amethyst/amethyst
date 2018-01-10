@@ -4,7 +4,7 @@ version = "0.2.1"
 authors = ["Rhuagh <seamonr@gmail.com>", "Xaeroxe <kieseljake@gmail.com>"]
 description = "Input rebinding "
 
-documentation = "https://www.amethyst.rs/doc/master/amethyst_input/"
+documentation = "https://www.amethyst.rs/doc/master/doc/amethyst_input/"
 homepage = "https://www.amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
