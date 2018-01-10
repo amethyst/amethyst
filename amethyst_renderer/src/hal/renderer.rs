@@ -11,6 +11,7 @@ use gfx_hal::pool::CommandPool;
 use gfx_hal::queue::{CommandQueue, Graphics, Supports, Transfer, Submission};
 use gfx_hal::window::{Backbuffer, Swapchain};
 
+use shred::Resources;
 use specs::World;
 
 
@@ -68,14 +69,14 @@ where
         allocator: &mut Allocator<B>,
         uploader: Option<&mut Uploader<B>>,
         device: &B::Device,
-        world: &World,
+        res: &Resources,
     ) {
         let start_epoch = self.start_epoch;
         center.execute_graphics(
             Draw {
                 allocator,
                 renderer: self,
-                world,
+                res,
                 graph,
                 uploader,
             },
@@ -114,11 +115,11 @@ where
         Ok(self.graphs.len() - 1)
     }
 
-    pub fn dispose(mut self, allocator: &mut Allocator<B>, device: &B::Device) {
+    pub fn dispose(mut self, allocator: &mut Allocator<B>, device: &B::Device, res: &Resources) {
         for graph in self.graphs {
-            graph.dispose(allocator, device);
+            graph.dispose(allocator, device, res);
         }
-        for (_, (acq, rel)) in unsafe { self.surface_semaphores.take() } {
+        for (_, (acq, rel)) in unsafe { self.surface_semaphores.drain() } {
             device.destroy_semaphore(acq);
             device.destroy_semaphore(rel);
         }
@@ -136,7 +137,7 @@ struct Draw<'a, B: Backend> {
     allocator: &'a mut Allocator<B>,
     renderer: &'a mut Renderer<B>,
     uploader: Option<&'a mut Uploader<B>>,
-    world: &'a World,
+    res: &'a Resources,
     graph: usize,
 }
 
@@ -170,7 +171,7 @@ where
             depth: 0.0..1.0,
         };
 
-        let ref world = *self.world;
+        let ref res = *self.res;
 
 
         // This execuiton needs to finsish before we will draw same frame again.
@@ -201,7 +202,7 @@ where
             self.allocator,
             device,
             viewport,
-            world,
+            res,
             fence,
             span,
         );

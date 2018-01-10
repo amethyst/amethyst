@@ -11,9 +11,12 @@ use std::ptr::read;
 
 use gfx_hal::Backend;
 
+use shred::Resources;
+
 use command::CommandCenter;
 use epoch::CurrentEpoch;
 use memory::Allocator;
+use relevant::Relevant;
 use shaders::ShaderManager;
 use upload::Uploader;
 
@@ -24,25 +27,24 @@ pub struct Hal<B: Backend> {
     pub device: B::Device,
     pub allocator: Allocator<B>,
     pub center: CommandCenter<B>,
-    pub uploader: ManuallyDrop<Uploader<B>>,
+    pub uploader: Uploader<B>,
     pub renderer: Option<Renderer<B>>,
     pub current: CurrentEpoch,
     pub shaders: ShaderManager<B>,
+    relevant: Relevant,
 }
 
 
-impl<B> Drop for Hal<B>
+impl<B> Hal<B>
 where
     B: Backend,
 {
-    fn drop(&mut self) {
+    pub fn dispose(mut self, res: &Resources) {
         self.center.wait_finish(&self.device, &mut self.current);
-        unsafe {
-            ManuallyDrop::into_inner(read(&mut self.uploader)).dispose(&mut self.allocator);
-        }
         self.renderer.take().map(|renderer| {
-            renderer.dispose(&mut self.allocator, &self.device)
+            renderer.dispose(&mut self.allocator, &self.device, res)
         });
+        self.uploader.dispose(&mut self.allocator);
         self.shaders.unload(&self.device);
         self.allocator.cleanup(&self.device, &self.current);
     }

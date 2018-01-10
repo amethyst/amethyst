@@ -31,6 +31,7 @@ derivative = "1.0"
 error-chain = "0.11"
 fnv = "1.0"
 gfx-hal = { version = "0.1.0", features = ["mint", "serde"], git = "https://github.com/omni-viral/gfx.git", branch = "depth_metal" }
+hibitset = { version = "0.4.1" }
 imagefmt = "4.0"
 mint = "0.4"
 num_cpus = "1.0"
@@ -38,6 +39,7 @@ rayon = "0.8"
 rayon-core = "1.2"
 smallvec = "0.4"
 serde = { version = "1.0", features = ["serde_derive"] }
+shred = "0.5"
 specs = { version = "0.10", git = "https://github.com/slide-rs/specs.git" }
 thread_profiler = { version = "0.1" }
 wavefront_obj = "5.0"

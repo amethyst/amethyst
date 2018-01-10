@@ -135,7 +135,11 @@ where
                 let old = replace(buffer, new);
                 allocator.destroy_buffer(old);
                 let stride = Self::stride(align);
-                vacant.replace((0..count).map(move |i| i as u64 * stride))
+                unsafe {
+                    // Safe since there are just offsets.
+                    // Real buffer is in deallocation queue.
+                    vacant.replace((0..count).map(move |i| i as u64 * stride))
+                }
             },
             Entry::Occupied(occupied) => occupied,
         };

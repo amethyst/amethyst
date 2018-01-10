@@ -26,14 +26,6 @@ where
 }
 
 
-impl<B, P> Component for DescriptorSet<B, P>
-where
-    B: Backend,
-    P: Send + Sync + 'static,
-{
-    type Storage = DenseVecStorage<Self>;
-}
-
 impl<P> Component for PassTag<P>
 where
     P: Send + Sync + 'static,

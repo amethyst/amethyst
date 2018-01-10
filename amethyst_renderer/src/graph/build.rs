@@ -9,6 +9,8 @@ use gfx_hal::memory::Properties;
 use gfx_hal::pass;
 use gfx_hal::pso;
 
+use specs::World;
+
 use descriptors::DescriptorPool;
 use graph::{ErrorKind, PassNode, Result, SuperFramebuffer};
 use graph::pass::{AnyPass, Pass};
@@ -124,20 +126,6 @@ impl<'a> Attachment<'a> {
     }
 }
 
-/// Collection of data required to construct rendering pass
-#[derive(Derivative)]
-#[derivative(Debug)]
-pub struct PassBuilder<'a, B: Backend> {
-    pub inputs: Vec<Option<Attachment<'a>>>,
-    pub colors: Vec<Option<&'a ColorAttachment>>,
-    pub depth_stencil: Option<(Option<&'a DepthStencilAttachment>, bool)>,
-    pub rasterizer: pso::Rasterizer,
-    pub primitive: Primitive,
-    name: &'a str,
-    #[derivative(Debug = "ignore")]
-    pub(crate) maker: fn() -> Box<AnyPass<B>>,
-}
-
 #[derive(Debug)]
 pub(crate) enum AttachmentImageViews<'a, B: Backend> {
     Owned(&'a [B::ImageView]),
@@ -162,6 +150,20 @@ pub(crate) struct DepthStencilAttachmentDesc<'a, B: Backend> {
     pub(crate) format: Format,
     pub(crate) view: AttachmentImageViews<'a, B>,
     pub(crate) clear: Option<ClearDepthStencil>,
+}
+
+/// Collection of data required to construct rendering pass
+#[derive(Derivative)]
+#[derivative(Debug)]
+pub struct PassBuilder<'a, B: Backend> {
+    pub inputs: Vec<Option<Attachment<'a>>>,
+    pub colors: Vec<Option<&'a ColorAttachment>>,
+    pub depth_stencil: Option<(Option<&'a DepthStencilAttachment>, bool)>,
+    pub rasterizer: pso::Rasterizer,
+    pub primitive: Primitive,
+    name: &'a str,
+    #[derivative(Debug = "ignore")]
+    pub(crate) maker: fn() -> Box<AnyPass<B>>,
 }
 
 impl<'a, B> PassBuilder<'a, B>

@@ -7,6 +7,7 @@ extern crate genmesh;
 
 extern crate thread_profiler;
 
+extern crate shred;
 extern crate specs;
 extern crate winit;
 
@@ -66,6 +67,7 @@ fn run() -> Result<()> {
         ref mut renderer,
         ref mut current,
         ref mut shaders,
+        ..
     } = HalConfig {
         adapter: None,
         arena_size: 1024 * 1024 * 16,
@@ -279,7 +281,7 @@ fn run() -> Result<()> {
 
     for i in 0.. {
         events_loop.poll_events(|_| {});
-        renderer.draw(0, current, center, allocator, None, device, &world);
+        renderer.draw(0, current, center, allocator, None, device, &world.res);
 
         let now = ::std::time::Instant::now();
         let delta = now - instant;

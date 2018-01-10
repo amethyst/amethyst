@@ -21,7 +21,7 @@ derivative = "1.0"
 fnv = "1"
 gfx = { version = "0.16", features = ["serialize"] }
 gfx_glyph = "0.6"
-hibitset = { version = "0.3", git = "https://github.com/slide-rs/hibitset.git" }
+hibitset = { version = "0.4.1" }
 rusttype = "0.2"
 shrev = "0.8"
 specs = { version = "0.10", git = "https://github.com/slide-rs/specs.git" }

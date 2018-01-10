@@ -11,7 +11,7 @@ use cirque::{Cirque, Entry, EntryMut};
 use epoch::Epoch;
 use stage::ShaderStage;
 
-const CAPACITY: usize = 1024;
+const CAPACITY: usize = 1024 * 32;
 
 
 /// Descriptor set tagged by type.
@@ -32,14 +32,21 @@ where
     pub fn get<'a>(&'a mut self, span: Range<Epoch>) -> Entry<'a, B::DescriptorSet> {
         self.0.get(span)
     }
+
+    pub unsafe fn dispose(mut self, pool: &mut DescriptorPool<B>) {
+        for (_, set) in self.0.drain() {
+            pool.free(set);
+        }
+    }
 }
 
 #[derive(Debug)]
 pub struct DescriptorPool<B: Backend> {
     range: Vec<DescriptorRangeDesc>,
     layout: B::DescriptorSetLayout,
-    pool: B::DescriptorPool,
+    pools: Vec<B::DescriptorPool>,
     sets: Vec<B::DescriptorSet>,
+    count: usize,
 }
 
 impl<B> DescriptorPool<B>
@@ -50,19 +57,24 @@ where
         let range = bindings_to_range_desc(bindings);
         DescriptorPool {
             layout: device.create_descriptor_set_layout(bindings),
-            pool: device.create_descriptor_pool(CAPACITY, &range),
+            pools: Vec::new(),
             sets: Vec::new(),
             range,
+            count: 0,
         }
     }
 
     pub fn dispose(self, device: &B::Device) {
+        assert_eq!(self.count, self.sets.len());
         #[cfg(feature = "gfx-metal")]
         {
             if device.downcast_ref::<::metal::Device>().is_none() {
-                self.pool.reset();
+                for pool in self.pools {
+                    pool.reset();
+                }
             }
         }
+        drop(self.sets);
         device.destroy_descriptor_set_layout(self.layout);
     }
 
@@ -70,18 +82,24 @@ where
         &self.layout
     }
 
-    pub fn get(&mut self) -> B::DescriptorSet {
-        self.sets
-            .pop()
-            .unwrap_or_else(|| self.pool.allocate_sets(&[&self.layout]).pop().unwrap())
+    pub fn allocate(&mut self, device: &B::Device) -> B::DescriptorSet {
+        if self.sets.is_empty() {
+            // Check if there is sets available
+            if self.count == self.pools.len() * CAPACITY {
+                // Allocate new pool
+                self.pools.push(device.create_descriptor_pool(CAPACITY, &self.range));
+            }
+            self.count += 1;
+            // allocate set
+            self.pools.last_mut().unwrap().allocate_sets(&[&self.layout]).pop().unwrap()
+        } else {
+            // get unused set
+            self.sets.pop().unwrap()
+        }
     }
 
-    pub fn put(&mut self, set: B::DescriptorSet) {
+    pub fn free(&mut self, set: B::DescriptorSet) {
         self.sets.push(set);
-    }
-
-    pub unsafe fn reset(&mut self) {
-        self.pool.reset();
     }
 }
 

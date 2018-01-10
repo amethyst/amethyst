@@ -22,6 +22,7 @@ use gfx_hal::queue::capability::{Graphics, Supports, Transfer};
 use gfx_hal::window::{Backbuffer, Frame};
 
 use smallvec::SmallVec;
+use shred::Resources;
 use specs::World;
 
 use descriptors::DescriptorPool;
@@ -131,7 +132,7 @@ where
     /// Executes `Pass::prepare` and `Pass::draw_inline` of the inner `Pass`
     /// to record transfer and draw commands.
     ///
-    /// `world` - primary source of data (`Mesh`es, `Texture`s etc) for the `Pass`es.
+    /// `res` - primary source of data (`Mesh`es, `Texture`s etc) for the `Pass`es.
     /// `rect` - area to draw in.
     /// `frame` - specifies which framebuffer and descriptor sets to use.
     /// `span` - commands will be executed in specified epoch range. Pass should ensure all resources
@@ -142,7 +143,7 @@ where
         cbuf: &mut CommandBuffer<B, C>,
         allocator: &mut Allocator<B>,
         device: &B::Device,
-        world: &World,
+        res: &Resources,
         rect: Rect,
         frame: SuperFrame<B>,
         span: Range<Epoch>,
@@ -168,7 +169,7 @@ where
                 allocator,
                 device,
                 cbuf.downgrade(),
-                world,
+                res,
             );
         }
 
@@ -186,11 +187,11 @@ where
         profile_scope!("AnyPass::draw_inline");
         // Record custom drawing calls
         self.pass
-            .draw_inline(span, &self.pipeline_layout, &mut self.descriptors, device, encoder, world);
+            .draw_inline(span, &self.pipeline_layout, &mut self.descriptors, device, encoder, res);
     }
 
-    fn dispose(self, _allocator: &mut Allocator<B>, device: &B::Device) {
-        // self.pass.dispose(allocator, device);
+    fn dispose(mut self, allocator: &mut Allocator<B>, device: &B::Device, res: &Resources) {
+        self.pass.cleanup(&mut self.descriptors, res);
         match self.framebuffer {
             SuperFramebuffer::Owned(framebuffers) => for framebuffer in framebuffers {
                 device.destroy_framebuffer(framebuffer);
@@ -200,7 +201,6 @@ where
         device.destroy_renderpass(self.render_pass);
         device.destroy_graphics_pipeline(self.graphics_pipeline);
         device.destroy_pipeline_layout(self.pipeline_layout);
-        self.descriptors.dispose(device);
     }
 }
 
@@ -238,7 +238,7 @@ where
     /// contains commands from passes that draw to the surface
     /// `device` - you need this guy everywhere =^_^=
     /// `viewport` - portion of framebuffers to draw
-    /// `world` - primary source of stuff to draw
+    /// `res` - primary source of stuff to draw
     /// `finish` - last submission should set this fence
     /// `span` - all commands will be finished before this epoch ends.
     pub fn draw_inline<C>(
@@ -252,7 +252,7 @@ where
         allocator: &mut Allocator<B>,
         device: &B::Device,
         viewport: Viewport,
-        world: &World,
+        res: &Resources,
         finish: &B::Fence,
         span: Range<Epoch>,
     ) where
@@ -280,7 +280,7 @@ where
                 &mut cbuf,
                 allocator,
                 device,
-                world,
+                res,
                 viewport.rect,
                 frame.clone(),
                 span.clone(),
@@ -565,9 +565,9 @@ where
         })
     }
 
-    pub fn dispose(self, allocator: &mut Allocator<B>, device: &B::Device) {
+    pub fn dispose(self, allocator: &mut Allocator<B>, device: &B::Device, res: &Resources) {
         for pass in self.passes {
-            pass.dispose(allocator, device);
+            pass.dispose(allocator, device, res);
         }
         for signal in self.signals.into_iter().filter_map(|x| x) {
             device.destroy_semaphore(signal);
