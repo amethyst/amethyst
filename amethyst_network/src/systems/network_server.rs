@@ -1,109 +1,96 @@
 extern crate ron;
 
-use specs::{Entities, Entity, Join, System, WriteStorage};
+use specs::{Entities, Entity, Join, System, WriteStorage,Component,VecStorage,FetchMut};
 use std::net::UdpSocket;
+use std::net::IpAddr;
 use std::str;
+use std::net::SocketAddr;
 use std::io::{Error,ErrorKind};
 use amethyst_core::transform::*;
 use std::any::Any;
+use shrev::*;
+use std::marker::PhantomData;
+use std::str::FromStr;
+use std::clone::Clone;
 
-#[derive(Debug,Serialize,Deserialize)]
-pub enum TestEvent{
-    A{a:i32},
-    B,
-    C{c1:i32,c2:String}
-}
+use resources::connection::*;
+use resources::net_event::*;
 
-pub struct NetServerSystem {
+use serde::{Serialize,Deserialize};
+
+pub struct NetServerSystem<T> where T:Send+Sync{
     pub socket:UdpSocket,
+    pub clients:Vec<NetConnection>,
+    net_event_types:PhantomData<T>,
 }
 
-impl NetServerSystem {
-    pub fn new()->NetServerSystem{
-        println!("Starting server socket");
-        let mut socket = UdpSocket::bind("127.0.0.1:34255").expect("Failed to bind to port.");
+impl<T> NetServerSystem<T> where T:Send+Sync+Serialize{
+    pub fn new(ip:&str,port:u16)->Result<NetServerSystem<T>,Error>{
+        let mut socket = UdpSocket::bind(SocketAddr::new(IpAddr::from_str("127.0.0.1").unwrap(),port))?;//TODO: Use supplied ip
         socket.set_nonblocking(true);
+        Ok(
+            NetServerSystem{
+                socket,
+                clients:vec![],
+                net_event_types:PhantomData,
+            }
+        )
+    }
 
-        NetServerSystem{
-            socket
+    pub fn send_event(&mut self,event:T,target:NetConnection){
+        let ser = ron::ser::pretty::to_string(&event);
+        //let s = serde_json::ser::;
+        match ser{
+            Ok(s)=>{
+                let mut buf = s.as_bytes();//temporary, so we know what we are doing. Will be replaced by serde_json::ser::to_bytes
+                let res = self.socket.send_to(buf, target.target);
+            },
+            Err(e)=>println!("Failed to serialize the event: {}",e),
         }
     }
 }
-
-
-//Event, State
-//Event::CreateState(state)
-//Event::UpdateState(stateid,newstate)
-//Event::DeleteState(stateid)
-
-
-//NetEvent(str)
-//NetEvent("delete")
-
-
-//Events{1=>Move}
-
-
-
-
 /*
-
-
 Client Registered components: Transform Sprite LocalTransform Velocity Input Music
 Server Registered components: Transform LocalTransform Velocity Input
 
 Server->Client Event: Create Entity with Transform(1,1,0,0)+LocalTransform([5,5,5,5],[2,2,2],[3,3,3])+NetworkedOwned(entityid:SERVERGENERATED,owner:ServerUUID)
-
-
-
-
 */
 
 
-impl<'a> System<'a> for NetServerSystem {
+//NOTICE ME AT REVIEW: I have no idea what I'm doing with that 'static lifetime, please tell me if its wrong.
+//NOTICE ME AT REVIEW
+//NOTICE ME AT REVIEW
+//NOTICE ME AT REVIEW
+impl<'a,T> System<'a> for NetServerSystem<T> where T:Send+Sync+Serialize+Deserialize<'a>+'static{
     type SystemData = (
+        FetchMut<'a, EventChannel<NetOwnedEvent<T>>>,
     );
-    fn run(&mut self, (): Self::SystemData) {
+    //NOTE: Running it this way might cause a buffer overflow during heavy load on low-tickrate servers.
+    //TODO: Once the net_debug tools will be made, test this for possible buffer overflow at OS level by monitoring packet loss in localhost.
+    fn run(&mut self, (mut events,): Self::SystemData) {
         let mut buf = [0; 2048];
         loop {
             match self.socket.recv_from(&mut buf) {
                 Ok((amt, src)) => {
-                    println!("amt: {}", amt);
-                    println!("src: {}", src);
-                    println!("{}", str::from_utf8(&buf).unwrap_or(""));
-
                     let  buf2 = &buf[..amt];
-
-                    let strin = str::from_utf8(&buf2).expect("Failed to get string from bytes");
-
-
-                    //let tr:Transform = ron::de::from_str(strin).expect("Failed to get transform from string");
-                    //let tr = ron::de::from_str(strin).expect("Failed to get transform from string");
-                    let tr:TestEvent = ron::de::from_str(strin).expect("Failed to get transform from string");
-                    /*match tr{
-                        Transform(..)=>println!("TransformYEET: {:?}",tr),
-                        //LocalTransform{..}=>println!("LocalTransformYEET: {:?}",tr),
-                        _=>println!("other type"),
-                    }*/
-                    match tr{
-                        TestEvent::A{a}=>println!("Received A:{}",a),
-                        TestEvent::B=>println!("Received B"),
-                        TestEvent::C{c1,c2}=>println!("Received C:{},{}",c1,c2),
+                    let str_in = str::from_utf8(&buf2);
+                    match str_in{
+                        Ok(s)=>{
+                            //TODO: Connection management server side stuff
+                            let net_event = ron::de::from_str::<T>(s);
+                            match net_event{
+                                Ok(ev)=>events.single_write(ev),//TODO: As for network_client, use NetOwnedEvent, which carries the source of the event
+                                Err(e)=>println!("Failed to read network event!"),
+                            }
+                        },
+                        Err(e)=>println!("Failed to get string from bytes: {}",e),
                     }
-
-                    //let tr:Transform = ron::de::from_bytes(&buf2).expect("Failed to get transform from string");
-
-                    //println!("{:?}",tr);
-
-                    /*let buf = &mut buf[..amt];
-                    buf.reverse();
-                    self.socket.send_to(buf, &src).expect("Failed to send data.");*/
                 },
                 Err(e) => {
                     if e.kind() == ErrorKind::WouldBlock{
                         break;//Safely ignores when no packets are waiting in the queue, and stop checking for this time.,
                     }
-                    println!("couldn't receive a datagram: {}", e);
+                    println!("Couldn't receive a datagram: {}", e);
                 },
             }
         }
