@@ -17,7 +17,7 @@ use smallvec::SmallVec;
 
 use epoch::{CurrentEpoch, Eh, Epoch};
 use hal::Hal;
-use memory::{cast_pod_vec, Allocator, Buffer};
+use memory::{Allocator, Buffer, cast_vec};
 use upload::{self, Uploader};
 use utils::{is_slice_sorted, is_slice_sorted_by_key};
 use vertex::{VertexFormat, VertexFormatSet, VertexFormatted};
@@ -470,8 +470,8 @@ impl MeshBuilder {
     {
         self.indices = match indices.into() {
             Indices::None => None,
-            Indices::U16(i) => Some((cast_pod_vec(i), IndexType::U16)),
-            Indices::U32(i) => Some((cast_pod_vec(i), IndexType::U32)),
+            Indices::U16(i) => Some((cast_vec(i), IndexType::U16)),
+            Indices::U32(i) => Some((cast_vec(i), IndexType::U32)),
         };
         self
     }
@@ -482,7 +482,7 @@ impl MeshBuilder {
         V: VertexFormatted,
     {
         self.vertices
-            .push((cast_pod_vec(vertices), V::VERTEX_FORMAT));
+            .push((cast_vec(vertices), V::VERTEX_FORMAT));
         self
     }
 

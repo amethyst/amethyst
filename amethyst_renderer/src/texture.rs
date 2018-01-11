@@ -6,13 +6,13 @@ use std::mem::size_of;
 use gfx_hal::{Backend, Device};
 use gfx_hal::command::{BufferImageCopy, Offset};
 use gfx_hal::device::Extent;
-use gfx_hal::format::{ImageFormat, Rgba8, SurfaceTyped, Swizzle};
-use gfx_hal::image::{AspectFlags, FilterMethod, ImageLayout, Kind, Level, SamplerInfo,
+use gfx_hal::format::{AsFormat, Rgba8Unorm, Swizzle, AspectFlags};
+use gfx_hal::image::{FilterMethod, ImageLayout, Kind, Level, SamplerInfo,
                      SubresourceLayers, SubresourceRange, Usage, ViewError, WrapMode};
 use gfx_hal::memory::{Pod, Properties};
 
 use epoch::CurrentEpoch;
-use memory::{Allocator, Image};
+use memory::{Allocator, Image, cast_vec};
 use relevant::Relevant;
 use upload::Uploader;
 
@@ -54,16 +54,16 @@ struct ViewInfo {
 
 /// Builds new textures.
 #[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-pub struct TextureBuilder<D, T> {
+pub struct TextureBuilder<F> {
     image: ImageInfo,
     row_pitch: Option<u32>,
     view: ViewInfo,
     sampler: SamplerInfo,
-    data: D,
-    pd: PhantomData<T>,
+    data: Vec<u8>,
+    pd: PhantomData<F>,
 }
 
-impl TextureBuilder<Vec<[u8; 4]>, Rgba8> {
+impl TextureBuilder<Rgba8Unorm> {
     /// Creates a new `TextureBuilder` from the given RGBA color value.
     pub fn from_color_val<C: Into<[f32; 4]>>(rgba: C) -> Self {
         let rgba = rgba.into();
@@ -72,25 +72,27 @@ impl TextureBuilder<Vec<[u8; 4]>, Rgba8> {
         let b = rgba[2];
         let a = rgba[3];
         TextureBuilder::new(vec![
-            [
-                (r * 255.0) as u8,
-                (g * 255.0) as u8,
-                (b * 255.0) as u8,
-                (a * 255.0) as u8,
-            ],
+            (r * 255.0) as u8,
+            (g * 255.0) as u8,
+            (b * 255.0) as u8,
+            (a * 255.0) as u8,
         ])
     }
 }
 
-impl<D, F, S, P> TextureBuilder<D, F>
+impl<F> TextureBuilder<F>
 where
-    F: ImageFormat<Surface = S>,
-    S: SurfaceTyped<DataType = P>,
-    P: Pod,
-    D: AsRef<[P]> + Into<Vec<P>>,
+    F: AsFormat,
 {
     /// Creates a new `TextureBuilder` with the given raw texture data.
-    pub fn new(data: D) -> Self {
+    pub fn new<D, P>(data: D) -> Self
+    where
+        D: AsRef<[P]> + Into<Vec<P>>,
+        P: Pod,
+    {
+        assert_eq!(F::SELF.base_format().0.desc().dim, (1, 1));
+        assert_eq!(F::SELF.base_format().0.desc().aspects, AspectFlags::COLOR);
+
         let len = data.as_ref().len();
         TextureBuilder {
             image: ImageInfo {
@@ -104,7 +106,7 @@ where
                 range: COLOR_RANGE,
             },
             sampler: SamplerInfo::new(FilterMethod::Scale, WrapMode::Clamp),
-            data: data,
+            data: cast_vec(data.into()),
             pd: PhantomData,
         }
     }
@@ -152,14 +154,15 @@ where
             Properties::DEVICE_LOCAL,
         )?;
 
-        let len = self.data.as_ref().len() as u32;
-        let pixel = size_of::<P>() as u32;
-        let bytes = len * pixel;
+        let bytes = self.data.len() as u32;
+        let pixel_bits = F::SELF.base_format().0.desc().bits;
+        assert_eq!(0, pixel_bits % 8);
+        let pixel = pixel_bits / 8;
 
         let mut copy = BufferImageCopy {
             buffer_offset: 0,
-            buffer_row_pitch: 0,
-            buffer_slice_pitch: bytes as u32,
+            buffer_width: 0,
+            buffer_height: 0,
             image_layers: COLOR_LAYER,
             image_offset: Offset { x: 0, y: 0, z: 0 },
             image_extent: Extent {
@@ -171,12 +174,11 @@ where
 
         match self.image.kind {
             Kind::D1(width) => {
-                copy.buffer_row_pitch = self.row_pitch.unwrap_or(width as u32 * pixel);
+                copy.buffer_width = self.row_pitch.unwrap_or(0);
                 copy.image_extent.width = width.into();
             }
             Kind::D2(width, height, _) => {
-                copy.buffer_row_pitch = self.row_pitch
-                    .unwrap_or(width as u32 * height as u32 * pixel);
+                copy.buffer_width = self.row_pitch.unwrap_or(0);
                 copy.image_extent.width = width.into();
                 copy.image_extent.height = height.into();
             }
@@ -221,18 +223,17 @@ where
     B: Backend,
 {
     /// Builds a new texture with the given raw texture data.
-    pub fn from_data<D, F, S, P>(data: D) -> TextureBuilder<D, F>
+    pub fn from_data<F, D, P>(data: D) -> TextureBuilder<F>
     where
-        F: ImageFormat<Surface = S>,
-        S: SurfaceTyped<DataType = P>,
-        P: Pod,
+        F: AsFormat,
         D: AsRef<[P]> + Into<Vec<P>>,
+        P: Pod,
     {
         TextureBuilder::new(data)
     }
 
     /// Builds a new texture with the given raw texture data.
-    pub fn from_color_val<C: Into<[f32; 4]>>(rgba: C) -> TextureBuilder<Vec<[u8; 4]>, Rgba8> {
+    pub fn from_color_val<C: Into<[f32; 4]>>(rgba: C) -> TextureBuilder<Rgba8Unorm> {
         TextureBuilder::from_color_val(rgba)
     }
 

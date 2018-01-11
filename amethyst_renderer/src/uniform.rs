@@ -65,7 +65,7 @@ where
     where
         C: Supports<Transfer>,
     {
-        let align = device.get_limits().min_uniform_buffer_offset_alignment as u64;
+        let align = 32; //device.get_limits().min_uniform_buffer_offset_alignment as u64;
         let stride = Self::stride(align);
         let count = span.end - span.start;
         let buffer = Self::allocate(align, count as usize, allocator, device)?;
@@ -99,7 +99,7 @@ where
             Ok(())
         }
     }
-    
+
     fn get_cached(&mut self, span: Range<Epoch>) -> (&Buffer<B>, Range<u64>) {
         use std::mem::size_of;
         let offset = *self.offsets.get(span).occupied().unwrap();
@@ -144,14 +144,9 @@ where
             Entry::Occupied(occupied) => occupied,
         };
 
-        let range = offset..(offset + size_of::<T>() as u64);
-
         if buffer.visible() {
-            let mut writer = device
-                .acquire_mapping_writer(buffer.raw(), range)
-                .unwrap();
-            writer.copy_from_slice(&[self.cached]);
-            device.release_mapping_writer(writer);
+            let mut writer = buffer.write(false, offset, size_of::<T>(), device).unwrap();
+            writer.copy_from_slice(cast_slice(&[self.cached]));
         } else {
             cbuf.update_buffer(buffer.raw(), offset, cast_slice(&[self.cached]));
         }
@@ -175,7 +170,6 @@ where
         let stride = Self::stride(align);
         let buffer = allocator.create_buffer(
             device,
-            span as u64 * stride,
             span as u64 * stride,
             Usage::UNIFORM,
             Properties::DEVICE_LOCAL,

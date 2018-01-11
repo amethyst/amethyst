@@ -29,11 +29,11 @@ error_chain! {
         // ViewError(::gfx_hal::buffer::ViewError);
         BufferCreationError(::gfx_hal::buffer::CreationError);
         ImageCreationError(::gfx_hal::image::CreationError);
-        OutOfMemory(::gfx_hal::device::OutOfMemory);
     }
 
     errors {
         NoCompatibleMemoryType {}
+        OutOfMemory {}
         BufferUsageAndProperties(usage: BufferUsage, properties: Properties) {
             description("No memory type supports both usage and properties specified")
             display("No memory type supports both
@@ -47,6 +47,11 @@ error_chain! {
     }
 }
 
+impl From<::gfx_hal::device::OutOfMemory> for Error {
+    fn from(_: ::gfx_hal::device::OutOfMemory) -> Error {
+        ErrorKind::OutOfMemory.into()
+    }
+}
 
 pub trait MemoryAllocator<B: Backend> {
     type Info;
@@ -105,25 +110,27 @@ where
 /// Align and size of input type must be divisible by align and size of output type
 /// Converting from arbitrary `T: Pod` into `u8` is always possible
 /// as `u8` has size and align equal to 1
-pub fn cast_pod_vec<T, Y>(mut vec: Vec<T>) -> Vec<Y>
-where
-    T: Pod,
-    Y: Pod,
-{
-    use std::mem::{align_of, forget, size_of};
+#[inline(always)]
+pub fn cast_vec<A: Pod, B: Pod>(mut vec: Vec<A>) -> Vec<B> {
+    use std::mem;
 
-    debug_assert_eq!(align_of::<T>() % align_of::<Y>(), 0);
-    debug_assert_eq!(size_of::<T>() % size_of::<Y>(), 0);
+    let raw_len = mem::size_of::<A>().wrapping_mul(vec.len());
+    let len = raw_len / mem::size_of::<B>();
 
-    let tsize = size_of::<T>();
-    let ysize = size_of::<Y>();
+    let raw_cap = mem::size_of::<A>().wrapping_mul(vec.capacity());
+    let cap = raw_cap / mem::size_of::<B>();
 
-    let p = vec.as_mut_ptr();
-    let s = vec.len();
-    let c = vec.capacity();
+    assert_eq!(raw_len, mem::size_of::<B>().wrapping_mul(len));
+    assert_eq!(raw_cap, mem::size_of::<B>().wrapping_mul(cap));
+    
+    let ptr = vec.as_mut_ptr() as *mut B;
+    mem::forget(vec);
 
     unsafe {
-        forget(vec);
-        Vec::from_raw_parts(p as *mut Y, (s * tsize) / ysize, (c * tsize) / ysize)
+        Vec::from_raw_parts(
+            ptr,
+            len,
+            cap,
+        )
     }
 }

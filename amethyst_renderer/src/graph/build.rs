@@ -3,7 +3,7 @@ use std::ops::Range;
 use gfx_hal::{Backend, Device, Primitive};
 use gfx_hal::command::{ClearColor, ClearDepthStencil, ClearValue};
 use gfx_hal::device::Extent;
-use gfx_hal::format::{Format, Swizzle};
+use gfx_hal::format::{AspectFlags, Format, Swizzle};
 use gfx_hal::image;
 use gfx_hal::memory::Properties;
 use gfx_hal::pass;
@@ -19,7 +19,7 @@ use shaders::ShaderManager;
 use vertex::VertexFormat;
 
 pub const COLOR_RANGE: image::SubresourceRange = image::SubresourceRange {
-    aspects: image::AspectFlags::COLOR,
+    aspects: AspectFlags::COLOR,
     levels: 0..1,
     layers: 0..1,
 };
@@ -239,7 +239,7 @@ where
             // Configure input attachments first
             let inputs = inputs.iter().map(|input| {
                 pass::Attachment {
-                    format: input.format,
+                    format: Some(input.format),
                     ops: pass::AttachmentOps {
                         load: pass::AttachmentLoadOp::Load,
                         store: pass::AttachmentStoreOp::Store,
@@ -252,7 +252,7 @@ where
             // Configure color attachments next to input
             let colors = colors.iter().map(|color| {
                 pass::Attachment {
-                    format: color.format,
+                    format: Some(color.format),
                     ops: pass::AttachmentOps {
                         load: if color.clear.is_some() {
                             pass::AttachmentLoadOp::Clear
@@ -273,7 +273,7 @@ where
             // Configure depth-stencil attachments last
             let depth_stencil = depth_stencil.as_ref().map(|depth_stencil| {
                 let attachment = pass::Attachment {
-                    format: depth_stencil.format,
+                    format: Some(depth_stencil.format),
                     ops: pass::AttachmentOps {
                         load: if pass.depth() && depth_stencil.clear.is_some() {
                             pass::AttachmentLoadOp::Clear

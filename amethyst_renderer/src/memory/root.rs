@@ -1,7 +1,7 @@
 use std::fmt;
 use std::marker::PhantomData;
 
-use gfx_hal::{Backend, Device, MemoryType};
+use gfx_hal::{Backend, Device, MemoryType, MemoryTypeId};
 use gfx_hal::memory::Requirements;
 use memory::{Block, MemoryAllocator, Result};
 use relevant::Relevant;
@@ -22,23 +22,19 @@ unsafe impl Sync for Tag {}
 #[derive(Debug)]
 pub struct RootAllocator<B> {
     relevant: Relevant,
-    memory_type: MemoryType,
+    id: MemoryTypeId,
     allocations: usize,
     pd: PhantomData<B>,
 }
 
 impl<B> RootAllocator<B> {
-    pub fn new(memory_type: MemoryType) -> Self {
+    pub fn new(id: MemoryTypeId) -> Self {
         RootAllocator {
             relevant: Relevant,
-            memory_type,
+            id,
             allocations: 0,
             pd: PhantomData,
         }
-    }
-
-    pub fn memory_type(&self) -> &MemoryType {
-        &self.memory_type
     }
 
     pub fn tag(&mut self) -> Tag {
@@ -54,11 +50,7 @@ where
     type Info = ();
 
     fn alloc(&mut self, device: &B::Device, _: (), reqs: Requirements) -> Result<Block<B, Tag>> {
-        assert_eq!(
-            (1 << self.memory_type.id) & reqs.type_mask,
-            1 << self.memory_type.id
-        );
-        let memory = device.allocate_memory(&self.memory_type, reqs.size)?;
+        let memory = device.allocate_memory(self.id, reqs.size)?;
         let memory = Box::into_raw(Box::new(memory)); // Suboptimal
         self.allocations += 1;
         Ok(Block::new(memory, 0..reqs.size).set_tag(self.tag()))

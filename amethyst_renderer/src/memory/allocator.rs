@@ -1,8 +1,13 @@
-use gfx_hal::{Backend, Device, MemoryType};
-use gfx_hal::buffer::{complete_requirements, Usage as BufferUsage};
+
+use std::ops::{Deref, DerefMut};
+use std::result::Result as StdResult;
+
+use gfx_hal::{Backend, Device, MemoryProperties};
+use gfx_hal::buffer::{Usage as BufferUsage};
 use gfx_hal::format::Format;
 use gfx_hal::image::{Kind, Level, Usage as ImageUsage};
-use gfx_hal::memory::{Properties, Requirements};
+use gfx_hal::mapping::Error as MappingError;
+use gfx_hal::memory::{Properties, Requirements, Pod};
 
 use epoch::{CurrentEpoch, DeletionQueue, Ec, Eh};
 use memory::{shift_for_alignment, Block, ErrorKind, MemoryAllocator, Result};
@@ -17,6 +22,8 @@ pub type WeakImage<B: Backend> = Ec<Item<B, B::Image>>;
 
 type BlockTag<B: Backend> = <SmartAllocator<B> as MemoryAllocator<B>>::Tag;
 
+/// Item bound to the block of memory.
+/// It can be `Image`, `Buffer` or something exotic.
 #[derive(Debug)]
 pub struct Item<B: Backend, T> {
     inner: T,
@@ -29,20 +36,95 @@ impl<B, T> Item<B, T>
 where
     B: Backend,
 {
+    /// Get alignment of the underlying memory block
     pub fn get_alignment(&self) -> u64 {
         self.requirements.alignment
     }
 
+    /// Get size of the underlying memory block
     pub fn get_size(&self) -> u64 {
-        self.requirements.size
+        self.block.size()
     }
 
+    /// Check if the underlying memory block is visible by cpu
     pub fn visible(&self) -> bool {
         self.properties.contains(Properties::CPU_VISIBLE)
     }
 
+    /// Check if the underlying memory block is coherent
+    /// between host and device.
+    pub fn coherent(&self) -> bool {
+        self.properties.contains(Properties::COHERENT)
+    }
+
+    /// Get row inner object.
     pub fn raw(&self) -> &T {
         &self.inner
+    }
+
+    /// Acquire reader for range of the underlying memory block.
+    /// Reader can be dereferenced to slice.
+    /// It will automatically unmap memory when dropped.
+    pub fn read<'a>(&'a mut self, offset: u64, size: usize, device: &'a B::Device) -> StdResult<Reader<'a, B>, MappingError> {
+        use std::mem::size_of;
+
+        let bytes = size as u64;
+
+        if !self.visible() {
+            return Err(MappingError::InvalidAccess);
+        }
+        let start = self.block.range().start + offset;
+        let end = start + bytes;
+        if self.block.range().end < end {
+            return Err(MappingError::OutOfBounds);
+        }
+        let range = start..end;
+
+        let memory = self.block.memory();
+        let ptr = device.map_memory(memory, range.clone())?;
+        if !self.coherent() {
+            device.invalidate_mapped_memory_ranges(&[(memory, range.clone())]);
+        }
+        Ok(Reader {
+            ptr,
+            size,
+            memory,
+            device,
+        })
+    }
+
+    /// Acquire writer for range of the underlying memory block.
+    /// Writer can be dereferenced to mutable slice.
+    /// It will automatically flush and unmap memory when dropped.
+    /// Flushing do not occur if writer wasn't dereferenced even once.
+    pub fn write<'a>(&'a self, fresh: bool, offset: u64, size: usize, device: &'a B::Device) -> StdResult<Writer<'a, B>, MappingError> {
+        use std::mem::size_of;
+
+        let bytes = size as u64;
+
+        if !self.visible() {
+            return Err(MappingError::InvalidAccess);
+        }
+        let start = self.block.range().start + offset;
+        let end = start + bytes;
+        if self.block.range().end < end {
+            return Err(MappingError::OutOfBounds);
+        }
+        let range = start..end;
+
+        let memory = self.block.memory();
+        let ptr = device.map_memory(memory, range.clone())?;
+        if !fresh && !self.coherent() {
+            device.invalidate_mapped_memory_ranges(&[(memory, range.clone())]);
+        }
+        Ok(Writer {
+            coherent: self.coherent(),
+            flushed: false,
+            ptr,
+            size,
+            memory,
+            device,
+        })
     }
 }
 
@@ -59,6 +141,92 @@ where
 {
 }
 
+pub struct Reader<'a, B: Backend> {
+    ptr: *const u8,
+    size: usize,
+    memory: &'a B::Memory,
+    device: &'a B::Device,
+}
+
+impl<'a, B> Deref for Reader<'a, B>
+where
+    B: Backend,
+{
+    type Target = [u8];
+    fn deref(&self) -> &[u8] {
+        use std::slice::from_raw_parts;
+        unsafe {
+            from_raw_parts(self.ptr, self.size)
+        }
+    }
+}
+
+impl<'a, B> Drop for Reader<'a, B>
+where
+    B: Backend,
+{
+    fn drop(&mut self) {
+        self.device.unmap_memory(self.memory);
+    }
+}
+
+pub struct Writer<'a, B: Backend> {
+    coherent: bool,
+    flushed: bool,
+    ptr: *mut u8,
+    size: usize,
+    memory: &'a B::Memory,
+    device: &'a B::Device,
+}
+
+impl<'a, B> Writer<'a, B>
+where
+    B: Backend,
+{
+    pub fn flush(&mut self) {
+        if !self.coherent && !self.flushed {
+            self.device.flush_mapped_memory_ranges(&[(self.memory, 0 .. self.size as u64)]);
+            self.flushed = true;
+        }
+    }
+}
+
+impl<'a, B> Deref for Writer<'a, B>
+where
+    B: Backend,
+{
+    type Target = [u8];
+    fn deref(&self) -> &[u8] {
+        use std::slice::from_raw_parts;
+        unsafe {
+            from_raw_parts(self.ptr, self.size)
+        }
+    }
+}
+
+impl<'a, B> DerefMut for Writer<'a, B>
+where
+    B: Backend,
+{
+    fn deref_mut(&mut self) -> &mut [u8] {
+        use std::slice::from_raw_parts_mut;
+        self.flushed = false;
+        unsafe {
+            from_raw_parts_mut(self.ptr, self.size)
+        }
+    }
+}
+
+impl<'a, B> Drop for Writer<'a, B>
+where
+    B: Backend,
+{
+    fn drop(&mut self) {
+        self.flush();
+        self.device.unmap_memory(self.memory);
+    }
+}
+
 pub struct Allocator<B: Backend> {
     allocator: SmartAllocator<B>,
     buffer_deletion_queue: DeletionQueue<Eh<Item<B, B::Buffer>>>,
@@ -70,13 +238,13 @@ where
     B: Backend,
 {
     pub fn new(
-        memory_types: Vec<MemoryType>,
+        memory_properties: MemoryProperties,
         arena_size: u64,
         chunk_size: u64,
         min_chunk_size: u64,
     ) -> Self {
         Allocator {
-            allocator: SmartAllocator::new(memory_types, arena_size, chunk_size, min_chunk_size),
+            allocator: SmartAllocator::new(memory_properties, arena_size, chunk_size, min_chunk_size),
             buffer_deletion_queue: DeletionQueue::new(),
             image_deletion_queue: DeletionQueue::new(),
         }
@@ -86,7 +254,6 @@ where
         &mut self,
         device: &B::Device,
         size: u64,
-        stride: u64,
         usage: BufferUsage,
         properties: Properties,
         transient: bool,
@@ -105,8 +272,8 @@ where
             }
         };
 
-        let ubuf = device.create_buffer(size, stride, usage)?;
-        let requirements = complete_requirements::<B>(device, &ubuf, usage);
+        let ubuf = device.create_buffer(size, usage)?;
+        let requirements = device.get_buffer_requirements(&ubuf);
         let ty = if transient {
             AllocationType::Arena
         } else {

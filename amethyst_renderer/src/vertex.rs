@@ -2,7 +2,7 @@
 
 use std::fmt::Debug;
 
-use gfx_hal::format::{BufferFormat, Format, Formatted, Vec2, Vec3, Vec4};
+use gfx_hal::format::{Format, AsFormat};
 use gfx_hal::memory::Pod;
 use gfx_hal::pso::{ElemStride, Element};
 
@@ -13,7 +13,7 @@ pub type AttributeFormat = Element<Format>;
 pub type Attributes<'a> = &'a [(u32, &'a str, AttributeFormat)];
 
 /// Trait for vertex attributes to implement
-pub trait Attribute: BufferFormat + Debug + PartialEq + Pod + Send + Sync {
+pub trait Attribute: AsFormat + Debug + PartialEq + Pod + Send + Sync {
     /// Binding index of attribute type
     /// It is used to bind to the attributes in shaders
     const BINDING: u32;
@@ -29,21 +29,18 @@ pub trait Attribute: BufferFormat + Debug + PartialEq + Pod + Send + Sync {
 /// Type for position attribute of vertex
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Position(Vec3<f32>);
+pub struct Position([f32; 3]);
 impl<T> From<T> for Position
 where
-    T: Into<Vec3<f32>>,
+    T: Into<[f32; 3]>,
 {
     fn from(from: T) -> Self {
         Position(from.into())
     }
 }
 
-impl Formatted for Position {
-    type Surface = <Vec3<f32> as Formatted>::Surface;
-    type Channel = <Vec3<f32> as Formatted>::Channel;
-    type View = <Vec3<f32> as Formatted>::View;
-    const SELF: Format = Vec3::<f32>::SELF;
+impl AsFormat for Position {
+    const SELF: Format = <[f32; 3] as AsFormat>::SELF;
 }
 unsafe impl Pod for Position {}
 impl Attribute for Position {
@@ -55,21 +52,18 @@ impl Attribute for Position {
 /// Type for color attribute of vertex
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Color(Vec4<f32>);
+pub struct Color([f32; 4]);
 impl<T> From<T> for Color
 where
-    T: Into<Vec4<f32>>,
+    T: Into<[f32; 4]>,
 {
     fn from(from: T) -> Self {
         Color(from.into())
     }
 }
 
-impl Formatted for Color {
-    type Surface = <Vec4<f32> as Formatted>::Surface;
-    type Channel = <Vec4<f32> as Formatted>::Channel;
-    type View = <Vec4<f32> as Formatted>::View;
-    const SELF: Format = Vec4::<f32>::SELF;
+impl AsFormat for Color {
+    const SELF: Format = <[f32; 4] as AsFormat>::SELF;
 }
 unsafe impl Pod for Color {}
 impl Attribute for Color {
@@ -81,20 +75,17 @@ impl Attribute for Color {
 /// Type for texture coord attribute of vertex
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Normal(Vec3<f32>);
+pub struct Normal([f32; 3]);
 impl<T> From<T> for Normal
 where
-    T: Into<Vec3<f32>>,
+    T: Into<[f32; 3]>,
 {
     fn from(from: T) -> Self {
         Normal(from.into())
     }
 }
-impl Formatted for Normal {
-    type Surface = <Vec3<f32> as Formatted>::Surface;
-    type Channel = <Vec3<f32> as Formatted>::Channel;
-    type View = <Vec3<f32> as Formatted>::View;
-    const SELF: Format = Vec3::<f32>::SELF;
+impl AsFormat for Normal {
+    const SELF: Format = <[f32; 3] as AsFormat>::SELF;
 }
 unsafe impl Pod for Normal {}
 impl Attribute for Normal {
@@ -106,20 +97,17 @@ impl Attribute for Normal {
 /// Type for tangent attribute of vertex
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Tangent(Vec3<f32>);
+pub struct Tangent([f32; 3]);
 impl<T> From<T> for Tangent
 where
-    T: Into<Vec3<f32>>,
+    T: Into<[f32; 3]>,
 {
     fn from(from: T) -> Self {
         Tangent(from.into())
     }
 }
-impl Formatted for Tangent {
-    type Surface = <Vec3<f32> as Formatted>::Surface;
-    type Channel = <Vec3<f32> as Formatted>::Channel;
-    type View = <Vec3<f32> as Formatted>::View;
-    const SELF: Format = Vec3::<f32>::SELF;
+impl AsFormat for Tangent {
+    const SELF: Format = <[f32; 3] as AsFormat>::SELF;
 }
 unsafe impl Pod for Tangent {}
 impl Attribute for Tangent {
@@ -131,20 +119,17 @@ impl Attribute for Tangent {
 /// Type for texture coord attribute of vertex
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct TexCoord(Vec2<f32>);
+pub struct TexCoord([f32; 2]);
 impl<T> From<T> for TexCoord
 where
-    T: Into<Vec2<f32>>,
+    T: Into<[f32; 2]>,
 {
     fn from(from: T) -> Self {
         TexCoord(from.into())
     }
 }
-impl Formatted for TexCoord {
-    type Surface = <Vec2<f32> as Formatted>::Surface;
-    type Channel = <Vec2<f32> as Formatted>::Channel;
-    type View = <Vec2<f32> as Formatted>::View;
-    const SELF: Format = Vec2::<f32>::SELF;
+impl AsFormat for TexCoord {
+    const SELF: Format = <[f32; 2] as AsFormat>::SELF;
 }
 unsafe impl Pod for TexCoord {}
 impl Attribute for TexCoord {
@@ -257,9 +242,9 @@ impl With<Color> for PosColor {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct PosTex {
     /// Position of the vertex in 3D space.
-    pub position: Vec3<f32>,
+    pub position: [f32; 3],
     /// UV texture coordinates used by the vertex.
-    pub tex_coord: Vec2<f32>,
+    pub tex_coord: [f32; 2],
 }
 
 unsafe impl Pod for PosTex {}

@@ -16,8 +16,7 @@ pub struct Block<B: Backend, T> {
     relevant: Relevant,
     tag: T,
     memory: *const B::Memory,
-    offset: u64,
-    size: u64,
+    range: Range<u64>,
 }
 
 
@@ -31,8 +30,7 @@ where
             relevant: Relevant,
             tag: (),
             memory,
-            offset: range.start,
-            size: range.end - range.start,
+            range,
         }
     }
 }
@@ -57,17 +55,17 @@ where
     }
 
     pub fn range(&self) -> Range<u64> {
-        self.offset..self.size + self.offset
+        self.range.clone()
     }
 
     pub fn size(&self) -> u64 {
-        self.size
+        self.range.end - self.range.start
     }
 
     /// Helper method to check if `other` block is sub-block of `self`
     pub fn contains<Y>(&self, other: &Block<B, Y>) -> bool {
-        self.memory == other.memory && self.offset <= other.offset
-            && self.offset + self.size >= other.offset + other.size
+        self.memory == other.memory && self.range.start <= other.range.start
+            && self.range.end >= other.range.end
     }
 
     /// Push additional tag value to this block.
@@ -77,15 +75,13 @@ where
             relevant,
             memory,
             tag,
-            offset,
-            size,
+            range,
         } = self;
         Block {
             relevant,
             memory,
             tag: (value, tag),
-            offset,
-            size,
+            range,
         }
     }
 
@@ -95,16 +91,14 @@ where
             relevant,
             memory,
             tag,
-            offset,
-            size,
+            range,
         } = self;
         (
             Block {
                 relevant,
                 memory,
                 tag: value,
-                offset,
-                size,
+                range,
             },
             tag,
         )
@@ -116,16 +110,14 @@ where
         let Block {
             relevant,
             memory,
-            offset,
-            size,
+            range,
             ..
         } = self;
         Block {
             relevant,
             memory,
             tag: value,
-            offset,
-            size,
+            range,
         }
     }
 
@@ -152,16 +144,14 @@ where
             relevant,
             memory,
             tag: (value, tag),
-            offset,
-            size,
+            range,
         } = self;
         (
             Block {
                 relevant,
                 memory,
                 tag,
-                offset,
-                size,
+                range,
             },
             value,
         )

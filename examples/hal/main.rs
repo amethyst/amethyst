@@ -25,7 +25,7 @@ use specs::World;
 use renderer::gfx_hal::{Device, Instance, QueueFamily, Surface, Swapchain};
 use renderer::gfx_hal::command::{ClearColor, ClearDepthStencil, Rect, Viewport};
 use renderer::gfx_hal::device::Extent;
-use renderer::gfx_hal::format::{Bgra8, ChannelType, Formatted, Rgba8, Depth32F};
+// use renderer::gfx_hal::format::{};
 use renderer::gfx_hal::pso::{EntryPoint, Stage};
 
 use renderer::*;

@@ -34,7 +34,6 @@ pub struct Hal<B: Backend> {
     relevant: Relevant,
 }
 
-
 impl<B> Hal<B>
 where
     B: Backend,

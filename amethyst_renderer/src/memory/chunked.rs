@@ -1,13 +1,13 @@
 use std::collections::VecDeque;
 
-use gfx_hal::Backend;
+use gfx_hal::{Backend, MemoryTypeId};
 use gfx_hal::memory::Requirements;
 
 use memory::{shift_for_alignment, Block, MemoryAllocator, MemorySubAllocator, Result};
 
 #[derive(Debug)]
 struct ChunkListNode<B: Backend, A: MemoryAllocator<B>> {
-    id: usize,
+    id: MemoryTypeId,
     chunks_per_block: usize,
     chunk_size: u64,
     blocks: Vec<(Block<B, A::Tag>, u64)>,
@@ -20,7 +20,7 @@ where
     B: Backend,
     A: MemoryAllocator<B>,
 {
-    fn new(chunk_size: u64, chunks_per_block: usize, id: usize) -> Self {
+    fn new(chunk_size: u64, chunks_per_block: usize, id: MemoryTypeId) -> Self {
         ChunkListNode {
             id,
             chunk_size,
@@ -36,7 +36,7 @@ where
 
     fn grow(&mut self, owner: &mut A, device: &B::Device, info: A::Info) -> Result<()> {
         let reqs = Requirements {
-            type_mask: 1 << self.id,
+            type_mask: 1 << self.id.0,
             size: self.chunk_size * self.chunks_per_block as u64,
             alignment: self.chunk_size,
         };
@@ -82,7 +82,7 @@ where
         info: A::Info,
         reqs: Requirements,
     ) -> Result<Block<B, usize>> {
-        assert_eq!((1 << self.id) & reqs.type_mask, 1 << self.id);
+        assert_eq!((1 << self.id.0) & reqs.type_mask, 1 << self.id.0);
         assert!(self.chunk_size >= reqs.size);
         assert!(self.chunk_size >= reqs.alignment);
         if let Some(block) = self.alloc_no_grow() {
@@ -118,7 +118,7 @@ where
 
 #[derive(Debug)]
 pub struct ChunkListAllocator<B: Backend, A: MemoryAllocator<B>> {
-    id: usize,
+    id: MemoryTypeId,
     chunk_size_bit: u8,
     min_size_bit: u8,
     nodes: Vec<ChunkListNode<B, A>>,
@@ -133,7 +133,7 @@ where
     ///
     /// Panics if `chunk_size` or `min_chunk_size` is not power of 2.
     ///
-    pub fn new(chunk_size: u64, min_chunk_size: u64, id: usize) -> Self {
+    pub fn new(chunk_size: u64, min_chunk_size: u64, id: MemoryTypeId) -> Self {
         let bits = (::std::mem::size_of::<usize>() * 8) as u32;
         let chunk_size_bit = (bits - chunk_size.leading_zeros() - 1) as u8;
         assert_eq!(1u64 << chunk_size_bit, chunk_size);

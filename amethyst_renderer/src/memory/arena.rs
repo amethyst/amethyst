@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 use std::mem::replace;
 
-use gfx_hal::Backend;
+use gfx_hal::{Backend, MemoryTypeId};
 use gfx_hal::memory::Requirements;
 
 
@@ -61,7 +61,7 @@ where
 /// Linear allocator for transient memory
 #[derive(Debug)]
 pub struct ArenaAllocator<B: Backend, A: MemoryAllocator<B>> {
-    id: usize,
+    id: MemoryTypeId,
     arena_size: u64,
     hot: Option<Box<ArenaNode<B, A>>>,
     freed: usize,
@@ -74,7 +74,7 @@ where
     A: MemoryAllocator<B>,
 {
     /// Construct allocator.
-    pub fn new(arena_size: u64, id: usize) -> Self {
+    pub fn new(arena_size: u64, id: MemoryTypeId) -> Self {
         ArenaAllocator {
             id,
             arena_size,
@@ -106,7 +106,7 @@ where
     ) -> Result<ArenaNode<B, A>> {
         let arena_size = ((reqs.size - 1) / self.arena_size + 1) * self.arena_size;
         let arena_requirements = Requirements {
-            type_mask: 1 << self.id,
+            type_mask: 1 << self.id.0,
             size: arena_size,
             alignment: reqs.alignment,
         };
@@ -131,7 +131,7 @@ where
         info: A::Info,
         reqs: Requirements,
     ) -> Result<Block<B, Self::Tag>> {
-        assert_eq!((1 << self.id) & reqs.type_mask, 1 << self.id);
+        assert_eq!((1 << self.id.0) & reqs.type_mask, 1 << self.id.0);
         let count = self.nodes.len();
         if let Some(ref mut hot) = self.hot.as_mut() {
             match hot.alloc(reqs) {

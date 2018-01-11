@@ -1,4 +1,4 @@
-use gfx_hal::{Backend, MemoryType};
+use gfx_hal::{Backend, MemoryType, MemoryTypeId};
 use gfx_hal::memory::Requirements;
 
 use memory::{Block, MemoryAllocator, MemorySubAllocator, Result};
@@ -17,7 +17,8 @@ pub struct CombinedAllocator<B>
 where
     B: Backend,
 {
-    memory: RootAllocator<B>,
+    memory_type: MemoryType,
+    root: RootAllocator<B>,
     arenas: ArenaAllocator<B, RootAllocator<B>>,
     chunks: ChunkListAllocator<B, RootAllocator<B>>,
 }
@@ -28,19 +29,21 @@ where
 {
     pub fn new(
         memory_type: MemoryType,
+        memory_type_id: MemoryTypeId,
         arena_size: u64,
         chunk_size: u64,
         min_chunk_size: u64,
     ) -> Self {
         CombinedAllocator {
-            memory: RootAllocator::new(memory_type),
-            arenas: ArenaAllocator::new(arena_size, memory_type.id),
-            chunks: ChunkListAllocator::new(chunk_size, min_chunk_size, memory_type.id),
+            memory_type,
+            root: RootAllocator::new(memory_type_id),
+            arenas: ArenaAllocator::new(arena_size, memory_type_id),
+            chunks: ChunkListAllocator::new(chunk_size, min_chunk_size, memory_type_id),
         }
     }
 
     pub fn memory_type(&self) -> &MemoryType {
-        self.memory.memory_type()
+        &self.memory_type
     }
 }
 
@@ -59,10 +62,10 @@ where
     ) -> Result<Block<B, (Type, usize)>> {
         match info {
             Type::Arena => self.arenas
-                .alloc(&mut self.memory, device, (), reqs)
+                .alloc(&mut self.root, device, (), reqs)
                 .map(|block| block.push_tag(Type::Arena)),
             Type::Chunk => self.chunks
-                .alloc(&mut self.memory, device, (), reqs)
+                .alloc(&mut self.root, device, (), reqs)
                 .map(|block| block.push_tag(Type::Chunk)),
         }
     }
@@ -70,8 +73,8 @@ where
     fn free(&mut self, device: &B::Device, block: Block<B, (Type, usize)>) {
         let (block, ty) = block.pop_tag();
         match ty {
-            Type::Arena => self.arenas.free(&mut self.memory, device, block),
-            Type::Chunk => self.chunks.free(&mut self.memory, device, block),
+            Type::Arena => self.arenas.free(&mut self.root, device, block),
+            Type::Chunk => self.chunks.free(&mut self.root, device, block),
         }
     }
 
@@ -80,8 +83,8 @@ where
     }
 
     fn dispose(mut self, device: &B::Device) {
-        self.arenas.dispose(&mut self.memory, device);
-        self.chunks.dispose(&mut self.memory, device);
-        self.memory.dispose(device);
+        self.arenas.dispose(&mut self.root, device);
+        self.chunks.dispose(&mut self.root, device);
+        self.root.dispose(device);
     }
 }

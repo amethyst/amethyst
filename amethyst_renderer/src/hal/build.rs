@@ -1,6 +1,6 @@
 use gfx_hal::{Backend, Device, Gpu};
 use gfx_hal::adapter::{Adapter, PhysicalDevice};
-use gfx_hal::format::{ChannelType, Format, Formatted, Srgba8};
+use gfx_hal::format::{ChannelType, Format, AsFormat};
 use gfx_hal::queue::{QueueFamily, QueueType};
 use gfx_hal::window::{Surface, SwapchainConfig};
 
@@ -29,6 +29,11 @@ error_chain!{
         NoValidAdaptersFound {
             description("No valid adapters queues found")
             display("No valid adapters queues found")
+        }
+
+        NoCompatibleFormat {
+            description("No compatible format found")
+            display("No compatible format found")
         }
     }
 }
@@ -165,7 +170,7 @@ impl<'a> HalConfig<'a> {
             queue_groups,
             memory_types,
             ..
-        } = adapter.physical_device.open(requests);
+        } = adapter.physical_device.open(requests).unwrap();
         let allocator = Allocator::new(
             memory_types,
             self.arena_size,
@@ -184,7 +189,7 @@ impl<'a> HalConfig<'a> {
         let (window_surface, adapters) = B::create_window_and_adapters(&self)?;
 
         let mut window_surface_format =
-            window_surface.map(|(window, surface)| (window, surface, Srgba8::SELF));
+            window_surface.map(|(window, surface)| (window, surface, Format::Rgb8Srgb));
 
         println!("Adapters:");
         for adapter in &adapters {
@@ -197,7 +202,7 @@ impl<'a> HalConfig<'a> {
             .chain(soft)
             .filter_map(|adapter| {
                 if let Some((_, ref surface, ref mut format)) = window_surface_format {
-                    *format = find_good_surface_format(surface, &adapter)?;
+                    *format = find_good_surface_format(surface, &adapter).ok()?.unwrap_or(Format::Rgb8Srgb);
                 }
                 Some(self.init_adapter(adapter))
             })
@@ -247,18 +252,23 @@ fn find_surface_format<B: Backend>(
     surface: &B::Surface,
     adapter: &Adapter<B>,
     channel: ChannelType,
-) -> Option<Format> {
+) -> Result<Option<Format>> {
     surface
         .capabilities_and_formats(&adapter.physical_device)
         .1
-        .into_iter()
-        .find(|format| format.1 == channel)
+        .map(|formats| {
+            formats
+                .into_iter()
+                .find(|format| format.base_format().1 == channel)
+                .map(Some)
+                .ok_or(ErrorKind::NoCompatibleFormat.into())
+        }).unwrap_or(Ok(None))
 }
 
 fn find_good_surface_format<B: Backend>(
     surface: &B::Surface,
     adapter: &Adapter<B>,
-) -> Option<Format> {
+) -> Result<Option<Format>> {
     find_surface_format(surface, adapter, ChannelType::Srgb)
         .or_else(|| find_surface_format(surface, adapter, ChannelType::Unorm))
 }

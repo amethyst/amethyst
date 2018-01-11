@@ -8,15 +8,15 @@ use gfx_hal::{Backend, Device};
 use gfx_hal::buffer::Usage as BufferUsage;
 use gfx_hal::command::{BufferCopy, BufferImageCopy, CommandBuffer};
 use gfx_hal::image::ImageLayout;
-use gfx_hal::memory::{Pod, Properties};
+use gfx_hal::memory::{Pod, Properties, cast_slice};
 use gfx_hal::pool::CommandPool;
 use gfx_hal::queue::{Supports, Transfer, CommandQueue, Submission};
 
 use cirque::{Cirque, Entry};
 use epoch::{CurrentEpoch, Eh, Epoch};
-use memory::{cast_pod_vec, Allocator, Buffer, Image, WeakBuffer, WeakImage};
+use memory::{cast_vec, Allocator, Buffer, Image, WeakBuffer, WeakImage};
 
-const DIRECT_TRESHOLD: u64 = 1024;
+const DIRECT_TRESHOLD: usize = 1024;
 
 error_chain! {
     links {
@@ -64,23 +64,21 @@ where
         D: AsRef<[T]> + Into<Vec<T>>,
         T: Pod,
     {
-        let bytes = (data.as_ref().len() * ::std::mem::size_of::<T>()) as u64;
-        assert!(dst.get_size() >= bytes + offset);
+        let bytes = (data.as_ref().len() * ::std::mem::size_of::<T>());
+        assert!(dst.get_size() >= bytes as u64 + offset);
 
         if bytes > DIRECT_TRESHOLD {
             let src = allocator.create_buffer(
                 device,
-                bytes,
-                bytes,
+                bytes as u64,
                 BufferUsage::TRANSFER_SRC,
                 Properties::CPU_VISIBLE,
                 true,
             )?;
 
             {
-                let mut writer = device.acquire_mapping_writer(src.raw(), 0..bytes)?;
-                writer.copy_from_slice(data.as_ref());
-                device.release_mapping_writer(writer);
+                let mut writer = src.write(true, 0, bytes, device)?;
+                writer.copy_from_slice(cast_slice(data.as_ref()));
             }
 
             Ok(Upload::BufferStaging {
@@ -91,7 +89,7 @@ where
         } else {
             Ok(Upload::BufferDirect {
                 dst: Eh::borrow(dst, current.now() + 5),
-                data: cast_pod_vec(data.into()),
+                data: cast_vec(data.into()),
                 offset,
             })
         }
@@ -110,21 +108,19 @@ where
         D: AsRef<[T]> + Into<Vec<T>>,
         T: Pod,
     {
-        let bytes = (data.as_ref().len() * ::std::mem::size_of::<T>()) as u64;
+        let bytes = (data.as_ref().len() * ::std::mem::size_of::<T>());
 
         let src = allocator.create_buffer(
             device,
-            bytes,
-            bytes,
+            bytes as u64,
             BufferUsage::TRANSFER_SRC,
             Properties::CPU_VISIBLE,
             true,
         )?;
 
         {
-            let mut writer = device.acquire_mapping_writer(src.raw(), 0..bytes)?;
-            writer.copy_from_slice(data.as_ref());
-            device.release_mapping_writer(writer);
+            let mut writer = src.write(true, 0, bytes, device)?;
+            writer.copy_from_slice(cast_slice(data.as_ref()));
         }
 
         Ok(Upload::ImageStaging {
@@ -218,10 +214,9 @@ where
         T: Pod,
     {
         if dst.visible() {
-            let size = (data.as_ref().len() * ::std::mem::size_of::<T>()) as u64;
-            let mut writer = device.acquire_mapping_writer(dst.raw(), offset..(offset + size))?;
-            writer.copy_from_slice(data.as_ref());
-            device.release_mapping_writer(writer);
+            let size = (data.as_ref().len() * ::std::mem::size_of::<T>());
+            let mut writer = dst.write(false, offset, size, device)?;
+            writer.copy_from_slice(cast_slice(data.as_ref()));
         } else {
             self.uploads.push(Upload::buffer(
                 allocator,

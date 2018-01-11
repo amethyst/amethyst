@@ -10,8 +10,8 @@ use std::cmp::min;
 use gfx_hal::{Backend, Device};
 use gfx_hal::device::WaitFor;
 use gfx_hal::pool::CommandPool;
-use gfx_hal::queue::{CommandQueue, Compute, General, Graphics, QueueFamily, QueueGroup, QueueType,
-                     RawQueueGroup, Transfer};
+use gfx_hal::queue::{CommandQueue, Compute, General, Graphics, QueueFamily, QueueFamilyId, QueueGroup, QueueType,
+                     Queues, Transfer};
 
 use smallvec::SmallVec;
 
@@ -89,7 +89,7 @@ where
     B: Backend,
 {
     /// Create new `CommandCenter` from `RawQueueGroup`s
-    pub fn new(raw: Vec<RawQueueGroup<B>>) -> Self {
+    pub fn new(queues: &mut Queues<B>, graphics: Option<QueueFamilyId>) -> Self {
         let mut center = CommandCenter {
             transfer: None,
             compute: None,
@@ -98,14 +98,8 @@ where
             fences: Vec::new(),
         };
 
-        for raw in raw {
-            match raw.family().queue_type() {
-                QueueType::Transfer => center.transfer = Some(Family::new(QueueGroup::new(raw))),
-                QueueType::Compute => center.compute = Some(Family::new(QueueGroup::new(raw))),
-                QueueType::Graphics => center.graphics = Some(Family::new(QueueGroup::new(raw))),
-                QueueType::General => center.general = Some(Family::new(QueueGroup::new(raw))),
-            }
-        }
+        center.graphics = graphics.and_then(|graphics| queues.take::<Graphics>(graphics).map(Family::new));
+
         center
     }
 

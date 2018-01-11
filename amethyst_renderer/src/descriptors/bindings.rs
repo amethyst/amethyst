@@ -17,7 +17,6 @@ use specs::{EntitiesRes, Join, MaskedStorage, Storage};
 
 use descriptors::{DescriptorSet, DescriptorPool};
 use epoch::Epoch;
-use graph::PassTag;
 use relevant::Relevant;
 use uniform::UniformCache;
 
