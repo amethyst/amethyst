@@ -72,18 +72,29 @@ impl<'a,T> System<'a> for NetServerSystem<T> where T:Send+Sync+Serialize+Deseria
         loop {
             match self.socket.recv_from(&mut buf) {
                 Ok((amt, src)) => {
-                    let  buf2 = &buf[..amt];
-                    let str_in = str::from_utf8(&buf2);
-                    match str_in{
-                        Ok(s)=>{
-                            //TODO: Connection management server side stuff
-                            let net_event = ron::de::from_str::<T>(s);
-                            match net_event{
-                                Ok(ev)=>events.single_write(ev),//TODO: As for network_client, use NetOwnedEvent, which carries the source of the event
-                                Err(e)=>println!("Failed to read network event!"),
+                    let conn = self.clients.iter().find(|c| src == c.target);
+                    match conn{
+                        Some(c)=>{
+                            if c.state==ConnectionState::Connected || c.state == ConnectionState::Connecting{
+                                let  buf2 = &buf[..amt];
+                                let str_in = str::from_utf8(&buf2);
+                                match str_in{
+                                    Ok(s)=>{
+                                        //TODO: Connection management server side stuff
+                                        let net_event = ron::de::from_str::<T>(s);
+                                        match net_event{
+                                            Ok(ev)=>events.single_write(NetOwnedEvent{
+                                                event:ev,
+                                                owner:c.clone(),//Could be replaced by a lifetime I guess
+                                        }),
+                                        Err(e)=>println!("Failed to read network event!"),
+                                    }
+                                },
+                                Err(e)=>println!("Failed to get string from bytes: {}",e),
+                            }
                             }
                         },
-                        Err(e)=>println!("Failed to get string from bytes: {}",e),
+                        None=>println!("Received network packet from unknown source."),
                     }
                 },
                 Err(e) => {

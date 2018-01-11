@@ -29,7 +29,7 @@ pub struct NetClientSystem<T> where T:Send+Sync{
     net_event_types:PhantomData<T>,
 }
 
-impl<T> NetClientSystem<T> where T:Send+Sync+Serialize{
+impl<T> NetClientSystem<T> where T:Send+Sync+Serialize+BaseNetEvent<T>{
     pub fn new(ip:&str,port:u16)->Result<NetClientSystem<T>,Error>{
         let mut socket = UdpSocket::bind(SocketAddr::new(IpAddr::from_str("127.0.0.1").unwrap(),port))?;//TODO: Use supplied ip
         socket.set_nonblocking(true);
@@ -49,13 +49,13 @@ impl<T> NetClientSystem<T> where T:Send+Sync+Serialize{
                 state:ConnectionState::Connecting,
             }
         );
-        self.send_event(NetEvent::Connect);//FIXME: I think this should use associated data/constant/type to work.  ConnectionEventType=NetEvent::Connect
+        self.send_event(T::base_to_custom(NetEvent::Connect));//FIXME: I think this should use associated data/constant/type to work.  ConnectionEventType=NetEvent::Connect
     }
 
     pub fn send_event(&mut self,event:T){
         //Possible to have a better syntax? :/
         match self.connection{
-            Some(conn)=>{
+            Some(ref mut conn)=>{
                 let ser = ron::ser::pretty::to_string(&event);
                 //let s = serde_json::ser::;
                 match ser{
@@ -76,7 +76,7 @@ impl<T> NetClientSystem<T> where T:Send+Sync+Serialize{
 //NOTICE ME AT REVIEW
 //NOTICE ME AT REVIEW
 //NOTICE ME AT REVIEW
-impl<'a,T> System<'a> for NetClientSystem<T> where T:Send+Sync+Serialize+Deserialize<'a>+'static{
+impl<'a,T> System<'a> for NetClientSystem<T> where T:Send+Sync+Serialize+Clone+Deserialize<'a>+BaseNetEvent<T>+'static{
     type SystemData = (
         FetchMut<'a, EventChannel<NetOwnedEvent<T>>>,
     );
@@ -86,42 +86,42 @@ impl<'a,T> System<'a> for NetClientSystem<T> where T:Send+Sync+Serialize+Deseria
         loop {
             match self.socket.recv_from(&mut buf) {
                 Ok((amt, src)) => { //Data received
-                    match self.connection{
-                        Some(conn)=>{ //Are we connected to anything?
-                            if src == conn.target && (conn.state == ConnectionState::Connected || conn.state == ConnectionState::Connecting){ //Was it sent by connected server, and are we still connected to it?
-                                let buf2 = &buf[..amt];
-                                let str_in = str::from_utf8(&buf2);
-                                match str_in{
-                                    Ok(s)=>{
-                                        let net_event = ron::de::from_str::<T>(s);
-                                        match net_event{
-                                            Ok(ev)=>{
-                                                let owned_event = NetOwnedEvent{
-                                                    event:ev,
-                                                    owner:conn.clone(),
-                                                };
-                                                events.single_write(owned_event);
-                                                match ev{
-                                                    NetEvent::Connected=>conn.state = ConnectionState::Connected,
-                                                    NetEvent::ConnectionRefused {reason}=>{ //Could be handled differently by the user, say by reconnecting to a fallback server.
-                                                        self.connection = None;
-                                                        println!("Connection refused by server: {}",reason);
-                                                    },
-                                                    NetEvent::Disconnected {reason}=>{
-                                                        self.connection = None;
-                                                        println!("Disconnected from server: {}",reason);
-                                                    }
-                                                    _=>{},//Other systems will handle the rest of the stuff
+                    if self.connection.is_some(){ //Are we connected to anything?
+                        if src == self.connection.as_ref().unwrap().target && (self.connection.as_ref().unwrap().state == ConnectionState::Connected || self.connection.as_ref().unwrap().state == ConnectionState::Connecting){ //Was it sent by connected server, and are we still connected to it?
+                            let mut buf2:&'a [u8] = &buf[..amt];
+                            let str_in = str::from_utf8(&buf2);
+                            match str_in{
+                                Ok(s)=>{
+                                    let net_event = ron::de::from_str::<T>(s);
+                                    match net_event{
+                                        Ok(ev)=>{
+                                            let owned_event = NetOwnedEvent{
+                                                event:ev.clone(),
+                                                owner:self.connection.as_ref().unwrap().clone(),
+                                            };
+                                            events.single_write(owned_event);
+                                            match T::custom_to_base(ev){
+                                                Some(NetEvent::Connected)=>self.connection.as_mut().unwrap().state = ConnectionState::Connected,
+                                                Some(NetEvent::ConnectionRefused {reason})=>{ //Could be handled differently by the user, say by reconnecting to a fallback server.
+                                                    self.connection = None;
+                                                    println!("Connection refused by server: {}",reason);
+                                                },
+                                                Some(NetEvent::Disconnected {reason})=>{
+                                                    self.connection = None;
+                                                    println!("Disconnected from server: {}",reason);
                                                 }
-                                            },
-                                            Err(e)=>println!("Failed to read network event!"),
-                                        }
-                                    },
-                                    Err(e)=>println!("Failed to get string from bytes: {}",e),
-                                }
+                                                _=>{},//Other systems will handle the rest of the stuff
+                                            }
+                                        },
+                                        Err(e)=>println!("Failed to read network event!"),
+                                    }
+                                },
+                                Err(e)=>println!("Failed to get string from bytes: {}",e),
                             }
-                        },
-                        None=>println!("Received network packet from unknown source, ignored."),
+                        }
+                    }
+                    else{
+                        println!("Received network packet from unknown source, ignored.");
                     }
                 },
                 Err(e) => { //No data
