@@ -18,12 +18,12 @@ amethyst_renderer = { path = "../amethyst_renderer", version = "0.6" }
 clipboard = "0.4"
 derivative = "1.0"
 fnv = "1"
-gfx = { version = "0.16", features = ["serialize"] }
-gfx_glyph = "0.6"
+gfx = { version = "0.17", features = ["serialize"] }
+gfx_glyph = "0.8.1"
 hibitset = "0.3"
-rusttype = "0.2"
+rusttype = "0.3"
 shrev = "0.8"
 specs = "0.10"
 unicode-normalization = "0.1"
 unicode-segmentation = "1.2"
-winit = "0.7"
+winit = "0.10"

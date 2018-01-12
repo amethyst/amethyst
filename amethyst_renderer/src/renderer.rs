@@ -7,7 +7,7 @@ use pipe::{ColorBuffer, DepthBuffer, PipelineBuild, PipelineData, PolyPipeline, 
            TargetBuilder};
 use tex::{Texture, TextureBuilder};
 use types::{ColorFormat, DepthFormat, Device, Encoder, Factory, Window};
-use winit::{self, EventsLoop, Window as WinitWindow, WindowBuilder};
+use winit::{EventsLoop, Window as WinitWindow, WindowBuilder};
 
 /// Generic renderer.
 pub struct Renderer {
