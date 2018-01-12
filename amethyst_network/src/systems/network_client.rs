@@ -32,7 +32,7 @@ pub struct NetClientSystem<T> where T:Send+Sync{
 
 impl<T> NetClientSystem<T> where T:Send+Sync+Serialize+BaseNetEvent<T>{
     pub fn new(ip:&str,port:u16)->Result<NetClientSystem<T>,Error>{
-        let mut socket = UdpSocket::bind(SocketAddr::new(IpAddr::from_str("127.0.0.1").unwrap(),port))?;//TODO: Use supplied ip
+        let mut socket = UdpSocket::bind(SocketAddr::new(IpAddr::from_str(ip).expect("Unreadable input IP"),port))?;//TODO: Use supplied ip
         socket.set_nonblocking(true);
         Ok(
             NetClientSystem{
@@ -44,6 +44,7 @@ impl<T> NetClientSystem<T> where T:Send+Sync+Serialize+BaseNetEvent<T>{
     }
 
     pub fn connect(&mut self,target:SocketAddr){
+        println!("Sending connection request to remote {:?}",target);
         self.connection = Some(
             NetConnection{
                 target,
@@ -72,11 +73,6 @@ impl<T> NetClientSystem<T> where T:Send+Sync+Serialize+BaseNetEvent<T>{
     }
 }
 
-
-//NOTICE ME AT REVIEW: I have no idea what I'm doing with that 'static lifetime, please tell me if its wrong.
-//NOTICE ME AT REVIEW
-//NOTICE ME AT REVIEW
-//NOTICE ME AT REVIEW
 impl<'a, T> System<'a> for NetClientSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+BaseNetEvent<T>+'static{
     type SystemData = (
         FetchMut<'a, EventChannel<NetOwnedEvent<T>>>,
@@ -102,7 +98,10 @@ impl<'a, T> System<'a> for NetClientSystem<T> where T:Send+Sync+Serialize+Clone+
                                             };
                                             events.single_write(owned_event);
                                             match T::custom_to_base(ev){
-                                                Some(NetEvent::Connected)=>self.connection.as_mut().unwrap().state = ConnectionState::Connected,
+                                                Some(NetEvent::Connected)=>{
+                                                    self.connection.as_mut().unwrap().state = ConnectionState::Connected;
+                                                    println!("Remote ({:?}) accepted connection request.",src);
+                                                },
                                                 Some(NetEvent::ConnectionRefused {reason})=>{ //Could be handled differently by the user, say by reconnecting to a fallback server.
                                                     self.connection = None;
                                                     println!("Connection refused by server: {}",reason);
