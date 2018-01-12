@@ -176,11 +176,11 @@ where
                     }
                 }
             }
-            WindowEvent::MouseMoved {
+            WindowEvent::CursorMoved {
                 position: (x, y), ..
             } => {
                 if let Some((old_x, old_y)) = self.mouse_position {
-                    event_handler.single_write(MouseMoved {
+                    event_handler.single_write(CursorMoved {
                         delta_x: x - old_x,
                         delta_y: y - old_y,
                     });
