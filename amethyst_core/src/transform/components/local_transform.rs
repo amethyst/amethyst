@@ -86,7 +86,7 @@ impl LocalTransform {
 
     /// Move down relative to current position and orientation.
     pub fn move_down(&mut self, orientation: &Orientation, amount: f32) -> &mut Self {
-        self.move_up( orientation, -amount)
+         self.move_local((-orientation.up).into(), amount)
     }
 
     /// Pitch relatively to the world.
