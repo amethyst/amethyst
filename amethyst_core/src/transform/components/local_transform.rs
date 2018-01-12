@@ -41,11 +41,6 @@ impl LocalTransform {
         matrix
     }
 
-    /// Move relatively to its current position and orientation.
-    pub fn move_forward(&mut self, orientation: &Orientation, amount: f32) -> &mut Self {
-        self.move_local(orientation.forward.into(), amount)
-    }
-
     /// Move relatively to its current position, but independently from its orientation.
     /// Ideally, first normalize the direction and then multiply it
     /// by whatever amount you want to move before passing the vector to this method
@@ -64,14 +59,34 @@ impl LocalTransform {
         self
     }
 
-    /// Move relatively to its current position and orientation.
+    /// Move forward relative to current position and orientation.
+    pub fn move_forward(&mut self, orientation: &Orientation, amount: f32) -> &mut Self {
+        self.move_local(orientation.forward.into(), amount)
+    }
+
+    /// Move backward relative to current position and orientation.
+    pub fn move_backward(&mut self, orientation: &Orientation, amount: f32) -> &mut Self {
+        self.move_local((-orientation.forward).into(), amount)
+    }
+
+    /// Move right relative to current position and orientation.
     pub fn move_right(&mut self, orientation: &Orientation, amount: f32) -> &mut Self {
         self.move_local(orientation.right.into(), amount)
     }
 
-    /// Move relatively to its current position and orientation.
+    /// Move left relative to current position and orientation.
+    pub fn move_left(&mut self, orientation: &Orientation, amount: f32) -> &mut Self {
+        self.move_local((-orientation.right).into(), amount)
+    }
+
+    /// Move up relative to current position and orientation.
     pub fn move_up(&mut self, orientation: &Orientation, amount: f32) -> &mut Self {
         self.move_local(orientation.up.into(), amount)
+    }
+
+    /// Move down relative to current position and orientation.
+    pub fn move_down(&mut self, orientation: &Orientation, amount: f32) -> &mut Self {
+        self.move_up( orientation, -amount)
     }
 
     /// Pitch relatively to the world.
