@@ -6,7 +6,6 @@ use std::mem;
 
 use fnv::FnvHashMap as HashMap;
 use gfx::{Primitive, ShaderSet};
-use gfx::Bind;
 use gfx::buffer::{Info as BufferInfo, Role as BufferRole};
 use gfx::memory::Usage;
 use gfx::preset::depth::{LESS_EQUAL_TEST, LESS_EQUAL_WRITE};
