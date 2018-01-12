@@ -13,6 +13,8 @@ use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline, PosTex, RenderBundle
                          Stage};
 use amethyst::ui::{DrawUi, UiBundle};
 use amethyst::network::network_server::*;
+use amethyst::network::resources::net_event::*;
+use amethyst::shrev::EventChannel;
 
 fn main() {
     if let Err(e) = run() {
@@ -22,11 +24,14 @@ fn main() {
 }
 
 fn run() -> Result<()> {
+    let server = NetServerSystem::<NetEvent>::new("127.0.0.1",4546 as u16).expect("Failed to create NetServerSystem");
+
     let game = Application::build("",State1)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             144,
-        ).with(NetServerSystem::new(),"net_server_system",&[]);
+        ).with(server,"net_server_system",&[])
+        .with_resource(EventChannel::<NetOwnedEvent<NetEvent>>::new());
 
     Ok(
         game.build()?.run(),

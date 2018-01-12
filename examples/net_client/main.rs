@@ -13,6 +13,11 @@ use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline, PosTex, RenderBundle
                          Stage};
 use amethyst::ui::{DrawUi, UiBundle};
 use amethyst::network::network_client::*;
+use amethyst::network::resources::net_event::*;
+use amethyst::shrev::EventChannel;
+use std::net::IpAddr;
+use std::net::SocketAddr;
+use std::str::FromStr;
 
 fn main() {
     if let Err(e) = run() {
@@ -22,11 +27,15 @@ fn main() {
 }
 
 fn run() -> Result<()> {
+    let mut client = NetClientSystem::<NetEvent>::new("127.0.0.1",4545 as u16).expect("Failed to create NetClientSystem");
+    client.connect(SocketAddr::new(IpAddr::from_str("127.0.0.1").unwrap(),4546 as u16));
+    
     let game = Application::build("",State1)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             144,
-        ).with(NetClientSystem::new(),"net_client_system",&[]);
+        ).with(client,"net_client_system",&[])
+        .with_resource(EventChannel::<NetOwnedEvent<NetEvent>>::new());
 
     Ok(
         game.build()?.run(),

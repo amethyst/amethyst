@@ -27,7 +27,7 @@ pub struct NetServerSystem<T> where T:Send+Sync{
 
 impl<T> NetServerSystem<T> where T:Send+Sync+Serialize{
     pub fn new(ip:&str,port:u16)->Result<NetServerSystem<T>,Error>{
-        let mut socket = UdpSocket::bind(SocketAddr::new(IpAddr::from_str("127.0.0.1").unwrap(),port))?;//TODO: Use supplied ip
+        let mut socket = UdpSocket::bind(SocketAddr::new(IpAddr::from_str(ip).expect("Unreadable input IP"),port))?;
         socket.set_nonblocking(true);
         Ok(
             NetServerSystem{
@@ -57,12 +57,7 @@ Server Registered components: Transform LocalTransform Velocity Input
 Server->Client Event: Create Entity with Transform(1,1,0,0)+LocalTransform([5,5,5,5],[2,2,2],[3,3,3])+NetworkedOwned(entityid:SERVERGENERATED,owner:ServerUUID)
 */
 
-
-//NOTICE ME AT REVIEW: I have no idea what I'm doing with that 'static lifetime, please tell me if its wrong.
-//NOTICE ME AT REVIEW
-//NOTICE ME AT REVIEW
-//NOTICE ME AT REVIEW
-impl<'a, T> System<'a> for NetServerSystem<T> where T:Send+Sync+Serialize+DeserializeOwned+'static{
+impl<'a, T> System<'a> for NetServerSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+BaseNetEvent<T>+'static{
     type SystemData = (
         FetchMut<'a, EventChannel<NetOwnedEvent<T>>>,
     );
@@ -73,29 +68,65 @@ impl<'a, T> System<'a> for NetServerSystem<T> where T:Send+Sync+Serialize+Deseri
         loop {
             match self.socket.recv_from(&mut buf) {
                 Ok((amt, src)) => {
-                    let conn = self.clients.iter().find(|c| src == c.target);
-                    match conn{
-                        Some(c)=>{
-                            if c.state==ConnectionState::Connected || c.state == ConnectionState::Connecting{
-                                let  buf2 = &buf[..amt];
-                                let str_in = str::from_utf8(&buf2);
-                                match str_in{
-                                    Ok(s)=>{
-                                        //TODO: Connection management server side stuff
-                                        let net_event = ron::de::from_str::<T>(s);
-                                        match net_event{
-                                            Ok(ev)=>events.single_write(NetOwnedEvent{
-                                                event:ev,
-                                                owner:c.clone(),//Could be replaced by a lifetime I guess
-                                        }),
-                                        Err(e)=>println!("Failed to read network event!"),
+                    let  buf2 = &buf[..amt];
+                    let str_in = str::from_utf8(&buf2);
+                    match str_in{
+                        Ok(s)=>{
+                            let net_event = ron::de::from_str::<T>(s);
+                            match net_event{
+                                Ok(ev)=>{
+                                    let conn_index = self.clients.iter().position(|c| src == c.target);
+                                    match conn_index{
+                                        Some(ind)=>{
+                                            let c = self.clients.get(ind).unwrap().clone();
+                                            if c.state==ConnectionState::Connected || c.state == ConnectionState::Connecting{
+                                                let owned_event = NetOwnedEvent{
+                                                    event:ev.clone(),
+                                                    owner:c.clone(),
+                                                };
+                                                events.single_write(owned_event);
+                                                match T::custom_to_base(ev){
+                                                    Some(NetEvent::Disconnect {reason})=>{
+                                                        self.clients.remove(ind);
+                                                        println!("Disconnected from server: {}",reason);
+                                                    }
+                                                    _=>{},//Other systems will handle the rest of the stuff
+                                                }
+                                            }else{
+                                                println!("Received message from client in invalid state connection state (not Connected and not Connecting)");
+                                            }
+                                        },
+                                        None=>{
+                                            //Connection protocol
+                                            match T::custom_to_base(ev.clone()){
+                                                Some(NetEvent::Connect)=>{
+                                                    println!("Remote ({:?}) initialized connection sequence.",src);
+                                                    let conn = NetConnection{
+                                                        target:src,
+                                                        state:ConnectionState::Connecting,
+                                                    };
+                                                    self.send_event(T::base_to_custom(NetEvent::Connected),conn.clone());
+
+                                                    //Push events to continue the user-space connection protocol
+                                                    let owned_event = NetOwnedEvent{
+                                                        event:ev,
+                                                        owner:conn.clone(),
+                                                    };
+                                                    events.single_write(owned_event);
+
+                                                    self.clients.push(conn);
+                                                },
+                                                _=>{
+                                                    println!("Received event from unknown source: {:?}",src);
+                                                },
+                                            }
+                                        },
                                     }
                                 },
-                                Err(e)=>println!("Failed to get string from bytes: {}",e),
-                            }
+                                Err(e)=>println!("Failed to read network event!"),
                             }
                         },
-                        None=>println!("Received network packet from unknown source."),
+                        Err(e)=>println!("Failed to get string from bytes: {}",e),
                     }
                 },
                 Err(e) => {
