@@ -11,12 +11,10 @@ use amethyst::core::cgmath::{Array, Vector3};
 use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::ecs::World;
 use amethyst::input::InputBundle;
-use amethyst::renderer::{Camera, DisplayConfig as DisplayConfig, DrawShaded, Event, KeyboardInput,
-                         Light, Material, MaterialDefaults, Mesh, MeshData, Pipeline, PointLight,
-                         PosNormTex, Projection, RenderBundle, RenderSystem, Rgba, Stage,
-                         VirtualKeyCode, WindowEvent};
-
-
+use amethyst::renderer::{Camera, DisplayConfig, DrawShaded, Event, KeyboardInput, Light, Material,
+                         MaterialDefaults, Mesh, MeshData, Pipeline, PointLight, PosNormTex,
+                         Projection, RenderBundle, RenderSystem, Rgba, Stage, VirtualKeyCode,
+                         WindowEvent};
 
 #[derive(Clone)]
 struct Custom;
@@ -58,7 +56,6 @@ impl SimpleFormat<Mesh> for Custom {
         Ok(result.into())
     }
 }
-
 
 struct AssetsExample;
 

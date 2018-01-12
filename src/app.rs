@@ -34,12 +34,10 @@ pub struct Application<'a, 'b> {
     #[derivative(Debug = "ignore")]
     pub world: World,
 
-    #[derivative(Debug = "ignore")]
-    dispatcher: Dispatcher<'a, 'b>,
+    #[derivative(Debug = "ignore")] dispatcher: Dispatcher<'a, 'b>,
     events_reader_id: ReaderId<Event>,
     states: StateMachine<'a>,
-    #[derivative(Debug = "ignore")]
-    locals: Vec<Box<for<'c> RunNow<'c> + 'b>>,
+    #[derivative(Debug = "ignore")] locals: Vec<Box<for<'c> RunNow<'c> + 'b>>,
     ignore_window_close: bool,
 }
 
@@ -99,7 +97,6 @@ impl<'a, 'b> Application<'a, 'b> {
     {
         ApplicationBuilder::new(path, initial_state)?.build()
     }
-
 
     /// Creates a new ApplicationBuilder with the given initial game state.
     ///
@@ -314,8 +311,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
         let rustc_meta = rustc_version_runtime::version_meta();
         println!(
             "Rustc version: {} {:?}",
-            rustc_meta.semver,
-            rustc_meta.channel
+            rustc_meta.semver, rustc_meta.channel
         );
         if let Some(hash) = rustc_meta.commit_hash {
             println!("Rustc git commit: {}", hash);

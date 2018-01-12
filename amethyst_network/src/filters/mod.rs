@@ -3,5 +3,5 @@
 mod filter;
 mod connected;
 
-pub use self::filter::*;
 pub use self::connected::*;
+pub use self::filter::*;

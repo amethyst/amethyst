@@ -81,10 +81,6 @@ where
 
         world.add_resource(input);
         world.add_resource(EventChannel::<InputEvent<AC>>::with_capacity(2000));
-        Ok(builder.add(
-            InputSystem::<AX, AC>::new(reader_id),
-            "input_system",
-            &[],
-        ))
+        Ok(builder.add(InputSystem::<AX, AC>::new(reader_id), "input_system", &[]))
     }
 }

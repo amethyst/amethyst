@@ -40,11 +40,9 @@ impl<'a, 'b> ECSBundle<'a, 'b> for UiBundle {
         let reader_2 = world
             .write_resource::<EventChannel<Event>>()
             .register_reader();
-        Ok(
-            builder
-                .add(Processor::<FontAsset>::new(), "font_processor", &[])
-                .add(UiSystem::new(reader_1), "ui_system", &["font_processor"])
-                .add(ResizeSystem::new(reader_2), "ui_resize_system", &[]),
-        )
+        Ok(builder
+            .add(Processor::<FontAsset>::new(), "font_processor", &[])
+            .add(UiSystem::new(reader_1), "ui_system", &["font_processor"])
+            .add(ResizeSystem::new(reader_2), "ui_resize_system", &[]))
     }
 }

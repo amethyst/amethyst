@@ -12,28 +12,20 @@ use winit::{MouseButton, VirtualKeyCode};
 pub enum InputEvent<T> {
     /// A key was pressed down, sent exactly once per key press.
     KeyPressed {
-        #[serde(with = "LocalVirtualKeyCode")]
-        key_code: VirtualKeyCode,
+        #[serde(with = "LocalVirtualKeyCode")] key_code: VirtualKeyCode,
         scancode: u32,
     },
     /// A key was released, sent exactly once per key release.
     KeyReleased {
-        #[serde(with = "LocalVirtualKeyCode")]
-        key_code: VirtualKeyCode,
+        #[serde(with = "LocalVirtualKeyCode")] key_code: VirtualKeyCode,
         scancode: u32,
     },
     /// A unicode character was received by the window.  Good for typing.
     KeyTyped(char),
     /// A mouse button was pressed down, sent exactly once per press.
-    MouseButtonPressed(
-        #[serde(with = "LocalMouseButton")]
-        MouseButton,
-    ),
+    MouseButtonPressed(#[serde(with = "LocalMouseButton")] MouseButton),
     /// A mouse button was released, sent exactly once per release.
-    MouseButtonReleased(
-        #[serde(with = "LocalMouseButton")]
-        MouseButton,
-    ),
+    MouseButtonReleased(#[serde(with = "LocalMouseButton")] MouseButton),
     /// A button was pressed.
     ButtonPressed(Button),
     /// A button was released.

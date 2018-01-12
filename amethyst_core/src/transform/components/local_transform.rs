@@ -8,7 +8,7 @@ use specs::{Component, DenseVecStorage, FlaggedStorage};
 /// Local position, rotation, and scale (from parent if it exists).
 ///
 /// Used for rendering position and orientation.
-#[derive(Clone, Debug, PartialEq,Serialize,Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct LocalTransform {
     /// Quaternion [w (scalar), x, y, z]
     pub rotation: Quaternion<f32>,

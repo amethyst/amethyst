@@ -4,12 +4,12 @@ use std::net::SocketAddr;
 
 ///Connection target
 //TODO add ping
-#[derive(Debug,Clone,Serialize,Deserialize)]
-pub struct NetConnection{
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NetConnection {
     /// The remote socket address of this connection
-    pub target:SocketAddr,
+    pub target: SocketAddr,
     /// The state of the connection
-    pub state:ConnectionState,
+    pub state: ConnectionState,
 }
 
 impl PartialEq for NetConnection {
@@ -18,11 +18,11 @@ impl PartialEq for NetConnection {
     }
 }
 
-impl Eq for NetConnection{}
+impl Eq for NetConnection {}
 
 ///The state of the connection
-#[derive(Debug,Clone,PartialEq,Eq,Serialize,Deserialize)]
-pub enum ConnectionState{
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ConnectionState {
     /// The connection is established
     Connected,
     /// The connection is being established

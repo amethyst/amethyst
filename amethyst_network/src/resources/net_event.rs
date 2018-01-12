@@ -2,8 +2,8 @@
 //! NetEvent are passed through the network
 //! NetOwnedEvent are passed through the ECS, and contains the event's source (remote connection, usually)
 
-use shrev::Event;
 use resources::*;
+use shrev::Event;
 
 ///The basic network events shipped with amethyst
 ///You can add more event by making a new enum and having this one has a variant of yours.
@@ -28,31 +28,31 @@ use resources::*;
 /// ```
 //TODO: Add CreateEntity,RemoveEntity,UpdateEntity
 //TODO: Example of switching the NetEvent set in the Network Systems
-#[derive(Debug,Clone,PartialEq,Serialize,Deserialize)]
-pub enum NetEvent{
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum NetEvent {
     /// Ask to connect to the server
     Connect,
     /// Reply to the client that the connection has been accepted
     Connected,
     /// Reply to the client that the connection has been refused
-    ConnectionRefused{
+    ConnectionRefused {
         /// The reason of the refusal
-        reason:String
+        reason: String,
     },
     /// Tell the server that the client is disconnecting
-    Disconnect{
+    Disconnect {
         /// The reason of the disconnection
-        reason:String
+        reason: String,
     },
     /// Notify the clients(including the one being disconnected) that a client has been disconnected from the server
-    Disconnected{
+    Disconnected {
         /// The reason of the disconnection
-        reason:String
+        reason: String,
     },
 }
 
-impl BaseNetEvent<NetEvent> for NetEvent{
-    fn base_to_custom(ev:NetEvent) -> NetEvent {
+impl BaseNetEvent<NetEvent> for NetEvent {
+    fn base_to_custom(ev: NetEvent) -> NetEvent {
         ev
     }
     fn custom_to_base(ev: NetEvent) -> Option<NetEvent> {
@@ -61,19 +61,21 @@ impl BaseNetEvent<NetEvent> for NetEvent{
 }
 
 /// The BaseNetEvent trait is used to convert from a user-made event enum to the predefined amethyst base event enum and the inverse.
-pub trait BaseNetEvent<T>{
+pub trait BaseNetEvent<T> {
     /// Converts a base event to a user event
-    fn base_to_custom(ev:NetEvent)->T;
+    fn base_to_custom(ev: NetEvent) -> T;
     /// Converts a user event to a base event (if applicable)
-    fn custom_to_base(ev:T)->Option<NetEvent>;
+    fn custom_to_base(ev: T) -> Option<NetEvent>;
 }
 
 ///Carries the source of the event. Useful for debugging, security checks, gameplay logic, etc...
-#[derive(Debug,Clone,Serialize,Deserialize)]
-pub struct NetOwnedEvent<T> where T:Event{
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NetOwnedEvent<T>
+where
+    T: Event,
+{
     /// The event
-    pub event:T,
+    pub event: T,
     /// The source of this event
-    pub owner:NetConnection,
+    pub owner: NetConnection,
 }
-

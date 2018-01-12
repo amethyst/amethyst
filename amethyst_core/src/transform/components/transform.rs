@@ -12,7 +12,7 @@ use specs::{Component, DenseVecStorage, FlaggedStorage};
 /// If this component is used, and `TransformSystem` is not used, then make sure to clear the flags
 /// on the `FlaggedStorage` at the appropriate times (before updating any `Transform` in the frame).
 /// See documentation on `FlaggedStorage` for more information.
-#[derive(Debug, Copy, Clone,Serialize,Deserialize)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct Transform(pub Matrix4<f32>);
 
 impl Transform {
@@ -64,7 +64,6 @@ impl AsRef<[[f32; 4]; 4]> for Transform {
         self.0.as_ref()
     }
 }
-
 
 impl Borrow<[[f32; 4]; 4]> for Transform {
     fn borrow(&self) -> &[[f32; 4]; 4] {

@@ -83,12 +83,10 @@ fn main() {
 
 fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTex> {
     SphereUV::new(u, v)
-        .vertex(|(x, y, z)| {
-            PosNormTex {
-                position: [x, y, z],
-                normal: Vector3::from([x, y, z]).normalize().into(),
-                tex_coord: [0.1, 0.1],
-            }
+        .vertex(|(x, y, z)| PosNormTex {
+            position: [x, y, z],
+            normal: Vector3::from([x, y, z]).normalize().into(),
+            tex_coord: [0.1, 0.1],
         })
         .triangulate()
         .vertices()
@@ -123,7 +121,6 @@ fn initialise_sphere(world: &mut World) {
         (mesh, mat)
     };
 
-
     // Create a sphere entity using the mesh and the material.
     world
         .create_entity()
@@ -149,7 +146,6 @@ fn initialise_lights(world: &mut World) {
     // Add point light.
     world.create_entity().with(light).build();
 }
-
 
 /// This function initialises a camera and adds it to the world.
 fn initialise_camera(world: &mut World) {

@@ -1,7 +1,6 @@
 use specs::{Component, DenseVecStorage, FlaggedStorage};
 use std::marker::PhantomData;
 
-
 /// The raw pixels on screen that are populated.
 ///
 /// TODO: Eventually this should be either replaced by a citrine type, or citrine may just
