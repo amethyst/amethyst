@@ -1,2 +1,5 @@
-//pub use self::netsync;
-pub mod netsync;
+//! ECS Components
+
+mod netsync;
+
+pub use self::netsync::*;

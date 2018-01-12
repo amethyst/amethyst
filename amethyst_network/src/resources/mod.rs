@@ -1,2 +1,7 @@
-pub mod connection;
-pub mod net_event;
+//! Resources
+
+mod connection;
+mod net_event;
+
+pub use self::connection::*;
+pub use self::net_event::*;
