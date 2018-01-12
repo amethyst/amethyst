@@ -270,8 +270,6 @@ impl<Q> StageBuilder<Queue<Q>> {
     }
 }
 
-
-
 pub struct CompilePass<'a> {
     factory: &'a mut Factory,
     target: &'a Target,
@@ -280,7 +278,11 @@ pub struct CompilePass<'a> {
 
 impl<'a> CompilePass<'a> {
     fn new(factory: &'a mut Factory, target: &'a Target, multisampling: u16) -> Self {
-        CompilePass { factory, target, multisampling }
+        CompilePass {
+            factory,
+            target,
+            multisampling,
+        }
     }
 }
 

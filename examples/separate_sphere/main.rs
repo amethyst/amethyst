@@ -88,9 +88,7 @@ fn gen_sphere(u: usize, v: usize) -> ComboMeshCreator {
 
     let normals = positions
         .iter()
-        .map(|pos| {
-            Separate::<Normal>::new(Vector3::from(*pos).normalize().into())
-        })
+        .map(|pos| Separate::<Normal>::new(Vector3::from(*pos).normalize().into()))
         .collect::<Vec<_>>();
     let tex_coords = positions
         .iter()
@@ -132,7 +130,6 @@ fn initialise_sphere(world: &mut World) {
         (mesh, mat)
     };
 
-
     // Create a sphere entity using the mesh and the material.
     world
         .create_entity()
@@ -158,7 +155,6 @@ fn initialise_lights(world: &mut World) {
     // Add point light.
     world.create_entity().with(light).build();
 }
-
 
 /// This function initialises a camera and adds it to the world.
 fn initialise_camera(world: &mut World) {

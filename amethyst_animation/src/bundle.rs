@@ -37,15 +37,13 @@ impl<'a, 'b, 'c> ECSBundle<'a, 'b> for SamplingBundle<'c> {
         world.add_resource(AssetStorage::<Sampler>::new());
         world.register::<SamplerControlSet>();
 
-        Ok(
-            builder
-                .add(SamplerProcessor::new(), "sampler_processor", &[])
-                .add(
-                    SamplerInterpolationSystem::new(),
-                    "sampler_interpolation_system",
-                    self.dep,
-                ),
-        )
+        Ok(builder
+            .add(SamplerProcessor::new(), "sampler_processor", &[])
+            .add(
+                SamplerInterpolationSystem::new(),
+                "sampler_interpolation_system",
+                self.dep,
+            ))
     }
 }
 

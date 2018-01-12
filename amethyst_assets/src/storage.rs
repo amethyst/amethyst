@@ -26,7 +26,6 @@ impl Allocator {
     }
 }
 
-
 /// An asset storage, storing the actual assets and allocating
 /// handles to them.
 pub struct AssetStorage<A: Asset> {
@@ -146,9 +145,9 @@ impl<A: Asset> AssetStorage<A> {
                     name,
                     tracker,
                 } => {
-                    let (asset, reload_obj) = match data.map(
-                        |FormatValue { data, reload }| (data, reload),
-                    ).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
+                    let (asset, reload_obj) = match data.map(|FormatValue { data, reload }| {
+                        (data, reload)
+                    }).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
                         .chain_err(|| ErrorKind::Asset(name))
                     {
                         Ok(x) => {
@@ -181,9 +180,9 @@ impl<A: Asset> AssetStorage<A> {
                     name,
                     old_reload,
                 } => {
-                    let (asset, reload_obj) = match data.map(
-                        |FormatValue { data, reload }| (data, reload),
-                    ).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
+                    let (asset, reload_obj) = match data.map(|FormatValue { data, reload }| {
+                        (data, reload)
+                    }).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
                         .chain_err(|| ErrorKind::Asset(name))
                     {
                         Ok(x) => x,
@@ -401,11 +400,9 @@ impl<A> WeakHandle<A> {
     /// Tries to upgrade to a `Handle`.
     #[inline]
     pub fn upgrade(&self) -> Option<Handle<A>> {
-        self.id.upgrade().map(|id| {
-            Handle {
-                id,
-                marker: PhantomData,
-            }
+        self.id.upgrade().map(|id| Handle {
+            id,
+            marker: PhantomData,
         })
     }
 
