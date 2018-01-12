@@ -29,7 +29,7 @@ fn main() {
 fn run() -> Result<()> {
     let mut client = NetClientSystem::<NetEvent>::new("127.0.0.1",4545 as u16).expect("Failed to create NetClientSystem");
     client.connect(SocketAddr::new(IpAddr::from_str("127.0.0.1").unwrap(),4546 as u16));
-    
+
     let game = Application::build("",State1)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
