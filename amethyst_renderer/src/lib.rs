@@ -75,8 +75,8 @@ pub use renderer::Renderer;
 pub use resources::{AmbientColor, ScreenDimensions, WindowMessages};
 pub use system::RenderSystem;
 pub use tex::{Texture, TextureBuilder, TextureHandle};
-pub use tex_animation::{Frame, SpriteSheetAnimation, SpriteSheetData, SpriteSheetDataHandle,
-                        TexAnimationSystem};
+pub use tex_animation::{FloatDuration, Frame, SetAnimationError, SpriteSheetAnimation, SpriteSheetData,
+                SpriteSheetDataHandle, TexAnimationSystem};
 pub use types::{Encoder, Factory, PipelineState, Resources};
 pub use vertex::{Attribute, AttributeFormat, Attributes, Color, Normal, PosColor, PosNormTangTex,
                  PosNormTex, PosTex, Position, Query, Separate, Tangent, TexCoord,

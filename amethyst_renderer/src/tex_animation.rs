@@ -1,4 +1,5 @@
-use std::time::Duration;
+use std::fmt::{Display, Error as FmtError, Formatter};
+use std::error::Error;
 
 use amethyst_assets::{Asset, AssetStorage, Handle};
 use amethyst_core::Time;
@@ -36,6 +37,43 @@ impl Into<Result<SpriteSheetData, ()>> for SpriteSheetData {
     }
 }
 
+/// Error returned by the `set_animation` function on the `SpriteSheetAnimation`
+#[derive(Copy, Clone, Debug)]
+pub enum SetAnimationError {
+    /// The handle given for the `SpriteSheetData` was invalid.  HINT: Handles are not valid for
+    /// their first frame of existence.
+    HandleInvalid,
+    /// The named animation was not found in the underlying `SpriteSheetData`.
+    AnimationNotFound,
+}
+
+impl Display for SetAnimationError {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        f.write_str(
+            match self {
+                &SetAnimationError::AnimationNotFound => "Animation was not found.",
+                &SetAnimationError::HandleInvalid => "SpriteSheetData Handle given is invalid."
+            }
+        )
+    }
+}
+
+impl Error for SetAnimationError {
+    fn description(&self) -> &str {
+        match self {
+            &SetAnimationError::AnimationNotFound => "Animation was not found.",
+            &SetAnimationError::HandleInvalid => "SpriteSheetData Handle given is invalid."
+        }
+    }
+
+    fn cause(&self) -> Option<&Error> {
+        None
+    }
+}
+
+/// A duration in seconds expressed via an f32.
+pub type FloatDuration = f32;
+
 /// A component describing the current state of animation for a sprite sheet.
 #[derive(Clone, Debug)]
 pub struct SpriteSheetAnimation {
@@ -51,7 +89,7 @@ pub struct SpriteSheetAnimation {
     /// the animations in sprite_sheet_data.
     current_frame: usize,
     /// How long the current frame has been played for.
-    frame_timer: Duration,
+    frame_timer: FloatDuration,
 }
 
 impl SpriteSheetAnimation {
@@ -80,7 +118,7 @@ impl SpriteSheetAnimation {
                 sprite_sheet_data,
                 current_animation,
                 current_frame: 0,
-                frame_timer: Duration::from_secs(0),
+                frame_timer: 0.0,
             }
         })
 
@@ -92,19 +130,12 @@ impl SpriteSheetAnimation {
     ///
     /// If the name provided can't be found in the `SpriteSheetData` for this component then this
     /// will return `Err` otherwise it will return `Ok`.
-    pub fn set_animation(&mut self, sheet_storage: &AssetStorage<SpriteSheetData>, animation: &str) -> Result<(), ()> {
-        let animation = sheet_storage.get(&self.sprite_sheet_data).and_then(|data| data.animation_mapping.get(animation).map(|i| *i));
-        match animation {
-            Some(animation) => {
-                self.current_animation = animation;
-                self.current_frame = 0;
-                self.frame_timer = Duration::from_secs(0);
-                Ok(())
-            }
-            None => {
-                Err(())
-            }
-        }
+    pub fn set_animation(&mut self, sheet_storage: &AssetStorage<SpriteSheetData>, animation: &str) -> Result<(), SetAnimationError> {
+        let animation = *sheet_storage.get(&self.sprite_sheet_data).ok_or(SetAnimationError::HandleInvalid)?.animation_mapping.get(animation).ok_or(SetAnimationError::AnimationNotFound)?;
+        self.current_animation = animation;
+        self.current_frame = 0;
+        self.frame_timer = 0.0;
+        Ok(())
     }
 
     /// Retrieve frame information for the current frame.
@@ -122,18 +153,17 @@ impl SpriteSheetAnimation {
     /// Advance the current animation by the time given.  Normally this will be called by the
     /// engine by default using the regularly running game clock.  This function is made public so
     /// that you can manually advance the animation if you require.
-    pub fn advance(&mut self, time: Duration, sheet_storage: &AssetStorage<SpriteSheetData>) -> Result<(), ()> {
-        use amethyst_core::timing::duration_f32_mul;
-        self.frame_timer += duration_f32_mul(time, self.playback_speed);
+    pub fn advance(&mut self, time: FloatDuration, sheet_storage: &AssetStorage<SpriteSheetData>) -> Result<(), ()> {
         let mut frame_time = self.current_frame(sheet_storage).ok_or(())?.duration;
+        self.frame_timer += time * self.playback_speed;
         while self.frame_timer >= frame_time {
             self.current_frame += 1;
-            let max_frame = sheet_storage.get(&self.sprite_sheet_data).map(|data| data.animations[self.current_animation].len() - 1).ok_or(())?;
+            let max_frame = sheet_storage.get(&self.sprite_sheet_data).unwrap().animations[self.current_animation].len() - 1;
             if self.current_frame > max_frame {
                 self.current_frame = 0;
             }
             self.frame_timer -= frame_time;
-            frame_time = self.current_frame(sheet_storage).ok_or(())?.duration;
+            frame_time = self.current_frame(sheet_storage).unwrap().duration;
         }
         Ok(())
     }
@@ -151,7 +181,7 @@ pub struct Frame {
     /// Normalized height, 0 is no height and 1 is the full height of the texture
     pub height: f32,
     /// The duration this frame should be played for.
-    pub duration: Duration,
+    pub duration: FloatDuration,
 }
 
 /// A system that automatically advances animations per the system clock.
@@ -165,14 +195,15 @@ impl<'a> System<'a> for TexAnimationSystem {
     );
 
     fn run(&mut self, (time, sheet_storage, mut mat_animation): Self::SystemData) {
+        let delta_time = time.delta_seconds();
         for mat_animation in (&mut mat_animation).join() {
-            mat_animation.albedo_animation.as_mut().map(|anim| anim.advance(time.delta_time(), &sheet_storage));
-            mat_animation.emission_animation.as_mut().map(|anim| anim.advance(time.delta_time(), &sheet_storage));
-            mat_animation.normal_animation.as_mut().map(|anim| anim.advance(time.delta_time(), &sheet_storage));
-            mat_animation.metallic_animation.as_mut().map(|anim| anim.advance(time.delta_time(), &sheet_storage));
-            mat_animation.roughness_animation.as_mut().map(|anim| anim.advance(time.delta_time(), &sheet_storage));
-            mat_animation.ambient_occlusion_animation.as_mut().map(|anim| anim.advance(time.delta_time(), &sheet_storage));
-            mat_animation.caveat_animation.as_mut().map(|anim| anim.advance(time.delta_time(), &sheet_storage));
+            mat_animation.albedo_animation.as_mut().map(|anim| anim.advance(delta_time, &sheet_storage));
+            mat_animation.emission_animation.as_mut().map(|anim| anim.advance(delta_time, &sheet_storage));
+            mat_animation.normal_animation.as_mut().map(|anim| anim.advance(delta_time, &sheet_storage));
+            mat_animation.metallic_animation.as_mut().map(|anim| anim.advance(delta_time, &sheet_storage));
+            mat_animation.roughness_animation.as_mut().map(|anim| anim.advance(delta_time, &sheet_storage));
+            mat_animation.ambient_occlusion_animation.as_mut().map(|anim| anim.advance(delta_time, &sheet_storage));
+            mat_animation.caveat_animation.as_mut().map(|anim| anim.advance(delta_time, &sheet_storage));
         }
     }
 }
