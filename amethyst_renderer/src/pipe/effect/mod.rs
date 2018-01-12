@@ -7,7 +7,7 @@ use std::mem;
 use fnv::FnvHashMap as HashMap;
 use gfx::{Primitive, ShaderSet};
 use gfx::buffer::{Info as BufferInfo, Role as BufferRole};
-use gfx::memory::Usage;
+use gfx::memory::{Usage, Bind};
 use gfx::preset::depth::{LESS_EQUAL_TEST, LESS_EQUAL_WRITE};
 use gfx::pso::buffer::{ElemStride, InstanceRate};
 use gfx::shade::{ProgramError, ToUniform};

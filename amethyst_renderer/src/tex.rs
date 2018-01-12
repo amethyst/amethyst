@@ -9,7 +9,7 @@ use std::marker::PhantomData;
 
 use error::Result;
 use gfx::format::{ChannelType, SurfaceType};
-use gfx::texture::{Info, SamplerInfo};
+use gfx::texture::{Info, SamplerInfo, Mipmap};
 use gfx::traits::Pod;
 
 use formats::TextureData;
@@ -85,7 +85,7 @@ where
 {
     /// Creates a new `TextureBuilder` with the given raw texture data.
     pub fn new(data: D) -> Self {
-        use gfx::SHADER_RESOURCE;
+        use gfx::memory::Bind;
         use gfx::format::{ChannelTyped, SurfaceTyped};
         use gfx::memory::Usage;
         use gfx::texture::{AaMode, Kind};
@@ -96,7 +96,7 @@ where
                 kind: Kind::D2(1, 1, AaMode::Single),
                 levels: 1,
                 format: SurfaceFormat::get_surface_type(),
-                bind: SHADER_RESOURCE,
+                bind: Bind::SHADER_RESOURCE,
                 usage: Usage::Dynamic,
             },
             channel_type: ChannelFormat::get_channel_type(),
@@ -177,7 +177,7 @@ where
         let tex = fac.create_texture_raw(
             self.info,
             Some(self.channel_type),
-            Some(&[cast_slice(data)]),
+            Some((&[cast_slice(data)], Mipmap::Provided)),
         )?;
 
         let desc = ResourceDesc {
