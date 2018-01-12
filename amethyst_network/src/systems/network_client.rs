@@ -21,7 +21,8 @@ use network_server::*;
 use resources::connection::*;
 use std::marker::PhantomData;
 
-use serde::{Serialize,Deserialize};
+use serde::Serialize;
+use serde::de::DeserializeOwned;
 
 pub struct NetClientSystem<T> where T:Send+Sync{
     pub socket:UdpSocket,
@@ -76,7 +77,7 @@ impl<T> NetClientSystem<T> where T:Send+Sync+Serialize+BaseNetEvent<T>{
 //NOTICE ME AT REVIEW
 //NOTICE ME AT REVIEW
 //NOTICE ME AT REVIEW
-impl<'a,T> System<'a> for NetClientSystem<T> where T:Send+Sync+Serialize+Clone+Deserialize<'a>+BaseNetEvent<T>+'static{
+impl<'a, T> System<'a> for NetClientSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+BaseNetEvent<T>+'static{
     type SystemData = (
         FetchMut<'a, EventChannel<NetOwnedEvent<T>>>,
     );
@@ -88,7 +89,7 @@ impl<'a,T> System<'a> for NetClientSystem<T> where T:Send+Sync+Serialize+Clone+D
                 Ok((amt, src)) => { //Data received
                     if self.connection.is_some(){ //Are we connected to anything?
                         if src == self.connection.as_ref().unwrap().target && (self.connection.as_ref().unwrap().state == ConnectionState::Connected || self.connection.as_ref().unwrap().state == ConnectionState::Connecting){ //Was it sent by connected server, and are we still connected to it?
-                            let mut buf2:&'a [u8] = &buf[..amt];
+                            let mut buf2:&[u8] = &buf[..amt];
                             let str_in = str::from_utf8(&buf2);
                             match str_in{
                                 Ok(s)=>{
