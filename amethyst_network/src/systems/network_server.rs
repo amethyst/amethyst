@@ -16,7 +16,8 @@ use std::clone::Clone;
 use resources::connection::*;
 use resources::net_event::*;
 
-use serde::{Serialize,Deserialize};
+use serde::Serialize;
+use serde::de::DeserializeOwned;
 
 pub struct NetServerSystem<T> where T:Send+Sync{
     pub socket:UdpSocket,
@@ -61,7 +62,7 @@ Server->Client Event: Create Entity with Transform(1,1,0,0)+LocalTransform([5,5,
 //NOTICE ME AT REVIEW
 //NOTICE ME AT REVIEW
 //NOTICE ME AT REVIEW
-impl<'a,T> System<'a> for NetServerSystem<T> where T:Send+Sync+Serialize+Deserialize<'a>+'static{
+impl<'a, T> System<'a> for NetServerSystem<T> where T:Send+Sync+Serialize+DeserializeOwned+'static{
     type SystemData = (
         FetchMut<'a, EventChannel<NetOwnedEvent<T>>>,
     );
