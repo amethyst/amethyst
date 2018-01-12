@@ -75,7 +75,10 @@ impl From<DisplayConfig> for WindowBuilder {
         builder.window = attrs;
 
         if cfg.fullscreen {
-            builder = builder.with_fullscreen(winit::get_primary_monitor());
+            // We need an events loop to get the primary monitor
+            // TODO: Is there a better way than just using a temporary?
+            // I can't find where this trait is being used (if anywhere)
+            builder = builder.with_fullscreen(Some(winit::EventsLoop::new().get_primary_monitor()));
         }
 
         builder
@@ -86,7 +89,7 @@ impl From<WindowBuilder> for DisplayConfig {
     fn from(wb: WindowBuilder) -> Self {
         DisplayConfig {
             title: wb.window.title,
-            fullscreen: wb.window.monitor.is_some(),
+            fullscreen: wb.window.fullscreen.is_some(),
             dimensions: wb.window.dimensions,
             max_dimensions: wb.window.max_dimensions,
             min_dimensions: wb.window.min_dimensions,
