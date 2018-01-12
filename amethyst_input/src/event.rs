@@ -39,7 +39,7 @@ pub enum InputEvent<T> {
     /// A button was released.
     ButtonReleased(Button),
     /// The mouse pointer moved on screen
-    MouseMoved { delta_x: f64, delta_y: f64 },
+    CursorMoved { delta_x: f64, delta_y: f64 },
     /// The associated action had one of its keys pressed.
     ActionPressed(T),
     /// The associated action had one of its keys released.
