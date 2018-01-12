@@ -1,5 +1,5 @@
-use std::fmt::{Display, Error as FmtError, Formatter};
 use std::error::Error;
+use std::fmt::{Display, Error as FmtError, Formatter};
 
 use amethyst_assets::{Asset, AssetStorage, Handle};
 use amethyst_core::Time;
@@ -7,7 +7,6 @@ use fnv::FnvHashMap as HashMap;
 use specs::{Fetch, Join, System, VecStorage, WriteStorage};
 
 use MaterialAnimation;
-
 
 /// An asset handle to sprite sheet metadata.
 pub type SpriteSheetDataHandle = Handle<SpriteSheetData>;
@@ -49,12 +48,10 @@ pub enum SetAnimationError {
 
 impl Display for SetAnimationError {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        f.write_str(
-            match self {
-                &SetAnimationError::AnimationNotFound => "Animation was not found.",
-                &SetAnimationError::HandleInvalid => "SpriteSheetData Handle given is invalid."
-            }
-        )
+        f.write_str(match self {
+            &SetAnimationError::AnimationNotFound => "Animation was not found.",
+            &SetAnimationError::HandleInvalid => "SpriteSheetData Handle given is invalid.",
+        })
     }
 }
 
@@ -62,7 +59,7 @@ impl Error for SetAnimationError {
     fn description(&self) -> &str {
         match self {
             &SetAnimationError::AnimationNotFound => "Animation was not found.",
-            &SetAnimationError::HandleInvalid => "SpriteSheetData Handle given is invalid."
+            &SetAnimationError::HandleInvalid => "SpriteSheetData Handle given is invalid.",
         }
     }
 
@@ -111,17 +108,22 @@ impl SpriteSheetAnimation {
     /// existence.
     /// - An animation with the name from `starting_animation` wasn't found in `sprite_sheet_data`.
     /// - The `sprite_sheet_data` handle wasn't made with the `sheet_storage` AssetStorage.
-    pub fn new(playback_speed: f32, sprite_sheet_data: SpriteSheetDataHandle, sheet_storage: &AssetStorage<SpriteSheetData>, starting_animation: &str) -> Option<SpriteSheetAnimation> {
-        sheet_storage.get(&sprite_sheet_data).and_then(|data| data.animation_mapping.get(starting_animation).map(|i| *i)).map(|current_animation| {
-            SpriteSheetAnimation {
+    pub fn new(
+        playback_speed: f32,
+        sprite_sheet_data: SpriteSheetDataHandle,
+        sheet_storage: &AssetStorage<SpriteSheetData>,
+        starting_animation: &str,
+    ) -> Option<SpriteSheetAnimation> {
+        sheet_storage
+            .get(&sprite_sheet_data)
+            .and_then(|data| data.animation_mapping.get(starting_animation).map(|i| *i))
+            .map(|current_animation| SpriteSheetAnimation {
                 playback_speed,
                 sprite_sheet_data,
                 current_animation,
                 current_frame: 0,
                 frame_timer: 0.0,
-            }
-        })
-
+            })
     }
 
     /// Sets the animation to the named case-sensitive animation from the `SpriteSheetData`.
@@ -130,8 +132,17 @@ impl SpriteSheetAnimation {
     ///
     /// If the name provided can't be found in the `SpriteSheetData` for this component then this
     /// will return `Err` otherwise it will return `Ok`.
-    pub fn set_animation(&mut self, sheet_storage: &AssetStorage<SpriteSheetData>, animation: &str) -> Result<(), SetAnimationError> {
-        let animation = *sheet_storage.get(&self.sprite_sheet_data).ok_or(SetAnimationError::HandleInvalid)?.animation_mapping.get(animation).ok_or(SetAnimationError::AnimationNotFound)?;
+    pub fn set_animation(
+        &mut self,
+        sheet_storage: &AssetStorage<SpriteSheetData>,
+        animation: &str,
+    ) -> Result<(), SetAnimationError> {
+        let animation = *sheet_storage
+            .get(&self.sprite_sheet_data)
+            .ok_or(SetAnimationError::HandleInvalid)?
+            .animation_mapping
+            .get(animation)
+            .ok_or(SetAnimationError::AnimationNotFound)?;
         self.current_animation = animation;
         self.current_frame = 0;
         self.frame_timer = 0.0;
@@ -147,18 +158,28 @@ impl SpriteSheetAnimation {
     /// invalid.  Because handles take at least one frame to become valid after being loaded the
     /// handle is the most likely point of failure.
     pub fn current_frame(&self, sheet_storage: &AssetStorage<SpriteSheetData>) -> Option<Frame> {
-        sheet_storage.get(&self.sprite_sheet_data).map(|data| data.frames[data.animations[self.current_animation][self.current_frame]].clone())
+        sheet_storage.get(&self.sprite_sheet_data).map(|data| {
+            data.frames[data.animations[self.current_animation][self.current_frame]].clone()
+        })
     }
 
     /// Advance the current animation by the time given.  Normally this will be called by the
     /// engine by default using the regularly running game clock.  This function is made public so
     /// that you can manually advance the animation if you require.
-    pub fn advance(&mut self, time: FloatDuration, sheet_storage: &AssetStorage<SpriteSheetData>) -> Result<(), ()> {
+    pub fn advance(
+        &mut self,
+        time: FloatDuration,
+        sheet_storage: &AssetStorage<SpriteSheetData>,
+    ) -> Result<(), ()> {
         let mut frame_time = self.current_frame(sheet_storage).ok_or(())?.duration;
         self.frame_timer += time * self.playback_speed;
         while self.frame_timer >= frame_time {
             self.current_frame += 1;
-            let max_frame = sheet_storage.get(&self.sprite_sheet_data).unwrap().animations[self.current_animation].len() - 1;
+            let max_frame = sheet_storage
+                .get(&self.sprite_sheet_data)
+                .unwrap()
+                .animations[self.current_animation]
+                .len() - 1;
             if self.current_frame > max_frame {
                 self.current_frame = 0;
             }
@@ -191,19 +212,40 @@ impl<'a> System<'a> for TexAnimationSystem {
     type SystemData = (
         Fetch<'a, Time>,
         Fetch<'a, AssetStorage<SpriteSheetData>>,
-        WriteStorage<'a, MaterialAnimation>
+        WriteStorage<'a, MaterialAnimation>,
     );
 
     fn run(&mut self, (time, sheet_storage, mut mat_animation): Self::SystemData) {
         let delta_time = time.delta_seconds();
         for mat_animation in (&mut mat_animation).join() {
-            mat_animation.albedo_animation.as_mut().map(|anim| anim.advance(delta_time, &sheet_storage));
-            mat_animation.emission_animation.as_mut().map(|anim| anim.advance(delta_time, &sheet_storage));
-            mat_animation.normal_animation.as_mut().map(|anim| anim.advance(delta_time, &sheet_storage));
-            mat_animation.metallic_animation.as_mut().map(|anim| anim.advance(delta_time, &sheet_storage));
-            mat_animation.roughness_animation.as_mut().map(|anim| anim.advance(delta_time, &sheet_storage));
-            mat_animation.ambient_occlusion_animation.as_mut().map(|anim| anim.advance(delta_time, &sheet_storage));
-            mat_animation.caveat_animation.as_mut().map(|anim| anim.advance(delta_time, &sheet_storage));
+            mat_animation
+                .albedo_animation
+                .as_mut()
+                .map(|anim| anim.advance(delta_time, &sheet_storage));
+            mat_animation
+                .emission_animation
+                .as_mut()
+                .map(|anim| anim.advance(delta_time, &sheet_storage));
+            mat_animation
+                .normal_animation
+                .as_mut()
+                .map(|anim| anim.advance(delta_time, &sheet_storage));
+            mat_animation
+                .metallic_animation
+                .as_mut()
+                .map(|anim| anim.advance(delta_time, &sheet_storage));
+            mat_animation
+                .roughness_animation
+                .as_mut()
+                .map(|anim| anim.advance(delta_time, &sheet_storage));
+            mat_animation
+                .ambient_occlusion_animation
+                .as_mut()
+                .map(|anim| anim.advance(delta_time, &sheet_storage));
+            mat_animation
+                .caveat_animation
+                .as_mut()
+                .map(|anim| anim.advance(delta_time, &sheet_storage));
         }
     }
 }
