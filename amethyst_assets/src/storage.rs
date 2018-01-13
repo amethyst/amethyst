@@ -148,7 +148,7 @@ impl<A: Asset> AssetStorage<A> {
                     let (asset, reload_obj) = match data.map(|FormatValue { data, reload }| {
                         (data, reload)
                     }).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
-                        .chain_err(|| ErrorKind::Asset(name))
+                        .chain_err(|| ErrorKind::Asset(name.clone()))
                     {
                         Ok(x) => {
                             debug!(
@@ -194,17 +194,10 @@ impl<A: Asset> AssetStorage<A> {
                     name,
                     old_reload,
                 } => {
-<<<<<<< d20f6b362c277c49a53871d8370975dbf8be9553
-                    let (asset, reload_obj) = match data.map(|FormatValue { data, reload }| {
-                        (data, reload)
-                    }).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
-                        .chain_err(|| ErrorKind::Asset(name))
-=======
                     let (asset, reload_obj) = match data.map(
                         |FormatValue { data, reload }| (data, reload),
                     ).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
                         .chain_err(|| ErrorKind::Asset(name.clone()))
->>>>>>> Setup basic logging
                     {
                         Ok(x) => x,
                         Err(e) => {
