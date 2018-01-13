@@ -1,10 +1,13 @@
 //! The core engine framework.
 
+use std::io;
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 
 use core::ECSBundle;
+use fern;
+use log::LevelFilter;
 use rayon::ThreadPool;
 use shred::{Resource, RunNow};
 use shrev::{EventChannel, ReaderId};
@@ -309,6 +312,20 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     pub fn new<P: AsRef<Path>>(path: P, initial_state: T) -> Result<Self> {
         use bundle::AppBundle;
         use rustc_version_runtime;
+
+        fern::Dispatch::new()
+            .format(|out, message, record| {
+                out.finish(format_args!(
+                    "[{}][{}] {}",
+                    record.target(),
+                    record.level(),
+                    message
+                ))
+            })
+            .level(LevelFilter::Info)
+            .chain(io::stdout())
+            .apply()
+            .unwrap_or_else(|e| warn!("Application tried to override existing logger: {}", e));
 
         info!("Initializing Amethyst...");
         info!("Version: {}", vergen::semver());

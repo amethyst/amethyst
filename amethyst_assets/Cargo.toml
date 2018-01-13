@@ -26,7 +26,7 @@ derivative = "1.0"
 error-chain = "0.11"
 fnv = "1"
 hibitset = "0.3.1"
-log = "0.3.8"
+log = "0.4"
 parking_lot = "0.4.4"
 rayon = "0.8"
 specs = { version = "0.10", features = ["common"] }
