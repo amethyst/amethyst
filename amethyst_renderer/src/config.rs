@@ -1,6 +1,6 @@
 //! Renderer configuration.
 
-use winit::WindowBuilder;
+use winit::{self, WindowBuilder};
 
 /// Structure for holding the renderer configuration.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -58,27 +58,26 @@ fn default_visibility() -> bool {
     true
 }
 
-impl From<DisplayConfig> for WindowBuilder {
-    fn from(cfg: DisplayConfig) -> Self {
-        use winit::{self, WindowAttributes};
-
+impl DisplayConfig {
+    /// Creates a `winit::WindowBuilder` using the values set in the DisplayConfig
+    ///
+    /// The EventsLoop is needed to configure a fullscreen window
+    pub fn to_windowbuilder(self, el: winit::EventsLoop) -> WindowBuilder {
+        use winit::WindowAttributes;
         let attrs = WindowAttributes {
-            dimensions: cfg.dimensions,
-            max_dimensions: cfg.max_dimensions,
-            min_dimensions: cfg.min_dimensions,
-            title: cfg.title,
-            visible: cfg.visibility,
+            dimensions: self.dimensions,
+            max_dimensions: self.max_dimensions,
+            min_dimensions: self.min_dimensions,
+            title: self.title,
+            visible: self.visibility,
             ..Default::default()
         };
 
         let mut builder = WindowBuilder::new();
         builder.window = attrs;
 
-        if cfg.fullscreen {
-            // We need an events loop to get the primary monitor
-            // TODO: Is there a better way than just using a temporary?
-            // I can't find where this trait is being used (if anywhere)
-            builder = builder.with_fullscreen(Some(winit::EventsLoop::new().get_primary_monitor()));
+        if self.fullscreen {
+            builder = builder.with_fullscreen(Some(el.get_primary_monitor()));
         }
 
         builder
