@@ -4,12 +4,12 @@ use std::cmp::{Ordering, PartialOrd};
 use std::hash::{Hash, Hasher};
 
 use amethyst_assets::{AssetStorage, Loader, WeakHandle};
+use amethyst_core::cgmath::vec4;
 use amethyst_renderer::{Encoder, Factory, Mesh, MeshHandle, PosTex, Resources, ScreenDimensions,
                         Texture, TextureData, TextureHandle, TextureMetadata, VertexFormat};
 use amethyst_renderer::error::Result;
 use amethyst_renderer::pipe::{Effect, NewEffect};
 use amethyst_renderer::pipe::pass::{Pass, PassData};
-use amethyst_core::cgmath::vec4;
 use fnv::FnvHashMap as HashMap;
 use gfx::preset::blend;
 use gfx::pso::buffer::ElemStride;
@@ -68,14 +68,13 @@ pub struct DrawUi {
     next_brush_cache_id: u32,
 }
 
-type GlyphBrushCache =
-    HashMap<
-        u32,
-        (
-            GlyphBrush<'static, Resources, Factory>,
-            WeakHandle<FontAsset>,
-        ),
-    >;
+type GlyphBrushCache = HashMap<
+    u32,
+    (
+        GlyphBrush<'static, Resources, Factory>,
+        WeakHandle<FontAsset>,
+    ),
+>;
 
 impl DrawUi {
     /// Create instance of `DrawUi` pass
@@ -192,7 +191,6 @@ impl Pass for DrawUi {
             });
         }
 
-
         for &mut (ref mut z, entity) in &mut self.cached_draw_order.cache {
             *z = ui_transform.get(entity).unwrap().z;
         }
@@ -223,9 +221,7 @@ impl Pass for DrawUi {
         // change.
         self.cached_draw_order
             .cache
-            .sort_unstable_by(|&(z1, _), &(z2, _)| {
-                z2.partial_cmp(&z1).unwrap_or(Ordering::Equal)
-            });
+            .sort_unstable_by(|&(z1, _), &(z2, _)| z2.partial_cmp(&z1).unwrap_or(Ordering::Equal));
 
         let proj_vec = vec4(
             2. / screen_dimensions.width(),
@@ -400,18 +396,15 @@ impl Pass for DrawUi {
                     let color = if focused.entity == Some(entity) {
                         ed.selected_background_color
                     } else {
-                        [ed.selected_background_color[0] * 0.5,
-                        ed.selected_background_color[1] * 0.5,
-                        ed.selected_background_color[2] * 0.5,
-                        ed.selected_background_color[3] * 0.5,]
+                        [
+                            ed.selected_background_color[0] * 0.5,
+                            ed.selected_background_color[1] * 0.5,
+                            ed.selected_background_color[2] * 0.5,
+                            ed.selected_background_color[3] * 0.5,
+                        ]
                     };
                     tex_storage
-                        .get(&cached_color_texture(
-                            cache,
-                            color,
-                            &loader,
-                            &tex_storage,
-                        ))
+                        .get(&cached_color_texture(cache, color, &loader, &tex_storage))
                         .map(|tex| (tex, (start, end)))
                 }) {
                     effect.data.textures.push(texture.view().clone());

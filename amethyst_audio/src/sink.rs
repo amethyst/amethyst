@@ -21,8 +21,8 @@ impl AudioSink {
 
     /// Adds a source to the sink's queue of music to play.
     pub fn append(&self, source: &Source) -> Result<(), DecoderError> {
-        self.sink.append(Decoder::new(Cursor::new(source.clone()))
-            .map_err(|_| DecoderError)?);
+        self.sink
+            .append(Decoder::new(Cursor::new(source.clone())).map_err(|_| DecoderError)?);
         Ok(())
     }
 

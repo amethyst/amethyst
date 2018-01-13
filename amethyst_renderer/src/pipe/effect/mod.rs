@@ -145,7 +145,11 @@ pub struct NewEffect<'f> {
 
 impl<'f> NewEffect<'f> {
     pub(crate) fn new(fac: &'f mut Factory, out: &'f Target, multisampling: u16) -> Self {
-        NewEffect { factory: fac, out, multisampling }
+        NewEffect {
+            factory: fac,
+            out,
+            multisampling,
+        }
     }
 
     pub fn simple<S: Into<&'f [u8]>>(self, vs: S, ps: S) -> EffectBuilder<'f> {
@@ -175,7 +179,12 @@ pub struct EffectBuilder<'a> {
 }
 
 impl<'a> EffectBuilder<'a> {
-    pub(crate) fn new(fac: &'a mut Factory, out: &'a Target, multisampling: u16, src: ProgramSource<'a>) -> Self {
+    pub(crate) fn new(
+        fac: &'a mut Factory,
+        out: &'a Target,
+        multisampling: u16,
+        src: ProgramSource<'a>,
+    ) -> Self {
         let mut rast = Rasterizer::new_fill().with_cull_back();
         if multisampling > 0 {
             rast.samples = Some(MultiSample);

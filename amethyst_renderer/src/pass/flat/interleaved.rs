@@ -105,19 +105,15 @@ where
 
             let vertex_args = camera
                 .as_ref()
-                .map(|&(ref cam, ref transform)| {
-                    VertexArgs {
-                        proj: cam.proj.into(),
-                        view: transform.0.invert().unwrap().into(),
-                        model: *global.as_ref(),
-                    }
+                .map(|&(ref cam, ref transform)| VertexArgs {
+                    proj: cam.proj.into(),
+                    view: transform.0.invert().unwrap().into(),
+                    model: *global.as_ref(),
                 })
-                .unwrap_or_else(|| {
-                    VertexArgs {
-                        proj: Matrix4::one().into(),
-                        view: Matrix4::one().into(),
-                        model: *global.as_ref(),
-                    }
+                .unwrap_or_else(|| VertexArgs {
+                    proj: Matrix4::one().into(),
+                    view: Matrix4::one().into(),
+                    model: *global.as_ref(),
                 });
 
             let albedo = tex_storage

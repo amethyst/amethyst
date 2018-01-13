@@ -9,7 +9,6 @@ use error::{Error, Result};
 use fnv::FnvHashMap as HashMap;
 use types::{Encoder, Factory};
 
-
 /// Defines how the rendering pipeline should be configured.
 #[derive(Clone, Debug)]
 pub struct Pipeline<L> {
@@ -199,7 +198,6 @@ impl<Q> PipelineBuilder<Queue<Q>> {
     }
 }
 
-
 impl<Q> PipelineBuilder<Q> {
     /// Constructs a new render target for this pipeline.
     pub fn with_target(mut self, tb: TargetBuilder) -> Self {
@@ -250,7 +248,11 @@ pub struct BuildStage<'a> {
 
 impl<'a> BuildStage<'a> {
     fn new(factory: &'a mut Factory, targets: &'a Targets, multisampling: u16) -> Self {
-        BuildStage { factory, targets, multisampling }
+        BuildStage {
+            factory,
+            targets,
+            multisampling,
+        }
     }
 }
 

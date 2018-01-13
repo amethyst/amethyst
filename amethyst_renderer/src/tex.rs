@@ -153,7 +153,6 @@ where
         use gfx::texture::ResourceDesc;
         use std::mem::size_of;
 
-
         // This variable has to live here to make sure the flipped
         // buffer lives long enough. (If one exists)
         let mut v_flip_buffer;

@@ -65,7 +65,6 @@ impl AsRef<[[f32; 4]; 4]> for Transform {
     }
 }
 
-
 impl Borrow<[[f32; 4]; 4]> for Transform {
     fn borrow(&self) -> &[[f32; 4]; 4] {
         self.0.as_ref()

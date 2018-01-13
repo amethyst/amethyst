@@ -119,9 +119,7 @@ impl Pass for DrawShadedSeparate {
             "camera_position",
             camera
                 .as_ref()
-                .map(|&(_, ref trans)| {
-                    [trans.0[3][0], trans.0[3][1], trans.0[3][2]]
-                })
+                .map(|&(_, ref trans)| [trans.0[3][0], trans.0[3][1], trans.0[3][2]])
                 .unwrap_or([0.0; 3]),
         );
 
@@ -160,8 +158,6 @@ impl Pass for DrawShadedSeparate {
             directional_light_count: directional_lights.len() as i32,
         };
 
-
-
         effect.update_constant_buffer("FragmentArgs", &fragment_args, encoder);
         effect.update_buffer("PointLights", &point_lights[..], encoder);
         effect.update_buffer("DirectionalLights", &directional_lights[..], encoder);
@@ -184,19 +180,15 @@ impl Pass for DrawShadedSeparate {
 
             let vertex_args = camera
                 .as_ref()
-                .map(|&(ref cam, ref transform)| {
-                    VertexArgs {
-                        proj: cam.proj.into(),
-                        view: transform.0.invert().unwrap().into(),
-                        model: *global.as_ref(),
-                    }
+                .map(|&(ref cam, ref transform)| VertexArgs {
+                    proj: cam.proj.into(),
+                    view: transform.0.invert().unwrap().into(),
+                    model: *global.as_ref(),
                 })
-                .unwrap_or_else(|| {
-                    VertexArgs {
-                        proj: Matrix4::one().into(),
-                        view: Matrix4::one().into(),
-                        model: *global.as_ref(),
-                    }
+                .unwrap_or_else(|| VertexArgs {
+                    proj: Matrix4::one().into(),
+                    view: Matrix4::one().into(),
+                    model: *global.as_ref(),
                 });
 
             effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);

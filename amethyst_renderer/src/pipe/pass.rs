@@ -40,7 +40,12 @@ impl<P> CompiledPass<P>
 where
     P: Pass,
 {
-    pub(super) fn compile(pass: P, fac: &mut Factory, out: &Target, multisampling: u16) -> Result<Self> {
+    pub(super) fn compile(
+        pass: P,
+        fac: &mut Factory,
+        out: &Target,
+        multisampling: u16,
+    ) -> Result<Self> {
         let effect = pass.compile(NewEffect::new(fac, out, multisampling))?;
         Ok(CompiledPass {
             effect: effect,

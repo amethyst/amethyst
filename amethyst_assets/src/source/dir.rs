@@ -39,15 +39,13 @@ impl Source for Directory {
 
         let path = self.path(path);
 
-        Ok(
-            metadata(&path)
-                .chain_err(|| format!("Failed to fetch metadata for {:?}", path))?
-                .modified()
-                .chain_err(|| "Could not get modification time")?
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_secs(),
-        )
+        Ok(metadata(&path)
+            .chain_err(|| format!("Failed to fetch metadata for {:?}", path))?
+            .modified()
+            .chain_err(|| "Could not get modification time")?
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs())
     }
 
     fn load(&self, path: &str) -> Result<Vec<u8>> {

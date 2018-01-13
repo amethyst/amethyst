@@ -18,7 +18,6 @@ pub struct DisplayConfig {
     pub visibility: bool,
 }
 
-
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct LoggingConfig {
     pub file_path: String,
