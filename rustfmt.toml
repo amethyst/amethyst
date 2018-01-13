@@ -1,6 +1,4 @@
 reorder_imports = true
 reorder_imported_names = true
 reorder_imports_in_group = true
-attributes_on_same_line_as_variant = false
-attributes_on_same_line_as_field = false
-wrap_comments = false
+same_line_attributes = false
