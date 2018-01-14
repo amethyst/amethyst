@@ -145,18 +145,20 @@ fn run() -> Result<(), amethyst::Error> {
             .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
             .with_pass(DrawShadedSeparate::new()),
     );
-
-    let mut game = Application::build(resources_directory, Example)?
+    let mut renderer = None;
+    let game = Application::build(resources_directory, Example)?
         .with_bundle(RenderBundle::new())?
         .with_bundle(AnimationBundle::new())?
         .with_bundle(TransformBundle::new().with_dep(&["animation_control_system"]))?
-        .with_local(RenderSystem::build(pipe, Some(config))?)
+        .world(|world| {
+            renderer = Some(RenderSystem::build(world, pipe, Some(config)));
+        })
+        .with_local(renderer.unwrap()?)
         .with_resource(AssetStorage::<GltfSceneAsset>::new())
         .with(GltfSceneLoaderSystem::new(), "", &[])
-        .register::<Handle<GltfSceneAsset>>()
-        .build()?;
+        .register::<Handle<GltfSceneAsset>>();
 
-    Ok(game.run())
+    Ok(game.build()?.run())
 }
 
 fn main() {

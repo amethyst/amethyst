@@ -64,7 +64,7 @@ fn run() -> Result<()> {
     );
 
     let assets_dir = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
-    let mut pipe = None;
+    let mut renderer = None;
     let game = Application::build(assets_dir, Pong)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
@@ -79,7 +79,7 @@ fn run() -> Result<()> {
         .with_bundle(RenderBundle::new())?
         .with_bundle(UiBundle::new())?
         .world(|world| {
-            pipe = Some({
+            let pipe = {
                 let loader = world.read_resource();
                 let mesh_storage = world.read_resource();
                 Pipeline::build().with_stage(
@@ -88,9 +88,10 @@ fn run() -> Result<()> {
                         .with_pass(DrawFlat::<PosTex>::new())
                         .with_pass(DrawUi::new(&loader, &mesh_storage)),
                 )
-            });
+            };
+            renderer = Some(RenderSystem::build(world, pipe, Some(display_config)));
         })
-        .with_local(RenderSystem::build(pipe.unwrap(), Some(display_config))?);
+        .with_local(renderer.unwrap()?);
     Ok(game.build()?.run())
 }
 
