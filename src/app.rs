@@ -794,17 +794,10 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// needs to have a system that translates AssetFutures into Components as
     /// they resolve. Amethyst registers a system to accomplish this.
     ///
-    /// # Parameters
-    ///
-    /// `make_context`: A closure that returns an initialized `Asset::Context`
-    ///                 object. This is given the a reference to the world object
-    ///                 to allow it to find any resources previously registered.
-    ///
     /// # Type Parameters
     ///
     /// - `A`: The asset type, an `Asset` in reference to Amethyst is a component
     ///        that implements the [`Asset`](../amethyst_assets/trait.Asset.html) trait.
-    /// - `F`: A function that returns the `Asset::Context` context object.
     ///
     /// # Returns
     ///
@@ -822,6 +815,25 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
         self.world.add_resource(AssetStorage::<A>::new());
         self.world.register::<Handle<A>>();
 
+        self
+    }
+
+    /// Calls the function/closure given on the internal world being built.  Allows for arbitrary
+    /// `World` access during construction.
+    ///
+    /// # Parameters
+    ///
+    /// - `f`: The function/closure which will be immediately called on the `World`.
+    ///
+    /// # Returns
+    ///
+    /// This function returns ApplicationBuilder after it has modified it.
+    ///
+    pub fn world<F>(mut self, f: F) -> Self
+    where
+        F: FnOnce(&mut World),
+    {
+        f(&mut self.world);
         self
     }
 

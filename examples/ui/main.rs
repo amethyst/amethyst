@@ -5,14 +5,14 @@ extern crate genmesh;
 
 use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::Time;
-use amethyst::core::cgmath::Vector3;
+use amethyst::core::cgmath::{Deg, Vector3};
 use amethyst::core::cgmath::prelude::InnerSpace;
 use amethyst::core::transform::Transform;
 use amethyst::ecs::{Entity, World};
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light, Mesh, Pipeline,
-                         PngFormat, PointLight, PosNormTex, RenderBundle, RenderSystem, Rgba,
-                         ScreenDimensions, Stage, Texture};
+                         PngFormat, PointLight, PosNormTex, Projection, RenderBundle, RenderSystem,
+                         Rgba, Stage, Texture};
 use amethyst::ui::{DrawUi, FontAsset, TextEditing, TtfFormat, UiBundle, UiFocused, UiImage,
                    UiText, UiTransform};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
@@ -160,22 +160,24 @@ fn run() -> Result<(), amethyst::Error> {
     let resources = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
     let config = DisplayConfig::load(&display_config_path);
 
-    let mut game = Application::build(resources, Example { fps_display: None })?
+    let mut pipe = None;
+    let game = Application::build(resources, Example { fps_display: None })?
         .with_bundle(RenderBundle::new())?
         .with_bundle(UiBundle::new())?
-        .with_bundle(FPSCounterBundle::default())?;
-    let pipe = {
-        let loader = game.world.read_resource();
-        let mesh_storage = game.world.read_resource();
+        .with_bundle(FPSCounterBundle::default())?
+        .world(|world| {
+            pipe = Some({
+                let loader = world.read_resource();
+                let mesh_storage = world.read_resource();
 
-        Pipeline::build().with_stage(
-            Stage::with_backbuffer()
-                .clear_target(BACKGROUND_COLOUR, 1.0)
-                .with_pass(DrawShaded::<PosNormTex>::new())
-                .with_pass(DrawUi::new(&loader, &mesh_storage)),
-        )
-    };
-    game = game.with_local(RenderSystem::build(pipe, Some(config))?);
+                Pipeline::build().with_stage(
+                    Stage::with_backbuffer()
+                        .clear_target(BACKGROUND_COLOUR, 1.0)
+                        .with_pass(DrawShaded::<PosNormTex>::new())
+                        .with_pass(DrawUi::new(&loader, &mesh_storage)),
+                )
+            });
+        }).with_local(RenderSystem::build(pipe.unwrap(), Some(config))?);
     Ok(game.build()?.run())
 }
 
@@ -254,9 +256,12 @@ fn initialise_lights(world: &mut World) {
 
 /// This function initialises a camera and adds it to the world.
 fn initialise_camera(world: &mut World) {
-    let (width, height) = {
-        let dim = world.read_resource::<ScreenDimensions>();
-        (dim.width(), dim.height())
-    };
-    world.add_resource(Camera::standard_3d(width, height));
+    use amethyst::core::cgmath::Matrix4;
+    let transform =
+        Matrix4::from_translation([0.0, 0.0, -4.0].into()) * Matrix4::from_angle_y(Deg(180.));
+    world
+        .create_entity()
+        .with(Camera::from(Projection::perspective(1.3, Deg(60.0))))
+        .with(Transform(transform.into()))
+        .build();
 }
