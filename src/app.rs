@@ -613,17 +613,22 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// # impl State for Example {}
     /// #
     /// # fn run() -> Result<(), ::amethyst::Error> {
-    /// let pipe = Pipeline::build().with_stage(
-    ///     Stage::with_backbuffer()
-    ///         .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-    ///         .with_pass(DrawShaded::<PosNormTex>::new()),
-    /// );
+
     ///
     /// let config = DisplayConfig::load("config_path.ron");
     ///
+    /// let mut renderer = None;
     /// let mut game = Application::build("resources/", Example)?
     /// .with_bundle(RenderBundle::new())?
-    /// .with_local(RenderSystem::build(pipe, Some(config))?)
+    /// .world(|world| {
+    ///     let pipe = Pipeline::build().with_stage(
+    ///         Stage::with_backbuffer()
+    ///             .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
+    ///             .with_pass(DrawShaded::<PosNormTex>::new()),
+    ///     );
+    ///     renderer = Some(RenderSystem::build(world, pipe, Some(config)))
+    /// })
+    /// .with_local(renderer.unwrap()?)
     /// .build()?;
     /// # Ok(())
     /// # }

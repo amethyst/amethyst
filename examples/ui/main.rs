@@ -160,13 +160,13 @@ fn run() -> Result<(), amethyst::Error> {
     let resources = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
     let config = DisplayConfig::load(&display_config_path);
 
-    let mut pipe = None;
+    let mut renderer = None;
     let game = Application::build(resources, Example { fps_display: None })?
         .with_bundle(RenderBundle::new())?
         .with_bundle(UiBundle::new())?
         .with_bundle(FPSCounterBundle::default())?
         .world(|world| {
-            pipe = Some({
+            let pipe = {
                 let loader = world.read_resource();
                 let mesh_storage = world.read_resource();
 
@@ -176,8 +176,9 @@ fn run() -> Result<(), amethyst::Error> {
                         .with_pass(DrawShaded::<PosNormTex>::new())
                         .with_pass(DrawUi::new(&loader, &mesh_storage)),
                 )
-            });
-        }).with_local(RenderSystem::build(pipe.unwrap(), Some(config))?);
+            };
+            renderer = Some(RenderSystem::build(world, pipe, Some(config)));
+        }).with_local(renderer.unwrap()?);
     Ok(game.build()?.run())
 }
 
