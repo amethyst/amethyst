@@ -161,7 +161,7 @@ impl Pass for DrawShadedSeparate {
         effect.update_constant_buffer("FragmentArgs", &fragment_args, encoder);
         effect.update_buffer("PointLights", &point_lights[..], encoder);
         effect.update_buffer("DirectionalLights", &directional_lights[..], encoder);
-        for (mesh, material, global) in (&mesh, &material, &global).join() {
+        'drawable: for (mesh, material, global) in (&mesh, &material, &global).join() {
             let mesh = match mesh_storage.get(mesh) {
                 Some(mesh) => mesh,
                 None => continue,
@@ -174,7 +174,7 @@ impl Pass for DrawShadedSeparate {
             {
                 match mesh.buffer(attrs) {
                     Some(vbuf) => effect.data.vertex_bufs.push(vbuf.clone()),
-                    None => return,
+                    None => continue 'drawable,
                 }
             }
 

@@ -174,7 +174,7 @@ impl Pass for DrawPbmSeparate {
                 .map(|&(_, ref trans)| [trans.0[3][0], trans.0[3][1], trans.0[3][2]])
                 .unwrap_or([0.0; 3]),
         );
-        for (mesh, material, global) in (&mesh, &material, &global).join() {
+        'drawable: for (mesh, material, global) in (&mesh, &material, &global).join() {
             let mesh = match mesh_storage.get(mesh) {
                 Some(mesh) => mesh,
                 None => continue,
@@ -188,7 +188,7 @@ impl Pass for DrawPbmSeparate {
             {
                 match mesh.buffer(attrs) {
                     Some(vbuf) => effect.data.vertex_bufs.push(vbuf.clone()),
-                    None => return,
+                    None => continue 'drawable,
                 }
             }
 

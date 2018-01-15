@@ -90,7 +90,7 @@ impl Pass for DrawFlatSeparate {
             })
             .or_else(|| (&camera, &global).join().next());
 
-        for (mesh, material, global) in (&mesh, &material, &global).join() {
+        'drawable: for (mesh, material, global) in (&mesh, &material, &global).join() {
             let mesh = match mesh_storage.get(mesh) {
                 Some(mesh) => mesh,
                 None => continue,
@@ -102,7 +102,7 @@ impl Pass for DrawFlatSeparate {
             {
                 match mesh.buffer(attrs) {
                     Some(vbuf) => effect.data.vertex_bufs.push(vbuf.clone()),
-                    None => return,
+                    None => continue 'drawable,
                 }
             }
 
