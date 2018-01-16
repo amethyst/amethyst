@@ -26,11 +26,10 @@ profiler = ["thread_profiler/thread_profiler"]
 [dependencies]
 amethyst_core = { path = "../amethyst_core" }
 amethyst_assets = { path = "../amethyst_assets" }
-cgmath = { version = "0.15", features = ["serde", "mint"] }
 derivative = "1.0"
 error-chain = "0.11"
 fnv = "1.0"
-gfx-hal = { version = "0.1.0", features = ["mint", "serde"], git = "https://github.com/omni-viral/gfx.git", branch = "metal_mapping" }
+gfx-hal = { version = "0.1.0", features = ["mint", "serde"], path = "/Users/zakarum/pet/gfx/src/hal" }
 hibitset = { version = "0.4.1" }
 imagefmt = "4.0"
 mint = "0.4"
@@ -43,13 +42,13 @@ shred = "0.5"
 specs = { version = "0.10", git = "https://github.com/slide-rs/specs.git" }
 thread_profiler = { version = "0.1" }
 wavefront_obj = "5.0"
-winit = "0.10"
+winit = "0.9"
 
 [target.'cfg(not(target_os = "macos"))'.dependencies]
 gfx-backend-vulkan = { version = "0.1", optional = true, features = ["glsl-to-spirv"], git = "https://github.com/omni-viral/gfx.git", branch = "metal_mapping" }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-gfx-backend-metal = { version = "0.1", optional = true, features = ["winit"], git = "https://github.com/omni-viral/gfx.git", branch = "metal_mapping" }
+gfx-backend-metal = { version = "0.1", optional = true, features = ["winit"], path = "/Users/zakarum/pet/gfx/src/backend/metal" }
 
 [dev-dependencies]
 genmesh = "0.4"

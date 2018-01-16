@@ -5,7 +5,7 @@
 use std::marker::PhantomData;
 use std::mem::size_of;
 
-use cgmath::{Deg, Matrix4, Point3, SquareMatrix, Transform, Vector3};
+use core::cgmath::{Deg, Matrix4, Point3, SquareMatrix, Transform, Vector3};
 
 use gfx_hal::{Backend, IndexCount, IndexType, Primitive, VertexCount};
 use gfx_hal::buffer::{IndexBufferView, Usage};
@@ -57,7 +57,6 @@ where
         let mut buffer = allocator.create_buffer(
             device,
             len as _,
-            V::VERTEX_FORMAT.stride as _,
             Usage::VERTEX,
             Properties::DEVICE_LOCAL,
             false,
@@ -89,7 +88,6 @@ where
         let mut buffer = allocator.create_buffer(
             device,
             len as _,
-            size_of::<u16>() as _,
             Usage::INDEX,
             Properties::DEVICE_LOCAL,
             false,
@@ -122,7 +120,6 @@ where
         let mut buffer = allocator.create_buffer(
             device,
             len as _,
-            size_of::<u32>() as _,
             Usage::INDEX,
             Properties::DEVICE_LOCAL,
             false,
@@ -352,7 +349,7 @@ where
 
     /// Sets the position of the mesh in 3D space.
     pub fn with_position<P: Into<Point3<f32>>>(mut self, pos: P) -> Self {
-        use cgmath::EuclideanSpace;
+        use core::cgmath::EuclideanSpace;
 
         let trans = Matrix4::from_translation(pos.into().to_vec());
         self.transform.concat_self(&trans);
@@ -496,7 +493,7 @@ impl MeshBuilder {
 
     /// Sets the position of the mesh in 3D space.
     pub fn with_position<P: Into<Point3<f32>>>(mut self, pos: P) -> Self {
-        use cgmath::EuclideanSpace;
+        use core::cgmath::EuclideanSpace;
 
         let trans = Matrix4::from_translation(pos.into().to_vec());
         self.transform.concat_self(&trans);
@@ -552,7 +549,6 @@ impl MeshBuilder {
                             let mut buffer = allocator.create_buffer(
                                 device,
                                 v.len() as _,
-                                f.stride as _,
                                 Usage::VERTEX,
                                 Properties::DEVICE_LOCAL,
                                 false,
@@ -578,7 +574,6 @@ impl MeshBuilder {
                             let mut buffer = allocator.create_buffer(
                                 device,
                                 i.len() as _,
-                                stride as _,
                                 Usage::INDEX,
                                 Properties::DEVICE_LOCAL,
                                 false,

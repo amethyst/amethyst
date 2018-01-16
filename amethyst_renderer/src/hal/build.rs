@@ -148,6 +148,7 @@ impl<'a> HalConfig<'a> {
 
         let mut requests = vec![];
 
+        let mut graphics_id = None;
         {
             let mut push_requests = |qt: Option<(usize, _)>| {
                 requests.extend(qt.and_then(|(count, qf)| {
@@ -159,25 +160,29 @@ impl<'a> HalConfig<'a> {
                 }));
             };
 
-            push_requests(transfer);
-            push_requests(compute);
-            push_requests(graphics);
-            push_requests(general);
+            // push_requests(transfer);
+            // push_requests(compute);
+            if graphics.is_some() {
+                graphics_id = Some(graphics.as_ref().unwrap().1.id());
+                push_requests(graphics);
+            } else {
+                graphics_id = general.as_ref().map(|&(_, ref qf)| qf.id());
+                push_requests(general);
+            }
         }
 
         let Gpu {
             device,
-            queue_groups,
-            memory_types,
+            mut queues,
             ..
         } = adapter.physical_device.open(requests).unwrap();
         let allocator = Allocator::new(
-            memory_types,
+            adapter.physical_device.memory_properties(),
             self.arena_size,
             self.chunk_size,
             self.min_chunk_size,
         );
-        let center = CommandCenter::new(queue_groups);
+        let center = CommandCenter::new(&mut queues, graphics_id);
 
         (device, allocator, center)
     }
@@ -270,5 +275,5 @@ fn find_good_surface_format<B: Backend>(
     adapter: &Adapter<B>,
 ) -> Result<Option<Format>> {
     find_surface_format(surface, adapter, ChannelType::Srgb)
-        .or_else(|| find_surface_format(surface, adapter, ChannelType::Unorm))
+        .or_else(|_| find_surface_format(surface, adapter, ChannelType::Unorm))
 }

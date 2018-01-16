@@ -84,7 +84,7 @@ impl Camera {
     /// of view of 60 degrees.
     /// View transformation will be multiplicative identity.
     pub fn standard_3d(width: f32, height: f32) -> Self {
-        use cgmath::Deg;
+        use core::cgmath::Deg;
         Self::from(Projection::perspective(width / height, Deg(60.)))
     }
 }

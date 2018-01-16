@@ -25,7 +25,7 @@ use specs::World;
 use renderer::gfx_hal::{Device, Instance, QueueFamily, Surface, Swapchain};
 use renderer::gfx_hal::command::{ClearColor, ClearDepthStencil, Rect, Viewport};
 use renderer::gfx_hal::device::Extent;
-// use renderer::gfx_hal::format::{};
+use renderer::gfx_hal::format::{D32Float, AsFormat};
 use renderer::gfx_hal::pso::{EntryPoint, Stage};
 
 use renderer::*;
@@ -89,7 +89,7 @@ fn run() -> Result<()> {
 
     println!("Build graph");    
     let mut graph = {
-        let depth = DepthStencilAttachment::new(Depth32F::SELF).clear(ClearDepthStencil(1.0, 0));
+        let depth = DepthStencilAttachment::new(D32Float::SELF).clear(ClearDepthStencil(1.0, 0));
         let present = ColorAttachment::new(renderer.format)
             .with_clear(ClearColor::Float([0.15, 0.1, 0.2, 1.0]));
         let mut pass = DrawFlat::build()

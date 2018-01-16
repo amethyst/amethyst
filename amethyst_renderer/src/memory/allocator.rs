@@ -121,6 +121,7 @@ where
             coherent: self.coherent(),
             flushed: false,
             ptr,
+            start,
             size,
             memory,
             device,
@@ -174,6 +175,7 @@ pub struct Writer<'a, B: Backend> {
     coherent: bool,
     flushed: bool,
     ptr: *mut u8,
+    start: u64,
     size: usize,
     memory: &'a B::Memory,
     device: &'a B::Device,
@@ -185,7 +187,7 @@ where
 {
     pub fn flush(&mut self) {
         if !self.coherent && !self.flushed {
-            self.device.flush_mapped_memory_ranges(&[(self.memory, 0 .. self.size as u64)]);
+            self.device.flush_mapped_memory_ranges(&[(self.memory, self.start .. (self.start + self.size as u64))]);
             self.flushed = true;
         }
     }

@@ -4,7 +4,7 @@ use core::Transform;
 use core::cgmath::{Deg, Matrix, Matrix4, SquareMatrix};
 use gfx_hal::{Backend, Device};
 use gfx_hal::command::{CommandBuffer, RenderPassInlineEncoder};
-use gfx_hal::format::{B8_G8_R8_A8, Bgra8, Depth, Depth32F, Format, Formatted, Rgba8, Srgb, Srgba8};
+// use gfx_hal::format::{Depth, Depth32F, Format, Formatted, Rgba8, Srgb, Srgba8};
 use gfx_hal::memory::Pod;
 use gfx_hal::pso::{DescriptorSetLayoutBinding, DescriptorSetWrite, DescriptorType,
                    DescriptorWrite, GraphicsShaderSet, ShaderStageFlags, Stage, VertexBufferSet};
@@ -112,7 +112,7 @@ where
         C: Supports<Transfer>,
     {
         /// Update uniform cache
-        for (_, _, tr, ent) in (&tag, mesh.check(), &trs, &*ent).join() {
+        for (_, _, tr, ent) in (&tag, mesh.mask(), &trs, &*ent).join() {
             let trprojview = TrProjView {
                 transform: (*tr).into(),
                 projection: cam.get(ac.entity).unwrap().proj.into(),
@@ -155,7 +155,7 @@ where
                 Entry::Occupied(occupied) => occupied,
             };
 
-            encoder.bind_graphics_descriptor_sets(binder.layout(), 0, &[set]);
+            encoder.bind_graphics_descriptor_sets(binder.layout(), 0, ::std::iter::once(set));
 
             let mut vertex = VertexBufferSet(vec![]);
             mesh.bind(span.end, <Self as Pass<B>>::VERTICES, &mut vertex)

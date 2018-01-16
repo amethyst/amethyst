@@ -11,7 +11,6 @@
 #![deny(unused_must_use)]
 
 extern crate amethyst_core as core;
-extern crate cgmath;
 #[macro_use]
 extern crate derivative;
 #[macro_use]
@@ -44,7 +43,7 @@ pub mod epoch;
 pub mod descriptors;
 pub mod hal;
 pub mod memory;
-// pub mod mesh;
+pub mod mesh;
 pub mod relevant;
 pub mod graph;
 pub mod shaders;
@@ -55,5 +54,5 @@ pub mod upload;
 pub mod uniform;
 pub mod vertex;
 
-// mod components;
+mod components;
 mod utils;
