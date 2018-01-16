@@ -277,7 +277,7 @@ impl<'a> System<'a> for UiSystem {
                     }
                 },
                 Event::WindowEvent {
-                    event: WindowEvent::MouseMoved { position, .. },
+                    event: WindowEvent::CursorMoved { position, .. },
                     ..
                 } => {
                     self.mouse_position = (position.0 as f32, position.1 as f32);

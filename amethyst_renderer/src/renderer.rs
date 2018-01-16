@@ -7,7 +7,7 @@ use pipe::{ColorBuffer, DepthBuffer, PipelineBuild, PipelineData, PolyPipeline, 
            TargetBuilder};
 use tex::{Texture, TextureBuilder};
 use types::{ColorFormat, DepthFormat, Device, Encoder, Factory, Window};
-use winit::{self, EventsLoop, Window as WinitWindow, WindowBuilder};
+use winit::{EventsLoop, Window as WinitWindow, WindowBuilder};
 
 /// Generic renderer.
 pub struct Renderer {
@@ -74,7 +74,7 @@ impl Renderer {
         #[cfg(feature = "opengl")]
         use glutin::GlContext;
 
-        if let Some(size) = self.window().get_inner_size_pixels() {
+        if let Some(size) = self.window().get_inner_size() {
             if size != self.cached_size {
                 self.cached_size = size;
                 self.resize(pipe, size);
@@ -164,7 +164,7 @@ impl RendererBuilder {
             .with_visibility(self.config.visibility);
 
         if self.config.fullscreen {
-            wb = wb.with_fullscreen(winit::get_primary_monitor());
+            wb = wb.with_fullscreen(Some(self.events.get_primary_monitor()));
         }
         match self.config.dimensions {
             Some((width, height)) => {
@@ -200,7 +200,7 @@ impl RendererBuilder {
             init_backend(self.winit_builder.clone(), &self.events, &self.config)?;
 
         let cached_size = window
-            .get_inner_size_pixels()
+            .get_inner_size()
             .expect("Unable to fetch window size, as the window went away!");
         let encoder = factory.create_command_buffer().into();
         Ok(Renderer {
@@ -284,7 +284,7 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> R
         .with_gl(GlRequest::Latest);
 
     let (win, dev, fac, color, depth) = win::init::<ColorFormat, DepthFormat>(wb, ctx, el);
-    let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
+    let size = win.get_inner_size().ok_or(Error::WindowDestroyed)?;
     let main_target = Target::new(
         ColorBuffer {
             as_input: None,

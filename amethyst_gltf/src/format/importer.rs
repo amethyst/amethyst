@@ -189,6 +189,7 @@ pub fn get_image_data(
             if let Some(ty) = mime_type {
                 Ok((data, ImageFormat::from_mime_type(ty)))
             } else {
+                #[allow(unused_imports)]
                 use std::ascii::AsciiExt;
                 let ext = path.extension()
                     .and_then(|s| s.to_str())
