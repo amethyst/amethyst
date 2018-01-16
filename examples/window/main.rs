@@ -34,21 +34,20 @@ fn run() -> Result<(), amethyst::Error> {
     );
     let config = DisplayConfig::load(&path);
 
-    let pipe = Pipeline::build().with_stage(
-        Stage::with_backbuffer()
-            .clear_target([0.00196, 0.23726, 0.21765, 1.0], 1.0)
-            .with_pass(DrawFlat::<PosNormTex>::new()),
-    );
 
-    let mut game = Application::build("./", Example)?
+    let mut renderer = None;
+    let game = Application::build("./", Example)?
         .with_bundle(RenderBundle::new())?
-        .with_local(RenderSystem::build(pipe, Some(config))?)
-        .build()
-        .expect("Fatal error");
-
-    game.run();
-
-    Ok(())
+        .world(|world| {
+            let pipe = Pipeline::build().with_stage(
+                Stage::with_backbuffer()
+                    .clear_target([0.00196, 0.23726, 0.21765, 1.0], 1.0)
+                    .with_pass(DrawFlat::<PosNormTex>::new()),
+            );
+            renderer = Some(RenderSystem::build(world, pipe, Some(config)));
+        })
+        .with_local(renderer.unwrap()?);
+    Ok(game.build()?.run())
 }
 
 fn main() {

@@ -17,20 +17,21 @@ fn run() -> Result<()> {
     );
 
     let config = DisplayConfig::load(&path);
-
-    let pipe = Pipeline::build().with_stage(
-        Stage::with_backbuffer()
-            .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawFlat::<PosTex>::new()),
-    );
-
-    let mut game = Application::build("./", Pong)?
+    let mut renderer = None;
+    let game = Application::build("./", Pong)?
         .with_bundle(TransformBundle::new())?
         .with_bundle(RenderBundle::new())?
-        .with_local(RenderSystem::build(pipe, Some(config))?)
-        .build()?;
+        .world(|world| {
+            let pipe = Pipeline::build().with_stage(
+                Stage::with_backbuffer()
+                    .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
+                    .with_pass(DrawFlat::<PosTex>::new()),
+            );
+            renderer = Some(RenderSystem::build(world, pipe, Some(config)))
+        })
+        .with_local(renderer.unwrap()?);
 
-    Ok(game.run())
+    Ok(game.build()?.run())
 }
 
 fn main() {

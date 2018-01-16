@@ -2,7 +2,7 @@
 amethyst_assets/target
 amethyst_config/target
 amethyst_renderer/target
-book/html
+book/book
 target
 Cargo.lock
 

@@ -144,17 +144,17 @@ fn run() -> Result<(), Error> {
             .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
             .with_pass(DrawShaded::<PosNormTex>::new()),
     );
-
-    let mut game = Application::build(resources_directory, AssetsExample)
+    let mut renderer = None;
+    let game = Application::build(resources_directory, AssetsExample)
         .expect("Failed to build ApplicationBuilder for an unknown reason.")
         .with_bundle(InputBundle::<String, String>::new())?
         .with_bundle(TransformBundle::new())?
         .with_bundle(RenderBundle::new())?
-        .with_local(RenderSystem::build(pipeline_builder, Some(display_config))?)
-        .build()?;
-
-    game.run();
-    Ok(())
+        .world(|world| {
+            renderer = Some(RenderSystem::build(world, pipeline_builder, Some(display_config)));
+        })
+        .with_local(renderer.unwrap()?);
+    Ok(game.build()?.run())
 }
 
 fn initialise_camera(world: &mut World) {

@@ -131,9 +131,13 @@ fn run() -> Result<(), amethyst::Error> {
             .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
             .with_pass(DrawPbm::<PosNormTangTex>::new()),
     );
+    let mut renderer = None;
     let mut game = Application::build(&resources, Example)?
         .with_bundle(RenderBundle::new())?
-        .with_local(RenderSystem::build(pipe, Some(config))?)
+        .world(|world| {
+            renderer = Some(RenderSystem::build(world, pipe, Some(config)));
+        })
+        .with_local(renderer.unwrap()?)
         .build()?;
     Ok(game.run())
 }

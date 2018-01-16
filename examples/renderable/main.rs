@@ -381,7 +381,7 @@ fn run() -> Result<(), Error> {
     );
 
     let display_config = DisplayConfig::load(display_config_path);
-
+    let mut renderer = None;
     let game = Application::build(resources_directory, Example)?
         .with::<ExampleSystem>(ExampleSystem, "example_system", &[])
         .with_frame_limit(FrameRateLimitStrategy::Unlimited, 0)
@@ -389,23 +389,22 @@ fn run() -> Result<(), Error> {
         .with_bundle(RenderBundle::new())?
         .with_bundle(UiBundle::new())?
         .with_bundle(HotReloadBundle::default())?
-        .with_bundle(FPSCounterBundle::default())?;
-    let pipeline_builder = {
-        let loader = game.world.read_resource();
-        let mesh_storage = game.world.read_resource();
+        .with_bundle(FPSCounterBundle::default())?
+        .world(|world| {
+            let pipe = {
+                let loader = world.read_resource();
+                let mesh_storage = world.read_resource();
 
-        Pipeline::build().with_stage(
-            Stage::with_backbuffer()
-                .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-                .with_pass(DrawShaded::<PosNormTex>::new())
-                .with_pass(DrawUi::new(&loader, &mesh_storage)),
-        )
-    };
-    let mut game = game.with_local(RenderSystem::build(pipeline_builder, Some(display_config))?)
-        .build()?;
-
-    game.run();
-    Ok(())
+                Pipeline::build().with_stage(
+                    Stage::with_backbuffer()
+                        .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
+                        .with_pass(DrawShaded::<PosNormTex>::new())
+                        .with_pass(DrawUi::new(&loader, &mesh_storage)),
+                )
+            };
+            renderer = Some(RenderSystem::build(world, pipe, Some(display_config)));
+        }).with_local(renderer.unwrap()?);
+    Ok(game.build()?.run())
 }
 
 fn initialise_camera(world: &mut World) {
