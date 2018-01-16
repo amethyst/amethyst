@@ -13,11 +13,11 @@ use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::timing::Time;
 use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::ecs::{Entity, Fetch, FetchMut, Join, ReadStorage, System, World, WriteStorage};
-use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, DisplayConfig as DisplayConfig,
-                         DrawShaded, ElementState, Event, KeyboardInput, Light, Material,
-                         MaterialDefaults, MeshHandle, ObjFormat, Pipeline, PngFormat, PointLight,
-                         PosNormTex, Projection, RenderBundle, RenderSystem, Rgba, Stage,
-                         VirtualKeyCode, WindowEvent};
+use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, DisplayConfig, DrawShaded,
+                         ElementState, Event, KeyboardInput, Light, Material, MaterialDefaults,
+                         MeshHandle, ObjFormat, Pipeline, PngFormat, PointLight, PosNormTex,
+                         Projection, RenderBundle, RenderSystem, Rgba, Stage, VirtualKeyCode,
+                         WindowEvent};
 use amethyst::ui::{DrawUi, FontHandle, TtfFormat, UiBundle, UiText, UiTransform};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 
@@ -29,8 +29,7 @@ struct DemoState {
     directional_light: bool,
     camera_angle: f32,
     fps_display: Entity,
-    #[allow(dead_code)]
-    pipeline_forward: bool, // TODO
+    #[allow(dead_code)] pipeline_forward: bool, // TODO
 }
 
 struct ExampleSystem;
@@ -183,7 +182,15 @@ impl State for Example {
 
         let fps_display = world
             .create_entity()
-            .with(UiTransform::new("fps".to_string(), 0., 0., 1., 200., 50., 0))
+            .with(UiTransform::new(
+                "fps".to_string(),
+                0.,
+                0.,
+                1.,
+                200.,
+                50.,
+                0,
+            ))
             .with(UiText::new(
                 assets.font.clone(),
                 "N/A".to_string(),
@@ -374,7 +381,6 @@ fn run() -> Result<(), Error> {
     );
 
     let display_config = DisplayConfig::load(display_config_path);
-
 
     let game = Application::build(resources_directory, Example)?
         .with::<ExampleSystem>(ExampleSystem, "example_system", &[])

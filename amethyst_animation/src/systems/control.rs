@@ -392,22 +392,16 @@ fn check_control_set_termination(control_set: &SamplerControlSet) -> bool {
     control_set
         .translation
         .as_ref()
-        .map(|t| {
-            t.state == ControlState::Done || t.state == ControlState::Requested
-        })
+        .map(|t| t.state == ControlState::Done || t.state == ControlState::Requested)
         .unwrap_or(true)
         && control_set
             .rotation
             .as_ref()
-            .map(|r| {
-                r.state == ControlState::Done || r.state == ControlState::Requested
-            })
+            .map(|r| r.state == ControlState::Done || r.state == ControlState::Requested)
             .unwrap_or(true)
         && control_set
             .scale
             .as_ref()
-            .map(|s| {
-                s.state == ControlState::Done || s.state == ControlState::Requested
-            })
+            .map(|s| s.state == ControlState::Done || s.state == ControlState::Requested)
             .unwrap_or(true)
 }

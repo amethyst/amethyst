@@ -72,7 +72,6 @@ impl From<SerError> for ConfigError {
     }
 }
 
-
 impl Error for ConfigError {
     fn description(&self) -> &str {
         match *self {

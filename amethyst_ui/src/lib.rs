@@ -6,7 +6,6 @@
 extern crate amethyst_assets;
 extern crate amethyst_core;
 extern crate amethyst_renderer;
-extern crate cgmath;
 extern crate clipboard;
 #[macro_use]
 extern crate derivative;

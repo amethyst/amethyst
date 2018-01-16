@@ -70,12 +70,14 @@ where
                 ..
             } => if self.pressed_keys.iter().all(|&k| k.0 != key_code) {
                 self.pressed_keys.push((key_code, scancode));
-                event_handler
-                    .iter_write([
+                event_handler.iter_write(
+                    [
                         KeyPressed { key_code, scancode },
                         ButtonPressed(Button::Key(key_code)),
                         ButtonPressed(Button::ScanCode(scancode)),
-                    ].iter().cloned());
+                    ].iter()
+                        .cloned(),
+                );
                 for (k, v) in self.bindings.actions.iter() {
                     for &button in v {
                         if Button::Key(key_code) == button {
@@ -100,12 +102,14 @@ where
                 let index = self.pressed_keys.iter().position(|&k| k.0 == key_code);
                 if let Some(i) = index {
                     self.pressed_keys.swap_remove(i);
-                    event_handler
-                        .iter_write([
+                    event_handler.iter_write(
+                        [
                             KeyReleased { key_code, scancode },
                             ButtonReleased(Button::Key(key_code)),
                             ButtonReleased(Button::ScanCode(scancode)),
-                        ].iter().cloned());
+                        ].iter()
+                            .cloned(),
+                    );
                     for (k, v) in self.bindings.actions.iter() {
                         for &button in v {
                             if Button::Key(key_code) == button {
@@ -129,11 +133,13 @@ where
                     .all(|&b| b != mouse_button)
                 {
                     self.pressed_mouse_buttons.push(mouse_button);
-                    event_handler
-                        .iter_write([
+                    event_handler.iter_write(
+                        [
                             MouseButtonPressed(mouse_button),
                             ButtonPressed(Button::Mouse(mouse_button)),
-                        ].iter().cloned());
+                        ].iter()
+                            .cloned(),
+                    );
                     for (k, v) in self.bindings.actions.iter() {
                         for &button in v {
                             if Button::Mouse(mouse_button) == button {
@@ -154,11 +160,13 @@ where
                     .position(|&b| b == mouse_button);
                 if let Some(i) = index {
                     self.pressed_mouse_buttons.swap_remove(i);
-                    event_handler
-                        .iter_write([
+                    event_handler.iter_write(
+                        [
                             MouseButtonReleased(mouse_button),
                             ButtonReleased(Button::Mouse(mouse_button)),
-                        ].iter().cloned());
+                        ].iter()
+                            .cloned(),
+                    );
                     for (k, v) in self.bindings.actions.iter() {
                         for &button in v {
                             if Button::Mouse(mouse_button) == button {
@@ -168,11 +176,11 @@ where
                     }
                 }
             }
-            WindowEvent::MouseMoved {
+            WindowEvent::CursorMoved {
                 position: (x, y), ..
             } => {
                 if let Some((old_x, old_y)) = self.mouse_position {
-                    event_handler.single_write(MouseMoved {
+                    event_handler.single_write(CursorMoved {
                         delta_x: x - old_x,
                         delta_y: y - old_y,
                     });
@@ -277,8 +285,9 @@ where
     where
         AC: Borrow<T>,
     {
-        self.bindings.actions.get(action).map(|ref buttons| {
-            buttons.iter().any(|&b| self.button_is_down(b))
-        })
+        self.bindings
+            .actions
+            .get(action)
+            .map(|ref buttons| buttons.iter().any(|&b| self.button_is_down(b)))
     }
 }

@@ -124,8 +124,6 @@ impl Time {
         self.absolute_real_time += self.delta_real_time;
     }
 
-
-
     /// Sets both `fixed_seconds` and `fixed_time` based on the seconds given.
     pub fn set_fixed_seconds(&mut self, secs: f32) {
         self.fixed_seconds = secs;

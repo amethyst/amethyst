@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Rhuagh <seamonr@gmail.com>"]
 description = "GLTF asset loading"
 
-documentation = "https://www.amethyst.rs/doc/master/amethyst_gltf/"
+documentation = "https://www.amethyst.rs/doc/master/doc/amethyst_gltf/"
 homepage = "https://www.amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
@@ -23,7 +23,7 @@ base64 = "0.7"
 fnv = "1"
 gltf = "0.9"
 gltf-utils = "0.9"
-gfx = "0.16"
+gfx = "0.17"
 imagefmt = "4.0"
 itertools = "0.7"
 specs = "0.10"

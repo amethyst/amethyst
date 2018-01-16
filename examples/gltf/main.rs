@@ -74,9 +74,10 @@ impl State for Example {
         camera_transform.rotation = camera_orientation.into();
         world
             .create_entity()
-            .with(Camera::from(
-                Projection::perspective(1024. / 768., Deg(60.)),
-            ))
+            .with(Camera::from(Projection::perspective(
+                1024. / 768.,
+                Deg(60.),
+            )))
             .with(Transform::default())
             .with(camera_transform)
             .build();

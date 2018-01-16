@@ -68,8 +68,7 @@ impl<'s> System<'s> for WinnerSystem {
                 // Print the score board.
                 println!(
                     "Score: | {:^3} | {:^3} |",
-                    score_board.score_left,
-                    score_board.score_right
+                    score_board.score_left, score_board.score_right
                 );
 
                 // Play audio.

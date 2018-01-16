@@ -27,7 +27,7 @@ Read a summary of what happened this past week at [*This Week in Amethyst*][tw].
 
 ## Vision
 
-Amethyst is a fast, [data-oriented](https://www.amethyst.rs/book/master/html/glossary.html#data-driven-design), and data-driven game engine suitable
+Amethyst is a fast, [data-oriented](https://www.amethyst.rs/book/master/book/glossary.html#data-oriented-programming), and data-driven game engine suitable
 for rapid prototyping and iteration. It also tries to push the
 [Rust programming language][rs] to its limits, driving further improvement and
 hopefully attracting more game developers toward the young and vibrant Rust
@@ -70,7 +70,7 @@ does not aim to be API-compatible with it in any way. Some goals include:
 Read the [online book][bk] for a comprehensive tutorial to using Amethyst. There
 is also an online crate-level [API reference][ar].
 
-[bk]: https://www.amethyst.rs/book/master/html/
+[bk]: https://www.amethyst.rs/book/master/book/
 
 
 
@@ -80,7 +80,7 @@ See the [Getting Started][gs] chapter in the book for the full-blown "Hello,
 World!" tutorial. For the sake of brevity, you can generate an empty game
 project with `cargo` and build it. Follow along below:
 
-[gs]: https://www.amethyst.rs/book/master/html/getting_started.html
+[gs]: https://www.amethyst.rs/book/master/book/getting_started.html
 
 ## Building Documentation
 

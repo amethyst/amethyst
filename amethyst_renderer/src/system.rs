@@ -58,7 +58,7 @@ where
 
     /// Create a new render system
     pub fn new(pipe: P, renderer: Renderer) -> Self {
-        let cached_size = renderer.window().get_inner_size_pixels().unwrap();
+        let cached_size = renderer.window().get_inner_size().unwrap();
         Self {
             pipe,
             renderer,
@@ -95,7 +95,7 @@ where
             command(self.renderer.window());
         }
 
-        if let Some(size) = self.renderer.window().get_inner_size_pixels() {
+        if let Some(size) = self.renderer.window().get_inner_size() {
             // Send window size changes to the resource
             if size
                 != (
@@ -167,12 +167,12 @@ where
 fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
     match new_event {
         Event::WindowEvent { ref event, .. } => match event {
-            &WindowEvent::MouseMoved { .. } => {
+            &WindowEvent::CursorMoved { .. } => {
                 let mut iter = vec.iter_mut();
                 while let Some(stored_event) = iter.next_back() {
                     match stored_event {
                         &mut Event::WindowEvent {
-                            event: WindowEvent::MouseMoved { .. },
+                            event: WindowEvent::CursorMoved { .. },
                             ..
                         } => {
                             mem::replace(stored_event, new_event.clone());
@@ -218,7 +218,7 @@ fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
                         },
 
                         &mut Event::WindowEvent {
-                            event: WindowEvent::MouseMoved { .. },
+                            event: WindowEvent::CursorMoved { .. },
                             ..
                         } => {}
 
@@ -257,7 +257,7 @@ fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
                     },
 
                     &mut Event::WindowEvent {
-                        event: WindowEvent::MouseMoved { .. },
+                        event: WindowEvent::CursorMoved { .. },
                         ..
                     } => {}
 

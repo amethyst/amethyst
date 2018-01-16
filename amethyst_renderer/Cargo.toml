@@ -1,13 +1,13 @@
 [package]
 name = "amethyst_renderer"
-version = "0.6.0"
+version = "0.6.1"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
 description = "High-level rendering engine with multiple backends"
 exclude = ["examples/*"]
 keywords = ["game", "engine", "renderer", "3d", "amethyst"]
 categories = ["rendering", "rendering::engine"]
 
-documentation = "https://www.amethyst.rs/doc/master/amethyst_renderer/"
+documentation = "https://www.amethyst.rs/doc/master/doc/amethyst_renderer/"
 homepage = "https://www.amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
@@ -31,8 +31,8 @@ amethyst_core = { path = "../amethyst_core", version = "0.1.0" }
 derivative = "1.0"
 error-chain = "0.11"
 fnv = "1.0"
-gfx = { version = "0.16", features = ["serialize"] }
-gfx_core = { version = "0.7", features = ["serialize"] }
+gfx = { version = "0.17", features = ["serialize"] }
+gfx_core = { version = "0.8", features = ["serialize"] }
 gfx_macros = "0.2"
 imagefmt = "4.0"
 rayon = "0.8"
@@ -41,11 +41,11 @@ serde_derive = "1.0"
 shred = "0.5"
 shrev = "0.8"
 wavefront_obj = "5.0"
-winit = "0.7"
+winit = "0.10"
 
-gfx_device_gl = { version = "0.14", optional = true }
-gfx_window_glutin = { version = "0.17", optional = true }
-glutin = { version = "0.9", optional = true }
+gfx_device_gl = { version = "0.15", optional = true }
+gfx_window_glutin = { version = "0.20", optional = true }
+glutin = { version = "0.12", optional = true }
 
 [target.'cfg(not(target_os = "macos"))'.dependencies]
 gfx_device_vulkan = { version = "0.1", optional = true }

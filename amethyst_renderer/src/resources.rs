@@ -68,11 +68,17 @@ impl ScreenDimensions {
     }
 
     /// Returns the current width of the window.
+    ///
+    /// This is returned as a float for user convenience, as this is typically used with other
+    /// float values.  This will only ever be a non-negative integer though.
     pub fn width(&self) -> f32 {
         self.w
     }
 
     /// Returns the current height of the window.
+    ///
+    /// This is returned as a float for user convenience, as this is typically used with other
+    /// float values.  This will only ever be a non-negative integer though.
     pub fn height(&self) -> f32 {
         self.h
     }
@@ -84,6 +90,10 @@ impl ScreenDimensions {
 
     /// Updates the width and height of the screen and recomputes the aspect
     /// ratio.
+    ///
+    /// Only use this if you need to programmatically set the resolution of your game.
+    /// This resource is updated automatically by the engine when a resize occurs so you don't need
+    /// this unless you want to resize the game window.
     pub fn update(&mut self, w: u32, h: u32) {
         self.w = w as f32;
         self.h = h as f32;

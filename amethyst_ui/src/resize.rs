@@ -35,9 +35,7 @@ impl<'a> System<'a> for ResizeSystem {
     );
 
     fn run(&mut self, (mut transform, mut resize, events): Self::SystemData) {
-        for event in events
-            .read(&mut self.event_reader)
-        {
+        for event in events.read(&mut self.event_reader) {
             if let &Event::WindowEvent {
                 event: WindowEvent::Resized(width, height),
                 ..

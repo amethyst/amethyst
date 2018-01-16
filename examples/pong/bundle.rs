@@ -19,20 +19,18 @@ impl<'a, 'b> ECSBundle<'a, 'b> for PongBundle {
         world.register::<Ball>();
         world.register::<Paddle>();
 
-        Ok(
-            builder
-                .add(PaddleSystem, "paddle_system", &["input_system"])
-                .add(MoveBallsSystem, "ball_system", &[])
-                .add(
-                    BounceSystem,
-                    "collision_system",
-                    &["paddle_system", "ball_system"],
-                )
-                .add(
-                    WinnerSystem,
-                    "winner_system",
-                    &["paddle_system", "ball_system"],
-                ),
-        )
+        Ok(builder
+            .add(PaddleSystem, "paddle_system", &["input_system"])
+            .add(MoveBallsSystem, "ball_system", &[])
+            .add(
+                BounceSystem,
+                "collision_system",
+                &["paddle_system", "ball_system"],
+            )
+            .add(
+                WinnerSystem,
+                "winner_system",
+                &["paddle_system", "ball_system"],
+            ))
     }
 }

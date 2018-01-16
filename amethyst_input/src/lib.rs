@@ -36,10 +36,8 @@ mod bundle;
 // This entire set ot types is to be eliminated once impl Trait is released.
 
 /// Iterator over keycodes
-pub type KeyCodes<'a> = Map<
-    Iter<'a, (VirtualKeyCode, u32)>,
-    fn(&(VirtualKeyCode, u32)) -> VirtualKeyCode,
->;
+pub type KeyCodes<'a> =
+    Map<Iter<'a, (VirtualKeyCode, u32)>, fn(&(VirtualKeyCode, u32)) -> VirtualKeyCode>;
 
 /// Iterator over key scan codes
 pub type ScanCodes<'a> = Map<Iter<'a, (VirtualKeyCode, u32)>, fn(&(VirtualKeyCode, u32)) -> u32>;

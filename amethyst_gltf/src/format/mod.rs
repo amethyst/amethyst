@@ -128,9 +128,7 @@ fn load_gltf(
 ) -> Result<GltfSceneAsset, GltfError> {
     import(source.clone(), name)
         .map_err(GltfError::GltfImporterError)
-        .and_then(|(gltf, buffers)| {
-            load_data(&gltf, &buffers, &options, source, name)
-        })
+        .and_then(|(gltf, buffers)| load_data(&gltf, &buffers, &options, source, name))
 }
 
 fn load_data(
@@ -293,15 +291,14 @@ fn load_material(
     );
 
     let em_factor = material.emissive_factor();
-    let emissive = load_texture_with_factor(
-        material.emissive_texture(),
-        [em_factor[0], em_factor[1], em_factor[2], 1.0],
-        buffers,
-        source.clone(),
-        name,
-    ).map(|(texture, factor)| {
-        (GltfTexture::new(texture), [factor[0], factor[1], factor[2]])
-    })?;
+    let emissive =
+        load_texture_with_factor(
+            material.emissive_texture(),
+            [em_factor[0], em_factor[1], em_factor[2], 1.0],
+            buffers,
+            source.clone(),
+            name,
+        ).map(|(texture, factor)| (GltfTexture::new(texture), [factor[0], factor[1], factor[2]]))?;
 
     // Can't use map/and_then because of Result returning from the load_texture function
     let normal = match material.normal_texture() {
@@ -500,7 +497,6 @@ fn load_node(
     local_transform.rotation = [rotation[3], rotation[0], rotation[1], rotation[2]].into();
     local_transform.scale = scale.into();
 
-
     Ok(GltfNode {
         primitives,
         children,
@@ -593,9 +589,11 @@ fn load_mesh(
                 faces
                     .iter()
                     .map(|i| {
-                        Separate::<Tangent>::new(
-                            [tangents[*i][0], tangents[*i][1], tangents[*i][2]],
-                        )
+                        Separate::<Tangent>::new([
+                            tangents[*i][0],
+                            tangents[*i][1],
+                            tangents[*i][2],
+                        ])
                     })
                     .collect()
             }

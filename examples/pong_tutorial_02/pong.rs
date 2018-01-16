@@ -1,10 +1,10 @@
-use amethyst::prelude::*;
-use amethyst::ecs::{Component, DenseVecStorage};
 use amethyst::assets::Loader;
 use amethyst::core::cgmath::Vector3;
 use amethyst::core::transform::{LocalTransform, Transform};
-use amethyst::renderer::{Camera, Material, MaterialDefaults, PosTex, MeshHandle, Event,
-                         KeyboardInput, VirtualKeyCode, WindowEvent};
+use amethyst::ecs::{Component, DenseVecStorage};
+use amethyst::prelude::*;
+use amethyst::renderer::{Camera, Event, KeyboardInput, Material, MaterialDefaults, MeshHandle,
+                         PosTex, VirtualKeyCode, WindowEvent};
 
 const PADDLE_HEIGHT: f32 = 0.30;
 const PADDLE_WIDTH: f32 = 0.05;
@@ -20,9 +20,8 @@ impl State for Pong {
     }
     fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
         match event {
-            Event::WindowEvent { event, .. } => {
-                match event {
-                    WindowEvent::KeyboardInput {
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::KeyboardInput {
                     input:
                         KeyboardInput {
                             virtual_keycode: Some(VirtualKeyCode::Escape),
@@ -30,9 +29,8 @@ impl State for Pong {
                         },
                     ..
                 } => Trans::Quit,
-                    _ => Trans::None,
-                }
-            }
+                _ => Trans::None,
+            },
             _ => Trans::None,
         }
     }
@@ -64,17 +62,13 @@ impl Component for Paddle {
     type Storage = DenseVecStorage<Self>;
 }
 
-
 /// Initialise the camera.
 fn initialise_camera(world: &mut World) {
-    world.create_entity()
-        .with(Camera::standard_2d())
-        .build();
+    world.create_entity().with(Camera::standard_2d()).build();
 }
 
 /// Initialises one paddle on the left, and one paddle on the right.
 fn initialise_paddles(world: &mut World) {
-
     let mut left_transform = LocalTransform::default();
     let mut right_transform = LocalTransform::default();
 
@@ -84,13 +78,16 @@ fn initialise_paddles(world: &mut World) {
     right_transform.translation = Vector3::new(1.0 - PADDLE_WIDTH, y, 0.0);
 
     // Create the mesh and the material needed.
-    let mesh = create_mesh(world,
-                           generate_rectangle_vertices(0.0, 0.0, PADDLE_WIDTH, PADDLE_HEIGHT));
+    let mesh = create_mesh(
+        world,
+        generate_rectangle_vertices(0.0, 0.0, PADDLE_WIDTH, PADDLE_HEIGHT),
+    );
 
     let material = create_colour_material(world, PADDLE_COLOUR);
 
     // Create a left plank entity.
-    world.create_entity()
+    world
+        .create_entity()
         .with(mesh.clone())
         .with(material.clone())
         .with(Paddle::new(Side::Left))
@@ -99,7 +96,8 @@ fn initialise_paddles(world: &mut World) {
         .build();
 
     // Create right plank entity.
-    world.create_entity()
+    world
+        .create_entity()
         .with(mesh)
         .with(material)
         .with(Paddle::new(Side::Right))
@@ -116,39 +114,43 @@ fn create_mesh(world: &World, vertices: Vec<PosTex>) -> MeshHandle {
 
 /// Creates a solid material of the specified colour.
 fn create_colour_material(world: &World, colour: [f32; 4]) -> Material {
-
     let mat_defaults = world.read_resource::<MaterialDefaults>();
     let loader = world.read_resource::<Loader>();
 
     let albedo = loader.load_from_data(colour.into(), (), &world.read_resource());
 
-    Material { albedo: albedo, ..mat_defaults.0.clone() }
+    Material {
+        albedo: albedo,
+        ..mat_defaults.0.clone()
+    }
 }
 
 /// Generates six vertices forming a rectangle.
 fn generate_rectangle_vertices(left: f32, bottom: f32, right: f32, top: f32) -> Vec<PosTex> {
-    vec![PosTex {
-             position: [left, bottom, 0.],
-             tex_coord: [0.0, 0.0],
-         },
-         PosTex {
-             position: [right, bottom, 0.0],
-             tex_coord: [1.0, 0.0],
-         },
-         PosTex {
-             position: [left, top, 0.0],
-             tex_coord: [1.0, 1.0],
-         },
-         PosTex {
-             position: [right, top, 0.],
-             tex_coord: [1.0, 1.0],
-         },
-         PosTex {
-             position: [left, top, 0.],
-             tex_coord: [0.0, 1.0],
-         },
-         PosTex {
-             position: [right, bottom, 0.0],
-             tex_coord: [0.0, 0.0],
-         }]
+    vec![
+        PosTex {
+            position: [left, bottom, 0.],
+            tex_coord: [0.0, 0.0],
+        },
+        PosTex {
+            position: [right, bottom, 0.0],
+            tex_coord: [1.0, 0.0],
+        },
+        PosTex {
+            position: [left, top, 0.0],
+            tex_coord: [1.0, 1.0],
+        },
+        PosTex {
+            position: [right, top, 0.],
+            tex_coord: [1.0, 1.0],
+        },
+        PosTex {
+            position: [left, top, 0.],
+            tex_coord: [0.0, 1.0],
+        },
+        PosTex {
+            position: [right, bottom, 0.0],
+            tex_coord: [0.0, 0.0],
+        },
+    ]
 }
