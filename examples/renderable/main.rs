@@ -365,7 +365,7 @@ fn load_assets(world: &World) -> Assets {
 fn main() {
     if let Err(error) = run() {
         eprintln!("Could not run the example!");
-        eprintln!("{}", error);
+        eprintln!("{:?}", error);
         ::std::process::exit(1);
     }
 }

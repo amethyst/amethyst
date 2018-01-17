@@ -6,8 +6,8 @@ use amethyst_core::orientation::Orientation;
 use amethyst_core::transform::components::*;
 use specs::{DispatcherBuilder, World};
 
-use {AmbientColor, Camera, Light, Material, MaterialDefaults, Mesh, Rgba, ScreenDimensions,
-     Texture, WindowMessages};
+use {AmbientColor, Camera, Light, Material, MaterialAnimation, MaterialDefaults, Mesh, Rgba,
+     ScreenDimensions, SpriteSheetData, TexAnimationSystem, Texture, WindowMessages};
 
 /// Rendering bundle
 ///
@@ -16,12 +16,21 @@ use {AmbientColor, Camera, Light, Material, MaterialDefaults, Mesh, Rgba, Screen
 /// `AssetFuture` into its related component.
 ///
 #[derive(Default)]
-pub struct RenderBundle;
+pub struct RenderBundle {
+    // defaults to false, meaning Texture Animation is included by default
+    without_texture_animation: bool,
+}
 
 impl RenderBundle {
     /// Create a new render bundle
     pub fn new() -> Self {
         Default::default()
+    }
+
+    /// Remove Texture Animation from bundle (included by default)
+    pub fn without_texture_animation(mut self) -> Self {
+        self.without_texture_animation = true;
+        self
     }
 }
 
@@ -29,7 +38,7 @@ impl<'a, 'b> ECSBundle<'a, 'b> for RenderBundle {
     fn build(
         self,
         world: &mut World,
-        builder: DispatcherBuilder<'a, 'b>,
+        mut builder: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
         world.add_resource(AmbientColor(Rgba::from([0.01; 3])));
         world.add_resource(WindowMessages::new());
@@ -47,6 +56,13 @@ impl<'a, 'b> ECSBundle<'a, 'b> for RenderBundle {
         world.register::<Handle<Mesh>>();
         world.register::<Handle<Texture>>();
         world.register::<Camera>();
+
+        if !self.without_texture_animation {
+            world.add_resource(AssetStorage::<SpriteSheetData>::new());
+            world.register::<MaterialAnimation>();
+            world.register::<Handle<SpriteSheetData>>();
+            builder = builder.add(TexAnimationSystem {}, "texture_animation_system", &[])
+        };
 
         Ok(builder)
     }
