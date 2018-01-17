@@ -74,17 +74,8 @@ where
         encoder: &mut Encoder,
         effect: &mut Effect,
         _factory: Factory,
-        (active, camera, mesh_storage, tex_storage, material_defaults, mesh, material, global): (
-            Option<Fetch<'a, ActiveCamera>>,
-            ReadStorage<'a, Camera>,
-            Fetch<'a, AssetStorage<Mesh>>,
-            Fetch<'a, AssetStorage<Texture>>,
-            Fetch<'a, MaterialDefaults>,
-            ReadStorage<'b, MeshHandle>,
-            ReadStorage<'b, Material>,
-            ReadStorage<'b, Transform>,
-        ),
-    ) {
+        (active, camera, mesh_storage, tex_storage, material_defaults, mesh, material, global): <Self as PassData<'a>>::Data,
+){
         let camera: Option<(&Camera, &Transform)> = active
             .and_then(|a| {
                 let cam = camera.get(a.entity);
@@ -115,6 +106,8 @@ where
                     view: Matrix4::one().into(),
                     model: *global.as_ref(),
                 });
+
+            println!("{:?}", vertex_args);
 
             let albedo = tex_storage
                 .get(&material.albedo)

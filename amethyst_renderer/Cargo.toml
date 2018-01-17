@@ -35,6 +35,7 @@ gfx = { version = "0.17", features = ["serialize"] }
 gfx_core = { version = "0.8", features = ["serialize"] }
 gfx_macros = "0.2"
 imagefmt = "4.0"
+log = "0.4"
 rayon = "0.8"
 serde = "1.0"
 serde_derive = "1.0"

@@ -6,7 +6,7 @@ use amethyst_assets::AssetStorage;
 use amethyst_core::cgmath::{Matrix4, One, SquareMatrix};
 use amethyst_core::transform::Transform;
 use gfx::pso::buffer::ElemStride;
-use specs::{Fetch, Join, ReadStorage};
+use specs::{Entities, Fetch, Join, ReadStorage};
 
 use super::*;
 use cam::{ActiveCamera, Camera};
@@ -17,23 +17,33 @@ use mtl::{Material, MaterialDefaults};
 use pipe::{DepthMode, Effect, NewEffect};
 use pipe::pass::{Pass, PassData};
 use resources::AmbientColor;
+use skinning::{JointIds, JointTransforms, JointWeights};
 use tex::Texture;
 use types::{Encoder, Factory};
 use vertex::{Normal, Position, Separate, Tangent, TexCoord, VertexFormat};
 
 /// Draw mesh with physically based lighting
 #[derive(Default, Clone, Debug, PartialEq)]
-pub struct DrawPbmSeparate;
+pub struct DrawPbmSeparate {
+    skinning: bool,
+}
 
 impl DrawPbmSeparate {
     /// Create instance of `DrawPbm` pass
     pub fn new() -> Self {
         Default::default()
     }
+
+    /// Enable vertex skinning
+    pub fn with_vertex_skinning(mut self) -> Self {
+        self.skinning = true;
+        self
+    }
 }
 
 impl<'a> PassData<'a> for DrawPbmSeparate {
     type Data = (
+        Entities<'a>,
         Option<Fetch<'a, ActiveCamera>>,
         ReadStorage<'a, Camera>,
         Fetch<'a, AmbientColor>,
@@ -44,35 +54,74 @@ impl<'a> PassData<'a> for DrawPbmSeparate {
         ReadStorage<'a, Material>,
         ReadStorage<'a, Transform>,
         ReadStorage<'a, Light>,
+        ReadStorage<'a, JointTransforms>,
     );
 }
 
 impl Pass for DrawPbmSeparate {
     fn compile(&self, effect: NewEffect) -> Result<Effect> {
-        effect
-            .simple(VERT_SRC, FRAG_SRC)
-            // Pos, norm, tangent, tex
-            //.with_raw_vertex_buffer(V::QUERIED_ATTRIBUTES, V::size() as ElemStride, 0)
-            .with_raw_vertex_buffer(
-                Separate::<Position>::ATTRIBUTES,
-                Separate::<Position>::size() as ElemStride,
-                0,
-            )
-            .with_raw_vertex_buffer(
-                Separate::<Normal>::ATTRIBUTES,
-                Separate::<Normal>::size() as ElemStride,
-                0,
-            )
-            .with_raw_vertex_buffer(
-                Separate::<Tangent>::ATTRIBUTES,
-                Separate::<Tangent>::size() as ElemStride,
-                0,
-            )
-            .with_raw_vertex_buffer(
-                Separate::<TexCoord>::ATTRIBUTES,
-                Separate::<TexCoord>::size() as ElemStride,
-                0,
-            )
+        let mut builder = if self.skinning {
+            effect.simple(VERT_SKIN_SRC, FRAG_SRC)
+        } else {
+            effect.simple(VERT_SRC, FRAG_SRC)
+        };
+        if self.skinning {
+            builder
+                .with_raw_vertex_buffer(
+                    Separate::<Position>::ATTRIBUTES,
+                    Separate::<Position>::size() as ElemStride,
+                    0,
+                )
+                .with_raw_vertex_buffer(
+                    Separate::<Normal>::ATTRIBUTES,
+                    Separate::<Normal>::size() as ElemStride,
+                    0,
+                )
+                .with_raw_vertex_buffer(
+                    Separate::<Tangent>::ATTRIBUTES,
+                    Separate::<Tangent>::size() as ElemStride,
+                    0,
+                )
+                .with_raw_vertex_buffer(
+                    Separate::<TexCoord>::ATTRIBUTES,
+                    Separate::<TexCoord>::size() as ElemStride,
+                    0,
+                )
+                .with_raw_vertex_buffer(
+                    Separate::<JointIds>::ATTRIBUTES,
+                    Separate::<JointIds>::size() as ElemStride,
+                    0,
+                )
+                .with_raw_vertex_buffer(
+                    Separate::<JointWeights>::ATTRIBUTES,
+                    Separate::<JointWeights>::size() as ElemStride,
+                    0,
+                )
+                .with_raw_constant_buffer("JointTransforms", mem::size_of::<[[f32; 4]; 4]>(), 100);;
+        } else {
+            builder
+                .with_raw_vertex_buffer(
+                    Separate::<Position>::ATTRIBUTES,
+                    Separate::<Position>::size() as ElemStride,
+                    0,
+                )
+                .with_raw_vertex_buffer(
+                    Separate::<Normal>::ATTRIBUTES,
+                    Separate::<Normal>::size() as ElemStride,
+                    0,
+                )
+                .with_raw_vertex_buffer(
+                    Separate::<Tangent>::ATTRIBUTES,
+                    Separate::<Tangent>::size() as ElemStride,
+                    0,
+                )
+                .with_raw_vertex_buffer(
+                    Separate::<TexCoord>::ATTRIBUTES,
+                    Separate::<TexCoord>::size() as ElemStride,
+                    0,
+                );
+        }
+        builder
             .with_raw_constant_buffer("VertexArgs", mem::size_of::<VertexArgs>(), 1)
             .with_raw_constant_buffer("FragmentArgs", mem::size_of::<FragmentArgs>(), 1)
             .with_raw_constant_buffer("PointLights", mem::size_of::<PointLight>(), 128)
@@ -96,6 +145,7 @@ impl Pass for DrawPbmSeparate {
         effect: &mut Effect,
         _factory: Factory,
         (
+            entities,
             active,
             camera,
             ambient,
@@ -106,18 +156,8 @@ impl Pass for DrawPbmSeparate {
             material,
             global,
             light,
-        ): (
-            Option<Fetch<'a, ActiveCamera>>,
-            ReadStorage<'a, Camera>,
-            Fetch<'a, AmbientColor>,
-            Fetch<'a, AssetStorage<Mesh>>,
-            Fetch<'a, AssetStorage<Texture>>,
-            Fetch<'a, MaterialDefaults>,
-            ReadStorage<'a, MeshHandle>,
-            ReadStorage<'a, Material>,
-            ReadStorage<'a, Transform>,
-            ReadStorage<'a, Light>,
-        ),
+            joints,
+        ): <Self as PassData<'a>>::Data,
     ) {
         let camera: Option<(&Camera, &Transform)> = active
             .and_then(|a| {
@@ -174,23 +214,39 @@ impl Pass for DrawPbmSeparate {
                 .map(|&(_, ref trans)| [trans.0[3][0], trans.0[3][1], trans.0[3][2]])
                 .unwrap_or([0.0; 3]),
         );
-        'drawable: for (mesh, material, global) in (&mesh, &material, &global).join() {
+        'drawable: for (entity, mesh, material, global) in
+            (&*entities, &mesh, &material, &global).join()
+        {
             let mesh = match mesh_storage.get(mesh) {
                 Some(mesh) => mesh,
                 None => continue,
             };
-            for attrs in [
-                Separate::<Position>::ATTRIBUTES,
-                Separate::<Normal>::ATTRIBUTES,
-                Separate::<Tangent>::ATTRIBUTES,
-                Separate::<TexCoord>::ATTRIBUTES,
-            ].iter()
-            {
-                match mesh.buffer(attrs) {
-                    Some(vbuf) => effect.data.vertex_bufs.push(vbuf.clone()),
-                    None => {
-                        effect.clear();
-                        continue 'drawable;
+            if self.skinning {
+                for attrs in [
+                    Separate::<Position>::ATTRIBUTES,
+                    Separate::<Normal>::ATTRIBUTES,
+                    Separate::<Tangent>::ATTRIBUTES,
+                    Separate::<TexCoord>::ATTRIBUTES,
+                    Separate::<JointIds>::ATTRIBUTES,
+                    Separate::<JointWeights>::ATTRIBUTES,
+                ].iter()
+                {
+                    match mesh.buffer(attrs) {
+                        Some(vbuf) => effect.data.vertex_bufs.push(vbuf.clone()),
+                        None => continue 'drawable,
+                    }
+                }
+            } else {
+                for attrs in [
+                    Separate::<Position>::ATTRIBUTES,
+                    Separate::<Normal>::ATTRIBUTES,
+                    Separate::<Tangent>::ATTRIBUTES,
+                    Separate::<TexCoord>::ATTRIBUTES,
+                ].iter()
+                {
+                    match mesh.buffer(attrs) {
+                        Some(vbuf) => effect.data.vertex_bufs.push(vbuf.clone()),
+                        None => continue 'drawable,
                     }
                 }
             }
@@ -209,6 +265,12 @@ impl Pass for DrawPbmSeparate {
                 });
 
             effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
+
+            if self.skinning {
+                if let Some(joint) = joints.get(entity) {
+                    effect.update_buffer("JointTransforms", &joint.matrices[..], encoder);
+                }
+            }
 
             let albedo = tex_storage
                 .get(&material.albedo)

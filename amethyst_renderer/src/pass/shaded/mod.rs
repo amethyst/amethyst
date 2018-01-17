@@ -7,6 +7,7 @@ mod interleaved;
 mod separate;
 
 static VERT_SRC: &[u8] = include_bytes!("../shaders/vertex/basic.glsl");
+static VERT_SKIN_SRC: &[u8] = include_bytes!("../shaders/vertex/skinned.glsl");
 static FRAG_SRC: &[u8] = include_bytes!("../shaders/fragment/shaded.glsl");
 
 fn pad(x: [f32; 3]) -> [f32; 4] {

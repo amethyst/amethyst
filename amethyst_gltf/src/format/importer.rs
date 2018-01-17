@@ -184,22 +184,38 @@ pub fn get_image_data(
         }
 
         gltf::image::Data::Uri { uri, mime_type } => {
-            let path = base_path.parent().unwrap_or(Path::new("./")).join(uri);
-            let data = source.load(path.to_str().unwrap())?;
-            if let Some(ty) = mime_type {
-                Ok((data, ImageFormat::from_mime_type(ty)))
+            if uri.starts_with("data:") {
+                let data = parse_data_uri(uri)?;
+                if let Some(ty) = mime_type {
+                    Ok((data, ImageFormat::from_mime_type(ty)))
+                } else {
+                    let mimetype = uri.split(',')
+                        .nth(0)
+                        .unwrap()
+                        .split(':')
+                        .nth(1)
+                        .unwrap()
+                        .split(';')
+                        .nth(0)
+                        .unwrap();
+                    Ok((data, ImageFormat::from_mime_type(mimetype)))
+                }
             } else {
-                #[allow(unused_imports)]
-                use std::ascii::AsciiExt;
-                let ext = path.extension()
-                    .and_then(|s| s.to_str())
-                    .map_or("".to_string(), |s| s.to_ascii_lowercase());
-                let format = match &ext[..] {
-                    "jpg" | "jpeg" => ImageFormat::Jpeg,
-                    "png" => ImageFormat::Png,
-                    _ => unreachable!(),
-                };
-                Ok((data, format))
+                let path = base_path.parent().unwrap_or(Path::new("./")).join(uri);
+                let data = source.load(path.to_str().unwrap())?;
+                if let Some(ty) = mime_type {
+                    Ok((data, ImageFormat::from_mime_type(ty)))
+                } else {
+                    let ext = path.extension()
+                        .and_then(|s| s.to_str())
+                        .map_or("".to_string(), |s| s.to_ascii_lowercase());
+                    let format = match &ext[..] {
+                        "jpg" | "jpeg" => ImageFormat::Jpeg,
+                        "png" => ImageFormat::Png,
+                        _ => unreachable!(),
+                    };
+                    Ok((data, format))
+                }
             }
         }
     }

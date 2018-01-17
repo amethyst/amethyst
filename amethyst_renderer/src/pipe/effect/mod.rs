@@ -7,7 +7,7 @@ use std::mem;
 use fnv::FnvHashMap as HashMap;
 use gfx::{Primitive, ShaderSet};
 use gfx::buffer::{Info as BufferInfo, Role as BufferRole};
-use gfx::memory::{Usage, Bind};
+use gfx::memory::{Bind, Usage};
 use gfx::preset::depth::{LESS_EQUAL_TEST, LESS_EQUAL_WRITE};
 use gfx::pso::buffer::{ElemStride, InstanceRate};
 use gfx::shade::{ProgramError, ToUniform};
@@ -314,12 +314,16 @@ impl<'a> EffectBuilder<'a> {
         use gfx::Factory;
         use gfx::traits::FactoryExt;
 
+        debug!("Building effect");
+        debug!("Compiling shaders");
         let ref mut fac = self.factory;
         let prog = self.prog.compile(fac)?;
+        debug!("Creating pipeline state");
         let pso = fac.create_pipeline_state(&prog, self.prim, self.rast, self.init.clone())?;
 
         let mut data = Data::default();
 
+        debug!("Creating raw constant buffers");
         let const_bufs = self.init
             .const_bufs
             .iter()
@@ -332,6 +336,7 @@ impl<'a> EffectBuilder<'a> {
             })
             .collect::<Result<HashMap<_, _>>>()?;
 
+        debug!("Set global uniforms");
         let globals = self.init
             .globals
             .iter()
@@ -343,6 +348,7 @@ impl<'a> EffectBuilder<'a> {
             })
             .collect::<HashMap<_, _>>();
 
+        debug!("Process Color/Depth/Blend outputs");
         data.out_colors.extend(
             self.out
                 .color_bufs()
@@ -361,6 +367,7 @@ impl<'a> EffectBuilder<'a> {
             .depth_buf()
             .map(|db| (db.as_output.clone(), (0, 0)));
 
+        debug!("Finished building effect");
         Ok(Effect {
             pso,
             data,

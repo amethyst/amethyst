@@ -48,6 +48,7 @@ impl Interpolate<[f32; 3]> for InterpolationType {
         outputs: &[[f32; 3]],
         normalize: bool,
     ) -> [f32; 3] {
+        debug!("Interpolation3, {}, {:?}", input, inputs);
         match *self {
             InterpolationType::Linear => linear_interpolate(input, inputs, outputs, normalize),
             InterpolationType::SphericalLinear => spherical_linear_interpolate(input, inputs, outputs, normalize),
@@ -71,6 +72,7 @@ impl Interpolate<[f32; 4]> for InterpolationType {
         outputs: &[[f32; 4]],
         normalize: bool,
     ) -> [f32; 4] {
+        debug!("Interpolation4, {}, {:?}", input, inputs);
         match *self {
             InterpolationType::Linear => linear_interpolate(input, inputs, outputs, normalize),
             InterpolationType::SphericalLinear => spherical_linear_interpolate(input, inputs, outputs, normalize),

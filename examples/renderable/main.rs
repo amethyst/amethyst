@@ -29,7 +29,8 @@ struct DemoState {
     directional_light: bool,
     camera_angle: f32,
     fps_display: Entity,
-    #[allow(dead_code)] pipeline_forward: bool, // TODO
+    #[allow(dead_code)]
+    pipeline_forward: bool, // TODO
 }
 
 struct ExampleSystem;

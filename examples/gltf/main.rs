@@ -5,12 +5,13 @@ extern crate amethyst_animation;
 extern crate amethyst_gltf;
 
 use amethyst::assets::{AssetStorage, Handle, Loader};
-use amethyst::core::cgmath::{Deg, Quaternion, Rotation3, Vector3};
-use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
+use amethyst::core::cgmath::{Array, Deg, Quaternion, Rotation3, Vector3};
+use amethyst::core::transform::{LocalTransform, Parent, Transform, TransformBundle};
 use amethyst::ecs::Entity;
 use amethyst::prelude::*;
 use amethyst::renderer::*;
-use amethyst_animation::{toggle_animation, AnimationBundle, AnimationSet, EndControl};
+use amethyst_animation::{toggle_animation, AnimationBundle, AnimationSet, EndControl,
+                         VertexSkinningBundle};
 use amethyst_gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystem, GltfSceneOptions};
 
 struct Example;
@@ -25,7 +26,7 @@ impl State for Example {
         let gltf_scene = load_gltf_mesh(
             &world,
             &*world.read_resource(),
-            "mesh/v2-locrotscale-cube-embedded-buffers.gltf",
+            "mesh/RiggedSimple.gltf",
             GltfSceneOptions {
                 generate_tex_coords: Some((0.1, 0.1)),
                 load_animations: true,
@@ -35,7 +36,6 @@ impl State for Example {
         let entity = world
             .create_entity()
             .with(gltf_scene)
-            .with(LocalTransform::default())
             .with(Transform::default())
             .build();
 
@@ -68,10 +68,8 @@ impl State for Example {
         println!("Put camera");
 
         let mut camera_transform = LocalTransform::default();
-        camera_transform.translation = Vector3::new(-2.0, 2.0, 2.0);
-        let camera_orientation =
-            Quaternion::from_angle_y(Deg(-45.)) * Quaternion::from_angle_x(Deg(-35.));
-        camera_transform.rotation = camera_orientation.into();
+        camera_transform.translation = Vector3::new(-10.0, 0.0, 0.0);
+        camera_transform.rotation = Quaternion::from_angle_y(Deg(-90.));
         world
             .create_entity()
             .with(Camera::from(Projection::perspective(
@@ -143,13 +141,14 @@ fn run() -> Result<(), amethyst::Error> {
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawShadedSeparate::new()),
+            .with_pass(DrawFlatSeparate::new().with_vertex_skinning()),
     );
 
     let mut game = Application::build(resources_directory, Example)?
         .with_bundle(RenderBundle::new())?
         .with_bundle(AnimationBundle::new())?
         .with_bundle(TransformBundle::new().with_dep(&["animation_control_system"]))?
+        .with_bundle(VertexSkinningBundle::new().with_dep(&["transform_system"]))?
         .with_local(RenderSystem::build(pipe, Some(config))?)
         .with_resource(AssetStorage::<GltfSceneAsset>::new())
         .with(GltfSceneLoaderSystem::new(), "", &[])

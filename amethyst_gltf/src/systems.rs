@@ -1,15 +1,16 @@
 use std::collections::{HashMap, HashSet};
 
-use animation::{Animation, AnimationHierarchy, AnimationSet, Sampler};
+use animation::{Animation, AnimationHierarchy, AnimationSet, Joint, Sampler, Skin};
 use assets::{AssetStorage, Handle, HotReloadStrategy, Loader};
 use core::{ThreadPool, Time};
+use core::cgmath::{Matrix4, SquareMatrix};
 use core::transform::*;
 use fnv::FnvHashMap;
-use renderer::{Material, MaterialDefaults, Mesh, Texture};
-use renderer::ComboMeshCreator;
+use renderer::{AnimatedComboMeshCreator, JointTransforms, Material, MaterialDefaults, Mesh,
+               Texture};
 use specs::{Entities, Entity, Fetch, FetchMut, Join, System, WriteStorage};
 
-use {GltfMaterial, GltfPrimitive, GltfSceneAsset};
+use {GltfMaterial, GltfPrimitive, GltfSceneAsset, GltfSkin};
 
 /// A GLTF scene loader, will transform `Handle<GltfSceneAsset>` into full entity hierarchies.
 ///
@@ -54,6 +55,9 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
         WriteStorage<'a, Material>,
         WriteStorage<'a, AnimationHierarchy>,
         WriteStorage<'a, AnimationSet>,
+        WriteStorage<'a, Joint>,
+        WriteStorage<'a, Skin>,
+        WriteStorage<'a, JointTransforms>,
     );
 
     #[allow(unused)]
@@ -80,6 +84,9 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
             mut materials,
             mut animation_hierarchies,
             mut animation_sets,
+            mut joints,
+            mut skins,
+            mut joint_transforms,
         ) = data;
 
         let strategy = strategy.as_ref().map(Deref::deref);
@@ -96,6 +103,7 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
                     (usize, TextureHandleLocation, Handle<Texture>),
                 > = Vec::default();
                 let mut node_map = HashMap::default();
+                let mut skin_links = Vec::default();
 
                 // Use the default scene if set, otherwise use the first scene.
                 // Note that the format will throw an error if the default scene is not set,
@@ -123,6 +131,7 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
                         &mut mesh_handles,
                         &mut texture_handles,
                         &mut node_map,
+                        &mut skin_links,
                     );
                 } else {
                     // If we have multiple root nodes in the scene, we need to create new entities
@@ -148,8 +157,21 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
                             &mut mesh_handles,
                             &mut texture_handles,
                             &mut node_map,
+                            &mut skin_links,
                         );
                     }
+                }
+
+                for (node_entity, skin_index, mesh_entities) in skin_links {
+                    load_skin(
+                        &scene_asset.skins[skin_index],
+                        &node_entity,
+                        &mut joints,
+                        &mut skins,
+                        &mut joint_transforms,
+                        mesh_entities,
+                        &node_map,
+                    );
                 }
 
                 // process new mesh handles, cache them in the primitives
@@ -198,6 +220,7 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
                     // if handle doesn't exist, load animation data
                     let mut node_indices: HashSet<usize> = HashSet::default();
                     for animation in &mut scene_asset.animations {
+                        debug!("Loading animation: {:?}", animation.nodes);
                         node_indices.extend(animation.nodes.iter());
                         if let None = animation.handle {
                             let samplers = animation
@@ -213,7 +236,6 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
                                 .enumerate()
                                 .map(|(index, sampler)| (animation.nodes[index].clone(), sampler))
                                 .collect::<Vec<_>>();
-                            /*let mut sampler_map = vec![];*/
                             animation.handle = Some(loader.load_from_data(
                                 Animation { nodes: sampler_map },
                                 (),
@@ -221,17 +243,20 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
                             ));
                         }
                     }
+                    debug!("Indices: {:?}", node_indices);
+                    let h = AnimationHierarchy {
+                        nodes: node_indices
+                            .into_iter()
+                            .map(|node_index| {
+                                (node_index, node_map.get(&node_index).cloned().unwrap())
+                            })
+                            .collect::<FnvHashMap<_, _>>(),
+                    };
+                    debug!("H: {:?}", h);
                     // create animation hierarchy
                     animation_hierarchies.insert(
                         entity,
-                        AnimationHierarchy {
-                            nodes: node_indices
-                                .into_iter()
-                                .map(|node_index| {
-                                    (node_index, node_map.get(&node_index).cloned().unwrap())
-                                })
-                                .collect::<FnvHashMap<_, _>>(),
-                        },
+                        h,
                     );
                     // create animation set
                     animation_sets.insert(
@@ -276,16 +301,13 @@ fn load_node(
     mesh_handles: &mut Vec<(usize, usize, Handle<Mesh>)>,
     texture_handles: &mut Vec<(usize, TextureHandleLocation, Handle<Texture>)>,
     node_map: &mut HashMap<usize, Entity>,
+    skin_links: &mut Vec<(Entity, usize, Vec<Entity>)>,
 ) {
     let node = &scene_asset.nodes[node_index];
     node_map.insert(node_index, node_entity.clone());
 
     // Load the node-to-parent transformation
-    let mut local = LocalTransform::default();
-    local.translation = node.local_transform.translation.clone();
-    local.rotation = node.local_transform.rotation.clone();
-    local.scale = node.local_transform.scale.clone();
-    local_transforms.insert(*node_entity, local);
+    local_transforms.insert(*node_entity, node.local_transform.clone());
 
     // Load child entities
     for child_node_index in &node.children {
@@ -314,10 +336,12 @@ fn load_node(
             mesh_handles,
             texture_handles,
             node_map,
+            skin_links,
         );
     }
 
     if node.primitives.len() > 0 {
+        let mut mesh_entities = vec![];
         // If we only have a single graphics primitive, we load it onto the nodes entity
         if node.primitives.len() == 1 {
             load_primitive(
@@ -335,6 +359,7 @@ fn load_node(
                 mesh_handles,
                 texture_handles,
             );
+            mesh_entities.push(*node_entity);
         } else {
             // If we have multiple graphics primitives, we need to add child entities for each
             // primitive and load the graphics onto those
@@ -363,9 +388,64 @@ fn load_node(
                     mesh_handles,
                     texture_handles,
                 );
+                mesh_entities.push(primitive_entity);
             }
         }
+
+        if let Some(skin_index) = node.skin {
+            skin_links.push((*node_entity, skin_index, mesh_entities));
+        }
     }
+}
+
+// Load skin for a node
+fn load_skin(
+    skin: &GltfSkin,
+    node_entity: &Entity,
+    joints: &mut WriteStorage<Joint>,
+    skins: &mut WriteStorage<Skin>,
+    joint_transforms: &mut WriteStorage<JointTransforms>,
+    mesh_entities: Vec<Entity>,
+    node_map: &HashMap<usize, Entity>,
+) {
+    // Load joint node information
+    for (skin_internal_index, joint_node_index) in skin.joints.iter().enumerate() {
+        let joint_entity = node_map.get(joint_node_index).unwrap();
+        joints.insert(
+            *joint_entity,
+            Joint {
+                inverse_bind_matrix: Matrix4::from(skin.inverse_bind_matrices[skin_internal_index]),
+                skin: *node_entity,
+            },
+        );
+    }
+
+    // Add joint transform holders for all mesh entities linked
+    for mesh_entity in &mesh_entities {
+        joint_transforms.insert(
+            *mesh_entity,
+            JointTransforms {
+                skin: *node_entity,
+                matrices: vec![Matrix4::identity().into(); skin.joints.len()],
+            },
+        );
+    }
+
+    // Add skin to node with skin reference
+    let joints = skin.joints
+        .iter()
+        .map(|i| *node_map.get(i).unwrap())
+        .collect();
+    let s = Skin {
+        joints,
+        meshes: mesh_entities,
+        bind_shape_matrix: Matrix4::identity(),
+    };
+    debug!("S: {:?}", s);
+    skins.insert(
+        *node_entity,
+      s  ,
+    );
 }
 
 // Load a single graphics primitive, attach all data to the given `entity`.
@@ -385,7 +465,7 @@ fn load_primitive(
     texture_handles: &mut Vec<(usize, TextureHandleLocation, Handle<Texture>)>,
 ) {
     let mesh = primitive.handle.as_ref().cloned().unwrap_or_else(|| {
-        let mesh_creator = ComboMeshCreator::new(primitive.attributes.clone());
+        let mesh_creator = AnimatedComboMeshCreator::new(primitive.attributes.clone());
         let handle = loader.load_from_data(mesh_creator.into(), (), mesh_storage);
         mesh_handles.push((node_index, primitive_index, handle.clone()));
         handle

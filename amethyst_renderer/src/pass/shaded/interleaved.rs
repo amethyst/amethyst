@@ -94,18 +94,7 @@ where
             material,
             global,
             light,
-        ): (
-            Option<Fetch<'a, ActiveCamera>>,
-            ReadStorage<'a, Camera>,
-            Fetch<'a, AmbientColor>,
-            Fetch<'a, AssetStorage<Mesh>>,
-            Fetch<'a, AssetStorage<Texture>>,
-            Fetch<'a, MaterialDefaults>,
-            ReadStorage<'a, MeshHandle>,
-            ReadStorage<'a, Material>,
-            ReadStorage<'a, Transform>,
-            ReadStorage<'a, Light>,
-        ),
+        ): <Self as PassData<'a>>::Data,
     ) {
         let camera: Option<(&Camera, &Transform)> = active
             .and_then(|a| {

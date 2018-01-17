@@ -3,6 +3,7 @@
 use std::collections::HashMap;
 use std::error::Error as StdError;
 use std::fmt;
+use std::mem;
 use std::sync::Arc;
 
 use self::importer::{get_image_data, import, Buffers, ImageFormat};
@@ -13,9 +14,10 @@ use gfx::Primitive;
 use gfx::texture::SamplerInfo;
 use gltf;
 use gltf::Gltf;
+use gltf_utils::AccessorIter;
 use itertools::Itertools;
-use renderer::{Color, JpgFormat, Normal, PngFormat, Position, Separate, Tangent, TexCoord,
-               TextureMetadata};
+use renderer::{Color, JointIds, JointWeights, JpgFormat, Normal, PngFormat, Position, Separate,
+               Tangent, TexCoord, TextureMetadata};
 
 use super::*;
 
@@ -126,6 +128,7 @@ fn load_gltf(
     name: &str,
     options: GltfSceneOptions,
 ) -> Result<GltfSceneAsset, GltfError> {
+    debug!("Loading GLTF scene {}", name);
     import(source.clone(), name)
         .map_err(GltfError::GltfImporterError)
         .and_then(|(gltf, buffers)| load_data(&gltf, &buffers, &options, source, name))
@@ -138,16 +141,20 @@ fn load_data(
     source: Arc<Source>,
     name: &str,
 ) -> Result<GltfSceneAsset, GltfError> {
-    // TODO: skins, animations, morph targets, cameras
+    // TODO: morph targets, cameras
     // TODO: KHR_materials_common extension
+    debug!("Loading nodes");
     let nodes = load_nodes(gltf, buffers, options)?;
+    debug!("Loading scenes");
     let scenes = gltf.scenes()
         .map(|ref scene| load_scene(scene))
         .collect::<Result<Vec<GltfScene>, GltfError>>()?;
     let default_scene = gltf.default_scene().map(|s| s.index());
+    debug!("Loading materials");
     let materials = gltf.materials()
         .map(|ref m| load_material(m, buffers, source.clone(), name))
         .collect::<Result<Vec<GltfMaterial>, GltfError>>()?;
+    debug!("Loading animations");
     let animations = if options.load_animations {
         gltf.animations()
             .map(|ref animation| load_animation(animation, buffers))
@@ -155,6 +162,9 @@ fn load_data(
     } else {
         Vec::default()
     };
+    debug!("Loading skins");
+    let skins = load_skins(gltf, buffers)?;
+
     Ok(GltfSceneAsset {
         nodes,
         scenes,
@@ -162,6 +172,7 @@ fn load_data(
         animations,
         default_scene,
         options: options.clone(),
+        skins,
     })
 }
 
@@ -300,6 +311,7 @@ fn load_material(
             name,
         ).map(|(texture, factor)| (GltfTexture::new(texture), [factor[0], factor[1], factor[2]]))?;
 
+    debug!("normal");
     // Can't use map/and_then because of Result returning from the load_texture function
     let normal = match material.normal_texture() {
         Some(normal_texture) => Some((
@@ -315,6 +327,7 @@ fn load_material(
         None => None,
     };
 
+    debug!("occl");
     // Can't use map/and_then because of Result returning from the load_texture function
     let occlusion = match material.occlusion_texture() {
         Some(occlusion_texture) => Some((
@@ -474,8 +487,6 @@ fn load_node(
     node_map: &mut HashMap<usize, usize>,
     options: &GltfSceneOptions,
 ) -> Result<GltfNode, GltfError> {
-    // TODO: skin
-
     let children = node.children().map(|c| c.index()).collect::<Vec<_>>();
 
     for child in node.children() {
@@ -497,11 +508,37 @@ fn load_node(
     local_transform.rotation = [rotation[3], rotation[0], rotation[1], rotation[2]].into();
     local_transform.scale = scale.into();
 
+    let skin = node.skin().map(|s| s.index());
+
     Ok(GltfNode {
         primitives,
         children,
         parent: None,
         local_transform,
+        skin,
+    })
+}
+
+fn load_skins(gltf: &gltf::Gltf, buffers: &Buffers) -> Result<Vec<GltfSkin>, GltfError> {
+    gltf.skins().map(|s| load_skin(&s, buffers)).collect()
+}
+
+fn load_skin(skin: &gltf::Skin, buffers: &Buffers) -> Result<GltfSkin, GltfError> {
+    let joints = skin.joints().map(|j| j.index()).collect::<Vec<_>>();
+    let skeleton = skin.skeleton().map(|s| s.index());
+    let inverse_bind_matrices = skin.inverse_bind_matrices()
+        .map(|acc| AccessorIter::<[f32; 16]>::new(acc, buffers))
+        .map(|matrices| {
+            matrices
+                .map(|m| unsafe { mem::transmute::<[f32; 16], [[f32; 4]; 4]>(m) })
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or(vec![[[0.; 4]; 4]; joints.len()]);
+
+    Ok(GltfSkin {
+        joints,
+        skeleton,
+        inverse_bind_matrices,
     })
 }
 
@@ -602,15 +639,57 @@ fn load_mesh(
                 .collect(),
         });
 
+        let joint_ids = primitive.joints_u16(0, buffers).map(|joints| match faces {
+            Some(ref faces) => {
+                let joints = joints.collect::<Vec<_>>();
+                faces
+                    .iter()
+                    .map(|i| {
+                        Separate::<JointIds>::new([
+                            joints[*i][0],
+                            joints[*i][1],
+                            joints[*i][2],
+                            joints[*i][3],
+                        ])
+                    })
+                    .collect()
+            }
+            None => joints
+                .map(|j| Separate::<JointIds>::new([j[0], j[1], j[2], j[3]]))
+                .collect(),
+        });
+        debug!("Joint ids: {:?}", joint_ids);
+
+        let joint_weights = primitive
+            .weights_f32(0, buffers)
+            .map(|weights| match faces {
+                Some(ref faces) => {
+                    let weights = weights.collect::<Vec<_>>();
+                    faces
+                        .iter()
+                        .map(|i| Separate::<JointWeights>::new(weights[*i]))
+                        .collect()
+                }
+                None => weights.map(|w| Separate::<JointWeights>::new(w)).collect(),
+            });
+        debug!("Joint weights: {:?}", joint_weights);
+
         let material = primitive.material().index();
-        // TODO: joint ids and weights
 
         match map_mode(primitive.mode()) {
             Ok(primitive) => primitives.push(GltfPrimitive {
                 primitive,
                 indices: faces,
                 material,
-                attributes: (positions, colors, tex_coord, normals, tangents),
+                attributes: (
+                    positions,
+                    colors,
+                    tex_coord,
+                    normals,
+                    tangents,
+                    joint_ids,
+                    joint_weights,
+                ),
                 handle: None,
             }),
             Err(err) => return Err(err),
