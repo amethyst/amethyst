@@ -281,8 +281,8 @@ where
         Some(semaphore)
     }
 
-    pub fn dispose(self, allocator: &mut Allocator<B>) {
-        for upload in self.uploads {
+    pub fn cleanup(&mut self, allocator: &mut Allocator<B>) {
+        for upload in self.uploads.drain(..) {
             upload.dispose(allocator);
         }
     }

@@ -14,7 +14,7 @@ use smallvec::SmallVec;
 use specs::{Component, DenseVecStorage, Entities, Fetch, Join, ReadStorage, SystemData, World,
             WriteStorage, StorageEntry};
 
-use cam::{ActiveCamera, Camera};
+use camera::{ActiveCamera, Camera};
 use cirque::Entry;
 use descriptors::{DescriptorSet, DescriptorPool, Binder, Layout, Uniform};
 use epoch::{CurrentEpoch, Epoch};

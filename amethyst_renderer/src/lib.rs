@@ -40,18 +40,21 @@ extern crate thread_profiler;
 
 extern crate wavefront_obj;
 
-pub mod cam;
+pub mod camera;
 pub mod cirque;
 pub mod command;
 pub mod epoch;
 pub mod descriptors;
 pub mod formats;
 pub mod hal;
+pub mod light;
+pub mod material;
 pub mod memory;
 pub mod mesh;
 pub mod relevant;
 pub mod graph;
 pub mod passes;
+pub mod resources;
 pub mod stage;
 pub mod system;
 pub mod texture;

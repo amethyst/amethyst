@@ -21,7 +21,7 @@ use metal;
 #[cfg(feature = "gfx-backend-vulkan")]
 use vulkan;
 
-use hal::Hal;
+use hal::HalBundle;
 
 error_chain!{
     errors {
@@ -186,7 +186,7 @@ impl<'a> HalConfig<'a> {
         (device, allocator, center)
     }
 
-    pub fn build<B>(self) -> Result<Hal<B>>
+    pub fn build<B>(self) -> Result<HalBundle<B>>
     where
         B: BackendEx,
     {
@@ -237,7 +237,7 @@ impl<'a> HalConfig<'a> {
         let uploader = Uploader::new();
 
         use std::mem::ManuallyDrop;
-        Ok(Hal {
+        Ok(HalBundle {
             relevant: Relevant,
             device,
             allocator,

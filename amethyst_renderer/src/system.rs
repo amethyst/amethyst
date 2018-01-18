@@ -7,8 +7,8 @@ use std::marker::PhantomData;
 
 use gfx_hal::Backend;
 
-use shred::{Resources, RunNow};
-use specs::World;
+use shred::{ResourceId, Resources, RunNow};
+use specs::{System, SystemData, World};
 
 use command::CommandCenter;
 use epoch::CurrentEpoch;
@@ -17,64 +17,41 @@ use hal::{Hal, Renderer};
 use upload::Uploader;
 
 
-struct RenderingSystem<B: Backend> {
+pub struct ActiveGraph(pub usize);
+
+pub struct AllResources<'a>(&'a Resources);
+impl<'a> SystemData<'a> for AllResources<'a> {
+    fn fetch(res: &'a Resources, _id: usize) -> Self { AllResources(res) }
+    fn reads(id: usize) -> Vec<ResourceId> { vec![] }
+    fn writes(id: usize) -> Vec<ResourceId> { vec![] }
+}
+
+pub struct RenderingSystem<B: Backend> {
     pub center: CommandCenter<B>,
     pub renderer: Option<Renderer<B>>,
 }
 
-impl<B> Hal<B>
+impl<'a, B> System<'a> for RenderingSystem<B>
 where
     B: Backend,
 {
-    fn into_system(self, world: &mut World) -> RenderingSystem<B> {
-        let Hal {
-            device,
-            allocator,
-            center,
-            uploader,
-            renderer,
-            current,
-            ..
-        } = self;
-
-        world.add_resource(HalResource {
-            device: Device(device),
-            allocator,
-            uploader,
-            current,
-        });
-
-        RenderingSystem {
-            center,
-            renderer,
-        }
-    }
-}
-
-
-/// `Backend::Device` are actually `Send + Sync`. Except for OpenGL.
-pub struct Device<B: Backend>(B::Device);
-unsafe impl<B> Send for Device<B> where B: Backend {}
-unsafe impl<B> Sync for Device<B> where B: Backend {}
-
-struct HalResource<B: Backend> {
-    pub device: Device<B>,
-    pub allocator: Allocator<B>,
-    pub uploader: Uploader<B>,
-    pub current: CurrentEpoch,
-}
-
-struct ActiveGraph(usize);
-
-impl<'a, B> RunNow<'a> for RenderingSystem<B>
-where
-    B: Backend,
-{
-    fn run_now(&mut self, res: &'a Resources) {
+    type SystemData = AllResources<'a>;
+    fn run(&mut self, AllResources(res): AllResources<'a>) {
         let graph = res.try_fetch::<ActiveGraph>(0).map(|ag| ag.0).unwrap_or(0);
-
-        res.fetch_mut::<HalResource<B>>(0);
+        res.fetch_mut::<Hal<B>>(0);
     }
 }
 
+impl<B> RenderingSystem<B>
+where
+    B: Backend,
+{
+    pub fn cleanup(&mut self, res: &Resources) {
+        let Hal { ref device, ref mut allocator, ref mut current, .. } = *res.fetch_mut::<Hal<B>>(0);
+        self.center.wait_finish(device, current);
+        self.renderer.take().map(|renderer| {
+            renderer.dispose(allocator, device, res)
+        });
+    }
+}
 
