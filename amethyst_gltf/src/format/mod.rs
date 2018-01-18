@@ -9,6 +9,7 @@ use std::sync::Arc;
 use self::importer::{get_image_data, import, Buffers, ImageFormat};
 use animation::{AnimationOutput, InterpolationType, Sampler};
 use assets::{Error as AssetError, Format, FormatValue, Result as AssetResult, ResultExt, Source};
+use core::cgmath::{Matrix4, SquareMatrix};
 use core::transform::LocalTransform;
 use gfx::Primitive;
 use gfx::texture::SamplerInfo;
@@ -534,7 +535,7 @@ fn load_skin(skin: &gltf::Skin, buffers: &Buffers) -> Result<GltfSkin, GltfError
                 .map(|m| unsafe { mem::transmute::<[f32; 16], [[f32; 4]; 4]>(m) })
                 .collect::<Vec<_>>()
         })
-        .unwrap_or(vec![[[0.; 4]; 4]; joints.len()]);
+        .unwrap_or(vec![Matrix4::identity().into(); joints.len()]);
 
     Ok(GltfSkin {
         joints,
@@ -653,19 +654,10 @@ fn load_mesh(
                 let joints = joints.collect::<Vec<_>>();
                 faces
                     .iter()
-                    .map(|i| {
-                        Separate::<JointIds>::new([
-                            joints[*i][0],
-                            joints[*i][1],
-                            joints[*i][2],
-                            joints[*i][3],
-                        ])
-                    })
+                    .map(|i| Separate::<JointIds>::new(joints[*i]))
                     .collect()
             }
-            None => joints
-                .map(|j| Separate::<JointIds>::new([j[0], j[1], j[2], j[3]]))
-                .collect(),
+            None => joints.map(|j| Separate::<JointIds>::new(j)).collect(),
         });
         trace!("Joint ids: {:?}", joint_ids);
 
