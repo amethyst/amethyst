@@ -9,6 +9,7 @@ use std::sync::Arc;
 use self::importer::{get_image_data, import, Buffers, ImageFormat};
 use animation::{AnimationOutput, InterpolationType, Sampler};
 use assets::{Error as AssetError, Format, FormatValue, Result as AssetResult, ResultExt, Source};
+use core::cgmath::{Matrix4, SquareMatrix};
 use core::transform::LocalTransform;
 use gfx::Primitive;
 use gfx::texture::SamplerInfo;
@@ -229,7 +230,10 @@ fn load_channel(
             ))
         }
         Rotation => {
-            let output = AccessorIter::new(sampler.output(), buffers).collect::<Vec<[f32; 4]>>();
+            // gltf quat format: [x, y, z, w], our quat format: [w, x, y, z]
+            let output = AccessorIter::<[f32; 4]>::new(sampler.output(), buffers)
+                .map(|q| [q[3], q[0], q[1], q[2]])
+                .collect::<Vec<_>>();
             let ty = if ty == InterpolationType::Linear {
                 InterpolationType::SphericalLinear
             } else {
@@ -311,7 +315,6 @@ fn load_material(
             name,
         ).map(|(texture, factor)| (GltfTexture::new(texture), [factor[0], factor[1], factor[2]]))?;
 
-    debug!("normal");
     // Can't use map/and_then because of Result returning from the load_texture function
     let normal = match material.normal_texture() {
         Some(normal_texture) => Some((
@@ -327,7 +330,6 @@ fn load_material(
         None => None,
     };
 
-    debug!("occl");
     // Can't use map/and_then because of Result returning from the load_texture function
     let occlusion = match material.occlusion_texture() {
         Some(occlusion_texture) => Some((
@@ -533,13 +535,21 @@ fn load_skin(skin: &gltf::Skin, buffers: &Buffers) -> Result<GltfSkin, GltfError
                 .map(|m| unsafe { mem::transmute::<[f32; 16], [[f32; 4]; 4]>(m) })
                 .collect::<Vec<_>>()
         })
-        .unwrap_or(vec![[[0.; 4]; 4]; joints.len()]);
+        .unwrap_or(vec![Matrix4::identity().into(); joints.len()]);
 
     Ok(GltfSkin {
         joints,
         skeleton,
         inverse_bind_matrices,
     })
+}
+
+fn _flip_check(uv: [f32; 2], flip_v: bool) -> [f32; 2] {
+    if flip_v {
+        [uv[0], 1. - uv[1]]
+    } else {
+        uv
+    }
 }
 
 fn load_mesh(
@@ -602,10 +612,10 @@ fn load_mesh(
         }.map(|texs| match faces {
             Some(ref faces) => faces
                 .iter()
-                .map(|i| Separate::<TexCoord>::new(texs[*i]))
+                .map(|i| Separate::<TexCoord>::new(_flip_check(texs[*i], options.flip_v_coord)))
                 .collect(),
             None => texs.into_iter()
-                .map(|t| Separate::<TexCoord>::new(t))
+                .map(|t| Separate::<TexCoord>::new(_flip_check(t, options.flip_v_coord)))
                 .collect(),
         });
 
@@ -644,21 +654,12 @@ fn load_mesh(
                 let joints = joints.collect::<Vec<_>>();
                 faces
                     .iter()
-                    .map(|i| {
-                        Separate::<JointIds>::new([
-                            joints[*i][0],
-                            joints[*i][1],
-                            joints[*i][2],
-                            joints[*i][3],
-                        ])
-                    })
+                    .map(|i| Separate::<JointIds>::new(joints[*i]))
                     .collect()
             }
-            None => joints
-                .map(|j| Separate::<JointIds>::new([j[0], j[1], j[2], j[3]]))
-                .collect(),
+            None => joints.map(|j| Separate::<JointIds>::new(j)).collect(),
         });
-        debug!("Joint ids: {:?}", joint_ids);
+        trace!("Joint ids: {:?}", joint_ids);
 
         let joint_weights = primitive
             .weights_f32(0, buffers)
@@ -672,7 +673,7 @@ fn load_mesh(
                 }
                 None => weights.map(|w| Separate::<JointWeights>::new(w)).collect(),
             });
-        debug!("Joint weights: {:?}", joint_weights);
+        trace!("Joint weights: {:?}", joint_weights);
 
         let material = primitive.material().index();
 

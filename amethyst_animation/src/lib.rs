@@ -2,8 +2,6 @@ extern crate amethyst_assets;
 extern crate amethyst_core;
 extern crate amethyst_renderer;
 extern crate fnv;
-#[macro_use]
-extern crate log;
 extern crate minterpolate;
 #[macro_use]
 extern crate serde;

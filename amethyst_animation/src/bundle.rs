@@ -24,7 +24,7 @@ impl<'a> VertexSkinningBundle<'a> {
         Default::default()
     }
 
-    /// Set dependencies for the `SamplerInterpolationSystem`
+    /// Set dependencies for the `VertexSkinningSystem`
     pub fn with_dep(mut self, dep: &'a [&'a str]) -> Self {
         self.dep = dep;
         self

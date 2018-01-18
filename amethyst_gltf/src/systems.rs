@@ -220,7 +220,7 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
                     // if handle doesn't exist, load animation data
                     let mut node_indices: HashSet<usize> = HashSet::default();
                     for animation in &mut scene_asset.animations {
-                        debug!("Loading animation: {:?}", animation.nodes);
+                        trace!("Loading animation: {:?}", animation.nodes);
                         node_indices.extend(animation.nodes.iter());
                         if let None = animation.handle {
                             let samplers = animation
@@ -243,7 +243,6 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
                             ));
                         }
                     }
-                    debug!("Indices: {:?}", node_indices);
                     let h = AnimationHierarchy {
                         nodes: node_indices
                             .into_iter()
@@ -252,12 +251,8 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
                             })
                             .collect::<FnvHashMap<_, _>>(),
                     };
-                    debug!("H: {:?}", h);
                     // create animation hierarchy
-                    animation_hierarchies.insert(
-                        entity,
-                        h,
-                    );
+                    animation_hierarchies.insert(entity, h);
                     // create animation set
                     animation_sets.insert(
                         entity,
@@ -441,11 +436,7 @@ fn load_skin(
         meshes: mesh_entities,
         bind_shape_matrix: Matrix4::identity(),
     };
-    debug!("S: {:?}", s);
-    skins.insert(
-        *node_entity,
-      s  ,
-    );
+    skins.insert(*node_entity, s);
 }
 
 // Load a single graphics primitive, attach all data to the given `entity`.

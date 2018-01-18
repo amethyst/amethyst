@@ -109,6 +109,7 @@ pub struct GltfAnimation {
 pub struct GltfSceneOptions {
     pub generate_tex_coords: Option<(f32, f32)>,
     pub load_animations: bool,
+    pub flip_v_coord: bool,
 }
 
 /// Actual asset produced on finished loading of a GLTF scene file.
