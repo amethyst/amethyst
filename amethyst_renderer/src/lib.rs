@@ -11,11 +11,13 @@
 #![deny(unused_must_use)]
 
 extern crate amethyst_core as core;
+extern crate amethyst_assets as assets;
 #[macro_use]
 extern crate derivative;
 #[macro_use]
 extern crate error_chain;
 extern crate hibitset;
+extern crate imagefmt;
 extern crate mint;
 extern crate rayon;
 extern crate rayon_core;
@@ -36,11 +38,14 @@ pub extern crate gfx_backend_metal as metal;
 #[macro_use]
 extern crate thread_profiler;
 
+extern crate wavefront_obj;
+
 pub mod cam;
 pub mod cirque;
 pub mod command;
 pub mod epoch;
 pub mod descriptors;
+pub mod formats;
 pub mod hal;
 pub mod memory;
 pub mod mesh;

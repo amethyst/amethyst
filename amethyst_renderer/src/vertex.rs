@@ -29,7 +29,7 @@ pub trait Attribute: AsFormat + Debug + PartialEq + Pod + Send + Sync {
 /// Type for position attribute of vertex
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Position([f32; 3]);
+pub struct Position(pub [f32; 3]);
 impl<T> From<T> for Position
 where
     T: Into<[f32; 3]>,
@@ -52,7 +52,7 @@ impl Attribute for Position {
 /// Type for color attribute of vertex
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Color([f32; 4]);
+pub struct Color(pub [f32; 4]);
 impl<T> From<T> for Color
 where
     T: Into<[f32; 4]>,
@@ -75,7 +75,7 @@ impl Attribute for Color {
 /// Type for texture coord attribute of vertex
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Normal([f32; 3]);
+pub struct Normal(pub [f32; 3]);
 impl<T> From<T> for Normal
 where
     T: Into<[f32; 3]>,
@@ -97,7 +97,7 @@ impl Attribute for Normal {
 /// Type for tangent attribute of vertex
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Tangent([f32; 3]);
+pub struct Tangent(pub [f32; 3]);
 impl<T> From<T> for Tangent
 where
     T: Into<[f32; 3]>,
@@ -119,7 +119,7 @@ impl Attribute for Tangent {
 /// Type for texture coord attribute of vertex
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct TexCoord([f32; 2]);
+pub struct TexCoord(pub [f32; 2]);
 impl<T> From<T> for TexCoord
 where
     T: Into<[f32; 2]>,

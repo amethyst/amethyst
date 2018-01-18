@@ -5,6 +5,7 @@
 use std::marker::PhantomData;
 use std::mem::size_of;
 
+use assets::{Asset, Handle};
 use core::cgmath::{Deg, Matrix4, Point3, SquareMatrix, Transform, Vector3};
 
 use gfx_hal::{Backend, IndexCount, IndexType, Primitive, VertexCount};
@@ -17,6 +18,7 @@ use smallvec::SmallVec;
 use specs::{Component, DenseVecStorage};
 
 use epoch::{CurrentEpoch, Eh, Epoch};
+use formats::MeshData;
 use hal::Hal;
 use memory::{Allocator, Buffer, cast_vec};
 use upload::{self, Uploader};
@@ -443,6 +445,7 @@ impl From<Vec<u32>> for Indices {
 /// Generics-free mesh builder.
 /// Useful for creating mesh from non-predefined set of data.
 /// Like from glTF.
+#[derive(Clone, Debug)]
 pub struct MeshBuilder {
     vertices: SmallVec<[(Vec<u8>, VertexFormat<'static>); 16]>,
     indices: Option<(Vec<u8>, IndexType)>,
@@ -686,6 +689,18 @@ where
     B: Backend,
 {
     type Storage = DenseVecStorage<Self>;
+}
+
+
+/// A handle to a mesh.
+pub type MeshHandle<B: Backend> = Handle<Mesh<B>>;
+
+impl<B> Asset for Mesh<B>
+where
+    B: Backend,
+{
+    type Data = MeshData;
+    type HandleStorage = DenseVecStorage<MeshHandle<B>>;
 }
 
 

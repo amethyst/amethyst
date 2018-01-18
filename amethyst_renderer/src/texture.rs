@@ -3,15 +3,20 @@
 use std::marker::PhantomData;
 use std::mem::size_of;
 
+use assets::{Asset, Handle};
+
 use gfx_hal::{Backend, Device};
 use gfx_hal::command::{BufferImageCopy, Offset};
 use gfx_hal::device::Extent;
-use gfx_hal::format::{AsFormat, Rgba8Unorm, Swizzle, AspectFlags};
+use gfx_hal::format::{Format, Swizzle, AspectFlags};
 use gfx_hal::image::{FilterMethod, ImageLayout, Kind, Level, SamplerInfo,
                      SubresourceLayers, SubresourceRange, Usage, ViewError, WrapMode};
 use gfx_hal::memory::{Pod, Properties};
 
+use specs::DenseVecStorage;
+
 use epoch::CurrentEpoch;
+use formats::{TextureData};
 use memory::{Allocator, Image, cast_vec};
 use relevant::Relevant;
 use upload::Uploader;
@@ -54,49 +59,40 @@ struct ViewInfo {
 
 /// Builds new textures.
 #[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-pub struct TextureBuilder<F> {
+pub struct TextureBuilder {
+    format: Format,
     image: ImageInfo,
     row_pitch: Option<u32>,
     view: ViewInfo,
     sampler: SamplerInfo,
     data: Vec<u8>,
-    pd: PhantomData<F>,
 }
 
-impl TextureBuilder<Rgba8Unorm> {
+impl TextureBuilder {
     /// Creates a new `TextureBuilder` from the given RGBA color value.
     pub fn from_color_val<C: Into<[f32; 4]>>(rgba: C) -> Self {
         let rgba = rgba.into();
-        let r = rgba[0];
-        let g = rgba[1];
-        let b = rgba[2];
-        let a = rgba[3];
         TextureBuilder::new(vec![
-            (r * 255.0) as u8,
-            (g * 255.0) as u8,
-            (b * 255.0) as u8,
-            (a * 255.0) as u8,
+            rgba[0],
+            rgba[1],
+            rgba[2],
+            rgba[3],
         ])
     }
 }
 
-impl<F> TextureBuilder<F>
-where
-    F: AsFormat,
-{
+impl TextureBuilder {
     /// Creates a new `TextureBuilder` with the given raw texture data.
     pub fn new<D, P>(data: D) -> Self
     where
         D: AsRef<[P]> + Into<Vec<P>>,
         P: Pod,
     {
-        assert_eq!(F::SELF.base_format().0.desc().dim, (1, 1));
-        assert_eq!(F::SELF.base_format().0.desc().aspects, AspectFlags::COLOR);
-
         let len = data.as_ref().len();
         TextureBuilder {
+            format: Format::Rgba8Unorm,
             image: ImageInfo {
-                kind: Kind::D1(len as u16),
+                kind: Kind::D1(len as u16 / 4),
                 levels: 1,
                 usage: Usage::SAMPLED,
             },
@@ -107,31 +103,7 @@ where
             },
             sampler: SamplerInfo::new(FilterMethod::Scale, WrapMode::Clamp),
             data: cast_vec(data.into()),
-            pd: PhantomData,
         }
-    }
-
-    /// Set data row pitch
-    pub fn with_row_pitch(mut self, row_pitch: u32) -> Self {
-        self.row_pitch = Some(row_pitch);
-        self
-    }
-
-    /// Set kind of the texture
-    pub fn with_kind(mut self, kind: Kind) -> Self {
-        self.image.kind = kind;
-        self
-    }
-
-    /// Sets the `SamplerInfo` for the texture
-    pub fn with_sampler(mut self, sampler: SamplerInfo) -> Self {
-        self.sampler = sampler;
-        self
-    }
-
-    /// Sets the number of mipmap levels to generate.
-    pub fn mip_levels(mut self, _val: u8) -> Self {
-        unimplemented!()
     }
 
     /// Builds and returns the new texture.
@@ -149,13 +121,13 @@ where
             device,
             self.image.kind,
             self.image.levels,
-            F::SELF,
+            self.format,
             self.image.usage,
             Properties::DEVICE_LOCAL,
         )?;
 
         let bytes = self.data.len() as u32;
-        let pixel_bits = F::SELF.base_format().0.desc().bits;
+        let pixel_bits = self.format.base_format().0.desc().bits;
         assert_eq!(0, pixel_bits % 8);
         let pixel = pixel_bits / 8;
 
@@ -196,7 +168,7 @@ where
         )?;
 
         let view =
-            device.create_image_view(image.raw(), F::SELF, self.view.swizzle, self.view.range)?;
+            device.create_image_view(image.raw(), self.format, self.view.swizzle, self.view.range)?;
 
         let sampler = device.create_sampler(self.sampler);
         Ok(Texture {
@@ -206,6 +178,38 @@ where
             image,
         })
     }
+
+    /// Set texture format
+    pub fn with_format(mut self, format: Format) -> Self {
+        assert_eq!(format.base_format().0.desc().dim, (1, 1));
+        assert_eq!(format.base_format().0.desc().aspects, AspectFlags::COLOR);
+        self.format = format;
+        self
+    }
+
+    /// Set data row pitch
+    pub fn with_row_pitch(mut self, row_pitch: u32) -> Self {
+        self.row_pitch = Some(row_pitch);
+        self
+    }
+
+    /// Set kind of the texture
+    pub fn with_kind(mut self, kind: Kind) -> Self {
+        self.image.kind = kind;
+        self
+    }
+
+    /// Sets the `SamplerInfo` for the texture
+    pub fn with_sampler(mut self, sampler: SamplerInfo) -> Self {
+        self.sampler = sampler;
+        self
+    }
+
+    /// Sets the number of mipmap levels to generate.
+    pub fn mip_levels(mut self, _val: u8) -> Self {
+        unimplemented!()
+    }
+
 }
 
 
@@ -223,9 +227,8 @@ where
     B: Backend,
 {
     /// Builds a new texture with the given raw texture data.
-    pub fn from_data<F, D, P>(data: D) -> TextureBuilder<F>
+    pub fn from_data<D, P>(data: D) -> TextureBuilder
     where
-        F: AsFormat,
         D: AsRef<[P]> + Into<Vec<P>>,
         P: Pod,
     {
@@ -233,8 +236,8 @@ where
     }
 
     /// Builds a new texture with the given raw texture data.
-    pub fn from_color_val<C: Into<[f32; 4]>>(rgba: C) -> TextureBuilder<Rgba8Unorm> {
-        TextureBuilder::from_color_val(rgba)
+    pub fn from_color_val<C: Into<[f32; 4]>>(rgba: C) -> TextureBuilder {
+        TextureBuilder::from_color_val(rgba).with_format(Format::Rgba32Float)
     }
 
     /// Returns the sampler for the texture.
@@ -246,4 +249,15 @@ where
     pub fn view(&self) -> &B::ImageView {
         &self.view
     }
+}
+
+/// A handle to a `Texture` asset.
+pub type TextureHandle<B: Backend> = Handle<Texture<B>>;
+
+impl<B> Asset for Texture<B>
+where
+    B: Backend,
+{
+    type Data = TextureData;
+    type HandleStorage = DenseVecStorage<TextureHandle<B>>;
 }
