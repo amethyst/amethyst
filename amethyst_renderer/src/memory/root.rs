@@ -24,7 +24,7 @@ pub struct RootAllocator<B> {
     relevant: Relevant,
     id: MemoryTypeId,
     allocations: usize,
-    pd: PhantomData<B>,
+    pd: PhantomData<fn() -> B>,
 }
 
 impl<B> RootAllocator<B> {

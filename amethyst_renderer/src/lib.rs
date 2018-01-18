@@ -46,13 +46,12 @@ pub mod memory;
 pub mod mesh;
 pub mod relevant;
 pub mod graph;
-pub mod shaders;
+pub mod passes;
 pub mod stage;
-// pub mod system;
+pub mod system;
 pub mod texture;
 pub mod upload;
 pub mod uniform;
 pub mod vertex;
 
-mod components;
 mod utils;

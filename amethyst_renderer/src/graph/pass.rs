@@ -23,6 +23,7 @@ use std::ops::Range;
 
 use gfx_hal::Backend;
 use gfx_hal::command::{CommandBuffer, RenderPassInlineEncoder};
+use gfx_hal::device::ShaderError;
 use gfx_hal::format::Format;
 use gfx_hal::pso::{DescriptorSetLayoutBinding, GraphicsShaderSet};
 use gfx_hal::queue::capability::{Supports, Transfer};
@@ -30,12 +31,11 @@ use gfx_hal::queue::capability::{Supports, Transfer};
 use smallvec::SmallVec;
 
 use shred::Resources;
-use specs::{SystemData, World};
+use specs::{Component, DenseVecStorage, NullStorage, SystemData, World};
 
 use descriptors::{DescriptorSet, DescriptorPool};
 use epoch::Epoch;
 use memory::Allocator;
-use shaders::ShaderManager;
 use vertex::VertexFormat;
 
 use graph::build::PassBuilder;
@@ -44,7 +44,14 @@ use descriptors::{Layout, Binder, BindingsList};
 /// Tag component.
 /// Passes should only process entities with `PassTag<Self>`.
 /// But there is no restriction.
-pub struct PassTag<P>(PhantomData<P>);
+pub struct PassTag<P>(PhantomData<fn() -> P>);
+
+impl<P> Component for PassTag<P>
+where
+    P: Send + Sync + 'static,
+{
+    type Storage = NullStorage<Self>;
+}
 
 impl<P> Default for PassTag<P> {
     fn default() -> Self {
@@ -105,9 +112,9 @@ where
     ///
     /// This function gets called during `Graph` build process.
     fn shaders<'a>(
-        manager: &'a mut ShaderManager<B>,
+        shaders: &'a mut SmallVec<[B::ShaderModule; 5]>,
         device: &B::Device,
-    ) -> Result<GraphicsShaderSet<'a, B>, ::shaders::Error>;
+    ) -> Result<GraphicsShaderSet<'a, B>, ShaderError>;
 
     /// This function designed for
     ///
@@ -186,9 +193,9 @@ where
     /// Load shaders
     fn shaders<'a>(
         &self,
-        manager: &'a mut ShaderManager<B>,
+        shaders: &'a mut SmallVec<[B::ShaderModule; 5]>,
         device: &B::Device,
-    ) -> Result<GraphicsShaderSet<'a, B>, ::shaders::Error>;
+    ) -> Result<GraphicsShaderSet<'a, B>, ShaderError>;
 
     /// Reflects [`Pass::prepare`] function
     ///
@@ -262,10 +269,10 @@ where
     /// Load shaders
     fn shaders<'a>(
         &self,
-        manager: &'a mut ShaderManager<B>,
+        shaders: &'a mut SmallVec<[B::ShaderModule; 5]>,
         device: &B::Device,
-    ) -> Result<GraphicsShaderSet<'a, B>, ::shaders::Error> {
-        P::shaders(manager, device)
+    ) -> Result<GraphicsShaderSet<'a, B>, ShaderError> {
+        P::shaders(shaders, device)
     }
 
     fn prepare<'a>(

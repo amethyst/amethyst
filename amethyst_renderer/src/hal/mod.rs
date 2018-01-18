@@ -17,7 +17,6 @@ use command::CommandCenter;
 use epoch::CurrentEpoch;
 use memory::Allocator;
 use relevant::Relevant;
-use shaders::ShaderManager;
 use upload::Uploader;
 
 pub use hal::build::{Error, ErrorKind, HalConfig};
@@ -30,7 +29,6 @@ pub struct Hal<B: Backend> {
     pub uploader: Uploader<B>,
     pub renderer: Option<Renderer<B>>,
     pub current: CurrentEpoch,
-    pub shaders: ShaderManager<B>,
     relevant: Relevant,
 }
 
@@ -44,7 +42,6 @@ where
             renderer.dispose(&mut self.allocator, &self.device, res)
         });
         self.uploader.dispose(&mut self.allocator);
-        self.shaders.unload(&self.device);
         self.allocator.cleanup(&self.device, &self.current);
     }
 }

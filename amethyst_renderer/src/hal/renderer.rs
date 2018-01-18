@@ -22,7 +22,6 @@ use command::{CommandCenter, Execution};
 use epoch::{CurrentEpoch, Epoch};
 use graph::{Graph, SuperFrame, PassBuilder, ColorAttachment};
 use memory::Allocator;
-use shaders::ShaderManager;
 use upload::Uploader;
 
 #[derive(Derivative)]
@@ -93,7 +92,6 @@ where
         present: &ColorAttachment,
         device: &B::Device,
         allocator: &mut Allocator<B>,
-        shaders: &mut ShaderManager<B>,
     ) -> ::graph::Result<usize> {
         assert_eq!(present.format, self.format);
         let (width, height) = self.window.get_inner_size_pixels().unwrap();
@@ -108,7 +106,6 @@ where
             },
             device,
             allocator,
-            shaders,
         )?;
 
         self.graphs.push(graph);

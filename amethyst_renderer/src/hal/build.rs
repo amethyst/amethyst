@@ -14,7 +14,6 @@ use graph::ColorAttachment;
 use hal::renderer::{Renderer, RendererConfig};
 use memory::Allocator;
 use relevant::Relevant;
-use shaders::{ShaderLoader, ShaderManager};
 use upload::Uploader;
 
 #[cfg(feature = "gfx-backend-metal")]
@@ -48,7 +47,7 @@ pub struct HalConfig<'a> {
 }
 
 /// Helper trait to initialize backend
-pub trait BackendEx: ShaderLoader {
+pub trait BackendEx: Backend {
     fn create_window_and_adapters(
         builder: &HalConfig,
     ) -> Result<(Option<(Window, Self::Surface)>, Vec<Adapter<Self>>)>;
@@ -246,7 +245,6 @@ impl<'a> HalConfig<'a> {
             renderer,
             uploader,
             current: CurrentEpoch::new(),
-            shaders: ShaderManager::new(),
         })
     }
 }

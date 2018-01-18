@@ -19,6 +19,18 @@ pub struct Block<B: Backend, T> {
     range: Range<u64>,
 }
 
+unsafe impl<B, T> Send for Block<B, T>
+where
+    B: Backend,
+    T: Send,
+{}
+
+unsafe impl<B, T> Sync for Block<B, T>
+where
+    B: Backend,
+    T: Sync,
+{}
+
 
 impl<B> Block<B, ()>
 where

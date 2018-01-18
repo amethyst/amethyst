@@ -4,12 +4,13 @@ use core::Transform;
 use core::cgmath::{Deg, Matrix, Matrix4, SquareMatrix};
 use gfx_hal::{Backend, Device};
 use gfx_hal::command::{CommandBuffer, RenderPassInlineEncoder};
-// use gfx_hal::format::{Depth, Depth32F, Format, Formatted, Rgba8, Srgb, Srgba8};
+use gfx_hal::device::ShaderError;
 use gfx_hal::memory::Pod;
 use gfx_hal::pso::{DescriptorSetLayoutBinding, DescriptorSetWrite, DescriptorType,
-                   DescriptorWrite, GraphicsShaderSet, ShaderStageFlags, Stage, VertexBufferSet};
+                   DescriptorWrite, EntryPoint, GraphicsShaderSet, Stage, VertexBufferSet};
 use gfx_hal::queue::{Supports, Transfer};
 use shred::Resources;
+use smallvec::SmallVec;
 use specs::{Component, DenseVecStorage, Entities, Fetch, Join, ReadStorage, SystemData, World,
             WriteStorage, StorageEntry};
 
@@ -20,7 +21,6 @@ use epoch::{CurrentEpoch, Epoch};
 use graph::{Data, Pass, PassTag};
 use memory::Allocator;
 use mesh::{Bind as MeshBind, Mesh};
-use shaders::{GraphicsShaderNameSet, ShaderLoader, ShaderManager};
 use uniform::{BasicUniformCache, UniformCache};
 use vertex::{PosColor, VertexFormat, VertexFormatted};
 
@@ -62,7 +62,7 @@ where
 
 impl<B> Pass<B> for DrawFlat
 where
-    B: Backend + ShaderLoader,
+    B: Backend,
 {
     /// Name of the pass
     const NAME: &'static str = "DrawFlat";
@@ -91,13 +91,28 @@ where
 
     /// Load shaders
     fn shaders<'a>(
-        manager: &'a mut ShaderManager<B>,
+        shaders: &'a mut SmallVec<[B::ShaderModule; 5]>,
         device: &B::Device,
-    ) -> Result<GraphicsShaderSet<'a, B>, ::shaders::Error> {
-        manager.load_shader_set(
-            GraphicsShaderNameSet::new("flat", false, false, false, true),
-            device,
-        )
+    ) -> Result<GraphicsShaderSet<'a, B>, ShaderError> {
+        shaders.clear();
+        shaders.push(device.create_shader_module(include_bytes!("vert.spv"))?);
+        shaders.push(device.create_shader_module(include_bytes!("frag.spv"))?);
+
+        Ok(GraphicsShaderSet {
+            vertex: EntryPoint {
+                entry: "main",
+                module: &shaders[0],
+                specialization: &[],
+            },
+            hull: None,
+            domain: None,
+            geometry: None,
+            fragment: Some(EntryPoint {
+                entry: "main",
+                module: &shaders[1],
+                specialization: &[],
+            }),
+        })
     }
 
     fn prepare<'a, C>(

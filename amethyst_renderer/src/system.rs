@@ -8,20 +8,25 @@ use std::marker::PhantomData;
 use gfx_hal::Backend;
 
 use shred::{Resources, RunNow};
+use specs::World;
 
-use hal::Hal;
+use command::CommandCenter;
+use epoch::CurrentEpoch;
+use memory::Allocator;
+use hal::{Hal, Renderer};
+use upload::Uploader;
 
 
 struct RenderingSystem<B: Backend> {
     pub center: CommandCenter<B>,
-    pub shaders: ShaderManager<B>,
+    pub renderer: Option<Renderer<B>>,
 }
 
-impl<B> RenderingSystem<B>
+impl<B> Hal<B>
 where
     B: Backend,
 {
-    fn new(hal: Hal<B>, world: &mut World) -> Self {
+    fn into_system(self, world: &mut World) -> RenderingSystem<B> {
         let Hal {
             device,
             allocator,
@@ -29,24 +34,34 @@ where
             uploader,
             renderer,
             current,
-            shaders,
             ..
-        } = hal;
+        } = self;
+
+        world.add_resource(HalResource {
+            device: Device(device),
+            allocator,
+            uploader,
+            current,
+        });
 
         RenderingSystem {
             center,
-            shaders,
+            renderer,
         }
     }
 }
 
+
+/// `Backend::Device` are actually `Send + Sync`. Except for OpenGL.
+pub struct Device<B: Backend>(B::Device);
+unsafe impl<B> Send for Device<B> where B: Backend {}
+unsafe impl<B> Sync for Device<B> where B: Backend {}
+
 struct HalResource<B: Backend> {
-    pub device: B::Device,
+    pub device: Device<B>,
     pub allocator: Allocator<B>,
     pub uploader: Uploader<B>,
-    pub renderer: Option<Renderer<B>>,
     pub current: CurrentEpoch,
-    pub shaders: ShaderManager<B>,
 }
 
 struct ActiveGraph(usize);

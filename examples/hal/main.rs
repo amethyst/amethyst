@@ -11,8 +11,6 @@ extern crate shred;
 extern crate specs;
 extern crate winit;
 
-mod flat;
-
 // use amethyst::assets::Loader;
 
 use core::cgmath::{Deg, Matrix, Matrix4, Point3, SquareMatrix, Vector3};
@@ -47,7 +45,7 @@ use metal::Backend;
 use Backend;
 
 
-use flat::{DrawFlat, TrProjView};
+use renderer::passes::flat::{DrawFlat, TrProjView};
 
 error_chain!{}
 
@@ -66,7 +64,6 @@ fn run() -> Result<()> {
         ref mut uploader,
         ref mut renderer,
         ref mut current,
-        ref mut shaders,
         ..
     } = HalConfig {
         adapter: None,
@@ -85,8 +82,6 @@ fn run() -> Result<()> {
 
     let ref mut renderer = *renderer.as_mut().unwrap();
 
-    shaders.set_shaders_dir(format!("{}/examples/hal", env!("CARGO_MANIFEST_DIR")));
-
     println!("Build graph");    
     let mut graph = {
         let depth = DepthStencilAttachment::new(D32Float::SELF).clear(ClearDepthStencil(1.0, 0));
@@ -97,7 +92,7 @@ fn run() -> Result<()> {
             .with_depth(&depth);
 
         renderer
-            .add_graph(&[&pass], &present, &device, allocator, shaders)
+            .add_graph(&[&pass], &present, &device, allocator)
             .chain_err(|| "Can't build graph")?
     };
 

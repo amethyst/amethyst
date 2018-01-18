@@ -9,13 +9,13 @@ use gfx_hal::memory::Properties;
 use gfx_hal::pass;
 use gfx_hal::pso;
 
+use smallvec::SmallVec;
 use specs::World;
 
 use descriptors::DescriptorPool;
 use graph::{ErrorKind, PassNode, Result, SuperFramebuffer};
 use graph::pass::{AnyPass, Pass};
 use memory::{Allocator, Image};
-use shaders::ShaderManager;
 use vertex::VertexFormat;
 
 pub const COLOR_RANGE: image::SubresourceRange = image::SubresourceRange {
@@ -211,7 +211,6 @@ where
     pub(crate) fn build(
         &self,
         device: &B::Device,
-        shaders: &mut ShaderManager<B>,
         inputs: &[InputAttachmentDesc<B>],
         colors: &[ColorAttachmentDesc<B>],
         depth_stencil: Option<DepthStencilAttachmentDesc<B>>,
@@ -348,11 +347,12 @@ where
         // Create `PipelineLayout` from single `DescriptorSetLayout`
         let pipeline_layout = device.create_pipeline_layout(&[descriptors.layout()], &[]);
 
+        let mut shaders = SmallVec::new();
         // Create `GraphicsPipeline`
         let graphics_pipeline = {
             // Init basic configuration
             let mut pipeline_desc = pso::GraphicsPipelineDesc::new(
-                pass.shaders(shaders, device)?,
+                pass.shaders(&mut shaders, device)?,
                 self.primitive,
                 self.rasterizer.clone(),
                 &pipeline_layout,
@@ -390,6 +390,10 @@ where
                 .pop()
                 .unwrap()?
         };
+
+        for module in shaders {
+            device.destroy_shader_module(module);
+        }
 
         // This color will be set to targets that aren't get cleared
         let ignored_color = ClearColor::Float([0.1, 0.2, 0.3, 1.0]);

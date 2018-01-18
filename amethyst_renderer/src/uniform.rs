@@ -10,7 +10,7 @@ use gfx_hal::command::CommandBuffer;
 use gfx_hal::memory::{cast_slice, Pod, Properties};
 use gfx_hal::queue::{Supports, Transfer};
 
-use specs::{Entity, MaskedStorage, Storage};
+use specs::{Component, DenseVecStorage, Entity, MaskedStorage, Storage};
 
 use cirque::{Cirque, Entry};
 use epoch::{Eh, Epoch};
@@ -178,4 +178,12 @@ where
 
         Ok(buffer)
     }
+}
+
+impl<B, T> Component for BasicUniformCache<B, T>
+where
+    B: Backend,
+    T: Send + Sync + 'static,
+{
+    type Storage = DenseVecStorage<Self>;
 }

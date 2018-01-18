@@ -14,6 +14,7 @@ use gfx_hal::memory::Properties;
 use gfx_hal::pso::VertexBufferSet;
 
 use smallvec::SmallVec;
+use specs::{Component, DenseVecStorage};
 
 use epoch::{CurrentEpoch, Eh, Epoch};
 use hal::Hal;
@@ -679,6 +680,14 @@ where
         &self.transform
     }
 }
+
+impl<B> Component for Mesh<B>
+where
+    B: Backend,
+{
+    type Storage = DenseVecStorage<Self>;
+}
+
 
 error_chain! {
     types {

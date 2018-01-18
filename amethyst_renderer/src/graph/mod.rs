@@ -11,7 +11,7 @@ use std::ops::Range;
 
 use gfx_hal::Backend;
 use gfx_hal::command::{ClearValue, CommandBuffer, Rect, Viewport};
-use gfx_hal::device::{Device, Extent};
+use gfx_hal::device::{Device, Extent, ShaderError};
 use gfx_hal::format::{Format, Swizzle};
 use gfx_hal::image;
 use gfx_hal::memory::Properties;
@@ -31,7 +31,6 @@ use graph::pass::AnyPass;
 // use graph::build::{AttachmentImageViews, InputAttachmentDesc, ColorAttachmentDesc, DepthStencilAttachmentDesc, reorder_passes, create_target, COLOR_RANGE, outputs, indices_in_of, some_indices_in_of, siblings, dependencies, direct_dependencies, linear_dependencies};
 use graph::build::*;
 use memory::{Allocator, Image};
-use shaders::ShaderManager;
 
 pub use graph::build::{ColorAttachment, DepthStencilAttachment, PassBuilder};
 pub use graph::pass::{Data, Pass, PassTag};
@@ -42,16 +41,38 @@ error_chain!{
             description("Failed to create framebuffer")
             display("Failed to create framebuffer")
         }
+
+        CompilationFailed(msg: String) {
+            description("Shader compilation failed")
+            display("Shader compilation failed: {}", msg)
+        }
+        MissingEntryPoint(msg: String) {
+            description("Missing shader entry point")
+            display("Missing shader entry point: {}", msg)
+        }
+        InterfaceMismatch(msg: String) {
+            description("Shader interface mismatch")
+            display("Shader interface mismatch: {}", msg)
+        }
     }
 
     links {
         Memory(::memory::Error, ::memory::ErrorKind);
-        Shader(::shaders::Error, ::shaders::ErrorKind);
     }
 
     foreign_links {
         CreationError(CreationError);
         ViewError(image::ViewError);
+    }
+}
+
+impl From<ShaderError> for Error {
+    fn from(error: ShaderError) -> Error {
+        match error {
+            ShaderError::CompilationFailed(msg) => ErrorKind::CompilationFailed(msg).into(),
+            ShaderError::MissingEntryPoint(msg) => ErrorKind::MissingEntryPoint(msg).into(),
+            ShaderError::InterfaceMismatch(msg) => ErrorKind::InterfaceMismatch(msg).into(),
+        }
     }
 }
 
@@ -345,7 +366,6 @@ where
         extent: Extent,
         device: &B::Device,
         allocator: &mut Allocator<B>,
-        shaders: &mut ShaderManager<B>,
     ) -> Result<Self> {
         // Create views for backbuffer
         let (mut image_views, frames) = match *backbuffer {
@@ -500,7 +520,6 @@ where
 
             let mut node = pass.build(
                 device,
-                shaders,
                 &inputs[..],
                 &colors[..],
                 depth_stencil,
