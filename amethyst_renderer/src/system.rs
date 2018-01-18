@@ -17,7 +17,7 @@ use hal::{Hal, Renderer};
 use upload::Uploader;
 
 
-pub struct ActiveGraph(pub usize);
+pub struct ActiveGraph(pub Option<usize>);
 
 pub struct AllResources<'a>(&'a Resources);
 impl<'a> SystemData<'a> for AllResources<'a> {
@@ -37,8 +37,9 @@ where
 {
     type SystemData = AllResources<'a>;
     fn run(&mut self, AllResources(res): AllResources<'a>) {
-        let graph = res.try_fetch::<ActiveGraph>(0).map(|ag| ag.0).unwrap_or(0);
-        res.fetch_mut::<Hal<B>>(0);
+        if let Some(graph) = res.fetch::<ActiveGraph>(0).0 {
+            res.fetch_mut::<Hal<B>>(0);
+        }
     }
 }
 

@@ -8,8 +8,8 @@ use core::frame_limiter::FrameLimiter;
 use ecs::{DispatcherBuilder, World};
 use ecs::common::Errors;
 use rayon::{Configuration, ThreadPool};
-use renderer::Event;
 use shrev::EventChannel;
+use winit::Event;
 
 use thread_profiler::register_thread_with_profiler;
 

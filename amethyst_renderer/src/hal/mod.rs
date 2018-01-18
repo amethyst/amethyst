@@ -73,7 +73,7 @@ where
         };
 
         world.add_resource(hal);
-        world.add_resource(ActiveGraph(0));
+        world.add_resource(ActiveGraph(None));
         world.add_resource(AmbientLight([0.01; 3]));
         world.add_resource(WindowMessages::new());
         world.add_resource(ScreenDimensions::new(0, 0));

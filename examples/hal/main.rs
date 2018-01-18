@@ -30,7 +30,7 @@ use renderer::*;
 use renderer::cam::{ActiveCamera, Camera};
 use renderer::graph::{Graph, Pass, ColorAttachment, DepthStencilAttachment, PassTag};
 use renderer::descriptors::DescriptorSet;
-use renderer::hal::{Hal, HalConfig, Renderer, RendererConfig};
+use renderer::hal::{Hal, HalBundle, HalConfig, Renderer, RendererConfig};
 use renderer::memory::Allocator;
 use renderer::mesh::{Mesh, MeshBuilder};
 use renderer::uniform::BasicUniformCache;
@@ -57,7 +57,7 @@ fn run() -> Result<()> {
     let mut events_loop = winit::EventsLoop::new();
 
     println!("Init HAL");
-    let Hal {
+    let HalBundle {
         ref mut device,
         ref mut allocator,
         ref mut center,

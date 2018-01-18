@@ -1,7 +1,7 @@
 //! Utilities for game state management.
 
 use ecs::World;
-use renderer::Event;
+use winit::Event;
 
 /// Types of state transitions.
 pub enum Trans {

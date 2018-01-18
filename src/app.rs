@@ -384,6 +384,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     pub fn register<C>(mut self) -> Self
     where
         C: Component,
+        C::Storage: Default,
     {
         self.world.register::<C>();
         self
@@ -816,6 +817,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     pub fn register_asset<A>(mut self) -> Self
     where
         A: Asset,
+        A::HandleStorage: Default,
     {
         use assets::{AssetStorage, Handle};
 
