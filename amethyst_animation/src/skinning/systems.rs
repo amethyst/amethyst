@@ -59,11 +59,8 @@ impl<'a> System<'a> for VertexSkinningSystem {
                                 let mut matrix = matrices.get_mut(*mesh_entity).unwrap();
                                 matrix.matrices = joint_matrices
                                     .iter()
-                                    .map(|joint_matrix| {
-                                        (global_inverse * joint_matrix).into()
-                                    })
+                                    .map(|joint_matrix| (global_inverse * joint_matrix).into())
                                     .collect();
-                                debug!("New joint matrices: {:?}", matrix);
                             }
 
                             None => (),

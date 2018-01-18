@@ -5,8 +5,8 @@ extern crate amethyst_animation;
 extern crate amethyst_gltf;
 
 use amethyst::assets::{AssetStorage, Handle, Loader};
-use amethyst::core::cgmath::{Array, Deg, Quaternion, Rotation3, Vector3};
-use amethyst::core::transform::{LocalTransform, Parent, Transform, TransformBundle};
+use amethyst::core::cgmath::{Deg, Quaternion, Rotation3, Vector3};
+use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
 use amethyst::ecs::Entity;
 use amethyst::prelude::*;
 use amethyst::renderer::*;
@@ -26,10 +26,11 @@ impl State for Example {
         let gltf_scene = load_gltf_mesh(
             &world,
             &*world.read_resource(),
-            "mesh/RiggedSimple.gltf",
+            "mesh/Monster.gltf",
             GltfSceneOptions {
                 generate_tex_coords: Some((0.1, 0.1)),
                 load_animations: true,
+                flip_v_coord: true,
             },
         );
 
@@ -68,8 +69,9 @@ impl State for Example {
         println!("Put camera");
 
         let mut camera_transform = LocalTransform::default();
-        camera_transform.translation = Vector3::new(-10.0, 0.0, 0.0);
-        camera_transform.rotation = Quaternion::from_angle_y(Deg(-90.));
+        camera_transform.translation = Vector3::new(-40.0, 40.0, 30.0);
+        camera_transform.rotation =
+            Quaternion::from_angle_y(Deg(-70.)) * Quaternion::from_angle_x(Deg(-20.));
         world
             .create_entity()
             .with(Camera::from(Projection::perspective(
@@ -145,13 +147,20 @@ fn run() -> Result<(), amethyst::Error> {
     );
 
     let mut game = Application::build(resources_directory, Example)?
+        .with(GltfSceneLoaderSystem::new(), "loader_system", &[])
         .with_bundle(RenderBundle::new())?
-        .with_bundle(AnimationBundle::new())?
-        .with_bundle(TransformBundle::new().with_dep(&["animation_control_system"]))?
-        .with_bundle(VertexSkinningBundle::new().with_dep(&["transform_system"]))?
+        .with_bundle(AnimationBundle::new().with_dep(&["loader_system"]))?
+        .with_bundle(
+            TransformBundle::new()
+                .with_dep(&["animation_control_system", "sampler_interpolation_system"]),
+        )?
+        .with_bundle(VertexSkinningBundle::new().with_dep(&[
+            "transform_system",
+            "animation_control_system",
+            "sampler_interpolation_system",
+        ]))?
         .with_local(RenderSystem::build(pipe, Some(config))?)
         .with_resource(AssetStorage::<GltfSceneAsset>::new())
-        .with(GltfSceneLoaderSystem::new(), "", &[])
         .register::<Handle<GltfSceneAsset>>()
         .build()?;
 
