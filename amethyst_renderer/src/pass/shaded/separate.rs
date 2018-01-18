@@ -3,7 +3,7 @@
 use amethyst_assets::AssetStorage;
 use amethyst_core::transform::Transform;
 use gfx::pso::buffer::ElemStride;
-use specs::{Entities, Fetch, Join, ReadStorage};
+use specs::{Entities, Fetch, Join, ReadStorage, World};
 
 use super::*;
 use cam::{ActiveCamera, Camera};
@@ -66,7 +66,7 @@ impl<'a> PassData<'a> for DrawShadedSeparate {
 }
 
 impl Pass for DrawShadedSeparate {
-    fn compile(&self, effect: NewEffect) -> Result<Effect> {
+    fn compile(&mut self, effect: NewEffect, _world: &mut World) -> Result<Effect> {
         debug!("Building shaded pass");
         let mut builder = if self.skinning {
             create_skinning_effect(effect, FRAG_SRC)

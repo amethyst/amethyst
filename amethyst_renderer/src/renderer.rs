@@ -8,6 +8,7 @@ use pipe::{ColorBuffer, DepthBuffer, PipelineBuild, PipelineData, PolyPipeline, 
 use tex::{Texture, TextureBuilder};
 use types::{ColorFormat, DepthFormat, Device, Encoder, Factory, Window};
 use winit::{EventsLoop, Window as WinitWindow, WindowBuilder};
+use specs::World;
 
 /// Generic renderer.
 pub struct Renderer {
@@ -57,12 +58,12 @@ impl Renderer {
     }
 
     /// Builds a new renderer pipeline.
-    pub fn create_pipe<B, P>(&mut self, pb: B) -> Result<P>
+    pub fn create_pipe<B, P>(&mut self, pb: B, world: &mut World) -> Result<P>
     where
         P: PolyPipeline,
         B: PipelineBuild<Pipeline = P>,
     {
-        pb.build(&mut self.factory, &self.main_target, self.multisampling)
+        pb.build(&mut self.factory, &self.main_target, self.multisampling, world)
     }
 
     /// Draws a scene with the given pipeline.

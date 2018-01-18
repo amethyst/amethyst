@@ -16,7 +16,7 @@ use amethyst::core::transform::TransformBundle;
 use amethyst::ecs::{Component, DenseVecStorage};
 use amethyst::input::InputBundle;
 use amethyst::prelude::*;
-use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline, PosTex, RenderBundle, RenderSystem,
+use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline, PosTex, RenderBundle,
                          Stage};
 use amethyst::ui::{DrawUi, UiBundle};
 
@@ -64,8 +64,13 @@ fn run() -> Result<()> {
     );
 
     let assets_dir = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
-
-    let game = Application::build(assets_dir, Pong)?
+    let pipe = Pipeline::build().with_stage(
+        Stage::with_backbuffer()
+            .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
+            .with_pass(DrawFlat::<PosTex>::new())
+            .with_pass(DrawUi::new()),
+    );
+    let mut game = Application::build(assets_dir, Pong)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             144,
@@ -76,25 +81,11 @@ fn run() -> Result<()> {
         .with_bundle(PongBundle)?
         .with_bundle(TransformBundle::new().with_dep(&["ball_system", "paddle_system"]))?
         .with_bundle(AudioBundle::new(|music: &mut Music| music.music.next()))?
-        .with_bundle(RenderBundle::new())?
-        .with_bundle(UiBundle::new())?;
-
-    let pipe = {
-        let loader = game.world.read_resource();
-        let mesh_storage = game.world.read_resource();
-        Pipeline::build().with_stage(
-            Stage::with_backbuffer()
-                .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-                .with_pass(DrawFlat::<PosTex>::new())
-                .with_pass(DrawUi::new(&loader, &mesh_storage)),
-        )
-    };
-
-    Ok(
-        game.with_local(RenderSystem::build(pipe, Some(display_config))?)
-            .build()?
-            .run(),
-    )
+        .with_bundle(UiBundle::new())?
+        .with_bundle(RenderBundle::new(pipe, Some(display_config)))?
+        .build()?;
+    game.run();
+    Ok(())
 }
 
 pub struct Ball {

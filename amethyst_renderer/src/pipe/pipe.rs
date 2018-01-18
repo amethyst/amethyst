@@ -1,5 +1,5 @@
 use hetseq::*;
-use specs::SystemData;
+use specs::{SystemData, World};
 
 use super::stage::*;
 use super::target::*;
@@ -212,18 +212,18 @@ pub trait PipelineBuild {
     type Pipeline: PolyPipeline;
 
     /// Build pipeline
-    fn build(self, fac: &mut Factory, out: &Target, multisampling: u16) -> Result<Self::Pipeline>;
+    fn build(self, fac: &mut Factory, out: &Target, multisampling: u16, world: &mut World) -> Result<Self::Pipeline>;
 }
 
 impl<L, Z, R, Q> PipelineBuild for PipelineBuilder<Q>
 where
     Q: IntoList<List = L>,
-    L: for<'a> Functor<BuildStage<'a>, Output = Z>,
+    L: for<'a, 'b> Functor<BuildStage<'a, 'b>, Output = Z>,
     Z: Try<Error, Ok = R>,
     R: PolyStages,
 {
     type Pipeline = Pipeline<R>;
-    fn build(mut self, fac: &mut Factory, out: &Target, multisampling: u16) -> Result<Pipeline<R>> {
+    fn build(mut self, fac: &mut Factory, out: &Target, multisampling: u16, world: &mut World) -> Result<Pipeline<R>> {
         let mut targets = self.targets
             .drain(..)
             .map(|tb| tb.build(fac, out.size()))
@@ -233,50 +233,52 @@ where
 
         let stages = self.stages
             .into_list()
-            .fmap(BuildStage::new(fac, &targets, multisampling))
+            .fmap(BuildStage::new(fac, &targets, multisampling, world))
             .try()?;
 
         Ok(Pipeline { stages, targets })
     }
 }
 
-pub struct BuildStage<'a> {
+pub struct BuildStage<'a, 'b> {
     factory: &'a mut Factory,
     targets: &'a Targets,
+    world: &'b mut World,
     multisampling: u16,
 }
 
-impl<'a> BuildStage<'a> {
-    fn new(factory: &'a mut Factory, targets: &'a Targets, multisampling: u16) -> Self {
+impl<'a, 'b> BuildStage<'a, 'b> {
+    fn new(factory: &'a mut Factory, targets: &'a Targets, multisampling: u16, world: &'b mut World) -> Self {
         BuildStage {
             factory,
             targets,
+            world,
             multisampling,
         }
     }
 }
 
-impl<'a, Q, L, Z, R> HetFnOnce<(StageBuilder<Q>,)> for BuildStage<'a>
+impl<'a, 'b, Q, L, Z, R> HetFnOnce<(StageBuilder<Q>,)> for BuildStage<'a, 'b>
 where
     Q: IntoList<List = L>,
-    L: for<'b> Functor<CompilePass<'b>, Output = Z>,
+    L: for<'c, 'd> Functor<CompilePass<'c, 'd>, Output = Z>,
     Z: Try<Error, Ok = R>,
     R: Passes,
 {
     type Output = Result<Stage<R>>;
     fn call_once(self, (stage,): (StageBuilder<Q>,)) -> Result<Stage<R>> {
-        stage.build(self.factory, self.targets, self.multisampling)
+        stage.build(self.factory, self.targets, self.world, self.multisampling)
     }
 }
 
-impl<'a, Q, L, Z, R> HetFnMut<(StageBuilder<Q>,)> for BuildStage<'a>
+impl<'a, 'b, Q, L, Z, R> HetFnMut<(StageBuilder<Q>,)> for BuildStage<'a, 'b>
 where
     Q: IntoList<List = L>,
-    L: for<'b> Functor<CompilePass<'b>, Output = Z>,
+    L: for<'c, 'd> Functor<CompilePass<'c, 'd>, Output = Z>,
     Z: Try<Error, Ok = R>,
     R: Passes,
 {
     fn call_mut(&mut self, (stage,): (StageBuilder<Q>,)) -> Result<Stage<R>> {
-        stage.build(self.factory, self.targets, self.multisampling)
+        stage.build(self.factory, self.targets, self.world, self.multisampling)
     }
 }

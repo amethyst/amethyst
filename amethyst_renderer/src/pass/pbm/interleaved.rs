@@ -5,7 +5,7 @@ use std::marker::PhantomData;
 use amethyst_assets::AssetStorage;
 use amethyst_core::transform::Transform;
 use gfx::pso::buffer::ElemStride;
-use specs::{Fetch, Join, ReadStorage};
+use specs::{Fetch, Join, ReadStorage, World};
 
 use super::*;
 use cam::{ActiveCamera, Camera};
@@ -63,7 +63,7 @@ impl<V> Pass for DrawPbm<V>
 where
     V: Query<(Position, Normal, Tangent, TexCoord)>,
 {
-    fn compile(&self, effect: NewEffect) -> Result<Effect> {
+    fn compile(&mut self, effect: NewEffect, _world: &mut World) -> Result<Effect> {
         let mut builder = effect.simple(VERT_SRC, FRAG_SRC);
         builder.with_raw_vertex_buffer(V::QUERIED_ATTRIBUTES, V::size() as ElemStride, 0);
         setup_vertex_args(&mut builder);

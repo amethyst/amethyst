@@ -18,7 +18,7 @@ use gfx_glyph::{BuiltInLineBreaker, FontId, GlyphBrush, GlyphBrushBuilder, Glyph
                 HorizontalAlign, Layout, Scale, SectionText, VariedSection, VerticalAlign};
 use hibitset::BitSet;
 use rusttype::Point;
-use specs::{Entities, Entity, Fetch, Join, ReadStorage, WriteStorage};
+use specs::{Entities, Entity, Fetch, Join, ReadStorage, World, WriteStorage};
 use unicode_segmentation::UnicodeSegmentation;
 
 use super::*;
@@ -61,7 +61,7 @@ impl Hash for KeyColor {
 
 /// Draw Ui elements.  UI won't display without this.  It's recommended this be your last pass.
 pub struct DrawUi {
-    mesh_handle: MeshHandle,
+    mesh_handle: Option<MeshHandle>,
     cached_draw_order: CachedDrawOrder,
     cached_color_textures: HashMap<KeyColor, TextureHandle>,
     glyph_brushes: GlyphBrushCache,
@@ -78,37 +78,9 @@ type GlyphBrushCache = HashMap<
 
 impl DrawUi {
     /// Create instance of `DrawUi` pass
-    pub fn new(loader: &Loader, mesh_storage: &AssetStorage<Mesh>) -> Self {
-        // Initialize a single unit quad, we'll use this mesh when drawing quads later
-        let data = vec![
-            PosTex {
-                position: [0., 1., 0.],
-                tex_coord: [0., 0.],
-            },
-            PosTex {
-                position: [1., 1., 0.],
-                tex_coord: [1., 0.],
-            },
-            PosTex {
-                position: [1., 0., 0.],
-                tex_coord: [1., 1.],
-            },
-            PosTex {
-                position: [0., 1., 0.],
-                tex_coord: [0., 0.],
-            },
-            PosTex {
-                position: [1., 0., 0.],
-                tex_coord: [1., 1.],
-            },
-            PosTex {
-                position: [0., 0., 0.],
-                tex_coord: [0., 1.],
-            },
-        ].into();
-        let mesh_handle = loader.load_from_data(data, (), mesh_storage);
+    pub fn new() -> Self {
         DrawUi {
-            mesh_handle,
+            mesh_handle: None,
             cached_draw_order: CachedDrawOrder {
                 cached: BitSet::new(),
                 cache: Vec::new(),
@@ -137,7 +109,37 @@ impl<'a> PassData<'a> for DrawUi {
 }
 
 impl Pass for DrawUi {
-    fn compile(&self, effect: NewEffect) -> Result<Effect> {
+    fn compile(&mut self, effect: NewEffect, world: &mut World) -> Result<Effect> {
+        // Initialize a single unit quad, we'll use this mesh when drawing quads later
+        let data = vec![
+            PosTex {
+                position: [0., 1., 0.],
+                tex_coord: [0., 0.],
+            },
+            PosTex {
+                position: [1., 1., 0.],
+                tex_coord: [1., 0.],
+            },
+            PosTex {
+                position: [1., 0., 0.],
+                tex_coord: [1., 1.],
+            },
+            PosTex {
+                position: [0., 1., 0.],
+                tex_coord: [0., 0.],
+            },
+            PosTex {
+                position: [1., 0., 0.],
+                tex_coord: [1., 1.],
+            },
+            PosTex {
+                position: [0., 0., 0.],
+                tex_coord: [0., 1.],
+            },
+        ].into();
+        let loader: &Loader = &*world.read_resource();
+        let mesh_storage = &*world.read_resource();
+        self.mesh_handle = Some(loader.load_from_data(data, (), mesh_storage));
         use std::mem;
         effect
             .simple(VERT_SRC, FRAG_SRC)
@@ -230,7 +232,7 @@ impl Pass for DrawUi {
             1.,
         );
 
-        let mesh = match mesh_storage.get(&self.mesh_handle) {
+        let mesh = match mesh_storage.get(self.mesh_handle.as_ref().unwrap()) {
             Some(mesh) => mesh,
             None => return,
         };

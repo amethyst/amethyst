@@ -158,24 +158,21 @@ fn run() -> Result<(), amethyst::Error> {
 
     let resources = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
     let config = DisplayConfig::load(&display_config_path);
-
-    let mut game = Application::build(resources, Example { fps_display: None })?
-        .with_bundle(RenderBundle::new())?
-        .with_bundle(UiBundle::new())?
-        .with_bundle(FPSCounterBundle::default())?;
     let pipe = {
-        let loader = game.world.read_resource();
-        let mesh_storage = game.world.read_resource();
-
         Pipeline::build().with_stage(
             Stage::with_backbuffer()
                 .clear_target(BACKGROUND_COLOUR, 1.0)
                 .with_pass(DrawShaded::<PosNormTex>::new())
-                .with_pass(DrawUi::new(&loader, &mesh_storage)),
+                .with_pass(DrawUi::new()),
         )
     };
-    game = game.with_local(RenderSystem::build(pipe, Some(config))?);
-    Ok(game.build()?.run())
+    let mut game = Application::build(resources, Example { fps_display: None })?
+        .with_bundle(UiBundle::new())?
+        .with_bundle(FPSCounterBundle::default())?
+        .with_bundle(RenderBundle::new(pipe, Some(config)))?
+        .build()?;
+    game.run();
+    Ok(())
 }
 
 fn main() {

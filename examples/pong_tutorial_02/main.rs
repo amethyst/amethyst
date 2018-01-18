@@ -5,7 +5,7 @@ mod pong;
 use amethyst::Result;
 use amethyst::core::transform::TransformBundle;
 use amethyst::prelude::*;
-use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline, PosTex, RenderBundle, RenderSystem,
+use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline, PosTex, RenderBundle,
                          Stage};
 
 fn run() -> Result<()> {
@@ -26,11 +26,10 @@ fn run() -> Result<()> {
 
     let mut game = Application::build("./", Pong)?
         .with_bundle(TransformBundle::new())?
-        .with_bundle(RenderBundle::new())?
-        .with_local(RenderSystem::build(pipe, Some(config))?)
+        .with_bundle(RenderBundle::new(pipe, Some(config)))?
         .build()?;
-
-    Ok(game.run())
+    game.run();
+    Ok(())
 }
 
 fn main() {

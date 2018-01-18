@@ -373,8 +373,7 @@ also add the `TransformSystem` for working with those components:
 ```rust,ignore
 let mut game = Application::build("./", Pong)?
     .with_bundle(TransformBundle::new())? //Add this bundle
-    .with_bundle(RenderBundle::new())?
-    .with_local(RenderSystem::build(pipe, Some(config))?)
+    .with_bundle(RenderBundle::new(pipe, Some(config)))?
     .build()?;
 ```
 

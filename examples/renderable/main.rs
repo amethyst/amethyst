@@ -16,7 +16,7 @@ use amethyst::ecs::{Entity, Fetch, FetchMut, Join, ReadStorage, System, World, W
 use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, DisplayConfig, DrawShaded,
                          ElementState, Event, KeyboardInput, Light, Material, MaterialDefaults,
                          MeshHandle, ObjFormat, Pipeline, PngFormat, PointLight, PosNormTex,
-                         Projection, RenderBundle, RenderSystem, Rgba, Stage, VirtualKeyCode,
+                         Projection, RenderBundle, Rgba, Stage, VirtualKeyCode,
                          WindowEvent};
 use amethyst::ui::{DrawUi, FontHandle, TtfFormat, UiBundle, UiText, UiTransform};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
@@ -382,29 +382,22 @@ fn run() -> Result<(), Error> {
     );
 
     let display_config = DisplayConfig::load(display_config_path);
-
-    let game = Application::build(resources_directory, Example)?
-        .with::<ExampleSystem>(ExampleSystem, "example_system", &[])
-        .with_frame_limit(FrameRateLimitStrategy::Unlimited, 0)
-        .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
-        .with_bundle(RenderBundle::new())?
-        .with_bundle(UiBundle::new())?
-        .with_bundle(HotReloadBundle::default())?
-        .with_bundle(FPSCounterBundle::default())?;
-    let pipeline_builder = {
-        let loader = game.world.read_resource();
-        let mesh_storage = game.world.read_resource();
-
+    let pipeline_builder = 
         Pipeline::build().with_stage(
             Stage::with_backbuffer()
                 .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
                 .with_pass(DrawShaded::<PosNormTex>::new())
-                .with_pass(DrawUi::new(&loader, &mesh_storage)),
-        )
-    };
-    let mut game = game.with_local(RenderSystem::build(pipeline_builder, Some(display_config))?)
+                .with_pass(DrawUi::new()),
+        );
+    let mut game = Application::build(resources_directory, Example)?
+        .with::<ExampleSystem>(ExampleSystem, "example_system", &[])
+        .with_frame_limit(FrameRateLimitStrategy::Unlimited, 0)
+        .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
+        .with_bundle(UiBundle::new())?
+        .with_bundle(HotReloadBundle::default())?
+        .with_bundle(FPSCounterBundle::default())?
+        .with_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?
         .build()?;
-
     game.run();
     Ok(())
 }

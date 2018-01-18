@@ -1,13 +1,16 @@
 //! ECS rendering bundle
 
 use amethyst_assets::{AssetStorage, Handle, Loader};
-use amethyst_core::bundle::{ECSBundle, Result};
+use amethyst_core::bundle::{ECSBundle, Error, Result};
 use amethyst_core::orientation::Orientation;
 use amethyst_core::transform::components::*;
 use specs::{DispatcherBuilder, World};
 
 use {AmbientColor, Camera, Light, Material, MaterialDefaults, Mesh, Rgba, ScreenDimensions,
      Texture, WindowMessages};
+use config::DisplayConfig;
+use pipe::{PipelineBuild, PolyPipeline};
+use system::RenderSystem;
 
 /// Rendering bundle
 ///
@@ -15,17 +18,22 @@ use {AmbientColor, Camera, Light, Material, MaterialDefaults, Mesh, Rgba, Screen
 /// Will also register asset contexts with the asset `Loader`, and add systems for merging
 /// `AssetFuture` into its related component.
 ///
-#[derive(Default)]
-pub struct RenderBundle;
+pub struct RenderBundle<B: PipelineBuild<Pipeline = P>, P: PolyPipeline> {
+    pipe: B,
+    config: Option<DisplayConfig>,
+}
 
-impl RenderBundle {
+impl<B: PipelineBuild<Pipeline = P>, P: PolyPipeline> RenderBundle<B, P> {
     /// Create a new render bundle
-    pub fn new() -> Self {
-        Default::default()
+    pub fn new(pipe: B, config: Option<DisplayConfig>) -> Self {
+        Self {
+            pipe,
+            config,
+        }
     }
 }
 
-impl<'a, 'b> ECSBundle<'a, 'b> for RenderBundle {
+impl<'a, 'b, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> ECSBundle<'a, 'b> for RenderBundle<B, P> {
     fn build(
         self,
         world: &mut World,
@@ -33,7 +41,6 @@ impl<'a, 'b> ECSBundle<'a, 'b> for RenderBundle {
     ) -> Result<DispatcherBuilder<'a, 'b>> {
         world.add_resource(AmbientColor(Rgba::from([0.01; 3])));
         world.add_resource(WindowMessages::new());
-        world.add_resource(ScreenDimensions::new(0, 0));
         world.add_resource(AssetStorage::<Mesh>::new());
         world.add_resource(AssetStorage::<Texture>::new());
         world.add_resource(Orientation::default());
@@ -47,8 +54,15 @@ impl<'a, 'b> ECSBundle<'a, 'b> for RenderBundle {
         world.register::<Handle<Mesh>>();
         world.register::<Handle<Texture>>();
         world.register::<Camera>();
-
-        Ok(builder)
+        let system = match RenderSystem::build(self.pipe, world, self.config) {
+            Ok(system) => system,
+            Err(err) => {
+                return Err(Error::with_chain(err, "Renderer error!"));
+            }
+        };
+        let (width, height) = system.window_size().expect("Window closed during initialization!");
+        world.add_resource(ScreenDimensions::new(width, height));
+        Ok(builder.add_thread_local(system))
     }
 }
 

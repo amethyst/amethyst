@@ -13,7 +13,7 @@ use amethyst::ecs::World;
 use amethyst::input::InputBundle;
 use amethyst::renderer::{Camera, DisplayConfig, DrawShaded, Event, KeyboardInput, Light, Material,
                          MaterialDefaults, Mesh, MeshData, Pipeline, PointLight, PosNormTex,
-                         Projection, RenderBundle, RenderSystem, Rgba, Stage, VirtualKeyCode,
+                         Projection, RenderBundle, Rgba, Stage, VirtualKeyCode,
                          WindowEvent};
 
 #[derive(Clone)]
@@ -149,8 +149,7 @@ fn run() -> Result<(), Error> {
         .expect("Failed to build ApplicationBuilder for an unknown reason.")
         .with_bundle(InputBundle::<String, String>::new())?
         .with_bundle(TransformBundle::new())?
-        .with_bundle(RenderBundle::new())?
-        .with_local(RenderSystem::build(pipeline_builder, Some(display_config))?)
+        .with_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?
         .build()?;
 
     game.run();

@@ -130,11 +130,10 @@ Now let's pack everything up and run it:
 
 ```rust,ignore
 let mut game = Application::build("./", Pong)?
-    .with_bundle(RenderBundle::new())?
-    .with_local(RenderSystem::build(pipe, Some(config))?)
+    .with_bundle(RenderBundle::new(pipe, Some(config)))?
     .build()?;
-
-Ok(game.run())
+game.run();
+Ok(())
 ```
 
 We've discovered Amethyst's root object: [Application][ap]. It binds the OS 

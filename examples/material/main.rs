@@ -132,10 +132,10 @@ fn run() -> Result<(), amethyst::Error> {
             .with_pass(DrawPbm::<PosNormTangTex>::new()),
     );
     let mut game = Application::build(&resources, Example)?
-        .with_bundle(RenderBundle::new())?
-        .with_local(RenderSystem::build(pipe, Some(config))?)
+        .with_bundle(RenderBundle::new(pipe, Some(config)))?
         .build()?;
-    Ok(game.run())
+    game.run();
+    Ok(())
 }
 
 fn main() {

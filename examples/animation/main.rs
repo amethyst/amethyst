@@ -11,7 +11,7 @@ use amethyst::ecs::{Entity, World};
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Event, KeyboardInput,
                          Light, Mesh, Pipeline, PointLight, PosNormTex, Projection, RenderBundle,
-                         RenderSystem, Rgba, Stage, VirtualKeyCode, WindowEvent};
+                         Rgba, Stage, VirtualKeyCode, WindowEvent};
 use amethyst_animation::{play_animation, Animation, AnimationBundle, AnimationOutput, EndControl,
                          InterpolationType, Sampler};
 use genmesh::{MapToVertices, Triangulate, Vertices};
@@ -94,10 +94,10 @@ fn run() -> Result<(), amethyst::Error> {
     let mut game = Application::build(resources, Example::default())?
         .with_bundle(AnimationBundle::new())?
         .with_bundle(TransformBundle::new().with_dep(&["sampler_interpolation_system"]))?
-        .with_bundle(RenderBundle::new())?
-        .with_local(RenderSystem::build(pipe, Some(config))?)
+        .with_bundle(RenderBundle::new(pipe, Some(config)))?
         .build()?;
-    Ok(game.run())
+    game.run();
+    Ok(())
 }
 
 fn main() {
