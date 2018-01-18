@@ -22,5 +22,7 @@ hibitset = { version = "0.4.1" }
 rayon = "0.8"
 serde = { version = "1", features = ["serde_derive"] }
 shred = "0.5"
+shrev = "0.8"
 specs = { version = "0.10", git = "https://github.com/slide-rs/specs.git" }
 quickcheck = "0.4.1"
+winit = "0.10"
