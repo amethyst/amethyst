@@ -45,6 +45,7 @@ pub mod cirque;
 pub mod command;
 pub mod epoch;
 pub mod descriptors;
+pub mod factory;
 pub mod formats;
 pub mod hal;
 pub mod light;

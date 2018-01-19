@@ -13,7 +13,7 @@ use specs::{System, SystemData, World};
 use command::CommandCenter;
 use epoch::CurrentEpoch;
 use memory::Allocator;
-use hal::{Hal, Renderer};
+use hal::{BasicFactory, Renderer};
 use upload::Uploader;
 
 
@@ -39,7 +39,7 @@ where
     fn run(&mut self, AllResources(res): AllResources<'a>) {
         if let Some(graph) = res.fetch::<ActiveGraph>(0).0 {
             if let Some(ref mut renderer) = self.renderer {
-                let mut hal = &mut *res.fetch_mut::<Hal<B>>(0);
+                let hal = &mut *res.fetch_mut::<BasicFactory<B>>(0);
 
                 renderer.draw(
                     graph,
@@ -60,7 +60,7 @@ where
     B: Backend,
 {
     pub fn cleanup(&mut self, res: &Resources) {
-        let Hal { ref device, ref mut allocator, ref mut current, .. } = *res.fetch_mut::<Hal<B>>(0);
+        let BasicFactory { ref device, ref mut allocator, ref mut current, .. } = *res.fetch_mut::<BasicFactory<B>>(0);
         self.center.wait_finish(device, current);
         self.renderer.take().map(|renderer| {
             renderer.dispose(allocator, device, res)

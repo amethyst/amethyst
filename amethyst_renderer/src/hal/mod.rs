@@ -15,8 +15,11 @@ use specs::{DispatcherBuilder, World};
 
 use command::CommandCenter;
 use epoch::CurrentEpoch;
+use factory::Factory;
 use memory::Allocator;
+use mesh::{Mesh, MeshBuilder};
 use relevant::Relevant;
+use texture::{Texture, TextureBuilder};
 use upload::Uploader;
 
 pub use hal::build::HalConfig;
@@ -73,14 +76,14 @@ where
 
         relevant.dispose();
 
-        let hal = Hal {
+        let factory = BasicFactory {
             device: Device(device),
             allocator,
             uploader,
             current,
         };
 
-        world.add_resource(hal);
+        world.add_resource(factory);
         world.add_resource(ActiveGraph(None));
         world.add_resource(AmbientLight([0.01; 3]));
         world.add_resource(WindowMessages::new());
@@ -120,14 +123,38 @@ where
 unsafe impl<B> Send for Device<B> where B: Backend {}
 unsafe impl<B> Sync for Device<B> where B: Backend {}
 
-pub struct Hal<B: Backend> {
+pub struct BasicFactory<B: Backend> {
     pub device: Device<B>,
     pub allocator: Allocator<B>,
     pub uploader: Uploader<B>,
     pub current: CurrentEpoch,
 }
 
-impl<B> Hal<B>
+impl<B> Factory<B> for BasicFactory<B>
+where
+    B: Backend,
+{
+    fn create_mesh(&mut self, mesh: MeshBuilder) -> Result<Mesh<B>, ::failure::Error> {
+        mesh.build(
+            &mut self.allocator,
+            &mut self.uploader,
+            &self.current,
+            &self.device,
+        )
+    }
+
+    fn create_texture(&mut self, texture: TextureBuilder) -> Result<Texture<B>, ::failure::Error> {
+        texture.build(
+            &mut self.allocator,
+            &mut self.uploader,
+            &self.current,
+            &self.device,
+        )
+    }
+}
+
+
+impl<B> BasicFactory<B>
 where
     B: Backend,
 {

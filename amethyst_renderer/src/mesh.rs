@@ -19,7 +19,6 @@ use specs::{Component, DenseVecStorage};
 
 use epoch::{CurrentEpoch, Eh, Epoch};
 use formats::MeshData;
-use hal::Hal;
 use memory::{Allocator, Buffer, cast_vec};
 use upload::{self, Uploader};
 use utils::{is_slice_sorted, is_slice_sorted_by_key};
@@ -284,145 +283,6 @@ pub struct IndexBuffer<B: Backend> {
     len: IndexCount,
 }
 
-/// Mesh builder based on heterogenous lists.
-/// It doesn't require data for buffers to be in `Vec`.
-pub struct HMeshBuilder<V, I> {
-    vertices: V,
-    indices: I,
-    prim: Primitive,
-    transform: Matrix4<f32>,
-}
-
-impl HMeshBuilder<(), ()> {
-    /// Create empty builder.
-    fn new() -> Self {
-        HMeshBuilder {
-            vertices: (),
-            indices: (),
-            prim: Primitive::TriangleList,
-            transform: Matrix4::identity(),
-        }
-    }
-}
-
-impl<L> HMeshBuilder<L, ()>
-where
-    L: VertexDataList,
-{
-    /// Add indices buffer to the `HMeshBuilder`
-    pub fn with_indices<I>(self, indices: I) -> HMeshBuilder<L, I>
-    where
-        I: IndexDataMaybe,
-    {
-        HMeshBuilder {
-            vertices: self.vertices,
-            indices: indices,
-            prim: self.prim,
-            transform: self.transform,
-        }
-    }
-}
-
-impl<L, I> HMeshBuilder<L, I>
-where
-    L: VertexDataList,
-    I: IndexDataMaybe,
-{
-    /// Add another vertices to the `HMeshBuilder`
-    pub fn with_vertices<D, V>(self, vertices: D) -> HMeshBuilder<(Data<D, V>, L), I>
-    where
-        D: AsRef<[V]> + Into<Vec<V>>,
-        V: VertexFormatted,
-    {
-        HMeshBuilder {
-            vertices: (Data::new(vertices), self.vertices),
-            indices: self.indices,
-            prim: self.prim,
-            transform: self.transform,
-        }
-    }
-
-    /// Sets the primitive type of the mesh.
-    ///
-    /// By default, meshes are constructed as triangle lists.
-    pub fn with_prim_type(mut self, prim: Primitive) -> Self {
-        self.prim = prim;
-        self
-    }
-
-    /// Sets the position of the mesh in 3D space.
-    pub fn with_position<P: Into<Point3<f32>>>(mut self, pos: P) -> Self {
-        use core::cgmath::EuclideanSpace;
-
-        let trans = Matrix4::from_translation(pos.into().to_vec());
-        self.transform.concat_self(&trans);
-        self
-    }
-
-    /// Rotates the mesh a certain number of degrees around the given axis.
-    pub fn with_rotation<Ax, An>(mut self, axis: Ax, angle: An) -> Self
-    where
-        Ax: Into<Vector3<f32>>,
-        An: Into<Deg<f32>>,
-    {
-        let rot = Matrix4::from_axis_angle(axis.into(), angle.into());
-        self.transform.concat_self(&rot);
-        self
-    }
-
-    /// Scales the mesh size according to the given value.
-    pub fn with_scale(mut self, val: f32) -> Self {
-        let scale = Matrix4::from_scale(val);
-        self.transform.concat_self(&scale);
-        self
-    }
-
-    /// Sets the transformation matrix of the mesh.
-    ///
-    /// This four-by-four matrix applies translation, rotation, and scaling to
-    /// the mesh. It is often referred to in the computer graphics industry as
-    /// the "model matrix".
-    pub fn with_transform<M: Into<Matrix4<f32>>>(mut self, mat: M) -> Self {
-        self.transform = mat.into();
-        self
-    }
-}
-
-impl<L, I> HMeshBuilder<L, I>
-where
-    L: VertexDataList,
-    I: IndexDataMaybe,
-{
-    /// Builds and returns the new mesh.
-    pub fn build<B>(self, hal: &mut Hal<B>) -> Result<Mesh<B>, ::failure::Error>
-    where
-        B: Backend,
-    {
-        Ok(Mesh {
-            vbufs: {
-                let mut vbufs = Vec::with_capacity(L::LENGTH);
-                self.vertices.build(
-                    &mut hal.allocator,
-                    &mut hal.uploader,
-                    &hal.current,
-                    &hal.device,
-                    &mut vbufs,
-                )?;
-                vbufs
-            },
-            ibuf: self.indices.build(
-                &mut hal.allocator,
-                &mut hal.uploader,
-                &hal.current,
-                &hal.device,
-            )?,
-            prim: self.prim,
-            transform: self.transform,
-        })
-    }
-}
-
-
 /// Abstracts over two types of indices and their absence.
 pub enum Indices {
     None,
@@ -611,8 +471,8 @@ where
     B: Backend,
 {
     /// Build new mesh with `HMeshBuilder`
-    pub fn new() -> HMeshBuilder<(), ()> {
-        HMeshBuilder::new()
+    pub fn new() -> MeshBuilder {
+        MeshBuilder::new()
     }
 
     /// Primitive type of the `Mesh`
@@ -704,6 +564,7 @@ impl<B> Asset for Mesh<B>
 where
     B: Backend,
 {
+    const NAME: &'static str = "Mesh";
     type Data = MeshData;
     type HandleStorage = DenseVecStorage<MeshHandle<B>>;
 }

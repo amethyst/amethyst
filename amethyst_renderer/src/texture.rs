@@ -250,6 +250,7 @@ impl<B> Asset for Texture<B>
 where
     B: Backend,
 {
+    const NAME: &'static str = "Texture";
     type Data = TextureData;
     type HandleStorage = DenseVecStorage<TextureHandle<B>>;
 }
