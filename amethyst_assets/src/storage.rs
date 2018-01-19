@@ -325,8 +325,7 @@ impl<A: Asset> Default for AssetStorage<A> {
 
 impl<A: Asset> Drop for AssetStorage<A> {
     fn drop(&mut self) {
-        let bitset = &self.bitset;
-        unsafe { self.assets.clean(|id| bitset.contains(id)) }
+        unsafe { self.assets.clean(&self.bitset) }
     }
 }
 

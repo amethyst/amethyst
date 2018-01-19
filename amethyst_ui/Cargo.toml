@@ -20,10 +20,10 @@ derivative = "1.0"
 fnv = "1"
 gfx = { version = "0.17", features = ["serialize"] }
 gfx_glyph = "0.8.1"
-hibitset = "0.3"
+hibitset = { version = "0.4", git = "https://github.com/slide-rs/hibitset.git" }
 rusttype = "0.3"
 shrev = "0.8"
-specs = "0.10"
+specs = { version = "0.10", git = "https://github.com/slide-rs/specs.git" }
 unicode-normalization = "0.1"
 unicode-segmentation = "1.2"
-winit = "0.10"
+winit = "0.9"

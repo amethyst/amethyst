@@ -26,4 +26,4 @@ gltf-utils = "0.9"
 gfx = "0.17"
 imagefmt = "4.0"
 itertools = "0.7"
-specs = "0.10"
+specs = { version = "0.10", git = "https://github.com/slide-rs/specs.git" }
