@@ -1,13 +1,10 @@
-
-
 use gfx_hal::{Backend, Device, Gpu};
 use gfx_hal::adapter::{Adapter, PhysicalDevice};
-use gfx_hal::format::{ChannelType, Format, AsFormat};
+use gfx_hal::format::{AsFormat, ChannelType, Format};
 use gfx_hal::queue::{QueueFamily, QueueType};
 use gfx_hal::window::{Surface, SwapchainConfig};
 
 use winit::Window;
-
 
 use cirque::Cirque;
 use command::CommandCenter;
@@ -112,7 +109,6 @@ impl BackendEx for vulkan::Backend {
     }
 }
 
-
 impl<'a> HalConfig<'a> {
     fn init_adapter<B>(&self, adapter: Adapter<B>) -> (B::Device, Allocator<B>, CommandCenter<B>)
     where
@@ -162,9 +158,7 @@ impl<'a> HalConfig<'a> {
         }
 
         let Gpu {
-            device,
-            mut queues,
-            ..
+            device, mut queues, ..
         } = adapter.physical_device.open(requests).unwrap();
         let allocator = Allocator::new(
             adapter.physical_device.memory_properties(),
@@ -197,7 +191,9 @@ impl<'a> HalConfig<'a> {
             .chain(soft)
             .filter_map(|adapter| {
                 if let Some((_, ref surface, ref mut format)) = window_surface_format {
-                    *format = find_good_surface_format(surface, &adapter).ok()?.unwrap_or(Format::Rgb8Srgb);
+                    *format = find_good_surface_format(surface, &adapter)
+                        .ok()?
+                        .unwrap_or(Format::Rgb8Srgb);
                 }
                 Some(self.init_adapter(adapter))
             })
@@ -240,8 +236,6 @@ impl<'a> HalConfig<'a> {
     }
 }
 
-
-
 fn find_surface_format<B: Backend>(
     surface: &B::Surface,
     adapter: &Adapter<B>,
@@ -256,7 +250,8 @@ fn find_surface_format<B: Backend>(
                 .find(|format| format.base_format().1 == channel)
                 .map(Some)
                 .ok_or(Error::NoCompatibleFormat.into())
-        }).unwrap_or(Ok(None))
+        })
+        .unwrap_or(Ok(None))
 }
 
 fn find_good_surface_format<B: Backend>(

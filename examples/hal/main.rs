@@ -23,27 +23,24 @@ use specs::World;
 use renderer::gfx_hal::{Device, Instance, QueueFamily, Surface, Swapchain};
 use renderer::gfx_hal::command::{ClearColor, ClearDepthStencil, Rect, Viewport};
 use renderer::gfx_hal::device::Extent;
-use renderer::gfx_hal::format::{D32Float, AsFormat};
+use renderer::gfx_hal::format::{AsFormat, D32Float};
 use renderer::gfx_hal::pso::{EntryPoint, Stage};
 
 use renderer::*;
 use renderer::cam::{ActiveCamera, Camera};
-use renderer::graph::{Graph, Pass, ColorAttachment, DepthStencilAttachment, PassTag};
 use renderer::descriptors::DescriptorSet;
+use renderer::graph::{ColorAttachment, DepthStencilAttachment, Graph, Pass, PassTag};
 use renderer::hal::{Hal, HalBundle, HalConfig, Renderer, RendererConfig};
 use renderer::memory::Allocator;
 use renderer::mesh::{Mesh, MeshBuilder};
 use renderer::uniform::BasicUniformCache;
 use renderer::vertex::PosColor;
 
-
 #[cfg(feature = "gfx-metal")]
 use metal::Backend;
 
-
 #[cfg(feature = "gfx-vulkan")]
 use Backend;
-
 
 use renderer::passes::flat::{DrawFlat, TrProjView};
 
@@ -82,14 +79,12 @@ fn run() -> Result<()> {
 
     let ref mut renderer = *renderer.as_mut().unwrap();
 
-    println!("Build graph");    
+    println!("Build graph");
     let mut graph = {
         let depth = DepthStencilAttachment::new(D32Float::SELF).clear(ClearDepthStencil(1.0, 0));
         let present = ColorAttachment::new(renderer.format)
             .with_clear(ClearColor::Float([0.15, 0.1, 0.2, 1.0]));
-        let mut pass = DrawFlat::build()
-            .with_color(0, &present)
-            .with_depth(&depth);
+        let mut pass = DrawFlat::build().with_color(0, &present).with_depth(&depth);
 
         renderer
             .add_graph(&[&pass], &present, &device, allocator)

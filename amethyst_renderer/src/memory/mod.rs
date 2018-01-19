@@ -1,6 +1,6 @@
 //!
 //! Memory management for rendering.
-//! 
+//!
 
 use std::cmp::Eq;
 use std::fmt::Debug;
@@ -22,14 +22,11 @@ mod smart;
 pub use self::allocator::{Allocator, Buffer, Image, WeakBuffer, WeakImage};
 use self::block::Block;
 
-
 #[derive(Fail, Debug, Clone)]
 pub enum Error {
-    #[fail(display = "No compatible memory")]
-    NoCompatibleMemoryType,
+    #[fail(display = "No compatible memory")] NoCompatibleMemoryType,
 
-    #[fail(display = "Out of memory")]
-    OutOfMemory,
+    #[fail(display = "Out of memory")] OutOfMemory,
 
     #[fail(display = "Buffer creation error occured: {}", error)]
     BufferCreation {
@@ -41,35 +38,32 @@ pub enum Error {
         error: ::gfx_hal::image::CreationError,
     },
 
-    #[fail(display = "No memory type supports both usage ({:?}) and properties ({:?}) specified", usage, properties)]
+    #[fail(display = "No memory type supports both usage ({:?}) and properties ({:?}) specified",
+           usage, properties)]
     BufferUsageAndProperties {
         usage: BufferUsage,
         properties: Properties,
     },
 
-    #[fail(display = "No memory type supports both usage ({:?}) and properties ({:?}) specified", usage, properties)]
+    #[fail(display = "No memory type supports both usage ({:?}) and properties ({:?}) specified",
+           usage, properties)]
     ImageUsageAndProperties {
         usage: ImageUsage,
         properties: Properties,
     },
 
-    #[fail(display = "Unknown backend error")]
-    Other,
+    #[fail(display = "Unknown backend error")] Other,
 }
 
 impl From<::gfx_hal::buffer::CreationError> for Error {
     fn from(error: ::gfx_hal::buffer::CreationError) -> Error {
-        Error::BufferCreation {
-            error,
-        }
+        Error::BufferCreation { error }
     }
 }
 
 impl From<::gfx_hal::image::CreationError> for Error {
     fn from(error: ::gfx_hal::image::CreationError) -> Error {
-        Error::ImageCreation {
-            error,
-        }
+        Error::ImageCreation { error }
     }
 }
 
@@ -117,7 +111,6 @@ pub trait MemorySubAllocator<B: Backend> {
     fn dispose(self, owner: &mut Self::Owner, device: &B::Device);
 }
 
-
 pub fn calc_alignment_shift<T>(alignment: T, offset: T) -> T
 where
     T: From<u8> + Add<Output = T> + Sub<Output = T> + Rem<Output = T> + Eq + Copy,
@@ -129,14 +122,12 @@ where
     }
 }
 
-
 pub fn shift_for_alignment<T>(alignment: T, offset: T) -> T
 where
     T: From<u8> + Add<Output = T> + Sub<Output = T> + Rem<Output = T> + Eq + Copy,
 {
     offset + calc_alignment_shift(alignment, offset)
 }
-
 
 /// Cast `Vec` of one `Pod` type into `Vec` of another `Pod` type
 /// Align and size of input type must be divisible by align and size of output type
@@ -154,15 +145,9 @@ pub fn cast_vec<A: Pod, B: Pod>(mut vec: Vec<A>) -> Vec<B> {
 
     assert_eq!(raw_len, mem::size_of::<B>().wrapping_mul(len));
     assert_eq!(raw_cap, mem::size_of::<B>().wrapping_mul(cap));
-    
+
     let ptr = vec.as_mut_ptr() as *mut B;
     mem::forget(vec);
 
-    unsafe {
-        Vec::from_raw_parts(
-            ptr,
-            len,
-            cap,
-        )
-    }
+    unsafe { Vec::from_raw_parts(ptr, len, cap) }
 }

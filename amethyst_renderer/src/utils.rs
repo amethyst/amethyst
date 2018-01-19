@@ -1,4 +1,3 @@
-
 #[inline(always)]
 pub fn is_slice_sorted<T>(slice: &[T]) -> bool
 where

@@ -1,7 +1,6 @@
 //! Defines `Relevant` type to use in types that requires
 //! custom dealocation.
-//! 
-
+//!
 
 use hibitset::BitSetLike;
 use specs::{Index, UnprotectedStorage};
@@ -38,7 +37,6 @@ impl Drop for Relevant {
         println!("Values of this type can't be dropped!")
     }
 }
-
 
 pub struct RelevantStorage<S, T> {
     inner: S,

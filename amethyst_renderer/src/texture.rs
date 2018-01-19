@@ -8,16 +8,16 @@ use assets::{Asset, AssetStorage, Handle};
 use gfx_hal::{Backend, Device};
 use gfx_hal::command::{BufferImageCopy, Offset};
 use gfx_hal::device::Extent;
-use gfx_hal::format::{Format, Swizzle, AspectFlags};
-use gfx_hal::image::{FilterMethod, ImageLayout, Kind, Level, SamplerInfo,
-                     SubresourceLayers, SubresourceRange, Usage, ViewError, WrapMode};
+use gfx_hal::format::{AspectFlags, Format, Swizzle};
+use gfx_hal::image::{FilterMethod, ImageLayout, Kind, Level, SamplerInfo, SubresourceLayers,
+                     SubresourceRange, Usage, ViewError, WrapMode};
 use gfx_hal::memory::{Pod, Properties};
 
 use specs::DenseVecStorage;
 
 use epoch::CurrentEpoch;
-use formats::{TextureData};
-use memory::{Allocator, Image, cast_vec};
+use formats::TextureData;
+use memory::{cast_vec, Allocator, Image};
 use relevant::Relevant;
 use upload::Uploader;
 
@@ -61,12 +61,7 @@ impl TextureBuilder {
     /// Creates a new `TextureBuilder` from the given RGBA color value.
     pub fn from_color_val<C: Into<[f32; 4]>>(rgba: C) -> Self {
         let rgba = rgba.into();
-        TextureBuilder::new(vec![
-            rgba[0],
-            rgba[1],
-            rgba[2],
-            rgba[3],
-        ])
+        TextureBuilder::new(vec![rgba[0], rgba[1], rgba[2], rgba[3]])
     }
 }
 
@@ -198,9 +193,7 @@ impl TextureBuilder {
     pub fn mip_levels(mut self, _val: u8) -> Self {
         unimplemented!()
     }
-
 }
-
 
 /// Handle to a GPU texture resource.
 #[derive(Debug)]

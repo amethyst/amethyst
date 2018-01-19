@@ -3,9 +3,8 @@ use std::marker::PhantomData;
 
 use gfx_hal::{Backend, Device, MemoryType, MemoryTypeId};
 use gfx_hal::memory::Requirements;
-use memory::{Block, MemoryAllocator, Error};
+use memory::{Block, Error, MemoryAllocator};
 use relevant::Relevant;
-
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Tag(*const ());
@@ -49,7 +48,12 @@ where
     type Tag = Tag;
     type Info = ();
 
-    fn alloc(&mut self, device: &B::Device, _: (), reqs: Requirements) -> Result<Block<B, Tag>, Error> {
+    fn alloc(
+        &mut self,
+        device: &B::Device,
+        _: (),
+        reqs: Requirements,
+    ) -> Result<Block<B, Tag>, Error> {
         let memory = device.allocate_memory(self.id, reqs.size)?;
         let memory = Box::into_raw(Box::new(memory)); // Suboptimal
         self.allocations += 1;

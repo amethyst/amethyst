@@ -39,7 +39,6 @@ where
 #[derive(Clone)]
 pub struct MaterialDefaults<B: Backend>(pub Material<B>);
 
-
 pub fn create_default_material<B>(world: &World) -> Material<B>
 where
     B: Backend,

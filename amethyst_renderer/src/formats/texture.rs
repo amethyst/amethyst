@@ -8,9 +8,8 @@ use failure::{Error, ResultExt};
 
 use gfx_hal::{Backend, Device};
 use gfx_hal::format::Format;
-use gfx_hal::memory::Pod;
 use gfx_hal::image::{AaMode, Kind, SamplerInfo};
-
+use gfx_hal::memory::Pod;
 
 use imagefmt::{self, ColFmt, Image};
 
@@ -122,7 +121,11 @@ pub struct JpgFormat;
 
 impl JpgFormat {
     /// Load Jpg from memory buffer
-    pub fn from_data(&self, data: Vec<u8>, options: TextureMetadata) -> Result<TextureData, ::assets::Error> {
+    pub fn from_data(
+        &self,
+        data: Vec<u8>,
+        options: TextureMetadata,
+    ) -> Result<TextureData, ::assets::Error> {
         imagefmt::jpeg::read(&mut Cursor::new(data), ColFmt::RGBA)
             .map(|raw| TextureData::Image(ImageData { raw }, options))
             .map_err(|e| ::assets::Error::with_chain(e, "Image decoding failed"))
@@ -137,7 +140,11 @@ where
 
     type Options = TextureMetadata;
 
-    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData, ::assets::Error> {
+    fn import(
+        &self,
+        bytes: Vec<u8>,
+        options: TextureMetadata,
+    ) -> Result<TextureData, ::assets::Error> {
         self.from_data(bytes, options)
     }
 }
@@ -148,7 +155,11 @@ pub struct PngFormat;
 
 impl PngFormat {
     /// Load Png from memory buffer
-    pub fn from_data(&self, data: Vec<u8>, options: TextureMetadata) -> Result<TextureData, ::assets::Error> {
+    pub fn from_data(
+        &self,
+        data: Vec<u8>,
+        options: TextureMetadata,
+    ) -> Result<TextureData, ::assets::Error> {
         imagefmt::png::read(&mut Cursor::new(data), ColFmt::RGBA)
             .map(|raw| TextureData::Image(ImageData { raw }, options))
             .map_err(|e| ::assets::Error::with_chain(e, "Image decoding failed"))
@@ -163,7 +174,11 @@ where
 
     type Options = TextureMetadata;
 
-    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData, ::assets::Error> {
+    fn import(
+        &self,
+        bytes: Vec<u8>,
+        options: TextureMetadata,
+    ) -> Result<TextureData, ::assets::Error> {
         self.from_data(bytes, options)
     }
 }
@@ -180,7 +195,11 @@ where
 
     type Options = TextureMetadata;
 
-    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData, ::assets::Error> {
+    fn import(
+        &self,
+        bytes: Vec<u8>,
+        options: TextureMetadata,
+    ) -> Result<TextureData, ::assets::Error> {
         // TODO: consider reading directly into GPU-visible memory
         // TODO: as noted by @omni-viral.
         imagefmt::bmp::read(&mut Cursor::new(bytes), ColFmt::RGBA)
@@ -202,9 +221,14 @@ where
 {
     use self::TextureData::*;
     match data {
-        Image(image_data, options) => {
-            create_texture_asset_from_image(image_data, options, allocator, uploader, current, device)
-        }
+        Image(image_data, options) => create_texture_asset_from_image(
+            image_data,
+            options,
+            allocator,
+            uploader,
+            current,
+            device,
+        ),
 
         Rgba(color, options) => {
             let tb = apply_options(Texture::<B>::from_color_val(color), options);
@@ -240,15 +264,11 @@ where
             let tb = apply_options(TextureBuilder::new(data), options);
             tb.build(allocator, uploader, current, device)
         }
-    }
-    .with_context(|err| format!("Failed to build texture: {}", err))
-    .map_err(Into::into)
+    }.with_context(|err| format!("Failed to build texture: {}", err))
+        .map_err(Into::into)
 }
 
-fn apply_options(
-    mut tb: TextureBuilder,
-    metadata: TextureMetadata,
-) -> TextureBuilder {
+fn apply_options(mut tb: TextureBuilder, metadata: TextureMetadata) -> TextureBuilder {
     match metadata.sampler {
         Some(sampler) => tb = tb.with_sampler(sampler),
         _ => (),
@@ -308,8 +328,7 @@ where
             .with_format(fmt)
             .with_kind(Kind::D2(image.w as u16, image.h as u16, AaMode::Single)),
         options,
-    )
-    .build(allocator, uploader, current, device)
-    .with_context(|err| format!("Failed to create texture from image: {:?}", err))
-    .map_err(Into::into)
+    ).build(allocator, uploader, current, device)
+        .with_context(|err| format!("Failed to create texture from image: {:?}", err))
+        .map_err(Into::into)
 }

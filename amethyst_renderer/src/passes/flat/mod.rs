@@ -11,19 +11,18 @@ use gfx_hal::pso::{DescriptorSetLayoutBinding, DescriptorSetWrite, DescriptorTyp
 use gfx_hal::queue::{Supports, Transfer};
 use shred::Resources;
 use smallvec::SmallVec;
-use specs::{Component, DenseVecStorage, Entities, Fetch, Join, ReadStorage, SystemData, World,
-            WriteStorage, StorageEntry};
+use specs::{Component, DenseVecStorage, Entities, Fetch, Join, ReadStorage, StorageEntry,
+            SystemData, World, WriteStorage};
 
 use camera::{ActiveCamera, Camera};
 use cirque::Entry;
-use descriptors::{DescriptorSet, DescriptorPool, Binder, Layout, Uniform};
+use descriptors::{Binder, DescriptorPool, DescriptorSet, Layout, Uniform};
 use epoch::{CurrentEpoch, Epoch};
 use graph::{Data, Pass, PassTag};
 use memory::Allocator;
 use mesh::{Bind as MeshBind, MeshHandle, MeshStorage};
 use uniform::{BasicUniformCache, UniformCache};
 use vertex::{PosColor, VertexFormat, VertexFormatted};
-
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -43,20 +42,17 @@ where
 {
     type PassData = (
         Entities<'a>,
-
         // Data
         Option<Fetch<'a, ActiveCamera>>,
         ReadStorage<'a, Camera>,
         ReadStorage<'a, MeshHandle<B>>,
         Fetch<'a, MeshStorage<B>>,
         ReadStorage<'a, Transform>,
-
         // Pass specific components.
         WriteStorage<'a, BasicUniformCache<B, TrProjView>>,
         WriteStorage<'a, DescriptorSet<B, Self>>,
     );
 }
-
 
 impl<B> Pass<B> for DrawFlat
 where
@@ -83,8 +79,7 @@ where
     type Bindings = (Uniform<TrProjView>, ());
 
     fn layout(layout: Layout<()>) -> Layout<Self::Bindings> {
-        layout
-            .uniform::<TrProjView, _>(0, Stage::Vertex)
+        layout.uniform::<TrProjView, _>(0, Stage::Vertex)
     }
 
     /// Load shaders
@@ -120,8 +115,7 @@ where
         device: &B::Device,
         cbuf: &mut CommandBuffer<B, C>,
         (ent, acam, cam, mesh, meshes, trs, mut uni, _): <Self as Data<'a, B>>::PassData,
-    )
-    where
+    ) where
         C: Supports<Transfer>,
     {
         let acam = if let Some(acam) = acam {
@@ -142,10 +136,16 @@ where
             };
             match uni.entry(ent).unwrap() {
                 StorageEntry::Occupied(mut entry) => {
-                    entry.get_mut().update(trprojview, span.clone(), cbuf, allocator, device).unwrap();
-                },
+                    entry
+                        .get_mut()
+                        .update(trprojview, span.clone(), cbuf, allocator, device)
+                        .unwrap();
+                }
                 StorageEntry::Vacant(entry) => {
-                    entry.insert(BasicUniformCache::new(trprojview, span.clone(), cbuf, allocator, device).unwrap());
+                    entry.insert(
+                        BasicUniformCache::new(trprojview, span.clone(), cbuf, allocator, device)
+                            .unwrap(),
+                    );
                 }
             };
         }
@@ -172,7 +172,7 @@ where
                 None => continue,
             };
 
-            if  descs.get(e).is_none() {
+            if descs.get(e).is_none() {
                 descs.insert(e, DescriptorSet::new());
             }
 
@@ -180,9 +180,7 @@ where
             let set = match desc.get(span.clone()) {
                 Entry::Vacant(vacant) => {
                     let mut set = pool.allocate(device);
-                    binder.set(&mut set)
-                        .uniform(span.clone(), uni)
-                        .bind(device);
+                    binder.set(&mut set).uniform(span.clone(), uni).bind(device);
                     vacant.insert(set)
                 }
                 Entry::Occupied(occupied) => occupied,

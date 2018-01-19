@@ -38,9 +38,11 @@ where
         let ref mut group = self.group;
         let queue = group.queues.pop().unwrap();
         let len = self.pools.len();
-        self.pools.extend((len..pools).map(|_| {
-            device.create_command_pool_typed(group, CommandPoolCreateFlags::empty(), 1)
-        }));
+        self.pools.extend(
+            (len..pools).map(|_| {
+                device.create_command_pool_typed(group, CommandPoolCreateFlags::empty(), 1)
+            }),
+        );
         let len = self.pools.len();
         let pools = self.pools.drain((len - pools)..).collect();
 

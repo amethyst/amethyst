@@ -13,7 +13,7 @@ use failure::ResultExt;
 
 use gfx_hal::Backend;
 use gfx_hal::command::{ClearValue, CommandBuffer, Rect, Viewport};
-use gfx_hal::device::{Device, Extent, ShaderError, FramebufferError};
+use gfx_hal::device::{Device, Extent, FramebufferError, ShaderError};
 use gfx_hal::format::{Format, Swizzle};
 use gfx_hal::image;
 use gfx_hal::memory::Properties;
@@ -23,14 +23,14 @@ use gfx_hal::queue::CommandQueue;
 use gfx_hal::queue::capability::{Graphics, Supports, Transfer};
 use gfx_hal::window::{Backbuffer, Frame};
 
-use smallvec::SmallVec;
 use shred::Resources;
+use smallvec::SmallVec;
 use specs::World;
 
 use descriptors::DescriptorPool;
 use epoch::Epoch;
-use graph::pass::AnyPass;
 use graph::build::*;
+use graph::pass::AnyPass;
 use memory::{Allocator, Image};
 
 pub use graph::build::{ColorAttachment, DepthStencilAttachment, PassBuilder};
@@ -38,17 +38,13 @@ pub use graph::pass::{Data, Pass, PassTag};
 
 #[derive(Fail, Debug, Clone)]
 pub enum Error {
-    #[fail(display = "Failed to create framebuffer")]
-    FramebufferError,
+    #[fail(display = "Failed to create framebuffer")] FramebufferError,
 
-    #[fail(display = "Shader compilation failed: {}", msg)]
-    CompilationFailed { msg: String },
+    #[fail(display = "Shader compilation failed: {}", msg)] CompilationFailed { msg: String },
 
-    #[fail(display = "Missing shader entry point: {}", msg)]
-    MissingEntryPoint { msg: String },
+    #[fail(display = "Missing shader entry point: {}", msg)] MissingEntryPoint { msg: String },
 
-    #[fail(display = "Shader interface mismatch: {}", msg)]
-    InterfaceMismatch { msg: String },
+    #[fail(display = "Shader interface mismatch: {}", msg)] InterfaceMismatch { msg: String },
 }
 
 impl From<FramebufferError> for Error {
@@ -93,7 +89,6 @@ where
     }
 }
 
-
 /// Framebuffer wrapper
 #[derive(Debug)]
 pub enum SuperFramebuffer<B: Backend> {
@@ -118,7 +113,6 @@ where
         _ => unreachable!("This combination can't happen"),
     }
 }
-
 
 /// Single node in rendering graph.
 /// Nodes can use output of other nodes as input.
@@ -175,13 +169,8 @@ where
         // * Bind pipeline layout with descriptors sets
         {
             profile_scope!("AnyPass::prepare");
-            self.pass.prepare(
-                span.clone(),
-                allocator,
-                device,
-                cbuf.downgrade(),
-                res,
-            );
+            self.pass
+                .prepare(span.clone(), allocator, device, cbuf.downgrade(), res);
         }
 
         let encoder = {
@@ -197,8 +186,14 @@ where
 
         profile_scope!("AnyPass::draw_inline");
         // Record custom drawing calls
-        self.pass
-            .draw_inline(span, &self.pipeline_layout, &mut self.descriptors, device, encoder, res);
+        self.pass.draw_inline(
+            span,
+            &self.pipeline_layout,
+            &mut self.descriptors,
+            device,
+            encoder,
+            res,
+        );
     }
 
     fn dispose(mut self, allocator: &mut Allocator<B>, device: &B::Device, res: &Resources) {
@@ -346,7 +341,6 @@ where
         });
     }
 
-
     /// Build rendering graph from `ColorPin`
     /// for specified `backbuffer`.
     pub fn build(
@@ -363,8 +357,12 @@ where
                 images
                     .iter()
                     .map(|image| {
-                        device
-                            .create_image_view(image, present.format, Swizzle::NO, COLOR_RANGE.clone())
+                        device.create_image_view(
+                            image,
+                            present.format,
+                            Swizzle::NO,
+                            COLOR_RANGE.clone(),
+                        )
                     })
                     .collect::<Result<Vec<_>, _>>()
                     .with_context(|err| format!("Failed to build graph: {}", err))?,
@@ -408,7 +406,6 @@ where
             }
         }
 
-
         let mut depth_stencil_targets = HashMap::<*const (), (Range<usize>, usize)>::new();
         for &attachment in depth_stencil_attachments.iter() {
             let key = attachment.key();
@@ -441,9 +438,7 @@ where
                 .map(|input| {
                     let input = input.unwrap();
                     let (ref indices, ref written) = *match input {
-                        Attachment::Color(color) => {
-                            &color_targets[&color.key()]
-                        },
+                        Attachment::Color(color) => &color_targets[&color.key()],
                         Attachment::DepthStencil(depth_stencil) => {
                             &depth_stencil_targets[&depth_stencil.key()]
                         }
@@ -451,7 +446,10 @@ where
                     let indices = indices.clone();
                     debug_assert!(*written > 0);
                     let ref view = image_views[indices];
-                    InputAttachmentDesc { format: input.format(), view }
+                    InputAttachmentDesc {
+                        format: input.format(),
+                        view,
+                    }
                 })
                 .collect::<Vec<_>>();
 
@@ -463,13 +461,10 @@ where
                     if first_draws_to_surface.is_none() && (color.key()) == present_key {
                         first_draws_to_surface = Some(index);
                     }
-                    let (ref indices, ref mut written) = *color_targets.get_mut(&color.key()).unwrap();
+                    let (ref indices, ref mut written) =
+                        *color_targets.get_mut(&color.key()).unwrap();
                     let indices = indices.clone();
-                    let clear = if *written == 0 {
-                        color.clear
-                    } else {
-                        None
-                    };
+                    let clear = if *written == 0 { color.clear } else { None };
 
                     *written += 1;
 
@@ -487,13 +482,10 @@ where
 
             let depth_stencil = pass.depth_stencil.clone().map(|(depth, stencil)| {
                 let depth = depth.unwrap();
-                let (ref indices, ref mut written) = *depth_stencil_targets.get_mut(&depth.key()).unwrap();
+                let (ref indices, ref mut written) =
+                    *depth_stencil_targets.get_mut(&depth.key()).unwrap();
                 let indices = indices.clone();
-                let clear = if *written == 0 {
-                    depth.clear
-                } else {
-                    None
-                };
+                let clear = if *written == 0 { depth.clear } else { None };
 
                 *written += 1;
 
@@ -508,13 +500,7 @@ where
                 }
             });
 
-            let mut node = pass.build(
-                device,
-                &inputs[..],
-                &colors[..],
-                depth_stencil,
-                extent,
-            )?;
+            let mut node = pass.build(device, &inputs[..], &colors[..], depth_stencil, extent)?;
 
             if let Some(last_dep) = last_dep {
                 node.depends = if pass_nodes
@@ -550,12 +536,10 @@ where
                     pass_nodes
                         .iter()
                         .skip(j + 1)
-                        .find(|node| {
-                            node.depends
-                                .as_ref()
-                                .map(|&(id, _)| id == i)
-                                .unwrap_or(false)
-                        })
+                        .find(|node| node.depends
+                            .as_ref()
+                            .map(|&(id, _)| id == i)
+                            .unwrap_or(false))
                         .is_none()
                 );
                 signals.push(Some(device.create_semaphore()));

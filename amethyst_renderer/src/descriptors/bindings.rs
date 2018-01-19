@@ -1,21 +1,15 @@
-
-use std::marker::PhantomData;
 use std::iter::once;
+use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut, Range};
 
 use gfx_hal::{Backend, Device};
-use gfx_hal::pso::{
-    DescriptorWrite,
-    DescriptorSetWrite,
-    DescriptorSetLayoutBinding,
-    DescriptorType,
-    ShaderStageFlags,
-};
+use gfx_hal::pso::{DescriptorSetLayoutBinding, DescriptorSetWrite, DescriptorType,
+                   DescriptorWrite, ShaderStageFlags};
 
 use smallvec::SmallVec;
 use specs::{EntitiesRes, Join, MaskedStorage, Storage};
 
-use descriptors::{DescriptorSet, DescriptorPool};
+use descriptors::{DescriptorPool, DescriptorSet};
 use epoch::Epoch;
 use relevant::Relevant;
 use uniform::UniformCache;
@@ -48,7 +42,12 @@ pub struct Uniform<T> {
 
 impl<T> Uniform<T> {
     /// Bind uniform to the set.
-    fn bind<'a, 'b, B, C>(self, span: Range<Epoch>, set: &'a B::DescriptorSet, cache: &'b mut C) -> DescriptorSetWrite<'a, 'b, B>
+    fn bind<'a, 'b, B, C>(
+        self,
+        span: Range<Epoch>,
+        set: &'a B::DescriptorSet,
+        cache: &'b mut C,
+    ) -> DescriptorSetWrite<'a, 'b, B>
     where
         B: Backend,
         C: UniformCache<B, T>,
@@ -81,9 +80,10 @@ impl<T> Binding for Uniform<T> {
 /// List of bindings.
 /// `()` is empty list, `(H, T)` is `BindingsLists` when `H: Binding` and `T: BindingsList`.
 pub trait BindingsList: Copy {
-
     /// Fill bindings structures.
-    fn fill<E>(self, extend: &mut E) where E: Extend<DescriptorSetLayoutBinding>;
+    fn fill<E>(self, extend: &mut E)
+    where
+        E: Extend<DescriptorSetLayoutBinding>;
 }
 
 impl BindingsList for () {
@@ -95,7 +95,10 @@ where
     H: Binding,
     T: BindingsList,
 {
-    fn fill<E>(self, extend: &mut E) where E: Extend<DescriptorSetLayoutBinding> {
+    fn fill<E>(self, extend: &mut E)
+    where
+        E: Extend<DescriptorSetLayoutBinding>,
+    {
         extend.extend(once(DescriptorSetLayoutBinding {
             ty: H::TY,
             count: H::COUNT,
@@ -112,13 +115,10 @@ pub struct Layout<L> {
     bindings: L,
 }
 
-
 impl Layout<()> {
     /// Crate empty layout.
     pub(crate) fn new() -> Self {
-        Layout {
-            bindings: (),
-        }
+        Layout { bindings: () }
     }
 }
 
@@ -129,8 +129,16 @@ where
     /// Add uniform binding to the layout.
     /// binding - index of the binding.
     /// stage - stage or stage flags.
-    pub fn uniform<T, S: Into<ShaderStageFlags>>(self, binding: usize, stage: S) -> Layout<(Uniform<T>, L)> {
-        self.with(Uniform{ binding, stage: stage.into(), pd: PhantomData})
+    pub fn uniform<T, S: Into<ShaderStageFlags>>(
+        self,
+        binding: usize,
+        stage: S,
+    ) -> Layout<(Uniform<T>, L)> {
+        self.with(Uniform {
+            binding,
+            stage: stage.into(),
+            pd: PhantomData,
+        })
     }
 
     /// Get array of bindings.
@@ -147,7 +155,6 @@ where
         }
     }
 }
-
 
 /// Binder can be used to bind bindings. =^___^=
 pub struct Binder<'a, B: Backend, L> {
@@ -185,7 +192,6 @@ where
         &self.layout
     }
 }
-
 
 /// Allows to bind descriptors to the contained set.
 pub struct SetBinder<'a, 'b, B: Backend, L> {

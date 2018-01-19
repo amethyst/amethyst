@@ -2,7 +2,7 @@
 
 use std::fmt::Debug;
 
-use gfx_hal::format::{Format, AsFormat};
+use gfx_hal::format::{AsFormat, Format};
 use gfx_hal::memory::Pod;
 use gfx_hal::pso::{ElemStride, Element};
 
@@ -410,7 +410,6 @@ impl With<TexCoord> for PosNormTangTex {
         format: TexCoord::SELF,
     };
 }
-
 
 /// Allows to query specific `Attribute`s of `VertexFormatted`
 pub trait Query<T>: VertexFormatted {

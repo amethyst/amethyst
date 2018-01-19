@@ -1,11 +1,11 @@
 //!
 //! Manage vertex and index buffers of single objects with ease.
-//! 
+//!
 
 use std::marker::PhantomData;
 use std::mem::size_of;
 
-use assets::{Asset, Handle, AssetStorage};
+use assets::{Asset, AssetStorage, Handle};
 use core::cgmath::{Deg, Matrix4, Point3, SquareMatrix, Transform, Vector3};
 
 use gfx_hal::{Backend, IndexCount, IndexType, Primitive, VertexCount};
@@ -19,11 +19,10 @@ use specs::{Component, DenseVecStorage};
 
 use epoch::{CurrentEpoch, Eh, Epoch};
 use formats::MeshData;
-use memory::{Allocator, Buffer, cast_vec};
+use memory::{cast_vec, Allocator, Buffer};
 use upload::{self, Uploader};
 use utils::{is_slice_sorted, is_slice_sorted_by_key};
 use vertex::{VertexFormat, VertexFormatSet, VertexFormatted};
-
 
 /// Wraps container type (Like `Vec<V>`, `&[V]`, Box<[V]>, Cow<[V]> etc)
 /// providing methods to build `VertexBuffer<B>` if `V` is `VertexFormatted`
@@ -171,7 +170,6 @@ impl VertexDataList for () {
         Ok(())
     }
 }
-
 
 /// Non-empty list implementation
 impl<D, V, L> VertexDataList for (Data<D, V>, L)
@@ -342,8 +340,7 @@ impl MeshBuilder {
     where
         V: VertexFormatted,
     {
-        self.vertices
-            .push((cast_vec(vertices), V::VERTEX_FORMAT));
+        self.vertices.push((cast_vec(vertices), V::VERTEX_FORMAT));
         self
     }
 
@@ -465,7 +462,6 @@ pub struct Mesh<B: Backend> {
     transform: Matrix4<f32>,
 }
 
-
 impl<B> Mesh<B>
 where
     B: Backend,
@@ -488,10 +484,7 @@ where
         vertex: &mut VertexBufferSet<'a, B>,
     ) -> Result<Bind<B>, BindError> {
         debug_assert!(is_slice_sorted(format_set));
-        debug_assert!(is_slice_sorted_by_key(
-            &self.vbufs,
-            |vbuf| vbuf.format.attributes,
-        ));
+        debug_assert!(is_slice_sorted_by_key(&self.vbufs, |vbuf| vbuf.format.attributes,));
         debug_assert!(vertex.0.is_empty());
 
         let mut last = 0;
@@ -506,29 +499,25 @@ where
                 vertex_count = Some(self.vbufs[index].len);
             } else {
                 // Can't bind
-                return Err(BindError::Incompatible {
-                    format: format_set,
-                });
+                return Err(BindError::Incompatible { format: format_set });
             }
         }
-        Ok(
-            self.ibuf
-                .as_ref()
-                .map(|ibuf| {
-                    Eh::make_valid_until(&ibuf.buffer, until);
-                    Bind::Indexed {
-                        index: IndexBufferView {
-                            buffer: ibuf.buffer.raw(),
-                            offset: 0,
-                            index_type: ibuf.index_type,
-                        },
-                        count: ibuf.len,
-                    }
-                })
-                .unwrap_or(Bind::Unindexed {
-                    count: vertex_count.unwrap_or(0),
-                }),
-        )
+        Ok(self.ibuf
+            .as_ref()
+            .map(|ibuf| {
+                Eh::make_valid_until(&ibuf.buffer, until);
+                Bind::Indexed {
+                    index: IndexBufferView {
+                        buffer: ibuf.buffer.raw(),
+                        offset: 0,
+                        index_type: ibuf.index_type,
+                    },
+                    count: ibuf.len,
+                }
+            })
+            .unwrap_or(Bind::Unindexed {
+                count: vertex_count.unwrap_or(0),
+            }))
     }
 
     pub fn dispose(self, allocator: &mut Allocator<B>) {
@@ -553,7 +542,6 @@ where
     type Storage = DenseVecStorage<Self>;
 }
 
-
 /// A handle to a mesh.
 pub type MeshHandle<B: Backend> = Handle<Mesh<B>>;
 
@@ -569,15 +557,11 @@ where
     type HandleStorage = DenseVecStorage<MeshHandle<B>>;
 }
 
-
 #[derive(Fail, Debug)]
 pub enum BindError {
     #[fail(display = "Mesh is incompatible with format: {:?}", format)]
-    Incompatible {
-        format: VertexFormatSet<'static>,
-    },
+    Incompatible { format: VertexFormatSet<'static> },
 }
-
 
 /// Result of buffers bindings.
 /// It only contains `IndexBufferView` (if index buffers exists)
@@ -612,7 +596,6 @@ where
     }
 }
 
-
 /// Helper function to find buffer with compatible format.
 fn find_compatible_buffer<B>(vbufs: &[VertexBuffer<B>], format: &VertexFormat) -> Option<usize>
 where
@@ -626,7 +609,6 @@ where
     }
     None
 }
-
 
 /// Check is vertex format `left` is compatible with `right`.
 /// `left` must have same `stride` and contain all attributes from `right`.

@@ -1,18 +1,16 @@
-
+use std::iter::{empty, once, Chain, Once};
 use std::marker::PhantomData;
-use std::iter::{Once, Chain, once, empty};
 use std::ops::Range;
 
 use gfx_hal::{Backend, Device};
-use gfx_hal::pso::{DescriptorPool as RawDescriptorPool, DescriptorRangeDesc, DescriptorSetLayoutBinding, DescriptorType};
-
+use gfx_hal::pso::{DescriptorPool as RawDescriptorPool, DescriptorRangeDesc,
+                   DescriptorSetLayoutBinding, DescriptorType};
 
 use cirque::{Cirque, Entry, EntryMut};
 use epoch::Epoch;
 use stage::ShaderStage;
 
 const CAPACITY: usize = 1024 * 32;
-
 
 /// Descriptor set tagged by type.
 /// So that multiple descriptor sets can be attached to the entity.
@@ -87,11 +85,17 @@ where
             // Check if there is sets available
             if self.count == self.pools.len() * CAPACITY {
                 // Allocate new pool
-                self.pools.push(device.create_descriptor_pool(CAPACITY, &self.range));
+                self.pools
+                    .push(device.create_descriptor_pool(CAPACITY, &self.range));
             }
             self.count += 1;
             // allocate set
-            self.pools.last_mut().unwrap().allocate_sets(&[&self.layout]).pop().unwrap()
+            self.pools
+                .last_mut()
+                .unwrap()
+                .allocate_sets(&[&self.layout])
+                .pop()
+                .unwrap()
         } else {
             // get unused set
             self.sets.pop().unwrap()
@@ -107,15 +111,14 @@ fn bindings_to_range_desc(bindings: &[DescriptorSetLayoutBinding]) -> Vec<Descri
     let mut desc: Vec<DescriptorRangeDesc> = Vec::new();
     for binding in bindings {
         let desc_len = desc.len();
-        desc.extend((desc_len..binding.binding + 1).map(|_| {
-            DescriptorRangeDesc {
+        desc.extend(
+            (desc_len..binding.binding + 1).map(|_| DescriptorRangeDesc {
                 ty: DescriptorType::UniformBuffer,
                 count: 0,
-            }
-        }));
+            }),
+        );
         desc[binding.binding].ty = binding.ty;
         desc[binding.binding].count = binding.count;
     }
     desc
 }
-

@@ -10,14 +10,13 @@ use std::cmp::min;
 use gfx_hal::{Backend, Device};
 use gfx_hal::device::WaitFor;
 use gfx_hal::pool::CommandPool;
-use gfx_hal::queue::{CommandQueue, Compute, General, Graphics, QueueFamily, QueueFamilyId, QueueGroup, QueueType,
-                     Queues, Transfer};
+use gfx_hal::queue::{CommandQueue, Compute, General, Graphics, QueueFamily, QueueFamilyId,
+                     QueueGroup, QueueType, Queues, Transfer};
 
 use smallvec::SmallVec;
 
 use self::family::Family;
 use epoch::{CurrentEpoch, Epoch};
-
 
 // Execution that needs `CommandQueue<B, C> where C: Supports<General>` to be executed.
 pub trait GeneralExecution<B: Backend>: Execution<B, General> {}
@@ -61,7 +60,6 @@ where
 {
 }
 
-
 /// Execution that can be executed on `CommandQueue<B, C>`.
 pub trait Execution<B: Backend, C> {
     fn execute(
@@ -98,7 +96,8 @@ where
             fences: Vec::new(),
         };
 
-        center.graphics = graphics.and_then(|graphics| queues.take::<Graphics>(graphics).map(Family::new));
+        center.graphics =
+            graphics.and_then(|graphics| queues.take::<Graphics>(graphics).map(Family::new));
 
         center
     }

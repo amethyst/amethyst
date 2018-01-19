@@ -9,35 +9,34 @@ extern crate error_chain;
 
 use error_chain::ChainedError;
 
-use amethyst::{core, config, assets, ecs, renderer, utils, winit, Application, Error, State, Trans};
+use amethyst::{assets, config, core, ecs, renderer, utils, winit, Application, Error, State, Trans};
 
 use assets::{HotReloadBundle, Loader};
 use config::Config;
-use core::cgmath::{Array, Deg, Euler, Quaternion, Rad, Rotation, Rotation3, Vector3};
 use core::EventsPump;
+use core::cgmath::{Array, Deg, Euler, Quaternion, Rad, Rotation, Rotation3, Vector3};
 use core::frame_limiter::FrameRateLimitStrategy;
 use core::timing::Time;
 use core::transform::{LocalTransform, Transform, TransformBundle};
 use ecs::{Entity, Fetch, FetchMut, Join, ReadStorage, System, World, WriteStorage};
 
-use renderer::hal::{HalConfig, HalBundle, Hal, RendererConfig};
+use renderer::camera::{Camera, Projection};
+use renderer::formats::{ObjFormat, PngFormat};
+use renderer::hal::{Hal, HalBundle, HalConfig, RendererConfig};
 use renderer::light::{AmbientLight, Light, PointLight};
-use renderer::passes::flat::DrawFlat;
 use renderer::material::{Material, MaterialDefaults};
 use renderer::mesh::MeshHandle;
-use renderer::formats::{ObjFormat, PngFormat};
-use renderer::vertex::{PosNormTex};
-use renderer::camera::{Camera, Projection};
+use renderer::passes::flat::DrawFlat;
 use renderer::system::ActiveGraph;
+use renderer::vertex::PosNormTex;
 
 use renderer::gfx_hal::command::{ClearColor, ClearDepthStencil};
+use renderer::gfx_hal::format::{AsFormat, D32Float};
 use renderer::graph::{ColorAttachment, DepthStencilAttachment, Pass};
-use renderer::gfx_hal::format::{D32Float, AsFormat};
-
 
 // use amethyst::ui::{DrawUi, FontHandle, TtfFormat, UiBundle, UiText, UiTransform};
 use utils::fps_counter::{FPSCounter, FPSCounterBundle};
-use winit::{Event, WindowEvent, VirtualKeyCode, ElementState, KeyboardInput, EventsLoop};
+use winit::{ElementState, Event, EventsLoop, KeyboardInput, VirtualKeyCode, WindowEvent};
 
 #[cfg(feature = "gfx-metal")]
 use renderer::metal::Backend;
@@ -68,7 +67,8 @@ impl<'a> System<'a> for ExampleSystem {
         Fetch<'a, FPSCounter>,
     );
 
-fn run(&mut self, (mut lights, time, camera, mut transforms, mut state, /*mut ui_text, */fps_counter): Self::SystemData){
+fn run(&mut self, (mut lights, time, camera, mut transforms, mut state, /*mut ui_text, */
+fps_counter): Self::SystemData){
         let light_angular_velocity = -1.0;
         let light_orbit_radius = 15.0;
         let light_z = 6.0;
@@ -394,8 +394,6 @@ fn run() -> Result<(), Error> {
     // Add our meshes directory to the asset loader.
     let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
 
-
-    
     let mut game = Application::build(resources_directory, Example)?
         .with(ExampleSystem, "example_system", &[])
         .with_frame_limit(FrameRateLimitStrategy::Unlimited, 0)
@@ -418,7 +416,8 @@ fn run() -> Result<(), Error> {
             height: 768,
             events: &events_loop,
         }),
-    }.build::<Backend>().unwrap();
+    }.build::<Backend>()
+        .unwrap();
 
     let mut graph = {
         <DrawFlat as Pass<Backend>>::register(&mut game.world);
@@ -426,20 +425,17 @@ fn run() -> Result<(), Error> {
         let depth = DepthStencilAttachment::new(D32Float::SELF).clear(ClearDepthStencil(1.0, 0));
         let present = ColorAttachment::new(renderer.format)
             .with_clear(ClearColor::Float([0.15, 0.1, 0.2, 1.0]));
-        let mut pass = DrawFlat::build()
-            .with_color(0, &present)
-            .with_depth(&depth);
+        let mut pass = DrawFlat::build().with_color(0, &present).with_depth(&depth);
 
         renderer
             .add_graph(&[&pass], &present, &hal.device, &mut hal.allocator)
             .unwrap()
     };
 
-    let mut game = game
-        .with_bundle(hal)?
+    let mut game = game.with_bundle(hal)?
         .with_thread_local(EventsPump(events_loop))
         .build()?;
-    
+
     (*game.world.write_resource::<ActiveGraph>()).0 = Some(graph);
 
     game.run();

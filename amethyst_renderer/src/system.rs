@@ -1,7 +1,7 @@
 //! Rendering system
-//! 
-//! 
-//! 
+//!
+//!
+//!
 
 use std::marker::PhantomData;
 
@@ -12,18 +12,23 @@ use specs::{System, SystemData, World};
 
 use command::CommandCenter;
 use epoch::CurrentEpoch;
-use memory::Allocator;
 use hal::{BasicFactory, Renderer};
+use memory::Allocator;
 use upload::Uploader;
-
 
 pub struct ActiveGraph(pub Option<usize>);
 
 pub struct AllResources<'a>(&'a Resources);
 impl<'a> SystemData<'a> for AllResources<'a> {
-    fn fetch(res: &'a Resources, _id: usize) -> Self { AllResources(res) }
-    fn reads(id: usize) -> Vec<ResourceId> { vec![] }
-    fn writes(id: usize) -> Vec<ResourceId> { vec![] }
+    fn fetch(res: &'a Resources, _id: usize) -> Self {
+        AllResources(res)
+    }
+    fn reads(id: usize) -> Vec<ResourceId> {
+        vec![]
+    }
+    fn writes(id: usize) -> Vec<ResourceId> {
+        vec![]
+    }
 }
 
 pub struct RenderingSystem<B: Backend> {
@@ -60,11 +65,15 @@ where
     B: Backend,
 {
     pub fn cleanup(&mut self, res: &Resources) {
-        let BasicFactory { ref device, ref mut allocator, ref mut current, .. } = *res.fetch_mut::<BasicFactory<B>>(0);
+        let BasicFactory {
+            ref device,
+            ref mut allocator,
+            ref mut current,
+            ..
+        } = *res.fetch_mut::<BasicFactory<B>>(0);
         self.center.wait_finish(device, current);
-        self.renderer.take().map(|renderer| {
-            renderer.dispose(allocator, device, res)
-        });
+        self.renderer
+            .take()
+            .map(|renderer| renderer.dispose(allocator, device, res));
     }
 }
-

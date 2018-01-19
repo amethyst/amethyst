@@ -1,6 +1,6 @@
 //!
 //! Lifetime-like runtime borrow checker.
-//! 
+//!
 
 use std::cmp::min;
 use std::collections::VecDeque;
@@ -14,7 +14,6 @@ use relevant::Relevant;
 /// Primary used with `ValidUntil` implementations.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Epoch(pub u64);
-
 
 impl Epoch {
     /// Create new `Epoch` that never compared as "later" to any other.
@@ -137,7 +136,7 @@ impl<T> Ec<T> {
     /// Get reference to the pointed value.
     /// Returns `Some` if `Ec` won't be expired withing specified epoch range.
     /// Returns `None` otherwise.
-    /// 
+    ///
     /// User must guarantee that `CurrentEpoch` won't be advanced to `span.end`
     /// while `T` is in use.
     #[inline]
@@ -240,7 +239,6 @@ impl<T> Deref for Eh<T> {
     }
 }
 
-
 /// This queue can be used to trash unused `Eh` and other implementors of `ValidUntil`.
 /// It can be `clean`ed to drop all enqueued `ValidUntil` implementors that has been expired.
 pub struct DeletionQueue<T> {
@@ -301,8 +299,6 @@ where
         self.offset += index as u64;
     }
 }
-
-
 
 #[cfg(target_pointer_width = "64")]
 #[derive(Debug)]

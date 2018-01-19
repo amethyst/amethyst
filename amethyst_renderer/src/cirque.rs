@@ -1,8 +1,7 @@
-use std::collections::vec_deque::{VecDeque, Drain};
+use std::collections::vec_deque::{Drain, VecDeque};
 use std::ops::{Deref, DerefMut, Range};
 
 use epoch::{CurrentEpoch, Epoch};
-
 
 /// Circular queue to use with `Epoch` based resurces.
 /// Useful when some resource may need to be changed while in use.
@@ -23,7 +22,7 @@ impl<T> Cirque<T> {
     /// Create `Cirque` filled with items from `iter`.
     pub fn from_iter<I>(iter: I) -> Self
     where
-        I: IntoIterator<Item=T>,
+        I: IntoIterator<Item = T>,
     {
         let values = iter.into_iter().map(|value| (Epoch::new(), value));
         Cirque {
@@ -86,7 +85,7 @@ impl<T> Cirque<T> {
     {
         match self.get(span) {
             Entry::Occupied(occupied) => occupied,
-            Entry::Vacant(vacant) => vacant.insert(f())
+            Entry::Vacant(vacant) => vacant.insert(f()),
         }
     }
 }
@@ -101,17 +100,22 @@ impl<'a, T: 'a> VacantEntry<'a, T> {
     /// Replace values in cirque with new ones.
     /// User must be sure that clearing items
     /// that are currently in use is safe.
-    /// 
+    ///
     /// # Panics
-    /// 
+    ///
     /// This function will panic if the iterator yields no items.
     pub unsafe fn replace<I>(self, iter: I) -> &'a mut T
     where
-        I: IntoIterator<Item=T>,
+        I: IntoIterator<Item = T>,
     {
         self.cirque.values.clear();
-        self.cirque.values.extend(iter.into_iter().map(|value| (Epoch::new(), value)));
-        let (ref mut until, ref mut value) = *self.cirque.values.back_mut().expect("Provided iterator must be non-empty");
+        self.cirque
+            .values
+            .extend(iter.into_iter().map(|value| (Epoch::new(), value)));
+        let (ref mut until, ref mut value) = *self.cirque
+            .values
+            .back_mut()
+            .expect("Provided iterator must be non-empty");
         *until = self.until;
         value
     }

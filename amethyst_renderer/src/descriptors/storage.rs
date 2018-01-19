@@ -1,8 +1,6 @@
-
-
 use gfx_hal::Backend;
 use hibitset::BitSetLike;
-use specs::{Component, Index, UnprotectedStorage, DenseVecStorage};
+use specs::{Component, DenseVecStorage, Index, UnprotectedStorage};
 
 use descriptors::{DescriptorPool, DescriptorSet};
 use relevant::RelevantStorage;

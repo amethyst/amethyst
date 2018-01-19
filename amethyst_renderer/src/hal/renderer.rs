@@ -1,5 +1,5 @@
 //! Encapsulation for external rendering resources.
-//! 
+//!
 
 use std::fmt;
 
@@ -8,19 +8,18 @@ use gfx_hal::command::{Rect, Viewport};
 use gfx_hal::device::Extent;
 use gfx_hal::format::Format;
 use gfx_hal::pool::CommandPool;
-use gfx_hal::queue::{CommandQueue, Graphics, Supports, Transfer, Submission};
+use gfx_hal::queue::{CommandQueue, Graphics, Submission, Supports, Transfer};
 use gfx_hal::window::{Backbuffer, Swapchain};
 
 use shred::Resources;
 use specs::World;
-
 
 use winit::{EventsLoop, Window};
 
 use cirque::Cirque;
 use command::{CommandCenter, Execution};
 use epoch::{CurrentEpoch, Epoch};
-use graph::{Graph, SuperFrame, PassBuilder, ColorAttachment};
+use graph::{ColorAttachment, Graph, PassBuilder, SuperFrame};
 use memory::Allocator;
 use upload::Uploader;
 
@@ -50,7 +49,6 @@ pub struct Renderer<B: Backend> {
     pub start_epoch: Epoch,
     pub graphs: Vec<Graph<B>>, // Move it to `Hal`.
 }
-
 
 fn fmt_window(window: &Window, fmt: &mut fmt::Formatter) -> fmt::Result {
     write!(fmt, "Window({:?})", window.id())
@@ -170,16 +168,16 @@ where
 
         let ref res = *self.res;
 
-
         // This execuiton needs to finsish before we will draw same frame again.
         // If there is only one frame this execution have to finish in current epoch
         let finish = current.now() + (frames - 1) as u64;
-        let span = current.now() .. finish;
+        let span = current.now()..finish;
 
-        let acq_rel = self.renderer.surface_semaphores.get_or_insert(span.clone(), || (
-            device.create_semaphore(),
-            device.create_semaphore(),
-        ));
+        let acq_rel = self.renderer
+            .surface_semaphores
+            .get_or_insert(span.clone(), || {
+                (device.create_semaphore(), device.create_semaphore())
+            });
 
         // Start frame acquisition
         let frame = SuperFrame::new(
@@ -187,13 +185,14 @@ where
             swapchain.acquire_frame(FrameSync::Semaphore(&acq_rel.0)),
         );
 
-        let upload = self.uploader.and_then(|uploader| uploader.commit(span.clone(), device, queue, &mut pools[0]));
+        let upload = self.uploader
+            .and_then(|uploader| uploader.commit(span.clone(), device, queue, &mut pools[0]));
 
         graph.draw_inline(
             queue,
             &mut pools[0],
             frame,
-            upload.as_ref().map(|x|&**x),
+            upload.as_ref().map(|x| &**x),
             &acq_rel.0,
             &acq_rel.1,
             self.allocator,

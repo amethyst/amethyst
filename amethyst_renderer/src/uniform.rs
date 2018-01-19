@@ -1,6 +1,6 @@
 //!
 //! Semi-automatic tracking of uniform caches and updates.
-//! 
+//!
 
 use std::ops::{DerefMut, Range};
 
@@ -16,7 +16,6 @@ use specs::{Component, DenseVecStorage, Entity, MaskedStorage, Storage};
 use cirque::{Cirque, Entry};
 use epoch::{Eh, Epoch};
 use memory::{shift_for_alignment, Allocator, Buffer};
-
 
 pub trait UniformCache<B: Backend, T>: Sized {
     fn new<C>(
@@ -141,7 +140,7 @@ where
                     // Real buffer is in deallocation queue.
                     vacant.replace((0..count).map(move |i| i as u64 * stride))
                 }
-            },
+            }
             Entry::Occupied(occupied) => occupied,
         };
 

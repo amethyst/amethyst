@@ -3,10 +3,8 @@ use std::ops::Range;
 
 use gfx_hal::Backend;
 
-
 use memory::MemoryAllocator;
 use relevant::Relevant;
-
 
 /// Tagged block of memory.
 /// It is relevant type and can't be silently dropped.
@@ -23,14 +21,15 @@ unsafe impl<B, T> Send for Block<B, T>
 where
     B: Backend,
     T: Send,
-{}
+{
+}
 
 unsafe impl<B, T> Sync for Block<B, T>
 where
     B: Backend,
     T: Sync,
-{}
-
+{
+}
 
 impl<B> Block<B, ()>
 where
@@ -46,7 +45,6 @@ where
         }
     }
 }
-
 
 impl<B, T> Block<B, T>
 where
@@ -169,4 +167,3 @@ where
         )
     }
 }
-

@@ -1,6 +1,6 @@
 //!
 //! Simplifies loading of data to the buffer and images
-//! 
+//!
 
 use std::ops::Range;
 
@@ -8,9 +8,9 @@ use gfx_hal::{Backend, Device};
 use gfx_hal::buffer::Usage as BufferUsage;
 use gfx_hal::command::{BufferCopy, BufferImageCopy, CommandBuffer};
 use gfx_hal::image::ImageLayout;
-use gfx_hal::memory::{Pod, Properties, cast_slice};
+use gfx_hal::memory::{cast_slice, Pod, Properties};
 use gfx_hal::pool::CommandPool;
-use gfx_hal::queue::{Supports, Transfer, CommandQueue, Submission};
+use gfx_hal::queue::{CommandQueue, Submission, Supports, Transfer};
 
 use cirque::{Cirque, Entry};
 use epoch::{CurrentEpoch, Eh, Epoch};
@@ -128,7 +128,7 @@ where
     {
         match self {
             Upload::BufferDirect { dst, offset, data } => cbuf.update_buffer(
-                unsafe {dst.get_span(span)}
+                unsafe { dst.get_span(span) }
                     .expect("Expected to be commited before dst expires")
                     .raw(),
                 offset,
@@ -136,7 +136,7 @@ where
             ),
             Upload::BufferStaging { dst, offset, src } => cbuf.copy_buffer(
                 src.raw(),
-                unsafe {dst.get_span(span)}
+                unsafe { dst.get_span(span) }
                     .expect("Expected to be commited before dst expires")
                     .raw(),
                 &[
@@ -154,7 +154,7 @@ where
                 src,
             } => cbuf.copy_buffer_to_image(
                 src.raw(),
-                unsafe {dst.get_span(span)}
+                unsafe { dst.get_span(span) }
                     .expect("Expected to be commited before dst expires")
                     .raw(),
                 dst_layout,
@@ -178,7 +178,6 @@ pub struct Uploader<B: Backend> {
     uploads: Vec<Upload<B>>,
     semaphores: Cirque<B::Semaphore>,
 }
-
 
 impl<B> Uploader<B>
 where
@@ -246,7 +245,13 @@ where
         )?))
     }
 
-    pub fn commit<'a, C>(&'a mut self, span: Range<Epoch>, device: &B::Device, queue: &mut CommandQueue<B, C>, pool: &mut CommandPool<B, C>) -> Option<&'a B::Semaphore>
+    pub fn commit<'a, C>(
+        &'a mut self,
+        span: Range<Epoch>,
+        device: &B::Device,
+        queue: &mut CommandQueue<B, C>,
+        pool: &mut CommandPool<B, C>,
+    ) -> Option<&'a B::Semaphore>
     where
         C: Supports<Transfer>,
     {
@@ -259,7 +264,8 @@ where
             upload.commit(&mut cbuf, span.clone());
         }
 
-        let semaphore = self.semaphores.get_or_insert(span, || device.create_semaphore());
+        let semaphore = self.semaphores
+            .get_or_insert(span, || device.create_semaphore());
 
         queue.submit::<C>(
             Submission::new()

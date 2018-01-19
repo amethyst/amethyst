@@ -1,12 +1,11 @@
-
 use std::ops::{Deref, DerefMut};
 
 use gfx_hal::{Backend, Device, MemoryProperties};
-use gfx_hal::buffer::{Usage as BufferUsage};
+use gfx_hal::buffer::Usage as BufferUsage;
 use gfx_hal::format::Format;
 use gfx_hal::image::{Kind, Level, Usage as ImageUsage};
 use gfx_hal::mapping::Error as MappingError;
-use gfx_hal::memory::{Properties, Requirements, Pod};
+use gfx_hal::memory::{Pod, Properties, Requirements};
 
 use epoch::{CurrentEpoch, DeletionQueue, Ec, Eh};
 use memory::{shift_for_alignment, Block, Error, MemoryAllocator};
@@ -64,7 +63,12 @@ where
     /// Acquire reader for range of the underlying memory block.
     /// Reader can be dereferenced to slice.
     /// It will automatically unmap memory when dropped.
-    pub fn read<'a>(&'a mut self, offset: u64, size: usize, device: &'a B::Device) -> Result<Reader<'a, B>, MappingError> {
+    pub fn read<'a>(
+        &'a mut self,
+        offset: u64,
+        size: usize,
+        device: &'a B::Device,
+    ) -> Result<Reader<'a, B>, MappingError> {
         use std::mem::size_of;
 
         let bytes = size as u64;
@@ -96,7 +100,13 @@ where
     /// Writer can be dereferenced to mutable slice.
     /// It will automatically flush and unmap memory when dropped.
     /// Flushing do not occur if writer wasn't dereferenced even once.
-    pub fn write<'a>(&'a self, fresh: bool, offset: u64, size: usize, device: &'a B::Device) -> Result<Writer<'a, B>, MappingError> {
+    pub fn write<'a>(
+        &'a self,
+        fresh: bool,
+        offset: u64,
+        size: usize,
+        device: &'a B::Device,
+    ) -> Result<Writer<'a, B>, MappingError> {
         use std::mem::size_of;
 
         let bytes = size as u64;
@@ -155,9 +165,7 @@ where
     type Target = [u8];
     fn deref(&self) -> &[u8] {
         use std::slice::from_raw_parts;
-        unsafe {
-            from_raw_parts(self.ptr, self.size)
-        }
+        unsafe { from_raw_parts(self.ptr, self.size) }
     }
 }
 
@@ -186,7 +194,9 @@ where
 {
     pub fn flush(&mut self) {
         if !self.coherent && !self.flushed {
-            self.device.flush_mapped_memory_ranges(&[(self.memory, self.start .. (self.start + self.size as u64))]);
+            self.device.flush_mapped_memory_ranges(&[
+                (self.memory, self.start..(self.start + self.size as u64)),
+            ]);
             self.flushed = true;
         }
     }
@@ -199,9 +209,7 @@ where
     type Target = [u8];
     fn deref(&self) -> &[u8] {
         use std::slice::from_raw_parts;
-        unsafe {
-            from_raw_parts(self.ptr, self.size)
-        }
+        unsafe { from_raw_parts(self.ptr, self.size) }
     }
 }
 
@@ -212,9 +220,7 @@ where
     fn deref_mut(&mut self) -> &mut [u8] {
         use std::slice::from_raw_parts_mut;
         self.flushed = false;
-        unsafe {
-            from_raw_parts_mut(self.ptr, self.size)
-        }
+        unsafe { from_raw_parts_mut(self.ptr, self.size) }
     }
 }
 
@@ -245,7 +251,12 @@ where
         min_chunk_size: u64,
     ) -> Self {
         Allocator {
-            allocator: SmartAllocator::new(memory_properties, arena_size, chunk_size, min_chunk_size),
+            allocator: SmartAllocator::new(
+                memory_properties,
+                arena_size,
+                chunk_size,
+                min_chunk_size,
+            ),
             buffer_deletion_queue: DeletionQueue::new(),
             image_deletion_queue: DeletionQueue::new(),
         }
@@ -284,10 +295,7 @@ where
             .alloc(device, (ty, properties), requirements)
             .map_err(|err| {
                 if let Error::NoCompatibleMemoryType = err {
-                    Error::BufferUsageAndProperties {
-                        usage,
-                        properties,
-                    }
+                    Error::BufferUsageAndProperties { usage, properties }
                 } else {
                     err
                 }
@@ -323,10 +331,7 @@ where
             .alloc(device, (ty, properties), requirements)
             .map_err(|err| {
                 if let Error::NoCompatibleMemoryType = err {
-                    Error::ImageUsageAndProperties {
-                        usage,
-                        properties,
-                    }
+                    Error::ImageUsageAndProperties { usage, properties }
                 } else {
                     err
                 }

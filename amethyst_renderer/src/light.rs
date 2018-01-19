@@ -1,4 +1,3 @@
-
 use specs::{Component, DenseVecStorage};
 
 #[derive(Clone, Copy, Debug)]

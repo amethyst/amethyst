@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 use gfx_hal::{Backend, MemoryTypeId};
 use gfx_hal::memory::Requirements;
 
-use memory::{shift_for_alignment, Block, MemoryAllocator, MemorySubAllocator, Error};
+use memory::{shift_for_alignment, Block, Error, MemoryAllocator, MemorySubAllocator};
 
 #[derive(Debug)]
 struct ChunkListNode<B: Backend, A: MemoryAllocator<B>> {
@@ -13,7 +13,6 @@ struct ChunkListNode<B: Backend, A: MemoryAllocator<B>> {
     blocks: Vec<(Block<B, A::Tag>, u64)>,
     free: VecDeque<(usize, u64)>,
 }
-
 
 impl<B, A> ChunkListNode<B, A>
 where
@@ -65,7 +64,6 @@ where
     }
 }
 
-
 impl<B, A> MemorySubAllocator<B> for ChunkListNode<B, A>
 where
     B: Backend,
@@ -115,7 +113,6 @@ where
     }
 }
 
-
 #[derive(Debug)]
 pub struct ChunkListAllocator<B: Backend, A: MemoryAllocator<B>> {
     id: MemoryTypeId,
@@ -159,12 +156,11 @@ where
         let chunks_per_block = 1 << self.chunk_size_bit;
         let id = self.id;
         let len = self.nodes.len() as u8;
-        self.nodes.extend((len..size).map(|index| {
-            ChunkListNode::new(chunk_size(index), chunks_per_block, id)
-        }));
+        self.nodes.extend(
+            (len..size).map(|index| ChunkListNode::new(chunk_size(index), chunks_per_block, id)),
+        );
     }
 }
-
 
 impl<B, A> MemorySubAllocator<B> for ChunkListAllocator<B, A>
 where

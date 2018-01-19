@@ -8,12 +8,11 @@ use specs::VecStorage;
 use wavefront_obj::obj::{parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex,
                          TextureIndex, Vertex, VertexIndex};
 
-
 use epoch::CurrentEpoch;
 use memory::Allocator;
 use mesh::{Mesh, MeshBuilder, MeshHandle};
 use upload::Uploader;
-use vertex::{self, PosColor, PosTex, PosNormTex, PosNormTangTex};
+use vertex::{self, PosColor, PosNormTangTex, PosNormTex, PosTex};
 
 /// Vertex combo
 pub type VertexBufferCombination = (
@@ -46,8 +45,7 @@ pub enum MeshData {
     Builder(MeshBuilder),
 }
 
-impl From<Vec<PosColor>> for MeshData
-{
+impl From<Vec<PosColor>> for MeshData {
     fn from(data: Vec<PosColor>) -> Self {
         MeshData::PosColor(data)
     }
@@ -95,7 +93,9 @@ where
             .map_err(Into::into)
             .and_then(|string| {
                 parse(string)
-                    .map_err(|e| ::assets::Error::from(format!("In line {}: {:?}", e.line_number, e.message)))
+                    .map_err(|e| {
+                        ::assets::Error::from(format!("In line {}: {:?}", e.line_number, e.message))
+                    })
                     .map_err(|e| e.chain_err(|| "Failed to parse OBJ"))
             })
             .map(|set| from_data(set).into())
@@ -116,12 +116,15 @@ fn convert(
         normal: ni.map(|i| {
             let normal: Normal = object.normals[i];
             Vector3::from([normal.x as f32, normal.y as f32, normal.z as f32])
-                .normalize().into()
-        }).unwrap_or([0.0, 0.0, 0.0]).into(),
+                .normalize()
+                .into()
+        }).unwrap_or([0.0, 0.0, 0.0])
+            .into(),
         tex_coord: ti.map(|i| {
             let tvertex: TVertex = object.tex_vertices[i];
             [tvertex.u as f32, tvertex.v as f32]
-        }).unwrap_or([0.0, 0.0]).into(),
+        }).unwrap_or([0.0, 0.0])
+            .into(),
     }
 }
 
@@ -202,15 +205,12 @@ where
             let mb = MeshBuilder::new().with_vertices(vertices);
             mb.build(allocator, uploader, current, device)
         }
-        MeshData::Combination(combo) => {
-            build_mesh_with_some!(
+        MeshData::Combination(combo) => build_mesh_with_some!(
                 MeshBuilder::new().with_vertices(combo.0), allocator, uploader, current, device => {combo.1, combo.2, combo.3, combo.4}
-            )
-        }
+            ),
         MeshData::Builder(builder) => builder.build(allocator, uploader, current, device),
-    }
-    .with_context(|err| format!("Failed to build mesh: {}", err))
-    .map_err(Into::into)
+    }.with_context(|err| format!("Failed to build mesh: {}", err))
+        .map_err(Into::into)
 }
 
 /// Build Mesh with vertex buffer combination

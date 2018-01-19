@@ -17,8 +17,8 @@
 //! In order to feed this pass with data we also need define `World -> [Input]` conversion.
 //!
 
-use std::marker::PhantomData;
 use std::fmt::Debug;
+use std::marker::PhantomData;
 use std::ops::Range;
 
 use gfx_hal::Backend;
@@ -33,13 +33,13 @@ use smallvec::SmallVec;
 use shred::Resources;
 use specs::{Component, DenseVecStorage, NullStorage, SystemData, World};
 
-use descriptors::{DescriptorSet, DescriptorPool};
+use descriptors::{DescriptorPool, DescriptorSet};
 use epoch::Epoch;
 use memory::Allocator;
 use vertex::VertexFormat;
 
+use descriptors::{Binder, BindingsList, Layout};
 use graph::build::PassBuilder;
-use descriptors::{Layout, Binder, BindingsList};
 
 /// Tag component.
 /// Passes should only process entities with `PassTag<Self>`.
@@ -96,7 +96,7 @@ where
     const VERTICES: &'static [VertexFormat<'static>];
 
     type Bindings: BindingsList;
-    
+
     /// Fill layout with bindings
     fn layout(Layout<()>) -> Layout<Self::Bindings>;
 
@@ -154,7 +154,6 @@ where
     /// Register whatever is required
     fn register(world: &mut World);
 }
-
 
 /// Object-safe trait that mirrors `Pass` trait.
 /// It's implemented for any type that implements `Pass`.

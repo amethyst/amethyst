@@ -1,7 +1,7 @@
 use gfx_hal::{Backend, MemoryType, MemoryTypeId};
 use gfx_hal::memory::Requirements;
 
-use memory::{Block, MemoryAllocator, MemorySubAllocator, Error};
+use memory::{Block, Error, MemoryAllocator, MemorySubAllocator};
 use memory::arena::ArenaAllocator;
 use memory::chunked::ChunkListAllocator;
 use memory::root::RootAllocator;

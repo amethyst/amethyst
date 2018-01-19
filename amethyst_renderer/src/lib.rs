@@ -7,15 +7,15 @@
 #![allow(unused_unsafe)]
 #![allow(unused_variables)]
 #![allow(dead_code)]
-
 #![deny(unused_must_use)]
 
-extern crate amethyst_core as core;
 extern crate amethyst_assets as assets;
+extern crate amethyst_core as core;
 #[macro_use]
 extern crate derivative;
 #[macro_use]
 extern crate failure;
+pub extern crate gfx_hal;
 extern crate hibitset;
 extern crate imagefmt;
 extern crate mint;
@@ -27,7 +27,6 @@ extern crate shred;
 extern crate smallvec;
 extern crate specs;
 extern crate winit;
-pub extern crate gfx_hal;
 
 #[cfg(feature = "gfx-backend-vulkan")]
 pub extern crate gfx_backend_vulkan as vulkan;

@@ -4,9 +4,7 @@ use std::mem::replace;
 use gfx_hal::{Backend, MemoryTypeId};
 use gfx_hal::memory::Requirements;
 
-
-use memory::{calc_alignment_shift, Block, MemoryAllocator, MemorySubAllocator, Error};
-
+use memory::{calc_alignment_shift, Block, Error, MemoryAllocator, MemorySubAllocator};
 
 #[derive(Debug)]
 struct ArenaNode<B: Backend, A: MemoryAllocator<B>> {
@@ -56,7 +54,6 @@ where
         owner.free(device, block);
     }
 }
-
 
 /// Linear allocator for transient memory
 #[derive(Debug)]

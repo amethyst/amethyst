@@ -2,7 +2,6 @@
 //! Top-level structure that encapsulates all pieces of rendering engine.
 //! `HalConfig` to instantiate `HalBundle`.
 
-
 mod build;
 mod renderer;
 
@@ -27,11 +26,9 @@ pub use hal::renderer::{Renderer, RendererConfig};
 
 #[derive(Fail, Debug)]
 pub enum Error {
-    #[fail(display = "No valid adapters queues found")]
-    NoValidAdaptersFound,
+    #[fail(display = "No valid adapters queues found")] NoValidAdaptersFound,
 
-    #[fail(display = "No compatible format found")]
-    NoCompatibleFormat,
+    #[fail(display = "No compatible format found")] NoCompatibleFormat,
 }
 
 pub struct HalBundle<B: Backend> {
@@ -54,13 +51,13 @@ where
         builder: DispatcherBuilder<'a, 'b>,
     ) -> ::core::Result<DispatcherBuilder<'a, 'b>> {
         use assets::{AssetStorage, Handle};
-        use core::orientation::Orientation;
-        use core::Transform;
         use camera::Camera;
+        use core::Transform;
+        use core::orientation::Orientation;
         use light::{AmbientLight, Light};
         use material::{create_default_material, Material, MaterialDefaults};
         use mesh::Mesh;
-        use resources::{WindowMessages, ScreenDimensions};
+        use resources::{ScreenDimensions, WindowMessages};
         use system::{ActiveGraph, RenderingSystem};
         use texture::Texture;
 
@@ -102,10 +99,7 @@ where
         world.register::<Handle<Texture<B>>>();
         world.register::<Camera>();
 
-        Ok(builder.add_thread_local(RenderingSystem {
-            center,
-            renderer,
-        }))
+        Ok(builder.add_thread_local(RenderingSystem { center, renderer }))
     }
 }
 
@@ -120,8 +114,16 @@ where
         &self.0
     }
 }
-unsafe impl<B> Send for Device<B> where B: Backend {}
-unsafe impl<B> Sync for Device<B> where B: Backend {}
+unsafe impl<B> Send for Device<B>
+where
+    B: Backend,
+{
+}
+unsafe impl<B> Sync for Device<B>
+where
+    B: Backend,
+{
+}
 
 pub struct BasicFactory<B: Backend> {
     pub device: Device<B>,
@@ -152,7 +154,6 @@ where
         )
     }
 }
-
 
 impl<B> BasicFactory<B>
 where
