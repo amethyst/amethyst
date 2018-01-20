@@ -3,6 +3,8 @@
 extern crate amethyst;
 extern crate amethyst_animation;
 extern crate amethyst_gltf;
+#[macro_use]
+extern crate log;
 
 use amethyst::assets::{AssetStorage, Handle, Loader};
 use amethyst::core::cgmath::{Deg, Quaternion, Rotation3, Vector3};
@@ -31,6 +33,7 @@ impl State for Example {
                 generate_tex_coords: Some((0.1, 0.1)),
                 load_animations: true,
                 flip_v_coord: true,
+                move_to_origin: true,
             },
         );
 
@@ -45,7 +48,7 @@ impl State for Example {
             animation_index: 0,
         });
 
-        println!("Create lights");
+        info!("Create lights");
         world
             .create_entity()
             .with(Light::from(PointLight {
@@ -66,12 +69,11 @@ impl State for Example {
             }))
             .build();
 
-        println!("Put camera");
+        info!("Put camera");
 
         let mut camera_transform = LocalTransform::default();
-        camera_transform.translation = Vector3::new(-40.0, 40.0, 30.0);
-        camera_transform.rotation =
-            Quaternion::from_angle_y(Deg(-70.)) * Quaternion::from_angle_x(Deg(-20.));
+        camera_transform.translation = Vector3::new(100.0, 20.0, 0.0);
+        camera_transform.rotation = Quaternion::from_angle_y(Deg(90.));
         world
             .create_entity()
             .with(Camera::from(Projection::perspective(
@@ -169,7 +171,7 @@ fn run() -> Result<(), amethyst::Error> {
 
 fn main() {
     if let Err(e) = run() {
-        println!("Failed to execute example: {}", e);
+        error!("Failed to execute example: {}", e);
         ::std::process::exit(1);
     }
 }

@@ -3,7 +3,7 @@ use std::collections::{HashMap, HashSet};
 use animation::{Animation, AnimationHierarchy, AnimationSet, Joint, Sampler, Skin};
 use assets::{AssetStorage, Handle, HotReloadStrategy, Loader};
 use core::{ThreadPool, Time};
-use core::cgmath::{Matrix4, SquareMatrix};
+use core::cgmath::{EuclideanSpace, Matrix4, Point3, SquareMatrix};
 use core::transform::*;
 use fnv::FnvHashMap;
 use renderer::{AnimatedComboMeshCreator, JointTransforms, Material, MaterialDefaults, Mesh,
@@ -336,6 +336,27 @@ fn load_node(
     }
 
     if node.primitives.len() > 0 {
+        if scene_asset.options.move_to_origin {
+            let mut min = Point3::origin();
+            let mut max = Point3::origin();
+            for primitive in &node.primitives {
+                let pmin = &primitive.extents.start;
+                let pmax = &primitive.extents.end;
+                for i in 0..3 {
+                    if pmin[i] < min[i] {
+                        min[i] = pmin[i];
+                    }
+                    if pmax[i] > max[i] {
+                        max[i] = pmax[i];
+                    }
+                }
+            }
+            let center = (min + max.to_vec()) / 2.;
+            local_transforms
+                .get_mut(*node_entity)
+                .map(|t| t.translation -= center.to_vec());
+            debug!("Moving node from: {:?} to origin", center);
+        }
         let mut mesh_entities = vec![];
         // If we only have a single graphics primitive, we load it onto the nodes entity
         if node.primitives.len() == 1 {

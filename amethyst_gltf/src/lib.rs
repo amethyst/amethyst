@@ -16,6 +16,8 @@ extern crate specs;
 pub use format::GltfSceneFormat;
 pub use systems::GltfSceneLoaderSystem;
 
+use std::ops::Range;
+
 use animation::{Animation, Sampler};
 use assets::{Asset, Error as AssetError, Handle};
 use core::transform::LocalTransform;
@@ -29,6 +31,7 @@ mod systems;
 /// A single graphics primitive
 #[derive(Debug)]
 pub struct GltfPrimitive {
+    pub extents: Range<[f32; 3]>,
     pub primitive: Primitive,
     pub material: Option<usize>,
     pub indices: Option<Vec<usize>>,
@@ -110,6 +113,7 @@ pub struct GltfSceneOptions {
     pub generate_tex_coords: Option<(f32, f32)>,
     pub load_animations: bool,
     pub flip_v_coord: bool,
+    pub move_to_origin: bool,
 }
 
 /// Actual asset produced on finished loading of a GLTF scene file.
