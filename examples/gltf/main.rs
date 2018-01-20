@@ -145,7 +145,7 @@ fn run() -> Result<(), amethyst::Error> {
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawFlatSeparate::new().with_vertex_skinning()),
+            .with_pass(DrawShadedSeparate::new().with_vertex_skinning()),
     );
 
     let mut game = Application::build(resources_directory, Example)?

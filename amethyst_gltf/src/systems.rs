@@ -6,6 +6,7 @@ use core::{ThreadPool, Time};
 use core::cgmath::{EuclideanSpace, Matrix4, Point3, SquareMatrix};
 use core::transform::*;
 use fnv::FnvHashMap;
+use hibitset::BitSet;
 use renderer::{AnimatedComboMeshCreator, JointTransforms, Material, MaterialDefaults, Mesh,
                Texture};
 use specs::{Entities, Entity, Fetch, FetchMut, Join, System, WriteStorage};
@@ -437,6 +438,7 @@ fn load_skin(
     }
 
     // Add joint transform holders for all mesh entities linked
+    let mut mesh_bitset = BitSet::new();
     for mesh_entity in &mesh_entities {
         joint_transforms.insert(
             *mesh_entity,
@@ -445,6 +447,7 @@ fn load_skin(
                 matrices: vec![Matrix4::identity().into(); skin.joints.len()],
             },
         );
+        mesh_bitset.add(mesh_entity.id());
     }
 
     // Add skin to node with skin reference
@@ -452,9 +455,10 @@ fn load_skin(
         .iter()
         .map(|i| *node_map.get(i).unwrap())
         .collect();
+
     let s = Skin {
         joints,
-        meshes: mesh_entities,
+        meshes: mesh_bitset,
         bind_shape_matrix: Matrix4::identity(),
     };
     skins.insert(*node_entity, s);

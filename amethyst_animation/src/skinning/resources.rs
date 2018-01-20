@@ -1,4 +1,5 @@
 use amethyst_core::cgmath::Matrix4;
+use hibitset::BitSet;
 use specs::{Component, DenseVecStorage, Entity};
 
 /// Joint, attach to an entity with a `LocalTransform`
@@ -19,7 +20,7 @@ pub struct Skin {
     /// Joint entities for the skin
     pub joints: Vec<Entity>,
     /// Mesh entities that use the skin
-    pub meshes: Vec<Entity>,
+    pub meshes: BitSet,
     /// Bind shape matrix
     pub bind_shape_matrix: Matrix4<f32>,
 }

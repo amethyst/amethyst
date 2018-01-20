@@ -55,7 +55,7 @@ pub type AnimatedVertexBufferCombination = (
 fn build_mesh_with_combo(
     combo: AnimatedVertexBufferCombination,
     renderer: &mut Renderer,
-) -> ::error::Result<Mesh> {
+) -> Result<Mesh> {
     build_mesh_with_some!(
         MeshBuilder::new(combo.0),
         renderer,
@@ -77,7 +77,7 @@ pub struct AnimatedComboMeshCreator {
 impl AnimatedComboMeshCreator {
     /// Create a new combo mesh creator with the given combo
     pub fn new(combo: AnimatedVertexBufferCombination) -> Self {
-        Self { combo }
+        AnimatedComboMeshCreator { combo }
     }
 }
 
