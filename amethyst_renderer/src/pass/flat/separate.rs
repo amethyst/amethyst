@@ -1,7 +1,6 @@
 //! Simple flat forward drawing pass.
 
 use amethyst_assets::AssetStorage;
-use amethyst_core::cgmath::{Matrix4, One, SquareMatrix};
 use amethyst_core::transform::Transform;
 use gfx::pso::buffer::ElemStride;
 use specs::{Entities, Fetch, Join, ReadStorage};
@@ -11,12 +10,19 @@ use cam::{ActiveCamera, Camera};
 use error::Result;
 use mesh::{Mesh, MeshHandle};
 use mtl::{Material, MaterialDefaults};
+use pass::skinning::{create_skinning_effect, set_skinning_buffers, setup_skinning_buffers};
+use pass::util::{add_textures, set_attribute_buffers, set_vertex_args, VertexArgs};
 use pipe::{DepthMode, Effect, NewEffect};
 use pipe::pass::{Pass, PassData};
-use skinning::{JointIds, JointTransforms, JointWeights};
+use skinning::JointTransforms;
 use tex::Texture;
 use types::{Encoder, Factory};
-use vertex::{Position, Separate, TexCoord, VertexFormat};
+use vertex::{Attributes, Position, Separate, TexCoord, VertexFormat};
+
+static ATTRIBUTES: [Attributes<'static>; 2] = [
+    Separate::<Position>::ATTRIBUTES,
+    Separate::<TexCoord>::ATTRIBUTES,
+];
 
 /// Draw mesh without lighting
 #[derive(Derivative, Clone, Debug, PartialEq)]
@@ -60,45 +66,23 @@ impl Pass for DrawFlatSeparate {
     fn compile(&self, effect: NewEffect) -> Result<Effect> {
         use std::mem;
         let mut builder = if self.skinning {
-            effect.simple(VERT_SKIN_SRC, FRAG_SRC)
+            create_skinning_effect(effect, FRAG_SRC)
         } else {
             effect.simple(VERT_SRC, FRAG_SRC)
         };
+        builder
+            .with_raw_vertex_buffer(
+                Separate::<Position>::ATTRIBUTES,
+                Separate::<Position>::size() as ElemStride,
+                0,
+            )
+            .with_raw_vertex_buffer(
+                Separate::<TexCoord>::ATTRIBUTES,
+                Separate::<TexCoord>::size() as ElemStride,
+                0,
+            );
         if self.skinning {
-            builder
-                .with_raw_vertex_buffer(
-                    Separate::<Position>::ATTRIBUTES,
-                    Separate::<Position>::size() as ElemStride,
-                    0,
-                )
-                .with_raw_vertex_buffer(
-                    Separate::<TexCoord>::ATTRIBUTES,
-                    Separate::<TexCoord>::size() as ElemStride,
-                    0,
-                )
-                .with_raw_vertex_buffer(
-                    Separate::<JointIds>::ATTRIBUTES,
-                    Separate::<JointIds>::size() as ElemStride,
-                    0,
-                )
-                .with_raw_vertex_buffer(
-                    Separate::<JointWeights>::ATTRIBUTES,
-                    Separate::<JointWeights>::size() as ElemStride,
-                    0,
-                )
-                .with_raw_constant_buffer("JointTransforms", mem::size_of::<[[f32; 4]; 4]>(), 100);;
-        } else {
-            builder
-                .with_raw_vertex_buffer(
-                    Separate::<Position>::ATTRIBUTES,
-                    Separate::<Position>::size() as ElemStride,
-                    0,
-                )
-                .with_raw_vertex_buffer(
-                    Separate::<TexCoord>::ATTRIBUTES,
-                    Separate::<TexCoord>::size() as ElemStride,
-                    0,
-                );
+            setup_skinning_buffers(&mut builder);
         }
         builder
             .with_raw_constant_buffer("VertexArgs", mem::size_of::<VertexArgs>(), 1)
@@ -140,44 +124,15 @@ impl Pass for DrawFlatSeparate {
                 Some(mesh) => mesh,
                 None => continue,
             };
-            if self.skinning {
-                for attrs in [
-                    Separate::<Position>::ATTRIBUTES,
-                    Separate::<TexCoord>::ATTRIBUTES,
-                    Separate::<JointIds>::ATTRIBUTES,
-                    Separate::<JointWeights>::ATTRIBUTES,
-                ].iter()
-                {
-                    match mesh.buffer(attrs) {
-                        Some(vbuf) => effect.data.vertex_bufs.push(vbuf.clone()),
-                        None => continue 'drawable, // Just ignore the mesh if it does not have the correct attributes
-                    }
-                }
-            } else {
-                for attrs in [
-                    Separate::<Position>::ATTRIBUTES,
-                    Separate::<TexCoord>::ATTRIBUTES,
-                ].iter()
-                {
-                    match mesh.buffer(attrs) {
-                        Some(vbuf) => effect.data.vertex_bufs.push(vbuf.clone()),
-                        None => continue 'drawable, // Just ignore the mesh if it does not have the correct attributes
-                    }
-                }
+
+            if !set_attribute_buffers(effect, mesh, &ATTRIBUTES)
+                || (self.skinning && !set_skinning_buffers(effect, mesh))
+            {
+                effect.clear();
+                continue 'drawable;
             }
 
-            let vertex_args = camera
-                .as_ref()
-                .map(|&(ref cam, ref transform)| VertexArgs {
-                    proj: cam.proj.into(),
-                    view: transform.0.invert().unwrap().into(),
-                    model: *global.as_ref(),
-                })
-                .unwrap_or_else(|| VertexArgs {
-                    proj: Matrix4::one().into(),
-                    view: Matrix4::one().into(),
-                    model: *global.as_ref(),
-                });
+            set_vertex_args(effect, encoder, camera, global);
 
             if self.skinning {
                 if let Some(joint) = joints.get(entity) {
@@ -185,14 +140,13 @@ impl Pass for DrawFlatSeparate {
                 }
             }
 
-            let albedo = tex_storage
-                .get(&material.albedo)
-                .or_else(|| tex_storage.get(&material_defaults.0.albedo))
-                .unwrap();
-
-            effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
-            effect.data.textures.push(albedo.view().clone());
-            effect.data.samplers.push(albedo.sampler().clone());
+            add_textures(
+                effect,
+                &tex_storage,
+                material,
+                &material_defaults.0,
+                &TEXTURES,
+            );
 
             effect.draw(mesh.slice(), encoder);
             effect.clear();

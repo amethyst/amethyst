@@ -544,7 +544,7 @@ fn load_skin(skin: &gltf::Skin, buffers: &Buffers) -> Result<GltfSkin, GltfError
     })
 }
 
-fn _flip_check(uv: [f32; 2], flip_v: bool) -> [f32; 2] {
+fn flip_check(uv: [f32; 2], flip_v: bool) -> [f32; 2] {
     if flip_v {
         [uv[0], 1. - uv[1]]
     } else {
@@ -612,10 +612,10 @@ fn load_mesh(
         }.map(|texs| match faces {
             Some(ref faces) => faces
                 .iter()
-                .map(|i| Separate::<TexCoord>::new(_flip_check(texs[*i], options.flip_v_coord)))
+                .map(|i| Separate::<TexCoord>::new(flip_check(texs[*i], options.flip_v_coord)))
                 .collect(),
             None => texs.into_iter()
-                .map(|t| Separate::<TexCoord>::new(_flip_check(t, options.flip_v_coord)))
+                .map(|t| Separate::<TexCoord>::new(flip_check(t, options.flip_v_coord)))
                 .collect(),
         });
 

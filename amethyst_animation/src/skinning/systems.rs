@@ -27,12 +27,11 @@ impl<'a> System<'a> for VertexSkinningSystem {
     );
 
     fn run(&mut self, (joints, transforms, skins, mut matrices): Self::SystemData) {
-        let mut updated: HashSet<Entity> = HashSet::default();
-
         // for flagged joint transforms, calculate a new set of joint matrices for the related skin
-        for (joint, _) in (&joints, transforms.open().1).join() {
-            updated.insert(joint.skin);
-        }
+        let updated = (&joints, transforms.open().1)
+            .join()
+            .map(|(joint, _)| joint.skin)
+            .collect::<HashSet<Entity>>();
 
         for skin_entity in updated {
             match skins.get(skin_entity) {
