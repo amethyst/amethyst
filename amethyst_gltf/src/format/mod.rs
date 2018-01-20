@@ -589,6 +589,7 @@ fn load_mesh(
                     .collect(),
             })
             .ok_or(GltfError::MissingPositions)?;
+        let bounds = primitive.position_bounds().unwrap();
 
         let colors = primitive
             .colors_rgba_f32(0, 1., buffers)
@@ -679,6 +680,7 @@ fn load_mesh(
 
         match map_mode(primitive.mode()) {
             Ok(primitive) => primitives.push(GltfPrimitive {
+                extents: bounds.min..bounds.max,
                 primitive,
                 indices: faces,
                 material,
