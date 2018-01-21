@@ -87,12 +87,13 @@ pub use vertex::{Attribute, AttributeFormat, Attributes, Color, Normal, PosColor
 pub mod error;
 pub mod pipe;
 
+#[macro_use]
+mod macros;
+
 mod bundle;
 mod cam;
 mod color;
 mod config;
-#[macro_use]
-mod macros;
 mod formats;
 mod input;
 mod light;

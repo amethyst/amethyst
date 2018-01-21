@@ -1,6 +1,7 @@
 use gfx::format::{ChannelType, Format, SurfaceType};
 use specs::{Component, DenseVecStorage, Entity, FlaggedStorage};
 
+use error::Result;
 use formats::MeshCreator;
 use mesh::{Mesh, MeshBuilder};
 use renderer::Renderer;
@@ -81,7 +82,7 @@ impl AnimatedComboMeshCreator {
 }
 
 impl MeshCreator for AnimatedComboMeshCreator {
-    fn build(self: Box<Self>, renderer: &mut Renderer) -> ::error::Result<Mesh> {
+    fn build(self: Box<Self>, renderer: &mut Renderer) -> Result<Mesh> {
         build_mesh_with_combo(self.combo, renderer)
     }
 }
