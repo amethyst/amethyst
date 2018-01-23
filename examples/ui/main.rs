@@ -6,8 +6,6 @@ extern crate genmesh;
 use amethyst::core::cgmath::{Deg, InnerSpace, Vector3};
 use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::Time;
-use amethyst::core::cgmath::Vector3;
-use amethyst::core::cgmath::prelude::InnerSpace;
 use amethyst::core::transform::Transform;
 use amethyst::ecs::{Entity, World};
 use amethyst::prelude::*;
