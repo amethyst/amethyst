@@ -2,14 +2,21 @@ pub use imagefmt::Error as ImageError;
 
 use std::io::Cursor;
 
-use Renderer;
-use amethyst_assets::{Result, ResultExt, SimpleFormat};
-use gfx::format::{ChannelType, SurfaceType};
-use gfx::texture::SamplerInfo;
-use gfx::traits::Pod;
-use imagefmt;
-use imagefmt::{ColFmt, Image};
-use tex::{Texture, TextureBuilder};
+use assets::SimpleFormat;
+
+use failure::{Error, ResultExt};
+
+use gfx_hal::{Backend, Device};
+use gfx_hal::format::Format;
+use gfx_hal::image::{AaMode, Kind, SamplerInfo};
+use gfx_hal::memory::Pod;
+
+use imagefmt::{self, ColFmt, Image};
+
+use epoch::CurrentEpoch;
+use memory::Allocator;
+use texture::{Texture, TextureBuilder};
+use upload::Uploader;
 
 /// Texture metadata, used while loading
 #[derive(Debug, Clone)]
@@ -20,12 +27,8 @@ pub struct TextureMetadata {
     pub mip_levels: Option<u8>,
     /// Texture size
     pub size: Option<(u16, u16)>,
-    /// Dynamic texture
-    pub dynamic: bool,
     /// Surface type
-    pub format: Option<SurfaceType>,
-    /// Channel type
-    pub channel: Option<ChannelType>,
+    pub format: Option<Format>,
 }
 
 impl Default for TextureMetadata {
@@ -34,9 +37,7 @@ impl Default for TextureMetadata {
             sampler: None,
             mip_levels: None,
             size: None,
-            dynamic: false,
             format: None,
-            channel: None,
         }
     }
 }
@@ -61,20 +62,8 @@ impl TextureMetadata {
     }
 
     /// Surface type
-    pub fn with_format(mut self, format: SurfaceType) -> Self {
+    pub fn with_format(mut self, format: Format) -> Self {
         self.format = Some(format);
-        self
-    }
-
-    /// Channel type
-    pub fn with_channel(mut self, channel: ChannelType) -> Self {
-        self.channel = Some(channel);
-        self
-    }
-
-    /// Texture is dynamic
-    pub fn dynamic(mut self, d: bool) -> Self {
-        self.dynamic = d;
         self
     }
 }
@@ -132,19 +121,30 @@ pub struct JpgFormat;
 
 impl JpgFormat {
     /// Load Jpg from memory buffer
-    pub fn from_data(&self, data: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
+    pub fn from_data(
+        &self,
+        data: Vec<u8>,
+        options: TextureMetadata,
+    ) -> Result<TextureData, ::assets::Error> {
         imagefmt::jpeg::read(&mut Cursor::new(data), ColFmt::RGBA)
             .map(|raw| TextureData::Image(ImageData { raw }, options))
-            .chain_err(|| "Image decoding failed")
+            .map_err(|e| ::assets::Error::with_chain(e, "Image decoding failed"))
     }
 }
 
-impl SimpleFormat<Texture> for JpgFormat {
+impl<B> SimpleFormat<Texture<B>> for JpgFormat
+where
+    B: Backend,
+{
     const NAME: &'static str = "JPEG";
 
     type Options = TextureMetadata;
 
-    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
+    fn import(
+        &self,
+        bytes: Vec<u8>,
+        options: TextureMetadata,
+    ) -> Result<TextureData, ::assets::Error> {
         self.from_data(bytes, options)
     }
 }
@@ -155,19 +155,30 @@ pub struct PngFormat;
 
 impl PngFormat {
     /// Load Png from memory buffer
-    pub fn from_data(&self, data: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
+    pub fn from_data(
+        &self,
+        data: Vec<u8>,
+        options: TextureMetadata,
+    ) -> Result<TextureData, ::assets::Error> {
         imagefmt::png::read(&mut Cursor::new(data), ColFmt::RGBA)
             .map(|raw| TextureData::Image(ImageData { raw }, options))
-            .chain_err(|| "Image decoding failed")
+            .map_err(|e| ::assets::Error::with_chain(e, "Image decoding failed"))
     }
 }
 
-impl SimpleFormat<Texture> for PngFormat {
+impl<B> SimpleFormat<Texture<B>> for PngFormat
+where
+    B: Backend,
+{
     const NAME: &'static str = "PNG";
 
     type Options = TextureMetadata;
 
-    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
+    fn import(
+        &self,
+        bytes: Vec<u8>,
+        options: TextureMetadata,
+    ) -> Result<TextureData, ::assets::Error> {
         self.from_data(bytes, options)
     }
 }
@@ -176,87 +187,88 @@ impl SimpleFormat<Texture> for PngFormat {
 #[derive(Clone)]
 pub struct BmpFormat;
 
-impl SimpleFormat<Texture> for BmpFormat {
+impl<B> SimpleFormat<Texture<B>> for BmpFormat
+where
+    B: Backend,
+{
     const NAME: &'static str = "BMP";
 
     type Options = TextureMetadata;
 
-    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
+    fn import(
+        &self,
+        bytes: Vec<u8>,
+        options: TextureMetadata,
+    ) -> Result<TextureData, ::assets::Error> {
         // TODO: consider reading directly into GPU-visible memory
         // TODO: as noted by @omni-viral.
         imagefmt::bmp::read(&mut Cursor::new(bytes), ColFmt::RGBA)
             .map(|raw| TextureData::Image(ImageData { raw }, options))
-            .chain_err(|| "Image decoding failed")
+            .map_err(|e| ::assets::Error::with_chain(e, "Image decoding failed"))
     }
 }
 
 /// Create a texture asset.
-pub fn create_texture_asset(data: TextureData, renderer: &mut Renderer) -> Result<Texture> {
+pub fn create_texture_asset<B>(
+    data: TextureData,
+    allocator: &mut Allocator<B>,
+    uploader: &mut Uploader<B>,
+    current: &CurrentEpoch,
+    device: &B::Device,
+) -> Result<Texture<B>, Error>
+where
+    B: Backend,
+{
     use self::TextureData::*;
     match data {
-        Image(image_data, options) => {
-            create_texture_asset_from_image(image_data, options, renderer)
-        }
+        Image(image_data, options) => create_texture_asset_from_image(
+            image_data,
+            options,
+            allocator,
+            uploader,
+            current,
+            device,
+        ),
 
         Rgba(color, options) => {
-            let tb = apply_options(Texture::from_color_val(color), options);
-            renderer
-                .create_texture(tb)
-                .chain_err(|| "Failed to build texture")
+            let tb = apply_options(Texture::<B>::from_color_val(color), options);
+            tb.build(allocator, uploader, current, device)
         }
 
         F32(data, options) => {
             let tb = apply_options(TextureBuilder::new(data), options);
-            renderer
-                .create_texture(tb)
-                .chain_err(|| "Failed to build texture")
+            tb.build(allocator, uploader, current, device)
         }
 
         F64(data, options) => {
             let tb = apply_options(TextureBuilder::new(data), options);
-            renderer
-                .create_texture(tb)
-                .chain_err(|| "Failed to build texture")
+            tb.build(allocator, uploader, current, device)
         }
 
         U8(data, options) => {
             let tb = apply_options(TextureBuilder::new(data), options);
-            renderer
-                .create_texture(tb)
-                .chain_err(|| "Failed to build texture")
+            tb.build(allocator, uploader, current, device)
         }
 
         U16(data, options) => {
             let tb = apply_options(TextureBuilder::new(data), options);
-            renderer
-                .create_texture(tb)
-                .chain_err(|| "Failed to build texture")
+            tb.build(allocator, uploader, current, device)
         }
 
         U32(data, options) => {
             let tb = apply_options(TextureBuilder::new(data), options);
-            renderer
-                .create_texture(tb)
-                .chain_err(|| "Failed to build texture")
+            tb.build(allocator, uploader, current, device)
         }
 
         U64(data, options) => {
             let tb = apply_options(TextureBuilder::new(data), options);
-            renderer
-                .create_texture(tb)
-                .chain_err(|| "Failed to build texture")
+            tb.build(allocator, uploader, current, device)
         }
-    }
+    }.with_context(|err| format!("Failed to build texture: {}", err))
+        .map_err(Into::into)
 }
 
-fn apply_options<D, T>(
-    mut tb: TextureBuilder<D, T>,
-    metadata: TextureMetadata,
-) -> TextureBuilder<D, T>
-where
-    D: AsRef<[T]>,
-    T: Pod + Copy,
-{
+fn apply_options(mut tb: TextureBuilder, metadata: TextureMetadata) -> TextureBuilder {
     match metadata.sampler {
         Some(sampler) => tb = tb.with_sampler(sampler),
         _ => (),
@@ -266,41 +278,40 @@ where
         _ => (),
     }
     match metadata.size {
-        Some((w, h)) => tb = tb.with_size(w, h),
+        Some((w, h)) => tb = tb.with_kind(Kind::D2(w, h, AaMode::Single)),
         _ => (),
-    }
-    if metadata.dynamic {
-        tb = tb.dynamic(true);
     }
     match metadata.format {
         Some(format) => tb = tb.with_format(format),
-        _ => (),
-    }
-    match metadata.channel {
-        Some(channel) => tb = tb.with_channel_type(channel),
         _ => (),
     }
 
     tb
 }
 
-fn create_texture_asset_from_image(
+fn create_texture_asset_from_image<B>(
     image: ImageData,
     options: TextureMetadata,
-    renderer: &mut Renderer,
-) -> Result<Texture> {
-    fn convert_color_format(fmt: ColFmt) -> Option<SurfaceType> {
+    allocator: &mut Allocator<B>,
+    uploader: &mut Uploader<B>,
+    current: &CurrentEpoch,
+    device: &B::Device,
+) -> Result<Texture<B>, Error>
+where
+    B: Backend,
+{
+    fn convert_color_format(fmt: ColFmt) -> Option<Format> {
         match fmt {
             ColFmt::Auto => unreachable!(),
-            ColFmt::RGBA => Some(SurfaceType::R8_G8_B8_A8),
-            ColFmt::BGRA => Some(SurfaceType::B8_G8_R8_A8),
+            ColFmt::RGBA => Some(Format::Rgba8Unorm),
+            ColFmt::BGRA => Some(Format::Bgra8Unorm),
             _ => None,
         }
     }
 
     let image = image.raw;
     let fmt = convert_color_format(image.fmt)
-        .chain_err(|| format!("Unsupported color format {:?}", image.fmt))?;
+        .ok_or(format_err!("Unsupported color format {:?}", image.fmt))?;
 
     if image.w > u16::max_value() as usize || image.h > u16::max_value() as usize {
         bail!(
@@ -312,14 +323,12 @@ fn create_texture_asset_from_image(
         );
     }
 
-    let tb = apply_options(
+    apply_options(
         TextureBuilder::new(image.buf)
             .with_format(fmt)
-            .with_size(image.w as u16, image.h as u16),
+            .with_kind(Kind::D2(image.w as u16, image.h as u16, AaMode::Single)),
         options,
-    );
-
-    renderer
-        .create_texture(tb)
-        .chain_err(|| "Failed to create texture from texture data")
+    ).build(allocator, uploader, current, device)
+        .with_context(|err| format!("Failed to create texture from image: {:?}", err))
+        .map_err(Into::into)
 }

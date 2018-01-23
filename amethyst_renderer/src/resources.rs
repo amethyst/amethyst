@@ -3,18 +3,6 @@
 use smallvec::SmallVec;
 use winit::Window;
 
-use color::Rgba;
-
-/// The ambient color of a scene
-#[derive(Clone, Debug, Default)]
-pub struct AmbientColor(pub Rgba);
-
-impl AsRef<Rgba> for AmbientColor {
-    fn as_ref(&self) -> &Rgba {
-        &self.0
-    }
-}
-
 /// This specs resource with id 0 permits sending commands to the
 /// renderer internal window.
 #[derive(Default)]

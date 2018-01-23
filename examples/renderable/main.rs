@@ -5,31 +5,53 @@
 
 extern crate amethyst;
 
-use amethyst::{Application, Error, State, Trans};
-use amethyst::assets::{HotReloadBundle, Loader};
-use amethyst::config::Config;
-use amethyst::core::cgmath::{Array, Deg, Euler, Quaternion, Rad, Rotation, Rotation3, Vector3};
-use amethyst::core::frame_limiter::FrameRateLimitStrategy;
-use amethyst::core::timing::Time;
-use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
-use amethyst::ecs::{Entity, Fetch, FetchMut, Join, ReadStorage, System, World, WriteStorage};
-use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, DisplayConfig, DrawShaded,
-                         ElementState, Event, KeyboardInput, Light, Material, MaterialDefaults,
-                         MeshHandle, ObjFormat, Pipeline, PngFormat, PointLight, PosNormTex,
-                         Projection, RenderBundle, RenderSystem, Rgba, Stage, VirtualKeyCode,
-                         WindowEvent};
-use amethyst::ui::{DrawUi, FontHandle, TtfFormat, UiBundle, UiText, UiTransform};
-use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
+extern crate error_chain;
+
+use error_chain::ChainedError;
+
+use amethyst::{assets, config, core, ecs, renderer, utils, winit, Application, Error, State, Trans};
+
+use assets::{HotReloadBundle, Loader};
+use config::Config;
+use core::EventsPump;
+use core::cgmath::{Array, Deg, Euler, Quaternion, Rad, Rotation, Rotation3, Vector3};
+use core::frame_limiter::FrameRateLimitStrategy;
+use core::timing::Time;
+use core::transform::{LocalTransform, Transform, TransformBundle};
+use ecs::{Entity, Fetch, FetchMut, Join, ReadStorage, System, World, WriteStorage};
+
+use renderer::camera::{Camera, Projection};
+use renderer::formats::{ObjFormat, PngFormat};
+use renderer::hal::{Hal, HalBundle, HalConfig, RendererConfig};
+use renderer::light::{AmbientLight, Light, PointLight};
+use renderer::material::{Material, MaterialDefaults};
+use renderer::mesh::MeshHandle;
+use renderer::passes::flat::DrawFlat;
+use renderer::system::ActiveGraph;
+use renderer::vertex::PosNormTex;
+
+use renderer::gfx_hal::command::{ClearColor, ClearDepthStencil};
+use renderer::gfx_hal::format::{AsFormat, D32Float};
+use renderer::graph::{ColorAttachment, DepthStencilAttachment, Pass};
+
+// use amethyst::ui::{DrawUi, FontHandle, TtfFormat, UiBundle, UiText, UiTransform};
+use utils::fps_counter::{FPSCounter, FPSCounterBundle};
+use winit::{ElementState, Event, EventsLoop, KeyboardInput, VirtualKeyCode, WindowEvent};
+
+#[cfg(feature = "gfx-metal")]
+use renderer::metal::Backend;
+
+#[cfg(feature = "gfx-vulkan")]
+use renderer::vulkan::Backend;
 
 struct DemoState {
     light_angle: f32,
-    light_color: [f32; 4],
+    light_color: [f32; 3],
     ambient_light: bool,
     point_light: bool,
-    directional_light: bool,
+    // directional_light: bool,
     camera_angle: f32,
-    fps_display: Entity,
-    #[allow(dead_code)] pipeline_forward: bool, // TODO
+    // fps_display: Entity,
 }
 
 struct ExampleSystem;
@@ -41,11 +63,12 @@ impl<'a> System<'a> for ExampleSystem {
         ReadStorage<'a, Camera>,
         WriteStorage<'a, LocalTransform>,
         FetchMut<'a, DemoState>,
-        WriteStorage<'a, UiText>,
+        // WriteStorage<'a, UiText>,
         Fetch<'a, FPSCounter>,
     );
 
-fn run(&mut self, (mut lights, time, camera, mut transforms, mut state, mut ui_text, fps_counter): Self::SystemData){
+fn run(&mut self, (mut lights, time, camera, mut transforms, mut state, /*mut ui_text, */
+fps_counter): Self::SystemData){
         let light_angular_velocity = -1.0;
         let light_orbit_radius = 15.0;
         let light_z = 6.0;
@@ -65,26 +88,24 @@ fn run(&mut self, (mut lights, time, camera, mut transforms, mut state, mut ui_t
             transform.rotation = (delta_rot * Quaternion::from(transform.rotation)).into();
         }
 
-        for point_light in (&mut lights).join().filter_map(|light| {
-            if let Light::Point(ref mut point_light) = *light {
-                Some(point_light)
-            } else {
-                None
-            }
-        }) {
-            point_light.center[0] = light_orbit_radius * state.light_angle.cos();
-            point_light.center[1] = light_orbit_radius * state.light_angle.sin();
-            point_light.center[2] = light_z;
+        for (transform, light) in (&mut transforms, &mut lights).join() {
+            match *light {
+                Light::Point(ref mut point_light) => {
+                    transform.translation.x = light_orbit_radius * state.light_angle.cos();
+                    transform.translation.y = light_orbit_radius * state.light_angle.sin();
+                    transform.translation.z = light_z;
 
-            point_light.color = state.light_color.into();
-        }
-
-        if let Some(fps_display) = ui_text.get_mut(state.fps_display) {
-            if time.frame_number() % 20 == 0 {
-                let fps = fps_counter.sampled_fps();
-                fps_display.text = format!("FPS: {:.*}", 2, fps);
+                    *point_light = state.light_color.into();
+                }
             }
         }
+
+        // if let Some(fps_display) = ui_text.get_mut(state.fps_display) {
+        //     if time.frame_number() % 20 == 0 {
+        //         let fps = fps_counter.sampled_fps();
+        //         fps_display.text = format!("FPS: {:.*}", 2, fps);
+        //     }
+        // }
     }
 }
 
@@ -160,54 +181,52 @@ impl State for Example {
             .with(Transform::default())
             .build();
 
-        let light: Light = PointLight {
-            color: [1.0, 1.0, 0.0].into(),
-            intensity: 50.0,
-            ..PointLight::default()
-        }.into();
-
         // Add lights to scene
-        world.create_entity().with(light).build();
+        world
+            .create_entity()
+            .with(Light::from(PointLight([1.0, 1.0, 0.0])))
+            .with(LocalTransform::default())
+            .with(Transform::default())
+            .build();
 
-        let light: Light = DirectionalLight {
-            color: [0.2; 4].into(),
-            direction: [-1.0; 3],
-        }.into();
+        // let light: Light = DirectionalLight {
+        //     color: [0.2; 4].into(),
+        //     direction: [-1.0; 3],
+        // }.into();
 
-        world.create_entity().with(light).build();
+        // world.create_entity().with(light).build();
 
         {
-            world.add_resource(AmbientColor(Rgba::from([0.01; 3])));
+            world.add_resource(AmbientLight([0.01; 3]));
         }
 
-        let fps_display = world
-            .create_entity()
-            .with(UiTransform::new(
-                "fps".to_string(),
-                0.,
-                0.,
-                1.,
-                200.,
-                50.,
-                0,
-            ))
-            .with(UiText::new(
-                assets.font.clone(),
-                "N/A".to_string(),
-                [1.0, 1.0, 1.0, 1.0],
-                25.,
-            ))
-            .build();
+        // let fps_display = world
+        //     .create_entity()
+        //     .with(UiTransform::new(
+        //         "fps".to_string(),
+        //         0.,
+        //         0.,
+        //         1.,
+        //         200.,
+        //         50.,
+        //         0,
+        //     ))
+        //     .with(UiText::new(
+        //         assets.font.clone(),
+        //         "N/A".to_string(),
+        //         [1.0, 1.0, 1.0, 1.0],
+        //         25.,
+        //     ))
+        //     .build();
 
         world.add_resource::<DemoState>(DemoState {
             light_angle: 0.0,
-            light_color: [1.0; 4],
+            light_color: [1.0; 3],
             ambient_light: true,
             point_light: true,
-            directional_light: true,
+            // directional_light: true,
             camera_angle: 0.0,
-            fps_display,
-            pipeline_forward: true,
+            // fps_display,
         });
     }
 
@@ -241,19 +260,19 @@ impl State for Example {
                             }*/
                             }
                             Some(VirtualKeyCode::R) => {
-                                state.light_color = [0.8, 0.2, 0.2, 1.0];
+                                state.light_color = [0.8, 0.2, 0.2];
                             }
                             Some(VirtualKeyCode::G) => {
-                                state.light_color = [0.2, 0.8, 0.2, 1.0];
+                                state.light_color = [0.2, 0.8, 0.2];
                             }
                             Some(VirtualKeyCode::B) => {
-                                state.light_color = [0.2, 0.2, 0.8, 1.0];
+                                state.light_color = [0.2, 0.2, 0.8];
                             }
                             Some(VirtualKeyCode::W) => {
-                                state.light_color = [1.0, 1.0, 1.0, 1.0];
+                                state.light_color = [1.0, 1.0, 1.0];
                             }
                             Some(VirtualKeyCode::A) => {
-                                let mut color = w.write_resource::<AmbientColor>();
+                                let mut color = w.write_resource::<AmbientLight>();
                                 if state.ambient_light {
                                     state.ambient_light = false;
                                     color.0 = [0.0; 3].into();
@@ -263,30 +282,30 @@ impl State for Example {
                                 }
                             }
                             Some(VirtualKeyCode::D) => {
-                                let mut lights = w.write::<Light>();
+                                // let mut lights = w.write::<Light>();
 
-                                if state.directional_light {
-                                    state.directional_light = false;
-                                    for light in (&mut lights).join() {
-                                        if let Light::Directional(ref mut d) = *light {
-                                            d.color = [0.0; 4].into();
-                                        }
-                                    }
-                                } else {
-                                    state.directional_light = true;
-                                    for light in (&mut lights).join() {
-                                        if let Light::Directional(ref mut d) = *light {
-                                            d.color = [0.2; 4].into();
-                                        }
-                                    }
-                                }
+                                // if state.directional_light {
+                                //     state.directional_light = false;
+                                //     for light in (&mut lights).join() {
+                                //         if let Light::Directional(ref mut d) = *light {
+                                //             d.color = [0.0; 4].into();
+                                //         }
+                                //     }
+                                // } else {
+                                //     state.directional_light = true;
+                                //     for light in (&mut lights).join() {
+                                //         if let Light::Directional(ref mut d) = *light {
+                                //             d.color = [0.2; 4].into();
+                                //         }
+                                //     }
+                                // }
                             }
                             Some(VirtualKeyCode::P) => if state.point_light {
                                 state.point_light = false;
-                                state.light_color = [0.0; 4].into();
+                                state.light_color = [0.0; 3].into();
                             } else {
                                 state.point_light = true;
-                                state.light_color = [1.0; 4].into();
+                                state.light_color = [1.0; 3].into();
                             },
                             _ => (),
                         }
@@ -301,22 +320,22 @@ impl State for Example {
 }
 
 struct Assets {
-    cube: MeshHandle,
-    cone: MeshHandle,
-    lid: MeshHandle,
-    rectangle: MeshHandle,
-    teapot: MeshHandle,
-    red: Material,
-    white: Material,
-    logo: Material,
-    font: FontHandle,
+    cube: MeshHandle<Backend>,
+    cone: MeshHandle<Backend>,
+    lid: MeshHandle<Backend>,
+    rectangle: MeshHandle<Backend>,
+    teapot: MeshHandle<Backend>,
+    red: Material<Backend>,
+    white: Material<Backend>,
+    logo: Material<Backend>,
+    // font: FontHandle,
 }
 
 fn load_assets(world: &World) -> Assets {
     let mesh_storage = world.read_resource();
     let tex_storage = world.read_resource();
-    let font_storage = world.read_resource();
-    let mat_defaults = world.read_resource::<MaterialDefaults>();
+    let mat_defaults = world.read_resource::<MaterialDefaults<Backend>>();
+    // let font_storage = world.read_resource();
     let loader = world.read_resource::<Loader>();
 
     let red = loader.load_from_data([1.0, 0.0, 0.0, 1.0].into(), (), &tex_storage);
@@ -347,7 +366,7 @@ fn load_assets(world: &World) -> Assets {
     let lid = loader.load("mesh/lid.obj", ObjFormat, (), (), &mesh_storage);
     let teapot = loader.load("mesh/teapot.obj", ObjFormat, (), (), &mesh_storage);
     let rectangle = loader.load("mesh/rectangle.obj", ObjFormat, (), (), &mesh_storage);
-    let font = loader.load("font/square.ttf", TtfFormat, (), (), &font_storage);
+    // let font = loader.load("font/square.ttf", TtfFormat, (), (), &font_storage);
 
     Assets {
         cube,
@@ -358,7 +377,7 @@ fn load_assets(world: &World) -> Assets {
         red,
         white,
         logo,
-        font,
+        // font,
     }
 }
 
@@ -375,34 +394,49 @@ fn run() -> Result<(), Error> {
     // Add our meshes directory to the asset loader.
     let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
 
-    let display_config_path = format!(
-        "{}/examples/renderable/resources/display_config.ron",
-        env!("CARGO_MANIFEST_DIR")
-    );
-
-    let display_config = DisplayConfig::load(display_config_path);
-
-    let game = Application::build(resources_directory, Example)?
-        .with::<ExampleSystem>(ExampleSystem, "example_system", &[])
+    let mut game = Application::build(resources_directory, Example)?
+        .with(ExampleSystem, "example_system", &[])
         .with_frame_limit(FrameRateLimitStrategy::Unlimited, 0)
         .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
-        .with_bundle(RenderBundle::new())?
-        .with_bundle(UiBundle::new())?
+        // .with_bundle(UiBundle::new())?
         .with_bundle(HotReloadBundle::default())?
         .with_bundle(FPSCounterBundle::default())?;
-    let pipeline_builder = {
-        let loader = game.world.read_resource();
-        let mesh_storage = game.world.read_resource();
 
-        Pipeline::build().with_stage(
-            Stage::with_backbuffer()
-                .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-                .with_pass(DrawShaded::<PosNormTex>::new())
-                .with_pass(DrawUi::new(&loader, &mesh_storage)),
-        )
+    let events_loop = EventsLoop::new();
+
+    let mut hal = HalConfig {
+        adapter: None,
+        arena_size: 1024 * 1024 * 16,
+        chunk_size: 1024,
+        min_chunk_size: 512,
+        compute: false,
+        renderer: Some(RendererConfig {
+            title: "Amethyst Hal Example",
+            width: 1024,
+            height: 768,
+            events: &events_loop,
+        }),
+    }.build::<Backend>()
+        .unwrap();
+
+    let mut graph = {
+        <DrawFlat as Pass<Backend>>::register(&mut game.world);
+        let ref mut renderer = *hal.renderer.as_mut().unwrap();
+        let depth = DepthStencilAttachment::new(D32Float::SELF).clear(ClearDepthStencil(1.0, 0));
+        let present = ColorAttachment::new(renderer.format)
+            .with_clear(ClearColor::Float([0.15, 0.1, 0.2, 1.0]));
+        let mut pass = DrawFlat::build().with_color(0, &present).with_depth(&depth);
+
+        renderer
+            .add_graph(&[&pass], &present, &hal.device, &mut hal.allocator)
+            .unwrap()
     };
-    let mut game = game.with_local(RenderSystem::build(pipeline_builder, Some(display_config))?)
+
+    let mut game = game.with_bundle(hal)?
+        .with_thread_local(EventsPump(events_loop))
         .build()?;
+
+    (*game.world.write_resource::<ActiveGraph>()).0 = Some(graph);
 
     game.run();
     Ok(())

@@ -16,4 +16,4 @@ travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
 amethyst_core = { path = "../amethyst_core", version = "0.1.0" }
-specs = "0.10"
+specs = { version = "0.10", git = "https://github.com/slide-rs/specs.git" }
