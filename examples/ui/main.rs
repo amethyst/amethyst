@@ -3,6 +3,7 @@
 extern crate amethyst;
 extern crate genmesh;
 
+use amethyst::core::cgmath::{Deg, InnerSpace, Vector3};
 use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::Time;
 use amethyst::core::cgmath::Vector3;
@@ -12,7 +13,7 @@ use amethyst::ecs::{Entity, World};
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light, Mesh, Pipeline,
                          PngFormat, PointLight, PosNormTex, RenderBundle, RenderSystem, Rgba,
-                         ScreenDimensions, Stage, Texture};
+                         ScreenDimensions, Stage, Texture,Projection};
 use amethyst::ui::{DrawUi, FontAsset, TextEditing, TtfFormat, UiBundle, UiFocused, UiImage,
                    UiText, UiTransform};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
@@ -254,9 +255,12 @@ fn initialise_lights(world: &mut World) {
 
 /// This function initialises a camera and adds it to the world.
 fn initialise_camera(world: &mut World) {
-    let (width, height) = {
-        let dim = world.read_resource::<ScreenDimensions>();
-        (dim.width(), dim.height())
-    };
-    world.add_resource(Camera::standard_3d(width, height));
+    use amethyst::core::cgmath::Matrix4;
+    let transform =
+        Matrix4::from_translation([0.0, 0.0, -4.0].into()) * Matrix4::from_angle_y(Deg(180.));
+    world
+        .create_entity()
+        .with(Camera::from(Projection::perspective(1.3, Deg(60.0))))
+        .with(Transform(transform.into()))
+        .build();
 }
