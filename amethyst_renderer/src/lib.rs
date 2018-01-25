@@ -22,6 +22,8 @@ extern crate gfx_core;
 extern crate gfx_macros;
 extern crate hetseq;
 extern crate imagefmt;
+#[macro_use]
+extern crate log;
 extern crate rayon;
 extern crate serde;
 #[macro_use]
@@ -73,6 +75,8 @@ pub use pipe::{ColorBuffer, Data, DepthBuffer, DepthMode, Effect, EffectBuilder,
                PolyStage, PolyStages, Stage, StageBuilder, Target, TargetBuilder, Targets};
 pub use renderer::Renderer;
 pub use resources::{AmbientColor, ScreenDimensions, WindowMessages};
+pub use skinning::{AnimatedComboMeshCreator, AnimatedVertexBufferCombination, JointIds,
+                   JointTransforms, JointWeights};
 pub use system::RenderSystem;
 pub use tex::{Texture, TextureBuilder, TextureHandle};
 pub use types::{Encoder, Factory, PipelineState, Resources};
@@ -82,6 +86,9 @@ pub use vertex::{Attribute, AttributeFormat, Attributes, Color, Normal, PosColor
 
 pub mod error;
 pub mod pipe;
+
+#[macro_use]
+mod macros;
 
 mod bundle;
 mod cam;
@@ -95,6 +102,7 @@ mod mtl;
 mod pass;
 mod renderer;
 mod resources;
+mod skinning;
 mod system;
 mod tex;
 mod types;

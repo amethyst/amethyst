@@ -9,7 +9,7 @@ use std::marker::PhantomData;
 
 use error::Result;
 use gfx::format::{ChannelType, SurfaceType};
-use gfx::texture::{Info, SamplerInfo, Mipmap};
+use gfx::texture::{Info, Mipmap, SamplerInfo};
 use gfx::traits::Pod;
 
 use formats::TextureData;
@@ -86,8 +86,8 @@ where
 {
     /// Creates a new `TextureBuilder` with the given raw texture data.
     pub fn new(data: D) -> Self {
-        use gfx::memory::Bind;
         use gfx::format::{ChannelTyped, SurfaceTyped};
+        use gfx::memory::Bind;
         use gfx::memory::Usage;
         use gfx::texture::{AaMode, Kind};
 

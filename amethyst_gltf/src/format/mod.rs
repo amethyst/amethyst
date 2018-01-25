@@ -3,19 +3,22 @@
 use std::collections::HashMap;
 use std::error::Error as StdError;
 use std::fmt;
+use std::mem;
 use std::sync::Arc;
 
 use self::importer::{get_image_data, import, Buffers, ImageFormat};
 use animation::{AnimationOutput, InterpolationType, Sampler};
 use assets::{Error as AssetError, Format, FormatValue, Result as AssetResult, ResultExt, Source};
+use core::cgmath::{Matrix4, SquareMatrix};
 use core::transform::LocalTransform;
 use gfx::Primitive;
 use gfx::texture::SamplerInfo;
 use gltf;
 use gltf::Gltf;
+use gltf_utils::AccessorIter;
 use itertools::Itertools;
-use renderer::{Color, JpgFormat, Normal, PngFormat, Position, Separate, Tangent, TexCoord,
-               TextureMetadata};
+use renderer::{Color, JointIds, JointWeights, JpgFormat, Normal, PngFormat, Position, Separate,
+               Tangent, TexCoord, TextureMetadata};
 
 use super::*;
 
@@ -126,6 +129,7 @@ fn load_gltf(
     name: &str,
     options: GltfSceneOptions,
 ) -> Result<GltfSceneAsset, GltfError> {
+    debug!("Loading GLTF scene {}", name);
     import(source.clone(), name)
         .map_err(GltfError::GltfImporterError)
         .and_then(|(gltf, buffers)| load_data(&gltf, &buffers, &options, source, name))
@@ -138,16 +142,20 @@ fn load_data(
     source: Arc<Source>,
     name: &str,
 ) -> Result<GltfSceneAsset, GltfError> {
-    // TODO: skins, animations, morph targets, cameras
+    // TODO: morph targets, cameras
     // TODO: KHR_materials_common extension
+    debug!("Loading nodes");
     let nodes = load_nodes(gltf, buffers, options)?;
+    debug!("Loading scenes");
     let scenes = gltf.scenes()
         .map(|ref scene| load_scene(scene))
         .collect::<Result<Vec<GltfScene>, GltfError>>()?;
     let default_scene = gltf.default_scene().map(|s| s.index());
+    debug!("Loading materials");
     let materials = gltf.materials()
         .map(|ref m| load_material(m, buffers, source.clone(), name))
         .collect::<Result<Vec<GltfMaterial>, GltfError>>()?;
+    debug!("Loading animations");
     let animations = if options.load_animations {
         gltf.animations()
             .map(|ref animation| load_animation(animation, buffers))
@@ -155,6 +163,9 @@ fn load_data(
     } else {
         Vec::default()
     };
+    debug!("Loading skins");
+    let skins = load_skins(gltf, buffers)?;
+
     Ok(GltfSceneAsset {
         nodes,
         scenes,
@@ -162,6 +173,7 @@ fn load_data(
         animations,
         default_scene,
         options: options.clone(),
+        skins,
     })
 }
 
@@ -218,7 +230,10 @@ fn load_channel(
             ))
         }
         Rotation => {
-            let output = AccessorIter::new(sampler.output(), buffers).collect::<Vec<[f32; 4]>>();
+            // gltf quat format: [x, y, z, w], our quat format: [w, x, y, z]
+            let output = AccessorIter::<[f32; 4]>::new(sampler.output(), buffers)
+                .map(|q| [q[3], q[0], q[1], q[2]])
+                .collect::<Vec<_>>();
             let ty = if ty == InterpolationType::Linear {
                 InterpolationType::SphericalLinear
             } else {
@@ -474,8 +489,6 @@ fn load_node(
     node_map: &mut HashMap<usize, usize>,
     options: &GltfSceneOptions,
 ) -> Result<GltfNode, GltfError> {
-    // TODO: skin
-
     let children = node.children().map(|c| c.index()).collect::<Vec<_>>();
 
     for child in node.children() {
@@ -497,12 +510,46 @@ fn load_node(
     local_transform.rotation = [rotation[3], rotation[0], rotation[1], rotation[2]].into();
     local_transform.scale = scale.into();
 
+    let skin = node.skin().map(|s| s.index());
+
     Ok(GltfNode {
         primitives,
         children,
         parent: None,
         local_transform,
+        skin,
     })
+}
+
+fn load_skins(gltf: &gltf::Gltf, buffers: &Buffers) -> Result<Vec<GltfSkin>, GltfError> {
+    gltf.skins().map(|s| load_skin(&s, buffers)).collect()
+}
+
+fn load_skin(skin: &gltf::Skin, buffers: &Buffers) -> Result<GltfSkin, GltfError> {
+    let joints = skin.joints().map(|j| j.index()).collect::<Vec<_>>();
+    let skeleton = skin.skeleton().map(|s| s.index());
+    let inverse_bind_matrices = skin.inverse_bind_matrices()
+        .map(|acc| AccessorIter::<[f32; 16]>::new(acc, buffers))
+        .map(|matrices| {
+            matrices
+                .map(|m| unsafe { mem::transmute::<[f32; 16], [[f32; 4]; 4]>(m) })
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or(vec![Matrix4::identity().into(); joints.len()]);
+
+    Ok(GltfSkin {
+        joints,
+        skeleton,
+        inverse_bind_matrices,
+    })
+}
+
+fn flip_check(uv: [f32; 2], flip_v: bool) -> [f32; 2] {
+    if flip_v {
+        [uv[0], 1. - uv[1]]
+    } else {
+        uv
+    }
 }
 
 fn load_mesh(
@@ -542,6 +589,7 @@ fn load_mesh(
                     .collect(),
             })
             .ok_or(GltfError::MissingPositions)?;
+        let bounds = primitive.position_bounds().unwrap();
 
         let colors = primitive
             .colors_rgba_f32(0, 1., buffers)
@@ -565,10 +613,10 @@ fn load_mesh(
         }.map(|texs| match faces {
             Some(ref faces) => faces
                 .iter()
-                .map(|i| Separate::<TexCoord>::new(texs[*i]))
+                .map(|i| Separate::<TexCoord>::new(flip_check(texs[*i], options.flip_v_coord)))
                 .collect(),
             None => texs.into_iter()
-                .map(|t| Separate::<TexCoord>::new(t))
+                .map(|t| Separate::<TexCoord>::new(flip_check(t, options.flip_v_coord)))
                 .collect(),
         });
 
@@ -602,15 +650,49 @@ fn load_mesh(
                 .collect(),
         });
 
+        let joint_ids = primitive.joints_u16(0, buffers).map(|joints| match faces {
+            Some(ref faces) => {
+                let joints = joints.collect::<Vec<_>>();
+                faces
+                    .iter()
+                    .map(|i| Separate::<JointIds>::new(joints[*i]))
+                    .collect()
+            }
+            None => joints.map(|j| Separate::<JointIds>::new(j)).collect(),
+        });
+        trace!("Joint ids: {:?}", joint_ids);
+
+        let joint_weights = primitive
+            .weights_f32(0, buffers)
+            .map(|weights| match faces {
+                Some(ref faces) => {
+                    let weights = weights.collect::<Vec<_>>();
+                    faces
+                        .iter()
+                        .map(|i| Separate::<JointWeights>::new(weights[*i]))
+                        .collect()
+                }
+                None => weights.map(|w| Separate::<JointWeights>::new(w)).collect(),
+            });
+        trace!("Joint weights: {:?}", joint_weights);
+
         let material = primitive.material().index();
-        // TODO: joint ids and weights
 
         match map_mode(primitive.mode()) {
             Ok(primitive) => primitives.push(GltfPrimitive {
+                extents: bounds.min..bounds.max,
                 primitive,
                 indices: faces,
                 material,
-                attributes: (positions, colors, tex_coord, normals, tangents),
+                attributes: (
+                    positions,
+                    colors,
+                    tex_coord,
+                    normals,
+                    tangents,
+                    joint_ids,
+                    joint_weights,
+                ),
                 handle: None,
             }),
             Err(err) => return Err(err),

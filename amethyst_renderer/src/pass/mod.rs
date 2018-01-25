@@ -7,3 +7,6 @@ pub use self::shaded::*;
 mod flat;
 mod pbm;
 mod shaded;
+mod skinning;
+mod util;
+mod shaded_util;

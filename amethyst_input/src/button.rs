@@ -8,14 +8,18 @@ use super::local_virtual_key_code::LocalVirtualKeyCode;
 pub enum Button {
     /// Virtual Keyboard keys, use this when the letter on the key matters
     /// more than the position of the key.
-    Key(#[serde(with = "LocalVirtualKeyCode")] VirtualKeyCode),
+    Key(#[serde(with = "LocalVirtualKeyCode")]
+    VirtualKeyCode),
 
     /// Scan code from keyboard, use this when the position of the key matters
     /// more than letter on the key.
     ScanCode(u32),
 
     /// Mouse buttons
-    Mouse(#[serde(with = "LocalMouseButton")] MouseButton),
+    Mouse(
+        #[serde(with = "LocalMouseButton")]
+        MouseButton,
+    ),
     //TODO: Add controller buttons here when the engine has support.
 }
 

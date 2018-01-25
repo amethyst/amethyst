@@ -3,7 +3,6 @@
 use std::marker::PhantomData;
 
 use amethyst_assets::AssetStorage;
-use amethyst_core::cgmath::{Matrix4, One, SquareMatrix};
 use amethyst_core::transform::Transform;
 use gfx::pso::buffer::ElemStride;
 use specs::{Fetch, Join, ReadStorage};
@@ -13,6 +12,7 @@ use cam::{ActiveCamera, Camera};
 use error::Result;
 use mesh::{Mesh, MeshHandle};
 use mtl::{Material, MaterialDefaults};
+use pass::util::{add_textures, set_attribute_buffers, set_vertex_args, VertexArgs};
 use pipe::{DepthMode, Effect, NewEffect};
 use pipe::pass::{Pass, PassData};
 use tex::Texture;
@@ -74,17 +74,8 @@ where
         encoder: &mut Encoder,
         effect: &mut Effect,
         _factory: Factory,
-        (active, camera, mesh_storage, tex_storage, material_defaults, mesh, material, global): (
-            Option<Fetch<'a, ActiveCamera>>,
-            ReadStorage<'a, Camera>,
-            Fetch<'a, AssetStorage<Mesh>>,
-            Fetch<'a, AssetStorage<Texture>>,
-            Fetch<'a, MaterialDefaults>,
-            ReadStorage<'b, MeshHandle>,
-            ReadStorage<'b, Material>,
-            ReadStorage<'b, Transform>,
-        ),
-    ) {
+        (active, camera, mesh_storage, tex_storage, material_defaults, mesh, material, global): <Self as PassData<'a>>::Data,
+){
         let camera: Option<(&Camera, &Transform)> = active
             .and_then(|a| {
                 let cam = camera.get(a.entity);
@@ -98,34 +89,19 @@ where
                 Some(mesh) => mesh,
                 None => continue,
             };
-            let vbuf = match mesh.buffer(V::QUERIED_ATTRIBUTES) {
-                Some(vbuf) => vbuf.clone(),
-                None => continue,
-            };
 
-            let vertex_args = camera
-                .as_ref()
-                .map(|&(ref cam, ref transform)| VertexArgs {
-                    proj: cam.proj.into(),
-                    view: transform.0.invert().unwrap().into(),
-                    model: *global.as_ref(),
-                })
-                .unwrap_or_else(|| VertexArgs {
-                    proj: Matrix4::one().into(),
-                    view: Matrix4::one().into(),
-                    model: *global.as_ref(),
-                });
+            if !set_attribute_buffers(effect, mesh, &[V::QUERIED_ATTRIBUTES]) {
+                continue;
+            }
 
-            let albedo = tex_storage
-                .get(&material.albedo)
-                .or_else(|| tex_storage.get(&material_defaults.0.albedo))
-                .unwrap();
-
-            effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
-            effect.data.textures.push(albedo.view().clone());
-            effect.data.samplers.push(albedo.sampler().clone());
-
-            effect.data.vertex_bufs.push(vbuf);
+            set_vertex_args(effect, encoder, camera, global);
+            add_textures(
+                effect,
+                &tex_storage,
+                material,
+                &material_defaults.0,
+                &TEXTURES,
+            );
 
             effect.draw(mesh.slice(), encoder);
             effect.clear();

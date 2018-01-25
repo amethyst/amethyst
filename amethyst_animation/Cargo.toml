@@ -19,7 +19,9 @@ travis-ci = { repository = "amethyst/amethyst" }
 [dependencies]
 amethyst_assets = { path = "../amethyst_assets/", version = "0.2.0" }
 amethyst_core = { path = "../amethyst_core/", version = "0.1.0" }
+amethyst_renderer = { path = "../amethyst_renderer/", version = "0.6.1" }
 fnv = "1"
+hibitset = "0.3.2"
 minterpolate = "0.2"
 serde = { version = "1.0", features = ["derive"] }
 specs = "0.10"

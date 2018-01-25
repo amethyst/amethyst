@@ -51,9 +51,13 @@ where
             renderer
         };
 
-        let pipe = renderer.create_pipe(pipe)?;
-
-        Ok(Self::new(pipe, renderer))
+        match renderer.create_pipe(pipe) {
+            Ok(pipe) => Ok(Self::new(pipe, renderer)),
+            Err(err) => {
+                error!("Failed creating pipeline: {}", err);
+                Err(err)
+            }
+        }
     }
 
     /// Create a new render system

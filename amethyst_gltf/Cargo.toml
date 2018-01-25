@@ -17,13 +17,15 @@ travis-ci = { repository = "amethyst/amethyst" }
 [dependencies]
 amethyst_assets = { path = "../amethyst_assets/", version = "0.2.0" }
 amethyst_animation = { path = "../amethyst_animation/", version = "0.1.0" }
-amethyst_renderer = { path = "../amethyst_renderer/", version = "0.6.0" }
+amethyst_renderer = { path = "../amethyst_renderer/", version = "0.6.1" }
 amethyst_core = { path = "../amethyst_core/", version = "0.1.0" }
 base64 = "0.7"
 fnv = "1"
 gltf = "0.9"
 gltf-utils = "0.9"
 gfx = "0.17"
+hibitset = "0.3.2"
 imagefmt = "4.0"
 itertools = "0.7"
+log = "0.4"
 specs = "0.10"

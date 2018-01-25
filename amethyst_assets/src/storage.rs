@@ -185,7 +185,6 @@ impl<A: Asset> AssetStorage<A> {
                         assets.insert(id, asset);
                     }
 
-
                     (reload_obj, handle)
                 }
                 Processed::HotReload {
@@ -194,9 +193,9 @@ impl<A: Asset> AssetStorage<A> {
                     name,
                     old_reload,
                 } => {
-                    let (asset, reload_obj) = match data.map(
-                        |FormatValue { data, reload }| (data, reload),
-                    ).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
+                    let (asset, reload_obj) = match data.map(|FormatValue { data, reload }| {
+                        (data, reload)
+                    }).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
                         .chain_err(|| ErrorKind::Asset(name.clone()))
                     {
                         Ok(x) => x,
@@ -256,11 +255,9 @@ impl<A: Asset> AssetStorage<A> {
                 marker: PhantomData,
             });
         }
-        debug!(
-            "{:?}: Freed {} handle ids",
-            A::NAME,
-            count,
-        );
+        if count != 0 {
+            debug!("{:?}: Freed {} handle ids", A::NAME, count,);
+        }
 
         if strategy
             .map(|s| s.needs_reload(frame_number))
@@ -285,9 +282,7 @@ impl<A: Asset> AssetStorage<A> {
 
             debug!(
                 "Asset {:?} (handle id: {:?}) was determined to need a reload using format {:?}",
-                name,
-                handle,
-                format,
+                name, handle, format,
             );
 
             if let Some(handle) = handle {

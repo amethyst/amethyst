@@ -7,18 +7,23 @@ extern crate fnv;
 extern crate gfx;
 extern crate gltf;
 extern crate gltf_utils;
+extern crate hibitset;
 extern crate imagefmt;
 extern crate itertools;
+#[macro_use]
+extern crate log;
 extern crate specs;
 
 pub use format::GltfSceneFormat;
 pub use systems::GltfSceneLoaderSystem;
 
+use std::ops::Range;
+
 use animation::{Animation, Sampler};
 use assets::{Asset, Error as AssetError, Handle};
 use core::transform::LocalTransform;
 use gfx::Primitive;
-use renderer::{MeshHandle, TextureData, TextureHandle, VertexBufferCombination};
+use renderer::{AnimatedVertexBufferCombination, MeshHandle, TextureData, TextureHandle};
 use specs::VecStorage;
 
 mod format;
@@ -27,10 +32,11 @@ mod systems;
 /// A single graphics primitive
 #[derive(Debug)]
 pub struct GltfPrimitive {
+    pub extents: Range<[f32; 3]>,
     pub primitive: Primitive,
     pub material: Option<usize>,
     pub indices: Option<Vec<usize>>,
-    pub attributes: VertexBufferCombination,
+    pub attributes: AnimatedVertexBufferCombination,
     pub handle: Option<MeshHandle>,
 }
 
@@ -68,10 +74,19 @@ impl GltfTexture {
     }
 }
 
+/// A GLTF defined skin
+#[derive(Debug)]
+pub struct GltfSkin {
+    pub joints: Vec<usize>,
+    pub skeleton: Option<usize>,
+    pub inverse_bind_matrices: Vec<[[f32; 4]; 4]>,
+}
+
 /// A node in the scene hierarchy
 #[derive(Debug)]
 pub struct GltfNode {
     pub primitives: Vec<GltfPrimitive>,
+    pub skin: Option<usize>,
     pub parent: Option<usize>,
     pub children: Vec<usize>,
     pub local_transform: LocalTransform,
@@ -98,6 +113,8 @@ pub struct GltfAnimation {
 pub struct GltfSceneOptions {
     pub generate_tex_coords: Option<(f32, f32)>,
     pub load_animations: bool,
+    pub flip_v_coord: bool,
+    pub move_to_origin: bool,
 }
 
 /// Actual asset produced on finished loading of a GLTF scene file.
@@ -108,6 +125,7 @@ pub struct GltfSceneAsset {
     pub materials: Vec<GltfMaterial>,
     pub animations: Vec<GltfAnimation>,
     pub default_scene: Option<usize>,
+    pub skins: Vec<GltfSkin>,
     pub options: GltfSceneOptions,
 }
 

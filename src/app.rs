@@ -322,7 +322,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
                     message
                 ))
             })
-            .level(LevelFilter::Info)
+            .level(LevelFilter::Debug)
             .chain(io::stdout())
             .apply()
             .unwrap_or_else(|e| warn!("Application tried to override existing logger: {}", e));

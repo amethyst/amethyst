@@ -1,39 +1,57 @@
 //! Forward physically-based drawing pass.
 
-use std::mem;
-
 use amethyst_assets::AssetStorage;
-use amethyst_core::cgmath::{Matrix4, One, SquareMatrix};
 use amethyst_core::transform::Transform;
 use gfx::pso::buffer::ElemStride;
-use specs::{Fetch, Join, ReadStorage};
+use specs::{Entities, Fetch, Join, ReadStorage};
 
 use super::*;
 use cam::{ActiveCamera, Camera};
 use error::Result;
-use light::{DirectionalLight, Light, PointLight};
+use light::Light;
 use mesh::{Mesh, MeshHandle};
 use mtl::{Material, MaterialDefaults};
+use pass::shaded_util::{set_light_args, setup_light_buffers};
+use pass::skinning::{create_skinning_effect, set_skinning_buffers, setup_skinning_buffers};
+use pass::util::{add_textures, set_attribute_buffers, set_vertex_args, setup_textures,
+                 setup_vertex_args};
 use pipe::{DepthMode, Effect, NewEffect};
 use pipe::pass::{Pass, PassData};
 use resources::AmbientColor;
+use skinning::JointTransforms;
 use tex::Texture;
 use types::{Encoder, Factory};
-use vertex::{Normal, Position, Separate, Tangent, TexCoord, VertexFormat};
+use vertex::{Attributes, Normal, Position, Separate, Tangent, TexCoord, VertexFormat};
+
+static ATTRIBUTES: [Attributes<'static>; 4] = [
+    Separate::<Position>::ATTRIBUTES,
+    Separate::<Normal>::ATTRIBUTES,
+    Separate::<Tangent>::ATTRIBUTES,
+    Separate::<TexCoord>::ATTRIBUTES,
+];
 
 /// Draw mesh with physically based lighting
 #[derive(Default, Clone, Debug, PartialEq)]
-pub struct DrawPbmSeparate;
+pub struct DrawPbmSeparate {
+    skinning: bool,
+}
 
 impl DrawPbmSeparate {
     /// Create instance of `DrawPbm` pass
     pub fn new() -> Self {
         Default::default()
     }
+
+    /// Enable vertex skinning
+    pub fn with_vertex_skinning(mut self) -> Self {
+        self.skinning = true;
+        self
+    }
 }
 
 impl<'a> PassData<'a> for DrawPbmSeparate {
     type Data = (
+        Entities<'a>,
         Option<Fetch<'a, ActiveCamera>>,
         ReadStorage<'a, Camera>,
         Fetch<'a, AmbientColor>,
@@ -44,15 +62,18 @@ impl<'a> PassData<'a> for DrawPbmSeparate {
         ReadStorage<'a, Material>,
         ReadStorage<'a, Transform>,
         ReadStorage<'a, Light>,
+        ReadStorage<'a, JointTransforms>,
     );
 }
 
 impl Pass for DrawPbmSeparate {
     fn compile(&self, effect: NewEffect) -> Result<Effect> {
-        effect
-            .simple(VERT_SRC, FRAG_SRC)
-            // Pos, norm, tangent, tex
-            //.with_raw_vertex_buffer(V::QUERIED_ATTRIBUTES, V::size() as ElemStride, 0)
+        let mut builder = if self.skinning {
+            create_skinning_effect(effect, FRAG_SRC)
+        } else {
+            effect.simple(VERT_SRC, FRAG_SRC)
+        };
+        builder
             .with_raw_vertex_buffer(
                 Separate::<Position>::ATTRIBUTES,
                 Separate::<Position>::size() as ElemStride,
@@ -72,20 +93,14 @@ impl Pass for DrawPbmSeparate {
                 Separate::<TexCoord>::ATTRIBUTES,
                 Separate::<TexCoord>::size() as ElemStride,
                 0,
-            )
-            .with_raw_constant_buffer("VertexArgs", mem::size_of::<VertexArgs>(), 1)
-            .with_raw_constant_buffer("FragmentArgs", mem::size_of::<FragmentArgs>(), 1)
-            .with_raw_constant_buffer("PointLights", mem::size_of::<PointLight>(), 128)
-            .with_raw_constant_buffer("DirectionalLights", mem::size_of::<DirectionalLight>(), 16)
-            .with_raw_global("ambient_color")
-            .with_raw_global("camera_position")
-            .with_texture("roughness")
-            .with_texture("caveat")
-            .with_texture("metallic")
-            .with_texture("ambient_occlusion")
-            .with_texture("emission")
-            .with_texture("normal")
-            .with_texture("albedo")
+            );
+        if self.skinning {
+            setup_skinning_buffers(&mut builder);
+        }
+        setup_vertex_args(&mut builder);
+        setup_light_buffers(&mut builder);
+        setup_textures(&mut builder, &TEXTURES);
+        builder
             .with_output("out_color", Some(DepthMode::LessEqualWrite))
             .build()
     }
@@ -96,6 +111,7 @@ impl Pass for DrawPbmSeparate {
         effect: &mut Effect,
         _factory: Factory,
         (
+            entities,
             active,
             camera,
             ambient,
@@ -106,18 +122,8 @@ impl Pass for DrawPbmSeparate {
             material,
             global,
             light,
-        ): (
-            Option<Fetch<'a, ActiveCamera>>,
-            ReadStorage<'a, Camera>,
-            Fetch<'a, AmbientColor>,
-            Fetch<'a, AssetStorage<Mesh>>,
-            Fetch<'a, AssetStorage<Texture>>,
-            Fetch<'a, MaterialDefaults>,
-            ReadStorage<'a, MeshHandle>,
-            ReadStorage<'a, Material>,
-            ReadStorage<'a, Transform>,
-            ReadStorage<'a, Light>,
-        ),
+            joints,
+        ): <Self as PassData<'a>>::Data,
     ) {
         let camera: Option<(&Camera, &Transform)> = active
             .and_then(|a| {
@@ -127,141 +133,38 @@ impl Pass for DrawPbmSeparate {
             })
             .or_else(|| (&camera, &global).join().next());
 
-        let point_lights: Vec<PointLightPod> = light
-            .join()
-            .filter_map(|light| {
-                if let Light::Point(ref light) = *light {
-                    Some(PointLightPod {
-                        position: pad(light.center.into()),
-                        color: pad(light.color.into()),
-                        intensity: light.intensity,
-                        _pad: [0.0; 3],
-                    })
-                } else {
-                    None
-                }
-            })
-            .collect();
+        set_light_args(effect, encoder, &light, &ambient, camera);
 
-        let directional_lights: Vec<DirectionalLightPod> = light
-            .join()
-            .filter_map(|light| {
-                if let Light::Directional(ref light) = *light {
-                    Some(DirectionalLightPod {
-                        color: pad(light.color.into()),
-                        direction: pad(light.direction.into()),
-                    })
-                } else {
-                    None
-                }
-            })
-            .collect();
-
-        let fragment_args = FragmentArgs {
-            point_light_count: point_lights.len() as i32,
-            directional_light_count: directional_lights.len() as i32,
-        };
-
-        effect.update_constant_buffer("FragmentArgs", &fragment_args, encoder);
-        effect.update_buffer("PointLights", &point_lights[..], encoder);
-        effect.update_buffer("DirectionalLights", &directional_lights[..], encoder);
-
-        effect.update_global("ambient_color", Into::<[f32; 3]>::into(*ambient.as_ref()));
-        effect.update_global(
-            "camera_position",
-            camera
-                .as_ref()
-                .map(|&(_, ref trans)| [trans.0[3][0], trans.0[3][1], trans.0[3][2]])
-                .unwrap_or([0.0; 3]),
-        );
-        'drawable: for (mesh, material, global) in (&mesh, &material, &global).join() {
+        'drawable: for (entity, mesh, material, global) in
+            (&*entities, &mesh, &material, &global).join()
+        {
             let mesh = match mesh_storage.get(mesh) {
                 Some(mesh) => mesh,
                 None => continue,
             };
-            for attrs in [
-                Separate::<Position>::ATTRIBUTES,
-                Separate::<Normal>::ATTRIBUTES,
-                Separate::<Tangent>::ATTRIBUTES,
-                Separate::<TexCoord>::ATTRIBUTES,
-            ].iter()
+
+            if !set_attribute_buffers(effect, mesh, &ATTRIBUTES)
+                || (self.skinning && !set_skinning_buffers(effect, mesh))
             {
-                match mesh.buffer(attrs) {
-                    Some(vbuf) => effect.data.vertex_bufs.push(vbuf.clone()),
-                    None => {
-                        effect.clear();
-                        continue 'drawable;
-                    }
+                effect.clear();
+                continue 'drawable;
+            }
+
+            set_vertex_args(effect, encoder, camera, global);
+
+            if self.skinning {
+                if let Some(joint) = joints.get(entity) {
+                    effect.update_buffer("JointTransforms", &joint.matrices[..], encoder);
                 }
             }
 
-            let vertex_args = camera
-                .as_ref()
-                .map(|&(ref cam, ref transform)| VertexArgs {
-                    proj: cam.proj.into(),
-                    view: transform.0.invert().unwrap().into(),
-                    model: *global.as_ref(),
-                })
-                .unwrap_or_else(|| VertexArgs {
-                    proj: Matrix4::one().into(),
-                    view: Matrix4::one().into(),
-                    model: *global.as_ref(),
-                });
-
-            effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
-
-            let albedo = tex_storage
-                .get(&material.albedo)
-                .or_else(|| tex_storage.get(&material_defaults.0.albedo))
-                .unwrap();
-
-            let roughness = tex_storage
-                .get(&material.roughness)
-                .or_else(|| tex_storage.get(&material_defaults.0.roughness))
-                .unwrap();
-
-            let emission = tex_storage
-                .get(&material.emission)
-                .or_else(|| tex_storage.get(&material_defaults.0.emission))
-                .unwrap();
-
-            let caveat = tex_storage
-                .get(&material.caveat)
-                .or_else(|| tex_storage.get(&material_defaults.0.caveat))
-                .unwrap();
-
-            let metallic = tex_storage
-                .get(&material.metallic)
-                .or_else(|| tex_storage.get(&material_defaults.0.metallic))
-                .unwrap();
-
-            let ambient_occlusion = tex_storage
-                .get(&material.ambient_occlusion)
-                .or_else(|| tex_storage.get(&material_defaults.0.ambient_occlusion))
-                .unwrap();
-
-            let normal = tex_storage
-                .get(&material.normal)
-                .or_else(|| tex_storage.get(&material_defaults.0.normal))
-                .unwrap();
-
-            effect.data.textures.push(roughness.view().clone());
-            effect.data.samplers.push(roughness.sampler().clone());
-            effect.data.textures.push(caveat.view().clone());
-            effect.data.samplers.push(caveat.sampler().clone());
-            effect.data.textures.push(metallic.view().clone());
-            effect.data.samplers.push(metallic.sampler().clone());
-            effect.data.textures.push(ambient_occlusion.view().clone());
-            effect
-                .data
-                .samplers
-                .push(ambient_occlusion.sampler().clone());
-            effect.data.textures.push(emission.view().clone());
-            effect.data.samplers.push(emission.sampler().clone());
-            effect.data.textures.push(normal.view().clone());
-            effect.data.samplers.push(normal.sampler().clone());
-            effect.data.textures.push(albedo.view().clone());
-            effect.data.samplers.push(albedo.sampler().clone());
+            add_textures(
+                effect,
+                &tex_storage,
+                material,
+                &material_defaults.0,
+                &TEXTURES,
+            );
 
             effect.draw(mesh.slice(), encoder);
             effect.clear();

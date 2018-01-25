@@ -14,7 +14,7 @@ use fnv::FnvHashMap as HashMap;
 use gfx::preset::blend;
 use gfx::pso::buffer::ElemStride;
 use gfx::state::ColorMask;
-use gfx_glyph::{BuiltInLineBreaker, FontId, GlyphBrush, GlyphBrushBuilder, GlyphCruncher, 
+use gfx_glyph::{BuiltInLineBreaker, FontId, GlyphBrush, GlyphBrushBuilder, GlyphCruncher,
                 HorizontalAlign, Layout, Scale, SectionText, VariedSection, VerticalAlign};
 use hibitset::BitSet;
 use rusttype::Point;
