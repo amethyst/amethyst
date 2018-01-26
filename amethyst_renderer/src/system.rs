@@ -99,6 +99,15 @@ where
             command(self.renderer.window());
         }
 
+        // Send resource size changes to the window
+        if screen_dimensions.dirty {
+            self.renderer.window().set_inner_size(
+                screen_dimensions.width() as u32,
+                screen_dimensions.height() as u32,
+            );
+            screen_dimensions.dirty = false;
+        }
+
         if let Some(size) = self.renderer.window().get_inner_size() {
             // Send window size changes to the resource
             if size
@@ -112,15 +121,6 @@ where
                 // so set dirty to false.
                 screen_dimensions.dirty = false;
             }
-        }
-
-        // Send resource size changes to the window
-        if screen_dimensions.dirty {
-            self.renderer.window().set_inner_size(
-                screen_dimensions.width() as u32,
-                screen_dimensions.height() as u32,
-            );
-            screen_dimensions.dirty = false;
         }
     }
 
