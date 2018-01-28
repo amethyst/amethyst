@@ -279,7 +279,12 @@ pub struct CompilePass<'a, 'b> {
 }
 
 impl<'a, 'b> CompilePass<'a, 'b> {
-    fn new(factory: &'a mut Factory, target: &'a Target, multisampling: u16, world: &'b mut World) -> Self {
+    fn new(
+        factory: &'a mut Factory,
+        target: &'a Target,
+        multisampling: u16,
+        world: &'b mut World,
+    ) -> Self {
         CompilePass {
             factory,
             target,
@@ -295,7 +300,13 @@ where
 {
     type Output = Result<CompiledPass<P>>;
     fn call_once(self, (pass,): (P,)) -> Result<CompiledPass<P>> {
-        CompiledPass::compile(pass, self.factory, self.target, self.multisampling, self.world)
+        CompiledPass::compile(
+            pass,
+            self.factory,
+            self.target,
+            self.multisampling,
+            self.world,
+        )
     }
 }
 impl<'a, 'b, P> HetFnMut<(P,)> for CompilePass<'a, 'b>
@@ -303,6 +314,12 @@ where
     P: Pass,
 {
     fn call_mut(&mut self, (pass,): (P,)) -> Result<CompiledPass<P>> {
-        CompiledPass::compile(pass, self.factory, self.target, self.multisampling, self.world)
+        CompiledPass::compile(
+            pass,
+            self.factory,
+            self.target,
+            self.multisampling,
+            self.world,
+        )
     }
 }

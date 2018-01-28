@@ -3,15 +3,15 @@
 extern crate amethyst;
 extern crate genmesh;
 
-use amethyst::core::cgmath::{Deg, InnerSpace, Vector3};
 use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::Time;
+use amethyst::core::cgmath::{Deg, InnerSpace, Vector3};
 use amethyst::core::transform::Transform;
 use amethyst::ecs::{Entity, World};
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light, Mesh, Pipeline,
-                         PngFormat, PointLight, PosNormTex, RenderBundle, RenderSystem, Rgba,
-                         Stage, Texture,Projection};
+                         PngFormat, PointLight, PosNormTex, Projection, RenderBundle,
+                         RenderSystem, Rgba, Stage, Texture};
 use amethyst::ui::{DrawUi, FontAsset, TextEditing, TtfFormat, UiBundle, UiFocused, UiImage,
                    UiText, UiTransform};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};

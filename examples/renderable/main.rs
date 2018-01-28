@@ -16,8 +16,7 @@ use amethyst::ecs::{Entity, Fetch, FetchMut, Join, ReadStorage, System, World, W
 use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, DisplayConfig, DrawShaded,
                          ElementState, Event, KeyboardInput, Light, Material, MaterialDefaults,
                          MeshHandle, ObjFormat, Pipeline, PngFormat, PointLight, PosNormTex,
-                         Projection, RenderBundle, Rgba, Stage, VirtualKeyCode,
-                         WindowEvent};
+                         Projection, RenderBundle, Rgba, Stage, VirtualKeyCode, WindowEvent};
 use amethyst::ui::{DrawUi, FontHandle, TtfFormat, UiBundle, UiText, UiTransform};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 
@@ -382,13 +381,12 @@ fn run() -> Result<(), Error> {
     );
 
     let display_config = DisplayConfig::load(display_config_path);
-    let pipeline_builder = 
-        Pipeline::build().with_stage(
-            Stage::with_backbuffer()
-                .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-                .with_pass(DrawShaded::<PosNormTex>::new())
-                .with_pass(DrawUi::new()),
-        );
+    let pipeline_builder = Pipeline::build().with_stage(
+        Stage::with_backbuffer()
+            .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
+            .with_pass(DrawShaded::<PosNormTex>::new())
+            .with_pass(DrawUi::new()),
+    );
     let mut game = Application::build(resources_directory, Example)?
         .with::<ExampleSystem>(ExampleSystem, "example_system", &[])
         .with_frame_limit(FrameRateLimitStrategy::Unlimited, 0)

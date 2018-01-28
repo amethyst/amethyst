@@ -5,8 +5,7 @@ mod pong;
 use amethyst::Result;
 use amethyst::core::transform::TransformBundle;
 use amethyst::prelude::*;
-use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline, PosTex, RenderBundle,
-                         Stage};
+use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline, PosTex, RenderBundle, Stage};
 
 fn run() -> Result<()> {
     use pong::Pong;

@@ -26,14 +26,13 @@ pub struct RenderBundle<B: PipelineBuild<Pipeline = P>, P: PolyPipeline> {
 impl<B: PipelineBuild<Pipeline = P>, P: PolyPipeline> RenderBundle<B, P> {
     /// Create a new render bundle
     pub fn new(pipe: B, config: Option<DisplayConfig>) -> Self {
-        Self {
-            pipe,
-            config,
-        }
+        Self { pipe, config }
     }
 }
 
-impl<'a, 'b, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> ECSBundle<'a, 'b> for RenderBundle<B, P> {
+impl<'a, 'b, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> ECSBundle<'a, 'b>
+    for RenderBundle<B, P>
+{
     fn build(
         self,
         world: &mut World,
@@ -60,7 +59,9 @@ impl<'a, 'b, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> ECSBundle<'a,
                 return Err(Error::with_chain(err, "Renderer error!"));
             }
         };
-        let (width, height) = system.window_size().expect("Window closed during initialization!");
+        let (width, height) = system
+            .window_size()
+            .expect("Window closed during initialization!");
         world.add_resource(ScreenDimensions::new(width, height));
         Ok(builder.add_thread_local(system))
     }

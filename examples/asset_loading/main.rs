@@ -13,8 +13,7 @@ use amethyst::ecs::World;
 use amethyst::input::InputBundle;
 use amethyst::renderer::{Camera, DisplayConfig, DrawShaded, Event, KeyboardInput, Light, Material,
                          MaterialDefaults, Mesh, MeshData, Pipeline, PointLight, PosNormTex,
-                         Projection, RenderBundle, Rgba, Stage, VirtualKeyCode,
-                         WindowEvent};
+                         Projection, RenderBundle, Rgba, Stage, VirtualKeyCode, WindowEvent};
 
 #[derive(Clone)]
 struct Custom;

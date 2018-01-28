@@ -5,10 +5,10 @@ use gfx::memory::Pod;
 use mesh::{Mesh, MeshBuilder, VertexDataSet};
 use pipe::{ColorBuffer, DepthBuffer, PipelineBuild, PipelineData, PolyPipeline, Target,
            TargetBuilder};
+use specs::World;
 use tex::{Texture, TextureBuilder};
 use types::{ColorFormat, DepthFormat, Device, Encoder, Factory, Window};
 use winit::{EventsLoop, Window as WinitWindow, WindowBuilder};
-use specs::World;
 
 /// Generic renderer.
 pub struct Renderer {
@@ -63,7 +63,12 @@ impl Renderer {
         P: PolyPipeline,
         B: PipelineBuild<Pipeline = P>,
     {
-        pb.build(&mut self.factory, &self.main_target, self.multisampling, world)
+        pb.build(
+            &mut self.factory,
+            &self.main_target,
+            self.multisampling,
+            world,
+        )
     }
 
     /// Draws a scene with the given pipeline.

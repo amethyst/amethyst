@@ -212,7 +212,13 @@ pub trait PipelineBuild {
     type Pipeline: PolyPipeline;
 
     /// Build pipeline
-    fn build(self, fac: &mut Factory, out: &Target, multisampling: u16, world: &mut World) -> Result<Self::Pipeline>;
+    fn build(
+        self,
+        fac: &mut Factory,
+        out: &Target,
+        multisampling: u16,
+        world: &mut World,
+    ) -> Result<Self::Pipeline>;
 }
 
 impl<L, Z, R, Q> PipelineBuild for PipelineBuilder<Q>
@@ -223,7 +229,13 @@ where
     R: PolyStages,
 {
     type Pipeline = Pipeline<R>;
-    fn build(mut self, fac: &mut Factory, out: &Target, multisampling: u16, world: &mut World) -> Result<Pipeline<R>> {
+    fn build(
+        mut self,
+        fac: &mut Factory,
+        out: &Target,
+        multisampling: u16,
+        world: &mut World,
+    ) -> Result<Pipeline<R>> {
         let mut targets = self.targets
             .drain(..)
             .map(|tb| tb.build(fac, out.size()))
@@ -248,7 +260,12 @@ pub struct BuildStage<'a, 'b> {
 }
 
 impl<'a, 'b> BuildStage<'a, 'b> {
-    fn new(factory: &'a mut Factory, targets: &'a Targets, multisampling: u16, world: &'b mut World) -> Self {
+    fn new(
+        factory: &'a mut Factory,
+        targets: &'a Targets,
+        multisampling: u16,
+        world: &'b mut World,
+    ) -> Self {
         BuildStage {
             factory,
             targets,

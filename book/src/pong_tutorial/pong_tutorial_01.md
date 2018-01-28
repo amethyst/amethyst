@@ -20,8 +20,8 @@ extern crate amethyst;
 use amethyst::Result;
 use amethyst::prelude::*;
 use amethyst::renderer::{DisplayConfig, DrawFlat, Event, KeyboardInput,
-                         Pipeline, PosTex, RenderBundle, RenderSystem,
-                         Stage, VirtualKeyCode, WindowEvent};
+                         Pipeline, PosTex, RenderBundle, Stage, 
+                         VirtualKeyCode, WindowEvent};
 ```
 
 We'll be learning more about these as we go through this tutorial. The prelude 
