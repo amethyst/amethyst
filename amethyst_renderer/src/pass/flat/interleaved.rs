@@ -5,7 +5,7 @@ use std::marker::PhantomData;
 use amethyst_assets::AssetStorage;
 use amethyst_core::transform::Transform;
 use gfx::pso::buffer::ElemStride;
-use specs::{Fetch, Join, ReadStorage, World};
+use specs::{Fetch, Join, ReadStorage};
 
 use super::*;
 use cam::{ActiveCamera, Camera};
@@ -58,7 +58,7 @@ impl<V> Pass for DrawFlat<V>
 where
     V: Query<(Position, TexCoord)>,
 {
-    fn compile(&mut self, effect: NewEffect, _world: &mut World) -> Result<Effect> {
+    fn compile(&mut self, effect: NewEffect) -> Result<Effect> {
         use std::mem;
         effect
             .simple(VERT_SRC, FRAG_SRC)

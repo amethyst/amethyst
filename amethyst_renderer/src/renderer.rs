@@ -5,7 +5,6 @@ use gfx::memory::Pod;
 use mesh::{Mesh, MeshBuilder, VertexDataSet};
 use pipe::{ColorBuffer, DepthBuffer, PipelineBuild, PipelineData, PolyPipeline, Target,
            TargetBuilder};
-use specs::World;
 use tex::{Texture, TextureBuilder};
 use types::{ColorFormat, DepthFormat, Device, Encoder, Factory, Window};
 use winit::{EventsLoop, Window as WinitWindow, WindowBuilder};
@@ -58,17 +57,12 @@ impl Renderer {
     }
 
     /// Builds a new renderer pipeline.
-    pub fn create_pipe<B, P>(&mut self, pb: B, world: &mut World) -> Result<P>
+    pub fn create_pipe<B, P>(&mut self, pb: B) -> Result<P>
     where
         P: PolyPipeline,
         B: PipelineBuild<Pipeline = P>,
     {
-        pb.build(
-            &mut self.factory,
-            &self.main_target,
-            self.multisampling,
-            world,
-        )
+        pb.build(&mut self.factory, &self.main_target, self.multisampling)
     }
 
     /// Draws a scene with the given pipeline.

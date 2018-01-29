@@ -10,8 +10,8 @@ use amethyst::core::transform::Transform;
 use amethyst::ecs::{Entity, World};
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light, Mesh, Pipeline,
-                         PngFormat, PointLight, PosNormTex, Projection, RenderBundle,
-                         RenderSystem, Rgba, Stage, Texture};
+                         PngFormat, PointLight, PosNormTex, Projection, RenderBundle, Rgba, Stage,
+                         Texture};
 use amethyst::ui::{DrawUi, FontAsset, TextEditing, TtfFormat, UiBundle, UiFocused, UiImage,
                    UiText, UiTransform};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};

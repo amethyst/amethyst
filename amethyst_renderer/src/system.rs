@@ -9,7 +9,7 @@ use amethyst_core::Time;
 use rayon::ThreadPool;
 use shred::Resources;
 use shrev::EventChannel;
-use specs::{Fetch, FetchMut, RunNow, SystemData, World};
+use specs::{Fetch, FetchMut, RunNow, SystemData};
 use winit::{DeviceEvent, Event, WindowEvent};
 
 use config::DisplayConfig;
@@ -36,7 +36,7 @@ where
     P: PolyPipeline,
 {
     /// Build a new `RenderSystem` from the given pipeline builder and config
-    pub fn build<B>(pipe: B, world: &mut World, config: Option<DisplayConfig>) -> Result<Self>
+    pub fn build<B>(pipe: B, config: Option<DisplayConfig>) -> Result<Self>
     where
         B: PipelineBuild<Pipeline = P>,
     {
@@ -51,7 +51,7 @@ where
             renderer
         };
 
-        match renderer.create_pipe(pipe, world) {
+        match renderer.create_pipe(pipe) {
             Ok(pipe) => Ok(Self::new(pipe, renderer)),
             Err(err) => {
                 error!("Failed creating pipeline: {}", err);

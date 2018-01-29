@@ -66,7 +66,7 @@ pub use formats::{build_mesh_with_combo, create_mesh_asset, create_texture_asset
                   ObjFormat, PngFormat, TextureData, TextureMetadata};
 pub use input::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
 pub use light::{DirectionalLight, Light, PointLight, SpotLight, SunLight};
-pub use mesh::{vertex_data, Mesh, MeshHandle, VertexBuffer};
+pub use mesh::{vertex_data, Mesh, MeshBuilder, MeshHandle, VertexBuffer};
 pub use mtl::{Material, MaterialDefaults};
 pub use pass::{DrawFlat, DrawFlatSeparate, DrawPbm, DrawPbmSeparate, DrawShaded,
                DrawShadedSeparate};

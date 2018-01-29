@@ -1,7 +1,7 @@
 //! ECS rendering bundle
 
 use amethyst_assets::{AssetStorage, Handle, Loader};
-use amethyst_core::bundle::{ECSBundle, Error, Result};
+use amethyst_core::bundle::{ECSBundle, Result, ResultExt};
 use amethyst_core::orientation::Orientation;
 use amethyst_core::transform::components::*;
 use specs::{DispatcherBuilder, World};
@@ -18,12 +18,20 @@ use system::RenderSystem;
 /// Will also register asset contexts with the asset `Loader`, and add systems for merging
 /// `AssetFuture` into its related component.
 ///
-pub struct RenderBundle<B: PipelineBuild<Pipeline = P>, P: PolyPipeline> {
+pub struct RenderBundle<B, P>
+where
+    B: PipelineBuild<Pipeline = P>,
+    P: PolyPipeline,
+{
     pipe: B,
     config: Option<DisplayConfig>,
 }
 
-impl<B: PipelineBuild<Pipeline = P>, P: PolyPipeline> RenderBundle<B, P> {
+impl<B, P> RenderBundle<B, P>
+where
+    B: PipelineBuild<Pipeline = P>,
+    P: PolyPipeline,
+{
     /// Create a new render bundle
     pub fn new(pipe: B, config: Option<DisplayConfig>) -> Self {
         Self { pipe, config }
@@ -53,12 +61,7 @@ impl<'a, 'b, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> ECSBundle<'a,
         world.register::<Handle<Mesh>>();
         world.register::<Handle<Texture>>();
         world.register::<Camera>();
-        let system = match RenderSystem::build(self.pipe, world, self.config) {
-            Ok(system) => system,
-            Err(err) => {
-                return Err(Error::with_chain(err, "Renderer error!"));
-            }
-        };
+        let system = RenderSystem::build(self.pipe, self.config).chain_err(|| "Renderer error!")?;
         let (width, height) = system
             .window_size()
             .expect("Window closed during initialization!");

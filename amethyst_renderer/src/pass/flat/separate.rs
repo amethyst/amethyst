@@ -3,7 +3,7 @@
 use amethyst_assets::AssetStorage;
 use amethyst_core::transform::Transform;
 use gfx::pso::buffer::ElemStride;
-use specs::{Entities, Fetch, Join, ReadStorage, World};
+use specs::{Entities, Fetch, Join, ReadStorage};
 
 use super::*;
 use cam::{ActiveCamera, Camera};
@@ -63,7 +63,7 @@ impl<'a> PassData<'a> for DrawFlatSeparate {
 }
 
 impl Pass for DrawFlatSeparate {
-    fn compile(&mut self, effect: NewEffect, _world: &mut World) -> Result<Effect> {
+    fn compile(&mut self, effect: NewEffect) -> Result<Effect> {
         use std::mem;
         let mut builder = if self.skinning {
             create_skinning_effect(effect, FRAG_SRC)

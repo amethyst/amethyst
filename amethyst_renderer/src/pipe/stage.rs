@@ -6,7 +6,7 @@ use error::{Error, Result};
 use fnv::FnvHashMap as HashMap;
 use pipe::{Target, Targets};
 use pipe::pass::{CompiledPass, Pass, PassData};
-use specs::{SystemData, World};
+use specs::SystemData;
 
 use types::{Encoder, Factory};
 
@@ -224,16 +224,15 @@ impl<Q> StageBuilder<Q> {
         self
     }
 
-    pub(crate) fn build<'a, 'b, L, Z, R>(
+    pub(crate) fn build<'a, L, Z, R>(
         self,
         fac: &'a mut Factory,
         targets: &'a Targets,
-        world: &'b mut World,
         multisampling: u16,
     ) -> Result<Stage<R>>
     where
         Q: IntoList<List = L>,
-        L: for<'c, 'd> Functor<CompilePass<'c, 'd>, Output = Z>,
+        L: for<'b> Functor<CompilePass<'b>, Output = Z>,
         Z: Try<Error, Ok = R>,
         R: Passes,
     {
@@ -244,7 +243,7 @@ impl<Q> StageBuilder<Q> {
 
         let passes = self.passes
             .into_list()
-            .fmap(CompilePass::new(fac, &out, multisampling, world))
+            .fmap(CompilePass::new(fac, &out, multisampling))
             .try()?;
 
         Ok(Stage {
@@ -271,55 +270,36 @@ impl<Q> StageBuilder<Queue<Q>> {
     }
 }
 
-pub struct CompilePass<'a, 'b> {
+pub struct CompilePass<'a> {
     factory: &'a mut Factory,
     target: &'a Target,
-    world: &'b mut World,
     multisampling: u16,
 }
 
-impl<'a, 'b> CompilePass<'a, 'b> {
-    fn new(
-        factory: &'a mut Factory,
-        target: &'a Target,
-        multisampling: u16,
-        world: &'b mut World,
-    ) -> Self {
+impl<'a> CompilePass<'a> {
+    fn new(factory: &'a mut Factory, target: &'a Target, multisampling: u16) -> Self {
         CompilePass {
             factory,
             target,
-            world,
             multisampling,
         }
     }
 }
 
-impl<'a, 'b, P> HetFnOnce<(P,)> for CompilePass<'a, 'b>
+impl<'a, P> HetFnOnce<(P,)> for CompilePass<'a>
 where
     P: Pass,
 {
     type Output = Result<CompiledPass<P>>;
     fn call_once(self, (pass,): (P,)) -> Result<CompiledPass<P>> {
-        CompiledPass::compile(
-            pass,
-            self.factory,
-            self.target,
-            self.multisampling,
-            self.world,
-        )
+        CompiledPass::compile(pass, self.factory, self.target, self.multisampling)
     }
 }
-impl<'a, 'b, P> HetFnMut<(P,)> for CompilePass<'a, 'b>
+impl<'a, P> HetFnMut<(P,)> for CompilePass<'a>
 where
     P: Pass,
 {
     fn call_mut(&mut self, (pass,): (P,)) -> Result<CompiledPass<P>> {
-        CompiledPass::compile(
-            pass,
-            self.factory,
-            self.target,
-            self.multisampling,
-            self.world,
-        )
+        CompiledPass::compile(pass, self.factory, self.target, self.multisampling)
     }
 }

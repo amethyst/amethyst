@@ -5,8 +5,8 @@ use std::hash::{Hash, Hasher};
 
 use amethyst_assets::{AssetStorage, Loader, WeakHandle};
 use amethyst_core::cgmath::vec4;
-use amethyst_renderer::{Encoder, Factory, Mesh, MeshHandle, PosTex, Resources, ScreenDimensions,
-                        Texture, TextureData, TextureHandle, TextureMetadata, VertexFormat};
+use amethyst_renderer::{Encoder, Factory, Mesh, PosTex, Resources, ScreenDimensions, Texture,
+                        TextureData, TextureHandle, TextureMetadata, VertexFormat};
 use amethyst_renderer::error::Result;
 use amethyst_renderer::pipe::{Effect, NewEffect};
 use amethyst_renderer::pipe::pass::{Pass, PassData};
@@ -18,7 +18,7 @@ use gfx_glyph::{BuiltInLineBreaker, FontId, GlyphBrush, GlyphBrushBuilder, Glyph
                 HorizontalAlign, Layout, Scale, SectionText, VariedSection, VerticalAlign};
 use hibitset::BitSet;
 use rusttype::Point;
-use specs::{Entities, Entity, Fetch, Join, ReadStorage, World, WriteStorage};
+use specs::{Entities, Entity, Fetch, Join, ReadStorage, WriteStorage};
 use unicode_segmentation::UnicodeSegmentation;
 
 use super::*;
@@ -61,7 +61,7 @@ impl Hash for KeyColor {
 
 /// Draw Ui elements.  UI won't display without this.  It's recommended this be your last pass.
 pub struct DrawUi {
-    mesh_handle: Option<MeshHandle>,
+    mesh: Option<Mesh>,
     cached_draw_order: CachedDrawOrder,
     cached_color_textures: HashMap<KeyColor, TextureHandle>,
     glyph_brushes: GlyphBrushCache,
@@ -80,7 +80,7 @@ impl DrawUi {
     /// Create instance of `DrawUi` pass
     pub fn new() -> Self {
         DrawUi {
-            mesh_handle: None,
+            mesh: None,
             cached_draw_order: CachedDrawOrder {
                 cached: BitSet::new(),
                 cache: Vec::new(),
@@ -97,7 +97,6 @@ impl<'a> PassData<'a> for DrawUi {
         Entities<'a>,
         Fetch<'a, Loader>,
         Fetch<'a, ScreenDimensions>,
-        Fetch<'a, AssetStorage<Mesh>>,
         Fetch<'a, AssetStorage<Texture>>,
         Fetch<'a, AssetStorage<FontAsset>>,
         Fetch<'a, UiFocused>,
@@ -109,7 +108,7 @@ impl<'a> PassData<'a> for DrawUi {
 }
 
 impl Pass for DrawUi {
-    fn compile(&mut self, effect: NewEffect, world: &mut World) -> Result<Effect> {
+    fn compile(&mut self, mut effect: NewEffect) -> Result<Effect> {
         // Initialize a single unit quad, we'll use this mesh when drawing quads later
         let data = vec![
             PosTex {
@@ -136,10 +135,8 @@ impl Pass for DrawUi {
                 position: [0., 0., 0.],
                 tex_coord: [0., 1.],
             },
-        ].into();
-        let loader: &Loader = &*world.read_resource();
-        let mesh_storage = &*world.read_resource();
-        self.mesh_handle = Some(loader.load_from_data(data, (), mesh_storage));
+        ];
+        self.mesh = Some(Mesh::build(data).build(&mut effect.factory)?);
         use std::mem;
         effect
             .simple(VERT_SRC, FRAG_SRC)
@@ -159,7 +156,6 @@ impl Pass for DrawUi {
             entities,
             loader,
             screen_dimensions,
-            mesh_storage,
             tex_storage,
             font_storage,
             focused,
@@ -167,19 +163,7 @@ impl Pass for DrawUi {
             ui_transform,
             mut ui_text,
             editing,
-        ): (
-            Entities<'a>,
-            Fetch<'a, Loader>,
-            Fetch<'a, ScreenDimensions>,
-            Fetch<'a, AssetStorage<Mesh>>,
-            Fetch<'a, AssetStorage<Texture>>,
-            Fetch<'a, AssetStorage<FontAsset>>,
-            Fetch<'a, UiFocused>,
-            ReadStorage<'a, UiImage>,
-            ReadStorage<'a, UiTransform>,
-            WriteStorage<'a, UiText>,
-            ReadStorage<'a, TextEditing>,
-        ),
+        ): <Self as PassData>::Data,
     ) {
         // Populate and update the draw order cache.
         {
@@ -232,10 +216,7 @@ impl Pass for DrawUi {
             1.,
         );
 
-        let mesh = match mesh_storage.get(self.mesh_handle.as_ref().unwrap()) {
-            Some(mesh) => mesh,
-            None => return,
-        };
+        let mesh = self.mesh.as_ref().unwrap();
 
         let vbuf = match mesh.buffer(PosTex::ATTRIBUTES) {
             Some(vbuf) => vbuf.clone(),

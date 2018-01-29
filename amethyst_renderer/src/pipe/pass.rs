@@ -1,6 +1,6 @@
 //! Types for constructing render passes.
 
-use specs::{SystemData, World};
+use specs::SystemData;
 
 use error::Result;
 use pipe::{Effect, NewEffect, Target};
@@ -16,7 +16,7 @@ pub trait PassData<'a> {
 pub trait Pass: for<'a> PassData<'a> {
     /// The pass is given an opportunity to compile shaders and store them in an `Effect`
     /// which is then passed to the pass in `apply`.
-    fn compile(&mut self, effect: NewEffect, world: &mut World) -> Result<Effect>;
+    fn compile(&mut self, effect: NewEffect) -> Result<Effect>;
     /// Called whenever the renderer is ready to apply the pass.  Feed commands into the
     /// encoder here.
     fn apply<'a, 'b: 'a>(
@@ -45,9 +45,8 @@ where
         fac: &mut Factory,
         out: &Target,
         multisampling: u16,
-        world: &mut World,
     ) -> Result<Self> {
-        let effect = pass.compile(NewEffect::new(fac, out, multisampling), world)?;
+        let effect = pass.compile(NewEffect::new(fac, out, multisampling))?;
         Ok(CompiledPass {
             effect,
             inner: pass,
