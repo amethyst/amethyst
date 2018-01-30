@@ -18,7 +18,8 @@ impl Default for ArenaConfig {
 }
 ```
 
-The default values match the values used in the full example, so if we don't use a config file things will look just like the example. 
+The default values match the values used in the full example, so if we don't use a config file things will 
+look just like the example. 
 
 ## Adding the Config to the World
 Now, in `bundle.rs`, add the following lines:
@@ -34,7 +35,8 @@ struct PongBundle {
     config: ArenaConfig,
 }
 ```
-We'll need to load the config at start-up, so let's add a `new()` function that takes the path to the RON config file
+We'll need to load the config at start-up, so let's add a `new()` function that takes the path to the Ron 
+config file.
 ```rust,ignore
 impl PongBundle {
     pub fn new<P: AsRef<Path>>(path: P) -> Self {
@@ -45,19 +47,23 @@ impl PongBundle {
 }
 ```
 
-Now that our `PongBundle` knows about our config, we want to add it to the world so other modules can access it. We do this by modifying the [`build()`][ecsbuild] function implemented as part of the [ECSBundle][ecsbundle] trait. Add the following line to the top of the function:
+Now that our `PongBundle` knows about our config, we want to add it to the world so other modules can access 
+it. We do this by modifying the [`build()`][ecsbuild] function implemented as part of the 
+[ECSBundle][ecsbundle] trait. Add the following line to the top of the function:
 ```rust,ignore
 world.add_resource(self.config);
 ```
 
-Now comes the difficult part: replacing every use of `ARENA_WIDTH` and `ARENA_HEIGHT` with our config object. To start, let's change our initialisation steps in `pong.rs`.
+Now comes the difficult part: replacing every use of `ARENA_WIDTH` and `ARENA_HEIGHT` with our config object. 
+To start, let's change our initialisation steps in `pong.rs`.
 
 Add the following line to the top of `pong.rs`
 ```rust,ignore
 use config::ArenaConfig;
 ```
 
-Now, in the `initialise_paddles()` function, add the following lines after the initialisation of the `left_transform` and `right_transform`
+Now, in the `initialise_paddles()` function, add the following lines after the initialisation of the 
+`left_transform` and `right_transform`.
 ```rust,ignore
 let (arena_height, arena_width) = {
     let config = &world.read_resource::<ArenaConfig>();
@@ -65,10 +71,13 @@ let (arena_height, arena_width) = {
 };
 ```
 
-Now replace all references to `ARENA_HEIGHT` with `arena_height` and all references to `ARENA_WIDTH` with `arena_width`. Do this for each initialisation function in `pong.rs`.
+Now replace all references to `ARENA_HEIGHT` with `arena_height` and all references to `ARENA_WIDTH` with 
+`arena_width`. Do this for each initialisation function in `pong.rs`.
 
 ## Accessing Config Files from Systems
-It is actually a bit simpler to access a Config file from a system than via the `World` directly. To access it in the `System`'s `run()` function, add to the `SystemData` type. This is how the `BounceSystem` looks when it wants to access the `ArenaConfig`
+It is actually a bit simpler to access a Config file from a system than via the `World` directly. To access 
+it in the `System`'s `run()` function, add to the `SystemData` type. This is how the `BounceSystem` looks 
+when it wants to access the `ArenaConfig`.
 ```rust,ignore
 use config::ArenaConfig;
 ...
@@ -87,11 +96,14 @@ fn run(&mut self,
 ```
 Now, in the `run()` function, replace the reference to `ARENA_HEIGHT` with `arena_config.height`.
 
-Add `Fetch<'s, ArenaConfig>` to the `WinnerSystem` as well, replacing the reference to `ARENA_WIDTH` with `arena_config.width`.
+Add `Fetch<'s, ArenaConfig>` to the `WinnerSystem` as well, replacing the reference to `ARENA_WIDTH` with 
+`arena_config.width`.
 
 ## Making `config.ron`
 
-Now comes the final part: actually making our `config.ron` file. This will be very simple right now, and expand as we add more configurable items. For now, just copy and paste the following into a new file. Feel free to modify the height and width if you want.
+Now comes the final part: actually making our `config.ron` file. This will be very simple right now, and 
+expand as we add more configurable items. For now, just copy and paste the following into a new file. Feel 
+free to modify the height and width if you want.
 
 ```ignore
 arena: (
