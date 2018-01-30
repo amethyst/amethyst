@@ -1,6 +1,7 @@
 # Adding Paddle Configs
 
-We're finally going to add a configuration struct for our Paddles. Because our Pong clone supports two players, we should let them configure each separately. Add the following to the `config.rs` file:
+We're finally going to add a configuration struct for our Paddles. Because our Pong clone supports two 
+players, we should let them configure each separately. Add the following to the `config.rs` file:
 ```rust,ignore
 #[derive(Debug, Deserialize, Serialize)]
 pub struct PaddleConfig {
@@ -57,7 +58,8 @@ fn build(
 ```
 The one change from the previous examples is that we need to add resources with an ID. Previous configs only 
 had one resource per type, so it was okay to add them with the default ID of 0 (as 
-[`World::add_resource`][add_resource] does). Thus, we use [`World::add_resource_with_id`][add_with_id] instead.
+[`World::add_resource`][add_resource] does). Thus, we use [`World::add_resource_with_id`][add_with_id] 
+instead.
 
 ## Replacing Constants with Configs
 Replacing all instances of `PADDLE_*` will be similar to the `BallConfig`, as we only use those values for 

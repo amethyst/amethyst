@@ -1,8 +1,12 @@
 # Appendix A: Config Files
 
-In the [full Pong example][pong], the paddle sizes, ball sizes, colors, and arena sizes are all hard-coded into the implementation. This means that if you want to change any of these, you need to recompile the project. Wouldn't it be nice to not have to recompile the project each time you wanted to change one or all of these things?
+In the [full Pong example][pong], the paddle sizes, ball sizes, colors, and arena sizes are all hard-coded 
+into the implementation. This means that if you want to change any of these, you need to recompile the 
+project. Wouldn't it be nice to not have to recompile the project each time you wanted to change one or all 
+of these things?
 
-Luckily, Amethyst uses [Ron][ron] configuration files and has infrastructure in the form of the [Config][config] trait to help us implement our own config files.
+Luckily, Amethyst uses [Ron][ron] configuration files and has infrastructure in the form of the 
+[Config][config] trait to help us implement our own config files.
 
 ## Structure of the Config File
 The existing example uses the following constants:
@@ -19,14 +23,17 @@ const BALL_VELOCITY_Y: f32 = 50.0;
 const BALL_RADIUS: f32 = 2.5;
 const BALL_COLOUR: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
 ```
-to specify the look of the game. We want to replace this with something more flexible in the form of a config file. To start, let's create a new file, `config.rs`, to hold our configuration structures. Add the following `use` statements to the top of this file:
+to specify the look of the game. We want to replace this with something more flexible in the form of a config 
+file. To start, let's create a new file, `config.rs`, to hold our configuration structures. Add the following 
+`use` statements to the top of this file:
 ```rust,ignore
 use std::path::Path;
 
 use amethyst::config::Config;
 ```
 
-For this project, we'll be placing a `config.ron` file in the same location as the `display_config.ron` and `input.ron` files (likely the `resources/` folder).
+For this project, we'll be placing a `config.ron` file in the same location as the `display_config.ron` and 
+`input.ron` files (likely the `resources/` folder).
 
 ## Chapters
 * [Adding an ArenaConfig][0]
