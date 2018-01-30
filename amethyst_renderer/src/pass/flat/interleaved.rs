@@ -58,7 +58,7 @@ impl<V> Pass for DrawFlat<V>
 where
     V: Query<(Position, TexCoord)>,
 {
-    fn compile(&self, effect: NewEffect) -> Result<Effect> {
+    fn compile(&mut self, effect: NewEffect) -> Result<Effect> {
         use std::mem;
         effect
             .simple(VERT_SRC, FRAG_SRC)

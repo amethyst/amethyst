@@ -137,7 +137,7 @@ impl Effect {
 }
 
 pub struct NewEffect<'f> {
-    factory: &'f mut Factory,
+    pub factory: &'f mut Factory,
     out: &'f Target,
     multisampling: u16,
 }

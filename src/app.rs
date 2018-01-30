@@ -9,7 +9,7 @@ use core::ECSBundle;
 use fern;
 use log::LevelFilter;
 use rayon::ThreadPool;
-use shred::{Resource, RunNow};
+use shred::Resource;
 use shrev::{EventChannel, ReaderId};
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
@@ -41,8 +41,6 @@ pub struct Application<'a, 'b> {
     dispatcher: Dispatcher<'a, 'b>,
     events_reader_id: ReaderId<Event>,
     states: StateMachine<'a>,
-    #[derivative(Debug = "ignore")]
-    locals: Vec<Box<for<'c> RunNow<'c> + 'b>>,
     ignore_window_close: bool,
 }
 
@@ -202,10 +200,6 @@ impl<'a, 'b> Application<'a, 'b> {
         profile_scope!("dispatch");
         self.dispatcher.dispatch(&mut self.world.res);
 
-        for local in &mut self.locals {
-            local.run_now(&self.world.res);
-        }
-
         #[cfg(feature = "profiler")]
         profile_scope!("maintain");
         self.world.maintain();
@@ -242,7 +236,6 @@ pub struct ApplicationBuilder<'a, 'b, T> {
     initial_state: T,
     /// Used by bundles to access the world directly
     pub world: World,
-    locals: Vec<Box<for<'c> RunNow<'c> + 'b>>,
     ignore_window_close: bool,
 }
 
@@ -348,7 +341,6 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
             disp_builder,
             initial_state,
             world,
-            locals: Vec::default(),
             ignore_window_close: false,
         })
     }
@@ -616,48 +608,6 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
         self
     }
 
-    /// Add a local `RunNow` system.
-    ///
-    /// The added system will be dispatched after all normal
-    /// and thread local systems. This is special because it does
-    /// accept types implementing only `RunNow`, but not
-    /// `System`, which is needed for e.g. the `RenderSystem`.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use amethyst::core::transform::Transform;
-    /// use amethyst::prelude::*;
-    /// use amethyst::renderer::*;
-    ///
-    /// # struct Example;
-    /// # impl State for Example {}
-    /// #
-    /// # fn run() -> Result<(), ::amethyst::Error> {
-    /// let pipe = Pipeline::build().with_stage(
-    ///     Stage::with_backbuffer()
-    ///         .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-    ///         .with_pass(DrawShaded::<PosNormTex>::new()),
-    /// );
-    ///
-    /// let config = DisplayConfig::load("config_path.ron");
-    ///
-    /// let mut game = Application::build("resources/", Example)?
-    /// .with_bundle(RenderBundle::new())?
-    /// .with_local(RenderSystem::build(pipe, Some(config))?)
-    /// .build()?;
-    /// # Ok(())
-    /// # }
-    /// # fn main() { run().unwrap(); }
-    /// ```
-    pub fn with_local<S>(mut self, system: S) -> Self
-    where
-        for<'c> S: RunNow<'c> + 'b,
-    {
-        self.locals.push(Box::new(system));
-        self
-    }
-
     /// Add a given ECS bundle to the game loop.
     ///
     /// A bundle is a container for registering a bunch of ECS systems and their dependent
@@ -888,7 +838,6 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
             states: StateMachine::new(self.initial_state),
             events_reader_id: reader_id,
             dispatcher: self.disp_builder.with_pool(pool).build(),
-            locals: self.locals,
             ignore_window_close: self.ignore_window_close,
         })
     }

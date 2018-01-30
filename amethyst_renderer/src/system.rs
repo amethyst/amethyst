@@ -70,6 +70,11 @@ where
         }
     }
 
+    /// Returns the size in pixels of the window.
+    pub fn window_size(&self) -> Option<(u32, u32)> {
+        self.renderer.window().get_inner_size()
+    }
+
     fn asset_loading(
         &mut self,
         (time, pool, strategy, mut mesh_storage, mut texture_storage): AssetLoadingData,

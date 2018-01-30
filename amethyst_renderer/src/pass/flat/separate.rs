@@ -63,7 +63,7 @@ impl<'a> PassData<'a> for DrawFlatSeparate {
 }
 
 impl Pass for DrawFlatSeparate {
-    fn compile(&self, effect: NewEffect) -> Result<Effect> {
+    fn compile(&mut self, effect: NewEffect) -> Result<Effect> {
         use std::mem;
         let mut builder = if self.skinning {
             create_skinning_effect(effect, FRAG_SRC)

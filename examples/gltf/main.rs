@@ -150,7 +150,7 @@ fn run() -> Result<(), amethyst::Error> {
 
     let mut game = Application::build(resources_directory, Example)?
         .with(GltfSceneLoaderSystem::new(), "loader_system", &[])
-        .with_bundle(RenderBundle::new())?
+        .with_bundle(RenderBundle::new(pipe, Some(config)))?
         .with_bundle(AnimationBundle::new().with_dep(&["loader_system"]))?
         .with_bundle(
             TransformBundle::new()
@@ -161,12 +161,11 @@ fn run() -> Result<(), amethyst::Error> {
             "animation_control_system",
             "sampler_interpolation_system",
         ]))?
-        .with_local(RenderSystem::build(pipe, Some(config))?)
         .with_resource(AssetStorage::<GltfSceneAsset>::new())
         .register::<Handle<GltfSceneAsset>>()
         .build()?;
-
-    Ok(game.run())
+    game.run();
+    Ok(())
 }
 
 fn main() {

@@ -67,7 +67,7 @@ impl<'a> PassData<'a> for DrawPbmSeparate {
 }
 
 impl Pass for DrawPbmSeparate {
-    fn compile(&self, effect: NewEffect) -> Result<Effect> {
+    fn compile(&mut self, effect: NewEffect) -> Result<Effect> {
         let mut builder = if self.skinning {
             create_skinning_effect(effect, FRAG_SRC)
         } else {

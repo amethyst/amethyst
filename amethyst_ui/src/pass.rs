@@ -5,8 +5,8 @@ use std::hash::{Hash, Hasher};
 
 use amethyst_assets::{AssetStorage, Loader, WeakHandle};
 use amethyst_core::cgmath::vec4;
-use amethyst_renderer::{Encoder, Factory, Mesh, MeshHandle, PosTex, Resources, ScreenDimensions,
-                        Texture, TextureData, TextureHandle, TextureMetadata, VertexFormat};
+use amethyst_renderer::{Encoder, Factory, Mesh, PosTex, Resources, ScreenDimensions, Texture,
+                        TextureData, TextureHandle, TextureMetadata, VertexFormat};
 use amethyst_renderer::error::Result;
 use amethyst_renderer::pipe::{Effect, NewEffect};
 use amethyst_renderer::pipe::pass::{Pass, PassData};
@@ -61,7 +61,7 @@ impl Hash for KeyColor {
 
 /// Draw Ui elements.  UI won't display without this.  It's recommended this be your last pass.
 pub struct DrawUi {
-    mesh_handle: MeshHandle,
+    mesh: Option<Mesh>,
     cached_draw_order: CachedDrawOrder,
     cached_color_textures: HashMap<KeyColor, TextureHandle>,
     glyph_brushes: GlyphBrushCache,
@@ -78,7 +78,37 @@ type GlyphBrushCache = HashMap<
 
 impl DrawUi {
     /// Create instance of `DrawUi` pass
-    pub fn new(loader: &Loader, mesh_storage: &AssetStorage<Mesh>) -> Self {
+    pub fn new() -> Self {
+        DrawUi {
+            mesh: None,
+            cached_draw_order: CachedDrawOrder {
+                cached: BitSet::new(),
+                cache: Vec::new(),
+            },
+            cached_color_textures: HashMap::default(),
+            glyph_brushes: HashMap::default(),
+            next_brush_cache_id: 0,
+        }
+    }
+}
+
+impl<'a> PassData<'a> for DrawUi {
+    type Data = (
+        Entities<'a>,
+        Fetch<'a, Loader>,
+        Fetch<'a, ScreenDimensions>,
+        Fetch<'a, AssetStorage<Texture>>,
+        Fetch<'a, AssetStorage<FontAsset>>,
+        Fetch<'a, UiFocused>,
+        ReadStorage<'a, UiImage>,
+        ReadStorage<'a, UiTransform>,
+        WriteStorage<'a, UiText>,
+        ReadStorage<'a, TextEditing>,
+    );
+}
+
+impl Pass for DrawUi {
+    fn compile(&mut self, mut effect: NewEffect) -> Result<Effect> {
         // Initialize a single unit quad, we'll use this mesh when drawing quads later
         let data = vec![
             PosTex {
@@ -105,39 +135,8 @@ impl DrawUi {
                 position: [0., 0., 0.],
                 tex_coord: [0., 1.],
             },
-        ].into();
-        let mesh_handle = loader.load_from_data(data, (), mesh_storage);
-        DrawUi {
-            mesh_handle,
-            cached_draw_order: CachedDrawOrder {
-                cached: BitSet::new(),
-                cache: Vec::new(),
-            },
-            cached_color_textures: HashMap::default(),
-            glyph_brushes: HashMap::default(),
-            next_brush_cache_id: 0,
-        }
-    }
-}
-
-impl<'a> PassData<'a> for DrawUi {
-    type Data = (
-        Entities<'a>,
-        Fetch<'a, Loader>,
-        Fetch<'a, ScreenDimensions>,
-        Fetch<'a, AssetStorage<Mesh>>,
-        Fetch<'a, AssetStorage<Texture>>,
-        Fetch<'a, AssetStorage<FontAsset>>,
-        Fetch<'a, UiFocused>,
-        ReadStorage<'a, UiImage>,
-        ReadStorage<'a, UiTransform>,
-        WriteStorage<'a, UiText>,
-        ReadStorage<'a, TextEditing>,
-    );
-}
-
-impl Pass for DrawUi {
-    fn compile(&self, effect: NewEffect) -> Result<Effect> {
+        ];
+        self.mesh = Some(Mesh::build(data).build(&mut effect.factory)?);
         use std::mem;
         effect
             .simple(VERT_SRC, FRAG_SRC)
@@ -157,7 +156,6 @@ impl Pass for DrawUi {
             entities,
             loader,
             screen_dimensions,
-            mesh_storage,
             tex_storage,
             font_storage,
             focused,
@@ -165,19 +163,7 @@ impl Pass for DrawUi {
             ui_transform,
             mut ui_text,
             editing,
-        ): (
-            Entities<'a>,
-            Fetch<'a, Loader>,
-            Fetch<'a, ScreenDimensions>,
-            Fetch<'a, AssetStorage<Mesh>>,
-            Fetch<'a, AssetStorage<Texture>>,
-            Fetch<'a, AssetStorage<FontAsset>>,
-            Fetch<'a, UiFocused>,
-            ReadStorage<'a, UiImage>,
-            ReadStorage<'a, UiTransform>,
-            WriteStorage<'a, UiText>,
-            ReadStorage<'a, TextEditing>,
-        ),
+        ): <Self as PassData>::Data,
     ) {
         // Populate and update the draw order cache.
         {
@@ -230,10 +216,7 @@ impl Pass for DrawUi {
             1.,
         );
 
-        let mesh = match mesh_storage.get(&self.mesh_handle) {
-            Some(mesh) => mesh,
-            None => return,
-        };
+        let mesh = self.mesh.as_ref().unwrap();
 
         let vbuf = match mesh.buffer(PosTex::ATTRIBUTES) {
             Some(vbuf) => vbuf.clone(),

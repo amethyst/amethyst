@@ -246,7 +246,7 @@ pub struct BuildStage<'a> {
     multisampling: u16,
 }
 
-impl<'a> BuildStage<'a> {
+impl<'a, 'b> BuildStage<'a> {
     fn new(factory: &'a mut Factory, targets: &'a Targets, multisampling: u16) -> Self {
         BuildStage {
             factory,

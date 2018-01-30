@@ -4,7 +4,7 @@ extern crate amethyst;
 
 use amethyst::prelude::*;
 use amethyst::renderer::{DisplayConfig, DrawFlat, Event, KeyboardInput, Pipeline, PosNormTex,
-                         RenderBundle, RenderSystem, Stage, VirtualKeyCode, WindowEvent};
+                         RenderBundle, Stage, VirtualKeyCode, WindowEvent};
 
 struct Example;
 
@@ -41,8 +41,7 @@ fn run() -> Result<(), amethyst::Error> {
     );
 
     let mut game = Application::build("./", Example)?
-        .with_bundle(RenderBundle::new())?
-        .with_local(RenderSystem::build(pipe, Some(config))?)
+        .with_bundle(RenderBundle::new(pipe, Some(config)))?
         .build()
         .expect("Fatal error");
 

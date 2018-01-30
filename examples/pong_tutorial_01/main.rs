@@ -3,7 +3,7 @@ extern crate amethyst;
 use amethyst::Result;
 use amethyst::prelude::*;
 use amethyst::renderer::{DisplayConfig, DrawFlat, Event, KeyboardInput, Pipeline, PosTex,
-                         RenderBundle, RenderSystem, Stage, VirtualKeyCode, WindowEvent};
+                         RenderBundle, Stage, VirtualKeyCode, WindowEvent};
 
 struct Pong;
 
@@ -40,11 +40,10 @@ fn run() -> Result<()> {
     );
 
     let mut game = Application::build("./", Pong)?
-        .with_bundle(RenderBundle::new())?
-        .with_local(RenderSystem::build(pipe, Some(config))?)
+        .with_bundle(RenderBundle::new(pipe, Some(config)))?
         .build()?;
-
-    Ok(game.run())
+    game.run();
+    Ok(())
 }
 
 fn main() {
