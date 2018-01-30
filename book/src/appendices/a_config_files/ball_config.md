@@ -4,8 +4,8 @@ For simplicity, we will wrap all of our Config objects into a single `PongConfig
 separately.
 
 The `BallConfig` will replace the `BALL_VELOCITY_X`, `BALL_VELOCITY_Y`, `BALL_RADIUS`, and `BALL_COLOR` 
-variables. However, the `BALL_COLOR` was originally an array, but Ron does not currently support those, so it
-will read in a tuple and convert this tuple to an array when needed.
+variables. However, the `BALL_COLOR` was originally an array, but [Serde][serde] and Ron handle arrays as 
+tuples, so it will read in a tuple and convert this tuple to an array when needed.
 ```rust,ignore
 #[derive(Debug, Deserialize, Serialize)]
 pub struct BallConfig {

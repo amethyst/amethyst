@@ -96,8 +96,8 @@ fn run(&mut self,
 ```
 Now, in the `run()` function, replace the reference to `ARENA_HEIGHT` with `arena_config.height`.
 
-Add `Fetch<'s, ArenaConfig>` to the `WinnerSystem` as well, replacing the reference to `ARENA_WIDTH` with 
-`arena_config.width`.
+Add `Fetch<'s, ArenaConfig>` to the `WinnerSystem` and `PaddleSystem` as well, replacing the reference to 
+`ARENA_WIDTH` with `arena_config.width`.
 
 ## Making `config.ron`
 

@@ -102,5 +102,9 @@ path = "examples/pong_tutorial_01/main.rs"
 name = "pong_tutorial_02"
 path = "examples/pong_tutorial_02/main.rs"
 
+[[example]]
+name = "appendix_a"
+path = "examples/appendix_a/main.rs"
+
 [workspace]
 members = ["amethyst_animation", "amethyst_gltf"]

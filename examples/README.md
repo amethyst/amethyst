@@ -51,3 +51,7 @@ Render a basic UI.
 * Background music and sound effects
 * A more interesting UI example
 * A bigger project with more than a single source file.
+
+### Appendix A
+
+From the book, it is a minor update to the Pong example that uses `Config` files instead of hardcoded constants.
