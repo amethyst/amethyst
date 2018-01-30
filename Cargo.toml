@@ -46,6 +46,8 @@ thread_profiler = { version = "0.1", optional = true }
 amethyst_gltf = { path = "amethyst_gltf", version = "0.1" }
 genmesh = "0.4"
 amethyst_animation = { path = "amethyst_animation", version = "0.1.0" }
+serde = "1.0"
+serde_derive = "1.0"
 
 [build-dependencies]
 vergen = "0.1"
