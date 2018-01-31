@@ -2,6 +2,7 @@
 
 We're finally going to add a configuration struct for our Paddles. Because our Pong clone supports two 
 players, we should let them configure each separately. Add the following to the `config.rs` file:
+
 ```rust,ignore
 #[derive(Debug, Deserialize, Serialize)]
 pub struct PaddleConfig {
@@ -26,6 +27,7 @@ impl Default for PaddleConfig {
 Just like the `BallConfig`, we need to read in the colour as a tuple instead of an array.
 
 Now, to allow us to have two separate `PaddleConfig`s, we will wrap them in a bigger structure as follows:
+
 ```rust,ignore
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct PaddlesConfig {
@@ -35,6 +37,7 @@ pub struct PaddlesConfig {
 ```
 
 Now we need to add the `PaddlesConfig` to our `PongConfig` as shown below
+
 ```rust,ignore
 pub struct PongConfig {
     pub arena: ArenaConfig,
@@ -42,7 +45,9 @@ pub struct PongConfig {
     pub paddles: PaddlesConfig,
 }
 ```
+
 and modify the `ECSBundle`'s `build()` function to add our `PaddleConfig`s. 
+
 ```rust,ignore
 fn build(
     self,
@@ -55,17 +60,20 @@ fn build(
     ...
 }
 ```
+
 We add the `PaddlesConfig` to the `World`, rather than as separate `left` and `right` configurations because
 `System`s can only access resources with ID 0. Any resource added using [`World::add_resource`][add_resource]
 is added using a default ID of 0. You must use [`World::add_resource_with_id`][add_with_id] to add multiple
-resources of the same type, but then the `System` cannot properly differentiate between them.
+resources of the same type, but then the `System`s cannot properly differentiate between them.
 
 ## Replacing Constants with Configs
+
 Replacing all instances of `PADDLE_*` will be similar to the `BallConfig`, as we only use those values for 
 creating the paddle entities. However, we will need to separate the `PaddlesConfig` into `left` and `right`.
 To avoid issues with the borrow checker, we read the `PaddlesConfig` once and copy all of the values, 
 unwrapping them in one big assignment statement.
 In `initialise_paddles()` in `pong.rs`, add this code below reading the `ArenaConfig`.
+
 ```rust,ignore
 let (
     left_height,
@@ -102,11 +110,15 @@ let (
     )
 };
 ```
+
 Now, within this function, replace
+
 ```rust,ignore
 let y = (arena_height - PADDLE_HEIGHT) / 2.0;
 ```
+
 with 
+
 ```rust,ignore
 let left_y = (arena_height - left_height) / 2.0;
 let right_y = (arena_height - right_height) / 2.0;
@@ -120,8 +132,10 @@ Now, use the left- and right-specific values in  the `world.create_entity()`
 calls.
 
 ## Modifying `config.ron`
+
 Now for the final modification of our `config.ron` file. For fun, let's make the right paddle yellow and
 keep the left paddle blue so the final `config.ron` file will be as follows:
+
 ```ignore
 (
     arena: (
@@ -129,8 +143,10 @@ keep the left paddle blue so the final `config.ron` file will be as follows:
         width: 100.0,
     ),
     ball: (
-        velocity_x: 75.0,
-        velocity_y: 50.0,
+        velocity: Vector2(
+            x: 75.0,
+            y: 50.0,
+        ),
         radius: 2.5,
         color: (1.0, 0.647, 0.0, 1.0),
     ),

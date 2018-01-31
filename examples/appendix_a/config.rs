@@ -1,3 +1,5 @@
+use amethyst::core::cgmath::Vector2;
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ArenaConfig {
     /// Height of the arena. Used to define Y axis coordinate scheme
@@ -17,10 +19,8 @@ impl Default for ArenaConfig {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct BallConfig {
-    /// X axis velocity of the ball
-    pub velocity_x: f32,
-    /// Y axis velocity of the ball
-    pub velocity_y: f32,
+    /// X axis and Y axis velocity of the ball
+    pub velocity: Vector2<f32>,
     /// Ball radius in pixels
     pub radius: f32,
     /// RGBA Color of the ball
@@ -30,8 +30,7 @@ pub struct BallConfig {
 impl Default for BallConfig {
     fn default() -> Self {
         BallConfig {
-            velocity_x: 75.0,
-            velocity_y: 50.0,
+            velocity: Vector2::new(75.0, 50.0),
             radius: 2.5,
             colour: (1.0, 0.0, 0.0, 1.0),
         }
