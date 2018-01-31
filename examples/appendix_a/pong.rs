@@ -181,7 +181,7 @@ fn initialise_balls(world: &mut World) {
             config.colour.2,
             config.colour.3,
         ];
-        (config.velocity_x, config.velocity_y, config.radius, c)
+        (config.velocity.x, config.velocity.y, config.radius, c)
     };
     // Create the mesh, material and translation.
     let mesh = create_mesh(world, generate_circle_vertices(radius, 16));

@@ -1,5 +1,5 @@
 # Pong Example
 
-Screenshot (taken October 20, 2017):
+Screenshot (taken January 31, 2018):
 
 ![example screenshot](screenshot.png)
