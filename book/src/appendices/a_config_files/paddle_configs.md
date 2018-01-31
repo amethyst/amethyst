@@ -51,40 +51,55 @@ fn build(
 ) -> Result<DispatcherBuilder<'a, 'b>> {
     world.add_resource(self.config.arena);
     world.add_resource(self.config.ball);
-    world.add_resource_with_id(self.config.paddles.left, 0);
-    world.add_resource_with_id(self.config.paddles.right, 1);
+    world.add_resource(self.config.paddles);
     ...
 }
 ```
-The one change from the previous examples is that we need to add resources with an ID. Previous configs only 
-had one resource per type, so it was okay to add them with the default ID of 0 (as 
-[`World::add_resource`][add_resource] does). Thus, we use [`World::add_resource_with_id`][add_with_id] 
-instead.
+We add the `PaddlesConfig` to the `World`, rather than as separate `left` and `right` configurations because
+`System`s can only access resources with ID 0. Any resource added using [`World::add_resource`][add_resource]
+is added using a default ID of 0. You must use [`World::add_resource_with_id`][add_with_id] to add multiple
+resources of the same type, but then the `System` cannot properly differentiate between them.
 
 ## Replacing Constants with Configs
 Replacing all instances of `PADDLE_*` will be similar to the `BallConfig`, as we only use those values for 
 creating the paddle entities. However, we will need to separate the `PaddlesConfig` into `left` and `right`.
+To avoid issues with the borrow checker, we read the `PaddlesConfig` once and copy all of the values, 
+unwrapping them in one big assignment statement.
 In `initialise_paddles()` in `pong.rs`, add this code below reading the `ArenaConfig`.
 ```rust,ignore
-let (left_height, left_width, left_velocity, left_color) = {
-    let config = &world.read_resource_with_id::<PaddleConfig>(0);
-    let c: [f32; 4] = [
-        config.color.0,
-        config.color.1,
-        config.color.2,
-        config.color.3,
+let (
+    left_height,
+    left_width,
+    left_velocity,
+    left_colour,
+    right_height,
+    right_width,
+    right_velocity,
+    right_colour,
+) = {
+    let config = &world.read_resource::<PaddlesConfig>();
+    let cl: [f32; 4] = [
+        config.left.colour.0,
+        config.left.colour.1,
+        config.left.colour.2,
+        config.left.colour.3,
     ];
-    (config.height, config.width, config.velocity, c)
-};
-let (right_height, right_width, right_velocity, right_color) = {
-    let config = &world.read_resource_with_id::<PaddleConfig>(1);
-    let c: [f32; 4] = [
-        config.color.0,
-        config.color.1,
-        config.color.2,
-        config.color.3,
+    let cr: [f32; 4] = [
+        config.right.colour.0,
+        config.right.colour.1,
+        config.right.colour.2,
+        config.right.colour.3,
     ];
-    (config.height, config.width, config.velocity, c)
+    (
+        config.left.height,
+        config.left.width,
+        config.left.velocity,
+        cl,
+        config.right.height,
+        config.right.width,
+        config.right.velocity,
+        cr,
+    )
 };
 ```
 Now, within this function, replace
@@ -98,7 +113,7 @@ let right_y = (arena_height - right_height) / 2.0;
 ```
 
 You will also need to repeat the calls to `create_mesh` and 
-`create_colour_material()` such that you have a left and right mesh and left
+`create_colour_material()` so that you have a left and right mesh and left
 and right colour.
 
 Now, use the left- and right-specific values in  the `world.create_entity()` 

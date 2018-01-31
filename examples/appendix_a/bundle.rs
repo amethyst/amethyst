@@ -1,16 +1,15 @@
-use std::path::Path;
 use {Ball, Paddle, ScoreBoard};
 use amethyst::config::Config;
 use amethyst::core::bundle::{ECSBundle, Result};
 use amethyst::core::timing::Time;
 use amethyst::ecs::{DispatcherBuilder, World};
 use config::PongConfig;
+use std::path::Path;
 use systems::{BounceSystem, MoveBallsSystem, PaddleSystem, WinnerSystem};
 
 /// A bundle is a convenient way to initialise related resources, components and systems in a
 /// world. This bundle prepares the world for a game of pong.
-pub struct PongBundle
-{
+pub struct PongBundle {
     config: PongConfig,
 }
 
@@ -30,8 +29,7 @@ impl<'a, 'b> ECSBundle<'a, 'b> for PongBundle {
     ) -> Result<DispatcherBuilder<'a, 'b>> {
         world.add_resource(self.config.arena);
         world.add_resource(self.config.ball);
-        world.add_resource_with_id(self.config.paddles.left, 0);
-        world.add_resource_with_id(self.config.paddles.right, 1);
+        world.add_resource(self.config.paddles);
         world.add_resource(ScoreBoard::new());
         world.add_resource(Time::default());
         world.register::<Ball>();
