@@ -6,4 +6,5 @@
 * [Pong Tutorial](pong_tutorial.md)
     * [Opening (and closing!) a window](./pong_tutorial/pong_tutorial_01.md)
     * [Drawing the paddles](./pong_tutorial/pong_tutorial_02.md)
+    * [Moving the paddles](./pong_tutorial/pong_tutorial_03.md)
 * [Glossary](./glossary.md)
