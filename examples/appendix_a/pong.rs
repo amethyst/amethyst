@@ -7,7 +7,7 @@ use amethyst::prelude::*;
 use amethyst::renderer::{Camera, Event, KeyboardInput, Material, MeshHandle, PosTex, Projection,
                          ScreenDimensions, VirtualKeyCode, WindowEvent, WindowMessages};
 use amethyst::ui::{TtfFormat, UiResize, UiText, UiTransform};
-use config::{ArenaConfig, BallConfig, PaddleConfig};
+use config::{ArenaConfig, BallConfig, PaddlesConfig};
 use systems::ScoreText;
 
 pub struct Pong;
@@ -81,30 +81,44 @@ fn hide_cursor(world: &mut World) {
 fn initialise_paddles(world: &mut World) {
     let mut left_transform = LocalTransform::default();
     let mut right_transform = LocalTransform::default();
-    
+
     let (arena_height, arena_width) = {
         let config = &world.read_resource::<ArenaConfig>();
         (config.height, config.width)
     };
-    let (left_height, left_width, left_velocity, left_colour) = {
-        let config = &world.read_resource_with_id::<PaddleConfig>(0);
-        let c: [f32; 4] = [
-            config.colour.0,
-            config.colour.1,
-            config.colour.2,
-            config.colour.3,
+    let (
+        left_height,
+        left_width,
+        left_velocity,
+        left_colour,
+        right_height,
+        right_width,
+        right_velocity,
+        right_colour,
+    ) = {
+        let config = &world.read_resource::<PaddlesConfig>();
+        let cl: [f32; 4] = [
+            config.left.colour.0,
+            config.left.colour.1,
+            config.left.colour.2,
+            config.left.colour.3,
         ];
-        (config.height, config.width, config.velocity, c)
-    };
-    let (right_height, right_width, right_velocity, right_colour) = {
-        let config = &world.read_resource_with_id::<PaddleConfig>(1);
-        let c: [f32; 4] = [
-            config.colour.0,
-            config.colour.1,
-            config.colour.2,
-            config.colour.3,
+        let cr: [f32; 4] = [
+            config.right.colour.0,
+            config.right.colour.1,
+            config.right.colour.2,
+            config.right.colour.3,
         ];
-        (config.height, config.width, config.velocity, c)
+        (
+            config.left.height,
+            config.left.width,
+            config.left.velocity,
+            cl,
+            config.right.height,
+            config.right.width,
+            config.right.velocity,
+            cr,
+        )
     };
 
     let left_y = (arena_height - left_height) / 2.0;

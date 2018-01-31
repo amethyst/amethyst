@@ -70,7 +70,7 @@ with `velocity_y`, `BALL_RADIUS` with `radius`, and `BALL_COLOR` with `color`.
 Now we will modify our bundle. We don't want everyone to always access all the config files, so we need to 
 add each resource separately so systems can use only what they want.
 
-First, we need to change what the `bundle.rs` is using. Change
+First, we need to change what `bundle.rs` is using. Change
 ```rust, ignore
 use config::ArenaConfig;
 ```
@@ -119,7 +119,7 @@ very easy with Ron; we just add an additional level of nesting.
     ),
 )
 ```
-This configuration sets the ball to be orange, while retaining the same size and velocity as the full 
+This configuration sets the ball to be orange, while retaining the same size and velocity as the original 
 example.
 
 [Click here to continue to the last chapter, configuring paddles][2]
