@@ -3,19 +3,36 @@
 // We have to use types from this to provide an output iterator type.
 use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::io::Cursor;
+use std::sync::atomic::{AtomicIsize, Ordering, ATOMIC_ISIZE_INIT};
 
 use cpal::{default_endpoint, endpoints};
 use cpal::EndpointsIterator;
 use rodio::{Decoder, Endpoint, Sink, Source as RSource};
 
 use DecoderError;
+use end_signal::EndSignalSource;
 use source::Source;
+
+// These are isize values because due to thread interactions it is possible, however unlikely, that
+// SOUNDS_PLAYING may be temporarily < 0.  If this happens, it should be resolved very quickly by
+// the threads completing their instructions.
+pub(crate) const MAX_SOUNDS_PLAYING: isize = 300;
+pub(crate) static SOUNDS_PLAYING: AtomicIsize = ATOMIC_ISIZE_INIT;
 
 /// A speaker(s) through which audio can be played.
 ///
-/// By convention, the default output is stored as a resouce in the `World`.
+/// By convention, the default output is stored as a resource in the `World`.
+#[derive(Clone)]
 pub struct Output {
     pub(crate) endpoint: Endpoint,
+}
+
+impl Eq for Output {}
+
+impl PartialEq for Output {
+    fn eq(&self, other: &Self) -> bool {
+        self.endpoint == other.endpoint
+    }
 }
 
 impl Output {
@@ -28,31 +45,14 @@ impl Output {
     ///
     /// This will return an Error if the loaded audio file in source could not be decoded.
     pub fn try_play_once(&self, source: &Source, volume: f32) -> Result<(), DecoderError> {
-        let sink = Sink::new(&self.endpoint);
-        match Decoder::new(Cursor::new(source.clone())) {
-            Ok(source) => {
-                sink.append(source.amplify(volume));
-                sink.detach();
-                Ok(())
-            }
-
-            // There is one and only one error that can be returned, which is unrecognized format
-            // See documentation for DecoderError here:
-            // https://docs.rs/rodio/0.5.1/rodio/decoder/enum.DecoderError.html
-            Err(err) => {
-                error!("Error while playing sound: {:?}", err);
-                Err(DecoderError)
-            }
-        }
+        self.try_play_n_times(source, volume, 1)
     }
 
     /// Play a sound once. A volume of 1.0 is unchanged, while 0.0 is silent.
     ///
     /// This may silently fail, in order to get error information use `try_play_once`.
     pub fn play_once(&self, source: &Source, volume: f32) {
-        if let Err(err) = self.try_play_once(source, volume) {
-            error!("An error occurred while trying to play a sound: {:?}", err);
-        }
+        self.play_n_times(source, volume, 1);
     }
 
     /// Play a sound n times. A volume of 1.0 is unchanged, while 0.0 is silent.
@@ -75,11 +75,17 @@ impl Output {
     ) -> Result<(), DecoderError> {
         let sink = Sink::new(&self.endpoint);
         for _ in 0..n {
-            sink.append(
-                Decoder::new(Cursor::new(source.clone()))
-                    .map_err(|_| DecoderError)?
-                    .amplify(volume),
-            );
+            if SOUNDS_PLAYING.load(Ordering::Relaxed) < MAX_SOUNDS_PLAYING {
+                sink.append(EndSignalSource::new(
+                    Decoder::new(Cursor::new(source.clone()))
+                        .map_err(|_| DecoderError)?
+                        .amplify(volume),
+                    || {
+                        SOUNDS_PLAYING.fetch_sub(1, Ordering::Relaxed);
+                    },
+                ));
+                SOUNDS_PLAYING.fetch_add(1, Ordering::Relaxed);
+            }
         }
         sink.detach();
         Ok(())
