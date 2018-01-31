@@ -7,3 +7,7 @@
     * [Opening (and closing!) a window](./pong_tutorial/pong_tutorial_01.md)
     * [Drawing the paddles](./pong_tutorial/pong_tutorial_02.md)
 * [Glossary](./glossary.md)
+* [Appendix A: Config Files](./appendices/a_config_files.md)
+    * [Adding an Arena Config](./appendices/a_config_files/arena_config.md)
+    * [Adding a Ball Config](./appendices/a_config_files/ball_config.md)
+    * [Adding Paddle Configs](./appendices/a_config_files/paddle_configs.md)

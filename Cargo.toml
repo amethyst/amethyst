@@ -46,6 +46,8 @@ thread_profiler = { version = "0.1", optional = true }
 amethyst_gltf = { path = "amethyst_gltf", version = "0.1" }
 genmesh = "0.4"
 amethyst_animation = { path = "amethyst_animation", version = "0.1.0" }
+serde = "1.0"
+serde_derive = "1.0"
 
 [build-dependencies]
 vergen = "0.1"
@@ -101,6 +103,10 @@ path = "examples/pong_tutorial_01/main.rs"
 [[example]]
 name = "pong_tutorial_02"
 path = "examples/pong_tutorial_02/main.rs"
+
+[[example]]
+name = "appendix_a"
+path = "examples/appendix_a/main.rs"
 
 [workspace]
 members = ["amethyst_animation", "amethyst_gltf"]
