@@ -5,11 +5,13 @@ into the implementation. This means that if you want to change any of these, you
 project. Wouldn't it be nice to not have to recompile the project each time you wanted to change one or all 
 of these things?
 
-Luckily, Amethyst uses [Ron][ron] configuration files and has infrastructure in the form of the 
+Luckily, Amethyst uses [RON][ron] configuration files and has infrastructure in the form of the 
 [Config][config] trait to help us implement our own config files.
 
 ## Structure of the Config File
+
 The existing example uses the following constants:
+
 ```rust,ignore
 const ARENA_HEIGHT: f32 = 100.0;
 const ARENA_WIDTH: f32 = 100.0;
@@ -23,9 +25,11 @@ const BALL_VELOCITY_Y: f32 = 50.0;
 const BALL_RADIUS: f32 = 2.5;
 const BALL_COLOUR: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
 ```
+
 to specify the look of the game. We want to replace this with something more flexible in the form of a config 
 file. To start, let's create a new file, `config.rs`, to hold our configuration structures. Add the following 
 `use` statements to the top of this file:
+
 ```rust,ignore
 use std::path::Path;
 
@@ -36,6 +40,7 @@ For this project, we'll be placing a `config.ron` file in the same location as t
 `input.ron` files (likely the `resources/` folder).
 
 ## Chapters
+
 * [Adding an ArenaConfig][0]
 * [Adding a Ball Config][1]
 * [Adding Paddle Configs][2]
@@ -46,3 +51,4 @@ For this project, we'll be placing a `config.ron` file in the same location as t
 [0]: ./appendices/a_config_files/arena_config.html
 [1]: ./appendices/a_config_files/ball_config.html
 [2]: ./appendices/a_config_files/paddle_configs.html
+
