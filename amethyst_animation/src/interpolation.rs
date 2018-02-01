@@ -1,9 +1,10 @@
-use std::fmt::Debug;
-
 use minterpolate::*;
 
 /// Interpolate over data set of the given type.
-pub trait Interpolate<T> {
+pub trait Interpolate<T>
+where
+    T: InterpolationPrimitive + Copy,
+{
     /// Interpolation function, `f(input) -> T`
     ///
     /// ## Parameters
@@ -15,11 +16,6 @@ pub trait Interpolate<T> {
     ///              that it is the same size as the inputs.
     /// - `normalize`: if true, normalize the interpolated value before returning it
     fn interpolate(&self, input: f32, inputs: &[f32], outputs: &[T], normalize: bool) -> T;
-}
-
-/// Trait used if an outside user wants to supply their own interpolation function
-pub trait InterpolationFunction
-    : Interpolate<[f32; 3]> + Interpolate<[f32; 4]> + Send + Sync + Debug {
 }
 
 /// Supported interpolation functions
@@ -35,22 +31,18 @@ pub enum InterpolationType {
     CatmullRomSpline,
     /// Cubic Hermite spline interpolation
     CubicSpline,
-    // User supplied interpolation function
-    //#[serde(skip_serializing, skip_deserializing)]
-    //TODO: Function(Box<InterpolationFunction>),
 }
 
-impl Interpolate<[f32; 3]> for InterpolationType {
-    fn interpolate(
-        &self,
-        input: f32,
-        inputs: &[f32],
-        outputs: &[[f32; 3]],
-        normalize: bool,
-    ) -> [f32; 3] {
+impl<T> Interpolate<T> for InterpolationType
+where
+    T: InterpolationPrimitive + Copy,
+{
+    fn interpolate(&self, input: f32, inputs: &[f32], outputs: &[T], normalize: bool) -> T {
         match *self {
             InterpolationType::Linear => linear_interpolate(input, inputs, outputs, normalize),
-            InterpolationType::SphericalLinear => spherical_linear_interpolate(input, inputs, outputs, normalize),
+            InterpolationType::SphericalLinear => {
+                spherical_linear_interpolate(input, inputs, outputs, normalize)
+            }
             InterpolationType::Step => step_interpolate(input, inputs, outputs, normalize),
             InterpolationType::CubicSpline => {
                 cubic_spline_interpolate(input, inputs, outputs, normalize)
@@ -58,30 +50,6 @@ impl Interpolate<[f32; 3]> for InterpolationType {
             InterpolationType::CatmullRomSpline => {
                 catmull_rom_spline_interpolate(input, inputs, outputs, normalize)
             }
-            //InterpolationType::Function(ref f) => f.interpolate(input, inputs, outputs, normalize),
-        }
-    }
-}
-
-impl Interpolate<[f32; 4]> for InterpolationType {
-    fn interpolate(
-        &self,
-        input: f32,
-        inputs: &[f32],
-        outputs: &[[f32; 4]],
-        normalize: bool,
-    ) -> [f32; 4] {
-        match *self {
-            InterpolationType::Linear => linear_interpolate(input, inputs, outputs, normalize),
-            InterpolationType::SphericalLinear => spherical_linear_interpolate(input, inputs, outputs, normalize),
-            InterpolationType::Step => step_interpolate(input, inputs, outputs, normalize),
-            InterpolationType::CubicSpline => {
-                cubic_spline_interpolate(input, inputs, outputs, normalize)
-            }
-            InterpolationType::CatmullRomSpline => {
-                catmull_rom_spline_interpolate(input, inputs, outputs, normalize)
-            }
-            //InterpolationType::Function(ref f) => f.interpolate(input, inputs, outputs, normalize),
         }
     }
 }

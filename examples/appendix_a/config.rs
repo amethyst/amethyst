@@ -37,7 +37,6 @@ impl Default for BallConfig {
     }
 }
 
-
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct PaddlesConfig {
     pub left: PaddleConfig,
