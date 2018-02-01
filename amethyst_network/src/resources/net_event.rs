@@ -4,6 +4,8 @@
 
 use shrev::Event;
 use resources::*;
+use serde::Serialize;
+use serde::de::DeserializeOwned;
 
 ///The basic network events shipped with amethyst
 ///You can add more event by making a new enum and having this one has a variant of yours.
@@ -30,7 +32,7 @@ use resources::*;
 //TODO: Add CreateEntity,RemoveEntity,UpdateEntity
 //TODO: Example of switching the NetEvent set in the Network Systems
 #[derive(Debug,Clone,PartialEq,Serialize,Deserialize)]
-pub enum NetEvent{
+pub enum NetEvent<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+'static{
     /// Ask to connect to the server
     Connect,
     /// Reply to the client that the connection has been accepted
@@ -50,9 +52,20 @@ pub enum NetEvent{
         /// The reason of the disconnection
         reason:String
     },
+    Custom(T),
 }
 
-impl BaseNetEvent<NetEvent> for NetEvent{
+impl<T> NetEvent<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+'static{
+    fn custom(&self) -> Option<&T> {
+        if let NetEvent::Custom(T) = self {
+            Some(&T)
+        } else {
+            None
+        }
+    }
+}
+
+/*impl BaseNetEvent<NetEvent> for NetEvent{
     fn base_to_custom(ev:NetEvent) -> NetEvent {
         ev
     }
@@ -67,7 +80,7 @@ pub trait BaseNetEvent<T>{
     fn base_to_custom(ev:NetEvent)->T;
     /// Converts a user event to a base event (if applicable)
     fn custom_to_base(ev:T)->Option<NetEvent>;
-}
+}*/
 
 ///Carries the source of the event. Useful for debugging, security checks, gameplay logic, etc...
 #[derive(Debug,Clone,Serialize,Deserialize)]

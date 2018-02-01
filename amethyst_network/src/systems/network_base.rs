@@ -12,26 +12,27 @@ use serde::Serialize;
 use serde::de::DeserializeOwned;
 use bincode::internal::ErrorKind;
 
-/// The NetworkBase trait is used to share the code between the client and the server network systems.
+/*/// The NetworkBase trait is used to share the code between the client and the server network systems.
 /// The T generic parameter corresponds to the network event enum type.
-pub trait NetworkBase<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+BaseNetEvent<T>+'static{
+pub trait NetworkBase<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+'static{
+}*/
 
-    /// Sends an event to the target NetConnection using the provided network Socket.
-    /// The socket has to be binded!
-    fn send_event(&self,event:&T,target:&NetConnection,socket:&UdpSocket){
-        let ser = serialize(event, Infinite);
-        match ser{
-            Ok(s)=>{
-                if let Err(e) = socket.send_to(s.as_slice(), target.target){
-                    println!("Failed to send data to network socket: {}",e);
-                }
-            },
-            Err(e)=>println!("Failed to serialize the event: {}",e),
-        }
+/// Sends an event to the target NetConnection using the provided network Socket.
+/// The socket has to be binded!
+pub fn send_event<T>(event:&NetEvent<T>,target:&NetConnection,socket:&UdpSocket) where T:Send+Sync+Serialize+Clone+DeserializeOwned+'static{
+    let ser = serialize(event, Infinite);
+    match ser{
+        Ok(s)=>{
+            let slice = s.as_slice();
+            if let Err(e) = socket.send_to(slice, target.target){
+                error!("Failed to send data to network socket: {}",e);
+            }
+        },
+        Err(e)=>error!("Failed to serialize the event: {}",e),
     }
+}
 
-    /// Attempts to deserialize an event from the raw byte data.
-    fn deserialize_event(&self,data:&[u8])->Result<T,Box<ErrorKind>>{
-        deserialize::<T>(data)
-    }
+/// Attempts to deserialize an event from the raw byte data.
+pub fn deserialize_event<T>(data:&[u8])->Result<T,Box<ErrorKind>> where T:Send+Sync+Serialize+Clone+DeserializeOwned+'static{
+    deserialize::<NetEvent<T>>(data)
 }

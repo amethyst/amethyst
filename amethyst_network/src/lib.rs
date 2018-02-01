@@ -8,6 +8,9 @@ extern crate amethyst_core;
 extern crate serde;
 extern crate bincode;
 extern crate shrev;
+#[macro_use]
+extern crate log;
+extern crate specs;
 
 pub mod components;
 pub mod filters;

@@ -1,6 +1,6 @@
 //! The network client System
 
-use amethyst_core::specs::{System,FetchMut};
+use specs::{System,FetchMut};
 use std::net::UdpSocket;
 use std::net::IpAddr;
 use std::net::SocketAddr;
@@ -12,7 +12,7 @@ use std::clone::Clone;
 use shrev::*;
 
 use resources::*;
-use systems::NetworkBase;
+use systems::*;
 use std::marker::PhantomData;
 
 use serde::Serialize;
@@ -30,7 +30,7 @@ pub struct NetClientSystem<T>{
 
 //TODO: add Unchecked Event type list. Those events will be let pass the client connected filter (Example: NetEvent::Connect).
 //TODO: add different Filters that can be added on demand, to filter the event before they reach other systems.
-impl<T> NetClientSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+BaseNetEvent<T>+'static{
+impl<T> NetClientSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+'static{
     /// Creates a NetClientSystem and binds the Socket on the ip and port added in parameters.
     pub fn new(ip:&str,port:u16)->Result<NetClientSystem<T>,Error>{
         let socket = UdpSocket::bind(SocketAddr::new(IpAddr::from_str(ip).expect("Unreadable input IP"),port))?;
@@ -50,18 +50,17 @@ impl<T> NetClientSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+Ba
             target,
             state:ConnectionState::Connecting,
         };
-        self.send_event(&T::base_to_custom(NetEvent::Connect),&conn,&self.socket);
+        send_event(NetEvent::<T>::Connect,&conn,&self.socket);
         self.connection = Some(
             conn,
         );
     }
 }
 
-impl<T> NetworkBase<T> for NetClientSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+BaseNetEvent<T>+'static{}
+//impl<T> NetworkBase<T> for NetClientSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+BaseNetEvent<T>+'static{}
 
-impl<'a, T> System<'a> for NetClientSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+BaseNetEvent<T>+'static{
-    type SystemData = FetchMut<'a, EventChannel<NetOwnedEvent<T>>>;
-    //omg unreadable plz enjoy code owo
+impl<'a, T> System<'a> for NetClientSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+'static{
+    type SystemData = FetchMut<'a, EventChannel<NetOwnedEvent<NetEvent<T>>>>;
     fn run(&mut self, mut events: Self::SystemData) {
         let mut buf = [0; 2048];
         loop {
@@ -69,47 +68,51 @@ impl<'a, T> System<'a> for NetClientSystem<T> where T:Send+Sync+Serialize+Clone+
                 //Data received
                 Ok((amt, src)) => {
                     //Are we connected to anything?
-                    if self.connection.is_some(){
+                    let mut connection_dropped = false;
+                    if let Some(mut conn) = self.connection.as_mut(){
                         //Was it sent by connected server, and are we still connected to it?
-                        if src == self.connection.as_ref().unwrap().target && (self.connection.as_ref().unwrap().state == ConnectionState::Connected || self.connection.as_ref().unwrap().state == ConnectionState::Connecting){
-                            let net_event = self.deserialize_event(&buf[..amt]);
+                        if src == conn.target && (conn.state == ConnectionState::Connected || conn.state == ConnectionState::Connecting){
+                            let net_event = deserialize_event::<T>(&buf[..amt]);
                             match net_event{
                                 Ok(ev)=>{
                                     let owned_event = NetOwnedEvent{
                                         event:ev.clone(),
-                                        owner:self.connection.as_ref().unwrap().clone(),
+                                        owner:conn.clone(),
                                     };
                                     events.single_write(owned_event);
-                                    match T::custom_to_base(ev){
-                                        Some(NetEvent::Connected)=>{
-                                            self.connection.as_mut().unwrap().state = ConnectionState::Connected;
-                                            println!("Remote ({:?}) accepted connection request.",src);
+                                    match ev{
+                                        NetEvent::Connected=>{
+                                            conn.state = ConnectionState::Connected;
+                                            info!("Remote ({:?}) accepted connection request.",src);
                                         },
                                         //Could be handled differently by the user, say by reconnecting to a fallback server.
-                                        Some(NetEvent::ConnectionRefused {reason})=>{
-                                            self.connection = None;
-                                            println!("Connection refused by server: {}",reason);
+                                        NetEvent::ConnectionRefused {reason}=>{
+                                            connection_dropped = true;
+                                            info!("Connection refused by server: {}",reason);
                                         },
-                                        Some(NetEvent::Disconnected {reason})=>{
-                                            self.connection = None;
-                                            println!("Disconnected from server: {}",reason);
+                                        NetEvent::Disconnected {reason}=>{
+                                            connection_dropped = true;
+                                            info!("Disconnected from server: {}",reason);
                                         }
                                         _=>{},//Other systems will handle the rest of the stuff
                                     }
                                 },
-                                Err(e)=>println!("Failed to read network event: {}",e),
+                                Err(e)=>error!("Failed to read network event: {}",e),
                             }
                         }
                     }
                     else{
-                        println!("Received network packet from unknown source, ignored.");
+                        warn!("Received network packet from unknown source, ignored.");
+                    }
+                    if connection_dropped{
+                        self.connection = None;
                     }
                 },
                 Err(e) => { //No data
                     if e.kind() == ErrorKind::WouldBlock{
                         break;//Safely ignores when no packets are waiting in the queue, and stop checking for this time.,
                     }
-                    println!("couldn't receive a datagram: {}", e);
+                    error!("couldn't receive a datagram: {}", e);
                 },
             }
         }

@@ -1,6 +1,6 @@
 //! The network server system
 
-use amethyst_core::specs::{System, FetchMut};
+use specs::{System, FetchMut};
 use std::net::UdpSocket;
 use std::net::IpAddr;
 use std::str;
@@ -12,11 +12,10 @@ use std::str::FromStr;
 use std::clone::Clone;
 
 use resources::*;
-use systems::NetworkBase;
+use systems::*;
 
 use serde::Serialize;
 use serde::de::DeserializeOwned;
-
 
 /*
 TODO: State sync + Network Ownership (NetOwned)
@@ -51,10 +50,10 @@ impl<T> NetServerSystem<T> where T:Send+Sync+Serialize{
     }
 }
 
-impl<T> NetworkBase<T> for NetServerSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+BaseNetEvent<T>+'static{}
+//impl<T> NetworkBase<T> for NetServerSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+BaseNetEvent<T>+'static{}
 
-impl<'a, T> System<'a> for NetServerSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+BaseNetEvent<T>+'static{
-    type SystemData = FetchMut<'a, EventChannel<NetOwnedEvent<T>>>;
+impl<'a, T> System<'a> for NetServerSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+'static{
+    type SystemData = FetchMut<'a, EventChannel<NetOwnedEvent<NetEvent<T>>>>;
     //NOTE: Running it this way might cause a buffer overflow during heavy load on low-tickrate servers.
     //TODO: Once the net_debug tools will be made, test this for possible buffer overflow at OS level by monitoring packet loss in localhost.
     fn run(&mut self, mut events: Self::SystemData) {
@@ -62,7 +61,7 @@ impl<'a, T> System<'a> for NetServerSystem<T> where T:Send+Sync+Serialize+Clone+
         loop {
             match self.socket.recv_from(&mut buf) {
                 Ok((amt, src)) => {
-                    let net_event = self.deserialize_event(&buf[..amt]);
+                    let net_event = deserialize_event::<T>(&buf[..amt]);
                     match net_event{
                         Ok(ev)=>{
                             let conn_index = self.clients.iter().position(|c| src == c.target);
@@ -75,27 +74,27 @@ impl<'a, T> System<'a> for NetServerSystem<T> where T:Send+Sync+Serialize+Clone+
                                             owner:c.clone(),
                                         };
                                         events.single_write(owned_event);
-                                        match T::custom_to_base(ev){
-                                            Some(NetEvent::Disconnect {reason})=>{
+                                        match ev{
+                                            NetEvent::Disconnect {reason}=>{
                                                 self.clients.remove(ind);
-                                                println!("Disconnected from server: {}",reason);
+                                                info!("Disconnected from server: {}",reason);
                                             }
                                             _=>{},//Other systems will handle the rest of the stuff
                                         }
                                     }else{
-                                        println!("Received message from client in invalid state connection state (not Connected and not Connecting)");
+                                        warn!("Received message from client in invalid state connection state (not Connected and not Connecting)");
                                     }
                                 },
                                 None=>{
                                     //Connection protocol
-                                    match T::custom_to_base(ev.clone()){
-                                        Some(NetEvent::Connect)=>{
-                                            println!("Remote ({:?}) initialized connection sequence.",src);
+                                    match ev.clone(){
+                                        NetEvent::Connect=>{
+                                            info!("Remote ({:?}) initialized connection sequence.",src);
                                             let conn = NetConnection{
                                                 target:src,
                                                 state:ConnectionState::Connecting,
                                             };
-                                            self.send_event(&T::base_to_custom(NetEvent::Connected),&conn,&self.socket);
+                                            send_event(NetEvent::<T>::Connected,&conn,&self.socket);
 
                                             //Push events to continue the user-space connection protocol
                                             let owned_event = NetOwnedEvent{
@@ -107,20 +106,20 @@ impl<'a, T> System<'a> for NetServerSystem<T> where T:Send+Sync+Serialize+Clone+
                                             self.clients.push(conn);
                                         },
                                         _=>{
-                                            println!("Received event from unknown source: {:?}",src);
+                                            warn!("Received event from unknown source: {:?}",src);
                                         },
                                     }
                                 },
                             }
                         },
-                        Err(e)=>println!("Failed to get string from bytes: {}",e),
+                        Err(e)=>error!("Failed to get string from bytes: {}",e),
                     }
                 },
                 Err(e) => {
                     if e.kind() == ErrorKind::WouldBlock{
                         break;//Safely ignores when no packets are waiting in the queue, and stop checking for this time.
                     }
-                    println!("Couldn't receive a datagram: {}", e);
+                    error!("Couldn't receive a datagram: {}", e);
                 },
             }
         }

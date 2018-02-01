@@ -12,8 +12,7 @@ use amethyst::prelude::*;
 use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline, PosTex, RenderBundle, RenderSystem,
                          Stage};
 use amethyst::ui::{DrawUi, UiBundle};
-use amethyst::network::network_server::*;
-use amethyst::network::resources::net_event::*;
+use amethyst::network::*;
 use amethyst::shrev::EventChannel;
 
 fn main() {
