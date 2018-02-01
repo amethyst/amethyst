@@ -41,13 +41,14 @@ amethyst_config = { path = "amethyst_config", version = "0.5.0" }
 amethyst_core = { path = "amethyst_core", version = "0.1.0" }
 amethyst_controls = { path = "amethyst_controls", version = "0.1.0" }
 amethyst_renderer = { path = "amethyst_renderer", version = "0.6" }
+amethyst_network = { path = "amethyst_network", version = "0.1.0" }
 amethyst_input = { path = "amethyst_input", version = "0.2" }
 amethyst_ui = { path = "amethyst_ui", version = "0.2" }
 amethyst_utils = { path = "amethyst_utils", version = "0.2" }
 derivative = "1.0"
+rayon = "0.8"
 fern = "0.5"
 log = "0.4"
-rayon = "0.8"
 rustc_version_runtime = "0.1"
 shred = "0.5"
 shrev = "0.8"
@@ -117,6 +118,22 @@ path = "examples/pong_tutorial_01/main.rs"
 [[example]]
 name = "pong_tutorial_02"
 path = "examples/pong_tutorial_02/main.rs"
+
+[[example]]
+name = "net_client"
+path = "examples/net_client/main.rs"
+
+[[example]]
+name = "net_server"
+path = "examples/net_server/main.rs"
+
+[[example]]
+name = "net_echo_server"
+path = "examples/net_echo_server/main.rs"
+
+[[example]]
+name = "pong_tutorial_03"
+path = "examples/pong_tutorial_03/main.rs"
 
 [[example]]
 name = "appendix_a"
