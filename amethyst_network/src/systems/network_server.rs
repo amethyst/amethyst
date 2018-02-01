@@ -1,6 +1,6 @@
 //! The network server system
 
-use specs::{System, FetchMut};
+use amethyst_core::specs::{System, FetchMut};
 use std::net::UdpSocket;
 use std::net::IpAddr;
 use std::str;
@@ -28,12 +28,12 @@ Server->Client Event: CreateEntity with Transform(1,1,0,0)+LocalTransform([5,5,5
 
 /// The System managing the server's network state and connections.
 /// The T generic parameter corresponds to the network event enum type.
-pub struct NetServerSystem<T> where T:Send+Sync{
+pub struct NetServerSystem<T>{
     /// The network socket
-    pub socket:UdpSocket,
+    pub socket: UdpSocket,
     /// The list of clients that are connected to us.
-    pub clients:Vec<NetConnection>,
-    net_event_types:PhantomData<T>,
+    pub clients: Vec<NetConnection>,
+    net_event_types: PhantomData<T>,
 }
 
 impl<T> NetServerSystem<T> where T:Send+Sync+Serialize{
@@ -54,12 +54,10 @@ impl<T> NetServerSystem<T> where T:Send+Sync+Serialize{
 impl<T> NetworkBase<T> for NetServerSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+BaseNetEvent<T>+'static{}
 
 impl<'a, T> System<'a> for NetServerSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+BaseNetEvent<T>+'static{
-    type SystemData = (
-        FetchMut<'a, EventChannel<NetOwnedEvent<T>>>,
-    );
+    type SystemData = FetchMut<'a, EventChannel<NetOwnedEvent<T>>>;
     //NOTE: Running it this way might cause a buffer overflow during heavy load on low-tickrate servers.
     //TODO: Once the net_debug tools will be made, test this for possible buffer overflow at OS level by monitoring packet loss in localhost.
-    fn run(&mut self, (mut events,): Self::SystemData) {
+    fn run(&mut self, mut events: Self::SystemData) {
         let mut buf = [0; 2048];
         loop {
             match self.socket.recv_from(&mut buf) {

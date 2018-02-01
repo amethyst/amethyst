@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_network"
-version = "0.0.1"
+version = "0.1.0"
 authors = ["Joël Lupien (Jojolepro) <jojolepromain@gmail.com>"]
 description = "Amethyst network crate"
 keywords = ["network", "specs", "ecs", "amethyst", "serialization"]
@@ -14,8 +14,6 @@ license = "MIT/Apache-2.0"
 [dependencies]
 amethyst_assets = { path = "../amethyst_assets", version = "0.2" }
 amethyst_core = { path = "../amethyst_core", version = "0.1" }
-cgmath = { version = "0.14", features = ["eders"] }
 serde = { version = "1", features = ["serde_derive"] }
 shrev = "0.8"
-specs = "0.10"
 bincode = "0.9.2"

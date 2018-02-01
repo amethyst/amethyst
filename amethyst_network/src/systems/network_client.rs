@@ -1,6 +1,6 @@
 //! The network client System
 
-use specs::{System,FetchMut};
+use amethyst_core::specs::{System,FetchMut};
 use std::net::UdpSocket;
 use std::net::IpAddr;
 use std::net::SocketAddr;
@@ -20,12 +20,12 @@ use serde::de::DeserializeOwned;
 
 /// The System managing the client's network state and connections.
 /// The T generic parameter corresponds to the network event enum type.
-pub struct NetClientSystem<T> where T:Send+Sync{
+pub struct NetClientSystem<T>{
     /// The network socket
-    pub socket:UdpSocket,
+    pub socket: UdpSocket,
     /// The server that we are (possibly) connected or connecting to.
-    pub connection:Option<NetConnection>,//Will handle a single connection for now, as it is simple to manage and corresponds to most use cases.
-    net_event_types:PhantomData<T>,
+    pub connection: Option<NetConnection>,//Will handle a single connection for now, as it is simple to manage and corresponds to most use cases.
+    net_event_types: PhantomData<T>,
 }
 
 //TODO: add Unchecked Event type list. Those events will be let pass the client connected filter (Example: NetEvent::Connect).
@@ -60,11 +60,9 @@ impl<T> NetClientSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+Ba
 impl<T> NetworkBase<T> for NetClientSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+BaseNetEvent<T>+'static{}
 
 impl<'a, T> System<'a> for NetClientSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+BaseNetEvent<T>+'static{
-    type SystemData = (
-        FetchMut<'a, EventChannel<NetOwnedEvent<T>>>,
-    );
+    type SystemData = FetchMut<'a, EventChannel<NetOwnedEvent<T>>>;
     //omg unreadable plz enjoy code owo
-    fn run(&mut self, (mut events,): Self::SystemData) {
+    fn run(&mut self, mut events: Self::SystemData) {
         let mut buf = [0; 2048];
         loop {
             match self.socket.recv_from(&mut buf) {

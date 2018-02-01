@@ -7,6 +7,7 @@ use resources::*;
 
 ///The basic network events shipped with amethyst
 ///You can add more event by making a new enum and having this one has a variant of yours.
+///
 /// ```rust
 /// #[derive(Debug,Clone,PartialEq,Serialize,Deserialize)]
 /// pub enum SampleUserEvents{
@@ -20,7 +21,7 @@ use resources::*;
 ///     }
 ///     fn custom_to_base(ev: SampleUserEvents) -> Option<NetEvent> {
 ///         match ev{
-///             SampleUserEvents::Base(e)=>Some(e),
+///             SampleUserEvents::Base(e) => Some(e),
 ///             _=>None,
 ///         }
 ///     }
@@ -72,8 +73,8 @@ pub trait BaseNetEvent<T>{
 #[derive(Debug,Clone,Serialize,Deserialize)]
 pub struct NetOwnedEvent<T> where T:Event{
     /// The event
-    pub event:T,
+    pub event: T,
     /// The source of this event
-    pub owner:NetConnection,
+    pub owner: NetConnection,
 }
 
