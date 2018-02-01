@@ -109,7 +109,7 @@ impl State for Example {
                     ..
                 } => {
                     let mut scene = world.write_resource::<Scene>();
-                    let sets = world.read::<AnimationSet>();
+                    let sets = world.read::<AnimationSet<LocalTransform>>();
                     let animations = sets.get(scene.entity).unwrap();
                     if animations.animations.len() > 0 {
                         if scene.animation_index >= animations.animations.len() {
@@ -151,7 +151,12 @@ fn run() -> Result<(), amethyst::Error> {
     let mut game = Application::build(resources_directory, Example)?
         .with(GltfSceneLoaderSystem::new(), "loader_system", &[])
         .with_bundle(RenderBundle::new(pipe, Some(config)))?
-        .with_bundle(AnimationBundle::new().with_dep(&["loader_system"]))?
+        .with_bundle(
+            AnimationBundle::<LocalTransform>::new(
+                "animation_control_system",
+                "sampler_interpolation_system",
+            ).with_dep(&["loader_system"]),
+        )?
         .with_bundle(
             TransformBundle::new()
                 .with_dep(&["animation_control_system", "sampler_interpolation_system"]),

@@ -41,7 +41,6 @@ impl<'s> System<'s> for WinnerSystem {
         ): Self::SystemData,
     ) {
         for (ball, transform) in (&mut balls, &mut transforms).join() {
-
             let ball_x = transform.translation[0];
 
             let did_hit = if ball_x <= ball.radius {

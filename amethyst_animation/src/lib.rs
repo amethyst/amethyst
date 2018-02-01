@@ -6,21 +6,24 @@ extern crate hibitset;
 extern crate minterpolate;
 #[macro_use]
 extern crate serde;
+extern crate shred;
 extern crate specs;
 
 pub use self::bundle::{AnimationBundle, SamplingBundle, VertexSkinningBundle};
-pub use self::interpolation::{Interpolate, InterpolationFunction, InterpolationType};
+pub use self::interpolation::{Interpolate, InterpolationType};
 pub use self::resources::{Animation, AnimationCommand, AnimationControl, AnimationHierarchy,
-                          AnimationOutput, AnimationSet, ControlState, EndControl, RestState,
-                          Sampler, SamplerControl, SamplerControlSet};
+                          AnimationSampling, AnimationSet, ControlState, EndControl, Sampler,
+                          SamplerControl, SamplerControlSet};
 pub use self::skinning::{Joint, Skin, VertexSkinningSystem};
 pub use self::systems::{AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem,
                         SamplerProcessor};
-pub use self::util::{pause_animation, play_animation, toggle_animation};
+pub use self::transform::LocalTransformChannel;
+pub use self::util::{pause_animation, play_animation, toggle_animation, SamplerPrimitive};
 
 mod skinning;
 mod resources;
 mod systems;
 mod interpolation;
+mod transform;
 mod bundle;
 mod util;
