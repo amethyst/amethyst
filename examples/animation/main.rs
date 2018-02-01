@@ -12,8 +12,8 @@ use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Event, KeyboardInput,
                          Light, Mesh, Pipeline, PointLight, PosNormTex, Projection, RenderBundle,
                          Rgba, Stage, VirtualKeyCode, WindowEvent};
-use amethyst_animation::{play_animation, Animation, AnimationBundle, AnimationOutput, EndControl,
-                         InterpolationType, Sampler};
+use amethyst_animation::{play_animation, Animation, AnimationBundle, EndControl,
+                         InterpolationType, Sampler, LocalTransformChannel};
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 
@@ -28,7 +28,7 @@ const LIGHT_INTENSITY: f32 = 3.0;
 #[derive(Default)]
 struct Example {
     pub sphere: Option<Entity>,
-    pub animation: Option<Handle<Animation>>,
+    pub animation: Option<Handle<Animation<LocalTransform>>>,
 }
 
 impl State for Example {
@@ -92,7 +92,7 @@ fn run() -> Result<(), amethyst::Error> {
     let config = DisplayConfig::load(&display_config_path);
 
     let mut game = Application::build(resources, Example::default())?
-        .with_bundle(AnimationBundle::new())?
+        .with_bundle(AnimationBundle::<LocalTransform>::new())?
         .with_bundle(TransformBundle::new().with_dep(&["sampler_interpolation_system"]))?
         .with_bundle(RenderBundle::new(pipe, Some(config)))?
         .build()?;
@@ -176,18 +176,18 @@ fn initialise_sphere(world: &mut World) -> Entity {
     parent_entity
 }
 
-fn initialise_animation(world: &mut World) -> Handle<Animation> {
+fn initialise_animation(world: &mut World) -> Handle<Animation<LocalTransform>> {
     let loader = world.write_resource::<Loader>();
     let translation_sampler = Sampler {
         input: vec![0., 1., 2., 3., 4.],
         ty: InterpolationType::Linear,
-        output: AnimationOutput::Translation(vec![
-            [0., 0., 0.],
-            [1., 0., 0.],
-            [0., 0., 0.],
-            [-1., 0., 0.],
-            [0., 0., 0.],
-        ]),
+        output: vec![
+            [0., 0., 0.].into(),
+            [1., 0., 0.].into(),
+            [0., 0., 0.].into(),
+            [-1., 0., 0.].into(),
+            [0., 0., 0.].into(),
+        ],
     };
 
     /*let scale_sampler = Sampler {
@@ -206,13 +206,13 @@ fn initialise_animation(world: &mut World) -> Handle<Animation> {
     let rotation_sampler = Sampler {
         input: vec![0., 1., 2., 3., 4.],
         ty: InterpolationType::Linear,
-        output: AnimationOutput::Rotation(vec![
-            [1., 0., 0., 0.],
-            [FRAC_1_SQRT_2, 0., 0., FRAC_1_SQRT_2],
-            [0., 0., 0., 1.],
-            [-FRAC_1_SQRT_2, 0., 0., FRAC_1_SQRT_2],
-            [-1., 0., 0., 0.],
-        ]),
+        output: vec![
+            [1., 0., 0., 0.].into(),
+            [FRAC_1_SQRT_2, 0., 0., FRAC_1_SQRT_2].into(),
+            [0., 0., 0., 1.].into(),
+            [-FRAC_1_SQRT_2, 0., 0., FRAC_1_SQRT_2].into(),
+            [-1., 0., 0., 0.].into(),
+        ],
     };
     let translation_animation_handle =
         loader.load_from_data(translation_sampler, (), &world.read_resource());
@@ -221,9 +221,9 @@ fn initialise_animation(world: &mut World) -> Handle<Animation> {
         loader.load_from_data(rotation_sampler, (), &world.read_resource());
     let animation = Animation {
         nodes: vec![
-            (0, translation_animation_handle),
+            (0, LocalTransformChannel::Translation, translation_animation_handle),
             //(0, scale_animation_handle),
-            (0, rotation_animation_handle),
+            (0, LocalTransformChannel::Rotation, rotation_animation_handle),
         ],
     };
     loader.load_from_data(animation, (), &world.read_resource())

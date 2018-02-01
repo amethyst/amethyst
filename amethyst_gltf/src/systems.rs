@@ -40,8 +40,8 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
         Entities<'a>,
         Fetch<'a, AssetStorage<Mesh>>,
         Fetch<'a, AssetStorage<Texture>>,
-        Fetch<'a, AssetStorage<Animation>>,
-        Fetch<'a, AssetStorage<Sampler>>,
+        Fetch<'a, AssetStorage<Animation<LocalTransform>>>,
+        Fetch<'a, AssetStorage<Sampler<f32>>>,
         Fetch<'a, Loader>,
         Fetch<'a, MaterialDefaults>,
         Fetch<'a, Time>,
@@ -55,13 +55,12 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
         WriteStorage<'a, Parent>,
         WriteStorage<'a, Material>,
         WriteStorage<'a, AnimationHierarchy>,
-        WriteStorage<'a, AnimationSet>,
+        WriteStorage<'a, AnimationSet<LocalTransform>>,
         WriteStorage<'a, Joint>,
         WriteStorage<'a, Skin>,
         WriteStorage<'a, JointTransforms>,
     );
 
-    #[allow(unused)]
     fn run(&mut self, data: Self::SystemData) {
         use std::ops::Deref;
 
@@ -212,7 +211,6 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
                         Emissive => {
                             scene_asset.materials[material_index].emissive.0.handle = Some(handle)
                         }
-                        _ => unreachable!(),
                     }
                 }
 
@@ -221,24 +219,31 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
                     // if handle doesn't exist, load animation data
                     let mut node_indices: HashSet<usize> = HashSet::default();
                     for animation in &mut scene_asset.animations {
-                        trace!("Loading animation: {:?}", animation.nodes);
-                        node_indices.extend(animation.nodes.iter());
+                        node_indices.extend(
+                            animation
+                                .samplers
+                                .iter()
+                                .map(|&(ref node_index, _, _)| *node_index),
+                        );
                         if let None = animation.handle {
-                            let samplers = animation
+                            let nodes = animation
                                 .samplers
                                 .iter()
                                 .cloned()
-                                .map(|sampler| {
-                                    loader.load_from_data(sampler, (), &*sampler_storage)
+                                .map(|(node_index, channel, ref sampler)| {
+                                    (
+                                        node_index,
+                                        channel,
+                                        loader.load_from_data(
+                                            sampler.clone(),
+                                            (),
+                                            &*sampler_storage,
+                                        ),
+                                    )
                                 })
                                 .collect::<Vec<_>>();
-                            let sampler_map = samplers
-                                .into_iter()
-                                .enumerate()
-                                .map(|(index, sampler)| (animation.nodes[index].clone(), sampler))
-                                .collect::<Vec<_>>();
                             animation.handle = Some(loader.load_from_data(
-                                Animation { nodes: sampler_map },
+                                Animation { nodes },
                                 (),
                                 &*animation_storage,
                             ));

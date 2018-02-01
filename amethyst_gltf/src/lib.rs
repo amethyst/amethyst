@@ -19,7 +19,7 @@ pub use systems::GltfSceneLoaderSystem;
 
 use std::ops::Range;
 
-use animation::{Animation, Sampler};
+use animation::{Animation, LocalTransformChannel, Sampler};
 use assets::{Asset, Error as AssetError, Handle};
 use core::transform::LocalTransform;
 use gfx::Primitive;
@@ -101,10 +101,10 @@ pub struct GltfScene {
 /// A single animation
 #[derive(Debug)]
 pub struct GltfAnimation {
-    // node index, vec will be same size as samplers, and reference the sampler at the same index
-    pub nodes: Vec<usize>,
-    pub samplers: Vec<Sampler>,
-    pub handle: Option<Handle<Animation>>,
+    // node index, vec will be same size as samplers and channels, and reference the sampler+channel
+    // at the same index
+    pub samplers: Vec<(usize, LocalTransformChannel, Sampler<f32>)>,
+    pub handle: Option<Handle<Animation<LocalTransform>>>,
     //pub hierarchy_root: usize,
 }
 

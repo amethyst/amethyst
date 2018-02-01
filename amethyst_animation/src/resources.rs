@@ -1,49 +1,93 @@
+use std::hash::Hash;
+use std::marker;
 use std::time::Duration;
 
 use amethyst_assets::{Asset, Handle, Result};
+use amethyst_core::cgmath::BaseNum;
 use fnv::FnvHashMap;
 use specs::{Component, DenseVecStorage, Entity, VecStorage};
 
 use interpolation::InterpolationType;
 
-/// The actual animation data for a single attribute
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum AnimationOutput {
-    /// Translation is a 3d vector
-    Translation(Vec<[f32; 3]>),
-    /// Rotation is a quaternion
-    Rotation(Vec<[f32; 4]>),
-    /// Scale is a 3d vector
-    Scale(Vec<[f32; 3]>),
+/// Master trait used to define animation sampling on a component
+pub trait AnimationSampling {
+    /// The channel type
+    type Channel;
+    /// Scalar type
+    type Scalar: BaseNum;
+
+    /// Apply a sample to a channel
+    fn apply_sample(&mut self, channel: &Self::Channel, data: &SamplerPrimitive<Self::Scalar>);
+
+    /// Get the current sample for a channel
+    fn get_current_sample(&self, channel: &Self::Channel) -> SamplerPrimitive<Self::Scalar>;
 }
 
-/// Sampler defines a single animation for a single attribute of the `LocalTransform` of the entity
-/// it is attached to.
+/// Sampler primitive
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub enum SamplerPrimitive<S>
+where
+    S: BaseNum,
+{
+    Scalar(S),
+    Vec2([S; 2]),
+    Vec3([S; 3]),
+    Vec4([S; 4]),
+}
+
+impl<S> From<[S; 2]> for SamplerPrimitive<S> where S: BaseNum {
+    fn from(arr: [S; 2]) -> Self {
+        SamplerPrimitive::Vec2(arr)
+    }
+}
+
+impl<S> From<[S; 3]> for SamplerPrimitive<S> where S: BaseNum {
+    fn from(arr: [S; 3]) -> Self {
+        SamplerPrimitive::Vec3(arr)
+    }
+}
+
+impl<S> From<[S; 4]> for SamplerPrimitive<S> where S: BaseNum {
+    fn from(arr: [S; 4]) -> Self {
+        SamplerPrimitive::Vec4(arr)
+    }
+}
+
+/// Sampler defines a single animation for a single channel on a single component
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Sampler {
+pub struct Sampler<S>
+where
+    S: BaseNum,
+{
     /// Time of key frames
     pub input: Vec<f32>,
     /// Actual output data to interpolate
-    pub output: AnimationOutput,
+    pub output: Vec<SamplerPrimitive<S>>,
     /// How should interpolation be done
     pub ty: InterpolationType,
 }
 
-impl Asset for Sampler {
+impl<S> Asset for Sampler<S>
+where
+    S: BaseNum + Send + Sync + 'static,
+{
     const NAME: &'static str = "animation::Sampler";
     type Data = Self;
     type HandleStorage = VecStorage<Handle<Self>>;
 }
 
-impl Into<Result<Sampler>> for Sampler {
-    fn into(self) -> Result<Sampler> {
+impl<S> Into<Result<Sampler<S>>> for Sampler<S>
+where
+    S: BaseNum,
+{
+    fn into(self) -> Result<Sampler<S>> {
         Ok(self)
     }
 }
 
 /// Defines the hierarchy of nodes that a single animation can control.
 /// Attach to the root entity that an animation can be defined for.
-/// Only required for animations which targets more than a single node.
+/// Only required for animations which target more than a single node.
 #[derive(Debug, Clone)]
 pub struct AnimationHierarchy {
     pub nodes: FnvHashMap<usize, Entity>,
@@ -55,21 +99,32 @@ impl Component for AnimationHierarchy {
 
 /// Defines a single animation.
 /// Defines relationships between the node index in `AnimationHierarchy` and a `Sampler` handle.
-/// If the animation only targets a single node index, `AnimationHierarchy` is not required.
+/// If the animation only target a single node index, `AnimationHierarchy` is not required.
 #[derive(Clone, Debug)]
-pub struct Animation {
+pub struct Animation<T>
+where
+    T: AnimationSampling,
+{
     /// node index -> sampler handle
-    pub nodes: Vec<(usize, Handle<Sampler>)>,
+    pub nodes: Vec<(usize, T::Channel, Handle<Sampler<T::Scalar>>)>,
 }
 
-impl Asset for Animation {
+impl<T> Asset for Animation<T>
+where
+    T: AnimationSampling + Send + Sync + 'static,
+    T::Channel: Send + Sync + 'static,
+    T::Scalar: Send + Sync + 'static,
+{
     const NAME: &'static str = "animation::Animation";
     type Data = Self;
     type HandleStorage = VecStorage<Handle<Self>>;
 }
 
-impl Into<Result<Animation>> for Animation {
-    fn into(self) -> Result<Animation> {
+impl<T> Into<Result<Animation<T>>> for Animation<T>
+where
+    T: AnimationSampling,
+{
+    fn into(self) -> Result<Animation<T>> {
         Ok(self)
     }
 }
@@ -93,7 +148,7 @@ impl ControlState {
     /// Is the state `Running`
     pub fn is_running(&self) -> bool {
         match *self {
-            ControlState::Running(..) => true,
+            ControlState::Running(_) => true,
             _ => false,
         }
     }
@@ -107,17 +162,6 @@ impl ControlState {
     }
 }
 
-/// The rest state for a single attribute
-#[derive(Debug, Clone)]
-pub enum RestState {
-    /// Translation is a 3d vector
-    Translation([f32; 3]),
-    /// Rotation is a quaternion
-    Rotation([f32; 4]),
-    /// Scale is a 3d vector
-    Scale([f32; 3]),
-}
-
 /// Control handling of animation/sampler end
 #[derive(Debug, Clone)]
 pub enum EndControl {
@@ -127,32 +171,46 @@ pub enum EndControl {
     Normal,
 }
 
-/// Run the sampler on the attached entity
+/// Control a single active sampler
 #[derive(Clone)]
-pub struct SamplerControl {
+pub struct SamplerControl<T>
+where
+    T: AnimationSampling,
+{
+    /// Channel
+    pub channel: T::Channel,
     /// Sampler
-    pub sampler: Handle<Sampler>,
+    pub sampler: Handle<Sampler<T::Scalar>>,
     /// State of sampling
     pub state: ControlState,
     /// What to do when sampler ends
     pub end: EndControl,
     /// What the transform should return to after end
-    pub after: RestState,
+    pub after: SamplerPrimitive<T::Scalar>,
+    // Control the rate of animation, default is 1.0
+    // pub rate_multiplier: f32, //TODO
 }
 
-/// Sampler control set, containing optional samplers for each of the possible channels.
+/// Sampler control set, containing a set of sampler controllers for a single component.
 ///
-/// Note that the `AnimationOutput` in the `Sampler` referenced, and the `RestState` referenced in
-/// each `SamplerControl` should match the attribute channel from the set here. There is no check
-/// made by the system that this is the case.
+/// We only support a single sampler per channel currently, i.e no animation blending. Blending is
+/// however possible to build on top of this by dynamically updating the samplers referenced from
+/// here.
 #[derive(Clone, Default)]
-pub struct SamplerControlSet {
-    pub translation: Option<SamplerControl>,
-    pub rotation: Option<SamplerControl>,
-    pub scale: Option<SamplerControl>,
+pub struct SamplerControlSet<T>
+where
+    T: AnimationSampling,
+    T::Channel: Hash + Eq,
+{
+    pub samplers: FnvHashMap<T::Channel, SamplerControl<T>>,
 }
 
-impl Component for SamplerControlSet {
+impl<T> Component for SamplerControlSet<T>
+where
+    T: AnimationSampling + Send + Sync + 'static,
+    T::Channel: Hash + Eq + Send + Sync + 'static,
+    T::Scalar: Send + Sync + 'static,
+{
     type Storage = DenseVecStorage<Self>;
 }
 
@@ -167,29 +225,66 @@ pub enum AnimationCommand {
     Abort,
 }
 
-/// Attaches to an entity, to control what animations are currently active
+/// Controls the state of a single running animation on a specific component type
 #[derive(Clone, Debug)]
-pub struct AnimationControl {
+pub struct AnimationControl<T>
+where
+    T: AnimationSampling,
+{
     /// Animation handle
-    pub animation: Handle<Animation>,
+    pub animation: Handle<Animation<T>>,
     /// What to do when animation ends
     pub end: EndControl,
     /// State of animation
     pub state: ControlState,
     /// Animation command
     pub command: AnimationCommand,
+    m: marker::PhantomData<T>,
 }
 
-impl Component for AnimationControl {
+impl<T> AnimationControl<T>
+where
+    T: AnimationSampling,
+{
+    pub fn new(
+        animation: Handle<Animation<T>>,
+        end: EndControl,
+        state: ControlState,
+        command: AnimationCommand,
+    ) -> Self {
+        Self {
+            animation,
+            end,
+            state,
+            command,
+            m: marker::PhantomData,
+        }
+    }
+}
+
+impl<T> Component for AnimationControl<T>
+where
+    T: AnimationSampling + Send + Sync + 'static,
+    T::Channel: Send + Sync + 'static,
+    T::Scalar: Send + Sync + 'static,
+{
     type Storage = DenseVecStorage<Self>;
 }
 
 /// Attaches to an entity that have animations, with links to all animations that can be run on the
 /// entity. Is not used directly by the animation systems, provided for convenience.
-pub struct AnimationSet {
-    pub animations: Vec<Handle<Animation>>,
+pub struct AnimationSet<T>
+where
+    T: AnimationSampling,
+{
+    pub animations: Vec<Handle<Animation<T>>>,
 }
 
-impl Component for AnimationSet {
+impl<T> Component for AnimationSet<T>
+where
+    T: AnimationSampling + Send + Sync + 'static,
+    T::Channel: Send + Sync + 'static,
+    T::Scalar: Send + Sync + 'static,
+{
     type Storage = DenseVecStorage<Self>;
 }

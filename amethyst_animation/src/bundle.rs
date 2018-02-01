@@ -1,13 +1,19 @@
+use std::hash::Hash;
+use std::marker;
+
 use amethyst_assets::AssetStorage;
 use amethyst_core::{ECSBundle, Result};
 use amethyst_renderer::JointTransforms;
-use specs::{DispatcherBuilder, World};
+use shred::ResourceId;
+use specs::{Component, DispatcherBuilder, World};
 
-use resources::{Animation, AnimationControl, AnimationHierarchy, AnimationSet, Sampler,
-                SamplerControlSet};
+use resources::{Animation, AnimationControl, AnimationHierarchy, AnimationSampling, AnimationSet,
+                Sampler, SamplerControlSet};
 use skinning::{Joint, Skin, VertexSkinningSystem};
 use systems::{AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem,
               SamplerProcessor};
+
+const DEP: [&str; 0] = [];
 
 /// Bundle for vertex skinning
 ///
@@ -52,14 +58,18 @@ impl<'a, 'b, 'c> ECSBundle<'a, 'b> for VertexSkinningBundle<'c> {
 ///
 /// Will add `SamplerInterpolationSystem` with name `sampler_interpolation_system`.
 #[derive(Default)]
-pub struct SamplingBundle<'a> {
+pub struct SamplingBundle<'a, T> {
     dep: &'a [&'a str],
+    m: marker::PhantomData<T>,
 }
 
-impl<'a> SamplingBundle<'a> {
+impl<'a, T> SamplingBundle<'a, T> {
     /// Create a new sampling bundle
     pub fn new() -> Self {
-        Default::default()
+        Self {
+            dep: &DEP,
+            m: marker::PhantomData,
+        }
     }
 
     /// Set dependencies for the `SamplerInterpolationSystem`
@@ -69,19 +79,33 @@ impl<'a> SamplingBundle<'a> {
     }
 }
 
-impl<'a, 'b, 'c> ECSBundle<'a, 'b> for SamplingBundle<'c> {
+impl<'a, 'b, 'c, T> ECSBundle<'a, 'b> for SamplingBundle<'c, T>
+where
+    T: AnimationSampling + Component + Send + Sync + 'static,
+    T::Channel: Hash + Eq + Send + Sync + 'static,
+    T::Scalar: Send + Sync + 'static,
+{
     fn build(
         self,
         world: &mut World,
         builder: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
-        world.add_resource(AssetStorage::<Sampler>::new());
-        world.register::<SamplerControlSet>();
+        if !world
+            .res
+            .has_value(ResourceId::new::<AssetStorage<Sampler<T::Scalar>>>())
+        {
+            world.add_resource(AssetStorage::<Sampler<T::Scalar>>::new());
+        }
+        world.register::<SamplerControlSet<T>>();
 
         Ok(builder
-            .add(SamplerProcessor::new(), "sampler_processor", &[])
             .add(
-                SamplerInterpolationSystem::new(),
+                SamplerProcessor::<T::Scalar>::new(),
+                "sampler_processor",
+                &[],
+            )
+            .add(
+                SamplerInterpolationSystem::<T>::new(),
                 "sampler_interpolation_system",
                 self.dep,
             ))
@@ -94,14 +118,18 @@ impl<'a, 'b, 'c> ECSBundle<'a, 'b> for SamplingBundle<'c> {
 ///
 /// Will add `AnimationControlSystem` with name `animation_control_system`.
 #[derive(Default)]
-pub struct AnimationBundle<'a> {
+pub struct AnimationBundle<'a, T> {
     dep: &'a [&'a str],
+    m: marker::PhantomData<T>,
 }
 
-impl<'a> AnimationBundle<'a> {
+impl<'a, T> AnimationBundle<'a, T> {
     /// Create a new animation bundle
     pub fn new() -> Self {
-        Default::default()
+        Self {
+            dep: &DEP,
+            m: marker::PhantomData,
+        }
     }
 
     /// Set dependencies for the `AnimationControlSystem`
@@ -111,24 +139,29 @@ impl<'a> AnimationBundle<'a> {
     }
 }
 
-impl<'a, 'b, 'c> ECSBundle<'a, 'b> for AnimationBundle<'c> {
+impl<'a, 'b, 'c, T> ECSBundle<'a, 'b> for AnimationBundle<'c, T>
+where
+    T: AnimationSampling + Component + Send + Sync + 'static,
+    T::Channel: Clone + Hash + Eq + Send + Sync + 'static,
+    T::Scalar: Send + Sync + 'static,
+{
     fn build(
         self,
         world: &mut World,
         mut builder: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
-        world.add_resource(AssetStorage::<Animation>::new());
-        world.register::<AnimationControl>();
+        world.add_resource(AssetStorage::<Animation<T>>::new());
+        world.register::<AnimationControl<T>>();
         world.register::<AnimationHierarchy>();
-        world.register::<AnimationSet>();
+        world.register::<AnimationSet<T>>();
         builder = builder
-            .add(AnimationProcessor::new(), "animation_processor", &[])
+            .add(AnimationProcessor::<T>::new(), "animation_processor", &[])
             .add(
-                AnimationControlSystem::new(),
+                AnimationControlSystem::<T>::new(),
                 "animation_control_system",
                 self.dep,
             );
-        SamplingBundle::new()
+        SamplingBundle::<T>::new()
             .with_dep(&["animation_control_system"])
             .build(world, builder)
     }
