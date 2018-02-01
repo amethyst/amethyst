@@ -22,17 +22,9 @@ pub(crate) static SOUNDS_PLAYING: AtomicIsize = ATOMIC_ISIZE_INIT;
 /// A speaker(s) through which audio can be played.
 ///
 /// By convention, the default output is stored as a resource in the `World`.
-#[derive(Clone)]
+#[derive(Clone, Eq, PartialEq)]
 pub struct Output {
     pub(crate) endpoint: Endpoint,
-}
-
-impl Eq for Output {}
-
-impl PartialEq for Output {
-    fn eq(&self, other: &Self) -> bool {
-        self.endpoint == other.endpoint
-    }
 }
 
 impl Output {
