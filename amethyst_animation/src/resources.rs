@@ -35,19 +35,28 @@ where
     Vec4([S; 4]),
 }
 
-impl<S> From<[S; 2]> for SamplerPrimitive<S> where S: BaseNum {
+impl<S> From<[S; 2]> for SamplerPrimitive<S>
+where
+    S: BaseNum,
+{
     fn from(arr: [S; 2]) -> Self {
         SamplerPrimitive::Vec2(arr)
     }
 }
 
-impl<S> From<[S; 3]> for SamplerPrimitive<S> where S: BaseNum {
+impl<S> From<[S; 3]> for SamplerPrimitive<S>
+where
+    S: BaseNum,
+{
     fn from(arr: [S; 3]) -> Self {
         SamplerPrimitive::Vec3(arr)
     }
 }
 
-impl<S> From<[S; 4]> for SamplerPrimitive<S> where S: BaseNum {
+impl<S> From<[S; 4]> for SamplerPrimitive<S>
+where
+    S: BaseNum,
+{
     fn from(arr: [S; 4]) -> Self {
         SamplerPrimitive::Vec4(arr)
     }

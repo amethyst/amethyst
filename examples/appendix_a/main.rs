@@ -52,7 +52,7 @@ fn run() -> Result<()> {
         "{}/examples/pong/resources/input.ron",
         env!("CARGO_MANIFEST_DIR")
     );
-    
+
     let config = format!(
         "{}/examples/appendix_a/resources/config.ron",
         env!("CARGO_MANIFEST_DIR")
