@@ -1,6 +1,6 @@
 //! Provides a client-server networking architecture to amethyst.
 
-#![deny(missing_docs)]
+//#![deny(missing_docs)]
 
 extern crate amethyst_assets;
 extern crate amethyst_core;
@@ -21,3 +21,4 @@ pub use components::*;
 pub use filters::*;
 pub use resources::*;
 pub use systems::*;
+

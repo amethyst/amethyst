@@ -6,6 +6,8 @@ use shrev::Event;
 use resources::*;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
+use specs::Component;
+use specs::VecStorage;
 
 /// The basic network events shipped with amethyst
 // TODO: Add CreateEntity,RemoveEntity,UpdateEntity
@@ -24,12 +26,15 @@ pub enum NetEvent<T>{// where T:Send+Sync+Serialize+Clone+DeserializeOwned+'stat
     /// Tell the server that the client is disconnecting
     Disconnect{
         /// The reason of the disconnection
-        reason:String
+        reason:String,
     },
     /// Notify the clients(including the one being disconnected) that a client has been disconnected from the server
     Disconnected{
         /// The reason of the disconnection
-        reason:String
+        reason:String,
+    },
+    AddComponent{
+        compData:String,
     },
     /// A user-defined enum containing more network event types.
     Custom(T),
@@ -44,6 +49,15 @@ impl<T> NetEvent<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+'static{
             None
         }
     }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct TestComp{
+    data:String,
+}
+
+impl Component for TestComp{
+    type Storage = VecStorage<TestComp>;
 }
 
 /*impl BaseNetEvent<NetEvent> for NetEvent{

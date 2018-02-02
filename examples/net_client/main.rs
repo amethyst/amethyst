@@ -1,4 +1,6 @@
 extern crate amethyst;
+#[macro_use]
+extern crate log;
 
 use std::time::Duration;
 
@@ -13,7 +15,7 @@ use std::str::FromStr;
 
 fn main() {
     if let Err(e) = run() {
-        println!("Failed to execute example: {}", e);
+        error!("Failed to execute example: {}", e);
         ::std::process::exit(1);
     }
 }
