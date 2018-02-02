@@ -10,7 +10,6 @@ use specs::{Entities, Entity, Fetch, Join, ReadStorage, System, WriteStorage};
 
 use components::{AudioEmitter, AudioListener};
 use end_signal::EndSignalSource;
-use output::{MAX_SOUNDS_PLAYING, SOUNDS_PLAYING};
 
 /// Syncs 3D transform data with the audio engine to provide 3D audio.
 #[derive(Default)]
@@ -80,22 +79,18 @@ impl<'a> System<'a> for AudioSystem {
                         }
                     }
                     while let Some(source) = audio_emitter.sound_queue.pop() {
-                        if SOUNDS_PLAYING.load(Ordering::Relaxed) < MAX_SOUNDS_PLAYING {
-                            let sink = SpatialSink::new(
-                                &listener.output.endpoint,
-                                emitter_position,
-                                left_ear_position,
-                                right_ear_position,
-                            );
-                            let atomic_bool = Arc::new(AtomicBool::new(false));
-                            let clone = atomic_bool.clone();
-                            SOUNDS_PLAYING.fetch_add(1, Ordering::Relaxed);
-                            sink.append(EndSignalSource::new(source, move || {
-                                clone.store(true, Ordering::Relaxed);
-                                SOUNDS_PLAYING.fetch_sub(1, Ordering::Relaxed);
-                            }));
-                            audio_emitter.sinks.push((sink, atomic_bool));
-                        }
+                        let sink = SpatialSink::new(
+                            &listener.output.endpoint,
+                            emitter_position,
+                            left_ear_position,
+                            right_ear_position,
+                        );
+                        let atomic_bool = Arc::new(AtomicBool::new(false));
+                        let clone = atomic_bool.clone();
+                        sink.append(EndSignalSource::new(source, move || {
+                            clone.store(true, Ordering::Relaxed);
+                        }));
+                        audio_emitter.sinks.push((sink, atomic_bool));
                     }
                 }
             }

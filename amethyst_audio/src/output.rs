@@ -3,21 +3,13 @@
 // We have to use types from this to provide an output iterator type.
 use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::io::Cursor;
-use std::sync::atomic::{AtomicIsize, Ordering, ATOMIC_ISIZE_INIT};
 
 use cpal::{default_endpoint, endpoints};
 use cpal::EndpointsIterator;
 use rodio::{Decoder, Endpoint, Sink, Source as RSource};
 
 use DecoderError;
-use end_signal::EndSignalSource;
 use source::Source;
-
-// These are isize values because due to thread interactions it is possible, however unlikely, that
-// SOUNDS_PLAYING may be temporarily < 0.  If this happens, it should be resolved very quickly by
-// the threads completing their instructions.
-pub(crate) const MAX_SOUNDS_PLAYING: isize = 300;
-pub(crate) static SOUNDS_PLAYING: AtomicIsize = ATOMIC_ISIZE_INIT;
 
 /// A speaker(s) through which audio can be played.
 ///
@@ -67,17 +59,9 @@ impl Output {
     ) -> Result<(), DecoderError> {
         let sink = Sink::new(&self.endpoint);
         for _ in 0..n {
-            if SOUNDS_PLAYING.load(Ordering::Relaxed) < MAX_SOUNDS_PLAYING {
-                sink.append(EndSignalSource::new(
-                    Decoder::new(Cursor::new(source.clone()))
-                        .map_err(|_| DecoderError)?
-                        .amplify(volume),
-                    || {
-                        SOUNDS_PLAYING.fetch_sub(1, Ordering::Relaxed);
-                    },
-                ));
-                SOUNDS_PLAYING.fetch_add(1, Ordering::Relaxed);
-            }
+            sink.append(Decoder::new(Cursor::new(source.clone()))
+                .map_err(|_| DecoderError)?
+                .amplify(volume));
         }
         sink.detach();
         Ok(())
