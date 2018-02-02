@@ -7,32 +7,11 @@ use resources::*;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 
-///The basic network events shipped with amethyst
-///You can add more event by making a new enum and having this one has a variant of yours.
-///
-/// ```rust
-/// #[derive(Debug,Clone,PartialEq,Serialize,Deserialize)]
-/// pub enum SampleUserEvents{
-///     Base(NetEvent),
-///     CustomEvent,
-/// }
-///
-/// impl BaseNetEvent<SampleUserEvents> for SampleUserEvents{
-///     fn base_to_custom(ev:NetEvent) -> SampleUserEvents {
-///         SampleUserEvents::Base(ev)
-///     }
-///     fn custom_to_base(ev: SampleUserEvents) -> Option<NetEvent> {
-///         match ev{
-///             SampleUserEvents::Base(e) => Some(e),
-///             _=>None,
-///         }
-///     }
-/// }
-/// ```
-//TODO: Add CreateEntity,RemoveEntity,UpdateEntity
-//TODO: Example of switching the NetEvent set in the Network Systems
+/// The basic network events shipped with amethyst
+// TODO: Add CreateEntity,RemoveEntity,UpdateEntity
+// TODO: Example of switching the NetEvent set in the Network Systems
 #[derive(Debug,Clone,PartialEq,Serialize,Deserialize)]
-pub enum NetEvent<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+'static{
+pub enum NetEvent<T>{// where T:Send+Sync+Serialize+Clone+DeserializeOwned+'static{
     /// Ask to connect to the server
     Connect,
     /// Reply to the client that the connection has been accepted
@@ -52,13 +31,15 @@ pub enum NetEvent<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+'static{
         /// The reason of the disconnection
         reason:String
     },
+    /// A user-defined enum containing more network event types.
     Custom(T),
 }
 
 impl<T> NetEvent<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+'static{
-    fn custom(&self) -> Option<&T> {
-        if let NetEvent::Custom(T) = self {
-            Some(&T)
+    /// Tries to convert a NetEvent to a custom event enum type.
+    pub fn custom(&self) -> Option<&T> {
+        if let &NetEvent::Custom(ref t) = self {
+            Some(&t)
         } else {
             None
         }

@@ -33,6 +33,6 @@ pub fn send_event<T>(event:&NetEvent<T>,target:&NetConnection,socket:&UdpSocket)
 }
 
 /// Attempts to deserialize an event from the raw byte data.
-pub fn deserialize_event<T>(data:&[u8])->Result<T,Box<ErrorKind>> where T:Send+Sync+Serialize+Clone+DeserializeOwned+'static{
+pub fn deserialize_event<T>(data:&[u8])->Result<NetEvent<T>,Box<ErrorKind>> where T:Send+Sync+Serialize+Clone+DeserializeOwned+'static{
     deserialize::<NetEvent<T>>(data)
 }

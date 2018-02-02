@@ -94,7 +94,7 @@ impl<'a, T> System<'a> for NetServerSystem<T> where T:Send+Sync+Serialize+Clone+
                                                 target:src,
                                                 state:ConnectionState::Connecting,
                                             };
-                                            send_event(NetEvent::<T>::Connected,&conn,&self.socket);
+                                            send_event(&NetEvent::Connected::<T>,&conn,&self.socket);
 
                                             //Push events to continue the user-space connection protocol
                                             let owned_event = NetOwnedEvent{

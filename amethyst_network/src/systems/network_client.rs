@@ -50,7 +50,7 @@ impl<T> NetClientSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+'s
             target,
             state:ConnectionState::Connecting,
         };
-        send_event(NetEvent::<T>::Connect,&conn,&self.socket);
+        send_event(&NetEvent::Connect::<T>,&conn,&self.socket);
         self.connection = Some(
             conn,
         );
