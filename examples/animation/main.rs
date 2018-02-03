@@ -92,7 +92,7 @@ fn run() -> Result<(), amethyst::Error> {
     let config = DisplayConfig::load(&display_config_path);
 
     let mut game = Application::build(resources, Example::default())?
-        .with_bundle(AnimationBundle::<LocalTransform>::new())?
+        .with_bundle(AnimationBundle::<LocalTransform>::new("animation_control_system", "sampler_interpolation_system"))?
         .with_bundle(TransformBundle::new().with_dep(&["sampler_interpolation_system"]))?
         .with_bundle(RenderBundle::new(pipe, Some(config)))?
         .build()?;
