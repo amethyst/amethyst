@@ -20,9 +20,7 @@ pub fn play_animation<T>(
     entity: Entity,
     end: EndControl,
 ) where
-    T: AnimationSampling + Send + Sync + 'static,
-    T::Channel: Send + Sync + 'static,
-    T::Scalar: Send + Sync + 'static,
+    T: AnimationSampling,
 {
     match controls.get_mut(entity) {
         Some(ref mut control) if control.animation == *animation => {
@@ -57,9 +55,7 @@ pub fn pause_animation<T>(
     animation: &Handle<Animation<T>>,
     entity: Entity,
 ) where
-    T: AnimationSampling + Send + Sync + 'static,
-    T::Channel: Send + Sync + 'static,
-    T::Scalar: Send + Sync + 'static,
+    T: AnimationSampling,
 {
     if let Some(ref mut control) = controls.get_mut(entity) {
         if control.animation == *animation && control.state.is_running() {
@@ -84,9 +80,7 @@ pub fn toggle_animation<T>(
     entity: Entity,
     end: EndControl,
 ) where
-    T: AnimationSampling + Send + Sync + 'static,
-    T::Channel: Send + Sync + 'static,
-    T::Scalar: Send + Sync + 'static,
+    T: AnimationSampling,
 {
     if controls
         .get(entity)

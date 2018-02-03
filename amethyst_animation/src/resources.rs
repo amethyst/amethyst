@@ -10,17 +10,17 @@ use specs::{Component, DenseVecStorage, Entity, VecStorage};
 use interpolation::InterpolationType;
 
 /// Master trait used to define animation sampling on a component
-pub trait AnimationSampling {
+pub trait AnimationSampling: Send + Sync + 'static {
     /// The channel type
-    type Channel;
+    type Channel: Clone + Hash + Eq + Send + Sync + 'static;
     /// Scalar type
-    type Scalar: BaseNum;
+    type Scalar: BaseNum + Send + Sync + 'static;
 
     /// Apply a sample to a channel
     fn apply_sample(&mut self, channel: &Self::Channel, data: &SamplerPrimitive<Self::Scalar>);
 
     /// Get the current sample for a channel
-    fn get_current_sample(&self, channel: &Self::Channel) -> SamplerPrimitive<Self::Scalar>;
+    fn current_sample(&self, channel: &Self::Channel) -> SamplerPrimitive<Self::Scalar>;
 }
 
 /// Sampler primitive
@@ -120,9 +120,7 @@ where
 
 impl<T> Asset for Animation<T>
 where
-    T: AnimationSampling + Send + Sync + 'static,
-    T::Channel: Send + Sync + 'static,
-    T::Scalar: Send + Sync + 'static,
+    T: AnimationSampling,
 {
     const NAME: &'static str = "animation::Animation";
     type Data = Self;
@@ -209,16 +207,13 @@ where
 pub struct SamplerControlSet<T>
 where
     T: AnimationSampling,
-    T::Channel: Hash + Eq,
 {
     pub samplers: FnvHashMap<T::Channel, SamplerControl<T>>,
 }
 
 impl<T> Component for SamplerControlSet<T>
 where
-    T: AnimationSampling + Send + Sync + 'static,
-    T::Channel: Hash + Eq + Send + Sync + 'static,
-    T::Scalar: Send + Sync + 'static,
+    T: AnimationSampling,
 {
     type Storage = DenseVecStorage<Self>;
 }
@@ -261,7 +256,7 @@ where
         state: ControlState,
         command: AnimationCommand,
     ) -> Self {
-        Self {
+        AnimationControl {
             animation,
             end,
             state,
@@ -273,9 +268,7 @@ where
 
 impl<T> Component for AnimationControl<T>
 where
-    T: AnimationSampling + Send + Sync + 'static,
-    T::Channel: Send + Sync + 'static,
-    T::Scalar: Send + Sync + 'static,
+    T: AnimationSampling,
 {
     type Storage = DenseVecStorage<Self>;
 }
@@ -291,9 +284,7 @@ where
 
 impl<T> Component for AnimationSet<T>
 where
-    T: AnimationSampling + Send + Sync + 'static,
-    T::Channel: Send + Sync + 'static,
-    T::Scalar: Send + Sync + 'static,
+    T: AnimationSampling,
 {
     type Storage = DenseVecStorage<Self>;
 }

@@ -25,7 +25,7 @@ impl AnimationSampling for LocalTransform {
         }
     }
 
-    fn get_current_sample(&self, channel: &Self::Channel) -> SamplerPrimitive<f32> {
+    fn current_sample(&self, channel: &Self::Channel) -> SamplerPrimitive<f32> {
         use self::LocalTransformChannel::*;
         match channel {
             &Translation => SamplerPrimitive::Vec3(self.translation.into()),

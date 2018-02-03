@@ -1,4 +1,3 @@
-use std::hash::Hash;
 use std::marker;
 use std::time::Duration;
 
@@ -31,9 +30,7 @@ impl<T> AnimationControlSystem<T> {
 
 impl<'a, T> System<'a> for AnimationControlSystem<T>
 where
-    T: AnimationSampling + Component + Send + Sync + 'static,
-    T::Channel: Clone + Hash + Eq + Send + Sync + 'static,
-    T::Scalar: Send + Sync + 'static,
+    T: AnimationSampling + Component,
 {
     type SystemData = (
         Entities<'a>,
@@ -135,9 +132,7 @@ fn process_animation_control<T>(
     remove: &mut Vec<Entity>,
 ) -> Option<ControlState>
 where
-    T: AnimationSampling + Component + Send + Sync + 'static,
-    T::Channel: Clone + Hash + Eq + Send + Sync + 'static,
-    T::Scalar: Send + Sync + 'static,
+    T: AnimationSampling + Component,
 {
     // Checking hierarchy
     let h_fallback = AnimationHierarchy {
@@ -238,9 +233,7 @@ fn request_animation<T>(
     components: &ReadStorage<T>, // for rest state
 ) -> bool
 where
-    T: AnimationSampling + Component + Send + Sync + 'static,
-    T::Channel: Clone + Hash + Eq + Send + Sync + 'static,
-    T::Scalar: Send + Sync + 'static,
+    T: AnimationSampling + Component,
 {
     // check that hierarchy is valid, and all samplers exist
     if animation
@@ -287,7 +280,6 @@ fn add_to_set<T>(
     control: SamplerControl<T>,
 ) where
     T: AnimationSampling,
-    T::Channel: Clone + Hash + Eq,
 {
     control_set.samplers.insert(channel.clone(), control);
 }
@@ -296,16 +288,14 @@ fn get_after<T>(channel: &T::Channel, component: &T) -> SamplerPrimitive<T::Scal
 where
     T: AnimationSampling,
 {
-    component.get_current_sample(channel)
+    component.current_sample(channel)
 }
 
 fn pause_animation<T>(
     hierarchy: &AnimationHierarchy,
     samplers: &mut WriteStorage<SamplerControlSet<T>>,
 ) where
-    T: AnimationSampling + Send + Sync + 'static,
-    T::Channel: Hash + Eq + Send + Sync + 'static,
-    T::Scalar: Send + Sync + 'static,
+    T: AnimationSampling,
 {
     for (_, node_entity) in &hierarchy.nodes {
         match samplers.get_mut(*node_entity) {
@@ -319,9 +309,7 @@ fn unpause_animation<T>(
     hierarchy: &AnimationHierarchy,
     samplers: &mut WriteStorage<SamplerControlSet<T>>,
 ) where
-    T: AnimationSampling + Send + Sync + 'static,
-    T::Channel: Hash + Eq + Send + Sync + 'static,
-    T::Scalar: Send + Sync + 'static,
+    T: AnimationSampling,
 {
     for (_, node_entity) in &hierarchy.nodes {
         match samplers.get_mut(*node_entity) {
@@ -338,9 +326,7 @@ fn check_and_terminate_animation<T>(
     samplers: &mut WriteStorage<SamplerControlSet<T>>,
 ) -> bool
 where
-    T: AnimationSampling + Send + Sync + 'static,
-    T::Channel: Hash + Eq + Send + Sync + 'static,
-    T::Scalar: Send + Sync + 'static,
+    T: AnimationSampling,
 {
     // Check for termination
     if check_termination(hierarchy, &samplers) {
@@ -367,9 +353,7 @@ fn check_termination<T>(
     samplers: &WriteStorage<SamplerControlSet<T>>,
 ) -> bool
 where
-    T: AnimationSampling + Send + Sync + 'static,
-    T::Channel: Hash + Eq + Send + Sync + 'static,
-    T::Scalar: Send + Sync + 'static,
+    T: AnimationSampling,
 {
     hierarchy
         .nodes
@@ -382,7 +366,6 @@ where
 fn do_control_set_termination<T>(control_set: &mut SamplerControlSet<T>)
 where
     T: AnimationSampling,
-    T::Channel: Hash + Eq,
 {
     for sampler in control_set
         .samplers
@@ -397,7 +380,6 @@ where
 fn do_control_set_pause<T>(control_set: &mut SamplerControlSet<T>)
 where
     T: AnimationSampling,
-    T::Channel: Hash + Eq,
 {
     for sampler in control_set.samplers.values_mut() {
         sampler.state = match sampler.state {
@@ -411,7 +393,6 @@ where
 fn do_control_set_unpause<T>(control_set: &mut SamplerControlSet<T>)
 where
     T: AnimationSampling,
-    T::Channel: Hash + Eq,
 {
     for sampler in control_set.samplers.values_mut() {
         if let ControlState::Paused(dur) = sampler.state {
@@ -424,7 +405,6 @@ where
 fn check_control_set_termination<T>(control_set: &SamplerControlSet<T>) -> bool
 where
     T: AnimationSampling,
-    T::Channel: Hash + Eq,
 {
     control_set
         .samplers

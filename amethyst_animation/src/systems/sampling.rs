@@ -1,4 +1,3 @@
-use std::hash::Hash;
 use std::marker;
 use std::time::Duration;
 
@@ -32,9 +31,7 @@ impl<T> SamplerInterpolationSystem<T> {
 
 impl<'a, T> System<'a> for SamplerInterpolationSystem<T>
 where
-    T: AnimationSampling + Component + Send + Sync + 'static,
-    T::Channel: Hash + Eq + Send + Sync + 'static,
-    T::Scalar: Send + Sync + 'static,
+    T: AnimationSampling + Component,
 {
     type SystemData = (
         Fetch<'a, Time>,
