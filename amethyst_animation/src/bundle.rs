@@ -54,7 +54,7 @@ impl<'a, 'b, 'c> ECSBundle<'a, 'b> for VertexSkinningBundle<'c> {
 /// Bundle for only the sampler interpolation.
 ///
 /// Will add `SamplerInterpolationSystem<T>` with the given name.
-/// Will also add `SamplerProcessor<T::Scalar>` if it has not been added yet.
+/// Will also add `SamplerProcessor<T::Primitive>` if it has not been added yet.
 #[derive(Default)]
 pub struct SamplingBundle<'a, T> {
     name: &'a str,
@@ -90,19 +90,18 @@ where
     fn build(
         self,
         world: &mut World,
-        builder: DispatcherBuilder<'a, 'b>,
+        mut builder: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
         if !world
             .res
-            .has_value(ResourceId::new::<AssetStorage<Sampler<T::Scalar>>>())
+            .has_value(ResourceId::new::<AssetStorage<Sampler<T::Primitive>>>())
         {
-            world.add_resource(AssetStorage::<Sampler<T::Scalar>>::new());
+            world.add_resource(AssetStorage::<Sampler<T::Primitive>>::new());
+            builder = builder.add(SamplerProcessor::<T::Primitive>::new(), "", &[]);
         }
-        world.register::<SamplerControlSet<T>>();
 
-        Ok(builder
-            .add(SamplerProcessor::<T::Scalar>::new(), "", &[])
-            .add(SamplerInterpolationSystem::<T>::new(), self.name, self.dep))
+        world.register::<SamplerControlSet<T>>();
+        Ok(builder.add(SamplerInterpolationSystem::<T>::new(), self.name, self.dep))
     }
 }
 

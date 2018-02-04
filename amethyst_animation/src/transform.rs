@@ -1,7 +1,8 @@
 use amethyst_core::LocalTransform;
 use amethyst_core::cgmath::{InnerSpace, Quaternion, Vector3};
 
-use resources::{AnimationSampling, SamplerPrimitive};
+use resources::AnimationSampling;
+use util::SamplerPrimitive;
 
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq, Serialize, Deserialize)]
 pub enum LocalTransformChannel {
@@ -12,11 +13,11 @@ pub enum LocalTransformChannel {
 
 impl AnimationSampling for LocalTransform {
     type Channel = LocalTransformChannel;
-    type Scalar = f32;
+    type Primitive = SamplerPrimitive<f32>;
 
     fn apply_sample(&mut self, channel: &Self::Channel, data: &SamplerPrimitive<f32>) {
         use self::LocalTransformChannel::*;
-        use SamplerPrimitive::*;
+        use util::SamplerPrimitive::*;
         match (channel, *data) {
             (&Translation, Vec3(ref d)) => self.translation = Vector3::from(*d),
             (&Rotation, Vec4(ref d)) => self.rotation = Quaternion::from(*d).normalize(),

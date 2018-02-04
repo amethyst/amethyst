@@ -184,7 +184,7 @@ fn load_animation(
     let samplers = animation
         .channels()
         .map(|ref channel| load_channel(channel, buffers))
-        .collect::<Result<Vec<(usize, LocalTransformChannel, Sampler<f32>)>, GltfError>>()?;
+        .collect::<Result<Vec<(usize, LocalTransformChannel, Sampler<SamplerPrimitive<f32>>)>, GltfError>>()?;
     Ok(GltfAnimation {
         samplers,
         handle: None,
@@ -194,7 +194,7 @@ fn load_animation(
 fn load_channel(
     channel: &gltf::animation::Channel,
     buffers: &Buffers,
-) -> Result<(usize, LocalTransformChannel, Sampler<f32>), GltfError> {
+) -> Result<(usize, LocalTransformChannel, Sampler<SamplerPrimitive<f32>>), GltfError> {
     use gltf::animation::TrsProperty::*;
     use gltf_utils::AccessorIter;
     let sampler = channel.sampler();

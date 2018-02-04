@@ -151,7 +151,12 @@ fn run() -> Result<(), amethyst::Error> {
     let mut game = Application::build(resources_directory, Example)?
         .with(GltfSceneLoaderSystem::new(), "loader_system", &[])
         .with_bundle(RenderBundle::new(pipe, Some(config)))?
-        .with_bundle(AnimationBundle::<LocalTransform>::new("animation_control_system", "sampler_interpolation_system").with_dep(&["loader_system"]))?
+        .with_bundle(
+            AnimationBundle::<LocalTransform>::new(
+                "animation_control_system",
+                "sampler_interpolation_system",
+            ).with_dep(&["loader_system"]),
+        )?
         .with_bundle(
             TransformBundle::new()
                 .with_dep(&["animation_control_system", "sampler_interpolation_system"]),

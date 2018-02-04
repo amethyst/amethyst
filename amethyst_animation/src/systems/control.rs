@@ -2,13 +2,12 @@ use std::marker;
 use std::time::Duration;
 
 use amethyst_assets::{AssetStorage, Handle};
-use amethyst_core::cgmath::BaseNum;
 use fnv::FnvHashMap;
+use minterpolate::InterpolationPrimitive;
 use specs::{Component, Entities, Entity, Fetch, Join, ReadStorage, System, WriteStorage};
 
 use resources::{Animation, AnimationCommand, AnimationControl, AnimationHierarchy,
-                AnimationSampling, ControlState, Sampler, SamplerControl, SamplerControlSet,
-                SamplerPrimitive};
+                AnimationSampling, ControlState, Sampler, SamplerControl, SamplerControlSet};
 
 /// System for setting up animations, should run before `SamplerInterpolationSystem`.
 ///
@@ -35,7 +34,7 @@ where
     type SystemData = (
         Entities<'a>,
         Fetch<'a, AssetStorage<Animation<T>>>,
-        Fetch<'a, AssetStorage<Sampler<T::Scalar>>>,
+        Fetch<'a, AssetStorage<Sampler<T::Primitive>>>,
         WriteStorage<'a, AnimationControl<T>>,
         WriteStorage<'a, SamplerControlSet<T>>,
         ReadStorage<'a, AnimationHierarchy>,
@@ -80,9 +79,9 @@ where
 
 /// Check if the given animation list is for a single node. If so, we don't need an
 /// `AnimationHierarchy`.
-fn only_one_index<C, S>(nodes: &[(usize, C, Handle<Sampler<S>>)]) -> bool
+fn only_one_index<C, P>(nodes: &[(usize, C, Handle<Sampler<P>>)]) -> bool
 where
-    S: BaseNum,
+    P: InterpolationPrimitive,
 {
     if nodes.is_empty() {
         true
@@ -126,7 +125,7 @@ fn process_animation_control<T>(
     animation: &Animation<T>,
     control: &AnimationControl<T>,
     hierarchy: Option<&AnimationHierarchy>,
-    sampler_storage: &AssetStorage<Sampler<T::Scalar>>,
+    sampler_storage: &AssetStorage<Sampler<T::Primitive>>,
     samplers: &mut WriteStorage<SamplerControlSet<T>>,
     transforms: &ReadStorage<T>,
     remove: &mut Vec<Entity>,
@@ -226,7 +225,7 @@ where
 /// True if the animation was started, false if it wasn't.
 fn request_animation<T>(
     animation: &Animation<T>,
-    sampler_storage: &AssetStorage<Sampler<T::Scalar>>,
+    sampler_storage: &AssetStorage<Sampler<T::Primitive>>,
     control: &AnimationControl<T>,
     hierarchy: &AnimationHierarchy,
     samplers: &mut WriteStorage<SamplerControlSet<T>>,
@@ -284,7 +283,7 @@ fn add_to_set<T>(
     control_set.samplers.insert(channel.clone(), control);
 }
 
-fn get_after<T>(channel: &T::Channel, component: &T) -> SamplerPrimitive<T::Scalar>
+fn get_after<T>(channel: &T::Channel, component: &T) -> T::Primitive
 where
     T: AnimationSampling,
 {

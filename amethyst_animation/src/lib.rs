@@ -13,12 +13,12 @@ pub use self::bundle::{AnimationBundle, SamplingBundle, VertexSkinningBundle};
 pub use self::interpolation::{Interpolate, InterpolationType};
 pub use self::resources::{Animation, AnimationCommand, AnimationControl, AnimationHierarchy,
                           AnimationSampling, AnimationSet, ControlState, EndControl, Sampler,
-                          SamplerControl, SamplerControlSet, SamplerPrimitive};
+                          SamplerControl, SamplerControlSet};
 pub use self::skinning::{Joint, Skin, VertexSkinningSystem};
 pub use self::systems::{AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem,
                         SamplerProcessor};
 pub use self::transform::LocalTransformChannel;
-pub use self::util::{pause_animation, play_animation, toggle_animation};
+pub use self::util::{pause_animation, play_animation, toggle_animation, SamplerPrimitive};
 
 mod skinning;
 mod resources;

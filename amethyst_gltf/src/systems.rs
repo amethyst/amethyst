@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
-use animation::{Animation, AnimationHierarchy, AnimationSet, Joint, Sampler, Skin};
+use animation::{Animation, AnimationHierarchy, AnimationSet, Joint, Sampler, SamplerPrimitive,
+                Skin};
 use assets::{AssetStorage, Handle, HotReloadStrategy, Loader};
 use core::{ThreadPool, Time};
 use core::cgmath::{EuclideanSpace, Matrix4, Point3, SquareMatrix};
@@ -41,7 +42,7 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
         Fetch<'a, AssetStorage<Mesh>>,
         Fetch<'a, AssetStorage<Texture>>,
         Fetch<'a, AssetStorage<Animation<LocalTransform>>>,
-        Fetch<'a, AssetStorage<Sampler<f32>>>,
+        Fetch<'a, AssetStorage<Sampler<SamplerPrimitive<f32>>>>,
         Fetch<'a, Loader>,
         Fetch<'a, MaterialDefaults>,
         Fetch<'a, Time>,

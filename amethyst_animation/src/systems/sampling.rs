@@ -35,7 +35,7 @@ where
 {
     type SystemData = (
         Fetch<'a, Time>,
-        Fetch<'a, AssetStorage<Sampler<T::Scalar>>>,
+        Fetch<'a, AssetStorage<Sampler<T::Primitive>>>,
         WriteStorage<'a, SamplerControlSet<T>>,
         WriteStorage<'a, T>,
     );
@@ -61,7 +61,7 @@ where
 /// - `now`: synchronized `Instant` for the current frame
 fn process_sampler<T>(
     control: &mut SamplerControl<T>,
-    sampler: &Sampler<T::Scalar>,
+    sampler: &Sampler<T::Primitive>,
     component: &mut T,
     time: &Time,
 ) where
@@ -103,7 +103,7 @@ fn process_sampler<T>(
 /// Will return the new state of the sampling, and optionally a new end control state (for looping)
 fn update_duration_and_check<T>(
     control: &SamplerControl<T>,
-    sampler: &Sampler<T::Scalar>,
+    sampler: &Sampler<T::Primitive>,
     time: &Time,
 ) -> (ControlState, Option<EndControl>)
 where
@@ -185,7 +185,7 @@ where
 }
 
 fn do_sampling<T>(
-    sampler: &Sampler<T::Scalar>,
+    sampler: &Sampler<T::Primitive>,
     duration: &Duration,
     channel: &T::Channel,
     component: &mut T,

@@ -3,93 +3,54 @@ use std::marker;
 use std::time::Duration;
 
 use amethyst_assets::{Asset, Handle, Result};
-use amethyst_core::cgmath::BaseNum;
 use fnv::FnvHashMap;
+use minterpolate::InterpolationPrimitive;
 use specs::{Component, DenseVecStorage, Entity, VecStorage};
 
 use interpolation::InterpolationType;
 
 /// Master trait used to define animation sampling on a component
 pub trait AnimationSampling: Send + Sync + 'static {
+    /// The interpolation primitive
+    type Primitive: InterpolationPrimitive + Clone + Copy + Send + Sync + 'static;
     /// The channel type
     type Channel: Clone + Hash + Eq + Send + Sync + 'static;
-    /// Scalar type
-    type Scalar: BaseNum + Send + Sync + 'static;
 
     /// Apply a sample to a channel
-    fn apply_sample(&mut self, channel: &Self::Channel, data: &SamplerPrimitive<Self::Scalar>);
+    fn apply_sample(&mut self, channel: &Self::Channel, data: &Self::Primitive);
 
     /// Get the current sample for a channel
-    fn current_sample(&self, channel: &Self::Channel) -> SamplerPrimitive<Self::Scalar>;
-}
-
-/// Sampler primitive
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub enum SamplerPrimitive<S>
-where
-    S: BaseNum,
-{
-    Scalar(S),
-    Vec2([S; 2]),
-    Vec3([S; 3]),
-    Vec4([S; 4]),
-}
-
-impl<S> From<[S; 2]> for SamplerPrimitive<S>
-where
-    S: BaseNum,
-{
-    fn from(arr: [S; 2]) -> Self {
-        SamplerPrimitive::Vec2(arr)
-    }
-}
-
-impl<S> From<[S; 3]> for SamplerPrimitive<S>
-where
-    S: BaseNum,
-{
-    fn from(arr: [S; 3]) -> Self {
-        SamplerPrimitive::Vec3(arr)
-    }
-}
-
-impl<S> From<[S; 4]> for SamplerPrimitive<S>
-where
-    S: BaseNum,
-{
-    fn from(arr: [S; 4]) -> Self {
-        SamplerPrimitive::Vec4(arr)
-    }
+    fn current_sample(&self, channel: &Self::Channel) -> Self::Primitive;
 }
 
 /// Sampler defines a single animation for a single channel on a single component
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Sampler<S>
+pub struct Sampler<T>
 where
-    S: BaseNum,
+    T: InterpolationPrimitive,
 {
     /// Time of key frames
     pub input: Vec<f32>,
     /// Actual output data to interpolate
-    pub output: Vec<SamplerPrimitive<S>>,
+    pub output: Vec<T>,
     /// How should interpolation be done
     pub ty: InterpolationType,
 }
 
-impl<S> Asset for Sampler<S>
+impl<T> Asset for Sampler<T>
 where
-    S: BaseNum + Send + Sync + 'static,
+    T: InterpolationPrimitive + Send + Sync + 'static,
 {
     const NAME: &'static str = "animation::Sampler";
     type Data = Self;
     type HandleStorage = VecStorage<Handle<Self>>;
 }
 
-impl<S> Into<Result<Sampler<S>>> for Sampler<S>
+impl<T> Into<Result<Sampler<T>>> for Sampler<T>
 where
-    S: BaseNum,
+    T: InterpolationPrimitive,
 {
-    fn into(self) -> Result<Sampler<S>> {
+    fn into(self) -> Result<Sampler<T>> {
         Ok(self)
     }
 }
@@ -115,7 +76,7 @@ where
     T: AnimationSampling,
 {
     /// node index -> sampler handle
-    pub nodes: Vec<(usize, T::Channel, Handle<Sampler<T::Scalar>>)>,
+    pub nodes: Vec<(usize, T::Channel, Handle<Sampler<T::Primitive>>)>,
 }
 
 impl<T> Asset for Animation<T>
@@ -187,13 +148,13 @@ where
     /// Channel
     pub channel: T::Channel,
     /// Sampler
-    pub sampler: Handle<Sampler<T::Scalar>>,
+    pub sampler: Handle<Sampler<T::Primitive>>,
     /// State of sampling
     pub state: ControlState,
     /// What to do when sampler ends
     pub end: EndControl,
     /// What the transform should return to after end
-    pub after: SamplerPrimitive<T::Scalar>,
+    pub after: T::Primitive,
     // Control the rate of animation, default is 1.0
     // pub rate_multiplier: f32, //TODO
 }
