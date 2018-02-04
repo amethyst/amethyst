@@ -3,7 +3,6 @@ use std::marker;
 use amethyst_assets::AssetStorage;
 use amethyst_core::{ECSBundle, Result};
 use amethyst_renderer::JointTransforms;
-use shred::ResourceId;
 use specs::{Component, DispatcherBuilder, World};
 
 use resources::{Animation, AnimationControl, AnimationHierarchy, AnimationSampling, AnimationSet,
@@ -90,18 +89,16 @@ where
     fn build(
         self,
         world: &mut World,
-        mut builder: DispatcherBuilder<'a, 'b>,
+        builder: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
-        if !world
+        world
             .res
-            .has_value(ResourceId::new::<AssetStorage<Sampler<T::Primitive>>>())
-        {
-            world.add_resource(AssetStorage::<Sampler<T::Primitive>>::new());
-            builder = builder.add(SamplerProcessor::<T::Primitive>::new(), "", &[]);
-        }
-
+            .entry()
+            .or_insert_with(|| AssetStorage::<Sampler<T::Primitive>>::new());
         world.register::<SamplerControlSet<T>>();
-        Ok(builder.add(SamplerInterpolationSystem::<T>::new(), self.name, self.dep))
+        Ok(builder
+            .add(SamplerProcessor::<T::Primitive>::new(), "", &[])
+            .add(SamplerInterpolationSystem::<T>::new(), self.name, self.dep))
     }
 }
 
