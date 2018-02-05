@@ -19,7 +19,7 @@ pub trait NetworkBase<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+'sta
 
 /// Sends an event to the target NetConnection using the provided network Socket.
 /// The socket has to be binded!
-pub fn send_event<T>(event:&NetEvent<T>,target:&NetConnection,socket:&UdpSocket) where T:Send+Sync+Serialize+Clone+DeserializeOwned+'static{
+pub(crate) fn send_event<T>(event:&NetEvent<T>,target:&NetConnection,socket:&UdpSocket) where T:Serialize{
     let ser = serialize(event, Infinite);
     match ser{
         Ok(s)=>{
@@ -33,6 +33,18 @@ pub fn send_event<T>(event:&NetEvent<T>,target:&NetConnection,socket:&UdpSocket)
 }
 
 /// Attempts to deserialize an event from the raw byte data.
-pub fn deserialize_event<T>(data:&[u8])->Result<NetEvent<T>,Box<ErrorKind>> where T:Send+Sync+Serialize+Clone+DeserializeOwned+'static{
+pub(crate) fn deserialize_event<T>(data:&[u8])->Result<NetEvent<T>,Box<ErrorKind>> where T:DeserializeOwned{
     deserialize::<NetEvent<T>>(data)
 }
+
+pub fn send_to<T>(event: NetEvent<T>, target: &NetConnection, pool: &mut NetConnectionPool){
+    //pool.
+}
+
+/*
+send_to_all
+send_to_others // On server == send_to_clients old model
+send_to_all_except
+send_to
+send_event // Internal logic
+*/

@@ -53,7 +53,7 @@ impl<T> NetServerSystem<T> where T:Send+Sync+Serialize{
 //impl<T> NetworkBase<T> for NetServerSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+BaseNetEvent<T>+'static{}
 
 impl<'a, T> System<'a> for NetServerSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+'static{
-    type SystemData = FetchMut<'a, EventChannel<NetOwnedEvent<NetEvent<T>>>>;
+    type SystemData = FetchMut<'a, EventChannel<NetSourcedEvent<NetEvent<T>>>>;
     //NOTE: Running it this way might cause a buffer overflow during heavy load on low-tickrate servers.
     //TODO: Once the net_debug tools will be made, test this for possible buffer overflow at OS level by monitoring packet loss in localhost.
     fn run(&mut self, mut events: Self::SystemData) {
@@ -69,9 +69,9 @@ impl<'a, T> System<'a> for NetServerSystem<T> where T:Send+Sync+Serialize+Clone+
                                 Some(ind)=>{
                                     let c = self.clients.get(ind).unwrap().clone();
                                     if c.state==ConnectionState::Connected || c.state == ConnectionState::Connecting{
-                                        let owned_event = NetOwnedEvent{
+                                        let owned_event = NetSourcedEvent {
                                             event:ev.clone(),
-                                            owner:c.clone(),
+                                            source:c.clone(),
                                         };
                                         events.single_write(owned_event);
                                         match ev{
@@ -97,9 +97,9 @@ impl<'a, T> System<'a> for NetServerSystem<T> where T:Send+Sync+Serialize+Clone+
                                             send_event(&NetEvent::Connected::<T>,&conn,&self.socket);
 
                                             //Push events to continue the user-space connection protocol
-                                            let owned_event = NetOwnedEvent{
+                                            let owned_event = NetSourcedEvent {
                                                 event:ev,
-                                                owner:conn.clone(),
+                                                source:conn.clone(),
                                             };
                                             events.single_write(owned_event);
 
