@@ -60,8 +60,11 @@ impl<T> NetClientSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+'s
 //impl<T> NetworkBase<T> for NetClientSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+BaseNetEvent<T>+'static{}
 
 impl<'a, T> System<'a> for NetClientSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+'static{
-    type SystemData = FetchMut<'a, EventChannel<NetSourcedEvent<?????,NetEvent<T>>>>;
-    fn run(&mut self, mut events: Self::SystemData) {
+    type SystemData = (
+        FetchMut<'a, NetSendBuffer<'a,T>>,
+        FetchMut<'a, NetReceiveBuffer<'a,T>>,
+    );
+    fn run(&mut self, (mut send_buf,mut receive_buf): Self::SystemData) {
         let mut buf = [0; 2048];
         loop {
             match self.socket.recv_from(&mut buf) {
@@ -79,7 +82,7 @@ impl<'a, T> System<'a> for NetClientSystem<T> where T:Send+Sync+Serialize+Clone+
                                         event:ev.clone(),
                                         source:conn.clone(),
                                     };
-                                    events.single_write(owned_event);
+                                    receive_buf.single_write(owned_event);
                                     match ev{
                                         NetEvent::Connected=>{
                                             conn.state = ConnectionState::Connected;

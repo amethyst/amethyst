@@ -53,10 +53,13 @@ impl<T> NetServerSystem<T> where T:Send+Sync+Serialize{
 //impl<T> NetworkBase<T> for NetServerSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+BaseNetEvent<T>+'static{}
 
 impl<'a, T> System<'a> for NetServerSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+'static{
-    type SystemData = FetchMut<'a, EventChannel<NetSourcedEvent<NetEvent<T>>>>;
+    type SystemData = (
+        FetchMut<'a, NetSendBuffer<'a,T>>,
+        FetchMut<'a, NetReceiveBuffer<'a,T>>,
+    );
     //NOTE: Running it this way might cause a buffer overflow during heavy load on low-tickrate servers.
     //TODO: Once the net_debug tools will be made, test this for possible buffer overflow at OS level by monitoring packet loss in localhost.
-    fn run(&mut self, mut events: Self::SystemData) {
+    fn run(&mut self, (mut send_buf,mut receive_buf): Self::SystemData) {
         let mut buf = [0; 2048];
         loop {
             match self.socket.recv_from(&mut buf) {
@@ -73,7 +76,7 @@ impl<'a, T> System<'a> for NetServerSystem<T> where T:Send+Sync+Serialize+Clone+
                                             event:ev.clone(),
                                             source:c.clone(),
                                         };
-                                        events.single_write(owned_event);
+                                        receive_buf.single_write(owned_event);
                                         match ev{
                                             NetEvent::Disconnect {reason}=>{
                                                 self.clients.remove(ind);
@@ -101,7 +104,7 @@ impl<'a, T> System<'a> for NetServerSystem<T> where T:Send+Sync+Serialize+Clone+
                                                 event:ev,
                                                 source:conn.clone(),
                                             };
-                                            events.single_write(owned_event);
+                                            receive_buf.single_write(owned_event);
 
                                             self.clients.push(conn);
                                         },

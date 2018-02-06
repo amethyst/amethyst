@@ -79,10 +79,10 @@ pub trait BaseNetEvent<T>{
 
 ///Carries the source of the event. Useful for debugging, security checks, gameplay logic, etc...
 #[derive(Debug,Clone,Serialize,Deserialize)]
-pub struct NetSourcedEvent<'a,T> where T:Event{
+pub struct NetSourcedEvent<T> where T:Event{
     /// The event
     pub event: T,
     /// The source of this event
-    pub source: &'a NetConnection,
+    pub source: Uuid,
 }
 

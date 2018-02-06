@@ -11,6 +11,7 @@ extern crate shrev;
 #[macro_use]
 extern crate log;
 extern crate specs;
+extern crate uuid;
 
 pub mod components;
 pub mod filters;

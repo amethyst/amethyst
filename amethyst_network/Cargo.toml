@@ -19,3 +19,4 @@ shrev = "0.8"
 bincode = "0.9.2"
 log = "0.4"
 specs = { git = "https://github.com/slide-rs/specs/", features = ["serde"] }
+uuid = { version = "0.5.1", features = ["v4"] }
