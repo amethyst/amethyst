@@ -27,7 +27,7 @@ Read a summary of what happened this past week at [*This Week in Amethyst*][tw].
 
 ## Vision
 
-Amethyst is a fast, [data-oriented](https://www.amethyst.rs/book/master/html/glossary.html#data-driven-design), and data-driven game engine suitable
+Amethyst is a fast, [data-oriented](https://gamedevelopment.tutsplus.com/articles/what-is-data-oriented-game-engine-design--cms-21052), and data-driven game engine suitable
 for rapid prototyping and iteration. It also tries to push the
 [Rust programming language][rs] to its limits, driving further improvement and
 hopefully attracting more game developers toward the young and vibrant Rust
