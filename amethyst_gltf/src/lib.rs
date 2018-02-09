@@ -19,9 +19,9 @@ pub use systems::GltfSceneLoaderSystem;
 
 use std::ops::Range;
 
-use animation::{Animation, LocalTransformChannel, Sampler, SamplerPrimitive};
+use animation::{Animation, TransformChannel, Sampler, SamplerPrimitive};
 use assets::{Asset, Error as AssetError, Handle};
-use core::transform::LocalTransform;
+use core::transform::Transform;
 use gfx::Primitive;
 use renderer::{AnimatedVertexBufferCombination, MeshHandle, TextureData, TextureHandle};
 use specs::VecStorage;
@@ -89,7 +89,7 @@ pub struct GltfNode {
     pub skin: Option<usize>,
     pub parent: Option<usize>,
     pub children: Vec<usize>,
-    pub local_transform: LocalTransform,
+    pub local_transform: Transform,
 }
 
 /// A single scene is defined as a list of the root nodes in the node hierarchy for the full asset
@@ -103,8 +103,8 @@ pub struct GltfScene {
 pub struct GltfAnimation {
     // node index, vec will be same size as samplers and channels, and reference the sampler+channel
     // at the same index
-    pub samplers: Vec<(usize, LocalTransformChannel, Sampler<SamplerPrimitive<f32>>)>,
-    pub handle: Option<Handle<Animation<LocalTransform>>>,
+    pub samplers: Vec<(usize, TransformChannel, Sampler<SamplerPrimitive<f32>>)>,
+    pub handle: Option<Handle<Animation<Transform>>>,
     //pub hierarchy_root: usize,
 }
 

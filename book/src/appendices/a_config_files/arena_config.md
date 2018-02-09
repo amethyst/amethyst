@@ -98,7 +98,7 @@ use config::ArenaConfig;
 type SystemData = (
     WriteStorage<'s, Ball>,
     ReadStorage<'s, Paddle>,
-    ReadStorage<'s, LocalTransform>,
+    ReadStorage<'s, Transform>,
     Fetch<'s, AssetStorage<Source>>,
     Fetch<'s, Sounds>,
     Fetch<'s, Option<Output>>,

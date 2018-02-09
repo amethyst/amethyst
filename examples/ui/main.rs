@@ -6,7 +6,7 @@ extern crate genmesh;
 use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::Time;
 use amethyst::core::cgmath::{Deg, InnerSpace, Vector3};
-use amethyst::core::transform::Transform;
+use amethyst::core::transform::GlobalTransform;
 use amethyst::ecs::{Entity, World};
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light, Mesh, Pipeline,
@@ -225,7 +225,7 @@ fn initialise_sphere(world: &mut World) {
     // Create a sphere entity using the mesh and the material.
     world
         .create_entity()
-        .with(Transform::default())
+        .with(GlobalTransform::default())
         .with(mesh)
         .with(material)
         .build();
@@ -256,6 +256,6 @@ fn initialise_camera(world: &mut World) {
     world
         .create_entity()
         .with(Camera::from(Projection::perspective(1.3, Deg(60.0))))
-        .with(Transform(transform.into()))
+        .with(GlobalTransform(transform.into()))
         .build();
 }

@@ -275,7 +275,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// ~~~no_run
     /// use amethyst::prelude::*;
-    /// use amethyst::core::transform::{Parent, LocalTransform, TransformSystem};
+    /// use amethyst::core::transform::{Parent, Transform, TransformSystem};
     ///
     /// struct NullState;
     /// impl State for NullState {}
@@ -289,7 +289,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// // components can be registered at this stage
     ///     .register::<Parent>()
-    ///     .register::<LocalTransform>()
+    ///     .register::<Transform>()
     ///
     /// // systems can be added before the game is run
     ///     .with::<TransformSystem>(TransformSystem::new(), "transform_system", &[])

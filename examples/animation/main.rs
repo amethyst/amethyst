@@ -5,7 +5,7 @@ extern crate amethyst_animation;
 extern crate genmesh;
 
 use amethyst::assets::{Handle, Loader};
-use amethyst::core::{LocalTransform, Parent, Transform, TransformBundle};
+use amethyst::core::{Transform, Parent, GlobalTransform, TransformBundle};
 use amethyst::core::cgmath::{Deg, InnerSpace, Vector3};
 use amethyst::ecs::{Entity, World};
 use amethyst::prelude::*;
@@ -13,7 +13,7 @@ use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Event,
                          Light, Mesh, Pipeline, PointLight, PosNormTex, Projection, RenderBundle,
                          Rgba, Stage, VirtualKeyCode, WindowEvent};
 use amethyst_animation::{play_animation, Animation, AnimationBundle, EndControl,
-                         InterpolationType, LocalTransformChannel, Sampler};
+                         InterpolationType, TransformChannel, Sampler};
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 
@@ -28,7 +28,7 @@ const LIGHT_INTENSITY: f32 = 3.0;
 #[derive(Default)]
 struct Example {
     pub sphere: Option<Entity>,
-    pub animation: Option<Handle<Animation<LocalTransform>>>,
+    pub animation: Option<Handle<Animation<Transform>>>,
 }
 
 impl State for Example {
@@ -92,7 +92,7 @@ fn run() -> Result<(), amethyst::Error> {
     let config = DisplayConfig::load(&display_config_path);
 
     let mut game = Application::build(resources, Example::default())?
-        .with_bundle(AnimationBundle::<LocalTransform>::new(
+        .with_bundle(AnimationBundle::<Transform>::new(
             "animation_control_system",
             "sampler_interpolation_system",
         ))?
@@ -152,18 +152,18 @@ fn initialise_sphere(world: &mut World) -> Entity {
 
     let parent_entity = world
         .create_entity()
-        .with(LocalTransform::default())
         .with(Transform::default())
+        .with(GlobalTransform::default())
         .build();
 
     // Create a sphere entity using the mesh and the material.
     world
         .create_entity()
-        .with(LocalTransform {
+        .with(Transform {
             translation: [0., 1.0, 0.].into(),
-            ..LocalTransform::default()
+            ..Transform::default()
         })
-        .with(Transform::default())
+        .with(GlobalTransform::default())
         .with(Parent {
             entity: parent_entity.clone(),
         })
@@ -179,7 +179,7 @@ fn initialise_sphere(world: &mut World) -> Entity {
     parent_entity
 }
 
-fn initialise_animation(world: &mut World) -> Handle<Animation<LocalTransform>> {
+fn initialise_animation(world: &mut World) -> Handle<Animation<Transform>> {
     let loader = world.write_resource::<Loader>();
     let translation_sampler = Sampler {
         input: vec![0., 1., 2., 3., 4.],
@@ -226,13 +226,13 @@ fn initialise_animation(world: &mut World) -> Handle<Animation<LocalTransform>> 
         nodes: vec![
             (
                 0,
-                LocalTransformChannel::Translation,
+                TransformChannel::Translation,
                 translation_animation_handle,
             ),
             //(0, scale_animation_handle),
             (
                 0,
-                LocalTransformChannel::Rotation,
+                TransformChannel::Rotation,
                 rotation_animation_handle,
             ),
         ],
@@ -265,6 +265,6 @@ fn initialise_camera(world: &mut World) {
     world
         .create_entity()
         .with(Camera::from(Projection::perspective(1.3, Deg(60.0))))
-        .with(Transform(transform.into()))
+        .with(GlobalTransform(transform.into()))
         .build();
 }

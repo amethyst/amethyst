@@ -41,7 +41,7 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
         Entities<'a>,
         Fetch<'a, AssetStorage<Mesh>>,
         Fetch<'a, AssetStorage<Texture>>,
-        Fetch<'a, AssetStorage<Animation<LocalTransform>>>,
+        Fetch<'a, AssetStorage<Animation<Transform>>>,
         Fetch<'a, AssetStorage<Sampler<SamplerPrimitive<f32>>>>,
         Fetch<'a, Loader>,
         Fetch<'a, MaterialDefaults>,
@@ -51,12 +51,12 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
         FetchMut<'a, AssetStorage<GltfSceneAsset>>,
         WriteStorage<'a, Handle<GltfSceneAsset>>,
         WriteStorage<'a, Handle<Mesh>>,
-        WriteStorage<'a, LocalTransform>,
         WriteStorage<'a, Transform>,
+        WriteStorage<'a, GlobalTransform>,
         WriteStorage<'a, Parent>,
         WriteStorage<'a, Material>,
-        WriteStorage<'a, AnimationHierarchy<LocalTransform>>,
-        WriteStorage<'a, AnimationSet<LocalTransform>>,
+        WriteStorage<'a, AnimationHierarchy<Transform>>,
+        WriteStorage<'a, AnimationSet<Transform>>,
         WriteStorage<'a, Joint>,
         WriteStorage<'a, Skin>,
         WriteStorage<'a, JointTransforms>,
@@ -140,7 +140,7 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
                     for root_node_index in &scene.root_nodes {
                         let root_entity = entities.create();
                         parents.insert(root_entity, Parent { entity });
-                        transforms.insert(root_entity, Transform::default());
+                        transforms.insert(root_entity, GlobalTransform::default());
                         load_node(
                             *root_node_index,
                             &root_entity,
@@ -289,8 +289,8 @@ fn load_node(
     node_index: usize,
     node_entity: &Entity,
     scene_asset: &GltfSceneAsset,
-    local_transforms: &mut WriteStorage<LocalTransform>,
-    transforms: &mut WriteStorage<Transform>,
+    local_transforms: &mut WriteStorage<Transform>,
+    transforms: &mut WriteStorage<GlobalTransform>,
     parents: &mut WriteStorage<Parent>,
     entities: &Entities,
     loader: &Loader,
@@ -319,7 +319,7 @@ fn load_node(
                 entity: *node_entity,
             },
         );
-        transforms.insert(child_entity, Transform::default());
+        transforms.insert(child_entity, GlobalTransform::default());
         load_node(
             *child_node_index,
             &child_entity,
@@ -387,8 +387,8 @@ fn load_node(
             // primitive and load the graphics onto those
             for (primitive_index, primitive) in node.primitives.iter().enumerate() {
                 let primitive_entity = entities.create();
-                local_transforms.insert(primitive_entity, LocalTransform::default());
-                transforms.insert(primitive_entity, Transform::default());
+                local_transforms.insert(primitive_entity, Transform::default());
+                transforms.insert(primitive_entity, GlobalTransform::default());
                 parents.insert(
                     primitive_entity,
                     Parent {

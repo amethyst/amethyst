@@ -7,10 +7,10 @@ use std::mem;
 use std::sync::Arc;
 
 use self::importer::{get_image_data, import, Buffers, ImageFormat};
-use animation::{InterpolationType, LocalTransformChannel, Sampler, SamplerPrimitive};
+use animation::{InterpolationType, TransformChannel, Sampler, SamplerPrimitive};
 use assets::{Error as AssetError, Format, FormatValue, Result as AssetResult, ResultExt, Source};
 use core::cgmath::{Matrix4, SquareMatrix};
-use core::transform::LocalTransform;
+use core::transform::Transform;
 use gfx::Primitive;
 use gfx::texture::SamplerInfo;
 use gltf;
@@ -194,7 +194,7 @@ fn load_animation(
 fn load_channel(
     channel: &gltf::animation::Channel,
     buffers: &Buffers,
-) -> Result<(usize, LocalTransformChannel, Sampler<SamplerPrimitive<f32>>), GltfError> {
+) -> Result<(usize, TransformChannel, Sampler<SamplerPrimitive<f32>>), GltfError> {
     use gltf::animation::TrsProperty::*;
     use gltf_utils::AccessorIter;
     let sampler = channel.sampler();
@@ -210,7 +210,7 @@ fn load_channel(
                 .collect::<Vec<_>>();
             Ok((
                 node_index,
-                LocalTransformChannel::Translation,
+                TransformChannel::Translation,
                 Sampler { input, ty, output },
             ))
         }
@@ -220,7 +220,7 @@ fn load_channel(
                 .collect::<Vec<_>>();
             Ok((
                 node_index,
-                LocalTransformChannel::Scale,
+                TransformChannel::Scale,
                 Sampler { input, ty, output },
             ))
         }
@@ -236,7 +236,7 @@ fn load_channel(
             };
             Ok((
                 node_index,
-                LocalTransformChannel::Rotation,
+                TransformChannel::Rotation,
                 Sampler { input, ty, output },
             ))
         }
@@ -496,7 +496,7 @@ fn load_node(
     };
 
     let (translation, rotation, scale) = node.transform().decomposed();
-    let mut local_transform = LocalTransform::default();
+    let mut local_transform = Transform::default();
     local_transform.translation = translation.into();
     // gltf quat format: [x, y, z, w], our quat format: [w, x, y, z]
     local_transform.rotation = [rotation[3], rotation[0], rotation[1], rotation[2]].into();

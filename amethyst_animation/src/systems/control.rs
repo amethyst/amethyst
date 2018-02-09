@@ -104,7 +104,7 @@ where
 ///                animation will be silently dropped.
 /// - `sampler_storage`: `AssetStorage` for all `Sampler`s
 /// - `samplers`: the active sampler sets
-/// - `transforms`: `LocalTransform`s, used to retrieve the rest pose before animation starts.
+/// - `transforms`: `Transform`s, used to retrieve the rest pose before animation starts.
 /// - `remove`: all entities pushed here will have the control object removed at the end of the system execution
 /// - `now`: we want all animations and samplers to be synchronized, so we only supply an `Instant`
 ///
@@ -208,7 +208,7 @@ where
 /// - `control`: the control object for the animation instance
 /// - `hierarchy`: the animation node hierarchy for the entity hierarchy the animation instance is active for
 /// - `samplers`: the active sampler sets
-/// - `transforms`: `LocalTransform`s, used to retrieve the rest pose before animation starts.
+/// - `transforms`: `Transform`s, used to retrieve the rest pose before animation starts.
 ///
 /// ## Returns
 ///

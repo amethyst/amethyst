@@ -17,7 +17,7 @@ pub use self::resources::{Animation, AnimationCommand, AnimationControl, Animati
 pub use self::skinning::{Joint, Skin, VertexSkinningSystem};
 pub use self::systems::{AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem,
                         SamplerProcessor};
-pub use self::transform::LocalTransformChannel;
+pub use self::transform::TransformChannel;
 pub use self::util::{pause_animation, play_animation, toggle_animation, SamplerPrimitive};
 
 mod skinning;

@@ -11,7 +11,7 @@ use amethyst::config::Config;
 use amethyst::core::cgmath::{Array, Deg, Euler, Quaternion, Rad, Rotation, Rotation3, Vector3};
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::timing::Time;
-use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
+use amethyst::core::transform::{Transform, GlobalTransform, TransformBundle};
 use amethyst::ecs::{Entity, Fetch, FetchMut, Join, ReadStorage, System, World, WriteStorage};
 use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, DisplayConfig, DrawShaded,
                          ElementState, Event, KeyboardInput, Light, Material, MaterialDefaults,
@@ -39,7 +39,7 @@ impl<'a> System<'a> for ExampleSystem {
         WriteStorage<'a, Light>,
         Fetch<'a, Time>,
         ReadStorage<'a, Camera>,
-        WriteStorage<'a, LocalTransform>,
+        WriteStorage<'a, Transform>,
         FetchMut<'a, DemoState>,
         WriteStorage<'a, UiText>,
         Fetch<'a, FPSCounter>,
@@ -98,7 +98,7 @@ impl State for Example {
 
         // Add teapot and lid to scene
         for mesh in vec![assets.lid.clone(), assets.teapot.clone()] {
-            let mut trans = LocalTransform::default();
+            let mut trans = Transform::default();
             trans.rotation = Quaternion::from(Euler::new(Deg(90.0), Deg(-90.0), Deg(0.0))).into();
             trans.translation = Vector3::new(5.0, 5.0, 0.0);
 
@@ -107,12 +107,12 @@ impl State for Example {
                 .with(mesh)
                 .with(assets.red.clone())
                 .with(trans)
-                .with(Transform::default())
+                .with(GlobalTransform::default())
                 .build();
         }
 
         // Add cube to scene
-        let mut trans = LocalTransform::default();
+        let mut trans = Transform::default();
         trans.translation = Vector3::new(5.0, -5.0, 2.0);
         trans.scale = [2.0; 3].into();
 
@@ -121,11 +121,11 @@ impl State for Example {
             .with(assets.cube.clone())
             .with(assets.logo.clone())
             .with(trans)
-            .with(Transform::default())
+            .with(GlobalTransform::default())
             .build();
 
         // Add cone to scene
-        let mut trans = LocalTransform::default();
+        let mut trans = Transform::default();
         trans.translation = Vector3::new(-5.0, 5.0, 0.0);
         trans.scale = [2.0; 3].into();
 
@@ -134,22 +134,22 @@ impl State for Example {
             .with(assets.cone.clone())
             .with(assets.white.clone())
             .with(trans)
-            .with(Transform::default())
+            .with(GlobalTransform::default())
             .build();
 
         // Add custom cube object to scene
-        let mut trans = LocalTransform::default();
+        let mut trans = Transform::default();
         trans.translation = Vector3::new(-5.0, -5.0, 1.0);
         world
             .create_entity()
             .with(assets.cube.clone())
             .with(assets.red.clone())
             .with(trans)
-            .with(Transform::default())
+            .with(GlobalTransform::default())
             .build();
 
         // Create base rectangle as floor
-        let mut trans = LocalTransform::default();
+        let mut trans = Transform::default();
         trans.scale = Vector3::from_value(10.);
 
         world
@@ -157,7 +157,7 @@ impl State for Example {
             .with(assets.rectangle.clone())
             .with(assets.white.clone())
             .with(trans)
-            .with(Transform::default())
+            .with(GlobalTransform::default())
             .build();
 
         let light: Light = PointLight {
@@ -401,13 +401,13 @@ fn run() -> Result<(), Error> {
 }
 
 fn initialise_camera(world: &mut World) {
-    let mut local = LocalTransform::default();
+    let mut local = Transform::default();
     local.translation = Vector3::new(0., -20., 10.);
     local.rotation = Quaternion::from_angle_x(Deg(75.)).into();
     world
         .create_entity()
         .with(Camera::from(Projection::perspective(1.3, Deg(60.0))))
         .with(local)
-        .with(Transform::default())
+        .with(GlobalTransform::default())
         .build();
 }
