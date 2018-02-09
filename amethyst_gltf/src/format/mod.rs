@@ -7,7 +7,7 @@ use std::mem;
 use std::sync::Arc;
 
 use self::importer::{get_image_data, import, Buffers, ImageFormat};
-use animation::{InterpolationType, TransformChannel, Sampler, SamplerPrimitive};
+use animation::{InterpolationFunction, TransformChannel, Sampler, SamplerPrimitive, InterpolationPrimitive};
 use assets::{Error as AssetError, Format, FormatValue, Result as AssetResult, ResultExt, Source};
 use core::cgmath::{Matrix4, SquareMatrix};
 use core::transform::Transform;
@@ -201,7 +201,6 @@ fn load_channel(
     let target = channel.target();
     let input = gltf_utils::AccessorIter::new(sampler.input(), buffers).collect::<Vec<f32>>();
     let node_index = target.node().index();
-    let ty = map_interpolation_type(&sampler.interpolation());
 
     match target.path() {
         Translation => {
@@ -211,7 +210,7 @@ fn load_channel(
             Ok((
                 node_index,
                 TransformChannel::Translation,
-                Sampler { input, ty, output },
+                Sampler { input, function: map_interpolation_type(&sampler.interpolation()), output },
             ))
         }
         Scale => {
@@ -221,7 +220,7 @@ fn load_channel(
             Ok((
                 node_index,
                 TransformChannel::Scale,
-                Sampler { input, ty, output },
+                Sampler { input, function: map_interpolation_type(&sampler.interpolation()), output },
             ))
         }
         Rotation => {
@@ -229,29 +228,30 @@ fn load_channel(
                 .map(|q| [q[3], q[0], q[1], q[2]].into())
                 .collect::<Vec<_>>();
             // gltf quat format: [x, y, z, w], our quat format: [w, x, y, z]
-            let ty = if ty == InterpolationType::Linear {
-                InterpolationType::SphericalLinear
+            let ty = map_interpolation_type(&sampler.interpolation());
+            let ty = if ty == InterpolationFunction::Linear {
+                InterpolationFunction::SphericalLinear
             } else {
                 ty
             };
             Ok((
                 node_index,
                 TransformChannel::Rotation,
-                Sampler { input, ty, output },
+                Sampler { input, function: ty, output },
             ))
         }
         Weights => Err(GltfError::NotImplemented),
     }
 }
 
-fn map_interpolation_type(ty: &gltf::animation::InterpolationAlgorithm) -> InterpolationType {
+fn map_interpolation_type<T>(ty: &gltf::animation::InterpolationAlgorithm) -> InterpolationFunction<T> where T: InterpolationPrimitive {
     use gltf::animation::InterpolationAlgorithm::*;
 
     match *ty {
-        Linear => InterpolationType::Linear,
-        Step => InterpolationType::Step,
-        CubicSpline => InterpolationType::CubicSpline,
-        CatmullRomSpline => InterpolationType::CatmullRomSpline,
+        Linear => InterpolationFunction::Linear,
+        Step => InterpolationFunction::Step,
+        CubicSpline => InterpolationFunction::CubicSpline,
+        CatmullRomSpline => InterpolationFunction::CatmullRomSpline,
     }
 }
 

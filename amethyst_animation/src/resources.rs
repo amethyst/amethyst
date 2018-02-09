@@ -4,10 +4,8 @@ use std::time::Duration;
 
 use amethyst_assets::{Asset, Handle, Result};
 use fnv::FnvHashMap;
-use minterpolate::InterpolationPrimitive;
+use minterpolate::{InterpolationPrimitive, InterpolationFunction};
 use specs::{Component, DenseVecStorage, Entity, VecStorage};
-
-use interpolation::InterpolationType;
 
 /// Master trait used to define animation sampling on a component
 pub trait AnimationSampling: Send + Sync + 'static {
@@ -34,7 +32,7 @@ where
     /// Actual output data to interpolate
     pub output: Vec<T>,
     /// How should interpolation be done
-    pub ty: InterpolationType,
+    pub function: InterpolationFunction<T>,
 }
 
 impl<T> Asset for Sampler<T>

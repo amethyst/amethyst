@@ -5,7 +5,6 @@ use amethyst_assets::AssetStorage;
 use amethyst_core::{duration_to_nanos, duration_to_secs, nanos_to_duration, secs_to_duration, Time};
 use specs::{Component, Fetch, Join, System, WriteStorage};
 
-use interpolation::Interpolate;
 use resources::{AnimationSampling, ControlState, EndControl, Sampler, SamplerControl,
                 SamplerControlSet};
 
@@ -14,7 +13,7 @@ use resources::{AnimationSampling, ControlState, EndControl, Sampler, SamplerCon
 /// If other forms of animation is needed, this can be used in isolation, have no direct dependency
 /// on `AnimationControlSystem`.
 ///
-/// Will process all active `SamplerControlSet`, and update the `Transform` for the entity they
+/// Will process all active `SamplerControlSet`, and update the target component for the entity they
 /// belong to.
 #[derive(Default)]
 pub struct SamplerInterpolationSystem<T> {
@@ -194,7 +193,7 @@ fn do_sampling<T>(
 {
     component.apply_sample(
         channel,
-        &sampler.ty.interpolate(
+        &sampler.function.interpolate(
             duration_to_secs(*duration),
             &sampler.input,
             &sampler.output,
