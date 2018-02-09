@@ -1,6 +1,4 @@
-// TODO: Needs documentation.
-
-#version 150 core
+#version 300 es
 
 layout (std140) uniform FragmentArgs {
     int point_light_count;
@@ -35,27 +33,25 @@ uniform vec3 camera_position;
 uniform sampler2D albedo;
 uniform sampler2D emission;
 
-in VertexData {
-    vec4 position;
-    vec3 normal;
-    vec3 tangent;
-    vec2 tex_coord;
-} vertex;
+in vec4 vertex_position;
+in vec3 vertex_normal;
+in vec3 vertex_tangent;
+in vec2 vertex_tex_coord;
 
 out vec4 out_color;
 
 void main() {
-    vec4 color = texture(albedo, vertex.tex_coord);
-    vec4 ecolor = texture(emission, vertex.tex_coord);
+    vec4 color = texture(albedo, vertex_tex_coord);
+    vec4 ecolor = texture(emission, vertex_tex_coord);
     vec4 lighting = vec4(0.0);
-    vec4 normal = vec4(normalize(vertex.normal), 0.0);
+    vec4 normal = vec4(normalize(vertex_normal), 0.0);
     for (int i = 0; i < point_light_count; i++) {
         // Calculate diffuse light
-        vec4 light_dir = normalize(plight[i].position - vertex.position);
+        vec4 light_dir = normalize(plight[i].position - vertex_position);
         float diff = max(dot(light_dir, normal), 0.0);
         vec4 diffuse = diff * plight[i].color;
         // Calculate attenuation
-        vec4 dist = plight[i].position - vertex.position;
+        vec4 dist = plight[i].position - vertex_position;
         float dist2 = dot(dist, dist);
         float attenuation = (plight[i].intensity / dist2);
         lighting += diffuse * attenuation;

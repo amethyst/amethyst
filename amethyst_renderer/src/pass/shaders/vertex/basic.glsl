@@ -1,6 +1,4 @@
-// TODO: Needs documentation.
-
-#version 150 core
+#version 300 es
 
 layout (std140) uniform VertexArgs {
     uniform mat4 proj;
@@ -13,17 +11,15 @@ in vec3 normal;
 in vec3 tangent;
 in vec2 tex_coord;
 
-out VertexData {
-    vec4 position;
-    vec3 normal;
-    vec3 tangent;
-    vec2 tex_coord;
-} vertex;
+out vec4 vertex_position;
+out vec3 vertex_normal;
+out vec3 vertex_tangent;
+out vec2 vertex_tex_coord;
 
 void main() {
-    vertex.position = model * vec4(position, 1.0);
-    vertex.normal = mat3(model) * normal;
-    vertex.tangent = mat3(model) * tangent;
-    vertex.tex_coord = tex_coord;
-    gl_Position = proj * view * vertex.position;
+    vertex_position = model * vec4(vertex_position.xyz, 1.0);
+    vertex_normal = mat3(model) * vertex_normal;
+    vertex_tangent = mat3(model) * vertex_tangent;
+    vertex_tex_coord = vertex_tex_coord;
+    gl_Position = proj * view * vertex_position;
 }

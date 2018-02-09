@@ -109,4 +109,4 @@ name = "appendix_a"
 path = "examples/appendix_a/main.rs"
 
 [workspace]
-members = ["amethyst_animation", "amethyst_gltf"]
+members = ["amethyst_animation", "amethyst_gltf", "ametrine"]

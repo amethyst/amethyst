@@ -1,0 +1,10 @@
+[package]
+name = "ametrine"
+version = "0.1.0"
+authors = ["torkleyy <torkleyy@gmail.com>"]
+
+[dependencies]
+amethyst = { path = "../" }
+android_glue = "0.2.3"
+genmesh = "0.4"
+shred = "0.5.2"
