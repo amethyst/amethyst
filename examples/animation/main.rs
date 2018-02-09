@@ -13,7 +13,7 @@ use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Event,
                          Light, Mesh, Pipeline, PointLight, PosNormTex, Projection, RenderBundle,
                          Rgba, Stage, VirtualKeyCode, WindowEvent};
 use amethyst_animation::{play_animation, Animation, AnimationBundle, EndControl,
-                         InterpolationType, TransformChannel, Sampler};
+                         InterpolationFunction, TransformChannel, Sampler};
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 
@@ -183,7 +183,7 @@ fn initialise_animation(world: &mut World) -> Handle<Animation<Transform>> {
     let loader = world.write_resource::<Loader>();
     let translation_sampler = Sampler {
         input: vec![0., 1., 2., 3., 4.],
-        ty: InterpolationType::Linear,
+        function: InterpolationFunction::Linear,
         output: vec![
             [0., 0., 0.].into(),
             [1., 0., 0.].into(),
@@ -208,7 +208,7 @@ fn initialise_animation(world: &mut World) -> Handle<Animation<Transform>> {
     use std::f32::consts::FRAC_1_SQRT_2;
     let rotation_sampler = Sampler {
         input: vec![0., 1., 2., 3., 4.],
-        ty: InterpolationType::Linear,
+        function: InterpolationFunction::SphericalLinear,
         output: vec![
             [1., 0., 0., 0.].into(),
             [FRAC_1_SQRT_2, 0., 0., FRAC_1_SQRT_2].into(),

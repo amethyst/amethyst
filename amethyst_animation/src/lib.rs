@@ -9,8 +9,8 @@ extern crate serde;
 extern crate shred;
 extern crate specs;
 
+pub use minterpolate::{InterpolationPrimitive, InterpolationFunction};
 pub use self::bundle::{AnimationBundle, SamplingBundle, VertexSkinningBundle};
-pub use self::interpolation::{Interpolate, InterpolationType};
 pub use self::resources::{Animation, AnimationCommand, AnimationControl, AnimationHierarchy,
                           AnimationSampling, AnimationSet, ControlState, EndControl, Sampler,
                           SamplerControl, SamplerControlSet};
@@ -23,7 +23,6 @@ pub use self::util::{pause_animation, play_animation, toggle_animation, SamplerP
 mod skinning;
 mod resources;
 mod systems;
-mod interpolation;
 mod transform;
 mod bundle;
 mod util;
