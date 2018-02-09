@@ -1,6 +1,6 @@
 use Ball;
 use amethyst::core::timing::Time;
-use amethyst::core::transform::LocalTransform;
+use amethyst::core::transform::Transform;
 use amethyst::ecs::{Fetch, Join, System, WriteStorage};
 
 /// This system is responsible for moving all balls according to their speed
@@ -10,7 +10,7 @@ pub struct MoveBallsSystem;
 impl<'s> System<'s> for MoveBallsSystem {
     type SystemData = (
         WriteStorage<'s, Ball>,
-        WriteStorage<'s, LocalTransform>,
+        WriteStorage<'s, Transform>,
         Fetch<'s, Time>,
     );
 

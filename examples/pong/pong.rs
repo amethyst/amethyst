@@ -2,7 +2,7 @@ use {ARENA_HEIGHT, ARENA_WIDTH};
 use {Ball, Paddle, Side};
 use amethyst::assets::Loader;
 use amethyst::core::cgmath::Vector3;
-use amethyst::core::transform::{LocalTransform, Transform};
+use amethyst::core::transform::{Transform, GlobalTransform};
 use amethyst::ecs::World;
 use amethyst::prelude::*;
 use amethyst::renderer::{Camera, Event, KeyboardInput, Material, MeshHandle, PosTex, Projection,
@@ -54,7 +54,7 @@ fn initialise_camera(world: &mut World) {
             ARENA_HEIGHT,
             0.0,
         )))
-        .with(Transform(
+        .with(GlobalTransform(
             Matrix4::from_translation(Vector3::new(0.0, 0.0, 1.0)).into(),
         ))
         .build();
@@ -77,8 +77,8 @@ fn hide_cursor(world: &mut World) {
 fn initialise_paddles(world: &mut World) {
     use {PADDLE_COLOUR, PADDLE_HEIGHT, PADDLE_VELOCITY, PADDLE_WIDTH};
 
-    let mut left_transform = LocalTransform::default();
-    let mut right_transform = LocalTransform::default();
+    let mut left_transform = Transform::default();
+    let mut right_transform = Transform::default();
 
     // Correctly position the paddles.
     let y = (ARENA_HEIGHT - PADDLE_HEIGHT) / 2.0;
@@ -104,7 +104,7 @@ fn initialise_paddles(world: &mut World) {
             height: PADDLE_HEIGHT,
             velocity: PADDLE_VELOCITY,
         })
-        .with(Transform::default())
+        .with(GlobalTransform::default())
         .with(left_transform)
         .build();
 
@@ -119,7 +119,7 @@ fn initialise_paddles(world: &mut World) {
             height: PADDLE_HEIGHT,
             velocity: PADDLE_VELOCITY,
         })
-        .with(Transform::default())
+        .with(GlobalTransform::default())
         .with(right_transform)
         .build();
 }
@@ -131,7 +131,7 @@ fn initialise_balls(world: &mut World) {
     // Create the mesh, material and translation.
     let mesh = create_mesh(world, generate_circle_vertices(BALL_RADIUS, 16));
     let material = create_colour_material(world, BALL_COLOUR);
-    let mut local_transform = LocalTransform::default();
+    let mut local_transform = Transform::default();
     local_transform.translation = Vector3::new(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
 
     world
@@ -143,7 +143,7 @@ fn initialise_balls(world: &mut World) {
             velocity: [BALL_VELOCITY_X, BALL_VELOCITY_Y],
         })
         .with(local_transform)
-        .with(Transform::default())
+        .with(GlobalTransform::default())
         .build();
 }
 

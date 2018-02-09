@@ -14,7 +14,7 @@ use resources::{AnimationSampling, ControlState, EndControl, Sampler, SamplerCon
 /// If other forms of animation is needed, this can be used in isolation, have no direct dependency
 /// on `AnimationControlSystem`.
 ///
-/// Will process all active `SamplerControlSet`, and update the `LocalTransform` for the entity they
+/// Will process all active `SamplerControlSet`, and update the `Transform` for the entity they
 /// belong to.
 #[derive(Default)]
 pub struct SamplerInterpolationSystem<T> {

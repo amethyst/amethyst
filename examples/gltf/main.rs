@@ -8,7 +8,7 @@ extern crate log;
 
 use amethyst::assets::{AssetStorage, Handle, Loader};
 use amethyst::core::cgmath::{Deg, Quaternion, Rotation3, Vector3};
-use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
+use amethyst::core::transform::{Transform, GlobalTransform, TransformBundle};
 use amethyst::ecs::Entity;
 use amethyst::prelude::*;
 use amethyst::renderer::*;
@@ -40,7 +40,7 @@ impl State for Example {
         let entity = world
             .create_entity()
             .with(gltf_scene)
-            .with(Transform::default())
+            .with(GlobalTransform::default())
             .build();
 
         world.add_resource(Scene {
@@ -71,7 +71,7 @@ impl State for Example {
 
         info!("Put camera");
 
-        let mut camera_transform = LocalTransform::default();
+        let mut camera_transform = Transform::default();
         camera_transform.translation = Vector3::new(100.0, 20.0, 0.0);
         camera_transform.rotation = Quaternion::from_angle_y(Deg(90.));
         world
@@ -80,7 +80,7 @@ impl State for Example {
                 1024. / 768.,
                 Deg(60.),
             )))
-            .with(Transform::default())
+            .with(GlobalTransform::default())
             .with(camera_transform)
             .build();
 
@@ -109,7 +109,7 @@ impl State for Example {
                     ..
                 } => {
                     let mut scene = world.write_resource::<Scene>();
-                    let sets = world.read::<AnimationSet<LocalTransform>>();
+                    let sets = world.read::<AnimationSet<Transform>>();
                     let animations = sets.get(scene.entity).unwrap();
                     if animations.animations.len() > 0 {
                         if scene.animation_index >= animations.animations.len() {
@@ -152,7 +152,7 @@ fn run() -> Result<(), amethyst::Error> {
         .with(GltfSceneLoaderSystem::new(), "loader_system", &[])
         .with_bundle(RenderBundle::new(pipe, Some(config)))?
         .with_bundle(
-            AnimationBundle::<LocalTransform>::new(
+            AnimationBundle::<Transform>::new(
                 "animation_control_system",
                 "sampler_interpolation_system",
             ).with_dep(&["loader_system"]),

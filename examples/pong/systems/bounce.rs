@@ -2,7 +2,7 @@ use {Ball, Paddle, Side};
 use amethyst::assets::AssetStorage;
 use amethyst::audio::Source;
 use amethyst::audio::output::Output;
-use amethyst::core::transform::LocalTransform;
+use amethyst::core::transform::Transform;
 use amethyst::ecs::{Fetch, Join, ReadStorage, System, WriteStorage};
 use audio::{play_bounce, Sounds};
 
@@ -14,7 +14,7 @@ impl<'s> System<'s> for BounceSystem {
     type SystemData = (
         WriteStorage<'s, Ball>,
         ReadStorage<'s, Paddle>,
-        ReadStorage<'s, LocalTransform>,
+        ReadStorage<'s, Transform>,
         Fetch<'s, AssetStorage<Source>>,
         Fetch<'s, Sounds>,
         Fetch<'s, Option<Output>>,

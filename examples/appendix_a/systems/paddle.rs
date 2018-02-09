@@ -1,6 +1,6 @@
 use Paddle;
 use amethyst::core::timing::Time;
-use amethyst::core::transform::LocalTransform;
+use amethyst::core::transform::Transform;
 use amethyst::ecs::{Fetch, Join, ReadStorage, System, WriteStorage};
 use amethyst::input::InputHandler;
 use config::ArenaConfig;
@@ -11,7 +11,7 @@ pub struct PaddleSystem;
 impl<'s> System<'s> for PaddleSystem {
     type SystemData = (
         ReadStorage<'s, Paddle>,
-        WriteStorage<'s, LocalTransform>,
+        WriteStorage<'s, Transform>,
         Fetch<'s, Time>,
         Fetch<'s, InputHandler<String, String>>,
         Fetch<'s, ArenaConfig>,

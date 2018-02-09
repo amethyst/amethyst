@@ -3,9 +3,9 @@
 use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 use hibitset::BitSet;
 use specs::{Entities, Entity, Join, System, WriteStorage};
-use transform::{LocalTransform, Parent, Transform};
+use transform::{Transform, Parent, GlobalTransform};
 
-/// Handles updating `Transform` components based on the `LocalTransform`
+/// Handles updating `GlobalTransform` components based on the `Transform`
 /// component and parents.
 #[derive(Default)]
 pub struct TransformSystem {
@@ -42,9 +42,9 @@ impl TransformSystem {
 impl<'a> System<'a> for TransformSystem {
     type SystemData = (
         Entities<'a>,
-        WriteStorage<'a, LocalTransform>,
-        WriteStorage<'a, Parent>,
         WriteStorage<'a, Transform>,
+        WriteStorage<'a, Parent>,
+        WriteStorage<'a, GlobalTransform>,
     );
     fn run(&mut self, (entities, mut locals, mut parents, mut globals): Self::SystemData) {
         #[cfg(feature = "profiler")]
@@ -183,13 +183,13 @@ mod tests {
     use cgmath::{Decomposed, Matrix4, One, Quaternion, Vector3, Zero};
     use shred::RunNow;
     use specs::World;
-    use transform::{LocalTransform, Parent, Transform, TransformSystem};
+    use transform::{Transform, Parent, GlobalTransform, TransformSystem};
     //use quickcheck::{Arbitrary, Gen};
 
     // If this works, then all other tests should work.
     #[test]
     fn transform_matrix() {
-        let mut transform = LocalTransform::default();
+        let mut transform = Transform::default();
         transform.translation = Vector3::new(5.0, 2.0, -0.5);
         transform.rotation = Quaternion::new(1.0, 0.0, 0.0, 0.0);
         transform.scale = Vector3::new(2.0, 2.0, 2.0);
@@ -208,14 +208,14 @@ mod tests {
 
     #[test]
     fn into_from() {
-        let transform = Transform::default();
+        let transform = GlobalTransform::default();
         let primitive: [[f32; 4]; 4] = transform.into();
         assert_eq!(
             primitive,
             <Matrix4<f32> as Into<[[f32; 4]; 4]>>::into(transform.0)
         );
 
-        let transform: Transform = primitive.into();
+        let transform: GlobalTransform = primitive.into();
         assert_eq!(
             primitive,
             <Matrix4<f32> as Into<[[f32; 4]; 4]>>::into(transform.0)
@@ -224,105 +224,105 @@ mod tests {
 
     fn transform_world<'a, 'b>() -> (World, TransformSystem) {
         let mut world = World::new();
-        world.register::<LocalTransform>();
         world.register::<Transform>();
+        world.register::<GlobalTransform>();
         world.register::<Parent>();
 
         (world, TransformSystem::new())
     }
 
-    fn together(transform: Transform, local: LocalTransform) -> [[f32; 4]; 4] {
+    fn together(transform: GlobalTransform, local: Transform) -> [[f32; 4]; 4] {
         (transform.0 * local.matrix()).into()
     }
 
-    // Basic default LocalTransform -> Transform (Should just be identity)
+    // Basic default Transform -> GlobalTransform (Should just be identity)
     #[test]
     fn zeroed() {
         let (mut world, mut system) = transform_world();
 
-        let mut transform = LocalTransform::default();
+        let mut transform = Transform::default();
         transform.translation = Vector3::zero();
         transform.rotation = Quaternion::one();
 
         let e1 = world
             .create_entity()
             .with(transform)
-            .with(Transform::default())
+            .with(GlobalTransform::default())
             .build();
 
         system.run_now(&mut world.res);
 
-        let transform = world.read::<Transform>().get(e1).unwrap().clone();
+        let transform = world.read::<GlobalTransform>().get(e1).unwrap().clone();
         let a1: [[f32; 4]; 4] = transform.into();
-        let a2: [[f32; 4]; 4] = Transform::default().into();
+        let a2: [[f32; 4]; 4] = GlobalTransform::default().into();
         assert_eq!(a1, a2);
     }
 
-    // Basic sanity check for LocalTransform -> Transform, no parent relationships
+    // Basic sanity check for Transform -> GlobalTransform, no parent relationships
     //
-    // Should just put the value of the LocalTransform matrix into the Transform component.
+    // Should just put the value of the Transform matrix into the GlobalTransform component.
     #[test]
     fn basic() {
         let (mut world, mut system) = transform_world();
 
-        let mut local = LocalTransform::default();
+        let mut local = Transform::default();
         local.translation = Vector3::new(5.0, 5.0, 5.0);
         local.rotation = Quaternion::new(1.0, 0.5, 0.5, 0.0);
 
         let e1 = world
             .create_entity()
             .with(local.clone())
-            .with(Transform::default())
+            .with(GlobalTransform::default())
             .build();
 
         system.run_now(&mut world.res);
 
-        let transform = world.read::<Transform>().get(e1).unwrap().clone();
+        let transform = world.read::<GlobalTransform>().get(e1).unwrap().clone();
         let a1: [[f32; 4]; 4] = transform.into();
         let a2: [[f32; 4]; 4] = local.matrix().into();
         assert_eq!(a1, a2);
     }
 
-    // Test Parent * LocalTransform -> Transform (Parent is before child)
+    // Test Parent * Transform -> GlobalTransform (Parent is before child)
     #[test]
     fn parent_before() {
         let (mut world, mut system) = transform_world();
 
-        let mut local1 = LocalTransform::default();
+        let mut local1 = Transform::default();
         local1.translation = Vector3::new(5.0, 5.0, 5.0);
         local1.rotation = Quaternion::new(1.0, 0.5, 0.5, 0.0);
 
         let e1 = world
             .create_entity()
             .with(local1.clone())
-            .with(Transform::default())
+            .with(GlobalTransform::default())
             .build();
 
-        let mut local2 = LocalTransform::default();
+        let mut local2 = Transform::default();
         local2.translation = Vector3::new(5.0, 5.0, 5.0);
         local2.rotation = Quaternion::new(1.0, 0.5, 0.5, 0.0);
 
         let e2 = world
             .create_entity()
             .with(local2.clone())
-            .with(Transform::default())
+            .with(GlobalTransform::default())
             .with(Parent { entity: e1 })
             .build();
 
-        let mut local3 = LocalTransform::default();
+        let mut local3 = Transform::default();
         local3.translation = Vector3::new(5.0, 5.0, 5.0);
         local3.rotation = Quaternion::new(1.0, 0.5, 0.5, 0.0);
 
         let e3 = world
             .create_entity()
             .with(local3.clone())
-            .with(Transform::default())
+            .with(GlobalTransform::default())
             .with(Parent { entity: e2 })
             .build();
 
         system.run_now(&mut world.res);
 
-        let transforms = world.read::<Transform>();
+        let transforms = world.read::<GlobalTransform>();
 
         let transform1 = {
             // First entity (top level parent)
@@ -349,39 +349,39 @@ mod tests {
         };
     }
 
-    // Test Parent * LocalTransform -> Transform (Parent is after child, therefore must be special cased in list)
+    // Test Parent * Transform -> GlobalTransform (Parent is after child, therefore must be special cased in list)
     #[test]
     fn parent_after() {
         let (mut world, mut system) = transform_world();
 
-        let mut local3 = LocalTransform::default();
+        let mut local3 = Transform::default();
         local3.translation = Vector3::new(5.0, 5.0, 5.0);
         local3.rotation = Quaternion::new(1.0, 0.5, 0.5, 0.0);
 
         let e3 = world
             .create_entity()
             .with(local3.clone())
-            .with(Transform::default())
+            .with(GlobalTransform::default())
             .build();
 
-        let mut local2 = LocalTransform::default();
+        let mut local2 = Transform::default();
         local2.translation = Vector3::new(5.0, 5.0, 5.0);
         local2.rotation = Quaternion::new(1.0, 0.5, 0.5, 0.0);
 
         let e2 = world
             .create_entity()
             .with(local2.clone())
-            .with(Transform::default())
+            .with(GlobalTransform::default())
             .build();
 
-        let mut local1 = LocalTransform::default();
+        let mut local1 = Transform::default();
         local1.translation = Vector3::new(5.0, 5.0, 5.0);
         local1.rotation = Quaternion::new(1.0, 0.5, 0.5, 0.0);
 
         let e1 = world
             .create_entity()
             .with(local1.clone())
-            .with(Transform::default())
+            .with(GlobalTransform::default())
             .build();
 
         {
@@ -392,7 +392,7 @@ mod tests {
 
         system.run_now(&mut world.res);
 
-        let transforms = world.read::<Transform>();
+        let transforms = world.read::<GlobalTransform>();
 
         let transform1 = {
             // First entity (top level parent)
@@ -424,14 +424,14 @@ mod tests {
     fn nan_transform() {
         let (mut world, mut system) = transform_world();
 
-        let mut local = LocalTransform::default();
+        let mut local = Transform::default();
         // Release the indeterminate forms!
         local.translation = Vector3::new(0.0 / 0.0, 0.0 / 0.0, 0.0 / 0.0);
 
         world
             .create_entity()
             .with(local.clone())
-            .with(Transform::default())
+            .with(GlobalTransform::default())
             .build();
 
         system.run_now(&mut world.res);
@@ -442,13 +442,13 @@ mod tests {
     fn is_finite_transform() {
         let (mut world, mut system) = transform_world();
 
-        let mut local = LocalTransform::default();
+        let mut local = Transform::default();
         // Release the indeterminate forms!
         local.translation = Vector3::new(1.0 / 0.0, 1.0 / 0.0, 1.0 / 0.0);
         world
             .create_entity()
             .with(local.clone())
-            .with(Transform::default())
+            .with(GlobalTransform::default())
             .build();
 
         system.run_now(&mut world.res);
@@ -460,8 +460,8 @@ mod tests {
 
         let e3 = world
             .create_entity()
-            .with(LocalTransform::default())
             .with(Transform::default())
+            .with(GlobalTransform::default())
             .build();
 
         world.write::<Parent>().insert(e3, Parent { entity: e3 });
@@ -477,34 +477,34 @@ mod tests {
 
         let e1 = world
             .create_entity()
-            .with(LocalTransform::default())
             .with(Transform::default())
+            .with(GlobalTransform::default())
             .build();
 
         let e2 = world
             .create_entity()
-            .with(LocalTransform::default())
             .with(Transform::default())
+            .with(GlobalTransform::default())
             .with(Parent { entity: e1 })
             .build();
 
         let e3 = world
             .create_entity()
-            .with(LocalTransform::default())
             .with(Transform::default())
+            .with(GlobalTransform::default())
             .build();
 
         let e4 = world
             .create_entity()
-            .with(LocalTransform::default())
             .with(Transform::default())
+            .with(GlobalTransform::default())
             .with(Parent { entity: e3 })
             .build();
 
         let e5 = world
             .create_entity()
-            .with(LocalTransform::default())
             .with(Transform::default())
+            .with(GlobalTransform::default())
             .with(Parent { entity: e4 })
             .build();
 

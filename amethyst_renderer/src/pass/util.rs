@@ -1,7 +1,7 @@
 use std::mem;
 
 use amethyst_assets::AssetStorage;
-use amethyst_core::Transform;
+use amethyst_core::GlobalTransform;
 use amethyst_core::cgmath::{Matrix4, One, SquareMatrix};
 
 use cam::Camera;
@@ -107,8 +107,8 @@ pub(crate) fn setup_vertex_args(builder: &mut EffectBuilder) {
 pub(crate) fn set_vertex_args(
     effect: &mut Effect,
     encoder: &mut Encoder,
-    camera: Option<(&Camera, &Transform)>,
-    global: &Transform,
+    camera: Option<(&Camera, &GlobalTransform)>,
+    global: &GlobalTransform,
 ) {
     let vertex_args = camera
         .as_ref()

@@ -5,7 +5,7 @@ extern crate genmesh;
 
 use amethyst::assets::Loader;
 use amethyst::core::cgmath::{Deg, InnerSpace, Matrix4, Vector3};
-use amethyst::core::transform::Transform;
+use amethyst::core::transform::GlobalTransform;
 use amethyst::prelude::*;
 use amethyst::renderer::*;
 use genmesh::{MapToVertices, Triangulate, Vertices};
@@ -62,7 +62,7 @@ impl State for Example {
 
                 world
                     .create_entity()
-                    .with(Transform(pos.into()))
+                    .with(GlobalTransform(pos.into()))
                     .with(mesh.clone())
                     .with(mtl)
                     .build();
@@ -95,7 +95,7 @@ impl State for Example {
         world
             .create_entity()
             .with(Camera::from(Projection::perspective(1.3, Deg(60.0))))
-            .with(Transform(transform.into()))
+            .with(GlobalTransform(transform.into()))
             .build();
     }
 
