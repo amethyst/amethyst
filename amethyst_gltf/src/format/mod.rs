@@ -7,7 +7,7 @@ use std::mem;
 use std::sync::Arc;
 
 use self::importer::{get_image_data, import, Buffers, ImageFormat};
-use animation::{AnimationOutput, InterpolationType, Sampler};
+use animation::{InterpolationType, LocalTransformChannel, Sampler, SamplerPrimitive};
 use assets::{Error as AssetError, Format, FormatValue, Result as AssetResult, ResultExt, Source};
 use core::cgmath::{Matrix4, SquareMatrix};
 use core::transform::LocalTransform;
@@ -181,14 +181,11 @@ fn load_animation(
     animation: &gltf::Animation,
     buffers: &Buffers,
 ) -> Result<GltfAnimation, GltfError> {
-    let (nodes, samplers) = animation
+    let samplers = animation
         .channels()
         .map(|ref channel| load_channel(channel, buffers))
-        .collect::<Result<Vec<(usize, Sampler)>, GltfError>>()?
-        .into_iter()
-        .unzip();
+        .collect::<Result<Vec<_>, GltfError>>()?;
     Ok(GltfAnimation {
-        nodes,
         samplers,
         handle: None,
     })
@@ -197,7 +194,7 @@ fn load_animation(
 fn load_channel(
     channel: &gltf::animation::Channel,
     buffers: &Buffers,
-) -> Result<(usize, Sampler), GltfError> {
+) -> Result<(usize, LocalTransformChannel, Sampler<SamplerPrimitive<f32>>), GltfError> {
     use gltf::animation::TrsProperty::*;
     use gltf_utils::AccessorIter;
     let sampler = channel.sampler();
@@ -208,32 +205,30 @@ fn load_channel(
 
     match target.path() {
         Translation => {
-            let output = AccessorIter::new(sampler.output(), buffers).collect::<Vec<[f32; 3]>>();
+            let output = AccessorIter::new(sampler.output(), buffers)
+                .map(|t| SamplerPrimitive::Vec3(t))
+                .collect::<Vec<_>>();
             Ok((
                 node_index,
-                Sampler {
-                    input,
-                    ty,
-                    output: AnimationOutput::Translation(output),
-                },
+                LocalTransformChannel::Translation,
+                Sampler { input, ty, output },
             ))
         }
         Scale => {
-            let output = AccessorIter::new(sampler.output(), buffers).collect::<Vec<[f32; 3]>>();
+            let output = AccessorIter::new(sampler.output(), buffers)
+                .map(|t| SamplerPrimitive::Vec3(t))
+                .collect::<Vec<_>>();
             Ok((
                 node_index,
-                Sampler {
-                    input,
-                    ty,
-                    output: AnimationOutput::Scale(output),
-                },
+                LocalTransformChannel::Scale,
+                Sampler { input, ty, output },
             ))
         }
         Rotation => {
-            // gltf quat format: [x, y, z, w], our quat format: [w, x, y, z]
             let output = AccessorIter::<[f32; 4]>::new(sampler.output(), buffers)
-                .map(|q| [q[3], q[0], q[1], q[2]])
+                .map(|q| [q[3], q[0], q[1], q[2]].into())
                 .collect::<Vec<_>>();
+            // gltf quat format: [x, y, z, w], our quat format: [w, x, y, z]
             let ty = if ty == InterpolationType::Linear {
                 InterpolationType::SphericalLinear
             } else {
@@ -241,11 +236,8 @@ fn load_channel(
             };
             Ok((
                 node_index,
-                Sampler {
-                    input,
-                    ty,
-                    output: AnimationOutput::Rotation(output),
-                },
+                LocalTransformChannel::Rotation,
+                Sampler { input, ty, output },
             ))
         }
         Weights => Err(GltfError::NotImplemented),
