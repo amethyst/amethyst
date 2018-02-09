@@ -364,7 +364,7 @@ pub fn duration_to_secs_f64(duration: Duration) -> f64 {
 
 /// Converts a time in seconds to a duration
 pub fn secs_to_duration(secs: f32) -> Duration {
-    Duration::new((secs as u64), ((secs % 1.0) * 1.0e9) as u32)
+    Duration::new(secs as u64, ((secs % 1.0) * 1.0e9) as u32)
 }
 
 /// Converts a Duration to nanoseconds
