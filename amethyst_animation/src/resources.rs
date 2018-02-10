@@ -194,8 +194,8 @@ where
     pub end: EndControl,
     /// What the transform should return to after end
     pub after: T::Primitive,
-    // Control the rate of animation, default is 1.0
-    // pub rate_multiplier: f32, //TODO
+    /// Control the rate of animation, default is 1.0
+    pub rate_multiplier: f32,
 }
 
 /// Sampler control set, containing a set of sampler controllers for a single component.
@@ -209,6 +209,60 @@ where
     T: AnimationSampling,
 {
     pub samplers: FnvHashMap<T::Channel, SamplerControl<T>>,
+}
+
+impl<T> SamplerControlSet<T>
+where
+    T: AnimationSampling,
+{
+    /// Set channel control
+    pub fn set_channel(&mut self, channel: T::Channel, control: SamplerControl<T>) {
+        self.samplers.insert(channel, control);
+    }
+
+    /// Abort control set
+    pub fn abort(&mut self) {
+        self.samplers
+            .values_mut()
+            .filter(|t| t.state != ControlState::Done)
+            .for_each(|sampler| sampler.state = ControlState::Abort);
+    }
+
+    /// Pause control set
+    pub fn pause(&mut self) {
+        for sampler in self.samplers.values_mut() {
+            sampler.state = match sampler.state {
+                ControlState::Running(dur) => ControlState::Paused(dur),
+                _ => ControlState::Paused(Duration::from_secs(0)),
+            }
+        }
+    }
+
+    /// Unpause control set
+    pub fn unpause(&mut self) {
+        for sampler in self.samplers.values_mut() {
+            if let ControlState::Paused(dur) = sampler.state {
+                sampler.state = ControlState::Running(dur);
+            }
+        }
+    }
+
+    /// Update rate multiplier
+    pub fn set_rate_multiplier(&mut self, rate_multiplier: f32)
+    where
+        T: AnimationSampling,
+    {
+        self.samplers
+            .values_mut()
+            .for_each(|sampler| sampler.rate_multiplier = rate_multiplier);
+    }
+
+    /// Check if a control set can be terminated
+    pub fn check_termination(&self) -> bool {
+        self.samplers
+            .values()
+            .all(|t| t.state == ControlState::Done || t.state == ControlState::Requested)
+    }
 }
 
 impl<T> Component for SamplerControlSet<T>
@@ -243,6 +297,8 @@ where
     pub state: ControlState,
     /// Animation command
     pub command: AnimationCommand,
+    /// Control the rate of animation, default is 1.0
+    pub rate_multiplier: f32,
     m: marker::PhantomData<T>,
 }
 
@@ -255,12 +311,14 @@ where
         end: EndControl,
         state: ControlState,
         command: AnimationCommand,
+        rate_multiplier: f32,
     ) -> Self {
         AnimationControl {
             animation,
             end,
             state,
             command,
+            rate_multiplier,
             m: marker::PhantomData,
         }
     }

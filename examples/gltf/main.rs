@@ -122,6 +122,7 @@ impl State for Example {
                             animation,
                             scene.entity,
                             EndControl::Normal,
+                            1.0,
                         );
                     }
                     Trans::None
