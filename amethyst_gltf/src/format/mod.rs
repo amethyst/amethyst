@@ -7,7 +7,8 @@ use std::mem;
 use std::sync::Arc;
 
 use self::importer::{get_image_data, import, Buffers, ImageFormat};
-use animation::{InterpolationFunction, TransformChannel, Sampler, SamplerPrimitive, InterpolationPrimitive};
+use animation::{InterpolationFunction, InterpolationPrimitive, Sampler, SamplerPrimitive,
+                TransformChannel};
 use assets::{Error as AssetError, Format, FormatValue, Result as AssetResult, ResultExt, Source};
 use core::cgmath::{Matrix4, SquareMatrix};
 use core::transform::Transform;
@@ -210,7 +211,11 @@ fn load_channel(
             Ok((
                 node_index,
                 TransformChannel::Translation,
-                Sampler { input, function: map_interpolation_type(&sampler.interpolation()), output },
+                Sampler {
+                    input,
+                    function: map_interpolation_type(&sampler.interpolation()),
+                    output,
+                },
             ))
         }
         Scale => {
@@ -220,7 +225,11 @@ fn load_channel(
             Ok((
                 node_index,
                 TransformChannel::Scale,
-                Sampler { input, function: map_interpolation_type(&sampler.interpolation()), output },
+                Sampler {
+                    input,
+                    function: map_interpolation_type(&sampler.interpolation()),
+                    output,
+                },
             ))
         }
         Rotation => {
@@ -237,14 +246,23 @@ fn load_channel(
             Ok((
                 node_index,
                 TransformChannel::Rotation,
-                Sampler { input, function: ty, output },
+                Sampler {
+                    input,
+                    function: ty,
+                    output,
+                },
             ))
         }
         Weights => Err(GltfError::NotImplemented),
     }
 }
 
-fn map_interpolation_type<T>(ty: &gltf::animation::InterpolationAlgorithm) -> InterpolationFunction<T> where T: InterpolationPrimitive {
+fn map_interpolation_type<T>(
+    ty: &gltf::animation::InterpolationAlgorithm,
+) -> InterpolationFunction<T>
+where
+    T: InterpolationPrimitive,
+{
     use gltf::animation::InterpolationAlgorithm::*;
 
     match *ty {

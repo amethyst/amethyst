@@ -3,7 +3,7 @@
 use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 use hibitset::BitSet;
 use specs::{Entities, Entity, Join, System, WriteStorage};
-use transform::{Transform, Parent, GlobalTransform};
+use transform::{GlobalTransform, Parent, Transform};
 
 /// Handles updating `GlobalTransform` components based on the `Transform`
 /// component and parents.
@@ -183,7 +183,7 @@ mod tests {
     use cgmath::{Decomposed, Matrix4, One, Quaternion, Vector3, Zero};
     use shred::RunNow;
     use specs::World;
-    use transform::{Transform, Parent, GlobalTransform, TransformSystem};
+    use transform::{GlobalTransform, Parent, Transform, TransformSystem};
     //use quickcheck::{Arbitrary, Gen};
 
     // If this works, then all other tests should work.

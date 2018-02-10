@@ -5,7 +5,7 @@ extern crate amethyst_animation;
 extern crate genmesh;
 
 use amethyst::assets::{Handle, Loader};
-use amethyst::core::{Transform, Parent, GlobalTransform, TransformBundle};
+use amethyst::core::{GlobalTransform, Parent, Transform, TransformBundle};
 use amethyst::core::cgmath::{Deg, InnerSpace, Vector3};
 use amethyst::ecs::{Entity, World};
 use amethyst::prelude::*;
@@ -13,7 +13,7 @@ use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Event,
                          Light, Mesh, Pipeline, PointLight, PosNormTex, Projection, RenderBundle,
                          Rgba, Stage, VirtualKeyCode, WindowEvent};
 use amethyst_animation::{play_animation, Animation, AnimationBundle, EndControl,
-                         InterpolationFunction, TransformChannel, Sampler};
+                         InterpolationFunction, Sampler, TransformChannel};
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 
@@ -230,11 +230,7 @@ fn initialise_animation(world: &mut World) -> Handle<Animation<Transform>> {
                 translation_animation_handle,
             ),
             //(0, scale_animation_handle),
-            (
-                0,
-                TransformChannel::Rotation,
-                rotation_animation_handle,
-            ),
+            (0, TransformChannel::Rotation, rotation_animation_handle),
         ],
     };
     loader.load_from_data(animation, (), &world.read_resource())

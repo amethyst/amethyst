@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use amethyst_assets::{Asset, Handle, Result};
 use fnv::FnvHashMap;
-use minterpolate::{InterpolationPrimitive, InterpolationFunction};
+use minterpolate::{InterpolationFunction, InterpolationPrimitive};
 use specs::{Component, DenseVecStorage, Entity, VecStorage};
 
 /// Master trait used to define animation sampling on a component
