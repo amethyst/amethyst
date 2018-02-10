@@ -72,7 +72,7 @@ fn process_sampler<T>(
 
     // If a new end condition has been computed, update in control state
     if let Some(end) = new_end {
-        control.end = end.clone();
+        control.end = end;
     }
 
     // Do sampling
@@ -121,7 +121,8 @@ where
         // sampling is running, update duration and check end condition
         Running(duration) => {
             let zero = Duration::from_secs(0);
-            let current_dur = duration + time.delta_time();
+            let current_dur =
+                duration + secs_to_duration(time.delta_seconds() * control.rate_multiplier);
             let last_frame = sampler
                 .input
                 .last()
@@ -176,10 +177,8 @@ fn do_end_control<T>(control: &SamplerControl<T>, component: &mut T)
 where
     T: AnimationSampling,
 {
-    match control.end {
-        EndControl::Normal => component.apply_sample(&control.channel, &control.after),
-        // looping is handled during duration update
-        _ => {}
+    if let EndControl::Normal = control.end {
+        component.apply_sample(&control.channel, &control.after);
     }
 }
 

@@ -17,11 +17,13 @@ use resources::{Animation, AnimationCommand, AnimationControl, AnimationSampling
 ///             matches the `Animation`, or only refer to a single node, else the animation will
 ///             not be run.
 /// - `end`: action to perform when the animation has reached its end.
+/// - `rate_multiplier`: animation rate to set
 pub fn play_animation<T>(
     controls: &mut WriteStorage<AnimationControl<T>>,
     animation: &Handle<Animation<T>>,
     entity: Entity,
     end: EndControl,
+    rate_multiplier: f32,
 ) where
     T: AnimationSampling,
 {
@@ -39,6 +41,7 @@ pub fn play_animation<T>(
                 end,
                 ControlState::Requested,
                 AnimationCommand::Start,
+                rate_multiplier,
             ),
         );
     }
@@ -77,11 +80,13 @@ pub fn pause_animation<T>(
 ///             matches the `Animation`, or only refer to a single node, else the animation will
 ///             not be run.
 /// - `end`: action to perform when the animation has reached its end.
+/// - `rate_multiplier`: animation rate to set
 pub fn toggle_animation<T>(
     controls: &mut WriteStorage<AnimationControl<T>>,
     animation: &Handle<Animation<T>>,
     entity: Entity,
     end: EndControl,
+    rate_multiplier: f32,
 ) where
     T: AnimationSampling,
 {
@@ -92,7 +97,31 @@ pub fn toggle_animation<T>(
     {
         pause_animation(controls, animation, entity);
     } else {
-        play_animation(controls, animation, entity, end);
+        play_animation(controls, animation, entity, end, rate_multiplier);
+    }
+}
+
+/// Set animation rate
+///
+/// ## Parameters:
+///
+/// - `controls`: animation control storage in the world.
+/// - `animation`: handle to the animation
+/// - `entity`: entity the animation is running on.
+/// - `rate_multiplier`: animation rate to set
+pub fn set_animation_rate<T>(
+    controls: &mut WriteStorage<AnimationControl<T>>,
+    animation: &Handle<Animation<T>>,
+    entity: Entity,
+    rate_multiplier: f32,
+) where
+    T: AnimationSampling,
+{
+    match controls.get_mut(entity) {
+        Some(ref mut control) if control.animation == *animation => {
+            control.rate_multiplier = rate_multiplier;
+        }
+        _ => {}
     }
 }
 
