@@ -59,9 +59,11 @@ impl Output {
     ) -> Result<(), DecoderError> {
         let sink = Sink::new(&self.endpoint);
         for _ in 0..n {
-            sink.append(Decoder::new(Cursor::new(source.clone()))
-                .map_err(|_| DecoderError)?
-                .amplify(volume));
+            sink.append(
+                Decoder::new(Cursor::new(source.clone()))
+                    .map_err(|_| DecoderError)?
+                    .amplify(volume),
+            );
         }
         sink.detach();
         Ok(())

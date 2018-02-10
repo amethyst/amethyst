@@ -8,7 +8,7 @@ use amethyst::{Application, Error, State, Trans};
 use amethyst::assets::{Loader, Result as AssetResult, SimpleFormat};
 use amethyst::config::Config;
 use amethyst::core::cgmath::{Array, Vector3};
-use amethyst::core::transform::{Transform, GlobalTransform, TransformBundle};
+use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::World;
 use amethyst::input::InputBundle;
 use amethyst::renderer::{Camera, DisplayConfig, DrawShaded, Event, KeyboardInput, Light, Material,

@@ -104,7 +104,7 @@ where
 ///                animation will be silently dropped.
 /// - `sampler_storage`: `AssetStorage` for all `Sampler`s
 /// - `samplers`: the active sampler sets
-/// - `transforms`: `Transform`s, used to retrieve the rest pose before animation starts.
+/// - `targets`: Target components, used to retrieve the rest pose before animation starts.
 /// - `remove`: all entities pushed here will have the control object removed at the end of the system execution
 /// - `now`: we want all animations and samplers to be synchronized, so we only supply an `Instant`
 ///
@@ -119,7 +119,7 @@ fn process_animation_control<T>(
     hierarchy: Option<&AnimationHierarchy<T>>,
     sampler_storage: &AssetStorage<Sampler<T::Primitive>>,
     samplers: &mut WriteStorage<SamplerControlSet<T>>,
-    transforms: &ReadStorage<T>,
+    targets: &ReadStorage<T>,
     remove: &mut Vec<Entity>,
 ) -> Option<ControlState>
 where
@@ -160,7 +160,7 @@ where
                 control,
                 hierarchy,
                 samplers,
-                transforms,
+                targets,
             ) {
                 Some(ControlState::Running(Duration::from_secs(0)))
             } else {
@@ -208,7 +208,7 @@ where
 /// - `control`: the control object for the animation instance
 /// - `hierarchy`: the animation node hierarchy for the entity hierarchy the animation instance is active for
 /// - `samplers`: the active sampler sets
-/// - `transforms`: `Transform`s, used to retrieve the rest pose before animation starts.
+/// - `targets`: Target components, used to retrieve the rest pose before animation starts.
 ///
 /// ## Returns
 ///
@@ -219,7 +219,7 @@ fn request_animation<T>(
     control: &AnimationControl<T>,
     hierarchy: &AnimationHierarchy<T>,
     samplers: &mut WriteStorage<SamplerControlSet<T>>,
-    components: &ReadStorage<T>, // for rest state
+    targets: &ReadStorage<T>, // for rest state
 ) -> bool
 where
     T: AnimationSampling + Component,
@@ -238,7 +238,7 @@ where
     // setup sampler tree
     for &(ref node_index, ref channel, ref sampler_handle) in &animation.nodes {
         let node_entity = hierarchy.nodes.get(node_index).unwrap();
-        let component = components.get(*node_entity).unwrap();
+        let component = targets.get(*node_entity).unwrap();
         let sampler_control = SamplerControl::<T> {
             channel: channel.clone(),
             state: ControlState::Requested,

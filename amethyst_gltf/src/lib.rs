@@ -19,7 +19,7 @@ pub use systems::GltfSceneLoaderSystem;
 
 use std::ops::Range;
 
-use animation::{Animation, TransformChannel, Sampler, SamplerPrimitive};
+use animation::{Animation, Sampler, SamplerPrimitive, TransformChannel};
 use assets::{Asset, Error as AssetError, Handle};
 use core::transform::Transform;
 use gfx::Primitive;
