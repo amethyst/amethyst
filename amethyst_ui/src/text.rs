@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 use std::ops::Range;
 
 use amethyst_core::timing::Time;
-use clipboard::{ClipboardContext, ClipboardProvider};
+//use clipboard::{ClipboardContext, ClipboardProvider};
 use hibitset::BitSet;
 use rusttype::PositionedGlyph;
 use shrev::{EventChannel, ReaderId};
@@ -622,6 +622,7 @@ impl<'a> System<'a> for UiSystem {
                             focused_edit.cursor_position = glyph_len;
                             focused_edit.highlight_vector = -glyph_len;
                         },
+                        /*
                         VirtualKeyCode::X => if ctrl_or_cmd(&modifiers) {
                             let new_clip = extract_highlighted(focused_edit, focused_text);
                             if new_clip.len() > 0 {
@@ -655,6 +656,7 @@ impl<'a> System<'a> for UiSystem {
                                     contents.graphemes(true).count() as isize;
                             }
                         },
+                        */
                         _ => {}
                     },
                     _ => {}
