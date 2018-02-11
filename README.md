@@ -8,7 +8,7 @@
 [s2]: https://img.shields.io/crates/v/amethyst.svg
 [s3]: https://img.shields.io/badge/license-MIT%2FApache-blue.svg
 [s4]: https://badges.gitter.im/amethyst/general.svg
-[s4]: https://tokei.rs/b1/github/amethyst/amethyst?category=code
+[s5]: https://tokei.rs/b1/github/amethyst/amethyst?category=code
 
 [tc]: https://travis-ci.org/amethyst/amethyst/
 [ci]: https://crates.io/crates/amethyst/
