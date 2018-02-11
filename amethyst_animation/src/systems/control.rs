@@ -132,7 +132,7 @@ where
         None => if only_one_index(&animation.nodes) {
             &h_fallback
         } else {
-            eprintln!(
+            error!(
                 "Animation control which target multiple nodes without a hierarchy detected, dropping"
             );
             remove.push(*entity);
@@ -189,6 +189,8 @@ where
                     samplers.remove(*node_entity);
                 }
                 remove.push(*entity);
+            } else {
+                update_animation_rate(hierarchy, samplers, control.rate_multiplier);
             }
             None
         }
@@ -244,10 +246,11 @@ where
             state: ControlState::Requested,
             sampler: sampler_handle.clone(),
             end: control.end.clone(),
-            after: get_after(channel, component),
+            after: component.current_sample(channel),
+            rate_multiplier: control.rate_multiplier,
         };
         let add = if let Some(ref mut set) = samplers.get_mut(*node_entity) {
-            add_to_set(channel, set, sampler_control);
+            set.set_channel(channel.clone(), sampler_control);
             None
         } else {
             Some(sampler_control)
@@ -256,28 +259,11 @@ where
             let mut set = SamplerControlSet {
                 samplers: FnvHashMap::default(),
             };
-            add_to_set(channel, &mut set, sampler_control);
+            set.set_channel(channel.clone(), sampler_control);
             samplers.insert(*node_entity, set);
         }
     }
     true
-}
-
-fn add_to_set<T>(
-    channel: &T::Channel,
-    control_set: &mut SamplerControlSet<T>,
-    control: SamplerControl<T>,
-) where
-    T: AnimationSampling,
-{
-    control_set.samplers.insert(channel.clone(), control);
-}
-
-fn get_after<T>(channel: &T::Channel, component: &T) -> T::Primitive
-where
-    T: AnimationSampling,
-{
-    component.current_sample(channel)
 }
 
 fn pause_animation<T>(
@@ -287,9 +273,8 @@ fn pause_animation<T>(
     T: AnimationSampling,
 {
     for (_, node_entity) in &hierarchy.nodes {
-        match samplers.get_mut(*node_entity) {
-            Some(ref mut s) => do_control_set_pause(s),
-            _ => (),
+        if let Some(ref mut s) = samplers.get_mut(*node_entity) {
+            s.pause();
         }
     }
 }
@@ -301,9 +286,22 @@ fn unpause_animation<T>(
     T: AnimationSampling,
 {
     for (_, node_entity) in &hierarchy.nodes {
-        match samplers.get_mut(*node_entity) {
-            Some(ref mut s) => do_control_set_unpause(s),
-            _ => (),
+        if let Some(ref mut s) = samplers.get_mut(*node_entity) {
+            s.unpause();
+        }
+    }
+}
+
+fn update_animation_rate<T>(
+    hierarchy: &AnimationHierarchy<T>,
+    samplers: &mut WriteStorage<SamplerControlSet<T>>,
+    rate_multiplier: f32,
+) where
+    T: AnimationSampling,
+{
+    for (_, node_entity) in &hierarchy.nodes {
+        if let Some(ref mut s) = samplers.get_mut(*node_entity) {
+            s.set_rate_multiplier(rate_multiplier);
         }
     }
 }
@@ -327,9 +325,8 @@ where
     } else {
         // Request termination of samplers
         for (_, node_entity) in &hierarchy.nodes {
-            match samplers.get_mut(*node_entity) {
-                Some(ref mut s) => do_control_set_termination(s),
-                _ => (),
+            if let Some(ref mut s) = samplers.get_mut(*node_entity) {
+                s.abort();
             }
         }
         false
@@ -348,55 +345,5 @@ where
         .nodes
         .iter()
         .flat_map(|(_, node_entity)| samplers.get(*node_entity))
-        .all(check_control_set_termination)
-}
-
-/// Request termination of `SamplerControlSet`
-fn do_control_set_termination<T>(control_set: &mut SamplerControlSet<T>)
-where
-    T: AnimationSampling,
-{
-    for sampler in control_set
-        .samplers
-        .values_mut()
-        .filter(|t| t.state != ControlState::Done)
-    {
-        sampler.state = ControlState::Abort;
-    }
-}
-
-/// Pause a `SamplerControlSet`
-fn do_control_set_pause<T>(control_set: &mut SamplerControlSet<T>)
-where
-    T: AnimationSampling,
-{
-    for sampler in control_set.samplers.values_mut() {
-        sampler.state = match sampler.state {
-            ControlState::Running(dur) => ControlState::Paused(dur),
-            _ => ControlState::Paused(Duration::from_secs(0)),
-        }
-    }
-}
-
-/// Unpause a `SamplerControlSet`
-fn do_control_set_unpause<T>(control_set: &mut SamplerControlSet<T>)
-where
-    T: AnimationSampling,
-{
-    for sampler in control_set.samplers.values_mut() {
-        if let ControlState::Paused(dur) = sampler.state {
-            sampler.state = ControlState::Running(dur);
-        }
-    }
-}
-
-/// Check if a control set can be terminated
-fn check_control_set_termination<T>(control_set: &SamplerControlSet<T>) -> bool
-where
-    T: AnimationSampling,
-{
-    control_set
-        .samplers
-        .values()
-        .all(|t| t.state == ControlState::Done || t.state == ControlState::Requested)
+        .all(SamplerControlSet::check_termination)
 }

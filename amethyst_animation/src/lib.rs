@@ -3,6 +3,8 @@ extern crate amethyst_core;
 extern crate amethyst_renderer;
 extern crate fnv;
 extern crate hibitset;
+#[macro_use]
+extern crate log;
 extern crate minterpolate;
 #[macro_use]
 extern crate serde;
@@ -17,7 +19,8 @@ pub use self::skinning::{Joint, Skin, VertexSkinningSystem};
 pub use self::systems::{AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem,
                         SamplerProcessor};
 pub use self::transform::TransformChannel;
-pub use self::util::{pause_animation, play_animation, toggle_animation, SamplerPrimitive};
+pub use self::util::{pause_animation, play_animation, set_animation_rate, toggle_animation,
+                     SamplerPrimitive};
 pub use minterpolate::{InterpolationFunction, InterpolationPrimitive};
 
 mod skinning;

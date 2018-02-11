@@ -64,6 +64,7 @@ impl State for Example {
                         self.animation.as_ref().unwrap(),
                         self.sphere.unwrap().clone(),
                         EndControl::Loop(None),
+                        1.0,
                     );
 
                     Trans::None
