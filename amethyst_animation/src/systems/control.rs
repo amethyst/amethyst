@@ -7,7 +7,8 @@ use minterpolate::InterpolationPrimitive;
 use specs::{Component, Entities, Entity, Fetch, Join, ReadStorage, System, WriteStorage};
 
 use resources::{Animation, AnimationCommand, AnimationControl, AnimationHierarchy,
-                AnimationSampling, ControlState, Sampler, SamplerControl, SamplerControlSet};
+                AnimationSampling, ControlState, Sampler, SamplerControl, SamplerControlSet,
+                StepDirection};
 
 /// System for setting up animations, should run before `SamplerInterpolationSystem`.
 ///
@@ -68,6 +69,12 @@ where
                     )
                 }) {
                 control.state = state;
+            }
+            if let AnimationCommand::Step(_) = control.command {
+                control.command = AnimationCommand::Start;
+            }
+            if let AnimationCommand::SetInputValue(_) = control.command {
+                control.command = AnimationCommand::Start;
             }
         }
 
@@ -180,6 +187,16 @@ where
             Some(ControlState::Running(Duration::from_secs(0)))
         }
 
+        (&ControlState::Running(..), &AnimationCommand::Step(ref dir)) => {
+            step_animation(hierarchy, samplers, sampler_storage, dir);
+            None
+        }
+
+        (&ControlState::Running(..), &AnimationCommand::SetInputValue(value)) => {
+            set_animation_input(hierarchy, samplers, value);
+            None
+        }
+
         // check for finished/aborted animations, wait for samplers to signal done,
         // then remove control objects
         (&ControlState::Running(..), _) => {
@@ -288,6 +305,35 @@ fn unpause_animation<T>(
     for (_, node_entity) in &hierarchy.nodes {
         if let Some(ref mut s) = samplers.get_mut(*node_entity) {
             s.unpause();
+        }
+    }
+}
+
+fn step_animation<T>(
+    hierarchy: &AnimationHierarchy<T>,
+    controls: &mut WriteStorage<SamplerControlSet<T>>,
+    sampler_storage: &AssetStorage<Sampler<T::Primitive>>,
+    direction: &StepDirection,
+) where
+    T: AnimationSampling,
+{
+    for (_, node_entity) in &hierarchy.nodes {
+        if let Some(ref mut s) = controls.get_mut(*node_entity) {
+            s.step(sampler_storage, direction);
+        }
+    }
+}
+
+fn set_animation_input<T>(
+    hierarchy: &AnimationHierarchy<T>,
+    controls: &mut WriteStorage<SamplerControlSet<T>>,
+    input: f32,
+) where
+    T: AnimationSampling,
+{
+    for (_, node_entity) in &hierarchy.nodes {
+        if let Some(ref mut s) = controls.get_mut(*node_entity) {
+            s.set_input(input);
         }
     }
 }

@@ -9,11 +9,11 @@ use amethyst::core::{GlobalTransform, Parent, Transform, TransformBundle};
 use amethyst::core::cgmath::{Deg, InnerSpace, Vector3};
 use amethyst::ecs::{Entity, World};
 use amethyst::prelude::*;
-use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Event, KeyboardInput,
-                         Light, Mesh, Pipeline, PointLight, PosNormTex, Projection, RenderBundle,
-                         Rgba, Stage, VirtualKeyCode, WindowEvent};
-use amethyst_animation::{play_animation, Animation, AnimationBundle, EndControl,
-                         InterpolationFunction, Sampler, TransformChannel};
+use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, ElementState, Event,
+                         KeyboardInput, Light, Mesh, Pipeline, PointLight, PosNormTex, Projection,
+                         RenderBundle, Rgba, Stage, VirtualKeyCode, WindowEvent};
+use amethyst_animation::{play_animation, step_animation, Animation, AnimationBundle, EndControl,
+                         InterpolationFunction, Sampler, StepDirection, TransformChannel};
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 
@@ -54,18 +54,43 @@ impl State for Example {
                 WindowEvent::KeyboardInput {
                     input:
                         KeyboardInput {
-                            virtual_keycode: Some(VirtualKeyCode::Space),
+                            virtual_keycode,
+                            state: ElementState::Released,
                             ..
                         },
                     ..
                 } => {
-                    play_animation(
-                        &mut world.write(),
-                        self.animation.as_ref().unwrap(),
-                        self.sphere.unwrap().clone(),
-                        EndControl::Loop(None),
-                        1.0,
-                    );
+                    match virtual_keycode {
+                        Some(VirtualKeyCode::Space) => {
+                            play_animation(
+                                &mut world.write(),
+                                self.animation.as_ref().unwrap(),
+                                self.sphere.unwrap().clone(),
+                                EndControl::Loop(None),
+                                0.0,
+                            );
+                        }
+
+                        Some(VirtualKeyCode::Left) => {
+                            step_animation(
+                                &mut world.write(),
+                                self.animation.as_ref().unwrap(),
+                                self.sphere.unwrap().clone(),
+                                StepDirection::Backward,
+                            );
+                        }
+
+                        Some(VirtualKeyCode::Right) => {
+                            step_animation(
+                                &mut world.write(),
+                                self.animation.as_ref().unwrap(),
+                                self.sphere.unwrap().clone(),
+                                StepDirection::Forward,
+                            );
+                        }
+
+                        _ => {}
+                    }
 
                     Trans::None
                 }

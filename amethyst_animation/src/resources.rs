@@ -2,9 +2,10 @@ use std::hash::Hash;
 use std::marker;
 use std::time::Duration;
 
-use amethyst_assets::{Asset, Handle, Result};
+use amethyst_assets::{Asset, AssetStorage, Handle, Result};
+use amethyst_core::timing::{duration_to_secs, secs_to_duration};
 use fnv::FnvHashMap;
-use minterpolate::{InterpolationFunction, InterpolationPrimitive};
+use minterpolate::{get_input_index, InterpolationFunction, InterpolationPrimitive};
 use specs::{Component, DenseVecStorage, Entity, VecStorage};
 
 /// Master trait used to define animation sampling on a component
@@ -257,11 +258,61 @@ where
             .for_each(|sampler| sampler.rate_multiplier = rate_multiplier);
     }
 
+    /// Forcible set the input value (point of interpolation)
+    pub fn set_input(&mut self, input: f32)
+    where
+        T: AnimationSampling,
+    {
+        let dur = secs_to_duration(input);
+        self.samplers.values_mut().for_each(|sampler| {
+            if let ControlState::Running(_) = sampler.state {
+                sampler.state = ControlState::Running(dur);
+            }
+        });
+    }
+
     /// Check if a control set can be terminated
     pub fn check_termination(&self) -> bool {
         self.samplers
             .values()
             .all(|t| t.state == ControlState::Done || t.state == ControlState::Requested)
+    }
+
+    /// Step animation
+    pub fn step(
+        &mut self,
+        samplers: &AssetStorage<Sampler<T::Primitive>>,
+        direction: &StepDirection,
+    ) {
+        self.samplers
+            .values_mut()
+            .filter(|t| t.state != ControlState::Done)
+            .map(|c| (samplers.get(&c.sampler).unwrap(), c))
+            .for_each(|(s, c)| {
+                set_step_state(c, s, direction);
+            });
+    }
+}
+
+fn set_step_state<T>(
+    control: &mut SamplerControl<T>,
+    sampler: &Sampler<T::Primitive>,
+    direction: &StepDirection,
+) where
+    T: AnimationSampling,
+{
+    if let ControlState::Running(dur) = control.state {
+        let dur_s = duration_to_secs(dur);
+        let new_index = match (get_input_index(dur_s, &sampler.input), direction) {
+            (Some(index), &StepDirection::Forward) if index >= sampler.input.len() - 1 => {
+                sampler.input.len() - 1
+            }
+            (Some(index), &StepDirection::Forward) => index + 1,
+            (Some(0), &StepDirection::Backward) => 0,
+            (Some(index), &StepDirection::Backward) => index - 1,
+            (None, _) => 0,
+        };
+        control.state = ControlState::Running(secs_to_duration(sampler.input[new_index]));
     }
 }
 
@@ -272,11 +323,24 @@ where
     type Storage = DenseVecStorage<Self>;
 }
 
+/// Used when doing animation stepping (i.e only move forward/backward to discrete input values)
+#[derive(Clone, Debug)]
+pub enum StepDirection {
+    /// Take a step forward
+    Forward,
+    /// Take a step backward
+    Backward,
+}
+
 /// Animation command
 #[derive(Clone, Debug)]
 pub enum AnimationCommand {
     /// Start the animation, or unpause if it's paused
     Start,
+    /// Step the animation forward/backward (move to the next/previous input value in sequence)
+    Step(StepDirection),
+    /// Forcible set current interpolation point for the animation, value in seconds
+    SetInputValue(f32),
     /// Pause the animation
     Pause,
     /// Abort the animation, will cause the control object to be removed from the world
