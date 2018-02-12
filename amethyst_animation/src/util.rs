@@ -1,174 +1,23 @@
-use amethyst_assets::Handle;
 use amethyst_core::cgmath::BaseNum;
 use amethyst_core::cgmath::num_traits::NumCast;
 use minterpolate::InterpolationPrimitive;
 use specs::{Entity, WriteStorage};
 
-use resources::{Animation, AnimationCommand, AnimationControl, AnimationSampling, ControlState,
-                EndControl, StepDirection};
+use resources::{AnimationControlSet, AnimationSampling};
 
-/// Play a given animation on the given entity.
-///
-/// ## Parameters:
-///
-/// - `controls`: animation control storage in the world.
-/// - `animation`: handle to the animation to run
-/// - `entity`: entity to run the animation on. Must either have an `AnimationHierarchy` that
-///             matches the `Animation`, or only refer to a single node, else the animation will
-///             not be run.
-/// - `end`: action to perform when the animation has reached its end.
-/// - `rate_multiplier`: animation rate to set
-pub fn play_animation<T>(
-    controls: &mut WriteStorage<AnimationControl<T>>,
-    animation: &Handle<Animation<T>>,
+/// Get the animation set for an entity. If none exists, one will be added.
+pub fn get_animation_set<'a, I, T>(
+    controls: &'a mut WriteStorage<AnimationControlSet<I, T>>,
     entity: Entity,
-    end: EndControl,
-    rate_multiplier: f32,
-) where
+) -> &'a mut AnimationControlSet<I, T>
+where
+    I: Send + Sync + 'static,
     T: AnimationSampling,
 {
-    match controls.get_mut(entity) {
-        Some(ref mut control) if control.animation == *animation => {
-            control.command = AnimationCommand::Start
-        }
-        _ => {}
-    }
     if let None = controls.get(entity) {
-        controls.insert(
-            entity,
-            AnimationControl::<T>::new(
-                animation.clone(),
-                end,
-                ControlState::Requested,
-                AnimationCommand::Start,
-                rate_multiplier,
-            ),
-        );
+        controls.insert(entity, AnimationControlSet::default());
     }
-}
-
-/// Pause the running animation on the given entity.
-///
-/// ## Parameters:
-///
-/// - `controls`: animation control storage in the world.
-/// - `animation`: handle to the animation to run
-/// - `entity`: entity the animation is running on. Must either have an `AnimationHierarchy` that
-///             matches the `Animation`, or only refer to a single node, else the animation will
-///             not be run.
-pub fn pause_animation<T>(
-    controls: &mut WriteStorage<AnimationControl<T>>,
-    animation: &Handle<Animation<T>>,
-    entity: Entity,
-) where
-    T: AnimationSampling,
-{
-    if let Some(ref mut control) = controls.get_mut(entity) {
-        if control.animation == *animation && control.state.is_running() {
-            control.command = AnimationCommand::Pause;
-        }
-    }
-}
-
-/// Toggle the state between paused and running for the given animation on the given entity.
-///
-/// ## Parameters:
-///
-/// - `controls`: animation control storage in the world.
-/// - `animation`: handle to the animation
-/// - `entity`: entity to run the animation on. Must either have an `AnimationHierarchy` that
-///             matches the `Animation`, or only refer to a single node, else the animation will
-///             not be run.
-/// - `end`: action to perform when the animation has reached its end.
-/// - `rate_multiplier`: animation rate to set
-pub fn toggle_animation<T>(
-    controls: &mut WriteStorage<AnimationControl<T>>,
-    animation: &Handle<Animation<T>>,
-    entity: Entity,
-    end: EndControl,
-    rate_multiplier: f32,
-) where
-    T: AnimationSampling,
-{
-    if controls
-        .get(entity)
-        .map(|c| c.state.is_running())
-        .unwrap_or(false)
-    {
-        pause_animation(controls, animation, entity);
-    } else {
-        play_animation(controls, animation, entity, end, rate_multiplier);
-    }
-}
-
-/// Set animation rate
-///
-/// ## Parameters:
-///
-/// - `controls`: animation control storage in the world.
-/// - `animation`: handle to the animation
-/// - `entity`: entity the animation is running on.
-/// - `rate_multiplier`: animation rate to set
-pub fn set_animation_rate<T>(
-    controls: &mut WriteStorage<AnimationControl<T>>,
-    animation: &Handle<Animation<T>>,
-    entity: Entity,
-    rate_multiplier: f32,
-) where
-    T: AnimationSampling,
-{
-    match controls.get_mut(entity) {
-        Some(ref mut control) if control.animation == *animation => {
-            control.rate_multiplier = rate_multiplier;
-        }
-        _ => {}
-    }
-}
-
-/// Step animation.
-///
-/// ## Parameters:
-///
-/// - `controls`: animation control storage in the world.
-/// - `animation`: handle to the animation
-/// - `entity`: entity the animation is running on.
-/// - `direction`: direction to step the animation
-pub fn step_animation<T>(
-    controls: &mut WriteStorage<AnimationControl<T>>,
-    animation: &Handle<Animation<T>>,
-    entity: Entity,
-    direction: StepDirection,
-) where
-    T: AnimationSampling,
-{
-    if let Some(ref mut control) = controls.get_mut(entity) {
-        if control.animation == *animation && control.state.is_running() {
-            control.command = AnimationCommand::Step(direction);
-        }
-    }
-}
-
-/// Forcibly set animation input value (i.e. the point of interpolation)
-///
-/// ## Parameters:
-///
-/// - `controls`: animation control storage in the world.
-/// - `animation`: handle to the animation
-/// - `entity`: entity the animation is running on.
-/// - `input`: input value to set
-pub fn set_animation_input<T>(
-    controls: &mut WriteStorage<AnimationControl<T>>,
-    animation: &Handle<Animation<T>>,
-    entity: Entity,
-    input: f32,
-) where
-    T: AnimationSampling,
-{
-    if let Some(ref mut control) = controls.get_mut(entity) {
-        if control.animation == *animation && control.state.is_running() {
-            control.command = AnimationCommand::SetInputValue(input);
-        }
-    }
+    controls.get_mut(entity).unwrap()
 }
 
 /// Sampler primitive

@@ -41,7 +41,7 @@ where
 
     fn run(&mut self, (time, samplers, mut control_sets, mut comps): Self::SystemData) {
         for (control_set, comp) in (&mut control_sets, &mut comps).join() {
-            for control in control_set.samplers.values_mut() {
+            for control in control_set.samplers.iter_mut() {
                 if let Some(ref sampler) = samplers.get(&control.sampler) {
                     process_sampler(control, sampler, comp, &time);
                 }

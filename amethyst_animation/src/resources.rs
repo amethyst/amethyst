@@ -185,6 +185,8 @@ pub struct SamplerControl<T>
 where
     T: AnimationSampling,
 {
+    /// Id of the animation control this entry belongs to
+    pub control_id: u64,
     /// Channel
     pub channel: T::Channel,
     /// Sampler
@@ -204,12 +206,23 @@ where
 /// We only support a single sampler per channel currently, i.e no animation blending. Blending is
 /// however possible to build on top of this by dynamically updating the samplers referenced from
 /// here.
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub struct SamplerControlSet<T>
 where
     T: AnimationSampling,
 {
-    pub samplers: FnvHashMap<T::Channel, SamplerControl<T>>,
+    pub samplers: Vec<SamplerControl<T>>,
+}
+
+impl<T> Default for SamplerControlSet<T>
+where
+    T: AnimationSampling,
+{
+    fn default() -> Self {
+        SamplerControlSet {
+            samplers: Vec::default(),
+        }
+    }
 }
 
 impl<T> SamplerControlSet<T>
@@ -217,21 +230,45 @@ where
     T: AnimationSampling,
 {
     /// Set channel control
-    pub fn set_channel(&mut self, channel: T::Channel, control: SamplerControl<T>) {
-        self.samplers.insert(channel, control);
+    pub fn add_control(&mut self, control: SamplerControl<T>) {
+        match self.samplers
+            .iter()
+            .position(|t| t.control_id == control.control_id && t.channel == control.channel)
+        {
+            Some(index) => {
+                self.samplers[index] = control;
+            }
+            None => {
+                self.samplers.push(control);
+            }
+        }
+    }
+
+    /// Clear sampler controls for the given animation
+    pub fn clear(&mut self, control_id: u64) {
+        self.samplers.retain(|t| t.control_id != control_id);
+    }
+
+    /// Check if set is empty
+    pub fn is_empty(&self) -> bool {
+        self.samplers.is_empty()
     }
 
     /// Abort control set
-    pub fn abort(&mut self) {
+    pub fn abort(&mut self, control_id: u64) {
         self.samplers
-            .values_mut()
+            .iter_mut()
+            .filter(|t| t.control_id == control_id)
             .filter(|t| t.state != ControlState::Done)
             .for_each(|sampler| sampler.state = ControlState::Abort);
     }
 
     /// Pause control set
-    pub fn pause(&mut self) {
-        for sampler in self.samplers.values_mut() {
+    pub fn pause(&mut self, control_id: u64) {
+        for sampler in self.samplers
+            .iter_mut()
+            .filter(|t| t.control_id == control_id)
+        {
             sampler.state = match sampler.state {
                 ControlState::Running(dur) => ControlState::Paused(dur),
                 _ => ControlState::Paused(Duration::from_secs(0)),
@@ -240,8 +277,11 @@ where
     }
 
     /// Unpause control set
-    pub fn unpause(&mut self) {
-        for sampler in self.samplers.values_mut() {
+    pub fn unpause(&mut self, control_id: u64) {
+        for sampler in self.samplers
+            .iter_mut()
+            .filter(|t| t.control_id == control_id)
+        {
             if let ControlState::Paused(dur) = sampler.state {
                 sampler.state = ControlState::Running(dur);
             }
@@ -249,43 +289,50 @@ where
     }
 
     /// Update rate multiplier
-    pub fn set_rate_multiplier(&mut self, rate_multiplier: f32)
+    pub fn set_rate_multiplier(&mut self, control_id: u64, rate_multiplier: f32)
     where
         T: AnimationSampling,
     {
         self.samplers
-            .values_mut()
+            .iter_mut()
+            .filter(|t| t.control_id == control_id)
             .for_each(|sampler| sampler.rate_multiplier = rate_multiplier);
     }
 
     /// Forcible set the input value (point of interpolation)
-    pub fn set_input(&mut self, input: f32)
+    pub fn set_input(&mut self, control_id: u64, input: f32)
     where
         T: AnimationSampling,
     {
         let dur = secs_to_duration(input);
-        self.samplers.values_mut().for_each(|sampler| {
-            if let ControlState::Running(_) = sampler.state {
-                sampler.state = ControlState::Running(dur);
-            }
-        });
+        self.samplers
+            .iter_mut()
+            .filter(|t| t.control_id == control_id)
+            .for_each(|sampler| {
+                if let ControlState::Running(_) = sampler.state {
+                    sampler.state = ControlState::Running(dur);
+                }
+            });
     }
 
     /// Check if a control set can be terminated
-    pub fn check_termination(&self) -> bool {
+    pub fn check_termination(&self, control_id: u64) -> bool {
         self.samplers
-            .values()
+            .iter()
+            .filter(|t| t.control_id == control_id)
             .all(|t| t.state == ControlState::Done || t.state == ControlState::Requested)
     }
 
     /// Step animation
     pub fn step(
         &mut self,
+        control_id: u64,
         samplers: &AssetStorage<Sampler<T::Primitive>>,
         direction: &StepDirection,
     ) {
         self.samplers
-            .values_mut()
+            .iter_mut()
+            .filter(|t| t.control_id == control_id)
             .filter(|t| t.state != ControlState::Done)
             .map(|c| (samplers.get(&c.sampler).unwrap(), c))
             .for_each(|(s, c)| {
@@ -307,8 +354,8 @@ fn set_step_state<T>(
             (Some(index), &StepDirection::Forward) if index >= sampler.input.len() - 1 => {
                 sampler.input.len() - 1
             }
-            (Some(index), &StepDirection::Forward) => index + 1,
             (Some(0), &StepDirection::Backward) => 0,
+            (Some(index), &StepDirection::Forward) => index + 1,
             (Some(index), &StepDirection::Backward) => index - 1,
             (None, _) => 0,
         };
@@ -345,6 +392,8 @@ pub enum AnimationCommand {
     Pause,
     /// Abort the animation, will cause the control object to be removed from the world
     Abort,
+    /// Only initialise the animation without starting it
+    Init,
 }
 
 /// Controls the state of a single running animation on a specific component type
@@ -355,6 +404,9 @@ where
 {
     /// Animation handle
     pub animation: Handle<Animation<T>>,
+    /// Id, a value of zero means this has not been initialised yet
+    /// (this is done by the control system)
+    pub id: u64,
     /// What to do when animation ends
     pub end: EndControl,
     /// State of animation
@@ -378,6 +430,7 @@ where
         rate_multiplier: f32,
     ) -> Self {
         AnimationControl {
+            id: 0,
             animation,
             end,
             state,
@@ -390,6 +443,136 @@ where
 
 impl<T> Component for AnimationControl<T>
 where
+    T: AnimationSampling,
+{
+    type Storage = DenseVecStorage<Self>;
+}
+
+#[derive(Clone, Debug)]
+pub struct AnimationControlSet<I, T>
+where
+    T: AnimationSampling,
+{
+    pub animations: Vec<(I, AnimationControl<T>)>,
+}
+
+impl<I, T> Default for AnimationControlSet<I, T>
+where
+    T: AnimationSampling,
+{
+    fn default() -> Self {
+        AnimationControlSet {
+            animations: Vec::default(),
+        }
+    }
+}
+
+impl<I, T> AnimationControlSet<I, T>
+where
+    I: PartialEq,
+    T: AnimationSampling,
+{
+    /// Is the animation set empty?
+    pub fn is_empty(&self) -> bool {
+        self.animations.is_empty()
+    }
+
+    /// Remove animation from set
+    ///
+    /// This should be used with care, as this will leave all linked samplers in place. If in
+    /// doubt, use `abort()` instead.
+    pub fn remove(&mut self, id: I) {
+        if let Some(index) = self.animations.iter().position(|a| a.0 == id) {
+            self.animations.remove(index);
+        }
+    }
+
+    fn set_command(&mut self, id: I, command: AnimationCommand) {
+        if let Some(&mut (_, ref mut control)) = self.animations.iter_mut().find(|a| a.0 == id) {
+            control.command = command;
+        }
+    }
+
+    /// Start animation if it exists
+    pub fn start(&mut self, id: I) {
+        self.set_command(id, AnimationCommand::Start);
+    }
+
+    /// Pause animation if it exists
+    pub fn pause(&mut self, id: I) {
+        self.set_command(id, AnimationCommand::Pause);
+    }
+
+    /// Toggle animation if it exists
+    pub fn toggle(&mut self, id: I) {
+        if let Some(&mut (_, ref mut control)) = self.animations.iter_mut().find(|a| a.0 == id) {
+            if control.state.is_running() {
+                control.command = AnimationCommand::Pause;
+            } else {
+                control.command = AnimationCommand::Start;
+            }
+        }
+    }
+
+    /// Set animation rate
+    pub fn set_rate(&mut self, id: I, rate_multiplier: f32) {
+        if let Some(&mut (_, ref mut control)) = self.animations.iter_mut().find(|a| a.0 == id) {
+            control.rate_multiplier = rate_multiplier;
+        }
+    }
+
+    /// Step animation
+    pub fn step(&mut self, id: I, direction: StepDirection) {
+        self.set_command(id, AnimationCommand::Step(direction));
+    }
+
+    /// Set animation input value (point of interpolation)
+    pub fn set_input(&mut self, id: I, input: f32) {
+        self.set_command(id, AnimationCommand::SetInputValue(input));
+    }
+
+    /// Abort animation
+    pub fn abort(&mut self, id: I) {
+        self.set_command(id, AnimationCommand::Abort);
+    }
+
+    /// Add animation with the given id, unless it already exists
+    pub fn add_animation(
+        &mut self,
+        id: I,
+        animation: &Handle<Animation<T>>,
+        end: EndControl,
+        rate_multiplier: f32,
+        command: AnimationCommand,
+    ) {
+        if let Some(_) = self.animations.iter().find(|a| a.0 == id) {
+            return;
+        }
+        self.animations.push((
+            id,
+            AnimationControl::new(
+                animation.clone(),
+                end,
+                ControlState::Requested,
+                command,
+                rate_multiplier,
+            ),
+        ));
+    }
+
+    /// Check if there is an animation with the given id in the set
+    pub fn has_animation(&mut self, id: I) -> bool {
+        if let Some(_) = self.animations.iter().find(|a| a.0 == id) {
+            true
+        } else {
+            false
+        }
+    }
+}
+
+impl<I, T> Component for AnimationControlSet<I, T>
+where
+    I: Send + Sync + 'static,
     T: AnimationSampling,
 {
     type Storage = DenseVecStorage<Self>;

@@ -19,8 +19,7 @@ pub use self::skinning::{Joint, Skin, VertexSkinningSystem};
 pub use self::systems::{AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem,
                         SamplerProcessor};
 pub use self::transform::TransformChannel;
-pub use self::util::{pause_animation, play_animation, set_animation_input, set_animation_rate,
-                     step_animation, toggle_animation, SamplerPrimitive};
+pub use self::util::{get_animation_set, SamplerPrimitive};
 pub use minterpolate::{InterpolationFunction, InterpolationPrimitive};
 
 mod skinning;
