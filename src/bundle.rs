@@ -8,9 +8,9 @@ use core::frame_limiter::FrameLimiter;
 use ecs::{DispatcherBuilder, World};
 use ecs::common::Errors;
 use rayon::{Configuration, ThreadPool};
-use renderer::Event;
 use shrev::EventChannel;
-#[cfg(feature = "profiler")]
+use winit::Event;
+
 use thread_profiler::register_thread_with_profiler;
 
 pub struct AppBundle {
@@ -32,7 +32,7 @@ impl<'a, 'b> ECSBundle<'a, 'b> for AppBundle {
         dispatcher: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
         let cfg = Configuration::new();
-        #[cfg(feature = "profiler")]
+        
         let cfg = cfg.start_handler(|index| {
             register_thread_with_profiler(format!("thread_pool{}", index));
         });

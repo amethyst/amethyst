@@ -53,7 +53,6 @@
 #![doc(html_logo_url = "https://tinyurl.com/jtmm43a")]
 
 #[macro_use]
-#[cfg(feature = "profiler")]
 pub extern crate thread_profiler;
 
 pub extern crate amethyst_assets as assets;
@@ -62,7 +61,7 @@ pub extern crate amethyst_config as config;
 pub extern crate amethyst_core as core;
 pub extern crate amethyst_input as input;
 pub extern crate amethyst_renderer as renderer;
-pub extern crate amethyst_ui as ui;
+// pub extern crate amethyst_ui as ui;
 pub extern crate amethyst_utils as utils;
 pub extern crate shred;
 pub extern crate shrev;

@@ -7,7 +7,6 @@ use std::result::Result as StdResult;
 
 use config::ConfigError;
 use core;
-use renderer;
 
 /// Engine result type.
 pub type Result<T> = StdResult<T, Error>;
@@ -55,11 +54,5 @@ impl Display for Error {
 impl From<core::Error> for Error {
     fn from(e: core::Error) -> Self {
         Error::Core(e)
-    }
-}
-
-impl From<renderer::error::Error> for Error {
-    fn from(err: renderer::error::Error) -> Self {
-        Error::Core(core::Error::with_chain(err, "Renderer error"))
     }
 }
