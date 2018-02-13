@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use std::hash::Hash;
 use std::marker;
 use std::time::Duration;
@@ -8,18 +9,30 @@ use fnv::FnvHashMap;
 use minterpolate::{get_input_index, InterpolationFunction, InterpolationPrimitive};
 use specs::{Component, DenseVecStorage, Entity, VecStorage};
 
+/// Blend method for sampler blending
+#[derive(Clone, Copy, Debug, PartialOrd, PartialEq, Eq, Hash)]
+pub enum BlendMethod {
+    Linear
+}
+
 /// Master trait used to define animation sampling on a component
 pub trait AnimationSampling: Send + Sync + 'static {
     /// The interpolation primitive
     type Primitive: InterpolationPrimitive + Clone + Copy + Send + Sync + 'static;
     /// The channel type
-    type Channel: Clone + Hash + Eq + Send + Sync + 'static;
+    type Channel: Debug + Clone + Hash + Eq + Send + Sync + 'static;
 
     /// Apply a sample to a channel
     fn apply_sample(&mut self, channel: &Self::Channel, data: &Self::Primitive);
 
     /// Get the current sample for a channel
     fn current_sample(&self, channel: &Self::Channel) -> Self::Primitive;
+
+    /// Get default primitive
+    fn default_primitive(channel: &Self::Channel) -> Self::Primitive;
+
+    /// Get blend config
+    fn blend_method(&self, channel: &Self::Channel) -> Option<BlendMethod>;
 }
 
 /// Sampler defines a single animation for a single channel on a single component
@@ -110,6 +123,10 @@ where
 /// Defines a single animation.
 /// Defines relationships between the node index in `AnimationHierarchy` and a `Sampler` handle.
 /// If the animation only targets a single node index, `AnimationHierarchy` is not required.
+///
+/// ### Type parameters:
+///
+/// - `T`: the component type that the animation should be applied to
 #[derive(Clone, Debug)]
 pub struct Animation<T>
 where
@@ -180,6 +197,10 @@ pub enum EndControl {
 }
 
 /// Control a single active sampler
+///
+/// ### Type parameters:
+///
+/// - `T`: the component type that the sampling should be applied to
 #[derive(Clone)]
 pub struct SamplerControl<T>
 where
@@ -189,6 +210,8 @@ where
     pub control_id: u64,
     /// Channel
     pub channel: T::Channel,
+    /// Blend weight
+    pub blend_weight: f32,
     /// Sampler
     pub sampler: Handle<Sampler<T::Primitive>>,
     /// State of sampling
@@ -203,9 +226,13 @@ where
 
 /// Sampler control set, containing a set of sampler controllers for a single component.
 ///
-/// We only support a single sampler per channel currently, i.e no animation blending. Blending is
-/// however possible to build on top of this by dynamically updating the samplers referenced from
-/// here.
+/// Have support for multiple samplers per channel, will do linear blending between all active
+/// samplers. The target component specifies if it can be blended, if it can't, the last added
+/// sampler wins.
+///
+/// ### Type parameters:
+///
+/// - `T`: the component type that the sampling should be applied to
 #[derive(Clone)]
 pub struct SamplerControlSet<T>
 where
@@ -299,7 +326,7 @@ where
             .for_each(|sampler| sampler.rate_multiplier = rate_multiplier);
     }
 
-    /// Forcible set the input value (point of interpolation)
+    /// Forcibly set the input value (point of interpolation)
     pub fn set_input(&mut self, control_id: u64, input: f32)
     where
         T: AnimationSampling,
@@ -338,6 +365,16 @@ where
             .for_each(|(s, c)| {
                 set_step_state(c, s, direction);
             });
+    }
+
+    /// Set blend weight for a sampler
+    pub fn set_blend_weight(&mut self, control_id: u64, channel: &T::Channel, blend_weight: f32) {
+        self.samplers
+            .iter_mut()
+            .filter(|t| t.control_id == control_id)
+            .filter(|t| t.state != ControlState::Done)
+            .filter(|t| t.channel == *channel)
+            .for_each(|t| t.blend_weight = blend_weight);
     }
 }
 
@@ -380,14 +417,23 @@ pub enum StepDirection {
 }
 
 /// Animation command
+///
+/// ### Type parameters:
+///
+/// - `T`: the component type that the animation should be applied to
 #[derive(Clone, Debug)]
-pub enum AnimationCommand {
+pub enum AnimationCommand<T>
+where
+    T: AnimationSampling,
+{
     /// Start the animation, or unpause if it's paused
     Start,
     /// Step the animation forward/backward (move to the next/previous input value in sequence)
     Step(StepDirection),
-    /// Forcible set current interpolation point for the animation, value in seconds
+    /// Forcibly set current interpolation point for the animation, value in seconds
     SetInputValue(f32),
+    /// Set blend weights
+    SetBlendWeights(Vec<(usize, T::Channel, f32)>),
     /// Pause the animation
     Pause,
     /// Abort the animation, will cause the control object to be removed from the world
@@ -397,6 +443,10 @@ pub enum AnimationCommand {
 }
 
 /// Controls the state of a single running animation on a specific component type
+///
+/// ### Type parameters:
+///
+/// - `T`: the component type that the animation should be applied to
 #[derive(Clone, Debug)]
 pub struct AnimationControl<T>
 where
@@ -412,7 +462,7 @@ where
     /// State of animation
     pub state: ControlState,
     /// Animation command
-    pub command: AnimationCommand,
+    pub command: AnimationCommand<T>,
     /// Control the rate of animation, default is 1.0
     pub rate_multiplier: f32,
     m: marker::PhantomData<T>,
@@ -426,7 +476,7 @@ where
         animation: Handle<Animation<T>>,
         end: EndControl,
         state: ControlState,
-        command: AnimationCommand,
+        command: AnimationCommand<T>,
         rate_multiplier: f32,
     ) -> Self {
         AnimationControl {
@@ -448,6 +498,17 @@ where
     type Storage = DenseVecStorage<Self>;
 }
 
+/// Contains all currently running animations for an entity.
+///
+/// Have support for running multiple animations, will do linear blending between all active
+/// animations. The target component specifies if it can be blended, if it can't, the last added
+/// animation wins.
+///
+/// ### Type parameters:
+///
+/// - `I`: identifier type for running animations, only one animation can be run at the same time
+///        with the same id
+/// - `T`: the component type that the animation should be applied to
 #[derive(Clone, Debug)]
 pub struct AnimationControlSet<I, T>
 where
@@ -487,7 +548,7 @@ where
         }
     }
 
-    fn set_command(&mut self, id: I, command: AnimationCommand) {
+    fn set_command(&mut self, id: I, command: AnimationCommand<T>) {
         if let Some(&mut (_, ref mut control)) = self.animations.iter_mut().find(|a| a.0 == id) {
             control.command = command;
         }
@@ -531,6 +592,11 @@ where
         self.set_command(id, AnimationCommand::SetInputValue(input));
     }
 
+    /// Set blend weights
+    pub fn set_blend_weight(&mut self, id: I, weights: Vec<(usize, T::Channel, f32)>) {
+        self.set_command(id, AnimationCommand::SetBlendWeights(weights));
+    }
+
     /// Abort animation
     pub fn abort(&mut self, id: I) {
         self.set_command(id, AnimationCommand::Abort);
@@ -543,7 +609,7 @@ where
         animation: &Handle<Animation<T>>,
         end: EndControl,
         rate_multiplier: f32,
-        command: AnimationCommand,
+        command: AnimationCommand<T>,
     ) {
         if let Some(_) = self.animations.iter().find(|a| a.0 == id) {
             return;
@@ -580,6 +646,10 @@ where
 
 /// Attaches to an entity that have animations, with links to all animations that can be run on the
 /// entity. Is not used directly by the animation systems, provided for convenience.
+///
+/// ### Type parameters:
+///
+/// - `T`: the component type that the animation should be applied to
 pub struct AnimationSet<T>
 where
     T: AnimationSampling,

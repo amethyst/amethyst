@@ -3,6 +3,7 @@ extern crate amethyst_core;
 extern crate amethyst_renderer;
 extern crate fnv;
 extern crate hibitset;
+extern crate itertools;
 #[macro_use]
 extern crate log;
 extern crate minterpolate;
@@ -14,7 +15,7 @@ extern crate specs;
 pub use self::bundle::{AnimationBundle, SamplingBundle, VertexSkinningBundle};
 pub use self::resources::{Animation, AnimationCommand, AnimationControl, AnimationHierarchy,
                           AnimationSampling, AnimationSet, ControlState, EndControl, Sampler,
-                          SamplerControl, SamplerControlSet, StepDirection};
+                          SamplerControl, SamplerControlSet, StepDirection, BlendMethod};
 pub use self::skinning::{Joint, Skin, VertexSkinningSystem};
 pub use self::systems::{AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem,
                         SamplerProcessor};

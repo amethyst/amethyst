@@ -6,6 +6,12 @@ use specs::{Entity, WriteStorage};
 use resources::{AnimationControlSet, AnimationSampling};
 
 /// Get the animation set for an entity. If none exists, one will be added.
+///
+/// ### Type parameters:
+///
+/// - `I`: identifier type for running animations, only one animation can be run at the same time
+///        with the same id
+/// - `T`: the component type that the animation applies to
 pub fn get_animation_set<'a, I, T>(
     controls: &'a mut WriteStorage<AnimationControlSet<I, T>>,
     entity: Entity,

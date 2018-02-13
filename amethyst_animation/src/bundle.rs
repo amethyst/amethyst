@@ -54,6 +54,10 @@ impl<'a, 'b, 'c> ECSBundle<'a, 'b> for VertexSkinningBundle<'c> {
 ///
 /// Will add `SamplerInterpolationSystem<T>` with the given name.
 /// Will also add `SamplerProcessor<T::Primitive>`.
+///
+/// ### Type parameters:
+///
+/// - `T`: the component type that sampling should be applied to
 #[derive(Default)]
 pub struct SamplingBundle<'a, T> {
     name: &'a str,
@@ -108,6 +112,12 @@ where
 ///
 /// Will add `AnimationControlSystem<T>` with the given name.
 /// Will also add `AnimationProcessor<T>`.
+///
+/// ### Type parameters:
+///
+/// - `I`: identifier type for running animations, only one animation can be run at the same time
+///        with the same id (per entity)
+/// - `T`: the component type that sampling should be applied to
 #[derive(Default)]
 pub struct AnimationBundle<'a, I, T> {
     animation_name: &'a str,
