@@ -34,4 +34,12 @@ impl AnimationSampling for Transform {
             &Scale => SamplerPrimitive::Vec3(self.scale.into()),
         }
     }
+    fn default_primitive(channel: &Self::Channel) -> Self::Primitive {
+        use self::TransformChannel::*;
+        match channel {
+            &Translation => SamplerPrimitive::Vec3([0.; 3]),
+            &Rotation => SamplerPrimitive::Vec4([0.; 4]),
+            &Scale => SamplerPrimitive::Vec3([0.; 3]),
+        }
+    }
 }

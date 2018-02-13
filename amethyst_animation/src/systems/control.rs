@@ -216,6 +216,11 @@ where
             None
         }
 
+        (&ControlState::Running(..), &AnimationCommand::SetBlendWeights(ref weights)) => {
+            set_blend_weights(control.id, hierarchy, samplers, weights);
+            None
+        }
+
         // check for finished/aborted animations, wait for samplers to signal done,
         // then remove control objects
         (&ControlState::Running(..), _) => {
@@ -292,6 +297,7 @@ where
             end: control.end.clone(),
             after: component.current_sample(channel),
             rate_multiplier: control.rate_multiplier,
+            blend_weight: 1.0,
         };
         let add = if let Some(ref mut set) = samplers.get_mut(*node_entity) {
             set.add_control(sampler_control);
@@ -363,6 +369,23 @@ fn set_animation_input<T>(
     for (_, node_entity) in &hierarchy.nodes {
         if let Some(ref mut s) = controls.get_mut(*node_entity) {
             s.set_input(control_id, input);
+        }
+    }
+}
+
+fn set_blend_weights<T>(
+    control_id: u64,
+    hierarchy: &AnimationHierarchy<T>,
+    controls: &mut WriteStorage<SamplerControlSet<T>>,
+    weights: &Vec<(usize, T::Channel, f32)>,
+) where
+    T: AnimationSampling,
+{
+    for &(node_index, ref channel, weight) in weights {
+        if let Some(node_entity) = hierarchy.nodes.get(&node_index) {
+            if let Some(ref mut s) = controls.get_mut(*node_entity) {
+                s.set_blend_weight(control_id, channel, weight);
+            }
         }
     }
 }

@@ -3,6 +3,7 @@ extern crate amethyst_core;
 extern crate amethyst_renderer;
 extern crate fnv;
 extern crate hibitset;
+extern crate itertools;
 #[macro_use]
 extern crate log;
 extern crate minterpolate;
