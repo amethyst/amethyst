@@ -5,7 +5,7 @@ use minterpolate::InterpolationPrimitive;
 use specs::{Entity, WriteStorage};
 
 use resources::{Animation, AnimationCommand, AnimationControl, AnimationSampling, ControlState,
-                EndControl};
+                EndControl, StepDirection};
 
 /// Play a given animation on the given entity.
 ///
@@ -122,6 +122,52 @@ pub fn set_animation_rate<T>(
             control.rate_multiplier = rate_multiplier;
         }
         _ => {}
+    }
+}
+
+/// Step animation.
+///
+/// ## Parameters:
+///
+/// - `controls`: animation control storage in the world.
+/// - `animation`: handle to the animation
+/// - `entity`: entity the animation is running on.
+/// - `direction`: direction to step the animation
+pub fn step_animation<T>(
+    controls: &mut WriteStorage<AnimationControl<T>>,
+    animation: &Handle<Animation<T>>,
+    entity: Entity,
+    direction: StepDirection,
+) where
+    T: AnimationSampling,
+{
+    if let Some(ref mut control) = controls.get_mut(entity) {
+        if control.animation == *animation && control.state.is_running() {
+            control.command = AnimationCommand::Step(direction);
+        }
+    }
+}
+
+/// Forcibly set animation input value (i.e. the point of interpolation)
+///
+/// ## Parameters:
+///
+/// - `controls`: animation control storage in the world.
+/// - `animation`: handle to the animation
+/// - `entity`: entity the animation is running on.
+/// - `input`: input value to set
+pub fn set_animation_input<T>(
+    controls: &mut WriteStorage<AnimationControl<T>>,
+    animation: &Handle<Animation<T>>,
+    entity: Entity,
+    input: f32,
+) where
+    T: AnimationSampling,
+{
+    if let Some(ref mut control) = controls.get_mut(entity) {
+        if control.animation == *animation && control.state.is_running() {
+            control.command = AnimationCommand::SetInputValue(input);
+        }
     }
 }
 
