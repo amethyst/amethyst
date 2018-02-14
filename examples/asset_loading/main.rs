@@ -8,7 +8,7 @@ use amethyst::{Application, Error, State, Trans};
 use amethyst::assets::{Loader, Result as AssetResult, SimpleFormat};
 use amethyst::config::Config;
 use amethyst::core::cgmath::{Array, Vector3};
-use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
+use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::World;
 use amethyst::input::InputBundle;
 use amethyst::renderer::{Camera, DisplayConfig, DrawShaded, Event, KeyboardInput, Light, Material,
@@ -83,7 +83,7 @@ impl State for AssetsExample {
             (mesh, mat)
         };
 
-        let mut trans = LocalTransform::default();
+        let mut trans = Transform::default();
         trans.translation = Vector3::new(-5.0, 0.0, 0.0);
         trans.scale = Vector3::from_value(2.);
         world
@@ -91,7 +91,7 @@ impl State for AssetsExample {
             .with(mesh)
             .with(mtl)
             .with(trans)
-            .with(Transform::default())
+            .with(GlobalTransform::default())
             .build();
     }
 
@@ -162,7 +162,7 @@ fn initialise_camera(world: &mut World) {
     world
         .create_entity()
         .with(Camera::from(Projection::perspective(1.0, Deg(60.0))))
-        .with(Transform(transform.into()))
+        .with(GlobalTransform(transform.into()))
         .build();
 }
 

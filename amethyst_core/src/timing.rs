@@ -261,7 +261,7 @@ mod tests {
     #[test]
     fn elapsed() {
         const DURATION: u64 = 1; // in seconds.
-        const UNCERTAINTY: u32 = 5; // in percents.
+        const UNCERTAINTY: u32 = 10; // in percents.
         let mut watch = Stopwatch::new();
 
         watch.start();
@@ -299,7 +299,7 @@ mod tests {
     fn restart() {
         const DURATION0: u64 = 2; // in seconds.
         const DURATION: u64 = 1; // in seconds.
-        const UNCERTAINTY: u32 = 5; // in percents.
+        const UNCERTAINTY: u32 = 10; // in percents.
         let mut watch = Stopwatch::new();
 
         watch.start();
@@ -328,7 +328,7 @@ mod tests {
     #[test]
     fn stop_start() {
         const DURATION: u64 = 3; // in seconds.
-        const UNCERTAINTY: u32 = 5; // in percents.
+        const UNCERTAINTY: u32 = 10; // in percents.
         let mut watch = Stopwatch::new();
 
         for _ in 0..DURATION {
@@ -364,7 +364,7 @@ pub fn duration_to_secs_f64(duration: Duration) -> f64 {
 
 /// Converts a time in seconds to a duration
 pub fn secs_to_duration(secs: f32) -> Duration {
-    Duration::new((secs as u64), ((secs % 1.0) * 1.0e9) as u32)
+    Duration::new(secs as u64, ((secs % 1.0) * 1.0e9) as u32)
 }
 
 /// Converts a Duration to nanoseconds

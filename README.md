@@ -2,12 +2,13 @@
 
 # Amethyst
 
-[![Build Status][s1]][tc] [![Crates.io][s2]][ci] [![MIT/Apache][s3]][li] [![Join the chat][s4]][gc]
+[![Build Status][s1]][tc] [![Crates.io][s2]][ci] [![MIT/Apache][s3]][li] [![Join the chat][s4]][gc] ![Lines of Code][s5]
 
 [s1]: https://travis-ci.org/amethyst/amethyst.svg?branch=master
 [s2]: https://img.shields.io/crates/v/amethyst.svg
 [s3]: https://img.shields.io/badge/license-MIT%2FApache-blue.svg
 [s4]: https://badges.gitter.im/amethyst/general.svg
+[s5]: https://tokei.rs/b1/github/amethyst/amethyst?category=code
 
 [tc]: https://travis-ci.org/amethyst/amethyst/
 [ci]: https://crates.io/crates/amethyst/
@@ -128,12 +129,10 @@ the [MIT License][lm] and the [Apache License 2.0][la].
 
 We are a community project that welcomes contribution from anyone. If you're
 interested in helping out, please read the [CONTRIBUTING.md][cm] file before
-getting started. Don't know what to hack on? Check our [active projects][pr],
-read our [roadmap][rm], or search though [our issue tracker][it].
+getting started. Don't know what to hack on? Check our [active projects][pr], or search though [our issue tracker][it].
 
 [cm]: CONTRIBUTING.md
 [pr]: https://github.com/amethyst/amethyst/projects
-[rm]: https://github.com/amethyst/amethyst/wiki/Roadmap
 [it]: https://github.com/amethyst/amethyst/issues
 
 Unless you explicitly state otherwise, any contribution intentionally submitted

@@ -1,7 +1,7 @@
 //! Forward physically-based drawing pass.
 
 use amethyst_assets::AssetStorage;
-use amethyst_core::transform::Transform;
+use amethyst_core::transform::GlobalTransform;
 use gfx::pso::buffer::ElemStride;
 use specs::{Entities, Fetch, Join, ReadStorage};
 
@@ -60,7 +60,7 @@ impl<'a> PassData<'a> for DrawPbmSeparate {
         Fetch<'a, MaterialDefaults>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
-        ReadStorage<'a, Transform>,
+        ReadStorage<'a, GlobalTransform>,
         ReadStorage<'a, Light>,
         ReadStorage<'a, JointTransforms>,
     );
@@ -125,7 +125,7 @@ impl Pass for DrawPbmSeparate {
             joints,
         ): <Self as PassData<'a>>::Data,
     ) {
-        let camera: Option<(&Camera, &Transform)> = active
+        let camera: Option<(&Camera, &GlobalTransform)> = active
             .and_then(|a| {
                 let cam = camera.get(a.entity);
                 let transform = global.get(a.entity);

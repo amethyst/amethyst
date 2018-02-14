@@ -1,6 +1,6 @@
 use amethyst::assets::Loader;
 use amethyst::core::cgmath::Vector3;
-use amethyst::core::transform::{LocalTransform, Transform};
+use amethyst::core::transform::{GlobalTransform, Transform};
 use amethyst::ecs::{Component, DenseVecStorage};
 use amethyst::prelude::*;
 use amethyst::renderer::{Camera, Event, KeyboardInput, Material, MaterialDefaults, MeshHandle,
@@ -69,8 +69,8 @@ fn initialise_camera(world: &mut World) {
 
 /// Initialises one paddle on the left, and one paddle on the right.
 fn initialise_paddles(world: &mut World) {
-    let mut left_transform = LocalTransform::default();
-    let mut right_transform = LocalTransform::default();
+    let mut left_transform = Transform::default();
+    let mut right_transform = Transform::default();
 
     // Correctly position the paddles.
     let y = -PADDLE_HEIGHT / 2.0;
@@ -91,7 +91,7 @@ fn initialise_paddles(world: &mut World) {
         .with(mesh.clone())
         .with(material.clone())
         .with(Paddle::new(Side::Left))
-        .with(Transform::default())
+        .with(GlobalTransform::default())
         .with(left_transform)
         .build();
 
@@ -101,7 +101,7 @@ fn initialise_paddles(world: &mut World) {
         .with(mesh)
         .with(material)
         .with(Paddle::new(Side::Right))
-        .with(Transform::default())
+        .with(GlobalTransform::default())
         .with(right_transform)
         .build();
 }

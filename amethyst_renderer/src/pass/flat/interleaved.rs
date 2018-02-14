@@ -3,7 +3,7 @@
 use std::marker::PhantomData;
 
 use amethyst_assets::AssetStorage;
-use amethyst_core::transform::Transform;
+use amethyst_core::transform::GlobalTransform;
 use gfx::pso::buffer::ElemStride;
 use specs::{Fetch, Join, ReadStorage};
 
@@ -50,7 +50,7 @@ where
         Fetch<'a, MaterialDefaults>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
-        ReadStorage<'a, Transform>,
+        ReadStorage<'a, GlobalTransform>,
     );
 }
 
@@ -76,7 +76,7 @@ where
         _factory: Factory,
         (active, camera, mesh_storage, tex_storage, material_defaults, mesh, material, global): <Self as PassData<'a>>::Data,
 ){
-        let camera: Option<(&Camera, &Transform)> = active
+        let camera: Option<(&Camera, &GlobalTransform)> = active
             .and_then(|a| {
                 let cam = camera.get(a.entity);
                 let transform = global.get(a.entity);

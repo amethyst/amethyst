@@ -12,7 +12,7 @@ pub struct AudioSink {
 }
 
 impl AudioSink {
-    /// Creates a new Dj using the given audio output.
+    /// Creates a new `AudioSink` using the given audio output.
     pub fn new(output: &Output) -> AudioSink {
         AudioSink {
             sink: Sink::new(&output.endpoint),

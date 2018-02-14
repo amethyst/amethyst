@@ -43,8 +43,8 @@ impl<'a, 'b, 'c> ECSBundle<'a, 'b> for TransformBundle<'c> {
         builder: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
         world.register::<Parent>();
-        world.register::<LocalTransform>();
         world.register::<Transform>();
+        world.register::<GlobalTransform>();
 
         Ok(builder.add(TransformSystem::new(), "transform_system", self.dep))
     }

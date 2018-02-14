@@ -2,7 +2,7 @@ use amethyst_core::cgmath::Matrix4;
 use hibitset::BitSet;
 use specs::{Component, DenseVecStorage, Entity};
 
-/// Joint, attach to an entity with a `LocalTransform`
+/// Joint, attach to an entity with a `Transform`
 #[derive(Debug, Clone)]
 pub struct Joint {
     /// Bring the mesh into the joints local coordinate system

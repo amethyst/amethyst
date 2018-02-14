@@ -7,10 +7,11 @@ use std::mem;
 use std::sync::Arc;
 
 use self::importer::{get_image_data, import, Buffers, ImageFormat};
-use animation::{AnimationOutput, InterpolationType, Sampler};
+use animation::{InterpolationFunction, InterpolationPrimitive, Sampler, SamplerPrimitive,
+                TransformChannel};
 use assets::{Error as AssetError, Format, FormatValue, Result as AssetResult, ResultExt, Source};
 use core::cgmath::{Matrix4, SquareMatrix};
-use core::transform::LocalTransform;
+use core::transform::Transform;
 use gfx::Primitive;
 use gfx::texture::SamplerInfo;
 use gltf;
@@ -181,14 +182,11 @@ fn load_animation(
     animation: &gltf::Animation,
     buffers: &Buffers,
 ) -> Result<GltfAnimation, GltfError> {
-    let (nodes, samplers) = animation
+    let samplers = animation
         .channels()
         .map(|ref channel| load_channel(channel, buffers))
-        .collect::<Result<Vec<(usize, Sampler)>, GltfError>>()?
-        .into_iter()
-        .unzip();
+        .collect::<Result<Vec<_>, GltfError>>()?;
     Ok(GltfAnimation {
-        nodes,
         samplers,
         handle: None,
     })
@@ -197,54 +195,61 @@ fn load_animation(
 fn load_channel(
     channel: &gltf::animation::Channel,
     buffers: &Buffers,
-) -> Result<(usize, Sampler), GltfError> {
+) -> Result<(usize, TransformChannel, Sampler<SamplerPrimitive<f32>>), GltfError> {
     use gltf::animation::TrsProperty::*;
     use gltf_utils::AccessorIter;
     let sampler = channel.sampler();
     let target = channel.target();
     let input = gltf_utils::AccessorIter::new(sampler.input(), buffers).collect::<Vec<f32>>();
     let node_index = target.node().index();
-    let ty = map_interpolation_type(&sampler.interpolation());
 
     match target.path() {
         Translation => {
-            let output = AccessorIter::new(sampler.output(), buffers).collect::<Vec<[f32; 3]>>();
+            let output = AccessorIter::new(sampler.output(), buffers)
+                .map(|t| SamplerPrimitive::Vec3(t))
+                .collect::<Vec<_>>();
             Ok((
                 node_index,
+                TransformChannel::Translation,
                 Sampler {
                     input,
-                    ty,
-                    output: AnimationOutput::Translation(output),
+                    function: map_interpolation_type(&sampler.interpolation()),
+                    output,
                 },
             ))
         }
         Scale => {
-            let output = AccessorIter::new(sampler.output(), buffers).collect::<Vec<[f32; 3]>>();
+            let output = AccessorIter::new(sampler.output(), buffers)
+                .map(|t| SamplerPrimitive::Vec3(t))
+                .collect::<Vec<_>>();
             Ok((
                 node_index,
+                TransformChannel::Scale,
                 Sampler {
                     input,
-                    ty,
-                    output: AnimationOutput::Scale(output),
+                    function: map_interpolation_type(&sampler.interpolation()),
+                    output,
                 },
             ))
         }
         Rotation => {
-            // gltf quat format: [x, y, z, w], our quat format: [w, x, y, z]
             let output = AccessorIter::<[f32; 4]>::new(sampler.output(), buffers)
-                .map(|q| [q[3], q[0], q[1], q[2]])
+                .map(|q| [q[3], q[0], q[1], q[2]].into())
                 .collect::<Vec<_>>();
-            let ty = if ty == InterpolationType::Linear {
-                InterpolationType::SphericalLinear
+            // gltf quat format: [x, y, z, w], our quat format: [w, x, y, z]
+            let ty = map_interpolation_type(&sampler.interpolation());
+            let ty = if ty == InterpolationFunction::Linear {
+                InterpolationFunction::SphericalLinear
             } else {
                 ty
             };
             Ok((
                 node_index,
+                TransformChannel::Rotation,
                 Sampler {
                     input,
-                    ty,
-                    output: AnimationOutput::Rotation(output),
+                    function: ty,
+                    output,
                 },
             ))
         }
@@ -252,14 +257,19 @@ fn load_channel(
     }
 }
 
-fn map_interpolation_type(ty: &gltf::animation::InterpolationAlgorithm) -> InterpolationType {
+fn map_interpolation_type<T>(
+    ty: &gltf::animation::InterpolationAlgorithm,
+) -> InterpolationFunction<T>
+where
+    T: InterpolationPrimitive,
+{
     use gltf::animation::InterpolationAlgorithm::*;
 
     match *ty {
-        Linear => InterpolationType::Linear,
-        Step => InterpolationType::Step,
-        CubicSpline => InterpolationType::CubicSpline,
-        CatmullRomSpline => InterpolationType::CatmullRomSpline,
+        Linear => InterpolationFunction::Linear,
+        Step => InterpolationFunction::Step,
+        CubicSpline => InterpolationFunction::CubicSpline,
+        CatmullRomSpline => InterpolationFunction::CatmullRomSpline,
     }
 }
 
@@ -504,7 +514,7 @@ fn load_node(
     };
 
     let (translation, rotation, scale) = node.transform().decomposed();
-    let mut local_transform = LocalTransform::default();
+    let mut local_transform = Transform::default();
     local_transform.translation = translation.into();
     // gltf quat format: [x, y, z, w], our quat format: [w, x, y, z]
     local_transform.rotation = [rotation[3], rotation[0], rotation[1], rotation[2]].into();

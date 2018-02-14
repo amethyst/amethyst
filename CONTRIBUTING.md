@@ -343,8 +343,6 @@ Then you can hit load button and choose `thread_profile.json` file.
 
 * Amethyst
   * [Amethyst Gitter][gi] - The Amethyst project's public chat room.
-  * [Development Roadmap][dr] - See this wiki page for general ideas on what you
-    can hack on.
 * Design Inspiration
   * [Bitsquid: Behind The Scenes (2013)][bs]
   * [Flexible Rendering for Multiple Platforms (2012)][fr]
@@ -356,8 +354,6 @@ Then you can hit load button and choose `thread_profile.json` file.
   * [Rust By Example][re] - Get acquainted with Rust through a series of small
     code samples.
   * [The Rust Programming Language][rl] - The canonical online book about Rust.
-
-[dr]: https://github.com/amethyst/amethyst/wiki/Roadmap
 
 [bs]: https://www.kth.se/social/upload/5289cb3ff276542440dd668c/bitsquid-behind-the-scenes.pdf
 [fr]: http://twvideo01.ubm-us.net/o1/vault/gdc2012/slides/Programming%20Track/Persson_Tobias_Flexible_Rendering.pdf.pdf

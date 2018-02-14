@@ -55,7 +55,7 @@ impl<'a, 'b, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> ECSBundle<'a,
         let mat = create_default_mat(world);
         world.add_resource(MaterialDefaults(mat));
 
-        world.register::<Transform>();
+        world.register::<GlobalTransform>();
         world.register::<Light>();
         world.register::<Material>();
         world.register::<Handle<Mesh>>();

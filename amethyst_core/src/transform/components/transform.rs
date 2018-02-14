@@ -13,10 +13,10 @@ use specs::{Component, DenseVecStorage, FlaggedStorage};
 /// on the `FlaggedStorage` at the appropriate times (before updating any `Transform` in the frame).
 /// See documentation on `FlaggedStorage` for more information.
 #[derive(Debug, Copy, Clone)]
-pub struct Transform(pub Matrix4<f32>);
+pub struct GlobalTransform(pub Matrix4<f32>);
 
-impl Transform {
-    /// Checks whether each `f32` of the `Transform` is finite (not NaN or inf).
+impl GlobalTransform {
+    /// Checks whether each `f32` of the `GlobalTransform` is finite (not NaN or inf).
     pub fn is_finite(&self) -> bool {
         for i in 0..4 {
             for j in 0..4 {
@@ -30,42 +30,42 @@ impl Transform {
     }
 }
 
-impl Component for Transform {
+impl Component for GlobalTransform {
     type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
 }
 
-impl Default for Transform {
+impl Default for GlobalTransform {
     fn default() -> Self {
-        Transform(Matrix4::one())
+        GlobalTransform(Matrix4::one())
     }
 }
 
-impl Transform {
-    /// Creates a new `Transform` in the form of an identity matrix.
+impl GlobalTransform {
+    /// Creates a new `GlobalTransform` in the form of an identity matrix.
     pub fn new() -> Self {
         Default::default()
     }
 }
 
-impl From<[[f32; 4]; 4]> for Transform {
+impl From<[[f32; 4]; 4]> for GlobalTransform {
     fn from(matrix: [[f32; 4]; 4]) -> Self {
-        Transform(matrix.into())
+        GlobalTransform(matrix.into())
     }
 }
 
-impl Into<[[f32; 4]; 4]> for Transform {
+impl Into<[[f32; 4]; 4]> for GlobalTransform {
     fn into(self) -> [[f32; 4]; 4] {
         self.0.into()
     }
 }
 
-impl AsRef<[[f32; 4]; 4]> for Transform {
+impl AsRef<[[f32; 4]; 4]> for GlobalTransform {
     fn as_ref(&self) -> &[[f32; 4]; 4] {
         self.0.as_ref()
     }
 }
 
-impl Borrow<[[f32; 4]; 4]> for Transform {
+impl Borrow<[[f32; 4]; 4]> for GlobalTransform {
     fn borrow(&self) -> &[[f32; 4]; 4] {
         self.0.as_ref()
     }

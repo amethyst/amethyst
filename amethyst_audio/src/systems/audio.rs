@@ -2,14 +2,14 @@ use std::iter::Iterator;
 use std::mem::replace;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::time::Duration;
 
 use amethyst_core::cgmath::Transform;
-use amethyst_core::transform::Transform as TransformComponent;
-use rodio::{Sample, Source, SpatialSink};
-use specs::{Entity, Fetch, Join, ReadStorage, System, WriteStorage};
+use amethyst_core::transform::GlobalTransform;
+use rodio::SpatialSink;
+use specs::{Entities, Entity, Fetch, Join, ReadStorage, System, WriteStorage};
 
 use components::{AudioEmitter, AudioListener};
+use end_signal::EndSignalSource;
 
 /// Syncs 3D transform data with the audio engine to provide 3D audio.
 #[derive(Default)]
@@ -23,77 +23,36 @@ impl AudioSystem {
 }
 
 /// Add this structure to world as a resource with ID 0 to select an entity whose AudioListener
-/// component will be used.
+/// component will be used.  If this resource isn't found then the system will arbitrarily select
+/// the first AudioListener it finds.
 pub struct SelectedListener(pub Entity);
-
-// Wraps a source and signals to another thread when that source has ended.
-struct EndSignalSource<I: Source>
-where
-    <I as Iterator>::Item: Sample,
-{
-    input: I,
-    signal: Arc<AtomicBool>,
-}
-
-impl<I: Source> EndSignalSource<I>
-where
-    <I as Iterator>::Item: Sample,
-{
-    pub fn new(input: I, signal: Arc<AtomicBool>) -> EndSignalSource<I> {
-        EndSignalSource { input, signal }
-    }
-}
-
-impl<I: Source> Iterator for EndSignalSource<I>
-where
-    <I as Iterator>::Item: Sample,
-{
-    type Item = <I as Iterator>::Item;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let next = self.input.next();
-        if next.is_none() {
-            self.signal.store(true, Ordering::Relaxed);
-        }
-        next
-    }
-}
-
-impl<I: Source> Source for EndSignalSource<I>
-where
-    <I as Iterator>::Item: Sample,
-{
-    fn current_frame_len(&self) -> Option<usize> {
-        self.input.current_frame_len()
-    }
-
-    fn channels(&self) -> u16 {
-        self.input.channels()
-    }
-
-    fn samples_rate(&self) -> u32 {
-        self.input.samples_rate()
-    }
-
-    fn total_duration(&self) -> Option<Duration> {
-        self.input.total_duration()
-    }
-}
 
 impl<'a> System<'a> for AudioSystem {
     type SystemData = (
-        Fetch<'a, SelectedListener>,
-        ReadStorage<'a, TransformComponent>,
+        Option<Fetch<'a, SelectedListener>>,
+        Entities<'a>,
+        ReadStorage<'a, GlobalTransform>,
         ReadStorage<'a, AudioListener>,
         WriteStorage<'a, AudioEmitter>,
     );
 
-    fn run(&mut self, (select_listener, transform, listener, mut audio_emitter): Self::SystemData) {
+    fn run(
+        &mut self,
+        (select_listener, entities, transform, listener, mut audio_emitter): Self::SystemData,
+    ) {
         #[cfg(feature = "profiler")]
         profile_scope!("audio_system");
         // Process emitters and listener.
-        if let Some(listener) = listener.get(select_listener.0) {
-            if let Some(listener_transform) = transform.get(select_listener.0) {
+        if let Some((listener, entity)) = select_listener
+            .as_ref()
+            .and_then(|sl| listener.get(sl.0).map(|l| (l, sl.0)))
+            .or_else(|| (&listener, &*entities).join().next())
+        {
+            if let Some(listener_transform) = select_listener
+                .as_ref()
+                .and_then(|sl| transform.get(sl.0))
+                .or_else(|| transform.get(entity))
+            {
                 let listener_transform = listener_transform.0;
                 let left_ear_position =
                     listener_transform.transform_point(listener.left_ear).into();
@@ -127,7 +86,10 @@ impl<'a> System<'a> for AudioSystem {
                             right_ear_position,
                         );
                         let atomic_bool = Arc::new(AtomicBool::new(false));
-                        sink.append(EndSignalSource::new(source, atomic_bool.clone()));
+                        let clone = atomic_bool.clone();
+                        sink.append(EndSignalSource::new(source, move || {
+                            clone.store(true, Ordering::Relaxed);
+                        }));
                         audio_emitter.sinks.push((sink, atomic_bool));
                     }
                 }

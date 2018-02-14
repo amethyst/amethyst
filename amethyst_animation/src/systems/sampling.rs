@@ -1,59 +1,50 @@
+use std::marker;
 use std::time::Duration;
 
 use amethyst_assets::AssetStorage;
-use amethyst_core::{duration_to_nanos, duration_to_secs, nanos_to_duration, secs_to_duration,
-                    LocalTransform, Time};
-use specs::{Fetch, Join, System, WriteStorage};
+use amethyst_core::{duration_to_nanos, duration_to_secs, nanos_to_duration, secs_to_duration, Time};
+use specs::{Component, Fetch, Join, System, WriteStorage};
 
-use interpolation::Interpolate;
-use resources::{ControlState, EndControl, RestState, Sampler, SamplerControl, SamplerControlSet};
+use resources::{AnimationSampling, ControlState, EndControl, Sampler, SamplerControl,
+                SamplerControlSet};
 
 /// System for interpolating active samplers.
 ///
 /// If other forms of animation is needed, this can be used in isolation, have no direct dependency
 /// on `AnimationControlSystem`.
 ///
-/// Will process all active `SamplerControlSet`, and update the `LocalTransform` for the entity they
+/// Will process all active `SamplerControlSet`, and update the target component for the entity they
 /// belong to.
 #[derive(Default)]
-pub struct SamplerInterpolationSystem;
+pub struct SamplerInterpolationSystem<T> {
+    m: marker::PhantomData<T>,
+}
 
-impl SamplerInterpolationSystem {
+impl<T> SamplerInterpolationSystem<T> {
     pub fn new() -> Self {
-        Default::default()
+        Self {
+            m: marker::PhantomData,
+        }
     }
 }
 
-impl<'a> System<'a> for SamplerInterpolationSystem {
+impl<'a, T> System<'a> for SamplerInterpolationSystem<T>
+where
+    T: AnimationSampling + Component,
+{
     type SystemData = (
         Fetch<'a, Time>,
-        Fetch<'a, AssetStorage<Sampler>>,
-        WriteStorage<'a, SamplerControlSet>,
-        WriteStorage<'a, LocalTransform>,
+        Fetch<'a, AssetStorage<Sampler<T::Primitive>>>,
+        WriteStorage<'a, SamplerControlSet<T>>,
+        WriteStorage<'a, T>,
     );
 
-    fn run(&mut self, (time, samplers, mut controls, mut transforms): Self::SystemData) {
-        for (control_set, transform) in (&mut controls, &mut transforms).join() {
-            if let Some((ref mut control, sampler)) = control_set
-                .translation
-                .as_mut()
-                .and_then(|c| samplers.get(&c.sampler).and_then(|s| Some((c, s))))
-            {
-                process_sampler(control, sampler, transform, &time);
-            }
-            if let Some((ref mut control, sampler)) = control_set
-                .rotation
-                .as_mut()
-                .and_then(|c| samplers.get(&c.sampler).and_then(|s| Some((c, s))))
-            {
-                process_sampler(control, sampler, transform, &time);
-            }
-            if let Some((ref mut control, sampler)) = control_set
-                .scale
-                .as_mut()
-                .and_then(|c| samplers.get(&c.sampler).and_then(|s| Some((c, s))))
-            {
-                process_sampler(control, sampler, transform, &time);
+    fn run(&mut self, (time, samplers, mut control_sets, mut comps): Self::SystemData) {
+        for (control_set, comp) in (&mut control_sets, &mut comps).join() {
+            for control in control_set.samplers.values_mut() {
+                if let Some(ref sampler) = samplers.get(&control.sampler) {
+                    process_sampler(control, sampler, comp, &time);
+                }
             }
         }
     }
@@ -65,47 +56,36 @@ impl<'a> System<'a> for SamplerInterpolationSystem {
 ///
 /// - `control`: sampler control object
 /// - `sampler`: the sampler reference from the control object
-/// - `transform`: the `LocalTransform` to update
+/// - `component`: the component to update
 /// - `now`: synchronized `Instant` for the current frame
-fn process_sampler(
-    control: &mut SamplerControl,
-    sampler: &Sampler,
-    transform: &mut LocalTransform,
+fn process_sampler<T>(
+    control: &mut SamplerControl<T>,
+    sampler: &Sampler<T::Primitive>,
+    component: &mut T,
     time: &Time,
-) {
+) where
+    T: AnimationSampling,
+{
     use resources::ControlState::*;
 
     let (new_state, new_end) = update_duration_and_check(&control, sampler, time);
 
     // If a new end condition has been computed, update in control state
     if let Some(end) = new_end {
-        control.end = end.clone();
+        control.end = end;
     }
 
     // Do sampling
     match new_state {
         Running(duration) | Paused(duration) => {
-            do_sampling(&sampler, &duration, transform);
+            do_sampling(&sampler, &duration, &control.channel, component);
         }
-        Done => do_end_control(&control, transform),
+        Done => do_end_control(&control, component),
         _ => {}
     }
 
     // Update state for next iteration
     control.state = new_state;
-}
-
-/// Called on samplers that have finished.
-fn do_end_control(control: &SamplerControl, transform: &mut LocalTransform) {
-    match control.end {
-        EndControl::Normal => match control.after {
-            RestState::Translation(tr) => transform.translation = tr.into(),
-            RestState::Rotation(r) => transform.rotation = r.into(),
-            RestState::Scale(s) => transform.scale = s.into(),
-        },
-        // looping is handled during duration update
-        _ => {}
-    }
 }
 
 /// Update durations, check if the sampler is finished, start new samplers, and check for aborted
@@ -120,11 +100,14 @@ fn do_end_control(control: &SamplerControl, transform: &mut LocalTransform) {
 /// ## Returns
 ///
 /// Will return the new state of the sampling, and optionally a new end control state (for looping)
-fn update_duration_and_check(
-    control: &SamplerControl,
-    sampler: &Sampler,
+fn update_duration_and_check<T>(
+    control: &SamplerControl<T>,
+    sampler: &Sampler<T::Primitive>,
     time: &Time,
-) -> (ControlState, Option<EndControl>) {
+) -> (ControlState, Option<EndControl>)
+where
+    T: AnimationSampling,
+{
     use resources::ControlState::*;
     // Update state with new duration
     // Check duration for end of sampling
@@ -138,7 +121,8 @@ fn update_duration_and_check(
         // sampling is running, update duration and check end condition
         Running(duration) => {
             let zero = Duration::from_secs(0);
-            let current_dur = duration + time.delta_time();
+            let current_dur =
+                duration + secs_to_duration(time.delta_seconds() * control.rate_multiplier);
             let last_frame = sampler
                 .input
                 .last()
@@ -188,27 +172,31 @@ fn next_duration(last_frame: Duration, duration: Duration) -> (Duration, u32) {
     (nanos_to_duration(remain_duration), loops as u32)
 }
 
-fn do_sampling(sampler: &Sampler, duration: &Duration, local_transform: &mut LocalTransform) {
-    use resources::AnimationOutput::*;
-    let dur_s = duration_to_secs(*duration);
-    match sampler.output {
-        Translation(ref ts) => {
-            local_transform.translation = sampler
-                .ty
-                .interpolate(dur_s, &sampler.input, ts, false)
-                .into()
-        }
-        Rotation(ref rs) => {
-            local_transform.rotation = sampler
-                .ty
-                .interpolate(dur_s, &sampler.input, rs, true)
-                .into()
-        }
-        Scale(ref ss) => {
-            local_transform.scale = sampler
-                .ty
-                .interpolate(dur_s, &sampler.input, ss, false)
-                .into()
-        }
+/// Called on samplers that have finished.
+fn do_end_control<T>(control: &SamplerControl<T>, component: &mut T)
+where
+    T: AnimationSampling,
+{
+    if let EndControl::Normal = control.end {
+        component.apply_sample(&control.channel, &control.after);
     }
+}
+
+fn do_sampling<T>(
+    sampler: &Sampler<T::Primitive>,
+    duration: &Duration,
+    channel: &T::Channel,
+    component: &mut T,
+) where
+    T: AnimationSampling,
+{
+    component.apply_sample(
+        channel,
+        &sampler.function.interpolate(
+            duration_to_secs(*duration),
+            &sampler.input,
+            &sampler.output,
+            false,
+        ),
+    );
 }
