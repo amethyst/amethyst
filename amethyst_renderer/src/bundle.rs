@@ -11,6 +11,7 @@ use {AmbientColor, Camera, Light, Material, MaterialDefaults, Mesh, Rgba, Screen
 use config::DisplayConfig;
 use pipe::{PipelineBuild, PolyPipeline};
 use system::RenderSystem;
+use transparent::{Transparent, TransparentBackToFront, TransparentSortingSystem};
 
 /// Rendering bundle
 ///
@@ -18,39 +19,54 @@ use system::RenderSystem;
 /// Will also register asset contexts with the asset `Loader`, and add systems for merging
 /// `AssetFuture` into its related component.
 ///
-pub struct RenderBundle<B, P>
+/// Will register `TransparentSortingSystem`, with name `transparent_sorting_system` if sorting is
+/// requested.
+///
+pub struct RenderBundle<'a, B, P>
 where
     B: PipelineBuild<Pipeline = P>,
     P: PolyPipeline,
 {
     pipe: B,
     config: Option<DisplayConfig>,
+    transparent_sorting: Option<&'a [&'a str]>,
 }
 
-impl<B, P> RenderBundle<B, P>
+impl<'a, B, P> RenderBundle<'a, B, P>
 where
     B: PipelineBuild<Pipeline = P>,
     P: PolyPipeline,
 {
     /// Create a new render bundle
     pub fn new(pipe: B, config: Option<DisplayConfig>) -> Self {
-        Self { pipe, config }
+        RenderBundle {
+            pipe,
+            config,
+            transparent_sorting: None,
+        }
+    }
+
+    /// Enable transparent mesh sorting, with the given dependencies
+    pub fn with_transparent_sorting(mut self, dep: &'a [&'a str]) -> Self {
+        self.transparent_sorting = Some(dep);
+        self
     }
 }
 
-impl<'a, 'b, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> ECSBundle<'a, 'b>
-    for RenderBundle<B, P>
+impl<'a, 'b, 'c, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> ECSBundle<'a, 'b>
+    for RenderBundle<'c, B, P>
 {
     fn build(
         self,
         world: &mut World,
-        builder: DispatcherBuilder<'a, 'b>,
+        mut builder: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
         world.add_resource(AmbientColor(Rgba::from([0.01; 3])));
         world.add_resource(WindowMessages::new());
         world.add_resource(AssetStorage::<Mesh>::new());
         world.add_resource(AssetStorage::<Texture>::new());
         world.add_resource(Orientation::default());
+        world.add_resource(TransparentBackToFront::default());
 
         let mat = create_default_mat(world);
         world.add_resource(MaterialDefaults(mat));
@@ -61,11 +77,20 @@ impl<'a, 'b, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> ECSBundle<'a,
         world.register::<Handle<Mesh>>();
         world.register::<Handle<Texture>>();
         world.register::<Camera>();
+        world.register::<Transparent>();
+
         let system = RenderSystem::build(self.pipe, self.config).chain_err(|| "Renderer error!")?;
         let (width, height) = system
             .window_size()
             .expect("Window closed during initialization!");
         world.add_resource(ScreenDimensions::new(width, height));
+        if let Some(dep) = self.transparent_sorting {
+            builder = builder.add(
+                TransparentSortingSystem::new(),
+                "transparent_sorting_system",
+                dep,
+            );
+        };
         Ok(builder.add_thread_local(system))
     }
 }

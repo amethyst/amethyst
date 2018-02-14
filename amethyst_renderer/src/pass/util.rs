@@ -3,11 +3,14 @@ use std::mem;
 use amethyst_assets::AssetStorage;
 use amethyst_core::GlobalTransform;
 use amethyst_core::cgmath::{Matrix4, One, SquareMatrix};
+use specs::{Fetch, Join, ReadStorage};
 
-use cam::Camera;
+use cam::{ActiveCamera, Camera};
 use mesh::Mesh;
-use mtl::Material;
+use mtl::{Material, MaterialDefaults};
+use pass::set_skinning_buffers;
 use pipe::{Effect, EffectBuilder};
+use skinning::JointTransforms;
 use tex::Texture;
 use types::Encoder;
 use vertex::Attributes;
@@ -123,4 +126,70 @@ pub(crate) fn set_vertex_args(
             model: *global.as_ref(),
         });
     effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
+}
+
+pub(crate) fn draw_mesh(
+    encoder: &mut Encoder,
+    effect: &mut Effect,
+    skinning: bool,
+    mesh: Option<&Mesh>,
+    joint: Option<&JointTransforms>,
+    tex_storage: &AssetStorage<Texture>,
+    material: Option<&Material>,
+    material_defaults: &MaterialDefaults,
+    camera: Option<(&Camera, &GlobalTransform)>,
+    global: Option<&GlobalTransform>,
+    attributes: &[Attributes<'static>],
+    textures: &[TextureType],
+) {
+    let mesh = match mesh {
+        Some(mesh) => mesh,
+        None => return,
+    };
+    if let None = material {
+        return;
+    }
+    if let None = global {
+        return;
+    }
+
+    if !set_attribute_buffers(effect, mesh, attributes)
+        || (skinning && !set_skinning_buffers(effect, mesh))
+    {
+        effect.clear();
+        return;
+    }
+
+    set_vertex_args(effect, encoder, camera, global.unwrap());
+
+    if skinning {
+        if let Some(joint) = joint {
+            effect.update_buffer("JointTransforms", &joint.matrices[..], encoder);
+        }
+    }
+
+    add_textures(
+        effect,
+        &tex_storage,
+        material.unwrap(),
+        &material_defaults.0,
+        textures,
+    );
+
+    effect.draw(mesh.slice(), encoder);
+    effect.clear();
+}
+
+pub(crate) fn get_camera<'a>(
+    active: Option<Fetch<'a, ActiveCamera>>,
+    camera: &'a ReadStorage<Camera>,
+    global: &'a ReadStorage<GlobalTransform>,
+) -> Option<(&'a Camera, &'a GlobalTransform)> {
+    active
+        .and_then(|a| {
+            let cam = camera.get(a.entity);
+            let transform = global.get(a.entity);
+            cam.into_iter().zip(transform.into_iter()).next()
+        })
+        .or_else(|| (camera, global).join().next())
 }
