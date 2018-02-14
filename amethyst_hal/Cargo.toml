@@ -1,0 +1,33 @@
+[package]
+name = "amethyst_hal"
+version = "0.1.0"
+authors = ["omni-viral <scareaangel@gmail.com>"]
+
+[features]
+gfx-vulkan = ["gfx-backend-vulkan"]
+gfx-metal = ["gfx-backend-metal"]
+gfx-dx12 = ["gfx-backend-dx12"]
+
+[dependencies]
+amethyst_core = { path = "../amethyst_core/", version = "0.1.0" }
+amethyst_config = { path = "../amethyst_config/", version = "0.5.0" }
+derivative = "1.0"
+log = "0.4"
+gfx-hal = { git = "https://github.com/gfx-rs/gfx" }
+gfx_mem = { git = "https://github.com/gfx-rs/gfx-mem" }
+specs = { version = "0.10" }
+shred = { version = "0.5" }
+winit = "= 0.10.0"
+xfg = { git = "https://github.com/omni-viral/xfg-rs" }
+
+gfx-backend-empty = { version = "0.1", git = "https://github.com/gfx-rs/gfx" }
+
+[target.'cfg(not(target_os = "macos"))'.dependencies]
+gfx-backend-vulkan = { version = "0.1", optional = true, git = "https://github.com/gfx-rs/gfx" }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+gfx-backend-metal = { version = "0.1", optional = true, git = "https://github.com/gfx-rs/gfx" }
+
+[target.'cfg(windows)'.dependencies]
+gfx-backend-dx12 = { version = "0.1", optional = true, git = "https://github.com/gfx-rs/gfx" }
+
