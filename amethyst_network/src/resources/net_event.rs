@@ -8,6 +8,7 @@ use serde::Serialize;
 use serde::de::DeserializeOwned;
 use specs::Component;
 use specs::VecStorage;
+use uuid::Uuid;
 
 /// The basic network events shipped with amethyst
 // TODO: Add CreateEntity,RemoveEntity,UpdateEntity
@@ -79,10 +80,10 @@ pub trait BaseNetEvent<T>{
 
 ///Carries the source of the event. Useful for debugging, security checks, gameplay logic, etc...
 #[derive(Debug,Clone,Serialize,Deserialize)]
-pub struct NetSourcedEvent<T> where T:Event{
+pub struct NetSourcedEvent<T>{
     /// The event
-    pub event: T,
+    pub event: NetEvent<T>,
     /// The source of this event
-    pub source: Uuid,
+    pub connection_id: Uuid,
 }
 

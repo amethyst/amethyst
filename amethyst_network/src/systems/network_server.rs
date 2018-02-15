@@ -17,6 +17,8 @@ use systems::*;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 
+use uuid::Uuid;
+
 /*
 TODO: State sync + Network Ownership (NetOwned)
 Client Registered components: Transform Sprite LocalTransform Velocity Input Music
@@ -54,8 +56,8 @@ impl<T> NetServerSystem<T> where T:Send+Sync+Serialize{
 
 impl<'a, T> System<'a> for NetServerSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+'static{
     type SystemData = (
-        FetchMut<'a, NetSendBuffer<'a,T>>,
-        FetchMut<'a, NetReceiveBuffer<'a,T>>,
+        FetchMut<'a, NetSendBuffer<T>>,
+        FetchMut<'a, NetReceiveBuffer<T>>,
     );
     //NOTE: Running it this way might cause a buffer overflow during heavy load on low-tickrate servers.
     //TODO: Once the net_debug tools will be made, test this for possible buffer overflow at OS level by monitoring packet loss in localhost.
@@ -74,9 +76,9 @@ impl<'a, T> System<'a> for NetServerSystem<T> where T:Send+Sync+Serialize+Clone+
                                     if c.state==ConnectionState::Connected || c.state == ConnectionState::Connecting{
                                         let owned_event = NetSourcedEvent {
                                             event:ev.clone(),
-                                            source:c.clone(),
+                                            connection_id:c.uuid,
                                         };
-                                        receive_buf.single_write(owned_event);
+                                        receive_buf.buf.single_write(owned_event);
                                         match ev{
                                             NetEvent::Disconnect {reason}=>{
                                                 self.clients.remove(ind);
@@ -96,15 +98,16 @@ impl<'a, T> System<'a> for NetServerSystem<T> where T:Send+Sync+Serialize+Clone+
                                             let conn = NetConnection{
                                                 target:src,
                                                 state:ConnectionState::Connecting,
+                                                uuid: Uuid::new_v4(),
                                             };
                                             send_event(&NetEvent::Connected::<T>,&conn,&self.socket);
 
                                             //Push events to continue the user-space connection protocol
                                             let owned_event = NetSourcedEvent {
                                                 event:ev,
-                                                source:conn.clone(),
+                                                connection_id:conn.uuid,
                                             };
-                                            receive_buf.single_write(owned_event);
+                                            receive_buf.buf.single_write(owned_event);
 
                                             self.clients.push(conn);
                                         },

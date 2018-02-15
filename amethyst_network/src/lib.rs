@@ -12,14 +12,16 @@ extern crate shrev;
 extern crate log;
 extern crate specs;
 extern crate uuid;
+extern crate rand;
 
 pub mod components;
-pub mod filters;
+mod filters;
 pub mod resources;
 pub mod systems;
+mod bundle;
 
 pub use components::*;
 pub use filters::*;
 pub use resources::*;
 pub use systems::*;
-
+pub use bundle::NetworkClientBundle;

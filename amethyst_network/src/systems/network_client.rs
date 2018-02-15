@@ -1,6 +1,7 @@
 //! The network client System
 
-use specs::{System,FetchMut};
+use specs::{System,FetchMut,Fetch};
+use specs::saveload::U64Marker;
 use std::net::UdpSocket;
 use std::net::IpAddr;
 use std::net::SocketAddr;
@@ -18,13 +19,16 @@ use std::marker::PhantomData;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 
+use uuid::Uuid;
+
 /// The System managing the client's network state and connections.
 /// The T generic parameter corresponds to the network event enum type.
 pub struct NetClientSystem<T>{
     /// The network socket
     pub socket: UdpSocket,
+    pub send_queue_reader: ReaderId<U64Marker>,
     /// The server that we are (possibly) connected or connecting to.
-    pub connection: Option<NetConnection>,//Will handle a single connection for now, as it is simple to manage and corresponds to most use cases.
+    //pub connection: Option<NetConnection>,//Will handle a single connection for now, as it is simple to manage and corresponds to most use cases.
     net_event_types: PhantomData<T>,
 }
 
@@ -38,22 +42,21 @@ impl<T> NetClientSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+'s
         Ok(
             NetClientSystem{
                 socket,
-                connection:None,
+                send_queue_reader: None,
                 net_event_types:PhantomData,
             }
         )
     }
     /// Connects to a remote server
-    pub fn connect(&mut self,target:SocketAddr){
+    pub fn connect(&mut self,target:SocketAddr,pool: &mut NetConnectionPool){
         println!("Sending connection request to remote {:?}",target);
         let conn = NetConnection{
             target,
             state:ConnectionState::Connecting,
+            uuid: Uuid::new_v4(),
         };
         send_event(&NetEvent::Connect::<T>,&conn,&self.socket);
-        self.connection = Some(
-            conn,
-        );
+        pool.connections.push(conn);
     }
 }
 
@@ -61,10 +64,27 @@ impl<T> NetClientSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+'s
 
 impl<'a, T> System<'a> for NetClientSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+'static{
     type SystemData = (
-        FetchMut<'a, NetSendBuffer<'a,T>>,
-        FetchMut<'a, NetReceiveBuffer<'a,T>>,
+        Fetch<'a, NetSendBuffer<T>>,
+        FetchMut<'a, NetReceiveBuffer<T>>,
+        Fetch<'a, NetConnectionPool>,
     );
-    fn run(&mut self, (mut send_buf,mut receive_buf): Self::SystemData) {
+    fn run(&mut self, (send_buf,mut receive_buf,pool): Self::SystemData) {
+        //Tx
+        if self.send_queue_reader.is_none(){
+            self.send_queue_reader = Some(send_buf.buf.register_reader());
+        }
+
+        for ev in send_buf.buf.read(self.send_queue_reader.as_mut().unwrap()){
+            info!("NET EVENT TO SEND");
+            let target = pool.connection_from_uuid(ev.connection_id);
+            if let Some(t) = target{
+                if t.state == ConnectionState::Connected || t.state == ConnectionState::Connecting{
+                    send_event(&ev.event,t,&self.socket);
+                }
+            }
+        }
+
+        // Rx
         let mut buf = [0; 2048];
         loop {
             match self.socket.recv_from(&mut buf) {
@@ -72,7 +92,7 @@ impl<'a, T> System<'a> for NetClientSystem<T> where T:Send+Sync+Serialize+Clone+
                 Ok((amt, src)) => {
                     //Are we connected to anything?
                     let mut connection_dropped = false;
-                    if let Some(mut conn) = self.connection.as_mut(){
+                    if let Some(mut conn) = pool.connections.first().as_mut(){
                         //Was it sent by connected server, and are we still connected to it?
                         if src == conn.target && (conn.state == ConnectionState::Connected || conn.state == ConnectionState::Connecting){
                             let net_event = deserialize_event::<T>(&buf[..amt]);
@@ -80,9 +100,9 @@ impl<'a, T> System<'a> for NetClientSystem<T> where T:Send+Sync+Serialize+Clone+
                                 Ok(ev)=>{
                                     let owned_event = NetSourcedEvent {
                                         event:ev.clone(),
-                                        source:conn.clone(),
+                                        connection_id:conn.uuid,
                                     };
-                                    receive_buf.single_write(owned_event);
+                                    receive_buf.buf.single_write(owned_event);
                                     match ev{
                                         NetEvent::Connected=>{
                                             conn.state = ConnectionState::Connected;
@@ -108,7 +128,7 @@ impl<'a, T> System<'a> for NetClientSystem<T> where T:Send+Sync+Serialize+Clone+
                         warn!("Received network packet from unknown source, ignored.");
                     }
                     if connection_dropped{
-                        self.connection = None;
+                        pool.connections.pop();
                     }
                 },
                 Err(e) => { //No data

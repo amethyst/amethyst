@@ -5,6 +5,7 @@ use specs::{Component,VecStorage};
 use shrev::EventChannel;
 use resources::net_event::{NetEvent,NetSourcedEvent};
 use uuid::Uuid;
+use std::net::SocketAddr;
 
 /// A network connection target data.
 //TODO add ping here?
@@ -14,6 +15,8 @@ pub struct NetConnection{
     pub target: SocketAddr,
     /// The state of the connection.
     pub state: ConnectionState,
+    /// UUID of the owner at the endpoint of this connection.
+    pub uuid: Uuid,
 }
 
 impl Eq for NetConnection{}
@@ -31,6 +34,7 @@ pub enum ConnectionState{
 
 /// A network owner. It can be either the client or a server.
 /// It represents anything that can own an entity or a component.
+/// Think of it as an identity card.
 pub struct NetOwner{
     pub id: Uuid,
 }
@@ -41,26 +45,67 @@ pub struct NetConnectionPool{
     pub connections: Vec<NetConnection>,
 }
 
+impl NetConnectionPool{
+    pub fn new() -> Self{
+        NetConnectionPool{
+            connections: vec![],
+        }
+    }
+
+    pub fn connection_from_uuid(&self,uuid:&Uuid)->Option<&NetConnection>{
+        for c in self.connections{
+            if c.uuid == *uuid{
+                return Some(&c)
+            }
+        }
+        None
+    }
+
+    pub fn connection_from_address(&self, socket: &SocketAddr)->Option(&NetConnection){
+        for c in self.connections{
+            if c.target == *socket{
+                return Some(&c)
+            }
+        }
+        None
+    }
+}
+
 impl<'a> Component for NetConnectionPool{
     type Storage = VecStorage<NetConnectionPool>;
 }
 
-#[derive(Debug,Clone)]
-pub struct NetSendBuffer<T> where T: Send+Sync{
-    pub buf: EventChannel<(Uuid,NetEvent<T>)>,
-}
-
-impl<T> Component for NetSendBuffer<T> where T: Send+Sync{
-    type Storage = VecStorage<NetSendBuffer<T>>;
-}
-
-#[derive(Debug,Clone)]
-pub struct NetReceiveBuffer<T> where T: Send+Sync{
+pub struct NetSendBuffer<T> where T: Send+Sync+'static{
     pub buf: EventChannel<NetSourcedEvent<T>>,
 }
 
-impl<'a,T> Component for NetReceiveBuffer<T> where T: Send+Sync{
+impl<T> NetSendBuffer<T> where T: Send+Sync+'static{
+    pub fn new()->NetSendBuffer<T>{
+        NetSendBuffer{
+            buf: EventChannel::<NetSourcedEvent<T>>::new(),
+        }
+    }
+}
+
+impl<T> Component for NetSendBuffer<T> where T: Send+Sync+'static{
+    type Storage = VecStorage<NetSendBuffer<T>>;
+}
+
+
+pub struct NetReceiveBuffer<T> where T: Send+Sync+'static{
+    pub buf: EventChannel<NetSourcedEvent<T>>,
+}
+
+impl<'a,T> Component for NetReceiveBuffer<T> where T: Send+Sync+'static{
     type Storage = VecStorage<NetReceiveBuffer<T>>;
+}
+
+impl<T> NetReceiveBuffer<T> where T: Send+Sync+'static{
+    pub fn new()->NetReceiveBuffer<T>{
+        NetReceiveBuffer{
+            buf: EventChannel::<NetSourcedEvent<T>>::new(),
+        }
+    }
 }
 
 /*

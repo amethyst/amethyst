@@ -25,7 +25,8 @@ fn run() -> Result<()> {
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             144,
         ).with(server,"net_server_system",&[])
-        .with_resource(EventChannel::<NetOwnedEvent<NetEvent<()>>>::new());
+        .with_resource(NetSendBuffer::<()>::new())
+        .with_resource(NetReceiveBuffer::<()>::new());
 
     Ok(
         game.build()?.run(),
