@@ -3,10 +3,12 @@ use std::time::Duration;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{duration_to_nanos, duration_to_secs, nanos_to_duration, secs_to_duration, Time};
+use itertools::Itertools;
+use minterpolate::InterpolationPrimitive;
 use specs::{Component, Fetch, Join, System, WriteStorage};
 
 use resources::{AnimationSampling, ControlState, EndControl, Sampler, SamplerControl,
-                SamplerControlSet};
+                SamplerControlSet, BlendMethod};
 
 /// System for interpolating active samplers.
 ///
@@ -15,15 +17,29 @@ use resources::{AnimationSampling, ControlState, EndControl, Sampler, SamplerCon
 ///
 /// Will process all active `SamplerControlSet`, and update the target component for the entity they
 /// belong to.
+///
+/// ### Type parameters:
+///
+/// - `T`: the component type that the animation should be applied to
 #[derive(Default)]
-pub struct SamplerInterpolationSystem<T> {
+pub struct SamplerInterpolationSystem<T>
+where
+    T: AnimationSampling,
+{
     m: marker::PhantomData<T>,
+    inner: Vec<(f32, T::Channel, T::Primitive)>,
+    channels: Vec<T::Channel>,
 }
 
-impl<T> SamplerInterpolationSystem<T> {
+impl<T> SamplerInterpolationSystem<T>
+where
+    T: AnimationSampling,
+{
     pub fn new() -> Self {
         Self {
             m: marker::PhantomData,
+            inner: Vec::default(),
+            channels: Vec::default(),
         }
     }
 }
@@ -41,9 +57,32 @@ where
 
     fn run(&mut self, (time, samplers, mut control_sets, mut comps): Self::SystemData) {
         for (control_set, comp) in (&mut control_sets, &mut comps).join() {
-            for control in control_set.samplers.values_mut() {
+            self.inner.clear();
+            for control in control_set.samplers.iter_mut() {
                 if let Some(ref sampler) = samplers.get(&control.sampler) {
-                    process_sampler(control, sampler, comp, &time);
+                    process_sampler(control, sampler, &time, &mut self.inner);
+                }
+            }
+            if self.inner.len() > 0 {
+                self.channels.clear();
+                self.channels
+                    .extend(self.inner.iter().map(|o| &o.1).unique().cloned());
+                for channel in &self.channels {
+                    match comp.blend_method(channel) {
+                        None => {
+                            if let Some(p) = self.inner.iter().filter(|p| p.1 == *channel)
+                                .map(|p| p.2)
+                                .last() {
+                                comp.apply_sample(channel, &p);
+                            }
+                        }
+
+                        Some(BlendMethod::Linear) => {
+                            if let Some(p) = linear_blend::<T>(channel, &self.inner) {
+                                comp.apply_sample(channel, &p);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -61,8 +100,8 @@ where
 fn process_sampler<T>(
     control: &mut SamplerControl<T>,
     sampler: &Sampler<T::Primitive>,
-    component: &mut T,
     time: &Time,
+    output: &mut Vec<(f32, T::Channel, T::Primitive)>,
 ) where
     T: AnimationSampling,
 {
@@ -78,9 +117,22 @@ fn process_sampler<T>(
     // Do sampling
     match new_state {
         Running(duration) | Paused(duration) => {
-            do_sampling(&sampler, &duration, &control.channel, component);
+            output.push((
+                control.blend_weight,
+                control.channel.clone(),
+                sampler.function.interpolate(
+                    duration_to_secs(duration),
+                    &sampler.input,
+                    &sampler.output,
+                    false,
+                ),
+            ));
         }
-        Done => do_end_control(&control, component),
+        Done => {
+            if let EndControl::Normal = control.end {
+                output.push((control.blend_weight, control.channel.clone(), control.after));
+            }
+        }
         _ => {}
     }
 
@@ -172,31 +224,35 @@ fn next_duration(last_frame: Duration, duration: Duration) -> (Duration, u32) {
     (nanos_to_duration(remain_duration), loops as u32)
 }
 
-/// Called on samplers that have finished.
-fn do_end_control<T>(control: &SamplerControl<T>, component: &mut T)
+fn linear_blend<T>(
+    channel: &T::Channel,
+    output: &Vec<(f32, T::Channel, T::Primitive)>,
+) -> Option<T::Primitive>
 where
     T: AnimationSampling,
 {
-    if let EndControl::Normal = control.end {
-        component.apply_sample(&control.channel, &control.after);
+    let total_blend_weight = output.iter().filter(|o| o.1 == *channel).map(|o| o.0).sum();
+    if total_blend_weight == 0. {
+        None
+    } else {
+        Some(
+            output
+                .iter()
+                .filter(|o| o.1 == *channel)
+                .map(|o| single_blend::<T>(total_blend_weight, o))
+                .fold(T::default_primitive(channel), |acc, p| {
+                    acc.add(&p)
+                }),
+        )
     }
 }
 
-fn do_sampling<T>(
-    sampler: &Sampler<T::Primitive>,
-    duration: &Duration,
-    channel: &T::Channel,
-    component: &mut T,
-) where
+fn single_blend<T>(
+    total: f32,
+    &(ref weight, _, ref primitive): &(f32, T::Channel, T::Primitive),
+) -> T::Primitive
+where
     T: AnimationSampling,
 {
-    component.apply_sample(
-        channel,
-        &sampler.function.interpolate(
-            duration_to_secs(*duration),
-            &sampler.input,
-            &sampler.output,
-            false,
-        ),
-    );
+    primitive.mul(*weight / total)
 }

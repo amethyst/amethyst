@@ -12,8 +12,9 @@ use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, ElementState, Event,
                          KeyboardInput, Light, Mesh, Pipeline, PointLight, PosNormTex, Projection,
                          RenderBundle, Rgba, Stage, VirtualKeyCode, WindowEvent};
-use amethyst_animation::{play_animation, step_animation, Animation, AnimationBundle, EndControl,
-                         InterpolationFunction, Sampler, StepDirection, TransformChannel};
+use amethyst_animation::{get_animation_set, Animation, AnimationBundle, AnimationCommand,
+                         EndControl, InterpolationFunction, Sampler, StepDirection,
+                         TransformChannel};
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 
@@ -62,31 +63,30 @@ impl State for Example {
                 } => {
                     match virtual_keycode {
                         Some(VirtualKeyCode::Space) => {
-                            play_animation(
+                            get_animation_set::<u32, Transform>(
                                 &mut world.write(),
-                                self.animation.as_ref().unwrap(),
                                 self.sphere.unwrap().clone(),
+                            ).add_animation(
+                                1,
+                                self.animation.as_ref().unwrap(),
                                 EndControl::Loop(None),
                                 0.0,
+                                AnimationCommand::Start,
                             );
                         }
 
                         Some(VirtualKeyCode::Left) => {
-                            step_animation(
+                            get_animation_set::<u32, Transform>(
                                 &mut world.write(),
-                                self.animation.as_ref().unwrap(),
                                 self.sphere.unwrap().clone(),
-                                StepDirection::Backward,
-                            );
+                            ).step(1, StepDirection::Backward);
                         }
 
                         Some(VirtualKeyCode::Right) => {
-                            step_animation(
+                            get_animation_set::<u32, Transform>(
                                 &mut world.write(),
-                                self.animation.as_ref().unwrap(),
                                 self.sphere.unwrap().clone(),
-                                StepDirection::Forward,
-                            );
+                            ).step(1, StepDirection::Forward);
                         }
 
                         _ => {}
@@ -118,7 +118,7 @@ fn run() -> Result<(), amethyst::Error> {
     let config = DisplayConfig::load(&display_config_path);
 
     let mut game = Application::build(resources, Example::default())?
-        .with_bundle(AnimationBundle::<Transform>::new(
+        .with_bundle(AnimationBundle::<u32, Transform>::new(
             "animation_control_system",
             "sampler_interpolation_system",
         ))?

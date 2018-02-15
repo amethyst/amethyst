@@ -1,9 +1,10 @@
 use amethyst_core::Transform;
 use amethyst_core::cgmath::{InnerSpace, Quaternion, Vector3};
 
-use resources::AnimationSampling;
+use resources::{AnimationSampling, BlendMethod};
 use util::SamplerPrimitive;
 
+/// Channels that can be animated on `Transform`
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq, Serialize, Deserialize)]
 pub enum TransformChannel {
     Translation,
@@ -33,5 +34,17 @@ impl AnimationSampling for Transform {
             &Rotation => SamplerPrimitive::Vec4(self.rotation.into()),
             &Scale => SamplerPrimitive::Vec3(self.scale.into()),
         }
+    }
+    fn default_primitive(channel: &Self::Channel) -> Self::Primitive {
+        use self::TransformChannel::*;
+        match channel {
+            &Translation => SamplerPrimitive::Vec3([0.; 3]),
+            &Rotation => SamplerPrimitive::Vec4([0.; 4]),
+            &Scale => SamplerPrimitive::Vec3([0.; 3]),
+        }
+    }
+
+    fn blend_method(&self, _: &Self::Channel) -> Option<BlendMethod> {
+        Some(BlendMethod::Linear)
     }
 }

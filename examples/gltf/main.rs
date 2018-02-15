@@ -12,8 +12,8 @@ use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::Entity;
 use amethyst::prelude::*;
 use amethyst::renderer::*;
-use amethyst_animation::{toggle_animation, AnimationBundle, AnimationSet, EndControl,
-                         VertexSkinningBundle};
+use amethyst_animation::{get_animation_set, AnimationBundle, AnimationCommand, AnimationSet,
+                         EndControl, VertexSkinningBundle};
 use amethyst_gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystem, GltfSceneOptions};
 
 struct Example;
@@ -112,18 +112,25 @@ impl State for Example {
                     let sets = world.read::<AnimationSet<Transform>>();
                     let animations = sets.get(scene.entity).unwrap();
                     if animations.animations.len() > 0 {
+                        let animation = &animations.animations[scene.animation_index];
+                        let mut controls = world.write();
+                        let mut set =
+                            get_animation_set::<usize, Transform>(&mut controls, scene.entity);
+                        if set.has_animation(scene.animation_index) {
+                            set.toggle(scene.animation_index);
+                        } else {
+                            set.add_animation(
+                                scene.animation_index,
+                                animation,
+                                EndControl::Normal,
+                                1.0,
+                                AnimationCommand::Start,
+                            );
+                        }
+                        scene.animation_index += 1;
                         if scene.animation_index >= animations.animations.len() {
                             scene.animation_index = 0;
                         }
-                        let animation = &animations.animations[scene.animation_index];
-                        scene.animation_index += 1;
-                        toggle_animation(
-                            &mut world.write(),
-                            animation,
-                            scene.entity,
-                            EndControl::Normal,
-                            1.0,
-                        );
                     }
                     Trans::None
                 }
@@ -153,7 +160,7 @@ fn run() -> Result<(), amethyst::Error> {
         .with(GltfSceneLoaderSystem::new(), "loader_system", &[])
         .with_bundle(RenderBundle::new(pipe, Some(config)))?
         .with_bundle(
-            AnimationBundle::<Transform>::new(
+            AnimationBundle::<usize, Transform>::new(
                 "animation_control_system",
                 "sampler_interpolation_system",
             ).with_dep(&["loader_system"]),
