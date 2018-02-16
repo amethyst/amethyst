@@ -6,8 +6,8 @@ use shrev::Event;
 use resources::*;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
-use specs::Component;
-use specs::VecStorage;
+use specs::world::Component;
+use specs::storage::VecStorage;
 use uuid::Uuid;
 
 /// The basic network events shipped with amethyst

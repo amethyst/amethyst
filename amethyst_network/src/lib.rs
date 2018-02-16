@@ -15,13 +15,13 @@ extern crate uuid;
 extern crate rand;
 
 pub mod components;
-mod filters;
+mod filter;
 pub mod resources;
 pub mod systems;
 mod bundle;
 
 pub use components::*;
-pub use filters::*;
+pub use filter::*;
 pub use resources::*;
 pub use systems::*;
 pub use bundle::NetworkClientBundle;

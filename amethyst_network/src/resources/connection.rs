@@ -1,11 +1,11 @@
 //! Network Connection and states.
 
 use std::net::SocketAddr;
-use specs::{Component,VecStorage};
+use specs::world::Component;
+use specs::storage::VecStorage;
 use shrev::EventChannel;
 use resources::net_event::{NetEvent,NetSourcedEvent};
 use uuid::Uuid;
-use std::net::SocketAddr;
 
 /// A network connection target data.
 //TODO add ping here?
@@ -61,7 +61,7 @@ impl NetConnectionPool{
         None
     }
 
-    pub fn connection_from_address(&self, socket: &SocketAddr)->Option(&NetConnection){
+    pub fn connection_from_address(&self, socket: &SocketAddr)->Option<&NetConnection>{
         for c in self.connections{
             if c.target == *socket{
                 return Some(&c)
