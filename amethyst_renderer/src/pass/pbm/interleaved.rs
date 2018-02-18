@@ -5,6 +5,7 @@ use std::marker::PhantomData;
 use amethyst_assets::AssetStorage;
 use amethyst_core::transform::GlobalTransform;
 use gfx::pso::buffer::ElemStride;
+use gfx_core::state::{Blend, ColorMask};
 use specs::{Fetch, Join, ReadStorage};
 
 use super::*;
@@ -14,12 +15,12 @@ use light::Light;
 use mesh::{Mesh, MeshHandle};
 use mtl::{Material, MaterialDefaults};
 use pass::shaded_util::{set_light_args, setup_light_buffers};
-use pass::util::{add_textures, set_attribute_buffers, set_vertex_args, setup_textures,
-                 setup_vertex_args};
+use pass::util::{draw_mesh, get_camera, setup_textures, setup_vertex_args};
 use pipe::{DepthMode, Effect, NewEffect};
 use pipe::pass::{Pass, PassData};
 use resources::AmbientColor;
 use tex::Texture;
+use transparent::{Transparent, TransparentBackToFront};
 use types::{Encoder, Factory};
 use vertex::{Normal, Position, Query, Tangent, TexCoord};
 
@@ -29,6 +30,7 @@ use vertex::{Normal, Position, Query, Tangent, TexCoord};
 #[derivative(Default(bound = "V: Query<(Position, Normal, Tangent, TexCoord)>"))]
 pub struct DrawPbm<V> {
     _pd: PhantomData<V>,
+    transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
 }
 
 impl<V> DrawPbm<V>
@@ -38,6 +40,17 @@ where
     /// Create instance of `DrawPbm` pass
     pub fn new() -> Self {
         Default::default()
+    }
+
+    /// Enable transparency
+    pub fn with_transparency(
+        mut self,
+        mask: ColorMask,
+        blend: Blend,
+        depth: Option<DepthMode>,
+    ) -> Self {
+        self.transparency = Some((mask, blend, depth));
+        self
     }
 }
 
@@ -52,10 +65,12 @@ where
         Fetch<'a, AssetStorage<Mesh>>,
         Fetch<'a, AssetStorage<Texture>>,
         Fetch<'a, MaterialDefaults>,
+        Fetch<'a, TransparentBackToFront>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
         ReadStorage<'a, GlobalTransform>,
         ReadStorage<'a, Light>,
+        ReadStorage<'a, Transparent>,
     );
 }
 
@@ -69,9 +84,11 @@ where
         setup_vertex_args(&mut builder);
         setup_light_buffers(&mut builder);
         setup_textures(&mut builder, &TEXTURES);
-        builder
-            .with_output("out_color", Some(DepthMode::LessEqualWrite))
-            .build()
+        match self.transparency {
+            Some((mask, blend, depth)) => builder.with_blended_output("color", mask, blend, depth),
+            None => builder.with_output("color", Some(DepthMode::LessEqualWrite)),
+        };
+        builder.build()
     }
 
     fn apply<'a, 'b: 'a>(
@@ -86,42 +103,52 @@ where
             mesh_storage,
             tex_storage,
             material_defaults,
+            back_to_front,
             mesh,
             material,
             global,
             light,
+            transparent,
         ): <Self as PassData<'a>>::Data,
     ) {
-        let camera: Option<(&Camera, &GlobalTransform)> = active
-            .and_then(|a| {
-                let cam = camera.get(a.entity);
-                let transform = global.get(a.entity);
-                cam.into_iter().zip(transform.into_iter()).next()
-            })
-            .or_else(|| (&camera, &global).join().next());
+        let camera = get_camera(active, &camera, &global);
 
         set_light_args(effect, encoder, &light, &ambient, camera);
 
-        for (mesh, material, global) in (&mesh, &material, &global).join() {
-            let mesh = match mesh_storage.get(mesh) {
-                Some(mesh) => mesh,
-                None => continue,
-            };
-            if !set_attribute_buffers(effect, mesh, &[V::QUERIED_ATTRIBUTES]) {
-                continue;
-            }
-
-            set_vertex_args(effect, encoder, camera, global);
-            add_textures(
+        for (mesh, material, global, _) in (&mesh, &material, &global, !&transparent).join() {
+            draw_mesh(
+                encoder,
                 effect,
-                &tex_storage,
-                material,
-                &material_defaults.0,
+                false,
+                mesh_storage.get(mesh),
+                None,
+                &*tex_storage,
+                Some(material),
+                &*material_defaults,
+                camera,
+                Some(global),
+                &[V::QUERIED_ATTRIBUTES],
                 &TEXTURES,
             );
+        }
 
-            effect.draw(mesh.slice(), encoder);
-            effect.clear();
+        for entity in &back_to_front.entities {
+            if let Some(mesh) = mesh.get(*entity) {
+                draw_mesh(
+                    encoder,
+                    effect,
+                    false,
+                    mesh_storage.get(mesh),
+                    None,
+                    &*tex_storage,
+                    material.get(*entity),
+                    &*material_defaults,
+                    camera,
+                    global.get(*entity),
+                    &[V::QUERIED_ATTRIBUTES],
+                    &TEXTURES,
+                );
+            }
         }
     }
 }
