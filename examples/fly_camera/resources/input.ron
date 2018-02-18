@@ -1,0 +1,18 @@
+(
+    axes: {
+        "move_x": (
+            pos: Key(D),
+            neg: Key(A),
+        ),
+        "move_y": (
+            pos: Key(Q),
+            neg: Key(E),
+        ),
+        "move_z": (
+            pos: Key(S),
+            neg: Key(W),
+        ),
+    },
+    actions: {
+    },
+)

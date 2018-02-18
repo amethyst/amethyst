@@ -54,7 +54,11 @@ impl Transform {
     /// Move relatively to its current position and orientation.
     #[inline]
     pub fn move_local(&mut self, axis: Vector3<f32>, amount: f32) -> &mut Self {
-        let delta = Quaternion::from(self.rotation).conjugate() * axis.normalize() * amount;
+        if axis.magnitude() == 0.0 {
+            return self;
+        }
+        //let delta = Quaternion::from(self.rotation).conjugate() * axis.normalize() * amount;
+        let delta = Quaternion::from(self.rotation) * axis.normalize() * amount;
 
         self.translation = self.translation + delta;
         self
