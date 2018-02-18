@@ -5,8 +5,8 @@
             neg: Key(A),
         ),
         "move_y": (
-            pos: Key(Q),
-            neg: Key(E),
+            pos: Key(E),
+            neg: Key(Q),
         ),
         "move_z": (
             pos: Key(S),
@@ -14,5 +14,7 @@
         ),
     },
     actions: {
+        
     },
 )
+

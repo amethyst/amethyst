@@ -38,6 +38,6 @@ pub(crate) fn setup_skinning_buffers<'a>(builder: &mut EffectBuilder<'a>) {
         .with_raw_constant_buffer("JointTransforms", mem::size_of::<[[f32; 4]; 4]>(), 100);
 }
 
-pub(crate) fn set_skinning_buffers(effect: &mut Effect, mesh: &Mesh) -> bool {
+pub fn set_skinning_buffers(effect: &mut Effect, mesh: &Mesh) -> bool {
     set_attribute_buffers(effect, mesh, &ATTRIBUTES)
 }

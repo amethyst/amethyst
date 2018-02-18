@@ -37,7 +37,7 @@ impl Projection {
     pub fn perspective<D: Into<Deg<f32>>>(aspect: f32, fov: D) -> Projection {
         Projection::Perspective(PerspectiveFov {
             fovy: fov.into().into(),
-            aspect: aspect,
+            aspect,
             near: 0.1,
             far: 2000.0,
         })

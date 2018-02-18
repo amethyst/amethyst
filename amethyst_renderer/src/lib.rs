@@ -79,6 +79,7 @@ pub use skinning::{AnimatedComboMeshCreator, AnimatedVertexBufferCombination, Jo
                    JointTransforms, JointWeights};
 pub use system::RenderSystem;
 pub use tex::{Texture, TextureBuilder, TextureHandle};
+pub use transparent::{Transparent, TransparentBackToFront, TransparentSortingSystem};
 pub use types::{Encoder, Factory, PipelineState, Resources};
 pub use vertex::{Attribute, AttributeFormat, Attributes, Color, Normal, PosColor, PosNormTangTex,
                  PosNormTex, PosTex, Position, Query, Separate, Tangent, TexCoord,
@@ -86,6 +87,7 @@ pub use vertex::{Attribute, AttributeFormat, Attributes, Color, Normal, PosColor
 
 pub mod error;
 pub mod pipe;
+pub mod mouse;
 
 #[macro_use]
 mod macros;
@@ -102,6 +104,7 @@ mod mtl;
 mod pass;
 mod renderer;
 mod resources;
+mod transparent;
 mod skinning;
 mod system;
 mod tex;
