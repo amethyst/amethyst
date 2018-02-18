@@ -6,18 +6,18 @@
 extern crate amethyst;
 
 use amethyst::{Application, Error, State, Trans};
-use amethyst::assets::{Loader};
+use amethyst::assets::Loader;
 use amethyst::config::Config;
-use amethyst::core::cgmath::{Deg,Vector3};
+use amethyst::core::cgmath::{Deg, Vector3};
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::World;
 use amethyst::input::InputBundle;
-use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded,
-                         ElementState, Event, KeyboardInput, Material, MaterialDefaults,
-                         MeshHandle, ObjFormat, Pipeline, PosNormTex,
-                         Projection, RenderBundle, Rgba, Stage, VirtualKeyCode, WindowEvent, WindowMessages};
-use amethyst::utils::fly_camera::{FlyCameraMovementSystem,FlyCameraRotationSystem};
+use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, ElementState, Event,
+                         KeyboardInput, Material, MaterialDefaults, MeshHandle, ObjFormat,
+                         Pipeline, PosNormTex, Projection, RenderBundle, Rgba, Stage,
+                         VirtualKeyCode, WindowEvent, WindowMessages};
+use amethyst::utils::fly_camera::{FlyCameraMovementSystem, FlyCameraRotationSystem};
 use amethyst::utils::mouse::*;
 
 struct ExampleState;
@@ -55,25 +55,21 @@ impl State for ExampleState {
 
     fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
         match event {
-            Event::WindowEvent { event, .. } => {
-                match event {
-                    WindowEvent::KeyboardInput {
-                        input:
-                            KeyboardInput {
-                                virtual_keycode,
-                                state: ElementState::Pressed,
-                                ..
-                            },
-                        ..
-                    } => {
-                        match virtual_keycode {
-                            Some(VirtualKeyCode::Escape) => return Trans::Quit,
-                            _ => (),
-                        }
-                    }
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::KeyboardInput {
+                    input:
+                        KeyboardInput {
+                            virtual_keycode,
+                            state: ElementState::Pressed,
+                            ..
+                        },
+                    ..
+                } => match virtual_keycode {
+                    Some(VirtualKeyCode::Escape) => return Trans::Quit,
                     _ => (),
-                }
-            }
+                },
+                _ => (),
+            },
             _ => (),
         }
         Trans::None
@@ -99,10 +95,7 @@ fn load_assets(world: &World) -> Assets {
 
     let cube = loader.load("mesh/cube.obj", ObjFormat, (), (), &mesh_storage);
 
-    Assets {
-        cube,
-        red,
-    }
+    Assets { cube, red }
 }
 
 fn main() {
@@ -132,15 +125,25 @@ fn run() -> Result<(), Error> {
     let pipeline_builder = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawShaded::<PosNormTex>::new())
+            .with_pass(DrawShaded::<PosNormTex>::new()),
     );
     let mut game = Application::build(resources_directory, ExampleState)?
-        .with(FlyCameraMovementSystem::new(1.0,Some("move_x"),Some("move_y"),Some("move_z")), "cam_move_system", &[])
-        .with(FlyCameraRotationSystem::new(1.0,1.0),"cam_rot_system",&[])
-        .with(MouseCenterLockSystem,"mouse_lock",&["cam_rot_system"])
+        .with(
+            FlyCameraMovementSystem::new(1.0, Some("move_x"), Some("move_y"), Some("move_z")),
+            "cam_move_system",
+            &[],
+        )
+        .with(
+            FlyCameraRotationSystem::new(1.0, 1.0),
+            "cam_rot_system",
+            &[],
+        )
+        .with(MouseCenterLockSystem, "mouse_lock", &["cam_rot_system"])
         .with_frame_limit(FrameRateLimitStrategy::Unlimited, 0)
         .with_bundle(TransformBundle::new().with_dep(&["cam_move_system"]))?
-        .with_bundle(InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path))?
+        .with_bundle(
+            InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path),
+        )?
         .with_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?
         .build()?;
     game.run();
