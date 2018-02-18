@@ -5,10 +5,15 @@ use amethyst_input::InputHandler;
 use amethyst_renderer::{Camera,ScreenDimensions};
 use specs::{Fetch, Join, ReadStorage, System, WriteStorage};
 
+/// The system that manages the camera movement
 pub struct FlyCameraMovementSystem<'a>{
+    /// The movement speed of the camera in units per second.
     speed: f32,
+    /// The name of the input axis to locally move in the x coordinates.
     move_x_name: Option<&'a str>,
+    /// The name of the input axis to locally move in the y coordinates.
     move_y_name: Option<&'a str>,
+    /// The name of the input axis to locally move in the z coordinates.
     move_z_name: Option<&'a str>,
 }
 
@@ -53,7 +58,7 @@ impl<'a,'b> System<'a> for FlyCameraMovementSystem<'b> {
     }
 }
 
-
+/// The system that manages the camera rotation.
 pub struct FlyCameraRotationSystem{
     sensitivity_x: f32,
     sensitivity_y: f32,
@@ -64,15 +69,6 @@ impl FlyCameraRotationSystem{
         FlyCameraRotationSystem{
             sensitivity_x,
             sensitivity_y,
-        }
-    }
-    fn clamp(v: Deg<f32>, min: Deg<f32>, max: Deg<f32>) -> Deg<f32>{
-        if v < min{
-            min
-        }else if v > max{
-            max
-        }else{
-            v
         }
     }
 }
@@ -92,16 +88,9 @@ impl<'a> System<'a> for FlyCameraRotationSystem {
             let offset_x = half_x - posx as f32;
             let offset_y = half_y - posy as f32;
             for (_,transform) in (&camera,&mut transform).join(){
-                let e = Euler::from(transform.rotation);
 
-                let new_x = FlyCameraRotationSystem::clamp(Deg::from(e.x) + Deg(offset_y * self.sensitivity_y),Deg(-90.0),Deg(90.0));
-
-                let new_rot = Quaternion::from(Euler {
-                    x: new_x,
-                    y: Deg::from(e.y) + Deg(offset_x * self.sensitivity_x),
-                    z: Deg::from(e.z),
-                });
-                transform.rotation = new_rot;
+                transform.rotate_local(Vector3::new(1.0,0.0,0.0),Deg(offset_y * self.sensitivity_y));
+                transform.rotate_global(Vector3::new(0.0,1.0,0.0),Deg(offset_x * self.sensitivity_x));
             }
         }
     }
