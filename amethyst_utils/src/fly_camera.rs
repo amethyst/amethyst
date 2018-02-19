@@ -3,23 +3,24 @@ use amethyst_core::timing::Time;
 use amethyst_core::transform::Transform;
 use amethyst_input::InputHandler;
 use amethyst_renderer::ScreenDimensions;
-use specs::{Component, Fetch, Join, ReadStorage, System, VecStorage, WriteStorage};
+use specs::{Component, Fetch, Join, NullStorage, ReadStorage, System, WriteStorage};
 use std::hash::Hash;
 use std::marker::PhantomData;
 
 /// Add this to a camera if you want it to be a fly camera.
 /// You need to add the FlyCameraBundle or the required systems for it to work.
+#[derive(Default)]
 pub struct FlyCameraTag;
 
 impl Component for FlyCameraTag {
-    type Storage = VecStorage<FlyCameraTag>;
+    type Storage = NullStorage<FlyCameraTag>;
 }
 
 /// The system that manages the camera movement.
 /// Generic parameters are the parameters for the InputHandler.
 pub struct FlyCameraMovementSystem<A, B> {
     /// The movement speed of the camera in units per second.
-    pub speed: f32,
+    speed: f32,
     /// The name of the input axis to locally move in the x coordinates.
     move_x_name: Option<A>,
     /// The name of the input axis to locally move in the y coordinates.

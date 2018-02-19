@@ -2,7 +2,6 @@ use amethyst_core::bundle::{ECSBundle, Result};
 use amethyst_renderer::WindowMessages;
 use fly_camera::*;
 use mouse::*;
-use shred::ResourceId;
 use specs::{DispatcherBuilder, World};
 use std::hash::Hash;
 use std::marker::PhantomData;
@@ -11,6 +10,7 @@ use std::marker::PhantomData;
 /// Note: Will not actually create a camera. It will only register the needed resources and systems.
 /// The generic parameters A and B are the ones used in InputHandler<A,B>.
 /// You might want to add "cam_move_system" and "cam_rot_system" as dependencies of the TransformSystem.
+/// Adding this bundle will grab the mouse, hide it and keep it centered.
 pub struct FlyCameraBundle<A, B> {
     sensitivity_x: f32,
     sensitivity_y: f32,
@@ -55,10 +55,9 @@ where
         builder: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
         world.register::<FlyCameraTag>();
-        if !world.res.has_value(ResourceId::new::<WindowMessages>()) {
-            world.add_resource(WindowMessages::new());
-        }
-        let mut msg = world.write_resource::<WindowMessages>();
+
+        let mut msg = world.res.entry().or_insert_with(|| WindowMessages::new());
+
         grab_cursor(&mut msg);
         set_mouse_cursor_none(&mut msg);
 
