@@ -1,7 +1,4 @@
-//! Demonstrates how to load renderable objects, along with several lighting
-//! methods.
-//!
-//! TODO: Rewrite for new renderer.
+//! Demonstrates how to use the fly camera
 
 extern crate amethyst;
 
@@ -16,9 +13,9 @@ use amethyst::input::InputBundle;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, ElementState, Event,
                          KeyboardInput, Material, MaterialDefaults, MeshHandle, ObjFormat,
                          Pipeline, PosNormTex, Projection, RenderBundle, Rgba, Stage,
-                         VirtualKeyCode, WindowEvent, WindowMessages};
-use amethyst::utils::fly_camera::{FlyCameraMovementSystem, FlyCameraRotationSystem};
-use amethyst::utils::mouse::*;
+                         VirtualKeyCode, WindowEvent};
+use amethyst::utils::bundles::FlyCameraBundle;
+use amethyst::utils::fly_camera::FlyCameraTag;
 
 struct ExampleState;
 
@@ -43,12 +40,6 @@ impl State for ExampleState {
             .with(GlobalTransform::default())
             .build();
 
-        let mut msg = WindowMessages::new();
-        {
-            grab_cursor(&mut msg);
-            set_mouse_cursor_none(&mut msg);
-        }
-        world.add_resource(msg);
 
         world.add_resource(AmbientColor(Rgba::from([0.01; 3])));
     }
@@ -128,18 +119,8 @@ fn run() -> Result<(), Error> {
             .with_pass(DrawShaded::<PosNormTex>::new()),
     );
     let mut game = Application::build(resources_directory, ExampleState)?
-        .with(
-            FlyCameraMovementSystem::new(1.0, Some("move_x"), Some("move_y"), Some("move_z")),
-            "cam_move_system",
-            &[],
-        )
-        .with(
-            FlyCameraRotationSystem::new(1.0, 1.0),
-            "cam_rot_system",
-            &[],
-        )
-        .with(MouseCenterLockSystem, "mouse_lock", &["cam_rot_system"])
         .with_frame_limit(FrameRateLimitStrategy::Unlimited, 0)
+        .with_bundle(FlyCameraBundle::<String,String>::new(Some(String::from("move_x")),Some(String::from("move_y")),Some(String::from("move_z"))))?
         .with_bundle(TransformBundle::new().with_dep(&["cam_move_system"]))?
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path),
@@ -160,5 +141,6 @@ fn initialise_camera(world: &mut World) {
         .with(Camera::from(Projection::perspective(1.3, Deg(60.0))))
         .with(local)
         .with(GlobalTransform::default())
+        .with(FlyCameraTag)
         .build();
 }

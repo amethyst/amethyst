@@ -5,7 +5,7 @@ use amethyst_core::bundle::{ECSBundle, Result, ResultExt};
 use amethyst_core::orientation::Orientation;
 use amethyst_core::transform::components::*;
 use specs::{DispatcherBuilder, World};
-
+use shred::ResourceId;
 use {AmbientColor, Camera, Light, Material, MaterialDefaults, Mesh, Rgba, ScreenDimensions,
      Texture, WindowMessages};
 use config::DisplayConfig;
@@ -47,7 +47,9 @@ impl<'a, 'b, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> ECSBundle<'a,
         builder: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
         world.add_resource(AmbientColor(Rgba::from([0.01; 3])));
-        world.add_resource(WindowMessages::new());
+        if !world.res.has_value(ResourceId::new::<WindowMessages>()) {
+            world.add_resource(WindowMessages::new());
+        }
         world.add_resource(AssetStorage::<Mesh>::new());
         world.add_resource(AssetStorage::<Texture>::new());
         world.add_resource(Orientation::default());
