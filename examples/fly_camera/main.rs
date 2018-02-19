@@ -40,7 +40,6 @@ impl State for ExampleState {
             .with(GlobalTransform::default())
             .build();
 
-
         world.add_resource(AmbientColor(Rgba::from([0.01; 3])));
     }
 
@@ -120,7 +119,11 @@ fn run() -> Result<(), Error> {
     );
     let mut game = Application::build(resources_directory, ExampleState)?
         .with_frame_limit(FrameRateLimitStrategy::Unlimited, 0)
-        .with_bundle(FlyCameraBundle::<String,String>::new(Some(String::from("move_x")),Some(String::from("move_y")),Some(String::from("move_z"))))?
+        .with_bundle(FlyCameraBundle::<String, String>::new(
+            Some(String::from("move_x")),
+            Some(String::from("move_y")),
+            Some(String::from("move_z")),
+        ))?
         .with_bundle(TransformBundle::new().with_dep(&["cam_move_system"]))?
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path),

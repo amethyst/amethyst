@@ -1,15 +1,15 @@
 //! ECS rendering bundle
 
+use {AmbientColor, Camera, Light, Material, MaterialDefaults, Mesh, Rgba, ScreenDimensions,
+     Texture, WindowMessages};
 use amethyst_assets::{AssetStorage, Handle, Loader};
 use amethyst_core::bundle::{ECSBundle, Result, ResultExt};
 use amethyst_core::orientation::Orientation;
 use amethyst_core::transform::components::*;
-use specs::{DispatcherBuilder, World};
-use shred::ResourceId;
-use {AmbientColor, Camera, Light, Material, MaterialDefaults, Mesh, Rgba, ScreenDimensions,
-     Texture, WindowMessages};
 use config::DisplayConfig;
 use pipe::{PipelineBuild, PolyPipeline};
+use shred::ResourceId;
+use specs::{DispatcherBuilder, World};
 use system::RenderSystem;
 
 /// Rendering bundle

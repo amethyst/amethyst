@@ -3,7 +3,7 @@ use amethyst_core::timing::Time;
 use amethyst_core::transform::Transform;
 use amethyst_input::InputHandler;
 use amethyst_renderer::ScreenDimensions;
-use specs::{Fetch, Join, ReadStorage, System, WriteStorage, Component,VecStorage};
+use specs::{Component, Fetch, Join, ReadStorage, System, VecStorage, WriteStorage};
 use std::hash::Hash;
 use std::marker::PhantomData;
 
@@ -11,13 +11,13 @@ use std::marker::PhantomData;
 /// You need to add the FlyCameraBundle or the required systems for it to work.
 pub struct FlyCameraTag;
 
-impl Component for FlyCameraTag{
+impl Component for FlyCameraTag {
     type Storage = VecStorage<FlyCameraTag>;
 }
 
 /// The system that manages the camera movement.
 /// Generic parameters are the parameters for the InputHandler.
-pub struct FlyCameraMovementSystem<A,B>{
+pub struct FlyCameraMovementSystem<A, B> {
     /// The movement speed of the camera in units per second.
     pub speed: f32,
     /// The name of the input axis to locally move in the x coordinates.
@@ -29,7 +29,11 @@ pub struct FlyCameraMovementSystem<A,B>{
     _marker: PhantomData<B>,
 }
 
-impl<A,B> FlyCameraMovementSystem<A,B> where A: Send+Sync+Hash+Eq+Clone+'static, B: Send+Sync+Hash+Eq+Clone+'static{
+impl<A, B> FlyCameraMovementSystem<A, B>
+where
+    A: Send + Sync + Hash + Eq + Clone + 'static,
+    B: Send + Sync + Hash + Eq + Clone + 'static,
+{
     pub fn new(
         speed: f32,
         move_x_name: Option<A>,
@@ -46,11 +50,17 @@ impl<A,B> FlyCameraMovementSystem<A,B> where A: Send+Sync+Hash+Eq+Clone+'static,
     }
 
     fn get_axis(name: &Option<A>, input: &InputHandler<A, B>) -> f32 {
-        name.as_ref().and_then(|ref n| input.axis_value(n)).unwrap_or(0.0) as f32
+        name.as_ref()
+            .and_then(|ref n| input.axis_value(n))
+            .unwrap_or(0.0) as f32
     }
 }
 
-impl<'a, A,B> System<'a> for FlyCameraMovementSystem<A,B> where A: Send+Sync+Hash+Eq+Clone+'static, B: Send+Sync+Hash+Eq+Clone+'static{
+impl<'a, A, B> System<'a> for FlyCameraMovementSystem<A, B>
+where
+    A: Send + Sync + Hash + Eq + Clone + 'static,
+    B: Send + Sync + Hash + Eq + Clone + 'static,
+{
     type SystemData = (
         Fetch<'a, Time>,
         WriteStorage<'a, Transform>,
@@ -72,14 +82,14 @@ impl<'a, A,B> System<'a> for FlyCameraMovementSystem<A,B> where A: Send+Sync+Has
 }
 
 /// The system that manages the camera rotation.
-pub struct FlyCameraRotationSystem<A,B>{
+pub struct FlyCameraRotationSystem<A, B> {
     sensitivity_x: f32,
     sensitivity_y: f32,
     _marker1: PhantomData<A>,
     _marker2: PhantomData<B>,
 }
 
-impl<A,B> FlyCameraRotationSystem<A,B> {
+impl<A, B> FlyCameraRotationSystem<A, B> {
     pub fn new(sensitivity_x: f32, sensitivity_y: f32) -> Self {
         FlyCameraRotationSystem {
             sensitivity_x,
@@ -90,7 +100,11 @@ impl<A,B> FlyCameraRotationSystem<A,B> {
     }
 }
 
-impl<'a, A, B> System<'a> for FlyCameraRotationSystem<A,B> where A: Send+Sync+Hash+Eq+Clone+'static, B: Send+Sync+Hash+Eq+Clone+'static{
+impl<'a, A, B> System<'a> for FlyCameraRotationSystem<A, B>
+where
+    A: Send + Sync + Hash + Eq + Clone + 'static,
+    B: Send + Sync + Hash + Eq + Clone + 'static,
+{
     type SystemData = (
         Fetch<'a, InputHandler<A, B>>,
         Fetch<'a, ScreenDimensions>,
