@@ -33,7 +33,7 @@ amethyst_utils = { path = "amethyst_utils", version = "0.1" }
 derivative = "1.0"
 fern = "0.5"
 log = "0.4"
-rayon = "0.8"
+rayon = "1.0"
 rustc_version_runtime = "0.1"
 shred = "0.5"
 shrev = "0.8"

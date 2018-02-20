@@ -10,7 +10,7 @@ use std::thread::sleep;
 use std::time::Duration;
 
 use amethyst_assets::*;
-use rayon::{Configuration, ThreadPool};
+use rayon::ThreadPoolBuilder;
 use specs::VecStorage;
 
 #[derive(Clone, Debug)]
@@ -45,8 +45,8 @@ impl Format<DummyAsset> for DummyFormat {
 fn main() {
     let path = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
 
-    let cfg = Configuration::new().num_threads(8);
-    let pool = Arc::new(ThreadPool::new(cfg).expect("Invalid config"));
+    let builder = ThreadPoolBuilder::new().num_threads(8);
+    let pool = Arc::new(builder.build().expect("Invalid config"));
 
     let loader = Loader::new(&path, pool.clone());
     let mut storage = AssetStorage::new();
