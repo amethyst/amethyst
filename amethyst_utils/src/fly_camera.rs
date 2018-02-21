@@ -22,11 +22,11 @@ pub struct FlyCameraMovementSystem<A, B> {
     /// The movement speed of the camera in units per second.
     speed: f32,
     /// The name of the input axis to locally move in the x coordinates.
-    move_x_name: Option<A>,
+    right_input_axis: Option<A>,
     /// The name of the input axis to locally move in the y coordinates.
-    move_y_name: Option<A>,
+    up_input_axis: Option<A>,
     /// The name of the input axis to locally move in the z coordinates.
-    move_z_name: Option<A>,
+    forward_input_axis: Option<A>,
     _marker: PhantomData<B>,
 }
 
@@ -37,15 +37,15 @@ where
 {
     pub fn new(
         speed: f32,
-        move_x_name: Option<A>,
-        move_y_name: Option<A>,
-        move_z_name: Option<A>,
+        right_input_axis: Option<A>,
+        up_input_axis: Option<A>,
+        forward_input_axis: Option<A>,
     ) -> Self {
         FlyCameraMovementSystem {
             speed,
-            move_x_name,
-            move_y_name,
-            move_z_name,
+            right_input_axis,
+            up_input_axis,
+            forward_input_axis,
             _marker: PhantomData,
         }
     }
@@ -70,9 +70,9 @@ where
     );
 
     fn run(&mut self, (time, mut transform, input, tag): Self::SystemData) {
-        let x = FlyCameraMovementSystem::get_axis(&self.move_x_name, &input);
-        let y = FlyCameraMovementSystem::get_axis(&self.move_y_name, &input);
-        let z = FlyCameraMovementSystem::get_axis(&self.move_z_name, &input);
+        let x = FlyCameraMovementSystem::get_axis(&self.right_input_axis, &input);
+        let y = FlyCameraMovementSystem::get_axis(&self.up_input_axis, &input);
+        let z = FlyCameraMovementSystem::get_axis(&self.forward_input_axis, &input);
 
         let dir = Vector3::new(x, y, z);
 

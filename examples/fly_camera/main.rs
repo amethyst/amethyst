@@ -28,10 +28,6 @@ impl State for ExampleState {
         // Add cube to scene
         let mut trans = Transform::default();
         trans.translation = Vector3::new(0.0, 0.0, -5.0);
-        //trans.scale = [1.0; 3].into();
-
-        //trans.move_local(Vector3::new(1.0,0.0,-1.0),5.0);
-
         world
             .create_entity()
             .with(assets.cube.clone())

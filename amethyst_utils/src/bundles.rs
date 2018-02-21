@@ -15,21 +15,25 @@ pub struct FlyCameraBundle<A, B> {
     sensitivity_x: f32,
     sensitivity_y: f32,
     speed: f32,
-    move_x_name: Option<A>,
-    move_y_name: Option<A>,
-    move_z_name: Option<A>,
+    right_input_axis: Option<A>,
+    up_input_axis: Option<A>,
+    forward_input_axis: Option<A>,
     _marker: PhantomData<B>,
 }
 
 impl<A, B> FlyCameraBundle<A, B> {
-    pub fn new(move_x_name: Option<A>, move_y_name: Option<A>, move_z_name: Option<A>) -> Self {
+    pub fn new(
+        right_input_axis: Option<A>,
+        up_input_axis: Option<A>,
+        forward_input_axis: Option<A>,
+    ) -> Self {
         FlyCameraBundle {
             sensitivity_x: 1.0,
             sensitivity_y: 1.0,
             speed: 1.0,
-            move_x_name,
-            move_y_name,
-            move_z_name,
+            right_input_axis,
+            up_input_axis,
+            forward_input_axis,
             _marker: PhantomData,
         }
     }
