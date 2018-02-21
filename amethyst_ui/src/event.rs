@@ -1,6 +1,6 @@
 use shrev::{EventChannel, ReaderId};
 use specs::{Entities,Entity,ReadStorage,Component, DenseVecStorage,NullStorage, Fetch, Join, System, WriteStorage,FetchMut};
-use specs::saveload::U64Marker;
+//use specs::saveload::U64Marker;
 use winit::{Event, WindowEvent};
 use amethyst_renderer::MouseButton;
 use amethyst_input::InputHandler;
@@ -112,7 +112,7 @@ impl<'a> System<'a> for UiMouseSystem{
 // Just to show how to handle element clicks. I'm not actually sure where we want the on_click() code that is specific to each clickable element.
 // Could make a system looping through, but you'd have to know which button is which.
 pub struct ClickableSystem{
-    reader_id: Option<ReaderId<U64Marker>>,
+    reader_id: Option<ReaderId<UiEvent>>,
 }
 
 impl ClickableSystem{
@@ -124,9 +124,9 @@ impl ClickableSystem{
 }
 
 impl<'a> System<'a> for ClickableSystem{
-    type SystemData = Fetch<'a, EventChannel<UiEvent>>;
+    type SystemData = FetchMut<'a, EventChannel<UiEvent>>;
 
-    fn run(&mut self, events: Self::SystemData) {
+    fn run(&mut self, mut events: Self::SystemData) {
         if self.reader_id.is_none(){
             self.reader_id = Some(events.register_reader());
         }

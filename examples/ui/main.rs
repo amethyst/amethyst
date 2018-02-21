@@ -14,7 +14,7 @@ use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light,
                          PngFormat, PointLight, PosNormTex, Projection, RenderBundle, Rgba, Stage,
                          Texture};
 use amethyst::ui::{DrawUi, FontAsset, TextEditing, TtfFormat, UiBundle, UiFocused, UiImage,
-                   UiText, UiTransform,UiMouseSystem,MouseReactive};
+                   UiText, UiTransform,UiMouseSystem,MouseReactive,ClickableSystem};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::winit::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use genmesh::{MapToVertices, Triangulate, Vertices};
@@ -171,6 +171,7 @@ fn run() -> Result<(), amethyst::Error> {
     let mut game = Application::build(resources, Example { fps_display: None })?
         .with_bundle(UiBundle::new())?
         .with(UiMouseSystem::new(),"ui_mouse_system",&[])
+        .with(ClickableSystem::new(),"ui_click_callback",&[])
         .with_bundle(FPSCounterBundle::default())?
         .with_bundle(InputBundle::<String, String>::new())?
         .with_bundle(RenderBundle::new(pipe, Some(config)))?

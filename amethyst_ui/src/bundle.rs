@@ -32,6 +32,8 @@ impl<'a, 'b> ECSBundle<'a, 'b> for UiBundle {
         world.register::<TextEditing>();
         world.register::<UiResize>();
         world.register::<Handle<FontAsset>>();
+        world.register::<MouseReactive>();
+        world.register::<Clickable>();
         world.add_resource(AssetStorage::<FontAsset>::new());
         world.add_resource(UiFocused { entity: None });
         world.add_resource(EventChannel::<UiEvent>::new());
