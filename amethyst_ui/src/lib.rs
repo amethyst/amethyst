@@ -1,6 +1,6 @@
 //! Provides components and systems to create an in game user interface.
 
-#![deny(missing_docs)]
+//#![deny(missing_docs)]
 #![doc(html_logo_url = "https://tinyurl.com/jtmm43a")]
 
 extern crate amethyst_assets;
@@ -19,6 +19,7 @@ extern crate specs;
 extern crate unicode_normalization;
 extern crate unicode_segmentation;
 extern crate winit;
+extern crate amethyst_input;
 
 mod bundle;
 mod focused;
@@ -28,6 +29,7 @@ mod pass;
 mod resize;
 mod text;
 mod transform;
+mod event;
 
 pub use self::bundle::UiBundle;
 pub use self::focused::UiFocused;
@@ -37,6 +39,7 @@ pub use self::pass::DrawUi;
 pub use self::resize::{ResizeSystem, UiResize};
 pub use self::text::{TextEditing, UiSystem, UiText};
 pub use self::transform::UiTransform;
+pub use self::event::{UiEventType,UiEvent,UiMouseSystem,MouseReactive};
 
 /// How many times the cursor blinks per second while editing text.
 const CURSOR_BLINK_RATE: f32 = 2.0;

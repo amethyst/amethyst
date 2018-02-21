@@ -34,6 +34,7 @@ impl<'a, 'b> ECSBundle<'a, 'b> for UiBundle {
         world.register::<Handle<FontAsset>>();
         world.add_resource(AssetStorage::<FontAsset>::new());
         world.add_resource(UiFocused { entity: None });
+        world.add_resource(EventChannel::<UiEvent>::new());
         let reader_1 = world
             .write_resource::<EventChannel<Event>>()
             .register_reader();

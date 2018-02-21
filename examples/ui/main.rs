@@ -9,11 +9,12 @@ use amethyst::core::cgmath::{Deg, InnerSpace, Vector3};
 use amethyst::core::transform::GlobalTransform;
 use amethyst::ecs::{Entity, World};
 use amethyst::prelude::*;
+use amethyst::input::InputBundle;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light, Mesh, Pipeline,
                          PngFormat, PointLight, PosNormTex, Projection, RenderBundle, Rgba, Stage,
                          Texture};
 use amethyst::ui::{DrawUi, FontAsset, TextEditing, TtfFormat, UiBundle, UiFocused, UiImage,
-                   UiText, UiTransform};
+                   UiText, UiTransform,UiMouseSystem,MouseReactive};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::winit::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use genmesh::{MapToVertices, Triangulate, Vertices};
@@ -72,6 +73,7 @@ impl State for Example {
             .with(UiImage {
                 texture: logo.clone(),
             })
+            .with(MouseReactive)
             .build();
 
         let text = world
@@ -168,7 +170,9 @@ fn run() -> Result<(), amethyst::Error> {
     };
     let mut game = Application::build(resources, Example { fps_display: None })?
         .with_bundle(UiBundle::new())?
+        .with(UiMouseSystem::new(),"ui_mouse_system",&[])
         .with_bundle(FPSCounterBundle::default())?
+        .with_bundle(InputBundle::<String, String>::new())?
         .with_bundle(RenderBundle::new(pipe, Some(config)))?
         .build()?;
     game.run();
