@@ -173,7 +173,7 @@ fn run() -> Result<(), amethyst::Error> {
         )
     };
     let mut game = Application::build(resources, Example { fps_display: None })?
-        .with_bundle(UiBundle::new())?
+        .with_bundle(UiBundle::<String, String>::new())?
         .with(UiEventHandlerSystem::new(), "ui_event_handler", &[])
         .with_bundle(FPSCounterBundle::default())?
         .with_bundle(InputBundle::<String, String>::new())?

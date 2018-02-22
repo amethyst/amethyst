@@ -4,6 +4,8 @@ use amethyst_assets::{AssetStorage, Handle, Processor};
 use amethyst_core::bundle::{ECSBundle, Result};
 use shrev::EventChannel;
 use specs::{DispatcherBuilder, World};
+use std::hash::Hash;
+use std::marker::PhantomData;
 use winit::Event;
 
 use super::*;
@@ -11,16 +13,27 @@ use super::*;
 /// UI bundle
 ///
 /// Will register all necessary components and systems needed for UI, along with any resources.
-pub struct UiBundle;
+/// The generic types A and B represent the A and B generic parameter of the InputHandler<A,B>.
+pub struct UiBundle<A, B> {
+    _marker1: PhantomData<A>,
+    _marker2: PhantomData<B>,
+}
 
-impl UiBundle {
+impl<A, B> UiBundle<A, B> {
     /// Create a new UI bundle
     pub fn new() -> Self {
-        UiBundle
+        UiBundle {
+            _marker1: PhantomData,
+            _marker2: PhantomData,
+        }
     }
 }
 
-impl<'a, 'b> ECSBundle<'a, 'b> for UiBundle {
+impl<'a, 'b, A, B> ECSBundle<'a, 'b> for UiBundle<A, B>
+where
+    A: Send + Sync + Eq + Hash + Clone + 'static,
+    B: Send + Sync + Eq + Hash + Clone + 'static,
+{
     fn build(
         self,
         world: &mut World,
@@ -49,6 +62,6 @@ impl<'a, 'b> ECSBundle<'a, 'b> for UiBundle {
             .add(Processor::<FontAsset>::new(), "font_processor", &[])
             .add(UiSystem::new(reader_1), "ui_system", &["font_processor"])
             .add(ResizeSystem::new(reader_2), "ui_resize_system", &[])
-            .add(UiMouseSystem::new(), "ui_mouse_system", &[]))
+            .add(UiMouseSystem::<A, B>::new(), "ui_mouse_system", &[]))
     }
 }
