@@ -9,10 +9,10 @@ use std::marker::PhantomData;
 
 use super::*;
 
-/// The system that manages the camera movement.
+/// The system that manages the fly movement.
 /// Generic parameters are the parameters for the InputHandler.
 pub struct FlyMovementSystem<A, B> {
-    /// The movement speed of the camera in units per second.
+    /// The movement speed of the movement in units per second.
     speed: f32,
     /// The name of the input axis to locally move in the x coordinates.
     right_input_axis: Option<A>,
@@ -75,7 +75,8 @@ where
     }
 }
 
-/// The system that manages the camera rotation.
+/// The system that manages the view rotation.
+/// Controlled by the mouse.
 pub struct FreeRotationSystem<A, B> {
     sensitivity_x: f32,
     sensitivity_y: f32,

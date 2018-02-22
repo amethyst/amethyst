@@ -1,7 +1,7 @@
 use specs::{Component, NullStorage};
 
 /// Add this to a camera if you want it to be a fly camera.
-/// You need to add the FlyCameraBundle or the required systems for it to work.
+/// You need to add the FlyControlBundle or the required systems for it to work.
 #[derive(Default)]
 pub struct FlyControlTag;
 
