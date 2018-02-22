@@ -6,15 +6,14 @@ use shrev::Event;
 use resources::*;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
-use specs::world::Component;
-use specs::storage::VecStorage;
+use specs::{VecStorage,Component};
 use uuid::Uuid;
 
-/// The basic network events shipped with amethyst
+/// The basic network events shipped with amethyst.
 // TODO: Add CreateEntity,RemoveEntity,UpdateEntity
 // TODO: Example of switching the NetEvent set in the Network Systems
 #[derive(Debug,Clone,PartialEq,Serialize,Deserialize)]
-pub enum NetEvent<T>{// where T:Send+Sync+Serialize+Clone+DeserializeOwned+'static{
+pub enum NetEvent<T> where T: PartialEq{//where T:Send+Sync+Serialize+Clone+DeserializeOwned+'static{
     /// Ask to connect to the server
     Connect,
     /// Reply to the client that the connection has been accepted
@@ -41,7 +40,7 @@ pub enum NetEvent<T>{// where T:Send+Sync+Serialize+Clone+DeserializeOwned+'stat
     Custom(T),
 }
 
-impl<T> NetEvent<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+'static{
+impl<T> NetEvent<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+PartialEq+'static{
     /// Tries to convert a NetEvent to a custom event enum type.
     pub fn custom(&self) -> Option<&T> {
         if let &NetEvent::Custom(ref t) = self {
@@ -80,7 +79,7 @@ pub trait BaseNetEvent<T>{
 
 ///Carries the source of the event. Useful for debugging, security checks, gameplay logic, etc...
 #[derive(Debug,Clone,Serialize,Deserialize)]
-pub struct NetSourcedEvent<T>{
+pub struct NetSourcedEvent<T> where T:PartialEq{
     /// The event
     pub event: NetEvent<T>,
     /// The source of this event

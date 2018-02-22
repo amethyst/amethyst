@@ -13,6 +13,7 @@ extern crate log;
 extern crate specs;
 extern crate uuid;
 extern crate rand;
+extern crate shred;
 
 pub mod components;
 mod filter;

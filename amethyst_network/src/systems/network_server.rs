@@ -1,6 +1,6 @@
 //! The network server system
 
-use specs::{System, FetchMut};
+use specs::{System,FetchMut,Fetch};
 use std::net::UdpSocket;
 use std::net::IpAddr;
 use std::str;
@@ -54,7 +54,7 @@ impl<T> NetServerSystem<T> where T:Send+Sync+Serialize{
 
 //impl<T> NetworkBase<T> for NetServerSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+BaseNetEvent<T>+'static{}
 
-impl<'a, T> System<'a> for NetServerSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+'static{
+impl<'a, T> System<'a> for NetServerSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+PartialEq+'static{
     type SystemData = (
         FetchMut<'a, NetSendBuffer<T>>,
         FetchMut<'a, NetReceiveBuffer<T>>,

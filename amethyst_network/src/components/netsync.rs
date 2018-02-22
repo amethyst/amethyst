@@ -1,4 +1,4 @@
-use specs::world::Component;
+use specs::Component;
 use std::marker::PhantomData;
 
 /// The component that marks an entity as synchronized to a remote network host. (Unfinished)
