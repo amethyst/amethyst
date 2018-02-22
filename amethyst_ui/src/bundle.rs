@@ -26,6 +26,7 @@ impl<'a, 'b> ECSBundle<'a, 'b> for UiBundle {
         world: &mut World,
         builder: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
+
         world.register::<UiImage>();
         world.register::<UiTransform>();
         world.register::<UiText>();
@@ -33,19 +34,22 @@ impl<'a, 'b> ECSBundle<'a, 'b> for UiBundle {
         world.register::<UiResize>();
         world.register::<Handle<FontAsset>>();
         world.register::<MouseReactive>();
-        world.register::<Clickable>();
+
         world.add_resource(AssetStorage::<FontAsset>::new());
         world.add_resource(UiFocused { entity: None });
         world.add_resource(EventChannel::<UiEvent>::new());
+
         let reader_1 = world
             .write_resource::<EventChannel<Event>>()
             .register_reader();
         let reader_2 = world
             .write_resource::<EventChannel<Event>>()
             .register_reader();
+
         Ok(builder
             .add(Processor::<FontAsset>::new(), "font_processor", &[])
             .add(UiSystem::new(reader_1), "ui_system", &["font_processor"])
-            .add(ResizeSystem::new(reader_2), "ui_resize_system", &[]))
+            .add(ResizeSystem::new(reader_2), "ui_resize_system", &[])
+            .add(UiMouseSystem::new(),"ui_mouse_system",&[]))
     }
 }

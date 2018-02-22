@@ -1,21 +1,21 @@
-use shrev::{EventChannel, ReaderId};
-use specs::{Entities,Entity,ReadStorage,Component, DenseVecStorage,NullStorage, Fetch, Join, System, WriteStorage,FetchMut};
-//use specs::saveload::U64Marker;
-use winit::{Event, WindowEvent};
+use shrev::EventChannel;
+use specs::{Entities,Entity,ReadStorage,Component, NullStorage, Fetch, Join, System, FetchMut};
 use amethyst_renderer::MouseButton;
 use amethyst_input::InputHandler;
 use transform::UiTransform;
-use resize::UiResize;
 
+/// The type of ui event.
+/// Click happens if you start and stop clicking on the same ui element.
 #[derive(Debug)]
 pub enum UiEventType{
     Click,
     ClickStart,
     ClickStop,
     HoverStart,
-    HoverStop
+    HoverStop,
 }
 
+/// A ui event instance.
 #[derive(Debug)]
 pub struct UiEvent{
     pub event_type: UiEventType,
@@ -31,13 +31,9 @@ impl UiEvent{
     }
 }
 
-#[derive(Default)]
-pub struct Clickable;
-
-impl Component for Clickable{
-    type Storage = NullStorage<Clickable>;
-}
-
+/// A component that tags an entity as reactive to ui events.
+/// Will only work if the entity has a UiTransform component attached to it.
+/// Without this, the ui element will not generate events.
 #[derive(Default)]
 pub struct MouseReactive;
 
@@ -45,9 +41,11 @@ impl Component for MouseReactive{
     type Storage = NullStorage<MouseReactive>;
 }
 
+/// The system that generates events for `MouseReactive` enabled entities.
 pub struct UiMouseSystem{
     was_down: bool,
     old_pos: (f32,f32),
+    click_started_on: Option<Entity>,
 }
 
 impl UiMouseSystem{
@@ -55,6 +53,7 @@ impl UiMouseSystem{
         UiMouseSystem{
             was_down: false,
             old_pos: (0.0,0.0),
+            click_started_on: None,
         }
     }
 
@@ -78,60 +77,45 @@ impl<'a> System<'a> for UiMouseSystem{
         // to replace on InputHandler generate OnMouseDown and OnMouseUp events
         let click_started = down && !self.was_down;
         let click_stopped = !down && self.was_down;
+        if let Some((pos_x,pos_y)) = input.mouse_position() {
+            let x = pos_x as f32;
+            let y = pos_y as f32;
+            for (tr, e, _) in (&transform, &*entities, &react).join() {
+                let is_in_rect = self.pos_in_rect(x, y, tr.x, tr.y, tr.width, tr.height);
+                let was_in_rect = self.pos_in_rect(self.old_pos.0, self.old_pos.1, tr.x, tr.y, tr.width, tr.height);
 
-        for (tr,e,_) in (&transform, &*entities, &react).join(){
-            if let Some((pos_x,pos_y)) = input.mouse_position() {
-                let x = pos_x as f32;
-                let y = pos_y as f32;
-                let is_in_rect = self.pos_in_rect(x,y,tr.x,tr.y,tr.width,tr.height);
-                let was_in_rect = self.pos_in_rect(self.old_pos.0,self.old_pos.1,tr.x,tr.y,tr.width,tr.height);
+                if is_in_rect && !was_in_rect {
+                    events.single_write(UiEvent::new(UiEventType::HoverStart, e));
+                } else if !is_in_rect && was_in_rect {
+                    events.single_write(UiEvent::new(UiEventType::HoverStop, e));
+                }
 
-
-                // I think the way it usually works is that you have to both start and end the click on the same element.
-                // This could be done by selecting the element on click down, and when releasing the click, check if we are on the selected element.
-                // Need a selection system for that to work tho
-                if is_in_rect{
+                if is_in_rect {
                     if click_started {
-                        println!("Clicked something");
-                        // Missing check for clickable component
-
-
-                        // Use UiTransform or Entity ref?
-
-                        events.single_write(UiEvent::new(UiEventType::ClickStart,e));
+                        events.single_write(UiEvent::new(UiEventType::ClickStart, e));
+                        self.click_started_on = Some(e);
+                    }else if click_stopped{
+                        if let Some(e2) = self.click_started_on{
+                            if e2 == e{
+                                events.single_write(UiEvent::new(UiEventType::Click,e2));
+                            }
+                        }
                     }
                 }
+            }
+
+            self.old_pos = (x,y);
+        }
+
+        // Could be used for drag and drop
+        if click_stopped{
+            if let Some(e) = self.click_started_on{
+                events.single_write(UiEvent::new(UiEventType::ClickStop,e));
+                self.click_started_on = None;
             }
         }
 
         self.was_down = down;
-    }
-}
 
-
-// Just to show how to handle element clicks. I'm not actually sure where we want the on_click() code that is specific to each clickable element.
-// Could make a system looping through, but you'd have to know which button is which.
-pub struct ClickableSystem{
-    reader_id: Option<ReaderId<UiEvent>>,
-}
-
-impl ClickableSystem{
-    pub fn new() -> Self {
-        ClickableSystem{
-            reader_id: None,
-        }
-    }
-}
-
-impl<'a> System<'a> for ClickableSystem{
-    type SystemData = FetchMut<'a, EventChannel<UiEvent>>;
-
-    fn run(&mut self, mut events: Self::SystemData) {
-        if self.reader_id.is_none(){
-            self.reader_id = Some(events.register_reader());
-        }
-        for ev in events.read(self.reader_id.as_mut().unwrap()){
-            println!("You clicked a clickable(comp WIP) element! ;)");
-        }
     }
 }
