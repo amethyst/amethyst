@@ -26,7 +26,6 @@ impl<'a, 'b> ECSBundle<'a, 'b> for UiBundle {
         world: &mut World,
         builder: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
-
         world.register::<UiImage>();
         world.register::<UiTransform>();
         world.register::<UiText>();
@@ -50,6 +49,6 @@ impl<'a, 'b> ECSBundle<'a, 'b> for UiBundle {
             .add(Processor::<FontAsset>::new(), "font_processor", &[])
             .add(UiSystem::new(reader_1), "ui_system", &["font_processor"])
             .add(ResizeSystem::new(reader_2), "ui_resize_system", &[])
-            .add(UiMouseSystem::new(),"ui_mouse_system",&[]))
+            .add(UiMouseSystem::new(), "ui_mouse_system", &[]))
     }
 }

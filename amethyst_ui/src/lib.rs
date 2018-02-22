@@ -5,6 +5,7 @@
 
 extern crate amethyst_assets;
 extern crate amethyst_core;
+extern crate amethyst_input;
 extern crate amethyst_renderer;
 extern crate clipboard;
 #[macro_use]
@@ -19,7 +20,6 @@ extern crate specs;
 extern crate unicode_normalization;
 extern crate unicode_segmentation;
 extern crate winit;
-extern crate amethyst_input;
 
 mod bundle;
 mod focused;
@@ -32,6 +32,7 @@ mod transform;
 mod event;
 
 pub use self::bundle::UiBundle;
+pub use self::event::{MouseReactive, UiEvent, UiEventType, UiMouseSystem};
 pub use self::focused::UiFocused;
 pub use self::format::{FontAsset, FontHandle, OtfFormat, TtfFormat};
 pub use self::image::UiImage;
@@ -39,7 +40,6 @@ pub use self::pass::DrawUi;
 pub use self::resize::{ResizeSystem, UiResize};
 pub use self::text::{TextEditing, UiSystem, UiText};
 pub use self::transform::UiTransform;
-pub use self::event::{UiEventType,UiEvent,UiMouseSystem,MouseReactive};
 
 /// How many times the cursor blinks per second while editing text.
 const CURSOR_BLINK_RATE: f32 = 2.0;

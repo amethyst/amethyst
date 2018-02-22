@@ -10,19 +10,19 @@ use amethyst::core::Time;
 use amethyst::core::cgmath::{Deg, InnerSpace, Vector3};
 use amethyst::core::transform::GlobalTransform;
 use amethyst::ecs::{Entity, World};
-use amethyst::prelude::*;
+use amethyst::ecs::{FetchMut, System};
 use amethyst::input::InputBundle;
+use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light, Mesh, Pipeline,
                          PngFormat, PointLight, PosNormTex, Projection, RenderBundle, Rgba, Stage,
                          Texture};
-use amethyst::ui::{DrawUi, FontAsset, TextEditing, TtfFormat, UiBundle, UiFocused, UiImage,
-                   UiText, UiTransform,MouseReactive,UiEvent};
+use amethyst::shrev::{EventChannel, ReaderId};
+use amethyst::ui::{DrawUi, FontAsset, MouseReactive, TextEditing, TtfFormat, UiBundle, UiEvent,
+                   UiFocused, UiImage, UiText, UiTransform};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::winit::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
-use amethyst::shrev::{ReaderId,EventChannel};
-use amethyst::ecs::{System,FetchMut};
 
 const SPHERE_COLOUR: [f32; 4] = [0.0, 0.0, 1.0, 1.0]; // blue
 const AMBIENT_LIGHT_COLOUR: Rgba = Rgba(0.01, 0.01, 0.01, 1.0); // near-black
@@ -174,7 +174,7 @@ fn run() -> Result<(), amethyst::Error> {
     };
     let mut game = Application::build(resources, Example { fps_display: None })?
         .with_bundle(UiBundle::new())?
-        .with(UiEventHandlerSystem::new(),"ui_event_handler",&[])
+        .with(UiEventHandlerSystem::new(), "ui_event_handler", &[])
         .with_bundle(FPSCounterBundle::default())?
         .with_bundle(InputBundle::<String, String>::new())?
         .with_bundle(RenderBundle::new(pipe, Some(config)))?
@@ -268,28 +268,25 @@ fn initialise_camera(world: &mut World) {
         .build();
 }
 
-
 /// This shows how to handle UI events.
-pub struct UiEventHandlerSystem{
+pub struct UiEventHandlerSystem {
     reader_id: Option<ReaderId<UiEvent>>,
 }
 
-impl UiEventHandlerSystem{
+impl UiEventHandlerSystem {
     pub fn new() -> Self {
-        UiEventHandlerSystem{
-            reader_id: None,
-        }
+        UiEventHandlerSystem { reader_id: None }
     }
 }
 
-impl<'a> System<'a> for UiEventHandlerSystem{
+impl<'a> System<'a> for UiEventHandlerSystem {
     type SystemData = FetchMut<'a, EventChannel<UiEvent>>;
 
     fn run(&mut self, mut events: Self::SystemData) {
-        if self.reader_id.is_none(){
+        if self.reader_id.is_none() {
             self.reader_id = Some(events.register_reader());
         }
-        for ev in events.read(self.reader_id.as_mut().unwrap()){
+        for ev in events.read(self.reader_id.as_mut().unwrap()) {
             info!("You just interacted with a ui element: {:?}", ev);
         }
     }
