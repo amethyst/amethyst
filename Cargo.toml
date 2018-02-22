@@ -39,6 +39,7 @@ shred = "0.5"
 shrev = "0.8"
 specs = "0.10"
 winit = "0.10"
+amethyst_hal = { path = "amethyst_hal", version = "0.1" }
 
 thread_profiler = { version = "0.1", optional = true }
 
@@ -109,4 +110,11 @@ name = "appendix_a"
 path = "examples/appendix_a/main.rs"
 
 [workspace]
-members = ["amethyst_animation", "amethyst_gltf"]
+
+[patch.'https://github.com/omni-viral/xfg-rs']
+xfg = { path = "../xfg-rs" }
+
+[patch.'https://github.com/gfx-rs/gfx']
+gfx-hal = { path = "../gfx/src/hal" }
+gfx-backend-metal = { path = "../gfx/src/backend/metal" }
+gfx-backend-empty = { path = "../gfx/src/backend/empty" }

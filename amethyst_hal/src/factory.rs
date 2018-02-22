@@ -21,6 +21,7 @@ pub trait BackendEx: Backend {
     type DeviceEx: Same<Self::Device> + Send + Sync;
     type PhysicalDeviceEx: Same<Self::PhysicalDevice> + Send + Sync;
     type SurfaceEx: Same<Self::Surface> + Send + Sync;
+    type SwapchainEx: Same<Self::Swapchain> + Send + Sync;
     type Instance: Instance<Backend = Self> + Send + Sync;
     fn init() -> Self::Instance;
     fn create_surface(instance: &Self::Instance, window: &Window) -> Self::Surface;
@@ -67,6 +68,7 @@ impl BackendEx for ::empty::Backend {
     type DeviceEx = ::empty::Device;
     type PhysicalDeviceEx = ::empty::PhysicalDevice;
     type SurfaceEx = ::empty::Surface;
+    type SwapchainEx = ::empty::Swapchain;
     type Instance = ::empty::Instance;
     fn init() -> Self::Instance {
         ::empty::Instance

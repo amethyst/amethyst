@@ -18,7 +18,7 @@ use AmethystGraph;
 use factory::{BackendEx, Factory};
 
 ///
-pub struct RenderSystem<B: Backend> {
+pub struct RenderSystem<B: BackendEx> {
     queues_usage: Vec<usize>,
     group: QueueGroup<B, General>,
     renders: HashMap<WindowId, Render<B>>,
@@ -45,6 +45,9 @@ where
 {
     /// Create new render system providing it with general queue group and surfaces to draw onto
     pub(crate) fn new(group: QueueGroup<B, General>) -> Self {
+        fn is_send_sync<T: Send + Sync>() {}
+        is_send_sync::<Render<B>>();
+
         RenderSystem {
             queues_usage: vec![0; group.queues.len()],
             group,
@@ -277,10 +280,10 @@ where
     }
 }
 
-struct Render<B: Backend> {
+struct Render<B: BackendEx> {
     queue: usize,
-    surface: B::Surface,
-    swapchain: B::Swapchain,
+    surface: B::SurfaceEx,
+    swapchain: B::SwapchainEx,
     backbuffer: Backbuffer<B>,
     active: Option<usize>,
     graphs: Vec<AmethystGraph<B>>,
