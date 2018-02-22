@@ -2,23 +2,16 @@ use amethyst_core::cgmath::{Deg, Vector3};
 use amethyst_core::timing::Time;
 use amethyst_core::transform::Transform;
 use amethyst_input::InputHandler;
-use amethyst_renderer::ScreenDimensions;
-use specs::{Component, Fetch, Join, NullStorage, ReadStorage, System, WriteStorage};
+use amethyst_renderer::{ScreenDimensions, WindowMessages};
+use specs::{Fetch, FetchMut, Join, ReadStorage, System, WriteStorage};
 use std::hash::Hash;
 use std::marker::PhantomData;
 
-/// Add this to a camera if you want it to be a fly camera.
-/// You need to add the FlyCameraBundle or the required systems for it to work.
-#[derive(Default)]
-pub struct FlyCameraTag;
-
-impl Component for FlyCameraTag {
-    type Storage = NullStorage<FlyCameraTag>;
-}
+use super::*;
 
 /// The system that manages the camera movement.
 /// Generic parameters are the parameters for the InputHandler.
-pub struct FlyCameraMovementSystem<A, B> {
+pub struct FlyMovementSystem<A, B> {
     /// The movement speed of the camera in units per second.
     speed: f32,
     /// The name of the input axis to locally move in the x coordinates.
@@ -30,7 +23,7 @@ pub struct FlyCameraMovementSystem<A, B> {
     _marker: PhantomData<B>,
 }
 
-impl<A, B> FlyCameraMovementSystem<A, B>
+impl<A, B> FlyMovementSystem<A, B>
 where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,
@@ -41,7 +34,7 @@ where
         up_input_axis: Option<A>,
         forward_input_axis: Option<A>,
     ) -> Self {
-        FlyCameraMovementSystem {
+        FlyMovementSystem {
             speed,
             right_input_axis,
             up_input_axis,
@@ -57,7 +50,7 @@ where
     }
 }
 
-impl<'a, A, B> System<'a> for FlyCameraMovementSystem<A, B>
+impl<'a, A, B> System<'a> for FlyMovementSystem<A, B>
 where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,
@@ -66,13 +59,13 @@ where
         Fetch<'a, Time>,
         WriteStorage<'a, Transform>,
         Fetch<'a, InputHandler<A, B>>,
-        ReadStorage<'a, FlyCameraTag>,
+        ReadStorage<'a, FlyControlTag>,
     );
 
     fn run(&mut self, (time, mut transform, input, tag): Self::SystemData) {
-        let x = FlyCameraMovementSystem::get_axis(&self.right_input_axis, &input);
-        let y = FlyCameraMovementSystem::get_axis(&self.up_input_axis, &input);
-        let z = FlyCameraMovementSystem::get_axis(&self.forward_input_axis, &input);
+        let x = FlyMovementSystem::get_axis(&self.right_input_axis, &input);
+        let y = FlyMovementSystem::get_axis(&self.up_input_axis, &input);
+        let z = FlyMovementSystem::get_axis(&self.forward_input_axis, &input);
 
         let dir = Vector3::new(x, y, z);
 
@@ -83,16 +76,16 @@ where
 }
 
 /// The system that manages the camera rotation.
-pub struct FlyCameraRotationSystem<A, B> {
+pub struct FreeRotationSystem<A, B> {
     sensitivity_x: f32,
     sensitivity_y: f32,
     _marker1: PhantomData<A>,
     _marker2: PhantomData<B>,
 }
 
-impl<A, B> FlyCameraRotationSystem<A, B> {
+impl<A, B> FreeRotationSystem<A, B> {
     pub fn new(sensitivity_x: f32, sensitivity_y: f32) -> Self {
-        FlyCameraRotationSystem {
+        FreeRotationSystem {
             sensitivity_x,
             sensitivity_y,
             _marker1: PhantomData,
@@ -101,7 +94,7 @@ impl<A, B> FlyCameraRotationSystem<A, B> {
     }
 }
 
-impl<'a, A, B> System<'a> for FlyCameraRotationSystem<A, B>
+impl<'a, A, B> System<'a> for FreeRotationSystem<A, B>
 where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,
@@ -110,7 +103,7 @@ where
         Fetch<'a, InputHandler<A, B>>,
         Fetch<'a, ScreenDimensions>,
         WriteStorage<'a, Transform>,
-        ReadStorage<'a, FlyCameraTag>,
+        ReadStorage<'a, FlyControlTag>,
     );
 
     fn run(&mut self, (input, dim, mut transform, tag): Self::SystemData) {
@@ -130,5 +123,22 @@ where
                 );
             }
         }
+    }
+}
+
+/// The system that locks the mouse to the center of the screen. Useful for first person camera.
+pub struct MouseCenterLockSystem;
+
+impl<'a> System<'a> for MouseCenterLockSystem {
+    type SystemData = (Fetch<'a, ScreenDimensions>, FetchMut<'a, WindowMessages>);
+
+    fn run(&mut self, (dim, mut msg): Self::SystemData) {
+        let half_x = dim.width() as i32 / 2;
+        let half_y = dim.height() as i32 / 2;
+        msg.send_command(move |win| {
+            if let Err(err) = win.set_cursor_position(half_x, half_y) {
+                error!("Unable to set the cursor position! Error: {:?}", err);
+            }
+        });
     }
 }

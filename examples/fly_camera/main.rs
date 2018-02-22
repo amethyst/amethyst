@@ -5,6 +5,7 @@ extern crate amethyst;
 use amethyst::{Application, Error, State, Trans};
 use amethyst::assets::Loader;
 use amethyst::config::Config;
+use amethyst::controls::*;
 use amethyst::core::cgmath::{Deg, Vector3};
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
@@ -14,8 +15,6 @@ use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Elemen
                          KeyboardInput, Material, MaterialDefaults, MeshHandle, ObjFormat,
                          Pipeline, PosNormTex, Projection, RenderBundle, Rgba, Stage,
                          VirtualKeyCode, WindowEvent};
-use amethyst::utils::bundles::FlyCameraBundle;
-use amethyst::utils::fly_camera::FlyCameraTag;
 
 struct ExampleState;
 
@@ -115,12 +114,12 @@ fn run() -> Result<(), Error> {
     );
     let mut game = Application::build(resources_directory, ExampleState)?
         .with_frame_limit(FrameRateLimitStrategy::Unlimited, 0)
-        .with_bundle(FlyCameraBundle::<String, String>::new(
+        .with_bundle(FlyControlBundle::<String, String>::new(
             Some(String::from("move_x")),
             Some(String::from("move_y")),
             Some(String::from("move_z")),
         ))?
-        .with_bundle(TransformBundle::new().with_dep(&["cam_move_system"]))?
+        .with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path),
         )?
@@ -132,14 +131,12 @@ fn run() -> Result<(), Error> {
 
 fn initialise_camera(world: &mut World) {
     let local = Transform::default();
-    //local.translation = Vector3::new(0., -20., 10.);
-    //local.rotation = Quaternion::from_angle_x(Deg(75.)).into();
 
     world
         .create_entity()
         .with(Camera::from(Projection::perspective(1.3, Deg(60.0))))
         .with(local)
         .with(GlobalTransform::default())
-        .with(FlyCameraTag)
+        .with(FlyControlTag)
         .build();
 }

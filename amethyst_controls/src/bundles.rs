@@ -1,17 +1,17 @@
+use super::*;
 use amethyst_core::bundle::{ECSBundle, Result};
 use amethyst_renderer::WindowMessages;
-use fly_camera::*;
-use mouse::*;
+use amethyst_utils::mouse::*;
 use specs::{DispatcherBuilder, World};
 use std::hash::Hash;
 use std::marker::PhantomData;
 
-/// The bundle that creates a Flying Camera.
-/// Note: Will not actually create a camera. It will only register the needed resources and systems.
+/// The bundle that creates a flying movement system.
+/// Note: Will not actually create a moving entity. It will only register the needed resources and systems.
 /// The generic parameters A and B are the ones used in InputHandler<A,B>.
-/// You might want to add "cam_move_system" and "cam_rot_system" as dependencies of the TransformSystem.
+/// You might want to add "fly_movement" and "free_rotation" as dependencies of the TransformSystem.
 /// Adding this bundle will grab the mouse, hide it and keep it centered.
-pub struct FlyCameraBundle<A, B> {
+pub struct FlyControlBundle<A, B> {
     sensitivity_x: f32,
     sensitivity_y: f32,
     speed: f32,
@@ -21,13 +21,13 @@ pub struct FlyCameraBundle<A, B> {
     _marker: PhantomData<B>,
 }
 
-impl<A, B> FlyCameraBundle<A, B> {
+impl<A, B> FlyControlBundle<A, B> {
     pub fn new(
         right_input_axis: Option<A>,
         up_input_axis: Option<A>,
         forward_input_axis: Option<A>,
     ) -> Self {
-        FlyCameraBundle {
+        FlyControlBundle {
             sensitivity_x: 1.0,
             sensitivity_y: 1.0,
             speed: 1.0,
@@ -48,7 +48,7 @@ impl<A, B> FlyCameraBundle<A, B> {
     }
 }
 
-impl<'a, 'b, A, B> ECSBundle<'a, 'b> for FlyCameraBundle<A, B>
+impl<'a, 'b, A, B> ECSBundle<'a, 'b> for FlyControlBundle<A, B>
 where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,
@@ -58,7 +58,7 @@ where
         world: &mut World,
         builder: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
-        world.register::<FlyCameraTag>();
+        world.register::<FlyControlTag>();
 
         let mut msg = world.res.entry().or_insert_with(|| WindowMessages::new());
 
@@ -67,20 +67,20 @@ where
 
         Ok(builder
             .add(
-                FlyCameraMovementSystem::<A, B>::new(
+                FlyMovementSystem::<A, B>::new(
                     1.0,
-                    self.move_x_name,
-                    self.move_y_name,
-                    self.move_z_name,
+                    self.right_input_axis,
+                    self.up_input_axis,
+                    self.forward_input_axis,
                 ),
-                "cam_move_system",
+                "fly_movement",
                 &[],
             )
             .add(
-                FlyCameraRotationSystem::<A, B>::new(1.0, 1.0),
-                "cam_rot_system",
+                FreeRotationSystem::<A, B>::new(1.0, 1.0),
+                "free_rotation",
                 &[],
             )
-            .add(MouseCenterLockSystem, "mouse_lock", &["cam_rot_system"]))
+            .add(MouseCenterLockSystem, "mouse_lock", &["free_rotation"]))
     }
 }

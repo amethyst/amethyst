@@ -1,0 +1,25 @@
+[package]
+name = "amethyst_controls"
+version = "0.1.0"
+authors = ["Joël Lupien <jojolepromain@gmail.com>"]
+description = "Amethyst controls"
+
+documentation = "https://www.amethyst.rs/doc/master/doc/amethyst_controls/"
+homepage = "https://www.amethyst.rs/"
+repository = "https://github.com/amethyst/amethyst"
+
+license = "MIT/Apache-2.0"
+
+[badges]
+appveyor = { repository = "amethyst/amethyst" }
+travis-ci = { repository = "amethyst/amethyst" }
+
+[dependencies]
+amethyst_core = { path = "../amethyst_core", version = "0.1.0" }
+amethyst_input = { path = "../amethyst_input", version = "0.2.1" }
+amethyst_utils = { path = "../amethyst_utils", version = "0.2" }
+amethyst_renderer = { path = "../amethyst_renderer", version = "0.6.1" }
+winit = "0.10"
+specs = "0.10"
+shred = "0.5"
+log = "0.4"

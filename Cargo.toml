@@ -26,6 +26,7 @@ amethyst_assets = { path = "amethyst_assets", version = "0.2.0" }
 amethyst_audio = { path = "amethyst_audio", version = "0.1.0" }
 amethyst_config = { path = "amethyst_config", version = "0.5.0" }
 amethyst_core = { path = "amethyst_core", version = "0.1.0" }
+amethyst_controls = { path = "amethyst_controls", version = "0.1.0" }
 amethyst_renderer = { path = "amethyst_renderer", version = "0.6" }
 amethyst_input = { path = "amethyst_input", version = "0.2" }
 amethyst_ui = { path = "amethyst_ui", version = "0.1" }
