@@ -6,7 +6,7 @@ use bincode::{serialize, deserialize, Infinite};
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use bincode::internal::ErrorKind;
-use super::{NetConnection,NetConnectionPool,NetEvent};
+use super::{NetConnection,NetConnectionPool,NetEvent,NetSendBuffer,NetSourcedEvent};
 
 /// Sends an event to the target NetConnection using the provided network Socket.
 /// The socket has to be binded!
@@ -28,14 +28,27 @@ pub fn deserialize_event<T>(data:&[u8])->Result<NetEvent<T>,Box<ErrorKind>> wher
     deserialize::<NetEvent<T>>(data)
 }
 
-pub fn send_to<T>(event: NetEvent<T>, target: &NetConnection, pool: &mut NetConnectionPool){
-    //pool.
+/// Send an event to a network connection by adding the event to the send queue.
+/// This will eventually have support for reliability settings.
+pub fn send_to<T>(event: NetEvent<T>, buf: &mut NetSendBuffer<T>, target: &NetConnection){
+    buf.buf.single_write(NetSourcedEvent{
+        event,
+        uuid: target.uuid,
+        socket: target.target,
+    });
 }
+
+pub fn send_to_all<T>(event: NetEvent<T>, buf: &mut NetSendBuffer<T>, pool: &NetConnectionPool){
+
+}
+
+pub fn send_to_all_except<T>(event: NetEvent<T>, buf: &mut NetSendBuffer<T>, pool: &NetConnectionPool, except: &NetConnection){
+
+}
+
 
 /*
 send_to_all
-send_to_others // On server == send_to_clients old model
 send_to_all_except
 send_to
-send_event // Internal logic
 */

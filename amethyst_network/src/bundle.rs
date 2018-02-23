@@ -8,7 +8,7 @@ use serde::Serialize;
 use serde::de::DeserializeOwned;
 use filter::NetFilter;
 use std::net::SocketAddr;
-use super::{NetSocketSystem,ConnectionManagerSystem,NetSendBuffer,NetReceiveBuffer,NetConnectionPool};
+use super::{NetSocketSystem,ConnectionManagerSystem,NetSendBuffer,NetReceiveBuffer,NetConnectionPool,NetIdentity};
 
 pub struct NetworkClientBundle<'a,T> {
     ip: &'a str,
@@ -45,15 +45,20 @@ impl<'a, 'b, 'c, T> ECSBundle<'a, 'b> for NetworkClientBundle<'c,T> where T: Sen
         world.add_resource(NetSendBuffer::<T>::new());
         world.add_resource(NetReceiveBuffer::<T>::new());
 
+        let muuid = Uuid::new_v4();
+
         while self.port.is_none() || self.port.unwrap() < 200 {
             self.port = Some(rand::random::<u16>());
         }
         let mut s = NetSocketSystem::<T>::new(self.ip,self.port.unwrap(),self.filters).expect("Failed to open network system.");
         if let Some(c) = self.connect_to{
-            s.connect(c,&mut pool);
+            s.connect(c,&mut pool,uuid);
         }
 
         world.add_resource(pool);
+        world.add_resource(NetIdentity{
+            uuid,
+        });
 
         builder = builder.add(s,"net_socket",&[]);
         builder = builder.add(ConnectionManagerSystem::<T>::new(self.is_server),"connection_manager",&["net_socket"]);

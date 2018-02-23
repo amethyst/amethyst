@@ -24,7 +24,7 @@ mod network_socket;
 mod utils;
 
 pub use bundle::NetworkClientBundle;
-pub use connection::{NetConnectionPool,NetConnection,NetReceiveBuffer,NetSendBuffer,NetOwner,ConnectionState};
+pub use connection::{NetConnectionPool,NetConnection,NetReceiveBuffer,NetSendBuffer,NetIdentity,ConnectionState};
 pub use connection_manager::ConnectionManagerSystem;
 pub use filter::{FilterConnected,NetFilter};
 pub use net_event::{NetEvent,NetSourcedEvent};

@@ -15,7 +15,8 @@ pub struct NetConnection{
     /// The state of the connection.
     pub state: ConnectionState,
     /// UUID of the owner at the endpoint of this connection.
-    pub uuid: Uuid,
+    /// Will be none during the connection phase of the client, until the server acknowledges the connection.
+    pub uuid: Option<Uuid>,
 }
 
 impl Eq for NetConnection{}
@@ -31,11 +32,16 @@ pub enum ConnectionState{
     Disconnected,
 }
 
-/// A network owner. It can be either the client or a server.
+/// A network identity. It can represent either a client or a server.
 /// It represents anything that can own an entity or a component.
 /// Think of it as an identity card.
-pub struct NetOwner{
-    pub id: Uuid,
+/// When used as a resource, it designates the local network uuid.
+pub struct NetIdentity{
+    pub uuid: Uuid,
+}
+
+impl Component for NetIdentity{
+    type Storage = VecStorage<NetIdentity>;
 }
 
 /// The list of network connections allocated by the network system.
@@ -76,7 +82,7 @@ impl NetConnectionPool{
 
 }
 
-impl<'a> Component for NetConnectionPool{
+impl Component for NetConnectionPool{
     type Storage = VecStorage<NetConnectionPool>;
 }
 
@@ -109,7 +115,7 @@ impl<T> NetReceiveBuffer<T> where T: Send+Sync+'static{
     }
 }
 
-impl<'a,T> Component for NetReceiveBuffer<T> where T: Send+Sync+'static{
+impl<T> Component for NetReceiveBuffer<T> where T: Send+Sync+'static{
     type Storage = VecStorage<NetReceiveBuffer<T>>;
 }
 

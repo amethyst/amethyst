@@ -15,7 +15,9 @@ use std::net::SocketAddr;
 #[derive(Debug,Clone,PartialEq,Serialize,Deserialize)]
 pub enum NetEvent<T>{
     /// Ask to connect to the server
-    Connect,
+    Connect{
+        client_uuid: Uuid,
+    },
     /// Reply to the client that the connection has been accepted
     Connected{
         server_uuid: Uuid,

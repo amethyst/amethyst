@@ -3,7 +3,7 @@ use shrev::{ReaderId,EventChannel};
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use uuid::Uuid;
-use super::{NetSourcedEvent,NetConnectionPool,NetSendBuffer,NetEvent,ConnectionState,NetConnection,NetReceiveBuffer};
+use super::{NetSourcedEvent,NetConnectionPool,NetSendBuffer,NetEvent,ConnectionState,NetConnection,NetReceiveBuffer,NetIdentity};
 
 pub struct ConnectionManagerSystem<T> where T: PartialEq{
     net_event_reader: Option<ReaderId<NetSourcedEvent<T>>>,
@@ -24,8 +24,9 @@ impl<'a,T> System<'a> for ConnectionManagerSystem<T> where T:Send+Sync+PartialEq
         FetchMut<'a, NetReceiveBuffer<T>>,
         FetchMut<'a, NetConnectionPool>,
         FetchMut<'a, NetSendBuffer<T>>,
+        Fetch<'a, NetIdentity>,
     );
-    fn run(&mut self, (mut events, mut pool, mut send_buf): Self::SystemData) {
+    fn run(&mut self, (mut events, mut pool, mut send_buf, identity): Self::SystemData) {
         if self.net_event_reader.is_none(){
             self.net_event_reader = Some(events.buf.register_reader());
         }
@@ -33,26 +34,30 @@ impl<'a,T> System<'a> for ConnectionManagerSystem<T> where T:Send+Sync+PartialEq
         for ev in events.buf.read(self.net_event_reader.as_mut().unwrap()){
             if self.is_server{
                 match ev.event {
-                    NetEvent::Connect => {
-                        // Received packet from unknown client
+                    NetEvent::Connect{client_uuid} => {
+                        // Received packet from unknown/disconnected client
                         if ev.uuid.is_none(){
-                            println!("conn manager received something");
-                            pool.connections.push(
-                                NetConnection{
-                                    target: ev.socket,
-                                    state: ConnectionState::Connected,
-                                    uuid: Uuid::new_v4(),
-                                }
-                            );
-                            send_buf.buf.single_write(
-                                NetSourcedEvent{
-                                    event: NetEvent::Connected{
-                                        server_uuid: Uuid::new_v4(), // TODO RETURN SELF.UUID
-                                    },
-                                    uuid: None,
-                                    socket: ev.socket,
-                                }
-                            );
+                            // Check if the specified uuid is already connected.
+                            // UUID Spoofing prevention.
+                            if !pool.connections.contains(|c| c.uuid == Some(client_uuid)) {
+                                println!("conn manager received something");
+                                pool.connections.push(
+                                    NetConnection {
+                                        target: ev.socket,
+                                        state: ConnectionState::Connected,
+                                        uuid: Some(client_uuid),
+                                    }
+                                );
+                                send_buf.buf.single_write(
+                                    NetSourcedEvent {
+                                        event: NetEvent::Connected {
+                                            server_uuid: identity.uuid.clone(),
+                                        },
+                                        uuid: Some(client_uuid),
+                                        socket: ev.socket,
+                                    }
+                                );
+                            }
                         }
                     },
                     NetEvent::Disconnect{ref reason} => {

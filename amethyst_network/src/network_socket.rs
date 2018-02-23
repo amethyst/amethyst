@@ -40,14 +40,14 @@ impl<T> NetSocketSystem<T> where T:Serialize+PartialEq{
         )
     }
     /// Connects to a remote server
-    pub fn connect(&mut self,target:SocketAddr,pool: &mut NetConnectionPool){
+    pub fn connect(&mut self,target:SocketAddr,pool: &mut NetConnectionPool, client_uuid: Uuid){
         info!("Sending connection request to remote {:?}",target);
         let conn = NetConnection{
             target,
             state:ConnectionState::Connecting,
-            uuid: Uuid::new_v4(),
+            uuid: None,
         };
-        send_event(&NetEvent::Connect::<T>,&conn,&self.socket);
+        send_event(&NetEvent::Connect::<T>{client_uuid},&conn,&self.socket);
         pool.connections.push(conn);
     }
 }
