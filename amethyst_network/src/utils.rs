@@ -10,7 +10,7 @@ use super::{NetConnection,NetConnectionPool,NetEvent};
 
 /// Sends an event to the target NetConnection using the provided network Socket.
 /// The socket has to be binded!
-pub fn send_event<T>(event:&NetEvent<T>,target:&NetConnection,socket:&UdpSocket) where T:Serialize+PartialEq{
+pub fn send_event<T>(event:&NetEvent<T>,target:&NetConnection,socket:&UdpSocket) where T:Serialize{
     let ser = serialize(event, Infinite);
     match ser{
         Ok(s)=>{
@@ -24,11 +24,11 @@ pub fn send_event<T>(event:&NetEvent<T>,target:&NetConnection,socket:&UdpSocket)
 }
 
 /// Attempts to deserialize an event from the raw byte data.
-pub fn deserialize_event<T>(data:&[u8])->Result<NetEvent<T>,Box<ErrorKind>> where T:DeserializeOwned+PartialEq{
+pub fn deserialize_event<T>(data:&[u8])->Result<NetEvent<T>,Box<ErrorKind>> where T:DeserializeOwned{
     deserialize::<NetEvent<T>>(data)
 }
 
-pub fn send_to<T>(event: NetEvent<T>, target: &NetConnection, pool: &mut NetConnectionPool) where T: PartialEq{
+pub fn send_to<T>(event: NetEvent<T>, target: &NetConnection, pool: &mut NetConnectionPool){
     //pool.
 }
 

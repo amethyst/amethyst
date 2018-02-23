@@ -19,7 +19,7 @@ impl<T> ConnectionManagerSystem<T> where T: PartialEq{
     }
 }
 
-impl<'a,T> System<'a> for ConnectionManagerSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+PartialEq+'static{
+impl<'a,T> System<'a> for ConnectionManagerSystem<T> where T:Send+Sync+PartialEq+'static{
     type SystemData = (
         FetchMut<'a, NetReceiveBuffer<T>>,
         FetchMut<'a, NetConnectionPool>,

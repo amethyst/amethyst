@@ -18,7 +18,7 @@ pub struct NetworkClientBundle<'a,T> {
     connect_to: Option<SocketAddr>,
 }
 
-impl<'a,T> NetworkClientBundle<'a,T> where T: Send+Sync{
+impl<'a,T> NetworkClientBundle<'a,T>{
     /// Creates a new NetworkClientBundle
     pub fn new(ip: &'a str,port: Option<u16>,filters: Vec<Box<NetFilter<T>>>,is_server: bool) -> Self {
         NetworkClientBundle {

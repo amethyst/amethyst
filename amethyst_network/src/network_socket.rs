@@ -26,7 +26,7 @@ pub struct NetSocketSystem<T> where T: PartialEq{
 
 //TODO: add Unchecked Event type list. Those events will be let pass the client connected filter (Example: NetEvent::Connect).
 //TODO: add different Filters that can be added on demand, to filter the event before they reach other systems.
-impl<T> NetSocketSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+PartialEq+'static{
+impl<T> NetSocketSystem<T> where T:Serialize+PartialEq{
     /// Creates a NetClientSystem and binds the Socket on the ip and port added in parameters.
     pub fn new(ip:&str,port:u16,filters:Vec<Box<NetFilter<T>>>)->Result<NetSocketSystem<T>,Error>{
         let socket = UdpSocket::bind(SocketAddr::new(IpAddr::from_str(ip).expect("Unreadable input IP."),port))?;
@@ -52,7 +52,7 @@ impl<T> NetSocketSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+Pa
     }
 }
 
-impl<'a, T> System<'a> for NetSocketSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+PartialEq+Sized+'static{
+impl<'a, T> System<'a> for NetSocketSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+PartialEq+'static{
     type SystemData = (
         FetchMut<'a, NetSendBuffer<T>>,
         FetchMut<'a, NetReceiveBuffer<T>>,

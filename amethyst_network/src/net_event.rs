@@ -13,7 +13,7 @@ use std::net::SocketAddr;
 // TODO: Add CreateEntity,RemoveEntity,UpdateEntity
 // TODO: Example of switching the NetEvent set in the Network Systems
 #[derive(Debug,Clone,PartialEq,Serialize,Deserialize)]
-pub enum NetEvent<T> where T: PartialEq{//where T:Send+Sync+Serialize+Clone+DeserializeOwned+'static{
+pub enum NetEvent<T>{
     /// Ask to connect to the server
     Connect,
     /// Reply to the client that the connection has been accepted
@@ -42,7 +42,7 @@ pub enum NetEvent<T> where T: PartialEq{//where T:Send+Sync+Serialize+Clone+Dese
     Custom(T),
 }
 
-impl<T> NetEvent<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+PartialEq+'static{
+impl<T> NetEvent<T> {
     /// Tries to convert a NetEvent to a custom event enum type.
     pub fn custom(&self) -> Option<&T> {
         if let &NetEvent::Custom(ref t) = self {
@@ -83,7 +83,7 @@ pub trait BaseNetEvent<T>{
 
 ///Carries the source of the event. Useful for debugging, security checks, gameplay logic, etc...
 #[derive(Debug,Clone,Serialize,Deserialize)]
-pub struct NetSourcedEvent<T> where T:PartialEq{
+pub struct NetSourcedEvent<T>{
     /// The event.
     pub event: NetEvent<T>,
     /// The source of this event.

@@ -80,11 +80,11 @@ impl<'a> Component for NetConnectionPool{
     type Storage = VecStorage<NetConnectionPool>;
 }
 
-pub struct NetSendBuffer<T> where T: Send+Sync+PartialEq+'static{
+pub struct NetSendBuffer<T> {
     pub buf: EventChannel<NetSourcedEvent<T>>,
 }
 
-impl<T> NetSendBuffer<T> where T: Send+Sync+PartialEq+'static{
+impl<T> NetSendBuffer<T> where T: Send+Sync+'static{
     pub fn new()->NetSendBuffer<T>{
         NetSendBuffer{
             buf: EventChannel::<NetSourcedEvent<T>>::new(),
@@ -92,25 +92,25 @@ impl<T> NetSendBuffer<T> where T: Send+Sync+PartialEq+'static{
     }
 }
 
-impl<T> Component for NetSendBuffer<T> where T: Send+Sync+PartialEq+'static{
+impl<T> Component for NetSendBuffer<T> where T: Send+Sync+'static{
     type Storage = VecStorage<NetSendBuffer<T>>;
 }
 
 
-pub struct NetReceiveBuffer<T> where T: Send+Sync+PartialEq+'static{
+pub struct NetReceiveBuffer<T>{
     pub buf: EventChannel<NetSourcedEvent<T>>,
 }
 
-impl<'a,T> Component for NetReceiveBuffer<T> where T: Send+Sync+PartialEq+'static{
-    type Storage = VecStorage<NetReceiveBuffer<T>>;
-}
-
-impl<T> NetReceiveBuffer<T> where T: Send+Sync+PartialEq+'static{
+impl<T> NetReceiveBuffer<T> where T: Send+Sync+'static{
     pub fn new()->NetReceiveBuffer<T>{
         NetReceiveBuffer{
             buf: EventChannel::<NetSourcedEvent<T>>::new(),
         }
     }
+}
+
+impl<'a,T> Component for NetReceiveBuffer<T> where T: Send+Sync+'static{
+    type Storage = VecStorage<NetReceiveBuffer<T>>;
 }
 
 /*
