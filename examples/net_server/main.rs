@@ -9,6 +9,11 @@ use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::prelude::*;
 use amethyst::network::*;
 use amethyst::shrev::EventChannel;
+use std::net::IpAddr;
+use std::net::SocketAddr;
+use std::str::FromStr;
+
+use amethyst::network::NetworkClientBundle;
 
 fn main() {
     if let Err(e) = run() {
@@ -18,15 +23,11 @@ fn main() {
 }
 
 fn run() -> Result<()> {
-    let server = NetServerSystem::<()>::new("127.0.0.1",4546 as u16).expect("Failed to create NetServerSystem");
-
     let game = Application::build("",State1)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             144,
-        ).with(server,"net_server_system",&[])
-        .with_resource(NetSendBuffer::<()>::new())
-        .with_resource(NetReceiveBuffer::<()>::new());
+        ).with_bundle(NetworkClientBundle::<()>::new("127.0.0.1",Some(3456 as u16),vec![],true))?;
 
     Ok(
         game.build()?.run(),

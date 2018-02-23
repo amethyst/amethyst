@@ -1,7 +1,7 @@
 //! The network filter base trait
-use resources::*;
 use std::net::SocketAddr;
 use std::marker::PhantomData;
+use super::{NetEvent,NetConnectionPool,ConnectionState};
 
 /// Network filter base trait providing an event filtering interface.
 pub trait NetFilter<T>: Send+Sync where T: Send+Sync+PartialEq{
@@ -19,8 +19,10 @@ impl<T> NetFilter<T> for FilterConnected where T: Send+Sync+PartialEq+Sized{
             if conn.state == ConnectionState::Connected{
                 return true
             }else if conn.state == ConnectionState::Connecting{
-                if *event == NetEvent::Connect || *event == NetEvent::Connected{
-                    return true
+                match *event{
+                    NetEvent::Connect => return true,
+                    NetEvent::Connected{server_uuid}=> return true,
+                    _ => {},
                 }
             }
         }

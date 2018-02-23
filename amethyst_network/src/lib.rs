@@ -15,14 +15,18 @@ extern crate uuid;
 extern crate rand;
 extern crate shred;
 
-pub mod components;
-mod filter;
-pub mod resources;
-pub mod systems;
 mod bundle;
+mod connection;
+mod connection_manager;
+mod filter;
+mod net_event;
+mod network_socket;
+mod utils;
 
-pub use components::*;
-pub use filter::*;
-pub use resources::*;
-pub use systems::*;
 pub use bundle::NetworkClientBundle;
+pub use connection::{NetConnectionPool,NetConnection,NetReceiveBuffer,NetSendBuffer,NetOwner,ConnectionState};
+pub use connection_manager::ConnectionManagerSystem;
+pub use filter::{FilterConnected,NetFilter};
+pub use net_event::{NetEvent,NetSourcedEvent};
+pub use network_socket::NetSocketSystem;
+pub use utils::{deserialize_event,send_event,send_to};

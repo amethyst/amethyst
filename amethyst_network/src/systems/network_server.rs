@@ -62,7 +62,7 @@ impl<'a, T> System<'a> for NetServerSystem<T> where T:Send+Sync+Serialize+Clone+
     //NOTE: Running it this way might cause a buffer overflow during heavy load on low-tickrate servers.
     //TODO: Once the net_debug tools will be made, test this for possible buffer overflow at OS level by monitoring packet loss in localhost.
     fn run(&mut self, (mut send_buf,mut receive_buf): Self::SystemData) {
-        let mut buf = [0; 2048];
+        /*let mut buf = [0; 2048];
         loop {
             match self.socket.recv_from(&mut buf) {
                 Ok((amt, src)) => {
@@ -128,6 +128,6 @@ impl<'a, T> System<'a> for NetServerSystem<T> where T:Send+Sync+Serialize+Clone+
                     error!("Couldn't receive a datagram: {}", e);
                 },
             }
-        }
+        }*/
     }
 }

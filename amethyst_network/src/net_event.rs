@@ -3,11 +3,11 @@
 //! NetOwnedEvent are passed through the ECS, and contains the event's source (remote connection, usually)
 
 use shrev::Event;
-use resources::*;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use specs::{VecStorage,Component};
 use uuid::Uuid;
+use std::net::SocketAddr;
 
 /// The basic network events shipped with amethyst.
 // TODO: Add CreateEntity,RemoveEntity,UpdateEntity
@@ -17,7 +17,9 @@ pub enum NetEvent<T> where T: PartialEq{//where T:Send+Sync+Serialize+Clone+Dese
     /// Ask to connect to the server
     Connect,
     /// Reply to the client that the connection has been accepted
-    Connected,
+    Connected{
+        server_uuid: Uuid,
+    },
     /// Reply to the client that the connection has been refused
     ConnectionRefused{
         /// The reason of the refusal
@@ -51,6 +53,8 @@ impl<T> NetEvent<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+PartialEq
     }
 }
 
+
+// for later testing of component sync
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TestComp{
     data:String,
@@ -80,9 +84,12 @@ pub trait BaseNetEvent<T>{
 ///Carries the source of the event. Useful for debugging, security checks, gameplay logic, etc...
 #[derive(Debug,Clone,Serialize,Deserialize)]
 pub struct NetSourcedEvent<T> where T:PartialEq{
-    /// The event
+    /// The event.
     pub event: NetEvent<T>,
-    /// The source of this event
-    pub connection_id: Uuid,
+    /// The source of this event.
+    /// Might be none if the client is connecting.
+    pub uuid: Option<Uuid>,
+    /// The socket which sent this event.
+    pub socket: SocketAddr,
 }
 

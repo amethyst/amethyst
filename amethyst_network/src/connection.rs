@@ -3,8 +3,8 @@
 use std::net::SocketAddr;
 use specs::{Component,VecStorage};
 use shrev::EventChannel;
-use resources::net_event::{NetEvent,NetSourcedEvent};
 use uuid::Uuid;
+use super::{NetEvent,NetSourcedEvent};
 
 /// A network connection target data.
 //TODO add ping here?
@@ -68,6 +68,12 @@ impl NetConnectionPool{
         }
         None
     }
+
+    pub fn remove_connection_for_address(&mut self, socket: &SocketAddr) -> Option<NetConnection>{
+        let index = self.connections.iter().position(|c| c.target == *socket);
+        index.map(|i| self.connections.swap_remove(i))
+    }
+
 }
 
 impl<'a> Component for NetConnectionPool{

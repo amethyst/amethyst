@@ -13,6 +13,8 @@ use std::net::IpAddr;
 use std::net::SocketAddr;
 use std::str::FromStr;
 
+use amethyst::network::NetworkClientBundle;
+
 fn main() {
     if let Err(e) = run() {
         error!("Failed to execute example: {}", e);
@@ -21,16 +23,11 @@ fn main() {
 }
 
 fn run() -> Result<()> {
-    let mut client = NetClientSystem::<()>::new("127.0.0.1",4545 as u16).expect("Failed to create NetClientSystem");
-    client.connect(SocketAddr::new(IpAddr::from_str("127.0.0.1").unwrap(),4546 as u16));
-
     let game = Application::build("",State1)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             144,
-        ).with(client,"net_client_system",&[])
-        .with_resource(NetSendBuffer::<()>::new())
-        .with_resource(NetReceiveBuffer::<()>::new());
+        ).with_bundle(NetworkClientBundle::<()>::new("127.0.0.1",Some(3455 as u16),vec![],false).with_connect(SocketAddr::new(IpAddr::from_str("127.0.0.1").unwrap(),3456 as u16)))?;
 
     Ok(
         game.build()?.run(),

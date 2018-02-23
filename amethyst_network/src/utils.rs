@@ -1,25 +1,16 @@
-//! The network base trait.
-//! Used to share code between the client and the server.
-
 extern crate bincode;
 
 use std::net::UdpSocket;
 use std::clone::Clone;
 use bincode::{serialize, deserialize, Infinite};
-use resources::*;
-
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use bincode::internal::ErrorKind;
-
-/*/// The NetworkBase trait is used to share the code between the client and the server network systems.
-/// The T generic parameter corresponds to the network event enum type.
-pub trait NetworkBase<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+'static{
-}*/
+use super::{NetConnection,NetConnectionPool,NetEvent};
 
 /// Sends an event to the target NetConnection using the provided network Socket.
 /// The socket has to be binded!
-pub(crate) fn send_event<T>(event:&NetEvent<T>,target:&NetConnection,socket:&UdpSocket) where T:Serialize+PartialEq{
+pub fn send_event<T>(event:&NetEvent<T>,target:&NetConnection,socket:&UdpSocket) where T:Serialize+PartialEq{
     let ser = serialize(event, Infinite);
     match ser{
         Ok(s)=>{
@@ -33,7 +24,7 @@ pub(crate) fn send_event<T>(event:&NetEvent<T>,target:&NetConnection,socket:&Udp
 }
 
 /// Attempts to deserialize an event from the raw byte data.
-pub(crate) fn deserialize_event<T>(data:&[u8])->Result<NetEvent<T>,Box<ErrorKind>> where T:DeserializeOwned+PartialEq{
+pub fn deserialize_event<T>(data:&[u8])->Result<NetEvent<T>,Box<ErrorKind>> where T:DeserializeOwned+PartialEq{
     deserialize::<NetEvent<T>>(data)
 }
 
