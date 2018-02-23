@@ -59,7 +59,7 @@ impl<T> NetClientSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+Pa
     }
 }
 
-impl<'a, T> System<'a> for NetClientSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+PartialEq+'static{
+impl<'a, T> System<'a> for NetClientSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+PartialEq+Sized+'static{
     type SystemData = (
         FetchMut<'a, NetSendBuffer<T>>,
         FetchMut<'a, NetReceiveBuffer<T>>,
@@ -89,46 +89,45 @@ impl<'a, T> System<'a> for NetClientSystem<T> where T:Send+Sync+Serialize+Clone+
                     //Are we connected to anything?
                     let mut connection_dropped = false;
 
-                    if let Some(mut conn) = pool.connections.first_mut(){
-                            let net_event = deserialize_event::<T>(&buf[..amt]);
-                            match net_event{
-                                Ok(ev)=>{
+                    let net_event = deserialize_event::<T>(&buf[..amt]);
+                    match net_event{
+                        Ok(ev)=>{
+                            /*let x: &mut Box<NetFilter<T>> = self.filters.first_mut().unwrap();
+                            x.allow(&pool,&src,&ev);*/
 
-                                    for f in self.filters.as_mut(){
-                                        if !f.allow(&pool,&src,&ev){
-                                            continue 'read;
-                                        }
-                                    }
-
-
-
-                                    let owned_event = NetSourcedEvent {
-                                        event:ev.clone(),
-                                        connection_id:conn.uuid,
-                                    };
-                                    receive_buf.buf.single_write(owned_event);
-                                    match ev{
-                                        NetEvent::Connected=>{
-                                            conn.state = ConnectionState::Connected;
-                                            info!("Remote ({:?}) accepted connection request.",src);
-                                        },
-                                        //Could be handled differently by the user, say by reconnecting to a fallback server.
-                                        NetEvent::ConnectionRefused {reason}=>{
-                                            connection_dropped = true;
-                                            info!("Connection refused by server: {}",reason);
-                                        },
-                                        NetEvent::Disconnected {reason}=>{
-                                            connection_dropped = true;
-                                            info!("Disconnected from server: {}",reason);
-                                        }
-                                        _=>{},//Other systems will handle the rest of the stuff
-                                    }
-                                },
-                                Err(e)=>error!("Failed to read network event: {}",e),
+                            //let iter: &mut Box<NetFilter<T>> = self.filters.iter_mut().unwrap();
+                            for mut f in self.filters.iter_mut(){
+                                //let f: NetFilter<T> = *f;
+                                if !f.allow(&pool,&src,&ev){
+                                    continue 'read;
+                                }
                             }
-                    }
-                    else{
-                        warn!("Received network packet from unknown source, ignored.");
+
+                            if let Some(mut conn) = pool.connections.first_mut() {
+                                let owned_event = NetSourcedEvent {
+                                    event: ev.clone(),
+                                    connection_id: conn.uuid,
+                                };
+                                receive_buf.buf.single_write(owned_event);
+                                match ev {
+                                    NetEvent::Connected => {
+                                        conn.state = ConnectionState::Connected;
+                                        info!("Remote ({:?}) accepted connection request.", src);
+                                    },
+                                    //Could be handled differently by the user, say by reconnecting to a fallback server.
+                                    NetEvent::ConnectionRefused { reason } => {
+                                        connection_dropped = true;
+                                        info!("Connection refused by server: {}", reason);
+                                    },
+                                    NetEvent::Disconnected { reason } => {
+                                        connection_dropped = true;
+                                        info!("Disconnected from server: {}", reason);
+                                    }
+                                    _ => {},//Other systems will handle the rest of the stuff
+                                }
+                            }
+                        },
+                        Err(e)=>error!("Failed to read network event: {}",e),
                     }
                     if connection_dropped{
                         pool.connections.pop();
