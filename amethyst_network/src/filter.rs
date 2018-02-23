@@ -4,7 +4,7 @@ use std::net::SocketAddr;
 use std::marker::PhantomData;
 
 /// Network filter base trait providing an event filtering interface.
-pub trait NetFilter<T> where T: Send+Sync+PartialEq+Sized{
+pub trait NetFilter<T>: Send+Sync where T: Send+Sync+PartialEq{
     /// Check if the event is allowed to pass through this filter.
     fn allow(&mut self,pool:&NetConnectionPool,source:&SocketAddr,event:&NetEvent<T>)->bool;
 }
