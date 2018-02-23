@@ -27,7 +27,7 @@ impl<'a,T> NetworkClientBundle<'a,T> where T: Send+Sync{
     }
 }
 
-impl<'a, 'b, 'c, T> ECSBundle<'a, 'b> for NetworkClientBundle<'c,T> where T: Send+Sync+PartialEq+Serialize+Clone+DeserializeOwned+?Sized+'static {
+impl<'a, 'b, 'c, T> ECSBundle<'a, 'b> for NetworkClientBundle<'c,T> where T: Send+Sync+PartialEq+Serialize+Clone+DeserializeOwned+'static {
     fn build(
         mut self,
         world: &mut World,
