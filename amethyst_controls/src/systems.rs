@@ -7,7 +7,7 @@ use specs::{Fetch, FetchMut, Join, ReadStorage, System, WriteStorage};
 use std::hash::Hash;
 use std::marker::PhantomData;
 
-use super::*;
+use components::FlyControlTag;
 
 /// The system that manages the fly movement.
 /// Generic parameters are the parameters for the InputHandler.

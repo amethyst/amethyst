@@ -5,7 +5,7 @@ extern crate amethyst;
 use amethyst::{Application, Error, State, Trans};
 use amethyst::assets::Loader;
 use amethyst::config::Config;
-use amethyst::controls::*;
+use amethyst::controls::{FlyControlTag,FlyControlBundle};
 use amethyst::core::cgmath::{Deg, Vector3};
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
@@ -35,7 +35,7 @@ impl State for ExampleState {
             .with(GlobalTransform::default())
             .build();
 
-        world.add_resource(AmbientColor(Rgba::from([0.01; 3])));
+        world.add_resource(AmbientColor(Rgba::from([0.1; 3])));
     }
 
     fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {

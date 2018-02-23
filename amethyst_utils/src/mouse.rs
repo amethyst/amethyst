@@ -1,5 +1,4 @@
-use amethyst_renderer::{ScreenDimensions, WindowMessages};
-use specs::{Fetch, FetchMut, System};
+use amethyst_renderer::WindowMessages;
 use winit::{CursorState, MouseCursor};
 
 /// Hide the cursor, so it's invisible while playing. Can't be used at the same time as grab_cursor.
