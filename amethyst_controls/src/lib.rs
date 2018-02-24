@@ -2,7 +2,6 @@
 extern crate amethyst_core;
 extern crate amethyst_input;
 extern crate amethyst_renderer;
-extern crate amethyst_utils;
 #[macro_use]
 extern crate log;
 extern crate shred;
