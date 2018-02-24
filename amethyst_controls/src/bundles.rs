@@ -77,7 +77,7 @@ where
                 &[],
             )
             .add(
-                FreeRotationSystem::<A, B>::new(1.0, 1.0),
+                FreeRotationSystem::<A, B>::new(self.sensitivity_x, self.sensitivity_y),
                 "free_rotation",
                 &[],
             )
