@@ -68,7 +68,7 @@ where
         Ok(builder
             .add(
                 FlyMovementSystem::<A, B>::new(
-                    1.0,
+                    self.speed,
                     self.right_input_axis,
                     self.up_input_axis,
                     self.forward_input_axis,
