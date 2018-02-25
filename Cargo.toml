@@ -111,10 +111,9 @@ path = "examples/appendix_a/main.rs"
 
 [workspace]
 
-[patch.'https://github.com/omni-viral/xfg-rs']
-xfg = { path = "../xfg-rs" }
-
-[patch.'https://github.com/gfx-rs/gfx']
-gfx-hal = { path = "../gfx/src/hal" }
-gfx-backend-metal = { path = "../gfx/src/backend/metal" }
-gfx-backend-empty = { path = "../gfx/src/backend/empty" }
+#[patch.'https://github.com/omni-viral/xfg-rs']
+#xfg = { path = "../xfg-rs" }
+#[patch.'https://github.com/gfx-rs/gfx']
+#gfx-hal = { path = "../gfx/src/hal" }
+#gfx-backend-metal = { path = "../gfx/src/backend/metal" }
+#gfx-backend-empty = { path = "../gfx/src/backend/empty" }

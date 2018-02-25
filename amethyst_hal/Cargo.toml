@@ -13,21 +13,21 @@ amethyst_core = { path = "../amethyst_core/", version = "0.1.0" }
 amethyst_config = { path = "../amethyst_config/", version = "0.5.0" }
 derivative = "1.0"
 log = "0.4"
-gfx-hal = { git = "https://github.com/gfx-rs/gfx" }
-gfx_mem = { git = "https://github.com/gfx-rs/gfx-mem" }
+gfx-hal = { git = "https://github.com/gfx-rs/gfx", rev = "68e80eaf" }
+gfx-memory = { git = "https://github.com/gfx-rs/gfx-memory", rev = "ccf1cad" }
 specs = { version = "0.10" }
 shred = { version = "0.5" }
 winit = "= 0.10.0"
-xfg = { git = "https://github.com/omni-viral/xfg-rs" }
+xfg = { git = "https://github.com/omni-viral/xfg-rs", ref = "f269e1f1" }
 
-gfx-backend-empty = { version = "0.1", git = "https://github.com/gfx-rs/gfx" }
+gfx-backend-empty = { version = "0.1", git = "https://github.com/gfx-rs/gfx", rev = "68e80eaf" }
 
 [target.'cfg(not(target_os = "macos"))'.dependencies]
-gfx-backend-vulkan = { version = "0.1", optional = true, git = "https://github.com/gfx-rs/gfx" }
+gfx-backend-vulkan = { version = "0.1", optional = true, git = "https://github.com/gfx-rs/gfx", rev = "68e80eaf" }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-gfx-backend-metal = { version = "0.1", optional = true, git = "https://github.com/gfx-rs/gfx" }
+gfx-backend-metal = { version = "0.1", optional = true, git = "https://github.com/gfx-rs/gfx", rev = "68e80eaf" }
 
 [target.'cfg(windows)'.dependencies]
-gfx-backend-dx12 = { version = "0.1", optional = true, git = "https://github.com/gfx-rs/gfx" }
+gfx-backend-dx12 = { version = "0.1", optional = true, git = "https://github.com/gfx-rs/gfx", rev = "68e80eaf" }
 

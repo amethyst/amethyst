@@ -45,9 +45,9 @@ where
 
         info!(
             "Device features: {:#?}",
-            adapter.physical_device.get_features()
+            adapter.physical_device.features()
         );
-        info!("Device limits: {:#?}", adapter.physical_device.get_limits());
+        info!("Device limits: {:#?}", adapter.physical_device.limits());
 
         let (device, queue_group) = {
             info!("Queue families: {:#?}", adapter.queue_families);
@@ -57,13 +57,12 @@ where
                 .filter(|family| family.queue_type() == QueueType::General)
                 .next()
                 .ok_or(format!("Can't find General queue family"))?;
-            let qfid = qf.id();
             let mut gpu = adapter
                 .physical_device
-                .open(vec![(qf, vec![1.0; self.queues])])
+                .open(vec![(&qf, vec![1.0; self.queues])])
                 .map_err(|err| err.to_string())?;
             let queue_group = gpu.queues
-                .take::<General>(qfid)
+                .take::<General>(qf.id())
                 .expect("This group was requested");
             (gpu.device, queue_group)
         };

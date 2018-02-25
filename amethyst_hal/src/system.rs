@@ -142,7 +142,7 @@ where
                     xfg_frame,
                     &acquire,
                     &job.release,
-                    viewport(r.surface.get_kind()),
+                    viewport(r.surface.kind()),
                     &fence,
                     &factory,
                     &mut res,
@@ -282,8 +282,8 @@ where
 
 struct Render<B: BackendEx> {
     queue: usize,
-    surface: B::SurfaceEx,
-    swapchain: B::SwapchainEx,
+    surface: B::Surface,
+    swapchain: B::Swapchain,
     backbuffer: Backbuffer<B>,
     active: Option<usize>,
     graphs: Vec<AmethystGraph<B>>,

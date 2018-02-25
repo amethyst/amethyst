@@ -12,16 +12,8 @@ use winit::{Window, WindowId};
 
 use {AmethystGraphBuilder, Buffer, Image};
 
-/// Helper trait that is automatically implemented for all types.
-pub trait Same<T>: Into<T> + From<T> + BorrowMut<T> {}
-impl<T> Same<T> for T {}
-
 /// Extend backend trait with initialization method.
 pub trait BackendEx: Backend {
-    type DeviceEx: Same<Self::Device> + Send + Sync;
-    type PhysicalDeviceEx: Same<Self::PhysicalDevice> + Send + Sync;
-    type SurfaceEx: Same<Self::Surface> + Send + Sync;
-    type SwapchainEx: Same<Self::Swapchain> + Send + Sync;
     type Instance: Instance<Backend = Self> + Send + Sync;
     fn init() -> Self::Instance;
     fn create_surface(instance: &Self::Instance, window: &Window) -> Self::Surface;
@@ -40,9 +32,6 @@ impl BackendEx for ::vulkan::Backend {
 
 #[cfg(feature = "gfx-metal")]
 impl BackendEx for ::metal::Backend {
-    type DeviceEx = ::metal::Device;
-    type PhysicalDeviceEx = ::metal::PhysicalDevice;
-    type SurfaceEx = ::metal::Surface;
     type Instance = ::metal::Instance;
     fn init() -> Self::Instance {
         ::metal::Instance::create("amethyst", 1)
@@ -65,10 +54,6 @@ impl BackendEx for ::dx12::Backend {
 
 #[cfg(not(any(feature = "gfx-vulkan", feature = "gfx-metal", feature = "gfx-dx12")))]
 impl BackendEx for ::empty::Backend {
-    type DeviceEx = ::empty::Device;
-    type PhysicalDeviceEx = ::empty::PhysicalDevice;
-    type SurfaceEx = ::empty::Surface;
-    type SwapchainEx = ::empty::Swapchain;
     type Instance = ::empty::Instance;
     fn init() -> Self::Instance {
         ::empty::Instance
@@ -84,13 +69,13 @@ impl BackendEx for ::empty::Backend {
 pub struct Factory<B: BackendEx> {
     // #[derivative(Debug="ignore")]
     instance: B::Instance,
-    physical: B::PhysicalDeviceEx,
+    physical: B::PhysicalDevice,
     // #[derivative(Debug="ignore")]
-    device: B::DeviceEx,
+    device: B::Device,
     allocator: SmartAllocator<B>,
     reclamation: ReclamationQueue<B>,
     current: u64,
-    surfaces: Vec<(WindowId, B::SurfaceEx, SwapchainConfig)>,
+    surfaces: Vec<(WindowId, B::Surface, SwapchainConfig)>,
     graphs: Vec<(WindowId, AmethystGraphBuilder<B>)>,
 }
 

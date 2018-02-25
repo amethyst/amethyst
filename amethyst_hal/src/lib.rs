@@ -7,7 +7,7 @@ extern crate amethyst_core as core;
 #[macro_use]
 extern crate derivative;
 extern crate gfx_hal as hal;
-extern crate gfx_mem as mem;
+extern crate gfx_memory as mem;
 #[macro_use]
 extern crate log;
 extern crate shred;
