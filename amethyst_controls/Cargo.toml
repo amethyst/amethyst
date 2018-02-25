@@ -1,10 +1,10 @@
 [package]
-name = "amethyst_utils"
-version = "0.2.0"
-authors = ["Simon Rönnberg <seamonr@gmail.com>", "Joël Lupien <jojolepromain@gmail.com>"]
-description = "Amethyst utils"
+name = "amethyst_controls"
+version = "0.1.0"
+authors = ["Joël Lupien <jojolepromain@gmail.com>"]
+description = "Amethyst controls"
 
-documentation = "https://www.amethyst.rs/doc/master/doc/amethyst_utils/"
+documentation = "https://www.amethyst.rs/doc/master/doc/amethyst_controls/"
 homepage = "https://www.amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
