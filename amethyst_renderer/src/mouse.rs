@@ -1,7 +1,7 @@
 //! Util functions that change how the mouse moves and looks.
 
-use winit::{CursorState, MouseCursor};
 use super::WindowMessages;
+use winit::{CursorState, MouseCursor};
 
 /// Hide the cursor, so it's invisible while playing. Can't be used at the same time as grab_cursor.
 pub fn hide_cursor(msg: &mut WindowMessages) {
