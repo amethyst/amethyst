@@ -87,6 +87,7 @@ pub use vertex::{Attribute, AttributeFormat, Attributes, Color, Normal, PosColor
 
 pub mod error;
 pub mod pipe;
+pub mod mouse;
 
 #[macro_use]
 mod macros;

@@ -7,8 +7,8 @@ use itertools::Itertools;
 use minterpolate::InterpolationPrimitive;
 use specs::{Component, Fetch, Join, System, WriteStorage};
 
-use resources::{AnimationSampling, ControlState, EndControl, Sampler, SamplerControl,
-                SamplerControlSet, BlendMethod};
+use resources::{AnimationSampling, BlendMethod, ControlState, EndControl, Sampler, SamplerControl,
+                SamplerControlSet};
 
 /// System for interpolating active samplers.
 ///
@@ -70,9 +70,12 @@ where
                 for channel in &self.channels {
                     match comp.blend_method(channel) {
                         None => {
-                            if let Some(p) = self.inner.iter().filter(|p| p.1 == *channel)
+                            if let Some(p) = self.inner
+                                .iter()
+                                .filter(|p| p.1 == *channel)
                                 .map(|p| p.2)
-                                .last() {
+                                .last()
+                            {
                                 comp.apply_sample(channel, &p);
                             }
                         }

@@ -12,7 +12,7 @@ use specs::{Component, DenseVecStorage, Entity, VecStorage};
 /// Blend method for sampler blending
 #[derive(Clone, Copy, Debug, PartialOrd, PartialEq, Eq, Hash)]
 pub enum BlendMethod {
-    Linear
+    Linear,
 }
 
 /// Master trait used to define animation sampling on a component

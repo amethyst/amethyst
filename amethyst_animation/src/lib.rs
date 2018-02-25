@@ -14,8 +14,8 @@ extern crate specs;
 
 pub use self::bundle::{AnimationBundle, SamplingBundle, VertexSkinningBundle};
 pub use self::resources::{Animation, AnimationCommand, AnimationControl, AnimationHierarchy,
-                          AnimationSampling, AnimationSet, ControlState, EndControl, Sampler,
-                          SamplerControl, SamplerControlSet, StepDirection, BlendMethod};
+                          AnimationSampling, AnimationSet, BlendMethod, ControlState, EndControl,
+                          Sampler, SamplerControl, SamplerControlSet, StepDirection};
 pub use self::skinning::{Joint, Skin, VertexSkinningSystem};
 pub use self::systems::{AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem,
                         SamplerProcessor};

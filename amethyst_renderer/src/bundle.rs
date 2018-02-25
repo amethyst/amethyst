@@ -1,15 +1,14 @@
 //! ECS rendering bundle
 
+use {AmbientColor, Camera, Light, Material, MaterialDefaults, Mesh, Rgba, ScreenDimensions,
+     Texture, WindowMessages};
 use amethyst_assets::{AssetStorage, Handle, Loader};
 use amethyst_core::bundle::{ECSBundle, Result, ResultExt};
 use amethyst_core::orientation::Orientation;
 use amethyst_core::transform::components::*;
-use specs::{DispatcherBuilder, World};
-
-use {AmbientColor, Camera, Light, Material, MaterialDefaults, Mesh, Rgba, ScreenDimensions,
-     Texture, WindowMessages};
 use config::DisplayConfig;
 use pipe::{PipelineBuild, PolyPipeline};
+use specs::{DispatcherBuilder, World};
 use system::RenderSystem;
 use transparent::{Transparent, TransparentBackToFront, TransparentSortingSystem};
 
@@ -62,7 +61,7 @@ impl<'a, 'b, 'c, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> ECSBundle
         mut builder: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
         world.add_resource(AmbientColor(Rgba::from([0.01; 3])));
-        world.add_resource(WindowMessages::new());
+        world.res.entry().or_insert_with(|| WindowMessages::new());
         world.add_resource(AssetStorage::<Mesh>::new());
         world.add_resource(AssetStorage::<Texture>::new());
         world.add_resource(Orientation::default());
