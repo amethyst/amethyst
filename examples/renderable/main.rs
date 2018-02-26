@@ -391,7 +391,7 @@ fn run() -> Result<(), Error> {
         .with::<ExampleSystem>(ExampleSystem, "example_system", &[])
         .with_frame_limit(FrameRateLimitStrategy::Unlimited, 0)
         .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
-        .with_bundle(UiBundle::new())?
+        .with_bundle(UiBundle::<String, String>::new())?
         .with_bundle(HotReloadBundle::default())?
         .with_bundle(FPSCounterBundle::default())?
         .with_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?

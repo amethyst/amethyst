@@ -2,18 +2,23 @@
 
 extern crate amethyst;
 extern crate genmesh;
+#[macro_use]
+extern crate log;
 
 use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::Time;
 use amethyst::core::cgmath::{Deg, InnerSpace, Vector3};
 use amethyst::core::transform::GlobalTransform;
 use amethyst::ecs::{Entity, World};
+use amethyst::ecs::{FetchMut, System};
+use amethyst::input::InputBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light, Mesh, Pipeline,
                          PngFormat, PointLight, PosNormTex, Projection, RenderBundle, Rgba, Stage,
                          Texture};
-use amethyst::ui::{DrawUi, FontAsset, TextEditing, TtfFormat, UiBundle, UiFocused, UiImage,
-                   UiText, UiTransform};
+use amethyst::shrev::{EventChannel, ReaderId};
+use amethyst::ui::{DrawUi, FontAsset, MouseReactive, TextEditing, TtfFormat, UiBundle, UiEvent,
+                   UiFocused, UiImage, UiText, UiTransform};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::winit::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use genmesh::{MapToVertices, Triangulate, Vertices};
@@ -72,6 +77,7 @@ impl State for Example {
             .with(UiImage {
                 texture: logo.clone(),
             })
+            .with(MouseReactive)
             .build();
 
         let text = world
@@ -167,8 +173,10 @@ fn run() -> Result<(), amethyst::Error> {
         )
     };
     let mut game = Application::build(resources, Example { fps_display: None })?
-        .with_bundle(UiBundle::new())?
+        .with_bundle(UiBundle::<String, String>::new())?
+        .with(UiEventHandlerSystem::new(), "ui_event_handler", &[])
         .with_bundle(FPSCounterBundle::default())?
+        .with_bundle(InputBundle::<String, String>::new())?
         .with_bundle(RenderBundle::new(pipe, Some(config)))?
         .build()?;
     game.run();
@@ -258,4 +266,28 @@ fn initialise_camera(world: &mut World) {
         .with(Camera::from(Projection::perspective(1.3, Deg(60.0))))
         .with(GlobalTransform(transform.into()))
         .build();
+}
+
+/// This shows how to handle UI events.
+pub struct UiEventHandlerSystem {
+    reader_id: Option<ReaderId<UiEvent>>,
+}
+
+impl UiEventHandlerSystem {
+    pub fn new() -> Self {
+        UiEventHandlerSystem { reader_id: None }
+    }
+}
+
+impl<'a> System<'a> for UiEventHandlerSystem {
+    type SystemData = FetchMut<'a, EventChannel<UiEvent>>;
+
+    fn run(&mut self, mut events: Self::SystemData) {
+        if self.reader_id.is_none() {
+            self.reader_id = Some(events.register_reader());
+        }
+        for ev in events.read(self.reader_id.as_mut().unwrap()) {
+            info!("You just interacted with a ui element: {:?}", ev);
+        }
+    }
 }

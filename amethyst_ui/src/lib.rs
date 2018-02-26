@@ -1,10 +1,11 @@
 //! Provides components and systems to create an in game user interface.
 
-#![deny(missing_docs)]
+#![warn(missing_docs)]
 #![doc(html_logo_url = "https://tinyurl.com/jtmm43a")]
 
 extern crate amethyst_assets;
 extern crate amethyst_core;
+extern crate amethyst_input;
 extern crate amethyst_renderer;
 extern crate clipboard;
 #[macro_use]
@@ -28,8 +29,10 @@ mod pass;
 mod resize;
 mod text;
 mod transform;
+mod event;
 
 pub use self::bundle::UiBundle;
+pub use self::event::{MouseReactive, UiEvent, UiEventType, UiMouseSystem};
 pub use self::focused::UiFocused;
 pub use self::format::{FontAsset, FontHandle, OtfFormat, TtfFormat};
 pub use self::image::UiImage;
