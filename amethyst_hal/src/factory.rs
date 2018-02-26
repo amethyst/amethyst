@@ -1,87 +1,147 @@
-use std::borrow::{Borrow, BorrowMut};
+use std::any::Any;
+use std::borrow::Borrow;
+use std::collections::VecDeque;
 use std::ops::Deref;
+use std::slice::from_raw_parts_mut;
 
-use hal::{Backend, Instance, Surface};
+use hal::{Backend, Device, Instance, Surface};
 use hal::buffer;
+use hal::command::{self, RawCommandBuffer};
 use hal::format::Format;
 use hal::image;
+use hal::mapping::Error as MappingError;
 use hal::memory::Properties;
+use hal::pool::{self, RawCommandPool};
+use hal::queue;
 use hal::window::{SurfaceCapabilities, SwapchainConfig};
-use mem::{Factory as FactoryTrait, FactoryError, SmartAllocator, Type};
+use mem::{Block, Factory as FactoryTrait, FactoryError, SmartAllocator, Type};
 use winit::{Window, WindowId};
 
-use {AmethystGraphBuilder, Buffer, Image};
+use {AmethystGraphBuilder, Buffer, Image, Error};
+use backend::BackendEx;
 
-/// Extend backend trait with initialization method.
-pub trait BackendEx: Backend {
-    type Instance: Instance<Backend = Self> + Send + Sync;
-    fn init() -> Self::Instance;
-    fn create_surface(instance: &Self::Instance, window: &Window) -> Self::Surface;
+struct Uploader<B: Backend> {
+    staging_treshold: usize,
+    family: queue::QueueFamilyId,
+    pool: Option<B::CommandPool>,
+    cbuf: Option<B::CommandBuffer>,
+    free: Vec<B::CommandBuffer>,
+    used: VecDeque<(B::CommandBuffer, u64)>,
 }
 
-#[cfg(feature = "gfx-vulkan")]
-impl BackendEx for ::vulkan::Backend {
-    type Instance = ::vulkan::Instance;
-    fn init() -> Self::Instance {
-        ::vulkan::Instance::create("amethyst", 1)
+impl<B> Uploader<B>
+where
+    B: Backend,
+{
+    fn new(staging_treshold: usize, family: queue::QueueFamilyId) -> Self {
+        Uploader {
+            staging_treshold,
+            family,
+            pool: None,
+            cbuf: None,
+            free: Vec::new(),
+            used: VecDeque::new(),
+        }
     }
-    fn create_surface(instance: &Self::Instance, window: &Window) -> Self::Surface {
-        instance.create_surface(window)
-    }
-}
 
-#[cfg(feature = "gfx-metal")]
-impl BackendEx for ::metal::Backend {
-    type Instance = ::metal::Instance;
-    fn init() -> Self::Instance {
-        ::metal::Instance::create("amethyst", 1)
+    fn upload_buffer(&mut self, device: &B::Device, allocator: &mut SmartAllocator<B>, buffer: &mut Buffer<B>, offset: u64, data: &[u8]) -> Result<Option<Buffer<B>>, Error> {
+        if buffer.size() < offset + data.len() as u64 {
+            return Err(Error::with_chain(MappingError::OutOfBounds, "Buffer upload failed"));
+        }
+        let props = allocator.properties(buffer.block());
+        if props.contains(Properties::CPU_VISIBLE) {
+            Self::upload_visible_buffer(device, props.contains(Properties::COHERENT), buffer, offset, data);
+            Ok(None)
+        } else {
+            self.upload_device_local_buffer(device, allocator, buffer, offset, data)
+        }
     }
-    fn create_surface(instance: &Self::Instance, window: &Window) -> Self::Surface {
-        instance.create_surface(window)
-    }
-}
 
-#[cfg(feature = "gfx-dx12")]
-impl BackendEx for ::dx12::Backend {
-    type Instance = ::dx12::Instance;
-    fn init() -> Self::Instance {
-        ::dx12::Instance::create("amethyst", 1)
+    fn upload_visible_buffer(device: &B::Device, coherent: bool, buffer: &mut Buffer<B>, offset: u64, data: &[u8]) {
+        let start = buffer.range().start + offset;
+        let end = start + data.len() as u64;
+        let range = start .. end;
+        debug_assert!(end <= buffer.range().end, "Checked in `Uploader::upload` method");
+        let ptr = device.map_memory(buffer.memory(), range.clone()).expect("Expect to be mapped");
+        if !coherent {
+            device.invalidate_mapped_memory_ranges(Some((buffer.memory(), range.clone())));
+        }
+        let slice = unsafe {
+            from_raw_parts_mut(ptr, data.len())
+        };
+        slice.copy_from_slice(data);
+        if !coherent {
+            device.flush_mapped_memory_ranges(Some((buffer.memory(), range)));
+        }
     }
-    fn create_surface(instance: &Self::Instance, window: &Window) -> Self::Surface {
-        instance.create_surface(window)
-    }
-}
 
-#[cfg(not(any(feature = "gfx-vulkan", feature = "gfx-metal", feature = "gfx-dx12")))]
-impl BackendEx for ::empty::Backend {
-    type Instance = ::empty::Instance;
-    fn init() -> Self::Instance {
-        ::empty::Instance
+    fn upload_device_local_buffer(&mut self, device: &B::Device, allocator: &mut SmartAllocator<B>, buffer: &mut Buffer<B>, offset: u64, data: &[u8]) -> Result<Option<Buffer<B>>, Error> {
+        if data.len() <= self.staging_treshold {
+            self.get_command_buffer(device).update_buffer((&*buffer).borrow(), offset, data);
+            Ok(None)
+        } else {
+            let mut staging = allocator.create_buffer(device, (Type::ShortLived, Properties::CPU_VISIBLE), data.len() as u64, buffer::Usage::TRANSFER_SRC).map_err(|err| Error::with_chain(err, "Failed to create staging buffer"))?;
+            let props = allocator.properties(staging.block());
+            Self::upload_visible_buffer(device, props.contains(Properties::COHERENT), &mut staging, offset, data);
+            self.get_command_buffer(device).copy_buffer(staging.borrow(), (&*buffer).borrow(), Some(command::BufferCopy {
+                src: 0,
+                dst: offset,
+                size: data.len() as u64,
+            }));
+            Ok(Some(staging))
+        }
     }
-    fn create_surface(_: &Self::Instance, _: &Window) -> Self::Surface {
-        ::empty::Surface
+
+    fn get_command_buffer<'a>(&'a mut self, device: &B::Device) -> &'a mut B::CommandBuffer {
+        let Uploader { family, ref mut pool, ref mut free, ref mut cbuf, .. } = *self;
+        cbuf.get_or_insert_with(|| {
+            let mut cbuf = free.pop().unwrap_or_else(|| {
+                let pool = pool.get_or_insert_with(|| device.create_command_pool(family, pool::CommandPoolCreateFlags::empty()));
+                pool.allocate(1, command::RawLevel::Primary).remove(0)
+            });
+            cbuf.begin(command::CommandBufferFlags::empty());
+            cbuf
+        })
+    }
+
+    fn uploads(&mut self, frame: u64) -> Option<(&mut B::CommandBuffer, queue::QueueFamilyId)> {
+        if let Some(mut cbuf) = self.cbuf.take() {
+            cbuf.finish();
+            self.used.push_back((cbuf, frame));
+            Some((&mut self.used.back_mut().unwrap().0, self.family))
+        } else {
+            None
+        }
+    }
+
+    fn clear(&mut self, ongoin: u64) {
+        while let Some((mut cbuf, frame)) = self.used.pop_front() {
+            if frame >= ongoin {
+                self.used.push_front((cbuf, ongoin));
+                break;
+            }
+            cbuf.reset(true);
+            self.free.push(cbuf);
+        }
     }
 }
 
 /// Factory is responsible for creating and destroying `Buffer`s and `Image`s.
-#[derive(Derivative)]
-// #[derivative(Debug)]
-pub struct Factory<B: BackendEx> {
-    // #[derivative(Debug="ignore")]
-    instance: B::Instance,
+pub struct Factory<B: Backend> {
+    instance: Box<Instance<Backend = B>>,
     physical: B::PhysicalDevice,
-    // #[derivative(Debug="ignore")]
     device: B::Device,
     allocator: SmartAllocator<B>,
     reclamation: ReclamationQueue<B>,
     current: u64,
     surfaces: Vec<(WindowId, B::Surface, SwapchainConfig)>,
     graphs: Vec<(WindowId, AmethystGraphBuilder<B>)>,
+    uploader: Uploader<B>,
 }
 
 impl<B> Factory<B>
 where
-    B: BackendEx,
+    B: Backend,
 {
     /// Create `Buffer`
     pub fn create_buffer(
@@ -89,13 +149,13 @@ where
         properties: Properties,
         size: u64,
         usage: buffer::Usage,
-    ) -> Result<Buffer<B>, FactoryError> {
+    ) -> Result<Buffer<B>, Error> {
         self.allocator.create_buffer(
             self.device.borrow(),
             (Type::General, properties),
             size,
             usage,
-        )
+        ).map_err(|err| Error::with_chain(err, "Failed to create buffer"))
     }
 
     /// Create `Image`
@@ -106,7 +166,7 @@ where
         level: image::Level,
         format: Format,
         usage: image::Usage,
-    ) -> Result<Image<B>, FactoryError> {
+    ) -> Result<Image<B>, Error> {
         self.allocator.create_image(
             self.device.borrow(),
             (Type::General, properties),
@@ -114,7 +174,7 @@ where
             level,
             format,
             usage,
-        )
+        ).map_err(|err| Error::with_chain(err, "Failed to create image"))
     }
 
     /// Destroy `Buffer`
@@ -127,12 +187,33 @@ where
         self.reclamation.destroy_image(self.current, image)
     }
 
+    /// Upload data to the buffer.
+    /// Factory will try to use most appropriate way to write data to the buffer.
+    /// For cpu-visible buffers it will write via memory mapping.
+    /// If size of the `data` is bigger than `staging_treshold` then it will perform staging.
+    /// Otherwise it will write through command buffer directly.
+    /// 
+    /// # Parameters
+    /// `buffer`    - where to upload data. It must be created with at least one of `TRANSFER_DST` usage or `CPU_VISIBLE` property.
+    /// `offset`    - write data to the buffer starting from this byte.
+    /// `data`      - data to upload.
+    /// 
+    pub fn upload_buffer(&mut self, buffer: &mut Buffer<B>, offset: u64, data: &[u8]) -> Result<(), Error> {
+        let ref device = self.device;
+        let ref mut allocator = self.allocator;
+        if let Some(staging) = self.uploader.upload_buffer(device, allocator, buffer, offset, data)? {
+            self.reclamation.destroy_buffer(self.current, staging)
+        }
+        Ok(())
+    }
+
     /// Add new window to draw upon
     pub fn add_window<F>(&mut self, window: &Window, configure: F)
     where
         F: FnOnce(SurfaceCapabilities, Option<Vec<Format>>) -> SwapchainConfig,
+        B: BackendEx,
     {
-        let surface = B::create_surface(&self.instance, window);
+        let surface = B::create_surface(Any::downcast_ref::<B::Instance>(&self.instance).unwrap(), window);
         let (capabilities, formats) = surface.capabilities_and_formats(self.physical.borrow());
         let config = configure(capabilities, formats);
         self.surfaces.push((window.id(), surface.into(), config));
@@ -149,13 +230,18 @@ where
         physical: B::PhysicalDevice,
         device: B::Device,
         allocator: SmartAllocator<B>,
-    ) -> Self {
+        staging_treshold: usize,
+        upload_family: queue::QueueFamilyId,
+    ) -> Self
+    where
+        B: BackendEx
+    {
         #[allow(dead_code)]
         fn is_send_sync<T: Send + Sync>() {}
         is_send_sync::<Self>();
 
         Factory {
-            instance,
+            instance: Box::new(instance),
             physical: physical.into(),
             device: device.into(),
             allocator,
@@ -167,11 +253,16 @@ where
             current: 0,
             surfaces: Vec::new(),
             graphs: Vec::new(),
+            uploader: Uploader::new(staging_treshold, upload_family),
         }
     }
 
     pub(crate) fn device_and_allocator(&mut self) -> (&B::Device, &mut SmartAllocator<B>) {
         (self.device.borrow(), &mut self.allocator)
+    }
+
+    pub(crate) fn uploads(&mut self) -> Option<(&mut B::CommandBuffer, queue::QueueFamilyId)> {
+        self.uploader.uploads(self.current)
     }
 
     pub(crate) fn get_surfaces<E>(&mut self, extend: &mut E)
@@ -188,24 +279,25 @@ where
         extend.extend(self.graphs.drain(..));
     }
 
-    /// `RenderSystem` calls this once per frame.
-    pub(crate) fn advance(&mut self) -> u64 {
-        self.current += 1;
+    /// `RenderSystem` call this to know with which frame index recorded commands are associated.
+    pub(crate) fn current(&mut self) -> u64 {
         self.current
     }
 
-    /// `RenderSystem` must wait for all operations that was started
-    /// before `ongoing`.
-    pub(crate) fn clean(&mut self, ongoing: u64) {
+    /// `RenderSystem` call this with least frame index with which ongoing job is associated.
+    /// Hence all resources released before this index can be destroyed.
+    pub(crate) fn advance(&mut self, ongoing: u64) {
         debug_assert!(ongoing <= self.current);
         self.reclamation
-            .clear(self.device.borrow(), ongoing, &mut self.allocator)
+            .clear(self.device.borrow(), ongoing, &mut self.allocator);
+        self.uploader.clear(ongoing);
+        self.current += 1;
     }
 }
 
 impl<B> Deref for Factory<B>
 where
-    B: BackendEx,
+    B: Backend,
 {
     type Target = B::Device;
     fn deref(&self) -> &B::Device {

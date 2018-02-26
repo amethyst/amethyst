@@ -3,14 +3,18 @@
 #![deny(missing_docs)]
 #![deny(unused_must_use)]
 
+extern crate amethyst_assets as assets;
 extern crate amethyst_core as core;
 #[macro_use]
 extern crate derivative;
+#[macro_use]
+extern crate error_chain;
 extern crate gfx_hal as hal;
 extern crate gfx_memory as mem;
 #[macro_use]
 extern crate log;
 extern crate shred;
+extern crate smallvec;
 extern crate specs;
 extern crate winit;
 extern crate xfg;
@@ -29,6 +33,8 @@ use mem::{Item, SmartBlock};
 use shred::Resources;
 use xfg::{Graph, GraphBuilder, Pass};
 
+error_chain! {}
+
 /// Buffer type used in engiene
 pub type Buffer<B: Backend> = Item<B::Buffer, SmartBlock<B::Memory>>;
 
@@ -44,9 +50,14 @@ pub type AmethystGraph<B: Backend> = Graph<B, Image<B>, AmethystPass<B>>;
 /// GraphBuilder type used in engine.
 pub type AmethystGraphBuilder<B: Backend> = GraphBuilder<AmethystPass<B>>;
 
+mod backend;
 mod bundle;
 mod factory;
+mod light;
+mod mesh;
 mod system;
+mod utils;
+mod vertex;
 
 pub use bundle::RenderBundle;
 pub use factory::Factory;

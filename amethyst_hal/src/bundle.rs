@@ -5,11 +5,15 @@ use hal::queue::{General, QueueFamily, QueueType};
 use mem::SmartAllocator;
 use shred::DispatcherBuilder;
 use specs::World;
+
 use std::marker::PhantomData;
 use std::string::ToString;
 
-use factory::{BackendEx, Factory};
+use backend::BackendEx;
+use factory::Factory;
 use system::RenderSystem;
+
+const STAGING_TRESHOLD: usize = 32 * 1024; // 32kb
 
 /// Render bundle initialize rendering systems
 /// puts `Factory` to the `World`
@@ -77,8 +81,8 @@ where
         );
         info!("Allocator created: {:#?}", allocator);
 
+        let factory = Factory::new(instance, adapter.physical_device, device, allocator, STAGING_TRESHOLD, queue_group.family());
         let system = RenderSystem::new(queue_group);
-        let factory = Factory::new(instance, adapter.physical_device, device, allocator);
 
         world.add_resource(factory);
 

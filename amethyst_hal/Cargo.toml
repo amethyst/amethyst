@@ -9,16 +9,19 @@ gfx-metal = ["gfx-backend-metal"]
 gfx-dx12 = ["gfx-backend-dx12"]
 
 [dependencies]
+amethyst_assets = { path = "../amethyst_assets/", version = "0.2.0" }
 amethyst_core = { path = "../amethyst_core/", version = "0.1.0" }
 amethyst_config = { path = "../amethyst_config/", version = "0.5.0" }
 derivative = "1.0"
+error-chain = "0.11"
 log = "0.4"
 gfx-hal = { git = "https://github.com/gfx-rs/gfx", rev = "68e80eaf" }
-gfx-memory = { git = "https://github.com/gfx-rs/gfx-memory", rev = "ccf1cad" }
+gfx-memory = { git = "https://github.com/gfx-rs/gfx-memory", rev = "4aa2d27" }
+smallvec = { version = "0.6.0" }
 specs = { version = "0.10" }
 shred = { version = "0.5" }
 winit = "= 0.10.0"
-xfg = { git = "https://github.com/omni-viral/xfg-rs", ref = "f269e1f1" }
+xfg = { git = "https://github.com/omni-viral/xfg-rs", rev = "13b5a0f" }
 
 gfx-backend-empty = { version = "0.1", git = "https://github.com/gfx-rs/gfx", rev = "68e80eaf" }
 

@@ -4,9 +4,9 @@ use hal::{Backend, Device as HalDevice};
 use hal::command::{Rect, Viewport};
 use hal::image::Kind;
 use hal::pool::{CommandPool, CommandPoolCreateFlags};
-use hal::queue::{General, QueueGroup};
-use hal::window::{Backbuffer, FrameSync, Surface, Swapchain};
-use mem::{Factory as FactoryTrait, Type as MemType};
+use hal::queue::{General, QueueGroup, RawSubmission, RawCommandQueue};
+use hal::window::{Backbuffer, FrameSync, Surface, Swapchain, SwapchainConfig};
+use mem::{Factory as FactoryTrait, Type as MemType, SmartAllocator};
 use shred::{Resources, RunNow};
 use winit::WindowId;
 use xfg::SuperFrame as XfgFrame;
@@ -14,11 +14,12 @@ use xfg::SuperFrame as XfgFrame;
 #[cfg(feature = "gfx-metal")]
 use metal;
 
-use AmethystGraph;
-use factory::{BackendEx, Factory};
+use {AmethystGraph, AmethystGraphBuilder};
+use backend::BackendEx;
+use factory::Factory;
 
 ///
-pub struct RenderSystem<B: BackendEx> {
+pub struct RenderSystem<B: Backend> {
     queues_usage: Vec<usize>,
     group: QueueGroup<B, General>,
     renders: HashMap<WindowId, Render<B>>,
@@ -41,7 +42,7 @@ impl RenderSystem<metal::Backend> {
 
 impl<B> RenderSystem<B>
 where
-    B: BackendEx,
+    B: Backend,
 {
     /// Create new render system providing it with general queue group and surfaces to draw onto
     pub(crate) fn new(group: QueueGroup<B, General>) -> Self {
@@ -60,9 +61,12 @@ where
         }
     }
 
-    fn run_renders(&mut self, mut res: &Resources, factory: &mut Factory<B>) {
+    fn run_renders(&mut self, mut res: &Resources, factory: &mut Factory<B>)
+    where
+        B: BackendEx,
+    {
         let ref mut group = self.group;
-        let current = factory.advance();
+        let current = factory.current();
 
         // Run renders
         for r in self.renders.values_mut() {
@@ -198,66 +202,90 @@ where
             .min()
             .unwrap();
 
-        // cleanup after finished jobs.
-        factory.clean(earliest);
+        // cleanup after finished jobs and move to next one.
+        factory.advance(earliest);
     }
 
-    fn poll_factory_orders(&mut self, factory: &mut Factory<B>) {
+    fn add_surface(&mut self, window_id: WindowId, mut surface: B::Surface, config: SwapchainConfig, device: &B::Device) {
+        let queue = self.queues_usage
+            .iter()
+            .enumerate()
+            .min_by_key(|&(_, u)| u)
+            .map(|(i, _)| i)
+            .expect("There are some queues");
+        let (swapchain, backbuffer) = device.create_swapchain(&mut surface, config);
+        let render = Render {
+            queue,
+            surface,
+            swapchain,
+            backbuffer,
+            active: None,
+            graphs: Vec::new(),
+            frames: VecDeque::new(),
+            jobs: Vec::new(),
+        };
+        self.renders.insert(window_id, render);
+    }
+
+    fn add_graph(&mut self, window_id: WindowId, graph: AmethystGraphBuilder<B>, device: &B::Device, allocator: &mut SmartAllocator<B>) {
+        let ref mut render = *match self.renders.get_mut(&window_id) {
+            Some(render) => render,
+            None => {
+                error!("Failed to add graph. No window: {:#?}", window_id);
+                return;
+            }
+        };
+        match graph.build(
+            device,
+            &render.backbuffer,
+            |kind, level, format, usage, properties, device| {
+                allocator.create_image(
+                    device,
+                    (MemType::General, properties),
+                    kind,
+                    level,
+                    format,
+                    usage,
+                )
+            },
+        ) {
+            Ok(graph) => {
+                render.graphs.push(graph);
+            }
+            Err(err) => {
+                error!("Failed to build graph: {:#?}", err);
+            }
+        };
+    }
+
+    fn poll_factory_orders(&mut self, factory: &mut Factory<B>)
+    where
+        B: BackendEx,
+    {
+        if let Some((cbuf, _)) = factory.uploads() {
+            if self.group.queues.len() > 1 {
+                unimplemented!("Upload in multiqueue environment is not supported yet");
+            }
+            unsafe {
+                self.group.queues[0].as_mut().submit_raw(RawSubmission {
+                    cmd_buffers: Some(cbuf),
+                    wait_semaphores: &[],
+                    signal_semaphores: &[],
+                }, None);
+            }
+        }
+
         let mut surfaces = Vec::new();
         factory.get_surfaces(&mut surfaces);
-        for (window_id, mut surface, config) in surfaces {
-            let queue = self.queues_usage
-                .iter()
-                .enumerate()
-                .min_by_key(|&(_, u)| u)
-                .map(|(i, _)| i)
-                .expect("There are some queues");
-            let (swapchain, backbuffer) = factory.create_swapchain(&mut surface, config);
-            let render = Render {
-                queue,
-                surface,
-                swapchain,
-                backbuffer,
-                active: None,
-                graphs: Vec::new(),
-                frames: VecDeque::new(),
-                jobs: Vec::new(),
-            };
-            self.renders.insert(window_id, render);
+        for (window_id, surface, config) in surfaces {
+            self.add_surface(window_id, surface, config, &factory);
         }
 
         let mut graphs = Vec::new();
         factory.get_graphs(&mut graphs);
         let (device, allocator) = factory.device_and_allocator();
         for (window_id, graph) in graphs {
-            let ref mut render = *match self.renders.get_mut(&window_id) {
-                Some(render) => render,
-                None => {
-                    error!("Failed to add graph. No window: {:#?}", window_id);
-                    continue;
-                }
-            };
-            match graph.build(
-                device,
-                &render.backbuffer,
-                |kind, level, format, usage, properties, device| {
-                    allocator.create_image(
-                        device,
-                        (MemType::General, properties),
-                        kind,
-                        level,
-                        format,
-                        usage,
-                    )
-                },
-            ) {
-                Ok(graph) => {
-                    render.graphs.push(graph);
-                }
-                Err(err) => {
-                    error!("Failed to build graph: {:#?}", err);
-                }
-            };
+            self.add_graph(window_id, graph, device, allocator);
         }
     }
 }
@@ -280,7 +308,7 @@ where
     }
 }
 
-struct Render<B: BackendEx> {
+struct Render<B: Backend> {
     queue: usize,
     surface: B::Surface,
     swapchain: B::Swapchain,
