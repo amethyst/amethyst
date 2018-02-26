@@ -1,17 +1,13 @@
-use std::fmt::Debug;
 
-use amethyst_assets::{Asset, AssetStorage, SimpleFormat, Error as AssetsError, Handle};
+use amethyst_assets::{Asset, SimpleFormat, Error as AssetsError, Handle};
 use core::cgmath::{InnerSpace, Vector3};
 use hal::Backend;
-use specs::{Component, DenseVecStorage, VecStorage};
+use specs::DenseVecStorage;
 use wavefront_obj::obj::{parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex,
                          TextureIndex, Vertex, VertexIndex};
 
-
-use {Error};
-use factory::Factory;
 use mesh::{Mesh, MeshBuilder};
-use vertex::{self, PosColor, PosNormTangTex, PosNormTex, PosTex};
+use vertex::{self, PosNormTex};
 
 /// Vertex combo
 pub type VertexBufferCombination = (

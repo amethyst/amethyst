@@ -14,13 +14,14 @@ amethyst_core = { path = "../amethyst_core/", version = "0.1.0" }
 amethyst_config = { path = "../amethyst_config/", version = "0.5.0" }
 derivative = "1.0"
 error-chain = "0.11"
-gfx-hal = { git = "https://github.com/gfx-rs/gfx", rev = "68e80eaf" }
+gfx-hal = { git = "https://github.com/gfx-rs/gfx", rev = "68e80eaf", features = ["serde"] }
 gfx-memory = { git = "https://github.com/gfx-rs/gfx-memory", rev = "4aa2d27" }
 imagefmt = "4.0"
 log = "0.4"
-smallvec = { version = "0.6.0" }
-specs = { version = "0.10" }
-shred = { version = "0.5" }
+serde = "1.0"
+shred = "0.5"
+smallvec = { version = "0.6.0", features = ["serde"] }
+specs = "0.10"
 wavefront_obj = "5.1"
 winit = "= 0.10.0"
 xfg = { git = "https://github.com/omni-viral/xfg-rs", rev = "13b5a0f" }

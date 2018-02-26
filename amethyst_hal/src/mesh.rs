@@ -3,7 +3,6 @@
 //!
 
 use std::borrow::Cow;
-use std::marker::PhantomData;
 use std::mem::size_of;
 
 use core::cgmath::{Deg, Matrix4, Point3, SquareMatrix, Transform, Vector3};
@@ -11,7 +10,7 @@ use core::cgmath::{Deg, Matrix4, Point3, SquareMatrix, Transform, Vector3};
 use hal::{Backend, IndexCount, IndexType, Primitive, VertexCount};
 use hal::buffer::{IndexBufferView, Usage};
 use hal::command::{RenderSubpassCommon};
-use hal::memory::{Properties, cast_slice};
+use hal::memory::Properties;
 use hal::pso::VertexBufferSet;
 
 use smallvec::SmallVec;
@@ -287,6 +286,7 @@ impl<'a> From<Cow<'a, [u32]>> for Indices<'a> {
 /// Useful for creating mesh from non-predefined set of data.
 /// Like from glTF.
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MeshBuilder<'a> {
     vertices: SmallVec<[(Cow<'a, [u8]>, VertexFormat<'static>); 16]>,
     indices: Option<(Cow<'a, [u8]>, IndexType)>,
@@ -384,7 +384,7 @@ impl<'a> MeshBuilder<'a> {
         Ok(Mesh {
             vbufs: self.vertices
                 .iter()
-                .map(|&(ref vertices, format)| {
+                .map(|&(ref vertices, ref format)| {
                     let len = vertices.len() as VertexCount / format.stride as VertexCount;
                     Ok(VertexBuffer {
                         buffer: {
@@ -396,7 +396,7 @@ impl<'a> MeshBuilder<'a> {
                             factory.upload_buffer(&mut buffer, 0, &vertices)?;
                             buffer
                         },
-                        format,
+                        format: format.clone(),
                         len,
                     })
                 })
@@ -460,7 +460,7 @@ where
         vertex: &mut VertexBufferSet<'a, B>,
     ) -> Result<Bind<'a, B>, IncompatibleError> {
         debug_assert!(is_slice_sorted(formats));
-        debug_assert!(is_slice_sorted_by_key(&self.vbufs, |vbuf| vbuf.format));
+        debug_assert!(is_slice_sorted_by_key(&self.vbufs, |vbuf| &vbuf.format));
         debug_assert!(vertex.0.is_empty());
 
         let mut next = 0;
@@ -549,9 +549,9 @@ fn find_compatible_buffer<B>(vbufs: &[VertexBuffer<B>], format: &VertexFormat) -
 where
     B: Backend,
 {
-    debug_assert!(is_slice_sorted_by_key(format.attributes, |a| a.offset));
+    debug_assert!(is_slice_sorted_by_key(&*format.attributes, |a| a.offset));
     for (i, vbuf) in vbufs.iter().enumerate() {
-        debug_assert!(is_slice_sorted_by_key(&vbuf.format.attributes, |a| a.offset));
+        debug_assert!(is_slice_sorted_by_key(&*vbuf.format.attributes, |a| a.offset));
         if is_compatible(&vbuf.format, format) {
             return Some(i);
         }

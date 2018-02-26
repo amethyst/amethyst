@@ -1,5 +1,5 @@
 //! Built-in vertex formats.
-
+use std::borrow::Cow;
 use std::fmt::Debug;
 
 use hal::format::{AsFormat, Format};
@@ -20,6 +20,7 @@ pub trait Attribute: AsFormat + Debug + PartialEq + Pod + Send + Sync {
 /// Type for position attribute of vertex.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Position(pub [f32; 3]);
 impl<T> From<T> for Position
 where
@@ -42,6 +43,7 @@ impl Attribute for Position {
 /// Type for color attribute of vertex
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Color(pub [f32; 4]);
 impl<T> From<T> for Color
 where
@@ -64,6 +66,7 @@ impl Attribute for Color {
 /// Type for texture coord attribute of vertex
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Normal(pub [f32; 3]);
 impl<T> From<T> for Normal
 where
@@ -85,6 +88,7 @@ impl Attribute for Normal {
 /// Type for tangent attribute of vertex
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Tangent(pub [f32; 3]);
 impl<T> From<T> for Tangent
 where
@@ -106,6 +110,7 @@ impl Attribute for Tangent {
 /// Type for texture coord attribute of vertex
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TexCoord(pub [f32; 2]);
 impl<T> From<T> for TexCoord
 where
@@ -126,9 +131,10 @@ impl Attribute for TexCoord {
 
 /// Vertex format contains information to initialize graphics pipeline
 /// Attributes must be sorted by offset.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct VertexFormat<'a> {
-    pub attributes: &'a [Element<Format>],
+    pub attributes: Cow<'a, [Element<Format>]>,
     pub stride: ElemStride,
 }
 
@@ -153,12 +159,12 @@ where
     T: Attribute,
 {
     const VERTEX_FORMAT: VertexFormat<'static> = VertexFormat {
-        attributes: &[
+        attributes: Cow::Borrowed(&[
             Element {
                 format: T::SELF,
                 offset: 0,
             },
-        ],
+        ]),
         stride: T::SIZE,
     };
 }
@@ -182,6 +188,7 @@ where
 /// Vertex format with position and RGBA8 color attributes.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PosColor {
     /// Position of the vertex in 3D space.
     pub position: Position,
@@ -193,10 +200,10 @@ unsafe impl Pod for PosColor {}
 
 impl AsVertexFormat for PosColor {
     const VERTEX_FORMAT: VertexFormat<'static> = VertexFormat {
-        attributes: &[
+        attributes: Cow::Borrowed(&[
             <Self as WithAttribute<Position>>::ELEMENT,
             <Self as WithAttribute<Color>>::ELEMENT,
-        ],
+        ]),
         stride: Position::SIZE + Color::SIZE,
     };
 }
@@ -218,6 +225,7 @@ impl WithAttribute<Color> for PosColor {
 /// Vertex format with position and UV texture coordinate attributes.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PosTex {
     /// Position of the vertex in 3D space.
     pub position: [f32; 3],
@@ -229,10 +237,10 @@ unsafe impl Pod for PosTex {}
 
 impl AsVertexFormat for PosTex {
     const VERTEX_FORMAT: VertexFormat<'static> = VertexFormat {
-        attributes: &[
+        attributes: Cow::Borrowed(&[
             <Self as WithAttribute<Position>>::ELEMENT,
             <Self as WithAttribute<TexCoord>>::ELEMENT,
-        ],
+        ]),
         stride: Position::SIZE + TexCoord::SIZE,
     };
 }
@@ -254,6 +262,7 @@ impl WithAttribute<TexCoord> for PosTex {
 /// Vertex format with position, normal, and UV texture coordinate attributes.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PosNormTex {
     /// Position of the vertex in 3D space.
     pub position: Position,
@@ -267,11 +276,11 @@ unsafe impl Pod for PosNormTex {}
 
 impl AsVertexFormat for PosNormTex {
     const VERTEX_FORMAT: VertexFormat<'static> = VertexFormat {
-        attributes: &[
+        attributes: Cow::Borrowed(&[
             <Self as WithAttribute<Position>>::ELEMENT,
             <Self as WithAttribute<Normal>>::ELEMENT,
             <Self as WithAttribute<TexCoord>>::ELEMENT,
-        ],
+        ]),
         stride: Position::SIZE + Normal::SIZE + TexCoord::SIZE,
     };
 }
@@ -300,6 +309,7 @@ impl WithAttribute<TexCoord> for PosNormTex {
 /// Vertex format with position, normal, tangent, and UV texture coordinate attributes.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PosNormTangTex {
     /// Position of the vertex in 3D space.
     pub position: Position,
@@ -315,12 +325,12 @@ unsafe impl Pod for PosNormTangTex {}
 
 impl AsVertexFormat for PosNormTangTex {
     const VERTEX_FORMAT: VertexFormat<'static> = VertexFormat {
-        attributes: &[
+        attributes: Cow::Borrowed(&[
             <Self as WithAttribute<Position>>::ELEMENT,
             <Self as WithAttribute<Normal>>::ELEMENT,
             <Self as WithAttribute<Tangent>>::ELEMENT,
             <Self as WithAttribute<TexCoord>>::ELEMENT,
-        ],
+        ]),
         stride: Position::SIZE + Normal::SIZE + Tangent::SIZE + TexCoord::SIZE,
     };
 }

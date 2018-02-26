@@ -14,6 +14,10 @@ extern crate gfx_memory as mem;
 extern crate imagefmt;
 #[macro_use]
 extern crate log;
+#[cfg(feature="serde")]
+#[macro_use]
+extern crate serde;
+
 extern crate shred;
 extern crate smallvec;
 extern crate specs;

@@ -3,11 +3,9 @@ use std::borrow::Cow;
 use hal::{Backend, Device};
 use hal::command::Offset;
 use hal::device::Extent;
-use hal::format::{AspectFlags, Format, Swizzle};
+use hal::format::{Format, Swizzle};
 use hal::image::{ImageLayout, Kind, Level, SamplerInfo, SubresourceLayers, SubresourceRange, Usage};
 use hal::memory::Properties;
-use hal::pso::DescriptorWrite;
-use hal::range::RangeArg;
 
 use {Image, Error};
 use factory::{Factory, ImageUpload};
@@ -61,6 +59,8 @@ where
     }
 }
 
+#[derive(Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TextureBuilder<'a> {
     sampler: Option<SamplerInfo>,
     kind: Kind,

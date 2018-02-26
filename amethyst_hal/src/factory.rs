@@ -8,14 +8,14 @@ use hal::{Backend, Device, Instance, Surface};
 use hal::buffer;
 use hal::command::{self, RawCommandBuffer};
 use hal::device;
-use hal::format::{AspectFlags, Format};
+use hal::format::Format;
 use hal::image;
 use hal::mapping::Error as MappingError;
 use hal::memory::Properties;
 use hal::pool::{self, RawCommandPool};
 use hal::queue;
 use hal::window::{SurfaceCapabilities, SwapchainConfig};
-use mem::{Block, Factory as FactoryTrait, FactoryError, SmartAllocator, SmartBlock, Type};
+use mem::{Block, Factory as FactoryTrait, SmartAllocator, SmartBlock, Type};
 use winit::{Window, WindowId};
 
 use {AmethystGraphBuilder, Buffer, Image, Error};

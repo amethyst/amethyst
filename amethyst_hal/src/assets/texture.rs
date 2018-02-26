@@ -4,18 +4,14 @@ use std::io::Cursor;
 
 use amethyst_assets::{Asset, Handle, SimpleFormat, Error as AssetsError};
 
-use hal::{Backend, Device};
+use hal::Backend;
 use hal::format::Format;
-use hal::image::{AaMode, Kind, SamplerInfo, Level, Size};
-use hal::memory::{Pod, cast_slice};
+use hal::image::{AaMode, Kind};
 
 use imagefmt::{self, ColFmt, Image};
 use specs::DenseVecStorage;
 
-use {Error};
-use factory::Factory;
 use texture::{Texture, TextureBuilder};
-use utils::cast_vec;
 
 /// ImageData provided by formats, can be interpreted as a texture.
 #[derive(Clone, Debug)]

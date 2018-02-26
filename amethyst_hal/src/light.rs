@@ -1,9 +1,11 @@
 use specs::{Component, DenseVecStorage};
 
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct AmbientLight(pub [f32; 3]);
 
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PointLight(pub [f32; 3]);
 
 impl<T> From<T> for PointLight
@@ -16,6 +18,7 @@ where
 }
 
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Light {
     Point(PointLight),
 }
