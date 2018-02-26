@@ -1,3 +1,5 @@
+pub use gfx_core::state::{Blend, BlendChannel, ColorMask, Equation, Factor};
+
 use std::cmp::Ordering;
 
 use amethyst_core::GlobalTransform;
