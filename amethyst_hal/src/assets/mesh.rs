@@ -22,58 +22,6 @@ pub type VertexBufferCombination = (
     Option<Vec<vertex::Tangent>>,
 );
 
-/// Mesh data for loading
-#[derive(Debug)]
-pub enum MeshData {
-    /// Position and color
-    PosColor(Vec<PosColor>),
-
-    /// Position and texture coordinates
-    PosTex(Vec<PosTex>),
-
-    /// Position, normal and texture coordinates
-    PosNormTex(Vec<PosNormTex>),
-
-    /// Position, normal, tangent and texture coordinates
-    PosNormTangTex(Vec<PosNormTangTex>),
-
-    /// Combination of separate attributes
-    Combination(VertexBufferCombination),
-
-    /// Create a mesh from a given builder
-    Builder(MeshBuilder<'static>),
-}
-
-impl From<Vec<PosColor>> for MeshData {
-    fn from(data: Vec<PosColor>) -> Self {
-        MeshData::PosColor(data)
-    }
-}
-
-impl From<Vec<PosTex>> for MeshData {
-    fn from(data: Vec<PosTex>) -> Self {
-        MeshData::PosTex(data)
-    }
-}
-
-impl From<Vec<PosNormTex>> for MeshData {
-    fn from(data: Vec<PosNormTex>) -> Self {
-        MeshData::PosNormTex(data)
-    }
-}
-
-impl From<Vec<PosNormTangTex>> for MeshData {
-    fn from(data: Vec<PosNormTangTex>) -> Self {
-        MeshData::PosNormTangTex(data)
-    }
-}
-
-impl From<VertexBufferCombination> for MeshData {
-    fn from(data: VertexBufferCombination) -> Self {
-        MeshData::Combination(data)
-    }
-}
-
 /// Allows loading from Wavefront files
 /// see: https://en.wikipedia.org/wiki/Wavefront_.obj_file
 #[derive(Clone)]
@@ -87,7 +35,7 @@ where
 
     type Options = ();
 
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<MeshData, AssetsError> {
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<MeshBuilder<'static>, AssetsError> {
         String::from_utf8(bytes)
             .map_err(Into::into)
             .and_then(|string| {
@@ -96,7 +44,10 @@ where
                         AssetsError::from(format!("Failed to parse OBJ. Error in line {}: {:?}", e.line_number, e.message))
                     })
             })
-            .map(|set| from_data(set).into())
+            .map(|set| {
+                MeshBuilder::new()
+                    .with_vertices(from_data(set))
+            })
     }
 }
 
@@ -161,63 +112,6 @@ fn from_data(obj_set: ObjSet) -> Vec<PosNormTex> {
     result
 }
 
-macro_rules! build_mesh_with_some {
-    ($builder:expr, $($args:expr),+ => { $h:expr $(,$t:expr)* }) => {
-        match $h {
-            Some(ref vertices) => build_mesh_with_some!($builder.with_vertices(&vertices[..]),
-                                                    $($args),+ => {$($t),*}),
-            None => build_mesh_with_some!($builder, $($args),+ => {$($t),*}),
-        }
-    };
-
-    ($builder:expr, $($args:expr),+ => {}) => {
-        $builder.build($($args),+)
-    };
-}
-
-/// Create mesh
-pub fn create_mesh_asset<B>(
-    data: &MeshData,
-    factory: &mut Factory<B>,
-) -> Result<Mesh<B>, Error>
-where
-    B: Backend,
-{
-    match *data {
-        MeshData::PosColor(ref vertices) => {
-            let mb = MeshBuilder::new().with_vertices(&vertices[..]);
-            mb.build(factory)
-        }
-        MeshData::PosTex(ref vertices) => {
-            let mb = MeshBuilder::new().with_vertices(&vertices[..]);
-            mb.build(factory)
-        }
-        MeshData::PosNormTex(ref vertices) => {
-            let mb = MeshBuilder::new().with_vertices(&vertices[..]);
-            mb.build(factory)
-        }
-        MeshData::PosNormTangTex(ref vertices) => {
-            let mb = MeshBuilder::new().with_vertices(&vertices[..]);
-            mb.build(factory)
-        }
-        MeshData::Combination(ref combo) => build_mesh_with_combo(combo, factory),
-        MeshData::Builder(ref builder) => builder.build(factory),
-    }.map_err(|err| Error::with_chain(err, format!("Failed to build mesh")))
-}
-
-/// Build Mesh with vertex buffer combination
-pub fn build_mesh_with_combo<B>(
-    combo: &VertexBufferCombination,
-    factory: &mut Factory<B>,
-) -> Result<Mesh<B>, Error>
-where
-    B: Backend,
-{
-    build_mesh_with_some!(
-        MeshBuilder::new().with_vertices(&combo.0[..]), factory => {combo.1, combo.2, combo.3, combo.4}
-    )
-}
-
 /// A handle to a mesh.
 pub type MeshHandle<B: Backend> = Handle<Mesh<B>>;
 
@@ -226,6 +120,6 @@ where
     B: Backend,
 {
     const NAME: &'static str = "Mesh";
-    type Data = MeshData;
+    type Data = MeshBuilder<'static>;
     type HandleStorage = DenseVecStorage<MeshHandle<B>>;
 }

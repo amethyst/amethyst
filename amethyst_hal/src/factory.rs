@@ -7,14 +7,15 @@ use std::slice::from_raw_parts_mut;
 use hal::{Backend, Device, Instance, Surface};
 use hal::buffer;
 use hal::command::{self, RawCommandBuffer};
-use hal::format::Format;
+use hal::device;
+use hal::format::{AspectFlags, Format};
 use hal::image;
 use hal::mapping::Error as MappingError;
 use hal::memory::Properties;
 use hal::pool::{self, RawCommandPool};
 use hal::queue;
 use hal::window::{SurfaceCapabilities, SwapchainConfig};
-use mem::{Block, Factory as FactoryTrait, FactoryError, SmartAllocator, Type};
+use mem::{Block, Factory as FactoryTrait, FactoryError, SmartAllocator, SmartBlock, Type};
 use winit::{Window, WindowId};
 
 use {AmethystGraphBuilder, Buffer, Image, Error};
@@ -50,28 +51,10 @@ where
         }
         let props = allocator.properties(buffer.block());
         if props.contains(Properties::CPU_VISIBLE) {
-            Self::upload_visible_buffer(device, props.contains(Properties::COHERENT), buffer, offset, data);
+            Self::upload_visible_block(device, props.contains(Properties::COHERENT), buffer.block(), offset, data);
             Ok(None)
         } else {
             self.upload_device_local_buffer(device, allocator, buffer, offset, data)
-        }
-    }
-
-    fn upload_visible_buffer(device: &B::Device, coherent: bool, buffer: &mut Buffer<B>, offset: u64, data: &[u8]) {
-        let start = buffer.range().start + offset;
-        let end = start + data.len() as u64;
-        let range = start .. end;
-        debug_assert!(end <= buffer.range().end, "Checked in `Uploader::upload` method");
-        let ptr = device.map_memory(buffer.memory(), range.clone()).expect("Expect to be mapped");
-        if !coherent {
-            device.invalidate_mapped_memory_ranges(Some((buffer.memory(), range.clone())));
-        }
-        let slice = unsafe {
-            from_raw_parts_mut(ptr, data.len())
-        };
-        slice.copy_from_slice(data);
-        if !coherent {
-            device.flush_mapped_memory_ranges(Some((buffer.memory(), range)));
         }
     }
 
@@ -80,15 +63,48 @@ where
             self.get_command_buffer(device).update_buffer((&*buffer).borrow(), offset, data);
             Ok(None)
         } else {
-            let mut staging = allocator.create_buffer(device, (Type::ShortLived, Properties::CPU_VISIBLE), data.len() as u64, buffer::Usage::TRANSFER_SRC).map_err(|err| Error::with_chain(err, "Failed to create staging buffer"))?;
+            let staging = allocator.create_buffer(device, (Type::ShortLived, Properties::CPU_VISIBLE), data.len() as u64, buffer::Usage::TRANSFER_SRC).map_err(|err| Error::with_chain(err, "Failed to create staging buffer"))?;
             let props = allocator.properties(staging.block());
-            Self::upload_visible_buffer(device, props.contains(Properties::COHERENT), &mut staging, offset, data);
+            Self::upload_visible_block(device, props.contains(Properties::COHERENT), staging.block(), 0, data);
             self.get_command_buffer(device).copy_buffer(staging.borrow(), (&*buffer).borrow(), Some(command::BufferCopy {
                 src: 0,
                 dst: offset,
                 size: data.len() as u64,
             }));
             Ok(Some(staging))
+        }
+    }
+
+    fn upload_image(&mut self, device: &B::Device, allocator: &mut SmartAllocator<B>, image: &mut Image<B>, data: &[u8], layout: image::ImageLayout, upload: ImageUpload) -> Result<Buffer<B>, Error> {
+        let staging = allocator.create_buffer(device, (Type::ShortLived, Properties::CPU_VISIBLE), data.len() as u64, buffer::Usage::TRANSFER_SRC).map_err(|err| Error::with_chain(err, "Failed to create staging buffer"))?;
+        let props = allocator.properties(staging.block());
+        Self::upload_visible_block(device, props.contains(Properties::COHERENT), staging.block(), 0, data);
+        self.get_command_buffer(device).copy_buffer_to_image(staging.borrow(), (&*image).borrow(), layout, Some(command::BufferImageCopy {
+            buffer_offset: 0,
+            buffer_width: 0,
+            buffer_height: 0,
+            image_layers: upload.layers,
+            image_offset: upload.offset,
+            image_extent: upload.extent,
+        }));
+        Ok(staging)
+    }
+
+    fn upload_visible_block(device: &B::Device, coherent: bool, block: &SmartBlock<B::Memory>, offset: u64, data: &[u8]) {
+        let start = block.range().start + offset;
+        let end = start + data.len() as u64;
+        let range = start .. end;
+        debug_assert!(end <= block.range().end, "Checked in `Uploader::upload` method");
+        let ptr = device.map_memory(block.memory(), range.clone()).expect("Expect to be mapped");
+        if !coherent {
+            device.invalidate_mapped_memory_ranges(Some((block.memory(), range.clone())));
+        }
+        let slice = unsafe {
+            from_raw_parts_mut(ptr, data.len())
+        };
+        slice.copy_from_slice(data);
+        if !coherent {
+            device.flush_mapped_memory_ranges(Some((block.memory(), range)));
         }
     }
 
@@ -202,8 +218,17 @@ where
         let ref device = self.device;
         let ref mut allocator = self.allocator;
         if let Some(staging) = self.uploader.upload_buffer(device, allocator, buffer, offset, data)? {
-            self.reclamation.destroy_buffer(self.current, staging)
+            self.reclamation.destroy_buffer(self.current, staging);
         }
+        Ok(())
+    }
+
+    /// Upload data to the image.
+    pub fn upload_image(&mut self, image: &mut Image<B>, data: &[u8], layout: image::ImageLayout, upload: ImageUpload) -> Result<(), Error> {
+        let ref device = self.device;
+        let ref mut allocator = self.allocator;
+        let staging = self.uploader.upload_image(device, allocator, image, data, layout, upload)?;
+        self.reclamation.destroy_buffer(self.current, staging);
         Ok(())
     }
 
@@ -372,4 +397,11 @@ where
         }
         self.offset = ongoing;
     }
+}
+
+
+pub struct ImageUpload {
+    pub layers: image::SubresourceLayers,
+    pub offset: command::Offset,
+    pub extent: device::Extent,
 }

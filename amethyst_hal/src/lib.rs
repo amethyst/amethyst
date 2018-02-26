@@ -11,6 +11,7 @@ extern crate derivative;
 extern crate error_chain;
 extern crate gfx_hal as hal;
 extern crate gfx_memory as mem;
+extern crate imagefmt;
 #[macro_use]
 extern crate log;
 extern crate shred;
@@ -52,13 +53,14 @@ pub type AmethystGraph<B: Backend> = Graph<B, Image<B>, AmethystPass<B>>;
 /// GraphBuilder type used in engine.
 pub type AmethystGraphBuilder<B: Backend> = GraphBuilder<AmethystPass<B>>;
 
-mod assets;
+pub mod assets;
 pub mod backend;
 pub mod bundle;
 pub mod factory;
 pub mod light;
 pub mod mesh;
 pub mod system;
+pub mod texture;
 pub mod utils;
 pub mod vertex;
 

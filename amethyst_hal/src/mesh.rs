@@ -444,7 +444,7 @@ where
     B: Backend,
 {
     /// Build new mesh with `HMeshBuilder`
-    pub fn new() -> MeshBuilder<'static> {
+    pub fn new<'a>() -> MeshBuilder<'a> {
         MeshBuilder::new()
     }
 
