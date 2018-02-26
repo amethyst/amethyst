@@ -1,17 +1,16 @@
 use std::fmt::Debug;
 
-use assets::{Asset, SimpleFormat};
+use amethyst_assets::{Asset, AssetStorage, SimpleFormat, Error as AssetsError, Handle};
 use core::cgmath::{InnerSpace, Vector3};
-use failure::{Error, ResultExt};
 use hal::Backend;
-use specs::VecStorage;
+use specs::{Component, DenseVecStorage, VecStorage};
 use wavefront_obj::obj::{parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex,
                          TextureIndex, Vertex, VertexIndex};
 
-use epoch::CurrentEpoch;
-use memory::Allocator;
-use mesh::{Mesh, MeshBuilder, MeshHandle};
-use upload::Uploader;
+
+use {Error};
+use factory::Factory;
+use mesh::{Mesh, MeshBuilder};
 use vertex::{self, PosColor, PosNormTangTex, PosNormTex, PosTex};
 
 /// Vertex combo
@@ -42,7 +41,7 @@ pub enum MeshData {
     Combination(VertexBufferCombination),
 
     /// Create a mesh from a given builder
-    Builder(MeshBuilder),
+    Builder(MeshBuilder<'static>),
 }
 
 impl From<Vec<PosColor>> for MeshData {
@@ -88,15 +87,14 @@ where
 
     type Options = ();
 
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<MeshData, ::assets::Error> {
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<MeshData, AssetsError> {
         String::from_utf8(bytes)
             .map_err(Into::into)
             .and_then(|string| {
                 parse(string)
                     .map_err(|e| {
-                        ::assets::Error::from(format!("In line {}: {:?}", e.line_number, e.message))
+                        AssetsError::from(format!("Failed to parse OBJ. Error in line {}: {:?}", e.line_number, e.message))
                     })
-                    .map_err(|e| e.chain_err(|| "Failed to parse OBJ"))
             })
             .map(|set| from_data(set).into())
     }
@@ -166,7 +164,7 @@ fn from_data(obj_set: ObjSet) -> Vec<PosNormTex> {
 macro_rules! build_mesh_with_some {
     ($builder:expr, $($args:expr),+ => { $h:expr $(,$t:expr)* }) => {
         match $h {
-            Some(vertices) => build_mesh_with_some!($builder.with_vertices(vertices),
+            Some(ref vertices) => build_mesh_with_some!($builder.with_vertices(&vertices[..]),
                                                     $($args),+ => {$($t),*}),
             None => build_mesh_with_some!($builder, $($args),+ => {$($t),*}),
         }
@@ -179,52 +177,55 @@ macro_rules! build_mesh_with_some {
 
 /// Create mesh
 pub fn create_mesh_asset<B>(
-    data: MeshData,
-    allocator: &mut Allocator<B>,
-    uploader: &mut Uploader<B>,
-    current: &CurrentEpoch,
-    device: &B::Device,
+    data: &MeshData,
+    factory: &mut Factory<B>,
 ) -> Result<Mesh<B>, Error>
 where
     B: Backend,
 {
-    match data {
-        MeshData::PosColor(vertices) => {
-            let mb = MeshBuilder::new().with_vertices(vertices);
-            mb.build(allocator, uploader, current, device)
+    match *data {
+        MeshData::PosColor(ref vertices) => {
+            let mb = MeshBuilder::new().with_vertices(&vertices[..]);
+            mb.build(factory)
         }
-        MeshData::PosTex(vertices) => {
-            let mb = MeshBuilder::new().with_vertices(vertices);
-            mb.build(allocator, uploader, current, device)
+        MeshData::PosTex(ref vertices) => {
+            let mb = MeshBuilder::new().with_vertices(&vertices[..]);
+            mb.build(factory)
         }
-        MeshData::PosNormTex(vertices) => {
-            let mb = MeshBuilder::new().with_vertices(vertices);
-            mb.build(allocator, uploader, current, device)
+        MeshData::PosNormTex(ref vertices) => {
+            let mb = MeshBuilder::new().with_vertices(&vertices[..]);
+            mb.build(factory)
         }
-        MeshData::PosNormTangTex(vertices) => {
-            let mb = MeshBuilder::new().with_vertices(vertices);
-            mb.build(allocator, uploader, current, device)
+        MeshData::PosNormTangTex(ref vertices) => {
+            let mb = MeshBuilder::new().with_vertices(&vertices[..]);
+            mb.build(factory)
         }
-        MeshData::Combination(combo) => build_mesh_with_some!(
-                MeshBuilder::new().with_vertices(combo.0), allocator, uploader, current, device => {combo.1, combo.2, combo.3, combo.4}
-            ),
-        MeshData::Builder(builder) => builder.build(allocator, uploader, current, device),
-    }.with_context(|err| format!("Failed to build mesh: {}", err))
-        .map_err(Into::into)
+        MeshData::Combination(ref combo) => build_mesh_with_combo(combo, factory),
+        MeshData::Builder(ref builder) => builder.build(factory),
+    }.map_err(|err| Error::with_chain(err, format!("Failed to build mesh")))
 }
 
 /// Build Mesh with vertex buffer combination
 pub fn build_mesh_with_combo<B>(
-    combo: VertexBufferCombination,
-    allocator: &mut Allocator<B>,
-    uploader: &mut Uploader<B>,
-    current: &CurrentEpoch,
-    device: &B::Device,
+    combo: &VertexBufferCombination,
+    factory: &mut Factory<B>,
 ) -> Result<Mesh<B>, Error>
 where
     B: Backend,
 {
     build_mesh_with_some!(
-        MeshBuilder::new().with_vertices(combo.0), allocator, uploader, current, device => {combo.1, combo.2, combo.3, combo.4}
+        MeshBuilder::new().with_vertices(&combo.0[..]), factory => {combo.1, combo.2, combo.3, combo.4}
     )
+}
+
+/// A handle to a mesh.
+pub type MeshHandle<B: Backend> = Handle<Mesh<B>>;
+
+impl<B> Asset for Mesh<B>
+where
+    B: Backend,
+{
+    const NAME: &'static str = "Mesh";
+    type Data = MeshData;
+    type HandleStorage = DenseVecStorage<MeshHandle<B>>;
 }

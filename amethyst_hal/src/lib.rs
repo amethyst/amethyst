@@ -1,9 +1,9 @@
 //!
 
-#![deny(missing_docs)]
+// #![deny(missing_docs)]
 #![deny(unused_must_use)]
 
-extern crate amethyst_assets as assets;
+extern crate amethyst_assets;
 extern crate amethyst_core as core;
 #[macro_use]
 extern crate derivative;
@@ -28,6 +28,8 @@ extern crate gfx_backend_metal as metal;
 #[cfg(feature = "gfx-vulkan")]
 extern crate gfx_backend_vulkan as vulkan;
 
+extern crate wavefront_obj;
+
 use hal::Backend;
 use mem::{Item, SmartBlock};
 use shred::Resources;
@@ -50,14 +52,15 @@ pub type AmethystGraph<B: Backend> = Graph<B, Image<B>, AmethystPass<B>>;
 /// GraphBuilder type used in engine.
 pub type AmethystGraphBuilder<B: Backend> = GraphBuilder<AmethystPass<B>>;
 
-mod backend;
-mod bundle;
-mod factory;
-mod light;
-mod mesh;
-mod system;
-mod utils;
-mod vertex;
+mod assets;
+pub mod backend;
+pub mod bundle;
+pub mod factory;
+pub mod light;
+pub mod mesh;
+pub mod system;
+pub mod utils;
+pub mod vertex;
 
 pub use bundle::RenderBundle;
 pub use factory::Factory;

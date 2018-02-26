@@ -21,209 +21,210 @@ use factory::Factory;
 use utils::{is_slice_sorted, is_slice_sorted_by_key, cast_cow};
 use vertex::{VertexFormat, AsVertexFormat};
 
-/// Wraps container type (Like `Vec<V>`, `&[V]`, Box<[V]>, Cow<[V]> etc)
-/// providing methods to build `VertexBuffer<B>` if `V` is `AsVertexFormat`
-/// or `IndexBuffer<B>` if `V` is `u16` or `u32`
-pub struct Data<D, V> {
-    data: D,
-    pd: PhantomData<V>,
-}
+// /// Wraps container type (Like `Vec<V>`, `&[V]`, Box<[V]>, Cow<[V]> etc)
+// /// providing methods to build `VertexBuffer<B>` if `V` is `AsVertexFormat`
+// /// or `IndexBuffer<B>` if `V` is `u16` or `u32`
+// pub struct Data<D, V> {
+//     data: D,
+//     pd: PhantomData<V>,
+// }
 
-impl<D, V> Data<D, V>
-where
-    D: AsRef<[V]>,
-    V: AsVertexFormat,
-{
-    fn new(data: D) -> Self {
-        Data {
-            data,
-            pd: PhantomData,
-        }
-    }
+// impl<D, V> Data<D, V>
+// where
+//     D: AsRef<[V]>,
+//     V: AsVertexFormat,
+// {
+//     fn new(data: D) -> Self {
+//         Data {
+//             data,
+//             pd: PhantomData,
+//         }
+//     }
 
-    fn build_vertex<B>(
-        self,
-        factory: &mut Factory<B>,
-    ) -> Result<VertexBuffer<B>, Error>
-    where
-        B: Backend,
-    {
-        let len = self.data.as_ref().len() as VertexCount;
-        let mut buffer = factory.create_buffer(
-            Properties::DEVICE_LOCAL,
-            len as _,
-            Usage::VERTEX | Usage::TRANSFER_DST,
-        )?;
-        factory.upload_buffer(&mut buffer, 0, cast_slice(self.data.as_ref()))?;
-        Ok(VertexBuffer {
-            buffer,
-            format: V::VERTEX_FORMAT,
-            len,
-        })
-    }
-}
+//     fn build_vertex<B>(
+//         self,
+//         factory: &mut Factory<B>,
+//     ) -> Result<VertexBuffer<B>, Error>
+//     where
+//         B: Backend,
+//     {
+//         let len = self.data.as_ref().len() as VertexCount;
+//         let mut buffer = factory.create_buffer(
+//             Properties::DEVICE_LOCAL,
+//             len as _,
+//             Usage::VERTEX | Usage::TRANSFER_DST,
+//         )?;
+//         factory.upload_buffer(&mut buffer, 0, cast_slice(self.data.as_ref()))?;
+//         Ok(VertexBuffer {
+//             buffer,
+//             format: V::VERTEX_FORMAT,
+//             len,
+//         })
+//     }
+// }
 
-impl<D> Data<D, u16>
-where
-    D: AsRef<[u16]>,
-{
-    fn build_index<B>(
-        self,
-        factory: &mut Factory<B>,
-    ) -> Result<IndexBuffer<B>, Error>
-    where
-        B: Backend,
-    {
-        let len = self.data.as_ref().len() as IndexCount;
-        let mut buffer = factory.create_buffer(
-            Properties::DEVICE_LOCAL,
-            (len * 2) as _,
-            Usage::INDEX | Usage::TRANSFER_DST,
-        )?;
-        factory.upload_buffer(&mut buffer, 0, cast_slice(self.data.as_ref()))?;
-        Ok(IndexBuffer {
-            buffer,
-            index_type: IndexType::U16,
-            len,
-        })
-    }
-}
+// impl<D> Data<D, u16>
+// where
+//     D: AsRef<[u16]>,
+// {
+//     fn build_index<B>(
+//         self,
+//         factory: &mut Factory<B>,
+//     ) -> Result<IndexBuffer<B>, Error>
+//     where
+//         B: Backend,
+//     {
+//         let len = self.data.as_ref().len() as IndexCount;
+//         let mut buffer = factory.create_buffer(
+//             Properties::DEVICE_LOCAL,
+//             (len * 2) as _,
+//             Usage::INDEX | Usage::TRANSFER_DST,
+//         )?;
+//         factory.upload_buffer(&mut buffer, 0, cast_slice(self.data.as_ref()))?;
+//         Ok(IndexBuffer {
+//             buffer,
+//             index_type: IndexType::U16,
+//             len,
+//         })
+//     }
+// }
 
-impl<D> Data<D, u32>
-where
-    D: AsRef<[u32]>,
-{
-    fn build_index<B>(
-        self,
-        factory: &mut Factory<B>,
-    ) -> Result<IndexBuffer<B>, Error>
-    where
-        B: Backend,
-    {
-        let len = self.data.as_ref().len() as IndexCount;
-        let mut buffer = factory.create_buffer(
-            Properties::DEVICE_LOCAL,
-            (len * 4) as _,
-            Usage::INDEX | Usage::TRANSFER_DST,
-        )?;
-        factory.upload_buffer(&mut buffer, 0, cast_slice(self.data.as_ref()))?;
-        Ok(IndexBuffer {
-            buffer,
-            index_type: IndexType::U32,
-            len,
-        })
-    }
-}
+// impl<D> Data<D, u32>
+// where
+//     D: AsRef<[u32]>,
+// {
+//     fn build_index<B>(
+//         self,
+//         factory: &mut Factory<B>,
+//     ) -> Result<IndexBuffer<B>, Error>
+//     where
+//         B: Backend,
+//     {
+//         let len = self.data.as_ref().len() as IndexCount;
+//         let mut buffer = factory.create_buffer(
+//             Properties::DEVICE_LOCAL,
+//             (len * 4) as _,
+//             Usage::INDEX | Usage::TRANSFER_DST,
+//         )?;
+//         factory.upload_buffer(&mut buffer, 0, cast_slice(self.data.as_ref()))?;
+//         Ok(IndexBuffer {
+//             buffer,
+//             index_type: IndexType::U32,
+//             len,
+//         })
+//     }
+// }
 
-/// Heterogenous list of vertex data.
-pub trait VertexDataList {
-    /// Length of the list
-    const LENGTH: usize;
+// /// Heterogenous list of vertex data.
+// pub trait VertexDataList {
+//     /// Length of the list
+//     const LENGTH: usize;
 
-    /// Build buffers from data.
-    fn build<B>(
-        self,
-        factory: &mut Factory<B>,
-        output: &mut Vec<VertexBuffer<B>>,
-    ) -> Result<(), Error>
-    where
-        B: Backend;
-}
+//     /// Build buffers from data.
+//     fn build<B>(
+//         self,
+//         factory: &mut Factory<B>,
+//         output: &mut Vec<VertexBuffer<B>>,
+//     ) -> Result<(), Error>
+//     where
+//         B: Backend;
+// }
 
-/// Empty list implementation
-impl VertexDataList for () {
-    const LENGTH: usize = 0;
-    fn build<B>(
-        self,
-        _factory: &mut Factory<B>,
-        _output: &mut Vec<VertexBuffer<B>>,
-    ) -> Result<(), Error>
-    where
-        B: Backend,
-    {
-        Ok(())
-    }
-}
+// /// Empty list implementation
+// impl VertexDataList for () {
+//     const LENGTH: usize = 0;
+//     fn build<B>(
+//         self,
+//         _factory: &mut Factory<B>,
+//         _output: &mut Vec<VertexBuffer<B>>,
+//     ) -> Result<(), Error>
+//     where
+//         B: Backend,
+//     {
+//         Ok(())
+//     }
+// }
 
-/// Non-empty list implementation
-impl<D, V, L> VertexDataList for (Data<D, V>, L)
-where
-    D: AsRef<[V]>,
-    V: AsVertexFormat,
-    L: VertexDataList,
-{
-    const LENGTH: usize = 1 + L::LENGTH;
-    fn build<B>(
-        self,
-        factory: &mut Factory<B>,
-        output: &mut Vec<VertexBuffer<B>>,
-    ) -> Result<(), Error>
-    where
-        B: Backend,
-    {
-        let (head, tail) = self;
-        output.push(head.build_vertex(factory)?);
-        tail.build(factory, output)
-    }
-}
+// /// Non-empty list implementation
+// impl<D, V, L> VertexDataList for (Data<D, V>, L)
+// where
+//     D: AsRef<[V]>,
+//     V: AsVertexFormat,
+//     L: VertexDataList,
+// {
+//     const LENGTH: usize = 1 + L::LENGTH;
+//     fn build<B>(
+//         self,
+//         factory: &mut Factory<B>,
+//         output: &mut Vec<VertexBuffer<B>>,
+//     ) -> Result<(), Error>
+//     where
+//         B: Backend,
+//     {
+//         let (head, tail) = self;
+//         output.push(head.build_vertex(factory)?);
+//         tail.build(factory, output)
+//     }
+// }
 
-/// Optional index data type.
-pub trait IndexDataMaybe {
-    /// Build buffer (or don't) from data.
-    fn build<B>(
-        self,
-        factory: &mut Factory<B>,
-    ) -> Result<Option<IndexBuffer<B>>, Error>
-    where
-        B: Backend;
-}
+// /// Optional index data type.
+// pub trait IndexDataMaybe {
+//     /// Build buffer (or don't) from data.
+//     fn build<B>(
+//         self,
+//         factory: &mut Factory<B>,
+//     ) -> Result<Option<IndexBuffer<B>>, Error>
+//     where
+//         B: Backend;
+// }
 
-/// None index data implementation
-impl IndexDataMaybe for () {
-    /// No data - no buffer
-    fn build<B>(
-        self,
-        _factory: &mut Factory<B>,
-    ) -> Result<Option<IndexBuffer<B>>, Error>
-    where
-        B: Backend,
-    {
-        Ok(None)
-    }
-}
+// /// None index data implementation
+// impl IndexDataMaybe for () {
+//     /// No data - no buffer
+//     fn build<B>(
+//         self,
+//         _factory: &mut Factory<B>,
+//     ) -> Result<Option<IndexBuffer<B>>, Error>
+//     where
+//         B: Backend,
+//     {
+//         Ok(None)
+//     }
+// }
 
-impl<D> IndexDataMaybe for Data<D, u16>
-where
-    D: AsRef<[u16]>,
-{
-    /// Build `u16` index buffer.
-    fn build<B>(
-        self,
-        factory: &mut Factory<B>,
-    ) -> Result<Option<IndexBuffer<B>>, Error>
-    where
-        B: Backend,
-    {
-        self.build_index(factory).map(Some)
-    }
-}
+// impl<D> IndexDataMaybe for Data<D, u16>
+// where
+//     D: AsRef<[u16]>,
+// {
+//     /// Build `u16` index buffer.
+//     fn build<B>(
+//         self,
+//         factory: &mut Factory<B>,
+//     ) -> Result<Option<IndexBuffer<B>>, Error>
+//     where
+//         B: Backend,
+//     {
+//         self.build_index(factory).map(Some)
+//     }
+// }
 
-impl<D> IndexDataMaybe for Data<D, u32>
-where
-    D: AsRef<[u32]>,
-{
-    /// Build `u32` index buffer.
-    fn build<B>(
-        self,
-        factory: &mut Factory<B>,
-    ) -> Result<Option<IndexBuffer<B>>, Error>
-    where
-        B: Backend,
-    {
-        self.build_index(factory)
-            .map(Some)
-    }
-}
+// impl<D> IndexDataMaybe for Data<D, u32>
+// where
+//     D: AsRef<[u32]>,
+// {
+//     /// Build `u32` index buffer.
+//     fn build<B>(
+//         self,
+//         factory: &mut Factory<B>,
+//     ) -> Result<Option<IndexBuffer<B>>, Error>
+//     where
+//         B: Backend,
+//     {
+//         self.build_index(factory)
+//             .map(Some)
+//     }
+// }
+
 
 /// Vertex buffer with it's format
 pub struct VertexBuffer<B: Backend> {
@@ -374,7 +375,7 @@ impl<'a> MeshBuilder<'a> {
 
     /// Builds and returns the new mesh.
     pub fn build<B>(
-        self,
+        &self,
         factory: &mut Factory<B>,
     ) -> Result<Mesh<B>, Error>
     where
@@ -382,8 +383,8 @@ impl<'a> MeshBuilder<'a> {
     {
         Ok(Mesh {
             vbufs: self.vertices
-                .into_iter()
-                .map(|(vertices, format)| {
+                .iter()
+                .map(|&(ref vertices, format)| {
                     let len = vertices.len() as VertexCount / format.stride as VertexCount;
                     Ok(VertexBuffer {
                         buffer: {
@@ -402,7 +403,7 @@ impl<'a> MeshBuilder<'a> {
                 .collect::<Result<_, Error>>()?,
             ibuf: match self.indices {
                 None => None,
-                Some((indices, index_type)) => {
+                Some((ref indices, index_type)) => {
                     let stride = match index_type {
                         IndexType::U16 => size_of::<u16>(),
                         IndexType::U32 => size_of::<u32>(),
@@ -577,28 +578,3 @@ fn is_compatible(left: &VertexFormat, right: &VertexFormat) -> bool {
             })
     })
 }
-
-
-// use assets::{Asset, AssetStorage, Handle};
-// use specs::{Component, DenseVecStorage};
-// impl<B> Component for Mesh<B>
-// where
-//     B: Backend,
-// {
-//     type Storage = DenseVecStorage<Self>;
-// }
-
-// /// A handle to a mesh.
-// pub type MeshHandle<B: Backend> = Handle<Mesh<B>>;
-
-// /// A storage of the meshes.
-// pub type MeshStorage<B: Backend> = AssetStorage<Mesh<B>>;
-
-// impl<B> Asset for Mesh<B>
-// where
-//     B: Backend,
-// {
-//     const NAME: &'static str = "Mesh";
-//     type Data = MeshData;
-//     type HandleStorage = DenseVecStorage<MeshHandle<B>>;
-// }

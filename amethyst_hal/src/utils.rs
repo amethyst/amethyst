@@ -36,7 +36,7 @@ pub fn cast_vec<A: Pod, B: Pod>(mut vec: Vec<A>) -> Vec<B> {
     }
 }
 
-pub fn cast_cow<A: Pod, B: Pod>(mut cow: Cow<[A]>) -> Cow<[B]> {
+pub fn cast_cow<A: Pod, B: Pod>(cow: Cow<[A]>) -> Cow<[B]> {
     match cow {
         Cow::Borrowed(slice) => Cow::Borrowed(cast_slice(slice)),
         Cow::Owned(vec) => Cow::Owned(cast_vec(vec)),

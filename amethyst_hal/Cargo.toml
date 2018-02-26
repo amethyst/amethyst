@@ -20,6 +20,7 @@ gfx-memory = { git = "https://github.com/gfx-rs/gfx-memory", rev = "4aa2d27" }
 smallvec = { version = "0.6.0" }
 specs = { version = "0.10" }
 shred = { version = "0.5" }
+wavefront_obj = "5.1"
 winit = "= 0.10.0"
 xfg = { git = "https://github.com/omni-viral/xfg-rs", rev = "13b5a0f" }
 
