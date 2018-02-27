@@ -1,5 +1,5 @@
+use hal::memory::{cast_slice, Pod};
 use std::borrow::Cow;
-use hal::memory::{Pod, cast_slice};
 
 pub fn is_slice_sorted<T: Ord>(slice: &[T]) -> bool {
     is_slice_sorted_by_key(slice, |i| i)
@@ -31,9 +31,7 @@ pub fn cast_vec<A: Pod, B: Pod>(mut vec: Vec<A>) -> Vec<B> {
 
     let ptr = vec.as_mut_ptr();
     mem::forget(vec);
-    unsafe {
-        Vec::from_raw_parts(ptr as _, len, cap)
-    }
+    unsafe { Vec::from_raw_parts(ptr as _, len, cap) }
 }
 
 pub fn cast_cow<A: Pod, B: Pod>(cow: Cow<[A]>) -> Cow<[B]> {

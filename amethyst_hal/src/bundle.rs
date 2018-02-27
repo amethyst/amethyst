@@ -3,14 +3,16 @@ use hal::Instance;
 use hal::adapter::PhysicalDevice;
 use hal::queue::{General, QueueFamily, QueueType};
 use mem::SmartAllocator;
-use shred::DispatcherBuilder;
+use shred::{DispatcherBuilder, Resources};
 use specs::World;
+use xfg::Pass;
 
 use std::marker::PhantomData;
 use std::string::ToString;
 
 use backend::BackendEx;
 use factory::Factory;
+use renderer::Renderer;
 use system::RenderSystem;
 
 const STAGING_TRESHOLD: usize = 32 * 1024; // 32kb
@@ -18,15 +20,16 @@ const STAGING_TRESHOLD: usize = 32 * 1024; // 32kb
 /// Render bundle initialize rendering systems
 /// puts `Factory` to the `World`
 /// and adds `RenderSystem` to the `DispatcherBuilder`
-pub struct RenderBundle<B> {
+pub struct RenderBundle<B, P> {
     queues: usize,
-    pd: PhantomData<fn() -> B>,
+    pd: PhantomData<fn() -> (B, P)>,
 }
 
 /// A bundle of ECS components, resources and systems.
-impl<'a, 'b, B> ECSBundle<'a, 'b> for RenderBundle<B>
+impl<'a, 'b, B, P> ECSBundle<'a, 'b> for RenderBundle<B, P>
 where
     B: BackendEx,
+    P: Send + Sync + for<'c> Pass<B, &'c Resources> + 'static,
 {
     /// Build and add ECS resources, register components, add systems etc to the Application.
     fn build(
@@ -34,23 +37,11 @@ where
         world: &mut World,
         dispatcher: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>, BundleError> {
-        #[cfg(feature = "metal")]
-        let autorelease_pool = {
-            if is::<B, metal::Backend>() {
-                Some(unsafe { metal::AutoreleasePool::new() });
-            } else {
-                None
-            }
-        };
-
         let instance = B::init();
         let mut adapter = instance.enumerate_adapters().remove(0);
         info!("Get adapter {:#?}", adapter.info);
 
-        info!(
-            "Device features: {:#?}",
-            adapter.physical_device.features()
-        );
+        info!("Device features: {:#?}", adapter.physical_device.features());
         info!("Device limits: {:#?}", adapter.physical_device.limits());
 
         let (device, queue_group) = {
@@ -81,11 +72,19 @@ where
         );
         info!("Allocator created: {:#?}", allocator);
 
-        let factory = Factory::new(instance, adapter.physical_device, device, allocator, STAGING_TRESHOLD, queue_group.family());
-        let system = RenderSystem::new(queue_group);
+        let factory = Factory::new(
+            instance,
+            adapter.physical_device,
+            device,
+            allocator,
+            STAGING_TRESHOLD,
+            queue_group.family(),
+        );
+        let renderer = Renderer::<B, P>::new(queue_group);
 
         world.add_resource(factory);
+        world.add_resource(renderer);
 
-        Ok(dispatcher.add_thread_local(system))
+        Ok(dispatcher.add_thread_local(RenderSystem::<B, P>::new()))
     }
 }

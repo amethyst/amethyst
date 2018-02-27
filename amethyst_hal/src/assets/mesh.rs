@@ -1,5 +1,4 @@
-
-use amethyst_assets::{Asset, SimpleFormat, Error as AssetsError, Handle};
+use amethyst_assets::{Asset, Error as AssetsError, Handle, SimpleFormat};
 use core::cgmath::{InnerSpace, Vector3};
 use hal::Backend;
 use specs::DenseVecStorage;
@@ -35,15 +34,14 @@ where
         String::from_utf8(bytes)
             .map_err(Into::into)
             .and_then(|string| {
-                parse(string)
-                    .map_err(|e| {
-                        AssetsError::from(format!("Failed to parse OBJ. Error in line {}: {:?}", e.line_number, e.message))
-                    })
+                parse(string).map_err(|e| {
+                    AssetsError::from(format!(
+                        "Failed to parse OBJ. Error in line {}: {:?}",
+                        e.line_number, e.message
+                    ))
+                })
             })
-            .map(|set| {
-                MeshBuilder::new()
-                    .with_vertices(from_data(set))
-            })
+            .map(|set| MeshBuilder::new().with_vertices(from_data(set)))
     }
 }
 

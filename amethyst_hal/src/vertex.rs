@@ -14,7 +14,7 @@ pub trait Attribute: AsFormat + Debug + PartialEq + Pod + Send + Sync {
     /// Size of the attribute.
     /// Has to be equal to `std::mem::size_of::<Self>() as ElemStride`.
     /// TODO: Remove when `std::mem_size_of` became const fn.
-    const SIZE: ElemStride; 
+    const SIZE: ElemStride;
 }
 
 /// Type for position attribute of vertex.

@@ -12,6 +12,7 @@ gfx-dx12 = ["gfx-backend-dx12"]
 amethyst_assets = { path = "../amethyst_assets/", version = "0.2.0" }
 amethyst_core = { path = "../amethyst_core/", version = "0.1.0" }
 amethyst_config = { path = "../amethyst_config/", version = "0.5.0" }
+crossbeam-channel = "0.1.2"
 derivative = "1.0"
 error-chain = "0.11"
 gfx-hal = { git = "https://github.com/gfx-rs/gfx", rev = "68e80eaf", features = ["serde"] }

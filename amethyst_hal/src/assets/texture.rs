@@ -2,7 +2,7 @@ pub use imagefmt::Error as ImageError;
 
 use std::io::Cursor;
 
-use amethyst_assets::{Asset, Handle, SimpleFormat, Error as AssetsError};
+use amethyst_assets::{Asset, Error as AssetsError, Handle, SimpleFormat};
 
 use hal::Backend;
 use hal::format::Format;
@@ -31,14 +31,9 @@ where
 
     type Options = ();
 
-    fn import(
-        &self,
-        bytes: Vec<u8>,
-        _options: (),
-    ) -> Result<TextureBuilder<'static>, AssetsError> {
-        let image = imagefmt::jpeg::read(&mut Cursor::new(bytes), ColFmt::RGBA).map_err(|err| {
-            AssetsError::with_chain(err, "Failed to load jpeg from bytestream")
-        })?;
+    fn import(&self, bytes: Vec<u8>, _options: ()) -> Result<TextureBuilder<'static>, AssetsError> {
+        let image = imagefmt::jpeg::read(&mut Cursor::new(bytes), ColFmt::RGBA)
+            .map_err(|err| AssetsError::with_chain(err, "Failed to load jpeg from bytestream"))?;
         Ok(TextureBuilder::new()
             .with_kind(Kind::D2(image.w as u16, image.h as u16, AaMode::Single))
             .with_format(Format::Rgba8Unorm)
@@ -58,14 +53,9 @@ where
 
     type Options = ();
 
-    fn import(
-        &self,
-        bytes: Vec<u8>,
-        _options: (),
-    ) -> Result<TextureBuilder<'static>, AssetsError> {
-        let image = imagefmt::png::read(&mut Cursor::new(bytes), ColFmt::RGBA).map_err(|err| {
-            AssetsError::with_chain(err, "Failed to load png from bytestream")
-        })?;
+    fn import(&self, bytes: Vec<u8>, _options: ()) -> Result<TextureBuilder<'static>, AssetsError> {
+        let image = imagefmt::png::read(&mut Cursor::new(bytes), ColFmt::RGBA)
+            .map_err(|err| AssetsError::with_chain(err, "Failed to load png from bytestream"))?;
         Ok(TextureBuilder::new()
             .with_kind(Kind::D2(image.w as u16, image.h as u16, AaMode::Single))
             .with_format(Format::Rgba8Unorm)
@@ -85,14 +75,9 @@ where
 
     type Options = ();
 
-    fn import(
-        &self,
-        bytes: Vec<u8>,
-        _options: (),
-    ) -> Result<TextureBuilder<'static>, AssetsError> {
-        let image = imagefmt::png::read(&mut Cursor::new(bytes), ColFmt::RGBA).map_err(|err| {
-            AssetsError::with_chain(err, "Failed to load png from bytestream")
-        })?;
+    fn import(&self, bytes: Vec<u8>, _options: ()) -> Result<TextureBuilder<'static>, AssetsError> {
+        let image = imagefmt::png::read(&mut Cursor::new(bytes), ColFmt::RGBA)
+            .map_err(|err| AssetsError::with_chain(err, "Failed to load png from bytestream"))?;
         Ok(TextureBuilder::new()
             .with_kind(Kind::D2(image.w as u16, image.h as u16, AaMode::Single))
             .with_format(Format::Rgba8Unorm)

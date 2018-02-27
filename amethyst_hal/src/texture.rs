@@ -7,8 +7,9 @@ use hal::format::{Format, Swizzle};
 use hal::image::{ImageLayout, Kind, Level, SamplerInfo, SubresourceLayers, SubresourceRange, Usage};
 use hal::memory::Properties;
 
-use {Image, Error};
-use factory::{Factory, ImageUpload};
+use Error;
+use factory::{Factory, Image};
+use uploader::ImageUpload;
 
 /// Read-only image
 pub struct Texture<B: Backend> {
@@ -130,49 +131,73 @@ impl<'a> TextureBuilder<'a> {
     where
         B: Backend,
     {
-        let mut image = factory.create_image(Properties::DEVICE_LOCAL, self.kind, self.levels, self.format, Usage::SAMPLED | Usage::TRANSFER_DST)?;
+        let mut image = factory.create_image(
+            Properties::DEVICE_LOCAL,
+            self.kind,
+            self.levels,
+            self.format,
+            Usage::SAMPLED | Usage::TRANSFER_DST,
+        )?;
 
         if let Some(ref data) = self.data {
             // Check that data provided matches bits of the whole image.
             let desc = self.format.base_format().0.desc();
             let (width, height, depth, _) = self.kind.dimensions();
-            let width = if width == 0 { 0usize } else { (width as usize - 1) / desc.dim.0 as usize + 1 };
-            let height = if height == 0 { 0usize } else { (height as usize - 1) / desc.dim.1 as usize + 1 };
+            let width = if width == 0 {
+                0usize
+            } else {
+                (width as usize - 1) / desc.dim.0 as usize + 1
+            };
+            let height = if height == 0 {
+                0usize
+            } else {
+                (height as usize - 1) / desc.dim.1 as usize + 1
+            };
             let depth = depth as usize;
             let blocks = width * height * depth;
             let total_bits = blocks * desc.bits as usize;
             assert_eq!(total_bits, data.len() * 8);
 
-            factory.upload_image(&mut image, data, ImageLayout::General, ImageUpload {
-                layers: SubresourceLayers {
-                    aspects: self.format.aspect_flags(),
-                    level: 0,
-                    layers: 0 .. 1,
+            factory.upload_image(
+                &mut image,
+                data,
+                ImageLayout::General,
+                ImageUpload {
+                    layers: SubresourceLayers {
+                        aspects: self.format.aspect_flags(),
+                        level: 0,
+                        layers: 0..1,
+                    },
+                    offset: Offset { x: 0, y: 0, z: 0 },
+                    extent: {
+                        let (x, y, z, _) = self.kind.dimensions();
+                        Extent {
+                            width: x as u32,
+                            height: y as u32,
+                            depth: z as u32,
+                        }
+                    },
                 },
-                offset: Offset {
-                    x: 0,
-                    y: 0,
-                    z: 0,
-                },
-                extent: {
-                    let (x, y, z, _) = self.kind.dimensions();
-                    Extent {
-                        width: x as u32,
-                        height: y as u32,
-                        depth: z as u32,
-                    }
-                }
-            })?;
+            )?;
         }
 
-        let view = factory.create_image_view(&image.raw(), self.format, Swizzle::NO, SubresourceRange {
-            aspects: self.format.aspect_flags(),
-            levels: 0 .. self.kind.num_levels(),
-            layers: 0 .. self.kind.num_layers(),
-        }).unwrap();
+        let view = factory
+            .create_image_view(
+                &image.raw(),
+                self.format,
+                Swizzle::NO,
+                SubresourceRange {
+                    aspects: self.format.aspect_flags(),
+                    levels: 0..self.kind.num_levels(),
+                    layers: 0..self.kind.num_layers(),
+                },
+            )
+            .unwrap();
 
         Ok(Texture {
-            sampler: self.sampler.clone().map(|info| factory.create_sampler(info)),
+            sampler: self.sampler
+                .clone()
+                .map(|info| factory.create_sampler(info)),
             image,
             view,
             kind: self.kind,

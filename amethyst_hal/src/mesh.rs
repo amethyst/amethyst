@@ -9,16 +9,16 @@ use core::cgmath::{Deg, Matrix4, Point3, SquareMatrix, Transform, Vector3};
 
 use hal::{Backend, IndexCount, IndexType, Primitive, VertexCount};
 use hal::buffer::{IndexBufferView, Usage};
-use hal::command::{RenderSubpassCommon};
+use hal::command::RenderSubpassCommon;
 use hal::memory::Properties;
 use hal::pso::VertexBufferSet;
 
 use smallvec::SmallVec;
 
-use {Buffer, Error};
-use factory::Factory;
-use utils::{is_slice_sorted, is_slice_sorted_by_key, cast_cow};
-use vertex::{VertexFormat, AsVertexFormat};
+use Error;
+use factory::{Buffer, Factory};
+use utils::{cast_cow, is_slice_sorted, is_slice_sorted_by_key};
+use vertex::{AsVertexFormat, VertexFormat};
 
 // /// Wraps container type (Like `Vec<V>`, `&[V]`, Box<[V]>, Cow<[V]> etc)
 // /// providing methods to build `VertexBuffer<B>` if `V` is `AsVertexFormat`
@@ -224,7 +224,6 @@ use vertex::{VertexFormat, AsVertexFormat};
 //     }
 // }
 
-
 /// Vertex buffer with it's format
 pub struct VertexBuffer<B: Backend> {
     buffer: Buffer<B>,
@@ -322,9 +321,10 @@ impl<'a> MeshBuilder<'a> {
     pub fn with_vertices<V, D>(mut self, vertices: D) -> Self
     where
         V: AsVertexFormat + 'a,
-        D: Into<Cow<'a, [V]>>
+        D: Into<Cow<'a, [V]>>,
     {
-        self.vertices.push((cast_cow(vertices.into()), V::VERTEX_FORMAT));
+        self.vertices
+            .push((cast_cow(vertices.into()), V::VERTEX_FORMAT));
         self
     }
 
@@ -374,10 +374,7 @@ impl<'a> MeshBuilder<'a> {
     }
 
     /// Builds and returns the new mesh.
-    pub fn build<B>(
-        &self,
-        factory: &mut Factory<B>,
-    ) -> Result<Mesh<B>, Error>
+    pub fn build<B>(&self, factory: &mut Factory<B>) -> Result<Mesh<B>, Error>
     where
         B: Backend,
     {
@@ -460,7 +457,9 @@ where
         vertex: &mut VertexBufferSet<'a, B>,
     ) -> Result<Bind<'a, B>, IncompatibleError> {
         debug_assert!(is_slice_sorted(formats));
-        debug_assert!(is_slice_sorted_by_key(&self.vbufs, |vbuf| &vbuf.format));
+        debug_assert!(is_slice_sorted_by_key(&self.vbufs, |vbuf| {
+            &vbuf.format
+        }));
         debug_assert!(vertex.0.is_empty());
 
         let mut next = 0;
@@ -479,15 +478,13 @@ where
         }
         Ok(self.ibuf
             .as_ref()
-            .map(|ibuf| {
-                Bind::Indexed {
-                    index: IndexBufferView {
-                        buffer: ibuf.buffer.raw(),
-                        offset: 0,
-                        index_type: ibuf.index_type,
-                    },
-                    count: ibuf.len,
-                }
+            .map(|ibuf| Bind::Indexed {
+                index: IndexBufferView {
+                    buffer: ibuf.buffer.raw(),
+                    offset: 0,
+                    index_type: ibuf.index_type,
+                },
+                count: ibuf.len,
             })
             .unwrap_or(Bind::Unindexed {
                 count: vertex_count.unwrap_or(0),
@@ -549,9 +546,13 @@ fn find_compatible_buffer<B>(vbufs: &[VertexBuffer<B>], format: &VertexFormat) -
 where
     B: Backend,
 {
-    debug_assert!(is_slice_sorted_by_key(&*format.attributes, |a| a.offset));
+    debug_assert!(is_slice_sorted_by_key(&*format.attributes, |a| {
+        a.offset
+    }));
     for (i, vbuf) in vbufs.iter().enumerate() {
-        debug_assert!(is_slice_sorted_by_key(&*vbuf.format.attributes, |a| a.offset));
+        debug_assert!(is_slice_sorted_by_key(&*vbuf.format.attributes, |a| {
+            a.offset
+        }));
         if is_compatible(&vbuf.format, format) {
             return Some(i);
         }
