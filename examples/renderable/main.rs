@@ -13,6 +13,7 @@ use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::timing::Time;
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::{Entity, Fetch, FetchMut, Join, ReadStorage, System, World, WriteStorage};
+use amethyst::input::InputBundle;
 use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, DisplayConfig, DrawShaded,
                          ElementState, Event, KeyboardInput, Light, Material, MaterialDefaults,
                          MeshHandle, ObjFormat, Pipeline, PngFormat, PointLight, PosNormTex,
@@ -395,6 +396,7 @@ fn run() -> Result<(), Error> {
         .with_bundle(HotReloadBundle::default())?
         .with_bundle(FPSCounterBundle::default())?
         .with_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?
+        .with_bundle(InputBundle::<String, String>::new())?
         .build()?;
     game.run();
     Ok(())

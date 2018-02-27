@@ -14,6 +14,8 @@ use super::*;
 ///
 /// Will register all necessary components and systems needed for UI, along with any resources.
 /// The generic types A and B represent the A and B generic parameter of the InputHandler<A,B>.
+///
+/// Will fail with error 'No resource with the given id' if the InputBundle is not added.
 pub struct UiBundle<A, B> {
     _marker1: PhantomData<A>,
     _marker2: PhantomData<B>,
