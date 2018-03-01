@@ -5,6 +5,8 @@
 > Note: This project is a *work in progress* and is very incomplete. Pardon the
 > dust!
 
+## Presentation
+
 Howdy! This book will teach you everything you need to know about building video
 games and interactive simulations with the Amethyst game engine. This engine is
 written entirely in [Rust][rs], a safe and fast systems programming language,
@@ -17,11 +19,13 @@ game engine.
 Amethyst is free and open source software, distributed under a dual license of [MIT][ml]
 and [Apache][al]. This means that the engine is given to you at no cost 
 and its source code is completely yours to tinker with. The code is available on
-[GitHub][am]. Contributions and feature requests are welcome!
+[GitHub][am]. Contributions and feature requests will always be welcomed!
 
 [ml]: https://github.com/amethyst/amethyst/blob/master/LICENSE-MIT
 [al]: https://github.com/amethyst/amethyst/blob/master/LICENSE-APACHE
-[am]: https://github.com/amethyst/amethyst
+[am]: https://github.com/amethyst/amethyst/blob/master
+
+## Getting started
 
 This book is split into three sections (more coming). This page is the first. The others are:
 
@@ -37,44 +41,42 @@ Read the crate-level [API documentation][ad] for more details.
 
 [ad]: https://www.amethyst.rs/doc/master/amethyst/
 
-## Why are you building this?
+> Please note that the default github branch is [develop][db], while the documentation in this document is based on the master/release branch.
+> The documentation for the develop branch is located [here][dd].
 
-I've worked with a few game engines over the years, namely [Unity][un] and the
-[Unreal Development Kit][ud], and both are pretty solid solutions if you want to
-build a quality game. But each have their own pros and cons that you have to
+[db]: https:://github.com/amethyst/amethyst/
+[dd]: https://www.amethyst.rs/doc/develop/amethyst/
+
+## Motivation
+
+Most of us have worked with quite a few game engines over the years, namely [Unity][un], [Unreal Engine][ud], [JMonkeyEngine][jme] and many more.
+While they all are pretty solid solutions if you want to
+build a quality game, each have their own pros and cons that you have to
 weigh before using them, especially in regards to performance and scalability.
 
 [un]: http://unity3d.com/
 [ud]: https://www.unrealengine.com/
+[jme]: https://www.jmonkeyengine.org/
 
-One engine I've always admired as a programmer but never had a chance to play
-with is the [Bitsquid Engine][bs] (now called [Autodesk Stingray][as]). It's
-fast, forward-thinking, highly parallel, and data-driven. It seems like a
-wonderful platform for rapid prototyping. I've wanted to play around with a
-Bitsquid-like engine for a while, but I couldn't find any open-source
-equivalents out there. Most of those I did find stuck to outdated design
-patterns and lacked the multi-core scalability I was looking for. So I set out
-to write my own.
+We think that basing the amethyst engine on good and modern principles will allow us to make an open source game engine that can actually be more performant than those engines.
+Those principles are:
+1. Modularity.
+   Modularity is at the core of the [Unix philosophy][up], which proved itself to be an excellent way of developing software over the years.
+   You will always be free to use the built-in modules, or to write your own and integrate them easily into the engine.
+   Since modules are small and well integrated, it is easier to reason about what they do and how they relate to other modules.
+2. Parallelism.
+   Modern computers, even cheap ones, all have multithread/multicores CPU. With the years, there will be more and more opportunities for parallelism to improve performance.
+   With a proper parallel engine, we are convinced that your game will be more and more performant over the years without even needing you to update it.
+3. Data-oriented/Data-driven.
+   Building your game around the data makes it really easy to prototype and quickly build a game.
+   Complex behaviours like swapping assets during gameplay become a breeze, making testing and balancing a lot faster.
 
-[bs]: http://twvideo01.ubm-us.net/o1/vault/gdc2012/slides/Programming%20Track/Persson_Tobias_Flexible_Rendering.pdf.pdf
-[as]: http://stingrayengine.com/
-[bl]: http://bitsquid.blogspot.com/
-
-In short, I am writing Amethyst to scratch three of my own itches:
-
-1. Teach myself Rust, game development, and computer graphics in their purest
-   form, rather than through the lens of a particular game engine.
-2. Write a modular, parallel, data-oriented, and data-driven engine suited for
-   rapid prototyping that demands (a little) less boilerplate from the user.
-3. Build a toolset that splits up the traditional "mega-editor" into several
-   [small but well-integrated tools][at], adhering to the [Unix philosophy][up].
-
-[at]: https://github.com/ebkalderon/amethyst_tools
 [up]: https://en.wikipedia.org/wiki/Unix_philosophy
 
 ## Contributing
 
-The Markdown source files from which this book is generated can be found
-[on GitHub][md]. Pull requests are welcome!
+We are always happy to welcome new contributors!
 
-[md]: https://github.com/amethyst/amethyst/tree/master/book/src
+If you want to contribute, or have questions, let us know either on [GitHub][db] or on [Gitter][gt]
+
+[gt]: https://gitter.im/amethyst/general/
