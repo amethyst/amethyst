@@ -23,7 +23,7 @@ and its source code is completely yours to tinker with. The code is available on
 
 [ml]: https://github.com/amethyst/amethyst/blob/master/LICENSE-MIT
 [al]: https://github.com/amethyst/amethyst/blob/master/LICENSE-APACHE
-[am]: https://github.com/amethyst/amethyst/blob/master
+[am]: https://github.com/amethyst/amethyst/tree/master
 
 ## Getting started
 
@@ -39,13 +39,13 @@ This book is split into three sections (more coming). This page is the first. Th
 
 Read the crate-level [API documentation][ad] for more details.
 
-[ad]: https://www.amethyst.rs/doc/master/amethyst/
+[ad]: https://www.amethyst.rs/doc/master/doc/amethyst/index.html
 
 > Please note that the default github branch is [develop][db], while the documentation in this document is based on the master/release branch.
 > The documentation for the develop branch is located [here][dd].
 
-[db]: https:://github.com/amethyst/amethyst/
-[dd]: https://www.amethyst.rs/doc/develop/amethyst/
+[db]: https://github.com/amethyst/amethyst/
+[dd]: https://www.amethyst.rs/doc/develop/doc/amethyst/index.html
 
 ## Motivation
 
@@ -56,7 +56,7 @@ weigh before using them, especially in regards to performance and scalability.
 
 [un]: http://unity3d.com/
 [ud]: https://www.unrealengine.com/
-[jme]: https://www.jmonkeyengine.org/
+[jme]: http://jmonkeyengine.org/
 
 We think that basing the amethyst engine on good and modern principles will allow us to make an open source game engine that can actually be more performant than those engines.
 Those principles are:
