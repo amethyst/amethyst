@@ -27,6 +27,9 @@ pub struct UiTransform {
     /// as this one exists they are ordered according to Entity creation order.  Shift-tab walks
     /// this ordering backwards.
     pub tab_order: i32,
+    pub calculated_x: f32,
+    pub calculated_y: f32,
+    pub calculated_z: f32,
     /// A private field to keep this from being initialized without new.
     pd: PhantomData<u8>,
 }
@@ -50,6 +53,9 @@ impl UiTransform {
             width,
             height,
             tab_order,
+            calculated_x: x,
+            calculated_y: y,
+            calculated_z: z,
             pd: PhantomData,
         }
     }

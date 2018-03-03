@@ -234,7 +234,7 @@ impl Pass for DrawUi {
             let vertex_args = VertexArgs {
                 proj_vec: proj_vec.into(),
                 // Coordinates are middle centered. It makes it easier to do layouting in most cases.
-                coord: [ui_transform.x - ui_transform.width / 2.0, ui_transform.y - ui_transform.height / 2.0],
+                coord: [ui_transform.calculated_x - ui_transform.width / 2.0, ui_transform.calculated_y - ui_transform.height / 2.0],
                 dimension: [ui_transform.width, ui_transform.height],
             };
             effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
@@ -352,9 +352,9 @@ impl Pass for DrawUi {
                     v_align: VerticalAlign::Top,
                 };
                 let section = VariedSection {
-                    screen_position: (ui_transform.x - ui_transform.width / 2.0, ui_transform.y - ui_transform.height / 2.0),
+                    screen_position: (ui_transform.calculated_x - ui_transform.width / 2.0, ui_transform.calculated_y - ui_transform.height / 2.0),
                     bounds: (ui_transform.width, ui_transform.height),
-                    z: ui_transform.z,
+                    z: ui_transform.calculated_z,
                     layout,
                     text,
                 };
@@ -488,8 +488,8 @@ impl Pass for DrawUi {
                                 width = 2.0;
                             }
                             let pos = glyph.map(|g| g.position()).unwrap_or(Point {
-                                x: ui_transform.x - ui_transform.width / 2.0,
-                                y: ui_transform.y - ui_transform.height / 2.0 + ascent,
+                                x: ui_transform.calculated_x - ui_transform.width / 2.0,
+                                y: ui_transform.calculated_y - ui_transform.height / 2.0 + ascent,
                             });
                             let mut x = pos.x;
                             if let Some(glyph) = glyph {

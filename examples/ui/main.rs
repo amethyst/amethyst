@@ -8,7 +8,7 @@ extern crate log;
 use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::Time;
 use amethyst::core::cgmath::{Deg, InnerSpace, Vector3};
-use amethyst::core::transform::GlobalTransform;
+use amethyst::core::transform::{GlobalTransform,Parent};
 use amethyst::ecs::{Entity, World};
 use amethyst::ecs::{FetchMut, System};
 use amethyst::input::InputBundle;
@@ -18,7 +18,7 @@ use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light,
                          Texture};
 use amethyst::shrev::{EventChannel, ReaderId};
 use amethyst::ui::{DrawUi, FontAsset, MouseReactive, TextEditing, TtfFormat, UiBundle, UiEvent,
-                   UiFocused, UiImage, UiText, UiTransform,Anchored,Anchor};
+                   UiFocused, UiImage, UiText, UiTransform,Anchored,Anchor,Stretch,Stretched};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::winit::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use genmesh::{MapToVertices, Triangulate, Vertices};
@@ -63,13 +63,32 @@ impl State for Example {
             (logo, font)
         };
 
-        world
+        let logo_entity = world
             .create_entity()
             .with(UiTransform::new(
                 "logo".to_string(),
-                300.,
-                300.,
                 0.,
+                0.,
+                0.,
+                21.,
+                266.,
+                0,
+            ))
+            .with(UiImage {
+                texture: logo.clone(),
+            })
+            .with(Stretched::new(Stretch::XY))
+            .with(Anchored::new(Anchor::Middle))
+            .with(MouseReactive)
+            .build();
+
+        let square = world
+            .create_entity()
+            .with(UiTransform::new(
+                "square".to_string(),
+                200.,
+                0.,
+                -1.,
                 232.,
                 266.,
                 0,
@@ -77,7 +96,10 @@ impl State for Example {
             .with(UiImage {
                 texture: logo.clone(),
             })
-            .with(MouseReactive)
+            .with(Stretched::new(Stretch::XY))
+            .with(Parent{
+                entity: logo_entity.clone(),
+            })
             .build();
 
         let text = world
@@ -97,7 +119,10 @@ impl State for Example {
                 [1.0, 1.0, 1.0, 1.0],
                 75.,
             ))
-            .with(Anchored::new(Anchor::Middle))
+            //.with(Anchored::new(Anchor::Middle))
+            .with(Parent{
+                entity: logo_entity.clone(),
+            })
             .with(TextEditing::new(
                 12,
                 [0.0, 0.0, 0.0, 1.0],
