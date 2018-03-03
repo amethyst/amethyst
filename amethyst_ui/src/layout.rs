@@ -5,22 +5,10 @@ use hibitset::BitSet;
 use std::collections::{HashMap,HashSet};
 use super::{UiTransform};
 
-
-
-
-
-
-
-
-
-// INTEGRATE MARGINS IN STRETCH
-
-
-
-
-
-
-
+pub enum ScaleMode{
+    Pixel,
+    Percent,
+}
 
 /// Y,X naming
 pub enum Anchor{
@@ -77,6 +65,11 @@ impl Stretched{
             margin: (0.0,0.0),
         }
     }
+
+    pub fn with_margin(mut self, x: f32, y: f32) -> Self {
+        self.margin = (x,y);
+        self
+    }
 }
 
 impl Component for Stretched{
@@ -126,7 +119,10 @@ impl<'a> System<'a> for UiLayoutSystem{
                 Anchor::BottomRight => (1.0,1.0),
             };
 
-            let user_offset = anchor.offset.unwrap();
+            let user_offset = match tr.scale_mode{
+                ScaleMode::Pixel => anchor.offset.unwrap(),
+                ScaleMode::Percent => anchor.offset.unwrap(), // NOT IMPLEMENTED, would need access to the parent's tr for that (in the other system)
+            };
 
             let new_pos_x = norm_offset.0 * screen_dim.width() + user_offset.0;
             let new_pos_y = norm_offset.1 * screen_dim.height() + user_offset.1;
@@ -264,9 +260,9 @@ impl<'a> System<'a> for UiParentSystem{
                             if let Some(st) = stretch.get(parent.entity){
                                 new_size = Some(
                                     match st.stretch{
-                                        Stretch::X => (parent_global.width,local.height),
-                                        Stretch::Y => (local.width,parent_global.height),
-                                        Stretch::XY => (parent_global.width,parent_global.height),
+                                        Stretch::X => (parent_global.width - st.margin.0,local.height),
+                                        Stretch::Y => (local.width,parent_global.height - st.margin.1),
+                                        Stretch::XY => (parent_global.width - st.margin.0,parent_global.height - st.margin.1),
                                     }
                                 );
                             }
@@ -309,9 +305,9 @@ impl<'a> System<'a> for UiParentSystem{
             if parents.get(entity).is_none() {
                 if let Some(st) = stretch.get(entity) {
                     let new_size = match st.stretch {
-                        Stretch::X => (screen_dim.width(), local.height),
-                        Stretch::Y => (local.width, screen_dim.height()),
-                        Stretch::XY => (screen_dim.width(), screen_dim.height()),
+                        Stretch::X => (screen_dim.width() - st.margin.0, local.height),
+                        Stretch::Y => (local.width, screen_dim.height() - st.margin.1),
+                        Stretch::XY => (screen_dim.width() - st.margin.0, screen_dim.height() - st.margin.1),
                     };
                     local.width = new_size.0;
                     local.height = new_size.1;

@@ -1,4 +1,5 @@
 use specs::{Component, DenseVecStorage, FlaggedStorage};
+use super::ScaleMode;
 use std::marker::PhantomData;
 
 /// The raw pixels on screen that are populated.
@@ -30,6 +31,7 @@ pub struct UiTransform {
     pub calculated_x: f32,
     pub calculated_y: f32,
     pub calculated_z: f32,
+    pub scale_mode: ScaleMode,
     /// A private field to keep this from being initialized without new.
     pd: PhantomData<u8>,
 }
@@ -56,6 +58,7 @@ impl UiTransform {
             calculated_x: x,
             calculated_y: y,
             calculated_z: z,
+            scale_mode: ScaleMode::Pixel,
             pd: PhantomData,
         }
     }
@@ -65,6 +68,11 @@ impl UiTransform {
         y > self.y - self.height / 2.0 &&
         x < self.x + self.width / 2.0 &&
         y < self.y + self.height / 2.0
+    }
+
+    pub fn as_percent(mut self) -> Self{
+        self.scale_mode = ScaleMode::Percent;
+        self
     }
 }
 
