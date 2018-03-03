@@ -18,7 +18,7 @@ use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light,
                          Texture};
 use amethyst::shrev::{EventChannel, ReaderId};
 use amethyst::ui::{DrawUi, FontAsset, MouseReactive, TextEditing, TtfFormat, UiBundle, UiEvent,
-                   UiFocused, UiImage, UiText, UiTransform};
+                   UiFocused, UiImage, UiText, UiTransform,Anchored,Anchor};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::winit::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use genmesh::{MapToVertices, Triangulate, Vertices};
@@ -97,6 +97,7 @@ impl State for Example {
                 [1.0, 1.0, 1.0, 1.0],
                 75.,
             ))
+            .with(Anchored::new(Anchor::Middle))
             .with(TextEditing::new(
                 12,
                 [0.0, 0.0, 0.0, 1.0],

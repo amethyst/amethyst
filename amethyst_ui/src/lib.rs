@@ -30,6 +30,7 @@ mod resize;
 mod text;
 mod transform;
 mod event;
+mod layout;
 
 pub use self::bundle::UiBundle;
 pub use self::event::{MouseReactive, UiEvent, UiEventType, UiMouseSystem};
@@ -40,6 +41,7 @@ pub use self::pass::DrawUi;
 pub use self::resize::{ResizeSystem, UiResize};
 pub use self::text::{TextEditing, UiSystem, UiText};
 pub use self::transform::UiTransform;
+pub use self::layout::{Anchor,Anchored,Stretch,Stretched,UiLayoutSystem};
 
 /// How many times the cursor blinks per second while editing text.
 const CURSOR_BLINK_RATE: f32 = 2.0;

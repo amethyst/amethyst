@@ -10,8 +10,10 @@ pub struct UiTransform {
     /// An identifier. Serves no purpose other than to help you distinguish between UI elements.
     pub id: String,
     /// X coordinate, 0 is the left edge, while the width of the screen is the right edge.
+    /// Centered in the middle of the ui element.
     pub x: f32,
     /// Y coordinate, 0 is the top edge, while the height of the screen is the bottom edge.
+    /// Centered in the middle of the ui element.
     pub y: f32,
     /// Z order, entities with a lower Z order will be rendered on top of entities with a higher
     /// Z order.
@@ -50,6 +52,13 @@ impl UiTransform {
             tab_order,
             pd: PhantomData,
         }
+    }
+    /// Checks if the input position is in the UiTransform rectangle.
+    pub fn position_inside(&self, x: f32, y: f32, ) -> bool {
+        x > self.x - self.width / 2.0 &&
+        y > self.y - self.height / 2.0 &&
+        x < self.x + self.width / 2.0 &&
+        y < self.y + self.height / 2.0
     }
 }
 

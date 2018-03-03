@@ -2,6 +2,7 @@
 
 use amethyst_assets::{AssetStorage, Handle, Processor};
 use amethyst_core::bundle::{ECSBundle, Result};
+use amethyst_core::Parent;
 use shrev::EventChannel;
 use specs::{DispatcherBuilder, World};
 use std::hash::Hash;
@@ -48,6 +49,9 @@ where
         world.register::<UiResize>();
         world.register::<Handle<FontAsset>>();
         world.register::<MouseReactive>();
+        world.register::<Anchored>();
+        world.register::<Stretched>();
+        world.register::<Parent>();
 
         world.add_resource(AssetStorage::<FontAsset>::new());
         world.add_resource(UiFocused { entity: None });
@@ -64,6 +68,7 @@ where
             .add(Processor::<FontAsset>::new(), "font_processor", &[])
             .add(UiSystem::new(reader_1), "ui_system", &["font_processor"])
             .add(ResizeSystem::new(reader_2), "ui_resize_system", &[])
-            .add(UiMouseSystem::<A, B>::new(), "ui_mouse_system", &[]))
+            .add(UiMouseSystem::<A, B>::new(), "ui_mouse_system", &[])
+            .add(UiLayoutSystem::new(), "ui_layout", &[]))
     }
 }
