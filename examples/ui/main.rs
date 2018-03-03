@@ -42,7 +42,7 @@ impl State for Example {
         initialise_sphere(world);
         initialise_lights(world);
         initialise_camera(world);
-        let (logo, font) = {
+        let (logo, font,red,green,blue) = {
             let loader = world.read_resource::<Loader>();
 
             let logo = loader.load(
@@ -60,46 +60,87 @@ impl State for Example {
                 (),
                 &world.read_resource::<AssetStorage<FontAsset>>(),
             );
-            (logo, font)
+            let red = loader.load_from_data([1.0, 0.0, 0.0, 1.0].into(), (), &world.read_resource::<AssetStorage<Texture>>());
+            let green = loader.load_from_data([0.0, 1.0, 0.0, 1.0].into(), (), &world.read_resource::<AssetStorage<Texture>>());
+            let blue = loader.load_from_data([0.0, 0.0, 1.0, 1.0].into(), (), &world.read_resource::<AssetStorage<Texture>>());
+            (logo, font,red,green,blue)
         };
+
+        let background = world
+            .create_entity()
+            .with(UiTransform::new(
+                "background".to_string(),
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0,
+            ))
+            .with(UiImage{
+                texture: red.clone(),
+            })
+            .with(Stretched::new(Stretch::XY))
+            .with(Anchored::new(Anchor::Middle))
+            .build();
+
+        let top_right = world
+            .create_entity()
+            .with(UiTransform::new(
+                "top_right".to_string(),
+                -32.0,
+                32.0,
+                -1.0,
+                64.0,
+                64.0,
+                0,
+            ).as_percent())
+            .with(UiImage {
+                texture: green.clone(),
+            })
+            .with(Anchored::new(Anchor::TopRight))
+            .with(Parent{
+                entity: background.clone(),
+            })
+            .build();
+
+        let middle_of_top_right = world
+            .create_entity()
+            .with(UiTransform::new(
+                "middle_top_right".to_string(),
+                0.0,
+                0.0,
+                -2.0,
+                32.0,
+                32.0,
+                0,
+            ).as_percent())
+            .with(UiImage {
+                texture: blue.clone(),
+            })
+            .with(Anchored::new(Anchor::Middle))
+            .with(Stretched::new(Stretch::X))
+            .with(Parent{
+                entity: top_right.clone(),
+            })
+            .build();
 
         let logo_entity = world
             .create_entity()
             .with(UiTransform::new(
                 "logo".to_string(),
                 0.,
-                0.,
-                0.,
-                21.,
-                266.,
-                0,
+                -32.,
+                -4.,
+                64.,
+                64.,
+                1,
             ))
             .with(UiImage {
                 texture: logo.clone(),
             })
-            .with(Stretched::new(Stretch::XY))
-            .with(Anchored::new(Anchor::Middle))
+            .with(Anchored::new(Anchor::BottomMiddle))
             .with(MouseReactive)
-            .build();
-
-        let square = world
-            .create_entity()
-            .with(UiTransform::new(
-                "square".to_string(),
-                200.,
-                0.,
-                -1.,
-                232.,
-                266.,
-                0,
-            ))
-            .with(UiImage {
-                texture: logo.clone(),
-            })
-            .with(Stretched::new(Stretch::XY))
-            .with(Parent{
-                entity: logo_entity.clone(),
-            })
             .build();
 
         let text = world
@@ -107,8 +148,8 @@ impl State for Example {
             .with(UiTransform::new(
                 "hello_world".to_string(),
                 0.,
-                200.,
-                1.,
+                -200.,
+                -4.,
                 500.,
                 75.,
                 1,
@@ -119,10 +160,7 @@ impl State for Example {
                 [1.0, 1.0, 1.0, 1.0],
                 75.,
             ))
-            //.with(Anchored::new(Anchor::Middle))
-            .with(Parent{
-                entity: logo_entity.clone(),
-            })
+            .with(Anchored::new(Anchor::Middle))
             .with(TextEditing::new(
                 12,
                 [0.0, 0.0, 0.0, 1.0],
@@ -134,8 +172,8 @@ impl State for Example {
             .create_entity()
             .with(UiTransform::new(
                 "fps".to_string(),
-                0.,
-                0.,
+                100.,
+                30.,
                 1.,
                 500.,
                 75.,
@@ -147,9 +185,10 @@ impl State for Example {
                 [1.0, 1.0, 1.0, 1.0],
                 75.,
             ))
+            .with(Anchored::new(Anchor::TopLeft))
             .build();
         self.fps_display = Some(fps);
-        world.write_resource::<UiFocused>().entity = Some(text);
+        //world.write_resource::<UiFocused>().entity = Some(text);
     }
 
     fn update(&mut self, world: &mut World) -> Trans {

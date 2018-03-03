@@ -5,12 +5,14 @@ use hibitset::BitSet;
 use std::collections::{HashMap,HashSet};
 use super::{UiTransform};
 
+#[derive(Debug,Clone)]
 pub enum ScaleMode{
     Pixel,
     Percent,
 }
 
 /// Y,X naming
+#[derive(Debug,Clone)]
 pub enum Anchor{
     TopLeft,
     TopMiddle,
@@ -23,6 +25,7 @@ pub enum Anchor{
     BottomRight,
 }
 
+#[derive(Debug,Clone)]
 pub enum Stretch{
     X,
     Y,
@@ -30,6 +33,7 @@ pub enum Stretch{
 }
 
 /// Relative to parent
+#[derive(Debug,Clone)]
 pub struct Anchored{
     anchor: Anchor,
     /// Defaults to none.
@@ -46,12 +50,27 @@ impl Anchored{
             offset: None,
         }
     }
+
+    pub fn norm_offset(&self) -> (f32,f32) {
+        match self.anchor{
+            Anchor::TopLeft => (-0.5,-0.5),
+            Anchor::TopMiddle => (0.0,-0.5),
+            Anchor::TopRight => (0.5,-0.5),
+            Anchor::MiddleLeft => (-0.5,0.0),
+            Anchor::Middle => (0.0,0.0),
+            Anchor::MiddleRight => (0.5,0.0),
+            Anchor::BottomLeft => (-0.5,0.5),
+            Anchor::BottomMiddle => (0.0,0.5),
+            Anchor::BottomRight => (0.5,0.5),
+        }
+    }
 }
 
 impl Component for Anchored{
     type Storage = VecStorage<Self>;
 }
 
+#[derive(Debug,Clone)]
 pub struct Stretched{
     stretch: Stretch,
     /// default to 0,0; in builder use .with_margin
@@ -107,25 +126,17 @@ impl<'a> System<'a> for UiLayoutSystem{
                 anchor.offset = Some((tr.x,tr.y));
             }
 
-            let norm_offset = match anchor.anchor{
-                Anchor::TopLeft => (0.0,0.0),
-                Anchor::TopMiddle => (0.5,0.0),
-                Anchor::TopRight => (1.0,0.0),
-                Anchor::MiddleLeft => (0.0,0.5),
-                Anchor::Middle => (0.5,0.5),
-                Anchor::MiddleRight => (1.0,0.5),
-                Anchor::BottomLeft => (0.0,1.0),
-                Anchor::BottomMiddle => (0.5,1.0),
-                Anchor::BottomRight => (1.0,1.0),
-            };
+            let norm_offset = anchor.norm_offset();
 
             let user_offset = match tr.scale_mode{
                 ScaleMode::Pixel => anchor.offset.unwrap(),
                 ScaleMode::Percent => anchor.offset.unwrap(), // NOT IMPLEMENTED, would need access to the parent's tr for that (in the other system)
             };
 
-            let new_pos_x = norm_offset.0 * screen_dim.width() + user_offset.0;
-            let new_pos_y = norm_offset.1 * screen_dim.height() + user_offset.1;
+            let middle = (screen_dim.width() / 2.0, screen_dim.height() / 2.0);
+
+            let new_pos_x = middle.0 + norm_offset.0 * screen_dim.width() + user_offset.0;
+            let new_pos_y = middle.1 + norm_offset.1 * screen_dim.height() + user_offset.1;
             tr.x = new_pos_x;
             tr.y = new_pos_y;
             if parent.get(entity).is_none(){
@@ -174,10 +185,11 @@ impl<'a> System<'a> for UiParentSystem{
         Entities<'a>,
         WriteStorage<'a, UiTransform>,
         WriteStorage<'a, Parent>,
+        ReadStorage<'a, Anchored>,
         ReadStorage<'a, Stretched>,
         Fetch<'a, ScreenDimensions>,
     );
-    fn run(&mut self, (entities, mut locals, mut parents, stretch, screen_dim): Self::SystemData) {
+    fn run(&mut self, (entities, mut locals, mut parents, anchors, stretch, screen_dim): Self::SystemData) {
         #[cfg(feature = "profiler")]
         profile_scope!("ui_parent_system");
 
@@ -256,8 +268,14 @@ impl<'a> System<'a> for UiParentSystem{
 
                     if local_dirty || parent_dirty || locals.open().1.flagged(parent.entity) || stretch.open().1.flagged(parent.entity) {
                         if let Some(parent_global) = locals.get(parent.entity) {
-                            combined_transform = Some((parent_global.x + local.x,parent_global.y + local.y,parent_global.z + local.z));
-                            if let Some(st) = stretch.get(parent.entity){
+                            combined_transform = Some(match anchors.get(entity){
+                                Some(anchor) => {
+                                    let norm = anchor.norm_offset();
+                                    (parent_global.x + parent_global.width * norm.0 + anchor.offset.unwrap().0,parent_global.y + parent_global.height * norm.1 + anchor.offset.unwrap().1,parent_global.z + local.z)
+                                },
+                                None => (parent_global.x + local.x,parent_global.y + local.y,parent_global.z + local.z),
+                            });
+                            if let Some(st) = stretch.get(entity){
                                 new_size = Some(
                                     match st.stretch{
                                         Stretch::X => (parent_global.width - st.margin.0,local.height),
