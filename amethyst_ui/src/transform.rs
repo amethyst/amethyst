@@ -1,5 +1,5 @@
-use specs::{Component, DenseVecStorage, FlaggedStorage};
 use super::ScaleMode;
+use specs::{Component, DenseVecStorage, FlaggedStorage};
 use std::marker::PhantomData;
 
 /// The raw pixels on screen that are populated.
@@ -68,15 +68,13 @@ impl UiTransform {
         }
     }
     /// Checks if the input position is in the UiTransform rectangle.
-    pub fn position_inside(&self, x: f32, y: f32, ) -> bool {
-        x > self.x - self.width / 2.0 &&
-        y > self.y - self.height / 2.0 &&
-        x < self.x + self.width / 2.0 &&
-        y < self.y + self.height / 2.0
+    pub fn position_inside(&self, x: f32, y: f32) -> bool {
+        x > self.x - self.width / 2.0 && y > self.y - self.height / 2.0
+            && x < self.x + self.width / 2.0 && y < self.y + self.height / 2.0
     }
 
     /// Currently unused. Will be implemented in a future PR.
-    pub fn as_percent(mut self) -> Self{
+    pub fn as_percent(mut self) -> Self {
         self.scale_mode = ScaleMode::Percent;
         self
     }

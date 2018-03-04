@@ -8,7 +8,7 @@ extern crate log;
 use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::Time;
 use amethyst::core::cgmath::{Deg, InnerSpace, Vector3};
-use amethyst::core::transform::{GlobalTransform,Parent};
+use amethyst::core::transform::{GlobalTransform, Parent};
 use amethyst::ecs::{Entity, World};
 use amethyst::ecs::{FetchMut, System};
 use amethyst::input::InputBundle;
@@ -17,8 +17,9 @@ use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light,
                          PngFormat, PointLight, PosNormTex, Projection, RenderBundle, Rgba, Stage,
                          Texture};
 use amethyst::shrev::{EventChannel, ReaderId};
-use amethyst::ui::{DrawUi, FontAsset, MouseReactive, TextEditing, TtfFormat, UiBundle, UiEvent,
-                   UiFocused, UiImage, UiText, UiTransform,Anchored,Anchor,Stretch,Stretched};
+use amethyst::ui::{Anchor, Anchored, DrawUi, FontAsset, MouseReactive, Stretch, Stretched,
+                   TextEditing, TtfFormat, UiBundle, UiEvent, UiFocused, UiImage, UiText,
+                   UiTransform};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::winit::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use genmesh::{MapToVertices, Triangulate, Vertices};
@@ -42,7 +43,7 @@ impl State for Example {
         initialise_sphere(world);
         initialise_lights(world);
         initialise_camera(world);
-        let (logo, font,red,green,blue) = {
+        let (logo, font, red, green, blue) = {
             let loader = world.read_resource::<Loader>();
 
             let logo = loader.load(
@@ -60,10 +61,22 @@ impl State for Example {
                 (),
                 &world.read_resource::<AssetStorage<FontAsset>>(),
             );
-            let red = loader.load_from_data([1.0, 0.0, 0.0, 1.0].into(), (), &world.read_resource::<AssetStorage<Texture>>());
-            let green = loader.load_from_data([0.0, 1.0, 0.0, 1.0].into(), (), &world.read_resource::<AssetStorage<Texture>>());
-            let blue = loader.load_from_data([0.0, 0.0, 1.0, 1.0].into(), (), &world.read_resource::<AssetStorage<Texture>>());
-            (logo, font,red,green,blue)
+            let red = loader.load_from_data(
+                [1.0, 0.0, 0.0, 1.0].into(),
+                (),
+                &world.read_resource::<AssetStorage<Texture>>(),
+            );
+            let green = loader.load_from_data(
+                [0.0, 1.0, 0.0, 1.0].into(),
+                (),
+                &world.read_resource::<AssetStorage<Texture>>(),
+            );
+            let blue = loader.load_from_data(
+                [0.0, 0.0, 1.0, 1.0].into(),
+                (),
+                &world.read_resource::<AssetStorage<Texture>>(),
+            );
+            (logo, font, red, green, blue)
         };
 
         let background = world
@@ -77,7 +90,7 @@ impl State for Example {
                 20.0,
                 0,
             ))
-            .with(UiImage{
+            .with(UiImage {
                 texture: red.clone(),
             })
             .with(Stretched::new(Stretch::XY))
@@ -86,20 +99,15 @@ impl State for Example {
 
         let top_right = world
             .create_entity()
-            .with(UiTransform::new(
-                "top_right".to_string(),
-                -32.0,
-                32.0,
-                -1.0,
-                64.0,
-                64.0,
-                0,
-            ).as_percent())
+            .with(
+                UiTransform::new("top_right".to_string(), -32.0, 32.0, -1.0, 64.0, 64.0, 0)
+                    .as_percent(),
+            )
             .with(UiImage {
                 texture: green.clone(),
             })
             .with(Anchored::new(Anchor::TopRight))
-            .with(Parent{
+            .with(Parent {
                 entity: background.clone(),
             })
             .build();
@@ -118,8 +126,8 @@ impl State for Example {
                 texture: blue.clone(),
             })
             .with(Anchored::new(Anchor::Middle))
-            .with(Stretched::new(Stretch::X).with_margin(2.0,0.0))
-            .with(Parent{
+            .with(Stretched::new(Stretch::X).with_margin(2.0, 0.0))
+            .with(Parent {
                 entity: top_right.clone(),
             })
             .build();

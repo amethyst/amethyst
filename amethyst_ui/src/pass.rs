@@ -196,7 +196,9 @@ impl Pass for DrawUi {
                     Some(pos) => self.cached_draw_order
                         .cache
                         .insert(pos, (transform.calculated_z, entity)),
-                    None => self.cached_draw_order.cache.push((transform.calculated_z, entity)),
+                    None => self.cached_draw_order
+                        .cache
+                        .push((transform.calculated_z, entity)),
                 }
             }
         }
@@ -227,7 +229,8 @@ impl Pass for DrawUi {
         // Remove brushes whose fonts have been dropped.
         self.glyph_brushes
             .retain(|&_id, ref mut value| !value.1.is_dead());
-        let highest_abs_z = (&ui_transform,).join()
+        let highest_abs_z = (&ui_transform,)
+            .join()
             .map(|t| t.0.calculated_z)
             .fold(1.0, |highest, current| current.abs().max(highest));
         for &(_z, entity) in &self.cached_draw_order.cache {
@@ -236,7 +239,10 @@ impl Pass for DrawUi {
             let vertex_args = VertexArgs {
                 proj_vec: proj_vec.into(),
                 // Coordinates are middle centered. It makes it easier to do layouting in most cases.
-                coord: [ui_transform.calculated_x - ui_transform.width / 2.0, ui_transform.calculated_y - ui_transform.height / 2.0],
+                coord: [
+                    ui_transform.calculated_x - ui_transform.width / 2.0,
+                    ui_transform.calculated_y - ui_transform.height / 2.0,
+                ],
                 dimension: [ui_transform.width, ui_transform.height],
             };
             effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
@@ -354,7 +360,10 @@ impl Pass for DrawUi {
                     v_align: VerticalAlign::Top,
                 };
                 let section = VariedSection {
-                    screen_position: (ui_transform.calculated_x - ui_transform.width / 2.0, ui_transform.calculated_y - ui_transform.height / 2.0),
+                    screen_position: (
+                        ui_transform.calculated_x - ui_transform.width / 2.0,
+                        ui_transform.calculated_y - ui_transform.height / 2.0,
+                    ),
                     bounds: (ui_transform.width, ui_transform.height),
                     z: ui_transform.calculated_z / highest_abs_z,
                     layout,
