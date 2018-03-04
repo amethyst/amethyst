@@ -227,7 +227,9 @@ impl Pass for DrawUi {
         // Remove brushes whose fonts have been dropped.
         self.glyph_brushes
             .retain(|&_id, ref mut value| !value.1.is_dead());
-
+        let highest_abs_z = (&ui_transform,).join()
+            .map(|t| t.calculated_z)
+            .fold(1.0, |highest, current| current.abs().max(highest));
         for &(_z, entity) in &self.cached_draw_order.cache {
             // This won't panic as we guaranteed earlier these entities are present.
             let ui_transform = ui_transform.get(entity).unwrap();
@@ -354,7 +356,7 @@ impl Pass for DrawUi {
                 let section = VariedSection {
                     screen_position: (ui_transform.calculated_x - ui_transform.width / 2.0, ui_transform.calculated_y - ui_transform.height / 2.0),
                     bounds: (ui_transform.width, ui_transform.height),
-                    z: ui_transform.calculated_z,
+                    z: ui_transform.calculated_z / highest_abs_z,
                     layout,
                     text,
                 };
