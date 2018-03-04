@@ -14,6 +14,7 @@ extern crate specs;
 extern crate uuid;
 extern crate rand;
 extern crate shred;
+extern crate mio;
 
 mod bundle;
 mod connection;

@@ -8,6 +8,7 @@ use serde::Serialize;
 use serde::de::DeserializeOwned;
 use filter::NetFilter;
 use std::net::SocketAddr;
+use uuid::Uuid;
 use super::{NetSocketSystem,ConnectionManagerSystem,NetSendBuffer,NetReceiveBuffer,NetConnectionPool,NetIdentity};
 
 pub struct NetworkClientBundle<'a,T> {
@@ -45,7 +46,7 @@ impl<'a, 'b, 'c, T> ECSBundle<'a, 'b> for NetworkClientBundle<'c,T> where T: Sen
         world.add_resource(NetSendBuffer::<T>::new());
         world.add_resource(NetReceiveBuffer::<T>::new());
 
-        let muuid = Uuid::new_v4();
+        let uuid = Uuid::new_v4();
 
         while self.port.is_none() || self.port.unwrap() < 200 {
             self.port = Some(rand::random::<u16>());

@@ -20,7 +20,7 @@ impl<T> NetFilter<T> for FilterConnected where T: PartialEq{
                 return true
             }else if conn.state == ConnectionState::Connecting{
                 match *event{
-                    NetEvent::Connect => return true,
+                    NetEvent::Connect{client_uuid} => return true,
                     NetEvent::Connected{server_uuid}=> return true,
                     _ => {},
                 }

@@ -59,8 +59,10 @@ impl NetConnectionPool{
 
     pub fn connection_from_uuid(&self,uuid:&Uuid)->Option<NetConnection>{
         for c in &self.connections{
-            if c.uuid == *uuid{
-                return Some(c.clone())
+            if let Some(cl_uuid) = c.uuid{
+                if cl_uuid == *uuid{
+                    return Some(c.clone())
+                }
             }
         }
         None

@@ -1,8 +1,9 @@
 //! The network client System
 
 use specs::{System,Fetch,FetchMut};
-use std::net::UdpSocket;
+//use std::net::UdpSocket;
 use std::net::IpAddr;
+use std::time::Duration;
 use std::net::SocketAddr;
 use std::io::{Error,ErrorKind};
 use std::str;
@@ -14,6 +15,10 @@ use serde::Serialize;
 use serde::de::DeserializeOwned;
 use uuid::Uuid;
 use super::{NetFilter,NetSourcedEvent,NetSendBuffer,NetReceiveBuffer,NetConnectionPool,ConnectionState,NetEvent,NetConnection,send_event,deserialize_event};
+use mio::net::UdpSocket;
+use mio::{Events, Ready, Poll, PollOpt, Token};
+
+const SOCKET: Token = Token(0);
 
 /// The System managing the network state and connections.
 /// The T generic parameter corresponds to the network event enum type.
@@ -22,6 +27,7 @@ pub struct NetSocketSystem<T> where T: PartialEq{
     pub socket: UdpSocket,
     pub send_queue_reader: Option<ReaderId<NetSourcedEvent<T>>>,
     pub filters: Vec<Box<NetFilter<T>>>,
+    pub poll: Poll,
 }
 
 //TODO: add Unchecked Event type list. Those events will be let pass the client connected filter (Example: NetEvent::Connect).
@@ -29,13 +35,16 @@ pub struct NetSocketSystem<T> where T: PartialEq{
 impl<T> NetSocketSystem<T> where T:Serialize+PartialEq{
     /// Creates a NetClientSystem and binds the Socket on the ip and port added in parameters.
     pub fn new(ip:&str,port:u16,filters:Vec<Box<NetFilter<T>>>)->Result<NetSocketSystem<T>,Error>{
-        let socket = UdpSocket::bind(SocketAddr::new(IpAddr::from_str(ip).expect("Unreadable input IP."),port))?;
-        socket.set_nonblocking(true)?;
+        let socket = UdpSocket::bind(&SocketAddr::new(IpAddr::from_str(ip).expect("Unreadable input IP."),port))?;
+        //socket.set_nonblocking(true)?;
+        let poll = Poll::new()?;
+        poll.register(&socket,SOCKET,Ready::writable(),PollOpt::edge())?;
         Ok(
             NetSocketSystem{
                 socket,
                 send_queue_reader: None,
                 filters,
+                poll,
             }
         )
     }
@@ -73,8 +82,54 @@ impl<'a, T> System<'a> for NetSocketSystem<T> where T:Send+Sync+Serialize+Clone+
             }
         }
 
-        // Rx
+
+
+        let mut events = Events::with_capacity(128);
         let mut buf = [0; 2048];
+        self.poll.poll(&mut events, Some(Duration::from_millis(0))).expect("Failed to poll");
+
+        for raw_event in events.iter(){
+            println!("EV");
+            match self.socket.recv_from(&mut buf) {
+                //Data received
+                Ok((amt, src)) => {
+                    let mut connection_dropped = false;
+
+                    let net_event = deserialize_event::<T>(&buf[..amt]);
+                    match net_event{
+                        Ok(ev)=>{
+                            let mut filtered = false;
+                            for mut f in self.filters.iter_mut(){
+                                if !f.allow(&pool,&src,&ev){
+                                    filtered = true;
+                                }
+                            }
+                            if !filtered {
+                                let owned_event = NetSourcedEvent {
+                                    event: ev.clone(),
+                                    uuid: pool.connection_from_address(&src).map(|c| c.uuid).unwrap(),
+                                    socket: src,
+                                };
+                                receive_buf.buf.single_write(owned_event);
+                            }
+                        },
+                        Err(e)=>error!("Failed to read network event: {}",e),
+                    }
+                    if connection_dropped{
+                        pool.connections.pop();
+                    }
+                },
+                Err(e) => { //No data
+                    if e.kind() == ErrorKind::WouldBlock{
+                        break;//Safely ignores when no packets are waiting in the queue, and stop checking for this time.
+                    }
+                    error!("couldn't receive a datagram: {}", e);
+                },
+            }
+        }
+
+        // Rx
+        /*let mut buf = [0; 2048];
         'read: loop {
             match self.socket.recv_from(&mut buf) {
                 //Data received
@@ -91,7 +146,7 @@ impl<'a, T> System<'a> for NetSocketSystem<T> where T:Send+Sync+Serialize+Clone+
                             }
                             let owned_event = NetSourcedEvent {
                                 event: ev.clone(),
-                                uuid: pool.connection_from_address(&src).map(|c| c.uuid),
+                                uuid: pool.connection_from_address(&src).map(|c| c.uuid).unwrap(),
                                 socket: src,
                             };
                             receive_buf.buf.single_write(owned_event);
@@ -109,6 +164,6 @@ impl<'a, T> System<'a> for NetSocketSystem<T> where T:Send+Sync+Serialize+Clone+
                     error!("couldn't receive a datagram: {}", e);
                 },
             }
-        }
+        }*/
     }
 }

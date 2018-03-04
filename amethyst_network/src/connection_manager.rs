@@ -1,4 +1,4 @@
-use specs::{System,FetchMut};
+use specs::{System,FetchMut,Fetch};
 use shrev::{ReaderId,EventChannel};
 use serde::Serialize;
 use serde::de::DeserializeOwned;
@@ -39,23 +39,26 @@ impl<'a,T> System<'a> for ConnectionManagerSystem<T> where T:Send+Sync+PartialEq
                         if ev.uuid.is_none(){
                             // Check if the specified uuid is already connected.
                             // UUID Spoofing prevention.
-                            if !pool.connections.contains(|c| c.uuid == Some(client_uuid)) {
+                            if !pool.connections.iter().filter(|c| match c.uuid {
+                                Some(cl_uuid) => cl_uuid == client_uuid,
+                                None => false,
+                            }).count() == 0 {
                                 println!("conn manager received something");
                                 pool.connections.push(
-                                    NetConnection {
-                                        target: ev.socket,
-                                        state: ConnectionState::Connected,
-                                        uuid: Some(client_uuid),
-                                    }
+                                NetConnection {
+                                target: ev.socket,
+                                state: ConnectionState::Connected,
+                                uuid: Some(client_uuid),
+                                }
                                 );
                                 send_buf.buf.single_write(
-                                    NetSourcedEvent {
-                                        event: NetEvent::Connected {
-                                            server_uuid: identity.uuid.clone(),
-                                        },
-                                        uuid: Some(client_uuid),
-                                        socket: ev.socket,
-                                    }
+                                NetSourcedEvent {
+                                event: NetEvent::Connected {
+                                server_uuid: identity.uuid.clone(),
+                                },
+                                uuid: Some(client_uuid),
+                                socket: ev.socket,
+                                }
                                 );
                             }
                         }
@@ -81,7 +84,7 @@ impl<'a,T> System<'a> for ConnectionManagerSystem<T> where T:Send+Sync+PartialEq
                         let mut conn = pool.connection_from_address(&ev.socket);
                         if let Some(mut c) = conn.as_mut(){
                             c.state = ConnectionState::Connected;
-                            c.uuid = server_uuid;
+                            c.uuid = Some(server_uuid);
                         }
                         info!("Remote {:?} accepted connection request.", ev.socket);
                     },

@@ -22,3 +22,4 @@ log = "0.4"
 specs = { version = "0.10", features = ["serde"] }
 uuid = { version = "0.5.1", features = ["v4","serde"] }
 rand = "0.4"
+mio = "0.6"
