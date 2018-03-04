@@ -5,6 +5,7 @@ use hibitset::BitSet;
 use std::collections::{HashMap,HashSet};
 use super::{UiTransform};
 
+/// Unused, will be implemented in a future PR.
 #[derive(Debug,Clone)]
 pub enum ScaleMode{
     Pixel,
@@ -128,9 +129,11 @@ impl<'a> System<'a> for UiLayoutSystem{
 
             let norm_offset = anchor.norm_offset();
 
+
+            // Percent will be implemented in a future PR
             let user_offset = match tr.scale_mode{
                 ScaleMode::Pixel => anchor.offset.unwrap(),
-                ScaleMode::Percent => anchor.offset.unwrap(), // NOT IMPLEMENTED, would need access to the parent's tr for that (in the other system)
+                ScaleMode::Percent => anchor.offset.unwrap(),
             };
 
             let middle = (screen_dim.width() / 2.0, screen_dim.height() / 2.0);

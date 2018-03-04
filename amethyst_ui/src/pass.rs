@@ -178,7 +178,7 @@ impl Pass for DrawUi {
         }
 
         for &mut (ref mut z, entity) in &mut self.cached_draw_order.cache {
-            *z = ui_transform.get(entity).unwrap().z;
+            *z = ui_transform.get(entity).unwrap().calculated_z;
         }
 
         // Attempt to insert the new entities in sorted position.  Should reduce work during
@@ -191,12 +191,12 @@ impl Pass for DrawUi {
                 let pos = self.cached_draw_order
                     .cache
                     .iter()
-                    .position(|&(cached_z, _)| transform.z >= cached_z);
+                    .position(|&(cached_z, _)| transform.calculated_z >= cached_z);
                 match pos {
                     Some(pos) => self.cached_draw_order
                         .cache
-                        .insert(pos, (transform.z, entity)),
-                    None => self.cached_draw_order.cache.push((transform.z, entity)),
+                        .insert(pos, (transform.calculated_z, entity)),
+                    None => self.cached_draw_order.cache.push((transform.calculated_z, entity)),
                 }
             }
         }

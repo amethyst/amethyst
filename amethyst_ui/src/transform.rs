@@ -70,6 +70,7 @@ impl UiTransform {
         y < self.y + self.height / 2.0
     }
 
+    /// Currently unused. Will be implemented in a future PR.
     pub fn as_percent(mut self) -> Self{
         self.scale_mode = ScaleMode::Percent;
         self

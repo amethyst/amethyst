@@ -39,7 +39,7 @@ struct Example {
 impl State for Example {
     fn on_start(&mut self, world: &mut World) {
         // Initialise the scene with an object, a light and a camera.
-        initialise_sphere(world);
+        //initialise_sphere(world);
         initialise_lights(world);
         initialise_camera(world);
         let (logo, font,red,green,blue) = {
@@ -66,15 +66,15 @@ impl State for Example {
             (logo, font,red,green,blue)
         };
 
-        let background = world
+        /*let background = world
             .create_entity()
             .with(UiTransform::new(
                 "background".to_string(),
                 0.0,
                 0.0,
                 0.0,
-                0.0,
-                0.0,
+                20.0,
+                20.0,
                 0,
             ))
             .with(UiImage{
@@ -114,7 +114,7 @@ impl State for Example {
                 32.0,
                 32.0,
                 0,
-            ).as_percent())
+            ))
             .with(UiImage {
                 texture: blue.clone(),
             })
@@ -131,7 +131,7 @@ impl State for Example {
                 "logo".to_string(),
                 0.,
                 -32.,
-                -4.,
+                -3.,
                 64.,
                 64.,
                 1,
@@ -141,14 +141,14 @@ impl State for Example {
             })
             .with(Anchored::new(Anchor::BottomMiddle))
             .with(MouseReactive)
-            .build();
+            .build();*/
 
         let text = world
             .create_entity()
             .with(UiTransform::new(
                 "hello_world".to_string(),
                 0.,
-                -200.,
+                0.,
                 -4.,
                 500.,
                 75.,
@@ -174,7 +174,7 @@ impl State for Example {
                 "fps".to_string(),
                 100.,
                 30.,
-                1.,
+                -3.,
                 500.,
                 75.,
                 2,
@@ -188,7 +188,7 @@ impl State for Example {
             .with(Anchored::new(Anchor::TopLeft))
             .build();
         self.fps_display = Some(fps);
-        //world.write_resource::<UiFocused>().entity = Some(text);
+        world.write_resource::<UiFocused>().entity = Some(text);
     }
 
     fn update(&mut self, world: &mut World) -> Trans {
