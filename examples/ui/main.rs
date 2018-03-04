@@ -149,7 +149,7 @@ impl State for Example {
                 "hello_world".to_string(),
                 0.,
                 0.,
-                -4.,
+                1.,
                 500.,
                 75.,
                 1,
@@ -157,7 +157,7 @@ impl State for Example {
             .with(UiText::new(
                 font.clone(),
                 "Hello world!".to_string(),
-                [1.0, 1.0, 1.0, 1.0],
+                [1.0, 0.0, 1.0, 1.0],
                 75.,
             ))
             .with(Anchored::new(Anchor::Middle))

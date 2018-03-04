@@ -69,7 +69,7 @@ where
             .add(UiSystem::new(reader_1), "ui_system", &["font_processor"])
             .add(ResizeSystem::new(reader_2), "ui_resize_system", &[])
             .add(UiMouseSystem::<A, B>::new(), "ui_mouse_system", &[])
-            .add(UiLayoutSystem::new(), "ui_layout", &[])
+            .add(UiLayoutSystem::new(), "ui_layout", &["ui_system"])
             .add(UiParentSystem::new(), "ui_parent", &["ui_layout"]))
     }
 }
