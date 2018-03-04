@@ -28,9 +28,14 @@ pub struct UiTransform {
     /// as this one exists they are ordered according to Entity creation order.  Shift-tab walks
     /// this ordering backwards.
     pub tab_order: i32,
+    /// Calculated x position by the `UiParentSystem` and `UiLayoutSystem`.
     pub calculated_x: f32,
+    /// Calculated y position by the `UiParentSystem` and `UiLayoutSystem`.
     pub calculated_y: f32,
+    /// Calculated z position by the `UiParentSystem` and `UiLayoutSystem`.
     pub calculated_z: f32,
+    /// WIP
+    /// The scale mode indicates if the position is in pixel or is relative (%) to the parent's size.
     pub scale_mode: ScaleMode,
     /// A private field to keep this from being initialized without new.
     pd: PhantomData<u8>,

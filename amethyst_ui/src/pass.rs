@@ -228,7 +228,7 @@ impl Pass for DrawUi {
         self.glyph_brushes
             .retain(|&_id, ref mut value| !value.1.is_dead());
         let highest_abs_z = (&ui_transform,).join()
-            .map(|t| t.calculated_z)
+            .map(|t| t.0.calculated_z)
             .fold(1.0, |highest, current| current.abs().max(highest));
         for &(_z, entity) in &self.cached_draw_order.cache {
             // This won't panic as we guaranteed earlier these entities are present.

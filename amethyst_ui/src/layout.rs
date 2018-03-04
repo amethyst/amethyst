@@ -1,4 +1,4 @@
-use amethyst_core::{GlobalTransform,Transform,Parent};
+use amethyst_core::Parent;
 use amethyst_renderer::ScreenDimensions;
 use specs::{Component,Entities,Entity,VecStorage,ReadStorage,WriteStorage,Fetch,System,Join,FlaggedStorage};
 use hibitset::BitSet;
@@ -6,36 +6,55 @@ use std::collections::{HashMap,HashSet};
 use super::{UiTransform};
 
 /// Unused, will be implemented in a future PR.
+/// Indicated if the position and margins should be calculated in pixel or
+/// relative to their parent size.
 #[derive(Debug,Clone)]
 pub enum ScaleMode{
+    /// Use directly the pixel value.
     Pixel,
+    /// Use a proportion (%) of the parent's dimensions (or screen, if there is no parent).
     Percent,
 }
 
-/// Y,X naming
+/// Indicated where the anchor is, relative to the parent (or to the screen, if there is no parent).
+/// Follow a normal english Y,X naming.
 #[derive(Debug,Clone)]
 pub enum Anchor{
+    /// Anchors the entity at the top left of the parent.
     TopLeft,
+    /// Anchors the entity at the top middle of the parent.
     TopMiddle,
+    /// Anchors the entity at the top right of the parent.
     TopRight,
+    /// Anchors the entity at the middle left of the parent.
     MiddleLeft,
+    /// Anchors the entity at the center of the parent.
     Middle,
+    /// Anchors the entity at the middle right of the parent.
     MiddleRight,
+    /// Anchors the entity at the bottom left of the parent.
     BottomLeft,
+    /// Anchors the entity at the bottom middle of the parent.
     BottomMiddle,
+    /// Anchors the entity at the bottom right of the parent.
     BottomRight,
 }
 
+/// Indicates if a component should be stretched.
 #[derive(Debug,Clone)]
 pub enum Stretch{
+    /// Stretches on the X axis.
     X,
+    /// Stretches on the Y axis.
     Y,
+    /// Stretches on both axes.
     XY,
 }
 
-/// Relative to parent
+/// Component indicating that the position of this entity should be relative to the parent's position.
 #[derive(Debug,Clone)]
 pub struct Anchored{
+    /// The `Anchor`
     anchor: Anchor,
     /// Defaults to none.
     /// While the position value in UiTransform will be changed,
@@ -45,6 +64,7 @@ pub struct Anchored{
 }
 
 impl Anchored{
+    /// Creates a new `Anchored` component using the `Anchor` setting.
     pub fn new(anchor: Anchor) -> Self {
         Anchored{
             anchor,
@@ -52,6 +72,9 @@ impl Anchored{
         }
     }
 
+    /// Returns the normalized offset using the `Anchor` setting.
+    /// The normalized offset is a [-0.5,0.5] value
+    /// indicating the relative offset from the parent's position (centered).
     pub fn norm_offset(&self) -> (f32,f32) {
         match self.anchor{
             Anchor::TopLeft => (-0.5,-0.5),
@@ -71,14 +94,20 @@ impl Component for Anchored{
     type Storage = VecStorage<Self>;
 }
 
+/// Component indicating that an entity should be stretched to fit the parent size
+/// on one or multiple axes.
 #[derive(Debug,Clone)]
 pub struct Stretched{
+    /// The `Stretch` setting.
+    /// Indicates on which axes this entity should be stretched.
     stretch: Stretch,
-    /// default to 0,0; in builder use .with_margin
+    /// Defaults to 0,0.
+    /// Use .with_margin(x,y) to change.
     margin: (f32,f32),
 }
 
 impl Stretched{
+    /// Create a new `Stretched` component using the `Stretch` setting.
     pub fn new(stretch: Stretch) -> Self {
         Stretched{
             stretch,
@@ -86,6 +115,7 @@ impl Stretched{
         }
     }
 
+    /// Adds a margin (spacing) on one or multiple axes.
     pub fn with_margin(mut self, x: f32, y: f32) -> Self {
         self.margin = (x,y);
         self
@@ -97,10 +127,8 @@ impl Component for Stretched{
 }
 
 
-
-pub struct UiLayoutSystem {
-
-}
+/// Used to initialize the `UiTransform` and `Anchored` offsets when using the `Anchored` component.
+pub struct UiLayoutSystem;
 
 impl UiLayoutSystem{
     /// Creates a new UiLayoutSystem.
@@ -116,41 +144,43 @@ impl<'a> System<'a> for UiLayoutSystem{
         Entities<'a>,
         WriteStorage<'a, UiTransform>,
         WriteStorage<'a, Anchored>,
-        ReadStorage<'a, Stretched>,
         ReadStorage<'a, Parent>,
         Fetch<'a, ScreenDimensions>,
     );
 
-    fn run(&mut self, (entities, mut transform, mut anchor, stretch, parent, screen_dim): Self::SystemData) {
+    fn run(&mut self, (entities, mut transform, mut anchor, parent, screen_dim): Self::SystemData) {
         for (entity,mut tr, mut anchor) in (&*entities,&mut transform, &mut anchor).join(){
             if anchor.offset.is_none(){
                 anchor.offset = Some((tr.x,tr.y));
-            }
 
-            let norm_offset = anchor.norm_offset();
+                let norm_offset = anchor.norm_offset();
 
 
-            // Percent will be implemented in a future PR
-            let user_offset = match tr.scale_mode{
-                ScaleMode::Pixel => anchor.offset.unwrap(),
-                ScaleMode::Percent => anchor.offset.unwrap(),
-            };
+                // Percent will be implemented in a future PR
+                let user_offset = match tr.scale_mode{
+                    ScaleMode::Pixel => anchor.offset.unwrap(),
+                    ScaleMode::Percent => anchor.offset.unwrap(),
+                };
 
-            let middle = (screen_dim.width() / 2.0, screen_dim.height() / 2.0);
+                let middle = (screen_dim.width() / 2.0, screen_dim.height() / 2.0);
 
-            let new_pos_x = middle.0 + norm_offset.0 * screen_dim.width() + user_offset.0;
-            let new_pos_y = middle.1 + norm_offset.1 * screen_dim.height() + user_offset.1;
-            tr.x = new_pos_x;
-            tr.y = new_pos_y;
-            if parent.get(entity).is_none(){
-                tr.calculated_x = tr.x;
-                tr.calculated_y = tr.y;
-                tr.calculated_z = tr.z;
+                let new_pos_x = middle.0 + norm_offset.0 * screen_dim.width() + user_offset.0;
+                let new_pos_y = middle.1 + norm_offset.1 * screen_dim.height() + user_offset.1;
+                tr.x = new_pos_x;
+                tr.y = new_pos_y;
+                if parent.get(entity).is_none(){
+                    tr.calculated_x = tr.x;
+                    tr.calculated_y = tr.y;
+                    tr.calculated_z = tr.z;
+                }
             }
         }
     }
 }
 
+/// Manages the `Parent` component on entities having `UiTransform`
+/// It does almost the same as the `TransformSystem`, but with some differences,
+/// like `UiTransform` alignment and stretching.
 #[derive(Default)]
 pub struct UiParentSystem {
     /// Map of entities to index in sorted vec.
@@ -281,9 +311,9 @@ impl<'a> System<'a> for UiParentSystem{
                             if let Some(st) = stretch.get(entity){
                                 new_size = Some(
                                     match st.stretch{
-                                        Stretch::X => (parent_global.width - st.margin.0,local.height),
-                                        Stretch::Y => (local.width,parent_global.height - st.margin.1),
-                                        Stretch::XY => (parent_global.width - st.margin.0,parent_global.height - st.margin.1),
+                                        Stretch::X => (parent_global.width - st.margin.0 * 2.0,local.height),
+                                        Stretch::Y => (local.width,parent_global.height - st.margin.1 * 2.0),
+                                        Stretch::XY => (parent_global.width - st.margin.0 * 2.0,parent_global.height - st.margin.1 * 2.0),
                                     }
                                 );
                             }
@@ -326,9 +356,9 @@ impl<'a> System<'a> for UiParentSystem{
             if parents.get(entity).is_none() {
                 if let Some(st) = stretch.get(entity) {
                     let new_size = match st.stretch {
-                        Stretch::X => (screen_dim.width() - st.margin.0, local.height),
-                        Stretch::Y => (local.width, screen_dim.height() - st.margin.1),
-                        Stretch::XY => (screen_dim.width() - st.margin.0, screen_dim.height() - st.margin.1),
+                        Stretch::X => (screen_dim.width() - st.margin.0 * 2.0, local.height),
+                        Stretch::Y => (local.width, screen_dim.height() - st.margin.1 * 2.0),
+                        Stretch::XY => (screen_dim.width() - st.margin.0 * 2.0, screen_dim.height() - st.margin.1 * 2.0),
                     };
                     local.width = new_size.0;
                     local.height = new_size.1;

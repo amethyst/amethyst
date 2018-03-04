@@ -39,7 +39,7 @@ struct Example {
 impl State for Example {
     fn on_start(&mut self, world: &mut World) {
         // Initialise the scene with an object, a light and a camera.
-        //initialise_sphere(world);
+        initialise_sphere(world);
         initialise_lights(world);
         initialise_camera(world);
         let (logo, font,red,green,blue) = {
@@ -66,7 +66,7 @@ impl State for Example {
             (logo, font,red,green,blue)
         };
 
-        /*let background = world
+        let background = world
             .create_entity()
             .with(UiTransform::new(
                 "background".to_string(),
@@ -103,8 +103,7 @@ impl State for Example {
                 entity: background.clone(),
             })
             .build();
-
-        let middle_of_top_right = world
+        world
             .create_entity()
             .with(UiTransform::new(
                 "middle_top_right".to_string(),
@@ -119,13 +118,13 @@ impl State for Example {
                 texture: blue.clone(),
             })
             .with(Anchored::new(Anchor::Middle))
-            .with(Stretched::new(Stretch::X))
+            .with(Stretched::new(Stretch::X).with_margin(2.0,0.0))
             .with(Parent{
                 entity: top_right.clone(),
             })
             .build();
 
-        let logo_entity = world
+        world
             .create_entity()
             .with(UiTransform::new(
                 "logo".to_string(),
@@ -141,7 +140,7 @@ impl State for Example {
             })
             .with(Anchored::new(Anchor::BottomMiddle))
             .with(MouseReactive)
-            .build();*/
+            .build();
 
         let text = world
             .create_entity()
@@ -149,7 +148,7 @@ impl State for Example {
                 "hello_world".to_string(),
                 0.,
                 0.,
-                1.,
+                -4.,
                 500.,
                 75.,
                 1,
@@ -157,7 +156,7 @@ impl State for Example {
             .with(UiText::new(
                 font.clone(),
                 "Hello world!".to_string(),
-                [1.0, 0.0, 1.0, 1.0],
+                [0.2, 0.2, 1.0, 1.0],
                 75.,
             ))
             .with(Anchored::new(Anchor::Middle))
