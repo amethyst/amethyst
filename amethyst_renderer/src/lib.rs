@@ -21,6 +21,7 @@ extern crate gfx_core;
 #[macro_use]
 extern crate gfx_macros;
 extern crate hetseq;
+extern crate hibitset;
 extern crate imagefmt;
 #[macro_use]
 extern crate log;
@@ -79,12 +80,12 @@ pub use skinning::{AnimatedComboMeshCreator, AnimatedVertexBufferCombination, Jo
                    JointTransforms, JointWeights};
 pub use system::RenderSystem;
 pub use tex::{Texture, TextureBuilder, TextureHandle};
-pub use transparent::{Blend, BlendChannel, ColorMask, Equation, Factor, Transparent,
-                      TransparentBackToFront, TransparentSortingSystem};
+pub use transparent::{Blend, BlendChannel, ColorMask, Equation, Factor, Transparent};
 pub use types::{Encoder, Factory, PipelineState, Resources};
 pub use vertex::{Attribute, AttributeFormat, Attributes, Color, Normal, PosColor, PosNormTangTex,
                  PosNormTex, PosTex, Position, Query, Separate, Tangent, TexCoord,
                  VertexBufferCombination, VertexFormat, With};
+pub use visibility::{Visibility, VisibilitySortingSystem};
 
 pub mod error;
 pub mod pipe;
@@ -111,3 +112,4 @@ mod system;
 mod tex;
 mod types;
 mod vertex;
+mod visibility;

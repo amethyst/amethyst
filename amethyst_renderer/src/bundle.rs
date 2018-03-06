@@ -10,7 +10,8 @@ use config::DisplayConfig;
 use pipe::{PipelineBuild, PolyPipeline};
 use specs::{DispatcherBuilder, World};
 use system::RenderSystem;
-use transparent::{Transparent, TransparentBackToFront, TransparentSortingSystem};
+use transparent::Transparent;
+use visibility::{Visibility, VisibilitySortingSystem};
 
 /// Rendering bundle
 ///
@@ -28,7 +29,7 @@ where
 {
     pipe: B,
     config: Option<DisplayConfig>,
-    transparent_sorting: Option<&'a [&'a str]>,
+    visibility_sorting: Option<&'a [&'a str]>,
 }
 
 impl<'a, B, P> RenderBundle<'a, B, P>
@@ -41,13 +42,13 @@ where
         RenderBundle {
             pipe,
             config,
-            transparent_sorting: None,
+            visibility_sorting: None,
         }
     }
 
     /// Enable transparent mesh sorting, with the given dependencies
-    pub fn with_transparent_sorting(mut self, dep: &'a [&'a str]) -> Self {
-        self.transparent_sorting = Some(dep);
+    pub fn with_visibility_sorting(mut self, dep: &'a [&'a str]) -> Self {
+        self.visibility_sorting = Some(dep);
         self
     }
 }
@@ -65,7 +66,6 @@ impl<'a, 'b, 'c, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> ECSBundle
         world.add_resource(AssetStorage::<Mesh>::new());
         world.add_resource(AssetStorage::<Texture>::new());
         world.add_resource(Orientation::default());
-        world.add_resource(TransparentBackToFront::default());
 
         let mat = create_default_mat(world);
         world.add_resource(MaterialDefaults(mat));
@@ -83,10 +83,11 @@ impl<'a, 'b, 'c, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> ECSBundle
             .window_size()
             .expect("Window closed during initialization!");
         world.add_resource(ScreenDimensions::new(width, height));
-        if let Some(dep) = self.transparent_sorting {
+        if let Some(dep) = self.visibility_sorting {
+            world.add_resource(Visibility::default());
             builder = builder.add(
-                TransparentSortingSystem::new(),
-                "transparent_sorting_system",
+                VisibilitySortingSystem::new(),
+                "visibility_sorting_system",
                 dep,
             );
         };
