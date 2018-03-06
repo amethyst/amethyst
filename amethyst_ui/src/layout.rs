@@ -299,9 +299,14 @@ impl<'a> System<'a> for UiParentSystem {
                         continue;
                     }
 
+                    // Layouting starts here.
+
                     if local_dirty || parent_dirty || locals.open().1.flagged(parent.entity)
                         || stretch.open().1.flagged(parent.entity)
                     {
+
+                        // Positioning when having a parent.
+
                         if let Some(parent_global) = locals.get(parent.entity) {
                             combined_transform = Some(match anchors.get(entity) {
                                 Some(anchor) => {
@@ -320,6 +325,9 @@ impl<'a> System<'a> for UiParentSystem {
                                     parent_global.z + local.z,
                                 ),
                             });
+
+                            // Stretching when having a parent
+
                             if let Some(st) = stretch.get(entity) {
                                 new_size = Some(match st.stretch {
                                     Stretch::X => {
@@ -349,6 +357,8 @@ impl<'a> System<'a> for UiParentSystem {
                     continue;
                 }
             }
+
+            // Changing the position and size values here because of how borrowing works.
 
             if let Some(c) = combined_transform {
                 if let Some(local) = locals.get_mut(entity) {
