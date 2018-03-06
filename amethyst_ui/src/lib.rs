@@ -25,6 +25,7 @@ extern crate winit;
 extern crate thread_profiler;
 
 mod bundle;
+mod button;
 mod focused;
 mod format;
 mod image;
@@ -46,6 +47,7 @@ pub use self::pass::DrawUi;
 pub use self::resize::{ResizeSystem, UiResize};
 pub use self::text::{TextEditing, UiSystem, UiText};
 pub use self::transform::UiTransform;
+pub use self::button::UiButton;
 
 /// How many times the cursor blinks per second while editing text.
 const CURSOR_BLINK_RATE: f32 = 2.0;
