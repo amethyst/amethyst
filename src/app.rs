@@ -92,7 +92,6 @@ impl<'a, T> Application<'a, T> {
     pub fn new<S>(initial_state: S) -> Result<Application<'a, T>>
     where
         S: State<T> + 'a,
-        T: Default,
     {
         ApplicationBuilder::new(initial_state)?.build()
     }
@@ -104,7 +103,6 @@ impl<'a, T> Application<'a, T> {
     pub fn build<S>(initial_state: S) -> Result<ApplicationBuilder<S, T>>
     where
         S: State<T> + 'a,
-        T: Default,
     {
         ApplicationBuilder::new(initial_state)
     }
