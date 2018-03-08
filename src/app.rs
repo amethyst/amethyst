@@ -13,9 +13,9 @@ use shred::Resource;
 use shrev::{EventChannel, ReaderId};
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
-use winit::{Event, WindowEvent};
+use winit::Event;
 
-use assets::{Asset, Loader, Source};
+use assets::{Loader, Source};
 use core::frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy};
 use core::timing::{Stopwatch, Time};
 use ecs::{Component, Dispatcher, DispatcherBuilder, System, World};
@@ -32,19 +32,15 @@ use vergen;
 /// game needs to run.
 #[derive(Derivative)]
 #[derivative(Debug)]
-pub struct Application<'a, 'b> {
-    /// The world
-    #[derivative(Debug = "ignore")]
-    pub world: World,
-
-    #[derivative(Debug = "ignore")]
-    dispatcher: Dispatcher<'a, 'b>,
-    events_reader_id: ReaderId<Event>,
-    states: StateMachine<'a>,
-    ignore_window_close: bool,
+pub struct Application<'a, T> {
+    data: T,
+    states: StateMachine<'a, T>,
+    time: Time,
+    stopwatch: Stopwatch,
+    frame_limiter: FrameLimiter,
 }
 
-impl<'a, 'b> Application<'a, 'b> {
+impl<'a, T> Application<'a, T> {
     /// Creates a new Application with the given initial game state.
     /// This will create and allocate all the needed resources for
     /// the event loop of the game engine. It is a shortcut for convenience
@@ -93,24 +89,24 @@ impl<'a, 'b> Application<'a, 'b> {
     /// let mut game = Application::new("assets/", NullState).expect("Failed to initialize");
     /// game.run();
     /// ~~~
-    pub fn new<P, S>(path: P, initial_state: S) -> Result<Application<'a, 'b>>
+    pub fn new<S>(initial_state: S) -> Result<Application<'a, T>>
     where
-        P: AsRef<Path>,
-        S: State + 'a,
+        S: State<T> + 'a,
+        T: Default,
     {
-        ApplicationBuilder::new(path, initial_state)?.build()
+        ApplicationBuilder::new(initial_state)?.build()
     }
 
     /// Creates a new ApplicationBuilder with the given initial game state.
     ///
     /// This is identical in function to
     /// [ApplicationBuilder::new](struct.ApplicationBuilder.html#method.new).
-    pub fn build<P, S>(path: P, initial_state: S) -> Result<ApplicationBuilder<'a, 'b, S>>
+    pub fn build<S>(initial_state: S) -> Result<ApplicationBuilder<S, T>>
     where
-        P: AsRef<Path>,
-        S: State + 'a,
+        S: State<T> + 'a,
+        T: Default,
     {
-        ApplicationBuilder::new(path, initial_state)
+        ApplicationBuilder::new(initial_state)
     }
 
     /// Run the gameloop until the game state indicates that the game is no
@@ -124,20 +120,15 @@ impl<'a, 'b> Application<'a, 'b> {
     /// [`new`](struct.Application.html#examples) method.
     pub fn run(&mut self) {
         self.initialize();
-        self.world.write_resource::<Stopwatch>().start();
+        self.stopwatch.start();
         while self.states.is_running() {
             self.advance_frame();
 
-            self.world.write_resource::<FrameLimiter>().wait();
-            {
-                let elapsed = self.world.read_resource::<Stopwatch>().elapsed();
-                let mut time = self.world.write_resource::<Time>();
-                time.increment_frame_number();
-                time.set_delta_time(elapsed);
-            }
-            let mut stopwatch = self.world.write_resource::<Stopwatch>();
-            stopwatch.stop();
-            stopwatch.restart();
+            self.frame_limiter.wait();
+            self.time.increment_frame_number();
+            self.time.set_delta_time(self.stopwatch.elapsed());
+            self.stopwatch.stop();
+            self.stopwatch.restart();
         }
 
         self.shutdown();
@@ -147,67 +138,22 @@ impl<'a, 'b> Application<'a, 'b> {
     fn initialize(&mut self) {
         #[cfg(feature = "profiler")]
         profile_scope!("initialize");
-        self.states.start(&mut self.world);
+        self.states.start(&mut self.data);
     }
 
     /// Advances the game world by one tick.
     fn advance_frame(&mut self) {
         trace!("Advancing frame (`Application::advance_frame`)");
-
-        {
-            let world = &mut self.world;
-            let states = &mut self.states;
-            #[cfg(feature = "profiler")]
-            profile_scope!("handle_event");
-
-            let events = world
-                .read_resource::<EventChannel<Event>>()
-                .read(&mut self.events_reader_id)
-                .cloned()
-                .collect::<Vec<_>>();
-
-            for event in events {
-                states.handle_event(world, event.clone());
-                if !self.ignore_window_close {
-                    if let &Event::WindowEvent {
-                        event: WindowEvent::Closed,
-                        ..
-                    } = &event
-                    {
-                        states.stop(world);
-                    }
-                }
-            }
-        }
-        {
-            let do_fixed = {
-                let time = self.world.write_resource::<Time>();
-                time.last_fixed_update().elapsed() >= time.fixed_time()
-            };
+        if self.time.last_fixed_update().elapsed() >= self.time.fixed_time() {
             #[cfg(feature = "profiler")]
             profile_scope!("fixed_update");
-            if do_fixed {
-                self.states.fixed_update(&mut self.world);
-                self.world.write_resource::<Time>().finish_fixed_update();
-            }
-
-            #[cfg(feature = "profiler")]
-            profile_scope!("update");
-            self.states.update(&mut self.world);
+            self.states.fixed_update(&mut self.data/*, &self.time*/);
+            self.time.finish_fixed_update();
         }
 
         #[cfg(feature = "profiler")]
-        profile_scope!("dispatch");
-        self.dispatcher.dispatch(&mut self.world.res);
-
-        #[cfg(feature = "profiler")]
-        profile_scope!("maintain");
-        self.world.maintain();
-
-        // TODO: replace this with a more customizable method.
-        // TODO: effectively, the user should have more control over error handling here
-        // TODO: because right now the app will just exit in case of an error.
-        self.world.write_resource::<Errors>().print_and_exit();
+        profile_scope!("update");
+        self.states.update(&mut self.data/*, &self.time*/);
     }
 
     /// Cleans up after the quit signal is received.
@@ -219,7 +165,7 @@ impl<'a, 'b> Application<'a, 'b> {
 }
 
 #[cfg(feature = "profiler")]
-impl<'a, 'b> Drop for Application<'a, 'b> {
+impl<'a, T> Drop for Application<'a, T> {
     fn drop(&mut self) {
         // TODO: Specify filename in config.
         let path = format!("{}/thread_profile.json", env!("CARGO_MANIFEST_DIR"));
@@ -230,16 +176,14 @@ impl<'a, 'b> Drop for Application<'a, 'b> {
 /// `ApplicationBuilder` is an interface that allows for creation of an [`Application`](struct.Application.html)
 /// using a custom set of configuration. This is the normal way an [`Application`](struct.Application.html)
 /// object is created.
-pub struct ApplicationBuilder<'a, 'b, T> {
-    // config: Config,
-    disp_builder: DispatcherBuilder<'a, 'b>,
-    initial_state: T,
-    /// Used by bundles to access the world directly
-    pub world: World,
-    ignore_window_close: bool,
+pub struct ApplicationBuilder<S, T> {
+    data: Option<T>,
+    initial_state: S,
+    frame_limiter: FrameLimiter,
+    time: Time,
 }
 
-impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
+impl<S, T> ApplicationBuilder<S, T> {
     /// Creates a new [ApplicationBuilder](struct.ApplicationBuilder.html) instance
     /// that wraps the initial_state. This is the more verbose way of initializing
     /// your application if you require specific configuration details to be changed
@@ -301,9 +245,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// // the game instance can now be run, this exits only when the game is done
     /// game.run();
     /// ~~~
-
-    pub fn new<P: AsRef<Path>>(path: P, initial_state: T) -> Result<Self> {
-        use bundle::AppBundle;
+    pub fn new(initial_state: S) -> Result<Self> {
         use rustc_version_runtime;
 
         fern::Dispatch::new()
@@ -333,15 +275,160 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
             info!("Rustc git commit: {}", hash);
         }
 
+        Ok(ApplicationBuilder {
+            initial_state,
+            data: None,
+            frame_limiter: FrameLimiter::default(),
+            time: Time::default(),
+        })
+    }
+
+    /// Set game data
+    pub fn with_game_data(mut self, data: T) -> Self {
+        self.data = Some(data);
+        self
+    }
+
+    /// Sets the maximum frames per second of this game.
+    ///
+    /// # Parameters
+    ///
+    /// `strategy`: the frame limit strategy to use
+    /// `max_fps`: the maximum frames per second this game will run at.
+    ///
+    /// # Returns
+    ///
+    /// This function returns the ApplicationBuilder after modifying it.
+    pub fn with_frame_limit(mut self, strategy: FrameRateLimitStrategy, max_fps: u32) -> Self {
+        self.frame_limiter = FrameLimiter::new(strategy, max_fps);
+        self
+    }
+
+    /// Sets the maximum frames per second of this game, based on the given config.
+    ///
+    /// # Parameters
+    ///
+    /// `config`: the frame limiter config
+    ///
+    /// # Returns
+    ///
+    /// This function returns the ApplicationBuilder after modifying it.
+    pub fn with_frame_limit_config(mut self, config: FrameRateLimitConfig) -> Self {
+        self.frame_limiter = FrameLimiter::from_config(config);
+        self
+    }
+
+    /// Sets the duration between fixed updates, defaults to one sixtieth of a second.
+    ///
+    /// # Parameters
+    ///
+    /// `duration`: The duration between fixed updates.
+    ///
+    /// # Returns
+    ///
+    /// This function returns the ApplicationBuilder after modifying it.
+    pub fn with_fixed_step_length(mut self, duration: Duration) -> Self {
+        self.time.set_fixed_time(duration);
+        self
+    }
+
+    /// Build an `Application` object using the `ApplicationBuilder` as configured.
+    ///
+    /// # Returns
+    ///
+    /// This function returns an Application object wrapped in the Result type.
+    ///
+    /// # Errors
+    ///
+    /// This function currently will not produce an error, returning a result
+    /// type was strictly for future possibilities.
+    ///
+    /// # Notes
+    ///
+    /// If the "profiler" feature is used, this function will register the thread
+    /// that executed this function as the "Main" thread.
+    ///
+    /// # Examples
+    ///
+    /// See the [example show for `ApplicationBuilder::new()`](struct.ApplicationBuilder.html#examples)
+    /// for an example on how this method is used.
+    pub fn build<'a>(self) -> Result<Application<'a, T>> where S: State<T> + 'a {
+        trace!("Entering `ApplicationBuilder::build`");
+
+        #[cfg(feature = "profiler")]
+        register_thread_with_profiler("Main".into());
+        #[cfg(feature = "profiler")]
+        profile_scope!("new");
+
+        Ok(Application {
+            data: self.data.unwrap(),
+            states: StateMachine::new(self.initial_state),
+            time: self.time,
+            frame_limiter: self.frame_limiter,
+            stopwatch: Stopwatch::new(),
+        })
+    }
+}
+
+/// Default game data
+pub struct DefaultGameData<'a, 'b> {
+    world: World,
+    dispatcher: Dispatcher<'a, 'b>,
+    events_reader_id: ReaderId<Event>,
+}
+
+impl<'a, 'b> DefaultGameData<'a, 'b> {
+    /// Build
+    pub fn build<P: AsRef<Path>>(path: P) -> Result<DefaultGameDataBuilder<'a, 'b>> {
+        DefaultGameDataBuilder::new(path)
+    }
+
+    /// Get events
+    pub fn get_window_events<I>(&mut self) -> Vec<Event> {
+        let world = &mut self.world;
+        world
+            .read_resource::<EventChannel<Event>>()
+            .read(&mut self.events_reader_id)
+            .cloned()
+            .collect()
+    }
+
+    /// Update
+    pub fn update(&mut self, time: &Time) {
+        *self.world.write_resource::<Time>() = *time;
+
+        #[cfg(feature = "profiler")]
+        profile_scope!("dispatch");
+        self.dispatcher.dispatch(&mut self.world.res);
+
+        #[cfg(feature = "profiler")]
+        profile_scope!("maintain");
+        self.world.maintain();
+
+        // TODO: replace this with a more customizable method.
+        // TODO: effectively, the user should have more control over error handling here
+        // TODO: because right now the app will just exit in case of an error.
+        self.world.write_resource::<Errors>().print_and_exit();
+    }
+}
+
+/// Builder
+pub struct DefaultGameDataBuilder<'a, 'b> {
+    world: World,
+    disp_builder: DispatcherBuilder<'a, 'b>,
+}
+
+impl<'a, 'b> DefaultGameDataBuilder<'a, 'b> {
+
+    /// New stuff
+    pub fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
+        use bundle::AppBundle;
         let mut disp_builder = DispatcherBuilder::new();
         let mut world = World::new();
         disp_builder = AppBundle::new(path).build(&mut world, disp_builder)?;
-
-        Ok(ApplicationBuilder {
-            disp_builder,
-            initial_state,
+        Ok(DefaultGameDataBuilder {
             world,
-            ignore_window_close: false,
+            disp_builder
         })
     }
 
@@ -699,146 +786,17 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
         self
     }
 
-    /// Sets the maximum frames per second of this game.
-    ///
-    /// # Parameters
-    ///
-    /// `strategy`: the frame limit strategy to use
-    /// `max_fps`: the maximum frames per second this game will run at.
-    ///
-    /// # Returns
-    ///
-    /// This function returns the ApplicationBuilder after modifying it.
-    pub fn with_frame_limit(mut self, strategy: FrameRateLimitStrategy, max_fps: u32) -> Self {
-        self.world
-            .add_resource(FrameLimiter::new(strategy, max_fps));
-        self
-    }
-
-    /// Sets the maximum frames per second of this game, based on the given config.
-    ///
-    /// # Parameters
-    ///
-    /// `config`: the frame limiter config
-    ///
-    /// # Returns
-    ///
-    /// This function returns the ApplicationBuilder after modifying it.
-    pub fn with_frame_limit_config(mut self, config: FrameRateLimitConfig) -> Self {
-        self.world.add_resource(FrameLimiter::from_config(config));
-        self
-    }
-
-    /// Sets the duration between fixed updates, defaults to one sixtieth of a second.
-    ///
-    /// # Parameters
-    ///
-    /// `duration`: The duration between fixed updates.
-    ///
-    /// # Returns
-    ///
-    /// This function returns the ApplicationBuilder after modifying it.
-    pub fn with_fixed_step_length(self, duration: Duration) -> Self {
-        self.world.write_resource::<Time>().set_fixed_time(duration);
-        self
-    }
-
-    /// Tells the resulting application window to ignore close events if ignore is true.
-    /// This will make your game window unresponsive to operating system close commands.
-    /// Use with caution.
-    ///
-    /// # Parameters
-    ///
-    /// `ignore`: Whether or not the window should ignore these events.  False by default.
-    ///
-    /// # Returns
-    ///
-    /// This function returns the ApplicationBuilder after modifying it.
-    pub fn ignore_window_close(mut self, ignore: bool) -> Self {
-        self.ignore_window_close = ignore;
-        self
-    }
-
-    /// Register a new asset type with the Application. All required components
-    /// related to the storage of this asset type will be registered. Since
-    /// Amethyst uses AssetFutures to allow for async content loading, Amethyst
-    /// needs to have a system that translates AssetFutures into Components as
-    /// they resolve. Amethyst registers a system to accomplish this.
-    ///
-    /// # Parameters
-    ///
-    /// `make_context`: A closure that returns an initialized `Asset::Context`
-    ///                 object. This is given the a reference to the world object
-    ///                 to allow it to find any resources previously registered.
-    ///
-    /// # Type Parameters
-    ///
-    /// - `A`: The asset type, an `Asset` in reference to Amethyst is a component
-    ///        that implements the [`Asset`](../amethyst_assets/trait.Asset.html) trait.
-    /// - `F`: A function that returns the `Asset::Context` context object.
-    ///
-    /// # Returns
-    ///
-    /// This function returns ApplicationBuilder after it has modified it.
-    ///
-    ///
-    // TODO: Create example of this function. It might be easier to build a large
-    //       example of a custom type in the `Asset` trait docs
-    pub fn register_asset<A>(mut self) -> Self
-    where
-        A: Asset,
-    {
-        use assets::{AssetStorage, Handle};
-
-        self.world.add_resource(AssetStorage::<A>::new());
-        self.world.register::<Handle<A>>();
-
-        self
-    }
-
-    /// Build an `Application` object using the `ApplicationBuilder` as configured.
-    ///
-    /// # Returns
-    ///
-    /// This function returns an Application object wrapped in the Result type.
-    ///
-    /// # Errors
-    ///
-    /// This function currently will not produce an error, returning a result
-    /// type was strictly for future possibilities.
-    ///
-    /// # Notes
-    ///
-    /// If the "profiler" feature is used, this function will register the thread
-    /// that executed this function as the "Main" thread.
-    ///
-    /// # Examples
-    ///
-    /// See the [example show for `ApplicationBuilder::new()`](struct.ApplicationBuilder.html#examples)
-    /// for an example on how this method is used.
-    pub fn build(self) -> Result<Application<'a, 'b>>
-    where
-        T: State + 'a,
-    {
-        trace!("Entering `ApplicationBuilder::build`");
-
-        #[cfg(feature = "profiler")]
-        register_thread_with_profiler("Main".into());
-        #[cfg(feature = "profiler")]
-        profile_scope!("new");
-
+    /// Build stuff
+    pub fn build(self) -> Result<DefaultGameData<'a, 'b>> {
         let pool = self.world.read_resource::<Arc<ThreadPool>>().clone();
         let reader_id = self.world
             .write_resource::<EventChannel<Event>>()
             .register_reader();
 
-        Ok(Application {
+        Ok(DefaultGameData {
             world: self.world,
-            // config: self.config,
-            states: StateMachine::new(self.initial_state),
             events_reader_id: reader_id,
             dispatcher: self.disp_builder.with_pool(pool).build(),
-            ignore_window_close: self.ignore_window_close,
         })
     }
 }

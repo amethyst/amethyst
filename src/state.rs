@@ -1,50 +1,47 @@
 //! Utilities for game state management.
 
-use ecs::World;
-use renderer::Event;
-
 /// Types of state transitions.
-pub enum Trans {
+pub enum Trans<T> {
     /// Continue as normal.
     None,
     /// Remove the active state and resume the next state on the stack or stop
     /// if there are none.
     Pop,
     /// Pause the active state and push a new state onto the stack.
-    Push(Box<State>),
+    Push(Box<State<T>>),
     /// Remove the current state on the stack and insert a different one.
-    Switch(Box<State>),
+    Switch(Box<State<T>>),
     /// Stop and remove all states and shut down the engine.
     Quit,
 }
 
 /// A trait which defines game states that can be used by the state machine.
-pub trait State {
+pub trait State<T> {
     /// Executed when the game state begins.
-    fn on_start(&mut self, _eng: &mut World) {}
+    fn on_start(&mut self, _data: &mut T) {}
 
     /// Executed when the game state exits.
-    fn on_stop(&mut self, _eng: &mut World) {}
+    fn on_stop(&mut self, _data: &mut T) {}
 
     /// Executed when a different game state is pushed onto the stack.
-    fn on_pause(&mut self, _eng: &mut World) {}
+    fn on_pause(&mut self, _data: &mut T) {}
 
     /// Executed when the application returns to this game state once again.
-    fn on_resume(&mut self, _eng: &mut World) {}
+    fn on_resume(&mut self, _data: &mut T) {}
 
     /// Executed on every frame before updating, for use in reacting to events.
-    fn handle_event(&mut self, _eng: &mut World, _event: Event) -> Trans {
+    /*fn handle_event(&mut self, _eng: &mut World, _event: Event) -> Trans {
         Trans::None
-    }
+    }*/
 
     /// Executed repeatedly at stable, predictable intervals (1/60th of a second
     /// by default).
-    fn fixed_update(&mut self, _eng: &mut World) -> Trans {
+    fn fixed_update(&mut self, _data: &mut T) -> Trans<T> {
         Trans::None
     }
 
     /// Executed on every frame immediately, as fast as the engine will allow.
-    fn update(&mut self, _eng: &mut World) -> Trans {
+    fn update(&mut self, _data: &mut T) -> Trans<T> {
         Trans::None
     }
 }
@@ -52,15 +49,15 @@ pub trait State {
 /// A simple stack-based state machine (pushdown automaton).
 #[derive(Derivative)]
 #[derivative(Debug)]
-pub struct StateMachine<'a> {
+pub struct StateMachine<'a, T> {
     running: bool,
     #[derivative(Debug = "ignore")]
-    state_stack: Vec<Box<State + 'a>>,
+    state_stack: Vec<Box<State<T> + 'a>>,
 }
 
-impl<'a> StateMachine<'a> {
+impl<'a, T> StateMachine<'a, T> {
     /// Creates a new state machine with the given initial state.
-    pub fn new<S: State + 'a>(initial_state: S) -> StateMachine<'a> {
+    pub fn new<S: State<T> + 'a>(initial_state: S) -> StateMachine<'a, T> {
         StateMachine {
             running: false,
             state_stack: vec![Box::new(initial_state)],
@@ -76,7 +73,7 @@ impl<'a> StateMachine<'a> {
     ///
     /// # Panics
     /// Panics if no states are present in the stack.
-    pub fn start(&mut self, engine: &mut World) {
+    pub fn start(&mut self, engine: &mut T) {
         if !self.running {
             let state = self.state_stack.last_mut().unwrap();
             state.on_start(engine);
@@ -85,7 +82,7 @@ impl<'a> StateMachine<'a> {
     }
 
     /// Passes a single event to the active state to handle.
-    pub fn handle_event(&mut self, engine: &mut World, event: Event) {
+    /*pub fn handle_event(&mut self, engine: &mut World, event: Event) {
         if self.running {
             let trans = match self.state_stack.last_mut() {
                 Some(state) => state.handle_event(engine, event),
@@ -94,10 +91,10 @@ impl<'a> StateMachine<'a> {
 
             self.transition(trans, engine);
         }
-    }
+    }*/
 
     /// Updates the currently active state at a steady, fixed interval.
-    pub fn fixed_update(&mut self, engine: &mut World) {
+    pub fn fixed_update(&mut self, engine: &mut T) {
         if self.running {
             let trans = match self.state_stack.last_mut() {
                 Some(state) => state.fixed_update(engine),
@@ -109,7 +106,7 @@ impl<'a> StateMachine<'a> {
     }
 
     /// Updates the currently active state immediately.
-    pub fn update(&mut self, engine: &mut World) {
+    pub fn update(&mut self, engine: &mut T) {
         if self.running {
             let trans = match self.state_stack.last_mut() {
                 Some(state) => state.update(engine),
@@ -122,7 +119,7 @@ impl<'a> StateMachine<'a> {
 
     /// Performs a state transition, if requested by either update() or
     /// fixed_update().
-    fn transition(&mut self, request: Trans, engine: &mut World) {
+    fn transition(&mut self, request: Trans<T>, engine: &mut T) {
         if self.running {
             match request {
                 Trans::None => (),
@@ -135,7 +132,7 @@ impl<'a> StateMachine<'a> {
     }
 
     /// Removes the current state on the stack and inserts a different one.
-    fn switch(&mut self, state: Box<State>, engine: &mut World) {
+    fn switch(&mut self, state: Box<State<T>>, engine: &mut T) {
         if self.running {
             if let Some(mut state) = self.state_stack.pop() {
                 state.on_stop(engine);
@@ -148,7 +145,7 @@ impl<'a> StateMachine<'a> {
     }
 
     /// Pauses the active state and pushes a new state onto the state stack.
-    fn push(&mut self, state: Box<State>, engine: &mut World) {
+    fn push(&mut self, state: Box<State<T>>, engine: &mut T) {
         if self.running {
             if let Some(state) = self.state_stack.last_mut() {
                 state.on_pause(engine);
@@ -162,7 +159,7 @@ impl<'a> StateMachine<'a> {
 
     /// Stops and removes the active state and un-pauses the next state on the
     /// stack (if any).
-    fn pop(&mut self, engine: &mut World) {
+    fn pop(&mut self, engine: &mut T) {
         if self.running {
             if let Some(mut state) = self.state_stack.pop() {
                 state.on_stop(engine);
@@ -177,7 +174,7 @@ impl<'a> StateMachine<'a> {
     }
 
     /// Shuts the state machine down.
-    pub(crate) fn stop(&mut self, engine: &mut World) {
+    pub(crate) fn stop(&mut self, engine: &mut T) {
         if self.running {
             while let Some(mut state) = self.state_stack.pop() {
                 state.on_stop(engine);
@@ -195,8 +192,8 @@ mod tests {
     struct State1(u8);
     struct State2;
 
-    impl State for State1 {
-        fn update(&mut self, _: &mut World) -> Trans {
+    impl State<World> for State1 {
+        fn update(&mut self, _: &mut World) -> Trans<World> {
             if self.0 > 0 {
                 self.0 -= 1;
                 Trans::None
@@ -207,7 +204,7 @@ mod tests {
     }
 
     impl State for State2 {
-        fn update(&mut self, _: &mut World) -> Trans {
+        fn update(&mut self, _: &mut World) -> Trans<World> {
             Trans::Pop
         }
     }

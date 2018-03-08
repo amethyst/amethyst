@@ -78,7 +78,7 @@ extern crate log;
 extern crate rayon;
 extern crate rustc_version_runtime;
 
-pub use self::app::{Application, ApplicationBuilder};
+pub use self::app::{Application, ApplicationBuilder, DefaultGameData, DefaultGameDataBuilder};
 pub use self::error::{Error, Result};
 pub use self::state::{State, StateMachine, Trans};
 
