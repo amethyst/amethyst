@@ -66,7 +66,7 @@ does not aim to be API-compatible with it in any way. Some goals include:
 
 ## Usage
 
-**Linux developers: the libasound2-dev package will be required to compile Amethyst.**
+**Linux developers: the libasound2-dev and libx11-xcb-dev packages are required to compile Amethyst.**
 
 Read the [online book][bk] for a comprehensive tutorial to using Amethyst. There
 is also an online crate-level [API reference][ar].
