@@ -242,15 +242,17 @@ impl<'a> System<'a> for UiParentSystem {
             self.remove_parent.clear();
         }
 
-
         {
             // Checks for entities with a modified local transform or a modified parent, but isn't initialized yet.
             let filter = locals.open().0 & parents.open().0; // has a local, parent, and isn't initialized.
             let mut to_add = Vec::<Entity>::new();
-            for (entity, _) in (&*entities, &filter).join().filter(|&(e,_)| !self.init.contains(&e)) {
+            for (entity, _) in (&*entities, &filter)
+                .join()
+                .filter(|&(e, _)| !self.init.contains(&e))
+            {
                 to_add.push(entity);
             }
-            for entity in to_add{
+            for entity in to_add {
                 self.indices.insert(entity, self.sorted.len());
                 self.sorted.push(entity);
                 self.frame_init.push(entity);
@@ -310,7 +312,6 @@ impl<'a> System<'a> for UiParentSystem {
                     if local_dirty || parent_dirty || locals.open().1.flagged(parent.entity)
                         || stretch.open().1.flagged(parent.entity)
                     {
-
                         // Positioning when having a parent.
 
                         if let Some(parent_global) = locals.get(parent.entity) {
