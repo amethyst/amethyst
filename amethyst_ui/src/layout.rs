@@ -319,17 +319,17 @@ impl<'a> System<'a> for UiParentSystem {
                                 Some(anchor) => {
                                     let norm = anchor.norm_offset();
                                     (
-                                        parent_global.x + parent_global.width * norm.0
+                                        parent_global.calculated_x + parent_global.width * norm.0
                                             + anchor.offset.unwrap().0,
-                                        parent_global.y + parent_global.height * norm.1
+                                        parent_global.calculated_y + parent_global.height * norm.1
                                             + anchor.offset.unwrap().1,
-                                        parent_global.z + local.z,
+                                        parent_global.calculated_z + local.z,
                                     )
                                 }
                                 None => (
-                                    parent_global.x + local.x,
-                                    parent_global.y + local.y,
-                                    parent_global.z + local.z,
+                                    parent_global.calculated_x + local.x,
+                                    parent_global.calculated_y + local.y,
+                                    parent_global.calculated_z + local.z,
                                 ),
                             });
 
