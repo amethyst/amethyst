@@ -16,5 +16,6 @@
 * Oflor
 * Robbie Cooper
 * Scott Corbeil
+* Thomas Schaller
 * White-Oak
 * Xaeroxe (Jacob Kiesel)

@@ -122,8 +122,8 @@ Other places you may want to check out are [r/rust_gamedev][rg] and [#rust-gamed
 Amethyst is free and open source software distributed under the terms of both
 the [MIT License][lm] and the [Apache License 2.0][la].
 
-[lm]: LICENSE-MIT
-[la]: LICENSE-APACHE
+[lm]: docs/LICENSE-MIT
+[la]: docs/LICENSE-APACHE
 
 ## Contributing
 
@@ -131,7 +131,7 @@ We are a community project that welcomes contribution from anyone. If you're
 interested in helping out, please read the [CONTRIBUTING.md][cm] file before
 getting started. Don't know what to hack on? Check our [active projects][pr], or search though [our issue tracker][it].
 
-[cm]: CONTRIBUTING.md
+[cm]: docs/CONTRIBUTING.md
 [pr]: https://github.com/amethyst/amethyst/projects
 [it]: https://github.com/amethyst/amethyst/issues
 
