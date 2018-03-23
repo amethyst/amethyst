@@ -12,12 +12,10 @@ engines, this probably sounds familiar: Unity engine calls these objects as
 `MonoBehaviour`s and Unreal engine calls them `Actor`s, but these all represent
 the same basic idea.
 
-Systems in specs/amethyst are slightly different. Rather than describe the
-functionality of a single component, they describe the functionality of all
-components of a specific type. This difference impacts the runtime performance
-of a game, since it lets us optimize the way the components are stored with
-cache-locality in mind. It also means we can make systems run in parallel
-when they don't share any data between them.
+Systems in specs/Amethyst are slightly different. Rather than describe the
+behavior of a single instance (eg, a single enemy in your game), they describe
+the behavior of all components of a specific type (all enemies). This makes
+your code more modular, easier to test, and makes it run faster.
 
 Let's get started.
 
@@ -36,9 +34,9 @@ project, called `bindings.ron`:
 )
 ```
 
-In amethyst, inputs can be either scalar inputs (eg, a button that is either
-pressed or not), or axes (eg, a range that relates two buttons as opposite
-ends of a range). In this file, we're creating two axes: W,S will move the
+In Amethyst, inputs can be either scalar inputs (a button that is either
+pressed or not), or axes (a range that relates two buttons as opposite
+ends of a range). In this file, we're creating two axes: W and S will move the
 left paddle up and down, and the Up and Down arrow keys will move the right
 paddle up and down.
 
@@ -50,21 +48,21 @@ axes we defined. Let's make the following changes to `main.rs`.
 use amethyst::input::InputBundle;
 
 let input_bundle = InputBundle::<String, String>::new()
-.with_bindings_from_file("./resources/bindings.ron");
+  .with_bindings_from_file("./resources/bindings.ron");
 
 let mut game = Application::build("./", Pong)?
-.with_bundle(TransformBundle::new())?
-.with_bundle(RenderBundle::new())?
-.with_bundle(input_bundle)?
-.with_local(RenderSystem::build(pipe, Some(config))?)
-.build()?;
+  .with_bundle(TransformBundle::new())?
+  .with_bundle(RenderBundle::new())?
+  .with_bundle(input_bundle)?
+  .with_local(RenderSystem::build(pipe, Some(config))?)
+  .build()?;
 ```
 
-At this point, we're ready to write a system that reads input from the input
-handler, and moves the paddles accordingly. First, we'll create a directory
-called `systems` under `src` to hold all our systems. We'll use a module to
-collect and export each of our systems to the rest of the application. Here's
-our `mod.rs` for `src/systems`:
+At this point, we're ready to write a system that reads input from the
+`InputHandler`, and moves the paddles accordingly. First, we'll create a
+directory called `systems` under `src` to hold all our systems. We'll use a
+module to collect and export each of our systems to the rest of the
+application. Here's our `mod.rs` for `src/systems`:
 
 ```rust,ignore
 mod paddle;
@@ -110,20 +108,20 @@ Note: We had to make our Paddle and Side public in `pong.rs`
 
 Let's review what our system does, because there's quite a bit there.
 
-We create a unit struct, called PaddleSystem, and implement the System trait
-for it. The trait specifies the lifetime of the components on which it
+We create a unit struct, called `PaddleSystem`, and implement the `System`
+trait for it. The trait specifies the lifetime of the components on which it
 operates. Inside the implementation, we define the `SystemData` the system
 operates on, a tuple of `WriteStorage`, `ReadStorage`, and `Fetch`. More
 specifically, the generic types we've used here tell us that the `PaddleSystem`
-mutates LocalTransform components, `WriteStorage<'s, LocalTransform>`, it
+mutates `LocalTransform` components, `WriteStorage<'s, LocalTransform>`, it
 reads `Paddle` components, `ReadStorage<'s, Paddle>`, and also accesses the
 `InputHandler<String, String>` resource we created earlier, using the `Fetch`
 trait.
 
 It's worth noting an important difference between the objects our system
 accesses. A system will iterate over entities that contain one of each of
-the components that it specifies in its SystemData. Going back to our example,
-the PaddleSystem will ignore any entity that is missing a `Paddle`,
+the components that it specifies in its `SystemData`. Going back to our example,
+the `PaddleSystem` will ignore any entity that is missing a `Paddle`,
 `LocalTransform` or both.
 
 ## Modifying the transform
@@ -148,11 +146,13 @@ component of the transform's translation.
 ```
 
 This is our first attempt at moving the paddles: we take the movement, and
-scale it by some factor to make the motion seem smooth. If you run the game
-now, you'll notice the paddles are able to fall off the edges of the game
-area.
+scale it by some factor to make the motion seem smooth. In a real game, we
+would use the time elapsed between frames to determine how far to move the
+paddle, so that the behavior of the game would not be tied to the game's
+framerate, but this will do for now. If you run the game now, you'll notice
+the paddles are able to "fall" off the edges of the game area.
 
-To fix this, we'll clamp the translation's y component to be at least -1.0 and
+To fix this, we'll clamp the translation's y component to be at least `-1.0` and
 at most `1.0 - PADDLE_HEIGHT` (since the translation indicates the paddle's
 bottom edge).
 
@@ -176,8 +176,8 @@ Our run function should now look something like this:
 ```
 
 ## Summary
-In this chapter, we created added an input handler to our game, so that we
-could capture keypresses. We then added a system that would interpret these
+In this chapter, we added an input handler to our game, so that we
+could capture keypresses. We then created a system that would interpret these
 keypresses, and move our game's paddles accordingly. In the next chapter, we'll
 explore another key concept in real-time games: time. We'll make our game aware
 of time, and add a ball for our paddles to bounce back and forth.
