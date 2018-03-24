@@ -2,7 +2,7 @@
 
 use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 use hibitset::BitSet;
-use specs::{Entities, Entity, Join, System, WriteStorage};
+use specs::prelude::{Entities, Entity, Join, System, WriteStorage};
 use transform::{GlobalTransform, Parent, Transform};
 
 /// Handles updating `GlobalTransform` components based on the `Transform`
@@ -51,7 +51,7 @@ impl<'a> System<'a> for TransformSystem {
         profile_scope!("transform_system");
 
         // Clear dirty flags on `Transform` storage, before updates go in
-        (&mut globals).open().1.clear_flags();
+       /* (&mut globals).open().1.clear_flags();
 
         {
             for (entity, parent) in (&*entities, parents.open().1).join() {
@@ -174,7 +174,7 @@ impl<'a> System<'a> for TransformSystem {
             self.init.add(bit);
         }
         self.frame_init.clear();
-        self.dead.clear();
+        self.dead.clear();*/
     }
 }
 
@@ -182,7 +182,7 @@ impl<'a> System<'a> for TransformSystem {
 mod tests {
     use cgmath::{Decomposed, Matrix4, One, Quaternion, Vector3, Zero};
     use shred::RunNow;
-    use specs::World;
+    use specs::prelude::World;
     use transform::{GlobalTransform, Parent, Transform, TransformSystem};
     //use quickcheck::{Arbitrary, Gen};
 

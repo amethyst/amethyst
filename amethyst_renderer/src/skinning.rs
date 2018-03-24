@@ -1,4 +1,4 @@
-use amethyst_core::specs::{Component, DenseVecStorage, Entity, FlaggedStorage};
+use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entity, FlaggedStorage};
 use gfx::format::{ChannelType, Format, SurfaceType};
 
 use error::Result;

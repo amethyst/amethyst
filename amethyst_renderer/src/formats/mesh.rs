@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use amethyst_assets::{Asset, Error, Result, ResultExt, SimpleFormat};
 use amethyst_core::cgmath::{InnerSpace, Vector3};
-use amethyst_core::specs::VecStorage;
+use amethyst_core::specs::prelude::VecStorage;
 use wavefront_obj::obj::{parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex,
                          TextureIndex, Vertex, VertexIndex};
 

@@ -1,6 +1,6 @@
 //! ECS transform bundle
 
-use specs::{DispatcherBuilder, World};
+use specs::prelude::{DispatcherBuilder, World};
 
 use bundle::{ECSBundle, Result};
 use transform::*;
@@ -46,6 +46,6 @@ impl<'a, 'b, 'c> ECSBundle<'a, 'b> for TransformBundle<'c> {
         world.register::<Transform>();
         world.register::<GlobalTransform>();
 
-        Ok(builder.add(TransformSystem::new(), "transform_system", self.dep))
+        Ok(builder.with(TransformSystem::new(), "transform_system", self.dep))
     }
 }

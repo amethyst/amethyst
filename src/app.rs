@@ -18,7 +18,7 @@ use winit::{Event, WindowEvent};
 use assets::{Asset, Loader, Source};
 use core::frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy};
 use core::timing::{Stopwatch, Time};
-use ecs::{Component, Dispatcher, DispatcherBuilder, System, World};
+use ecs::prelude::{Component, Dispatcher, DispatcherBuilder, System, World};
 use ecs::common::Errors;
 use error::{Error, Result};
 use state::{State, StateMachine};
@@ -366,7 +366,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// ~~~no_run
     /// use amethyst::prelude::*;
-    /// use amethyst::ecs::{Component, HashMapStorage};
+    /// use amethyst::ecs::prelude::{Component, HashMapStorage};
     ///
     /// struct NullState;
     /// impl State for NullState {}
@@ -397,6 +397,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     pub fn register<C>(mut self) -> Self
     where
         C: Component,
+        C::Storage: Default,
     {
         self.world.register::<C>();
         self
@@ -491,7 +492,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///     .with(NopSystem, "doggo", &[]);
     /// ~~~
     pub fn with_barrier(mut self) -> Self {
-        self.disp_builder = self.disp_builder.add_barrier();
+        self.disp_builder = self.disp_builder.with_barrier();
         self
     }
 
@@ -554,7 +555,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     where
         for<'c> S: System<'c> + Send + 'a,
     {
-        self.disp_builder = self.disp_builder.add(system, name, dependencies);
+        self.disp_builder = self.disp_builder.with(system, name, dependencies);
         self
     }
 
@@ -604,7 +605,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     where
         for<'c> S: System<'c> + 'b,
     {
-        self.disp_builder = self.disp_builder.add_thread_local(system);
+        self.disp_builder = self.disp_builder.with_thread_local(system);
         self
     }
 
@@ -756,43 +757,6 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// This function returns the ApplicationBuilder after modifying it.
     pub fn ignore_window_close(mut self, ignore: bool) -> Self {
         self.ignore_window_close = ignore;
-        self
-    }
-
-    /// Register a new asset type with the Application. All required components
-    /// related to the storage of this asset type will be registered. Since
-    /// Amethyst uses AssetFutures to allow for async content loading, Amethyst
-    /// needs to have a system that translates AssetFutures into Components as
-    /// they resolve. Amethyst registers a system to accomplish this.
-    ///
-    /// # Parameters
-    ///
-    /// `make_context`: A closure that returns an initialized `Asset::Context`
-    ///                 object. This is given the a reference to the world object
-    ///                 to allow it to find any resources previously registered.
-    ///
-    /// # Type Parameters
-    ///
-    /// - `A`: The asset type, an `Asset` in reference to Amethyst is a component
-    ///        that implements the [`Asset`](../amethyst_assets/trait.Asset.html) trait.
-    /// - `F`: A function that returns the `Asset::Context` context object.
-    ///
-    /// # Returns
-    ///
-    /// This function returns ApplicationBuilder after it has modified it.
-    ///
-    ///
-    // TODO: Create example of this function. It might be easier to build a large
-    //       example of a custom type in the `Asset` trait docs
-    pub fn register_asset<A>(mut self) -> Self
-    where
-        A: Asset,
-    {
-        use assets::{AssetStorage, Handle};
-
-        self.world.add_resource(AssetStorage::<A>::new());
-        self.world.register::<Handle<A>>();
-
         self
     }
 

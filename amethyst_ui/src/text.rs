@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 use std::ops::Range;
 
-use amethyst_core::specs::{Component, DenseVecStorage, Entities, Entity, Fetch, FetchMut, Join,
+use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entities, Entity, Fetch, FetchMut, Join,
                            ReadStorage, System, WriteStorage};
 use amethyst_core::timing::Time;
 use clipboard::{ClipboardContext, ClipboardProvider};

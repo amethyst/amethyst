@@ -1,5 +1,5 @@
 use amethyst_core::cgmath::Matrix4;
-use amethyst_core::specs::{Component, DenseVecStorage, Entity};
+use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entity};
 use hibitset::BitSet;
 
 /// Joint, attach to an entity with a `Transform`

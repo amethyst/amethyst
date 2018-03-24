@@ -2,8 +2,8 @@ use std::hash::Hash;
 use std::marker;
 
 use amethyst_assets::AssetStorage;
-use amethyst_core::{ECSBundle, Result};
-use amethyst_core::specs::{Component, DispatcherBuilder, World};
+use amethyst_core::{ECSBundle, Result, GlobalTransform};
+use amethyst_core::specs::prelude::{Component, DispatcherBuilder, World};
 use amethyst_renderer::JointTransforms;
 
 use material::MaterialTextureSet;
@@ -44,8 +44,9 @@ impl<'a, 'b, 'c> ECSBundle<'a, 'b> for VertexSkinningBundle<'c> {
         world.register::<Joint>();
         world.register::<Skin>();
         world.register::<JointTransforms>();
-        Ok(builder.add(
-            VertexSkinningSystem::new(),
+        let mut transforms = world.write::<GlobalTransform>();
+        Ok(builder.with(
+            VertexSkinningSystem::new(transforms.track_inserted(), transforms.track_modified()),
             "vertex_skinning_system",
             self.dep,
         ))
@@ -104,8 +105,8 @@ where
         world.register::<SamplerControlSet<T>>();
         world.add_resource(MaterialTextureSet::default());
         Ok(builder
-            .add(SamplerProcessor::<T::Primitive>::new(), "", &[])
-            .add(SamplerInterpolationSystem::<T>::new(), self.name, self.dep))
+            .with(SamplerProcessor::<T::Primitive>::new(), "", &[])
+            .with(SamplerInterpolationSystem::<T>::new(), self.name, self.dep))
     }
 }
 
@@ -167,7 +168,7 @@ where
         world.register::<AnimationHierarchy<T>>();
         world.register::<RestState<T>>();
         world.register::<AnimationSet<I, T>>();
-        builder = builder.add(AnimationProcessor::<T>::new(), "", &[]).add(
+        builder = builder.with(AnimationProcessor::<T>::new(), "", &[]).with(
             AnimationControlSystem::<I, T>::new(),
             self.animation_name,
             self.dep,

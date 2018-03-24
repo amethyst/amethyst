@@ -6,7 +6,7 @@ extern crate genmesh;
 use amethyst::assets::Loader;
 use amethyst::core::cgmath::{Deg, InnerSpace, Vector3};
 use amethyst::core::transform::GlobalTransform;
-use amethyst::ecs::World;
+use amethyst::ecs::prelude::World;
 use amethyst::prelude::*;
 use amethyst::renderer::*;
 use genmesh::{MapToVertices, Triangulate, Vertices};

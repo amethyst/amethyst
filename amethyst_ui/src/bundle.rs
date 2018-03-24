@@ -3,7 +3,7 @@
 use amethyst_assets::{AssetStorage, Handle, Processor};
 use amethyst_core::Parent;
 use amethyst_core::bundle::{ECSBundle, Result};
-use amethyst_core::specs::{DispatcherBuilder, World};
+use amethyst_core::specs::prelude::{DispatcherBuilder, World};
 use shrev::EventChannel;
 use std::hash::Hash;
 use std::marker::PhantomData;
@@ -65,10 +65,10 @@ where
             .register_reader();
 
         Ok(builder
-            .add(Processor::<FontAsset>::new(), "font_processor", &[])
-            .add(UiSystem::new(reader_1), "ui_system", &["font_processor"])
-            .add(ResizeSystem::new(reader_2), "ui_resize_system", &[])
-            .add(UiMouseSystem::<A, B>::new(), "ui_mouse_system", &[])
+            .with(Processor::<FontAsset>::new(), "font_processor", &[])
+            .with(UiSystem::new(reader_1), "ui_system", &["font_processor"])
+            .with(ResizeSystem::new(reader_2), "ui_resize_system", &[])
+            .with(UiMouseSystem::<A, B>::new(), "ui_mouse_system", &[])
             .add(UiLayoutSystem::new(), "ui_layout", &["ui_system"])
             .add(UiParentSystem::new(), "ui_parent", &["ui_layout"]))
     }

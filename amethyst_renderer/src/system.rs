@@ -7,7 +7,7 @@ use std::sync::Arc;
 use amethyst_assets::{AssetStorage, HotReloadStrategy};
 use amethyst_core::Time;
 use amethyst_core::shred::Resources;
-use amethyst_core::specs::{Fetch, FetchMut, RunNow, SystemData};
+use amethyst_core::specs::prelude::{Fetch, FetchMut, RunNow, SystemData};
 use rayon::ThreadPool;
 use shrev::EventChannel;
 use winit::{DeviceEvent, Event, WindowEvent};
@@ -163,9 +163,9 @@ where
     fn run_now(&mut self, res: &'a Resources) {
         #[cfg(feature = "profiler")]
         profile_scope!("render_system");
-        self.asset_loading(AssetLoadingData::fetch(res, 0));
-        self.window_management(WindowData::fetch(res, 0));
-        self.render(RenderData::<P>::fetch(res, 0));
+        self.asset_loading(AssetLoadingData::fetch(res));
+        self.window_management(WindowData::fetch(res));
+        self.render(RenderData::<P>::fetch(res));
     }
 }
 

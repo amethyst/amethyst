@@ -5,7 +5,7 @@ use std::time::Duration;
 use assets::Loader;
 use core::{ECSBundle, Result, Stopwatch, Time};
 use core::frame_limiter::FrameLimiter;
-use ecs::{DispatcherBuilder, World};
+use ecs::prelude::{DispatcherBuilder, World};
 use ecs::common::Errors;
 use rayon::{Configuration, ThreadPool};
 use renderer::Event;

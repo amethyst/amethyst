@@ -25,7 +25,7 @@ crossbeam = "0.3.0"
 derivative = "1.0"
 error-chain = "0.11"
 fnv = "1"
-hibitset = "0.3.1"
+hibitset = { version = "0.5.0", features = ["parallel"] }
 log = "0.4"
 parking_lot = "0.4.4"
 rayon = "0.8"

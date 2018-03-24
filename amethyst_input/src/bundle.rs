@@ -5,7 +5,7 @@ use std::path::Path;
 
 use amethyst_config::Config;
 use amethyst_core::bundle::{ECSBundle, Result};
-use amethyst_core::specs::{DispatcherBuilder, World};
+use amethyst_core::specs::prelude::{DispatcherBuilder, World};
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use shrev::EventChannel;
@@ -81,6 +81,6 @@ where
 
         world.add_resource(input);
         world.add_resource(EventChannel::<InputEvent<AC>>::with_capacity(2000));
-        Ok(builder.add(InputSystem::<AX, AC>::new(reader_id), "input_system", &[]))
+        Ok(builder.with(InputSystem::<AX, AC>::new(reader_id), "input_system", &[]))
     }
 }

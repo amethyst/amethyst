@@ -3,7 +3,7 @@
 use std::hash::Hash;
 use std::marker;
 
-use amethyst_core::specs::{Fetch, FetchMut, System};
+use amethyst_core::specs::prelude::{Fetch, FetchMut, System};
 use shrev::{EventChannel, ReaderId};
 use winit::Event;
 

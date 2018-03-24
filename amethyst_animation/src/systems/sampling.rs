@@ -3,7 +3,7 @@ use std::time::Duration;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{duration_to_nanos, duration_to_secs, nanos_to_duration, secs_to_duration, Time};
-use amethyst_core::specs::{Component, Fetch, Join, System, WriteStorage};
+use amethyst_core::specs::prelude::{Component, Fetch, Join, System, WriteStorage};
 use itertools::Itertools;
 use minterpolate::InterpolationPrimitive;
 

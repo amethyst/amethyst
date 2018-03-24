@@ -3,7 +3,8 @@ use std::sync::{Arc, Weak};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use amethyst_core::Time;
-use amethyst_core::specs::{Component, Fetch, FetchMut, System, UnprotectedStorage, VecStorage};
+use amethyst_core::specs::prelude::{Component, Fetch, FetchMut, System, VecStorage};
+use amethyst_core::specs::storage::UnprotectedStorage;
 use crossbeam::sync::MsQueue;
 use hibitset::BitSet;
 use rayon::ThreadPool;
@@ -339,7 +340,7 @@ impl<A: Asset> Default for AssetStorage<A> {
 impl<A: Asset> Drop for AssetStorage<A> {
     fn drop(&mut self) {
         let bitset = &self.bitset;
-        unsafe { self.assets.clean(|id| bitset.contains(id)) }
+        unsafe { self.assets.clean(bitset) }
     }
 }
 

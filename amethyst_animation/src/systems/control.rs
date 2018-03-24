@@ -3,7 +3,7 @@ use std::marker;
 use std::time::Duration;
 
 use amethyst_assets::{AssetStorage, Handle};
-use amethyst_core::specs::{Component, Entities, Entity, Fetch, Join, ReadStorage, System,
+use amethyst_core::specs::prelude::{Component, Entities, Entity, Fetch, Join, ReadStorage, System,
                            WriteStorage};
 use amethyst_core::timing::secs_to_duration;
 use fnv::FnvHashMap;
