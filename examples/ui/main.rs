@@ -9,7 +9,7 @@ use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::Time;
 use amethyst::core::cgmath::Deg;
 use amethyst::core::transform::{GlobalTransform, Parent};
-use amethyst::ecs::prelude::{Entity, World, FetchMut, System};
+use amethyst::ecs::prelude::{Entity, FetchMut, System, World};
 use amethyst::input::InputBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light, Mesh, Pipeline,

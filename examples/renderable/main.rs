@@ -12,7 +12,8 @@ use amethyst::core::cgmath::{Array, Deg, Euler, Quaternion, Rad, Rotation, Rotat
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::timing::Time;
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
-use amethyst::ecs::prelude::{Entity, Fetch, FetchMut, Join, ReadStorage, System, World, WriteStorage};
+use amethyst::ecs::prelude::{Entity, Fetch, FetchMut, Join, ReadStorage, System, World,
+                             WriteStorage};
 use amethyst::input::InputBundle;
 use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, DisplayConfig, DrawShaded,
                          ElementState, Event, KeyboardInput, Light, Material, MaterialDefaults,

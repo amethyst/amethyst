@@ -15,11 +15,11 @@ use shrev::{EventChannel, ReaderId};
 use thread_profiler::{register_thread_with_profiler, write_profile};
 use winit::{Event, WindowEvent};
 
-use assets::{Asset, Loader, Source};
+use assets::{Loader, Source};
 use core::frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy};
 use core::timing::{Stopwatch, Time};
-use ecs::prelude::{Component, Dispatcher, DispatcherBuilder, System, World};
 use ecs::common::Errors;
+use ecs::prelude::{Component, Dispatcher, DispatcherBuilder, System, World};
 use error::{Error, Result};
 use state::{State, StateMachine};
 use vergen;
@@ -275,10 +275,17 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// ~~~no_run
     /// use amethyst::prelude::*;
-    /// use amethyst::core::transform::{Parent, Transform, TransformSystem};
+    /// use amethyst::core::transform::{Parent, Transform};
+    /// use amethyst::ecs::prelude::System;
     ///
     /// struct NullState;
     /// impl State for NullState {}
+    ///
+    /// struct NopSystem;
+    /// impl<'a> System<'a> for NopSystem {
+    ///     type SystemData = ();
+    ///     fn run(&mut self, _: Self::SystemData) {}
+    /// }
     ///
     /// // initialize the builder, the `ApplicationBuilder` object
     /// // follows the use pattern of most builder objects found
@@ -292,7 +299,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///     .register::<Transform>()
     ///
     /// // systems can be added before the game is run
-    ///     .with::<TransformSystem>(TransformSystem::new(), "transform_system", &[])
+    ///     .with::<NopSystem>(NopSystem, "nop_system", &[])
     ///
     /// // lastly we can build the Application object
     ///     .build()
@@ -366,7 +373,8 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// ~~~no_run
     /// use amethyst::prelude::*;
-    /// use amethyst::ecs::prelude::{Component, HashMapStorage};
+    /// use amethyst::ecs::prelude::Component;
+    /// use amethyst::ecs::storage::HashMapStorage;
     ///
     /// struct NullState;
     /// impl State for NullState {}
@@ -470,7 +478,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// ~~~no_run
     /// use amethyst::prelude::*;
-    /// use amethyst::ecs::System;
+    /// use amethyst::ecs::prelude::System;
     ///
     /// struct NullState;
     /// impl State for NullState {}
@@ -530,7 +538,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// ~~~no_run
     /// use amethyst::prelude::*;
-    /// use amethyst::ecs::System;
+    /// use amethyst::ecs::prelude::System;
     ///
     /// struct NullState;
     /// impl State for NullState {}
@@ -585,7 +593,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// ~~~no_run
     /// use amethyst::prelude::*;
-    /// use amethyst::ecs::System;
+    /// use amethyst::ecs::prelude::System;
     ///
     /// struct NullState;
     /// impl State for NullState {}
@@ -666,7 +674,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// use amethyst::prelude::*;
     /// use amethyst::assets::{Directory, Loader};
     /// use amethyst::renderer::ObjFormat;
-    /// use amethyst::ecs::World;
+    /// use amethyst::ecs::prelude::World;
     ///
     /// let mut game = Application::build("assets/", LoadingState)
     ///     .expect("Failed to initialize")

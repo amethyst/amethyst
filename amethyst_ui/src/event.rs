@@ -1,5 +1,5 @@
 use amethyst_core::specs::prelude::{Component, Entities, Entity, Fetch, FetchMut, Join,
-                           ReadStorage, System};
+                                    ReadStorage, System};
 use amethyst_core::specs::storage::NullStorage;
 use amethyst_input::InputHandler;
 use amethyst_renderer::MouseButton;

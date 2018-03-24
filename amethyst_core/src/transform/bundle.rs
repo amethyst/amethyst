@@ -46,6 +46,19 @@ impl<'a, 'b, 'c> ECSBundle<'a, 'b> for TransformBundle<'c> {
         world.register::<Transform>();
         world.register::<GlobalTransform>();
 
-        Ok(builder.with(TransformSystem::new(), "transform_system", self.dep))
+        let mut locals = world.write::<Transform>();
+        let mut parents = world.write::<Parent>();
+
+        Ok(builder.with(
+            TransformSystem::new(
+                parents.track_inserted(),
+                parents.track_modified(),
+                parents.track_removed(),
+                locals.track_inserted(),
+                locals.track_modified(),
+            ),
+            "transform_system",
+            self.dep,
+        ))
     }
 }

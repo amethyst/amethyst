@@ -2,7 +2,7 @@ use std::hash::Hash;
 use std::marker;
 
 use amethyst_assets::AssetStorage;
-use amethyst_core::{ECSBundle, Result, GlobalTransform};
+use amethyst_core::{ECSBundle, GlobalTransform, Result};
 use amethyst_core::specs::prelude::{Component, DispatcherBuilder, World};
 use amethyst_renderer::JointTransforms;
 

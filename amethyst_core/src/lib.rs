@@ -7,6 +7,8 @@ pub extern crate specs;
 extern crate error_chain;
 extern crate fnv;
 extern crate hibitset;
+#[macro_use]
+extern crate log;
 extern crate rayon;
 #[macro_use]
 extern crate serde;
