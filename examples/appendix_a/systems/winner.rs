@@ -3,7 +3,7 @@ use amethyst::assets::AssetStorage;
 use amethyst::audio::Source;
 use amethyst::audio::output::Output;
 use amethyst::core::transform::Transform;
-use amethyst::ecs::{Entity, Fetch, FetchMut, Join, System, WriteStorage};
+use amethyst::ecs::prelude::{Entity, Fetch, FetchMut, Join, System, WriteStorage};
 use amethyst::ui::UiText;
 use audio::Sounds;
 use config::ArenaConfig;

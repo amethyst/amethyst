@@ -1,4 +1,4 @@
-use amethyst_core::specs::{Component, DenseVecStorage, Fetch, Join, System, WriteStorage};
+use amethyst_core::specs::prelude::{Component, DenseVecStorage, Fetch, Join, System, WriteStorage};
 use shrev::{EventChannel, ReaderId};
 use winit::{Event, WindowEvent};
 

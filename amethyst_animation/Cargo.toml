@@ -21,7 +21,7 @@ amethyst_assets = { path = "../amethyst_assets/", version = "0.2.0" }
 amethyst_core = { path = "../amethyst_core/", version = "0.1.0" }
 amethyst_renderer = { path = "../amethyst_renderer/", version = "0.6.1" }
 fnv = "1"
-hibitset = "0.3.2"
+hibitset = { version = "0.5.0", features = ["parallel"] }
 itertools = "0.7.6"
 log = "0.4"
 minterpolate = { version = "0.2", features = ["serde"] }

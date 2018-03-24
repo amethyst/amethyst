@@ -2,7 +2,7 @@
 
 pub use app::{Application, ApplicationBuilder};
 pub use config::Config;
-pub use ecs::World;
+pub use ecs::prelude::World;
 //pub use renderer::input::*;
 
 pub use state::{State, Trans};

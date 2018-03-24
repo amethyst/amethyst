@@ -9,7 +9,7 @@ extern crate log;
 use amethyst::assets::{AssetStorage, Handle, Loader};
 use amethyst::core::cgmath::{Deg, Quaternion, Rotation3, Vector3};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
-use amethyst::ecs::Entity;
+use amethyst::ecs::prelude::Entity;
 use amethyst::prelude::*;
 use amethyst::renderer::*;
 use amethyst_animation::{get_animation_set, AnimationBundle, AnimationCommand, AnimationSet,

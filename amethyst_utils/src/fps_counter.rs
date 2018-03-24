@@ -1,7 +1,7 @@
 //! Util Resources
 
 use amethyst_core::{ECSBundle, Result};
-use amethyst_core::specs::{DispatcherBuilder, Fetch, FetchMut, System, World};
+use amethyst_core::specs::prelude::{DispatcherBuilder, Fetch, FetchMut, System, World};
 use amethyst_core::timing::{duration_to_nanos, Time};
 use circular_buffer::CircularBuffer;
 
@@ -90,6 +90,6 @@ impl<'a, 'b> ECSBundle<'a, 'b> for FPSCounterBundle {
         builder: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
         world.add_resource(FPSCounter::new(self.samplesize));
-        Ok(builder.add(FPSCounterSystem, "fps_counter_system", &[]))
+        Ok(builder.with(FPSCounterSystem, "fps_counter_system", &[]))
     }
 }

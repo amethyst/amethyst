@@ -1,7 +1,7 @@
 //! Simple flat forward drawing pass.
 
 use amethyst_assets::AssetStorage;
-use amethyst_core::specs::{Entities, Fetch, Join, ReadStorage};
+use amethyst_core::specs::prelude::{Entities, Fetch, Join, ReadStorage};
 use amethyst_core::transform::GlobalTransform;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};

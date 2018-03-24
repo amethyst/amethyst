@@ -10,7 +10,7 @@ use std::thread::sleep;
 use std::time::Duration;
 
 use amethyst_assets::*;
-use amethyst_core::specs::VecStorage;
+use amethyst_core::specs::prelude::VecStorage;
 use rayon::{Configuration, ThreadPool};
 
 #[derive(Clone, Debug)]

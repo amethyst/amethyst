@@ -1,4 +1,4 @@
-use specs::{DispatcherBuilder, World};
+use specs::prelude::{DispatcherBuilder, World};
 
 error_chain!{}
 

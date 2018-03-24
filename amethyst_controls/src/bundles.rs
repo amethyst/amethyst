@@ -1,6 +1,6 @@
 use super::*;
 use amethyst_core::bundle::{ECSBundle, Result};
-use amethyst_core::specs::{DispatcherBuilder, World};
+use amethyst_core::specs::prelude::{DispatcherBuilder, World};
 use amethyst_renderer::WindowMessages;
 use amethyst_renderer::mouse::*;
 use std::hash::Hash;
@@ -66,7 +66,7 @@ where
         set_mouse_cursor_none(&mut msg);
 
         Ok(builder
-            .add(
+            .with(
                 FlyMovementSystem::<A, B>::new(
                     self.speed,
                     self.right_input_axis,
@@ -76,11 +76,11 @@ where
                 "fly_movement",
                 &[],
             )
-            .add(
+            .with(
                 FreeRotationSystem::<A, B>::new(self.sensitivity_x, self.sensitivity_y),
                 "free_rotation",
                 &[],
             )
-            .add(MouseCenterLockSystem, "mouse_lock", &["free_rotation"]))
+            .with(MouseCenterLockSystem, "mouse_lock", &["free_rotation"]))
     }
 }

@@ -24,7 +24,7 @@ use std::ops::Range;
 
 use animation::{Animation, Sampler, SamplerPrimitive, TransformChannel};
 use assets::{Asset, Error as AssetError, Handle};
-use core::specs::VecStorage;
+use core::specs::prelude::VecStorage;
 use core::transform::Transform;
 use gfx::Primitive;
 use renderer::{AnimatedVertexBufferCombination, MeshHandle, TextureData, TextureHandle};

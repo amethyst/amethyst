@@ -1,6 +1,6 @@
 //! Utilities for game state management.
 
-use ecs::World;
+use ecs::prelude::World;
 use renderer::Event;
 
 /// Types of state transitions.
@@ -214,7 +214,7 @@ mod tests {
 
     #[test]
     fn switch_pop() {
-        use ecs::World;
+        use ecs::prelude::World;
 
         let mut world = World::new();
 

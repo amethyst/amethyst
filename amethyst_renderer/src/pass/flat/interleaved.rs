@@ -3,7 +3,7 @@
 use std::marker::PhantomData;
 
 use amethyst_assets::AssetStorage;
-use amethyst_core::specs::{Fetch, Join, ReadStorage};
+use amethyst_core::specs::prelude::{Fetch, Join, ReadStorage};
 use amethyst_core::transform::GlobalTransform;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};

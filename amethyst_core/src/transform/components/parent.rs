@@ -1,4 +1,4 @@
-use specs::{Component, DenseVecStorage, Entity, FlaggedStorage};
+use specs::prelude::{Component, DenseVecStorage, Entity, FlaggedStorage};
 
 /// Component for defining a parent entity.
 ///

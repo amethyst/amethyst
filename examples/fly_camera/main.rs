@@ -9,7 +9,7 @@ use amethyst::controls::{FlyControlBundle, FlyControlTag};
 use amethyst::core::cgmath::{Deg, Vector3};
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
-use amethyst::ecs::World;
+use amethyst::ecs::prelude::World;
 use amethyst::input::InputBundle;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, ElementState, Event,
                          KeyboardInput, Material, MaterialDefaults, MeshHandle, ObjFormat,

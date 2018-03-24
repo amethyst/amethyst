@@ -13,9 +13,9 @@ use std::sync::Arc;
 
 use amethyst_assets::*;
 use amethyst_core::Time;
-use amethyst_core::specs::{Dispatcher, DispatcherBuilder, Fetch, FetchMut, System, VecStorage,
-                           World};
 use amethyst_core::specs::common::Errors;
+use amethyst_core::specs::prelude::{Dispatcher, DispatcherBuilder, Fetch, FetchMut, System,
+                                    VecStorage, World};
 use rayon::ThreadPool;
 
 struct App {
@@ -188,7 +188,7 @@ pub struct VertexData {
 
 fn main() {
     let disp = DispatcherBuilder::new()
-        .add(RenderingSystem, "rendering", &[])
+        .with(RenderingSystem, "rendering", &[])
         .build();
 
     let assets_dir = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));

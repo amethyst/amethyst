@@ -1,5 +1,5 @@
 use amethyst_core::cgmath::{Deg, Vector3};
-use amethyst_core::specs::{Fetch, FetchMut, Join, ReadStorage, System, WriteStorage};
+use amethyst_core::specs::prelude::{Fetch, FetchMut, Join, ReadStorage, System, WriteStorage};
 use amethyst_core::timing::Time;
 use amethyst_core::transform::Transform;
 use amethyst_input::InputHandler;
