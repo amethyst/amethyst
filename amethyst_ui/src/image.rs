@@ -1,5 +1,5 @@
+use amethyst_core::specs::{Component, VecStorage};
 use amethyst_renderer::TextureHandle;
-use specs::{Component, VecStorage};
 
 /// A component with the texture to display in this entity's `UiTransform`
 #[derive(Clone)]

@@ -1,4 +1,4 @@
-use specs::{Component, NullStorage};
+use amethyst_core::specs::{Component, NullStorage};
 
 /// Add this to a camera if you want it to be a fly camera.
 /// You need to add the FlyControlBundle or the required systems for it to work.
