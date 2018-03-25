@@ -108,7 +108,7 @@ pub struct Stretched {
 
 impl Stretched {
     /// Create a new `Stretched` component using the `Stretch` setting.
-    pub fn new(stretch: Stretch,margin_x: f32,margin_y: f32) -> Self {
+    pub fn new(stretch: Stretch, margin_x: f32, margin_y: f32) -> Self {
         Stretched {
             stretch,
             margin: (margin_x, margin_y),
@@ -121,15 +121,15 @@ impl Component for Stretched {
 }
 
 /// Used to initialize the `UiTransform` and `Anchored` offsets when using the `Anchored` component.
-pub struct UiLayoutSystem{
-    screen_size: (f32,f32),
+pub struct UiLayoutSystem {
+    screen_size: (f32, f32),
 }
 
 impl UiLayoutSystem {
     /// Creates a new UiLayoutSystem.
     pub fn new() -> Self {
         UiLayoutSystem {
-            screen_size: (0.0,0.0),
+            screen_size: (0.0, 0.0),
         }
     }
 }
@@ -144,13 +144,12 @@ impl<'a> System<'a> for UiLayoutSystem {
     );
 
     fn run(&mut self, (entities, mut transform, mut anchor, parent, screen_dim): Self::SystemData) {
-        let cur_size = (screen_dim.width(),screen_dim.height());
+        let cur_size = (screen_dim.width(), screen_dim.height());
         let offset_override = self.screen_size != cur_size;
         self.screen_size = cur_size;
         for (entity, mut tr, mut anchor) in (&*entities, &mut transform, &mut anchor).join() {
-            if anchor.offset.is_none() || (offset_override && anchor.offset.is_some()){
-
-                if offset_override && anchor.offset.is_some(){
+            if anchor.offset.is_none() || (offset_override && anchor.offset.is_some()) {
+                if offset_override && anchor.offset.is_some() {
                     tr.local_x = anchor.offset.unwrap().0;
                     tr.local_y = anchor.offset.unwrap().1;
                 }
@@ -393,7 +392,7 @@ impl<'a> System<'a> for UiParentSystem {
         }
 
         // When you don't have a parent but do have stretch on, resize with screen size.
-        for (entity, mut local,stretch) in (&*entities, &mut locals,&stretches).join() {
+        for (entity, mut local, stretch) in (&*entities, &mut locals, &stretches).join() {
             if parents.get(entity).is_none() {
                 let new_size = match stretch.stretch {
                     Stretch::X => (screen_dim.width() - stretch.margin.0 * 2.0, local.height),

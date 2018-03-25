@@ -355,10 +355,10 @@ impl<'a> System<'a> for UiSystem {
                             let mut eligible = (&*entities, &transform)
                                 .join()
                                 .filter(|&(_, t)| {
-                                    t.local_x <= self.mouse_position.0
-                                        && t.local_x + t.width >= self.mouse_position.0
-                                        && t.local_y <= self.mouse_position.1
-                                        && t.local_y + t.height >= self.mouse_position.1
+                                    t.global_x - t.width / 2.0 <= self.mouse_position.0
+                                        && t.global_x + t.width / 2.0 >= self.mouse_position.0
+                                        && t.global_y - t.height / 2.0 <= self.mouse_position.1
+                                        && t.global_y + t.height / 2.0 >= self.mouse_position.1
                                 })
                                 .collect::<Vec<_>>();
                             // In instances of ambiguity we want to select the element with the
@@ -366,9 +366,9 @@ impl<'a> System<'a> for UiSystem {
                             // eligible elements
                             let lowest_z = eligible
                                 .iter()
-                                .fold(INFINITY, |lowest, &(_, t)| lowest.min(t.local_z));
+                                .fold(INFINITY, |lowest, &(_, t)| lowest.min(t.global_z));
                             // Then filter by it
-                            eligible.retain(|&(_, t)| t.local_z == lowest_z);
+                            eligible.retain(|&(_, t)| t.global_z == lowest_z);
                             // We may still have ambiguity as to what to select at this point,
                             // so we'll resolve that by selecting the most recently created
                             // element.
