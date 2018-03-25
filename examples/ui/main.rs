@@ -175,6 +175,51 @@ impl State for Example {
                 false,
             ))
             .build();
+
+        // Manual button creation example
+        let button_image = world
+            .create_entity()
+            .with(
+                UiTransform::new("btn_image".to_string(), 0.0, 32.0, -1.0, 128.0, 64.0, 9)
+            )
+            .with(UiImage {
+                texture: green.clone(),
+            })
+            .with(Anchored::new(Anchor::TopMiddle))
+            .with(Parent {
+                entity: background.clone(),
+            })
+            .with(MouseReactive)
+            .build();
+        world
+            .create_entity()
+            .with(UiTransform::new(
+                "btn_text".to_string(),
+                0.,
+                0.,
+                -1.,
+                0.,
+                0.,
+                10,
+            ))
+            .with(UiText::new(
+                font.clone(),
+                "Button!".to_string(),
+                [0.2, 0.2, 1.0, 1.0],
+                20.,
+            ))
+            .with(Anchored::new(Anchor::Middle))
+            .with(Stretched::new(Stretch::XY))
+            .with(
+                Parent{
+                    entity: button_image,
+                }
+            )
+            .build();
+
+
+
+
         let fps = world
             .create_entity()
             .with(UiTransform::new(

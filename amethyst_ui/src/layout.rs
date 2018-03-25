@@ -127,12 +127,16 @@ impl Component for Stretched {
 }
 
 /// Used to initialize the `UiTransform` and `Anchored` offsets when using the `Anchored` component.
-pub struct UiLayoutSystem;
+pub struct UiLayoutSystem{
+    screen_size: (f32,f32),
+}
 
 impl UiLayoutSystem {
     /// Creates a new UiLayoutSystem.
     pub fn new() -> Self {
-        UiLayoutSystem {}
+        UiLayoutSystem {
+            screen_size: (0.0,0.0),
+        }
     }
 }
 
@@ -146,9 +150,18 @@ impl<'a> System<'a> for UiLayoutSystem {
     );
 
     fn run(&mut self, (entities, mut transform, mut anchor, parent, screen_dim): Self::SystemData) {
+        let cur_size = (screen_dim.width(),screen_dim.height());
+        let offset_override = self.screen_size != cur_size;
+        self.screen_size = cur_size;
         for (entity, mut tr, mut anchor) in (&*entities, &mut transform, &mut anchor).join() {
-            if anchor.offset.is_none() {
-                anchor.offset = Some((tr.x, tr.y));
+            if anchor.offset.is_none() || (offset_override && anchor.offset.is_some()){
+
+                if offset_override && anchor.offset.is_some(){
+                    tr.local_x = anchor.offset.unwrap().0;
+                    tr.local_y = anchor.offset.unwrap().1;
+                }
+
+                anchor.offset = Some((tr.local_x, tr.local_y));
 
                 let norm_offset = anchor.norm_offset();
 
@@ -162,12 +175,12 @@ impl<'a> System<'a> for UiLayoutSystem {
 
                 let new_pos_x = middle.0 + norm_offset.0 * screen_dim.width() + user_offset.0;
                 let new_pos_y = middle.1 + norm_offset.1 * screen_dim.height() + user_offset.1;
-                tr.x = new_pos_x;
-                tr.y = new_pos_y;
+                tr.local_x = new_pos_x;
+                tr.local_y = new_pos_y;
                 if parent.get(entity).is_none() {
-                    tr.calculated_x = tr.x;
-                    tr.calculated_y = tr.y;
-                    tr.calculated_z = tr.z;
+                    tr.global_x = tr.local_x;
+                    tr.global_y = tr.local_y;
+                    tr.global_z = tr.local_z;
                 }
             }
         }
@@ -222,7 +235,7 @@ impl<'a> System<'a> for UiParentSystem {
     );
     fn run(
         &mut self,
-        (entities, mut locals, mut parents, anchors, stretch, screen_dim): Self::SystemData,
+        (entities, mut locals, mut parents, anchors, stretches, screen_dim): Self::SystemData,
     ) {
         #[cfg(feature = "profiler")]
         profile_scope!("ui_parent_system");
@@ -310,7 +323,7 @@ impl<'a> System<'a> for UiParentSystem {
                     // Layouting starts here.
 
                     if local_dirty || parent_dirty || locals.open().1.flagged(parent.entity)
-                        || stretch.open().1.flagged(parent.entity)
+                        || stretches.open().1.flagged(parent.entity)
                     {
                         // Positioning when having a parent.
 
@@ -319,23 +332,23 @@ impl<'a> System<'a> for UiParentSystem {
                                 Some(anchor) => {
                                     let norm = anchor.norm_offset();
                                     (
-                                        parent_global.calculated_x + parent_global.width * norm.0
+                                        parent_global.global_x + parent_global.width * norm.0
                                             + anchor.offset.unwrap().0,
-                                        parent_global.calculated_y + parent_global.height * norm.1
+                                        parent_global.global_y + parent_global.height * norm.1
                                             + anchor.offset.unwrap().1,
-                                        parent_global.calculated_z + local.z,
+                                        parent_global.global_z + local.local_z,
                                     )
                                 }
                                 None => (
-                                    parent_global.calculated_x + local.x,
-                                    parent_global.calculated_y + local.y,
-                                    parent_global.calculated_z + local.z,
+                                    parent_global.global_x + local.local_x,
+                                    parent_global.global_y + local.local_y,
+                                    parent_global.global_z + local.local_z,
                                 ),
                             });
 
                             // Stretching when having a parent
 
-                            if let Some(st) = stretch.get(entity) {
+                            if let Some(st) = stretches.get(entity) {
                                 new_size = Some(match st.stretch {
                                     Stretch::X => {
                                         (parent_global.width - st.margin.0 * 2.0, local.height)
@@ -369,9 +382,9 @@ impl<'a> System<'a> for UiParentSystem {
 
             if let Some(c) = combined_transform {
                 if let Some(local) = locals.get_mut(entity) {
-                    local.calculated_x = c.0;
-                    local.calculated_y = c.1;
-                    local.calculated_z = c.2;
+                    local.global_x = c.0;
+                    local.global_y = c.1;
+                    local.global_z = c.2;
                 }
             }
 
@@ -386,20 +399,18 @@ impl<'a> System<'a> for UiParentSystem {
         }
 
         // When you don't have a parent but do have stretch on, resize with screen size.
-        for (entity, mut local) in (&*entities, &mut locals).join() {
+        for (entity, mut local,stretch) in (&*entities, &mut locals,&stretches).join() {
             if parents.get(entity).is_none() {
-                if let Some(st) = stretch.get(entity) {
-                    let new_size = match st.stretch {
-                        Stretch::X => (screen_dim.width() - st.margin.0 * 2.0, local.height),
-                        Stretch::Y => (local.width, screen_dim.height() - st.margin.1 * 2.0),
-                        Stretch::XY => (
-                            screen_dim.width() - st.margin.0 * 2.0,
-                            screen_dim.height() - st.margin.1 * 2.0,
-                        ),
-                    };
-                    local.width = new_size.0;
-                    local.height = new_size.1;
-                }
+                let new_size = match stretch.stretch {
+                    Stretch::X => (screen_dim.width() - stretch.margin.0 * 2.0, local.height),
+                    Stretch::Y => (local.width, screen_dim.height() - stretch.margin.1 * 2.0),
+                    Stretch::XY => (
+                        screen_dim.width() - stretch.margin.0 * 2.0,
+                        screen_dim.height() - stretch.margin.1 * 2.0,
+                    ),
+                };
+                local.width = new_size.0;
+                local.height = new_size.1;
             }
         }
 

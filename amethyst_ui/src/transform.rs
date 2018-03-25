@@ -12,13 +12,13 @@ pub struct UiTransform {
     pub id: String,
     /// X coordinate, 0 is the left edge, while the width of the screen is the right edge.
     /// Centered in the middle of the ui element.
-    pub x: f32,
+    pub local_x: f32,
     /// Y coordinate, 0 is the top edge, while the height of the screen is the bottom edge.
     /// Centered in the middle of the ui element.
-    pub y: f32,
+    pub local_y: f32,
     /// Z order, entities with a lower Z order will be rendered on top of entities with a higher
     /// Z order.
-    pub z: f32,
+    pub local_z: f32,
     /// The width of this UI element
     pub width: f32,
     /// The height of this UI element
@@ -28,12 +28,12 @@ pub struct UiTransform {
     /// as this one exists they are ordered according to Entity creation order.  Shift-tab walks
     /// this ordering backwards.
     pub tab_order: i32,
-    /// Calculated x position by the `UiParentSystem` and `UiLayoutSystem`.
-    pub calculated_x: f32,
-    /// Calculated y position by the `UiParentSystem` and `UiLayoutSystem`.
-    pub calculated_y: f32,
-    /// Calculated z position by the `UiParentSystem` and `UiLayoutSystem`.
-    pub calculated_z: f32,
+    /// Global x position by the `UiParentSystem` and `UiLayoutSystem`.
+    pub global_x: f32,
+    /// Global y position by the `UiParentSystem` and `UiLayoutSystem`.
+    pub global_y: f32,
+    /// Global z position by the `UiParentSystem` and `UiLayoutSystem`.
+    pub global_z: f32,
     /// WIP
     /// The scale mode indicates if the position is in pixel or is relative (%) to the parent's size.
     pub scale_mode: ScaleMode,
@@ -54,23 +54,23 @@ impl UiTransform {
     ) -> UiTransform {
         UiTransform {
             id,
-            x,
-            y,
-            z,
+            local_x: x,
+            local_y: y,
+            local_z: z,
             width,
             height,
             tab_order,
-            calculated_x: x,
-            calculated_y: y,
-            calculated_z: z,
+            global_x: x,
+            global_y: y,
+            global_z: z,
             scale_mode: ScaleMode::Pixel,
             pd: PhantomData,
         }
     }
     /// Checks if the input position is in the UiTransform rectangle.
     pub fn position_inside(&self, x: f32, y: f32) -> bool {
-        x > self.x - self.width / 2.0 && y > self.y - self.height / 2.0
-            && x < self.x + self.width / 2.0 && y < self.y + self.height / 2.0
+        x > self.local_x - self.width / 2.0 && y > self.local_y - self.height / 2.0
+            && x < self.local_x + self.width / 2.0 && y < self.local_y + self.height / 2.0
     }
 
     /// Currently unused. Will be implemented in a future PR.
