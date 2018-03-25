@@ -108,17 +108,11 @@ pub struct Stretched {
 
 impl Stretched {
     /// Create a new `Stretched` component using the `Stretch` setting.
-    pub fn new(stretch: Stretch) -> Self {
+    pub fn new(stretch: Stretch,margin_x: f32,margin_y: f32) -> Self {
         Stretched {
             stretch,
-            margin: (0.0, 0.0),
+            margin: (margin_x, margin_y),
         }
-    }
-
-    /// Adds a margin (spacing) on one or multiple axes.
-    pub fn with_margin(mut self, x: f32, y: f32) -> Self {
-        self.margin = (x, y);
-        self
     }
 }
 

@@ -93,7 +93,7 @@ impl State for Example {
             .with(UiImage {
                 texture: red.clone(),
             })
-            .with(Stretched::new(Stretch::XY))
+            .with(Stretched::new(Stretch::XY,0.0,0.0))
             .with(Anchored::new(Anchor::Middle))
             .build();
 
@@ -126,7 +126,7 @@ impl State for Example {
                 texture: blue.clone(),
             })
             .with(Anchored::new(Anchor::Middle))
-            .with(Stretched::new(Stretch::X).with_margin(2.0, 0.0))
+            .with(Stretched::new(Stretch::X,2.0,0.0))
             .with(Parent {
                 entity: top_right.clone(),
             })
@@ -209,7 +209,7 @@ impl State for Example {
                 20.,
             ))
             .with(Anchored::new(Anchor::Middle))
-            .with(Stretched::new(Stretch::XY))
+            .with(Stretched::new(Stretch::XY,0.0,0.0))
             .with(
                 Parent{
                     entity: button_image,
