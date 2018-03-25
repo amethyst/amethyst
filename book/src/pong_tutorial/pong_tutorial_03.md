@@ -8,7 +8,7 @@ Let's add a system that moves the paddles based on user input.
 
 A system is nothing more than a function that runs once each frame and
 potentially makes some changes to components. If you've used other game
-engines, this probably sounds familiar: Unity engine calls these objects as
+engines, this probably sounds familiar: Unity engine calls these objects
 `MonoBehaviour`s and Unreal engine calls them `Actor`s, but these all represent
 the same basic idea.
 
@@ -20,15 +20,16 @@ your code more modular, easier to test, and makes it run faster.
 Let's get started.
 
 ## Capturing user input
+
 To capture user input, we'll need to introduce a few more files to our game.
 Let's start by creating a resource file under the `resources` directory of our
-project, called `bindings.ron`:
+project, called `bindings_config.ron`:
 
 ```ron,ignore
 (
   axes: {
     "left_paddle": (pos: Key(W), neg: Key(S)),
-    "right_paddle": (pos: Key(Up), neg: Key(Down))
+    "right_paddle": (pos: Key(Up), neg: Key(Down)),
   },
   actions: {},
 )
@@ -47,15 +48,19 @@ axes we defined. Let's make the following changes to `main.rs`.
 ```rust,ignore
 use amethyst::input::InputBundle;
 
+let binding_path = format!(
+    "{}/resources/bindings_config.ron",
+    env!("CARGO_MANIFEST_DIR")
+);
+
 let input_bundle = InputBundle::<String, String>::new()
-  .with_bindings_from_file("./resources/bindings.ron");
+    .with_bindings_from_file(binding_path);
 
 let mut game = Application::build("./", Pong)?
-  .with_bundle(TransformBundle::new())?
-  .with_bundle(RenderBundle::new())?
-  .with_bundle(input_bundle)?
-  .with_local(RenderSystem::build(pipe, Some(config))?)
-  .build()?;
+    .with_bundle(TransformBundle::new())?
+    .with_bundle(RenderBundle::new(pipe, Some(config)))?
+    .with_bundle(input_bundle)?
+    .build()?;
 ```
 
 At this point, we're ready to write a system that reads input from the
@@ -70,41 +75,55 @@ mod paddle;
 pub use self::paddle::PaddleSystem;
 ```
 
-We're finally ready to implement the PaddleSystem:
+We're finally ready to implement the `PaddleSystem`:
 
 ```rust,ignore
 use pong::{Paddle, Side};
 use amethyst::ecs::{System, Join, Fetch};
 use amethyst::input::InputHandler;
-use amethyst::core::LocalTransform;
+use amethyst::core::transform::components::Transform;
 use amethyst::ecs::{ReadStorage, WriteStorage};
 
 pub struct PaddleSystem;
 
 impl<'s> System<'s> for PaddleSystem {
   type SystemData = (
-     WriteStorage<'s, LocalTransform>,
-     ReadStorage<'s, Paddle>,
-     Fetch<'s, InputHandler<String, String>>,
-   );
+    WriteStorage<'s, Transform>,
+    ReadStorage<'s, Paddle>,
+    Fetch<'s, InputHandler<String, String>>,
+  );
 
-   fn run(&mut self, (mut transforms, paddles, input): Self::SystemData) {
-      for paddle in (&paddles).join() {
-        let movement = match paddle.side {
-          Side::Left => input.axis_value("left_paddle"),
-          Side::Right => input.axis_value("right_paddle"),
-        };
-        if let Some(mv_amount) = movement {
-          if mv_amount != 0.0 {
-            println!("Side {:?} moving {}", paddle.side, mv_amount);
-          }
+  fn run(&mut self, (mut transforms, paddles, input): Self::SystemData) {
+    for paddle in (&paddles).join() {
+      let movement = match paddle.side {
+        Side::Left => input.axis_value("left_paddle"),
+        Side::Right => input.axis_value("right_paddle"),
+      };
+      if let Some(mv_amount) = movement {
+        if mv_amount != 0.0 {
+          println!("Side {:?} moving {}", paddle.side, mv_amount);
         }
       }
     }
   }
+}
 ```
 
 Note: We had to make our Paddle and Side public in `pong.rs`
+
+Now lets add this system to our `ApplicationBuilder` in `main.rs`:
+
+```rust,ignore
+mod systems;
+
+// in the run() function
+let mut game = Application::build("./", Pong)?
+    .with_bundle(TransformBundle::new())?
+    .with_bundle(RenderBundle::new(pipe, Some(config)))?
+    .with_bundle(input_bundle)?
+    .with(systems::PaddleSystem, "paddle_system", &["input_system"])
+    .build()?;
+```
 
 Let's review what our system does, because there's quite a bit there.
 
@@ -174,6 +193,9 @@ Our run function should now look something like this:
     }
   }
 ```
+
+Note: For the above to work, we'll have to mark `PADDLE_HEIGHT` as being
+public in `pong.rs`, and then import it in `paddle.rs`.
 
 ## Summary
 In this chapter, we added an input handler to our game, so that we

@@ -1,6 +1,6 @@
 use amethyst::assets::Loader;
 use amethyst::core::cgmath::Vector3;
-use amethyst::core::transform::{LocalTransform, Transform};
+use amethyst::core::transform::{GlobalTransform, Transform};
 use amethyst::ecs::{Component, DenseVecStorage};
 use amethyst::prelude::*;
 use amethyst::renderer::{Camera, Event, KeyboardInput, Material, MaterialDefaults, MeshHandle,
@@ -36,7 +36,7 @@ impl State for Pong {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(PartialEq, Eq)]
 pub enum Side {
     Left,
     Right,
@@ -69,11 +69,11 @@ fn initialise_camera(world: &mut World) {
 
 /// Initialises one paddle on the left, and one paddle on the right.
 fn initialise_paddles(world: &mut World) {
-    let mut left_transform = LocalTransform::default();
-    let mut right_transform = LocalTransform::default();
+    let mut left_transform = Transform::default();
+    let mut right_transform = Transform::default();
 
     // Correctly position the paddles.
-    let y = 0.0 - (PADDLE_HEIGHT / 2.0);
+    let y = -PADDLE_HEIGHT / 2.0;
     left_transform.translation = Vector3::new(-1.0, y, 0.0);
     right_transform.translation = Vector3::new(1.0 - PADDLE_WIDTH, y, 0.0);
 
@@ -91,7 +91,7 @@ fn initialise_paddles(world: &mut World) {
         .with(mesh.clone())
         .with(material.clone())
         .with(Paddle::new(Side::Left))
-        .with(Transform::default())
+        .with(GlobalTransform::default())
         .with(left_transform)
         .build();
 
@@ -101,7 +101,7 @@ fn initialise_paddles(world: &mut World) {
         .with(mesh)
         .with(material)
         .with(Paddle::new(Side::Right))
-        .with(Transform::default())
+        .with(GlobalTransform::default())
         .with(right_transform)
         .build();
 }

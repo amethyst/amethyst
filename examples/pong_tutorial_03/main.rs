@@ -3,23 +3,26 @@ extern crate amethyst;
 mod pong;
 mod systems;
 
-use std::time::Duration;
-
 use amethyst::Result;
 use amethyst::core::transform::TransformBundle;
-use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::prelude::*;
 use amethyst::input::InputBundle;
-use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline, PosTex, RenderBundle, RenderSystem,
-                         Stage};
+use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline, PosTex, RenderBundle, Stage};
 
 fn run() -> Result<()> {
     use pong::Pong;
 
-    let config = DisplayConfig::load("./resources/display_config.ron");
+    let path = format!(
+        "{}/examples/pong_tutorial_03/resources/display_config.ron",
+        env!("CARGO_MANIFEST_DIR")
+    );
 
-    let input_bundle = InputBundle::<String, String>::new()
-        .with_bindings_from_file("./resources/bindings_config.ron");
+    let binding_path = format!(
+        "{}/examples/pong_tutorial_03/resources/bindings_config.ron",
+        env!("CARGO_MANIFEST_DIR")
+    );
+
+    let config = DisplayConfig::load(&path);
 
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
@@ -27,16 +30,14 @@ fn run() -> Result<()> {
             .with_pass(DrawFlat::<PosTex>::new()),
     );
 
+    let input_bundle = InputBundle::<String, String>::new()
+      .with_bindings_from_file(binding_path);
+
     let mut game = Application::build("./", Pong)?
-        .with_frame_limit(
-            FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
-            144,
-        )
         .with_bundle(TransformBundle::new())?
+        .with_bundle(RenderBundle::new(pipe, Some(config)))?
         .with_bundle(input_bundle)?
-        .with_bundle(RenderBundle::new())?
-        .with_local(RenderSystem::build(pipe, Some(config))?)
-        .with(systems::PaddleSystem, "paddle_sys", &["input_system"])
+        .with(systems::PaddleSystem, "paddle_system", &["input_system"])
         .build()?;
     game.run();
     Ok(())
