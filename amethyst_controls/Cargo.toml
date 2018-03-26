@@ -18,7 +18,7 @@ travis-ci = { repository = "amethyst/amethyst" }
 amethyst_core = { path = "../amethyst_core", version = "0.1.0" }
 amethyst_input = { path = "../amethyst_input", version = "0.2.1" }
 amethyst_renderer = { path = "../amethyst_renderer", version = "0.6.1" }
-winit = "0.10"
+winit = "0.11"
 specs = "0.10"
 shred = "0.5"
 log = "0.4"
