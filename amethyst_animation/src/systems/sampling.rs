@@ -135,6 +135,24 @@ fn process_sampler<T>(
             if let EndControl::Normal = control.end {
                 output.push((control.blend_weight, control.channel.clone(), control.after));
             }
+            if let EndControl::Stay = control.end {
+                let last_frame = sampler
+                    .input
+                    .last()
+                    .cloned()
+                    .unwrap_or(0.);
+                
+                output.push((
+                    control.blend_weight,
+                    control.channel.clone(),
+                    sampler.function.interpolate(
+                        last_frame,
+                        &sampler.input,
+                        &sampler.output,
+                        false,
+                    ),
+                ));
+            }
         }
         _ => {}
     }

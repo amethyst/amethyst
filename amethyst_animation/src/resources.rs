@@ -194,6 +194,8 @@ pub enum EndControl {
     Loop(Option<u32>),
     /// When duration of sampler/animation is reached, go back to rest state
     Normal,
+    /// When duration of sampler/animation is reached, do nothing: stay at the last sampled state
+    Stay,
 }
 
 /// Control a single active sampler
