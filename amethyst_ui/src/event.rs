@@ -70,18 +70,6 @@ impl<A, B> UiMouseSystem<A, B> {
             _marker2: PhantomData,
         }
     }
-
-    fn pos_in_rect(
-        &self,
-        pos_x: f32,
-        pos_y: f32,
-        rect_x: f32,
-        rect_y: f32,
-        width: f32,
-        height: f32,
-    ) -> bool {
-        pos_x > rect_x && pos_x < rect_x + width && pos_y > rect_y && pos_y < rect_y + height
-    }
 }
 
 impl<'a, A, B> System<'a> for UiMouseSystem<A, B>
@@ -107,15 +95,8 @@ where
             let x = pos_x as f32;
             let y = pos_y as f32;
             for (tr, e, _) in (&transform, &*entities, &react).join() {
-                let is_in_rect = self.pos_in_rect(x, y, tr.x, tr.y, tr.width, tr.height);
-                let was_in_rect = self.pos_in_rect(
-                    self.old_pos.0,
-                    self.old_pos.1,
-                    tr.x,
-                    tr.y,
-                    tr.width,
-                    tr.height,
-                );
+                let is_in_rect = tr.position_inside(x, y);
+                let was_in_rect = tr.position_inside(self.old_pos.0, self.old_pos.1);
 
                 if is_in_rect && !was_in_rect {
                     events.single_write(UiEvent::new(UiEventType::HoverStart, e));

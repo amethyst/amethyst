@@ -178,7 +178,7 @@ impl Pass for DrawUi {
         }
 
         for &mut (ref mut z, entity) in &mut self.cached_draw_order.cache {
-            *z = ui_transform.get(entity).unwrap().z;
+            *z = ui_transform.get(entity).unwrap().global_z;
         }
 
         // Attempt to insert the new entities in sorted position.  Should reduce work during
@@ -191,12 +191,14 @@ impl Pass for DrawUi {
                 let pos = self.cached_draw_order
                     .cache
                     .iter()
-                    .position(|&(cached_z, _)| transform.z >= cached_z);
+                    .position(|&(cached_z, _)| transform.global_z >= cached_z);
                 match pos {
                     Some(pos) => self.cached_draw_order
                         .cache
-                        .insert(pos, (transform.z, entity)),
-                    None => self.cached_draw_order.cache.push((transform.z, entity)),
+                        .insert(pos, (transform.global_z, entity)),
+                    None => self.cached_draw_order
+                        .cache
+                        .push((transform.global_z, entity)),
                 }
             }
         }
@@ -227,13 +229,20 @@ impl Pass for DrawUi {
         // Remove brushes whose fonts have been dropped.
         self.glyph_brushes
             .retain(|&_id, ref mut value| !value.1.is_dead());
-
+        let highest_abs_z = (&ui_transform,)
+            .join()
+            .map(|t| t.0.global_z)
+            .fold(1.0, |highest, current| current.abs().max(highest));
         for &(_z, entity) in &self.cached_draw_order.cache {
             // This won't panic as we guaranteed earlier these entities are present.
             let ui_transform = ui_transform.get(entity).unwrap();
             let vertex_args = VertexArgs {
                 proj_vec: proj_vec.into(),
-                coord: [ui_transform.x, ui_transform.y],
+                // Coordinates are middle centered. It makes it easier to do layouting in most cases.
+                coord: [
+                    ui_transform.global_x - ui_transform.width / 2.0,
+                    ui_transform.global_y - ui_transform.height / 2.0,
+                ],
                 dimension: [ui_transform.width, ui_transform.height],
             };
             effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
@@ -351,9 +360,12 @@ impl Pass for DrawUi {
                     v_align: VerticalAlign::Top,
                 };
                 let section = VariedSection {
-                    screen_position: (ui_transform.x, ui_transform.y),
+                    screen_position: (
+                        ui_transform.global_x - ui_transform.width / 2.0,
+                        ui_transform.global_y - ui_transform.height / 2.0,
+                    ),
                     bounds: (ui_transform.width, ui_transform.height),
-                    z: ui_transform.z,
+                    z: ui_transform.global_z / highest_abs_z,
                     layout,
                     text,
                 };
@@ -487,8 +499,8 @@ impl Pass for DrawUi {
                                 width = 2.0;
                             }
                             let pos = glyph.map(|g| g.position()).unwrap_or(Point {
-                                x: ui_transform.x,
-                                y: ui_transform.y + ascent,
+                                x: ui_transform.global_x - ui_transform.width / 2.0,
+                                y: ui_transform.global_y - ui_transform.height / 2.0 + ascent,
                             });
                             let mut x = pos.x;
                             if let Some(glyph) = glyph {
