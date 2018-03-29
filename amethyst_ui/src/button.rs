@@ -1,10 +1,10 @@
+use super::{Anchor, Anchored, FontAsset, Stretch, Stretched, TtfFormat, UiImage, UiText,
+            UiTransform};
 ///! A clickable button.
 use amethyst_assets::{AssetStorage, Loader};
 use amethyst_core::Parent;
 use amethyst_renderer::Texture;
 use specs::{Entity, World};
-use super::{Anchor, Anchored, FontAsset, Stretch, Stretched, TtfFormat, 
-            UiImage, UiText, UiTransform};
 
 /// Builder for a `UiButton`.
 pub struct UiButtonBuilder<'a, 'b> {
@@ -26,7 +26,7 @@ pub struct UiButton {
     pub image: Entity,
 }
 
-impl <'a, 'b> UiButtonBuilder<'a, 'b> {
+impl<'a, 'b> UiButtonBuilder<'a, 'b> {
     /// Construct a new UiButtonBuilder.
     /// This allows easy use of default values for text and button appearance and allows the user
     /// to easily set other UI-related options.
@@ -41,19 +41,13 @@ impl <'a, 'b> UiButtonBuilder<'a, 'b> {
                 (),
                 &world.read_resource::<AssetStorage<FontAsset>>(),
             );
-            let text = UiText::new(
-                font,
-                "".to_string(),
-                [0.0, 0.0, 0.0, 1.0],
-                32.0);
+            let text = UiText::new(font, "".to_string(), [0.0, 0.0, 0.0, 1.0], 32.0);
             let grey = loader.load_from_data(
                 [0.82, 0.83, 0.83, 1.0].into(),
                 (),
                 &world.read_resource::<AssetStorage<Texture>>(),
             );
-            let image = UiImage {
-                texture: grey,
-            };
+            let image = UiImage { texture: grey };
             (text, image)
         };
         UiButtonBuilder {
@@ -106,15 +100,15 @@ impl <'a, 'b> UiButtonBuilder<'a, 'b> {
     /// use
     /// [`with_uitext`](#with_uitext) and provide a new `UiText` object.
     pub fn with_text<S>(mut self, text: S) -> Self
-        where S: ToString 
+    where
+        S: ToString,
     {
         self.text.text = text.to_string();
         self
     }
 
     /// Replace the default UiImage with `image`.
-    pub fn with_image(mut self, image: UiImage) -> Self
-    {
+    pub fn with_image(mut self, image: UiImage) -> Self {
         self.image = image;
         self
     }
@@ -124,14 +118,7 @@ impl <'a, 'b> UiButtonBuilder<'a, 'b> {
         id.push_str("_btn_txt");
         self.world
             .create_entity()
-            .with(UiTransform::new(
-                    id,
-                    0.,
-                    0.,
-                    -1.,
-                    0.,
-                    0.,
-                    10))
+            .with(UiTransform::new(id, 0., 0., -1., 0., 0., 10))
             .with(Anchored::new(Anchor::Middle))
             .with(Stretched::new(Stretch::XY, 0., 0.))
             .with(self.text.clone())
@@ -142,9 +129,7 @@ impl <'a, 'b> UiButtonBuilder<'a, 'b> {
     }
 
     fn build_image(&mut self) -> Entity {
-        let mut image_builder = self.world
-            .create_entity()
-            .with(self.image.clone());
+        let mut image_builder = self.world.create_entity().with(self.image.clone());
         if let Some(parent) = self.parent.take() {
             image_builder = image_builder.with(parent);
         }
@@ -167,7 +152,7 @@ impl <'a, 'b> UiButtonBuilder<'a, 'b> {
         let text_entity = self.build_text(&image_entity);
         UiButton {
             text: text_entity,
-            image: image_entity
+            image: image_entity,
         }
     }
 }
