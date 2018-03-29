@@ -51,3 +51,11 @@ pub use self::button::{UiButton, UiButtonBuilder};
 
 /// How many times the cursor blinks per second while editing text.
 const CURSOR_BLINK_RATE: f32 = 2.0;
+
+use specs::Entity;
+/// Ui elements will define this trait to allow easier addition to other
+/// elements and to the world.
+pub trait ToEntities {
+    /// Transform a UI element to its constituent Entities.
+    fn to_entities(self) -> Vec<Entity>;
+}
