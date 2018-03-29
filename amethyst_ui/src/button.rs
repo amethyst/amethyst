@@ -1,5 +1,5 @@
-use super::{Anchor, Anchored, FontAsset, Stretch, Stretched, TtfFormat, UiImage, UiText,
-            UiTransform};
+use super::{Anchor, Anchored, FontAsset, Stretch, Stretched, ToEntities, TtfFormat, UiImage,
+            UiText, UiTransform};
 ///! A clickable button.
 use amethyst_assets::{AssetStorage, Loader};
 use amethyst_core::Parent;
@@ -30,7 +30,7 @@ impl<'a, 'b> UiButtonBuilder<'a, 'b> {
     /// Construct a new UiButtonBuilder.
     /// This allows easy use of default values for text and button appearance and allows the user
     /// to easily set other UI-related options.
-    pub fn new(name: &'a str, world: &'b mut World) -> Self {
+    pub fn new<S: ToString>(name: &'a str, text: S, world: &'b mut World) -> Self {
         let (text, image) = {
             let loader = world.read_resource::<Loader>();
 
@@ -41,7 +41,7 @@ impl<'a, 'b> UiButtonBuilder<'a, 'b> {
                 (),
                 &world.read_resource::<AssetStorage<FontAsset>>(),
             );
-            let text = UiText::new(font, "".to_string(), [0.0, 0.0, 0.0, 1.0], 32.0);
+            let text = UiText::new(font, text.to_string(), [0.0, 0.0, 0.0, 1.0], 32.0);
             let grey = loader.load_from_data(
                 [0.82, 0.83, 0.83, 1.0].into(),
                 (),
@@ -154,5 +154,11 @@ impl<'a, 'b> UiButtonBuilder<'a, 'b> {
             text: text_entity,
             image: image_entity,
         }
+    }
+}
+
+impl ToEntities for UiButton {
+    fn to_entities(self) -> Vec<Entity> {
+        vec![self.text, self.image]
     }
 }
