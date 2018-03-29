@@ -44,7 +44,7 @@ pub use self::pass::DrawUi;
 pub use self::resize::{ResizeSystem, UiResize};
 pub use self::text::{TextEditing, UiSystem, UiText};
 pub use self::transform::UiTransform;
-pub use self::button::UiButton;
+pub use self::button::{UiButton, UiButtonBuilder};
 
 /// How many times the cursor blinks per second while editing text.
 const CURSOR_BLINK_RATE: f32 = 2.0;

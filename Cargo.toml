@@ -113,5 +113,8 @@ path = "examples/appendix_a/main.rs"
 name = "fly_camera"
 path = "examples/fly_camera/main.rs"
 
+[[example]]
+name = "uibutton"
+path = "examples/uibutton/main.rs"
 [workspace]
 members = ["amethyst_animation", "amethyst_gltf"]
