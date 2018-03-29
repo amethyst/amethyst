@@ -176,7 +176,7 @@ impl State for Example {
             ))
             .build();
 
-        let _button = UiButtonBuilder::new("btn", world)
+        let _button = UiButtonBuilder::new("btn", "Button!", world)
             .with_uitext(UiText::new(
                 font.clone(),
                 "Button!".to_string(),
