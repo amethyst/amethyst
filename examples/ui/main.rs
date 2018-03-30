@@ -310,9 +310,9 @@ fn main() {
 
 fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTex> {
     SphereUV::new(u, v)
-        .vertex(|(x, y, z)| PosNormTex {
-            position: [x, y, z],
-            normal: Vector3::from([x, y, z]).normalize().into(),
+        .vertex(|vertex| PosNormTex {
+            position: vertex.pos,
+            normal: vertex.normal,
             tex_coord: [0.1, 0.1],
         })
         .triangulate()

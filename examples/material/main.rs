@@ -147,12 +147,12 @@ fn main() {
 
 fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTangTex> {
     SphereUV::new(u, v)
-        .vertex(|(x, y, z)| {
-            let normal = Vector3::from([x, y, z]).normalize();
+        .vertex(|vertex| {
+            let normal = Vector3::from(vertex.pos).normalize();
             let up = Vector3::from([0.0, 1.0, 0.0]);
             let tangent = normal.cross(up).cross(normal);
             PosNormTangTex {
-                position: [x, y, z],
+                position: vertex.pos,
                 normal: normal.into(),
                 tangent: tangent.into(),
                 tex_coord: [0.1, 0.1],
