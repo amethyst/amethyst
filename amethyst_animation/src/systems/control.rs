@@ -233,11 +233,11 @@ where
             if check_termination(control.id, hierarchy, &samplers) {
                 // Do termination
                 for (_, node_entity) in &hierarchy.nodes {
-                    let empty = {
-                        let mut sampler = samplers.get_mut(*node_entity).unwrap();
-                        sampler.clear(control.id);
-                        sampler.is_empty()
-                    };
+                    let empty = samplers.get_mut(*node_entity)
+                        .map(|sampler| {
+                            sampler.clear(control.id);
+                            sampler.is_empty()})
+                        .unwrap_or(false);
                     if empty {
                         samplers.remove(*node_entity);
                     }
