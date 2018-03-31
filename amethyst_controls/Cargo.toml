@@ -22,3 +22,6 @@ winit = "0.10"
 specs = "0.10"
 shred = "0.5"
 log = "0.4"
+
+[features]
+profiler = ["thread_profiler/thread_profiler"]

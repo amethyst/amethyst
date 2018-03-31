@@ -24,6 +24,7 @@ default = ["opengl"]
 #metal = ["gfx_device_metal", "gfx_window_metal"]
 opengl = ["gfx_device_gl", "gfx_window_glutin", "glutin"]
 #vulkan = ["gfx_device_vulkan", "gfx_window_vulkan"]
+profiler = ["thread_profiler/thread_profiler"]
 
 [dependencies]
 amethyst_assets = { path = "../amethyst_assets", version = "0.2.0" }

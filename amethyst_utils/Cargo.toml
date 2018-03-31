@@ -24,3 +24,6 @@ shred = "0.5"
 log = "0.4"
 
 thread_profiler = { version = "0.1", optional = true }
+
+[features]
+profiler = ["thread_profiler/thread_profiler"]
