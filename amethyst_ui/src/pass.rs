@@ -9,8 +9,8 @@ use amethyst_core::specs::{Entities, Entity, Fetch, Join, ReadStorage, WriteStor
 use amethyst_renderer::{Encoder, Factory, Mesh, PosTex, Resources, ScreenDimensions, Texture,
                         TextureData, TextureHandle, TextureMetadata, VertexFormat};
 use amethyst_renderer::error::Result;
-use amethyst_renderer::pipe::{Effect, NewEffect};
 use amethyst_renderer::pipe::pass::{Pass, PassData};
+use amethyst_renderer::pipe::{Effect, NewEffect};
 use fnv::FnvHashMap as HashMap;
 use gfx::preset::blend;
 use gfx::pso::buffer::ElemStride;

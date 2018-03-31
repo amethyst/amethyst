@@ -1,5 +1,5 @@
-use super::{Anchor, Anchored, FontAsset, Stretch, Stretched, ToEntities, TtfFormat, UiImage,
-            UiText, UiTransform};
+use super::{Anchor, Anchored, FontAsset, Stretch, Stretched, TtfFormat, UiImage, UiText,
+            UiTransform};
 ///! A clickable button.
 use amethyst_assets::{AssetStorage, Loader};
 use amethyst_core::Parent;
@@ -154,11 +154,5 @@ impl<'a, 'b> UiButtonBuilder<'a, 'b> {
             text: text_entity,
             image: image_entity,
         }
-    }
-}
-
-impl ToEntities for UiButton {
-    fn to_entities(self) -> Vec<Entity> {
-        vec![self.text, self.image]
     }
 }
