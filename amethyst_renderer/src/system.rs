@@ -26,8 +26,7 @@ use tex::Texture;
 #[derivative(Debug)]
 pub struct RenderSystem<P> {
     pipe: P,
-    #[derivative(Debug = "ignore")]
-    renderer: Renderer,
+    #[derivative(Debug = "ignore")] renderer: Renderer,
     cached_size: (u32, u32),
 }
 

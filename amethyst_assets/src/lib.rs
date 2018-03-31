@@ -22,6 +22,12 @@ extern crate log;
 extern crate parking_lot;
 extern crate rayon;
 extern crate specs;
+#[macro_use]
+#[cfg(feature = "profiler")]
+extern crate thread_profiler;
+
+#[cfg(feature = "profiler")]
+use thread_profiler::{register_thread_with_profiler, write_profile};
 
 pub use asset::{Asset, Format, FormatValue, SimpleFormat};
 pub use cache::Cache;

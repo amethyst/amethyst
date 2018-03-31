@@ -8,8 +8,7 @@ use amethyst_config::Config;
 pub struct DisplayConfig {
     pub title: String,
     pub brightness: f64,
-    #[serde(default)]
-    pub fullscreen: bool,
+    #[serde(default)] pub fullscreen: bool,
     pub dimensions: (u16, u16),
     pub min_dimensions: Option<(u16, u16)>,
     pub max_dimensions: Option<(u16, u16)>,

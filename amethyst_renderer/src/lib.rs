@@ -33,6 +33,8 @@ extern crate shred;
 extern crate shrev;
 extern crate smallvec;
 extern crate specs;
+#[macro_use]
+extern crate thread_profiler;
 extern crate wavefront_obj;
 extern crate winit;
 

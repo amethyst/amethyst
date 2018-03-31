@@ -7,6 +7,8 @@ use crossbeam::sync::MsQueue;
 use hibitset::BitSet;
 use rayon::ThreadPool;
 use specs::{Component, Fetch, FetchMut, System, UnprotectedStorage, VecStorage};
+#[cfg(feature = "profiler")]
+use thread_profiler::{register_thread_with_profiler, write_profile};
 
 use asset::{Asset, FormatValue};
 use error::{ErrorKind, Result, ResultExt};
@@ -274,6 +276,11 @@ impl<A: Asset> AssetStorage<A> {
             .iter()
             .position(|&(_, ref rel)| rel.needs_reload())
         {
+            #[cfg(feature = "profiler")]
+            register_thread_with_profiler("storage/hot_reload".into());
+            #[cfg(feature = "profiler")]
+            profile_scope!("hot_reload");
+
             let (handle, rel): (WeakHandle<_>, Box<Reload<_>>) = self.reloads.swap_remove(p);
 
             let name = rel.name();

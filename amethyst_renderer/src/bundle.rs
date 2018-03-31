@@ -54,8 +54,7 @@ where
 }
 
 impl<'a, 'b, 'c, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> ECSBundle<'a, 'b>
-    for RenderBundle<'c, B, P>
-{
+    for RenderBundle<'c, B, P> {
     fn build(
         self,
         world: &mut World,

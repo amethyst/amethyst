@@ -37,6 +37,7 @@ impl App {
         world.add_resource(AssetStorage::<MeshAsset>::new());
         world.add_resource(Loader::new(path, pool.clone()));
         world.add_resource(pool);
+        world.add_resource(Time::default());
 
         App {
             dispatcher,

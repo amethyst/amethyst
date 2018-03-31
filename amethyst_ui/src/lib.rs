@@ -17,6 +17,8 @@ extern crate hibitset;
 extern crate rusttype;
 extern crate shrev;
 extern crate specs;
+#[macro_use]
+extern crate thread_profiler;
 extern crate unicode_normalization;
 extern crate unicode_segmentation;
 extern crate winit;

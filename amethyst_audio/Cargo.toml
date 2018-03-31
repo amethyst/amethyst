@@ -34,4 +34,7 @@ version = "0.4.2"
 features = ["serde"]
 
 [features]
-profiler = ["thread_profiler/thread_profiler"]
+profiler = [
+	"thread_profiler",
+	"thread_profiler/thread_profiler",
+]

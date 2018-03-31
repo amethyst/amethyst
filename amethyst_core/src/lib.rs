@@ -10,6 +10,8 @@ extern crate rayon;
 extern crate serde;
 extern crate shred;
 extern crate specs;
+#[macro_use]
+extern crate thread_profiler;
 
 //#[cfg(test)]
 //extern crate quickcheck;

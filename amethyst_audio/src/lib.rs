@@ -8,6 +8,8 @@ extern crate rodio;
 extern crate shred;
 extern crate smallvec;
 extern crate specs;
+#[macro_use]
+extern crate thread_profiler;
 
 pub use self::bundle::AudioBundle;
 pub use self::components::*;
