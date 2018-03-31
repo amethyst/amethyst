@@ -277,8 +277,6 @@ impl<A: Asset> AssetStorage<A> {
             .position(|&(_, ref rel)| rel.needs_reload())
         {
             #[cfg(feature = "profiler")]
-            register_thread_with_profiler("storage/hot_reload".into());
-            #[cfg(feature = "profiler")]
             profile_scope!("hot_reload");
 
             let (handle, rel): (WeakHandle<_>, Box<Reload<_>>) = self.reloads.swap_remove(p);
