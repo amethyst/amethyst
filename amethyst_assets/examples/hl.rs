@@ -17,7 +17,6 @@ use amethyst_core::Time;
 use rayon::ThreadPool;
 use specs::{Dispatcher, DispatcherBuilder, Fetch, FetchMut, System, VecStorage, World};
 use specs::common::Errors;
-use std::time::Duration;
 
 struct App {
     dispatcher: Dispatcher<'static, 'static>,
@@ -37,7 +36,7 @@ impl App {
         world.add_resource(Errors::new());
         world.add_resource(AssetStorage::<MeshAsset>::new());
         world.add_resource(Loader::new(path, pool.clone()));
-        world.add_resource(Time::placeholder());
+        world.add_resource(Time::default());
         world.add_resource(pool);
 
         App {
