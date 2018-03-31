@@ -35,6 +35,8 @@ impl Directory {
 
 impl Source for Directory {
     fn modified(&self, path: &str) -> Result<u64> {
+        #[cfg(feature = "profiler")]
+        profile_scope!("dir_modified_asset");
         use std::fs::metadata;
 
         let path = self.path(path);
@@ -49,6 +51,8 @@ impl Source for Directory {
     }
 
     fn load(&self, path: &str) -> Result<Vec<u8>> {
+        #[cfg(feature = "profiler")]
+        profile_scope!("dir_load_asset");
         use std::io::Read;
 
         let path = self.path(path);
