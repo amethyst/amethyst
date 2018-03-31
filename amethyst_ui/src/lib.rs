@@ -23,17 +23,18 @@ extern crate winit;
 
 mod bundle;
 mod button;
+mod event;
 mod focused;
 mod format;
 mod image;
+mod layout;
 mod pass;
 mod resize;
 mod text;
 mod transform;
-mod event;
-mod layout;
 
 pub use self::bundle::UiBundle;
+pub use self::button::{UiButton, UiButtonBuilder};
 pub use self::event::{MouseReactive, UiEvent, UiEventType, UiMouseSystem};
 pub use self::focused::UiFocused;
 pub use self::format::{FontAsset, FontHandle, OtfFormat, TtfFormat};
@@ -44,15 +45,6 @@ pub use self::pass::DrawUi;
 pub use self::resize::{ResizeSystem, UiResize};
 pub use self::text::{TextEditing, UiSystem, UiText};
 pub use self::transform::UiTransform;
-pub use self::button::{UiButton, UiButtonBuilder};
 
 /// How many times the cursor blinks per second while editing text.
 const CURSOR_BLINK_RATE: f32 = 2.0;
-
-use specs::Entity;
-/// Ui elements will define this trait to allow easier addition to other
-/// elements and to the world.
-pub trait ToEntities {
-    /// Transform a UI element to its constituent Entities.
-    fn to_entities(self) -> Vec<Entity>;
-}
