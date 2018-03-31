@@ -30,6 +30,22 @@ pub struct Time {
 }
 
 impl Time {
+    pub fn placeholder() -> Self {
+        Time {
+            delta_seconds: 0.01,
+            delta_time: Duration::new(0, 1_000_000),
+            delta_real_seconds: 0.01,
+            delta_real_time: Duration::new(0, 1_000_000),
+            fixed_seconds: 0.01,
+            fixed_time: Duration::new(0, 1_000_000),
+            last_fixed_update: Instant::now(),
+            frame_number: 0,
+            absolute_real_time: 0.0,
+            absolute_time: 0.0,
+            time_scale: 1.0,
+        }
+    }
+
     /// Gets the time difference between frames in seconds.
     pub fn delta_seconds(&self) -> f32 {
         self.delta_seconds
