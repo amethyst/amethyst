@@ -11,6 +11,7 @@ extern crate serde;
 extern crate shred;
 extern crate specs;
 #[macro_use]
+#[cfg(feature = "profiler")]
 extern crate thread_profiler;
 
 //#[cfg(test)]
