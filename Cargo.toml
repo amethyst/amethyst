@@ -20,18 +20,18 @@ travis-ci = { repository = "amethyst/amethyst", branch = "develop" }
 
 [features]
 profiler = [
-	"thread_profiler",
-	"thread_profiler/thread_profiler",
-	"amethyst_assets/profiler",
-	"amethyst_animation/profiler",
-	"amethyst_audio/profiler",
-	"amethyst_config/profiler",
-	"amethyst_core/profiler",
-	"amethyst_controls/profiler",
-	"amethyst_renderer/profiler",
-	"amethyst_input/profiler",
-	"amethyst_ui/profiler",
-	"amethyst_utils/profiler",
+    "thread_profiler",
+    "thread_profiler/thread_profiler",
+    "amethyst_assets/profiler",
+    "amethyst_animation/profiler",
+    "amethyst_audio/profiler",
+    "amethyst_config/profiler",
+    "amethyst_core/profiler",
+    "amethyst_controls/profiler",
+    "amethyst_renderer/profiler",
+    "amethyst_input/profiler",
+    "amethyst_ui/profiler",
+    "amethyst_utils/profiler",
 ]
 
 [dependencies]

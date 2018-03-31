@@ -34,6 +34,6 @@ thread_profiler = { version = "0.1", optional = true }
 
 [features]
 profiler = [
-	"thread_profiler",
-	"thread_profiler/thread_profiler",
+    "thread_profiler",
+    "thread_profiler/thread_profiler",
 ]
