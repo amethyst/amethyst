@@ -28,3 +28,8 @@ specs = "0.10"
 unicode-normalization = "0.1"
 unicode-segmentation = "1.2"
 winit = "0.10"
+
+thread_profiler = { version = "0.1", optional = true }
+
+[features]
+profiler = [ "thread_profiler/thread_profiler" ]

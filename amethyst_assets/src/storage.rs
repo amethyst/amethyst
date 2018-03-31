@@ -7,6 +7,8 @@ use crossbeam::sync::MsQueue;
 use hibitset::BitSet;
 use rayon::ThreadPool;
 use specs::{Component, Fetch, FetchMut, System, UnprotectedStorage, VecStorage};
+#[cfg(feature = "profiler")]
+use thread_profiler::{register_thread_with_profiler, write_profile};
 
 use asset::{Asset, FormatValue};
 use error::{ErrorKind, Result, ResultExt};

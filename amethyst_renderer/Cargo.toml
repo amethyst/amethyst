@@ -24,6 +24,7 @@ default = ["opengl"]
 #metal = ["gfx_device_metal", "gfx_window_metal"]
 opengl = ["gfx_device_gl", "gfx_window_glutin", "glutin"]
 #vulkan = ["gfx_device_vulkan", "gfx_window_vulkan"]
+profiler = [ "thread_profiler/thread_profiler" ]
 
 [dependencies]
 amethyst_assets = { path = "../amethyst_assets", version = "0.2.0" }
@@ -44,6 +45,8 @@ shred = "0.5"
 shrev = "0.8"
 wavefront_obj = "5.0"
 winit = "0.10"
+
+thread_profiler = { version = "0.1", optional = true }
 
 gfx_device_gl = { version = "0.15", optional = true }
 gfx_window_glutin = { version = "0.20", optional = true }

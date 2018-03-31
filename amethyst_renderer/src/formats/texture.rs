@@ -339,8 +339,8 @@ mod tests {
         match TextureData::from([0.25, 0.50, 0.75]) {
             TextureData::Rgba(color, _) => {
                 assert_eq!(color, [0.25, 0.50, 0.75, 1.0]);
-            },
-            _ => panic!("Expected [f32; 3] to turn into TextureData::Rgba")
+            }
+            _ => panic!("Expected [f32; 3] to turn into TextureData::Rgba"),
         }
     }
 }

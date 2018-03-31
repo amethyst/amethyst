@@ -69,6 +69,8 @@ impl Loader {
         N: Into<String>,
         P: Progress,
     {
+        #[cfg(feature = "profiler")]
+        profile_scope!("initialise_loading_assets");
         self.load_from::<A, F, _, _, _>(name, format, options, "", progress, storage)
     }
 
@@ -104,6 +106,8 @@ impl Loader {
         S: AsRef<str> + Eq + Hash + ?Sized,
         String: Borrow<S>,
     {
+        #[cfg(feature = "profiler")]
+        profile_scope!("load_asset_from");
         use progress::Tracker;
 
         let name = name.into();

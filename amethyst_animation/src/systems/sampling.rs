@@ -136,12 +136,8 @@ fn process_sampler<T>(
                 output.push((control.blend_weight, control.channel.clone(), control.after));
             }
             if let EndControl::Stay = control.end {
-                let last_frame = sampler
-                    .input
-                    .last()
-                    .cloned()
-                    .unwrap_or(0.);
-                
+                let last_frame = sampler.input.last().cloned().unwrap_or(0.);
+
                 output.push((
                     control.blend_weight,
                     control.channel.clone(),

@@ -33,8 +33,13 @@ extern crate shred;
 extern crate shrev;
 extern crate smallvec;
 extern crate specs;
+
 extern crate wavefront_obj;
 extern crate winit;
+
+#[macro_use]
+#[cfg(feature = "profiler")]
+extern crate thread_profiler;
 
 #[cfg(all(feature = "d3d11", target_os = "windows"))]
 extern crate gfx_device_dx11;
