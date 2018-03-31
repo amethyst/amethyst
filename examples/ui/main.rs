@@ -7,7 +7,7 @@ extern crate log;
 
 use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::Time;
-use amethyst::core::cgmath::{Deg, InnerSpace, Vector3};
+use amethyst::core::cgmath::Deg;
 use amethyst::core::transform::{GlobalTransform, Parent};
 use amethyst::ecs::{Entity, World};
 use amethyst::ecs::{FetchMut, System};

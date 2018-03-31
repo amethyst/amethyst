@@ -4,7 +4,7 @@ extern crate amethyst;
 extern crate genmesh;
 
 use amethyst::assets::Loader;
-use amethyst::core::cgmath::{Deg, InnerSpace, Matrix4, Vector3};
+use amethyst::core::cgmath::{Deg, Matrix4, Vector3};
 use amethyst::core::transform::GlobalTransform;
 use amethyst::prelude::*;
 use amethyst::renderer::*;
@@ -148,12 +148,12 @@ fn main() {
 fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTangTex> {
     SphereUV::new(u, v)
         .vertex(|vertex| {
-            let normal = Vector3::from(vertex.pos).normalize();
+            let normal = Vector3::from(vertex.normal);
             let up = Vector3::from([0.0, 1.0, 0.0]);
             let tangent = normal.cross(up).cross(normal);
             PosNormTangTex {
                 position: vertex.pos,
-                normal: normal.into(),
+                normal: vertex.normal,
                 tangent: tangent.into(),
                 tex_coord: [0.1, 0.1],
             }

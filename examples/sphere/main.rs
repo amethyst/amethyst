@@ -4,8 +4,7 @@ extern crate amethyst;
 extern crate genmesh;
 
 use amethyst::assets::Loader;
-use amethyst::core::cgmath::{Deg, Vector3};
-use amethyst::core::cgmath::prelude::InnerSpace;
+use amethyst::core::cgmath::Deg;
 use amethyst::core::transform::GlobalTransform;
 use amethyst::ecs::World;
 use amethyst::prelude::*;
