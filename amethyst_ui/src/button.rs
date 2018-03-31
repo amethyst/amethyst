@@ -1,10 +1,29 @@
-use super::{Anchor, Anchored, FontAsset, Stretch, Stretched, ToEntities, TtfFormat, UiImage,
-            UiText, UiTransform};
+use super::{Anchor, Anchored, FontAsset, Stretch, Stretched, TtfFormat, UiImage, UiText,
+            UiTransform};
 ///! A clickable button.
 use amethyst_assets::{AssetStorage, Loader};
 use amethyst_core::Parent;
 use amethyst_renderer::Texture;
 use specs::{Entity, World};
+
+use std::marker;
+
+/// Container that wraps the resources we need to initialize button defaults
+pub struct UiButtonResources<'a> {
+    loader: &'a Loader,
+    font_asset: &'a AssetStorage<FontAsset>,
+    texture_asset: &'a AssetStorage<Texture>,
+}
+
+impl <'a> UiButtonResources<'a> {
+    pub fn from_world(world: &World) -> Self {
+        UiButtonResources {
+            loader: &world.read_resource::<Loader>(),
+            font_asset: &world.read_resource::<AssetStorage<FontAsset>>(),
+            texture_asset: &world.read_resource::<AssetStorage<Texture>>(),
+        }
+    }
+}
 
 /// Builder for a `UiButton`.
 pub struct UiButtonBuilder<'a, 'b> {
@@ -154,11 +173,5 @@ impl<'a, 'b> UiButtonBuilder<'a, 'b> {
             text: text_entity,
             image: image_entity,
         }
-    }
-}
-
-impl ToEntities for UiButton {
-    fn to_entities(self) -> Vec<Entity> {
-        vec![self.text, self.image]
     }
 }
