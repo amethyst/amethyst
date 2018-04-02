@@ -18,8 +18,8 @@ use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light,
                          Texture};
 use amethyst::shrev::{EventChannel, ReaderId};
 use amethyst::ui::{Anchor, Anchored, DrawUi, FontAsset, MouseReactive, Stretch, Stretched,
-                   TextEditing, TtfFormat, UiBundle, UiButtonBuilder, UiEvent, UiFocused, UiImage, UiText,
-                   UiTransform};
+                   TextEditing, TtfFormat, UiBundle, UiButtonBuilder, UiButtonResources, UiEvent,
+                   UiFocused, UiImage, UiText, UiTransform};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::winit::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use genmesh::{MapToVertices, Triangulate, Vertices};
@@ -176,14 +176,17 @@ impl State for Example {
             ))
             .build();
 
-        let _button = UiButtonBuilder::new("btn", "Button!", world)
-            .with_uitext(UiText::new(
-                font.clone(),
-                "Button!".to_string(),
-                [0.2, 0.2, 1.0, 1.0],
-                20.,
-            ))
-            .with_transform(UiTransform::new(
+        let button_builder = {
+            // Until we can borrow immutably whilst also borrowing mutably, we need to restrict this
+            // lifetime
+            UiButtonBuilder::new("btn", "Button!", UiButtonResources::from_world(&world))
+                .with_uitext(UiText::new(
+                    font.clone(),
+                    "Button!".to_string(),
+                    [0.2, 0.2, 1.0, 1.0],
+                    20.,
+                ))
+                .with_transform(UiTransform::new(
                     "btn_transform".to_string(),
                     0.0,
                     32.0,
@@ -191,15 +194,22 @@ impl State for Example {
                     128.0,
                     64.0,
                     9,
-            ))
-            .with_image(UiImage {
-                texture: green.clone(),
-            })
-            .with_anchored(Anchored::new(Anchor::TopMiddle))
-            .with_parent(Parent {
-                entity: background.clone(),
-            })
-            .build();
+                ))
+                .with_image(UiImage {
+                    texture: green.clone(),
+                })
+                .with_anchored(Anchored::new(Anchor::TopMiddle))
+                .with_parent(Parent {
+                    entity: background.clone(),
+                })
+        };
+        button_builder.build(world);
+        let simple_builder = {
+            UiButtonBuilder::new("simple_btn", "Simpler!", UiButtonResources::from_world(&world))
+                .with_font(font.clone())
+                .with_position(50.0, 50.0)
+        };
+        simple_builder.build(world);
 
         let fps = world
             .create_entity()
