@@ -16,6 +16,10 @@ extern crate gfx_glyph;
 extern crate hibitset;
 extern crate rusttype;
 extern crate shrev;
+#[macro_use]
+extern crate shred_derive;
+extern crate shred;
+extern crate specs;
 extern crate unicode_normalization;
 extern crate unicode_segmentation;
 extern crate winit;
@@ -37,7 +41,7 @@ mod text;
 mod transform;
 
 pub use self::bundle::UiBundle;
-pub use self::button::{UiButton, UiButtonBuilder};
+pub use self::button::{UiButton, UiButtonBuilder, UiButtonResources, UiButtonLazyResources};
 pub use self::event::{MouseReactive, UiEvent, UiEventType, UiMouseSystem};
 pub use self::focused::UiFocused;
 pub use self::format::{FontAsset, FontHandle, OtfFormat, TtfFormat};
