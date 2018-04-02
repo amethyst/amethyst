@@ -8,6 +8,7 @@ use amethyst_core::orientation::Orientation;
 use amethyst_core::transform::components::*;
 use config::DisplayConfig;
 use pipe::{PipelineBuild, PolyPipeline};
+use skinning::JointTransforms;
 use specs::{DispatcherBuilder, World};
 use system::RenderSystem;
 use transparent::Transparent;
@@ -77,6 +78,7 @@ impl<'a, 'b, 'c, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> ECSBundle
         world.register::<Handle<Texture>>();
         world.register::<Camera>();
         world.register::<Transparent>();
+        world.register::<JointTransforms>();
 
         let system = RenderSystem::build(self.pipe, self.config).chain_err(|| "Renderer error!")?;
         let (width, height) = system
