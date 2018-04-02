@@ -6,6 +6,25 @@ use amethyst_core::Parent;
 use amethyst_renderer::Texture;
 use specs::{Entity, World};
 
+use std::marker;
+
+/// Container that wraps the resources we need to initialize button defaults
+pub struct UiButtonResources<'a> {
+    loader: &'a Loader,
+    font_asset: &'a AssetStorage<FontAsset>,
+    texture_asset: &'a AssetStorage<Texture>,
+}
+
+impl <'a> UiButtonResources<'a> {
+    pub fn from_world(world: &World) -> Self {
+        UiButtonResources {
+            loader: &world.read_resource::<Loader>(),
+            font_asset: &world.read_resource::<AssetStorage<FontAsset>>(),
+            texture_asset: &world.read_resource::<AssetStorage<Texture>>(),
+        }
+    }
+}
+
 /// Builder for a `UiButton`.
 pub struct UiButtonBuilder<'a, 'b> {
     name: &'a str,
