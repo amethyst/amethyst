@@ -6,8 +6,8 @@ use std::time::Duration;
 
 use amethyst::Result;
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
-use amethyst::prelude::*;
 use amethyst::network::*;
+use amethyst::prelude::*;
 use amethyst::shrev::EventChannel;
 use std::net::IpAddr;
 use std::net::SocketAddr;
@@ -23,18 +23,22 @@ fn main() {
 }
 
 fn run() -> Result<()> {
-    let game = Application::build("",State1)?
+    let game = Application::build("", State1)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             144,
-        ).with_bundle(NetworkClientBundle::<()>::new("127.0.0.1",Some(3455 as u16),vec![],false).with_connect(SocketAddr::new(IpAddr::from_str("127.0.0.1").unwrap(),3456 as u16)))?;
+        )
+        .with_bundle(
+            NetworkClientBundle::<()>::new("127.0.0.1", Some(3455 as u16), vec![], false)
+                .with_connect(SocketAddr::new(
+                    IpAddr::from_str("127.0.0.1").unwrap(),
+                    3456 as u16,
+                )),
+        )?;
 
-    Ok(
-        game.build()?.run(),
-    )
+    Ok(game.build()?.run())
 }
 
 pub struct State1;
 
-impl State for State1 {
-}
+impl State for State1 {}

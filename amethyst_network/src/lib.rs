@@ -10,11 +10,11 @@ extern crate bincode;
 extern crate shrev;
 #[macro_use]
 extern crate log;
-extern crate specs;
-extern crate uuid;
+extern crate mio;
 extern crate rand;
 extern crate shred;
-extern crate mio;
+extern crate specs;
+extern crate uuid;
 
 mod bundle;
 mod connection;
@@ -25,9 +25,10 @@ mod network_socket;
 mod utils;
 
 pub use bundle::NetworkClientBundle;
-pub use connection::{NetConnectionPool,NetConnection,NetReceiveBuffer,NetSendBuffer,NetIdentity,ConnectionState};
+pub use connection::{ConnectionState, NetConnection, NetConnectionPool, NetIdentity,
+                     NetReceiveBuffer, NetSendBuffer};
 pub use connection_manager::ConnectionManagerSystem;
-pub use filter::{FilterConnected,NetFilter};
-pub use net_event::{NetEvent,NetSourcedEvent};
+pub use filter::{FilterConnected, NetFilter};
+pub use net_event::{NetEvent, NetSourcedEvent};
 pub use network_socket::NetSocketSystem;
-pub use utils::{deserialize_event,send_event,send_to};
+pub use utils::{deserialize_event, send_event, send_to};

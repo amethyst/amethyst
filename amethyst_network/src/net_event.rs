@@ -2,43 +2,43 @@
 //! NetEvent are passed through the network
 //! NetOwnedEvent are passed through the ECS, and contains the event's source (remote connection, usually)
 
-use shrev::Event;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
-use specs::{VecStorage,Component};
-use uuid::Uuid;
+use shrev::Event;
+use specs::{Component, VecStorage};
 use std::net::SocketAddr;
+use uuid::Uuid;
 
 /// The basic network events shipped with amethyst.
 // TODO: Add CreateEntity,RemoveEntity,UpdateEntity
 // TODO: Example of switching the NetEvent set in the Network Systems
-#[derive(Debug,Clone,PartialEq,Serialize,Deserialize)]
-pub enum NetEvent<T>{
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum NetEvent<T> {
     /// Ask to connect to the server
-    Connect{
+    Connect {
         client_uuid: Uuid,
     },
     /// Reply to the client that the connection has been accepted
-    Connected{
+    Connected {
         server_uuid: Uuid,
     },
     /// Reply to the client that the connection has been refused
-    ConnectionRefused{
+    ConnectionRefused {
         /// The reason of the refusal
-        reason:String
+        reason: String,
     },
     /// Tell the server that the client is disconnecting
-    Disconnect{
+    Disconnect {
         /// The reason of the disconnection
-        reason:String,
+        reason: String,
     },
     /// Notify the clients(including the one being disconnected) that a client has been disconnected from the server
-    Disconnected{
+    Disconnected {
         /// The reason of the disconnection
-        reason:String,
+        reason: String,
     },
-    AddComponent{
-        compData:String,
+    AddComponent {
+        compData: String,
     },
     /// A user-defined enum containing more network event types.
     Custom(T),
@@ -55,14 +55,13 @@ impl<T> NetEvent<T> {
     }
 }
 
-
 // for later testing of component sync
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct TestComp{
-    data:String,
+pub struct TestComp {
+    data: String,
 }
 
-impl Component for TestComp{
+impl Component for TestComp {
     type Storage = VecStorage<TestComp>;
 }
 
@@ -84,8 +83,8 @@ pub trait BaseNetEvent<T>{
 }*/
 
 ///Carries the source of the event. Useful for debugging, security checks, gameplay logic, etc...
-#[derive(Debug,Clone,Serialize,Deserialize)]
-pub struct NetSourcedEvent<T>{
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NetSourcedEvent<T> {
     /// The event.
     pub event: NetEvent<T>,
     /// The source of this event.
@@ -94,4 +93,3 @@ pub struct NetSourcedEvent<T>{
     /// The socket which sent this event.
     pub socket: SocketAddr,
 }
-

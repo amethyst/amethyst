@@ -1,28 +1,32 @@
 //! The network client System
 
-use specs::{System,Fetch,FetchMut};
+use specs::{Fetch, FetchMut, System};
 //use std::net::UdpSocket;
-use std::net::IpAddr;
-use std::time::Duration;
-use std::net::SocketAddr;
-use std::io::{Error,ErrorKind};
-use std::str;
-use std::str::FromStr;
-use std::clone::Clone;
-use shrev::*;
-use std::marker::PhantomData;
+use super::{deserialize_event, send_event, ConnectionState, NetConnection, NetConnectionPool,
+            NetEvent, NetFilter, NetReceiveBuffer, NetSendBuffer, NetSourcedEvent};
+use mio::{Events, Poll, PollOpt, Ready, Token};
+use mio::net::UdpSocket;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
+use shrev::*;
+use std::clone::Clone;
+use std::io::{Error, ErrorKind};
+use std::marker::PhantomData;
+use std::net::IpAddr;
+use std::net::SocketAddr;
+use std::str;
+use std::str::FromStr;
+use std::time::Duration;
 use uuid::Uuid;
-use super::{NetFilter,NetSourcedEvent,NetSendBuffer,NetReceiveBuffer,NetConnectionPool,ConnectionState,NetEvent,NetConnection,send_event,deserialize_event};
-use mio::net::UdpSocket;
-use mio::{Events, Ready, Poll, PollOpt, Token};
 
 const SOCKET: Token = Token(0);
 
 /// The System managing the network state and connections.
 /// The T generic parameter corresponds to the network event enum type.
-pub struct NetSocketSystem<T> where T: PartialEq{
+pub struct NetSocketSystem<T>
+where
+    T: PartialEq,
+{
     /// The network socket
     pub socket: UdpSocket,
     pub send_queue_reader: Option<ReaderId<NetSourcedEvent<T>>>,
@@ -32,63 +36,74 @@ pub struct NetSocketSystem<T> where T: PartialEq{
 
 //TODO: add Unchecked Event type list. Those events will be let pass the client connected filter (Example: NetEvent::Connect).
 //TODO: add different Filters that can be added on demand, to filter the event before they reach other systems.
-impl<T> NetSocketSystem<T> where T:Serialize+PartialEq{
+impl<T> NetSocketSystem<T>
+where
+    T: Serialize + PartialEq,
+{
     /// Creates a NetClientSystem and binds the Socket on the ip and port added in parameters.
-    pub fn new(ip:&str,port:u16,filters:Vec<Box<NetFilter<T>>>)->Result<NetSocketSystem<T>,Error>{
-        let socket = UdpSocket::bind(&SocketAddr::new(IpAddr::from_str(ip).expect("Unreadable input IP."),port))?;
+    pub fn new(
+        ip: &str,
+        port: u16,
+        filters: Vec<Box<NetFilter<T>>>,
+    ) -> Result<NetSocketSystem<T>, Error> {
+        let socket = UdpSocket::bind(&SocketAddr::new(
+            IpAddr::from_str(ip).expect("Unreadable input IP."),
+            port,
+        ))?;
         //socket.set_nonblocking(true)?;
         let poll = Poll::new()?;
-        poll.register(&socket,SOCKET,Ready::writable(),PollOpt::edge())?;
-        Ok(
-            NetSocketSystem{
-                socket,
-                send_queue_reader: None,
-                filters,
-                poll,
-            }
-        )
+        poll.register(&socket, SOCKET, Ready::writable(), PollOpt::edge())?;
+        Ok(NetSocketSystem {
+            socket,
+            send_queue_reader: None,
+            filters,
+            poll,
+        })
     }
     /// Connects to a remote server
-    pub fn connect(&mut self,target:SocketAddr,pool: &mut NetConnectionPool, client_uuid: Uuid){
-        info!("Sending connection request to remote {:?}",target);
-        let conn = NetConnection{
+    pub fn connect(&mut self, target: SocketAddr, pool: &mut NetConnectionPool, client_uuid: Uuid) {
+        info!("Sending connection request to remote {:?}", target);
+        let conn = NetConnection {
             target,
-            state:ConnectionState::Connecting,
+            state: ConnectionState::Connecting,
             uuid: None,
         };
-        send_event(&NetEvent::Connect::<T>{client_uuid},&conn,&self.socket);
+        send_event(&NetEvent::Connect::<T> { client_uuid }, &conn, &self.socket);
         pool.connections.push(conn);
     }
 }
 
-impl<'a, T> System<'a> for NetSocketSystem<T> where T:Send+Sync+Serialize+Clone+DeserializeOwned+PartialEq+'static{
+impl<'a, T> System<'a> for NetSocketSystem<T>
+where
+    T: Send + Sync + Serialize + Clone + DeserializeOwned + PartialEq + 'static,
+{
     type SystemData = (
         FetchMut<'a, NetSendBuffer<T>>,
         FetchMut<'a, NetReceiveBuffer<T>>,
         FetchMut<'a, NetConnectionPool>,
     );
-    fn run(&mut self, (mut send_buf,mut receive_buf,mut pool): Self::SystemData) {
+    fn run(&mut self, (mut send_buf, mut receive_buf, mut pool): Self::SystemData) {
         //Tx
-        if self.send_queue_reader.is_none(){
+        if self.send_queue_reader.is_none() {
             self.send_queue_reader = Some(send_buf.buf.register_reader());
         }
 
-        for ev in send_buf.buf.read(self.send_queue_reader.as_mut().unwrap()){
+        for ev in send_buf.buf.read(self.send_queue_reader.as_mut().unwrap()) {
             let target = pool.connection_from_address(&ev.socket);
-            if let Some(t) = target{
-                if t.state == ConnectionState::Connected || t.state == ConnectionState::Connecting{
-                    send_event(&ev.event,&t,&self.socket);
+            if let Some(t) = target {
+                if t.state == ConnectionState::Connected || t.state == ConnectionState::Connecting {
+                    send_event(&ev.event, &t, &self.socket);
                 }
             }
         }
 
-
-
         let mut events = Events::with_capacity(128);
         let mut buf = [0; 2048];
-        self.poll.poll(&mut events, Some(Duration::from_millis(0))).expect("Failed to poll");
+        self.poll
+            .poll(&mut events, Some(Duration::from_millis(0)))
+            .expect("Failed to poll");
 
-        for raw_event in events.iter(){
+        for raw_event in events.iter() {
             println!("EV");
             match self.socket.recv_from(&mut buf) {
                 //Data received
@@ -96,35 +111,38 @@ impl<'a, T> System<'a> for NetSocketSystem<T> where T:Send+Sync+Serialize+Clone+
                     let mut connection_dropped = false;
 
                     let net_event = deserialize_event::<T>(&buf[..amt]);
-                    match net_event{
-                        Ok(ev)=>{
+                    match net_event {
+                        Ok(ev) => {
                             let mut filtered = false;
-                            for mut f in self.filters.iter_mut(){
-                                if !f.allow(&pool,&src,&ev){
+                            for mut f in self.filters.iter_mut() {
+                                if !f.allow(&pool, &src, &ev) {
                                     filtered = true;
                                 }
                             }
                             if !filtered {
                                 let owned_event = NetSourcedEvent {
                                     event: ev.clone(),
-                                    uuid: pool.connection_from_address(&src).map(|c| c.uuid).unwrap(),
+                                    uuid: pool.connection_from_address(&src)
+                                        .map(|c| c.uuid)
+                                        .unwrap(),
                                     socket: src,
                                 };
                                 receive_buf.buf.single_write(owned_event);
                             }
-                        },
-                        Err(e)=>error!("Failed to read network event: {}",e),
+                        }
+                        Err(e) => error!("Failed to read network event: {}", e),
                     }
-                    if connection_dropped{
+                    if connection_dropped {
                         pool.connections.pop();
                     }
-                },
-                Err(e) => { //No data
-                    if e.kind() == ErrorKind::WouldBlock{
-                        break;//Safely ignores when no packets are waiting in the queue, and stop checking for this time.
+                }
+                Err(e) => {
+                    //No data
+                    if e.kind() == ErrorKind::WouldBlock {
+                        break; //Safely ignores when no packets are waiting in the queue, and stop checking for this time.
                     }
                     error!("couldn't receive a datagram: {}", e);
-                },
+                }
             }
         }
 
@@ -164,6 +182,5 @@ impl<'a, T> System<'a> for NetSocketSystem<T> where T:Send+Sync+Serialize+Clone+
                     error!("couldn't receive a datagram: {}", e);
                 },
             }
-        }*/
-    }
+        }*/    }
 }

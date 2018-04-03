@@ -1,28 +1,40 @@
 //! The network filter base trait
-use std::net::SocketAddr;
+use super::{ConnectionState, NetConnectionPool, NetEvent};
 use std::marker::PhantomData;
-use super::{NetEvent,NetConnectionPool,ConnectionState};
+use std::net::SocketAddr;
 
 /// Network filter base trait providing an event filtering interface.
-pub trait NetFilter<T>: Send+Sync where T: PartialEq{
+pub trait NetFilter<T>: Send + Sync
+where
+    T: PartialEq,
+{
     /// Check if the event is allowed to pass through this filter.
-    fn allow(&mut self,pool:&NetConnectionPool,source:&SocketAddr,event:&NetEvent<T>)->bool;
+    fn allow(&mut self, pool: &NetConnectionPool, source: &SocketAddr, event: &NetEvent<T>)
+        -> bool;
 }
 
 /// A filter that checks if the incoming event is from a connected client.
 pub struct FilterConnected;
 
-impl<T> NetFilter<T> for FilterConnected where T: PartialEq{
+impl<T> NetFilter<T> for FilterConnected
+where
+    T: PartialEq,
+{
     /// Checks if the event is from a connected client.
-    fn allow(&mut self,pool:&NetConnectionPool,source:&SocketAddr,event:&NetEvent<T>)->bool{
-        if let Some(ref conn) = pool.connection_from_address(source){
-            if conn.state == ConnectionState::Connected{
-                return true
-            }else if conn.state == ConnectionState::Connecting{
-                match *event{
-                    NetEvent::Connect{client_uuid} => return true,
-                    NetEvent::Connected{server_uuid}=> return true,
-                    _ => {},
+    fn allow(
+        &mut self,
+        pool: &NetConnectionPool,
+        source: &SocketAddr,
+        event: &NetEvent<T>,
+    ) -> bool {
+        if let Some(ref conn) = pool.connection_from_address(source) {
+            if conn.state == ConnectionState::Connected {
+                return true;
+            } else if conn.state == ConnectionState::Connecting {
+                match *event {
+                    NetEvent::Connect { client_uuid } => return true,
+                    NetEvent::Connected { server_uuid } => return true,
+                    _ => {}
                 }
             }
         }

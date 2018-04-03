@@ -1,17 +1,18 @@
 extern crate rand;
 
+use super::{ConnectionManagerSystem, NetConnectionPool, NetIdentity, NetReceiveBuffer,
+            NetSendBuffer, NetSocketSystem};
 use amethyst_core::bundle::{ECSBundle, Result};
-use specs::World;
-use shred::DispatcherBuilder;
-use std::marker::PhantomData;
+use filter::NetFilter;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
-use filter::NetFilter;
+use shred::DispatcherBuilder;
+use specs::World;
+use std::marker::PhantomData;
 use std::net::SocketAddr;
 use uuid::Uuid;
-use super::{NetSocketSystem,ConnectionManagerSystem,NetSendBuffer,NetReceiveBuffer,NetConnectionPool,NetIdentity};
 
-pub struct NetworkClientBundle<'a,T> {
+pub struct NetworkClientBundle<'a, T> {
     ip: &'a str,
     port: Option<u16>,
     filters: Vec<Box<NetFilter<T>>>,
@@ -19,9 +20,14 @@ pub struct NetworkClientBundle<'a,T> {
     connect_to: Option<SocketAddr>,
 }
 
-impl<'a,T> NetworkClientBundle<'a,T>{
+impl<'a, T> NetworkClientBundle<'a, T> {
     /// Creates a new NetworkClientBundle
-    pub fn new(ip: &'a str,port: Option<u16>,filters: Vec<Box<NetFilter<T>>>,is_server: bool) -> Self {
+    pub fn new(
+        ip: &'a str,
+        port: Option<u16>,
+        filters: Vec<Box<NetFilter<T>>>,
+        is_server: bool,
+    ) -> Self {
         NetworkClientBundle {
             ip,
             port,
@@ -30,13 +36,16 @@ impl<'a,T> NetworkClientBundle<'a,T>{
             connect_to: None,
         }
     }
-    pub fn with_connect(mut self,socket: SocketAddr) -> Self{
+    pub fn with_connect(mut self, socket: SocketAddr) -> Self {
         self.connect_to = Some(socket);
         self
     }
 }
 
-impl<'a, 'b, 'c, T> ECSBundle<'a, 'b> for NetworkClientBundle<'c,T> where T: Send+Sync+PartialEq+Serialize+Clone+DeserializeOwned+'static {
+impl<'a, 'b, 'c, T> ECSBundle<'a, 'b> for NetworkClientBundle<'c, T>
+where
+    T: Send + Sync + PartialEq + Serialize + Clone + DeserializeOwned + 'static,
+{
     fn build(
         mut self,
         world: &mut World,
@@ -51,18 +60,21 @@ impl<'a, 'b, 'c, T> ECSBundle<'a, 'b> for NetworkClientBundle<'c,T> where T: Sen
         while self.port.is_none() || self.port.unwrap() < 200 {
             self.port = Some(rand::random::<u16>());
         }
-        let mut s = NetSocketSystem::<T>::new(self.ip,self.port.unwrap(),self.filters).expect("Failed to open network system.");
-        if let Some(c) = self.connect_to{
-            s.connect(c,&mut pool,uuid);
+        let mut s = NetSocketSystem::<T>::new(self.ip, self.port.unwrap(), self.filters)
+            .expect("Failed to open network system.");
+        if let Some(c) = self.connect_to {
+            s.connect(c, &mut pool, uuid);
         }
 
         world.add_resource(pool);
-        world.add_resource(NetIdentity{
-            uuid,
-        });
+        world.add_resource(NetIdentity { uuid });
 
-        builder = builder.add(s,"net_socket",&[]);
-        builder = builder.add(ConnectionManagerSystem::<T>::new(self.is_server),"connection_manager",&["net_socket"]);
+        builder = builder.add(s, "net_socket", &[]);
+        builder = builder.add(
+            ConnectionManagerSystem::<T>::new(self.is_server),
+            "connection_manager",
+            &["net_socket"],
+        );
 
         Ok(builder)
     }
