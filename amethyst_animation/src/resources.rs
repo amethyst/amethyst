@@ -7,7 +7,7 @@ use amethyst_assets::{Asset, AssetStorage, Handle, Result};
 use amethyst_core::timing::{duration_to_secs, secs_to_duration};
 use fnv::FnvHashMap;
 use minterpolate::{get_input_index, InterpolationFunction, InterpolationPrimitive};
-use specs::{Component, DenseVecStorage, Entity, VecStorage};
+use specs::{Component, DenseVecStorage, Entity, VecStorage, WriteStorage};
 
 /// Blend method for sampler blending
 #[derive(Clone, Copy, Debug, PartialOrd, PartialEq, Eq, Hash)]
@@ -67,6 +67,30 @@ where
     }
 }
 
+/// Define the rest state for a component on an entity
+pub struct RestState<T> {
+    state: T,
+}
+
+impl<T> RestState<T> {
+    /// Create new rest state
+    pub fn new(t: T) -> Self {
+        RestState { state: t }
+    }
+
+    /// Get the rest state
+    pub fn state(&self) -> &T {
+        &self.state
+    }
+}
+
+impl<T> Component for RestState<T>
+where
+    T: AnimationSampling,
+{
+    type Storage = DenseVecStorage<Self>;
+}
+
 /// Defines the hierarchy of nodes that a single animation can control.
 /// Attach to the root entity that an animation can be defined for.
 /// Only required for animations which target more than a single node.
@@ -109,6 +133,22 @@ where
         AnimationHierarchy {
             nodes,
             m: marker::PhantomData,
+        }
+    }
+
+    /// Create rest state for the hierarchy. Will copy the values from the base components for each
+    /// entity in the hierarchy.
+    pub fn rest_state<F>(&self, get_component: F, states: &mut WriteStorage<RestState<T>>)
+    where
+        T: AnimationSampling,
+        F: Fn(Entity) -> Option<T>,
+    {
+        for entity in self.nodes.values() {
+            if states.get(*entity).is_none() {
+                if let Some(comp) = get_component(*entity) {
+                    states.insert(*entity, RestState::new(comp));
+                }
+            }
         }
     }
 }
