@@ -14,6 +14,10 @@ extern crate itertools;
 extern crate log;
 extern crate specs;
 
+#[macro_use]
+#[cfg(feature = "profiler")]
+extern crate thread_profiler;
+
 pub use format::GltfSceneFormat;
 pub use systems::GltfSceneLoaderSystem;
 

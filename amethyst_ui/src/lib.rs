@@ -21,6 +21,10 @@ extern crate unicode_normalization;
 extern crate unicode_segmentation;
 extern crate winit;
 
+#[macro_use]
+#[cfg(feature = "profiler")]
+extern crate thread_profiler;
+
 mod bundle;
 mod focused;
 mod format;

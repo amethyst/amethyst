@@ -8,6 +8,10 @@
 extern crate ron;
 extern crate serde;
 
+#[macro_use]
+#[cfg(feature = "profiler")]
+extern crate thread_profiler;
+
 use std::error::Error;
 use std::fmt;
 use std::io;

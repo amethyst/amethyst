@@ -8,6 +8,10 @@ extern crate shred;
 extern crate specs;
 extern crate winit;
 
+#[macro_use]
+#[cfg(feature = "profiler")]
+extern crate thread_profiler;
+
 mod components;
 mod bundles;
 mod systems;

@@ -251,6 +251,9 @@ where
     }
 
     fn reload(self: Box<Self>) -> Result<FormatValue<A>> {
+        #[cfg(feature = "profiler")]
+        profile_scope!("reload_single_file");
+
         let this: SingleFile<_, _> = *self;
         let SingleFile {
             format,
