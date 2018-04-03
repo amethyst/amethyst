@@ -7,7 +7,7 @@ use amethyst::ecs::World;
 use amethyst::prelude::*;
 use amethyst::renderer::{Camera, Event, KeyboardInput, Material, MeshHandle, PosTex, Projection,
                          VirtualKeyCode, WindowEvent, WindowMessages};
-use amethyst::ui::{TtfFormat, UiText, UiTransform,Anchored,Anchor};
+use amethyst::ui::{Anchor, Anchored, TtfFormat, UiText, UiTransform};
 use systems::ScoreText;
 
 pub struct Pong;
