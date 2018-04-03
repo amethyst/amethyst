@@ -1,15 +1,16 @@
 use std::collections::{HashMap, HashSet};
 
-use animation::{Animation, AnimationHierarchy, AnimationSet, Joint, Sampler, Skin};
+use animation::{Animation, AnimationHierarchy, AnimationSet, Joint, Sampler, SamplerPrimitive,
+                Skin};
 use assets::{AssetStorage, Handle, HotReloadStrategy, Loader};
 use core::{ThreadPool, Time};
 use core::cgmath::{EuclideanSpace, Matrix4, Point3, SquareMatrix};
+use core::specs::{Entities, Entity, Fetch, FetchMut, Join, System, WriteStorage};
 use core::transform::*;
 use fnv::FnvHashMap;
 use hibitset::BitSet;
 use renderer::{AnimatedComboMeshCreator, JointTransforms, Material, MaterialDefaults, Mesh,
                Texture};
-use specs::{Entities, Entity, Fetch, FetchMut, Join, System, WriteStorage};
 
 use {GltfMaterial, GltfPrimitive, GltfSceneAsset, GltfSkin};
 
@@ -40,8 +41,8 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
         Entities<'a>,
         Fetch<'a, AssetStorage<Mesh>>,
         Fetch<'a, AssetStorage<Texture>>,
-        Fetch<'a, AssetStorage<Animation>>,
-        Fetch<'a, AssetStorage<Sampler>>,
+        Fetch<'a, AssetStorage<Animation<Transform>>>,
+        Fetch<'a, AssetStorage<Sampler<SamplerPrimitive<f32>>>>,
         Fetch<'a, Loader>,
         Fetch<'a, MaterialDefaults>,
         Fetch<'a, Time>,
@@ -50,18 +51,17 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
         FetchMut<'a, AssetStorage<GltfSceneAsset>>,
         WriteStorage<'a, Handle<GltfSceneAsset>>,
         WriteStorage<'a, Handle<Mesh>>,
-        WriteStorage<'a, LocalTransform>,
         WriteStorage<'a, Transform>,
+        WriteStorage<'a, GlobalTransform>,
         WriteStorage<'a, Parent>,
         WriteStorage<'a, Material>,
-        WriteStorage<'a, AnimationHierarchy>,
-        WriteStorage<'a, AnimationSet>,
+        WriteStorage<'a, AnimationHierarchy<Transform>>,
+        WriteStorage<'a, AnimationSet<Transform>>,
         WriteStorage<'a, Joint>,
         WriteStorage<'a, Skin>,
         WriteStorage<'a, JointTransforms>,
     );
 
-    #[allow(unused)]
     fn run(&mut self, data: Self::SystemData) {
         use std::ops::Deref;
 
@@ -140,7 +140,7 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
                     for root_node_index in &scene.root_nodes {
                         let root_entity = entities.create();
                         parents.insert(root_entity, Parent { entity });
-                        transforms.insert(root_entity, Transform::default());
+                        transforms.insert(root_entity, GlobalTransform::default());
                         load_node(
                             *root_node_index,
                             &root_entity,
@@ -212,7 +212,6 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
                         Emissive => {
                             scene_asset.materials[material_index].emissive.0.handle = Some(handle)
                         }
-                        _ => unreachable!(),
                     }
                 }
 
@@ -221,37 +220,43 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
                     // if handle doesn't exist, load animation data
                     let mut node_indices: HashSet<usize> = HashSet::default();
                     for animation in &mut scene_asset.animations {
-                        trace!("Loading animation: {:?}", animation.nodes);
-                        node_indices.extend(animation.nodes.iter());
-                        if let None = animation.handle {
-                            let samplers = animation
+                        node_indices.extend(
+                            animation
                                 .samplers
                                 .iter()
-                                .cloned()
-                                .map(|sampler| {
-                                    loader.load_from_data(sampler, (), &*sampler_storage)
+                                .map(|&(ref node_index, _, _)| *node_index),
+                        );
+                        if let None = animation.handle {
+                            let nodes = animation
+                                .samplers
+                                .iter()
+                                .map(|&(node_index, channel, ref sampler)| {
+                                    (
+                                        node_index,
+                                        channel,
+                                        loader.load_from_data(
+                                            sampler.clone(),
+                                            (),
+                                            &*sampler_storage,
+                                        ),
+                                    )
                                 })
                                 .collect::<Vec<_>>();
-                            let sampler_map = samplers
-                                .into_iter()
-                                .enumerate()
-                                .map(|(index, sampler)| (animation.nodes[index].clone(), sampler))
-                                .collect::<Vec<_>>();
                             animation.handle = Some(loader.load_from_data(
-                                Animation { nodes: sampler_map },
+                                Animation { nodes },
                                 (),
                                 &*animation_storage,
                             ));
                         }
                     }
-                    let h = AnimationHierarchy {
-                        nodes: node_indices
+                    let h = AnimationHierarchy::new_many(
+                        node_indices
                             .into_iter()
                             .map(|node_index| {
                                 (node_index, node_map.get(&node_index).cloned().unwrap())
                             })
                             .collect::<FnvHashMap<_, _>>(),
-                    };
+                    );
                     // create animation hierarchy
                     animation_hierarchies.insert(entity, h);
                     // create animation set
@@ -284,8 +289,8 @@ fn load_node(
     node_index: usize,
     node_entity: &Entity,
     scene_asset: &GltfSceneAsset,
-    local_transforms: &mut WriteStorage<LocalTransform>,
-    transforms: &mut WriteStorage<Transform>,
+    local_transforms: &mut WriteStorage<Transform>,
+    transforms: &mut WriteStorage<GlobalTransform>,
     parents: &mut WriteStorage<Parent>,
     entities: &Entities,
     loader: &Loader,
@@ -314,7 +319,7 @@ fn load_node(
                 entity: *node_entity,
             },
         );
-        transforms.insert(child_entity, Transform::default());
+        transforms.insert(child_entity, GlobalTransform::default());
         load_node(
             *child_node_index,
             &child_entity,
@@ -382,8 +387,8 @@ fn load_node(
             // primitive and load the graphics onto those
             for (primitive_index, primitive) in node.primitives.iter().enumerate() {
                 let primitive_entity = entities.create();
-                local_transforms.insert(primitive_entity, LocalTransform::default());
-                transforms.insert(primitive_entity, Transform::default());
+                local_transforms.insert(primitive_entity, Transform::default());
+                transforms.insert(primitive_entity, GlobalTransform::default());
                 parents.insert(
                     primitive_entity,
                     Parent {

@@ -1,36 +1,55 @@
+use std::marker;
 use std::time::Duration;
 
 use amethyst_assets::{AssetStorage, Handle};
-use amethyst_core::LocalTransform;
-use specs::{Entities, Entity, Fetch, Join, ReadStorage, System, WriteStorage};
+use amethyst_core::specs::{Component, Entities, Entity, Fetch, Join, ReadStorage, System,
+                           WriteStorage};
+use minterpolate::InterpolationPrimitive;
 
-use resources::{Animation, AnimationCommand, AnimationControl, AnimationHierarchy,
-                AnimationOutput, ControlState, RestState, Sampler, SamplerControl,
-                SamplerControlSet};
+use resources::{Animation, AnimationCommand, AnimationControl, AnimationControlSet,
+                AnimationHierarchy, AnimationSampling, ControlState, RestState, Sampler,
+                SamplerControl, SamplerControlSet, StepDirection};
 
 /// System for setting up animations, should run before `SamplerInterpolationSystem`.
 ///
 /// Will process all active `AnimationControl` + `AnimationHierarchy`, and do processing of the
 /// animations they describe. If an animation only targets a single node/entity, there is no need
 /// for `AnimationHierarchy`.
+///
+/// ### Type parameters:
+///
+/// - `I`: identifier type for running animations, only one animation can be run at the same time
+///        with the same id
+/// - `T`: the component type that the animation should be applied to
 #[derive(Default)]
-pub struct AnimationControlSystem;
+pub struct AnimationControlSystem<I, T> {
+    m: marker::PhantomData<(I, T)>,
+    next_id: u64,
+}
 
-impl AnimationControlSystem {
+impl<I, T> AnimationControlSystem<I, T> {
     pub fn new() -> Self {
-        Default::default()
+        Self {
+            m: marker::PhantomData,
+            next_id: 1,
+        }
     }
 }
 
-impl<'a> System<'a> for AnimationControlSystem {
+impl<'a, I, T> System<'a> for AnimationControlSystem<I, T>
+where
+    I: PartialEq + Copy + Send + Sync + 'static,
+    T: AnimationSampling + Component + Clone,
+{
     type SystemData = (
         Entities<'a>,
-        Fetch<'a, AssetStorage<Animation>>,
-        Fetch<'a, AssetStorage<Sampler>>,
-        WriteStorage<'a, AnimationControl>,
-        WriteStorage<'a, SamplerControlSet>,
-        ReadStorage<'a, AnimationHierarchy>,
-        ReadStorage<'a, LocalTransform>,
+        Fetch<'a, AssetStorage<Animation<T>>>,
+        Fetch<'a, AssetStorage<Sampler<T::Primitive>>>,
+        WriteStorage<'a, AnimationControlSet<I, T>>,
+        WriteStorage<'a, SamplerControlSet<T>>,
+        ReadStorage<'a, AnimationHierarchy<T>>,
+        ReadStorage<'a, T>,
+        WriteStorage<'a, RestState<T>>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
@@ -42,28 +61,50 @@ impl<'a> System<'a> for AnimationControlSystem {
             mut samplers,
             hierarchies,
             transforms,
+            mut rest_states,
         ) = data;
-        let mut remove = Vec::default();
-        for (entity, control) in (&*entities, &mut controls).join() {
-            if let Some(state) = animation_storage
-                .get(&control.animation)
-                .and_then(|animation| {
-                    process_animation_control(
-                        &entity,
-                        animation,
-                        control,
-                        hierarchies.get(entity),
-                        &*sampler_storage,
-                        &mut samplers,
-                        &transforms,
-                        &mut remove,
-                    )
-                }) {
-                control.state = state;
+        let mut remove_sets = Vec::default();
+        for (entity, control_set) in (&*entities, &mut controls).join() {
+            let mut remove_ids = Vec::default();
+            for &mut (ref id, ref mut control) in control_set.animations.iter_mut() {
+                let mut remove = false;
+                if let Some(state) = animation_storage.get(&control.animation).and_then(
+                    |animation| {
+                        process_animation_control(
+                            &entity,
+                            animation,
+                            control,
+                            hierarchies.get(entity),
+                            &*sampler_storage,
+                            &mut samplers,
+                            &mut rest_states,
+                            &transforms,
+                            &mut remove,
+                            &mut self.next_id,
+                        )
+                    },
+                ) {
+                    control.state = state;
+                }
+                if let AnimationCommand::Step(_) = control.command {
+                    control.command = AnimationCommand::Start;
+                }
+                if let AnimationCommand::SetInputValue(_) = control.command {
+                    control.command = AnimationCommand::Start;
+                }
+                if remove {
+                    remove_ids.push(*id);
+                }
+            }
+            for id in remove_ids {
+                control_set.remove(id);
+                if control_set.is_empty() {
+                    remove_sets.push(entity);
+                }
             }
         }
 
-        for entity in remove {
+        for entity in remove_sets {
             controls.remove(entity);
         }
     }
@@ -71,21 +112,16 @@ impl<'a> System<'a> for AnimationControlSystem {
 
 /// Check if the given animation list is for a single node. If so, we don't need an
 /// `AnimationHierarchy`.
-fn only_one_index(nodes: &[(usize, Handle<Sampler>)]) -> bool {
+fn only_one_index<C, P>(nodes: &[(usize, C, Handle<Sampler<P>>)]) -> bool
+where
+    P: InterpolationPrimitive,
+{
     if nodes.is_empty() {
         true
     } else {
         let first = nodes[0].0;
-        nodes.iter().all(|&(ref i, _)| *i == first)
+        nodes.iter().all(|&(ref i, _, _)| *i == first)
     }
-}
-
-macro_rules! hashmap {
-    ($( $key: expr => $val: expr ),*) => {{
-         let mut map = ::fnv::FnvHashMap::default();
-         $( map.insert($key, $val); )*
-         map
-    }}
 }
 
 /// Process a single animation control object.
@@ -101,37 +137,40 @@ macro_rules! hashmap {
 ///                animation will be silently dropped.
 /// - `sampler_storage`: `AssetStorage` for all `Sampler`s
 /// - `samplers`: the active sampler sets
-/// - `transforms`: `LocalTransform`s, used to retrieve the rest pose before animation starts.
+/// - `targets`: Target components, used to retrieve the rest pose before animation starts.
 /// - `remove`: all entities pushed here will have the control object removed at the end of the system execution
-/// - `now`: we want all animations and samplers to be synchronized, so we only supply an `Instant`
+/// - `next_id`: next id to use for the animation control id
 ///
 /// ##
 ///
 /// Optionally returns a new `ControlState` for the animation. This will be the new state of the
 /// control object.
-fn process_animation_control(
+fn process_animation_control<T>(
     entity: &Entity,
-    animation: &Animation,
-    control: &AnimationControl,
-    hierarchy: Option<&AnimationHierarchy>,
-    sampler_storage: &AssetStorage<Sampler>,
-    samplers: &mut WriteStorage<SamplerControlSet>,
-    transforms: &ReadStorage<LocalTransform>,
-    remove: &mut Vec<Entity>,
-) -> Option<ControlState> {
+    animation: &Animation<T>,
+    control: &mut AnimationControl<T>,
+    hierarchy: Option<&AnimationHierarchy<T>>,
+    sampler_storage: &AssetStorage<Sampler<T::Primitive>>,
+    samplers: &mut WriteStorage<SamplerControlSet<T>>,
+    rest_states: &mut WriteStorage<RestState<T>>,
+    targets: &ReadStorage<T>,
+    remove: &mut bool,
+    next_id: &mut u64,
+) -> Option<ControlState>
+where
+    T: AnimationSampling + Component + Clone,
+{
     // Checking hierarchy
-    let h_fallback = AnimationHierarchy {
-        nodes: hashmap![animation.nodes[0].0 => *entity],
-    };
+    let h_fallback = AnimationHierarchy::new_single(animation.nodes[0].0, *entity);
     let hierarchy = match hierarchy {
         Some(h) => h,
         None => if only_one_index(&animation.nodes) {
             &h_fallback
         } else {
-            eprintln!(
+            error!(
                 "Animation control which target multiple nodes without a hierarchy detected, dropping"
             );
-            remove.push(*entity);
+            *remove = true;
             return None;
         },
     };
@@ -139,8 +178,8 @@ fn process_animation_control(
         // Check for aborted or done animation
         (_, &AnimationCommand::Abort) | (&ControlState::Abort, _) | (&ControlState::Done, _) => {
             // signal samplers to abort, and remove control object if all samplers are done and removed
-            if check_and_terminate_animation(hierarchy, samplers) {
-                remove.push(*entity);
+            if check_and_terminate_animation(control.id, hierarchy, samplers) {
+                *remove = true;
             }
             Some(ControlState::Abort)
         }
@@ -149,43 +188,71 @@ fn process_animation_control(
         // We ignore the command here because we need the animation to be
         // started before we can pause it, and to avoid a lot of checks for
         // abort. The command will be processed next frame.
-        (&ControlState::Requested, _) => {
-            if request_animation(
+        (&ControlState::Requested, &AnimationCommand::Start) => {
+            control.id = *next_id;
+            *next_id += 1;
+            if start_animation(
                 animation,
                 sampler_storage,
                 control,
                 hierarchy,
                 samplers,
-                transforms,
+                rest_states,
+                targets,
             ) {
                 Some(ControlState::Running(Duration::from_secs(0)))
             } else {
-                None // Try again next frame, might just be that samplers haven't
-                     // finished loading
+                None // Try again next frame, might just be that samplers haven't finished loading
             }
         }
 
         // If pause was requested on a running animation, pause it
         (&ControlState::Running(..), &AnimationCommand::Pause) => {
-            pause_animation(hierarchy, samplers);
+            pause_animation(control.id, hierarchy, samplers);
             Some(ControlState::Paused(Duration::from_secs(0)))
         }
 
         // If start was requested on a paused animation, unpause it
         (&ControlState::Paused(_), &AnimationCommand::Start) => {
-            unpause_animation(hierarchy, samplers);
+            unpause_animation(control.id, hierarchy, samplers);
             Some(ControlState::Running(Duration::from_secs(0)))
+        }
+
+        (&ControlState::Running(..), &AnimationCommand::Step(ref dir)) => {
+            step_animation(control.id, hierarchy, samplers, sampler_storage, dir);
+            None
+        }
+
+        (&ControlState::Running(..), &AnimationCommand::SetInputValue(value)) => {
+            set_animation_input(control.id, hierarchy, samplers, value);
+            None
+        }
+
+        (&ControlState::Running(..), &AnimationCommand::SetBlendWeights(ref weights)) => {
+            set_blend_weights(control.id, hierarchy, samplers, weights);
+            None
         }
 
         // check for finished/aborted animations, wait for samplers to signal done,
         // then remove control objects
         (&ControlState::Running(..), _) => {
-            if check_termination(hierarchy, &samplers) {
+            if check_termination(control.id, hierarchy, &samplers) {
                 // Do termination
                 for (_, node_entity) in &hierarchy.nodes {
-                    samplers.remove(*node_entity);
+                    let empty = samplers
+                        .get_mut(*node_entity)
+                        .map(|sampler| {
+                            sampler.clear(control.id);
+                            sampler.is_empty()
+                        })
+                        .unwrap_or(false);
+                    if empty {
+                        samplers.remove(*node_entity);
+                    }
                 }
-                remove.push(*entity);
+                *remove = true;
+            } else {
+                update_animation_rate(control.id, hierarchy, samplers, control.rate_multiplier);
             }
             None
         }
@@ -205,107 +272,189 @@ fn process_animation_control(
 /// - `control`: the control object for the animation instance
 /// - `hierarchy`: the animation node hierarchy for the entity hierarchy the animation instance is active for
 /// - `samplers`: the active sampler sets
-/// - `transforms`: `LocalTransform`s, used to retrieve the rest pose before animation starts.
+/// - `targets`: Target components, used to retrieve the rest pose before animation starts.
 ///
 /// ## Returns
 ///
 /// True if the animation was started, false if it wasn't.
-fn request_animation(
-    animation: &Animation,
-    sampler_storage: &AssetStorage<Sampler>,
-    control: &AnimationControl,
-    hierarchy: &AnimationHierarchy,
-    samplers: &mut WriteStorage<SamplerControlSet>,
-    transforms: &ReadStorage<LocalTransform>, // for rest state
-) -> bool {
+fn start_animation<T>(
+    animation: &Animation<T>,
+    sampler_storage: &AssetStorage<Sampler<T::Primitive>>,
+    control: &AnimationControl<T>,
+    hierarchy: &AnimationHierarchy<T>,
+    samplers: &mut WriteStorage<SamplerControlSet<T>>,
+    rest_states: &mut WriteStorage<RestState<T>>,
+    targets: &ReadStorage<T>, // for rest state
+) -> bool
+where
+    T: AnimationSampling + Component + Clone,
+{
     // check that hierarchy is valid, and all samplers exist
     if animation
         .nodes
         .iter()
-        .any(|&(ref node_index, ref sampler_handle)| {
+        .any(|&(ref node_index, _, ref sampler_handle)| {
             hierarchy.nodes.get(node_index).is_none()
                 || sampler_storage.get(sampler_handle).is_none()
         }) {
         return false;
     }
 
+    hierarchy.rest_state(|entity| targets.get(entity).cloned(), rest_states);
+
     // setup sampler tree
-    for &(ref node_index, ref sampler_handle) in &animation.nodes {
+    for &(ref node_index, ref channel, ref sampler_handle) in &animation.nodes {
         let node_entity = hierarchy.nodes.get(node_index).unwrap();
-        let sampler = sampler_storage.get(sampler_handle).unwrap();
-        let transform = transforms.get(*node_entity).unwrap();
-        let sampler_control = SamplerControl {
-            sampler: sampler_handle.clone(),
-            state: ControlState::Requested,
-            end: control.end.clone(),
-            after: get_after(sampler, transform),
-        };
-        let mut set = samplers
+        let component = rest_states
             .get(*node_entity)
-            .cloned()
-            .unwrap_or(SamplerControlSet::default());
-        add_to_set(sampler, &mut set, sampler_control);
-        samplers.insert(*node_entity, set);
+            .map(|r| r.state())
+            .or_else(|| targets.get(*node_entity))
+            .unwrap();
+        let sampler_control = SamplerControl::<T> {
+            control_id: control.id,
+            channel: channel.clone(),
+            state: ControlState::Requested,
+            sampler: sampler_handle.clone(),
+            end: control.end.clone(),
+            after: component.current_sample(channel),
+            rate_multiplier: control.rate_multiplier,
+            blend_weight: 1.0,
+        };
+        let add = if let Some(ref mut set) = samplers.get_mut(*node_entity) {
+            set.add_control(sampler_control);
+            None
+        } else {
+            Some(sampler_control)
+        };
+        if let Some(sampler_control) = add {
+            let mut set = SamplerControlSet::default();
+            set.add_control(sampler_control);
+            samplers.insert(*node_entity, set);
+        }
     }
     true
 }
 
-fn add_to_set(sampler: &Sampler, control_set: &mut SamplerControlSet, control: SamplerControl) {
-    match sampler.output {
-        AnimationOutput::Translation(_) => control_set.translation = Some(control),
-        AnimationOutput::Rotation(_) => control_set.rotation = Some(control),
-        AnimationOutput::Scale(_) => control_set.scale = Some(control),
-    }
-}
-
-fn get_after(sampler: &Sampler, transform: &LocalTransform) -> RestState {
-    match sampler.output {
-        AnimationOutput::Translation(_) => RestState::Translation(transform.translation.into()),
-        AnimationOutput::Rotation(_) => RestState::Rotation(transform.rotation.into()),
-        AnimationOutput::Scale(_) => RestState::Scale(transform.scale.into()),
-    }
-}
-
-fn pause_animation(hierarchy: &AnimationHierarchy, samplers: &mut WriteStorage<SamplerControlSet>) {
+fn pause_animation<T>(
+    control_id: u64,
+    hierarchy: &AnimationHierarchy<T>,
+    samplers: &mut WriteStorage<SamplerControlSet<T>>,
+) where
+    T: AnimationSampling,
+{
     for (_, node_entity) in &hierarchy.nodes {
-        match samplers.get_mut(*node_entity) {
-            Some(ref mut s) => do_control_set_pause(s),
-            _ => (),
+        if let Some(ref mut s) = samplers.get_mut(*node_entity) {
+            s.pause(control_id);
         }
     }
 }
 
-fn unpause_animation(
-    hierarchy: &AnimationHierarchy,
-    samplers: &mut WriteStorage<SamplerControlSet>,
-) {
+fn unpause_animation<T>(
+    control_id: u64,
+    hierarchy: &AnimationHierarchy<T>,
+    samplers: &mut WriteStorage<SamplerControlSet<T>>,
+) where
+    T: AnimationSampling,
+{
     for (_, node_entity) in &hierarchy.nodes {
-        match samplers.get_mut(*node_entity) {
-            Some(ref mut s) => do_control_set_unpause(s),
-            _ => (),
+        if let Some(ref mut s) = samplers.get_mut(*node_entity) {
+            s.unpause(control_id);
+        }
+    }
+}
+
+fn step_animation<T>(
+    control_id: u64,
+    hierarchy: &AnimationHierarchy<T>,
+    controls: &mut WriteStorage<SamplerControlSet<T>>,
+    sampler_storage: &AssetStorage<Sampler<T::Primitive>>,
+    direction: &StepDirection,
+) where
+    T: AnimationSampling,
+{
+    for (_, node_entity) in &hierarchy.nodes {
+        if let Some(ref mut s) = controls.get_mut(*node_entity) {
+            s.step(control_id, sampler_storage, direction);
+        }
+    }
+}
+
+fn set_animation_input<T>(
+    control_id: u64,
+    hierarchy: &AnimationHierarchy<T>,
+    controls: &mut WriteStorage<SamplerControlSet<T>>,
+    input: f32,
+) where
+    T: AnimationSampling,
+{
+    for (_, node_entity) in &hierarchy.nodes {
+        if let Some(ref mut s) = controls.get_mut(*node_entity) {
+            s.set_input(control_id, input);
+        }
+    }
+}
+
+fn set_blend_weights<T>(
+    control_id: u64,
+    hierarchy: &AnimationHierarchy<T>,
+    controls: &mut WriteStorage<SamplerControlSet<T>>,
+    weights: &Vec<(usize, T::Channel, f32)>,
+) where
+    T: AnimationSampling,
+{
+    for &(node_index, ref channel, weight) in weights {
+        if let Some(node_entity) = hierarchy.nodes.get(&node_index) {
+            if let Some(ref mut s) = controls.get_mut(*node_entity) {
+                s.set_blend_weight(control_id, channel, weight);
+            }
+        }
+    }
+}
+
+fn update_animation_rate<T>(
+    control_id: u64,
+    hierarchy: &AnimationHierarchy<T>,
+    samplers: &mut WriteStorage<SamplerControlSet<T>>,
+    rate_multiplier: f32,
+) where
+    T: AnimationSampling,
+{
+    for (_, node_entity) in &hierarchy.nodes {
+        if let Some(ref mut s) = samplers.get_mut(*node_entity) {
+            s.set_rate_multiplier(control_id, rate_multiplier);
         }
     }
 }
 
 /// Check if all nodes in an `AnimationHierarchy` are ready for termination, if so remove all
 /// `SamplerControlSet`s for the hierarchy, if not request termination on all sampler controls
-fn check_and_terminate_animation(
-    hierarchy: &AnimationHierarchy,
-    samplers: &mut WriteStorage<SamplerControlSet>,
-) -> bool {
+fn check_and_terminate_animation<T>(
+    control_id: u64,
+    hierarchy: &AnimationHierarchy<T>,
+    samplers: &mut WriteStorage<SamplerControlSet<T>>,
+) -> bool
+where
+    T: AnimationSampling,
+{
     // Check for termination
-    if check_termination(hierarchy, &samplers) {
+    if check_termination(control_id, hierarchy, &samplers) {
         // Do termination
         for (_, node_entity) in &hierarchy.nodes {
-            samplers.remove(*node_entity);
+            let empty = {
+                let mut sampler = samplers.get_mut(*node_entity).unwrap();
+                sampler.clear(control_id);
+                sampler.is_empty()
+            };
+            if empty {
+                samplers.remove(*node_entity);
+            }
         }
         true
     } else {
         // Request termination of samplers
         for (_, node_entity) in &hierarchy.nodes {
-            match samplers.get_mut(*node_entity) {
-                Some(ref mut s) => do_control_set_termination(s),
-                _ => (),
+            if let Some(ref mut s) = samplers.get_mut(*node_entity) {
+                s.abort(control_id);
             }
         }
         false
@@ -313,95 +462,17 @@ fn check_and_terminate_animation(
 }
 
 /// Check if all nodes in an `AnimationHierarcy` are ready for termination.
-fn check_termination(
-    hierarchy: &AnimationHierarchy,
-    samplers: &WriteStorage<SamplerControlSet>,
-) -> bool {
+fn check_termination<T>(
+    control_id: u64,
+    hierarchy: &AnimationHierarchy<T>,
+    samplers: &WriteStorage<SamplerControlSet<T>>,
+) -> bool
+where
+    T: AnimationSampling,
+{
     hierarchy
         .nodes
         .iter()
         .flat_map(|(_, node_entity)| samplers.get(*node_entity))
-        .all(check_control_set_termination)
-}
-
-/// Request termination of `SamplerControlSet`
-fn do_control_set_termination(control_set: &mut SamplerControlSet) {
-    if let Some(ref mut t) = control_set.translation {
-        if t.state != ControlState::Done {
-            t.state = ControlState::Abort;
-        }
-    }
-    if let Some(ref mut r) = control_set.rotation {
-        if r.state != ControlState::Done {
-            r.state = ControlState::Abort;
-        }
-    }
-    if let Some(ref mut s) = control_set.scale {
-        if s.state != ControlState::Done {
-            s.state = ControlState::Abort;
-        }
-    }
-}
-
-/// Pause a `SamplerControlSet`
-fn do_control_set_pause(control_set: &mut SamplerControlSet) {
-    if let Some(ref mut t) = control_set.translation {
-        t.state = match t.state {
-            ControlState::Running(dur) => ControlState::Paused(dur),
-            _ => ControlState::Paused(Duration::from_secs(0)),
-        };
-    }
-    if let Some(ref mut r) = control_set.rotation {
-        r.state = match r.state {
-            ControlState::Running(dur) => ControlState::Paused(dur),
-            _ => ControlState::Paused(Duration::from_secs(0)),
-        };
-    }
-    if let Some(ref mut s) = control_set.scale {
-        s.state = match s.state {
-            ControlState::Running(dur) => ControlState::Paused(dur),
-            _ => ControlState::Paused(Duration::from_secs(0)),
-        };
-    }
-}
-
-/// Unpause a `SamplerControlSet`
-fn do_control_set_unpause(control_set: &mut SamplerControlSet) {
-    if let Some(ref mut t) = control_set.translation {
-        t.state = match t.state {
-            ControlState::Paused(dur) => ControlState::Running(dur),
-            ref s => s.clone(),
-        };
-    }
-    if let Some(ref mut r) = control_set.rotation {
-        r.state = match r.state {
-            ControlState::Paused(dur) => ControlState::Running(dur),
-            ref s => s.clone(),
-        };
-    }
-    if let Some(ref mut s) = control_set.scale {
-        s.state = match s.state {
-            ControlState::Paused(dur) => ControlState::Running(dur),
-            ref s => s.clone(),
-        };
-    }
-}
-
-/// Check if a control set can be terminated
-fn check_control_set_termination(control_set: &SamplerControlSet) -> bool {
-    control_set
-        .translation
-        .as_ref()
-        .map(|t| t.state == ControlState::Done || t.state == ControlState::Requested)
-        .unwrap_or(true)
-        && control_set
-            .rotation
-            .as_ref()
-            .map(|r| r.state == ControlState::Done || r.state == ControlState::Requested)
-            .unwrap_or(true)
-        && control_set
-            .scale
-            .as_ref()
-            .map(|s| s.state == ControlState::Done || s.state == ControlState::Requested)
-            .unwrap_or(true)
+        .all(|s| s.check_termination(control_id))
 }

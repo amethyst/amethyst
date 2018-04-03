@@ -2,7 +2,7 @@ use {Ball, Paddle, Side};
 use amethyst::assets::AssetStorage;
 use amethyst::audio::Source;
 use amethyst::audio::output::Output;
-use amethyst::core::transform::LocalTransform;
+use amethyst::core::transform::Transform;
 use amethyst::ecs::{Fetch, Join, ReadStorage, System, WriteStorage};
 use audio::{play_bounce, Sounds};
 use config::ArenaConfig;
@@ -15,7 +15,7 @@ impl<'s> System<'s> for BounceSystem {
     type SystemData = (
         WriteStorage<'s, Ball>,
         ReadStorage<'s, Paddle>,
-        ReadStorage<'s, LocalTransform>,
+        ReadStorage<'s, Transform>,
         Fetch<'s, AssetStorage<Source>>,
         Fetch<'s, Sounds>,
         Fetch<'s, Option<Output>>,
@@ -25,13 +25,12 @@ impl<'s> System<'s> for BounceSystem {
     fn run(
         &mut self,
         (mut balls, paddles, transforms, storage, sounds, audio_output, arena_config): Self::SystemData,
-    ) {
+){
         // Check whether a ball collided, and bounce off accordingly.
         //
         // We also check for the velocity of the ball every time, to prevent multiple collisions
         // from occurring.
         for (ball, transform) in (&mut balls, &transforms).join() {
-
             let ball_x = transform.translation[0];
             let ball_y = transform.translation[1];
 

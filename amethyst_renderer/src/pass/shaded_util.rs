@@ -1,8 +1,8 @@
 use std::mem;
 
-use amethyst_core::Transform;
+use amethyst_core::GlobalTransform;
+use amethyst_core::specs::{Join, ReadStorage};
 use gfx::traits::Pod;
-use specs::{Join, ReadStorage};
 
 use cam::Camera;
 use light::{DirectionalLight, Light, PointLight};
@@ -46,7 +46,7 @@ pub(crate) fn set_light_args(
     encoder: &mut Encoder,
     light: &ReadStorage<Light>,
     ambient: &AmbientColor,
-    camera: Option<(&Camera, &Transform)>,
+    camera: Option<(&Camera, &GlobalTransform)>,
 ) {
     let point_lights: Vec<PointLightPod> = light
         .join()

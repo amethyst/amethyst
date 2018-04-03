@@ -1,87 +1,158 @@
-use amethyst_assets::Handle;
-use specs::{Entity, WriteStorage};
+use amethyst_core::cgmath::BaseNum;
+use amethyst_core::cgmath::num_traits::NumCast;
+use amethyst_core::specs::{Entity, WriteStorage};
+use minterpolate::InterpolationPrimitive;
 
-use resources::{Animation, AnimationCommand, AnimationControl, ControlState, EndControl};
+use resources::{AnimationControlSet, AnimationSampling};
 
-/// Play a given animation on the given entity.
+/// Get the animation set for an entity. If none exists, one will be added.
 ///
-/// ## Parameters:
+/// ### Type parameters:
 ///
-/// - `controls`: animation control storage in the world.
-/// - `animation`: handle to the animation to run
-/// - `entity`: entity to run the animation on. Must either have an `AnimationHierarchy` that
-///             matches the `Animation`, or only refer to a single node, else the animation will
-///             not be run.
-/// - `end`: action to perform when the animation has reached its end.
-pub fn play_animation(
-    controls: &mut WriteStorage<AnimationControl>,
-    animation: &Handle<Animation>,
+/// - `I`: identifier type for running animations, only one animation can be run at the same time
+///        with the same id
+/// - `T`: the component type that the animation applies to
+pub fn get_animation_set<'a, I, T>(
+    controls: &'a mut WriteStorage<AnimationControlSet<I, T>>,
     entity: Entity,
-    end: EndControl,
-) {
-    match controls.get_mut(entity) {
-        Some(ref mut control) if control.animation == *animation => {
-            control.command = AnimationCommand::Start
-        }
-        _ => {}
-    }
+) -> &'a mut AnimationControlSet<I, T>
+where
+    I: Send + Sync + 'static,
+    T: AnimationSampling,
+{
     if let None = controls.get(entity) {
-        controls.insert(
-            entity,
-            AnimationControl {
-                animation: animation.clone(),
-                state: ControlState::Requested,
-                command: AnimationCommand::Start,
-                end,
-            },
-        );
+        controls.insert(entity, AnimationControlSet::default());
+    }
+    controls.get_mut(entity).unwrap()
+}
+
+/// Sampler primitive
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub enum SamplerPrimitive<S>
+where
+    S: BaseNum,
+{
+    Scalar(S),
+    Vec2([S; 2]),
+    Vec3([S; 3]),
+    Vec4([S; 4]),
+}
+
+impl<S> From<[S; 2]> for SamplerPrimitive<S>
+where
+    S: BaseNum,
+{
+    fn from(arr: [S; 2]) -> Self {
+        SamplerPrimitive::Vec2(arr)
     }
 }
 
-/// Pause the running animation on the given entity.
-///
-/// ## Parameters:
-///
-/// - `controls`: animation control storage in the world.
-/// - `animation`: handle to the animation to run
-/// - `entity`: entity the animation is running on. Must either have an `AnimationHierarchy` that
-///             matches the `Animation`, or only refer to a single node, else the animation will
-///             not be run.
-pub fn pause_animation(
-    controls: &mut WriteStorage<AnimationControl>,
-    animation: &Handle<Animation>,
-    entity: Entity,
-) {
-    if let Some(ref mut control) = controls.get_mut(entity) {
-        if control.animation == *animation && control.state.is_running() {
-            control.command = AnimationCommand::Pause;
+impl<S> From<[S; 3]> for SamplerPrimitive<S>
+where
+    S: BaseNum,
+{
+    fn from(arr: [S; 3]) -> Self {
+        SamplerPrimitive::Vec3(arr)
+    }
+}
+
+impl<S> From<[S; 4]> for SamplerPrimitive<S>
+where
+    S: BaseNum,
+{
+    fn from(arr: [S; 4]) -> Self {
+        SamplerPrimitive::Vec4(arr)
+    }
+}
+
+impl<S> InterpolationPrimitive for SamplerPrimitive<S>
+where
+    S: BaseNum,
+{
+    fn add(&self, other: &Self) -> Self {
+        use self::SamplerPrimitive::*;
+        match (*self, *other) {
+            (Scalar(ref s), Scalar(ref o)) => Scalar(*s + *o),
+            (Vec2(ref s), Vec2(ref o)) => Vec2([s[0] + o[0], s[1] + o[1]]),
+            (Vec3(ref s), Vec3(ref o)) => Vec3([s[0] + o[0], s[1] + o[1], s[2] + o[2]]),
+            (Vec4(ref s), Vec4(ref o)) => {
+                Vec4([s[0] + o[0], s[1] + o[1], s[2] + o[2], s[3] + o[3]])
+            }
+            _ => panic!("Interpolation can not be done between primitives of different types"),
+        }
+    }
+
+    fn sub(&self, other: &Self) -> Self {
+        use self::SamplerPrimitive::*;
+        match (*self, *other) {
+            (Scalar(ref s), Scalar(ref o)) => Scalar(*s - *o),
+            (Vec2(ref s), Vec2(ref o)) => Vec2([s[0] - o[0], s[1] - o[1]]),
+            (Vec3(ref s), Vec3(ref o)) => Vec3([s[0] - o[0], s[1] - o[1], s[2] - o[2]]),
+            (Vec4(ref s), Vec4(ref o)) => {
+                Vec4([s[0] - o[0], s[1] - o[1], s[2] - o[2], s[3] - o[3]])
+            }
+            _ => panic!("Interpolation can not be done between primitives of different types"),
+        }
+    }
+
+    fn mul(&self, scalar: f32) -> Self {
+        use self::SamplerPrimitive::*;
+        match *self {
+            Scalar(ref s) => Scalar(mul_f32(*s, scalar)),
+            Vec2(ref s) => Vec2([mul_f32(s[0], scalar), mul_f32(s[1], scalar)]),
+            Vec3(ref s) => Vec3([
+                mul_f32(s[0], scalar),
+                mul_f32(s[1], scalar),
+                mul_f32(s[2], scalar),
+            ]),
+            Vec4(ref s) => Vec4([
+                mul_f32(s[0], scalar),
+                mul_f32(s[1], scalar),
+                mul_f32(s[2], scalar),
+                mul_f32(s[3], scalar),
+            ]),
+        }
+    }
+
+    fn dot(&self, other: &Self) -> f32 {
+        use self::SamplerPrimitive::*;
+        match (*self, *other) {
+            (Scalar(ref s), Scalar(ref o)) => (*s * *o).to_f32().unwrap(),
+            (Vec2(ref s), Vec2(ref o)) => (s[0] * o[0] + s[1] * o[1]).to_f32().unwrap(),
+            (Vec3(ref s), Vec3(ref o)) => {
+                (s[0] * o[0] + s[1] * o[1] + s[2] * o[2]).to_f32().unwrap()
+            }
+            (Vec4(ref s), Vec4(ref o)) => (s[0] * o[0] + s[1] * o[1] + s[2] * o[2] + s[3] * o[3])
+                .to_f32()
+                .unwrap(),
+            _ => panic!("Interpolation can not be done between primitives of different types"),
+        }
+    }
+
+    fn magnitude2(&self) -> f32 {
+        self.dot(self)
+    }
+
+    fn magnitude(&self) -> f32 {
+        use self::SamplerPrimitive::*;
+        match *self {
+            Scalar(ref s) => s.to_f32().unwrap(),
+            Vec2(_) | Vec3(_) | Vec4(_) => self.magnitude2().sqrt(),
+        }
+    }
+
+    fn normalize(&self) -> Self {
+        use self::SamplerPrimitive::*;
+        match *self {
+            Scalar(_) => *self,
+            Vec2(_) | Vec3(_) | Vec4(_) => self.mul(1. / self.magnitude()),
         }
     }
 }
 
-/// Toggle the state between paused and running for the given animation on the given entity.
-///
-/// ## Parameters:
-///
-/// - `controls`: animation control storage in the world.
-/// - `animation`: handle to the animation
-/// - `entity`: entity to run the animation on. Must either have an `AnimationHierarchy` that
-///             matches the `Animation`, or only refer to a single node, else the animation will
-///             not be run.
-/// - `end`: action to perform when the animation has reached its end.
-pub fn toggle_animation(
-    controls: &mut WriteStorage<AnimationControl>,
-    animation: &Handle<Animation>,
-    entity: Entity,
-    end: EndControl,
-) {
-    if controls
-        .get(entity)
-        .map(|c| c.state.is_running())
-        .unwrap_or(false)
-    {
-        pause_animation(controls, animation, entity);
-    } else {
-        play_animation(controls, animation, entity, end);
-    }
+fn mul_f32<T>(s: T, scalar: f32) -> T
+where
+    T: BaseNum,
+{
+    NumCast::from(s.to_f32().unwrap() * scalar).unwrap()
 }

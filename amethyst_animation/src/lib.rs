@@ -3,24 +3,32 @@ extern crate amethyst_core;
 extern crate amethyst_renderer;
 extern crate fnv;
 extern crate hibitset;
+extern crate itertools;
+#[macro_use]
+extern crate log;
 extern crate minterpolate;
 #[macro_use]
 extern crate serde;
-extern crate specs;
+
+#[macro_use]
+#[cfg(feature = "profiler")]
+extern crate thread_profiler;
 
 pub use self::bundle::{AnimationBundle, SamplingBundle, VertexSkinningBundle};
-pub use self::interpolation::{Interpolate, InterpolationFunction, InterpolationType};
-pub use self::resources::{Animation, AnimationCommand, AnimationControl, AnimationHierarchy,
-                          AnimationOutput, AnimationSet, ControlState, EndControl, RestState,
-                          Sampler, SamplerControl, SamplerControlSet};
+pub use self::resources::{Animation, AnimationCommand, AnimationControl, AnimationControlSet,
+                          AnimationHierarchy, AnimationSampling, AnimationSet, BlendMethod,
+                          ControlState, EndControl, Sampler, SamplerControl, SamplerControlSet,
+                          StepDirection};
 pub use self::skinning::{Joint, Skin, VertexSkinningSystem};
 pub use self::systems::{AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem,
                         SamplerProcessor};
-pub use self::util::{pause_animation, play_animation, toggle_animation};
+pub use self::transform::TransformChannel;
+pub use self::util::{get_animation_set, SamplerPrimitive};
+pub use minterpolate::{InterpolationFunction, InterpolationPrimitive};
 
 mod skinning;
 mod resources;
 mod systems;
-mod interpolation;
+mod transform;
 mod bundle;
 mod util;

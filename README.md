@@ -2,17 +2,20 @@
 
 # Amethyst
 
-[![Build Status][s1]][tc] [![Crates.io][s2]][ci] [![MIT/Apache][s3]][li] [![Join the chat][s4]][gc]
+[![Build Status][s1]][tc] [![Crates.io][s2]][ci] [![MIT/Apache][s3]][li] [![Join the chat][s4]][gc] [![Join us on Discord][s5]][di] ![Lines of Code][s6]
 
 [s1]: https://travis-ci.org/amethyst/amethyst.svg?branch=master
 [s2]: https://img.shields.io/crates/v/amethyst.svg
 [s3]: https://img.shields.io/badge/license-MIT%2FApache-blue.svg
 [s4]: https://badges.gitter.im/amethyst/general.svg
+[s5]: https://img.shields.io/discord/425678876929163284.svg?logo=discord
+[s6]: https://tokei.rs/b1/github/amethyst/amethyst?category=code
 
 [tc]: https://travis-ci.org/amethyst/amethyst/
 [ci]: https://crates.io/crates/amethyst/
 [li]: COPYING
 [gc]: https://gitter.im/orgs/amethyst/rooms
+[di]: https://discord.gg/GnP5Whs
 
 **Warning: The book and tools repository are severely out of date at the moment. Amethyst is undergoing a lot of changes at the moment so if you are looking to use the library it would be better to just read the examples.**
 
@@ -65,7 +68,7 @@ does not aim to be API-compatible with it in any way. Some goals include:
 
 ## Usage
 
-**Linux developers: the libasound2-dev package will be required to compile Amethyst.**
+**Linux developers: the libasound2-dev (alsa-lib-devel on Fedora) and libx11-xcb-dev packages are required to compile Amethyst.**
 
 Read the [online book][bk] for a comprehensive tutorial to using Amethyst. There
 is also an online crate-level [API reference][ar].
@@ -121,8 +124,8 @@ Other places you may want to check out are [r/rust_gamedev][rg] and [#rust-gamed
 Amethyst is free and open source software distributed under the terms of both
 the [MIT License][lm] and the [Apache License 2.0][la].
 
-[lm]: LICENSE-MIT
-[la]: LICENSE-APACHE
+[lm]: docs/LICENSE-MIT
+[la]: docs/LICENSE-APACHE
 
 ## Contributing
 
@@ -130,7 +133,7 @@ We are a community project that welcomes contribution from anyone. If you're
 interested in helping out, please read the [CONTRIBUTING.md][cm] file before
 getting started. Don't know what to hack on? Check our [active projects][pr], or search though [our issue tracker][it].
 
-[cm]: CONTRIBUTING.md
+[cm]: docs/CONTRIBUTING.md
 [pr]: https://github.com/amethyst/amethyst/projects
 [it]: https://github.com/amethyst/amethyst/issues
 

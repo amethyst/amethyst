@@ -12,19 +12,22 @@ extern crate imagefmt;
 extern crate itertools;
 #[macro_use]
 extern crate log;
-extern crate specs;
+
+#[macro_use]
+#[cfg(feature = "profiler")]
+extern crate thread_profiler;
 
 pub use format::GltfSceneFormat;
 pub use systems::GltfSceneLoaderSystem;
 
 use std::ops::Range;
 
-use animation::{Animation, Sampler};
+use animation::{Animation, Sampler, SamplerPrimitive, TransformChannel};
 use assets::{Asset, Error as AssetError, Handle};
-use core::transform::LocalTransform;
+use core::specs::VecStorage;
+use core::transform::Transform;
 use gfx::Primitive;
 use renderer::{AnimatedVertexBufferCombination, MeshHandle, TextureData, TextureHandle};
-use specs::VecStorage;
 
 mod format;
 mod systems;
@@ -89,7 +92,7 @@ pub struct GltfNode {
     pub skin: Option<usize>,
     pub parent: Option<usize>,
     pub children: Vec<usize>,
-    pub local_transform: LocalTransform,
+    pub local_transform: Transform,
 }
 
 /// A single scene is defined as a list of the root nodes in the node hierarchy for the full asset
@@ -101,10 +104,10 @@ pub struct GltfScene {
 /// A single animation
 #[derive(Debug)]
 pub struct GltfAnimation {
-    // node index, vec will be same size as samplers, and reference the sampler at the same index
-    pub nodes: Vec<usize>,
-    pub samplers: Vec<Sampler>,
-    pub handle: Option<Handle<Animation>>,
+    // node index, vec will be same size as samplers and channels, and reference the sampler+channel
+    // at the same index
+    pub samplers: Vec<(usize, TransformChannel, Sampler<SamplerPrimitive<f32>>)>,
+    pub handle: Option<Handle<Animation<Transform>>>,
     //pub hierarchy_root: usize,
 }
 

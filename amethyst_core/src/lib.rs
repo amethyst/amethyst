@@ -1,5 +1,7 @@
 #[macro_use]
 pub extern crate cgmath;
+pub extern crate shred;
+pub extern crate specs;
 
 #[macro_use]
 extern crate error_chain;
@@ -8,8 +10,10 @@ extern crate hibitset;
 extern crate rayon;
 #[macro_use]
 extern crate serde;
-extern crate shred;
-extern crate specs;
+
+#[macro_use]
+#[cfg(feature = "profiler")]
+extern crate thread_profiler;
 
 //#[cfg(test)]
 //extern crate quickcheck;

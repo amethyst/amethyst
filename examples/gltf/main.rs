@@ -8,12 +8,12 @@ extern crate log;
 
 use amethyst::assets::{AssetStorage, Handle, Loader};
 use amethyst::core::cgmath::{Deg, Quaternion, Rotation3, Vector3};
-use amethyst::core::transform::{LocalTransform, Transform, TransformBundle};
+use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::Entity;
 use amethyst::prelude::*;
 use amethyst::renderer::*;
-use amethyst_animation::{toggle_animation, AnimationBundle, AnimationSet, EndControl,
-                         VertexSkinningBundle};
+use amethyst_animation::{get_animation_set, AnimationBundle, AnimationCommand, AnimationSet,
+                         EndControl, VertexSkinningBundle};
 use amethyst_gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystem, GltfSceneOptions};
 
 struct Example;
@@ -40,7 +40,7 @@ impl State for Example {
         let entity = world
             .create_entity()
             .with(gltf_scene)
-            .with(Transform::default())
+            .with(GlobalTransform::default())
             .build();
 
         world.add_resource(Scene {
@@ -71,7 +71,7 @@ impl State for Example {
 
         info!("Put camera");
 
-        let mut camera_transform = LocalTransform::default();
+        let mut camera_transform = Transform::default();
         camera_transform.translation = Vector3::new(100.0, 20.0, 0.0);
         camera_transform.rotation = Quaternion::from_angle_y(Deg(90.));
         world
@@ -80,7 +80,7 @@ impl State for Example {
                 1024. / 768.,
                 Deg(60.),
             )))
-            .with(Transform::default())
+            .with(GlobalTransform::default())
             .with(camera_transform)
             .build();
 
@@ -109,20 +109,28 @@ impl State for Example {
                     ..
                 } => {
                     let mut scene = world.write_resource::<Scene>();
-                    let sets = world.read::<AnimationSet>();
+                    let sets = world.read::<AnimationSet<Transform>>();
                     let animations = sets.get(scene.entity).unwrap();
                     if animations.animations.len() > 0 {
+                        let animation = &animations.animations[scene.animation_index];
+                        let mut controls = world.write();
+                        let mut set =
+                            get_animation_set::<usize, Transform>(&mut controls, scene.entity);
+                        if set.has_animation(scene.animation_index) {
+                            set.toggle(scene.animation_index);
+                        } else {
+                            set.add_animation(
+                                scene.animation_index,
+                                animation,
+                                EndControl::Normal,
+                                1.0,
+                                AnimationCommand::Start,
+                            );
+                        }
+                        scene.animation_index += 1;
                         if scene.animation_index >= animations.animations.len() {
                             scene.animation_index = 0;
                         }
-                        let animation = &animations.animations[scene.animation_index];
-                        scene.animation_index += 1;
-                        toggle_animation(
-                            &mut world.write(),
-                            animation,
-                            scene.entity,
-                            EndControl::Normal,
-                        );
                     }
                     Trans::None
                 }
@@ -151,7 +159,12 @@ fn run() -> Result<(), amethyst::Error> {
     let mut game = Application::build(resources_directory, Example)?
         .with(GltfSceneLoaderSystem::new(), "loader_system", &[])
         .with_bundle(RenderBundle::new(pipe, Some(config)))?
-        .with_bundle(AnimationBundle::new().with_dep(&["loader_system"]))?
+        .with_bundle(
+            AnimationBundle::<usize, Transform>::new(
+                "animation_control_system",
+                "sampler_interpolation_system",
+            ).with_dep(&["loader_system"]),
+        )?
         .with_bundle(
             TransformBundle::new()
                 .with_dep(&["animation_control_system", "sampler_interpolation_system"]),

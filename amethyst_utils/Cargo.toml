@@ -1,7 +1,7 @@
 [package]
 name = "amethyst_utils"
-version = "0.1.0"
-authors = ["Simon Rönnberg <seamonr@gmail.com>"]
+version = "0.2.0"
+authors = ["Simon Rönnberg <seamonr@gmail.com>", "Joël Lupien <jojolepromain@gmail.com>"]
 description = "Amethyst utils"
 
 documentation = "https://www.amethyst.rs/doc/master/doc/amethyst_utils/"
@@ -16,4 +16,9 @@ travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
 amethyst_core = { path = "../amethyst_core", version = "0.1.0" }
-specs = "0.10"
+winit = "0.10"
+
+thread_profiler = { version = "0.1", optional = true }
+
+[features]
+profiler = [ "thread_profiler/thread_profiler" ]

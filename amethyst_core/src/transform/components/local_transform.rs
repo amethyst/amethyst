@@ -1,7 +1,8 @@
 //! Local transform component.
 
 use cgmath::{Array, Deg, ElementWise, EuclideanSpace, InnerSpace, Matrix3, Matrix4, One, Point3,
-             Quaternion, Rotation, Rotation3, SquareMatrix, Transform, Vector3, Zero};
+             Quaternion, Rotation, Rotation3, SquareMatrix, Transform as CgTransform, Vector3,
+             Zero};
 use orientation::Orientation;
 use specs::{Component, DenseVecStorage, FlaggedStorage};
 
@@ -9,7 +10,7 @@ use specs::{Component, DenseVecStorage, FlaggedStorage};
 ///
 /// Used for rendering position and orientation.
 #[derive(Clone, Debug, PartialEq,Serialize,Deserialize)]
-pub struct LocalTransform {
+pub struct Transform {
     /// Quaternion [w (scalar), x, y, z]
     pub rotation: Quaternion<f32>,
     /// Scale vector [x, y, z]
@@ -18,7 +19,7 @@ pub struct LocalTransform {
     pub translation: Vector3<f32>,
 }
 
-impl LocalTransform {
+impl Transform {
     /// Rotate to look at a point in space (without rolling)
     pub fn look_at(&mut self, orientation: &Orientation, position: Point3<f32>) -> &mut Self {
         self.rotation = Quaternion::look_at(
@@ -30,7 +31,7 @@ impl LocalTransform {
 
     /// Returns the local object matrix for the transform.
     ///
-    /// Combined with the parent's global `Transform` component it gives
+    /// Combined with the parent's `GlobalTransform` component it gives
     /// the global (or world) matrix for the current entity.
     #[inline]
     pub fn matrix(&self) -> Matrix4<f32> {
@@ -53,7 +54,11 @@ impl LocalTransform {
     /// Move relatively to its current position and orientation.
     #[inline]
     pub fn move_local(&mut self, axis: Vector3<f32>, amount: f32) -> &mut Self {
-        let delta = Quaternion::from(self.rotation).conjugate() * axis.normalize() * amount;
+        if axis.magnitude2() == 0.0 {
+            return self;
+        }
+
+        let delta = Quaternion::from(self.rotation) * axis.normalize() * amount;
 
         self.translation = self.translation + delta;
         self
@@ -172,9 +177,9 @@ impl LocalTransform {
     }
 }
 
-impl Default for LocalTransform {
+impl Default for Transform {
     fn default() -> Self {
-        LocalTransform {
+        Transform {
             translation: Vector3::zero(),
             rotation: Quaternion::one(),
             scale: Vector3::from_value(1.),
@@ -182,8 +187,8 @@ impl Default for LocalTransform {
     }
 }
 
-impl LocalTransform {
-    /// Create a new `LocalTransform`.
+impl Transform {
+    /// Create a new `Transform`.
     ///
     /// If you call `matrix` on this, then you would get an identity matrix.
     pub fn new() -> Self {
@@ -191,11 +196,11 @@ impl LocalTransform {
     }
 }
 
-impl Component for LocalTransform {
+impl Component for Transform {
     type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
 }
 
-impl Transform<Point3<f32>> for LocalTransform {
+impl CgTransform<Point3<f32>> for Transform {
     fn one() -> Self {
         Default::default()
     }

@@ -1,7 +1,7 @@
 use {Ball, Paddle, Side};
 use amethyst::assets::Loader;
 use amethyst::core::cgmath::Vector3;
-use amethyst::core::transform::{LocalTransform, Transform};
+use amethyst::core::transform::{GlobalTransform, Transform};
 use amethyst::ecs::World;
 use amethyst::prelude::*;
 use amethyst::renderer::{Camera, Event, KeyboardInput, Material, MeshHandle, PosTex, Projection,
@@ -58,7 +58,7 @@ fn initialise_camera(world: &mut World) {
             arena_height,
             0.0,
         )))
-        .with(Transform(
+        .with(GlobalTransform(
             Matrix4::from_translation(Vector3::new(0.0, 0.0, 1.0)).into(),
         ))
         .build();
@@ -79,8 +79,8 @@ fn hide_cursor(world: &mut World) {
 
 /// Initialises one paddle on the left, and one paddle on the right.
 fn initialise_paddles(world: &mut World) {
-    let mut left_transform = LocalTransform::default();
-    let mut right_transform = LocalTransform::default();
+    let mut left_transform = Transform::default();
+    let mut right_transform = Transform::default();
 
     let (arena_height, arena_width) = {
         let config = &world.read_resource::<ArenaConfig>();
@@ -148,7 +148,7 @@ fn initialise_paddles(world: &mut World) {
             width: left_width,
             velocity: left_velocity,
         })
-        .with(Transform::default())
+        .with(GlobalTransform::default())
         .with(left_transform)
         .build();
     // Create right paddle
@@ -162,7 +162,7 @@ fn initialise_paddles(world: &mut World) {
             width: right_width,
             velocity: right_velocity,
         })
-        .with(Transform::default())
+        .with(GlobalTransform::default())
         .with(right_transform)
         .build();
 }
@@ -186,7 +186,7 @@ fn initialise_balls(world: &mut World) {
     // Create the mesh, material and translation.
     let mesh = create_mesh(world, generate_circle_vertices(radius, 16));
     let material = create_colour_material(world, colour);
-    let mut local_transform = LocalTransform::default();
+    let mut local_transform = Transform::default();
     local_transform.translation = Vector3::new(arena_width / 2.0, arena_height / 2.0, 0.0);
 
     world
@@ -198,7 +198,7 @@ fn initialise_balls(world: &mut World) {
             velocity: [velocity_x, velocity_y],
         })
         .with(local_transform)
-        .with(Transform::default())
+        .with(GlobalTransform::default())
         .build();
 }
 
@@ -212,11 +212,11 @@ fn initialise_score(world: &mut World) {
     );
     let mut p1_transform = UiTransform::new("P1".to_string(), 0., 0., 1., 55., 50., 0);
     let p1_size_fn = |transform: &mut UiTransform, (width, _height)| {
-        transform.x = (width / 2.) - 100. - transform.width / 2.;
+        transform.local_x = (width / 2.) - 100. - transform.width / 2.;
     };
     let mut p2_transform = UiTransform::new("P2".to_string(), 0., 0., 1., 55., 50., 0);
     let p2_size_fn = |transform: &mut UiTransform, (width, _height)| {
-        transform.x = (width / 2.) + 100. - transform.width / 2.;
+        transform.local_x = (width / 2.) + 100. - transform.width / 2.;
     };
     {
         let dim = world.read_resource::<ScreenDimensions>();

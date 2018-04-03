@@ -1,5 +1,5 @@
 use amethyst_core::cgmath::Point3;
-use specs::{Component, HashMapStorage};
+use amethyst_core::specs::{Component, HashMapStorage};
 
 use output::Output;
 
@@ -8,7 +8,7 @@ use output::Output;
 pub struct AudioListener {
     /// Output used by this listener to emit sounds to
     pub output: Output,
-    /// Position of the left_ear relative to the global transform on this entity.
+    /// Position of the left ear relative to the global transform on this entity.
     pub left_ear: Point3<f32>,
     /// Position of the right ear relative to the global transform on this entity.
     pub right_ear: Point3<f32>,

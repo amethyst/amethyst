@@ -299,7 +299,7 @@ The Amethyst book is generated using a different documentation tool called
 directory of the Amethyst repository.
 
 [mb]: https://github.com/azerupi/mdBook
-[bk]: book/src
+[bk]: ../book/src
 
 Documentation of any kind should adhere to the following standard:
 

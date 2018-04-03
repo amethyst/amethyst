@@ -52,7 +52,7 @@ fn run() -> Result<()> {
         "{}/examples/pong/resources/input.ron",
         env!("CARGO_MANIFEST_DIR")
     );
-    
+
     let config = format!(
         "{}/examples/appendix_a/resources/config.ron",
         env!("CARGO_MANIFEST_DIR")
@@ -75,7 +75,7 @@ fn run() -> Result<()> {
         .with_bundle(PongBundle::new(&config))?
         .with_bundle(TransformBundle::new().with_dep(&["ball_system", "paddle_system"]))?
         .with_bundle(AudioBundle::new(|music: &mut Music| music.music.next()))?
-        .with_bundle(UiBundle::new())?
+        .with_bundle(UiBundle::<String, String>::new())?
         .with_bundle(RenderBundle::new(pipe, Some(display_config)))?
         .build()?;
     game.run();

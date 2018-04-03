@@ -7,8 +7,11 @@ extern crate fnv;
 extern crate serde;
 extern crate shrev;
 extern crate smallvec;
-extern crate specs;
 extern crate winit;
+
+#[macro_use]
+#[cfg(feature = "profiler")]
+extern crate thread_profiler;
 
 pub use self::axis::Axis;
 pub use self::bindings::Bindings;

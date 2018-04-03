@@ -2,7 +2,7 @@ use {Ball, ScoreBoard};
 use amethyst::assets::AssetStorage;
 use amethyst::audio::Source;
 use amethyst::audio::output::Output;
-use amethyst::core::transform::LocalTransform;
+use amethyst::core::transform::Transform;
 use amethyst::ecs::{Entity, Fetch, FetchMut, Join, System, WriteStorage};
 use amethyst::ui::UiText;
 use audio::Sounds;
@@ -16,7 +16,7 @@ pub struct WinnerSystem;
 impl<'s> System<'s> for WinnerSystem {
     type SystemData = (
         WriteStorage<'s, Ball>,
-        WriteStorage<'s, LocalTransform>,
+        WriteStorage<'s, Transform>,
         WriteStorage<'s, UiText>,
         FetchMut<'s, ScoreBoard>,
         Fetch<'s, AssetStorage<Source>>,
@@ -41,7 +41,6 @@ impl<'s> System<'s> for WinnerSystem {
         ): Self::SystemData,
     ) {
         for (ball, transform) in (&mut balls, &mut transforms).join() {
-
             let ball_x = transform.translation[0];
 
             let did_hit = if ball_x <= ball.radius {

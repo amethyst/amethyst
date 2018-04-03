@@ -2,9 +2,9 @@ use std::io::Cursor;
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 
+use amethyst_core::specs::{BTreeStorage, Component};
 use rodio::{Decoder, SpatialSink};
 use smallvec::SmallVec;
-use specs::{BTreeStorage, Component};
 
 use DecoderError;
 use source::Source;

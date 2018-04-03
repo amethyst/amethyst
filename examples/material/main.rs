@@ -4,8 +4,8 @@ extern crate amethyst;
 extern crate genmesh;
 
 use amethyst::assets::Loader;
-use amethyst::core::cgmath::{Deg, InnerSpace, Matrix4, Vector3};
-use amethyst::core::transform::Transform;
+use amethyst::core::cgmath::{Deg, Matrix4, Vector3};
+use amethyst::core::transform::GlobalTransform;
 use amethyst::prelude::*;
 use amethyst::renderer::*;
 use genmesh::{MapToVertices, Triangulate, Vertices};
@@ -62,7 +62,7 @@ impl State for Example {
 
                 world
                     .create_entity()
-                    .with(Transform(pos.into()))
+                    .with(GlobalTransform(pos.into()))
                     .with(mesh.clone())
                     .with(mtl)
                     .build();
@@ -95,7 +95,7 @@ impl State for Example {
         world
             .create_entity()
             .with(Camera::from(Projection::perspective(1.3, Deg(60.0))))
-            .with(Transform(transform.into()))
+            .with(GlobalTransform(transform.into()))
             .build();
     }
 
@@ -147,13 +147,13 @@ fn main() {
 
 fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTangTex> {
     SphereUV::new(u, v)
-        .vertex(|(x, y, z)| {
-            let normal = Vector3::from([x, y, z]).normalize();
+        .vertex(|vertex| {
+            let normal = Vector3::from(vertex.normal);
             let up = Vector3::from([0.0, 1.0, 0.0]);
             let tangent = normal.cross(up).cross(normal);
             PosNormTangTex {
-                position: [x, y, z],
-                normal: normal.into(),
+                position: vertex.pos,
+                normal: vertex.normal,
                 tangent: tangent.into(),
                 tex_coord: [0.1, 0.1],
             }

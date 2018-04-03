@@ -1,8 +1,8 @@
-use amethyst_core::Transform;
+use amethyst_core::GlobalTransform;
 use amethyst_core::cgmath::{Matrix4, SquareMatrix};
+use amethyst_core::specs::{Join, ReadStorage, System, WriteStorage};
 use amethyst_renderer::JointTransforms;
 use hibitset::BitSet;
-use specs::{Join, ReadStorage, System, WriteStorage};
 
 use super::resources::*;
 
@@ -30,7 +30,7 @@ impl VertexSkinningSystem {
 impl<'a> System<'a> for VertexSkinningSystem {
     type SystemData = (
         ReadStorage<'a, Joint>,
-        ReadStorage<'a, Transform>,
+        ReadStorage<'a, GlobalTransform>,
         ReadStorage<'a, Skin>,
         WriteStorage<'a, JointTransforms>,
     );

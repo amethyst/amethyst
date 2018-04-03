@@ -1,7 +1,7 @@
 //! Camera type with support for perspective and orthographic projections.
 
 use amethyst_core::cgmath::{Deg, Matrix4, Ortho, PerspectiveFov};
-use specs::{Component, Entity, HashMapStorage};
+use amethyst_core::specs::{Component, Entity, HashMapStorage};
 
 /// The projection mode of a `Camera`.
 ///
@@ -37,7 +37,7 @@ impl Projection {
     pub fn perspective<D: Into<Deg<f32>>>(aspect: f32, fov: D) -> Projection {
         Projection::Perspective(PerspectiveFov {
             fovy: fov.into().into(),
-            aspect: aspect,
+            aspect,
             near: 0.1,
             far: 2000.0,
         })

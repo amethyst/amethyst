@@ -5,15 +5,16 @@ extern crate amethyst_animation;
 extern crate genmesh;
 
 use amethyst::assets::{Handle, Loader};
-use amethyst::core::{LocalTransform, Parent, Transform, TransformBundle};
-use amethyst::core::cgmath::{Deg, InnerSpace, Vector3};
+use amethyst::core::{GlobalTransform, Parent, Transform, TransformBundle};
+use amethyst::core::cgmath::Deg;
 use amethyst::ecs::{Entity, World};
 use amethyst::prelude::*;
-use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Event, KeyboardInput,
-                         Light, Mesh, Pipeline, PointLight, PosNormTex, Projection, RenderBundle,
-                         Rgba, Stage, VirtualKeyCode, WindowEvent};
-use amethyst_animation::{play_animation, Animation, AnimationBundle, AnimationOutput, EndControl,
-                         InterpolationType, Sampler};
+use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, ElementState, Event,
+                         KeyboardInput, Light, Mesh, Pipeline, PointLight, PosNormTex, Projection,
+                         RenderBundle, Rgba, Stage, VirtualKeyCode, WindowEvent};
+use amethyst_animation::{get_animation_set, Animation, AnimationBundle, AnimationCommand,
+                         EndControl, InterpolationFunction, Sampler, StepDirection,
+                         TransformChannel};
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 
@@ -28,7 +29,7 @@ const LIGHT_INTENSITY: f32 = 3.0;
 #[derive(Default)]
 struct Example {
     pub sphere: Option<Entity>,
-    pub animation: Option<Handle<Animation>>,
+    pub animation: Option<Handle<Animation<Transform>>>,
 }
 
 impl State for Example {
@@ -54,17 +55,42 @@ impl State for Example {
                 WindowEvent::KeyboardInput {
                     input:
                         KeyboardInput {
-                            virtual_keycode: Some(VirtualKeyCode::Space),
+                            virtual_keycode,
+                            state: ElementState::Released,
                             ..
                         },
                     ..
                 } => {
-                    play_animation(
-                        &mut world.write(),
-                        self.animation.as_ref().unwrap(),
-                        self.sphere.unwrap().clone(),
-                        EndControl::Loop(None),
-                    );
+                    match virtual_keycode {
+                        Some(VirtualKeyCode::Space) => {
+                            get_animation_set::<u32, Transform>(
+                                &mut world.write(),
+                                self.sphere.unwrap().clone(),
+                            ).add_animation(
+                                1,
+                                self.animation.as_ref().unwrap(),
+                                EndControl::Loop(None),
+                                0.0,
+                                AnimationCommand::Start,
+                            );
+                        }
+
+                        Some(VirtualKeyCode::Left) => {
+                            get_animation_set::<u32, Transform>(
+                                &mut world.write(),
+                                self.sphere.unwrap().clone(),
+                            ).step(1, StepDirection::Backward);
+                        }
+
+                        Some(VirtualKeyCode::Right) => {
+                            get_animation_set::<u32, Transform>(
+                                &mut world.write(),
+                                self.sphere.unwrap().clone(),
+                            ).step(1, StepDirection::Forward);
+                        }
+
+                        _ => {}
+                    }
 
                     Trans::None
                 }
@@ -92,7 +118,10 @@ fn run() -> Result<(), amethyst::Error> {
     let config = DisplayConfig::load(&display_config_path);
 
     let mut game = Application::build(resources, Example::default())?
-        .with_bundle(AnimationBundle::new())?
+        .with_bundle(AnimationBundle::<u32, Transform>::new(
+            "animation_control_system",
+            "sampler_interpolation_system",
+        ))?
         .with_bundle(TransformBundle::new().with_dep(&["sampler_interpolation_system"]))?
         .with_bundle(RenderBundle::new(pipe, Some(config)))?
         .build()?;
@@ -109,9 +138,9 @@ fn main() {
 
 fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTex> {
     SphereUV::new(u, v)
-        .vertex(|(x, y, z)| PosNormTex {
-            position: [x, y, z],
-            normal: Vector3::from([x, y, z]).normalize().into(),
+        .vertex(|vertex| PosNormTex {
+            position: vertex.pos,
+            normal: vertex.normal,
             tex_coord: [0.1, 0.1],
         })
         .triangulate()
@@ -149,18 +178,18 @@ fn initialise_sphere(world: &mut World) -> Entity {
 
     let parent_entity = world
         .create_entity()
-        .with(LocalTransform::default())
         .with(Transform::default())
+        .with(GlobalTransform::default())
         .build();
 
     // Create a sphere entity using the mesh and the material.
     world
         .create_entity()
-        .with(LocalTransform {
+        .with(Transform {
             translation: [0., 1.0, 0.].into(),
-            ..LocalTransform::default()
+            ..Transform::default()
         })
-        .with(Transform::default())
+        .with(GlobalTransform::default())
         .with(Parent {
             entity: parent_entity.clone(),
         })
@@ -176,18 +205,18 @@ fn initialise_sphere(world: &mut World) -> Entity {
     parent_entity
 }
 
-fn initialise_animation(world: &mut World) -> Handle<Animation> {
+fn initialise_animation(world: &mut World) -> Handle<Animation<Transform>> {
     let loader = world.write_resource::<Loader>();
     let translation_sampler = Sampler {
         input: vec![0., 1., 2., 3., 4.],
-        ty: InterpolationType::Linear,
-        output: AnimationOutput::Translation(vec![
-            [0., 0., 0.],
-            [1., 0., 0.],
-            [0., 0., 0.],
-            [-1., 0., 0.],
-            [0., 0., 0.],
-        ]),
+        function: InterpolationFunction::Linear,
+        output: vec![
+            [0., 0., 0.].into(),
+            [1., 0., 0.].into(),
+            [0., 0., 0.].into(),
+            [-1., 0., 0.].into(),
+            [0., 0., 0.].into(),
+        ],
     };
 
     /*let scale_sampler = Sampler {
@@ -205,14 +234,14 @@ fn initialise_animation(world: &mut World) -> Handle<Animation> {
     use std::f32::consts::FRAC_1_SQRT_2;
     let rotation_sampler = Sampler {
         input: vec![0., 1., 2., 3., 4.],
-        ty: InterpolationType::Linear,
-        output: AnimationOutput::Rotation(vec![
-            [1., 0., 0., 0.],
-            [FRAC_1_SQRT_2, 0., 0., FRAC_1_SQRT_2],
-            [0., 0., 0., 1.],
-            [-FRAC_1_SQRT_2, 0., 0., FRAC_1_SQRT_2],
-            [-1., 0., 0., 0.],
-        ]),
+        function: InterpolationFunction::SphericalLinear,
+        output: vec![
+            [1., 0., 0., 0.].into(),
+            [FRAC_1_SQRT_2, 0., 0., FRAC_1_SQRT_2].into(),
+            [0., 0., 0., 1.].into(),
+            [-FRAC_1_SQRT_2, 0., 0., FRAC_1_SQRT_2].into(),
+            [-1., 0., 0., 0.].into(),
+        ],
     };
     let translation_animation_handle =
         loader.load_from_data(translation_sampler, (), &world.read_resource());
@@ -221,9 +250,13 @@ fn initialise_animation(world: &mut World) -> Handle<Animation> {
         loader.load_from_data(rotation_sampler, (), &world.read_resource());
     let animation = Animation {
         nodes: vec![
-            (0, translation_animation_handle),
+            (
+                0,
+                TransformChannel::Translation,
+                translation_animation_handle,
+            ),
             //(0, scale_animation_handle),
-            (0, rotation_animation_handle),
+            (0, TransformChannel::Rotation, rotation_animation_handle),
         ],
     };
     loader.load_from_data(animation, (), &world.read_resource())
@@ -254,6 +287,6 @@ fn initialise_camera(world: &mut World) {
     world
         .create_entity()
         .with(Camera::from(Projection::perspective(1.3, Deg(60.0))))
-        .with(Transform(transform.into()))
+        .with(GlobalTransform(transform.into()))
         .build();
 }
