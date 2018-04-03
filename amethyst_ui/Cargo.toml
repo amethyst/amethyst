@@ -27,6 +27,8 @@ shrev = "0.8.1"
 unicode-normalization = "0.1"
 unicode-segmentation = "1.2"
 winit = "0.11"
+shred = "0.5"
+shred-derive = "0.3"
 
 thread_profiler = { version = "0.1", optional = true }
 
