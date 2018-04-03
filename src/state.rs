@@ -54,7 +54,8 @@ pub trait State {
 #[derivative(Debug)]
 pub struct StateMachine<'a> {
     running: bool,
-    #[derivative(Debug = "ignore")] state_stack: Vec<Box<State + 'a>>,
+    #[derivative(Debug = "ignore")]
+    state_stack: Vec<Box<State + 'a>>,
 }
 
 impl<'a> StateMachine<'a> {

@@ -12,7 +12,6 @@ extern crate imagefmt;
 extern crate itertools;
 #[macro_use]
 extern crate log;
-extern crate specs;
 
 #[macro_use]
 #[cfg(feature = "profiler")]
@@ -25,10 +24,10 @@ use std::ops::Range;
 
 use animation::{Animation, Sampler, SamplerPrimitive, TransformChannel};
 use assets::{Asset, Error as AssetError, Handle};
+use core::specs::VecStorage;
 use core::transform::Transform;
 use gfx::Primitive;
 use renderer::{AnimatedVertexBufferCombination, MeshHandle, TextureData, TextureHandle};
-use specs::VecStorage;
 
 mod format;
 mod systems;

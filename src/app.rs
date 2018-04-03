@@ -37,7 +37,8 @@ pub struct Application<'a, 'b> {
     #[derivative(Debug = "ignore")]
     pub world: World,
 
-    #[derivative(Debug = "ignore")] dispatcher: Dispatcher<'a, 'b>,
+    #[derivative(Debug = "ignore")]
+    dispatcher: Dispatcher<'a, 'b>,
     events_reader_id: ReaderId<Event>,
     states: StateMachine<'a>,
     ignore_window_close: bool,

@@ -1,5 +1,5 @@
+use amethyst_core::specs::{Component, DenseVecStorage, Fetch, Join, System, WriteStorage};
 use shrev::{EventChannel, ReaderId};
-use specs::{Component, DenseVecStorage, Fetch, Join, System, WriteStorage};
 use winit::{Event, WindowEvent};
 
 use super::*;

@@ -2,8 +2,9 @@ use std::marker;
 use std::time::Duration;
 
 use amethyst_assets::{AssetStorage, Handle};
+use amethyst_core::specs::{Component, Entities, Entity, Fetch, Join, ReadStorage, System,
+                           WriteStorage};
 use minterpolate::InterpolationPrimitive;
-use specs::{Component, Entities, Entity, Fetch, Join, ReadStorage, System, WriteStorage};
 
 use resources::{Animation, AnimationCommand, AnimationControl, AnimationControlSet,
                 AnimationHierarchy, AnimationSampling, ControlState, RestState, Sampler,

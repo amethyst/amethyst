@@ -1,7 +1,7 @@
 use amethyst_core::cgmath::BaseNum;
 use amethyst_core::cgmath::num_traits::NumCast;
+use amethyst_core::specs::{Entity, WriteStorage};
 use minterpolate::InterpolationPrimitive;
-use specs::{Entity, WriteStorage};
 
 use resources::{AnimationControlSet, AnimationSampling};
 

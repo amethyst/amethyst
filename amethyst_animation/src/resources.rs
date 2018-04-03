@@ -4,10 +4,10 @@ use std::marker;
 use std::time::Duration;
 
 use amethyst_assets::{Asset, AssetStorage, Handle, Result};
+use amethyst_core::specs::{Component, DenseVecStorage, Entity, VecStorage, WriteStorage};
 use amethyst_core::timing::{duration_to_secs, secs_to_duration};
 use fnv::FnvHashMap;
 use minterpolate::{get_input_index, InterpolationFunction, InterpolationPrimitive};
-use specs::{Component, DenseVecStorage, Entity, VecStorage, WriteStorage};
 
 /// Blend method for sampler blending
 #[derive(Clone, Copy, Debug, PartialOrd, PartialEq, Eq, Hash)]

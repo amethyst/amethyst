@@ -1,5 +1,5 @@
 use amethyst_core::cgmath::Point3;
-use specs::{Component, HashMapStorage};
+use amethyst_core::specs::{Component, HashMapStorage};
 
 use output::Output;
 
