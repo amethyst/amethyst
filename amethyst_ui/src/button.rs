@@ -1,13 +1,12 @@
-use super::{Anchor, Anchored, FontAsset, FontHandle, Stretch, Stretched, TtfFormat, UiImage, UiText,
-            UiTransform};
+use super::{Anchor, Anchored, FontAsset, FontHandle, Stretch, Stretched, TtfFormat, UiImage,
+            UiText, UiTransform};
 ///! A clickable button.
 use amethyst_assets::{AssetStorage, Loader};
 use amethyst_core::Parent;
 use amethyst_renderer::Texture;
-use specs::{Entity, World, Fetch};
+use shred::SystemData;
+use specs::{Entities, Entity, Fetch, LazyUpdate, World};
 
-const DEFAULT_X: f32 = 0.0;
-const DEFAULT_Y: f32 = 0.0;
 const DEFAULT_Z: f32 = -1.0;
 const DEFAULT_WIDTH: f32 = 128.0;
 const DEFAULT_HEIGHT: f32 = 64.0;
@@ -17,20 +16,31 @@ const DEFAULT_TXT_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 const DEFAULT_FONT_NAME: &'static str = "font/square.ttf";
 
 /// Container that wraps the resources we need to initialize button defaults
+#[derive(SystemData)]
 pub struct UiButtonResources<'a> {
     loader: Fetch<'a, Loader>,
     font_asset: Fetch<'a, AssetStorage<FontAsset>>,
     texture_asset: Fetch<'a, AssetStorage<Texture>>,
 }
 
-impl <'a> UiButtonResources<'a> {
-    /// Grab the resources we need from the world. 
-    pub fn from_world(world: &World) -> UiButtonResources {
-        UiButtonResources {
-            loader: world.read_resource::<Loader>(),
-            font_asset: world.read_resource::<AssetStorage<FontAsset>>(),
-            texture_asset: world.read_resource::<AssetStorage<Texture>>(),
-        }
+/// Container that wraps the resources that comprise a button
+#[derive(SystemData)]
+pub struct UiButtonLazyResources<'a> {
+    lazy: Fetch<'a, LazyUpdate>,
+    entities: Entities<'a>,
+}
+
+impl <'a> UiButtonLazyResources<'a> {
+    /// Grab the resources needed for lazy constructor from the world.
+    pub fn from_world(world: &'a World) -> Self {
+        Self::fetch(&world.res, 0)
+    }
+}
+
+impl<'a> UiButtonResources<'a> {
+    /// Grab the resources we need from the world.
+    pub fn from_world(world: &'a World) -> Self {
+        Self::fetch(&world.res, 0)
     }
 }
 
@@ -57,8 +67,11 @@ impl<'a> UiButtonBuilder<'a> {
     /// Construct a new UiButtonBuilder.
     /// This allows easy use of default values for text and button appearance and allows the user
     /// to easily set other UI-related options.
-    pub fn new<'b, S: ToString>(name: &'a str, text: S, resources: UiButtonResources<'b>) -> UiButtonBuilder<'a> {
-
+    pub fn new<'b, S: ToString>(
+        name: &'a str,
+        text: S,
+        resources: UiButtonResources<'b>,
+    ) -> UiButtonBuilder<'a> {
         let (text, image) = {
             let loader = &resources.loader;
 
@@ -70,11 +83,8 @@ impl<'a> UiButtonBuilder<'a> {
                 &resources.font_asset,
             );
             let text = UiText::new(font, text.to_string(), DEFAULT_TXT_COLOR, 32.0);
-            let grey = loader.load_from_data(
-                DEFAULT_BKGD_COLOR.into(),
-                (),
-                &resources.texture_asset,
-            );
+            let grey =
+                loader.load_from_data(DEFAULT_BKGD_COLOR.into(), (), &resources.texture_asset);
             let image = UiImage { texture: grey };
             (text, image)
         };
@@ -147,6 +157,11 @@ impl<'a> UiButtonBuilder<'a> {
         self
     }
 
+    /// Provide an X and Y position for the button.
+    ///
+    /// This will create a default UiTransform if one is not already attached.
+    /// See `DEFAULT_Z`, `DEFAULT_WIDTH`, `DEFAULT_HEIGHT`, and `DEFAULT_TAB_ORDER` for
+    /// the values that will be provided to the default UiTransform.
     pub fn with_position(mut self, x: f32, y: f32) -> Self {
         self.transform = if let Some(mut t) = self.transform.take() {
             t.local_x = x;
@@ -164,7 +179,8 @@ impl<'a> UiButtonBuilder<'a> {
                 DEFAULT_Z,
                 DEFAULT_WIDTH,
                 DEFAULT_HEIGHT,
-                DEFAULT_TAB_ORDER))
+                DEFAULT_TAB_ORDER,
+            ))
         };
         self
     }
@@ -212,10 +228,32 @@ impl<'a> UiButtonBuilder<'a> {
         }
     }
 
-    /// Create a UiButton from a lazy updater.
-    pub fn build(mut self, lazy: &LazyUpdate) -> UiButton {
-        let image_entity: self.build_image(lazy);
-        let text_entity = self.build_text(&image_entity, lazy);
+    /// Lazily build the UiButton. Need to call `World::maintain` to have the values actually added.
+    pub fn lazy_build(mut self, res: UiButtonLazyResources) -> UiButton {
+        let image_entity = res.entities.create();
+        res.lazy.insert(image_entity, self.image);
+        if let Some(parent) = self.parent.take() {
+            res.lazy.insert(image_entity, parent);
+        }
+        if let Some(transform) = self.transform.take() {
+            res.lazy.insert(image_entity, transform);
+        }
+        if let Some(anchored) = self.anchored.take() {
+            res.lazy.insert(image_entity, anchored);
+        }
+        if let Some(stretched) = self.stretched.take() {
+            res.lazy.insert(image_entity, stretched);
+        }
+
+        let mut id = self.name.to_string();
+        id.push_str("_btn_txt");
+        let text_entity = res.entities.create();
+        res.lazy.insert(text_entity, UiTransform::new(id, 0., 0., -1., 0., 0., 10));
+        res.lazy.insert(text_entity, Anchored::new(Anchor::Middle));
+        res.lazy.insert(text_entity, Stretched::new(Stretch::XY, 0., 0.));
+        res.lazy.insert(text_entity, self.text);
+        res.lazy.insert(text_entity, Parent { entity: image_entity.clone() });
+
         UiButton {
             text: text_entity,
             image: image_entity,
