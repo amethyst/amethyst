@@ -1,11 +1,11 @@
-use super::{Anchor, Anchored, FontAsset, FontHandle, Stretch, Stretched, TtfFormat, UiImage,
+use super::{Anchor, Anchored, FontAsset, FontHandle, MouseReactive, Stretch, Stretched, TtfFormat, UiImage,
             UiText, UiTransform};
 ///! A clickable button.
 use amethyst_assets::{AssetStorage, Loader};
 use amethyst_core::Parent;
 use amethyst_renderer::Texture;
 use shred::SystemData;
-use specs::{Entities, Entity, Fetch, LazyUpdate, World};
+use specs::{Entities, Entity, Fetch, World, WriteStorage};
 
 const DEFAULT_Z: f32 = -1.0;
 const DEFAULT_WIDTH: f32 = 128.0;
@@ -18,26 +18,32 @@ const DEFAULT_FONT_NAME: &'static str = "font/square.ttf";
 /// Container that wraps the resources we need to initialize button defaults
 #[derive(SystemData)]
 pub struct UiButtonResources<'a> {
-    loader: Fetch<'a, Loader>,
     font_asset: Fetch<'a, AssetStorage<FontAsset>>,
+    loader: Fetch<'a, Loader>,
     texture_asset: Fetch<'a, AssetStorage<Texture>>,
 }
 
-/// Container that wraps the resources that comprise a button
+/// Container for all the resources the builder needs to make a new UiButton.
 #[derive(SystemData)]
-pub struct UiButtonLazyResources<'a> {
-    lazy: Fetch<'a, LazyUpdate>,
+struct UiButtonBuilderResources<'a> {
+    anchored: WriteStorage<'a, Anchored>,
     entities: Entities<'a>,
+    image: WriteStorage<'a, UiImage>,
+    mouse_reactive: WriteStorage<'a, MouseReactive>,
+    parent: WriteStorage<'a, Parent>,
+    stretched: WriteStorage<'a, Stretched>,
+    text: WriteStorage<'a, UiText>,
+    transform: WriteStorage<'a, UiTransform>,
 }
 
-impl <'a> UiButtonLazyResources<'a> {
-    /// Grab the resources needed for lazy constructor from the world.
+impl<'a> UiButtonResources<'a> {
+    /// Grab the resources we need from the world.
     pub fn from_world(world: &'a World) -> Self {
         Self::fetch(&world.res, 0)
     }
 }
 
-impl<'a> UiButtonResources<'a> {
+impl<'a> UiButtonBuilderResources<'a> {
     /// Grab the resources we need from the world.
     pub fn from_world(world: &'a World) -> Self {
         Self::fetch(&world.res, 0)
@@ -185,78 +191,47 @@ impl<'a> UiButtonBuilder<'a> {
         self
     }
 
-    fn build_text(&mut self, image: &Entity, world: &mut World) -> Entity {
-        let mut id = self.name.to_string();
-        id.push_str("_btn_txt");
-        world
-            .create_entity()
-            .with(UiTransform::new(id, 0., 0., -1., 0., 0., 10))
-            .with(Anchored::new(Anchor::Middle))
-            .with(Stretched::new(Stretch::XY, 0., 0.))
-            .with(self.text.clone())
-            .with(Parent {
-                entity: image.clone(),
-            })
-            .build()
-    }
-
-    fn build_image(&mut self, world: &mut World) -> Entity {
-        let mut image_builder = world.create_entity().with(self.image.clone());
-        if let Some(parent) = self.parent.take() {
-            image_builder = image_builder.with(parent);
-        }
-        if let Some(transform) = self.transform.take() {
-            image_builder = image_builder.with(transform);
-        }
-        if let Some(anchored) = self.anchored.take() {
-            image_builder = image_builder.with(anchored);
-        }
-        if let Some(stretched) = self.stretched.take() {
-            image_builder = image_builder.with(stretched);
-        }
-
-        image_builder.build()
-    }
-
-    /// Create the UiButton based on provided configuration parameters.
-    pub fn build(mut self, world: &mut World) -> UiButton {
-        let image_entity = self.build_image(world);
-        let text_entity = self.build_text(&image_entity, world);
-        UiButton {
-            text: text_entity,
-            image: image_entity,
-        }
-    }
-
-    /// Lazily build the UiButton. Need to call `World::maintain` to have the values actually added.
-    pub fn lazy_build(mut self, res: UiButtonLazyResources) -> UiButton {
+    fn build(mut self, mut res: UiButtonBuilderResources) -> UiButton {
         let image_entity = res.entities.create();
-        res.lazy.insert(image_entity, self.image);
+        res.image.insert(image_entity, self.image);
+        res.mouse_reactive.insert(image_entity, MouseReactive);
         if let Some(parent) = self.parent.take() {
-            res.lazy.insert(image_entity, parent);
+            res.parent.insert(image_entity, parent);
         }
         if let Some(transform) = self.transform.take() {
-            res.lazy.insert(image_entity, transform);
+            res.transform.insert(image_entity, transform);
         }
         if let Some(anchored) = self.anchored.take() {
-            res.lazy.insert(image_entity, anchored);
+            res.anchored.insert(image_entity, anchored);
         }
         if let Some(stretched) = self.stretched.take() {
-            res.lazy.insert(image_entity, stretched);
+            res.stretched.insert(image_entity, stretched);
         }
 
         let mut id = self.name.to_string();
         id.push_str("_btn_txt");
         let text_entity = res.entities.create();
-        res.lazy.insert(text_entity, UiTransform::new(id, 0., 0., -1., 0., 0., 10));
-        res.lazy.insert(text_entity, Anchored::new(Anchor::Middle));
-        res.lazy.insert(text_entity, Stretched::new(Stretch::XY, 0., 0.));
-        res.lazy.insert(text_entity, self.text);
-        res.lazy.insert(text_entity, Parent { entity: image_entity.clone() });
+        res.transform
+            .insert(text_entity, UiTransform::new(id, 0., 0., -1., 0., 0., 10));
+        res.anchored
+            .insert(text_entity, Anchored::new(Anchor::Middle));
+        res.stretched
+            .insert(text_entity, Stretched::new(Stretch::XY, 0., 0.));
+        res.text.insert(text_entity, self.text);
+        res.parent.insert(
+            text_entity,
+            Parent {
+                entity: image_entity.clone(),
+            },
+        );
 
         UiButton {
             text: text_entity,
             image: image_entity,
         }
+    }
+    /// Create the UiButton based on provided configuration parameters.
+    pub fn build_from_world(self, world: &World) -> UiButton {
+        self.build(UiButtonBuilderResources::from_world(world))
     }
 }

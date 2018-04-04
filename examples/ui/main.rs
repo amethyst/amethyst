@@ -18,12 +18,12 @@ use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light,
                          Texture};
 use amethyst::shrev::{EventChannel, ReaderId};
 use amethyst::ui::{Anchor, Anchored, DrawUi, FontAsset, MouseReactive, Stretch, Stretched,
-                   TextEditing, TtfFormat, UiBundle, UiButtonBuilder, UiButtonLazyResources,
-                   UiButtonResources, UiEvent, UiFocused, UiImage, UiText, UiTransform};
+                   TextEditing, TtfFormat, UiBundle, UiButtonBuilder, UiButtonResources, UiEvent,
+                   UiFocused, UiImage, UiText, UiTransform};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::winit::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
-use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
+use genmesh::{MapToVertices, Triangulate, Vertices};
 
 const SPHERE_COLOUR: [f32; 4] = [0.0, 0.0, 1.0, 1.0]; // blue
 const AMBIENT_LIGHT_COLOUR: Rgba = Rgba(0.01, 0.01, 0.01, 1.0); // near-black
@@ -203,13 +203,16 @@ impl State for Example {
                     entity: background.clone(),
                 })
         };
-        button_builder.build(world);
+        button_builder.build_from_world(world);
         let simple_builder = {
-            UiButtonBuilder::new("simple_btn", "Simpler!", UiButtonResources::from_world(&world))
-                .with_font(font.clone())
+            UiButtonBuilder::new(
+                "simple_btn",
+                "Simpler!",
+                UiButtonResources::from_world(&world),
+            ).with_font(font.clone())
                 .with_position(250.0, 50.0)
         };
-        simple_builder.lazy_build(UiButtonLazyResources::from_world(world));
+        simple_builder.build_from_world(world);
 
         let fps = world
             .create_entity()
