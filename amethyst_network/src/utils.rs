@@ -1,10 +1,10 @@
 extern crate bincode;
 
-use std::net::UdpSocket;
+//use std::net::UdpSocket;
 use super::{NetConnection, NetConnectionPool, NetEvent, NetSendBuffer, NetSourcedEvent};
 use bincode::{deserialize, serialize, Infinite};
 use bincode::internal::ErrorKind;
-//use mio::net::UdpSocket;
+use mio::net::UdpSocket;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use std::clone::Clone;

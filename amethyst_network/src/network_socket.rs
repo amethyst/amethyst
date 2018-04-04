@@ -1,11 +1,11 @@
 //! The network client System
 
 use specs::{Fetch, FetchMut, System};
-use std::net::UdpSocket;
+//use std::net::UdpSocket;
 use super::{deserialize_event, send_event, ConnectionState, NetConnection, NetConnectionPool,
             NetEvent, NetFilter, NetReceiveBuffer, NetSendBuffer, NetSourcedEvent};
-//use mio::{Events, Poll, PollOpt, Ready, Token};
-//use mio::net::UdpSocket;
+use mio::{Events, Poll, PollOpt, Ready, Token};
+use mio::net::UdpSocket;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use shrev::*;
@@ -19,7 +19,7 @@ use std::str::FromStr;
 use std::time::Duration;
 use uuid::Uuid;
 
-//const SOCKET: Token = Token(0);
+const SOCKET: Token = Token(0);
 
 
 // If a client sends both a connect event and other events,
@@ -37,7 +37,7 @@ where
     pub socket: UdpSocket,
     pub send_queue_reader: Option<ReaderId<NetSourcedEvent<T>>>,
     pub filters: Vec<Box<NetFilter<T>>>,
-    //pub poll: Poll,
+    pub poll: Poll,
 }
 
 //TODO: add Unchecked Event type list. Those events will be let pass the client connected filter (Example: NetEvent::Connect).
@@ -56,14 +56,14 @@ where
             IpAddr::from_str(ip).expect("Unreadable input IP."),
             port,
         ))?;
-        socket.set_nonblocking(true)?;
-        //let poll = Poll::new()?;
-        //poll.register(&socket, SOCKET, Ready::readable() | Ready::writable(), PollOpt::edge())?;
+        //socket.set_nonblocking(true)?;
+        let poll = Poll::new()?;
+        poll.register(&socket, SOCKET, Ready::readable() | Ready::writable(), PollOpt::level())?;
         Ok(NetSocketSystem {
             socket,
             send_queue_reader: None,
             filters,
-            //poll,
+            poll,
         })
     }
     /// Connects to a remote server
@@ -109,10 +109,58 @@ where
 
         println!("Sent {} events",count);
 
+        //Rx mio2
+        let mut events = Events::with_capacity(1024);
+        let mut buf = [0 as u8; 2048];
+        self.poll
+            .poll(&mut events, Some(Duration::from_millis(0)))
+            .expect("Failed to poll network socket.");
+
+        for raw_event in events.iter() {
+            if raw_event.readiness().is_readable() {
+                match self.socket.recv_from(&mut buf) {
+                    //Data received
+                    Ok((amt, src)) => {
+                        let mut connection_dropped = false;
+                        let net_event = deserialize_event::<T>(&buf[..amt]);
+                        match net_event {
+                            Ok(ev) => {
+                                let mut filtered = false;
+                                for mut f in self.filters.iter_mut() {
+                                    if !f.allow(&pool, &src, &ev) {
+                                        filtered = true;
+                                    }
+                                }
+                                if !filtered {
+                                    let owned_event = NetSourcedEvent {
+                                        event: ev.clone(),
+                                        uuid: pool.connection_from_address(&src).and_then(|c| c.uuid),
+                                        socket: src,
+                                    };
+                                    receive_buf.buf.single_write(owned_event);
+                                }
+                            }
+                            Err(e) => error!("Failed to read network event: {}", e),
+                        }
+                        if connection_dropped {
+                            pool.connections.pop();
+                        }
+                    }
+                    Err(e) => {
+                        //No data
+                        if e.kind() == ErrorKind::WouldBlock {
+                            println!("Would block!");
+                            break; //Safely ignores when no packets are waiting in the queue, and stop checking for this time.
+                        }
+                        error!("couldn't receive a datagram: {}", e);
+                    }
+                }
+            }
+        }
 
 
         //Rx Normal
-        loop{
+        /*loop{
             let mut buf = [0; 2048];
             match self.socket.recv_from(&mut buf) {
                 //Data received
@@ -150,7 +198,7 @@ where
                     error!("couldn't receive a datagram: {}", e);
                 }
             }
-        }
+        }*/
 
         // Rx MIO (locks after 20-30 events)
         /*let mut events = Events::with_capacity(128);
@@ -206,41 +254,5 @@ where
             }
         }*/
 
-        // Rx
-        /*let mut buf = [0; 2048];
-        'read: loop {
-            match self.socket.recv_from(&mut buf) {
-                //Data received
-                Ok((amt, src)) => {
-                    let mut connection_dropped = false;
-
-                    let net_event = deserialize_event::<T>(&buf[..amt]);
-                    match net_event{
-                        Ok(ev)=>{
-                            for mut f in self.filters.iter_mut(){
-                                if !f.allow(&pool,&src,&ev){
-                                    continue 'read;
-                                }
-                            }
-                            let owned_event = NetSourcedEvent {
-                                event: ev.clone(),
-                                uuid: pool.connection_from_address(&src).map(|c| c.uuid).unwrap(),
-                                socket: src,
-                            };
-                            receive_buf.buf.single_write(owned_event);
-                        },
-                        Err(e)=>error!("Failed to read network event: {}",e),
-                    }
-                    if connection_dropped{
-                        pool.connections.pop();
-                    }
-                },
-                Err(e) => { //No data
-                    if e.kind() == ErrorKind::WouldBlock{
-                        break;//Safely ignores when no packets are waiting in the queue, and stop checking for this time.
-                    }
-                    error!("couldn't receive a datagram: {}", e);
-                },
-            }
-        }*/    }
+    }
 }
