@@ -203,7 +203,7 @@ impl State for Example {
                     entity: background.clone(),
                 })
         };
-        button_builder.build(world);
+        button_builder.build_from_world(world);
         let simple_builder = {
             UiButtonBuilder::new("simple_btn", "Simpler!", UiButtonResources::from_world(&world))
                 .with_font(font.clone())
