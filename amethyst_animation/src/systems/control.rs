@@ -51,6 +51,8 @@ where
     );
 
     fn run(&mut self, data: Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("animation_control_run");
         let (
             entities,
             animation_storage,
@@ -155,6 +157,8 @@ fn process_animation_control<T>(
 where
     T: AnimationSampling + Component,
 {
+    #[cfg(feature = "profiler")]
+    profile_scope!("process_animation_control");
     // Checking hierarchy
     let h_fallback = AnimationHierarchy::new_single(animation.nodes[0].0, *entity);
     let hierarchy = match hierarchy {
@@ -282,6 +286,8 @@ fn start_animation<T>(
 where
     T: AnimationSampling + Component,
 {
+    #[cfg(feature = "profiler")]
+    profile_scope!("start_animation");
     // check that hierarchy is valid, and all samplers exist
     if animation
         .nodes

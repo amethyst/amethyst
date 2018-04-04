@@ -36,6 +36,8 @@ impl<'a> System<'a> for VertexSkinningSystem {
     );
 
     fn run(&mut self, (joints, transforms, skins, mut matrices): Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("run_vertex_skinning");
         // for flagged joint transforms, calculate a new set of joint matrices for the related skin
         let updated_iter = (&joints, transforms.open().1)
             .join()
