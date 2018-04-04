@@ -6,7 +6,7 @@ extern crate genmesh;
 
 use amethyst::assets::{Handle, Loader};
 use amethyst::core::{GlobalTransform, Parent, Transform, TransformBundle};
-use amethyst::core::cgmath::{Deg, InnerSpace, Vector3};
+use amethyst::core::cgmath::Deg;
 use amethyst::ecs::{Entity, World};
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, ElementState, Event,
@@ -138,9 +138,9 @@ fn main() {
 
 fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTex> {
     SphereUV::new(u, v)
-        .vertex(|(x, y, z)| PosNormTex {
-            position: [x, y, z],
-            normal: Vector3::from([x, y, z]).normalize().into(),
+        .vertex(|vertex| PosNormTex {
+            position: vertex.pos,
+            normal: vertex.normal,
             tex_coord: [0.1, 0.1],
         })
         .triangulate()

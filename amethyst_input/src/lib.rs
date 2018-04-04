@@ -7,7 +7,6 @@ extern crate fnv;
 extern crate serde;
 extern crate shrev;
 extern crate smallvec;
-extern crate specs;
 extern crate winit;
 
 #[macro_use]

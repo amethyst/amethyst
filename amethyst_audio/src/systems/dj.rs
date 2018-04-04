@@ -1,9 +1,9 @@
 use std::marker::PhantomData;
 
 use amethyst_assets::AssetStorage;
-use shred::Resource;
-use specs::{Fetch, FetchMut, System};
-use specs::common::Errors;
+use amethyst_core::shred::Resource;
+use amethyst_core::specs::{Fetch, FetchMut, System};
+use amethyst_core::specs::common::Errors;
 
 use sink::AudioSink;
 use source::{Source, SourceHandle};

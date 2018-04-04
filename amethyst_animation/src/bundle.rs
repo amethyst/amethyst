@@ -2,11 +2,11 @@ use std::marker;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{ECSBundle, Result};
+use amethyst_core::specs::{Component, DispatcherBuilder, World};
 use amethyst_renderer::JointTransforms;
-use specs::{Component, DispatcherBuilder, World};
 
 use resources::{Animation, AnimationControlSet, AnimationHierarchy, AnimationSampling,
-                AnimationSet, Sampler, SamplerControlSet};
+                AnimationSet, RestState, Sampler, SamplerControlSet};
 use skinning::{Joint, Skin, VertexSkinningSystem};
 use systems::{AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem,
               SamplerProcessor};
@@ -152,7 +152,7 @@ impl<'a, I, T> AnimationBundle<'a, I, T> {
 impl<'a, 'b, 'c, I, T> ECSBundle<'a, 'b> for AnimationBundle<'c, I, T>
 where
     I: PartialEq + Copy + Send + Sync + 'static,
-    T: AnimationSampling + Component,
+    T: AnimationSampling + Component + Clone,
 {
     fn build(
         self,
@@ -162,6 +162,7 @@ where
         world.add_resource(AssetStorage::<Animation<T>>::new());
         world.register::<AnimationControlSet<I, T>>();
         world.register::<AnimationHierarchy<T>>();
+        world.register::<RestState<T>>();
         world.register::<AnimationSet<T>>();
         builder = builder.add(AnimationProcessor::<T>::new(), "", &[]).add(
             AnimationControlSystem::<I, T>::new(),

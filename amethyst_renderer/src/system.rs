@@ -6,10 +6,10 @@ use std::sync::Arc;
 
 use amethyst_assets::{AssetStorage, HotReloadStrategy};
 use amethyst_core::Time;
+use amethyst_core::shred::Resources;
+use amethyst_core::specs::{Fetch, FetchMut, RunNow, SystemData};
 use rayon::ThreadPool;
-use shred::Resources;
 use shrev::EventChannel;
-use specs::{Fetch, FetchMut, RunNow, SystemData};
 use winit::{DeviceEvent, Event, WindowEvent};
 
 use config::DisplayConfig;
@@ -26,7 +26,8 @@ use tex::Texture;
 #[derivative(Debug)]
 pub struct RenderSystem<P> {
     pipe: P,
-    #[derivative(Debug = "ignore")] renderer: Renderer,
+    #[derivative(Debug = "ignore")]
+    renderer: Renderer,
     cached_size: (u32, u32),
 }
 

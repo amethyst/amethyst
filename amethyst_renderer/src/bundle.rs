@@ -5,10 +5,11 @@ use {AmbientColor, Camera, Light, Material, MaterialDefaults, Mesh, Rgba, Screen
 use amethyst_assets::{AssetStorage, Handle, Loader};
 use amethyst_core::bundle::{ECSBundle, Result, ResultExt};
 use amethyst_core::orientation::Orientation;
+use amethyst_core::specs::{DispatcherBuilder, World};
 use amethyst_core::transform::components::*;
 use config::DisplayConfig;
 use pipe::{PipelineBuild, PolyPipeline};
-use specs::{DispatcherBuilder, World};
+use skinning::JointTransforms;
 use system::RenderSystem;
 use transparent::Transparent;
 use visibility::{Visibility, VisibilitySortingSystem};
@@ -54,7 +55,8 @@ where
 }
 
 impl<'a, 'b, 'c, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> ECSBundle<'a, 'b>
-    for RenderBundle<'c, B, P> {
+    for RenderBundle<'c, B, P>
+{
     fn build(
         self,
         world: &mut World,
@@ -76,6 +78,7 @@ impl<'a, 'b, 'c, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> ECSBundle
         world.register::<Handle<Texture>>();
         world.register::<Camera>();
         world.register::<Transparent>();
+        world.register::<JointTransforms>();
 
         let system = RenderSystem::build(self.pipe, self.config).chain_err(|| "Renderer error!")?;
         let (width, height) = system

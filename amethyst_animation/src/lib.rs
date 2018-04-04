@@ -9,8 +9,6 @@ extern crate log;
 extern crate minterpolate;
 #[macro_use]
 extern crate serde;
-extern crate shred;
-extern crate specs;
 
 #[macro_use]
 #[cfg(feature = "profiler")]

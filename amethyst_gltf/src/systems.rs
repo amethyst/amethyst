@@ -5,12 +5,12 @@ use animation::{Animation, AnimationHierarchy, AnimationSet, Joint, Sampler, Sam
 use assets::{AssetStorage, Handle, HotReloadStrategy, Loader};
 use core::{ThreadPool, Time};
 use core::cgmath::{EuclideanSpace, Matrix4, Point3, SquareMatrix};
+use core::specs::{Entities, Entity, Fetch, FetchMut, Join, System, WriteStorage};
 use core::transform::*;
 use fnv::FnvHashMap;
 use hibitset::BitSet;
 use renderer::{AnimatedComboMeshCreator, JointTransforms, Material, MaterialDefaults, Mesh,
                Texture};
-use specs::{Entities, Entity, Fetch, FetchMut, Join, System, WriteStorage};
 
 use {GltfMaterial, GltfPrimitive, GltfSceneAsset, GltfSkin};
 

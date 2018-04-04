@@ -1,5 +1,5 @@
 use super::ScaleMode;
-use specs::{Component, DenseVecStorage, FlaggedStorage};
+use amethyst_core::specs::{Component, DenseVecStorage, FlaggedStorage};
 use std::marker::PhantomData;
 
 /// The raw pixels on screen that are populated.

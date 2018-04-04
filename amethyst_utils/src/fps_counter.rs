@@ -1,9 +1,9 @@
 //! Util Resources
 
 use amethyst_core::{ECSBundle, Result};
+use amethyst_core::specs::{DispatcherBuilder, Fetch, FetchMut, System, World};
 use amethyst_core::timing::{duration_to_nanos, Time};
 use circular_buffer::CircularBuffer;
-use specs::{DispatcherBuilder, Fetch, FetchMut, System, World};
 
 /// The FPSCounter resource needed by the FPSCounterSystem.
 ///
