@@ -29,6 +29,8 @@ impl<'a, 'b> ECSBundle<'a, 'b> for HotReloadBundle {
         world: &mut World,
         dispatcher: DispatcherBuilder<'a, 'b>,
     ) -> core::Result<DispatcherBuilder<'a, 'b>> {
+        #[cfg(feature = "profiler")]
+        profile_scope!("amethyst_assets::reload::HotReloadBundle::build");
         world.write_resource::<Loader>().set_hot_reload(true);
         world.add_resource(self.strategy);
 

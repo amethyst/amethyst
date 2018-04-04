@@ -7,6 +7,7 @@ use crossbeam::sync::MsQueue;
 use hibitset::BitSet;
 use rayon::ThreadPool;
 use specs::{Component, Fetch, FetchMut, System, UnprotectedStorage, VecStorage};
+
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
 
@@ -72,6 +73,8 @@ impl<A: Asset> AssetStorage<A> {
     where
         A: Clone,
     {
+        #[cfg(feature = "profiler")]
+        profile_scope!("clone_asset");
         if let Some(asset) = self.get(handle).map(A::clone) {
             let h = self.allocate();
 
@@ -91,7 +94,9 @@ impl<A: Asset> AssetStorage<A> {
 
     /// Get an asset from a given asset handle.
     pub fn get(&self, handle: &Handle<A>) -> Option<&A> {
-        if self.bitset.contains(handle.id()) {
+        if self.bitset.contains(handle.id()) {     
+            #[cfg(feature = "profiler")]
+            profile_scope!("get_asset");
             Some(unsafe { self.assets.get(handle.id()) })
         } else {
             None
@@ -101,6 +106,8 @@ impl<A: Asset> AssetStorage<A> {
     /// Get an asset mutably from a given asset handle.
     pub fn get_mut(&mut self, handle: &Handle<A>) -> Option<&mut A> {
         if self.bitset.contains(handle.id()) {
+            #[cfg(feature = "profiler")]
+            profile_scope!("get_asset_mut");
             Some(unsafe { self.assets.get_mut(handle.id()) })
         } else {
             None
@@ -133,6 +140,8 @@ impl<A: Asset> AssetStorage<A> {
         D: FnMut(A),
         F: FnMut(A::Data) -> Result<A>,
     {
+        #[cfg(feature = "profiler")]
+        profile_scope!("get_asset");
         while let Some(processed) = self.processed.try_pop() {
             let assets = &mut self.assets;
             let bitset = &mut self.bitset;
@@ -290,6 +299,9 @@ impl<A: Asset> AssetStorage<A> {
             if let Some(handle) = handle {
                 let processed = self.processed.clone();
                 pool.spawn(move || {
+                    #[cfg(feature = "profiler")]
+                    profile_scope!("dir_load_asset_from_data");
+                    
                     let old_reload = rel.clone();
                     let data = rel.reload().chain_err(|| ErrorKind::Format(format));
 

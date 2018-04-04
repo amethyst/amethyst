@@ -174,6 +174,9 @@ impl Loader {
         A: Asset,
         P: Progress,
     {
+        #[cfg(feature = "profiler")]
+        profile_scope!("dir_load_asset_from_data");
+
         progress.add_assets(1);
         let tracker = progress.create_tracker();
         let tracker = Box::new(tracker);

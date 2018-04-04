@@ -33,16 +33,22 @@ where
         K: ?Sized + Hash + Eq,
         String: Borrow<K>,
     {
+        #[cfg(feature = "profiler")]
+        profile_scope!("cache_get");
         self.map.get(key).and_then(WeakHandle::upgrade)
     }
 
     /// Deletes all cached handles which are invalid.
     pub fn clear_dead<F>(&mut self) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("clear_cache_dead");
         self.map.retain(|_, h| !h.is_dead());
     }
 
     /// Clears all values.
     pub fn clear_all(&mut self) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("clear_cache_all");
         self.map.clear();
     }
 }
