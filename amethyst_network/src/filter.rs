@@ -16,6 +16,7 @@ where
 /// A filter that checks if the incoming event is from a connected client.
 pub struct FilterConnected;
 
+
 impl<T> NetFilter<T> for FilterConnected
 where
     T: PartialEq,
@@ -29,15 +30,21 @@ where
     ) -> bool {
         if let Some(ref conn) = pool.connection_from_address(source) {
             if conn.state == ConnectionState::Connected {
-                return true;
-            } else if conn.state == ConnectionState::Connecting {
+                true
+            } else /*if conn.state == ConnectionState::Connecting */{
                 match *event {
-                    NetEvent::Connect { client_uuid } => return true,
-                    NetEvent::Connected { server_uuid } => return true,
-                    _ => {}
+                    NetEvent::Connect { client_uuid } => true,
+                    NetEvent::Connected { server_uuid } => true,
+                    _ => false,
                 }
             }
+        } else {
+            match *event {
+                NetEvent::Connect { client_uuid } => true,
+                NetEvent::Connected { server_uuid } => true,
+                _ => false,
+            }
+
         }
-        false
     }
 }

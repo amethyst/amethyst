@@ -31,4 +31,4 @@ pub use connection_manager::ConnectionManagerSystem;
 pub use filter::{FilterConnected, NetFilter};
 pub use net_event::{NetEvent, NetSourcedEvent};
 pub use network_socket::NetSocketSystem;
-pub use utils::{deserialize_event, send_event, send_to};
+pub use utils::{deserialize_event, send_event, send_to,send_to_all,send_to_all_except};

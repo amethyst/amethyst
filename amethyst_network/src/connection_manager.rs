@@ -49,7 +49,7 @@ where
                         if ev.uuid.is_none() {
                             // Check if the specified uuid is already connected.
                             // UUID Spoofing prevention.
-                            if !pool.connections
+                            if pool.connections
                                 .iter()
                                 .filter(|c| match c.uuid {
                                     Some(cl_uuid) => cl_uuid == client_uuid,
@@ -57,7 +57,6 @@ where
                                 })
                                 .count() == 0
                             {
-                                println!("conn manager received something");
                                 pool.connections.push(NetConnection {
                                     target: ev.socket,
                                     state: ConnectionState::Connected,

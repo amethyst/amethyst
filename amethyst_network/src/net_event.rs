@@ -40,6 +40,9 @@ pub enum NetEvent<T> {
     AddComponent {
         compData: String,
     },
+    TextMessage {
+        msg: String,
+    },
     /// A user-defined enum containing more network event types.
     Custom(T),
 }
