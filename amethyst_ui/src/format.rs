@@ -1,6 +1,6 @@
 use amethyst_assets::{Asset, Error, Handle, ResultExt, SimpleFormat};
+use amethyst_core::specs::VecStorage;
 use rusttype::{Font, FontCollection};
-use specs::VecStorage;
 
 /// A loaded set of fonts from a file.
 pub struct FontAsset(pub Font<'static>);

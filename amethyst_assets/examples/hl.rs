@@ -8,15 +8,15 @@ extern crate rayon;
 extern crate ron;
 #[macro_use]
 extern crate serde;
-extern crate specs;
 
 use std::sync::Arc;
 
 use amethyst_assets::*;
 use amethyst_core::Time;
+use amethyst_core::specs::{Dispatcher, DispatcherBuilder, Fetch, FetchMut, System, VecStorage,
+                           World};
+use amethyst_core::specs::common::Errors;
 use rayon::ThreadPool;
-use specs::{Dispatcher, DispatcherBuilder, Fetch, FetchMut, System, VecStorage, World};
-use specs::common::Errors;
 
 struct App {
     dispatcher: Dispatcher<'static, 'static>,
@@ -164,7 +164,7 @@ impl State {
                     eprintln!("Quitting game..");
 
                     None
-                },
+                }
                 Completion::Loading => Some(State::Loading(progress)),
             },
             State::SomethingElse => {

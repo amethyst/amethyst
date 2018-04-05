@@ -4,9 +4,9 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use amethyst_core::cgmath::Transform;
+use amethyst_core::specs::{Entities, Entity, Fetch, Join, ReadStorage, System, WriteStorage};
 use amethyst_core::transform::GlobalTransform;
 use rodio::SpatialSink;
-use specs::{Entities, Entity, Fetch, Join, ReadStorage, System, WriteStorage};
 
 use components::{AudioEmitter, AudioListener};
 use end_signal::EndSignalSource;

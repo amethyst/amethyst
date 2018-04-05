@@ -1,8 +1,4 @@
 extern crate amethyst_core;
-#[macro_use]
-extern crate log;
-extern crate shred;
-extern crate specs;
 extern crate winit;
 
 #[macro_use]

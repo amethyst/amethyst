@@ -1,8 +1,8 @@
 use super::UiTransform;
 use amethyst_core::Parent;
+use amethyst_core::specs::{Component, Entities, Entity, Fetch, FlaggedStorage, Join, ReadStorage,
+                           System, VecStorage, WriteStorage};
 use amethyst_renderer::ScreenDimensions;
-use specs::{Component, Entities, Entity, Fetch, FlaggedStorage, Join, ReadStorage, System,
-            VecStorage, WriteStorage};
 use std::collections::{HashMap, HashSet};
 
 /// Unused, will be implemented in a future PR.

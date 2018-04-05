@@ -22,7 +22,7 @@ hibitset = "0.3.2"
 rayon = "0.8"
 serde = { version = "1", features = ["serde_derive"] }
 shred = "0.5"
-specs = "0.10"
+specs = { version = "0.10", features = ["common"] }
 quickcheck = "0.4.1"
 
 thread_profiler = { version = "0.1" , optional = true }

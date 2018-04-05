@@ -21,7 +21,6 @@ extern crate hibitset;
 extern crate log;
 extern crate parking_lot;
 extern crate rayon;
-extern crate specs;
 
 #[macro_use]
 #[cfg(feature = "profiler")]

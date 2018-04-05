@@ -24,8 +24,6 @@ amethyst_core = { path = "../amethyst_core", version = "0.1.0"}
 cpal = "0.4"
 log = "0.4"
 rodio = "= 0.5.2"
-shred = "0.5"
-specs = "0.10"
 
 thread_profiler = { version = "0.1", optional = true }
 

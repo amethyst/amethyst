@@ -1,10 +1,10 @@
 //! Simple shaded pass
 
 use amethyst_assets::AssetStorage;
+use amethyst_core::specs::{Entities, Fetch, Join, ReadStorage};
 use amethyst_core::transform::GlobalTransform;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
-use specs::{Entities, Fetch, Join, ReadStorage};
 
 use super::*;
 use cam::{ActiveCamera, Camera};

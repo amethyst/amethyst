@@ -3,10 +3,11 @@ use std::sync::{Arc, Weak};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use amethyst_core::Time;
+use amethyst_core::specs::{Component, Fetch, FetchMut, System, UnprotectedStorage, VecStorage};
 use crossbeam::sync::MsQueue;
 use hibitset::BitSet;
 use rayon::ThreadPool;
-use specs::{Component, Fetch, FetchMut, System, UnprotectedStorage, VecStorage};
+
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
 

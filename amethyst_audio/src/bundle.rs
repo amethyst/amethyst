@@ -4,8 +4,8 @@ use std::marker::PhantomData;
 
 use amethyst_assets::{AssetStorage, Processor};
 use amethyst_core::bundle::{ECSBundle, Result};
-use shred::ResourceId;
-use specs::{DispatcherBuilder, World};
+use amethyst_core::shred::ResourceId;
+use amethyst_core::specs::{DispatcherBuilder, World};
 
 use output::{default_output, Output};
 use sink::AudioSink;

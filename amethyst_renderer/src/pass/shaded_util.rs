@@ -1,8 +1,8 @@
 use std::mem;
 
 use amethyst_core::GlobalTransform;
+use amethyst_core::specs::{Join, ReadStorage};
 use gfx::traits::Pod;
-use specs::{Join, ReadStorage};
 
 use cam::Camera;
 use light::{DirectionalLight, Light, PointLight};

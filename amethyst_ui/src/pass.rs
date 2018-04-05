@@ -5,6 +5,7 @@ use std::hash::{Hash, Hasher};
 
 use amethyst_assets::{AssetStorage, Loader, WeakHandle};
 use amethyst_core::cgmath::vec4;
+use amethyst_core::specs::{Entities, Entity, Fetch, Join, ReadStorage, WriteStorage};
 use amethyst_renderer::{Encoder, Factory, Mesh, PosTex, Resources, ScreenDimensions, Texture,
                         TextureData, TextureHandle, TextureMetadata, VertexFormat};
 use amethyst_renderer::error::Result;
@@ -18,7 +19,6 @@ use gfx_glyph::{BuiltInLineBreaker, FontId, GlyphBrush, GlyphBrushBuilder, Glyph
                 HorizontalAlign, Layout, Scale, SectionText, VariedSection, VerticalAlign};
 use hibitset::BitSet;
 use rusttype::Point;
-use specs::{Entities, Entity, Fetch, Join, ReadStorage, WriteStorage};
 use unicode_segmentation::UnicodeSegmentation;
 
 use super::*;

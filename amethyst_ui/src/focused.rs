@@ -1,4 +1,4 @@
-use specs::Entity;
+use amethyst_core::specs::Entity;
 
 /// This resource stores the currently focused UI element.
 pub struct UiFocused {
