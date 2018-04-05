@@ -41,7 +41,7 @@ mod text;
 mod transform;
 
 pub use self::bundle::UiBundle;
-pub use self::button::{UiButton, UiButtonBuilder, UiButtonResources, UiButtonLazyResources};
+pub use self::button::{UiButton, UiButtonBuilder, UiButtonResources};
 pub use self::event::{MouseReactive, UiEvent, UiEventType, UiMouseSystem};
 pub use self::focused::UiFocused;
 pub use self::format::{FontAsset, FontHandle, OtfFormat, TtfFormat};
