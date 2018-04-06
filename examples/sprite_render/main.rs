@@ -6,6 +6,7 @@
 extern crate amethyst;
 #[macro_use]
 extern crate log;
+extern crate gfx;
 
 mod loader;
 mod sprite;
@@ -15,9 +16,10 @@ use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::Entity;
 use amethyst::input::InputBundle;
 use amethyst::prelude::*;
-use amethyst::renderer::{Camera, DisplayConfig, DrawFlat, Pipeline, PosTex, Projection,
+use amethyst::renderer::{Camera, ColorMask, DisplayConfig, DrawFlat, Pipeline, PosTex, Projection,
                          RenderBundle, ScreenDimensions, Stage};
 use amethyst::ui::{DrawUi, UiBundle};
+use gfx::preset::blend::ALPHA;
 
 use loader::SpriteSheetLoader;
 
@@ -93,13 +95,13 @@ fn run() -> Result<(), amethyst::Error> {
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target(BACKGROUND_COLOUR, 1.0)
-            .with_pass(DrawFlat::<PosTex>::new())
+            .with_pass(DrawFlat::<PosTex>::new().with_transparency(ColorMask::all(), ALPHA, None))
             .with_pass(DrawUi::new()),
     );
 
     let mut game = Application::build(resources_directory, Example)?
         // RenderBundle: gives us a window
-        .with_bundle(RenderBundle::new(pipe, Some(config)).with_visibility_sorting(&[]))?
+        .with_bundle(RenderBundle::new(pipe, Some(config)))?
         // UiBundle relies on this as some Ui objects take input
         .with_bundle(InputBundle::<String, String>::new())?
         // Draws textures
