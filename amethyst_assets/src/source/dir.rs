@@ -27,7 +27,7 @@ impl Directory {
 
     fn path(&self, s_path: &str) -> PathBuf {
         let mut path = self.loc.clone();
-        path.push(Path::new(s_path).iter().collect::<PathBuf>());
+        path.extend(Path::new(s_path).iter());
 
         path
     }
