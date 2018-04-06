@@ -62,6 +62,7 @@ genmesh = "0.5"
 amethyst_animation = { path = "amethyst_animation", version = "0.1.0" }
 serde = "1.0"
 serde_derive = "1.0"
+gfx = "0.17"
 
 [build-dependencies]
 vergen = "0.1"
