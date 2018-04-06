@@ -58,7 +58,7 @@ where
         ))?;
         //socket.set_nonblocking(true)?;
         let poll = Poll::new()?;
-        poll.register(&socket, SOCKET, Ready::readable() | Ready::writable(), PollOpt::level())?;
+        poll.register(&socket, SOCKET, Ready::readable(), PollOpt::level())?;
         Ok(NetSocketSystem {
             socket,
             send_queue_reader: None,
@@ -89,6 +89,10 @@ where
         FetchMut<'a, NetConnectionPool>,
     );
     fn run(&mut self, (mut send_buf, mut receive_buf, mut pool): Self::SystemData) {
+        let mut events = Events::with_capacity(2048);
+        let mut buf = [0 as u8; 2048];
+
+
         // Tx
         if self.send_queue_reader.is_none() {
             self.send_queue_reader = Some(send_buf.buf.register_reader());
@@ -101,58 +105,60 @@ where
                 if t.state == ConnectionState::Connected || t.state == ConnectionState::Connecting {
                     count += 1;
                     send_event(&ev.event, &t, &self.socket);
-                }else{
+                } else {
                     println!("Tried to send packet while target is not in a connected or connecting state.");
                 }
             }
         }
 
-        println!("Sent {} events",count);
-
         //Rx mio2
-        let mut events = Events::with_capacity(1024);
-        let mut buf = [0 as u8; 2048];
-        self.poll
-            .poll(&mut events, Some(Duration::from_millis(0)))
-            .expect("Failed to poll network socket.");
+        loop {
+            self.poll
+                .poll(&mut events, Some(Duration::from_millis(0)))
+                .expect("Failed to poll network socket.");
 
-        for raw_event in events.iter() {
-            if raw_event.readiness().is_readable() {
-                match self.socket.recv_from(&mut buf) {
-                    //Data received
-                    Ok((amt, src)) => {
-                        let mut connection_dropped = false;
-                        let net_event = deserialize_event::<T>(&buf[..amt]);
-                        match net_event {
-                            Ok(ev) => {
-                                let mut filtered = false;
-                                for mut f in self.filters.iter_mut() {
-                                    if !f.allow(&pool, &src, &ev) {
-                                        filtered = true;
+            if events.is_empty(){
+                break;
+            }
+
+            for raw_event in events.iter() {
+                if raw_event.readiness().is_readable() {
+                    match self.socket.recv_from(&mut buf) {
+                        //Data received
+                        Ok((amt, src)) => {
+                            let mut connection_dropped = false;
+                            let net_event = deserialize_event::<T>(&buf[..amt]);
+                            match net_event {
+                                Ok(ev) => {
+                                    let mut filtered = false;
+                                    for mut f in self.filters.iter_mut() {
+                                        if !f.allow(&pool, &src, &ev) {
+                                            filtered = true;
+                                        }
+                                    }
+                                    if !filtered {
+                                        let owned_event = NetSourcedEvent {
+                                            event: ev.clone(),
+                                            uuid: pool.connection_from_address(&src).and_then(|c| c.uuid),
+                                            socket: src,
+                                        };
+                                        receive_buf.buf.single_write(owned_event);
                                     }
                                 }
-                                if !filtered {
-                                    let owned_event = NetSourcedEvent {
-                                        event: ev.clone(),
-                                        uuid: pool.connection_from_address(&src).and_then(|c| c.uuid),
-                                        socket: src,
-                                    };
-                                    receive_buf.buf.single_write(owned_event);
-                                }
+                                Err(e) => error!("Failed to read network event: {}", e),
                             }
-                            Err(e) => error!("Failed to read network event: {}", e),
+                            if connection_dropped {
+                                pool.connections.pop();
+                            }
                         }
-                        if connection_dropped {
-                            pool.connections.pop();
+                        Err(e) => {
+                            //No data
+                            if e.kind() == ErrorKind::WouldBlock {
+                                println!("Would block!");
+                                break; //Safely ignores when no packets are waiting in the queue, and stop checking for this time.
+                            }
+                            error!("couldn't receive a datagram: {}", e);
                         }
-                    }
-                    Err(e) => {
-                        //No data
-                        if e.kind() == ErrorKind::WouldBlock {
-                            println!("Would block!");
-                            break; //Safely ignores when no packets are waiting in the queue, and stop checking for this time.
-                        }
-                        error!("couldn't receive a datagram: {}", e);
                     }
                 }
             }

@@ -153,7 +153,7 @@ impl<A: Asset> AssetStorage<A> {
                     }).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
                         .chain_err(|| ErrorKind::Asset(name.clone()))
                     {
-                        | Ok(x) => {
+                        Ok(x) => {
                             debug!(
                                 "{:?}: Asset {:?} (handle id: {:?}) has been loaded successfully",
                                 A::NAME,
@@ -201,7 +201,7 @@ impl<A: Asset> AssetStorage<A> {
                     }).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
                         .chain_err(|| ErrorKind::Asset(name.clone()))
                     {
-                        | Ok(x) => x,
+                        Ok(x) => x,
                         Err(e) => {
                             error!(
                                 "{:?}: Failed to hot-reload asset {:?} (handle id: {:?}): {}\n\
