@@ -1,0 +1,40 @@
+[package]
+name = "amethyst_hal"
+version = "0.1.0"
+authors = ["omni-viral <scareaangel@gmail.com>"]
+
+[features]
+gfx-vulkan = ["gfx-backend-vulkan"]
+gfx-metal = ["gfx-backend-metal"]
+gfx-dx12 = ["gfx-backend-dx12"]
+
+[dependencies]
+amethyst_assets = { path = "../amethyst_assets/", version = "0.2.0" }
+amethyst_core = { path = "../amethyst_core/", version = "0.1.0" }
+amethyst_config = { path = "../amethyst_config/", version = "0.5.0" }
+crossbeam-channel = "0.1.2"
+derivative = "1.0"
+error-chain = "0.11"
+gfx-hal = { git = "https://github.com/gfx-rs/gfx", rev = "68e80eaf", features = ["serde"] }
+gfx-memory = { git = "https://github.com/gfx-rs/gfx-memory", rev = "4aa2d27" }
+imagefmt = "4.0"
+log = "0.4"
+serde = "1.0"
+shred = "0.5"
+smallvec = { version = "0.6.0", features = ["serde"] }
+specs = "0.10"
+wavefront_obj = "5.1"
+winit = "= 0.10.0"
+xfg = { git = "https://github.com/omni-viral/xfg-rs", rev = "13b5a0f" }
+
+gfx-backend-empty = { version = "0.1", git = "https://github.com/gfx-rs/gfx", rev = "68e80eaf" }
+
+[target.'cfg(not(target_os = "macos"))'.dependencies]
+gfx-backend-vulkan = { version = "0.1", optional = true, git = "https://github.com/gfx-rs/gfx", rev = "68e80eaf" }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+gfx-backend-metal = { version = "0.1", optional = true, git = "https://github.com/gfx-rs/gfx", rev = "68e80eaf" }
+
+[target.'cfg(windows)'.dependencies]
+gfx-backend-dx12 = { version = "0.1", optional = true, git = "https://github.com/gfx-rs/gfx", rev = "68e80eaf" }
+
