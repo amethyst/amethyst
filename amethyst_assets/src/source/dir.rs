@@ -1,9 +1,9 @@
 use std::fs::File;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::UNIX_EPOCH;
 
-use {ErrorKind, Result, ResultExt};
 use source::Source;
+use {ErrorKind, Result, ResultExt};
 
 /// Directory source.
 ///
@@ -27,7 +27,7 @@ impl Directory {
 
     fn path(&self, s_path: &str) -> PathBuf {
         let mut path = self.loc.clone();
-        path.push(s_path);
+        path.extend(Path::new(s_path).iter());
 
         path
     }
@@ -66,5 +66,45 @@ impl Source for Directory {
             .chain_err(|| ErrorKind::Source)?;
 
         Ok(v)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use std::path::Path;
+
+    use super::Directory;
+    use source::Source;
+
+    #[test]
+    fn loads_asset_from_assets_directory() {
+        let test_assets_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/assets");
+        let directory = Directory::new(test_assets_dir);
+
+        assert_eq!(
+            "data".as_bytes().to_vec(),
+            directory
+                .load("subdir/asset")
+                .expect("Failed to load tests/assets/subdir/asset")
+        );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn tolerates_backslashed_location_with_forward_slashed_asset_paths() {
+        // Canonicalized path on Windows uses backslashes
+        let test_assets_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/assets")
+            .canonicalize()
+            .expect("Failed to canonicalize tests/assets directory");
+        let directory = Directory::new(test_assets_dir);
+
+        assert_eq!(
+            "data".as_bytes().to_vec(),
+            // Use forward slash to declare path
+            directory
+                .load("subdir/asset")
+                .expect("Failed to load tests/assets/subdir/asset")
+        );
     }
 }
