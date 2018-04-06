@@ -126,5 +126,9 @@ path = "examples/appendix_a/main.rs"
 name = "fly_camera"
 path = "examples/fly_camera/main.rs"
 
+[[example]]
+name = "sprite_render"
+path = "examples/sprite_render/main.rs"
+
 [workspace]
 members = ["amethyst_animation", "amethyst_gltf"]
