@@ -41,15 +41,15 @@ impl Metadata {
     pub fn new(
         sprite_w: f32,
         sprite_h: f32,
-        column_count: usize,
         row_count: usize,
+        column_count: usize,
         has_border: bool,
     ) -> Self {
         Metadata {
             sprite_w,
             sprite_h,
-            column_count,
             row_count,
+            column_count,
             has_border,
         }
     }

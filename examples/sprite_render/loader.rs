@@ -26,6 +26,10 @@ impl SpriteSheetLoader {
 
         let mut sprite_meshes = Vec::with_capacity(metadata.row_count * metadata.column_count);
         let (offset_w, offset_h) = offset_distances(&metadata);
+        let (image_w, image_h) = (
+            offset_w * metadata.column_count as f32,
+            offset_h * metadata.row_count as f32,
+        );
         for row in 0..metadata.row_count {
             for col in 0..metadata.column_count {
                 // Sprites are numbered in the following pattern:
@@ -34,16 +38,20 @@ impl SpriteSheetLoader {
                 //  5  6  7  8  9
                 // 10 11 12 13 14
                 // 15 16 17 18 19
-                // let _sprite_number = row * metadata.row_count + col;
 
                 let offset_x = offset_w * col as f32;
                 let offset_y = offset_h * row as f32;
                 let vertices = create_sprite_vertices(
+                    image_w,
+                    image_h,
                     offset_x,
                     offset_y,
                     offset_x + metadata.sprite_w,
                     offset_y + metadata.sprite_h,
                 );
+
+                let sprite_number = row * metadata.row_count + col;
+                debug!("{}: Vertices: {:?}", sprite_number, &vertices);
 
                 let mesh_handle = loader.load_from_data(
                     vertices.into(),
@@ -54,16 +62,6 @@ impl SpriteSheetLoader {
                 sprite_meshes.push(mesh_handle);
             }
         }
-
-        // let vertices = create_sprite_vertices(0., 0., metadata.sprite_w, metadata.sprite_h);
-
-        // let mesh_handle = loader.load_from_data(
-        //     vertices.into(),
-        //     (),
-        //     &world.read_resource::<AssetStorage<Mesh>>(),
-        // );
-
-        // sprite_meshes.push(mesh_handle);
 
         sprite::Sheet::new(sprite_meshes, image)
     }
@@ -119,35 +117,48 @@ fn offset_distances(metadata: &sprite::Metadata) -> (f32, f32) {
 ///
 /// # Parameters
 ///
+/// * `image_w`: Width of the full sprite sheet.
+/// * `image_h`: Height of the full sprite sheet.
 /// * `left`: x coordinate of the left side of the sprite.
 /// * `bottom`: y coordinate of the bottom of the sprite.
 /// * `right`: x coordinate of the right side of the sprite.
 /// * `top`: y coordinate of the top of the sprite.
-fn create_sprite_vertices(left: f32, bottom: f32, right: f32, top: f32) -> Vec<PosTex> {
+fn create_sprite_vertices(
+    image_w: f32,
+    image_h: f32,
+    left: f32,
+    bottom: f32,
+    right: f32,
+    top: f32,
+) -> Vec<PosTex> {
+    let tex_coord_left = left / image_w;
+    let tex_coord_right = right / image_w;
+    let tex_coord_top = top / image_h;
+    let tex_coord_bottom = bottom / image_h;
     vec![
         PosTex {
-            position: [left, bottom, 0.],
-            tex_coord: [0., 0.],
+            position: [0., bottom, 0.],
+            tex_coord: [tex_coord_left, tex_coord_bottom],
         },
         PosTex {
-            position: [right, bottom, 0.],
-            tex_coord: [1., 0.],
+            position: [right - left, bottom, 0.],
+            tex_coord: [tex_coord_right, tex_coord_bottom],
         },
         PosTex {
-            position: [left, top, 0.],
-            tex_coord: [0., 1.],
+            position: [0., top, 0.],
+            tex_coord: [tex_coord_left, tex_coord_top],
         },
         PosTex {
-            position: [right, top, 0.],
-            tex_coord: [1., 1.],
+            position: [right - left, top, 0.],
+            tex_coord: [tex_coord_right, tex_coord_top],
         },
         PosTex {
-            position: [left, top, 0.],
-            tex_coord: [0., 1.],
+            position: [0., top, 0.],
+            tex_coord: [tex_coord_left, tex_coord_top],
         },
         PosTex {
-            position: [right, bottom, 0.],
-            tex_coord: [1., 0.],
+            position: [right - left, bottom, 0.],
+            tex_coord: [tex_coord_right, tex_coord_bottom],
         },
     ]
 }
