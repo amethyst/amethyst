@@ -31,12 +31,22 @@ impl State for Example {
     fn on_start(&mut self, mut world: &mut World) {
         initialise_camera(world);
 
+        let sprite_w = 32.;
+        let sprite_h = 32.;
         let sprite_sheet_loader = SpriteSheetLoader;
         let sprite_sheet = sprite_sheet_loader.load(
             "texture/bat.32x32.png",
-            sprite::Metadata::new(32., 32., 2, 6, false),
+            sprite::Metadata::new(sprite_w, sprite_h, 2, 6, false),
             &mut world,
         );
+
+        // Calculate offset to centre all sprites
+        //
+        // The X offset needs to be multiplied because we are drawing the sprites across the window;
+        // we don't need to multiply the Y offset because we are only drawing the sprites in 1 row.
+        let sprite_count = sprite_sheet.sprite_meshes.len();
+        let sprite_offset_x = sprite_count as f32 * sprite_w / 2.;
+        let sprite_offset_y = sprite_h / 2.;
 
         let (width, height) = {
             let dim = world.read_resource::<ScreenDimensions>();
@@ -44,15 +54,19 @@ impl State for Example {
         };
         // This `Transform` moves the sprites to the middle of the window
         let mut common_transform = Transform::default();
-        common_transform.translation = Vector3::new(width / 2., height / 2., 0.);
+        common_transform.translation = Vector3::new(
+            width / 2. - sprite_offset_x,
+            height / 2. - sprite_offset_y,
+            0.,
+        );
 
         // Create an entity per sprite.
         //
         // In a real application we would probably store the `sprite_sheet` in a `Storage` instead
         // of discarding it after this function.
-        for i in 0..sprite_sheet.sprite_meshes.len() {
+        for i in 0..sprite_count {
             let mut sprite_transform = Transform::default();
-            sprite_transform.translation = Vector3::new(0., i as f32 * 32., 0.);
+            sprite_transform.translation = Vector3::new(i as f32 * sprite_w, 0., 0.);
 
             // This combines multiple `Transform`ations.
             // You need to `use amethyst::core::cgmath::Transform`;
