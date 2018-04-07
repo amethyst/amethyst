@@ -46,10 +46,18 @@ impl State for Example {
         let mut common_transform = Transform::default();
         common_transform.translation = Vector3::new(width / 2., height / 2., 0.);
 
+        // Create an entity per sprite.
+        //
+        // In a real application we would probably store the `sprite_sheet` in a `Storage` instead
+        // of discarding it after this function.
         for i in 0..sprite_sheet.sprite_meshes.len() {
             let mut sprite_transform = Transform::default();
             sprite_transform.translation = Vector3::new(0., i as f32 * 32., 0.);
-            // sprite_transform.concat_self(&common_transform);
+
+            // This combines multiple `Transform`ations.
+            // You need to `use amethyst::core::cgmath::Transform`;
+            sprite_transform.concat_self(&common_transform);
+
             world
                 .create_entity()
                 .with(sprite_sheet.sprite_meshes[i].clone())
@@ -88,7 +96,7 @@ fn run() -> Result<(), amethyst::Error> {
         env!("CARGO_MANIFEST_DIR")
     );
 
-    let resources_directory = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
+    let assets_directory = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
     let config = DisplayConfig::load(&path);
 
     let pipe = Pipeline::build().with_stage(
@@ -102,8 +110,8 @@ fn run() -> Result<(), amethyst::Error> {
             .with_pass(DrawUi::new()),
     );
 
-    let mut game = Application::build(resources_directory, Example)?
-        // RenderBundle: gives us a window
+    let mut game = Application::build(assets_directory, Example)?
+        // RenderBundle gives us a window
         .with_bundle(RenderBundle::new(pipe, Some(config)))?
         // UiBundle relies on this as some Ui objects take input
         .with_bundle(InputBundle::<String, String>::new())?
