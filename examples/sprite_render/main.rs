@@ -16,8 +16,9 @@ use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::Entity;
 use amethyst::input::InputBundle;
 use amethyst::prelude::*;
-use amethyst::renderer::{Camera, ColorMask, DisplayConfig, DrawFlat, Pipeline, PosTex, Projection,
-                         RenderBundle, ScreenDimensions, Stage};
+use amethyst::renderer::{Camera, ColorMask, DisplayConfig, DrawFlat, Event, KeyboardInput,
+                         Pipeline, PosTex, Projection, RenderBundle, ScreenDimensions, Stage,
+                         VirtualKeyCode, WindowEvent};
 use amethyst::ui::{DrawUi, UiBundle};
 use gfx::preset::blend;
 
@@ -80,6 +81,23 @@ impl State for Example {
                 // Used by the engine to compute and store the rendered position.
                 .with(GlobalTransform::default())
                 .build();
+        }
+    }
+
+    fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
+        match event {
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::KeyboardInput {
+                    input:
+                        KeyboardInput {
+                            virtual_keycode: Some(VirtualKeyCode::Escape),
+                            ..
+                        },
+                    ..
+                } => Trans::Quit,
+                _ => Trans::None,
+            },
+            _ => Trans::None,
         }
     }
 }
