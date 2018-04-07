@@ -11,7 +11,7 @@ extern crate gfx;
 mod loader;
 mod sprite;
 
-use amethyst::core::cgmath::{Matrix4, Vector3};
+use amethyst::core::cgmath::{Matrix4, Transform as CgTransform, Vector3};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::Entity;
 use amethyst::input::InputBundle;
@@ -19,7 +19,7 @@ use amethyst::prelude::*;
 use amethyst::renderer::{Camera, ColorMask, DisplayConfig, DrawFlat, Pipeline, PosTex, Projection,
                          RenderBundle, ScreenDimensions, Stage};
 use amethyst::ui::{DrawUi, UiBundle};
-use gfx::preset::blend::ALPHA;
+use gfx::preset::blend;
 
 use loader::SpriteSheetLoader;
 
@@ -32,15 +32,9 @@ impl State for Example {
         initialise_camera(world);
 
         let sprite_sheet_loader = SpriteSheetLoader;
-        // let sprite_sheet = sprite_sheet_loader.load(
-        //     "texture/bat.32x32.png",
-        //     sprite::Metadata::new(31., 31., 2, 6, true),
-        //     &mut world,
-        // );
-
         let sprite_sheet = sprite_sheet_loader.load(
             "texture/bat.32x32.png",
-            sprite::Metadata::new(192., 64., 1, 1, false),
+            sprite::Metadata::new(32., 32., 2, 6, false),
             &mut world,
         );
 
@@ -48,18 +42,22 @@ impl State for Example {
             let dim = world.read_resource::<ScreenDimensions>();
             (dim.width(), dim.height())
         };
-        // This `Transform` moves the sprite to the middle of the window
-        let mut transform = Transform::default();
-        transform.translation = Vector3::new(width / 2., height / 2., 0.);
-        transform.scale = Vector3::new(2., 2., 0.);
+        // This `Transform` moves the sprites to the middle of the window
+        let mut common_transform = Transform::default();
+        common_transform.translation = Vector3::new(width / 2., height / 2., 0.);
 
-        world
-            .create_entity()
-            .with(sprite_sheet.sprite_meshes[0].clone())
-            .with(sprite_sheet.image)
-            .with(transform)
-            .with(GlobalTransform::default())
-            .build();
+        for i in 0..sprite_sheet.sprite_meshes.len() {
+            let mut sprite_transform = Transform::default();
+            sprite_transform.translation = Vector3::new(0., i as f32 * 32., 0.);
+            // sprite_transform.concat_self(&common_transform);
+            world
+                .create_entity()
+                .with(sprite_sheet.sprite_meshes[i].clone())
+                .with(sprite_sheet.image.clone())
+                .with(sprite_transform)
+                .with(GlobalTransform::default())
+                .build();
+        }
     }
 }
 
@@ -95,7 +93,11 @@ fn run() -> Result<(), amethyst::Error> {
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target(BACKGROUND_COLOUR, 1.0)
-            .with_pass(DrawFlat::<PosTex>::new().with_transparency(ColorMask::all(), ALPHA, None))
+            .with_pass(DrawFlat::<PosTex>::new().with_transparency(
+                ColorMask::all(),
+                blend::ALPHA,
+                None,
+            ))
             .with_pass(DrawUi::new()),
     );
 
