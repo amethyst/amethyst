@@ -1,4 +1,4 @@
-use super::{Anchor, Anchored, FontAsset, FontHandle, Stretch, Stretched, TtfFormat, UiImage,
+use super::{Anchor, Anchored, FontAsset, FontHandle, MouseReactive, Stretch, Stretched, TtfFormat, UiImage,
             UiText, UiTransform};
 ///! A clickable button.
 use amethyst_assets::{AssetStorage, Loader};
@@ -29,6 +29,7 @@ struct UiButtonBuilderResources<'a> {
     anchored: WriteStorage<'a, Anchored>,
     entities: Entities<'a>,
     image: WriteStorage<'a, UiImage>,
+    mouse_reactive: WriteStorage<'a, MouseReactive>,
     parent: WriteStorage<'a, Parent>,
     stretched: WriteStorage<'a, Stretched>,
     text: WriteStorage<'a, UiText>,
@@ -193,6 +194,7 @@ impl<'a> UiButtonBuilder<'a> {
     fn build(mut self, mut res: UiButtonBuilderResources) -> UiButton {
         let image_entity = res.entities.create();
         res.image.insert(image_entity, self.image);
+        res.mouse_reactive.insert(image_entity, MouseReactive);
         if let Some(parent) = self.parent.take() {
             res.parent.insert(image_entity, parent);
         }
