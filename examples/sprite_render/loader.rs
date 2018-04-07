@@ -115,8 +115,8 @@ fn offset_distances(metadata: &sprite::Metadata) -> (f32, f32) {
 
 /// Returns a set of vertices that make up a rectangular mesh of the given size.
 ///
-/// Coordinates in this function are calculated from the top left of the image. X increases to the
-/// right, Y increases downwards.
+/// This function expects pixel coordinates -- starting from the top left of the image. X increases
+/// to the right, Y increases downwards.
 ///
 /// # Parameters
 ///
@@ -140,8 +140,11 @@ fn create_sprite_vertices(
     // Texture coordinates are expressed as fractions of the position on the image.
     let tex_coord_left = left / image_w;
     let tex_coord_right = right / image_w;
-    let tex_coord_top = top / image_h;
-    let tex_coord_bottom = bottom / image_h;
+    // Inverse the pixel coordinates when transforming them into texture coordinates, because the
+    // render passes' Y axis is 0 from the bottom of the image, and increases to 1.0 at the top of
+    // the image.
+    let tex_coord_top = 1. - bottom / image_h;
+    let tex_coord_bottom = 1. - top / image_h;
 
     vec![
         PosTex {
