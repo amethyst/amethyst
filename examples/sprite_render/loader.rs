@@ -44,10 +44,10 @@ impl SpriteSheetLoader {
                 let vertices = create_sprite_vertices(
                     image_w,
                     image_h,
+                    metadata.sprite_w,
+                    metadata.sprite_h,
                     offset_x,
                     offset_y,
-                    offset_x + metadata.sprite_w,
-                    offset_y + metadata.sprite_h,
                 );
 
                 let sprite_number = row * metadata.row_count + col;
@@ -115,50 +115,58 @@ fn offset_distances(metadata: &sprite::Metadata) -> (f32, f32) {
 
 /// Returns a set of vertices that make up a rectangular mesh of the given size.
 ///
+/// Coordinates in this function are calculated from the top left of the image. X increases to the
+/// right, Y increases downwards.
+///
 /// # Parameters
 ///
 /// * `image_w`: Width of the full sprite sheet.
 /// * `image_h`: Height of the full sprite sheet.
-/// * `left`: x coordinate of the left side of the sprite.
-/// * `bottom`: y coordinate of the bottom of the sprite.
-/// * `right`: x coordinate of the right side of the sprite.
-/// * `top`: y coordinate of the top of the sprite.
+/// * `sprite_w`: Width of each sprite, excluding the border pixel if any.
+/// * `sprite_h`: Height of each sprite, excluding the border pixel if any.
+/// * `left`: X coordinate of the left side of the sprite.
+/// * `top`: Y coordinate of the top of the sprite.
 fn create_sprite_vertices(
     image_w: f32,
     image_h: f32,
+    sprite_w: f32,
+    sprite_h: f32,
     left: f32,
-    bottom: f32,
-    right: f32,
     top: f32,
 ) -> Vec<PosTex> {
+    let right = left + sprite_w;
+    let bottom = top + sprite_h;
+
+    // Texture coordinates are expressed as fractions of the position on the image.
     let tex_coord_left = left / image_w;
     let tex_coord_right = right / image_w;
     let tex_coord_top = top / image_h;
     let tex_coord_bottom = bottom / image_h;
+
     vec![
         PosTex {
-            position: [0., bottom, 0.],
-            tex_coord: [tex_coord_left, tex_coord_bottom],
-        },
-        PosTex {
-            position: [right - left, bottom, 0.],
-            tex_coord: [tex_coord_right, tex_coord_bottom],
-        },
-        PosTex {
-            position: [0., top, 0.],
+            position: [0., 0., 0.],
             tex_coord: [tex_coord_left, tex_coord_top],
         },
         PosTex {
-            position: [right - left, top, 0.],
+            position: [sprite_w, 0., 0.],
             tex_coord: [tex_coord_right, tex_coord_top],
         },
         PosTex {
-            position: [0., top, 0.],
-            tex_coord: [tex_coord_left, tex_coord_top],
+            position: [0., sprite_h, 0.],
+            tex_coord: [tex_coord_left, tex_coord_bottom],
         },
         PosTex {
-            position: [right - left, bottom, 0.],
+            position: [sprite_w, sprite_h, 0.],
             tex_coord: [tex_coord_right, tex_coord_bottom],
+        },
+        PosTex {
+            position: [0., sprite_h, 0.],
+            tex_coord: [tex_coord_left, tex_coord_bottom],
+        },
+        PosTex {
+            position: [sprite_w, 0., 0.],
+            tex_coord: [tex_coord_right, tex_coord_top],
         },
     ]
 }
