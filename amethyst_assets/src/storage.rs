@@ -287,7 +287,10 @@ impl<A: Asset> AssetStorage<A> {
 
             debug!(
                 "{:?}: Asset {:?} (handle id: {:?}) needs a reload using format {:?}",
-                A::NAME, name, handle, format,
+                A::NAME,
+                name,
+                handle,
+                format,
             );
 
             if let Some(handle) = handle {
