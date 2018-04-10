@@ -19,7 +19,10 @@ pub enum BlendMethod {
 pub trait AnimationSampling: Send + Sync + 'static {
     /// The interpolation primitive
     type Primitive: InterpolationPrimitive + Clone + Copy + Send + Sync + 'static;
-    /// The channel type
+    /// An independent grouping or type of functions that operate on attributes of a component
+    ///
+    /// For example, `translation`, `scaling` and `rotation` are transformation channels independent
+    /// of each other, even though they all mutate coordinates of a component.
     type Channel: Debug + Clone + Hash + Eq + Send + Sync + 'static;
 
     /// Apply a sample to a channel
@@ -42,10 +45,25 @@ where
     T: InterpolationPrimitive,
 {
     /// Time of key frames
+    ///
+    /// A simple example of this for animations that are defined with 4 evenly spaced key frames is
+    /// `vec![0., 1., 2., 3.]`.
     pub input: Vec<f32>,
     /// Actual output data to interpolate
+    ///
+    /// For `input` of size `i`, the `output` is size `n * i`, where `n` is the number of values for
+    /// a key frame.
+    ///
+    /// For linear interpolation, each key frame only needs one value as end points to the function,
+    /// so the `output` vector is the same length as the `input` vector &mdash; `n` is 1.
+    ///
+    /// For [`CubicSpline`][cbc_spl] interpolation, every key frame needs 3 values to feed into the
+    /// cubic spline function &mdash; the input tangent, position, and output tangent &mdash; so `n`
+    /// is 3.
+    ///
+    /// [cbc_spl]: enum.InterpolationFunction.html#variant.CubicSpline
     pub output: Vec<T>,
-    /// How should interpolation be done
+    /// How interpolation should be done
     pub function: InterpolationFunction<T>,
 }
 
@@ -92,8 +110,8 @@ where
 }
 
 /// Defines the hierarchy of nodes that a single animation can control.
-/// Attach to the root entity that an animation can be defined for.
-/// Only required for animations which target more than a single node.
+/// Attached to the root entity that an animation can be defined for.
+/// Only required for animations which target more than a single node or entity.
 #[derive(Debug, Clone)]
 pub struct AnimationHierarchy<T> {
     pub nodes: FnvHashMap<usize, Entity>,
@@ -161,12 +179,17 @@ where
 }
 
 /// Defines a single animation.
+///
+/// An animation is a set of [`Sampler`][sampler]s that should always run together as a unit.
+///
 /// Defines relationships between the node index in `AnimationHierarchy` and a `Sampler` handle.
 /// If the animation only targets a single node index, `AnimationHierarchy` is not required.
 ///
 /// ### Type parameters:
 ///
 /// - `T`: the component type that the animation should be applied to
+///
+/// [sampler]: struct.Sampler.html
 #[derive(Clone, Debug)]
 pub struct Animation<T>
 where
