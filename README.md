@@ -67,9 +67,6 @@ does not aim to be API-compatible with it in any way. Some goals include:
 [up]: https://en.wikipedia.org/wiki/Unix_philosophy
 
 ## Usage
-
-**Linux developers: the libasound2-dev (alsa-lib-devel on Fedora) and libx11-xcb-dev packages are required to compile Amethyst.**
-
 Read the [online book][bk] for a comprehensive tutorial to using Amethyst. There
 is also an online crate-level [API reference][ar].
 
@@ -77,13 +74,31 @@ is also an online crate-level [API reference][ar].
 
 
 
-## Quick Example
+## Getting started
+To compile any of the examples run:
+```
+$ cargo run --example name_of_example
+```
+All available examples are listed under [examples][ex].
 
-See the [Getting Started][gs] chapter in the book for the full-blown "Hello,
-World!" tutorial. For the sake of brevity, you can generate an empty game
-project with `cargo` and build it. Follow along below:
+For a full-blown "Hello World" tutorial check out the [Getting Started][gs] chapter
+in the book.
 
+[ex]: examples/
 [gs]: https://www.amethyst.rs/book/master/book/getting_started.html
+
+## Dependencies
+If you are compiling on Linux make sure to install the following dependencies:
+
+### Ubuntu
+```
+$ sudo apt install libasound2-dev libx11-xcb-dev
+```
+
+### Fedora
+```
+$ sudo yum install alsa-lib-devel libx11-xcb-dev
+```
 
 ## Building Documentation
 
