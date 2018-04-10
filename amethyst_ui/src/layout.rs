@@ -1,7 +1,7 @@
 use super::UiTransform;
 use amethyst_core::Parent;
-use amethyst_core::specs::{Component, Entities, Entity, Fetch, FlaggedStorage, Join, ReadStorage,
-                           System, VecStorage, WriteStorage};
+use amethyst_core::specs::prelude::{Component, Entities, Entity, Fetch, FlaggedStorage, Join, ReadStorage,
+                           System, VecStorage, WriteStorage, ReaderId, InsertedFlag, RemovedFlag, ModifiedFlag, BitSet};
 use amethyst_renderer::ScreenDimensions;
 use std::collections::{HashMap, HashSet};
 
@@ -183,7 +183,6 @@ impl<'a> System<'a> for UiLayoutSystem {
 /// Manages the `Parent` component on entities having `UiTransform`
 /// It does almost the same as the `TransformSystem`, but with some differences,
 /// like `UiTransform` alignment and stretching.
-#[derive(Default)]
 pub struct UiParentSystem {
     /// Map of entities to index in sorted vec.
     indices: HashMap<Entity, usize>,
@@ -191,8 +190,25 @@ pub struct UiParentSystem {
     /// with parents.
     sorted: Vec<Entity>,
 
-    init: Vec<Entity>,
-    frame_init: Vec<Entity>,
+    init: BitSet,
+    frame_init: BitSet,
+
+    parent_modified: BitSet,
+    parent_removed: BitSet,
+
+    local_modified: BitSet,
+
+    stretch_modified: BitSet,
+
+    inserted_parent_id: ReaderId<InsertedFlag>,
+    modified_parent_id: ReaderId<ModifiedFlag>,
+    removed_parent_id: ReaderId<RemovedFlag>,
+
+    inserted_local_id: ReaderId<InsertedFlag>,
+    modified_local_id: ReaderId<ModifiedFlag>,
+
+    inserted_stretch_id: ReaderId<InsertedFlag>,
+    modified_stretch_id: ReaderId<ModifiedFlag>,
 
     dead: HashSet<Entity>,
     remove_parent: Vec<Entity>,
@@ -200,8 +216,35 @@ pub struct UiParentSystem {
 
 impl UiParentSystem {
     /// Creates a new UiLayoutSystem.
-    pub fn new() -> Self {
-        Default::default()
+    pub fn new(
+        inserted_parent_id: ReaderId<InsertedFlag>,
+        modified_parent_id: ReaderId<ModifiedFlag>,
+        removed_parent_id: ReaderId<RemovedFlag>,
+        inserted_local_id: ReaderId<InsertedFlag>,
+        modified_local_id: ReaderId<ModifiedFlag>,
+        inserted_stretch_id: ReaderId<InsertedFlag>,
+        modified_stretch_id: ReaderId<ModifiedFlag>,
+    ) -> Self {
+        UiParentSystem {
+            inserted_parent_id,
+            modified_parent_id,
+            removed_parent_id,
+            inserted_local_id,
+            modified_local_id,
+            inserted_stretch_id,
+            modified_stretch_id,
+            indices: HashMap::default(),
+            sorted: Vec::default(),
+            init: BitSet::default(),
+            frame_init: BitSet::default(),
+            dead: HashSet::default(),
+            remove_parent: Vec::default(),
+            parent_modified: BitSet::default(),
+            parent_removed: BitSet::default(),
+            local_modified: BitSet::default(),
+            stretch_modified: BitSet::default(),
+
+        }
     }
 
     fn remove(&mut self, index: usize) {
@@ -211,9 +254,7 @@ impl UiParentSystem {
             self.indices.insert(*swapped, index);
         }
         self.indices.remove(&entity);
-
-        let init_index = self.init.iter().position(|&e| e == entity).unwrap();
-        self.init.remove(init_index);
+        self.init.remove(index as u32);
     }
 }
 
@@ -233,8 +274,23 @@ impl<'a> System<'a> for UiParentSystem {
         #[cfg(feature = "profiler")]
         profile_scope!("ui_parent_system");
 
+        self.parent_modified.clear();
+        self.parent_removed.clear();
+        self.local_modified.clear();
+        self.stretch_modified.clear();
+
+        parents.populate_inserted(&mut self.inserted_parent_id, &mut self.parent_modified);
+        parents.populate_modified(&mut self.modified_parent_id, &mut self.parent_modified);
+        parents.populate_removed(&mut self.removed_parent_id, &mut self.parent_removed);
+
+        locals.populate_inserted(&mut self.inserted_local_id, &mut self.local_modified);
+        locals.populate_modified(&mut self.modified_local_id, &mut self.local_modified);
+
+        stretches.populate_inserted(&mut self.inserted_stretch_id, &mut self.stretch_modified);
+        stretches.populate_modified(&mut self.modified_stretch_id, &mut self.stretch_modified);
+
         {
-            for (entity, parent) in (&*entities, parents.open().1).join() {
+            for (entity, _, parent) in (&*entities, &self.parent_modified, &parents).join() {
                 if parent.entity == entity {
                     self.remove_parent.push(entity);
                 }
@@ -248,20 +304,19 @@ impl<'a> System<'a> for UiParentSystem {
             self.remove_parent.clear();
         }
 
+        for entity in &self.sorted {
+            if self.parent_removed.contains(entity.id()) {
+                self.dead.insert(*entity);
+            }
+        }
+
         {
             // Checks for entities with a modified local transform or a modified parent, but isn't initialized yet.
-            let filter = locals.open().0 & parents.open().0; // has a local, parent, and isn't initialized.
-            let mut to_add = Vec::<Entity>::new();
-            for (entity, _) in (&*entities, &filter)
-                .join()
-                .filter(|&(e, _)| !self.init.contains(&e))
-            {
-                to_add.push(entity);
-            }
-            for entity in to_add {
+            let filter = &self.local_modified & &self.parent_modified & !&self.init; // has a local, parent, and isn't initialized.
+            for (entity, _) in (&*entities, &filter).join() {
                 self.indices.insert(entity, self.sorted.len());
                 self.sorted.push(entity);
-                self.frame_init.push(entity);
+                self.frame_init.add(entity.id());
             }
         }
 
@@ -269,8 +324,8 @@ impl<'a> System<'a> for UiParentSystem {
         let mut index = 0;
         while index < self.sorted.len() {
             let entity = self.sorted[index];
-            let local_dirty = locals.open().1.flagged(entity);
-            let parent_dirty = parents.open().1.flagged(entity);
+            let local_dirty = self.local_modified.contains(entity.id());
+            let parent_dirty = self.parent_modified.contains(entity.id());
 
             let mut combined_transform: Option<(f32, f32, f32)> = None;
             let mut new_size: Option<(f32, f32)> = None;
@@ -315,9 +370,7 @@ impl<'a> System<'a> for UiParentSystem {
 
                     // Layouting starts here.
 
-                    if local_dirty || parent_dirty || locals.open().1.flagged(parent.entity)
-                        || stretches.open().1.flagged(parent.entity)
-                    {
+                    if local_dirty || parent_dirty || self.stretch_modified.contains(parent.entity.id()) {
                         // Positioning when having a parent.
 
                         if let Some(parent_global) = locals.get(parent.entity) {
@@ -407,13 +460,15 @@ impl<'a> System<'a> for UiParentSystem {
             }
         }
 
-        (&mut locals).open().1.clear_flags();
-        (&mut parents).open().1.clear_flags();
-
         for bit in &self.frame_init {
-            self.init.push(bit.clone());
+            self.init.add(bit);
         }
         self.frame_init.clear();
         self.dead.clear();
+
+        // We need to treat any changes done inside the system as non-modifications, so we read out
+        // any events that were generated during the system run
+        locals.populate_inserted(&mut self.inserted_local_id, &mut self.local_modified);
+        locals.populate_modified(&mut self.modified_local_id, &mut self.local_modified);
     }
 }
