@@ -67,14 +67,14 @@ does not aim to be API-compatible with it in any way. Some goals include:
 [up]: https://en.wikipedia.org/wiki/Unix_philosophy
 
 ## Usage
+
 Read the [online book][bk] for a comprehensive tutorial to using Amethyst. There
 is also an online crate-level [API reference][ar].
 
 [bk]: https://www.amethyst.rs/book/master/book/
 
-
-
 ## Getting started
+
 To compile any of the examples run:
 ```
 $ cargo run --example name_of_example
@@ -88,16 +88,19 @@ in the book.
 [gs]: https://www.amethyst.rs/book/master/book/getting_started.html
 
 ## Dependencies
+
 If you are compiling on Linux make sure to install the following dependencies:
 
 ### Ubuntu
+
 ```
 $ sudo apt install libasound2-dev libx11-xcb-dev
 ```
 
 ### Fedora
+
 ```
-$ sudo yum install alsa-lib-devel libx11-xcb-dev
+$ sudo yum install alsa-lib-devel
 ```
 
 ## Building Documentation
@@ -117,7 +120,6 @@ $ cargo doc
 ```
 
 The API reference can be found in `target/doc/amethyst/index.html`.
-
 
 ## Questions / Help
 
