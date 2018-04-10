@@ -1,7 +1,7 @@
 //! Camera type with support for perspective and orthographic projections.
 
 use amethyst_core::cgmath::{Deg, Matrix4, Ortho, PerspectiveFov};
-use specs::{Component, Entity, HashMapStorage};
+use amethyst_core::specs::{Component, Entity, HashMapStorage};
 
 /// The projection mode of a `Camera`.
 ///

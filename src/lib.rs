@@ -59,14 +59,13 @@ pub extern crate thread_profiler;
 pub extern crate amethyst_assets as assets;
 pub extern crate amethyst_audio as audio;
 pub extern crate amethyst_config as config;
+pub extern crate amethyst_controls as controls;
 pub extern crate amethyst_core as core;
 pub extern crate amethyst_input as input;
 pub extern crate amethyst_renderer as renderer;
 pub extern crate amethyst_ui as ui;
 pub extern crate amethyst_utils as utils;
-pub extern crate shred;
 pub extern crate shrev;
-pub extern crate specs as ecs;
 pub extern crate winit;
 
 #[macro_use]
@@ -80,6 +79,8 @@ extern crate rustc_version_runtime;
 pub use self::app::{Application, ApplicationBuilder};
 pub use self::error::{Error, Result};
 pub use self::state::{State, StateMachine, Trans};
+pub use core::shred;
+pub use core::specs as ecs;
 
 pub mod prelude;
 

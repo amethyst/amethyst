@@ -80,7 +80,7 @@ fn run() -> Result<()> {
         .with_bundle(PongBundle)?
         .with_bundle(TransformBundle::new().with_dep(&["ball_system", "paddle_system"]))?
         .with_bundle(AudioBundle::new(|music: &mut Music| music.music.next()))?
-        .with_bundle(UiBundle::new())?
+        .with_bundle(UiBundle::<String, String>::new())?
         .with_bundle(RenderBundle::new(pipe, Some(display_config)))?
         .build()?;
     game.run();

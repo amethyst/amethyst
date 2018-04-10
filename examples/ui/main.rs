@@ -2,18 +2,24 @@
 
 extern crate amethyst;
 extern crate genmesh;
+#[macro_use]
+extern crate log;
 
 use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::Time;
-use amethyst::core::cgmath::{Deg, InnerSpace, Vector3};
-use amethyst::core::transform::GlobalTransform;
+use amethyst::core::cgmath::Deg;
+use amethyst::core::transform::{GlobalTransform, Parent};
 use amethyst::ecs::{Entity, World};
+use amethyst::ecs::{FetchMut, System};
+use amethyst::input::InputBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light, Mesh, Pipeline,
                          PngFormat, PointLight, PosNormTex, Projection, RenderBundle, Rgba, Stage,
                          Texture};
-use amethyst::ui::{DrawUi, FontAsset, TextEditing, TtfFormat, UiBundle, UiFocused, UiImage,
-                   UiText, UiTransform};
+use amethyst::shrev::{EventChannel, ReaderId};
+use amethyst::ui::{Anchor, Anchored, DrawUi, FontAsset, MouseReactive, Stretch, Stretched,
+                   TextEditing, TtfFormat, UiBundle, UiEvent, UiFocused, UiImage, UiText,
+                   UiTransform};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::winit::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use genmesh::{MapToVertices, Triangulate, Vertices};
@@ -37,7 +43,7 @@ impl State for Example {
         initialise_sphere(world);
         initialise_lights(world);
         initialise_camera(world);
-        let (logo, font) = {
+        let (logo, font, red, green, blue) = {
             let loader = world.read_resource::<Loader>();
 
             let logo = loader.load(
@@ -55,23 +61,93 @@ impl State for Example {
                 (),
                 &world.read_resource::<AssetStorage<FontAsset>>(),
             );
-            (logo, font)
+            let red = loader.load_from_data(
+                [1.0, 0.0, 0.0, 1.0].into(),
+                (),
+                &world.read_resource::<AssetStorage<Texture>>(),
+            );
+            let green = loader.load_from_data(
+                [0.0, 1.0, 0.0, 1.0].into(),
+                (),
+                &world.read_resource::<AssetStorage<Texture>>(),
+            );
+            let blue = loader.load_from_data(
+                [0.0, 0.0, 1.0, 1.0].into(),
+                (),
+                &world.read_resource::<AssetStorage<Texture>>(),
+            );
+            (logo, font, red, green, blue)
         };
+
+        let background = world
+            .create_entity()
+            .with(UiTransform::new(
+                "background".to_string(),
+                0.0,
+                0.0,
+                0.0,
+                20.0,
+                20.0,
+                0,
+            ))
+            .with(UiImage {
+                texture: red.clone(),
+            })
+            .with(Stretched::new(Stretch::XY, 0.0, 0.0))
+            .with(Anchored::new(Anchor::Middle))
+            .build();
+
+        let top_right = world
+            .create_entity()
+            .with(
+                UiTransform::new("top_right".to_string(), -32.0, 32.0, -1.0, 64.0, 64.0, 0)
+                    .as_percent(),
+            )
+            .with(UiImage {
+                texture: green.clone(),
+            })
+            .with(Anchored::new(Anchor::TopRight))
+            .with(Parent {
+                entity: background.clone(),
+            })
+            .build();
+        world
+            .create_entity()
+            .with(UiTransform::new(
+                "middle_top_right".to_string(),
+                0.0,
+                0.0,
+                -2.0,
+                32.0,
+                32.0,
+                0,
+            ))
+            .with(UiImage {
+                texture: blue.clone(),
+            })
+            .with(Anchored::new(Anchor::Middle))
+            .with(Stretched::new(Stretch::X, 2.0, 0.0))
+            .with(Parent {
+                entity: top_right.clone(),
+            })
+            .build();
 
         world
             .create_entity()
             .with(UiTransform::new(
                 "logo".to_string(),
-                300.,
-                300.,
                 0.,
-                232.,
-                266.,
-                0,
+                -32.,
+                -3.,
+                64.,
+                64.,
+                1,
             ))
             .with(UiImage {
                 texture: logo.clone(),
             })
+            .with(Anchored::new(Anchor::BottomMiddle))
+            .with(MouseReactive)
             .build();
 
         let text = world
@@ -79,8 +155,8 @@ impl State for Example {
             .with(UiTransform::new(
                 "hello_world".to_string(),
                 0.,
-                200.,
-                1.,
+                0.,
+                -4.,
                 500.,
                 75.,
                 1,
@@ -88,9 +164,10 @@ impl State for Example {
             .with(UiText::new(
                 font.clone(),
                 "Hello world!".to_string(),
-                [1.0, 1.0, 1.0, 1.0],
+                [0.2, 0.2, 1.0, 1.0],
                 75.,
             ))
+            .with(Anchored::new(Anchor::Middle))
             .with(TextEditing::new(
                 12,
                 [0.0, 0.0, 0.0, 1.0],
@@ -98,13 +175,59 @@ impl State for Example {
                 false,
             ))
             .build();
+
+        // Manual button creation example
+        let button_image = world
+            .create_entity()
+            .with(UiTransform::new(
+                "btn_image".to_string(),
+                0.0,
+                32.0,
+                -1.0,
+                128.0,
+                64.0,
+                9,
+            ))
+            .with(UiImage {
+                texture: green.clone(),
+            })
+            .with(Anchored::new(Anchor::TopMiddle))
+            .with(Parent {
+                entity: background.clone(),
+            })
+            .with(MouseReactive)
+            .build();
+        world
+            .create_entity()
+            .with(UiTransform::new(
+                "btn_text".to_string(),
+                0.,
+                0.,
+                -1.,
+                0.,
+                0.,
+                10,
+            ))
+            .with(UiText::new(
+                font.clone(),
+                "Button!".to_string(),
+                [0.2, 0.2, 1.0, 1.0],
+                20.,
+            ))
+            .with(Anchored::new(Anchor::Middle))
+            .with(Stretched::new(Stretch::XY, 0.0, 0.0))
+            .with(Parent {
+                entity: button_image,
+            })
+            .build();
+
         let fps = world
             .create_entity()
             .with(UiTransform::new(
                 "fps".to_string(),
-                0.,
-                0.,
-                1.,
+                100.,
+                30.,
+                -3.,
                 500.,
                 75.,
                 2,
@@ -115,6 +238,7 @@ impl State for Example {
                 [1.0, 1.0, 1.0, 1.0],
                 75.,
             ))
+            .with(Anchored::new(Anchor::TopLeft))
             .build();
         self.fps_display = Some(fps);
         world.write_resource::<UiFocused>().entity = Some(text);
@@ -167,8 +291,10 @@ fn run() -> Result<(), amethyst::Error> {
         )
     };
     let mut game = Application::build(resources, Example { fps_display: None })?
-        .with_bundle(UiBundle::new())?
+        .with_bundle(UiBundle::<String, String>::new())?
+        .with(UiEventHandlerSystem::new(), "ui_event_handler", &[])
         .with_bundle(FPSCounterBundle::default())?
+        .with_bundle(InputBundle::<String, String>::new())?
         .with_bundle(RenderBundle::new(pipe, Some(config)))?
         .build()?;
     game.run();
@@ -184,9 +310,9 @@ fn main() {
 
 fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTex> {
     SphereUV::new(u, v)
-        .vertex(|(x, y, z)| PosNormTex {
-            position: [x, y, z],
-            normal: Vector3::from([x, y, z]).normalize().into(),
+        .vertex(|vertex| PosNormTex {
+            position: vertex.pos,
+            normal: vertex.normal,
             tex_coord: [0.1, 0.1],
         })
         .triangulate()
@@ -258,4 +384,28 @@ fn initialise_camera(world: &mut World) {
         .with(Camera::from(Projection::perspective(1.3, Deg(60.0))))
         .with(GlobalTransform(transform.into()))
         .build();
+}
+
+/// This shows how to handle UI events.
+pub struct UiEventHandlerSystem {
+    reader_id: Option<ReaderId<UiEvent>>,
+}
+
+impl UiEventHandlerSystem {
+    pub fn new() -> Self {
+        UiEventHandlerSystem { reader_id: None }
+    }
+}
+
+impl<'a> System<'a> for UiEventHandlerSystem {
+    type SystemData = FetchMut<'a, EventChannel<UiEvent>>;
+
+    fn run(&mut self, mut events: Self::SystemData) {
+        if self.reader_id.is_none() {
+            self.reader_id = Some(events.register_reader());
+        }
+        for ev in events.read(self.reader_id.as_mut().unwrap()) {
+            info!("You just interacted with a ui element: {:?}", ev);
+        }
+    }
 }

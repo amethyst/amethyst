@@ -1,10 +1,10 @@
 //! Simple shaded pass
 
 use amethyst_assets::AssetStorage;
+use amethyst_core::specs::{Entities, Fetch, Join, ReadStorage};
 use amethyst_core::transform::GlobalTransform;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
-use specs::{Entities, Fetch, Join, ReadStorage};
 
 use super::*;
 use cam::{ActiveCamera, Camera};
@@ -20,9 +20,9 @@ use pipe::pass::{Pass, PassData};
 use resources::AmbientColor;
 use skinning::JointTransforms;
 use tex::Texture;
-use transparent::{Transparent, TransparentBackToFront};
 use types::{Encoder, Factory};
 use vertex::{Attributes, Normal, Position, Separate, TexCoord, VertexFormat};
+use visibility::Visibility;
 
 static ATTRIBUTES: [Attributes<'static>; 3] = [
     Separate::<Position>::ATTRIBUTES,
@@ -70,13 +70,12 @@ impl<'a> PassData<'a> for DrawShadedSeparate {
         Fetch<'a, AssetStorage<Mesh>>,
         Fetch<'a, AssetStorage<Texture>>,
         Fetch<'a, MaterialDefaults>,
-        Fetch<'a, TransparentBackToFront>,
+        Option<Fetch<'a, Visibility>>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
         ReadStorage<'a, GlobalTransform>,
         ReadStorage<'a, Light>,
         ReadStorage<'a, JointTransforms>,
-        ReadStorage<'a, Transparent>,
     );
 }
 
@@ -131,13 +130,12 @@ impl Pass for DrawShadedSeparate {
             mesh_storage,
             tex_storage,
             material_defaults,
-            back_to_front,
+            visibility,
             mesh,
             material,
             global,
             light,
             joints,
-            transparent,
         ): <Self as PassData<'a>>::Data,
     ) {
         trace!("Drawing shaded pass");
@@ -145,41 +143,68 @@ impl Pass for DrawShadedSeparate {
 
         set_light_args(effect, encoder, &light, &ambient, camera);
 
-        for (entity, mesh, material, global, _) in
-            (&*entities, &mesh, &material, &global, !&transparent).join()
-        {
-            draw_mesh(
-                encoder,
-                effect,
-                self.skinning,
-                mesh_storage.get(mesh),
-                joints.get(entity),
-                &*tex_storage,
-                Some(material),
-                &*material_defaults,
-                camera,
-                Some(global),
-                &ATTRIBUTES,
-                &TEXTURES,
-            );
-        }
-
-        for entity in &back_to_front.entities {
-            if let Some(mesh) = mesh.get(*entity) {
+        match visibility {
+            None => for (entity, mesh, material, global) in
+                (&*entities, &mesh, &material, &global).join()
+            {
                 draw_mesh(
                     encoder,
                     effect,
                     self.skinning,
                     mesh_storage.get(mesh),
-                    joints.get(*entity),
-                    &*tex_storage,
-                    material.get(*entity),
-                    &*material_defaults,
+                    joints.get(entity),
+                    &tex_storage,
+                    Some(material),
+                    &material_defaults,
                     camera,
-                    global.get(*entity),
+                    Some(global),
                     &ATTRIBUTES,
                     &TEXTURES,
                 );
+            },
+            Some(ref visibility) => {
+                for (entity, mesh, material, global, _) in (
+                    &*entities,
+                    &mesh,
+                    &material,
+                    &global,
+                    &visibility.visible_unordered,
+                ).join()
+                {
+                    draw_mesh(
+                        encoder,
+                        effect,
+                        self.skinning,
+                        mesh_storage.get(mesh),
+                        joints.get(entity),
+                        &tex_storage,
+                        Some(material),
+                        &material_defaults,
+                        camera,
+                        Some(global),
+                        &ATTRIBUTES,
+                        &TEXTURES,
+                    );
+                }
+
+                for entity in &visibility.visible_ordered {
+                    if let Some(mesh) = mesh.get(*entity) {
+                        draw_mesh(
+                            encoder,
+                            effect,
+                            self.skinning,
+                            mesh_storage.get(mesh),
+                            joints.get(*entity),
+                            &tex_storage,
+                            material.get(*entity),
+                            &material_defaults,
+                            camera,
+                            global.get(*entity),
+                            &ATTRIBUTES,
+                            &TEXTURES,
+                        );
+                    }
+                }
             }
         }
     }

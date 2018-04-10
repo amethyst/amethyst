@@ -3,10 +3,10 @@
 use std::marker::PhantomData;
 
 use amethyst_assets::AssetStorage;
+use amethyst_core::specs::{Fetch, Join, ReadStorage};
 use amethyst_core::transform::GlobalTransform;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
-use specs::{Fetch, Join, ReadStorage};
 
 use super::*;
 use cam::{ActiveCamera, Camera};
@@ -20,9 +20,9 @@ use pipe::{DepthMode, Effect, NewEffect};
 use pipe::pass::{Pass, PassData};
 use resources::AmbientColor;
 use tex::Texture;
-use transparent::{Transparent, TransparentBackToFront};
 use types::{Encoder, Factory};
 use vertex::{Normal, Position, Query, TexCoord};
+use visibility::Visibility;
 
 /// Draw mesh with simple lighting technique
 /// `V` is `VertexFormat`
@@ -65,12 +65,11 @@ where
         Fetch<'a, AssetStorage<Mesh>>,
         Fetch<'a, AssetStorage<Texture>>,
         Fetch<'a, MaterialDefaults>,
-        Fetch<'a, TransparentBackToFront>,
+        Option<Fetch<'a, Visibility>>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
         ReadStorage<'a, GlobalTransform>,
         ReadStorage<'a, Light>,
-        ReadStorage<'a, Transparent>,
     );
 }
 
@@ -103,51 +102,72 @@ where
             mesh_storage,
             tex_storage,
             material_defaults,
-            back_to_front,
+            visibility,
             mesh,
             material,
             global,
             light,
-            transparent,
         ): <Self as PassData<'a>>::Data,
     ) {
         let camera = get_camera(active, &camera, &global);
 
         set_light_args(effect, encoder, &light, &ambient, camera);
 
-        for (mesh, material, global, _) in (&mesh, &material, &global, !&transparent).join() {
-            draw_mesh(
-                encoder,
-                effect,
-                false,
-                mesh_storage.get(mesh),
-                None,
-                &*tex_storage,
-                Some(material),
-                &*material_defaults,
-                camera,
-                Some(global),
-                &[V::QUERIED_ATTRIBUTES],
-                &TEXTURES,
-            );
-        }
-
-        for entity in &back_to_front.entities {
-            if let Some(mesh) = mesh.get(*entity) {
+        match visibility {
+            None => for (mesh, material, global) in (&mesh, &material, &global).join() {
                 draw_mesh(
                     encoder,
                     effect,
                     false,
                     mesh_storage.get(mesh),
                     None,
-                    &*tex_storage,
-                    material.get(*entity),
-                    &*material_defaults,
+                    &tex_storage,
+                    Some(material),
+                    &material_defaults,
                     camera,
-                    global.get(*entity),
+                    Some(global),
                     &[V::QUERIED_ATTRIBUTES],
                     &TEXTURES,
                 );
+            },
+            Some(ref visibility) => {
+                for (mesh, material, global, _) in
+                    (&mesh, &material, &global, &visibility.visible_unordered).join()
+                {
+                    draw_mesh(
+                        encoder,
+                        effect,
+                        false,
+                        mesh_storage.get(mesh),
+                        None,
+                        &tex_storage,
+                        Some(material),
+                        &material_defaults,
+                        camera,
+                        Some(global),
+                        &[V::QUERIED_ATTRIBUTES],
+                        &TEXTURES,
+                    );
+                }
+
+                for entity in &visibility.visible_ordered {
+                    if let Some(mesh) = mesh.get(*entity) {
+                        draw_mesh(
+                            encoder,
+                            effect,
+                            false,
+                            mesh_storage.get(mesh),
+                            None,
+                            &tex_storage,
+                            material.get(*entity),
+                            &material_defaults,
+                            camera,
+                            global.get(*entity),
+                            &[V::QUERIED_ATTRIBUTES],
+                            &TEXTURES,
+                        );
+                    }
+                }
             }
         }
     }

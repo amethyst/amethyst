@@ -3,12 +3,12 @@ use std::time::Duration;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{duration_to_nanos, duration_to_secs, nanos_to_duration, secs_to_duration, Time};
+use amethyst_core::specs::{Component, Fetch, Join, System, WriteStorage};
 use itertools::Itertools;
 use minterpolate::InterpolationPrimitive;
-use specs::{Component, Fetch, Join, System, WriteStorage};
 
-use resources::{AnimationSampling, ControlState, EndControl, Sampler, SamplerControl,
-                SamplerControlSet, BlendMethod};
+use resources::{AnimationSampling, BlendMethod, ControlState, EndControl, Sampler, SamplerControl,
+                SamplerControlSet};
 
 /// System for interpolating active samplers.
 ///
@@ -70,9 +70,12 @@ where
                 for channel in &self.channels {
                     match comp.blend_method(channel) {
                         None => {
-                            if let Some(p) = self.inner.iter().filter(|p| p.1 == *channel)
+                            if let Some(p) = self.inner
+                                .iter()
+                                .filter(|p| p.1 == *channel)
                                 .map(|p| p.2)
-                                .last() {
+                                .last()
+                            {
                                 comp.apply_sample(channel, &p);
                             }
                         }
@@ -131,6 +134,20 @@ fn process_sampler<T>(
         Done => {
             if let EndControl::Normal = control.end {
                 output.push((control.blend_weight, control.channel.clone(), control.after));
+            }
+            if let EndControl::Stay = control.end {
+                let last_frame = sampler.input.last().cloned().unwrap_or(0.);
+
+                output.push((
+                    control.blend_weight,
+                    control.channel.clone(),
+                    sampler.function.interpolate(
+                        last_frame,
+                        &sampler.input,
+                        &sampler.output,
+                        false,
+                    ),
+                ));
             }
         }
         _ => {}

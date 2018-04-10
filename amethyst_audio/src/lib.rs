@@ -5,9 +5,11 @@ extern crate cpal;
 #[macro_use]
 extern crate log;
 extern crate rodio;
-extern crate shred;
 extern crate smallvec;
-extern crate specs;
+
+#[macro_use]
+#[cfg(feature = "profiler")]
+extern crate thread_profiler;
 
 pub use self::bundle::AudioBundle;
 pub use self::components::*;

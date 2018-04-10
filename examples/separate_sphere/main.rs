@@ -81,7 +81,7 @@ fn main() {
 
 fn gen_sphere(u: usize, v: usize) -> ComboMeshCreator {
     let positions = SphereUV::new(u, v)
-        .vertex(|(x, y, z)| [x, y, z])
+        .vertex(|vertex| vertex.pos)
         .triangulate()
         .vertices()
         .collect::<Vec<_>>();
