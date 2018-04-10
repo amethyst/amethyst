@@ -51,17 +51,21 @@ where
     pub input: Vec<f32>,
     /// Actual output data to interpolate
     ///
-    /// For `input` of size `i`, the `output` is size `n * i`, where `n` is the number of values for
-    /// a key frame.
+    /// For `input` of size `i`, the `output` size differs depending on the interpolation function.
+    /// The following list summarizes the size of the `output` for each interpolation function. For
+    /// more details, please click through to each interpolation function's documentation.
     ///
-    /// For linear interpolation, each key frame only needs one value as end points to the function,
-    /// so the `output` vector is the same length as the `input` vector &mdash; `n` is 1.
+    /// * [Linear][lin]: `i` — `[pos_0, .., pos_n]`
+    /// * [Spherical Linear][sph]: `i` — `[pos_0, .., pos_n]`
+    /// * [Step][step]: `i` — `[pos_0, .., pos_n]`
+    /// * [Catmull Rom Spline][cm]: `i + 2` — `[in_tangent_0, pos_0, .., pos_n, out_tangent_n]`
+    /// * [Cubic Spline][cub]: `3 * i` — `[in_tangent_0, pos_0, out_tangent_0, ..]`
     ///
-    /// For [`CubicSpline`][cbc_spl] interpolation, every key frame needs 3 values to feed into the
-    /// cubic spline function &mdash; the input tangent, position, and output tangent &mdash; so `n`
-    /// is 3.
-    ///
-    /// [cbc_spl]: enum.InterpolationFunction.html#variant.CubicSpline
+    /// [lin]: https://docs.rs/minterpolate/0.2.2/minterpolate/fn.linear_interpolate.html
+    /// [sph]: https://docs.rs/minterpolate/0.2.2/minterpolate/fn.spherical_linear_interpolate.html
+    /// [step]: https://docs.rs/minterpolate/0.2.2/minterpolate/fn.step_interpolate.html
+    /// [cm]: https://docs.rs/minterpolate/0.2.2/minterpolate/fn.catmull_rom_spline_interpolate.html
+    /// [cub]: https://docs.rs/minterpolate/0.2.2/minterpolate/fn.cubic_spline_interpolate.html
     pub output: Vec<T>,
     /// How interpolation should be done
     pub function: InterpolationFunction<T>,
