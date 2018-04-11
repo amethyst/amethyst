@@ -251,6 +251,8 @@ impl<A: Asset> AssetStorage<A> {
         let mut skip = 0;
         while let Some(i) = self.handles.iter().skip(skip).position(Handle::is_unique) {
             count += 1;
+            // Re-normalize index
+            let i = skip + i;
             skip = i;
             let handle = self.handles.swap_remove(i);
             let id = handle.id();
@@ -274,7 +276,7 @@ impl<A: Asset> AssetStorage<A> {
             .map(|s| s.needs_reload(frame_number))
             .unwrap_or(false)
         {
-            trace!("Testing for asset reloads..");
+            trace!("{:?}: Testing for asset reloads..", A::NAME);
             self.hot_reload(pool);
         }
     }
@@ -292,8 +294,11 @@ impl<A: Asset> AssetStorage<A> {
             let handle = handle.upgrade();
 
             debug!(
-                "Asset {:?} (handle id: {:?}) was determined to need a reload using format {:?}",
-                name, handle, format,
+                "{:?}: Asset {:?} (handle id: {:?}) needs a reload using format {:?}",
+                A::NAME,
+                name,
+                handle,
+                format,
             );
 
             if let Some(handle) = handle {

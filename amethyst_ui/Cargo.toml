@@ -26,7 +26,7 @@ rusttype = "0.4"
 shrev = "0.8.1"
 unicode-normalization = "0.1"
 unicode-segmentation = "1.2"
-winit = "0.10"
+winit = "0.11.3"
 
 thread_profiler = { version = "0.1", optional = true }
 
