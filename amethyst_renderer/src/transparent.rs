@@ -1,4 +1,5 @@
-pub use gfx_core::state::{Blend, BlendChannel, ColorMask, Equation, Factor};
+pub use gfx::preset::blend::{ALPHA, REPLACE};
+pub use gfx_core::state::{Blend, BlendChannel, BlendValue, ColorMask, Equation, Factor};
 
 use amethyst_core::specs::{Component, NullStorage};
 

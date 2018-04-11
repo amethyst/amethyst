@@ -83,7 +83,8 @@ pub use skinning::{AnimatedComboMeshCreator, AnimatedVertexBufferCombination, Jo
 pub use sprite::{Sprite, SpriteSheet, SpriteSheetHandle};
 pub use system::RenderSystem;
 pub use tex::{Texture, TextureBuilder, TextureHandle};
-pub use transparent::{Blend, BlendChannel, ColorMask, Equation, Factor, Transparent};
+pub use transparent::{Blend, BlendChannel, BlendValue, ColorMask, Equation, Factor, Transparent,
+                      ALPHA, REPLACE};
 pub use types::{Encoder, Factory, PipelineState, Resources};
 pub use vertex::{Attribute, AttributeFormat, Attributes, Color, Normal, PosColor, PosNormTangTex,
                  PosNormTex, PosTex, Position, Query, Separate, Tangent, TexCoord,
