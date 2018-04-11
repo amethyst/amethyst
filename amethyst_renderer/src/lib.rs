@@ -80,6 +80,7 @@ pub use renderer::Renderer;
 pub use resources::{AmbientColor, ScreenDimensions, WindowMessages};
 pub use skinning::{AnimatedComboMeshCreator, AnimatedVertexBufferCombination, JointIds,
                    JointTransforms, JointWeights};
+pub use sprite::{Sprite, SpriteSheet, SpriteSheetHandle};
 pub use system::RenderSystem;
 pub use tex::{Texture, TextureBuilder, TextureHandle};
 pub use transparent::{Blend, BlendChannel, ColorMask, Equation, Factor, Transparent};
@@ -90,8 +91,8 @@ pub use vertex::{Attribute, AttributeFormat, Attributes, Color, Normal, PosColor
 pub use visibility::{Visibility, VisibilitySortingSystem};
 
 pub mod error;
-pub mod pipe;
 pub mod mouse;
+pub mod pipe;
 
 #[macro_use]
 mod macros;
@@ -108,10 +109,11 @@ mod mtl;
 mod pass;
 mod renderer;
 mod resources;
-mod transparent;
 mod skinning;
+mod sprite;
 mod system;
 mod tex;
+mod transparent;
 mod types;
 mod vertex;
 mod visibility;
