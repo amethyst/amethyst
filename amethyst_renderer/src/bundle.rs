@@ -10,6 +10,7 @@ use amethyst_core::transform::components::*;
 use config::DisplayConfig;
 use pipe::{PipelineBuild, PolyPipeline};
 use skinning::JointTransforms;
+use sprite::SpriteSheet;
 use system::RenderSystem;
 use transparent::Transparent;
 use visibility::{Visibility, VisibilitySortingSystem};
@@ -66,6 +67,7 @@ impl<'a, 'b, 'c, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> ECSBundle
         world.res.entry().or_insert_with(|| WindowMessages::new());
         world.add_resource(AssetStorage::<Mesh>::new());
         world.add_resource(AssetStorage::<Texture>::new());
+        world.add_resource(AssetStorage::<SpriteSheet>::new());
         world.add_resource(Orientation::default());
 
         let mat = create_default_mat(world);
@@ -76,6 +78,7 @@ impl<'a, 'b, 'c, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> ECSBundle
         world.register::<Material>();
         world.register::<Handle<Mesh>>();
         world.register::<Handle<Texture>>();
+        world.register::<Handle<SpriteSheet>>();
         world.register::<Camera>();
         world.register::<Transparent>();
         world.register::<JointTransforms>();
