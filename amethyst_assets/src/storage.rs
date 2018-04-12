@@ -94,7 +94,13 @@ impl<A: Asset> AssetStorage<A> {
 
     /// Get an asset from a given asset handle.
     pub fn get(&self, handle: &Handle<A>) -> Option<&A> {
-        if self.bitset.contains(handle.id()) {     
+        if self.bitset.contains(handle.id()) {
+            // Add a warning if a handle is unique (i.e. asset does not
+            // need to be loaded as it is not used by anything) 
+            // https://github.com/amethyst/amethyst/issues/628
+            if handle.is_unique() {
+                warn!("Loading unecessary asset. Handle {} is unique ", handle.id());
+            }
             #[cfg(feature = "profiler")]
             profile_scope!("get_asset");
             Some(unsafe { self.assets.get(handle.id()) })
@@ -416,7 +422,7 @@ impl<A> Handle<A> {
     }
 
     /// Returns `true` if this is the only handle to the asset its pointing at.
-    fn is_unique(&self) -> bool {
+    pub fn is_unique(&self) -> bool {
         Arc::strong_count(&self.id) == 1
     }
 }
