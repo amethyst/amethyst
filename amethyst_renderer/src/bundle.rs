@@ -1,7 +1,7 @@
 //! ECS rendering bundle
 
 use {AmbientColor, Camera, Light, Material, MaterialDefaults, Mesh, Rgba, ScreenDimensions,
-     Texture, WindowMessages};
+     Texture, TextureOffset, WindowMessages};
 use amethyst_assets::{AssetStorage, Handle, Loader};
 use amethyst_core::bundle::{ECSBundle, Result, ResultExt};
 use amethyst_core::orientation::Orientation;
@@ -120,11 +120,18 @@ fn create_default_mat(world: &World) -> Material {
 
     Material {
         albedo,
+        albedo_offset: TextureOffset::default(),
         emission,
+        emission_offset: TextureOffset::default(),
         normal,
+        normal_offset: TextureOffset::default(),
         metallic,
+        metallic_offset: TextureOffset::default(),
         roughness,
+        roughness_offset: TextureOffset::default(),
         ambient_occlusion,
+        ambient_occlusion_offset: TextureOffset::default(),
         caveat,
+        caveat_offset: TextureOffset::default(),
     }
 }

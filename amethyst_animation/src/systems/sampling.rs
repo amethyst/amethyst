@@ -7,8 +7,8 @@ use amethyst_core::specs::{Component, Fetch, Join, System, WriteStorage};
 use itertools::Itertools;
 use minterpolate::InterpolationPrimitive;
 
-use resources::{AnimationSampling, BlendMethod, ControlState, EndControl, Sampler, SamplerControl,
-                SamplerControlSet};
+use resources::{AnimationSampling, ApplyData, BlendMethod, ControlState, EndControl, Sampler,
+                SamplerControl, SamplerControlSet};
 
 /// System for interpolating active samplers.
 ///
@@ -53,9 +53,10 @@ where
         Fetch<'a, AssetStorage<Sampler<T::Primitive>>>,
         WriteStorage<'a, SamplerControlSet<T>>,
         WriteStorage<'a, T>,
+        <T as ApplyData<'a>>::ApplyData,
     );
 
-    fn run(&mut self, (time, samplers, mut control_sets, mut comps): Self::SystemData) {
+    fn run(&mut self, (time, samplers, mut control_sets, mut comps, apply_data): Self::SystemData) {
         for (control_set, comp) in (&mut control_sets, &mut comps).join() {
             self.inner.clear();
             for control in control_set.samplers.iter_mut() {
@@ -76,13 +77,13 @@ where
                                 .map(|p| p.2)
                                 .last()
                             {
-                                comp.apply_sample(channel, &p);
+                                comp.apply_sample(channel, &p, &apply_data);
                             }
                         }
 
                         Some(BlendMethod::Linear) => {
                             if let Some(p) = linear_blend::<T>(channel, &self.inner) {
-                                comp.apply_sample(channel, &p);
+                                comp.apply_sample(channel, &p, &apply_data);
                             }
                         }
                     }

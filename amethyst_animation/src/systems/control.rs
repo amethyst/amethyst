@@ -7,8 +7,8 @@ use amethyst_core::specs::{Component, Entities, Entity, Fetch, Join, ReadStorage
 use minterpolate::InterpolationPrimitive;
 
 use resources::{Animation, AnimationCommand, AnimationControl, AnimationControlSet,
-                AnimationHierarchy, AnimationSampling, ControlState, RestState, Sampler,
-                SamplerControl, SamplerControlSet, StepDirection};
+                AnimationHierarchy, AnimationSampling, ApplyData, ControlState, RestState,
+                Sampler, SamplerControl, SamplerControlSet, StepDirection};
 
 /// System for setting up animations, should run before `SamplerInterpolationSystem`.
 ///
@@ -50,6 +50,7 @@ where
         ReadStorage<'a, AnimationHierarchy<T>>,
         ReadStorage<'a, T>,
         WriteStorage<'a, RestState<T>>,
+        <T as ApplyData<'a>>::ApplyData,
     );
 
     fn run(&mut self, data: Self::SystemData) {
@@ -62,6 +63,7 @@ where
             hierarchies,
             transforms,
             mut rest_states,
+            apply_data,
         ) = data;
         let mut remove_sets = Vec::default();
         for (entity, control_set) in (&*entities, &mut controls).join() {
@@ -81,6 +83,7 @@ where
                             &transforms,
                             &mut remove,
                             &mut self.next_id,
+                            &apply_data,
                         )
                     },
                 ) {
@@ -156,6 +159,7 @@ fn process_animation_control<T>(
     targets: &ReadStorage<T>,
     remove: &mut bool,
     next_id: &mut u64,
+    apply_data: &<T as ApplyData>::ApplyData,
 ) -> Option<ControlState>
 where
     T: AnimationSampling + Component + Clone,
@@ -199,6 +203,7 @@ where
                 samplers,
                 rest_states,
                 targets,
+                apply_data,
             ) {
                 Some(ControlState::Running(Duration::from_secs(0)))
             } else {
@@ -285,6 +290,7 @@ fn start_animation<T>(
     samplers: &mut WriteStorage<SamplerControlSet<T>>,
     rest_states: &mut WriteStorage<RestState<T>>,
     targets: &ReadStorage<T>, // for rest state
+    apply_data: &<T as ApplyData>::ApplyData,
 ) -> bool
 where
     T: AnimationSampling + Component + Clone,
@@ -316,7 +322,7 @@ where
             state: ControlState::Requested,
             sampler: sampler_handle.clone(),
             end: control.end.clone(),
-            after: component.current_sample(channel),
+            after: component.current_sample(channel, apply_data),
             rate_multiplier: control.rate_multiplier,
             blend_weight: 1.0,
         };

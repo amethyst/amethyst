@@ -5,6 +5,7 @@ use amethyst_core::{ECSBundle, Result};
 use amethyst_core::specs::{Component, DispatcherBuilder, World};
 use amethyst_renderer::JointTransforms;
 
+use material::MaterialTextureSet;
 use resources::{Animation, AnimationControlSet, AnimationHierarchy, AnimationSampling,
                 AnimationSet, RestState, Sampler, SamplerControlSet};
 use skinning::{Joint, Skin, VertexSkinningSystem};
@@ -100,6 +101,7 @@ where
             .entry()
             .or_insert_with(AssetStorage::<Sampler<T::Primitive>>::new);
         world.register::<SamplerControlSet<T>>();
+        world.add_resource(MaterialTextureSet::default());
         Ok(builder
             .add(SamplerProcessor::<T::Primitive>::new(), "", &[])
             .add(SamplerInterpolationSystem::<T>::new(), self.name, self.dep))

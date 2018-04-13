@@ -5,7 +5,7 @@ use amethyst_core::specs::{Join, ReadStorage};
 use gfx::traits::Pod;
 
 use cam::Camera;
-use light::{DirectionalLight, Light, PointLight};
+use light::Light;
 use pipe::{Effect, EffectBuilder};
 use resources::AmbientColor;
 use types::Encoder;
@@ -101,8 +101,12 @@ pub(crate) fn set_light_args(
 pub(crate) fn setup_light_buffers(builder: &mut EffectBuilder) {
     builder
         .with_raw_constant_buffer("FragmentArgs", mem::size_of::<FragmentArgs>(), 1)
-        .with_raw_constant_buffer("PointLights", mem::size_of::<PointLight>(), 128)
-        .with_raw_constant_buffer("DirectionalLights", mem::size_of::<DirectionalLight>(), 16)
+        .with_raw_constant_buffer("PointLights", mem::size_of::<PointLightPod>(), 128)
+        .with_raw_constant_buffer(
+            "DirectionalLights",
+            mem::size_of::<DirectionalLightPod>(),
+            16,
+        )
         .with_raw_global("ambient_color")
         .with_raw_global("camera_position");
 }

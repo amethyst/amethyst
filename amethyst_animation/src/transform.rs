@@ -1,7 +1,7 @@
 use amethyst_core::Transform;
 use amethyst_core::cgmath::{InnerSpace, Quaternion, Vector3};
 
-use resources::{AnimationSampling, BlendMethod};
+use resources::{AnimationSampling, ApplyData, BlendMethod};
 use util::SamplerPrimitive;
 
 /// Channels that can be animated on `Transform`
@@ -12,11 +12,15 @@ pub enum TransformChannel {
     Scale,
 }
 
-impl AnimationSampling for Transform {
-    type Channel = TransformChannel;
-    type Primitive = SamplerPrimitive<f32>;
+impl<'a> ApplyData<'a> for Transform {
+    type ApplyData = ();
+}
 
-    fn apply_sample(&mut self, channel: &Self::Channel, data: &SamplerPrimitive<f32>) {
+impl AnimationSampling for Transform {
+    type Primitive = SamplerPrimitive<f32>;
+    type Channel = TransformChannel;
+
+    fn apply_sample(&mut self, channel: &Self::Channel, data: &SamplerPrimitive<f32>, _: &()) {
         use self::TransformChannel::*;
         use util::SamplerPrimitive::*;
         match (channel, *data) {
@@ -27,7 +31,7 @@ impl AnimationSampling for Transform {
         }
     }
 
-    fn current_sample(&self, channel: &Self::Channel) -> SamplerPrimitive<f32> {
+    fn current_sample(&self, channel: &Self::Channel, _: &()) -> SamplerPrimitive<f32> {
         use self::TransformChannel::*;
         match channel {
             &Translation => SamplerPrimitive::Vec3(self.translation.into()),
