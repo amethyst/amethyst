@@ -1,9 +1,9 @@
 use std::hash::Hash;
 use std::marker;
 
-use amethyst_assets::AssetStorage;
-use amethyst_core::{ECSBundle, Result};
+use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::specs::{Component, DispatcherBuilder, World};
+use amethyst_core::{ECSBundle, Result};
 use amethyst_renderer::JointTransforms;
 
 use material::MaterialTextureSet;
@@ -167,6 +167,7 @@ where
         world.register::<AnimationHierarchy<T>>();
         world.register::<RestState<T>>();
         world.register::<AnimationSet<I, T>>();
+        world.register::<Handle<Animation<T>>>();
         builder = builder.add(AnimationProcessor::<T>::new(), "", &[]).add(
             AnimationControlSystem::<I, T>::new(),
             self.animation_name,
