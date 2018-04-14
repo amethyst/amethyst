@@ -827,6 +827,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
         #[cfg(feature = "profiler")]
         profile_scope!("new");
 
+        #[cfg(feature = "parallel")]
         let pool = self.world.read_resource::<Arc<ThreadPool>>().clone();
         let reader_id = self.world
             .write_resource::<EventChannel<Event>>()
@@ -837,7 +838,10 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
             // config: self.config,
             states: StateMachine::new(self.initial_state),
             events_reader_id: reader_id,
+            #[cfg(feature = "parallel")]
             dispatcher: self.disp_builder.with_pool(pool).build(),
+            #[cfg(not(feature = "parallel"))]
+            dispatcher: self.disp_builder.build(),
             ignore_window_close: self.ignore_window_close,
         })
     }
