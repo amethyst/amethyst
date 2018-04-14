@@ -19,7 +19,10 @@ pub enum BlendMethod {
 pub trait AnimationSampling: Send + Sync + 'static {
     /// The interpolation primitive
     type Primitive: InterpolationPrimitive + Clone + Copy + Send + Sync + 'static;
-    /// The channel type
+    /// An independent grouping or type of functions that operate on attributes of a component
+    ///
+    /// For example, `translation`, `scaling` and `rotation` are transformation channels independent
+    /// of each other, even though they all mutate coordinates of a component.
     type Channel: Debug + Clone + Hash + Eq + Send + Sync + 'static;
 
     /// Apply a sample to a channel
@@ -42,10 +45,29 @@ where
     T: InterpolationPrimitive,
 {
     /// Time of key frames
+    ///
+    /// A simple example of this for animations that are defined with 4 evenly spaced key frames is
+    /// `vec![0., 1., 2., 3.]`.
     pub input: Vec<f32>,
     /// Actual output data to interpolate
+    ///
+    /// For `input` of size `i`, the `output` size differs depending on the interpolation function.
+    /// The following list summarizes the size of the `output` for each interpolation function. For
+    /// more details, please click through to each interpolation function's documentation.
+    ///
+    /// * [Linear][lin]: `i` — `[pos_0, .., pos_n]`
+    /// * [Spherical Linear][sph]: `i` — `[pos_0, .., pos_n]`
+    /// * [Step][step]: `i` — `[pos_0, .., pos_n]`
+    /// * [Catmull Rom Spline][cm]: `i + 2` — `[in_tangent_0, pos_0, .., pos_n, out_tangent_n]`
+    /// * [Cubic Spline][cub]: `3 * i` — `[in_tangent_0, pos_0, out_tangent_0, ..]`
+    ///
+    /// [lin]: https://docs.rs/minterpolate/0.2.2/minterpolate/fn.linear_interpolate.html
+    /// [sph]: https://docs.rs/minterpolate/0.2.2/minterpolate/fn.spherical_linear_interpolate.html
+    /// [step]: https://docs.rs/minterpolate/0.2.2/minterpolate/fn.step_interpolate.html
+    /// [cm]: https://docs.rs/minterpolate/0.2.2/minterpolate/fn.catmull_rom_spline_interpolate.html
+    /// [cub]: https://docs.rs/minterpolate/0.2.2/minterpolate/fn.cubic_spline_interpolate.html
     pub output: Vec<T>,
-    /// How should interpolation be done
+    /// How interpolation should be done
     pub function: InterpolationFunction<T>,
 }
 
@@ -92,8 +114,8 @@ where
 }
 
 /// Defines the hierarchy of nodes that a single animation can control.
-/// Attach to the root entity that an animation can be defined for.
-/// Only required for animations which target more than a single node.
+/// Attached to the root entity that an animation can be defined for.
+/// Only required for animations which target more than a single node or entity.
 #[derive(Debug, Clone)]
 pub struct AnimationHierarchy<T> {
     pub nodes: FnvHashMap<usize, Entity>,
@@ -161,12 +183,17 @@ where
 }
 
 /// Defines a single animation.
+///
+/// An animation is a set of [`Sampler`][sampler]s that should always run together as a unit.
+///
 /// Defines relationships between the node index in `AnimationHierarchy` and a `Sampler` handle.
 /// If the animation only targets a single node index, `AnimationHierarchy` is not required.
 ///
 /// ### Type parameters:
 ///
 /// - `T`: the component type that the animation should be applied to
+///
+/// [sampler]: struct.Sampler.html
 #[derive(Clone, Debug)]
 pub struct Animation<T>
 where

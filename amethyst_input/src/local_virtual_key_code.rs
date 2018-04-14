@@ -72,6 +72,7 @@ pub enum LocalVirtualKeyCode {
     Return,
     Space,
     Compose,
+    Caret,
     Numlock,
     Numpad0,
     Numpad1,
@@ -153,7 +154,6 @@ pub enum LocalVirtualKeyCode {
     WebSearch,
     WebStop,
     Yen,
-    Caret,
 }
 
 impl From<LocalVirtualKeyCode> for VirtualKeyCode {
@@ -228,6 +228,7 @@ impl From<LocalVirtualKeyCode> for VirtualKeyCode {
             LocalVirtualKeyCode::Return => VirtualKeyCode::Return,
             LocalVirtualKeyCode::Space => VirtualKeyCode::Space,
             LocalVirtualKeyCode::Compose => VirtualKeyCode::Compose,
+            LocalVirtualKeyCode::Caret => VirtualKeyCode::Caret,
             LocalVirtualKeyCode::Numlock => VirtualKeyCode::Numlock,
             LocalVirtualKeyCode::Numpad0 => VirtualKeyCode::Numpad0,
             LocalVirtualKeyCode::Numpad1 => VirtualKeyCode::Numpad1,
@@ -309,7 +310,6 @@ impl From<LocalVirtualKeyCode> for VirtualKeyCode {
             LocalVirtualKeyCode::WebSearch => VirtualKeyCode::WebSearch,
             LocalVirtualKeyCode::WebStop => VirtualKeyCode::WebStop,
             LocalVirtualKeyCode::Yen => VirtualKeyCode::Yen,
-            LocalVirtualKeyCode::Caret => VirtualKeyCode::Caret,
         }
     }
 }
