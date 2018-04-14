@@ -422,7 +422,7 @@ impl<A> Handle<A> {
     }
 
     /// Returns `true` if this is the only handle to the asset its pointing at.
-    pub fn is_unique(&self) -> bool {
+    fn is_unique(&self) -> bool {
         Arc::strong_count(&self.id) == 1
     }
 }
