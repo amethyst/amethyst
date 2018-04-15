@@ -17,6 +17,6 @@ fn main() {
             _ => println!("cargo:rustc-cfg=parallel"),
         }
     } else {
-        panic!("Could not identify the building target");
+        panic!("Could not identify the building target (missing TARGET env variable, are you sure you are running this from cargo?)");
     }
 }
