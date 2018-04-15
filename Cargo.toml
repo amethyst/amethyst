@@ -34,7 +34,6 @@ profiler = [
     "amethyst_utils/profiler",
 ]
 parallel = []
-serial = []
 
 [dependencies]
 amethyst_assets = { path = "amethyst_assets", version = "0.2.0" }
