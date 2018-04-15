@@ -15,6 +15,7 @@ extern crate serde;
 extern crate thread_profiler;
 
 pub use self::bundle::{AnimationBundle, SamplingBundle, VertexSkinningBundle};
+pub use self::material::{MaterialChannel, MaterialPrimitive, MaterialTextureSet};
 pub use self::resources::{Animation, AnimationCommand, AnimationControl, AnimationControlSet,
                           AnimationHierarchy, AnimationSampling, AnimationSet, ApplyData,
                           BlendMethod, ControlState, EndControl, Sampler, SamplerControl,
@@ -23,7 +24,6 @@ pub use self::skinning::{Joint, Skin, VertexSkinningSystem};
 pub use self::systems::{AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem,
                         SamplerProcessor};
 pub use self::transform::TransformChannel;
-pub use self::material::{MaterialPrimitive, MaterialChannel, MaterialTextureSet};
 pub use self::util::{get_animation_set, SamplerPrimitive};
 pub use minterpolate::{InterpolationFunction, InterpolationPrimitive};
 
