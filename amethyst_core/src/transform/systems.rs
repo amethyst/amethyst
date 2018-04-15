@@ -1,7 +1,6 @@
 //! Scene graph system and types
 
 use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
-use hibitset::BitSet;
 use specs::{Entities, Entity, Join, System, WriteStorage};
 use transform::{GlobalTransform, Parent, Transform};
 
@@ -15,8 +14,8 @@ pub struct TransformSystem {
     /// with parents.
     sorted: Vec<Entity>,
 
-    init: BitSet,
-    frame_init: BitSet,
+    init: Vec<Entity>,
+    frame_init: Vec<Entity>,
 
     dead: HashSet<Entity>,
     remove_parent: Vec<Entity>,
@@ -35,7 +34,9 @@ impl TransformSystem {
             self.indices.insert(*swapped, index);
         }
         self.indices.remove(&entity);
-        self.init.remove(index as u32);
+
+        let init_index = self.init.iter().position(|&e| e == entity).unwrap();
+        self.init.remove(init_index);
     }
 }
 
@@ -70,11 +71,18 @@ impl<'a> System<'a> for TransformSystem {
 
         {
             // Checks for entities with a modified local transform or a modified parent, but isn't initialized yet.
-            let filter = locals.open().0 & parents.open().0 & !&self.init; // has a local, parent, and isn't initialized.
-            for (entity, _) in (&*entities, &filter).join() {
+            let filter = locals.open().0 & parents.open().0; // has a local, parent, and isn't initialized.
+            let mut to_add = Vec::<Entity>::new();
+            for (entity, _) in (&*entities, &filter)
+                .join()
+                .filter(|&(e, _)| !self.init.contains(&e))
+                {
+                    to_add.push(entity);
+                }
+            for entity in to_add {
                 self.indices.insert(entity, self.sorted.len());
                 self.sorted.push(entity);
-                self.frame_init.add(entity.id());
+                self.frame_init.push(entity);
             }
         }
 
@@ -171,7 +179,7 @@ impl<'a> System<'a> for TransformSystem {
         (&mut parents).open().1.clear_flags();
 
         for bit in &self.frame_init {
-            self.init.add(bit);
+            self.init.push(bit.clone());
         }
         self.frame_init.clear();
         self.dead.clear();
