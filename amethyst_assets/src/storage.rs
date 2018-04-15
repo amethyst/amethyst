@@ -148,6 +148,17 @@ impl<A: Asset> AssetStorage<A> {
                     name,
                     tracker,
                 } => {
+
+                    // Add a warning if a handle is unique (i.e. asset does not
+                    // need to be loaded as it is not used by anything)
+                    // https://github.com/amethyst/amethyst/issues/628
+                    if handle.is_unique() {
+                        warn!(
+                            "Loading unecessary asset. Handle {} is unique ",
+                            handle.id()
+                        );
+                    }
+                    
                     let (asset, reload_obj) = match data.map(|FormatValue { data, reload }| {
                         (data, reload)
                     }).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
