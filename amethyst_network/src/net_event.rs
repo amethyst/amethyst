@@ -1,46 +1,42 @@
 //! The network events that are passed from machine to machine, and within the ECS event handling system.
 //! NetEvent are passed through the network
-//! NetOwnedEvent are passed through the ECS, and contains the event's source (remote connection, usually)
+//! NetOwnedEvent are passed through the ECS, and contains the event's source (remote connection, usually).
 
-use serde::Serialize;
-use serde::de::DeserializeOwned;
-use shrev::Event;
-use specs::{Component, VecStorage};
 use std::net::SocketAddr;
 use uuid::Uuid;
 
 /// The basic network events shipped with amethyst.
-// TODO: Add CreateEntity,RemoveEntity,UpdateEntity
-// TODO: Example of switching the NetEvent set in the Network Systems
+// TODO: Add CreateEntity,RemoveEntity,UpdateEntity once specs 0.11 is released
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum NetEvent<T> {
-    /// Ask to connect to the server
+    /// Ask to connect to the server.
     Connect {
+        /// The client uuid.
         client_uuid: Uuid,
     },
-    /// Reply to the client that the connection has been accepted
+    /// Reply to the client that the connection has been accepted.
     Connected {
+        /// The server uuid.
         server_uuid: Uuid,
     },
-    /// Reply to the client that the connection has been refused
+    /// Reply to the client that the connection has been refused.
     ConnectionRefused {
-        /// The reason of the refusal
+        /// The reason of the refusal.
         reason: String,
     },
-    /// Tell the server that the client is disconnecting
+    /// Tell the server that the client is disconnecting.
     Disconnect {
-        /// The reason of the disconnection
+        /// The reason of the disconnection.
         reason: String,
     },
-    /// Notify the clients(including the one being disconnected) that a client has been disconnected from the server
+    /// Notify the clients(including the one being disconnected) that a client has been disconnected from the server.
     Disconnected {
-        /// The reason of the disconnection
+        /// The reason of the disconnection.
         reason: String,
     },
-    AddComponent {
-        compData: String,
-    },
+    /// A simple text message event.
     TextMessage {
+        /// The message.
         msg: String,
     },
     /// A user-defined enum containing more network event types.
@@ -58,33 +54,6 @@ impl<T> NetEvent<T> {
     }
 }
 
-// for later testing of component sync
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct TestComp {
-    data: String,
-}
-
-impl Component for TestComp {
-    type Storage = VecStorage<TestComp>;
-}
-
-/*impl BaseNetEvent<NetEvent> for NetEvent{
-    fn base_to_custom(ev:NetEvent) -> NetEvent {
-        ev
-    }
-    fn custom_to_base(ev: NetEvent) -> Option<NetEvent> {
-        Some(ev)
-    }
-}
-
-/// The BaseNetEvent trait is used to convert from a user-made event enum to the predefined amethyst base event enum and the inverse.
-pub trait BaseNetEvent<T>{
-    /// Converts a base event to a user event
-    fn base_to_custom(ev:NetEvent)->T;
-    /// Converts a user event to a base event (if applicable)
-    fn custom_to_base(ev:T)->Option<NetEvent>;
-}*/
-
 ///Carries the source of the event. Useful for debugging, security checks, gameplay logic, etc...
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetSourcedEvent<T> {
@@ -93,6 +62,6 @@ pub struct NetSourcedEvent<T> {
     /// The source of this event.
     /// Might be none if the client is connecting.
     pub uuid: Option<Uuid>,
-    /// The socket which sent this event.
+    /// The socket from which we received this event or to which we want to send it to.
     pub socket: SocketAddr,
 }

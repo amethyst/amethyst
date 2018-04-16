@@ -1,6 +1,6 @@
 //! Provides a client-server networking architecture to amethyst.
 
-//#![deny(missing_docs)]
+#![warn(missing_docs)]
 
 extern crate amethyst_assets;
 extern crate amethyst_core;
@@ -24,7 +24,7 @@ mod net_event;
 mod network_socket;
 mod utils;
 
-pub use bundle::NetworkClientBundle;
+pub use bundle::NetworkBundle;
 pub use connection::{ConnectionState, NetConnection, NetConnectionPool, NetIdentity,
                      NetReceiveBuffer, NetSendBuffer};
 pub use connection_manager::ConnectionManagerSystem;

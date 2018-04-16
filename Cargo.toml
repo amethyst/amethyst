@@ -128,6 +128,10 @@ name = "net_server"
 path = "examples/net_server/main.rs"
 
 [[example]]
+name = "net_echo_server"
+path = "examples/net_echo_server/main.rs"
+
+[[example]]
 name = "appendix_a"
 path = "examples/appendix_a/main.rs"
 

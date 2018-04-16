@@ -6,6 +6,9 @@ use resources::*;
 use serde::Serialize;
 use serde::de::DeserializeOwned;*/
 
+
+// TODO: Implement once specs 0.11 is out
+
 /*pub struct EntitySyncSystem<T> {
     pub net_event_reader: Option<ReaderId<U64Marker>>,
 }

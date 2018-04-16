@@ -8,7 +8,7 @@ use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::network::*;
 use amethyst::prelude::*;
 use amethyst::shrev::ReaderId;
-use amethyst::ecs::{FetchMut, System};
+use amethyst::ecs::{Fetch, FetchMut, System};
 
 fn main() {
     if let Err(e) = run() {
@@ -18,11 +18,10 @@ fn main() {
 }
 
 fn run() -> Result<()> {
-    // We make the server run at 1 fps, to see how much the buffer can handle before we lose events
     let game = Application::build("", State1)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
-            1,
+            144,
         )
         .with_bundle(NetworkBundle::<()>::new(
             "127.0.0.1",
@@ -30,44 +29,40 @@ fn run() -> Result<()> {
             vec![Box::new(FilterConnected::<()>::new())],
             true,
         ))?
-        .with(SpamReceiveSystem::new(),"rcv",&[]);
+        .with(EchoSystem::new(),"echo",&[]);
 
     Ok(game.build()?.run())
 }
 
-/// Default empty state
+/// Default empty state.
 pub struct State1;
 impl State for State1 {}
 
-/// A simple system that receives a ton of network events.
-struct SpamReceiveSystem{
+/// The echo system sends any received event to all connected clients.
+struct EchoSystem{
     pub reader: Option<ReaderId<NetSourcedEvent<()>>>,
 }
 
-impl SpamReceiveSystem{
+impl EchoSystem{
     pub fn new() -> Self{
-        SpamReceiveSystem{
+        EchoSystem{
             reader: None,
         }
     }
 }
 
-impl<'a> System<'a> for SpamReceiveSystem {
+impl<'a> System<'a> for EchoSystem {
     type SystemData = (
         FetchMut<'a, NetReceiveBuffer<()>>,
+        FetchMut<'a, NetSendBuffer<()>>,
+        Fetch<'a, NetConnectionPool>,
     );
-    fn run(&mut self, (mut rcv,): Self::SystemData) {
+    fn run(&mut self, (mut rcv, mut send, pool): Self::SystemData) {
         if self.reader.is_none() {
             self.reader = Some(rcv.buf.register_reader());
         }
-        let mut count = 0;
         for ev in rcv.buf.read(self.reader.as_mut().unwrap()) {
-            count += 1;
-            match ev.event{
-                NetEvent::TextMessage {ref msg} => println!("{}",msg),
-                _ => {},
-            }
+            send_to_all(ev.event.clone(), &mut send, &pool);
         }
-        println!("Received {} messages this frame",count);
     }
 }

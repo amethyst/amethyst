@@ -1,6 +1,5 @@
 extern crate bincode;
 
-//use std::net::UdpSocket;
 use super::{NetConnection, NetConnectionPool, NetEvent, NetSendBuffer, NetSourcedEvent};
 use bincode::{deserialize, serialize, Infinite};
 use bincode::internal::ErrorKind;
@@ -10,7 +9,7 @@ use serde::de::DeserializeOwned;
 use std::clone::Clone;
 
 /// Sends an event to the target NetConnection using the provided network Socket.
-/// The socket has to be binded!
+/// The socket has to be binded.
 pub fn send_event<T>(event: &NetEvent<T>, target: &NetConnection, socket: &UdpSocket)
 where
     T: Serialize,
@@ -48,6 +47,7 @@ where
     });
 }
 
+/// Sends an event to all connections in the NetConnectionPool.
 pub fn send_to_all<T>(event: NetEvent<T>, buf: &mut NetSendBuffer<T>, pool: &NetConnectionPool)
 where
     T: Send + Sync + Clone + 'static,
@@ -57,6 +57,7 @@ where
     }
 }
 
+/// Sends an event to all connections in the NetConnectionPool ignoring the specified network connection.
 pub fn send_to_all_except<T>(
     event: NetEvent<T>,
     buf: &mut NetSendBuffer<T>,
@@ -69,9 +70,3 @@ pub fn send_to_all_except<T>(
         send_to(event.clone(), buf, conn);
     }
 }
-
-/*
-send_to_all
-send_to_all_except
-send_to
-*/

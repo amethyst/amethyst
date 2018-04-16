@@ -1,16 +1,35 @@
 use super::{ConnectionState, NetConnection, NetConnectionPool, NetEvent, NetIdentity,
             NetReceiveBuffer, NetSendBuffer, NetSourcedEvent};
-use serde::Serialize;
-use serde::de::DeserializeOwned;
-use shrev::{EventChannel, ReaderId};
+use shrev::ReaderId;
 use specs::{Fetch, FetchMut, System};
-use uuid::Uuid;
 
+/// Manages the network connections.
+/// The way it is done depends if it is assigned to work as a server or as a client.
+///
+/// # Standard Events
+///
+/// Server Mode:
+/// Input: Connect
+/// Output: Connected
+///
+/// Input: Disconnect
+/// Output: Disconnected
+///
+/// Clients Mode:
+/// Input: Connected
+///
+/// Input: ConnectionRefused
+///
+/// Input: Disconnected
+///
+// TODO: Allow user to specify how uuid are assigned to connections.
 pub struct ConnectionManagerSystem<T>
 where
     T: PartialEq,
 {
+    /// The reader for the NetReceiveBuffer.
     net_event_reader: Option<ReaderId<NetSourcedEvent<T>>>,
+    /// Indicates how it should handle events and reply to them.
     is_server: bool,
 }
 
@@ -18,6 +37,7 @@ impl<T> ConnectionManagerSystem<T>
 where
     T: PartialEq,
 {
+    /// Creates a new ConnectionManagerSystem.
     pub fn new(is_server: bool) -> Self {
         ConnectionManagerSystem {
             net_event_reader: None,
@@ -43,6 +63,7 @@ where
 
         for ev in events.buf.read(self.net_event_reader.as_mut().unwrap()) {
             if self.is_server {
+                // Server mode
                 match ev.event {
                     NetEvent::Connect { client_uuid } => {
                         // Received packet from unknown/disconnected client
@@ -57,11 +78,13 @@ where
                                 })
                                 .count() == 0
                             {
+                                // Add the connection
                                 pool.connections.push(NetConnection {
                                     target: ev.socket,
                                     state: ConnectionState::Connected,
                                     uuid: Some(client_uuid),
                                 });
+                                // Reply with Connected
                                 send_buf.buf.single_write(NetSourcedEvent {
                                     event: NetEvent::Connected {
                                         server_uuid: identity.uuid.clone(),
@@ -74,6 +97,7 @@ where
                     }
                     NetEvent::Disconnect { ref reason } => {
                         if let Some(conn) = pool.remove_connection_for_address(&ev.socket) {
+                            // If the client was connected, we reply that it is Disconnected
                             send_buf.buf.single_write(NetSourcedEvent {
                                 event: NetEvent::Disconnected {
                                     reason: reason.clone(),
@@ -86,9 +110,10 @@ where
                     _ => {}
                 }
             } else {
+                // Client mode
                 match ev.event {
                     NetEvent::Connected { server_uuid } => {
-                        let mut conn = pool.connection_from_address(&ev.socket);
+                        let mut conn = pool.connection_from_address_mut(&ev.socket);
                         if let Some(mut c) = conn.as_mut() {
                             c.state = ConnectionState::Connected;
                             c.uuid = Some(server_uuid);

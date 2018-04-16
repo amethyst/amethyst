@@ -14,12 +14,33 @@ where
 }
 
 /// A filter that checks if the incoming event is from a connected client.
-pub struct FilterConnected;
+pub struct FilterConnected<T>{
+    _pd: PhantomData<T>,
+}
 
+impl<T> FilterConnected<T>{
+    /// Creates a new FilterConnected filter.
+    pub fn new() -> Self {
+        FilterConnected{
+            _pd: PhantomData,
+        }
+    }
+}
 
-impl<T> NetFilter<T> for FilterConnected
+impl<T> FilterConnected<T>{
+    /// Hardcoded event bypass.
+    fn event_bypass(event: &NetEvent<T>) -> bool{
+        match event {
+            &NetEvent::Connect { client_uuid: _ } => true,
+            &NetEvent::Connected { server_uuid: _ } => true,
+            _ => false,
+        }
+    }
+}
+
+impl<T> NetFilter<T> for FilterConnected<T>
 where
-    T: PartialEq,
+    T: PartialEq+Send+Sync,
 {
     /// Checks if the event is from a connected client.
     fn allow(
@@ -31,20 +52,11 @@ where
         if let Some(ref conn) = pool.connection_from_address(source) {
             if conn.state == ConnectionState::Connected {
                 true
-            } else /*if conn.state == ConnectionState::Connecting */{
-                match *event {
-                    NetEvent::Connect { client_uuid } => true,
-                    NetEvent::Connected { server_uuid } => true,
-                    _ => false,
-                }
+            } else{
+                FilterConnected::event_bypass(event)
             }
         } else {
-            match *event {
-                NetEvent::Connect { client_uuid } => true,
-                NetEvent::Connected { server_uuid } => true,
-                _ => false,
-            }
-
+            FilterConnected::event_bypass(event)
         }
     }
 }

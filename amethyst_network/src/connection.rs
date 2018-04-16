@@ -1,13 +1,12 @@
 //! Network Connection and states.
 
-use super::{NetEvent, NetSourcedEvent};
+use super::NetSourcedEvent;
 use shrev::EventChannel;
 use specs::{Component, VecStorage};
 use std::net::SocketAddr;
 use uuid::Uuid;
 
 /// A network connection target data.
-//TODO add ping here?
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct NetConnection {
     /// The remote socket address of this connection.
@@ -37,6 +36,7 @@ pub enum ConnectionState {
 /// Think of it as an identity card.
 /// When used as a resource, it designates the local network uuid.
 pub struct NetIdentity {
+    /// The uuid identifying this NetIdentity.
     pub uuid: Uuid,
 }
 
@@ -51,32 +51,46 @@ pub struct NetConnectionPool {
 }
 
 impl NetConnectionPool {
+    /// Creates a new NetConnectionPool.
     pub fn new() -> Self {
         NetConnectionPool {
             connections: vec![],
         }
     }
 
-    pub fn connection_from_uuid(&self, uuid: &Uuid) -> Option<NetConnection> {
+    /// Fetches the NetConnection from the uuid.
+    pub fn connection_from_uuid(&self, uuid: &Uuid) -> Option<&NetConnection> {
         for c in &self.connections {
             if let Some(cl_uuid) = c.uuid {
                 if cl_uuid == *uuid {
-                    return Some(c.clone());
+                    return Some(c);
                 }
             }
         }
         None
     }
 
-    pub fn connection_from_address(&self, socket: &SocketAddr) -> Option<NetConnection> {
+    /// Fetches the NetConnection from the network socket address.
+    pub fn connection_from_address(&self, socket: &SocketAddr) -> Option<&NetConnection> {
         for c in &self.connections {
             if c.target == *socket {
-                return Some(c.clone());
+                return Some(c);
             }
         }
         None
     }
 
+    /// Fetches the NetConnection from the network socket address mutably.
+    pub fn connection_from_address_mut(&mut self, socket: &SocketAddr) -> Option<&mut NetConnection> {
+        for c in &mut self.connections.iter_mut() {
+            if c.target == *socket {
+                return Some(c);
+            }
+        }
+        None
+    }
+
+    /// Removes the connection for the specified network socket address.
     pub fn remove_connection_for_address(&mut self, socket: &SocketAddr) -> Option<NetConnection> {
         let index = self.connections.iter().position(|c| c.target == *socket);
         index.map(|i| self.connections.swap_remove(i))
@@ -87,7 +101,9 @@ impl Component for NetConnectionPool {
     type Storage = VecStorage<NetConnectionPool>;
 }
 
+/// The resource containing the events that should be send by the NetworkSocketSystem.
 pub struct NetSendBuffer<T> {
+    /// The event buffer.
     pub buf: EventChannel<NetSourcedEvent<T>>,
 }
 
@@ -95,6 +111,7 @@ impl<T> NetSendBuffer<T>
 where
     T: Send + Sync + 'static,
 {
+    /// Creates a new empty NetSendBuffer
     pub fn new() -> NetSendBuffer<T> {
         NetSendBuffer {
             buf: EventChannel::<NetSourcedEvent<T>>::new(),
@@ -109,7 +126,9 @@ where
     type Storage = VecStorage<NetSendBuffer<T>>;
 }
 
+/// The resource containing the events that were received and not filtered by the NetworkSocketSystem.
 pub struct NetReceiveBuffer<T> {
+    /// The event buffer.
     pub buf: EventChannel<NetSourcedEvent<T>>,
 }
 
@@ -117,6 +136,7 @@ impl<T> NetReceiveBuffer<T>
 where
     T: Send + Sync + 'static,
 {
+    /// Creates a new empty NetSendBuffer
     pub fn new() -> NetReceiveBuffer<T> {
         NetReceiveBuffer {
             buf: EventChannel::<NetSourcedEvent<T>>::new(),
@@ -130,31 +150,3 @@ where
 {
     type Storage = VecStorage<NetReceiveBuffer<T>>;
 }
-
-/*
-Client:
-1 NetConnection->Server
-* NetOwner->Other players + server
-
-Server:
-* NetConnection->Clients
-* NetOwner (partial)->Clients
-
-NetOwner->uuid->stuff(name,stats,PlayerIdentity,etc...)
-NetConnection->socket
-
-
-SELECT TARGET
-send_to_all // nothing special
-send_to_others // Need to know self
-send_to_all_except // Need to select a target
-send_to // Reply to event
-send_event // Internal logic
-
-Kick playername = "bob"
-playername->PlayerIdentity->netowneruuid    /*->NetOwner->uuid*/  ->NetConnection //works on server but not client
-
-NetOwner->uuid == NetConnection->uuid
-
-UUID assigned by server. Can be fetched from web service using connection token sent from client
-*/
