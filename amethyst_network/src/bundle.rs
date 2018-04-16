@@ -4,13 +4,13 @@ use super::{ConnectionManagerSystem, NetConnectionPool, NetIdentity, NetReceiveB
             NetSendBuffer, NetSocketSystem};
 use amethyst_core::bundle::{ECSBundle, Result};
 use filter::NetFilter;
+use rand::Rng;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use shred::DispatcherBuilder;
 use specs::World;
 use std::net::SocketAddr;
 use uuid::Uuid;
-use rand::Rng;
 
 /// A convenience bundle to create the infrastructure needed to send and receive network messages.
 pub struct NetworkBundle<'a, T> {
@@ -67,10 +67,9 @@ where
 
         let custom_port = self.port.is_some();
 
-
         // TODO: If the port is already in use, try another random port
 
-        if !custom_port{
+        if !custom_port {
             // [1025–65535]
             self.port = Some(rand::thread_rng().gen_range(1025, 65535 + 1) as u16)
         }

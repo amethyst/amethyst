@@ -2,13 +2,13 @@ extern crate amethyst;
 #[macro_use]
 extern crate log;
 
-use std::time::Duration;
 use amethyst::Result;
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
+use amethyst::ecs::{Fetch, FetchMut, System};
 use amethyst::network::*;
 use amethyst::prelude::*;
 use amethyst::shrev::ReaderId;
-use amethyst::ecs::{Fetch, FetchMut, System};
+use std::time::Duration;
 
 fn main() {
     if let Err(e) = run() {
@@ -29,7 +29,7 @@ fn run() -> Result<()> {
             vec![Box::new(FilterConnected::<()>::new())],
             true,
         ))?
-        .with(EchoSystem::new(),"echo",&[]);
+        .with(EchoSystem::new(), "echo", &[]);
 
     Ok(game.build()?.run())
 }
@@ -39,15 +39,13 @@ pub struct State1;
 impl State for State1 {}
 
 /// The echo system sends any received event to all connected clients.
-struct EchoSystem{
+struct EchoSystem {
     pub reader: Option<ReaderId<NetSourcedEvent<()>>>,
 }
 
-impl EchoSystem{
-    pub fn new() -> Self{
-        EchoSystem{
-            reader: None,
-        }
+impl EchoSystem {
+    pub fn new() -> Self {
+        EchoSystem { reader: None }
     }
 }
 

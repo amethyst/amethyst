@@ -81,7 +81,10 @@ impl NetConnectionPool {
     }
 
     /// Fetches the NetConnection from the network socket address mutably.
-    pub fn connection_from_address_mut(&mut self, socket: &SocketAddr) -> Option<&mut NetConnection> {
+    pub fn connection_from_address_mut(
+        &mut self,
+        socket: &SocketAddr,
+    ) -> Option<&mut NetConnection> {
         for c in &mut self.connections.iter_mut() {
             if c.target == *socket {
                 return Some(c);

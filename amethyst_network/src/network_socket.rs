@@ -1,6 +1,5 @@
 //! The network send and receive System
 
-use specs::{Fetch, FetchMut, System};
 use super::{deserialize_event, send_event, ConnectionState, NetConnection, NetConnectionPool,
             NetEvent, NetFilter, NetReceiveBuffer, NetSendBuffer, NetSourcedEvent};
 use mio::{Events, Poll, PollOpt, Ready, Token};
@@ -8,6 +7,7 @@ use mio::net::UdpSocket;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use shrev::*;
+use specs::{Fetch, FetchMut, System};
 use std::clone::Clone;
 use std::io::Error;
 use std::net::IpAddr;
@@ -19,11 +19,8 @@ use uuid::Uuid;
 
 const SOCKET: Token = Token(0);
 
-
 // If a client sends both a connect event and other events,
 // only the connect event will be considered valid and all others will be lost.
-
-
 
 /// The System managing the network state and connections.
 /// The T generic parameter corresponds to the network event enum type.
@@ -98,7 +95,6 @@ where
         let mut events = Events::with_capacity(2048);
         let mut buf = [0 as u8; 2048];
 
-
         // Sends events that are in the NetSendBuffer resource.
         if self.send_queue_reader.is_none() {
             self.send_queue_reader = Some(send_buf.buf.register_reader());
@@ -112,7 +108,7 @@ where
                 } else {
                     warn!("Tried to send packet while target is not in a connected or connecting state.");
                 }
-            }else{
+            } else {
                 warn!("Targeted address is not in the NetConnection pool.")
             }
         }
@@ -123,7 +119,7 @@ where
                 .poll(&mut events, Some(Duration::from_millis(0)))
                 .expect("Failed to poll network socket.");
 
-            if events.is_empty(){
+            if events.is_empty() {
                 break;
             }
 
@@ -135,7 +131,6 @@ where
                             let net_event = deserialize_event::<T>(&buf[..amt]);
                             match net_event {
                                 Ok(ev) => {
-
                                     // Filter events
                                     let mut filtered = false;
                                     for mut f in self.filters.iter_mut() {
@@ -146,11 +141,12 @@ where
                                     if !filtered {
                                         let owned_event = NetSourcedEvent {
                                             event: ev.clone(),
-                                            uuid: pool.connection_from_address(&src).and_then(|c| c.uuid),
+                                            uuid: pool.connection_from_address(&src)
+                                                .and_then(|c| c.uuid),
                                             socket: src,
                                         };
                                         receive_buf.buf.single_write(owned_event);
-                                    }else{
+                                    } else {
                                         info!("Filtered an incoming network packet.")
                                     }
                                 }

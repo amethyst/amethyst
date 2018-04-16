@@ -2,13 +2,13 @@ extern crate amethyst;
 #[macro_use]
 extern crate log;
 
-use std::time::Duration;
 use amethyst::Result;
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
+use amethyst::ecs::{FetchMut, System};
 use amethyst::network::*;
 use amethyst::prelude::*;
 use amethyst::shrev::ReaderId;
-use amethyst::ecs::{FetchMut, System};
+use std::time::Duration;
 
 fn main() {
     if let Err(e) = run() {
@@ -30,7 +30,7 @@ fn run() -> Result<()> {
             vec![Box::new(FilterConnected::<()>::new())],
             true,
         ))?
-        .with(SpamReceiveSystem::new(),"rcv",&[]);
+        .with(SpamReceiveSystem::new(), "rcv", &[]);
 
     Ok(game.build()?.run())
 }
@@ -40,22 +40,18 @@ pub struct State1;
 impl State for State1 {}
 
 /// A simple system that receives a ton of network events.
-struct SpamReceiveSystem{
+struct SpamReceiveSystem {
     pub reader: Option<ReaderId<NetSourcedEvent<()>>>,
 }
 
-impl SpamReceiveSystem{
-    pub fn new() -> Self{
-        SpamReceiveSystem{
-            reader: None,
-        }
+impl SpamReceiveSystem {
+    pub fn new() -> Self {
+        SpamReceiveSystem { reader: None }
     }
 }
 
 impl<'a> System<'a> for SpamReceiveSystem {
-    type SystemData = (
-        FetchMut<'a, NetReceiveBuffer<()>>,
-    );
+    type SystemData = (FetchMut<'a, NetReceiveBuffer<()>>,);
     fn run(&mut self, (mut rcv,): Self::SystemData) {
         if self.reader.is_none() {
             self.reader = Some(rcv.buf.register_reader());
@@ -63,11 +59,11 @@ impl<'a> System<'a> for SpamReceiveSystem {
         let mut count = 0;
         for ev in rcv.buf.read(self.reader.as_mut().unwrap()) {
             count += 1;
-            match ev.event{
-                NetEvent::TextMessage {ref msg} => println!("{}",msg),
-                _ => {},
+            match ev.event {
+                NetEvent::TextMessage { ref msg } => println!("{}", msg),
+                _ => {}
             }
         }
-        println!("Received {} messages this frame",count);
+        println!("Received {} messages this frame", count);
     }
 }
