@@ -5,9 +5,9 @@ use std::mem;
 use std::sync::Arc;
 
 use amethyst_assets::{AssetStorage, HotReloadStrategy};
-use amethyst_core::Time;
 use amethyst_core::shred::Resources;
 use amethyst_core::specs::{Fetch, FetchMut, RunNow, SystemData};
+use amethyst_core::Time;
 use rayon::ThreadPool;
 use shrev::EventChannel;
 use winit::{DeviceEvent, Event, WindowEvent};
@@ -115,10 +115,11 @@ where
 
         if let Some(size) = self.renderer.window().get_inner_size() {
             // Send window size changes to the resource
-            if size != (
-                screen_dimensions.width() as u32,
-                screen_dimensions.height() as u32,
-            ) {
+            if size
+                != (
+                    screen_dimensions.width() as u32,
+                    screen_dimensions.height() as u32,
+                ) {
                 screen_dimensions.update(size.0, size.1);
 
                 // We don't need to send the updated size of the window back to the window itself,

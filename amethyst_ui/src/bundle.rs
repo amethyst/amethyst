@@ -1,9 +1,9 @@
 //! ECS rendering bundle
 
 use amethyst_assets::{AssetStorage, Handle, Processor};
-use amethyst_core::Parent;
 use amethyst_core::bundle::{ECSBundle, Result};
 use amethyst_core::specs::{DispatcherBuilder, World};
+use amethyst_core::Parent;
 use shrev::EventChannel;
 use std::hash::Hash;
 use std::marker::PhantomData;

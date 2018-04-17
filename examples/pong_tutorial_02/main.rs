@@ -2,10 +2,10 @@ extern crate amethyst;
 
 mod pong;
 
-use amethyst::Result;
 use amethyst::core::transform::TransformBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline, PosTex, RenderBundle, Stage};
+use amethyst::Result;
 
 fn run() -> Result<()> {
     use pong::Pong;

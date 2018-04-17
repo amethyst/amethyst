@@ -8,8 +8,8 @@ use cpal::EndpointsIterator;
 use cpal::{default_endpoint, endpoints};
 use rodio::{Decoder, Endpoint, Sink, Source as RSource};
 
-use DecoderError;
 use source::Source;
+use DecoderError;
 
 /// A speaker(s) through which audio can be played.
 ///

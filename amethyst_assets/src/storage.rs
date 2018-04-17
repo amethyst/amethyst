@@ -2,8 +2,8 @@ use std::marker::PhantomData;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Weak};
 
-use amethyst_core::Time;
 use amethyst_core::specs::{Component, Fetch, FetchMut, System, UnprotectedStorage, VecStorage};
+use amethyst_core::Time;
 use crossbeam::sync::MsQueue;
 use hibitset::BitSet;
 use rayon::ThreadPool;

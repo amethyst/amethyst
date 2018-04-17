@@ -6,9 +6,9 @@ extern crate genmesh;
 extern crate log;
 
 use amethyst::assets::{AssetStorage, Loader};
-use amethyst::core::Time;
 use amethyst::core::cgmath::Deg;
 use amethyst::core::transform::{GlobalTransform, Parent};
+use amethyst::core::Time;
 use amethyst::ecs::{Entity, World};
 use amethyst::ecs::{FetchMut, System};
 use amethyst::input::InputBundle;

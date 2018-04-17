@@ -1,9 +1,9 @@
 use std::mem;
 
 use amethyst_assets::AssetStorage;
-use amethyst_core::GlobalTransform;
 use amethyst_core::cgmath::{Matrix4, One, SquareMatrix};
 use amethyst_core::specs::{Fetch, Join, ReadStorage};
+use amethyst_core::GlobalTransform;
 
 use cam::{ActiveCamera, Camera};
 use mesh::Mesh;

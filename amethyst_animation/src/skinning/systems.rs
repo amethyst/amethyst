@@ -1,6 +1,6 @@
-use amethyst_core::GlobalTransform;
 use amethyst_core::cgmath::{Matrix4, SquareMatrix};
 use amethyst_core::specs::{Join, ReadStorage, System, WriteStorage};
+use amethyst_core::GlobalTransform;
 use amethyst_renderer::JointTransforms;
 use hibitset::BitSet;
 

@@ -6,8 +6,8 @@ use std::path::Path;
 use amethyst_config::Config;
 use amethyst_core::bundle::{ECSBundle, Result};
 use amethyst_core::specs::{DispatcherBuilder, World};
-use serde::Serialize;
 use serde::de::DeserializeOwned;
+use serde::Serialize;
 use shrev::EventChannel;
 use winit::Event;
 

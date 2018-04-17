@@ -12,10 +12,10 @@ extern crate serde;
 use std::sync::Arc;
 
 use amethyst_assets::*;
-use amethyst_core::Time;
 use amethyst_core::specs::common::Errors;
 use amethyst_core::specs::{Dispatcher, DispatcherBuilder, Fetch, FetchMut, System, VecStorage,
                            World};
+use amethyst_core::Time;
 use rayon::ThreadPool;
 
 struct App {
