@@ -4,11 +4,11 @@ extern crate amethyst;
 #[macro_use]
 extern crate serde_derive;
 
+mod audio;
+mod bundle;
+mod config;
 mod pong;
 mod systems;
-mod bundle;
-mod audio;
-mod config;
 
 use std::time::Duration;
 

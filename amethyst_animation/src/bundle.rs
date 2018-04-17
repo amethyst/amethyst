@@ -1,8 +1,8 @@
 use std::marker;
 
 use amethyst_assets::AssetStorage;
-use amethyst_core::{ECSBundle, Result};
 use amethyst_core::specs::{Component, DispatcherBuilder, World};
+use amethyst_core::{ECSBundle, Result};
 use amethyst_renderer::JointTransforms;
 
 use resources::{Animation, AnimationControlSet, AnimationHierarchy, AnimationSampling,

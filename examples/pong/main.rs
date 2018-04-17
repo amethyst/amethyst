@@ -2,10 +2,10 @@
 
 extern crate amethyst;
 
+mod audio;
+mod bundle;
 mod pong;
 mod systems;
-mod bundle;
-mod audio;
 
 use std::time::Duration;
 

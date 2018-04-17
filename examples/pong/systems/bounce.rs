@@ -1,10 +1,10 @@
-use {Ball, Paddle, Side};
 use amethyst::assets::AssetStorage;
 use amethyst::audio::Source;
 use amethyst::audio::output::Output;
 use amethyst::core::transform::Transform;
 use amethyst::ecs::{Fetch, Join, ReadStorage, System, WriteStorage};
 use audio::{play_bounce, Sounds};
+use {Ball, Paddle, Side};
 
 /// This system is responsible for detecting collisions between balls and
 /// paddles, as well as balls and the top and bottom edges of the arena.

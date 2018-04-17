@@ -1,7 +1,5 @@
 //! ECS rendering bundle
 
-use {AmbientColor, Camera, Light, Material, MaterialDefaults, Mesh, Rgba, ScreenDimensions,
-     Texture, WindowMessages};
 use amethyst_assets::{AssetStorage, Handle, Loader};
 use amethyst_core::bundle::{ECSBundle, Result, ResultExt};
 use amethyst_core::orientation::Orientation;
@@ -13,6 +11,8 @@ use skinning::JointTransforms;
 use system::RenderSystem;
 use transparent::Transparent;
 use visibility::{Visibility, VisibilitySortingSystem};
+use {AmbientColor, Camera, Light, Material, MaterialDefaults, Mesh, Rgba, ScreenDimensions,
+     Texture, WindowMessages};
 
 /// Rendering bundle
 ///

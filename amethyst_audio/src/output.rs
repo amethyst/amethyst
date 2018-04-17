@@ -4,8 +4,8 @@
 use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::io::Cursor;
 
-use cpal::{default_endpoint, endpoints};
 use cpal::EndpointsIterator;
+use cpal::{default_endpoint, endpoints};
 use rodio::{Decoder, Endpoint, Sink, Source as RSource};
 
 use DecoderError;

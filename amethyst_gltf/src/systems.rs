@@ -3,10 +3,10 @@ use std::collections::{HashMap, HashSet};
 use animation::{Animation, AnimationHierarchy, AnimationSet, Joint, Sampler, SamplerPrimitive,
                 Skin};
 use assets::{AssetStorage, Handle, HotReloadStrategy, Loader};
-use core::{ThreadPool, Time};
 use core::cgmath::{EuclideanSpace, Matrix4, Point3, SquareMatrix};
 use core::specs::{Entities, Entity, Fetch, FetchMut, Join, System, WriteStorage};
 use core::transform::*;
+use core::{ThreadPool, Time};
 use fnv::FnvHashMap;
 use hibitset::BitSet;
 use renderer::{AnimatedComboMeshCreator, JointTransforms, Material, MaterialDefaults, Mesh,
@@ -100,9 +100,11 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
             if let Some(scene_asset) = scene_storage.get_mut(scene_handle) {
                 // We need to track any new mesh/texture loads for caching purposes
                 let mut mesh_handles = Vec::default();
-                let mut texture_handles: Vec<
-                    (usize, TextureHandleLocation, Handle<Texture>),
-                > = Vec::default();
+                let mut texture_handles: Vec<(
+                    usize,
+                    TextureHandleLocation,
+                    Handle<Texture>,
+                )> = Vec::default();
                 let mut node_map = HashMap::default();
                 let mut skin_links = Vec::default();
 

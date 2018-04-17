@@ -1,5 +1,5 @@
-use super::{Anchor, Anchored, FontAsset, FontHandle, MouseReactive, Stretch, Stretched, TtfFormat, UiImage,
-            UiText, UiTransform};
+use super::{Anchor, Anchored, FontAsset, FontHandle, MouseReactive, Stretch, Stretched, TtfFormat,
+            UiImage, UiText, UiTransform};
 ///! A clickable button.
 use amethyst_assets::{AssetStorage, Loader};
 use amethyst_core::Parent;

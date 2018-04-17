@@ -9,8 +9,8 @@ use amethyst::core::transform::GlobalTransform;
 use amethyst::ecs::World;
 use amethyst::prelude::*;
 use amethyst::renderer::*;
-use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
+use genmesh::{MapToVertices, Triangulate, Vertices};
 
 const SPHERE_COLOUR: [f32; 4] = [0.0, 0.0, 1.0, 1.0]; // blue
 const AMBIENT_LIGHT_COLOUR: Rgba = Rgba(0.01, 0.01, 0.01, 1.0); // near-black

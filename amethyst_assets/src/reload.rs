@@ -4,8 +4,8 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use amethyst_core as core;
-use amethyst_core::{ECSBundle, Time};
 use amethyst_core::specs::{DispatcherBuilder, Fetch, FetchMut, System, World};
+use amethyst_core::{ECSBundle, Time};
 
 use {Asset, Format, FormatValue, Loader, Result, Source};
 

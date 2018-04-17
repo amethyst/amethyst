@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
-use std::sync::{Arc, Weak};
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{Arc, Weak};
 
 use amethyst_core::Time;
 use amethyst_core::specs::{Component, Fetch, FetchMut, System, UnprotectedStorage, VecStorage};
@@ -95,12 +95,6 @@ impl<A: Asset> AssetStorage<A> {
     /// Get an asset from a given asset handle.
     pub fn get(&self, handle: &Handle<A>) -> Option<&A> {
         if self.bitset.contains(handle.id()) {
-            // Add a warning if a handle is unique (i.e. asset does not
-            // need to be loaded as it is not used by anything) 
-            // https://github.com/amethyst/amethyst/issues/628
-            if handle.is_unique() {
-                warn!("Loading unecessary asset. Handle {} is unique ", handle.id());
-            }
             #[cfg(feature = "profiler")]
             profile_scope!("get_asset");
             Some(unsafe { self.assets.get(handle.id()) })
@@ -247,6 +241,16 @@ impl<A: Asset> AssetStorage<A> {
                 }
             };
 
+            // Add a warning if a handle is unique (i.e. asset does not
+            // need to be loaded as it is not used by anything)
+            // https://github.com/amethyst/amethyst/issues/628
+            if handle.is_unique() {
+                warn!(
+                    "Loading unecessary asset. Handle {} is unique ",
+                    handle.id()
+                );
+            }
+
             // Add the reload obj if it is `Some`.
             if let Some(reload_obj) = reload_obj {
                 reloads.push((handle.downgrade(), reload_obj));
@@ -312,7 +316,7 @@ impl<A: Asset> AssetStorage<A> {
                 pool.spawn(move || {
                     #[cfg(feature = "profiler")]
                     profile_scope!("dir_load_asset_from_data");
-                    
+
                     let old_reload = rel.clone();
                     let data = rel.reload().chain_err(|| ErrorKind::Format(format));
 

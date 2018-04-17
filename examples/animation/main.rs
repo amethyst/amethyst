@@ -5,8 +5,8 @@ extern crate amethyst_animation;
 extern crate genmesh;
 
 use amethyst::assets::{Handle, Loader};
-use amethyst::core::{GlobalTransform, Parent, Transform, TransformBundle};
 use amethyst::core::cgmath::Deg;
+use amethyst::core::{GlobalTransform, Parent, Transform, TransformBundle};
 use amethyst::ecs::{Entity, World};
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, ElementState, Event,
@@ -15,8 +15,8 @@ use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Elemen
 use amethyst_animation::{get_animation_set, Animation, AnimationBundle, AnimationCommand,
                          EndControl, InterpolationFunction, Sampler, StepDirection,
                          TransformChannel};
-use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
+use genmesh::{MapToVertices, Triangulate, Vertices};
 
 const SPHERE_COLOUR: [f32; 4] = [0.0, 0.0, 1.0, 1.0]; // blue
 const AMBIENT_LIGHT_COLOUR: Rgba = Rgba(0.01, 0.01, 0.01, 1.0); // near-black

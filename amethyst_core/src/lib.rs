@@ -25,10 +25,10 @@ pub use transform::*;
 use std::sync::Arc;
 
 pub mod bundle;
-pub mod orientation;
-pub mod transform;
-pub mod timing;
 pub mod frame_limiter;
+pub mod orientation;
+pub mod timing;
+pub mod transform;
 
 /// A rayon thread pool wrapped in an `Arc`. This should be used as resource in `World`.
 pub type ThreadPool = Arc<rayon::ThreadPool>;

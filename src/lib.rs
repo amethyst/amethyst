@@ -85,7 +85,7 @@ pub use core::specs as ecs;
 pub mod prelude;
 
 mod app;
+mod bundle;
 mod error;
 mod state;
 mod vergen;
-mod bundle;

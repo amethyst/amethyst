@@ -90,8 +90,8 @@ pub use vertex::{Attribute, AttributeFormat, Attributes, Color, Normal, PosColor
 pub use visibility::{Visibility, VisibilitySortingSystem};
 
 pub mod error;
-pub mod pipe;
 pub mod mouse;
+pub mod pipe;
 
 #[macro_use]
 mod macros;
@@ -108,10 +108,10 @@ mod mtl;
 mod pass;
 mod renderer;
 mod resources;
-mod transparent;
 mod skinning;
 mod system;
 mod tex;
+mod transparent;
 mod types;
 mod vertex;
 mod visibility;
