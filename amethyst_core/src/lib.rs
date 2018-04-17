@@ -15,6 +15,9 @@ extern crate serde;
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
 
+#[cfg(all(target_os = "emscripten", not(no_threading)))]
+compile_error!("the cfg flag \"no_threading\" is required when building for emscripten");
+
 //#[cfg(test)]
 //extern crate quickcheck;
 
