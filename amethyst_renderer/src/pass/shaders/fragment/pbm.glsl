@@ -40,6 +40,41 @@ uniform sampler2D roughness;
 uniform sampler2D ambient_occlusion;
 uniform sampler2D caveat;
 
+layout (std140) uniform AlbedoOffset {
+    vec2 u_offset;
+    vec2 v_offset;
+} albedo_offset;
+
+layout (std140) uniform EmissionOffset {
+    vec2 u_offset;
+    vec2 v_offset;
+} emission_offset;
+
+layout (std140) uniform NormalOffset {
+    vec2 u_offset;
+    vec2 v_offset;
+} normal_offset;
+
+layout (std140) uniform MetallicOffset {
+    vec2 u_offset;
+    vec2 v_offset;
+} metallic_offset;
+
+layout (std140) uniform RoughnessOffset {
+    vec2 u_offset;
+    vec2 v_offset;
+} roughness_offset;
+
+layout (std140) uniform AmbientOcclusionOffset {
+    vec2 u_offset;
+    vec2 v_offset;
+} ambient_occlusion_offset;
+
+layout (std140) uniform CaveatOffset {
+    vec2 u_offset;
+    vec2 v_offset;
+} caveat_offset;
+
 in VertexData {
     vec4 position;
     vec3 normal;
@@ -50,6 +85,14 @@ in VertexData {
 out vec4 out_color;
 
 const float PI = 3.14159265359;
+
+float tex_coord(float coord, vec2 offset) {
+    return offset.x + coord * (offset.y - offset.x);
+}
+
+vec2 tex_coords(vec2 coord, vec2 u, vec2 v) {
+    return vec2(tex_coord(coord.x, u), tex_coord(coord.y, v));
+}
 
 float normal_distribution(vec3 N, vec3 H, float a) {
     float a2 = a * a;
@@ -77,13 +120,13 @@ vec3 fresnel(float HdotV, vec3 fresnel_base) {
 }
 
 void main() {
-    vec3 albedo             = texture(albedo, vertex.tex_coord).rgb;
-    vec3 emission           = texture(emission, vertex.tex_coord).rgb;
-    vec3 normal             = texture(normal, vertex.tex_coord).rgb;
-    float metallic          = texture(metallic, vertex.tex_coord).r;
-    float roughness         = texture(roughness, vertex.tex_coord).r;
-    float ambient_occlusion = texture(ambient_occlusion, vertex.tex_coord).r;
-    float caveat            = texture(caveat, vertex.tex_coord).r; // TODO: Use caveat
+    vec3 albedo             = texture(albedo, tex_coords(vertex.tex_coord, albedo_offset.u_offset, albedo_offset.v_offset)).rgb;
+    vec3 emission           = texture(emission, tex_coords(vertex.tex_coord, emission_offset.u_offset, emission_offset.v_offset)).rgb;
+    vec3 normal             = texture(normal, tex_coords(vertex.tex_coord, normal_offset.u_offset, normal_offset.v_offset)).rgb;
+    float metallic          = texture(metallic, tex_coords(vertex.tex_coord, metallic_offset.u_offset, metallic_offset.v_offset)).r;
+    float roughness         = texture(roughness, tex_coords(vertex.tex_coord, roughness_offset.u_offset, roughness_offset.v_offset)).r;
+    float ambient_occlusion = texture(ambient_occlusion, tex_coords(vertex.tex_coord, ambient_occlusion_offset.u_offset, ambient_occlusion_offset.v_offset)).r;
+    float caveat            = texture(caveat, tex_coords(vertex.tex_coord, caveat_offset.u_offset, caveat_offset.v_offset)).r; // TODO: Use caveat
 
     // normal conversion
     normal = normal * 2 - 1;

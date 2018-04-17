@@ -15,10 +15,10 @@ extern crate gfx;
 extern crate gfx_glyph;
 extern crate hibitset;
 extern crate rusttype;
-extern crate shrev;
+extern crate shred;
 #[macro_use]
 extern crate shred_derive;
-extern crate shred;
+extern crate shrev;
 extern crate specs;
 extern crate unicode_normalization;
 extern crate unicode_segmentation;

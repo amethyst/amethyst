@@ -35,6 +35,16 @@ uniform vec3 camera_position;
 uniform sampler2D albedo;
 uniform sampler2D emission;
 
+layout (std140) uniform AlbedoOffset {
+    vec2 u_offset;
+    vec2 v_offset;
+} albedo_offset;
+
+layout (std140) uniform EmissionOffset {
+    vec2 u_offset;
+    vec2 v_offset;
+} emission_offset;
+
 in VertexData {
     vec4 position;
     vec3 normal;
@@ -44,9 +54,17 @@ in VertexData {
 
 out vec4 out_color;
 
+float tex_coord(float coord, vec2 offset) {
+    return offset.x + coord * (offset.y - offset.x);
+}
+
+vec2 tex_coords(vec2 coord, vec2 u, vec2 v) {
+    return vec2(tex_coord(coord.x, u), tex_coord(coord.y, v));
+}
+
 void main() {
-    vec4 color = texture(albedo, vertex.tex_coord);
-    vec4 ecolor = texture(emission, vertex.tex_coord);
+    vec4 color = texture(albedo, tex_coords(vertex.tex_coord, albedo_offset.u_offset, albedo_offset.v_offset));
+    vec4 ecolor = texture(emission, tex_coords(vertex.tex_coord, emission_offset.u_offset, emission_offset.v_offset));
     vec4 lighting = vec4(0.0);
     vec4 normal = vec4(normalize(vertex.normal), 0.0);
     for (int i = 0; i < point_light_count; i++) {
