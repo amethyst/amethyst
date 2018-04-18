@@ -2,40 +2,38 @@ use super::ScaleMode;
 use amethyst_core::specs::{Component, DenseVecStorage, FlaggedStorage};
 use std::marker::PhantomData;
 
-/// The raw pixels on screen that are populated.
-///
-/// TODO: Eventually this should be either replaced by a citrine type, or citrine may just
-/// populate it.
+/// The UiTransform represents the transformation of a ui element.
+/// Values are in pixel and the position is calculated from the top left of the screen
+/// to the center of the ui element's area.
 #[derive(Clone, Debug)]
 pub struct UiTransform {
     /// An identifier. Serves no purpose other than to help you distinguish between UI elements.
     pub id: String,
-    /// X coordinate, 0 is the left edge, while the width of the screen is the right edge.
+    /// X coordinate, 0 is the left edge of the screen, while the width of the screen in pixel is the right edge.
     /// Centered in the middle of the ui element.
     pub local_x: f32,
-    /// Y coordinate, 0 is the top edge, while the height of the screen is the bottom edge.
+    /// Y coordinate, 0 is the top edge of the screen, while the height of the screen in pixel is the bottom edge.
     /// Centered in the middle of the ui element.
     pub local_y: f32,
     /// Z order, entities with a lower Z order will be rendered on top of entities with a higher
     /// Z order.
     pub local_z: f32,
-    /// The width of this UI element
+    /// The width of this UI element in pixel.
     pub width: f32,
-    /// The height of this UI element
+    /// The height of this UI element in pixel.
     pub height: f32,
     /// The UI element tab order.  When the player presses tab the UI focus will shift to the
     /// UI element with the next highest tab order, or if another element with the same tab_order
     /// as this one exists they are ordered according to Entity creation order.  Shift-tab walks
     /// this ordering backwards.
     pub tab_order: i32,
-    /// Global x position by the `UiParentSystem` and `UiLayoutSystem`.
+    /// Global x position set by the `UiParentSystem` and `UiLayoutSystem` systems.
     pub global_x: f32,
-    /// Global y position by the `UiParentSystem` and `UiLayoutSystem`.
+    /// Global y position set by the `UiParentSystem` and `UiLayoutSystem` systems.
     pub global_y: f32,
-    /// Global z position by the `UiParentSystem` and `UiLayoutSystem`.
+    /// Global z position set by the `UiParentSystem` and `UiLayoutSystem` systems.
     pub global_z: f32,
-    /// WIP
-    /// The scale mode indicates if the position is in pixel or is relative (%) to the parent's size.
+    /// The scale mode indicates if the position is in pixel or is relative (%) (WIP!) to the parent's size.
     pub scale_mode: ScaleMode,
     /// A private field to keep this from being initialized without new.
     pd: PhantomData<u8>,
