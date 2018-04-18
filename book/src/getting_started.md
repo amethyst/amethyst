@@ -2,16 +2,14 @@
 
 ## Setting up Rust
 
-Make sure to have the latest stable of Rust installed.
-We recommend using [rustup][ru] for that.
-
-After you did that, Rust should be fully installed.
+We recommend using [rustup][ru] to easily install the latest stable version of rust.
+Instructions should be on screen once rustup is downloaded.
 
 [ru]: https://rustup.rs
 
 ## Required dependencies
 
-If you are on Linux, you'll need to install `libasound2-dev`.
+If you are on Linux, you'll need to install `libasound2-dev` and `libx11-xcb-dev`.
 
 ## Setting up Amethyst
 

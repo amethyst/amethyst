@@ -2,18 +2,20 @@
 
 # Amethyst
 
-[![Build Status][s1]][tc] [![Crates.io][s2]][ci] [![MIT/Apache][s3]][li] [![Join the chat][s4]][gc] ![Lines of Code][s5]
+[![Build Status][s1]][tc] [![Crates.io][s2]][ci] [![MIT/Apache][s3]][li] [![Join the chat][s4]][gc] [![Join us on Discord][s5]][di] ![Lines of Code][s6]
 
 [s1]: https://travis-ci.org/amethyst/amethyst.svg?branch=master
 [s2]: https://img.shields.io/crates/v/amethyst.svg
 [s3]: https://img.shields.io/badge/license-MIT%2FApache-blue.svg
 [s4]: https://badges.gitter.im/amethyst/general.svg
-[s5]: https://tokei.rs/b1/github/amethyst/amethyst?category=code
+[s5]: https://img.shields.io/discord/425678876929163284.svg?logo=discord
+[s6]: https://tokei.rs/b1/github/amethyst/amethyst?category=code
 
 [tc]: https://travis-ci.org/amethyst/amethyst/
 [ci]: https://crates.io/crates/amethyst/
 [li]: COPYING
 [gc]: https://gitter.im/orgs/amethyst/rooms
+[di]: https://discord.gg/GnP5Whs
 
 **Warning: The book and tools repository are severely out of date at the moment. Amethyst is undergoing a lot of changes at the moment so if you are looking to use the library it would be better to just read the examples.**
 
@@ -66,22 +68,40 @@ does not aim to be API-compatible with it in any way. Some goals include:
 
 ## Usage
 
-**Linux developers: the libasound2-dev package will be required to compile Amethyst.**
-
 Read the [online book][bk] for a comprehensive tutorial to using Amethyst. There
 is also an online crate-level [API reference][ar].
 
 [bk]: https://www.amethyst.rs/book/master/book/
 
+## Getting started
 
+To compile any of the examples run:
+```
+$ cargo run --example name_of_example
+```
+All available examples are listed under [examples][ex].
 
-## Quick Example
+For a full-blown "Hello World" tutorial check out the [Getting Started][gs] chapter
+in the book.
 
-See the [Getting Started][gs] chapter in the book for the full-blown "Hello,
-World!" tutorial. For the sake of brevity, you can generate an empty game
-project with `cargo` and build it. Follow along below:
-
+[ex]: examples/
 [gs]: https://www.amethyst.rs/book/master/book/getting_started.html
+
+## Dependencies
+
+If you are compiling on Linux make sure to install the following dependencies:
+
+### Ubuntu
+
+```
+$ sudo apt install libasound2-dev libx11-xcb-dev
+```
+
+### Fedora
+
+```
+$ sudo yum install alsa-lib-devel
+```
 
 ## Building Documentation
 
@@ -100,7 +120,6 @@ $ cargo doc
 ```
 
 The API reference can be found in `target/doc/amethyst/index.html`.
-
 
 ## Questions / Help
 
@@ -122,8 +141,8 @@ Other places you may want to check out are [r/rust_gamedev][rg] and [#rust-gamed
 Amethyst is free and open source software distributed under the terms of both
 the [MIT License][lm] and the [Apache License 2.0][la].
 
-[lm]: LICENSE-MIT
-[la]: LICENSE-APACHE
+[lm]: docs/LICENSE-MIT
+[la]: docs/LICENSE-APACHE
 
 ## Contributing
 
@@ -131,7 +150,7 @@ We are a community project that welcomes contribution from anyone. If you're
 interested in helping out, please read the [CONTRIBUTING.md][cm] file before
 getting started. Don't know what to hack on? Check our [active projects][pr], or search though [our issue tracker][it].
 
-[cm]: CONTRIBUTING.md
+[cm]: docs/CONTRIBUTING.md
 [pr]: https://github.com/amethyst/amethyst/projects
 [it]: https://github.com/amethyst/amethyst/issues
 

@@ -1,23 +1,25 @@
 //! Simple flat forward drawing pass.
 
 use amethyst_assets::AssetStorage;
+use amethyst_core::specs::{Entities, Fetch, Join, ReadStorage};
 use amethyst_core::transform::GlobalTransform;
 use gfx::pso::buffer::ElemStride;
-use specs::{Entities, Fetch, Join, ReadStorage};
+use gfx_core::state::{Blend, ColorMask};
 
 use super::*;
 use cam::{ActiveCamera, Camera};
 use error::Result;
 use mesh::{Mesh, MeshHandle};
 use mtl::{Material, MaterialDefaults};
-use pass::skinning::{create_skinning_effect, set_skinning_buffers, setup_skinning_buffers};
-use pass::util::{add_textures, set_attribute_buffers, set_vertex_args, VertexArgs};
+use pass::skinning::{create_skinning_effect, setup_skinning_buffers};
+use pass::util::{draw_mesh, get_camera, setup_textures, VertexArgs};
 use pipe::{DepthMode, Effect, NewEffect};
 use pipe::pass::{Pass, PassData};
 use skinning::JointTransforms;
 use tex::Texture;
 use types::{Encoder, Factory};
 use vertex::{Attributes, Position, Separate, TexCoord, VertexFormat};
+use visibility::Visibility;
 
 static ATTRIBUTES: [Attributes<'static>; 2] = [
     Separate::<Position>::ATTRIBUTES,
@@ -29,6 +31,7 @@ static ATTRIBUTES: [Attributes<'static>; 2] = [
 #[derivative(Default(bound = "Self: Pass"))]
 pub struct DrawFlatSeparate {
     skinning: bool,
+    transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
 }
 
 impl DrawFlatSeparate
@@ -45,6 +48,17 @@ where
         self.skinning = true;
         self
     }
+
+    /// Enable transparency
+    pub fn with_transparency(
+        mut self,
+        mask: ColorMask,
+        blend: Blend,
+        depth: Option<DepthMode>,
+    ) -> Self {
+        self.transparency = Some((mask, blend, depth));
+        self
+    }
 }
 
 impl<'a> PassData<'a> for DrawFlatSeparate {
@@ -55,6 +69,7 @@ impl<'a> PassData<'a> for DrawFlatSeparate {
         Fetch<'a, AssetStorage<Mesh>>,
         Fetch<'a, AssetStorage<Texture>>,
         Fetch<'a, MaterialDefaults>,
+        Option<Fetch<'a, Visibility>>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
         ReadStorage<'a, GlobalTransform>,
@@ -84,11 +99,13 @@ impl Pass for DrawFlatSeparate {
         if self.skinning {
             setup_skinning_buffers(&mut builder);
         }
-        builder
-            .with_raw_constant_buffer("VertexArgs", mem::size_of::<VertexArgs>(), 1)
-            .with_texture("albedo")
-            .with_output("color", Some(DepthMode::LessEqualWrite))
-            .build()
+        builder.with_raw_constant_buffer("VertexArgs", mem::size_of::<VertexArgs>(), 1);
+        setup_textures(&mut builder, &TEXTURES);
+        match self.transparency {
+            Some((mask, blend, depth)) => builder.with_blended_output("color", mask, blend, depth),
+            None => builder.with_output("color", Some(DepthMode::LessEqualWrite)),
+        };
+        builder.build()
     }
 
     fn apply<'a, 'b: 'a>(
@@ -103,53 +120,78 @@ impl Pass for DrawFlatSeparate {
             mesh_storage,
             tex_storage,
             material_defaults,
+            visibility,
             mesh,
             material,
             global,
             joints,
         ): <Self as PassData<'a>>::Data,
     ) {
-        let camera: Option<(&Camera, &GlobalTransform)> = active
-            .and_then(|a| {
-                let cam = camera.get(a.entity);
-                let transform = global.get(a.entity);
-                cam.into_iter().zip(transform.into_iter()).next()
-            })
-            .or_else(|| (&camera, &global).join().next());
+        let camera = get_camera(active, &camera, &global);
 
-        'drawable: for (entity, mesh, material, global) in
-            (&*entities, &mesh, &material, &global).join()
-        {
-            let mesh = match mesh_storage.get(mesh) {
-                Some(mesh) => mesh,
-                None => continue,
-            };
-
-            if !set_attribute_buffers(effect, mesh, &ATTRIBUTES)
-                || (self.skinning && !set_skinning_buffers(effect, mesh))
+        match visibility {
+            None => for (entity, mesh, material, global) in
+                (&*entities, &mesh, &material, &global).join()
             {
-                effect.clear();
-                continue 'drawable;
-            }
+                draw_mesh(
+                    encoder,
+                    effect,
+                    self.skinning,
+                    mesh_storage.get(mesh),
+                    joints.get(entity),
+                    &tex_storage,
+                    Some(material),
+                    &material_defaults,
+                    camera,
+                    Some(global),
+                    &ATTRIBUTES,
+                    &TEXTURES,
+                );
+            },
+            Some(ref visibility) => {
+                for (entity, mesh, material, global, _) in (
+                    &*entities,
+                    &mesh,
+                    &material,
+                    &global,
+                    &visibility.visible_unordered,
+                ).join()
+                {
+                    draw_mesh(
+                        encoder,
+                        effect,
+                        self.skinning,
+                        mesh_storage.get(mesh),
+                        joints.get(entity),
+                        &tex_storage,
+                        Some(material),
+                        &material_defaults,
+                        camera,
+                        Some(global),
+                        &ATTRIBUTES,
+                        &TEXTURES,
+                    );
+                }
 
-            set_vertex_args(effect, encoder, camera, global);
-
-            if self.skinning {
-                if let Some(joint) = joints.get(entity) {
-                    effect.update_buffer("JointTransforms", &joint.matrices[..], encoder);
+                for entity in &visibility.visible_ordered {
+                    if let Some(mesh) = mesh.get(*entity) {
+                        draw_mesh(
+                            encoder,
+                            effect,
+                            self.skinning,
+                            mesh_storage.get(mesh),
+                            joints.get(*entity),
+                            &tex_storage,
+                            material.get(*entity),
+                            &material_defaults,
+                            camera,
+                            global.get(*entity),
+                            &ATTRIBUTES,
+                            &TEXTURES,
+                        );
+                    }
                 }
             }
-
-            add_textures(
-                effect,
-                &tex_storage,
-                material,
-                &material_defaults.0,
-                &TEXTURES,
-            );
-
-            effect.draw(mesh.slice(), encoder);
-            effect.clear();
         }
     }
 }

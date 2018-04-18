@@ -1,9 +1,10 @@
 use amethyst_core::Transform;
 use amethyst_core::cgmath::{InnerSpace, Quaternion, Vector3};
 
-use resources::AnimationSampling;
+use resources::{AnimationSampling, ApplyData, BlendMethod};
 use util::SamplerPrimitive;
 
+/// Channels that can be animated on `Transform`
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq, Serialize, Deserialize)]
 pub enum TransformChannel {
     Translation,
@@ -11,11 +12,15 @@ pub enum TransformChannel {
     Scale,
 }
 
-impl AnimationSampling for Transform {
-    type Channel = TransformChannel;
-    type Primitive = SamplerPrimitive<f32>;
+impl<'a> ApplyData<'a> for Transform {
+    type ApplyData = ();
+}
 
-    fn apply_sample(&mut self, channel: &Self::Channel, data: &SamplerPrimitive<f32>) {
+impl AnimationSampling for Transform {
+    type Primitive = SamplerPrimitive<f32>;
+    type Channel = TransformChannel;
+
+    fn apply_sample(&mut self, channel: &Self::Channel, data: &SamplerPrimitive<f32>, _: &()) {
         use self::TransformChannel::*;
         use util::SamplerPrimitive::*;
         match (channel, *data) {
@@ -26,12 +31,24 @@ impl AnimationSampling for Transform {
         }
     }
 
-    fn current_sample(&self, channel: &Self::Channel) -> SamplerPrimitive<f32> {
+    fn current_sample(&self, channel: &Self::Channel, _: &()) -> SamplerPrimitive<f32> {
         use self::TransformChannel::*;
         match channel {
             &Translation => SamplerPrimitive::Vec3(self.translation.into()),
             &Rotation => SamplerPrimitive::Vec4(self.rotation.into()),
             &Scale => SamplerPrimitive::Vec3(self.scale.into()),
         }
+    }
+    fn default_primitive(channel: &Self::Channel) -> Self::Primitive {
+        use self::TransformChannel::*;
+        match channel {
+            &Translation => SamplerPrimitive::Vec3([0.; 3]),
+            &Rotation => SamplerPrimitive::Vec4([0.; 4]),
+            &Scale => SamplerPrimitive::Vec3([0.; 3]),
+        }
+    }
+
+    fn blend_method(&self, _: &Self::Channel) -> Option<BlendMethod> {
+        Some(BlendMethod::Linear)
     }
 }

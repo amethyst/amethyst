@@ -3,21 +3,23 @@
 use std::marker::PhantomData;
 
 use amethyst_assets::AssetStorage;
+use amethyst_core::specs::{Fetch, Join, ReadStorage};
 use amethyst_core::transform::GlobalTransform;
 use gfx::pso::buffer::ElemStride;
-use specs::{Fetch, Join, ReadStorage};
+use gfx_core::state::{Blend, ColorMask};
 
 use super::*;
 use cam::{ActiveCamera, Camera};
 use error::Result;
 use mesh::{Mesh, MeshHandle};
 use mtl::{Material, MaterialDefaults};
-use pass::util::{add_textures, set_attribute_buffers, set_vertex_args, VertexArgs};
+use pass::util::{draw_mesh, get_camera, setup_textures, VertexArgs};
 use pipe::{DepthMode, Effect, NewEffect};
 use pipe::pass::{Pass, PassData};
 use tex::Texture;
 use types::{Encoder, Factory};
 use vertex::{Position, Query, TexCoord};
+use visibility::Visibility;
 
 /// Draw mesh without lighting
 /// `V` is `VertexFormat`
@@ -25,6 +27,7 @@ use vertex::{Position, Query, TexCoord};
 #[derivative(Default(bound = "V: Query<(Position, TexCoord)>, Self: Pass"))]
 pub struct DrawFlat<V> {
     _pd: PhantomData<V>,
+    transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
 }
 
 impl<V> DrawFlat<V>
@@ -35,6 +38,17 @@ where
     /// Create instance of `DrawFlat` pass
     pub fn new() -> Self {
         Default::default()
+    }
+
+    /// Enable transparency
+    pub fn with_transparency(
+        mut self,
+        mask: ColorMask,
+        blend: Blend,
+        depth: Option<DepthMode>,
+    ) -> Self {
+        self.transparency = Some((mask, blend, depth));
+        self
     }
 }
 
@@ -48,6 +62,7 @@ where
         Fetch<'a, AssetStorage<Mesh>>,
         Fetch<'a, AssetStorage<Texture>>,
         Fetch<'a, MaterialDefaults>,
+        Option<Fetch<'a, Visibility>>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
         ReadStorage<'a, GlobalTransform>,
@@ -60,13 +75,16 @@ where
 {
     fn compile(&mut self, effect: NewEffect) -> Result<Effect> {
         use std::mem;
-        effect
-            .simple(VERT_SRC, FRAG_SRC)
+        let mut builder = effect.simple(VERT_SRC, FRAG_SRC);
+        builder
             .with_raw_constant_buffer("VertexArgs", mem::size_of::<VertexArgs>(), 1)
-            .with_raw_vertex_buffer(V::QUERIED_ATTRIBUTES, V::size() as ElemStride, 0)
-            .with_texture("albedo")
-            .with_output("color", Some(DepthMode::LessEqualWrite))
-            .build()
+            .with_raw_vertex_buffer(V::QUERIED_ATTRIBUTES, V::size() as ElemStride, 0);
+        setup_textures(&mut builder, &TEXTURES);
+        match self.transparency {
+            Some((mask, blend, depth)) => builder.with_blended_output("color", mask, blend, depth),
+            None => builder.with_output("color", Some(DepthMode::LessEqualWrite)),
+        };
+        builder.build()
     }
 
     fn apply<'a, 'b: 'a>(
@@ -74,37 +92,76 @@ where
         encoder: &mut Encoder,
         effect: &mut Effect,
         _factory: Factory,
-        (active, camera, mesh_storage, tex_storage, material_defaults, mesh, material, global): <Self as PassData<'a>>::Data,
-){
-        let camera: Option<(&Camera, &GlobalTransform)> = active
-            .and_then(|a| {
-                let cam = camera.get(a.entity);
-                let transform = global.get(a.entity);
-                cam.into_iter().zip(transform.into_iter()).next()
-            })
-            .or_else(|| (&camera, &global).join().next());
+        (
+            active,
+            camera,
+            mesh_storage,
+            tex_storage,
+            material_defaults,
+            visibility,
+            mesh,
+            material,
+            global,
+        ): <Self as PassData<'a>>::Data,
+    ) {
+        let camera = get_camera(active, &camera, &global);
 
-        for (mesh, material, global) in (&mesh, &material, &global).join() {
-            let mesh = match mesh_storage.get(mesh) {
-                Some(mesh) => mesh,
-                None => continue,
-            };
+        match visibility {
+            None => for (mesh, material, global) in (&mesh, &material, &global).join() {
+                draw_mesh(
+                    encoder,
+                    effect,
+                    false,
+                    mesh_storage.get(mesh),
+                    None,
+                    &tex_storage,
+                    Some(material),
+                    &material_defaults,
+                    camera,
+                    Some(global),
+                    &[V::QUERIED_ATTRIBUTES],
+                    &TEXTURES,
+                );
+            },
+            Some(ref visibility) => {
+                for (mesh, material, global, _) in
+                    (&mesh, &material, &global, &visibility.visible_unordered).join()
+                {
+                    draw_mesh(
+                        encoder,
+                        effect,
+                        false,
+                        mesh_storage.get(mesh),
+                        None,
+                        &tex_storage,
+                        Some(material),
+                        &material_defaults,
+                        camera,
+                        Some(global),
+                        &[V::QUERIED_ATTRIBUTES],
+                        &TEXTURES,
+                    );
+                }
 
-            if !set_attribute_buffers(effect, mesh, &[V::QUERIED_ATTRIBUTES]) {
-                continue;
+                for entity in &visibility.visible_ordered {
+                    if let Some(mesh) = mesh.get(*entity) {
+                        draw_mesh(
+                            encoder,
+                            effect,
+                            false,
+                            mesh_storage.get(mesh),
+                            None,
+                            &tex_storage,
+                            material.get(*entity),
+                            &material_defaults,
+                            camera,
+                            global.get(*entity),
+                            &[V::QUERIED_ATTRIBUTES],
+                            &TEXTURES,
+                        );
+                    }
+                }
             }
-
-            set_vertex_args(effect, encoder, camera, global);
-            add_textures(
-                effect,
-                &tex_storage,
-                material,
-                &material_defaults.0,
-                &TEXTURES,
-            );
-
-            effect.draw(mesh.slice(), encoder);
-            effect.clear();
         }
     }
 }

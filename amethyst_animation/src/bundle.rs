@@ -2,11 +2,12 @@ use std::marker;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{ECSBundle, Result};
+use amethyst_core::specs::{Component, DispatcherBuilder, World};
 use amethyst_renderer::JointTransforms;
-use specs::{Component, DispatcherBuilder, World};
 
-use resources::{Animation, AnimationControl, AnimationHierarchy, AnimationSampling, AnimationSet,
-                Sampler, SamplerControlSet};
+use material::MaterialTextureSet;
+use resources::{Animation, AnimationControlSet, AnimationHierarchy, AnimationSampling,
+                AnimationSet, RestState, Sampler, SamplerControlSet};
 use skinning::{Joint, Skin, VertexSkinningSystem};
 use systems::{AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem,
               SamplerProcessor};
@@ -54,6 +55,10 @@ impl<'a, 'b, 'c> ECSBundle<'a, 'b> for VertexSkinningBundle<'c> {
 ///
 /// Will add `SamplerInterpolationSystem<T>` with the given name.
 /// Will also add `SamplerProcessor<T::Primitive>`.
+///
+/// ### Type parameters:
+///
+/// - `T`: the component type that sampling should be applied to
 #[derive(Default)]
 pub struct SamplingBundle<'a, T> {
     name: &'a str,
@@ -96,6 +101,7 @@ where
             .entry()
             .or_insert_with(AssetStorage::<Sampler<T::Primitive>>::new);
         world.register::<SamplerControlSet<T>>();
+        world.add_resource(MaterialTextureSet::default());
         Ok(builder
             .add(SamplerProcessor::<T::Primitive>::new(), "", &[])
             .add(SamplerInterpolationSystem::<T>::new(), self.name, self.dep))
@@ -108,15 +114,21 @@ where
 ///
 /// Will add `AnimationControlSystem<T>` with the given name.
 /// Will also add `AnimationProcessor<T>`.
+///
+/// ### Type parameters:
+///
+/// - `I`: identifier type for running animations, only one animation can be run at the same time
+///        with the same id (per entity)
+/// - `T`: the component type that sampling should be applied to
 #[derive(Default)]
-pub struct AnimationBundle<'a, T> {
+pub struct AnimationBundle<'a, I, T> {
     animation_name: &'a str,
     sampling_name: &'a str,
     dep: &'a [&'a str],
-    m: marker::PhantomData<T>,
+    m: marker::PhantomData<(I, T)>,
 }
 
-impl<'a, T> AnimationBundle<'a, T> {
+impl<'a, I, T> AnimationBundle<'a, I, T> {
     /// Create a new animation bundle
     ///
     /// ### Parameters:
@@ -139,9 +151,10 @@ impl<'a, T> AnimationBundle<'a, T> {
     }
 }
 
-impl<'a, 'b, 'c, T> ECSBundle<'a, 'b> for AnimationBundle<'c, T>
+impl<'a, 'b, 'c, I, T> ECSBundle<'a, 'b> for AnimationBundle<'c, I, T>
 where
-    T: AnimationSampling + Component,
+    I: PartialEq + Copy + Send + Sync + 'static,
+    T: AnimationSampling + Component + Clone,
 {
     fn build(
         self,
@@ -149,11 +162,12 @@ where
         mut builder: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
         world.add_resource(AssetStorage::<Animation<T>>::new());
-        world.register::<AnimationControl<T>>();
+        world.register::<AnimationControlSet<I, T>>();
         world.register::<AnimationHierarchy<T>>();
+        world.register::<RestState<T>>();
         world.register::<AnimationSet<T>>();
         builder = builder.add(AnimationProcessor::<T>::new(), "", &[]).add(
-            AnimationControlSystem::<T>::new(),
+            AnimationControlSystem::<I, T>::new(),
             self.animation_name,
             self.dep,
         );

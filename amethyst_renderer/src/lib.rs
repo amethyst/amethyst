@@ -21,6 +21,7 @@ extern crate gfx_core;
 #[macro_use]
 extern crate gfx_macros;
 extern crate hetseq;
+extern crate hibitset;
 extern crate imagefmt;
 #[macro_use]
 extern crate log;
@@ -28,12 +29,14 @@ extern crate rayon;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
-extern crate shred;
 extern crate shrev;
 extern crate smallvec;
-extern crate specs;
 extern crate wavefront_obj;
 extern crate winit;
+
+#[macro_use]
+#[cfg(feature = "profiler")]
+extern crate thread_profiler;
 
 #[cfg(all(feature = "d3d11", target_os = "windows"))]
 extern crate gfx_device_dx11;
@@ -67,7 +70,7 @@ pub use formats::{build_mesh_with_combo, create_mesh_asset, create_texture_asset
 pub use input::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
 pub use light::{DirectionalLight, Light, PointLight, SpotLight, SunLight};
 pub use mesh::{vertex_data, Mesh, MeshBuilder, MeshHandle, VertexBuffer};
-pub use mtl::{Material, MaterialDefaults};
+pub use mtl::{Material, MaterialDefaults, TextureOffset};
 pub use pass::{DrawFlat, DrawFlatSeparate, DrawPbm, DrawPbmSeparate, DrawShaded,
                DrawShadedSeparate};
 pub use pipe::{ColorBuffer, Data, DepthBuffer, DepthMode, Effect, EffectBuilder, Init, Meta,
@@ -79,13 +82,16 @@ pub use skinning::{AnimatedComboMeshCreator, AnimatedVertexBufferCombination, Jo
                    JointTransforms, JointWeights};
 pub use system::RenderSystem;
 pub use tex::{Texture, TextureBuilder, TextureHandle};
+pub use transparent::{Blend, BlendChannel, ColorMask, Equation, Factor, Transparent};
 pub use types::{Encoder, Factory, PipelineState, Resources};
 pub use vertex::{Attribute, AttributeFormat, Attributes, Color, Normal, PosColor, PosNormTangTex,
                  PosNormTex, PosTex, Position, Query, Separate, Tangent, TexCoord,
                  VertexBufferCombination, VertexFormat, With};
+pub use visibility::{Visibility, VisibilitySortingSystem};
 
 pub mod error;
 pub mod pipe;
+pub mod mouse;
 
 #[macro_use]
 mod macros;
@@ -102,8 +108,10 @@ mod mtl;
 mod pass;
 mod renderer;
 mod resources;
+mod transparent;
 mod skinning;
 mod system;
 mod tex;
 mod types;
 mod vertex;
+mod visibility;

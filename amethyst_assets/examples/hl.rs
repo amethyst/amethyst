@@ -8,15 +8,15 @@ extern crate rayon;
 extern crate ron;
 #[macro_use]
 extern crate serde;
-extern crate specs;
 
 use std::sync::Arc;
 
 use amethyst_assets::*;
 use amethyst_core::Time;
+use amethyst_core::specs::{Dispatcher, DispatcherBuilder, Fetch, FetchMut, System, VecStorage,
+                           World};
+use amethyst_core::specs::common::Errors;
 use rayon::ThreadPool;
-use specs::{Dispatcher, DispatcherBuilder, Fetch, FetchMut, System, VecStorage, World};
-use specs::common::Errors;
 
 struct App {
     dispatcher: Dispatcher<'static, 'static>,
@@ -36,7 +36,9 @@ impl App {
         world.add_resource(Errors::new());
         world.add_resource(AssetStorage::<MeshAsset>::new());
         world.add_resource(Loader::new(path, pool.clone()));
+        world.add_resource(Time::default());
         world.add_resource(pool);
+        world.add_resource(Time::default());
 
         App {
             dispatcher,
@@ -148,10 +150,22 @@ impl State {
 
                 Some(State::Loading(progress))
             }
-            State::Loading(progress) => if progress.is_complete() {
-                Some(State::SomethingElse)
-            } else {
-                Some(State::Loading(progress))
+            State::Loading(progress) => match progress.complete() {
+                Completion::Complete => Some(State::SomethingElse),
+                Completion::Failed => {
+                    eprintln!("Asset loading failed!");
+                    eprintln!("-- Errors --");
+                    progress.errors().iter().enumerate().for_each(|(n, e)| {
+                        eprintln!("{}: error: {}", n, e);
+                        for cause in e.iter().skip(1) {
+                            eprintln!("{}: caused by: {}", n, cause);
+                        }
+                    });
+                    eprintln!("Quitting game..");
+
+                    None
+                }
+                Completion::Loading => Some(State::Loading(progress)),
             },
             State::SomethingElse => {
                 // You could now start the actual game, cause the loading is done.
@@ -177,6 +191,7 @@ fn main() {
         .add(RenderingSystem, "rendering", &[])
         .build();
 
-    let mut app = App::new(disp, "examples/assets/", State::Start);
+    let assets_dir = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
+    let mut app = App::new(disp, &assets_dir, State::Start);
     app.run();
 }

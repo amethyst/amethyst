@@ -113,6 +113,12 @@ impl From<[f32; 4]> for TextureData {
     }
 }
 
+impl From<[f32; 3]> for TextureData {
+    fn from(color: [f32; 3]) -> Self {
+        [color[0], color[1], color[2], 1.0].into()
+    }
+}
+
 impl TextureData {
     /// Creates texture data from color.
     pub fn color(value: [f32; 4]) -> Self {
@@ -322,4 +328,19 @@ fn create_texture_asset_from_image(
     renderer
         .create_texture(tb)
         .chain_err(|| "Failed to create texture from texture data")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::TextureData;
+
+    #[test]
+    fn texture_data_from_f32_3() {
+        match TextureData::from([0.25, 0.50, 0.75]) {
+            TextureData::Rgba(color, _) => {
+                assert_eq!(color, [0.25, 0.50, 0.75, 1.0]);
+            }
+            _ => panic!("Expected [f32; 3] to turn into TextureData::Rgba"),
+        }
+    }
 }

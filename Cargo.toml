@@ -19,17 +19,31 @@ appveyor = { repository = "amethyst/amethyst", branch = "develop" }
 travis-ci = { repository = "amethyst/amethyst", branch = "develop" }
 
 [features]
-profiler = ["thread_profiler/thread_profiler"]
+profiler = [
+    "thread_profiler",
+    "thread_profiler/thread_profiler",
+    "amethyst_assets/profiler",
+    "amethyst_animation/profiler",
+    "amethyst_audio/profiler",
+    "amethyst_config/profiler",
+    "amethyst_core/profiler",
+    "amethyst_controls/profiler",
+    "amethyst_renderer/profiler",
+    "amethyst_input/profiler",
+    "amethyst_ui/profiler",
+    "amethyst_utils/profiler",
+]
 
 [dependencies]
 amethyst_assets = { path = "amethyst_assets", version = "0.2.0" }
 amethyst_audio = { path = "amethyst_audio", version = "0.1.0" }
 amethyst_config = { path = "amethyst_config", version = "0.5.0" }
 amethyst_core = { path = "amethyst_core", version = "0.1.0" }
+amethyst_controls = { path = "amethyst_controls", version = "0.1.0" }
 amethyst_renderer = { path = "amethyst_renderer", version = "0.6" }
 amethyst_input = { path = "amethyst_input", version = "0.2" }
-amethyst_ui = { path = "amethyst_ui", version = "0.1" }
-amethyst_utils = { path = "amethyst_utils", version = "0.1" }
+amethyst_ui = { path = "amethyst_ui", version = "0.2" }
+amethyst_utils = { path = "amethyst_utils", version = "0.2" }
 derivative = "1.0"
 fern = "0.5"
 log = "0.4"
@@ -38,13 +52,13 @@ rustc_version_runtime = "0.1"
 shred = "0.5"
 shrev = "0.8"
 specs = "0.10"
-winit = "0.10"
+winit = "0.12"
 
 thread_profiler = { version = "0.1", optional = true }
 
 [dev-dependencies]
 amethyst_gltf = { path = "amethyst_gltf", version = "0.1" }
-genmesh = "0.4"
+genmesh = "0.5"
 amethyst_animation = { path = "amethyst_animation", version = "0.1.0" }
 serde = "1.0"
 serde_derive = "1.0"
@@ -111,6 +125,10 @@ path = "examples/pong_tutorial_03/main.rs"
 [[example]]
 name = "appendix_a"
 path = "examples/appendix_a/main.rs"
+
+[[example]]
+name = "fly_camera"
+path = "examples/fly_camera/main.rs"
 
 [workspace]
 members = ["amethyst_animation", "amethyst_gltf"]

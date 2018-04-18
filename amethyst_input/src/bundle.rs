@@ -5,10 +5,10 @@ use std::path::Path;
 
 use amethyst_config::Config;
 use amethyst_core::bundle::{ECSBundle, Result};
+use amethyst_core::specs::{DispatcherBuilder, World};
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use shrev::EventChannel;
-use specs::{DispatcherBuilder, World};
 use winit::Event;
 
 use {Bindings, InputEvent, InputHandler, InputSystem};

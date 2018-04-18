@@ -5,7 +5,7 @@ use std::time::Instant;
 
 use amethyst_core as core;
 use amethyst_core::{ECSBundle, Time};
-use specs::{DispatcherBuilder, Fetch, FetchMut, System, World};
+use amethyst_core::specs::{DispatcherBuilder, Fetch, FetchMut, System, World};
 
 use {Asset, Format, FormatValue, Loader, Result, Source};
 
@@ -42,10 +42,10 @@ impl<'a, 'b> ECSBundle<'a, 'b> for HotReloadBundle {
 ///
 /// ```
 /// # extern crate amethyst_assets;
-/// # extern crate specs;
+/// # extern crate amethyst_core;
 /// #
 /// # use amethyst_assets::HotReloadStrategy;
-/// # use specs::World;
+/// # use amethyst_core::specs::World;
 /// #
 /// # fn main() {
 /// let mut world = World::new();
@@ -251,6 +251,9 @@ where
     }
 
     fn reload(self: Box<Self>) -> Result<FormatValue<A>> {
+        #[cfg(feature = "profiler")]
+        profile_scope!("reload_single_file");
+
         let this: SingleFile<_, _> = *self;
         let SingleFile {
             format,
