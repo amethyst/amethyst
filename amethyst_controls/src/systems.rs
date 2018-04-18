@@ -12,6 +12,7 @@ use components::FlyControlTag;
 
 use shrev::{EventChannel, ReaderId};
 use winit::{Event, WindowEvent};
+use resources::WindowFocus;
 
 /// The system that manages the fly movement.
 /// Generic parameters are the parameters for the InputHandler.
@@ -106,22 +107,25 @@ where
 {
     type SystemData = (
         Read<'a, InputHandler<A, B>>,
+        Read<'a, WindowFocus>,
         ReadExpect<'a, ScreenDimensions>,
         WriteStorage<'a, Transform>,
         ReadStorage<'a, FlyControlTag>,
     );
 
-    fn run(&mut self, (input, dim, mut transform, tag): Self::SystemData) {
-        // take the same mid-point as the MouseCenterLockSystem
-        let half_x = dim.width() as i32 / 2;
-        let half_y = dim.height() as i32 / 2;
+    fn run(&mut self, (input, focus, dim, mut transform, tag): Self::SystemData) {
+        if focus.is_focused {
+            // take the same mid-point as the MouseCenterLockSystem
+            let half_x = dim.width() as i32 / 2;
+            let half_y = dim.height() as i32 / 2;
 
-        if let Some((posx, posy)) = input.mouse_position() {
-            let offset_x = half_x as f32 - posx as f32;
-            let offset_y = half_y as f32 - posy as f32;
-            for (transform, _) in (&mut transform, &tag).join() {
-                transform.pitch_local(Deg(offset_y * self.sensitivity_y));
-                transform.yaw_global(Deg(offset_x * self.sensitivity_x));
+            if let Some((posx, posy)) = input.mouse_position() {
+                let offset_x = half_x as f32 - posx as f32;
+                let offset_y = half_y as f32 - posy as f32;
+                for (transform, _) in (&mut transform, &tag).join() {
+                    transform.pitch_local(Deg(offset_y * self.sensitivity_y));
+                    transform.yaw_global(Deg(offset_x * self.sensitivity_x));
+                }
             }
         }
     }
@@ -131,16 +135,26 @@ where
 pub struct MouseCenterLockSystem;
 
 impl<'a> System<'a> for MouseCenterLockSystem {
-    type SystemData = (ReadExpect<'a, ScreenDimensions>, Write<'a, WindowMessages>);
+    type SystemData = (
+        ReadExpect<'a, ScreenDimensions>,
+        Write<'a, WindowMessages>, 
+        Write<'a, WindowFocus>
+    );
 
-    fn run(&mut self, (dim, mut msg): Self::SystemData) {
-        let half_x = dim.width() as i32 / 2;
-        let half_y = dim.height() as i32 / 2;
-        msg.send_command(move |win| {
-            if let Err(err) = win.set_cursor_position(half_x, half_y) {
-                error!("Unable to set the cursor position! Error: {:?}", err);
-            }
-        });
+    fn run(&mut self, (dim, mut msg, focus): Self::SystemData) {
+        use amethyst_renderer::mouse::*;
+        if focus.is_focused {
+            let half_x = dim.width() as i32 / 2;
+            let half_y = dim.height() as i32 / 2;
+            msg.send_command(move |win| {
+                if let Err(err) = win.set_cursor_position(half_x, half_y) {
+                    error!("Unable to set the cursor position! Error: {:?}", err);
+                }
+
+            });
+        } else {
+            release_cursor(&mut msg);
+        }
     }
 
     fn setup(&mut self, res: &mut Resources) {
@@ -153,25 +167,35 @@ impl<'a> System<'a> for MouseCenterLockSystem {
     }
 }
 
+// A system which reads Events and saves if a window has lost focus in a WindowFocus resource
 pub struct MouseFocusUpdateSystem {
     event_reader: Option<ReaderId<Event>>,
+}
+
+impl MouseFocusUpdateSystem {
+    pub fn new() -> MouseFocusUpdateSystem {
+        MouseFocusUpdateSystem { 
+            event_reader: None 
+        }
+    }
 }
 
 impl<'a> System<'a> for MouseFocusUpdateSystem {
     type SystemData = (
         Read<'a, EventChannel<Event>>,
-        Read<'a, EventChannel<Event>>,
+        Write<'a, WindowFocus>,
     );
 
-    fn run(&mut self, (inputs, events): Self::SystemData) {
+    fn run(&mut self, (events, mut focus): Self::SystemData) {
         for event in events.read(&mut self.event_reader.as_mut().unwrap()) {
-            if let &Event::WindowEvent {
-                event: WindowEvent::Focused(false),
-                ..
-            } = event
-            {
-                println!("Focus event happended");
-                println!("TODO: save event in resource");
+            match event {
+                Event::WindowEvent { event, .. } => match event {
+                    WindowEvent::Focused(focused) => {
+                        focus.is_focused = *focused;
+                    },
+                    _ => (),
+                },
+                _ => (),
             }
         }
     }

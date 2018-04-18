@@ -14,7 +14,9 @@ extern crate thread_profiler;
 mod components;
 mod bundles;
 mod systems;
+mod resources;
 
 pub use self::bundles::FlyControlBundle;
 pub use self::components::FlyControlTag;
 pub use self::systems::{FlyMovementSystem, FreeRotationSystem, MouseCenterLockSystem, MouseFocusUpdateSystem};
+pub use self::resources::{WindowFocus};

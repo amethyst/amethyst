@@ -68,7 +68,7 @@ where
             &[],
         );
         builder.add(MouseCenterLockSystem, "mouse_lock", &["free_rotation"]);
-        builder.add(MouseFocusUpdateSystem, "mouse_focus", &["free_lock"]);
+        builder.add(MouseFocusUpdateSystem::new(), "mouse_focus", &["mouse_lock"]);
         Ok(())
     }
 }

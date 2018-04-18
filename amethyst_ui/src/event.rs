@@ -55,8 +55,8 @@ impl Component for MouseReactive {
 /// The generic types A and B represent the A and B generic parameter of the InputHandler<A,B>.
 pub struct UiMouseSystem<A, B> {
     was_down: bool,
-    old_pos: (f32, f32),
     click_started_on: Option<Entity>,
+    last_target: Option<Entity>,
     _marker1: PhantomData<A>,
     _marker2: PhantomData<B>,
 }
@@ -66,8 +66,8 @@ impl<A, B> UiMouseSystem<A, B> {
     pub fn new() -> Self {
         UiMouseSystem {
             was_down: false,
-            old_pos: (0.0, 0.0),
             click_started_on: None,
+            last_target: None,
             _marker1: PhantomData,
             _marker2: PhantomData,
         }
@@ -90,37 +90,42 @@ where
     fn run(&mut self, (entities, transform, react, input, mut events): Self::SystemData) {
         let down = input.mouse_button_is_down(MouseButton::Left);
 
-        // to replace on InputHandler generate OnMouseDown and OnMouseUp events
+        // TODO: To replace on InputHandler generate OnMouseDown and OnMouseUp events
         let click_started = down && !self.was_down;
         let click_stopped = !down && self.was_down;
+
         if let Some((pos_x, pos_y)) = input.mouse_position() {
             let x = pos_x as f32;
             let y = pos_y as f32;
-            for (tr, e, _) in (&transform, &*entities, &react).join() {
-                let is_in_rect = tr.position_inside(x, y);
-                let was_in_rect = tr.position_inside(self.old_pos.0, self.old_pos.1);
 
-                if is_in_rect && !was_in_rect {
-                    events.single_write(UiEvent::new(UiEventType::HoverStart, e));
-                } else if !is_in_rect && was_in_rect {
-                    events.single_write(UiEvent::new(UiEventType::HoverStop, e));
+            let target = targeted((x, y), (&*entities, &transform).join(), &react);
+
+            if target != self.last_target {
+                if let Some(target) = target {
+                    events.single_write(UiEvent::new(UiEventType::HoverStart, target));
                 }
+                if let Some(last_target) = self.last_target {
+                    events.single_write(UiEvent::new(
+                        UiEventType::HoverStop,
+                        last_target,
+                    ));
+                }
+            }
 
-                if is_in_rect {
-                    if click_started {
-                        events.single_write(UiEvent::new(UiEventType::ClickStart, e));
-                        self.click_started_on = Some(e);
-                    } else if click_stopped {
-                        if let Some(e2) = self.click_started_on {
-                            if e2 == e {
-                                events.single_write(UiEvent::new(UiEventType::Click, e2));
-                            }
+            if let Some(e) = target {
+                if click_started {
+                    events.single_write(UiEvent::new(UiEventType::ClickStart, e));
+                    self.click_started_on = Some(e);
+                } else if click_stopped {
+                    if let Some(e2) = self.click_started_on {
+                        if e2 == e {
+                            events.single_write(UiEvent::new(UiEventType::Click, e2));
                         }
                     }
                 }
             }
 
-            self.old_pos = (x, y);
+            self.last_target = target;
         }
 
         // Could be used for drag and drop
@@ -133,4 +138,31 @@ where
 
         self.was_down = down;
     }
+}
+
+fn targeted<'a, I>(
+    pos: (f32, f32),
+    transforms: I,
+    react: &ReadStorage<MouseReactive>,
+) -> Option<Entity> 
+    where I: Iterator<Item=(Entity, &'a UiTransform)> + 'a,
+{
+    use std::f32::INFINITY;
+
+    let candidate = transforms
+        .filter(|t| t.1.opaque)
+        .filter(|t| t.1.position_inside(pos.0, pos.1))
+        .fold((None, INFINITY), |(lowest_entity, lowest_z), (entity, t)| {
+            if lowest_z < t.global_z {
+                (lowest_entity, lowest_z)
+            } else {
+                (Some(entity), t.global_z)
+            }
+        }).0;
+    if let Some(candidate) = candidate {
+        if react.get(candidate).is_some() {
+            return Some(candidate);
+        }
+    }
+    None
 }

@@ -41,12 +41,6 @@ impl State for ExampleState {
     fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
         match event {
             Event::WindowEvent { event, .. } => match event {
-                WindowEvent::Focused(false) => {
-                    println!("Focus lost");
-                },
-                WindowEvent::Focused(true) => {
-                    println!("Focus regained");
-                },
                 WindowEvent::KeyboardInput {
                     input:
                         KeyboardInput {
