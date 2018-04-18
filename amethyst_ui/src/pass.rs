@@ -1,11 +1,10 @@
 //! Simple flat forward drawing pass.
 
-use std::cmp::{Ordering, PartialOrd};
 use std::hash::{Hash, Hasher};
 
 use amethyst_assets::{AssetStorage, Loader, WeakHandle};
 use amethyst_core::cgmath::vec4;
-use amethyst_core::specs::{Entities, Entity, Fetch, Join, ReadStorage, WriteStorage};
+use amethyst_core::specs::{Entities, Fetch, Join, ReadStorage, WriteStorage};
 use amethyst_renderer::{Encoder, Factory, Mesh, PosTex, Resources, ScreenDimensions, Texture,
                         TextureData, TextureHandle, TextureMetadata, VertexFormat};
 use amethyst_renderer::error::Result;
@@ -17,7 +16,6 @@ use gfx::pso::buffer::ElemStride;
 use gfx::state::ColorMask;
 use gfx_glyph::{BuiltInLineBreaker, FontId, GlyphBrush, GlyphBrushBuilder, GlyphCruncher,
                 HorizontalAlign, Layout, Scale, SectionText, VariedSection, VerticalAlign};
-use hibitset::BitSet;
 use rusttype::Point;
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -31,14 +29,8 @@ const FRAG_SRC: &[u8] = include_bytes!("shaders/frag.glsl");
 #[repr(C)]
 struct VertexArgs {
     proj_vec: [f32; 4],
-    coord: [f32; 2],
+    coord: [f32; 4],
     dimension: [f32; 2],
-}
-
-#[derive(Clone, Debug)]
-struct CachedDrawOrder {
-    pub cached: BitSet,
-    pub cache: Vec<(f32, Entity)>,
 }
 
 /// A color used to query a hashmap for a cached texture of that color.
@@ -62,7 +54,6 @@ impl Hash for KeyColor {
 /// Draw Ui elements.  UI won't display without this.  It's recommended this be your last pass.
 pub struct DrawUi {
     mesh: Option<Mesh>,
-    cached_draw_order: CachedDrawOrder,
     cached_color_textures: HashMap<KeyColor, TextureHandle>,
     glyph_brushes: GlyphBrushCache,
     next_brush_cache_id: u32,
@@ -81,10 +72,6 @@ impl DrawUi {
     pub fn new() -> Self {
         DrawUi {
             mesh: None,
-            cached_draw_order: CachedDrawOrder {
-                cached: BitSet::new(),
-                cache: Vec::new(),
-            },
             cached_color_textures: HashMap::default(),
             glyph_brushes: HashMap::default(),
             next_brush_cache_id: 0,
@@ -165,52 +152,6 @@ impl Pass for DrawUi {
             editing,
         ): <Self as PassData>::Data,
     ) {
-        // Populate and update the draw order cache.
-        {
-            let bitset = &mut self.cached_draw_order.cached;
-            self.cached_draw_order.cache.retain(|&(_z, entity)| {
-                let keep = ui_transform.get(entity).is_some();
-                if !keep {
-                    bitset.remove(entity.id());
-                }
-                keep
-            });
-        }
-
-        for &mut (ref mut z, entity) in &mut self.cached_draw_order.cache {
-            *z = ui_transform.get(entity).unwrap().global_z;
-        }
-
-        // Attempt to insert the new entities in sorted position.  Should reduce work during
-        // the sorting step.
-        let transform_set = ui_transform.check();
-        {
-            // Create a bitset containing only the new indices.
-            let new = (&transform_set ^ &self.cached_draw_order.cached) & &transform_set;
-            for (entity, transform, _new) in (&*entities, &ui_transform, &new).join() {
-                let pos = self.cached_draw_order
-                    .cache
-                    .iter()
-                    .position(|&(cached_z, _)| transform.global_z >= cached_z);
-                match pos {
-                    Some(pos) => self.cached_draw_order
-                        .cache
-                        .insert(pos, (transform.global_z, entity)),
-                    None => self.cached_draw_order
-                        .cache
-                        .push((transform.global_z, entity)),
-                }
-            }
-        }
-        self.cached_draw_order.cached = transform_set;
-
-        // Sort from largest z value to smallest z value.
-        // Most of the time this shouldn't do anything but you still need it for if the z values
-        // change.
-        self.cached_draw_order
-            .cache
-            .sort_unstable_by(|&(z1, _), &(z2, _)| z2.partial_cmp(&z1).unwrap_or(Ordering::Equal));
-
         let proj_vec = vec4(
             2. / screen_dimensions.width(),
             -2. / screen_dimensions.height(),
@@ -233,15 +174,15 @@ impl Pass for DrawUi {
             .join()
             .map(|t| t.0.global_z)
             .fold(1.0, |highest, current| current.abs().max(highest));
-        for &(_z, entity) in &self.cached_draw_order.cache {
-            // This won't panic as we guaranteed earlier these entities are present.
-            let ui_transform = ui_transform.get(entity).unwrap();
+        for (entity, ui_transform) in (&*entities, &ui_transform).join() {
             let vertex_args = VertexArgs {
                 proj_vec: proj_vec.into(),
                 // Coordinates are middle centered. It makes it easier to do layouting in most cases.
                 coord: [
                     ui_transform.global_x - ui_transform.width / 2.0,
                     ui_transform.global_y - ui_transform.height / 2.0,
+                    ui_transform.global_z / highest_abs_z,
+                    0.0,
                 ],
                 dimension: [ui_transform.width, ui_transform.height],
             };
@@ -421,7 +362,7 @@ impl Pass for DrawUi {
                         let pos = glyph.position();
                         let vertex_args = VertexArgs {
                             proj_vec: proj_vec.into(),
-                            coord: [pos.x, pos.y - ascent],
+                            coord: [pos.x, pos.y - ascent, ui_transform.global_z / highest_abs_z, 0.0],
                             dimension: [width, height],
                         };
                         effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
@@ -432,13 +373,6 @@ impl Pass for DrawUi {
                 }
                 // Render text
                 brush.queue(section.clone());
-                if let Err(err) = brush.draw_queued(
-                    encoder,
-                    &effect.data.out_blends[0],
-                    &effect.data.out_depth.as_ref().unwrap().0,
-                ) {
-                    eprintln!("Unable to draw text! Error: {:?}", err);
-                }
                 // Render cursor
                 if focused.entity == Some(entity) {
                     if let Some((texture, editing)) = editing.as_ref().and_then(|ed| {
@@ -514,7 +448,7 @@ impl Pass for DrawUi {
                             }
                             let vertex_args = VertexArgs {
                                 proj_vec: proj_vec.into(),
-                                coord: [x, y],
+                                coord: [x, y, ui_transform.global_z / highest_abs_z, 0.0],
                                 dimension: [width, height],
                             };
                             effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
@@ -524,6 +458,15 @@ impl Pass for DrawUi {
                         effect.data.samplers.clear();
                     }
                 }
+            }
+        }
+        for (_, &mut (ref mut brush, _)) in &mut self.glyph_brushes {
+            if let Err(err) = brush.draw_queued(
+                encoder,
+                &effect.data.out_blends[0],
+                &effect.data.out_depth.as_ref().unwrap().0,
+            ) {
+                error!("Unable to draw text! Error: {:?}", err);
             }
         }
     }

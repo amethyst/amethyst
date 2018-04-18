@@ -5,7 +5,7 @@
 // std140 is a cross platform layout.
 layout (std140) uniform VertexArgs {
     uniform vec4 proj_vec;
-    uniform vec2 coord;
+    uniform vec4 coord;
     uniform vec2 dimension;
 };
 
@@ -20,7 +20,7 @@ out VertexData {
 void main() {
     vertex.position = vec4(position, 1);
     vertex.position *= vec4(dimension, 1, 1);
-    vertex.position += vec4(coord, 0, 0);
+    vertex.position += coord;
     vertex.position *= proj_vec;
     vertex.position += vec4(-1, 1, 0, 0);
     vertex.tex_coord = tex_coord;
