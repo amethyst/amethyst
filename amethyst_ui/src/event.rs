@@ -53,8 +53,8 @@ impl Component for MouseReactive {
 /// The generic types A and B represent the A and B generic parameter of the InputHandler<A,B>.
 pub struct UiMouseSystem<A, B> {
     was_down: bool,
-    old_pos: (f32, f32),
     click_started_on: Option<Entity>,
+    last_target: Option<Entity>,
     _marker1: PhantomData<A>,
     _marker2: PhantomData<B>,
 }
@@ -64,8 +64,8 @@ impl<A, B> UiMouseSystem<A, B> {
     pub fn new() -> Self {
         UiMouseSystem {
             was_down: false,
-            old_pos: (0.0, 0.0),
             click_started_on: None,
+            last_target: None,
             _marker1: PhantomData,
             _marker2: PhantomData,
         }
@@ -88,13 +88,42 @@ where
     fn run(&mut self, (entities, transform, react, input, mut events): Self::SystemData) {
         let down = input.mouse_button_is_down(MouseButton::Left);
 
-        // to replace on InputHandler generate OnMouseDown and OnMouseUp events
+        // TODO: To replace on InputHandler generate OnMouseDown and OnMouseUp events
         let click_started = down && !self.was_down;
         let click_stopped = !down && self.was_down;
+
+
         if let Some((pos_x, pos_y)) = input.mouse_position() {
             let x = pos_x as f32;
             let y = pos_y as f32;
-            for (tr, e, _) in (&transform, &*entities, &react).join() {
+
+            let target = targeted((x,y),(&*entities,&transform).join().collect::<Vec<_>>());
+
+            let is_in_rect = target.is_some();
+            let was_in_rect = self.last_target.is_some();
+
+            if is_in_rect && !was_in_rect {
+                events.single_write(UiEvent::new(UiEventType::HoverStart, target.unwrap()));
+            } else if !is_in_rect && was_in_rect {
+                events.single_write(UiEvent::new(UiEventType::HoverStop, self.last_target.unwrap()));
+            }
+
+            if let Some(e) = target{
+                if click_started {
+                    events.single_write(UiEvent::new(UiEventType::ClickStart, e));
+                    self.click_started_on = Some(e);
+                } else if click_stopped {
+                    if let Some(e2) = self.click_started_on {
+                        if e2 == e {
+                            events.single_write(UiEvent::new(UiEventType::Click, e2));
+                        }
+                    }
+                }
+            }
+
+            self.last_target = target;
+
+            /*for (tr, e, _) in (&transform, &*entities, &react).join() {
                 let is_in_rect = tr.position_inside(x, y);
                 let was_in_rect = tr.position_inside(self.old_pos.0, self.old_pos.1);
 
@@ -118,7 +147,7 @@ where
                 }
             }
 
-            self.old_pos = (x, y);
+            self.old_pos = (x, y);*/
         }
 
         // Could be used for drag and drop
@@ -130,5 +159,35 @@ where
         }
 
         self.was_down = down;
+    }
+}
+
+fn targeted(pos: (f32,f32), transforms: Vec<(Entity,&UiTransform)>) -> Option<Entity>{
+    let mut v = transforms.iter()
+        .filter(|t|t.1.opaque)
+        .filter(|t|t.1.position_inside(pos.0,pos.1))
+        .collect::<Vec<_>>();
+    v.sort_by(|t1,t2|t1.1.global_z.partial_cmp(&t2.1.global_z)
+        .expect("Failed to do z ordering on `UiTransform`s. Do you have a NaN?"));
+    v.first().map(|t| t.0)
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn overlap_fail() {
+
+    }
+
+    #[test]
+    fn overlap_bottom_success() {
+        let all = vec![
+            (Entity::new(0,0),UiTransform::new("".to_string(),0.0,0.0,0.0,1.0,1.0,0)),
+        ];
+    }
+
+    #[test]
+    fn overlap_top_success() {
+
     }
 }

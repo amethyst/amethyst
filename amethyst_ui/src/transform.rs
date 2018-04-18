@@ -37,6 +37,10 @@ pub struct UiTransform {
     /// WIP
     /// The scale mode indicates if the position is in pixel or is relative (%) to the parent's size.
     pub scale_mode: ScaleMode,
+    /// Indicates if actions on the ui can go through this element.
+    /// If set to false, the element will behaves as if it was transparent and will let events go to
+    /// the next element (for example, the text on a button).
+    pub opaque: bool,
     /// A private field to keep this from being initialized without new.
     pd: PhantomData<u8>,
 }
@@ -64,13 +68,21 @@ impl UiTransform {
             global_y: y,
             global_z: z,
             scale_mode: ScaleMode::Pixel,
+            opaque: false,
             pd: PhantomData,
         }
     }
     /// Checks if the input position is in the UiTransform rectangle.
-    pub fn position_inside(&self, x: f32, y: f32) -> bool {
+    /// Uses local coordinates (ignores layouting).
+    pub fn position_inside_local(&self, x: f32, y: f32) -> bool {
         x > self.local_x - self.width / 2.0 && y > self.local_y - self.height / 2.0
             && x < self.local_x + self.width / 2.0 && y < self.local_y + self.height / 2.0
+    }
+
+    /// Checks if the input position is in the UiTransform rectangle.
+    pub fn position_inside(&self, x: f32, y: f32) -> bool {
+        x > self.global_x - self.width / 2.0 && y > self.global_y - self.height / 2.0
+            && x < self.global_x + self.width / 2.0 && y < self.global_y + self.height / 2.0
     }
 
     /// Currently unused. Will be implemented in a future PR.
@@ -78,8 +90,27 @@ impl UiTransform {
         self.scale_mode = ScaleMode::Percent;
         self
     }
+
 }
 
 impl Component for UiTransform {
     type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn inside_local() {
+        let tr = UiTransform::new("".to_string(),0.0,0.0,0.0,1.0,1.0,0);
+        let pos = (-0.49,0.20);
+        assert!(tr.position_inside(pos.0,pos.1));
+    }
+
+    #[test]
+    fn inside_global() {
+        let tr = UiTransform::new("".to_string(),0.0,0.0,0.0,1.0,1.0,0);
+        let pos = (-0.49,0.20);
+        assert!(tr.position_inside(pos.0,pos.1));
+    }
 }
