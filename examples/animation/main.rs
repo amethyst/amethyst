@@ -4,7 +4,7 @@ extern crate amethyst;
 extern crate amethyst_animation;
 extern crate genmesh;
 
-use amethyst::assets::{Handle, Loader};
+use amethyst::assets::{AssetStorage, Handle, Loader};
 use amethyst::core::{GlobalTransform, Parent, Transform, TransformBundle};
 use amethyst::core::cgmath::Deg;
 use amethyst::ecs::{Entity, World};
@@ -13,30 +13,52 @@ use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Elemen
                          KeyboardInput, Light, Mesh, Pipeline, PointLight, PosNormTex, Projection,
                          RenderBundle, Rgba, Stage, VirtualKeyCode, WindowEvent};
 use amethyst_animation::{get_animation_set, Animation, AnimationBundle, AnimationCommand,
-                         EndControl, InterpolationFunction, Sampler, StepDirection,
-                         TransformChannel};
+                         AnimationSet, DeferStartRelation, EndControl, InterpolationFunction,
+                         Sampler, SamplerPrimitive, StepDirection, TransformChannel};
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 
-const SPHERE_COLOUR: [f32; 4] = [0.0, 0.0, 1.0, 1.0]; // blue
-const AMBIENT_LIGHT_COLOUR: Rgba = Rgba(0.01, 0.01, 0.01, 1.0); // near-black
-const POINT_LIGHT_COLOUR: Rgba = Rgba(1.0, 1.0, 1.0, 1.0); // white
-const BACKGROUND_COLOUR: [f32; 4] = [0.0, 0.0, 0.0, 0.0]; // black
+// blue
+const SPHERE_COLOUR: [f32; 4] = [0.0, 0.0, 1.0, 1.0];
+// near-black
+const AMBIENT_LIGHT_COLOUR: Rgba = Rgba(0.01, 0.01, 0.01, 1.0);
+// white
+const POINT_LIGHT_COLOUR: Rgba = Rgba(1.0, 1.0, 1.0, 1.0);
+// black
+const BACKGROUND_COLOUR: [f32; 4] = [0.0, 0.0, 0.0, 0.0];
 const LIGHT_POSITION: [f32; 3] = [2.0, 2.0, -2.0];
 const LIGHT_RADIUS: f32 = 5.0;
 const LIGHT_INTENSITY: f32 = 3.0;
 
-#[derive(Default)]
+#[derive(Eq, PartialOrd, PartialEq, Hash, Debug, Copy, Clone)]
+enum AnimationId {
+    Scale,
+    Rotate,
+    Translate,
+}
+
 struct Example {
     pub sphere: Option<Entity>,
-    pub animation: Option<Handle<Animation<Transform>>>,
+    rate: f32,
+    current_animation: AnimationId,
+}
+
+impl Default for Example {
+    fn default() -> Self {
+        Example {
+            sphere: None,
+            rate: 1.0,
+            current_animation: AnimationId::Translate,
+        }
+    }
 }
 
 impl State for Example {
     fn on_start(&mut self, world: &mut World) {
         // Initialise the scene with an object, a light and a camera.
-        self.sphere = Some(initialise_sphere(world));
-        self.animation = Some(initialise_animation(world));
+        let sphere_entity = initialise_sphere(world);
+        self.sphere = Some(sphere_entity);
+        initialise_animation(world, sphere_entity);
         initialise_lights(world);
         initialise_camera(world);
     }
@@ -63,30 +85,91 @@ impl State for Example {
                 } => {
                     match virtual_keycode {
                         Some(VirtualKeyCode::Space) => {
-                            get_animation_set::<u32, Transform>(
-                                &mut world.write(),
-                                self.sphere.unwrap().clone(),
-                            ).add_animation(
-                                1,
-                                self.animation.as_ref().unwrap(),
-                                EndControl::Loop(None),
-                                0.0,
-                                AnimationCommand::Start,
+                            add_animation(
+                                world,
+                                self.sphere.unwrap(),
+                                self.current_animation,
+                                self.rate,
+                                None,
+                                true,
+                            );
+                        }
+
+                        Some(VirtualKeyCode::D) => {
+                            add_animation(
+                                world,
+                                self.sphere.unwrap(),
+                                AnimationId::Translate,
+                                self.rate,
+                                None,
+                                false,
+                            );
+                            add_animation(
+                                world,
+                                self.sphere.unwrap(),
+                                AnimationId::Rotate,
+                                self.rate,
+                                Some((AnimationId::Translate, DeferStartRelation::End)),
+                                false,
+                            );
+                            add_animation(
+                                world,
+                                self.sphere.unwrap(),
+                                AnimationId::Scale,
+                                self.rate,
+                                Some((AnimationId::Rotate, DeferStartRelation::Start(0.666))),
+                                false,
                             );
                         }
 
                         Some(VirtualKeyCode::Left) => {
-                            get_animation_set::<u32, Transform>(
+                            get_animation_set::<AnimationId, Transform>(
                                 &mut world.write(),
                                 self.sphere.unwrap().clone(),
-                            ).step(1, StepDirection::Backward);
+                            ).step(self.current_animation, StepDirection::Backward);
                         }
 
                         Some(VirtualKeyCode::Right) => {
-                            get_animation_set::<u32, Transform>(
+                            get_animation_set::<AnimationId, Transform>(
                                 &mut world.write(),
                                 self.sphere.unwrap().clone(),
-                            ).step(1, StepDirection::Forward);
+                            ).step(self.current_animation, StepDirection::Forward);
+                        }
+
+                        Some(VirtualKeyCode::F) => {
+                            self.rate = 1.0;
+                            get_animation_set::<AnimationId, Transform>(
+                                &mut world.write(),
+                                self.sphere.unwrap().clone(),
+                            ).set_rate(self.current_animation, self.rate);
+                        }
+
+                        Some(VirtualKeyCode::V) => {
+                            self.rate = 0.0;
+                            get_animation_set::<AnimationId, Transform>(
+                                &mut world.write(),
+                                self.sphere.unwrap().clone(),
+                            ).set_rate(self.current_animation, self.rate);
+                        }
+
+                        Some(VirtualKeyCode::H) => {
+                            self.rate = 0.5;
+                            get_animation_set::<AnimationId, Transform>(
+                                &mut world.write(),
+                                self.sphere.unwrap().clone(),
+                            ).set_rate(self.current_animation, self.rate);
+                        }
+
+                        Some(VirtualKeyCode::R) => {
+                            self.current_animation = AnimationId::Rotate;
+                        }
+
+                        Some(VirtualKeyCode::S) => {
+                            self.current_animation = AnimationId::Scale;
+                        }
+
+                        Some(VirtualKeyCode::T) => {
+                            self.current_animation = AnimationId::Translate;
                         }
 
                         _ => {}
@@ -118,7 +201,7 @@ fn run() -> Result<(), amethyst::Error> {
     let config = DisplayConfig::load(&display_config_path);
 
     let mut game = Application::build(resources, Example::default())?
-        .with_bundle(AnimationBundle::<u32, Transform>::new(
+        .with_bundle(AnimationBundle::<AnimationId, Transform>::new(
             "animation_control_system",
             "sampler_interpolation_system",
         ))?
@@ -205,9 +288,9 @@ fn initialise_sphere(world: &mut World) -> Entity {
     parent_entity
 }
 
-fn initialise_animation(world: &mut World) -> Handle<Animation<Transform>> {
+fn initialise_animation(world: &mut World, entity: Entity) {
     let loader = world.write_resource::<Loader>();
-    let translation_sampler = Sampler {
+    let translation_sampler = Sampler::<SamplerPrimitive<f32>> {
         input: vec![0., 1., 2., 3., 4.],
         function: InterpolationFunction::Linear,
         output: vec![
@@ -219,20 +302,20 @@ fn initialise_animation(world: &mut World) -> Handle<Animation<Transform>> {
         ],
     };
 
-    /*let scale_sampler = Sampler {
+    let scale_sampler = Sampler::<SamplerPrimitive<f32>> {
         input: vec![0., 1., 2., 3., 4.],
-        ty: InterpolationType::Linear,
-        output: AnimationOutput::Scale(vec![
-            [1., 1., 1.],
-            [0.6, 0.6, 0.6],
-            [0.3, 0.3, 0.3],
-            [0.6, 0.6, 0.6],
-            [1., 1., 1.],
-        ]),
-    };*/
+        function: InterpolationFunction::Linear,
+        output: vec![
+            [1., 1., 1.].into(),
+            [0.6, 0.6, 0.6].into(),
+            [0.3, 0.3, 0.3].into(),
+            [0.6, 0.6, 0.6].into(),
+            [1., 1., 1.].into(),
+        ],
+    };
 
     use std::f32::consts::FRAC_1_SQRT_2;
-    let rotation_sampler = Sampler {
+    let rotation_sampler = Sampler::<SamplerPrimitive<f32>> {
         input: vec![0., 1., 2., 3., 4.],
         function: InterpolationFunction::SphericalLinear,
         output: vec![
@@ -243,23 +326,101 @@ fn initialise_animation(world: &mut World) -> Handle<Animation<Transform>> {
             [-1., 0., 0., 0.].into(),
         ],
     };
-    let translation_animation_handle =
+    let translation_sampler_handle =
         loader.load_from_data(translation_sampler, (), &world.read_resource());
-    //let scale_animation_handle = loader.load_from_data(scale_sampler, &world.read_resource());
-    let rotation_animation_handle =
+    let scale_sampler_handle = loader.load_from_data(scale_sampler, (), &world.read_resource());
+    let rotation_sampler_handle =
         loader.load_from_data(rotation_sampler, (), &world.read_resource());
-    let animation = Animation {
-        nodes: vec![
-            (
-                0,
-                TransformChannel::Translation,
-                translation_animation_handle,
-            ),
-            //(0, scale_animation_handle),
-            (0, TransformChannel::Rotation, rotation_animation_handle),
-        ],
-    };
-    loader.load_from_data(animation, (), &world.read_resource())
+    let animation_storage = world.read_resource();
+    let mut set = AnimationSet::<AnimationId, Transform>::new();
+    add_to_set(
+        &mut set,
+        AnimationId::Translate,
+        TransformChannel::Translation,
+        translation_sampler_handle,
+        &loader,
+        &animation_storage,
+    );
+    add_to_set(
+        &mut set,
+        AnimationId::Scale,
+        TransformChannel::Scale,
+        scale_sampler_handle,
+        &loader,
+        &animation_storage,
+    );
+    add_to_set(
+        &mut set,
+        AnimationId::Rotate,
+        TransformChannel::Rotation,
+        rotation_sampler_handle,
+        &loader,
+        &animation_storage,
+    );
+    world.write().insert(entity, set);
+}
+
+fn add_to_set(
+    set: &mut AnimationSet<AnimationId, Transform>,
+    id: AnimationId,
+    channel: TransformChannel,
+    sampler: Handle<Sampler<SamplerPrimitive<f32>>>,
+    loader: &Loader,
+    animation_storage: &AssetStorage<Animation<Transform>>,
+) {
+    set.insert(
+        id,
+        loader.load_from_data(
+            Animation::new_single(0, channel, sampler),
+            (),
+            animation_storage,
+        ),
+    );
+}
+
+fn add_animation(
+    world: &mut World,
+    entity: Entity,
+    id: AnimationId,
+    rate: f32,
+    defer: Option<(AnimationId, DeferStartRelation)>,
+    toggle_if_exists: bool,
+) {
+    let animation = world
+        .read::<AnimationSet<AnimationId, Transform>>()
+        .get(entity)
+        .and_then(|s| s.get(&id))
+        .cloned()
+        .unwrap();
+    let mut sets = world.write();
+    let control_set = get_animation_set::<AnimationId, Transform>(&mut sets, entity);
+    match defer {
+        None => {
+            if toggle_if_exists && control_set.has_animation(id) {
+                control_set.toggle(id);
+            } else {
+                control_set.add_animation(
+                    id,
+                    &animation,
+                    EndControl::Normal,
+                    rate,
+                    AnimationCommand::Start,
+                );
+            }
+        }
+
+        Some((defer_id, defer_relation)) => {
+            control_set.add_deferred_animation(
+                id,
+                &animation,
+                EndControl::Normal,
+                rate,
+                AnimationCommand::Start,
+                defer_id,
+                defer_relation,
+            );
+        }
+    }
 }
 
 /// This function adds an ambient light and a point light to the world.

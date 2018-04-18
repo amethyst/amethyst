@@ -109,10 +109,10 @@ impl State for Example {
                     ..
                 } => {
                     let mut scene = world.write_resource::<Scene>();
-                    let sets = world.read::<AnimationSet<Transform>>();
+                    let sets = world.read::<AnimationSet<usize, Transform>>();
                     let animations = sets.get(scene.entity).unwrap();
                     if animations.animations.len() > 0 {
-                        let animation = &animations.animations[scene.animation_index];
+                        let animation = animations.animations.get(&scene.animation_index).unwrap();
                         let mut controls = world.write();
                         let mut set =
                             get_animation_set::<usize, Transform>(&mut controls, scene.entity);

@@ -1,3 +1,4 @@
+use std::hash::Hash;
 use std::marker;
 
 use amethyst_assets::AssetStorage;
@@ -153,7 +154,7 @@ impl<'a, I, T> AnimationBundle<'a, I, T> {
 
 impl<'a, 'b, 'c, I, T> ECSBundle<'a, 'b> for AnimationBundle<'c, I, T>
 where
-    I: PartialEq + Copy + Send + Sync + 'static,
+    I: PartialEq + Eq + Hash + Copy + Send + Sync + 'static,
     T: AnimationSampling + Component + Clone,
 {
     fn build(
@@ -165,7 +166,7 @@ where
         world.register::<AnimationControlSet<I, T>>();
         world.register::<AnimationHierarchy<T>>();
         world.register::<RestState<T>>();
-        world.register::<AnimationSet<T>>();
+        world.register::<AnimationSet<I, T>>();
         builder = builder.add(AnimationProcessor::<T>::new(), "", &[]).add(
             AnimationControlSystem::<I, T>::new(),
             self.animation_name,

@@ -185,6 +185,9 @@ where
         // requested sampling => start interpolating
         Requested => (Running(Duration::from_secs(0)), None),
 
+        // deferred start that should start now
+        Deferred(dur) => (Running(dur.clone()), None),
+
         // abort sampling => end interpolating
         Abort => (Done, None),
 

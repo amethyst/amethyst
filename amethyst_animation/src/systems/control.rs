@@ -1,14 +1,18 @@
+use std::hash::Hash;
 use std::marker;
 use std::time::Duration;
 
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::specs::{Component, Entities, Entity, Fetch, Join, ReadStorage, System,
                            WriteStorage};
+use amethyst_core::timing::secs_to_duration;
+use fnv::FnvHashMap;
 use minterpolate::InterpolationPrimitive;
 
 use resources::{Animation, AnimationCommand, AnimationControl, AnimationControlSet,
-                AnimationHierarchy, AnimationSampling, ApplyData, ControlState, RestState,
-                Sampler, SamplerControl, SamplerControlSet, StepDirection};
+                AnimationHierarchy, AnimationSampling, ApplyData, ControlState,
+                DeferStartRelation, RestState, Sampler, SamplerControl, SamplerControlSet,
+                StepDirection};
 
 /// System for setting up animations, should run before `SamplerInterpolationSystem`.
 ///
@@ -22,23 +26,35 @@ use resources::{Animation, AnimationCommand, AnimationControl, AnimationControlS
 ///        with the same id
 /// - `T`: the component type that the animation should be applied to
 #[derive(Default)]
-pub struct AnimationControlSystem<I, T> {
+pub struct AnimationControlSystem<I, T>
+where
+    I: Eq + Hash,
+{
     m: marker::PhantomData<(I, T)>,
     next_id: u64,
+    remove_ids: Vec<I>,
+    state_set: FnvHashMap<I, f32>,
+    deferred_start: Vec<(I, f32)>,
 }
 
-impl<I, T> AnimationControlSystem<I, T> {
+impl<I, T> AnimationControlSystem<I, T>
+where
+    I: Eq + Hash,
+{
     pub fn new() -> Self {
-        Self {
+        AnimationControlSystem {
             m: marker::PhantomData,
             next_id: 1,
+            remove_ids: Vec::default(),
+            state_set: FnvHashMap::default(),
+            deferred_start: Vec::default(),
         }
     }
 }
 
 impl<'a, I, T> System<'a> for AnimationControlSystem<I, T>
 where
-    I: PartialEq + Copy + Send + Sync + 'static,
+    I: PartialEq + Eq + Hash + Copy + Send + Sync + 'static,
     T: AnimationSampling + Component + Clone,
 {
     type SystemData = (
@@ -67,7 +83,9 @@ where
         ) = data;
         let mut remove_sets = Vec::default();
         for (entity, control_set) in (&*entities, &mut controls).join() {
-            let mut remove_ids = Vec::default();
+            self.remove_ids.clear();
+            self.state_set.clear();
+            let hierarchy = hierarchies.get(entity);
             for &mut (ref id, ref mut control) in control_set.animations.iter_mut() {
                 let mut remove = false;
                 if let Some(state) = animation_storage.get(&control.animation).and_then(
@@ -76,7 +94,7 @@ where
                             &entity,
                             animation,
                             control,
-                            hierarchies.get(entity),
+                            hierarchy,
                             &*sampler_storage,
                             &mut samplers,
                             &mut rest_states,
@@ -96,11 +114,76 @@ where
                     control.command = AnimationCommand::Start;
                 }
                 if remove {
-                    remove_ids.push(*id);
+                    self.remove_ids.push(*id);
+                } else {
+                    self.state_set.insert(
+                        *id,
+                        get_running_duration(&entity, control, hierarchies.get(entity), &samplers),
+                    );
                 }
             }
-            for id in remove_ids {
-                control_set.remove(id);
+            for deferred_animation in &control_set.deferred_animations {
+                self.state_set.insert(deferred_animation.animation_id, -1.0);
+            }
+            self.deferred_start.clear();
+            for deferred_animation in &control_set.deferred_animations {
+                let (start, start_dur) =
+                    if let Some(dur) = self.state_set.get(&deferred_animation.relation.0) {
+                        if *dur < 0. {
+                            (false, 0.)
+                        } else if let DeferStartRelation::Start(start_dur) =
+                            deferred_animation.relation.1
+                        {
+                            let remain_dur = dur - start_dur;
+                            (remain_dur >= 0., remain_dur)
+                        } else {
+                            (false, 0.)
+                        }
+                    } else {
+                        (true, 0.)
+                    };
+                if start {
+                    self.deferred_start
+                        .push((deferred_animation.animation_id, start_dur));
+                    self.state_set
+                        .insert(deferred_animation.animation_id, start_dur);
+                }
+            }
+            let mut next_id = self.next_id;
+            for &(id, start_dur) in &self.deferred_start {
+                let index = control_set
+                    .deferred_animations
+                    .iter()
+                    .position(|a| a.animation_id == id)
+                    .unwrap();
+                let mut def = control_set.deferred_animations.remove(index);
+                def.control.state = ControlState::Deferred(secs_to_duration(start_dur));
+                def.control.command = AnimationCommand::Start;
+                let mut remove = false;
+                if let Some(state) = animation_storage.get(&def.control.animation).and_then(
+                    |animation| {
+                        process_animation_control(
+                            &entity,
+                            animation,
+                            &mut def.control,
+                            hierarchy,
+                            &*sampler_storage,
+                            &mut samplers,
+                            &mut rest_states,
+                            &transforms,
+                            &mut remove,
+                            &mut next_id,
+                            &apply_data,
+                        )
+                    },
+                ) {
+                    def.control.state = state;
+                }
+                control_set.insert(id, def.control);
+            }
+            self.next_id = next_id;
+            for id in &self.remove_ids {
+                control_set.remove(*id);
                 if control_set.is_empty() {
                     remove_sets.push(entity);
                 }
@@ -111,6 +194,35 @@ where
             controls.remove(entity);
         }
     }
+}
+
+fn get_running_duration<T>(
+    entity: &Entity,
+    control: &AnimationControl<T>,
+    hierarchy: Option<&AnimationHierarchy<T>>,
+    samplers: &WriteStorage<SamplerControlSet<T>>,
+) -> f32
+where
+    T: AnimationSampling,
+{
+    match &control.state {
+        &ControlState::Running(_) => find_max_duration(
+            control.id,
+            samplers.get(*hierarchy
+                .and_then(|h| h.nodes.values().next())
+                .unwrap_or(entity)),
+        ),
+        _ => -1.0,
+    }
+}
+
+fn find_max_duration<T>(control_id: u64, samplers: Option<&SamplerControlSet<T>>) -> f32
+where
+    T: AnimationSampling,
+{
+    samplers
+        .and_then(|set| set.get_running_duration(control_id))
+        .unwrap_or(0.)
 }
 
 /// Check if the given animation list is for a single node. If so, we don't need an
@@ -193,6 +305,25 @@ where
         // started before we can pause it, and to avoid a lot of checks for
         // abort. The command will be processed next frame.
         (&ControlState::Requested, &AnimationCommand::Start) => {
+            control.id = *next_id;
+            *next_id += 1;
+            if start_animation(
+                animation,
+                sampler_storage,
+                control,
+                hierarchy,
+                samplers,
+                rest_states,
+                targets,
+                apply_data,
+            ) {
+                Some(ControlState::Running(Duration::from_secs(0)))
+            } else {
+                None // Try again next frame, might just be that samplers haven't finished loading
+            }
+        }
+
+        (&ControlState::Deferred(..), &AnimationCommand::Start) => {
             control.id = *next_id;
             *next_id += 1;
             if start_animation(
@@ -308,6 +439,12 @@ where
 
     hierarchy.rest_state(|entity| targets.get(entity).cloned(), rest_states);
 
+    let start_state = if let ControlState::Deferred(dur) = control.state {
+        ControlState::Deferred(dur)
+    } else {
+        ControlState::Requested
+    };
+
     // setup sampler tree
     for &(ref node_index, ref channel, ref sampler_handle) in &animation.nodes {
         let node_entity = hierarchy.nodes.get(node_index).unwrap();
@@ -319,7 +456,7 @@ where
         let sampler_control = SamplerControl::<T> {
             control_id: control.id,
             channel: channel.clone(),
-            state: ControlState::Requested,
+            state: start_state.clone(),
             sampler: sampler_handle.clone(),
             end: control.end.clone(),
             after: component.current_sample(channel, apply_data),
