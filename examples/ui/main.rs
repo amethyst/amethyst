@@ -295,9 +295,16 @@ fn run() -> Result<(), amethyst::Error> {
 }
 
 fn main() {
-    if let Err(e) = run() {
-        println!("Failed to execute example: {}", e);
-        ::std::process::exit(1);
+    println!("Due to some bugs this example currently comes with a seizure warning.");
+    println!("If you have a history of seizures please do not run this.");
+    println!("Would you like to run this? (Y/N)");
+    let mut input = String::new();
+    let _ = ::std::io::stdin().read_line(&mut input);
+    if input.to_lowercase().starts_with("y") {
+        if let Err(e) = run() {
+            println!("Failed to execute example: {}", e);
+            ::std::process::exit(1);
+        }
     }
 }
 
