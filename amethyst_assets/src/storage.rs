@@ -147,7 +147,7 @@ impl<A: Asset> AssetStorage<A> {
                     handle,
                     name,
                     tracker,
-                } => {
+                } => {                    
                     let (asset, reload_obj) = match data.map(|FormatValue { data, reload }| {
                         (data, reload)
                     }).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
