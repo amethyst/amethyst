@@ -23,7 +23,6 @@ profiler = [
     "thread_profiler",
     "thread_profiler/thread_profiler",
     "amethyst_assets/profiler",
-    "amethyst_animation/profiler",
     "amethyst_audio/profiler",
     "amethyst_config/profiler",
     "amethyst_core/profiler",
