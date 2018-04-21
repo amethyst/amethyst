@@ -1,6 +1,9 @@
 use std::sync::Arc;
 
-use specs::UnprotectedStorage;
+use amethyst_core::specs::UnprotectedStorage;
+#[cfg(feature = "profiler")]
+#[macro_use]
+use thread_profiler::{register_thread_with_profiler, write_profile};
 
 use {ErrorKind, Handle, Reload, Result, ResultExt, SingleFile, Source};
 
@@ -104,6 +107,8 @@ where
         options: Self::Options,
         create_reload: bool,
     ) -> Result<FormatValue<A>> {
+        #[cfg(feature = "profiler")]
+        profile_scope!("import_asset");
         if create_reload {
             let (b, m) = source
                 .load_with_metadata(&name)
@@ -111,7 +116,6 @@ where
             let data = T::import(&self, b, options.clone())?;
             let reload = SingleFile::new(self.clone(), m, options, name, source);
             let reload = Some(Box::new(reload) as Box<Reload<A>>);
-
             Ok(FormatValue { data, reload })
         } else {
             let b = source.load(&name).chain_err(|| ErrorKind::Source)?;

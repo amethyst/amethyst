@@ -2,12 +2,13 @@ use std::marker;
 use std::time::Duration;
 
 use amethyst_assets::{AssetStorage, Handle};
+use amethyst_core::specs::{Component, Entities, Entity, Fetch, Join, ReadStorage, System,
+                           WriteStorage};
 use minterpolate::InterpolationPrimitive;
-use specs::{Component, Entities, Entity, Fetch, Join, ReadStorage, System, WriteStorage};
 
 use resources::{Animation, AnimationCommand, AnimationControl, AnimationControlSet,
-                AnimationHierarchy, AnimationSampling, ControlState, Sampler, SamplerControl,
-                SamplerControlSet, StepDirection};
+                AnimationHierarchy, AnimationSampling, ApplyData, ControlState, RestState,
+                Sampler, SamplerControl, SamplerControlSet, StepDirection};
 
 /// System for setting up animations, should run before `SamplerInterpolationSystem`.
 ///
@@ -38,7 +39,7 @@ impl<I, T> AnimationControlSystem<I, T> {
 impl<'a, I, T> System<'a> for AnimationControlSystem<I, T>
 where
     I: PartialEq + Copy + Send + Sync + 'static,
-    T: AnimationSampling + Component,
+    T: AnimationSampling + Component + Clone,
 {
     type SystemData = (
         Entities<'a>,
@@ -48,6 +49,8 @@ where
         WriteStorage<'a, SamplerControlSet<T>>,
         ReadStorage<'a, AnimationHierarchy<T>>,
         ReadStorage<'a, T>,
+        WriteStorage<'a, RestState<T>>,
+        <T as ApplyData<'a>>::ApplyData,
     );
 
     fn run(&mut self, data: Self::SystemData) {
@@ -59,6 +62,8 @@ where
             mut samplers,
             hierarchies,
             transforms,
+            mut rest_states,
+            apply_data,
         ) = data;
         let mut remove_sets = Vec::default();
         for (entity, control_set) in (&*entities, &mut controls).join() {
@@ -74,9 +79,11 @@ where
                             hierarchies.get(entity),
                             &*sampler_storage,
                             &mut samplers,
+                            &mut rest_states,
                             &transforms,
                             &mut remove,
                             &mut self.next_id,
+                            &apply_data,
                         )
                     },
                 ) {
@@ -148,12 +155,14 @@ fn process_animation_control<T>(
     hierarchy: Option<&AnimationHierarchy<T>>,
     sampler_storage: &AssetStorage<Sampler<T::Primitive>>,
     samplers: &mut WriteStorage<SamplerControlSet<T>>,
+    rest_states: &mut WriteStorage<RestState<T>>,
     targets: &ReadStorage<T>,
     remove: &mut bool,
     next_id: &mut u64,
+    apply_data: &<T as ApplyData>::ApplyData,
 ) -> Option<ControlState>
 where
-    T: AnimationSampling + Component,
+    T: AnimationSampling + Component + Clone,
 {
     // Checking hierarchy
     let h_fallback = AnimationHierarchy::new_single(animation.nodes[0].0, *entity);
@@ -192,7 +201,9 @@ where
                 control,
                 hierarchy,
                 samplers,
+                rest_states,
                 targets,
+                apply_data,
             ) {
                 Some(ControlState::Running(Duration::from_secs(0)))
             } else {
@@ -233,11 +244,13 @@ where
             if check_termination(control.id, hierarchy, &samplers) {
                 // Do termination
                 for (_, node_entity) in &hierarchy.nodes {
-                    let empty = {
-                        let mut sampler = samplers.get_mut(*node_entity).unwrap();
-                        sampler.clear(control.id);
-                        sampler.is_empty()
-                    };
+                    let empty = samplers
+                        .get_mut(*node_entity)
+                        .map(|sampler| {
+                            sampler.clear(control.id);
+                            sampler.is_empty()
+                        })
+                        .unwrap_or(false);
                     if empty {
                         samplers.remove(*node_entity);
                     }
@@ -275,10 +288,12 @@ fn start_animation<T>(
     control: &AnimationControl<T>,
     hierarchy: &AnimationHierarchy<T>,
     samplers: &mut WriteStorage<SamplerControlSet<T>>,
+    rest_states: &mut WriteStorage<RestState<T>>,
     targets: &ReadStorage<T>, // for rest state
+    apply_data: &<T as ApplyData>::ApplyData,
 ) -> bool
 where
-    T: AnimationSampling + Component,
+    T: AnimationSampling + Component + Clone,
 {
     // check that hierarchy is valid, and all samplers exist
     if animation
@@ -291,17 +306,23 @@ where
         return false;
     }
 
+    hierarchy.rest_state(|entity| targets.get(entity).cloned(), rest_states);
+
     // setup sampler tree
     for &(ref node_index, ref channel, ref sampler_handle) in &animation.nodes {
         let node_entity = hierarchy.nodes.get(node_index).unwrap();
-        let component = targets.get(*node_entity).unwrap();
+        let component = rest_states
+            .get(*node_entity)
+            .map(|r| r.state())
+            .or_else(|| targets.get(*node_entity))
+            .unwrap();
         let sampler_control = SamplerControl::<T> {
             control_id: control.id,
             channel: channel.clone(),
             state: ControlState::Requested,
             sampler: sampler_handle.clone(),
             end: control.end.clone(),
-            after: component.current_sample(channel),
+            after: component.current_sample(channel, apply_data),
             rate_multiplier: control.rate_multiplier,
             blend_weight: 1.0,
         };
@@ -425,11 +446,13 @@ where
     if check_termination(control_id, hierarchy, &samplers) {
         // Do termination
         for (_, node_entity) in &hierarchy.nodes {
-            let empty = {
-                let mut sampler = samplers.get_mut(*node_entity).unwrap();
-                sampler.clear(control_id);
-                sampler.is_empty()
-            };
+            let empty = samplers
+                .get_mut(*node_entity)
+                .map(|sampler| {
+                    sampler.clear(control_id);
+                    sampler.is_empty()
+                })
+                .unwrap_or(false);
             if empty {
                 samplers.remove(*node_entity);
             }

@@ -1,6 +1,6 @@
 pub use gfx_core::state::{Blend, BlendChannel, ColorMask, Equation, Factor};
 
-use specs::{Component, NullStorage};
+use amethyst_core::specs::{Component, NullStorage};
 
 /// Transparent mesh component
 #[derive(Clone, Debug, Default)]

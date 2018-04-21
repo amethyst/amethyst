@@ -3,12 +3,12 @@ use std::time::Duration;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{duration_to_nanos, duration_to_secs, nanos_to_duration, secs_to_duration, Time};
+use amethyst_core::specs::{Component, Fetch, Join, System, WriteStorage};
 use itertools::Itertools;
 use minterpolate::InterpolationPrimitive;
-use specs::{Component, Fetch, Join, System, WriteStorage};
 
-use resources::{AnimationSampling, BlendMethod, ControlState, EndControl, Sampler, SamplerControl,
-                SamplerControlSet};
+use resources::{AnimationSampling, ApplyData, BlendMethod, ControlState, EndControl, Sampler,
+                SamplerControl, SamplerControlSet};
 
 /// System for interpolating active samplers.
 ///
@@ -53,9 +53,10 @@ where
         Fetch<'a, AssetStorage<Sampler<T::Primitive>>>,
         WriteStorage<'a, SamplerControlSet<T>>,
         WriteStorage<'a, T>,
+        <T as ApplyData<'a>>::ApplyData,
     );
 
-    fn run(&mut self, (time, samplers, mut control_sets, mut comps): Self::SystemData) {
+    fn run(&mut self, (time, samplers, mut control_sets, mut comps, apply_data): Self::SystemData) {
         for (control_set, comp) in (&mut control_sets, &mut comps).join() {
             self.inner.clear();
             for control in control_set.samplers.iter_mut() {
@@ -76,13 +77,13 @@ where
                                 .map(|p| p.2)
                                 .last()
                             {
-                                comp.apply_sample(channel, &p);
+                                comp.apply_sample(channel, &p, &apply_data);
                             }
                         }
 
                         Some(BlendMethod::Linear) => {
                             if let Some(p) = linear_blend::<T>(channel, &self.inner) {
-                                comp.apply_sample(channel, &p);
+                                comp.apply_sample(channel, &p, &apply_data);
                             }
                         }
                     }
@@ -136,12 +137,8 @@ fn process_sampler<T>(
                 output.push((control.blend_weight, control.channel.clone(), control.after));
             }
             if let EndControl::Stay = control.end {
-                let last_frame = sampler
-                    .input
-                    .last()
-                    .cloned()
-                    .unwrap_or(0.);
-                
+                let last_frame = sampler.input.last().cloned().unwrap_or(0.);
+
                 output.push((
                     control.blend_weight,
                     control.channel.clone(),

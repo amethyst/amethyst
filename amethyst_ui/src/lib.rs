@@ -15,24 +15,33 @@ extern crate gfx;
 extern crate gfx_glyph;
 extern crate hibitset;
 extern crate rusttype;
+extern crate shred;
+#[macro_use]
+extern crate shred_derive;
 extern crate shrev;
 extern crate specs;
 extern crate unicode_normalization;
 extern crate unicode_segmentation;
 extern crate winit;
 
+#[macro_use]
+#[cfg(feature = "profiler")]
+extern crate thread_profiler;
+
 mod bundle;
+mod button;
+mod event;
 mod focused;
 mod format;
 mod image;
+mod layout;
 mod pass;
 mod resize;
 mod text;
 mod transform;
-mod event;
-mod layout;
 
 pub use self::bundle::UiBundle;
+pub use self::button::{UiButton, UiButtonBuilder, UiButtonResources};
 pub use self::event::{MouseReactive, UiEvent, UiEventType, UiMouseSystem};
 pub use self::focused::UiFocused;
 pub use self::format::{FontAsset, FontHandle, OtfFormat, TtfFormat};

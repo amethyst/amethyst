@@ -1,5 +1,5 @@
+use amethyst_core::specs::SystemData;
 use hetseq::*;
-use specs::SystemData;
 
 use super::stage::*;
 use super::target::*;

@@ -4,10 +4,11 @@ use std::marker;
 use std::time::Duration;
 
 use amethyst_assets::{Asset, AssetStorage, Handle, Result};
+use amethyst_core::shred::SystemData;
+use amethyst_core::specs::{Component, DenseVecStorage, Entity, VecStorage, WriteStorage};
 use amethyst_core::timing::{duration_to_secs, secs_to_duration};
 use fnv::FnvHashMap;
 use minterpolate::{get_input_index, InterpolationFunction, InterpolationPrimitive};
-use specs::{Component, DenseVecStorage, Entity, VecStorage};
 
 /// Blend method for sampler blending
 #[derive(Clone, Copy, Debug, PartialOrd, PartialEq, Eq, Hash)]
@@ -15,18 +16,36 @@ pub enum BlendMethod {
     Linear,
 }
 
+/// Extra data to extract from `World`, for use when applying or fetching a sample
+pub trait ApplyData<'a> {
+    /// The actual data, must implement `SystemData`
+    type ApplyData: SystemData<'a>;
+}
+
 /// Master trait used to define animation sampling on a component
-pub trait AnimationSampling: Send + Sync + 'static {
+pub trait AnimationSampling: Send + Sync + 'static + for<'b> ApplyData<'b> {
     /// The interpolation primitive
     type Primitive: InterpolationPrimitive + Clone + Copy + Send + Sync + 'static;
-    /// The channel type
+    /// An independent grouping or type of functions that operate on attributes of a component
+    ///
+    /// For example, `translation`, `scaling` and `rotation` are transformation channels independent
+    /// of each other, even though they all mutate coordinates of a component.
     type Channel: Debug + Clone + Hash + Eq + Send + Sync + 'static;
 
     /// Apply a sample to a channel
-    fn apply_sample(&mut self, channel: &Self::Channel, data: &Self::Primitive);
+    fn apply_sample<'a>(
+        &mut self,
+        channel: &Self::Channel,
+        data: &Self::Primitive,
+        extra: &<Self as ApplyData<'a>>::ApplyData,
+    );
 
     /// Get the current sample for a channel
-    fn current_sample(&self, channel: &Self::Channel) -> Self::Primitive;
+    fn current_sample<'a>(
+        &self,
+        channel: &Self::Channel,
+        extra: &<Self as ApplyData<'a>>::ApplyData,
+    ) -> Self::Primitive;
 
     /// Get default primitive
     fn default_primitive(channel: &Self::Channel) -> Self::Primitive;
@@ -42,10 +61,29 @@ where
     T: InterpolationPrimitive,
 {
     /// Time of key frames
+    ///
+    /// A simple example of this for animations that are defined with 4 evenly spaced key frames is
+    /// `vec![0., 1., 2., 3.]`.
     pub input: Vec<f32>,
     /// Actual output data to interpolate
+    ///
+    /// For `input` of size `i`, the `output` size differs depending on the interpolation function.
+    /// The following list summarizes the size of the `output` for each interpolation function. For
+    /// more details, please click through to each interpolation function's documentation.
+    ///
+    /// * [Linear][lin]: `i` — `[pos_0, .., pos_n]`
+    /// * [Spherical Linear][sph]: `i` — `[pos_0, .., pos_n]`
+    /// * [Step][step]: `i` — `[pos_0, .., pos_n]`
+    /// * [Catmull Rom Spline][cm]: `i + 2` — `[in_tangent_0, pos_0, .., pos_n, out_tangent_n]`
+    /// * [Cubic Spline][cub]: `3 * i` — `[in_tangent_0, pos_0, out_tangent_0, ..]`
+    ///
+    /// [lin]: https://docs.rs/minterpolate/0.2.2/minterpolate/fn.linear_interpolate.html
+    /// [sph]: https://docs.rs/minterpolate/0.2.2/minterpolate/fn.spherical_linear_interpolate.html
+    /// [step]: https://docs.rs/minterpolate/0.2.2/minterpolate/fn.step_interpolate.html
+    /// [cm]: https://docs.rs/minterpolate/0.2.2/minterpolate/fn.catmull_rom_spline_interpolate.html
+    /// [cub]: https://docs.rs/minterpolate/0.2.2/minterpolate/fn.cubic_spline_interpolate.html
     pub output: Vec<T>,
-    /// How should interpolation be done
+    /// How interpolation should be done
     pub function: InterpolationFunction<T>,
 }
 
@@ -67,9 +105,33 @@ where
     }
 }
 
+/// Define the rest state for a component on an entity
+pub struct RestState<T> {
+    state: T,
+}
+
+impl<T> RestState<T> {
+    /// Create new rest state
+    pub fn new(t: T) -> Self {
+        RestState { state: t }
+    }
+
+    /// Get the rest state
+    pub fn state(&self) -> &T {
+        &self.state
+    }
+}
+
+impl<T> Component for RestState<T>
+where
+    T: AnimationSampling,
+{
+    type Storage = DenseVecStorage<Self>;
+}
+
 /// Defines the hierarchy of nodes that a single animation can control.
-/// Attach to the root entity that an animation can be defined for.
-/// Only required for animations which target more than a single node.
+/// Attached to the root entity that an animation can be defined for.
+/// Only required for animations which target more than a single node or entity.
 #[derive(Debug, Clone)]
 pub struct AnimationHierarchy<T> {
     pub nodes: FnvHashMap<usize, Entity>,
@@ -111,6 +173,22 @@ where
             m: marker::PhantomData,
         }
     }
+
+    /// Create rest state for the hierarchy. Will copy the values from the base components for each
+    /// entity in the hierarchy.
+    pub fn rest_state<F>(&self, get_component: F, states: &mut WriteStorage<RestState<T>>)
+    where
+        T: AnimationSampling,
+        F: Fn(Entity) -> Option<T>,
+    {
+        for entity in self.nodes.values() {
+            if states.get(*entity).is_none() {
+                if let Some(comp) = get_component(*entity) {
+                    states.insert(*entity, RestState::new(comp));
+                }
+            }
+        }
+    }
 }
 
 impl<T> Component for AnimationHierarchy<T>
@@ -121,12 +199,17 @@ where
 }
 
 /// Defines a single animation.
+///
+/// An animation is a set of [`Sampler`][sampler]s that should always run together as a unit.
+///
 /// Defines relationships between the node index in `AnimationHierarchy` and a `Sampler` handle.
 /// If the animation only targets a single node index, `AnimationHierarchy` is not required.
 ///
 /// ### Type parameters:
 ///
 /// - `T`: the component type that the animation should be applied to
+///
+/// [sampler]: struct.Sampler.html
 #[derive(Clone, Debug)]
 pub struct Animation<T>
 where

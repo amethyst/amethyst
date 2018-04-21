@@ -3,10 +3,13 @@ use std::sync::{Arc, Weak};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use amethyst_core::Time;
+use amethyst_core::specs::{Component, Fetch, FetchMut, System, UnprotectedStorage, VecStorage};
 use crossbeam::sync::MsQueue;
 use hibitset::BitSet;
 use rayon::ThreadPool;
-use specs::{Component, Fetch, FetchMut, System, UnprotectedStorage, VecStorage};
+
+#[cfg(feature = "profiler")]
+use thread_profiler::{register_thread_with_profiler, write_profile};
 
 use asset::{Asset, FormatValue};
 use error::{ErrorKind, Result, ResultExt};
@@ -144,7 +147,7 @@ impl<A: Asset> AssetStorage<A> {
                     handle,
                     name,
                     tracker,
-                } => {
+                } => {                    
                     let (asset, reload_obj) = match data.map(|FormatValue { data, reload }| {
                         (data, reload)
                     }).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
@@ -175,6 +178,16 @@ impl<A: Asset> AssetStorage<A> {
                         }
                     };
 
+                    // Add a warning if a handle is unique (i.e. asset does not
+                    // need to be loaded as it is not used by anything)
+                    // https://github.com/amethyst/amethyst/issues/628
+                    if handle.is_unique() {
+                        warn!(
+                            "Loading unecessary asset. Handle {} is unique ",
+                            handle.id()
+                        );
+                    }
+                    
                     let id = handle.id();
                     bitset.add(id);
                     handles.push(handle.clone());
@@ -240,6 +253,8 @@ impl<A: Asset> AssetStorage<A> {
         let mut skip = 0;
         while let Some(i) = self.handles.iter().skip(skip).position(Handle::is_unique) {
             count += 1;
+            // Re-normalize index
+            let i = skip + i;
             skip = i;
             let handle = self.handles.swap_remove(i);
             let id = handle.id();
@@ -263,7 +278,7 @@ impl<A: Asset> AssetStorage<A> {
             .map(|s| s.needs_reload(frame_number))
             .unwrap_or(false)
         {
-            trace!("Testing for asset reloads..");
+            trace!("{:?}: Testing for asset reloads..", A::NAME);
             self.hot_reload(pool);
         }
     }
@@ -281,8 +296,11 @@ impl<A: Asset> AssetStorage<A> {
             let handle = handle.upgrade();
 
             debug!(
-                "Asset {:?} (handle id: {:?}) was determined to need a reload using format {:?}",
-                name, handle, format,
+                "{:?}: Asset {:?} (handle id: {:?}) needs a reload using format {:?}",
+                A::NAME,
+                name,
+                handle,
+                format,
             );
 
             if let Some(handle) = handle {

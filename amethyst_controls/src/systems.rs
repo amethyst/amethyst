@@ -1,9 +1,9 @@
 use amethyst_core::cgmath::{Deg, Vector3};
+use amethyst_core::specs::{Fetch, FetchMut, Join, ReadStorage, System, WriteStorage};
 use amethyst_core::timing::Time;
 use amethyst_core::transform::Transform;
 use amethyst_input::InputHandler;
 use amethyst_renderer::{ScreenDimensions, WindowMessages};
-use specs::{Fetch, FetchMut, Join, ReadStorage, System, WriteStorage};
 use std::hash::Hash;
 use std::marker::PhantomData;
 
@@ -108,11 +108,13 @@ where
     );
 
     fn run(&mut self, (input, dim, mut transform, tag): Self::SystemData) {
-        let half_x = dim.width() / 2.0;
-        let half_y = dim.height() / 2.0;
+        // take the same mid-point as the MouseCenterLockSystem
+        let half_x = dim.width() as i32 / 2;
+        let half_y = dim.height() as i32 / 2;
+
         if let Some((posx, posy)) = input.mouse_position() {
-            let offset_x = half_x - posx as f32;
-            let offset_y = half_y - posy as f32;
+            let offset_x = half_x as f32 - posx as f32;
+            let offset_y = half_y as f32 - posy as f32;
             for (transform, _) in (&mut transform, &tag).join() {
                 transform.rotate_local(
                     Vector3::new(1.0, 0.0, 0.0),

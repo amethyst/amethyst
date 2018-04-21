@@ -3,11 +3,11 @@ use std::mem;
 use amethyst_assets::AssetStorage;
 use amethyst_core::GlobalTransform;
 use amethyst_core::cgmath::{Matrix4, One, SquareMatrix};
-use specs::{Fetch, Join, ReadStorage};
+use amethyst_core::specs::{Fetch, Join, ReadStorage};
 
 use cam::{ActiveCamera, Camera};
 use mesh::Mesh;
-use mtl::{Material, MaterialDefaults};
+use mtl::{Material, MaterialDefaults, TextureOffset};
 use pass::set_skinning_buffers;
 use pipe::{Effect, EffectBuilder};
 use skinning::JointTransforms;
@@ -31,6 +31,22 @@ pub(crate) struct VertexArgs {
     proj: [[f32; 4]; 4],
     view: [[f32; 4]; 4],
     model: [[f32; 4]; 4],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct TextureOffsetPod {
+    u_offset: [f32; 2],
+    v_offset: [f32; 2],
+}
+
+impl TextureOffsetPod {
+    pub(crate) fn from_offset(offset: &TextureOffset) -> Self {
+        TextureOffsetPod {
+            u_offset: [offset.u.0, offset.u.1],
+            v_offset: [offset.v.0, offset.v.1],
+        }
+    }
 }
 
 pub(crate) fn set_attribute_buffers(
@@ -65,10 +81,12 @@ pub(crate) fn setup_textures(builder: &mut EffectBuilder, types: &[TextureType])
             Caveat => builder.with_texture("caveat"),
         };
     }
+    setup_texture_offsets(builder, types);
 }
 
 pub(crate) fn add_textures(
     effect: &mut Effect,
+    encoder: &mut Encoder,
     storage: &AssetStorage<Texture>,
     material: &Material,
     default: &Material,
@@ -100,6 +118,98 @@ pub(crate) fn add_textures(
                 .or_else(|| storage.get(&default.caveat)),
         };
         add_texture(effect, texture.unwrap());
+    }
+    set_texture_offsets(effect, encoder, material, types);
+}
+
+pub(crate) fn setup_texture_offsets(builder: &mut EffectBuilder, types: &[TextureType]) {
+    use self::TextureType::*;
+    for ty in types {
+        match *ty {
+            Albedo => builder.with_raw_constant_buffer(
+                "AlbedoOffset",
+                mem::size_of::<TextureOffsetPod>(),
+                1,
+            ),
+            Emission => builder.with_raw_constant_buffer(
+                "EmissionOffset",
+                mem::size_of::<TextureOffsetPod>(),
+                1,
+            ),
+            Normal => builder.with_raw_constant_buffer(
+                "NormalOffset",
+                mem::size_of::<TextureOffsetPod>(),
+                1,
+            ),
+            Metallic => builder.with_raw_constant_buffer(
+                "MetallicOffset",
+                mem::size_of::<TextureOffsetPod>(),
+                1,
+            ),
+            Roughness => builder.with_raw_constant_buffer(
+                "RoughnessOffset",
+                mem::size_of::<TextureOffsetPod>(),
+                1,
+            ),
+            AmbientOcclusion => builder.with_raw_constant_buffer(
+                "AmbientOcclusionOffset",
+                mem::size_of::<TextureOffsetPod>(),
+                1,
+            ),
+            Caveat => builder.with_raw_constant_buffer(
+                "CaveatOffset",
+                mem::size_of::<TextureOffsetPod>(),
+                1,
+            ),
+        };
+    }
+}
+
+pub(crate) fn set_texture_offsets(
+    effect: &mut Effect,
+    encoder: &mut Encoder,
+    material: &Material,
+    types: &[TextureType],
+) {
+    use self::TextureType::*;
+    for ty in types {
+        match *ty {
+            Albedo => effect.update_constant_buffer(
+                "AlbedoOffset",
+                &TextureOffsetPod::from_offset(&material.albedo_offset),
+                encoder,
+            ),
+            Emission => effect.update_constant_buffer(
+                "EmissionOffset",
+                &TextureOffsetPod::from_offset(&material.emission_offset),
+                encoder,
+            ),
+            Normal => effect.update_constant_buffer(
+                "NormalOffset",
+                &TextureOffsetPod::from_offset(&material.normal_offset),
+                encoder,
+            ),
+            Metallic => effect.update_constant_buffer(
+                "MetallicOffset",
+                &TextureOffsetPod::from_offset(&material.metallic_offset),
+                encoder,
+            ),
+            Roughness => effect.update_constant_buffer(
+                "RoughnessOffset",
+                &TextureOffsetPod::from_offset(&material.roughness_offset),
+                encoder,
+            ),
+            AmbientOcclusion => effect.update_constant_buffer(
+                "AmbientOcclusionOffset",
+                &TextureOffsetPod::from_offset(&material.ambient_occlusion_offset),
+                encoder,
+            ),
+            Caveat => effect.update_constant_buffer(
+                "CaveatOffset",
+                &TextureOffsetPod::from_offset(&material.caveat_offset),
+                encoder,
+            ),
+        };
     }
 }
 
@@ -167,6 +277,7 @@ pub(crate) fn draw_mesh(
 
     add_textures(
         effect,
+        encoder,
         &tex_storage,
         material.unwrap(),
         &material_defaults.0,

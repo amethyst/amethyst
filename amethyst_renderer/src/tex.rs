@@ -3,7 +3,7 @@
 pub use gfx::texture::{FilterMethod, WrapMode};
 
 use amethyst_assets::{Asset, Handle};
-use specs::DenseVecStorage;
+use amethyst_core::specs::DenseVecStorage;
 
 use std::marker::PhantomData;
 

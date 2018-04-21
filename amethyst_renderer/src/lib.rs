@@ -29,12 +29,14 @@ extern crate rayon;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
-extern crate shred;
 extern crate shrev;
 extern crate smallvec;
-extern crate specs;
 extern crate wavefront_obj;
 extern crate winit;
+
+#[macro_use]
+#[cfg(feature = "profiler")]
+extern crate thread_profiler;
 
 #[cfg(all(feature = "d3d11", target_os = "windows"))]
 extern crate gfx_device_dx11;
@@ -68,7 +70,7 @@ pub use formats::{build_mesh_with_combo, create_mesh_asset, create_texture_asset
 pub use input::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
 pub use light::{DirectionalLight, Light, PointLight, SpotLight, SunLight};
 pub use mesh::{vertex_data, Mesh, MeshBuilder, MeshHandle, VertexBuffer};
-pub use mtl::{Material, MaterialDefaults};
+pub use mtl::{Material, MaterialDefaults, TextureOffset};
 pub use pass::{DrawFlat, DrawFlatSeparate, DrawPbm, DrawPbmSeparate, DrawShaded,
                DrawShadedSeparate};
 pub use pipe::{ColorBuffer, Data, DepthBuffer, DepthMode, Effect, EffectBuilder, Init, Meta,

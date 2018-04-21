@@ -4,9 +4,11 @@ extern crate amethyst_input;
 extern crate amethyst_renderer;
 #[macro_use]
 extern crate log;
-extern crate shred;
-extern crate specs;
 extern crate winit;
+
+#[macro_use]
+#[cfg(feature = "profiler")]
+extern crate thread_profiler;
 
 mod components;
 mod bundles;

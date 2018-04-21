@@ -1,13 +1,13 @@
 use std::cmp::Ordering;
 use std::ops::Range;
 
+use amethyst_core::specs::{Component, DenseVecStorage, Entities, Entity, Fetch, FetchMut, Join,
+                           ReadStorage, System, WriteStorage};
 use amethyst_core::timing::Time;
 use clipboard::{ClipboardContext, ClipboardProvider};
 use hibitset::BitSet;
 use rusttype::PositionedGlyph;
 use shrev::{EventChannel, ReaderId};
-use specs::{Component, DenseVecStorage, Entities, Entity, Fetch, FetchMut, Join, ReadStorage,
-            System, WriteStorage};
 use unicode_normalization::UnicodeNormalization;
 use unicode_normalization::char::is_combining_mark;
 use unicode_segmentation::UnicodeSegmentation;

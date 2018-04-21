@@ -1,8 +1,8 @@
 use super::*;
 use amethyst_core::bundle::{ECSBundle, Result};
+use amethyst_core::specs::{DispatcherBuilder, World};
 use amethyst_renderer::WindowMessages;
 use amethyst_renderer::mouse::*;
-use specs::{DispatcherBuilder, World};
 use std::hash::Hash;
 use std::marker::PhantomData;
 

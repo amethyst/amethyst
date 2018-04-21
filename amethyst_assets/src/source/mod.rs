@@ -21,6 +21,9 @@ pub trait Source: Send + Sync + 'static {
     /// There's a default implementation which just calls both methods,
     /// but you may be able to provide a more optimized version yourself.
     fn load_with_metadata(&self, path: &str) -> Result<(Vec<u8>, u64)> {
+        #[cfg(feature = "profiler")]
+        profile_scope!("source_load_asset_with_metadata");
+
         let m = self.modified(path)?;
         let b = self.load(path)?;
 

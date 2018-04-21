@@ -24,6 +24,7 @@ default = ["opengl"]
 #metal = ["gfx_device_metal", "gfx_window_metal"]
 opengl = ["gfx_device_gl", "gfx_window_glutin", "glutin"]
 #vulkan = ["gfx_device_vulkan", "gfx_window_vulkan"]
+profiler = [ "thread_profiler/thread_profiler" ]
 
 [dependencies]
 amethyst_assets = { path = "../amethyst_assets", version = "0.2.0" }
@@ -40,14 +41,15 @@ log = "0.4"
 rayon = "0.8"
 serde = "1.0"
 serde_derive = "1.0"
-shred = "0.5"
 shrev = "0.8"
 wavefront_obj = "5.0"
-winit = "0.10"
+winit = "0.12"
+
+thread_profiler = { version = "0.1", optional = true }
 
 gfx_device_gl = { version = "0.15", optional = true }
-gfx_window_glutin = { version = "0.20", optional = true }
-glutin = { version = "0.12", optional = true }
+gfx_window_glutin = { version = "0.22.0", optional = true }
+glutin = { version = "0.14", optional = true }
 
 [target.'cfg(not(target_os = "macos"))'.dependencies]
 gfx_device_vulkan = { version = "0.1", optional = true }
@@ -55,17 +57,14 @@ gfx_window_vulkan = { version = "0.1", optional = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 gfx_device_metal = { version = "0.2", optional = true }
-gfx_window_metal = { version = "0.3", optional = true }
+gfx_window_metal = { version = "0.6", optional = true }
 
 [target.'cfg(windows)'.dependencies]
 gfx_device_dx11 = { version = "0.6", optional = true }
-gfx_window_dxgi = { version = "0.7", optional = true }
+gfx_window_dxgi = { version = "0.13", optional = true }
 
 [dependencies.hetseq]
 version = "0.1.5"
-
-[dependencies.specs]
-version = "0.10"
 
 [dev-dependencies]
 genmesh = "0.4"

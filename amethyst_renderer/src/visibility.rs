@@ -2,8 +2,8 @@ use std::cmp::Ordering;
 
 use amethyst_core::GlobalTransform;
 use amethyst_core::cgmath::{EuclideanSpace, InnerSpace, MetricSpace, Point3, Transform, Vector3};
+use amethyst_core::specs::{Entities, Entity, Fetch, FetchMut, Join, ReadStorage, System};
 use hibitset::BitSet;
-use specs::{Entities, Entity, Fetch, FetchMut, Join, ReadStorage, System};
 
 use cam::{ActiveCamera, Camera};
 use transparent::Transparent;
@@ -66,7 +66,7 @@ impl<'a> System<'a> for VisibilitySortingSystem {
         let camera: Option<&GlobalTransform> = active
             .and_then(|a| global.get(a.entity))
             .or_else(|| (&camera, &global).join().map(|cg| cg.1).next());
-        let camera_forward = camera
+        let camera_backward = camera
             .map(|c| c.0.z.truncate())
             .unwrap_or(Vector3::unit_z());
         let camera_centroid = camera
@@ -85,7 +85,7 @@ impl<'a> System<'a> for VisibilitySortingSystem {
                     camera_distance: centroid.distance2(camera_centroid),
                     from_camera: centroid - camera_centroid,
                 })
-                .filter(|c| c.from_camera.dot(camera_forward) > 0.), // filter entities behind the camera
+                .filter(|c| c.from_camera.dot(camera_backward) < 0.), // filter entities behind the camera
         );
         self.transparent.clear();
         self.transparent
