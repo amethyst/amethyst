@@ -35,10 +35,6 @@ pub struct UiTransform {
     pub global_z: f32,
     /// The scale mode indicates if the position is in pixel or is relative (%) (WIP!) to the parent's size.
     pub scale_mode: ScaleMode,
-    /// Indicates if actions on the ui can go through this element.
-    /// If set to false, the element will behaves as if it was transparent and will let events go to
-    /// the next element (for example, the text on a button).
-    pub opaque: bool,
     /// A private field to keep this from being initialized without new.
     pd: PhantomData<u8>,
 }
@@ -67,7 +63,6 @@ impl UiTransform {
             global_y: y,
             global_z: z,
             scale_mode: ScaleMode::Pixel,
-            opaque: true,
             pd: PhantomData,
         }
     }
@@ -89,7 +84,6 @@ impl UiTransform {
         self.scale_mode = ScaleMode::Percent;
         self
     }
-
 }
 
 impl Component for UiTransform {
@@ -101,15 +95,15 @@ mod tests {
     use super::*;
     #[test]
     fn inside_local() {
-        let tr = UiTransform::new("".to_string(),0.0,0.0,0.0,1.0,1.0,0);
-        let pos = (-0.49,0.20);
-        assert!(tr.position_inside(pos.0,pos.1));
+        let tr = UiTransform::new("".to_string(), 0.0, 0.0, 0.0, 1.0, 1.0, 0);
+        let pos = (-0.49, 0.20);
+        assert!(tr.position_inside(pos.0, pos.1));
     }
 
     #[test]
     fn inside_global() {
-        let tr = UiTransform::new("".to_string(),0.0,0.0,0.0,1.0,1.0,0);
-        let pos = (-0.49,0.20);
-        assert!(tr.position_inside(pos.0,pos.1));
+        let tr = UiTransform::new("".to_string(), 0.0, 0.0, 0.0, 1.0, 1.0, 0);
+        let pos = (-0.49, 0.20);
+        assert!(tr.position_inside(pos.0, pos.1));
     }
 }
