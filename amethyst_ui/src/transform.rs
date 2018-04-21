@@ -46,7 +46,8 @@ pub struct UiTransform {
 }
 
 impl UiTransform {
-    /// Creates a new UiTransform
+    /// Creates a new UiTransform.
+    /// By default, it is considered opaque.
     pub fn new(
         id: String,
         x: f32,
@@ -68,7 +69,7 @@ impl UiTransform {
             global_y: y,
             global_z: z,
             scale_mode: ScaleMode::Pixel,
-            opaque: false,
+            opaque: true,
             pd: PhantomData,
         }
     }
