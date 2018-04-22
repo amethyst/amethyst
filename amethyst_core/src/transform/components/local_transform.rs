@@ -1,9 +1,10 @@
 //! Local transform component.
 
 use cgmath::{Array, Deg, Rad, ElementWise, EuclideanSpace, InnerSpace, Matrix3, Matrix4,
-             One, Point3, Quaternion, Rotation, Rotation3, SquareMatrix, Transform as CgTransform,
+             One, Point3, Quaternion, Rotation, Rotation3, Transform as CgTransform,
              Vector3, Vector4, Zero};
 use specs::{Component, DenseVecStorage, FlaggedStorage};
+use orientation::Orientation;
 
 /// Local position, rotation, and scale (from parent if it exists).
 ///
@@ -65,6 +66,12 @@ impl Transform {
 
         let mat = Matrix4 { x, y, z, w: self.translation.extend(1.0)};
         mat
+    }
+
+    /// Convert this transform's rotation into an Orientation, guaranteed to be 3 unit orthogonal
+    /// vectors
+    pub fn orientation(&self) -> Orientation {
+        Orientation::from(Matrix3::from(self.rotation))
     }
 
     /// Move relatively to its current position.
