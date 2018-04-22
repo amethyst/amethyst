@@ -4,7 +4,6 @@ use {AmbientColor, Camera, Light, Material, MaterialDefaults, Mesh, Rgba, Screen
      Texture, TextureOffset, WindowMessages};
 use amethyst_assets::{AssetStorage, Handle, Loader};
 use amethyst_core::bundle::{ECSBundle, Result, ResultExt};
-use amethyst_core::orientation::Orientation;
 use amethyst_core::specs::prelude::{DispatcherBuilder, World};
 use amethyst_core::transform::components::*;
 use config::DisplayConfig;
@@ -68,7 +67,6 @@ impl<'a, 'b, 'c, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> ECSBundle
         world.add_resource(AssetStorage::<Mesh>::new());
         world.add_resource(AssetStorage::<Texture>::new());
         world.add_resource(AssetStorage::<SpriteSheet>::new());
-        world.add_resource(Orientation::default());
 
         let mat = create_default_mat(world);
         world.add_resource(MaterialDefaults(mat));
