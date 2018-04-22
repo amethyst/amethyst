@@ -56,7 +56,7 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
         WriteStorage<'a, Parent>,
         WriteStorage<'a, Material>,
         WriteStorage<'a, AnimationHierarchy<Transform>>,
-        WriteStorage<'a, AnimationSet<Transform>>,
+        WriteStorage<'a, AnimationSet<usize, Transform>>,
         WriteStorage<'a, Joint>,
         WriteStorage<'a, Skin>,
         WriteStorage<'a, JointTransforms>,
@@ -268,7 +268,8 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
                                 .iter()
                                 .filter_map(|a| a.handle.as_ref())
                                 .cloned()
-                                .collect::<Vec<_>>(),
+                                .enumerate()
+                                .collect::<FnvHashMap<_, _>>(),
                         },
                     );
                 }

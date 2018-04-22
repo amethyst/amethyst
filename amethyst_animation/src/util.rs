@@ -20,6 +20,7 @@ where
     I: Send + Sync + 'static,
     T: AnimationSampling,
 {
+    // TODO: replace with entry API when specs is released
     if let None = controls.get(entity) {
         controls.insert(entity, AnimationControlSet::default());
     }
