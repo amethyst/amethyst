@@ -31,17 +31,17 @@ impl Transform {
     ///
     /// Combined with the parent's `GlobalTransform` component it gives
     /// the global (or world) matrix for the current entity.
-    // this is a hot function
-    // Manually implement the matrix-multiply to avoid a load of unnecessary +0s
     #[inline]
     pub fn matrix(&self) -> Matrix4<f32> {
+        // This is a hot function, so manually implement the matrix-multiply to avoid a load of
+        // unnecessary +0s.
         let quat: Matrix3<f32> = self.rotation.into();
         // multiplying a general matrix by a diagonal matrix is equivalent to multiplying each row
         // of the general matrix with the corresponding value from the diagonal matrix (see
         // http://www.solitaryroad.com/c108.html for example). If we do this manually we can cut
         // down the number of arithmetic operations and speed up stuff.
         //
-        // This should probably be in cgmath eventually..
+        // This should probably be in cgmath eventually.
         //
         // Note: Not benchmarked
         let x = Vector4 {
@@ -85,7 +85,7 @@ impl Transform {
 
     /// Move a distance along an axis.
     ///
-    /// Will not move in the case where the axis is zero, for any distance.
+    /// It will not move in the case where the axis is zero, for any distance.
     #[inline]
     pub fn move_along_global(&mut self, direction: Vector3<f32>, distance: f32) -> &mut Self {
         if !ulps_eq!(direction, Zero::zero()) {
@@ -96,7 +96,7 @@ impl Transform {
 
     /// Move a distance along an axis.
     ///
-    /// Will not move in the case where the axis is zero, for any distance.
+    /// It will not move in the case where the axis is zero, for any distance.
     #[inline]
     pub fn move_along_local(&mut self, direction: Vector3<f32>, distance: f32) -> &mut Self {
         if !ulps_eq!(direction, Zero::zero()) {
