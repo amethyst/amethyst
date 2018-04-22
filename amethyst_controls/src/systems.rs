@@ -70,7 +70,7 @@ where
         let dir = Vector3::new(x, y, z);
 
         for (transform, _) in (&mut transform, &tag).join() {
-            transform.move_local(dir, time.delta_seconds() * self.speed);
+            transform.move_along_local(dir, time.delta_seconds() * self.speed);
         }
     }
 }
@@ -116,14 +116,8 @@ where
             let offset_x = half_x as f32 - posx as f32;
             let offset_y = half_y as f32 - posy as f32;
             for (transform, _) in (&mut transform, &tag).join() {
-                transform.rotate_local(
-                    Vector3::new(1.0, 0.0, 0.0),
-                    Deg(offset_y * self.sensitivity_y),
-                );
-                transform.rotate_global(
-                    Vector3::new(0.0, 1.0, 0.0),
-                    Deg(offset_x * self.sensitivity_x),
-                );
+                transform.pitch_local(Deg(offset_y * self.sensitivity_y));
+                transform.yaw_global(Deg(offset_x * self.sensitivity_x));
             }
         }
     }
