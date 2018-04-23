@@ -1,7 +1,7 @@
 use Paddle;
 use amethyst::core::timing::Time;
 use amethyst::core::transform::Transform;
-use amethyst::ecs::prelude::{Fetch, Join, ReadStorage, System, WriteStorage};
+use amethyst::ecs::prelude::{Join, Read, ReadStorage, System, WriteStorage};
 use amethyst::input::InputHandler;
 use config::ArenaConfig;
 /// This system is responsible for moving all the paddles according to the user
@@ -12,9 +12,9 @@ impl<'s> System<'s> for PaddleSystem {
     type SystemData = (
         ReadStorage<'s, Paddle>,
         WriteStorage<'s, Transform>,
-        Fetch<'s, Time>,
-        Fetch<'s, InputHandler<String, String>>,
-        Fetch<'s, ArenaConfig>,
+        Read<'s, Time>,
+        Read<'s, InputHandler<String, String>>,
+        Read<'s, ArenaConfig>,
     );
 
     fn run(&mut self, (paddles, mut transforms, time, input, arena_config): Self::SystemData) {

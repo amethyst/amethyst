@@ -103,12 +103,7 @@ impl<'a> System<'a> for TransformSystem {
                         }
                     }
                 }
-                _ => {
-                    error!(
-                        "Parent component removed for entity {:?} in the Parent Hierarchy.",
-                        entity
-                    );
-                }
+                _ => (),
             }
         }
     }

@@ -1,7 +1,7 @@
 //! Simple shaded pass
 
 use amethyst_assets::AssetStorage;
-use amethyst_core::specs::prelude::{Entities, Fetch, Join, ReadStorage};
+use amethyst_core::specs::prelude::{Entities, Join, Read, ReadExpect, ReadStorage};
 use amethyst_core::transform::GlobalTransform;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
@@ -64,13 +64,13 @@ impl DrawShadedSeparate {
 impl<'a> PassData<'a> for DrawShadedSeparate {
     type Data = (
         Entities<'a>,
-        Option<Fetch<'a, ActiveCamera>>,
+        Option<Read<'a, ActiveCamera>>,
         ReadStorage<'a, Camera>,
-        Fetch<'a, AmbientColor>,
-        Fetch<'a, AssetStorage<Mesh>>,
-        Fetch<'a, AssetStorage<Texture>>,
-        Fetch<'a, MaterialDefaults>,
-        Option<Fetch<'a, Visibility>>,
+        Read<'a, AmbientColor>,
+        Read<'a, AssetStorage<Mesh>>,
+        Read<'a, AssetStorage<Texture>>,
+        ReadExpect<'a, MaterialDefaults>,
+        Option<Read<'a, Visibility>>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
         ReadStorage<'a, GlobalTransform>,

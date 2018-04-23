@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 
 use amethyst_core::GlobalTransform;
 use amethyst_core::cgmath::{EuclideanSpace, InnerSpace, MetricSpace, Point3, Transform, Vector3};
-use amethyst_core::specs::prelude::{Entities, Entity, Fetch, FetchMut, Join, ReadStorage, System};
+use amethyst_core::specs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write};
 use hibitset::BitSet;
 
 use cam::{ActiveCamera, Camera};
@@ -50,8 +50,8 @@ impl VisibilitySortingSystem {
 impl<'a> System<'a> for VisibilitySortingSystem {
     type SystemData = (
         Entities<'a>,
-        FetchMut<'a, Visibility>,
-        Option<Fetch<'a, ActiveCamera>>,
+        Write<'a, Visibility>,
+        Option<Read<'a, ActiveCamera>>,
         ReadStorage<'a, Camera>,
         ReadStorage<'a, Transparent>,
         ReadStorage<'a, GlobalTransform>,

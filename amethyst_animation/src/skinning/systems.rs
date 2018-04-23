@@ -16,6 +16,7 @@ pub struct VertexSkinningSystem {
     joint_matrices: Vec<Matrix4<f32>>,
     /// Also scratch space, used while determining which skins need to be updated.
     updated: BitSet,
+    updated_skins: BitSet,
     /// Used for tracking modifications to global transforms
     updated_id: ReaderId<ModifiedFlag>,
     inserted_id: ReaderId<InsertedFlag>,
@@ -26,6 +27,7 @@ impl VertexSkinningSystem {
         Self {
             joint_matrices: Vec::new(),
             updated: BitSet::new(),
+            updated_skins: BitSet::new(),
             inserted_id,
             updated_id,
         }
@@ -44,8 +46,12 @@ impl<'a> System<'a> for VertexSkinningSystem {
         self.updated.clear();
         transforms.populate_modified(&mut self.updated_id, &mut self.updated);
         transforms.populate_inserted(&mut self.inserted_id, &mut self.updated);
+        self.updated_skins.clear();
+        for (_, joint) in (&self.updated, &joints).join() {
+            self.updated_skins.add(joint.skin.id());
+        }
 
-        for (_id, skin) in (&self.updated, &skins).join() {
+        for (_id, skin) in (&self.updated_skins, &skins).join() {
             // Compute the joint transforms
             self.joint_matrices.clear();
             self.joint_matrices.extend(

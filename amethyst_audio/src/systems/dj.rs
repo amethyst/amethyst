@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use amethyst_assets::AssetStorage;
 use amethyst_core::shred::Resource;
 use amethyst_core::specs::common::Errors;
-use amethyst_core::specs::prelude::{Fetch, FetchMut, System};
+use amethyst_core::specs::prelude::{Read, ReadExpect, System, WriteExpect};
 
 use sink::AudioSink;
 use source::{Source, SourceHandle};
@@ -33,10 +33,10 @@ where
     R: Resource,
 {
     type SystemData = (
-        Fetch<'a, AssetStorage<Source>>,
-        Fetch<'a, Errors>,
-        Fetch<'a, AudioSink>,
-        FetchMut<'a, R>,
+        Read<'a, AssetStorage<Source>>,
+        Read<'a, Errors>,
+        ReadExpect<'a, AudioSink>,
+        WriteExpect<'a, R>,
     );
 
     fn run(&mut self, (storage, errors, sink, mut res): Self::SystemData) {

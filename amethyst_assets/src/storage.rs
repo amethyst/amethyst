@@ -3,7 +3,7 @@ use std::sync::{Arc, Weak};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use amethyst_core::Time;
-use amethyst_core::specs::prelude::{Component, Fetch, FetchMut, System, VecStorage};
+use amethyst_core::specs::prelude::{Component, Read, ReadExpect, System, VecStorage, Write};
 use amethyst_core::specs::storage::UnprotectedStorage;
 use crossbeam::sync::MsQueue;
 use hibitset::BitSet;
@@ -370,10 +370,10 @@ where
     A::Data: Into<Result<A>>,
 {
     type SystemData = (
-        FetchMut<'a, AssetStorage<A>>,
-        Fetch<'a, Arc<ThreadPool>>,
-        Fetch<'a, Time>,
-        Option<Fetch<'a, HotReloadStrategy>>,
+        Write<'a, AssetStorage<A>>,
+        ReadExpect<'a, Arc<ThreadPool>>,
+        Read<'a, Time>,
+        Option<Read<'a, HotReloadStrategy>>,
     );
 
     fn run(&mut self, (mut storage, pool, time, strategy): Self::SystemData) {

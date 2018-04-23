@@ -74,14 +74,18 @@ where
             .with(ResizeSystem::new(reader_2), "ui_resize_system", &[])
             .with(UiMouseSystem::<A, B>::new(), "ui_mouse_system", &[])
             .with(UiLayoutSystem::new(), "ui_layout", &["ui_system"])
-            .with(UiParentSystem::new(
-                parents.track_inserted(),
-                parents.track_modified(),
-                parents.track_removed(),
-                locals.track_inserted(),
-                locals.track_modified(),
-                stretches.track_inserted(),
-                stretches.track_modified(),
-            ), "ui_parent", &["ui_layout"]))
+            .with(
+                UiParentSystem::new(
+                    parents.track_inserted(),
+                    parents.track_modified(),
+                    parents.track_removed(),
+                    locals.track_inserted(),
+                    locals.track_modified(),
+                    stretches.track_inserted(),
+                    stretches.track_modified(),
+                ),
+                "ui_parent",
+                &["ui_layout"],
+            ))
     }
 }

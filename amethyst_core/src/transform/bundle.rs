@@ -43,6 +43,7 @@ impl<'a, 'b, 'c> ECSBundle<'a, 'b> for TransformBundle<'c> {
         world: &mut World,
         builder: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
+        world.register::<Transform>();
         HierarchySystem::<Parent>::setup(&mut world.res);
 
         let mut locals = world.write::<Transform>();

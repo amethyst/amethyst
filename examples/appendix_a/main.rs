@@ -119,6 +119,7 @@ impl Component for Paddle {
     type Storage = DenseVecStorage<Self>;
 }
 
+#[derive(Default)]
 pub struct ScoreBoard {
     score_left: i32,
     score_right: i32,

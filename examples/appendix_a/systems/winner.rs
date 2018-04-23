@@ -3,7 +3,7 @@ use amethyst::assets::AssetStorage;
 use amethyst::audio::Source;
 use amethyst::audio::output::Output;
 use amethyst::core::transform::Transform;
-use amethyst::ecs::prelude::{Entity, Fetch, FetchMut, Join, System, WriteStorage};
+use amethyst::ecs::prelude::{Entity, Join, Read, ReadExpect, System, Write, WriteStorage};
 use amethyst::ui::UiText;
 use audio::Sounds;
 use config::ArenaConfig;
@@ -18,12 +18,12 @@ impl<'s> System<'s> for WinnerSystem {
         WriteStorage<'s, Ball>,
         WriteStorage<'s, Transform>,
         WriteStorage<'s, UiText>,
-        FetchMut<'s, ScoreBoard>,
-        Fetch<'s, AssetStorage<Source>>,
-        Fetch<'s, Sounds>,
-        Fetch<'s, ScoreText>,
-        Fetch<'s, Option<Output>>,
-        Fetch<'s, ArenaConfig>,
+        Write<'s, ScoreBoard>,
+        Read<'s, AssetStorage<Source>>,
+        ReadExpect<'s, Sounds>,
+        ReadExpect<'s, ScoreText>,
+        Read<'s, Option<Output>>,
+        Read<'s, ArenaConfig>,
     );
 
     fn run(

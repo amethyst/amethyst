@@ -1,7 +1,7 @@
 use Ball;
 use amethyst::core::timing::Time;
 use amethyst::core::transform::Transform;
-use amethyst::ecs::prelude::{Fetch, Join, System, WriteStorage};
+use amethyst::ecs::prelude::{Join, Read, System, WriteStorage};
 
 /// This system is responsible for moving all balls according to their speed
 /// and the time passed.
@@ -11,7 +11,7 @@ impl<'s> System<'s> for MoveBallsSystem {
     type SystemData = (
         WriteStorage<'s, Ball>,
         WriteStorage<'s, Transform>,
-        Fetch<'s, Time>,
+        Read<'s, Time>,
     );
 
     fn run(&mut self, (mut balls, mut locals, time): Self::SystemData) {

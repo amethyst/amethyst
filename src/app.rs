@@ -788,7 +788,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// See the [example show for `ApplicationBuilder::new()`](struct.ApplicationBuilder.html#examples)
     /// for an example on how this method is used.
-    pub fn build(self) -> Result<Application<'a, 'b>>
+    pub fn build(mut self) -> Result<Application<'a, 'b>>
     where
         T: State + 'a,
     {
@@ -805,15 +805,18 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
             .write_resource::<EventChannel<Event>>()
             .register_reader();
 
+        #[cfg(not(no_threading))]
+        let mut dispatcher = self.disp_builder.with_pool(pool).build();
+        #[cfg(no_threading)]
+        let mut dispatcher = self.disp_builder.build();
+        dispatcher.setup(&mut self.world.res);
+
         Ok(Application {
             world: self.world,
             // config: self.config,
             states: StateMachine::new(self.initial_state),
             events_reader_id: reader_id,
-            #[cfg(not(no_threading))]
-            dispatcher: self.disp_builder.with_pool(pool).build(),
-            #[cfg(no_threading)]
-            dispatcher: self.disp_builder.build(),
+            dispatcher,
             ignore_window_close: self.ignore_window_close,
         })
     }
