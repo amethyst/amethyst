@@ -1,7 +1,7 @@
 //! ECS transform bundle
 
-use specs::prelude::{DispatcherBuilder, System, World};
-use specs_hierarchy::{Hierarchy, HierarchySystem};
+use specs::prelude::{DispatcherBuilder, World};
+use specs_hierarchy::HierarchySystem;
 
 use bundle::{ECSBundle, Result};
 use transform::*;
@@ -44,10 +44,8 @@ impl<'a, 'b, 'c> ECSBundle<'a, 'b> for TransformBundle<'c> {
         builder: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
         world.register::<Transform>();
-        HierarchySystem::<Parent>::setup(&mut world.res);
 
         let mut locals = world.write::<Transform>();
-        let mut hierarchy = world.write_resource::<Hierarchy<Parent>>();
 
         Ok(builder
             .with(
@@ -56,11 +54,7 @@ impl<'a, 'b, 'c> ECSBundle<'a, 'b> for TransformBundle<'c> {
                 self.dep,
             )
             .with(
-                TransformSystem::new(
-                    locals.track_inserted(),
-                    locals.track_modified(),
-                    hierarchy.track(),
-                ),
+                TransformSystem::new(locals.track_inserted(), locals.track_modified()),
                 "transform_system",
                 &["parent_hierarchy_system"],
             ))

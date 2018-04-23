@@ -65,7 +65,6 @@ where
             .register_reader();
 
         let mut locals = world.write::<UiTransform>();
-        let mut parents = world.write::<Parent>();
         let mut stretches = world.write::<Stretched>();
 
         Ok(builder
@@ -76,16 +75,13 @@ where
             .with(UiLayoutSystem::new(), "ui_layout", &["ui_system"])
             .with(
                 UiParentSystem::new(
-                    parents.track_inserted(),
-                    parents.track_modified(),
-                    parents.track_removed(),
                     locals.track_inserted(),
                     locals.track_modified(),
                     stretches.track_inserted(),
                     stretches.track_modified(),
                 ),
                 "ui_parent",
-                &["ui_layout"],
+                &["transform_system", "ui_layout"],
             ))
     }
 }

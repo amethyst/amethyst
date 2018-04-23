@@ -1,10 +1,10 @@
 use super::UiTransform;
-use amethyst_core::Parent;
-use amethyst_core::specs::prelude::{BitSet, Component, Entities, Entity, FlaggedStorage,
-                                    InsertedFlag, Join, ModifiedFlag, ReadExpect, ReadStorage,
-                                    ReaderId, RemovedFlag, System, VecStorage, WriteStorage};
+use amethyst_core::{HierarchyEvent, Parent, ParentHierarchy};
+use amethyst_core::shred::Resources;
+use amethyst_core::specs::prelude::{BitSet, Component, Entities, FlaggedStorage, InsertedFlag,
+                                    Join, ModifiedFlag, ReadExpect, ReadStorage, ReaderId, System,
+                                    VecStorage, WriteStorage};
 use amethyst_renderer::ScreenDimensions;
-use std::collections::{HashMap, HashSet};
 
 /// Unused, will be implemented in a future PR.
 /// Indicated if the position and margins should be calculated in pixel or
@@ -185,25 +185,7 @@ impl<'a> System<'a> for UiLayoutSystem {
 /// It does almost the same as the `TransformSystem`, but with some differences,
 /// like `UiTransform` alignment and stretching.
 pub struct UiParentSystem {
-    /// Map of entities to index in sorted vec.
-    indices: HashMap<Entity, usize>,
-    /// Vec of entities with parents before children. Only contains entities
-    /// with parents.
-    sorted: Vec<Entity>,
-
-    init: BitSet,
-    frame_init: BitSet,
-
-    parent_modified: BitSet,
-    parent_removed: BitSet,
-
     local_modified: BitSet,
-
-    stretch_modified: BitSet,
-
-    inserted_parent_id: ReaderId<InsertedFlag>,
-    modified_parent_id: ReaderId<ModifiedFlag>,
-    removed_parent_id: ReaderId<RemovedFlag>,
 
     inserted_local_id: ReaderId<InsertedFlag>,
     modified_local_id: ReaderId<ModifiedFlag>,
@@ -211,50 +193,25 @@ pub struct UiParentSystem {
     inserted_stretch_id: ReaderId<InsertedFlag>,
     modified_stretch_id: ReaderId<ModifiedFlag>,
 
-    dead: HashSet<Entity>,
-    remove_parent: Vec<Entity>,
+    parent_events_id: Option<ReaderId<HierarchyEvent>>,
 }
 
 impl UiParentSystem {
     /// Creates a new UiLayoutSystem.
     pub fn new(
-        inserted_parent_id: ReaderId<InsertedFlag>,
-        modified_parent_id: ReaderId<ModifiedFlag>,
-        removed_parent_id: ReaderId<RemovedFlag>,
         inserted_local_id: ReaderId<InsertedFlag>,
         modified_local_id: ReaderId<ModifiedFlag>,
         inserted_stretch_id: ReaderId<InsertedFlag>,
         modified_stretch_id: ReaderId<ModifiedFlag>,
     ) -> Self {
         UiParentSystem {
-            inserted_parent_id,
-            modified_parent_id,
-            removed_parent_id,
             inserted_local_id,
             modified_local_id,
             inserted_stretch_id,
             modified_stretch_id,
-            indices: HashMap::default(),
-            sorted: Vec::default(),
-            init: BitSet::default(),
-            frame_init: BitSet::default(),
-            dead: HashSet::default(),
-            remove_parent: Vec::default(),
-            parent_modified: BitSet::default(),
-            parent_removed: BitSet::default(),
+            parent_events_id: None,
             local_modified: BitSet::default(),
-            stretch_modified: BitSet::default(),
         }
-    }
-
-    fn remove(&mut self, index: usize) {
-        let entity = self.sorted[index];
-        self.sorted.swap_remove(index);
-        if let Some(swapped) = self.sorted.get(index) {
-            self.indices.insert(*swapped, index);
-        }
-        self.indices.remove(&entity);
-        self.init.remove(index as u32);
     }
 }
 
@@ -262,121 +219,48 @@ impl<'a> System<'a> for UiParentSystem {
     type SystemData = (
         Entities<'a>,
         WriteStorage<'a, UiTransform>,
-        WriteStorage<'a, Parent>,
+        ReadStorage<'a, Parent>,
         ReadStorage<'a, Anchored>,
         ReadStorage<'a, Stretched>,
         ReadExpect<'a, ScreenDimensions>,
+        ReadExpect<'a, ParentHierarchy>,
     );
     fn run(
         &mut self,
-        (entities, mut locals, mut parents, anchors, stretches, screen_dim): Self::SystemData,
-    ) {
+        (entities, mut locals, parents, anchors, stretches, screen_dim, hierarchy): Self::SystemData,
+){
         #[cfg(feature = "profiler")]
         profile_scope!("ui_parent_system");
 
-        self.parent_modified.clear();
-        self.parent_removed.clear();
         self.local_modified.clear();
-        self.stretch_modified.clear();
-
-        parents.populate_inserted(&mut self.inserted_parent_id, &mut self.parent_modified);
-        parents.populate_modified(&mut self.modified_parent_id, &mut self.parent_modified);
-        parents.populate_removed(&mut self.removed_parent_id, &mut self.parent_removed);
 
         locals.populate_inserted(&mut self.inserted_local_id, &mut self.local_modified);
         locals.populate_modified(&mut self.modified_local_id, &mut self.local_modified);
 
-        stretches.populate_inserted(&mut self.inserted_stretch_id, &mut self.stretch_modified);
-        stretches.populate_modified(&mut self.modified_stretch_id, &mut self.stretch_modified);
+        stretches.populate_inserted(&mut self.inserted_stretch_id, &mut self.local_modified);
+        stretches.populate_modified(&mut self.modified_stretch_id, &mut self.local_modified);
 
+        for event in hierarchy
+            .changed()
+            .read(&mut self.parent_events_id.as_mut().unwrap())
         {
-            for (entity, _, parent) in (&*entities, &self.parent_modified, &parents).join() {
-                if parent.entity == entity {
-                    self.remove_parent.push(entity);
-                }
-            }
-
-            for entity in self.remove_parent.iter() {
-                eprintln!("Entity was its own parent: {:?}", entity);
-                parents.remove(*entity);
-            }
-
-            self.remove_parent.clear();
-        }
-
-        for entity in &self.sorted {
-            if self.parent_removed.contains(entity.id()) {
-                self.dead.insert(*entity);
-            }
-        }
-
-        {
-            // Checks for entities with a modified local transform or a modified parent, but isn't initialized yet.
-            let filter = &self.local_modified & &self.parent_modified & !&self.init; // has a local, parent, and isn't initialized.
-            for (entity, _) in (&*entities, &filter).join() {
-                self.indices.insert(entity, self.sorted.len());
-                self.sorted.push(entity);
-                self.frame_init.add(entity.id());
+            if let HierarchyEvent::Modified(entity) = *event {
+                self.local_modified.add(entity.id());
             }
         }
 
         // Compute transforms with parents.
-        let mut index = 0;
-        while index < self.sorted.len() {
-            let entity = self.sorted[index];
-            let local_dirty = self.local_modified.contains(entity.id());
-            let parent_dirty = self.parent_modified.contains(entity.id());
-
+        for entity in hierarchy.all() {
+            let self_dirty = self.local_modified.contains(entity.id());
             let mut combined_transform: Option<(f32, f32, f32)> = None;
             let mut new_size: Option<(f32, f32)> = None;
 
-            match (
-                parents.get(entity),
-                locals.get(entity),
-                self.dead.contains(&entity),
-            ) {
-                (Some(parent), Some(local), false) => {
-                    // Make sure this iteration isn't a child before the parent.
-                    if parent_dirty {
-                        let mut swap = None;
-
-                        // If the index is none then the parent is an orphan or dead
-                        if let Some(parent_index) = self.indices.get(&parent.entity) {
-                            if parent_index > &index {
-                                swap = Some(*parent_index);
-                            }
-                        }
-
-                        if let Some(p) = swap {
-                            // Swap the parent and child.
-                            self.sorted.swap(p, index);
-                            self.indices.insert(parent.entity, index);
-                            self.indices.insert(entity, p);
-
-                            // Swap took place, re-try this index.
-                            continue;
-                        }
-                    }
-
-                    // Kill the entity if the parent is dead.
-                    if self.dead.contains(&parent.entity) || !entities.is_alive(parent.entity) {
-                        self.remove(index);
-                        let _ = entities.delete(entity);
-                        self.dead.insert(entity);
-
-                        // Re-try index because swapped with last element.
-                        continue;
-                    }
-
-                    // Layouting starts here.
-
-                    if local_dirty || parent_dirty
-                        || self.stretch_modified.contains(parent.entity.id())
-                    {
-                        // Positioning when having a parent.
-
+            match (parents.get(*entity), locals.get(*entity)) {
+                (Some(parent), Some(local)) => {
+                    let parent_dirty = self.local_modified.contains(parent.entity.id());
+                    if parent_dirty || self_dirty {
                         if let Some(parent_global) = locals.get(parent.entity) {
-                            combined_transform = Some(match anchors.get(entity) {
+                            combined_transform = Some(match anchors.get(*entity) {
                                 Some(anchor) => {
                                     let norm = anchor.norm_offset();
                                     (
@@ -396,7 +280,7 @@ impl<'a> System<'a> for UiParentSystem {
 
                             // Stretching when having a parent
 
-                            if let Some(st) = stretches.get(entity) {
+                            if let Some(st) = stretches.get(*entity) {
                                 new_size = Some(match st.stretch {
                                     Stretch::X => {
                                         (parent_global.width - st.margin.0 * 2.0, local.height)
@@ -413,23 +297,13 @@ impl<'a> System<'a> for UiParentSystem {
                         }
                     }
                 }
-                (_, _, dead @ _) => {
-                    // This entity should not be in the sorted list, so remove it.
-                    self.remove(index);
-
-                    if !dead && !entities.is_alive(entity) {
-                        self.dead.insert(entity);
-                    }
-
-                    // Re-try index because swapped with last element.
-                    continue;
-                }
+                _ => (),
             }
 
             // Changing the position and size values here because of how borrowing works.
 
             if let Some(c) = combined_transform {
-                if let Some(local) = locals.get_mut(entity) {
+                if let Some(local) = locals.get_mut(*entity) {
                     local.global_x = c.0;
                     local.global_y = c.1;
                     local.global_z = c.2;
@@ -437,13 +311,11 @@ impl<'a> System<'a> for UiParentSystem {
             }
 
             if let Some(s) = new_size {
-                if let Some(local) = locals.get_mut(entity) {
+                if let Some(local) = locals.get_mut(*entity) {
                     local.width = s.0;
                     local.height = s.1;
                 }
             }
-
-            index += 1;
         }
 
         // When you don't have a parent but do have stretch on, resize with screen size.
@@ -462,15 +334,16 @@ impl<'a> System<'a> for UiParentSystem {
             }
         }
 
-        for bit in &self.frame_init {
-            self.init.add(bit);
-        }
-        self.frame_init.clear();
-        self.dead.clear();
-
         // We need to treat any changes done inside the system as non-modifications, so we read out
         // any events that were generated during the system run
         locals.populate_inserted(&mut self.inserted_local_id, &mut self.local_modified);
         locals.populate_modified(&mut self.modified_local_id, &mut self.local_modified);
+    }
+
+    fn setup(&mut self, res: &mut Resources) {
+        use amethyst_core::specs::prelude::{SystemData, WriteExpect};
+        <Self::SystemData as SystemData>::setup(res);
+        let mut hierarchy: WriteExpect<ParentHierarchy> = SystemData::fetch(res);
+        self.parent_events_id = Some(hierarchy.track());
     }
 }

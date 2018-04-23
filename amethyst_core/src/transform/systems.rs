@@ -1,10 +1,10 @@
 //! Scene graph system and types
 
 use hibitset::BitSet;
+use shred::Resources;
 use specs::prelude::{Entities, InsertedFlag, Join, ModifiedFlag, ReadExpect, ReadStorage,
                      ReaderId, System, WriteStorage};
-use specs_hierarchy::{Hierarchy, HierarchyEvent};
-use transform::{GlobalTransform, Parent, Transform};
+use transform::{GlobalTransform, HierarchyEvent, Parent, ParentHierarchy, Transform};
 
 /// Handles updating `GlobalTransform` components based on the `Transform`
 /// component and parents.
@@ -15,7 +15,7 @@ pub struct TransformSystem {
     inserted_local_id: ReaderId<InsertedFlag>,
     modified_local_id: ReaderId<ModifiedFlag>,
 
-    parent_events_id: ReaderId<HierarchyEvent>,
+    parent_events_id: Option<ReaderId<HierarchyEvent>>,
 }
 
 impl TransformSystem {
@@ -23,12 +23,11 @@ impl TransformSystem {
     pub fn new(
         inserted_local_id: ReaderId<InsertedFlag>,
         modified_local_id: ReaderId<ModifiedFlag>,
-        parent_events_id: ReaderId<HierarchyEvent>,
     ) -> TransformSystem {
         TransformSystem {
             inserted_local_id,
             modified_local_id,
-            parent_events_id,
+            parent_events_id: None,
             local_modified: BitSet::default(),
             global_modified: BitSet::default(),
         }
@@ -38,7 +37,7 @@ impl TransformSystem {
 impl<'a> System<'a> for TransformSystem {
     type SystemData = (
         Entities<'a>,
-        ReadExpect<'a, Hierarchy<Parent>>,
+        ReadExpect<'a, ParentHierarchy>,
         ReadStorage<'a, Transform>,
         ReadStorage<'a, Parent>,
         WriteStorage<'a, GlobalTransform>,
@@ -53,7 +52,10 @@ impl<'a> System<'a> for TransformSystem {
         locals.populate_inserted(&mut self.inserted_local_id, &mut self.local_modified);
         locals.populate_modified(&mut self.modified_local_id, &mut self.local_modified);
 
-        for event in hierarchy.changed().read(&mut self.parent_events_id) {
+        for event in hierarchy
+            .changed()
+            .read(self.parent_events_id.as_mut().unwrap())
+        {
             match *event {
                 HierarchyEvent::Removed(entity) => {
                     if let Err(err) = entities.delete(entity) {
@@ -107,13 +109,20 @@ impl<'a> System<'a> for TransformSystem {
             }
         }
     }
+
+    fn setup(&mut self, res: &mut Resources) {
+        use specs::prelude::{SystemData, WriteExpect};
+        <Self::SystemData as SystemData>::setup(res);
+        let mut hierarchy: WriteExpect<ParentHierarchy> = SystemData::fetch(res);
+        self.parent_events_id = Some(hierarchy.track());
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use cgmath::{Decomposed, Matrix4, One, Quaternion, Vector3, Zero};
     use shred::RunNow;
-    use specs::prelude::{System, World};
+    use specs::prelude::World;
     use specs_hierarchy::{Hierarchy, HierarchySystem};
     use transform::{GlobalTransform, Parent, Transform, TransformSystem};
     //use quickcheck::{Arbitrary, Gen};
@@ -160,22 +169,17 @@ mod tests {
         world.register::<GlobalTransform>();
         world.register::<Parent>();
 
-        <HierarchySystem<Parent> as System>::setup(&mut world.res);
-        let (l_insert, l_modify, h_event) = {
+        let (l_insert, l_modify) = {
             let mut locals = world.write::<Transform>();
-            let mut hierarchy = world.write_resource::<Hierarchy<Parent>>();
-            (
-                locals.track_inserted(),
-                locals.track_modified(),
-                hierarchy.track(),
-            )
+            (locals.track_inserted(), locals.track_modified())
         };
 
-        (
-            world,
-            HierarchySystem::<Parent>::new(),
-            TransformSystem::new(l_insert, l_modify, h_event),
-        )
+        let mut hs = HierarchySystem::<Parent>::new();
+        let mut ts = TransformSystem::new(l_insert, l_modify);
+        hs.setup(&mut world.res);
+        ts.setup(&mut world.res);
+
+        (world, hs, ts)
     }
 
     fn together(transform: GlobalTransform, local: Transform) -> [[f32; 4]; 4] {

@@ -1,5 +1,5 @@
 use amethyst_assets::{Asset, Handle};
-use amethyst_core::specs::VecStorage;
+use amethyst_core::specs::prelude::VecStorage;
 
 /// An asset handle to sprite sheet metadata.
 pub type SpriteSheetHandle = Handle<SpriteSheet>;
