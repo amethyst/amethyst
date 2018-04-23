@@ -27,14 +27,16 @@ profiler = [
     "amethyst_config/profiler",
     "amethyst_core/profiler",
     "amethyst_controls/profiler",
-    "amethyst_renderer/profiler",
     "amethyst_input/profiler",
+    "amethyst_locale/profiler",
+    "amethyst_renderer/profiler",
     "amethyst_ui/profiler",
     "amethyst_utils/profiler",
 ]
 
 [dependencies]
 amethyst_assets = { path = "amethyst_assets", version = "0.2.0" }
+amethyst_locale = { path = "amethyst_locale", version = "0.1.0" }
 amethyst_audio = { path = "amethyst_audio", version = "0.1.0" }
 amethyst_config = { path = "amethyst_config", version = "0.5.0" }
 amethyst_core = { path = "amethyst_core", version = "0.1.0" }
