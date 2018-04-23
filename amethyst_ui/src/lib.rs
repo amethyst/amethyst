@@ -14,6 +14,8 @@ extern crate fnv;
 extern crate gfx;
 extern crate gfx_glyph;
 extern crate hibitset;
+#[macro_use]
+extern crate log;
 extern crate rusttype;
 extern crate shred;
 #[macro_use]
