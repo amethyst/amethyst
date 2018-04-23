@@ -12,6 +12,7 @@ extern crate log;
 extern crate rayon;
 #[macro_use]
 extern crate serde;
+extern crate specs_hierarchy;
 
 #[macro_use]
 #[cfg(feature = "profiler")]
