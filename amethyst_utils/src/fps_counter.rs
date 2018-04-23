@@ -1,7 +1,7 @@
 //! Util Resources
 
 use amethyst_core::{ECSBundle, Result};
-use amethyst_core::specs::prelude::{DispatcherBuilder, Fetch, FetchMut, System, World};
+use amethyst_core::specs::prelude::{DispatcherBuilder, Read, System, World, Write};
 use amethyst_core::timing::{duration_to_nanos, Time};
 use circular_buffer::CircularBuffer;
 
@@ -15,6 +15,12 @@ use circular_buffer::CircularBuffer;
 pub struct FPSCounter {
     buf: CircularBuffer<u64>,
     sum: u64,
+}
+
+impl Default for FPSCounter {
+    fn default() -> Self {
+        FPSCounter::new(20)
+    }
 }
 
 impl FPSCounter {
@@ -56,7 +62,7 @@ impl FPSCounter {
 pub struct FPSCounterSystem;
 
 impl<'a> System<'a> for FPSCounterSystem {
-    type SystemData = (Fetch<'a, Time>, FetchMut<'a, FPSCounter>);
+    type SystemData = (Read<'a, Time>, Write<'a, FPSCounter>);
     fn run(&mut self, (time, mut counter): Self::SystemData) {
         counter.push(duration_to_nanos(time.delta_real_time()));
         //Enable this to debug performance engine wide.

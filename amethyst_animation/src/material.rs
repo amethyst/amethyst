@@ -1,7 +1,7 @@
 use fnv::FnvHashMap;
 
 use amethyst_assets::Handle;
-use amethyst_core::specs::Fetch;
+use amethyst_core::specs::prelude::Read;
 use amethyst_renderer::{Material, Texture, TextureOffset};
 use minterpolate::InterpolationPrimitive;
 
@@ -105,7 +105,7 @@ pub enum MaterialChannel {
 }
 
 impl<'a> ApplyData<'a> for Material {
-    type ApplyData = Fetch<'a, MaterialTextureSet>;
+    type ApplyData = Read<'a, MaterialTextureSet>;
 }
 
 fn offset(offset: &TextureOffset) -> MaterialPrimitive {
@@ -124,7 +124,7 @@ impl AnimationSampling for Material {
         &mut self,
         channel: &Self::Channel,
         data: &Self::Primitive,
-        extra: &Fetch<MaterialTextureSet>,
+        extra: &Read<MaterialTextureSet>,
     ) {
         match (*channel, *data) {
             (MaterialChannel::AlbedoTexture, MaterialPrimitive::Texture(i)) => {
@@ -192,7 +192,7 @@ impl AnimationSampling for Material {
     fn current_sample(
         &self,
         channel: &Self::Channel,
-        extra: &Fetch<MaterialTextureSet>,
+        extra: &Read<MaterialTextureSet>,
     ) -> Self::Primitive {
         match *channel {
             MaterialChannel::AlbedoTexture => {

@@ -5,7 +5,7 @@ use std::time::Instant;
 
 use amethyst_core as core;
 use amethyst_core::{ECSBundle, Time};
-use amethyst_core::specs::prelude::{DispatcherBuilder, Fetch, FetchMut, System, World};
+use amethyst_core::specs::prelude::{DispatcherBuilder, Read, System, World, Write};
 
 use {Asset, Format, FormatValue, Loader, Result, Source};
 
@@ -136,7 +136,7 @@ enum HotReloadStrategyInner {
 pub struct HotReloadSystem;
 
 impl<'a> System<'a> for HotReloadSystem {
-    type SystemData = (Fetch<'a, Time>, FetchMut<'a, HotReloadStrategy>);
+    type SystemData = (Read<'a, Time>, Write<'a, HotReloadStrategy>);
 
     fn run(&mut self, (time, mut strategy): Self::SystemData) {
         match strategy.inner {
@@ -250,6 +250,14 @@ where
         self.modified != 0 && (self.source.modified(&self.path).unwrap_or(0) > self.modified)
     }
 
+    fn name(&self) -> String {
+        self.path.clone()
+    }
+
+    fn format(&self) -> &'static str {
+        F::NAME
+    }
+
     fn reload(self: Box<Self>) -> Result<FormatValue<A>> {
         #[cfg(feature = "profiler")]
         profile_scope!("reload_single_file");
@@ -264,13 +272,5 @@ where
         } = this;
 
         format.import(path, source, options, true)
-    }
-
-    fn name(&self) -> String {
-        self.path.clone()
-    }
-
-    fn format(&self) -> &'static str {
-        F::NAME
     }
 }

@@ -1,7 +1,8 @@
 use super::UiTransform;
 use amethyst_core::Parent;
-use amethyst_core::specs::prelude::{Component, Entities, Entity, Fetch, FlaggedStorage, Join, ReadStorage,
-                           System, VecStorage, WriteStorage, ReaderId, InsertedFlag, RemovedFlag, ModifiedFlag, BitSet};
+use amethyst_core::specs::prelude::{BitSet, Component, Entities, Entity, FlaggedStorage,
+                                    InsertedFlag, Join, ModifiedFlag, ReadExpect, ReadStorage,
+                                    ReaderId, RemovedFlag, System, VecStorage, WriteStorage};
 use amethyst_renderer::ScreenDimensions;
 use std::collections::{HashMap, HashSet};
 
@@ -140,7 +141,7 @@ impl<'a> System<'a> for UiLayoutSystem {
         WriteStorage<'a, UiTransform>,
         WriteStorage<'a, Anchored>,
         ReadStorage<'a, Parent>,
-        Fetch<'a, ScreenDimensions>,
+        ReadExpect<'a, ScreenDimensions>,
     );
 
     fn run(&mut self, (entities, mut transform, mut anchor, parent, screen_dim): Self::SystemData) {
@@ -243,7 +244,6 @@ impl UiParentSystem {
             parent_removed: BitSet::default(),
             local_modified: BitSet::default(),
             stretch_modified: BitSet::default(),
-
         }
     }
 
@@ -265,7 +265,7 @@ impl<'a> System<'a> for UiParentSystem {
         WriteStorage<'a, Parent>,
         ReadStorage<'a, Anchored>,
         ReadStorage<'a, Stretched>,
-        Fetch<'a, ScreenDimensions>,
+        ReadExpect<'a, ScreenDimensions>,
     );
     fn run(
         &mut self,
@@ -370,7 +370,9 @@ impl<'a> System<'a> for UiParentSystem {
 
                     // Layouting starts here.
 
-                    if local_dirty || parent_dirty || self.stretch_modified.contains(parent.entity.id()) {
+                    if local_dirty || parent_dirty
+                        || self.stretch_modified.contains(parent.entity.id())
+                    {
                         // Positioning when having a parent.
 
                         if let Some(parent_global) = locals.get(parent.entity) {

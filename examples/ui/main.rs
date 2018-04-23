@@ -9,7 +9,7 @@ use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::Time;
 use amethyst::core::cgmath::Deg;
 use amethyst::core::transform::{GlobalTransform, Parent};
-use amethyst::ecs::prelude::{Entity, FetchMut, System, World};
+use amethyst::ecs::prelude::{Entity, WriteExpect, System, World};
 use amethyst::input::InputBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light, Mesh, Pipeline,
@@ -397,7 +397,7 @@ impl UiEventHandlerSystem {
 }
 
 impl<'a> System<'a> for UiEventHandlerSystem {
-    type SystemData = FetchMut<'a, EventChannel<UiEvent>>;
+    type SystemData = WriteExpect<'a, EventChannel<UiEvent>>;
 
     fn run(&mut self, mut events: Self::SystemData) {
         if self.reader_id.is_none() {

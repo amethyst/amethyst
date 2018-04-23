@@ -1,6 +1,5 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::time::Duration;
 
 use assets::Loader;
 use core::{ECSBundle, Result, Stopwatch, Time};
@@ -45,9 +44,7 @@ impl<'a, 'b> ECSBundle<'a, 'b> for AppBundle {
         world.add_resource(pool);
         world.add_resource(FrameLimiter::default());
         world.add_resource(Stopwatch::default());
-        let mut time = Time::default();
-        time.set_fixed_time(Duration::new(0, 16666666));
-        world.add_resource(time);
+        world.add_resource(Time::default());
         Ok(dispatcher)
     }
 }

@@ -14,8 +14,8 @@ use std::sync::Arc;
 use amethyst_assets::*;
 use amethyst_core::Time;
 use amethyst_core::specs::common::Errors;
-use amethyst_core::specs::prelude::{Dispatcher, DispatcherBuilder, Fetch, FetchMut, System,
-                                    VecStorage, World};
+use amethyst_core::specs::prelude::{Dispatcher, DispatcherBuilder, Read, ReadExpect, System,
+                                    VecStorage, World, Write};
 use rayon::ThreadPool;
 
 struct App {
@@ -102,10 +102,10 @@ pub struct RenderingSystem;
 
 impl<'a> System<'a> for RenderingSystem {
     type SystemData = (
-        FetchMut<'a, AssetStorage<MeshAsset>>,
-        Fetch<'a, Time>,
-        Fetch<'a, Arc<ThreadPool>>,
-        Option<Fetch<'a, HotReloadStrategy>>,
+        Write<'a, AssetStorage<MeshAsset>>,
+        Read<'a, Time>,
+        ReadExpect<'a, Arc<ThreadPool>>,
+        Option<Read<'a, HotReloadStrategy>>,
         /* texture storage, transforms, .. */
     );
 

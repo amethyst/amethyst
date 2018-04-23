@@ -5,8 +5,8 @@ mod systems;
 
 use amethyst::Result;
 use amethyst::core::transform::TransformBundle;
-use amethyst::prelude::*;
 use amethyst::input::InputBundle;
+use amethyst::prelude::*;
 use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline, PosTex, RenderBundle, Stage};
 
 fn run() -> Result<()> {
@@ -30,8 +30,7 @@ fn run() -> Result<()> {
             .with_pass(DrawFlat::<PosTex>::new()),
     );
 
-    let input_bundle = InputBundle::<String, String>::new()
-      .with_bindings_from_file(binding_path);
+    let input_bundle = InputBundle::<String, String>::new().with_bindings_from_file(binding_path);
 
     let mut game = Application::build("./", Pong)?
         .with_bundle(TransformBundle::new())?

@@ -1,4 +1,5 @@
-use amethyst_core::specs::prelude::{Component, DenseVecStorage, Fetch, Join, System, WriteStorage};
+use amethyst_core::specs::prelude::{Component, DenseVecStorage, Join, ReadExpect, System,
+                                    WriteStorage};
 use shrev::{EventChannel, ReaderId};
 use winit::{Event, WindowEvent};
 
@@ -31,7 +32,7 @@ impl<'a> System<'a> for ResizeSystem {
     type SystemData = (
         WriteStorage<'a, UiTransform>,
         WriteStorage<'a, UiResize>,
-        Fetch<'a, EventChannel<Event>>,
+        ReadExpect<'a, EventChannel<Event>>,
     );
 
     fn run(&mut self, (mut transform, mut resize, events): Self::SystemData) {

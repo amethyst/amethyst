@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use amethyst_core::cgmath::Transform;
-use amethyst_core::specs::prelude::{Entities, Entity, Fetch, Join, ReadStorage, System,
+use amethyst_core::specs::prelude::{Entities, Entity, Join, Read, ReadStorage, System,
                                     WriteStorage};
 use amethyst_core::transform::GlobalTransform;
 use rodio::SpatialSink;
@@ -30,7 +30,7 @@ pub struct SelectedListener(pub Entity);
 
 impl<'a> System<'a> for AudioSystem {
     type SystemData = (
-        Option<Fetch<'a, SelectedListener>>,
+        Option<Read<'a, SelectedListener>>,
         Entities<'a>,
         ReadStorage<'a, GlobalTransform>,
         ReadStorage<'a, AudioListener>,
