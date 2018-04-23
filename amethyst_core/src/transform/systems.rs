@@ -3,8 +3,7 @@
 use hibitset::BitSet;
 use specs::prelude::{Entities, InsertedFlag, Join, ModifiedFlag, ReadExpect, ReadStorage,
                      ReaderId, System, WriteStorage};
-use specs_hierarchy::{Hierarchy, HierarchyEvent};
-use transform::{GlobalTransform, Parent, Transform};
+use transform::{GlobalTransform, HierarchyEvent, Parent, ParentHierarchy, Transform};
 
 /// Handles updating `GlobalTransform` components based on the `Transform`
 /// component and parents.
@@ -38,7 +37,7 @@ impl TransformSystem {
 impl<'a> System<'a> for TransformSystem {
     type SystemData = (
         Entities<'a>,
-        ReadExpect<'a, Hierarchy<Parent>>,
+        ReadExpect<'a, ParentHierarchy>,
         ReadStorage<'a, Transform>,
         ReadStorage<'a, Parent>,
         WriteStorage<'a, GlobalTransform>,

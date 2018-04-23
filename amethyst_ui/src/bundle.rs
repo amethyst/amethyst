@@ -1,7 +1,7 @@
 //! ECS rendering bundle
 
 use amethyst_assets::{AssetStorage, Handle, Processor};
-use amethyst_core::Parent;
+use amethyst_core::{Parent, ParentHierarchy};
 use amethyst_core::bundle::{ECSBundle, Result};
 use amethyst_core::specs::prelude::{DispatcherBuilder, World};
 use shrev::EventChannel;
@@ -65,8 +65,8 @@ where
             .register_reader();
 
         let mut locals = world.write::<UiTransform>();
-        let mut parents = world.write::<Parent>();
         let mut stretches = world.write::<Stretched>();
+        let mut hierarchy = world.write_resource::<ParentHierarchy>();
 
         Ok(builder
             .with(Processor::<FontAsset>::new(), "font_processor", &[])
@@ -76,16 +76,14 @@ where
             .with(UiLayoutSystem::new(), "ui_layout", &["ui_system"])
             .with(
                 UiParentSystem::new(
-                    parents.track_inserted(),
-                    parents.track_modified(),
-                    parents.track_removed(),
                     locals.track_inserted(),
                     locals.track_modified(),
                     stretches.track_inserted(),
                     stretches.track_modified(),
+                    hierarchy.track(),
                 ),
                 "ui_parent",
-                &["ui_layout"],
+                &["transform_system", "ui_layout"],
             ))
     }
 }

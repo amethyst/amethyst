@@ -8,7 +8,7 @@ extern crate log;
 use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::Time;
 use amethyst::core::cgmath::Deg;
-use amethyst::core::transform::{GlobalTransform, Parent};
+use amethyst::core::transform::{GlobalTransform, Parent, TransformBundle};
 use amethyst::ecs::prelude::{Entity, System, World, WriteExpect};
 use amethyst::input::InputBundle;
 use amethyst::prelude::*;
@@ -283,6 +283,7 @@ fn run() -> Result<(), amethyst::Error> {
         )
     };
     let mut game = Application::build(resources, Example { fps_display: None })?
+        .with_bundle(TransformBundle::new())?
         .with_bundle(UiBundle::<String, String>::new())?
         .with(UiEventHandlerSystem::new(), "ui_event_handler", &[])
         .with_bundle(FPSCounterBundle::default())?
