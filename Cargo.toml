@@ -59,6 +59,7 @@ thread_profiler = { version = "0.1", optional = true }
 amethyst_gltf = { path = "amethyst_gltf", version = "0.1" }
 genmesh = "0.5"
 amethyst_animation = { path = "amethyst_animation", version = "0.1.0" }
+ron = "0.1"
 serde = "1.0"
 serde_derive = "1.0"
 
@@ -128,6 +129,10 @@ path = "examples/appendix_a/main.rs"
 [[example]]
 name = "fly_camera"
 path = "examples/fly_camera/main.rs"
+
+[[example]]
+name = "sprites"
+path = "examples/sprites/main.rs"
 
 [workspace]
 members = ["amethyst_animation", "amethyst_gltf"]

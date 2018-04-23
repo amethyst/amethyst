@@ -2,7 +2,7 @@ use fnv::FnvHashMap;
 
 use amethyst_assets::Handle;
 use amethyst_core::specs::Fetch;
-use amethyst_renderer::{Material, Texture, TextureOffset};
+use amethyst_renderer::{Material, Sprite, Texture, TextureOffset};
 use minterpolate::InterpolationPrimitive;
 
 use {AnimationSampling, ApplyData, BlendMethod};
@@ -82,6 +82,18 @@ impl InterpolationPrimitive for MaterialPrimitive {
 
     fn normalize(&self) -> Self {
         panic!("Cannot normalize MaterialPrimitive")
+    }
+}
+
+impl From<Sprite> for MaterialPrimitive {
+    fn from(sprite: Sprite) -> Self {
+        MaterialPrimitive::Offset((sprite.left, sprite.right), (sprite.top, sprite.bottom))
+    }
+}
+
+impl<'a> From<&'a Sprite> for MaterialPrimitive {
+    fn from(sprite: &'a Sprite) -> Self {
+        MaterialPrimitive::Offset((sprite.left, sprite.right), (sprite.top, sprite.bottom))
     }
 }
 
