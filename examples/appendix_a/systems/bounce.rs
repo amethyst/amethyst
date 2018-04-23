@@ -3,7 +3,7 @@ use amethyst::assets::AssetStorage;
 use amethyst::audio::Source;
 use amethyst::audio::output::Output;
 use amethyst::core::transform::Transform;
-use amethyst::ecs::{Fetch, Join, ReadStorage, System, WriteStorage};
+use amethyst::ecs::prelude::{Fetch, Join, ReadStorage, System, WriteStorage};
 use audio::{play_bounce, Sounds};
 use config::ArenaConfig;
 

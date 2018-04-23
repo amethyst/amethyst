@@ -1,7 +1,7 @@
 //! Provides structures used to load audio files.
 
 use amethyst_assets::{Asset, Handle, Result};
-use amethyst_core::specs::VecStorage;
+use amethyst_core::specs::prelude::VecStorage;
 
 use formats::AudioData;
 

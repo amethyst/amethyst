@@ -1,4 +1,4 @@
-use amethyst_core::specs::SystemData;
+use amethyst_core::specs::prelude::SystemData;
 use hetseq::*;
 
 use super::stage::*;

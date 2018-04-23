@@ -5,7 +5,7 @@ use std::time::Instant;
 
 use amethyst_core as core;
 use amethyst_core::{ECSBundle, Time};
-use amethyst_core::specs::{DispatcherBuilder, Fetch, FetchMut, System, World};
+use amethyst_core::specs::prelude::{DispatcherBuilder, Fetch, FetchMut, System, World};
 
 use {Asset, Format, FormatValue, Loader, Result, Source};
 
@@ -32,7 +32,7 @@ impl<'a, 'b> ECSBundle<'a, 'b> for HotReloadBundle {
         world.write_resource::<Loader>().set_hot_reload(true);
         world.add_resource(self.strategy);
 
-        Ok(dispatcher.add(HotReloadSystem, "hot_reload", &[]))
+        Ok(dispatcher.with(HotReloadSystem, "hot_reload", &[]))
     }
 }
 
@@ -45,7 +45,7 @@ impl<'a, 'b> ECSBundle<'a, 'b> for HotReloadBundle {
 /// # extern crate amethyst_core;
 /// #
 /// # use amethyst_assets::HotReloadStrategy;
-/// # use amethyst_core::specs::World;
+/// # use amethyst_core::specs::prelude::World;
 /// #
 /// # fn main() {
 /// let mut world = World::new();

@@ -1,5 +1,5 @@
 use amethyst_assets::{Asset, Error, Handle, ResultExt, SimpleFormat};
-use amethyst_core::specs::VecStorage;
+use amethyst_core::specs::prelude::VecStorage;
 use rusttype::{Font, FontCollection};
 
 /// A loaded set of fonts from a file.

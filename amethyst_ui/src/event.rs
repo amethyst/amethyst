@@ -1,5 +1,6 @@
-use amethyst_core::specs::{Component, Entities, Entity, Fetch, FetchMut, Join, NullStorage,
-                           ReadStorage, System};
+use amethyst_core::specs::prelude::{Component, Entities, Entity, Fetch, FetchMut, Join,
+                                    ReadStorage, System};
+use amethyst_core::specs::storage::NullStorage;
 use amethyst_input::InputHandler;
 use amethyst_renderer::MouseButton;
 use shrev::EventChannel;

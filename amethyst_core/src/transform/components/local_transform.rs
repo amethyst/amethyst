@@ -4,7 +4,7 @@ use cgmath::{Array, Deg, ElementWise, EuclideanSpace, InnerSpace, Matrix3, Matri
              Quaternion, Rotation, Rotation3, SquareMatrix, Transform as CgTransform, Vector3,
              Zero};
 use orientation::Orientation;
-use specs::{Component, DenseVecStorage, FlaggedStorage};
+use specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
 
 /// Local position, rotation, and scale (from parent if it exists).
 ///

@@ -2,12 +2,12 @@
 
 use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 use hibitset::BitSet;
-use specs::{Entities, Entity, Join, System, WriteStorage};
+use specs::prelude::{Entities, Entity, InsertedFlag, Join, ModifiedFlag, ReadStorage, ReaderId,
+                     RemovedFlag, System, WriteStorage};
 use transform::{GlobalTransform, Parent, Transform};
 
 /// Handles updating `GlobalTransform` components based on the `Transform`
 /// component and parents.
-#[derive(Default)]
 pub struct TransformSystem {
     /// Map of entities to index in sorted vec.
     indices: HashMap<Entity, usize>,
@@ -18,14 +18,50 @@ pub struct TransformSystem {
     init: BitSet,
     frame_init: BitSet,
 
+    parent_modified: BitSet,
+    parent_removed: BitSet,
+
+    local_modified: BitSet,
+
+    global_modified: BitSet,
+
+    inserted_parent_id: ReaderId<InsertedFlag>,
+    modified_parent_id: ReaderId<ModifiedFlag>,
+    removed_parent_id: ReaderId<RemovedFlag>,
+
+    inserted_local_id: ReaderId<InsertedFlag>,
+    modified_local_id: ReaderId<ModifiedFlag>,
+
     dead: HashSet<Entity>,
     remove_parent: Vec<Entity>,
 }
 
 impl TransformSystem {
     /// Creates a new transform processor.
-    pub fn new() -> TransformSystem {
-        Default::default()
+    pub fn new(
+        inserted_parent_id: ReaderId<InsertedFlag>,
+        modified_parent_id: ReaderId<ModifiedFlag>,
+        removed_parent_id: ReaderId<RemovedFlag>,
+        inserted_local_id: ReaderId<InsertedFlag>,
+        modified_local_id: ReaderId<ModifiedFlag>,
+    ) -> TransformSystem {
+        TransformSystem {
+            inserted_parent_id,
+            modified_parent_id,
+            removed_parent_id,
+            inserted_local_id,
+            modified_local_id,
+            indices: HashMap::default(),
+            sorted: Vec::default(),
+            init: BitSet::default(),
+            frame_init: BitSet::default(),
+            dead: HashSet::default(),
+            remove_parent: Vec::default(),
+            parent_modified: BitSet::default(),
+            parent_removed: BitSet::default(),
+            local_modified: BitSet::default(),
+            global_modified: BitSet::default(),
+        }
     }
 
     fn remove(&mut self, index: usize) {
@@ -42,35 +78,50 @@ impl TransformSystem {
 impl<'a> System<'a> for TransformSystem {
     type SystemData = (
         Entities<'a>,
-        WriteStorage<'a, Transform>,
+        ReadStorage<'a, Transform>,
         WriteStorage<'a, Parent>,
         WriteStorage<'a, GlobalTransform>,
     );
-    fn run(&mut self, (entities, mut locals, mut parents, mut globals): Self::SystemData) {
+    fn run(&mut self, (entities, locals, mut parents, mut globals): Self::SystemData) {
         #[cfg(feature = "profiler")]
         profile_scope!("transform_system");
 
-        // Clear dirty flags on `Transform` storage, before updates go in
-        (&mut globals).open().1.clear_flags();
+        self.parent_modified.clear();
+        self.parent_removed.clear();
+        self.local_modified.clear();
+        self.global_modified.clear();
+
+        parents.populate_inserted(&mut self.inserted_parent_id, &mut self.parent_modified);
+        parents.populate_modified(&mut self.modified_parent_id, &mut self.parent_modified);
+        parents.populate_removed(&mut self.removed_parent_id, &mut self.parent_removed);
+
+        locals.populate_inserted(&mut self.inserted_local_id, &mut self.local_modified);
+        locals.populate_modified(&mut self.modified_local_id, &mut self.local_modified);
 
         {
-            for (entity, parent) in (&*entities, parents.open().1).join() {
+            for (entity, _, parent) in (&*entities, &self.parent_modified, &parents).join() {
                 if parent.entity == entity {
                     self.remove_parent.push(entity);
                 }
             }
 
             for entity in self.remove_parent.iter() {
-                eprintln!("Entity was its own parent: {:?}", entity);
+                warn!("Entity was its own parent: {:?}", entity);
                 parents.remove(*entity);
             }
 
             self.remove_parent.clear();
         }
 
+        for entity in &self.sorted {
+            if self.parent_removed.contains(entity.id()) {
+                self.dead.insert(*entity);
+            }
+        }
+
         {
             // Checks for entities with a modified local transform or a modified parent, but isn't initialized yet.
-            let filter = locals.open().0 & parents.open().0 & !&self.init; // has a local, parent, and isn't initialized.
+            let filter = &self.local_modified & &self.parent_modified & !&self.init; // has a local, parent, and isn't initialized.
             for (entity, _) in (&*entities, &filter).join() {
                 self.indices.insert(entity, self.sorted.len());
                 self.sorted.push(entity);
@@ -79,16 +130,20 @@ impl<'a> System<'a> for TransformSystem {
         }
 
         {
-            let locals_flagged = locals.open().1;
-
             // Compute transforms without parents.
-            for (_entity, local, global, _) in
-                (&*entities, locals_flagged, &mut globals, !&parents).join()
+            for (entity, _, local, global, _) in (
+                &*entities,
+                &self.local_modified,
+                &locals,
+                &mut globals,
+                !&parents,
+            ).join()
             {
+                self.global_modified.add(entity.id());
                 global.0 = local.matrix();
                 debug_assert!(
                     global.is_finite(),
-                    format!("Entity {:?} had a non-finite `Transform`", _entity)
+                    format!("Entity {:?} had a non-finite `Transform`", entity)
                 );
             }
         }
@@ -97,8 +152,8 @@ impl<'a> System<'a> for TransformSystem {
         let mut index = 0;
         while index < self.sorted.len() {
             let entity = self.sorted[index];
-            let local_dirty = locals.open().1.flagged(entity);
-            let parent_dirty = parents.open().1.flagged(entity);
+            let local_dirty = self.local_modified.contains(entity.id());
+            let parent_dirty = self.parent_modified.contains(entity.id());
 
             match (
                 parents.get(entity),
@@ -138,7 +193,9 @@ impl<'a> System<'a> for TransformSystem {
                         continue;
                     }
 
-                    if local_dirty || parent_dirty || globals.open().1.flagged(parent.entity) {
+                    if local_dirty || parent_dirty
+                        || self.global_modified.contains(parent.entity.id())
+                    {
                         let combined_transform =
                             if let Some(parent_global) = globals.get(parent.entity) {
                                 (parent_global.0 * local.matrix()).into()
@@ -147,6 +204,7 @@ impl<'a> System<'a> for TransformSystem {
                             };
 
                         if let Some(global) = globals.get_mut(entity) {
+                            self.global_modified.add(entity.id());
                             global.0 = combined_transform.into();
                         }
                     }
@@ -167,9 +225,6 @@ impl<'a> System<'a> for TransformSystem {
             index += 1;
         }
 
-        (&mut locals).open().1.clear_flags();
-        (&mut parents).open().1.clear_flags();
-
         for bit in &self.frame_init {
             self.init.add(bit);
         }
@@ -182,7 +237,7 @@ impl<'a> System<'a> for TransformSystem {
 mod tests {
     use cgmath::{Decomposed, Matrix4, One, Quaternion, Vector3, Zero};
     use shred::RunNow;
-    use specs::World;
+    use specs::prelude::World;
     use transform::{GlobalTransform, Parent, Transform, TransformSystem};
     //use quickcheck::{Arbitrary, Gen};
 
@@ -228,7 +283,22 @@ mod tests {
         world.register::<GlobalTransform>();
         world.register::<Parent>();
 
-        (world, TransformSystem::new())
+        let (p_insert, p_modify, p_remove, l_insert, l_modify) = {
+            let mut locals = world.write::<Transform>();
+            let mut parents = world.write::<Parent>();
+            (
+                parents.track_inserted(),
+                parents.track_modified(),
+                parents.track_removed(),
+                locals.track_inserted(),
+                locals.track_modified(),
+            )
+        };
+
+        (
+            world,
+            TransformSystem::new(p_insert, p_modify, p_remove, l_insert, l_modify),
+        )
     }
 
     fn together(transform: GlobalTransform, local: Transform) -> [[f32; 4]; 4] {
