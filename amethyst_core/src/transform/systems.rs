@@ -103,7 +103,7 @@ impl<'a> System<'a> for TransformSystem {
                         }
                     }
                 }
-                _ => ()
+                _ => (),
             }
         }
     }

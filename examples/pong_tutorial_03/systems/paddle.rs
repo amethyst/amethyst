@@ -1,5 +1,5 @@
 use amethyst::core::transform::components::Transform;
-use amethyst::ecs::prelude:: {Read, Join, System, ReadStorage, WriteStorage};
+use amethyst::ecs::prelude::{Join, Read, ReadStorage, System, WriteStorage};
 use amethyst::input::InputHandler;
 use pong::{Paddle, Side, PADDLE_HEIGHT};
 

@@ -1,7 +1,7 @@
 use Ball;
 use amethyst::core::timing::Time;
 use amethyst::core::transform::Transform;
-use amethyst::ecs::prelude::{Read, Join, System, WriteStorage};
+use amethyst::ecs::prelude::{Join, Read, System, WriteStorage};
 
 /// This system is responsible for moving all balls according to their speed
 /// and the time passed.
