@@ -72,7 +72,7 @@ mod test {
                 left: 0.,
                 right: 0.5,
                 top: 0.75,
-                bottom: 1.0
+                bottom: 1.0,
             },
             ((0.0, 0.5), (0.75, 1.0)).into()
         );
@@ -85,7 +85,7 @@ mod test {
                 left: 0.,
                 right: 0.5,
                 top: 0.75,
-                bottom: 1.0
+                bottom: 1.0,
             },
             [0.0, 0.5, 0.75, 1.0].into()
         );
