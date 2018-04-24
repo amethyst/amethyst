@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [sv]: http://semver.org/
 
 ## [Unreleased]
+### Added
+* Documentation for Animation crate ([#631]).
+* Support for rendering sprites ([#638]).
+
+### Fixed
+* Asset loading tolerates paths constructed using back slashes ([#623]).
+
+[#631]: https://github.com/amethyst/amethyst/pull/631
+[#638]: https://github.com/amethyst/amethyst/pull/638
+[#623]: https://github.com/amethyst/amethyst/pull/623
 
 ## [0.5.1] - 2017-08-30
 
