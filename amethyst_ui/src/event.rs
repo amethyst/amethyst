@@ -100,34 +100,34 @@ where
             let target = targeted(
                 (x, y),
                 (&*entities, &transform).join().collect::<Vec<_>>(),
+                &react,
             );
 
             let is_in_rect = target.is_some();
+
+            if is_in_rect {
+                println!("Inside!");
+            }
+
             let was_in_rect = self.last_target.is_some();
 
             if is_in_rect && !was_in_rect {
-                if react.get(target.unwrap()).is_some(){
-                    events.single_write(UiEvent::new(UiEventType::HoverStart, target.unwrap()));
-                }
+                events.single_write(UiEvent::new(UiEventType::HoverStart, target.unwrap()));
             } else if !is_in_rect && was_in_rect {
-                if react.get(self.last_target.unwrap()).is_some() {
-                    events.single_write(UiEvent::new(
-                        UiEventType::HoverStop,
-                        self.last_target.unwrap(),
-                    ));
-                }
+                events.single_write(UiEvent::new(
+                    UiEventType::HoverStop,
+                    self.last_target.unwrap(),
+                ));
             }
 
             if let Some(e) = target {
-                if react.get(e).is_some(){
-                    if click_started {
-                        events.single_write(UiEvent::new(UiEventType::ClickStart, e));
-                        self.click_started_on = Some(e);
-                    } else if click_stopped {
-                        if let Some(e2) = self.click_started_on {
-                            if e2 == e {
-                                events.single_write(UiEvent::new(UiEventType::Click, e2));
-                            }
+                if click_started {
+                    events.single_write(UiEvent::new(UiEventType::ClickStart, e));
+                    self.click_started_on = Some(e);
+                } else if click_stopped {
+                    if let Some(e2) = self.click_started_on {
+                        if e2 == e {
+                            events.single_write(UiEvent::new(UiEventType::Click, e2));
                         }
                     }
                 }
@@ -151,17 +151,24 @@ where
 fn targeted(
     pos: (f32, f32),
     transforms: Vec<(Entity, &UiTransform)>,
+    react: &ReadStorage<MouseReactive>,
 ) -> Option<Entity> {
     let mut v = transforms
         .iter()
-        .filter(|t|t.1.opaque)
+        .filter(|t| t.1.opaque)
         .filter(|t| t.1.position_inside(pos.0, pos.1))
         .collect::<Vec<_>>();
     v.sort_by(|t1, t2| {
-        t2.1
+        t1.1
             .global_z
-            .partial_cmp(&t1.1.global_z)
+            .partial_cmp(&t2.1.global_z)
             .expect("Failed to do z ordering on `UiTransform`s. Do you have a NaN?")
     });
-    v.first().map(|t| t.0)
+    v.first().and_then(|t| {
+        if react.get(t.0).is_some() {
+            Some(t.0)
+        } else {
+            None
+        }
+    })
 }
