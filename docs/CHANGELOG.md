@@ -11,13 +11,26 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Added
 * Documentation for Animation crate ([#631]).
 * Support for rendering sprites ([#638]).
+* Fly Camera ([#578]).
+* UI Layouts ([#591]).
+* UI Events ([#580]).
+
+[#580]: https://github.com/amethyst/amethyst/pull/580
+[#591]: https://github.com/amethyst/amethyst/pull/591
+[#578]: https://github.com/amethyst/amethyst/pull/578
 
 ### Fixed
 * Asset loading tolerates paths constructed using back slashes ([#623]).
+* Pong text alignment ([#621]).
+* Updated book introduction ([#588]).
+* Renderable runtime crash ([#586]).
 
+[#586]: https://github.com/amethyst/amethyst/pull/586
+[#588]: https://github.com/amethyst/amethyst/pull/588
 [#631]: https://github.com/amethyst/amethyst/pull/631
 [#638]: https://github.com/amethyst/amethyst/pull/638
 [#623]: https://github.com/amethyst/amethyst/pull/623
+[#621]: https://github.com/amethyst/amethyst/pull/621
 
 ## [0.5.1] - 2017-08-30
 
