@@ -147,21 +147,22 @@ fn targeted(
     )>,
     react: &ReadStorage<MouseReactive>,
 ) -> Option<Entity> {
-    let mut v = transforms
+    use std::f32::INFINITY;
+
+    let candidate = transforms
         .filter(|t| t.1.opaque)
         .filter(|t| t.1.position_inside(pos.0, pos.1))
-        .collect::<Vec<_>>();
-    v.sort_by(|t1, t2| {
-        t1.1
-            .global_z
-            .partial_cmp(&t2.1.global_z)
-            .expect("Failed to do z ordering on `UiTransform`s. Do you have a NaN?")
-    });
-    v.first().and_then(|t| {
-        if react.get(t.0).is_some() {
-            Some(t.0)
-        } else {
-            None
+        .fold((None, INFINITY), |(lowest_entity, lowest_z), (entity, t)| {
+            if lowest_z < t.global_z {
+                (lowest_entity, lowest_z)
+            } else {
+                (Some(entity), t.global_z)
+            }
+        }).0;
+    if let Some(candidate) = candidate {
+        if react.get(candidate).is_some() {
+            return Some(candidate);
         }
-    })
+    }
+    None
 }
