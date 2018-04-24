@@ -128,6 +128,10 @@ name = "appendix_a"
 path = "examples/appendix_a/main.rs"
 
 [[example]]
+name = "locale"
+path = "examples/locale/main.rs"
+
+[[example]]
 name = "fly_camera"
 path = "examples/fly_camera/main.rs"
 

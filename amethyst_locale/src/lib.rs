@@ -22,9 +22,9 @@ extern crate thread_profiler;
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
 
-use fluent::MessageContext;
-use amethyst_assets::{SimpleFormat,Handle,Asset,Result};
+use amethyst_assets::{Asset, Handle, Result, SimpleFormat};
 use amethyst_core::specs::VecStorage;
+use fluent::MessageContext;
 
 /// Loads the strings from localisation files.
 #[derive(Clone)]
@@ -39,11 +39,13 @@ impl SimpleFormat<Locale> for LocaleFormat {
         let s = String::from_utf8(bytes)?;
         let mut ctx = MessageContext::new(&[]);
         ctx.add_messages(&s);
-        Ok(
-            Locale{
-                context: ctx,
-            }
-        )
+        Ok(Locale { context: ctx })
+    }
+}
+
+impl Into<Result<Locale>> for Locale {
+    fn into(self) -> Result<Locale> {
+        Ok(self)
     }
 }
 
@@ -62,4 +64,3 @@ impl Asset for Locale {
     type Data = Locale;
     type HandleStorage = VecStorage<LocaleHandle>;
 }
-
