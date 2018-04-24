@@ -53,7 +53,6 @@ impl Into<Result<Locale>> for Locale {
 pub type LocaleHandle = Handle<Locale>;
 
 /// A loaded locale.
-//#[derive(Clone)]
 pub struct Locale {
     /// The message context.
     pub context: MessageContext<'static>,
