@@ -1,5 +1,5 @@
-use amethyst_core::specs::{Component, Entities, Entity, Fetch, FetchMut, Join, NullStorage,
-                           ReadStorage, System};
+use amethyst_core::specs::{Component, Entities, EntitiesRes, Entity, Fetch, FetchMut, Join,
+                           JoinIter, MaskedStorage, NullStorage, ReadStorage, Storage, System};
 use amethyst_input::InputHandler;
 use amethyst_renderer::MouseButton;
 use shrev::EventChannel;
@@ -97,18 +97,9 @@ where
             let x = pos_x as f32;
             let y = pos_y as f32;
 
-            let target = targeted(
-                (x, y),
-                (&*entities, &transform).join().collect::<Vec<_>>(),
-                &react,
-            );
+            let target = targeted((x, y), (&*entities, &transform).join(), &react);
 
             let is_in_rect = target.is_some();
-
-            if is_in_rect {
-                println!("Inside!");
-            }
-
             let was_in_rect = self.last_target.is_some();
 
             if is_in_rect && !was_in_rect {
@@ -150,11 +141,13 @@ where
 
 fn targeted(
     pos: (f32, f32),
-    transforms: Vec<(Entity, &UiTransform)>,
+    transforms: JoinIter<(
+        &EntitiesRes,
+        &Storage<UiTransform, Fetch<MaskedStorage<UiTransform>>>,
+    )>,
     react: &ReadStorage<MouseReactive>,
 ) -> Option<Entity> {
     let mut v = transforms
-        .iter()
         .filter(|t| t.1.opaque)
         .filter(|t| t.1.position_inside(pos.0, pos.1))
         .collect::<Vec<_>>();
