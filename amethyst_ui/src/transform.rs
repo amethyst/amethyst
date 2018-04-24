@@ -35,6 +35,10 @@ pub struct UiTransform {
     pub global_z: f32,
     /// The scale mode indicates if the position is in pixel or is relative (%) (WIP!) to the parent's size.
     pub scale_mode: ScaleMode,
+    /// Indicates if actions on the ui can go through this element.
+    /// If set to false, the element will behaves as if it was transparent and will let events go to
+    /// the next element (for example, the text on a button).
+    pub opaque: bool,
     /// A private field to keep this from being initialized without new.
     pd: PhantomData<u8>,
 }
@@ -63,6 +67,7 @@ impl UiTransform {
             global_y: y,
             global_z: z,
             scale_mode: ScaleMode::Pixel,
+            opaque: true,
             pd: PhantomData,
         }
     }
@@ -82,6 +87,12 @@ impl UiTransform {
     /// Currently unused. Will be implemented in a future PR.
     pub fn as_percent(mut self) -> Self {
         self.scale_mode = ScaleMode::Percent;
+        self
+    }
+
+    /// Sets the opaque variable to false, allowing ui events to go through this ui element.
+    pub fn as_transparent(mut self) -> Self {
+        self.opaque = false;
         self
     }
 }

@@ -212,7 +212,7 @@ impl<'a> UiButtonBuilder<'a> {
         id.push_str("_btn_txt");
         let text_entity = res.entities.create();
         res.transform
-            .insert(text_entity, UiTransform::new(id, 0., 0., -1., 0., 0., 10));
+            .insert(text_entity, UiTransform::new(id, 0., 0., -1., 0., 0., 10).as_transparent());
         res.anchored
             .insert(text_entity, Anchored::new(Anchor::Middle));
         res.stretched
