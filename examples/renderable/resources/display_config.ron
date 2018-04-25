@@ -1,6 +1,6 @@
 (
   fullscreen: false,
-  multisampling: 1,
+  multisampling: 0,
   title: "Renderable Example",
   visibility: true,
   vsync: false,
