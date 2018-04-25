@@ -12,21 +12,18 @@ pub struct TransformSystem {
     local_modified: BitSet,
     global_modified: BitSet,
 
-    inserted_local_id: ReaderId<InsertedFlag>,
-    modified_local_id: ReaderId<ModifiedFlag>,
+    inserted_local_id: Option<ReaderId<InsertedFlag>>,
+    modified_local_id: Option<ReaderId<ModifiedFlag>>,
 
     parent_events_id: Option<ReaderId<HierarchyEvent>>,
 }
 
 impl TransformSystem {
     /// Creates a new transform processor.
-    pub fn new(
-        inserted_local_id: ReaderId<InsertedFlag>,
-        modified_local_id: ReaderId<ModifiedFlag>,
-    ) -> TransformSystem {
+    pub fn new() -> TransformSystem {
         TransformSystem {
-            inserted_local_id,
-            modified_local_id,
+            inserted_local_id: None,
+            modified_local_id: None,
             parent_events_id: None,
             local_modified: BitSet::default(),
             global_modified: BitSet::default(),
@@ -49,8 +46,14 @@ impl<'a> System<'a> for TransformSystem {
         self.local_modified.clear();
         self.global_modified.clear();
 
-        locals.populate_inserted(&mut self.inserted_local_id, &mut self.local_modified);
-        locals.populate_modified(&mut self.modified_local_id, &mut self.local_modified);
+        locals.populate_inserted(
+            self.inserted_local_id.as_mut().unwrap(),
+            &mut self.local_modified,
+        );
+        locals.populate_modified(
+            self.modified_local_id.as_mut().unwrap(),
+            &mut self.local_modified,
+        );
 
         for event in hierarchy
             .changed()
@@ -111,10 +114,13 @@ impl<'a> System<'a> for TransformSystem {
     }
 
     fn setup(&mut self, res: &mut Resources) {
-        use specs::prelude::{SystemData, WriteExpect};
-        <Self::SystemData as SystemData>::setup(res);
-        let mut hierarchy: WriteExpect<ParentHierarchy> = SystemData::fetch(res);
+        use specs::prelude::SystemData;
+        Self::SystemData::setup(res);
+        let mut hierarchy = res.fetch_mut::<ParentHierarchy>();
+        let mut locals = WriteStorage::<Transform>::fetch(res);
         self.parent_events_id = Some(hierarchy.track());
+        self.inserted_local_id = Some(locals.track_inserted());
+        self.modified_local_id = Some(locals.track_modified());
     }
 }
 
@@ -165,17 +171,8 @@ mod tests {
 
     fn transform_world<'a, 'b>() -> (World, HierarchySystem<Parent>, TransformSystem) {
         let mut world = World::new();
-        world.register::<Transform>();
-        world.register::<GlobalTransform>();
-        world.register::<Parent>();
-
-        let (l_insert, l_modify) = {
-            let mut locals = world.write_storage::<Transform>();
-            (locals.track_inserted(), locals.track_modified())
-        };
-
         let mut hs = HierarchySystem::<Parent>::new();
-        let mut ts = TransformSystem::new(l_insert, l_modify);
+        let mut ts = TransformSystem::new();
         hs.setup(&mut world.res);
         ts.setup(&mut world.res);
 

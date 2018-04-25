@@ -1,5 +1,6 @@
 //! The core engine framework.
 
+use std::error::Error as StdError;
 use std::io;
 use std::path::Path;
 use std::sync::Arc;
@@ -8,7 +9,7 @@ use std::time::Duration;
 use core::ECSBundle;
 use fern;
 use log::LevelFilter;
-use rayon::ThreadPool;
+use rayon::{ThreadPool, ThreadPoolBuilder};
 use shred::Resource;
 use shrev::{EventChannel, ReaderId};
 #[cfg(feature = "profiler")]
@@ -310,7 +311,6 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// ~~~
 
     pub fn new<P: AsRef<Path>>(path: P, initial_state: T) -> Result<Self> {
-        use bundle::AppBundle;
         use rustc_version_runtime;
 
         fern::Dispatch::new()
@@ -340,12 +340,27 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
             info!("Rustc git commit: {}", hash);
         }
 
-        let mut disp_builder = DispatcherBuilder::new();
         let mut world = World::new();
-        disp_builder = AppBundle::new(path).build(&mut world, disp_builder)?;
+
+        let thread_pool_builder = ThreadPoolBuilder::new();
+        #[cfg(feature = "profiler")]
+        let thread_pool_builder = thread_pool_builder.start_handler(|index| {
+            register_thread_with_profiler(format!("thread_pool{}", index));
+        });
+        let pool = thread_pool_builder
+            .build()
+            .map(|p| Arc::new(p))
+            .map_err(|err| Error::Core(err.description().to_string().into()))?;
+        world.add_resource(Loader::new(path.as_ref().to_owned(), pool.clone()));
+        world.add_resource(pool);
+        world.add_resource(EventChannel::<Event>::with_capacity(2000));
+        world.add_resource(Errors::default());
+        world.add_resource(FrameLimiter::default());
+        world.add_resource(Stopwatch::default());
+        world.add_resource(Time::default());
 
         Ok(ApplicationBuilder {
-            disp_builder,
+            disp_builder: DispatcherBuilder::new(),
             initial_state,
             world,
             ignore_window_close: false,

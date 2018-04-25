@@ -1,15 +1,11 @@
 use std::hash::Hash;
 use std::marker;
 
-use amethyst_assets::{AssetStorage, Handle};
-use amethyst_core::{ECSBundle, GlobalTransform, Result};
+use amethyst_core::{ECSBundle, Result};
 use amethyst_core::specs::prelude::{Component, DispatcherBuilder, World};
-use amethyst_renderer::JointTransforms;
 
-use material::MaterialTextureSet;
-use resources::{Animation, AnimationControlSet, AnimationHierarchy, AnimationSampling,
-                AnimationSet, RestState, Sampler, SamplerControlSet};
-use skinning::{Joint, Skin, VertexSkinningSystem};
+use resources::AnimationSampling;
+use skinning::VertexSkinningSystem;
 use systems::{AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem,
               SamplerProcessor};
 
@@ -38,15 +34,11 @@ impl<'a> VertexSkinningBundle<'a> {
 impl<'a, 'b, 'c> ECSBundle<'a, 'b> for VertexSkinningBundle<'c> {
     fn build(
         self,
-        world: &mut World,
+        _: &mut World,
         builder: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
-        world.register::<Joint>();
-        world.register::<Skin>();
-        world.register::<JointTransforms>();
-        let mut transforms = world.write_storage::<GlobalTransform>();
         Ok(builder.with(
-            VertexSkinningSystem::new(transforms.track_inserted(), transforms.track_modified()),
+            VertexSkinningSystem::new(),
             "vertex_skinning_system",
             self.dep,
         ))
@@ -95,15 +87,9 @@ where
 {
     fn build(
         self,
-        world: &mut World,
+        _: &mut World,
         builder: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
-        world
-            .res
-            .entry()
-            .or_insert_with(AssetStorage::<Sampler<T::Primitive>>::new);
-        world.register::<SamplerControlSet<T>>();
-        world.add_resource(MaterialTextureSet::default());
         Ok(builder
             .with(SamplerProcessor::<T::Primitive>::new(), "", &[])
             .with(SamplerInterpolationSystem::<T>::new(), self.name, self.dep))
@@ -163,12 +149,6 @@ where
         world: &mut World,
         mut builder: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
-        world.add_resource(AssetStorage::<Animation<T>>::new());
-        world.register::<AnimationControlSet<I, T>>();
-        world.register::<AnimationHierarchy<T>>();
-        world.register::<RestState<T>>();
-        world.register::<AnimationSet<I, T>>();
-        world.register::<Handle<Animation<T>>>();
         builder = builder.with(AnimationProcessor::<T>::new(), "", &[]).with(
             AnimationControlSystem::<I, T>::new(),
             self.animation_name,

@@ -40,13 +40,9 @@ impl<'a> TransformBundle<'a> {
 impl<'a, 'b, 'c> ECSBundle<'a, 'b> for TransformBundle<'c> {
     fn build(
         self,
-        world: &mut World,
+        _: &mut World,
         builder: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
-        world.register::<Transform>();
-
-        let mut locals = world.write_storage::<Transform>();
-
         Ok(builder
             .with(
                 HierarchySystem::<Parent>::new(),
@@ -54,7 +50,7 @@ impl<'a, 'b, 'c> ECSBundle<'a, 'b> for TransformBundle<'c> {
                 self.dep,
             )
             .with(
-                TransformSystem::new(locals.track_inserted(), locals.track_modified()),
+                TransformSystem::new(),
                 "transform_system",
                 &["parent_hierarchy_system"],
             ))

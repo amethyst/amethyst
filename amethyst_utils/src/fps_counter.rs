@@ -71,31 +71,15 @@ impl<'a> System<'a> for FPSCounterSystem {
 }
 
 ///Automatically adds a FPSCounterSystem and a FPSCounter resource with the specified sample size.
-pub struct FPSCounterBundle {
-    samplesize: usize,
-}
-
-impl FPSCounterBundle {
-    ///Creates a new FPSCounterBundle with the specified sample size.
-    pub fn new(samplesize: usize) -> Self {
-        Self { samplesize }
-    }
-}
-
-impl Default for FPSCounterBundle {
-    ///Same as FPSCounterBundle::new(20).
-    fn default() -> Self {
-        Self::new(20)
-    }
-}
+#[derive(Default)]
+pub struct FPSCounterBundle;
 
 impl<'a, 'b> ECSBundle<'a, 'b> for FPSCounterBundle {
     fn build(
         self,
-        world: &mut World,
+        _: &mut World,
         builder: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
-        world.add_resource(FPSCounter::new(self.samplesize));
         Ok(builder.with(FPSCounterSystem, "fps_counter_system", &[]))
     }
 }

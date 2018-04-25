@@ -1,8 +1,6 @@
 use super::*;
 use amethyst_core::bundle::{ECSBundle, Result};
 use amethyst_core::specs::prelude::{DispatcherBuilder, World};
-use amethyst_renderer::WindowMessages;
-use amethyst_renderer::mouse::*;
 use std::hash::Hash;
 use std::marker::PhantomData;
 
@@ -55,16 +53,9 @@ where
 {
     fn build(
         self,
-        world: &mut World,
+        _: &mut World,
         builder: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
-        world.register::<FlyControlTag>();
-
-        let mut msg = world.res.entry().or_insert_with(|| WindowMessages::new());
-
-        grab_cursor(&mut msg);
-        set_mouse_cursor_none(&mut msg);
-
         Ok(builder
             .with(
                 FlyMovementSystem::<A, B>::new(

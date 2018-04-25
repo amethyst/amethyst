@@ -1,5 +1,6 @@
 use amethyst_core::GlobalTransform;
 use amethyst_core::cgmath::{Matrix4, SquareMatrix};
+use amethyst_core::shred::Resources;
 use amethyst_core::specs::prelude::{BitSet, InsertedFlag, Join, ModifiedFlag, ReadStorage,
                                     ReaderId, System, WriteStorage};
 use amethyst_renderer::JointTransforms;
@@ -18,18 +19,18 @@ pub struct VertexSkinningSystem {
     updated: BitSet,
     updated_skins: BitSet,
     /// Used for tracking modifications to global transforms
-    updated_id: ReaderId<ModifiedFlag>,
-    inserted_id: ReaderId<InsertedFlag>,
+    updated_id: Option<ReaderId<ModifiedFlag>>,
+    inserted_id: Option<ReaderId<InsertedFlag>>,
 }
 
 impl VertexSkinningSystem {
-    pub fn new(inserted_id: ReaderId<InsertedFlag>, updated_id: ReaderId<ModifiedFlag>) -> Self {
+    pub fn new() -> Self {
         Self {
             joint_matrices: Vec::new(),
             updated: BitSet::new(),
             updated_skins: BitSet::new(),
-            inserted_id,
-            updated_id,
+            inserted_id: None,
+            updated_id: None,
         }
     }
 }
@@ -44,8 +45,8 @@ impl<'a> System<'a> for VertexSkinningSystem {
 
     fn run(&mut self, (joints, transforms, skins, mut matrices): Self::SystemData) {
         self.updated.clear();
-        transforms.populate_modified(&mut self.updated_id, &mut self.updated);
-        transforms.populate_inserted(&mut self.inserted_id, &mut self.updated);
+        transforms.populate_modified(&mut self.updated_id.as_mut().unwrap(), &mut self.updated);
+        transforms.populate_inserted(&mut self.inserted_id.as_mut().unwrap(), &mut self.updated);
         self.updated_skins.clear();
         for (_, joint) in (&self.updated, &joints).join() {
             self.updated_skins.add(joint.skin.id());
@@ -106,5 +107,13 @@ impl<'a> System<'a> for VertexSkinningSystem {
                     }));
             }
         }
+    }
+
+    fn setup(&mut self, res: &mut Resources) {
+        use amethyst_core::specs::prelude::SystemData;
+        Self::SystemData::setup(res);
+        let mut transform = WriteStorage::<GlobalTransform>::fetch(res);
+        self.updated_id = Some(transform.track_modified());
+        self.inserted_id = Some(transform.track_inserted());
     }
 }

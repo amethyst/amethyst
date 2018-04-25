@@ -1,5 +1,5 @@
 use amethyst_core::specs::prelude::{Component, Entities, Entity, Join, Read, ReadStorage, System,
-                                    WriteExpect};
+                                    Write};
 use amethyst_core::specs::storage::NullStorage;
 use amethyst_input::InputHandler;
 use amethyst_renderer::MouseButton;
@@ -84,7 +84,7 @@ where
         ReadStorage<'a, UiTransform>,
         ReadStorage<'a, MouseReactive>,
         Read<'a, InputHandler<A, B>>,
-        WriteExpect<'a, EventChannel<UiEvent>>,
+        Write<'a, EventChannel<UiEvent>>,
     );
 
     fn run(&mut self, (entities, transform, react, input, mut events): Self::SystemData) {
