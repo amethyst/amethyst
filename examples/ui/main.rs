@@ -8,9 +8,8 @@ extern crate log;
 use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::Time;
 use amethyst::core::cgmath::Deg;
-use amethyst::core::transform::{GlobalTransform, Parent};
-use amethyst::ecs::{Entity, World};
-use amethyst::ecs::{FetchMut, System};
+use amethyst::core::transform::{GlobalTransform, Parent, TransformBundle};
+use amethyst::ecs::prelude::{Entity, System, World, WriteExpect};
 use amethyst::input::InputBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light, Mesh, Pipeline,
@@ -284,6 +283,7 @@ fn run() -> Result<(), amethyst::Error> {
         )
     };
     let mut game = Application::build(resources, Example { fps_display: None })?
+        .with_bundle(TransformBundle::new())?
         .with_bundle(UiBundle::<String, String>::new())?
         .with(UiEventHandlerSystem::new(), "ui_event_handler", &[])
         .with_bundle(FPSCounterBundle::default())?
@@ -398,7 +398,7 @@ impl UiEventHandlerSystem {
 }
 
 impl<'a> System<'a> for UiEventHandlerSystem {
-    type SystemData = FetchMut<'a, EventChannel<UiEvent>>;
+    type SystemData = WriteExpect<'a, EventChannel<UiEvent>>;
 
     fn run(&mut self, mut events: Self::SystemData) {
         if self.reader_id.is_none() {

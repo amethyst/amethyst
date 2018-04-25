@@ -13,7 +13,7 @@ use amethyst::Result;
 use amethyst::audio::AudioBundle;
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::transform::TransformBundle;
-use amethyst::ecs::{Component, DenseVecStorage};
+use amethyst::ecs::prelude::{Component, DenseVecStorage};
 use amethyst::input::InputBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline, PosTex, RenderBundle, Stage};
@@ -124,6 +124,7 @@ impl Component for Paddle {
     type Storage = DenseVecStorage<Self>;
 }
 
+#[derive(Default)]
 pub struct ScoreBoard {
     score_left: i32,
     score_right: i32,

@@ -3,9 +3,9 @@ use super::{Anchor, Anchored, FontAsset, FontHandle, MouseReactive, Stretch, Str
 ///! A clickable button.
 use amethyst_assets::{AssetStorage, Loader};
 use amethyst_core::Parent;
+use amethyst_core::specs::prelude::{Entities, Entity, Read, ReadExpect, World, WriteStorage};
 use amethyst_renderer::Texture;
 use shred::SystemData;
-use specs::{Entities, Entity, Fetch, World, WriteStorage};
 
 const DEFAULT_Z: f32 = -1.0;
 const DEFAULT_WIDTH: f32 = 128.0;
@@ -18,9 +18,9 @@ const DEFAULT_FONT_NAME: &'static str = "font/square.ttf";
 /// Container that wraps the resources we need to initialize button defaults
 #[derive(SystemData)]
 pub struct UiButtonResources<'a> {
-    font_asset: Fetch<'a, AssetStorage<FontAsset>>,
-    loader: Fetch<'a, Loader>,
-    texture_asset: Fetch<'a, AssetStorage<Texture>>,
+    font_asset: Read<'a, AssetStorage<FontAsset>>,
+    loader: ReadExpect<'a, Loader>,
+    texture_asset: Read<'a, AssetStorage<Texture>>,
 }
 
 /// Container for all the resources the builder needs to make a new UiButton.
@@ -39,14 +39,14 @@ struct UiButtonBuilderResources<'a> {
 impl<'a> UiButtonResources<'a> {
     /// Grab the resources we need from the world.
     pub fn from_world(world: &'a World) -> Self {
-        Self::fetch(&world.res, 0)
+        Self::fetch(&world.res)
     }
 }
 
 impl<'a> UiButtonBuilderResources<'a> {
     /// Grab the resources we need from the world.
     pub fn from_world(world: &'a World) -> Self {
-        Self::fetch(&world.res, 0)
+        Self::fetch(&world.res)
     }
 }
 

@@ -1,5 +1,6 @@
 use amethyst_core::cgmath::{Deg, Vector3};
-use amethyst_core::specs::{Fetch, FetchMut, Join, ReadStorage, System, WriteStorage};
+use amethyst_core::specs::prelude::{Join, Read, ReadExpect, ReadStorage, System, Write,
+                                    WriteStorage};
 use amethyst_core::timing::Time;
 use amethyst_core::transform::Transform;
 use amethyst_input::InputHandler;
@@ -56,9 +57,9 @@ where
     B: Send + Sync + Hash + Eq + Clone + 'static,
 {
     type SystemData = (
-        Fetch<'a, Time>,
+        Read<'a, Time>,
         WriteStorage<'a, Transform>,
-        Fetch<'a, InputHandler<A, B>>,
+        Read<'a, InputHandler<A, B>>,
         ReadStorage<'a, FlyControlTag>,
     );
 
@@ -101,8 +102,8 @@ where
     B: Send + Sync + Hash + Eq + Clone + 'static,
 {
     type SystemData = (
-        Fetch<'a, InputHandler<A, B>>,
-        Fetch<'a, ScreenDimensions>,
+        Read<'a, InputHandler<A, B>>,
+        ReadExpect<'a, ScreenDimensions>,
         WriteStorage<'a, Transform>,
         ReadStorage<'a, FlyControlTag>,
     );
@@ -133,7 +134,7 @@ where
 pub struct MouseCenterLockSystem;
 
 impl<'a> System<'a> for MouseCenterLockSystem {
-    type SystemData = (Fetch<'a, ScreenDimensions>, FetchMut<'a, WindowMessages>);
+    type SystemData = (ReadExpect<'a, ScreenDimensions>, Write<'a, WindowMessages>);
 
     fn run(&mut self, (dim, mut msg): Self::SystemData) {
         let half_x = dim.width() as i32 / 2;

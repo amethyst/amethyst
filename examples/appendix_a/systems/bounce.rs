@@ -3,7 +3,7 @@ use amethyst::assets::AssetStorage;
 use amethyst::audio::Source;
 use amethyst::audio::output::Output;
 use amethyst::core::transform::Transform;
-use amethyst::ecs::{Fetch, Join, ReadStorage, System, WriteStorage};
+use amethyst::ecs::prelude::{Join, Read, ReadExpect, ReadStorage, System, WriteStorage};
 use audio::{play_bounce, Sounds};
 use config::ArenaConfig;
 
@@ -16,10 +16,10 @@ impl<'s> System<'s> for BounceSystem {
         WriteStorage<'s, Ball>,
         ReadStorage<'s, Paddle>,
         ReadStorage<'s, Transform>,
-        Fetch<'s, AssetStorage<Source>>,
-        Fetch<'s, Sounds>,
-        Fetch<'s, Option<Output>>,
-        Fetch<'s, ArenaConfig>,
+        Read<'s, AssetStorage<Source>>,
+        ReadExpect<'s, Sounds>,
+        Read<'s, Option<Output>>,
+        Read<'s, ArenaConfig>,
     );
 
     fn run(

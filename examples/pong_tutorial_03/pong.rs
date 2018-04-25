@@ -1,7 +1,7 @@
 use amethyst::assets::Loader;
 use amethyst::core::cgmath::Vector3;
 use amethyst::core::transform::{GlobalTransform, Transform};
-use amethyst::ecs::{Component, DenseVecStorage};
+use amethyst::ecs::prelude::{Component, DenseVecStorage};
 use amethyst::prelude::*;
 use amethyst::renderer::{Camera, Event, KeyboardInput, Material, MaterialDefaults, MeshHandle,
                          PosTex, VirtualKeyCode, WindowEvent};

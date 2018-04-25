@@ -1,7 +1,7 @@
 use std::mem;
 
 use amethyst_core::GlobalTransform;
-use amethyst_core::specs::{Join, ReadStorage};
+use amethyst_core::specs::prelude::{Join, ReadStorage};
 use gfx::traits::Pod;
 
 use cam::Camera;

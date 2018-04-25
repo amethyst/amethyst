@@ -1,6 +1,6 @@
 //! Physically-based material.
 
-use amethyst_core::specs::{Component, DenseVecStorage};
+use amethyst_core::specs::prelude::{Component, DenseVecStorage};
 
 use tex::TextureHandle;
 

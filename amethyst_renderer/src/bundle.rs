@@ -5,7 +5,7 @@ use {AmbientColor, Camera, Light, Material, MaterialDefaults, Mesh, Rgba, Screen
 use amethyst_assets::{AssetStorage, Handle, Loader};
 use amethyst_core::bundle::{ECSBundle, Result, ResultExt};
 use amethyst_core::orientation::Orientation;
-use amethyst_core::specs::{DispatcherBuilder, World};
+use amethyst_core::specs::prelude::{DispatcherBuilder, World};
 use amethyst_core::transform::components::*;
 use config::DisplayConfig;
 use pipe::{PipelineBuild, PolyPipeline};
@@ -90,13 +90,13 @@ impl<'a, 'b, 'c, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> ECSBundle
         world.add_resource(ScreenDimensions::new(width, height));
         if let Some(dep) = self.visibility_sorting {
             world.add_resource(Visibility::default());
-            builder = builder.add(
+            builder = builder.with(
                 VisibilitySortingSystem::new(),
                 "visibility_sorting_system",
                 dep,
             );
         };
-        Ok(builder.add_thread_local(system))
+        Ok(builder.with_thread_local(system))
     }
 }
 

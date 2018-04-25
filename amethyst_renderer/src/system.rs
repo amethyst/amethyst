@@ -7,7 +7,7 @@ use std::sync::Arc;
 use amethyst_assets::{AssetStorage, HotReloadStrategy};
 use amethyst_core::Time;
 use amethyst_core::shred::Resources;
-use amethyst_core::specs::{Fetch, FetchMut, RunNow, SystemData};
+use amethyst_core::specs::prelude::{Read, ReadExpect, RunNow, SystemData, Write, WriteExpect};
 use rayon::ThreadPool;
 use shrev::EventChannel;
 use winit::{DeviceEvent, Event, WindowEvent};
@@ -142,17 +142,17 @@ where
 }
 
 type AssetLoadingData<'a> = (
-    Fetch<'a, Time>,
-    Fetch<'a, Arc<ThreadPool>>,
-    Option<Fetch<'a, HotReloadStrategy>>,
-    FetchMut<'a, AssetStorage<Mesh>>,
-    FetchMut<'a, AssetStorage<Texture>>,
+    Read<'a, Time>,
+    ReadExpect<'a, Arc<ThreadPool>>,
+    Option<Read<'a, HotReloadStrategy>>,
+    Write<'a, AssetStorage<Mesh>>,
+    Write<'a, AssetStorage<Texture>>,
 );
 
-type WindowData<'a> = (FetchMut<'a, WindowMessages>, FetchMut<'a, ScreenDimensions>);
+type WindowData<'a> = (Write<'a, WindowMessages>, WriteExpect<'a, ScreenDimensions>);
 
 type RenderData<'a, P> = (
-    FetchMut<'a, EventChannel<Event>>,
+    WriteExpect<'a, EventChannel<Event>>,
     <P as PipelineData<'a>>::Data,
 );
 
@@ -163,9 +163,15 @@ where
     fn run_now(&mut self, res: &'a Resources) {
         #[cfg(feature = "profiler")]
         profile_scope!("render_system");
-        self.asset_loading(AssetLoadingData::fetch(res, 0));
-        self.window_management(WindowData::fetch(res, 0));
-        self.render(RenderData::<P>::fetch(res, 0));
+        self.asset_loading(AssetLoadingData::fetch(res));
+        self.window_management(WindowData::fetch(res));
+        self.render(RenderData::<P>::fetch(res));
+    }
+
+    fn setup(&mut self, res: &mut Resources) {
+        AssetLoadingData::setup(res);
+        WindowData::setup(res);
+        RenderData::<P>::setup(res);
     }
 }
 

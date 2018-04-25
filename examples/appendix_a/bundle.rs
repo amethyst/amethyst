@@ -2,7 +2,7 @@ use {Ball, Paddle, ScoreBoard};
 use amethyst::config::Config;
 use amethyst::core::bundle::{ECSBundle, Result};
 use amethyst::core::timing::Time;
-use amethyst::ecs::{DispatcherBuilder, World};
+use amethyst::ecs::prelude::{DispatcherBuilder, World};
 use config::PongConfig;
 use std::path::Path;
 use systems::{BounceSystem, MoveBallsSystem, PaddleSystem, WinnerSystem};
@@ -36,14 +36,14 @@ impl<'a, 'b> ECSBundle<'a, 'b> for PongBundle {
         world.register::<Paddle>();
 
         Ok(builder
-            .add(PaddleSystem, "paddle_system", &["input_system"])
-            .add(MoveBallsSystem, "ball_system", &[])
-            .add(
+            .with(PaddleSystem, "paddle_system", &["input_system"])
+            .with(MoveBallsSystem, "ball_system", &[])
+            .with(
                 BounceSystem,
                 "collision_system",
                 &["paddle_system", "ball_system"],
             )
-            .add(
+            .with(
                 WinnerSystem,
                 "winner_system",
                 &["paddle_system", "ball_system"],

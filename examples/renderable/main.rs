@@ -12,7 +12,8 @@ use amethyst::core::cgmath::{Array, Deg, Euler, Quaternion, Rad, Rotation, Rotat
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::timing::Time;
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
-use amethyst::ecs::{Entity, Fetch, FetchMut, Join, ReadStorage, System, World, WriteStorage};
+use amethyst::ecs::prelude::{Entity, Join, Read, ReadStorage, System, World, WriteExpect,
+                             WriteStorage};
 use amethyst::input::InputBundle;
 use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, DisplayConfig, DrawShaded,
                          ElementState, Event, KeyboardInput, Light, Material, MaterialDefaults,
@@ -38,12 +39,12 @@ struct ExampleSystem;
 impl<'a> System<'a> for ExampleSystem {
     type SystemData = (
         WriteStorage<'a, Light>,
-        Fetch<'a, Time>,
+        Read<'a, Time>,
         ReadStorage<'a, Camera>,
         WriteStorage<'a, Transform>,
-        FetchMut<'a, DemoState>,
+        WriteExpect<'a, DemoState>,
         WriteStorage<'a, UiText>,
-        Fetch<'a, FPSCounter>,
+        Read<'a, FPSCounter>,
     );
 
 fn run(&mut self, (mut lights, time, camera, mut transforms, mut state, mut ui_text, fps_counter): Self::SystemData){

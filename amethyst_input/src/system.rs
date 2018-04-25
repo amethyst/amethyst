@@ -3,7 +3,7 @@
 use std::hash::Hash;
 use std::marker;
 
-use amethyst_core::specs::{Fetch, FetchMut, System};
+use amethyst_core::specs::prelude::{ReadExpect, System, Write, WriteExpect};
 use shrev::{EventChannel, ReaderId};
 use winit::Event;
 
@@ -47,9 +47,9 @@ where
     AC: Hash + Eq + Clone + Send + Sync + 'static,
 {
     type SystemData = (
-        Fetch<'a, EventChannel<Event>>,
-        FetchMut<'a, InputHandler<AX, AC>>,
-        FetchMut<'a, EventChannel<InputEvent<AC>>>,
+        ReadExpect<'a, EventChannel<Event>>,
+        Write<'a, InputHandler<AX, AC>>,
+        WriteExpect<'a, EventChannel<InputEvent<AC>>>,
     );
 
     fn run(&mut self, (input, mut handler, mut output): Self::SystemData) {
