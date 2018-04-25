@@ -3,7 +3,7 @@ use std::mem;
 use amethyst_assets::AssetStorage;
 use amethyst_core::GlobalTransform;
 use amethyst_core::cgmath::{Matrix4, One, SquareMatrix};
-use amethyst_core::specs::{Fetch, Join, ReadStorage};
+use amethyst_core::specs::prelude::{Join, Read, ReadStorage};
 
 use cam::{ActiveCamera, Camera};
 use mesh::Mesh;
@@ -289,7 +289,7 @@ pub(crate) fn draw_mesh(
 }
 
 pub(crate) fn get_camera<'a>(
-    active: Option<Fetch<'a, ActiveCamera>>,
+    active: Option<Read<'a, ActiveCamera>>,
     camera: &'a ReadStorage<Camera>,
     global: &'a ReadStorage<GlobalTransform>,
 ) -> Option<(&'a Camera, &'a GlobalTransform)> {

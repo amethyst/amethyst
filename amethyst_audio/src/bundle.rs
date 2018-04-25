@@ -4,8 +4,7 @@ use std::marker::PhantomData;
 
 use amethyst_assets::{AssetStorage, Processor};
 use amethyst_core::bundle::{ECSBundle, Result};
-use amethyst_core::shred::ResourceId;
-use amethyst_core::specs::{DispatcherBuilder, World};
+use amethyst_core::specs::prelude::{DispatcherBuilder, World};
 
 use output::{default_output, Output};
 use sink::AudioSink;
@@ -62,7 +61,8 @@ where
     ) -> Result<DispatcherBuilder<'a, 'b>> {
         // Remove option here when specs get support for optional fetch in
         // released version
-        if !world.res.has_value(ResourceId::new::<Option<Output>>()) {
+
+        if !world.res.has_value::<Option<Output>>() {
             world.add_resource(default_output());
         }
 
@@ -76,8 +76,8 @@ where
         if let Some(sink) = sink {
             world.add_resource(sink);
             builder = builder
-                .add(Processor::<Source>::new(), "source_processor", &[])
-                .add(DjSystem::new(self.picker), "dj_system", self.dep);
+                .with(Processor::<Source>::new(), "source_processor", &[])
+                .with(DjSystem::new(self.picker), "dj_system", self.dep);
         }
 
         Ok(builder)

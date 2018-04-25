@@ -1,5 +1,5 @@
 use super::ScaleMode;
-use amethyst_core::specs::{Component, DenseVecStorage, FlaggedStorage};
+use amethyst_core::specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
 use std::marker::PhantomData;
 
 /// The UiTransform represents the transformation of a ui element.

@@ -7,7 +7,7 @@ extern crate genmesh;
 use amethyst::assets::{AssetStorage, Handle, Loader};
 use amethyst::core::{GlobalTransform, Parent, Transform, TransformBundle};
 use amethyst::core::cgmath::Deg;
-use amethyst::ecs::{Entity, World};
+use amethyst::ecs::prelude::{Entity, World};
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, ElementState, Event,
                          KeyboardInput, Light, Mesh, Pipeline, PointLight, PosNormTex, Projection,

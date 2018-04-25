@@ -17,9 +17,9 @@ mod sprite;
 mod sprite_sheet_loader;
 
 use amethyst::assets::{AssetStorage, Loader};
-use amethyst::core::cgmath::{Matrix4, Transform as CgTransform, Vector3};
+use amethyst::core::cgmath::{Matrix4, Transform as CgTransform, Vector3, Point3};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
-use amethyst::ecs::Entity;
+use amethyst::ecs::prelude::Entity;
 use amethyst::input::InputBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{Camera, ColorMask, DisplayConfig, DrawFlat, Event, KeyboardInput,
@@ -96,7 +96,8 @@ impl State for Example {
 
             // This combines multiple `Transform`ations.
             // You need to `use amethyst::core::cgmath::Transform`;
-            sprite_transform.concat_self(&common_transform);
+
+            CgTransform::<Point3<f32>>::concat_self(&mut sprite_transform, &common_transform);
 
             let mesh = {
                 let loader = world.read_resource::<Loader>();

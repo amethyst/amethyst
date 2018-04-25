@@ -1,8 +1,8 @@
 use amethyst_core::GlobalTransform;
 use amethyst_core::cgmath::{Matrix4, SquareMatrix};
-use amethyst_core::specs::{Join, ReadStorage, System, WriteStorage};
+use amethyst_core::specs::prelude::{BitSet, InsertedFlag, Join, ModifiedFlag, ReadStorage,
+                                    ReaderId, System, WriteStorage};
 use amethyst_renderer::JointTransforms;
-use hibitset::BitSet;
 
 use super::resources::*;
 
@@ -16,13 +16,20 @@ pub struct VertexSkinningSystem {
     joint_matrices: Vec<Matrix4<f32>>,
     /// Also scratch space, used while determining which skins need to be updated.
     updated: BitSet,
+    updated_skins: BitSet,
+    /// Used for tracking modifications to global transforms
+    updated_id: ReaderId<ModifiedFlag>,
+    inserted_id: ReaderId<InsertedFlag>,
 }
 
 impl VertexSkinningSystem {
-    pub fn new() -> Self {
+    pub fn new(inserted_id: ReaderId<InsertedFlag>, updated_id: ReaderId<ModifiedFlag>) -> Self {
         Self {
             joint_matrices: Vec::new(),
             updated: BitSet::new(),
+            updated_skins: BitSet::new(),
+            inserted_id,
+            updated_id,
         }
     }
 }
@@ -36,16 +43,15 @@ impl<'a> System<'a> for VertexSkinningSystem {
     );
 
     fn run(&mut self, (joints, transforms, skins, mut matrices): Self::SystemData) {
-        // for flagged joint transforms, calculate a new set of joint matrices for the related skin
-        let updated_iter = (&joints, transforms.open().1)
-            .join()
-            .map(|(joint, _)| joint.skin.id());
         self.updated.clear();
-        for updated in updated_iter {
-            self.updated.add(updated);
+        transforms.populate_modified(&mut self.updated_id, &mut self.updated);
+        transforms.populate_inserted(&mut self.inserted_id, &mut self.updated);
+        self.updated_skins.clear();
+        for (_, joint) in (&self.updated, &joints).join() {
+            self.updated_skins.add(joint.skin.id());
         }
 
-        for (_id, skin) in (&self.updated, &skins).join() {
+        for (_id, skin) in (&self.updated_skins, &skins).join() {
             // Compute the joint transforms
             self.joint_matrices.clear();
             self.joint_matrices.extend(
@@ -75,7 +81,9 @@ impl<'a> System<'a> for VertexSkinningSystem {
             }
         }
 
-        for (mesh_global, mut joint_transform) in (transforms.open().1, &mut matrices).join() {
+        for (_, mesh_global, mut joint_transform) in
+            (&self.updated, &transforms, &mut matrices).join()
+        {
             if let Some(global_inverse) = mesh_global.0.invert() {
                 let skin = skins.get(joint_transform.skin).unwrap();
                 let joint_matrices = skin.joints

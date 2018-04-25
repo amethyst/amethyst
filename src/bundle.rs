@@ -1,13 +1,13 @@
+use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::time::Duration;
 
 use assets::Loader;
 use core::{ECSBundle, Result, Stopwatch, Time};
 use core::frame_limiter::FrameLimiter;
-use ecs::{DispatcherBuilder, World};
 use ecs::common::Errors;
-use rayon::{Configuration, ThreadPool};
+use ecs::prelude::{DispatcherBuilder, World};
+use rayon::ThreadPoolBuilder;
 use renderer::Event;
 use shrev::EventChannel;
 #[cfg(feature = "profiler")]
@@ -31,12 +31,13 @@ impl<'a, 'b> ECSBundle<'a, 'b> for AppBundle {
         world: &mut World,
         dispatcher: DispatcherBuilder<'a, 'b>,
     ) -> Result<DispatcherBuilder<'a, 'b>> {
-        let cfg = Configuration::new();
+        let builder = ThreadPoolBuilder::new();
         #[cfg(feature = "profiler")]
-        let cfg = cfg.start_handler(|index| {
+        let builder = builder.start_handler(|index| {
             register_thread_with_profiler(format!("thread_pool{}", index));
         });
-        let pool = ThreadPool::new(cfg)
+        let pool = builder
+            .build()
             .map(|p| Arc::new(p))
             .map_err(|err| err.description().to_string())?;
         world.add_resource(Loader::new(self.path, pool.clone()));
@@ -45,9 +46,7 @@ impl<'a, 'b> ECSBundle<'a, 'b> for AppBundle {
         world.add_resource(pool);
         world.add_resource(FrameLimiter::default());
         world.add_resource(Stopwatch::default());
-        let mut time = Time::default();
-        time.set_fixed_time(Duration::new(0, 16666666));
-        world.add_resource(time);
+        world.add_resource(Time::default());
         Ok(dispatcher)
     }
 }

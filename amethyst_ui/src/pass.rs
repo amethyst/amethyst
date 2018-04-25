@@ -5,7 +5,8 @@ use std::hash::{Hash, Hasher};
 
 use amethyst_assets::{AssetStorage, Loader, WeakHandle};
 use amethyst_core::cgmath::vec4;
-use amethyst_core::specs::{Entities, Entity, Fetch, Join, ReadStorage, WriteStorage};
+use amethyst_core::specs::prelude::{Entities, Entity, Join, Read, ReadExpect, ReadStorage,
+                                    WriteStorage};
 use amethyst_renderer::{Encoder, Factory, Mesh, PosTex, Resources, ScreenDimensions, Texture,
                         TextureData, TextureHandle, TextureMetadata, VertexFormat};
 use amethyst_renderer::error::Result;
@@ -95,11 +96,11 @@ impl DrawUi {
 impl<'a> PassData<'a> for DrawUi {
     type Data = (
         Entities<'a>,
-        Fetch<'a, Loader>,
-        Fetch<'a, ScreenDimensions>,
-        Fetch<'a, AssetStorage<Texture>>,
-        Fetch<'a, AssetStorage<FontAsset>>,
-        Fetch<'a, UiFocused>,
+        ReadExpect<'a, Loader>,
+        ReadExpect<'a, ScreenDimensions>,
+        Read<'a, AssetStorage<Texture>>,
+        Read<'a, AssetStorage<FontAsset>>,
+        Read<'a, UiFocused>,
         ReadStorage<'a, UiImage>,
         ReadStorage<'a, UiTransform>,
         WriteStorage<'a, UiText>,
@@ -183,7 +184,7 @@ impl Pass for DrawUi {
 
         // Attempt to insert the new entities in sorted position.  Should reduce work during
         // the sorting step.
-        let transform_set = ui_transform.check();
+        let transform_set = ui_transform.mask().clone();
         {
             // Create a bitset containing only the new indices.
             let new = (&transform_set ^ &self.cached_draw_order.cached) & &transform_set;

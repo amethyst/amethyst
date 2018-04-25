@@ -15,11 +15,11 @@ use shrev::{EventChannel, ReaderId};
 use thread_profiler::{register_thread_with_profiler, write_profile};
 use winit::{Event, WindowEvent};
 
-use assets::{Asset, Loader, Source};
+use assets::{Loader, Source};
 use core::frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy};
 use core::timing::{Stopwatch, Time};
-use ecs::{Component, Dispatcher, DispatcherBuilder, System, World};
 use ecs::common::Errors;
+use ecs::prelude::{Component, Dispatcher, DispatcherBuilder, System, World};
 use error::{Error, Result};
 use state::{State, StateMachine};
 use vergen;
@@ -275,10 +275,17 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// ~~~no_run
     /// use amethyst::prelude::*;
-    /// use amethyst::core::transform::{Parent, Transform, TransformSystem};
+    /// use amethyst::core::transform::{Parent, Transform};
+    /// use amethyst::ecs::prelude::System;
     ///
     /// struct NullState;
     /// impl State for NullState {}
+    ///
+    /// struct NopSystem;
+    /// impl<'a> System<'a> for NopSystem {
+    ///     type SystemData = ();
+    ///     fn run(&mut self, _: Self::SystemData) {}
+    /// }
     ///
     /// // initialize the builder, the `ApplicationBuilder` object
     /// // follows the use pattern of most builder objects found
@@ -292,7 +299,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///     .register::<Transform>()
     ///
     /// // systems can be added before the game is run
-    ///     .with::<TransformSystem>(TransformSystem::new(), "transform_system", &[])
+    ///     .with::<NopSystem>(NopSystem, "nop_system", &[])
     ///
     /// // lastly we can build the Application object
     ///     .build()
@@ -366,7 +373,8 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// ~~~no_run
     /// use amethyst::prelude::*;
-    /// use amethyst::ecs::{Component, HashMapStorage};
+    /// use amethyst::ecs::prelude::Component;
+    /// use amethyst::ecs::storage::HashMapStorage;
     ///
     /// struct NullState;
     /// impl State for NullState {}
@@ -397,6 +405,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     pub fn register<C>(mut self) -> Self
     where
         C: Component,
+        C::Storage: Default,
     {
         self.world.register::<C>();
         self
@@ -469,7 +478,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// ~~~no_run
     /// use amethyst::prelude::*;
-    /// use amethyst::ecs::System;
+    /// use amethyst::ecs::prelude::System;
     ///
     /// struct NullState;
     /// impl State for NullState {}
@@ -491,7 +500,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///     .with(NopSystem, "doggo", &[]);
     /// ~~~
     pub fn with_barrier(mut self) -> Self {
-        self.disp_builder = self.disp_builder.add_barrier();
+        self.disp_builder = self.disp_builder.with_barrier();
         self
     }
 
@@ -529,7 +538,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// ~~~no_run
     /// use amethyst::prelude::*;
-    /// use amethyst::ecs::System;
+    /// use amethyst::ecs::prelude::System;
     ///
     /// struct NullState;
     /// impl State for NullState {}
@@ -554,7 +563,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     where
         for<'c> S: System<'c> + Send + 'a,
     {
-        self.disp_builder = self.disp_builder.add(system, name, dependencies);
+        self.disp_builder = self.disp_builder.with(system, name, dependencies);
         self
     }
 
@@ -584,7 +593,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// ~~~no_run
     /// use amethyst::prelude::*;
-    /// use amethyst::ecs::System;
+    /// use amethyst::ecs::prelude::System;
     ///
     /// struct NullState;
     /// impl State for NullState {}
@@ -604,7 +613,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     where
         for<'c> S: System<'c> + 'b,
     {
-        self.disp_builder = self.disp_builder.add_thread_local(system);
+        self.disp_builder = self.disp_builder.with_thread_local(system);
         self
     }
 
@@ -665,7 +674,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// use amethyst::prelude::*;
     /// use amethyst::assets::{Directory, Loader};
     /// use amethyst::renderer::ObjFormat;
-    /// use amethyst::ecs::World;
+    /// use amethyst::ecs::prelude::World;
     ///
     /// let mut game = Application::build("assets/", LoadingState)
     ///     .expect("Failed to initialize")
@@ -759,43 +768,6 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
         self
     }
 
-    /// Register a new asset type with the Application. All required components
-    /// related to the storage of this asset type will be registered. Since
-    /// Amethyst uses AssetFutures to allow for async content loading, Amethyst
-    /// needs to have a system that translates AssetFutures into Components as
-    /// they resolve. Amethyst registers a system to accomplish this.
-    ///
-    /// # Parameters
-    ///
-    /// `make_context`: A closure that returns an initialized `Asset::Context`
-    ///                 object. This is given the a reference to the world object
-    ///                 to allow it to find any resources previously registered.
-    ///
-    /// # Type Parameters
-    ///
-    /// - `A`: The asset type, an `Asset` in reference to Amethyst is a component
-    ///        that implements the [`Asset`](../amethyst_assets/trait.Asset.html) trait.
-    /// - `F`: A function that returns the `Asset::Context` context object.
-    ///
-    /// # Returns
-    ///
-    /// This function returns ApplicationBuilder after it has modified it.
-    ///
-    ///
-    // TODO: Create example of this function. It might be easier to build a large
-    //       example of a custom type in the `Asset` trait docs
-    pub fn register_asset<A>(mut self) -> Self
-    where
-        A: Asset,
-    {
-        use assets::{AssetStorage, Handle};
-
-        self.world.add_resource(AssetStorage::<A>::new());
-        self.world.register::<Handle<A>>();
-
-        self
-    }
-
     /// Build an `Application` object using the `ApplicationBuilder` as configured.
     ///
     /// # Returns
@@ -816,7 +788,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// See the [example show for `ApplicationBuilder::new()`](struct.ApplicationBuilder.html#examples)
     /// for an example on how this method is used.
-    pub fn build(self) -> Result<Application<'a, 'b>>
+    pub fn build(mut self) -> Result<Application<'a, 'b>>
     where
         T: State + 'a,
     {
@@ -833,15 +805,18 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
             .write_resource::<EventChannel<Event>>()
             .register_reader();
 
+        #[cfg(not(no_threading))]
+        let mut dispatcher = self.disp_builder.with_pool(pool).build();
+        #[cfg(no_threading)]
+        let mut dispatcher = self.disp_builder.build();
+        dispatcher.setup(&mut self.world.res);
+
         Ok(Application {
             world: self.world,
             // config: self.config,
             states: StateMachine::new(self.initial_state),
             events_reader_id: reader_id,
-            #[cfg(not(no_threading))]
-            dispatcher: self.disp_builder.with_pool(pool).build(),
-            #[cfg(no_threading)]
-            dispatcher: self.disp_builder.build(),
+            dispatcher,
             ignore_window_close: self.ignore_window_close,
         })
     }

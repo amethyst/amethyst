@@ -2,7 +2,7 @@
 //!
 //! TODO: Remove redundant padding once `#[repr(align(...))]` stabilizes.
 
-use amethyst_core::specs::{Component, DenseVecStorage};
+use amethyst_core::specs::prelude::{Component, DenseVecStorage};
 use gfx;
 
 use color::Rgba;

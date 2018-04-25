@@ -1,8 +1,8 @@
 use std::cmp::Ordering;
 use std::ops::Range;
 
-use amethyst_core::specs::{Component, DenseVecStorage, Entities, Entity, Fetch, FetchMut, Join,
-                           ReadStorage, System, WriteStorage};
+use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entities, Entity, Join, Read,
+                                    ReadExpect, ReadStorage, System, Write, WriteStorage};
 use amethyst_core::timing::Time;
 use clipboard::{ClipboardContext, ClipboardProvider};
 use hibitset::BitSet;
@@ -153,9 +153,9 @@ impl<'a> System<'a> for UiSystem {
         WriteStorage<'a, UiText>,
         WriteStorage<'a, TextEditing>,
         ReadStorage<'a, UiTransform>,
-        FetchMut<'a, UiFocused>,
-        Fetch<'a, EventChannel<Event>>,
-        Fetch<'a, Time>,
+        Write<'a, UiFocused>,
+        ReadExpect<'a, EventChannel<Event>>,
+        Read<'a, Time>,
     );
 
     fn run(
@@ -180,7 +180,7 @@ impl<'a> System<'a> for UiSystem {
 
         // Attempt to insert the new entities in sorted position.  Should reduce work during
         // the sorting step.
-        let transform_set = transform.check();
+        let transform_set = transform.mask().clone();
         {
             // Create a bitset containing only the new indices.
             let new = (&transform_set ^ &self.tab_order_cache.cached) & &transform_set;

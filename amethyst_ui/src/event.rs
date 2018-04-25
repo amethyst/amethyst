@@ -1,5 +1,6 @@
-use amethyst_core::specs::{Component, Entities, Entity, Fetch, FetchMut, Join, NullStorage,
-                           ReadStorage, System};
+use amethyst_core::specs::prelude::{Component, Entities, Entity, Join, Read, ReadStorage, System,
+                                    WriteExpect};
+use amethyst_core::specs::storage::NullStorage;
 use amethyst_input::InputHandler;
 use amethyst_renderer::MouseButton;
 use shrev::EventChannel;
@@ -82,8 +83,8 @@ where
         Entities<'a>,
         ReadStorage<'a, UiTransform>,
         ReadStorage<'a, MouseReactive>,
-        Fetch<'a, InputHandler<A, B>>,
-        FetchMut<'a, EventChannel<UiEvent>>,
+        Read<'a, InputHandler<A, B>>,
+        WriteExpect<'a, EventChannel<UiEvent>>,
     );
 
     fn run(&mut self, (entities, transform, react, input, mut events): Self::SystemData) {
