@@ -16,7 +16,8 @@ use amethyst_core::Time;
 use amethyst_core::specs::{Dispatcher, DispatcherBuilder, Fetch, FetchMut, System, VecStorage,
                            World};
 use amethyst_core::specs::common::Errors;
-use rayon::ThreadPool;
+
+use rayon::{ThreadPool, ThreadPoolBuilder};
 
 struct App {
     dispatcher: Dispatcher<'static, 'static>,
@@ -29,7 +30,7 @@ impl App {
         let mut world = World::new();
 
         // Note: in an actual application, you'd want to share the thread pool.
-        let pool = Arc::new(ThreadPool::new(Default::default()).expect("Invalid config"));
+        let pool = Arc::new(ThreadPoolBuilder::new().build().expect("Invalid config"));
 
         world.register::<MeshHandle>();
 

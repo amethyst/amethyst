@@ -19,7 +19,7 @@ cgmath = { version = "0.16", features = ["serde", "mint"] }
 error-chain = "0.11"
 fnv = "1.0"
 hibitset = "0.3.2"
-rayon = "0.8"
+rayon = "1.0"
 serde = { version = "1", features = ["serde_derive"] }
 shred = "0.5"
 specs = { version = "0.10", features = ["common"] }

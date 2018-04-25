@@ -28,8 +28,7 @@ fnv = "1"
 hibitset = "0.3.1"
 log = "0.4"
 parking_lot = "0.4.4"
-rayon = "0.8"
-
+rayon = "1.0"
 thread_profiler = { version = "0.1", optional = true }
 
 [dev-dependencies]
