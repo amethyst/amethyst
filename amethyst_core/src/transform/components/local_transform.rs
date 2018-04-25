@@ -1,8 +1,8 @@
 //! Local transform component.
 
-use cgmath::{Array, Deg, ElementWise, EuclideanSpace, InnerSpace, Matrix3, Matrix4, One, Point3,
-             Quaternion, Rotation, Rotation3, SquareMatrix, Transform as CgTransform, Vector3,
-             Zero};
+use cgmath::{Array, Basis2, Deg, ElementWise, EuclideanSpace, Euler, InnerSpace, Matrix3, Matrix4,
+             One, Point2, Point3, Quaternion, Rotation, Rotation2, Rotation3, SquareMatrix,
+             Transform as CgTransform, Vector2, Vector3, Zero};
 use orientation::Orientation;
 use specs::{Component, DenseVecStorage, FlaggedStorage};
 
@@ -220,9 +220,78 @@ impl CgTransform<Point3<f32>> for Transform {
             .rotate_vector(vec.mul_element_wise(self.scale))
     }
 
+    fn inverse_transform_vector(&self, vec: Vector3<f32>) -> Option<Vector3<f32>> {
+        if ulps_eq!(self.scale, &Vector3::zero()) {
+            None
+        } else {
+            Some(
+                self.rotation
+                    .invert()
+                    .rotate_vector(vec.div_element_wise(self.scale)),
+            )
+        }
+    }
+
     fn transform_point(&self, point: Point3<f32>) -> Point3<f32> {
         let p = Point3::from_vec(point.to_vec().mul_element_wise(self.scale));
         self.rotation.rotate_point(p) + self.translation
+    }
+
+    fn concat(&self, other: &Self) -> Self {
+        Self {
+            scale: self.scale.mul_element_wise(other.scale),
+            rotation: self.rotation * other.rotation,
+            translation: self.rotation
+                .rotate_vector(other.translation.mul_element_wise(self.scale))
+                + self.translation,
+        }
+    }
+
+    fn inverse_transform(&self) -> Option<Self> {
+        if ulps_eq!(self.scale, Vector3::zero()) {
+            None
+        } else {
+            let scale = 1. / self.scale;
+            let rotation = self.rotation.invert();
+            let translation = rotation
+                .rotate_vector(self.translation)
+                .mul_element_wise(-scale);
+            Some(Self {
+                translation,
+                rotation,
+                scale,
+            })
+        }
+    }
+}
+
+impl CgTransform<Point2<f32>> for Transform {
+    fn one() -> Self {
+        Default::default()
+    }
+
+    fn look_at(_eye: Point2<f32>, _center: Point2<f32>, _up: Vector2<f32>) -> Self {
+        panic!("Can't compute look at for 2D")
+    }
+
+    fn transform_vector(&self, vec: Vector2<f32>) -> Vector2<f32> {
+        let rot: Basis2<f32> = Rotation2::from_angle(-Euler::from(self.rotation).z);
+        rot.rotate_vector(vec.mul_element_wise(self.scale.truncate()))
+    }
+
+    fn inverse_transform_vector(&self, vec: Vector2<f32>) -> Option<Vector2<f32>> {
+        if ulps_eq!(self.scale, &Vector3::zero()) {
+            None
+        } else {
+            let rot: Basis2<f32> = Rotation2::from_angle(-Euler::from(self.rotation).z);
+            Some(rot.rotate_vector(vec.div_element_wise(self.scale.truncate())))
+        }
+    }
+
+    fn transform_point(&self, point: Point2<f32>) -> Point2<f32> {
+        let p = Point2::from_vec(point.to_vec().mul_element_wise(self.scale.truncate()));
+        let rot: Basis2<f32> = Rotation2::from_angle(-Euler::from(self.rotation).z);
+        rot.rotate_point(p) + self.translation.truncate()
     }
 
     fn concat(&self, other: &Self) -> Self {
