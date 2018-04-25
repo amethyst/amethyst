@@ -25,12 +25,9 @@ impl HotReloadBundle {
 }
 
 impl<'a, 'b> ECSBundle<'a, 'b> for HotReloadBundle {
-    fn build(
-        self,
-        _: &mut World,
-        dispatcher: DispatcherBuilder<'a, 'b>,
-    ) -> core::Result<DispatcherBuilder<'a, 'b>> {
-        Ok(dispatcher.with(HotReloadSystem::new(self.strategy), "hot_reload", &[]))
+    fn build(self, _: &mut World, dispatcher: &mut DispatcherBuilder<'a, 'b>) -> core::Result<()> {
+        dispatcher.add(HotReloadSystem::new(self.strategy), "hot_reload", &[]);
+        Ok(())
     }
 }
 

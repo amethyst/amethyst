@@ -51,27 +51,23 @@ where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,
 {
-    fn build(
-        self,
-        _: &mut World,
-        builder: DispatcherBuilder<'a, 'b>,
-    ) -> Result<DispatcherBuilder<'a, 'b>> {
-        Ok(builder
-            .with(
-                FlyMovementSystem::<A, B>::new(
-                    self.speed,
-                    self.right_input_axis,
-                    self.up_input_axis,
-                    self.forward_input_axis,
-                ),
-                "fly_movement",
-                &[],
-            )
-            .with(
-                FreeRotationSystem::<A, B>::new(self.sensitivity_x, self.sensitivity_y),
-                "free_rotation",
-                &[],
-            )
-            .with(MouseCenterLockSystem, "mouse_lock", &["free_rotation"]))
+    fn build(self, _: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+        builder.add(
+            FlyMovementSystem::<A, B>::new(
+                self.speed,
+                self.right_input_axis,
+                self.up_input_axis,
+                self.forward_input_axis,
+            ),
+            "fly_movement",
+            &[],
+        );
+        builder.add(
+            FreeRotationSystem::<A, B>::new(self.sensitivity_x, self.sensitivity_y),
+            "free_rotation",
+            &[],
+        );
+        builder.add(MouseCenterLockSystem, "mouse_lock", &["free_rotation"]);
+        Ok(())
     }
 }

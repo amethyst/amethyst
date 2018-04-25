@@ -63,15 +63,12 @@ where
     AX: Hash + Eq + Clone + Send + Sync + 'static,
     AC: Hash + Eq + Clone + Send + Sync + 'static,
 {
-    fn build(
-        self,
-        _: &mut World,
-        builder: DispatcherBuilder<'a, 'b>,
-    ) -> Result<DispatcherBuilder<'a, 'b>> {
-        Ok(builder.with(
+    fn build(self, _: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+        builder.add(
             InputSystem::<AX, AC>::new(self.bindings),
             "input_system",
             &[],
-        ))
+        );
+        Ok(())
     }
 }

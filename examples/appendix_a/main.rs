@@ -24,6 +24,7 @@ use amethyst::ui::{DrawUi, UiBundle};
 
 use audio::Music;
 use bundle::PongBundle;
+use config::PongConfig;
 
 const AUDIO_MUSIC: &'static [&'static str] = &[
     "audio/Computer_Music_All-Stars_-_Wheres_My_Jetpack.ogg",
@@ -64,6 +65,7 @@ fn run() -> Result<()> {
             .with_pass(DrawFlat::<PosTex>::new())
             .with_pass(DrawUi::new()),
     );
+    let pong_config = PongConfig::load(&config);
     let mut game = Application::build(assets_dir, Pong)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
@@ -72,7 +74,10 @@ fn run() -> Result<()> {
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path),
         )?
-        .with_bundle(PongBundle::new(&config))?
+        .with_resource(pong_config.arena)
+        .with_resource(pong_config.ball)
+        .with_resource(pong_config.paddles)
+        .with_bundle(PongBundle::default())?
         .with_bundle(TransformBundle::new().with_dep(&["ball_system", "paddle_system"]))?
         .with_bundle(AudioBundle::new(|music: &mut Music| music.music.next()))?
         .with_bundle(UiBundle::<String, String>::new())?

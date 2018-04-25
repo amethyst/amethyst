@@ -1,7 +1,5 @@
-use {Ball, Paddle, ScoreBoard};
 use amethyst::config::Config;
 use amethyst::core::bundle::{ECSBundle, Result};
-use amethyst::core::timing::Time;
 use amethyst::ecs::prelude::{DispatcherBuilder, World};
 use config::PongConfig;
 use std::path::Path;
@@ -9,44 +7,23 @@ use systems::{BounceSystem, MoveBallsSystem, PaddleSystem, WinnerSystem};
 
 /// A bundle is a convenient way to initialise related resources, components and systems in a
 /// world. This bundle prepares the world for a game of pong.
-pub struct PongBundle {
-    config: PongConfig,
-}
-
-impl PongBundle {
-    pub fn new<P: AsRef<Path>>(path: P) -> Self {
-        PongBundle {
-            config: PongConfig::load(path),
-        }
-    }
-}
+#[derive(Default)]
+pub struct PongBundle;
 
 impl<'a, 'b> ECSBundle<'a, 'b> for PongBundle {
-    fn build(
-        self,
-        world: &mut World,
-        builder: DispatcherBuilder<'a, 'b>,
-    ) -> Result<DispatcherBuilder<'a, 'b>> {
-        world.add_resource(self.config.arena);
-        world.add_resource(self.config.ball);
-        world.add_resource(self.config.paddles);
-        world.add_resource(ScoreBoard::new());
-        world.add_resource(Time::default());
-        world.register::<Ball>();
-        world.register::<Paddle>();
-
-        Ok(builder
-            .with(PaddleSystem, "paddle_system", &["input_system"])
-            .with(MoveBallsSystem, "ball_system", &[])
-            .with(
-                BounceSystem,
-                "collision_system",
-                &["paddle_system", "ball_system"],
-            )
-            .with(
-                WinnerSystem,
-                "winner_system",
-                &["paddle_system", "ball_system"],
-            ))
+    fn build(self, _: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+        builder.add(PaddleSystem, "paddle_system", &["input_system"]);
+        builder.add(MoveBallsSystem, "ball_system", &[]);
+        builder.add(
+            BounceSystem,
+            "collision_system",
+            &["paddle_system", "ball_system"],
+        );
+        builder.add(
+            WinnerSystem,
+            "winner_system",
+            &["paddle_system", "ball_system"],
+        );
+        Ok(())
     }
 }

@@ -50,22 +50,16 @@ where
 impl<'a, 'b, 'c, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> ECSBundle<'a, 'b>
     for RenderBundle<'c, B, P>
 {
-    fn build(
-        self,
-        world: &mut World,
-        mut builder: DispatcherBuilder<'a, 'b>,
-    ) -> Result<DispatcherBuilder<'a, 'b>> {
-        use amethyst_core::specs::prelude::RunNow;
-        let mut system =
-            RenderSystem::build(self.pipe, self.config).chain_err(|| "Renderer error!")?;
-        system.setup(&mut world.res);
+    fn build(self, _: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
         if let Some(dep) = self.visibility_sorting {
-            builder = builder.with(
+            builder.add(
                 VisibilitySortingSystem::new(),
                 "visibility_sorting_system",
                 dep,
             );
         };
-        Ok(builder.with_thread_local(system))
+        builder
+            .add_thread_local(RenderSystem::build(self.pipe, self.config).chain_err(|| "Renderer error!")?);
+        Ok(())
     }
 }

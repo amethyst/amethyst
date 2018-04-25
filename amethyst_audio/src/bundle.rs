@@ -53,16 +53,12 @@ where
     F: FnMut(&mut R) -> Option<SourceHandle> + Send + 'static,
     R: Send + Sync + 'static,
 {
-    fn build(
-        self,
-        _: &mut World,
-        mut builder: DispatcherBuilder<'a, 'b>,
-    ) -> Result<DispatcherBuilder<'a, 'b>> {
-        builder = builder.with(Processor::<Source>::new(), "source_processor", &[]);
+    fn build(self, _: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+        builder.add(Processor::<Source>::new(), "source_processor", &[]);
         if let Some(_) = default_endpoint() {
-            builder = builder.with(DjSystem::new(self.picker), "dj_system", self.dep);
+            builder.add(DjSystem::new(self.picker), "dj_system", self.dep);
         }
 
-        Ok(builder)
+        Ok(())
     }
 }

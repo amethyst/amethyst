@@ -75,11 +75,8 @@ impl<'a> System<'a> for FPSCounterSystem {
 pub struct FPSCounterBundle;
 
 impl<'a, 'b> ECSBundle<'a, 'b> for FPSCounterBundle {
-    fn build(
-        self,
-        _: &mut World,
-        builder: DispatcherBuilder<'a, 'b>,
-    ) -> Result<DispatcherBuilder<'a, 'b>> {
-        Ok(builder.with(FPSCounterSystem, "fps_counter_system", &[]))
+    fn build(self, _: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+        builder.add(FPSCounterSystem, "fps_counter_system", &[]);
+        Ok(())
     }
 }

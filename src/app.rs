@@ -656,8 +656,8 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     where
         B: ECSBundle<'a, 'b>,
     {
-        self.disp_builder = bundle
-            .build(&mut self.world, self.disp_builder)
+        bundle
+            .build(&mut self.world, &mut self.disp_builder)
             .map_err(|err| Error::Core(err))?;
         Ok(self)
     }

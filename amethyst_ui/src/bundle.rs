@@ -34,21 +34,17 @@ where
     A: Send + Sync + Eq + Hash + Clone + 'static,
     B: Send + Sync + Eq + Hash + Clone + 'static,
 {
-    fn build(
-        self,
-        _: &mut World,
-        builder: DispatcherBuilder<'a, 'b>,
-    ) -> Result<DispatcherBuilder<'a, 'b>> {
-        Ok(builder
-            .with(Processor::<FontAsset>::new(), "font_processor", &[])
-            .with(UiSystem::new(), "ui_system", &["font_processor"])
-            .with(ResizeSystem::new(), "ui_resize_system", &[])
-            .with(UiMouseSystem::<A, B>::new(), "ui_mouse_system", &[])
-            .with(UiLayoutSystem::new(), "ui_layout", &["ui_system"])
-            .with(
-                UiParentSystem::default(),
-                "ui_parent",
-                &["transform_system", "ui_layout"],
-            ))
+    fn build(self, _: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+        builder.add(Processor::<FontAsset>::new(), "font_processor", &[]);
+        builder.add(UiSystem::new(), "ui_system", &["font_processor"]);
+        builder.add(ResizeSystem::new(), "ui_resize_system", &[]);
+        builder.add(UiMouseSystem::<A, B>::new(), "ui_mouse_system", &[]);
+        builder.add(UiLayoutSystem::new(), "ui_layout", &["ui_system"]);
+        builder.add(
+            UiParentSystem::default(),
+            "ui_parent",
+            &["transform_system", "ui_layout"],
+        );
+        Ok(())
     }
 }

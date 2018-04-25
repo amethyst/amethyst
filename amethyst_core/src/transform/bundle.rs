@@ -38,21 +38,17 @@ impl<'a> TransformBundle<'a> {
 }
 
 impl<'a, 'b, 'c> ECSBundle<'a, 'b> for TransformBundle<'c> {
-    fn build(
-        self,
-        _: &mut World,
-        builder: DispatcherBuilder<'a, 'b>,
-    ) -> Result<DispatcherBuilder<'a, 'b>> {
-        Ok(builder
-            .with(
-                HierarchySystem::<Parent>::new(),
-                "parent_hierarchy_system",
-                self.dep,
-            )
-            .with(
-                TransformSystem::new(),
-                "transform_system",
-                &["parent_hierarchy_system"],
-            ))
+    fn build(self, _: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+        builder.add(
+            HierarchySystem::<Parent>::new(),
+            "parent_hierarchy_system",
+            self.dep,
+        );
+        builder.add(
+            TransformSystem::new(),
+            "transform_system",
+            &["parent_hierarchy_system"],
+        );
+        Ok(())
     }
 }

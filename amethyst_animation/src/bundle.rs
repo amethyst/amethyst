@@ -32,16 +32,13 @@ impl<'a> VertexSkinningBundle<'a> {
 }
 
 impl<'a, 'b, 'c> ECSBundle<'a, 'b> for VertexSkinningBundle<'c> {
-    fn build(
-        self,
-        _: &mut World,
-        builder: DispatcherBuilder<'a, 'b>,
-    ) -> Result<DispatcherBuilder<'a, 'b>> {
-        Ok(builder.with(
+    fn build(self, _: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+        builder.add(
             VertexSkinningSystem::new(),
             "vertex_skinning_system",
             self.dep,
-        ))
+        );
+        Ok(())
     }
 }
 
@@ -85,14 +82,10 @@ impl<'a, 'b, 'c, T> ECSBundle<'a, 'b> for SamplingBundle<'c, T>
 where
     T: AnimationSampling + Component,
 {
-    fn build(
-        self,
-        _: &mut World,
-        builder: DispatcherBuilder<'a, 'b>,
-    ) -> Result<DispatcherBuilder<'a, 'b>> {
-        Ok(builder
-            .with(SamplerProcessor::<T::Primitive>::new(), "", &[])
-            .with(SamplerInterpolationSystem::<T>::new(), self.name, self.dep))
+    fn build(self, _: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+        builder.add(SamplerProcessor::<T::Primitive>::new(), "", &[]);
+        builder.add(SamplerInterpolationSystem::<T>::new(), self.name, self.dep);
+        Ok(())
     }
 }
 
@@ -144,12 +137,9 @@ where
     I: PartialEq + Eq + Hash + Copy + Send + Sync + 'static,
     T: AnimationSampling + Component + Clone,
 {
-    fn build(
-        self,
-        world: &mut World,
-        mut builder: DispatcherBuilder<'a, 'b>,
-    ) -> Result<DispatcherBuilder<'a, 'b>> {
-        builder = builder.with(AnimationProcessor::<T>::new(), "", &[]).with(
+    fn build(self, world: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+        builder.add(AnimationProcessor::<T>::new(), "", &[]);
+        builder.add(
             AnimationControlSystem::<I, T>::new(),
             self.animation_name,
             self.dep,

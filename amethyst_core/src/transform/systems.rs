@@ -201,7 +201,11 @@ mod tests {
         hs.run_now(&mut world.res);
         system.run_now(&mut world.res);
 
-        let transform = world.read_storage::<GlobalTransform>().get(e1).unwrap().clone();
+        let transform = world
+            .read_storage::<GlobalTransform>()
+            .get(e1)
+            .unwrap()
+            .clone();
         let a1: [[f32; 4]; 4] = transform.into();
         let a2: [[f32; 4]; 4] = GlobalTransform::default().into();
         assert_eq!(a1, a2);
@@ -227,7 +231,11 @@ mod tests {
         hs.run_now(&mut world.res);
         system.run_now(&mut world.res);
 
-        let transform = world.read_storage::<GlobalTransform>().get(e1).unwrap().clone();
+        let transform = world
+            .read_storage::<GlobalTransform>()
+            .get(e1)
+            .unwrap()
+            .clone();
         let a1: [[f32; 4]; 4] = transform.into();
         let a2: [[f32; 4]; 4] = local.matrix().into();
         assert_eq!(a1, a2);
