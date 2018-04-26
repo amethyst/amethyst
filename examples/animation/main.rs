@@ -1,9 +1,11 @@
 //! Displays a shaded sphere to the user.
 
 extern crate amethyst;
-extern crate amethyst_animation;
 extern crate genmesh;
 
+use amethyst::animation::{get_animation_set, Animation, AnimationBundle, AnimationCommand,
+                         AnimationSet, DeferStartRelation, EndControl, InterpolationFunction,
+                         Sampler, SamplerPrimitive, StepDirection, TransformChannel};
 use amethyst::assets::{AssetStorage, Handle, Loader};
 use amethyst::core::{GlobalTransform, Parent, Transform, TransformBundle};
 use amethyst::core::cgmath::Deg;
@@ -12,9 +14,6 @@ use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, ElementState, Event,
                          KeyboardInput, Light, Mesh, Pipeline, PointLight, PosNormTex, Projection,
                          RenderBundle, Rgba, Stage, VirtualKeyCode, WindowEvent};
-use amethyst_animation::{get_animation_set, Animation, AnimationBundle, AnimationCommand,
-                         AnimationSet, DeferStartRelation, EndControl, InterpolationFunction,
-                         Sampler, SamplerPrimitive, StepDirection, TransformChannel};
 use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
 
