@@ -22,6 +22,7 @@ travis-ci = { repository = "amethyst/amethyst", branch = "develop" }
 profiler = [
     "thread_profiler",
     "thread_profiler/thread_profiler",
+    "amethyst_animation/profiler",
     "amethyst_assets/profiler",
     "amethyst_audio/profiler",
     "amethyst_config/profiler",
