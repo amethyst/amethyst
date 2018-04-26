@@ -1,6 +1,6 @@
 use super::*;
-use amethyst_core::bundle::{ECSBundle, Result};
-use amethyst_core::specs::prelude::{DispatcherBuilder, World};
+use amethyst_core::bundle::{Result, SystemBundle};
+use amethyst_core::specs::prelude::DispatcherBuilder;
 use std::hash::Hash;
 use std::marker::PhantomData;
 
@@ -46,12 +46,12 @@ impl<A, B> FlyControlBundle<A, B> {
     }
 }
 
-impl<'a, 'b, A, B> ECSBundle<'a, 'b> for FlyControlBundle<A, B>
+impl<'a, 'b, A, B> SystemBundle<'a, 'b> for FlyControlBundle<A, B>
 where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,
 {
-    fn build(self, _: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
         builder.add(
             FlyMovementSystem::<A, B>::new(
                 self.speed,

@@ -1,7 +1,7 @@
 //! ECS rendering bundle
 
-use amethyst_core::bundle::{ECSBundle, Result, ResultExt};
-use amethyst_core::specs::prelude::{DispatcherBuilder, World};
+use amethyst_core::bundle::{Result, ResultExt, SystemBundle};
+use amethyst_core::specs::prelude::DispatcherBuilder;
 use config::DisplayConfig;
 use pipe::{PipelineBuild, PolyPipeline};
 use system::RenderSystem;
@@ -47,10 +47,10 @@ where
     }
 }
 
-impl<'a, 'b, 'c, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> ECSBundle<'a, 'b>
+impl<'a, 'b, 'c, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> SystemBundle<'a, 'b>
     for RenderBundle<'c, B, P>
 {
-    fn build(self, _: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
         if let Some(dep) = self.visibility_sorting {
             builder.add(
                 VisibilitySortingSystem::new(),

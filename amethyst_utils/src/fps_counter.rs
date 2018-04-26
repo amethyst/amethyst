@@ -1,7 +1,7 @@
 //! Util Resources
 
-use amethyst_core::{ECSBundle, Result};
-use amethyst_core::specs::prelude::{DispatcherBuilder, Read, System, World, Write};
+use amethyst_core::{Result, SystemBundle};
+use amethyst_core::specs::prelude::{DispatcherBuilder, Read, System, Write};
 use amethyst_core::timing::{duration_to_nanos, Time};
 use circular_buffer::CircularBuffer;
 
@@ -74,8 +74,8 @@ impl<'a> System<'a> for FPSCounterSystem {
 #[derive(Default)]
 pub struct FPSCounterBundle;
 
-impl<'a, 'b> ECSBundle<'a, 'b> for FPSCounterBundle {
-    fn build(self, _: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+impl<'a, 'b> SystemBundle<'a, 'b> for FPSCounterBundle {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
         builder.add(FPSCounterSystem, "fps_counter_system", &[]);
         Ok(())
     }

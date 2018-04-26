@@ -1,9 +1,9 @@
 //! ECS transform bundle
 
-use specs::prelude::{DispatcherBuilder, World};
+use specs::prelude::DispatcherBuilder;
 use specs_hierarchy::HierarchySystem;
 
-use bundle::{ECSBundle, Result};
+use bundle::{Result, SystemBundle};
 use transform::*;
 
 /// Transform bundle
@@ -37,8 +37,8 @@ impl<'a> TransformBundle<'a> {
     }
 }
 
-impl<'a, 'b, 'c> ECSBundle<'a, 'b> for TransformBundle<'c> {
-    fn build(self, _: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+impl<'a, 'b, 'c> SystemBundle<'a, 'b> for TransformBundle<'c> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
         builder.add(
             HierarchySystem::<Parent>::new(),
             "parent_hierarchy_system",

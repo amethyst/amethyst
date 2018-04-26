@@ -4,8 +4,8 @@ use std::hash::Hash;
 use std::path::Path;
 
 use amethyst_config::Config;
-use amethyst_core::bundle::{ECSBundle, Result};
-use amethyst_core::specs::prelude::{DispatcherBuilder, World};
+use amethyst_core::bundle::{Result, SystemBundle};
+use amethyst_core::specs::prelude::DispatcherBuilder;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 
@@ -58,12 +58,12 @@ where
     }
 }
 
-impl<'a, 'b, AX, AC> ECSBundle<'a, 'b> for InputBundle<AX, AC>
+impl<'a, 'b, AX, AC> SystemBundle<'a, 'b> for InputBundle<AX, AC>
 where
     AX: Hash + Eq + Clone + Send + Sync + 'static,
     AC: Hash + Eq + Clone + Send + Sync + 'static,
 {
-    fn build(self, _: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
         builder.add(
             InputSystem::<AX, AC>::new(self.bindings),
             "input_system",

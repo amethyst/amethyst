@@ -278,12 +278,7 @@ fn initialise_sphere(world: &mut World) -> Entity {
         .with(mesh)
         .with(material)
         .build();
-
-    /*let mut nodes = HashMap::default();
-    nodes.insert(0, parent_entity.clone());
-    world
-        .write_storage()
-        .insert(parent_entity, AnimationHierarchy { nodes });*/
+    
     parent_entity
 }
 

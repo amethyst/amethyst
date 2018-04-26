@@ -6,7 +6,7 @@ use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 
-use core::ECSBundle;
+use core::SystemBundle;
 use fern;
 use log::LevelFilter;
 use rayon::{ThreadPool, ThreadPoolBuilder};
@@ -654,10 +654,10 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     pub fn with_bundle<B>(mut self, bundle: B) -> Result<Self>
     where
-        B: ECSBundle<'a, 'b>,
+        B: SystemBundle<'a, 'b>,
     {
         bundle
-            .build(&mut self.world, &mut self.disp_builder)
+            .build(&mut self.disp_builder)
             .map_err(|err| Error::Core(err))?;
         Ok(self)
     }
