@@ -4,8 +4,8 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use amethyst_core as core;
-use amethyst_core::{ECSBundle, Time};
-use amethyst_core::specs::prelude::{DispatcherBuilder, Read, Resources, System, World, Write};
+use amethyst_core::{SystemBundle, Time};
+use amethyst_core::specs::prelude::{DispatcherBuilder, Read, Resources, System, Write};
 
 use {Asset, Format, FormatValue, Loader, Result, Source};
 
@@ -23,8 +23,8 @@ impl HotReloadBundle {
     }
 }
 
-impl<'a, 'b> ECSBundle<'a, 'b> for HotReloadBundle {
-    fn build(self, _: &mut World, dispatcher: &mut DispatcherBuilder<'a, 'b>) -> core::Result<()> {
+impl<'a, 'b> SystemBundle<'a, 'b> for HotReloadBundle {
+    fn build(self, dispatcher: &mut DispatcherBuilder<'a, 'b>) -> core::Result<()> {
         dispatcher.add(HotReloadSystem::new(self.strategy), "hot_reload", &[]);
         Ok(())
     }
