@@ -282,7 +282,7 @@ fn initialise_sphere(world: &mut World) -> Entity {
     /*let mut nodes = HashMap::default();
     nodes.insert(0, parent_entity.clone());
     world
-        .write()
+        .write_storage()
         .insert(parent_entity, AnimationHierarchy { nodes });*/
     parent_entity
 }

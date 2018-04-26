@@ -1,9 +1,8 @@
 //! Scene graph system and types
 
 use hibitset::BitSet;
-use shred::Resources;
 use specs::prelude::{Entities, InsertedFlag, Join, ModifiedFlag, ReadExpect, ReadStorage,
-                     ReaderId, System, WriteStorage};
+                     ReaderId, Resources, System, WriteStorage};
 use transform::{GlobalTransform, HierarchyEvent, Parent, ParentHierarchy, Transform};
 
 /// Handles updating `GlobalTransform` components based on the `Transform`

@@ -6,8 +6,8 @@ use std::sync::Arc;
 
 use amethyst_assets::{AssetStorage, HotReloadStrategy};
 use amethyst_core::Time;
-use amethyst_core::shred::Resources;
-use amethyst_core::specs::prelude::{Read, ReadExpect, RunNow, SystemData, Write, WriteExpect};
+use amethyst_core::specs::prelude::{Read, ReadExpect, Resources, RunNow, SystemData, Write,
+                                    WriteExpect};
 use rayon::ThreadPool;
 use shrev::EventChannel;
 use winit::{DeviceEvent, Event, WindowEvent};
