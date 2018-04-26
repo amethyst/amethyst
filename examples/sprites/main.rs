@@ -130,7 +130,7 @@ impl State for Example {
                 .build();
 
             // We also need to trigger the animation, not just attach it to the entity
-            let mut animation_control_set_storage = world.write();
+            let mut animation_control_set_storage = world.write_storage();
             let animation_set =
                 get_animation_set::<u32, Material>(&mut animation_control_set_storage, entity);
             let animation_id = 0;

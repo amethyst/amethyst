@@ -170,7 +170,7 @@ mod tests {
         world.register::<Parent>();
 
         let (l_insert, l_modify) = {
-            let mut locals = world.write::<Transform>();
+            let mut locals = world.write_storage::<Transform>();
             (locals.track_inserted(), locals.track_modified())
         };
 
@@ -204,7 +204,7 @@ mod tests {
         hs.run_now(&mut world.res);
         system.run_now(&mut world.res);
 
-        let transform = world.read::<GlobalTransform>().get(e1).unwrap().clone();
+        let transform = world.read_storage::<GlobalTransform>().get(e1).unwrap().clone();
         let a1: [[f32; 4]; 4] = transform.into();
         let a2: [[f32; 4]; 4] = GlobalTransform::default().into();
         assert_eq!(a1, a2);
@@ -230,7 +230,7 @@ mod tests {
         hs.run_now(&mut world.res);
         system.run_now(&mut world.res);
 
-        let transform = world.read::<GlobalTransform>().get(e1).unwrap().clone();
+        let transform = world.read_storage::<GlobalTransform>().get(e1).unwrap().clone();
         let a1: [[f32; 4]; 4] = transform.into();
         let a2: [[f32; 4]; 4] = local.matrix().into();
         assert_eq!(a1, a2);
@@ -276,7 +276,7 @@ mod tests {
         hs.run_now(&mut world.res);
         system.run_now(&mut world.res);
 
-        let transforms = world.read::<GlobalTransform>();
+        let transforms = world.read_storage::<GlobalTransform>();
 
         let transform1 = {
             // First entity (top level parent)
@@ -339,7 +339,7 @@ mod tests {
             .build();
 
         {
-            let mut parents = world.write::<Parent>();
+            let mut parents = world.write_storage::<Parent>();
             parents.insert(e2, Parent { entity: e1 });
             parents.insert(e3, Parent { entity: e2 });
         }
@@ -347,7 +347,7 @@ mod tests {
         hs.run_now(&mut world.res);
         system.run_now(&mut world.res);
 
-        let transforms = world.read::<GlobalTransform>();
+        let transforms = world.read_storage::<GlobalTransform>();
 
         let transform1 = {
             // First entity (top level parent)

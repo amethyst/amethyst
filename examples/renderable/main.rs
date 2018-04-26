@@ -265,7 +265,7 @@ impl State for Example {
                                 }
                             }
                             Some(VirtualKeyCode::D) => {
-                                let mut lights = w.write::<Light>();
+                                let mut lights = w.write_storage::<Light>();
 
                                 if state.directional_light {
                                     state.directional_light = false;
