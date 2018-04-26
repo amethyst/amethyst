@@ -20,11 +20,40 @@ pub struct Transform {
 }
 
 impl Transform {
-    /// Rotate to look at a point in space (without rolling)
-    // Does this make sense, because the position doesn't take into account parent transformations?
+    /// Makes the entity point towards `position`.
+    ///
+    /// `up` says which direction the entity should be 'rolled' to once it is pointing at
+    /// `position`. If `up` is parallel to the direction the entity is looking, the result will be
+    /// garbage.
+    ///
+    /// This function only works with respect to the coordinate system of its parent, so when used
+    /// with an object that's not a sibling it will not do what you expect.
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// # use amethyst_core::transform::components::Transform;
+    /// # use amethyst_core::cgmath::{Quaternion, One, Vector3, Point3, Matrix3};
+    /// let mut t = Transform::default();
+    /// // No rotation by default
+    /// assert_eq!(t.rotation, Quaternion::one());
+    /// // look up with up pointing backwards
+    /// t.look_at(Point3::new(0.0, 1.0, 0.0), Vector3::new(0.0, 0.0, 1.0));
+    /// // our rotation should match the angle from straight ahead to straight up
+    /// let rotation = Quaternion::from_arc(
+    ///     Vector3::new(0.0, 0.0, -1.0),
+    ///     Vector3::new(0.0, 1.0, 0.0),
+    ///     None);
+    /// assert_eq!(t.rotation, rotation);
+    /// ```
+    // FIXME doctest
     #[inline]
-    pub fn look_at(&mut self, up: Vector3<f32>, position: Point3<f32>) -> &mut Self {
-        self.rotation = Quaternion::look_at(position - Point3::from_vec(self.translation), up);
+    pub fn look_at(&mut self, position: Point3<f32>, up: Vector3<f32>) -> &mut Self {
+        self.rotation = Quaternion::look_at(Point3::from_vec(self.translation) - position, up);
+        debug_assert!(self.rotation.s.is_finite()
+                      && self.rotation.v.x.is_finite()
+                      && self.rotation.v.y.is_finite()
+                      && self.rotation.v.z.is_finite());
         self
     }
 
