@@ -1,8 +1,9 @@
 use std::cmp::Ordering;
 use std::ops::Range;
 
+use amethyst_core::shred::Resources;
 use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entities, Entity, Join, Read,
-                                    ReadExpect, ReadStorage, System, Write, WriteStorage};
+                                    ReadStorage, System, Write, WriteStorage};
 use amethyst_core::timing::Time;
 use clipboard::{ClipboardContext, ClipboardProvider};
 use hibitset::BitSet;
@@ -123,7 +124,7 @@ struct CachedTabOrder {
 /// This system processes the underlying UI data as needed.
 pub struct UiSystem {
     /// A reader for winit events.
-    reader: ReaderId<Event>,
+    reader: Option<ReaderId<Event>>,
     /// A cache sorted by tab order, and then by Entity.
     tab_order_cache: CachedTabOrder,
     /// This is set to true while the left mouse button is pressed.
@@ -134,9 +135,9 @@ pub struct UiSystem {
 
 impl UiSystem {
     /// Initializes a new UiSystem that uses the given reader id.
-    pub fn new(reader: ReaderId<Event>) -> Self {
+    pub fn new() -> Self {
         Self {
-            reader,
+            reader: None,
             tab_order_cache: CachedTabOrder {
                 cached: BitSet::new(),
                 cache: Vec::new(),
@@ -154,7 +155,7 @@ impl<'a> System<'a> for UiSystem {
         WriteStorage<'a, TextEditing>,
         ReadStorage<'a, UiTransform>,
         Write<'a, UiFocused>,
-        ReadExpect<'a, EventChannel<Event>>,
+        Read<'a, EventChannel<Event>>,
         Read<'a, Time>,
     );
 
@@ -235,7 +236,7 @@ impl<'a> System<'a> for UiSystem {
                 }
             }
         }
-        for event in events.read(&mut self.reader) {
+        for event in events.read(self.reader.as_mut().unwrap()) {
             // Process events for the whole UI.
             match *event {
                 Event::WindowEvent {
@@ -661,6 +662,12 @@ impl<'a> System<'a> for UiSystem {
                 }
             }
         }
+    }
+
+    fn setup(&mut self, res: &mut Resources) {
+        use amethyst_core::specs::prelude::SystemData;
+        Self::SystemData::setup(res);
+        self.reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
     }
 }
 

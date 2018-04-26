@@ -2,12 +2,11 @@
 
 use std::marker::PhantomData;
 
-use amethyst_assets::{AssetStorage, Processor};
+use amethyst_assets::Processor;
 use amethyst_core::bundle::{ECSBundle, Result};
 use amethyst_core::specs::prelude::{DispatcherBuilder, World};
+use cpal::default_endpoint;
 
-use output::{default_output, Output};
-use sink::AudioSink;
 use source::*;
 use systems::DjSystem;
 
@@ -54,32 +53,12 @@ where
     F: FnMut(&mut R) -> Option<SourceHandle> + Send + 'static,
     R: Send + Sync + 'static,
 {
-    fn build(
-        self,
-        world: &mut World,
-        mut builder: DispatcherBuilder<'a, 'b>,
-    ) -> Result<DispatcherBuilder<'a, 'b>> {
-        // Remove option here when specs get support for optional fetch in
-        // released version
-
-        if !world.res.has_value::<Option<Output>>() {
-            world.add_resource(default_output());
+    fn build(self, _: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+        builder.add(Processor::<Source>::new(), "source_processor", &[]);
+        if let Some(_) = default_endpoint() {
+            builder.add(DjSystem::new(self.picker), "dj_system", self.dep);
         }
 
-        let sink = world
-            .read_resource::<Option<Output>>()
-            .as_ref()
-            .map(|audio_output| AudioSink::new(audio_output));
-
-        world.add_resource(AssetStorage::<Source>::new());
-
-        if let Some(sink) = sink {
-            world.add_resource(sink);
-            builder = builder
-                .with(Processor::<Source>::new(), "source_processor", &[])
-                .with(DjSystem::new(self.picker), "dj_system", self.dep);
-        }
-
-        Ok(builder)
+        Ok(())
     }
 }

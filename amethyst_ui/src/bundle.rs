@@ -1,13 +1,10 @@
 //! ECS rendering bundle
 
-use amethyst_assets::{AssetStorage, Handle, Processor};
-use amethyst_core::Parent;
+use amethyst_assets::Processor;
 use amethyst_core::bundle::{ECSBundle, Result};
 use amethyst_core::specs::prelude::{DispatcherBuilder, World};
-use shrev::EventChannel;
 use std::hash::Hash;
 use std::marker::PhantomData;
-use winit::Event;
 
 use super::*;
 
@@ -37,51 +34,17 @@ where
     A: Send + Sync + Eq + Hash + Clone + 'static,
     B: Send + Sync + Eq + Hash + Clone + 'static,
 {
-    fn build(
-        self,
-        world: &mut World,
-        builder: DispatcherBuilder<'a, 'b>,
-    ) -> Result<DispatcherBuilder<'a, 'b>> {
-        world.register::<UiImage>();
-        world.register::<UiTransform>();
-        world.register::<UiText>();
-        world.register::<TextEditing>();
-        world.register::<UiResize>();
-        world.register::<Handle<FontAsset>>();
-        world.register::<MouseReactive>();
-        world.register::<Anchored>();
-        world.register::<Stretched>();
-        world.register::<Parent>();
-
-        world.add_resource(AssetStorage::<FontAsset>::new());
-        world.add_resource(UiFocused { entity: None });
-        world.add_resource(EventChannel::<UiEvent>::new());
-
-        let reader_1 = world
-            .write_resource::<EventChannel<Event>>()
-            .register_reader();
-        let reader_2 = world
-            .write_resource::<EventChannel<Event>>()
-            .register_reader();
-
-        let mut locals = world.write_storage::<UiTransform>();
-        let mut stretches = world.write_storage::<Stretched>();
-
-        Ok(builder
-            .with(Processor::<FontAsset>::new(), "font_processor", &[])
-            .with(UiSystem::new(reader_1), "ui_system", &["font_processor"])
-            .with(ResizeSystem::new(reader_2), "ui_resize_system", &[])
-            .with(UiMouseSystem::<A, B>::new(), "ui_mouse_system", &[])
-            .with(UiLayoutSystem::new(), "ui_layout", &["ui_system"])
-            .with(
-                UiParentSystem::new(
-                    locals.track_inserted(),
-                    locals.track_modified(),
-                    stretches.track_inserted(),
-                    stretches.track_modified(),
-                ),
-                "ui_parent",
-                &["transform_system", "ui_layout"],
-            ))
+    fn build(self, _: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+        builder.add(Processor::<FontAsset>::new(), "font_processor", &[]);
+        builder.add(UiSystem::new(), "ui_system", &["font_processor"]);
+        builder.add(ResizeSystem::new(), "ui_resize_system", &[]);
+        builder.add(UiMouseSystem::<A, B>::new(), "ui_mouse_system", &[]);
+        builder.add(UiLayoutSystem::new(), "ui_layout", &["ui_system"]);
+        builder.add(
+            UiParentSystem::default(),
+            "ui_parent",
+            &["transform_system", "ui_layout"],
+        );
+        Ok(())
     }
 }

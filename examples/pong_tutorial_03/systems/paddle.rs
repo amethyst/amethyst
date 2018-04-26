@@ -6,11 +6,11 @@ use pong::{Paddle, Side, PADDLE_HEIGHT};
 pub struct PaddleSystem;
 
 impl<'s> System<'s> for PaddleSystem {
-  type SystemData = (
-    WriteStorage<'s, Transform>,
-    ReadStorage<'s, Paddle>,
-    Read<'s, InputHandler<String, String>>,
-  );
+    type SystemData = (
+        WriteStorage<'s, Transform>,
+        ReadStorage<'s, Paddle>,
+        Read<'s, InputHandler<String, String>>,
+    );
 
     fn run(&mut self, (mut transforms, paddles, input): Self::SystemData) {
         for (paddle, mut transform) in (&paddles, &mut transforms).join() {

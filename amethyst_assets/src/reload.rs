@@ -5,6 +5,7 @@ use std::time::Instant;
 
 use amethyst_core as core;
 use amethyst_core::{ECSBundle, Time};
+use amethyst_core::shred::Resources;
 use amethyst_core::specs::prelude::{DispatcherBuilder, Read, System, World, Write};
 
 use {Asset, Format, FormatValue, Loader, Result, Source};
@@ -24,15 +25,9 @@ impl HotReloadBundle {
 }
 
 impl<'a, 'b> ECSBundle<'a, 'b> for HotReloadBundle {
-    fn build(
-        self,
-        world: &mut World,
-        dispatcher: DispatcherBuilder<'a, 'b>,
-    ) -> core::Result<DispatcherBuilder<'a, 'b>> {
-        world.write_resource::<Loader>().set_hot_reload(true);
-        world.add_resource(self.strategy);
-
-        Ok(dispatcher.with(HotReloadSystem, "hot_reload", &[]))
+    fn build(self, _: &mut World, dispatcher: &mut DispatcherBuilder<'a, 'b>) -> core::Result<()> {
+        dispatcher.add(HotReloadSystem::new(self.strategy), "hot_reload", &[]);
+        Ok(())
     }
 }
 
@@ -53,6 +48,7 @@ impl<'a, 'b> ECSBundle<'a, 'b> for HotReloadBundle {
 /// world.add_resource(HotReloadStrategy::every(2));
 /// # }
 /// ```
+#[derive(Clone)]
 pub struct HotReloadStrategy {
     inner: HotReloadStrategyInner,
 }
@@ -119,6 +115,7 @@ impl Default for HotReloadStrategy {
     }
 }
 
+#[derive(Clone)]
 enum HotReloadStrategyInner {
     Every {
         interval: u8,
@@ -133,7 +130,18 @@ enum HotReloadStrategyInner {
 }
 
 /// System for updating `HotReloadStrategy`.
-pub struct HotReloadSystem;
+pub struct HotReloadSystem {
+    initial_strategy: HotReloadStrategy,
+}
+
+impl HotReloadSystem {
+    /// Create a new reload system
+    pub fn new(strategy: HotReloadStrategy) -> Self {
+        HotReloadSystem {
+            initial_strategy: strategy,
+        }
+    }
+}
 
 impl<'a> System<'a> for HotReloadSystem {
     type SystemData = (Read<'a, Time>, Write<'a, HotReloadStrategy>);
@@ -159,6 +167,13 @@ impl<'a> System<'a> for HotReloadSystem {
             },
             HotReloadStrategyInner::Never => {}
         }
+    }
+
+    fn setup(&mut self, res: &mut Resources) {
+        use amethyst_core::specs::prelude::SystemData;
+        Self::SystemData::setup(res);
+        res.insert(self.initial_strategy.clone());
+        res.fetch_mut::<Loader>().set_hot_reload(true);
     }
 }
 

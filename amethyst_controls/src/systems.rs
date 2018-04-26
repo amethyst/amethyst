@@ -1,4 +1,5 @@
 use amethyst_core::cgmath::{Deg, Vector3};
+use amethyst_core::shred::Resources;
 use amethyst_core::specs::prelude::{Join, Read, ReadExpect, ReadStorage, System, Write,
                                     WriteStorage};
 use amethyst_core::timing::Time;
@@ -144,5 +145,14 @@ impl<'a> System<'a> for MouseCenterLockSystem {
                 error!("Unable to set the cursor position! Error: {:?}", err);
             }
         });
+    }
+
+    fn setup(&mut self, res: &mut Resources) {
+        use amethyst_core::specs::prelude::SystemData;
+        use amethyst_renderer::mouse::*;
+        Self::SystemData::setup(res);
+        let mut msg = res.fetch_mut::<WindowMessages>();
+        grab_cursor(&mut msg);
+        set_mouse_cursor_none(&mut msg);
     }
 }

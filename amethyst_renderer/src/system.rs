@@ -16,6 +16,7 @@ use config::DisplayConfig;
 use error::Result;
 use formats::{create_mesh_asset, create_texture_asset};
 use mesh::Mesh;
+use mtl::{Material, MaterialDefaults};
 use pipe::{PipelineBuild, PipelineData, PolyPipeline};
 use renderer::Renderer;
 use resources::{ScreenDimensions, WindowMessages};
@@ -152,7 +153,7 @@ type AssetLoadingData<'a> = (
 type WindowData<'a> = (Write<'a, WindowMessages>, WriteExpect<'a, ScreenDimensions>);
 
 type RenderData<'a, P> = (
-    WriteExpect<'a, EventChannel<Event>>,
+    Write<'a, EventChannel<Event>>,
     <P as PipelineData<'a>>::Data,
 );
 
@@ -172,6 +173,54 @@ where
         AssetLoadingData::setup(res);
         WindowData::setup(res);
         RenderData::<P>::setup(res);
+
+        let mat = create_default_mat(res);
+        res.insert(MaterialDefaults(mat));
+        let (width, height) = self.window_size()
+            .expect("Window closed during initialization!");
+        res.insert(ScreenDimensions::new(width, height));
+    }
+}
+
+fn create_default_mat(res: &mut Resources) -> Material {
+    use amethyst_assets::Loader;
+    use mtl::TextureOffset;
+
+    let loader = res.fetch::<Loader>();
+
+    let albedo = [0.5, 0.5, 0.5, 1.0].into();
+    let emission = [0.0; 4].into();
+    let normal = [0.5, 0.5, 1.0, 1.0].into();
+    let metallic = [0.0; 4].into();
+    let roughness = [0.5; 4].into();
+    let ambient_occlusion = [1.0; 4].into();
+    let caveat = [1.0; 4].into();
+
+    let tex_storage = res.fetch();
+
+    let albedo = loader.load_from_data(albedo, (), &tex_storage);
+    let emission = loader.load_from_data(emission, (), &tex_storage);
+    let normal = loader.load_from_data(normal, (), &tex_storage);
+    let metallic = loader.load_from_data(metallic, (), &tex_storage);
+    let roughness = loader.load_from_data(roughness, (), &tex_storage);
+    let ambient_occlusion = loader.load_from_data(ambient_occlusion, (), &tex_storage);
+    let caveat = loader.load_from_data(caveat, (), &tex_storage);
+
+    Material {
+        albedo,
+        albedo_offset: TextureOffset::default(),
+        emission,
+        emission_offset: TextureOffset::default(),
+        normal,
+        normal_offset: TextureOffset::default(),
+        metallic,
+        metallic_offset: TextureOffset::default(),
+        roughness,
+        roughness_offset: TextureOffset::default(),
+        ambient_occlusion,
+        ambient_occlusion_offset: TextureOffset::default(),
+        caveat,
+        caveat_offset: TextureOffset::default(),
     }
 }
 

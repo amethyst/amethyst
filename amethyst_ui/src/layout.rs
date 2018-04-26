@@ -184,35 +184,17 @@ impl<'a> System<'a> for UiLayoutSystem {
 /// Manages the `Parent` component on entities having `UiTransform`
 /// It does almost the same as the `TransformSystem`, but with some differences,
 /// like `UiTransform` alignment and stretching.
+#[derive(Default)]
 pub struct UiParentSystem {
     local_modified: BitSet,
 
-    inserted_local_id: ReaderId<InsertedFlag>,
-    modified_local_id: ReaderId<ModifiedFlag>,
+    inserted_local_id: Option<ReaderId<InsertedFlag>>,
+    modified_local_id: Option<ReaderId<ModifiedFlag>>,
 
-    inserted_stretch_id: ReaderId<InsertedFlag>,
-    modified_stretch_id: ReaderId<ModifiedFlag>,
+    inserted_stretch_id: Option<ReaderId<InsertedFlag>>,
+    modified_stretch_id: Option<ReaderId<ModifiedFlag>>,
 
     parent_events_id: Option<ReaderId<HierarchyEvent>>,
-}
-
-impl UiParentSystem {
-    /// Creates a new UiLayoutSystem.
-    pub fn new(
-        inserted_local_id: ReaderId<InsertedFlag>,
-        modified_local_id: ReaderId<ModifiedFlag>,
-        inserted_stretch_id: ReaderId<InsertedFlag>,
-        modified_stretch_id: ReaderId<ModifiedFlag>,
-    ) -> Self {
-        UiParentSystem {
-            inserted_local_id,
-            modified_local_id,
-            inserted_stretch_id,
-            modified_stretch_id,
-            parent_events_id: None,
-            local_modified: BitSet::default(),
-        }
-    }
 }
 
 impl<'a> System<'a> for UiParentSystem {
@@ -234,11 +216,23 @@ impl<'a> System<'a> for UiParentSystem {
 
         self.local_modified.clear();
 
-        locals.populate_inserted(&mut self.inserted_local_id, &mut self.local_modified);
-        locals.populate_modified(&mut self.modified_local_id, &mut self.local_modified);
+        locals.populate_inserted(
+            &mut self.inserted_local_id.as_mut().unwrap(),
+            &mut self.local_modified,
+        );
+        locals.populate_modified(
+            &mut self.modified_local_id.as_mut().unwrap(),
+            &mut self.local_modified,
+        );
 
-        stretches.populate_inserted(&mut self.inserted_stretch_id, &mut self.local_modified);
-        stretches.populate_modified(&mut self.modified_stretch_id, &mut self.local_modified);
+        stretches.populate_inserted(
+            &mut self.inserted_stretch_id.as_mut().unwrap(),
+            &mut self.local_modified,
+        );
+        stretches.populate_modified(
+            &mut self.modified_stretch_id.as_mut().unwrap(),
+            &mut self.local_modified,
+        );
 
         for event in hierarchy
             .changed()
@@ -336,14 +330,25 @@ impl<'a> System<'a> for UiParentSystem {
 
         // We need to treat any changes done inside the system as non-modifications, so we read out
         // any events that were generated during the system run
-        locals.populate_inserted(&mut self.inserted_local_id, &mut self.local_modified);
-        locals.populate_modified(&mut self.modified_local_id, &mut self.local_modified);
+        locals.populate_inserted(
+            &mut self.inserted_local_id.as_mut().unwrap(),
+            &mut self.local_modified,
+        );
+        locals.populate_modified(
+            &mut self.modified_local_id.as_mut().unwrap(),
+            &mut self.local_modified,
+        );
     }
 
     fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::specs::prelude::{SystemData, WriteExpect};
+        use amethyst_core::specs::prelude::SystemData;
         <Self::SystemData as SystemData>::setup(res);
-        let mut hierarchy: WriteExpect<ParentHierarchy> = SystemData::fetch(res);
-        self.parent_events_id = Some(hierarchy.track());
+        self.parent_events_id = Some(res.fetch_mut::<ParentHierarchy>().track());
+        let mut locals = WriteStorage::<UiTransform>::fetch(res);
+        let mut stretches = WriteStorage::<Stretched>::fetch(res);
+        self.inserted_local_id = Some(locals.track_inserted());
+        self.modified_local_id = Some(locals.track_modified());
+        self.inserted_stretch_id = Some(stretches.track_inserted());
+        self.modified_stretch_id = Some(stretches.track_modified());
     }
 }

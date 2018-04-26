@@ -17,7 +17,7 @@ mod sprite;
 mod sprite_sheet_loader;
 
 use amethyst::assets::{AssetStorage, Loader};
-use amethyst::core::cgmath::{Matrix4, Transform as CgTransform, Vector3, Point3};
+use amethyst::core::cgmath::{Matrix4, Point3, Transform as CgTransform, Vector3};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::Entity;
 use amethyst::input::InputBundle;

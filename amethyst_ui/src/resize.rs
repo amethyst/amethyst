@@ -1,5 +1,5 @@
-use amethyst_core::specs::prelude::{Component, DenseVecStorage, Join, ReadExpect, System,
-                                    WriteStorage};
+use amethyst_core::shred::Resources;
+use amethyst_core::specs::prelude::{Component, DenseVecStorage, Join, Read, System, WriteStorage};
 use shrev::{EventChannel, ReaderId};
 use winit::{Event, WindowEvent};
 
@@ -16,15 +16,13 @@ impl Component for UiResize {
 /// This system rearranges UI elements whenever the screen is resized using their `UiResize`
 /// component.
 pub struct ResizeSystem {
-    event_reader: ReaderId<Event>,
+    event_reader: Option<ReaderId<Event>>,
 }
 
 impl ResizeSystem {
     /// Creates a new ResizeSystem that listens with the given reader Id.
-    pub fn new(winit_event_reader: ReaderId<Event>) -> ResizeSystem {
-        ResizeSystem {
-            event_reader: winit_event_reader,
-        }
+    pub fn new() -> ResizeSystem {
+        ResizeSystem { event_reader: None }
     }
 }
 
@@ -32,11 +30,11 @@ impl<'a> System<'a> for ResizeSystem {
     type SystemData = (
         WriteStorage<'a, UiTransform>,
         WriteStorage<'a, UiResize>,
-        ReadExpect<'a, EventChannel<Event>>,
+        Read<'a, EventChannel<Event>>,
     );
 
     fn run(&mut self, (mut transform, mut resize, events): Self::SystemData) {
-        for event in events.read(&mut self.event_reader) {
+        for event in events.read(&mut self.event_reader.as_mut().unwrap()) {
             if let &Event::WindowEvent {
                 event: WindowEvent::Resized(width, height),
                 ..
@@ -47,5 +45,11 @@ impl<'a> System<'a> for ResizeSystem {
                 }
             }
         }
+    }
+
+    fn setup(&mut self, res: &mut Resources) {
+        use amethyst_core::specs::prelude::SystemData;
+        Self::SystemData::setup(res);
+        self.event_reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
     }
 }

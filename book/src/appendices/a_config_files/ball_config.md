@@ -79,12 +79,12 @@ avoid duplicating this effort.
 Now, within the `initialise_ball` function, replace `BALL_VELOCITY_X` with `velocity_x`, `BALL_VELOCITY_Y` 
 with `velocity_y`, `BALL_RADIUS` with `radius`, and `BALL_COLOR` with `color`.
 
-## Modifying the Bundle
+## Modifying the initialisation
 
-Now we will modify our bundle. We don't want everyone to always access all the config files, so we need to 
+Now we will modify our application initialisation. We don't want everyone to always access all the config files, so we need to 
 add each resource separately so systems can use only what they want.
 
-First, we need to change what `bundle.rs` is using. Change
+First, we need to change what `main.rs` is using. Change
 
 ```rust, ignore
 use config::ArenaConfig;
@@ -96,31 +96,23 @@ to
 use config::PongConfig;
 ```
 
-Now, modify the `build()` function in the `ECSBundle` trait implementation from
+Now, modify the `run()` function, from
 
 ```rust, ignore
-fn build(
-    self,
-    world: &mut World,
-    builder: DispatcherBuilder<'a, 'b>
-) -> Result<DispatcherBuilder<'a, 'b>> {
-    world.add_resource(self.config);
-    ...
-}
+let arena_config = ArenaConfig::load(&config);
+[..]
+    .with_resource(arena_config)
+    .with_bundle(PongBundle::default())?
 ```
 
 to
 
 ```rust, ignore
-fn build(
-    self,
-    world: &mut World,
-    builder: DispatcherBuilder<'a, 'b>
-) -> Result<DispatcherBuilder<'a, 'b>> {
-    world.add_resource(self.config.arena);
-    world.add_resource(self.config.ball);
-    ...
-}
+let pong_config = PongConfig::load(&config);
+[..]
+    .with_resource(pong_config.arena)
+    .with_resource(pong_config.ball)
+    .with_bundle(PongBundle::default())?
 ```
 
 ## Adding the BallConfig to `config.ron`
