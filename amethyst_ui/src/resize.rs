@@ -1,5 +1,5 @@
-use amethyst_core::shred::Resources;
-use amethyst_core::specs::prelude::{Component, DenseVecStorage, Join, Read, System, WriteStorage};
+use amethyst_core::specs::prelude::{Component, DenseVecStorage, Join, Read, Resources, System,
+                                    WriteStorage};
 use shrev::{EventChannel, ReaderId};
 use winit::{Event, WindowEvent};
 

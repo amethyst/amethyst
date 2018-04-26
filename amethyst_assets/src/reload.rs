@@ -5,8 +5,7 @@ use std::time::Instant;
 
 use amethyst_core as core;
 use amethyst_core::{ECSBundle, Time};
-use amethyst_core::shred::Resources;
-use amethyst_core::specs::prelude::{DispatcherBuilder, Read, System, World, Write};
+use amethyst_core::specs::prelude::{DispatcherBuilder, Read, Resources, System, World, Write};
 
 use {Asset, Format, FormatValue, Loader, Result, Source};
 
