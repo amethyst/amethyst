@@ -64,8 +64,8 @@ where
             .write_resource::<EventChannel<Event>>()
             .register_reader();
 
-        let mut locals = world.write::<UiTransform>();
-        let mut stretches = world.write::<Stretched>();
+        let mut locals = world.write_storage::<UiTransform>();
+        let mut stretches = world.write_storage::<Stretched>();
 
         Ok(builder
             .with(Processor::<FontAsset>::new(), "font_processor", &[])

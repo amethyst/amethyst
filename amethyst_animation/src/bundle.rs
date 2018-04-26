@@ -44,7 +44,7 @@ impl<'a, 'b, 'c> ECSBundle<'a, 'b> for VertexSkinningBundle<'c> {
         world.register::<Joint>();
         world.register::<Skin>();
         world.register::<JointTransforms>();
-        let mut transforms = world.write::<GlobalTransform>();
+        let mut transforms = world.write_storage::<GlobalTransform>();
         Ok(builder.with(
             VertexSkinningSystem::new(transforms.track_inserted(), transforms.track_modified()),
             "vertex_skinning_system",

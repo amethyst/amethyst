@@ -45,7 +45,7 @@ impl<'a, 'b, 'c> ECSBundle<'a, 'b> for TransformBundle<'c> {
     ) -> Result<DispatcherBuilder<'a, 'b>> {
         world.register::<Transform>();
 
-        let mut locals = world.write::<Transform>();
+        let mut locals = world.write_storage::<Transform>();
 
         Ok(builder
             .with(

@@ -237,7 +237,7 @@ impl State for Example {
     }
 
     fn update(&mut self, world: &mut World) -> Trans {
-        let mut ui_text = world.write::<UiText>();
+        let mut ui_text = world.write_storage::<UiText>();
         if let Some(fps_display) = self.fps_display.and_then(|entity| ui_text.get_mut(entity)) {
             if world.read_resource::<Time>().frame_number() % 20 == 0 {
                 let fps = world.read_resource::<FPSCounter>().sampled_fps();

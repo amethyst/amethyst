@@ -124,14 +124,14 @@ impl State for Example {
 
                         Some(VirtualKeyCode::Left) => {
                             get_animation_set::<AnimationId, Transform>(
-                                &mut world.write(),
+                                &mut world.write_storage(),
                                 self.sphere.unwrap().clone(),
                             ).step(self.current_animation, StepDirection::Backward);
                         }
 
                         Some(VirtualKeyCode::Right) => {
                             get_animation_set::<AnimationId, Transform>(
-                                &mut world.write(),
+                                &mut world.write_storage(),
                                 self.sphere.unwrap().clone(),
                             ).step(self.current_animation, StepDirection::Forward);
                         }
@@ -139,7 +139,7 @@ impl State for Example {
                         Some(VirtualKeyCode::F) => {
                             self.rate = 1.0;
                             get_animation_set::<AnimationId, Transform>(
-                                &mut world.write(),
+                                &mut world.write_storage(),
                                 self.sphere.unwrap().clone(),
                             ).set_rate(self.current_animation, self.rate);
                         }
@@ -147,7 +147,7 @@ impl State for Example {
                         Some(VirtualKeyCode::V) => {
                             self.rate = 0.0;
                             get_animation_set::<AnimationId, Transform>(
-                                &mut world.write(),
+                                &mut world.write_storage(),
                                 self.sphere.unwrap().clone(),
                             ).set_rate(self.current_animation, self.rate);
                         }
@@ -155,7 +155,7 @@ impl State for Example {
                         Some(VirtualKeyCode::H) => {
                             self.rate = 0.5;
                             get_animation_set::<AnimationId, Transform>(
-                                &mut world.write(),
+                                &mut world.write_storage(),
                                 self.sphere.unwrap().clone(),
                             ).set_rate(self.current_animation, self.rate);
                         }
@@ -357,7 +357,7 @@ fn initialise_animation(world: &mut World, entity: Entity) {
         &loader,
         &animation_storage,
     );
-    world.write().insert(entity, set);
+    world.write_storage().insert(entity, set);
 }
 
 fn add_to_set(
@@ -387,12 +387,12 @@ fn add_animation(
     toggle_if_exists: bool,
 ) {
     let animation = world
-        .read::<AnimationSet<AnimationId, Transform>>()
+        .read_storage::<AnimationSet<AnimationId, Transform>>()
         .get(entity)
         .and_then(|s| s.get(&id))
         .cloned()
         .unwrap();
-    let mut sets = world.write();
+    let mut sets = world.write_storage();
     let control_set = get_animation_set::<AnimationId, Transform>(&mut sets, entity);
     match defer {
         None => {
