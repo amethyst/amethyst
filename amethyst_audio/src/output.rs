@@ -4,9 +4,9 @@
 use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::io::Cursor;
 
-use cpal::{default_endpoint, endpoints};
-use cpal::EndpointsIterator;
-use rodio::{Decoder, Endpoint, Sink, Source as RSource};
+
+use cpal::OutputDevices;
+use rodio::{Decoder, Device, Sink, Source as RSource, default_output_device, output_devices};
 
 use DecoderError;
 use source::Source;
@@ -16,13 +16,13 @@ use source::Source;
 /// By convention, the default output is stored as a resource in the `World`.
 #[derive(Clone, Eq, PartialEq)]
 pub struct Output {
-    pub(crate) endpoint: Endpoint,
+    pub(crate) device: Device,
 }
 
 impl Output {
     /// Gets the name of the output
     pub fn name(&self) -> String {
-        self.endpoint.name()
+        self.device.name()
     }
 
     /// Play a sound once.  A volume of 1.0 is unchanged, while 0.0 is silent.
@@ -57,7 +57,7 @@ impl Output {
         volume: f32,
         n: u16,
     ) -> Result<(), DecoderError> {
-        let sink = Sink::new(&self.endpoint);
+        let sink = Sink::new(&self.device);
         for _ in 0..n {
             sink.append(
                 Decoder::new(Cursor::new(source.clone()))
@@ -73,30 +73,30 @@ impl Output {
 impl Debug for Output {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         f.debug_struct("Output")
-            .field("endpoint", &self.name())
+            .field("device", &self.name())
             .finish()
     }
 }
 
 /// An iterator over outputs
 pub struct OutputIterator {
-    input: EndpointsIterator,
+    input: OutputDevices,
 }
 
 impl Iterator for OutputIterator {
     type Item = Output;
 
     fn next(&mut self) -> Option<Output> {
-        self.input.next().map(|re| Output { endpoint: re })
+        self.input.next().map(|re| Output { device: re })
     }
 }
 
 /// Get the default output, returns none if no outputs are available.
 pub fn default_output() -> Option<Output> {
-    default_endpoint().map(|re| Output { endpoint: re })
+    Some(Output { device: default_output_device()? })
 }
 
 /// Get a list of outputs available to the system.
 pub fn outputs() -> OutputIterator {
-    OutputIterator { input: endpoints() }
+    OutputIterator { input: output_devices() }
 }

@@ -5,7 +5,7 @@ use std::marker::PhantomData;
 use amethyst_assets::Processor;
 use amethyst_core::bundle::{ECSBundle, Result};
 use amethyst_core::specs::prelude::{DispatcherBuilder, World};
-use cpal::default_endpoint;
+use rodio::default_output_device;
 
 use source::*;
 use systems::DjSystem;
@@ -55,7 +55,7 @@ where
 {
     fn build(self, _: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
         builder.add(Processor::<Source>::new(), "source_processor", &[]);
-        if let Some(_) = default_endpoint() {
+        if let Some(_) = default_output_device() {
             builder.add(DjSystem::new(self.picker), "dj_system", self.dep);
         }
 

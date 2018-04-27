@@ -81,7 +81,7 @@ impl<'a> System<'a> for AudioSystem {
                     }
                     while let Some(source) = audio_emitter.sound_queue.pop() {
                         let sink = SpatialSink::new(
-                            &listener.output.endpoint,
+                            &listener.output.device,
                             emitter_position,
                             left_ear_position,
                             right_ear_position,

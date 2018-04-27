@@ -15,7 +15,7 @@ impl AudioSink {
     /// Creates a new `AudioSink` using the given audio output.
     pub fn new(output: &Output) -> AudioSink {
         AudioSink {
-            sink: Sink::new(&output.endpoint),
+            sink: Sink::new(&output.device),
         }
     }
 
