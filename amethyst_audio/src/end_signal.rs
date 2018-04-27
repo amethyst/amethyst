@@ -50,8 +50,8 @@ where
         self.input.channels()
     }
 
-    fn samples_rate(&self) -> u32 {
-        self.input.samples_rate()
+    fn sample_rate(&self) -> u32 {
+        self.input.sample_rate()
     }
 
     fn total_duration(&self) -> Option<Duration> {

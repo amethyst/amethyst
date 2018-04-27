@@ -1,7 +1,7 @@
 use std::iter::Iterator;
 use std::mem::replace;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 
 use amethyst_core::cgmath::Transform;
 use amethyst_core::specs::prelude::{Entities, Entity, Join, Read, ReadStorage, System,
@@ -81,7 +81,7 @@ impl<'a> System<'a> for AudioSystem {
                     }
                     while let Some(source) = audio_emitter.sound_queue.pop() {
                         let sink = SpatialSink::new(
-                            &listener.output.endpoint,
+                            &listener.output.device,
                             emitter_position,
                             left_ear_position,
                             right_ear_position,
