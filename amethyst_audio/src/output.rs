@@ -92,9 +92,7 @@ impl Iterator for OutputIterator {
 
 /// Get the default output, returns none if no outputs are available.
 pub fn default_output() -> Option<Output> {
-    Some(Output {
-        device: default_output_device()?,
-    })
+    default_output_device().map(|re| Output { device: re })
 }
 
 /// Get a list of outputs available to the system.
