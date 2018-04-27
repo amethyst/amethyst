@@ -3,6 +3,7 @@ use amethyst::assets::AssetStorage;
 use amethyst::audio::Source;
 use amethyst::audio::output::Output;
 use amethyst::core::transform::Transform;
+use amethyst::core::cgmath::Vector3;
 use amethyst::ecs::prelude::{Entity, Join, Read, ReadExpect, System, Write, WriteStorage};
 use amethyst::ui::UiText;
 use audio::Sounds;
@@ -40,16 +41,16 @@ impl<'s> System<'s> for WinnerSystem {
         for (ball, transform) in (&mut balls, &mut transforms).join() {
             use ARENA_WIDTH;
 
-            let ball_x = transform.translation[0];
+            let ball_pos = transform.position();
 
-            let did_hit = if ball_x <= ball.radius {
+            let did_hit = if ball_pos.x <= ball.radius {
                 // Right player scored on the left side.
                 score_board.score_right += 1;
                 if let Some(text) = text.get_mut(score_text.p2_score) {
                     text.text = score_board.score_right.to_string();
                 }
                 true
-            } else if ball_x >= ARENA_WIDTH - ball.radius {
+            } else if ball_pos.x >= ARENA_WIDTH - ball.radius {
                 // Left player scored on the right side.
                 score_board.score_left += 1;
                 if let Some(text) = text.get_mut(score_text.p1_score) {
@@ -63,7 +64,11 @@ impl<'s> System<'s> for WinnerSystem {
             if did_hit {
                 // Reset the ball.
                 ball.velocity[0] = -ball.velocity[0];
-                transform.translation[0] = ARENA_WIDTH / 2.0;
+                transform.set_position(Vector3 {
+                    x: ARENA_WIDTH / 2.0,
+                    y: ball_pos.y,
+                    z: ball_pos.z
+                });
 
                 // Print the score board.
                 println!(

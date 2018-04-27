@@ -8,7 +8,7 @@ extern crate amethyst;
 use amethyst::{Application, Error, State, Trans};
 use amethyst::assets::{HotReloadBundle, Loader};
 use amethyst::config::Config;
-use amethyst::core::cgmath::{Array, Deg, Euler, Quaternion, Rad, Rotation, Rotation3, Vector3};
+use amethyst::core::cgmath::{Deg, Euler, Quaternion, Rad, Rotation, Rotation3, Vector3};
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::timing::Time;
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
@@ -61,10 +61,12 @@ fn run(&mut self, (mut lights, time, camera, mut transforms, mut state, mut ui_t
             Quaternion::from_angle_z(Rad(camera_angular_velocity * time.delta_seconds()));
         for (_, transform) in (&camera, &mut transforms).join() {
             // rotate the camera, using the origin as a pivot point
-            transform.translation = delta_rot.rotate_vector(transform.translation);
+            let position = transform.position();
+            transform.set_position(delta_rot.rotate_vector(position));
             // add the delta rotation for the frame to the total rotation (quaternion multiplication
             // is the same as rotational addition)
-            transform.rotation = (delta_rot * Quaternion::from(transform.rotation)).into();
+            let rotation = transform.rotation();
+            transform.set_rotation(delta_rot * rotation);
         }
 
         for point_light in (&mut lights).join().filter_map(|light| {
@@ -100,9 +102,9 @@ impl State for Example {
 
         // Add teapot and lid to scene
         for mesh in vec![assets.lid.clone(), assets.teapot.clone()] {
-            let mut trans = Transform::default();
-            trans.rotation = Quaternion::from(Euler::new(Deg(90.0), Deg(-90.0), Deg(0.0))).into();
-            trans.translation = Vector3::new(5.0, 5.0, 0.0);
+            let trans = Transform::default()
+                .with_rotation(Quaternion::from(Euler::new(Deg(90.0), Deg(-90.0), Deg(0.0))))
+                .with_position(Vector3::new(5.0, 5.0, 0.0));
 
             world
                 .create_entity()
@@ -114,9 +116,9 @@ impl State for Example {
         }
 
         // Add cube to scene
-        let mut trans = Transform::default();
-        trans.translation = Vector3::new(5.0, -5.0, 2.0);
-        trans.scale = [2.0; 3].into();
+        let trans = Transform::default()
+            .with_position(Vector3::new(5.0, -5.0, 2.0))
+            .with_scale(2.0);
 
         world
             .create_entity()
@@ -127,9 +129,9 @@ impl State for Example {
             .build();
 
         // Add cone to scene
-        let mut trans = Transform::default();
-        trans.translation = Vector3::new(-5.0, 5.0, 0.0);
-        trans.scale = [2.0; 3].into();
+        let trans = Transform::default()
+            .with_position(Vector3::new(-5.0, 5.0, 0.0))
+            .with_scale(2.0);
 
         world
             .create_entity()
@@ -140,8 +142,8 @@ impl State for Example {
             .build();
 
         // Add custom cube object to scene
-        let mut trans = Transform::default();
-        trans.translation = Vector3::new(-5.0, -5.0, 1.0);
+        let trans = Transform::default()
+            .with_position(Vector3::new(-5.0, -5.0, 1.0));
         world
             .create_entity()
             .with(assets.cube.clone())
@@ -151,8 +153,8 @@ impl State for Example {
             .build();
 
         // Create base rectangle as floor
-        let mut trans = Transform::default();
-        trans.scale = Vector3::from_value(10.);
+        let trans = Transform::default()
+            .with_scale(10.);
 
         world
             .create_entity()
@@ -404,9 +406,9 @@ fn run() -> Result<(), Error> {
 }
 
 fn initialise_camera(world: &mut World) {
-    let mut local = Transform::default();
-    local.translation = Vector3::new(0., -20., 10.);
-    local.rotation = Quaternion::from_angle_x(Deg(75.)).into();
+    let local = Transform::default()
+        .with_position(Vector3::new(0., -20., 10.))
+        .with_rotation(Quaternion::from_angle_x(Deg(75.)));
     world
         .create_entity()
         .with(Camera::from(Projection::perspective(1.3, Deg(60.0))))

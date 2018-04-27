@@ -361,7 +361,7 @@ fn load_node(
             let center = (min + max.to_vec()) / 2.;
             local_transforms
                 .get_mut(*node_entity)
-                .map(|t| t.translation -= center.to_vec());
+                .map(|t| t.with_position(t.position() - center.to_vec()));
             debug!("Moving node from: {:?} to origin", center);
         }
         let mut mesh_entities = vec![];

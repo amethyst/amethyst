@@ -267,10 +267,8 @@ fn initialise_sphere(world: &mut World) -> Entity {
     // Create a sphere entity using the mesh and the material.
     world
         .create_entity()
-        .with(Transform {
-            translation: [0., 1.0, 0.].into(),
-            ..Transform::default()
-        })
+        .with(*Transform::default().with_position([0., 1.0, 0.].into())
+        )
         .with(GlobalTransform::default())
         .with(Parent {
             entity: parent_entity.clone(),

@@ -61,6 +61,7 @@ genmesh = "0.5"
 ron = "0.1"
 serde = "1.0"
 serde_derive = "1.0"
+num-traits = "0.2"
 
 [build-dependencies]
 vergen = "0.1"

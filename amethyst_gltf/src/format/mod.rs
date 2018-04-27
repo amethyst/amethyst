@@ -10,7 +10,7 @@ use self::importer::{get_image_data, import, Buffers, ImageFormat};
 use animation::{InterpolationFunction, InterpolationPrimitive, Sampler, SamplerPrimitive,
                 TransformChannel};
 use assets::{Error as AssetError, Format, FormatValue, Result as AssetResult, ResultExt, Source};
-use core::cgmath::{Matrix4, SquareMatrix};
+use core::cgmath::{Matrix4, SquareMatrix, Quaternion};
 use core::transform::Transform;
 use gfx::Primitive;
 use gfx::texture::SamplerInfo;
@@ -514,11 +514,14 @@ fn load_node(
     };
 
     let (translation, rotation, scale) = node.transform().decomposed();
-    let mut local_transform = Transform::default();
-    local_transform.translation = translation.into();
-    // gltf quat format: [x, y, z, w], our quat format: [w, x, y, z]
-    local_transform.rotation = [rotation[3], rotation[0], rotation[1], rotation[2]].into();
-    local_transform.scale = scale.into();
+    if scale[1] != scale[0] || scale[2] != scale[0] {
+        warn!("Importing gltf node will scale like {:?} instead of {:?}", [scale[0]; 3], scale);
+    }
+    let local_transform = Transform::default()
+        .with_position(translation)
+        // gltf quat format: [x, y, z, w], our quat format: [w, x, y, z]
+        .with_rotation(Quaternion::new(rotation[3], rotation[0], rotation[1], rotation[2]))
+        .with_scale(scale[0]);
 
     let skin = node.skin().map(|s| s.index());
 

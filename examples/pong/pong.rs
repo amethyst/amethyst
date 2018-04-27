@@ -82,8 +82,8 @@ fn initialise_paddles(world: &mut World) {
 
     // Correctly position the paddles.
     let y = (ARENA_HEIGHT - PADDLE_HEIGHT) / 2.0;
-    left_transform.translation = Vector3::new(0.0, y, 0.0);
-    right_transform.translation = Vector3::new(ARENA_WIDTH - PADDLE_WIDTH, y, 0.0);
+    left_transform.set_position(Vector3::new(0.0, y, 0.0));
+    right_transform.set_position(Vector3::new(ARENA_WIDTH - PADDLE_WIDTH, y, 0.0));
 
     // Create the mesh and the material needed.
     let mesh = create_mesh(
@@ -132,7 +132,7 @@ fn initialise_balls(world: &mut World) {
     let mesh = create_mesh(world, generate_circle_vertices(BALL_RADIUS, 16));
     let material = create_colour_material(world, BALL_COLOUR);
     let mut local_transform = Transform::default();
-    local_transform.translation = Vector3::new(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
+    local_transform.set_position(Vector3::new(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0));
 
     world
         .create_entity()
