@@ -3,7 +3,7 @@ use amethyst::core::timing::Time;
 use amethyst::core::transform::Transform;
 use amethyst::ecs::prelude::{Join, Read, ReadStorage, System, WriteStorage};
 use amethyst::input::InputHandler;
-use num_traits::clamp;
+use amethyst::core::cgmath::num_traits::clamp;
 
 /// This system is responsible for moving all the paddles according to the user
 /// provided input.

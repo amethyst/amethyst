@@ -1,8 +1,8 @@
-use amethyst::config::Config;
+//use amethyst::config::Config;
 use amethyst::core::bundle::{ECSBundle, Result};
 use amethyst::ecs::prelude::{DispatcherBuilder, World};
-use config::PongConfig;
-use std::path::Path;
+//use config::PongConfig;
+//use std::path::Path;
 use systems::{BounceSystem, MoveBallsSystem, PaddleSystem, WinnerSystem};
 
 /// A bundle is a convenient way to initialise related resources, components and systems in a

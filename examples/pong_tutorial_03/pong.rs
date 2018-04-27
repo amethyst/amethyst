@@ -69,13 +69,13 @@ fn initialise_camera(world: &mut World) {
 
 /// Initialises one paddle on the left, and one paddle on the right.
 fn initialise_paddles(world: &mut World) {
-    let mut left_transform = Transform::default();
-    let mut right_transform = Transform::default();
 
     // Correctly position the paddles.
     let y = -PADDLE_HEIGHT / 2.0;
-    left_transform.translation = Vector3::new(-1.0, y, 0.0);
-    right_transform.translation = Vector3::new(1.0 - PADDLE_WIDTH, y, 0.0);
+    let left_transform = Transform::default()
+        .with_position(Vector3::new(-1.0, y, 0.0));
+    let right_transform = Transform::default()
+        .with_position(Vector3::new(1.0 - PADDLE_WIDTH, y, 0.0));
 
     // Create the mesh and the material needed.
     let mesh = create_mesh(

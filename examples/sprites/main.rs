@@ -76,12 +76,12 @@ impl State for Example {
             (dim.width(), dim.height())
         };
         // This `Transform` moves the sprites to the middle of the window
-        let mut common_transform = Transform::default();
-        common_transform.translation = Vector3::new(
-            width / 2. - sprite_offset_x,
-            height / 2. - sprite_offset_y,
-            0.,
-        );
+        let common_transform = Transform::default()
+            .with_position(Vector3::new(
+                width / 2. - sprite_offset_x,
+                height / 2. - sprite_offset_y,
+                0.,
+            ));
 
         // Store sprite sheet texture in the world's `MaterialTextureSet` resource (singleton hash
         // map)
@@ -91,8 +91,8 @@ impl State for Example {
 
         // Create an entity per sprite.
         for i in 0..sprite_count {
-            let mut sprite_transform = Transform::default();
-            sprite_transform.translation = Vector3::new(i as f32 * sprite_w, 0., 0.);
+            let mut sprite_transform = Transform::default()
+                .with_position(Vector3::new(i as f32 * sprite_w, 0., 0.));
 
             // This combines multiple `Transform`ations.
             // You need to `use amethyst::core::cgmath::Transform`;

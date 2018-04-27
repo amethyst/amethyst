@@ -83,9 +83,9 @@ impl State for AssetsExample {
             (mesh, mat)
         };
 
-        let mut trans = Transform::default();
-        trans.translation = Vector3::new(-5.0, 0.0, 0.0);
-        trans.scale = Vector3::from_value(2.);
+        let trans = Transform::default()
+            .with_position(Vector3::new(-5.0, 0.0, 0.0))
+            .with_scale(2.);
         world
             .create_entity()
             .with(mesh)

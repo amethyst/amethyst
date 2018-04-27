@@ -1,7 +1,6 @@
 //! TODO: Rewrite for new renderer.
 
 extern crate amethyst;
-extern crate num_traits; // for `clamp`
 
 mod pong;
 mod systems;

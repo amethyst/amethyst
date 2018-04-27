@@ -18,15 +18,7 @@ pub struct Transform {
     pub inner: Decomposed<Vector3<f32>, Quaternion<f32>>
 }
 
-impl Deref for Transform {
-    type Target = Decomposed;
-    fn deref(&self) -> &Self::Target {
-        &self.inner
-    }
-}
-
 impl Transform {
-
     /// Create a new transform from an existing position, rotation, and scale factor.
     ///
     /// If you only want to set one of the parameters it's probably better to use the `with_`

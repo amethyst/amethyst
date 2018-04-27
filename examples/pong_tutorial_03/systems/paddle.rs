@@ -1,4 +1,5 @@
 use amethyst::core::transform::components::Transform;
+use amethyst::core::cgmath::num_traits::clamp;
 use amethyst::ecs::prelude::{Join, Read, ReadStorage, System, WriteStorage};
 use amethyst::input::InputHandler;
 use pong::{Paddle, Side, PADDLE_HEIGHT};
@@ -20,9 +21,8 @@ impl<'s> System<'s> for PaddleSystem {
             };
             if let Some(mv_amount) = movement {
                 let scaled_amount = (1.0 / 60.0) * mv_amount as f32;
-                transform.translation[1] = (transform.translation[1] + scaled_amount)
-                    .min(1.0 - PADDLE_HEIGHT)
-                    .max(-1.0);
+                let mut position = transform.position();
+                position[1] = clamp(position[1] + scaled_amount, 1.0 - PADDLE_HEIGHT, -1.0);
             }
         }
     }
