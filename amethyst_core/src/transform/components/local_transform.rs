@@ -14,26 +14,28 @@ use std::{cmp, ops};
 /// The transforms are preformed in this order: scale, then rotation, then translation,
 /// or in maths `world_vertex = translation * rotation * scale * model_vertex`
 #[derive(Copy, Clone, Debug)]
-pub struct Transform(Decomposed<Vector3<f32>, Quaternion<f32>>);
+pub struct Transform {
+    pub inner: Decomposed<Vector3<f32>, Quaternion<f32>>
+}
 
 impl Transform {
 
     /// Get the current position
     #[inline]
     pub fn position(&self) -> Vector3<f32> {
-        self.0.disp
+        self.inner.disp
     }
 
     /// Get the current rotation
     #[inline]
     pub fn rotation(&self) -> Quaternion<f32> {
-        self.0.rot
+        self.inner.rot
     }
 
     /// Get the current rotation
     #[inline]
     pub fn scale(&self) -> f32 {
-        self.0.scale
+        self.inner.scale
     }
 
     /// Set the position.
@@ -41,7 +43,7 @@ impl Transform {
     pub fn set_position<P>(&mut self, position: P) -> &mut Self
         where P: Into<Vector3<f32>>
     {
-        self.0.disp = position.into();
+        self.inner.disp = position.into();
         self
     }
 
@@ -50,7 +52,7 @@ impl Transform {
     pub fn set_rotation<Q>(&mut self, rotation: Q) -> &mut Self
         where Q: Into<Quaternion<f32>>
     {
-        self.0.rot = rotation.into().normalize();
+        self.inner.rot = rotation.into().normalize();
         self
     }
 
@@ -67,14 +69,14 @@ impl Transform {
               Rad<f32>: From<A>
     {
         // we use Euler as an internediate stage to avoid gimbal lock
-        self.0.rot = Quaternion::from(Euler { x, y, z });
+        self.inner.rot = Quaternion::from(Euler { x, y, z });
         self
     }
 
     /// Set the scale
     #[inline]
     pub fn set_scale(&mut self, scale: f32) -> &mut Self {
-        self.0.scale = scale;
+        self.inner.scale = scale;
         self
     }
 
@@ -83,7 +85,7 @@ impl Transform {
     pub fn with_position<P>(mut self, position: P) -> Self
         where P: Into<Vector3<f32>>
     {
-        self.0.disp = position.into();
+        self.inner.disp = position.into();
         self
     }
 
@@ -92,7 +94,7 @@ impl Transform {
     pub fn with_rotation<Q>(mut self, rotation: Q) -> Self
         where Q: Into<Quaternion<f32>>
     {
-        self.0.rot = rotation.into().normalize();
+        self.inner.rot = rotation.into().normalize();
         self
     }
 
@@ -109,14 +111,14 @@ impl Transform {
               Rad<f32>: From<A>
     {
         // we use Euler as an internediate stage to avoid gimbal lock
-        self.0.rot = Quaternion::from(Euler { x, y, z });
+        self.inner.rot = Quaternion::from(Euler { x, y, z });
         self
     }
 
     /// Set the scale
     #[inline]
     pub fn with_scale(mut self, scale: f32) -> Self {
-        self.0.scale = scale;
+        self.inner.scale = scale;
         self
     }
 
@@ -149,7 +151,7 @@ impl Transform {
     // FIXME doctest
     #[inline]
     pub fn look_at(&mut self, position: Point3<f32>, up: Vector3<f32>) -> &mut Self {
-        self.0 = Decomposed::look_at(Point3::from_vec(self.0.disp), position, up);
+        self.inner = Decomposed::look_at(Point3::from_vec(self.inner.disp), position, up);
         self
     }
 
@@ -157,13 +159,13 @@ impl Transform {
     /// vectors
     #[inline]
     pub fn orientation(&self) -> Orientation {
-        Orientation::from(Matrix3::from(self.0.rot))
+        Orientation::from(Matrix3::from(self.inner.rot))
     }
 
     /// Move relatively to its current position.
     #[inline]
     pub fn move_global(&mut self, translation: Vector3<f32>) -> &mut Self {
-        self.0.disp += translation;
+        self.inner.disp += translation;
         self
     }
 
@@ -172,7 +174,7 @@ impl Transform {
     /// Equivalent to rotating the translation before applying.
     #[inline]
     pub fn move_local(&mut self, translation: Vector3<f32>) -> &mut Self {
-        self.0.disp += self.0.rot * translation;
+        self.inner.disp += self.inner.rot * translation;
         self
     }
 
@@ -182,7 +184,7 @@ impl Transform {
     #[inline]
     pub fn move_along_global(&mut self, direction: Vector3<f32>, distance: f32) -> &mut Self {
         if !ulps_eq!(direction, Zero::zero()) {
-            self.0.disp += direction.normalize_to(distance);
+            self.inner.disp += direction.normalize_to(distance);
         }
         self
     }
@@ -193,7 +195,7 @@ impl Transform {
     #[inline]
     pub fn move_along_local(&mut self, direction: Vector3<f32>, distance: f32) -> &mut Self {
         if !ulps_eq!(direction, Zero::zero()) {
-            self.0.disp += self.0.rot * direction.normalize_to(distance);
+            self.inner.disp += self.inner.rot * direction.normalize_to(distance);
         }
         self
     }
@@ -281,7 +283,7 @@ impl Transform {
         );
         // avoid doing sqrt twice by reusing mag
         let q = Quaternion::from_axis_angle(axis / mag, angle);
-        self.0.rot = q * self.0.rot;
+        self.inner.rot = q * self.inner.rot;
         self
     }
 
@@ -295,7 +297,7 @@ impl Transform {
         );
         // avoid doing sqrt twice by reusing mag
         let q = Quaternion::from_axis_angle(axis / mag, angle);
-        self.0.rot = self.0.rot * q;
+        self.inner.rot = self.inner.rot * q;
         self
     }
 
@@ -331,23 +333,25 @@ impl Transform {
 
     /// Get the 2d rotation basis
     fn basis_2d(&self) -> Basis2<f32> {
-        Rotation2::from_angle(-Euler::from(self.0.rot).z)
+        Rotation2::from_angle(-Euler::from(self.inner.rot).z)
     }
 }
 
 impl From<Transform> for Matrix4<f32> {
     fn from(t: Transform) -> Self {
-        t.0.into()
+        t.inner.into()
     }
 }
 
 impl Default for Transform {
     fn default() -> Transform {
-        Transform(Decomposed {
-            scale: One::one(),
-            rot: Quaternion::one(),
-            disp: Zero::zero()
-        })
+        Transform {
+            inner: Decomposed {
+                scale: One::one(),
+                rot: Quaternion::one(),
+                disp: Zero::zero()
+            }
+        }
     }
 }
 
@@ -361,9 +365,9 @@ impl ops::Mul for Transform {
 
 impl cmp::PartialEq for Transform {
     fn eq(&self, other: &Self) -> bool {
-        self.0.scale == other.0.scale
-            && self.0.rot == other.0.rot
-            && self.0.disp == other.0.disp
+        self.inner.scale == other.inner.scale
+            && self.inner.rot == other.inner.rot
+            && self.inner.disp == other.inner.disp
     }
 }
 
@@ -379,27 +383,27 @@ impl CgTransform<Point3<f32>> for Transform {
     }
 
     fn look_at(eye: Point3<f32>, center: Point3<f32>, up: Vector3<f32>) -> Self {
-        Transform(Decomposed::look_at(eye, center, up))
+        Transform { inner: Decomposed::look_at(eye, center, up) }
     }
 
     fn transform_vector(&self, vec: Vector3<f32>) -> Vector3<f32> {
-        self.0.transform_vector(vec)
+        self.inner.transform_vector(vec)
     }
 
     fn inverse_transform_vector(&self, vec: Vector3<f32>) -> Option<Vector3<f32>> {
-        self.0.inverse_transform_vector(vec)
+        self.inner.inverse_transform_vector(vec)
     }
 
     fn transform_point(&self, point: Point3<f32>) -> Point3<f32> {
-        self.0.transform_point(point)
+        self.inner.transform_point(point)
     }
 
     fn concat(&self, other: &Self) -> Self {
-        Transform(self.0.concat(&other.0))
+        Transform { inner: self.inner.concat(&other.inner) }
     }
 
     fn inverse_transform(&self) -> Option<Self> {
-        self.0.inverse_transform().map(Transform)
+        Some(Transform { inner: self.inner.inverse_transform()? })
     }
 }
 
@@ -413,50 +417,27 @@ impl CgTransform<Point2<f32>> for Transform {
     }
 
     fn transform_vector(&self, vec: Vector2<f32>) -> Vector2<f32> {
-        self.basis_2d().rotate_vector(vec * self.0.scale)
+        self.basis_2d().rotate_vector(vec * self.inner.scale)
     }
 
     fn inverse_transform_vector(&self, vec: Vector2<f32>) -> Option<Vector2<f32>> {
-        if ulps_eq!(self.0.scale, Zero::zero()) {
+        if ulps_eq!(self.inner.scale, Zero::zero()) {
             None
         } else {
-            Some(self.basis_2d().rotate_vector(vec / self.0.scale))
+            Some(self.basis_2d().rotate_vector(vec / self.inner.scale))
         }
     }
 
     fn transform_point(&self, point: Point2<f32>) -> Point2<f32> {
-        self.basis_2d().rotate_point(point * self.0.scale) + self.0.disp.truncate()
+        self.basis_2d().rotate_point(point * self.inner.scale) + self.inner.disp.truncate()
     }
 
     fn concat(&self, other: &Self) -> Self {
         <Self as CgTransform<Point3<f32>>>::concat(self, other)
-            /*
-        Self(Decomposed {
-            scale: self.0.scale * other.0.scale,
-            rotation: self.0.rot * other.0.rot,
-            translation: self.0.rot.rotate_vector(other.0.disp * self.0.scale) + self.disp,
-        }
-        */
     }
 
     fn inverse_transform(&self) -> Option<Self> {
         <Self as CgTransform<Point3<f32>>>::inverse_transform(self)
-            /*
-        if ulps_eq!(self.scale, Vector3::zero()) {
-            None
-        } else {
-            let scale = 1. / self.scale;
-            let rotation = self.rotation.invert();
-            let translation = rotation
-                .rotate_vector(self.translation)
-                .mul_element_wise(-scale);
-            Some(Self {
-                translation,
-                rotation,
-                scale,
-            })
-        }
-        */
     }
 }
 

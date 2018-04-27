@@ -8,7 +8,7 @@ use amethyst::animation::{get_animation_set, Animation, AnimationBundle, Animati
                          Sampler, SamplerPrimitive, StepDirection, TransformChannel};
 use amethyst::assets::{AssetStorage, Handle, Loader};
 use amethyst::core::{GlobalTransform, Parent, Transform, TransformBundle};
-use amethyst::core::cgmath::Deg;
+use amethyst::core::cgmath::{Deg, Vector3};
 use amethyst::ecs::prelude::{Entity, World};
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, ElementState, Event,
@@ -267,8 +267,7 @@ fn initialise_sphere(world: &mut World) -> Entity {
     // Create a sphere entity using the mesh and the material.
     world
         .create_entity()
-        .with(*Transform::default().with_position([0., 1.0, 0.].into())
-        )
+        .with(Transform::default().with_position(Vector3 {x: 0., y: 1., z: 0. }))
         .with(GlobalTransform::default())
         .with(Parent {
             entity: parent_entity.clone(),
