@@ -22,6 +22,7 @@ travis-ci = { repository = "amethyst/amethyst", branch = "develop" }
 profiler = [
     "thread_profiler",
     "thread_profiler/thread_profiler",
+    "amethyst_animation/profiler",
     "amethyst_assets/profiler",
     "amethyst_audio/profiler",
     "amethyst_config/profiler",
@@ -34,6 +35,7 @@ profiler = [
 ]
 
 [dependencies]
+amethyst_animation = { path = "amethyst_animation", version = "0.1.0" }
 amethyst_assets = { path = "amethyst_assets", version = "0.2.0" }
 amethyst_audio = { path = "amethyst_audio", version = "0.1.0" }
 amethyst_config = { path = "amethyst_config", version = "0.5.0" }
@@ -56,7 +58,6 @@ thread_profiler = { version = "0.1", optional = true }
 [dev-dependencies]
 amethyst_gltf = { path = "amethyst_gltf", version = "0.1" }
 genmesh = "0.5"
-amethyst_animation = { path = "amethyst_animation", version = "0.1.0" }
 ron = "0.1"
 serde = "1.0"
 serde_derive = "1.0"
