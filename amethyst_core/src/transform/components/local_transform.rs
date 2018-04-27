@@ -9,6 +9,8 @@ use specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
 /// Local position, rotation, and scale (from parent if it exists).
 ///
 /// Used for rendering position and orientation.
+///
+/// The transforms are preformed in this order: scale, then rotation, then translation.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Transform {
     /// Quaternion [w (scalar), x, y, z]
@@ -50,10 +52,12 @@ impl Transform {
     #[inline]
     pub fn look_at(&mut self, position: Point3<f32>, up: Vector3<f32>) -> &mut Self {
         self.rotation = Quaternion::look_at(Point3::from_vec(self.translation) - position, up);
+        // Catch NaNs etc. in debug mode.
         debug_assert!(self.rotation.s.is_finite()
                       && self.rotation.v.x.is_finite()
                       && self.rotation.v.y.is_finite()
-                      && self.rotation.v.z.is_finite());
+                      && self.rotation.v.z.is_finite(), 
+                      "`look_at` should be finite to be useful");
         self
     }
 
@@ -290,11 +294,8 @@ impl CgTransform<Point3<f32>> for Transform {
     fn look_at(eye: Point3<f32>, center: Point3<f32>, up: Vector3<f32>) -> Self {
         let rotation = Quaternion::look_at(center - eye, up);
         let translation = rotation.rotate_vector(Point3::origin() - eye);
-        Self {
-            scale: Vector3::from_value(1.),
-            rotation,
-            translation,
-        }
+        let scale = Vector3::from_value(1.);
+        Self { scale, rotation, translation, }
     }
 
     fn transform_vector(&self, vec: Vector3<f32>) -> Vector3<f32> {
