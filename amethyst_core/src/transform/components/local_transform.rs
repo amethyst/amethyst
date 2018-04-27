@@ -5,9 +5,6 @@ use cgmath::{Array, Basis2, Deg, ElementWise, EuclideanSpace, Euler, InnerSpace,
              Transform as CgTransform, Vector2, Vector3, Vector4, Rad, Zero, Angle};
 use orientation::Orientation;
 use specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
-use std::ops;
-
-error do not merge
 
 /// Local position, rotation, and scale (from parent if it exists).
 ///
@@ -25,6 +22,7 @@ pub struct Transform {
 }
 
 impl Transform {
+
     /// Makes the entity point towards `position`.
     ///
     /// `up` says which direction the entity should be 'rolled' to once it is pointing at
@@ -275,17 +273,10 @@ impl Transform {
         use cgmath::SquareMatrix;
         self.matrix().invert().unwrap()
     }
-
-    /// Create a new `Transform`.
-    ///
-    /// This transform performs no rotation, translation, or scaling by default. The transform
-    /// that does nothing is known as the *identity* transform.
-    pub fn identity() -> Self {
-        Default::default()
-    }
 }
 
 impl Default for Transform {
+    /// The default transform does nothing when used to transform an entity.
     fn default() -> Self {
         Transform {
             translation: Vector3::zero(),
@@ -293,37 +284,6 @@ impl Default for Transform {
             scale: Vector3::from_value(1.),
         }
     }
-}
-
-impl ops::Mul for Transform {
-    type Output = Self;
-    /// Multiplying two transforms together creates a new transform. Applying the new transform
-    /// is equivalent to applying `self` after `rhs`.
-    fn mul(self, rhs: Self) -> Self::Output {
-        // equivalent to multiplying matrices but faster
-        let scale = self.scale.mul_element_wise(rhs.scale);
-        let rotation = self.rotation * rhs.rotation;
-        let translation = self.rotation
-            .rotate_vector(rhs.translation.mul_element_wise(self.scale))
-            +self.translation;
-        Self { scale, rotation, translation }
-    }
-}
-
-#[test]
-fn test_mul() {
-    let first = Transform {
-        rotation: Quaternion::look_at(Vector3::new(-1., 1., 2.), Vector3::new(1., 0., 0.)),
-        translation: Vector3::new(20., 10., -3.),
-        scale: Vector3::new(1., 1.1, 1.),
-    };
-    let second = Transform {
-        rotation: Quaternion::look_at(Vector3::new(7., -1., 3.), Vector3::new(2., 1., 1.)),
-        translation: Vector3::new(2., 1., -3.),
-        scale: Vector3::new(1., -1.1, 1.),
-    };
-    // check Mat(first * second) == Mat(first) * Mat(second)
-    assert_ulps_eq!(first.matrix() * second.matrix(), (first * second).matrix());
 }
 
 impl Component for Transform {
@@ -448,3 +408,25 @@ impl CgTransform<Point2<f32>> for Transform {
         }
     }
 }
+
+/// Sanity test for concat operation
+#[test]
+fn test_mul() {
+    // For the condition to hold both scales must be uniform
+    let first = Transform {
+        rotation: Quaternion::look_at(Vector3::new(-1., 1., 2.), Vector3::new(1., 0., 0.)),
+        translation: Vector3::new(20., 10., -3.),
+        scale: Vector3::new(2., 2., 2.),
+    };
+    let second = Transform {
+        rotation: Quaternion::look_at(Vector3::new(7., -1., 3.), Vector3::new(2., 1., 1.)),
+        translation: Vector3::new(2., 1., -3.),
+        scale: Vector3::new(1., 1., 1.),
+    };
+    // check Mat(first * second) == Mat(first) * Mat(second)
+    assert_ulps_eq!(first.matrix() * second.matrix(),
+        <Transform as CgTransform<Point3<f32>>>::concat(&first, &second).matrix());
+    assert_ulps_eq!(first.matrix() * second.matrix(),
+        <Transform as CgTransform<Point2<f32>>>::concat(&first, &second).matrix());
+}
+
