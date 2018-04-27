@@ -4,12 +4,11 @@
 use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::io::Cursor;
 
-
 use cpal::OutputDevices;
-use rodio::{Decoder, Device, Sink, Source as RSource, default_output_device, output_devices};
+use rodio::{default_output_device, output_devices, Decoder, Device, Sink, Source as RSource};
 
-use DecoderError;
 use source::Source;
+use DecoderError;
 
 /// A speaker(s) through which audio can be played.
 ///
@@ -93,10 +92,14 @@ impl Iterator for OutputIterator {
 
 /// Get the default output, returns none if no outputs are available.
 pub fn default_output() -> Option<Output> {
-    Some(Output { device: default_output_device()? })
+    Some(Output {
+        device: default_output_device()?,
+    })
 }
 
 /// Get a list of outputs available to the system.
 pub fn outputs() -> OutputIterator {
-    OutputIterator { input: output_devices() }
+    OutputIterator {
+        input: output_devices(),
+    }
 }
