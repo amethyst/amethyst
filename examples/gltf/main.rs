@@ -71,9 +71,9 @@ impl State for Example {
 
         info!("Put camera");
 
-        let mut camera_transform = Transform::default();
-        camera_transform.translation = Vector3::new(100.0, 20.0, 0.0);
-        camera_transform.rotation = Quaternion::from_angle_y(Deg(90.));
+        let camera_transform = Transform::default()
+            .with_position(Vector3::new(100.0, 20.0, 0.0))
+            .with_rotation(Quaternion::from_angle_y(Deg(90.)));
         world
             .create_entity()
             .with(Camera::from(Projection::perspective(

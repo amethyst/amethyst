@@ -20,6 +20,29 @@ pub struct Transform {
 
 impl Transform {
 
+    /// Create a new transform from an existing position, rotation, and scale factor.
+    ///
+    /// If you only want to set one of the parameters it's probably better to use the `with_`
+    /// methods, for example
+    ///
+    /// ```
+    /// # use amethyst_core::Transform;
+    /// # use amethyst_core::cgmath::Vector3;
+    /// let t = Transform::default()
+    ///     .with_position(Vector3 { x: 0., y: 0., z: 1. });
+    /// ```
+    #[inline]
+    pub fn new(position: Vector3<f32>, rotation: Quaternion<f32>, scale: f32) -> Transform {
+        Transform {
+            inner: Decomposed {
+                disp: position,
+                rot: rotation,
+                scale
+            }
+        }
+    }
+
+
     /// Get the current position
     #[inline]
     pub fn position(&self) -> Vector3<f32> {

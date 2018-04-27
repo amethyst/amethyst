@@ -31,22 +31,20 @@ impl<'s> System<'s> for BounceSystem {
         // We also check for the velocity of the ball every time, to prevent multiple collisions
         // from occurring.
         for (ball, transform) in (&mut balls, &transforms).join() {
-            let ball_x = transform.translation[0];
-            let ball_y = transform.translation[1];
+            let ball_pos = transform.position();
 
             // Bounce at the top or the bottom of the arena.
-            if ball_y <= ball.radius && ball.velocity[1] < 0.0 {
+            if ball_pos.y <= ball.radius && ball.velocity[1] < 0.0 {
                 ball.velocity[1] = -ball.velocity[1];
                 play_bounce(&*sounds, &storage, &*audio_output);
-            } else if ball_y >= arena_config.height - ball.radius && ball.velocity[1] > 0.0 {
+            } else if ball_pos.y >= arena_config.height - ball.radius && ball.velocity[1] > 0.0 {
                 ball.velocity[1] = -ball.velocity[1];
                 play_bounce(&*sounds, &storage, &*audio_output);
             }
 
             // Bounce at the paddles.
             for (paddle, paddle_transform) in (&paddles, &transforms).join() {
-                let paddle_x = paddle_transform.translation[0];
-                let paddle_y = paddle_transform.translation[1];
+                let paddle_pos = paddle_transform.position();
 
                 // To determine whether the ball has collided with a paddle, we create a larger
                 // rectangle around the current one, by subtracting the ball radius from the
@@ -54,12 +52,12 @@ impl<'s> System<'s> for BounceSystem {
                 // is than within the paddle if its centre is within the larger wrapper
                 // rectangle.
                 if point_in_rect(
-                    ball_x,
-                    ball_y,
-                    paddle_x - ball.radius,
-                    paddle_y - ball.radius,
-                    paddle_x + paddle.width + ball.radius,
-                    paddle_y + paddle.height + ball.radius,
+                    ball_pos.x,
+                    ball_pos.y,
+                    paddle_pos.x - ball.radius,
+                    paddle_pos.y - ball.radius,
+                    paddle_pos.x + paddle.width + ball.radius,
+                    paddle_pos.y + paddle.height + ball.radius,
                 ) {
                     if paddle.side == Side::Left && ball.velocity[0] < 0.0 {
                         ball.velocity[0] = -ball.velocity[0];

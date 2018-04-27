@@ -25,8 +25,8 @@ impl State for ExampleState {
         let assets = load_assets(&world);
 
         // Add cube to scene
-        let mut trans = Transform::default();
-        trans.translation = Vector3::new(0.0, 0.0, -5.0);
+        let trans = Transform::default()
+            .with_position(Vector3::new(0.0, 0.0, -5.0));
         world
             .create_entity()
             .with(assets.cube.clone())
