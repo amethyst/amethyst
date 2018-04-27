@@ -125,7 +125,7 @@ impl Transform {
     #[inline]
     pub fn move_along_global(&mut self, direction: Vector3<f32>, distance: f32) -> &mut Self {
         if !ulps_eq!(direction, Zero::zero()) {
-            self.translation += direction.normalize() * distance;
+            self.translation += direction.normalize_to(distance);
         }
         self
     }
@@ -136,7 +136,7 @@ impl Transform {
     #[inline]
     pub fn move_along_local(&mut self, direction: Vector3<f32>, distance: f32) -> &mut Self {
         if !ulps_eq!(direction, Zero::zero()) {
-            self.translation += self.rotation * direction.normalize() * distance;
+            self.translation += self.rotation * direction.normalize_to(distance);
         }
         self
     }
@@ -249,6 +249,13 @@ impl Transform {
         self.rotation = Quaternion::from_angle_x(x) * Quaternion::from_angle_y(y)
             * Quaternion::from_angle_z(z);
         self
+    }
+
+    /// Calculates the inverse of this transform, which we need to render.
+    ///
+    /// We can exploit the extra information we have to perform this inverse faster than `O(n^3)`.
+    pub fn view_matrix(&self) -> Matrix4<f32> {
+        unimplemented!();
     }
 }
 
