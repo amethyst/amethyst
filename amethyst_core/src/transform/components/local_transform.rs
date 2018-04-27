@@ -2,9 +2,12 @@
 
 use cgmath::{Array, Basis2, Deg, ElementWise, EuclideanSpace, Euler, InnerSpace, Matrix3, Matrix4,
              One, Point2, Point3, Quaternion, Rotation, Rotation2, Rotation3,
-             Transform as CgTransform, Vector2, Vector3, Vector4, Rad, Zero};
+             Transform as CgTransform, Vector2, Vector3, Vector4, Rad, Zero, Angle};
 use orientation::Orientation;
 use specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
+use std::ops;
+
+error do not merge
 
 /// Local position, rotation, and scale (from parent if it exists).
 ///
@@ -56,7 +59,7 @@ impl Transform {
         debug_assert!(self.rotation.s.is_finite()
                       && self.rotation.v.x.is_finite()
                       && self.rotation.v.y.is_finite()
-                      && self.rotation.v.z.is_finite(), 
+                      && self.rotation.v.z.is_finite(),
                       "`look_at` should be finite to be useful");
         self
     }
@@ -249,9 +252,18 @@ impl Transform {
     }
 
     /// Set the rotation using Euler x, y, z.
-    pub fn set_rotation<A: Into<Rad<f32>>>(&mut self, x: A, y: A, z: A) -> &mut Self {
-        self.rotation = Quaternion::from_angle_x(x) * Quaternion::from_angle_y(y)
-            * Quaternion::from_angle_z(z);
+    ///
+    /// # Arguments
+    ///
+    ///  - x - The angle to apply around the x axis. Also known at the pitch.
+    ///  - y - The angle to apply around the y axis. Also known at the yaw.
+    ///  - z - The angle to apply around the z axis. Also known at the roll.
+    pub fn set_rotation<A>(&mut self, x: A, y: A, z: A) -> &mut Self
+        where A: Angle<Unitless=f32>,
+              Rad<f32>: From<A>
+    {
+        // we use Euler as an internediate stage to avoid gimbal lock
+        self.rotation = Quaternion::from(Euler { x, y, z });
         self
     }
 
@@ -259,7 +271,17 @@ impl Transform {
     ///
     /// We can exploit the extra information we have to perform this inverse faster than `O(n^3)`.
     pub fn view_matrix(&self) -> Matrix4<f32> {
-        unimplemented!();
+        // todo
+        use cgmath::SquareMatrix;
+        self.matrix().invert().unwrap()
+    }
+
+    /// Create a new `Transform`.
+    ///
+    /// This transform performs no rotation, translation, or scaling by default. The transform
+    /// that does nothing is known as the *identity* transform.
+    pub fn identity() -> Self {
+        Default::default()
     }
 }
 
@@ -273,13 +295,35 @@ impl Default for Transform {
     }
 }
 
-impl Transform {
-    /// Create a new `Transform`.
-    ///
-    /// If you call `matrix` on this, then you would get an identity matrix.
-    pub fn new() -> Self {
-        Default::default()
+impl ops::Mul for Transform {
+    type Output = Self;
+    /// Multiplying two transforms together creates a new transform. Applying the new transform
+    /// is equivalent to applying `self` after `rhs`.
+    fn mul(self, rhs: Self) -> Self::Output {
+        // equivalent to multiplying matrices but faster
+        let scale = self.scale.mul_element_wise(rhs.scale);
+        let rotation = self.rotation * rhs.rotation;
+        let translation = self.rotation
+            .rotate_vector(rhs.translation.mul_element_wise(self.scale))
+            +self.translation;
+        Self { scale, rotation, translation }
     }
+}
+
+#[test]
+fn test_mul() {
+    let first = Transform {
+        rotation: Quaternion::look_at(Vector3::new(-1., 1., 2.), Vector3::new(1., 0., 0.)),
+        translation: Vector3::new(20., 10., -3.),
+        scale: Vector3::new(1., 1.1, 1.),
+    };
+    let second = Transform {
+        rotation: Quaternion::look_at(Vector3::new(7., -1., 3.), Vector3::new(2., 1., 1.)),
+        translation: Vector3::new(2., 1., -3.),
+        scale: Vector3::new(1., -1.1, 1.),
+    };
+    // check Mat(first * second) == Mat(first) * Mat(second)
+    assert_ulps_eq!(first.matrix() * second.matrix(), (first * second).matrix());
 }
 
 impl Component for Transform {
