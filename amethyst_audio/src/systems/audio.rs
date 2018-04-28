@@ -1,7 +1,7 @@
 use std::iter::Iterator;
 use std::mem::replace;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use amethyst_core::cgmath::Transform;
 use amethyst_core::specs::prelude::{Entities, Entity, Join, Read, ReadStorage, System,

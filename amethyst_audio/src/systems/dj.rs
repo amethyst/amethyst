@@ -5,7 +5,7 @@ use amethyst_core::shred::{Resource, Resources};
 use amethyst_core::specs::common::Errors;
 use amethyst_core::specs::prelude::{Read, System, WriteExpect};
 
-use output::{default_output, Output};
+use output::default_output;
 use sink::AudioSink;
 use source::{Source, SourceHandle};
 
@@ -36,14 +36,14 @@ where
     type SystemData = (
         Read<'a, AssetStorage<Source>>,
         Read<'a, Errors>,
-        Read<'a, Option<AudioSink>>,
+        Option<Read<'a, AudioSink>>,
         WriteExpect<'a, R>,
     );
 
     fn run(&mut self, (storage, errors, sink, mut res): Self::SystemData) {
         #[cfg(feature = "profiler")]
         profile_scope!("dj_system");
-        if let &Some(ref sink) = &*sink {
+        if let Some(ref sink) = sink {
             if sink.empty() {
                 if let Some(source) = (&mut self.f)(&mut res).and_then(|h| storage.get(&h)) {
                     errors.execute(|| sink.append(source));
@@ -55,12 +55,9 @@ where
     fn setup(&mut self, res: &mut Resources) {
         use amethyst_core::specs::prelude::SystemData;
         Self::SystemData::setup(res);
-        let sink = {
-            let output = res.entry::<Option<Output>>().or_insert_with(default_output);
-            output.as_ref().map(|output| AudioSink::new(output))
-        };
-        if let Some(sink) = sink {
-            res.insert(sink);
+        if let Some(output) = default_output() {
+            res.insert(AudioSink::new(&output));
+            res.insert(Some(output));
         } else {
             error!(
                 "Failed finding a default audio output to hook AudioSink to, audio will not work!"
