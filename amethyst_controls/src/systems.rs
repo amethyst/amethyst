@@ -1,6 +1,5 @@
 use amethyst_core::cgmath::{Deg, Vector3};
-use amethyst_core::shred::Resources;
-use amethyst_core::specs::prelude::{Join, Read, ReadExpect, ReadStorage, System, Write,
+use amethyst_core::specs::prelude::{Join, Read, ReadExpect, ReadStorage, Resources, System, Write,
                                     WriteStorage};
 use amethyst_core::timing::Time;
 use amethyst_core::transform::Transform;

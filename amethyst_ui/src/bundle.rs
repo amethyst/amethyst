@@ -1,8 +1,8 @@
 //! ECS rendering bundle
 
 use amethyst_assets::Processor;
-use amethyst_core::bundle::{ECSBundle, Result};
-use amethyst_core::specs::prelude::{DispatcherBuilder, World};
+use amethyst_core::bundle::{Result, SystemBundle};
+use amethyst_core::specs::prelude::DispatcherBuilder;
 use std::hash::Hash;
 use std::marker::PhantomData;
 
@@ -29,12 +29,12 @@ impl<A, B> UiBundle<A, B> {
     }
 }
 
-impl<'a, 'b, A, B> ECSBundle<'a, 'b> for UiBundle<A, B>
+impl<'a, 'b, A, B> SystemBundle<'a, 'b> for UiBundle<A, B>
 where
     A: Send + Sync + Eq + Hash + Clone + 'static,
     B: Send + Sync + Eq + Hash + Clone + 'static,
 {
-    fn build(self, _: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
         builder.add(Processor::<FontAsset>::new(), "font_processor", &[]);
         builder.add(UiSystem::new(), "ui_system", &["font_processor"]);
         builder.add(ResizeSystem::new(), "ui_resize_system", &[]);

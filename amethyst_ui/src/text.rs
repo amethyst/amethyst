@@ -1,9 +1,8 @@
 use std::cmp::Ordering;
 use std::ops::Range;
 
-use amethyst_core::shred::Resources;
 use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entities, Entity, Join, Read,
-                                    ReadStorage, System, Write, WriteStorage};
+                                    ReadStorage, Resources, System, Write, WriteStorage};
 use amethyst_core::timing::Time;
 use clipboard::{ClipboardContext, ClipboardProvider};
 use hibitset::BitSet;

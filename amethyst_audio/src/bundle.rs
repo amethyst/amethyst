@@ -3,8 +3,8 @@
 use std::marker::PhantomData;
 
 use amethyst_assets::Processor;
-use amethyst_core::bundle::{ECSBundle, Result};
-use amethyst_core::specs::prelude::{DispatcherBuilder, World};
+use amethyst_core::bundle::{Result, SystemBundle};
+use amethyst_core::specs::prelude::DispatcherBuilder;
 use rodio::default_output_device;
 
 use source::*;
@@ -48,12 +48,12 @@ impl<'a, F, R> AudioBundle<'a, F, R> {
     }
 }
 
-impl<'a, 'b, 'c, F, R> ECSBundle<'a, 'b> for AudioBundle<'c, F, R>
+impl<'a, 'b, 'c, F, R> SystemBundle<'a, 'b> for AudioBundle<'c, F, R>
 where
     F: FnMut(&mut R) -> Option<SourceHandle> + Send + 'static,
     R: Send + Sync + 'static,
 {
-    fn build(self, _: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
         builder.add(Processor::<Source>::new(), "source_processor", &[]);
         if let Some(_) = default_output_device() {
             builder.add(DjSystem::new(self.picker), "dj_system", self.dep);
