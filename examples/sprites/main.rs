@@ -118,8 +118,6 @@ impl State for Example {
                 .create_entity()
                 // The default `Material`, whose textures will be swapped based on the animation.
                 .with(sprite_sheet_material.clone())
-                // The `Animation` defines the mutation of the `MaterialAnimation`.
-                .with(animation.clone())
                 // Shift sprite to some part of the window
                 .with(sprite_transform)
                 // This defines the coordinates in the world, where the sprites should be drawn
@@ -203,12 +201,6 @@ fn run() -> Result<(), amethyst::Error> {
     );
 
     let mut game = Application::build(assets_directory, Example::default())?
-        // RenderBundle gives us a window
-        .with_bundle(RenderBundle::new(pipe, Some(config)))?
-        // UiBundle relies on this as some Ui objects take input
-        .with_bundle(InputBundle::<String, String>::new())?
-        // Draws textures
-        .with_bundle(UiBundle::<String, String>::new())?
         // Provides sprite animation
         .with_bundle(AnimationBundle::<u32, Material>::new(
             "animation_control_system",
@@ -219,6 +211,12 @@ fn run() -> Result<(), amethyst::Error> {
             TransformBundle::new()
                 .with_dep(&["animation_control_system", "sampler_interpolation_system"]),
         )?
+        // RenderBundle gives us a window
+        .with_bundle(RenderBundle::new(pipe, Some(config)))?
+        // UiBundle relies on this as some Ui objects take input
+        .with_bundle(InputBundle::<String, String>::new())?
+        // Draws textures
+        .with_bundle(UiBundle::<String, String>::new())?
         .build()?;
 
     game.run();
