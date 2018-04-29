@@ -3,13 +3,13 @@ use std::marker;
 use std::time::Duration;
 
 use amethyst_assets::{AssetStorage, Handle};
-use amethyst_core::specs::prelude::{Component, Entities, Entity, Join, Read, ReadStorage, System,
-                                    WriteStorage};
+use amethyst_core::specs::prelude::{Component, Entities, Entity, Join, Read, ReadStorage, Resources,
+                                    System, SystemData, WriteStorage};
 use amethyst_core::timing::secs_to_duration;
 use fnv::FnvHashMap;
 use minterpolate::InterpolationPrimitive;
 
-use resources::{Animation, AnimationCommand, AnimationControl, AnimationControlSet,
+use resources::{Animation, AnimationSet, AnimationCommand, AnimationControl, AnimationControlSet,
                 AnimationHierarchy, AnimationSampling, ApplyData, ControlState,
                 DeferStartRelation, RestState, Sampler, SamplerControl, SamplerControlSet,
                 StepDirection};
@@ -193,6 +193,14 @@ where
         for entity in remove_sets {
             controls.remove(entity);
         }
+    }
+
+    fn setup(&mut self, res: &mut Resources) {
+        ReadStorage::<AnimationSet<I, T>>::setup(res);
+        ReadStorage::<AnimationControlSet<I, T>>::setup(res);
+        ReadStorage::<AnimationHierarchy<T>>::setup(res);
+        ReadStorage::<RestState<T>>::setup(res);
+        ReadStorage::<Handle<Animation<T>>>::setup(res);
     }
 }
 
