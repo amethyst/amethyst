@@ -34,7 +34,7 @@ where P: AsRef<str>,
 }
 
 fn run() -> Result<(), String> {
-    //run_test_command("cargo", &["test", "--all"])?;
+    run_test_command("cargo", &["test", "--all"])?;
     run_test_command("cargo", ["test", "--features", "profiler"])?;
     for package in [
         "amethyst_animation",
