@@ -45,10 +45,11 @@ before_script:
 
 # Generate documentation, compile the engine, run tests.
 script: |
+  cargo run --release ci
   # Build and test without profiler
-  cargo test --all -v &&
+  #cargo test --all -v &&
   # Build and test with profiler
-  cargo test --all --features profiler -v 
+  #cargo test --all --features profiler -v 
 
 # Push notifications to `amethyst/general` and `amethyst/engine` Gitter chats.
 notifications:
