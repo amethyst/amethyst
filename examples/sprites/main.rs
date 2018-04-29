@@ -203,12 +203,6 @@ fn run() -> Result<(), amethyst::Error> {
     );
 
     let mut game = Application::build(assets_directory, Example::default())?
-        // RenderBundle gives us a window
-        .with_bundle(RenderBundle::new(pipe, Some(config)))?
-        // UiBundle relies on this as some Ui objects take input
-        .with_bundle(InputBundle::<String, String>::new())?
-        // Draws textures
-        .with_bundle(UiBundle::<String, String>::new())?
         // Provides sprite animation
         .with_bundle(AnimationBundle::<u32, Material>::new(
             "animation_control_system",
@@ -219,6 +213,12 @@ fn run() -> Result<(), amethyst::Error> {
             TransformBundle::new()
                 .with_dep(&["animation_control_system", "sampler_interpolation_system"]),
         )?
+        // RenderBundle gives us a window
+        .with_bundle(RenderBundle::new(pipe, Some(config)))?
+        // UiBundle relies on this as some Ui objects take input
+        .with_bundle(InputBundle::<String, String>::new())?
+        // Draws textures
+        .with_bundle(UiBundle::<String, String>::new())?
         .build()?;
 
     game.run();
