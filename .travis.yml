@@ -45,7 +45,7 @@ before_script:
 
 # Generate documentation, compile the engine, run tests.
 script: |
-  cargo run --release ci
+  cargo build --release --bin ci && ./target/release/ci
 
 # Push notifications to `amethyst/general` and `amethyst/engine` Gitter chats.
 notifications:
