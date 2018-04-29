@@ -43,5 +43,4 @@ build: false
 
 # Generate documentation, compile the engine, run tests.
 test_script:
-  - cargo test --all -v
-  - cargo test --all -v --features profiler
+  - cargo run --release ci
