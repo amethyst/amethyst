@@ -170,7 +170,7 @@ impl Pass for DrawUi {
         {
             let bitset = &mut self.cached_draw_order.cached;
             self.cached_draw_order.cache.retain(|&(_z, entity)| {
-                let keep = ui_transform.get(entity).is_some();
+                let keep = ui_transform.contains(entity);
                 if !keep {
                     bitset.remove(entity.id());
                 }
