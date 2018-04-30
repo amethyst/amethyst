@@ -20,11 +20,7 @@ where
     I: Send + Sync + 'static,
     T: AnimationSampling,
 {
-    // TODO: replace with entry API when specs is released
-    if let None = controls.get(entity) {
-        controls.insert(entity, AnimationControlSet::default());
-    }
-    controls.get_mut(entity).unwrap()
+    controls.entry(entity).unwrap().or_insert_with(AnimationControlSet::default)
 }
 
 /// Sampler primitive

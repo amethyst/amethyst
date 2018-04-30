@@ -436,7 +436,7 @@ where
         .nodes
         .iter()
         .any(|&(ref node_index, _, ref sampler_handle)| {
-            hierarchy.nodes.get(node_index).is_none()
+            !hierarchy.nodes.contains_key(node_index)
                 || sampler_storage.get(sampler_handle).is_none()
         }) {
         return false;
