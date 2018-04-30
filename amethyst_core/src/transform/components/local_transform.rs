@@ -1,8 +1,8 @@
 //! Local transform component.
 
-use cgmath::{Array, Basis2, Deg, ElementWise, EuclideanSpace, Euler, InnerSpace, Matrix3, Matrix4,
-             One, Point2, Point3, Quaternion, Rotation, Rotation2, Rotation3,
-             Transform as CgTransform, Vector2, Vector3, Vector4, Rad, Zero, Angle};
+use cgmath::{Angle, Array, Basis2, Deg, ElementWise, EuclideanSpace, Euler, InnerSpace, Matrix3,
+             Matrix4, One, Point2, Point3, Quaternion, Rad, Rotation, Rotation2, Rotation3,
+             Transform as CgTransform, Vector2, Vector3, Vector4, Zero};
 use orientation::Orientation;
 use specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
 
@@ -22,7 +22,6 @@ pub struct Transform {
 }
 
 impl Transform {
-
     /// Makes the entity point towards `position`.
     ///
     /// `up` says which direction the entity should be 'rolled' to once it is pointing at
@@ -54,11 +53,11 @@ impl Transform {
     pub fn look_at(&mut self, position: Point3<f32>, up: Vector3<f32>) -> &mut Self {
         self.rotation = Quaternion::look_at(Point3::from_vec(self.translation) - position, up);
         // Catch NaNs etc. in debug mode.
-        debug_assert!(self.rotation.s.is_finite()
-                      && self.rotation.v.x.is_finite()
-                      && self.rotation.v.y.is_finite()
-                      && self.rotation.v.z.is_finite(),
-                      "`look_at` should be finite to be useful");
+        debug_assert!(
+            self.rotation.s.is_finite() && self.rotation.v.x.is_finite()
+                && self.rotation.v.y.is_finite() && self.rotation.v.z.is_finite(),
+            "`look_at` should be finite to be useful"
+        );
         self
     }
 
@@ -83,22 +82,27 @@ impl Transform {
             x: quat.x.x * self.scale.x,
             y: quat.x.y * self.scale.y,
             z: quat.x.z * self.scale.z,
-            w: 0.0
+            w: 0.0,
         };
         let y = Vector4 {
             x: quat.y.x * self.scale.x,
             y: quat.y.y * self.scale.y,
             z: quat.y.z * self.scale.z,
-            w: 0.0
+            w: 0.0,
         };
         let z = Vector4 {
             x: quat.z.x * self.scale.x,
             y: quat.z.y * self.scale.y,
             z: quat.z.z * self.scale.z,
-            w: 0.0
+            w: 0.0,
         };
 
-        let mat = Matrix4 { x, y, z, w: self.translation.extend(1.0)};
+        let mat = Matrix4 {
+            x,
+            y,
+            z,
+            w: self.translation.extend(1.0),
+        };
         mat
     }
 
@@ -257,8 +261,9 @@ impl Transform {
     ///  - y - The angle to apply around the y axis. Also known at the yaw.
     ///  - z - The angle to apply around the z axis. Also known at the roll.
     pub fn set_rotation<A>(&mut self, x: A, y: A, z: A) -> &mut Self
-        where A: Angle<Unitless=f32>,
-              Rad<f32>: From<A>
+    where
+        A: Angle<Unitless = f32>,
+        Rad<f32>: From<A>,
     {
         // we use Euler as an internediate stage to avoid gimbal lock
         self.rotation = Quaternion::from(Euler { x, y, z });
@@ -299,7 +304,11 @@ impl CgTransform<Point3<f32>> for Transform {
         let rotation = Quaternion::look_at(center - eye, up);
         let translation = rotation.rotate_vector(Point3::origin() - eye);
         let scale = Vector3::from_value(1.);
-        Self { scale, rotation, translation, }
+        Self {
+            scale,
+            rotation,
+            translation,
+        }
     }
 
     fn transform_vector(&self, vec: Vector3<f32>) -> Vector3<f32> {
@@ -424,9 +433,12 @@ fn test_mul() {
         scale: Vector3::new(1., 1., 1.),
     };
     // check Mat(first * second) == Mat(first) * Mat(second)
-    assert_ulps_eq!(first.matrix() * second.matrix(),
-        <Transform as CgTransform<Point3<f32>>>::concat(&first, &second).matrix());
-    assert_ulps_eq!(first.matrix() * second.matrix(),
-        <Transform as CgTransform<Point2<f32>>>::concat(&first, &second).matrix());
+    assert_ulps_eq!(
+        first.matrix() * second.matrix(),
+        <Transform as CgTransform<Point3<f32>>>::concat(&first, &second).matrix()
+    );
+    assert_ulps_eq!(
+        first.matrix() * second.matrix(),
+        <Transform as CgTransform<Point2<f32>>>::concat(&first, &second).matrix()
+    );
 }
-

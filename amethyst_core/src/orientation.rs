@@ -1,6 +1,6 @@
 //! Orientation of objects
 
-use cgmath::{Vector3, Matrix3};
+use cgmath::{Matrix3, Vector3};
 
 /// This struct contains 3 unit vectors pointing in the given directions.
 ///
@@ -24,7 +24,7 @@ impl From<Matrix3<f32>> for Orientation {
         Orientation {
             forward: -mat.z,
             right: mat.x,
-            up: mat.y
+            up: mat.y,
         }
     }
 }

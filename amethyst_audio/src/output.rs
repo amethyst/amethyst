@@ -7,8 +7,8 @@ use std::io::Cursor;
 use cpal::OutputDevices;
 use rodio::{default_output_device, output_devices, Decoder, Device, Sink, Source as RSource};
 
-use source::Source;
 use DecoderError;
+use source::Source;
 
 /// A speaker(s) through which audio can be played.
 ///
