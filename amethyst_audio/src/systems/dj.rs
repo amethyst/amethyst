@@ -5,7 +5,7 @@ use amethyst_core::shred::{Resource, Resources};
 use amethyst_core::specs::common::Errors;
 use amethyst_core::specs::prelude::{Read, System, WriteExpect};
 
-use output::default_output;
+use output::{default_output, Output};
 use sink::AudioSink;
 use source::{Source, SourceHandle};
 
@@ -55,9 +55,10 @@ where
     fn setup(&mut self, res: &mut Resources) {
         use amethyst_core::specs::prelude::SystemData;
         Self::SystemData::setup(res);
-        if let Some(output) = default_output() {
-            res.insert(AudioSink::new(&output));
-            res.insert(Some(output));
+        if let Some(o) = default_output() {
+            res.entry::<AudioSink>()
+                .or_insert_with(|| AudioSink::new(&o));
+            res.entry::<Output>().or_insert_with(|| o);
         } else {
             error!(
                 "Failed finding a default audio output to hook AudioSink to, audio will not work!"

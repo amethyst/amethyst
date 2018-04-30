@@ -21,7 +21,7 @@ impl<'s> System<'s> for WinnerSystem {
         Read<'s, AssetStorage<Source>>,
         ReadExpect<'s, Sounds>,
         ReadExpect<'s, ScoreText>,
-        Read<'s, Option<Output>>,
+        Option<Read<'s, Output>>,
     );
 
     fn run(
@@ -72,7 +72,7 @@ impl<'s> System<'s> for WinnerSystem {
                 );
 
                 // Play audio.
-                if let Some(ref output) = *audio_output {
+                if let Some(ref output) = audio_output {
                     if let Some(sound) = storage.get(&sounds.score_sfx) {
                         output.play_once(sound, 1.0);
                     }

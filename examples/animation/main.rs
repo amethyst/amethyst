@@ -4,8 +4,8 @@ extern crate amethyst;
 extern crate genmesh;
 
 use amethyst::animation::{get_animation_set, Animation, AnimationBundle, AnimationCommand,
-                         AnimationSet, DeferStartRelation, EndControl, InterpolationFunction,
-                         Sampler, SamplerPrimitive, StepDirection, TransformChannel};
+                          AnimationSet, DeferStartRelation, EndControl, InterpolationFunction,
+                          Sampler, SamplerPrimitive, StepDirection, TransformChannel};
 use amethyst::assets::{AssetStorage, Handle, Loader};
 use amethyst::core::{GlobalTransform, Parent, Transform, TransformBundle};
 use amethyst::core::cgmath::Deg;
@@ -278,7 +278,7 @@ fn initialise_sphere(world: &mut World) -> Entity {
         .with(mesh)
         .with(material)
         .build();
-    
+
     parent_entity
 }
 

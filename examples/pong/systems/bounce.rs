@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use {Ball, Paddle, Side};
 use amethyst::assets::AssetStorage;
 use amethyst::audio::Source;
@@ -17,7 +19,7 @@ impl<'s> System<'s> for BounceSystem {
         ReadStorage<'s, Transform>,
         Read<'s, AssetStorage<Source>>,
         ReadExpect<'s, Sounds>,
-        Read<'s, Option<Output>>,
+        Option<Read<'s, Output>>,
     );
 
     fn run(
@@ -37,10 +39,10 @@ impl<'s> System<'s> for BounceSystem {
             // Bounce at the top or the bottom of the arena.
             if ball_y <= ball.radius && ball.velocity[1] < 0.0 {
                 ball.velocity[1] = -ball.velocity[1];
-                play_bounce(&*sounds, &storage, &*audio_output);
+                play_bounce(&*sounds, &storage, audio_output.as_ref().map(|o| o.deref()));
             } else if ball_y >= ARENA_HEIGHT - ball.radius && ball.velocity[1] > 0.0 {
                 ball.velocity[1] = -ball.velocity[1];
-                play_bounce(&*sounds, &storage, &*audio_output);
+                play_bounce(&*sounds, &storage, audio_output.as_ref().map(|o| o.deref()));
             }
 
             // Bounce at the paddles.
@@ -63,10 +65,10 @@ impl<'s> System<'s> for BounceSystem {
                 ) {
                     if paddle.side == Side::Left && ball.velocity[0] < 0.0 {
                         ball.velocity[0] = -ball.velocity[0];
-                        play_bounce(&*sounds, &storage, &*audio_output);
+                        play_bounce(&*sounds, &storage, audio_output.as_ref().map(|o| o.deref()));
                     } else if paddle.side == Side::Right && ball.velocity[0] > 0.0 {
                         ball.velocity[0] = -ball.velocity[0];
-                        play_bounce(&*sounds, &storage, &*audio_output);
+                        play_bounce(&*sounds, &storage, audio_output.as_ref().map(|o| o.deref()));
                     }
                 }
             }

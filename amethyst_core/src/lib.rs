@@ -25,9 +25,9 @@ compile_error!("the cfg flag \"no_threading\" is required when building for emsc
 //extern crate quickcheck;
 
 pub use bundle::{Error, ErrorKind, Result, SystemBundle};
+pub use orientation::Orientation;
 pub use timing::*;
 pub use transform::*;
-pub use orientation::Orientation;
 
 use std::sync::Arc;
 
