@@ -43,7 +43,6 @@ nightly = [
     "amethyst_renderer/nightly",
     "amethyst_input/nightly",
     "amethyst_ui/nightly",
-    "amethyst_core/nightly",
     "amethyst_utils/nightly",
 ]
 
@@ -148,3 +147,4 @@ path = "examples/sprites/main.rs"
 
 [workspace]
 members = ["amethyst_gltf"]
+
