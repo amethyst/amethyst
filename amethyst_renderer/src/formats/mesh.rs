@@ -1,12 +1,14 @@
 use std::fmt::Debug;
+use std::result::Result as StdResult;
 
-use amethyst_assets::{Asset, Error, Result, ResultExt, SimpleFormat};
+use amethyst_assets::{Asset, SimpleFormat};
 use amethyst_core::cgmath::{InnerSpace, Vector3};
 use amethyst_core::specs::prelude::VecStorage;
+use failure::{err_msg, Error, Fail, ResultExt};
 use wavefront_obj::obj::{parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex,
                          TextureIndex, Vertex, VertexIndex};
 
-use Renderer;
+use {ErrorKind, Renderer, Result};
 use mesh::{Mesh, MeshBuilder, MeshHandle};
 use vertex::*;
 
@@ -78,15 +80,12 @@ impl SimpleFormat<Mesh> for ObjFormat {
 
     type Options = ();
 
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<MeshData> {
-        String::from_utf8(bytes)
-            .map_err(Into::into)
-            .and_then(|string| {
-                parse(string)
-                    .map_err(|e| Error::from(format!("In line {}: {:?}", e.line_number, e.message)))
-                    .chain_err(|| "Failed to parse OBJ")
-            })
-            .map(|set| from_data(set).into())
+    fn import(&self, bytes: Vec<u8>, _options: ()) -> StdResult<MeshData, Error> {
+        let s = String::from_utf8(bytes).context(err_msg("Failed to parse OBJ"))?;
+        let set = parse(s).map_err(|e| {
+            format_err!("In line {}: {:?}", e.line_number, e.message).context("Failed to parse OBJ")
+        })?;
+        Ok(from_data(set).into())
     }
 }
 
@@ -168,17 +167,18 @@ pub fn create_mesh_asset(data: MeshData, renderer: &mut Renderer) -> Result<Mesh
             let mb = MeshBuilder::new(vertices);
             renderer.create_mesh(mb)
         }
-        MeshData::Creator(creator) => creator.build(renderer),
+        MeshData::Creator(creator) => creator.build(renderer)
+            .map_err(|e| e.context(ErrorKind::MeshCreation).into()),
     };
 
-    data.chain_err(|| "Failed to build mesh")
+    data
 }
 
 /// Build Mesh with vertex buffer combination
 pub fn build_mesh_with_combo(
     combo: VertexBufferCombination,
     renderer: &mut Renderer,
-) -> ::error::Result<Mesh> {
+) -> Result<Mesh> {
     build_mesh_with_some!(
         MeshBuilder::new(combo.0),
         renderer,
@@ -197,7 +197,7 @@ pub fn build_mesh_with_combo(
 /// pass.
 pub trait MeshCreator: Send + Sync + Debug + 'static {
     /// Build a mesh given a `Renderer`
-    fn build(self: Box<Self>, renderer: &mut Renderer) -> ::error::Result<Mesh>;
+    fn build(self: Box<Self>, renderer: &mut Renderer) -> StdResult<Mesh, Error>;
 }
 
 /// Mesh creator for `VertexBufferCombination`.
@@ -214,8 +214,8 @@ impl ComboMeshCreator {
 }
 
 impl MeshCreator for ComboMeshCreator {
-    fn build(self: Box<Self>, renderer: &mut Renderer) -> ::error::Result<Mesh> {
-        build_mesh_with_combo(self.combo, renderer)
+    fn build(self: Box<Self>, renderer: &mut Renderer) -> StdResult<Mesh, Error> {
+        build_mesh_with_combo(self.combo, renderer).map_err(|e| e.into())
     }
 }
 

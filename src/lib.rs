@@ -70,6 +70,9 @@ pub extern crate winit;
 
 #[macro_use]
 extern crate derivative;
+extern crate failure;
+#[macro_use]
+extern crate failure_derive;
 extern crate fern;
 #[macro_use]
 extern crate log;

@@ -31,7 +31,7 @@ nightly = [ "amethyst_core/nightly" ]
 amethyst_assets = { path = "../amethyst_assets", version = "0.2.0" }
 amethyst_core = { path = "../amethyst_core", version = "0.1.0" }
 derivative = "1.0"
-error-chain = "0.11"
+failure = "0.1"
 fnv = "1.0"
 gfx = { version = "0.17", features = ["serialize"] }
 gfx_core = { version = "0.8", features = ["serialize"] }

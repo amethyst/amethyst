@@ -48,6 +48,7 @@
 extern crate amethyst_assets;
 extern crate amethyst_core;
 extern crate amethyst_renderer;
+extern crate failure;
 extern crate fnv;
 extern crate hibitset;
 extern crate itertools;

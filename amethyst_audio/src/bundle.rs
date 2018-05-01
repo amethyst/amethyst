@@ -3,8 +3,9 @@
 use std::marker::PhantomData;
 
 use amethyst_assets::Processor;
-use amethyst_core::bundle::{Result, SystemBundle};
+use amethyst_core::bundle::SystemBundle;
 use amethyst_core::specs::prelude::DispatcherBuilder;
+use failure;
 use rodio::default_output_device;
 
 use source::*;
@@ -53,7 +54,7 @@ where
     F: FnMut(&mut R) -> Option<SourceHandle> + Send + 'static,
     R: Send + Sync + 'static,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), failure::Error> {
         builder.add(Processor::<Source>::new(), "source_processor", &[]);
         if let Some(_) = default_output_device() {
             builder.add(DjSystem::new(self.picker), "dj_system", self.dep);

@@ -2,6 +2,7 @@
 extern crate amethyst_core;
 extern crate amethyst_input;
 extern crate amethyst_renderer;
+extern crate failure;
 #[macro_use]
 extern crate log;
 extern crate winit;

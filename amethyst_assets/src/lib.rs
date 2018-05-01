@@ -13,8 +13,9 @@ extern crate amethyst_core;
 extern crate crossbeam;
 #[macro_use]
 extern crate derivative;
+extern crate failure;
 #[macro_use]
-extern crate error_chain;
+extern crate failure_derive;
 extern crate fnv;
 extern crate hibitset;
 #[macro_use]
@@ -28,7 +29,7 @@ extern crate thread_profiler;
 
 pub use asset::{Asset, Format, FormatValue, SimpleFormat};
 pub use cache::Cache;
-pub use error::{Error, ErrorKind, Result, ResultExt};
+pub use error::{Error, ErrorKind, Result};
 pub use loader::Loader;
 pub use progress::{Completion, Progress, ProgressCounter, Tracker};
 pub use reload::{HotReloadBundle, HotReloadStrategy, HotReloadSystem, Reload, SingleFile};

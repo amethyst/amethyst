@@ -1,126 +1,138 @@
 //! Renderer error types.
 
 use std::error::Error as StdError;
-use std::fmt::Result as FmtResult;
-use std::fmt::{Display, Formatter};
+use std::fmt::{self, Display, Formatter};
 use std::result::Result as StdResult;
 
+use failure::{Error as FailureError, Backtrace, Context, Fail};
 use gfx;
 use gfx_core;
 
 /// Renderer result type.
 pub type Result<T> = StdResult<T, Error>;
 
-/// Common renderer error type.
+/// The renderer subsystem error type
 #[derive(Debug)]
-pub enum Error {
+pub struct Error {
+    inner: Context<ErrorKind>,
+}
+
+/// Common renderer error type.
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Fail)]
+pub enum ErrorKind {
     /// Failed to create a buffer.
-    BufferCreation(gfx::buffer::CreationError),
+    #[fail(display = "Failed to create buffer.")]
+    BufferCreation,
     /// A render target with the given name does not exist.
+    #[fail(display = "No render target with name \"{}\" exists.", _0)]
     NoSuchTarget(String),
     /// Failed to initialize a render pass.
-    PassInit(gfx::PipelineStateError<String>),
+    #[fail(display = "Could not initialize a render pass.")]
+    PassInit,
     /// Failed to create a pipeline state object (PSO).
-    PipelineCreation(gfx_core::pso::CreationError),
+    #[fail(display = "Failed to create a pipeline state object (PSO).")]
+    PipelineCreation,
     /// Failed to create thread pool.
-    PoolCreation(String),
+    #[fail(display = "Failed to create thread pool.")]
+    PoolCreation,
     /// Failed to create and link a shader program.
-    ProgramCreation(gfx::shade::ProgramError),
+    #[fail(display = "Failed to create and link a shader program.")]
+    ProgramCreation,
     /// Failed to create a resource view.
-    ResViewCreation(gfx::ResourceViewError),
+    #[fail(display = "Failed to create a resource view.")]
+    ResViewCreation,
     /// Failed to create a render target.
-    TargetCreation(gfx::CombinedError),
+    #[fail(display = "Failed to create a render target.")]
+    TargetCreation,
+    /// Failed to create a mesh resource.
+    #[fail(display = "Failed to create a mesh resource.")]
+    MeshCreation,
     /// Failed to create a texture resource.
-    TextureCreation(gfx::texture::CreationError),
+    #[fail(display = "Failed to create a texture resource.")]
+    TextureCreation,
     /// The window handle associated with the renderer has been destroyed.
+    #[fail(display = "The window handle associated with the renderer has been destroyed.")]
     WindowDestroyed,
+    /// An image decoder failed to decode an image.
+    #[fail(display = "An image decoder failed to decode an image.")]
+    DecodeImage,
 }
 
-impl StdError for Error {
-    fn description(&self) -> &str {
-        match *self {
-            Error::BufferCreation(_) => "Failed to create buffer!",
-            Error::NoSuchTarget(_) => "Target with this name does not exist!",
-            Error::PassInit(_) => "Failed to initialize render pass!",
-            Error::PipelineCreation(_) => "Failed to create PSO!",
-            Error::PoolCreation(_) => "Failed to create thread pool!",
-            Error::ProgramCreation(_) => "Failed to create shader program!",
-            Error::ResViewCreation(_) => "Failed to create resource view!",
-            Error::TargetCreation(_) => "Failed to create render target!",
-            Error::TextureCreation(_) => "Failed to create texture!",
-            Error::WindowDestroyed => "Window has been destroyed!",
-        }
+impl Fail for Error {
+    fn cause(&self) -> Option<&Fail> {
+        self.inner.cause()
     }
 
-    fn cause(&self) -> Option<&StdError> {
-        match *self {
-            Error::BufferCreation(ref e) => Some(e),
-            Error::PassInit(ref e) => Some(e),
-            Error::PipelineCreation(ref e) => Some(e),
-            Error::ProgramCreation(ref e) => Some(e),
-            Error::ResViewCreation(ref e) => Some(e),
-            Error::TargetCreation(ref e) => Some(e),
-            Error::TextureCreation(ref e) => Some(e),
-            _ => None,
-        }
+    fn backtrace(&self) -> Option<&Backtrace> {
+        self.inner.backtrace()
     }
 }
 
-impl Display for Error {
-    fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
-        match *self {
-            Error::BufferCreation(ref e) => write!(fmt, "Buffer creation failed: {}", e),
-            Error::NoSuchTarget(ref e) => write!(fmt, "Nonexistent target: {}", e),
-            Error::PassInit(ref e) => write!(fmt, "Pass initialization failed: {}", e),
-            Error::PipelineCreation(ref e) => write!(fmt, "PSO creation failed: {}", e),
-            Error::PoolCreation(ref e) => write!(fmt, "Thread pool creation failed: {}", e),
-            Error::ProgramCreation(ref e) => write!(fmt, "Program compilation failed: {}", e),
-            Error::ResViewCreation(ref e) => write!(fmt, "Resource view creation failed: {}", e),
-            Error::TargetCreation(ref e) => write!(fmt, "Target creation failed: {}", e),
-            Error::TextureCreation(ref e) => write!(fmt, "Texture creation failed: {}", e),
-            Error::WindowDestroyed => write!(fmt, "Window has been destroyed"),
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Display::fmt(&self.inner, f)
+    }
+}
+
+impl Error {
+    /// Get the kind of this error.
+    pub fn kind(&self) -> &ErrorKind {
+        self.inner.get_context()
+    }
+}
+
+impl From<ErrorKind> for Error {
+    fn from(kind: ErrorKind) -> Self {
+        Error {
+            inner: Context::new(kind),
         }
+    }
+}
+
+impl From<Context<ErrorKind>> for Error {
+    fn from(inner: Context<ErrorKind>) -> Self {
+        Error { inner }
     }
 }
 
 impl From<gfx::CombinedError> for Error {
     fn from(e: gfx::CombinedError) -> Error {
-        Error::TargetCreation(e)
+        e.context(ErrorKind::TargetCreation).into()
     }
 }
 
 impl From<gfx::PipelineStateError<String>> for Error {
     fn from(e: gfx::PipelineStateError<String>) -> Error {
-        Error::PassInit(e)
+        e.context(ErrorKind::PassInit).into()
     }
 }
 
 impl From<gfx::ResourceViewError> for Error {
     fn from(e: gfx::ResourceViewError) -> Error {
-        Error::ResViewCreation(e)
+        e.context(ErrorKind::ResViewCreation).into()
     }
 }
 
 impl From<gfx::buffer::CreationError> for Error {
     fn from(e: gfx::buffer::CreationError) -> Error {
-        Error::BufferCreation(e)
+        e.context(ErrorKind::BufferCreation).into()
     }
 }
 
 impl From<gfx::shade::ProgramError> for Error {
     fn from(e: gfx::shade::ProgramError) -> Error {
-        Error::ProgramCreation(e)
+        e.context(ErrorKind::ProgramCreation).into()
     }
 }
 
 impl From<gfx::texture::CreationError> for Error {
     fn from(e: gfx::texture::CreationError) -> Error {
-        Error::TextureCreation(e)
+        e.context(ErrorKind::TextureCreation).into()
     }
 }
 
 impl From<gfx_core::pso::CreationError> for Error {
     fn from(e: gfx_core::pso::CreationError) -> Error {
-        Error::PipelineCreation(e)
+        e.context(ErrorKind::PipelineCreation).into()
     }
 }

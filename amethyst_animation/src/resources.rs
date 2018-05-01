@@ -4,10 +4,11 @@ use std::hash::Hash;
 use std::marker;
 use std::time::Duration;
 
-use amethyst_assets::{Asset, AssetStorage, Handle, Result};
+use amethyst_assets::{Asset, AssetStorage, Handle};
 use amethyst_core::shred::SystemData;
 use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entity, VecStorage, WriteStorage};
 use amethyst_core::timing::{duration_to_secs, secs_to_duration};
+use failure::Error;
 use fnv::FnvHashMap;
 use minterpolate::{get_input_index, InterpolationFunction, InterpolationPrimitive};
 
@@ -97,11 +98,11 @@ where
     type HandleStorage = VecStorage<Handle<Self>>;
 }
 
-impl<T> Into<Result<Sampler<T>>> for Sampler<T>
+impl<T> Into<Result<Sampler<T>, Error>> for Sampler<T>
 where
     T: InterpolationPrimitive,
 {
-    fn into(self) -> Result<Sampler<T>> {
+    fn into(self) -> Result<Sampler<T>, Error> {
         Ok(self)
     }
 }
@@ -276,11 +277,11 @@ where
     type HandleStorage = VecStorage<Handle<Self>>;
 }
 
-impl<T> Into<Result<Animation<T>>> for Animation<T>
+impl<T> Into<Result<Animation<T>, Error>> for Animation<T>
 where
     T: AnimationSampling,
 {
-    fn into(self) -> Result<Animation<T>> {
+    fn into(self) -> Result<Animation<T>, Error> {
         Ok(self)
     }
 }

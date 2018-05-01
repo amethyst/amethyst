@@ -1,8 +1,9 @@
 //! ECS rendering bundle
 
-use amethyst_core::bundle::{Result, ResultExt, SystemBundle};
+use amethyst_core::bundle::SystemBundle;
 use amethyst_core::specs::prelude::DispatcherBuilder;
 use config::DisplayConfig;
+use failure::{Error, ResultExt};
 use pipe::{PipelineBuild, PolyPipeline};
 use system::RenderSystem;
 use visibility::VisibilitySortingSystem;
@@ -50,7 +51,7 @@ where
 impl<'a, 'b, 'c, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> SystemBundle<'a, 'b>
     for RenderBundle<'c, B, P>
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         if let Some(dep) = self.visibility_sorting {
             builder.add(
                 VisibilitySortingSystem::new(),
@@ -58,8 +59,9 @@ impl<'a, 'b, 'c, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> SystemBun
                 dep,
             );
         };
-        builder
-            .add_thread_local(RenderSystem::build(self.pipe, self.config).chain_err(|| "Renderer error!")?);
+        let render_system = RenderSystem::build(self.pipe, self.config)
+            .context("Error building render system")?;
+        builder.add_thread_local(render_system);
         Ok(())
     }
 }

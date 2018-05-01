@@ -10,6 +10,7 @@ extern crate amethyst_renderer;
 extern crate clipboard;
 #[macro_use]
 extern crate derivative;
+extern crate failure;
 extern crate fnv;
 extern crate gfx;
 extern crate gfx_glyph;

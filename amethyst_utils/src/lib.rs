@@ -1,4 +1,5 @@
 extern crate amethyst_core;
+extern crate failure;
 extern crate winit;
 
 #[cfg(feature = "profiler")]

@@ -1,5 +1,6 @@
 use super::Source as Audio;
-use amethyst_assets::*;
+use amethyst_assets::SimpleFormat;
+use failure::Error;
 
 pub struct AudioData(pub Vec<u8>);
 
@@ -12,7 +13,7 @@ impl SimpleFormat<Audio> for WavFormat {
 
     type Options = ();
 
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<AudioData> {
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<AudioData, Error> {
         Ok(AudioData(bytes))
     }
 }
@@ -26,7 +27,7 @@ impl SimpleFormat<Audio> for OggFormat {
 
     type Options = ();
 
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<AudioData> {
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<AudioData, Error> {
         Ok(AudioData(bytes))
     }
 }
@@ -40,7 +41,7 @@ impl SimpleFormat<Audio> for FlacFormat {
 
     type Options = ();
 
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<AudioData> {
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<AudioData, Error> {
         Ok(AudioData(bytes))
     }
 }

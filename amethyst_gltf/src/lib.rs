@@ -3,6 +3,10 @@ extern crate amethyst_assets as assets;
 extern crate amethyst_core as core;
 extern crate amethyst_renderer as renderer;
 extern crate base64;
+#[macro_use]
+extern crate failure;
+#[macro_use]
+extern crate failure_derive;
 extern crate fnv;
 extern crate gfx;
 extern crate gltf;
@@ -17,18 +21,21 @@ extern crate log;
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
 
+pub use error::{Error, ErrorKind, Result};
 pub use format::GltfSceneFormat;
 pub use systems::GltfSceneLoaderSystem;
 
 use std::ops::Range;
+use std::result::Result as StdResult;
 
 use animation::{Animation, Sampler, SamplerPrimitive, TransformChannel};
-use assets::{Asset, Error as AssetError, Handle};
+use assets::{Asset, Handle};
 use core::specs::prelude::VecStorage;
 use core::transform::Transform;
 use gfx::Primitive;
 use renderer::{AnimatedVertexBufferCombination, MeshHandle, TextureData, TextureHandle};
 
+mod error;
 mod format;
 mod systems;
 
@@ -44,7 +51,7 @@ pub struct GltfPrimitive {
 }
 
 /// Alpha mode for material
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum AlphaMode {
     Opaque,
     Mask,
@@ -132,8 +139,8 @@ pub struct GltfSceneAsset {
     pub options: GltfSceneOptions,
 }
 
-impl Into<Result<GltfSceneAsset, AssetError>> for GltfSceneAsset {
-    fn into(self) -> Result<GltfSceneAsset, AssetError> {
+impl<E> Into<StdResult<GltfSceneAsset, E>> for GltfSceneAsset {
+    fn into(self) -> StdResult<GltfSceneAsset, E> {
         Ok(self)
     }
 }

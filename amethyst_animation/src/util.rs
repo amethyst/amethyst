@@ -78,7 +78,11 @@ where
             (Vec4(ref s), Vec4(ref o)) => {
                 Vec4([s[0] + o[0], s[1] + o[1], s[2] + o[2], s[3] + o[3]])
             }
-            _ => panic!("Interpolation can not be done between primitives of different types"),
+            _ => panic!(
+                "Interpolation can not be done between primitives of different types \
+                 ({:?} and {:?})",
+                self, other
+            ),
         }
     }
 
@@ -91,7 +95,11 @@ where
             (Vec4(ref s), Vec4(ref o)) => {
                 Vec4([s[0] - o[0], s[1] - o[1], s[2] - o[2], s[3] - o[3]])
             }
-            _ => panic!("Interpolation can not be done between primitives of different types"),
+            _ => panic!(
+                "Interpolation can not be done between primitives of different types \
+                 ({:?} and {:?})",
+                self, other
+            ),
         }
     }
 
@@ -125,7 +133,11 @@ where
             (Vec4(ref s), Vec4(ref o)) => (s[0] * o[0] + s[1] * o[1] + s[2] * o[2] + s[3] * o[3])
                 .to_f32()
                 .unwrap(),
-            _ => panic!("Interpolation can not be done between primitives of different types"),
+            _ => panic!(
+                "Interpolation can not be done between primitives of different types \
+                 ({:?} and {:?})",
+                self, other
+            ),
         }
     }
 

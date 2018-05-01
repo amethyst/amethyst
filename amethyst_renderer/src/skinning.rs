@@ -1,7 +1,9 @@
 use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entity, FlaggedStorage};
 use gfx::format::{ChannelType, Format, SurfaceType};
 
+use std::result::Result as StdResult;
 use error::Result;
+use failure::Error;
 use formats::MeshCreator;
 use mesh::{Mesh, MeshBuilder};
 use renderer::Renderer;
@@ -82,8 +84,9 @@ impl AnimatedComboMeshCreator {
 }
 
 impl MeshCreator for AnimatedComboMeshCreator {
-    fn build(self: Box<Self>, renderer: &mut Renderer) -> Result<Mesh> {
+    fn build(self: Box<Self>, renderer: &mut Renderer) -> StdResult<Mesh, Error> {
         build_mesh_with_combo(self.combo, renderer)
+            .map_err(|e| e.into())
     }
 }
 
