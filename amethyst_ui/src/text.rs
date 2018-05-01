@@ -166,7 +166,7 @@ impl<'a> System<'a> for UiSystem {
         {
             let bitset = &mut self.tab_order_cache.cached;
             self.tab_order_cache.cache.retain(|&(_t, entity)| {
-                let keep = transform.get(entity).is_some();
+                let keep = transform.contains(entity);
                 if !keep {
                     bitset.remove(entity.id());
                 }

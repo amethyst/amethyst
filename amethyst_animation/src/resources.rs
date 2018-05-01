@@ -183,7 +183,7 @@ where
         F: Fn(Entity) -> Option<T>,
     {
         for entity in self.nodes.values() {
-            if states.get(*entity).is_none() {
+            if !states.contains(*entity) {
                 if let Some(comp) = get_component(*entity) {
                     states.insert(*entity, RestState::new(comp));
                 }

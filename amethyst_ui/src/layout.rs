@@ -170,7 +170,7 @@ impl<'a> System<'a> for UiLayoutSystem {
                 let new_pos_y = middle.1 + norm_offset.1 * screen_dim.height() + user_offset.1;
                 tr.local_x = new_pos_x;
                 tr.local_y = new_pos_y;
-                if parent.get(entity).is_none() {
+                if !parent.contains(entity) {
                     tr.global_x = tr.local_x;
                     tr.global_y = tr.local_y;
                     tr.global_z = tr.local_z;
@@ -313,7 +313,7 @@ impl<'a> System<'a> for UiParentSystem {
 
         // When you don't have a parent but do have stretch on, resize with screen size.
         for (entity, mut local, stretch) in (&*entities, &mut locals, &stretches).join() {
-            if parents.get(entity).is_none() {
+            if !parents.contains(entity) {
                 let new_size = match stretch.stretch {
                     Stretch::X => (screen_dim.width() - stretch.margin.0 * 2.0, local.height),
                     Stretch::Y => (local.width, screen_dim.height() - stretch.margin.1 * 2.0),

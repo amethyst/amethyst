@@ -80,7 +80,7 @@ impl<'a> System<'a> for VisibilitySortingSystem {
                 .map(|(entity, global)| (entity, global.0.transform_point(origin)))
                 .map(|(entity, centroid)| Internals {
                     entity,
-                    transparent: transparent.get(entity).is_some(),
+                    transparent: transparent.contains(entity),
                     centroid,
                     camera_distance: centroid.distance2(camera_centroid),
                     from_camera: centroid - camera_centroid,
