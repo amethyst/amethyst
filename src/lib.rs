@@ -19,12 +19,12 @@
 //!
 //! struct GameState;
 //!
-//! impl State for GameState {
-//!     fn on_start(&mut self, _: &mut World) {
+//! impl State<()> for GameState {
+//!     fn on_start(&mut self, _: StateData<()>) {
 //!         println!("Starting game!");
 //!     }
 //!
-//!     fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
+//!     fn handle_event(&mut self, _: StateData<()>, event: Event) -> Trans<()> {
 //!         match event {
 //!             Event::WindowEvent { event, .. } => match event {
 //!                 WindowEvent::KeyboardInput {
@@ -37,19 +37,19 @@
 //!         }
 //!     }
 //!
-//!     fn update(&mut self, _: &mut World) -> Trans {
+//!     fn update(&mut self, _: StateData<()>) -> Trans<()> {
 //!         println!("Computing some more whoop-ass...");
 //!         Trans::Quit
 //!     }
 //! }
 //!
 //! fn main() {
-//!     let mut game = Application::new("assets/", GameState).expect("Fatal error");
+//!     let mut game = Application::new("assets/", GameState, ()).expect("Fatal error");
 //!     game.run();
 //! }
 //! ```
 
-#![deny(missing_docs)]
+#![warn(missing_docs)]
 #![doc(html_logo_url = "https://tinyurl.com/jtmm43a")]
 
 #[macro_use]
@@ -78,7 +78,8 @@ extern crate rustc_version_runtime;
 
 pub use self::app::{Application, ApplicationBuilder};
 pub use self::error::{Error, Result};
-pub use self::state::{State, StateMachine, Trans};
+pub use self::game_data::{DataInit, GameData, GameDataBuilder};
+pub use self::state::{State, StateData, StateMachine, Trans};
 pub use core::shred;
 pub use core::specs as ecs;
 pub use core::shrev;
@@ -86,6 +87,7 @@ pub use core::shrev;
 pub mod prelude;
 
 mod app;
+mod game_data;
 mod error;
 mod state;
 mod vergen;

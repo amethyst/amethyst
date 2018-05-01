@@ -36,8 +36,9 @@ struct Example {
     fps_display: Option<Entity>,
 }
 
-impl State for Example {
-    fn on_start(&mut self, world: &mut World) {
+impl<'a, 'b> State<GameData<'a, 'b>> for Example {
+    fn on_start(&mut self, data: StateData<GameData>) {
+        let StateData { world, .. } = data;
         // Initialise the scene with an object, a light and a camera.
         initialise_sphere(world);
         initialise_lights(world);
@@ -236,19 +237,7 @@ impl State for Example {
         world.write_resource::<UiFocused>().entity = Some(text);
     }
 
-    fn update(&mut self, world: &mut World) -> Trans {
-        let mut ui_text = world.write_storage::<UiText>();
-        if let Some(fps_display) = self.fps_display.and_then(|entity| ui_text.get_mut(entity)) {
-            if world.read_resource::<Time>().frame_number() % 20 == 0 {
-                let fps = world.read_resource::<FPSCounter>().sampled_fps();
-                fps_display.text = format!("FPS: {:.*}", 2, fps);
-            }
-        }
-
-        Trans::None
-    }
-
-    fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
+    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
         match event {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::KeyboardInput {
@@ -263,6 +252,20 @@ impl State for Example {
             },
             _ => Trans::None,
         }
+    }
+
+    fn update(&mut self, state_data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+        let StateData { world, data } = state_data;
+        data.update(&world);
+        let mut ui_text = world.write_storage::<UiText>();
+        if let Some(fps_display) = self.fps_display.and_then(|entity| ui_text.get_mut(entity)) {
+            if world.read_resource::<Time>().frame_number() % 20 == 0 {
+                let fps = world.read_resource::<FPSCounter>().sampled_fps();
+                fps_display.text = format!("FPS: {:.*}", 2, fps);
+            }
+        }
+
+        Trans::None
     }
 }
 
@@ -282,14 +285,14 @@ fn run() -> Result<(), amethyst::Error> {
                 .with_pass(DrawUi::new()),
         )
     };
-    let mut game = Application::build(resources, Example { fps_display: None })?
+    let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
         .with_bundle(UiBundle::<String, String>::new())?
         .with(UiEventHandlerSystem::new(), "ui_event_handler", &[])
         .with_bundle(FPSCounterBundle::default())?
         .with_bundle(InputBundle::<String, String>::new())?
-        .with_bundle(RenderBundle::new(pipe, Some(config)))?
-        .build()?;
+        .with_bundle(RenderBundle::new(pipe, Some(config)))?;
+    let mut game = Application::new(resources, Example { fps_display: None }, game_data)?;
     game.run();
     Ok(())
 }

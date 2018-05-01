@@ -66,23 +66,27 @@ fn run() -> Result<()> {
             .with_pass(DrawUi::new()),
     );
     let pong_config = PongConfig::load(&config);
+
+    let game_data = GameDataBuilder::default()
+        .with_bundle(
+            InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path),
+        )?
+        .with_bundle(PongBundle::default())?
+        .with_bundle(TransformBundle::new().with_dep(&["ball_system", "paddle_system"]))?
+        .with_bundle(AudioBundle::new(|music: &mut Music| music.music.next()))?
+        .with_bundle(UiBundle::<String, String>::new())?
+        .with_bundle(RenderBundle::new(pipe, Some(display_config)))?;
+
     let mut game = Application::build(assets_dir, Pong)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             144,
         )
-        .with_bundle(
-            InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path),
-        )?
         .with_resource(pong_config.arena)
         .with_resource(pong_config.ball)
         .with_resource(pong_config.paddles)
-        .with_bundle(PongBundle::default())?
-        .with_bundle(TransformBundle::new().with_dep(&["ball_system", "paddle_system"]))?
-        .with_bundle(AudioBundle::new(|music: &mut Music| music.music.next()))?
-        .with_bundle(UiBundle::<String, String>::new())?
-        .with_bundle(RenderBundle::new(pipe, Some(display_config)))?
-        .build()?;
+        .build(game_data)?;
+
     game.run();
     Ok(())
 }
