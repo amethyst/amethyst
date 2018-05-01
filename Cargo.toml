@@ -148,3 +148,6 @@ path = "examples/sprites/main.rs"
 [workspace]
 members = ["amethyst_gltf"]
 
+
+[patch.crates-io]
+coreaudio-sys = { git = "https://github.com/regexident/coreaudio-sys.git", rev = "0950296041eb15a3e2a6e9faaf95242cdf83cef1" }
