@@ -10,6 +10,9 @@ use std::marker::PhantomData;
 
 use components::FlyControlTag;
 
+use shrev::{EventChannel, ReaderId};
+use winit::{Event, WindowEvent};
+
 /// The system that manages the fly movement.
 /// Generic parameters are the parameters for the InputHandler.
 pub struct FlyMovementSystem<A, B> {
@@ -147,5 +150,35 @@ impl<'a> System<'a> for MouseCenterLockSystem {
         let mut msg = res.fetch_mut::<WindowMessages>();
         grab_cursor(&mut msg);
         set_mouse_cursor_none(&mut msg);
+    }
+}
+
+pub struct MouseFocusUpdateSystem {
+    event_reader: Option<ReaderId<Event>>,
+}
+
+impl<'a> System<'a> for MouseFocusUpdateSystem {
+    type SystemData = (
+        Read<'a, EventChannel<Event>>,
+        Read<'a, EventChannel<Event>>,
+    );
+
+    fn run(&mut self, (inputs, events): Self::SystemData) {
+        for event in events.read(&mut self.event_reader.as_mut().unwrap()) {
+            if let &Event::WindowEvent {
+                event: WindowEvent::Focused(false),
+                ..
+            } = event
+            {
+                println!("Focus event happended");
+                println!("TODO: save event in resource");
+            }
+        }
+    }
+
+    fn setup(&mut self, res: &mut Resources) {
+        use amethyst_core::specs::prelude::SystemData;
+        Self::SystemData::setup(res);
+        self.event_reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
     }
 }

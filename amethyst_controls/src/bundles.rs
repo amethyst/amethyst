@@ -68,6 +68,7 @@ where
             &[],
         );
         builder.add(MouseCenterLockSystem, "mouse_lock", &["free_rotation"]);
+        builder.add(MouseFocusUpdateSystem, "mouse_focus", &["free_lock"]);
         Ok(())
     }
 }
