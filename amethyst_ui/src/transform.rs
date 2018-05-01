@@ -108,7 +108,9 @@ mod tests {
     fn inside_local() {
         let tr = UiTransform::new("".to_string(), 0.0, 0.0, 0.0, 1.0, 1.0, 0);
         let pos = (-0.49, 0.20);
-        assert!(tr.position_inside(pos.0, pos.1));
+        assert!(tr.position_inside_local(pos.0, pos.1));
+        let pos = (-1.49, 1.20);
+        assert!(!tr.position_inside_local(pos.0, pos.1));
     }
 
     #[test]
@@ -116,5 +118,7 @@ mod tests {
         let tr = UiTransform::new("".to_string(), 0.0, 0.0, 0.0, 1.0, 1.0, 0);
         let pos = (-0.49, 0.20);
         assert!(tr.position_inside(pos.0, pos.1));
+        let pos = (-1.49, 1.20);
+        assert!(!tr.position_inside(pos.0, pos.1));
     }
 }
