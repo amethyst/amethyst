@@ -8,8 +8,12 @@ use amethyst::renderer::{DisplayConfig, DrawFlat, Event, KeyboardInput, Pipeline
 
 struct Example;
 
-impl State for Example {
-    fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
+impl<'a, 'b> State<GameData<'a, 'b>> for Example {
+    fn handle_event(
+        &mut self,
+        _: StateData<GameData<'a, 'b>>,
+        event: Event,
+    ) -> Trans<GameData<'a, 'b>> {
         match event {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::KeyboardInput {
@@ -24,6 +28,11 @@ impl State for Example {
             },
             _ => Trans::None,
         }
+    }
+
+    fn update(&mut self, data: StateData<GameData<'a, 'b>>) -> Trans<GameData<'a, 'b>> {
+        data.data.update(&data.world);
+        Trans::None
     }
 }
 
@@ -40,9 +49,8 @@ fn run() -> Result<(), amethyst::Error> {
             .with_pass(DrawFlat::<PosNormTex>::new()),
     );
 
-    let mut game = Application::build("./", Example)?
-        .with_bundle(RenderBundle::new(pipe, Some(config)))?
-        .build()
+    let mut game = Application::<GameData>::build("./", Example)?
+        .build(GameDataBuilder::default().with_bundle(RenderBundle::new(pipe, Some(config)))?)
         .expect("Fatal error");
 
     game.run();

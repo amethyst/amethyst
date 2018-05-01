@@ -49,7 +49,7 @@
 //! }
 //! ```
 
-#![deny(missing_docs)]
+#![warn(missing_docs)]
 #![doc(html_logo_url = "https://tinyurl.com/jtmm43a")]
 
 #[macro_use]
@@ -79,13 +79,15 @@ extern crate rustc_version_runtime;
 
 pub use self::app::{Application, ApplicationBuilder};
 pub use self::error::{Error, Result};
-pub use self::state::{State, StateMachine, Trans};
+pub use self::game_data::{DataInit, GameData, GameDataBuilder};
+pub use self::state::{State, StateData, StateMachine, Trans};
 pub use core::shred;
 pub use core::specs as ecs;
 
 pub mod prelude;
 
 mod app;
+mod game_data;
 mod error;
 mod state;
 mod vergen;

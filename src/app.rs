@@ -6,10 +6,9 @@ use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 
-use core::SystemBundle;
 use fern;
 use log::LevelFilter;
-use rayon::{ThreadPool, ThreadPoolBuilder};
+use rayon::ThreadPoolBuilder;
 use shred::Resource;
 use shrev::{EventChannel, ReaderId};
 #[cfg(feature = "profiler")]
@@ -20,9 +19,10 @@ use assets::{Loader, Source};
 use core::frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy};
 use core::timing::{Stopwatch, Time};
 use ecs::common::Errors;
-use ecs::prelude::{Component, Dispatcher, DispatcherBuilder, System, World};
+use ecs::prelude::{Component, World};
 use error::{Error, Result};
-use state::{State, StateMachine};
+use game_data::DataInit;
+use state::{State, StateData, StateMachine};
 use vergen;
 
 /// An Application is the root object of the game engine. It binds the OS
@@ -33,19 +33,17 @@ use vergen;
 /// game needs to run.
 #[derive(Derivative)]
 #[derivative(Debug)]
-pub struct Application<'a, 'b> {
+pub struct Application<'a, T> {
     /// The world
     #[derivative(Debug = "ignore")]
-    pub world: World,
-
-    #[derivative(Debug = "ignore")]
-    dispatcher: Dispatcher<'a, 'b>,
+    world: World,
     events_reader_id: ReaderId<Event>,
-    states: StateMachine<'a>,
+    states: StateMachine<'a, T>,
     ignore_window_close: bool,
+    data: T,
 }
 
-impl<'a, 'b> Application<'a, 'b> {
+impl<'a, T> Application<'a, T> {
     /// Creates a new Application with the given initial game state.
     /// This will create and allocate all the needed resources for
     /// the event loop of the game engine. It is a shortcut for convenience
@@ -94,22 +92,23 @@ impl<'a, 'b> Application<'a, 'b> {
     /// let mut game = Application::new("assets/", NullState).expect("Failed to initialize");
     /// game.run();
     /// ~~~
-    pub fn new<P, S>(path: P, initial_state: S) -> Result<Application<'a, 'b>>
+    pub fn new<P, S, I>(path: P, initial_state: S, init: I) -> Result<Application<'a, T>>
     where
         P: AsRef<Path>,
-        S: State + 'a,
+        S: State<T> + 'a,
+        I: DataInit<T>,
     {
-        ApplicationBuilder::new(path, initial_state)?.build()
+        ApplicationBuilder::new(path, initial_state)?.build(init)
     }
 
     /// Creates a new ApplicationBuilder with the given initial game state.
     ///
     /// This is identical in function to
     /// [ApplicationBuilder::new](struct.ApplicationBuilder.html#method.new).
-    pub fn build<P, S>(path: P, initial_state: S) -> Result<ApplicationBuilder<'a, 'b, S>>
+    pub fn build<P, S>(path: P, initial_state: S) -> Result<ApplicationBuilder<S>>
     where
         P: AsRef<Path>,
-        S: State + 'a,
+        S: State<T>,
     {
         ApplicationBuilder::new(path, initial_state)
     }
@@ -148,7 +147,8 @@ impl<'a, 'b> Application<'a, 'b> {
     fn initialize(&mut self) {
         #[cfg(feature = "profiler")]
         profile_scope!("initialize");
-        self.states.start(&mut self.world);
+        self.states
+            .start(StateData::new(&mut self.world, &mut self.data));
     }
 
     /// Advances the game world by one tick.
@@ -168,14 +168,14 @@ impl<'a, 'b> Application<'a, 'b> {
                 .collect::<Vec<_>>();
 
             for event in events {
-                states.handle_event(world, event.clone());
+                states.handle_event(StateData::new(world, &mut self.data), event.clone());
                 if !self.ignore_window_close {
                     if let &Event::WindowEvent {
                         event: WindowEvent::Closed,
                         ..
                     } = &event
                     {
-                        states.stop(world);
+                        states.stop(StateData::new(world, &mut self.data));
                     }
                 }
             }
@@ -188,18 +188,16 @@ impl<'a, 'b> Application<'a, 'b> {
             #[cfg(feature = "profiler")]
             profile_scope!("fixed_update");
             if do_fixed {
-                self.states.fixed_update(&mut self.world);
+                self.states
+                    .fixed_update(StateData::new(&mut self.world, &mut self.data));
                 self.world.write_resource::<Time>().finish_fixed_update();
             }
 
             #[cfg(feature = "profiler")]
             profile_scope!("update");
-            self.states.update(&mut self.world);
+            self.states
+                .update(StateData::new(&mut self.world, &mut self.data));
         }
-
-        #[cfg(feature = "profiler")]
-        profile_scope!("dispatch");
-        self.dispatcher.dispatch(&mut self.world.res);
 
         #[cfg(feature = "profiler")]
         profile_scope!("maintain");
@@ -220,7 +218,7 @@ impl<'a, 'b> Application<'a, 'b> {
 }
 
 #[cfg(feature = "profiler")]
-impl<'a, 'b> Drop for Application<'a, 'b> {
+impl<'a, T> Drop for Application<'a, T> {
     fn drop(&mut self) {
         // TODO: Specify filename in config.
         let path = format!("{}/thread_profile.json", env!("CARGO_MANIFEST_DIR"));
@@ -231,16 +229,15 @@ impl<'a, 'b> Drop for Application<'a, 'b> {
 /// `ApplicationBuilder` is an interface that allows for creation of an [`Application`](struct.Application.html)
 /// using a custom set of configuration. This is the normal way an [`Application`](struct.Application.html)
 /// object is created.
-pub struct ApplicationBuilder<'a, 'b, T> {
+pub struct ApplicationBuilder<S> {
     // config: Config,
-    disp_builder: DispatcherBuilder<'a, 'b>,
-    initial_state: T,
+    initial_state: S,
     /// Used by bundles to access the world directly
     pub world: World,
     ignore_window_close: bool,
 }
 
-impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
+impl<S> ApplicationBuilder<S> {
     /// Creates a new [ApplicationBuilder](struct.ApplicationBuilder.html) instance
     /// that wraps the initial_state. This is the more verbose way of initializing
     /// your application if you require specific configuration details to be changed
@@ -310,7 +307,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// game.run();
     /// ~~~
 
-    pub fn new<P: AsRef<Path>>(path: P, initial_state: T) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P, initial_state: S) -> Result<Self> {
         use rustc_version_runtime;
 
         fern::Dispatch::new()
@@ -360,7 +357,6 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
         world.add_resource(Time::default());
 
         Ok(ApplicationBuilder {
-            disp_builder: DispatcherBuilder::new(),
             initial_state,
             world,
             ignore_window_close: false,
@@ -478,190 +474,6 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
         self
     }
 
-    /// Inserts a barrier which assures that all systems added before the
-    /// barrier are executed before the ones after this barrier.
-    ///
-    /// Does nothing if there were no systems added since the last call to
-    /// `with_barrier()`. Thread-local systems are not affected by barriers;
-    /// they're always executed at the end.
-    ///
-    /// # Returns
-    ///
-    /// This function returns ApplicationBuilder after it has modified it.
-    ///
-    /// # Examples
-    ///
-    /// ~~~no_run
-    /// use amethyst::prelude::*;
-    /// use amethyst::ecs::prelude::System;
-    ///
-    /// struct NullState;
-    /// impl State for NullState {}
-    ///
-    /// struct NopSystem;
-    /// impl<'a> System<'a> for NopSystem {
-    ///     type SystemData = ();
-    ///     fn run(&mut self, (): Self::SystemData) {}
-    /// }
-    ///
-    /// // Three systems are added in this example. The "tabby cat" & "tom cat"
-    /// // systems will both run in parallel. Only after both cat systems have
-    /// // run is the "doggo" system permitted to run them.
-    /// Application::build("assets/", NullState)
-    ///     .expect("Failed to initialize")
-    ///     .with(NopSystem, "tabby cat", &[])
-    ///     .with(NopSystem, "tom cat", &[])
-    ///     .with_barrier()
-    ///     .with(NopSystem, "doggo", &[]);
-    /// ~~~
-    pub fn with_barrier(mut self) -> Self {
-        self.disp_builder = self.disp_builder.with_barrier();
-        self
-    }
-
-    /// Adds a given system to the game loop.
-    ///
-    /// __Note:__ all dependencies must be added before you add the system.
-    ///
-    /// # Parameters
-    ///
-    /// - `system`: The system that is to be added to the game loop.
-    /// - `name`: A unique string to identify the system by. This is used for
-    ///         dependency tracking. This name may be empty `""` string in which
-    ///         case it cannot be referenced as a dependency.
-    /// - `dependencies`: A list of named system that _must_ have completed running
-    ///                 before this system is permitted to run.
-    ///                 This may be an empty list if there is no dependencies.
-    ///
-    /// # Returns
-    ///
-    /// This function returns ApplicationBuilder after it has modified it.
-    ///
-    /// # Type Parameters
-    ///
-    /// - `S`: A type that implements the `System` trait.
-    ///
-    /// # Panics
-    ///
-    /// If two system are added that share an identical name, this function will panic.
-    /// Empty names are permitted, and this function will not panic if more then two are added.
-    ///
-    /// If a dependency is referenced (by name), but has not previously been added this
-    /// function will panic.
-    ///
-    /// # Examples
-    ///
-    /// ~~~no_run
-    /// use amethyst::prelude::*;
-    /// use amethyst::ecs::prelude::System;
-    ///
-    /// struct NullState;
-    /// impl State for NullState {}
-    ///
-    /// struct NopSystem;
-    /// impl<'a> System<'a> for NopSystem {
-    ///     type SystemData = ();
-    ///     fn run(&mut self, _: Self::SystemData) {}
-    /// }
-    ///
-    /// Application::build("assets/", NullState)
-    ///     .expect("Failed to initialize")
-    ///     // This will add the "foo" system to the game loop, in this case
-    ///     // the "foo" system will not depend on any systems.
-    ///     .with(NopSystem, "foo", &[])
-    ///     // The "bar" system will only run after the "foo" system has completed
-    ///     .with(NopSystem, "bar", &["foo"])
-    ///     // It is legal to register a system with an empty name
-    ///     .with(NopSystem, "", &[]);
-    /// ~~~
-    pub fn with<S>(mut self, system: S, name: &str, dependencies: &[&str]) -> Self
-    where
-        for<'c> S: System<'c> + Send + 'a,
-    {
-        self.disp_builder = self.disp_builder.with(system, name, dependencies);
-        self
-    }
-
-    /// Add a given thread-local system to the game loop.
-    ///
-    /// A thread-local system is one that _must_ run on the main thread of the
-    /// game. A thread-local system would be necessary typically to work
-    /// around vendor APIs that have thread dependent designs; an example
-    /// being OpenGL which uses a thread-local state machine to function.
-    ///
-    /// All thread-local systems are executed sequentially after all
-    /// non-thread-local systems.
-    ///
-    /// # Parameters
-    ///
-    /// - `system`: The system that is to be added to the game loop.
-    ///
-    /// # Returns
-    ///
-    /// This function returns ApplicationBuilder after it has modified it.
-    ///
-    /// # Type Parameters
-    ///
-    /// - `S`: A type that implements the `System` trait.
-    ///
-    /// # Examples
-    ///
-    /// ~~~no_run
-    /// use amethyst::prelude::*;
-    /// use amethyst::ecs::prelude::System;
-    ///
-    /// struct NullState;
-    /// impl State for NullState {}
-    ///
-    /// struct NopSystem;
-    /// impl<'a> System<'a> for NopSystem {
-    ///     type SystemData = ();
-    ///     fn run(&mut self, _: Self::SystemData) {}
-    /// }
-    ///
-    /// Application::build("assets/", NullState)
-    ///     .expect("Failed to initialize")
-    ///     // the Nop system is registered here
-    ///     .with_thread_local(NopSystem);
-    /// ~~~
-    pub fn with_thread_local<S>(mut self, system: S) -> Self
-    where
-        for<'c> S: System<'c> + 'b,
-    {
-        self.disp_builder = self.disp_builder.with_thread_local(system);
-        self
-    }
-
-    /// Add a given ECS bundle to the game loop.
-    ///
-    /// A bundle is a container for registering a bunch of ECS systems and their dependent
-    /// resources and components.
-    ///
-    /// # Parameters
-    ///
-    /// - `bundle`: The bundle to add
-    ///
-    /// # Returns
-    ///
-    /// This function returns ApplicationBuilder after it has modified it, this is
-    /// wrapped in a `Result`.
-    ///
-    /// # Errors
-    ///
-    /// This function creates systems and resources, which use any number of dependent
-    /// crates or APIs, which could result in any number of errors.
-    /// See each individual bundle for a description of the errors it could produce.
-    ///
-    pub fn with_bundle<B>(mut self, bundle: B) -> Result<Self>
-    where
-        B: SystemBundle<'a, 'b>,
-    {
-        bundle
-            .build(&mut self.disp_builder)
-            .map_err(|err| Error::Core(err))?;
-        Ok(self)
-    }
-
     /// Register an asset store with the loader logic of the Application.
     ///
     /// If the asset store exists, that shares a name with the new store the net
@@ -711,10 +523,10 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///     }
     /// }
     /// ~~~
-    pub fn with_source<I, S>(self, name: I, store: S) -> Self
+    pub fn with_source<I, O>(self, name: I, store: O) -> Self
     where
         I: Into<String>,
-        S: Source,
+        O: Source,
     {
         {
             let mut loader = self.world.write_resource::<Loader>();
@@ -803,9 +615,10 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// See the [example show for `ApplicationBuilder::new()`](struct.ApplicationBuilder.html#examples)
     /// for an example on how this method is used.
-    pub fn build(mut self) -> Result<Application<'a, 'b>>
+    pub fn build<'a, T, I>(mut self, init: I) -> Result<Application<'a, T>>
     where
-        T: State + 'a,
+        S: State<T> + 'a,
+        I: DataInit<T>,
     {
         trace!("Entering `ApplicationBuilder::build`");
 
@@ -814,25 +627,18 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
         #[cfg(feature = "profiler")]
         profile_scope!("new");
 
-        #[cfg(not(no_threading))]
-        let pool = self.world.read_resource::<Arc<ThreadPool>>().clone();
         let reader_id = self.world
             .write_resource::<EventChannel<Event>>()
             .register_reader();
 
-        #[cfg(not(no_threading))]
-        let mut dispatcher = self.disp_builder.with_pool(pool).build();
-        #[cfg(no_threading)]
-        let mut dispatcher = self.disp_builder.build();
-        dispatcher.setup(&mut self.world.res);
+        let data = init.build(&mut self.world);
 
         Ok(Application {
             world: self.world,
-            // config: self.config,
             states: StateMachine::new(self.initial_state),
             events_reader_id: reader_id,
-            dispatcher,
             ignore_window_close: self.ignore_window_close,
+            data,
         })
     }
 }
