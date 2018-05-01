@@ -31,3 +31,4 @@ features = ["serde"]
 
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]
+nightly = [ "amethyst_core/nightly" ]
