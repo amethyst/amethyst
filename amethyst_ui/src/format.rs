@@ -1,5 +1,6 @@
-use amethyst_assets::{Asset, Error, Handle, ResultExt, SimpleFormat};
+use amethyst_assets::{Asset, Handle, SimpleFormat};
 use amethyst_core::specs::prelude::VecStorage;
+use failure::{err_msg, Error};
 use rusttype::{Font, FontCollection};
 
 /// A loaded set of fonts from a file.
@@ -48,6 +49,6 @@ impl SimpleFormat<FontAsset> for TtfFormat {
             .into_fonts()
             .nth(0)
             .map(|f| FontData(f))
-            .chain_err(|| "Font parsing error")
+            .ok_or(err_msg("Font parsing error"))
     }
 }

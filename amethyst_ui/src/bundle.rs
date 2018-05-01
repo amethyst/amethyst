@@ -1,8 +1,9 @@
 //! ECS rendering bundle
 
 use amethyst_assets::Processor;
-use amethyst_core::bundle::{Result, SystemBundle};
+use amethyst_core::bundle::SystemBundle;
 use amethyst_core::specs::prelude::DispatcherBuilder;
+use failure::Error;
 use std::hash::Hash;
 use std::marker::PhantomData;
 
@@ -34,7 +35,7 @@ where
     A: Send + Sync + Eq + Hash + Clone + 'static,
     B: Send + Sync + Eq + Hash + Clone + 'static,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(Processor::<FontAsset>::new(), "font_processor", &[]);
         builder.add(UiSystem::new(), "ui_system", &["font_processor"]);
         builder.add(ResizeSystem::new(), "ui_resize_system", &[]);

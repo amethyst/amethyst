@@ -1,8 +1,9 @@
 use std::sync::Arc;
+use failure::{self, ResultExt};
 
 use amethyst_core::specs::storage::UnprotectedStorage;
 
-use {ErrorKind, Handle, Reload, Result, ResultExt, SingleFile, Source};
+use {ErrorKind, Handle, Reload, SingleFile, Source};
 
 /// One of the three core traits of this crate.
 ///
@@ -42,19 +43,22 @@ pub trait Format<A: Asset>: Send + 'static {
 
     /// Reads the given bytes and produces asset data.
     ///
-    /// ## Reload
+    /// # Reload
     ///
     /// The reload structure has metadata which allows the asset management
     /// to reload assets if necessary (for hot reloading).
     /// You should only create this if `create_reload` is `true`.
     /// Also, the parameter is just a request, which means you can also return `None`.
+    ///
+    /// The error case can be anything that implements `failure::Fail`, which includes
+    /// `std::error::Error + Sync + Send + 'static`.
     fn import(
         &self,
         name: String,
         source: Arc<Source>,
         options: Self::Options,
         create_reload: bool,
-    ) -> Result<FormatValue<A>>;
+    ) -> Result<FormatValue<A>, failure::Error>;
 }
 
 /// The `Ok` return value of `Format::import` for a given asset type `A`.
@@ -80,13 +84,17 @@ impl<A: Asset> FormatValue<A> {
 pub trait SimpleFormat<A: Asset> {
     /// A unique identifier for this format.
     const NAME: &'static str;
+
     /// Options specific to the format, which are passed to `import`.
     /// E.g. for textures this would be stuff like mipmap levels and
     /// sampler info.
     type Options: Clone + Send + Sync + 'static;
 
     /// Produces asset data from given bytes.
-    fn import(&self, bytes: Vec<u8>, options: Self::Options) -> Result<A::Data>;
+    ///
+    /// The error case can be anything that implements `failure::Fail`, which includes
+    /// `std::error::Error + Sync + Send + 'static`.
+    fn import(&self, bytes: Vec<u8>, options: Self::Options) -> Result<A::Data, failure::Error>;
 }
 
 impl<A, T> Format<A> for T
@@ -103,19 +111,21 @@ where
         source: Arc<Source>,
         options: Self::Options,
         create_reload: bool,
-    ) -> Result<FormatValue<A>> {
+    ) -> Result<FormatValue<A>, failure::Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("import_asset");
         if create_reload {
-            let (b, m) = source
-                .load_with_metadata(&name)
-                .chain_err(|| ErrorKind::Source)?;
-            let data = T::import(&self, b, options.clone())?;
+            let (b, m) = source.load_with_metadata(&name)?;
+            let data =
+                T::import(&self, b, options.clone()).context(ErrorKind::ImportAssetFromBytes {
+                    name: name.clone(),
+                    asset_type: Self::NAME,
+                })?;
             let reload = SingleFile::new(self.clone(), m, options, name, source);
             let reload = Some(Box::new(reload) as Box<Reload<A>>);
             Ok(FormatValue { data, reload })
         } else {
-            let b = source.load(&name).chain_err(|| ErrorKind::Source)?;
+            let b = source.load(&name)?;
             let data = T::import(&self, b, options)?;
 
             Ok(FormatValue::data(data))

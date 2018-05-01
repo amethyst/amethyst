@@ -5,93 +5,24 @@
 #![crate_type = "lib"]
 #![doc(html_logo_url = "http://tinyurl.com/hgsb45k")]
 
+extern crate failure;
+#[macro_use]
+extern crate failure_derive;
+#[macro_use]
+extern crate log;
 extern crate ron;
 extern crate serde;
 
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
 
-use std::error::Error;
-use std::fmt;
-use std::io;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
-use ron::de::Error as DeError;
-use ron::ser::Error as SerError;
 use serde::{Deserialize, Serialize};
+pub use error::{Error, ErrorKind, Result, WrongExtension};
+use failure::ResultExt;
 
-/// Error related to anything that manages/creates configurations as well as
-/// "workspace"-related things.
-#[derive(Debug)]
-pub enum ConfigError {
-    /// Forward to the `std::io::Error` error.
-    File(io::Error),
-    /// Errors related to serde's parsing of configuration files.
-    Parser(DeError),
-    /// Occurs if a value is ill-formed during serialization (like a poisoned mutex).
-    Serializer(SerError),
-    /// Related to the path of the file.
-    Extension(PathBuf),
-}
-
-impl fmt::Display for ConfigError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            ConfigError::File(ref err) => write!(f, "{}", err),
-            ConfigError::Parser(ref msg) => write!(f, "{}", msg),
-            ConfigError::Serializer(ref msg) => write!(f, "{}", msg),
-            ConfigError::Extension(ref path) => {
-                let found = match path.extension() {
-                    Some(extension) => format!("{:?}", extension),
-                    None => format!("a directory."),
-                };
-
-                write!(
-                    f,
-                    "{}: Invalid path extension, expected \"ron\", got {}.",
-                    path.display().to_string(),
-                    found,
-                )
-            }
-        }
-    }
-}
-
-impl From<io::Error> for ConfigError {
-    fn from(e: io::Error) -> ConfigError {
-        ConfigError::File(e)
-    }
-}
-
-impl From<DeError> for ConfigError {
-    fn from(e: DeError) -> Self {
-        ConfigError::Parser(e)
-    }
-}
-
-impl From<SerError> for ConfigError {
-    fn from(e: SerError) -> Self {
-        ConfigError::Serializer(e)
-    }
-}
-
-impl Error for ConfigError {
-    fn description(&self) -> &str {
-        match *self {
-            ConfigError::File(_) => "Project file error",
-            ConfigError::Parser(_) => "Project parser error",
-            ConfigError::Serializer(_) => "Project serializer error",
-            ConfigError::Extension(_) => "Invalid extension or directory for a file",
-        }
-    }
-
-    fn cause(&self) -> Option<&Error> {
-        match *self {
-            ConfigError::File(ref err) => Some(err),
-            _ => None,
-        }
-    }
-}
+mod error;
 
 /// Trait implemented by the `config!` macro.
 pub trait Config
@@ -103,10 +34,10 @@ where
     fn load<P: AsRef<Path>>(path: P) -> Self;
 
     /// Loads a configuration structure from a file.
-    fn load_no_fallback<P: AsRef<Path>>(path: P) -> Result<Self, ConfigError>;
+    fn load_no_fallback<P: AsRef<Path>>(path: P) -> Result<Self>;
 
     /// Writes a configuration structure to a file.
-    fn write<P: AsRef<Path>>(&self, path: P) -> Result<(), ConfigError>;
+    fn write<P: AsRef<Path>>(&self, path: P) -> Result<()>;
 }
 
 impl<T> Config for T
@@ -115,13 +46,12 @@ where
 {
     fn load<P: AsRef<Path>>(path: P) -> Self {
         Self::load_no_fallback(path.as_ref()).unwrap_or_else(|e| {
-            println!("1: Failed to load config: {}", e);
-
+            warn!("Failed to load config: {}", e);
             Self::default()
         })
     }
 
-    fn load_no_fallback<P: AsRef<Path>>(path: P) -> Result<Self, ConfigError> {
+    fn load_no_fallback<P: AsRef<Path>>(path: P) -> Result<Self> {
         use ron::de::Deserializer;
         use std::fs::File;
         use std::io::Read;
@@ -129,31 +59,34 @@ where
         let path = path.as_ref();
 
         let content = {
-            let mut file = File::open(path)?;
+            let mut file = File::open(path).context(ErrorKind::File)?;
             let mut buffer = Vec::new();
-            file.read_to_end(&mut buffer)?;
+            file.read_to_end(&mut buffer).context(ErrorKind::File)?;
 
             buffer
         };
 
         if path.extension().and_then(|e| e.to_str()) == Some("ron") {
             let mut d = Deserializer::from_bytes(&content);
-            let val = T::deserialize(&mut d)?;
-            d.end()?;
+            let val = T::deserialize(&mut d).context(ErrorKind::Parser)?;
+            d.end().context(ErrorKind::Parser)?;
 
             Ok(val)
         } else {
-            Err(ConfigError::Extension(path.to_path_buf()))
+            Err(Error::wrong_extension(path.to_path_buf()))
         }
     }
 
-    fn write<P: AsRef<Path>>(&self, path: P) -> Result<(), ConfigError> {
+    fn write<P: AsRef<Path>>(&self, path: P) -> Result<()> {
         use ron::ser::to_string_pretty;
         use std::fs::File;
         use std::io::Write;
 
-        let s = to_string_pretty(self, Default::default())?;
-        File::create(path)?.write(s.as_bytes())?;
+        let s = to_string_pretty(self, Default::default()).context(ErrorKind::Serializer)?;
+        File::create(path)
+            .context(ErrorKind::Serializer)?
+            .write(s.as_bytes())
+            .context(ErrorKind::Serializer)?;
 
         Ok(())
     }

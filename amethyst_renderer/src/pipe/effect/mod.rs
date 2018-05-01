@@ -4,6 +4,7 @@
 
 use std::mem;
 
+use failure::ResultExt;
 use fnv::FnvHashMap as HashMap;
 use gfx::buffer::{Info as BufferInfo, Role as BufferRole};
 use gfx::memory::{Bind, Usage};
@@ -19,7 +20,7 @@ use glsl_layout::Std140;
 
 pub use self::pso::{Data, Init, Meta};
 
-use error::{Error, Result};
+use error::{Error, ErrorKind, Result};
 use pipe::Target;
 use types::{Encoder, Factory, PipelineState, Resources, Slice};
 use vertex::Attributes;
@@ -46,21 +47,21 @@ impl<'a> ProgramSource<'a> {
 
         match *self {
             ProgramSource::Simple(ref vs, ref ps) => fac.create_shader_set(vs, ps)
-                .map_err(|e| Error::ProgramCreation(e)),
+                .context(ErrorKind::ProgramCreation),
             ProgramSource::Geometry(ref vs, ref gs, ref ps) => {
                 let v = fac.create_shader_vertex(vs)
-                    .map_err(|e| ProgramError::Vertex(e))?;
+                    .context(ErrorKind::ProgramCreation)?;
                 let g = fac.create_shader_geometry(gs)
-                    .expect("Geometry shader creation failed");
+                    .context(ErrorKind::ProgramCreation)?;
                 let p = fac.create_shader_pixel(ps)
-                    .map_err(|e| ProgramError::Pixel(e))?;
+                    .context(ErrorKind::ProgramCreation)?;
                 Ok(ShaderSet::Geometry(v, g, p))
             }
             ProgramSource::Tessellated(ref vs, ref hs, ref ds, ref ps) => {
                 fac.create_shader_set_tessellation(vs, hs, ds, ps)
-                    .map_err(|e| Error::ProgramCreation(e))
+                    .context(ErrorKind::ProgramCreation)
             }
-        }
+        }.map_err(|e| e.into())
     }
 }
 

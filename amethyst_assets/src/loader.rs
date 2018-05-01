@@ -1,3 +1,4 @@
+//! The `Loader` struct, responsible for loading assets.
 use std::borrow::Borrow;
 use std::hash::Hash;
 use std::path::PathBuf;
@@ -148,7 +149,12 @@ impl Loader {
             profile_scope!("load_asset_from_worker");
             let data = format
                 .import(name.clone(), source, options, hot_reload)
-                .chain_err(|| ErrorKind::Format(F::NAME));
+                .map_err(|e| {
+                    e.context(ErrorKind::ImportAsset {
+                        name: name.clone(),
+                        asset_type: F::NAME,
+                    }).into()
+                });
             let tracker = Box::new(tracker) as Box<Tracker>;
 
             processed.push(Processed::NewAsset {

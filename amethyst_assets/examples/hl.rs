@@ -4,19 +4,24 @@
 
 extern crate amethyst_assets;
 extern crate amethyst_core;
+extern crate failure;
 extern crate rayon;
 extern crate ron;
 #[macro_use]
 extern crate serde;
 
+use std::result::Result as StdResult;
 use std::sync::Arc;
 
-use amethyst_assets::*;
+//use amethyst_assets::*;
+use amethyst_assets::{Asset, AssetStorage, Completion, Handle, HotReloadStrategy, Loader,
+                      ProgressCounter, SimpleFormat};
 use amethyst_core::Time;
 use amethyst_core::specs::common::Errors;
 use amethyst_core::specs::prelude::{Dispatcher, DispatcherBuilder, Read, ReadExpect, System,
                                     VecStorage, World, Write};
 use rayon::{ThreadPool, ThreadPoolBuilder};
+use failure::{err_msg, Error, Fail};
 
 struct App {
     dispatcher: Dispatcher<'static, 'static>,
@@ -88,13 +93,21 @@ impl SimpleFormat<MeshAsset> for Ron {
 
     type Options = ();
 
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<VertexData> {
+    fn import(&self, bytes: Vec<u8>, _: ()) -> StdResult<VertexData, Error> {
         use ron::de::from_str;
         use std::str::from_utf8;
 
-        let s = from_utf8(&bytes)?;
+        // Add some context to underlying errors
+        fn with_context<T, E: Into<Error>>(r: Result<T, E>) -> Result<T, Error> {
+            r.map_err(|e| {
+                e.into()
+                    .context(err_msg("Failed to decode mesh file."))
+                    .into()
+            })
+        }
 
-        from_str(s).chain_err(|| "Failed to decode mesh file")
+        let s = with_context(from_utf8(&bytes))?;
+        with_context(from_str(s))
     }
 }
 
@@ -141,7 +154,8 @@ impl State {
                 let (mesh, progress) = {
                     let mut progress = ProgressCounter::new();
                     let loader = world.read_resource::<Loader>();
-                    let a = loader.load("mesh.ron", Ron, (), &mut progress, &world.read_resource());
+                    let a =
+                        loader.load("messh.ron", Ron, (), &mut progress, &world.read_resource());
 
                     (a, progress)
                 };
@@ -157,7 +171,7 @@ impl State {
                     eprintln!("-- Errors --");
                     progress.errors().iter().enumerate().for_each(|(n, e)| {
                         eprintln!("{}: error: {}", n, e);
-                        for cause in e.iter().skip(1) {
+                        for cause in e.causes().skip(1) {
                             eprintln!("{}: caused by: {}", n, cause);
                         }
                     });

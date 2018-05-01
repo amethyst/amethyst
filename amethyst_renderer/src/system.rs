@@ -89,14 +89,14 @@ where
         let strategy = strategy.as_ref().map(Deref::deref);
 
         mesh_storage.process(
-            |d| create_mesh_asset(d, &mut self.renderer),
+            |d| create_mesh_asset(d, &mut self.renderer).map_err(|e| e.into()),
             time.frame_number(),
             &**pool,
             strategy,
         );
 
         texture_storage.process(
-            |d| create_texture_asset(d, &mut self.renderer),
+            |d| create_texture_asset(d, &mut self.renderer).map_err(|e| e.into()),
             time.frame_number(),
             &**pool,
             strategy,

@@ -3,7 +3,7 @@
 use hetseq::*;
 
 use amethyst_core::specs::prelude::SystemData;
-use error::{Error, Result};
+use error::{Error, ErrorKind, Result};
 use fnv::FnvHashMap as HashMap;
 use pipe::pass::{CompiledPass, Pass, PassData};
 use pipe::{Target, Targets};
@@ -239,7 +239,7 @@ impl<Q> StageBuilder<Q> {
         let out = targets
             .get(&self.target_name)
             .cloned()
-            .ok_or(Error::NoSuchTarget(self.target_name.clone()))?;
+            .ok_or(ErrorKind::NoSuchTarget(self.target_name.clone()))?;
 
         let passes = self.passes
             .into_list()

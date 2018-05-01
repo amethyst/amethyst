@@ -1,13 +1,14 @@
 //! Provides structures and functions used to get audio outputs.
 
 // We have to use types from this to provide an output iterator type.
-use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::io::Cursor;
+use std::fmt;
 
 use cpal::OutputDevices;
+use failure::ResultExt;
 use rodio::{default_output_device, output_devices, Decoder, Device, Sink, Source as RSource};
 
-use DecoderError;
+use {Error, ErrorKind};
 use source::Source;
 
 /// A speaker(s) through which audio can be played.
@@ -27,7 +28,7 @@ impl Output {
     /// Play a sound once.  A volume of 1.0 is unchanged, while 0.0 is silent.
     ///
     /// This will return an Error if the loaded audio file in source could not be decoded.
-    pub fn try_play_once(&self, source: &Source, volume: f32) -> Result<(), DecoderError> {
+    pub fn try_play_once(&self, source: &Source, volume: f32) -> Result<(), Error> {
         self.try_play_n_times(source, volume, 1)
     }
 
@@ -55,12 +56,12 @@ impl Output {
         source: &Source,
         volume: f32,
         n: u16,
-    ) -> Result<(), DecoderError> {
+    ) -> Result<(), Error> {
         let sink = Sink::new(&self.device);
         for _ in 0..n {
             sink.append(
                 Decoder::new(Cursor::new(source.clone()))
-                    .map_err(|_| DecoderError)?
+                    .context(ErrorKind::Decoder)?
                     .amplify(volume),
             );
         }
@@ -69,8 +70,8 @@ impl Output {
     }
 }
 
-impl Debug for Output {
-    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+impl fmt::Debug for Output {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Output")
             .field("device", &self.name())
             .finish()

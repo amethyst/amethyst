@@ -4,6 +4,7 @@ use amethyst_assets::AssetStorage;
 use amethyst_core::shred::{Resource, Resources};
 use amethyst_core::specs::common::Errors;
 use amethyst_core::specs::prelude::{Read, System, WriteExpect};
+use failure::ResultExt;
 
 use output::{default_output, Output};
 use sink::AudioSink;
@@ -46,7 +47,7 @@ where
         if let Some(ref sink) = sink {
             if sink.empty() {
                 if let Some(source) = (&mut self.f)(&mut res).and_then(|h| storage.get(&h)) {
-                    errors.execute(|| sink.append(source));
+                    errors.execute(|| sink.append(source).compat());
                 }
             }
         }

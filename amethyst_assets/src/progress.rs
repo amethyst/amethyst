@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+use failure::Fail;
 use parking_lot::Mutex;
 
 use Error;
@@ -157,7 +158,9 @@ impl Tracker for () {
     fn success(self: Box<Self>) {}
     fn fail(self: Box<Self>, e: Error) {
         error!("error: {}", e);
-        e.iter().skip(1).for_each(|e| error!("caused by: {}", e));
+        while let Some(e) = e.cause() {
+            error!("caused by: {}", e)
+        }
         error!("note: to handle the error, use a `Progress` other than `()`");
     }
 }

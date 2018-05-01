@@ -1,11 +1,14 @@
+//! This crate contains the `SystemBundle` abstraction, and functionality for dealing with
+//! transforms.
 #[macro_use]
 pub extern crate cgmath;
 pub extern crate shred;
 pub extern crate shrev;
 pub extern crate specs;
 
+extern crate failure;
 #[macro_use]
-extern crate error_chain;
+extern crate failure_derive;
 extern crate fnv;
 extern crate hibitset;
 #[macro_use]
@@ -25,14 +28,16 @@ compile_error!("the cfg flag \"no_threading\" is required when building for emsc
 //#[cfg(test)]
 //extern crate quickcheck;
 
-pub use bundle::{Error, ErrorKind, Result, SystemBundle};
 pub use orientation::Orientation;
+pub use error::{Error, ErrorKind, Result};
+pub use bundle::SystemBundle;
 pub use timing::*;
 pub use transform::*;
 
 use std::sync::Arc;
 
 pub mod bundle;
+mod error;
 pub mod frame_limiter;
 mod orientation;
 pub mod timing;

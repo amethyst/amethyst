@@ -1,9 +1,10 @@
 //! ECS transform bundle
 
+use failure::Error;
 use specs::prelude::DispatcherBuilder;
 use specs_hierarchy::HierarchySystem;
 
-use bundle::{Result, SystemBundle};
+use bundle::SystemBundle;
 use transform::*;
 
 /// Transform bundle
@@ -38,7 +39,7 @@ impl<'a> TransformBundle<'a> {
 }
 
 impl<'a, 'b, 'c> SystemBundle<'a, 'b> for TransformBundle<'c> {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(
             HierarchySystem::<Parent>::new(),
             "parent_hierarchy_system",

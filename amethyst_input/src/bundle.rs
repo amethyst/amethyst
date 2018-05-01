@@ -4,8 +4,9 @@ use std::hash::Hash;
 use std::path::Path;
 
 use amethyst_config::Config;
-use amethyst_core::bundle::{Result, SystemBundle};
+use amethyst_core::bundle::SystemBundle;
 use amethyst_core::specs::prelude::DispatcherBuilder;
+use failure::Error;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 
@@ -63,7 +64,7 @@ where
     AX: Hash + Eq + Clone + Send + Sync + 'static,
     AC: Hash + Eq + Clone + Send + Sync + 'static,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(
             InputSystem::<AX, AC>::new(self.bindings),
             "input_system",

@@ -2,6 +2,7 @@ extern crate amethyst_config;
 extern crate amethyst_core;
 #[macro_use]
 extern crate derivative;
+extern crate failure;
 extern crate fnv;
 #[macro_use]
 extern crate serde;

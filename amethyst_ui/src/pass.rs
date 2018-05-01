@@ -7,11 +7,11 @@ use amethyst_assets::{AssetStorage, Loader};
 use amethyst_core::cgmath::vec4;
 use amethyst_core::specs::prelude::{Entities, Entity, Join, Read, ReadExpect, ReadStorage,
                                     WriteStorage};
-use amethyst_renderer::error::Result;
 use amethyst_renderer::pipe::pass::{Pass, PassData};
 use amethyst_renderer::pipe::{Effect, NewEffect};
-use amethyst_renderer::{Encoder, Factory, Mesh, PosTex, Resources, ScreenDimensions, Texture,
-                        TextureData, TextureHandle, TextureMetadata, VertexFormat};
+use amethyst_renderer::{self as renderer, Encoder, Factory, Mesh, PosTex, Resources,
+                        ScreenDimensions, Texture, TextureData, TextureHandle, TextureMetadata,
+                        VertexFormat};
 use fnv::FnvHashMap as HashMap;
 use gfx::preset::blend;
 use gfx::pso::buffer::ElemStride;
@@ -106,7 +106,7 @@ impl<'a> PassData<'a> for DrawUi {
 }
 
 impl Pass for DrawUi {
-    fn compile(&mut self, mut effect: NewEffect) -> Result<Effect> {
+    fn compile(&mut self, mut effect: NewEffect) -> renderer::Result<Effect> {
         // Initialize a single unit quad, we'll use this mesh when drawing quads later
         let data = vec![
             PosTex {
