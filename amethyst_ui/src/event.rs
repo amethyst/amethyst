@@ -100,16 +100,16 @@ where
 
             let target = targeted((x, y), (&*entities, &transform).join(), &react);
 
-            let is_in_rect = target.is_some();
-            let was_in_rect = self.last_target.is_some();
-
-            if is_in_rect && !was_in_rect {
-                events.single_write(UiEvent::new(UiEventType::HoverStart, target.unwrap()));
-            } else if !is_in_rect && was_in_rect {
-                events.single_write(UiEvent::new(
-                    UiEventType::HoverStop,
-                    self.last_target.unwrap(),
-                ));
+            if target != self.last_target {
+                if let Some(target) = target {
+                    events.single_write(UiEvent::new(UiEventType::HoverStart, target));
+                }
+                if let Some(last_target) = self.last_target {
+                    events.single_write(UiEvent::new(
+                        UiEventType::HoverStop,
+                        last_target,
+                    ));
+                }
             }
 
             if let Some(e) = target {
