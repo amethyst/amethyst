@@ -19,12 +19,12 @@
 //!
 //! struct GameState;
 //!
-//! impl State for GameState {
-//!     fn on_start(&mut self, _: &mut World) {
+//! impl State<()> for GameState {
+//!     fn on_start(&mut self, _: StateData<()>) {
 //!         println!("Starting game!");
 //!     }
 //!
-//!     fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
+//!     fn handle_event(&mut self, _: StateData<()>, event: Event) -> Trans<()> {
 //!         match event {
 //!             Event::WindowEvent { event, .. } => match event {
 //!                 WindowEvent::KeyboardInput {
@@ -37,14 +37,14 @@
 //!         }
 //!     }
 //!
-//!     fn update(&mut self, _: &mut World) -> Trans {
+//!     fn update(&mut self, _: StateData<()>) -> Trans<()> {
 //!         println!("Computing some more whoop-ass...");
 //!         Trans::Quit
 //!     }
 //! }
 //!
 //! fn main() {
-//!     let mut game = Application::new("assets/", GameState).expect("Fatal error");
+//!     let mut game = Application::new("assets/", GameState, ()).expect("Fatal error");
 //!     game.run();
 //! }
 //! ```

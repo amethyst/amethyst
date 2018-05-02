@@ -56,16 +56,13 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     ///
     /// # Returns
     ///
-    /// This function returns ApplicationBuilder after it has modified it.
+    /// This function returns GameDataBuilder after it has modified it.
     ///
     /// # Examples
     ///
     /// ~~~no_run
     /// use amethyst::prelude::*;
     /// use amethyst::ecs::prelude::System;
-    ///
-    /// struct NullState;
-    /// impl State for NullState {}
     ///
     /// struct NopSystem;
     /// impl<'a> System<'a> for NopSystem {
@@ -76,8 +73,7 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     /// // Three systems are added in this example. The "tabby cat" & "tom cat"
     /// // systems will both run in parallel. Only after both cat systems have
     /// // run is the "doggo" system permitted to run them.
-    /// Application::build("assets/", NullState)
-    ///     .expect("Failed to initialize")
+    /// GameDataBuilder::default()
     ///     .with(NopSystem, "tabby cat", &[])
     ///     .with(NopSystem, "tom cat", &[])
     ///     .with_barrier()
@@ -88,7 +84,7 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
         self
     }
 
-    /// Adds a given system to the game loop.
+    /// Adds a given system.
     ///
     /// __Note:__ all dependencies must be added before you add the system.
     ///
@@ -104,7 +100,7 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     ///
     /// # Returns
     ///
-    /// This function returns ApplicationBuilder after it has modified it.
+    /// This function returns GameDataBuilder after it has modified it.
     ///
     /// # Type Parameters
     ///
@@ -124,17 +120,13 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     /// use amethyst::prelude::*;
     /// use amethyst::ecs::prelude::System;
     ///
-    /// struct NullState;
-    /// impl State for NullState {}
-    ///
     /// struct NopSystem;
     /// impl<'a> System<'a> for NopSystem {
     ///     type SystemData = ();
     ///     fn run(&mut self, _: Self::SystemData) {}
     /// }
     ///
-    /// Application::build("assets/", NullState)
-    ///     .expect("Failed to initialize")
+    /// GameDataBuilder::default()
     ///     // This will add the "foo" system to the game loop, in this case
     ///     // the "foo" system will not depend on any systems.
     ///     .with(NopSystem, "foo", &[])
@@ -151,7 +143,7 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
         self
     }
 
-    /// Add a given thread-local system to the game loop.
+    /// Add a given thread-local system.
     ///
     /// A thread-local system is one that _must_ run on the main thread of the
     /// game. A thread-local system would be necessary typically to work
@@ -167,7 +159,7 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     ///
     /// # Returns
     ///
-    /// This function returns ApplicationBuilder after it has modified it.
+    /// This function returns GameDataBuilder after it has modified it.
     ///
     /// # Type Parameters
     ///
@@ -179,17 +171,13 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     /// use amethyst::prelude::*;
     /// use amethyst::ecs::prelude::System;
     ///
-    /// struct NullState;
-    /// impl State for NullState {}
-    ///
     /// struct NopSystem;
     /// impl<'a> System<'a> for NopSystem {
     ///     type SystemData = ();
     ///     fn run(&mut self, _: Self::SystemData) {}
     /// }
     ///
-    /// Application::build("assets/", NullState)
-    ///     .expect("Failed to initialize")
+    /// GameDataBuilder::default()
     ///     // the Nop system is registered here
     ///     .with_thread_local(NopSystem);
     /// ~~~
@@ -211,7 +199,7 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     ///
     /// # Returns
     ///
-    /// This function returns ApplicationBuilder after it has modified it, this is
+    /// This function returns GameDataBuilder after it has modified it, this is
     /// wrapped in a `Result`.
     ///
     /// # Errors

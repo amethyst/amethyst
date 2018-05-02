@@ -24,15 +24,15 @@ const LIGHT_INTENSITY: f32 = 3.0;
 
 struct Example;
 
-impl State for Example {
-    fn on_start(&mut self, world: &mut World) {
+impl<'a, 'b> State<GameData<'a, 'b>> for Example {
+    fn on_start(&mut self, data: StateData<GameData>) {
         // Initialise the scene with an object, a light and a camera.
-        initialise_sphere(world);
-        initialise_lights(world);
-        initialise_camera(world);
+        initialise_sphere(data.world);
+        initialise_lights(data.world);
+        initialise_camera(data.world);
     }
 
-    fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
+    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
         match event {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::KeyboardInput {
@@ -47,6 +47,11 @@ impl State for Example {
             },
             _ => Trans::None,
         }
+    }
+
+    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+        data.data.update(&data.world);
+        Trans::None
     }
 }
 
@@ -67,8 +72,7 @@ fn run() -> Result<(), amethyst::Error> {
     let config = DisplayConfig::load(&display_config_path);
 
     let mut game = Application::build(resources, Example)?
-        .with_bundle(RenderBundle::new(pipe, Some(config)))?
-        .build()?;
+        .build(GameDataBuilder::default().with_bundle(RenderBundle::new(pipe, Some(config)))?)?;
     game.run();
     Ok(())
 }

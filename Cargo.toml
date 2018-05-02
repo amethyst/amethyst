@@ -85,14 +85,14 @@ path = "examples/hello_world/main.rs"
 name = "window"
 path = "examples/window/main.rs"
 
-#[[example]]
-#name = "sphere"
-#path = "examples/sphere/main.rs"
-#
-#[[example]]
-#name = "renderable"
-#path = "examples/renderable/main.rs"
-#
+[[example]]
+name = "sphere"
+path = "examples/sphere/main.rs"
+
+[[example]]
+name = "renderable"
+path = "examples/renderable/main.rs"
+
 #[[example]]
 #name = "pong"
 #path = "examples/pong/main.rs"
@@ -104,11 +104,11 @@ path = "examples/window/main.rs"
 #[[example]]
 #name = "material"
 #path = "examples/material/main.rs"
-#
-#[[example]]
-#name = "separate_sphere"
-#path = "examples/separate_sphere/main.rs"
-#
+
+[[example]]
+name = "separate_sphere"
+path = "examples/separate_sphere/main.rs"
+
 #[[example]]
 #name = "gltf"
 #path = "examples/gltf/main.rs"
