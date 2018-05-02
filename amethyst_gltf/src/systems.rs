@@ -3,10 +3,10 @@ use std::collections::{HashMap, HashSet};
 use animation::{Animation, AnimationHierarchy, AnimationSet, Joint, Sampler, SamplerPrimitive,
                 Skin};
 use assets::{AssetStorage, Handle, HotReloadStrategy, Loader};
-use core::{ThreadPool, Time};
 use core::cgmath::{EuclideanSpace, Matrix4, Point3, SquareMatrix};
 use core::specs::prelude::{Entities, Entity, Join, Read, ReadExpect, System, Write, WriteStorage};
 use core::transform::*;
+use core::{ThreadPool, Time};
 use fnv::FnvHashMap;
 use hibitset::BitSet;
 use renderer::{AnimatedComboMeshCreator, JointTransforms, Material, MaterialDefaults, Mesh,

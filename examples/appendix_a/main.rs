@@ -4,15 +4,14 @@ extern crate amethyst;
 #[macro_use]
 extern crate serde_derive;
 
+mod audio;
+mod bundle;
+mod config;
 mod pong;
 mod systems;
-mod bundle;
-mod audio;
-mod config;
 
 use std::time::Duration;
 
-use amethyst::Result;
 use amethyst::audio::AudioBundle;
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::transform::TransformBundle;
@@ -21,6 +20,7 @@ use amethyst::input::InputBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline, PosTex, RenderBundle, Stage};
 use amethyst::ui::{DrawUi, UiBundle};
+use amethyst::Result;
 
 use audio::Music;
 use bundle::PongBundle;

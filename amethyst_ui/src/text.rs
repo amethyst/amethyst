@@ -8,8 +8,8 @@ use clipboard::{ClipboardContext, ClipboardProvider};
 use hibitset::BitSet;
 use rusttype::PositionedGlyph;
 use shrev::{EventChannel, ReaderId};
-use unicode_normalization::UnicodeNormalization;
 use unicode_normalization::char::is_combining_mark;
+use unicode_normalization::UnicodeNormalization;
 use unicode_segmentation::UnicodeSegmentation;
 use winit::{ElementState, Event, KeyboardInput, ModifiersState, MouseButton, VirtualKeyCode,
             WindowEvent};

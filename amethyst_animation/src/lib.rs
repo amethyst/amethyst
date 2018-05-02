@@ -75,9 +75,9 @@ pub use self::util::{get_animation_set, SamplerPrimitive};
 pub use minterpolate::{InterpolationFunction, InterpolationPrimitive};
 
 mod bundle;
+mod material;
 mod resources;
 mod skinning;
 mod systems;
-mod material;
 mod transform;
 mod util;

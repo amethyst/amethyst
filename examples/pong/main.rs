@@ -2,14 +2,13 @@
 
 extern crate amethyst;
 
+mod audio;
+mod bundle;
 mod pong;
 mod systems;
-mod bundle;
-mod audio;
 
 use std::time::Duration;
 
-use amethyst::Result;
 use amethyst::audio::AudioBundle;
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::transform::TransformBundle;
@@ -18,6 +17,7 @@ use amethyst::input::InputBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline, PosTex, RenderBundle, Stage};
 use amethyst::ui::{DrawUi, UiBundle};
+use amethyst::Result;
 
 use audio::Music;
 use bundle::PongBundle;

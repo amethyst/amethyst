@@ -3,6 +3,12 @@ use std::sync::Arc;
 use amethyst_core::specs::storage::UnprotectedStorage;
 #[cfg(feature = "profiler")]
 #[macro_use]
+#[cfg(feature = "profiler")]
+#[macro_use]
+#[cfg(feature = "profiler")]
+#[macro_use]
+#[cfg(feature = "profiler")]
+#[macro_use]
 use thread_profiler::{register_thread_with_profiler, write_profile};
 
 use {ErrorKind, Handle, Reload, Result, ResultExt, SingleFile, Source};

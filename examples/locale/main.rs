@@ -12,15 +12,12 @@ struct Example {
 
 impl Example {
     pub fn new() -> Self {
-        Example {
-            handle: None,
-        }
+        Example { handle: None }
     }
 }
 
 impl State for Example {
     fn on_start(&mut self, world: &mut World) {
-        world.add_resource(AssetStorage::<Locale>::new());
         let loader = world.read_resource::<Loader>();
         self.handle = Some(loader.load(
             "locale/locale.ftl",

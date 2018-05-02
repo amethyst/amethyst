@@ -2,8 +2,8 @@ use super::{Anchor, Anchored, FontAsset, FontHandle, MouseReactive, Stretch, Str
             UiImage, UiText, UiTransform};
 ///! A clickable button.
 use amethyst_assets::{AssetStorage, Loader};
-use amethyst_core::Parent;
 use amethyst_core::specs::prelude::{Entities, Entity, Read, ReadExpect, World, WriteStorage};
+use amethyst_core::Parent;
 use amethyst_renderer::Texture;
 use shred::SystemData;
 

@@ -130,15 +130,13 @@ impl<T> VertexFormat for Separate<T>
 where
     T: Attribute,
 {
-    const ATTRIBUTES: Attributes<'static> = &[
-        (
-            T::NAME,
-            Element {
-                offset: 0,
-                format: T::FORMAT,
-            },
-        ),
-    ];
+    const ATTRIBUTES: Attributes<'static> = &[(
+        T::NAME,
+        Element {
+            offset: 0,
+            format: T::FORMAT,
+        },
+    )];
 }
 
 impl<T> With<T> for Separate<T>
@@ -352,31 +350,4 @@ macro_rules! impl_query {
     };
 }
 
-impl_query!(
-    A,
-    B,
-    C,
-    D,
-    E,
-    F,
-    G,
-    H,
-    I,
-    J,
-    K,
-    L,
-    M,
-    N,
-    O,
-    P,
-    Q,
-    R,
-    S,
-    T,
-    U,
-    V,
-    W,
-    X,
-    Y,
-    Z
-);
+impl_query!(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z);

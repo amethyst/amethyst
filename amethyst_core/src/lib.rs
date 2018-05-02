@@ -33,9 +33,9 @@ use std::sync::Arc;
 
 pub mod bundle;
 pub mod frame_limiter;
+mod orientation;
 pub mod timing;
 pub mod transform;
-mod orientation;
 
 /// A rayon thread pool wrapped in an `Arc`. This should be used as resource in `World`.
 pub type ThreadPool = Arc<rayon::ThreadPool>;

@@ -7,9 +7,9 @@ use shrev::EventChannel;
 use smallvec::SmallVec;
 use winit::{ElementState, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
 
-use super::*;
 use super::event::InputEvent;
 use super::event::InputEvent::*;
+use super::*;
 
 /// This struct holds state information about input devices.
 ///
