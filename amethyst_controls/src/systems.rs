@@ -1,5 +1,6 @@
 use amethyst_core::cgmath::{Deg, Vector3};
-use amethyst_core::specs::{Fetch, FetchMut, Join, ReadStorage, System, WriteStorage};
+use amethyst_core::specs::prelude::{Join, Read, ReadExpect, ReadStorage, Resources, System, Write,
+                                    WriteStorage};
 use amethyst_core::timing::Time;
 use amethyst_core::transform::Transform;
 use amethyst_input::InputHandler;
@@ -56,9 +57,9 @@ where
     B: Send + Sync + Hash + Eq + Clone + 'static,
 {
     type SystemData = (
-        Fetch<'a, Time>,
+        Read<'a, Time>,
         WriteStorage<'a, Transform>,
-        Fetch<'a, InputHandler<A, B>>,
+        Read<'a, InputHandler<A, B>>,
         ReadStorage<'a, FlyControlTag>,
     );
 
@@ -70,7 +71,7 @@ where
         let dir = Vector3::new(x, y, z);
 
         for (transform, _) in (&mut transform, &tag).join() {
-            transform.move_local(dir, time.delta_seconds() * self.speed);
+            transform.move_along_local(dir, time.delta_seconds() * self.speed);
         }
     }
 }
@@ -101,8 +102,8 @@ where
     B: Send + Sync + Hash + Eq + Clone + 'static,
 {
     type SystemData = (
-        Fetch<'a, InputHandler<A, B>>,
-        Fetch<'a, ScreenDimensions>,
+        Read<'a, InputHandler<A, B>>,
+        ReadExpect<'a, ScreenDimensions>,
         WriteStorage<'a, Transform>,
         ReadStorage<'a, FlyControlTag>,
     );
@@ -116,14 +117,8 @@ where
             let offset_x = half_x as f32 - posx as f32;
             let offset_y = half_y as f32 - posy as f32;
             for (transform, _) in (&mut transform, &tag).join() {
-                transform.rotate_local(
-                    Vector3::new(1.0, 0.0, 0.0),
-                    Deg(offset_y * self.sensitivity_y),
-                );
-                transform.rotate_global(
-                    Vector3::new(0.0, 1.0, 0.0),
-                    Deg(offset_x * self.sensitivity_x),
-                );
+                transform.pitch_local(Deg(offset_y * self.sensitivity_y));
+                transform.yaw_global(Deg(offset_x * self.sensitivity_x));
             }
         }
     }
@@ -133,7 +128,7 @@ where
 pub struct MouseCenterLockSystem;
 
 impl<'a> System<'a> for MouseCenterLockSystem {
-    type SystemData = (Fetch<'a, ScreenDimensions>, FetchMut<'a, WindowMessages>);
+    type SystemData = (ReadExpect<'a, ScreenDimensions>, Write<'a, WindowMessages>);
 
     fn run(&mut self, (dim, mut msg): Self::SystemData) {
         let half_x = dim.width() as i32 / 2;
@@ -143,5 +138,14 @@ impl<'a> System<'a> for MouseCenterLockSystem {
                 error!("Unable to set the cursor position! Error: {:?}", err);
             }
         });
+    }
+
+    fn setup(&mut self, res: &mut Resources) {
+        use amethyst_core::specs::prelude::SystemData;
+        use amethyst_renderer::mouse::*;
+        Self::SystemData::setup(res);
+        let mut msg = res.fetch_mut::<WindowMessages>();
+        grab_cursor(&mut msg);
+        set_mouse_cursor_none(&mut msg);
     }
 }

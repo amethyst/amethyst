@@ -2,7 +2,7 @@ use {Ball, Paddle, Side};
 use amethyst::assets::Loader;
 use amethyst::core::cgmath::Vector3;
 use amethyst::core::transform::{GlobalTransform, Transform};
-use amethyst::ecs::World;
+use amethyst::ecs::prelude::World;
 use amethyst::prelude::*;
 use amethyst::renderer::{Camera, Event, KeyboardInput, Material, MeshHandle, PosTex, Projection,
                          ScreenDimensions, VirtualKeyCode, WindowEvent, WindowMessages};

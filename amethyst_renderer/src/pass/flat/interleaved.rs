@@ -3,7 +3,7 @@
 use std::marker::PhantomData;
 
 use amethyst_assets::AssetStorage;
-use amethyst_core::specs::{Fetch, Join, ReadStorage};
+use amethyst_core::specs::prelude::{Join, Read, ReadExpect, ReadStorage};
 use amethyst_core::transform::GlobalTransform;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
@@ -57,12 +57,12 @@ where
     V: Query<(Position, TexCoord)>,
 {
     type Data = (
-        Option<Fetch<'a, ActiveCamera>>,
+        Option<Read<'a, ActiveCamera>>,
         ReadStorage<'a, Camera>,
-        Fetch<'a, AssetStorage<Mesh>>,
-        Fetch<'a, AssetStorage<Texture>>,
-        Fetch<'a, MaterialDefaults>,
-        Option<Fetch<'a, Visibility>>,
+        Read<'a, AssetStorage<Mesh>>,
+        Read<'a, AssetStorage<Texture>>,
+        ReadExpect<'a, MaterialDefaults>,
+        Option<Read<'a, Visibility>>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
         ReadStorage<'a, GlobalTransform>,

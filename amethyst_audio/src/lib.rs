@@ -23,13 +23,13 @@ pub mod output;
 use std::error::Error;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
+mod bundle;
+mod components;
 mod end_signal;
 mod formats;
 mod sink;
 mod source;
-mod components;
 mod systems;
-mod bundle;
 
 /// An error occurred while decoding the source.
 #[derive(Debug)]

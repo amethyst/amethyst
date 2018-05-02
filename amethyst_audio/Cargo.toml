@@ -21,9 +21,9 @@ travis-ci = { repository = "amethyst/amethyst" }
 [dependencies]
 amethyst_assets = { path = "../amethyst_assets", version = "0.2.0"}
 amethyst_core = { path = "../amethyst_core", version = "0.1.0"}
-cpal = "0.4"
+cpal = "0.8"
 log = "0.4"
-rodio = "= 0.5.2"
+rodio = "0.7"
 
 thread_profiler = { version = "0.1", optional = true }
 
@@ -33,3 +33,4 @@ features = ["serde"]
 
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]
+nightly = [ "amethyst_core/nightly" ]

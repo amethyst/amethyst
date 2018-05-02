@@ -4,14 +4,12 @@ use std::hash::Hash;
 use std::path::Path;
 
 use amethyst_config::Config;
-use amethyst_core::bundle::{ECSBundle, Result};
-use amethyst_core::specs::{DispatcherBuilder, World};
+use amethyst_core::bundle::{Result, SystemBundle};
+use amethyst_core::specs::prelude::DispatcherBuilder;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
-use shrev::EventChannel;
-use winit::Event;
 
-use {Bindings, InputEvent, InputHandler, InputSystem};
+use {Bindings, InputSystem};
 
 /// Bundle for adding the `InputHandler`.
 ///
@@ -60,27 +58,17 @@ where
     }
 }
 
-impl<'a, 'b, AX, AC> ECSBundle<'a, 'b> for InputBundle<AX, AC>
+impl<'a, 'b, AX, AC> SystemBundle<'a, 'b> for InputBundle<AX, AC>
 where
     AX: Hash + Eq + Clone + Send + Sync + 'static,
     AC: Hash + Eq + Clone + Send + Sync + 'static,
 {
-    fn build(
-        self,
-        world: &mut World,
-        builder: DispatcherBuilder<'a, 'b>,
-    ) -> Result<DispatcherBuilder<'a, 'b>> {
-        let mut input = InputHandler::new();
-        if let Some(bindings) = self.bindings {
-            input.bindings = bindings;
-        }
-
-        let reader_id = world
-            .write_resource::<EventChannel<Event>>()
-            .register_reader();
-
-        world.add_resource(input);
-        world.add_resource(EventChannel::<InputEvent<AC>>::with_capacity(2000));
-        Ok(builder.add(InputSystem::<AX, AC>::new(reader_id), "input_system", &[]))
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+        builder.add(
+            InputSystem::<AX, AC>::new(self.bindings),
+            "input_system",
+            &[],
+        );
+        Ok(())
     }
 }

@@ -1,8 +1,6 @@
 use super::*;
-use amethyst_core::bundle::{ECSBundle, Result};
-use amethyst_core::specs::{DispatcherBuilder, World};
-use amethyst_renderer::WindowMessages;
-use amethyst_renderer::mouse::*;
+use amethyst_core::bundle::{Result, SystemBundle};
+use amethyst_core::specs::prelude::DispatcherBuilder;
 use std::hash::Hash;
 use std::marker::PhantomData;
 
@@ -48,39 +46,28 @@ impl<A, B> FlyControlBundle<A, B> {
     }
 }
 
-impl<'a, 'b, A, B> ECSBundle<'a, 'b> for FlyControlBundle<A, B>
+impl<'a, 'b, A, B> SystemBundle<'a, 'b> for FlyControlBundle<A, B>
 where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,
 {
-    fn build(
-        self,
-        world: &mut World,
-        builder: DispatcherBuilder<'a, 'b>,
-    ) -> Result<DispatcherBuilder<'a, 'b>> {
-        world.register::<FlyControlTag>();
-
-        let mut msg = world.res.entry().or_insert_with(|| WindowMessages::new());
-
-        grab_cursor(&mut msg);
-        set_mouse_cursor_none(&mut msg);
-
-        Ok(builder
-            .add(
-                FlyMovementSystem::<A, B>::new(
-                    self.speed,
-                    self.right_input_axis,
-                    self.up_input_axis,
-                    self.forward_input_axis,
-                ),
-                "fly_movement",
-                &[],
-            )
-            .add(
-                FreeRotationSystem::<A, B>::new(self.sensitivity_x, self.sensitivity_y),
-                "free_rotation",
-                &[],
-            )
-            .add(MouseCenterLockSystem, "mouse_lock", &["free_rotation"]))
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+        builder.add(
+            FlyMovementSystem::<A, B>::new(
+                self.speed,
+                self.right_input_axis,
+                self.up_input_axis,
+                self.forward_input_axis,
+            ),
+            "fly_movement",
+            &[],
+        );
+        builder.add(
+            FreeRotationSystem::<A, B>::new(self.sensitivity_x, self.sensitivity_y),
+            "free_rotation",
+            &[],
+        );
+        builder.add(MouseCenterLockSystem, "mouse_lock", &["free_rotation"]);
+        Ok(())
     }
 }

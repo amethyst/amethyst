@@ -8,9 +8,8 @@ extern crate log;
 use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::Time;
 use amethyst::core::cgmath::Deg;
-use amethyst::core::transform::{GlobalTransform, Parent};
-use amethyst::ecs::{Entity, World};
-use amethyst::ecs::{FetchMut, System};
+use amethyst::core::transform::{GlobalTransform, Parent, TransformBundle};
+use amethyst::ecs::prelude::{Entity, System, World, Write};
 use amethyst::input::InputBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light, Mesh, Pipeline,
@@ -238,7 +237,7 @@ impl State for Example {
     }
 
     fn update(&mut self, world: &mut World) -> Trans {
-        let mut ui_text = world.write::<UiText>();
+        let mut ui_text = world.write_storage::<UiText>();
         if let Some(fps_display) = self.fps_display.and_then(|entity| ui_text.get_mut(entity)) {
             if world.read_resource::<Time>().frame_number() % 20 == 0 {
                 let fps = world.read_resource::<FPSCounter>().sampled_fps();
@@ -284,6 +283,7 @@ fn run() -> Result<(), amethyst::Error> {
         )
     };
     let mut game = Application::build(resources, Example { fps_display: None })?
+        .with_bundle(TransformBundle::new())?
         .with_bundle(UiBundle::<String, String>::new())?
         .with(UiEventHandlerSystem::new(), "ui_event_handler", &[])
         .with_bundle(FPSCounterBundle::default())?
@@ -398,7 +398,7 @@ impl UiEventHandlerSystem {
 }
 
 impl<'a> System<'a> for UiEventHandlerSystem {
-    type SystemData = FetchMut<'a, EventChannel<UiEvent>>;
+    type SystemData = Write<'a, EventChannel<UiEvent>>;
 
     fn run(&mut self, mut events: Self::SystemData) {
         if self.reader_id.is_none() {

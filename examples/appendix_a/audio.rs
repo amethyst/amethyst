@@ -4,7 +4,7 @@ use std::vec::IntoIter;
 use amethyst::assets::{AssetStorage, Loader};
 use amethyst::audio::{AudioSink, Source, SourceHandle};
 use amethyst::audio::output::Output;
-use amethyst::ecs::World;
+use amethyst::ecs::prelude::World;
 
 pub struct Sounds {
     pub score_sfx: SourceHandle,

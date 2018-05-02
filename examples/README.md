@@ -36,6 +36,14 @@ This example use vertex buffers per attribute.
 
 ![sphere example result](assets/img/sphere.png)
 
+### Multisample sphere
+
+Render a basic 3D scene, with a camera, lights and a 3D object, a sphere in this scenario.
+This example use vertex buffers per attribute.
+Only difference here is that multisampling is enabled in the options.
+
+![sphere example result](assets/img/sphere.png)
+
 ### Renderable
 
 Load graphics objects from disc using the asset loader.

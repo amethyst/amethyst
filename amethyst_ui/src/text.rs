@@ -1,8 +1,8 @@
 use std::cmp::Ordering;
 use std::ops::Range;
 
-use amethyst_core::specs::{Component, DenseVecStorage, Entities, Entity, Fetch, FetchMut, Join,
-                           ReadStorage, System, WriteStorage};
+use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entities, Entity, Join, Read,
+                                    ReadStorage, Resources, System, Write, WriteStorage};
 use amethyst_core::timing::Time;
 use clipboard::{ClipboardContext, ClipboardProvider};
 use hibitset::BitSet;
@@ -123,7 +123,7 @@ struct CachedTabOrder {
 /// This system processes the underlying UI data as needed.
 pub struct UiSystem {
     /// A reader for winit events.
-    reader: ReaderId<Event>,
+    reader: Option<ReaderId<Event>>,
     /// A cache sorted by tab order, and then by Entity.
     tab_order_cache: CachedTabOrder,
     /// This is set to true while the left mouse button is pressed.
@@ -134,9 +134,9 @@ pub struct UiSystem {
 
 impl UiSystem {
     /// Initializes a new UiSystem that uses the given reader id.
-    pub fn new(reader: ReaderId<Event>) -> Self {
+    pub fn new() -> Self {
         Self {
-            reader,
+            reader: None,
             tab_order_cache: CachedTabOrder {
                 cached: BitSet::new(),
                 cache: Vec::new(),
@@ -153,9 +153,9 @@ impl<'a> System<'a> for UiSystem {
         WriteStorage<'a, UiText>,
         WriteStorage<'a, TextEditing>,
         ReadStorage<'a, UiTransform>,
-        FetchMut<'a, UiFocused>,
-        Fetch<'a, EventChannel<Event>>,
-        Fetch<'a, Time>,
+        Write<'a, UiFocused>,
+        Read<'a, EventChannel<Event>>,
+        Read<'a, Time>,
     );
 
     fn run(
@@ -166,7 +166,7 @@ impl<'a> System<'a> for UiSystem {
         {
             let bitset = &mut self.tab_order_cache.cached;
             self.tab_order_cache.cache.retain(|&(_t, entity)| {
-                let keep = transform.get(entity).is_some();
+                let keep = transform.contains(entity);
                 if !keep {
                     bitset.remove(entity.id());
                 }
@@ -180,7 +180,7 @@ impl<'a> System<'a> for UiSystem {
 
         // Attempt to insert the new entities in sorted position.  Should reduce work during
         // the sorting step.
-        let transform_set = transform.check();
+        let transform_set = transform.mask().clone();
         {
             // Create a bitset containing only the new indices.
             let new = (&transform_set ^ &self.tab_order_cache.cached) & &transform_set;
@@ -235,7 +235,7 @@ impl<'a> System<'a> for UiSystem {
                 }
             }
         }
-        for event in events.read(&mut self.reader) {
+        for event in events.read(self.reader.as_mut().unwrap()) {
             // Process events for the whole UI.
             match *event {
                 Event::WindowEvent {
@@ -661,6 +661,12 @@ impl<'a> System<'a> for UiSystem {
                 }
             }
         }
+    }
+
+    fn setup(&mut self, res: &mut Resources) {
+        use amethyst_core::specs::prelude::SystemData;
+        Self::SystemData::setup(res);
+        self.reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
     }
 }
 

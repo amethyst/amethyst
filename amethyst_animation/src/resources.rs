@@ -6,7 +6,7 @@ use std::time::Duration;
 
 use amethyst_assets::{Asset, AssetStorage, Handle, Result};
 use amethyst_core::shred::SystemData;
-use amethyst_core::specs::{Component, DenseVecStorage, Entity, VecStorage, WriteStorage};
+use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entity, VecStorage, WriteStorage};
 use amethyst_core::timing::{duration_to_secs, secs_to_duration};
 use fnv::FnvHashMap;
 use minterpolate::{get_input_index, InterpolationFunction, InterpolationPrimitive};
@@ -183,7 +183,7 @@ where
         F: Fn(Entity) -> Option<T>,
     {
         for entity in self.nodes.values() {
-            if states.get(*entity).is_none() {
+            if !states.contains(*entity) {
                 if let Some(comp) = get_component(*entity) {
                     states.insert(*entity, RestState::new(comp));
                 }

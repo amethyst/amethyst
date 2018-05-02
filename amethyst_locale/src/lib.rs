@@ -15,7 +15,7 @@ extern crate thread_profiler;
 use thread_profiler::{register_thread_with_profiler, write_profile};
 
 use amethyst_assets::{Asset, Handle, Result, SimpleFormat};
-use amethyst_core::specs::VecStorage;
+use amethyst_core::specs::prelude::VecStorage;
 use fluent::MessageContext;
 
 /// Loads the strings from localisation files.

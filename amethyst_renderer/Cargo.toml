@@ -25,6 +25,7 @@ default = ["opengl"]
 opengl = ["gfx_device_gl", "gfx_window_glutin", "glutin"]
 #vulkan = ["gfx_device_vulkan", "gfx_window_vulkan"]
 profiler = [ "thread_profiler/thread_profiler" ]
+nightly = [ "amethyst_core/nightly" ]
 
 [dependencies]
 amethyst_assets = { path = "../amethyst_assets", version = "0.2.0" }
@@ -35,10 +36,10 @@ fnv = "1.0"
 gfx = { version = "0.17", features = ["serialize"] }
 gfx_core = { version = "0.8", features = ["serialize"] }
 gfx_macros = "0.2"
-hibitset = "0.3"
+hibitset = { version = "0.5.0", features = ["parallel"] }
 imagefmt = "4.0"
 log = "0.4"
-rayon = "0.8"
+rayon = "1.0.1"
 serde = "1.0"
 serde_derive = "1.0"
 shrev = "0.8"

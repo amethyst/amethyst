@@ -22,6 +22,7 @@ travis-ci = { repository = "amethyst/amethyst", branch = "develop" }
 profiler = [
     "thread_profiler",
     "thread_profiler/thread_profiler",
+    "amethyst_animation/profiler",
     "amethyst_assets/profiler",
     "amethyst_audio/profiler",
     "amethyst_config/profiler",
@@ -33,8 +34,21 @@ profiler = [
     "amethyst_ui/profiler",
     "amethyst_utils/profiler",
 ]
+nightly = [
+    "amethyst_animation/nightly",
+    "amethyst_assets/nightly",
+    "amethyst_audio/nightly",
+    "amethyst_config/nightly",
+    "amethyst_core/nightly",
+    "amethyst_controls/nightly",
+    "amethyst_renderer/nightly",
+    "amethyst_input/nightly",
+    "amethyst_ui/nightly",
+    "amethyst_utils/nightly",
+]
 
 [dependencies]
+amethyst_animation = { path = "amethyst_animation", version = "0.1.0" }
 amethyst_assets = { path = "amethyst_assets", version = "0.2.0" }
 amethyst_locale = { path = "amethyst_locale", version = "0.1.0" }
 amethyst_audio = { path = "amethyst_audio", version = "0.1.0" }
@@ -48,11 +62,9 @@ amethyst_utils = { path = "amethyst_utils", version = "0.2" }
 derivative = "1.0"
 fern = "0.5"
 log = "0.4"
-rayon = "0.8"
+rayon = "1.0.1"
 rustc_version_runtime = "0.1"
-shred = "0.5"
 shrev = "0.8"
-specs = "0.10"
 winit = "0.12"
 
 thread_profiler = { version = "0.1", optional = true }
@@ -60,7 +72,7 @@ thread_profiler = { version = "0.1", optional = true }
 [dev-dependencies]
 amethyst_gltf = { path = "amethyst_gltf", version = "0.1" }
 genmesh = "0.5"
-amethyst_animation = { path = "amethyst_animation", version = "0.1.0" }
+ron = "0.1"
 serde = "1.0"
 serde_derive = "1.0"
 
@@ -135,5 +147,13 @@ path = "examples/locale/main.rs"
 name = "fly_camera"
 path = "examples/fly_camera/main.rs"
 
+[[example]]
+name = "sprites"
+path = "examples/sprites/main.rs"
+
 [workspace]
-members = ["amethyst_animation", "amethyst_gltf"]
+members = ["amethyst_gltf"]
+
+
+[patch.crates-io]
+coreaudio-sys = { git = "https://github.com/regexident/coreaudio-sys.git", rev = "0950296041eb15a3e2a6e9faaf95242cdf83cef1" }

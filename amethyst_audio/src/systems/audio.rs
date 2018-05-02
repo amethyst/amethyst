@@ -4,7 +4,8 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use amethyst_core::cgmath::Transform;
-use amethyst_core::specs::{Entities, Entity, Fetch, Join, ReadStorage, System, WriteStorage};
+use amethyst_core::specs::prelude::{Entities, Entity, Join, Read, ReadStorage, System,
+                                    WriteStorage};
 use amethyst_core::transform::GlobalTransform;
 use rodio::SpatialSink;
 
@@ -29,7 +30,7 @@ pub struct SelectedListener(pub Entity);
 
 impl<'a> System<'a> for AudioSystem {
     type SystemData = (
-        Option<Fetch<'a, SelectedListener>>,
+        Option<Read<'a, SelectedListener>>,
         Entities<'a>,
         ReadStorage<'a, GlobalTransform>,
         ReadStorage<'a, AudioListener>,
@@ -80,7 +81,7 @@ impl<'a> System<'a> for AudioSystem {
                     }
                     while let Some(source) = audio_emitter.sound_queue.pop() {
                         let sink = SpatialSink::new(
-                            &listener.output.endpoint,
+                            &listener.output.device,
                             emitter_position,
                             left_ear_position,
                             right_ear_position,

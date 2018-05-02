@@ -4,8 +4,8 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use amethyst_core as core;
-use amethyst_core::{ECSBundle, Time};
-use amethyst_core::specs::{DispatcherBuilder, Fetch, FetchMut, System, World};
+use amethyst_core::{SystemBundle, Time};
+use amethyst_core::specs::prelude::{DispatcherBuilder, Read, Resources, System, Write};
 
 use {Asset, Format, FormatValue, Loader, Result, Source};
 
@@ -23,16 +23,10 @@ impl HotReloadBundle {
     }
 }
 
-impl<'a, 'b> ECSBundle<'a, 'b> for HotReloadBundle {
-    fn build(
-        self,
-        world: &mut World,
-        dispatcher: DispatcherBuilder<'a, 'b>,
-    ) -> core::Result<DispatcherBuilder<'a, 'b>> {
-        world.write_resource::<Loader>().set_hot_reload(true);
-        world.add_resource(self.strategy);
-
-        Ok(dispatcher.add(HotReloadSystem, "hot_reload", &[]))
+impl<'a, 'b> SystemBundle<'a, 'b> for HotReloadBundle {
+    fn build(self, dispatcher: &mut DispatcherBuilder<'a, 'b>) -> core::Result<()> {
+        dispatcher.add(HotReloadSystem::new(self.strategy), "hot_reload", &[]);
+        Ok(())
     }
 }
 
@@ -45,7 +39,7 @@ impl<'a, 'b> ECSBundle<'a, 'b> for HotReloadBundle {
 /// # extern crate amethyst_core;
 /// #
 /// # use amethyst_assets::HotReloadStrategy;
-/// # use amethyst_core::specs::World;
+/// # use amethyst_core::specs::prelude::World;
 /// #
 /// # fn main() {
 /// let mut world = World::new();
@@ -53,6 +47,7 @@ impl<'a, 'b> ECSBundle<'a, 'b> for HotReloadBundle {
 /// world.add_resource(HotReloadStrategy::every(2));
 /// # }
 /// ```
+#[derive(Clone)]
 pub struct HotReloadStrategy {
     inner: HotReloadStrategyInner,
 }
@@ -119,6 +114,7 @@ impl Default for HotReloadStrategy {
     }
 }
 
+#[derive(Clone)]
 enum HotReloadStrategyInner {
     Every {
         interval: u8,
@@ -133,10 +129,21 @@ enum HotReloadStrategyInner {
 }
 
 /// System for updating `HotReloadStrategy`.
-pub struct HotReloadSystem;
+pub struct HotReloadSystem {
+    initial_strategy: HotReloadStrategy,
+}
+
+impl HotReloadSystem {
+    /// Create a new reload system
+    pub fn new(strategy: HotReloadStrategy) -> Self {
+        HotReloadSystem {
+            initial_strategy: strategy,
+        }
+    }
+}
 
 impl<'a> System<'a> for HotReloadSystem {
-    type SystemData = (Fetch<'a, Time>, FetchMut<'a, HotReloadStrategy>);
+    type SystemData = (Read<'a, Time>, Write<'a, HotReloadStrategy>);
 
     fn run(&mut self, (time, mut strategy): Self::SystemData) {
         match strategy.inner {
@@ -159,6 +166,13 @@ impl<'a> System<'a> for HotReloadSystem {
             },
             HotReloadStrategyInner::Never => {}
         }
+    }
+
+    fn setup(&mut self, res: &mut Resources) {
+        use amethyst_core::specs::prelude::SystemData;
+        Self::SystemData::setup(res);
+        res.insert(self.initial_strategy.clone());
+        res.fetch_mut::<Loader>().set_hot_reload(true);
     }
 }
 
@@ -250,6 +264,14 @@ where
         self.modified != 0 && (self.source.modified(&self.path).unwrap_or(0) > self.modified)
     }
 
+    fn name(&self) -> String {
+        self.path.clone()
+    }
+
+    fn format(&self) -> &'static str {
+        F::NAME
+    }
+
     fn reload(self: Box<Self>) -> Result<FormatValue<A>> {
         #[cfg(feature = "profiler")]
         profile_scope!("reload_single_file");
@@ -264,13 +286,5 @@ where
         } = this;
 
         format.import(path, source, options, true)
-    }
-
-    fn name(&self) -> String {
-        self.path.clone()
-    }
-
-    fn format(&self) -> &'static str {
-        F::NAME
     }
 }

@@ -7,9 +7,12 @@ pub extern crate specs;
 extern crate error_chain;
 extern crate fnv;
 extern crate hibitset;
+#[macro_use]
+extern crate log;
 extern crate rayon;
 #[macro_use]
 extern crate serde;
+extern crate specs_hierarchy;
 
 #[macro_use]
 #[cfg(feature = "profiler")]
@@ -21,17 +24,18 @@ compile_error!("the cfg flag \"no_threading\" is required when building for emsc
 //#[cfg(test)]
 //extern crate quickcheck;
 
-pub use bundle::{ECSBundle, Error, ErrorKind, Result};
+pub use bundle::{Error, ErrorKind, Result, SystemBundle};
+pub use orientation::Orientation;
 pub use timing::*;
 pub use transform::*;
 
 use std::sync::Arc;
 
 pub mod bundle;
-pub mod orientation;
-pub mod transform;
-pub mod timing;
 pub mod frame_limiter;
+pub mod timing;
+pub mod transform;
+mod orientation;
 
 /// A rayon thread pool wrapped in an `Arc`. This should be used as resource in `World`.
 pub type ThreadPool = Arc<rayon::ThreadPool>;

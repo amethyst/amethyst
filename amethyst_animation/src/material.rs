@@ -1,8 +1,8 @@
 use fnv::FnvHashMap;
 
 use amethyst_assets::Handle;
-use amethyst_core::specs::Fetch;
-use amethyst_renderer::{Material, Texture, TextureOffset};
+use amethyst_core::specs::prelude::Read;
+use amethyst_renderer::{Material, Sprite, Texture, TextureOffset};
 use minterpolate::InterpolationPrimitive;
 
 use {AnimationSampling, ApplyData, BlendMethod};
@@ -85,6 +85,18 @@ impl InterpolationPrimitive for MaterialPrimitive {
     }
 }
 
+impl From<Sprite> for MaterialPrimitive {
+    fn from(sprite: Sprite) -> Self {
+        MaterialPrimitive::Offset((sprite.left, sprite.right), (sprite.top, sprite.bottom))
+    }
+}
+
+impl<'a> From<&'a Sprite> for MaterialPrimitive {
+    fn from(sprite: &'a Sprite) -> Self {
+        MaterialPrimitive::Offset((sprite.left, sprite.right), (sprite.top, sprite.bottom))
+    }
+}
+
 /// Channels that are animatable on `Material`
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq, Serialize, Deserialize)]
 pub enum MaterialChannel {
@@ -105,7 +117,7 @@ pub enum MaterialChannel {
 }
 
 impl<'a> ApplyData<'a> for Material {
-    type ApplyData = Fetch<'a, MaterialTextureSet>;
+    type ApplyData = Read<'a, MaterialTextureSet>;
 }
 
 fn offset(offset: &TextureOffset) -> MaterialPrimitive {
@@ -124,7 +136,7 @@ impl AnimationSampling for Material {
         &mut self,
         channel: &Self::Channel,
         data: &Self::Primitive,
-        extra: &Fetch<MaterialTextureSet>,
+        extra: &Read<MaterialTextureSet>,
     ) {
         match (*channel, *data) {
             (MaterialChannel::AlbedoTexture, MaterialPrimitive::Texture(i)) => {
@@ -192,7 +204,7 @@ impl AnimationSampling for Material {
     fn current_sample(
         &self,
         channel: &Self::Channel,
-        extra: &Fetch<MaterialTextureSet>,
+        extra: &Read<MaterialTextureSet>,
     ) -> Self::Primitive {
         match *channel {
             MaterialChannel::AlbedoTexture => {

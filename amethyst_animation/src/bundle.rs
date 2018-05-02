@@ -1,15 +1,11 @@
 use std::hash::Hash;
 use std::marker;
 
-use amethyst_assets::AssetStorage;
-use amethyst_core::{ECSBundle, Result};
-use amethyst_core::specs::{Component, DispatcherBuilder, World};
-use amethyst_renderer::JointTransforms;
+use amethyst_core::{Result, SystemBundle};
+use amethyst_core::specs::prelude::{Component, DispatcherBuilder};
 
-use material::MaterialTextureSet;
-use resources::{Animation, AnimationControlSet, AnimationHierarchy, AnimationSampling,
-                AnimationSet, RestState, Sampler, SamplerControlSet};
-use skinning::{Joint, Skin, VertexSkinningSystem};
+use resources::AnimationSampling;
+use skinning::VertexSkinningSystem;
 use systems::{AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem,
               SamplerProcessor};
 
@@ -35,20 +31,14 @@ impl<'a> VertexSkinningBundle<'a> {
     }
 }
 
-impl<'a, 'b, 'c> ECSBundle<'a, 'b> for VertexSkinningBundle<'c> {
-    fn build(
-        self,
-        world: &mut World,
-        builder: DispatcherBuilder<'a, 'b>,
-    ) -> Result<DispatcherBuilder<'a, 'b>> {
-        world.register::<Joint>();
-        world.register::<Skin>();
-        world.register::<JointTransforms>();
-        Ok(builder.add(
+impl<'a, 'b, 'c> SystemBundle<'a, 'b> for VertexSkinningBundle<'c> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+        builder.add(
             VertexSkinningSystem::new(),
             "vertex_skinning_system",
             self.dep,
-        ))
+        );
+        Ok(())
     }
 }
 
@@ -88,24 +78,14 @@ impl<'a, T> SamplingBundle<'a, T> {
     }
 }
 
-impl<'a, 'b, 'c, T> ECSBundle<'a, 'b> for SamplingBundle<'c, T>
+impl<'a, 'b, 'c, T> SystemBundle<'a, 'b> for SamplingBundle<'c, T>
 where
     T: AnimationSampling + Component,
 {
-    fn build(
-        self,
-        world: &mut World,
-        builder: DispatcherBuilder<'a, 'b>,
-    ) -> Result<DispatcherBuilder<'a, 'b>> {
-        world
-            .res
-            .entry()
-            .or_insert_with(AssetStorage::<Sampler<T::Primitive>>::new);
-        world.register::<SamplerControlSet<T>>();
-        world.add_resource(MaterialTextureSet::default());
-        Ok(builder
-            .add(SamplerProcessor::<T::Primitive>::new(), "", &[])
-            .add(SamplerInterpolationSystem::<T>::new(), self.name, self.dep))
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+        builder.add(SamplerProcessor::<T::Primitive>::new(), "", &[]);
+        builder.add(SamplerInterpolationSystem::<T>::new(), self.name, self.dep);
+        Ok(())
     }
 }
 
@@ -152,28 +132,20 @@ impl<'a, I, T> AnimationBundle<'a, I, T> {
     }
 }
 
-impl<'a, 'b, 'c, I, T> ECSBundle<'a, 'b> for AnimationBundle<'c, I, T>
+impl<'a, 'b, 'c, I, T> SystemBundle<'a, 'b> for AnimationBundle<'c, I, T>
 where
     I: PartialEq + Eq + Hash + Copy + Send + Sync + 'static,
     T: AnimationSampling + Component + Clone,
 {
-    fn build(
-        self,
-        world: &mut World,
-        mut builder: DispatcherBuilder<'a, 'b>,
-    ) -> Result<DispatcherBuilder<'a, 'b>> {
-        world.add_resource(AssetStorage::<Animation<T>>::new());
-        world.register::<AnimationControlSet<I, T>>();
-        world.register::<AnimationHierarchy<T>>();
-        world.register::<RestState<T>>();
-        world.register::<AnimationSet<I, T>>();
-        builder = builder.add(AnimationProcessor::<T>::new(), "", &[]).add(
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+        builder.add(AnimationProcessor::<T>::new(), "", &[]);
+        builder.add(
             AnimationControlSystem::<I, T>::new(),
             self.animation_name,
             self.dep,
         );
         SamplingBundle::<T>::new(self.sampling_name)
             .with_dep(&[self.animation_name])
-            .build(world, builder)
+            .build(builder)
     }
 }

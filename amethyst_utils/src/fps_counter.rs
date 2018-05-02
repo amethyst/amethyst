@@ -1,7 +1,7 @@
 //! Util Resources
 
-use amethyst_core::{ECSBundle, Result};
-use amethyst_core::specs::{DispatcherBuilder, Fetch, FetchMut, System, World};
+use amethyst_core::{Result, SystemBundle};
+use amethyst_core::specs::prelude::{DispatcherBuilder, Read, System, Write};
 use amethyst_core::timing::{duration_to_nanos, Time};
 use circular_buffer::CircularBuffer;
 
@@ -15,6 +15,12 @@ use circular_buffer::CircularBuffer;
 pub struct FPSCounter {
     buf: CircularBuffer<u64>,
     sum: u64,
+}
+
+impl Default for FPSCounter {
+    fn default() -> Self {
+        FPSCounter::new(20)
+    }
 }
 
 impl FPSCounter {
@@ -56,7 +62,7 @@ impl FPSCounter {
 pub struct FPSCounterSystem;
 
 impl<'a> System<'a> for FPSCounterSystem {
-    type SystemData = (Fetch<'a, Time>, FetchMut<'a, FPSCounter>);
+    type SystemData = (Read<'a, Time>, Write<'a, FPSCounter>);
     fn run(&mut self, (time, mut counter): Self::SystemData) {
         counter.push(duration_to_nanos(time.delta_real_time()));
         //Enable this to debug performance engine wide.
@@ -65,31 +71,12 @@ impl<'a> System<'a> for FPSCounterSystem {
 }
 
 ///Automatically adds a FPSCounterSystem and a FPSCounter resource with the specified sample size.
-pub struct FPSCounterBundle {
-    samplesize: usize,
-}
+#[derive(Default)]
+pub struct FPSCounterBundle;
 
-impl FPSCounterBundle {
-    ///Creates a new FPSCounterBundle with the specified sample size.
-    pub fn new(samplesize: usize) -> Self {
-        Self { samplesize }
-    }
-}
-
-impl Default for FPSCounterBundle {
-    ///Same as FPSCounterBundle::new(20).
-    fn default() -> Self {
-        Self::new(20)
-    }
-}
-
-impl<'a, 'b> ECSBundle<'a, 'b> for FPSCounterBundle {
-    fn build(
-        self,
-        world: &mut World,
-        builder: DispatcherBuilder<'a, 'b>,
-    ) -> Result<DispatcherBuilder<'a, 'b>> {
-        world.add_resource(FPSCounter::new(self.samplesize));
-        Ok(builder.add(FPSCounterSystem, "fps_counter_system", &[]))
+impl<'a, 'b> SystemBundle<'a, 'b> for FPSCounterBundle {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+        builder.add(FPSCounterSystem, "fps_counter_system", &[]);
+        Ok(())
     }
 }

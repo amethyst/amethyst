@@ -3,7 +3,7 @@ use amethyst::assets::AssetStorage;
 use amethyst::audio::Source;
 use amethyst::audio::output::Output;
 use amethyst::core::transform::Transform;
-use amethyst::ecs::{Entity, Fetch, FetchMut, Join, System, WriteStorage};
+use amethyst::ecs::prelude::{Entity, Join, Read, ReadExpect, System, Write, WriteStorage};
 use amethyst::ui::UiText;
 use audio::Sounds;
 
@@ -17,11 +17,11 @@ impl<'s> System<'s> for WinnerSystem {
         WriteStorage<'s, Ball>,
         WriteStorage<'s, Transform>,
         WriteStorage<'s, UiText>,
-        FetchMut<'s, ScoreBoard>,
-        Fetch<'s, AssetStorage<Source>>,
-        Fetch<'s, Sounds>,
-        Fetch<'s, ScoreText>,
-        Fetch<'s, Option<Output>>,
+        Write<'s, ScoreBoard>,
+        Read<'s, AssetStorage<Source>>,
+        ReadExpect<'s, Sounds>,
+        ReadExpect<'s, ScoreText>,
+        Option<Read<'s, Output>>,
     );
 
     fn run(
@@ -72,7 +72,7 @@ impl<'s> System<'s> for WinnerSystem {
                 );
 
                 // Play audio.
-                if let Some(ref output) = *audio_output {
+                if let Some(ref output) = audio_output {
                     if let Some(sound) = storage.get(&sounds.score_sfx) {
                         output.play_once(sound, 1.0);
                     }

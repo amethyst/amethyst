@@ -5,7 +5,7 @@ use animation::{Animation, AnimationHierarchy, AnimationSet, Joint, Sampler, Sam
 use assets::{AssetStorage, Handle, HotReloadStrategy, Loader};
 use core::{ThreadPool, Time};
 use core::cgmath::{EuclideanSpace, Matrix4, Point3, SquareMatrix};
-use core::specs::{Entities, Entity, Fetch, FetchMut, Join, System, WriteStorage};
+use core::specs::prelude::{Entities, Entity, Join, Read, ReadExpect, System, Write, WriteStorage};
 use core::transform::*;
 use fnv::FnvHashMap;
 use hibitset::BitSet;
@@ -39,16 +39,16 @@ impl GltfSceneLoaderSystem {
 impl<'a> System<'a> for GltfSceneLoaderSystem {
     type SystemData = (
         Entities<'a>,
-        Fetch<'a, AssetStorage<Mesh>>,
-        Fetch<'a, AssetStorage<Texture>>,
-        Fetch<'a, AssetStorage<Animation<Transform>>>,
-        Fetch<'a, AssetStorage<Sampler<SamplerPrimitive<f32>>>>,
-        Fetch<'a, Loader>,
-        Fetch<'a, MaterialDefaults>,
-        Fetch<'a, Time>,
-        Fetch<'a, ThreadPool>,
-        Option<Fetch<'a, HotReloadStrategy>>,
-        FetchMut<'a, AssetStorage<GltfSceneAsset>>,
+        Read<'a, AssetStorage<Mesh>>,
+        Read<'a, AssetStorage<Texture>>,
+        Read<'a, AssetStorage<Animation<Transform>>>,
+        Read<'a, AssetStorage<Sampler<SamplerPrimitive<f32>>>>,
+        ReadExpect<'a, Loader>,
+        ReadExpect<'a, MaterialDefaults>,
+        Read<'a, Time>,
+        ReadExpect<'a, ThreadPool>,
+        Option<Read<'a, HotReloadStrategy>>,
+        Write<'a, AssetStorage<GltfSceneAsset>>,
         WriteStorage<'a, Handle<GltfSceneAsset>>,
         WriteStorage<'a, Handle<Mesh>>,
         WriteStorage<'a, Transform>,

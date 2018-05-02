@@ -1,6 +1,6 @@
 use amethyst_core::cgmath::BaseNum;
 use amethyst_core::cgmath::num_traits::NumCast;
-use amethyst_core::specs::{Entity, WriteStorage};
+use amethyst_core::specs::prelude::{Entity, WriteStorage};
 use minterpolate::InterpolationPrimitive;
 
 use resources::{AnimationControlSet, AnimationSampling};
@@ -20,11 +20,7 @@ where
     I: Send + Sync + 'static,
     T: AnimationSampling,
 {
-    // TODO: replace with entry API when specs is released
-    if let None = controls.get(entity) {
-        controls.insert(entity, AnimationControlSet::default());
-    }
-    controls.get_mut(entity).unwrap()
+    controls.entry(entity).unwrap().or_insert_with(AnimationControlSet::default)
 }
 
 /// Sampler primitive

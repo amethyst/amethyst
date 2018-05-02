@@ -8,6 +8,66 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [sv]: http://semver.org/
 
 ## [Unreleased]
+### Added
+* Documentation for Animation crate ([#631]).
+* Support for rendering sprites ([#638]).
+* Fly Camera ([#578]).
+* UI Layouts ([#591]).
+* UI Events ([#580]).
+* Introduce a generic animation system, with support for both  transform and texture animation, ([#558]), ([#566]), ([#567]), ([#569]), ([#570]), ([#611]), ([#641]), ([#644])
+* Add transparency support to core passes, ([#543]), ([#574]), ([#584]) 
+* Add vertex skinning, ([#545]), ([#619])
+* Update dependencies to the newest versions: cgmath, winit, glutin, gfx, gfx_glyph, ([#527]), ([#572]), ([#648])
+* Expose a basic visibility ordering system, with the ability to swap in better replacement systems, ([#595])
+* Audio `Output` is now added directly rather than as an `Option`, should now be fetched with `Option<Read<'a, Output>>`, ([#679])
+* New nightly feature that enables `shred`s nightly feature, ([#689])
+* Refactored bundles to only contain `System`s, ([#675])
+* Rodio updated to 0.7, ([#676])
+* Refactor to use new specs, major breakage! ([#674]), ([#679]), ([#683]).
+* `Transform` refactored, and added lots of utility functions, ([#660])
+* Disable multisampling on all examples, and add a single example with multisampling on, ([#671])
+
+### Fixed
+* Asset loading tolerates paths constructed using back slashes ([#623]).
+* Pong text alignment ([#621]).
+* Updated book introduction ([#588]).
+* Renderable runtime crash ([#586]).
+
+[#580]: https://github.com/amethyst/amethyst/pull/580
+[#591]: https://github.com/amethyst/amethyst/pull/591
+[#578]: https://github.com/amethyst/amethyst/pull/578
+[#586]: https://github.com/amethyst/amethyst/pull/586
+[#588]: https://github.com/amethyst/amethyst/pull/588
+[#631]: https://github.com/amethyst/amethyst/pull/631
+[#638]: https://github.com/amethyst/amethyst/pull/638
+[#623]: https://github.com/amethyst/amethyst/pull/623
+[#621]: https://github.com/amethyst/amethyst/pull/621
+[#558]: https://github.com/amethyst/amethyst/pull/558
+[#566]: https://github.com/amethyst/amethyst/pull/566
+[#567]: https://github.com/amethyst/amethyst/pull/567
+[#569]: https://github.com/amethyst/amethyst/pull/569
+[#570]: https://github.com/amethyst/amethyst/pull/570
+[#611]: https://github.com/amethyst/amethyst/pull/611
+[#641]: https://github.com/amethyst/amethyst/pull/641
+[#644]: https://github.com/amethyst/amethyst/pull/644
+[#543]: https://github.com/amethyst/amethyst/pull/543
+[#574]: https://github.com/amethyst/amethyst/pull/574
+[#584]: https://github.com/amethyst/amethyst/pull/584
+[#545]: https://github.com/amethyst/amethyst/pull/545
+[#619]: https://github.com/amethyst/amethyst/pull/619
+[#527]: https://github.com/amethyst/amethyst/pull/527
+[#572]: https://github.com/amethyst/amethyst/pull/572
+[#648]: https://github.com/amethyst/amethyst/pull/648
+[#595]: https://github.com/amethyst/amethyst/pull/595
+[#679]: https://github.com/amethyst/amethyst/pull/679
+[#675]: https://github.com/amethyst/amethyst/pull/675
+[#676]: https://github.com/amethyst/amethyst/pull/676
+[#674]: https://github.com/amethyst/amethyst/pull/674
+[#679]: https://github.com/amethyst/amethyst/pull/679
+[#683]: https://github.com/amethyst/amethyst/pull/683
+[#660]: https://github.com/amethyst/amethyst/pull/660
+[#671]: https://github.com/amethyst/amethyst/pull/671
+[#689]: https://github.com/amethyst/amethyst/pull/689
 
 ## [0.5.1] - 2017-08-30
 

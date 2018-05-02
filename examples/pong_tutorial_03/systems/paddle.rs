@@ -1,6 +1,5 @@
 use amethyst::core::transform::components::Transform;
-use amethyst::ecs::{Fetch, Join, System};
-use amethyst::ecs::{ReadStorage, WriteStorage};
+use amethyst::ecs::prelude::{Join, Read, ReadStorage, System, WriteStorage};
 use amethyst::input::InputHandler;
 use pong::{Paddle, Side, PADDLE_HEIGHT};
 
@@ -10,7 +9,7 @@ impl<'s> System<'s> for PaddleSystem {
     type SystemData = (
         WriteStorage<'s, Transform>,
         ReadStorage<'s, Paddle>,
-        Fetch<'s, InputHandler<String, String>>,
+        Read<'s, InputHandler<String, String>>,
     );
 
     fn run(&mut self, (mut transforms, paddles, input): Self::SystemData) {

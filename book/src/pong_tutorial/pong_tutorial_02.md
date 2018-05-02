@@ -40,7 +40,7 @@ statements to make it through this chapter:
 
 ```rust,ignore
 use amethyst::prelude::*;
-use amethyst::ecs::{Component, DenseVecStorage};
+use amethyst::ecs::prelude::{Component, DenseVecStorage};
 use amethyst::assets::Loader;
 use amethyst::core::cgmath::Vector3;
 use amethyst::core::transform::{Transform, GlobalTransform};

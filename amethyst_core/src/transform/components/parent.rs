@@ -1,4 +1,8 @@
-use specs::{Component, DenseVecStorage, Entity, FlaggedStorage};
+use specs::prelude::{Component, DenseVecStorage, Entity, FlaggedStorage};
+use specs_hierarchy::{Hierarchy, Parent as HParent};
+
+pub use specs_hierarchy::HierarchyEvent;
+pub type ParentHierarchy = Hierarchy<Parent>;
 
 /// Component for defining a parent entity.
 ///
@@ -11,4 +15,10 @@ pub struct Parent {
 
 impl Component for Parent {
     type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
+}
+
+impl HParent for Parent {
+    fn parent_entity(&self) -> Entity {
+        self.entity
+    }
 }

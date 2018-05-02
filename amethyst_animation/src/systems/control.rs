@@ -3,14 +3,14 @@ use std::marker;
 use std::time::Duration;
 
 use amethyst_assets::{AssetStorage, Handle};
-use amethyst_core::specs::{Component, Entities, Entity, Fetch, Join, ReadStorage, System,
-                           WriteStorage};
+use amethyst_core::specs::prelude::{Component, Entities, Entity, Join, Read, ReadStorage,
+                                    Resources, System, SystemData, WriteStorage};
 use amethyst_core::timing::secs_to_duration;
 use fnv::FnvHashMap;
 use minterpolate::InterpolationPrimitive;
 
 use resources::{Animation, AnimationCommand, AnimationControl, AnimationControlSet,
-                AnimationHierarchy, AnimationSampling, ApplyData, ControlState,
+                AnimationHierarchy, AnimationSampling, AnimationSet, ApplyData, ControlState,
                 DeferStartRelation, RestState, Sampler, SamplerControl, SamplerControlSet,
                 StepDirection};
 
@@ -59,8 +59,8 @@ where
 {
     type SystemData = (
         Entities<'a>,
-        Fetch<'a, AssetStorage<Animation<T>>>,
-        Fetch<'a, AssetStorage<Sampler<T::Primitive>>>,
+        Read<'a, AssetStorage<Animation<T>>>,
+        Read<'a, AssetStorage<Sampler<T::Primitive>>>,
         WriteStorage<'a, AnimationControlSet<I, T>>,
         WriteStorage<'a, SamplerControlSet<T>>,
         ReadStorage<'a, AnimationHierarchy<T>>,
@@ -193,6 +193,11 @@ where
         for entity in remove_sets {
             controls.remove(entity);
         }
+    }
+
+    fn setup(&mut self, res: &mut Resources) {
+        Self::SystemData::setup(res);
+        ReadStorage::<AnimationSet<I, T>>::setup(res);
     }
 }
 
@@ -431,7 +436,7 @@ where
         .nodes
         .iter()
         .any(|&(ref node_index, _, ref sampler_handle)| {
-            hierarchy.nodes.get(node_index).is_none()
+            !hierarchy.nodes.contains_key(node_index)
                 || sampler_storage.get(sampler_handle).is_none()
         }) {
         return false;
