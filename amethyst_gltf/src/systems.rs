@@ -100,9 +100,11 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
             if let Some(scene_asset) = scene_storage.get_mut(scene_handle) {
                 // We need to track any new mesh/texture loads for caching purposes
                 let mut mesh_handles = Vec::default();
-                let mut texture_handles: Vec<
-                    (usize, TextureHandleLocation, Handle<Texture>),
-                > = Vec::default();
+                let mut texture_handles: Vec<(
+                    usize,
+                    TextureHandleLocation,
+                    Handle<Texture>,
+                )> = Vec::default();
                 let mut node_map = HashMap::default();
                 let mut skin_links = Vec::default();
 

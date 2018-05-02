@@ -1,4 +1,4 @@
-//! The simplest Amethyst example.
+//! Example showing how to load a Locale file as an Asset using the Loader.
 
 extern crate amethyst;
 
@@ -12,7 +12,9 @@ struct Example {
 
 impl Example {
     pub fn new() -> Self {
-        Example { handle: None }
+        Example {
+            handle: None,
+        }
     }
 }
 
@@ -31,6 +33,8 @@ impl State for Example {
 
     fn update(&mut self, world: &mut World) -> Trans {
         let store = world.read_resource::<AssetStorage<Locale>>();
+        // Check if the locale has been loaded.
+        // If you are doing this for multiple assets, you should be using `ProgressCounter`.
         if let Some(locale) = store.get(&self.handle.clone().unwrap()) {
             println!(
                 "{}",

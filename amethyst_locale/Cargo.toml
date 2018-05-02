@@ -8,7 +8,7 @@ Localisation bindings.
 """
 exclude = ["examples/*"]
 license = "MIT/Apache-2.0"
-keywords = ["game", "asset", "resource", "management", "amethyst"]
+keywords = ["game", "localisation", "resource", "management", "amethyst"]
 categories = ["filesystem,localisation"]
 
 documentation = "https://www.amethyst.rs/doc/master/doc/amethyst/"
@@ -22,7 +22,6 @@ travis-ci = { repository = "amethyst/amethyst" }
 [dependencies]
 amethyst_assets = { path = "../amethyst_assets", version = "0.2" }
 amethyst_core = { path = "../amethyst_core", version = "0.1" }
-log = "0.4"
 fluent = "0.2.0"
 
 thread_profiler = { version = "0.1", optional = true }

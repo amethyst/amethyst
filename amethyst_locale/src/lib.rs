@@ -1,18 +1,10 @@
-//! # amethyst_assets
+//! # amethyst_locale
 //!
-//! Asset management crate.
-//! Designed with the following goals in mind:
-//!
-//! * extensibility
-//! * asynchronous & parallel using rayon
-//! * allow different sources
-
+//! Localisation binding a `Fluent` file to an Asset<Locale> via the use of amethyst_assets.
 #![warn(missing_docs)]
 
 extern crate amethyst_assets;
 extern crate amethyst_core;
-#[macro_use]
-extern crate log;
 extern crate fluent;
 
 #[macro_use]

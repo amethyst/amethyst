@@ -1,9 +1,7 @@
-# amethyst_assets
+# amethyst_locale
 
-This crate is used for asset management in Amethyst, however
-it is designed to be also usable without other parts of Amethyst,
-as to attract more developers to it and to promote collaboration
-(instead of duplication).
+This crate is a simple wrapper around a localisation library.
+In this case, said library is `Fluent`.
 
 ## Contribution
 
@@ -17,5 +15,5 @@ MIT/Apache-2.
 
 ## License
 
-`amethyst_assets` is distributed under the terms of both the MIT 
+`amethyst_locale` is distributed under the terms of both the MIT
 license and the Apache License (Version 2.0).
