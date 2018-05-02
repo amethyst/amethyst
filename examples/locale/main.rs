@@ -2,9 +2,10 @@
 
 extern crate amethyst;
 
-use amethyst::assets::*;
+use amethyst::assets::{AssetStorage, Handle, Loader, Processor};
 use amethyst::locale::*;
 use amethyst::prelude::*;
+use amethyst::Error;
 
 struct Example {
     handle: Option<Handle<Locale>>,
@@ -30,9 +31,10 @@ impl State for Example {
 
     fn update(&mut self, world: &mut World) -> Trans {
         let store = world.read_resource::<AssetStorage<Locale>>();
+
         // Check if the locale has been loaded.
         // If you are doing this for multiple assets, you should be using `ProgressCounter`.
-        if let Some(locale) = store.get(&self.handle.clone().unwrap()) {
+        if let Some(locale) = self.handle.as_ref().and_then(|h| store.get(h)) {
             println!(
                 "{}",
                 locale
@@ -57,11 +59,16 @@ impl State for Example {
 }
 
 fn main() {
+    if let Err(error) = run() {
+        eprintln!("Initialisation error: {}", error);
+        ::std::process::exit(1);
+    }
+}
+fn run() -> Result<(), Error> {
     let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
-    let mut game = Application::build(resources_directory, Example::new())
-        .expect("Fatal error")
+    let mut game = Application::build(resources_directory, Example::new())?
         .with(Processor::<Locale>::new(), "proc", &[])
-        .build()
-        .expect("Fatal error");
+        .build()?;
     game.run();
+    Ok(())
 }
