@@ -45,9 +45,8 @@ fn run() -> Result<(), amethyst::Error> {
             .with_pass(DrawFlat::<PosNormTex>::new()),
     );
 
-    let mut game = Application::<GameData>::build("./", Example)?
-        .build(GameDataBuilder::default().with_bundle(RenderBundle::new(pipe, Some(config)))?)
-        .expect("Fatal error");
+    let game_data = GameDataBuilder::default().with_bundle(RenderBundle::new(pipe, Some(config)))?;
+    let mut game = Application::<GameData>::new("./", Example, game_data)?;
 
     game.run();
 

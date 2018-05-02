@@ -12,27 +12,34 @@ pub const PADDLE_COLOUR: [f32; 4] = [0.0, 0.0, 1.0, 1.0];
 
 pub struct Pong;
 
-impl State for Pong {
-    fn on_start(&mut self, world: &mut World) {
+impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
+    fn on_start(&mut self, data: StateData<GameData>) {
+        let StateData { world, .. } = data;
         world.register::<Paddle>();
         initialise_paddles(world);
         initialise_camera(world);
     }
-    fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
+
+    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
         match event {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::KeyboardInput {
                     input:
-                        KeyboardInput {
-                            virtual_keycode: Some(VirtualKeyCode::Escape),
-                            ..
-                        },
+                    KeyboardInput {
+                        virtual_keycode: Some(VirtualKeyCode::Escape),
+                        ..
+                    },
                     ..
                 } => Trans::Quit,
                 _ => Trans::None,
             },
             _ => Trans::None,
         }
+    }
+
+    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+        data.data.update(&data.world);
+        Trans::None
     }
 }
 
