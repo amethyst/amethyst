@@ -33,6 +33,18 @@ profiler = [
     "amethyst_ui/profiler",
     "amethyst_utils/profiler",
 ]
+nightly = [
+    "amethyst_animation/nightly",
+    "amethyst_assets/nightly",
+    "amethyst_audio/nightly",
+    "amethyst_config/nightly",
+    "amethyst_core/nightly",
+    "amethyst_controls/nightly",
+    "amethyst_renderer/nightly",
+    "amethyst_input/nightly",
+    "amethyst_ui/nightly",
+    "amethyst_utils/nightly",
+]
 
 [dependencies]
 amethyst_animation = { path = "amethyst_animation", version = "0.1.0" }
@@ -134,4 +146,5 @@ name = "sprites"
 path = "examples/sprites/main.rs"
 
 [workspace]
-members = ["amethyst_animation", "amethyst_gltf"]
+members = ["amethyst_gltf"]
+
