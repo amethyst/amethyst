@@ -90,60 +90,64 @@ name = "sphere"
 path = "examples/sphere/main.rs"
 
 [[example]]
+name = "sphere_multisample"
+path = "examples/sphere_multisample/main.rs"
+
+[[example]]
 name = "renderable"
 path = "examples/renderable/main.rs"
 
-#[[example]]
-#name = "pong"
-#path = "examples/pong/main.rs"
-#
-#[[example]]
-#name = "asset_loading"
-#path = "examples/asset_loading/main.rs"
-#
-#[[example]]
-#name = "material"
-#path = "examples/material/main.rs"
+[[example]]
+name = "pong"
+path = "examples/pong/main.rs"
+
+[[example]]
+name = "asset_loading"
+path = "examples/asset_loading/main.rs"
+
+[[example]]
+name = "material"
+path = "examples/material/main.rs"
 
 [[example]]
 name = "separate_sphere"
 path = "examples/separate_sphere/main.rs"
 
-#[[example]]
-#name = "gltf"
-#path = "examples/gltf/main.rs"
-#
-#[[example]]
-#name = "ui"
-#path = "examples/ui/main.rs"
-#
-#[[example]]
-#name = "animation"
-#path = "examples/animation/main.rs"
-#
-#[[example]]
-#name = "pong_tutorial_01"
-#path = "examples/pong_tutorial_01/main.rs"
-#
-#[[example]]
-#name = "pong_tutorial_02"
-#path = "examples/pong_tutorial_02/main.rs"
-#
-#[[example]]
-#name = "pong_tutorial_03"
-#path = "examples/pong_tutorial_03/main.rs"
-#
-#[[example]]
-#name = "appendix_a"
-#path = "examples/appendix_a/main.rs"
-#
-#[[example]]
-#name = "fly_camera"
-#path = "examples/fly_camera/main.rs"
-#
-#[[example]]
-#name = "sprites"
-#path = "examples/sprites/main.rs"
+[[example]]
+name = "gltf"
+path = "examples/gltf/main.rs"
+
+[[example]]
+name = "ui"
+path = "examples/ui/main.rs"
+
+[[example]]
+name = "animation"
+path = "examples/animation/main.rs"
+
+[[example]]
+name = "fly_camera"
+path = "examples/fly_camera/main.rs"
+
+[[example]]
+name = "sprites"
+path = "examples/sprites/main.rs"
+
+[[example]]
+name = "pong_tutorial_01"
+path = "examples/pong_tutorial_01/main.rs"
+
+[[example]]
+name = "pong_tutorial_02"
+path = "examples/pong_tutorial_02/main.rs"
+
+[[example]]
+name = "pong_tutorial_03"
+path = "examples/pong_tutorial_03/main.rs"
+
+[[example]]
+name = "appendix_a"
+path = "examples/appendix_a/main.rs"
 
 [workspace]
 members = ["amethyst_gltf"]

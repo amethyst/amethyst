@@ -69,11 +69,7 @@ fn run() -> Result<()> {
             .with_pass(DrawFlat::<PosTex>::new())
             .with_pass(DrawUi::new()),
     );
-    let mut game = Application::build(assets_dir, Pong)?
-        .with_frame_limit(
-            FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
-            144,
-        )
+    let game_data = GameDataBuilder::default()
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path),
         )?
@@ -81,8 +77,13 @@ fn run() -> Result<()> {
         .with_bundle(TransformBundle::new().with_dep(&["ball_system", "paddle_system"]))?
         .with_bundle(AudioBundle::new(|music: &mut Music| music.music.next()))?
         .with_bundle(UiBundle::<String, String>::new())?
-        .with_bundle(RenderBundle::new(pipe, Some(display_config)))?
-        .build()?;
+        .with_bundle(RenderBundle::new(pipe, Some(display_config)))?;
+    let mut game = Application::build(assets_dir, Pong)?
+        .with_frame_limit(
+            FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
+            144,
+        )
+        .build(game_data)?;
     game.run();
     Ok(())
 }

@@ -39,8 +39,10 @@ struct Example {
     entities: Vec<Entity>,
 }
 
-impl State for Example {
-    fn on_start(&mut self, mut world: &mut World) {
+impl<'a, 'b> State<GameData<'a, 'b>> for Example {
+    fn on_start(&mut self, data: StateData<GameData>) {
+        let StateData { world, .. } = data;
+
         initialise_camera(world);
 
         let sprite_sheet_texture = png_loader::load("texture/bat.32x32.png", world);
@@ -62,8 +64,8 @@ impl State for Example {
         };
 
         // Load animations
-        let grey_bat_animation = animation::grey_bat(&sprite_sheet, &mut world);
-        let brown_bat_animation = animation::brown_bat(&sprite_sheet, &mut world);
+        let grey_bat_animation = animation::grey_bat(&sprite_sheet, world);
+        let brown_bat_animation = animation::brown_bat(&sprite_sheet, world);
 
         // Calculate offset to centre all sprites
         //
@@ -152,7 +154,7 @@ impl State for Example {
         }
     }
 
-    fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
+    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
         match event {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::KeyboardInput {
@@ -168,6 +170,11 @@ impl State for Example {
             },
             _ => Trans::None,
         }
+    }
+
+    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+        data.data.update(&data.world);
+        Trans::None
     }
 }
 
@@ -204,8 +211,7 @@ fn run() -> Result<(), amethyst::Error> {
             .with_pass(DrawUi::new()),
     );
 
-    let mut game = Application::build(assets_directory, Example::default())?
-        // Provides sprite animation
+    let game_data = GameDataBuilder::default()
         .with_bundle(AnimationBundle::<u32, Material>::new(
             "animation_control_system",
             "sampler_interpolation_system",
@@ -220,9 +226,8 @@ fn run() -> Result<(), amethyst::Error> {
         // UiBundle relies on this as some Ui objects take input
         .with_bundle(InputBundle::<String, String>::new())?
         // Draws textures
-        .with_bundle(UiBundle::<String, String>::new())?
-        .build()?;
-
+        .with_bundle(UiBundle::<String, String>::new())?;
+    let mut game = Application::new(assets_directory, Example::default(), game_data)?;
     game.run();
 
     Ok(())

@@ -7,8 +7,8 @@ use amethyst::renderer::{DisplayConfig, DrawFlat, Event, KeyboardInput, Pipeline
 
 struct Pong;
 
-impl State for Pong {
-    fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
+impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
+    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
         match event {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::KeyboardInput {
@@ -23,6 +23,11 @@ impl State for Pong {
             },
             _ => Trans::None,
         }
+    }
+
+    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+        data.data.update(&data.world);
+        Trans::None
     }
 }
 
@@ -39,9 +44,9 @@ fn run() -> Result<()> {
             .with_pass(DrawFlat::<PosTex>::new()),
     );
 
-    let mut game = Application::build("./", Pong)?
-        .with_bundle(RenderBundle::new(pipe, Some(config)))?
-        .build()?;
+    let game_data = GameDataBuilder::default()
+        .with_bundle(RenderBundle::new(pipe, Some(config)))?;
+    let mut game = Application::new("./", Pong, game_data)?;
     game.run();
     Ok(())
 }

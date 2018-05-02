@@ -6,7 +6,7 @@ extern crate amethyst_gltf;
 #[macro_use]
 extern crate log;
 
-use amethyst::assets::{AssetStorage, Handle, Loader};
+use amethyst::assets::{Handle, Loader};
 use amethyst::core::cgmath::{Deg, Quaternion, Rotation3, Vector3};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::Entity;
@@ -23,8 +23,9 @@ struct Scene {
     animation_index: usize,
 }
 
-impl State for Example {
-    fn on_start(&mut self, world: &mut World) {
+impl<'a, 'b> State<GameData<'a, 'b>> for Example {
+    fn on_start(&mut self, data: StateData<GameData>) {
+        let StateData { world, .. } = data;
         let gltf_scene = load_gltf_mesh(
             &world,
             &*world.read_resource(),
@@ -87,7 +88,8 @@ impl State for Example {
         world.add_resource(AmbientColor(Rgba(0.2, 0.2, 0.2, 0.2)));
     }
 
-    fn handle_event(&mut self, world: &mut World, event: Event) -> Trans {
+    fn handle_event(&mut self, data: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
+        let StateData { world, .. } = data;
         match event {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::KeyboardInput {
@@ -139,6 +141,11 @@ impl State for Example {
             _ => Trans::None,
         }
     }
+
+    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+        data.data.update(&data.world);
+        Trans::None
+    }
 }
 
 fn run() -> Result<(), amethyst::Error> {
@@ -156,7 +163,7 @@ fn run() -> Result<(), amethyst::Error> {
             .with_pass(DrawShadedSeparate::new().with_vertex_skinning()),
     );
 
-    let mut game = Application::build(resources_directory, Example)?
+    let game_data = GameDataBuilder::default()
         .with(GltfSceneLoaderSystem::new(), "loader_system", &[])
         .with_bundle(RenderBundle::new(pipe, Some(config)))?
         .with_bundle(
@@ -173,10 +180,9 @@ fn run() -> Result<(), amethyst::Error> {
             "transform_system",
             "animation_control_system",
             "sampler_interpolation_system",
-        ]))?
-        .with_resource(AssetStorage::<GltfSceneAsset>::new())
-        .register::<Handle<GltfSceneAsset>>()
-        .build()?;
+        ]))?;
+
+    let mut game = Application::new(resources_directory, Example, game_data)?;
     game.run();
     Ok(())
 }
