@@ -44,8 +44,7 @@ fn run() -> Result<()> {
             .with_pass(DrawFlat::<PosTex>::new()),
     );
 
-    let game_data = GameDataBuilder::default()
-        .with_bundle(RenderBundle::new(pipe, Some(config)))?;
+    let game_data = GameDataBuilder::default().with_bundle(RenderBundle::new(pipe, Some(config)))?;
     let mut game = Application::new("./", Pong, game_data)?;
     game.run();
     Ok(())

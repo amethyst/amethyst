@@ -72,8 +72,7 @@ fn run() -> Result<(), amethyst::Error> {
 
     let config = DisplayConfig::load(&display_config_path);
 
-    let game_data = GameDataBuilder::default()
-        .with_bundle(RenderBundle::new(pipe, Some(config)))?;
+    let game_data = GameDataBuilder::default().with_bundle(RenderBundle::new(pipe, Some(config)))?;
     let mut game = Application::new(resources, Example, game_data)?;
     game.run();
     Ok(())

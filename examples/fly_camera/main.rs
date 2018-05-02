@@ -2,7 +2,7 @@
 
 extern crate amethyst;
 
-use amethyst::{Application, Error, State, Trans, GameDataBuilder, GameData, StateData};
+use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
 use amethyst::assets::Loader;
 use amethyst::config::Config;
 use amethyst::controls::{FlyControlBundle, FlyControlTag};

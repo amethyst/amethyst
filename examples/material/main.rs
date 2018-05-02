@@ -137,8 +137,7 @@ fn run() -> Result<(), amethyst::Error> {
             .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
             .with_pass(DrawPbm::<PosNormTangTex>::new()),
     );
-    let game_data = GameDataBuilder::default()
-        .with_bundle(RenderBundle::new(pipe, Some(config)))?;
+    let game_data = GameDataBuilder::default().with_bundle(RenderBundle::new(pipe, Some(config)))?;
     let mut game = Application::new(&resources, Example, game_data)?;
     game.run();
     Ok(())
