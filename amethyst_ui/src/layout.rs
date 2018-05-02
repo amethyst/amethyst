@@ -206,10 +206,8 @@ impl<'a> System<'a> for UiParentSystem {
         ReadExpect<'a, ScreenDimensions>,
         ReadExpect<'a, ParentHierarchy>,
     );
-    fn run(
-        &mut self,
-        (entities, mut locals, parents, anchors, stretches, screen_dim, hierarchy): Self::SystemData,
-){
+    fn run(&mut self, data: Self::SystemData) {
+        let (entities, mut locals, parents, anchors, stretches, screen_dim, hierarchy) = data;
         #[cfg(feature = "profiler")]
         profile_scope!("ui_parent_system");
 

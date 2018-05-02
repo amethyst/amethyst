@@ -87,9 +87,9 @@ impl<'a, T> Application<'a, T> {
     /// use amethyst::prelude::*;
     ///
     /// struct NullState;
-    /// impl State for NullState {}
+    /// impl State<()> for NullState {}
     ///
-    /// let mut game = Application::new("assets/", NullState).expect("Failed to initialize");
+    /// let mut game = Application::new("assets/", NullState, ()).expect("Failed to initialize");
     /// game.run();
     /// ~~~
     pub fn new<P, S, I>(path: P, initial_state: S, init: I) -> Result<Application<'a, T>>
@@ -277,13 +277,7 @@ impl<S> ApplicationBuilder<S> {
     /// use amethyst::ecs::prelude::System;
     ///
     /// struct NullState;
-    /// impl State for NullState {}
-    ///
-    /// struct NopSystem;
-    /// impl<'a> System<'a> for NopSystem {
-    ///     type SystemData = ();
-    ///     fn run(&mut self, _: Self::SystemData) {}
-    /// }
+    /// impl State<()> for NullState {}
     ///
     /// // initialize the builder, the `ApplicationBuilder` object
     /// // follows the use pattern of most builder objects found
@@ -296,11 +290,9 @@ impl<S> ApplicationBuilder<S> {
     ///     .register::<Parent>()
     ///     .register::<Transform>()
     ///
-    /// // systems can be added before the game is run
-    ///     .with::<NopSystem>(NopSystem, "nop_system", &[])
-    ///
     /// // lastly we can build the Application object
-    ///     .build()
+    /// // the `build` function takes the user defined game data initializer as input
+    ///     .build(())
     ///     .expect("Failed to create Application");
     ///
     /// // the game instance can now be run, this exits only when the game is done
@@ -388,7 +380,7 @@ impl<S> ApplicationBuilder<S> {
     /// use amethyst::ecs::storage::HashMapStorage;
     ///
     /// struct NullState;
-    /// impl State for NullState {}
+    /// impl State<()> for NullState {}
     ///
     /// // define your custom type for the ECS
     /// struct Velocity([f32; 3]);
@@ -449,7 +441,7 @@ impl<S> ApplicationBuilder<S> {
     /// use amethyst::prelude::*;
     ///
     /// struct NullState;
-    /// impl State for NullState {}
+    /// impl State<()> for NullState {}
     ///
     /// // your resource can be anything that can be safely stored in a `Arc`
     /// // in this example, it is a vector of scores with a user name
@@ -507,16 +499,16 @@ impl<S> ApplicationBuilder<S> {
     ///     .expect("Failed to initialize")
     ///     // Register the directory "custom_directory" under the name "resources".
     ///     .with_source("custom_store", Directory::new("custom_directory"))
-    ///     .build()
+    ///     .build(GameDataBuilder::default())
     ///     .expect("Failed to build game")
     ///     .run();
     ///
     /// struct LoadingState;
-    /// impl State for LoadingState {
-    ///     fn on_start(&mut self, world: &mut World) {
-    ///         let storage = world.read_resource();
+    /// impl<'a, 'b> State<GameData<'a, 'b>> for LoadingState {
+    ///     fn on_start(&mut self, data: StateData<GameData>) {
+    ///         let storage = data.world.read_resource();
     ///
-    ///         let loader = world.read_resource::<Loader>();
+    ///         let loader = data.world.read_resource::<Loader>();
     ///         // Load a teapot mesh from the directory that registered above.
     ///         let mesh = loader.load_from("teapot", ObjFormat, (), "custom_directory",
     ///                                     (), &storage);

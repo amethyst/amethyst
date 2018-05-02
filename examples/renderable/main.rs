@@ -5,7 +5,7 @@
 
 extern crate amethyst;
 
-use amethyst::{Application, Error, State, Trans};
+use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
 use amethyst::assets::{HotReloadBundle, Loader};
 use amethyst::config::Config;
 use amethyst::core::cgmath::{Array, Deg, Euler, Quaternion, Rad, Rotation, Rotation3, Vector3};
@@ -47,7 +47,8 @@ impl<'a> System<'a> for ExampleSystem {
         Read<'a, FPSCounter>,
     );
 
-fn run(&mut self, (mut lights, time, camera, mut transforms, mut state, mut ui_text, fps_counter): Self::SystemData){
+    fn run(&mut self, data: Self::SystemData) {
+        let (mut lights, time, camera, mut transforms, mut state, mut ui_text, fps_counter) = data;
         let light_angular_velocity = -1.0;
         let light_orbit_radius = 15.0;
         let light_z = 6.0;
@@ -92,8 +93,9 @@ fn run(&mut self, (mut lights, time, camera, mut transforms, mut state, mut ui_t
 
 struct Example;
 
-impl State for Example {
-    fn on_start(&mut self, world: &mut World) {
+impl<'a, 'b> State<GameData<'a, 'b>> for Example {
+    fn on_start(&mut self, data: StateData<GameData>) {
+        let StateData { world, .. } = data;
         initialise_camera(world);
 
         let assets = load_assets(&world);
@@ -213,8 +215,8 @@ impl State for Example {
         });
     }
 
-    fn handle_event(&mut self, world: &mut World, event: Event) -> Trans {
-        let w = world;
+    fn handle_event(&mut self, data: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
+        let w = data.world;
         // Exit if user hits Escape or closes the window
         let mut state = w.write_resource::<DemoState>();
 
@@ -234,13 +236,13 @@ impl State for Example {
                             Some(VirtualKeyCode::Escape) => return Trans::Quit,
                             Some(VirtualKeyCode::Space) => {
                                 // TODO: figure out how to change pipeline
-                            /*if state.pipeline_forward {
-                                state.pipeline_forward = false;
-                                set_pipeline_state(pipe, false);
-                            } else {
-                                state.pipeline_forward = true;
-                                set_pipeline_state(pipe, true);
-                            }*/
+                                /*if state.pipeline_forward {
+                                    state.pipeline_forward = false;
+                                    set_pipeline_state(pipe, false);
+                                } else {
+                                    state.pipeline_forward = true;
+                                    set_pipeline_state(pipe, true);
+                                }*/
                             }
                             Some(VirtualKeyCode::R) => {
                                 state.light_color = [0.8, 0.2, 0.2, 1.0];
@@ -298,6 +300,11 @@ impl State for Example {
             }
             _ => (),
         }
+        Trans::None
+    }
+
+    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+        data.data.update(&data.world);
         Trans::None
     }
 }
@@ -389,16 +396,17 @@ fn run() -> Result<(), Error> {
             .with_pass(DrawShaded::<PosNormTex>::new())
             .with_pass(DrawUi::new()),
     );
-    let mut game = Application::build(resources_directory, Example)?
+    let game_data = GameDataBuilder::default()
         .with::<ExampleSystem>(ExampleSystem, "example_system", &[])
-        .with_frame_limit(FrameRateLimitStrategy::Unlimited, 0)
         .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
         .with_bundle(UiBundle::<String, String>::new())?
         .with_bundle(HotReloadBundle::default())?
         .with_bundle(FPSCounterBundle::default())?
         .with_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?
-        .with_bundle(InputBundle::<String, String>::new())?
-        .build()?;
+        .with_bundle(InputBundle::<String, String>::new())?;
+    let mut game = Application::build(resources_directory, Example)?
+        .with_frame_limit(FrameRateLimitStrategy::Unlimited, 0)
+        .build(game_data)?;
     game.run();
     Ok(())
 }

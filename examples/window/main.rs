@@ -9,11 +9,7 @@ use amethyst::renderer::{DisplayConfig, DrawFlat, Event, KeyboardInput, Pipeline
 struct Example;
 
 impl<'a, 'b> State<GameData<'a, 'b>> for Example {
-    fn handle_event(
-        &mut self,
-        _: StateData<GameData<'a, 'b>>,
-        event: Event,
-    ) -> Trans<GameData<'a, 'b>> {
+    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
         match event {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::KeyboardInput {
@@ -30,7 +26,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
         }
     }
 
-    fn update(&mut self, data: StateData<GameData<'a, 'b>>) -> Trans<GameData<'a, 'b>> {
+    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
         data.data.update(&data.world);
         Trans::None
     }

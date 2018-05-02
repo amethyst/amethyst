@@ -307,7 +307,8 @@ mod tests {
         };
     }
 
-    // Test Parent * Transform -> GlobalTransform (Parent is after child, therefore must be special cased in list)
+    // Test Parent * Transform -> GlobalTransform
+    // (Parent is after child, therefore must be special cased in list)
     #[test]
     fn parent_after() {
         let (mut world, mut hs, mut system) = transform_world();
