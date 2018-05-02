@@ -12,7 +12,7 @@ pub fn grey_bat(sprite_sheet: &SpriteSheet, world: &mut World) -> Handle<Animati
 
     let sprite_offset_sampler = {
         Sampler {
-            input: vec![0., 0.5, 0.7, 0.9, 1.1, 1.3, 1.5, 1.7, 1.9, 2.1, 2.3],
+            input: vec![0., 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4],
             function: InterpolationFunction::Step,
             output: sprite_offsets,
         }
@@ -50,7 +50,7 @@ pub fn brown_bat(sprite_sheet: &SpriteSheet, world: &mut World) -> Handle<Animat
 
     let sprite_offset_sampler = {
         Sampler {
-            input: vec![0., 0.2, 0.4, 0.6, 0.8],
+            input: vec![0., 0.1, 0.2, 0.3, 0.4],
             function: InterpolationFunction::Step,
             output: sprite_offsets,
         }
