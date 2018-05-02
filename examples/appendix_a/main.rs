@@ -86,7 +86,7 @@ fn run() -> Result<()> {
         .with_resource(pong_config.ball)
         .with_resource(pong_config.paddles)
         .build(game_data)?;
-    
+
     game.run();
     Ok(())
 }

@@ -25,10 +25,10 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::KeyboardInput {
                     input:
-                    KeyboardInput {
-                        virtual_keycode: Some(VirtualKeyCode::Escape),
-                        ..
-                    },
+                        KeyboardInput {
+                            virtual_keycode: Some(VirtualKeyCode::Escape),
+                            ..
+                        },
                     ..
                 } => Trans::Quit,
                 _ => Trans::None,

@@ -4,7 +4,7 @@
 extern crate amethyst;
 extern crate rayon;
 
-use amethyst::{Application, Error, State, Trans, GameDataBuilder, GameData, StateData};
+use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
 use amethyst::assets::{Loader, Result as AssetResult, SimpleFormat};
 use amethyst::config::Config;
 use amethyst::core::cgmath::{Array, Vector3};

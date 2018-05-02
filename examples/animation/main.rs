@@ -54,7 +54,7 @@ impl Default for Example {
 
 impl<'a, 'b> State<GameData<'a, 'b>> for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
-        let StateData { world , .. } = data;
+        let StateData { world, .. } = data;
         // Initialise the scene with an object, a light and a camera.
         let sphere_entity = initialise_sphere(world);
         self.sphere = Some(sphere_entity);
@@ -64,7 +64,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
     }
 
     fn handle_event(&mut self, data: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        let StateData { world , .. } = data;
+        let StateData { world, .. } = data;
         match event {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::KeyboardInput {

@@ -37,7 +37,7 @@ struct Example {
 }
 
 impl<'a, 'b> State<GameData<'a, 'b>> for Example {
-    fn on_start(&mut self, data : StateData<GameData>) {
+    fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
         // Initialise the scene with an object, a light and a camera.
         initialise_sphere(world);
@@ -254,7 +254,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
         }
     }
 
-    fn update(&mut self, state_data : StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+    fn update(&mut self, state_data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
         let StateData { world, data } = state_data;
         data.update(&world);
         let mut ui_text = world.write_storage::<UiText>();
