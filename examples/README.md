@@ -104,3 +104,12 @@ Render a basic UI.
 
 ### Appendix A
 From the book, it is a minor update to the Pong example that uses `Config` files instead of hardcoded constants.
+
+### Game Data
+
+Load graphics objects from disc using the asset loader.
+Also contains a custom system that move the camera and the scene.
+Adds the ability to pause the scene by hitting `Space`.
+Demonstrates how to use custom `GameData`, with three different states: `Loading`, `Main`, `Paused`.
+
+![game_data_example_result](game_data/screenshot.png)
