@@ -149,6 +149,10 @@ path = "examples/pong_tutorial_03/main.rs"
 name = "appendix_a"
 path = "examples/appendix_a/main.rs"
 
+[[example]]
+name = "game_data"
+path = "examples/game_data/main.rs"
+
 [workspace]
 members = ["amethyst_gltf"]
 
