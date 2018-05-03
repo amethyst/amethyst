@@ -136,16 +136,7 @@ impl State for Example {
 
             let animation_id = 0;
 
-            // If you want to start an animation from the beginning, use this:
-            // animation_set.add_animation(
-            //     animation_id,
-            //     &animation,
-            //     EndControl::Loop(None),
-            //     1., // Rate at which the animation plays
-            //     AnimationCommand::Start,
-            // );
-
-            // Otherwise, this offsets the animation:
+            // Offset the animation:
             let animation_control = AnimationControl::new(
                 animation,
                 EndControl::Loop(None),
