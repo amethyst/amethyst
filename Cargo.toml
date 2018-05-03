@@ -149,6 +149,10 @@ name = "appendix_a"
 path = "examples/appendix_a/main.rs"
 
 [[example]]
+name = "custom_game_data"
+path = "examples/custom_game_data/main.rs"
+
+[[example]]
 name = "fly_camera"
 path = "examples/fly_camera/main.rs"
 
