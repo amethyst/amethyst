@@ -35,9 +35,6 @@ pub use reload::{HotReloadBundle, HotReloadStrategy, HotReloadSystem, Reload, Si
 pub use source::{Directory, Source};
 pub use storage::{AssetStorage, Handle, Processor, WeakHandle};
 
-#[cfg(feature = "profiler")]
-use thread_profiler::{register_thread_with_profiler, write_profile};
-
 mod asset;
 mod cache;
 mod error;

@@ -19,7 +19,13 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Add vertex skinning, ([#545]), ([#619])
 * Update dependencies to the newest versions: cgmath, winit, glutin, gfx, gfx_glyph, ([#527]), ([#572]), ([#648])
 * Expose a basic visibility ordering system, with the ability to swap in better replacement systems, ([#595])
-
+* Audio `Output` is now added directly rather than as an `Option`, should now be fetched with `Option<Read<'a, Output>>`, ([#679])
+* New nightly feature that enables `shred`s nightly feature, ([#689])
+* Refactored bundles to only contain `System`s, ([#675])
+* Rodio updated to 0.7, ([#676])
+* Refactor to use new specs, major breakage! ([#674]), ([#679]), ([#683]).
+* `Transform` refactored, and added lots of utility functions, ([#660])
+* Disable multisampling on all examples, and add a single example with multisampling on, ([#671])
 
 ### Fixed
 * Asset loading tolerates paths constructed using back slashes ([#623]).
@@ -53,6 +59,15 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#572]: https://github.com/amethyst/amethyst/pull/572
 [#648]: https://github.com/amethyst/amethyst/pull/648
 [#595]: https://github.com/amethyst/amethyst/pull/595
+[#679]: https://github.com/amethyst/amethyst/pull/679
+[#675]: https://github.com/amethyst/amethyst/pull/675
+[#676]: https://github.com/amethyst/amethyst/pull/676
+[#674]: https://github.com/amethyst/amethyst/pull/674
+[#679]: https://github.com/amethyst/amethyst/pull/679
+[#683]: https://github.com/amethyst/amethyst/pull/683
+[#660]: https://github.com/amethyst/amethyst/pull/660
+[#671]: https://github.com/amethyst/amethyst/pull/671
+[#689]: https://github.com/amethyst/amethyst/pull/689
 
 ## [0.5.1] - 2017-08-30
 

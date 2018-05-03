@@ -38,3 +38,4 @@ serde = { version = "1", features = ["serde_derive"] }
 
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]
+nightly = [ "amethyst_core/nightly" ]

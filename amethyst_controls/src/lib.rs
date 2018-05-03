@@ -7,7 +7,6 @@ extern crate log;
 extern crate winit;
 extern crate shrev;
 
-#[macro_use]
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
 
