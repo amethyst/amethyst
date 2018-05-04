@@ -5,12 +5,12 @@ use amethyst::core::SystemBundle;
 use amethyst::{DataInit, Error, Result};
 use rayon::ThreadPool;
 
-pub struct GameData<'a, 'b> {
+pub struct CustomGameData<'a, 'b> {
     pub base: Dispatcher<'a, 'b>,
     pub running: Dispatcher<'a, 'b>,
 }
 
-impl<'a, 'b> GameData<'a, 'b> {
+impl<'a, 'b> CustomGameData<'a, 'b> {
     /// Update game data
     pub fn update(&mut self, world: &World, running: bool) {
         if running {
@@ -20,20 +20,20 @@ impl<'a, 'b> GameData<'a, 'b> {
     }
 }
 
-pub struct GameDataBuilder<'a, 'b> {
+pub struct CustomGameDataBuilder<'a, 'b> {
     pub base: DispatcherBuilder<'a, 'b>,
     pub running: DispatcherBuilder<'a, 'b>,
 }
 
-impl<'a, 'b> Default for GameDataBuilder<'a, 'b> {
+impl<'a, 'b> Default for CustomGameDataBuilder<'a, 'b> {
     fn default() -> Self {
-        GameDataBuilder::new()
+        CustomGameDataBuilder::new()
     }
 }
 
-impl<'a, 'b> GameDataBuilder<'a, 'b> {
+impl<'a, 'b> CustomGameDataBuilder<'a, 'b> {
     pub fn new() -> Self {
-        GameDataBuilder {
+        CustomGameDataBuilder {
             base: DispatcherBuilder::new(),
             running: DispatcherBuilder::new(),
         }
@@ -58,8 +58,8 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     }
 }
 
-impl<'a, 'b> DataInit<GameData<'a, 'b>> for GameDataBuilder<'a, 'b> {
-    fn build(self, world: &mut World) -> GameData<'a, 'b> {
+impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomGameDataBuilder<'a, 'b> {
+    fn build(self, world: &mut World) -> CustomGameData<'a, 'b> {
         #[cfg(not(no_threading))]
         let pool = world.read_resource::<Arc<ThreadPool>>().clone();
 
@@ -75,6 +75,6 @@ impl<'a, 'b> DataInit<GameData<'a, 'b>> for GameDataBuilder<'a, 'b> {
         let mut running = self.running.build();
         running.setup(&mut world.res);
 
-        GameData { base, running }
+        CustomGameData { base, running }
     }
 }

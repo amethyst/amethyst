@@ -1,7 +1,7 @@
 (
   fullscreen: false,
   multisampling: 0,
-  title: "Renderable Example",
+  title: "Custom GameData Example",
   visibility: true,
   vsync: false,
 )

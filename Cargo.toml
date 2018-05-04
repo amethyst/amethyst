@@ -150,8 +150,8 @@ name = "appendix_a"
 path = "examples/appendix_a/main.rs"
 
 [[example]]
-name = "game_data"
-path = "examples/game_data/main.rs"
+name = "custom_game_data"
+path = "examples/custom_game_data/main.rs"
 
 [workspace]
 members = ["amethyst_gltf"]
