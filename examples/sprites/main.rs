@@ -16,6 +16,10 @@ mod png_loader;
 mod sprite;
 mod sprite_sheet_loader;
 
+use std::time::Duration;
+
+use amethyst::animation::{get_animation_set, AnimationBundle, AnimationCommand, AnimationControl,
+                          ControlState, EndControl, MaterialTextureSet};
 use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::cgmath::{Matrix4, Point3, Transform as CgTransform, Vector3};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
@@ -26,8 +30,6 @@ use amethyst::renderer::{Camera, ColorMask, DisplayConfig, DrawFlat, Event, Keyb
                          Material, MaterialDefaults, Mesh, Pipeline, PosTex, Projection,
                          RenderBundle, ScreenDimensions, Stage, VirtualKeyCode, WindowEvent, ALPHA};
 use amethyst::ui::{DrawUi, UiBundle};
-use amethyst_animation::{get_animation_set, AnimationBundle, AnimationCommand, EndControl,
-                         MaterialTextureSet};
 
 const BACKGROUND_COLOUR: [f32; 4] = [0.0, 0.0, 0.0, 1.0]; // black
 
@@ -131,14 +133,19 @@ impl State for Example {
             let mut animation_control_set_storage = world.write_storage();
             let animation_set =
                 get_animation_set::<u32, Material>(&mut animation_control_set_storage, entity);
+
             let animation_id = 0;
-            animation_set.add_animation(
-                animation_id,
-                &animation,
+
+            // Offset the animation:
+            let animation_control = AnimationControl::new(
+                animation,
                 EndControl::Loop(None),
-                1., // Rate at which the animation plays
+                // Offset from beginning
+                ControlState::Deferred(Duration::from_millis(i as u64 * 200)),
                 AnimationCommand::Start,
+                1., // Rate at which the animation plays
             );
+            animation_set.insert(animation_id, animation_control);
 
             // Store the entity
             self.entities.push(entity);
@@ -173,10 +180,7 @@ fn initialise_camera(world: &mut World) -> Entity {
     world
         .create_entity()
         .with(Camera::from(Projection::orthographic(
-            0.0,
-            width,
-            height,
-            0.0,
+            0.0, width, height, 0.0,
         )))
         .with(GlobalTransform(Matrix4::from_translation(
             Vector3::new(0.0, 0.0, 1.0).into(),
