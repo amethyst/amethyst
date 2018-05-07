@@ -71,7 +71,7 @@ where
             pipe,
             renderer,
             cached_size,
-            event_vec: Vec::new(),
+            event_vec: Vec::with_capacity(20),
         }
     }
 
