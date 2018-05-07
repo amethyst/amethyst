@@ -25,7 +25,7 @@ hibitset = { version = "0.5.0", features = ["parallel"] }
 rusttype = "0.4"
 shred-derive = "0.5.0-alpha1"
 shred = "0.7.0-alpha3"
-shrev = "0.8"
+shrev = "1.0.0-alpha1"
 unicode-normalization = "0.1"
 unicode-segmentation = "1.2"
 winit = "0.13.1"
