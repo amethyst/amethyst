@@ -5,6 +5,7 @@ extern crate amethyst_renderer;
 #[macro_use]
 extern crate log;
 extern crate winit;
+extern crate shrev;
 
 #[macro_use]
 #[cfg(feature = "profiler")]
@@ -13,7 +14,9 @@ extern crate thread_profiler;
 mod components;
 mod bundles;
 mod systems;
+mod resources;
 
 pub use self::bundles::FlyControlBundle;
 pub use self::components::FlyControlTag;
-pub use self::systems::{FlyMovementSystem, FreeRotationSystem, MouseCenterLockSystem};
+pub use self::systems::{FlyMovementSystem, FreeRotationSystem, MouseCenterLockSystem, MouseFocusUpdateSystem};
+pub use self::resources::WindowFocus;

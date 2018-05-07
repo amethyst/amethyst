@@ -9,9 +9,6 @@ use crossbeam::sync::MsQueue;
 use hibitset::BitSet;
 use rayon::ThreadPool;
 
-#[cfg(feature = "profiler")]
-use thread_profiler::{register_thread_with_profiler, write_profile};
-
 use asset::{Asset, FormatValue};
 use error::{ErrorKind, Result, ResultExt};
 use progress::Tracker;

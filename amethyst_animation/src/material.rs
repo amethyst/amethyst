@@ -41,6 +41,10 @@ impl MaterialTextureSet {
         }
     }
 
+    pub fn len(&self) -> usize {
+        self.textures.len()
+    }
+
     pub fn clear(&mut self) {
         self.textures.clear();
         self.texture_inverse.clear();
