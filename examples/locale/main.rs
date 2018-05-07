@@ -2,10 +2,10 @@
 
 extern crate amethyst;
 
+use amethyst::Error;
 use amethyst::assets::{AssetStorage, Handle, Loader, Processor};
 use amethyst::locale::*;
 use amethyst::prelude::*;
-use amethyst::Error;
 
 struct Example {
     handle: Option<Handle<Locale>>,
@@ -13,9 +13,7 @@ struct Example {
 
 impl Example {
     pub fn new() -> Self {
-        Example {
-            handle: None,
-        }
+        Example { handle: None }
     }
 }
 

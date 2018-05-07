@@ -180,7 +180,10 @@ fn initialise_camera(world: &mut World) -> Entity {
     world
         .create_entity()
         .with(Camera::from(Projection::orthographic(
-            0.0, width, height, 0.0,
+            0.0,
+            width,
+            height,
+            0.0,
         )))
         .with(GlobalTransform(Matrix4::from_translation(
             Vector3::new(0.0, 0.0, 1.0).into(),
