@@ -34,7 +34,7 @@ pub enum InputEvent<T> {
     ButtonReleased(Button),
     /// The mouse pointer moved on screen
     CursorMoved { delta_x: f64, delta_y: f64 },
-    /// The mouse device moved.  Use this for any use of the mouse that doesn't involve a standard mouse cursor.
+    /// The mouse device moved.  Use this for any use of the mouse that doesn't involve a standard mouse pointer.
     MouseMoved { delta_x: f64, delta_y: f64 },
     /// The associated action had one of its keys pressed.
     ActionPressed(T),
