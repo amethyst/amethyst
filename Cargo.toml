@@ -141,6 +141,10 @@ name = "fly_camera"
 path = "examples/fly_camera/main.rs"
 
 [[example]]
+name = "arc_ball_camera"
+path = "examples/arc_ball_camera/main.rs"
+
+[[example]]
 name = "sprites"
 path = "examples/sprites/main.rs"
 

@@ -2,8 +2,9 @@ use std::marker::PhantomData;
 use std::hash::Hash;
 
 use amethyst_core::cgmath::{Deg, Vector3};
-use amethyst_core::specs::prelude::{Join, Read, ReadExpect, ReadStorage, Resources, System, Write,
-                                    WriteStorage};
+use amethyst_core::specs::prelude::{
+    Join, Read, ReadExpect, ReadStorage, Resources, System, Write, WriteStorage,
+};
 use amethyst_core::timing::Time;
 use amethyst_core::transform::Transform;
 use amethyst_input::InputHandler;
@@ -11,7 +12,7 @@ use amethyst_renderer::{ScreenDimensions, WindowMessages};
 use amethyst_core::shrev::{EventChannel, ReaderId};
 use winit::{Event, WindowEvent};
 
-use components::FlyControlTag;
+use components::{ArcBallControlTag, FlyControlTag};
 use resources::WindowFocus;
 
 /// The system that manages the fly movement.
@@ -76,6 +77,35 @@ where
 
         for (transform, _) in (&mut transform, &tag).join() {
             transform.move_along_local(dir, time.delta_seconds() * self.speed);
+        }
+    }
+}
+
+/// The system that manages the arc ball movement;
+/// In essence, the system will allign the camera with its target while keeping the distance to it
+/// and while keeping the orientation of the camera.
+/// To modify the orientation of the camera in accordance with the mouse input, please use the
+/// FreeRotationSystem.
+pub struct ArcBallMovementSystem;
+
+impl<'a> System<'a> for ArcBallMovementSystem {
+    type SystemData = (
+        WriteStorage<'a, Transform>,
+        ReadStorage<'a, ArcBallControlTag>,
+    );
+
+    fn run(&mut self, (mut transforms, tags): Self::SystemData) {
+        let mut position = None;
+        for (transform, arc_ball_camera_tag) in (&transforms, &tags).join() {
+            let pos_vec = transform.rotation * -Vector3::unit_z() * arc_ball_camera_tag.distance;
+            if let Some(target_transform) = transforms.get(arc_ball_camera_tag.target) {
+                position = Some(target_transform.translation - pos_vec);
+            }
+        }
+        if let Some(new_pos) = position {
+            for (transform, _) in (&mut transforms, &tags).join() {
+                transform.translation = new_pos;
+            }
         }
     }
 }
