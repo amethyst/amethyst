@@ -81,46 +81,27 @@ where
 }
 
 /// The system that manages the arc ball movement;
-pub struct ArcBallMovementSystem<A, B> {
-    sensitivity_x: f32,
-    sensitivity_y: f32,
-    _marker1: PhantomData<A>,
-    _marker2: PhantomData<B>,
-}
+pub struct ArcBallMovementSystem;
 
-impl<A, B> ArcBallMovementSystem<A, B> {
-    pub fn new(sensitivity_x: f32, sensitivity_y: f32) -> Self {
-        ArcBallMovementSystem {
-            sensitivity_x,
-            sensitivity_y,
-            _marker1: PhantomData,
-            _marker2: PhantomData,
-        }
-    }
-}
-
-impl<'a, A, B> System<'a> for ArcBallMovementSystem<A, B>
-where
-    A: Send + Sync + Hash + Eq + Clone + 'static,
-    B: Send + Sync + Hash + Eq + Clone + 'static,
-{
+impl<'a> System<'a> for ArcBallMovementSystem {
     type SystemData = (
         Read<'a, Time>,
         WriteStorage<'a, Transform>,
-        Read<'a, InputHandler<A, B>>,
         ReadStorage<'a, ArcBallCameraTag>,
     );
 
-    fn run(&mut self, (time, mut transforms, input, tag): Self::SystemData) {
-        if let Some((posx, posy)) = input.mouse_position() {
-            for (transform, arcBallCameraTag) in (&mut transforms, &tag).join() {
-                if let Some(targetTransform) = transforms.get(arcBallCameraTag.target) {
-                    let (x, y, _) = targetTransform.translation;
-                    let offset_x = x as f32 - posx as f32;
-                    let offset_y = y as f32 - posy as f32;
-                    transform.pitch_local(Deg(offset_y * self.sensitivity_y));
-                    transform.yaw_global(Deg(offset_x * self.sensitivity_x));
-                }
+    fn run(&mut self, (time, mut transforms, tags): Self::SystemData) {
+        let position: Option<Vector3> = None;
+        for (transform, arcBallCameraTag) in (&transforms, &tags) {
+            if let Some(targetTransform) = transforms.get(arcBallCameraTag.target) {
+                let target_to_cam = transform.translate - targetTransform.translate;
+                let new_target_to_cam = target_to_cam.normalize() * arcBallCameraTag.distance;
+                position = Some(targetTransform.translate + new_target_to_cam);
+            }
+        }
+        if let Some(new_pos) = position {
+            for(transform, _) in (&mut transforms, &tags) {
+                transform.translate = new_pos;
             }
         }
     }

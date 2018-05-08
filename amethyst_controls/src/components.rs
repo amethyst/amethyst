@@ -12,6 +12,7 @@ impl Component for FlyControlTag {
 
 pub struct ArcBallCameraTag {
     pub target: Entity,
+    pub distance: f32,
 }
 
 impl Component for ArcBallCameraTag {
