@@ -137,8 +137,8 @@ pub struct MouseCenterLockSystem;
 impl<'a> System<'a> for MouseCenterLockSystem {
     type SystemData = (
         ReadExpect<'a, ScreenDimensions>,
-        Write<'a, WindowMessages>, 
-        Write<'a, WindowFocus>
+        Write<'a, WindowMessages>,
+        Write<'a, WindowFocus>,
     );
 
     fn run(&mut self, (dim, mut msg, focus): Self::SystemData) {
@@ -150,7 +150,6 @@ impl<'a> System<'a> for MouseCenterLockSystem {
                 if let Err(err) = win.set_cursor_position(half_x, half_y) {
                     error!("Unable to set the cursor position! Error: {:?}", err);
                 }
-
             });
         } else {
             release_cursor(&mut msg);
@@ -174,17 +173,12 @@ pub struct MouseFocusUpdateSystem {
 
 impl MouseFocusUpdateSystem {
     pub fn new() -> MouseFocusUpdateSystem {
-        MouseFocusUpdateSystem { 
-            event_reader: None 
-        }
+        MouseFocusUpdateSystem { event_reader: None }
     }
 }
 
 impl<'a> System<'a> for MouseFocusUpdateSystem {
-    type SystemData = (
-        Read<'a, EventChannel<Event>>,
-        Write<'a, WindowFocus>,
-    );
+    type SystemData = (Read<'a, EventChannel<Event>>, Write<'a, WindowFocus>);
 
     fn run(&mut self, (events, mut focus): Self::SystemData) {
         for event in events.read(&mut self.event_reader.as_mut().unwrap()) {
@@ -192,7 +186,7 @@ impl<'a> System<'a> for MouseFocusUpdateSystem {
                 &Event::WindowEvent { ref event, .. } => match event {
                     &WindowEvent::Focused(focused) => {
                         focus.is_focused = focused;
-                    },
+                    }
                     _ => (),
                 },
                 _ => (),

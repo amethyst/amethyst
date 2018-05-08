@@ -20,7 +20,10 @@ where
     I: Send + Sync + 'static,
     T: AnimationSampling,
 {
-    controls.entry(entity).unwrap().or_insert_with(AnimationControlSet::default)
+    controls
+        .entry(entity)
+        .unwrap()
+        .or_insert_with(AnimationControlSet::default)
 }
 
 /// Sampler primitive
