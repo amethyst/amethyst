@@ -1,6 +1,7 @@
 use amethyst_core::cgmath::{Deg, Vector3};
-use amethyst_core::specs::prelude::{Join, Read, ReadExpect, ReadStorage, Resources, System, Write,
-                                    WriteStorage};
+use amethyst_core::specs::prelude::{
+    Join, Read, ReadExpect, ReadStorage, Resources, System, Write, WriteStorage,
+};
 use amethyst_core::timing::Time;
 use amethyst_core::transform::Transform;
 use amethyst_input::InputHandler;
@@ -8,11 +9,11 @@ use amethyst_renderer::{ScreenDimensions, WindowMessages};
 use std::hash::Hash;
 use std::marker::PhantomData;
 
-use components::FlyControlTag;
+use components::{ArcBallControlTag, FlyControlTag};
 
+use resources::WindowFocus;
 use shrev::{EventChannel, ReaderId};
 use winit::{Event, WindowEvent};
-use resources::WindowFocus;
 
 /// The system that manages the fly movement.
 /// Generic parameters are the parameters for the InputHandler.
@@ -80,6 +81,35 @@ where
     }
 }
 
+/// The system that manages the arc ball movement;
+/// In essence, the system will allign the camera with its target while keeping the distance to it
+/// and while keeping the orientation of the camera.
+/// To modify the orientation of the camera in accordance with the mouse input, please use the
+/// FreeRotationSystem.
+pub struct ArcBallMovementSystem;
+
+impl<'a> System<'a> for ArcBallMovementSystem {
+    type SystemData = (
+        WriteStorage<'a, Transform>,
+        ReadStorage<'a, ArcBallControlTag>,
+    );
+
+    fn run(&mut self, (mut transforms, tags): Self::SystemData) {
+        let mut position = None;
+        for (transform, arc_ball_camera_tag) in (&transforms, &tags).join() {
+            let pos_vec = transform.rotation * -Vector3::unit_z() * arc_ball_camera_tag.distance;
+            if let Some(target_transform) = transforms.get(arc_ball_camera_tag.target) {
+                position = Some(target_transform.translation - pos_vec);
+            }
+        }
+        if let Some(new_pos) = position {
+            for (transform, _) in (&mut transforms, &tags).join() {
+                transform.translation = new_pos;
+            }
+        }
+    }
+}
+
 /// The system that manages the view rotation.
 /// Controlled by the mouse.
 pub struct FreeRotationSystem<A, B> {
@@ -137,8 +167,8 @@ pub struct MouseCenterLockSystem;
 impl<'a> System<'a> for MouseCenterLockSystem {
     type SystemData = (
         ReadExpect<'a, ScreenDimensions>,
-        Write<'a, WindowMessages>, 
-        Write<'a, WindowFocus>
+        Write<'a, WindowMessages>,
+        Write<'a, WindowFocus>,
     );
 
     fn run(&mut self, (dim, mut msg, focus): Self::SystemData) {
@@ -150,7 +180,6 @@ impl<'a> System<'a> for MouseCenterLockSystem {
                 if let Err(err) = win.set_cursor_position(half_x, half_y) {
                     error!("Unable to set the cursor position! Error: {:?}", err);
                 }
-
             });
         } else {
             release_cursor(&mut msg);
@@ -174,17 +203,12 @@ pub struct MouseFocusUpdateSystem {
 
 impl MouseFocusUpdateSystem {
     pub fn new() -> MouseFocusUpdateSystem {
-        MouseFocusUpdateSystem { 
-            event_reader: None 
-        }
+        MouseFocusUpdateSystem { event_reader: None }
     }
 }
 
 impl<'a> System<'a> for MouseFocusUpdateSystem {
-    type SystemData = (
-        Read<'a, EventChannel<Event>>,
-        Write<'a, WindowFocus>,
-    );
+    type SystemData = (Read<'a, EventChannel<Event>>, Write<'a, WindowFocus>);
 
     fn run(&mut self, (events, mut focus): Self::SystemData) {
         for event in events.read(&mut self.event_reader.as_mut().unwrap()) {
@@ -192,7 +216,7 @@ impl<'a> System<'a> for MouseFocusUpdateSystem {
                 &Event::WindowEvent { ref event, .. } => match event {
                     &WindowEvent::Focused(focused) => {
                         focus.is_focused = focused;
-                    },
+                    }
                     _ => (),
                 },
                 _ => (),
