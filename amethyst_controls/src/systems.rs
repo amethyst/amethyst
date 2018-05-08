@@ -1,4 +1,4 @@
-use amethyst_core::cgmath::{Deg, Vector3};
+use amethyst_core::cgmath::{Deg, InnerSpace, Vector3};
 use amethyst_core::specs::prelude::{Join, Read, ReadExpect, ReadStorage, Resources, System, Write,
                                     WriteStorage};
 use amethyst_core::timing::Time;
@@ -81,46 +81,26 @@ where
 }
 
 /// The system that manages the arc ball movement;
-pub struct ArcBallMovementSystem<A, B> {
-    sensitivity_x: f32,
-    sensitivity_y: f32,
-    _marker1: PhantomData<A>,
-    _marker2: PhantomData<B>,
-}
+pub struct ArcBallMovementSystem;
 
-impl<A, B> ArcBallMovementSystem<A, B> {
-    pub fn new(sensitivity_x: f32, sensitivity_y: f32) -> Self {
-        ArcBallMovementSystem {
-            sensitivity_x,
-            sensitivity_y,
-            _marker1: PhantomData,
-            _marker2: PhantomData,
-        }
-    }
-}
-
-impl<'a, A, B> System<'a> for ArcBallMovementSystem<A, B>
-where
-    A: Send + Sync + Hash + Eq + Clone + 'static,
-    B: Send + Sync + Hash + Eq + Clone + 'static,
-{
+impl<'a> System<'a> for ArcBallMovementSystem {
     type SystemData = (
-        Read<'a, Time>,
         WriteStorage<'a, Transform>,
-        Read<'a, InputHandler<A, B>>,
         ReadStorage<'a, ArcBallCameraTag>,
     );
 
-    fn run(&mut self, (time, mut transforms, input, tag): Self::SystemData) {
-        if let Some((posx, posy)) = input.mouse_position() {
-            for (transform, arcBallCameraTag) in (&mut transforms, &tag).join() {
-                if let Some(targetTransform) = transforms.get(arcBallCameraTag.target) {
-                    let (x, y, _) = targetTransform.translation;
-                    let offset_x = x as f32 - posx as f32;
-                    let offset_y = y as f32 - posy as f32;
-                    transform.pitch_local(Deg(offset_y * self.sensitivity_y));
-                    transform.yaw_global(Deg(offset_x * self.sensitivity_x));
-                }
+    fn run(&mut self, (mut transforms, tags): Self::SystemData) {
+        let mut position = None;
+        for (transform, arc_ball_camera_tag) in (&transforms, &tags).join() {
+            if let Some(target_transform) = transforms.get(arc_ball_camera_tag.target) {
+                let target_to_cam = transform.translation - target_transform.translation;
+                let new_target_to_cam = target_to_cam.normalize() * arc_ball_camera_tag.distance;
+                position = Some(target_transform.translation + new_target_to_cam);
+            }
+        }
+        if let Some(new_pos) = position {
+            for (transform, _) in (&mut transforms, &tags).join() {
+                transform.translation = new_pos;
             }
         }
     }
