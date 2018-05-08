@@ -171,7 +171,7 @@ impl<'a, 'b> Application<'a, 'b> {
                 states.handle_event(world, event.clone());
                 if !self.ignore_window_close {
                     if let &Event::WindowEvent {
-                        event: WindowEvent::Closed,
+                        event: WindowEvent::CloseRequested,
                         ..
                     } = &event
                     {
