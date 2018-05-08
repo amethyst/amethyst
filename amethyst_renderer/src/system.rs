@@ -30,6 +30,9 @@ pub struct RenderSystem<P> {
     #[derivative(Debug = "ignore")]
     renderer: Renderer,
     cached_size: (u32, u32),
+    // This only exists to allow the system to re-use a vec allocation
+    // during event compression.  It's length 0 except during `fn render`.
+    event_vec: Vec<Event>,
 }
 
 impl<P> RenderSystem<P>
@@ -68,6 +71,7 @@ where
             pipe,
             renderer,
             cached_size,
+            event_vec: Vec::with_capacity(20),
         }
     }
 
@@ -132,13 +136,11 @@ where
 
     fn render(&mut self, (mut event_handler, data): RenderData<P>) {
         self.renderer.draw(&mut self.pipe, data);
-
-        let mut events: Vec<Event> = Vec::new();
+        let events = &mut self.event_vec;
         self.renderer.events_mut().poll_events(|new_event| {
-            compress_events(&mut events, new_event);
+            compress_events(events, new_event);
         });
-
-        event_handler.iter_write(events);
+        event_handler.iter_write(events.drain(..));
     }
 }
 
