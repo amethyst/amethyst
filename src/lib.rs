@@ -30,7 +30,7 @@
 //!                 WindowEvent::KeyboardInput {
 //!                     input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Escape), .. }, ..
 //!                 } |
-//!                 WindowEvent::Closed => Trans::Quit,
+//!                 WindowEvent::CloseRequested => Trans::Quit,
 //!                 _ => Trans::None,
 //!             },
 //!             _ => Trans::None,
