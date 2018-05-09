@@ -120,7 +120,7 @@ fn run() -> Result<(), Error> {
         )?
         .with(ArcBallMovementSystem {}, "arc_ball_movement_system", &[])
         .with(
-            FreeRotationSystem::<String, String>::new(1., 1.),
+            FreeRotationSystem::<String, String>::new(10., 10.),
             "free_rotation_system",
             &[],
         )
