@@ -4,7 +4,8 @@ extern crate amethyst;
 
 use amethyst::assets::Loader;
 use amethyst::config::Config;
-use amethyst::controls::{ArcBallCameraTag, ArcBallMovementSystem, FreeRotationSystem};
+use amethyst::controls::{ArcBallCameraTag, ArcBallMovementSystem, FreeRotationSystem,
+                         MouseCenterLockSystem, MouseFocusUpdateSystem};
 use amethyst::core::cgmath::{Deg, Vector3};
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
@@ -117,17 +118,15 @@ fn run() -> Result<(), Error> {
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path),
         )?
+        .with(ArcBallMovementSystem {}, "arc_ball_movement_system", &[])
         .with(
             FreeRotationSystem::<String, String>::new(1., 1.),
             "free_rotation_system",
-            &["input_system"],
+            &[],
         )
-        .with(
-            ArcBallMovementSystem {},
-            "arc_ball_movement_system",
-            &["free_rotation_system"],
-        )
-        .with_bundle(TransformBundle::new().with_dep(&["arc_ball_movement_system"]))?
+        .with(MouseFocusUpdateSystem::new(), "mouse_focus", &[])
+        .with(MouseCenterLockSystem, "mouse_lock", &["mouse_focus"])
+        .with_bundle(TransformBundle::new().with_dep(&[]))?
         .with_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?
         .build()?;
     game.run();
