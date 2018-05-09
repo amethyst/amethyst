@@ -62,7 +62,6 @@ fern = "0.5"
 log = "0.4"
 rayon = "1.0.1"
 rustc_version_runtime = "0.1"
-shrev = "1.0.0-alpha1"
 winit = "0.13.1"
 
 thread_profiler = { version = "0.1", optional = true }

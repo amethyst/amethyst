@@ -42,7 +42,6 @@ log = "0.4"
 rayon = "1.0.1"
 serde = "1.0"
 serde_derive = "1.0"
-shrev = "1.0.0-alpha1"
 wavefront_obj = "5.0"
 winit = "0.13.1"
 

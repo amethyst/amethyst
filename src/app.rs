@@ -11,7 +11,7 @@ use fern;
 use log::LevelFilter;
 use rayon::{ThreadPool, ThreadPoolBuilder};
 use shred::Resource;
-use shrev::{EventChannel, ReaderId};
+use core::shrev::{EventChannel, ReaderId};
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
 use winit::{Event, WindowEvent};

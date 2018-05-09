@@ -20,7 +20,6 @@ amethyst_input = { path = "../amethyst_input", version = "0.2.1" }
 amethyst_renderer = { path = "../amethyst_renderer", version = "0.6.1" }
 winit = "0.13.1"
 log = "0.4"
-shrev = "0.8"
 
 thread_profiler = { version = "0.1", optional = true }
 

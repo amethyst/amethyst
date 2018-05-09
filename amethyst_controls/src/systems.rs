@@ -1,3 +1,6 @@
+use std::marker::PhantomData;
+use std::hash::Hash;
+
 use amethyst_core::cgmath::{Deg, Vector3};
 use amethyst_core::specs::prelude::{Join, Read, ReadExpect, ReadStorage, Resources, System, Write,
                                     WriteStorage};
@@ -5,13 +8,10 @@ use amethyst_core::timing::Time;
 use amethyst_core::transform::Transform;
 use amethyst_input::InputHandler;
 use amethyst_renderer::{ScreenDimensions, WindowMessages};
-use std::hash::Hash;
-use std::marker::PhantomData;
+use amethyst_core::shrev::{EventChannel, ReaderId};
+use winit::{Event, WindowEvent};
 
 use components::FlyControlTag;
-
-use shrev::{EventChannel, ReaderId};
-use winit::{Event, WindowEvent};
 use resources::WindowFocus;
 
 /// The system that manages the fly movement.

@@ -3,7 +3,7 @@
 use std::borrow::Borrow;
 use std::hash::Hash;
 
-use shrev::EventChannel;
+use amethyst_core::shrev::EventChannel;
 use smallvec::SmallVec;
 use winit::{DeviceEvent, ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode,
             WindowEvent};
