@@ -42,9 +42,7 @@ where
         AX: Hash + Eq + Clone + Send + Sync + 'static,
         AC: Hash + Eq + Clone + Send + Sync + 'static,
     {
-        if let &Event::WindowEvent { ref event, .. } = event {
-            handler.send_event(event, output);
-        }
+        handler.send_event(event, output);
     }
 }
 
