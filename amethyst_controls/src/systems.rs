@@ -1,18 +1,17 @@
 use amethyst_core::cgmath::{Deg, Vector3};
-use amethyst_core::specs::prelude::{Join, Read, ReadExpect, ReadStorage, Resources, System, Write,
+use amethyst_core::specs::prelude::{Join, Read, ReadStorage, Resources, System, Write,
                                     WriteStorage};
 use amethyst_core::timing::Time;
 use amethyst_core::transform::Transform;
 use amethyst_input::InputHandler;
-use amethyst_renderer::{ScreenDimensions, WindowMessages};
+use amethyst_renderer::WindowMessages;
 use std::hash::Hash;
 use std::marker::PhantomData;
 
 use components::FlyControlTag;
 
 use shrev::{EventChannel, ReaderId};
-use winit::{Event, WindowEvent};
-use resources::WindowFocus;
+use winit::{Event, WindowEvent, DeviceEvent};
 
 /// The system that manages the fly movement.
 /// Generic parameters are the parameters for the InputHandler.
@@ -82,11 +81,13 @@ where
 
 /// The system that manages the view rotation.
 /// Controlled by the mouse.
+/// Handles raw mouse input.
 pub struct FreeRotationSystem<A, B> {
     sensitivity_x: f32,
     sensitivity_y: f32,
     _marker1: PhantomData<A>,
     _marker2: PhantomData<B>,
+    event_reader: Option<ReaderId<Event>>,
 }
 
 impl<A, B> FreeRotationSystem<A, B> {
@@ -96,6 +97,7 @@ impl<A, B> FreeRotationSystem<A, B> {
             sensitivity_y,
             _marker1: PhantomData,
             _marker2: PhantomData,
+            event_reader: None
         }
     }
 }
@@ -106,87 +108,67 @@ where
     B: Send + Sync + Hash + Eq + Clone + 'static,
 {
     type SystemData = (
-        Read<'a, InputHandler<A, B>>,
-        Read<'a, WindowFocus>,
-        ReadExpect<'a, ScreenDimensions>,
+        Read<'a, EventChannel<Event>>,
         WriteStorage<'a, Transform>,
         ReadStorage<'a, FlyControlTag>,
     );
 
-    fn run(&mut self, (input, focus, dim, mut transform, tag): Self::SystemData) {
-        if focus.is_focused {
-            // take the same mid-point as the MouseCenterLockSystem
-            let half_x = dim.width() as i32 / 2;
-            let half_y = dim.height() as i32 / 2;
-
-            if let Some((posx, posy)) = input.mouse_position() {
-                let offset_x = half_x as f32 - posx as f32;
-                let offset_y = half_y as f32 - posy as f32;
-                for (transform, _) in (&mut transform, &tag).join() {
-                    transform.pitch_local(Deg(offset_y * self.sensitivity_y));
-                    transform.yaw_global(Deg(offset_x * self.sensitivity_x));
-                }
+    fn run(&mut self, (events, mut transform, tag): Self::SystemData) {
+        for event in events.read(&mut self.event_reader.as_mut().unwrap()) {
+            match event {
+                &Event::DeviceEvent { ref event, .. } => {
+                    match event {
+                        &DeviceEvent::MouseMotion  { delta: (x, y) } => {
+                            for (transform, _) in (&mut transform, &tag).join() {
+                                transform.pitch_local(Deg( (-1.0) * y as f32 * self.sensitivity_y));
+                                transform.yaw_global(Deg(  (-1.0) * x as f32 * self.sensitivity_x));
+                            }
+                        },
+                        _ => (),
+                    }
+                },
+                _ => (),
             }
-        }
-    }
-}
-
-/// The system that locks the mouse to the center of the screen. Useful for first person camera.
-pub struct MouseCenterLockSystem;
-
-impl<'a> System<'a> for MouseCenterLockSystem {
-    type SystemData = (
-        ReadExpect<'a, ScreenDimensions>,
-        Write<'a, WindowMessages>,
-        Write<'a, WindowFocus>,
-    );
-
-    fn run(&mut self, (dim, mut msg, focus): Self::SystemData) {
-        use amethyst_renderer::mouse::*;
-        if focus.is_focused {
-            let half_x = dim.width() as i32 / 2;
-            let half_y = dim.height() as i32 / 2;
-            msg.send_command(move |win| {
-                if let Err(err) = win.set_cursor_position(half_x, half_y) {
-                    error!("Unable to set the cursor position! Error: {:?}", err);
-                }
-            });
-        } else {
-            release_cursor(&mut msg);
         }
     }
 
     fn setup(&mut self, res: &mut Resources) {
         use amethyst_core::specs::prelude::SystemData;
-        use amethyst_renderer::mouse::*;
+
         Self::SystemData::setup(res);
-        let mut msg = res.fetch_mut::<WindowMessages>();
-        grab_cursor(&mut msg);
-        set_mouse_cursor_none(&mut msg);
+        self.event_reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
     }
 }
 
-/// A system which reads Events and saves if a window has lost focus in a WindowFocus resource
-pub struct MouseFocusUpdateSystem {
+/// A system which hides the cursor and centers it so it can't leave the window
+/// Releases cursor if window focus is lost
+pub struct CursorHideSystem {
     event_reader: Option<ReaderId<Event>>,
 }
 
-impl MouseFocusUpdateSystem {
-    pub fn new() -> MouseFocusUpdateSystem {
-        MouseFocusUpdateSystem { event_reader: None }
+impl CursorHideSystem {
+    pub fn new() -> CursorHideSystem {
+        CursorHideSystem {
+            event_reader: None
+        }
     }
 }
 
-impl<'a> System<'a> for MouseFocusUpdateSystem {
-    type SystemData = (Read<'a, EventChannel<Event>>, Write<'a, WindowFocus>);
+impl<'a> System<'a> for CursorHideSystem {
+    type SystemData = (
+        Read<'a, EventChannel<Event>>,
+        Write<'a, WindowMessages>,
+    );
 
-    fn run(&mut self, (events, mut focus): Self::SystemData) {
+    fn run(&mut self, (events, mut msg): Self::SystemData) {
+        use amethyst_renderer::mouse::*;
+
         for event in events.read(&mut self.event_reader.as_mut().unwrap()) {
             match event {
                 &Event::WindowEvent { ref event, .. } => match event {
                     &WindowEvent::Focused(focused) => {
-                        focus.is_focused = focused;
-                    }
+                        if focused { grab_cursor(&mut msg) } else { release_cursor(&mut msg) }
+                    },
                     _ => (),
                 },
                 _ => (),
@@ -196,7 +178,13 @@ impl<'a> System<'a> for MouseFocusUpdateSystem {
 
     fn setup(&mut self, res: &mut Resources) {
         use amethyst_core::specs::prelude::SystemData;
+        use amethyst_renderer::mouse::*;
+
         Self::SystemData::setup(res);
         self.event_reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
+
+        let mut msg = res.fetch_mut::<WindowMessages>();
+        grab_cursor(&mut msg);
+        set_mouse_cursor_none(&mut msg);
     }
 }
