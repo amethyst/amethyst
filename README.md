@@ -52,9 +52,7 @@ Planned features:
 
 [![develop docs][adb1]][ad1] [![master docs][adb2]][ad2] [![0.6 docs][adb3]][ad3]
 
-* [Documentation of the (default) develop branch (recommended)][ad1]
-* [Documentation of the master branch (outdated)][ad2]
-* [Documentation of the latest release (0.6, outdated)][ad3]
+The `master` branch and the 0.6 release are rather old, it is recommended you use the `develop` branch.
 
 [adb1]: https://img.shields.io/badge/docs-develop-blue.svg
 [adb2]: https://img.shields.io/badge/docs-master-blue.svg
@@ -124,12 +122,13 @@ We do not support anything other than the most recent Rust stable release. Use n
 
 Please check out the [FAQ][faq] before asking.
 
-If you have an easy question, just ask on [Gitter][gt] and we'll help you and add it to the FAQ.
+If you have a question, just ask on [Gitter][gt] or [Discord][di] and we'll help you and add it to the FAQ.
 
 Other places you may want to check out are [r/rust_gamedev][rg] and [#rust-gamedev IRC][irc].
 
 [faq]: https://github.com/amethyst/amethyst/wiki/Frequently-Asked-Questions
 [gt]: https://gitter.im/amethyst/general
+[di]: https://discord.gg/GnP5Whs
 [rg]: https://www.reddit.com/r/rust_gamedev/
 [irc]: https://botbot.me/mozilla/rust-gamedev/
 
