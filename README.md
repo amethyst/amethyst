@@ -17,59 +17,49 @@
 [gc]: https://gitter.im/orgs/amethyst/rooms
 [di]: https://discord.gg/GnP5Whs
 
-**Warning: The book and tools repository are severely out of date at the moment. Amethyst is undergoing a lot of changes at the moment so if you are looking to use the library it would be better to just read the examples.**
+**Warning: The book and the documentation are missing content. Amethyst is undergoing a lot of changes at the moment.**
 
 This project is a *work in progress* and is very incomplete; pardon the dust!
-Read a summary of what happened this past week at [*This Week in Amethyst*][tw].
 
-[tw]: https://www.amethyst.rs/
+## Features
 
-### [Documentation][ar]
+* [x] modular structure while providing a quick solution to start your project (the main crate)
+* [x] powered by the parallel ECS library [Specs]
+* [x]  [gfx]-based rendering engine with high customizability
+* [x] input abstraction for keyboard and mouse, bindings defined in config files
+* [x] parallel asset loading with high extensibility and hot-reloading
+* [x] vertex skinning and property animation
+* [x] 3D audio with support for multiple emitters
+* [x] basic UI support for text, text fields, buttons and images
+* [x] scenes can be imported from [glTF] files
+* [x] includes a simple state manager
 
-[ar]: https://www.amethyst.rs/doc/
+Planned features:
 
-## Vision
+* [ ] networking
+* [ ] scripting support
+* [ ] defining scenes and prefabs with RON files
+* [ ] gamepad support
+* [ ] platform support: Android, iOS
+* [ ] modular, composable and extensible editor that can be fully controlled by a REPL
 
-Amethyst is a fast, [data-oriented](https://www.amethyst.rs/book/master/book/glossary.html#data-oriented-programming), and data-driven game engine suitable
-for rapid prototyping and iteration. It also tries to push the
-[Rust programming language][rs] to its limits, driving further improvement and
-hopefully attracting more game developers toward the young and vibrant Rust
-ecosystem.
+[Specs]: https://github.com/slide-rs/specs
+[gfx]: https://github.com/gfx-rs/gfx
+[glTF]: https://www.khronos.org/gltf/
 
-[rs]: https://www.rust-lang.org/
+## Documentation
 
-The engine's design draws much inspiration from the industrial-strength
-[Bitsquid Engine][bs] (now called [Autodesk Stingray][sr]). However, Amethyst
-does not aim to be API-compatible with it in any way. Some goals include:
+* [Documentation of the (default) develop branch (recommended)][ad1]
+* [Documentation of the master branch (outdated)][ad2]
+* [Documentation of the latest release (0.6, outdated)][ad3]
 
-[bs]: http://twvideo01.ubm-us.net/o1/vault/gdc2012/slides/Programming%20Track/Persson_Tobias_Flexible_Rendering.pdf.pdf
-[sr]: http://stingrayengine.com/
-
-* Simple game state management in the form of a [pushdown automaton][pa].
-* Massively parallel architecture.
-* [Correct entity-component-system model][em], with entities and prefabs largely
-  defined in [Ron files][rn].
-* Abstract scripting API that can be bound to a variety of embedded languages,
-  such as [mruby][mr], [Lua][lu], etc.
-* Renderer optimized for modern graphics APIs, e.g. Vulkan, Direct3D 12+, Metal.
-* Easy integration with useful third-party game development libraries, e.g.
-  [Piston][pi].
-* Traditional "mega-editor" split into several
-  [small but well-integrated tools][at], adhering to the [Unix philosophy][up].
-
-[pa]: http://gameprogrammingpatterns.com/state.html#pushdown-automata
-[em]: http://shaneenishry.com/blog/2014/12/27/misconceptions-of-component-based-entity-systems/
-[rn]: https://github.com/ron-rs/ron
-[mr]: http://mruby.org/
-[lu]: http://www.lua.org/
-[pi]: http://www.piston.rs/
-[at]: https://github.com/amethyst/tools
-[up]: https://en.wikipedia.org/wiki/Unix_philosophy
+[ad1]: https://www.amethyst.rs/doc/develop.html
+[ad2]: https://www.amethyst.rs/doc/master.html
+[ad3]: https://www.docs.rs/amethyst
 
 ## Usage
 
-Read the [online book][bk] for a comprehensive tutorial to using Amethyst. There
-is also an online crate-level [API reference][ar].
+Please read the [online book][bk] for a comprehensive tutorial to using Amethyst.
 
 [bk]: https://www.amethyst.rs/book/master/book/
 
