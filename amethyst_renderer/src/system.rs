@@ -9,7 +9,7 @@ use amethyst_core::Time;
 use amethyst_core::specs::prelude::{Read, ReadExpect, Resources, RunNow, SystemData, Write,
                                     WriteExpect};
 use rayon::ThreadPool;
-use shrev::EventChannel;
+use amethyst_core::shrev::EventChannel;
 use winit::{DeviceEvent, Event, WindowEvent};
 
 use config::DisplayConfig;

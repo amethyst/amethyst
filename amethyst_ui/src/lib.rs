@@ -18,7 +18,6 @@ extern crate rusttype;
 extern crate shred;
 #[macro_use]
 extern crate shred_derive;
-extern crate shrev;
 extern crate unicode_normalization;
 extern crate unicode_segmentation;
 extern crate winit;

@@ -7,7 +7,7 @@ use amethyst_core::timing::Time;
 use clipboard::{ClipboardContext, ClipboardProvider};
 use hibitset::BitSet;
 use rusttype::PositionedGlyph;
-use shrev::{EventChannel, ReaderId};
+use amethyst_core::shrev::{EventChannel, ReaderId};
 use unicode_normalization::UnicodeNormalization;
 use unicode_normalization::char::is_combining_mark;
 use unicode_segmentation::UnicodeSegmentation;

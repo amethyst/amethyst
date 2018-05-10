@@ -4,7 +4,6 @@ extern crate amethyst_input;
 extern crate amethyst_renderer;
 #[macro_use]
 extern crate log;
-extern crate shrev;
 extern crate winit;
 
 #[macro_use]
