@@ -1,6 +1,7 @@
-use amethyst_core::cgmath::{Deg, InnerSpace, Vector3};
-use amethyst_core::specs::prelude::{Join, Read, ReadExpect, ReadStorage, Resources, System, Write,
-                                    WriteStorage};
+use amethyst_core::cgmath::{Deg, Vector3};
+use amethyst_core::specs::prelude::{
+    Join, Read, ReadExpect, ReadStorage, Resources, System, Write, WriteStorage,
+};
 use amethyst_core::timing::Time;
 use amethyst_core::transform::Transform;
 use amethyst_input::InputHandler;
@@ -92,10 +93,9 @@ impl<'a> System<'a> for ArcBallMovementSystem {
     fn run(&mut self, (mut transforms, tags): Self::SystemData) {
         let mut position = None;
         for (transform, arc_ball_camera_tag) in (&transforms, &tags).join() {
+            let pos_vec = transform.rotation * -Vector3::unit_z() * arc_ball_camera_tag.distance;
             if let Some(target_transform) = transforms.get(arc_ball_camera_tag.target) {
-                let target_to_cam = transform.translation - target_transform.translation;
-                let new_target_to_cam = target_to_cam.normalize() * arc_ball_camera_tag.distance;
-                position = Some(target_transform.translation + new_target_to_cam);
+                position = Some(target_transform.translation - pos_vec);
             }
         }
         if let Some(new_pos) = position {

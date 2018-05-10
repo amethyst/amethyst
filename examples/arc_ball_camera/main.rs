@@ -4,17 +4,20 @@ extern crate amethyst;
 
 use amethyst::assets::Loader;
 use amethyst::config::Config;
-use amethyst::controls::{ArcBallCameraTag, ArcBallMovementSystem, FreeRotationSystem,
-                         MouseCenterLockSystem, MouseFocusUpdateSystem};
+use amethyst::controls::{
+    ArcBallCameraTag, ArcBallMovementSystem, FlyControlTag, FreeRotationSystem,
+    MouseCenterLockSystem, MouseFocusUpdateSystem,
+};
 use amethyst::core::cgmath::{Deg, Vector3};
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::{Entity, World};
 use amethyst::input::InputBundle;
-use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, ElementState, Event,
-                         KeyboardInput, Material, MaterialDefaults, MeshHandle, ObjFormat,
-                         Pipeline, PosNormTex, Projection, RenderBundle, Rgba, Stage,
-                         VirtualKeyCode, WindowEvent};
+use amethyst::renderer::{
+    AmbientColor, Camera, DisplayConfig, DrawShaded, ElementState, Event, KeyboardInput, Material,
+    MaterialDefaults, MeshHandle, ObjFormat, Pipeline, PosNormTex, Projection, RenderBundle, Rgba,
+    Stage, VirtualKeyCode, WindowEvent,
+};
 use amethyst::{Application, Error, State, Trans};
 
 struct ExampleState;
@@ -25,7 +28,18 @@ impl State for ExampleState {
 
         // Add cube to scene
         let mut trans = Transform::default();
+        trans.translation = Vector3::new(-5.0, 0.0, -10.0);
+        world
+            .create_entity()
+            .with(assets.cube.clone())
+            .with(assets.red.clone())
+            .with(trans)
+            .with(GlobalTransform::default())
+            .build();
+
+        let mut trans = Transform::default();
         trans.translation = Vector3::new(0.0, 0.0, -5.0);
+
         let entity = world
             .create_entity()
             .with(assets.cube.clone())
@@ -115,18 +129,18 @@ fn run() -> Result<(), Error> {
     );
     let mut game = Application::build(resources_directory, ExampleState)?
         .with_frame_limit(FrameRateLimitStrategy::Unlimited, 0)
+        .with_bundle(TransformBundle::new().with_dep(&[]))?
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path),
         )?
+        .with(MouseFocusUpdateSystem::new(), "mouse_focus", &[])
+        .with(MouseCenterLockSystem, "mouse_lock", &["mouse_focus"])
         .with(ArcBallMovementSystem {}, "arc_ball_movement_system", &[])
         .with(
-            FreeRotationSystem::<String, String>::new(10., 10.),
+            FreeRotationSystem::<String, String>::new(1., 1.),
             "free_rotation_system",
             &[],
         )
-        .with(MouseFocusUpdateSystem::new(), "mouse_focus", &[])
-        .with(MouseCenterLockSystem, "mouse_lock", &["mouse_focus"])
-        .with_bundle(TransformBundle::new().with_dep(&[]))?
         .with_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?
         .build()?;
     game.run();
@@ -141,6 +155,7 @@ fn initialise_camera(world: &mut World, entity: Entity) {
         .with(Camera::from(Projection::perspective(1.3, Deg(60.0))))
         .with(local)
         .with(GlobalTransform::default())
+        .with(FlyControlTag)
         .with(ArcBallCameraTag {
             target: entity,
             distance: 10.,

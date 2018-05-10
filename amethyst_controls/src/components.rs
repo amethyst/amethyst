@@ -10,6 +10,7 @@ impl Component for FlyControlTag {
     type Storage = NullStorage<FlyControlTag>;
 }
 
+#[derive(Debug)]
 pub struct ArcBallCameraTag {
     pub target: Entity,
     pub distance: f32,
