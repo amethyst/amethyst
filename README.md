@@ -30,6 +30,7 @@ This project is a *work in progress* and is very incomplete; pardon the dust!
 * [x] parallel asset loading with high extensibility and hot-reloading
 * [x] vertex skinning and property animation
 * [x] 3D audio with support for multiple emitters
+* [x] sprite rendering and texture animation
 * [x] basic UI support for text, text fields, buttons and images
 * [x] scenes can be imported from [glTF] files
 * [x] includes a simple state manager
@@ -49,9 +50,15 @@ Planned features:
 
 ## Documentation
 
+[![develop docs][adb1]][ad1] [![master docs][adb2]][ad2] [![0.6 docs][adb3]][ad3]
+
 * [Documentation of the (default) develop branch (recommended)][ad1]
 * [Documentation of the master branch (outdated)][ad2]
 * [Documentation of the latest release (0.6, outdated)][ad3]
+
+[adb1]: https://img.shields.io/badge/docs-develop-blue.svg
+[adb2]: https://img.shields.io/badge/docs-master-blue.svg
+[adb3]: https://img.shields.io/badge/docs-0.6-blue.svg
 
 [ad1]: https://www.amethyst.rs/doc/develop.html
 [ad2]: https://www.amethyst.rs/doc/master.html
