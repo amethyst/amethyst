@@ -105,10 +105,7 @@ where
                     events.single_write(UiEvent::new(UiEventType::HoverStart, target));
                 }
                 if let Some(last_target) = self.last_target {
-                    events.single_write(UiEvent::new(
-                        UiEventType::HoverStop,
-                        last_target,
-                    ));
+                    events.single_write(UiEvent::new(UiEventType::HoverStop, last_target));
                 }
             }
 
@@ -144,21 +141,26 @@ fn targeted<'a, I>(
     pos: (f32, f32),
     transforms: I,
     react: &ReadStorage<MouseReactive>,
-) -> Option<Entity> 
-    where I: Iterator<Item=(Entity, &'a UiTransform)> + 'a,
+) -> Option<Entity>
+where
+    I: Iterator<Item = (Entity, &'a UiTransform)> + 'a,
 {
     use std::f32::INFINITY;
 
     let candidate = transforms
         .filter(|t| t.1.opaque)
         .filter(|t| t.1.position_inside(pos.0, pos.1))
-        .fold((None, INFINITY), |(lowest_entity, lowest_z), (entity, t)| {
-            if lowest_z < t.global_z {
-                (lowest_entity, lowest_z)
-            } else {
-                (Some(entity), t.global_z)
-            }
-        }).0;
+        .fold(
+            (None, INFINITY),
+            |(lowest_entity, lowest_z), (entity, t)| {
+                if lowest_z < t.global_z {
+                    (lowest_entity, lowest_z)
+                } else {
+                    (Some(entity), t.global_z)
+                }
+            },
+        )
+        .0;
     if let Some(candidate) = candidate {
         if react.get(candidate).is_some() {
             return Some(candidate);

@@ -7,8 +7,6 @@ pub struct WindowFocus {
 
 impl WindowFocus {
     pub fn new() -> WindowFocus {
-        WindowFocus {
-            is_focused: true,
-        }
+        WindowFocus { is_focused: true }
     }
 }
