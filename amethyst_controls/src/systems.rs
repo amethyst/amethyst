@@ -86,7 +86,7 @@ where
 /// In essence, the system will allign the camera with its target while keeping the distance to it
 /// and while keeping the orientation of the camera.
 /// To modify the orientation of the camera in according with the mouse input, please use the
-/// FlyMovementSystem.
+/// FreeRotationSystem.
 pub struct ArcBallMovementSystem;
 
 impl<'a> System<'a> for ArcBallMovementSystem {

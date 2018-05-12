@@ -135,7 +135,10 @@ fn run() -> Result<(), Error> {
         )?
         .with(MouseFocusUpdateSystem::new(), "mouse_focus", &[])
         .with(MouseCenterLockSystem, "mouse_lock", &["mouse_focus"])
+        // This system will keep the camera focussing the target while conserving the orientation
+        // of the camera and its distance to the target 
         .with(ArcBallMovementSystem {}, "arc_ball_movement_system", &[])
+        // This system manage the orientation of camera in accord to mouse input
         .with(
             FreeRotationSystem::<String, String>::new(1., 1.),
             "free_rotation_system",
@@ -155,7 +158,9 @@ fn initialise_camera(world: &mut World, entity: Entity) {
         .with(Camera::from(Projection::perspective(1.3, Deg(60.0))))
         .with(local)
         .with(GlobalTransform::default())
+        // Will allow the FreeRotationSystem to catch this entity
         .with(FlyControlTag)
+        // Will allow the ArcBallMovementSystem to catch this entity
         .with(ArcBallControlTag {
             target: entity,
             distance: 10.,
