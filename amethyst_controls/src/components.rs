@@ -10,9 +10,7 @@ impl Component for FlyControlTag {
     type Storage = NullStorage<FlyControlTag>;
 }
 
-/// Add this to a camera to which you have already add the FlyControlTag to add a arc ball
-/// behaviour to the camera.
-/// Please, note that this component requires the ArcBallControlSystem to work.
+/// To add an arc ball behaviour, add this to a camera which already has the FlyControlTag added.
 #[derive(Debug, Clone)]
 pub struct ArcBallControlTag {
     pub target: Entity,
