@@ -3,7 +3,7 @@
 use std::borrow::Borrow;
 use std::hash::Hash;
 
-use shrev::EventChannel;
+use amethyst_core::shrev::EventChannel;
 use smallvec::SmallVec;
 use winit::{DeviceEvent, ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode,
             WindowEvent};
@@ -17,7 +17,7 @@ use super::event::InputEvent::*;
 /// For example, if a key is pressed on the keyboard, this struct will record
 /// that the key is pressed until it is released again.
 #[derive(Derivative)]
-#[derivative(Default(bound = "AX: Hash + Eq, AC: Hash + Eq"))]
+#[derivative(Default(bound = ""))]
 pub struct InputHandler<AX, AC>
 where
     AX: Hash + Eq,
