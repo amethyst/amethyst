@@ -5,7 +5,7 @@ extern crate amethyst;
 use amethyst::assets::Loader;
 use amethyst::config::Config;
 use amethyst::controls::{
-    ArcBallCameraTag, ArcBallMovementSystem, FlyControlTag, FreeRotationSystem,
+    ArcBallControlTag, ArcBallMovementSystem, FlyControlTag, FreeRotationSystem,
     MouseCenterLockSystem, MouseFocusUpdateSystem,
 };
 use amethyst::core::cgmath::{Deg, Vector3};
@@ -156,7 +156,7 @@ fn initialise_camera(world: &mut World, entity: Entity) {
         .with(local)
         .with(GlobalTransform::default())
         .with(FlyControlTag)
-        .with(ArcBallCameraTag {
+        .with(ArcBallControlTag {
             target: entity,
             distance: 10.,
         })
