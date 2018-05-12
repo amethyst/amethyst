@@ -11,7 +11,7 @@ use fern;
 use log::LevelFilter;
 use rayon::{ThreadPool, ThreadPoolBuilder};
 use shred::Resource;
-use shrev::{EventChannel, ReaderId};
+use core::shrev::{EventChannel, ReaderId};
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
 use winit::{Event, WindowEvent};
@@ -170,12 +170,22 @@ impl<'a, 'b> Application<'a, 'b> {
             for event in events {
                 states.handle_event(world, event.clone());
                 if !self.ignore_window_close {
-                    if let &Event::WindowEvent {
-                        event: WindowEvent::Closed,
-                        ..
-                    } = &event
-                    {
-                        states.stop(world);
+                    if cfg!(target_os = "ios") {
+                        if let &Event::WindowEvent {
+                            event: WindowEvent::Destroyed,
+                            ..
+                        } = &event
+                        {
+                            states.stop(world);
+                        }
+                    } else {
+                        if let &Event::WindowEvent {
+                            event: WindowEvent::CloseRequested,
+                            ..
+                        } = &event
+                        {
+                            states.stop(world);
+                        }
                     }
                 }
             }

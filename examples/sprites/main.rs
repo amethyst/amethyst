@@ -163,7 +163,7 @@ impl State for Example {
                         },
                     ..
                 }
-                | WindowEvent::Closed => Trans::Quit,
+                | WindowEvent::CloseRequested => Trans::Quit,
                 _ => Trans::None,
             },
             _ => Trans::None,

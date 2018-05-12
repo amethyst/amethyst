@@ -23,8 +23,9 @@ log = "0.4"
 rayon = "1.0.1"
 serde = { version = "1", features = ["serde_derive"] }
 shred = { version = "0.7.0-alpha5" }
-specs = { version = "0.11.0-alpha5", features = ["common"] }
-specs-hierarchy = { version = "0.1.0-alpha5" }
+specs = { version = "0.11.0-alpha6", features = ["common"] }
+specs-hierarchy = { version = "0.1.0-alpha6" }
+shrev = "1.0.0"
 quickcheck = "0.4.1"
 
 thread_profiler = { version = "0.1" , optional = true }

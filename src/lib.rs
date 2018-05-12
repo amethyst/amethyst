@@ -30,7 +30,7 @@
 //!                 WindowEvent::KeyboardInput {
 //!                     input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Escape), .. }, ..
 //!                 } |
-//!                 WindowEvent::Closed => Trans::Quit,
+//!                 WindowEvent::CloseRequested => Trans::Quit,
 //!                 _ => Trans::None,
 //!             },
 //!             _ => Trans::None,
@@ -67,7 +67,6 @@ pub extern crate amethyst_locale as locale;
 pub extern crate amethyst_renderer as renderer;
 pub extern crate amethyst_ui as ui;
 pub extern crate amethyst_utils as utils;
-pub extern crate shrev;
 pub extern crate winit;
 
 #[macro_use]
@@ -83,6 +82,7 @@ pub use self::error::{Error, Result};
 pub use self::state::{State, StateMachine, Trans};
 pub use core::shred;
 pub use core::specs as ecs;
+pub use core::shrev;
 
 pub mod prelude;
 

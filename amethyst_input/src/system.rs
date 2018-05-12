@@ -3,7 +3,7 @@
 use std::hash::Hash;
 
 use amethyst_core::specs::prelude::{Read, Resources, System, Write};
-use shrev::{EventChannel, ReaderId};
+use amethyst_core::shrev::{EventChannel, ReaderId};
 use winit::Event;
 
 use {Bindings, InputEvent, InputHandler};
@@ -42,9 +42,7 @@ where
         AX: Hash + Eq + Clone + Send + Sync + 'static,
         AC: Hash + Eq + Clone + Send + Sync + 'static,
     {
-        if let &Event::WindowEvent { ref event, .. } = event {
-            handler.send_event(event, output);
-        }
+        handler.send_event(event, output);
     }
 }
 
