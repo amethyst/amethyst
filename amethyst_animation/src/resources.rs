@@ -185,7 +185,12 @@ where
         for entity in self.nodes.values() {
             if !states.contains(*entity) {
                 if let Some(comp) = get_component(*entity) {
-                    states.insert(*entity, RestState::new(comp));
+                    if let Err(err) = states.insert(*entity, RestState::new(comp)) {
+                        error!(
+                            "Failed creating rest state for AnimationHierarchy, because of: {}",
+                            err
+                        );
+                    }
                 }
             }
         }

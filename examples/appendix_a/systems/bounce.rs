@@ -22,10 +22,8 @@ impl<'s> System<'s> for BounceSystem {
         Read<'s, ArenaConfig>,
     );
 
-    fn run(
-        &mut self,
-        (mut balls, paddles, transforms, storage, sounds, audio_output, arena_config): Self::SystemData,
-){
+    fn run(&mut self, data: Self::SystemData) {
+        let (mut balls, paddles, transforms, storage, sounds, audio_output, arena_config) = data;
         // Check whether a ball collided, and bounce off accordingly.
         //
         // We also check for the velocity of the ball every time, to prevent multiple collisions

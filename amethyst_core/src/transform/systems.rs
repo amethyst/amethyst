@@ -307,7 +307,8 @@ mod tests {
         };
     }
 
-    // Test Parent * Transform -> GlobalTransform (Parent is after child, therefore must be special cased in list)
+    // Test Parent * Transform -> GlobalTransform
+    // (Parent is after child, therefore must be special cased in list)
     #[test]
     fn parent_after() {
         let (mut world, mut hs, mut system) = transform_world();
@@ -344,8 +345,8 @@ mod tests {
 
         {
             let mut parents = world.write_storage::<Parent>();
-            parents.insert(e2, Parent { entity: e1 });
-            parents.insert(e3, Parent { entity: e2 });
+            parents.insert(e2, Parent { entity: e1 }).unwrap();
+            parents.insert(e3, Parent { entity: e2 }).unwrap();
         }
 
         hs.run_now(&mut world.res);

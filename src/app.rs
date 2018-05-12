@@ -238,8 +238,10 @@ impl<'a, 'b> Drop for Application<'a, 'b> {
     }
 }
 
-/// `ApplicationBuilder` is an interface that allows for creation of an [`Application`](struct.Application.html)
-/// using a custom set of configuration. This is the normal way an [`Application`](struct.Application.html)
+/// `ApplicationBuilder` is an interface that allows for creation of an
+/// [`Application`](struct.Application.html)
+/// using a custom set of configuration. This is the normal way an
+/// [`Application`](struct.Application.html)
 /// object is created.
 pub struct ApplicationBuilder<'a, 'b, T> {
     // config: Config,

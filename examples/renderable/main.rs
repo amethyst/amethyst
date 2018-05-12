@@ -47,7 +47,8 @@ impl<'a> System<'a> for ExampleSystem {
         Read<'a, FPSCounter>,
     );
 
-fn run(&mut self, (mut lights, time, camera, mut transforms, mut state, mut ui_text, fps_counter): Self::SystemData){
+    fn run(&mut self, data: Self::SystemData) {
+        let (mut lights, time, camera, mut transforms, mut state, mut ui_text, fps_counter) = data;
         let light_angular_velocity = -1.0;
         let light_orbit_radius = 15.0;
         let light_z = 6.0;
