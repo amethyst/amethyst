@@ -9,7 +9,7 @@ use amethyst_renderer::{ScreenDimensions, WindowMessages};
 use std::hash::Hash;
 use std::marker::PhantomData;
 
-use components::{ArcBallCameraTag, FlyControlTag};
+use components::{ArcBallControlTag, FlyControlTag};
 
 use resources::WindowFocus;
 use shrev::{EventChannel, ReaderId};
@@ -82,12 +82,16 @@ where
 }
 
 /// The system that manages the arc ball movement;
+/// In essence, the system will allign the camera with its target while keeping the distance to it
+/// and while keeping the orientation of the camera.
+/// To modify the orientation of the camera in according with the mouse input, please use the
+/// FlyMovementSystem.
 pub struct ArcBallMovementSystem;
 
 impl<'a> System<'a> for ArcBallMovementSystem {
     type SystemData = (
         WriteStorage<'a, Transform>,
-        ReadStorage<'a, ArcBallCameraTag>,
+        ReadStorage<'a, ArcBallControlTag>,
     );
 
     fn run(&mut self, (mut transforms, tags): Self::SystemData) {

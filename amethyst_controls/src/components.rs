@@ -10,15 +10,18 @@ impl Component for FlyControlTag {
     type Storage = NullStorage<FlyControlTag>;
 }
 
-#[derive(Debug)]
-pub struct ArcBallCameraTag {
+/// Add this to a camera to which you have already add the FlyControlTag to add a arc ball
+/// behaviour to the camera.
+/// Please not that this component require the ArcBallControlSystem to work.
+#[derive(Debug, Clone)]
+pub struct ArcBallControlTag {
     pub target: Entity,
     pub distance: f32,
 }
 
-impl Component for ArcBallCameraTag {
+impl Component for ArcBallControlTag {
     // we can use HashMapStorage here because, according to the specs doc, this storage should be
     // use when the component is use with few entity, I think there will rarely more than one
     // camera
-    type Storage = HashMapStorage<ArcBallCameraTag>;
+    type Storage = HashMapStorage<ArcBallControlTag>;
 }
