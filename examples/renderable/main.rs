@@ -5,22 +5,24 @@
 
 extern crate amethyst;
 
-use amethyst::{Application, Error, State, Trans};
 use amethyst::assets::{HotReloadBundle, Loader};
 use amethyst::config::Config;
 use amethyst::core::cgmath::{Array, Deg, Euler, Quaternion, Rad, Rotation, Rotation3, Vector3};
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::timing::Time;
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
-use amethyst::ecs::prelude::{Entity, Join, Read, ReadStorage, System, World, WriteExpect,
-                             WriteStorage};
+use amethyst::ecs::prelude::{
+    Entity, Join, Read, ReadStorage, System, World, WriteExpect, WriteStorage,
+};
 use amethyst::input::InputBundle;
-use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, DisplayConfig, DrawShaded,
-                         ElementState, Event, KeyboardInput, Light, Material, MaterialDefaults,
-                         MeshHandle, ObjFormat, Pipeline, PngFormat, PointLight, PosNormTex,
-                         Projection, RenderBundle, Rgba, Stage, VirtualKeyCode, WindowEvent};
+use amethyst::renderer::{
+    AmbientColor, Camera, DirectionalLight, DisplayConfig, DrawShaded, ElementState, Event,
+    KeyboardInput, Light, Material, MaterialDefaults, MeshHandle, ObjFormat, Pipeline, PngFormat,
+    PointLight, PosNormTex, Projection, RenderBundle, Rgba, Stage, VirtualKeyCode, WindowEvent,
+};
 use amethyst::ui::{DrawUi, FontHandle, TtfFormat, UiBundle, UiText, UiTransform};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
+use amethyst::{Application, State, Trans};
 
 struct DemoState {
     light_angle: f32,
@@ -365,16 +367,7 @@ fn load_assets(world: &World) -> Assets {
     }
 }
 
-fn main() {
-    if let Err(error) = run() {
-        eprintln!("Could not run the example!");
-        eprintln!("{}", error);
-        ::std::process::exit(1);
-    }
-}
-
-/// Wrapper around the main, so we can return errors easily.
-fn run() -> Result<(), Error> {
+fn main() -> amethyst::Result<()> {
     // Add our meshes directory to the asset loader.
     let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
 

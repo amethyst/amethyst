@@ -9,8 +9,8 @@ use amethyst::core::transform::GlobalTransform;
 use amethyst::ecs::prelude::World;
 use amethyst::prelude::*;
 use amethyst::renderer::*;
-use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
+use genmesh::{MapToVertices, Triangulate, Vertices};
 
 const SPHERE_COLOUR: [f32; 4] = [0.0, 0.0, 1.0, 1.0]; // blue
 const AMBIENT_LIGHT_COLOUR: Rgba = Rgba(0.01, 0.01, 0.01, 1.0); // near-black
@@ -49,7 +49,7 @@ impl State for Example {
     }
 }
 
-fn run() -> Result<(), amethyst::Error> {
+fn main() -> amethyst::Result<()> {
     let display_config_path = format!(
         "{}/examples/separate_sphere/resources/display.ron",
         env!("CARGO_MANIFEST_DIR")
@@ -70,13 +70,6 @@ fn run() -> Result<(), amethyst::Error> {
         .build()?;
     game.run();
     Ok(())
-}
-
-fn main() {
-    if let Err(e) = run() {
-        println!("Failed to execute example: {}", e);
-        ::std::process::exit(1);
-    }
 }
 
 fn gen_sphere(u: usize, v: usize) -> ComboMeshCreator {

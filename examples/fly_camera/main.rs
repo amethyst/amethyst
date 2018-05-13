@@ -2,7 +2,6 @@
 
 extern crate amethyst;
 
-use amethyst::{Application, Error, State, Trans};
 use amethyst::assets::Loader;
 use amethyst::config::Config;
 use amethyst::controls::{FlyControlBundle, FlyControlTag};
@@ -11,10 +10,12 @@ use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::World;
 use amethyst::input::InputBundle;
-use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, ElementState, Event,
-                         KeyboardInput, Material, MaterialDefaults, MeshHandle, ObjFormat,
-                         Pipeline, PosNormTex, Projection, RenderBundle, Rgba, Stage,
-                         VirtualKeyCode, WindowEvent};
+use amethyst::renderer::{
+    AmbientColor, Camera, DisplayConfig, DrawShaded, ElementState, Event, KeyboardInput, Material,
+    MaterialDefaults, MeshHandle, ObjFormat, Pipeline, PosNormTex, Projection, RenderBundle, Rgba,
+    Stage, VirtualKeyCode, WindowEvent,
+};
+use amethyst::{Application, Result, State, Trans};
 
 struct ExampleState;
 
@@ -83,16 +84,7 @@ fn load_assets(world: &World) -> Assets {
     Assets { cube, red }
 }
 
-fn main() {
-    if let Err(error) = run() {
-        eprintln!("Could not run the example!");
-        eprintln!("{}", error);
-        ::std::process::exit(1);
-    }
-}
-
-/// Wrapper around the main, so we can return errors easily.
-fn run() -> Result<(), Error> {
+fn main() -> Result<()> {
     let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
 
     let display_config_path = format!(

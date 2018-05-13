@@ -21,7 +21,8 @@ impl State for Example {
     }
 }
 
-fn main() {
-    let mut game = Application::new("./", Example).expect("Fatal error");
+fn main() -> amethyst::Result<()> {
+    let mut game = Application::new("./", Example)?;
     game.run();
+    Ok(())
 }

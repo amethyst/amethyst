@@ -3,19 +3,23 @@
 extern crate amethyst;
 extern crate genmesh;
 
-use amethyst::animation::{get_animation_set, Animation, AnimationBundle, AnimationCommand,
-                          AnimationSet, DeferStartRelation, EndControl, InterpolationFunction,
-                          Sampler, SamplerPrimitive, StepDirection, TransformChannel};
+use amethyst::animation::{
+    get_animation_set, Animation, AnimationBundle, AnimationCommand, AnimationSet,
+    DeferStartRelation, EndControl, InterpolationFunction, Sampler, SamplerPrimitive,
+    StepDirection, TransformChannel,
+};
 use amethyst::assets::{AssetStorage, Handle, Loader};
-use amethyst::core::{GlobalTransform, Parent, Transform, TransformBundle};
 use amethyst::core::cgmath::Deg;
+use amethyst::core::{GlobalTransform, Parent, Transform, TransformBundle};
 use amethyst::ecs::prelude::{Entity, World};
 use amethyst::prelude::*;
-use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, ElementState, Event,
-                         KeyboardInput, Light, Mesh, Pipeline, PointLight, PosNormTex, Projection,
-                         RenderBundle, Rgba, Stage, VirtualKeyCode, WindowEvent};
-use genmesh::{MapToVertices, Triangulate, Vertices};
+use amethyst::renderer::{
+    AmbientColor, Camera, DisplayConfig, DrawShaded, ElementState, Event, KeyboardInput, Light,
+    Mesh, Pipeline, PointLight, PosNormTex, Projection, RenderBundle, Rgba, Stage, VirtualKeyCode,
+    WindowEvent,
+};
 use genmesh::generators::SphereUV;
+use genmesh::{MapToVertices, Triangulate, Vertices};
 
 // blue
 const SPHERE_COLOUR: [f32; 4] = [0.0, 0.0, 1.0, 1.0];
@@ -183,7 +187,7 @@ impl State for Example {
     }
 }
 
-fn run() -> Result<(), amethyst::Error> {
+fn main() -> amethyst::Result<()> {
     let display_config_path = format!(
         "{}/examples/animation/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
@@ -209,13 +213,6 @@ fn run() -> Result<(), amethyst::Error> {
         .build()?;
     game.run();
     Ok(())
-}
-
-fn main() {
-    if let Err(e) = run() {
-        println!("Failed to execute example: {}", e);
-        ::std::process::exit(1);
-    }
 }
 
 fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTex> {

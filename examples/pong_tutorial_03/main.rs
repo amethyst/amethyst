@@ -3,13 +3,13 @@ extern crate amethyst;
 mod pong;
 mod systems;
 
-use amethyst::Result;
 use amethyst::core::transform::TransformBundle;
 use amethyst::input::InputBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline, PosTex, RenderBundle, Stage};
+use amethyst::Result;
 
-fn run() -> Result<()> {
+fn main() -> Result<()> {
     use pong::Pong;
 
     let path = format!(
@@ -40,11 +40,4 @@ fn run() -> Result<()> {
         .build()?;
     game.run();
     Ok(())
-}
-
-fn main() {
-    if let Err(e) = run() {
-        println!("Error occurred during game execution: {}", e);
-        ::std::process::exit(1);
-    }
 }
