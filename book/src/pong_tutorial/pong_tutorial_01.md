@@ -67,11 +67,11 @@ up the `State` and close the application. All other keyboard input is ignored
 for now.
 
 Now that we know we can quit, let's add some code to actually get things 
-started! We'll use a `run()` function, which returns a Result and thus 
+started! We'll use an ordinary `main()` function, but which returns a `Result` and thus 
 allows us to use `?`.
 
 ```rust,ignore
-fn run() -> Result<()> {
+fn main() -> Result<()> {
 
     //We'll put the rest of the code here
 
@@ -79,7 +79,7 @@ fn run() -> Result<()> {
 }
 ```
 
-Inside run() we first define a path for our display_config.ron file and load it.
+Inside `main()` we first define a path for our display_config.ron file and load it.
 
 ```rust,ignore
 let path = "./resources/display_config.ron";
@@ -144,18 +144,6 @@ along with our config, and building.
 Then we call `.run()` on `game` which begins the gameloop. The game will 
 continue to run until our `State` returns `Trans::Quit`, or when all states have 
 been popped off the state machine's stack.
-
-Now all that's left is to write a `main()` function to call our `run()` 
-function:
-
-```rust,ignore
-fn main() {
-    if let Err(e) = run() {
-        println!("Error occurred during game execution: {}", e);
-        ::std::process::exit(1);
-    }
-}
-```
 
 Success! Now we should be able to compile and run this code and get a window. 
 It should look something like this:
