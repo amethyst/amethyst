@@ -191,41 +191,50 @@ impl<'a> UiButtonBuilder<'a> {
         self
     }
 
+    // unwraps are safe because we create the entities inside
     fn build(mut self, mut res: UiButtonBuilderResources) -> UiButton {
         let image_entity = res.entities.create();
-        res.image.insert(image_entity, self.image);
-        res.mouse_reactive.insert(image_entity, MouseReactive);
+        res.image.insert(image_entity, self.image).unwrap();
+        res.mouse_reactive
+            .insert(image_entity, MouseReactive)
+            .unwrap();
         if let Some(parent) = self.parent.take() {
-            res.parent.insert(image_entity, parent);
+            res.parent.insert(image_entity, parent).unwrap();
         }
         if let Some(transform) = self.transform.take() {
-            res.transform.insert(image_entity, transform);
+            res.transform.insert(image_entity, transform).unwrap();
         }
         if let Some(anchored) = self.anchored.take() {
-            res.anchored.insert(image_entity, anchored);
+            res.anchored.insert(image_entity, anchored).unwrap();
         }
         if let Some(stretched) = self.stretched.take() {
-            res.stretched.insert(image_entity, stretched);
+            res.stretched.insert(image_entity, stretched).unwrap();
         }
 
         let mut id = self.name.to_string();
         id.push_str("_btn_txt");
         let text_entity = res.entities.create();
-        res.transform.insert(
-            text_entity,
-            UiTransform::new(id, 0., 0., -1., 0., 0., 10).as_transparent(),
-        );
+        res.transform
+            .insert(
+                text_entity,
+                UiTransform::new(id, 0., 0., -1., 0., 0., 10).as_transparent(),
+            )
+            .unwrap();
         res.anchored
-            .insert(text_entity, Anchored::new(Anchor::Middle));
+            .insert(text_entity, Anchored::new(Anchor::Middle))
+            .unwrap();
         res.stretched
-            .insert(text_entity, Stretched::new(Stretch::XY, 0., 0.));
-        res.text.insert(text_entity, self.text);
-        res.parent.insert(
-            text_entity,
-            Parent {
-                entity: image_entity.clone(),
-            },
-        );
+            .insert(text_entity, Stretched::new(Stretch::XY, 0., 0.))
+            .unwrap();
+        res.text.insert(text_entity, self.text).unwrap();
+        res.parent
+            .insert(
+                text_entity,
+                Parent {
+                    entity: image_entity.clone(),
+                },
+            )
+            .unwrap();
 
         UiButton {
             text: text_entity,

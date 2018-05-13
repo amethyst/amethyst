@@ -139,8 +139,12 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
                     // for each root node and set their parent reference to the attached entity
                     for root_node_index in &scene.root_nodes {
                         let root_entity = entities.create();
-                        parents.insert(root_entity, Parent { entity });
-                        transforms.insert(root_entity, GlobalTransform::default());
+                        // entity just created, safe to unwrap
+                        parents.insert(root_entity, Parent { entity }).unwrap();
+                        // entity just created, safe to unwrap
+                        transforms
+                            .insert(root_entity, GlobalTransform::default())
+                            .unwrap();
                         load_node(
                             *root_node_index,
                             &root_entity,
@@ -258,20 +262,23 @@ impl<'a> System<'a> for GltfSceneLoaderSystem {
                             .collect::<FnvHashMap<_, _>>(),
                     );
                     // create animation hierarchy
-                    animation_hierarchies.insert(entity, h);
+                    // entity from `Join`, can't be dead
+                    animation_hierarchies.insert(entity, h).unwrap();
                     // create animation set
-                    animation_sets.insert(
-                        entity,
-                        AnimationSet {
-                            animations: scene_asset
-                                .animations
-                                .iter()
-                                .filter_map(|a| a.handle.as_ref())
-                                .cloned()
-                                .enumerate()
-                                .collect::<FnvHashMap<_, _>>(),
-                        },
-                    );
+                    animation_sets
+                        .insert(
+                            entity,
+                            AnimationSet {
+                                animations: scene_asset
+                                    .animations
+                                    .iter()
+                                    .filter_map(|a| a.handle.as_ref())
+                                    .cloned()
+                                    .enumerate()
+                                    .collect::<FnvHashMap<_, _>>(),
+                            },
+                        )
+                        .unwrap(); // entity from `Join`, can't be dead
                 }
                 deletes.push(entity);
             }
@@ -305,22 +312,30 @@ fn load_node(
     node_map: &mut HashMap<usize, Entity>,
     skin_links: &mut Vec<(Entity, usize, Vec<Entity>)>,
 ) {
+    // entity either from `Join`, or just created, safe to unwrap inserts
+
     let node = &scene_asset.nodes[node_index];
     node_map.insert(node_index, node_entity.clone());
 
     // Load the node-to-parent transformation
-    local_transforms.insert(*node_entity, node.local_transform.clone());
+    local_transforms
+        .insert(*node_entity, node.local_transform.clone())
+        .unwrap();
 
     // Load child entities
     for child_node_index in &node.children {
         let child_entity = entities.create();
-        parents.insert(
-            child_entity,
-            Parent {
-                entity: *node_entity,
-            },
-        );
-        transforms.insert(child_entity, GlobalTransform::default());
+        parents
+            .insert(
+                child_entity,
+                Parent {
+                    entity: *node_entity,
+                },
+            )
+            .unwrap();
+        transforms
+            .insert(child_entity, GlobalTransform::default())
+            .unwrap();
         load_node(
             *child_node_index,
             &child_entity,
@@ -388,14 +403,20 @@ fn load_node(
             // primitive and load the graphics onto those
             for (primitive_index, primitive) in node.primitives.iter().enumerate() {
                 let primitive_entity = entities.create();
-                local_transforms.insert(primitive_entity, Transform::default());
-                transforms.insert(primitive_entity, GlobalTransform::default());
-                parents.insert(
-                    primitive_entity,
-                    Parent {
-                        entity: *node_entity,
-                    },
-                );
+                local_transforms
+                    .insert(primitive_entity, Transform::default())
+                    .unwrap();
+                transforms
+                    .insert(primitive_entity, GlobalTransform::default())
+                    .unwrap();
+                parents
+                    .insert(
+                        primitive_entity,
+                        Parent {
+                            entity: *node_entity,
+                        },
+                    )
+                    .unwrap();
                 load_primitive(
                     node_index,
                     primitive_index,
@@ -434,25 +455,31 @@ fn load_skin(
     // Load joint node information
     for (skin_internal_index, joint_node_index) in skin.joints.iter().enumerate() {
         let joint_entity = node_map.get(joint_node_index).unwrap();
-        joints.insert(
-            *joint_entity,
-            Joint {
-                inverse_bind_matrix: Matrix4::from(skin.inverse_bind_matrices[skin_internal_index]),
-                skin: *node_entity,
-            },
-        );
+        joints
+            .insert(
+                *joint_entity,
+                Joint {
+                    inverse_bind_matrix: Matrix4::from(
+                        skin.inverse_bind_matrices[skin_internal_index],
+                    ),
+                    skin: *node_entity,
+                },
+            )
+            .unwrap();
     }
 
     // Add joint transform holders for all mesh entities linked
     let mut mesh_bitset = BitSet::new();
     for mesh_entity in &mesh_entities {
-        joint_transforms.insert(
-            *mesh_entity,
-            JointTransforms {
-                skin: *node_entity,
-                matrices: vec![Matrix4::identity().into(); skin.joints.len()],
-            },
-        );
+        joint_transforms
+            .insert(
+                *mesh_entity,
+                JointTransforms {
+                    skin: *node_entity,
+                    matrices: vec![Matrix4::identity().into(); skin.joints.len()],
+                },
+            )
+            .unwrap();
         mesh_bitset.add(mesh_entity.id());
     }
 
@@ -467,7 +494,7 @@ fn load_skin(
         meshes: mesh_bitset,
         bind_shape_matrix: Matrix4::identity(),
     };
-    skins.insert(*node_entity, s);
+    skins.insert(*node_entity, s).unwrap();
 }
 
 // Load a single graphics primitive, attach all data to the given `entity`.
@@ -508,8 +535,8 @@ fn load_primitive(
         .unwrap_or_else(|| material_defaults.0.clone());
 
     // Attach mesh to the entity
-    meshes.insert(*entity, mesh);
-    materials.insert(*entity, material);
+    meshes.insert(*entity, mesh).unwrap();
+    materials.insert(*entity, material).unwrap();
 }
 
 // Load a material

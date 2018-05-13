@@ -351,7 +351,8 @@ fn initialise_animation(world: &mut World, entity: Entity) {
         &loader,
         &animation_storage,
     );
-    world.write_storage().insert(entity, set);
+    // entity created just before this function is called, so unwrap is safe
+    world.write_storage().insert(entity, set).unwrap();
 }
 
 fn add_to_set(

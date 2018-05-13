@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::specs::prelude::{Component, Entities, Entity, Join, Read, ReadStorage,
-                                    Resources, System, SystemData, WriteStorage};
+                                    Resources, SystemData, System, WriteStorage};
 use amethyst_core::timing::secs_to_duration;
 use fnv::FnvHashMap;
 use minterpolate::InterpolationPrimitive;
@@ -477,7 +477,12 @@ where
         if let Some(sampler_control) = add {
             let mut set = SamplerControlSet::default();
             set.add_control(sampler_control);
-            samplers.insert(*node_entity, set);
+            if let Err(err) = samplers.insert(*node_entity, set) {
+                error!(
+                    "Failed creating SamplerControl for AnimationHierarchy because: {}",
+                    err
+                );
+            }
         }
     }
     true

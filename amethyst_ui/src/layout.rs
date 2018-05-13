@@ -206,10 +206,8 @@ impl<'a> System<'a> for UiParentSystem {
         ReadExpect<'a, ScreenDimensions>,
         ReadExpect<'a, ParentHierarchy>,
     );
-    fn run(
-        &mut self,
-        (entities, mut locals, parents, anchors, stretches, screen_dim, hierarchy): Self::SystemData,
-){
+    fn run(&mut self, data: Self::SystemData) {
+        let (entities, mut locals, parents, anchors, stretches, screen_dim, hierarchy) = data;
         #[cfg(feature = "profiler")]
         profile_scope!("ui_parent_system");
 
@@ -341,7 +339,7 @@ impl<'a> System<'a> for UiParentSystem {
 
     fn setup(&mut self, res: &mut Resources) {
         use amethyst_core::specs::prelude::SystemData;
-        <Self::SystemData as SystemData>::setup(res);
+        Self::SystemData::setup(res);
         self.parent_events_id = Some(res.fetch_mut::<ParentHierarchy>().track());
         let mut locals = WriteStorage::<UiTransform>::fetch(res);
         let mut stretches = WriteStorage::<Stretched>::fetch(res);
