@@ -8,8 +8,8 @@ use amethyst::core::cgmath::{Deg, Matrix4, Vector3};
 use amethyst::core::transform::GlobalTransform;
 use amethyst::prelude::*;
 use amethyst::renderer::*;
-use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
+use genmesh::{MapToVertices, Triangulate, Vertices};
 
 struct Example;
 
@@ -117,7 +117,7 @@ impl State for Example {
     }
 }
 
-fn run() -> Result<(), amethyst::Error> {
+fn main() -> amethyst::Result<()> {
     let path = format!(
         "{}/examples/material/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
@@ -136,13 +136,6 @@ fn run() -> Result<(), amethyst::Error> {
         .build()?;
     game.run();
     Ok(())
-}
-
-fn main() {
-    if let Err(e) = run() {
-        println!("Failed to execute example: {}", e);
-        ::std::process::exit(1);
-    }
 }
 
 fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTangTex> {

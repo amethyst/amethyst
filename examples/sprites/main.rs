@@ -18,17 +18,21 @@ mod sprite_sheet_loader;
 
 use std::time::Duration;
 
-use amethyst::animation::{get_animation_set, AnimationBundle, AnimationCommand, AnimationControl,
-                          ControlState, EndControl, MaterialTextureSet};
+use amethyst::animation::{
+    get_animation_set, AnimationBundle, AnimationCommand, AnimationControl, ControlState,
+    EndControl, MaterialTextureSet,
+};
 use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::cgmath::{Matrix4, Point3, Transform as CgTransform, Vector3};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::Entity;
 use amethyst::input::InputBundle;
 use amethyst::prelude::*;
-use amethyst::renderer::{Camera, ColorMask, DisplayConfig, DrawFlat, Event, KeyboardInput,
-                         Material, MaterialDefaults, Mesh, Pipeline, PosTex, Projection,
-                         RenderBundle, ScreenDimensions, Stage, VirtualKeyCode, WindowEvent, ALPHA};
+use amethyst::renderer::{
+    Camera, ColorMask, DisplayConfig, DrawFlat, Event, KeyboardInput, Material, MaterialDefaults,
+    Mesh, Pipeline, PosTex, Projection, RenderBundle, ScreenDimensions, Stage, VirtualKeyCode,
+    WindowEvent, ALPHA,
+};
 use amethyst::ui::{DrawUi, UiBundle};
 
 const BACKGROUND_COLOUR: [f32; 4] = [0.0, 0.0, 0.0, 1.0]; // black
@@ -180,10 +184,7 @@ fn initialise_camera(world: &mut World) -> Entity {
     world
         .create_entity()
         .with(Camera::from(Projection::orthographic(
-            0.0,
-            width,
-            height,
-            0.0,
+            0.0, width, height, 0.0,
         )))
         .with(GlobalTransform(Matrix4::from_translation(
             Vector3::new(0.0, 0.0, 1.0).into(),
@@ -191,7 +192,7 @@ fn initialise_camera(world: &mut World) -> Entity {
         .build()
 }
 
-fn run() -> Result<(), amethyst::Error> {
+fn main() -> amethyst::Result<()> {
     let path = format!(
         "{}/examples/sprites/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
@@ -229,13 +230,6 @@ fn run() -> Result<(), amethyst::Error> {
     game.run();
 
     Ok(())
-}
-
-fn main() {
-    if let Err(e) = run() {
-        error!("Failed to execute example: {}", e);
-        ::std::process::exit(1);
-    }
 }
 
 /// Returns a set of vertices that make up a rectangular mesh of the given size.

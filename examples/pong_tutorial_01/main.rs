@@ -1,9 +1,11 @@
 extern crate amethyst;
 
-use amethyst::Result;
 use amethyst::prelude::*;
-use amethyst::renderer::{DisplayConfig, DrawFlat, Event, KeyboardInput, Pipeline, PosTex,
-                         RenderBundle, Stage, VirtualKeyCode, WindowEvent};
+use amethyst::renderer::{
+    DisplayConfig, DrawFlat, Event, KeyboardInput, Pipeline, PosTex, RenderBundle, Stage,
+    VirtualKeyCode, WindowEvent,
+};
+use amethyst::Result;
 
 struct Pong;
 
@@ -26,7 +28,7 @@ impl State for Pong {
     }
 }
 
-fn run() -> Result<()> {
+fn main() -> Result<()> {
     let path = format!(
         "{}/examples/pong_tutorial_01/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
@@ -44,11 +46,4 @@ fn run() -> Result<()> {
         .build()?;
     game.run();
     Ok(())
-}
-
-fn main() {
-    if let Err(e) = run() {
-        println!("Error occurred during game execution: {}", e);
-        ::std::process::exit(1);
-    }
 }

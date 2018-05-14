@@ -12,8 +12,10 @@ use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::Entity;
 use amethyst::prelude::*;
 use amethyst::renderer::*;
-use amethyst_animation::{get_animation_set, AnimationBundle, AnimationCommand, AnimationSet,
-                         EndControl, VertexSkinningBundle};
+use amethyst_animation::{
+    get_animation_set, AnimationBundle, AnimationCommand, AnimationSet, EndControl,
+    VertexSkinningBundle,
+};
 use amethyst_gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystem, GltfSceneOptions};
 
 struct Example;
@@ -141,7 +143,7 @@ impl State for Example {
     }
 }
 
-fn run() -> Result<(), amethyst::Error> {
+fn main() -> amethyst::Result<()> {
     let path = format!(
         "{}/examples/gltf/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
@@ -179,13 +181,6 @@ fn run() -> Result<(), amethyst::Error> {
         .build()?;
     game.run();
     Ok(())
-}
-
-fn main() {
-    if let Err(e) = run() {
-        error!("Failed to execute example: {}", e);
-        ::std::process::exit(1);
-    }
 }
 
 fn load_gltf_mesh(

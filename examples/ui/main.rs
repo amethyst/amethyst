@@ -6,23 +6,25 @@ extern crate genmesh;
 extern crate log;
 
 use amethyst::assets::{AssetStorage, Loader};
-use amethyst::core::Time;
 use amethyst::core::cgmath::Deg;
 use amethyst::core::transform::{GlobalTransform, Parent, TransformBundle};
+use amethyst::core::Time;
 use amethyst::ecs::prelude::{Entity, System, World, Write};
 use amethyst::input::InputBundle;
 use amethyst::prelude::*;
-use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light, Mesh, Pipeline,
-                         PngFormat, PointLight, PosNormTex, Projection, RenderBundle, Rgba, Stage,
-                         Texture};
+use amethyst::renderer::{
+    AmbientColor, Camera, DisplayConfig, DrawShaded, Light, Mesh, Pipeline, PngFormat, PointLight,
+    PosNormTex, Projection, RenderBundle, Rgba, Stage, Texture,
+};
 use amethyst::shrev::{EventChannel, ReaderId};
-use amethyst::ui::{Anchor, Anchored, DrawUi, FontAsset, MouseReactive, Stretch, Stretched,
-                   TextEditing, TtfFormat, UiBundle, UiButtonBuilder, UiButtonResources, UiEvent,
-                   UiFocused, UiImage, UiText, UiTransform};
+use amethyst::ui::{
+    Anchor, Anchored, DrawUi, FontAsset, MouseReactive, Stretch, Stretched, TextEditing, TtfFormat,
+    UiBundle, UiButtonBuilder, UiButtonResources, UiEvent, UiFocused, UiImage, UiText, UiTransform,
+};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::winit::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
-use genmesh::{MapToVertices, Triangulate, Vertices};
 use genmesh::generators::SphereUV;
+use genmesh::{MapToVertices, Triangulate, Vertices};
 
 const SPHERE_COLOUR: [f32; 4] = [0.0, 0.0, 1.0, 1.0]; // blue
 const AMBIENT_LIGHT_COLOUR: Rgba = Rgba(0.01, 0.01, 0.01, 1.0); // near-black
@@ -266,46 +268,41 @@ impl State for Example {
     }
 }
 
-fn run() -> Result<(), amethyst::Error> {
-    let display_config_path = format!(
-        "{}/examples/ui/resources/display.ron",
-        env!("CARGO_MANIFEST_DIR")
-    );
-
-    let resources = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
-    let config = DisplayConfig::load(&display_config_path);
-    let pipe = {
-        Pipeline::build().with_stage(
-            Stage::with_backbuffer()
-                .clear_target(BACKGROUND_COLOUR, 1.0)
-                .with_pass(DrawShaded::<PosNormTex>::new())
-                .with_pass(DrawUi::new()),
-        )
-    };
-    let mut game = Application::build(resources, Example { fps_display: None })?
-        .with_bundle(TransformBundle::new())?
-        .with_bundle(UiBundle::<String, String>::new())?
-        .with(UiEventHandlerSystem::new(), "ui_event_handler", &[])
-        .with_bundle(FPSCounterBundle::default())?
-        .with_bundle(InputBundle::<String, String>::new())?
-        .with_bundle(RenderBundle::new(pipe, Some(config)))?
-        .build()?;
-    game.run();
-    Ok(())
-}
-
-fn main() {
+fn main() -> amethyst::Result<()> {
     println!("Due to some bugs this example currently comes with a seizure warning.");
     println!("If you have a history of seizures please do not run this.");
     println!("Would you like to run this? (Y/N)");
     let mut input = String::new();
     let _ = ::std::io::stdin().read_line(&mut input);
+    
     if input.to_lowercase().starts_with("y") {
-        if let Err(e) = run() {
-            println!("Failed to execute example: {}", e);
-            ::std::process::exit(1);
-        }
+        let display_config_path = format!(
+            "{}/examples/ui/resources/display.ron",
+            env!("CARGO_MANIFEST_DIR")
+        );
+
+        let resources = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
+        let config = DisplayConfig::load(&display_config_path);
+        let pipe = {
+            Pipeline::build().with_stage(
+                Stage::with_backbuffer()
+                    .clear_target(BACKGROUND_COLOUR, 1.0)
+                    .with_pass(DrawShaded::<PosNormTex>::new())
+                    .with_pass(DrawUi::new()),
+            )
+        };
+        let mut game = Application::build(resources, Example { fps_display: None })?
+            .with_bundle(TransformBundle::new())?
+            .with_bundle(UiBundle::<String, String>::new())?
+            .with(UiEventHandlerSystem::new(), "ui_event_handler", &[])
+            .with_bundle(FPSCounterBundle::default())?
+            .with_bundle(InputBundle::<String, String>::new())?
+            .with_bundle(RenderBundle::new(pipe, Some(config)))?
+            .build()?;
+        game.run();
     }
+
+    Ok(())
 }
 
 fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTex> {

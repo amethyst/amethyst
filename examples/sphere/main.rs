@@ -8,11 +8,12 @@ use amethyst::core::cgmath::Deg;
 use amethyst::core::transform::GlobalTransform;
 use amethyst::ecs::prelude::World;
 use amethyst::prelude::*;
-use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Event, KeyboardInput,
-                         Light, Mesh, Pipeline, PointLight, PosNormTex, Projection, RenderBundle,
-                         Rgba, Stage, VirtualKeyCode, WindowEvent};
-use genmesh::{MapToVertices, Triangulate, Vertices};
+use amethyst::renderer::{
+    AmbientColor, Camera, DisplayConfig, DrawShaded, Event, KeyboardInput, Light, Mesh, Pipeline,
+    PointLight, PosNormTex, Projection, RenderBundle, Rgba, Stage, VirtualKeyCode, WindowEvent,
+};
 use genmesh::generators::SphereUV;
+use genmesh::{MapToVertices, Triangulate, Vertices};
 
 const SPHERE_COLOUR: [f32; 4] = [0.0, 0.0, 1.0, 1.0]; // blue
 const AMBIENT_LIGHT_COLOUR: Rgba = Rgba(0.01, 0.01, 0.01, 1.0); // near-black
@@ -50,7 +51,7 @@ impl State for Example {
     }
 }
 
-fn run() -> Result<(), amethyst::Error> {
+fn main() -> amethyst::Result<()> {
     let display_config_path = format!(
         "{}/examples/sphere/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
@@ -71,13 +72,6 @@ fn run() -> Result<(), amethyst::Error> {
         .build()?;
     game.run();
     Ok(())
-}
-
-fn main() {
-    if let Err(e) = run() {
-        println!("Failed to execute example: {}", e);
-        ::std::process::exit(1);
-    }
 }
 
 fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTex> {

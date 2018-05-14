@@ -2,14 +2,13 @@
 
 extern crate amethyst;
 
+mod audio;
+mod bundle;
 mod pong;
 mod systems;
-mod bundle;
-mod audio;
 
 use std::time::Duration;
 
-use amethyst::Result;
 use amethyst::audio::AudioBundle;
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::transform::TransformBundle;
@@ -18,6 +17,7 @@ use amethyst::input::InputBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline, PosTex, RenderBundle, Stage};
 use amethyst::ui::{DrawUi, UiBundle};
+use amethyst::Result;
 
 use audio::Music;
 use bundle::PongBundle;
@@ -41,14 +41,7 @@ const AUDIO_MUSIC: &'static [&'static str] = &[
 const AUDIO_BOUNCE: &'static str = "audio/bounce.ogg";
 const AUDIO_SCORE: &'static str = "audio/score.ogg";
 
-fn main() {
-    if let Err(e) = run() {
-        println!("Failed to execute example: {}", e);
-        ::std::process::exit(1);
-    }
-}
-
-fn run() -> Result<()> {
+fn main() -> Result<()> {
     use pong::Pong;
 
     let display_config_path = format!(
