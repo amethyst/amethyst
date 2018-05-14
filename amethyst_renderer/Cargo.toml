@@ -36,6 +36,7 @@ fnv = "1.0"
 gfx = { version = "0.17", features = ["serialize"] }
 gfx_core = { version = "0.8", features = ["serialize"] }
 gfx_macros = "0.2"
+glsl-layout = { git = "https://github.com/rustgd/glsl-layout", features = ["cgmath", "gfx"] }
 hibitset = { version = "0.5.0", features = ["parallel"] }
 imagefmt = "4.0"
 log = "0.4"

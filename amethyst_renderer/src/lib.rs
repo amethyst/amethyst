@@ -20,6 +20,8 @@ extern crate gfx;
 extern crate gfx_core;
 #[macro_use]
 extern crate gfx_macros;
+#[macro_use]
+extern crate glsl_layout;
 extern crate hetseq;
 extern crate hibitset;
 extern crate imagefmt;
