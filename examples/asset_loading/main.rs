@@ -4,7 +4,7 @@
 extern crate amethyst;
 extern crate rayon;
 
-use amethyst::{Application, Error, State, Trans};
+use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
 use amethyst::assets::{Loader, Result as AssetResult, SimpleFormat};
 use amethyst::config::Config;
 use amethyst::core::cgmath::{Array, Vector3};
@@ -58,8 +58,9 @@ impl SimpleFormat<Mesh> for Custom {
 
 struct AssetsExample;
 
-impl State for AssetsExample {
-    fn on_start(&mut self, world: &mut World) {
+impl<'a, 'b> State<GameData<'a, 'b>> for AssetsExample {
+    fn on_start(&mut self, data: StateData<GameData>) {
+        let StateData { world, .. } = data;
         world.add_resource(0usize);
 
         initialise_camera(world);
@@ -95,7 +96,7 @@ impl State for AssetsExample {
             .build();
     }
 
-    fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
+    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
         match event {
             Event::WindowEvent { event, .. } => {
                 match event {
@@ -116,6 +117,11 @@ impl State for AssetsExample {
             }
             _ => Trans::None,
         }
+    }
+
+    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+        data.data.update(&data.world);
+        Trans::None
     }
 }
 
@@ -144,13 +150,12 @@ fn run() -> Result<(), Error> {
             .with_pass(DrawShaded::<PosNormTex>::new()),
     );
 
-    let mut game = Application::build(resources_directory, AssetsExample)
-        .expect("Failed to build ApplicationBuilder for an unknown reason.")
+    let game_data = GameDataBuilder::default()
         .with_bundle(InputBundle::<String, String>::new())?
         .with_bundle(TransformBundle::new())?
-        .with_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?
-        .build()?;
+        .with_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?;
 
+    let mut game = Application::new(resources_directory, AssetsExample, game_data)?;
     game.run();
     Ok(())
 }

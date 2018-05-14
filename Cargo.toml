@@ -89,6 +89,10 @@ name = "sphere"
 path = "examples/sphere/main.rs"
 
 [[example]]
+name = "sphere_multisample"
+path = "examples/sphere_multisample/main.rs"
+
+[[example]]
 name = "renderable"
 path = "examples/renderable/main.rs"
 
@@ -121,6 +125,14 @@ name = "animation"
 path = "examples/animation/main.rs"
 
 [[example]]
+name = "fly_camera"
+path = "examples/fly_camera/main.rs"
+
+[[example]]
+name = "sprites"
+path = "examples/sprites/main.rs"
+
+[[example]]
 name = "pong_tutorial_01"
 path = "examples/pong_tutorial_01/main.rs"
 
@@ -137,16 +149,12 @@ name = "appendix_a"
 path = "examples/appendix_a/main.rs"
 
 [[example]]
-name = "fly_camera"
-path = "examples/fly_camera/main.rs"
+name = "custom_game_data"
+path = "examples/custom_game_data/main.rs"
 
 [[example]]
 name = "arc_ball_camera"
 path = "examples/arc_ball_camera/main.rs"
-
-[[example]]
-name = "sprites"
-path = "examples/sprites/main.rs"
 
 [workspace]
 members = ["amethyst_gltf"]

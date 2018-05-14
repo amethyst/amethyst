@@ -5,21 +5,22 @@
 
 extern crate amethyst;
 
-use amethyst::{Application, Error, State, Trans};
-use amethyst::assets::{HotReloadBundle, Loader};
+use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
+use amethyst::assets::{Completion, HotReloadBundle, Loader, ProgressCounter};
 use amethyst::config::Config;
 use amethyst::core::cgmath::{Array, Deg, Euler, Quaternion, Rad, Rotation, Rotation3, Vector3};
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::timing::Time;
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
-use amethyst::ecs::prelude::{Entity, Join, Read, ReadStorage, System, World, WriteExpect,
-                             WriteStorage};
+use amethyst::ecs::prelude::{Component, Entity, Join, Read, ReadStorage, System, World,
+                             WriteExpect, WriteStorage};
+use amethyst::ecs::storage::NullStorage;
 use amethyst::input::InputBundle;
 use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, DisplayConfig, DrawShaded,
                          ElementState, Event, KeyboardInput, Light, Material, MaterialDefaults,
                          MeshHandle, ObjFormat, Pipeline, PngFormat, PointLight, PosNormTex,
                          Projection, RenderBundle, Rgba, Stage, VirtualKeyCode, WindowEvent};
-use amethyst::ui::{DrawUi, FontHandle, TtfFormat, UiBundle, UiText, UiTransform};
+use amethyst::ui::{Anchor, Anchored, DrawUi, FontHandle, TtfFormat, UiBundle, UiText, UiTransform};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 
 struct DemoState {
@@ -91,13 +92,126 @@ impl<'a> System<'a> for ExampleSystem {
     }
 }
 
+#[derive(Default)]
+struct Loading {
+    progress: Option<ProgressCounter>,
+}
 struct Example;
 
-impl State for Example {
-    fn on_start(&mut self, world: &mut World) {
+#[derive(Default)]
+struct LoadTag;
+
+impl Component for LoadTag {
+    type Storage = NullStorage<Self>;
+}
+
+impl<'a, 'b> State<GameData<'a, 'b>> for Loading {
+    fn on_start(&mut self, data: StateData<GameData>) {
+        data.world.register::<LoadTag>();
+        let (progress, assets) = load_assets(&data.world);
+        self.progress = Some(progress);
+        let fps_display = data.world
+            .create_entity()
+            .with(UiTransform::new(
+                "fps".to_string(),
+                100.,
+                25.,
+                1.,
+                200.,
+                50.,
+                0,
+            ))
+            .with(UiText::new(
+                assets.font.clone(),
+                "N/A".to_string(),
+                [1.0, 1.0, 1.0, 1.0],
+                25.,
+            ))
+            .with(Anchored::new(Anchor::TopLeft))
+            .build();
+
+        data.world
+            .create_entity()
+            .with(UiTransform::new(
+                "fps".to_string(),
+                0.,
+                0.,
+                1.,
+                200.,
+                50.,
+                0,
+            ))
+            .with(UiText::new(
+                assets.font.clone(),
+                "Loading".to_string(),
+                [1.0, 1.0, 1.0, 1.0],
+                25.,
+            ))
+            .with(Anchored::new(Anchor::Middle))
+            .with(LoadTag)
+            .build();
+
+        data.world.add_resource(assets);
+        data.world.add_resource::<DemoState>(DemoState {
+            light_angle: 0.0,
+            light_color: [1.0; 4],
+            ambient_light: true,
+            point_light: true,
+            directional_light: true,
+            camera_angle: 0.0,
+            fps_display,
+            pipeline_forward: true,
+        });
+    }
+
+    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
+        match event {
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::KeyboardInput {
+                    input:
+                        KeyboardInput {
+                            virtual_keycode: Some(VirtualKeyCode::Escape),
+                            ..
+                        },
+                    ..
+                } => Trans::Quit,
+                _ => Trans::None,
+            },
+            _ => Trans::None,
+        }
+    }
+
+    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+        data.data.update(&data.world);
+        match self.progress.as_ref().unwrap().complete() {
+            Completion::Failed => {
+                println!("Failed loading assets");
+                Trans::Quit
+            }
+            Completion::Complete => {
+                println!("Assets loaded, swapping state");
+                let entities = (
+                    &*data.world.entities(),
+                    &data.world.read_storage::<LoadTag>(),
+                ).join()
+                    .map(|(e, _)| e)
+                    .collect::<Vec<_>>();
+                if let Err(err) = data.world.delete_entities(&entities) {
+                    println!("Failed deleting load state entities: {}", err);
+                }
+                Trans::Switch(Box::new(Example))
+            }
+            Completion::Loading => Trans::None,
+        }
+    }
+}
+
+impl<'a, 'b> State<GameData<'a, 'b>> for Example {
+    fn on_start(&mut self, data: StateData<GameData>) {
+        let StateData { world, .. } = data;
         initialise_camera(world);
 
-        let assets = load_assets(&world);
+        let assets = world.read_resource::<Assets>().clone();
 
         // Add teapot and lid to scene
         for mesh in vec![assets.lid.clone(), assets.teapot.clone()] {
@@ -178,44 +292,11 @@ impl State for Example {
         }.into();
 
         world.create_entity().with(light).build();
-
-        {
-            world.add_resource(AmbientColor(Rgba::from([0.01; 3])));
-        }
-
-        let fps_display = world
-            .create_entity()
-            .with(UiTransform::new(
-                "fps".to_string(),
-                0.,
-                0.,
-                1.,
-                200.,
-                50.,
-                0,
-            ))
-            .with(UiText::new(
-                assets.font.clone(),
-                "N/A".to_string(),
-                [1.0, 1.0, 1.0, 1.0],
-                25.,
-            ))
-            .build();
-
-        world.add_resource::<DemoState>(DemoState {
-            light_angle: 0.0,
-            light_color: [1.0; 4],
-            ambient_light: true,
-            point_light: true,
-            directional_light: true,
-            camera_angle: 0.0,
-            fps_display,
-            pipeline_forward: true,
-        });
+        world.add_resource(AmbientColor(Rgba::from([0.01; 3])));
     }
 
-    fn handle_event(&mut self, world: &mut World, event: Event) -> Trans {
-        let w = world;
+    fn handle_event(&mut self, data: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
+        let w = data.world;
         // Exit if user hits Escape or closes the window
         let mut state = w.write_resource::<DemoState>();
 
@@ -235,13 +316,13 @@ impl State for Example {
                             Some(VirtualKeyCode::Escape) => return Trans::Quit,
                             Some(VirtualKeyCode::Space) => {
                                 // TODO: figure out how to change pipeline
-                            /*if state.pipeline_forward {
-                                state.pipeline_forward = false;
-                                set_pipeline_state(pipe, false);
-                            } else {
-                                state.pipeline_forward = true;
-                                set_pipeline_state(pipe, true);
-                            }*/
+                                /*if state.pipeline_forward {
+                                    state.pipeline_forward = false;
+                                    set_pipeline_state(pipe, false);
+                                } else {
+                                    state.pipeline_forward = true;
+                                    set_pipeline_state(pipe, true);
+                                }*/
                             }
                             Some(VirtualKeyCode::R) => {
                                 state.light_color = [0.8, 0.2, 0.2, 1.0];
@@ -301,8 +382,14 @@ impl State for Example {
         }
         Trans::None
     }
+
+    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+        data.data.update(&data.world);
+        Trans::None
+    }
 }
 
+#[derive(Clone)]
 struct Assets {
     cube: MeshHandle,
     cone: MeshHandle,
@@ -315,20 +402,21 @@ struct Assets {
     font: FontHandle,
 }
 
-fn load_assets(world: &World) -> Assets {
+fn load_assets(world: &World) -> (ProgressCounter, Assets) {
+    let mut progress = ProgressCounter::default();
     let mesh_storage = world.read_resource();
     let tex_storage = world.read_resource();
     let font_storage = world.read_resource();
     let mat_defaults = world.read_resource::<MaterialDefaults>();
     let loader = world.read_resource::<Loader>();
 
-    let red = loader.load_from_data([1.0, 0.0, 0.0, 1.0].into(), (), &tex_storage);
+    let red = loader.load_from_data([1.0, 0.0, 0.0, 1.0].into(), &mut progress, &tex_storage);
     let red = Material {
         albedo: red,
         ..mat_defaults.0.clone()
     };
 
-    let white = loader.load_from_data([1.0, 1.0, 1.0, 1.0].into(), (), &tex_storage);
+    let white = loader.load_from_data([1.0, 1.0, 1.0, 1.0].into(), &mut progress, &tex_storage);
     let white = Material {
         albedo: white,
         ..mat_defaults.0.clone()
@@ -339,30 +427,51 @@ fn load_assets(world: &World) -> Assets {
             "texture/logo.png",
             PngFormat,
             Default::default(),
-            (),
+            &mut progress,
             &tex_storage,
         ),
         ..mat_defaults.0.clone()
     };
 
-    let cube = loader.load("mesh/cube.obj", ObjFormat, (), (), &mesh_storage);
-    let cone = loader.load("mesh/cone.obj", ObjFormat, (), (), &mesh_storage);
-    let lid = loader.load("mesh/lid.obj", ObjFormat, (), (), &mesh_storage);
-    let teapot = loader.load("mesh/teapot.obj", ObjFormat, (), (), &mesh_storage);
-    let rectangle = loader.load("mesh/rectangle.obj", ObjFormat, (), (), &mesh_storage);
-    let font = loader.load("font/square.ttf", TtfFormat, (), (), &font_storage);
+    let cube = loader.load("mesh/cube.obj", ObjFormat, (), &mut progress, &mesh_storage);
+    let cone = loader.load("mesh/cone.obj", ObjFormat, (), &mut progress, &mesh_storage);
+    let lid = loader.load("mesh/lid.obj", ObjFormat, (), &mut progress, &mesh_storage);
+    let teapot = loader.load(
+        "mesh/teapot.obj",
+        ObjFormat,
+        (),
+        &mut progress,
+        &mesh_storage,
+    );
+    let rectangle = loader.load(
+        "mesh/rectangle.obj",
+        ObjFormat,
+        (),
+        &mut progress,
+        &mesh_storage,
+    );
+    let font = loader.load(
+        "font/square.ttf",
+        TtfFormat,
+        (),
+        &mut progress,
+        &font_storage,
+    );
 
-    Assets {
-        cube,
-        cone,
-        lid,
-        rectangle,
-        teapot,
-        red,
-        white,
-        logo,
-        font,
-    }
+    (
+        progress,
+        Assets {
+            cube,
+            cone,
+            lid,
+            rectangle,
+            teapot,
+            red,
+            white,
+            logo,
+            font,
+        },
+    )
 }
 
 fn main() {
@@ -390,16 +499,17 @@ fn run() -> Result<(), Error> {
             .with_pass(DrawShaded::<PosNormTex>::new())
             .with_pass(DrawUi::new()),
     );
-    let mut game = Application::build(resources_directory, Example)?
+    let game_data = GameDataBuilder::default()
         .with::<ExampleSystem>(ExampleSystem, "example_system", &[])
-        .with_frame_limit(FrameRateLimitStrategy::Unlimited, 0)
         .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
         .with_bundle(UiBundle::<String, String>::new())?
         .with_bundle(HotReloadBundle::default())?
         .with_bundle(FPSCounterBundle::default())?
         .with_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?
-        .with_bundle(InputBundle::<String, String>::new())?
-        .build()?;
+        .with_bundle(InputBundle::<String, String>::new())?;
+    let mut game = Application::build(resources_directory, Loading::default())?
+        .with_frame_limit(FrameRateLimitStrategy::Unlimited, 0)
+        .build(game_data)?;
     game.run();
     Ok(())
 }

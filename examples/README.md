@@ -103,4 +103,11 @@ Render a basic UI.
 ![pong example result](assets/img/pong.png)
 
 ### Appendix A
+
 From the book, it is a minor update to the Pong example that uses `Config` files instead of hardcoded constants.
+
+### Custom Game Data
+
+Demonstrates how to use custom `GameData`, with three different states: `Loading`, `Main`, `Paused`.
+
+![game_data_example_result](custom_game_data/screenshot.png)

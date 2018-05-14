@@ -2,7 +2,7 @@
 
 extern crate amethyst;
 
-use amethyst::{Application, Error, State, Trans};
+use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
 use amethyst::assets::Loader;
 use amethyst::config::Config;
 use amethyst::controls::{FlyControlBundle, FlyControlTag};
@@ -18,8 +18,9 @@ use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Elemen
 
 struct ExampleState;
 
-impl State for ExampleState {
-    fn on_start(&mut self, world: &mut World) {
+impl<'a, 'b> State<GameData<'a, 'b>> for ExampleState {
+    fn on_start(&mut self, data: StateData<GameData>) {
+        let StateData { world, .. } = data;
         initialise_camera(world);
 
         let assets = load_assets(&world);
@@ -38,7 +39,7 @@ impl State for ExampleState {
         world.add_resource(AmbientColor(Rgba::from([0.1; 3])));
     }
 
-    fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
+    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
         match event {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::KeyboardInput {
@@ -57,6 +58,11 @@ impl State for ExampleState {
             },
             _ => (),
         }
+        Trans::None
+    }
+
+    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+        data.data.update(&data.world);
         Trans::None
     }
 }
@@ -112,8 +118,7 @@ fn run() -> Result<(), Error> {
             .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
             .with_pass(DrawShaded::<PosNormTex>::new()),
     );
-    let mut game = Application::build(resources_directory, ExampleState)?
-        .with_frame_limit(FrameRateLimitStrategy::Unlimited, 0)
+    let game_data = GameDataBuilder::default()
         .with_bundle(FlyControlBundle::<String, String>::new(
             Some(String::from("move_x")),
             Some(String::from("move_y")),
@@ -123,8 +128,10 @@ fn run() -> Result<(), Error> {
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path),
         )?
-        .with_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?
-        .build()?;
+        .with_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?;
+    let mut game = Application::build(resources_directory, ExampleState)?
+        .with_frame_limit(FrameRateLimitStrategy::Unlimited, 0)
+        .build(game_data)?;
     game.run();
     Ok(())
 }
