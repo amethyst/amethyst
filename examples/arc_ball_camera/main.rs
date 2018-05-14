@@ -18,12 +18,13 @@ use amethyst::renderer::{
     MaterialDefaults, MeshHandle, ObjFormat, Pipeline, PosNormTex, Projection, RenderBundle, Rgba,
     Stage, VirtualKeyCode, WindowEvent,
 };
-use amethyst::{Application, Error, State, Trans};
+use amethyst::{Application, Error, State, Trans, GameData, GameDataBuilder, StateData};
 
 struct ExampleState;
 
-impl State for ExampleState {
-    fn on_start(&mut self, world: &mut World) {
+impl<'a, 'b> State<GameData<'a, 'b>> for ExampleState {
+    fn on_start(&mut self, data: StateData<GameData>) {
+        let StateData { world, .. } = data;
         let assets = load_assets(&world);
 
         // Add cube to scene
@@ -53,7 +54,7 @@ impl State for ExampleState {
         world.add_resource(AmbientColor(Rgba::from([0.1; 3])));
     }
 
-    fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
+    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
         match event {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::KeyboardInput {
@@ -72,6 +73,11 @@ impl State for ExampleState {
             },
             _ => (),
         }
+        Trans::None
+    }
+
+    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+        data.data.update(&data.world);
         Trans::None
     }
 }
@@ -127,8 +133,7 @@ fn run() -> Result<(), Error> {
             .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
             .with_pass(DrawShaded::<PosNormTex>::new()),
     );
-    let mut game = Application::build(resources_directory, ExampleState)?
-        .with_frame_limit(FrameRateLimitStrategy::Unlimited, 0)
+    let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new().with_dep(&[]))?
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path),
@@ -136,7 +141,7 @@ fn run() -> Result<(), Error> {
         .with(MouseFocusUpdateSystem::new(), "mouse_focus", &[])
         .with(MouseCenterLockSystem, "mouse_lock", &["mouse_focus"])
         // This system will keep the camera focussing the target while conserving the orientation
-        // of the camera and its distance to the target 
+        // of the camera and its distance to the target
         .with(ArcBallMovementSystem {}, "arc_ball_movement_system", &[])
         // This system manage the orientation of camera in accord to mouse input
         .with(
@@ -144,8 +149,10 @@ fn run() -> Result<(), Error> {
             "free_rotation_system",
             &[],
         )
-        .with_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?
-        .build()?;
+        .with_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?;
+    let mut game = Application::build(resources_directory, ExampleState)?
+        .with_frame_limit(FrameRateLimitStrategy::Unlimited, 0)
+        .build(game_data)?;
     game.run();
     Ok(())
 }

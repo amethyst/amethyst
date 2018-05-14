@@ -153,16 +153,8 @@ name = "custom_game_data"
 path = "examples/custom_game_data/main.rs"
 
 [[example]]
-name = "fly_camera"
-path = "examples/fly_camera/main.rs"
-
-[[example]]
 name = "arc_ball_camera"
 path = "examples/arc_ball_camera/main.rs"
-
-[[example]]
-name = "sprites"
-path = "examples/sprites/main.rs"
 
 [workspace]
 members = ["amethyst_gltf"]
