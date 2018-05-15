@@ -1,9 +1,12 @@
 pub use imagefmt::Error as ImageError;
 
 use std::io::Cursor;
+use std::result::Result as StdResult;
 
 use Renderer;
-use amethyst_assets::{Result, ResultExt, SimpleFormat};
+use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, Result, ResultExt, SimpleFormat};
+use amethyst_core::specs::error::Error as SpecsError;
+use amethyst_core::specs::prelude::{Entity, Read, ReadExpect, WriteStorage};
 use gfx::format::{ChannelType, SurfaceType};
 use gfx::texture::SamplerInfo;
 use gfx::traits::Pod;
@@ -123,6 +126,26 @@ impl TextureData {
     /// Creates texture data from color.
     pub fn color(value: [f32; 4]) -> Self {
         TextureData::Rgba(value, Default::default())
+    }
+}
+
+impl<'a> PrefabData<'a> for TextureData {
+    type SystemData = (
+        ReadExpect<'a, Loader>,
+        WriteStorage<'a, Handle<Texture>>,
+        Read<'a, AssetStorage<Texture>>,
+    );
+
+    fn load_prefab(
+        &self,
+        entity: Entity,
+        system_data: &mut Self::SystemData,
+        _: &[Entity],
+    ) -> StdResult<(), SpecsError> {
+        let handle = system_data
+            .0
+            .load_from_data(self.clone(), (), &system_data.2);
+        system_data.1.insert(entity, handle).map(|_| ())
     }
 }
 

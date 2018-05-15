@@ -1,0 +1,25 @@
+Prefab (
+    entities: [
+        PrefabEntity (
+            parent: 0,
+            data: Some((
+                CustomPrefabData (
+                    mesh: "mesh/cuboid.custom",
+                    material: (0.0, 0.0, 1.0, 0.0,),
+                ),
+                TransformPrefabData (
+                    transform: (
+                        translation: (
+                            x: 0.0,
+                            y: 0.0,
+                            z: 5.0,
+                        ),
+                        scale: (x: 2.0, y: 2.0, z: 2.0,),
+                        rotation: (s: 1.0, v: (x: 0.0, y: 0.0, z: 0.0,),),
+                    ),
+                ),
+            )),
+        ),
+    ],
+)
+
