@@ -5,10 +5,15 @@ rust:
   - beta
   - nightly
 
-# Allow for occasional compiler breakage on nightly Rust.
 matrix:
+  # Allow for occasional compiler breakage on nightly Rust.
   allow_failures:
     - rust: nightly
+  # Check on Rust 1.23.
+  include:
+    - rust: 1.23
+      script:
+        - cargo check --tests
 
 # Build the Bors staging and trying branches, plus PRs to develop, master, and
 # the latest release branch.
@@ -48,7 +53,7 @@ script: |
   # Build and test without profiler
   cargo test --all -v &&
   # Build and test with profiler
-  cargo test --all --features profiler -v 
+  cargo test --all --features profiler -v
 
 # Push notifications to `amethyst/general` and `amethyst/engine` Gitter chats.
 notifications:
