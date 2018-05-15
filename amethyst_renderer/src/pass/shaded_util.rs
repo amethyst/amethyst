@@ -22,6 +22,7 @@ pub(crate) struct FragmentArgs {
 pub(crate) struct PointLightPod {
     position: vec3,
     color: vec3,
+    pad: float,
     intensity: float,
 }
 
@@ -44,8 +45,9 @@ pub(crate) fn set_light_args(
             if let Light::Point(ref light) = *light {
                 Some(PointLightPod {
                     position: light.center.into(),
-                    color: light.color.into(),
+                    color: [100.0, 0.0, 0.0].into(),
                     intensity: light.intensity,
+                    pad: 0.0,
                 }.std140())
             } else {
                 None
