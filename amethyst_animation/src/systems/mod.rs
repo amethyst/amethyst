@@ -5,8 +5,8 @@ use amethyst_assets::Processor;
 
 use resources::{Animation, Sampler};
 
-mod sampling;
 mod control;
+mod sampling;
 
 /// Asset storage processor for `Sampler`
 pub type SamplerProcessor<S> = Processor<Sampler<S>>;

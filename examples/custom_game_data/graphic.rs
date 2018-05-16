@@ -1,11 +1,11 @@
+use amethyst::assets::{Loader, ProgressCounter};
 use amethyst::core::cgmath::{Array, Deg, Euler, Quaternion, Rotation3, Vector3};
 use amethyst::core::{GlobalTransform, Transform};
+use amethyst::ecs::prelude::World;
 use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, Light, Material,
                          MaterialDefaults, MeshHandle, ObjFormat, PngFormat, PointLight,
                          Projection, Rgba};
-use amethyst::assets::{Loader, ProgressCounter};
 use amethyst::ui::{FontHandle, TtfFormat};
-use amethyst::ecs::prelude::World;
 
 #[derive(Clone)]
 pub struct Assets {

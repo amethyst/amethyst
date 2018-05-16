@@ -7,11 +7,11 @@ use amethyst_assets::{AssetStorage, Loader, WeakHandle};
 use amethyst_core::cgmath::vec4;
 use amethyst_core::specs::prelude::{Entities, Entity, Join, Read, ReadExpect, ReadStorage,
                                     WriteStorage};
+use amethyst_renderer::error::Result;
+use amethyst_renderer::pipe::pass::{Pass, PassData};
+use amethyst_renderer::pipe::{Effect, NewEffect};
 use amethyst_renderer::{Encoder, Factory, Mesh, PosTex, Resources, ScreenDimensions, Texture,
                         TextureData, TextureHandle, TextureMetadata, VertexFormat};
-use amethyst_renderer::error::Result;
-use amethyst_renderer::pipe::{Effect, NewEffect};
-use amethyst_renderer::pipe::pass::{Pass, PassData};
 use fnv::FnvHashMap as HashMap;
 use gfx::preset::blend;
 use gfx::pso::buffer::ElemStride;

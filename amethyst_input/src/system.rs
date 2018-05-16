@@ -2,8 +2,8 @@
 
 use std::hash::Hash;
 
-use amethyst_core::specs::prelude::{Read, Resources, System, Write};
 use amethyst_core::shrev::{EventChannel, ReaderId};
+use amethyst_core::specs::prelude::{Read, Resources, System, Write};
 use winit::Event;
 
 use {Bindings, InputEvent, InputHandler};

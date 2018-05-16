@@ -6,8 +6,8 @@ use std::sync::Arc;
 use fnv::FnvHashMap;
 use rayon::ThreadPool;
 
-use {Asset, Directory, ErrorKind, Format, FormatValue, Progress, ResultExt, Source};
 use storage::{AssetStorage, Handle, Processed};
+use {Asset, Directory, ErrorKind, Format, FormatValue, Progress, ResultExt, Source};
 
 /// The asset loader, holding the sources and a reference to the `ThreadPool`.
 pub struct Loader {
