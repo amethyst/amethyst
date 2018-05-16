@@ -60,7 +60,7 @@ impl<'a, 'b> CustomGameDataBuilder<'a, 'b> {
         }
     }
 
-    pub fn with_core<B>(mut self, bundle: B) -> Result<Self>
+    pub fn with_base_bundle<B>(mut self, bundle: B) -> Result<Self, Error>
     where
         B: SystemBundle<'a, 'b>,
     {
@@ -81,7 +81,7 @@ impl<'a, 'b> CustomGameDataBuilder<'a, 'b> {
 
 impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomGameDataBuilder<'a, 'b> {
     fn build(self, world: &mut World) -> CustomGameData<'a, 'b> {
-        let pool = world.read_resource::<Arc<ThreadPool>>().clone();
+        let pool = world.read_resource::<ThreadPool>().clone();
 
         let mut core_dispatcher = self.core.with_pool(pool.clone()).build();
         let mut running_dispatcher = self.running.with_pool(pool.clone()).build();
