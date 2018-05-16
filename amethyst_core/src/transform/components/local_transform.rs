@@ -74,13 +74,12 @@ impl Transform {
         //
         // Note: Not benchmarked
 
-        let mat = Matrix4 {
+        Matrix4 {
             x: (quat.x * self.scale.x).extend(0.),
             y: (quat.y * self.scale.y).extend(0.),
             z: (quat.z * self.scale.z).extend(0.),
             w: self.translation.extend(1.0),
-        };
-        mat
+        }
     }
 
     /// Convert this transform's rotation into an Orientation, guaranteed to be 3 unit orthogonal
