@@ -2,7 +2,7 @@
 
 use cgmath::{Angle, Array, Basis2, Deg, ElementWise, EuclideanSpace, Euler, InnerSpace, Matrix3,
              Matrix4, One, Point2, Point3, Quaternion, Rad, Rotation, Rotation2, Rotation3,
-             Transform as CgTransform, Vector2, Vector3, Vector4, Zero};
+             Transform as CgTransform, Vector2, Vector3, Zero};
 use orientation::Orientation;
 use specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
 
