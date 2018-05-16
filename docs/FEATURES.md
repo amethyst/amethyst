@@ -4,7 +4,7 @@
 
 * [x] modular structure while providing a quick solution to start your project (the main crate)
 * [x] powered by the parallel ECS library [Specs]
-* [x]  [gfx]-based rendering engine with high customizability
+* [x] [gfx]-based rendering engine with high customizability
 * [x] input abstraction for keyboard and mouse, bindings defined in config files
 * [x] parallel asset loading with high extensibility and hot-reloading
 * [x] vertex skinning and property animation
