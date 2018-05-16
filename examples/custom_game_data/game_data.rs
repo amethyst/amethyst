@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use amethyst::ecs::prelude::{Dispatcher, DispatcherBuilder, System, World};
 use amethyst::core::SystemBundle;
+use amethyst::ecs::prelude::{Dispatcher, DispatcherBuilder, System, World};
 use amethyst::{DataInit, Error, Result};
 use rayon::ThreadPool;
 

@@ -1,9 +1,9 @@
+use amethyst_core::shrev::EventChannel;
 use amethyst_core::specs::prelude::{Component, Entities, Entity, Join, Read, ReadStorage, System,
                                     Write};
 use amethyst_core::specs::storage::NullStorage;
 use amethyst_input::InputHandler;
 use amethyst_renderer::MouseButton;
-use amethyst_core::shrev::EventChannel;
 use std::hash::Hash;
 use std::marker::PhantomData;
 use transform::UiTransform;

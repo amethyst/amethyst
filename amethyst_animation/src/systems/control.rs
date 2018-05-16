@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::specs::prelude::{Component, Entities, Entity, Join, Read, ReadStorage,
-                                    Resources, SystemData, System, WriteStorage};
+                                    Resources, System, SystemData, WriteStorage};
 use amethyst_core::timing::secs_to_duration;
 use fnv::FnvHashMap;
 use minterpolate::InterpolationPrimitive;

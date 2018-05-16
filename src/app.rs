@@ -6,11 +6,11 @@ use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 
+use core::shrev::{EventChannel, ReaderId};
 use fern;
 use log::LevelFilter;
 use rayon::ThreadPoolBuilder;
 use shred::Resource;
-use core::shrev::{EventChannel, ReaderId};
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
 use winit::{Event, WindowEvent};

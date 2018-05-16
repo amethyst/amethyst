@@ -1,4 +1,3 @@
-use {Ball, ScoreBoard};
 use amethyst::assets::AssetStorage;
 use amethyst::audio::Source;
 use amethyst::audio::output::Output;
@@ -7,6 +6,7 @@ use amethyst::ecs::prelude::{Entity, Join, Read, ReadExpect, System, Write, Writ
 use amethyst::ui::UiText;
 use audio::Sounds;
 use config::ArenaConfig;
+use {Ball, ScoreBoard};
 
 /// This system is responsible for checking if a ball has moved into a left or
 /// a right edge. Points are distributed to the player on the other side, and

@@ -4,21 +4,18 @@ extern crate amethyst;
 
 use amethyst::assets::Loader;
 use amethyst::config::Config;
-use amethyst::controls::{
-    ArcBallControlTag, ArcBallMovementSystem, FlyControlTag, FreeRotationSystem,
-    MouseCenterLockSystem, MouseFocusUpdateSystem,
-};
+use amethyst::controls::{ArcBallControlTag, ArcBallMovementSystem, FlyControlTag,
+                         FreeRotationSystem, MouseCenterLockSystem, MouseFocusUpdateSystem};
 use amethyst::core::cgmath::{Deg, Vector3};
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::{Entity, World};
 use amethyst::input::InputBundle;
-use amethyst::renderer::{
-    AmbientColor, Camera, DisplayConfig, DrawShaded, ElementState, Event, KeyboardInput, Material,
-    MaterialDefaults, MeshHandle, ObjFormat, Pipeline, PosNormTex, Projection, RenderBundle, Rgba,
-    Stage, VirtualKeyCode, WindowEvent,
-};
-use amethyst::{Application, Error, State, Trans, GameData, GameDataBuilder, StateData};
+use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, ElementState, Event,
+                         KeyboardInput, Material, MaterialDefaults, MeshHandle, ObjFormat,
+                         Pipeline, PosNormTex, Projection, RenderBundle, Rgba, Stage,
+                         VirtualKeyCode, WindowEvent};
+use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
 
 struct ExampleState;
 

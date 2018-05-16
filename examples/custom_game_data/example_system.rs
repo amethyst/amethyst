@@ -1,9 +1,9 @@
-use amethyst::ecs::prelude::{Join, Read, ReadStorage, System, WriteExpect, WriteStorage};
-use amethyst::core::{Time, Transform};
-use amethyst::renderer::{Camera, Light};
-use amethyst::utils::fps_counter::FPSCounter;
 use amethyst::core::cgmath::{Quaternion, Rad, Rotation, Rotation3};
+use amethyst::core::{Time, Transform};
+use amethyst::ecs::prelude::{Join, Read, ReadStorage, System, WriteExpect, WriteStorage};
+use amethyst::renderer::{Camera, Light};
 use amethyst::ui::UiText;
+use amethyst::utils::fps_counter::FPSCounter;
 
 use super::DemoState;
 

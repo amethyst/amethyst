@@ -2,7 +2,6 @@
 
 extern crate amethyst;
 
-use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
 use amethyst::assets::Loader;
 use amethyst::config::Config;
 use amethyst::controls::{FlyControlBundle, FlyControlTag};
@@ -15,6 +14,7 @@ use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Elemen
                          KeyboardInput, Material, MaterialDefaults, MeshHandle, ObjFormat,
                          Pipeline, PosNormTex, Projection, RenderBundle, Rgba, Stage,
                          VirtualKeyCode, WindowEvent};
+use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
 
 struct ExampleState;
 
