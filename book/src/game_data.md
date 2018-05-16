@@ -60,7 +60,7 @@ impl<'a, 'b> CustomGameDataBuilder<'a, 'b> {
         }
     }
 
-    pub fn with_base_bundle<B>(mut self, bundle: B) -> Result<Self, Error>
+    pub fn with_base_bundle<B>(mut self, bundle: B) -> Result<Self>
     where
         B: SystemBundle<'a, 'b>,
     {
