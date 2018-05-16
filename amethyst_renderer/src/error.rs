@@ -1,8 +1,8 @@
 //! Renderer error types.
 
 use std::error::Error as StdError;
-use std::fmt::{Display, Formatter};
 use std::fmt::Result as FmtResult;
+use std::fmt::{Display, Formatter};
 use std::result::Result as StdResult;
 
 use gfx;

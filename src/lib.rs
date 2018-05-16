@@ -81,13 +81,13 @@ pub use self::error::{Error, Result};
 pub use self::game_data::{DataInit, GameData, GameDataBuilder};
 pub use self::state::{State, StateData, StateMachine, Trans};
 pub use core::shred;
-pub use core::specs as ecs;
 pub use core::shrev;
+pub use core::specs as ecs;
 
 pub mod prelude;
 
 mod app;
-mod game_data;
 mod error;
+mod game_data;
 mod state;
 mod vergen;

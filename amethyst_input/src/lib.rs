@@ -26,13 +26,13 @@ use winit::{MouseButton, VirtualKeyCode};
 
 mod axis;
 mod bindings;
+mod bundle;
 mod button;
+mod event;
 mod input_handler;
 mod local_mouse_button;
 mod local_virtual_key_code;
-mod event;
 mod system;
-mod bundle;
 
 // This entire set ot types is to be eliminated once impl Trait is released.
 

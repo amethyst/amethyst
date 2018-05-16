@@ -4,7 +4,6 @@
 extern crate amethyst;
 extern crate rayon;
 
-use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
 use amethyst::assets::{Loader, Result as AssetResult, SimpleFormat};
 use amethyst::config::Config;
 use amethyst::core::cgmath::{Array, Vector3};
@@ -14,6 +13,7 @@ use amethyst::input::InputBundle;
 use amethyst::renderer::{Camera, DisplayConfig, DrawShaded, Event, KeyboardInput, Light, Material,
                          MaterialDefaults, Mesh, MeshData, Pipeline, PointLight, PosNormTex,
                          Projection, RenderBundle, Rgba, Stage, VirtualKeyCode, WindowEvent};
+use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
 
 #[derive(Clone)]
 struct Custom;

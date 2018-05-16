@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
-use std::sync::{Arc, Weak};
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{Arc, Weak};
 
 use amethyst_core::Time;
 use amethyst_core::specs::prelude::{Component, Read, ReadExpect, System, VecStorage, Write};

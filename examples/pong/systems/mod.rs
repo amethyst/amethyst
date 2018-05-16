@@ -1,6 +1,6 @@
+mod bounce;
 mod move_balls;
 mod paddle;
-mod bounce;
 mod winner;
 
 pub use self::bounce::BounceSystem;

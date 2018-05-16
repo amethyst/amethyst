@@ -3,7 +3,6 @@
 extern crate amethyst;
 extern crate rayon;
 
-use amethyst::{Application, Error, State, StateData, Trans};
 use amethyst::assets::{Completion, HotReloadBundle, ProgressCounter};
 use amethyst::config::Config;
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
@@ -15,18 +14,19 @@ use amethyst::renderer::{DisplayConfig, DrawShaded, Event, Pipeline, PosNormTex,
                          Stage};
 use amethyst::ui::{DrawUi, UiBundle};
 use amethyst::utils::fps_counter::FPSCounterBundle;
+use amethyst::{Application, Error, State, StateData, Trans};
 
+use example_system::ExampleSystem;
 use game_data::{CustomGameData, CustomGameDataBuilder};
 use graphic::{add_graphics_to_world, load_assets, Assets};
-use ui::{create_load_ui, create_paused_ui};
 use input::{is_exit, is_pause};
-use example_system::ExampleSystem;
+use ui::{create_load_ui, create_paused_ui};
 
+mod example_system;
 mod game_data;
-mod ui;
 mod graphic;
 mod input;
-mod example_system;
+mod ui;
 
 pub struct DemoState {
     light_angle: f32,

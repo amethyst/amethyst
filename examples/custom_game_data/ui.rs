@@ -1,6 +1,6 @@
+use super::Tag;
 use amethyst::ecs::prelude::{Entity, World};
 use amethyst::ui::{Anchor, Anchored, FontHandle, UiText, UiTransform};
-use super::Tag;
 
 pub fn create_load_ui(world: &mut World, font: FontHandle) -> Entity {
     let fps_display = world

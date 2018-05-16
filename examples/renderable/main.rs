@@ -5,7 +5,6 @@
 
 extern crate amethyst;
 
-use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
 use amethyst::assets::{Completion, HotReloadBundle, Loader, ProgressCounter};
 use amethyst::config::Config;
 use amethyst::core::cgmath::{Array, Deg, Euler, Quaternion, Rad, Rotation, Rotation3, Vector3};
@@ -22,6 +21,7 @@ use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, DisplayConfig, 
                          Projection, RenderBundle, Rgba, Stage, VirtualKeyCode, WindowEvent};
 use amethyst::ui::{Anchor, Anchored, DrawUi, FontHandle, TtfFormat, UiBundle, UiText, UiTransform};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
+use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
 
 struct DemoState {
     light_angle: f32,
