@@ -70,37 +70,14 @@ impl Transform {
         // This is a hot function, so manually implement the matrix-multiply to avoid a load of
         // unnecessary +0s.
         let quat: Matrix3<f32> = self.rotation.into();
-        // multiplying a general matrix by a diagonal matrix is equivalent to multiplying each row
-        // of the general matrix with the corresponding value from the diagonal matrix (see
-        // http://www.solitaryroad.com/c108.html for example). If we do this manually we can cut
-        // down the number of arithmetic operations and speed up stuff.
-        //
         // This should probably be in cgmath eventually.
         //
         // Note: Not benchmarked
-        let x = Vector4 {
-            x: quat.x.x * self.scale.x,
-            y: quat.x.y * self.scale.y,
-            z: quat.x.z * self.scale.z,
-            w: 0.0,
-        };
-        let y = Vector4 {
-            x: quat.y.x * self.scale.x,
-            y: quat.y.y * self.scale.y,
-            z: quat.y.z * self.scale.z,
-            w: 0.0,
-        };
-        let z = Vector4 {
-            x: quat.z.x * self.scale.x,
-            y: quat.z.y * self.scale.y,
-            z: quat.z.z * self.scale.z,
-            w: 0.0,
-        };
 
         let mat = Matrix4 {
-            x,
-            y,
-            z,
+            x: (quat.x * self.scale.x).extend(0.),
+            y: (quat.y * self.scale.y).extend(0.),
+            z: (quat.z * self.scale.z).extend(0.),
             w: self.translation.extend(1.0),
         };
         mat
