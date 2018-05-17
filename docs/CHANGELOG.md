@@ -26,6 +26,12 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Refactor to use new specs, major breakage! ([#674]), ([#679]), ([#683]).
 * `Transform` refactored, and added lots of utility functions, ([#660])
 * Disable multisampling on all examples, and add a single example with multisampling on, ([#671])
+* Add new raw mouse events for use with camera rotation ([#699])
+* Upgrade to winit 1.13.1 ([#698])
+* Refactor game data, permit greater extensibility. ([#691])
+* Refactor, upgrade to new specs ([#662])
+* Add UiButtons and UiButtonBuilder ([#613])
+
 
 ### Fixed
 * Asset loading tolerates paths constructed using back slashes ([#623]).
@@ -68,6 +74,11 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#660]: https://github.com/amethyst/amethyst/pull/660
 [#671]: https://github.com/amethyst/amethyst/pull/671
 [#689]: https://github.com/amethyst/amethyst/pull/689
+[#691]: https://github.com/amethyst/amethyst/pull/691
+[#698]: https://github.com/amethyst/amethyst/pull/698
+[#699]: https://github.com/amethyst/amethyst/pull/699
+[#622]: https://github.com/amethyst/amethyst/pull/622
+[#613]: https://github.com/amethyst/amethyst/pull/613
 
 ## [0.5.1] - 2017-08-30
 
