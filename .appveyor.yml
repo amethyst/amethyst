@@ -36,7 +36,7 @@ branches:
 # Force third-party crates to persist from previous builds and update only when
 # needed.
 cache:
-  - .cargo -> rust-%channel%-date, cargo-%channel%-build
+  - .cargo
 
 # Since this is not a .NET project, we can flip the build system off.
 build: false
