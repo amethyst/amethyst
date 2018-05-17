@@ -14,25 +14,25 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Fly Camera ([#578]).
 * UI Layouts ([#591]).
 * UI Events ([#580]).
-* Introduce a generic animation system, with support for both  transform and texture animation, ([#558]), ([#566]), ([#567]), ([#569]), ([#570]), ([#611]), ([#641]), ([#644])
-* Add transparency support to core passes, ([#543]), ([#574]), ([#584]) 
-* Add vertex skinning, ([#545]), ([#619])
-* Expose a basic visibility ordering system, with the ability to swap in better replacement systems, ([#595])
-* Audio `Output` is now added directly rather than as an `Option`, should now be fetched with `Option<Read<'a, Output>>`, ([#679])
-* New nightly feature that enables `shred`s nightly feature, ([#689])
-* `Transform` refactored, and added lots of utility functions, ([#660])
+* Introduce a generic animation system, with support for both  transform and texture animation ([#558]), ([#566]), ([#567]), ([#569]), ([#570]), ([#611]), ([#641]), ([#644])
+* Add transparency support to core passes ([#543]), ([#574]), ([#584]) 
+* Add vertex skinning ([#545]), ([#619])
+* Expose a basic visibility ordering system, with the ability to swap in better replacement systems ([#595])
+* Audio `Output` is now added directly rather than as an `Option`, should now be fetched with `Option<Read<'a, Output>>` ([#679])
+* New nightly feature that enables `shred`s nightly feature ([#689])
+* `Transform` refactored, and added lots of utility functions ([#660])
 * Add new raw mouse events for use with camera rotation ([#699])
 * Add UiButtons and UiButtonBuilder ([#613])
 * Add arc ball camera ([#700])
 
 ### Changed
-* Update dependencies to the newest versions: cgmath, winit, glutin, gfx, gfx_glyph, ([#527]), ([#572]), ([#648])
-* Rodio updated to 0.7, ([#676])
-* Refactored bundles to only contain `System`s, ([#675])
+* Update dependencies to the newest versions: cgmath, winit, glutin, gfx, gfx_glyph ([#527]), ([#572]), ([#648])
+* Rodio updated to 0.7 ([#676])
+* Refactored bundles to only contain `System`s ([#675])
 * Refactor to use new specs, major breakage! ([#674]), ([#679]), ([#683]), ([#662]).
 * Upgrade to winit 1.13.1 ([#698])
-* Refactor game data, permit greater extensibility. ([#691])
-* Disable multisampling on all examples, and add a single example with multisampling on, ([#671])
+* Refactor game data, permit greater extensibility ([#691])
+* Disable multisampling on all examples, and add a single example with multisampling on ([#671])
 
 ### Fixed
 * Asset loading tolerates paths constructed using back slashes ([#623]).
