@@ -66,11 +66,11 @@ pub struct DrawUi {
     cached_draw_order: CachedDrawOrder,
     cached_color_textures: HashMap<KeyColor, TextureHandle>,
     glyph_brushes: GlyphBrushCache,
-    next_brush_cache_id: u32,
+    next_brush_cache_id: u64,
 }
 
 type GlyphBrushCache = HashMap<
-    u32, GlyphBrush<'static, Resources, Factory>
+    u64, GlyphBrush<'static, Resources, Factory>
 >;
 
 impl DrawUi {

@@ -36,7 +36,7 @@ pub struct UiText {
     #[derivative(Debug = "ignore")]
     pub(crate) cached_glyphs: Vec<PositionedGlyph<'static>>,
     /// Cached `GlyphBrush` id for use in the `UiPass`.
-    pub(crate) brush_id: Option<u32>,
+    pub(crate) brush_id: Option<u64>,
 }
 
 impl UiText {
