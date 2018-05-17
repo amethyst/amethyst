@@ -39,8 +39,8 @@ Amethyst's state machine to start, stop, and update the game. But for now we'll
 just implement one method: 
 
 ```rust,ignore
-impl State for Pong {
-    fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
+impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
+    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
         match event {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::KeyboardInput {
@@ -56,15 +56,23 @@ impl State for Pong {
             _ => Trans::None,
         }
     }
+
+    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+        data.data.update(&data.world);
+        Trans::None
+    }
 }
 ```
 
-The `handle_event` method is executed on every frame before updating, and it's 
+The `handle_event` method is executed for every event before updating, and it's 
 used to react to events. It returns a `Trans`, which is an enum of state machine 
 transitions. In this case, we're watching for the Escape keycode from the 
 Window. If we receive it, we'll return `Trans::Quit` which will be used to clean 
 up the `State` and close the application. All other keyboard input is ignored 
 for now.
+
+The `update` method is executed after events have happened.  In this instance
+we're just using it to execute our dispatcher.  More on that later.
 
 Now that we know we can quit, let's add some code to actually get things 
 started! We'll use a `run()` function, which returns a Result and thus 
@@ -99,7 +107,7 @@ make, anyway:
   max_dimensions: None,
   min_dimensions: None,
   fullscreen: false,
-  multisampling: 1,
+  multisampling: 0,
   visibility: true,
   vsync: true,
 )
@@ -129,9 +137,8 @@ color we started with back, for instance, you can try
 Now let's pack everything up and run it:
 
 ```rust,ignore
-let mut game = Application::build("./", Pong)?
-    .with_bundle(RenderBundle::new(pipe, Some(config)))?
-    .build()?;
+let game_data = GameDataBuilder::default().with_bundle(RenderBundle::new(pipe, Some(config)))?;
+let mut game = Application::new("./", Pong, game_data)?;
 game.run();
 Ok(())
 ```
@@ -162,8 +169,7 @@ It should look something like this:
 
 ![Step one](./images/pong_tutorial/pong_01.png)
 
-(TODO: switch links to master)
 
-[st]: https://www.amethyst.rs/doc/develop/doc/amethyst/trait.State.html
-[ap]: https://www.amethyst.rs/doc/develop/doc/amethyst/struct.Application.html
+[st]: https://www.amethyst.rs/doc/master/doc/amethyst/trait.State.html
+[ap]: https://www.amethyst.rs/doc/master/doc/amethyst/struct.Application.html
 [gs]: ./getting_started.html
