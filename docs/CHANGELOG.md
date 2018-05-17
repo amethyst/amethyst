@@ -78,7 +78,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#691]: https://github.com/amethyst/amethyst/pull/691
 [#698]: https://github.com/amethyst/amethyst/pull/698
 [#699]: https://github.com/amethyst/amethyst/pull/699
-[#622]: https://github.com/amethyst/amethyst/pull/622
+[#662]: https://github.com/amethyst/amethyst/pull/662
 [#613]: https://github.com/amethyst/amethyst/pull/613
 [#700]: https://github.com/amethyst/amethyst/pull/700
 
