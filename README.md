@@ -21,6 +21,15 @@
 
 This project is a *work in progress* and is very incomplete; pardon the dust!
 
+## Goals
+
+* massively parallel architecture
+* powered by a correct [Entity Component System][ecs] model
+* rapid prototyping with [RON] files for prefabs and an abstract scripting API
+
+[ecs]: https://en.wikipedia.org/wiki/Entity–component–system
+[RON]: https://github.com/ron-rs/ron
+
 ## Features
 
 Please visit the [features page][feat] for a list of features Amethyst provides and will provide.
