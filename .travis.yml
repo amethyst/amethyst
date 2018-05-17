@@ -35,10 +35,6 @@ addons:
 # performance.
 sudo: false
 
-# Force third-party crates to persist from previous builds and update only when
-# needed.
-cache: cargo
-
 # Allow binaries installed from Cargo.
 before_script:
   - export PATH=$PATH:/home/travis/.cargo/bin
