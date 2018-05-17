@@ -4,7 +4,7 @@
 //!
 //! [am]: https://www.amethyst.rs/
 //! [gh]: https://github.com/amethyst/amethyst/tree/develop/src/renderer
-//! [bk]: https://www.amethyst.rs/book/
+//! [bk]: https://www.amethyst.rs/book/master/
 
 #![deny(missing_docs)]
 #![doc(html_logo_url = "https://tinyurl.com/jtmm43a")]
@@ -20,6 +20,8 @@ extern crate gfx;
 extern crate gfx_core;
 #[macro_use]
 extern crate gfx_macros;
+#[macro_use]
+extern crate glsl_layout;
 extern crate hetseq;
 extern crate hibitset;
 extern crate imagefmt;

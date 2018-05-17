@@ -20,7 +20,7 @@ in uvec4 joint_ids;
 in vec4 joint_weights;
 
 out VertexData {
-    vec4 position;
+    vec3 position;
     vec3 normal;
     vec3 tangent;
     vec2 tex_coord;
@@ -34,10 +34,11 @@ void main() {
         joint_weights.z * joints[int(joint_ids.z)] +
         joint_weights.w * joints[int(joint_ids.w)];
 
-    vertex.position = model * joint_transform * vec4(position, 1.0);
+    vec4 vertex_position = model * joint_transform * vec4(position, 1.0);
     mat3 mat3_transform = mat3(model) * mat3(joint_transform);
+    vertex.position = vertex_position.xyz;
     vertex.normal = mat3_transform * normal;
     vertex.tangent = mat3_transform * tangent;
     vertex.tex_coord = tex_coord;
-    gl_Position = proj * view * vertex.position;
+    gl_Position = proj * view * vertex_position;
 }

@@ -39,13 +39,13 @@ stops complaining about unused imports. In `pong.rs` we'll need these use
 statements to make it through this chapter:
 
 ```rust,ignore
-use amethyst::prelude::*;
-use amethyst::ecs::prelude::{Component, DenseVecStorage};
 use amethyst::assets::Loader;
 use amethyst::core::cgmath::Vector3;
-use amethyst::core::transform::{Transform, GlobalTransform};
-use amethyst::renderer::{Camera, Material, MaterialDefaults, PosTex, MeshHandle,
-                         Event,KeyboardInput, VirtualKeyCode, WindowEvent};
+use amethyst::core::transform::{GlobalTransform, Transform};
+use amethyst::ecs::prelude::{Component, DenseVecStorage};
+use amethyst::prelude::*;
+use amethyst::renderer::{Camera, Event, KeyboardInput, Material, MaterialDefaults, MeshHandle,
+                         PosTex, VirtualKeyCode, WindowEvent};
 ```
 
 ## Our first Component
@@ -119,7 +119,7 @@ First let's look at our math imports:
 
 ```rust,ignore
 use amethyst::core::cgmath::Vector3;
-use amethyst::core::transform::{Transform, GlobalTransform};
+use amethyst::core::transform::{GlobalTransform, Transform};
 ```
 
 Amethyst uses the [cgmath crate][cg] under the hood and exposes it for our use.
@@ -355,8 +355,8 @@ paddles to the world, along with a camera.
 Let's run this and see what happens. On my machine I get a panic that reads:
 
 ```
-No component with the given id. Did you forget to register the component with
-`World::register::<ComponentName>()`?
+thread 'main' panicked at 'Tried to fetch a resource, but the resource does not exist.
+Try adding the resource by inserting it manually or using the `setup` method.
 ```
 
 It looks like we're missing at least one component registration. In addition to

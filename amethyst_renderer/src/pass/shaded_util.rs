@@ -2,7 +2,8 @@ use std::mem;
 
 use amethyst_core::GlobalTransform;
 use amethyst_core::specs::prelude::{Join, ReadStorage};
-use gfx::traits::Pod;
+
+use glsl_layout::*;
 
 use cam::Camera;
 use light::Light;
@@ -10,36 +11,26 @@ use pipe::{Effect, EffectBuilder};
 use resources::AmbientColor;
 use types::Encoder;
 
-fn pad(x: [f32; 3]) -> [f32; 4] {
-    [x[0], x[1], x[2], 1.0]
-}
 
-#[repr(C)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Uniform)]
 pub(crate) struct FragmentArgs {
-    point_light_count: i32,
-    directional_light_count: i32,
+    point_light_count: uint,
+    directional_light_count: uint,
 }
 
-#[repr(C)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Uniform)]
 pub(crate) struct PointLightPod {
-    position: [f32; 4],
-    color: [f32; 4],
-    intensity: f32,
-    _pad: [f32; 3],
+    position: vec3,
+    color: vec3,
+    pad: float,
+    intensity: float,
 }
 
-unsafe impl Pod for PointLightPod {}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Uniform)]
 pub(crate) struct DirectionalLightPod {
-    color: [f32; 4],
-    direction: [f32; 4],
+    color: vec3,
+    direction: vec3,
 }
-
-unsafe impl Pod for DirectionalLightPod {}
 
 pub(crate) fn set_light_args(
     effect: &mut Effect,
@@ -48,30 +39,30 @@ pub(crate) fn set_light_args(
     ambient: &AmbientColor,
     camera: Option<(&Camera, &GlobalTransform)>,
 ) {
-    let point_lights: Vec<PointLightPod> = light
+    let point_lights: Vec<_> = light
         .join()
         .filter_map(|light| {
             if let Light::Point(ref light) = *light {
                 Some(PointLightPod {
-                    position: pad(light.center.into()),
-                    color: pad(light.color.into()),
+                    position: light.center.into(),
+                    color: light.color.into(),
                     intensity: light.intensity,
-                    _pad: [0.0; 3],
-                })
+                    pad: 0.0,
+                }.std140())
             } else {
                 None
             }
         })
         .collect();
 
-    let directional_lights: Vec<DirectionalLightPod> = light
+    let directional_lights: Vec<_> = light
         .join()
         .filter_map(|light| {
             if let Light::Directional(ref light) = *light {
                 Some(DirectionalLightPod {
-                    color: pad(light.color.into()),
-                    direction: pad(light.direction.into()),
-                })
+                    color: light.color.into(),
+                    direction: light.direction.into(),
+                }.std140())
             } else {
                 None
             }
@@ -79,11 +70,11 @@ pub(crate) fn set_light_args(
         .collect();
 
     let fragment_args = FragmentArgs {
-        point_light_count: point_lights.len() as i32,
-        directional_light_count: directional_lights.len() as i32,
+        point_light_count: point_lights.len() as u32,
+        directional_light_count: directional_lights.len() as u32,
     };
 
-    effect.update_constant_buffer("FragmentArgs", &fragment_args, encoder);
+    effect.update_constant_buffer("FragmentArgs", &fragment_args.std140(), encoder);
     effect.update_buffer("PointLights", &point_lights[..], encoder);
     effect.update_buffer("DirectionalLights", &directional_lights[..], encoder);
 
@@ -100,11 +91,11 @@ pub(crate) fn set_light_args(
 
 pub(crate) fn setup_light_buffers(builder: &mut EffectBuilder) {
     builder
-        .with_raw_constant_buffer("FragmentArgs", mem::size_of::<FragmentArgs>(), 1)
-        .with_raw_constant_buffer("PointLights", mem::size_of::<PointLightPod>(), 128)
+        .with_raw_constant_buffer("FragmentArgs", mem::size_of::<<FragmentArgs as Uniform>::Std140>(), 1)
+        .with_raw_constant_buffer("PointLights", mem::size_of::<<PointLightPod as Uniform>::Std140>(), 128)
         .with_raw_constant_buffer(
             "DirectionalLights",
-            mem::size_of::<DirectionalLightPod>(),
+            mem::size_of::<<DirectionalLightPod as Uniform>::Std140>(),
             16,
         )
         .with_raw_global("ambient_color")

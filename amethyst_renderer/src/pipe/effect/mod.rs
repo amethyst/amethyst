@@ -15,6 +15,8 @@ use gfx::state::{Blend, ColorMask, Comparison, Depth, MultiSample, Rasterizer, S
 use gfx::traits::Pod;
 use gfx::{Primitive, ShaderSet};
 
+use glsl_layout::Std140;
+
 pub use self::pso::{Data, Init, Meta};
 
 use error::{Error, Result};
@@ -109,7 +111,7 @@ impl Effect {
     pub fn update_constant_buffer<N, T>(&mut self, name: N, data: &T, enc: &mut Encoder)
     where
         N: AsRef<str>,
-        T: Copy,
+        T: Std140,
     {
         match self.const_bufs.get(name.as_ref()) {
             Some(i) => {

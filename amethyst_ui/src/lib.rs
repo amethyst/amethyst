@@ -13,6 +13,8 @@ extern crate derivative;
 extern crate fnv;
 extern crate gfx;
 extern crate gfx_glyph;
+#[macro_use]
+extern crate glsl_layout;
 extern crate hibitset;
 extern crate rusttype;
 extern crate shred;
