@@ -4,7 +4,7 @@
 //!
 //! [am]: https://www.amethyst.rs/
 //! [gh]: https://github.com/amethyst/amethyst/tree/develop/src/renderer
-//! [bk]: https://www.amethyst.rs/book/
+//! [bk]: https://www.amethyst.rs/book/master/
 
 #![deny(missing_docs)]
 #![doc(html_logo_url = "https://tinyurl.com/jtmm43a")]

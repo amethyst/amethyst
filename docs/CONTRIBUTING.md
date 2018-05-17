@@ -197,7 +197,7 @@ There are two types of documentation in Amethyst you can work on:
 2. [The Amethyst book][ab]
 
 [ad]: https://www.amethyst.rs/doc/develop/doc/amethyst/index.html
-[ab]: https://www.amethyst.rs/book/develop/html/index.html
+[ab]: https://www.amethyst.rs/book/develop/
 
 Our Rust API documentation is generated directly from source code comments
 marked with either `///` or `//!` using  a tool called Rustdoc. See
