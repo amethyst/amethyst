@@ -35,7 +35,7 @@ pub struct UiText {
     /// Cached glyph positions, used to process mouse highlighting
     #[derivative(Debug = "ignore")]
     pub(crate) cached_glyphs: Vec<PositionedGlyph<'static>>,
-    /// Cached id used to retrieve the `GlyphBrush` in the `UiPass`.
+    /// Cached `GlyphBrush` id for use in the `UiPass`.
     pub(crate) brush_id: Option<u32>,
 }
 

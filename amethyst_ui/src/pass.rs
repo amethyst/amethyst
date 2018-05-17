@@ -3,7 +3,7 @@
 use std::cmp::{Ordering, PartialOrd};
 use std::hash::{Hash, Hasher};
 
-use amethyst_assets::{AssetStorage, Loader, WeakHandle};
+use amethyst_assets::{AssetStorage, Loader};
 use amethyst_core::cgmath::vec4;
 use amethyst_core::specs::prelude::{Entities, Entity, Join, Read, ReadExpect, ReadStorage,
                                     WriteStorage};
@@ -70,11 +70,7 @@ pub struct DrawUi {
 }
 
 type GlyphBrushCache = HashMap<
-    u32,
-    (
-        GlyphBrush<'static, Resources, Factory>,
-        WeakHandle<FontAsset>,
-    ),
+    u32, GlyphBrush<'static, Resources, Factory>
 >;
 
 impl DrawUi {
@@ -227,9 +223,6 @@ impl Pass for DrawUi {
         };
         effect.data.vertex_bufs.push(vbuf);
 
-        // Remove brushes whose fonts have been dropped.
-        self.glyph_brushes
-            .retain(|&_id, ref mut value| !value.1.is_dead());
         let highest_abs_z = (&ui_transform,)
             .join()
             .map(|t| t.0.global_z)
@@ -265,26 +258,11 @@ impl Pass for DrawUi {
                         Some(font) => font,
                         None => continue,
                     };
-                    let mut new_id = self.glyph_brushes
-                        .iter()
-                        .filter_map(|(id, ref value)| value.1.upgrade().map(|h| (id, h)))
-                        .find(|&(_id, ref handle)| *handle == ui_text.font)
-                        .map(|(id, _handle)| *id);
-
-                    if new_id.is_none() {
-                        new_id = Some(self.next_brush_cache_id);
-                        self.glyph_brushes.insert(
-                            self.next_brush_cache_id,
-                            (
-                                GlyphBrushBuilder::using_font(font.0.clone())
-                                    .build(factory.clone()),
-                                ui_text.font.downgrade(),
-                            ),
-                        );
-                        self.next_brush_cache_id += 1;
-                    }
-                    ui_text.brush_id = new_id;
+                    self.glyph_brushes.insert(self.next_brush_cache_id, GlyphBrushBuilder::using_font(font.0.clone())
+                                    .build(factory.clone()));
+                    ui_text.brush_id = Some(self.next_brush_cache_id);
                     ui_text.cached_font = ui_text.font.clone();
+                    self.next_brush_cache_id += 1;
                 }
                 // Build text sections.
                 let editing = editing.get(entity);
@@ -374,8 +352,7 @@ impl Pass for DrawUi {
                 // Render background highlight
                 let brush = &mut self.glyph_brushes
                     .get_mut(&ui_text.brush_id.unwrap())
-                    .unwrap()
-                    .0;
+                    .unwrap();
                 // Maintain the glyph cache (used by the input code).
                 ui_text.cached_glyphs.clear();
                 ui_text
