@@ -17,59 +17,42 @@
 [gc]: https://gitter.im/orgs/amethyst/rooms
 [di]: https://discord.gg/GnP5Whs
 
-**Warning: The book and tools repository are severely out of date at the moment. Amethyst is undergoing a lot of changes at the moment so if you are looking to use the library it would be better to just read the examples.**
+**Warning: The book and the documentation are missing content. Amethyst is undergoing a lot of changes at the moment.**
 
 This project is a *work in progress* and is very incomplete; pardon the dust!
-Read a summary of what happened this past week at [*This Week in Amethyst*][tw].
 
-[tw]: https://www.amethyst.rs/
+## Goals
 
-### [Documentation][ar]
+* massively parallel architecture
+* powered by a correct [Entity Component System][ecs] model
+* rapid prototyping with [RON] files for prefabs and an abstract scripting API
 
-[ar]: https://www.amethyst.rs/doc/
+[ecs]: https://en.wikipedia.org/wiki/Entity–component–system
+[RON]: https://github.com/ron-rs/ron
 
-## Vision
+## Features
 
-Amethyst is a fast, [data-oriented](https://www.amethyst.rs/book/master/book/glossary.html#data-oriented-programming), and data-driven game engine suitable
-for rapid prototyping and iteration. It also tries to push the
-[Rust programming language][rs] to its limits, driving further improvement and
-hopefully attracting more game developers toward the young and vibrant Rust
-ecosystem.
+Please visit the [features page][feat] for a list of features Amethyst provides and will provide.
 
-[rs]: https://www.rust-lang.org/
+[feat]: docs/FEATURES.md
 
-The engine's design draws much inspiration from the industrial-strength
-[Bitsquid Engine][bs] (now called [Autodesk Stingray][sr]). However, Amethyst
-does not aim to be API-compatible with it in any way. Some goals include:
+## Documentation
 
-[bs]: http://twvideo01.ubm-us.net/o1/vault/gdc2012/slides/Programming%20Track/Persson_Tobias_Flexible_Rendering.pdf.pdf
-[sr]: http://stingrayengine.com/
+[![develop docs][adb1]][ad1] [![master docs][adb2]][ad2] [![0.6 docs][adb3]][ad3]
 
-* Simple game state management in the form of a [pushdown automaton][pa].
-* Massively parallel architecture.
-* [Correct entity-component-system model][em], with entities and prefabs largely
-  defined in [Ron files][rn].
-* Abstract scripting API that can be bound to a variety of embedded languages,
-  such as [mruby][mr], [Lua][lu], etc.
-* Renderer optimized for modern graphics APIs, e.g. Vulkan, Direct3D 12+, Metal.
-* Easy integration with useful third-party game development libraries, e.g.
-  [Piston][pi].
-* Traditional "mega-editor" split into several
-  [small but well-integrated tools][at], adhering to the [Unix philosophy][up].
+The `master` branch and the 0.6 release are rather old, it is recommended you use the `develop` branch.
 
-[pa]: http://gameprogrammingpatterns.com/state.html#pushdown-automata
-[em]: http://shaneenishry.com/blog/2014/12/27/misconceptions-of-component-based-entity-systems/
-[rn]: https://github.com/ron-rs/ron
-[mr]: http://mruby.org/
-[lu]: http://www.lua.org/
-[pi]: http://www.piston.rs/
-[at]: https://github.com/amethyst/tools
-[up]: https://en.wikipedia.org/wiki/Unix_philosophy
+[adb1]: https://img.shields.io/badge/docs-develop-blue.svg
+[adb2]: https://img.shields.io/badge/docs-master-blue.svg
+[adb3]: https://img.shields.io/badge/docs-0.6-blue.svg
+
+[ad1]: https://www.amethyst.rs/doc/develop.html
+[ad2]: https://www.amethyst.rs/doc/master.html
+[ad3]: https://www.docs.rs/amethyst
 
 ## Usage
 
-Read the [online book][bk] for a comprehensive tutorial to using Amethyst. There
-is also an online crate-level [API reference][ar].
+Please read the [online book][bk] for a comprehensive tutorial to using Amethyst.
 
 [bk]: https://www.amethyst.rs/book/master/book/
 
@@ -127,12 +110,13 @@ We do not support anything other than the most recent Rust stable release. Use n
 
 Please check out the [FAQ][faq] before asking.
 
-If you have an easy question, just ask on [Gitter][gt] and we'll help you and add it to the FAQ.
+If you have a question, just ask on [Gitter][gt] or [Discord][di] and we'll help you and add it to the FAQ.
 
 Other places you may want to check out are [r/rust_gamedev][rg] and [#rust-gamedev IRC][irc].
 
 [faq]: https://github.com/amethyst/amethyst/wiki/Frequently-Asked-Questions
 [gt]: https://gitter.im/amethyst/general
+[di]: https://discord.gg/GnP5Whs
 [rg]: https://www.reddit.com/r/rust_gamedev/
 [irc]: https://botbot.me/mozilla/rust-gamedev/
 
