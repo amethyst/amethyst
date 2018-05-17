@@ -54,7 +54,7 @@ The `master` branch and the 0.6 release are rather old, it is recommended you us
 
 Please read the [online book][bk] for a comprehensive tutorial to using Amethyst.
 
-[bk]: https://www.amethyst.rs/book/master/book/
+[bk]: https://www.amethyst.rs/book/master/
 
 ## Getting started
 
@@ -68,7 +68,7 @@ For a full-blown "Hello World" tutorial check out the [Getting Started][gs] chap
 in the book.
 
 [ex]: examples/
-[gs]: https://www.amethyst.rs/book/master/book/getting_started.html
+[gs]: https://www.amethyst.rs/book/master/getting_started.html
 
 ## Dependencies
 
