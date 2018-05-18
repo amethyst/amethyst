@@ -2,7 +2,6 @@
 
 use gfx::shade::{Formatted, ToUniform};
 use gfx_core::shade::{BaseType, ContainerType, UniformValue};
-use glsl_layout::{vec3, vec4};
 
 /// An RGBA color value.
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, PartialOrd, Serialize)]
@@ -103,18 +102,5 @@ impl Formatted for Rgba {
 impl ToUniform for Rgba {
     fn convert(self) -> UniformValue {
         UniformValue::F32Vector4(self.into())
-    }
-}
-
-impl From<Rgba> for vec3 {
-    fn from(Rgba(r, g, b, _): Rgba) -> vec3 {
-        [r, g, b].into()
-    }
-}
-
-
-impl From<Rgba> for vec4 {
-    fn from(Rgba(r, g, b, a): Rgba) -> vec4 {
-        [r, g, b, a].into()
     }
 }

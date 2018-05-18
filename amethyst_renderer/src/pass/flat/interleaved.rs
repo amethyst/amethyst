@@ -7,7 +7,6 @@ use amethyst_core::specs::prelude::{Join, Read, ReadExpect, ReadStorage};
 use amethyst_core::transform::GlobalTransform;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
-use glsl_layout::Uniform;
 
 use super::*;
 use cam::{ActiveCamera, Camera};
@@ -78,7 +77,7 @@ where
         use std::mem;
         let mut builder = effect.simple(VERT_SRC, FRAG_SRC);
         builder
-            .with_raw_constant_buffer("VertexArgs", mem::size_of::<<VertexArgs as Uniform>::Std140>(), 1)
+            .with_raw_constant_buffer("VertexArgs", mem::size_of::<VertexArgs>(), 1)
             .with_raw_vertex_buffer(V::QUERIED_ATTRIBUTES, V::size() as ElemStride, 0);
         setup_textures(&mut builder, &TEXTURES);
         match self.transparency {

@@ -18,7 +18,6 @@ use gfx::pso::buffer::ElemStride;
 use gfx::state::ColorMask;
 use gfx_glyph::{BuiltInLineBreaker, FontId, GlyphBrush, GlyphBrushBuilder, GlyphCruncher,
                 HorizontalAlign, Layout, Scale, SectionText, VariedSection, VerticalAlign};
-use glsl_layout::Uniform;
 use hibitset::BitSet;
 use rusttype::Point;
 use unicode_segmentation::UnicodeSegmentation;
@@ -28,7 +27,7 @@ use super::*;
 const VERT_SRC: &[u8] = include_bytes!("shaders/vertex.glsl");
 const FRAG_SRC: &[u8] = include_bytes!("shaders/frag.glsl");
 
-#[derive(Copy, Clone, Debug, Uniform)]
+#[derive(Copy, Clone, Debug)]
 #[allow(dead_code)] // This is used by the shaders
 #[repr(C)]
 struct VertexArgs {
@@ -138,7 +137,7 @@ impl Pass for DrawUi {
         use std::mem;
         effect
             .simple(VERT_SRC, FRAG_SRC)
-            .with_raw_constant_buffer("VertexArgs", mem::size_of::<<VertexArgs as Uniform>::Std140>(), 1)
+            .with_raw_constant_buffer("VertexArgs", mem::size_of::<VertexArgs>(), 1)
             .with_raw_vertex_buffer(PosTex::ATTRIBUTES, PosTex::size() as ElemStride, 0)
             .with_texture("albedo")
             .with_blended_output("color", ColorMask::all(), blend::ALPHA, None)
@@ -240,7 +239,7 @@ impl Pass for DrawUi {
                 ],
                 dimension: [ui_transform.width, ui_transform.height],
             };
-            effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
+            effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
             if let Some(image) = ui_image
                 .get(entity)
                 .and_then(|image| tex_storage.get(&image.texture))
@@ -403,7 +402,7 @@ impl Pass for DrawUi {
                             coord: [pos.x, pos.y - ascent],
                             dimension: [width, height],
                         };
-                        effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
+                        effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
                         effect.draw(mesh.slice(), encoder);
                     }
                     effect.data.textures.clear();
@@ -496,7 +495,7 @@ impl Pass for DrawUi {
                                 coord: [x, y],
                                 dimension: [width, height],
                             };
-                            effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
+                            effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
                             effect.draw(mesh.slice(), encoder);
                         }
                         effect.data.textures.clear();
