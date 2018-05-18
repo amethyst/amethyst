@@ -8,8 +8,8 @@ layout (std140) uniform FragmentArgs {
 };
 
 struct PointLight {
-    vec3 position;
-    vec3 color;
+    vec4 position;
+    vec4 color;
     float intensity;
     float radius;
     float smoothness;
@@ -21,8 +21,8 @@ layout (std140) uniform PointLights {
 };
 
 struct DirectionalLight {
-    vec3 color;
-    vec3 direction;
+    vec4 color;
+    vec4 direction;
 };
 
 layout (std140) uniform DirectionalLights {
@@ -76,7 +76,7 @@ layout (std140) uniform CaveatOffset {
 } caveat_offset;
 
 in VertexData {
-    vec3 position;
+    vec4 position;
     vec3 normal;
     vec3 tangent;
     vec2 tex_coord;
@@ -143,8 +143,8 @@ void main() {
 
     vec3 lighted = vec3(0.0);
     for (int i = 0; i < point_light_count; i++) {
-        vec3 view_direction = normalize(camera_position - vertex.position);
-        vec3 light_direction = normalize(plight[i].position - vertex.position);
+        vec3 view_direction = normalize(camera_position - vertex.position.xyz);
+        vec3 light_direction = normalize(plight[i].position.xyz - vertex.position.xyz);
         float intensity = plight[i].intensity / dot(light_direction, light_direction);
 
         vec3 halfway = normalize(view_direction + light_direction);
@@ -163,7 +163,7 @@ void main() {
         float denominator = 4 * NdotV * NdotL + 0.0001;
         vec3 specular = nominator / denominator;
 
-        lighted += (diffuse * albedo / PI + specular) * plight[i].color * intensity * NdotL;
+        lighted += (diffuse * albedo / PI + specular) * plight[i].color.rgb * intensity * NdotL;
     }
 
     vec3 ambient = ambient_color * albedo * ambient_occlusion;

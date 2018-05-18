@@ -10,7 +10,7 @@ layout (std140) uniform AlbedoOffset {
 } albedo_offset;
 
 in VertexData {
-    vec3 position;
+    vec4 position;
     vec3 normal;
     vec3 tangent;
     vec2 tex_coord;
