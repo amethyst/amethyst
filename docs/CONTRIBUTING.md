@@ -171,7 +171,7 @@ To check whether anything major has changed upstream, you can do:
 ```bash
 $ # Fetch latest changes
 $ git fetch upstream
-$ # Do a "non-intruisive" check.
+$ # Do a "non-intrusive" check.
 $ git merge --ff-only --no-commit upstream
 ```
 
