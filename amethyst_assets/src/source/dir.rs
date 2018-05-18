@@ -4,7 +4,6 @@ use std::time::UNIX_EPOCH;
 
 use failure::Error;
 use source::Source;
-use {ErrorKind, Result, ResultExt};
 
 /// Directory source.
 ///

@@ -1,6 +1,5 @@
 //! The core engine framework.
 
-use std::error::Error as StdError;
 use std::io;
 use std::path::Path;
 use std::sync::Arc;
@@ -21,10 +20,11 @@ use core::frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStra
 use core::timing::{Stopwatch, Time};
 use ecs::common::Errors;
 use ecs::prelude::{Component, World};
-use error::{Error, ErrorKind, Result};
 use game_data::DataInit;
 use state::{State, StateData, StateMachine};
 use vergen;
+
+pub use error::{Error, ErrorKind, Result};
 
 /// An Application is the root object of the game engine. It binds the OS
 /// event loop, state machines, timers and other core components in a central place.
@@ -479,191 +479,6 @@ impl<S> ApplicationBuilder<S> {
         self
     }
 
-<<<<<<< HEAD
-=======
-    /// Inserts a barrier which assures that all systems added before the
-    /// barrier are executed before the ones after this barrier.
-    ///
-    /// Does nothing if there were no systems added since the last call to
-    /// `with_barrier()`. Thread-local systems are not affected by barriers;
-    /// they're always executed at the end.
-    ///
-    /// # Returns
-    ///
-    /// This function returns ApplicationBuilder after it has modified it.
-    ///
-    /// # Examples
-    ///
-    /// ~~~no_run
-    /// use amethyst::prelude::*;
-    /// use amethyst::ecs::prelude::System;
-    ///
-    /// struct NullState;
-    /// impl State for NullState {}
-    ///
-    /// struct NopSystem;
-    /// impl<'a> System<'a> for NopSystem {
-    ///     type SystemData = ();
-    ///     fn run(&mut self, (): Self::SystemData) {}
-    /// }
-    ///
-    /// // Three systems are added in this example. The "tabby cat" & "tom cat"
-    /// // systems will both run in parallel. Only after both cat systems have
-    /// // run is the "doggo" system permitted to run them.
-    /// Application::build("assets/", NullState)
-    ///     .expect("Failed to initialize")
-    ///     .with(NopSystem, "tabby cat", &[])
-    ///     .with(NopSystem, "tom cat", &[])
-    ///     .with_barrier()
-    ///     .with(NopSystem, "doggo", &[]);
-    /// ~~~
-    pub fn with_barrier(mut self) -> Self {
-        self.disp_builder = self.disp_builder.with_barrier();
-        self
-    }
-
-    /// Adds a given system to the game loop.
-    ///
-    /// __Note:__ all dependencies must be added before you add the system.
-    ///
-    /// # Parameters
-    ///
-    /// - `system`: The system that is to be added to the game loop.
-    /// - `name`: A unique string to identify the system by. This is used for
-    ///         dependency tracking. This name may be empty `""` string in which
-    ///         case it cannot be referenced as a dependency.
-    /// - `dependencies`: A list of named system that _must_ have completed running
-    ///                 before this system is permitted to run.
-    ///                 This may be an empty list if there is no dependencies.
-    ///
-    /// # Returns
-    ///
-    /// This function returns ApplicationBuilder after it has modified it.
-    ///
-    /// # Type Parameters
-    ///
-    /// - `S`: A type that implements the `System` trait.
-    ///
-    /// # Panics
-    ///
-    /// If two system are added that share an identical name, this function will panic.
-    /// Empty names are permitted, and this function will not panic if more then two are added.
-    ///
-    /// If a dependency is referenced (by name), but has not previously been added this
-    /// function will panic.
-    ///
-    /// # Examples
-    ///
-    /// ~~~no_run
-    /// use amethyst::prelude::*;
-    /// use amethyst::ecs::prelude::System;
-    ///
-    /// struct NullState;
-    /// impl State for NullState {}
-    ///
-    /// struct NopSystem;
-    /// impl<'a> System<'a> for NopSystem {
-    ///     type SystemData = ();
-    ///     fn run(&mut self, _: Self::SystemData) {}
-    /// }
-    ///
-    /// Application::build("assets/", NullState)
-    ///     .expect("Failed to initialize")
-    ///     // This will add the "foo" system to the game loop, in this case
-    ///     // the "foo" system will not depend on any systems.
-    ///     .with(NopSystem, "foo", &[])
-    ///     // The "bar" system will only run after the "foo" system has completed
-    ///     .with(NopSystem, "bar", &["foo"])
-    ///     // It is legal to register a system with an empty name
-    ///     .with(NopSystem, "", &[]);
-    /// ~~~
-    pub fn with<S>(mut self, system: S, name: &str, dependencies: &[&str]) -> Self
-    where
-        for<'c> S: System<'c> + Send + 'a,
-    {
-        self.disp_builder = self.disp_builder.with(system, name, dependencies);
-        self
-    }
-
-    /// Add a given thread-local system to the game loop.
-    ///
-    /// A thread-local system is one that _must_ run on the main thread of the
-    /// game. A thread-local system would be necessary typically to work
-    /// around vendor APIs that have thread dependent designs; an example
-    /// being OpenGL which uses a thread-local state machine to function.
-    ///
-    /// All thread-local systems are executed sequentially after all
-    /// non-thread-local systems.
-    ///
-    /// # Parameters
-    ///
-    /// - `system`: The system that is to be added to the game loop.
-    ///
-    /// # Returns
-    ///
-    /// This function returns ApplicationBuilder after it has modified it.
-    ///
-    /// # Type Parameters
-    ///
-    /// - `S`: A type that implements the `System` trait.
-    ///
-    /// # Examples
-    ///
-    /// ~~~no_run
-    /// use amethyst::prelude::*;
-    /// use amethyst::ecs::prelude::System;
-    ///
-    /// struct NullState;
-    /// impl State for NullState {}
-    ///
-    /// struct NopSystem;
-    /// impl<'a> System<'a> for NopSystem {
-    ///     type SystemData = ();
-    ///     fn run(&mut self, _: Self::SystemData) {}
-    /// }
-    ///
-    /// Application::build("assets/", NullState)
-    ///     .expect("Failed to initialize")
-    ///     // the Nop system is registered here
-    ///     .with_thread_local(NopSystem);
-    /// ~~~
-    pub fn with_thread_local<S>(mut self, system: S) -> Self
-    where
-        for<'c> S: System<'c> + 'b,
-    {
-        self.disp_builder = self.disp_builder.with_thread_local(system);
-        self
-    }
-
-    /// Add a given ECS bundle to the game loop.
-    ///
-    /// A bundle is a container for registering a bunch of ECS systems and their dependent
-    /// resources and components.
-    ///
-    /// # Parameters
-    ///
-    /// - `bundle`: The bundle to add
-    ///
-    /// # Returns
-    ///
-    /// This function returns ApplicationBuilder after it has modified it, this is
-    /// wrapped in a `Result`.
-    ///
-    /// # Errors
-    ///
-    /// This function creates systems and resources, which use any number of dependent
-    /// crates or APIs, which could result in any number of errors.
-    /// See each individual bundle for a description of the errors it could produce.
-    ///
-    pub fn with_bundle<B>(mut self, bundle: B) -> Result<Self>
-    where
-        B: SystemBundle<'a, 'b>,
-    {
-        bundle.build(&mut self.disp_builder)?;
-        Ok(self)
-    }
-
->>>>>>> Convert error-chain to failure
     /// Register an asset store with the loader logic of the Application.
     ///
     /// If the asset store exists, that shares a name with the new store the net

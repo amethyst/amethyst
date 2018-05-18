@@ -1,10 +1,9 @@
 //! Renderer error types.
 
-use std::error::Error as StdError;
-use std::fmt::{self, Display, Formatter};
+use std::fmt;
 use std::result::Result as StdResult;
 
-use failure::{Error as FailureError, Backtrace, Context, Fail};
+use failure::{Backtrace, Context, Fail};
 use gfx;
 use gfx_core;
 

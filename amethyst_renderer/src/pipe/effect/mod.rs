@@ -11,7 +11,7 @@ use gfx::memory::{Bind, Usage};
 use gfx::preset::depth::{LESS_EQUAL_TEST, LESS_EQUAL_WRITE};
 use gfx::pso::buffer::{ElemStride, InstanceRate};
 use gfx::shade::core::UniformValue;
-use gfx::shade::{ProgramError, ToUniform};
+use gfx::shade::ToUniform;
 use gfx::state::{Blend, ColorMask, Comparison, Depth, MultiSample, Rasterizer, Stencil};
 use gfx::traits::Pod;
 use gfx::{Primitive, ShaderSet};
@@ -20,7 +20,7 @@ use glsl_layout::Std140;
 
 pub use self::pso::{Data, Init, Meta};
 
-use error::{Error, ErrorKind, Result};
+use error::{ErrorKind, Result};
 use pipe::Target;
 use types::{Encoder, Factory, PipelineState, Resources, Slice};
 use vertex::Attributes;
