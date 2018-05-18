@@ -74,7 +74,7 @@ void main() {
         vec3 dist = plight[i].position - vertex.position;
         float dist2 = dot(dist, dist);
         float attenuation = (plight[i].intensity / dist2);
-        lighting += diffuse * attenuation;
+        lighting += attenuation;
     }
     for (uint i = 0u; i < directional_light_count; i++) {
         vec3 dir = dlight[i].direction;
