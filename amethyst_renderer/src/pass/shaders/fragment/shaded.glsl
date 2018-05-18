@@ -7,7 +7,7 @@ layout (std140) uniform FragmentArgs {
     uint directional_light_count;
 };
 
-layout (std140) struct PointLight {
+struct PointLight {
     vec3 position;
     vec3 color;
     float pad; // Workaround for bug in mac's implementation of opengl (loads garbage when accessing members of structures in arrays with dynamic indices).

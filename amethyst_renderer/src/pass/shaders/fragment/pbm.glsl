@@ -10,10 +10,8 @@ layout (std140) uniform FragmentArgs {
 struct PointLight {
     vec3 position;
     vec3 color;
+    float pad; // Workaround for bug in mac's implementation of opengl (loads garbage when accessing members of structures in arrays with dynamic indices).
     float intensity;
-    float radius;
-    float smoothness;
-    float _pad;
 };
 
 layout (std140) uniform PointLights {
