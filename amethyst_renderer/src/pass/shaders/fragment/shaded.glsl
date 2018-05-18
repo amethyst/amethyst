@@ -1,6 +1,6 @@
 // TODO: Needs documentation.
 
-#version 330 core
+#version 150 core
 
 layout (std140) uniform FragmentArgs {
     uint point_light_count;
@@ -10,7 +10,6 @@ layout (std140) uniform FragmentArgs {
 layout (std140) struct PointLight {
     vec3 position;
     vec3 color;
-    float pad; // Workaround for bug in mac's implementation of opengl (loads garbage when accessing members of structures in arrays with dynamic indices).
     float intensity;
 };
 
@@ -67,13 +66,14 @@ void main() {
     vec3 normal = normalize(vertex.normal);
     for (uint i = 0u; i < point_light_count; i++) {
         // Calculate diffuse light
-        vec3 light_dir = normalize(plight[i].position - vertex.position);
+        PointLight light = plight[i];
+        vec3 light_dir = normalize(light.position - vertex.position);
         float diff = max(dot(light_dir, normal), 0.0);
-        vec3 diffuse = diff * normalize(plight[i].color);
+        vec3 diffuse = diff * normalize(light.color);
         // Calculate attenuation
-        vec3 dist = plight[i].position - vertex.position;
+        vec3 dist = light.position - vertex.position;
         float dist2 = dot(dist, dist);
-        float attenuation = (plight[i].intensity / dist2);
+        float attenuation = (light.intensity / dist2);
         lighting += attenuation;
     }
     for (uint i = 0u; i < directional_light_count; i++) {
@@ -84,4 +84,6 @@ void main() {
     }
     lighting += ambient_color;
     out_color = vec4(lighting, 1.0) * color + ecolor;
+    int i = 0;
+    // out_color = vec4(plight[0].intensity / 100.0, 0.0, 0.0, 1.0);
 }
