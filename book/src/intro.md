@@ -1,9 +1,7 @@
-<img src="./images/amethyst_thumb.png" alt="Logo" width="96px" style="float:left;margin-right:15px"/>
-
-# The Amethyst Engine
-
-> Note: This project is a *work in progress* and is very incomplete. Pardon the
-> dust!
+<div style="display:inline-block;width:100%">
+    <img src="./images/amethyst_thumb.png" alt="Logo" width="96px" style="float:left;margin-right:15px"/>
+    <h1>The Amethyst Engine</h1>
+</div>
 
 ## Presentation
 
