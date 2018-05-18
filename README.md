@@ -21,9 +21,9 @@
 
 ## Goals
 
-* massively parallel architecture
-* powered by a correct [Entity Component System][ecs] model
-* rapid prototyping with [RON] files for prefabs and an abstract scripting API
+* Massively parallel architecture
+* Powered by a correct [Entity Component System][ecs] model
+* Rapid prototyping with [RON] files for prefabs and an abstract scripting API
 
 [ecs]: https://en.wikipedia.org/wiki/Entity–component–system
 [RON]: https://github.com/ron-rs/ron
