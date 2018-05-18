@@ -1,22 +1,26 @@
+<!--
+
 Thanks for filing a bug! We provide an issue template for you to make sure
 all the important details are presented upfront and we don't have to ask
 for everything individually.
 
-There are multiple places where you can tick an answer. For that, just put an "x" between the brackets.
+There are multiple places where you can provide one or multiple answers.
+For that, just uncomment the points and fill in the missing information.
 
-* [x] This is how a ticked answer looks
+<!-- * This is what a commented (invisible) point looks like (without the "\") --\>
+* This one got uncommented
 
 In case there's a section that's irrelevant to your report, feel free to delete it.
 
-----> **Please make sure to delete the above lines before submitting your issue**
+-->
 
 ## Kind of bug
 
-* [ ] Crash
-* [ ] Nothing happens
-* [ ] Instability
-* [ ] Wrong behavior (please specify the expected behavior)
-* [ ] Other (describe below)
+<!-- * Crash -->
+<!-- * Nothing happens -->
+<!-- * Instability -->
+<!-- * Wrong behavior (please specify the expected behavior) -->
+<!-- * Other (describe below) -->
 
 ## Error message with stack trace (if relevant)
 
@@ -48,10 +52,10 @@ In case there's a section that's irrelevant to your report, feel free to delete 
 
 ## Reproduction
 
-* [ ] I have used the following example from this repository:
-* [ ] You can find my code here:
-* [ ] I'm currently creating a minimal example for reproduction
-* [ ] A reproduction is not necessary because I know the source of the bug
+<!-- * I have used the following example from this repository: -->
+<!-- * You can find my code here: -->
+<!-- * I'm currently creating a minimal example for reproduction -->
+<!-- * A reproduction is not necessary because I know the source of the bug -->
 
 ### Reproduction steps
 
@@ -64,5 +68,6 @@ In case there's a section that's irrelevant to your report, feel free to delete 
 
 ## Source of the bug
 
-* [ ] The bug is triggered by the following line (please use a permalink):
-* [ ] I suspect the bug is located in the following crate:
+<!-- * The bug is triggered by the following line (please use a permalink): -->
+<!-- * I suspect the bug is located in the following Amethyst module: -->
+<!-- * I suspect the bug is located in the following external dependency: -->
