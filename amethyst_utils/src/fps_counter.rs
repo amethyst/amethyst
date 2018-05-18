@@ -2,7 +2,7 @@
 
 use amethyst_core::specs::prelude::{DispatcherBuilder, Read, System, Write};
 use amethyst_core::timing::{duration_to_nanos, Time};
-use amethyst_core::{Result, SystemBundle};
+use amethyst_core::SystemBundle;
 use circular_buffer::CircularBuffer;
 use failure::Error;
 

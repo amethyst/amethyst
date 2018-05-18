@@ -8,7 +8,7 @@ use fnv::FnvHashMap;
 use rayon::ThreadPool;
 
 use storage::{AssetStorage, Handle, Processed};
-use {Asset, Directory, ErrorKind, Format, FormatValue, Progress, ResultExt, Source};
+use {Asset, Directory, ErrorKind, Format, FormatValue, Progress, Source};
 
 /// The asset loader, holding the sources and a reference to the `ThreadPool`.
 pub struct Loader {

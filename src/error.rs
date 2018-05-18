@@ -1,13 +1,12 @@
 //! Engine error types.
 
-use std::error::Error as StdError;
 use std::fmt;
 use std::result::Result as StdResult;
 
-use config::ConfigError;
+use config::Error as ConfigError;
 use core::Error as CoreError;
 use failure::{Backtrace, Context, Fail};
-use renderer::error::Error as RendererError;
+use renderer::Error as RendererError;
 
 /// Engine result type.
 pub type Result<T> = StdResult<T, Error>;
@@ -76,6 +75,9 @@ impl fmt::Display for Error {
 }
 
 impl Error {
+    /// The kind of this error in the context of this module.
+    ///
+    /// See the cause (if present) for more info on the error.
     pub fn kind(&self) -> ErrorKind {
         *self.inner.get_context()
     }

@@ -4,7 +4,7 @@ use std::result::Result as StdResult;
 use amethyst_assets::{Asset, SimpleFormat};
 use amethyst_core::cgmath::{InnerSpace, Vector3};
 use amethyst_core::specs::prelude::VecStorage;
-use failure::{err_msg, Error, Fail, ResultExt};
+use failure::{err_msg, Error, ResultExt};
 use wavefront_obj::obj::{parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex,
                          TextureIndex, Vertex, VertexIndex};
 

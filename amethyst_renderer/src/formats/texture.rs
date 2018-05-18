@@ -5,7 +5,7 @@ use std::result::Result as StdResult;
 
 use Renderer;
 use amethyst_assets::SimpleFormat;
-use failure::{err_msg, Error, Fail, ResultExt};
+use failure::{Error, Fail};
 use {ErrorKind, Result};
 use gfx::format::{ChannelType, SurfaceType};
 use gfx::texture::SamplerInfo;
