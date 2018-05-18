@@ -1,6 +1,6 @@
 [package]
 name = "amethyst"
-version = "0.6.0"
+version = "0.7.0"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
 description = "Data-oriented game engine written in Rust"
 exclude = ["examples/*", "book/*"]
@@ -47,14 +47,14 @@ nightly = [
 ]
 
 [dependencies]
-amethyst_animation = { path = "amethyst_animation", version = "0.1.0" }
-amethyst_assets = { path = "amethyst_assets", version = "0.2.0" }
-amethyst_audio = { path = "amethyst_audio", version = "0.1.0" }
-amethyst_config = { path = "amethyst_config", version = "0.5.0" }
-amethyst_core = { path = "amethyst_core", version = "0.1.0" }
+amethyst_animation = { path = "amethyst_animation", version = "0.2.0" }
+amethyst_assets = { path = "amethyst_assets", version = "0.3.0" }
+amethyst_audio = { path = "amethyst_audio", version = "0.2.0" }
+amethyst_config = { path = "amethyst_config", version = "0.6.0" }
+amethyst_core = { path = "amethyst_core", version = "0.2.0" }
 amethyst_controls = { path = "amethyst_controls", version = "0.1.0" }
-amethyst_renderer = { path = "amethyst_renderer", version = "0.6" }
-amethyst_input = { path = "amethyst_input", version = "0.2" }
+amethyst_renderer = { path = "amethyst_renderer", version = "0.7" }
+amethyst_input = { path = "amethyst_input", version = "0.3" }
 amethyst_ui = { path = "amethyst_ui", version = "0.2" }
 amethyst_utils = { path = "amethyst_utils", version = "0.2" }
 derivative = "1.0"
@@ -67,7 +67,7 @@ winit = "0.13.1"
 thread_profiler = { version = "0.1", optional = true }
 
 [dev-dependencies]
-amethyst_gltf = { path = "amethyst_gltf", version = "0.1" }
+amethyst_gltf = { path = "amethyst_gltf", version = "0.2" }
 genmesh = "0.5"
 ron = "0.1"
 serde = "1.0"
@@ -158,7 +158,3 @@ path = "examples/arc_ball_camera/main.rs"
 
 [workspace]
 members = ["amethyst_gltf"]
-
-
-[patch.crates-io]
-coreaudio-sys = { git = "https://github.com/RustAudio/coreaudio-sys.git", rev = "cf3a8321f461655a304ee8aa3139d5c5c88fd379" }

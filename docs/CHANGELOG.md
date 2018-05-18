@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [kc]: http://keepachangelog.com/
 [sv]: http://semver.org/
 
-## [Unreleased]
+## [0.7.0] - 2018-05
 ### Added
 * Documentation for Animation crate ([#631]).
 * Support for rendering sprites ([#638]).

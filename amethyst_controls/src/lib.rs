@@ -6,7 +6,6 @@ extern crate amethyst_renderer;
 extern crate log;
 extern crate winit;
 
-#[macro_use]
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
 
