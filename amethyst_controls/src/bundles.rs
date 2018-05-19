@@ -73,6 +73,7 @@ where
             &["free_rotation"],
         );
         builder.add(MouseCenterLockSystem, "mouse_lock", &["mouse_focus"]);
+        builder.add(CursorHideSystem::new(), "cursor_hide", &["mouse_focus"]);
         Ok(())
     }
 }
