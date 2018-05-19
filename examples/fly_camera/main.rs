@@ -119,11 +119,14 @@ fn run() -> Result<(), Error> {
             .with_pass(DrawShaded::<PosNormTex>::new()),
     );
     let game_data = GameDataBuilder::default()
-        .with_bundle(FlyControlBundle::<String, String>::new(
-            Some(String::from("move_x")),
-            Some(String::from("move_y")),
-            Some(String::from("move_z")),
-        ))?
+        .with_bundle(
+            FlyControlBundle::<String, String>::new(
+                Some(String::from("move_x")),
+                Some(String::from("move_y")),
+                Some(String::from("move_z")),
+            )
+            .with_sensitivity(0.1, 0.1),
+        )?
         .with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path),
