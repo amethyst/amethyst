@@ -140,25 +140,28 @@ where
         Read<'a, EventChannel<Event>>,
         WriteStorage<'a, Transform>,
         ReadStorage<'a, FlyControlTag>,
+        Read<'a, WindowFocus>,
     );
 
-    fn run(&mut self, (events, mut transform, tag): Self::SystemData) {
-        for event in events.read(&mut self.event_reader.as_mut().unwrap()) {
-            match *event {
-                Event::DeviceEvent { ref event, .. } => {
-                    match *event {
-                        DeviceEvent::MouseMotion  { delta: (x, y) } => {
-                            for (transform, _) in (&mut transform, &tag).join() {
-                                transform.pitch_local(Deg( (-1.0) * y as f32 * self.sensitivity_y));
-                                transform.yaw_global(Deg(  (-1.0) * x as f32 * self.sensitivity_x));
-                            }
-                        },
-                        _ => (),
-                    }
-                },
-                _ => (),
-             }
-         }
+    fn run(&mut self, (events, mut transform, tag, focus): Self::SystemData) {
+        if focus.is_focused {
+            for event in events.read(&mut self.event_reader.as_mut().unwrap()) {
+                match *event {
+                    Event::DeviceEvent { ref event, .. } => {
+                        match *event {
+                            DeviceEvent::MouseMotion  { delta: (x, y) } => {
+                                for (transform, _) in (&mut transform, &tag).join() {
+                                    transform.pitch_local(Deg( (-1.0) * y as f32 * self.sensitivity_y));
+                                    transform.yaw_global(Deg(  (-1.0) * x as f32 * self.sensitivity_x));
+                                }
+                            },
+                            _ => (),
+                        }
+                    },
+                    _ => (),
+                }
+            }
+        }
      }
 
     fn setup(&mut self, res: &mut Resources) {
