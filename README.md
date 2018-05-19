@@ -80,18 +80,6 @@ $ sudo apt install libasound2-dev libx11-xcb-dev
 $ sudo yum install alsa-lib-devel
 ```
 
-## OSX audio workaround
-
-If you're using audio on OSX for the time being a workaround is necessary.  Add this to your Cargo.toml
-
-```
-[patch.crates-io]
-coreaudio-sys = { git = "https://github.com/RustAudio/coreaudio-sys.git", rev = "cf3a8321f461655a304ee8aa3139d5c5c88fd379" }
-```
-
-We're working on getting this resolved so this is no longer necessary, but right now this is out of our control.  Note this
-still may not work on older Macs.
-
 ## Building Documentation
 
 You can build the book locally with:
