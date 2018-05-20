@@ -19,13 +19,11 @@
 
 **Warning: The book and the documentation are missing content. Amethyst is undergoing a lot of changes at the moment.**
 
-This project is a *work in progress* and is very incomplete; pardon the dust!
-
 ## Goals
 
-* massively parallel architecture
-* powered by a correct [Entity Component System][ecs] model
-* rapid prototyping with [RON] files for prefabs and an abstract scripting API
+* Massively parallel architecture
+* Powered by a correct [Entity Component System][ecs] model
+* Rapid prototyping with [RON] files for prefabs and an abstract scripting API
 
 [ecs]: https://en.wikipedia.org/wiki/Entity–component–system
 [RON]: https://github.com/ron-rs/ron
@@ -38,17 +36,13 @@ Please visit the [features page][feat] for a list of features Amethyst provides 
 
 ## Documentation
 
-[![develop docs][adb1]][ad1] [![master docs][adb2]][ad2] [![0.6 docs][adb3]][ad3]
-
-The `master` branch and the 0.6 release are rather old, it is recommended you use the `develop` branch.
+[![develop docs][adb1]][ad1] [![master docs][adb2]][ad2]
 
 [adb1]: https://img.shields.io/badge/docs-develop-blue.svg
 [adb2]: https://img.shields.io/badge/docs-master-blue.svg
-[adb3]: https://img.shields.io/badge/docs-0.6-blue.svg
 
 [ad1]: https://www.amethyst.rs/doc/develop.html
 [ad2]: https://www.amethyst.rs/doc/master.html
-[ad3]: https://www.docs.rs/amethyst
 
 ## Usage
 

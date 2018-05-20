@@ -7,7 +7,6 @@ extern crate failure;
 extern crate log;
 extern crate winit;
 
-#[macro_use]
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
 
@@ -20,4 +19,4 @@ pub use self::bundles::FlyControlBundle;
 pub use self::components::{ArcBallControlTag, FlyControlTag};
 pub use self::resources::WindowFocus;
 pub use self::systems::{ArcBallMovementSystem, FlyMovementSystem, FreeRotationSystem,
-                        MouseCenterLockSystem, MouseFocusUpdateSystem};
+                        MouseCenterLockSystem, MouseFocusUpdateSystem, CursorHideSystem};

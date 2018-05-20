@@ -15,9 +15,9 @@ appveyor = { repository = "amethyst/amethyst" }
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
-amethyst_core = { path = "../amethyst_core", version = "0.1.0" }
+amethyst_core = { path = "../amethyst_core", version = "0.2.0" }
 failure = "0.1"
-winit = "0.12"
+winit = "0.13.1"
 
 thread_profiler = { version = "0.1", optional = true }
 
