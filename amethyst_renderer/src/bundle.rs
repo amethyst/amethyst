@@ -59,8 +59,8 @@ impl<'a, 'b, 'c, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> SystemBun
                 dep,
             );
         };
-        let render_system = RenderSystem::build(self.pipe, self.config)
-            .context("Error building render system")?;
+        let render_system =
+            RenderSystem::build(self.pipe, self.config).context("Error building render system")?;
         builder.add_thread_local(render_system);
         Ok(())
     }

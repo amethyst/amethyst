@@ -1,8 +1,9 @@
 use std::sync::Arc;
 
+use amethyst::DataInit;
 use amethyst::core::SystemBundle;
 use amethyst::ecs::prelude::{Dispatcher, DispatcherBuilder, System, World};
-use amethyst::{DataInit, Error, Result};
+use failure;
 use rayon::ThreadPool;
 
 pub struct CustomGameData<'a, 'b> {
@@ -39,13 +40,11 @@ impl<'a, 'b> CustomGameDataBuilder<'a, 'b> {
         }
     }
 
-    pub fn with_base_bundle<B>(mut self, bundle: B) -> Result<Self>
+    pub fn with_base_bundle<B>(mut self, bundle: B) -> Result<Self, failure::Error>
     where
         B: SystemBundle<'a, 'b>,
     {
-        bundle
-            .build(&mut self.base)
-            .map_err(|err| Error::Core(err))?;
+        bundle.build(&mut self.base)?;
         Ok(self)
     }
 

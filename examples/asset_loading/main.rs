@@ -2,9 +2,10 @@
 // TODO: Add asset loader directory store for the meshes.
 
 extern crate amethyst;
+extern crate failure;
 extern crate rayon;
 
-use amethyst::assets::{Loader, Result as AssetResult, SimpleFormat};
+use amethyst::assets::{Loader, SimpleFormat};
 use amethyst::config::Config;
 use amethyst::core::cgmath::{Array, Vector3};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
@@ -24,7 +25,7 @@ impl SimpleFormat<Mesh> for Custom {
     type Options = ();
 
     /// Reads the given bytes and produces asset data.
-    fn import(&self, bytes: Vec<u8>, _: ()) -> AssetResult<MeshData> {
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<MeshData, failure::Error> {
         let data: String = String::from_utf8(bytes)?;
 
         let trimmed: Vec<&str> = data.lines().filter(|line| line.len() >= 1).collect();
@@ -34,6 +35,8 @@ impl SimpleFormat<Mesh> for Custom {
         for line in trimmed {
             let nums: Vec<&str> = line.split_whitespace().collect();
 
+            // You may want to use error handling so that amethyst doesn't crash on
+            // bad input.
             let position = [
                 nums[0].parse::<f32>().unwrap(),
                 nums[1].parse::<f32>().unwrap(),

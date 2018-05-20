@@ -11,7 +11,9 @@ use amethyst::core::cgmath::{Deg, Quaternion, Rotation3, Vector3};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::Entity;
 use amethyst::prelude::*;
-use amethyst::renderer::*;
+use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShadedSeparate, ElementState,
+                         Event, KeyboardInput, Light, Pipeline, PointLight, Projection,
+                         RenderBundle, Rgba, Stage, VirtualKeyCode, WindowEvent};
 use amethyst_animation::{get_animation_set, AnimationBundle, AnimationCommand, AnimationSet,
                          EndControl, VertexSkinningBundle};
 use amethyst_gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystem, GltfSceneOptions};

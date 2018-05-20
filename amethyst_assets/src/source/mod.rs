@@ -1,8 +1,8 @@
 pub use self::dir::Directory;
 
-use {ErrorKind, Result};
-use std::result::Result as StdResult;
 use failure::{Error, ResultExt};
+use std::result::Result as StdResult;
+use {ErrorKind, Result};
 
 mod dir;
 

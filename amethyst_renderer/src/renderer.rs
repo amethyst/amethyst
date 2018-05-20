@@ -285,9 +285,10 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> R
         .with_gl(GlRequest::Latest);
 
     let (win, dev, fac, color, depth) = win::init::<ColorFormat, DepthFormat>(wb, ctx, el);
-    let size = win.get_inner_size()
-        .ok_or(Error::from(err_msg("Cannot get window dimensions, assume window is destroyed")
-            .context(ErrorKind::WindowDestroyed)))?;
+    let size = win.get_inner_size().ok_or(Error::from(
+        err_msg("Cannot get window dimensions, assume window is destroyed")
+            .context(ErrorKind::WindowDestroyed),
+    ))?;
     let main_target = Target::new(
         ColorBuffer {
             as_input: None,

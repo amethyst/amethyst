@@ -5,11 +5,11 @@ extern crate amethyst_core;
 extern crate failure;
 extern crate rayon;
 
+use std::result::Result as StdResult;
 use std::str::from_utf8;
 use std::sync::Arc;
 use std::thread::sleep;
 use std::time::Duration;
-use std::result::Result as StdResult;
 
 use amethyst_assets::*;
 use amethyst_core::specs::prelude::VecStorage;

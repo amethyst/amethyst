@@ -3,9 +3,9 @@ use std::io::Cursor;
 use failure::Fail;
 use rodio::{Decoder, Sink};
 
-use {Result, ErrorKind};
 use output::Output;
 use source::Source;
+use {ErrorKind, Result};
 
 /// This structure provides a way to programmatically pick and play music.
 pub struct AudioSink {

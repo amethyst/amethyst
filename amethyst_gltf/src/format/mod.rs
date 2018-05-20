@@ -11,7 +11,6 @@ use animation::{InterpolationFunction, InterpolationPrimitive, Sampler, SamplerP
 use assets::{Format, FormatValue, Source};
 use core::cgmath::{Matrix4, SquareMatrix};
 use core::transform::Transform;
-use {Result, ErrorKind};
 use failure::{self, ResultExt};
 use gfx::Primitive;
 use gfx::texture::SamplerInfo;
@@ -21,6 +20,7 @@ use gltf_utils::AccessorIter;
 use itertools::Itertools;
 use renderer::{Color, JointIds, JointWeights, JpgFormat, Normal, PngFormat, Position, Separate,
                Tangent, TexCoord, TextureMetadata};
+use {ErrorKind, Result};
 
 use super::*;
 
@@ -54,11 +54,7 @@ impl Format<GltfSceneAsset> for GltfSceneFormat {
     }
 }
 
-fn load_gltf(
-    source: Arc<Source>,
-    name: &str,
-    options: GltfSceneOptions,
-) -> Result<GltfSceneAsset> {
+fn load_gltf(source: Arc<Source>, name: &str, options: GltfSceneOptions) -> Result<GltfSceneAsset> {
     debug!("Loading GLTF scene {}", name);
     let (gltf, buffers) = import(source.clone(), name)?;
     load_data(&gltf, &buffers, &options, source, name)
@@ -106,10 +102,7 @@ fn load_data(
     })
 }
 
-fn load_animation(
-    animation: &gltf::Animation,
-    buffers: &Buffers,
-) -> Result<GltfAnimation> {
+fn load_animation(animation: &gltf::Animation, buffers: &Buffers) -> Result<GltfAnimation> {
     let samplers = animation
         .channels()
         .map(|ref channel| load_channel(channel, buffers))

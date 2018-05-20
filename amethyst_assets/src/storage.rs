@@ -150,9 +150,10 @@ impl<A: Asset> AssetStorage<A> {
                 } => {
                     let (asset, reload_obj) = match data.map(|FormatValue { data, reload }| {
                         (data, reload)
-                    }).and_then(|(d, rel)| f(d).map(|a| (a, rel))
-                        .map_err(|e| e.context(ErrorKind::DropAsset).into()))
-                    {
+                    }).and_then(|(d, rel)| {
+                        f(d).map(|a| (a, rel))
+                            .map_err(|e| e.context(ErrorKind::DropAsset).into())
+                    }) {
                         Ok(x) => {
                             debug!(
                                 "{:?}: Asset {:?} (handle id: {:?}) has been loaded successfully",
@@ -208,9 +209,10 @@ impl<A: Asset> AssetStorage<A> {
                 } => {
                     let (asset, reload_obj) = match data.map(|FormatValue { data, reload }| {
                         (data, reload)
-                    }).and_then(|(d, rel)| f(d).map(|a| (a, rel))
-                        .map_err(|e| e.context(ErrorKind::DropAsset).into()))
-                    {
+                    }).and_then(|(d, rel)| {
+                        f(d).map(|a| (a, rel))
+                            .map_err(|e| e.context(ErrorKind::DropAsset).into())
+                    }) {
                         Ok(x) => x,
                         Err(e) => {
                             error!(

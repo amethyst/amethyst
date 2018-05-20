@@ -3,8 +3,8 @@
 use std::sync::Arc;
 use std::time::Instant;
 
-use amethyst_core::{SystemBundle, Time};
 use amethyst_core::specs::prelude::{DispatcherBuilder, Read, Resources, System, Write};
+use amethyst_core::{SystemBundle, Time};
 use failure;
 
 use {Asset, ErrorKind, Format, FormatValue, Loader, Source};

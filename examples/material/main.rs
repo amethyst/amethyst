@@ -7,7 +7,9 @@ use amethyst::assets::Loader;
 use amethyst::core::cgmath::{Deg, Matrix4, Vector3};
 use amethyst::core::transform::GlobalTransform;
 use amethyst::prelude::*;
-use amethyst::renderer::*;
+use amethyst::renderer::{Camera, DisplayConfig, DrawPbm, Event, KeyboardInput, Light, Material,
+                         MaterialDefaults, MeshHandle, Pipeline, PointLight, PosNormTangTex,
+                         Projection, RenderBundle, Stage, VirtualKeyCode, WindowEvent};
 use genmesh::generators::SphereUV;
 use genmesh::{MapToVertices, Triangulate, Vertices};
 

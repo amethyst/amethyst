@@ -16,7 +16,7 @@ pub struct Error {
 #[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord, Hash, Fail)]
 pub enum ErrorKind {
     /// An error occurred decoding an audio asset
-    #[fail(display="An error occurred while decoding an audio asset")]
+    #[fail(display = "An error occurred while decoding an audio asset")]
     Decoder,
 }
 

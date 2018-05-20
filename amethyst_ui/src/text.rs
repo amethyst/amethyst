@@ -502,7 +502,8 @@ impl<'a> System<'a> for UiSystem {
                                 }
                             },
                             _ => {
-                                if focused_text.text.graphemes(true).count() < focused_edit.max_length {
+                                if focused_text.text.graphemes(true).count()
+                                    < focused_edit.max_length {
                                     focused_text.text.insert(start_byte, input);
                                     focused_edit.cursor_position += 1;
                                 }

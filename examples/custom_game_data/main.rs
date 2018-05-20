@@ -1,6 +1,7 @@
 //! Demonstrates how to use a custom game data structure
 
 extern crate amethyst;
+extern crate failure;
 extern crate rayon;
 
 use amethyst::assets::{Completion, HotReloadBundle, ProgressCounter};
@@ -14,7 +15,7 @@ use amethyst::renderer::{DisplayConfig, DrawShaded, Event, Pipeline, PosNormTex,
                          Stage};
 use amethyst::ui::{DrawUi, UiBundle};
 use amethyst::utils::fps_counter::FPSCounterBundle;
-use amethyst::{Application, Error, State, StateData, Trans};
+use amethyst::{Application, State, StateData, Trans};
 
 use example_system::ExampleSystem;
 use game_data::{CustomGameData, CustomGameDataBuilder};
@@ -163,7 +164,7 @@ fn main() {
 }
 
 /// Wrapper around the main, so we can return errors easily.
-fn run() -> Result<(), Error> {
+fn run() -> Result<(), failure::Error> {
     // Add our meshes directory to the asset loader.
     let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
 

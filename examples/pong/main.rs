@@ -1,6 +1,7 @@
 //! TODO: Rewrite for new renderer.
 
 extern crate amethyst;
+extern crate failure;
 
 mod audio;
 mod bundle;
