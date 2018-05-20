@@ -1,5 +1,5 @@
-use std::sync::Arc;
 use failure::{self, ResultExt};
+use std::sync::Arc;
 
 use amethyst_core::specs::storage::UnprotectedStorage;
 

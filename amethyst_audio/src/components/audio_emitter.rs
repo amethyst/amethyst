@@ -8,8 +8,8 @@ use failure::ResultExt;
 use rodio::{Decoder, SpatialSink};
 use smallvec::SmallVec;
 
-use {Error, ErrorKind};
 use source::Source;
+use {Error, ErrorKind};
 
 /// An audio source, add this component to anything that emits sound.
 #[derive(Default)]

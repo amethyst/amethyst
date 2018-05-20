@@ -20,8 +20,8 @@ use amethyst_core::Time;
 use amethyst_core::specs::common::Errors;
 use amethyst_core::specs::prelude::{Dispatcher, DispatcherBuilder, Read, ReadExpect, System,
                                     VecStorage, World, Write};
-use rayon::{ThreadPool, ThreadPoolBuilder};
 use failure::{err_msg, Error, Fail};
+use rayon::{ThreadPool, ThreadPoolBuilder};
 
 struct App {
     dispatcher: Dispatcher<'static, 'static>,

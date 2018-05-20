@@ -1,6 +1,7 @@
 //! TODO: Rewrite for new renderer.
 
 extern crate amethyst;
+extern crate failure;
 #[macro_use]
 extern crate serde_derive;
 

@@ -18,9 +18,9 @@ extern crate thread_profiler;
 
 use std::path::Path;
 
-use serde::{Deserialize, Serialize};
 pub use error::{Error, ErrorKind, Result, WrongExtension};
 use failure::ResultExt;
+use serde::{Deserialize, Serialize};
 
 mod error;
 

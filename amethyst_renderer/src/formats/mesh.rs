@@ -8,9 +8,9 @@ use failure::{err_msg, Error, ResultExt};
 use wavefront_obj::obj::{parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex,
                          TextureIndex, Vertex, VertexIndex};
 
-use {ErrorKind, Renderer, Result};
 use mesh::{Mesh, MeshBuilder, MeshHandle};
 use vertex::*;
+use {ErrorKind, Renderer, Result};
 
 /// Mesh data for loading
 #[derive(Debug)]
@@ -167,7 +167,8 @@ pub fn create_mesh_asset(data: MeshData, renderer: &mut Renderer) -> Result<Mesh
             let mb = MeshBuilder::new(vertices);
             renderer.create_mesh(mb)
         }
-        MeshData::Creator(creator) => creator.build(renderer)
+        MeshData::Creator(creator) => creator
+            .build(renderer)
             .map_err(|e| e.context(ErrorKind::MeshCreation).into()),
     };
 

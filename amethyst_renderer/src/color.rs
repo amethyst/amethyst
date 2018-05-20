@@ -112,7 +112,6 @@ impl From<Rgba> for vec3 {
     }
 }
 
-
 impl From<Rgba> for vec4 {
     fn from(Rgba(r, g, b, a): Rgba) -> vec4 {
         [r, g, b, a].into()

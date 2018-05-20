@@ -1,15 +1,15 @@
 //! Provides structures and functions used to get audio outputs.
 
 // We have to use types from this to provide an output iterator type.
-use std::io::Cursor;
 use std::fmt;
+use std::io::Cursor;
 
 use cpal::OutputDevices;
 use failure::ResultExt;
 use rodio::{default_output_device, output_devices, Decoder, Device, Sink, Source as RSource};
 
-use {Error, ErrorKind};
 use source::Source;
+use {Error, ErrorKind};
 
 /// A speaker(s) through which audio can be played.
 ///
@@ -51,12 +51,7 @@ impl Output {
     /// Play a sound n times. A volume of 1.0 is unchanged, while 0.0 is silent.
     ///
     /// This will return an Error if the loaded audio file in source could not be decoded.
-    pub fn try_play_n_times(
-        &self,
-        source: &Source,
-        volume: f32,
-        n: u16,
-    ) -> Result<(), Error> {
+    pub fn try_play_n_times(&self, source: &Source, volume: f32, n: u16) -> Result<(), Error> {
         let sink = Sink::new(&self.device);
         for _ in 0..n {
             sink.append(

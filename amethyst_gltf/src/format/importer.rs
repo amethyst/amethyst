@@ -3,12 +3,12 @@ use std::sync::Arc;
 
 use assets::Source as AssetSource;
 use base64;
-use {Error, ErrorKind};
 use failure::{err_msg, ResultExt};
 use gltf;
 use gltf::Gltf;
 use gltf::json;
 use gltf_utils::Source;
+use {Error, ErrorKind};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum ImageFormat {
@@ -82,7 +82,8 @@ fn read_to_end<P: AsRef<Path>>(source: Arc<AssetSource>, path: P) -> Result<Vec<
 }
 
 fn parse_data_uri(uri: &str) -> Result<Vec<u8>, Error> {
-    let encoded = uri.split(",").nth(1)
+    let encoded = uri.split(",")
+        .nth(1)
         .ok_or(err_msg("expected ',' in data uri not found"))
         .context(ErrorKind::Importer)?;
     let decoded = base64::decode(&encoded).context(ErrorKind::Importer)?;
@@ -99,7 +100,8 @@ fn load_external_buffers(
     for (index, buffer) in gltf.buffers().enumerate() {
         let uri = buffer.uri();
         let data_res: Result<Vec<u8>, Error> = if uri == "#bin" {
-            Ok(bin.take().expect("internal error: uri says binary data is not empty, but it is"))
+            Ok(bin.take()
+                .expect("internal error: uri says binary data is not empty, but it is"))
         } else if uri.starts_with("data:") {
             parse_data_uri(uri)
         } else {
@@ -118,7 +120,9 @@ fn load_external_buffers(
 }
 
 fn validate_standard(unvalidated: gltf::Unvalidated) -> Result<Gltf, Error> {
-    Ok(unvalidated.validate_completely().context(ErrorKind::Importer)?)
+    Ok(unvalidated
+        .validate_completely()
+        .context(ErrorKind::Importer)?)
 }
 
 fn validate_binary(unvalidated: gltf::Unvalidated, has_bin: bool) -> Result<Gltf, Error> {
@@ -142,7 +146,9 @@ fn validate_binary(unvalidated: gltf::Unvalidated, has_bin: bool) -> Result<Gltf
     }
 
     if errs.is_empty() {
-        Ok(unvalidated.validate_completely().context(ErrorKind::Importer)?)
+        Ok(unvalidated
+            .validate_completely()
+            .context(ErrorKind::Importer)?)
     } else {
         Err(ErrorKind::Validation(errs).into())
     }
@@ -207,7 +213,8 @@ pub fn get_image_data(
                 }
             } else {
                 let path = base_path.parent().unwrap_or(Path::new("./")).join(uri);
-                let data = source.load(path.to_str().unwrap())
+                let data = source
+                    .load(path.to_str().unwrap())
                     .context(ErrorKind::Importer)?;
                 if let Some(ty) = mime_type {
                     Ok((data, ImageFormat::from_mime_type(ty)?))
@@ -226,4 +233,3 @@ pub fn get_image_data(
         }
     }
 }
-

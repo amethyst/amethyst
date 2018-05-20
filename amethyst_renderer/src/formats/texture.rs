@@ -6,13 +6,13 @@ use std::result::Result as StdResult;
 use Renderer;
 use amethyst_assets::SimpleFormat;
 use failure::{Error, Fail};
-use {ErrorKind, Result};
 use gfx::format::{ChannelType, SurfaceType};
 use gfx::texture::SamplerInfo;
 use gfx::traits::Pod;
 use imagefmt;
 use imagefmt::{ColFmt, Image};
 use tex::{Texture, TextureBuilder};
+use {ErrorKind, Result};
 
 /// Texture metadata, used while loading
 #[derive(Debug, Clone)]
@@ -305,7 +305,8 @@ fn create_texture_asset_from_image(
             u16::max_value(),
             image.w,
             image.h
-        ).context(ErrorKind::TextureCreation).into());
+        ).context(ErrorKind::TextureCreation)
+            .into());
     }
 
     let tb = apply_options(

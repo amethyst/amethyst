@@ -216,7 +216,11 @@ pub(crate) fn set_texture_offsets(
 }
 
 pub(crate) fn setup_vertex_args(builder: &mut EffectBuilder) {
-    builder.with_raw_constant_buffer("VertexArgs", mem::size_of::<<VertexArgs as Uniform>::Std140>(), 1);
+    builder.with_raw_constant_buffer(
+        "VertexArgs",
+        mem::size_of::<<VertexArgs as Uniform>::Std140>(),
+        1,
+    );
 }
 
 pub(crate) fn set_vertex_args(
