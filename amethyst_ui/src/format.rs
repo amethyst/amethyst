@@ -1,6 +1,6 @@
 use amethyst_assets::{Asset, Handle, SimpleFormat};
 use amethyst_core::specs::prelude::VecStorage;
-use failure::{err_msg, Error};
+use failure::{self, err_msg};
 use rusttype::{Font, FontCollection};
 
 /// A loaded set of fonts from a file.
@@ -17,8 +17,8 @@ impl Asset for FontAsset {
     type HandleStorage = VecStorage<Handle<Self>>;
 }
 
-impl Into<Result<FontAsset, Error>> for FontData {
-    fn into(self) -> Result<FontAsset, Error> {
+impl Into<Result<FontAsset, failure::Error>> for FontData {
+    fn into(self) -> Result<FontAsset, failure::Error> {
         Ok(FontAsset(self.0))
     }
 }
@@ -43,12 +43,13 @@ pub struct TtfFormat;
 impl SimpleFormat<FontAsset> for TtfFormat {
     const NAME: &'static str = "TTF/OTF";
     type Options = ();
+    type Error = failure::Compat<failure::Error>;
 
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<FontData, Error> {
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<FontData, Self::Error> {
         FontCollection::from_bytes(bytes)
             .into_fonts()
             .nth(0)
             .map(|f| FontData(f))
-            .ok_or(err_msg("Font parsing error"))
+            .ok_or(err_msg("Font parsing error").compat())
     }
 }

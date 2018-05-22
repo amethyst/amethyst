@@ -26,6 +26,7 @@ failure = "0.1"
 failure_derive = "0.1"
 log = "0.4"
 rodio = "0.7"
+void = "1"
 
 thread_profiler = { version = "0.1", optional = true }
 

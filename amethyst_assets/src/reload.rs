@@ -5,7 +5,7 @@ use std::time::Instant;
 
 use amethyst_core::specs::prelude::{DispatcherBuilder, Read, Resources, System, Write};
 use amethyst_core::{SystemBundle, Time};
-use failure;
+use failure::{self, Fail};
 
 use {Asset, ErrorKind, Format, FormatValue, Loader, Source};
 

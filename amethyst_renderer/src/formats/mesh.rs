@@ -1,16 +1,74 @@
-use std::fmt::Debug;
+use std::fmt;
 use std::result::Result as StdResult;
 
 use amethyst_assets::{Asset, SimpleFormat};
 use amethyst_core::cgmath::{InnerSpace, Vector3};
 use amethyst_core::specs::prelude::VecStorage;
-use failure::{err_msg, Error, ResultExt};
+use failure::{Error, ResultExt};
 use wavefront_obj::obj::{parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex,
                          TextureIndex, Vertex, VertexIndex};
 
 use mesh::{Mesh, MeshBuilder, MeshHandle};
 use vertex::*;
 use {ErrorKind, Renderer, Result};
+
+mod error {
+    use std::fmt;
+    use failure::{Fail, Context, Backtrace};
+
+    #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Fail)]
+    pub enum MeshImportErrorKind {
+        /// An error occurred during parsing a mesh format
+        #[fail(display="An error occurred during parsing a mesh format")]
+        Parse,
+        /// An unexpected error occurred during mesh import
+        #[fail(display="An unexpected error occurred during mesh import")]
+        Other,
+    }
+
+    #[derive(Debug)]
+    pub struct MeshImportError {
+        inner: Context<MeshImportErrorKind>
+    }
+
+    impl Fail for MeshImportError {
+        fn cause(&self) -> Option<&Fail> {
+            self.inner.cause()
+        }
+
+        fn backtrace(&self) -> Option<&Backtrace> {
+            self.inner.backtrace()
+        }
+    }
+
+    impl fmt::Display for MeshImportError {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            fmt::Display::fmt(&self.inner, f)
+        }
+    }
+
+    impl MeshImportError {
+        /// Get the kind of this error.
+        pub fn kind(&self) -> &MeshImportErrorKind {
+            self.inner.get_context()
+        }
+    }
+
+    impl From<MeshImportErrorKind> for MeshImportError {
+        fn from(kind: MeshImportErrorKind) -> Self {
+            MeshImportError {
+                inner: Context::new(kind),
+            }
+        }
+    }
+
+    impl From<Context<MeshImportErrorKind>> for MeshImportError {
+        fn from(inner: Context<MeshImportErrorKind>) -> Self {
+            MeshImportError { inner }
+        }
+    }
+}
+pub use self::error::{MeshImportError, MeshImportErrorKind};
 
 /// Mesh data for loading
 #[derive(Debug)]
@@ -79,12 +137,13 @@ impl SimpleFormat<Mesh> for ObjFormat {
     const NAME: &'static str = "WAVEFRONT_OBJ";
 
     type Options = ();
+    type Error = MeshImportError;
 
-    fn import(&self, bytes: Vec<u8>, _options: ()) -> StdResult<MeshData, Error> {
-        let s = String::from_utf8(bytes).context(err_msg("Failed to parse OBJ"))?;
+    fn import(&self, bytes: Vec<u8>, _options: ()) -> StdResult<MeshData, Self::Error> {
+        let s = String::from_utf8(bytes).context(MeshImportErrorKind::Other)?;
         let set = parse(s).map_err(|e| {
             format_err!("In line {}: {:?}", e.line_number, e.message).context("Failed to parse OBJ")
-        })?;
+        }).context(MeshImportErrorKind::Parse)?;
         Ok(from_data(set).into())
     }
 }
@@ -196,7 +255,7 @@ pub fn build_mesh_with_combo(
 /// This allows the user to create their own vertex attributes, and have the amethyst asset and
 /// render systems be able to convert it into a `Mesh` that can be used from any applicable
 /// pass.
-pub trait MeshCreator: Send + Sync + Debug + 'static {
+pub trait MeshCreator: Send + Sync + fmt::Debug + 'static {
     /// Build a mesh given a `Renderer`
     fn build(self: Box<Self>, renderer: &mut Renderer) -> StdResult<Mesh, Error>;
 }

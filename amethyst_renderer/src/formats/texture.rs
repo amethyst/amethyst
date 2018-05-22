@@ -5,14 +5,14 @@ use std::result::Result as StdResult;
 
 use Renderer;
 use amethyst_assets::SimpleFormat;
-use failure::{Error, Fail};
+use failure::Fail;
 use gfx::format::{ChannelType, SurfaceType};
 use gfx::texture::SamplerInfo;
 use gfx::traits::Pod;
 use imagefmt;
 use imagefmt::{ColFmt, Image};
 use tex::{Texture, TextureBuilder};
-use {ErrorKind, Result};
+use {Error, ErrorKind, Result};
 
 /// Texture metadata, used while loading
 #[derive(Debug, Clone)]
@@ -152,9 +152,10 @@ impl SimpleFormat<Texture> for JpgFormat {
     const NAME: &'static str = "JPEG";
 
     type Options = TextureMetadata;
+    type Error = Error;
 
-    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> StdResult<TextureData, Error> {
-        self.from_data(bytes, options).map_err(|e| e.into())
+    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> StdResult<TextureData, Self::Error> {
+        self.from_data(bytes, options)
     }
 }
 
@@ -175,8 +176,9 @@ impl SimpleFormat<Texture> for PngFormat {
     const NAME: &'static str = "PNG";
 
     type Options = TextureMetadata;
+    type Error = Error;
 
-    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> StdResult<TextureData, Error> {
+    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> StdResult<TextureData, Self::Error> {
         self.from_data(bytes, options).map_err(|e| e.into())
     }
 }
@@ -189,8 +191,9 @@ impl SimpleFormat<Texture> for BmpFormat {
     const NAME: &'static str = "BMP";
 
     type Options = TextureMetadata;
+    type Error = Error;
 
-    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> StdResult<TextureData, Error> {
+    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> StdResult<TextureData, Self::Error> {
         // TODO: consider reading directly into GPU-visible memory
         // TODO: as noted by @omni-viral.
         imagefmt::bmp::read(&mut Cursor::new(bytes), ColFmt::RGBA)

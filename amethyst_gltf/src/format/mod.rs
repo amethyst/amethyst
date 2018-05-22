@@ -11,7 +11,7 @@ use animation::{InterpolationFunction, InterpolationPrimitive, Sampler, SamplerP
 use assets::{Format, FormatValue, Source};
 use core::cgmath::{Matrix4, SquareMatrix};
 use core::transform::Transform;
-use failure::{self, ResultExt};
+use failure::ResultExt;
 use gfx::Primitive;
 use gfx::texture::SamplerInfo;
 use gltf;
@@ -37,6 +37,7 @@ impl Format<GltfSceneAsset> for GltfSceneFormat {
     const NAME: &'static str = "GLTFScene";
 
     type Options = GltfSceneOptions;
+    type Error = Error;
 
     fn import(
         &self,
@@ -44,7 +45,7 @@ impl Format<GltfSceneAsset> for GltfSceneFormat {
         source: Arc<Source>,
         options: GltfSceneOptions,
         _create_reload: bool,
-    ) -> StdResult<FormatValue<GltfSceneAsset>, failure::Error> {
+    ) -> StdResult<FormatValue<GltfSceneAsset>, Self::Error> {
         let gltf = load_gltf(source, &name, options)?;
         if gltf.default_scene.is_some() || gltf.scenes.len() == 1 {
             Ok(FormatValue::data(gltf)) // TODO: create `Reload` object

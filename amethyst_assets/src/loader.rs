@@ -4,6 +4,7 @@ use std::hash::Hash;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use failure::Fail;
 use fnv::FnvHashMap;
 use rayon::ThreadPool;
 
