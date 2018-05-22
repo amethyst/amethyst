@@ -5,6 +5,8 @@
 extern crate amethyst_assets;
 extern crate amethyst_core;
 extern crate failure;
+#[macro_use]
+extern crate failure_derive;
 extern crate rayon;
 extern crate ron;
 #[macro_use]
@@ -20,7 +22,7 @@ use amethyst_core::Time;
 use amethyst_core::specs::common::Errors;
 use amethyst_core::specs::prelude::{Dispatcher, DispatcherBuilder, Read, ReadExpect, System,
                                     VecStorage, World, Write};
-use failure::{err_msg, Error, Fail};
+use failure::{err_msg, Error, Fail, Context, ResultExt};
 use rayon::{ThreadPool, ThreadPoolBuilder};
 
 struct App {
@@ -88,26 +90,26 @@ impl Asset for MeshAsset {
 #[derive(Clone)]
 struct Ron;
 
+#[derive(Debug, Fail)]
+pub enum ErrorKind {
+    #[fail(display="Error parsing bytes as utf8")]
+    Utf8,
+    #[fail(display="Error deserializing ron file")]
+    Parse,
+}
+
 impl SimpleFormat<MeshAsset> for Ron {
     const NAME: &'static str = "RON";
 
     type Options = ();
+    type Error = Context<ErrorKind>;
 
-    fn import(&self, bytes: Vec<u8>, _: ()) -> StdResult<VertexData, Error> {
+    fn import(&self, bytes: Vec<u8>, _: ()) -> StdResult<VertexData, Self::Error> {
         use ron::de::from_str;
         use std::str::from_utf8;
 
-        // Add some context to underlying errors
-        fn with_context<T, E: Into<Error>>(r: Result<T, E>) -> Result<T, Error> {
-            r.map_err(|e| {
-                e.into()
-                    .context(err_msg("Failed to decode mesh file."))
-                    .into()
-            })
-        }
-
-        let s = with_context(from_utf8(&bytes))?;
-        with_context(from_str(s))
+        let s = from_utf8(&bytes).context(ErrorKind::Utf8)?;
+        from_str(s).context(ErrorKind::Parse)
     }
 }
 

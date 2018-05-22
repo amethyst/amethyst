@@ -18,9 +18,9 @@ pub enum ErrorKind {
     /// Error getting the metadata of an asset on disk
     #[fail(display = "Could not get metadata of asset at \"{}\".", _0)]
     AssetMetadata(String),
-    /// Returned if an asset with a given name failed to load.
-    #[fail(display = "Failed to load asset from disk at \"{}\"", _0)]
-    FetchAssetFromDisk(String),
+    /// Failed to load asset data from a source
+    #[fail(display = "Failed to load asset from source at \"{}\"", _0)]
+    FetchAssetFromSource(String),
     /// Could not import an asset.
     #[fail(display = "Failed to import asset called \"{}\" of type \"{}\"", name, asset_type)]
     ImportAsset {

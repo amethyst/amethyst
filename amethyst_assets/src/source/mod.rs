@@ -29,7 +29,7 @@ pub trait Source: Send + Sync + 'static {
         let m = self.modified(path)
             .context(ErrorKind::AssetMetadata(path.to_owned()))?;
         let b = self.load(path)
-            .context(ErrorKind::FetchAssetFromDisk(path.to_owned()))?;
+            .context(ErrorKind::FetchAssetFromSource(path.to_owned()))?;
 
         Ok((b, m))
     }

@@ -9,6 +9,7 @@ extern crate failure_derive;
 extern crate log;
 extern crate rodio;
 extern crate smallvec;
+extern crate void;
 
 #[macro_use]
 #[cfg(feature = "profiler")]

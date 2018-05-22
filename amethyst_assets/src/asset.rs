@@ -1,9 +1,9 @@
-use failure::{self, ResultExt};
+use failure::{Fail, ResultExt};
 use std::sync::Arc;
 
 use amethyst_core::specs::storage::UnprotectedStorage;
 
-use {ErrorKind, Handle, Reload, SingleFile, Source};
+use {Error, ErrorKind, Handle, Reload, SingleFile, Source};
 
 /// One of the three core traits of this crate.
 ///
@@ -41,6 +41,12 @@ pub trait Format<A: Asset>: Send + 'static {
     /// sampler info.
     type Options: Send + 'static;
 
+    /// The import operation may fail with this associated Error type.
+    ///
+    /// If your import cannot fail consider using the never type `!` TODO when
+    /// it becomes stable.
+    type Error: Fail;
+
     /// Reads the given bytes and produces asset data.
     ///
     /// # Reload
@@ -49,16 +55,13 @@ pub trait Format<A: Asset>: Send + 'static {
     /// to reload assets if necessary (for hot reloading).
     /// You should only create this if `create_reload` is `true`.
     /// Also, the parameter is just a request, which means you can also return `None`.
-    ///
-    /// The error case can be anything that implements `failure::Fail`, which includes
-    /// `std::error::Error + Sync + Send + 'static`.
     fn import(
         &self,
         name: String,
         source: Arc<Source>,
         options: Self::Options,
         create_reload: bool,
-    ) -> Result<FormatValue<A>, failure::Error>;
+    ) -> Result<FormatValue<A>, Self::Error>;
 }
 
 /// The `Ok` return value of `Format::import` for a given asset type `A`.
@@ -90,11 +93,14 @@ pub trait SimpleFormat<A: Asset> {
     /// sampler info.
     type Options: Clone + Send + Sync + 'static;
 
-    /// Produces asset data from given bytes.
+    /// The import operation may fail with this associated Error type.
     ///
-    /// The error case can be anything that implements `failure::Fail`, which includes
-    /// `std::error::Error + Sync + Send + 'static`.
-    fn import(&self, bytes: Vec<u8>, options: Self::Options) -> Result<A::Data, failure::Error>;
+    /// If your import cannot fail consider using the never type `!` TODO when
+    /// it becomes stable.
+    type Error: Fail;
+
+    /// Produces asset data from given bytes.
+    fn import(&self, bytes: Vec<u8>, options: Self::Options) -> Result<A::Data, Self::Error>;
 }
 
 impl<A, T> Format<A> for T
@@ -104,6 +110,7 @@ where
 {
     const NAME: &'static str = T::NAME;
     type Options = T::Options;
+    type Error = Error;
 
     fn import(
         &self,
@@ -111,7 +118,7 @@ where
         source: Arc<Source>,
         options: Self::Options,
         create_reload: bool,
-    ) -> Result<FormatValue<A>, failure::Error> {
+    ) -> Result<FormatValue<A>, Self::Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("import_asset");
         if create_reload {
@@ -125,8 +132,11 @@ where
             let reload = Some(Box::new(reload) as Box<Reload<A>>);
             Ok(FormatValue { data, reload })
         } else {
-            let b = source.load(&name)?;
-            let data = T::import(&self, b, options)?;
+            let b = source.load(&name).context(ErrorKind::FetchAssetFromSource(name.clone()))?;
+            let data = T::import(&self, b, options).context(ErrorKind::ImportAssetFromBytes {
+                name: name.clone(),
+                asset_type: Self::NAME,
+            })?;
 
             Ok(FormatValue::data(data))
         }

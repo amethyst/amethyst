@@ -4,6 +4,7 @@ extern crate amethyst_assets;
 extern crate amethyst_core;
 extern crate failure;
 extern crate rayon;
+extern crate void;
 
 use std::result::Result as StdResult;
 use std::str::from_utf8;
@@ -15,6 +16,7 @@ use amethyst_assets::*;
 use amethyst_core::specs::prelude::VecStorage;
 use failure::Error;
 use rayon::ThreadPoolBuilder;
+use void::Void;
 
 #[derive(Clone, Debug)]
 struct DummyAsset(String);
@@ -31,6 +33,7 @@ impl Format<DummyAsset> for DummyFormat {
     const NAME: &'static str = "DUMMY";
 
     type Options = ();
+    type Error = Void;
 
     fn import(
         &self,
@@ -38,8 +41,9 @@ impl Format<DummyAsset> for DummyFormat {
         source: Arc<Source>,
         _: (),
         _create_reload: bool,
-    ) -> StdResult<FormatValue<DummyAsset>, Error> {
-        let dummy = from_utf8(source.load(&name)?.as_slice()).map(|s| s.to_owned())?;
+    ) -> StdResult<FormatValue<DummyAsset>, Self::Error> {
+        let data = source.load(&name).unwrap();
+        let dummy = from_utf8(data.as_slice()).unwrap().to_owned();
         Ok(FormatValue::data(dummy))
     }
 }
