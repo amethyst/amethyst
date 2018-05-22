@@ -57,7 +57,8 @@ done the following things first:
 
 1. You have ensured the pull request is based on a recent version of your
    respective branch.
-2. You have processed your source code with `cargo fmt`.
+2. You have processed your source code with `cargo fmt` (we use latest rustup stable, 
+   0.4 at the time of writing).
 3. All of the following commands completed without errors.
    * `cargo build`
    * `cargo test --all`
