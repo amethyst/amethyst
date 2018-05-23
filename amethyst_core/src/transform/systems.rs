@@ -60,9 +60,10 @@ impl<'a> System<'a> for TransformSystem {
         {
             match *event {
                 HierarchyEvent::Removed(entity) => {
-                    if let Err(err) = entities.delete(entity) {
-                        error!("Failed removing entity {:?}: {}", entity, err);
-                    }
+                    // Sometimes the user may have already deleted the entity.
+                    // This is fine, so we'll ignore any errors this may give
+                    // since it can only fail due to the entity already being dead.
+                    let _ = entities.delete(entity);
                 }
                 HierarchyEvent::Modified(entity) => {
                     self.local_modified.add(entity.id());
