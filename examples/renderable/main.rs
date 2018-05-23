@@ -508,7 +508,6 @@ fn run() -> Result<(), Error> {
         .with_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?
         .with_bundle(InputBundle::<String, String>::new())?;
     let mut game = Application::build(resources_directory, Loading::default())?
-        .with_frame_limit(FrameRateLimitStrategy::Unlimited, 0)
         .build(game_data)?;
     game.run();
     Ok(())
