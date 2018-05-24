@@ -148,7 +148,6 @@ fn run() -> Result<(), Error> {
         )
         .with_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?;
     let mut game = Application::build(resources_directory, ExampleState)?
-        .with_frame_limit(FrameRateLimitStrategy::Unlimited, 0)
         .build(game_data)?;
     game.run();
     Ok(())

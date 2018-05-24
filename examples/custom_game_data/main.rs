@@ -189,7 +189,6 @@ fn run() -> Result<(), Error> {
         .with_base_bundle(InputBundle::<String, String>::new())?;
 
     let mut game = Application::build(resources_directory, Loading::default())?
-        .with_frame_limit(FrameRateLimitStrategy::Unlimited, 0)
         .build(game_data)?;
     game.run();
 

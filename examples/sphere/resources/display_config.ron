@@ -6,5 +6,5 @@
   multisampling: 0,
   title: "Sphere example",
   visibility: true,
-  vsync: false,
+  vsync: true,
 )
