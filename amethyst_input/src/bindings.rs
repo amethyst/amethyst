@@ -1,16 +1,16 @@
 //! Defines binding structure used for saving and loading input settings.
 
 use std::borrow::Borrow;
+use std::collections::HashMap;
 use std::hash::Hash;
 
-use fnv::FnvHashMap as HashMap;
 use smallvec::SmallVec;
 
 use super::{Axis, Button};
 
 /// Used for saving and loading input settings.
 #[derive(Derivative, Serialize, Deserialize, Clone)]
-#[derivative(Default(bound = "AX: Hash + Eq, AC: Hash + Eq"))]
+#[derivative(Default(bound = ""))]
 pub struct Bindings<AX, AC>
 where
     AX: Hash + Eq,

@@ -2,7 +2,6 @@ extern crate amethyst_config;
 extern crate amethyst_core;
 #[macro_use]
 extern crate derivative;
-extern crate fnv;
 #[macro_use]
 extern crate serde;
 extern crate smallvec;
