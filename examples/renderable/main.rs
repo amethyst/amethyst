@@ -8,7 +8,6 @@ extern crate amethyst;
 use amethyst::assets::{Completion, HotReloadBundle, Loader, ProgressCounter};
 use amethyst::config::Config;
 use amethyst::core::cgmath::{Array, Deg, Euler, Quaternion, Rad, Rotation, Rotation3, Vector3};
-use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::timing::Time;
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::{Component, Entity, Join, Read, ReadStorage, System, World,

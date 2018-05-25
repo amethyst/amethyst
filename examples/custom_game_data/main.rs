@@ -5,7 +5,6 @@ extern crate rayon;
 
 use amethyst::assets::{Completion, HotReloadBundle, ProgressCounter};
 use amethyst::config::Config;
-use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::transform::TransformBundle;
 use amethyst::ecs::prelude::{Component, Entity, Join, World};
 use amethyst::ecs::storage::NullStorage;
