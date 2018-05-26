@@ -4,7 +4,7 @@
   min_dimensions: None,
   fullscreen: false,
   multisampling: 0,
-  title: "Assets example",
+  title: "Prefab example",
   visibility: true,
   vsync: true,
 )
