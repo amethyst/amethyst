@@ -1,0 +1,75 @@
+Prefab (
+    entities: [
+        (
+            data: Some((
+                None,
+                None,
+                None,
+                Some((ambient_color: Some(((0.5, 0.5, 0.5, 0.5))))),
+                None,
+            )),
+        ),
+        (
+            data: Some((
+                None,
+                Some(File("mesh/puffy.gltf", GltfSceneFormat, (
+                    generate_tex_coords: Some((0.1, 0.1)),
+                    load_animations: true,
+                    flip_v_coord: true,
+                    move_to_origin: true,
+                    scene_index: None,
+                ))),
+                None,
+                None,
+                Some(()),
+            )),
+        ),
+        (
+            data: Some((
+                Some(Transform (
+                     translation: (x: 5.0, y: 2.0, z: 5.0,),
+                     rotation: (s: 0.9098437, v: (x: -0.16043, y: 0.37686962, z: 0.06645229,),),
+                )),
+                None,
+                Some(Perspective((
+                    fovy: Rad (1.0471975512),
+                    aspect: 1.33333333333333333333,
+                    near: 0.1,
+                    far: 2000.0,
+                ))),
+                None,
+                None,
+            )),
+        ),
+        (
+            data: Some((
+                None,
+                None,
+                None,
+                Some((
+                    light: Some(Point((
+                        center: (6.0, 6.0, -6.0),
+                        intensity: 6.0,
+                        color: (0.8, 0.0, 0.0, 1.0),
+                    ))),
+                )),
+                None,
+            )),
+        ),
+        (
+            data: Some((
+                None,
+                None,
+                None,
+                Some((
+                    light: Some(Point((
+                        center: (0.0, 4.0, 4.0),
+                        intensity: 6.0,
+                        color: (0.0, 0.3, 0.7, 1.0),
+                    ))),
+                )),
+                None,
+            )),
+        ),
+    ],
+)

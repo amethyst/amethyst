@@ -18,8 +18,10 @@ use amethyst::input::InputBundle;
 use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, DisplayConfig, DrawShaded,
                          ElementState, Event, KeyboardInput, Light, Material, MaterialDefaults,
                          MeshHandle, ObjFormat, Pipeline, PngFormat, PointLight, PosNormTex,
-                         Projection, RenderBundle, Rgba, Stage, VirtualKeyCode, WindowEvent};
-use amethyst::ui::{Anchor, Anchored, DrawUi, FontHandle, TtfFormat, UiBundle, UiText, UiTransform};
+                         Projection, RenderBundle, Rgba, Stage, TextureFormat, VirtualKeyCode,
+                         WindowEvent};
+use amethyst::ui::{Anchor, Anchored, DrawUi, FontFormat, FontHandle, TtfFormat, UiBundle,
+                   UiFinder, UiLoader, UiLoaderSystem, UiText, UiTransform};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
 
@@ -30,12 +32,12 @@ struct DemoState {
     point_light: bool,
     directional_light: bool,
     camera_angle: f32,
-    fps_display: Entity,
-    #[allow(dead_code)]
-    pipeline_forward: bool, // TODO
 }
 
-struct ExampleSystem;
+#[derive(Default)]
+struct ExampleSystem {
+    fps_display: Option<Entity>,
+}
 
 impl<'a> System<'a> for ExampleSystem {
     type SystemData = (
@@ -46,10 +48,12 @@ impl<'a> System<'a> for ExampleSystem {
         WriteExpect<'a, DemoState>,
         WriteStorage<'a, UiText>,
         Read<'a, FPSCounter>,
+        UiFinder<'a>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (mut lights, time, camera, mut transforms, mut state, mut ui_text, fps_counter) = data;
+        let (mut lights, time, camera, mut transforms, mut state, mut ui_text, fps_counter, finder) =
+            data;
         let light_angular_velocity = -1.0;
         let light_orbit_radius = 15.0;
         let light_z = 6.0;
@@ -83,10 +87,17 @@ impl<'a> System<'a> for ExampleSystem {
             point_light.color = state.light_color.into();
         }
 
-        if let Some(fps_display) = ui_text.get_mut(state.fps_display) {
-            if time.frame_number() % 20 == 0 {
-                let fps = fps_counter.sampled_fps();
-                fps_display.text = format!("FPS: {:.*}", 2, fps);
+        if let None = self.fps_display {
+            if let Some(fps_entity) = finder.find("fps_text") {
+                self.fps_display = Some(fps_entity);
+            }
+        }
+        if let Some(fps_entity) = self.fps_display {
+            if let Some(fps_display) = ui_text.get_mut(fps_entity) {
+                if time.frame_number() % 20 == 0 {
+                    let fps = fps_counter.sampled_fps();
+                    fps_display.text = format!("FPS: {:.*}", 2, fps);
+                }
             }
         }
     }
@@ -108,9 +119,15 @@ impl Component for LoadTag {
 impl<'a, 'b> State<GameData<'a, 'b>> for Loading {
     fn on_start(&mut self, data: StateData<GameData>) {
         data.world.register::<LoadTag>();
-        let (progress, assets) = load_assets(&data.world);
+        let (mut progress, assets) = load_assets(&data.world);
+
+        let ui_handle = data.world
+            .exec(|loader: UiLoader<TextureFormat, FontFormat>| {
+                loader.load("ui.ron", &mut progress)
+            });
+        data.world.create_entity().with(ui_handle).build();
         self.progress = Some(progress);
-        let fps_display = data.world
+        /* let fps_display = data.world
             .create_entity()
             .with(UiTransform::new(
                 "fps".to_string(),
@@ -128,7 +145,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Loading {
                 25.,
             ))
             .with(Anchored::new(Anchor::TopLeft))
-            .build();
+            .build();*/
 
         data.world
             .create_entity()
@@ -159,8 +176,6 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Loading {
             point_light: true,
             directional_light: true,
             camera_angle: 0.0,
-            fps_display,
-            pipeline_forward: true,
         });
     }
 
@@ -301,83 +316,69 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
         let mut state = w.write_resource::<DemoState>();
 
         match event {
-            Event::WindowEvent { event, .. } => {
-                match event {
-                    WindowEvent::KeyboardInput {
-                        input:
-                            KeyboardInput {
-                                virtual_keycode,
-                                state: ElementState::Pressed,
-                                ..
-                            },
-                        ..
-                    } => {
-                        match virtual_keycode {
-                            Some(VirtualKeyCode::Escape) => return Trans::Quit,
-                            Some(VirtualKeyCode::Space) => {
-                                // TODO: figure out how to change pipeline
-                                /*if state.pipeline_forward {
-                                    state.pipeline_forward = false;
-                                    set_pipeline_state(pipe, false);
-                                } else {
-                                    state.pipeline_forward = true;
-                                    set_pipeline_state(pipe, true);
-                                }*/
-                            }
-                            Some(VirtualKeyCode::R) => {
-                                state.light_color = [0.8, 0.2, 0.2, 1.0];
-                            }
-                            Some(VirtualKeyCode::G) => {
-                                state.light_color = [0.2, 0.8, 0.2, 1.0];
-                            }
-                            Some(VirtualKeyCode::B) => {
-                                state.light_color = [0.2, 0.2, 0.8, 1.0];
-                            }
-                            Some(VirtualKeyCode::W) => {
-                                state.light_color = [1.0, 1.0, 1.0, 1.0];
-                            }
-                            Some(VirtualKeyCode::A) => {
-                                let mut color = w.write_resource::<AmbientColor>();
-                                if state.ambient_light {
-                                    state.ambient_light = false;
-                                    color.0 = [0.0; 3].into();
-                                } else {
-                                    state.ambient_light = true;
-                                    color.0 = [0.01; 3].into();
-                                }
-                            }
-                            Some(VirtualKeyCode::D) => {
-                                let mut lights = w.write_storage::<Light>();
-
-                                if state.directional_light {
-                                    state.directional_light = false;
-                                    for light in (&mut lights).join() {
-                                        if let Light::Directional(ref mut d) = *light {
-                                            d.color = [0.0; 4].into();
-                                        }
-                                    }
-                                } else {
-                                    state.directional_light = true;
-                                    for light in (&mut lights).join() {
-                                        if let Light::Directional(ref mut d) = *light {
-                                            d.color = [0.2; 4].into();
-                                        }
-                                    }
-                                }
-                            }
-                            Some(VirtualKeyCode::P) => if state.point_light {
-                                state.point_light = false;
-                                state.light_color = [0.0; 4].into();
-                            } else {
-                                state.point_light = true;
-                                state.light_color = [1.0; 4].into();
-                            },
-                            _ => (),
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::KeyboardInput {
+                    input:
+                        KeyboardInput {
+                            virtual_keycode,
+                            state: ElementState::Pressed,
+                            ..
+                        },
+                    ..
+                } => match virtual_keycode {
+                    Some(VirtualKeyCode::Escape) => return Trans::Quit,
+                    Some(VirtualKeyCode::R) => {
+                        state.light_color = [0.8, 0.2, 0.2, 1.0];
+                    }
+                    Some(VirtualKeyCode::G) => {
+                        state.light_color = [0.2, 0.8, 0.2, 1.0];
+                    }
+                    Some(VirtualKeyCode::B) => {
+                        state.light_color = [0.2, 0.2, 0.8, 1.0];
+                    }
+                    Some(VirtualKeyCode::W) => {
+                        state.light_color = [1.0, 1.0, 1.0, 1.0];
+                    }
+                    Some(VirtualKeyCode::A) => {
+                        let mut color = w.write_resource::<AmbientColor>();
+                        if state.ambient_light {
+                            state.ambient_light = false;
+                            color.0 = [0.0; 3].into();
+                        } else {
+                            state.ambient_light = true;
+                            color.0 = [0.01; 3].into();
                         }
                     }
+                    Some(VirtualKeyCode::D) => {
+                        let mut lights = w.write_storage::<Light>();
+
+                        if state.directional_light {
+                            state.directional_light = false;
+                            for light in (&mut lights).join() {
+                                if let Light::Directional(ref mut d) = *light {
+                                    d.color = [0.0; 4].into();
+                                }
+                            }
+                        } else {
+                            state.directional_light = true;
+                            for light in (&mut lights).join() {
+                                if let Light::Directional(ref mut d) = *light {
+                                    d.color = [0.2; 4].into();
+                                }
+                            }
+                        }
+                    }
+                    Some(VirtualKeyCode::P) => if state.point_light {
+                        state.point_light = false;
+                        state.light_color = [0.0; 4].into();
+                    } else {
+                        state.point_light = true;
+                        state.light_color = [1.0; 4].into();
+                    },
                     _ => (),
-                }
-            }
+                },
+                _ => (),
+            },
             _ => (),
         }
         Trans::None
@@ -500,7 +501,12 @@ fn run() -> Result<(), Error> {
             .with_pass(DrawUi::new()),
     );
     let game_data = GameDataBuilder::default()
-        .with::<ExampleSystem>(ExampleSystem, "example_system", &[])
+        .with(
+            UiLoaderSystem::<TextureFormat, FontFormat>::default(),
+            "",
+            &[],
+        )
+        .with::<ExampleSystem>(ExampleSystem::default(), "example_system", &[])
         .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
         .with_bundle(UiBundle::<String, String>::new())?
         .with_bundle(HotReloadBundle::default())?

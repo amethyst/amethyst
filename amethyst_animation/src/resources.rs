@@ -107,6 +107,7 @@ where
 }
 
 /// Define the rest state for a component on an entity
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RestState<T> {
     state: T,
 }
@@ -873,6 +874,18 @@ where
     T: AnimationSampling,
 {
     pub animations: FnvHashMap<I, Handle<Animation<T>>>,
+}
+
+impl<I, T> Default for AnimationSet<I, T>
+where
+    I: Eq + Hash,
+    T: AnimationSampling,
+{
+    fn default() -> Self {
+        AnimationSet {
+            animations: FnvHashMap::default(),
+        }
+    }
 }
 
 impl<I, T> AnimationSet<I, T>

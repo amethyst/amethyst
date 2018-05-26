@@ -1,55 +1,8 @@
-use fnv::FnvHashMap;
-
-use amethyst_assets::Handle;
 use amethyst_core::specs::prelude::Read;
-use amethyst_renderer::{Material, Sprite, Texture, TextureOffset};
+use amethyst_renderer::{Material, MaterialTextureSet, Sprite, TextureOffset};
 use minterpolate::InterpolationPrimitive;
 
 use {AnimationSampling, ApplyData, BlendMethod};
-
-/// Textures used by texture animations
-#[derive(Debug, Default)]
-pub struct MaterialTextureSet {
-    textures: FnvHashMap<usize, Handle<Texture>>,
-    texture_inverse: FnvHashMap<Handle<Texture>, usize>,
-}
-
-impl MaterialTextureSet {
-    pub fn new() -> Self {
-        MaterialTextureSet {
-            textures: FnvHashMap::default(),
-            texture_inverse: FnvHashMap::default(),
-        }
-    }
-
-    pub fn handle(&self, index: usize) -> Option<Handle<Texture>> {
-        self.textures.get(&index).cloned()
-    }
-
-    pub fn index(&self, handle: &Handle<Texture>) -> Option<usize> {
-        self.texture_inverse.get(handle).cloned()
-    }
-
-    pub fn insert(&mut self, index: usize, handle: Handle<Texture>) {
-        self.textures.insert(index, handle.clone());
-        self.texture_inverse.insert(handle, index);
-    }
-
-    pub fn remove(&mut self, index: usize) {
-        if let Some(handle) = self.textures.remove(&index) {
-            self.texture_inverse.remove(&handle);
-        }
-    }
-
-    pub fn len(&self) -> usize {
-        self.textures.len()
-    }
-
-    pub fn clear(&mut self) {
-        self.textures.clear();
-        self.texture_inverse.clear();
-    }
-}
 
 /// Sampler primitive for Material animations
 /// Note that material can only ever be animated with `Step`, or a panic will occur.

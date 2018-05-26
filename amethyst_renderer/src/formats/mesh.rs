@@ -1,8 +1,11 @@
 use std::fmt::Debug;
+use std::result::Result as StdResult;
 
-use amethyst_assets::{Asset, Error, Result, ResultExt, SimpleFormat};
+use amethyst_assets::{Asset, AssetStorage, Error, Loader, PrefabData, Result, ResultExt,
+                      SimpleFormat};
 use amethyst_core::cgmath::{InnerSpace, Vector3};
-use amethyst_core::specs::prelude::VecStorage;
+use amethyst_core::specs::error::Error as SpecsError;
+use amethyst_core::specs::prelude::{Entity, Read, ReadExpect, VecStorage, WriteStorage};
 use wavefront_obj::obj::{parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex,
                          TextureIndex, Vertex, VertexIndex};
 
@@ -11,7 +14,7 @@ use mesh::{Mesh, MeshBuilder, MeshHandle};
 use vertex::*;
 
 /// Mesh data for loading
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MeshData {
     /// Position and color
     PosColor(Vec<PosColor>),
@@ -26,6 +29,7 @@ pub enum MeshData {
     PosNormTangTex(Vec<PosNormTangTex>),
 
     /// Create a mesh from a given creator
+    #[serde(skip)]
     Creator(Box<MeshCreator>),
 }
 
@@ -68,9 +72,30 @@ impl Asset for Mesh {
     type HandleStorage = VecStorage<MeshHandle>;
 }
 
+impl<'a> PrefabData<'a> for MeshData {
+    type SystemData = (
+        ReadExpect<'a, Loader>,
+        WriteStorage<'a, MeshHandle>,
+        Read<'a, AssetStorage<Mesh>>,
+    );
+    type Result = ();
+
+    fn load_prefab(
+        &self,
+        entity: Entity,
+        system_data: &mut Self::SystemData,
+        _: &[Entity],
+    ) -> StdResult<(), SpecsError> {
+        let handle = system_data
+            .0
+            .load_from_data(self.clone(), (), &system_data.2);
+        system_data.1.insert(entity, handle).map(|_| ())
+    }
+}
+
 /// Allows loading from Wavefront files
 /// see: https://en.wikipedia.org/wiki/Wavefront_.obj_file
-#[derive(Clone)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct ObjFormat;
 
 impl SimpleFormat<Mesh> for ObjFormat {
@@ -198,10 +223,19 @@ pub fn build_mesh_with_combo(
 pub trait MeshCreator: Send + Sync + Debug + 'static {
     /// Build a mesh given a `Renderer`
     fn build(self: Box<Self>, renderer: &mut Renderer) -> ::error::Result<Mesh>;
+
+    /// Clone a boxed version of this object
+    fn box_clone(&self) -> Box<MeshCreator>;
+}
+
+impl Clone for Box<MeshCreator> {
+    fn clone(&self) -> Box<MeshCreator> {
+        self.box_clone()
+    }
 }
 
 /// Mesh creator for `VertexBufferCombination`.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ComboMeshCreator {
     combo: VertexBufferCombination,
 }
@@ -216,6 +250,10 @@ impl ComboMeshCreator {
 impl MeshCreator for ComboMeshCreator {
     fn build(self: Box<Self>, renderer: &mut Renderer) -> ::error::Result<Mesh> {
         build_mesh_with_combo(self.combo, renderer)
+    }
+
+    fn box_clone(&self) -> Box<MeshCreator> {
+        Box::new((*self).clone())
     }
 }
 

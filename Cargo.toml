@@ -156,5 +156,9 @@ path = "examples/custom_game_data/main.rs"
 name = "arc_ball_camera"
 path = "examples/arc_ball_camera/main.rs"
 
+[[example]]
+name = "prefab"
+path = "examples/prefab/main.rs"
+
 [workspace]
 members = ["amethyst_gltf"]

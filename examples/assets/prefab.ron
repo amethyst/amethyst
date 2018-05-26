@@ -1,0 +1,27 @@
+Prefab (
+    entities: [
+        (
+            data: Some((
+                GraphicsPrefab (
+                    mesh: (
+                        name: "mesh/cuboid.custom",
+                        format: Custom,
+                        options: (),
+                    ),
+                    material: (
+                        albedo: Some(Data(Rgba((0.0, 0.0, 1.0, 0.0,), (),))),
+                    ),
+                    transparent: false,
+                ),
+                Transform (
+                    translation: (
+                        x: 0.0,
+                        y: 0.0,
+                        z: 5.0,
+                    ),
+                    scale: (x: 2.0, y: 2.0, z: 2.0,),
+                ),
+            )),
+        ),
+    ],
+)

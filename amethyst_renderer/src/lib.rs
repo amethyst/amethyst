@@ -28,9 +28,8 @@ extern crate imagefmt;
 #[macro_use]
 extern crate log;
 extern crate rayon;
-extern crate serde;
 #[macro_use]
-extern crate serde_derive;
+extern crate serde;
 extern crate smallvec;
 extern crate wavefront_obj;
 extern crate winit;
@@ -62,16 +61,17 @@ extern crate gfx_device_vulkan;
 extern crate gfx_window_vulkan;
 
 pub use bundle::RenderBundle;
-pub use cam::{ActiveCamera, Camera, Projection};
+pub use cam::{ActiveCamera, ActiveCameraPrefab, Camera, CameraPrefab, Projection};
 pub use color::Rgba;
 pub use config::DisplayConfig;
 pub use formats::{build_mesh_with_combo, create_mesh_asset, create_texture_asset, BmpFormat,
-                  ComboMeshCreator, ImageData, ImageError, JpgFormat, MeshCreator, MeshData,
-                  ObjFormat, PngFormat, TextureData, TextureMetadata};
+                  ComboMeshCreator, GraphicsPrefab, ImageData, ImageError, JpgFormat,
+                  MaterialPrefab, MeshCreator, MeshData, ObjFormat, PngFormat, TextureData,
+                  TextureFormat, TextureMetadata, TexturePrefab};
 pub use input::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
-pub use light::{DirectionalLight, Light, PointLight, SpotLight, SunLight};
+pub use light::{DirectionalLight, Light, LightPrefab, PointLight, SpotLight, SunLight};
 pub use mesh::{vertex_data, Mesh, MeshBuilder, MeshHandle, VertexBuffer};
-pub use mtl::{Material, MaterialDefaults, TextureOffset};
+pub use mtl::{Material, MaterialDefaults, MaterialTextureSet, TextureOffset};
 pub use pass::{DrawFlat, DrawFlatSeparate, DrawPbm, DrawPbmSeparate, DrawShaded,
                DrawShadedSeparate};
 pub use pipe::{ColorBuffer, Data, DepthBuffer, DepthMode, Effect, EffectBuilder, Init, Meta,
@@ -80,7 +80,7 @@ pub use pipe::{ColorBuffer, Data, DepthBuffer, DepthMode, Effect, EffectBuilder,
 pub use renderer::Renderer;
 pub use resources::{AmbientColor, ScreenDimensions, WindowMessages};
 pub use skinning::{AnimatedComboMeshCreator, AnimatedVertexBufferCombination, JointIds,
-                   JointTransforms, JointWeights};
+                   JointTransforms, JointTransformsPrefab, JointWeights};
 pub use sprite::{Sprite, SpriteSheet, SpriteSheetHandle};
 pub use system::RenderSystem;
 pub use tex::{Texture, TextureBuilder, TextureHandle};

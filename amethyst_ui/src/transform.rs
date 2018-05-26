@@ -1,6 +1,26 @@
-use super::ScaleMode;
-use amethyst_core::specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
 use std::marker::PhantomData;
+
+use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entities, Entity, FlaggedStorage,
+                                    Join, ReadStorage};
+
+use ScaleMode;
+
+/// Utility `SystemData` for finding UI entities based on `UiTransform` id
+#[derive(SystemData)]
+pub struct UiFinder<'a> {
+    entities: Entities<'a>,
+    storage: ReadStorage<'a, UiTransform>,
+}
+
+impl<'a> UiFinder<'a> {
+    /// Find the `UiTransform` entity with the given id
+    pub fn find(&self, id: &str) -> Option<Entity> {
+        (&*self.entities, &self.storage)
+            .join()
+            .find(|(_, transform)| transform.id == id)
+            .map(|(entity, _)| entity)
+    }
+}
 
 /// The UiTransform represents the transformation of a ui element.
 /// Values are in pixel and the position is calculated from the top left of the screen

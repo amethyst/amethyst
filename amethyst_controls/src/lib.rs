@@ -1,9 +1,12 @@
 //! Amethyst control crate.
+extern crate amethyst_assets;
 extern crate amethyst_core;
 extern crate amethyst_input;
 extern crate amethyst_renderer;
 #[macro_use]
 extern crate log;
+#[macro_use]
+extern crate serde;
 extern crate winit;
 
 #[cfg(feature = "profiler")]
