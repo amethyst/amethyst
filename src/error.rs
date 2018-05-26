@@ -115,9 +115,3 @@ impl From<RendererError> for Error {
     }
 }
 
-impl From<ConfigError> for Error {
-    fn from(err: ConfigError) -> Self {
-        Error::Config(err)
-    }
-}
-

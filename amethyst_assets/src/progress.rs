@@ -157,8 +157,12 @@ pub trait Tracker: Send + 'static {
 impl Tracker for () {
     fn success(self: Box<Self>) {}
     fn fail(self: Box<Self>, e: Error) {
-        for err in e.causes() {
-            error!("caused by: {}", e)
+        let mut causes = e.causes();
+        // Cannot fail - we are guaranteed at least 1 error
+        error!("    error: {}", causes.next().unwrap());
+
+        for err in causes {
+            error!("caused by: {}", err)
         }
         error!("note: to handle the error, use a `Progress` other than `()`");
     }
