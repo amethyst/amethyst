@@ -47,7 +47,8 @@ pub enum ErrorKind {
         asset_type: &'static str,
     },
     /// The single file reloader failed to reload a file with the given format .
-    #[fail(display = "The single file reloader failed to reload a file in \"{}\" format.", _0)]
+    #[fail(display = "The single file reloader failed to reload a file at \"{}\" of type \"{}\".",
+           path, asset_type)]
     SingleFileReload {
         /// The path to the asset
         path: String,
@@ -93,5 +94,52 @@ impl From<ErrorKind> for Error {
 impl From<Context<ErrorKind>> for Error {
     fn from(inner: Context<ErrorKind>) -> Self {
         Error { inner }
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn err_msgs() {
+        for (variant, msg) in vec![(
+            ErrorKind::AssetMetadata("/some/path/or/other".into()),
+            r#"Could not get metadata of asset at "/some/path/or/other"."#
+        ), (
+            ErrorKind::FetchAssetFromSource("/some/path/or/other".into()),
+            r#"Failed to load asset from source at "/some/path/or/other""#
+        ), (
+            ErrorKind::ImportAsset {
+                name: "name".into(),
+                asset_type: "type"
+            },
+            r#"Failed to import asset called "name" of type "type""#
+        ), (
+            ErrorKind::ImportAssetFromBytes {
+                name: "name".into(),
+                asset_type: "type"
+            },
+            r#"Failed to import asset called "name" of type "type" from its raw byte format"#,
+        ), (
+            ErrorKind::Reload {
+                name: "name".into(),
+                asset_type: "type"
+            },
+            r#"Failed to reload asset called "name" of type "type"."#
+        ), (
+            ErrorKind::SingleFileReload {
+                path: "/some/path/or/other".into(),
+                asset_type: "type"
+            },
+            r#"The single file reloader failed to reload a file at "/some/path/or/other" of type "type"."#
+        ), (
+            ErrorKind::DropAsset,
+            "A custom asset dropper returned an error."
+        )] {
+            assert_eq!(format!("{}", variant), msg)
+        }
+
     }
 }
