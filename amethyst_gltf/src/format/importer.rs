@@ -1,29 +1,27 @@
-use std;
-use std::error::Error as StdError;
-use std::fmt;
 use std::path::Path;
 use std::sync::Arc;
 
-use assets::{Error as AssetError, Result as AssetResult, Source as AssetSource};
+use assets::Source as AssetSource;
 use base64;
+use failure::{err_msg, ResultExt};
 use gltf;
 use gltf::Gltf;
 use gltf::json;
-use gltf::json::validation;
 use gltf_utils::Source;
+use {Error, ErrorKind};
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum ImageFormat {
     Png,
     Jpeg,
 }
 
 impl ImageFormat {
-    fn from_mime_type(mime: &str) -> Self {
+    fn from_mime_type(mime: &str) -> Result<Self, Error> {
         match mime {
-            "image/jpeg" => ImageFormat::Jpeg,
-            "image/png" => ImageFormat::Png,
-            _ => unreachable!(),
+            "image/jpeg" => Ok(ImageFormat::Jpeg),
+            "image/png" => Ok(ImageFormat::Png),
+            _ => Err(ErrorKind::UnknownImageType(mime.to_owned()).into()),
         }
     }
 }
@@ -74,14 +72,21 @@ where
     }
 }
 
-fn read_to_end<P: AsRef<Path>>(source: Arc<AssetSource>, path: P) -> AssetResult<Vec<u8>> {
+fn read_to_end<P: AsRef<Path>>(source: Arc<AssetSource>, path: P) -> Result<Vec<u8>, Error> {
     let path = path.as_ref();
-    Ok(source.load(path.to_str().unwrap())?)
+    let path = path.to_str()
+        .ok_or(format_err!("cannot convert path \"{:?}\" to string", path))
+        .context(ErrorKind::Importer)?;
+    let data = source.load(path).context(ErrorKind::Importer)?;
+    Ok(data)
 }
 
 fn parse_data_uri(uri: &str) -> Result<Vec<u8>, Error> {
-    let encoded = uri.split(",").nth(1).unwrap();
-    let decoded = base64::decode(&encoded)?;
+    let encoded = uri.split(",")
+        .nth(1)
+        .ok_or(err_msg("expected ',' in data uri not found"))
+        .context(ErrorKind::Importer)?;
+    let decoded = base64::decode(&encoded).context(ErrorKind::Importer)?;
     Ok(decoded)
 }
 
@@ -95,18 +100,19 @@ fn load_external_buffers(
     for (index, buffer) in gltf.buffers().enumerate() {
         let uri = buffer.uri();
         let data_res: Result<Vec<u8>, Error> = if uri == "#bin" {
-            Ok(bin.take().unwrap())
+            Ok(bin.take()
+                .expect("internal error: uri says binary data is not empty, but it is"))
         } else if uri.starts_with("data:") {
-            Ok(parse_data_uri(uri)?)
+            parse_data_uri(uri)
         } else {
             let path = base_path.parent().unwrap_or(Path::new("./")).join(uri);
-            Ok(read_to_end(source.clone(), &path)?)
+            read_to_end(source.clone(), &path)
         };
         let data = data_res?;
 
         if data.len() < buffer.length() {
             let path = json::Path::new().field("buffers").index(index);
-            return Err(Error::BufferLength(path));
+            return Err(ErrorKind::BufferLength(path).into());
         }
         buffers.push(data);
     }
@@ -114,7 +120,9 @@ fn load_external_buffers(
 }
 
 fn validate_standard(unvalidated: gltf::Unvalidated) -> Result<Gltf, Error> {
-    Ok(unvalidated.validate_completely()?)
+    Ok(unvalidated
+        .validate_completely()
+        .context(ErrorKind::Importer)?)
 }
 
 fn validate_binary(unvalidated: gltf::Unvalidated, has_bin: bool) -> Result<Gltf, Error> {
@@ -138,9 +146,11 @@ fn validate_binary(unvalidated: gltf::Unvalidated, has_bin: bool) -> Result<Gltf
     }
 
     if errs.is_empty() {
-        Ok(unvalidated.validate_completely()?)
+        Ok(unvalidated
+            .validate_completely()
+            .context(ErrorKind::Importer)?)
     } else {
-        Err(Error::Validation(errs))
+        Err(ErrorKind::Validation(errs).into())
     }
 }
 
@@ -149,9 +159,10 @@ fn import_standard(
     source: Arc<AssetSource>,
     base_path: &Path,
 ) -> Result<(Gltf, Buffers), Error> {
-    let gltf = validate_standard(Gltf::from_slice(data)?)?;
-    let buffers = Buffers(load_external_buffers(source, base_path, &gltf, None)?);
-    Ok((gltf, buffers))
+    let gltf_unvalidated = Gltf::from_slice(data).context(ErrorKind::Importer)?;
+    let gltf = validate_standard(gltf_unvalidated)?;
+    let buffers = load_external_buffers(source, base_path, &gltf, None)?;
+    Ok((gltf, Buffers(buffers)))
 }
 
 fn import_binary(
@@ -163,8 +174,8 @@ fn import_binary(
         header: _,
         json,
         bin,
-    } = gltf::Glb::from_slice(data)?;
-    let unvalidated = Gltf::from_slice(json)?;
+    } = gltf::Glb::from_slice(data).context(ErrorKind::Importer)?;
+    let unvalidated = Gltf::from_slice(json).context(ErrorKind::Importer)?;
     let bin = bin.map(|x| x.to_vec());
     let gltf = validate_binary(unvalidated, bin.is_some())?;
     let buffers = Buffers(load_external_buffers(source, base_path, &gltf, bin)?);
@@ -180,14 +191,14 @@ pub fn get_image_data(
     match image.data() {
         gltf::image::Data::View { view, mime_type } => {
             let data = buffers.view(&view).unwrap();
-            Ok((data.to_vec(), ImageFormat::from_mime_type(mime_type)))
+            Ok((data.to_vec(), ImageFormat::from_mime_type(mime_type)?))
         }
 
         gltf::image::Data::Uri { uri, mime_type } => {
             if uri.starts_with("data:") {
                 let data = parse_data_uri(uri)?;
                 if let Some(ty) = mime_type {
-                    Ok((data, ImageFormat::from_mime_type(ty)))
+                    Ok((data, ImageFormat::from_mime_type(ty)?))
                 } else {
                     let mimetype = uri.split(',')
                         .nth(0)
@@ -198,13 +209,15 @@ pub fn get_image_data(
                         .split(';')
                         .nth(0)
                         .unwrap();
-                    Ok((data, ImageFormat::from_mime_type(mimetype)))
+                    Ok((data, ImageFormat::from_mime_type(mimetype)?))
                 }
             } else {
                 let path = base_path.parent().unwrap_or(Path::new("./")).join(uri);
-                let data = source.load(path.to_str().unwrap())?;
+                let data = source
+                    .load(path.to_str().unwrap())
+                    .context(ErrorKind::Importer)?;
                 if let Some(ty) = mime_type {
-                    Ok((data, ImageFormat::from_mime_type(ty)))
+                    Ok((data, ImageFormat::from_mime_type(ty)?))
                 } else {
                     let ext = path.extension()
                         .and_then(|s| s.to_str())
@@ -212,119 +225,11 @@ pub fn get_image_data(
                     let format = match &ext[..] {
                         "jpg" | "jpeg" => ImageFormat::Jpeg,
                         "png" => ImageFormat::Png,
-                        _ => unreachable!(),
+                        _ => return Err(ErrorKind::UnknownImageType(ext.clone()).into()),
                     };
                     Ok((data, format))
                 }
             }
-        }
-    }
-}
-
-/// Error encountered when importing a glTF 2.0 asset.
-#[allow(unused)]
-#[derive(Debug)]
-pub enum Error {
-    /// A loaded glTF buffer is not of the required length.
-    BufferLength(json::Path),
-
-    /// Base 64 decoding error.
-    Base64Decoding(base64::DecodeError),
-
-    /// A glTF extension required by the asset has not been enabled by the user.
-    ExtensionDisabled(String),
-
-    /// A glTF extension required by the asset is not supported by the library.
-    ExtensionUnsupported(String),
-
-    /// The glTF version of the asset is incompatible with the importer.
-    IncompatibleVersion(String),
-
-    /// Standard I/O error.
-    Io(std::io::Error),
-
-    /// `gltf` crate error.
-    Gltf(gltf::Error),
-
-    /// Failure when deserializing .gltf or .glb JSON.
-    MalformedJson(json::Error),
-
-    /// The .gltf data is invalid.
-    Validation(Vec<(json::Path, validation::Error)>),
-
-    /// Asset error
-    Asset(AssetError),
-}
-
-impl From<AssetError> for Error {
-    fn from(err: AssetError) -> Self {
-        Error::Asset(err)
-    }
-}
-
-impl From<json::Error> for Error {
-    fn from(err: json::Error) -> Error {
-        Error::MalformedJson(err)
-    }
-}
-
-impl From<std::io::Error> for Error {
-    fn from(err: std::io::Error) -> Error {
-        Error::Io(err)
-    }
-}
-
-impl From<Vec<(json::Path, validation::Error)>> for Error {
-    fn from(errs: Vec<(json::Path, validation::Error)>) -> Error {
-        Error::Validation(errs)
-    }
-}
-
-impl From<gltf::Error> for Error {
-    fn from(err: gltf::Error) -> Error {
-        match err {
-            gltf::Error::Validation(errs) => Error::Validation(errs),
-            _ => Error::Gltf(err),
-        }
-    }
-}
-
-impl From<base64::DecodeError> for Error {
-    fn from(err: base64::DecodeError) -> Error {
-        Error::Base64Decoding(err)
-    }
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use std::error::Error;
-        write!(f, "{}", self.description())
-    }
-}
-
-impl StdError for Error {
-    fn description(&self) -> &str {
-        use self::Error::*;
-        match *self {
-            Base64Decoding(_) => "Base 64 decoding failed",
-            BufferLength(_) => "Loaded buffer does not match required length",
-            ExtensionDisabled(_) => "Asset requires a disabled extension",
-            ExtensionUnsupported(_) => "Assets requires an unsupported extension",
-            IncompatibleVersion(_) => "Asset is not glTF version 2.0",
-            Io(_) => "I/O error",
-            Gltf(_) => "Error from gltf crate",
-            MalformedJson(_) => "Malformed .gltf / .glb JSON",
-            Validation(_) => "Asset failed validation tests",
-            Asset(_) => "Failed loading file from source",
-        }
-    }
-
-    fn cause(&self) -> Option<&StdError> {
-        use self::Error::*;
-        match *self {
-            MalformedJson(ref err) => Some(err),
-            Io(ref err) => Some(err),
-            _ => None,
         }
     }
 }

@@ -1,4 +1,1 @@
-reorder_imports = true
-reorder_imported_names = true
-reorder_imports_in_group = true
 wrap_comments = false

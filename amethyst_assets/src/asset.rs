@@ -1,8 +1,9 @@
+use failure::{Fail, ResultExt};
 use std::sync::Arc;
 
 use amethyst_core::specs::storage::UnprotectedStorage;
 
-use {ErrorKind, Handle, Reload, Result, ResultExt, SingleFile, Source};
+use {Error, ErrorKind, Handle, Reload, SingleFile, Source};
 
 /// One of the three core traits of this crate.
 ///
@@ -40,9 +41,12 @@ pub trait Format<A: Asset>: Send + 'static {
     /// sampler info.
     type Options: Send + 'static;
 
+    /// The import operation may fail with this associated Error type.
+    type Error: Fail;
+
     /// Reads the given bytes and produces asset data.
     ///
-    /// ## Reload
+    /// # Reload
     ///
     /// The reload structure has metadata which allows the asset management
     /// to reload assets if necessary (for hot reloading).
@@ -54,7 +58,7 @@ pub trait Format<A: Asset>: Send + 'static {
         source: Arc<Source>,
         options: Self::Options,
         create_reload: bool,
-    ) -> Result<FormatValue<A>>;
+    ) -> Result<FormatValue<A>, Self::Error>;
 }
 
 /// The `Ok` return value of `Format::import` for a given asset type `A`.
@@ -80,13 +84,17 @@ impl<A: Asset> FormatValue<A> {
 pub trait SimpleFormat<A: Asset> {
     /// A unique identifier for this format.
     const NAME: &'static str;
+
     /// Options specific to the format, which are passed to `import`.
     /// E.g. for textures this would be stuff like mipmap levels and
     /// sampler info.
     type Options: Clone + Send + Sync + 'static;
 
+    /// The import operation may fail with this associated Error type.
+    type Error: Fail;
+
     /// Produces asset data from given bytes.
-    fn import(&self, bytes: Vec<u8>, options: Self::Options) -> Result<A::Data>;
+    fn import(&self, bytes: Vec<u8>, options: Self::Options) -> Result<A::Data, Self::Error>;
 }
 
 impl<A, T> Format<A> for T
@@ -96,6 +104,7 @@ where
 {
     const NAME: &'static str = T::NAME;
     type Options = T::Options;
+    type Error = Error;
 
     fn import(
         &self,
@@ -103,22 +112,28 @@ where
         source: Arc<Source>,
         options: Self::Options,
         create_reload: bool,
-    ) -> Result<FormatValue<A>> {
+    ) -> Result<FormatValue<A>, Self::Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("import_asset");
         if create_reload {
-            let (b, m) = source
-                .load_with_metadata(&name)
-                .chain_err(|| ErrorKind::Source)?;
-            let data = T::import(&self, b, options.clone())?;
+            let (b, m) = source.load_with_metadata(&name)?;
+            let data =
+                T::import(&self, b, options.clone()).context(ErrorKind::ImportAssetFromBytes {
+                    name: name.clone(),
+                    asset_type: Self::NAME,
+                })?;
             let reload = SingleFile::new(self.clone(), m, options, name, source);
             let reload = Some(Box::new(reload) as Box<Reload<A>>);
             Ok(FormatValue { data, reload })
         } else {
-            let b = source.load(&name).chain_err(|| ErrorKind::Source)?;
-            let data = T::import(&self, b, options)?;
+            let b = source.load(&name).context(ErrorKind::FetchAssetFromSource(name.clone()))?;
+            let data = T::import(&self, b, options).context(ErrorKind::ImportAssetFromBytes {
+                name: name.clone(),
+                asset_type: Self::NAME,
+            })?;
 
             Ok(FormatValue::data(data))
         }
     }
 }
+

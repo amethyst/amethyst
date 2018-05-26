@@ -1,4 +1,5 @@
 use std::marker::PhantomData;
+use std::result::Result as StdResult;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Weak};
 
@@ -10,7 +11,8 @@ use hibitset::BitSet;
 use rayon::ThreadPool;
 
 use asset::{Asset, FormatValue};
-use error::{ErrorKind, Result, ResultExt};
+use error::{ErrorKind, Result};
+use failure::Error;
 use progress::Tracker;
 use reload::{HotReloadStrategy, Reload};
 
@@ -114,7 +116,7 @@ impl<A: Asset> AssetStorage<A> {
         pool: &ThreadPool,
         strategy: Option<&HotReloadStrategy>,
     ) where
-        F: FnMut(A::Data) -> Result<A>,
+        F: FnMut(A::Data) -> StdResult<A, Error>,
     {
         self.process_custom_drop(f, |_| {}, frame_number, pool, strategy);
     }
@@ -130,7 +132,7 @@ impl<A: Asset> AssetStorage<A> {
         strategy: Option<&HotReloadStrategy>,
     ) where
         D: FnMut(A),
-        F: FnMut(A::Data) -> Result<A>,
+        F: FnMut(A::Data) -> StdResult<A, Error>,
     {
         while let Some(processed) = self.processed.try_pop() {
             let assets = &mut self.assets;
@@ -148,9 +150,10 @@ impl<A: Asset> AssetStorage<A> {
                 } => {
                     let (asset, reload_obj) = match data.map(|FormatValue { data, reload }| {
                         (data, reload)
-                    }).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
-                        .chain_err(|| ErrorKind::Asset(name.clone()))
-                    {
+                    }).and_then(|(d, rel)| {
+                        f(d).map(|a| (a, rel))
+                            .map_err(|e| e.context(ErrorKind::DropAsset).into())
+                    }) {
                         Ok(x) => {
                             debug!(
                                 "{:?}: Asset {:?} (handle id: {:?}) has been loaded successfully",
@@ -170,7 +173,7 @@ impl<A: Asset> AssetStorage<A> {
                                 handle,
                                 e,
                             );
-                            tracker.fail(e);
+                            tracker.fail(e.into());
 
                             continue;
                         }
@@ -206,9 +209,10 @@ impl<A: Asset> AssetStorage<A> {
                 } => {
                     let (asset, reload_obj) = match data.map(|FormatValue { data, reload }| {
                         (data, reload)
-                    }).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
-                        .chain_err(|| ErrorKind::Asset(name.clone()))
-                    {
+                    }).and_then(|(d, rel)| {
+                        f(d).map(|a| (a, rel))
+                            .map_err(|e| e.context(ErrorKind::DropAsset).into())
+                    }) {
                         Ok(x) => x,
                         Err(e) => {
                             error!(
@@ -305,7 +309,12 @@ impl<A: Asset> AssetStorage<A> {
                 let processed = self.processed.clone();
                 pool.spawn(move || {
                     let old_reload = rel.clone();
-                    let data = rel.reload().chain_err(|| ErrorKind::Format(format));
+                    let data = rel.reload().map_err(|e| {
+                        e.context(ErrorKind::Reload {
+                            name: name.clone(),
+                            asset_type: A::NAME,
+                        }).into()
+                    });
 
                     let p = Processed::HotReload {
                         data,
@@ -346,7 +355,9 @@ impl<A: Asset> Drop for AssetStorage<A> {
 /// for `A`.
 ///
 /// This system can only be used if the asset data implements
-/// `Into<Result<A, BoxedErr>>`.
+/// `Into<Result<A, failure::Error>>`. If the asset data is `A` (i.e. `Self`),
+/// then you will need to provide a trivial implementation of
+/// `impl Into<Result<Type, Error>> for Type`.
 pub struct Processor<A> {
     marker: PhantomData<A>,
 }
@@ -364,7 +375,7 @@ impl<A> Processor<A> {
 impl<'a, A> System<'a> for Processor<A>
 where
     A: Asset,
-    A::Data: Into<Result<A>>,
+    A::Data: Into<StdResult<A, Error>>,
 {
     type SystemData = (
         Write<'a, AssetStorage<A>>,

@@ -1,13 +1,15 @@
+//! The `Loader` struct, responsible for loading assets.
 use std::borrow::Borrow;
 use std::hash::Hash;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use failure::Fail;
 use fnv::FnvHashMap;
 use rayon::ThreadPool;
 
 use storage::{AssetStorage, Handle, Processed};
-use {Asset, Directory, ErrorKind, Format, FormatValue, Progress, ResultExt, Source};
+use {Asset, Directory, ErrorKind, Format, FormatValue, Progress, Source};
 
 /// The asset loader, holding the sources and a reference to the `ThreadPool`.
 pub struct Loader {
@@ -148,7 +150,12 @@ impl Loader {
             profile_scope!("load_asset_from_worker");
             let data = format
                 .import(name.clone(), source, options, hot_reload)
-                .chain_err(|| ErrorKind::Format(F::NAME));
+                .map_err(|e| {
+                    e.context(ErrorKind::ImportAsset {
+                        name: name.clone(),
+                        asset_type: F::NAME,
+                    }).into()
+                });
             let tracker = Box::new(tracker) as Box<Tracker>;
 
             processed.push(Processed::NewAsset {

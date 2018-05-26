@@ -4,18 +4,25 @@
 
 extern crate amethyst_assets;
 extern crate amethyst_core;
+extern crate failure;
+#[macro_use]
+extern crate failure_derive;
 extern crate rayon;
 extern crate ron;
 #[macro_use]
 extern crate serde;
 
+use std::result::Result as StdResult;
 use std::sync::Arc;
 
-use amethyst_assets::*;
+//use amethyst_assets::*;
+use amethyst_assets::{Asset, AssetStorage, Completion, Handle, HotReloadStrategy, Loader,
+                      ProgressCounter, SimpleFormat};
 use amethyst_core::Time;
 use amethyst_core::specs::common::Errors;
 use amethyst_core::specs::prelude::{Dispatcher, DispatcherBuilder, Read, ReadExpect, System,
                                     VecStorage, World, Write};
+use failure::{err_msg, Error, Fail, Context, ResultExt};
 use rayon::{ThreadPool, ThreadPoolBuilder};
 
 struct App {
@@ -83,18 +90,26 @@ impl Asset for MeshAsset {
 #[derive(Clone)]
 struct Ron;
 
+#[derive(Debug, Fail)]
+pub enum ErrorKind {
+    #[fail(display="Error parsing bytes as utf8")]
+    Utf8,
+    #[fail(display="Error deserializing ron file")]
+    Parse,
+}
+
 impl SimpleFormat<MeshAsset> for Ron {
     const NAME: &'static str = "RON";
 
     type Options = ();
+    type Error = Context<ErrorKind>;
 
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<VertexData> {
+    fn import(&self, bytes: Vec<u8>, _: ()) -> StdResult<VertexData, Self::Error> {
         use ron::de::from_str;
         use std::str::from_utf8;
 
-        let s = from_utf8(&bytes)?;
-
-        from_str(s).chain_err(|| "Failed to decode mesh file")
+        let s = from_utf8(&bytes).context(ErrorKind::Utf8)?;
+        from_str(s).context(ErrorKind::Parse)
     }
 }
 
@@ -141,7 +156,8 @@ impl State {
                 let (mesh, progress) = {
                     let mut progress = ProgressCounter::new();
                     let loader = world.read_resource::<Loader>();
-                    let a = loader.load("mesh.ron", Ron, (), &mut progress, &world.read_resource());
+                    let a =
+                        loader.load("messh.ron", Ron, (), &mut progress, &world.read_resource());
 
                     (a, progress)
                 };
@@ -157,7 +173,7 @@ impl State {
                     eprintln!("-- Errors --");
                     progress.errors().iter().enumerate().for_each(|(n, e)| {
                         eprintln!("{}: error: {}", n, e);
-                        for cause in e.iter().skip(1) {
+                        for cause in e.causes().skip(1) {
                             eprintln!("{}: caused by: {}", n, cause);
                         }
                     });

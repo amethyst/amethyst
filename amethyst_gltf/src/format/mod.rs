@@ -1,17 +1,17 @@
 //! GLTF format
 
 use std::collections::HashMap;
-use std::error::Error as StdError;
-use std::fmt;
 use std::mem;
+use std::result::Result as StdResult;
 use std::sync::Arc;
 
 use self::importer::{get_image_data, import, Buffers, ImageFormat};
 use animation::{InterpolationFunction, InterpolationPrimitive, Sampler, SamplerPrimitive,
                 TransformChannel};
-use assets::{Error as AssetError, Format, FormatValue, Result as AssetResult, ResultExt, Source};
+use assets::{Format, FormatValue, Source};
 use core::cgmath::{Matrix4, SquareMatrix};
 use core::transform::Transform;
+use failure::ResultExt;
 use gfx::Primitive;
 use gfx::texture::SamplerInfo;
 use gltf;
@@ -20,6 +20,7 @@ use gltf_utils::AccessorIter;
 use itertools::Itertools;
 use renderer::{Color, JointIds, JointWeights, JpgFormat, Normal, PngFormat, Position, Separate,
                Tangent, TexCoord, TextureMetadata};
+use {ErrorKind, Result};
 
 use super::*;
 
@@ -32,82 +33,11 @@ mod importer;
 /// as the root node of the scene hierarchy.
 pub struct GltfSceneFormat;
 
-/// Format errors
-#[derive(Debug)]
-pub enum GltfError {
-    /// Importer failed to load the json file
-    GltfImporterError(self::importer::Error),
-
-    /// GLTF have no default scene and the number of scenes is not 1
-    InvalidSceneGltf(usize),
-
-    /// GLTF primitive use a primitive type not support by gfx
-    PrimitiveMissingInGfx(String),
-
-    /// GLTF primitive missing positions
-    MissingPositions,
-
-    /// External file failed loading
-    Asset(AssetError),
-
-    /// Not implemented yet
-    NotImplemented,
-}
-
-impl StdError for GltfError {
-    fn description(&self) -> &str {
-        use self::GltfError::*;
-        match *self {
-            GltfImporterError(_) => "Gltf import error",
-            InvalidSceneGltf(_) => "Gltf has no default scene, and the number of scenes is not 1",
-            PrimitiveMissingInGfx(_) => "Primitive missing in gfx",
-            MissingPositions => "Primitive missing positions",
-            Asset(_) => "File loading error",
-            NotImplemented => "Not implemented",
-        }
-    }
-
-    fn cause(&self) -> Option<&StdError> {
-        match *self {
-            GltfError::GltfImporterError(ref err) => Some(err),
-            GltfError::Asset(ref err) => Some(err),
-            _ => None,
-        }
-    }
-}
-
-impl fmt::Display for GltfError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use self::GltfError::*;
-        use std::error::Error;
-        match *self {
-            GltfImporterError(ref err) => {
-                write!(f, "{}: {}", self.description(), err.description())
-            }
-            PrimitiveMissingInGfx(ref err) => write!(f, "{}: {}", self.description(), err),
-            Asset(ref err) => write!(f, "{}: {}", self.description(), err.description()),
-            InvalidSceneGltf(size) => write!(f, "{}: {}", self.description(), size),
-            MissingPositions | NotImplemented => write!(f, "{}", self.description()),
-        }
-    }
-}
-
-impl From<self::importer::Error> for GltfError {
-    fn from(err: self::importer::Error) -> Self {
-        GltfError::GltfImporterError(err)
-    }
-}
-
-impl From<AssetError> for GltfError {
-    fn from(err: AssetError) -> Self {
-        GltfError::Asset(err)
-    }
-}
-
 impl Format<GltfSceneAsset> for GltfSceneFormat {
     const NAME: &'static str = "GLTFScene";
 
     type Options = GltfSceneOptions;
+    type Error = Error;
 
     fn import(
         &self,
@@ -115,25 +45,20 @@ impl Format<GltfSceneAsset> for GltfSceneFormat {
         source: Arc<Source>,
         options: GltfSceneOptions,
         _create_reload: bool,
-    ) -> AssetResult<FormatValue<GltfSceneAsset>> {
-        let gltf = load_gltf(source, &name, options).chain_err(|| "Failed to import gltf scene")?;
+    ) -> StdResult<FormatValue<GltfSceneAsset>, Self::Error> {
+        let gltf = load_gltf(source, &name, options)?;
         if gltf.default_scene.is_some() || gltf.scenes.len() == 1 {
             Ok(FormatValue::data(gltf)) // TODO: create `Reload` object
         } else {
-            Err(GltfError::InvalidSceneGltf(gltf.scenes.len())).chain_err(|| "Invalid GLTF scene")
+            Err(ErrorKind::InvalidNumberOfScenes(gltf.scenes.len()).into())
         }
     }
 }
 
-fn load_gltf(
-    source: Arc<Source>,
-    name: &str,
-    options: GltfSceneOptions,
-) -> Result<GltfSceneAsset, GltfError> {
+fn load_gltf(source: Arc<Source>, name: &str, options: GltfSceneOptions) -> Result<GltfSceneAsset> {
     debug!("Loading GLTF scene {}", name);
-    import(source.clone(), name)
-        .map_err(GltfError::GltfImporterError)
-        .and_then(|(gltf, buffers)| load_data(&gltf, &buffers, &options, source, name))
+    let (gltf, buffers) = import(source.clone(), name)?;
+    load_data(&gltf, &buffers, &options, source, name)
 }
 
 fn load_data(
@@ -142,7 +67,7 @@ fn load_data(
     options: &GltfSceneOptions,
     source: Arc<Source>,
     name: &str,
-) -> Result<GltfSceneAsset, GltfError> {
+) -> Result<GltfSceneAsset> {
     // TODO: morph targets, cameras
     // TODO: KHR_materials_common extension
     debug!("Loading nodes");
@@ -150,17 +75,17 @@ fn load_data(
     debug!("Loading scenes");
     let scenes = gltf.scenes()
         .map(|ref scene| load_scene(scene))
-        .collect::<Result<Vec<GltfScene>, GltfError>>()?;
+        .collect::<Result<Vec<GltfScene>>>()?;
     let default_scene = gltf.default_scene().map(|s| s.index());
     debug!("Loading materials");
     let materials = gltf.materials()
         .map(|ref m| load_material(m, buffers, source.clone(), name))
-        .collect::<Result<Vec<GltfMaterial>, GltfError>>()?;
+        .collect::<Result<Vec<GltfMaterial>>>()?;
     debug!("Loading animations");
     let animations = if options.load_animations {
         gltf.animations()
             .map(|ref animation| load_animation(animation, buffers))
-            .collect::<Result<Vec<GltfAnimation>, GltfError>>()?
+            .collect::<Result<Vec<GltfAnimation>>>()?
     } else {
         Vec::default()
     };
@@ -178,14 +103,11 @@ fn load_data(
     })
 }
 
-fn load_animation(
-    animation: &gltf::Animation,
-    buffers: &Buffers,
-) -> Result<GltfAnimation, GltfError> {
+fn load_animation(animation: &gltf::Animation, buffers: &Buffers) -> Result<GltfAnimation> {
     let samplers = animation
         .channels()
         .map(|ref channel| load_channel(channel, buffers))
-        .collect::<Result<Vec<_>, GltfError>>()?;
+        .collect::<Result<Vec<_>>>()?;
     Ok(GltfAnimation {
         samplers,
         handle: None,
@@ -195,7 +117,7 @@ fn load_animation(
 fn load_channel(
     channel: &gltf::animation::Channel,
     buffers: &Buffers,
-) -> Result<(usize, TransformChannel, Sampler<SamplerPrimitive<f32>>), GltfError> {
+) -> Result<(usize, TransformChannel, Sampler<SamplerPrimitive<f32>>)> {
     use gltf::animation::TrsProperty::*;
     use gltf_utils::AccessorIter;
     let sampler = channel.sampler();
@@ -253,7 +175,7 @@ fn load_channel(
                 },
             ))
         }
-        Weights => Err(GltfError::NotImplemented),
+        Weights => Err(ErrorKind::NotImplemented.into()),
     }
 }
 
@@ -279,7 +201,7 @@ fn load_material(
     buffers: &Buffers,
     source: Arc<Source>,
     name: &str,
-) -> Result<GltfMaterial, GltfError> {
+) -> Result<GltfMaterial> {
     let base_color = load_texture_with_factor(
         material.pbr_metallic_roughness().base_color_texture(),
         material.pbr_metallic_roughness().base_color_factor(),
@@ -415,7 +337,7 @@ fn load_texture_with_factor(
     buffers: &Buffers,
     source: Arc<Source>,
     name: &str,
-) -> Result<(TextureData, [f32; 4]), GltfError> {
+) -> Result<(TextureData, [f32; 4])> {
     match texture {
         Some(info) => Ok((
             load_texture(&info.texture(), buffers, source, name)?,
@@ -430,13 +352,14 @@ fn load_texture(
     buffers: &Buffers,
     source: Arc<Source>,
     name: &str,
-) -> Result<TextureData, GltfError> {
+) -> Result<TextureData> {
     let (data, format) = get_image_data(&texture.source(), buffers, source, name.as_ref())?;
     let metadata = TextureMetadata::default().with_sampler(load_sampler_info(&texture.sampler()));
-    Ok(match format {
+    let data = match format {
         ImageFormat::Png => PngFormat.from_data(data, metadata),
         ImageFormat::Jpeg => JpgFormat.from_data(data, metadata),
-    }?)
+    }.context(ErrorKind::TextureCreation)?;
+    Ok(data)
 }
 
 fn load_sampler_info(sampler: &gltf::texture::Sampler) -> SamplerInfo {
@@ -462,7 +385,7 @@ fn load_sampler_info(sampler: &gltf::texture::Sampler) -> SamplerInfo {
     s
 }
 
-fn load_scene(scene: &gltf::Scene) -> Result<GltfScene, GltfError> {
+fn load_scene(scene: &gltf::Scene) -> Result<GltfScene> {
     Ok(GltfScene {
         root_nodes: scene.nodes().map(|n| n.index()).collect(),
     })
@@ -472,7 +395,7 @@ fn load_nodes(
     gltf: &gltf::Gltf,
     buffers: &Buffers,
     options: &GltfSceneOptions,
-) -> Result<Vec<GltfNode>, GltfError> {
+) -> Result<Vec<GltfNode>> {
     let mut node_map = HashMap::default();
     let mut nodes = vec![];
 
@@ -498,7 +421,7 @@ fn load_node(
     node_index: usize,
     node_map: &mut HashMap<usize, usize>,
     options: &GltfSceneOptions,
-) -> Result<GltfNode, GltfError> {
+) -> Result<GltfNode> {
     let children = node.children().map(|c| c.index()).collect::<Vec<_>>();
 
     for child in node.children() {
@@ -531,11 +454,11 @@ fn load_node(
     })
 }
 
-fn load_skins(gltf: &gltf::Gltf, buffers: &Buffers) -> Result<Vec<GltfSkin>, GltfError> {
+fn load_skins(gltf: &gltf::Gltf, buffers: &Buffers) -> Result<Vec<GltfSkin>> {
     gltf.skins().map(|s| load_skin(&s, buffers)).collect()
 }
 
-fn load_skin(skin: &gltf::Skin, buffers: &Buffers) -> Result<GltfSkin, GltfError> {
+fn load_skin(skin: &gltf::Skin, buffers: &Buffers) -> Result<GltfSkin> {
     let joints = skin.joints().map(|j| j.index()).collect::<Vec<_>>();
     let skeleton = skin.skeleton().map(|s| s.index());
     let inverse_bind_matrices = skin.inverse_bind_matrices()
@@ -566,7 +489,7 @@ fn load_mesh(
     mesh: &gltf::Mesh,
     buffers: &Buffers,
     options: &GltfSceneOptions,
-) -> Result<Vec<GltfPrimitive>, GltfError> {
+) -> Result<Vec<GltfPrimitive>> {
     // TODO: simplify loading here when we have support for indexed meshes
     // All attributes can then be mapped directly instead of using faces to unwind the indexing
     use gltf_utils::PrimitiveIterators;
@@ -598,7 +521,7 @@ fn load_mesh(
                     .map(|pos| Separate::<Position>::new(pos))
                     .collect(),
             })
-            .ok_or(GltfError::MissingPositions)?;
+            .ok_or(ErrorKind::MissingPositions)?;
         let bounds = primitive.position_bounds().unwrap();
 
         let colors = primitive
@@ -711,15 +634,15 @@ fn load_mesh(
     Ok(primitives)
 }
 
-fn map_mode(mode: gltf::mesh::Mode) -> Result<Primitive, GltfError> {
+fn map_mode(mode: gltf::mesh::Mode) -> Result<Primitive> {
     use gltf::mesh::Mode::*;
     match mode {
         Points => Ok(Primitive::PointList),
         Lines => Ok(Primitive::LineList),
-        LineLoop => Err(GltfError::PrimitiveMissingInGfx("LineLoop".to_string())),
+        LineLoop => Err(ErrorKind::PrimitiveMissingInGfx("LineLoop".to_string()).into()),
         LineStrip => Ok(Primitive::LineStrip),
         Triangles => Ok(Primitive::TriangleList),
         TriangleStrip => Ok(Primitive::TriangleStrip),
-        TriangleFan => Err(GltfError::PrimitiveMissingInGfx("TriangleFan".to_string())),
+        TriangleFan => Err(ErrorKind::PrimitiveMissingInGfx("TriangleFan".to_string()).into()),
     }
 }

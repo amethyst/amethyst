@@ -6,7 +6,7 @@
 //! [gh]: https://github.com/amethyst/amethyst/tree/develop/src/renderer
 //! [bk]: https://www.amethyst.rs/book/master/
 
-#![deny(missing_docs)]
+#![warn(missing_docs)]
 #![doc(html_logo_url = "https://tinyurl.com/jtmm43a")]
 
 extern crate amethyst_assets;
@@ -14,7 +14,7 @@ extern crate amethyst_core;
 #[macro_use]
 extern crate derivative;
 #[macro_use]
-extern crate error_chain;
+extern crate failure;
 extern crate fnv;
 extern crate gfx;
 extern crate gfx_core;
@@ -65,6 +65,7 @@ pub use bundle::RenderBundle;
 pub use cam::{ActiveCamera, Camera, Projection};
 pub use color::Rgba;
 pub use config::DisplayConfig;
+pub use error::*;
 pub use formats::{build_mesh_with_combo, create_mesh_asset, create_texture_asset, BmpFormat,
                   ComboMeshCreator, ImageData, ImageError, JpgFormat, MeshCreator, MeshData,
                   ObjFormat, PngFormat, TextureData, TextureMetadata};
@@ -92,7 +93,7 @@ pub use vertex::{Attribute, AttributeFormat, Attributes, Color, Normal, PosColor
                  VertexBufferCombination, VertexFormat, With};
 pub use visibility::{Visibility, VisibilitySortingSystem};
 
-pub mod error;
+mod error;
 pub mod mouse;
 pub mod pipe;
 

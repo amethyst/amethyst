@@ -2,7 +2,8 @@ use std::sync::Arc;
 
 use core::SystemBundle;
 use core::specs::prelude::{Dispatcher, DispatcherBuilder, System, World};
-use error::{Error, Result};
+use error::{ErrorKind, Result};
+use failure::ResultExt;
 use rayon::ThreadPool;
 
 /// Initialise trait for game data
@@ -214,7 +215,7 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     {
         bundle
             .build(&mut self.disp_builder)
-            .map_err(|err| Error::Core(err))?;
+            .context(ErrorKind::Core)?;
         Ok(self)
     }
 }

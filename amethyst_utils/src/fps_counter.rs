@@ -1,9 +1,10 @@
 //! Util Resources
 
+use amethyst_core::SystemBundle;
 use amethyst_core::specs::prelude::{DispatcherBuilder, Read, System, Write};
 use amethyst_core::timing::{duration_to_nanos, Time};
-use amethyst_core::{Result, SystemBundle};
 use circular_buffer::CircularBuffer;
+use failure::Error;
 
 /// The FPSCounter resource needed by the FPSCounterSystem.
 ///
@@ -75,7 +76,7 @@ impl<'a> System<'a> for FPSCounterSystem {
 pub struct FPSCounterBundle;
 
 impl<'a, 'b> SystemBundle<'a, 'b> for FPSCounterBundle {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(FPSCounterSystem, "fps_counter_system", &[]);
         Ok(())
     }

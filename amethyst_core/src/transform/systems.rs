@@ -38,6 +38,7 @@ impl<'a> System<'a> for TransformSystem {
         ReadStorage<'a, Parent>,
         WriteStorage<'a, GlobalTransform>,
     );
+
     fn run(&mut self, (entities, hierarchy, locals, parents, mut globals): Self::SystemData) {
         #[cfg(feature = "profiler")]
         profile_scope!("transform_system");

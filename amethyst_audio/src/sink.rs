@@ -1,10 +1,11 @@
 use std::io::Cursor;
 
+use failure::Fail;
 use rodio::{Decoder, Sink};
 
-use DecoderError;
 use output::Output;
 use source::Source;
+use {ErrorKind, Result};
 
 /// This structure provides a way to programmatically pick and play music.
 pub struct AudioSink {
@@ -20,9 +21,10 @@ impl AudioSink {
     }
 
     /// Adds a source to the sink's queue of music to play.
-    pub fn append(&self, source: &Source) -> Result<(), DecoderError> {
+    pub fn append(&self, source: &Source) -> Result<()> {
         self.sink
-            .append(Decoder::new(Cursor::new(source.clone())).map_err(|_| DecoderError)?);
+            .append(Decoder::new(Cursor::new(source.clone()))
+                .map_err(|e| e.context(ErrorKind::Decoder))?);
         Ok(())
     }
 

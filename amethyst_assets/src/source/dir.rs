@@ -1,9 +1,9 @@
-use std::fs::File;
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::UNIX_EPOCH;
 
+use failure::Error;
 use source::Source;
-use {ErrorKind, Result, ResultExt};
 
 /// Directory source.
 ///
@@ -28,29 +28,24 @@ impl Directory {
     fn path(&self, s_path: &str) -> PathBuf {
         let mut path = self.loc.clone();
         path.extend(Path::new(s_path).iter());
-
         path
     }
 }
 
 impl Source for Directory {
-    fn modified(&self, path: &str) -> Result<u64> {
+    fn modified(&self, path: &str) -> Result<u64, Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("dir_modified_asset");
-        use std::fs::metadata;
 
         let path = self.path(path);
 
-        Ok(metadata(&path)
-            .chain_err(|| format!("Failed to fetch metadata for {:?}", path))?
-            .modified()
-            .chain_err(|| "Could not get modification time")?
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
+        Ok(fs::metadata(&path)?
+            .modified()?
+            .duration_since(UNIX_EPOCH)?
             .as_secs())
     }
 
-    fn load(&self, path: &str) -> Result<Vec<u8>> {
+    fn load(&self, path: &str) -> Result<Vec<u8>, Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("dir_load_asset");
         use std::io::Read;
@@ -58,12 +53,8 @@ impl Source for Directory {
         let path = self.path(path);
 
         let mut v = Vec::new();
-        let mut file = File::open(&path)
-            .chain_err(|| format!("Failed to open file {:?}", path))
-            .chain_err(|| ErrorKind::Source)?;
-        file.read_to_end(&mut v)
-            .chain_err(|| format!("Failed to read file {:?}", path))
-            .chain_err(|| ErrorKind::Source)?;
+        let mut file = fs::File::open(&path)?;
+        file.read_to_end(&mut v)?;
 
         Ok(v)
     }

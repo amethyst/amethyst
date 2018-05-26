@@ -1,12 +1,12 @@
 //! The core engine framework.
 
-use std::error::Error as StdError;
 use std::io;
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 
 use core::shrev::{EventChannel, ReaderId};
+use failure::ResultExt;
 use fern;
 use log::LevelFilter;
 use rayon::ThreadPoolBuilder;
@@ -20,10 +20,11 @@ use core::frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStra
 use core::timing::{Stopwatch, Time};
 use ecs::common::Errors;
 use ecs::prelude::{Component, World};
-use error::{Error, Result};
 use game_data::DataInit;
 use state::{State, StateData, StateMachine};
 use vergen;
+
+pub use error::{Error, ErrorKind, Result};
 
 /// An Application is the root object of the game engine. It binds the OS
 /// event loop, state machines, timers and other core components in a central place.
@@ -351,7 +352,7 @@ impl<S> ApplicationBuilder<S> {
         let pool = thread_pool_builder
             .build()
             .map(|p| Arc::new(p))
-            .map_err(|err| Error::Core(err.description().to_string().into()))?;
+            .context(ErrorKind::General)?;
         world.add_resource(Loader::new(path.as_ref().to_owned(), pool.clone()));
         world.add_resource(pool);
         world.add_resource(EventChannel::<Event>::with_capacity(2000));

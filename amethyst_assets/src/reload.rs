@@ -3,11 +3,11 @@
 use std::sync::Arc;
 use std::time::Instant;
 
-use amethyst_core as core;
 use amethyst_core::specs::prelude::{DispatcherBuilder, Read, Resources, System, Write};
 use amethyst_core::{SystemBundle, Time};
+use failure::{self, Fail};
 
-use {Asset, Format, FormatValue, Loader, Result, Source};
+use {Asset, ErrorKind, Format, FormatValue, Loader, Source};
 
 /// This bundle activates hot reload for the `Loader`,
 /// adds a `HotReloadStrategy` and the `HotReloadSystem`.
@@ -24,7 +24,7 @@ impl HotReloadBundle {
 }
 
 impl<'a, 'b> SystemBundle<'a, 'b> for HotReloadBundle {
-    fn build(self, dispatcher: &mut DispatcherBuilder<'a, 'b>) -> core::Result<()> {
+    fn build(self, dispatcher: &mut DispatcherBuilder<'a, 'b>) -> Result<(), failure::Error> {
         dispatcher.add(HotReloadSystem::new(self.strategy), "hot_reload", &[]);
         Ok(())
     }
@@ -185,9 +185,10 @@ pub trait Reload<A: Asset>: ReloadClone<A> + Send + Sync + 'static {
     /// Returns the format name.
     fn format(&self) -> &'static str;
     /// Reloads the asset.
-    fn reload(self: Box<Self>) -> Result<FormatValue<A>>;
+    fn reload(self: Box<Self>) -> Result<FormatValue<A>, failure::Error>;
 }
 
+/// Helper trait for cloning trait objects of `Reload`
 pub trait ReloadClone<A> {
     fn cloned(&self) -> Box<Reload<A>>;
 }
@@ -272,10 +273,11 @@ where
         F::NAME
     }
 
-    fn reload(self: Box<Self>) -> Result<FormatValue<A>> {
+    fn reload(self: Box<Self>) -> Result<FormatValue<A>, failure::Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("reload_single_file");
 
+        let name = self.name();
         let this: SingleFile<_, _> = *self;
         let SingleFile {
             format,
@@ -285,6 +287,11 @@ where
             ..
         } = this;
 
-        format.import(path, source, options, true)
+        format.import(path, source, options, true).map_err(|e| {
+            e.context(ErrorKind::SingleFileReload {
+                path: name,
+                asset_type: F::NAME,
+            }).into()
+        })
     }
 }

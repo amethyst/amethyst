@@ -1,15 +1,18 @@
 pub use imagefmt::Error as ImageError;
 
 use std::io::Cursor;
+use std::result::Result as StdResult;
 
 use Renderer;
-use amethyst_assets::{Result, ResultExt, SimpleFormat};
+use amethyst_assets::SimpleFormat;
+use failure::Fail;
 use gfx::format::{ChannelType, SurfaceType};
 use gfx::texture::SamplerInfo;
 use gfx::traits::Pod;
 use imagefmt;
 use imagefmt::{ColFmt, Image};
 use tex::{Texture, TextureBuilder};
+use {Error, ErrorKind, Result};
 
 /// Texture metadata, used while loading
 #[derive(Debug, Clone)]
@@ -141,7 +144,7 @@ impl JpgFormat {
     pub fn from_data(&self, data: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
         imagefmt::jpeg::read(&mut Cursor::new(data), ColFmt::RGBA)
             .map(|raw| TextureData::Image(ImageData { raw }, options))
-            .chain_err(|| "Image decoding failed")
+            .map_err(|e| e.context(ErrorKind::DecodeImage).into())
     }
 }
 
@@ -149,8 +152,9 @@ impl SimpleFormat<Texture> for JpgFormat {
     const NAME: &'static str = "JPEG";
 
     type Options = TextureMetadata;
+    type Error = Error;
 
-    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
+    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> StdResult<TextureData, Self::Error> {
         self.from_data(bytes, options)
     }
 }
@@ -164,7 +168,7 @@ impl PngFormat {
     pub fn from_data(&self, data: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
         imagefmt::png::read(&mut Cursor::new(data), ColFmt::RGBA)
             .map(|raw| TextureData::Image(ImageData { raw }, options))
-            .chain_err(|| "Image decoding failed")
+            .map_err(|e| e.context(ErrorKind::TextureCreation).into())
     }
 }
 
@@ -172,9 +176,10 @@ impl SimpleFormat<Texture> for PngFormat {
     const NAME: &'static str = "PNG";
 
     type Options = TextureMetadata;
+    type Error = Error;
 
-    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
-        self.from_data(bytes, options)
+    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> StdResult<TextureData, Self::Error> {
+        self.from_data(bytes, options).map_err(|e| e.into())
     }
 }
 
@@ -186,13 +191,14 @@ impl SimpleFormat<Texture> for BmpFormat {
     const NAME: &'static str = "BMP";
 
     type Options = TextureMetadata;
+    type Error = Error;
 
-    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
+    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> StdResult<TextureData, Self::Error> {
         // TODO: consider reading directly into GPU-visible memory
         // TODO: as noted by @omni-viral.
         imagefmt::bmp::read(&mut Cursor::new(bytes), ColFmt::RGBA)
             .map(|raw| TextureData::Image(ImageData { raw }, options))
-            .chain_err(|| "Image decoding failed")
+            .map_err(|e| e.context(ErrorKind::TextureCreation).into())
     }
 }
 
@@ -206,53 +212,39 @@ pub fn create_texture_asset(data: TextureData, renderer: &mut Renderer) -> Resul
 
         Rgba(color, options) => {
             let tb = apply_options(Texture::from_color_val(color), options);
-            renderer
-                .create_texture(tb)
-                .chain_err(|| "Failed to build texture")
+            renderer.create_texture(tb)
         }
 
         F32(data, options) => {
             let tb = apply_options(TextureBuilder::new(data), options);
-            renderer
-                .create_texture(tb)
-                .chain_err(|| "Failed to build texture")
+            renderer.create_texture(tb)
         }
 
         F64(data, options) => {
             let tb = apply_options(TextureBuilder::new(data), options);
-            renderer
-                .create_texture(tb)
-                .chain_err(|| "Failed to build texture")
+            renderer.create_texture(tb)
         }
 
         U8(data, options) => {
             let tb = apply_options(TextureBuilder::new(data), options);
-            renderer
-                .create_texture(tb)
-                .chain_err(|| "Failed to build texture")
+            renderer.create_texture(tb)
         }
 
         U16(data, options) => {
             let tb = apply_options(TextureBuilder::new(data), options);
-            renderer
-                .create_texture(tb)
-                .chain_err(|| "Failed to build texture")
+            renderer.create_texture(tb)
         }
 
         U32(data, options) => {
             let tb = apply_options(TextureBuilder::new(data), options);
-            renderer
-                .create_texture(tb)
-                .chain_err(|| "Failed to build texture")
+            renderer.create_texture(tb)
         }
 
         U64(data, options) => {
             let tb = apply_options(TextureBuilder::new(data), options);
-            renderer
-                .create_texture(tb)
-                .chain_err(|| "Failed to build texture")
+            renderer.create_texture(tb)
         }
-    }
+    }.map_err(|e| e.context(ErrorKind::TextureCreation).into())
 }
 
 fn apply_options<D, T>(
@@ -295,27 +287,29 @@ fn create_texture_asset_from_image(
     options: TextureMetadata,
     renderer: &mut Renderer,
 ) -> Result<Texture> {
-    fn convert_color_format(fmt: ColFmt) -> Option<SurfaceType> {
+    fn convert_color_format(fmt: ColFmt) -> Result<SurfaceType> {
         match fmt {
             ColFmt::Auto => unreachable!(),
-            ColFmt::RGBA => Some(SurfaceType::R8_G8_B8_A8),
-            ColFmt::BGRA => Some(SurfaceType::B8_G8_R8_A8),
-            _ => None,
+            ColFmt::RGBA => Ok(SurfaceType::R8_G8_B8_A8),
+            ColFmt::BGRA => Ok(SurfaceType::B8_G8_R8_A8),
+            _ => Err(format_err!("Unsupported color format {:?}", fmt)
+                .context(ErrorKind::TextureCreation)
+                .into()),
         }
     }
 
     let image = image.raw;
-    let fmt = convert_color_format(image.fmt)
-        .chain_err(|| format!("Unsupported color format {:?}", image.fmt))?;
+    let fmt = convert_color_format(image.fmt)?;
 
     if image.w > u16::max_value() as usize || image.h > u16::max_value() as usize {
-        bail!(
-            "Unsupported texture size (expected: ({}, {}), got: ({}, {})",
+        return Err(format_err!(
+            "Unsupported texture size (max allowed: ({}, {}), got: ({}, {})",
             u16::max_value(),
             u16::max_value(),
             image.w,
             image.h
-        );
+        ).context(ErrorKind::TextureCreation)
+            .into());
     }
 
     let tb = apply_options(
@@ -327,7 +321,7 @@ fn create_texture_asset_from_image(
 
     renderer
         .create_texture(tb)
-        .chain_err(|| "Failed to create texture from texture data")
+        .map_err(|e| e.context(ErrorKind::TextureCreation).into())
 }
 
 #[cfg(test)]

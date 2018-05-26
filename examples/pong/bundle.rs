@@ -1,5 +1,6 @@
-use amethyst::core::bundle::{Result, SystemBundle};
+use amethyst::core::bundle::SystemBundle;
 use amethyst::ecs::prelude::DispatcherBuilder;
+use failure;
 use systems::{BounceSystem, MoveBallsSystem, PaddleSystem, WinnerSystem};
 
 /// A bundle is a convenient way to initialise related resources, components and systems in a
@@ -7,7 +8,7 @@ use systems::{BounceSystem, MoveBallsSystem, PaddleSystem, WinnerSystem};
 pub struct PongBundle;
 
 impl<'a, 'b> SystemBundle<'a, 'b> for PongBundle {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), failure::Error> {
         builder.add(PaddleSystem, "paddle_system", &["input_system"]);
         builder.add(MoveBallsSystem, "ball_system", &[]);
         builder.add(

@@ -8,7 +8,10 @@ use amethyst::core::cgmath::{Deg, InnerSpace, Vector3};
 use amethyst::core::transform::GlobalTransform;
 use amethyst::ecs::prelude::World;
 use amethyst::prelude::*;
-use amethyst::renderer::*;
+use amethyst::renderer::{AmbientColor, Camera, ComboMeshCreator, DisplayConfig,
+                         DrawShadedSeparate, Event, KeyboardInput, Light, Mesh, Normal, Pipeline,
+                         PointLight, Position, Projection, RenderBundle, Rgba, Separate, Stage,
+                         TexCoord, VirtualKeyCode, WindowEvent};
 use genmesh::generators::SphereUV;
 use genmesh::{MapToVertices, Triangulate, Vertices};
 

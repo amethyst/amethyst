@@ -2,9 +2,11 @@
 // TODO: Add asset loader directory store for the meshes.
 
 extern crate amethyst;
+extern crate failure;
 extern crate rayon;
+extern crate void;
 
-use amethyst::assets::{Loader, Result as AssetResult, SimpleFormat};
+use amethyst::assets::{Loader, SimpleFormat};
 use amethyst::config::Config;
 use amethyst::core::cgmath::{Array, Vector3};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
@@ -14,6 +16,7 @@ use amethyst::renderer::{Camera, DisplayConfig, DrawShaded, Event, KeyboardInput
                          MaterialDefaults, Mesh, MeshData, Pipeline, PointLight, PosNormTex,
                          Projection, RenderBundle, Rgba, Stage, VirtualKeyCode, WindowEvent};
 use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
+use void::Void;
 
 #[derive(Clone)]
 struct Custom;
@@ -22,10 +25,11 @@ impl SimpleFormat<Mesh> for Custom {
     const NAME: &'static str = "CUSTOM";
 
     type Options = ();
+    type Error = Void;
 
     /// Reads the given bytes and produces asset data.
-    fn import(&self, bytes: Vec<u8>, _: ()) -> AssetResult<MeshData> {
-        let data: String = String::from_utf8(bytes)?;
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<MeshData, Self::Error> {
+        let data = String::from_utf8(bytes).unwrap();
 
         let trimmed: Vec<&str> = data.lines().filter(|line| line.len() >= 1).collect();
 
@@ -34,6 +38,8 @@ impl SimpleFormat<Mesh> for Custom {
         for line in trimmed {
             let nums: Vec<&str> = line.split_whitespace().collect();
 
+            // You may want to use error handling so that amethyst doesn't crash on
+            // bad input.
             let position = [
                 nums[0].parse::<f32>().unwrap(),
                 nums[1].parse::<f32>().unwrap(),

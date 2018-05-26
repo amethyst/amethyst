@@ -4,11 +4,12 @@ use std::sync::atomic::AtomicBool;
 
 use amethyst_core::specs::prelude::Component;
 use amethyst_core::specs::storage::BTreeStorage;
+use failure::ResultExt;
 use rodio::{Decoder, SpatialSink};
 use smallvec::SmallVec;
 
-use DecoderError;
 use source::Source;
+use {Error, ErrorKind};
 
 /// An audio source, add this component to anything that emits sound.
 #[derive(Default)]
@@ -27,9 +28,9 @@ impl AudioEmitter {
     }
 
     /// Plays an audio source from this emitter.
-    pub fn play(&mut self, source: &Source) -> Result<(), DecoderError> {
+    pub fn play(&mut self, source: &Source) -> Result<(), Error> {
         self.sound_queue
-            .push(Decoder::new(Cursor::new(source.clone())).map_err(|_| DecoderError)?);
+            .push(Decoder::new(Cursor::new(source.clone())).context(ErrorKind::Decoder)?);
         Ok(())
     }
 

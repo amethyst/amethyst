@@ -23,7 +23,8 @@ travis-ci = { repository = "amethyst/amethyst" }
 amethyst_core = { path = "../amethyst_core", version = "0.2" }
 crossbeam = "0.3.0"
 derivative = "1.0"
-error-chain = "0.11"
+failure = "0.1"
+failure_derive = "0.1"
 fnv = "1"
 hibitset = { version = "0.5.0", features = ["parallel"] }
 log = "0.4"
@@ -35,6 +36,7 @@ thread_profiler = { version = "0.1", optional = true }
 [dev-dependencies]
 ron = "0.1.4"
 serde = { version = "1", features = ["serde_derive"] }
+void = "1"
 
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]
