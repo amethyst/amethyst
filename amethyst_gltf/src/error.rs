@@ -46,7 +46,6 @@ pub enum ErrorKind {
     #[fail(display = "Failure when deserializing .gltf or .glb JSON.")]
     MalformedJson,
     /// The .gltf data is invalid.
-    // TODO I can't get this to work #[derivative(Hash="ignore")]
     #[fail(display = "The .gltf data is invalid: {:?}.", _0)]
     Validation(Vec<(json::Path, validation::Error)>),
     /// Unsupported/Unrecognised image type

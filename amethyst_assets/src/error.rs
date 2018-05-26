@@ -57,12 +57,6 @@ pub enum ErrorKind {
     /// A custom asset dropper returned an error.
     #[fail(display = "A custom asset dropper returned an error.")]
     DropAsset,
-    ///// Returned if a source could not retrieve something.
-    //#[fail(display="Failed to load bytes from source")]
-    //Source,
-    ///// Returned if a format failed to load the asset data.
-    //#[fail(display="Format \"{}\" could not load asset", _0)]
-    //Format(&'static str),
 }
 
 impl Fail for Error {

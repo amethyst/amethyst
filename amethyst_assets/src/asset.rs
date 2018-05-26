@@ -42,9 +42,6 @@ pub trait Format<A: Asset>: Send + 'static {
     type Options: Send + 'static;
 
     /// The import operation may fail with this associated Error type.
-    ///
-    /// If your import cannot fail consider using the never type `!` TODO when
-    /// it becomes stable.
     type Error: Fail;
 
     /// Reads the given bytes and produces asset data.
@@ -94,9 +91,6 @@ pub trait SimpleFormat<A: Asset> {
     type Options: Clone + Send + Sync + 'static;
 
     /// The import operation may fail with this associated Error type.
-    ///
-    /// If your import cannot fail consider using the never type `!` TODO when
-    /// it becomes stable.
     type Error: Fail;
 
     /// Produces asset data from given bytes.

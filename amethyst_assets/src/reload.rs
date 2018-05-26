@@ -188,9 +188,8 @@ pub trait Reload<A: Asset>: ReloadClone<A> + Send + Sync + 'static {
     fn reload(self: Box<Self>) -> Result<FormatValue<A>, failure::Error>;
 }
 
-/// What is this for?
+/// Helper trait for cloning trait objects of `Reload`
 pub trait ReloadClone<A> {
-    /// What is this for?
     fn cloned(&self) -> Box<Reload<A>>;
 }
 
