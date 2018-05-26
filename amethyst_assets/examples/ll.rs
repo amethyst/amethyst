@@ -4,8 +4,8 @@ extern crate amethyst_assets;
 extern crate amethyst_core;
 extern crate failure;
 extern crate rayon;
-extern crate void;
 
+use std::fmt;
 use std::result::Result as StdResult;
 use std::str::from_utf8;
 use std::sync::Arc;
@@ -14,9 +14,8 @@ use std::time::Duration;
 
 use amethyst_assets::*;
 use amethyst_core::specs::prelude::VecStorage;
-use failure::Error;
+use failure::{Fail, Backtrace, Error, ResultExt, err_msg};
 use rayon::ThreadPoolBuilder;
-use void::Void;
 
 #[derive(Clone, Debug)]
 struct DummyAsset(String);
@@ -29,11 +28,35 @@ impl Asset for DummyAsset {
 
 struct DummyFormat;
 
+#[derive(Debug)]
+struct DummyFormatError(Error);
+
+impl fmt::Display for DummyFormatError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Display::fmt(&self.0, f)
+    }
+}
+
+impl Fail for DummyFormatError {
+    fn cause(&self) -> Option<&Fail> {
+        Some(self.0.cause())
+    }
+    fn backtrace(&self) -> Option<&Backtrace> {
+        Some(self.0.backtrace())
+    }
+}
+
+impl From<Error> for DummyFormatError {
+    fn from(e: Error) -> DummyFormatError {
+        DummyFormatError(e)
+    }
+}
+
 impl Format<DummyAsset> for DummyFormat {
     const NAME: &'static str = "DUMMY";
 
     type Options = ();
-    type Error = Void;
+    type Error = DummyFormatError;
 
     fn import(
         &self,
@@ -42,8 +65,11 @@ impl Format<DummyAsset> for DummyFormat {
         _: (),
         _create_reload: bool,
     ) -> StdResult<FormatValue<DummyAsset>, Self::Error> {
-        let data = source.load(&name).unwrap();
-        let dummy = from_utf8(data.as_slice()).unwrap().to_owned();
+        let data = source.load(&name)?;
+        let dummy = from_utf8(data.as_slice())
+            .context(err_msg("Could not decode DUMMY data"))
+            .map_err(Error::from)?
+            .to_owned();
         Ok(FormatValue::data(dummy))
     }
 }
