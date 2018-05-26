@@ -157,7 +157,6 @@ pub trait Tracker: Send + 'static {
 impl Tracker for () {
     fn success(self: Box<Self>) {}
     fn fail(self: Box<Self>, e: Error) {
-        error!("error: {}", e);
         for err in e.causes() {
             error!("caused by: {}", e)
         }
