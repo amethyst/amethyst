@@ -59,7 +59,10 @@ pub(crate) fn set_attribute_buffers(
     for attr in attributes.iter() {
         match mesh.buffer(attr) {
             Some(vbuf) => effect.data.vertex_bufs.push(vbuf.clone()),
-            None => return false,
+            None => {
+                error!("Required vertex attribute buffer with format {:?} missing in mesh", attr);
+                return false;
+            }
         }
     }
     true
