@@ -3,12 +3,12 @@ use std::marker::PhantomData;
 
 use amethyst_core::cgmath::{Deg, Vector3};
 use amethyst_core::shrev::{EventChannel, ReaderId};
-use amethyst_core::specs::prelude::{Join, Read, ReadExpect, ReadStorage, Resources, System, Write,
+use amethyst_core::specs::prelude::{Join, Read, ReadStorage, Resources, System, Write,
                                     WriteStorage};
 use amethyst_core::timing::Time;
 use amethyst_core::transform::Transform;
 use amethyst_input::InputHandler;
-use amethyst_renderer::{ScreenDimensions, WindowMessages};
+use amethyst_renderer::WindowMessages;
 use winit::{Event, WindowEvent, DeviceEvent};
 
 use components::{ArcBallControlTag, FlyControlTag};
@@ -170,37 +170,6 @@ where
 
         Self::SystemData::setup(res);
         self.event_reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
-    }
-}
-
-/// The system that locks the mouse to the center of the screen. Useful for first person camera.
-pub struct MouseCenterLockSystem;
-
-impl<'a> System<'a> for MouseCenterLockSystem {
-    type SystemData = (
-        ReadExpect<'a, ScreenDimensions>,
-        Write<'a, WindowMessages>,
-        Read<'a, WindowFocus>,
-    );
-
-    fn run(&mut self, (dim, mut msg, focus): Self::SystemData) {
-        use amethyst_renderer::mouse::*;
-        if focus.is_focused {
-            let half_x = dim.width() as i32 / 2;
-            let half_y = dim.height() as i32 / 2;
-            msg.send_command(move |win| {
-                if let Err(err) = win.set_cursor_position(half_x, half_y) {
-                    error!("Unable to set the cursor position! Error: {:?}", err);
-                }
-            });
-        } else {
-            release_cursor(&mut msg);
-        }
-    }
-
-    fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::specs::prelude::SystemData;
-        Self::SystemData::setup(res);
     }
 }
 
