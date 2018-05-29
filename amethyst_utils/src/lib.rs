@@ -1,5 +1,4 @@
 extern crate amethyst_core;
-extern crate winit;
 
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
