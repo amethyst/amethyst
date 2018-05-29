@@ -4,8 +4,8 @@ extern crate amethyst;
 
 use amethyst::assets::Loader;
 use amethyst::config::Config;
-use amethyst::controls::{ArcBallControlTag, ArcBallMovementSystem, FlyControlTag,
-                         FreeRotationSystem, MouseCenterLockSystem, MouseFocusUpdateSystem};
+use amethyst::controls::{ArcBallControlTag, ArcBallMovementSystem, CursorHideSystem, 
+                         FlyControlTag, FreeRotationSystem, MouseFocusUpdateSystem};
 use amethyst::core::cgmath::{Deg, Vector3};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::{Entity, World};
@@ -135,8 +135,8 @@ fn run() -> Result<(), Error> {
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path),
         )?
         .with(MouseFocusUpdateSystem::new(), "mouse_focus", &[])
-        .with(MouseCenterLockSystem, "mouse_lock", &["mouse_focus"])
-        // This system will keep the camera focussing the target while conserving the orientation
+        .with(CursorHideSystem::new(), "cursor_hide", &["mouse_focus"])
+        // This system will keep the camera focusing the target while conserving the orientation
         // of the camera and its distance to the target
         .with(ArcBallMovementSystem {}, "arc_ball_movement_system", &[])
         // This system manage the orientation of camera in accord to mouse input
