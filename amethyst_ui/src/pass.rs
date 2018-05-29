@@ -17,10 +17,9 @@ use gfx::preset::blend;
 use gfx::pso::buffer::ElemStride;
 use gfx::state::ColorMask;
 use gfx_glyph::{BuiltInLineBreaker, FontId, GlyphBrush, GlyphBrushBuilder, GlyphCruncher,
-                HorizontalAlign, Layout, Scale, SectionText, VariedSection, VerticalAlign};
+                HorizontalAlign, Layout, Point, Scale, SectionText, VariedSection, VerticalAlign};
 use glsl_layout::Uniform;
 use hibitset::BitSet;
-use rusttype::Point;
 use unicode_segmentation::UnicodeSegmentation;
 
 use super::*;
@@ -441,7 +440,6 @@ impl Pass for DrawUi {
                                     .get(&FontId(0))
                                     .unwrap()
                                     .glyph(' ')
-                                    .unwrap()
                                     .scaled(Scale::uniform(ui_text.font_size))
                                     .h_metrics()
                                     .advance_width

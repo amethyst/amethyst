@@ -1,6 +1,6 @@
 use amethyst_assets::{Asset, Error, Handle, ResultExt, SimpleFormat};
 use amethyst_core::specs::prelude::VecStorage;
-use rusttype::{Font, FontCollection};
+use gfx_glyph::Font;
 
 /// A loaded set of fonts from a file.
 pub struct FontAsset(pub Font<'static>);
@@ -44,9 +44,7 @@ impl SimpleFormat<FontAsset> for TtfFormat {
     type Options = ();
 
     fn import(&self, bytes: Vec<u8>, _: ()) -> Result<FontData, Error> {
-        FontCollection::from_bytes(bytes)
-            .into_fonts()
-            .nth(0)
+        Font::from_bytes(bytes)
             .map(|f| FontData(f))
             .chain_err(|| "Font parsing error")
     }
