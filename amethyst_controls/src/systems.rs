@@ -144,8 +144,9 @@ where
     );
 
     fn run(&mut self, (events, mut transform, tag, focus): Self::SystemData) {
-        if focus.is_focused {
-            for event in events.read(&mut self.event_reader.as_mut().unwrap()) {
+        let focused = focus.is_focused;
+        for event in events.read(&mut self.event_reader.as_mut().unwrap()) {
+            if focused {
                 match *event {
                     Event::DeviceEvent { ref event, .. } => {
                         match *event {
@@ -179,7 +180,7 @@ impl<'a> System<'a> for MouseCenterLockSystem {
     type SystemData = (
         ReadExpect<'a, ScreenDimensions>,
         Write<'a, WindowMessages>,
-        Write<'a, WindowFocus>,
+        Read<'a, WindowFocus>,
     );
 
     fn run(&mut self, (dim, mut msg, focus): Self::SystemData) {
