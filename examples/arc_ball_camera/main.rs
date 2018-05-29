@@ -7,7 +7,6 @@ use amethyst::config::Config;
 use amethyst::controls::{ArcBallControlTag, ArcBallMovementSystem, FlyControlTag,
                          FreeRotationSystem, MouseCenterLockSystem, MouseFocusUpdateSystem};
 use amethyst::core::cgmath::{Deg, Vector3};
-use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::{Entity, World};
 use amethyst::input::InputBundle;

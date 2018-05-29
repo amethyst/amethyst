@@ -179,7 +179,7 @@ impl<'a> System<'a> for MouseCenterLockSystem {
     type SystemData = (
         ReadExpect<'a, ScreenDimensions>,
         Write<'a, WindowMessages>,
-        Write<'a, WindowFocus>,
+        Read<'a, WindowFocus>,
     );
 
     fn run(&mut self, (dim, mut msg, focus): Self::SystemData) {

@@ -329,7 +329,7 @@ impl<S> ApplicationBuilder<S> {
             .unwrap_or_else(|e| warn!("Application tried to override existing logger: {}", e));
 
         info!("Initializing Amethyst...");
-        info!("Version: {}", vergen::semver());
+        info!("Version: {}", env!("CARGO_PKG_VERSION"));
         info!("Platform: {}", vergen::target());
         info!("Amethyst git commit: {}", vergen::sha());
         let rustc_meta = rustc_version_runtime::version_meta();

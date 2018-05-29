@@ -6,7 +6,6 @@ use amethyst::assets::Loader;
 use amethyst::config::Config;
 use amethyst::controls::{FlyControlBundle, FlyControlTag};
 use amethyst::core::cgmath::{Deg, Vector3};
-use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::World;
 use amethyst::input::InputBundle;
