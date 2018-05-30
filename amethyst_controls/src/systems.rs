@@ -9,7 +9,7 @@ use amethyst_core::timing::Time;
 use amethyst_core::transform::Transform;
 use amethyst_input::InputHandler;
 use amethyst_renderer::{ScreenDimensions, WindowMessages};
-use winit::{Event, WindowEvent, DeviceEvent};
+use winit::{DeviceEvent, Event, WindowEvent};
 
 use components::{ArcBallControlTag, FlyControlTag};
 use resources::WindowFocus;
@@ -148,22 +148,20 @@ where
         for event in events.read(&mut self.event_reader.as_mut().unwrap()) {
             if focused {
                 match *event {
-                    Event::DeviceEvent { ref event, .. } => {
-                        match *event {
-                            DeviceEvent::MouseMotion  { delta: (x, y) } => {
-                                for (transform, _) in (&mut transform, &tag).join() {
-                                    transform.pitch_local(Deg( (-1.0) * y as f32 * self.sensitivity_y));
-                                    transform.yaw_global(Deg(  (-1.0) * x as f32 * self.sensitivity_x));
-                                }
-                            },
-                            _ => (),
+                    Event::DeviceEvent { ref event, .. } => match *event {
+                        DeviceEvent::MouseMotion { delta: (x, y) } => {
+                            for (transform, _) in (&mut transform, &tag).join() {
+                                transform.pitch_local(Deg((-1.0) * y as f32 * self.sensitivity_y));
+                                transform.yaw_global(Deg((-1.0) * x as f32 * self.sensitivity_x));
+                            }
                         }
+                        _ => (),
                     },
                     _ => (),
                 }
             }
         }
-     }
+    }
 
     fn setup(&mut self, res: &mut Resources) {
         use amethyst_core::specs::prelude::SystemData;
@@ -246,17 +244,12 @@ pub struct CursorHideSystem {
 
 impl CursorHideSystem {
     pub fn new() -> CursorHideSystem {
-        CursorHideSystem {
-            event_reader: None
-        }
+        CursorHideSystem { event_reader: None }
     }
 }
 
 impl<'a> System<'a> for CursorHideSystem {
-    type SystemData = (
-        Read<'a, EventChannel<Event>>,
-        Write<'a, WindowMessages>,
-    );
+    type SystemData = (Read<'a, EventChannel<Event>>, Write<'a, WindowMessages>);
 
     fn run(&mut self, (events, mut msg): Self::SystemData) {
         use amethyst_renderer::mouse::*;
@@ -265,8 +258,12 @@ impl<'a> System<'a> for CursorHideSystem {
             match *event {
                 Event::WindowEvent { ref event, .. } => match event {
                     &WindowEvent::Focused(focused) => {
-                        if focused { grab_cursor(&mut msg) } else { release_cursor(&mut msg) }
-                    },
+                        if focused {
+                            grab_cursor(&mut msg)
+                        } else {
+                            release_cursor(&mut msg)
+                        }
+                    }
                     _ => (),
                 },
                 _ => (),

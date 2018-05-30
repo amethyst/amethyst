@@ -1,9 +1,9 @@
 use std::mem;
 
 use amethyst_assets::AssetStorage;
-use amethyst_core::GlobalTransform;
 use amethyst_core::cgmath::{Matrix4, One, SquareMatrix};
 use amethyst_core::specs::prelude::{Join, Read, ReadStorage};
+use amethyst_core::GlobalTransform;
 
 use glsl_layout::*;
 
@@ -60,7 +60,10 @@ pub(crate) fn set_attribute_buffers(
         match mesh.buffer(attr) {
             Some(vbuf) => effect.data.vertex_bufs.push(vbuf.clone()),
             None => {
-                error!("Required vertex attribute buffer with format {:?} missing in mesh", attr);
+                error!(
+                    "Required vertex attribute buffer with format {:?} missing in mesh",
+                    attr
+                );
                 return false;
             }
         }
@@ -219,7 +222,11 @@ pub(crate) fn set_texture_offsets(
 }
 
 pub(crate) fn setup_vertex_args(builder: &mut EffectBuilder) {
-    builder.with_raw_constant_buffer("VertexArgs", mem::size_of::<<VertexArgs as Uniform>::Std140>(), 1);
+    builder.with_raw_constant_buffer(
+        "VertexArgs",
+        mem::size_of::<<VertexArgs as Uniform>::Std140>(),
+        1,
+    );
 }
 
 pub(crate) fn set_vertex_args(

@@ -12,8 +12,8 @@ use animation::{InterpolationFunction, InterpolationPrimitive, Sampler, SamplerP
 use assets::{Error as AssetError, Format, FormatValue, Result as AssetResult, ResultExt, Source};
 use core::cgmath::{Matrix4, SquareMatrix};
 use core::transform::Transform;
-use gfx::Primitive;
 use gfx::texture::SamplerInfo;
+use gfx::Primitive;
 use gltf;
 use gltf::Gltf;
 use gltf_utils::AccessorIter;

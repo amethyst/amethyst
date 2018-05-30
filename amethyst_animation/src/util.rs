@@ -1,5 +1,5 @@
-use amethyst_core::cgmath::BaseNum;
 use amethyst_core::cgmath::num_traits::NumCast;
+use amethyst_core::cgmath::BaseNum;
 use amethyst_core::specs::prelude::{Entity, WriteStorage};
 use minterpolate::InterpolationPrimitive;
 

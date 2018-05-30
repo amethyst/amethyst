@@ -69,9 +69,7 @@ pub struct DrawUi {
     next_brush_cache_id: u64,
 }
 
-type GlyphBrushCache = HashMap<
-    u64, GlyphBrush<'static, Resources, Factory>
->;
+type GlyphBrushCache = HashMap<u64, GlyphBrush<'static, Resources, Factory>>;
 
 impl DrawUi {
     /// Create instance of `DrawUi` pass
@@ -137,7 +135,11 @@ impl Pass for DrawUi {
         use std::mem;
         effect
             .simple(VERT_SRC, FRAG_SRC)
-            .with_raw_constant_buffer("VertexArgs", mem::size_of::<<VertexArgs as Uniform>::Std140>(), 1)
+            .with_raw_constant_buffer(
+                "VertexArgs",
+                mem::size_of::<<VertexArgs as Uniform>::Std140>(),
+                1,
+            )
             .with_raw_vertex_buffer(PosTex::ATTRIBUTES, PosTex::size() as ElemStride, 0)
             .with_texture("albedo")
             .with_blended_output("color", ColorMask::all(), blend::ALPHA, None)
@@ -258,8 +260,10 @@ impl Pass for DrawUi {
                         Some(font) => font,
                         None => continue,
                     };
-                    self.glyph_brushes.insert(self.next_brush_cache_id, GlyphBrushBuilder::using_font(font.0.clone())
-                                    .build(factory.clone()));
+                    self.glyph_brushes.insert(
+                        self.next_brush_cache_id,
+                        GlyphBrushBuilder::using_font(font.0.clone()).build(factory.clone()),
+                    );
                     ui_text.brush_id = Some(self.next_brush_cache_id);
                     ui_text.cached_font = ui_text.font.clone();
                     self.next_brush_cache_id += 1;
@@ -323,14 +327,12 @@ impl Pass for DrawUi {
                             },
                         ]
                     })
-                    .unwrap_or(vec![
-                        SectionText {
-                            text: rendered_string,
-                            scale: Scale::uniform(ui_text.font_size),
-                            color: ui_text.color,
-                            font_id: FontId(0),
-                        },
-                    ]);
+                    .unwrap_or(vec![SectionText {
+                        text: rendered_string,
+                        scale: Scale::uniform(ui_text.font_size),
+                        color: ui_text.color,
+                        font_id: FontId(0),
+                    }]);
                 // TODO: If you're adding multi-line support you need to change this to use
                 // Layout::Wrap.
                 let layout = Layout::SingleLine {
@@ -494,7 +496,11 @@ impl Pass for DrawUi {
                                 coord: [x, y],
                                 dimension: [width, height],
                             };
-                            effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
+                            effect.update_constant_buffer(
+                                "VertexArgs",
+                                &vertex_args.std140(),
+                                encoder,
+                            );
                             effect.draw(mesh.slice(), encoder);
                         }
                         effect.data.textures.clear();

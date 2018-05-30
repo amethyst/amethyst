@@ -146,8 +146,7 @@ fn run() -> Result<(), Error> {
             &[],
         )
         .with_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?;
-    let mut game = Application::build(resources_directory, ExampleState)?
-        .build(game_data)?;
+    let mut game = Application::build(resources_directory, ExampleState)?.build(game_data)?;
     game.run();
     Ok(())
 }

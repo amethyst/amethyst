@@ -100,7 +100,11 @@ impl Pass for DrawFlatSeparate {
         if self.skinning {
             setup_skinning_buffers(&mut builder);
         }
-        builder.with_raw_constant_buffer("VertexArgs", mem::size_of::<<VertexArgs as Uniform>::Std140>(), 1);
+        builder.with_raw_constant_buffer(
+            "VertexArgs",
+            mem::size_of::<<VertexArgs as Uniform>::Std140>(),
+            1,
+        );
         setup_textures(&mut builder, &TEXTURES);
         match self.transparency {
             Some((mask, blend, depth)) => builder.with_blended_output("color", mask, blend, depth),

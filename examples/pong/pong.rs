@@ -7,8 +7,8 @@ use amethyst::renderer::{Camera, Event, KeyboardInput, Material, MeshHandle, Pos
                          VirtualKeyCode, WindowEvent, WindowMessages};
 use amethyst::ui::{Anchor, Anchored, TtfFormat, UiText, UiTransform};
 use systems::ScoreText;
-use {ARENA_HEIGHT, ARENA_WIDTH};
 use {Ball, Paddle, Side};
+use {ARENA_HEIGHT, ARENA_WIDTH};
 
 pub struct Pong;
 
