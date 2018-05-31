@@ -69,4 +69,3 @@ impl From<ConfigError> for Error {
         Error::Config(err)
     }
 }
-

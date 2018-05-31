@@ -1,5 +1,5 @@
-use amethyst_core::Transform;
 use amethyst_core::cgmath::{InnerSpace, Quaternion, Vector3};
+use amethyst_core::Transform;
 
 use resources::{AnimationSampling, ApplyData, BlendMethod};
 use util::SamplerPrimitive;

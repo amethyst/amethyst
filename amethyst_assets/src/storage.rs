@@ -2,9 +2,9 @@ use std::marker::PhantomData;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Weak};
 
-use amethyst_core::Time;
 use amethyst_core::specs::prelude::{Component, Read, ReadExpect, System, VecStorage, Write};
 use amethyst_core::specs::storage::UnprotectedStorage;
+use amethyst_core::Time;
 use crossbeam::sync::MsQueue;
 use hibitset::BitSet;
 use rayon::ThreadPool;
@@ -389,8 +389,9 @@ where
 /// user deals with, the actual asset (`A`) is stored
 /// in an `AssetStorage`.
 #[derive(Derivative)]
-#[derivative(Clone(bound = ""), Eq(bound = ""), Hash(bound = ""), PartialEq(bound = ""),
-             Debug(bound = ""))]
+#[derivative(
+    Clone(bound = ""), Eq(bound = ""), Hash(bound = ""), PartialEq(bound = ""), Debug(bound = "")
+)]
 pub struct Handle<A: ?Sized> {
     id: Arc<u32>,
     marker: PhantomData<A>,

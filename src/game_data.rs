@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use core::SystemBundle;
 use core::specs::prelude::{Dispatcher, DispatcherBuilder, System, World};
+use core::SystemBundle;
 use error::{Error, Result};
 use rayon::ThreadPool;
 

@@ -5,10 +5,10 @@ use std::mem;
 use std::sync::Arc;
 
 use amethyst_assets::{AssetStorage, HotReloadStrategy};
-use amethyst_core::Time;
 use amethyst_core::shrev::EventChannel;
 use amethyst_core::specs::prelude::{Read, ReadExpect, Resources, RunNow, SystemData, Write,
                                     WriteExpect};
+use amethyst_core::Time;
 use rayon::ThreadPool;
 use winit::{DeviceEvent, Event, WindowEvent};
 
@@ -172,7 +172,9 @@ where
 
         let mat = create_default_mat(res);
         res.insert(MaterialDefaults(mat));
-        let (width, height) = self.renderer.window().get_inner_size()
+        let (width, height) = self.renderer
+            .window()
+            .get_inner_size()
             .expect("Window closed during initialization!");
         let hidpi = self.renderer.window().hidpi_factor();
         res.insert(ScreenDimensions::new(width, height, hidpi));

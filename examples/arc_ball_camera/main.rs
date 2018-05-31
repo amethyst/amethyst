@@ -4,7 +4,7 @@ extern crate amethyst;
 
 use amethyst::assets::Loader;
 use amethyst::config::Config;
-use amethyst::controls::{ArcBallControlTag, ArcBallMovementSystem, CursorHideSystem, 
+use amethyst::controls::{ArcBallControlTag, ArcBallMovementSystem, CursorHideSystem,
                          FlyControlTag, FreeRotationSystem, MouseFocusUpdateSystem};
 use amethyst::core::cgmath::{Deg, Vector3};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
@@ -146,8 +146,7 @@ fn run() -> Result<(), Error> {
             &[],
         )
         .with_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?;
-    let mut game = Application::build(resources_directory, ExampleState)?
-        .build(game_data)?;
+    let mut game = Application::build(resources_directory, ExampleState)?.build(game_data)?;
     game.run();
     Ok(())
 }

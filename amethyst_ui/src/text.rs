@@ -8,8 +8,8 @@ use amethyst_core::timing::Time;
 use clipboard::{ClipboardContext, ClipboardProvider};
 use gfx_glyph::PositionedGlyph;
 use hibitset::BitSet;
-use unicode_normalization::UnicodeNormalization;
 use unicode_normalization::char::is_combining_mark;
+use unicode_normalization::UnicodeNormalization;
 use unicode_segmentation::UnicodeSegmentation;
 use winit::{ElementState, Event, KeyboardInput, ModifiersState, MouseButton, VirtualKeyCode,
             WindowEvent};

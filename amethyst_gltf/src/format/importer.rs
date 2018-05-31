@@ -7,9 +7,9 @@ use std::sync::Arc;
 use assets::{Error as AssetError, Result as AssetResult, Source as AssetSource};
 use base64;
 use gltf;
-use gltf::Gltf;
 use gltf::json;
 use gltf::json::validation;
+use gltf::Gltf;
 use gltf_utils::Source;
 
 #[derive(Debug)]

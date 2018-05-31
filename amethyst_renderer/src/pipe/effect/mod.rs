@@ -41,8 +41,8 @@ pub(crate) enum ProgramSource<'a> {
 
 impl<'a> ProgramSource<'a> {
     pub fn compile(&self, fac: &mut Factory) -> Result<ShaderSet<Resources>> {
-        use gfx::Factory;
         use gfx::traits::FactoryExt;
+        use gfx::Factory;
 
         match *self {
             ProgramSource::Simple(ref vs, ref ps) => fac.create_shader_set(vs, ps)
@@ -313,8 +313,8 @@ impl<'a> EffectBuilder<'a> {
 
     /// TODO: Support render targets as inputs.
     pub fn build(&mut self) -> Result<Effect> {
-        use gfx::Factory;
         use gfx::traits::FactoryExt;
+        use gfx::Factory;
 
         debug!("Building effect");
         debug!("Compiling shaders");

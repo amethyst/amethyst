@@ -187,8 +187,7 @@ fn run() -> Result<(), Error> {
         .with_base_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?
         .with_base_bundle(InputBundle::<String, String>::new())?;
 
-    let mut game = Application::build(resources_directory, Loading::default())?
-        .build(game_data)?;
+    let mut game = Application::build(resources_directory, Loading::default())?.build(game_data)?;
     game.run();
 
     Ok(())

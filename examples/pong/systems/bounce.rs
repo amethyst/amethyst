@@ -1,8 +1,8 @@
 use std::ops::Deref;
 
 use amethyst::assets::AssetStorage;
-use amethyst::audio::Source;
 use amethyst::audio::output::Output;
+use amethyst::audio::Source;
 use amethyst::core::transform::Transform;
 use amethyst::ecs::prelude::{Join, Read, ReadExpect, ReadStorage, System, WriteStorage};
 use audio::{play_bounce, Sounds};
