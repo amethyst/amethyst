@@ -1,11 +1,13 @@
 //! Physically-based material.
 
+use amethyst_assets::Handle;
 use amethyst_core::specs::prelude::{Component, DenseVecStorage};
+use fnv::FnvHashMap;
 
-use tex::TextureHandle;
+use tex::{Texture, TextureHandle};
 
 /// Material reference this part of the texture
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct TextureOffset {
     /// Start and end offset for U coordinate
     pub u: (f32, f32),
@@ -66,3 +68,54 @@ impl Component for Material {
 /// `Material` you don't want to specify.
 #[derive(Clone)]
 pub struct MaterialDefaults(pub Material);
+
+/// Textures used by texture animations
+#[derive(Debug, Default)]
+pub struct MaterialTextureSet {
+    textures: FnvHashMap<usize, Handle<Texture>>,
+    texture_inverse: FnvHashMap<Handle<Texture>, usize>,
+}
+
+impl MaterialTextureSet {
+    /// Create new texture set
+    pub fn new() -> Self {
+        MaterialTextureSet {
+            textures: FnvHashMap::default(),
+            texture_inverse: FnvHashMap::default(),
+        }
+    }
+
+    /// Retrieve the handle for a given index
+    pub fn handle(&self, index: usize) -> Option<Handle<Texture>> {
+        self.textures.get(&index).cloned()
+    }
+
+    /// Retrieve the index for a given handle
+    pub fn index(&self, handle: &Handle<Texture>) -> Option<usize> {
+        self.texture_inverse.get(handle).cloned()
+    }
+
+    /// Insert a texture handle at the given index
+    pub fn insert(&mut self, index: usize, handle: Handle<Texture>) {
+        self.textures.insert(index, handle.clone());
+        self.texture_inverse.insert(handle, index);
+    }
+
+    /// Remove the given index
+    pub fn remove(&mut self, index: usize) {
+        if let Some(handle) = self.textures.remove(&index) {
+            self.texture_inverse.remove(&handle);
+        }
+    }
+
+    /// Get number of textures in the set
+    pub fn len(&self) -> usize {
+        self.textures.len()
+    }
+
+    /// Remove all texture handles in the set
+    pub fn clear(&mut self) {
+        self.textures.clear();
+        self.texture_inverse.clear();
+    }
+}

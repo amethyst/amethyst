@@ -6,7 +6,7 @@ use winit::Window;
 use color::Rgba;
 
 /// The ambient color of a scene
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct AmbientColor(pub Rgba);
 
 impl AsRef<Rgba> for AmbientColor {

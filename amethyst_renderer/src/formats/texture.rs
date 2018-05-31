@@ -2,7 +2,7 @@ pub use imagefmt::Error as ImageError;
 
 use std::io::Cursor;
 
-use amethyst_assets::{Result, ResultExt, SimpleFormat};
+use amethyst_assets::{ProcessingState, Result, ResultExt, SimpleFormat};
 use gfx::format::{ChannelType, SurfaceType};
 use gfx::texture::SamplerInfo;
 use gfx::traits::Pod;
@@ -12,7 +12,8 @@ use tex::{Texture, TextureBuilder};
 use Renderer;
 
 /// Texture metadata, used while loading
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(default)]
 pub struct TextureMetadata {
     /// Sampler info
     pub sampler: Option<SamplerInfo>,
@@ -80,9 +81,10 @@ impl TextureMetadata {
 }
 
 /// Texture data for loading
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum TextureData {
     /// Image data
+    #[serde(skip)]
     Image(ImageData, TextureMetadata),
 
     /// Color
@@ -132,8 +134,9 @@ pub struct ImageData {
     /// The raw image data.
     pub raw: Image<u8>,
 }
+
 /// Allows loading of jpg or jpeg files.
-#[derive(Clone)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct JpgFormat;
 
 impl JpgFormat {
@@ -156,7 +159,7 @@ impl SimpleFormat<Texture> for JpgFormat {
 }
 
 /// Allows loading of PNG files.
-#[derive(Clone)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct PngFormat;
 
 impl PngFormat {
@@ -179,7 +182,7 @@ impl SimpleFormat<Texture> for PngFormat {
 }
 
 /// Allows loading of BMP files.
-#[derive(Clone)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct BmpFormat;
 
 impl SimpleFormat<Texture> for BmpFormat {
@@ -197,9 +200,12 @@ impl SimpleFormat<Texture> for BmpFormat {
 }
 
 /// Create a texture asset.
-pub fn create_texture_asset(data: TextureData, renderer: &mut Renderer) -> Result<Texture> {
+pub fn create_texture_asset(
+    data: TextureData,
+    renderer: &mut Renderer,
+) -> Result<ProcessingState<Texture>> {
     use self::TextureData::*;
-    match data {
+    let t = match data {
         Image(image_data, options) => {
             create_texture_asset_from_image(image_data, options, renderer)
         }
@@ -252,7 +258,8 @@ pub fn create_texture_asset(data: TextureData, renderer: &mut Renderer) -> Resul
                 .create_texture(tb)
                 .chain_err(|| "Failed to build texture")
         }
-    }
+    };
+    t.map(|t| ProcessingState::Loaded(t))
 }
 
 fn apply_options<D, T>(
@@ -328,6 +335,31 @@ fn create_texture_asset_from_image(
     renderer
         .create_texture(tb)
         .chain_err(|| "Failed to create texture from texture data")
+}
+
+/// Aggregate texture format
+#[derive(Clone, Deserialize, Serialize)]
+pub enum TextureFormat {
+    /// Jpeg
+    Jpg,
+    /// Png
+    Png,
+    /// Bmp
+    Bmp,
+}
+
+impl SimpleFormat<Texture> for TextureFormat {
+    const NAME: &'static str = "TextureFormat";
+
+    type Options = TextureMetadata;
+
+    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
+        match *self {
+            TextureFormat::Jpg => SimpleFormat::import(&JpgFormat, bytes, options),
+            TextureFormat::Png => SimpleFormat::import(&PngFormat, bytes, options),
+            TextureFormat::Bmp => SimpleFormat::import(&BmpFormat, bytes, options),
+        }
+    }
 }
 
 #[cfg(test)]

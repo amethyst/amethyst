@@ -37,6 +37,18 @@ pub struct AssetStorage<A: Asset> {
     pub(crate) processed: Arc<MsQueue<Processed<A>>>,
     reloads: Vec<(WeakHandle<A>, Box<Reload<A>>)>,
     unused_handles: MsQueue<Handle<A>>,
+    //requeue: Vec<Processed<A>>,
+}
+
+/// Returned by processor systems, describes the loading state of the asset.
+pub enum ProcessingState<A>
+where
+    A: Asset,
+{
+    /// Asset is not fully loaded yet, need to wait longer
+    Loading(A::Data),
+    /// Asset have finished loading, can now be inserted into storage and tracker notified
+    Loaded(A),
 }
 
 impl<A: Asset> AssetStorage<A> {
@@ -114,7 +126,7 @@ impl<A: Asset> AssetStorage<A> {
         pool: &ThreadPool,
         strategy: Option<&HotReloadStrategy>,
     ) where
-        F: FnMut(A::Data) -> Result<A>,
+        F: FnMut(A::Data) -> Result<ProcessingState<A>>,
     {
         self.process_custom_drop(f, |_| {}, frame_number, pool, strategy);
     }
@@ -130,8 +142,9 @@ impl<A: Asset> AssetStorage<A> {
         strategy: Option<&HotReloadStrategy>,
     ) where
         D: FnMut(A),
-        F: FnMut(A::Data) -> Result<A>,
+        F: FnMut(A::Data) -> Result<ProcessingState<A>>,
     {
+        let mut requeue = Vec::default();
         while let Some(processed) = self.processed.try_pop() {
             let assets = &mut self.assets;
             let bitset = &mut self.bitset;
@@ -151,7 +164,7 @@ impl<A: Asset> AssetStorage<A> {
                     }).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
                         .chain_err(|| ErrorKind::Asset(name.clone()))
                     {
-                        Ok(x) => {
+                        Ok((ProcessingState::Loaded(x), r)) => {
                             debug!(
                                 "{:?}: Asset {:?} (handle id: {:?}) has been loaded successfully",
                                 A::NAME,
@@ -160,7 +173,22 @@ impl<A: Asset> AssetStorage<A> {
                             );
                             tracker.success();
 
-                            x
+                            (x, r)
+                        }
+                        Ok((ProcessingState::Loading(x), r)) => {
+                            debug!(
+                                "{:?}: Asset {:?} (handle id: {:?}) is not complete, readding to queue",
+                                A::NAME,
+                                name,
+                                handle,
+                            );
+                            requeue.push(Processed::NewAsset {
+                                data: Ok(FormatValue { data: x, reload: r }),
+                                handle,
+                                name,
+                                tracker,
+                            });
+                            continue;
                         }
                         Err(e) => {
                             error!(
@@ -209,7 +237,10 @@ impl<A: Asset> AssetStorage<A> {
                     }).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
                         .chain_err(|| ErrorKind::Asset(name.clone()))
                     {
-                        Ok(x) => x,
+                        Ok((ProcessingState::Loaded(x), r)) => (x, r),
+                        Ok(..) => {
+                            continue; // FIXME
+                        }
                         Err(e) => {
                             error!(
                                 "{:?}: Failed to hot-reload asset {:?} (handle id: {:?}): {}\n\
@@ -279,6 +310,10 @@ impl<A: Asset> AssetStorage<A> {
             trace!("{:?}: Testing for asset reloads..", A::NAME);
             self.hot_reload(pool);
         }
+
+        for p in requeue.drain(..) {
+            self.processed.push(p);
+        }
     }
 
     fn hot_reload(&mut self, pool: &ThreadPool) {
@@ -330,6 +365,7 @@ impl<A: Asset> Default for AssetStorage<A> {
             processed: Arc::new(MsQueue::new()),
             reloads: Default::default(),
             unused_handles: MsQueue::new(),
+            //requeue: Vec::default(),
         }
     }
 }
@@ -364,7 +400,7 @@ impl<A> Processor<A> {
 impl<'a, A> System<'a> for Processor<A>
 where
     A: Asset,
-    A::Data: Into<Result<A>>,
+    A::Data: Into<Result<ProcessingState<A>>>,
 {
     type SystemData = (
         Write<'a, AssetStorage<A>>,

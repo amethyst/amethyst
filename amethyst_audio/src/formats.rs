@@ -1,6 +1,7 @@
 use super::Source as Audio;
 use amethyst_assets::*;
 
+#[derive(Clone)]
 pub struct AudioData(pub Vec<u8>);
 
 /// Loads audio from wav files.

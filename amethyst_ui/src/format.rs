@@ -1,4 +1,4 @@
-use amethyst_assets::{Asset, Error, Handle, ResultExt, SimpleFormat};
+use amethyst_assets::{Asset, Error, Handle, ProcessingState, ResultExt, SimpleFormat};
 use amethyst_core::specs::prelude::VecStorage;
 use gfx_glyph::Font;
 
@@ -8,6 +8,7 @@ pub struct FontAsset(pub Font<'static>);
 /// A handle to font data stored with `amethyst_assets`.
 pub type FontHandle = Handle<FontAsset>;
 
+#[derive(Clone)]
 pub struct FontData(Font<'static>);
 
 impl Asset for FontAsset {
@@ -16,9 +17,9 @@ impl Asset for FontAsset {
     type HandleStorage = VecStorage<Handle<Self>>;
 }
 
-impl Into<Result<FontAsset, Error>> for FontData {
-    fn into(self) -> Result<FontAsset, Error> {
-        Ok(FontAsset(self.0))
+impl Into<Result<ProcessingState<FontAsset>, Error>> for FontData {
+    fn into(self) -> Result<ProcessingState<FontAsset>, Error> {
+        Ok(ProcessingState::Loaded(FontAsset(self.0)))
     }
 }
 
@@ -47,5 +48,25 @@ impl SimpleFormat<FontAsset> for TtfFormat {
         Font::from_bytes(bytes)
             .map(|f| FontData(f))
             .chain_err(|| "Font parsing error")
+    }
+}
+
+/// Wrapper format for all core supported Font formats
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub enum FontFormat {
+    /// TTF Format
+    Ttf,
+    /// OTF Format
+    Otf,
+}
+
+impl SimpleFormat<FontAsset> for FontFormat {
+    const NAME: &'static str = "FontFormat";
+    type Options = ();
+
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<FontData, Error> {
+        match *self {
+            FontFormat::Ttf | FontFormat::Otf => TtfFormat.import(bytes, ()),
+        }
     }
 }

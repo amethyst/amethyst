@@ -118,7 +118,8 @@ vec3 fresnel(float HdotV, vec3 fresnel_base) {
 }
 
 void main() {
-    vec3 albedo             = texture(albedo, tex_coords(vertex.tex_coord, albedo_offset.u_offset, albedo_offset.v_offset)).rgb;
+    vec4 albedo_full        = texture(albedo, tex_coords(vertex.tex_coord, albedo_offset.u_offset, albedo_offset.v_offset)).rgba;
+    vec3 albedo             = albedo_full.rgb;
     vec3 emission           = texture(emission, tex_coords(vertex.tex_coord, emission_offset.u_offset, emission_offset.v_offset)).rgb;
     vec3 normal             = texture(normal, tex_coords(vertex.tex_coord, normal_offset.u_offset, normal_offset.v_offset)).rgb;
     float metallic          = texture(metallic, tex_coords(vertex.tex_coord, metallic_offset.u_offset, metallic_offset.v_offset)).r;
@@ -167,5 +168,5 @@ void main() {
     vec3 ambient = ambient_color * albedo * ambient_occlusion;
     vec3 color = ambient + lighted + emission;
    
-    out_color = vec4(color, 1.0);
+    out_color = vec4(color, albedo_full.a);
 }

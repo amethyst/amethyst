@@ -8,7 +8,7 @@ use amethyst_renderer::ScreenDimensions;
 /// Unused, will be implemented in a future PR.
 /// Indicated if the position and margins should be calculated in pixel or
 /// relative to their parent size.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum ScaleMode {
     /// Use directly the pixel value.
     Pixel,
@@ -18,7 +18,7 @@ pub enum ScaleMode {
 
 /// Indicated where the anchor is, relative to the parent (or to the screen, if there is no parent).
 /// Follow a normal english Y,X naming.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum Anchor {
     /// Anchors the entity at the top left of the parent.
     TopLeft,
@@ -41,7 +41,7 @@ pub enum Anchor {
 }
 
 /// Indicates if a component should be stretched.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum Stretch {
     /// Stretches on the X axis.
     X,
@@ -52,7 +52,7 @@ pub enum Stretch {
 }
 
 /// Component indicating that the position of this entity should be relative to the parent's position.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Anchored {
     /// The `Anchor`
     anchor: Anchor,
@@ -60,6 +60,7 @@ pub struct Anchored {
     /// While the position value in UiTransform will be changed,
     /// this keeps track of the offset from the anchor.
     /// By default, it will automatically be set to the UiTransform position before it gets moved by the layout system.
+    #[serde(skip)]
     offset: Option<(f32, f32)>,
 }
 
@@ -96,7 +97,7 @@ impl Component for Anchored {
 
 /// Component indicating that an entity should be stretched to fit the parent size
 /// on one or multiple axes.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Stretched {
     /// The `Stretch` setting.
     /// Indicates on which axes this entity should be stretched.

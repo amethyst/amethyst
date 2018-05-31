@@ -118,7 +118,7 @@ impl<'a> System<'a> for RenderingSystem {
             |vertex_data| {
                 // Upload vertex data to GPU and give back an asset
 
-                Ok(MeshAsset { buffer: () })
+                Ok(ProcessingState::Loaded(MeshAsset { buffer: () }))
             },
             time.frame_number(),
             &**pool,

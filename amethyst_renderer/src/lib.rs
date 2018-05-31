@@ -28,9 +28,8 @@ extern crate imagefmt;
 #[macro_use]
 extern crate log;
 extern crate rayon;
-extern crate serde;
 #[macro_use]
-extern crate serde_derive;
+extern crate serde;
 extern crate smallvec;
 extern crate wavefront_obj;
 extern crate winit;
@@ -66,12 +65,13 @@ pub use cam::{ActiveCamera, Camera, Projection};
 pub use color::Rgba;
 pub use config::DisplayConfig;
 pub use formats::{build_mesh_with_combo, create_mesh_asset, create_texture_asset, BmpFormat,
-                  ComboMeshCreator, ImageData, ImageError, JpgFormat, MeshCreator, MeshData,
-                  ObjFormat, PngFormat, TextureData, TextureMetadata};
+                  ComboMeshCreator, ImageData, ImageError, JpgFormat,
+                  MeshCreator, MeshData, ObjFormat, PngFormat, TextureData,
+                  TextureFormat, TextureMetadata};
 pub use input::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
 pub use light::{DirectionalLight, Light, PointLight, SpotLight, SunLight};
 pub use mesh::{vertex_data, Mesh, MeshBuilder, MeshHandle, VertexBuffer};
-pub use mtl::{Material, MaterialDefaults, TextureOffset};
+pub use mtl::{Material, MaterialDefaults, MaterialTextureSet, TextureOffset};
 pub use pass::{DrawFlat, DrawFlatSeparate, DrawPbm, DrawPbmSeparate, DrawShaded,
                DrawShadedSeparate};
 pub use pipe::{ColorBuffer, Data, DepthBuffer, DepthMode, Effect, EffectBuilder, Init, Meta,

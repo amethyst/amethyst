@@ -26,6 +26,7 @@ pub enum Light {
 /// A directional light source.
 #[repr(C)]
 #[derive(Clone, ConstantBuffer, Debug, Deserialize, PartialEq, Serialize)]
+#[serde(default)]
 pub struct DirectionalLight {
     /// Color of the light in RGBA8 format.
     pub color: Rgba,
@@ -70,6 +71,7 @@ impl From<DirectionalLight> for Light {
 /// [fb]: http://www.frostbite.com/wp-content/uploads/2014/11/course_notes_moving_frostbite_to_pbr.pdf
 #[repr(C)]
 #[derive(Clone, ConstantBuffer, Debug, Deserialize, PartialEq, Serialize)]
+#[serde(default)]
 pub struct PointLight {
     /// Location of the light source in three dimensional space.
     pub center: [f32; 3], //TODO: Replace with a cgmath type when gfx version > 0.16
@@ -105,6 +107,7 @@ impl From<PointLight> for Light {
 /// A spot light source.
 #[repr(C)]
 #[derive(Clone, ConstantBuffer, Debug, Deserialize, PartialEq, Serialize)]
+#[serde(default)]
 pub struct SpotLight {
     /// Opening angle of the light cone in degrees.
     pub angle: f32, //TODO: Replace with a cgmath type when gfx version > 0.16
@@ -146,6 +149,7 @@ impl From<SpotLight> for Light {
 /// A realistic disk-shaped sun light source.
 #[repr(C)]
 #[derive(Clone, ConstantBuffer, Debug, Deserialize, PartialEq, Serialize)]
+#[serde(default)]
 pub struct SunLight {
     /// The sun's angular radius in degrees.
     pub ang_rad: f32, //TODO: Replace with a cgmath type when gfx version > 0.16

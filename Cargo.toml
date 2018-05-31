@@ -69,7 +69,7 @@ thread_profiler = { version = "0.1", optional = true }
 [dev-dependencies]
 amethyst_gltf = { path = "amethyst_gltf", version = "0.2" }
 genmesh = "0.5"
-ron = "0.1"
+ron = "0.2"
 serde = "1.0"
 serde_derive = "1.0"
 

@@ -241,6 +241,7 @@ impl<'a> UiButtonBuilder<'a> {
             image: image_entity,
         }
     }
+
     /// Create the UiButton based on provided configuration parameters.
     pub fn build_from_world(self, world: &World) -> UiButton {
         self.build(UiButtonBuilderResources::from_world(world))
