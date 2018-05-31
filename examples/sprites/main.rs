@@ -19,7 +19,7 @@ mod sprite_sheet_loader;
 use std::time::Duration;
 
 use amethyst::animation::{get_animation_set, AnimationBundle, AnimationCommand, AnimationControl,
-                          ControlState, EndControl, MaterialTextureSet};
+                          ControlState, EndControl};
 use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::cgmath::{Matrix4, Point3, Transform as CgTransform, Vector3};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
@@ -27,8 +27,8 @@ use amethyst::ecs::prelude::Entity;
 use amethyst::input::{is_close_requested, is_key, InputBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::{Camera, ColorMask, DisplayConfig, DrawFlat, Event, Material,
-                         MaterialDefaults, Mesh, Pipeline, PosTex, Projection, RenderBundle,
-                         ScreenDimensions, Stage, VirtualKeyCode, ALPHA};
+                         MaterialDefaults, MaterialTextureSet, Mesh, Pipeline, PosTex, Projection,
+                         RenderBundle, ScreenDimensions, Stage, VirtualKeyCode, ALPHA};
 use amethyst::ui::{DrawUi, UiBundle};
 
 const BACKGROUND_COLOUR: [f32; 4] = [0.0, 0.0, 0.0, 1.0]; // black

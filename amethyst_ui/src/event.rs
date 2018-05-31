@@ -10,7 +10,7 @@ use transform::UiTransform;
 
 /// The type of ui event.
 /// Click happens if you start and stop clicking on the same ui element.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum UiEventType {
     /// When an element is clicked normally.
     /// Happens when the element both start and stops being clicked.
@@ -44,7 +44,7 @@ impl UiEvent {
 /// A component that tags an entity as reactive to ui events.
 /// Will only work if the entity has a UiTransform component attached to it.
 /// Without this, the ui element will not generate events.
-#[derive(Default)]
+#[derive(Default, Serialize, Deserialize, Clone)]
 pub struct MouseReactive;
 
 impl Component for MouseReactive {

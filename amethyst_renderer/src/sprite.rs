@@ -7,9 +7,9 @@ pub type SpriteSheetHandle = Handle<SpriteSheet>;
 /// Meta data for a sprite sheet texture.
 ///
 /// Contains a handle to the texture and the sprite coordinates on the texture.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SpriteSheet {
-    /// Index of the texture for this sprite sheet.
+    /// Index into `MaterialTextureSet` of the texture for this sprite sheet.
     pub index: usize,
     /// A list of sprites in this sprite sheet.
     pub sprites: Vec<Sprite>,
@@ -27,7 +27,7 @@ impl Asset for SpriteSheet {
 ///
 /// * X axis: 0.0 is the left side and 1.0 is the right side.
 /// * Y axis: 0.0 is the top and 1.0 is the bottom.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Sprite {
     /// Normalized left x coordinate
     pub left: f32,

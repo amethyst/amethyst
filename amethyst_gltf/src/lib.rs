@@ -23,7 +23,7 @@ pub use systems::GltfSceneLoaderSystem;
 use std::ops::Range;
 
 use animation::{Animation, Sampler, SamplerPrimitive, TransformChannel};
-use assets::{Asset, Error as AssetError, Handle};
+use assets::{Asset, Error as AssetError, Handle, ProcessingState};
 use core::specs::prelude::VecStorage;
 use core::transform::Transform;
 use gfx::Primitive;
@@ -132,9 +132,9 @@ pub struct GltfSceneAsset {
     pub options: GltfSceneOptions,
 }
 
-impl Into<Result<GltfSceneAsset, AssetError>> for GltfSceneAsset {
-    fn into(self) -> Result<GltfSceneAsset, AssetError> {
-        Ok(self)
+impl Into<Result<ProcessingState<GltfSceneAsset>, AssetError>> for GltfSceneAsset {
+    fn into(self) -> Result<ProcessingState<GltfSceneAsset>, AssetError> {
+        Ok(ProcessingState::Loaded(self))
     }
 }
 

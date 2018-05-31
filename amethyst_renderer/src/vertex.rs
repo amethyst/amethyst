@@ -151,7 +151,7 @@ where
 
 /// Vertex format with position and RGBA8 color attributes.
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PosColor {
     /// Position of the vertex in 3D space.
     pub position: [f32; 3],
@@ -184,7 +184,7 @@ impl With<Color> for PosColor {
 
 /// Vertex format with position and UV texture coordinate attributes.
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PosTex {
     /// Position of the vertex in 3D space.
     pub position: [f32; 3],
@@ -217,7 +217,7 @@ impl With<TexCoord> for PosTex {
 
 /// Vertex format with position, normal, and UV texture coordinate attributes.
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PosNormTex {
     /// Position of the vertex in 3D space.
     pub position: [f32; 3],
@@ -260,7 +260,7 @@ impl With<TexCoord> for PosNormTex {
 
 /// Vertex format with position, normal, and UV texture coordinate attributes.
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PosNormTangTex {
     /// Position of the vertex in 3D space.
     pub position: [f32; 3],
