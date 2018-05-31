@@ -10,6 +10,7 @@ use amethyst::assets::{Handle, Loader};
 use amethyst::core::cgmath::{Deg, Quaternion, Rotation3, Vector3};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::Entity;
+use amethyst::input::{is_close_requested, is_key};
 use amethyst::prelude::*;
 use amethyst::renderer::*;
 use amethyst_animation::{get_animation_set, AnimationBundle, AnimationCommand, AnimationSet,
@@ -90,55 +91,36 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
 
     fn handle_event(&mut self, data: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
         let StateData { world, .. } = data;
-        match event {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            virtual_keycode: Some(VirtualKeyCode::Escape),
-                            ..
-                        },
-                    ..
+        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+            Trans::Quit
+        } else if is_key(&event, VirtualKeyCode::Space) {
+            let mut scene = world.write_resource::<Scene>();
+            let sets = world.read_storage::<AnimationSet<usize, Transform>>();
+            let animations = sets.get(scene.entity).unwrap();
+            if animations.animations.len() > 0 {
+                let animation = animations.animations.get(&scene.animation_index).unwrap();
+                let mut controls = world.write_storage();
+                let set =
+                    get_animation_set::<usize, Transform>(&mut controls, scene.entity);
+                if set.has_animation(scene.animation_index) {
+                    set.toggle(scene.animation_index);
+                } else {
+                    set.add_animation(
+                        scene.animation_index,
+                        animation,
+                        EndControl::Normal,
+                        1.0,
+                        AnimationCommand::Start,
+                    );
                 }
-                | WindowEvent::CloseRequested => Trans::Quit,
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            virtual_keycode: Some(VirtualKeyCode::Space),
-                            state: ElementState::Released,
-                            ..
-                        },
-                    ..
-                } => {
-                    let mut scene = world.write_resource::<Scene>();
-                    let sets = world.read_storage::<AnimationSet<usize, Transform>>();
-                    let animations = sets.get(scene.entity).unwrap();
-                    if animations.animations.len() > 0 {
-                        let animation = animations.animations.get(&scene.animation_index).unwrap();
-                        let mut controls = world.write_storage();
-                        let mut set =
-                            get_animation_set::<usize, Transform>(&mut controls, scene.entity);
-                        if set.has_animation(scene.animation_index) {
-                            set.toggle(scene.animation_index);
-                        } else {
-                            set.add_animation(
-                                scene.animation_index,
-                                animation,
-                                EndControl::Normal,
-                                1.0,
-                                AnimationCommand::Start,
-                            );
-                        }
-                        scene.animation_index += 1;
-                        if scene.animation_index >= animations.animations.len() {
-                            scene.animation_index = 0;
-                        }
-                    }
-                    Trans::None
+                scene.animation_index += 1;
+                if scene.animation_index >= animations.animations.len() {
+                    scene.animation_index = 0;
                 }
-                _ => Trans::None,
-            },
-            _ => Trans::None,
+            }
+            Trans::None
+        } else {
+            Trans::None
         }
     }
 

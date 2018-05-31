@@ -9,11 +9,11 @@ use amethyst::controls::{ArcBallControlTag, ArcBallMovementSystem, FlyControlTag
 use amethyst::core::cgmath::{Deg, Vector3};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::{Entity, World};
-use amethyst::input::InputBundle;
-use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, ElementState, Event,
-                         KeyboardInput, Material, MaterialDefaults, MeshHandle, ObjFormat,
+use amethyst::input::{InputBundle, is_close_requested, is_key};
+use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Event,
+                         Material, MaterialDefaults, MeshHandle, ObjFormat,
                          Pipeline, PosNormTex, Projection, RenderBundle, Rgba, Stage,
-                         VirtualKeyCode, WindowEvent};
+                         VirtualKeyCode};
 use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
 
 struct ExampleState;
@@ -51,25 +51,11 @@ impl<'a, 'b> State<GameData<'a, 'b>> for ExampleState {
     }
 
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        match event {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            virtual_keycode,
-                            state: ElementState::Pressed,
-                            ..
-                        },
-                    ..
-                } => match virtual_keycode {
-                    Some(VirtualKeyCode::Escape) => return Trans::Quit,
-                    _ => (),
-                },
-                _ => (),
-            },
-            _ => (),
+        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+            Trans::Quit
+        } else {
+            Trans::None
         }
-        Trans::None
     }
 
     fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {

@@ -10,7 +10,7 @@ use amethyst::core::cgmath::Deg;
 use amethyst::core::transform::{GlobalTransform, Parent, TransformBundle};
 use amethyst::core::Time;
 use amethyst::ecs::prelude::{Entity, System, World, Write};
-use amethyst::input::InputBundle;
+use amethyst::input::{InputBundle, is_key, is_close_requested};
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light, Mesh, Pipeline,
                          PngFormat, PointLight, PosNormTex, Projection, RenderBundle, Rgba, Stage,
@@ -20,7 +20,7 @@ use amethyst::ui::{Anchor, Anchored, DrawUi, FontAsset, MouseReactive, Stretch, 
                    TextEditing, TtfFormat, UiBundle, UiButtonBuilder, UiButtonResources, UiEvent,
                    UiFocused, UiImage, UiText, UiTransform};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
-use amethyst::winit::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
+use amethyst::winit::{Event, VirtualKeyCode};
 use genmesh::generators::SphereUV;
 use genmesh::{MapToVertices, Triangulate, Vertices};
 
@@ -238,19 +238,10 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
     }
 
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        match event {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            virtual_keycode: Some(VirtualKeyCode::Escape),
-                            ..
-                        },
-                    ..
-                } => Trans::Quit,
-                _ => Trans::None,
-            },
-            _ => Trans::None,
+        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+            Trans::Quit
+        } else {
+            Trans::None
         }
     }
 

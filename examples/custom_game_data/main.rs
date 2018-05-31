@@ -8,9 +8,9 @@ use amethyst::config::Config;
 use amethyst::core::transform::TransformBundle;
 use amethyst::ecs::prelude::{Component, Entity, Join, World};
 use amethyst::ecs::storage::NullStorage;
-use amethyst::input::InputBundle;
+use amethyst::input::{InputBundle, is_key, is_close_requested};
 use amethyst::renderer::{DisplayConfig, DrawShaded, Event, Pipeline, PosNormTex, RenderBundle,
-                         Stage};
+                         Stage, VirtualKeyCode};
 use amethyst::ui::{DrawUi, UiBundle};
 use amethyst::utils::fps_counter::FPSCounterBundle;
 use amethyst::{Application, Error, State, StateData, Trans};
@@ -18,13 +18,11 @@ use amethyst::{Application, Error, State, StateData, Trans};
 use example_system::ExampleSystem;
 use game_data::{CustomGameData, CustomGameDataBuilder};
 use graphic::{add_graphics_to_world, load_assets, Assets};
-use input::{is_exit, is_pause};
 use ui::{create_load_ui, create_paused_ui};
 
 mod example_system;
 mod game_data;
 mod graphic;
-mod input;
 mod ui;
 
 pub struct DemoState {
@@ -77,7 +75,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>> for Loading {
         _: StateData<CustomGameData>,
         event: Event,
     ) -> Trans<CustomGameData<'a, 'b>> {
-        if is_exit(event) {
+        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
             Trans::Quit
         } else {
             Trans::None
@@ -112,9 +110,9 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>> for Paused {
         data: StateData<CustomGameData>,
         event: Event,
     ) -> Trans<CustomGameData<'a, 'b>> {
-        if is_exit(event.clone()) {
+        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
             Trans::Quit
-        } else if is_pause(event) {
+        } else if is_key(&event, VirtualKeyCode::Space) {
             delete_state_tagged(data.world);
             Trans::Pop
         } else {
@@ -138,9 +136,9 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>> for Main {
         _: StateData<CustomGameData>,
         event: Event,
     ) -> Trans<CustomGameData<'a, 'b>> {
-        if is_exit(event.clone()) {
+        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
             Trans::Quit
-        } else if is_pause(event) {
+        } else if is_key(&event, VirtualKeyCode::Space) {
             Trans::Push(Box::new(Paused))
         } else {
             Trans::None

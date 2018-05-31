@@ -9,10 +9,10 @@ use amethyst::config::Config;
 use amethyst::core::cgmath::{Array, Vector3};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::World;
-use amethyst::input::InputBundle;
-use amethyst::renderer::{Camera, DisplayConfig, DrawShaded, Event, KeyboardInput, Light, Material,
+use amethyst::input::{InputBundle, is_key, is_close_requested};
+use amethyst::renderer::{Camera, DisplayConfig, DrawShaded, Event, Light, Material,
                          MaterialDefaults, Mesh, MeshData, Pipeline, PointLight, PosNormTex,
-                         Projection, RenderBundle, Rgba, Stage, VirtualKeyCode, WindowEvent};
+                         Projection, RenderBundle, Rgba, Stage, VirtualKeyCode};
 use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
 
 #[derive(Clone)]
@@ -97,25 +97,10 @@ impl<'a, 'b> State<GameData<'a, 'b>> for AssetsExample {
     }
 
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        match event {
-            Event::WindowEvent { event, .. } => {
-                match event {
-                    WindowEvent::KeyboardInput {
-                        input:
-                            KeyboardInput {
-                                virtual_keycode: Some(VirtualKeyCode::Escape),
-                                ..
-                            },
-                        ..
-                    } => {
-                        // If the user pressed the escape key, or requested the window to be closed,
-                        // quit the application.
-                        Trans::Quit
-                    }
-                    _ => Trans::None,
-                }
-            }
-            _ => Trans::None,
+        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+            Trans::Quit
+        } else {
+            Trans::None
         }
     }
 

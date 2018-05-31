@@ -13,11 +13,11 @@ use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::{Component, Entity, Join, Read, ReadStorage, System, World,
                              WriteExpect, WriteStorage};
 use amethyst::ecs::storage::NullStorage;
-use amethyst::input::InputBundle;
+use amethyst::input::{InputBundle, is_close_requested, is_key, get_key};
 use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, DisplayConfig, DrawShaded,
-                         ElementState, Event, KeyboardInput, Light, Material, MaterialDefaults,
+                         Event, Light, Material, MaterialDefaults,
                          MeshHandle, ObjFormat, Pipeline, PngFormat, PointLight, PosNormTex,
-                         Projection, RenderBundle, Rgba, Stage, VirtualKeyCode, WindowEvent};
+                         Projection, RenderBundle, Rgba, Stage, VirtualKeyCode};
 use amethyst::ui::{Anchor, Anchored, DrawUi, FontHandle, TtfFormat, UiBundle, UiText, UiTransform};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
@@ -164,19 +164,10 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Loading {
     }
 
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        match event {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            virtual_keycode: Some(VirtualKeyCode::Escape),
-                            ..
-                        },
-                    ..
-                } => Trans::Quit,
-                _ => Trans::None,
-            },
-            _ => Trans::None,
+        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+            Trans::Quit
+        } else {
+            Trans::None
         }
     }
 
@@ -299,84 +290,58 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
         // Exit if user hits Escape or closes the window
         let mut state = w.write_resource::<DemoState>();
 
-        match event {
-            Event::WindowEvent { event, .. } => {
-                match event {
-                    WindowEvent::KeyboardInput {
-                        input:
-                            KeyboardInput {
-                                virtual_keycode,
-                                state: ElementState::Pressed,
-                                ..
-                            },
-                        ..
-                    } => {
-                        match virtual_keycode {
-                            Some(VirtualKeyCode::Escape) => return Trans::Quit,
-                            Some(VirtualKeyCode::Space) => {
-                                // TODO: figure out how to change pipeline
-                                /*if state.pipeline_forward {
-                                    state.pipeline_forward = false;
-                                    set_pipeline_state(pipe, false);
-                                } else {
-                                    state.pipeline_forward = true;
-                                    set_pipeline_state(pipe, true);
-                                }*/
-                            }
-                            Some(VirtualKeyCode::R) => {
-                                state.light_color = [0.8, 0.2, 0.2, 1.0];
-                            }
-                            Some(VirtualKeyCode::G) => {
-                                state.light_color = [0.2, 0.8, 0.2, 1.0];
-                            }
-                            Some(VirtualKeyCode::B) => {
-                                state.light_color = [0.2, 0.2, 0.8, 1.0];
-                            }
-                            Some(VirtualKeyCode::W) => {
-                                state.light_color = [1.0, 1.0, 1.0, 1.0];
-                            }
-                            Some(VirtualKeyCode::A) => {
-                                let mut color = w.write_resource::<AmbientColor>();
-                                if state.ambient_light {
-                                    state.ambient_light = false;
-                                    color.0 = [0.0; 3].into();
-                                } else {
-                                    state.ambient_light = true;
-                                    color.0 = [0.01; 3].into();
-                                }
-                            }
-                            Some(VirtualKeyCode::D) => {
-                                let mut lights = w.write_storage::<Light>();
-
-                                if state.directional_light {
-                                    state.directional_light = false;
-                                    for light in (&mut lights).join() {
-                                        if let Light::Directional(ref mut d) = *light {
-                                            d.color = [0.0; 4].into();
-                                        }
-                                    }
-                                } else {
-                                    state.directional_light = true;
-                                    for light in (&mut lights).join() {
-                                        if let Light::Directional(ref mut d) = *light {
-                                            d.color = [0.2; 4].into();
-                                        }
-                                    }
-                                }
-                            }
-                            Some(VirtualKeyCode::P) => if state.point_light {
-                                state.point_light = false;
-                                state.light_color = [0.0; 4].into();
-                            } else {
-                                state.point_light = true;
-                                state.light_color = [1.0; 4].into();
-                            },
-                            _ => (),
-                        }
-                    }
-                    _ => (),
+        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+            return Trans::Quit;
+        }
+        match get_key(&event) {
+            Some(VirtualKeyCode::R) => {
+                state.light_color = [0.8, 0.2, 0.2, 1.0];
+            }
+            Some(VirtualKeyCode::G) => {
+                state.light_color = [0.2, 0.8, 0.2, 1.0];
+            }
+            Some(VirtualKeyCode::B) => {
+                state.light_color = [0.2, 0.2, 0.8, 1.0];
+            }
+            Some(VirtualKeyCode::W) => {
+                state.light_color = [1.0, 1.0, 1.0, 1.0];
+            }
+            Some(VirtualKeyCode::A) => {
+                let mut color = w.write_resource::<AmbientColor>();
+                if state.ambient_light {
+                    state.ambient_light = false;
+                    color.0 = [0.0; 3].into();
+                } else {
+                    state.ambient_light = true;
+                    color.0 = [0.01; 3].into();
                 }
             }
+            Some(VirtualKeyCode::D) => {
+                let mut lights = w.write_storage::<Light>();
+
+                if state.directional_light {
+                    state.directional_light = false;
+                    for light in (&mut lights).join() {
+                        if let Light::Directional(ref mut d) = *light {
+                            d.color = [0.0; 4].into();
+                        }
+                    }
+                } else {
+                    state.directional_light = true;
+                    for light in (&mut lights).join() {
+                        if let Light::Directional(ref mut d) = *light {
+                            d.color = [0.2; 4].into();
+                        }
+                    }
+                }
+            }
+            Some(VirtualKeyCode::P) => if state.point_light {
+                state.point_light = false;
+                state.light_color = [0.0; 4].into();
+            } else {
+                state.point_light = true;
+                state.light_color = [1.0; 4].into();
+            },
             _ => (),
         }
         Trans::None
