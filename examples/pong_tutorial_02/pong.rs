@@ -2,9 +2,10 @@ use amethyst::assets::Loader;
 use amethyst::core::cgmath::Vector3;
 use amethyst::core::transform::{GlobalTransform, Transform};
 use amethyst::ecs::prelude::{Component, DenseVecStorage};
+use amethyst::input::{is_close_requested, is_key};
 use amethyst::prelude::*;
-use amethyst::renderer::{Camera, Event, KeyboardInput, Material, MaterialDefaults, MeshHandle,
-                         PosTex, VirtualKeyCode, WindowEvent};
+use amethyst::renderer::{Camera, Event, Material, MaterialDefaults, MeshHandle,
+                         PosTex, VirtualKeyCode};
 
 const PADDLE_HEIGHT: f32 = 0.30;
 const PADDLE_WIDTH: f32 = 0.05;
@@ -21,19 +22,10 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
     }
 
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        match event {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            virtual_keycode: Some(VirtualKeyCode::Escape),
-                            ..
-                        },
-                    ..
-                } => Trans::Quit,
-                _ => Trans::None,
-            },
-            _ => Trans::None,
+        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+            Trans::Quit
+        } else {
+            Trans::None
         }
     }
 

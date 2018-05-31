@@ -7,10 +7,11 @@ use amethyst::assets::Loader;
 use amethyst::core::cgmath::Deg;
 use amethyst::core::transform::GlobalTransform;
 use amethyst::ecs::prelude::World;
+use amethyst::input::{is_key, is_close_requested};
 use amethyst::prelude::*;
-use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Event, KeyboardInput,
+use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Event,
                          Light, Mesh, Pipeline, PointLight, PosNormTex, Projection, RenderBundle,
-                         Rgba, Stage, VirtualKeyCode, WindowEvent};
+                         Rgba, Stage, VirtualKeyCode};
 use genmesh::generators::SphereUV;
 use genmesh::{MapToVertices, Triangulate, Vertices};
 
@@ -34,19 +35,10 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
     }
 
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        match event {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            virtual_keycode: Some(VirtualKeyCode::Escape),
-                            ..
-                        },
-                    ..
-                } => Trans::Quit,
-                _ => Trans::None,
-            },
-            _ => Trans::None,
+        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+            Trans::Quit
+        } else {
+            Trans::None
         }
     }
 

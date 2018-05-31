@@ -110,9 +110,9 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>> for Paused {
         data: StateData<CustomGameData>,
         event: Event,
     ) -> Trans<CustomGameData<'a, 'b>> {
-        if is_exit(event.clone()) {
+        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
             Trans::Quit
-        } else if is_pause(event) {
+        } else if is_key(&event, VirtualKeyCode::Space) {
             delete_paused_ui(data.world);
             Trans::Pop
         } else {
@@ -136,9 +136,9 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>> for Main {
         _: StateData<CustomGameData>,
         event: Event,
     ) -> Trans<CustomGameData<'a, 'b>> {
-        if is_exit(event.clone()) {
+        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
             Trans::Quit
-        } else if is_pause(event) {
+        } else if is_key(&event, VirtualKeyCode::Space) {
             Trans::Push(Box::new(Paused))
         } else {
             Trans::None

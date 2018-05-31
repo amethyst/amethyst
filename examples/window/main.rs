@@ -2,27 +2,19 @@
 
 extern crate amethyst;
 
+use amethyst::input::{is_close_requested, is_key};
 use amethyst::prelude::*;
-use amethyst::renderer::{DisplayConfig, DrawFlat, Event, KeyboardInput, Pipeline, PosNormTex,
-                         RenderBundle, Stage, VirtualKeyCode, WindowEvent};
+use amethyst::renderer::{DisplayConfig, DrawFlat, Event, Pipeline, PosNormTex,
+                         RenderBundle, Stage, VirtualKeyCode};
 
 struct Example;
 
 impl<'a, 'b> State<GameData<'a, 'b>> for Example {
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        match event {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            virtual_keycode: Some(VirtualKeyCode::Escape),
-                            ..
-                        },
-                    ..
-                } => Trans::Quit,
-                _ => Trans::None,
-            },
-            _ => Trans::None,
+        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+            Trans::Quit
+        } else {
+            Trans::None
         }
     }
 

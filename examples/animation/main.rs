@@ -10,10 +10,11 @@ use amethyst::assets::{AssetStorage, Handle, Loader};
 use amethyst::core::cgmath::Deg;
 use amethyst::core::{GlobalTransform, Parent, Transform, TransformBundle};
 use amethyst::ecs::prelude::{Entity, World};
+use amethyst::input::{get_key, is_key, is_close_requested};
 use amethyst::prelude::*;
-use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, ElementState, Event,
-                         KeyboardInput, Light, Mesh, Pipeline, PointLight, PosNormTex, Projection,
-                         RenderBundle, Rgba, Stage, VirtualKeyCode, WindowEvent};
+use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Event,
+                         Light, Mesh, Pipeline, PointLight, PosNormTex, Projection,
+                         RenderBundle, Rgba, Stage, VirtualKeyCode};
 use genmesh::generators::SphereUV;
 use genmesh::{MapToVertices, Triangulate, Vertices};
 
@@ -65,123 +66,101 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
 
     fn handle_event(&mut self, data: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
         let StateData { world, .. } = data;
-        match event {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            virtual_keycode: Some(VirtualKeyCode::Escape),
-                            ..
-                        },
-                    ..
-                } => Trans::Quit,
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            virtual_keycode,
-                            state: ElementState::Released,
-                            ..
-                        },
-                    ..
-                } => {
-                    match virtual_keycode {
-                        Some(VirtualKeyCode::Space) => {
-                            add_animation(
-                                world,
-                                self.sphere.unwrap(),
-                                self.current_animation,
-                                self.rate,
-                                None,
-                                true,
-                            );
-                        }
-
-                        Some(VirtualKeyCode::D) => {
-                            add_animation(
-                                world,
-                                self.sphere.unwrap(),
-                                AnimationId::Translate,
-                                self.rate,
-                                None,
-                                false,
-                            );
-                            add_animation(
-                                world,
-                                self.sphere.unwrap(),
-                                AnimationId::Rotate,
-                                self.rate,
-                                Some((AnimationId::Translate, DeferStartRelation::End)),
-                                false,
-                            );
-                            add_animation(
-                                world,
-                                self.sphere.unwrap(),
-                                AnimationId::Scale,
-                                self.rate,
-                                Some((AnimationId::Rotate, DeferStartRelation::Start(0.666))),
-                                false,
-                            );
-                        }
-
-                        Some(VirtualKeyCode::Left) => {
-                            get_animation_set::<AnimationId, Transform>(
-                                &mut world.write_storage(),
-                                self.sphere.unwrap().clone(),
-                            ).step(self.current_animation, StepDirection::Backward);
-                        }
-
-                        Some(VirtualKeyCode::Right) => {
-                            get_animation_set::<AnimationId, Transform>(
-                                &mut world.write_storage(),
-                                self.sphere.unwrap().clone(),
-                            ).step(self.current_animation, StepDirection::Forward);
-                        }
-
-                        Some(VirtualKeyCode::F) => {
-                            self.rate = 1.0;
-                            get_animation_set::<AnimationId, Transform>(
-                                &mut world.write_storage(),
-                                self.sphere.unwrap().clone(),
-                            ).set_rate(self.current_animation, self.rate);
-                        }
-
-                        Some(VirtualKeyCode::V) => {
-                            self.rate = 0.0;
-                            get_animation_set::<AnimationId, Transform>(
-                                &mut world.write_storage(),
-                                self.sphere.unwrap().clone(),
-                            ).set_rate(self.current_animation, self.rate);
-                        }
-
-                        Some(VirtualKeyCode::H) => {
-                            self.rate = 0.5;
-                            get_animation_set::<AnimationId, Transform>(
-                                &mut world.write_storage(),
-                                self.sphere.unwrap().clone(),
-                            ).set_rate(self.current_animation, self.rate);
-                        }
-
-                        Some(VirtualKeyCode::R) => {
-                            self.current_animation = AnimationId::Rotate;
-                        }
-
-                        Some(VirtualKeyCode::S) => {
-                            self.current_animation = AnimationId::Scale;
-                        }
-
-                        Some(VirtualKeyCode::T) => {
-                            self.current_animation = AnimationId::Translate;
-                        }
-
-                        _ => {}
-                    }
-
-                    Trans::None
-                }
-                _ => Trans::None,
-            },
-            _ => Trans::None,
+        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+            return Trans::Quit;
         }
+        match get_key(&event) {
+            Some(VirtualKeyCode::Space) => {
+                add_animation(
+                    world,
+                    self.sphere.unwrap(),
+                    self.current_animation,
+                    self.rate,
+                    None,
+                    true,
+                );
+            }
+
+            Some(VirtualKeyCode::D) => {
+                add_animation(
+                    world,
+                    self.sphere.unwrap(),
+                    AnimationId::Translate,
+                    self.rate,
+                    None,
+                    false,
+                );
+                add_animation(
+                    world,
+                    self.sphere.unwrap(),
+                    AnimationId::Rotate,
+                    self.rate,
+                    Some((AnimationId::Translate, DeferStartRelation::End)),
+                    false,
+                );
+                add_animation(
+                    world,
+                    self.sphere.unwrap(),
+                    AnimationId::Scale,
+                    self.rate,
+                    Some((AnimationId::Rotate, DeferStartRelation::Start(0.666))),
+                    false,
+                );
+            }
+
+            Some(VirtualKeyCode::Left) => {
+                get_animation_set::<AnimationId, Transform>(
+                    &mut world.write_storage(),
+                    self.sphere.unwrap().clone(),
+                ).step(self.current_animation, StepDirection::Backward);
+            }
+
+            Some(VirtualKeyCode::Right) => {
+                get_animation_set::<AnimationId, Transform>(
+                    &mut world.write_storage(),
+                    self.sphere.unwrap().clone(),
+                ).step(self.current_animation, StepDirection::Forward);
+            }
+
+            Some(VirtualKeyCode::F) => {
+                self.rate = 1.0;
+                get_animation_set::<AnimationId, Transform>(
+                    &mut world.write_storage(),
+                    self.sphere.unwrap().clone(),
+                ).set_rate(self.current_animation, self.rate);
+            }
+
+            Some(VirtualKeyCode::V) => {
+                self.rate = 0.0;
+                get_animation_set::<AnimationId, Transform>(
+                    &mut world.write_storage(),
+                    self.sphere.unwrap().clone(),
+                ).set_rate(self.current_animation, self.rate);
+            }
+
+            Some(VirtualKeyCode::H) => {
+                self.rate = 0.5;
+                get_animation_set::<AnimationId, Transform>(
+                    &mut world.write_storage(),
+                    self.sphere.unwrap().clone(),
+                ).set_rate(self.current_animation, self.rate);
+            }
+
+            Some(VirtualKeyCode::R) => {
+                self.current_animation = AnimationId::Rotate;
+            }
+
+            Some(VirtualKeyCode::S) => {
+                self.current_animation = AnimationId::Scale;
+            }
+
+            Some(VirtualKeyCode::T) => {
+                self.current_animation = AnimationId::Translate;
+            }
+
+            _ => {}
+        };
+        Trans::None
     }
 
     fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {

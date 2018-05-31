@@ -24,11 +24,11 @@ use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::cgmath::{Matrix4, Point3, Transform as CgTransform, Vector3};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::Entity;
-use amethyst::input::InputBundle;
+use amethyst::input::{InputBundle, is_close_requested, is_key};
 use amethyst::prelude::*;
-use amethyst::renderer::{Camera, ColorMask, DisplayConfig, DrawFlat, Event, KeyboardInput,
+use amethyst::renderer::{Camera, ColorMask, DisplayConfig, DrawFlat, Event,
                          Material, MaterialDefaults, Mesh, Pipeline, PosTex, Projection,
-                         RenderBundle, ScreenDimensions, Stage, VirtualKeyCode, WindowEvent, ALPHA};
+                         RenderBundle, ScreenDimensions, Stage, VirtualKeyCode, ALPHA};
 use amethyst::ui::{DrawUi, UiBundle};
 
 const BACKGROUND_COLOUR: [f32; 4] = [0.0, 0.0, 0.0, 1.0]; // black
@@ -155,20 +155,10 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
     }
 
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        match event {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            virtual_keycode: Some(VirtualKeyCode::Escape),
-                            ..
-                        },
-                    ..
-                }
-                | WindowEvent::CloseRequested => Trans::Quit,
-                _ => Trans::None,
-            },
-            _ => Trans::None,
+        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+            Trans::Quit
+        } else {
+            Trans::None
         }
     }
 
