@@ -75,11 +75,6 @@ where
         }
     }
 
-    /// Returns the size in pixels of the window.
-    pub fn window_size(&self) -> Option<(u32, u32)> {
-        self.renderer.window().get_inner_size()
-    }
-
     fn asset_loading(
         &mut self,
         (time, pool, strategy, mut mesh_storage, mut texture_storage): AssetLoadingData,
@@ -177,9 +172,10 @@ where
 
         let mat = create_default_mat(res);
         res.insert(MaterialDefaults(mat));
-        let (width, height) = self.window_size()
+        let (width, height) = self.renderer.window().get_inner_size()
             .expect("Window closed during initialization!");
-        res.insert(ScreenDimensions::new(width, height));
+        let hidpi = self.renderer.window().hidpi_factor();
+        res.insert(ScreenDimensions::new(width, height, hidpi));
     }
 }
 
