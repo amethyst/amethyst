@@ -1,6 +1,6 @@
 //! Provides structures used to load audio files.
 
-use amethyst_assets::{Asset, Handle, Result};
+use amethyst_assets::{Asset, Handle, ProcessingState, Result};
 use amethyst_core::specs::prelude::VecStorage;
 
 use formats::AudioData;
@@ -27,8 +27,8 @@ impl Asset for Source {
     type HandleStorage = VecStorage<SourceHandle>;
 }
 
-impl Into<Result<Source>> for AudioData {
-    fn into(self) -> Result<Source> {
-        Ok(Source { bytes: self.0 })
+impl Into<Result<ProcessingState<Source>>> for AudioData {
+    fn into(self) -> Result<ProcessingState<Source>> {
+        Ok(ProcessingState::Loaded(Source { bytes: self.0 }))
     }
 }

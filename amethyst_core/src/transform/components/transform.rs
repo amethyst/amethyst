@@ -12,7 +12,7 @@ use specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
 /// If this component is used, and `TransformSystem` is not used, then make sure to clear the flags
 /// on the `FlaggedStorage` at the appropriate times (before updating any `Transform` in the frame).
 /// See documentation on `FlaggedStorage` for more information.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct GlobalTransform(pub Matrix4<f32>);
 
 impl GlobalTransform {

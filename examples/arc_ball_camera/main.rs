@@ -9,11 +9,10 @@ use amethyst::controls::{ArcBallControlTag, ArcBallMovementSystem, CursorHideSys
 use amethyst::core::cgmath::{Deg, Vector3};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::{Entity, World};
-use amethyst::input::{InputBundle, is_close_requested, is_key};
-use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Event,
-                         Material, MaterialDefaults, MeshHandle, ObjFormat,
-                         Pipeline, PosNormTex, Projection, RenderBundle, Rgba, Stage,
-                         VirtualKeyCode};
+use amethyst::input::{is_close_requested, is_key, InputBundle};
+use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Event, Material,
+                         MaterialDefaults, MeshHandle, ObjFormat, Pipeline, PosNormTex,
+                         Projection, RenderBundle, Rgba, Stage, VirtualKeyCode};
 use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
 
 struct ExampleState;

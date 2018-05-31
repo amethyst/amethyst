@@ -1,5 +1,4 @@
-use amethyst_core::specs::prelude::{Component, Entity};
-use amethyst_core::specs::storage::{HashMapStorage, NullStorage};
+use amethyst_core::specs::prelude::{Component, Entity, HashMapStorage, NullStorage};
 
 /// Add this to a camera if you want it to be a fly camera.
 /// You need to add the FlyControlBundle or the required systems for it to work.

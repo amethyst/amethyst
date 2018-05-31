@@ -11,7 +11,8 @@ use specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
 /// Used for rendering position and orientation.
 ///
 /// The transforms are preformed in this order: scale, then rotation, then translation.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
 pub struct Transform {
     /// Quaternion [w (scalar), x, y, z]
     pub rotation: Quaternion<f32>,

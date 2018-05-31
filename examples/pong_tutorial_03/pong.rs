@@ -2,10 +2,10 @@ use amethyst::assets::Loader;
 use amethyst::core::cgmath::Vector3;
 use amethyst::core::transform::{GlobalTransform, Transform};
 use amethyst::ecs::prelude::{Component, DenseVecStorage};
-use amethyst::input::{is_key, is_close_requested};
+use amethyst::input::{is_close_requested, is_key};
 use amethyst::prelude::*;
-use amethyst::renderer::{Camera, Event, Material, MaterialDefaults, MeshHandle,
-                         PosTex, VirtualKeyCode};
+use amethyst::renderer::{Camera, Event, Material, MaterialDefaults, MeshHandle, PosTex,
+                         VirtualKeyCode};
 
 pub const PADDLE_HEIGHT: f32 = 0.30;
 pub const PADDLE_WIDTH: f32 = 0.05;

@@ -8,7 +8,7 @@ use amethyst::config::Config;
 use amethyst::core::transform::TransformBundle;
 use amethyst::ecs::prelude::{Component, Entity, Join, World};
 use amethyst::ecs::storage::NullStorage;
-use amethyst::input::{InputBundle, is_key, is_close_requested};
+use amethyst::input::{is_close_requested, is_key, InputBundle};
 use amethyst::renderer::{DisplayConfig, DrawShaded, Event, Pipeline, PosNormTex, RenderBundle,
                          Stage, VirtualKeyCode};
 use amethyst::ui::{DrawUi, UiBundle};

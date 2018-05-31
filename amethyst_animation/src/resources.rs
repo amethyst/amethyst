@@ -4,7 +4,7 @@ use std::hash::Hash;
 use std::marker;
 use std::time::Duration;
 
-use amethyst_assets::{Asset, AssetStorage, Handle, Result};
+use amethyst_assets::{Asset, AssetStorage, Handle, ProcessingState, Result};
 use amethyst_core::shred::SystemData;
 use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entity, VecStorage, WriteStorage};
 use amethyst_core::timing::{duration_to_secs, secs_to_duration};
@@ -97,16 +97,17 @@ where
     type HandleStorage = VecStorage<Handle<Self>>;
 }
 
-impl<T> Into<Result<Sampler<T>>> for Sampler<T>
+impl<T> Into<Result<ProcessingState<Sampler<T>>>> for Sampler<T>
 where
-    T: InterpolationPrimitive,
+    T: InterpolationPrimitive + Send + Sync + 'static,
 {
-    fn into(self) -> Result<Sampler<T>> {
-        Ok(self)
+    fn into(self) -> Result<ProcessingState<Sampler<T>>> {
+        Ok(ProcessingState::Loaded(self))
     }
 }
 
 /// Define the rest state for a component on an entity
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RestState<T> {
     state: T,
 }
@@ -276,12 +277,12 @@ where
     type HandleStorage = VecStorage<Handle<Self>>;
 }
 
-impl<T> Into<Result<Animation<T>>> for Animation<T>
+impl<T> Into<Result<ProcessingState<Animation<T>>>> for Animation<T>
 where
     T: AnimationSampling,
 {
-    fn into(self) -> Result<Animation<T>> {
-        Ok(self)
+    fn into(self) -> Result<ProcessingState<Animation<T>>> {
+        Ok(ProcessingState::Loaded(self))
     }
 }
 
@@ -873,6 +874,18 @@ where
     T: AnimationSampling,
 {
     pub animations: FnvHashMap<I, Handle<Animation<T>>>,
+}
+
+impl<I, T> Default for AnimationSet<I, T>
+where
+    I: Eq + Hash,
+    T: AnimationSampling,
+{
+    fn default() -> Self {
+        AnimationSet {
+            animations: FnvHashMap::default(),
+        }
+    }
 }
 
 impl<I, T> AnimationSet<I, T>

@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::{Arc, Weak};
+use std::sync::{Arc, Mutex, Weak};
 
 use amethyst_core::specs::prelude::{Component, Read, ReadExpect, System, VecStorage, Write};
 use amethyst_core::specs::storage::UnprotectedStorage;
@@ -37,6 +37,18 @@ pub struct AssetStorage<A: Asset> {
     pub(crate) processed: Arc<MsQueue<Processed<A>>>,
     reloads: Vec<(WeakHandle<A>, Box<Reload<A>>)>,
     unused_handles: MsQueue<Handle<A>>,
+    requeue: Mutex<Vec<Processed<A>>>,
+}
+
+/// Returned by processor systems, describes the loading state of the asset.
+pub enum ProcessingState<A>
+where
+    A: Asset,
+{
+    /// Asset is not fully loaded yet, need to wait longer
+    Loading(A::Data),
+    /// Asset have finished loading, can now be inserted into storage and tracker notified
+    Loaded(A),
 }
 
 impl<A: Asset> AssetStorage<A> {
@@ -114,7 +126,7 @@ impl<A: Asset> AssetStorage<A> {
         pool: &ThreadPool,
         strategy: Option<&HotReloadStrategy>,
     ) where
-        F: FnMut(A::Data) -> Result<A>,
+        F: FnMut(A::Data) -> Result<ProcessingState<A>>,
     {
         self.process_custom_drop(f, |_| {}, frame_number, pool, strategy);
     }
@@ -130,120 +142,145 @@ impl<A: Asset> AssetStorage<A> {
         strategy: Option<&HotReloadStrategy>,
     ) where
         D: FnMut(A),
-        F: FnMut(A::Data) -> Result<A>,
+        F: FnMut(A::Data) -> Result<ProcessingState<A>>,
     {
-        while let Some(processed) = self.processed.try_pop() {
-            let assets = &mut self.assets;
-            let bitset = &mut self.bitset;
-            let handles = &mut self.handles;
-            let reloads = &mut self.reloads;
+        {
+            let requeue = self.requeue.get_mut().unwrap();
+            while let Some(processed) = self.processed.try_pop() {
+                let assets = &mut self.assets;
+                let bitset = &mut self.bitset;
+                let handles = &mut self.handles;
+                let reloads = &mut self.reloads;
 
-            let f = &mut f;
-            let (reload_obj, handle) = match processed {
-                Processed::NewAsset {
-                    data,
-                    handle,
-                    name,
-                    tracker,
-                } => {
-                    let (asset, reload_obj) = match data.map(|FormatValue { data, reload }| {
-                        (data, reload)
-                    }).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
-                        .chain_err(|| ErrorKind::Asset(name.clone()))
-                    {
-                        Ok(x) => {
-                            debug!(
-                                "{:?}: Asset {:?} (handle id: {:?}) has been loaded successfully",
-                                A::NAME,
-                                name,
-                                handle,
-                            );
-                            tracker.success();
-
-                            x
-                        }
-                        Err(e) => {
-                            error!(
-                                "{:?}: Asset {:?} (handle id: {:?}) could not be loaded: {}",
-                                A::NAME,
-                                name,
-                                handle,
-                                e,
-                            );
-                            tracker.fail(e);
-
-                            continue;
-                        }
-                    };
-
-                    // Add a warning if a handle is unique (i.e. asset does not
-                    // need to be loaded as it is not used by anything)
-                    // https://github.com/amethyst/amethyst/issues/628
-                    if handle.is_unique() {
-                        warn!(
-                            "Loading unecessary asset. Handle {} is unique ",
-                            handle.id()
-                        );
-                    }
-
-                    let id = handle.id();
-                    bitset.add(id);
-                    handles.push(handle.clone());
-
-                    // NOTE: the loader has to ensure that a handle will be used
-                    // together with a `Data` only once.
-                    unsafe {
-                        assets.insert(id, asset);
-                    }
-
-                    (reload_obj, handle)
-                }
-                Processed::HotReload {
-                    data,
-                    handle,
-                    name,
-                    old_reload,
-                } => {
-                    let (asset, reload_obj) = match data.map(|FormatValue { data, reload }| {
-                        (data, reload)
-                    }).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
-                        .chain_err(|| ErrorKind::Asset(name.clone()))
-                    {
-                        Ok(x) => x,
-                        Err(e) => {
-                            error!(
-                                "{:?}: Failed to hot-reload asset {:?} (handle id: {:?}): {}\n\
-                                 Falling back to old reload object.",
-                                A::NAME,
-                                name,
-                                handle,
-                                e,
-                            );
-
-                            reloads.push((handle.downgrade(), old_reload));
-
-                            continue;
-                        }
-                    };
-
-                    let id = handle.id();
-                    assert!(
-                        bitset.contains(id),
-                        "Expected handle {:?} to be valid, but the asset storage says otherwise",
+                let f = &mut f;
+                let (reload_obj, handle) = match processed {
+                    Processed::NewAsset {
+                        data,
                         handle,
-                    );
-                    unsafe {
-                        let old = assets.get_mut(id);
-                        *old = asset;
+                        name,
+                        tracker,
+                    } => {
+                        let (asset, reload_obj) = match data.map(|FormatValue { data, reload }| {
+                            (data, reload)
+                        }).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
+                            .chain_err(|| ErrorKind::Asset(name.clone()))
+                        {
+                            Ok((ProcessingState::Loaded(x), r)) => {
+                                debug!(
+                                        "{:?}: Asset {:?} (handle id: {:?}) has been loaded successfully",
+                                        A::NAME,
+                                        name,
+                                        handle,
+                                    );
+                                tracker.success();
+
+                                (x, r)
+                            }
+                            Ok((ProcessingState::Loading(x), r)) => {
+                                debug!(
+                                        "{:?}: Asset {:?} (handle id: {:?}) is not complete, readding to queue",
+                                        A::NAME,
+                                        name,
+                                        handle,
+                                    );
+                                requeue.push(Processed::NewAsset {
+                                    data: Ok(FormatValue { data: x, reload: r }),
+                                    handle,
+                                    name,
+                                    tracker,
+                                });
+                                continue;
+                            }
+                            Err(e) => {
+                                error!(
+                                    "{:?}: Asset {:?} (handle id: {:?}) could not be loaded: {}",
+                                    A::NAME,
+                                    name,
+                                    handle,
+                                    e,
+                                );
+                                tracker.fail(e);
+
+                                continue;
+                            }
+                        };
+
+                        // Add a warning if a handle is unique (i.e. asset does not
+                        // need to be loaded as it is not used by anything)
+                        // https://github.com/amethyst/amethyst/issues/628
+                        if handle.is_unique() {
+                            warn!(
+                                "Loading unecessary asset. Handle {} is unique ",
+                                handle.id()
+                            );
+                        }
+
+                        let id = handle.id();
+                        bitset.add(id);
+                        handles.push(handle.clone());
+
+                        // NOTE: the loader has to ensure that a handle will be used
+                        // together with a `Data` only once.
+                        unsafe {
+                            assets.insert(id, asset);
+                        }
+
+                        (reload_obj, handle)
                     }
+                    Processed::HotReload {
+                        data,
+                        handle,
+                        name,
+                        old_reload,
+                    } => {
+                        let (asset, reload_obj) = match data.map(|FormatValue { data, reload }| {
+                            (data, reload)
+                        }).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
+                            .chain_err(|| ErrorKind::Asset(name.clone()))
+                        {
+                            Ok((ProcessingState::Loaded(x), r)) => (x, r),
+                            Ok(..) => {
+                                continue; // FIXME
+                            }
+                            Err(e) => {
+                                error!(
+                                    "{:?}: Failed to hot-reload asset {:?} (handle id: {:?}): {}\n\
+                                     Falling back to old reload object.",
+                                    A::NAME,
+                                    name,
+                                    handle,
+                                    e,
+                                );
 
-                    (reload_obj, handle)
+                                reloads.push((handle.downgrade(), old_reload));
+
+                                continue;
+                            }
+                        };
+
+                        let id = handle.id();
+                        assert!(
+                            bitset.contains(id),
+                            "Expected handle {:?} to be valid, but the asset storage says otherwise",
+                            handle,
+                        );
+                        unsafe {
+                            let old = assets.get_mut(id);
+                            *old = asset;
+                        }
+
+                        (reload_obj, handle)
+                    }
+                };
+
+                // Add the reload obj if it is `Some`.
+                if let Some(reload_obj) = reload_obj {
+                    reloads.push((handle.downgrade(), reload_obj));
                 }
-            };
+            }
 
-            // Add the reload obj if it is `Some`.
-            if let Some(reload_obj) = reload_obj {
-                reloads.push((handle.downgrade(), reload_obj));
+            for p in requeue.drain(..) {
+                self.processed.push(p);
             }
         }
 
@@ -330,6 +367,7 @@ impl<A: Asset> Default for AssetStorage<A> {
             processed: Arc::new(MsQueue::new()),
             reloads: Default::default(),
             unused_handles: MsQueue::new(),
+            requeue: Mutex::new(Vec::default()),
         }
     }
 }
@@ -364,7 +402,7 @@ impl<A> Processor<A> {
 impl<'a, A> System<'a> for Processor<A>
 where
     A: Asset,
-    A::Data: Into<Result<A>>,
+    A::Data: Into<Result<ProcessingState<A>>>,
 {
     type SystemData = (
         Write<'a, AssetStorage<A>>,

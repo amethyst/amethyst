@@ -9,7 +9,7 @@ use amethyst::config::Config;
 use amethyst::core::cgmath::{Array, Vector3};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::World;
-use amethyst::input::{InputBundle, is_key, is_close_requested};
+use amethyst::input::{is_close_requested, is_key, InputBundle};
 use amethyst::renderer::{Camera, DisplayConfig, DrawShaded, Event, Light, Material,
                          MaterialDefaults, Mesh, MeshData, Pipeline, PointLight, PosNormTex,
                          Projection, RenderBundle, Rgba, Stage, VirtualKeyCode};

@@ -10,7 +10,7 @@ use amethyst::core::cgmath::Deg;
 use amethyst::core::transform::{GlobalTransform, Parent, TransformBundle};
 use amethyst::core::Time;
 use amethyst::ecs::prelude::{Entity, System, World, Write};
-use amethyst::input::{InputBundle, is_key, is_close_requested};
+use amethyst::input::{is_close_requested, is_key, InputBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light, Mesh, Pipeline,
                          PngFormat, PointLight, PosNormTex, Projection, RenderBundle, Rgba, Stage,
