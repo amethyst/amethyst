@@ -206,6 +206,7 @@ fn create_default_mat(res: &mut Resources) -> Material {
     let caveat = loader.load_from_data(caveat, (), &tex_storage);
 
     Material {
+        alpha_cutoff: 0.01,
         albedo,
         albedo_offset: TextureOffset::default(),
         emission,

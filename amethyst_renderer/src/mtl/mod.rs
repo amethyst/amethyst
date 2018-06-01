@@ -25,6 +25,8 @@ impl Default for TextureOffset {
 /// Material struct.
 #[derive(Clone, PartialEq)]
 pub struct Material {
+    /// Alpha cutoff: the value at which we do not draw the pixel
+    pub alpha_cutoff: f32,
     /// Diffuse map.
     pub albedo: TextureHandle,
     /// Diffuse texture offset
