@@ -18,6 +18,7 @@ pub use self::button::Button;
 pub use self::event::InputEvent;
 pub use self::input_handler::InputHandler;
 pub use self::system::InputSystem;
+pub use self::util::{is_close_requested, is_key, get_key};
 
 use std::iter::{Chain, FlatMap, Iterator, Map};
 use std::slice::Iter;
@@ -33,6 +34,7 @@ mod input_handler;
 mod local_mouse_button;
 mod local_virtual_key_code;
 mod system;
+mod util;
 
 // This entire set ot types is to be eliminated once impl Trait is released.
 

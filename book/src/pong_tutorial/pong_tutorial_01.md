@@ -19,6 +19,7 @@ extern crate amethyst;
 
 use amethyst::Result;
 use amethyst::prelude::*;
+use amethyst::input::{is_close_requested, is_key};
 use amethyst::renderer::{DisplayConfig, DrawFlat, Event, KeyboardInput,
                          Pipeline, PosTex, RenderBundle, Stage, 
                          VirtualKeyCode, WindowEvent};
@@ -41,19 +42,10 @@ just implement one method:
 ```rust,ignore
 impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        match event {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            virtual_keycode: Some(VirtualKeyCode::Escape),
-                            ..
-                        },
-                    ..
-                } => Trans::Quit,
-                _ => Trans::None,
-            },
-            _ => Trans::None,
+        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+            Trans::Quit
+        } else {
+            Trans::None
         }
     }
 
@@ -66,10 +58,10 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
 
 The `handle_event` method is executed for every event before updating, and it's 
 used to react to events. It returns a `Trans`, which is an enum of state machine 
-transitions. In this case, we're watching for the Escape keycode from the 
-Window. If we receive it, we'll return `Trans::Quit` which will be used to clean 
-up the `State` and close the application. All other keyboard input is ignored 
-for now.
+transitions. In this case, we're watching for the Escape keycode, and the 
+`CloseRequested` event from the Window. If we receive it, we'll return 
+`Trans::Quit` which will be used to clean up the `State` and close the application.
+All other keyboard input is ignored or now.
 
 The `update` method is executed after events have happened.  In this instance
 we're just using it to execute our dispatcher.  More on that later.
