@@ -2,7 +2,6 @@ pub use imagefmt::Error as ImageError;
 
 use std::io::Cursor;
 
-use Renderer;
 use amethyst_assets::{Result, ResultExt, SimpleFormat};
 use gfx::format::{ChannelType, SurfaceType};
 use gfx::texture::SamplerInfo;
@@ -10,6 +9,7 @@ use gfx::traits::Pod;
 use imagefmt;
 use imagefmt::{ColFmt, Image};
 use tex::{Texture, TextureBuilder};
+use Renderer;
 
 /// Texture metadata, used while loading
 #[derive(Debug, Clone)]

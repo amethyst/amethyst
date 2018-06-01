@@ -6,9 +6,9 @@ use amethyst_core::specs::prelude::VecStorage;
 use wavefront_obj::obj::{parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex,
                          TextureIndex, Vertex, VertexIndex};
 
-use Renderer;
 use mesh::{Mesh, MeshBuilder, MeshHandle};
 use vertex::*;
+use Renderer;
 
 /// Mesh data for loading
 #[derive(Debug)]

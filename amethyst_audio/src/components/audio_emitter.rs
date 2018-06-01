@@ -1,14 +1,14 @@
 use std::io::Cursor;
-use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
+use std::sync::Arc;
 
 use amethyst_core::specs::prelude::Component;
 use amethyst_core::specs::storage::BTreeStorage;
 use rodio::{Decoder, SpatialSink};
 use smallvec::SmallVec;
 
-use DecoderError;
 use source::Source;
+use DecoderError;
 
 /// An audio source, add this component to anything that emits sound.
 #[derive(Default)]
