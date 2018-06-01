@@ -106,8 +106,24 @@ Render a basic UI.
 
 From the book, it is a minor update to the Pong example that uses `Config` files instead of hardcoded constants.
 
+![example screenshot](appendix_a/screenshot.png)
+
 ### Custom Game Data
 
 Demonstrates how to use custom `GameData`, with three different states: `Loading`, `Main`, `Paused`.
 
 ![game_data_example_result](custom_game_data/screenshot.png)
+
+### Fly Camera
+
+This example shows how to use the Fly Camera.
+
+### Arc ball Camera
+
+This example shows how to use the Arc Ball Camera.
+
+### Sprites
+
+Demonstrates how to use `SpriteSheet`s.
+
+![example animation](sprites/example.gif)
