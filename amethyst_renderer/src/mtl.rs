@@ -74,8 +74,8 @@ pub struct MaterialDefaults(pub Material);
 /// Textures used by texture animations
 #[derive(Debug, Default)]
 pub struct MaterialTextureSet {
-    textures: FnvHashMap<usize, Handle<Texture>>,
-    texture_inverse: FnvHashMap<Handle<Texture>, usize>,
+    textures: FnvHashMap<u64, Handle<Texture>>,
+    texture_inverse: FnvHashMap<Handle<Texture>, u64>,
 }
 
 impl MaterialTextureSet {
@@ -88,24 +88,24 @@ impl MaterialTextureSet {
     }
 
     /// Retrieve the handle for a given index
-    pub fn handle(&self, index: usize) -> Option<Handle<Texture>> {
-        self.textures.get(&index).cloned()
+    pub fn handle(&self, id: u64) -> Option<Handle<Texture>> {
+        self.textures.get(&id).cloned()
     }
 
     /// Retrieve the index for a given handle
-    pub fn index(&self, handle: &Handle<Texture>) -> Option<usize> {
+    pub fn id(&self, handle: &Handle<Texture>) -> Option<u64> {
         self.texture_inverse.get(handle).cloned()
     }
 
     /// Insert a texture handle at the given index
-    pub fn insert(&mut self, index: usize, handle: Handle<Texture>) {
-        self.textures.insert(index, handle.clone());
-        self.texture_inverse.insert(handle, index);
+    pub fn insert(&mut self, id: u64, handle: Handle<Texture>) {
+        self.textures.insert(id, handle.clone());
+        self.texture_inverse.insert(handle, id);
     }
 
     /// Remove the given index
-    pub fn remove(&mut self, index: usize) {
-        if let Some(handle) = self.textures.remove(&index) {
+    pub fn remove(&mut self, id: u64) {
+        if let Some(handle) = self.textures.remove(&id) {
             self.texture_inverse.remove(&handle);
         }
     }
