@@ -239,8 +239,20 @@ impl<A: Asset> AssetStorage<A> {
                             .chain_err(|| ErrorKind::Asset(name.clone()))
                         {
                             Ok((ProcessingState::Loaded(x), r)) => (x, r),
-                            Ok(..) => {
-                                continue; // FIXME
+                            Ok((ProcessingState::Loading(x), r)) => {
+                                debug!(
+                                    "{:?}: Asset {:?} (handle id: {:?}) is not complete, readding to queue",
+                                    A::NAME,
+                                    name,
+                                    handle,
+                                );
+                                requeue.push(Processed::HotReload {
+                                    data: Ok(FormatValue { data: x, reload: r }),
+                                    handle,
+                                    name,
+                                    old_reload,
+                                });
+                                continue;
                             }
                             Err(e) => {
                                 error!(

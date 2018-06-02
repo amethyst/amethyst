@@ -10,7 +10,7 @@ pub type SpriteSheetHandle = Handle<SpriteSheet>;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SpriteSheet {
     /// Index into `MaterialTextureSet` of the texture for this sprite sheet.
-    pub index: usize,
+    pub texture_id: u64,
     /// A list of sprites in this sprite sheet.
     pub sprites: Vec<Sprite>,
 }

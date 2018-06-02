@@ -8,7 +8,7 @@ use {AnimationSampling, ApplyData, BlendMethod};
 /// Note that material can only ever be animated with `Step`, or a panic will occur.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum MaterialPrimitive {
-    Texture(usize),
+    Texture(u64),
     Offset((f32, f32), (f32, f32)),
 }
 
@@ -165,25 +165,25 @@ impl AnimationSampling for Material {
     ) -> Self::Primitive {
         match *channel {
             MaterialChannel::AlbedoTexture => {
-                MaterialPrimitive::Texture(extra.index(&self.albedo).unwrap())
+                MaterialPrimitive::Texture(extra.id(&self.albedo).unwrap())
             }
             MaterialChannel::EmissionTexture => {
-                MaterialPrimitive::Texture(extra.index(&self.emission).unwrap())
+                MaterialPrimitive::Texture(extra.id(&self.emission).unwrap())
             }
             MaterialChannel::NormalTexture => {
-                MaterialPrimitive::Texture(extra.index(&self.normal).unwrap())
+                MaterialPrimitive::Texture(extra.id(&self.normal).unwrap())
             }
             MaterialChannel::MetallicTexture => {
-                MaterialPrimitive::Texture(extra.index(&self.metallic).unwrap())
+                MaterialPrimitive::Texture(extra.id(&self.metallic).unwrap())
             }
             MaterialChannel::RoughnessTexture => {
-                MaterialPrimitive::Texture(extra.index(&self.roughness).unwrap())
+                MaterialPrimitive::Texture(extra.id(&self.roughness).unwrap())
             }
             MaterialChannel::AmbientOcclusionTexture => {
-                MaterialPrimitive::Texture(extra.index(&self.ambient_occlusion).unwrap())
+                MaterialPrimitive::Texture(extra.id(&self.ambient_occlusion).unwrap())
             }
             MaterialChannel::CaveatTexture => {
-                MaterialPrimitive::Texture(extra.index(&self.caveat).unwrap())
+                MaterialPrimitive::Texture(extra.id(&self.caveat).unwrap())
             }
             MaterialChannel::AlbedoOffset => offset(&self.albedo_offset),
             MaterialChannel::EmissionOffset => offset(&self.emission_offset),
