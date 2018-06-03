@@ -5,9 +5,8 @@ mod pong;
 use amethyst::core::transform::TransformBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline, PosTex, RenderBundle, Stage};
-use amethyst::Result;
 
-fn run() -> Result<()> {
+fn main() -> amethyst::Result<()> {
     use pong::Pong;
 
     let path = format!(
@@ -29,11 +28,4 @@ fn run() -> Result<()> {
     let mut game = Application::new("./", Pong, game_data)?;
     game.run();
     Ok(())
-}
-
-fn main() {
-    if let Err(e) = run() {
-        println!("Error occurred during game execution: {}", e);
-        ::std::process::exit(1);
-    }
 }

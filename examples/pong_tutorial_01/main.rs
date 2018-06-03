@@ -1,6 +1,5 @@
 extern crate amethyst;
 
-use amethyst::Result;
 use amethyst::input::{is_key, is_close_requested};
 use amethyst::prelude::*;
 use amethyst::renderer::{DisplayConfig, DrawFlat, Event, Pipeline, PosTex,
@@ -23,7 +22,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
     }
 }
 
-fn run() -> Result<()> {
+fn main() -> amethyst::Result<()> {
     let path = format!(
         "{}/examples/pong_tutorial_01/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
@@ -40,11 +39,4 @@ fn run() -> Result<()> {
     let mut game = Application::new("./", Pong, game_data)?;
     game.run();
     Ok(())
-}
-
-fn main() {
-    if let Err(e) = run() {
-        println!("Error occurred during game execution: {}", e);
-        ::std::process::exit(1);
-    }
 }
