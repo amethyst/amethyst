@@ -42,7 +42,7 @@ impl Attribute for Position {
 pub enum Color {}
 impl Attribute for Color {
     const NAME: &'static str = "color";
-    const FORMAT: Format = Format(SurfaceType::R32_G32_B32_A32, ChannelType::Unorm);
+    const FORMAT: Format = Format(SurfaceType::R32_G32_B32_A32, ChannelType::Float);
     const SIZE: u32 = 16;
     type Repr = [f32; 4];
 }
