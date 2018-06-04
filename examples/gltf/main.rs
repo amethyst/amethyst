@@ -136,17 +136,14 @@ fn main() -> amethyst::Result<()> {
     );
 
     let resources_directory = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
-    let config = DisplayConfig::load(&path);
-
-    let pipe = Pipeline::build().with_stage(
-        Stage::with_backbuffer()
-            .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawShadedSeparate::new().with_vertex_skinning()),
-    );
 
     let game_data = GameDataBuilder::default()
         .with(GltfSceneLoaderSystem::new(), "loader_system", &[])
-        .with_bundle(RenderBundle::new(pipe, Some(config)))?
+        .with_basic_renderer(
+            path,
+            DrawShadedSeparate::new().with_vertex_skinning(),
+            false,
+        )?
         .with_bundle(
             AnimationBundle::<usize, Transform>::new(
                 "animation_control_system",

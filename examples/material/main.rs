@@ -120,16 +120,14 @@ fn main() -> amethyst::Result<()> {
         "{}/examples/material/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
     );
-    let config = DisplayConfig::load(&path);
 
     let resources = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
 
-    let pipe = Pipeline::build().with_stage(
-        Stage::with_backbuffer()
-            .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawPbm::<PosNormTangTex>::new()),
-    );
-    let game_data = GameDataBuilder::default().with_bundle(RenderBundle::new(pipe, Some(config)))?;
+    let game_data = GameDataBuilder::default().with_basic_renderer(
+        path,
+        DrawPbm::<PosNormTangTex>::new(),
+        false,
+    )?;
     let mut game = Application::new(&resources, Example, game_data)?;
     game.run();
     Ok(())
