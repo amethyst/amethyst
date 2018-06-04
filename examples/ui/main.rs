@@ -10,7 +10,7 @@ use amethyst::core::cgmath::Deg;
 use amethyst::core::transform::{GlobalTransform, Parent, TransformBundle};
 use amethyst::core::Time;
 use amethyst::ecs::prelude::{Entity, System, World, Write};
-use amethyst::input::{InputBundle, is_key, is_close_requested};
+use amethyst::input::{is_close_requested, is_key, InputBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light, Mesh, Pipeline,
                          PngFormat, PointLight, PosNormTex, Projection, RenderBundle, Rgba, Stage,
@@ -266,7 +266,9 @@ fn main() -> amethyst::Result<()> {
     println!("Would you like to run this? (Y/N)");
     let mut input = String::new();
     let _ = ::std::io::stdin().read_line(&mut input);
-    if !input.to_lowercase().starts_with("y") { return Ok(()); }
+    if !input.to_lowercase().starts_with("y") {
+        return Ok(());
+    }
 
     let display_config_path = format!(
         "{}/examples/ui/resources/display.ron",

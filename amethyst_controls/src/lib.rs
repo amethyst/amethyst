@@ -12,7 +12,7 @@ mod components;
 mod resources;
 mod systems;
 
-pub use self::bundles::FlyControlBundle;
+pub use self::bundles::{ArcBallControlBundle, FlyControlBundle};
 pub use self::components::{ArcBallControlTag, FlyControlTag};
 pub use self::resources::WindowFocus;
 pub use self::systems::{ArcBallMovementSystem, CursorHideSystem, FlyMovementSystem,

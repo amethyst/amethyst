@@ -10,11 +10,11 @@ use amethyst::assets::{AssetStorage, Handle, Loader};
 use amethyst::core::cgmath::Deg;
 use amethyst::core::{GlobalTransform, Parent, Transform, TransformBundle};
 use amethyst::ecs::prelude::{Entity, World};
-use amethyst::input::{get_key, is_key, is_close_requested};
+use amethyst::input::{get_key, is_close_requested, is_key};
 use amethyst::prelude::*;
-use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Event,
-                         Light, Mesh, Pipeline, PointLight, PosNormTex, Projection,
-                         RenderBundle, Rgba, Stage, VirtualKeyCode};
+use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Event, Light, Mesh,
+                         Pipeline, PointLight, PosNormTex, Projection, RenderBundle, Rgba, Stage,
+                         VirtualKeyCode};
 use genmesh::generators::SphereUV;
 use genmesh::{MapToVertices, Triangulate, Vertices};
 

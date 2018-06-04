@@ -6,7 +6,7 @@ extern crate genmesh;
 use amethyst::assets::Loader;
 use amethyst::core::cgmath::{Deg, Matrix4, Vector3};
 use amethyst::core::transform::GlobalTransform;
-use amethyst::input::{is_key, is_close_requested};
+use amethyst::input::{is_close_requested, is_key};
 use amethyst::prelude::*;
 use amethyst::renderer::*;
 use genmesh::generators::SphereUV;
