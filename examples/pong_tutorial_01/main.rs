@@ -1,9 +1,9 @@
 extern crate amethyst;
 
-use amethyst::input::{is_key, is_close_requested};
+use amethyst::input::{is_close_requested, is_key};
 use amethyst::prelude::*;
-use amethyst::renderer::{DisplayConfig, DrawFlat, Event, Pipeline, PosTex,
-                         RenderBundle, Stage, VirtualKeyCode};
+use amethyst::renderer::{DisplayConfig, DrawFlat, Event, Pipeline, PosTex, RenderBundle, Stage,
+                         VirtualKeyCode};
 
 struct Pong;
 

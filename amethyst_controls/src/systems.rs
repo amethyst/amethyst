@@ -85,6 +85,7 @@ where
 /// and while keeping the orientation of the camera.
 /// To modify the orientation of the camera in accordance with the mouse input, please use the
 /// FreeRotationSystem.
+#[derive(Default)]
 pub struct ArcBallMovementSystem;
 
 impl<'a> System<'a> for ArcBallMovementSystem {
