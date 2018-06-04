@@ -4,7 +4,7 @@ use std::cmp::{Ordering, PartialOrd};
 use std::hash::{Hash, Hasher};
 
 use amethyst_assets::{AssetStorage, Loader};
-use amethyst_core::cgmath::vec4;
+use amethyst_core::cgmath::vec4 as cg_vec4;
 use amethyst_core::specs::prelude::{Entities, Entity, Join, Read, ReadExpect, ReadStorage,
                                     WriteStorage};
 use amethyst_renderer::error::Result;
@@ -18,7 +18,7 @@ use gfx::pso::buffer::ElemStride;
 use gfx::state::ColorMask;
 use gfx_glyph::{BuiltInLineBreaker, FontId, GlyphBrush, GlyphBrushBuilder, GlyphCruncher,
                 HorizontalAlign, Layout, Scale, SectionText, VariedSection, VerticalAlign};
-use glsl_layout::Uniform;
+use glsl_layout::{Uniform, vec2, vec4};
 use hibitset::BitSet;
 use rusttype::Point;
 use unicode_segmentation::UnicodeSegmentation;
@@ -32,9 +32,9 @@ const FRAG_SRC: &[u8] = include_bytes!("shaders/frag.glsl");
 #[allow(dead_code)] // This is used by the shaders
 #[repr(C)]
 struct VertexArgs {
-    proj_vec: [f32; 4],
-    coord: [f32; 2],
-    dimension: [f32; 2],
+    proj_vec: vec4,
+    coord: vec2,
+    dimension: vec2,
 }
 
 #[derive(Clone, Debug)]
@@ -209,7 +209,7 @@ impl Pass for DrawUi {
             .cache
             .sort_unstable_by(|&(z1, _), &(z2, _)| z2.partial_cmp(&z1).unwrap_or(Ordering::Equal));
 
-        let proj_vec = vec4(
+        let proj_vec = cg_vec4(
             2. / screen_dimensions.width(),
             -2. / screen_dimensions.height(),
             -2.,
@@ -237,8 +237,8 @@ impl Pass for DrawUi {
                 coord: [
                     ui_transform.global_x - ui_transform.width / 2.0,
                     ui_transform.global_y - ui_transform.height / 2.0,
-                ],
-                dimension: [ui_transform.width, ui_transform.height],
+                ].into(),
+                dimension: [ui_transform.width, ui_transform.height].into(),
             };
             effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
             if let Some(image) = ui_image
@@ -400,8 +400,8 @@ impl Pass for DrawUi {
                         let pos = glyph.position();
                         let vertex_args = VertexArgs {
                             proj_vec: proj_vec.into(),
-                            coord: [pos.x, pos.y - ascent],
-                            dimension: [width, height],
+                            coord: [pos.x, pos.y - ascent].into(),
+                            dimension: [width, height].into(),
                         };
                         effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
                         effect.draw(mesh.slice(), encoder);
@@ -493,8 +493,8 @@ impl Pass for DrawUi {
                             }
                             let vertex_args = VertexArgs {
                                 proj_vec: proj_vec.into(),
-                                coord: [x, y],
-                                dimension: [width, height],
+                                coord: [x, y].into(),
+                                dimension: [width, height].into(),
                             };
                             effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
                             effect.draw(mesh.slice(), encoder);
