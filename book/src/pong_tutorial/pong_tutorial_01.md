@@ -138,7 +138,10 @@ Ok(())
 We've discovered Amethyst's root object: [Application][ap]. It binds the OS
 event loop, state machines, timers and other core components in a central place.
 Here we're creating a new `RenderBundle`, adding the `Pipeline` we created,
-along with our config, and building.
+along with our config, and building. There is also a helper function 
+`with_basic_renderer` on `GameDataBuilder` that you can use to create your 
+`Pipeline` and `RenderBundle`, that performs most of the actions above. In the
+full `pong` example in the `Amethyst` repository that function is used instead.
 
 Then we call `.run()` on `game` which begins the gameloop. The game will
 continue to run until our `State` returns `Trans::Quit`, or when all states have

@@ -18,8 +18,8 @@ use amethyst::core::transform::TransformBundle;
 use amethyst::ecs::prelude::{Component, DenseVecStorage};
 use amethyst::input::InputBundle;
 use amethyst::prelude::*;
-use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline, PosTex, RenderBundle, Stage};
-use amethyst::ui::{DrawUi, UiBundle};
+use amethyst::renderer::{DrawFlat, PosTex};
+use amethyst::ui::UiBundle;
 
 use audio::Music;
 use bundle::PongBundle;
@@ -39,8 +39,6 @@ fn main() -> amethyst::Result<()> {
         "{}/examples/pong/resources/display.ron",
         env!("CARGO_MANIFEST_DIR")
     );
-    let display_config = DisplayConfig::load(display_config_path);
-
     let key_bindings_path = format!(
         "{}/examples/pong/resources/input.ron",
         env!("CARGO_MANIFEST_DIR")
@@ -51,12 +49,7 @@ fn main() -> amethyst::Result<()> {
         env!("CARGO_MANIFEST_DIR")
     );
     let assets_dir = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
-    let pipe = Pipeline::build().with_stage(
-        Stage::with_backbuffer()
-            .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawFlat::<PosTex>::new())
-            .with_pass(DrawUi::new()),
-    );
+
     let pong_config = PongConfig::load(&config);
 
     let game_data = GameDataBuilder::default()
@@ -67,7 +60,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(TransformBundle::new().with_dep(&["ball_system", "paddle_system"]))?
         .with_bundle(AudioBundle::new(|music: &mut Music| music.music.next()))?
         .with_bundle(UiBundle::<String, String>::new())?
-        .with_bundle(RenderBundle::new(pipe, Some(display_config)))?;
+        .with_basic_renderer(display_config_path, DrawFlat::<PosTex>::new(), true)?;
 
     let mut game = Application::build(assets_dir, Pong)?
         .with_frame_limit(

@@ -12,13 +12,12 @@ use amethyst::core::Time;
 use amethyst::ecs::prelude::{Entity, System, World, Write};
 use amethyst::input::{is_close_requested, is_key, InputBundle};
 use amethyst::prelude::*;
-use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light, Mesh, Pipeline,
-                         PngFormat, PointLight, PosNormTex, Projection, RenderBundle, Rgba, Stage,
-                         Texture};
+use amethyst::renderer::{AmbientColor, Camera, DrawShaded, Light, Mesh, PngFormat, PointLight,
+                         PosNormTex, Projection, Rgba, Texture};
 use amethyst::shrev::{EventChannel, ReaderId};
-use amethyst::ui::{Anchor, Anchored, DrawUi, FontAsset, MouseReactive, Stretch, Stretched,
-                   TextEditing, TtfFormat, UiBundle, UiButtonBuilder, UiButtonResources, UiEvent,
-                   UiFocused, UiImage, UiText, UiTransform};
+use amethyst::ui::{Anchor, Anchored, FontAsset, MouseReactive, Stretch, Stretched, TextEditing,
+                   TtfFormat, UiBundle, UiButtonBuilder, UiButtonResources, UiEvent, UiFocused,
+                   UiImage, UiText, UiTransform};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::winit::{Event, VirtualKeyCode};
 use genmesh::generators::SphereUV;
@@ -27,7 +26,6 @@ use genmesh::{MapToVertices, Triangulate, Vertices};
 const SPHERE_COLOUR: [f32; 4] = [0.0, 0.0, 1.0, 1.0]; // blue
 const AMBIENT_LIGHT_COLOUR: Rgba = Rgba(0.01, 0.01, 0.01, 1.0); // near-black
 const POINT_LIGHT_COLOUR: Rgba = Rgba(1.0, 1.0, 1.0, 1.0); // white
-const BACKGROUND_COLOUR: [f32; 4] = [0.0, 0.0, 0.0, 0.0]; // black
 const LIGHT_POSITION: [f32; 3] = [2.0, 2.0, -2.0];
 const LIGHT_RADIUS: f32 = 5.0;
 const LIGHT_INTENSITY: f32 = 3.0;
@@ -276,22 +274,14 @@ fn main() -> amethyst::Result<()> {
     );
 
     let resources = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
-    let config = DisplayConfig::load(&display_config_path);
-    let pipe = {
-        Pipeline::build().with_stage(
-            Stage::with_backbuffer()
-                .clear_target(BACKGROUND_COLOUR, 1.0)
-                .with_pass(DrawShaded::<PosNormTex>::new())
-                .with_pass(DrawUi::new()),
-        )
-    };
+
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
         .with_bundle(UiBundle::<String, String>::new())?
         .with(UiEventHandlerSystem::new(), "ui_event_handler", &[])
         .with_bundle(FPSCounterBundle::default())?
         .with_bundle(InputBundle::<String, String>::new())?
-        .with_bundle(RenderBundle::new(pipe, Some(config)))?;
+        .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), true)?;
     let mut game = Application::new(resources, Example { fps_display: None }, game_data)?;
     game.run();
     Ok(())

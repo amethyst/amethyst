@@ -12,9 +12,8 @@ use amethyst::core::{GlobalTransform, Parent, Transform, TransformBundle};
 use amethyst::ecs::prelude::{Entity, World};
 use amethyst::input::{get_key, is_close_requested, is_key};
 use amethyst::prelude::*;
-use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Event, Light, Mesh,
-                         Pipeline, PointLight, PosNormTex, Projection, RenderBundle, Rgba, Stage,
-                         VirtualKeyCode};
+use amethyst::renderer::{AmbientColor, Camera, DrawShaded, Event, Light, Mesh, PointLight,
+                         PosNormTex, Projection, Rgba, VirtualKeyCode};
 use genmesh::generators::SphereUV;
 use genmesh::{MapToVertices, Triangulate, Vertices};
 
@@ -24,8 +23,6 @@ const SPHERE_COLOUR: [f32; 4] = [0.0, 0.0, 1.0, 1.0];
 const AMBIENT_LIGHT_COLOUR: Rgba = Rgba(0.01, 0.01, 0.01, 1.0);
 // white
 const POINT_LIGHT_COLOUR: Rgba = Rgba(1.0, 1.0, 1.0, 1.0);
-// black
-const BACKGROUND_COLOUR: [f32; 4] = [0.0, 0.0, 0.0, 0.0];
 const LIGHT_POSITION: [f32; 3] = [2.0, 2.0, -2.0];
 const LIGHT_RADIUS: f32 = 5.0;
 const LIGHT_INTENSITY: f32 = 3.0;
@@ -177,21 +174,13 @@ fn main() -> amethyst::Result<()> {
 
     let resources = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
 
-    let pipe = Pipeline::build().with_stage(
-        Stage::with_backbuffer()
-            .clear_target(BACKGROUND_COLOUR, 1.0)
-            .with_pass(DrawShaded::<PosNormTex>::new()),
-    );
-
-    let config = DisplayConfig::load(&display_config_path);
-
     let game_data = GameDataBuilder::default()
         .with_bundle(AnimationBundle::<AnimationId, Transform>::new(
             "animation_control_system",
             "sampler_interpolation_system",
         ))?
         .with_bundle(TransformBundle::new().with_dep(&["sampler_interpolation_system"]))?
-        .with_bundle(RenderBundle::new(pipe, Some(config)))?;
+        .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;
     let mut game = Application::new(resources, Example::default(), game_data)?;
     game.run();
 
