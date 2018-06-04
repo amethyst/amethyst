@@ -24,7 +24,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
     }
 }
 
-fn run() -> Result<(), amethyst::Error> {
+fn main() -> amethyst::Result<()> {
     let path = format!(
         "{}/examples/window/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
@@ -43,11 +43,4 @@ fn run() -> Result<(), amethyst::Error> {
     game.run();
 
     Ok(())
-}
-
-fn main() {
-    if let Err(e) = run() {
-        println!("Failed to execute example: {}", e);
-        ::std::process::exit(1);
-    }
 }

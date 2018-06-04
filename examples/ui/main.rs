@@ -260,7 +260,14 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
     }
 }
 
-fn run() -> Result<(), amethyst::Error> {
+fn main() -> amethyst::Result<()> {
+    println!("Due to some bugs this example currently comes with a seizure warning.");
+    println!("If you have a history of seizures please do not run this.");
+    println!("Would you like to run this? (Y/N)");
+    let mut input = String::new();
+    let _ = ::std::io::stdin().read_line(&mut input);
+    if !input.to_lowercase().starts_with("y") { return Ok(()); }
+
     let display_config_path = format!(
         "{}/examples/ui/resources/display.ron",
         env!("CARGO_MANIFEST_DIR")
@@ -286,20 +293,6 @@ fn run() -> Result<(), amethyst::Error> {
     let mut game = Application::new(resources, Example { fps_display: None }, game_data)?;
     game.run();
     Ok(())
-}
-
-fn main() {
-    println!("Due to some bugs this example currently comes with a seizure warning.");
-    println!("If you have a history of seizures please do not run this.");
-    println!("Would you like to run this? (Y/N)");
-    let mut input = String::new();
-    let _ = ::std::io::stdin().read_line(&mut input);
-    if input.to_lowercase().starts_with("y") {
-        if let Err(e) = run() {
-            println!("Failed to execute example: {}", e);
-            ::std::process::exit(1);
-        }
-    }
 }
 
 fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTex> {

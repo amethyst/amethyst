@@ -47,7 +47,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
     }
 }
 
-fn run() -> Result<(), amethyst::Error> {
+fn main() -> amethyst::Result<()> {
     let display_config_path = format!(
         "{}/examples/sphere/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
@@ -67,13 +67,6 @@ fn run() -> Result<(), amethyst::Error> {
     let mut game = Application::new(resources, Example, game_data)?;
     game.run();
     Ok(())
-}
-
-fn main() {
-    if let Err(e) = run() {
-        println!("Failed to execute example: {}", e);
-        ::std::process::exit(1);
-    }
 }
 
 fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTex> {

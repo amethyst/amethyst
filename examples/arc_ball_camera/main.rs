@@ -86,16 +86,7 @@ fn load_assets(world: &World) -> Assets {
     Assets { cube, red }
 }
 
-fn main() {
-    if let Err(error) = run() {
-        eprintln!("Could not run the example!");
-        eprintln!("{}", error);
-        ::std::process::exit(1);
-    }
-}
-
-/// Wrapper around the main, so we can return errors easily.
-fn run() -> Result<(), Error> {
+fn main() -> Result<(), Error> {
     let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
 
     let display_config_path = format!(

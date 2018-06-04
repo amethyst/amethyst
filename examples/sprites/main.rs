@@ -185,7 +185,7 @@ fn initialise_camera(world: &mut World) -> Entity {
         .build()
 }
 
-fn run() -> Result<(), amethyst::Error> {
+fn main() -> amethyst::Result<()> {
     let path = format!(
         "{}/examples/sprites/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
@@ -221,13 +221,6 @@ fn run() -> Result<(), amethyst::Error> {
     game.run();
 
     Ok(())
-}
-
-fn main() {
-    if let Err(e) = run() {
-        error!("Failed to execute example: {}", e);
-        ::std::process::exit(1);
-    }
 }
 
 /// Returns a set of vertices that make up a rectangular mesh of the given size.
