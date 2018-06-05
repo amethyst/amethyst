@@ -7,7 +7,7 @@ use amethyst::assets::Loader;
 use amethyst::core::cgmath::{Deg, InnerSpace, Vector3};
 use amethyst::core::transform::GlobalTransform;
 use amethyst::ecs::prelude::World;
-use amethyst::input::{is_key, is_close_requested};
+use amethyst::input::{is_close_requested, is_key};
 use amethyst::prelude::*;
 use amethyst::renderer::*;
 use genmesh::generators::SphereUV;

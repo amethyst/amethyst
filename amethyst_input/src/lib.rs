@@ -18,7 +18,7 @@ pub use self::button::Button;
 pub use self::event::InputEvent;
 pub use self::input_handler::InputHandler;
 pub use self::system::InputSystem;
-pub use self::util::{is_close_requested, is_key, get_key};
+pub use self::util::{get_key, is_close_requested, is_key};
 
 use std::iter::{Chain, FlatMap, Iterator, Map};
 use std::slice::Iter;

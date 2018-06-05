@@ -9,9 +9,9 @@ use amethyst::core::transform::GlobalTransform;
 use amethyst::ecs::prelude::World;
 use amethyst::input::{is_close_requested, is_key};
 use amethyst::prelude::*;
-use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Event,
-                         Light, Mesh, Pipeline, PointLight, PosNormTex, Projection, RenderBundle,
-                         Rgba, Stage, VirtualKeyCode};
+use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Event, Light, Mesh,
+                         Pipeline, PointLight, PosNormTex, Projection, RenderBundle, Rgba, Stage,
+                         VirtualKeyCode};
 use genmesh::generators::SphereUV;
 use genmesh::{MapToVertices, Triangulate, Vertices};
 

@@ -100,8 +100,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
             if animations.animations.len() > 0 {
                 let animation = animations.animations.get(&scene.animation_index).unwrap();
                 let mut controls = world.write_storage();
-                let set =
-                    get_animation_set::<usize, Transform>(&mut controls, scene.entity);
+                let set = get_animation_set::<usize, Transform>(&mut controls, scene.entity);
                 if set.has_animation(scene.animation_index) {
                     set.toggle(scene.animation_index);
                 } else {

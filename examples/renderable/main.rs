@@ -13,11 +13,11 @@ use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::{Component, Entity, Join, Read, ReadStorage, System, World,
                              WriteExpect, WriteStorage};
 use amethyst::ecs::storage::NullStorage;
-use amethyst::input::{InputBundle, is_close_requested, is_key, get_key};
-use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, DisplayConfig, DrawShaded,
-                         Event, Light, Material, MaterialDefaults,
-                         MeshHandle, ObjFormat, Pipeline, PngFormat, PointLight, PosNormTex,
-                         Projection, RenderBundle, Rgba, Stage, VirtualKeyCode};
+use amethyst::input::{get_key, is_close_requested, is_key, InputBundle};
+use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, DisplayConfig, DrawShaded, Event,
+                         Light, Material, MaterialDefaults, MeshHandle, ObjFormat, Pipeline,
+                         PngFormat, PointLight, PosNormTex, Projection, RenderBundle, Rgba, Stage,
+                         VirtualKeyCode};
 use amethyst::ui::{Anchor, Anchored, DrawUi, FontHandle, TtfFormat, UiBundle, UiText, UiTransform};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
