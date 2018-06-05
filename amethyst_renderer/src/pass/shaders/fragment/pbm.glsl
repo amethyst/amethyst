@@ -160,7 +160,7 @@ void main() {
         float HdotV = max(dot(halfway, view_direction), 0.0);
         float geometry = geometry(NdotV, NdotL, roughness2);
 
-        vec3 fresnel = fresnel_base + (1.0 - fresnel_base) * pow(1.0 - HdotV, 5.0);
+        vec3 fresnel = fresnel(HdotV, fresnel_base);
         vec3 diffuse = vec3(1.0) - fresnel;
         diffuse *= 1.0 - metallic;
 
