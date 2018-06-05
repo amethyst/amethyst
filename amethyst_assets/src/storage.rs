@@ -170,7 +170,7 @@ impl<A: Asset> AssetStorage<A> {
                                 handle,
                                 e,
                             );
-                            tracker.fail(e);
+                            tracker.fail(handle.id(), A::NAME, name, e);
 
                             continue;
                         }
@@ -181,7 +181,7 @@ impl<A: Asset> AssetStorage<A> {
                     // https://github.com/amethyst/amethyst/issues/628
                     if handle.is_unique() {
                         warn!(
-                            "Loading unecessary asset. Handle {} is unique ",
+                            "Loading unnecessary asset. Handle {} is unique ",
                             handle.id()
                         );
                     }

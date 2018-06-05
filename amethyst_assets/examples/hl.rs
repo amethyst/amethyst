@@ -156,8 +156,8 @@ impl State {
                     eprintln!("Asset loading failed!");
                     eprintln!("-- Errors --");
                     progress.errors().iter().enumerate().for_each(|(n, e)| {
-                        eprintln!("{}: error: {}", n, e);
-                        for cause in e.iter().skip(1) {
+                        eprintln!("{}: error: {}", n, e.e);
+                        for cause in e.e.iter().skip(1) {
                             eprintln!("{}: caused by: {}", n, cause);
                         }
                     });
