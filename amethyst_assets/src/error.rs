@@ -24,5 +24,10 @@ error_chain! {
             description("Format could not load asset")
             display("Format {:?} could not load asset", format)
         }
+
+        /// Returned if an asset is loaded and never used.
+        UnusedHandle {
+            description("Asset was loaded but no handle to it was saved.")
+        }
     }
 }
