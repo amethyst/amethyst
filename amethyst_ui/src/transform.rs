@@ -4,7 +4,6 @@ use std::marker::PhantomData;
 use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entities, Entity, FlaggedStorage,
                                     Join, ReadStorage};
 
-
 /// Utility `SystemData` for finding UI entities based on `UiTransform` id
 #[derive(SystemData)]
 pub struct UiFinder<'a> {
