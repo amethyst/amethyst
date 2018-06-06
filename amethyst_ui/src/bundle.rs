@@ -39,11 +39,10 @@ where
         builder.add(UiSystem::new(), "ui_system", &["font_processor"]);
         builder.add(ResizeSystem::new(), "ui_resize_system", &[]);
         builder.add(UiMouseSystem::<A, B>::new(), "ui_mouse_system", &[]);
-        builder.add(UiLayoutSystem::new(), "ui_layout", &["ui_system"]);
         builder.add(
             UiParentSystem::default(),
             "ui_parent",
-            &["transform_system", "ui_layout"],
+            &["transform_system"],
         );
         Ok(())
     }

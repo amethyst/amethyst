@@ -1,5 +1,5 @@
-use super::{Anchor, Anchored, FontAsset, FontHandle, MouseReactive, Stretch, Stretched, TtfFormat,
-            UiImage, UiText, UiTransform};
+use super::{Anchor, FontAsset, FontHandle, MouseReactive, Stretch, TtfFormat, UiImage, UiText,
+            UiTransform};
 ///! A clickable button.
 use amethyst_assets::{AssetStorage, Loader};
 use amethyst_core::specs::prelude::{Entities, Entity, Read, ReadExpect, World, WriteStorage};
@@ -26,12 +26,10 @@ pub struct UiButtonResources<'a> {
 /// Container for all the resources the builder needs to make a new UiButton.
 #[derive(SystemData)]
 struct UiButtonBuilderResources<'a> {
-    anchored: WriteStorage<'a, Anchored>,
     entities: Entities<'a>,
     image: WriteStorage<'a, UiImage>,
     mouse_reactive: WriteStorage<'a, MouseReactive>,
     parent: WriteStorage<'a, Parent>,
-    stretched: WriteStorage<'a, Stretched>,
     text: WriteStorage<'a, UiText>,
     transform: WriteStorage<'a, UiTransform>,
 }
@@ -55,9 +53,7 @@ pub struct UiButtonBuilder<'a> {
     name: &'a str,
     image: UiImage,
     text: UiText,
-    anchored: Option<Anchored>,
     parent: Option<Parent>,
-    stretched: Option<Stretched>,
     transform: Option<UiTransform>,
 }
 
@@ -99,28 +95,14 @@ impl<'a> UiButtonBuilder<'a> {
             name,
             image,
             text,
-            anchored: None,
             parent: None,
-            stretched: None,
             transform: None,
         }
-    }
-
-    /// Add an anchor to the button.
-    pub fn with_anchored(mut self, anchored: Anchored) -> Self {
-        self.anchored = Some(anchored);
-        self
     }
 
     /// Add a parent to the button.
     pub fn with_parent(mut self, parent: Parent) -> Self {
         self.parent = Some(parent);
-        self
-    }
-
-    /// Stretch the button.
-    pub fn with_stretched(mut self, stretched: Stretched) -> Self {
-        self.stretched = Some(stretched);
         self
     }
 
@@ -171,15 +153,16 @@ impl<'a> UiButtonBuilder<'a> {
     pub fn with_position(mut self, x: f32, y: f32) -> Self {
         self.transform = if let Some(mut t) = self.transform.take() {
             t.local_x = x;
-            t.global_x = x;
+            t.pixel_x = x;
             t.local_y = y;
-            t.global_y = y;
+            t.pixel_y = y;
             Some(t)
         } else {
             let mut id = self.name.to_string();
             id.push_str("_new_transform");
             Some(UiTransform::new(
                 id,
+                Anchor::TopLeft,
                 x,
                 y,
                 DEFAULT_Z,
@@ -204,12 +187,6 @@ impl<'a> UiButtonBuilder<'a> {
         if let Some(transform) = self.transform.take() {
             res.transform.insert(image_entity, transform).unwrap();
         }
-        if let Some(anchored) = self.anchored.take() {
-            res.anchored.insert(image_entity, anchored).unwrap();
-        }
-        if let Some(stretched) = self.stretched.take() {
-            res.stretched.insert(image_entity, stretched).unwrap();
-        }
 
         let mut id = self.name.to_string();
         id.push_str("_btn_txt");
@@ -217,14 +194,13 @@ impl<'a> UiButtonBuilder<'a> {
         res.transform
             .insert(
                 text_entity,
-                UiTransform::new(id, 0., 0., -1., 0., 0., 10).as_transparent(),
+                UiTransform::new(id, Anchor::Middle, 0., 0., -1., 0., 0., 10)
+                    .as_transparent()
+                    .with_stretching(Stretch::XY {
+                        x_margin: 0.,
+                        y_margin: 0.,
+                    }),
             )
-            .unwrap();
-        res.anchored
-            .insert(text_entity, Anchored::new(Anchor::Middle))
-            .unwrap();
-        res.stretched
-            .insert(text_entity, Stretched::new(Stretch::XY, 0., 0.))
             .unwrap();
         res.text.insert(text_entity, self.text).unwrap();
         res.parent

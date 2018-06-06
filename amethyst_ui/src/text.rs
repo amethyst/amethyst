@@ -3,8 +3,10 @@ use std::ops::Range;
 
 use amethyst_core::shrev::{EventChannel, ReaderId};
 use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entities, Entity, Join, Read,
-                                    ReadStorage, Resources, System, Write, WriteStorage};
+                                    ReadExpect, ReadStorage, Resources, System, Write,
+                                    WriteStorage};
 use amethyst_core::timing::Time;
+use amethyst_renderer::ScreenDimensions;
 use clipboard::{ClipboardContext, ClipboardProvider};
 use gfx_glyph::PositionedGlyph;
 use hibitset::BitSet;
@@ -156,12 +158,13 @@ impl<'a> System<'a> for UiSystem {
         Write<'a, UiFocused>,
         Read<'a, EventChannel<Event>>,
         Read<'a, Time>,
+        ReadExpect<'a, ScreenDimensions>,
     );
 
     fn run(
         &mut self,
-        (entities, mut text, mut editable, transform, mut focused, events, time): Self::SystemData,
-    ) {
+        (entities, mut text, mut editable, transform, mut focused, events, time, screen_dimensions): Self::SystemData,
+){
         // Populate and update the tab order cache.
         {
             let bitset = &mut self.tab_order_cache.cached;
@@ -280,7 +283,10 @@ impl<'a> System<'a> for UiSystem {
                     event: WindowEvent::CursorMoved { position, .. },
                     ..
                 } => {
-                    self.mouse_position = (position.0 as f32, position.1 as f32);
+                    self.mouse_position = (
+                        position.0 as f32 - screen_dimensions.width() / 2.,
+                        position.1 as f32 - screen_dimensions.height() / 2.,
+                    );
                     if self.left_mouse_button_pressed {
                         let mut focused_text_edit = focused.entity.and_then(|entity| {
                             text.get_mut(entity)
@@ -293,8 +299,8 @@ impl<'a> System<'a> for UiSystem {
                         {
                             use std::f32::NAN;
 
-                            let mouse_x = self.mouse_position.0;
-                            let mouse_y = self.mouse_position.1;
+                            let mouse_x = self.mouse_position.0 + screen_dimensions.width() / 2.;
+                            let mouse_y = self.mouse_position.1 + screen_dimensions.height() / 2.;
                             // Find the glyph closest to the mouse position.
                             focused_edit.highlight_vector = focused_text
                                 .cached_glyphs
@@ -355,10 +361,10 @@ impl<'a> System<'a> for UiSystem {
                             let mut eligible = (&*entities, &transform)
                                 .join()
                                 .filter(|&(_, t)| {
-                                    t.global_x - t.width / 2.0 <= self.mouse_position.0
-                                        && t.global_x + t.width / 2.0 >= self.mouse_position.0
-                                        && t.global_y - t.height / 2.0 <= self.mouse_position.1
-                                        && t.global_y + t.height / 2.0 >= self.mouse_position.1
+                                    t.pixel_x - t.width / 2.0 <= self.mouse_position.0
+                                        && t.pixel_x + t.width / 2.0 >= self.mouse_position.0
+                                        && t.pixel_y - t.height / 2.0 <= self.mouse_position.1
+                                        && t.pixel_y + t.height / 2.0 >= self.mouse_position.1
                                 })
                                 .collect::<Vec<_>>();
                             // In instances of ambiguity we want to select the element with the
@@ -395,8 +401,10 @@ impl<'a> System<'a> for UiSystem {
                             {
                                 use std::f32::NAN;
 
-                                let mouse_x = self.mouse_position.0;
-                                let mouse_y = self.mouse_position.1;
+                                let mouse_x =
+                                    self.mouse_position.0 + screen_dimensions.width() / 2.;
+                                let mouse_y =
+                                    self.mouse_position.1 + screen_dimensions.height() / 2.;
                                 // Find the glyph closest to the click position.
                                 focused_edit.highlight_vector = 0;
                                 focused_edit.cursor_position = focused_text

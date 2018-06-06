@@ -18,7 +18,7 @@ use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, DisplayConfig, 
                          Light, Material, MaterialDefaults, MeshHandle, ObjFormat, Pipeline,
                          PngFormat, PointLight, PosNormTex, Projection, RenderBundle, Rgba, Stage,
                          VirtualKeyCode};
-use amethyst::ui::{Anchor, Anchored, DrawUi, FontHandle, TtfFormat, UiBundle, UiText, UiTransform};
+use amethyst::ui::{Anchor, DrawUi, FontHandle, TtfFormat, UiBundle, UiText, UiTransform};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
 
@@ -113,6 +113,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Loading {
             .create_entity()
             .with(UiTransform::new(
                 "fps".to_string(),
+                Anchor::TopLeft,
                 100.,
                 25.,
                 1.,
@@ -126,13 +127,13 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Loading {
                 [1.0, 1.0, 1.0, 1.0],
                 25.,
             ))
-            .with(Anchored::new(Anchor::TopLeft))
             .build();
 
         data.world
             .create_entity()
             .with(UiTransform::new(
                 "fps".to_string(),
+                Anchor::Middle,
                 0.,
                 0.,
                 1.,
@@ -146,7 +147,6 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Loading {
                 [1.0, 1.0, 1.0, 1.0],
                 25.,
             ))
-            .with(Anchored::new(Anchor::Middle))
             .with(LoadTag)
             .build();
 
