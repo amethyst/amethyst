@@ -14,9 +14,9 @@ use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DrawShaded, Light, Mesh, PngFormat, PointLight,
                          PosNormTex, Projection, Rgba, Texture, Shape};
 use amethyst::shrev::{EventChannel, ReaderId};
-use amethyst::ui::{Anchor, Anchored, FontAsset, MouseReactive, Stretch, Stretched, TextEditing,
-                   TtfFormat, UiBundle, UiButtonBuilder, UiButtonResources, UiEvent, UiFocused,
-                   UiImage, UiText, UiTransform};
+use amethyst::ui::{Anchor, FontAsset, MouseReactive, Stretch, TextEditing, TtfFormat,
+                   UiBundle, UiButtonBuilder, UiButtonResources, UiEvent, UiFocused, UiImage,
+                   UiText, UiTransform};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::winit::{Event, VirtualKeyCode};
 
@@ -38,7 +38,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
         initialise_sphere(world);
         initialise_lights(world);
         initialise_camera(world);
-        let (logo, font, red, green, blue) = {
+        let (logo, font, background_color, green) = {
             let loader = world.read_resource::<Loader>();
 
             let logo = loader.load(
@@ -56,8 +56,8 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
                 (),
                 &world.read_resource::<AssetStorage<FontAsset>>(),
             );
-            let red = loader.load_from_data(
-                [1.0, 0.0, 0.0, 1.0].into(),
+            let background_color = loader.load_from_data(
+                [0.36, 0.10, 0.57, 1.0].into(),
                 (),
                 &world.read_resource::<AssetStorage<Texture>>(),
             );
@@ -66,64 +66,28 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
                 (),
                 &world.read_resource::<AssetStorage<Texture>>(),
             );
-            let blue = loader.load_from_data(
-                [0.0, 0.0, 1.0, 1.0].into(),
-                (),
-                &world.read_resource::<AssetStorage<Texture>>(),
-            );
-            (logo, font, red, green, blue)
+            (logo, font, background_color, green)
         };
 
         let background = world
             .create_entity()
-            .with(UiTransform::new(
-                "background".to_string(),
-                0.0,
-                0.0,
-                0.0,
-                20.0,
-                20.0,
-                0,
-            ))
-            .with(UiImage {
-                texture: red.clone(),
-            })
-            .with(Stretched::new(Stretch::XY, 0.0, 0.0))
-            .with(Anchored::new(Anchor::Middle))
-            .build();
-
-        let top_right = world
-            .create_entity()
             .with(
-                UiTransform::new("top_right".to_string(), -32.0, 32.0, -1.0, 64.0, 64.0, 0)
-                    .as_percent(),
+                UiTransform::new(
+                    "background".to_string(),
+                    Anchor::Middle,
+                    0.0,
+                    0.0,
+                    10.0,
+                    20.0,
+                    20.0,
+                    0,
+                ).with_stretching(Stretch::XY {
+                    x_margin: 0.0,
+                    y_margin: 0.0,
+                }),
             )
             .with(UiImage {
-                texture: green.clone(),
-            })
-            .with(Anchored::new(Anchor::TopRight))
-            .with(Parent {
-                entity: background.clone(),
-            })
-            .build();
-        world
-            .create_entity()
-            .with(UiTransform::new(
-                "middle_top_right".to_string(),
-                0.0,
-                0.0,
-                -2.0,
-                32.0,
-                32.0,
-                0,
-            ))
-            .with(UiImage {
-                texture: blue.clone(),
-            })
-            .with(Anchored::new(Anchor::Middle))
-            .with(Stretched::new(Stretch::X, 2.0, 0.0))
-            .with(Parent {
-                entity: top_right.clone(),
+                texture: background_color.clone(),
             })
             .build();
 
@@ -131,8 +95,9 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
             .create_entity()
             .with(UiTransform::new(
                 "logo".to_string(),
+                Anchor::BottomMiddle,
                 0.,
-                -32.,
+                32.,
                 -3.,
                 64.,
                 64.,
@@ -141,7 +106,6 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
             .with(UiImage {
                 texture: logo.clone(),
             })
-            .with(Anchored::new(Anchor::BottomMiddle))
             .with(MouseReactive)
             .build();
 
@@ -149,6 +113,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
             .create_entity()
             .with(UiTransform::new(
                 "hello_world".to_string(),
+                Anchor::Middle,
                 0.,
                 0.,
                 -4.,
@@ -159,10 +124,9 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
             .with(UiText::new(
                 font.clone(),
                 "Hello world!".to_string(),
-                [0.2, 0.2, 1.0, 1.0],
+                [0.5, 0.5, 1.0, 1.0],
                 75.,
             ))
-            .with(Anchored::new(Anchor::Middle))
             .with(TextEditing::new(
                 12,
                 [0.0, 0.0, 0.0, 1.0],
@@ -183,6 +147,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
                 ))
                 .with_transform(UiTransform::new(
                     "btn_transform".to_string(),
+                    Anchor::TopMiddle,
                     0.0,
                     32.0,
                     -1.0,
@@ -193,7 +158,6 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
                 .with_image(UiImage {
                     texture: green.clone(),
                 })
-                .with_anchored(Anchored::new(Anchor::TopMiddle))
                 .with_parent(Parent {
                     entity: background.clone(),
                 })
@@ -205,7 +169,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
                 "Simpler!",
                 UiButtonResources::from_world(&world),
             ).with_font(font.clone())
-                .with_position(250.0, 50.0)
+                .with_position(275.0, 50.0)
         };
         simple_builder.build_from_world(world);
 
@@ -213,6 +177,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
             .create_entity()
             .with(UiTransform::new(
                 "fps".to_string(),
+                Anchor::TopLeft,
                 100.,
                 30.,
                 -3.,
@@ -226,7 +191,6 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
                 [1.0, 1.0, 1.0, 1.0],
                 75.,
             ))
-            .with(Anchored::new(Anchor::TopLeft))
             .build();
         self.fps_display = Some(fps);
         world.write_resource::<UiFocused>().entity = Some(text);
@@ -256,15 +220,6 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
 }
 
 fn main() -> amethyst::Result<()> {
-    println!("Due to some bugs this example currently comes with a seizure warning.");
-    println!("If you have a history of seizures please do not run this.");
-    println!("Would you like to run this? (Y/N)");
-    let mut input = String::new();
-    let _ = ::std::io::stdin().read_line(&mut input);
-    if !input.to_lowercase().starts_with("y") {
-        return Ok(());
-    }
-
     let display_config_path = format!(
         "{}/examples/ui/resources/display.ron",
         env!("CARGO_MANIFEST_DIR")
