@@ -18,7 +18,7 @@ use gfx::pso::buffer::ElemStride;
 use gfx::state::ColorMask;
 use gfx_glyph::{BuiltInLineBreaker, FontId, GlyphBrush, GlyphBrushBuilder, GlyphCruncher,
                 HorizontalAlign, Layout, Point, Scale, SectionText, VariedSection, VerticalAlign};
-use glsl_layout::{Uniform, vec2, vec4};
+use glsl_layout::{vec2, vec4, Uniform};
 use hibitset::BitSet;
 use unicode_segmentation::UnicodeSegmentation;
 
