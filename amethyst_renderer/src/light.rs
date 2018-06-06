@@ -2,10 +2,12 @@
 //!
 //! TODO: Remove redundant padding once `#[repr(align(...))]` stabilizes.
 
-use amethyst_core::specs::prelude::{Component, DenseVecStorage};
+use amethyst_assets::{PrefabData, PrefabError};
+use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entity, Write, WriteStorage};
 use gfx;
 
 use color::Rgba;
+use resources::AmbientColor;
 
 /// A light source.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
@@ -180,4 +182,49 @@ impl From<SunLight> for Light {
 
 impl Component for Light {
     type Storage = DenseVecStorage<Self>;
+}
+
+impl<'a> PrefabData<'a> for Light {
+    type SystemData = WriteStorage<'a, Light>;
+    type Result = ();
+
+    fn load_prefab(
+        &self,
+        entity: Entity,
+        storage: &mut Self::SystemData,
+        _: &[Entity],
+    ) -> Result<(), PrefabError> {
+        storage.insert(entity, self.clone()).map(|_| ())
+    }
+}
+
+/// Prefab for lighting
+#[derive(Default, Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct LightPrefab {
+    light: Option<Light>,
+    ambient_color: Option<AmbientColor>,
+}
+
+impl<'a> PrefabData<'a> for LightPrefab {
+    type SystemData = (
+        <Light as PrefabData<'a>>::SystemData,
+        Write<'a, AmbientColor>,
+    );
+    type Result = ();
+
+    fn load_prefab(
+        &self,
+        entity: Entity,
+        system_data: &mut Self::SystemData,
+        _: &[Entity],
+    ) -> Result<(), PrefabError> {
+        if let Some(ref light) = self.light {
+            light.load_prefab(entity, &mut system_data.0, &[])?;
+        }
+        if let Some(ref ambient_color) = self.ambient_color {
+            *system_data.1 = ambient_color.clone();
+        }
+        Ok(())
+    }
 }
