@@ -13,9 +13,9 @@ use amethyst::ecs::prelude::{Component, Entity, Join, Read, ReadStorage, System,
                              WriteExpect, WriteStorage};
 use amethyst::ecs::storage::NullStorage;
 use amethyst::input::{get_key, is_close_requested, is_key, InputBundle};
-use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, DrawShaded, Event,
-                         Light, Material, MaterialDefaults, MeshHandle, ObjFormat, Pipeline,
-                         PngFormat, PointLight, PosNormTex, Projection, Rgba, VirtualKeyCode};
+use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, DrawShaded, Event, Light,
+                         Material, MaterialDefaults, MeshHandle, ObjFormat, PngFormat, PointLight,
+                         PosNormTex, Projection, Rgba, VirtualKeyCode};
 use amethyst::ui::{Anchor, FontHandle, TtfFormat, UiBundle, UiText, UiTransform};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};

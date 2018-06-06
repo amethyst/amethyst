@@ -1,8 +1,8 @@
 use amethyst_assets::{AssetStorage, Loader, Progress};
 use amethyst_core::cgmath::{InnerSpace, Vector3};
 use amethyst_core::specs::prelude::{Read, ReadExpect};
-use genmesh::generators::{/*Circle, */Cone, Cube, Cylinder, IcoSphere, IndexedPolygon, Plane,
-                          SharedVertex, SphereUv, Torus};
+use genmesh::generators::{/*Circle, */ Cone, Cube, Cylinder, IcoSphere, IndexedPolygon,
+                          Plane, SharedVertex, SphereUv, Torus};
 use genmesh::{EmitTriangles, MapVertex, Triangulate, Vertex, Vertices};
 
 use {ComboMeshCreator, Mesh, MeshData, MeshHandle, Normal, PosNormTangTex, PosNormTex, PosTex,
