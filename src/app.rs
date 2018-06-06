@@ -326,7 +326,7 @@ impl<S> ApplicationBuilder<S> {
             .level(LevelFilter::Debug)
             .chain(io::stdout())
             .apply()
-            .unwrap_or_else(|e| warn!("Application tried to override existing logger: {}", e));
+            .unwrap_or_else(|_| debug!("Global logger already set, default amethyst logger will not be used"));
 
         info!("Initializing Amethyst...");
         info!("Version: {}", env!("CARGO_PKG_VERSION"));
