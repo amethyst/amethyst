@@ -137,7 +137,13 @@ impl Tracker for ProgressCounterTracker {
         self.num_loading.fetch_sub(1, Ordering::Relaxed);
     }
 
-    fn fail(self: Box<Self>, handle_id: u32, asset_type_name: &'static str, asset_name: String, error: Error) {
+    fn fail(
+        self: Box<Self>,
+        handle_id: u32,
+        asset_type_name: &'static str,
+        asset_name: String,
+        error: Error,
+    ) {
         self.errors.lock().push(AssetErrorMeta {
             error,
             handle_id,
@@ -163,14 +169,32 @@ pub trait Tracker: Send + 'static {
     /// Called if the asset could be imported.
     fn success(self: Box<Self>);
     /// Called if the asset couldn't be imported to an error.
-    fn fail(self: Box<Self>, handle_id: u32, asset_type_name: &'static str, asset_name: String, error: Error);
+    fn fail(
+        self: Box<Self>,
+        handle_id: u32,
+        asset_type_name: &'static str,
+        asset_name: String,
+        error: Error,
+    );
 }
 
 impl Tracker for () {
     fn success(self: Box<Self>) {}
-    fn fail(self: Box<Self>, handle_id: u32, asset_type_name: &'static str, asset_name: String, error: Error) {
-        error!("error loading handle {}, {}, with name {}, caused by: {:?}", handle_id, asset_type_name, asset_name, error);
-        error.iter().skip(1).for_each(|e| error!("caused by: {:?}", e));
+    fn fail(
+        self: Box<Self>,
+        handle_id: u32,
+        asset_type_name: &'static str,
+        asset_name: String,
+        error: Error,
+    ) {
+        error!(
+            "error loading handle {}, {}, with name {}, caused by: {:?}",
+            handle_id, asset_type_name, asset_name, error
+        );
+        error
+            .iter()
+            .skip(1)
+            .for_each(|e| error!("caused by: {:?}", e));
         error!("note: to handle the error, use a `Progress` other than `()`");
     }
 }

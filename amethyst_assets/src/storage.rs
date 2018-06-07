@@ -180,7 +180,12 @@ impl<A: Asset> AssetStorage<A> {
                                         "Loading unnecessary asset. Handle {} is unique ",
                                         handle.id()
                                     );
-                                    tracker.fail(handle.id(), A::NAME, name, Error::from_kind(ErrorKind::UnusedHandle));
+                                    tracker.fail(
+                                        handle.id(),
+                                        A::NAME,
+                                        name,
+                                        Error::from_kind(ErrorKind::UnusedHandle),
+                                    );
                                 } else {
                                     tracker.success();
                                 }
