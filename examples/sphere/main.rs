@@ -1,7 +1,6 @@
 //! Displays a shaded sphere to the user.
 
 extern crate amethyst;
-extern crate genmesh;
 
 use amethyst::assets::Loader;
 use amethyst::core::cgmath::Deg;
@@ -10,9 +9,7 @@ use amethyst::ecs::prelude::World;
 use amethyst::input::{is_close_requested, is_key};
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DrawShaded, Event, Light, Mesh, PointLight,
-                         PosNormTex, Projection, Rgba, VirtualKeyCode};
-use genmesh::generators::SphereUV;
-use genmesh::{MapToVertices, Triangulate, Vertices};
+                         PosNormTex, Projection, Rgba, VirtualKeyCode, Shape};
 
 const SPHERE_COLOUR: [f32; 4] = [0.0, 0.0, 1.0, 1.0]; // blue
 const AMBIENT_LIGHT_COLOUR: Rgba = Rgba(0.01, 0.01, 0.01, 1.0); // near-black
@@ -63,18 +60,6 @@ fn main() -> amethyst::Result<()> {
     Ok(())
 }
 
-fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTex> {
-    SphereUV::new(u, v)
-        .vertex(|vertex| PosNormTex {
-            position: vertex.pos,
-            normal: vertex.normal,
-            tex_coord: [0.1, 0.1],
-        })
-        .triangulate()
-        .vertices()
-        .collect()
-}
-
 /// This function initialises a sphere and adds it to the world.
 fn initialise_sphere(world: &mut World) {
     // Create a sphere mesh and material.
@@ -85,8 +70,11 @@ fn initialise_sphere(world: &mut World) {
     let (mesh, material) = {
         let loader = world.read_resource::<Loader>();
 
-        let mesh: Handle<Mesh> =
-            loader.load_from_data(gen_sphere(32, 32).into(), (), &world.read_resource());
+        let mesh: Handle<Mesh> = loader.load_from_data(
+            Shape::Sphere(32, 32).generate::<Vec<PosNormTex>>(None),
+            (),
+            &world.read_resource(),
+        );
 
         let albedo = SPHERE_COLOUR.into();
 

@@ -1,17 +1,14 @@
 //! Displays a shaded sphere to the user.
 
 extern crate amethyst;
-extern crate genmesh;
 
 use amethyst::assets::Loader;
-use amethyst::core::cgmath::{Deg, InnerSpace, Vector3};
+use amethyst::core::cgmath::Deg;
 use amethyst::core::transform::GlobalTransform;
 use amethyst::ecs::prelude::World;
 use amethyst::input::{is_close_requested, is_key};
 use amethyst::prelude::*;
 use amethyst::renderer::*;
-use genmesh::generators::SphereUV;
-use genmesh::{MapToVertices, Triangulate, Vertices};
 
 const SPHERE_COLOUR: [f32; 4] = [0.0, 0.0, 1.0, 1.0]; // blue
 const AMBIENT_LIGHT_COLOUR: Rgba = Rgba(0.01, 0.01, 0.01, 1.0); // near-black
@@ -62,29 +59,6 @@ fn main() -> amethyst::Result<()> {
     Ok(())
 }
 
-fn gen_sphere(u: usize, v: usize) -> ComboMeshCreator {
-    let positions = SphereUV::new(u, v)
-        .vertex(|vertex| vertex.pos)
-        .triangulate()
-        .vertices()
-        .collect::<Vec<_>>();
-
-    let normals = positions
-        .iter()
-        .map(|pos| Separate::<Normal>::new(Vector3::from(*pos).normalize().into()))
-        .collect::<Vec<_>>();
-    let tex_coords = positions
-        .iter()
-        .map(|_| Separate::<TexCoord>::new([0.1, 0.1]))
-        .collect::<Vec<_>>();
-    let positions = positions
-        .into_iter()
-        .map(|pos| Separate::<Position>::new(pos))
-        .collect::<Vec<_>>();
-
-    (positions, None, Some(tex_coords), Some(normals), None).into()
-}
-
 /// This function initialises a sphere and adds it to the world.
 fn initialise_sphere(world: &mut World) {
     // Create a sphere mesh and material.
@@ -95,8 +69,11 @@ fn initialise_sphere(world: &mut World) {
     let (mesh, material) = {
         let loader = world.read_resource::<Loader>();
 
-        let mesh: Handle<Mesh> =
-            loader.load_from_data(gen_sphere(32, 32).into(), (), &world.read_resource());
+        let mesh: Handle<Mesh> = loader.load_from_data(
+            Shape::Sphere(32, 32).generate::<ComboMeshCreator>(None),
+            (),
+            &world.read_resource(),
+        );
 
         let albedo = SPHERE_COLOUR.into();
 

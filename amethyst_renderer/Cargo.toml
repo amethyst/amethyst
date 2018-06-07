@@ -33,6 +33,7 @@ amethyst_core = { path = "../amethyst_core", version = "0.2.0" }
 derivative = "1.0"
 error-chain = "0.11"
 fnv = "1.0"
+genmesh = "0.6"
 gfx = { version = "0.17.1", features = ["serialize"] }
 gfx_core = { version = "0.8", features = ["serialize"] }
 gfx_macros = "0.2"
@@ -65,9 +66,6 @@ gfx_window_dxgi = { version = "0.13", optional = true }
 
 [dependencies.hetseq]
 version = "0.1.5"
-
-[dev-dependencies]
-genmesh = "0.4"
 
 [dependencies.smallvec]
 version = "0.4.2"
