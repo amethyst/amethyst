@@ -82,7 +82,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
                     Anchor::Middle,
                     0.0,
                     0.0,
-                    10.0,
+                    0.0,
                     20.0,
                     20.0,
                     0,
@@ -102,7 +102,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
                 "logo".to_string(),
                 Anchor::BottomMiddle,
                 0.,
-                32.,
+                -32.,
                 -3.,
                 64.,
                 64.,
@@ -155,7 +155,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
 
         UiButtonBuilder::new("simple_btn", "Simpler!")
             .with_font(font.clone())
-            .with_position(250.0, 50.0)
+            .with_position(275.0, 50.0)
             .build_from_world(world);
 
         let fps = world

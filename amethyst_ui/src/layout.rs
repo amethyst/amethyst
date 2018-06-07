@@ -5,8 +5,7 @@ use amethyst_core::specs::prelude::{BitSet, Entities, InsertedFlag, Join, Modifi
 use amethyst_core::{HierarchyEvent, Parent, ParentHierarchy};
 use amethyst_renderer::ScreenDimensions;
 
-/// Unused, will be implemented in a future PR.
-/// Indicated if the position and margins should be calculated in pixel or
+/// Indicates if the position and margins should be calculated in pixel or
 /// relative to their parent size.
 #[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
 pub enum ScaleMode {
@@ -134,9 +133,17 @@ impl<'a> System<'a> for UiParentSystem {
         let current_screen_size = (screen_dim.width(), screen_dim.height());
         let screen_resized = current_screen_size != self.screen_size;
         self.screen_size = current_screen_size;
-        for (entity, transform, _) in (&*entities, &mut transforms, !&parents).join() {
+        for (entity, _) in (&*entities, !&parents).join() {
             let self_dirty = self.transform_modified.contains(entity.id());
             if self_dirty || screen_resized {
+                // By doing things this way we prevent grabbing mutable
+                // borrows unnecessarily which allows us to avoid re-computing
+                // for no changes.
+                let transform = transforms.get_mut(entity);
+                if transform.is_none() {
+                    continue;
+                }
+                let transform = transform.unwrap();
                 let norm = transform.anchor.norm_offset();
                 transform.pixel_x = screen_dim.width() * norm.0;
                 transform.pixel_y = screen_dim.height() * norm.1;
@@ -185,14 +192,19 @@ impl<'a> System<'a> for UiParentSystem {
             {
                 let self_dirty = self.transform_modified.contains(entity.id());
                 let parent_entity = parents.get(*entity).unwrap().entity;
-                let parent_transform_copy = transforms.get(parent_entity).unwrap().clone();
-                let mut transform = transforms.get_mut(*entity).unwrap();
                 let parent_dirty = self.transform_modified.contains(parent_entity.id());
                 if parent_dirty || self_dirty || screen_resized {
+                    let parent_transform_copy = transforms.get(parent_entity).cloned();
+                    let transform = transforms.get_mut(*entity);
+                    if parent_transform_copy.is_none() || transform.is_none() {
+                        continue;
+                    }
+                    let parent_transform_copy = parent_transform_copy.unwrap();
+                    let mut transform = transform.unwrap();
                     let norm = transform.anchor.norm_offset();
-                    transform.pixel_x = parent_transform_copy.pixel_width * norm.0;
-                    transform.pixel_y = parent_transform_copy.pixel_height * norm.1;
-                    transform.global_z = transform.local_z;
+                    transform.pixel_x = parent_transform_copy.pixel_x + parent_transform_copy.pixel_width * norm.0;
+                    transform.pixel_y = parent_transform_copy.pixel_y + parent_transform_copy.pixel_height * norm.1;
+                    transform.global_z = parent_transform_copy.global_z + transform.local_z;
 
                     let new_size = match transform.stretch {
                         Stretch::NoStretch => (transform.width, transform.height),
@@ -237,7 +249,6 @@ impl<'a> System<'a> for UiParentSystem {
                 &mut self.transform_modified,
             );
         }
-
         // We need to treat any changes done inside the system as non-modifications, so we read out
         // any events that were generated during the system run
         transforms.populate_inserted(

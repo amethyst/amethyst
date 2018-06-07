@@ -189,7 +189,7 @@ impl UiButtonBuilder {
                 image_entity,
                 UiTransform::new(
                     self.name,
-                    self.anchor.unwrap_or(Anchor::TopRight),
+                    self.anchor.unwrap_or(Anchor::TopLeft),
                     self.x,
                     self.y,
                     self.z,
@@ -226,7 +226,7 @@ impl UiButtonBuilder {
         res.transform
             .insert(
                 text_entity,
-                UiTransform::new(id, Anchor::Middle, 0., 0., -1., 0., 0., 10)
+                UiTransform::new(id, Anchor::Middle, 0., 0., -0.01, 0., 0., 10)
                     .as_transparent()
                     .with_stretching(Stretch::XY {
                         x_margin: 0.,
