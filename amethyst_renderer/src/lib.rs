@@ -31,6 +31,9 @@ extern crate log;
 extern crate rayon;
 #[macro_use]
 extern crate serde;
+extern crate shred;
+#[macro_use]
+extern crate shred_derive;
 extern crate smallvec;
 extern crate wavefront_obj;
 extern crate winit;
@@ -79,7 +82,7 @@ pub use pipe::{ColorBuffer, Data, DepthBuffer, DepthMode, Effect, EffectBuilder,
                PolyStage, PolyStages, Stage, StageBuilder, Target, TargetBuilder, Targets};
 pub use renderer::Renderer;
 pub use resources::{AmbientColor, ScreenDimensions, WindowMessages};
-pub use shape::{InternalShape, Shape};
+pub use shape::{InternalShape, Shape, ShapeUpload};
 pub use skinning::{AnimatedComboMeshCreator, AnimatedVertexBufferCombination, JointIds,
                    JointTransforms, JointWeights};
 pub use sprite::{Sprite, SpriteSheet, SpriteSheetHandle};

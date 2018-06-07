@@ -43,6 +43,8 @@ imagefmt = "4.0"
 log = "0.4"
 rayon = "1.0.1"
 serde = { version = "1", features = ["serde_derive"] }
+shred-derive = "0.5"
+shred = "0.7"
 wavefront_obj = "5.0"
 winit = "0.15"
 
