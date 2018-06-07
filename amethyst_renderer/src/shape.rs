@@ -1,6 +1,6 @@
 use amethyst_core::cgmath::{InnerSpace, Vector3};
 use genmesh::generators::{Cone, Cube, Cylinder, IcoSphere, IndexedPolygon, Plane, SharedVertex,
-                          SphereUv, Torus};
+                          SphereUv, Torus, CircleU};
 use genmesh::{EmitTriangles, MapVertex, Triangulate, Vertex, Vertices};
 
 use {ComboMeshCreator, MeshData, Normal, PosNormTangTex, PosNormTex, PosTex, Position, Separate,
@@ -24,6 +24,8 @@ pub enum Shape {
     IcoSphere(Option<usize>),
     /// Plane, located in the XY plane, number of subdivisions along x and y axis if given
     Plane(Option<(usize, usize)>),
+    /// Circle, located in the XY plane, number of points around the circle
+    Circle(usize),
 }
 
 pub type VertexFormat = ([f32; 3], [f32; 3], [f32; 2], [f32; 3]);
@@ -81,6 +83,7 @@ impl Shape {
                     .unwrap_or_else(Plane::new),
                 scale,
             ),
+            Shape::Circle(u) => generate_vertices(CircleU::new(u), scale),
         };
         InternalShape(vertices)
     }
