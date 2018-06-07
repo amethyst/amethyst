@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Add bundle for the arc ball camera ([#770])
 * Add utility functions for dealing with common input ([#759])
 * Add alpha cutoff support to the PBR shader ([#756])
+* Shape mesh generators ([#777])
 
 ### Changed
 * Refactored asset loading so `Processor`s can defer storage insertion ([#760])
@@ -44,6 +45,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#770]: https://github.com/amethyst/amethyst/pull/770
 [#772]: https://github.com/amethyst/amethyst/pull/772
 [#773]: https://github.com/amethyst/amethyst/pull/773
+[#777]: https://github.com/amethyst/amethyst/pull/777
 
 ## [0.7.0] - 2018-05
 ### Added

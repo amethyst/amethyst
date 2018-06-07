@@ -1,10 +1,14 @@
+use amethyst_assets::{AssetStorage, Loader, Progress};
 use amethyst_core::cgmath::{InnerSpace, Vector3};
-use genmesh::generators::{Cone, Cube, Cylinder, IcoSphere, IndexedPolygon, Plane, SharedVertex,
-                          SphereUv, Torus, CircleU};
+use amethyst_core::specs::prelude::{Read, ReadExpect};
+use genmesh::generators::{/*Circle, */Cone, Cube, Cylinder, IcoSphere, IndexedPolygon, Plane,
+                          SharedVertex, SphereUv, Torus};
 use genmesh::{EmitTriangles, MapVertex, Triangulate, Vertex, Vertices};
 
-use {ComboMeshCreator, MeshData, Normal, PosNormTangTex, PosNormTex, PosTex, Position, Separate,
-     Tangent, TexCoord};
+use {ComboMeshCreator, Mesh, MeshData, MeshHandle, Normal, PosNormTangTex, PosNormTex, PosTex,
+     Position, Separate, Tangent, TexCoord};
+
+// TODO: enable Circle when PR is released in genmesh
 
 /// Shape generators
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -24,8 +28,15 @@ pub enum Shape {
     IcoSphere(Option<usize>),
     /// Plane, located in the XY plane, number of subdivisions along x and y axis if given
     Plane(Option<(usize, usize)>),
-    /// Circle, located in the XY plane, number of points around the circle
-    Circle(usize),
+    // Circle, located in the XY plane, number of points around the circle
+    //Circle(usize),
+}
+
+/// `SystemData` needed to upload a `Shape` directly to create a `MeshHandle`
+#[derive(SystemData)]
+pub struct ShapeUpload<'a> {
+    loader: ReadExpect<'a, Loader>,
+    storage: Read<'a, AssetStorage<Mesh>>,
 }
 
 pub type VertexFormat = ([f32; 3], [f32; 3], [f32; 2], [f32; 3]);
@@ -35,6 +46,36 @@ pub type VertexFormat = ([f32; 3], [f32; 3], [f32; 2], [f32; 3]);
 pub struct InternalShape(Vec<VertexFormat>);
 
 impl Shape {
+    /// Generate `Mesh` for the `Shape`, and convert it into a `MeshHandle`.
+    ///
+    /// ### Parameters:
+    ///
+    /// - `scale`: Scale the shape by the given amounts along the x, y, z axes
+    /// - `upload`: ECS resources needed for uploading the mesh
+    /// - `progress`: Progress tracker
+    ///
+    /// ### Type parameters:
+    ///
+    /// `V`: Vertex format to use, must to be one of:
+    ///     * `Vec<PosTex>`
+    ///     * `Vec<PosNormTex>`
+    ///     * `Vec<PosNormTangTex>`
+    ///     * `ComboMeshCreator`
+    pub fn upload<V, P>(
+        &self,
+        scale: Option<(f32, f32, f32)>,
+        upload: ShapeUpload,
+        progress: P,
+    ) -> MeshHandle
+    where
+        V: From<InternalShape> + Into<MeshData>,
+        P: Progress,
+    {
+        upload
+            .loader
+            .load_from_data(self.generate::<V>(scale), progress, &upload.storage)
+    }
+
     /// Generate `MeshData` for the `Shape`
     ///
     /// ### Parameters:
@@ -83,7 +124,7 @@ impl Shape {
                     .unwrap_or_else(Plane::new),
                 scale,
             ),
-            Shape::Circle(u) => generate_vertices(CircleU::new(u), scale),
+            //Shape::Circle(u) => generate_vertices(CircleU::new(u), scale),
         };
         InternalShape(vertices)
     }
