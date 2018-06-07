@@ -10,7 +10,7 @@ use hibitset::BitSet;
 use rayon::ThreadPool;
 
 use asset::{Asset, FormatValue};
-use error::{ErrorKind, Result, ResultExt};
+use error::{Error, ErrorKind, Result, ResultExt};
 use progress::Tracker;
 use reload::{HotReloadStrategy, Reload};
 
@@ -172,7 +172,23 @@ impl<A: Asset> AssetStorage<A> {
                                         name,
                                         handle,
                                     );
-                                tracker.success();
+                                // Add a warning if a handle is unique (i.e. asset does not
+                                // need to be loaded as it is not used by anything)
+                                // https://github.com/amethyst/amethyst/issues/628
+                                if handle.is_unique() {
+                                    warn!(
+                                        "Loading unnecessary asset. Handle {} is unique ",
+                                        handle.id()
+                                    );
+                                    tracker.fail(
+                                        handle.id(),
+                                        A::NAME,
+                                        name,
+                                        Error::from_kind(ErrorKind::UnusedHandle),
+                                    );
+                                } else {
+                                    tracker.success();
+                                }
 
                                 (x, r)
                             }
@@ -199,21 +215,11 @@ impl<A: Asset> AssetStorage<A> {
                                     handle,
                                     e,
                                 );
-                                tracker.fail(e);
+                                tracker.fail(handle.id(), A::NAME, name, e);
 
                                 continue;
                             }
                         };
-
-                        // Add a warning if a handle is unique (i.e. asset does not
-                        // need to be loaded as it is not used by anything)
-                        // https://github.com/amethyst/amethyst/issues/628
-                        if handle.is_unique() {
-                            warn!(
-                                "Loading unecessary asset. Handle {} is unique ",
-                                handle.id()
-                            );
-                        }
 
                         let id = handle.id();
                         bitset.add(id);
