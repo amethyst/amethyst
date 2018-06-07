@@ -13,7 +13,6 @@ use transform::UiTransform;
 #[derive(Debug, Clone)]
 pub enum UiEventType {
     /// When an element is clicked normally.
-    /// Happens when the element both start and stops being clicked.
     Click,
     /// When the element starts being clicked (On left mouse down).
     ClickStart,

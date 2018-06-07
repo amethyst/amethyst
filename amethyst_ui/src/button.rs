@@ -45,8 +45,8 @@ pub struct UiButtonBuilder {
     width: f32,
     height: f32,
     tab_order: i32,
-    anchor: Option<Anchor>,
-    stretch: Option<Stretch>,
+    anchor: Anchor,
+    stretch: Stretch,
     text: String,
     text_color: [f32; 4],
     font: Option<FontHandle>,
@@ -65,8 +65,8 @@ impl Default for UiButtonBuilder {
             width: DEFAULT_WIDTH,
             height: DEFAULT_HEIGHT,
             tab_order: DEFAULT_TAB_ORDER,
-            anchor: None,
-            stretch: None,
+            anchor: Anchor::TopLeft,
+            stretch: Stretch::NoStretch,
             text: "".to_string(),
             text_color: DEFAULT_TXT_COLOR,
             font: None,
@@ -104,13 +104,13 @@ impl UiButtonBuilder {
 
     /// Add an anchor to the button.
     pub fn with_anchor(mut self, anchor: Anchor) -> Self {
-        self.anchor = Some(anchor);
+        self.anchor = anchor;
         self
     }
 
     /// Stretch the button.
     pub fn with_stretch(mut self, stretch: Stretch) -> Self {
-        self.stretch = Some(stretch);
+        self.stretch = stretch;
         self
     }
 
@@ -189,14 +189,14 @@ impl UiButtonBuilder {
                 image_entity,
                 UiTransform::new(
                     self.name,
-                    self.anchor.unwrap_or(Anchor::TopRight),
+                    self.anchor,
                     self.x,
                     self.y,
                     self.z,
                     self.width,
                     self.height,
                     self.tab_order,
-                ).with_stretching(Stretch::NoStretch),
+                ).with_stretch(self.stretch),
             )
             .unwrap();
         let image_handle = self.image.unwrap_or_else(|| {
@@ -226,9 +226,9 @@ impl UiButtonBuilder {
         res.transform
             .insert(
                 text_entity,
-                UiTransform::new(id, Anchor::Middle, 0., 0., -1., 0., 0., 10)
+                UiTransform::new(id, Anchor::Middle, 0., 0., -0.01, 0., 0., 10)
                     .as_transparent()
-                    .with_stretching(Stretch::XY {
+                    .with_stretch(Stretch::XY {
                         x_margin: 0.,
                         y_margin: 0.,
                     }),

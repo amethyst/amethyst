@@ -40,8 +40,8 @@ where
         builder.add(ResizeSystem::new(), "ui_resize_system", &[]);
         builder.add(UiMouseSystem::<A, B>::new(), "ui_mouse_system", &[]);
         builder.add(
-            UiParentSystem::default(),
-            "ui_parent",
+            UiTransformSystem::default(),
+            "ui_transform",
             &["transform_system"],
         );
         Ok(())

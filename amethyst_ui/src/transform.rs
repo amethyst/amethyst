@@ -54,11 +54,11 @@ pub struct UiTransform {
     /// as this one exists they are ordered according to Entity creation order.  Shift-tab walks
     /// this ordering backwards.
     pub tab_order: i32,
-    /// Global x position set by the `UiParentSystem`.
+    /// Global x position set by the `UiTransformSystem`.
     pub(crate) pixel_x: f32,
-    /// Global y position set by the `UiParentSystem`.
+    /// Global y position set by the `UiTransformSystem`.
     pub(crate) pixel_y: f32,
-    /// Global z position set by the `UiParentSystem`.
+    /// Global z position set by the `UiTransformSystem`.
     pub(crate) global_z: f32,
     /// Width in pixels, used for rendering.  Duplicate of `width` if `scale_mode == ScaleMode::Pixel`.
     pub(crate) pixel_width: f32,
@@ -134,22 +134,22 @@ impl UiTransform {
     }
 
     /// Adds stretching to this ui element so it can fill its parent.
-    pub fn with_stretching(mut self, stretch: Stretch) -> Self {
+    pub fn with_stretch(mut self, stretch: Stretch) -> Self {
         self.stretch = stretch;
         self
     }
 
-    /// Returns the global x coordinate of this UiTransform as computed by the `UiParentSystem`.
+    /// Returns the global x coordinate of this UiTransform as computed by the `UiTransformSystem`.
     pub fn pixel_x(&self) -> f32 {
         self.pixel_x
     }
 
-    /// Returns the global y coordinate of this UiTransform as computed by the `UiParentSystem`.
+    /// Returns the global y coordinate of this UiTransform as computed by the `UiTransformSystem`.
     pub fn pixel_y(&self) -> f32 {
         self.pixel_y
     }
 
-    /// Returns the global z coordinate of this UiTransform as computed by the `UiParentSystem`.
+    /// Returns the global z order of this UiTransform as computed by the `UiTransformSystem`.
     pub fn global_z(&self) -> f32 {
         self.global_z
     }
