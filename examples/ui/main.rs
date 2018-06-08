@@ -1,7 +1,6 @@
 //! Displays a shaded sphere to the user.
 
 extern crate amethyst;
-extern crate genmesh;
 #[macro_use]
 extern crate log;
 
@@ -13,15 +12,13 @@ use amethyst::ecs::prelude::{Entity, System, World, Write};
 use amethyst::input::{is_close_requested, is_key, InputBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DrawShaded, Light, Mesh, PngFormat, PointLight,
-                         PosNormTex, Projection, Rgba, Texture};
+                         PosNormTex, Projection, Rgba, Texture, Shape};
 use amethyst::shrev::{EventChannel, ReaderId};
 use amethyst::ui::{Anchor, Anchored, FontAsset, MouseReactive, Stretch, Stretched, TextEditing,
                    TtfFormat, UiBundle, UiButtonBuilder, UiButtonResources, UiEvent, UiFocused,
                    UiImage, UiText, UiTransform};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::winit::{Event, VirtualKeyCode};
-use genmesh::generators::SphereUV;
-use genmesh::{MapToVertices, Triangulate, Vertices};
 
 const SPHERE_COLOUR: [f32; 4] = [0.0, 0.0, 1.0, 1.0]; // blue
 const AMBIENT_LIGHT_COLOUR: Rgba = Rgba(0.01, 0.01, 0.01, 1.0); // near-black
@@ -287,18 +284,6 @@ fn main() -> amethyst::Result<()> {
     Ok(())
 }
 
-fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTex> {
-    SphereUV::new(u, v)
-        .vertex(|vertex| PosNormTex {
-            position: vertex.pos,
-            normal: vertex.normal,
-            tex_coord: [0.1, 0.1],
-        })
-        .triangulate()
-        .vertices()
-        .collect()
-}
-
 /// This function initialises a sphere and adds it to the world.
 fn initialise_sphere(world: &mut World) {
     // Create a sphere mesh and material.
@@ -309,8 +294,11 @@ fn initialise_sphere(world: &mut World) {
     let (mesh, material) = {
         let loader = world.read_resource::<Loader>();
 
-        let mesh: Handle<Mesh> =
-            loader.load_from_data(gen_sphere(32, 32).into(), (), &world.read_resource());
+        let mesh: Handle<Mesh> = loader.load_from_data(
+            Shape::Sphere(32, 32).generate::<Vec<PosNormTex>>(None),
+            (),
+            &world.read_resource(),
+        );
 
         let albedo = SPHERE_COLOUR.into();
 
