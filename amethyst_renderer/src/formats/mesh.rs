@@ -235,7 +235,7 @@ impl Clone for Box<MeshCreator> {
 }
 
 /// Mesh creator for `VertexBufferCombination`.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComboMeshCreator {
     combo: VertexBufferCombination,
 }
