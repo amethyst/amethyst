@@ -10,7 +10,7 @@ use transparent::Transparent;
 /// ### Type parameters:
 ///
 /// - `F`: `Format` to use for loading `Texture`s
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(default)]
 pub struct MaterialPrefab<F>
 where

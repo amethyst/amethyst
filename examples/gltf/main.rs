@@ -1,92 +1,101 @@
 //! Displays a 2D GLTF scene
 
 extern crate amethyst;
-extern crate amethyst_animation;
 extern crate amethyst_gltf;
 #[macro_use]
-extern crate log;
+extern crate serde;
 
-use amethyst::assets::{Handle, Loader};
-use amethyst::core::cgmath::{Deg, Quaternion, Rotation3, Vector3};
+use amethyst::animation::{get_animation_set, AnimationBundle, AnimationCommand,
+                          AnimationControlSet, AnimationSet, EndControl, VertexSkinningBundle};
+use amethyst::assets::{AssetPrefab, Completion, Handle, Prefab, PrefabData, PrefabLoader,
+                       PrefabLoaderSystem, ProgressCounter, RonFormat};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
-use amethyst::ecs::prelude::Entity;
+use amethyst::ecs::error::Error;
+use amethyst::ecs::prelude::{Entity, ReadStorage, Write, WriteStorage};
 use amethyst::input::{is_close_requested, is_key};
 use amethyst::prelude::*;
 use amethyst::renderer::*;
-use amethyst_animation::{get_animation_set, AnimationBundle, AnimationCommand, AnimationSet,
-                         EndControl, VertexSkinningBundle};
-use amethyst_gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystem, GltfSceneOptions};
+use amethyst::utils::tag::{Tag, TagFinder};
+use amethyst_gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystem};
 
-struct Example;
+#[derive(Default)]
+struct Example {
+    entity: Option<Entity>,
+    initialised: bool,
+    progress: Option<ProgressCounter>,
+}
 
+#[derive(Clone, Serialize, Deserialize)]
+struct AnimationMarker;
+
+#[derive(Default)]
 struct Scene {
-    entity: Entity,
+    handle: Option<Handle<Prefab<ScenePrefabData>>>,
     animation_index: usize,
+}
+
+#[derive(Default, Deserialize, Serialize)]
+#[serde(default)]
+struct ScenePrefabData {
+    transform: Option<Transform>,
+    gltf: Option<AssetPrefab<GltfSceneAsset, GltfSceneFormat>>,
+    camera: Option<CameraPrefab>,
+    light: Option<LightPrefab>,
+    tag: Option<Tag<AnimationMarker>>,
+}
+
+impl<'a> PrefabData<'a> for ScenePrefabData {
+    type SystemData = (
+        <Option<Transform> as PrefabData<'a>>::SystemData,
+        <Option<AssetPrefab<GltfSceneAsset, GltfSceneFormat>> as PrefabData<'a>>::SystemData,
+        <Option<CameraPrefab> as PrefabData<'a>>::SystemData,
+        <Option<LightPrefab> as PrefabData<'a>>::SystemData,
+        <Option<Tag<AnimationMarker>> as PrefabData<'a>>::SystemData,
+    );
+    type Result = ();
+
+    fn load_prefab(
+        &self,
+        entity: Entity,
+        system_data: &mut Self::SystemData,
+        entities: &[Entity],
+    ) -> Result<(), Error> {
+        self.transform
+            .load_prefab(entity, &mut system_data.0, entities)?;
+        self.gltf.load_prefab(entity, &mut system_data.1, entities)?;
+        self.camera
+            .load_prefab(entity, &mut system_data.2, entities)?;
+        self.light
+            .load_prefab(entity, &mut system_data.3, entities)?;
+        self.tag.load_prefab(entity, &mut system_data.4, entities)?;
+        Ok(())
+    }
+
+    fn trigger_sub_loading(
+        &mut self,
+        progress: &mut ProgressCounter,
+        system_data: &mut Self::SystemData,
+    ) -> Result<bool, Error> {
+        self.gltf.trigger_sub_loading(progress, &mut system_data.1)
+    }
 }
 
 impl<'a, 'b> State<GameData<'a, 'b>> for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
-        let gltf_scene = load_gltf_mesh(
-            &world,
-            &*world.read_resource(),
-            "mesh/Monster.gltf",
-            GltfSceneOptions {
-                generate_tex_coords: Some((0.1, 0.1)),
-                load_animations: true,
-                flip_v_coord: true,
-                move_to_origin: true,
+
+        self.progress = Some(ProgressCounter::default());
+
+        world.exec(
+            |(loader, mut scene): (PrefabLoader<ScenePrefabData>, Write<Scene>)| {
+                scene.handle = Some(loader.load(
+                    "prefab/puffy_scene.ron",
+                    RonFormat,
+                    (),
+                    self.progress.as_mut().unwrap(),
+                ));
             },
         );
-
-        let entity = world
-            .create_entity()
-            .with(gltf_scene)
-            .with(GlobalTransform::default())
-            .build();
-
-        world.add_resource(Scene {
-            entity,
-            animation_index: 0,
-        });
-
-        info!("Create lights");
-        world
-            .create_entity()
-            .with(Light::from(PointLight {
-                center: [6.0, 6.0, -6.0].into(),
-                intensity: 6.0,
-                color: [0.8, 0.0, 0.0].into(),
-                ..PointLight::default()
-            }))
-            .build();
-
-        world
-            .create_entity()
-            .with(Light::from(PointLight {
-                center: [0.0, 4.0, 4.0].into(),
-                intensity: 5.0,
-                color: [0.0, 0.3, 0.7].into(),
-                ..PointLight::default()
-            }))
-            .build();
-
-        info!("Put camera");
-
-        let mut camera_transform = Transform::default();
-        camera_transform.translation = Vector3::new(100.0, 20.0, 0.0);
-        camera_transform.rotation = Quaternion::from_angle_y(Deg(90.));
-        world
-            .create_entity()
-            .with(Camera::from(Projection::perspective(
-                1024. / 768.,
-                Deg(60.),
-            )))
-            .with(GlobalTransform::default())
-            .with(camera_transform)
-            .build();
-
-        world.add_resource(AmbientColor(Rgba(0.2, 0.2, 0.2, 0.2)));
     }
 
     fn handle_event(&mut self, data: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
@@ -94,29 +103,12 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
         if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
             Trans::Quit
         } else if is_key(&event, VirtualKeyCode::Space) {
-            let mut scene = world.write_resource::<Scene>();
-            let sets = world.read_storage::<AnimationSet<usize, Transform>>();
-            let animations = sets.get(scene.entity).unwrap();
-            if animations.animations.len() > 0 {
-                let animation = animations.animations.get(&scene.animation_index).unwrap();
-                let mut controls = world.write_storage();
-                let set = get_animation_set::<usize, Transform>(&mut controls, scene.entity);
-                if set.has_animation(scene.animation_index) {
-                    set.toggle(scene.animation_index);
-                } else {
-                    set.add_animation(
-                        scene.animation_index,
-                        animation,
-                        EndControl::Normal,
-                        1.0,
-                        AnimationCommand::Start,
-                    );
-                }
-                scene.animation_index += 1;
-                if scene.animation_index >= animations.animations.len() {
-                    scene.animation_index = 0;
-                }
-            }
+            toggle_or_cycle_animation(
+                self.entity,
+                &mut world.write_resource(),
+                &world.read_storage(),
+                &mut world.write_storage(),
+            );
             Trans::None
         } else {
             Trans::None
@@ -124,8 +116,72 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
     }
 
     fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+        if !self.initialised {
+            let remove = match self.progress.as_ref().map(|p| p.complete()) {
+                None | Some(Completion::Loading) => false,
+
+                Some(Completion::Complete) => {
+                    let scene_handle = data.world
+                        .read_resource::<Scene>()
+                        .handle
+                        .as_ref()
+                        .unwrap()
+                        .clone();
+
+                    data.world
+                        .create_entity()
+                        .with(scene_handle)
+                        .with(GlobalTransform::default())
+                        .build();
+
+                    true
+                }
+
+                Some(Completion::Failed) => return Trans::Quit,
+            };
+            if remove {
+                self.progress = None;
+            }
+            if self.entity.is_none() {
+                if let Some(entity) = data.world
+                    .exec(|finder: TagFinder<AnimationMarker>| finder.find())
+                {
+                    self.entity = Some(entity);
+                    self.initialised = true;
+                }
+            }
+        }
         data.data.update(&data.world);
         Trans::None
+    }
+}
+
+fn toggle_or_cycle_animation(
+    entity: Option<Entity>,
+    scene: &mut Scene,
+    sets: &ReadStorage<AnimationSet<usize, Transform>>,
+    controls: &mut WriteStorage<AnimationControlSet<usize, Transform>>,
+) {
+    if let Some((entity, Some(animations))) = entity.map(|entity| (entity, sets.get(entity))) {
+        if animations.animations.len() > scene.animation_index {
+            let animation = animations.animations.get(&scene.animation_index).unwrap();
+            let mut set = get_animation_set::<usize, Transform>(controls, entity);
+            if set.has_animation(scene.animation_index) {
+                set.toggle(scene.animation_index);
+            } else {
+                set.add_animation(
+                    scene.animation_index,
+                    animation,
+                    EndControl::Normal,
+                    1.0,
+                    AnimationCommand::Start,
+                );
+            }
+            scene.animation_index += 1;
+            if scene.animation_index >= animations.animations.len() {
+                scene.animation_index = 0;
+            }
+        }
     }
 }
 
@@ -138,38 +194,35 @@ fn main() -> amethyst::Result<()> {
     let resources_directory = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
 
     let game_data = GameDataBuilder::default()
-        .with(GltfSceneLoaderSystem::new(), "loader_system", &[])
+        .with(
+            PrefabLoaderSystem::<ScenePrefabData>::default(),
+            "scene_loader",
+            &[],
+        )
+        .with(
+            GltfSceneLoaderSystem::default(),
+            "gltf_loader",
+            &["scene_loader"],
+        )
         .with_basic_renderer(
             path,
             DrawShadedSeparate::new().with_vertex_skinning(),
             false,
         )?
         .with_bundle(
-            AnimationBundle::<usize, Transform>::new(
-                "animation_control_system",
-                "sampler_interpolation_system",
-            ).with_dep(&["loader_system"]),
+            AnimationBundle::<usize, Transform>::new("animation_control", "sampler_interpolation")
+                .with_dep(&["gltf_loader"]),
         )?
         .with_bundle(
-            TransformBundle::new()
-                .with_dep(&["animation_control_system", "sampler_interpolation_system"]),
+            TransformBundle::new().with_dep(&["animation_control", "sampler_interpolation"]),
         )?
         .with_bundle(VertexSkinningBundle::new().with_dep(&[
             "transform_system",
-            "animation_control_system",
-            "sampler_interpolation_system",
+            "animation_control",
+            "sampler_interpolation",
         ]))?;
 
-    let mut game = Application::new(resources_directory, Example, game_data)?;
+    let mut game = Application::build(resources_directory, Example::default())?.build(game_data)?;
     game.run();
     Ok(())
-}
-
-fn load_gltf_mesh(
-    world: &World,
-    loader: &Loader,
-    name: &str,
-    options: GltfSceneOptions,
-) -> Handle<GltfSceneAsset> {
-    loader.load(name, GltfSceneFormat, options, (), &world.read_resource())
 }
