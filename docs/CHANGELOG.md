@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ## Unreleased
 ### Added
+* UI `ScaleMode` is now functional, permitting percentage based `UiTransform`s. ([#774])
 * Add serde trait derives to many core components ([#760])
 * Add a generic asset `Format` for `ron` files ([#760])
 * Improve error handling for asset loading ([#773])
@@ -19,6 +20,10 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Shape mesh generators ([#777])
 
 ### Changed
+* UI systems will now never overwrite your local `UiTransform` values ([#774])
+* Global `UiTransform` values are no longer writable ([#774])
+* `UiResize` refactored to be more user friendly and more helpful ([#774])
+* `Anchored` and `Stretched` components have been folded into `UiTransform` ([#774])
 * Refactored asset loading so `Processor`s can defer storage insertion ([#760])
 * Moved `MaterialTextureSet` to the renderer crate ([#760])
 * Use `fresnel` function in PBR shader ([#772])
@@ -44,9 +49,10 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#766]: https://github.com/amethyst/amethyst/pull/766
 [#767]: https://github.com/amethyst/amethyst/pull/767
 [#770]: https://github.com/amethyst/amethyst/pull/770
+[#771]: https://github.com/amethyst/amethyst/pull/771
 [#772]: https://github.com/amethyst/amethyst/pull/772
 [#773]: https://github.com/amethyst/amethyst/pull/773
-[#771]: https://github.com/amethyst/amethyst/pull/771
+[#774]: https://github.com/amethyst/amethyst/pull/774
 [#777]: https://github.com/amethyst/amethyst/pull/777
 
 ## [0.7.0] - 2018-05
