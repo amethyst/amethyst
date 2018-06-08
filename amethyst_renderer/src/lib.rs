@@ -83,7 +83,7 @@ pub use pipe::{ColorBuffer, Data, DepthBuffer, DepthMode, Effect, EffectBuilder,
                PolyStage, PolyStages, Stage, StageBuilder, Target, TargetBuilder, Targets};
 pub use renderer::Renderer;
 pub use resources::{AmbientColor, ScreenDimensions, WindowMessages};
-pub use shape::{InternalShape, Shape, ShapeUpload};
+pub use shape::{InternalShape, Shape, ShapePrefab, ShapeUpload};
 pub use skinning::{AnimatedComboMeshCreator, AnimatedVertexBufferCombination, JointIds,
                    JointTransforms, JointTransformsPrefab, JointWeights};
 pub use sprite::{Sprite, SpriteRenderData, SpriteSheet, SpriteSheetHandle, WithSpriteRender};
