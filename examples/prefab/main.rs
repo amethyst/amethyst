@@ -13,7 +13,7 @@ use amethyst::renderer::{CameraPrefab, DisplayConfig, DrawShaded, Event, Graphic
 use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
 
 type MyPrefabData = (
-    Option<GraphicsPrefab<ObjFormat, TextureFormat>>,
+    Option<GraphicsPrefab<Vec<PosNormTex>>>,
     Option<Transform>,
     Option<Light>,
     Option<CameraPrefab>,
