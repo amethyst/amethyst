@@ -474,16 +474,27 @@ impl<'a> System<'a> for UiSystem {
                         // Ignore obsolete control characters, and tab characters we can't render
                         // properly anyways.  Also ignore newline characters since we don't
                         // support multi-line text at the moment.
-                        if input < '\u{8}' || (input > '\u{8}' && input < '\u{20}') {
+                        if input < '\u{20}' {
                             continue;
                         }
-                        // Since delete character isn't emitted on windows, ignore it too.
-                        // We'll handle this with the KeyboardInput event instead.
-                        if input == '\u{7F}' {
+                        // Ignore delete character too
+                        else if input == '\u{7F}' {
+                            continue;
+                        }
+
+                        // Unicode reserves some characters for "private use".  Systems emit
+                        // these for no clear reason, so we're just going to ignore all of them.
+                        else if input >= '\u{E000}' && input <= '\u{F8FF}' {
+                            continue;
+                        }
+                        else if input >= '\u{F0000}' && input <= '\u{FFFFF}' {
+                            continue;
+                        }
+                        else if input >= '\u{100000}' && input <= '\u{10FFFF}' {
                             continue;
                         }
                         focused_edit.cursor_blink_timer = 0.0;
-                        let deleted = delete_highlighted(focused_edit, focused_text);
+                        delete_highlighted(focused_edit, focused_text);
                         let start_byte = focused_text
                             .text
                             .grapheme_indices(true)
@@ -494,27 +505,9 @@ impl<'a> System<'a> for UiSystem {
                                 // This line returns the correct byte index for both.
                                 focused_text.text.len()
                             });
-                        match input {
-                            '\u{8}' /*Backspace*/ => if !deleted {
-                                if focused_edit.cursor_position > 0 {
-                                    if let Some((byte, len)) = focused_text
-                                        .text
-                                        .grapheme_indices(true)
-                                        .nth(focused_edit.cursor_position as usize - 1)
-                                        .map(|i| (i.0, i.1.len())) {
-                                            {
-                                                focused_text.text.drain(byte..(byte + len));
-                                            }
-                                            focused_edit.cursor_position -= 1;
-                                    }
-                                }
-                            },
-                            _ => {
-                                if focused_text.text.graphemes(true).count() < focused_edit.max_length {
-                                    focused_text.text.insert(start_byte, input);
-                                    focused_edit.cursor_position += 1;
-                                }
-                            }
+                        if focused_text.text.graphemes(true).count() < focused_edit.max_length {
+                            focused_text.text.insert(start_byte, input);
+                            focused_edit.cursor_position += 1;
                         }
                     }
                     Event::WindowEvent {
@@ -549,6 +542,20 @@ impl<'a> System<'a> for UiSystem {
                             };
                             focused_edit.cursor_position = glyph_len;
                             focused_edit.cursor_blink_timer = 0.0;
+                        }
+                        VirtualKeyCode::Back => {
+                            if !delete_highlighted(focused_edit, focused_text) {
+                                if focused_edit.cursor_position > 0 {
+                                    if let Some((byte, len)) = focused_text
+                                        .text
+                                        .grapheme_indices(true)
+                                        .nth(focused_edit.cursor_position as usize - 1)
+                                        .map(|i| (i.0, i.1.len())) {
+                                        focused_text.text.drain(byte..(byte + len));
+                                        focused_edit.cursor_position -= 1;
+                                    }
+                                }
+                            }
                         }
                         VirtualKeyCode::Delete => {
                             if !delete_highlighted(focused_edit, focused_text) {
