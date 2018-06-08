@@ -43,13 +43,12 @@ mod text;
 mod transform;
 
 pub use self::bundle::UiBundle;
-pub use self::button::{UiButton, UiButtonBuilder, UiButtonResources};
+pub use self::button::{UiButton, UiButtonBuilder, UiButtonBuilderResources};
 pub use self::event::{MouseReactive, UiEvent, UiEventType, UiMouseSystem};
 pub use self::focused::UiFocused;
 pub use self::format::{FontAsset, FontFormat, FontHandle, OtfFormat, TtfFormat};
 pub use self::image::UiImage;
-pub use self::layout::{Anchor, Anchored, ScaleMode, Stretch, Stretched, UiLayoutSystem,
-                       UiParentSystem};
+pub use self::layout::{Anchor, ScaleMode, Stretch, UiTransformSystem};
 pub use self::pass::DrawUi;
 pub use self::resize::{ResizeSystem, UiResize};
 pub use self::text::{TextEditing, UiSystem, UiText};

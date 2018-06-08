@@ -6,7 +6,7 @@ use amethyst::input::{is_close_requested, is_key};
 use amethyst::prelude::*;
 use amethyst::renderer::{Camera, Event, Material, MeshHandle, PosTex, Projection, VirtualKeyCode,
                          WindowMessages};
-use amethyst::ui::{Anchor, Anchored, TtfFormat, UiText, UiTransform};
+use amethyst::ui::{Anchor, TtfFormat, UiText, UiTransform};
 use systems::ScoreText;
 use {Ball, Paddle, Side};
 use {ARENA_HEIGHT, ARENA_WIDTH};
@@ -153,9 +153,27 @@ fn initialise_score(world: &mut World) {
         (),
         &world.read_resource(),
     );
-    let p1_transform = UiTransform::new("P1".to_string(), -50., 50., 1., 55., 50., 0);
+    let p1_transform = UiTransform::new(
+        "P1".to_string(),
+        Anchor::TopMiddle,
+        -50.,
+        50.,
+        1.,
+        55.,
+        50.,
+        0,
+    );
 
-    let p2_transform = UiTransform::new("P2".to_string(), 50., 50., 1., 55., 50., 0);
+    let p2_transform = UiTransform::new(
+        "P2".to_string(),
+        Anchor::TopMiddle,
+        50.,
+        50.,
+        1.,
+        55.,
+        50.,
+        0,
+    );
 
     let p1_score = world
         .create_entity()
@@ -166,7 +184,6 @@ fn initialise_score(world: &mut World) {
             [1.0, 1.0, 1.0, 1.0],
             50.,
         ))
-        .with(Anchored::new(Anchor::TopMiddle))
         .build();
     let p2_score = world
         .create_entity()
@@ -177,7 +194,6 @@ fn initialise_score(world: &mut World) {
             [1.0, 1.0, 1.0, 1.0],
             50.,
         ))
-        .with(Anchored::new(Anchor::TopMiddle))
         .build();
     world.add_resource(ScoreText { p1_score, p2_score });
 }

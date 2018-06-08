@@ -232,20 +232,22 @@ impl Pass for DrawUi {
         for &(_z, entity) in &self.cached_draw_order.cache {
             // This won't panic as we guaranteed earlier these entities are present.
             let ui_transform = ui_transform.get(entity).unwrap();
-            let vertex_args = VertexArgs {
-                proj_vec: proj_vec.into(),
-                // Coordinates are middle centered. It makes it easier to do layouting in most cases.
-                coord: [
-                    ui_transform.global_x - ui_transform.width / 2.0,
-                    ui_transform.global_y - ui_transform.height / 2.0,
-                ].into(),
-                dimension: [ui_transform.width, ui_transform.height].into(),
-            };
-            effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
             if let Some(image) = ui_image
                 .get(entity)
                 .and_then(|image| tex_storage.get(&image.texture))
             {
+                let vertex_args = VertexArgs {
+                    proj_vec: proj_vec.into(),
+                    // Coordinates are middle centered. It makes it easier to do layouting in most cases.
+                    coord: [
+                        ui_transform.pixel_x - ui_transform.pixel_width / 2.0
+                            + screen_dimensions.width() / 2.,
+                        ui_transform.pixel_y - ui_transform.pixel_height / 2.0
+                            + screen_dimensions.height() / 2.,
+                    ].into(),
+                    dimension: [ui_transform.pixel_width, ui_transform.pixel_height].into(),
+                };
+                effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
                 effect.data.textures.push(image.view().clone());
                 effect.data.samplers.push(image.sampler().clone());
                 effect.draw(mesh.slice(), encoder);
@@ -342,10 +344,12 @@ impl Pass for DrawUi {
                 };
                 let section = VariedSection {
                     screen_position: (
-                        ui_transform.global_x - ui_transform.width / 2.0,
-                        ui_transform.global_y - ui_transform.height / 2.0,
+                        ui_transform.pixel_x - ui_transform.pixel_width / 2.0
+                            + screen_dimensions.width() / 2.,
+                        ui_transform.pixel_y - ui_transform.pixel_height / 2.0
+                            + screen_dimensions.height() / 2.,
                     ),
-                    bounds: (ui_transform.width, ui_transform.height),
+                    bounds: (ui_transform.pixel_width, ui_transform.pixel_height),
                     z: ui_transform.global_z / highest_abs_z,
                     layout,
                     text,
@@ -478,8 +482,10 @@ impl Pass for DrawUi {
                                 width = 2.0;
                             }
                             let pos = glyph.map(|g| g.position()).unwrap_or(Point {
-                                x: ui_transform.global_x - ui_transform.width / 2.0,
-                                y: ui_transform.global_y - ui_transform.height / 2.0 + ascent,
+                                x: ui_transform.pixel_x - ui_transform.pixel_width / 2.0
+                                    + screen_dimensions.width() / 2.,
+                                y: ui_transform.pixel_y - ui_transform.pixel_height / 2.0 + ascent
+                                    + screen_dimensions.height() / 2.,
                             });
                             let mut x = pos.x;
                             if let Some(glyph) = glyph {

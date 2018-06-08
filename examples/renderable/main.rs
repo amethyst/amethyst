@@ -13,10 +13,10 @@ use amethyst::ecs::prelude::{Component, Entity, Join, Read, ReadStorage, System,
                              WriteExpect, WriteStorage};
 use amethyst::ecs::storage::NullStorage;
 use amethyst::input::{get_key, is_close_requested, is_key, InputBundle};
-use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, DrawShaded, Event, Light,
-                         Material, MaterialDefaults, MeshHandle, ObjFormat, PngFormat, PointLight,
-                         PosNormTex, Projection, Rgba, VirtualKeyCode};
-use amethyst::ui::{Anchor, Anchored, FontHandle, TtfFormat, UiBundle, UiText, UiTransform};
+use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, DrawShaded, Event,
+                         Light, Material, MaterialDefaults, MeshHandle, ObjFormat, Pipeline,
+                         PngFormat, PointLight, PosNormTex, Projection, Rgba, VirtualKeyCode};
+use amethyst::ui::{Anchor, FontHandle, TtfFormat, UiBundle, UiText, UiTransform};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
 
@@ -111,6 +111,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Loading {
             .create_entity()
             .with(UiTransform::new(
                 "fps".to_string(),
+                Anchor::TopLeft,
                 100.,
                 25.,
                 1.,
@@ -124,13 +125,13 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Loading {
                 [1.0, 1.0, 1.0, 1.0],
                 25.,
             ))
-            .with(Anchored::new(Anchor::TopLeft))
             .build();
 
         data.world
             .create_entity()
             .with(UiTransform::new(
                 "fps".to_string(),
+                Anchor::Middle,
                 0.,
                 0.,
                 1.,
@@ -144,7 +145,6 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Loading {
                 [1.0, 1.0, 1.0, 1.0],
                 25.,
             ))
-            .with(Anchored::new(Anchor::Middle))
             .with(LoadTag)
             .build();
 

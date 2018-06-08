@@ -1,9 +1,9 @@
 use amethyst_core::shrev::EventChannel;
-use amethyst_core::specs::prelude::{Component, Entities, Entity, Join, Read, ReadStorage, System,
-                                    Write};
+use amethyst_core::specs::prelude::{Component, Entities, Entity, Join, Read, ReadExpect,
+                                    ReadStorage, System, Write};
 use amethyst_core::specs::storage::NullStorage;
 use amethyst_input::InputHandler;
-use amethyst_renderer::MouseButton;
+use amethyst_renderer::{MouseButton, ScreenDimensions};
 use std::hash::Hash;
 use std::marker::PhantomData;
 use transform::UiTransform;
@@ -13,7 +13,6 @@ use transform::UiTransform;
 #[derive(Debug, Clone)]
 pub enum UiEventType {
     /// When an element is clicked normally.
-    /// Happens when the element both start and stops being clicked.
     Click,
     /// When the element starts being clicked (On left mouse down).
     ClickStart,
@@ -84,10 +83,14 @@ where
         ReadStorage<'a, UiTransform>,
         ReadStorage<'a, MouseReactive>,
         Read<'a, InputHandler<A, B>>,
+        ReadExpect<'a, ScreenDimensions>,
         Write<'a, EventChannel<UiEvent>>,
     );
 
-    fn run(&mut self, (entities, transform, react, input, mut events): Self::SystemData) {
+    fn run(
+        &mut self,
+        (entities, transform, react, input, screen_dimensions, mut events): Self::SystemData,
+    ) {
         let down = input.mouse_button_is_down(MouseButton::Left);
 
         // TODO: To replace on InputHandler generate OnMouseDown and OnMouseUp events
@@ -95,8 +98,8 @@ where
         let click_stopped = !down && self.was_down;
 
         if let Some((pos_x, pos_y)) = input.mouse_position() {
-            let x = pos_x as f32;
-            let y = pos_y as f32;
+            let x = pos_x as f32 - screen_dimensions.width() / 2.;
+            let y = pos_y as f32 - screen_dimensions.height() / 2.;
 
             let target = targeted((x, y), (&*entities, &transform).join(), &react);
 
