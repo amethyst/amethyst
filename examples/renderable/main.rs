@@ -6,7 +6,6 @@
 extern crate amethyst;
 
 use amethyst::assets::{Completion, HotReloadBundle, Loader, ProgressCounter};
-use amethyst::config::Config;
 use amethyst::core::cgmath::{Array, Deg, Euler, Quaternion, Rad, Rotation, Rotation3, Vector3};
 use amethyst::core::timing::Time;
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
@@ -14,11 +13,10 @@ use amethyst::ecs::prelude::{Component, Entity, Join, Read, ReadStorage, System,
                              WriteExpect, WriteStorage};
 use amethyst::ecs::storage::NullStorage;
 use amethyst::input::{get_key, is_close_requested, is_key, InputBundle};
-use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, DisplayConfig, DrawShaded, Event,
-                         Light, Material, MaterialDefaults, MeshHandle, ObjFormat, Pipeline,
-                         PngFormat, PointLight, PosNormTex, Projection, RenderBundle, Rgba, Stage,
-                         VirtualKeyCode};
-use amethyst::ui::{Anchor, Anchored, DrawUi, FontHandle, TtfFormat, UiBundle, UiText, UiTransform};
+use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, DrawShaded, Event, Light,
+                         Material, MaterialDefaults, MeshHandle, ObjFormat, PngFormat, PointLight,
+                         PosNormTex, Projection, Rgba, VirtualKeyCode};
+use amethyst::ui::{Anchor, Anchored, FontHandle, TtfFormat, UiBundle, UiText, UiTransform};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
 
@@ -447,20 +445,13 @@ fn main() -> Result<(), Error> {
         env!("CARGO_MANIFEST_DIR")
     );
 
-    let display_config = DisplayConfig::load(display_config_path);
-    let pipeline_builder = Pipeline::build().with_stage(
-        Stage::with_backbuffer()
-            .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawShaded::<PosNormTex>::new())
-            .with_pass(DrawUi::new()),
-    );
     let game_data = GameDataBuilder::default()
         .with::<ExampleSystem>(ExampleSystem, "example_system", &[])
         .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
         .with_bundle(UiBundle::<String, String>::new())?
         .with_bundle(HotReloadBundle::default())?
         .with_bundle(FPSCounterBundle::default())?
-        .with_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?
+        .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), true)?
         .with_bundle(InputBundle::<String, String>::new())?;
     let mut game = Application::build(resources_directory, Loading::default())?.build(game_data)?;
     game.run();

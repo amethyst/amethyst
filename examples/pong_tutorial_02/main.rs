@@ -4,7 +4,7 @@ mod pong;
 
 use amethyst::core::transform::TransformBundle;
 use amethyst::prelude::*;
-use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline, PosTex, RenderBundle, Stage};
+use amethyst::renderer::{DrawFlat, PosTex};
 
 fn main() -> amethyst::Result<()> {
     use pong::Pong;
@@ -14,17 +14,9 @@ fn main() -> amethyst::Result<()> {
         env!("CARGO_MANIFEST_DIR")
     );
 
-    let config = DisplayConfig::load(&path);
-
-    let pipe = Pipeline::build().with_stage(
-        Stage::with_backbuffer()
-            .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawFlat::<PosTex>::new()),
-    );
-
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
-        .with_bundle(RenderBundle::new(pipe, Some(config)))?;
+        .with_basic_renderer(path, DrawFlat::<PosTex>::new(), false)?;
     let mut game = Application::new("./", Pong, game_data)?;
     game.run();
     Ok(())

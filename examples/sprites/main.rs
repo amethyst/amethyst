@@ -26,12 +26,9 @@ use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::Entity;
 use amethyst::input::{is_close_requested, is_key, InputBundle};
 use amethyst::prelude::*;
-use amethyst::renderer::{Camera, ColorMask, DisplayConfig, DrawFlat, Event, Material,
-                         MaterialDefaults, MaterialTextureSet, Mesh, Pipeline, PosTex, Projection,
-                         RenderBundle, ScreenDimensions, Stage, VirtualKeyCode, ALPHA};
-use amethyst::ui::{DrawUi, UiBundle};
-
-const BACKGROUND_COLOUR: [f32; 4] = [0.0, 0.0, 0.0, 1.0]; // black
+use amethyst::renderer::{Camera, ColorMask, DrawFlat, Event, Material, MaterialDefaults, Mesh,
+                         PosTex, Projection, ScreenDimensions, VirtualKeyCode, ALPHA, MaterialTextureSet};
+use amethyst::ui::UiBundle;
 
 #[derive(Debug, Default)]
 struct Example {
@@ -192,14 +189,6 @@ fn main() -> amethyst::Result<()> {
     );
 
     let assets_directory = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
-    let config = DisplayConfig::load(&path);
-
-    let pipe = Pipeline::build().with_stage(
-        Stage::with_backbuffer()
-            .clear_target(BACKGROUND_COLOUR, 1.0)
-            .with_pass(DrawFlat::<PosTex>::new().with_transparency(ColorMask::all(), ALPHA, None))
-            .with_pass(DrawUi::new()),
-    );
 
     let game_data = GameDataBuilder::default()
         .with_bundle(AnimationBundle::<u32, Material>::new(
@@ -212,7 +201,7 @@ fn main() -> amethyst::Result<()> {
                 .with_dep(&["animation_control_system", "sampler_interpolation_system"]),
         )?
         // RenderBundle gives us a window
-        .with_bundle(RenderBundle::new(pipe, Some(config)))?
+        .with_basic_renderer(path, DrawFlat::<PosTex>::new().with_transparency(ColorMask::all(), ALPHA, None), true)?
         // UiBundle relies on this as some Ui objects take input
         .with_bundle(InputBundle::<String, String>::new())?
         // Draws textures

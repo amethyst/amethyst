@@ -16,7 +16,6 @@ use genmesh::{MapToVertices, Triangulate, Vertices};
 const SPHERE_COLOUR: [f32; 4] = [0.0, 0.0, 1.0, 1.0]; // blue
 const AMBIENT_LIGHT_COLOUR: Rgba = Rgba(0.01, 0.01, 0.01, 1.0); // near-black
 const POINT_LIGHT_COLOUR: Rgba = Rgba(1.0, 1.0, 1.0, 1.0); // white
-const BACKGROUND_COLOUR: [f32; 4] = [0.0, 0.0, 0.0, 0.0]; // black
 const LIGHT_POSITION: [f32; 3] = [2.0, 2.0, -2.0];
 const LIGHT_RADIUS: f32 = 5.0;
 const LIGHT_INTENSITY: f32 = 3.0;
@@ -53,15 +52,11 @@ fn main() -> amethyst::Result<()> {
 
     let resources = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
 
-    let pipe = Pipeline::build().with_stage(
-        Stage::with_backbuffer()
-            .clear_target(BACKGROUND_COLOUR, 1.0)
-            .with_pass(DrawShadedSeparate::new()),
-    );
-
-    let config = DisplayConfig::load(&display_config_path);
-
-    let game_data = GameDataBuilder::default().with_bundle(RenderBundle::new(pipe, Some(config)))?;
+    let game_data = GameDataBuilder::default().with_basic_renderer(
+        display_config_path,
+        DrawShadedSeparate::new(),
+        false,
+    )?;
     let mut game = Application::new(resources, Example, game_data)?;
     game.run();
     Ok(())
