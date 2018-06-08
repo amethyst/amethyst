@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Use `fresnel` function in PBR shader ([#772])
 * Remove boilerplate for `run` + `main` in examples ([#764])
 * Update dependencies ([#752], [#751])
+* Formalized and documented support for overriding the global logger ([#776])
 
 ### Fixed
 * Resizing fixed on OSX ([#767])
@@ -48,6 +49,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#773]: https://github.com/amethyst/amethyst/pull/773
 [#771]: https://github.com/amethyst/amethyst/pull/771
 [#777]: https://github.com/amethyst/amethyst/pull/777
+[#776]: https://github.com/amethyst/amethyst/pull/776
 
 ## [0.7.0] - 2018-05
 ### Added
