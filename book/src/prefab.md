@@ -196,8 +196,12 @@ From the point of the user, there are a few parts to using a `Prefab`:
 
 ## `Prefab` formats
 
-Currently, we only supply a generic `RonFormat`, that can be used to load `Prefab`s in `ron` 
-format with any `PrefabData` that also implements `serde::Deserialize`.
+There are a few provided formats that create `Prefab`s, some with very specific `PrefabData`, and
+ one that is generic:
+ 
+* `RonFormat` - this format can be used to load `Prefab`s in `ron` format with any `PrefabData`
+ that also implements `serde::Deserialize`.
+* `UiFormat` - used to load UI components in a specialised DSL format.
 
 For an example of a `Prefab` in `ron` format, look at `examples/assets/prefab/example.ron`. The
 `PrefabData` for this is:
