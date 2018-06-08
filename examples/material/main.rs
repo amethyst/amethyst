@@ -1,16 +1,13 @@
 //! Displays spheres with physically based materials.
 
 extern crate amethyst;
-extern crate genmesh;
 
 use amethyst::assets::Loader;
-use amethyst::core::cgmath::{Deg, Matrix4, Vector3};
+use amethyst::core::cgmath::{Deg, Matrix4};
 use amethyst::core::transform::GlobalTransform;
 use amethyst::input::{is_close_requested, is_key};
 use amethyst::prelude::*;
 use amethyst::renderer::*;
-use genmesh::generators::SphereUV;
-use genmesh::{MapToVertices, Triangulate, Vertices};
 
 struct Example;
 
@@ -18,7 +15,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
         let mat_defaults = world.read_resource::<MaterialDefaults>().0.clone();
-        let verts = gen_sphere(32, 32).into();
+        let verts = Shape::Sphere(32, 32).generate::<Vec<PosNormTangTex>>(None);
         let albedo = [1.0, 1.0, 1.0, 1.0].into();
 
         println!("Load mesh");
@@ -120,35 +117,15 @@ fn main() -> amethyst::Result<()> {
         "{}/examples/material/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
     );
-    let config = DisplayConfig::load(&path);
 
     let resources = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
 
-    let pipe = Pipeline::build().with_stage(
-        Stage::with_backbuffer()
-            .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawPbm::<PosNormTangTex>::new()),
-    );
-    let game_data = GameDataBuilder::default().with_bundle(RenderBundle::new(pipe, Some(config)))?;
+    let game_data = GameDataBuilder::default().with_basic_renderer(
+        path,
+        DrawPbm::<PosNormTangTex>::new(),
+        false,
+    )?;
     let mut game = Application::new(&resources, Example, game_data)?;
     game.run();
     Ok(())
-}
-
-fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTangTex> {
-    SphereUV::new(u, v)
-        .vertex(|vertex| {
-            let normal = Vector3::from(vertex.normal);
-            let up = Vector3::from([0.0, 1.0, 0.0]);
-            let tangent = normal.cross(up).cross(normal);
-            PosNormTangTex {
-                position: vertex.pos,
-                normal: vertex.normal,
-                tangent: tangent.into(),
-                tex_coord: [0.1, 0.1],
-            }
-        })
-        .triangulate()
-        .vertices()
-        .collect()
 }

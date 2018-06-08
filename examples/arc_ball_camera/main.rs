@@ -3,15 +3,13 @@
 extern crate amethyst;
 
 use amethyst::assets::Loader;
-use amethyst::config::Config;
 use amethyst::controls::{ArcBallControlBundle, ArcBallControlTag, FlyControlTag};
 use amethyst::core::cgmath::{Deg, Vector3};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::{Entity, World};
 use amethyst::input::{is_close_requested, is_key, InputBundle};
-use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Event, Material,
-                         MaterialDefaults, MeshHandle, ObjFormat, Pipeline, PosNormTex,
-                         Projection, RenderBundle, Rgba, Stage, VirtualKeyCode};
+use amethyst::renderer::{AmbientColor, Camera, DrawShaded, Event, Material, MaterialDefaults,
+                         MeshHandle, ObjFormat, PosNormTex, Projection, Rgba, VirtualKeyCode};
 use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
 
 struct ExampleState;
@@ -92,25 +90,18 @@ fn main() -> Result<(), Error> {
         env!("CARGO_MANIFEST_DIR")
     );
 
-    let display_config = DisplayConfig::load(display_config_path);
-
     let key_bindings_path = format!(
         "{}/examples/arc_ball_camera/resources/input.ron",
         env!("CARGO_MANIFEST_DIR")
     );
 
-    let pipeline_builder = Pipeline::build().with_stage(
-        Stage::with_backbuffer()
-            .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawShaded::<PosNormTex>::new()),
-    );
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new().with_dep(&[]))?
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path),
         )?
         .with_bundle(ArcBallControlBundle::<String, String>::new())?
-        .with_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?;
+        .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;
     let mut game = Application::build(resources_directory, ExampleState)?.build(game_data)?;
     game.run();
     Ok(())

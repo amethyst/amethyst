@@ -1,7 +1,6 @@
 //! Displays a shaded sphere with multisampling enabled to the user.
 
 extern crate amethyst;
-extern crate genmesh;
 
 use amethyst::assets::Loader;
 use amethyst::core::cgmath::Deg;
@@ -9,16 +8,12 @@ use amethyst::core::transform::GlobalTransform;
 use amethyst::ecs::prelude::World;
 use amethyst::input::{is_close_requested, is_key};
 use amethyst::prelude::*;
-use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Event, Light, Mesh,
-                         Pipeline, PointLight, PosNormTex, Projection, RenderBundle, Rgba, Stage,
-                         VirtualKeyCode};
-use genmesh::generators::SphereUV;
-use genmesh::{MapToVertices, Triangulate, Vertices};
+use amethyst::renderer::{AmbientColor, Camera, DrawShaded, Event, Light, Mesh, PointLight,
+                         PosNormTex, Projection, Rgba, VirtualKeyCode, Shape};
 
 const SPHERE_COLOUR: [f32; 4] = [0.0, 0.0, 1.0, 1.0]; // blue
 const AMBIENT_LIGHT_COLOUR: Rgba = Rgba(0.01, 0.01, 0.01, 1.0); // near-black
 const POINT_LIGHT_COLOUR: Rgba = Rgba(1.0, 1.0, 1.0, 1.0); // white
-const BACKGROUND_COLOUR: [f32; 4] = [0.0, 0.0, 0.0, 0.0]; // black
 const LIGHT_POSITION: [f32; 3] = [2.0, 2.0, -2.0];
 const LIGHT_RADIUS: f32 = 5.0;
 const LIGHT_INTENSITY: f32 = 3.0;
@@ -50,36 +45,20 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
 
 fn main() -> amethyst::Result<()> {
     let display_config_path = format!(
-        "{}/examples/sphere/resources/display_config.ron",
+        "{}/examples/sphere_multisample/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
     );
 
     let resources = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
 
-    let pipe = Pipeline::build().with_stage(
-        Stage::with_backbuffer()
-            .clear_target(BACKGROUND_COLOUR, 1.0)
-            .with_pass(DrawShaded::<PosNormTex>::new()),
-    );
-
-    let config = DisplayConfig::load(&display_config_path);
-
-    let game_data = GameDataBuilder::default().with_bundle(RenderBundle::new(pipe, Some(config)))?;
+    let game_data = GameDataBuilder::default().with_basic_renderer(
+        display_config_path,
+        DrawShaded::<PosNormTex>::new(),
+        false,
+    )?;
     let mut game = Application::new(resources, Example, game_data)?;
     game.run();
     Ok(())
-}
-
-fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTex> {
-    SphereUV::new(u, v)
-        .vertex(|vertex| PosNormTex {
-            position: vertex.pos,
-            normal: vertex.normal,
-            tex_coord: [0.1, 0.1],
-        })
-        .triangulate()
-        .vertices()
-        .collect()
 }
 
 /// This function initialises a sphere and adds it to the world.
@@ -92,8 +71,11 @@ fn initialise_sphere(world: &mut World) {
     let (mesh, material) = {
         let loader = world.read_resource::<Loader>();
 
-        let mesh: Handle<Mesh> =
-            loader.load_from_data(gen_sphere(32, 32).into(), (), &world.read_resource());
+        let mesh: Handle<Mesh> = loader.load_from_data(
+            Shape::Sphere(32, 32).generate::<Vec<PosNormTex>>(None),
+            (),
+            &world.read_resource(),
+        );
 
         let albedo = SPHERE_COLOUR.into();
 
