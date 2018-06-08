@@ -201,6 +201,7 @@ There are a few provided formats that create `Prefab`s, some with very specific 
  
 * `RonFormat` - this format can be used to load `Prefab`s in `ron` format with any `PrefabData`
  that also implements `serde::Deserialize`.
+* `GltfSceneFormat` - used to load `Gltf` files
 * `UiFormat` - used to load UI components in a specialised DSL format.
 
 For an example of a `Prefab` in `ron` format, look at `examples/assets/prefab/example.ron`. The
@@ -214,3 +215,6 @@ For an example of a `Prefab` in `ron` format, look at `examples/assets/prefab/ex
     Option<CameraPrefab>,
 )
 ```
+
+For a more advanced example, and also a custom `PrefabData` implementation, look at the `gltf` example 
+and `examples/assets/prefab/puffy_scene.ron`.
