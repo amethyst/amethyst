@@ -14,23 +14,29 @@ pub fn load_mesh(
 ) -> Result<Vec<(MeshData, Option<usize>, Option<Range<[f32; 3]>>)>, GltfError> {
     // TODO: simplify loading here when we have support for indexed meshes
     // All attributes can then be mapped directly instead of using faces to unwind the indexing
-    use gltf_utils::PrimitiveIterators;
 
     let mut primitives = vec![];
 
     for primitive in mesh.primitives() {
-        let faces = primitive.indices_u32(buffers).map(|mut iter| {
-            let mut faces = vec![];
-            while let (Some(a), Some(b), Some(c)) = (iter.next(), iter.next(), iter.next()) {
-                faces.push(a as usize);
-                faces.push(b as usize);
-                faces.push(c as usize);
-            }
-            faces
-        });
+        let reader = primitive.reader(|buffer| buffers.buffer(&buffer));
 
-        let positions = primitive
-            .positions(buffers)
+        let faces = reader
+            .read_indices()
+            .map(|indices| indices.into_u32())
+            .map(|mut indices| {
+                let mut faces = vec![];
+                while let (Some(a), Some(b), Some(c)) =
+                    (indices.next(), indices.next(), indices.next())
+                {
+                    faces.push(a as usize);
+                    faces.push(b as usize);
+                    faces.push(c as usize);
+                }
+                faces
+            });
+
+        let positions = reader
+            .read_positions()
             .map(|positions| match faces {
                 Some(ref faces) => {
                     let vertices = positions.collect::<Vec<_>>();
@@ -45,12 +51,12 @@ pub fn load_mesh(
             })
             .ok_or(GltfError::MissingPositions)?;
 
-        let bounds = primitive
-            .position_bounds()
-            .map(|bound| bound.min..bound.max);
+        let bounds = primitive.bounding_box();
+        let bounds = bounds.min..bounds.max;
 
-        let colors = primitive
-            .colors_rgba_f32(0, 1., buffers)
+        let colors = reader
+            .read_colors(0)
+            .map(|colors| colors.into_rgba_f32())
             .map(|colors| match faces {
                 Some(ref faces) => {
                     let colors = colors.collect::<Vec<_>>();
@@ -62,8 +68,8 @@ pub fn load_mesh(
                 None => colors.map(|color| Separate::<Color>::new(color)).collect(),
             });
 
-        let tex_coord = match primitive.tex_coords_f32(0, buffers) {
-            Some(tex_coords) => Some(tex_coords.collect::<Vec<[f32; 2]>>()),
+        let tex_coord = match reader.read_tex_coords(0) {
+            Some(tex_coords) => Some(tex_coords.into_f32().collect::<Vec<[f32; 2]>>()),
             None => match options.generate_tex_coords {
                 Some((u, v)) => Some((0..positions.len()).map(|_| [u, v]).collect()),
                 None => None,
@@ -78,7 +84,7 @@ pub fn load_mesh(
                 .collect(),
         });
 
-        let normals = primitive.normals(buffers).map(|normals| match faces {
+        let normals = reader.read_normals().map(|normals| match faces {
             Some(ref faces) => {
                 let normals = normals.collect::<Vec<_>>();
                 faces
@@ -89,7 +95,7 @@ pub fn load_mesh(
             None => normals.map(|n| Separate::<Normal>::new(n)).collect(),
         });
 
-        let tangents = primitive.tangents(buffers).map(|tangents| match faces {
+        let tangents = reader.read_tangents().map(|tangents| match faces {
             Some(ref faces) => {
                 let tangents = tangents.collect::<Vec<_>>();
                 faces
@@ -108,20 +114,24 @@ pub fn load_mesh(
                 .collect(),
         });
 
-        let joint_ids = primitive.joints_u16(0, buffers).map(|joints| match faces {
-            Some(ref faces) => {
-                let joints = joints.collect::<Vec<_>>();
-                faces
-                    .iter()
-                    .map(|i| Separate::<JointIds>::new(joints[*i]))
-                    .collect()
-            }
-            None => joints.map(|j| Separate::<JointIds>::new(j)).collect(),
-        });
+        let joint_ids = reader
+            .read_joints(0)
+            .map(|joints| joints.into_u16())
+            .map(|joints| match faces {
+                Some(ref faces) => {
+                    let joints = joints.collect::<Vec<_>>();
+                    faces
+                        .iter()
+                        .map(|i| Separate::<JointIds>::new(joints[*i]))
+                        .collect()
+                }
+                None => joints.map(|j| Separate::<JointIds>::new(j)).collect(),
+            });
         trace!("Joint ids: {:?}", joint_ids);
 
-        let joint_weights = primitive
-            .weights_f32(0, buffers)
+        let joint_weights = reader
+            .read_weights(0)
+            .map(|weights| weights.into_f32())
             .map(|weights| match faces {
                 Some(ref faces) => {
                     let weights = weights.collect::<Vec<_>>();
@@ -146,8 +156,9 @@ pub fn load_mesh(
             joint_weights,
         ));
 
-        primitives.push((creator.into(), material, bounds));
+        primitives.push((creator.into(), material, Some(bounds)));
     }
+
     Ok(primitives)
 }
 

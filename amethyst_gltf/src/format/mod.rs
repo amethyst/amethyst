@@ -44,10 +44,14 @@ pub enum GltfError {
     /// GLTF have no default scene and the number of scenes is not 1
     InvalidSceneGltf(usize),
 
-    // GLTF primitive use a primitive type not support by gfx
-    //PrimitiveMissingInGfx(String),
     /// GLTF primitive missing positions
     MissingPositions,
+
+    /// GLTF animation channel missing input
+    MissingInputs,
+
+    /// GLTF animation channel missing output
+    MissingOutputs,
 
     /// External file failed loading
     Asset(AssetError),
@@ -64,6 +68,8 @@ impl StdError for GltfError {
             InvalidSceneGltf(_) => "Gltf has no default scene, and the number of scenes is not 1",
             //PrimitiveMissingInGfx(_) => "Primitive missing in gfx",
             MissingPositions => "Primitive missing positions",
+            MissingInputs => "Channel missing inputs",
+            MissingOutputs => "Channel missing outputs",
             Asset(_) => "File loading error",
             NotImplemented => "Not implemented",
         }
@@ -89,7 +95,9 @@ impl fmt::Display for GltfError {
             //PrimitiveMissingInGfx(ref err) => write!(f, "{}: {}", self.description(), err),
             Asset(ref err) => write!(f, "{}: {}", self.description(), err.description()),
             InvalidSceneGltf(size) => write!(f, "{}: {}", self.description(), size),
-            MissingPositions | NotImplemented => write!(f, "{}", self.description()),
+            MissingPositions | NotImplemented | MissingInputs | MissingOutputs => {
+                write!(f, "{}", self.description())
+            }
         }
     }
 }
