@@ -1,8 +1,7 @@
 use std::ops::Range;
 
 use gltf;
-use renderer::{AnimatedComboMeshCreator, Color, JointIds, JointWeights, MeshData, Normal,
-               Position, Separate, Tangent, TexCoord};
+use renderer::{AnimatedComboMeshCreator, Attribute, MeshData, Separate};
 
 use super::{Buffers, GltfError};
 use GltfSceneOptions;
@@ -35,21 +34,45 @@ pub fn load_mesh(
                 faces
             });
 
-        let positions = reader
+        let mut positions = reader
             .read_positions()
             .map(|positions| match faces {
                 Some(ref faces) => {
                     let vertices = positions.collect::<Vec<_>>();
-                    faces
-                        .iter()
-                        .map(|i| Separate::<Position>::new(vertices[*i]))
-                        .collect::<Vec<_>>()
+                    faces.iter().map(|i| vertices[*i]).collect::<Vec<_>>()
                 }
-                None => positions
-                    .map(|pos| Separate::<Position>::new(pos))
-                    .collect(),
+                None => positions.collect(),
             })
             .ok_or(GltfError::MissingPositions)?;
+
+        let normals = reader
+            .read_normals()
+            .map(|normals| match faces {
+                Some(ref faces) => {
+                    let normals = normals.collect::<Vec<_>>();
+                    faces.iter().map(|i| normals[*i]).collect()
+                }
+                None => normals.collect(),
+            })
+            .unwrap_or_else(|| {
+                use core::cgmath::Point3;
+                use std::iter::once;
+                let f = faces
+                    .as_ref()
+                    .map(|f| f.clone())
+                    .unwrap_or_else(|| (0..positions.len()).collect::<Vec<_>>());
+                f.chunks(3)
+                    .flat_map(|chunk| {
+                        let a = Point3::from(positions[chunk[0]]);
+                        let ab = Point3::from(positions[chunk[1]]) - a;
+                        let ac = Point3::from(positions[chunk[2]]) - a;
+                        let normal: [f32; 3] = ab.cross(ac).into();
+                        once(normal.clone())
+                            .chain(once(normal.clone()))
+                            .chain(once(normal))
+                    })
+                    .collect::<Vec<_>>()
+            });
 
         let bounds = primitive.bounding_box();
         let bounds = bounds.min..bounds.max;
@@ -60,12 +83,9 @@ pub fn load_mesh(
             .map(|colors| match faces {
                 Some(ref faces) => {
                     let colors = colors.collect::<Vec<_>>();
-                    faces
-                        .iter()
-                        .map(|i| Separate::<Color>::new(colors[*i]))
-                        .collect()
+                    faces.iter().map(|i| colors[*i]).collect()
                 }
-                None => colors.map(|color| Separate::<Color>::new(color)).collect(),
+                None => colors.collect(),
             });
 
         let tex_coord = match reader.read_tex_coords(0) {
@@ -77,41 +97,22 @@ pub fn load_mesh(
         }.map(|texs| match faces {
             Some(ref faces) => faces
                 .iter()
-                .map(|i| Separate::<TexCoord>::new(flip_check(texs[*i], options.flip_v_coord)))
+                .map(|i| flip_check(texs[*i], options.flip_v_coord))
                 .collect(),
             None => texs.into_iter()
-                .map(|t| Separate::<TexCoord>::new(flip_check(t, options.flip_v_coord)))
+                .map(|t| flip_check(t, options.flip_v_coord))
                 .collect(),
         });
-
-        let normals = reader.read_normals().map(|normals| match faces {
-            Some(ref faces) => {
-                let normals = normals.collect::<Vec<_>>();
-                faces
-                    .iter()
-                    .map(|i| Separate::<Normal>::new(normals[*i]))
-                    .collect()
-            }
-            None => normals.map(|n| Separate::<Normal>::new(n)).collect(),
-        });
-
+        
         let tangents = reader.read_tangents().map(|tangents| match faces {
             Some(ref faces) => {
                 let tangents = tangents.collect::<Vec<_>>();
                 faces
                     .iter()
-                    .map(|i| {
-                        Separate::<Tangent>::new([
-                            tangents[*i][0],
-                            tangents[*i][1],
-                            tangents[*i][2],
-                        ])
-                    })
+                    .map(|i| [tangents[*i][0], tangents[*i][1], tangents[*i][2]])
                     .collect()
             }
-            None => tangents
-                .map(|t| Separate::<Tangent>::new([t[0], t[1], t[2]]))
-                .collect(),
+            None => tangents.map(|t| [t[0], t[1], t[2]]).collect(),
         });
 
         let joint_ids = reader
@@ -120,12 +121,9 @@ pub fn load_mesh(
             .map(|joints| match faces {
                 Some(ref faces) => {
                     let joints = joints.collect::<Vec<_>>();
-                    faces
-                        .iter()
-                        .map(|i| Separate::<JointIds>::new(joints[*i]))
-                        .collect()
+                    faces.iter().map(|i| joints[*i]).collect()
                 }
-                None => joints.map(|j| Separate::<JointIds>::new(j)).collect(),
+                None => joints.collect(),
             });
         trace!("Joint ids: {:?}", joint_ids);
 
@@ -135,31 +133,43 @@ pub fn load_mesh(
             .map(|weights| match faces {
                 Some(ref faces) => {
                     let weights = weights.collect::<Vec<_>>();
-                    faces
-                        .iter()
-                        .map(|i| Separate::<JointWeights>::new(weights[*i]))
-                        .collect()
+                    faces.iter().map(|i| weights[*i]).collect()
                 }
-                None => weights.map(|w| Separate::<JointWeights>::new(w)).collect(),
+                None => weights.collect(),
             });
         trace!("Joint weights: {:?}", joint_weights);
 
         let material = primitive.material().index();
 
         let creator = AnimatedComboMeshCreator::new((
-            positions,
-            colors,
-            tex_coord,
-            normals,
-            tangents,
-            joint_ids,
-            joint_weights,
+            cast_attribute(positions),
+            colors.map(cast_attribute),
+            tex_coord.map(cast_attribute),
+            Some(cast_attribute(normals)),
+            tangents.map(cast_attribute),
+            joint_ids.map(cast_attribute),
+            joint_weights.map(cast_attribute),
         ));
 
         primitives.push((creator.into(), material, Some(bounds)));
     }
 
     Ok(primitives)
+}
+
+fn cast_attribute<T>(mut old: Vec<T::Repr>) -> Vec<Separate<T>>
+where
+    T: Attribute,
+{
+    let new = unsafe {
+        Vec::from_raw_parts(
+            old.as_mut_ptr() as *mut Separate<T>,
+            old.len(),
+            old.capacity(),
+        )
+    };
+    ::std::mem::forget(old);
+    new
 }
 
 fn flip_check(uv: [f32; 2], flip_v: bool) -> [f32; 2] {
