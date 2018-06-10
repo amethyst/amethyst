@@ -21,8 +21,7 @@ amethyst_renderer = { path = "../amethyst_renderer/", version = "0.7.0" }
 amethyst_core = { path = "../amethyst_core/", version = "0.2.0" }
 base64 = "0.7"
 fnv = "1"
-gltf = "0.9"
-gltf-utils = "0.9"
+gltf = "0.11"
 gfx = "0.17"
 hibitset = { version = "0.5.0", features = ["parallel"] }
 imagefmt = "4.0"
