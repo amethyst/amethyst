@@ -6,7 +6,6 @@ extern crate base64;
 extern crate fnv;
 extern crate gfx;
 extern crate gltf;
-extern crate gltf_utils;
 extern crate hibitset;
 extern crate imagefmt;
 extern crate itertools;

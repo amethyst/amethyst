@@ -1,11 +1,9 @@
 use std::collections::HashMap;
-use std::mem;
 
 use animation::{JointPrefab, SkinPrefab, SkinnablePrefab};
 use assets::Prefab;
 use core::cgmath::{Matrix4, SquareMatrix};
 use gltf;
-use gltf_utils::AccessorIter;
 use renderer::JointTransformsPrefab;
 
 use super::{Buffers, GltfError};
@@ -22,13 +20,12 @@ pub fn load_skin(
     let joints = skin.joints()
         .map(|j| node_map.get(&j.index()).cloned().unwrap())
         .collect::<Vec<_>>();
-    let inverse_bind_matrices = skin.inverse_bind_matrices()
-        .map(|acc| AccessorIter::<[f32; 16]>::new(acc, buffers))
-        .map(|matrices| {
-            matrices
-                .map(|m| unsafe { mem::transmute::<[f32; 16], [[f32; 4]; 4]>(m) })
-                .collect::<Vec<_>>()
-        })
+
+    let reader = skin.reader(|buffer| buffers.buffer(&buffer));
+
+    let inverse_bind_matrices = reader
+        .read_inverse_bind_matrices()
+        .map(|matrices| matrices.collect())
         .unwrap_or(vec![Matrix4::identity().into(); joints.len()]);
 
     for (bind_index, joint_index) in joints.iter().enumerate() {

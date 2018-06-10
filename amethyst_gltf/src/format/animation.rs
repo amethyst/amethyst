@@ -41,74 +41,66 @@ fn load_channel(
     channel: &gltf::animation::Channel,
     buffers: &Buffers,
 ) -> Result<(usize, TransformChannel, Sampler<SamplerPrimitive<f32>>), GltfError> {
-    use gltf::animation::TrsProperty::*;
-    use gltf_utils::AccessorIter;
+    use gltf::animation::util::ReadOutputs::*;
     let sampler = channel.sampler();
     let target = channel.target();
-    let input = AccessorIter::new(sampler.input(), buffers).collect::<Vec<f32>>();
+
+    let reader = channel.reader(|buffer| buffers.buffer(&buffer));
+    let input = reader
+        .read_inputs()
+        .ok_or(GltfError::MissingInputs)?
+        .collect();
     let node_index = target.node().index();
 
-    match target.path() {
-        Translation => {
-            let output = AccessorIter::new(sampler.output(), buffers)
-                .map(|t| SamplerPrimitive::Vec3(t))
-                .collect::<Vec<_>>();
-            Ok((
-                node_index,
-                TransformChannel::Translation,
-                Sampler {
-                    input,
-                    function: map_interpolation_type(&sampler.interpolation()),
-                    output,
-                },
-            ))
-        }
-        Scale => {
-            let output = AccessorIter::new(sampler.output(), buffers)
-                .map(|t| SamplerPrimitive::Vec3(t))
-                .collect::<Vec<_>>();
-            Ok((
-                node_index,
-                TransformChannel::Scale,
-                Sampler {
-                    input,
-                    function: map_interpolation_type(&sampler.interpolation()),
-                    output,
-                },
-            ))
-        }
-        Rotation => {
-            let output = AccessorIter::<[f32; 4]>::new(sampler.output(), buffers)
-                .map(|q| [q[3], q[0], q[1], q[2]].into())
-                .collect::<Vec<_>>();
-            // gltf quat format: [x, y, z, w], our quat format: [w, x, y, z]
+    match reader.read_outputs().ok_or(GltfError::MissingOutputs)? {
+        Translations(translations) => Ok((
+            node_index,
+            TransformChannel::Translation,
+            Sampler {
+                input,
+                function: map_interpolation_type(&sampler.interpolation()),
+                output: translations.map(|t| t.into()).collect(),
+            },
+        )),
+        Rotations(rotations) => {
             let ty = map_interpolation_type(&sampler.interpolation());
             let ty = if ty == InterpolationFunction::Linear {
                 InterpolationFunction::SphericalLinear
             } else {
                 ty
             };
+            // gltf quat format: [x, y, z, w], our quat format: [w, x, y, z]
             Ok((
                 node_index,
                 TransformChannel::Rotation,
                 Sampler {
                     input,
                     function: ty,
-                    output,
+                    output: rotations
+                        .into_f32()
+                        .map(|q| [q[3], q[0], q[1], q[2]].into())
+                        .collect(),
                 },
             ))
         }
-        Weights => Err(GltfError::NotImplemented),
+        Scales(scales) => Ok((
+            node_index,
+            TransformChannel::Scale,
+            Sampler {
+                input,
+                function: map_interpolation_type(&sampler.interpolation()),
+                output: scales.map(|s| s.into()).collect(),
+            },
+        )),
+        MorphTargetWeights(_) => Err(GltfError::NotImplemented),
     }
 }
 
-fn map_interpolation_type<T>(
-    ty: &gltf::animation::InterpolationAlgorithm,
-) -> InterpolationFunction<T>
+fn map_interpolation_type<T>(ty: &gltf::animation::Interpolation) -> InterpolationFunction<T>
 where
     T: InterpolationPrimitive,
 {
-    use gltf::animation::InterpolationAlgorithm::*;
+    use gltf::animation::Interpolation::*;
 
     match *ty {
         Linear => InterpolationFunction::Linear,
