@@ -11,7 +11,6 @@ use renderer::{JpgFormat, MaterialPrefab, PngFormat, TextureData, TextureFormat,
 use super::{get_image_data, Buffers, GltfError, ImageFormat};
 
 // Load a single material, and transform into a format usable by the engine
-// TODO: alpha cutoff, require changes to PBR shader
 pub fn load_material(
     material: &gltf::Material,
     buffers: &Buffers,
@@ -89,11 +88,14 @@ pub fn load_material(
         None => None,
     };
     prefab.ambient_occlusion_id = material.index().map(|i| i as u64 * 10 + 5);
-    prefab.transparent = if let AlphaMode::Opaque = material.alpha_mode() {
+    prefab.transparent = if let AlphaMode::Blend = material.alpha_mode() {
         true
     } else {
         false
     };
+    if let AlphaMode::Mask = material.alpha_mode() {
+        prefab.alpha_cutoff = material.alpha_cutoff();
+    }
 
     Ok(prefab)
 }

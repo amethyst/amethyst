@@ -66,7 +66,6 @@ impl StdError for GltfError {
         match *self {
             GltfImporterError(_) => "Gltf import error",
             InvalidSceneGltf(_) => "Gltf has no default scene, and the number of scenes is not 1",
-            //PrimitiveMissingInGfx(_) => "Primitive missing in gfx",
             MissingPositions => "Primitive missing positions",
             MissingInputs => "Channel missing inputs",
             MissingOutputs => "Channel missing outputs",
@@ -92,7 +91,6 @@ impl fmt::Display for GltfError {
             GltfImporterError(ref err) => {
                 write!(f, "{}: {}", self.description(), err.description())
             }
-            //PrimitiveMissingInGfx(ref err) => write!(f, "{}: {}", self.description(), err),
             Asset(ref err) => write!(f, "{}: {}", self.description(), err.description()),
             InvalidSceneGltf(size) => write!(f, "{}: {}", self.description(), size),
             MissingPositions | NotImplemented | MissingInputs | MissingOutputs => {
@@ -161,9 +159,6 @@ fn load_data(
         name,
         &mut prefab,
     )?;
-    // TODO: cameras
-    // TODO: morph targets
-    // TODO: lights?
     Ok(prefab)
 }
 
@@ -306,9 +301,7 @@ fn load_node(
         if graphics.len() == 1 {
             // single primitive can be loaded directly onto the node
             let (mesh, material_index, bounds) = graphics.remove(0);
-            if let Some(bounds) = bounds {
-                bounding_box.extend_range(&bounds);
-            }
+            bounding_box.extend_range(&bounds);
             let prefab_data = prefab.entity(entity_index).unwrap().data_or_default();
             prefab_data.mesh = Some(mesh);
             if let Some(material) = material_index.and_then(|index| gltf.materials().nth(index)) {
@@ -337,11 +330,10 @@ fn load_node(
                 if let Some(ref mut skin) = skin {
                     skin.mesh_indices.push(mesh_entity);
                 }
+
                 // extent
-                if let Some(bounds) = bounds {
-                    bounding_box.extend_range(&bounds);
-                    prefab_data.extent = Some(bounds.into());
-                }
+                bounding_box.extend_range(&bounds);
+                prefab_data.extent = Some(bounds.into());
             }
         }
     }
