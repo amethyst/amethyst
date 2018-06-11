@@ -11,6 +11,7 @@ extern crate imagefmt;
 extern crate itertools;
 #[macro_use]
 extern crate log;
+extern crate mikktspace;
 #[macro_use]
 extern crate serde;
 
@@ -152,9 +153,10 @@ impl Component for GltfNodeExtent {
 
 /// Options used when loading a GLTF file
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(default)]
 pub struct GltfSceneOptions {
     /// Generate texture coordinates if none exist in the Gltf file
-    pub generate_tex_coords: Option<(f32, f32)>,
+    pub generate_tex_coords: (f32, f32),
     /// Load animation data from the Gltf file
     pub load_animations: bool,
     /// Flip the v coordinate for all texture coordinates
@@ -181,23 +183,31 @@ impl<'a> PrefabData<'a> for GltfPrefab {
         system_data: &mut Self::SystemData,
         entities: &[Entity],
     ) -> Result<(), Error> {
+        let (
+            ref mut transforms,
+            ref mut meshes,
+            ref mut materials,
+            ref mut animatables,
+            ref mut skinnables,
+            ref mut extents,
+        ) = system_data;
         if let Some(ref transform) = self.transform {
-            transform.load_prefab(entity, &mut system_data.0, entities)?;
+            transform.load_prefab(entity, transforms, entities)?;
         }
         if let Some(ref mesh) = self.mesh_handle {
-            (system_data.1).1.insert(entity, mesh.clone())?;
+            meshes.1.insert(entity, mesh.clone())?;
         }
         if let Some(ref material) = self.material {
-            material.load_prefab(entity, &mut system_data.2, entities)?;
+            material.load_prefab(entity, materials, entities)?;
         }
         if let Some(ref animatable) = self.animatable {
-            animatable.load_prefab(entity, &mut system_data.3, entities)?;
+            animatable.load_prefab(entity, animatables, entities)?;
         }
         if let Some(ref skinnable) = self.skinnable {
-            skinnable.load_prefab(entity, &mut system_data.4, entities)?;
+            skinnable.load_prefab(entity, skinnables, entities)?;
         }
         if let Some(ref extent) = self.extent {
-            system_data.5.insert(entity, extent.clone())?;
+            extents.insert(entity, extent.clone())?;
         }
         Ok(())
     }
@@ -207,22 +217,23 @@ impl<'a> PrefabData<'a> for GltfPrefab {
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
     ) -> Result<bool, Error> {
+        let (_, ref mut meshes, ref mut materials, ref mut animatables, _, _) = system_data;
         let mut ret = false;
         if let Some(ref mesh) = self.mesh {
-            self.mesh_handle = Some((system_data.1).0.load_from_data(
+            self.mesh_handle = Some(meshes.0.load_from_data(
                 mesh.clone(),
                 &mut *progress,
-                &(system_data.1).2,
+                &meshes.2,
             ));
             ret = true;
         }
         if let Some(ref mut material) = self.material {
-            if material.trigger_sub_loading(progress, &mut system_data.2)? {
+            if material.trigger_sub_loading(progress, materials)? {
                 ret = true;
             }
         }
         if let Some(ref mut animatable) = self.animatable {
-            if animatable.trigger_sub_loading(progress, &mut system_data.3)? {
+            if animatable.trigger_sub_loading(progress, animatables)? {
                 ret = true;
             }
         }
