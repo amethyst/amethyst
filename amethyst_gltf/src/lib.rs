@@ -11,6 +11,7 @@ extern crate imagefmt;
 extern crate itertools;
 #[macro_use]
 extern crate log;
+extern crate mikktspace;
 #[macro_use]
 extern crate serde;
 
@@ -152,9 +153,10 @@ impl Component for GltfNodeExtent {
 
 /// Options used when loading a GLTF file
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(default)]
 pub struct GltfSceneOptions {
     /// Generate texture coordinates if none exist in the Gltf file
-    pub generate_tex_coords: Option<(f32, f32)>,
+    pub generate_tex_coords: (f32, f32),
     /// Load animation data from the Gltf file
     pub load_animations: bool,
     /// Flip the v coordinate for all texture coordinates

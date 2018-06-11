@@ -9,7 +9,7 @@ Prefab (
         ),
         (
             data: (
-                transform: Transform(
+                transform: (
                     translation: (x: 0.0, y: -1.1, z: 0.0),
                     rotation: (s: 0.7071068, v: (x: 0., y: 0.7071068, z: 0.),),
                 ),
@@ -19,7 +19,7 @@ Prefab (
             parent: 1,
             data: (
                 gltf: File("mesh/puffy.gltf", GltfSceneFormat, (
-                    load_animations: false,
+                    load_animations: true,
                     flip_v_coord: true,
                 )),
                 tag: (),
@@ -27,8 +27,9 @@ Prefab (
         ),
         (
             data: (
-                transform: Transform (
-                     translation: (x: 0.0, y: 2.0, z: 15.0,),
+                transform: (
+                     translation: (x: 3.0, y: 2.0, z: 7.0,),
+                     rotation: (s: 0.9698463, v: (x: -0.1710101, y: 0.1710101, z: -0.0301537),),
                 ),
                 camera: Perspective((
                     fovy: Rad (1.0471975512),

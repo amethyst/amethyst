@@ -306,9 +306,7 @@ fn load_node(
         if graphics.len() == 1 {
             // single primitive can be loaded directly onto the node
             let (mesh, material_index, bounds) = graphics.remove(0);
-            if let Some(bounds) = bounds {
-                bounding_box.extend_range(&bounds);
-            }
+            bounding_box.extend_range(&bounds);
             let prefab_data = prefab.entity(entity_index).unwrap().data_or_default();
             prefab_data.mesh = Some(mesh);
             if let Some(material) = material_index.and_then(|index| gltf.materials().nth(index)) {
@@ -337,11 +335,10 @@ fn load_node(
                 if let Some(ref mut skin) = skin {
                     skin.mesh_indices.push(mesh_entity);
                 }
+
                 // extent
-                if let Some(bounds) = bounds {
-                    bounding_box.extend_range(&bounds);
-                    prefab_data.extent = Some(bounds.into());
-                }
+                bounding_box.extend_range(&bounds);
+                prefab_data.extent = Some(bounds.into());
             }
         }
     }
