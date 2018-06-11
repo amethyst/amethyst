@@ -137,7 +137,10 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
                     true
                 }
 
-                Some(Completion::Failed) => return Trans::Quit,
+                Some(Completion::Failed) => {
+                    println!("Error: {:?}", self.progress.as_ref().unwrap().errors());
+                    return Trans::Quit;
+                }
             };
             if remove {
                 self.progress = None;
@@ -169,6 +172,7 @@ fn toggle_or_cycle_animation(
             if set.has_animation(scene.animation_index) {
                 set.toggle(scene.animation_index);
             } else {
+                println!("Running animation {}", scene.animation_index);
                 set.add_animation(
                     scene.animation_index,
                     animation,
@@ -178,6 +182,9 @@ fn toggle_or_cycle_animation(
                 );
             }
             scene.animation_index += 1;
+            if scene.animation_index == 6 {
+                scene.animation_index = 7;
+            }
             if scene.animation_index >= animations.animations.len() {
                 scene.animation_index = 0;
             }
@@ -206,7 +213,9 @@ fn main() -> amethyst::Result<()> {
         )
         .with_basic_renderer(
             path,
-            DrawShadedSeparate::new().with_vertex_skinning(),
+            DrawPbmSeparate::new()
+                .with_vertex_skinning()
+                .with_transparency(ColorMask::all(), ALPHA, Some(DepthMode::LessEqualWrite)),
             false,
         )?
         .with_bundle(
