@@ -116,8 +116,8 @@ impl UiTransform {
 
     /// Checks if the input position is in the UiTransform rectangle.
     pub fn position_inside(&self, x: f32, y: f32) -> bool {
-        x > self.pixel_x - self.width / 2.0 && y > self.pixel_y - self.height / 2.0
-            && x < self.pixel_x + self.width / 2.0 && y < self.pixel_y + self.height / 2.0
+        x > self.pixel_x - self.pixel_width / 2.0 && y > self.pixel_y - self.pixel_height / 2.0
+            && x < self.pixel_x + self.pixel_width / 2.0 && y < self.pixel_y + self.pixel_height / 2.0
     }
 
     /// Renders this UI element by evaluating transform as a percentage of the parent size,
