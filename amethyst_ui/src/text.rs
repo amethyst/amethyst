@@ -481,16 +481,13 @@ impl<'a> System<'a> for UiSystem {
                         else if input == '\u{7F}' {
                             continue;
                         }
-
                         // Unicode reserves some characters for "private use".  Systems emit
                         // these for no clear reason, so we're just going to ignore all of them.
                         else if input >= '\u{E000}' && input <= '\u{F8FF}' {
                             continue;
-                        }
-                        else if input >= '\u{F0000}' && input <= '\u{FFFFF}' {
+                        } else if input >= '\u{F0000}' && input <= '\u{FFFFF}' {
                             continue;
-                        }
-                        else if input >= '\u{100000}' && input <= '\u{10FFFF}' {
+                        } else if input >= '\u{100000}' && input <= '\u{10FFFF}' {
                             continue;
                         }
                         focused_edit.cursor_blink_timer = 0.0;
@@ -550,7 +547,8 @@ impl<'a> System<'a> for UiSystem {
                                         .text
                                         .grapheme_indices(true)
                                         .nth(focused_edit.cursor_position as usize - 1)
-                                        .map(|i| (i.0, i.1.len())) {
+                                        .map(|i| (i.0, i.1.len()))
+                                    {
                                         focused_text.text.drain(byte..(byte + len));
                                         focused_edit.cursor_position -= 1;
                                     }

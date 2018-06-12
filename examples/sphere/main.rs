@@ -9,7 +9,7 @@ use amethyst::ecs::prelude::World;
 use amethyst::input::{is_close_requested, is_key};
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DrawShaded, Event, Light, Mesh, PointLight,
-                         PosNormTex, Projection, Rgba, VirtualKeyCode, Shape};
+                         PosNormTex, Projection, Rgba, Shape, VirtualKeyCode};
 
 const SPHERE_COLOUR: [f32; 4] = [0.0, 0.0, 1.0, 1.0]; // blue
 const AMBIENT_LIGHT_COLOUR: Rgba = Rgba(0.01, 0.01, 0.01, 1.0); // near-black
