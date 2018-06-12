@@ -62,11 +62,14 @@ extern crate thread_profiler;
 
 pub use self::bundle::{AnimationBundle, SamplingBundle, VertexSkinningBundle};
 pub use self::material::{MaterialChannel, MaterialPrimitive};
+pub use self::prefab::{AnimatablePrefab, AnimationHierarchyPrefab, AnimationPrefab,
+                       AnimationSetPrefab};
 pub use self::resources::{Animation, AnimationCommand, AnimationControl, AnimationControlSet,
                           AnimationHierarchy, AnimationSampling, AnimationSet, ApplyData,
                           BlendMethod, ControlState, DeferStartRelation, EndControl, RestState,
                           Sampler, SamplerControl, SamplerControlSet, StepDirection};
-pub use self::skinning::{Joint, Skin, VertexSkinningSystem};
+pub use self::skinning::{Joint, JointPrefab, Skin, SkinPrefab, SkinnablePrefab,
+                         VertexSkinningSystem};
 pub use self::systems::{AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem,
                         SamplerProcessor};
 pub use self::transform::TransformChannel;
@@ -75,6 +78,7 @@ pub use minterpolate::{InterpolationFunction, InterpolationPrimitive};
 
 mod bundle;
 mod material;
+mod prefab;
 mod resources;
 mod skinning;
 mod systems;

@@ -127,3 +127,7 @@ This example shows how to use the Arc Ball Camera.
 Demonstrates how to use `SpriteSheet`s.
 
 ![example animation](sprites/example.gif)
+
+### Prefab
+
+Shows how to load data using the `Prefab` system.

@@ -12,7 +12,7 @@ use amethyst::ecs::prelude::{Entity, World};
 use amethyst::input::{get_key, is_close_requested, is_key};
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DrawShaded, Event, Light, Mesh, PointLight,
-                         PosNormTex, Projection, Rgba, VirtualKeyCode, Shape};
+                         PosNormTex, Projection, Rgba, Shape, VirtualKeyCode};
 
 // blue
 const SPHERE_COLOUR: [f32; 4] = [0.0, 0.0, 1.0, 1.0];

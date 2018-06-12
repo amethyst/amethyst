@@ -12,11 +12,10 @@ use amethyst::ecs::prelude::{Entity, System, World, Write};
 use amethyst::input::{is_close_requested, is_key, InputBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DrawShaded, Light, Mesh, PngFormat, PointLight,
-                         PosNormTex, Projection, Rgba, Texture, Shape};
+                         PosNormTex, Projection, Rgba, Shape, Texture};
 use amethyst::shrev::{EventChannel, ReaderId};
-use amethyst::ui::{Anchor, FontAsset, MouseReactive, Stretch, TextEditing, TtfFormat,
-                   UiBundle, UiButtonBuilder, UiEvent, UiFocused, UiImage,
-                   UiText, UiTransform};
+use amethyst::ui::{Anchor, FontAsset, MouseReactive, Stretch, TextEditing, TtfFormat, UiBundle,
+                   UiButtonBuilder, UiEvent, UiFocused, UiImage, UiText, UiTransform};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::winit::{Event, VirtualKeyCode};
 
