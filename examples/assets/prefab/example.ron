@@ -1,0 +1,54 @@
+#![enable(implicit_some)]
+Prefab (
+    entities: [
+        (
+            data: (
+                GraphicsPrefab (
+                    mesh: File ("mesh/cube.obj", ObjFormat, ()),
+                    material: (
+                        albedo: Data(Rgba((0.0, 0.0, 1.0, 0.0,), (),)),
+                    ),
+                ),
+                Transform (
+                    translation: (
+                        x: 0.0,
+                        y: 0.0,
+                        z: 5.0,
+                    ),
+                    scale: (x: 2.0, y: 2.0, z: 2.0,),
+                ),
+                None,
+                None,
+            ),
+        ),
+        (
+            data: (
+                None,
+                None,
+                Point((
+                    center: (5.0, -20.0, 15.0),
+                    intensity: 100.0,
+                    color: (1.0, 1.0, 1.0, 1.0),
+                    radius: 1.0,
+                )),
+                None,
+            ),
+        ),
+        (
+            data: (
+                None,
+                Transform (
+                    translation: (x: 0.0, y: -20.0, z: 10.0),
+                    rotation: (s: 0.7882256, v: (x: 0.6153864, y: 0.0, z: 0.0),),
+                ),
+                None,
+                Perspective((
+                    fovy: Rad (1.0471975512),
+                    aspect: 1.0,
+                    near: 0.1,
+                    far: 2000.0,
+                )),
+            ),
+        ),
+    ],
+)

@@ -26,8 +26,9 @@ use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::Entity;
 use amethyst::input::{is_close_requested, is_key, InputBundle};
 use amethyst::prelude::*;
-use amethyst::renderer::{Camera, ColorMask, DrawFlat, Event, Material, MaterialDefaults, Mesh,
-                         PosTex, Projection, ScreenDimensions, VirtualKeyCode, ALPHA, MaterialTextureSet};
+use amethyst::renderer::{Camera, ColorMask, DrawFlat, Event, Material, MaterialDefaults,
+                         MaterialTextureSet, Mesh, PosTex, Projection, ScreenDimensions,
+                         VirtualKeyCode, ALPHA};
 use amethyst::ui::UiBundle;
 
 #[derive(Debug, Default)]

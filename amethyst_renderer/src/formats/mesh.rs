@@ -1,8 +1,10 @@
 use std::fmt::Debug;
+use std::result::Result as StdResult;
 
-use amethyst_assets::{Asset, Error, ProcessingState, Result, ResultExt, SimpleFormat};
+use amethyst_assets::{Asset, AssetStorage, Error, Loader, PrefabData, PrefabError,
+                      ProcessingState, Result, ResultExt, SimpleFormat};
 use amethyst_core::cgmath::{InnerSpace, Vector3};
-use amethyst_core::specs::prelude::VecStorage;
+use amethyst_core::specs::prelude::{Entity, Read, ReadExpect, VecStorage, WriteStorage};
 use wavefront_obj::obj::{parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex,
                          TextureIndex, Vertex, VertexIndex};
 
@@ -67,6 +69,27 @@ impl Asset for Mesh {
     const NAME: &'static str = "renderer::Mesh";
     type Data = MeshData;
     type HandleStorage = VecStorage<MeshHandle>;
+}
+
+impl<'a> PrefabData<'a> for MeshData {
+    type SystemData = (
+        ReadExpect<'a, Loader>,
+        WriteStorage<'a, MeshHandle>,
+        Read<'a, AssetStorage<Mesh>>,
+    );
+    type Result = ();
+
+    fn load_prefab(
+        &self,
+        entity: Entity,
+        system_data: &mut Self::SystemData,
+        _: &[Entity],
+    ) -> StdResult<(), PrefabError> {
+        let handle = system_data
+            .0
+            .load_from_data(self.clone(), (), &system_data.2);
+        system_data.1.insert(entity, handle).map(|_| ())
+    }
 }
 
 /// Allows loading from Wavefront files
