@@ -60,7 +60,7 @@ where
     pub caveat_id: Option<u64>,
     /// Set material as `Transparent`
     pub transparent: bool,
-    ///
+    /// Alpha cutoff: the value below which we do not draw the pixel
     pub alpha_cutoff: f32,
 }
 

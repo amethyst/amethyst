@@ -4,6 +4,7 @@ use std::marker::PhantomData;
 
 use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, PrefabError, ProgressCounter};
 use amethyst_core::specs::prelude::{Entity, Read, ReadExpect, WriteStorage};
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
 use {Animation, AnimationHierarchy, AnimationSampling, AnimationSet, RestState, Sampler};
@@ -20,8 +21,8 @@ use {Animation, AnimationHierarchy, AnimationSampling, AnimationSet, RestState, 
 pub struct AnimationPrefab<T>
 where
     T: AnimationSampling,
-    T::Channel: for<'a> Deserialize<'a> + Serialize,
-    T::Primitive: for<'a> Deserialize<'a> + Serialize,
+    T::Channel: DeserializeOwned + Serialize,
+    T::Primitive: DeserializeOwned + Serialize,
 {
     /// All samplers in the `Animation`
     pub samplers: Vec<(usize, T::Channel, Sampler<T::Primitive>)>,
@@ -53,8 +54,8 @@ where
 impl<'a, T> PrefabData<'a> for AnimationPrefab<T>
 where
     T: AnimationSampling,
-    T::Channel: for<'b> Deserialize<'b> + Serialize,
-    T::Primitive: for<'b> Deserialize<'b> + Serialize,
+    T::Channel: DeserializeOwned + Serialize,
+    T::Primitive: DeserializeOwned + Serialize,
 {
     type SystemData = (
         ReadExpect<'a, Loader>,
@@ -94,7 +95,7 @@ where
     }
 }
 
-/// `PrefaData` for loading `Animation`s as part of an `AnimationSet`.
+/// `PrefabData` for loading `Animation`s as part of an `AnimationSet`.
 ///
 /// ### Type parameters
 ///
@@ -213,7 +214,7 @@ where
     }
 }
 
-/// `PrefaData` for full animation support
+/// `PrefabData` for full animation support
 ///
 /// ### Type parameters
 ///

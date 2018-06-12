@@ -1,14 +1,12 @@
 use amethyst_assets::{AssetStorage, Loader, Progress};
 use amethyst_core::cgmath::{InnerSpace, Vector3};
 use amethyst_core::specs::prelude::{Read, ReadExpect};
-use genmesh::generators::{/*Circle, */ Cone, Cube, Cylinder, IcoSphere, IndexedPolygon,
-                          Plane, SharedVertex, SphereUv, Torus};
+use genmesh::generators::{Cone, Cube, Cylinder, IcoSphere, IndexedPolygon, Plane, SharedVertex,
+                          SphereUv, Torus};
 use genmesh::{EmitTriangles, MapVertex, Triangulate, Vertex, Vertices};
 
 use {ComboMeshCreator, Mesh, MeshData, MeshHandle, Normal, PosNormTangTex, PosNormTex, PosTex,
      Position, Separate, Tangent, TexCoord};
-
-// TODO: enable Circle when PR is released in genmesh
 
 /// Shape generators
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -28,8 +26,6 @@ pub enum Shape {
     IcoSphere(Option<usize>),
     /// Plane, located in the XY plane, number of subdivisions along x and y axis if given
     Plane(Option<(usize, usize)>),
-    // Circle, located in the XY plane, number of points around the circle
-    //Circle(usize),
 }
 
 /// `SystemData` needed to upload a `Shape` directly to create a `MeshHandle`
@@ -144,7 +140,6 @@ impl Shape {
                     .unwrap_or_else(Plane::new),
                 scale,
             ),
-            //Shape::Circle(u) => generate_vertices(CircleU::new(u), scale),
         };
         InternalShape(vertices)
     }

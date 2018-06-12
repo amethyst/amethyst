@@ -44,16 +44,8 @@ impl<'a, 'b> State<GameData<'a, 'b>> for AssetsExample {
     }
 }
 
-fn main() {
-    if let Err(error) = run() {
-        eprintln!("Could not run the example!");
-        eprintln!("{}", error);
-        ::std::process::exit(1);
-    }
-}
-
 /// Wrapper around the main, so we can return errors easily.
-fn run() -> Result<(), Error> {
+fn main() -> Result<(), Error> {
     // Add our meshes directory to the asset loader.
     let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
 
