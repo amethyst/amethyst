@@ -15,6 +15,27 @@
 //! By default, the amethyst will set the maximum frame rate to 144 fps, and will use a yield-only
 //! limiting strategy.
 //!
+//! # Examples
+//!
+//! ```
+//! # extern crate amethyst;
+//! use amethyst::prelude::*;
+//! use amethyst::core::frame_limiter::FrameRateLimitStrategy;
+//! use std::time::Duration;
+//!
+//! # struct GameState;
+//! # impl<'a, 'b> State<GameData<'a, 'b>> for GameState {}
+//! # fn main() -> amethyst::Result<()> {
+//! let mut game = Application::build("./", GameState)?
+//!     .with_frame_limit(
+//!         FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
+//!         144,
+//!     )
+//!     .build(GameDataBuilder::new())?;
+//! # Ok(())
+//! # }
+//! ```
+//!
 //! # Frame Budgets and Cadence
 //!
 //! The amount of time each frame has to complete is determined by the selected maximum frame
