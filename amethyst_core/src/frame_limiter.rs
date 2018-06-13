@@ -49,7 +49,7 @@
 //! budget. For example, at 60 fps amethyst will try to start a frame every 16.6 milliseconds.
 //! Keeping this timing consistent helps ensure that your game simulation runs smoothly, and
 //! amethyst will automatically keep your game running at the requested cadence as long as your
-//! game game logic takes less time to complete than is allotted (i.e. less that 16.6 ms when
+//! game logic takes less time to complete than is allotted (i.e. less that 16.6 ms when
 //! running at 60 fps).
 //!
 //! If the game logic for the frame takes longer than the alloted time, then amethyst will
@@ -80,7 +80,7 @@
 //!
 //! `SleepAndYield` can potentially be as accurate as `Yield` while using less CPU time, but you
 //! will have to test different grace period timings to determine how much time needs to be left
-//! to ensure that the main thread doesn't sleep to long and miss the start of the next frame.
+//! to ensure that the main thread doesn't sleep too long and miss the start of the next frame.
 //!
 //! [`Application`]: ../../amethyst/struct.Application.html
 //! [`FrameRateLimitStrategy`]: ./enum.FrameRateLimitStrategy.html
