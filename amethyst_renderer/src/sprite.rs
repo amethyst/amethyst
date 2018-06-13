@@ -1,5 +1,12 @@
-use amethyst_assets::{Asset, Handle};
-use amethyst_core::specs::prelude::VecStorage;
+use amethyst_assets::{Asset, AssetStorage, Handle, Loader};
+use amethyst_core::specs::prelude::{
+    Entity, EntityBuilder, Read, ReadExpect, VecStorage, WriteStorage,
+};
+use error::{Error, Result};
+use mesh::{Mesh, MeshHandle};
+use std::marker::Sized;
+use tex::TextureHandle;
+use {Material, MaterialDefaults, TextureOffset};
 
 /// An asset handle to sprite sheet metadata.
 pub type SpriteSheetHandle = Handle<SpriteSheet>;
@@ -58,6 +65,145 @@ impl From<[f32; 4]> for Sprite {
             top: uv[2],
             bottom: uv[3],
         }
+    }
+}
+
+/// SystemData containing the data necessary to handle new rendered sprites
+#[derive(SystemData)]
+pub struct SpriteRenderData<'a> {
+    /// Storage containing the meshes
+    pub meshes: WriteStorage<'a, MeshHandle>,
+    /// Storage containing the materials
+    pub materials: WriteStorage<'a, Material>,
+    /// Loader resource
+    pub loader: ReadExpect<'a, Loader>,
+    /// Assets storage containing meshes
+    pub asset_storage: Read<'a, AssetStorage<Mesh>>,
+    /// Material defaults
+    pub material_defaults: ReadExpect<'a, MaterialDefaults>,
+}
+
+impl<'a> SpriteRenderData<'a> {
+    fn build_mesh_and_material(
+        &mut self,
+        sprite: Sprite,
+        texture: TextureHandle,
+        size: (f32, f32),
+    ) -> (MeshHandle, Material) {
+        use vertex::PosTex;
+        let width = sprite.right - sprite.left;
+        let height = sprite.bottom - sprite.top;
+
+        let vertices: Vec<PosTex> = vec![
+            // First triangle
+            PosTex {
+                position: [0.0, 0.0, 0.0],
+                tex_coord: [0.0, 0.0],
+            },
+            PosTex {
+                position: [width, 0.0, 0.0],
+                tex_coord: [1.0, 0.0],
+            },
+            PosTex {
+                position: [0.0, height, 0.0],
+                tex_coord: [0.0, 1.0],
+            },
+            // Second triangle
+            PosTex {
+                position: [width, height, 0.0],
+                tex_coord: [1.0, 1.0],
+            },
+            PosTex {
+                position: [0.0, height, 0.0],
+                tex_coord: [0.0, 1.0],
+            },
+            PosTex {
+                position: [width, 0.0, 0.0],
+                tex_coord: [1.0, 0.0],
+            },
+        ];
+
+        let mesh = self.loader
+            .load_from_data(vertices.into(), (), &self.asset_storage);
+
+        let material = Material {
+            albedo: texture,
+            albedo_offset: TextureOffset {
+                u: (sprite.left / size.0, sprite.right / size.0),
+                v: (1.0 - sprite.bottom / size.1, 1.0 - sprite.top / size.1),
+            },
+            ..self.material_defaults.0.clone()
+        };
+
+        (mesh, material)
+    }
+
+    /// Adds a mesh and a material to an entity corresponding to the sprite and texture given.
+    /// Note that is you need to insert the same sprite and texture, using ``add_sprite_render_multiple`` allows for better performances.
+    pub fn add_sprite_render(
+        &mut self,
+        entity: Entity,
+        sprite: Sprite,
+        texture: TextureHandle,
+        texture_size: (f32, f32),
+    ) -> Result<()> {
+        let (mesh, material) = self.build_mesh_and_material(sprite, texture, texture_size);
+        self.meshes.insert(entity, mesh)?;
+        self.materials.insert(entity, material)?;
+        Ok(())
+    }
+
+    /// Adds the same mesh and material to multiple entities corresponding to the sprite and texture given.
+    pub fn add_sprite_render_multiple(
+        &mut self,
+        entities: Vec<Entity>,
+        sprite: Sprite,
+        texture: TextureHandle,
+        texture_size: (f32, f32),
+    ) -> Result<()> {
+        let len = entities.len();
+        if len == 0 {
+            Err(Error::Arguments(
+                "0 entities were provided to add SpriteRender to".to_owned(),
+            ))
+        } else {
+            let (mesh, material) = self.build_mesh_and_material(sprite, texture, texture_size);
+            for entity in 0..len - 1 {
+                self.meshes.insert(entities[entity], mesh.clone())?;
+                self.materials.insert(entities[entity], material.clone())?;
+            }
+            self.meshes.insert(entities[len - 1], mesh)?;
+            self.materials.insert(entities[len - 1], material)?;
+            Ok(())
+        }
+    }
+}
+
+/// An easy way to attach and display a sprite when building an entity
+pub trait WithSpriteRender
+where
+    Self: Sized,
+{
+    /// Adds a mesh and a material to the entity being built corresponding to the sprite and texture given.
+    fn with_sprite_render(
+        self,
+        sprite: Sprite,
+        texture: TextureHandle,
+        texture_size: (f32, f32),
+    ) -> Result<Self>;
+}
+
+impl<'a> WithSpriteRender for EntityBuilder<'a> {
+    fn with_sprite_render(
+        self,
+        sprite: Sprite,
+        texture: TextureHandle,
+        texture_size: (f32, f32),
+    ) -> Result<Self> {
+        self.world
+            .system_data::<SpriteRenderData>()
+            .add_sprite_render(self.entity, sprite, texture, texture_size)?;
+        Ok(self)
     }
 }
 
