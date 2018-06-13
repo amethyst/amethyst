@@ -91,34 +91,34 @@ impl<'a> SpriteRenderData<'a> {
         size: (f32, f32),
     ) -> (MeshHandle, Material) {
         use vertex::PosTex;
-        let width = sprite.right - sprite.left;
-        let height = sprite.bottom - sprite.top;
+        let half_width = (sprite.right - sprite.left) * 0.5;
+        let half_height = (sprite.bottom - sprite.top) * 0.5;
 
         let vertices: Vec<PosTex> = vec![
             // First triangle
             PosTex {
-                position: [0.0, 0.0, 0.0],
+                position: [-half_width, -half_height, 0.0],
                 tex_coord: [0.0, 0.0],
             },
             PosTex {
-                position: [width, 0.0, 0.0],
+                position: [half_width, -half_height, 0.0],
                 tex_coord: [1.0, 0.0],
             },
             PosTex {
-                position: [0.0, height, 0.0],
+                position: [-half_width, half_height, 0.0],
                 tex_coord: [0.0, 1.0],
             },
             // Second triangle
             PosTex {
-                position: [width, height, 0.0],
+                position: [half_width, half_height, 0.0],
                 tex_coord: [1.0, 1.0],
             },
             PosTex {
-                position: [0.0, height, 0.0],
+                position: [-half_width, half_height, 0.0],
                 tex_coord: [0.0, 1.0],
             },
             PosTex {
-                position: [width, 0.0, 0.0],
+                position: [half_width, -half_height, 0.0],
                 tex_coord: [1.0, 0.0],
             },
         ];
