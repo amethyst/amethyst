@@ -86,14 +86,18 @@ pub use shape::{InternalShape, Shape, ShapeUpload};
 pub use skinning::{AnimatedComboMeshCreator, AnimatedVertexBufferCombination, JointIds,
                    JointTransforms, JointWeights};
 pub use sprite::{Sprite, SpriteSheet, SpriteSheetHandle};
+                   JointTransforms, JointTransformsPrefab, JointWeights, WthSpriteRender};
 pub use system::RenderSystem;
 pub use tex::{Texture, TextureBuilder, TextureHandle};
-pub use transparent::{Blend, BlendChannel, BlendValue, ColorMask, Equation, Factor, Transparent,
-                      ALPHA, REPLACE};
+pub use transparent::{
+    Blend, BlendChannel, BlendValue, ColorMask, Equation, Factor, Transparent, ALPHA, REPLACE,
+};
 pub use types::{Encoder, Factory, PipelineState, Resources};
-pub use vertex::{Attribute, AttributeFormat, Attributes, Color, Normal, PosColor, PosNormTangTex,
-                 PosNormTex, PosTex, Position, Query, Separate, Tangent, TexCoord,
-                 VertexBufferCombination, VertexFormat, With};
+pub use vertex::{
+    Attribute, AttributeFormat, Attributes, Color, Normal, PosColor, PosNormTangTex, PosNormTex,
+    PosTex, Position, Query, Separate, Tangent, TexCoord, VertexBufferCombination, VertexFormat,
+    With,
+};
 pub use visibility::{Visibility, VisibilitySortingSystem};
 
 pub mod error;

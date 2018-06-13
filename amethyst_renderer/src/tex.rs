@@ -46,6 +46,12 @@ impl Texture {
     pub fn view(&self) -> &RawShaderResourceView {
         &self.view
     }
+
+    /// Returns the texture's dimensions ``(width, height)``
+    pub fn size(&self) -> (usize, usize) {
+        let (w, h, _, _) = self.texture.get_info().kind.get_dimensions();
+        (w as usize, h as usize)
+    }
 }
 
 impl Asset for Texture {

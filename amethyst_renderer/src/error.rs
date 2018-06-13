@@ -5,6 +5,7 @@ use std::fmt::Result as FmtResult;
 use std::fmt::{Display, Formatter};
 use std::result::Result as StdResult;
 
+use amethyst_core;
 use gfx;
 use gfx_core;
 
@@ -14,6 +15,8 @@ pub type Result<T> = StdResult<T, Error>;
 /// Common renderer error type.
 #[derive(Debug)]
 pub enum Error {
+    /// The provided arguments are incorrect.
+    Arguments(String),
     /// Failed to create a buffer.
     BufferCreation(gfx::buffer::CreationError),
     /// A render target with the given name does not exist.
@@ -28,6 +31,8 @@ pub enum Error {
     ProgramCreation(gfx::shade::ProgramError),
     /// Failed to create a resource view.
     ResViewCreation(gfx::ResourceViewError),
+    /// Failed to interact with the ECS.
+    SpecsError(amethyst_core::specs::error::Error),
     /// Failed to create a render target.
     TargetCreation(gfx::CombinedError),
     /// Failed to create a texture resource.
@@ -39,6 +44,7 @@ pub enum Error {
 impl StdError for Error {
     fn description(&self) -> &str {
         match *self {
+            Error::Arguments(_) => "The provided arguments are incorrect!",
             Error::BufferCreation(_) => "Failed to create buffer!",
             Error::NoSuchTarget(_) => "Target with this name does not exist!",
             Error::PassInit(_) => "Failed to initialize render pass!",
@@ -46,6 +52,7 @@ impl StdError for Error {
             Error::PoolCreation(_) => "Failed to create thread pool!",
             Error::ProgramCreation(_) => "Failed to create shader program!",
             Error::ResViewCreation(_) => "Failed to create resource view!",
+            Error::SpecsError(_) => "Failed to interact with the ECS!",
             Error::TargetCreation(_) => "Failed to create render target!",
             Error::TextureCreation(_) => "Failed to create texture!",
             Error::WindowDestroyed => "Window has been destroyed!",
@@ -59,6 +66,7 @@ impl StdError for Error {
             Error::PipelineCreation(ref e) => Some(e),
             Error::ProgramCreation(ref e) => Some(e),
             Error::ResViewCreation(ref e) => Some(e),
+            Error::SpecsError(ref e) => Some(e),
             Error::TargetCreation(ref e) => Some(e),
             Error::TextureCreation(ref e) => Some(e),
             _ => None,
@@ -69,6 +77,7 @@ impl StdError for Error {
 impl Display for Error {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
         match *self {
+            Error::Arguments(ref e) => write!(fmt, "The provided arguments are incorrect: {}", e),
             Error::BufferCreation(ref e) => write!(fmt, "Buffer creation failed: {}", e),
             Error::NoSuchTarget(ref e) => write!(fmt, "Nonexistent target: {}", e),
             Error::PassInit(ref e) => write!(fmt, "Pass initialization failed: {}", e),
@@ -76,6 +85,7 @@ impl Display for Error {
             Error::PoolCreation(ref e) => write!(fmt, "Thread pool creation failed: {}", e),
             Error::ProgramCreation(ref e) => write!(fmt, "Program compilation failed: {}", e),
             Error::ResViewCreation(ref e) => write!(fmt, "Resource view creation failed: {}", e),
+            Error::SpecsError(ref e) => write!(fmt, "Interaction with ECS failed: {}", e),
             Error::TargetCreation(ref e) => write!(fmt, "Target creation failed: {}", e),
             Error::TextureCreation(ref e) => write!(fmt, "Texture creation failed: {}", e),
             Error::WindowDestroyed => write!(fmt, "Window has been destroyed"),
@@ -122,5 +132,11 @@ impl From<gfx::texture::CreationError> for Error {
 impl From<gfx_core::pso::CreationError> for Error {
     fn from(e: gfx_core::pso::CreationError) -> Error {
         Error::PipelineCreation(e)
+    }
+}
+
+impl From<amethyst_core::specs::error::Error> for Error {
+    fn from(e: amethyst_core::specs::error::Error) -> Error {
+        Error::SpecsError(e)
     }
 }
