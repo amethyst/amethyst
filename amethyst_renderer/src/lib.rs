@@ -86,7 +86,7 @@ pub use shape::{InternalShape, Shape, ShapeUpload};
 pub use skinning::{AnimatedComboMeshCreator, AnimatedVertexBufferCombination, JointIds,
                    JointTransforms, JointWeights};
 pub use sprite::{Sprite, SpriteSheet, SpriteSheetHandle};
-                   JointTransforms, JointTransformsPrefab, JointWeights, WthSpriteRender};
+                   JointTransforms, JointTransformsPrefab, JointWeights, WithSpriteRender};
 pub use system::RenderSystem;
 pub use tex::{Texture, TextureBuilder, TextureHandle};
 pub use transparent::{
