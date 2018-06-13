@@ -86,7 +86,7 @@ pub use resources::{AmbientColor, ScreenDimensions, WindowMessages};
 pub use shape::{InternalShape, Shape, ShapeUpload};
 pub use skinning::{AnimatedComboMeshCreator, AnimatedVertexBufferCombination, JointIds,
                    JointTransforms, JointTransformsPrefab, JointWeights};
-pub use sprite::{Sprite, SpriteRenderData, SpriteSheet, SpriteSheetHandle, WthSpriteRender};
+pub use sprite::{Sprite, SpriteRenderData, SpriteSheet, SpriteSheetHandle, WithSpriteRender};
 pub use system::RenderSystem;
 pub use tex::{Texture, TextureBuilder, TextureHandle};
 pub use transparent::{
