@@ -34,8 +34,8 @@ impl<'s> System<'s> for PaddleSystem {
 
                 // We make sure the paddle remains in the arena.
                 transform.translation[1] = transform.translation[1]
-                    .max(0.0)
-                    .min(ARENA_HEIGHT - paddle.height);
+                    .max(paddle.height * 0.5)
+                    .min(ARENA_HEIGHT - paddle.height * 0.5);
             }
         }
     }

@@ -86,7 +86,7 @@ pub struct SpriteRenderData<'a> {
 impl<'a> SpriteRenderData<'a> {
     fn build_mesh_and_material(
         &mut self,
-        sprite: Sprite,
+        sprite: &Sprite,
         texture: TextureHandle,
         size: (f32, f32),
     ) -> (MeshHandle, Material) {
@@ -143,7 +143,7 @@ impl<'a> SpriteRenderData<'a> {
     pub fn add_sprite_render(
         &mut self,
         entity: Entity,
-        sprite: Sprite,
+        sprite: &Sprite,
         texture: TextureHandle,
         texture_size: (f32, f32),
     ) -> Result<()> {
@@ -157,7 +157,7 @@ impl<'a> SpriteRenderData<'a> {
     pub fn add_sprite_render_multiple(
         &mut self,
         entities: Vec<Entity>,
-        sprite: Sprite,
+        sprite: &Sprite,
         texture: TextureHandle,
         texture_size: (f32, f32),
     ) -> Result<()> {
@@ -187,7 +187,7 @@ where
     /// Adds a mesh and a material to the entity being built corresponding to the sprite and texture given.
     fn with_sprite_render(
         self,
-        sprite: Sprite,
+        sprite: &Sprite,
         texture: TextureHandle,
         texture_size: (f32, f32),
     ) -> Result<Self>;
@@ -196,7 +196,7 @@ where
 impl<'a> WithSpriteRender for EntityBuilder<'a> {
     fn with_sprite_render(
         self,
-        sprite: Sprite,
+        sprite: &Sprite,
         texture: TextureHandle,
         texture_size: (f32, f32),
     ) -> Result<Self> {
