@@ -12,7 +12,7 @@
 //! any work it needs to. If a frame takes less time than is budgeted, amethyst will attempt to
 //! yield the remaining time back to the operating system, using the chosen strategy.
 //!
-//! By default, the amethyst will set the maximum frame rate to 144 fps, and will use a yield-only
+//! By default, amethyst will set the maximum frame rate to 144 fps, and will use a yield-only
 //! limiting strategy.
 //!
 //! # Examples
