@@ -19,6 +19,10 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Basic renderer setup helper function ([#771])
 * Shape mesh generators ([#777])
 * Derive `PartialEq` for `SpriteSheet` ([#789])
+* Add core support for Prefabs ([#716])
+* Add shape prefab support ([#785])
+* Specialised UI prefab format ([#786])
+* Add generation of normals/tangents in GLTF ([#784])
 
 ### Changed
 * UI systems will now never overwrite your local `UiTransform` values ([#774])
@@ -31,6 +35,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Remove boilerplate for `run` + `main` in examples ([#764])
 * Update dependencies ([#752], [#751])
 * Formalized and documented support for overriding the global logger ([#776])
+* Refactor GLTF loader to use prefabs ([#784])
 
 ### Fixed
 * Resizing fixed on OSX ([#767])
@@ -57,6 +62,10 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#774]: https://github.com/amethyst/amethyst/pull/774
 [#777]: https://github.com/amethyst/amethyst/pull/777
 [#776]: https://github.com/amethyst/amethyst/pull/776
+[#716]: https://github.com/amethyst/amethyst/pull/716
+[#784]: https://github.com/amethyst/amethyst/pull/784
+[#785]: https://github.com/amethyst/amethyst/pull/785
+[#786]: https://github.com/amethyst/amethyst/pull/786
 [#789]: https://github.com/amethyst/amethyst/pull/789
 
 ## [0.7.0] - 2018-05

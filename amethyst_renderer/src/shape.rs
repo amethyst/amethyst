@@ -1,12 +1,73 @@
-use amethyst_assets::{AssetStorage, Loader, Progress};
+use std::marker::PhantomData;
+
+use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, PrefabError, Progress,
+                      ProgressCounter};
 use amethyst_core::cgmath::{InnerSpace, Vector3};
-use amethyst_core::specs::prelude::{Read, ReadExpect};
-use genmesh::generators::{Cone, Cube, Cylinder, IcoSphere, IndexedPolygon, Plane, SharedVertex,
-                          SphereUv, Torus};
+use amethyst_core::specs::prelude::{Entity, Read, ReadExpect, WriteStorage};
+use genmesh::generators::{Circle, Cone, Cube, Cylinder, IcoSphere, IndexedPolygon, Plane,
+                          SharedVertex, SphereUv, Torus};
 use genmesh::{EmitTriangles, MapVertex, Triangulate, Vertex, Vertices};
 
 use {ComboMeshCreator, Mesh, MeshData, MeshHandle, Normal, PosNormTangTex, PosNormTex, PosTex,
      Position, Separate, Tangent, TexCoord};
+
+/// Prefab for generating `Mesh` from basic shapes
+///
+/// ### Type parameters:
+///
+/// `V`: Vertex format to use, must be one of:
+///     * `Vec<PosTex>`
+///     * `Vec<PosNormTex>`
+///     * `Vec<PosNormTangTex>`
+///     * `ComboMeshCreator`
+#[derive(Clone, Serialize, Deserialize)]
+pub struct ShapePrefab<V> {
+    #[serde(skip)]
+    handle: Option<Handle<Mesh>>,
+    shape: Shape,
+    #[serde(default)]
+    shape_scale: Option<(f32, f32, f32)>,
+    #[serde(skip)]
+    _m: PhantomData<V>,
+}
+
+impl<'a, V> PrefabData<'a> for ShapePrefab<V>
+where
+    V: From<InternalShape> + Into<MeshData>,
+{
+    type SystemData = (
+        ReadExpect<'a, Loader>,
+        WriteStorage<'a, Handle<Mesh>>,
+        Read<'a, AssetStorage<Mesh>>,
+    );
+    type Result = ();
+
+    fn load_prefab(
+        &self,
+        entity: Entity,
+        system_data: &mut Self::SystemData,
+        _: &[Entity],
+    ) -> Result<(), PrefabError> {
+        let (_, ref mut meshes, _) = system_data;
+        meshes
+            .insert(entity, self.handle.as_ref().unwrap().clone())
+            .map(|_| ())
+    }
+
+    fn trigger_sub_loading(
+        &mut self,
+        progress: &mut ProgressCounter,
+        system_data: &mut <Self as PrefabData>::SystemData,
+    ) -> Result<bool, PrefabError> {
+        let (loader, _, mesh_storage) = system_data;
+        self.handle = Some(loader.load_from_data(
+            self.shape.generate::<V>(self.shape_scale.clone()),
+            progress,
+            &mesh_storage,
+        ));
+        Ok(true)
+    }
+}
 
 /// Shape generators
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -26,6 +87,8 @@ pub enum Shape {
     IcoSphere(Option<usize>),
     /// Plane, located in the XY plane, number of subdivisions along x and y axis if given
     Plane(Option<(usize, usize)>),
+    /// Circle, located in the XY plane, number of points around the circle
+    Circle(usize),
 }
 
 /// `SystemData` needed to upload a `Shape` directly to create a `MeshHandle`
@@ -140,6 +203,7 @@ impl Shape {
                     .unwrap_or_else(Plane::new),
                 scale,
             ),
+            Shape::Circle(u) => generate_vertices(Circle::new(u), scale),
         };
         InternalShape(vertices)
     }

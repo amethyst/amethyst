@@ -154,7 +154,7 @@ impl<'a> PrefabData<'a> for TextureData {
 /// ### Type parameters:
 ///
 /// - `F`: `Format` to use for loading the `Texture`s from file
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum TexturePrefab<F>
 where
     F: Format<Texture, Options = TextureMetadata>,
@@ -445,7 +445,7 @@ fn create_texture_asset_from_image(
 }
 
 /// Aggregate texture format
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum TextureFormat {
     /// Jpeg
     Jpg,
