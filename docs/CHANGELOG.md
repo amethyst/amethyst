@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Add alpha cutoff support to the PBR shader ([#756])
 * Basic renderer setup helper function ([#771])
 * Shape mesh generators ([#777])
+* Derive `PartialEq` for `SpriteSheet` ([#789])
 
 ### Changed
 * UI systems will now never overwrite your local `UiTransform` values ([#774])
@@ -56,6 +57,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#774]: https://github.com/amethyst/amethyst/pull/774
 [#777]: https://github.com/amethyst/amethyst/pull/777
 [#776]: https://github.com/amethyst/amethyst/pull/776
+[#789]: https://github.com/amethyst/amethyst/pull/789
 
 ## [0.7.0] - 2018-05
 ### Added
