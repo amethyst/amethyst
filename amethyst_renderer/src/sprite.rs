@@ -2,7 +2,7 @@ use amethyst_assets::{Asset, AssetStorage, Handle, Loader};
 use amethyst_core::specs::prelude::{
     Entity, EntityBuilder, Read, ReadExpect, VecStorage, WriteStorage,
 };
-use error::{Error, Result};
+use error::Result;
 use mesh::{Mesh, MeshHandle};
 use std::marker::Sized;
 use tex::TextureHandle;
@@ -139,8 +139,8 @@ impl<'a> SpriteRenderData<'a> {
     }
 
     /// Adds a mesh and a material to an entity corresponding to the sprite and texture given.
-    /// Note that is you need to insert the same sprite and texture, using ``add_sprite_render_multiple`` allows for better performances.
-    pub fn add_sprite_render(
+    /// Note that is you need to insert the same sprite and texture, using ``add_multiple`` allows for better performances.
+    pub fn add(
         &mut self,
         entity: Entity,
         sprite: &Sprite,
@@ -154,7 +154,7 @@ impl<'a> SpriteRenderData<'a> {
     }
 
     /// Adds the same mesh and material to multiple entities corresponding to the sprite and texture given.
-    pub fn add_sprite_render_multiple(
+    pub fn add_multiple(
         &mut self,
         entities: Vec<Entity>,
         sprite: &Sprite,
@@ -162,9 +162,7 @@ impl<'a> SpriteRenderData<'a> {
         texture_size: (f32, f32),
     ) -> Result<()> {
         let len = entities.len();
-        if len == 0 {
-            Err(Error::NoEntitySpecified)
-        } else {
+        if len != 0 {
             let (mesh, material) = self.build_mesh_and_material(sprite, texture, texture_size);
             for entity in 0..len - 1 {
                 self.meshes.insert(entities[entity], mesh.clone())?;
@@ -172,8 +170,8 @@ impl<'a> SpriteRenderData<'a> {
             }
             self.meshes.insert(entities[len - 1], mesh)?;
             self.materials.insert(entities[len - 1], material)?;
-            Ok(())
         }
+        Ok(())
     }
 }
 
@@ -183,7 +181,7 @@ where
     Self: Sized,
 {
     /// Adds a mesh and a material to the entity being built corresponding to the sprite and texture given.
-    fn with_sprite_render(
+    fn with_sprite(
         self,
         sprite: &Sprite,
         texture: TextureHandle,
@@ -192,7 +190,7 @@ where
 }
 
 impl<'a> WithSpriteRender for EntityBuilder<'a> {
-    fn with_sprite_render(
+    fn with_sprite(
         self,
         sprite: &Sprite,
         texture: TextureHandle,
@@ -200,7 +198,7 @@ impl<'a> WithSpriteRender for EntityBuilder<'a> {
     ) -> Result<Self> {
         self.world
             .system_data::<SpriteRenderData>()
-            .add_sprite_render(self.entity, sprite, texture, texture_size)?;
+            .add(self.entity, sprite, texture, texture_size)?;
         Ok(self)
     }
 }
