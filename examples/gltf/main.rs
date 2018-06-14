@@ -9,6 +9,7 @@ use amethyst::animation::{get_animation_set, AnimationBundle, AnimationCommand,
                           AnimationControlSet, AnimationSet, EndControl, VertexSkinningBundle};
 use amethyst::assets::{AssetPrefab, Completion, Handle, Prefab, PrefabData, PrefabLoader,
                        PrefabLoaderSystem, ProgressCounter, RonFormat};
+use amethyst::controls::{ControlTagPrefab, FlyControlBundle};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::error::Error;
 use amethyst::ecs::prelude::{Entity, ReadStorage, Write, WriteStorage};
@@ -42,6 +43,7 @@ struct ScenePrefabData {
     camera: Option<CameraPrefab>,
     light: Option<LightPrefab>,
     tag: Option<Tag<AnimationMarker>>,
+    fly_tag: Option<ControlTagPrefab>,
 }
 
 impl<'a> PrefabData<'a> for ScenePrefabData {
@@ -51,6 +53,7 @@ impl<'a> PrefabData<'a> for ScenePrefabData {
         <Option<CameraPrefab> as PrefabData<'a>>::SystemData,
         <Option<LightPrefab> as PrefabData<'a>>::SystemData,
         <Option<Tag<AnimationMarker>> as PrefabData<'a>>::SystemData,
+        <Option<ControlTagPrefab> as PrefabData<'a>>::SystemData,
     );
     type Result = ();
 
@@ -60,14 +63,20 @@ impl<'a> PrefabData<'a> for ScenePrefabData {
         system_data: &mut Self::SystemData,
         entities: &[Entity],
     ) -> Result<(), Error> {
-        self.transform
-            .load_prefab(entity, &mut system_data.0, entities)?;
-        self.gltf.load_prefab(entity, &mut system_data.1, entities)?;
-        self.camera
-            .load_prefab(entity, &mut system_data.2, entities)?;
-        self.light
-            .load_prefab(entity, &mut system_data.3, entities)?;
-        self.tag.load_prefab(entity, &mut system_data.4, entities)?;
+        let (
+            ref mut transforms,
+            ref mut gltfs,
+            ref mut cameras,
+            ref mut lights,
+            ref mut tags,
+            ref mut control_tags,
+        ) = system_data;
+        self.transform.load_prefab(entity, transforms, entities)?;
+        self.gltf.load_prefab(entity, gltfs, entities)?;
+        self.camera.load_prefab(entity, cameras, entities)?;
+        self.light.load_prefab(entity, lights, entities)?;
+        self.tag.load_prefab(entity, tags, entities)?;
+        self.fly_tag.load_prefab(entity, control_tags, entities)?;
         Ok(())
     }
 
@@ -76,7 +85,8 @@ impl<'a> PrefabData<'a> for ScenePrefabData {
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
     ) -> Result<bool, Error> {
-        self.gltf.trigger_sub_loading(progress, &mut system_data.1)
+        let (_, ref mut gltfs, _, _, _, _) = system_data;
+        self.gltf.trigger_sub_loading(progress, gltfs)
     }
 }
 
@@ -192,7 +202,7 @@ fn toggle_or_cycle_animation(
     }
 }
 
-fn main() -> amethyst::Result<()> {
+fn main() -> Result<(), amethyst::Error> {
     let path = format!(
         "{}/examples/gltf/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
@@ -223,8 +233,15 @@ fn main() -> amethyst::Result<()> {
                 .with_dep(&["gltf_loader"]),
         )?
         .with_bundle(
-            TransformBundle::new().with_dep(&["animation_control", "sampler_interpolation"]),
+            FlyControlBundle::<String, String>::new(None, None, None)
+                .with_sensitivity(0.1, 0.1)
+                .with_speed(5.),
         )?
+        .with_bundle(TransformBundle::new().with_dep(&[
+            "animation_control",
+            "sampler_interpolation",
+            "fly_movement",
+        ]))?
         .with_bundle(VertexSkinningBundle::new().with_dep(&[
             "transform_system",
             "animation_control",

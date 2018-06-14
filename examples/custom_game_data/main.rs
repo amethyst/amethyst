@@ -3,41 +3,47 @@
 extern crate amethyst;
 extern crate rayon;
 
-use amethyst::assets::{Completion, HotReloadBundle, ProgressCounter};
+use amethyst::assets::{Completion, Handle, Prefab, PrefabLoader, PrefabLoaderSystem,
+                       ProgressCounter, RonFormat};
 use amethyst::config::Config;
 use amethyst::core::transform::TransformBundle;
-use amethyst::ecs::prelude::{Component, Entity, Join, World};
+use amethyst::ecs::prelude::{Component, Entity};
 use amethyst::ecs::storage::NullStorage;
 use amethyst::input::{is_close_requested, is_key, InputBundle};
 use amethyst::renderer::{DisplayConfig, DrawShaded, Event, Pipeline, PosNormTex, RenderBundle,
                          Stage, VirtualKeyCode};
-use amethyst::ui::{DrawUi, UiBundle};
+use amethyst::ui::{DrawUi, UiBundle, UiCreator};
 use amethyst::utils::fps_counter::FPSCounterBundle;
+use amethyst::utils::scene::BasicScenePrefab;
 use amethyst::{Application, Error, State, StateData, Trans};
 
 use example_system::ExampleSystem;
 use game_data::{CustomGameData, CustomGameDataBuilder};
-use graphic::{add_graphics_to_world, load_assets, Assets};
-use ui::{create_load_ui, create_paused_ui};
 
 mod example_system;
 mod game_data;
-mod graphic;
-mod ui;
+
+type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
 pub struct DemoState {
     light_angle: f32,
     light_color: [f32; 4],
     camera_angle: f32,
-    fps_display: Entity,
 }
 
 #[derive(Default)]
 struct Loading {
-    progress: Option<ProgressCounter>,
+    progress: ProgressCounter,
+    scene: Option<Handle<Prefab<MyPrefabData>>>,
+    ui: Option<Entity>,
 }
-struct Main;
-struct Paused;
+struct Main {
+    scene: Handle<Prefab<MyPrefabData>>,
+}
+#[derive(Default)]
+struct Paused {
+    ui: Option<Entity>,
+}
 
 #[derive(Default)]
 struct Tag;
@@ -46,27 +52,20 @@ impl Component for Tag {
     type Storage = NullStorage<Self>;
 }
 
-fn delete_state_tagged(world: &mut World) {
-    let entities = (&*world.entities(), &world.read_storage::<Tag>())
-        .join()
-        .map(|(e, _)| e)
-        .collect::<Vec<_>>();
-    if let Err(err) = world.delete_entities(&entities) {
-        eprintln!("Failed deleting entities: {}", err);
-    }
-}
-
 impl<'a, 'b> State<CustomGameData<'a, 'b>> for Loading {
     fn on_start(&mut self, data: StateData<CustomGameData>) {
-        data.world.register::<Tag>();
-        self.progress = Some(load_assets(data.world));
-        let font = data.world.read_resource::<Assets>().font.clone();
-        let fps_display = create_load_ui(data.world, font.clone());
+        self.scene = Some(data.world.exec(|loader: PrefabLoader<MyPrefabData>| {
+            loader.load("prefab/renderable.ron", RonFormat, (), &mut self.progress)
+        }));
+
+        self.ui = Some(data.world.exec(|mut creator: UiCreator| {
+            creator.create("ui/fps.ron", &mut self.progress);
+            creator.create("ui/loading.ron", &mut self.progress)
+        }));
         data.world.add_resource::<DemoState>(DemoState {
             light_angle: 0.0,
             light_color: [1.0; 4],
             camera_angle: 0.0,
-            fps_display,
         });
     }
 
@@ -84,15 +83,19 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>> for Loading {
 
     fn update(&mut self, data: StateData<CustomGameData>) -> Trans<CustomGameData<'a, 'b>> {
         data.data.update(&data.world, true);
-        match self.progress.as_ref().unwrap().complete() {
+        match self.progress.complete() {
             Completion::Failed => {
                 eprintln!("Failed loading assets");
                 Trans::Quit
             }
             Completion::Complete => {
                 println!("Assets loaded, swapping state");
-                delete_state_tagged(data.world);
-                Trans::Switch(Box::new(Main))
+                if let Some(entity) = self.ui {
+                    let _ = data.world.delete_entity(entity);
+                }
+                Trans::Switch(Box::new(Main {
+                    scene: self.scene.as_ref().unwrap().clone(),
+                }))
             }
             Completion::Loading => Trans::None,
         }
@@ -101,8 +104,10 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>> for Loading {
 
 impl<'a, 'b> State<CustomGameData<'a, 'b>> for Paused {
     fn on_start(&mut self, data: StateData<CustomGameData>) {
-        let font = data.world.read_resource::<Assets>().font.clone();
-        create_paused_ui(data.world, font);
+        self.ui = Some(
+            data.world
+                .exec(|mut creator: UiCreator| creator.create("ui/paused.ron", ())),
+        );
     }
 
     fn handle_event(
@@ -113,7 +118,9 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>> for Paused {
         if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
             Trans::Quit
         } else if is_key(&event, VirtualKeyCode::Space) {
-            delete_state_tagged(data.world);
+            if let Some(entity) = self.ui {
+                let _ = data.world.delete_entity(entity);
+            }
             Trans::Pop
         } else {
             Trans::None
@@ -128,7 +135,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>> for Paused {
 
 impl<'a, 'b> State<CustomGameData<'a, 'b>> for Main {
     fn on_start(&mut self, data: StateData<CustomGameData>) {
-        add_graphics_to_world(data.world);
+        data.world.create_entity().with(self.scene.clone()).build();
     }
 
     fn handle_event(
@@ -139,7 +146,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>> for Main {
         if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
             Trans::Quit
         } else if is_key(&event, VirtualKeyCode::Space) {
-            Trans::Push(Box::new(Paused))
+            Trans::Push(Box::new(Paused::default()))
         } else {
             Trans::None
         }
@@ -168,10 +175,10 @@ fn main() -> Result<(), Error> {
             .with_pass(DrawUi::new()),
     );
     let game_data = CustomGameDataBuilder::default()
-        .with_running::<ExampleSystem>(ExampleSystem, "example_system", &[])
+        .with_base(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
+        .with_running::<ExampleSystem>(ExampleSystem::default(), "example_system", &[])
         .with_base_bundle(TransformBundle::new())?
         .with_base_bundle(UiBundle::<String, String>::new())?
-        .with_base_bundle(HotReloadBundle::default())?
         .with_base_bundle(FPSCounterBundle::default())?
         .with_base_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?
         .with_base_bundle(InputBundle::<String, String>::new())?;

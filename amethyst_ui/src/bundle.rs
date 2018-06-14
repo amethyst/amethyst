@@ -3,6 +3,7 @@
 use amethyst_assets::Processor;
 use amethyst_core::bundle::{Result, SystemBundle};
 use amethyst_core::specs::prelude::DispatcherBuilder;
+use amethyst_renderer::TextureFormat;
 use std::hash::Hash;
 use std::marker::PhantomData;
 
@@ -35,7 +36,16 @@ where
     B: Send + Sync + Eq + Hash + Clone + 'static,
 {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
-        builder.add(Processor::<FontAsset>::new(), "font_processor", &[]);
+        builder.add(
+            UiLoaderSystem::<TextureFormat, FontFormat>::default(),
+            "ui_loader",
+            &[],
+        );
+        builder.add(
+            Processor::<FontAsset>::new(),
+            "font_processor",
+            &["ui_loader"],
+        );
         builder.add(UiSystem::new(), "ui_system", &["font_processor"]);
         builder.add(ResizeSystem::new(), "ui_resize_system", &[]);
         builder.add(UiMouseSystem::<A, B>::new(), "ui_mouse_system", &[]);

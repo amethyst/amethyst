@@ -1,4 +1,5 @@
 use amethyst_assets::{Format, PrefabData, ProgressCounter};
+use amethyst_controls::ControlTagPrefab;
 use amethyst_core::specs::error::Error;
 use amethyst_core::specs::prelude::Entity;
 use amethyst_core::Transform;
@@ -29,6 +30,7 @@ where
     transform: Option<Transform>,
     light: Option<LightPrefab>,
     camera: Option<CameraPrefab>,
+    control_tag: Option<ControlTagPrefab>,
 }
 
 impl<V, M> Default for BasicScenePrefab<V, M>
@@ -42,6 +44,7 @@ where
             transform: None,
             light: None,
             camera: None,
+            control_tag: None,
         }
     }
 }
@@ -57,6 +60,7 @@ where
         <Transform as PrefabData<'a>>::SystemData,
         <LightPrefab as PrefabData<'a>>::SystemData,
         <CameraPrefab as PrefabData<'a>>::SystemData,
+        <ControlTagPrefab as PrefabData<'a>>::SystemData,
     );
 
     type Result = ();
@@ -67,11 +71,13 @@ where
         system_data: &mut Self::SystemData,
         entities: &[Entity],
     ) -> Result<(), Error> {
-        let (ref mut graphics, ref mut transforms, ref mut lights, ref mut cameras) = system_data;
+        let (ref mut graphics, ref mut transforms, ref mut lights, ref mut cameras, ref mut tags) =
+            system_data;
         self.graphics.load_prefab(entity, graphics, entities)?;
         self.transform.load_prefab(entity, transforms, entities)?;
         self.light.load_prefab(entity, lights, entities)?;
         self.camera.load_prefab(entity, cameras, entities)?;
+        self.control_tag.load_prefab(entity, tags, entities)?;
         Ok(())
     }
 
@@ -81,7 +87,8 @@ where
         system_data: &mut Self::SystemData,
     ) -> Result<bool, Error> {
         let mut ret = false;
-        let (ref mut graphics, ref mut transforms, ref mut lights, ref mut cameras) = system_data;
+        let (ref mut graphics, ref mut transforms, ref mut lights, ref mut cameras, ref mut tags) =
+            system_data;
         if self.graphics.trigger_sub_loading(progress, graphics)? {
             ret = true;
         }
@@ -92,6 +99,9 @@ where
             ret = true;
         }
         if self.camera.trigger_sub_loading(progress, cameras)? {
+            ret = true;
+        }
+        if self.control_tag.trigger_sub_loading(progress, tags)? {
             ret = true;
         }
         Ok(ret)
