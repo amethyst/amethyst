@@ -3,13 +3,13 @@ Prefab (
     entities: [
         (
             data: (
-                GraphicsPrefab (
-                    mesh: Asset(File("mesh/cube.obj", ObjFormat, ())),
+                graphics: (
+                    mesh: Asset(File ("mesh/cube.obj", ObjFormat, ())),
                     material: (
-                        albedo: Data(Rgba((0.0, 0.0, 1.0, 0.0,), (),)),
+                        albedo: Data(Rgba((0.0, 0.0, 1.0, 1.0,), (),)),
                     ),
                 ),
-                Transform (
+                transform: (
                     translation: (
                         x: 0.0,
                         y: 0.0,
@@ -17,32 +17,27 @@ Prefab (
                     ),
                     scale: (x: 2.0, y: 2.0, z: 2.0,),
                 ),
-                None,
-                None,
             ),
         ),
         (
             data: (
-                None,
-                None,
-                Point((
-                    center: (5.0, -20.0, 15.0),
-                    intensity: 100.0,
-                    color: (1.0, 1.0, 1.0, 1.0),
-                    radius: 1.0,
-                )),
-                None,
+                light: (
+                    light: Point((
+                        center: (5.0, -20.0, 15.0),
+                        intensity: 100.0,
+                        color: (1.0, 1.0, 1.0, 1.0),
+                        radius: 1.0,
+                    )),
+                ),
             ),
         ),
         (
             data: (
-                None,
-                Transform (
+                transform: Transform (
                     translation: (x: 0.0, y: -20.0, z: 10.0),
                     rotation: (s: 0.7882256, v: (x: 0.6153864, y: 0.0, z: 0.0),),
                 ),
-                None,
-                Perspective((
+                camera: Perspective((
                     fovy: Rad (1.0471975512),
                     aspect: 1.0,
                     near: 0.1,
