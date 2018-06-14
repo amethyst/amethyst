@@ -30,6 +30,9 @@ quickcheck = "0.4.1"
 
 thread_profiler = { version = "0.1" , optional = true }
 
+[dev-dependencies]
+amethyst = { path = ".." }
+
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]
 nightly = [ "shred/nightly" ]
