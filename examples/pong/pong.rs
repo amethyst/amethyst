@@ -138,7 +138,7 @@ fn initialise_paddles(world: &mut World, spritesheet: TextureHandle) {
     // sprite to see how to add a sprite to only one entity.
     world
         .exec(|mut data: SpriteRenderData| {
-            data.add_sprite_render_multiple(
+            data.add_multiple(
                 vec![paddle_left, paddle_right],
                 &sprite,
                 spritesheet,
@@ -166,7 +166,7 @@ fn initialise_balls(world: &mut World, spritesheet: TextureHandle) {
 
     world
         .create_entity()
-        .with_sprite_render(&sprite, spritesheet, SPRITESHEET_SIZE)
+        .with_sprite(&sprite, spritesheet, SPRITESHEET_SIZE)
         .expect("Error creating SpriteRender for ball")
         .with(Ball {
             radius: BALL_RADIUS,
