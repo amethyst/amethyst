@@ -15,8 +15,9 @@ use amethyst::ecs::storage::NullStorage;
 use amethyst::input::{get_key, is_close_requested, is_key, InputBundle};
 use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, DrawShaded, Event, Light,
                          Material, MaterialDefaults, MeshHandle, ObjFormat, PngFormat, PointLight,
-                         PosNormTex, Projection, Rgba, VirtualKeyCode};
-use amethyst::ui::{Anchor, FontHandle, TtfFormat, UiBundle, UiText, UiTransform};
+                         PosNormTex, Projection, Rgba, TextureFormat, VirtualKeyCode};
+use amethyst::ui::{Anchor, FontFormat, FontHandle, TtfFormat, UiBundle, UiCreator, UiFinder,
+                   UiLoaderSystem, UiText, UiTransform};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
 
@@ -27,12 +28,12 @@ struct DemoState {
     point_light: bool,
     directional_light: bool,
     camera_angle: f32,
-    fps_display: Entity,
-    #[allow(dead_code)]
-    pipeline_forward: bool, // TODO
 }
 
-struct ExampleSystem;
+#[derive(Default)]
+struct ExampleSystem {
+    fps_display: Option<Entity>,
+}
 
 impl<'a> System<'a> for ExampleSystem {
     type SystemData = (
@@ -43,10 +44,12 @@ impl<'a> System<'a> for ExampleSystem {
         WriteExpect<'a, DemoState>,
         WriteStorage<'a, UiText>,
         Read<'a, FPSCounter>,
+        UiFinder<'a>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (mut lights, time, camera, mut transforms, mut state, mut ui_text, fps_counter) = data;
+        let (mut lights, time, camera, mut transforms, mut state, mut ui_text, fps_counter, finder) =
+            data;
         let light_angular_velocity = -1.0;
         let light_orbit_radius = 15.0;
         let light_z = 6.0;
@@ -80,10 +83,17 @@ impl<'a> System<'a> for ExampleSystem {
             point_light.color = state.light_color.into();
         }
 
-        if let Some(fps_display) = ui_text.get_mut(state.fps_display) {
-            if time.frame_number() % 20 == 0 {
-                let fps = fps_counter.sampled_fps();
-                fps_display.text = format!("FPS: {:.*}", 2, fps);
+        if let None = self.fps_display {
+            if let Some(fps_entity) = finder.find("fps_text") {
+                self.fps_display = Some(fps_entity);
+            }
+        }
+        if let Some(fps_entity) = self.fps_display {
+            if let Some(fps_display) = ui_text.get_mut(fps_entity) {
+                if time.frame_number() % 20 == 0 {
+                    let fps = fps_counter.sampled_fps();
+                    fps_display.text = format!("FPS: {:.*}", 2, fps);
+                }
             }
         }
     }
@@ -105,32 +115,17 @@ impl Component for LoadTag {
 impl<'a, 'b> State<GameData<'a, 'b>> for Loading {
     fn on_start(&mut self, data: StateData<GameData>) {
         data.world.register::<LoadTag>();
-        let (progress, assets) = load_assets(&data.world);
+        let (mut progress, assets) = load_assets(&data.world);
+
+        data.world
+            .exec(|mut creator: UiCreator| creator.create("ui/renderable.ron", &mut progress));
+
         self.progress = Some(progress);
-        let fps_display = data.world
-            .create_entity()
-            .with(UiTransform::new(
-                "fps".to_string(),
-                Anchor::TopLeft,
-                100.,
-                25.,
-                1.,
-                200.,
-                50.,
-                0,
-            ))
-            .with(UiText::new(
-                assets.font.clone(),
-                "N/A".to_string(),
-                [1.0, 1.0, 1.0, 1.0],
-                25.,
-            ))
-            .build();
 
         data.world
             .create_entity()
             .with(UiTransform::new(
-                "fps".to_string(),
+                "loading".to_string(),
                 Anchor::Middle,
                 0.,
                 0.,
@@ -156,8 +151,6 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Loading {
             point_light: true,
             directional_light: true,
             camera_angle: 0.0,
-            fps_display,
-            pipeline_forward: true,
         });
     }
 
@@ -446,7 +439,12 @@ fn main() -> Result<(), Error> {
     );
 
     let game_data = GameDataBuilder::default()
-        .with::<ExampleSystem>(ExampleSystem, "example_system", &[])
+        .with(
+            UiLoaderSystem::<TextureFormat, FontFormat>::default(),
+            "",
+            &[],
+        )
+        .with::<ExampleSystem>(ExampleSystem::default(), "example_system", &[])
         .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
         .with_bundle(UiBundle::<String, String>::new())?
         .with_bundle(HotReloadBundle::default())?
