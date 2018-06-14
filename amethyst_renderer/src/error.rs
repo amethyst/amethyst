@@ -15,10 +15,10 @@ pub type Result<T> = StdResult<T, Error>;
 /// Common renderer error type.
 #[derive(Debug)]
 pub enum Error {
-    /// The provided arguments are incorrect.
-    Arguments(String),
     /// Failed to create a buffer.
     BufferCreation(gfx::buffer::CreationError),
+    /// No target entities were specified to add sprites to.
+    NoEntitySpecified,
     /// A render target with the given name does not exist.
     NoSuchTarget(String),
     /// Failed to initialize a render pass.
@@ -44,8 +44,8 @@ pub enum Error {
 impl StdError for Error {
     fn description(&self) -> &str {
         match *self {
-            Error::Arguments(_) => "The provided arguments are incorrect!",
             Error::BufferCreation(_) => "Failed to create buffer!",
+            Error::NoEntitySpecified => "No target entities were specified to add sprites to!",
             Error::NoSuchTarget(_) => "Target with this name does not exist!",
             Error::PassInit(_) => "Failed to initialize render pass!",
             Error::PipelineCreation(_) => "Failed to create PSO!",
@@ -77,8 +77,10 @@ impl StdError for Error {
 impl Display for Error {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
         match *self {
-            Error::Arguments(ref e) => write!(fmt, "The provided arguments are incorrect: {}", e),
             Error::BufferCreation(ref e) => write!(fmt, "Buffer creation failed: {}", e),
+            Error::NoEntitySpecified => {
+                write!(fmt, "No target entities were specified to add sprites to")
+            },
             Error::NoSuchTarget(ref e) => write!(fmt, "Nonexistent target: {}", e),
             Error::PassInit(ref e) => write!(fmt, "Pass initialization failed: {}", e),
             Error::PipelineCreation(ref e) => write!(fmt, "PSO creation failed: {}", e),
