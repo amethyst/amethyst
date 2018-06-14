@@ -15,8 +15,6 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
         let mat_defaults = world.read_resource::<MaterialDefaults>().0.clone();
-        let verts = Shape::Sphere(32, 32).generate::<Vec<PosNormTangTex>>(None);
-        let albedo = [1.0, 1.0, 1.0, 1.0].into();
 
         println!("Load mesh");
         let (mesh, albedo) = {
@@ -24,8 +22,12 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
 
             let meshes = &world.read_resource();
             let textures = &world.read_resource();
-            let mesh: MeshHandle = loader.load_from_data(verts, (), meshes);
-            let albedo = loader.load_from_data(albedo, (), textures);
+            let mesh: MeshHandle = loader.load_from_data(
+                Shape::Sphere(32, 32).generate::<Vec<PosNormTangTex>>(None),
+                (),
+                meshes,
+            );
+            let albedo = loader.load_from_data([1.0, 1.0, 1.0, 1.0].into(), (), textures);
 
             (mesh, albedo)
         };

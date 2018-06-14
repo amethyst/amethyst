@@ -2,37 +2,24 @@
 
 extern crate amethyst;
 
-use amethyst::assets::Loader;
-use amethyst::controls::{FlyControlBundle, FlyControlTag};
-use amethyst::core::cgmath::{Deg, Vector3};
-use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
-use amethyst::ecs::prelude::World;
+use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, RonFormat};
+use amethyst::controls::FlyControlBundle;
+use amethyst::core::transform::TransformBundle;
 use amethyst::input::{is_close_requested, is_key, InputBundle};
-use amethyst::renderer::{AmbientColor, Camera, DrawShaded, Event, Material, MaterialDefaults,
-                         MeshHandle, ObjFormat, PosNormTex, Projection, Rgba, VirtualKeyCode};
+use amethyst::renderer::{DrawShaded, Event, PosNormTex, VirtualKeyCode};
+use amethyst::utils::scene::BasicScenePrefab;
 use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
+
+type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
 struct ExampleState;
 
 impl<'a, 'b> State<GameData<'a, 'b>> for ExampleState {
     fn on_start(&mut self, data: StateData<GameData>) {
-        let StateData { world, .. } = data;
-        initialise_camera(world);
-
-        let assets = load_assets(&world);
-
-        // Add cube to scene
-        let mut trans = Transform::default();
-        trans.translation = Vector3::new(0.0, 0.0, -5.0);
-        world
-            .create_entity()
-            .with(assets.cube.clone())
-            .with(assets.red.clone())
-            .with(trans)
-            .with(GlobalTransform::default())
-            .build();
-
-        world.add_resource(AmbientColor(Rgba::from([0.1; 3])));
+        let prefab_handle = data.world.exec(|loader: PrefabLoader<MyPrefabData>| {
+            loader.load("prefab/fly_camera.ron", RonFormat, (), ())
+        });
+        data.world.create_entity().with(prefab_handle).build();
     }
 
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
@@ -49,28 +36,6 @@ impl<'a, 'b> State<GameData<'a, 'b>> for ExampleState {
     }
 }
 
-struct Assets {
-    cube: MeshHandle,
-    red: Material,
-}
-
-fn load_assets(world: &World) -> Assets {
-    let mesh_storage = world.read_resource();
-    let tex_storage = world.read_resource();
-    let mat_defaults = world.read_resource::<MaterialDefaults>();
-    let loader = world.read_resource::<Loader>();
-
-    let red = loader.load_from_data([1.0, 0.0, 0.0, 1.0].into(), (), &tex_storage);
-    let red = Material {
-        albedo: red,
-        ..mat_defaults.0.clone()
-    };
-
-    let cube = loader.load("mesh/cube.obj", ObjFormat, (), (), &mesh_storage);
-
-    Assets { cube, red }
-}
-
 fn main() -> Result<(), Error> {
     let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
 
@@ -85,6 +50,7 @@ fn main() -> Result<(), Error> {
     );
 
     let game_data = GameDataBuilder::default()
+        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
         .with_bundle(
             FlyControlBundle::<String, String>::new(
                 Some(String::from("move_x")),
@@ -100,16 +66,4 @@ fn main() -> Result<(), Error> {
     let mut game = Application::build(resources_directory, ExampleState)?.build(game_data)?;
     game.run();
     Ok(())
-}
-
-fn initialise_camera(world: &mut World) {
-    let local = Transform::default();
-
-    world
-        .create_entity()
-        .with(Camera::from(Projection::perspective(1.3, Deg(60.0))))
-        .with(local)
-        .with(GlobalTransform::default())
-        .with(FlyControlTag)
-        .build();
 }
