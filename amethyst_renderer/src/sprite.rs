@@ -163,9 +163,7 @@ impl<'a> SpriteRenderData<'a> {
     ) -> Result<()> {
         let len = entities.len();
         if len == 0 {
-            Err(Error::Arguments(
-                "0 entities were provided to add SpriteRender to".to_owned(),
-            ))
+            Err(Error::NoEntitySpecified)
         } else {
             let (mesh, material) = self.build_mesh_and_material(sprite, texture, texture_size);
             for entity in 0..len - 1 {
