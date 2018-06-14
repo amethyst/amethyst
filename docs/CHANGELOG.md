@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Add shape prefab support ([#785])
 * Specialised UI prefab format ([#786])
 * Add generation of normals/tangents in GLTF ([#784])
+* Derive `PartialEq` for `SpriteSheet` ([#789])
 
 ### Changed
 * UI systems will now never overwrite your local `UiTransform` values ([#774])
@@ -65,6 +66,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#784]: https://github.com/amethyst/amethyst/pull/784
 [#785]: https://github.com/amethyst/amethyst/pull/785
 [#786]: https://github.com/amethyst/amethyst/pull/786
+[#789]: https://github.com/amethyst/amethyst/pull/789
 
 ## [0.7.0] - 2018-05
 ### Added
