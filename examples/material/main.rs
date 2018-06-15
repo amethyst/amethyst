@@ -72,22 +72,24 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
 
         println!("Create lights");
         let light1: Light = PointLight {
-            center: [6.0, 6.0, -6.0].into(),
             intensity: 6.0,
             color: [0.8, 0.0, 0.0].into(),
             ..PointLight::default()
         }.into();
 
+        let light1_transform = GlobalTransform(Matrix4::from_translation([6.0, 6.0, -6.0].into()).into());
+
         let light2: Light = PointLight {
-            center: [6.0, -6.0, -6.0].into(),
             intensity: 5.0,
             color: [0.0, 0.3, 0.7].into(),
             ..PointLight::default()
         }.into();
 
-        world.create_entity().with(light1).build();
+        let light2_transform = GlobalTransform(Matrix4::from_translation([6.0, -6.0, -6.0].into()).into());
 
-        world.create_entity().with(light2).build();
+        world.create_entity().with(light1).with(light1_transform).build();
+
+        world.create_entity().with(light2).with(light2_transform).build();
 
         println!("Put camera");
 
