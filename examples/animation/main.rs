@@ -49,10 +49,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
         let prefab_handle = world.exec(|loader: PrefabLoader<MyPrefabData>| {
             loader.load("prefab/animation.ron", RonFormat, (), ())
         });
-        let sphere_entity = world.create_entity().with(prefab_handle).build();
-
-        self.sphere = Some(sphere_entity);
-        //initialise_animation(world, sphere_entity);
+        self.sphere = Some(world.create_entity().with(prefab_handle).build());
     }
 
     fn handle_event(&mut self, data: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {

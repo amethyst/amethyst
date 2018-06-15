@@ -24,7 +24,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Add generation of normals/tangents in GLTF ([#784])
 * Derive `PartialEq` for `SpriteSheet` ([#789])
 * Add basic scene prefab ([#791])
-* Improve ergonomics of examples ([#XXX])
+* Improve ergonomics of examples ([#793])
 
 ### Changed
 * UI systems will now never overwrite your local `UiTransform` values ([#774])
@@ -70,7 +70,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#786]: https://github.com/amethyst/amethyst/pull/786
 [#791]: https://github.com/amethyst/amethyst/pull/791
 [#789]: https://github.com/amethyst/amethyst/pull/789
-[#XXX]: https://github.com/amethyst/amethyst/pull/XXX
+[#793]: https://github.com/amethyst/amethyst/pull/793
 
 ## [0.7.0] - 2018-05
 ### Added
