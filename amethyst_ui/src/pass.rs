@@ -3,23 +3,23 @@
 use std::cmp::{Ordering, PartialOrd};
 use std::hash::{Hash, Hasher};
 
-use amethyst_assets::{AssetStorage, Loader, WeakHandle};
-use amethyst_core::cgmath::vec4;
+use amethyst_assets::{AssetStorage, Loader};
+use amethyst_core::cgmath::vec4 as cg_vec4;
 use amethyst_core::specs::prelude::{Entities, Entity, Join, Read, ReadExpect, ReadStorage,
                                     WriteStorage};
+use amethyst_renderer::error::Result;
+use amethyst_renderer::pipe::pass::{Pass, PassData};
+use amethyst_renderer::pipe::{Effect, NewEffect};
 use amethyst_renderer::{Encoder, Factory, Mesh, PosTex, Resources, ScreenDimensions, Texture,
                         TextureData, TextureHandle, TextureMetadata, VertexFormat};
-use amethyst_renderer::error::Result;
-use amethyst_renderer::pipe::{Effect, NewEffect};
-use amethyst_renderer::pipe::pass::{Pass, PassData};
 use fnv::FnvHashMap as HashMap;
 use gfx::preset::blend;
 use gfx::pso::buffer::ElemStride;
 use gfx::state::ColorMask;
 use gfx_glyph::{BuiltInLineBreaker, FontId, GlyphBrush, GlyphBrushBuilder, GlyphCruncher,
-                HorizontalAlign, Layout, Scale, SectionText, VariedSection, VerticalAlign};
+                HorizontalAlign, Layout, Point, Scale, SectionText, VariedSection, VerticalAlign};
+use glsl_layout::{vec2, vec4, Uniform};
 use hibitset::BitSet;
-use rusttype::Point;
 use unicode_segmentation::UnicodeSegmentation;
 
 use super::*;
@@ -27,13 +27,13 @@ use super::*;
 const VERT_SRC: &[u8] = include_bytes!("shaders/vertex.glsl");
 const FRAG_SRC: &[u8] = include_bytes!("shaders/frag.glsl");
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Uniform)]
 #[allow(dead_code)] // This is used by the shaders
 #[repr(C)]
 struct VertexArgs {
-    proj_vec: [f32; 4],
-    coord: [f32; 2],
-    dimension: [f32; 2],
+    proj_vec: vec4,
+    coord: vec2,
+    dimension: vec2,
 }
 
 #[derive(Clone, Debug)]
@@ -66,16 +66,10 @@ pub struct DrawUi {
     cached_draw_order: CachedDrawOrder,
     cached_color_textures: HashMap<KeyColor, TextureHandle>,
     glyph_brushes: GlyphBrushCache,
-    next_brush_cache_id: u32,
+    next_brush_cache_id: u64,
 }
 
-type GlyphBrushCache = HashMap<
-    u32,
-    (
-        GlyphBrush<'static, Resources, Factory>,
-        WeakHandle<FontAsset>,
-    ),
->;
+type GlyphBrushCache = HashMap<u64, GlyphBrush<'static, Resources, Factory>>;
 
 impl DrawUi {
     /// Create instance of `DrawUi` pass
@@ -141,7 +135,11 @@ impl Pass for DrawUi {
         use std::mem;
         effect
             .simple(VERT_SRC, FRAG_SRC)
-            .with_raw_constant_buffer("VertexArgs", mem::size_of::<VertexArgs>(), 1)
+            .with_raw_constant_buffer(
+                "VertexArgs",
+                mem::size_of::<<VertexArgs as Uniform>::Std140>(),
+                1,
+            )
             .with_raw_vertex_buffer(PosTex::ATTRIBUTES, PosTex::size() as ElemStride, 0)
             .with_texture("albedo")
             .with_blended_output("color", ColorMask::all(), blend::ALPHA, None)
@@ -212,7 +210,7 @@ impl Pass for DrawUi {
             .cache
             .sort_unstable_by(|&(z1, _), &(z2, _)| z2.partial_cmp(&z1).unwrap_or(Ordering::Equal));
 
-        let proj_vec = vec4(
+        let proj_vec = cg_vec4(
             2. / screen_dimensions.width(),
             -2. / screen_dimensions.height(),
             -2.,
@@ -227,9 +225,6 @@ impl Pass for DrawUi {
         };
         effect.data.vertex_bufs.push(vbuf);
 
-        // Remove brushes whose fonts have been dropped.
-        self.glyph_brushes
-            .retain(|&_id, ref mut value| !value.1.is_dead());
         let highest_abs_z = (&ui_transform,)
             .join()
             .map(|t| t.0.global_z)
@@ -237,20 +232,22 @@ impl Pass for DrawUi {
         for &(_z, entity) in &self.cached_draw_order.cache {
             // This won't panic as we guaranteed earlier these entities are present.
             let ui_transform = ui_transform.get(entity).unwrap();
-            let vertex_args = VertexArgs {
-                proj_vec: proj_vec.into(),
-                // Coordinates are middle centered. It makes it easier to do layouting in most cases.
-                coord: [
-                    ui_transform.global_x - ui_transform.width / 2.0,
-                    ui_transform.global_y - ui_transform.height / 2.0,
-                ],
-                dimension: [ui_transform.width, ui_transform.height],
-            };
-            effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
             if let Some(image) = ui_image
                 .get(entity)
                 .and_then(|image| tex_storage.get(&image.texture))
             {
+                let vertex_args = VertexArgs {
+                    proj_vec: proj_vec.into(),
+                    // Coordinates are middle centered. It makes it easier to do layouting in most cases.
+                    coord: [
+                        ui_transform.pixel_x - ui_transform.pixel_width / 2.0
+                            + screen_dimensions.width() / 2.,
+                        ui_transform.pixel_y - ui_transform.pixel_height / 2.0
+                            + screen_dimensions.height() / 2.,
+                    ].into(),
+                    dimension: [ui_transform.pixel_width, ui_transform.pixel_height].into(),
+                };
+                effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
                 effect.data.textures.push(image.view().clone());
                 effect.data.samplers.push(image.sampler().clone());
                 effect.draw(mesh.slice(), encoder);
@@ -265,26 +262,13 @@ impl Pass for DrawUi {
                         Some(font) => font,
                         None => continue,
                     };
-                    let mut new_id = self.glyph_brushes
-                        .iter()
-                        .filter_map(|(id, ref value)| value.1.upgrade().map(|h| (id, h)))
-                        .find(|&(_id, ref handle)| *handle == ui_text.font)
-                        .map(|(id, _handle)| *id);
-
-                    if new_id.is_none() {
-                        new_id = Some(self.next_brush_cache_id);
-                        self.glyph_brushes.insert(
-                            self.next_brush_cache_id,
-                            (
-                                GlyphBrushBuilder::using_font(font.0.clone())
-                                    .build(factory.clone()),
-                                ui_text.font.downgrade(),
-                            ),
-                        );
-                        self.next_brush_cache_id += 1;
-                    }
-                    ui_text.brush_id = new_id;
+                    self.glyph_brushes.insert(
+                        self.next_brush_cache_id,
+                        GlyphBrushBuilder::using_font(font.0.clone()).build(factory.clone()),
+                    );
+                    ui_text.brush_id = Some(self.next_brush_cache_id);
                     ui_text.cached_font = ui_text.font.clone();
+                    self.next_brush_cache_id += 1;
                 }
                 // Build text sections.
                 let editing = editing.get(entity);
@@ -345,14 +329,12 @@ impl Pass for DrawUi {
                             },
                         ]
                     })
-                    .unwrap_or(vec![
-                        SectionText {
-                            text: rendered_string,
-                            scale: Scale::uniform(ui_text.font_size),
-                            color: ui_text.color,
-                            font_id: FontId(0),
-                        },
-                    ]);
+                    .unwrap_or(vec![SectionText {
+                        text: rendered_string,
+                        scale: Scale::uniform(ui_text.font_size),
+                        color: ui_text.color,
+                        font_id: FontId(0),
+                    }]);
                 // TODO: If you're adding multi-line support you need to change this to use
                 // Layout::Wrap.
                 let layout = Layout::SingleLine {
@@ -362,10 +344,12 @@ impl Pass for DrawUi {
                 };
                 let section = VariedSection {
                     screen_position: (
-                        ui_transform.global_x - ui_transform.width / 2.0,
-                        ui_transform.global_y - ui_transform.height / 2.0,
+                        ui_transform.pixel_x - ui_transform.pixel_width / 2.0
+                            + screen_dimensions.width() / 2.,
+                        ui_transform.pixel_y - ui_transform.pixel_height / 2.0
+                            + screen_dimensions.height() / 2.,
                     ),
-                    bounds: (ui_transform.width, ui_transform.height),
+                    bounds: (ui_transform.pixel_width, ui_transform.pixel_height),
                     z: ui_transform.global_z / highest_abs_z,
                     layout,
                     text,
@@ -374,8 +358,7 @@ impl Pass for DrawUi {
                 // Render background highlight
                 let brush = &mut self.glyph_brushes
                     .get_mut(&ui_text.brush_id.unwrap())
-                    .unwrap()
-                    .0;
+                    .unwrap();
                 // Maintain the glyph cache (used by the input code).
                 ui_text.cached_glyphs.clear();
                 ui_text
@@ -422,10 +405,10 @@ impl Pass for DrawUi {
                         let pos = glyph.position();
                         let vertex_args = VertexArgs {
                             proj_vec: proj_vec.into(),
-                            coord: [pos.x, pos.y - ascent],
-                            dimension: [width, height],
+                            coord: [pos.x, pos.y - ascent].into(),
+                            dimension: [width, height].into(),
                         };
-                        effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
+                        effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
                         effect.draw(mesh.slice(), encoder);
                     }
                     effect.data.textures.clear();
@@ -463,7 +446,6 @@ impl Pass for DrawUi {
                                     .get(&FontId(0))
                                     .unwrap()
                                     .glyph(' ')
-                                    .unwrap()
                                     .scaled(Scale::uniform(ui_text.font_size))
                                     .h_metrics()
                                     .advance_width
@@ -500,8 +482,10 @@ impl Pass for DrawUi {
                                 width = 2.0;
                             }
                             let pos = glyph.map(|g| g.position()).unwrap_or(Point {
-                                x: ui_transform.global_x - ui_transform.width / 2.0,
-                                y: ui_transform.global_y - ui_transform.height / 2.0 + ascent,
+                                x: ui_transform.pixel_x - ui_transform.pixel_width / 2.0
+                                    + screen_dimensions.width() / 2.,
+                                y: ui_transform.pixel_y - ui_transform.pixel_height / 2.0 + ascent
+                                    + screen_dimensions.height() / 2.,
                             });
                             let mut x = pos.x;
                             if let Some(glyph) = glyph {
@@ -515,10 +499,14 @@ impl Pass for DrawUi {
                             }
                             let vertex_args = VertexArgs {
                                 proj_vec: proj_vec.into(),
-                                coord: [x, y],
-                                dimension: [width, height],
+                                coord: [x, y].into(),
+                                dimension: [width, height].into(),
                             };
-                            effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
+                            effect.update_constant_buffer(
+                                "VertexArgs",
+                                &vertex_args.std140(),
+                                encoder,
+                            );
                             effect.draw(mesh.slice(), encoder);
                         }
                         effect.data.textures.clear();

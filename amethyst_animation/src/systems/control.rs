@@ -477,7 +477,12 @@ where
         if let Some(sampler_control) = add {
             let mut set = SamplerControlSet::default();
             set.add_control(sampler_control);
-            samplers.insert(*node_entity, set);
+            if let Err(err) = samplers.insert(*node_entity, set) {
+                error!(
+                    "Failed creating SamplerControl for AnimationHierarchy because: {}",
+                    err
+                );
+            }
         }
     }
     true

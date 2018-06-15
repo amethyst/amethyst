@@ -1,55 +1,47 @@
 //! Displays a shaded sphere to the user.
 
 extern crate amethyst;
-extern crate genmesh;
 
 use amethyst::assets::Loader;
-use amethyst::core::cgmath::{Deg, InnerSpace, Vector3};
+use amethyst::core::cgmath::Deg;
 use amethyst::core::transform::GlobalTransform;
 use amethyst::ecs::prelude::World;
+use amethyst::input::{is_close_requested, is_key};
 use amethyst::prelude::*;
 use amethyst::renderer::*;
-use genmesh::{MapToVertices, Triangulate, Vertices};
-use genmesh::generators::SphereUV;
 
 const SPHERE_COLOUR: [f32; 4] = [0.0, 0.0, 1.0, 1.0]; // blue
 const AMBIENT_LIGHT_COLOUR: Rgba = Rgba(0.01, 0.01, 0.01, 1.0); // near-black
 const POINT_LIGHT_COLOUR: Rgba = Rgba(1.0, 1.0, 1.0, 1.0); // white
-const BACKGROUND_COLOUR: [f32; 4] = [0.0, 0.0, 0.0, 0.0]; // black
 const LIGHT_POSITION: [f32; 3] = [2.0, 2.0, -2.0];
 const LIGHT_RADIUS: f32 = 5.0;
 const LIGHT_INTENSITY: f32 = 3.0;
 
 struct Example;
 
-impl State for Example {
-    fn on_start(&mut self, world: &mut World) {
+impl<'a, 'b> State<GameData<'a, 'b>> for Example {
+    fn on_start(&mut self, data: StateData<GameData>) {
         // Initialise the scene with an object, a light and a camera.
-        initialise_sphere(world);
-        initialise_lights(world);
-        initialise_camera(world);
+        initialise_sphere(data.world);
+        initialise_lights(data.world);
+        initialise_camera(data.world);
     }
 
-    fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
-        match event {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            virtual_keycode: Some(VirtualKeyCode::Escape),
-                            ..
-                        },
-                    ..
-                }
-                | WindowEvent::CloseRequested => Trans::Quit,
-                _ => Trans::None,
-            },
-            _ => Trans::None,
+    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
+        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+            Trans::Quit
+        } else {
+            Trans::None
         }
+    }
+
+    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+        data.data.update(&data.world);
+        Trans::None
     }
 }
 
-fn run() -> Result<(), amethyst::Error> {
+fn main() -> amethyst::Result<()> {
     let display_config_path = format!(
         "{}/examples/separate_sphere/resources/display.ron",
         env!("CARGO_MANIFEST_DIR")
@@ -57,49 +49,14 @@ fn run() -> Result<(), amethyst::Error> {
 
     let resources = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
 
-    let pipe = Pipeline::build().with_stage(
-        Stage::with_backbuffer()
-            .clear_target(BACKGROUND_COLOUR, 1.0)
-            .with_pass(DrawShadedSeparate::new()),
-    );
-
-    let config = DisplayConfig::load(&display_config_path);
-
-    let mut game = Application::build(resources, Example)?
-        .with_bundle(RenderBundle::new(pipe, Some(config)))?
-        .build()?;
+    let game_data = GameDataBuilder::default().with_basic_renderer(
+        display_config_path,
+        DrawShadedSeparate::new(),
+        false,
+    )?;
+    let mut game = Application::new(resources, Example, game_data)?;
     game.run();
     Ok(())
-}
-
-fn main() {
-    if let Err(e) = run() {
-        println!("Failed to execute example: {}", e);
-        ::std::process::exit(1);
-    }
-}
-
-fn gen_sphere(u: usize, v: usize) -> ComboMeshCreator {
-    let positions = SphereUV::new(u, v)
-        .vertex(|vertex| vertex.pos)
-        .triangulate()
-        .vertices()
-        .collect::<Vec<_>>();
-
-    let normals = positions
-        .iter()
-        .map(|pos| Separate::<Normal>::new(Vector3::from(*pos).normalize().into()))
-        .collect::<Vec<_>>();
-    let tex_coords = positions
-        .iter()
-        .map(|_| Separate::<TexCoord>::new([0.1, 0.1]))
-        .collect::<Vec<_>>();
-    let positions = positions
-        .into_iter()
-        .map(|pos| Separate::<Position>::new(pos))
-        .collect::<Vec<_>>();
-
-    (positions, None, Some(tex_coords), Some(normals), None).into()
 }
 
 /// This function initialises a sphere and adds it to the world.
@@ -112,8 +69,11 @@ fn initialise_sphere(world: &mut World) {
     let (mesh, material) = {
         let loader = world.read_resource::<Loader>();
 
-        let mesh: Handle<Mesh> =
-            loader.load_from_data(gen_sphere(32, 32).into(), (), &world.read_resource());
+        let mesh: Handle<Mesh> = loader.load_from_data(
+            Shape::Sphere(32, 32).generate::<ComboMeshCreator>(None),
+            (),
+            &world.read_resource(),
+        );
 
         let albedo = SPHERE_COLOUR.into();
 

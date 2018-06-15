@@ -7,10 +7,9 @@ use std::sync::Arc;
 use assets::{Error as AssetError, Result as AssetResult, Source as AssetSource};
 use base64;
 use gltf;
-use gltf::Gltf;
 use gltf::json;
 use gltf::json::validation;
-use gltf_utils::Source;
+use gltf::Gltf;
 
 #[derive(Debug)]
 pub enum ImageFormat {
@@ -31,12 +30,6 @@ impl ImageFormat {
 /// Buffer data returned from `import`.
 #[derive(Clone, Debug)]
 pub struct Buffers(Vec<Vec<u8>>);
-
-impl Source for Buffers {
-    fn source_buffer(&self, buffer: &gltf::Buffer) -> &[u8] {
-        &self.0[buffer.index()]
-    }
-}
 
 #[allow(unused)]
 impl Buffers {
@@ -91,18 +84,20 @@ fn load_external_buffers(
     gltf: &Gltf,
     mut bin: Option<Vec<u8>>,
 ) -> Result<Vec<Vec<u8>>, Error> {
+    use gltf::buffer::Source;
     let mut buffers = vec![];
     for (index, buffer) in gltf.buffers().enumerate() {
-        let uri = buffer.uri();
-        let data_res: Result<Vec<u8>, Error> = if uri == "#bin" {
-            Ok(bin.take().unwrap())
-        } else if uri.starts_with("data:") {
-            Ok(parse_data_uri(uri)?)
-        } else {
-            let path = base_path.parent().unwrap_or(Path::new("./")).join(uri);
-            Ok(read_to_end(source.clone(), &path)?)
+        let data = match buffer.source() {
+            Source::Uri(uri) => {
+                if uri.starts_with("data:") {
+                    parse_data_uri(uri)?
+                } else {
+                    let path = base_path.parent().unwrap_or(Path::new("./")).join(uri);
+                    read_to_end(source.clone(), &path)?
+                }
+            }
+            Source::Bin => bin.take().unwrap(),
         };
-        let data = data_res?;
 
         if data.len() < buffer.length() {
             let path = json::Path::new().field("buffers").index(index);
@@ -113,43 +108,12 @@ fn load_external_buffers(
     Ok(buffers)
 }
 
-fn validate_standard(unvalidated: gltf::Unvalidated) -> Result<Gltf, Error> {
-    Ok(unvalidated.validate_completely()?)
-}
-
-fn validate_binary(unvalidated: gltf::Unvalidated, has_bin: bool) -> Result<Gltf, Error> {
-    use gltf::json::validation::Error as Reason;
-
-    let mut errs = vec![];
-    {
-        let json = unvalidated.as_json();
-        for (index, buffer) in json.buffers.iter().enumerate() {
-            let path = || json::Path::new().field("buffers").index(index).field("uri");
-            match index {
-                0 if has_bin => if buffer.uri.is_some() {
-                    errs.push((path(), Reason::Missing));
-                },
-                _ if buffer.uri.is_none() => {
-                    errs.push((path(), Reason::Missing));
-                }
-                _ => {}
-            }
-        }
-    }
-
-    if errs.is_empty() {
-        Ok(unvalidated.validate_completely()?)
-    } else {
-        Err(Error::Validation(errs))
-    }
-}
-
 fn import_standard(
     data: &[u8],
     source: Arc<AssetSource>,
     base_path: &Path,
 ) -> Result<(Gltf, Buffers), Error> {
-    let gltf = validate_standard(Gltf::from_slice(data)?)?;
+    let gltf = Gltf::from_slice(data)?;
     let buffers = Buffers(load_external_buffers(source, base_path, &gltf, None)?);
     Ok((gltf, buffers))
 }
@@ -159,14 +123,13 @@ fn import_binary(
     source: Arc<AssetSource>,
     base_path: &Path,
 ) -> Result<(Gltf, Buffers), Error> {
-    let gltf::Glb {
+    let gltf::binary::Glb {
         header: _,
         json,
         bin,
-    } = gltf::Glb::from_slice(data)?;
-    let unvalidated = Gltf::from_slice(json)?;
+    } = gltf::binary::Glb::from_slice(data)?;
+    let gltf = Gltf::from_slice(&json)?;
     let bin = bin.map(|x| x.to_vec());
-    let gltf = validate_binary(unvalidated, bin.is_some())?;
     let buffers = Buffers(load_external_buffers(source, base_path, &gltf, bin)?);
     Ok((gltf, buffers))
 }
@@ -177,13 +140,14 @@ pub fn get_image_data(
     source: Arc<AssetSource>,
     base_path: &Path,
 ) -> Result<(Vec<u8>, ImageFormat), Error> {
-    match image.data() {
-        gltf::image::Data::View { view, mime_type } => {
+    use gltf::image::Source;
+    match image.source() {
+        Source::View { view, mime_type } => {
             let data = buffers.view(&view).unwrap();
             Ok((data.to_vec(), ImageFormat::from_mime_type(mime_type)))
         }
 
-        gltf::image::Data::Uri { uri, mime_type } => {
+        Source::Uri { uri, mime_type } => {
             if uri.starts_with("data:") {
                 let data = parse_data_uri(uri)?;
                 if let Some(ty) = mime_type {

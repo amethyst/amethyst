@@ -6,8 +6,8 @@ use std::path::Path;
 use amethyst_config::Config;
 use amethyst_core::bundle::{Result, SystemBundle};
 use amethyst_core::specs::prelude::DispatcherBuilder;
-use serde::Serialize;
 use serde::de::DeserializeOwned;
+use serde::Serialize;
 
 use {Bindings, InputSystem};
 

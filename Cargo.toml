@@ -1,6 +1,6 @@
 [package]
 name = "amethyst"
-version = "0.6.0"
+version = "0.7.0"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
 description = "Data-oriented game engine written in Rust"
 exclude = ["examples/*", "book/*"]
@@ -48,15 +48,15 @@ nightly = [
 ]
 
 [dependencies]
-amethyst_animation = { path = "amethyst_animation", version = "0.1.0" }
-amethyst_assets = { path = "amethyst_assets", version = "0.2.0" }
-amethyst_locale = { path = "amethyst_locale", version = "0.1.0" }
-amethyst_audio = { path = "amethyst_audio", version = "0.1.0" }
-amethyst_config = { path = "amethyst_config", version = "0.5.0" }
-amethyst_core = { path = "amethyst_core", version = "0.1.0" }
+amethyst_animation = { path = "amethyst_animation", version = "0.2.0" }
+amethyst_assets = { path = "amethyst_assets", version = "0.3.0" }
+amethyst_audio = { path = "amethyst_audio", version = "0.2.0" }
+amethyst_config = { path = "amethyst_config", version = "0.6.0" }
+amethyst_core = { path = "amethyst_core", version = "0.2.0" }
 amethyst_controls = { path = "amethyst_controls", version = "0.1.0" }
-amethyst_renderer = { path = "amethyst_renderer", version = "0.6" }
-amethyst_input = { path = "amethyst_input", version = "0.2" }
+amethyst_locale = { path = "amethyst_locale", version = "0.1.0" }
+amethyst_renderer = { path = "amethyst_renderer", version = "0.7" }
+amethyst_input = { path = "amethyst_input", version = "0.3" }
 amethyst_ui = { path = "amethyst_ui", version = "0.2" }
 amethyst_utils = { path = "amethyst_utils", version = "0.2" }
 derivative = "1.0"
@@ -64,14 +64,15 @@ fern = "0.5"
 log = "0.4"
 rayon = "1.0.1"
 rustc_version_runtime = "0.1"
-winit = "0.13.1"
+winit = "0.15"
 
 thread_profiler = { version = "0.1", optional = true }
 
 [dev-dependencies]
-amethyst_gltf = { path = "amethyst_gltf", version = "0.1" }
+amethyst_gltf = { path = "amethyst_gltf", version = "0.2" }
+env_logger = "0.5.10"
 genmesh = "0.5"
-ron = "0.1"
+ron = "0.2"
 serde = "1.0"
 serde_derive = "1.0"
 
@@ -89,6 +90,10 @@ path = "examples/window/main.rs"
 [[example]]
 name = "sphere"
 path = "examples/sphere/main.rs"
+
+[[example]]
+name = "sphere_multisample"
+path = "examples/sphere_multisample/main.rs"
 
 [[example]]
 name = "renderable"
@@ -123,6 +128,14 @@ name = "animation"
 path = "examples/animation/main.rs"
 
 [[example]]
+name = "fly_camera"
+path = "examples/fly_camera/main.rs"
+
+[[example]]
+name = "sprites"
+path = "examples/sprites/main.rs"
+
+[[example]]
 name = "pong_tutorial_01"
 path = "examples/pong_tutorial_01/main.rs"
 
@@ -139,20 +152,25 @@ name = "appendix_a"
 path = "examples/appendix_a/main.rs"
 
 [[example]]
+<<<<<<< HEAD
 name = "locale"
 path = "examples/locale/main.rs"
 
 [[example]]
 name = "fly_camera"
 path = "examples/fly_camera/main.rs"
+=======
+name = "custom_game_data"
+path = "examples/custom_game_data/main.rs"
+>>>>>>> 00fa904612be5609121981a9663a7aea097e3a55
 
 [[example]]
-name = "sprites"
-path = "examples/sprites/main.rs"
+name = "arc_ball_camera"
+path = "examples/arc_ball_camera/main.rs"
+
+[[example]]
+name = "prefab"
+path = "examples/prefab/main.rs"
 
 [workspace]
 members = ["amethyst_gltf"]
-
-
-[patch.crates-io]
-coreaudio-sys = { git = "https://github.com/RustAudio/coreaudio-sys.git", rev = "cf3a8321f461655a304ee8aa3139d5c5c88fd379" }

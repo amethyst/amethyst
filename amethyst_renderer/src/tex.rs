@@ -148,10 +148,10 @@ where
 
     /// Builds and returns the new texture.
     pub fn build(self, fac: &mut Factory) -> Result<Texture> {
-        use gfx::Factory;
         use gfx::format::Swizzle;
         use gfx::memory::cast_slice;
         use gfx::texture::ResourceDesc;
+        use gfx::Factory;
         use std::mem::size_of;
 
         // This variable has to live here to make sure the flipped

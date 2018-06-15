@@ -14,16 +14,17 @@ in vec3 tangent;
 in vec2 tex_coord;
 
 out VertexData {
-    vec4 position;
+    vec3 position;
     vec3 normal;
     vec3 tangent;
     vec2 tex_coord;
 } vertex;
 
 void main() {
-    vertex.position = model * vec4(position, 1.0);
+    vec4 vertex_position = model * vec4(position, 1.0);
+    vertex.position = vertex_position.xyz;
     vertex.normal = mat3(model) * normal;
     vertex.tangent = mat3(model) * tangent;
     vertex.tex_coord = tex_coord;
-    gl_Position = proj * view * vertex.position;
+    gl_Position = proj * view * vertex_position;
 }

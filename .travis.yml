@@ -31,9 +31,9 @@ addons:
     packages:
       - libasound2-dev
 
-# Since this build doesn't require sudo, we can turn it off and improve build
-# performance.
-sudo: false
+# This build doesn't require sudo, but turning it on gives us more disk space
+# We need the extra space as we keep running out.
+sudo: required
 
 # Force third-party crates to persist from previous builds and update only when
 # needed.

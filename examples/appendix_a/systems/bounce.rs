@@ -1,11 +1,11 @@
-use {Ball, Paddle, Side};
 use amethyst::assets::AssetStorage;
-use amethyst::audio::Source;
 use amethyst::audio::output::Output;
+use amethyst::audio::Source;
 use amethyst::core::transform::Transform;
 use amethyst::ecs::prelude::{Join, Read, ReadExpect, ReadStorage, System, WriteStorage};
 use audio::{play_bounce, Sounds};
 use config::ArenaConfig;
+use {Ball, Paddle, Side};
 
 /// This system is responsible for detecting collisions between balls and
 /// paddles, as well as balls and the top and bottom edges of the arena.
@@ -22,10 +22,8 @@ impl<'s> System<'s> for BounceSystem {
         Read<'s, ArenaConfig>,
     );
 
-    fn run(
-        &mut self,
-        (mut balls, paddles, transforms, storage, sounds, audio_output, arena_config): Self::SystemData,
-){
+    fn run(&mut self, data: Self::SystemData) {
+        let (mut balls, paddles, transforms, storage, sounds, audio_output, arena_config) = data;
         // Check whether a ball collided, and bounce off accordingly.
         //
         // We also check for the velocity of the ball every time, to prevent multiple collisions

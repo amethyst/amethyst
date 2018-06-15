@@ -60,9 +60,10 @@ impl<'a> System<'a> for TransformSystem {
         {
             match *event {
                 HierarchyEvent::Removed(entity) => {
-                    if let Err(err) = entities.delete(entity) {
-                        error!("Failed removing entity {:?}: {}", entity, err);
-                    }
+                    // Sometimes the user may have already deleted the entity.
+                    // This is fine, so we'll ignore any errors this may give
+                    // since it can only fail due to the entity already being dead.
+                    let _ = entities.delete(entity);
                 }
                 HierarchyEvent::Modified(entity) => {
                     self.local_modified.add(entity.id());
@@ -307,7 +308,8 @@ mod tests {
         };
     }
 
-    // Test Parent * Transform -> GlobalTransform (Parent is after child, therefore must be special cased in list)
+    // Test Parent * Transform -> GlobalTransform
+    // (Parent is after child, therefore must be special cased in list)
     #[test]
     fn parent_after() {
         let (mut world, mut hs, mut system) = transform_world();
@@ -344,8 +346,8 @@ mod tests {
 
         {
             let mut parents = world.write_storage::<Parent>();
-            parents.insert(e2, Parent { entity: e1 });
-            parents.insert(e3, Parent { entity: e2 });
+            parents.insert(e2, Parent { entity: e1 }).unwrap();
+            parents.insert(e3, Parent { entity: e2 }).unwrap();
         }
 
         hs.run_now(&mut world.res);

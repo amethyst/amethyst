@@ -1,5 +1,5 @@
-use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Arc;
 
 use parking_lot::Mutex;
 
@@ -45,7 +45,7 @@ impl Progress for () {
 /// in order to check how many assets are loaded.
 #[derive(Default)]
 pub struct ProgressCounter {
-    errors: Arc<Mutex<Vec<Error>>>,
+    errors: Arc<Mutex<Vec<AssetErrorMeta>>>,
     num_assets: usize,
     num_failed: Arc<AtomicUsize>,
     num_loading: Arc<AtomicUsize>,
@@ -58,7 +58,7 @@ impl ProgressCounter {
     }
 
     /// Removes all errors and returns them.
-    pub fn errors(&self) -> Vec<Error> {
+    pub fn errors(&self) -> Vec<AssetErrorMeta> {
         let mut lock = self.errors.lock();
         let rv = lock.drain(..).collect();
 
@@ -127,7 +127,7 @@ impl<'a> Progress for &'a mut ProgressCounter {
 /// Progress tracker for `ProgressCounter`.
 #[derive(Default)]
 pub struct ProgressCounterTracker {
-    errors: Arc<Mutex<Vec<Error>>>,
+    errors: Arc<Mutex<Vec<AssetErrorMeta>>>,
     num_failed: Arc<AtomicUsize>,
     num_loading: Arc<AtomicUsize>,
 }
@@ -137,10 +137,29 @@ impl Tracker for ProgressCounterTracker {
         self.num_loading.fetch_sub(1, Ordering::Relaxed);
     }
 
-    fn fail(self: Box<Self>, e: Error) {
-        self.errors.lock().push(e);
+    fn fail(
+        self: Box<Self>,
+        handle_id: u32,
+        asset_type_name: &'static str,
+        asset_name: String,
+        error: Error,
+    ) {
+        self.errors.lock().push(AssetErrorMeta {
+            error,
+            handle_id,
+            asset_type_name,
+            asset_name,
+        });
         self.num_failed.fetch_add(1, Ordering::Relaxed);
     }
+}
+
+#[derive(Debug)]
+pub struct AssetErrorMeta {
+    pub error: Error,
+    pub handle_id: u32,
+    pub asset_type_name: &'static str,
+    pub asset_name: String,
 }
 
 /// The `Tracker` trait which will be used by the loader to report
@@ -150,14 +169,32 @@ pub trait Tracker: Send + 'static {
     /// Called if the asset could be imported.
     fn success(self: Box<Self>);
     /// Called if the asset couldn't be imported to an error.
-    fn fail(self: Box<Self>, e: Error);
+    fn fail(
+        self: Box<Self>,
+        handle_id: u32,
+        asset_type_name: &'static str,
+        asset_name: String,
+        error: Error,
+    );
 }
 
 impl Tracker for () {
     fn success(self: Box<Self>) {}
-    fn fail(self: Box<Self>, e: Error) {
-        error!("error: {}", e);
-        e.iter().skip(1).for_each(|e| error!("caused by: {}", e));
+    fn fail(
+        self: Box<Self>,
+        handle_id: u32,
+        asset_type_name: &'static str,
+        asset_name: String,
+        error: Error,
+    ) {
+        error!(
+            "error loading handle {}, {}, with name {}, caused by: {:?}",
+            handle_id, asset_type_name, asset_name, error
+        );
+        error
+            .iter()
+            .skip(1)
+            .for_each(|e| error!("caused by: {:?}", e));
         error!("note: to handle the error, use a `Progress` other than `()`");
     }
 }

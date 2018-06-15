@@ -3,6 +3,7 @@
 pub use app::{Application, ApplicationBuilder};
 pub use config::Config;
 pub use ecs::prelude::World;
+pub use game_data::{DataInit, GameData, GameDataBuilder};
 //pub use renderer::input::*;
 
-pub use state::{State, Trans};
+pub use state::{State, StateData, Trans};

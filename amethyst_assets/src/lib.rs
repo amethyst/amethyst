@@ -21,6 +21,12 @@ extern crate hibitset;
 extern crate log;
 extern crate parking_lot;
 extern crate rayon;
+extern crate ron;
+#[macro_use]
+extern crate serde;
+extern crate shred;
+#[macro_use]
+extern crate shred_derive;
 
 #[macro_use]
 #[cfg(feature = "profiler")]
@@ -29,16 +35,20 @@ extern crate thread_profiler;
 pub use asset::{Asset, Format, FormatValue, SimpleFormat};
 pub use cache::Cache;
 pub use error::{Error, ErrorKind, Result, ResultExt};
+pub use formats::RonFormat;
 pub use loader::Loader;
+pub use prefab::{AssetPrefab, Prefab, PrefabData, PrefabError, PrefabLoader, PrefabLoaderSystem};
 pub use progress::{Completion, Progress, ProgressCounter, Tracker};
 pub use reload::{HotReloadBundle, HotReloadStrategy, HotReloadSystem, Reload, SingleFile};
 pub use source::{Directory, Source};
-pub use storage::{AssetStorage, Handle, Processor, WeakHandle};
+pub use storage::{AssetStorage, Handle, ProcessingState, Processor, WeakHandle};
 
 mod asset;
 mod cache;
 mod error;
+mod formats;
 mod loader;
+mod prefab;
 mod progress;
 mod reload;
 mod source;

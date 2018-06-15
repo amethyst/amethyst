@@ -1,19 +1,21 @@
-use {Ball, Paddle, Side};
 use amethyst::assets::Loader;
 use amethyst::core::cgmath::Vector3;
 use amethyst::core::transform::{GlobalTransform, Transform};
 use amethyst::ecs::prelude::World;
+use amethyst::input::{is_close_requested, is_key};
 use amethyst::prelude::*;
-use amethyst::renderer::{Camera, Event, KeyboardInput, Material, MeshHandle, PosTex, Projection,
-                         ScreenDimensions, VirtualKeyCode, WindowEvent, WindowMessages};
-use amethyst::ui::{TtfFormat, UiResize, UiText, UiTransform};
+use amethyst::renderer::{Camera, Event, Material, MeshHandle, PosTex, Projection, VirtualKeyCode,
+                         WindowMessages};
+use amethyst::ui::{Anchor, TtfFormat, UiText, UiTransform};
 use config::{ArenaConfig, BallConfig, PaddlesConfig};
 use systems::ScoreText;
+use {Ball, Paddle, Side};
 
 pub struct Pong;
 
-impl State for Pong {
-    fn on_start(&mut self, world: &mut World) {
+impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
+    fn on_start(&mut self, data: StateData<GameData>) {
+        let StateData { world, .. } = data;
         use audio::initialise_audio;
 
         // Setup our game.
@@ -25,21 +27,17 @@ impl State for Pong {
         hide_cursor(world);
     }
 
-    fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
-        match event {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            virtual_keycode: Some(VirtualKeyCode::Escape),
-                            ..
-                        },
-                    ..
-                } => Trans::Quit,
-                _ => Trans::None,
-            },
-            _ => Trans::None,
+    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
+        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+            Trans::Quit
+        } else {
+            Trans::None
         }
+    }
+
+    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+        data.data.update(&data.world);
+        Trans::None
     }
 }
 
@@ -210,19 +208,28 @@ fn initialise_score(world: &mut World) {
         (),
         &world.read_resource(),
     );
-    let mut p1_transform = UiTransform::new("P1".to_string(), 0., 0., 1., 55., 50., 0);
-    let p1_size_fn = |transform: &mut UiTransform, (width, _height)| {
-        transform.local_x = (width / 2.) - 100. - transform.width / 2.;
-    };
-    let mut p2_transform = UiTransform::new("P2".to_string(), 0., 0., 1., 55., 50., 0);
-    let p2_size_fn = |transform: &mut UiTransform, (width, _height)| {
-        transform.local_x = (width / 2.) + 100. - transform.width / 2.;
-    };
-    {
-        let dim = world.read_resource::<ScreenDimensions>();
-        p1_size_fn(&mut p1_transform, (dim.width(), dim.height()));
-        p2_size_fn(&mut p2_transform, (dim.width(), dim.height()));
-    }
+    let p1_transform = UiTransform::new(
+        "P1".to_string(),
+        Anchor::TopMiddle,
+        -50.,
+        50.,
+        1.,
+        55.,
+        50.,
+        0,
+    );
+
+    let p2_transform = UiTransform::new(
+        "P2".to_string(),
+        Anchor::TopMiddle,
+        50.,
+        50.,
+        1.,
+        55.,
+        50.,
+        0,
+    );
+
     let p1_score = world
         .create_entity()
         .with(p1_transform)
@@ -232,7 +239,6 @@ fn initialise_score(world: &mut World) {
             [1.0, 1.0, 1.0, 1.0],
             50.,
         ))
-        .with(UiResize(Box::new(p1_size_fn)))
         .build();
     let p2_score = world
         .create_entity()
@@ -243,7 +249,6 @@ fn initialise_score(world: &mut World) {
             [1.0, 1.0, 1.0, 1.0],
             50.,
         ))
-        .with(UiResize(Box::new(p2_size_fn)))
         .build();
     world.add_resource(ScoreText { p1_score, p2_score });
 }

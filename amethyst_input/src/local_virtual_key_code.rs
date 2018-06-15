@@ -154,6 +154,9 @@ pub enum LocalVirtualKeyCode {
     WebSearch,
     WebStop,
     Yen,
+    Copy,
+    Paste,
+    Cut,
 }
 
 impl From<LocalVirtualKeyCode> for VirtualKeyCode {
@@ -310,6 +313,9 @@ impl From<LocalVirtualKeyCode> for VirtualKeyCode {
             LocalVirtualKeyCode::WebSearch => VirtualKeyCode::WebSearch,
             LocalVirtualKeyCode::WebStop => VirtualKeyCode::WebStop,
             LocalVirtualKeyCode::Yen => VirtualKeyCode::Yen,
+            LocalVirtualKeyCode::Copy => VirtualKeyCode::Copy,
+            LocalVirtualKeyCode::Paste => VirtualKeyCode::Paste,
+            LocalVirtualKeyCode::Cut => VirtualKeyCode::Cut,
         }
     }
 }

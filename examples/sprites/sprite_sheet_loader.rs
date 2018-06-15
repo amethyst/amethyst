@@ -6,9 +6,9 @@ use sprite;
 ///
 /// # Parameters:
 ///
-/// * `index`: Index of the sprite sheet's texture in the `MaterialTextureSet`.
+/// * `texture_id`: Id of the sprite sheet's texture in the `MaterialTextureSet`.
 /// * `definition`: Definition of the sprite layout on the sprite sheet.
-pub fn load(index: usize, definition: &sprite::SpriteSheetDefinition) -> SpriteSheet {
+pub fn load(texture_id: u64, definition: &sprite::SpriteSheetDefinition) -> SpriteSheet {
     let mut sprites = Vec::with_capacity(definition.row_count * definition.column_count);
     let (offset_w, offset_h) = offset_distances(&definition);
     let (image_w, image_h) = (
@@ -46,7 +46,10 @@ pub fn load(index: usize, definition: &sprite::SpriteSheetDefinition) -> SpriteS
         }
     }
 
-    SpriteSheet { index, sprites }
+    SpriteSheet {
+        texture_id,
+        sprites,
+    }
 }
 
 /// Returns the pixel offset distances per sprite.

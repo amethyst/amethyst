@@ -6,141 +6,237 @@ extern crate base64;
 extern crate fnv;
 extern crate gfx;
 extern crate gltf;
-extern crate gltf_utils;
 extern crate hibitset;
 extern crate imagefmt;
 extern crate itertools;
 #[macro_use]
 extern crate log;
+extern crate mikktspace;
+#[macro_use]
+extern crate serde;
 
 #[macro_use]
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
 
 pub use format::GltfSceneFormat;
-pub use systems::GltfSceneLoaderSystem;
 
 use std::ops::Range;
 
-use animation::{Animation, Sampler, SamplerPrimitive, TransformChannel};
-use assets::{Asset, Error as AssetError, Handle};
-use core::specs::prelude::VecStorage;
+use animation::{AnimatablePrefab, SkinnablePrefab};
+use assets::{Handle, Prefab, PrefabData, PrefabLoaderSystem, ProgressCounter};
+use core::cgmath::{Array, EuclideanSpace, Point3, Vector3};
+use core::specs::error::Error;
+use core::specs::prelude::{Component, DenseVecStorage, Entity, WriteStorage};
 use core::transform::Transform;
-use gfx::Primitive;
-use renderer::{AnimatedVertexBufferCombination, MeshHandle, TextureData, TextureHandle};
+use renderer::{MaterialPrefab, Mesh, MeshData, TextureFormat};
 
 mod format;
-mod systems;
 
-/// A single graphics primitive
-#[derive(Debug)]
-pub struct GltfPrimitive {
-    pub extents: Range<[f32; 3]>,
-    pub primitive: Primitive,
-    pub material: Option<usize>,
-    pub indices: Option<Vec<usize>>,
-    pub attributes: AnimatedVertexBufferCombination,
-    pub handle: Option<MeshHandle>,
+/// Load `GltfSceneAsset`s
+pub type GltfSceneLoaderSystem = PrefabLoaderSystem<GltfPrefab>;
+
+/// Gltf scene asset as returned by the `GltfSceneFormat`
+pub type GltfSceneAsset = Prefab<GltfPrefab>;
+
+/// `PrefabData` for loading Gltf files.
+#[derive(Debug, Clone, Default)]
+pub struct GltfPrefab {
+    /// `Transform` will almost always be placed, the only exception is for the main `Entity` for
+    /// certain scenarios (based on the data in the Gltf file)
+    pub transform: Option<Transform>,
+    /// `MeshData` is placed on all `Entity`s with graphics primitives
+    pub mesh: Option<MeshData>,
+    /// Mesh handle after sub asset loading is done
+    pub mesh_handle: Option<Handle<Mesh>>,
+    /// `MeshData` is placed on all `Entity`s with graphics primitives with material
+    pub material: Option<MaterialPrefab<TextureFormat>>,
+    /// Loaded animations, if applicable, will always only be placed on the main `Entity`
+    pub animatable: Option<AnimatablePrefab<usize, Transform>>,
+    /// Skin data is placed on `Entity`s involved in the skin, skeleton or graphical primitives
+    /// using the skin
+    pub skinnable: Option<SkinnablePrefab>,
+    /// Node extent
+    pub extent: Option<GltfNodeExtent>,
 }
 
-/// Alpha mode for material
-#[derive(Debug)]
-pub enum AlphaMode {
-    Opaque,
-    Mask,
-    Blend,
-}
+impl GltfPrefab {
+    /// Move the scene so the center of the bounding box is at the given `target` location.
+    pub fn move_to(&mut self, target: Point3<f32>) {
+        if let Some(ref extent) = self.extent {
+            self.transform
+                .get_or_insert_with(Transform::default)
+                .translation += target - extent.centroid();
+        }
+    }
 
-/// GLTF material, PBR based
-#[derive(Debug)]
-pub struct GltfMaterial {
-    base_color: (GltfTexture, [f32; 4]),
-    metallic: (GltfTexture, f32),
-    roughness: (GltfTexture, f32),
-    emissive: (GltfTexture, [f32; 3]),
-    normal: Option<(GltfTexture, f32)>,
-    occlusion: Option<(GltfTexture, f32)>,
-    alpha: (AlphaMode, f32),
-    double_sided: bool,
-}
-
-/// A GLTF defined texture, will be in `TextureData` format in the output from the loader.
-#[derive(Debug)]
-pub struct GltfTexture {
-    pub data: TextureData,
-    pub handle: Option<TextureHandle>,
-}
-
-impl GltfTexture {
-    pub fn new(data: TextureData) -> Self {
-        Self { data, handle: None }
+    /// Scale the scene to a specific max size
+    pub fn scale_to(&mut self, max_distance: f32) {
+        if let Some(ref extent) = self.extent {
+            let distance = extent.distance();
+            let max = distance.x.max(distance.y).max(distance.z);
+            let scale = max_distance / max;
+            self.transform.get_or_insert_with(Transform::default).scale =
+                Vector3::from_value(scale);
+        }
     }
 }
 
-/// A GLTF defined skin
-#[derive(Debug)]
-pub struct GltfSkin {
-    pub joints: Vec<usize>,
-    pub skeleton: Option<usize>,
-    pub inverse_bind_matrices: Vec<[[f32; 4]; 4]>,
+#[derive(Clone, Debug)]
+pub struct GltfNodeExtent {
+    pub start: Point3<f32>,
+    pub end: Point3<f32>,
 }
 
-/// A node in the scene hierarchy
-#[derive(Debug)]
-pub struct GltfNode {
-    pub primitives: Vec<GltfPrimitive>,
-    pub skin: Option<usize>,
-    pub parent: Option<usize>,
-    pub children: Vec<usize>,
-    pub local_transform: Transform,
+impl Default for GltfNodeExtent {
+    fn default() -> Self {
+        Self {
+            start: Point3::from_value(std::f32::MAX),
+            end: Point3::from_value(std::f32::MIN),
+        }
+    }
 }
 
-/// A single scene is defined as a list of the root nodes in the node hierarchy for the full asset
-#[derive(Debug)]
-pub struct GltfScene {
-    pub root_nodes: Vec<usize>,
+impl GltfNodeExtent {
+    pub fn extend_range(&mut self, other: &Range<[f32; 3]>) {
+        for i in 0..3 {
+            if other.start[i] < self.start[i] {
+                self.start[i] = other.start[i];
+            }
+            if other.end[i] > self.end[i] {
+                self.end[i] = other.end[i];
+            }
+        }
+    }
+
+    pub fn extend(&mut self, other: &GltfNodeExtent) {
+        for i in 0..3 {
+            if other.start[i] < self.start[i] {
+                self.start[i] = other.start[i];
+            }
+            if other.end[i] > self.end[i] {
+                self.end[i] = other.end[i];
+            }
+        }
+    }
+
+    pub fn centroid(&self) -> Point3<f32> {
+        (self.start + self.end.to_vec()) / 2.
+    }
+
+    pub fn distance(&self) -> Vector3<f32> {
+        self.end - self.start
+    }
+
+    pub fn valid(&self) -> bool {
+        for i in 0..3 {
+            if self.start[i] > self.end[i] {
+                return false;
+            }
+        }
+        true
+    }
 }
 
-/// A single animation
-#[derive(Debug)]
-pub struct GltfAnimation {
-    // node index, vec will be same size as samplers and channels, and reference the sampler+channel
-    // at the same index
-    pub samplers: Vec<(usize, TransformChannel, Sampler<SamplerPrimitive<f32>>)>,
-    pub handle: Option<Handle<Animation<Transform>>>,
-    //pub hierarchy_root: usize,
+impl From<Range<[f32; 3]>> for GltfNodeExtent {
+    fn from(range: Range<[f32; 3]>) -> Self {
+        GltfNodeExtent {
+            start: Point3::from(range.start),
+            end: Point3::from(range.end),
+        }
+    }
+}
+
+impl Component for GltfNodeExtent {
+    type Storage = DenseVecStorage<Self>;
 }
 
 /// Options used when loading a GLTF file
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(default)]
 pub struct GltfSceneOptions {
-    pub generate_tex_coords: Option<(f32, f32)>,
+    /// Generate texture coordinates if none exist in the Gltf file
+    pub generate_tex_coords: (f32, f32),
+    /// Load animation data from the Gltf file
     pub load_animations: bool,
+    /// Flip the v coordinate for all texture coordinates
     pub flip_v_coord: bool,
-    pub move_to_origin: bool,
+    /// Load the given scene index, if not supplied will either load the default scene (if set),
+    /// or the first scene (only if there is only one scene, otherwise an `Error` will be returned).
+    pub scene_index: Option<usize>,
 }
 
-/// Actual asset produced on finished loading of a GLTF scene file.
-#[derive(Debug)]
-pub struct GltfSceneAsset {
-    pub nodes: Vec<GltfNode>,
-    pub scenes: Vec<GltfScene>,
-    pub materials: Vec<GltfMaterial>,
-    pub animations: Vec<GltfAnimation>,
-    pub default_scene: Option<usize>,
-    pub skins: Vec<GltfSkin>,
-    pub options: GltfSceneOptions,
-}
+impl<'a> PrefabData<'a> for GltfPrefab {
+    type SystemData = (
+        <Transform as PrefabData<'a>>::SystemData,
+        <MeshData as PrefabData<'a>>::SystemData,
+        <MaterialPrefab<TextureFormat> as PrefabData<'a>>::SystemData,
+        <AnimatablePrefab<usize, Transform> as PrefabData<'a>>::SystemData,
+        <SkinnablePrefab as PrefabData<'a>>::SystemData,
+        WriteStorage<'a, GltfNodeExtent>,
+    );
+    type Result = ();
 
-impl Into<Result<GltfSceneAsset, AssetError>> for GltfSceneAsset {
-    fn into(self) -> Result<GltfSceneAsset, AssetError> {
-        Ok(self)
+    fn load_prefab(
+        &self,
+        entity: Entity,
+        system_data: &mut Self::SystemData,
+        entities: &[Entity],
+    ) -> Result<(), Error> {
+        let (
+            ref mut transforms,
+            ref mut meshes,
+            ref mut materials,
+            ref mut animatables,
+            ref mut skinnables,
+            ref mut extents,
+        ) = system_data;
+        if let Some(ref transform) = self.transform {
+            transform.load_prefab(entity, transforms, entities)?;
+        }
+        if let Some(ref mesh) = self.mesh_handle {
+            meshes.1.insert(entity, mesh.clone())?;
+        }
+        if let Some(ref material) = self.material {
+            material.load_prefab(entity, materials, entities)?;
+        }
+        if let Some(ref animatable) = self.animatable {
+            animatable.load_prefab(entity, animatables, entities)?;
+        }
+        if let Some(ref skinnable) = self.skinnable {
+            skinnable.load_prefab(entity, skinnables, entities)?;
+        }
+        if let Some(ref extent) = self.extent {
+            extents.insert(entity, extent.clone())?;
+        }
+        Ok(())
     }
-}
 
-impl Asset for GltfSceneAsset {
-    const NAME: &'static str = "gltf::Scene";
-    type Data = Self;
-    // TODO: replace by tracked storage
-    type HandleStorage = VecStorage<Handle<Self>>;
+    fn trigger_sub_loading(
+        &mut self,
+        progress: &mut ProgressCounter,
+        system_data: &mut Self::SystemData,
+    ) -> Result<bool, Error> {
+        let (_, ref mut meshes, ref mut materials, ref mut animatables, _, _) = system_data;
+        let mut ret = false;
+        if let Some(ref mesh) = self.mesh {
+            self.mesh_handle = Some(meshes.0.load_from_data(
+                mesh.clone(),
+                &mut *progress,
+                &meshes.2,
+            ));
+            ret = true;
+        }
+        if let Some(ref mut material) = self.material {
+            if material.trigger_sub_loading(progress, materials)? {
+                ret = true;
+            }
+        }
+        if let Some(ref mut animatable) = self.animatable {
+            if animatable.trigger_sub_loading(progress, animatables)? {
+                ret = true;
+            }
+        }
+        Ok(ret)
+    }
 }

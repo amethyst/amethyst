@@ -1,0 +1,7 @@
+# Licenses for audio assets
+
+This is incomplete for now.
+
+ - `score.ogg`: Contributed by Richard Dodd, released into the Public Domain (CC0)
+ - `Computer_Music_All-Stars_-_Wheres_My_Jetpack.ogg` (BY)
+ - `Computer_Music_All-Starts_-_Albatross_v2.ogg` (BY)

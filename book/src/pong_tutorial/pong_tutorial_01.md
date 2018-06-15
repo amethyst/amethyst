@@ -4,12 +4,12 @@ Let's start a new project:
 
 `amethyst new pong`
 
-If you run this project with `cargo run`, you'll end up with a window titled 
-"pong" that renders a really delightful shade of green. Press `Esc` to quit. If 
-you're having trouble getting the project to run, double check the 
+If you run this project with `cargo run`, you'll end up with a window titled
+"pong" that renders a really delightful shade of green. Press `Esc` to quit. If
+you're having trouble getting the project to run, double check the
 [Getting Started][gs] guide.
 
-We've opened and closed a window, so we're basically done! But let's write this 
+We've opened and closed a window, so we're basically done! But let's write this
 functionality ourselves so we're sure we know what's going on.
 
 In `src` there's a `main.rs` file. Delete everything, then add these imports:
@@ -17,69 +17,69 @@ In `src` there's a `main.rs` file. Delete everything, then add these imports:
 ```rust,ignore
 extern crate amethyst;
 
-use amethyst::Result;
 use amethyst::prelude::*;
+use amethyst::input::{is_close_requested, is_key};
 use amethyst::renderer::{DisplayConfig, DrawFlat, Event, KeyboardInput,
-                         Pipeline, PosTex, RenderBundle, Stage, 
+                         Pipeline, PosTex, RenderBundle, Stage,
                          VirtualKeyCode, WindowEvent};
 ```
 
-We'll be learning more about these as we go through this tutorial. The prelude 
-includes the basic (and most important) types like `Application`, `World`, and 
+We'll be learning more about these as we go through this tutorial. The prelude
+includes the basic (and most important) types like `Application`, `World`, and
 `State`.
 
 Now we create our core game struct:
 
 ```rust,ignore
-struct Pong; 
+struct Pong;
 ```
 
-We'll be implementing the [`State`][st] trait on this struct, which is used by 
-Amethyst's state machine to start, stop, and update the game. But for now we'll 
-just implement one method: 
+We'll be implementing the [`State`][st] trait on this struct, which is used by
+Amethyst's state machine to start, stop, and update the game. But for now we'll
+just implement one method:
 
 ```rust,ignore
-impl State for Pong {
-    fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
-        match event {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            virtual_keycode: Some(VirtualKeyCode::Escape),
-                            ..
-                        },
-                    ..
-                } => Trans::Quit,
-                _ => Trans::None,
-            },
-            _ => Trans::None,
+impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
+    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
+        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+            Trans::Quit
+        } else {
+            Trans::None
         }
+    }
+
+    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+        data.data.update(&data.world);
+        Trans::None
     }
 }
 ```
 
-The `handle_event` method is executed on every frame before updating, and it's 
-used to react to events. It returns a `Trans`, which is an enum of state machine 
-transitions. In this case, we're watching for the Escape keycode from the 
-Window. If we receive it, we'll return `Trans::Quit` which will be used to clean 
-up the `State` and close the application. All other keyboard input is ignored 
-for now.
+The `handle_event` method is executed for every event before updating, and it's
+used to react to events. It returns a `Trans`, which is an enum of state machine
+transitions. In this case, we're watching for the Escape keycode, and the
+`CloseRequested` event from the Window. If we receive it, we'll return
+`Trans::Quit` which will be used to clean up the `State` and close the application.
+All other keyboard input is ignored or now.
 
-Now that we know we can quit, let's add some code to actually get things 
-started! We'll use a `run()` function, which returns a Result and thus 
-allows us to use `?`.
+The `update` method is executed after events have happened.  In this instance
+we're just using it to execute our dispatcher.  More on that later.
+
+Now that we know we can quit, let's add some code to actually get things
+started! We'll start with our `main` function, and we'll have it return a
+`Result` so that we can use `?`. This will allow us to automatically exit
+if any errors occur during setup.
 
 ```rust,ignore
-fn run() -> Result<()> {
+fn main() -> amethyst::Result<()> {
 
-    //We'll put the rest of the code here
+    // We'll put the rest of the code here.
 
     Ok(())
 }
 ```
 
-Inside run() we first define a path for our display_config.ron file and load it.
+Inside `main()` we first define a path for our display_config.ron file and load it.
 
 ```rust,ignore
 let path = "./resources/display_config.ron";
@@ -87,9 +87,9 @@ let path = "./resources/display_config.ron";
 let config = DisplayConfig::load(&path);
 ```
 
-This .ron file was automatically generated by `amethyst new`. If you didn't use 
-`amethyst new`, now would be a good time to create this config file inside a 
-folder named resources. If you already have this file, we have some changes to 
+This .ron file was automatically generated by `amethyst new`. If you didn't use
+`amethyst new`, now would be a good time to create this config file inside a
+folder named resources. If you already have this file, we have some changes to
 make, anyway:
 
 ```rust,ignore
@@ -99,17 +99,17 @@ make, anyway:
   max_dimensions: None,
   min_dimensions: None,
   fullscreen: false,
-  multisampling: 1,
+  multisampling: 0,
   visibility: true,
   vsync: true,
 )
 ```
 
-This will set the default window dimensions to 500 x 500, and make the title bar 
+This will set the default window dimensions to 500 x 500, and make the title bar
 say "Pong!" instead of the sad, lowercase default of "pong".
 
-Now, back inside our run() function in main.rs, let's copy and paste some 
-rendering code so we can keep moving. We'll cover rendering in more depth later 
+Now, back inside our `main()` function in main.rs, let's copy and paste some
+rendering code so we can keep moving. We'll cover rendering in more depth later
 in this tutorial.
 
 ```rust,ignore
@@ -120,50 +120,39 @@ let pipe = Pipeline::build().with_stage(
 );
 ```
 
-The important thing to know right now is that this renders a black background. 
-If you want a different color you can tweak the RGBA values inside the 
-`.clear_target` method. Values range from 0.0 to 1.0, so to get that cool green 
-color we started with back, for instance, you can try 
+The important thing to know right now is that this renders a black background.
+If you want a different color you can tweak the RGBA values inside the
+`.clear_target` method. Values range from 0.0 to 1.0, so to get that cool green
+color we started with back, for instance, you can try
 `[0.00196, 0.23726, 0.21765, 1.0]`.
 
 Now let's pack everything up and run it:
 
 ```rust,ignore
-let mut game = Application::build("./", Pong)?
-    .with_bundle(RenderBundle::new(pipe, Some(config)))?
-    .build()?;
+let game_data = GameDataBuilder::default().with_bundle(RenderBundle::new(pipe, Some(config)))?;
+let mut game = Application::new("./", Pong, game_data)?;
 game.run();
 Ok(())
 ```
 
-We've discovered Amethyst's root object: [Application][ap]. It binds the OS 
-event loop, state machines, timers and other core components in a central place. 
-Here we're creating a new `RenderBundle`, adding the `Pipeline` we created, 
-along with our config, and building.
+We've discovered Amethyst's root object: [Application][ap]. It binds the OS
+event loop, state machines, timers and other core components in a central place.
+Here we're creating a new `RenderBundle`, adding the `Pipeline` we created,
+along with our config, and building. There is also a helper function 
+`with_basic_renderer` on `GameDataBuilder` that you can use to create your 
+`Pipeline` and `RenderBundle`, that performs most of the actions above. In the
+full `pong` example in the `Amethyst` repository that function is used instead.
 
-Then we call `.run()` on `game` which begins the gameloop. The game will 
-continue to run until our `State` returns `Trans::Quit`, or when all states have 
+Then we call `.run()` on `game` which begins the gameloop. The game will
+continue to run until our `State` returns `Trans::Quit`, or when all states have
 been popped off the state machine's stack.
 
-Now all that's left is to write a `main()` function to call our `run()` 
-function:
-
-```rust,ignore
-fn main() {
-    if let Err(e) = run() {
-        println!("Error occurred during game execution: {}", e);
-        ::std::process::exit(1);
-    }
-}
-```
-
-Success! Now we should be able to compile and run this code and get a window. 
+Success! Now we should be able to compile and run this code and get a window.
 It should look something like this:
 
 ![Step one](./images/pong_tutorial/pong_01.png)
 
-(TODO: switch links to master)
 
-[st]: https://www.amethyst.rs/doc/develop/doc/amethyst/trait.State.html
-[ap]: https://www.amethyst.rs/doc/develop/doc/amethyst/struct.Application.html
+[st]: https://www.amethyst.rs/doc/master/doc/amethyst/trait.State.html
+[ap]: https://www.amethyst.rs/doc/master/doc/amethyst/struct.Application.html
 [gs]: ./getting_started.html

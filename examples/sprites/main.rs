@@ -19,19 +19,17 @@ mod sprite_sheet_loader;
 use std::time::Duration;
 
 use amethyst::animation::{get_animation_set, AnimationBundle, AnimationCommand, AnimationControl,
-                          ControlState, EndControl, MaterialTextureSet};
+                          ControlState, EndControl};
 use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::cgmath::{Matrix4, Point3, Transform as CgTransform, Vector3};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::Entity;
-use amethyst::input::InputBundle;
+use amethyst::input::{is_close_requested, is_key, InputBundle};
 use amethyst::prelude::*;
-use amethyst::renderer::{Camera, ColorMask, DisplayConfig, DrawFlat, Event, KeyboardInput,
-                         Material, MaterialDefaults, Mesh, Pipeline, PosTex, Projection,
-                         RenderBundle, ScreenDimensions, Stage, VirtualKeyCode, WindowEvent, ALPHA};
-use amethyst::ui::{DrawUi, UiBundle};
-
-const BACKGROUND_COLOUR: [f32; 4] = [0.0, 0.0, 0.0, 1.0]; // black
+use amethyst::renderer::{Camera, ColorMask, DrawFlat, Event, Material, MaterialDefaults,
+                         MaterialTextureSet, Mesh, PosTex, Projection, ScreenDimensions,
+                         VirtualKeyCode, ALPHA};
+use amethyst::ui::UiBundle;
 
 #[derive(Debug, Default)]
 struct Example {
@@ -39,8 +37,10 @@ struct Example {
     entities: Vec<Entity>,
 }
 
-impl State for Example {
-    fn on_start(&mut self, mut world: &mut World) {
+impl<'a, 'b> State<GameData<'a, 'b>> for Example {
+    fn on_start(&mut self, data: StateData<GameData>) {
+        let StateData { world, .. } = data;
+
         initialise_camera(world);
 
         let sprite_sheet_texture = png_loader::load("texture/bat.32x32.png", world);
@@ -62,8 +62,8 @@ impl State for Example {
         };
 
         // Load animations
-        let grey_bat_animation = animation::grey_bat(&sprite_sheet, &mut world);
-        let brown_bat_animation = animation::brown_bat(&sprite_sheet, &mut world);
+        let grey_bat_animation = animation::grey_bat(&sprite_sheet, world);
+        let brown_bat_animation = animation::brown_bat(&sprite_sheet, world);
 
         // Calculate offset to centre all sprites
         //
@@ -152,22 +152,17 @@ impl State for Example {
         }
     }
 
-    fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
-        match event {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            virtual_keycode: Some(VirtualKeyCode::Escape),
-                            ..
-                        },
-                    ..
-                }
-                | WindowEvent::CloseRequested => Trans::Quit,
-                _ => Trans::None,
-            },
-            _ => Trans::None,
+    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
+        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+            Trans::Quit
+        } else {
+            Trans::None
         }
+    }
+
+    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+        data.data.update(&data.world);
+        Trans::None
     }
 }
 
@@ -180,10 +175,7 @@ fn initialise_camera(world: &mut World) -> Entity {
     world
         .create_entity()
         .with(Camera::from(Projection::orthographic(
-            0.0,
-            width,
-            height,
-            0.0,
+            0.0, width, height, 0.0,
         )))
         .with(GlobalTransform(Matrix4::from_translation(
             Vector3::new(0.0, 0.0, 1.0).into(),
@@ -191,24 +183,15 @@ fn initialise_camera(world: &mut World) -> Entity {
         .build()
 }
 
-fn run() -> Result<(), amethyst::Error> {
+fn main() -> amethyst::Result<()> {
     let path = format!(
         "{}/examples/sprites/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
     );
 
     let assets_directory = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
-    let config = DisplayConfig::load(&path);
 
-    let pipe = Pipeline::build().with_stage(
-        Stage::with_backbuffer()
-            .clear_target(BACKGROUND_COLOUR, 1.0)
-            .with_pass(DrawFlat::<PosTex>::new().with_transparency(ColorMask::all(), ALPHA, None))
-            .with_pass(DrawUi::new()),
-    );
-
-    let mut game = Application::build(assets_directory, Example::default())?
-        // Provides sprite animation
+    let game_data = GameDataBuilder::default()
         .with_bundle(AnimationBundle::<u32, Material>::new(
             "animation_control_system",
             "sampler_interpolation_system",
@@ -219,23 +202,15 @@ fn run() -> Result<(), amethyst::Error> {
                 .with_dep(&["animation_control_system", "sampler_interpolation_system"]),
         )?
         // RenderBundle gives us a window
-        .with_bundle(RenderBundle::new(pipe, Some(config)))?
+        .with_basic_renderer(path, DrawFlat::<PosTex>::new().with_transparency(ColorMask::all(), ALPHA, None), true)?
         // UiBundle relies on this as some Ui objects take input
         .with_bundle(InputBundle::<String, String>::new())?
         // Draws textures
-        .with_bundle(UiBundle::<String, String>::new())?
-        .build()?;
-
+        .with_bundle(UiBundle::<String, String>::new())?;
+    let mut game = Application::new(assets_directory, Example::default(), game_data)?;
     game.run();
 
     Ok(())
-}
-
-fn main() {
-    if let Err(e) = run() {
-        error!("Failed to execute example: {}", e);
-        ::std::process::exit(1);
-    }
 }
 
 /// Returns a set of vertices that make up a rectangular mesh of the given size.

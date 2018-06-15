@@ -1,21 +1,18 @@
 //! Displays a shaded sphere to the user.
 
 extern crate amethyst;
-extern crate genmesh;
 
 use amethyst::animation::{get_animation_set, Animation, AnimationBundle, AnimationCommand,
                           AnimationSet, DeferStartRelation, EndControl, InterpolationFunction,
                           Sampler, SamplerPrimitive, StepDirection, TransformChannel};
 use amethyst::assets::{AssetStorage, Handle, Loader};
-use amethyst::core::{GlobalTransform, Parent, Transform, TransformBundle};
 use amethyst::core::cgmath::Deg;
+use amethyst::core::{GlobalTransform, Parent, Transform, TransformBundle};
 use amethyst::ecs::prelude::{Entity, World};
+use amethyst::input::{get_key, is_close_requested, is_key};
 use amethyst::prelude::*;
-use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, ElementState, Event,
-                         KeyboardInput, Light, Mesh, Pipeline, PointLight, PosNormTex, Projection,
-                         RenderBundle, Rgba, Stage, VirtualKeyCode, WindowEvent};
-use genmesh::{MapToVertices, Triangulate, Vertices};
-use genmesh::generators::SphereUV;
+use amethyst::renderer::{AmbientColor, Camera, DrawShaded, Event, Light, Mesh, PointLight,
+                         PosNormTex, Projection, Rgba, Shape, VirtualKeyCode};
 
 // blue
 const SPHERE_COLOUR: [f32; 4] = [0.0, 0.0, 1.0, 1.0];
@@ -23,8 +20,6 @@ const SPHERE_COLOUR: [f32; 4] = [0.0, 0.0, 1.0, 1.0];
 const AMBIENT_LIGHT_COLOUR: Rgba = Rgba(0.01, 0.01, 0.01, 1.0);
 // white
 const POINT_LIGHT_COLOUR: Rgba = Rgba(1.0, 1.0, 1.0, 1.0);
-// black
-const BACKGROUND_COLOUR: [f32; 4] = [0.0, 0.0, 0.0, 0.0];
 const LIGHT_POSITION: [f32; 3] = [2.0, 2.0, -2.0];
 const LIGHT_RADIUS: f32 = 5.0;
 const LIGHT_INTENSITY: f32 = 3.0;
@@ -52,8 +47,9 @@ impl Default for Example {
     }
 }
 
-impl State for Example {
-    fn on_start(&mut self, world: &mut World) {
+impl<'a, 'b> State<GameData<'a, 'b>> for Example {
+    fn on_start(&mut self, data: StateData<GameData>) {
+        let StateData { world, .. } = data;
         // Initialise the scene with an object, a light and a camera.
         let sphere_entity = initialise_sphere(world);
         self.sphere = Some(sphere_entity);
@@ -62,128 +58,112 @@ impl State for Example {
         initialise_camera(world);
     }
 
-    fn handle_event(&mut self, world: &mut World, event: Event) -> Trans {
-        match event {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            virtual_keycode: Some(VirtualKeyCode::Escape),
-                            ..
-                        },
-                    ..
-                } => Trans::Quit,
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            virtual_keycode,
-                            state: ElementState::Released,
-                            ..
-                        },
-                    ..
-                } => {
-                    match virtual_keycode {
-                        Some(VirtualKeyCode::Space) => {
-                            add_animation(
-                                world,
-                                self.sphere.unwrap(),
-                                self.current_animation,
-                                self.rate,
-                                None,
-                                true,
-                            );
-                        }
-
-                        Some(VirtualKeyCode::D) => {
-                            add_animation(
-                                world,
-                                self.sphere.unwrap(),
-                                AnimationId::Translate,
-                                self.rate,
-                                None,
-                                false,
-                            );
-                            add_animation(
-                                world,
-                                self.sphere.unwrap(),
-                                AnimationId::Rotate,
-                                self.rate,
-                                Some((AnimationId::Translate, DeferStartRelation::End)),
-                                false,
-                            );
-                            add_animation(
-                                world,
-                                self.sphere.unwrap(),
-                                AnimationId::Scale,
-                                self.rate,
-                                Some((AnimationId::Rotate, DeferStartRelation::Start(0.666))),
-                                false,
-                            );
-                        }
-
-                        Some(VirtualKeyCode::Left) => {
-                            get_animation_set::<AnimationId, Transform>(
-                                &mut world.write_storage(),
-                                self.sphere.unwrap().clone(),
-                            ).step(self.current_animation, StepDirection::Backward);
-                        }
-
-                        Some(VirtualKeyCode::Right) => {
-                            get_animation_set::<AnimationId, Transform>(
-                                &mut world.write_storage(),
-                                self.sphere.unwrap().clone(),
-                            ).step(self.current_animation, StepDirection::Forward);
-                        }
-
-                        Some(VirtualKeyCode::F) => {
-                            self.rate = 1.0;
-                            get_animation_set::<AnimationId, Transform>(
-                                &mut world.write_storage(),
-                                self.sphere.unwrap().clone(),
-                            ).set_rate(self.current_animation, self.rate);
-                        }
-
-                        Some(VirtualKeyCode::V) => {
-                            self.rate = 0.0;
-                            get_animation_set::<AnimationId, Transform>(
-                                &mut world.write_storage(),
-                                self.sphere.unwrap().clone(),
-                            ).set_rate(self.current_animation, self.rate);
-                        }
-
-                        Some(VirtualKeyCode::H) => {
-                            self.rate = 0.5;
-                            get_animation_set::<AnimationId, Transform>(
-                                &mut world.write_storage(),
-                                self.sphere.unwrap().clone(),
-                            ).set_rate(self.current_animation, self.rate);
-                        }
-
-                        Some(VirtualKeyCode::R) => {
-                            self.current_animation = AnimationId::Rotate;
-                        }
-
-                        Some(VirtualKeyCode::S) => {
-                            self.current_animation = AnimationId::Scale;
-                        }
-
-                        Some(VirtualKeyCode::T) => {
-                            self.current_animation = AnimationId::Translate;
-                        }
-
-                        _ => {}
-                    }
-
-                    Trans::None
-                }
-                _ => Trans::None,
-            },
-            _ => Trans::None,
+    fn handle_event(&mut self, data: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
+        let StateData { world, .. } = data;
+        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+            return Trans::Quit;
         }
+        match get_key(&event) {
+            Some(VirtualKeyCode::Space) => {
+                add_animation(
+                    world,
+                    self.sphere.unwrap(),
+                    self.current_animation,
+                    self.rate,
+                    None,
+                    true,
+                );
+            }
+
+            Some(VirtualKeyCode::D) => {
+                add_animation(
+                    world,
+                    self.sphere.unwrap(),
+                    AnimationId::Translate,
+                    self.rate,
+                    None,
+                    false,
+                );
+                add_animation(
+                    world,
+                    self.sphere.unwrap(),
+                    AnimationId::Rotate,
+                    self.rate,
+                    Some((AnimationId::Translate, DeferStartRelation::End)),
+                    false,
+                );
+                add_animation(
+                    world,
+                    self.sphere.unwrap(),
+                    AnimationId::Scale,
+                    self.rate,
+                    Some((AnimationId::Rotate, DeferStartRelation::Start(0.666))),
+                    false,
+                );
+            }
+
+            Some(VirtualKeyCode::Left) => {
+                get_animation_set::<AnimationId, Transform>(
+                    &mut world.write_storage(),
+                    self.sphere.unwrap().clone(),
+                ).step(self.current_animation, StepDirection::Backward);
+            }
+
+            Some(VirtualKeyCode::Right) => {
+                get_animation_set::<AnimationId, Transform>(
+                    &mut world.write_storage(),
+                    self.sphere.unwrap().clone(),
+                ).step(self.current_animation, StepDirection::Forward);
+            }
+
+            Some(VirtualKeyCode::F) => {
+                self.rate = 1.0;
+                get_animation_set::<AnimationId, Transform>(
+                    &mut world.write_storage(),
+                    self.sphere.unwrap().clone(),
+                ).set_rate(self.current_animation, self.rate);
+            }
+
+            Some(VirtualKeyCode::V) => {
+                self.rate = 0.0;
+                get_animation_set::<AnimationId, Transform>(
+                    &mut world.write_storage(),
+                    self.sphere.unwrap().clone(),
+                ).set_rate(self.current_animation, self.rate);
+            }
+
+            Some(VirtualKeyCode::H) => {
+                self.rate = 0.5;
+                get_animation_set::<AnimationId, Transform>(
+                    &mut world.write_storage(),
+                    self.sphere.unwrap().clone(),
+                ).set_rate(self.current_animation, self.rate);
+            }
+
+            Some(VirtualKeyCode::R) => {
+                self.current_animation = AnimationId::Rotate;
+            }
+
+            Some(VirtualKeyCode::S) => {
+                self.current_animation = AnimationId::Scale;
+            }
+
+            Some(VirtualKeyCode::T) => {
+                self.current_animation = AnimationId::Translate;
+            }
+
+            _ => {}
+        };
+        Trans::None
+    }
+
+    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+        data.data.update(&data.world);
+        Trans::None
     }
 }
 
-fn run() -> Result<(), amethyst::Error> {
+fn main() -> amethyst::Result<()> {
     let display_config_path = format!(
         "{}/examples/animation/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
@@ -191,43 +171,17 @@ fn run() -> Result<(), amethyst::Error> {
 
     let resources = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
 
-    let pipe = Pipeline::build().with_stage(
-        Stage::with_backbuffer()
-            .clear_target(BACKGROUND_COLOUR, 1.0)
-            .with_pass(DrawShaded::<PosNormTex>::new()),
-    );
-
-    let config = DisplayConfig::load(&display_config_path);
-
-    let mut game = Application::build(resources, Example::default())?
+    let game_data = GameDataBuilder::default()
         .with_bundle(AnimationBundle::<AnimationId, Transform>::new(
             "animation_control_system",
             "sampler_interpolation_system",
         ))?
         .with_bundle(TransformBundle::new().with_dep(&["sampler_interpolation_system"]))?
-        .with_bundle(RenderBundle::new(pipe, Some(config)))?
-        .build()?;
+        .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;
+    let mut game = Application::new(resources, Example::default(), game_data)?;
     game.run();
+
     Ok(())
-}
-
-fn main() {
-    if let Err(e) = run() {
-        println!("Failed to execute example: {}", e);
-        ::std::process::exit(1);
-    }
-}
-
-fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTex> {
-    SphereUV::new(u, v)
-        .vertex(|vertex| PosNormTex {
-            position: vertex.pos,
-            normal: vertex.normal,
-            tex_coord: [0.1, 0.1],
-        })
-        .triangulate()
-        .vertices()
-        .collect()
 }
 
 /// This function initialises a sphere and adds it to the world.
@@ -240,8 +194,11 @@ fn initialise_sphere(world: &mut World) -> Entity {
     let (mesh, material) = {
         let loader = world.read_resource::<Loader>();
 
-        let mesh: Handle<Mesh> =
-            loader.load_from_data(gen_sphere(32, 32).into(), (), &world.read_resource());
+        let mesh: Handle<Mesh> = loader.load_from_data(
+            Shape::Sphere(32, 32).generate::<Vec<PosNormTex>>(None),
+            (),
+            &world.read_resource(),
+        );
 
         let albedo = SPHERE_COLOUR.into();
 
@@ -351,7 +308,8 @@ fn initialise_animation(world: &mut World, entity: Entity) {
         &loader,
         &animation_storage,
     );
-    world.write_storage().insert(entity, set);
+    // entity created just before this function is called, so unwrap is safe
+    world.write_storage().insert(entity, set).unwrap();
 }
 
 fn add_to_set(

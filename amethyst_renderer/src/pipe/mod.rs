@@ -25,6 +25,6 @@ pub use self::target::{ColorBuffer, DepthBuffer, Target, TargetBuilder, Targets}
 pub mod pass;
 
 mod effect;
-mod stage;
 mod pipe;
+mod stage;
 mod target;

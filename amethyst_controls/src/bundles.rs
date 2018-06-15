@@ -35,11 +35,13 @@ impl<A, B> FlyControlBundle<A, B> {
             _marker: PhantomData,
         }
     }
+
     pub fn with_sensitivity(mut self, x: f32, y: f32) -> Self {
         self.sensitivity_x = x;
         self.sensitivity_y = y;
         self
     }
+
     pub fn with_speed(mut self, speed: f32) -> Self {
         self.speed = speed;
         self
@@ -72,7 +74,58 @@ where
             "mouse_focus",
             &["free_rotation"],
         );
-        builder.add(MouseCenterLockSystem, "mouse_lock", &["mouse_focus"]);
+        builder.add(CursorHideSystem::new(), "cursor_hide", &["mouse_focus"]);
+        Ok(())
+    }
+}
+
+/// The bundle that creates an arc ball movement system.
+/// Note: Will not actually create a moving entity. It will only register the needed resources and systems.
+/// The generic parameters A and B are the ones used in InputHandler<A,B>.
+/// You might want to add "fly_movement" and "free_rotation" as dependencies of the TransformSystem.
+/// Adding this bundle will grab the mouse, hide it and keep it centered.
+///
+/// See the `arc_ball_camera` example to see how to use the arc ball camera.
+pub struct ArcBallControlBundle<A, B> {
+    sensitivity_x: f32,
+    sensitivity_y: f32,
+    _marker: PhantomData<(A, B)>,
+}
+
+impl<A, B> ArcBallControlBundle<A, B> {
+    pub fn new() -> Self {
+        ArcBallControlBundle {
+            sensitivity_x: 1.0,
+            sensitivity_y: 1.0,
+            _marker: PhantomData,
+        }
+    }
+
+    pub fn with_sensitivity(mut self, x: f32, y: f32) -> Self {
+        self.sensitivity_x = x;
+        self.sensitivity_y = y;
+        self
+    }
+}
+
+impl<'a, 'b, A, B> SystemBundle<'a, 'b> for ArcBallControlBundle<A, B>
+where
+    A: Send + Sync + Hash + Eq + Clone + 'static,
+    B: Send + Sync + Hash + Eq + Clone + 'static,
+{
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+        builder.add(ArcBallMovementSystem::default(), "arc_ball_movement", &[]);
+        builder.add(
+            FreeRotationSystem::<A, B>::new(self.sensitivity_x, self.sensitivity_y),
+            "free_rotation",
+            &[],
+        );
+        builder.add(
+            MouseFocusUpdateSystem::new(),
+            "mouse_focus",
+            &["free_rotation"],
+        );
+        builder.add(CursorHideSystem::new(), "cursor_hide", &["mouse_focus"]);
         Ok(())
     }
 }

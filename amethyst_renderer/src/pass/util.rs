@@ -1,9 +1,11 @@
 use std::mem;
 
 use amethyst_assets::AssetStorage;
-use amethyst_core::GlobalTransform;
 use amethyst_core::cgmath::{Matrix4, One, SquareMatrix};
 use amethyst_core::specs::prelude::{Join, Read, ReadStorage};
+use amethyst_core::GlobalTransform;
+
+use glsl_layout::*;
 
 use cam::{ActiveCamera, Camera};
 use mesh::Mesh;
@@ -25,26 +27,26 @@ pub(crate) enum TextureType {
     Caveat,
 }
 
-#[repr(C)]
-#[derive(Clone, Copy, Debug)]
+#[repr(C, align(16))]
+#[derive(Clone, Copy, Debug, Uniform)]
 pub(crate) struct VertexArgs {
-    proj: [[f32; 4]; 4],
-    view: [[f32; 4]; 4],
-    model: [[f32; 4]; 4],
+    proj: mat4,
+    view: mat4,
+    model: mat4,
 }
 
-#[repr(C)]
-#[derive(Clone, Copy, Debug)]
+#[repr(C, align(16))]
+#[derive(Clone, Copy, Debug, Uniform)]
 pub(crate) struct TextureOffsetPod {
-    u_offset: [f32; 2],
-    v_offset: [f32; 2],
+    u_offset: vec2,
+    v_offset: vec2,
 }
 
 impl TextureOffsetPod {
     pub(crate) fn from_offset(offset: &TextureOffset) -> Self {
         TextureOffsetPod {
-            u_offset: [offset.u.0, offset.u.1],
-            v_offset: [offset.v.0, offset.v.1],
+            u_offset: [offset.u.0, offset.u.1].into(),
+            v_offset: [offset.v.0, offset.v.1].into(),
         }
     }
 }
@@ -57,7 +59,13 @@ pub(crate) fn set_attribute_buffers(
     for attr in attributes.iter() {
         match mesh.buffer(attr) {
             Some(vbuf) => effect.data.vertex_bufs.push(vbuf.clone()),
-            None => return false,
+            None => {
+                error!(
+                    "Required vertex attribute buffer with format {:?} missing in mesh",
+                    attr
+                );
+                return false;
+            }
         }
     }
     true
@@ -128,37 +136,37 @@ pub(crate) fn setup_texture_offsets(builder: &mut EffectBuilder, types: &[Textur
         match *ty {
             Albedo => builder.with_raw_constant_buffer(
                 "AlbedoOffset",
-                mem::size_of::<TextureOffsetPod>(),
+                mem::size_of::<<TextureOffsetPod as Uniform>::Std140>(),
                 1,
             ),
             Emission => builder.with_raw_constant_buffer(
                 "EmissionOffset",
-                mem::size_of::<TextureOffsetPod>(),
+                mem::size_of::<<TextureOffsetPod as Uniform>::Std140>(),
                 1,
             ),
             Normal => builder.with_raw_constant_buffer(
                 "NormalOffset",
-                mem::size_of::<TextureOffsetPod>(),
+                mem::size_of::<<TextureOffsetPod as Uniform>::Std140>(),
                 1,
             ),
             Metallic => builder.with_raw_constant_buffer(
                 "MetallicOffset",
-                mem::size_of::<TextureOffsetPod>(),
+                mem::size_of::<<TextureOffsetPod as Uniform>::Std140>(),
                 1,
             ),
             Roughness => builder.with_raw_constant_buffer(
                 "RoughnessOffset",
-                mem::size_of::<TextureOffsetPod>(),
+                mem::size_of::<<TextureOffsetPod as Uniform>::Std140>(),
                 1,
             ),
             AmbientOcclusion => builder.with_raw_constant_buffer(
                 "AmbientOcclusionOffset",
-                mem::size_of::<TextureOffsetPod>(),
+                mem::size_of::<<TextureOffsetPod as Uniform>::Std140>(),
                 1,
             ),
             Caveat => builder.with_raw_constant_buffer(
                 "CaveatOffset",
-                mem::size_of::<TextureOffsetPod>(),
+                mem::size_of::<<TextureOffsetPod as Uniform>::Std140>(),
                 1,
             ),
         };
@@ -176,37 +184,37 @@ pub(crate) fn set_texture_offsets(
         match *ty {
             Albedo => effect.update_constant_buffer(
                 "AlbedoOffset",
-                &TextureOffsetPod::from_offset(&material.albedo_offset),
+                &TextureOffsetPod::from_offset(&material.albedo_offset).std140(),
                 encoder,
             ),
             Emission => effect.update_constant_buffer(
                 "EmissionOffset",
-                &TextureOffsetPod::from_offset(&material.emission_offset),
+                &TextureOffsetPod::from_offset(&material.emission_offset).std140(),
                 encoder,
             ),
             Normal => effect.update_constant_buffer(
                 "NormalOffset",
-                &TextureOffsetPod::from_offset(&material.normal_offset),
+                &TextureOffsetPod::from_offset(&material.normal_offset).std140(),
                 encoder,
             ),
             Metallic => effect.update_constant_buffer(
                 "MetallicOffset",
-                &TextureOffsetPod::from_offset(&material.metallic_offset),
+                &TextureOffsetPod::from_offset(&material.metallic_offset).std140(),
                 encoder,
             ),
             Roughness => effect.update_constant_buffer(
                 "RoughnessOffset",
-                &TextureOffsetPod::from_offset(&material.roughness_offset),
+                &TextureOffsetPod::from_offset(&material.roughness_offset).std140(),
                 encoder,
             ),
             AmbientOcclusion => effect.update_constant_buffer(
                 "AmbientOcclusionOffset",
-                &TextureOffsetPod::from_offset(&material.ambient_occlusion_offset),
+                &TextureOffsetPod::from_offset(&material.ambient_occlusion_offset).std140(),
                 encoder,
             ),
             Caveat => effect.update_constant_buffer(
                 "CaveatOffset",
-                &TextureOffsetPod::from_offset(&material.caveat_offset),
+                &TextureOffsetPod::from_offset(&material.caveat_offset).std140(),
                 encoder,
             ),
         };
@@ -214,7 +222,11 @@ pub(crate) fn set_texture_offsets(
 }
 
 pub(crate) fn setup_vertex_args(builder: &mut EffectBuilder) {
-    builder.with_raw_constant_buffer("VertexArgs", mem::size_of::<VertexArgs>(), 1);
+    builder.with_raw_constant_buffer(
+        "VertexArgs",
+        mem::size_of::<<VertexArgs as Uniform>::Std140>(),
+        1,
+    );
 }
 
 pub(crate) fn set_vertex_args(
@@ -228,14 +240,14 @@ pub(crate) fn set_vertex_args(
         .map(|&(ref cam, ref transform)| VertexArgs {
             proj: cam.proj.into(),
             view: transform.0.invert().unwrap().into(),
-            model: *global.as_ref(),
+            model: global.0.into(),
         })
         .unwrap_or_else(|| VertexArgs {
             proj: Matrix4::one().into(),
             view: Matrix4::one().into(),
-            model: *global.as_ref(),
+            model: global.0.into(),
         });
-    effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
+    effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
 }
 
 pub(crate) fn draw_mesh(

@@ -1,33 +1,27 @@
 //! Displays a shaded sphere to the user.
 
 extern crate amethyst;
-extern crate genmesh;
 #[macro_use]
 extern crate log;
 
 use amethyst::assets::{AssetStorage, Loader};
-use amethyst::core::Time;
 use amethyst::core::cgmath::Deg;
-use amethyst::core::transform::{GlobalTransform, Parent, TransformBundle};
+use amethyst::core::transform::{GlobalTransform, TransformBundle};
+use amethyst::core::Time;
 use amethyst::ecs::prelude::{Entity, System, World, Write};
-use amethyst::input::InputBundle;
+use amethyst::input::{is_close_requested, is_key, InputBundle};
 use amethyst::prelude::*;
-use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, Light, Mesh, Pipeline,
-                         PngFormat, PointLight, PosNormTex, Projection, RenderBundle, Rgba, Stage,
-                         Texture};
+use amethyst::renderer::{AmbientColor, Camera, DrawShaded, Light, Mesh, PngFormat, PointLight,
+                         PosNormTex, Projection, Rgba, Shape, Texture};
 use amethyst::shrev::{EventChannel, ReaderId};
-use amethyst::ui::{Anchor, Anchored, DrawUi, FontAsset, MouseReactive, Stretch, Stretched,
-                   TextEditing, TtfFormat, UiBundle, UiButtonBuilder, UiButtonResources, UiEvent,
-                   UiFocused, UiImage, UiText, UiTransform};
+use amethyst::ui::{Anchor, FontAsset, MouseReactive, Stretch, TextEditing, TtfFormat, UiBundle,
+                   UiButtonBuilder, UiEvent, UiFocused, UiImage, UiText, UiTransform};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
-use amethyst::winit::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
-use genmesh::{MapToVertices, Triangulate, Vertices};
-use genmesh::generators::SphereUV;
+use amethyst::winit::{Event, VirtualKeyCode};
 
 const SPHERE_COLOUR: [f32; 4] = [0.0, 0.0, 1.0, 1.0]; // blue
 const AMBIENT_LIGHT_COLOUR: Rgba = Rgba(0.01, 0.01, 0.01, 1.0); // near-black
 const POINT_LIGHT_COLOUR: Rgba = Rgba(1.0, 1.0, 1.0, 1.0); // white
-const BACKGROUND_COLOUR: [f32; 4] = [0.0, 0.0, 0.0, 0.0]; // black
 const LIGHT_POSITION: [f32; 3] = [2.0, 2.0, -2.0];
 const LIGHT_RADIUS: f32 = 5.0;
 const LIGHT_INTENSITY: f32 = 3.0;
@@ -36,13 +30,14 @@ struct Example {
     fps_display: Option<Entity>,
 }
 
-impl State for Example {
-    fn on_start(&mut self, world: &mut World) {
+impl<'a, 'b> State<GameData<'a, 'b>> for Example {
+    fn on_start(&mut self, data: StateData<GameData>) {
+        let StateData { world, .. } = data;
         // Initialise the scene with an object, a light and a camera.
         initialise_sphere(world);
         initialise_lights(world);
         initialise_camera(world);
-        let (logo, font, red, green, blue) = {
+        let (logo, font, background_color, green) = {
             let loader = world.read_resource::<Loader>();
 
             let logo = loader.load(
@@ -60,8 +55,8 @@ impl State for Example {
                 (),
                 &world.read_resource::<AssetStorage<FontAsset>>(),
             );
-            let red = loader.load_from_data(
-                [1.0, 0.0, 0.0, 1.0].into(),
+            let background_color = loader.load_from_data(
+                [0.36, 0.10, 0.57, 1.0].into(),
                 (),
                 &world.read_resource::<AssetStorage<Texture>>(),
             );
@@ -70,64 +65,28 @@ impl State for Example {
                 (),
                 &world.read_resource::<AssetStorage<Texture>>(),
             );
-            let blue = loader.load_from_data(
-                [0.0, 0.0, 1.0, 1.0].into(),
-                (),
-                &world.read_resource::<AssetStorage<Texture>>(),
-            );
-            (logo, font, red, green, blue)
+            (logo, font, background_color, green)
         };
 
         let background = world
             .create_entity()
-            .with(UiTransform::new(
-                "background".to_string(),
-                0.0,
-                0.0,
-                0.0,
-                20.0,
-                20.0,
-                0,
-            ))
-            .with(UiImage {
-                texture: red.clone(),
-            })
-            .with(Stretched::new(Stretch::XY, 0.0, 0.0))
-            .with(Anchored::new(Anchor::Middle))
-            .build();
-
-        let top_right = world
-            .create_entity()
             .with(
-                UiTransform::new("top_right".to_string(), -32.0, 32.0, -1.0, 64.0, 64.0, 0)
-                    .as_percent(),
+                UiTransform::new(
+                    "background".to_string(),
+                    Anchor::Middle,
+                    0.0,
+                    0.0,
+                    0.0,
+                    20.0,
+                    20.0,
+                    0,
+                ).with_stretch(Stretch::XY {
+                    x_margin: 0.0,
+                    y_margin: 0.0,
+                }),
             )
             .with(UiImage {
-                texture: green.clone(),
-            })
-            .with(Anchored::new(Anchor::TopRight))
-            .with(Parent {
-                entity: background.clone(),
-            })
-            .build();
-        world
-            .create_entity()
-            .with(UiTransform::new(
-                "middle_top_right".to_string(),
-                0.0,
-                0.0,
-                -2.0,
-                32.0,
-                32.0,
-                0,
-            ))
-            .with(UiImage {
-                texture: blue.clone(),
-            })
-            .with(Anchored::new(Anchor::Middle))
-            .with(Stretched::new(Stretch::X, 2.0, 0.0))
-            .with(Parent {
-                entity: top_right.clone(),
+                texture: background_color.clone(),
             })
             .build();
 
@@ -135,6 +94,7 @@ impl State for Example {
             .create_entity()
             .with(UiTransform::new(
                 "logo".to_string(),
+                Anchor::BottomMiddle,
                 0.,
                 -32.,
                 -3.,
@@ -145,7 +105,6 @@ impl State for Example {
             .with(UiImage {
                 texture: logo.clone(),
             })
-            .with(Anchored::new(Anchor::BottomMiddle))
             .with(MouseReactive)
             .build();
 
@@ -153,6 +112,7 @@ impl State for Example {
             .create_entity()
             .with(UiTransform::new(
                 "hello_world".to_string(),
+                Anchor::Middle,
                 0.,
                 0.,
                 -4.,
@@ -163,10 +123,9 @@ impl State for Example {
             .with(UiText::new(
                 font.clone(),
                 "Hello world!".to_string(),
-                [0.2, 0.2, 1.0, 1.0],
+                [0.5, 0.5, 1.0, 1.0],
                 75.,
             ))
-            .with(Anchored::new(Anchor::Middle))
             .with(TextEditing::new(
                 12,
                 [0.0, 0.0, 0.0, 1.0],
@@ -175,48 +134,29 @@ impl State for Example {
             ))
             .build();
 
-        let button_builder = {
-            // Until we can borrow immutably whilst also borrowing mutably, we need to restrict this
-            // lifetime
-            UiButtonBuilder::new("btn", "Button!", UiButtonResources::from_world(&world))
-                .with_uitext(UiText::new(
-                    font.clone(),
-                    "Button!".to_string(),
-                    [0.2, 0.2, 1.0, 1.0],
-                    20.,
-                ))
-                .with_transform(UiTransform::new(
-                    "btn_transform".to_string(),
-                    0.0,
-                    32.0,
-                    -1.0,
-                    128.0,
-                    64.0,
-                    9,
-                ))
-                .with_image(UiImage {
-                    texture: green.clone(),
-                })
-                .with_anchored(Anchored::new(Anchor::TopMiddle))
-                .with_parent(Parent {
-                    entity: background.clone(),
-                })
-        };
-        button_builder.build_from_world(world);
-        let simple_builder = {
-            UiButtonBuilder::new(
-                "simple_btn",
-                "Simpler!",
-                UiButtonResources::from_world(&world),
-            ).with_font(font.clone())
-                .with_position(250.0, 50.0)
-        };
-        simple_builder.build_from_world(world);
+        UiButtonBuilder::new("btn_transform", "Button!")
+            .with_font(font.clone())
+            .with_text_color([0.2, 0.2, 1.0, 1.0])
+            .with_font_size(20.)
+            .with_position(0.0, 32.0)
+            .with_layer(-1.)
+            .with_size(128., 64.)
+            .with_tab_order(9)
+            .with_image(green.clone())
+            .with_anchor(Anchor::TopMiddle)
+            .with_parent(background.clone())
+            .build_from_world(world);
+
+        UiButtonBuilder::new("simple_btn", "Simpler!")
+            .with_font(font.clone())
+            .with_position(275.0, 50.0)
+            .build_from_world(world);
 
         let fps = world
             .create_entity()
             .with(UiTransform::new(
                 "fps".to_string(),
+                Anchor::TopLeft,
                 100.,
                 30.,
                 -3.,
@@ -230,13 +170,22 @@ impl State for Example {
                 [1.0, 1.0, 1.0, 1.0],
                 75.,
             ))
-            .with(Anchored::new(Anchor::TopLeft))
             .build();
         self.fps_display = Some(fps);
         world.write_resource::<UiFocused>().entity = Some(text);
     }
 
-    fn update(&mut self, world: &mut World) -> Trans {
+    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
+        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+            Trans::Quit
+        } else {
+            Trans::None
+        }
+    }
+
+    fn update(&mut self, state_data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+        let StateData { world, data } = state_data;
+        data.update(&world);
         let mut ui_text = world.write_storage::<UiText>();
         if let Some(fps_display) = self.fps_display.and_then(|entity| ui_text.get_mut(entity)) {
             if world.read_resource::<Time>().frame_number() % 20 == 0 {
@@ -247,77 +196,26 @@ impl State for Example {
 
         Trans::None
     }
-
-    fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
-        match event {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            virtual_keycode: Some(VirtualKeyCode::Escape),
-                            ..
-                        },
-                    ..
-                } => Trans::Quit,
-                _ => Trans::None,
-            },
-            _ => Trans::None,
-        }
-    }
 }
 
-fn run() -> Result<(), amethyst::Error> {
+fn main() -> amethyst::Result<()> {
     let display_config_path = format!(
         "{}/examples/ui/resources/display.ron",
         env!("CARGO_MANIFEST_DIR")
     );
 
     let resources = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
-    let config = DisplayConfig::load(&display_config_path);
-    let pipe = {
-        Pipeline::build().with_stage(
-            Stage::with_backbuffer()
-                .clear_target(BACKGROUND_COLOUR, 1.0)
-                .with_pass(DrawShaded::<PosNormTex>::new())
-                .with_pass(DrawUi::new()),
-        )
-    };
-    let mut game = Application::build(resources, Example { fps_display: None })?
+
+    let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
         .with_bundle(UiBundle::<String, String>::new())?
         .with(UiEventHandlerSystem::new(), "ui_event_handler", &[])
         .with_bundle(FPSCounterBundle::default())?
         .with_bundle(InputBundle::<String, String>::new())?
-        .with_bundle(RenderBundle::new(pipe, Some(config)))?
-        .build()?;
+        .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), true)?;
+    let mut game = Application::new(resources, Example { fps_display: None }, game_data)?;
     game.run();
     Ok(())
-}
-
-fn main() {
-    println!("Due to some bugs this example currently comes with a seizure warning.");
-    println!("If you have a history of seizures please do not run this.");
-    println!("Would you like to run this? (Y/N)");
-    let mut input = String::new();
-    let _ = ::std::io::stdin().read_line(&mut input);
-    if input.to_lowercase().starts_with("y") {
-        if let Err(e) = run() {
-            println!("Failed to execute example: {}", e);
-            ::std::process::exit(1);
-        }
-    }
-}
-
-fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTex> {
-    SphereUV::new(u, v)
-        .vertex(|vertex| PosNormTex {
-            position: vertex.pos,
-            normal: vertex.normal,
-            tex_coord: [0.1, 0.1],
-        })
-        .triangulate()
-        .vertices()
-        .collect()
 }
 
 /// This function initialises a sphere and adds it to the world.
@@ -330,8 +228,11 @@ fn initialise_sphere(world: &mut World) {
     let (mesh, material) = {
         let loader = world.read_resource::<Loader>();
 
-        let mesh: Handle<Mesh> =
-            loader.load_from_data(gen_sphere(32, 32).into(), (), &world.read_resource());
+        let mesh: Handle<Mesh> = loader.load_from_data(
+            Shape::Sphere(32, 32).generate::<Vec<PosNormTex>>(None),
+            (),
+            &world.read_resource(),
+        );
 
         let albedo = SPHERE_COLOUR.into();
 

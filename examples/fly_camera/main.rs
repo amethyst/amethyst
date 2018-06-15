@@ -2,24 +2,21 @@
 
 extern crate amethyst;
 
-use amethyst::{Application, Error, State, Trans};
 use amethyst::assets::Loader;
-use amethyst::config::Config;
 use amethyst::controls::{FlyControlBundle, FlyControlTag};
 use amethyst::core::cgmath::{Deg, Vector3};
-use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::World;
-use amethyst::input::InputBundle;
-use amethyst::renderer::{AmbientColor, Camera, DisplayConfig, DrawShaded, ElementState, Event,
-                         KeyboardInput, Material, MaterialDefaults, MeshHandle, ObjFormat,
-                         Pipeline, PosNormTex, Projection, RenderBundle, Rgba, Stage,
-                         VirtualKeyCode, WindowEvent};
+use amethyst::input::{is_close_requested, is_key, InputBundle};
+use amethyst::renderer::{AmbientColor, Camera, DrawShaded, Event, Material, MaterialDefaults,
+                         MeshHandle, ObjFormat, PosNormTex, Projection, Rgba, VirtualKeyCode};
+use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
 
 struct ExampleState;
 
-impl State for ExampleState {
-    fn on_start(&mut self, world: &mut World) {
+impl<'a, 'b> State<GameData<'a, 'b>> for ExampleState {
+    fn on_start(&mut self, data: StateData<GameData>) {
+        let StateData { world, .. } = data;
         initialise_camera(world);
 
         let assets = load_assets(&world);
@@ -38,25 +35,16 @@ impl State for ExampleState {
         world.add_resource(AmbientColor(Rgba::from([0.1; 3])));
     }
 
-    fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
-        match event {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            virtual_keycode,
-                            state: ElementState::Pressed,
-                            ..
-                        },
-                    ..
-                } => match virtual_keycode {
-                    Some(VirtualKeyCode::Escape) => return Trans::Quit,
-                    _ => (),
-                },
-                _ => (),
-            },
-            _ => (),
+    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
+        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+            Trans::Quit
+        } else {
+            Trans::None
         }
+    }
+
+    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+        data.data.update(&data.world);
         Trans::None
     }
 }
@@ -83,16 +71,7 @@ fn load_assets(world: &World) -> Assets {
     Assets { cube, red }
 }
 
-fn main() {
-    if let Err(error) = run() {
-        eprintln!("Could not run the example!");
-        eprintln!("{}", error);
-        ::std::process::exit(1);
-    }
-}
-
-/// Wrapper around the main, so we can return errors easily.
-fn run() -> Result<(), Error> {
+fn main() -> Result<(), Error> {
     let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
 
     let display_config_path = format!(
@@ -100,31 +79,25 @@ fn run() -> Result<(), Error> {
         env!("CARGO_MANIFEST_DIR")
     );
 
-    let display_config = DisplayConfig::load(display_config_path);
-
     let key_bindings_path = format!(
         "{}/examples/fly_camera/resources/input.ron",
         env!("CARGO_MANIFEST_DIR")
     );
 
-    let pipeline_builder = Pipeline::build().with_stage(
-        Stage::with_backbuffer()
-            .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawShaded::<PosNormTex>::new()),
-    );
-    let mut game = Application::build(resources_directory, ExampleState)?
-        .with_frame_limit(FrameRateLimitStrategy::Unlimited, 0)
-        .with_bundle(FlyControlBundle::<String, String>::new(
-            Some(String::from("move_x")),
-            Some(String::from("move_y")),
-            Some(String::from("move_z")),
-        ))?
+    let game_data = GameDataBuilder::default()
+        .with_bundle(
+            FlyControlBundle::<String, String>::new(
+                Some(String::from("move_x")),
+                Some(String::from("move_y")),
+                Some(String::from("move_z")),
+            ).with_sensitivity(0.1, 0.1),
+        )?
         .with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path),
         )?
-        .with_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?
-        .build()?;
+        .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;
+    let mut game = Application::build(resources_directory, ExampleState)?.build(game_data)?;
     game.run();
     Ok(())
 }

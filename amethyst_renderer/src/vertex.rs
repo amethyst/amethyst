@@ -42,7 +42,7 @@ impl Attribute for Position {
 pub enum Color {}
 impl Attribute for Color {
     const NAME: &'static str = "color";
-    const FORMAT: Format = Format(SurfaceType::R32_G32_B32_A32, ChannelType::Unorm);
+    const FORMAT: Format = Format(SurfaceType::R32_G32_B32_A32, ChannelType::Float);
     const SIZE: u32 = 16;
     type Repr = [f32; 4];
 }
@@ -108,7 +108,7 @@ pub trait With<F: Attribute>: VertexFormat {
 
 /// Vertex format for attributes in separate buffers
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Separate<T: Attribute>(T::Repr);
 unsafe impl<T> Pod for Separate<T>
 where
@@ -130,15 +130,13 @@ impl<T> VertexFormat for Separate<T>
 where
     T: Attribute,
 {
-    const ATTRIBUTES: Attributes<'static> = &[
-        (
-            T::NAME,
-            Element {
-                offset: 0,
-                format: T::FORMAT,
-            },
-        ),
-    ];
+    const ATTRIBUTES: Attributes<'static> = &[(
+        T::NAME,
+        Element {
+            offset: 0,
+            format: T::FORMAT,
+        },
+    )];
 }
 
 impl<T> With<T> for Separate<T>
@@ -153,7 +151,7 @@ where
 
 /// Vertex format with position and RGBA8 color attributes.
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PosColor {
     /// Position of the vertex in 3D space.
     pub position: [f32; 3],
@@ -186,7 +184,7 @@ impl With<Color> for PosColor {
 
 /// Vertex format with position and UV texture coordinate attributes.
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PosTex {
     /// Position of the vertex in 3D space.
     pub position: [f32; 3],
@@ -219,7 +217,7 @@ impl With<TexCoord> for PosTex {
 
 /// Vertex format with position, normal, and UV texture coordinate attributes.
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PosNormTex {
     /// Position of the vertex in 3D space.
     pub position: [f32; 3],
@@ -262,7 +260,7 @@ impl With<TexCoord> for PosNormTex {
 
 /// Vertex format with position, normal, and UV texture coordinate attributes.
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PosNormTangTex {
     /// Position of the vertex in 3D space.
     pub position: [f32; 3],
@@ -352,31 +350,4 @@ macro_rules! impl_query {
     };
 }
 
-impl_query!(
-    A,
-    B,
-    C,
-    D,
-    E,
-    F,
-    G,
-    H,
-    I,
-    J,
-    K,
-    L,
-    M,
-    N,
-    O,
-    P,
-    Q,
-    R,
-    S,
-    T,
-    U,
-    V,
-    W,
-    X,
-    Y,
-    Z
-);
+impl_query!(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z);

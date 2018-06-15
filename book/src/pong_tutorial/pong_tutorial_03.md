@@ -53,14 +53,15 @@ let binding_path = format!(
     env!("CARGO_MANIFEST_DIR")
 );
 
-let input_bundle = InputBundle::<String, String>::new()
-    .with_bindings_from_file(binding_path);
+let input_bundle = InputBundle::<String, String>::new().with_bindings_from_file(binding_path);
 
-let mut game = Application::build("./", Pong)?
+let game_data = GameDataBuilder::default()
     .with_bundle(TransformBundle::new())?
     .with_bundle(RenderBundle::new(pipe, Some(config)))?
     .with_bundle(input_bundle)?
-    .build()?;
+    .with(systems::PaddleSystem, "paddle_system", &["input_system"]);
+let mut game = Application::new("./", Pong, game_data)?;
+game.run();
 ```
 
 At this point, we're ready to write a system that reads input from the
@@ -90,7 +91,7 @@ impl<'s> System<'s> for PaddleSystem {
   type SystemData = (
     WriteStorage<'s, Transform>,
     ReadStorage<'s, Paddle>,
-    Fetch<'s, InputHandler<String, String>>,
+    Read<'s, InputHandler<String, String>>,
   );
 
   fn run(&mut self, (mut transforms, paddles, input): Self::SystemData) {
@@ -130,12 +131,12 @@ Let's review what our system does, because there's quite a bit there.
 We create a unit struct, called `PaddleSystem`, and implement the `System`
 trait for it. The trait specifies the lifetime of the components on which it
 operates. Inside the implementation, we define the `SystemData` the system
-operates on, a tuple of `WriteStorage`, `ReadStorage`, and `Fetch`. More
+operates on, a tuple of `WriteStorage`, `ReadStorage`, and `Read`. More
 specifically, the generic types we've used here tell us that the `PaddleSystem`
 mutates `LocalTransform` components, `WriteStorage<'s, LocalTransform>`, it
 reads `Paddle` components, `ReadStorage<'s, Paddle>`, and also accesses the
-`InputHandler<String, String>` resource we created earlier, using the `Fetch`
-trait.
+`InputHandler<String, String>` resource we created earlier, using the `Read`
+structure.
 
 It's worth noting an important difference between the objects our system
 accesses. A system will iterate over entities that contain one of each of

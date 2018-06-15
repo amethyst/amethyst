@@ -1,8 +1,8 @@
 //! Camera type with support for perspective and orthographic projections.
 
+use amethyst_assets::{PrefabData, PrefabError};
 use amethyst_core::cgmath::{Deg, Matrix4, Ortho, PerspectiveFov};
-use amethyst_core::specs::prelude::{Component, Entity};
-use amethyst_core::specs::storage::HashMapStorage;
+use amethyst_core::specs::prelude::{Component, Entity, HashMapStorage, Write, WriteStorage};
 
 /// The projection mode of a `Camera`.
 ///
@@ -98,4 +98,61 @@ impl Component for Camera {
 pub struct ActiveCamera {
     /// Camera entity
     pub entity: Entity,
+}
+
+/// Projection prefab
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub enum CameraPrefab {
+    /// An [orthographic projection][op].
+    ///
+    /// [op]: https://en.wikipedia.org/wiki/Orthographic_projection
+    Orthographic(Ortho<f32>),
+
+    /// A realistic [perspective projection][pp].
+    ///
+    /// [pp]: https://en.wikipedia.org/wiki/Perspective_(graphical)
+    Perspective(PerspectiveFov<f32>),
+
+    /// Projection matrix
+    Matrix(Matrix4<f32>),
+}
+
+impl<'a> PrefabData<'a> for CameraPrefab {
+    type SystemData = WriteStorage<'a, Camera>;
+    type Result = ();
+
+    fn load_prefab(
+        &self,
+        entity: Entity,
+        storage: &mut Self::SystemData,
+        _: &[Entity],
+    ) -> Result<(), PrefabError> {
+        let proj = match *self {
+            CameraPrefab::Matrix(mat) => mat,
+            CameraPrefab::Orthographic(ortho) => ortho.into(),
+            CameraPrefab::Perspective(perspective) => perspective.into(),
+        };
+        storage.insert(entity, Camera { proj }).map(|_| ())
+    }
+}
+
+/// Active camera prefab
+pub struct ActiveCameraPrefab(usize);
+
+impl<'a> PrefabData<'a> for ActiveCameraPrefab {
+    type SystemData = (Option<Write<'a, ActiveCamera>>,);
+    type Result = ();
+
+    fn load_prefab(
+        &self,
+        _: Entity,
+        system_data: &mut Self::SystemData,
+        entities: &[Entity],
+    ) -> Result<(), PrefabError> {
+        if let Some(ref mut cam) = system_data.0 {
+            cam.entity = entities[self.0];
+        }
+        // TODO: if no `ActiveCamera` insert using `LazyUpdate`, require changes to `specs`
+        Ok(())
+    }
 }

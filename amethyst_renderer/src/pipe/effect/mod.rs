@@ -5,15 +5,17 @@
 use std::mem;
 
 use fnv::FnvHashMap as HashMap;
-use gfx::{Primitive, ShaderSet};
 use gfx::buffer::{Info as BufferInfo, Role as BufferRole};
 use gfx::memory::{Bind, Usage};
 use gfx::preset::depth::{LESS_EQUAL_TEST, LESS_EQUAL_WRITE};
 use gfx::pso::buffer::{ElemStride, InstanceRate};
-use gfx::shade::{ProgramError, ToUniform};
 use gfx::shade::core::UniformValue;
+use gfx::shade::{ProgramError, ToUniform};
 use gfx::state::{Blend, ColorMask, Comparison, Depth, MultiSample, Rasterizer, Stencil};
 use gfx::traits::Pod;
+use gfx::{Primitive, ShaderSet};
+
+use glsl_layout::Std140;
 
 pub use self::pso::{Data, Init, Meta};
 
@@ -39,8 +41,8 @@ pub(crate) enum ProgramSource<'a> {
 
 impl<'a> ProgramSource<'a> {
     pub fn compile(&self, fac: &mut Factory) -> Result<ShaderSet<Resources>> {
-        use gfx::Factory;
         use gfx::traits::FactoryExt;
+        use gfx::Factory;
 
         match *self {
             ProgramSource::Simple(ref vs, ref ps) => fac.create_shader_set(vs, ps)
@@ -109,7 +111,7 @@ impl Effect {
     pub fn update_constant_buffer<N, T>(&mut self, name: N, data: &T, enc: &mut Encoder)
     where
         N: AsRef<str>,
-        T: Copy,
+        T: Std140,
     {
         match self.const_bufs.get(name.as_ref()) {
             Some(i) => {
@@ -311,8 +313,8 @@ impl<'a> EffectBuilder<'a> {
 
     /// TODO: Support render targets as inputs.
     pub fn build(&mut self) -> Result<Effect> {
-        use gfx::Factory;
         use gfx::traits::FactoryExt;
+        use gfx::Factory;
 
         debug!("Building effect");
         debug!("Compiling shaders");
