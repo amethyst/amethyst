@@ -20,10 +20,13 @@ Prefab (
             ),
         ),
         (
-            data: (
+            data: ( 
+                transform: Transform (
+                    translation: (x: 5.0, y: -20.0, z: 15.0),
+                    rotation: (s: 0.0, v: (x: 0.0, y: 0.0, z: 0.0),),
+                ),
                 light: (
                     light: Point((
-                        center: (5.0, -20.0, 15.0),
                         intensity: 100.0,
                         color: (1.0, 1.0, 1.0, 1.0),
                         radius: 1.0,

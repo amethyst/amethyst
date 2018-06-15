@@ -41,9 +41,11 @@ Prefab (
         ),
         (
             data: (
+                transform: Transform (
+                     translation: (x: 6.0, y: 6.0, z: -6.0,),
+                ),
                 light: (
                     light: Point((
-                        center: (6.0, 6.0, -6.0),
                         intensity: 6.0,
                         color: (0.8, 0.0, 0.0, 1.0),
                     )),
@@ -52,9 +54,11 @@ Prefab (
         ),
         (
             data: (
+                transform: Transform (
+                     translation: (x: 0.0, y: 4.0, z: 4.0,),
+                ),
                 light: (
                     light: Point((
-                        center: (0.0, 4.0, 4.0),
                         intensity: 6.0,
                         color: (0.0, 0.3, 0.7, 1.0),
                     )),

@@ -14,10 +14,13 @@ Prefab (
         ),
         (
             data: (
+                transform: (
+                    translation: (x: 2.0, y: 2.0, z: -2.0),
+                    rotation: (s: 0.0, v: (x: 0.0, y: 1.0, z: 0.0),),
+                ),
                 light: (
                     ambient_color: (Rgba(0.01, 0.01, 0.01, 1.0)),
                     light: Point((
-                        center: (2.0, 2.0, -2.0),
                         intensity: 3.0,
                         color: (1.0, 1.0, 1.0, 1.0),
                         radius: 5.0,

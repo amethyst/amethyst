@@ -111,9 +111,11 @@ Prefab (
         ),
         (
             data: (
+                transform: (
+                    translation: (x: 1.0, y: 1.0, z: 0.0),
+                ),
                 light: (
                     light: Point((
-                        center: (1.0, 1.0, 0.0),
                         intensity: 50.0,
                     )),
                 ),
