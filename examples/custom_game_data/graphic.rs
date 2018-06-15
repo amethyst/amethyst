@@ -1,5 +1,5 @@
 use amethyst::assets::{Loader, ProgressCounter};
-use amethyst::core::cgmath::{Array, Deg, Euler, Quaternion, Rotation3, Vector3, Matrix4};
+use amethyst::core::cgmath::{Array, Deg, Euler, Quaternion, Rotation3, Vector3};
 use amethyst::core::{GlobalTransform, Transform};
 use amethyst::ecs::prelude::World;
 use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, Light, Material,
