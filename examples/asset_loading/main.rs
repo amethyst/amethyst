@@ -5,7 +5,7 @@ extern crate amethyst;
 extern crate rayon;
 
 use amethyst::assets::{Loader, Result as AssetResult, SimpleFormat};
-use amethyst::core::cgmath::{Array, Vector3};
+use amethyst::core::cgmath::{Array, Vector3, Matrix4};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::World;
 use amethyst::input::{is_close_requested, is_key, InputBundle};
