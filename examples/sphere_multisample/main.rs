@@ -107,15 +107,19 @@ fn initialise_lights(world: &mut World) {
     world.add_resource(AmbientColor(AMBIENT_LIGHT_COLOUR));
 
     let light: Light = PointLight {
-        center: LIGHT_POSITION.into(),
         radius: LIGHT_RADIUS,
         intensity: LIGHT_INTENSITY,
         color: POINT_LIGHT_COLOUR,
         ..Default::default()
     }.into();
 
+    let transform = Matrix4::from_translation(LIGHT_POSITION.into());
+
     // Add point light.
-    world.create_entity().with(light).build();
+    world.create_entity()
+        .with(light)
+        .with(GlobalTransform(transform.into()))
+        .build();
 }
 
 /// This function initialises a camera and adds it to the world.
