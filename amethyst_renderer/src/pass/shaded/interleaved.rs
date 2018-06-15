@@ -111,7 +111,7 @@ where
     ) {
         let camera = get_camera(active, &camera, &global);
 
-        set_light_args(effect, encoder, &light, &ambient, camera);
+        set_light_args(effect, encoder, &light, &global, &ambient, camera);
 
         match visibility {
             None => for (mesh, material, global) in (&mesh, &material, &global).join() {

@@ -75,8 +75,6 @@ impl From<DirectionalLight> for Light {
 #[derive(Clone, ConstantBuffer, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(default)]
 pub struct PointLight {
-    /// Location of the light source in three dimensional space.
-    pub center: [f32; 3], //TODO: Replace with a cgmath type when gfx version > 0.16
     /// Color of the light in RGBA8 format.
     pub color: Rgba,
     /// Brightness of the light source, in lumens.
@@ -91,7 +89,6 @@ pub struct PointLight {
 impl Default for PointLight {
     fn default() -> Self {
         PointLight {
-            center: [0.0, 0.0, 0.0],
             color: Rgba::default(),
             intensity: 10.0,
             radius: 10.0,
