@@ -12,7 +12,7 @@ use amethyst::ecs::storage::NullStorage;
 use amethyst::input::{is_close_requested, is_key, InputBundle};
 use amethyst::renderer::{DisplayConfig, DrawShaded, Event, Pipeline, PosNormTex, RenderBundle,
                          Stage, VirtualKeyCode};
-use amethyst::ui::{DrawUi, UiBundle, UiCreator};
+use amethyst::ui::{DrawUi, UiBundle, UiCreator, UiLoader, UiPrefab};
 use amethyst::utils::fps_counter::FPSCounterBundle;
 use amethyst::utils::scene::BasicScenePrefab;
 use amethyst::{Application, Error, State, StateData, Trans};
@@ -35,14 +35,15 @@ pub struct DemoState {
 struct Loading {
     progress: ProgressCounter,
     scene: Option<Handle<Prefab<MyPrefabData>>>,
-    ui: Option<Entity>,
+    load_ui: Option<Entity>,
+    paused_ui: Option<Handle<UiPrefab>>,
 }
 struct Main {
     scene: Handle<Prefab<MyPrefabData>>,
+    paused_ui: Handle<UiPrefab>,
 }
-#[derive(Default)]
 struct Paused {
-    ui: Option<Entity>,
+    ui: Entity,
 }
 
 #[derive(Default)]
@@ -58,10 +59,14 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>> for Loading {
             loader.load("prefab/renderable.ron", RonFormat, (), &mut self.progress)
         }));
 
-        self.ui = Some(data.world.exec(|mut creator: UiCreator| {
+        self.load_ui = Some(data.world.exec(|mut creator: UiCreator| {
             creator.create("ui/fps.ron", &mut self.progress);
             creator.create("ui/loading.ron", &mut self.progress)
         }));
+        self.paused_ui = Some(
+            data.world
+                .exec(|loader: UiLoader| loader.load("ui/paused.ron", &mut self.progress)),
+        );
         data.world.add_resource::<DemoState>(DemoState {
             light_angle: 0.0,
             light_color: [1.0; 4],
@@ -90,11 +95,12 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>> for Loading {
             }
             Completion::Complete => {
                 println!("Assets loaded, swapping state");
-                if let Some(entity) = self.ui {
+                if let Some(entity) = self.load_ui {
                     let _ = data.world.delete_entity(entity);
                 }
                 Trans::Switch(Box::new(Main {
                     scene: self.scene.as_ref().unwrap().clone(),
+                    paused_ui: self.paused_ui.as_ref().unwrap().clone(),
                 }))
             }
             Completion::Loading => Trans::None,
@@ -103,13 +109,6 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>> for Loading {
 }
 
 impl<'a, 'b> State<CustomGameData<'a, 'b>> for Paused {
-    fn on_start(&mut self, data: StateData<CustomGameData>) {
-        self.ui = Some(
-            data.world
-                .exec(|mut creator: UiCreator| creator.create("ui/paused.ron", ())),
-        );
-    }
-
     fn handle_event(
         &mut self,
         data: StateData<CustomGameData>,
@@ -118,9 +117,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>> for Paused {
         if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
             Trans::Quit
         } else if is_key(&event, VirtualKeyCode::Space) {
-            if let Some(entity) = self.ui {
-                let _ = data.world.delete_entity(entity);
-            }
+            let _ = data.world.delete_entity(self.ui);
             Trans::Pop
         } else {
             Trans::None
@@ -140,13 +137,18 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>> for Main {
 
     fn handle_event(
         &mut self,
-        _: StateData<CustomGameData>,
+        data: StateData<CustomGameData>,
         event: Event,
     ) -> Trans<CustomGameData<'a, 'b>> {
         if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
             Trans::Quit
         } else if is_key(&event, VirtualKeyCode::Space) {
-            Trans::Push(Box::new(Paused::default()))
+            Trans::Push(Box::new(Paused {
+                ui: data.world
+                    .create_entity()
+                    .with(self.paused_ui.clone())
+                    .build(),
+            }))
         } else {
             Trans::None
         }

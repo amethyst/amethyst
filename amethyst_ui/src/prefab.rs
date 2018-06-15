@@ -351,7 +351,7 @@ where
     None
 }
 
-type UiPrefabData<I, F> = (
+type UiPrefabData<I = TextureFormat, F = FontFormat> = (
     Option<UiTransformBuilder>,
     Option<UiImageBuilder<I>>,
     Option<UiTextBuilder<F>>,
@@ -363,7 +363,7 @@ type UiPrefabData<I, F> = (
 ///
 /// - `I`: `Format` used for loading `Texture`s
 /// - `F`: `Format` used for loading `FontAsset`
-pub type UiPrefab<I, F> = Prefab<UiPrefabData<I, F>>;
+pub type UiPrefab<I = TextureFormat, F = FontFormat> = Prefab<UiPrefabData<I, F>>;
 
 /// Ui format.
 ///
