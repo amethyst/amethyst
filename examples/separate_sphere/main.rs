@@ -3,7 +3,7 @@
 extern crate amethyst;
 
 use amethyst::assets::Loader;
-use amethyst::core::cgmath::Deg;
+use amethyst::core::cgmath::{Deg, Matrix4};
 use amethyst::core::transform::GlobalTransform;
 use amethyst::ecs::prelude::World;
 use amethyst::input::{is_close_requested, is_key};
@@ -105,22 +105,25 @@ fn initialise_lights(world: &mut World) {
     world.add_resource(AmbientColor(AMBIENT_LIGHT_COLOUR));
 
     let light: Light = PointLight {
-        center: LIGHT_POSITION.into(),
         radius: LIGHT_RADIUS,
         intensity: LIGHT_INTENSITY,
         color: POINT_LIGHT_COLOUR,
         ..Default::default()
     }.into();
 
+    let transform = Matrix4::from_translation(LIGHT_POSITION.into());
+
     // Add point light.
-    world.create_entity().with(light).build();
+    world.create_entity()
+        .with(light)
+        .with(GlobalTransform(transform.into()))
+        .build();
 }
 
 /// This function initialises a camera and adds it to the world.
 fn initialise_camera(world: &mut World) {
     use amethyst::core::cgmath::Matrix4;
-    let transform =
-        Matrix4::from_translation([0.0, 0.0, -4.0].into()) * Matrix4::from_angle_y(Deg(180.));
+    let transform = Matrix4::from_translation([0.0, 0.0, -4.0].into()) * Matrix4::from_angle_y(Deg(180.));
     world
         .create_entity()
         .with(Camera::from(Projection::perspective(1.3, Deg(60.0))))
