@@ -8,6 +8,7 @@ Text(
         z: 1.,
         width: 200.,
         height: 50.,
+        transparent: true,
     ),
     text: (
         text: "Paused",
