@@ -3,18 +3,13 @@
 extern crate amethyst;
 
 use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, RonFormat};
-use amethyst::core::transform::{Transform, TransformBundle};
+use amethyst::core::transform::TransformBundle;
 use amethyst::input::{is_close_requested, is_key};
 use amethyst::prelude::*;
-use amethyst::renderer::{CameraPrefab, DrawShaded, Event, GraphicsPrefab, LightPrefab, PosNormTex,
-                         VirtualKeyCode};
+use amethyst::renderer::{DrawShaded, Event, PosNormTex, VirtualKeyCode};
+use amethyst::utils::scene::BasicScenePrefab;
 
-type MyPrefabData = (
-    Option<GraphicsPrefab<Vec<PosNormTex>>>,
-    Option<Transform>,
-    Option<LightPrefab>,
-    Option<CameraPrefab>,
-);
+type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
 struct Example;
 
