@@ -38,6 +38,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Update dependencies ([#752], [#751])
 * Formalized and documented support for overriding the global logger ([#776])
 * Refactor GLTF loader to use prefabs ([#784])
+* Point lights use `GlobalTransform` for positioning rather than a separate `center` ([#794])
+* Point lights now require a `GlobalTransform` component to be included in rendering ([#794])
 
 ### Fixed
 * Resizing fixed on OSX ([#767])
