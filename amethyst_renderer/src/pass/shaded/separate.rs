@@ -141,7 +141,7 @@ impl Pass for DrawShadedSeparate {
         trace!("Drawing shaded pass");
         let camera = get_camera(active, &camera, &global);
 
-        set_light_args(effect, encoder, &light, &ambient, camera);
+        set_light_args(effect, encoder, &light, &global, &ambient, camera);
 
         match visibility {
             None => for (entity, mesh, material, global) in

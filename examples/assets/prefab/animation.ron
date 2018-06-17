@@ -81,9 +81,11 @@ Prefab (
         (
             data: (
                 (
+                    transform: (
+                        translation: (x: 2.0, y: 2.0, z: -2.0),
+                    ),
                     light: (
                         light: Point((
-                            center: (2.0, 2.0, -2.0),
                             intensity: 3.0,
                             color: (1.0, 1.0, 1.0, 1.0),
                             radius: 5.0,
