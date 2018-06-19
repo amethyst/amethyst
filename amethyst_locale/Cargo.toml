@@ -20,8 +20,8 @@ appveyor = { repository = "amethyst/amethyst", branch = "develop" }
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
-amethyst_assets = { path = "../amethyst_assets", version = "0.2" }
-amethyst_core = { path = "../amethyst_core", version = "0.1" }
+amethyst_assets = { path = "../amethyst_assets", version = "0.3" }
+amethyst_core = { path = "../amethyst_core", version = "0.2" }
 fluent = "0.2.0"
 
 thread_profiler = { version = "0.1", optional = true }

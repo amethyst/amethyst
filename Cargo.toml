@@ -152,17 +152,12 @@ name = "appendix_a"
 path = "examples/appendix_a/main.rs"
 
 [[example]]
-<<<<<<< HEAD
 name = "locale"
 path = "examples/locale/main.rs"
 
 [[example]]
-name = "fly_camera"
-path = "examples/fly_camera/main.rs"
-=======
 name = "custom_game_data"
 path = "examples/custom_game_data/main.rs"
->>>>>>> 00fa904612be5609121981a9663a7aea097e3a55
 
 [[example]]
 name = "arc_ball_camera"

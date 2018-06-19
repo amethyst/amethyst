@@ -14,7 +14,7 @@ extern crate thread_profiler;
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
 
-use amethyst_assets::{Asset, Handle, Result, SimpleFormat};
+use amethyst_assets::{Asset, Handle, Result, SimpleFormat, ProcessingState};
 use amethyst_core::specs::prelude::VecStorage;
 use fluent::MessageContext;
 
@@ -35,9 +35,9 @@ impl SimpleFormat<Locale> for LocaleFormat {
     }
 }
 
-impl Into<Result<Locale>> for Locale {
-    fn into(self) -> Result<Locale> {
-        Ok(self)
+impl Into<Result<ProcessingState<Locale>>> for Locale {
+    fn into(self) -> Result<ProcessingState<Locale>> {
+        Ok(ProcessingState::Loaded(self))
     }
 }
 
