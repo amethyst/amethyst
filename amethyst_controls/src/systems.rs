@@ -14,7 +14,6 @@ use winit::{DeviceEvent, Event, WindowEvent};
 use components::{ArcBallControlTag, FlyControlTag};
 use resources::WindowFocus;
 
-
 /// The system that manages the fly movement.
 /// Generic parameters are the parameters for the InputHandler.
 pub struct FlyMovementSystem<A, B> {
