@@ -1,9 +1,7 @@
-<img src="./images/amethyst_thumb.png" alt="Logo" width="96px" style="float:left;margin-right:15px"/>
-
-# The Amethyst Engine
-
-> Note: This project is a *work in progress* and is very incomplete. Pardon the
-> dust!
+<div style="display:inline-block;width:100%">
+    <img src="./images/amethyst_thumb.png" alt="Logo" width="96px" style="float:left;margin-right:15px"/>
+    <h1>The Amethyst Engine</h1>
+</div>
 
 ## Presentation
 
@@ -30,11 +28,11 @@ and its source code is completely yours to tinker with. The code is available on
 This book is split into three sections (more coming). This page is the first. The others are:
 
 * [Getting Started][gs] – Prepare your computer for Amethyst development.
-* [A Simple Application][sa] – Build a basic pong game in Rust.
+* [Pong Tutorial][pt] – Build a basic pong game in Rust.
 * [Glossary][gl] - Defines special terms used throughout the book.
 
 [gs]: ./getting_started.html
-[sa]: ./simple_application.html
+[pt]: ./pong_tutorial.html
 [gl]: ./glossary.html
 
 Read the crate-level [API documentation][ad] for more details.

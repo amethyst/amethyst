@@ -1,0 +1,7 @@
+(
+  fullscreen: false,
+  multisampling: 0,
+  title: "Arc Ball Camera Example",
+  visibility: true,
+  vsync: true,
+)

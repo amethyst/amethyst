@@ -75,7 +75,3 @@ pub struct PongConfig {
     /// Configuration of the arena
     pub arena: ArenaConfig,
 }
-
-pub struct PongBundle {
-    config: PongConfig,
-}

@@ -7,7 +7,147 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [kc]: http://keepachangelog.com/
 [sv]: http://semver.org/
 
-## [Unreleased]
+## Unreleased
+### Added
+* UI `ScaleMode` is now functional, permitting percentage based `UiTransform`s. ([#774])
+* Add serde trait derives to many core components ([#760])
+* Add a generic asset `Format` for `ron` files ([#760])
+* Improve error handling for asset loading ([#773])
+* Add bundle for the arc ball camera ([#770])
+* Add utility functions for dealing with common input ([#759])
+* Add alpha cutoff support to the PBR shader ([#756])
+* Basic renderer setup helper function ([#771])
+* Shape mesh generators ([#777])
+* Derive `PartialEq` for `SpriteSheet` ([#789])
+* Add core support for Prefabs ([#716])
+* Add shape prefab support ([#785])
+* Specialised UI prefab format ([#786])
+* Add generation of normals/tangents in GLTF ([#784])
+* Add basic scene prefab ([#791])
+* Improve ergonomics of examples ([#793])
+
+### Changed
+* UI systems will now never overwrite your local `UiTransform` values ([#774])
+* Global `UiTransform` values are no longer writable ([#774])
+* `UiResize` refactored to be more user friendly and more helpful ([#774])
+* `Anchored` and `Stretched` components have been folded into `UiTransform` ([#774])
+* Refactored asset loading so `Processor`s can defer storage insertion ([#760])
+* Moved `MaterialTextureSet` to the renderer crate ([#760])
+* Use `fresnel` function in PBR shader ([#772])
+* Remove boilerplate for `run` + `main` in examples ([#764])
+* Update dependencies ([#752], [#751])
+* Formalized and documented support for overriding the global logger ([#776])
+* Refactor GLTF loader to use prefabs ([#784])
+* Point lights use `GlobalTransform` for positioning rather than a separate `center` ([#794])
+* Point lights now require a `GlobalTransform` component to be included in rendering ([#794])
+
+### Fixed
+* Resizing fixed on OSX ([#767])
+* Fix color format ([#766])
+* Remove individual example READMEs ([#758])
+* Log an error if a pass tries to render a mesh with incompatible vertex buffers ([#749])
+* Standardize vsync across examples ([746])
+
+[#746]: https://github.com/amethyst/amethyst/pull/746
+[#749]: https://github.com/amethyst/amethyst/pull/749
+[#751]: https://github.com/amethyst/amethyst/pull/751
+[#752]: https://github.com/amethyst/amethyst/pull/752
+[#756]: https://github.com/amethyst/amethyst/pull/756
+[#758]: https://github.com/amethyst/amethyst/pull/758
+[#759]: https://github.com/amethyst/amethyst/pull/759
+[#760]: https://github.com/amethyst/amethyst/pull/760
+[#764]: https://github.com/amethyst/amethyst/pull/764
+[#766]: https://github.com/amethyst/amethyst/pull/766
+[#767]: https://github.com/amethyst/amethyst/pull/767
+[#770]: https://github.com/amethyst/amethyst/pull/770
+[#771]: https://github.com/amethyst/amethyst/pull/771
+[#772]: https://github.com/amethyst/amethyst/pull/772
+[#773]: https://github.com/amethyst/amethyst/pull/773
+[#774]: https://github.com/amethyst/amethyst/pull/774
+[#777]: https://github.com/amethyst/amethyst/pull/777
+[#776]: https://github.com/amethyst/amethyst/pull/776
+[#716]: https://github.com/amethyst/amethyst/pull/716
+[#784]: https://github.com/amethyst/amethyst/pull/784
+[#785]: https://github.com/amethyst/amethyst/pull/785
+[#786]: https://github.com/amethyst/amethyst/pull/786
+[#791]: https://github.com/amethyst/amethyst/pull/791
+[#789]: https://github.com/amethyst/amethyst/pull/789
+[#793]: https://github.com/amethyst/amethyst/pull/793
+
+## [0.7.0] - 2018-05
+### Added
+* Documentation for Animation crate ([#631]).
+* Support for rendering sprites ([#638]).
+* Fly Camera ([#578]).
+* UI Layouts ([#591]).
+* UI Events ([#580]).
+* Introduce a generic animation system, with support for both  transform and texture animation ([#558]), ([#566]), ([#567]), ([#569]), ([#570]), ([#611]), ([#641]), ([#644])
+* Add transparency support to core passes ([#543]), ([#574]), ([#584]) 
+* Add vertex skinning ([#545]), ([#619])
+* Expose a basic visibility ordering system, with the ability to swap in better replacement systems ([#595])
+* Audio `Output` is now added directly rather than as an `Option`, should now be fetched with `Option<Read<'a, Output>>` ([#679])
+* New nightly feature that enables `shred`s nightly feature ([#689])
+* `Transform` refactored, and added lots of utility functions ([#660])
+* Add new raw mouse events for use with camera rotation ([#699])
+* Add UiButtons and UiButtonBuilder ([#613])
+* Add arc ball camera ([#700])
+
+### Changed
+* Update dependencies to the newest versions: cgmath, winit, glutin, gfx, gfx_glyph ([#527]), ([#572]), ([#648])
+* Rodio updated to 0.7 ([#676])
+* Refactored bundles to only contain `System`s ([#675])
+* Refactor to use new specs, major breakage! ([#674]), ([#679]), ([#683]), ([#662]).
+* Upgrade to winit 1.13.1 ([#698])
+* Refactor game data, permit greater extensibility ([#691])
+* Disable multisampling on all examples, and add a single example with multisampling on ([#671])
+
+### Fixed
+* Asset loading tolerates paths constructed using back slashes ([#623]).
+* Pong text alignment ([#621]).
+* Updated book introduction ([#588]).
+* Renderable runtime crash ([#586]).
+
+[#580]: https://github.com/amethyst/amethyst/pull/580
+[#591]: https://github.com/amethyst/amethyst/pull/591
+[#578]: https://github.com/amethyst/amethyst/pull/578
+[#586]: https://github.com/amethyst/amethyst/pull/586
+[#588]: https://github.com/amethyst/amethyst/pull/588
+[#631]: https://github.com/amethyst/amethyst/pull/631
+[#638]: https://github.com/amethyst/amethyst/pull/638
+[#623]: https://github.com/amethyst/amethyst/pull/623
+[#621]: https://github.com/amethyst/amethyst/pull/621
+[#558]: https://github.com/amethyst/amethyst/pull/558
+[#566]: https://github.com/amethyst/amethyst/pull/566
+[#567]: https://github.com/amethyst/amethyst/pull/567
+[#569]: https://github.com/amethyst/amethyst/pull/569
+[#570]: https://github.com/amethyst/amethyst/pull/570
+[#611]: https://github.com/amethyst/amethyst/pull/611
+[#641]: https://github.com/amethyst/amethyst/pull/641
+[#644]: https://github.com/amethyst/amethyst/pull/644
+[#543]: https://github.com/amethyst/amethyst/pull/543
+[#574]: https://github.com/amethyst/amethyst/pull/574
+[#584]: https://github.com/amethyst/amethyst/pull/584
+[#545]: https://github.com/amethyst/amethyst/pull/545
+[#619]: https://github.com/amethyst/amethyst/pull/619
+[#527]: https://github.com/amethyst/amethyst/pull/527
+[#572]: https://github.com/amethyst/amethyst/pull/572
+[#648]: https://github.com/amethyst/amethyst/pull/648
+[#595]: https://github.com/amethyst/amethyst/pull/595
+[#679]: https://github.com/amethyst/amethyst/pull/679
+[#675]: https://github.com/amethyst/amethyst/pull/675
+[#676]: https://github.com/amethyst/amethyst/pull/676
+[#674]: https://github.com/amethyst/amethyst/pull/674
+[#679]: https://github.com/amethyst/amethyst/pull/679
+[#683]: https://github.com/amethyst/amethyst/pull/683
+[#660]: https://github.com/amethyst/amethyst/pull/660
+[#671]: https://github.com/amethyst/amethyst/pull/671
+[#689]: https://github.com/amethyst/amethyst/pull/689
+[#691]: https://github.com/amethyst/amethyst/pull/691
+[#698]: https://github.com/amethyst/amethyst/pull/698
+[#699]: https://github.com/amethyst/amethyst/pull/699
+[#662]: https://github.com/amethyst/amethyst/pull/662
+[#613]: https://github.com/amethyst/amethyst/pull/613
+[#700]: https://github.com/amethyst/amethyst/pull/700
 
 ## [0.5.1] - 2017-08-30
 

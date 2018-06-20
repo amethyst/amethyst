@@ -1,11 +1,12 @@
+use std::cmp::Ordering;
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::marker;
 use std::time::Duration;
 
-use amethyst_assets::{Asset, AssetStorage, Handle, Result};
+use amethyst_assets::{Asset, AssetStorage, Handle, ProcessingState, Result};
 use amethyst_core::shred::SystemData;
-use amethyst_core::specs::{Component, DenseVecStorage, Entity, VecStorage, WriteStorage};
+use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entity, VecStorage, WriteStorage};
 use amethyst_core::timing::{duration_to_secs, secs_to_duration};
 use fnv::FnvHashMap;
 use minterpolate::{get_input_index, InterpolationFunction, InterpolationPrimitive};
@@ -96,16 +97,17 @@ where
     type HandleStorage = VecStorage<Handle<Self>>;
 }
 
-impl<T> Into<Result<Sampler<T>>> for Sampler<T>
+impl<T> Into<Result<ProcessingState<Sampler<T>>>> for Sampler<T>
 where
-    T: InterpolationPrimitive,
+    T: InterpolationPrimitive + Send + Sync + 'static,
 {
-    fn into(self) -> Result<Sampler<T>> {
-        Ok(self)
+    fn into(self) -> Result<ProcessingState<Sampler<T>>> {
+        Ok(ProcessingState::Loaded(self))
     }
 }
 
 /// Define the rest state for a component on an entity
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RestState<T> {
     state: T,
 }
@@ -182,9 +184,14 @@ where
         F: Fn(Entity) -> Option<T>,
     {
         for entity in self.nodes.values() {
-            if states.get(*entity).is_none() {
+            if !states.contains(*entity) {
                 if let Some(comp) = get_component(*entity) {
-                    states.insert(*entity, RestState::new(comp));
+                    if let Err(err) = states.insert(*entity, RestState::new(comp)) {
+                        error!(
+                            "Failed creating rest state for AnimationHierarchy, because of: {}",
+                            err
+                        );
+                    }
                 }
             }
         }
@@ -219,6 +226,48 @@ where
     pub nodes: Vec<(usize, T::Channel, Handle<Sampler<T::Primitive>>)>,
 }
 
+impl<T> Animation<T>
+where
+    T: AnimationSampling,
+{
+    /// Create new empty animation
+    pub fn new() -> Self {
+        Animation { nodes: vec![] }
+    }
+
+    /// Create an animation with a single sampler
+    pub fn new_single(
+        index: usize,
+        channel: T::Channel,
+        sampler: Handle<Sampler<T::Primitive>>,
+    ) -> Self {
+        Animation {
+            nodes: vec![(index, channel, sampler)],
+        }
+    }
+
+    /// Add a sampler to the animation
+    pub fn add(
+        &mut self,
+        node_index: usize,
+        channel: T::Channel,
+        sampler: Handle<Sampler<T::Primitive>>,
+    ) {
+        self.nodes.push((node_index, channel, sampler));
+    }
+
+    /// Add a sampler to the animation
+    pub fn with(
+        mut self,
+        node_index: usize,
+        channel: T::Channel,
+        sampler: Handle<Sampler<T::Primitive>>,
+    ) -> Self {
+        self.nodes.push((node_index, channel, sampler));
+        self
+    }
+}
+
 impl<T> Asset for Animation<T>
 where
     T: AnimationSampling,
@@ -228,12 +277,12 @@ where
     type HandleStorage = VecStorage<Handle<Self>>;
 }
 
-impl<T> Into<Result<Animation<T>>> for Animation<T>
+impl<T> Into<Result<ProcessingState<Animation<T>>>> for Animation<T>
 where
     T: AnimationSampling,
 {
-    fn into(self) -> Result<Animation<T>> {
-        Ok(self)
+    fn into(self) -> Result<ProcessingState<Animation<T>>> {
+        Ok(ProcessingState::Loaded(self))
     }
 }
 
@@ -242,6 +291,8 @@ where
 pub enum ControlState {
     /// Animation was just requested, not started yet
     Requested,
+    /// Deferred start
+    Deferred(Duration),
     /// Animation is running, contains last animation tick, and accumulated duration
     Running(Duration),
     /// Animation is paused at the accumulated duration
@@ -461,6 +512,21 @@ where
             .filter(|t| t.channel == *channel)
             .for_each(|t| t.blend_weight = blend_weight);
     }
+
+    /// Get the max running duration of the control set
+    pub fn get_running_duration(&self, control_id: u64) -> Option<f32> {
+        self.samplers
+            .iter()
+            .filter(|t| t.control_id == control_id)
+            .map(|t| {
+                if let ControlState::Running(dur) = t.state {
+                    duration_to_secs(dur)
+                } else {
+                    0.
+                }
+            })
+            .max_by(|a, b| a.partial_cmp(&b).unwrap_or(Ordering::Equal))
+    }
 }
 
 fn set_step_state<T>(
@@ -583,6 +649,25 @@ where
     type Storage = DenseVecStorage<Self>;
 }
 
+/// Defer the start of an animation until the relationship has done this
+#[derive(Debug, Clone, PartialEq)]
+pub enum DeferStartRelation {
+    /// Start animation time duration after relationship started
+    Start(f32),
+    /// Start animation when relationship ends
+    End,
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct DeferredStart<I, T>
+where
+    T: AnimationSampling,
+{
+    pub animation_id: I,
+    pub relation: (I, DeferStartRelation),
+    pub control: AnimationControl<T>,
+}
+
 /// Contains all currently running animations for an entity.
 ///
 /// Have support for running multiple animations, will do linear blending between all active
@@ -600,6 +685,7 @@ where
     T: AnimationSampling,
 {
     pub animations: Vec<(I, AnimationControl<T>)>,
+    pub(crate) deferred_animations: Vec<DeferredStart<I, T>>,
 }
 
 impl<I, T> Default for AnimationControlSet<I, T>
@@ -609,6 +695,7 @@ where
     fn default() -> Self {
         AnimationControlSet {
             animations: Vec::default(),
+            deferred_animations: Vec::default(),
         }
     }
 }
@@ -620,7 +707,7 @@ where
 {
     /// Is the animation set empty?
     pub fn is_empty(&self) -> bool {
-        self.animations.is_empty()
+        self.animations.is_empty() && self.deferred_animations.is_empty()
     }
 
     /// Remove animation from set
@@ -636,6 +723,11 @@ where
     fn set_command(&mut self, id: I, command: AnimationCommand<T>) {
         if let Some(&mut (_, ref mut control)) = self.animations.iter_mut().find(|a| a.0 == id) {
             control.command = command;
+        } else if let Some(ref mut control) = self.deferred_animations
+            .iter_mut()
+            .find(|a| a.animation_id == id)
+        {
+            control.control.command = command;
         }
     }
 
@@ -664,6 +756,12 @@ where
     pub fn set_rate(&mut self, id: I, rate_multiplier: f32) {
         if let Some(&mut (_, ref mut control)) = self.animations.iter_mut().find(|a| a.0 == id) {
             control.rate_multiplier = rate_multiplier;
+        }
+        if let Some(ref mut control) = self.deferred_animations
+            .iter_mut()
+            .find(|a| a.animation_id == id)
+        {
+            control.control.rate_multiplier = rate_multiplier;
         }
     }
 
@@ -711,6 +809,41 @@ where
         ));
     }
 
+    /// Add deferred animation with the given id, unless it already exists
+    pub fn add_deferred_animation(
+        &mut self,
+        id: I,
+        animation: &Handle<Animation<T>>,
+        end: EndControl,
+        rate_multiplier: f32,
+        command: AnimationCommand<T>,
+        wait_for: I,
+        wait_deferred_for: DeferStartRelation,
+    ) {
+        if let Some(_) = self.animations.iter().find(|a| a.0 == id) {
+            return;
+        }
+        self.deferred_animations.push(DeferredStart {
+            animation_id: id,
+            relation: (wait_for, wait_deferred_for),
+            control: AnimationControl::new(
+                animation.clone(),
+                end,
+                ControlState::Requested,
+                command,
+                rate_multiplier,
+            ),
+        });
+    }
+
+    /// Insert an animation directly
+    pub fn insert(&mut self, id: I, control: AnimationControl<T>) {
+        if let Some(_) = self.animations.iter().find(|a| a.0 == id) {
+            return;
+        }
+        self.animations.push((id, control));
+    }
+
     /// Check if there is an animation with the given id in the set
     pub fn has_animation(&mut self, id: I) -> bool {
         if let Some(_) = self.animations.iter().find(|a| a.0 == id) {
@@ -735,15 +868,52 @@ where
 /// ### Type parameters:
 ///
 /// - `T`: the component type that the animation should be applied to
-pub struct AnimationSet<T>
+pub struct AnimationSet<I, T>
 where
+    I: Eq + Hash,
     T: AnimationSampling,
 {
-    pub animations: Vec<Handle<Animation<T>>>,
+    pub animations: FnvHashMap<I, Handle<Animation<T>>>,
 }
 
-impl<T> Component for AnimationSet<T>
+impl<I, T> Default for AnimationSet<I, T>
 where
+    I: Eq + Hash,
+    T: AnimationSampling,
+{
+    fn default() -> Self {
+        AnimationSet {
+            animations: FnvHashMap::default(),
+        }
+    }
+}
+
+impl<I, T> AnimationSet<I, T>
+where
+    I: Eq + Hash,
+    T: AnimationSampling,
+{
+    /// Create
+    pub fn new() -> Self {
+        AnimationSet {
+            animations: FnvHashMap::default(),
+        }
+    }
+
+    /// Insert an animation in the set
+    pub fn insert(&mut self, id: I, handle: Handle<Animation<T>>) {
+        self.animations.insert(id, handle);
+    }
+
+    /// Retrieve an animation handle from the set
+    pub fn get(&self, id: &I) -> Option<&Handle<Animation<T>>> {
+        self.animations.get(id)
+    }
+}
+
+impl<I, T> Component for AnimationSet<I, T>
+where
+    I: Eq + Hash + Send + Sync + 'static,
     T: AnimationSampling,
 {
     type Storage = DenseVecStorage<Self>;

@@ -12,11 +12,11 @@ extern crate serde;
 use std::sync::Arc;
 
 use amethyst_assets::*;
-use amethyst_core::Time;
-use amethyst_core::specs::{Dispatcher, DispatcherBuilder, Fetch, FetchMut, System, VecStorage,
-                           World};
 use amethyst_core::specs::common::Errors;
-use rayon::ThreadPool;
+use amethyst_core::specs::prelude::{Dispatcher, DispatcherBuilder, Read, ReadExpect, System,
+                                    VecStorage, World, Write};
+use amethyst_core::Time;
+use rayon::{ThreadPool, ThreadPoolBuilder};
 
 struct App {
     dispatcher: Dispatcher<'static, 'static>,
@@ -29,7 +29,7 @@ impl App {
         let mut world = World::new();
 
         // Note: in an actual application, you'd want to share the thread pool.
-        let pool = Arc::new(ThreadPool::new(Default::default()).expect("Invalid config"));
+        let pool = Arc::new(ThreadPoolBuilder::new().build().expect("Invalid config"));
 
         world.register::<MeshHandle>();
 
@@ -102,10 +102,10 @@ pub struct RenderingSystem;
 
 impl<'a> System<'a> for RenderingSystem {
     type SystemData = (
-        FetchMut<'a, AssetStorage<MeshAsset>>,
-        Fetch<'a, Time>,
-        Fetch<'a, Arc<ThreadPool>>,
-        Option<Fetch<'a, HotReloadStrategy>>,
+        Write<'a, AssetStorage<MeshAsset>>,
+        Read<'a, Time>,
+        ReadExpect<'a, Arc<ThreadPool>>,
+        Option<Read<'a, HotReloadStrategy>>,
         /* texture storage, transforms, .. */
     );
 
@@ -118,7 +118,7 @@ impl<'a> System<'a> for RenderingSystem {
             |vertex_data| {
                 // Upload vertex data to GPU and give back an asset
 
-                Ok(MeshAsset { buffer: () })
+                Ok(ProcessingState::Loaded(MeshAsset { buffer: () }))
             },
             time.frame_number(),
             &**pool,
@@ -156,8 +156,8 @@ impl State {
                     eprintln!("Asset loading failed!");
                     eprintln!("-- Errors --");
                     progress.errors().iter().enumerate().for_each(|(n, e)| {
-                        eprintln!("{}: error: {}", n, e);
-                        for cause in e.iter().skip(1) {
+                        eprintln!("{}: error: {}", n, e.error);
+                        for cause in e.error.iter().skip(1) {
                             eprintln!("{}: caused by: {}", n, cause);
                         }
                     });
@@ -188,7 +188,7 @@ pub struct VertexData {
 
 fn main() {
     let disp = DispatcherBuilder::new()
-        .add(RenderingSystem, "rendering", &[])
+        .with(RenderingSystem, "rendering", &[])
         .build();
 
     let assets_dir = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));

@@ -2,9 +2,9 @@ use std::iter::Cycle;
 use std::vec::IntoIter;
 
 use amethyst::assets::{AssetStorage, Loader};
-use amethyst::audio::{AudioSink, Source, SourceHandle};
 use amethyst::audio::output::Output;
-use amethyst::ecs::World;
+use amethyst::audio::{AudioSink, Source, SourceHandle};
+use amethyst::ecs::prelude::World;
 
 pub struct Sounds {
     pub score_sfx: SourceHandle,
@@ -56,7 +56,7 @@ pub fn initialise_audio(world: &mut World) {
 }
 
 /// Plays the bounce sound when a ball hits a side or a paddle.
-pub fn play_bounce(sounds: &Sounds, storage: &AssetStorage<Source>, output: &Option<Output>) {
+pub fn play_bounce(sounds: &Sounds, storage: &AssetStorage<Source>, output: Option<&Output>) {
     if let Some(ref output) = output.as_ref() {
         if let Some(sound) = storage.get(&sounds.bounce_sfx) {
             output.play_once(sound, 1.0);

@@ -1,19 +1,22 @@
 //! Amethyst control crate.
+extern crate amethyst_assets;
 extern crate amethyst_core;
 extern crate amethyst_input;
 extern crate amethyst_renderer;
 #[macro_use]
-extern crate log;
+extern crate serde;
 extern crate winit;
 
-#[macro_use]
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
 
-mod components;
 mod bundles;
+mod components;
+mod resources;
 mod systems;
 
-pub use self::bundles::FlyControlBundle;
-pub use self::components::FlyControlTag;
-pub use self::systems::{FlyMovementSystem, FreeRotationSystem, MouseCenterLockSystem};
+pub use self::bundles::{ArcBallControlBundle, FlyControlBundle};
+pub use self::components::{ArcBallControlTag, ControlTagPrefab, FlyControlTag};
+pub use self::resources::WindowFocus;
+pub use self::systems::{ArcBallMovementSystem, CursorHideSystem, FlyMovementSystem,
+                        FreeRotationSystem, MouseFocusUpdateSystem};

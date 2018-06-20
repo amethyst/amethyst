@@ -1,19 +1,17 @@
 // TODO: Needs documentation.
 
-#version 150 core
+#version 330 core
 
 layout (std140) uniform FragmentArgs {
-    int point_light_count;
-    int directional_light_count;
+    uint point_light_count;
+    uint directional_light_count;
 };
 
 struct PointLight {
-    vec4 position;
-    vec4 color;
+    vec3 position;
+    vec3 color;
+    float pad; // Workaround for bug in mac's implementation of opengl (loads garbage when accessing members of structures in arrays with dynamic indices).
     float intensity;
-    float radius;
-    float smoothness;
-    float _pad;
 };
 
 layout (std140) uniform PointLights {
@@ -21,8 +19,8 @@ layout (std140) uniform PointLights {
 };
 
 struct DirectionalLight {
-    vec4 color;
-    vec4 direction;
+    vec3 color;
+    vec3 direction;
 };
 
 layout (std140) uniform DirectionalLights {
@@ -46,7 +44,7 @@ layout (std140) uniform EmissionOffset {
 } emission_offset;
 
 in VertexData {
-    vec4 position;
+    vec3 position;
     vec3 normal;
     vec3 tangent;
     vec2 tex_coord;
@@ -65,25 +63,25 @@ vec2 tex_coords(vec2 coord, vec2 u, vec2 v) {
 void main() {
     vec4 color = texture(albedo, tex_coords(vertex.tex_coord, albedo_offset.u_offset, albedo_offset.v_offset));
     vec4 ecolor = texture(emission, tex_coords(vertex.tex_coord, emission_offset.u_offset, emission_offset.v_offset));
-    vec4 lighting = vec4(0.0);
-    vec4 normal = vec4(normalize(vertex.normal), 0.0);
-    for (int i = 0; i < point_light_count; i++) {
+    vec3 lighting = vec3(0.0);
+    vec3 normal = normalize(vertex.normal);
+    for (uint i = 0u; i < point_light_count; i++) {
         // Calculate diffuse light
-        vec4 light_dir = normalize(plight[i].position - vertex.position);
+        vec3 light_dir = normalize(plight[i].position - vertex.position);
         float diff = max(dot(light_dir, normal), 0.0);
-        vec4 diffuse = diff * plight[i].color;
+        vec3 diffuse = diff * normalize(plight[i].color);
         // Calculate attenuation
-        vec4 dist = plight[i].position - vertex.position;
+        vec3 dist = plight[i].position - vertex.position;
         float dist2 = dot(dist, dist);
         float attenuation = (plight[i].intensity / dist2);
         lighting += diffuse * attenuation;
     }
-    for (int i = 0; i < directional_light_count; i++) {
-        vec4 dir = dlight[i].direction;
+    for (uint i = 0u; i < directional_light_count; i++) {
+        vec3 dir = dlight[i].direction;
         float diff = max(dot(-dir, normal), 0.0);
-        vec4 diffuse = diff * dlight[i].color;
+        vec3 diffuse = diff * dlight[i].color;
         lighting += diffuse;
     }
-    lighting += vec4(ambient_color, 0.0);
-    out_color = lighting * color + ecolor;
+    lighting += ambient_color;
+    out_color = vec4(lighting, 1.0) * color + ecolor;
 }

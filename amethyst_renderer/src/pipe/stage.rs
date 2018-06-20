@@ -2,11 +2,11 @@
 
 use hetseq::*;
 
-use amethyst_core::specs::SystemData;
+use amethyst_core::specs::prelude::SystemData;
 use error::{Error, Result};
 use fnv::FnvHashMap as HashMap;
-use pipe::{Target, Targets};
 use pipe::pass::{CompiledPass, Pass, PassData};
+use pipe::{Target, Targets};
 
 use types::{Encoder, Factory};
 

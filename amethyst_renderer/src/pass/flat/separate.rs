@@ -1,10 +1,11 @@
 //! Simple flat forward drawing pass.
 
 use amethyst_assets::AssetStorage;
-use amethyst_core::specs::{Entities, Fetch, Join, ReadStorage};
+use amethyst_core::specs::prelude::{Entities, Join, Read, ReadExpect, ReadStorage};
 use amethyst_core::transform::GlobalTransform;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
+use glsl_layout::Uniform;
 
 use super::*;
 use cam::{ActiveCamera, Camera};
@@ -13,8 +14,8 @@ use mesh::{Mesh, MeshHandle};
 use mtl::{Material, MaterialDefaults};
 use pass::skinning::{create_skinning_effect, setup_skinning_buffers};
 use pass::util::{draw_mesh, get_camera, setup_textures, VertexArgs};
-use pipe::{DepthMode, Effect, NewEffect};
 use pipe::pass::{Pass, PassData};
+use pipe::{DepthMode, Effect, NewEffect};
 use skinning::JointTransforms;
 use tex::Texture;
 use types::{Encoder, Factory};
@@ -64,12 +65,12 @@ where
 impl<'a> PassData<'a> for DrawFlatSeparate {
     type Data = (
         Entities<'a>,
-        Option<Fetch<'a, ActiveCamera>>,
+        Option<Read<'a, ActiveCamera>>,
         ReadStorage<'a, Camera>,
-        Fetch<'a, AssetStorage<Mesh>>,
-        Fetch<'a, AssetStorage<Texture>>,
-        Fetch<'a, MaterialDefaults>,
-        Option<Fetch<'a, Visibility>>,
+        Read<'a, AssetStorage<Mesh>>,
+        Read<'a, AssetStorage<Texture>>,
+        ReadExpect<'a, MaterialDefaults>,
+        Option<Read<'a, Visibility>>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
         ReadStorage<'a, GlobalTransform>,
@@ -99,7 +100,11 @@ impl Pass for DrawFlatSeparate {
         if self.skinning {
             setup_skinning_buffers(&mut builder);
         }
-        builder.with_raw_constant_buffer("VertexArgs", mem::size_of::<VertexArgs>(), 1);
+        builder.with_raw_constant_buffer(
+            "VertexArgs",
+            mem::size_of::<<VertexArgs as Uniform>::Std140>(),
+            1,
+        );
         setup_textures(&mut builder, &TEXTURES);
         match self.transparency {
             Some((mask, blend, depth)) => builder.with_blended_output("color", mask, blend, depth),

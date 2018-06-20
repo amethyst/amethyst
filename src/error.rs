@@ -1,8 +1,8 @@
 //! Engine error types.
 
 use std::error::Error as StdError;
-use std::fmt::{Display, Formatter};
 use std::fmt::Result as FmtResult;
+use std::fmt::{Display, Formatter};
 use std::result::Result as StdResult;
 
 use config::ConfigError;
@@ -61,5 +61,11 @@ impl From<core::Error> for Error {
 impl From<renderer::error::Error> for Error {
     fn from(err: renderer::error::Error) -> Self {
         Error::Core(core::Error::with_chain(err, "Renderer error"))
+    }
+}
+
+impl From<ConfigError> for Error {
+    fn from(err: ConfigError) -> Self {
+        Error::Config(err)
     }
 }

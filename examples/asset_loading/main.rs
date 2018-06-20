@@ -4,16 +4,14 @@
 extern crate amethyst;
 extern crate rayon;
 
-use amethyst::{Application, Error, State, Trans};
 use amethyst::assets::{Loader, Result as AssetResult, SimpleFormat};
-use amethyst::config::Config;
-use amethyst::core::cgmath::{Array, Vector3};
+use amethyst::core::cgmath::{Array, Vector3, Matrix4};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
-use amethyst::ecs::World;
-use amethyst::input::InputBundle;
-use amethyst::renderer::{Camera, DisplayConfig, DrawShaded, Event, KeyboardInput, Light, Material,
-                         MaterialDefaults, Mesh, MeshData, Pipeline, PointLight, PosNormTex,
-                         Projection, RenderBundle, Rgba, Stage, VirtualKeyCode, WindowEvent};
+use amethyst::ecs::prelude::World;
+use amethyst::input::{is_close_requested, is_key, InputBundle};
+use amethyst::renderer::{Camera, DrawShaded, Event, Light, Material, MaterialDefaults, Mesh,
+                         MeshData, PointLight, PosNormTex, Projection, Rgba, VirtualKeyCode};
+use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
 
 #[derive(Clone)]
 struct Custom;
@@ -58,8 +56,9 @@ impl SimpleFormat<Mesh> for Custom {
 
 struct AssetsExample;
 
-impl State for AssetsExample {
-    fn on_start(&mut self, world: &mut World) {
+impl<'a, 'b> State<GameData<'a, 'b>> for AssetsExample {
+    fn on_start(&mut self, data: StateData<GameData>) {
+        let StateData { world, .. } = data;
         world.add_resource(0usize);
 
         initialise_camera(world);
@@ -95,40 +94,21 @@ impl State for AssetsExample {
             .build();
     }
 
-    fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
-        match event {
-            Event::WindowEvent { event, .. } => {
-                match event {
-                    WindowEvent::KeyboardInput {
-                        input:
-                            KeyboardInput {
-                                virtual_keycode: Some(VirtualKeyCode::Escape),
-                                ..
-                            },
-                        ..
-                    } => {
-                        // If the user pressed the escape key, or requested the window to be closed,
-                        // quit the application.
-                        Trans::Quit
-                    }
-                    _ => Trans::None,
-                }
-            }
-            _ => Trans::None,
+    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
+        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+            Trans::Quit
+        } else {
+            Trans::None
         }
     }
-}
 
-fn main() {
-    if let Err(error) = run() {
-        eprintln!("Could not run the example!");
-        eprintln!("{}", error);
-        ::std::process::exit(1);
+    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+        data.data.update(&data.world);
+        Trans::None
     }
 }
 
-/// Wrapper around the main, so we can return errors easily.
-fn run() -> Result<(), Error> {
+fn main() -> Result<(), Error> {
     // Add our meshes directory to the asset loader.
     let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
 
@@ -137,20 +117,12 @@ fn run() -> Result<(), Error> {
         env!("CARGO_MANIFEST_DIR")
     );
 
-    let display_config = DisplayConfig::load(display_config_path);
-    let pipeline_builder = Pipeline::build().with_stage(
-        Stage::with_backbuffer()
-            .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawShaded::<PosNormTex>::new()),
-    );
-
-    let mut game = Application::build(resources_directory, AssetsExample)
-        .expect("Failed to build ApplicationBuilder for an unknown reason.")
+    let game_data = GameDataBuilder::default()
         .with_bundle(InputBundle::<String, String>::new())?
         .with_bundle(TransformBundle::new())?
-        .with_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?
-        .build()?;
+        .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;
 
+    let mut game = Application::new(resources_directory, AssetsExample, game_data)?;
     game.run();
     Ok(())
 }
@@ -169,12 +141,17 @@ fn initialise_camera(world: &mut World) {
 /// Adds lights to the scene.
 fn initialise_lights(world: &mut World) {
     let light: Light = PointLight {
-        center: [5.0, -20.0, 15.0].into(),
         intensity: 100.0,
         radius: 1.0,
         color: Rgba::white(),
         ..Default::default()
     }.into();
 
-    world.create_entity().with(light).build();
+    let transform = Matrix4::from_translation([5.0, -20.0, 15.0].into());
+
+    // Add point light.
+    world.create_entity()
+        .with(light)
+        .with(GlobalTransform(transform.into()))
+        .build();
 }

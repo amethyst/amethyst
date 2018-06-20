@@ -1,0 +1,116 @@
+#![enable(implicit_some)]
+Prefab (
+    entities: [
+        (
+            data: (
+                (
+                    transform: (),
+                    light: (ambient_color: ((0.05, 0.05, 0.05, 1.0))),
+                ),
+                (
+                    animations: [
+                        // each animation is defined by an id, and a set of samplers
+                        (Translate, (
+                            // each sampler consist of:
+                            //   * target entity (which is an index in this prefab),
+                            //   * animation channel, here the attribute on Transform
+                            //   * interpolation data and function
+                            samplers: [(0, Translation, (
+                                input: [0., 1., 2., 3., 4.],
+                                output: [
+                                    Vec3((0., 0., 0.)),
+                                    Vec3((1., 0., 0.)),
+                                    Vec3((0., 0., 0.)),
+                                    Vec3((-1., 0., 0.)),
+                                    Vec3((0., 0., 0.)),
+                                ],
+                                function: Linear,
+                            ))]
+                        )),
+                        (Scale, (
+                            samplers: [(0, Scale, (
+                                input: [0., 1., 2., 3., 4.],
+                                output: [
+                                    Vec3((1., 1., 1.)),
+                                    Vec3((0.6, 0.6, 0.6)),
+                                    Vec3((0.3, 0.3, 0.3)),
+                                    Vec3((0.6, 0.6, 0.6)),
+                                    Vec3((1., 1., 1.)),
+                                ],
+                                function: Linear,
+                            ))]
+                        )),
+                        (Rotate, (
+                            samplers: [(0, Rotation, (
+                                input: [0., 1., 2., 3., 4.],
+                                output: [
+                                    Vec4((1., 0., 0., 0.)),
+                                    Vec4((0.70710678, 0., 0., 0.70710678)),
+                                    Vec4((0., 0., 0., 1.)),
+                                    Vec4((-0.70710678, 0., 0., 0.70710678)),
+                                    Vec4((-1., 0., 0., 0.)),
+                                ],
+                                function: SphericalLinear,
+                            ))]
+                        )),
+                    ],
+                )
+            ),
+        ),
+        (
+            parent: 0,
+            data: (
+                (
+                    graphics: (
+                        mesh: Shape(( shape: Sphere(32, 32), )),
+                        material: (
+                            albedo: Data(Rgba((0.0, 0.0, 1.0, 1.0,), (),)),
+                        ),
+                    ),
+                    transform: (
+                        translation: (
+                            x: 0.0,
+                            y: 1.0,
+                            z: 0.0,
+                        ),
+                    ),
+                ),
+                None
+            ),
+        ),
+        (
+            data: (
+                (
+                    transform: (
+                        translation: (x: 2.0, y: 2.0, z: -2.0),
+                    ),
+                    light: (
+                        light: Point((
+                            intensity: 3.0,
+                            color: (1.0, 1.0, 1.0, 1.0),
+                            radius: 5.0,
+                        )),
+                    ),
+                ),
+                None
+            ),
+        ),
+        (
+            data: (
+                (
+                    transform: Transform (
+                        translation: (x: 0.0, y: 0.0, z: -4.0),
+                        rotation: (s: 0.0, v: (x: 0.0, y: 1.0, z: 0.0),),
+                    ),
+                    camera: Perspective((
+                        fovy: Rad (1.0471975512),
+                        aspect: 1.3,
+                        near: 0.1,
+                        far: 2000.0,
+                    )),
+                ),
+                None
+            ),
+        ),
+    ],
+)

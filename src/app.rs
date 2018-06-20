@@ -1,27 +1,28 @@
 //! The core engine framework.
 
+use std::error::Error as StdError;
 use std::io;
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 
-use core::ECSBundle;
+use core::shrev::{EventChannel, ReaderId};
 use fern;
 use log::LevelFilter;
-use rayon::ThreadPool;
+use rayon::ThreadPoolBuilder;
 use shred::Resource;
-use shrev::{EventChannel, ReaderId};
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
 use winit::{Event, WindowEvent};
 
-use assets::{Asset, Loader, Source};
+use assets::{Loader, Source};
 use core::frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy};
 use core::timing::{Stopwatch, Time};
-use ecs::{Component, Dispatcher, DispatcherBuilder, System, World};
 use ecs::common::Errors;
+use ecs::prelude::{Component, World};
 use error::{Error, Result};
-use state::{State, StateMachine};
+use game_data::DataInit;
+use state::{State, StateData, StateMachine};
 use vergen;
 
 /// An Application is the root object of the game engine. It binds the OS
@@ -30,21 +31,82 @@ use vergen;
 /// Since Application functions as the root of the game, Amethyst does not need
 /// to use any global variables. Within this object is everything that your
 /// game needs to run.
+///
+/// # Logging
+///
+/// Amethyst performs logging internally using the [log] crate. By default, `Application` will
+/// initialize a global logger that simply sends logs to the console. You can take advantage of
+/// this and use the logging macros in `log` once you've created your `Application` instance:
+///
+/// ```
+/// extern crate amethyst;
+/// #[macro_use]
+/// extern crate log;
+///
+/// use amethyst::prelude::*;
+/// use amethyst::core::transform::{Parent, Transform};
+/// use amethyst::ecs::prelude::System;
+///
+/// struct NullState;
+/// impl State<()> for NullState {}
+///
+/// fn main() -> amethyst::Result<()> {
+///     // Build the application instance to initialize the default logger.
+///     let mut game = Application::build("assets/", NullState)?
+///         .build(())?;
+///
+///     // Now logging can be performed as normal.
+///     info!("Using the default logger provided by amethyst");
+///     warn!("Uh-oh, something went wrong!");
+///
+///     Ok(())
+/// }
+/// ```
+///
+/// You can also setup your own logging system. Simply intialize any global logger that supports
+/// [log], and it will be used instead of the default logger:
+///
+/// ```
+/// extern crate amethyst;
+/// #[macro_use]
+/// extern crate log;
+/// extern crate env_logger;
+///
+/// use amethyst::prelude::*;
+/// use amethyst::core::transform::{Parent, Transform};
+/// use amethyst::ecs::prelude::System;
+///
+/// struct NullState;
+/// impl State<()> for NullState {}
+///
+/// fn main() -> amethyst::Result<()> {
+///     // Initialize your custom logger (using env_logger in this case) before creating the
+///     // `Application` instance.
+///     env_logger::init();
+///
+///     // The default logger will be automatically disabled and any logging amethyst does
+///     // will go through your custom logger.
+///     let mut game = Application::build("assets/", NullState)?
+///         .build(())?;
+///
+///     Ok(())
+/// }
+/// ```
+///
+/// [log]: https://crates.io/crates/log
 #[derive(Derivative)]
 #[derivative(Debug)]
-pub struct Application<'a, 'b> {
+pub struct Application<'a, T> {
     /// The world
     #[derivative(Debug = "ignore")]
-    pub world: World,
-
-    #[derivative(Debug = "ignore")]
-    dispatcher: Dispatcher<'a, 'b>,
+    world: World,
     events_reader_id: ReaderId<Event>,
-    states: StateMachine<'a>,
+    states: StateMachine<'a, T>,
     ignore_window_close: bool,
+    data: T,
 }
 
-impl<'a, 'b> Application<'a, 'b> {
+impl<'a, T> Application<'a, T> {
     /// Creates a new Application with the given initial game state.
     /// This will create and allocate all the needed resources for
     /// the event loop of the game engine. It is a shortcut for convenience
@@ -88,27 +150,28 @@ impl<'a, 'b> Application<'a, 'b> {
     /// use amethyst::prelude::*;
     ///
     /// struct NullState;
-    /// impl State for NullState {}
+    /// impl State<()> for NullState {}
     ///
-    /// let mut game = Application::new("assets/", NullState).expect("Failed to initialize");
+    /// let mut game = Application::new("assets/", NullState, ()).expect("Failed to initialize");
     /// game.run();
     /// ~~~
-    pub fn new<P, S>(path: P, initial_state: S) -> Result<Application<'a, 'b>>
+    pub fn new<P, S, I>(path: P, initial_state: S, init: I) -> Result<Application<'a, T>>
     where
         P: AsRef<Path>,
-        S: State + 'a,
+        S: State<T> + 'a,
+        I: DataInit<T>,
     {
-        ApplicationBuilder::new(path, initial_state)?.build()
+        ApplicationBuilder::new(path, initial_state)?.build(init)
     }
 
     /// Creates a new ApplicationBuilder with the given initial game state.
     ///
     /// This is identical in function to
     /// [ApplicationBuilder::new](struct.ApplicationBuilder.html#method.new).
-    pub fn build<P, S>(path: P, initial_state: S) -> Result<ApplicationBuilder<'a, 'b, S>>
+    pub fn build<P, S>(path: P, initial_state: S) -> Result<ApplicationBuilder<S>>
     where
         P: AsRef<Path>,
-        S: State + 'a,
+        S: State<T>,
     {
         ApplicationBuilder::new(path, initial_state)
     }
@@ -147,7 +210,8 @@ impl<'a, 'b> Application<'a, 'b> {
     fn initialize(&mut self) {
         #[cfg(feature = "profiler")]
         profile_scope!("initialize");
-        self.states.start(&mut self.world);
+        self.states
+            .start(StateData::new(&mut self.world, &mut self.data));
     }
 
     /// Advances the game world by one tick.
@@ -167,14 +231,24 @@ impl<'a, 'b> Application<'a, 'b> {
                 .collect::<Vec<_>>();
 
             for event in events {
-                states.handle_event(world, event.clone());
+                states.handle_event(StateData::new(world, &mut self.data), event.clone());
                 if !self.ignore_window_close {
-                    if let &Event::WindowEvent {
-                        event: WindowEvent::Closed,
-                        ..
-                    } = &event
-                    {
-                        states.stop(world);
+                    if cfg!(target_os = "ios") {
+                        if let &Event::WindowEvent {
+                            event: WindowEvent::Destroyed,
+                            ..
+                        } = &event
+                        {
+                            states.stop(StateData::new(world, &mut self.data));
+                        }
+                    } else {
+                        if let &Event::WindowEvent {
+                            event: WindowEvent::CloseRequested,
+                            ..
+                        } = &event
+                        {
+                            states.stop(StateData::new(world, &mut self.data));
+                        }
                     }
                 }
             }
@@ -187,18 +261,16 @@ impl<'a, 'b> Application<'a, 'b> {
             #[cfg(feature = "profiler")]
             profile_scope!("fixed_update");
             if do_fixed {
-                self.states.fixed_update(&mut self.world);
+                self.states
+                    .fixed_update(StateData::new(&mut self.world, &mut self.data));
                 self.world.write_resource::<Time>().finish_fixed_update();
             }
 
             #[cfg(feature = "profiler")]
             profile_scope!("update");
-            self.states.update(&mut self.world);
+            self.states
+                .update(StateData::new(&mut self.world, &mut self.data));
         }
-
-        #[cfg(feature = "profiler")]
-        profile_scope!("dispatch");
-        self.dispatcher.dispatch(&mut self.world.res);
 
         #[cfg(feature = "profiler")]
         profile_scope!("maintain");
@@ -219,7 +291,7 @@ impl<'a, 'b> Application<'a, 'b> {
 }
 
 #[cfg(feature = "profiler")]
-impl<'a, 'b> Drop for Application<'a, 'b> {
+impl<'a, T> Drop for Application<'a, T> {
     fn drop(&mut self) {
         // TODO: Specify filename in config.
         let path = format!("{}/thread_profile.json", env!("CARGO_MANIFEST_DIR"));
@@ -227,19 +299,20 @@ impl<'a, 'b> Drop for Application<'a, 'b> {
     }
 }
 
-/// `ApplicationBuilder` is an interface that allows for creation of an [`Application`](struct.Application.html)
-/// using a custom set of configuration. This is the normal way an [`Application`](struct.Application.html)
+/// `ApplicationBuilder` is an interface that allows for creation of an
+/// [`Application`](struct.Application.html)
+/// using a custom set of configuration. This is the normal way an
+/// [`Application`](struct.Application.html)
 /// object is created.
-pub struct ApplicationBuilder<'a, 'b, T> {
+pub struct ApplicationBuilder<S> {
     // config: Config,
-    disp_builder: DispatcherBuilder<'a, 'b>,
-    initial_state: T,
+    initial_state: S,
     /// Used by bundles to access the world directly
     pub world: World,
     ignore_window_close: bool,
 }
 
-impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
+impl<S> ApplicationBuilder<S> {
     /// Creates a new [ApplicationBuilder](struct.ApplicationBuilder.html) instance
     /// that wraps the initial_state. This is the more verbose way of initializing
     /// your application if you require specific configuration details to be changed
@@ -275,10 +348,11 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// ~~~no_run
     /// use amethyst::prelude::*;
-    /// use amethyst::core::transform::{Parent, Transform, TransformSystem};
+    /// use amethyst::core::transform::{Parent, Transform};
+    /// use amethyst::ecs::prelude::System;
     ///
     /// struct NullState;
-    /// impl State for NullState {}
+    /// impl State<()> for NullState {}
     ///
     /// // initialize the builder, the `ApplicationBuilder` object
     /// // follows the use pattern of most builder objects found
@@ -291,19 +365,16 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///     .register::<Parent>()
     ///     .register::<Transform>()
     ///
-    /// // systems can be added before the game is run
-    ///     .with::<TransformSystem>(TransformSystem::new(), "transform_system", &[])
-    ///
     /// // lastly we can build the Application object
-    ///     .build()
+    /// // the `build` function takes the user defined game data initializer as input
+    ///     .build(())
     ///     .expect("Failed to create Application");
     ///
     /// // the game instance can now be run, this exits only when the game is done
     /// game.run();
     /// ~~~
 
-    pub fn new<P: AsRef<Path>>(path: P, initial_state: T) -> Result<Self> {
-        use bundle::AppBundle;
+    pub fn new<P: AsRef<Path>>(path: P, initial_state: S) -> Result<Self> {
         use rustc_version_runtime;
 
         fern::Dispatch::new()
@@ -318,10 +389,12 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
             .level(LevelFilter::Debug)
             .chain(io::stdout())
             .apply()
-            .unwrap_or_else(|e| warn!("Application tried to override existing logger: {}", e));
+            .unwrap_or_else(|_| {
+                debug!("Global logger already set, default amethyst logger will not be used")
+            });
 
         info!("Initializing Amethyst...");
-        info!("Version: {}", vergen::semver());
+        info!("Version: {}", env!("CARGO_PKG_VERSION"));
         info!("Platform: {}", vergen::target());
         info!("Amethyst git commit: {}", vergen::sha());
         let rustc_meta = rustc_version_runtime::version_meta();
@@ -333,12 +406,26 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
             info!("Rustc git commit: {}", hash);
         }
 
-        let mut disp_builder = DispatcherBuilder::new();
         let mut world = World::new();
-        disp_builder = AppBundle::new(path).build(&mut world, disp_builder)?;
+
+        let thread_pool_builder = ThreadPoolBuilder::new();
+        #[cfg(feature = "profiler")]
+        let thread_pool_builder = thread_pool_builder.start_handler(|index| {
+            register_thread_with_profiler(format!("thread_pool{}", index));
+        });
+        let pool = thread_pool_builder
+            .build()
+            .map(|p| Arc::new(p))
+            .map_err(|err| Error::Core(err.description().to_string().into()))?;
+        world.add_resource(Loader::new(path.as_ref().to_owned(), pool.clone()));
+        world.add_resource(pool);
+        world.add_resource(EventChannel::<Event>::with_capacity(2000));
+        world.add_resource(Errors::default());
+        world.add_resource(FrameLimiter::default());
+        world.add_resource(Stopwatch::default());
+        world.add_resource(Time::default());
 
         Ok(ApplicationBuilder {
-            disp_builder,
             initial_state,
             world,
             ignore_window_close: false,
@@ -366,10 +453,11 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// ~~~no_run
     /// use amethyst::prelude::*;
-    /// use amethyst::ecs::{Component, HashMapStorage};
+    /// use amethyst::ecs::prelude::Component;
+    /// use amethyst::ecs::storage::HashMapStorage;
     ///
     /// struct NullState;
-    /// impl State for NullState {}
+    /// impl State<()> for NullState {}
     ///
     /// // define your custom type for the ECS
     /// struct Velocity([f32; 3]);
@@ -397,6 +485,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     pub fn register<C>(mut self) -> Self
     where
         C: Component,
+        C::Storage: Default,
     {
         self.world.register::<C>();
         self
@@ -429,7 +518,7 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// use amethyst::prelude::*;
     ///
     /// struct NullState;
-    /// impl State for NullState {}
+    /// impl State<()> for NullState {}
     ///
     /// // your resource can be anything that can be safely stored in a `Arc`
     /// // in this example, it is a vector of scores with a user name
@@ -452,190 +541,6 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     {
         self.world.add_resource(resource);
         self
-    }
-
-    /// Inserts a barrier which assures that all systems added before the
-    /// barrier are executed before the ones after this barrier.
-    ///
-    /// Does nothing if there were no systems added since the last call to
-    /// `with_barrier()`. Thread-local systems are not affected by barriers;
-    /// they're always executed at the end.
-    ///
-    /// # Returns
-    ///
-    /// This function returns ApplicationBuilder after it has modified it.
-    ///
-    /// # Examples
-    ///
-    /// ~~~no_run
-    /// use amethyst::prelude::*;
-    /// use amethyst::ecs::System;
-    ///
-    /// struct NullState;
-    /// impl State for NullState {}
-    ///
-    /// struct NopSystem;
-    /// impl<'a> System<'a> for NopSystem {
-    ///     type SystemData = ();
-    ///     fn run(&mut self, (): Self::SystemData) {}
-    /// }
-    ///
-    /// // Three systems are added in this example. The "tabby cat" & "tom cat"
-    /// // systems will both run in parallel. Only after both cat systems have
-    /// // run is the "doggo" system permitted to run them.
-    /// Application::build("assets/", NullState)
-    ///     .expect("Failed to initialize")
-    ///     .with(NopSystem, "tabby cat", &[])
-    ///     .with(NopSystem, "tom cat", &[])
-    ///     .with_barrier()
-    ///     .with(NopSystem, "doggo", &[]);
-    /// ~~~
-    pub fn with_barrier(mut self) -> Self {
-        self.disp_builder = self.disp_builder.add_barrier();
-        self
-    }
-
-    /// Adds a given system to the game loop.
-    ///
-    /// __Note:__ all dependencies must be added before you add the system.
-    ///
-    /// # Parameters
-    ///
-    /// - `system`: The system that is to be added to the game loop.
-    /// - `name`: A unique string to identify the system by. This is used for
-    ///         dependency tracking. This name may be empty `""` string in which
-    ///         case it cannot be referenced as a dependency.
-    /// - `dependencies`: A list of named system that _must_ have completed running
-    ///                 before this system is permitted to run.
-    ///                 This may be an empty list if there is no dependencies.
-    ///
-    /// # Returns
-    ///
-    /// This function returns ApplicationBuilder after it has modified it.
-    ///
-    /// # Type Parameters
-    ///
-    /// - `S`: A type that implements the `System` trait.
-    ///
-    /// # Panics
-    ///
-    /// If two system are added that share an identical name, this function will panic.
-    /// Empty names are permitted, and this function will not panic if more then two are added.
-    ///
-    /// If a dependency is referenced (by name), but has not previously been added this
-    /// function will panic.
-    ///
-    /// # Examples
-    ///
-    /// ~~~no_run
-    /// use amethyst::prelude::*;
-    /// use amethyst::ecs::System;
-    ///
-    /// struct NullState;
-    /// impl State for NullState {}
-    ///
-    /// struct NopSystem;
-    /// impl<'a> System<'a> for NopSystem {
-    ///     type SystemData = ();
-    ///     fn run(&mut self, _: Self::SystemData) {}
-    /// }
-    ///
-    /// Application::build("assets/", NullState)
-    ///     .expect("Failed to initialize")
-    ///     // This will add the "foo" system to the game loop, in this case
-    ///     // the "foo" system will not depend on any systems.
-    ///     .with(NopSystem, "foo", &[])
-    ///     // The "bar" system will only run after the "foo" system has completed
-    ///     .with(NopSystem, "bar", &["foo"])
-    ///     // It is legal to register a system with an empty name
-    ///     .with(NopSystem, "", &[]);
-    /// ~~~
-    pub fn with<S>(mut self, system: S, name: &str, dependencies: &[&str]) -> Self
-    where
-        for<'c> S: System<'c> + Send + 'a,
-    {
-        self.disp_builder = self.disp_builder.add(system, name, dependencies);
-        self
-    }
-
-    /// Add a given thread-local system to the game loop.
-    ///
-    /// A thread-local system is one that _must_ run on the main thread of the
-    /// game. A thread-local system would be necessary typically to work
-    /// around vendor APIs that have thread dependent designs; an example
-    /// being OpenGL which uses a thread-local state machine to function.
-    ///
-    /// All thread-local systems are executed sequentially after all
-    /// non-thread-local systems.
-    ///
-    /// # Parameters
-    ///
-    /// - `system`: The system that is to be added to the game loop.
-    ///
-    /// # Returns
-    ///
-    /// This function returns ApplicationBuilder after it has modified it.
-    ///
-    /// # Type Parameters
-    ///
-    /// - `S`: A type that implements the `System` trait.
-    ///
-    /// # Examples
-    ///
-    /// ~~~no_run
-    /// use amethyst::prelude::*;
-    /// use amethyst::ecs::System;
-    ///
-    /// struct NullState;
-    /// impl State for NullState {}
-    ///
-    /// struct NopSystem;
-    /// impl<'a> System<'a> for NopSystem {
-    ///     type SystemData = ();
-    ///     fn run(&mut self, _: Self::SystemData) {}
-    /// }
-    ///
-    /// Application::build("assets/", NullState)
-    ///     .expect("Failed to initialize")
-    ///     // the Nop system is registered here
-    ///     .with_thread_local(NopSystem);
-    /// ~~~
-    pub fn with_thread_local<S>(mut self, system: S) -> Self
-    where
-        for<'c> S: System<'c> + 'b,
-    {
-        self.disp_builder = self.disp_builder.add_thread_local(system);
-        self
-    }
-
-    /// Add a given ECS bundle to the game loop.
-    ///
-    /// A bundle is a container for registering a bunch of ECS systems and their dependent
-    /// resources and components.
-    ///
-    /// # Parameters
-    ///
-    /// - `bundle`: The bundle to add
-    ///
-    /// # Returns
-    ///
-    /// This function returns ApplicationBuilder after it has modified it, this is
-    /// wrapped in a `Result`.
-    ///
-    /// # Errors
-    ///
-    /// This function creates systems and resources, which use any number of dependent
-    /// crates or APIs, which could result in any number of errors.
-    /// See each individual bundle for a description of the errors it could produce.
-    ///
-    pub fn with_bundle<B>(mut self, bundle: B) -> Result<Self>
-    where
-        B: ECSBundle<'a, 'b>,
-    {
-        self.disp_builder = bundle
-            .build(&mut self.world, self.disp_builder)
-            .map_err(|err| Error::Core(err))?;
-        Ok(self)
     }
 
     /// Register an asset store with the loader logic of the Application.
@@ -665,32 +570,32 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     /// use amethyst::prelude::*;
     /// use amethyst::assets::{Directory, Loader};
     /// use amethyst::renderer::ObjFormat;
-    /// use amethyst::ecs::World;
+    /// use amethyst::ecs::prelude::World;
     ///
     /// let mut game = Application::build("assets/", LoadingState)
     ///     .expect("Failed to initialize")
     ///     // Register the directory "custom_directory" under the name "resources".
     ///     .with_source("custom_store", Directory::new("custom_directory"))
-    ///     .build()
+    ///     .build(GameDataBuilder::default())
     ///     .expect("Failed to build game")
     ///     .run();
     ///
     /// struct LoadingState;
-    /// impl State for LoadingState {
-    ///     fn on_start(&mut self, world: &mut World) {
-    ///         let storage = world.read_resource();
+    /// impl<'a, 'b> State<GameData<'a, 'b>> for LoadingState {
+    ///     fn on_start(&mut self, data: StateData<GameData>) {
+    ///         let storage = data.world.read_resource();
     ///
-    ///         let loader = world.read_resource::<Loader>();
+    ///         let loader = data.world.read_resource::<Loader>();
     ///         // Load a teapot mesh from the directory that registered above.
     ///         let mesh = loader.load_from("teapot", ObjFormat, (), "custom_directory",
     ///                                     (), &storage);
     ///     }
     /// }
     /// ~~~
-    pub fn with_source<I, S>(self, name: I, store: S) -> Self
+    pub fn with_source<I, O>(self, name: I, store: O) -> Self
     where
         I: Into<String>,
-        S: Source,
+        O: Source,
     {
         {
             let mut loader = self.world.write_resource::<Loader>();
@@ -759,43 +664,6 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
         self
     }
 
-    /// Register a new asset type with the Application. All required components
-    /// related to the storage of this asset type will be registered. Since
-    /// Amethyst uses AssetFutures to allow for async content loading, Amethyst
-    /// needs to have a system that translates AssetFutures into Components as
-    /// they resolve. Amethyst registers a system to accomplish this.
-    ///
-    /// # Parameters
-    ///
-    /// `make_context`: A closure that returns an initialized `Asset::Context`
-    ///                 object. This is given the a reference to the world object
-    ///                 to allow it to find any resources previously registered.
-    ///
-    /// # Type Parameters
-    ///
-    /// - `A`: The asset type, an `Asset` in reference to Amethyst is a component
-    ///        that implements the [`Asset`](../amethyst_assets/trait.Asset.html) trait.
-    /// - `F`: A function that returns the `Asset::Context` context object.
-    ///
-    /// # Returns
-    ///
-    /// This function returns ApplicationBuilder after it has modified it.
-    ///
-    ///
-    // TODO: Create example of this function. It might be easier to build a large
-    //       example of a custom type in the `Asset` trait docs
-    pub fn register_asset<A>(mut self) -> Self
-    where
-        A: Asset,
-    {
-        use assets::{AssetStorage, Handle};
-
-        self.world.add_resource(AssetStorage::<A>::new());
-        self.world.register::<Handle<A>>();
-
-        self
-    }
-
     /// Build an `Application` object using the `ApplicationBuilder` as configured.
     ///
     /// # Returns
@@ -816,9 +684,10 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
     ///
     /// See the [example show for `ApplicationBuilder::new()`](struct.ApplicationBuilder.html#examples)
     /// for an example on how this method is used.
-    pub fn build(self) -> Result<Application<'a, 'b>>
+    pub fn build<'a, T, I>(mut self, init: I) -> Result<Application<'a, T>>
     where
-        T: State + 'a,
+        S: State<T> + 'a,
+        I: DataInit<T>,
     {
         trace!("Entering `ApplicationBuilder::build`");
 
@@ -827,22 +696,18 @@ impl<'a, 'b, T> ApplicationBuilder<'a, 'b, T> {
         #[cfg(feature = "profiler")]
         profile_scope!("new");
 
-        #[cfg(not(no_threading))]
-        let pool = self.world.read_resource::<Arc<ThreadPool>>().clone();
         let reader_id = self.world
             .write_resource::<EventChannel<Event>>()
             .register_reader();
 
+        let data = init.build(&mut self.world);
+
         Ok(Application {
             world: self.world,
-            // config: self.config,
             states: StateMachine::new(self.initial_state),
             events_reader_id: reader_id,
-            #[cfg(not(no_threading))]
-            dispatcher: self.disp_builder.with_pool(pool).build(),
-            #[cfg(no_threading)]
-            dispatcher: self.disp_builder.build(),
             ignore_window_close: self.ignore_window_close,
+            data,
         })
     }
 }

@@ -3,7 +3,7 @@
 use std::borrow::Borrow;
 
 use cgmath::{Matrix4, One};
-use specs::{Component, DenseVecStorage, FlaggedStorage};
+use specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
 
 /// Performs a global transformation on the entity (transform from origin).
 ///

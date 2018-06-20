@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_core"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Simon Rönnberg <seamonr@gmail.com>"]
 description = "Amethyst core"
 
@@ -18,14 +18,21 @@ travis-ci = { repository = "amethyst/amethyst" }
 cgmath = { version = "0.16", features = ["serde", "mint"] }
 error-chain = "0.11"
 fnv = "1.0"
-hibitset = "0.3.2"
-rayon = "0.8"
+hibitset = { version = "0.5.0", features = ["parallel"] }
+log = "0.4"
+rayon = "1.0.1"
 serde = { version = "1", features = ["serde_derive"] }
-shred = "0.5"
-specs = { version = "0.10", features = ["common"] }
+shred = { version = "0.7" }
+specs = { version = "0.11", features = ["common"] }
+specs-hierarchy = { version = "0.1" }
+shrev = "1.0"
 quickcheck = "0.4.1"
 
 thread_profiler = { version = "0.1" , optional = true }
 
+[dev-dependencies]
+amethyst = { path = ".." }
+
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]
+nightly = [ "shred/nightly" ]

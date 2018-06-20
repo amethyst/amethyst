@@ -1,15 +1,17 @@
 use std::cmp::Ordering;
 use std::ops::Range;
 
-use amethyst_core::specs::{Component, DenseVecStorage, Entities, Entity, Fetch, FetchMut, Join,
-                           ReadStorage, System, WriteStorage};
+use amethyst_core::shrev::{EventChannel, ReaderId};
+use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entities, Entity, Join, Read,
+                                    ReadExpect, ReadStorage, Resources, System, Write,
+                                    WriteStorage};
 use amethyst_core::timing::Time;
+use amethyst_renderer::ScreenDimensions;
 use clipboard::{ClipboardContext, ClipboardProvider};
+use gfx_glyph::PositionedGlyph;
 use hibitset::BitSet;
-use rusttype::PositionedGlyph;
-use shrev::{EventChannel, ReaderId};
-use unicode_normalization::UnicodeNormalization;
 use unicode_normalization::char::is_combining_mark;
+use unicode_normalization::UnicodeNormalization;
 use unicode_segmentation::UnicodeSegmentation;
 use winit::{ElementState, Event, KeyboardInput, ModifiersState, MouseButton, VirtualKeyCode,
             WindowEvent};
@@ -35,8 +37,8 @@ pub struct UiText {
     /// Cached glyph positions, used to process mouse highlighting
     #[derivative(Debug = "ignore")]
     pub(crate) cached_glyphs: Vec<PositionedGlyph<'static>>,
-    /// Cached id used to retrieve the `GlyphBrush` in the `UiPass`.
-    pub(crate) brush_id: Option<u32>,
+    /// Cached `GlyphBrush` id for use in the `UiPass`.
+    pub(crate) brush_id: Option<u64>,
 }
 
 impl UiText {
@@ -123,7 +125,7 @@ struct CachedTabOrder {
 /// This system processes the underlying UI data as needed.
 pub struct UiSystem {
     /// A reader for winit events.
-    reader: ReaderId<Event>,
+    reader: Option<ReaderId<Event>>,
     /// A cache sorted by tab order, and then by Entity.
     tab_order_cache: CachedTabOrder,
     /// This is set to true while the left mouse button is pressed.
@@ -134,9 +136,9 @@ pub struct UiSystem {
 
 impl UiSystem {
     /// Initializes a new UiSystem that uses the given reader id.
-    pub fn new(reader: ReaderId<Event>) -> Self {
+    pub fn new() -> Self {
         Self {
-            reader,
+            reader: None,
             tab_order_cache: CachedTabOrder {
                 cached: BitSet::new(),
                 cache: Vec::new(),
@@ -153,20 +155,21 @@ impl<'a> System<'a> for UiSystem {
         WriteStorage<'a, UiText>,
         WriteStorage<'a, TextEditing>,
         ReadStorage<'a, UiTransform>,
-        FetchMut<'a, UiFocused>,
-        Fetch<'a, EventChannel<Event>>,
-        Fetch<'a, Time>,
+        Write<'a, UiFocused>,
+        Read<'a, EventChannel<Event>>,
+        Read<'a, Time>,
+        ReadExpect<'a, ScreenDimensions>,
     );
 
     fn run(
         &mut self,
-        (entities, mut text, mut editable, transform, mut focused, events, time): Self::SystemData,
-    ) {
+        (entities, mut text, mut editable, transform, mut focused, events, time, screen_dimensions): Self::SystemData,
+){
         // Populate and update the tab order cache.
         {
             let bitset = &mut self.tab_order_cache.cached;
             self.tab_order_cache.cache.retain(|&(_t, entity)| {
-                let keep = transform.get(entity).is_some();
+                let keep = transform.contains(entity);
                 if !keep {
                     bitset.remove(entity.id());
                 }
@@ -180,7 +183,7 @@ impl<'a> System<'a> for UiSystem {
 
         // Attempt to insert the new entities in sorted position.  Should reduce work during
         // the sorting step.
-        let transform_set = transform.check();
+        let transform_set = transform.mask().clone();
         {
             // Create a bitset containing only the new indices.
             let new = (&transform_set ^ &self.tab_order_cache.cached) & &transform_set;
@@ -235,7 +238,7 @@ impl<'a> System<'a> for UiSystem {
                 }
             }
         }
-        for event in events.read(&mut self.reader) {
+        for event in events.read(self.reader.as_mut().unwrap()) {
             // Process events for the whole UI.
             match *event {
                 Event::WindowEvent {
@@ -280,7 +283,10 @@ impl<'a> System<'a> for UiSystem {
                     event: WindowEvent::CursorMoved { position, .. },
                     ..
                 } => {
-                    self.mouse_position = (position.0 as f32, position.1 as f32);
+                    self.mouse_position = (
+                        position.0 as f32 - screen_dimensions.width() / 2.,
+                        position.1 as f32 - screen_dimensions.height() / 2.,
+                    );
                     if self.left_mouse_button_pressed {
                         let mut focused_text_edit = focused.entity.and_then(|entity| {
                             text.get_mut(entity)
@@ -293,8 +299,8 @@ impl<'a> System<'a> for UiSystem {
                         {
                             use std::f32::NAN;
 
-                            let mouse_x = self.mouse_position.0;
-                            let mouse_y = self.mouse_position.1;
+                            let mouse_x = self.mouse_position.0 + screen_dimensions.width() / 2.;
+                            let mouse_y = self.mouse_position.1 + screen_dimensions.height() / 2.;
                             // Find the glyph closest to the mouse position.
                             focused_edit.highlight_vector = focused_text
                                 .cached_glyphs
@@ -355,10 +361,10 @@ impl<'a> System<'a> for UiSystem {
                             let mut eligible = (&*entities, &transform)
                                 .join()
                                 .filter(|&(_, t)| {
-                                    t.global_x - t.width / 2.0 <= self.mouse_position.0
-                                        && t.global_x + t.width / 2.0 >= self.mouse_position.0
-                                        && t.global_y - t.height / 2.0 <= self.mouse_position.1
-                                        && t.global_y + t.height / 2.0 >= self.mouse_position.1
+                                    t.pixel_x - t.width / 2.0 <= self.mouse_position.0
+                                        && t.pixel_x + t.width / 2.0 >= self.mouse_position.0
+                                        && t.pixel_y - t.height / 2.0 <= self.mouse_position.1
+                                        && t.pixel_y + t.height / 2.0 >= self.mouse_position.1
                                 })
                                 .collect::<Vec<_>>();
                             // In instances of ambiguity we want to select the element with the
@@ -395,8 +401,10 @@ impl<'a> System<'a> for UiSystem {
                             {
                                 use std::f32::NAN;
 
-                                let mouse_x = self.mouse_position.0;
-                                let mouse_y = self.mouse_position.1;
+                                let mouse_x =
+                                    self.mouse_position.0 + screen_dimensions.width() / 2.;
+                                let mouse_y =
+                                    self.mouse_position.1 + screen_dimensions.height() / 2.;
                                 // Find the glyph closest to the click position.
                                 focused_edit.highlight_vector = 0;
                                 focused_edit.cursor_position = focused_text
@@ -466,16 +474,24 @@ impl<'a> System<'a> for UiSystem {
                         // Ignore obsolete control characters, and tab characters we can't render
                         // properly anyways.  Also ignore newline characters since we don't
                         // support multi-line text at the moment.
-                        if input < '\u{8}' || (input > '\u{8}' && input < '\u{20}') {
+                        if input < '\u{20}' {
                             continue;
                         }
-                        // Since delete character isn't emitted on windows, ignore it too.
-                        // We'll handle this with the KeyboardInput event instead.
-                        if input == '\u{7F}' {
+                        // Ignore delete character too
+                        else if input == '\u{7F}' {
+                            continue;
+                        }
+                        // Unicode reserves some characters for "private use".  Systems emit
+                        // these for no clear reason, so we're just going to ignore all of them.
+                        else if input >= '\u{E000}' && input <= '\u{F8FF}' {
+                            continue;
+                        } else if input >= '\u{F0000}' && input <= '\u{FFFFF}' {
+                            continue;
+                        } else if input >= '\u{100000}' && input <= '\u{10FFFF}' {
                             continue;
                         }
                         focused_edit.cursor_blink_timer = 0.0;
-                        let deleted = delete_highlighted(focused_edit, focused_text);
+                        delete_highlighted(focused_edit, focused_text);
                         let start_byte = focused_text
                             .text
                             .grapheme_indices(true)
@@ -486,27 +502,9 @@ impl<'a> System<'a> for UiSystem {
                                 // This line returns the correct byte index for both.
                                 focused_text.text.len()
                             });
-                        match input {
-                            '\u{8}' /*Backspace*/ => if !deleted {
-                                if focused_edit.cursor_position > 0 {
-                                    if let Some((byte, len)) = focused_text
-                                        .text
-                                        .grapheme_indices(true)
-                                        .nth(focused_edit.cursor_position as usize - 1)
-                                        .map(|i| (i.0, i.1.len())) {
-                                            {
-                                                focused_text.text.drain(byte..(byte + len));
-                                            }
-                                            focused_edit.cursor_position -= 1;
-                                    }
-                                }
-                            },
-                            _ => {
-                                if focused_text.text.graphemes(true).count() < focused_edit.max_length {
-                                    focused_text.text.insert(start_byte, input);
-                                    focused_edit.cursor_position += 1;
-                                }
-                            }
+                        if focused_text.text.graphemes(true).count() < focused_edit.max_length {
+                            focused_text.text.insert(start_byte, input);
+                            focused_edit.cursor_position += 1;
                         }
                     }
                     Event::WindowEvent {
@@ -541,6 +539,21 @@ impl<'a> System<'a> for UiSystem {
                             };
                             focused_edit.cursor_position = glyph_len;
                             focused_edit.cursor_blink_timer = 0.0;
+                        }
+                        VirtualKeyCode::Back => {
+                            if !delete_highlighted(focused_edit, focused_text) {
+                                if focused_edit.cursor_position > 0 {
+                                    if let Some((byte, len)) = focused_text
+                                        .text
+                                        .grapheme_indices(true)
+                                        .nth(focused_edit.cursor_position as usize - 1)
+                                        .map(|i| (i.0, i.1.len()))
+                                    {
+                                        focused_text.text.drain(byte..(byte + len));
+                                        focused_edit.cursor_position -= 1;
+                                    }
+                                }
+                            }
                         }
                         VirtualKeyCode::Delete => {
                             if !delete_highlighted(focused_edit, focused_text) {
@@ -661,6 +674,12 @@ impl<'a> System<'a> for UiSystem {
                 }
             }
         }
+    }
+
+    fn setup(&mut self, res: &mut Resources) {
+        use amethyst_core::specs::prelude::SystemData;
+        Self::SystemData::setup(res);
+        self.reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
     }
 }
 

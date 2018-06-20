@@ -1,7 +1,7 @@
 //! Simple shaded pass
 
 use amethyst_assets::AssetStorage;
-use amethyst_core::specs::{Entities, Fetch, Join, ReadStorage};
+use amethyst_core::specs::prelude::{Entities, Join, Read, ReadExpect, ReadStorage};
 use amethyst_core::transform::GlobalTransform;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
@@ -15,8 +15,8 @@ use mtl::{Material, MaterialDefaults};
 use pass::shaded_util::{set_light_args, setup_light_buffers};
 use pass::skinning::{create_skinning_effect, setup_skinning_buffers};
 use pass::util::{draw_mesh, get_camera, setup_textures, setup_vertex_args};
-use pipe::{DepthMode, Effect, NewEffect};
 use pipe::pass::{Pass, PassData};
+use pipe::{DepthMode, Effect, NewEffect};
 use resources::AmbientColor;
 use skinning::JointTransforms;
 use tex::Texture;
@@ -64,13 +64,13 @@ impl DrawShadedSeparate {
 impl<'a> PassData<'a> for DrawShadedSeparate {
     type Data = (
         Entities<'a>,
-        Option<Fetch<'a, ActiveCamera>>,
+        Option<Read<'a, ActiveCamera>>,
         ReadStorage<'a, Camera>,
-        Fetch<'a, AmbientColor>,
-        Fetch<'a, AssetStorage<Mesh>>,
-        Fetch<'a, AssetStorage<Texture>>,
-        Fetch<'a, MaterialDefaults>,
-        Option<Fetch<'a, Visibility>>,
+        Read<'a, AmbientColor>,
+        Read<'a, AssetStorage<Mesh>>,
+        Read<'a, AssetStorage<Texture>>,
+        ReadExpect<'a, MaterialDefaults>,
+        Option<Read<'a, Visibility>>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
         ReadStorage<'a, GlobalTransform>,
@@ -141,7 +141,7 @@ impl Pass for DrawShadedSeparate {
         trace!("Drawing shaded pass");
         let camera = get_camera(active, &camera, &global);
 
-        set_light_args(effect, encoder, &light, &ambient, camera);
+        set_light_args(effect, encoder, &light, &global, &ambient, camera);
 
         match visibility {
             None => for (entity, mesh, material, global) in

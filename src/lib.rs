@@ -5,7 +5,7 @@
 //!
 //! [rs]: https://www.rust-lang.org/
 //! [gh]: https://github.com/amethyst/amethyst
-//! [bk]: https://www.amethyst.rs/book/
+//! [bk]: https://www.amethyst.rs/book/master/
 //!
 //! This project is a work in progress and is very incomplete. Pardon the dust!
 //!
@@ -19,43 +19,44 @@
 //!
 //! struct GameState;
 //!
-//! impl State for GameState {
-//!     fn on_start(&mut self, _: &mut World) {
+//! impl State<()> for GameState {
+//!     fn on_start(&mut self, _: StateData<()>) {
 //!         println!("Starting game!");
 //!     }
 //!
-//!     fn handle_event(&mut self, _: &mut World, event: Event) -> Trans {
+//!     fn handle_event(&mut self, _: StateData<()>, event: Event) -> Trans<()> {
 //!         match event {
 //!             Event::WindowEvent { event, .. } => match event {
 //!                 WindowEvent::KeyboardInput {
 //!                     input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Escape), .. }, ..
 //!                 } |
-//!                 WindowEvent::Closed => Trans::Quit,
+//!                 WindowEvent::CloseRequested => Trans::Quit,
 //!                 _ => Trans::None,
 //!             },
 //!             _ => Trans::None,
 //!         }
 //!     }
 //!
-//!     fn update(&mut self, _: &mut World) -> Trans {
+//!     fn update(&mut self, _: StateData<()>) -> Trans<()> {
 //!         println!("Computing some more whoop-ass...");
 //!         Trans::Quit
 //!     }
 //! }
 //!
 //! fn main() {
-//!     let mut game = Application::new("assets/", GameState).expect("Fatal error");
+//!     let mut game = Application::new("assets/", GameState, ()).expect("Fatal error");
 //!     game.run();
 //! }
 //! ```
 
-#![deny(missing_docs)]
+#![warn(missing_docs)]
 #![doc(html_logo_url = "https://tinyurl.com/jtmm43a")]
 
 #[macro_use]
 #[cfg(feature = "profiler")]
 pub extern crate thread_profiler;
 
+pub extern crate amethyst_animation as animation;
 pub extern crate amethyst_assets as assets;
 pub extern crate amethyst_audio as audio;
 pub extern crate amethyst_config as config;
@@ -66,7 +67,6 @@ pub extern crate amethyst_network as network;
 pub extern crate amethyst_renderer as renderer;
 pub extern crate amethyst_ui as ui;
 pub extern crate amethyst_utils as utils;
-pub extern crate shrev;
 pub extern crate winit;
 
 #[macro_use]
@@ -79,14 +79,16 @@ extern crate rustc_version_runtime;
 
 pub use self::app::{Application, ApplicationBuilder};
 pub use self::error::{Error, Result};
-pub use self::state::{State, StateMachine, Trans};
+pub use self::game_data::{DataInit, GameData, GameDataBuilder};
+pub use self::state::{State, StateData, StateMachine, Trans};
 pub use core::shred;
+pub use core::shrev;
 pub use core::specs as ecs;
 
 pub mod prelude;
 
 mod app;
 mod error;
+mod game_data;
 mod state;
 mod vergen;
-mod bundle;

@@ -5,6 +5,8 @@ extern crate cpal;
 #[macro_use]
 extern crate log;
 extern crate rodio;
+#[macro_use]
+extern crate serde;
 extern crate smallvec;
 
 #[macro_use]
@@ -23,13 +25,13 @@ pub mod output;
 use std::error::Error;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
+mod bundle;
+mod components;
 mod end_signal;
 mod formats;
 mod sink;
 mod source;
-mod components;
 mod systems;
-mod bundle;
 
 /// An error occurred while decoding the source.
 #[derive(Debug)]

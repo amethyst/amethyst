@@ -30,68 +30,11 @@ post a duplicate issue.
 
 Amethyst does not officially support beta or nightly channels of Rust.
 If an issue can only be reproduced on those channels our resolution strategy will
-be to communicate with the rust project itself to ensure the issue does not reach
+be to communicate with the Rust project itself to ensure the issue does not reach
 the stable branch.
 
 That's all there is to it! Thanks for posting your issue; we'll take it to heart
 and try our best to resolve it.
-
-### Issue Handling For Team Members
-
-Whenever a new issue is filed by anyone, please label it accordingly. These
-labels help developers prioritize what they should work on next. All Amethyst
-issue trackers use the same set of labels to mark each issue. Please select one
-(1) label from each of the following three sections that is most relevant to
-the issue:
-
-1. **Diff**: How difficult do you think it is to resolve?
-   * Hard (highest)
-   * Medium
-   * Easy (least)
-2. **Pri**: Relatively speaking, how important is it?
-   * Blocker (highest)
-   * Critical
-   * Important
-   * Normal
-   * Low (least)
-3. **Type**: What kind of issue are you reporting?
-   * Bug
-     * A problem with the software.
-   * Feature
-     * New functionality you would like to see.
-   * Improvement
-     * Making existing functionality better.
-   * Question
-     * Any kind of question about the project.
-   * RFC
-     * Need peer review or a brainstorming session on a particular topic.
-   * Task
-     * A task or long-term initiative we should pursue.
-
-You may also attach supplementary information using the orange labels beginning
-with "Note".
-
-* **Note**: Select any of these if the associated statement is true.
-  * Doc
-    * This issue deals with documentation.
-  * Help Wanted
-    * This issue requires lots of people's help to get done.
-
-Finally, a "Status" label can be assigned to stalled or unresolved issues.
-
-* **Status**: Adds extra hints about the
-  * Stalled
-    * This issue hasn't been updated and has gone stale. If it's particularly
-      old and irrelevant, feel free to close it.
-  * Wontfix
-    * This issue will not be pursued either because it is deemed either very low
-      priority or is outside the scope of the project goals.
-
-A visual "kanban" board showing the status of all issues in the repository can
-be found in the [Projects][pr] tab, next to "Pull Requests." Feel free to check
-it out and update it as you like.
-
-[pr]: https://github.com/amethyst/amethyst/projects
 
 ## Pull Requests
 
@@ -114,7 +57,8 @@ done the following things first:
 
 1. You have ensured the pull request is based on a recent version of your
    respective branch.
-2. You have processed your source code with `cargo fmt`.
+2. You have processed your source code with `cargo fmt` (we use latest rustup stable, 
+   0.4 at the time of writing).
 3. All of the following commands completed without errors.
    * `cargo build`
    * `cargo test --all`
@@ -125,39 +69,8 @@ done the following things first:
    the work by you, as defined in the Apache 2.0 license, shall be dual
    licensed as above, without any additional terms or conditions.
 
-To streamline the process, the `.pre-commit.sh` script will run tests on each
-commit in a sanitary way for you; to have it run automatically on each commit
-simply create a symbolic link with
-
-```bash
-$ ln -s -f ../../.pre-commit.sh .git/hooks/pre-commit
-```
-
-or copy it to your `.git` folder with
-
-```bash
-$ cp .pre-commit.sh .git/hooks/pre-commit
-```
-
-Note: if you use `cp` you won't get upstream changes to `.pre-commit.sh`, but if
-you use `ln` and you checkout a path without the .pre-commit.sh` script in your
- working directory, the hook won't run.
-
-This ensures that you can't commit your changes if tests fail.  If you need to
-make a commit without running tests, then simply use
-
-```bash
-$ git commit --no-verify
-```
-
-Note: the `pre-commit` hook stashes all of your unstaged changes temporarily to
-ensure that your changes don't depend on code you haven't included in your
-commit.  So if you've lost any work, run `git stash list` and `git stash apply`
-to bring your changes back.
-
 [lm]: LICENSE-MIT
 [la]: LICENSE-APACHE
-[st]: src/engine/state.rs#L224-L265
 
 > If you want to be publicly known as an author, feel free to add your name
 > and/or GitHub username to the AUTHORS.md file in your pull request.
@@ -169,6 +82,7 @@ your code has been reviewed, revised if necessary, and then signed-off by a
 developer, it will be merged into the source tree.
 
 ### Protocol for merging pull requests
+
 * Pull Requests shall not be merged before at least 24 hours have passed.
 * Pull Requests shall be approved by at least two members (two approvals from contributors can count as one member approval.)
 * Merging a PR shall be done with `bors r+`
@@ -258,7 +172,7 @@ To check whether anything major has changed upstream, you can do:
 ```bash
 $ # Fetch latest changes
 $ git fetch upstream
-$ # Do a "non-intruisive" check.
+$ # Do a "non-intrusive" check.
 $ git merge --ff-only --no-commit upstream
 ```
 
@@ -283,8 +197,8 @@ There are two types of documentation in Amethyst you can work on:
 1. [API documentation][ad]
 2. [The Amethyst book][ab]
 
-[ad]: https://www.amethyst.rs/doc/master/doc/amethyst/index.html
-[ab]: https://www.amethyst.rs/book/master/html/index.html
+[ad]: https://www.amethyst.rs/doc/develop/doc/amethyst/index.html
+[ab]: https://www.amethyst.rs/book/develop/
 
 Our Rust API documentation is generated directly from source code comments
 marked with either `///` or `//!` using  a tool called Rustdoc. See

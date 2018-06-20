@@ -36,6 +36,14 @@ This example use vertex buffers per attribute.
 
 ![sphere example result](assets/img/sphere.png)
 
+### Multisample sphere
+
+Render a basic 3D scene, with a camera, lights and a 3D object, a sphere in this scenario.
+This example use vertex buffers per attribute.
+Only difference here is that multisampling is enabled in the options.
+
+![sphere example result](assets/img/sphere.png)
+
 ### Renderable
 
 Load graphics objects from disc using the asset loader.
@@ -57,7 +65,19 @@ Render a sphere using a physically based material.
 
 ### Animation
 
-Animate a sphere using a custom built animation sampler sequence. Press `Space` to start the animation.
+Animate a sphere using a custom built animation sampler sequence. Keybindings:
+
+* `Space` - start/pause/unpause the currentanimation(default is translational animation)
+* `D` - demonstrate deferred start, translate will run first, then rotate when translate ends, and last scale animation 
+        will start after rotation has run for 0.66s.
+* `T` - set translate to current animation
+* `R` - set rotate to current animation
+* `S` - set scale to current animation
+* `H` - run animation at half speed
+* `F` - run animation at full speed
+* `V` - run animation at no speed, use stepping keys for controlling the animation
+* `Right` - step to the next animation keyframe
+* `Left` - step to the previous animation keyframe 
 
 ### Gltf
 
@@ -83,4 +103,31 @@ Render a basic UI.
 ![pong example result](assets/img/pong.png)
 
 ### Appendix A
+
 From the book, it is a minor update to the Pong example that uses `Config` files instead of hardcoded constants.
+
+![example screenshot](appendix_a/screenshot.png)
+
+### Custom Game Data
+
+Demonstrates how to use custom `GameData`, with three different states: `Loading`, `Main`, `Paused`.
+
+![game_data_example_result](custom_game_data/screenshot.png)
+
+### Fly Camera
+
+This example shows how to use the Fly Camera.
+
+### Arc ball Camera
+
+This example shows how to use the Arc Ball Camera.
+
+### Sprites
+
+Demonstrates how to use `SpriteSheet`s.
+
+![example animation](sprites/example.gif)
+
+### Prefab
+
+Shows how to load data using the `Prefab` system.

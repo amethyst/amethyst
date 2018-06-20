@@ -5,17 +5,18 @@ use std::mem;
 use std::sync::Arc;
 
 use amethyst_assets::{AssetStorage, HotReloadStrategy};
+use amethyst_core::shrev::EventChannel;
+use amethyst_core::specs::prelude::{Read, ReadExpect, Resources, RunNow, SystemData, Write,
+                                    WriteExpect};
 use amethyst_core::Time;
-use amethyst_core::shred::Resources;
-use amethyst_core::specs::{Fetch, FetchMut, RunNow, SystemData};
 use rayon::ThreadPool;
-use shrev::EventChannel;
 use winit::{DeviceEvent, Event, WindowEvent};
 
 use config::DisplayConfig;
 use error::Result;
 use formats::{create_mesh_asset, create_texture_asset};
 use mesh::Mesh;
+use mtl::{Material, MaterialDefaults};
 use pipe::{PipelineBuild, PipelineData, PolyPipeline};
 use renderer::Renderer;
 use resources::{ScreenDimensions, WindowMessages};
@@ -29,6 +30,9 @@ pub struct RenderSystem<P> {
     #[derivative(Debug = "ignore")]
     renderer: Renderer,
     cached_size: (u32, u32),
+    // This only exists to allow the system to re-use a vec allocation
+    // during event compression.  It's length 0 except during `fn render`.
+    event_vec: Vec<Event>,
 }
 
 impl<P> RenderSystem<P>
@@ -67,12 +71,8 @@ where
             pipe,
             renderer,
             cached_size,
+            event_vec: Vec::with_capacity(20),
         }
-    }
-
-    /// Returns the size in pixels of the window.
-    pub fn window_size(&self) -> Option<(u32, u32)> {
-        self.renderer.window().get_inner_size()
     }
 
     fn asset_loading(
@@ -115,11 +115,10 @@ where
 
         if let Some(size) = self.renderer.window().get_inner_size() {
             // Send window size changes to the resource
-            if size
-                != (
-                    screen_dimensions.width() as u32,
-                    screen_dimensions.height() as u32,
-                ) {
+            if size != (
+                screen_dimensions.width() as u32,
+                screen_dimensions.height() as u32,
+            ) {
                 screen_dimensions.update(size.0, size.1);
 
                 // We don't need to send the updated size of the window back to the window itself,
@@ -131,28 +130,26 @@ where
 
     fn render(&mut self, (mut event_handler, data): RenderData<P>) {
         self.renderer.draw(&mut self.pipe, data);
-
-        let mut events: Vec<Event> = Vec::new();
+        let events = &mut self.event_vec;
         self.renderer.events_mut().poll_events(|new_event| {
-            compress_events(&mut events, new_event);
+            compress_events(events, new_event);
         });
-
-        event_handler.iter_write(events);
+        event_handler.iter_write(events.drain(..));
     }
 }
 
 type AssetLoadingData<'a> = (
-    Fetch<'a, Time>,
-    Fetch<'a, Arc<ThreadPool>>,
-    Option<Fetch<'a, HotReloadStrategy>>,
-    FetchMut<'a, AssetStorage<Mesh>>,
-    FetchMut<'a, AssetStorage<Texture>>,
+    Read<'a, Time>,
+    ReadExpect<'a, Arc<ThreadPool>>,
+    Option<Read<'a, HotReloadStrategy>>,
+    Write<'a, AssetStorage<Mesh>>,
+    Write<'a, AssetStorage<Texture>>,
 );
 
-type WindowData<'a> = (FetchMut<'a, WindowMessages>, FetchMut<'a, ScreenDimensions>);
+type WindowData<'a> = (Write<'a, WindowMessages>, WriteExpect<'a, ScreenDimensions>);
 
 type RenderData<'a, P> = (
-    FetchMut<'a, EventChannel<Event>>,
+    Write<'a, EventChannel<Event>>,
     <P as PipelineData<'a>>::Data,
 );
 
@@ -163,9 +160,67 @@ where
     fn run_now(&mut self, res: &'a Resources) {
         #[cfg(feature = "profiler")]
         profile_scope!("render_system");
-        self.asset_loading(AssetLoadingData::fetch(res, 0));
-        self.window_management(WindowData::fetch(res, 0));
-        self.render(RenderData::<P>::fetch(res, 0));
+        self.asset_loading(AssetLoadingData::fetch(res));
+        self.window_management(WindowData::fetch(res));
+        self.render(RenderData::<P>::fetch(res));
+    }
+
+    fn setup(&mut self, res: &mut Resources) {
+        AssetLoadingData::setup(res);
+        WindowData::setup(res);
+        RenderData::<P>::setup(res);
+
+        let mat = create_default_mat(res);
+        res.insert(MaterialDefaults(mat));
+        let (width, height) = self.renderer
+            .window()
+            .get_inner_size()
+            .expect("Window closed during initialization!");
+        let hidpi = self.renderer.window().hidpi_factor();
+        res.insert(ScreenDimensions::new(width, height, hidpi));
+    }
+}
+
+fn create_default_mat(res: &mut Resources) -> Material {
+    use amethyst_assets::Loader;
+    use mtl::TextureOffset;
+
+    let loader = res.fetch::<Loader>();
+
+    let albedo = [0.5, 0.5, 0.5, 1.0].into();
+    let emission = [0.0; 4].into();
+    let normal = [0.5, 0.5, 1.0, 1.0].into();
+    let metallic = [0.0; 4].into();
+    let roughness = [0.5; 4].into();
+    let ambient_occlusion = [1.0; 4].into();
+    let caveat = [1.0; 4].into();
+
+    let tex_storage = res.fetch();
+
+    let albedo = loader.load_from_data(albedo, (), &tex_storage);
+    let emission = loader.load_from_data(emission, (), &tex_storage);
+    let normal = loader.load_from_data(normal, (), &tex_storage);
+    let metallic = loader.load_from_data(metallic, (), &tex_storage);
+    let roughness = loader.load_from_data(roughness, (), &tex_storage);
+    let ambient_occlusion = loader.load_from_data(ambient_occlusion, (), &tex_storage);
+    let caveat = loader.load_from_data(caveat, (), &tex_storage);
+
+    Material {
+        alpha_cutoff: 0.01,
+        albedo,
+        albedo_offset: TextureOffset::default(),
+        emission,
+        emission_offset: TextureOffset::default(),
+        normal,
+        normal_offset: TextureOffset::default(),
+        metallic,
+        metallic_offset: TextureOffset::default(),
+        roughness,
+        roughness_offset: TextureOffset::default(),
+        ambient_occlusion,
+        ambient_occlusion_offset: TextureOffset::default(),
+        caveat,
+        caveat_offset: TextureOffset::default(),
     }
 }
 

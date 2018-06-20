@@ -3,10 +3,11 @@
 use std::marker::PhantomData;
 
 use amethyst_assets::AssetStorage;
-use amethyst_core::specs::{Fetch, Join, ReadStorage};
+use amethyst_core::specs::prelude::{Join, Read, ReadExpect, ReadStorage};
 use amethyst_core::transform::GlobalTransform;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
+use glsl_layout::Uniform;
 
 use super::*;
 use cam::{ActiveCamera, Camera};
@@ -14,8 +15,8 @@ use error::Result;
 use mesh::{Mesh, MeshHandle};
 use mtl::{Material, MaterialDefaults};
 use pass::util::{draw_mesh, get_camera, setup_textures, VertexArgs};
-use pipe::{DepthMode, Effect, NewEffect};
 use pipe::pass::{Pass, PassData};
+use pipe::{DepthMode, Effect, NewEffect};
 use tex::Texture;
 use types::{Encoder, Factory};
 use vertex::{Position, Query, TexCoord};
@@ -57,12 +58,12 @@ where
     V: Query<(Position, TexCoord)>,
 {
     type Data = (
-        Option<Fetch<'a, ActiveCamera>>,
+        Option<Read<'a, ActiveCamera>>,
         ReadStorage<'a, Camera>,
-        Fetch<'a, AssetStorage<Mesh>>,
-        Fetch<'a, AssetStorage<Texture>>,
-        Fetch<'a, MaterialDefaults>,
-        Option<Fetch<'a, Visibility>>,
+        Read<'a, AssetStorage<Mesh>>,
+        Read<'a, AssetStorage<Texture>>,
+        ReadExpect<'a, MaterialDefaults>,
+        Option<Read<'a, Visibility>>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
         ReadStorage<'a, GlobalTransform>,
@@ -77,7 +78,11 @@ where
         use std::mem;
         let mut builder = effect.simple(VERT_SRC, FRAG_SRC);
         builder
-            .with_raw_constant_buffer("VertexArgs", mem::size_of::<VertexArgs>(), 1)
+            .with_raw_constant_buffer(
+                "VertexArgs",
+                mem::size_of::<<VertexArgs as Uniform>::Std140>(),
+                1,
+            )
             .with_raw_vertex_buffer(V::QUERIED_ATTRIBUTES, V::size() as ElemStride, 0);
         setup_textures(&mut builder, &TEXTURES);
         match self.transparency {

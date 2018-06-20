@@ -8,7 +8,6 @@
 extern crate ron;
 extern crate serde;
 
-#[macro_use]
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
 
@@ -138,7 +137,7 @@ where
         };
 
         if path.extension().and_then(|e| e.to_str()) == Some("ron") {
-            let mut d = Deserializer::from_bytes(&content);
+            let mut d = Deserializer::from_bytes(&content)?;
             let val = T::deserialize(&mut d)?;
             d.end()?;
 

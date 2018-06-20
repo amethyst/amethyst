@@ -10,8 +10,8 @@ use std::thread::sleep;
 use std::time::Duration;
 
 use amethyst_assets::*;
-use amethyst_core::specs::VecStorage;
-use rayon::{Configuration, ThreadPool};
+use amethyst_core::specs::prelude::VecStorage;
+use rayon::ThreadPoolBuilder;
 
 #[derive(Clone, Debug)]
 struct DummyAsset(String);
@@ -45,8 +45,8 @@ impl Format<DummyAsset> for DummyFormat {
 fn main() {
     let path = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
 
-    let cfg = Configuration::new().num_threads(8);
-    let pool = Arc::new(ThreadPool::new(cfg).expect("Invalid config"));
+    let builder = ThreadPoolBuilder::new().num_threads(8);
+    let pool = Arc::new(builder.build().expect("Invalid config"));
 
     let loader = Loader::new(&path, pool.clone());
     let mut storage = AssetStorage::new();
@@ -82,7 +82,7 @@ fn main() {
             |mut s| {
                 s.insert_str(0, ">> ");
 
-                Ok(DummyAsset(s))
+                Ok(ProcessingState::Loaded(DummyAsset(s)))
             },
             frame_number,
             &*pool,

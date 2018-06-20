@@ -27,41 +27,25 @@ be present. For now though, let's just use the `Default` trait.
 
 ## Adding the Config to the World
 
-Now, in `bundle.rs`, add the following lines:
+Now, in `main.rs`, add the following lines:
 
 ```rust,ignore
-use std::path::Path;
-
 use config::ArenaConfig;
 ```
 
-In `bundle.rs`, modify the `PongBundle` struct to now have a `config` field.
+We'll need to load the config at startup, so let's add this to the `run` function in `main.rs`
 
 ```rust,ignore
-struct PongBundle {
-    config: ArenaConfig,
-}
+let arena_config = ArenaConfig::load(&config);
 ```
 
-We'll need to load the config at startup, so let's add a `new()` function that takes the path to the RON 
-config file.
+Now that we have loaded our config, we want to add it to the world so other modules can access 
+it. We do this by adding the config as a resource during `Application` creation:
+
 
 ```rust,ignore
-impl PongBundle {
-    pub fn new<P: AsRef<Path>>(path: P) -> Self {
-        PongBundle {
-            config: PongConfig::load(path),
-        }
-    }
-}
-```
-
-Now that our `PongBundle` knows about our config, we want to add it to the world so other modules can access 
-it. We do this by modifying the [`build()`][ecsbuild] function implemented as part of the 
-[`ECSBundle`][ecsbundle] trait. Add the following line to the top of the function:
-
-```rust,ignore
-world.add_resource(self.config);
+    .with_resource(arena_config)
+    .with_bundle(PongBundle::default())?
 ```
 
 Now for the difficult part: replacing every use of `ARENA_WIDTH` and `ARENA_HEIGHT` with our config object. 

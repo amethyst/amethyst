@@ -46,19 +46,13 @@ pub struct PongConfig {
 }
 ```
 
-and modify the `ECSBundle`'s `build()` function to add our `PaddleConfig`s. 
+and modify the `main.rs`'s `run()` function to add our `PaddleConfig`s. 
 
 ```rust,ignore
-fn build(
-    self,
-    world: &mut World,
-    builder: DispatcherBuilder<'a, 'b>,
-) -> Result<DispatcherBuilder<'a, 'b>> {
-    world.add_resource(self.config.arena);
-    world.add_resource(self.config.ball);
-    world.add_resource(self.config.paddles);
-    ...
-}
+    .with_resource(pong_config.arena)
+    .with_resource(pong_config.ball)
+    .with_resource(pong_config.paddles)
+    .with_bundle(PongBundle::default())?
 ```
 
 We add the `PaddlesConfig` to the `World`, rather than as separate `left` and `right` configurations because

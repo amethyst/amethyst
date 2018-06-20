@@ -77,6 +77,8 @@ impl Renderer {
         if let Some(size) = self.window().get_inner_size() {
             if size != self.cached_size {
                 self.cached_size = size;
+                #[cfg(feature = "opengl")]
+                self.window.resize(size.0, size.1);
                 self.resize(pipe, size);
             }
         }
