@@ -44,6 +44,14 @@ where
     pub filters: Vec<Box<NetFilter<T>>>,
     /// The mio's `Poll`.
     pub poll: Poll,
+
+
+
+// EXTRACT STATEFUL DATA FROM HERE INTO A RESOURCE
+// MOVE UTILS FUNCTIONS (connect) EXTERNALLY
+
+
+
 }
 
 impl<T> NetSocketSystem<T>

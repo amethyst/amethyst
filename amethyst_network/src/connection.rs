@@ -40,11 +40,20 @@ pub struct NetIdentity {
     pub uuid: Uuid,
 }
 
+impl Default for NetIdentity{
+  pub fn default() -> Self{
+    NetIdentity{
+      uuid: Uuid::new_v4(),
+    }
+  }
+}
+
 impl Component for NetIdentity {
     type Storage = VecStorage<NetIdentity>;
 }
 
 /// The list of network connections allocated by the network system.
+#[derive(Default)]
 pub struct NetConnectionPool {
     /// The connections.
     pub connections: Vec<NetConnection>,
@@ -95,6 +104,7 @@ impl Component for NetConnectionPool {
 }
 
 /// The resource containing the events that should be send by the NetworkSocketSystem.
+#[derive(Default)]
 pub struct NetSendBuffer<T> {
     /// The event buffer.
     pub buf: EventChannel<NetSourcedEvent<T>>,
@@ -120,6 +130,7 @@ where
 }
 
 /// The resource containing the events that were received and not filtered by the NetworkSocketSystem.
+#[derive(Default)]
 pub struct NetReceiveBuffer<T> {
     /// The event buffer.
     pub buf: EventChannel<NetSourcedEvent<T>>,

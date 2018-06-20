@@ -1,6 +1,6 @@
 use super::{ConnectionManagerSystem, NetConnectionPool, NetIdentity, NetReceiveBuffer,
             NetSendBuffer, NetSocketSystem};
-use amethyst_core::bundle::{ECSBundle, Result};
+use amethyst_core::bundle::{SystemBundle, Result};
 use filter::NetFilter;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
@@ -62,20 +62,16 @@ impl<'a, T> NetworkBundle<'a, T> {
     }
 }
 
-impl<'a, 'b, 'c, T> ECSBundle<'a, 'b> for NetworkBundle<'c, T>
+impl<'a, 'b, 'c, T> SystemBundle<'a, 'b> for NetworkBundle<'c, T>
 where
     T: Send + Sync + PartialEq + Serialize + Clone + DeserializeOwned + 'static,
 {
-    fn build(
-        mut self,
-        world: &mut World,
-        mut builder: DispatcherBuilder<'a, 'b>,
-    ) -> Result<DispatcherBuilder<'a, 'b>> {
-        let mut pool = NetConnectionPool::new();
-        world.add_resource(NetSendBuffer::<T>::new());
-        world.add_resource(NetReceiveBuffer::<T>::new());
+    fn build(self,mut builder: DispatcherBuilder<'a, 'b>) -> Result<()> {
+        //let mut pool = NetConnectionPool::new();
+        //world.add_resource(NetSendBuffer::<T>::new());
+        //world.add_resource(NetReceiveBuffer::<T>::new());
 
-        let uuid = Uuid::new_v4();
+        //let uuid = Uuid::new_v4();
 
         let custom_port = self.port.is_some();
 
@@ -90,16 +86,16 @@ where
             s.connect(c, &mut pool, uuid);
         }
 
-        world.add_resource(pool);
-        world.add_resource(NetIdentity { uuid });
+        //world.add_resource(pool);
+        //world.add_resource(NetIdentity { uuid });
 
-        builder = builder.add(s, "net_socket", &[]);
-        builder = builder.add(
+        builder.add(s, "net_socket", &[]);
+        builder.add(
             ConnectionManagerSystem::<T>::new(self.is_server),
             "connection_manager",
             &["net_socket"],
         );
 
-        Ok(builder)
+        Ok()
     }
 }
