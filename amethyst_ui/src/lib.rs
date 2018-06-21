@@ -4,6 +4,7 @@
 #![doc(html_logo_url = "https://tinyurl.com/jtmm43a")]
 
 extern crate amethyst_assets;
+extern crate amethyst_audio;
 extern crate amethyst_core;
 extern crate amethyst_input;
 extern crate amethyst_renderer;
@@ -32,6 +33,7 @@ extern crate log;
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
 
+mod action_components;
 mod bundle;
 mod button;
 mod event;
@@ -45,18 +47,21 @@ mod resize;
 mod text;
 mod transform;
 
+pub use self::action_components::{OnUiActionImage, OnUiActionSound};
 pub use self::bundle::UiBundle;
-pub use self::button::{UiButton, UiButtonBuilder, UiButtonBuilderResources};
+pub use self::button::{UiButton, UiButtonBuilder, UiButtonBuilderResources, UiButtonSystem};
 pub use self::event::{MouseReactive, UiEvent, UiEventType, UiMouseSystem};
 pub use self::focused::UiFocused;
 pub use self::format::{FontAsset, FontFormat, FontHandle, OtfFormat, TtfFormat};
 pub use self::image::UiImage;
 pub use self::layout::{Anchor, ScaleMode, Stretch, UiTransformSystem};
 pub use self::pass::DrawUi;
-pub use self::prefab::{UiCreator, UiFormat, UiImageBuilder, UiLoader, UiLoaderSystem, UiPrefab,
-                       UiTextBuilder, UiTransformBuilder, UiWidget};
+pub use self::prefab::{
+    UiCreator, UiFormat, UiImageBuilder, UiLoader, UiLoaderSystem, UiPrefab, UiTextBuilder,
+    UiTransformBuilder, UiWidget,
+};
 pub use self::resize::{ResizeSystem, UiResize};
-pub use self::text::{TextEditing, UiSystem, UiText};
+pub use self::text::{TextEditing, UiKeyboardSystem, UiText};
 pub use self::transform::{UiFinder, UiTransform};
 
 /// How many times the cursor blinks per second while editing text.

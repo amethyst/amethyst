@@ -3,16 +3,18 @@
 extern crate amethyst;
 extern crate rayon;
 
-use amethyst::assets::{Completion, Handle, Prefab, PrefabLoader, PrefabLoaderSystem,
-                       ProgressCounter, RonFormat};
+use amethyst::assets::{
+    Completion, Handle, Prefab, PrefabLoader, PrefabLoaderSystem, ProgressCounter, RonFormat,
+};
 use amethyst::config::Config;
 use amethyst::core::transform::TransformBundle;
 use amethyst::ecs::prelude::{Component, Entity};
 use amethyst::ecs::storage::NullStorage;
 use amethyst::input::{is_close_requested, is_key_down, InputBundle};
 use amethyst::prelude::*;
-use amethyst::renderer::{DisplayConfig, DrawShaded, Event, Pipeline, PosNormTex, RenderBundle,
-                         Stage, VirtualKeyCode};
+use amethyst::renderer::{
+    DisplayConfig, DrawShaded, Event, Pipeline, PosNormTex, RenderBundle, Stage, VirtualKeyCode,
+};
 use amethyst::ui::{DrawUi, UiBundle, UiCreator, UiLoader, UiPrefab};
 use amethyst::utils::fps_counter::FPSCounterBundle;
 use amethyst::utils::scene::BasicScenePrefab;

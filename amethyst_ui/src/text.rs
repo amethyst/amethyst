@@ -2,9 +2,10 @@ use std::cmp::Ordering;
 use std::ops::Range;
 
 use amethyst_core::shrev::{EventChannel, ReaderId};
-use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entities, Entity, Join, Read,
-                                    ReadExpect, ReadStorage, Resources, System, Write,
-                                    WriteStorage};
+use amethyst_core::specs::prelude::{
+    Component, DenseVecStorage, Entities, Entity, Join, Read, ReadExpect, ReadStorage, Resources,
+    System, Write, WriteStorage,
+};
 use amethyst_core::timing::Time;
 use amethyst_renderer::ScreenDimensions;
 use clipboard::{ClipboardContext, ClipboardProvider};
@@ -13,8 +14,9 @@ use hibitset::BitSet;
 use unicode_normalization::char::is_combining_mark;
 use unicode_normalization::UnicodeNormalization;
 use unicode_segmentation::UnicodeSegmentation;
-use winit::{ElementState, Event, KeyboardInput, ModifiersState, MouseButton, VirtualKeyCode,
-            WindowEvent};
+use winit::{
+    ElementState, Event, KeyboardInput, ModifiersState, MouseButton, VirtualKeyCode, WindowEvent,
+};
 
 use super::*;
 
@@ -123,7 +125,7 @@ struct CachedTabOrder {
 }
 
 /// This system processes the underlying UI data as needed.
-pub struct UiSystem {
+pub struct UiKeyboardSystem {
     /// A reader for winit events.
     reader: Option<ReaderId<Event>>,
     /// A cache sorted by tab order, and then by Entity.
@@ -134,8 +136,8 @@ pub struct UiSystem {
     mouse_position: (f32, f32),
 }
 
-impl UiSystem {
-    /// Initializes a new UiSystem that uses the given reader id.
+impl UiKeyboardSystem {
+    /// Creates a new instance of this system
     pub fn new() -> Self {
         Self {
             reader: None,
@@ -149,7 +151,7 @@ impl UiSystem {
     }
 }
 
-impl<'a> System<'a> for UiSystem {
+impl<'a> System<'a> for UiKeyboardSystem {
     type SystemData = (
         Entities<'a>,
         WriteStorage<'a, UiText>,

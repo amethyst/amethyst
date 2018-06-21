@@ -1,15 +1,19 @@
 use std::marker::PhantomData;
 
-use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, PrefabError, Progress,
-                      ProgressCounter};
+use amethyst_assets::{
+    AssetStorage, Handle, Loader, PrefabData, PrefabError, Progress, ProgressCounter,
+};
 use amethyst_core::cgmath::{InnerSpace, Vector3};
 use amethyst_core::specs::prelude::{Entity, Read, ReadExpect, WriteStorage};
-use genmesh::generators::{Circle, Cone, Cube, Cylinder, IcoSphere, IndexedPolygon, Plane,
-                          SharedVertex, SphereUv, Torus};
+use genmesh::generators::{
+    Circle, Cone, Cube, Cylinder, IcoSphere, IndexedPolygon, Plane, SharedVertex, SphereUv, Torus,
+};
 use genmesh::{EmitTriangles, MapVertex, Triangulate, Vertex, Vertices};
 
-use {ComboMeshCreator, Mesh, MeshData, MeshHandle, Normal, PosNormTangTex, PosNormTex, PosTex,
-     Position, Separate, Tangent, TexCoord};
+use {
+    ComboMeshCreator, Mesh, MeshData, MeshHandle, Normal, PosNormTangTex, PosNormTex, PosTex,
+    Position, Separate, Tangent, TexCoord,
+};
 
 /// Prefab for generating `Mesh` from basic shapes
 ///

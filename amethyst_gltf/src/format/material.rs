@@ -5,8 +5,10 @@ use gfx::texture::SamplerInfo;
 use gltf;
 use gltf::material::AlphaMode;
 use itertools::Itertools;
-use renderer::{JpgFormat, MaterialPrefab, PngFormat, TextureData, TextureFormat, TextureMetadata,
-               TexturePrefab};
+use renderer::{
+    JpgFormat, MaterialPrefab, PngFormat, TextureData, TextureFormat, TextureMetadata,
+    TexturePrefab,
+};
 
 use super::{get_image_data, Buffers, GltfError, ImageFormat};
 

@@ -5,16 +5,19 @@
 
 extern crate amethyst;
 
-use amethyst::assets::{Completion, Handle, HotReloadBundle, Prefab, PrefabLoader,
-                       PrefabLoaderSystem, ProgressCounter, RonFormat};
+use amethyst::assets::{
+    Completion, Handle, HotReloadBundle, Prefab, PrefabLoader, PrefabLoaderSystem, ProgressCounter,
+    RonFormat,
+};
 use amethyst::core::cgmath::{Quaternion, Rad, Rotation, Rotation3};
 use amethyst::core::timing::Time;
 use amethyst::core::transform::{Transform, TransformBundle};
 use amethyst::ecs::prelude::{Entity, Join, Read, ReadStorage, System, Write, WriteStorage};
 use amethyst::input::{get_key, is_close_requested, is_key_down, InputBundle};
 use amethyst::prelude::*;
-use amethyst::renderer::{AmbientColor, Camera, DrawShaded, ElementState, Event, Light,
-                         PosNormTex, VirtualKeyCode};
+use amethyst::renderer::{
+    AmbientColor, Camera, DrawShaded, ElementState, Event, Light, PosNormTex, VirtualKeyCode,
+};
 use amethyst::ui::{UiBundle, UiCreator, UiFinder, UiText};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::utils::scene::BasicScenePrefab;
@@ -87,27 +90,27 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
             return Trans::Quit;
         }
         match get_key(&event) {
-            Some((VirtualKeyCode::R,ElementState::Pressed)) => {
+            Some((VirtualKeyCode::R, ElementState::Pressed)) => {
                 w.exec(|mut state: Write<DemoState>| {
                     state.light_color = [0.8, 0.2, 0.2, 1.0];
                 });
             }
-            Some((VirtualKeyCode::G,ElementState::Pressed)) => {
+            Some((VirtualKeyCode::G, ElementState::Pressed)) => {
                 w.exec(|mut state: Write<DemoState>| {
                     state.light_color = [0.2, 0.8, 0.2, 1.0];
                 });
             }
-            Some((VirtualKeyCode::B,ElementState::Pressed)) => {
+            Some((VirtualKeyCode::B, ElementState::Pressed)) => {
                 w.exec(|mut state: Write<DemoState>| {
                     state.light_color = [0.2, 0.2, 0.8, 1.0];
                 });
             }
-            Some((VirtualKeyCode::W,ElementState::Pressed)) => {
+            Some((VirtualKeyCode::W, ElementState::Pressed)) => {
                 w.exec(|mut state: Write<DemoState>| {
                     state.light_color = [1.0, 1.0, 1.0, 1.0];
                 });
             }
-            Some((VirtualKeyCode::A,ElementState::Pressed)) => {
+            Some((VirtualKeyCode::A, ElementState::Pressed)) => {
                 w.exec(
                     |(mut state, mut color): (Write<DemoState>, Write<AmbientColor>)| {
                         if state.ambient_light {
@@ -120,7 +123,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
                     },
                 );
             }
-            Some((VirtualKeyCode::D,ElementState::Pressed)) => {
+            Some((VirtualKeyCode::D, ElementState::Pressed)) => {
                 w.exec(
                     |(mut state, mut lights): (Write<DemoState>, WriteStorage<Light>)| {
                         if state.directional_light {
@@ -141,7 +144,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
                     },
                 );
             }
-            Some((VirtualKeyCode::P,ElementState::Pressed)) => {
+            Some((VirtualKeyCode::P, ElementState::Pressed)) => {
                 w.exec(|mut state: Write<DemoState>| {
                     if state.point_light {
                         state.point_light = false;
@@ -249,13 +252,15 @@ impl<'a> System<'a> for ExampleSystem {
             transform.rotation = (delta_rot * Quaternion::from(transform.rotation)).into();
         }
 
-        for (point_light, transform)  in (&mut lights, &mut transforms).join().filter_map(|(light, transform)| {
-            if let Light::Point(ref mut point_light) = *light {
-                Some((point_light, transform))
-            } else {
-                None
-            }
-        }) {
+        for (point_light, transform) in (&mut lights, &mut transforms).join().filter_map(
+            |(light, transform)| {
+                if let Light::Point(ref mut point_light) = *light {
+                    Some((point_light, transform))
+                } else {
+                    None
+                }
+            },
+        ) {
             transform.translation.x = light_orbit_radius * state.light_angle.cos();
             transform.translation.y = light_orbit_radius * state.light_angle.sin();
             transform.translation.z = light_z;
