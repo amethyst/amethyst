@@ -1,8 +1,9 @@
 use std::result::Result as StdResult;
 
 use amethyst_assets::{PrefabData, PrefabError};
-use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entity, FlaggedStorage,
-                                    WriteStorage};
+use amethyst_core::specs::prelude::{
+    Component, DenseVecStorage, Entity, FlaggedStorage, WriteStorage,
+};
 use gfx::format::{ChannelType, Format, SurfaceType};
 
 use error::Result;

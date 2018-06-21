@@ -4,8 +4,9 @@ extern crate amethyst;
 
 use amethyst::input::{is_close_requested, is_key};
 use amethyst::prelude::*;
-use amethyst::renderer::{DisplayConfig, DrawFlat, Event, Pipeline, PosNormTex, RenderBundle,
-                         Stage, VirtualKeyCode};
+use amethyst::renderer::{
+    DisplayConfig, DrawFlat, Event, Pipeline, PosNormTex, RenderBundle, Stage, VirtualKeyCode,
+};
 
 struct Example;
 

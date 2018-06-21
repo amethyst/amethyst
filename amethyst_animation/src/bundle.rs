@@ -6,8 +6,9 @@ use amethyst_core::{Result, SystemBundle};
 
 use resources::AnimationSampling;
 use skinning::VertexSkinningSystem;
-use systems::{AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem,
-              SamplerProcessor};
+use systems::{
+    AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem, SamplerProcessor,
+};
 
 /// Bundle for vertex skinning
 ///

@@ -3,8 +3,10 @@ pub use imagefmt::Error as ImageError;
 use std::io::Cursor;
 use std::result::Result as StdResult;
 
-use amethyst_assets::{AssetStorage, Format, Handle, Loader, PrefabData, PrefabError,
-                      ProcessingState, ProgressCounter, Result, ResultExt, SimpleFormat};
+use amethyst_assets::{
+    AssetStorage, Format, Handle, Loader, PrefabData, PrefabError, ProcessingState,
+    ProgressCounter, Result, ResultExt, SimpleFormat,
+};
 use amethyst_core::specs::prelude::{Entity, Read, ReadExpect};
 use gfx::format::{ChannelType, SurfaceType};
 use gfx::texture::SamplerInfo;

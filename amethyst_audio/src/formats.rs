@@ -45,3 +45,28 @@ impl SimpleFormat<Audio> for FlacFormat {
         Ok(AudioData(bytes))
     }
 }
+
+/// Aggregate sound format
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub enum AudioFormat {
+    /// Ogg
+    Ogg,
+    /// Wav
+    Wav,
+    /// Flac
+    Flac,
+}
+
+impl SimpleFormat<Audio> for AudioFormat {
+    const NAME: &'static str = "AudioFormat";
+
+    type Options = ();
+
+    fn import(&self, bytes: Vec<u8>, options: ()) -> Result<AudioData> {
+        match *self {
+            AudioFormat::Ogg => SimpleFormat::import(&OggFormat, bytes, options),
+            AudioFormat::Wav => SimpleFormat::import(&WavFormat, bytes, options),
+            AudioFormat::Flac => SimpleFormat::import(&FlacFormat, bytes, options),
+        }
+    }
+}

@@ -1,7 +1,8 @@
 use std::marker::PhantomData;
 
-use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entities, Entity, FlaggedStorage,
-                                    Join, ReadStorage};
+use amethyst_core::specs::prelude::{
+    Component, DenseVecStorage, Entities, Entity, FlaggedStorage, Join, ReadStorage,
+};
 
 use super::{Anchor, ScaleMode, Stretch};
 
@@ -111,13 +112,16 @@ impl UiTransform {
     /// Checks if the input position is in the UiTransform rectangle.
     /// Uses local coordinates (ignores layouting).
     pub fn position_inside_local(&self, x: f32, y: f32) -> bool {
-        x > self.local_x - self.width / 2.0 && y > self.local_y - self.height / 2.0
-            && x < self.local_x + self.width / 2.0 && y < self.local_y + self.height / 2.0
+        x > self.local_x - self.width / 2.0
+            && y > self.local_y - self.height / 2.0
+            && x < self.local_x + self.width / 2.0
+            && y < self.local_y + self.height / 2.0
     }
 
     /// Checks if the input position is in the UiTransform rectangle.
     pub fn position_inside(&self, x: f32, y: f32) -> bool {
-        x > self.pixel_x - self.pixel_width / 2.0 && y > self.pixel_y - self.pixel_height / 2.0
+        x > self.pixel_x - self.pixel_width / 2.0
+            && y > self.pixel_y - self.pixel_height / 2.0
             && x < self.pixel_x + self.pixel_width / 2.0
             && y < self.pixel_y + self.pixel_height / 2.0
     }

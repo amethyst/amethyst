@@ -5,15 +5,18 @@
 
 extern crate amethyst;
 
-use amethyst::assets::{Completion, Handle, HotReloadBundle, Prefab, PrefabLoader,
-                       PrefabLoaderSystem, ProgressCounter, RonFormat};
+use amethyst::assets::{
+    Completion, Handle, HotReloadBundle, Prefab, PrefabLoader, PrefabLoaderSystem, ProgressCounter,
+    RonFormat,
+};
 use amethyst::core::cgmath::{Quaternion, Rad, Rotation, Rotation3};
 use amethyst::core::timing::Time;
 use amethyst::core::transform::{Transform, TransformBundle};
 use amethyst::ecs::prelude::{Entity, Join, Read, ReadStorage, System, Write, WriteStorage};
 use amethyst::input::{get_key, is_close_requested, is_key, InputBundle};
-use amethyst::renderer::{AmbientColor, Camera, DrawShaded, Event, Light, PosNormTex,
-                         VirtualKeyCode};
+use amethyst::renderer::{
+    AmbientColor, Camera, DrawShaded, Event, Light, PosNormTex, VirtualKeyCode,
+};
 use amethyst::ui::{UiBundle, UiCreator, UiFinder, UiText};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::utils::scene::BasicScenePrefab;
@@ -246,13 +249,15 @@ impl<'a> System<'a> for ExampleSystem {
             transform.rotation = (delta_rot * Quaternion::from(transform.rotation)).into();
         }
 
-        for (point_light, transform)  in (&mut lights, &mut transforms).join().filter_map(|(light, transform)| {
-            if let Light::Point(ref mut point_light) = *light {
-                Some((point_light, transform))
-            } else {
-                None
-            }
-        }) {
+        for (point_light, transform) in (&mut lights, &mut transforms).join().filter_map(
+            |(light, transform)| {
+                if let Light::Point(ref mut point_light) = *light {
+                    Some((point_light, transform))
+                } else {
+                    None
+                }
+            },
+        ) {
             transform.translation.x = light_orbit_radius * state.light_angle.cos();
             transform.translation.y = light_orbit_radius * state.light_angle.sin();
             transform.translation.z = light_z;

@@ -5,8 +5,9 @@ use std::hash::Hash;
 
 use amethyst_core::shrev::EventChannel;
 use smallvec::SmallVec;
-use winit::{DeviceEvent, ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode,
-            WindowEvent};
+use winit::{
+    DeviceEvent, ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent,
+};
 
 use super::event::InputEvent;
 use super::event::InputEvent::*;

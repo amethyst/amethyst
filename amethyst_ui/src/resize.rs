@@ -1,6 +1,8 @@
 use amethyst_core::shrev::ReaderId;
-use amethyst_core::specs::prelude::{BitSet, Component, FlaggedStorage, InsertedFlag, Join,
-                                    ModifiedFlag, ReadExpect, Resources, System, WriteStorage};
+use amethyst_core::specs::prelude::{
+    BitSet, Component, FlaggedStorage, InsertedFlag, Join, ModifiedFlag, ReadExpect, Resources,
+    System, WriteStorage,
+};
 use amethyst_renderer::ScreenDimensions;
 
 use super::*;

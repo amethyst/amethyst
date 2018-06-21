@@ -4,8 +4,10 @@ extern crate amethyst;
 #[macro_use]
 extern crate serde;
 
-use amethyst::animation::{get_animation_set, AnimationBundle, AnimationCommand, AnimationSet,
-                          AnimationSetPrefab, DeferStartRelation, EndControl, StepDirection};
+use amethyst::animation::{
+    get_animation_set, AnimationBundle, AnimationCommand, AnimationSet, AnimationSetPrefab,
+    DeferStartRelation, EndControl, StepDirection,
+};
 use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, RonFormat};
 use amethyst::core::{Transform, TransformBundle};
 use amethyst::ecs::prelude::{Entity, World};

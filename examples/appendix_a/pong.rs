@@ -4,8 +4,9 @@ use amethyst::core::transform::{GlobalTransform, Transform};
 use amethyst::ecs::prelude::World;
 use amethyst::input::{is_close_requested, is_key};
 use amethyst::prelude::*;
-use amethyst::renderer::{Camera, Event, Material, MeshHandle, PosTex, Projection, VirtualKeyCode,
-                         WindowMessages};
+use amethyst::renderer::{
+    Camera, Event, Material, MeshHandle, PosTex, Projection, VirtualKeyCode, WindowMessages,
+};
 use amethyst::ui::{Anchor, TtfFormat, UiText, UiTransform};
 use config::{ArenaConfig, BallConfig, PaddlesConfig};
 use systems::ScoreText;

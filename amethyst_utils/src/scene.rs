@@ -3,8 +3,10 @@ use amethyst_controls::ControlTagPrefab;
 use amethyst_core::specs::error::Error;
 use amethyst_core::specs::prelude::Entity;
 use amethyst_core::Transform;
-use amethyst_renderer::{CameraPrefab, GraphicsPrefab, InternalShape, LightPrefab, Mesh, MeshData,
-                        ObjFormat, TextureFormat};
+use amethyst_renderer::{
+    CameraPrefab, GraphicsPrefab, InternalShape, LightPrefab, Mesh, MeshData, ObjFormat,
+    TextureFormat,
+};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 

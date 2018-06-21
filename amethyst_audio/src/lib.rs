@@ -15,7 +15,7 @@ extern crate thread_profiler;
 
 pub use self::bundle::AudioBundle;
 pub use self::components::*;
-pub use self::formats::{FlacFormat, OggFormat, WavFormat};
+pub use self::formats::{AudioFormat, FlacFormat, OggFormat, WavFormat};
 pub use self::sink::AudioSink;
 pub use self::source::{Source, SourceHandle};
 pub use self::systems::*;
