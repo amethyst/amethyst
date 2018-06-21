@@ -1,6 +1,7 @@
 use amethyst_assets::{PrefabData, PrefabError};
-use amethyst_core::specs::prelude::{Component, Entities, Entity, Join, NullStorage, ReadStorage,
-                                    WriteStorage};
+use amethyst_core::specs::prelude::{
+    Component, Entities, Entity, Join, NullStorage, ReadStorage, WriteStorage,
+};
 use std::marker::PhantomData;
 
 /// Tag component that can be used with a custom type to tag entities for processing

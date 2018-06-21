@@ -5,12 +5,14 @@ extern crate amethyst;
 extern crate rayon;
 
 use amethyst::assets::{Loader, Result as AssetResult, SimpleFormat};
-use amethyst::core::cgmath::{Array, Vector3, Matrix4};
+use amethyst::core::cgmath::{Array, Matrix4, Vector3};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::input::{is_close_requested, is_key_down, InputBundle};
 use amethyst::prelude::*;
-use amethyst::renderer::{Camera, DrawShaded, Event, Light, Material, MaterialDefaults, Mesh,
-                         MeshData, PointLight, PosNormTex, Projection, Rgba, VirtualKeyCode};
+use amethyst::renderer::{
+    Camera, DrawShaded, Event, Light, Material, MaterialDefaults, Mesh, MeshData, PointLight,
+    PosNormTex, Projection, Rgba, VirtualKeyCode,
+};
 use amethyst::Error;
 
 #[derive(Clone)]
@@ -152,7 +154,8 @@ fn initialise_lights(world: &mut World) {
     let transform = Matrix4::from_translation([5.0, -20.0, 15.0].into());
 
     // Add point light.
-    world.create_entity()
+    world
+        .create_entity()
         .with(light)
         .with(GlobalTransform(transform.into()))
         .build();

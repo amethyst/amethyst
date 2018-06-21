@@ -80,7 +80,7 @@ extern crate rustc_version_runtime;
 pub use self::app::{Application, ApplicationBuilder};
 pub use self::error::{Error, Result};
 pub use self::game_data::{DataInit, GameData, GameDataBuilder};
-pub use self::logger::{start_logger, LoggerConfig, LevelFilter as LogLevelFilter};
+pub use self::logger::{start_logger, LevelFilter as LogLevelFilter, LoggerConfig};
 pub use self::state::{State, StateData, StateMachine, Trans};
 pub use core::shred;
 pub use core::shrev;

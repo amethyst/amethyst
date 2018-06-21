@@ -18,17 +18,20 @@ mod sprite_sheet_loader;
 
 use std::time::Duration;
 
-use amethyst::animation::{get_animation_set, AnimationBundle, AnimationCommand, AnimationControl,
-                          ControlState, EndControl};
+use amethyst::animation::{
+    get_animation_set, AnimationBundle, AnimationCommand, AnimationControl, ControlState,
+    EndControl,
+};
 use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::cgmath::{Matrix4, Point3, Transform as CgTransform, Vector3};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::Entity;
 use amethyst::input::{is_close_requested, is_key_down, InputBundle};
 use amethyst::prelude::*;
-use amethyst::renderer::{Camera, ColorMask, DrawFlat, Event, Material, MaterialDefaults,
-                         MaterialTextureSet, Mesh, PosTex, Projection, ScreenDimensions,
-                         VirtualKeyCode, ALPHA};
+use amethyst::renderer::{
+    Camera, ColorMask, DrawFlat, Event, Material, MaterialDefaults, MaterialTextureSet, Mesh,
+    PosTex, Projection, ScreenDimensions, VirtualKeyCode, ALPHA,
+};
 use amethyst::ui::UiBundle;
 
 #[derive(Debug, Default)]

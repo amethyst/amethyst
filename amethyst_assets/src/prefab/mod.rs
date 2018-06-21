@@ -3,8 +3,9 @@ pub use amethyst_core::specs::error::Error as PrefabError;
 
 use std::marker::PhantomData;
 
-use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entity, FlaggedStorage, Read,
-                                    ReadExpect, SystemData, WriteStorage};
+use amethyst_core::specs::prelude::{
+    Component, DenseVecStorage, Entity, FlaggedStorage, Read, ReadExpect, SystemData, WriteStorage,
+};
 
 use {Asset, AssetStorage, Format, Handle, Loader, Progress, ProgressCounter};
 
@@ -318,7 +319,7 @@ where
 ///
 /// - `A`: `Asset`,
 /// - `F`: `Format` for loading `A`
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 pub enum AssetPrefab<A, F>
 where
     A: Asset,
@@ -363,27 +364,6 @@ where
             ),
         };
         system_data.1.insert(entity, handle.clone()).map(|_| handle)
-    }
-
-    fn trigger_sub_loading(
-        &mut self,
-        progress: &mut ProgressCounter,
-        system_data: &mut Self::SystemData,
-    ) -> Result<bool, PrefabError> {
-        let handle = match *self {
-            AssetPrefab::File(ref name, ref format, ref options) => Some(system_data.0.load(
-                name.as_ref(),
-                format.clone(),
-                options.clone(),
-                progress,
-                &system_data.2,
-            )),
-            _ => None,
-        };
-        if let Some(handle) = handle {
-            *self = AssetPrefab::Handle(handle);
-        }
-        Ok(true)
     }
 }
 

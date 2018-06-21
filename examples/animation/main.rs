@@ -4,8 +4,10 @@ extern crate amethyst;
 #[macro_use]
 extern crate serde;
 
-use amethyst::animation::{get_animation_set, AnimationBundle, AnimationCommand, AnimationSet,
-                          AnimationSetPrefab, DeferStartRelation, EndControl, StepDirection};
+use amethyst::animation::{
+    get_animation_set, AnimationBundle, AnimationCommand, AnimationSet, AnimationSetPrefab,
+    DeferStartRelation, EndControl, StepDirection,
+};
 use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, RonFormat};
 use amethyst::core::{Transform, TransformBundle};
 use amethyst::ecs::prelude::Entity;
@@ -58,7 +60,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
             return Trans::Quit;
         }
         match get_key(&event) {
-            Some((VirtualKeyCode::Space,ElementState::Pressed)) => {
+            Some((VirtualKeyCode::Space, ElementState::Pressed)) => {
                 add_animation(
                     world,
                     self.sphere.unwrap(),
@@ -69,7 +71,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
                 );
             }
 
-            Some((VirtualKeyCode::D,ElementState::Pressed)) => {
+            Some((VirtualKeyCode::D, ElementState::Pressed)) => {
                 add_animation(
                     world,
                     self.sphere.unwrap(),
@@ -96,53 +98,58 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
                 );
             }
 
-            Some((VirtualKeyCode::Left,ElementState::Pressed)) => {
+            Some((VirtualKeyCode::Left, ElementState::Pressed)) => {
                 get_animation_set::<AnimationId, Transform>(
                     &mut world.write_storage(),
                     self.sphere.unwrap().clone(),
-                ).unwrap().step(self.current_animation, StepDirection::Backward);
+                ).unwrap()
+                    .step(self.current_animation, StepDirection::Backward);
             }
 
-            Some((VirtualKeyCode::Right,ElementState::Pressed)) => {
+            Some((VirtualKeyCode::Right, ElementState::Pressed)) => {
                 get_animation_set::<AnimationId, Transform>(
                     &mut world.write_storage(),
                     self.sphere.unwrap().clone(),
-                ).unwrap().step(self.current_animation, StepDirection::Forward);
+                ).unwrap()
+                    .step(self.current_animation, StepDirection::Forward);
             }
 
-            Some((VirtualKeyCode::F,ElementState::Pressed)) => {
+            Some((VirtualKeyCode::F, ElementState::Pressed)) => {
                 self.rate = 1.0;
                 get_animation_set::<AnimationId, Transform>(
                     &mut world.write_storage(),
                     self.sphere.unwrap().clone(),
-                ).unwrap().set_rate(self.current_animation, self.rate);
+                ).unwrap()
+                    .set_rate(self.current_animation, self.rate);
             }
 
-            Some((VirtualKeyCode::V,ElementState::Pressed)) => {
+            Some((VirtualKeyCode::V, ElementState::Pressed)) => {
                 self.rate = 0.0;
                 get_animation_set::<AnimationId, Transform>(
                     &mut world.write_storage(),
                     self.sphere.unwrap().clone(),
-                ).unwrap().set_rate(self.current_animation, self.rate);
+                ).unwrap()
+                    .set_rate(self.current_animation, self.rate);
             }
 
-            Some((VirtualKeyCode::H,ElementState::Pressed)) => {
+            Some((VirtualKeyCode::H, ElementState::Pressed)) => {
                 self.rate = 0.5;
                 get_animation_set::<AnimationId, Transform>(
                     &mut world.write_storage(),
                     self.sphere.unwrap().clone(),
-                ).unwrap().set_rate(self.current_animation, self.rate);
+                ).unwrap()
+                    .set_rate(self.current_animation, self.rate);
             }
 
-            Some((VirtualKeyCode::R,ElementState::Pressed)) => {
+            Some((VirtualKeyCode::R, ElementState::Pressed)) => {
                 self.current_animation = AnimationId::Rotate;
             }
 
-            Some((VirtualKeyCode::S,ElementState::Pressed)) => {
+            Some((VirtualKeyCode::S, ElementState::Pressed)) => {
                 self.current_animation = AnimationId::Scale;
             }
 
-            Some((VirtualKeyCode::T,ElementState::Pressed)) => {
+            Some((VirtualKeyCode::T, ElementState::Pressed)) => {
                 self.current_animation = AnimationId::Translate;
             }
 

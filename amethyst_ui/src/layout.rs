@@ -1,7 +1,8 @@
 use super::UiTransform;
-use amethyst_core::specs::prelude::{BitSet, Entities, InsertedFlag, Join, ModifiedFlag,
-                                    ReadExpect, ReadStorage, ReaderId, Resources, System,
-                                    WriteStorage};
+use amethyst_core::specs::prelude::{
+    BitSet, Entities, InsertedFlag, Join, ModifiedFlag, ReadExpect, ReadStorage, ReaderId,
+    Resources, System, WriteStorage,
+};
 use amethyst_core::{HierarchyEvent, Parent, ParentHierarchy};
 use amethyst_renderer::ScreenDimensions;
 
