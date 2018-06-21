@@ -2,7 +2,6 @@
 //!
 
 #![crate_name = "amethyst_config"]
-#![crate_type = "lib"]
 #![doc(html_logo_url = "http://tinyurl.com/hgsb45k")]
 
 extern crate ron;

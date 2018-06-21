@@ -4,9 +4,12 @@
 use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::io::Cursor;
 
+use amethyst_core::shred::Resources;
+
 use cpal::OutputDevices;
 use rodio::{default_output_device, output_devices, Decoder, Device, Sink, Source as RSource};
 
+use sink::AudioSink;
 use source::Source;
 use DecoderError;
 
@@ -99,5 +102,16 @@ pub fn default_output() -> Option<Output> {
 pub fn outputs() -> OutputIterator {
     OutputIterator {
         input: output_devices(),
+    }
+}
+
+/// Initialize default output
+pub fn init_output(res: &mut Resources) {
+    if let Some(o) = default_output() {
+        res.entry::<AudioSink>()
+            .or_insert_with(|| AudioSink::new(&o));
+        res.entry::<Output>().or_insert_with(|| o);
+    } else {
+        error!("Failed finding a default audio output to hook AudioSink to, audio will not work!")
     }
 }

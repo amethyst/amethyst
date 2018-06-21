@@ -5,19 +5,24 @@ use std::hash::{Hash, Hasher};
 
 use amethyst_assets::{AssetStorage, Loader};
 use amethyst_core::cgmath::vec4 as cg_vec4;
-use amethyst_core::specs::prelude::{Entities, Entity, Join, Read, ReadExpect, ReadStorage,
-                                    WriteStorage};
+use amethyst_core::specs::prelude::{
+    Entities, Entity, Join, Read, ReadExpect, ReadStorage, WriteStorage,
+};
 use amethyst_renderer::error::Result;
 use amethyst_renderer::pipe::pass::{Pass, PassData};
 use amethyst_renderer::pipe::{Effect, NewEffect};
-use amethyst_renderer::{Encoder, Factory, Mesh, PosTex, Resources, ScreenDimensions, Texture,
-                        TextureData, TextureHandle, TextureMetadata, VertexFormat};
+use amethyst_renderer::{
+    Encoder, Factory, Mesh, PosTex, Resources, ScreenDimensions, Texture, TextureData,
+    TextureHandle, TextureMetadata, VertexFormat,
+};
 use fnv::FnvHashMap as HashMap;
 use gfx::preset::blend;
 use gfx::pso::buffer::ElemStride;
 use gfx::state::ColorMask;
-use gfx_glyph::{BuiltInLineBreaker, FontId, GlyphBrush, GlyphBrushBuilder, GlyphCruncher,
-                HorizontalAlign, Layout, Point, Scale, SectionText, VariedSection, VerticalAlign};
+use gfx_glyph::{
+    BuiltInLineBreaker, FontId, GlyphBrush, GlyphBrushBuilder, GlyphCruncher, HorizontalAlign,
+    Layout, Point, Scale, SectionText, VariedSection, VerticalAlign,
+};
 use glsl_layout::{vec2, vec4, Uniform};
 use hibitset::BitSet;
 use unicode_segmentation::UnicodeSegmentation;
@@ -49,7 +54,9 @@ impl Eq for KeyColor {}
 
 impl PartialEq for KeyColor {
     fn eq(&self, other: &Self) -> bool {
-        self.0[0] == other.0[0] && self.0[1] == other.0[1] && self.0[2] == other.0[2]
+        self.0[0] == other.0[0]
+            && self.0[1] == other.0[1]
+            && self.0[2] == other.0[2]
             && self.0[3] == other.0[3]
     }
 }
@@ -484,7 +491,8 @@ impl Pass for DrawUi {
                             let pos = glyph.map(|g| g.position()).unwrap_or(Point {
                                 x: ui_transform.pixel_x - ui_transform.pixel_width / 2.0
                                     + screen_dimensions.width() / 2.,
-                                y: ui_transform.pixel_y - ui_transform.pixel_height / 2.0 + ascent
+                                y: ui_transform.pixel_y - ui_transform.pixel_height / 2.0
+                                    + ascent
                                     + screen_dimensions.height() / 2.,
                             });
                             let mut x = pos.x;

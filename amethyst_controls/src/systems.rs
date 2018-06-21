@@ -3,8 +3,9 @@ use std::marker::PhantomData;
 
 use amethyst_core::cgmath::{Deg, Vector3};
 use amethyst_core::shrev::{EventChannel, ReaderId};
-use amethyst_core::specs::prelude::{Join, Read, ReadStorage, Resources, System, Write,
-                                    WriteStorage};
+use amethyst_core::specs::prelude::{
+    Join, Read, ReadStorage, Resources, System, Write, WriteStorage,
+};
 use amethyst_core::timing::Time;
 use amethyst_core::transform::Transform;
 use amethyst_input::InputHandler;

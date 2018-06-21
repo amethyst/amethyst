@@ -4,7 +4,9 @@ extern crate amethyst;
 #[macro_use]
 extern crate log;
 
-use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, RonFormat};
+use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, Processor, RonFormat};
+use amethyst::audio::output::init_output;
+use amethyst::audio::Source;
 use amethyst::core::transform::TransformBundle;
 use amethyst::core::Time;
 use amethyst::ecs::prelude::{Entity, System, Write};
@@ -31,7 +33,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
             loader.load("prefab/sphere.ron", RonFormat, (), ())
         });
         world.create_entity().with(handle).build();
-
+        init_output(&mut world.res);
         world.exec(|mut creator: UiCreator| {
             creator.create("ui/example.ron", ());
         });
@@ -79,6 +81,7 @@ fn main() -> amethyst::Result<()> {
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
         .with_bundle(TransformBundle::new())?
         .with_bundle(UiBundle::<String, String>::new())?
+        .with(Processor::<Source>::new(), "source_processor", &[])
         .with(UiEventHandlerSystem::new(), "ui_event_handler", &[])
         .with_bundle(FPSCounterBundle::default())?
         .with_bundle(InputBundle::<String, String>::new())?

@@ -5,8 +5,7 @@ use amethyst::ecs::prelude::World;
 use amethyst::input::{is_close_requested, is_key};
 use amethyst::prelude::*;
 use amethyst::renderer::{
-    Camera, Event, PngFormat, Projection, Sprite, SpriteRenderData, Texture, TextureHandle,
-    VirtualKeyCode, WindowMessages, WithSpriteRender,
+    Camera, Event, Texture, TextureHandle, PngFormat, Projection, Sprite, SpriteRenderData, VirtualKeyCode, WithSpriteRender, WindowMessages,
 };
 use amethyst::ui::{Anchor, TtfFormat, UiText, UiTransform};
 use systems::ScoreText;

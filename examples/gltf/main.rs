@@ -5,10 +5,14 @@ extern crate amethyst_gltf;
 #[macro_use]
 extern crate serde;
 
-use amethyst::animation::{get_animation_set, AnimationBundle, AnimationCommand,
-                          AnimationControlSet, AnimationSet, EndControl, VertexSkinningBundle};
-use amethyst::assets::{AssetPrefab, Completion, Handle, Prefab, PrefabData, PrefabLoader,
-                       PrefabLoaderSystem, ProgressCounter, RonFormat};
+use amethyst::animation::{
+    get_animation_set, AnimationBundle, AnimationCommand, AnimationControlSet, AnimationSet,
+    EndControl, VertexSkinningBundle,
+};
+use amethyst::assets::{
+    AssetPrefab, Completion, Handle, Prefab, PrefabData, PrefabLoader, PrefabLoaderSystem,
+    ProgressCounter, RonFormat,
+};
 use amethyst::controls::{ControlTagPrefab, FlyControlBundle};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::error::Error;

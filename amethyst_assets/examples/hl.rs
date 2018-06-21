@@ -13,8 +13,9 @@ use std::sync::Arc;
 
 use amethyst_assets::*;
 use amethyst_core::specs::common::Errors;
-use amethyst_core::specs::prelude::{Dispatcher, DispatcherBuilder, Read, ReadExpect, System,
-                                    VecStorage, World, Write};
+use amethyst_core::specs::prelude::{
+    Dispatcher, DispatcherBuilder, Read, ReadExpect, System, VecStorage, World, Write,
+};
 use amethyst_core::Time;
 use rayon::{ThreadPool, ThreadPoolBuilder};
 
