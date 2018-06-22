@@ -45,3 +45,17 @@ impl SimpleFormat<Audio> for FlacFormat {
         Ok(AudioData(bytes))
     }
 }
+
+/// Loads audio from MP3 files.
+#[derive(Clone)]
+pub struct Mp3Format;
+
+impl SimpleFormat<Audio> for Mp3Format {
+    const NAME: &'static str = "MP3";
+
+    type Options = ();
+
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<AudioData> {
+        Ok(AudioData(bytes))
+    }
+}
