@@ -15,15 +15,15 @@ use resources::{AnimationControlSet, AnimationSampling};
 pub fn get_animation_set<'a, I, T>(
     controls: &'a mut WriteStorage<AnimationControlSet<I, T>>,
     entity: Entity,
-) -> &'a mut AnimationControlSet<I, T>
+) -> Option<&'a mut AnimationControlSet<I, T>>
 where
     I: Send + Sync + 'static,
     T: AnimationSampling,
 {
     controls
         .entry(entity)
-        .unwrap()
-        .or_insert_with(AnimationControlSet::default)
+        .ok()
+        .map(|entry| entry.or_insert_with(AnimationControlSet::default))
 }
 
 /// Sampler primitive
