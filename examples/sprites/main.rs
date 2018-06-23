@@ -133,7 +133,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
             let mut animation_control_set_storage = world.write_storage();
             let animation_set =
                 get_animation_set::<u32, Material>(&mut animation_control_set_storage, entity)
-                .unwrap();
+                    .unwrap();
 
             let animation_id = 0;
 
