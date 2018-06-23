@@ -5,7 +5,8 @@ use minterpolate::InterpolationPrimitive;
 
 use resources::{AnimationControlSet, AnimationSampling};
 
-/// Get the animation set for an entity. If none exists, one will be added.
+/// Get the animation set for an entity. If none exists, one will be added. If entity is invalid,
+/// (eg. removed before) None will be returned.
 ///
 /// ### Type parameters:
 ///
