@@ -72,7 +72,7 @@ impl From<[f32; 4]> for Sprite {
 /// SystemData containing the data necessary to handle new rendered sprites
 #[derive(SystemData)]
 pub struct SpriteRenderData<'a> {
-    /// Storage containing the displayed meshes
+    /// Storage containing the meshes
     pub meshes: WriteStorage<'a, MeshHandle>,
     /// Storage containing the materials
     pub materials: WriteStorage<'a, Material>,
@@ -80,7 +80,7 @@ pub struct SpriteRenderData<'a> {
     pub material_defaults: ReadExpect<'a, MaterialDefaults>,
     /// Asset loader
     pub loader: ReadExpect<'a, Loader>,
-    /// Storage containing the meshes as assets
+    /// Mesh asset storage
     pub asset_storage: Read<'a, AssetStorage<Mesh>>,
 }
 
