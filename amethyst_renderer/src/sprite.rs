@@ -4,9 +4,10 @@ use amethyst_core::specs::prelude::{
 };
 use error::Result;
 use mesh::{Mesh, MeshHandle};
+use shape::Shape;
 use std::marker::Sized;
 use tex::TextureHandle;
-use {Material, MaterialDefaults, TextureOffset};
+use {Material, MaterialDefaults, PosTex, TextureOffset};
 
 /// An asset handle to sprite sheet metadata.
 pub type SpriteSheetHandle = Handle<SpriteSheet>;
@@ -75,12 +76,12 @@ pub struct SpriteRenderData<'a> {
     pub meshes: WriteStorage<'a, MeshHandle>,
     /// Storage containing the materials
     pub materials: WriteStorage<'a, Material>,
-    /// Loader resource
-    pub loader: ReadExpect<'a, Loader>,
-    /// Assets storage containing meshes
-    pub asset_storage: Read<'a, AssetStorage<Mesh>>,
     /// Material defaults
     pub material_defaults: ReadExpect<'a, MaterialDefaults>,
+    /// Asset loader
+    pub loader: ReadExpect<'a, Loader>,
+    /// Mesh asset storage
+    pub asset_storage: Read<'a, AssetStorage<Mesh>>,
 }
 
 impl<'a> SpriteRenderData<'a> {
@@ -90,41 +91,13 @@ impl<'a> SpriteRenderData<'a> {
         texture: TextureHandle,
         size: (f32, f32),
     ) -> (MeshHandle, Material) {
-        use vertex::PosTex;
         let half_width = (sprite.right - sprite.left) * 0.5;
         let half_height = (sprite.bottom - sprite.top) * 0.5;
 
-        let vertices: Vec<PosTex> = vec![
-            // First triangle
-            PosTex {
-                position: [-half_width, -half_height, 0.0],
-                tex_coord: [0.0, 0.0],
-            },
-            PosTex {
-                position: [half_width, -half_height, 0.0],
-                tex_coord: [1.0, 0.0],
-            },
-            PosTex {
-                position: [-half_width, half_height, 0.0],
-                tex_coord: [0.0, 1.0],
-            },
-            // Second triangle
-            PosTex {
-                position: [half_width, half_height, 0.0],
-                tex_coord: [1.0, 1.0],
-            },
-            PosTex {
-                position: [-half_width, half_height, 0.0],
-                tex_coord: [0.0, 1.0],
-            },
-            PosTex {
-                position: [half_width, -half_height, 0.0],
-                tex_coord: [1.0, 0.0],
-            },
-        ];
-
+        let vertices =
+            Shape::Plane(None).generate::<Vec<PosTex>>(Some((half_width, half_height, 0.0)));
         let mesh = self.loader
-            .load_from_data(vertices.into(), (), &self.asset_storage);
+            .load_from_data(vertices, (), &self.asset_storage);
 
         let material = Material {
             albedo: texture,
@@ -196,9 +169,12 @@ impl<'a> WithSpriteRender for EntityBuilder<'a> {
         texture: TextureHandle,
         texture_size: (f32, f32),
     ) -> Result<Self> {
-        self.world
-            .system_data::<SpriteRenderData>()
-            .add(self.entity, sprite, texture, texture_size)?;
+        self.world.system_data::<SpriteRenderData>().add(
+            self.entity,
+            sprite,
+            texture,
+            texture_size,
+        )?;
         Ok(self)
     }
 }
