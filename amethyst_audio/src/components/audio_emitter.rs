@@ -54,4 +54,3 @@ impl Component for AudioEmitter {
     type Storage = BTreeStorage<Self>;
 }
 
-unsafe impl Sync for AudioEmitter {}
