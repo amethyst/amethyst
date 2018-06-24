@@ -5,6 +5,8 @@ extern crate cpal;
 #[macro_use]
 extern crate log;
 extern crate rodio;
+#[macro_use]
+extern crate serde;
 extern crate smallvec;
 
 #[macro_use]

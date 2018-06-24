@@ -35,16 +35,17 @@ pub(crate) fn set_light_args(
     effect: &mut Effect,
     encoder: &mut Encoder,
     light: &ReadStorage<Light>,
+    global: &ReadStorage<GlobalTransform>,
     ambient: &AmbientColor,
     camera: Option<(&Camera, &GlobalTransform)>,
 ) {
-    let point_lights: Vec<_> = light
+    let point_lights: Vec<_> = (light, global)
         .join()
-        .filter_map(|light| {
+        .filter_map(|(light, transform)| {
             if let Light::Point(ref light) = *light {
                 Some(
                     PointLightPod {
-                        position: light.center.into(),
+                        position: transform.0.w.truncate().into(),
                         color: light.color.into(),
                         intensity: light.intensity,
                         pad: 0.0,

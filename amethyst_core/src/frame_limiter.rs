@@ -12,7 +12,7 @@
 //! any work it needs to. If a frame takes less time than is budgeted, amethyst will attempt to
 //! yield the remaining time back to the operating system, using the chosen strategy.
 //!
-//! By default, the amethyst will set the maximum frame rate to 144 fps, and will use a yield-only
+//! By default, amethyst will set the maximum frame rate to 144 fps, and will use a yield-only
 //! limiting strategy.
 //!
 //! # Examples
@@ -35,26 +35,6 @@
 //! # Ok(())
 //! # }
 //! ```
-//!
-//! # Frame Budgets and Cadence
-//!
-//! The amount of time each frame has to complete is determined by the selected maximum frame
-//! rate. Here are frame budgets for common frame rates:
-//!
-//! * 30 fps = 33.3 milliseconds per frame
-//! * 60 fps = 16.6 milliseconds per frame
-//! * 144 fps = 6.9 milliseconds per frame
-//!
-//! Amethyst will attempt to start each frame on a consistent cadence based on the current frame
-//! budget. For example, at 60 fps amethyst will try to start a frame every 16.6 milliseconds.
-//! Keeping this timing consistent helps ensure that your game simulation runs smoothly, and
-//! amethyst will automatically keep your game running at the requested cadence as long as your
-//! game logic takes less time to complete than is allotted (i.e. less that 16.6 ms when
-//! running at 60 fps).
-//!
-//! If the game logic for the frame takes longer than the alloted time, then amethyst will
-//! immediately begin the next frame. In the case that a frame goes over its budget, the frame
-//! cadence will reset to align with the start of the first frame after the long frame.
 //!
 //! # Frame Rate Limiting Strategies
 //!
@@ -199,12 +179,11 @@ impl FrameLimiter {
         Self::new(config.strategy, config.fps)
     }
 
-    /// Resets the frame cadence to start at the current time.
+    /// Resets the frame start time to the current instant.
     ///
     /// This resets the frame limiter's internal tracking of when the last frame started to the
-    /// current instant. Be careful when calling `start`, as doing so will effectively reset
-    /// the frame cadence, and will cause the current frame to be longer than normal if not
-    /// called at the very beginning of the frame.
+    /// current instant. Be careful when calling `start`, as doing so will cause the current
+    /// frame to be longer than normal if not called at the very beginning of the frame.
     pub fn start(&mut self) {
         self.last_call = Instant::now();
     }

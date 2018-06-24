@@ -1,5 +1,7 @@
 //! `amethyst` rendering ecs resources
 
+use amethyst_assets::{PrefabData, PrefabError};
+use amethyst_core::specs::{Entity, Write};
 use smallvec::SmallVec;
 use winit::Window;
 
@@ -12,6 +14,21 @@ pub struct AmbientColor(pub Rgba);
 impl AsRef<Rgba> for AmbientColor {
     fn as_ref(&self) -> &Rgba {
         &self.0
+    }
+}
+
+impl<'a> PrefabData<'a> for AmbientColor {
+    type SystemData = Write<'a, AmbientColor>;
+    type Result = ();
+
+    fn load_prefab(
+        &self,
+        _: Entity,
+        ambient: &mut Self::SystemData,
+        _: &[Entity],
+    ) -> Result<(), PrefabError> {
+        ambient.0 = self.0.clone();
+        Ok(())
     }
 }
 

@@ -15,7 +15,7 @@ pub type SpriteSheetHandle = Handle<SpriteSheet>;
 /// Meta data for a sprite sheet texture.
 ///
 /// Contains a handle to the texture and the sprite coordinates on the texture.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct SpriteSheet {
     /// Index into `MaterialTextureSet` of the texture for this sprite sheet.
     pub texture_id: u64,

@@ -65,14 +65,15 @@ extern crate gfx_device_vulkan;
 extern crate gfx_window_vulkan;
 
 pub use bundle::RenderBundle;
-pub use cam::{ActiveCamera, Camera, Projection};
+pub use cam::{ActiveCamera, ActiveCameraPrefab, Camera, CameraPrefab, Projection};
 pub use color::Rgba;
 pub use config::DisplayConfig;
 pub use formats::{build_mesh_with_combo, create_mesh_asset, create_texture_asset, BmpFormat,
-                  ComboMeshCreator, ImageData, ImageError, JpgFormat, MeshCreator, MeshData,
-                  ObjFormat, PngFormat, TextureData, TextureFormat, TextureMetadata};
+                  ComboMeshCreator, GraphicsPrefab, ImageData, ImageError, JpgFormat,
+                  MaterialPrefab, MeshCreator, MeshData, ObjFormat, PngFormat, TextureData,
+                  TextureFormat, TextureMetadata, TexturePrefab};
 pub use input::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
-pub use light::{DirectionalLight, Light, PointLight, SpotLight, SunLight};
+pub use light::{DirectionalLight, Light, LightPrefab, PointLight, SpotLight, SunLight};
 pub use mesh::{vertex_data, Mesh, MeshBuilder, MeshHandle, VertexBuffer};
 pub use mtl::{Material, MaterialDefaults, MaterialTextureSet, TextureOffset};
 pub use pass::{DrawFlat, DrawFlatSeparate, DrawPbm, DrawPbmSeparate, DrawShaded,
@@ -82,7 +83,7 @@ pub use pipe::{ColorBuffer, Data, DepthBuffer, DepthMode, Effect, EffectBuilder,
                PolyStage, PolyStages, Stage, StageBuilder, Target, TargetBuilder, Targets};
 pub use renderer::Renderer;
 pub use resources::{AmbientColor, ScreenDimensions, WindowMessages};
-pub use shape::{InternalShape, Shape, ShapeUpload};
+pub use shape::{InternalShape, Shape, ShapePrefab, ShapeUpload};
 pub use skinning::{AnimatedComboMeshCreator, AnimatedVertexBufferCombination, JointIds,
                    JointTransforms, JointTransformsPrefab, JointWeights};
 pub use sprite::{Sprite, SpriteRenderData, SpriteSheet, SpriteSheetHandle, WithSpriteRender};

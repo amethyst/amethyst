@@ -202,8 +202,10 @@ impl<'a> System<'a> for UiTransformSystem {
                     let parent_transform_copy = parent_transform_copy.unwrap();
                     let mut transform = transform.unwrap();
                     let norm = transform.anchor.norm_offset();
-                    transform.pixel_x = parent_transform_copy.pixel_x + parent_transform_copy.pixel_width * norm.0;
-                    transform.pixel_y = parent_transform_copy.pixel_y + parent_transform_copy.pixel_height * norm.1;
+                    transform.pixel_x =
+                        parent_transform_copy.pixel_x + parent_transform_copy.pixel_width * norm.0;
+                    transform.pixel_y =
+                        parent_transform_copy.pixel_y + parent_transform_copy.pixel_height * norm.1;
                     transform.global_z = parent_transform_copy.global_z + transform.local_z;
 
                     let new_size = match transform.stretch {

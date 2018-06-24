@@ -18,6 +18,13 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Add alpha cutoff support to the PBR shader ([#756])
 * Basic renderer setup helper function ([#771])
 * Shape mesh generators ([#777])
+* Derive `PartialEq` for `SpriteSheet` ([#789])
+* Add core support for Prefabs ([#716])
+* Add shape prefab support ([#785])
+* Specialised UI prefab format ([#786])
+* Add generation of normals/tangents in GLTF ([#784])
+* Add basic scene prefab ([#791])
+* Improve ergonomics of examples ([#793])
 
 ### Changed
 * UI systems will now never overwrite your local `UiTransform` values ([#774])
@@ -30,6 +37,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Remove boilerplate for `run` + `main` in examples ([#764])
 * Update dependencies ([#752], [#751])
 * Formalized and documented support for overriding the global logger ([#776])
+* Refactor GLTF loader to use prefabs ([#784])
+* Point lights use `GlobalTransform` for positioning rather than a separate `center` ([#794])
+* Point lights now require a `GlobalTransform` component to be included in rendering ([#794])
 
 ### Fixed
 * Resizing fixed on OSX ([#767])
@@ -56,6 +66,13 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#774]: https://github.com/amethyst/amethyst/pull/774
 [#777]: https://github.com/amethyst/amethyst/pull/777
 [#776]: https://github.com/amethyst/amethyst/pull/776
+[#716]: https://github.com/amethyst/amethyst/pull/716
+[#784]: https://github.com/amethyst/amethyst/pull/784
+[#785]: https://github.com/amethyst/amethyst/pull/785
+[#786]: https://github.com/amethyst/amethyst/pull/786
+[#791]: https://github.com/amethyst/amethyst/pull/791
+[#789]: https://github.com/amethyst/amethyst/pull/789
+[#793]: https://github.com/amethyst/amethyst/pull/793
 
 ## [0.7.0] - 2018-05
 ### Added
