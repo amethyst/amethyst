@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Add generation of normals/tangents in GLTF ([#784])
 * Add basic scene prefab ([#791])
 * Improve ergonomics of examples ([#793])
+* Beginner-friendly utilities for sprite rendering ([#804])
 
 ### Changed
 * UI systems will now never overwrite your local `UiTransform` values ([#774])
@@ -73,6 +74,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#791]: https://github.com/amethyst/amethyst/pull/791
 [#789]: https://github.com/amethyst/amethyst/pull/789
 [#793]: https://github.com/amethyst/amethyst/pull/793
+[#804]: https://github.com/amethyst/amethyst/pull/804
 
 ## [0.7.0] - 2018-05
 ### Added
