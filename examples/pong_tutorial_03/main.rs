@@ -21,6 +21,10 @@ fn main() -> amethyst::Result<()> {
         env!("CARGO_MANIFEST_DIR")
     );
 
+    // This line is not mentionned in the pong tutorial as it is specific to the context
+    // of the git repository. It only is a different location to load the assets from.
+    let assets_dir = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
+
     let input_bundle = InputBundle::<String, String>::new().with_bindings_from_file(binding_path);
 
     let game_data = GameDataBuilder::default()
@@ -28,7 +32,7 @@ fn main() -> amethyst::Result<()> {
         .with_basic_renderer(path, DrawFlat::<PosTex>::new(), false)?
         .with_bundle(input_bundle)?
         .with(systems::PaddleSystem, "paddle_system", &["input_system"]);
-    let mut game = Application::new("./", Pong, game_data)?;
+    let mut game = Application::new(assets_dir, Pong, game_data)?;
     game.run();
     Ok(())
 }

@@ -4,7 +4,7 @@ use amethyst::input::{is_close_requested, is_key};
 use amethyst::prelude::*;
 use amethyst::renderer::{DrawFlat, Event, PosTex, VirtualKeyCode};
 
-struct Pong;
+pub struct Pong;
 
 impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
@@ -27,9 +27,13 @@ fn main() -> amethyst::Result<()> {
         env!("CARGO_MANIFEST_DIR")
     );
 
+    // This line is not mentionned in the pong tutorial as it is specific to the context
+    // of the git repository. It only is a different location to load the assets from.
+    let assets_dir = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
+
     let game_data =
         GameDataBuilder::default().with_basic_renderer(path, DrawFlat::<PosTex>::new(), false)?;
-    let mut game = Application::new("./", Pong, game_data)?;
+    let mut game = Application::new(assets_dir, Pong, game_data)?;
     game.run();
     Ok(())
 }

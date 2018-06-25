@@ -1,7 +1,7 @@
 use amethyst::core::transform::components::Transform;
 use amethyst::ecs::prelude::{Join, Read, ReadStorage, System, WriteStorage};
 use amethyst::input::InputHandler;
-use pong::{Paddle, Side, PADDLE_HEIGHT};
+use pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
 
 pub struct PaddleSystem;
 
@@ -19,10 +19,10 @@ impl<'s> System<'s> for PaddleSystem {
                 Side::Right => input.axis_value("right_paddle"),
             };
             if let Some(mv_amount) = movement {
-                let scaled_amount = (1.0 / 60.0) * mv_amount as f32;
+                let scaled_amount = 1.2 * mv_amount as f32;
                 transform.translation[1] = (transform.translation[1] + scaled_amount)
-                    .min(1.0 - PADDLE_HEIGHT)
-                    .max(-1.0);
+                    .min(ARENA_HEIGHT - PADDLE_HEIGHT * 0.5)
+                    .max(PADDLE_HEIGHT * 0.5);
             }
         }
     }

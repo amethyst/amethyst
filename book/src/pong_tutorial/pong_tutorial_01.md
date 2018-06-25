@@ -31,12 +31,12 @@ includes the basic (and most important) types like `Application`, `World`, and
 Now we create our core game struct:
 
 ```rust,ignore
-struct Pong;
+pub struct Pong;
 ```
 
 We'll be implementing the [`State`][st] trait on this struct, which is used by
 Amethyst's state machine to start, stop, and update the game. But for now we'll
-just implement one method:
+just implement two methods:
 
 ```rust,ignore
 impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
@@ -147,6 +147,10 @@ Then we call `.run()` on `game` which begins the gameloop. The game will
 continue to run until our `State` returns `Trans::Quit`, or when all states have
 been popped off the state machine's stack.
 
+Finally, let's create an `img` folder in the root of the project. This
+will contain the [spritesheet texture][ss] `pong_spritesheet.png` we will need
+to render the elements of the game.
+
 Success! Now we should be able to compile and run this code and get a window.
 It should look something like this:
 
@@ -156,3 +160,4 @@ It should look something like this:
 [st]: https://www.amethyst.rs/doc/master/doc/amethyst/trait.State.html
 [ap]: https://www.amethyst.rs/doc/master/doc/amethyst/struct.Application.html
 [gs]: ./getting_started.html
+[ss]: ./images/pong_tutorial/pong_spritesheet.png
