@@ -58,8 +58,7 @@ let input_bundle = InputBundle::<String, String>::new().with_bindings_from_file(
 let game_data = GameDataBuilder::default()
     .with_bundle(TransformBundle::new())?
     .with_bundle(RenderBundle::new(pipe, Some(config)))?
-    .with_bundle(input_bundle)?
-    .with(systems::PaddleSystem, "paddle_system", &["input_system"]);
+    .with_bundle(input_bundle)?;
 let mut game = Application::new("./", Pong, game_data)?;
 game.run();
 ```
@@ -79,11 +78,10 @@ pub use self::paddle::PaddleSystem;
 We're finally ready to implement the `PaddleSystem`:
 
 ```rust,ignore
-use pong::{Paddle, Side};
-use amethyst::ecs::{System, Join, Fetch};
-use amethyst::input::InputHandler;
 use amethyst::core::transform::components::Transform;
-use amethyst::ecs::{ReadStorage, WriteStorage};
+use amethyst::ecs::{Join, Read, ReadStorage, System, WriteStorage};
+use amethyst::input::InputHandler;
+use pong::{Paddle, Side};
 
 pub struct PaddleSystem;
 
@@ -95,14 +93,18 @@ impl<'s> System<'s> for PaddleSystem {
   );
 
   fn run(&mut self, (mut transforms, paddles, input): Self::SystemData) {
-    for paddle in (&paddles).join() {
+    for (paddle, transform) in (&paddles, &mut transforms).join() {
       let movement = match paddle.side {
         Side::Left => input.axis_value("left_paddle"),
         Side::Right => input.axis_value("right_paddle"),
       };
       if let Some(mv_amount) = movement {
         if mv_amount != 0.0 {
-          println!("Side {:?} moving {}", paddle.side, mv_amount);
+          let side_name = match paddle.side {
+            Side::Left => "left",
+            Side::Right => "right",
+          };
+          println!("Side {:?} moving {}", side_name, mv_amount);
         }
       }
     }
@@ -126,7 +128,14 @@ let mut game = Application::build("./", Pong)?
     .build()?;
 ```
 
-Let's review what our system does, because there's quite a bit there.
+Take a look at the `with` method call. Here, we're not adding a bundle, we're adding
+a system alone. We provide an instance of the system, a string representing its name
+and a list of dependencies. The dependencies are the names of the systems that
+must be ran before our newly added system. Here, we require the `input_system` to be
+ran as we will use the user's input to move the paddles, so we need to have this
+data be prepared.
+
+Back in `paddle.rs`, let's review what our system does, because there's quite a bit there.
 
 We create a unit struct, called `PaddleSystem`, and implement the `System`
 trait for it. The trait specifies the lifetime of the components on which it
@@ -138,11 +147,21 @@ reads `Paddle` components, `ReadStorage<'s, Paddle>`, and also accesses the
 `InputHandler<String, String>` resource we created earlier, using the `Read`
 structure.
 
-It's worth noting an important difference between the objects our system
-accesses. A system will iterate over entities that contain one of each of
-the components that it specifies in its `SystemData`. Going back to our example,
-the `PaddleSystem` will ignore any entity that is missing a `Paddle`,
-`LocalTransform` or both.
+Then, now that we have access to the storages of the components we want, we can
+iterate over them. We perform a join operation between the `Transform` and `Paddle`
+storages. This will iterate over all entities that have both a `Paddle` and `Transform`
+attached to them, and give us access to the actual components, immutably for the
+`Paddle` and mutably for the `Transform`.
+
+> There are many other ways to use storages. For example, you can use them to get
+> a reference to the component of a specific type held by an entity, or simply
+> iterate over them without joining. However in practice, your most common use will
+> be to join over multiple storages as it is rare to have a system affect
+> only one specific component.
+
+> Please also note that it is possible to join over storages using multiple threads
+> by using `par_join` instead of `join`, but here the overhead introduced is not
+> worth the gain offered by parallelism.
 
 ## Modifying the transform
 
@@ -158,7 +177,7 @@ component of the transform's translation.
         Side::Right => input.axis_value("right_paddle"),
       };
       if let Some(mv_amount) = movement {
-        let scaled_amount = (1.0 / 60.0) * mv_amount as f32;
+        let scaled_amount = 1.2 * mv_amount as f32;
         transform.translation[1] += scaled_amount;
       }
     }
@@ -172,9 +191,13 @@ paddle, so that the behavior of the game would not be tied to the game's
 framerate, but this will do for now. If you run the game now, you'll notice
 the paddles are able to "fall" off the edges of the game area.
 
-To fix this, we'll clamp the translation's y component to be at least `-1.0` and
-at most `1.0 - PADDLE_HEIGHT` (since the translation indicates the paddle's
-bottom edge).
+To fix this, we'll make sure the paddle's anchor point never gets out of the
+arena. But as the anchor point is in the middle of the sprite, we also need
+to add a margin for the paddle to not go halfway out of the screen.
+Therefore, we will border the y value of the transform from
+`ARENA_HEIGHT - PADDLE_HEIGHT * 0.5` (the top of the screen but a little bit
+lower) to `PADDLE_HEIGHT * 0.5` (the bottom of the screen but a little bit higher).
+
 
 Our run function should now look something like this:
 
@@ -186,17 +209,17 @@ Our run function should now look something like this:
         Side::Right => input.axis_value("right_paddle"),
       };
       if let Some(mv_amount) = movement {
-        let scaled_amount = (1.0 / 60.0) * mv_amount as f32;
+        let scaled_amount = 1.2 * mv_amount as f32;
         transform.translation[1] = (transform.translation[1] + scaled_amount)
-        .min(1.0 - PADDLE_HEIGHT)
-        .max(-1.0);
+          .min(ARENA_HEIGHT - PADDLE_HEIGHT * 0.5)
+          .max(PADDLE_HEIGHT * 0.5);
       }
     }
   }
 ```
 
-Note: For the above to work, we'll have to mark `PADDLE_HEIGHT` as being
-public in `pong.rs`, and then import it in `paddle.rs`.
+Note: For the above to work, we'll have to mark `PADDLE_HEIGHT` and `ARENA_HEIGHT`
+as being public in `pong.rs`, and then import it in `paddle.rs`.
 
 ## Summary
 In this chapter, we added an input handler to our game, so that we
