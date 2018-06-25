@@ -23,15 +23,15 @@ use bundle::PongBundle;
 
 const ARENA_HEIGHT: f32 = 100.0;
 const ARENA_WIDTH: f32 = 100.0;
-const PADDLE_HEIGHT: f32 = 15.0;
-const PADDLE_WIDTH: f32 = 2.5;
+const PADDLE_HEIGHT: f32 = 16.0;
+const PADDLE_WIDTH: f32 = 4.0;
 const PADDLE_VELOCITY: f32 = 75.0;
-const PADDLE_COLOUR: [f32; 4] = [0.0, 0.0, 1.0, 1.0];
 
 const BALL_VELOCITY_X: f32 = 75.0;
 const BALL_VELOCITY_Y: f32 = 50.0;
-const BALL_RADIUS: f32 = 2.5;
-const BALL_COLOUR: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
+const BALL_RADIUS: f32 = 2.0;
+
+const SPRITESHEET_SIZE: (f32, f32) = (8.0, 16.0);
 
 const AUDIO_MUSIC: &'static [&'static str] = &[
     "audio/Computer_Music_All-Stars_-_Wheres_My_Jetpack.ogg",
