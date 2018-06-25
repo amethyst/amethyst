@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Localisation using FTL files and the fluent-rs library ([#663])
 * Add basic scene prefab ([#791])
 * Improve ergonomics of examples ([#793])
+* Beginner-friendly utilities for sprite rendering ([#804])
 * Derive `PartialEq` for `MaterialPrimitive` ([#809])
 * Make `with_bindings_from_file` return a Result ([#811])
 * Logger initialization is now optional and can be enabled with a call to `amethyst::start_logger()` ([#815])
@@ -83,6 +84,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#791]: https://github.com/amethyst/amethyst/pull/791
 [#789]: https://github.com/amethyst/amethyst/pull/789
 [#793]: https://github.com/amethyst/amethyst/pull/793
+[#804]: https://github.com/amethyst/amethyst/pull/804
 [#809]: https://github.com/amethyst/amethyst/pull/809
 [#811]: https://github.com/amethyst/amethyst/pull/811
 [#816]: https://github.com/amethyst/amethyst/pull/816
