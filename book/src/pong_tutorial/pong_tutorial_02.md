@@ -334,9 +334,9 @@ get the size of the texture it needs to do its magic.
 > exist in Amethyst to make prototyping easier.
 
 > Here, we are using the `with_sprite` utility twice for the same sprite.
-> Keep in mind however that [another syntax exists][am] when we need multiple
-> entities to display the exact same sprite, that leads to improved performance.
-> Here, however, it is negligible.
+> Keep in mind however that another syntax exists in the `SpriteRenderData` struct
+> when we need multiple entities to display the exact same sprite, leading
+> to improved performance. Here, however, it is negligible.
 
 Now let's add our initialise functions to the `on_start` function in `impl State
 for Pong`. It now looks like this:
@@ -419,4 +419,3 @@ moving!
 [sb-storage]: https://slide-rs.github.io/specs/05_storages.html#densevecstorage
 [cg]: https://docs.rs/cgmath/0.15.0/cgmath/
 [2d]: https://www.amethyst.rs/doc/develop/doc/amethyst_renderer/struct.Camera.html#method.standard_2d
-[am]: #
