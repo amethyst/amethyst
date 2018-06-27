@@ -9,15 +9,6 @@ Prefab (
         ),
         (
             data: (
-                transform: (
-                    translation: (x: 0.0, y: -1.1, z: 0.0),
-                    rotation: (s: 0.7071068, v: (x: 0., y: 0.7071068, z: 0.),),
-                ),
-            ),
-        ),
-        (
-            parent: 1,
-            data: (
                 gltf: File("mesh/puffy.gltf", GltfSceneFormat, (
                     load_animations: false,
                     flip_v_coord: true,
@@ -26,10 +17,17 @@ Prefab (
             ),
         ),
         (
+            parent: 1,
+            data: (
+                transform: (),
+                fly_tag: (),
+            ),
+        ),
+        (
+            parent: 2,
             data: (
                 transform: (
-                     translation: (x: 3.0, y: 2.0, z: 7.0,),
-                     rotation: (s: 0.9698463, v: (x: -0.1710101, y: 0.1710101, z: -0.0301537),),
+                    translation: (x: 0., y: 0., z: 10.0),
                 ),
                 camera: Perspective((
                     fovy: Rad (1.0471975512),
@@ -41,9 +39,12 @@ Prefab (
         ),
         (
             data: (
+                transform: (
+                    translation: (x: 6.0, y: 6.0, z: -6.0),
+                    rotation: (s: 0.0, v: (x: 0.0, y: 1.0, z: 0.0),),
+                ),
                 light: (
                     light: Point((
-                        center: (6.0, 6.0, -6.0),
                         intensity: 6.0,
                         color: (0.8, 0.0, 0.0, 1.0),
                     )),
@@ -52,9 +53,12 @@ Prefab (
         ),
         (
             data: (
+                transform: (
+                    translation: (x: 0.0, y: 4.0, z: 4.0),
+                    rotation: (s: 0.0, v: (x: 0.0, y: 1.0, z: 0.0),),
+                ),
                 light: (
                     light: Point((
-                        center: (0.0, 4.0, 4.0),
                         intensity: 6.0,
                         color: (0.0, 0.3, 0.7, 1.0),
                     )),

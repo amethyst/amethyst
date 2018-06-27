@@ -94,9 +94,13 @@ pub fn add_graphics_to_world(world: &mut World) {
         intensity: 50.0,
         ..PointLight::default()
     }.into();
-
+    
     // Add lights to scene
-    world.create_entity().with(light).build();
+    world.create_entity()
+        .with(light)
+        .with(Transform::default())
+        .with(GlobalTransform::default())
+        .build();
 
     let light: Light = DirectionalLight {
         color: [0.2; 4].into(),

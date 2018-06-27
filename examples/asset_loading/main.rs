@@ -5,7 +5,7 @@ extern crate amethyst;
 extern crate rayon;
 
 use amethyst::assets::{Loader, Result as AssetResult, SimpleFormat};
-use amethyst::core::cgmath::{Array, Vector3};
+use amethyst::core::cgmath::{Array, Vector3, Matrix4};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::World;
 use amethyst::input::{is_close_requested, is_key, InputBundle};
@@ -141,12 +141,17 @@ fn initialise_camera(world: &mut World) {
 /// Adds lights to the scene.
 fn initialise_lights(world: &mut World) {
     let light: Light = PointLight {
-        center: [5.0, -20.0, 15.0].into(),
         intensity: 100.0,
         radius: 1.0,
         color: Rgba::white(),
         ..Default::default()
     }.into();
 
-    world.create_entity().with(light).build();
+    let transform = Matrix4::from_translation([5.0, -20.0, 15.0].into());
+
+    // Add point light.
+    world.create_entity()
+        .with(light)
+        .with(GlobalTransform(transform.into()))
+        .build();
 }

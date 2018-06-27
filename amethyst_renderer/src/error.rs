@@ -5,6 +5,7 @@ use std::fmt::Result as FmtResult;
 use std::fmt::{Display, Formatter};
 use std::result::Result as StdResult;
 
+use amethyst_core;
 use gfx;
 use gfx_core;
 
@@ -28,6 +29,8 @@ pub enum Error {
     ProgramCreation(gfx::shade::ProgramError),
     /// Failed to create a resource view.
     ResViewCreation(gfx::ResourceViewError),
+    /// Failed to interact with the ECS.
+    SpecsError(amethyst_core::specs::error::Error),
     /// Failed to create a render target.
     TargetCreation(gfx::CombinedError),
     /// Failed to create a texture resource.
@@ -46,6 +49,7 @@ impl StdError for Error {
             Error::PoolCreation(_) => "Failed to create thread pool!",
             Error::ProgramCreation(_) => "Failed to create shader program!",
             Error::ResViewCreation(_) => "Failed to create resource view!",
+            Error::SpecsError(_) => "Failed to interact with the ECS!",
             Error::TargetCreation(_) => "Failed to create render target!",
             Error::TextureCreation(_) => "Failed to create texture!",
             Error::WindowDestroyed => "Window has been destroyed!",
@@ -59,6 +63,7 @@ impl StdError for Error {
             Error::PipelineCreation(ref e) => Some(e),
             Error::ProgramCreation(ref e) => Some(e),
             Error::ResViewCreation(ref e) => Some(e),
+            Error::SpecsError(ref e) => Some(e),
             Error::TargetCreation(ref e) => Some(e),
             Error::TextureCreation(ref e) => Some(e),
             _ => None,
@@ -76,6 +81,7 @@ impl Display for Error {
             Error::PoolCreation(ref e) => write!(fmt, "Thread pool creation failed: {}", e),
             Error::ProgramCreation(ref e) => write!(fmt, "Program compilation failed: {}", e),
             Error::ResViewCreation(ref e) => write!(fmt, "Resource view creation failed: {}", e),
+            Error::SpecsError(ref e) => write!(fmt, "Interaction with ECS failed: {}", e),
             Error::TargetCreation(ref e) => write!(fmt, "Target creation failed: {}", e),
             Error::TextureCreation(ref e) => write!(fmt, "Texture creation failed: {}", e),
             Error::WindowDestroyed => write!(fmt, "Window has been destroyed"),
@@ -122,5 +128,11 @@ impl From<gfx::texture::CreationError> for Error {
 impl From<gfx_core::pso::CreationError> for Error {
     fn from(e: gfx_core::pso::CreationError) -> Error {
         Error::PipelineCreation(e)
+    }
+}
+
+impl From<amethyst_core::specs::error::Error> for Error {
+    fn from(e: amethyst_core::specs::error::Error) -> Error {
+        Error::SpecsError(e)
     }
 }

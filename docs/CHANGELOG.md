@@ -24,6 +24,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Specialised UI prefab format ([#786])
 * Add generation of normals/tangents in GLTF ([#784])
 * Localisation using FTL files and the fluent-rs library ([#663])
+* Add basic scene prefab ([#791])
+* Improve ergonomics of examples ([#793])
 
 ### Changed
 * UI systems will now never overwrite your local `UiTransform` values ([#774])
@@ -37,6 +39,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Update dependencies ([#752], [#751])
 * Formalized and documented support for overriding the global logger ([#776])
 * Refactor GLTF loader to use prefabs ([#784])
+* Point lights use `GlobalTransform` for positioning rather than a separate `center` ([#794])
+* Point lights now require a `GlobalTransform` component to be included in rendering ([#794])
 
 ### Fixed
 * Resizing fixed on OSX ([#767])
@@ -68,7 +72,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#784]: https://github.com/amethyst/amethyst/pull/784
 [#785]: https://github.com/amethyst/amethyst/pull/785
 [#786]: https://github.com/amethyst/amethyst/pull/786
+[#791]: https://github.com/amethyst/amethyst/pull/791
 [#789]: https://github.com/amethyst/amethyst/pull/789
+[#793]: https://github.com/amethyst/amethyst/pull/793
 
 ## [0.7.0] - 2018-05
 ### Added

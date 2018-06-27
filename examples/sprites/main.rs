@@ -132,7 +132,8 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
             // We also need to trigger the animation, not just attach it to the entity
             let mut animation_control_set_storage = world.write_storage();
             let animation_set =
-                get_animation_set::<u32, Material>(&mut animation_control_set_storage, entity);
+                get_animation_set::<u32, Material>(&mut animation_control_set_storage, entity)
+                    .unwrap();
 
             let animation_id = 0;
 
