@@ -100,14 +100,14 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
                 get_animation_set::<AnimationId, Transform>(
                     &mut world.write_storage(),
                     self.sphere.unwrap().clone(),
-                ).step(self.current_animation, StepDirection::Backward);
+                ).unwrap().step(self.current_animation, StepDirection::Backward);
             }
 
             Some(VirtualKeyCode::Right) => {
                 get_animation_set::<AnimationId, Transform>(
                     &mut world.write_storage(),
                     self.sphere.unwrap().clone(),
-                ).step(self.current_animation, StepDirection::Forward);
+                ).unwrap().step(self.current_animation, StepDirection::Forward);
             }
 
             Some(VirtualKeyCode::F) => {
@@ -115,7 +115,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
                 get_animation_set::<AnimationId, Transform>(
                     &mut world.write_storage(),
                     self.sphere.unwrap().clone(),
-                ).set_rate(self.current_animation, self.rate);
+                ).unwrap().set_rate(self.current_animation, self.rate);
             }
 
             Some(VirtualKeyCode::V) => {
@@ -123,7 +123,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
                 get_animation_set::<AnimationId, Transform>(
                     &mut world.write_storage(),
                     self.sphere.unwrap().clone(),
-                ).set_rate(self.current_animation, self.rate);
+                ).unwrap().set_rate(self.current_animation, self.rate);
             }
 
             Some(VirtualKeyCode::H) => {
@@ -131,7 +131,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
                 get_animation_set::<AnimationId, Transform>(
                     &mut world.write_storage(),
                     self.sphere.unwrap().clone(),
-                ).set_rate(self.current_animation, self.rate);
+                ).unwrap().set_rate(self.current_animation, self.rate);
             }
 
             Some(VirtualKeyCode::R) => {
@@ -194,7 +194,7 @@ fn add_animation(
         .cloned()
         .unwrap();
     let mut sets = world.write_storage();
-    let control_set = get_animation_set::<AnimationId, Transform>(&mut sets, entity);
+    let control_set = get_animation_set::<AnimationId, Transform>(&mut sets, entity).unwrap();
     match defer {
         None => {
             if toggle_if_exists && control_set.has_animation(id) {
