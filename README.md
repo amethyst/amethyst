@@ -17,7 +17,7 @@
 [gc]: https://gitter.im/orgs/amethyst/rooms
 [di]: https://discord.gg/GnP5Whs
 
-**Warning: The book and the documentation are missing content. Amethyst is undergoing a lot of changes at the moment.**
+**Warning: The engine is still in alpha, and thus it changes very fast. You may find out that some parts of the documentation can be outdated. If you find such an occurrence, feel free to open an issue and it will be fixed in no time.**
 
 ## Goals
 
