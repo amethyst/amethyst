@@ -6,7 +6,7 @@ use {AnimationSampling, ApplyData, BlendMethod};
 
 /// Sampler primitive for Material animations
 /// Note that material can only ever be animated with `Step`, or a panic will occur.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum MaterialPrimitive {
     Texture(u64),
     Offset((f32, f32), (f32, f32)),
