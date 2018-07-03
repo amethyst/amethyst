@@ -10,7 +10,7 @@ use super::{Axis, Button};
 
 /// Used for saving and loading input settings.
 #[derive(Derivative, Serialize, Deserialize, Clone)]
-#[derivative(Default(bound = "AX: Hash + Eq, AC: Hash + Eq"))]
+#[derivative(Default(bound = ""))]
 pub struct Bindings<AX, AC>
 where
     AX: Hash + Eq,

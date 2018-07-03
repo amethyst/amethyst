@@ -27,7 +27,8 @@ use {Bindings, InputSystem};
 ///
 /// No errors returned from this bundle.
 ///
-#[derive(Default)]
+#[derive(Derivative)]
+#[derivative(Default(bound = ""))]
 pub struct InputBundle<AX, AC>
 where
     AX: Hash + Eq,
@@ -38,8 +39,8 @@ where
 
 impl<AX, AC> InputBundle<AX, AC>
 where
-    AX: Hash + Eq + DeserializeOwned + Serialize + Default,
-    AC: Hash + Eq + DeserializeOwned + Serialize + Default,
+    AX: Hash + Eq,
+    AC: Hash + Eq,
 {
     /// Create a new input bundle with no bindings
     pub fn new() -> Self {
@@ -53,7 +54,11 @@ where
     }
 
     /// Load bindings from file
-    pub fn with_bindings_from_file<P: AsRef<Path>>(self, file: P) -> Self {
+    pub fn with_bindings_from_file<P: AsRef<Path>>(self, file: P) -> Self
+    where
+        AX: DeserializeOwned + Serialize,
+        AC: DeserializeOwned + Serialize,
+    {
         self.with_bindings(Bindings::load(file))
     }
 }
