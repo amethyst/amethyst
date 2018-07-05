@@ -131,7 +131,6 @@ mod tests {
     use specs::prelude::World;
     use specs_hierarchy::{Hierarchy, HierarchySystem};
     use transform::{GlobalTransform, Parent, Transform, TransformSystem};
-    //use quickcheck::{Arbitrary, Gen};
 
     // If this works, then all other tests should work.
     #[test]

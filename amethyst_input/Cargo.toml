@@ -25,7 +25,7 @@ winit = "0.15"
 thread_profiler = { version = "0.1", optional = true }
 
 [dependencies.smallvec]
-version = "0.4.2"
+version = "0.6"
 features = ["serde"]
 
 [features]

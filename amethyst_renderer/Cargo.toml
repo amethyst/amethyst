@@ -70,5 +70,5 @@ gfx_window_dxgi = { version = "0.13", optional = true }
 version = "0.1.5"
 
 [dependencies.smallvec]
-version = "0.4.2"
+version = "0.6"
 features = ["serde"]

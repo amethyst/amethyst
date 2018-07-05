@@ -26,7 +26,6 @@ shred = { version = "0.7" }
 specs = { version = "0.11", features = ["common"] }
 specs-hierarchy = { version = "0.1" }
 shrev = "1.0"
-quickcheck = "0.4.1"
 
 thread_profiler = { version = "0.1" , optional = true }
 
