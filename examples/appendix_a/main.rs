@@ -36,11 +36,11 @@ fn main() -> amethyst::Result<()> {
     use pong::Pong;
 
     let display_config_path = format!(
-        "{}/examples/pong/resources/display.ron",
+        "{}/examples/appendix_a/resources/display.ron",
         env!("CARGO_MANIFEST_DIR")
     );
     let key_bindings_path = format!(
-        "{}/examples/pong/resources/input.ron",
+        "{}/examples/appendix_a/resources/input.ron",
         env!("CARGO_MANIFEST_DIR")
     );
 
