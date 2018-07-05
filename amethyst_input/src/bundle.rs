@@ -2,8 +2,9 @@
 
 use std::hash::Hash;
 use std::path::Path;
+use std::result::Result as StdResult;
 
-use amethyst_config::Config;
+use amethyst_config::{Config, ConfigError};
 use amethyst_core::bundle::{Result, SystemBundle};
 use amethyst_core::specs::prelude::DispatcherBuilder;
 use serde::de::DeserializeOwned;
@@ -54,12 +55,12 @@ where
     }
 
     /// Load bindings from file
-    pub fn with_bindings_from_file<P: AsRef<Path>>(self, file: P) -> Self
+    pub fn with_bindings_from_file<P: AsRef<Path>>(self, file: P) -> StdResult<Self, ConfigError>
     where
         AX: DeserializeOwned + Serialize,
         AC: DeserializeOwned + Serialize,
     {
-        self.with_bindings(Bindings::load(file))
+        Bindings::load_no_fallback(file).map(|b| self.with_bindings(b))
     }
 }
 
