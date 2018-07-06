@@ -175,7 +175,7 @@ where
                 self.passes.new_target(target);
             }
             None => {
-                eprintln!("Target name {:?} not found!", self.target_name);
+                error!("Target name {:?} not found!", self.target_name);
             }
         }
     }

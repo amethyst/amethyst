@@ -421,7 +421,7 @@ impl Pass for DrawUi {
                     &effect.data.out_blends[0],
                     &effect.data.out_depth.as_ref().unwrap().0,
                 ) {
-                    eprintln!("Unable to draw text! Error: {:?}", err);
+                    error!("Unable to draw text! Error: {:?}", err);
                 }
                 // Render cursor
                 if focused.entity == Some(entity) {
