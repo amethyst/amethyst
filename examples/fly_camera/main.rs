@@ -60,7 +60,7 @@ fn main() -> Result<(), Error> {
         )?
         .with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?
         .with_bundle(
-            InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path),
+            InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?,
         )?
         .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;
     let mut game = Application::build(resources_directory, ExampleState)?.build(game_data)?;
