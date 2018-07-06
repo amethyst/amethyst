@@ -25,6 +25,8 @@ extern crate shred_derive;
 extern crate unicode_normalization;
 extern crate unicode_segmentation;
 extern crate winit;
+#[macro_use]
+extern crate log;
 
 #[macro_use]
 #[cfg(feature = "profiler")]
