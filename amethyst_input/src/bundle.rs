@@ -60,7 +60,7 @@ where
         AX: DeserializeOwned + Serialize,
         AC: DeserializeOwned + Serialize,
     {
-        Bindings::load_no_fallback(file).map(|b| self.with_bindings(b))
+        Ok(self.with_bindings(Bindings::load_no_fallback(file)?))
     }
 }
 
