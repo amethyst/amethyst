@@ -1,14 +1,12 @@
 //! The core engine framework.
 
 use std::error::Error as StdError;
-use std::io;
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 
 use core::shrev::{EventChannel, ReaderId};
-use fern;
-use log::LevelFilter;
+use log::Level;
 use rayon::ThreadPoolBuilder;
 use shred::Resource;
 #[cfg(feature = "profiler")]
@@ -377,21 +375,11 @@ impl<S> ApplicationBuilder<S> {
     pub fn new<P: AsRef<Path>>(path: P, initial_state: S) -> Result<Self> {
         use rustc_version_runtime;
 
-        fern::Dispatch::new()
-            .format(|out, message, record| {
-                out.finish(format_args!(
-                    "[{}][{}] {}",
-                    record.target(),
-                    record.level(),
-                    message
-                ))
-            })
-            .level(LevelFilter::Debug)
-            .chain(io::stdout())
-            .apply()
-            .unwrap_or_else(|_| {
-                debug!("Global logger already set, default amethyst logger will not be used")
-            });
+        if !log_enabled!(Level::Error) {
+            println!(
+                "WARNING: No logger detected! Did you forget to call `amethyst::start_logger()`?"
+            );
+        }
 
         info!("Initializing Amethyst...");
         info!("Version: {}", env!("CARGO_PKG_VERSION"));
