@@ -77,7 +77,7 @@ $ sudo apt install libasound2-dev libx11-xcb-dev
 ### Fedora
 
 ```
-$ sudo yum install alsa-lib-devel
+$ sudo dnf install alsa-lib-devel
 ```
 
 ## Building Documentation
