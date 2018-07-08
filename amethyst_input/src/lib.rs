@@ -36,30 +36,6 @@ mod local_virtual_key_code;
 mod system;
 mod util;
 
-// This entire set ot types is to be eliminated once impl Trait is released.
-
-/// Iterator over keycodes
-pub type KeyCodes<'a> =
-    Map<Iter<'a, (VirtualKeyCode, u32)>, fn(&(VirtualKeyCode, u32)) -> VirtualKeyCode>;
-
-/// Iterator over key scan codes
-pub type ScanCodes<'a> = Map<Iter<'a, (VirtualKeyCode, u32)>, fn(&(VirtualKeyCode, u32)) -> u32>;
-
-/// Iterator over MouseButtons
-pub type MouseButtons<'a> = Iter<'a, MouseButton>;
-
-/// An iterator over buttons
-pub struct Buttons<'a> {
-    iterator: Chain<
-        Map<Iter<'a, MouseButton>, fn(&MouseButton) -> Button>,
-        FlatMap<
-            Iter<'a, (VirtualKeyCode, u32)>,
-            KeyThenCode,
-            fn(&(VirtualKeyCode, u32)) -> KeyThenCode,
-        >,
-    >,
-}
-
 struct KeyThenCode {
     value: (VirtualKeyCode, u32),
     index: u8,
@@ -83,13 +59,5 @@ impl Iterator for KeyThenCode {
             1 => Some(Button::ScanCode(self.value.1)),
             _ => None,
         }
-    }
-}
-
-impl<'a> Iterator for Buttons<'a> {
-    type Item = Button;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iterator.next()
     }
 }
