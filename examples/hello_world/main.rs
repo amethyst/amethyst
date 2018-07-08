@@ -22,6 +22,7 @@ impl State<()> for Example {
 }
 
 fn main() {
+    amethyst::start_logger(Default::default());
     let mut game = Application::new("./", Example, ()).expect("Fatal error");
     game.run();
 }

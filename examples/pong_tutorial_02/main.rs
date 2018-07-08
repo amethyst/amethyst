@@ -7,6 +7,8 @@ use amethyst::prelude::*;
 use amethyst::renderer::{DrawFlat, PosTex};
 
 fn main() -> amethyst::Result<()> {
+    amethyst::start_logger(Default::default());
+
     use pong::Pong;
 
     let path = format!(

@@ -79,7 +79,15 @@ fn main() -> amethyst::Result<()> {
 }
 ```
 
-Inside `main()` we first define a path for our display_config.ron file and load it.
+Inside `main()` we first start the default amethyst logger so we can see
+errors, warnings and debug messages while the program is running.
+
+```rust,ignore
+amethyst::start_logger(Default::default());
+```
+
+After the logger is started, we define a path for our display_config.ron file
+and load it.
 
 ```rust,ignore
 let path = "./resources/display_config.ron";

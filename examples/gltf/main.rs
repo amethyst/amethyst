@@ -203,6 +203,8 @@ fn toggle_or_cycle_animation(
 }
 
 fn main() -> Result<(), amethyst::Error> {
+    amethyst::start_logger(Default::default());
+
     let path = format!(
         "{}/examples/gltf/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
