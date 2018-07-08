@@ -87,6 +87,8 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
 }
 
 fn main() -> Result<(), Error> {
+    amethyst::start_logger(Default::default());
+
     let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
 
     let game_data = GameDataBuilder::default().with(Processor::<Locale>::new(), "proc", &[]);
