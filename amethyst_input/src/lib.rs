@@ -20,10 +20,9 @@ pub use self::input_handler::InputHandler;
 pub use self::system::InputSystem;
 pub use self::util::{get_key, is_close_requested, is_key};
 
-use std::iter::{Chain, FlatMap, Iterator, Map};
-use std::slice::Iter;
+use std::iter::Iterator;
 
-use winit::{MouseButton, VirtualKeyCode};
+use winit::VirtualKeyCode;
 
 mod axis;
 mod bindings;
