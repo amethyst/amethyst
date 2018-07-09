@@ -5,8 +5,9 @@ use std::hash::Hash;
 
 use amethyst_core::shrev::EventChannel;
 use smallvec::SmallVec;
-use winit::{DeviceEvent, ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode,
-            WindowEvent};
+use winit::{
+    DeviceEvent, ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent,
+};
 
 use super::event::InputEvent;
 use super::event::InputEvent::*;
@@ -205,7 +206,7 @@ where
     }
 
     /// Returns an iterator over all keys that are down.
-    pub fn keys_that_are_down(&self) -> impl Iterator<Item=VirtualKeyCode> + '_ {
+    pub fn keys_that_are_down(&self) -> impl Iterator<Item = VirtualKeyCode> + '_ {
         self.pressed_keys
             .iter()
             .map((|k| k.0) as fn(&(VirtualKeyCode, u32)) -> VirtualKeyCode)
@@ -217,7 +218,7 @@ where
     }
 
     /// Returns an iterator over all pressed mouse buttons
-    pub fn mouse_buttons_that_are_down(&self) -> impl Iterator<Item=&MouseButton> {
+    pub fn mouse_buttons_that_are_down(&self) -> impl Iterator<Item = &MouseButton> {
         self.pressed_mouse_buttons.iter()
     }
 
@@ -229,7 +230,7 @@ where
     }
 
     /// Returns an iterator over all pressed scan codes
-    pub fn scan_codes_that_are_down(&self) -> impl Iterator<Item=u32> + '_ {
+    pub fn scan_codes_that_are_down(&self) -> impl Iterator<Item = u32> + '_ {
         self.pressed_keys
             .iter()
             .map((|k| k.1) as fn(&(VirtualKeyCode, u32)) -> u32)
@@ -249,7 +250,7 @@ where
     }
 
     /// Returns an iterator over all buttons that are down.
-    pub fn buttons_that_are_down<'a>(&self) -> impl Iterator<Item=Button> + '_ {
+    pub fn buttons_that_are_down<'a>(&self) -> impl Iterator<Item = Button> + '_ {
         let mouse_buttons = self.pressed_mouse_buttons
             .iter()
             .map((|&mb| Button::Mouse(mb)) as fn(&MouseButton) -> Button);
