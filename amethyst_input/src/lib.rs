@@ -15,6 +15,7 @@ pub use self::axis::Axis;
 pub use self::bindings::Bindings;
 pub use self::bundle::InputBundle;
 pub use self::button::Button;
+pub use self::controller::{ControllerAxis, ControllerButton};
 pub use self::event::InputEvent;
 pub use self::input_handler::InputHandler;
 pub use self::system::InputSystem;
@@ -29,6 +30,7 @@ mod axis;
 mod bindings;
 mod bundle;
 mod button;
+mod controller;
 mod event;
 mod input_handler;
 mod local_mouse_button;
@@ -48,15 +50,22 @@ pub type ScanCodes<'a> = Map<Iter<'a, (VirtualKeyCode, u32)>, fn(&(VirtualKeyCod
 /// Iterator over MouseButtons
 pub type MouseButtons<'a> = Iter<'a, MouseButton>;
 
+pub type ControllerButtons<'a> = Iter<'a, (u32, ControllerButton)>;
+
+pub type Controllers<'a> = Map<Iter<'a, (u32, u32)>, fn(&(u32, u32)) -> u32>;
+
 /// An iterator over buttons
 pub struct Buttons<'a> {
     iterator: Chain<
+        Chain<
         Map<Iter<'a, MouseButton>, fn(&MouseButton) -> Button>,
         FlatMap<
             Iter<'a, (VirtualKeyCode, u32)>,
             KeyThenCode,
             fn(&(VirtualKeyCode, u32)) -> KeyThenCode,
         >,
+    >,
+        Map<Iter<'a, (u32, ControllerButton)>, fn(&(u32, ControllerButton)) -> Button>,
     >,
 }
 

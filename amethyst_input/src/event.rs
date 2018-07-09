@@ -1,4 +1,5 @@
 use super::button::Button;
+use super::controller::{ControllerAxis, ControllerButton};
 use super::local_mouse_button::LocalMouseButton;
 use super::local_virtual_key_code::LocalVirtualKeyCode;
 
@@ -36,6 +37,26 @@ pub enum InputEvent<T> {
     CursorMoved { delta_x: f64, delta_y: f64 },
     /// The mouse device moved.  Use this for any use of the mouse that doesn't involve a standard mouse pointer.
     MouseMoved { delta_x: f64, delta_y: f64 },
+    /// A controller Axis was moved.
+    ControllerAxisMoved {
+        which: u32,
+        axis: ControllerAxis,
+        value: f64,
+    },
+    ///  A controller button was pressed.
+    ControllerButtonPressed {
+        which: u32,
+        button: ControllerButton,
+    },
+    ///  A controller button was released.
+    ControllerButtonReleased {
+        which: u32,
+        button: ControllerButton,
+    },
+    /// New controller was connected.
+    ControllerConnected { which: u32 },
+    /// Controller was disconnected, it's id might be reused later.
+    ControllerDisconnected { which: u32 },
     /// The associated action had one of its keys pressed.
     ActionPressed(T),
     /// The associated action had one of its keys released.
