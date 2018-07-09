@@ -28,6 +28,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Improve ergonomics of examples ([#793])
 * Derive `PartialEq` for `MaterialPrimitive` ([#809])
 * Make `with_bindings_from_file` return a Result ([#811])
+* Logger initialization is now optional and can be enabled with a call to `amethyst::start_logger()` ([#815])
 
 ### Changed
 * UI systems will now never overwrite your local `UiTransform` values ([#774])
@@ -79,6 +80,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#793]: https://github.com/amethyst/amethyst/pull/793
 [#809]: https://github.com/amethyst/amethyst/pull/809
 [#811]: https://github.com/amethyst/amethyst/pull/811
+[#815]: https://github.com/amethyst/amethyst/pull/815
 
 ## [0.7.0] - 2018-05
 ### Added
