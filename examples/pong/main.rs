@@ -50,10 +50,19 @@ fn main() -> amethyst::Result<()> {
         env!("CARGO_MANIFEST_DIR")
     );
 
-    let key_bindings_path = format!(
-        "{}/examples/pong/resources/input.ron",
-        env!("CARGO_MANIFEST_DIR")
-    );
+    let key_bindings_path = {
+        if cfg!(feature = "sdl_controller") {
+            format!(
+                "{}/examples/pong/resources/input_controller.ron",
+                env!("CARGO_MANIFEST_DIR")
+            )
+        } else {
+            format!(
+                "{}/examples/pong/resources/input.ron",
+                env!("CARGO_MANIFEST_DIR")
+            )
+        }
+    };
 
     let assets_dir = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
 
