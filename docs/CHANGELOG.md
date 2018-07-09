@@ -90,7 +90,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * UI Layouts ([#591]).
 * UI Events ([#580]).
 * Introduce a generic animation system, with support for both  transform and texture animation ([#558]), ([#566]), ([#567]), ([#569]), ([#570]), ([#611]), ([#641]), ([#644])
-* Add transparency support to core passes ([#543]), ([#574]), ([#584]) 
+* Add transparency support to core passes ([#543]), ([#574]), ([#584])
 * Add vertex skinning ([#545]), ([#619])
 * Expose a basic visibility ordering system, with the ability to swap in better replacement systems ([#595])
 * Audio `Output` is now added directly rather than as an `Option`, should now be fetched with `Option<Read<'a, Output>>` ([#679])

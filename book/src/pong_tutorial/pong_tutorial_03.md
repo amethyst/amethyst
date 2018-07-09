@@ -28,16 +28,17 @@ project, called `bindings_config.ron`:
 ```ron,ignore
 (
   axes: {
-    "left_paddle": (pos: Key(W), neg: Key(S)),
-    "right_paddle": (pos: Key(Up), neg: Key(Down)),
+    "left_paddle": Emulated(pos: Key(W), neg: Key(S)),
+    "right_paddle": Emulated(pos: Key(Up), neg: Key(Down)),
   },
   actions: {},
 )
 ```
 
 In Amethyst, inputs can be either scalar inputs (a button that is either
-pressed or not), or axes (a range that relates two buttons as opposite
-ends of a range). In this file, we're creating two axes: W and S will move the
+pressed or not), or axes (a range that represents analog controller stick or
+relates two buttons as opposite ends of a range).
+In this file, we're creating two axes: W and S will move the
 left paddle up and down, and the Up and Down arrow keys will move the right
 paddle up and down.
 
