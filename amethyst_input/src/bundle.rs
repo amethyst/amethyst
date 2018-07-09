@@ -4,6 +4,9 @@ use std::hash::Hash;
 use std::path::Path;
 use std::result::Result as StdResult;
 
+#[cfg(feature = "sdl_controller")]
+use sdl_events_system::ControllerMappings;
+
 use amethyst_config::{Config, ConfigError};
 use amethyst_core::bundle::{Result, SystemBundle};
 use amethyst_core::specs::prelude::DispatcherBuilder;
@@ -36,6 +39,8 @@ where
     AC: Hash + Eq,
 {
     bindings: Option<Bindings<AX, AC>>,
+    #[cfg(feature = "sdl_controller")]
+    controller_mappings: Option<ControllerMappings>,
 }
 
 impl<AX, AC> InputBundle<AX, AC>
@@ -62,6 +67,27 @@ where
     {
         Ok(self.with_bindings(Bindings::load_no_fallback(file)?))
     }
+
+    /// Load SDL controller mappings from file
+    #[cfg(feature = "sdl_controller")]
+    pub fn with_sdl_controller_mappings(mut self, mappings: String) -> Self {
+        self.controller_mappings = Some(ControllerMappings::FromString(mappings));
+        self
+    }
+
+    /// Load SDL controller mappings from file
+    #[cfg(feature = "sdl_controller")]
+    pub fn with_sdl_controller_mappings_from_file<P: AsRef<Path>>(mut self, file: P) -> Self
+    where
+        AX: DeserializeOwned + Serialize,
+        AC: DeserializeOwned + Serialize,
+    {
+        use std::path::PathBuf;
+
+        let path_buf = PathBuf::from(file.as_ref());
+        self.controller_mappings = Some(ControllerMappings::FromPath(path_buf));
+        self
+    }
 }
 
 impl<'a, 'b, AX, AC> SystemBundle<'a, 'b> for InputBundle<AX, AC>
@@ -70,6 +96,14 @@ where
     AC: Hash + Eq + Clone + Send + Sync + 'static,
 {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+        #[cfg(feature = "sdl_controller")]
+        {
+            use super::SdlEventsSystem;
+            builder.add_thread_local(
+                // TODO: improve errors when migrating to failure
+                SdlEventsSystem::<AX, AC>::new(self.controller_mappings).unwrap(),
+            );
+        }
         builder.add(
             InputSystem::<AX, AC>::new(self.bindings),
             "input_system",
