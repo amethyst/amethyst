@@ -185,6 +185,8 @@ fn initialise_camera(world: &mut World) -> Entity {
 }
 
 fn main() -> amethyst::Result<()> {
+    amethyst::start_logger(Default::default());
+
     let path = format!(
         "{}/examples/sprites/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")

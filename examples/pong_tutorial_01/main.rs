@@ -22,6 +22,8 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
 }
 
 fn main() -> amethyst::Result<()> {
+    amethyst::start_logger(Default::default());
+
     let path = format!(
         "{}/examples/pong_tutorial_01/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")

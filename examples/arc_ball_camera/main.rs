@@ -37,6 +37,8 @@ impl<'a, 'b> State<GameData<'a, 'b>> for ExampleState {
 }
 
 fn main() -> Result<(), Error> {
+    amethyst::start_logger(Default::default());
+
     let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
 
     let display_config_path = format!(

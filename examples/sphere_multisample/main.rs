@@ -37,6 +37,8 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
 }
 
 fn main() -> amethyst::Result<()> {
+    amethyst::start_logger(Default::default());
+
     let display_config_path = format!(
         "{}/examples/sphere_multisample/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")

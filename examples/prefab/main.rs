@@ -38,6 +38,8 @@ impl<'a, 'b> State<GameData<'a, 'b>> for AssetsExample {
 
 /// Wrapper around the main, so we can return errors easily.
 fn main() -> Result<(), Error> {
+    amethyst::start_logger(Default::default());
+
     // Add our meshes directory to the asset loader.
     let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
 

@@ -161,6 +161,8 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>> for Main {
 }
 
 fn main() -> Result<(), Error> {
+    amethyst::start_logger(Default::default());
+
     // Add our meshes directory to the asset loader.
     let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
 
