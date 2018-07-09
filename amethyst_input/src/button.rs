@@ -1,5 +1,6 @@
 use winit::{MouseButton, VirtualKeyCode};
 
+use super::controller::ControllerButton;
 use super::local_mouse_button::LocalMouseButton;
 use super::local_virtual_key_code::LocalVirtualKeyCode;
 
@@ -16,7 +17,11 @@ pub enum Button {
 
     /// Mouse buttons
     Mouse(#[serde(with = "LocalMouseButton")] MouseButton),
-    //TODO: Add controller buttons here when the engine has support.
+
+    /// Controller buttons matching SDL controller model.
+    /// A tuple of sequential controller_id in order of connection
+    /// and specific type of used controller button.
+    Controller(u32, ControllerButton),
 }
 
 impl From<VirtualKeyCode> for Button {

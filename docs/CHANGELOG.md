@@ -29,6 +29,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Derive `PartialEq` for `MaterialPrimitive` ([#809])
 * Make `with_bindings_from_file` return a Result ([#811])
 * Logger initialization is now optional and can be enabled with a call to `amethyst::start_logger()` ([#815])
+* Gamepad support with optional builtin SDL controller event source ([#818])
 
 ### Changed
 * UI systems will now never overwrite your local `UiTransform` values ([#774])
@@ -86,6 +87,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#811]: https://github.com/amethyst/amethyst/pull/811
 [#816]: https://github.com/amethyst/amethyst/pull/816
 [#815]: https://github.com/amethyst/amethyst/pull/815
+[#818]: https://github.com/amethyst/amethyst/pull/818
 
 ## [0.7.0] - 2018-05
 ### Added
@@ -95,7 +97,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * UI Layouts ([#591]).
 * UI Events ([#580]).
 * Introduce a generic animation system, with support for both  transform and texture animation ([#558]), ([#566]), ([#567]), ([#569]), ([#570]), ([#611]), ([#641]), ([#644])
-* Add transparency support to core passes ([#543]), ([#574]), ([#584]) 
+* Add transparency support to core passes ([#543]), ([#574]), ([#584])
 * Add vertex skinning ([#545]), ([#619])
 * Expose a basic visibility ordering system, with the ability to swap in better replacement systems ([#595])
 * Audio `Output` is now added directly rather than as an `Option`, should now be fetched with `Option<Read<'a, Output>>` ([#679])
