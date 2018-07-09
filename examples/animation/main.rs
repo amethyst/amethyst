@@ -8,7 +8,7 @@ use amethyst::animation::{get_animation_set, AnimationBundle, AnimationCommand, 
                           AnimationSetPrefab, DeferStartRelation, EndControl, StepDirection};
 use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, RonFormat};
 use amethyst::core::{Transform, TransformBundle};
-use amethyst::ecs::prelude::{Entity, World};
+use amethyst::ecs::prelude::Entity;
 use amethyst::input::{get_key, is_close_requested, is_key};
 use amethyst::prelude::*;
 use amethyst::renderer::{DrawShaded, Event, PosNormTex, VirtualKeyCode};
