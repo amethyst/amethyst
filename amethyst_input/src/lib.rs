@@ -8,6 +8,9 @@ extern crate serde;
 extern crate smallvec;
 extern crate winit;
 
+#[cfg(feature = "sdl_controller")]
+extern crate sdl2;
+
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
 
@@ -20,6 +23,9 @@ pub use self::event::InputEvent;
 pub use self::input_handler::InputHandler;
 pub use self::system::InputSystem;
 pub use self::util::{get_key, is_close_requested, is_key};
+
+#[cfg(feature = "sdl_controller")]
+pub use self::sdl_events_system::SdlEventsSystem;
 
 use std::iter::{Chain, FlatMap, Iterator, Map};
 use std::slice::Iter;
@@ -37,6 +43,9 @@ mod local_mouse_button;
 mod local_virtual_key_code;
 mod system;
 mod util;
+
+#[cfg(feature = "sdl_controller")]
+mod sdl_events_system;
 
 // This entire set ot types is to be eliminated once impl Trait is released.
 
@@ -58,13 +67,13 @@ pub type Controllers<'a> = Map<Iter<'a, (u32, u32)>, fn(&(u32, u32)) -> u32>;
 pub struct Buttons<'a> {
     iterator: Chain<
         Chain<
-        Map<Iter<'a, MouseButton>, fn(&MouseButton) -> Button>,
-        FlatMap<
-            Iter<'a, (VirtualKeyCode, u32)>,
-            KeyThenCode,
-            fn(&(VirtualKeyCode, u32)) -> KeyThenCode,
+            Map<Iter<'a, MouseButton>, fn(&MouseButton) -> Button>,
+            FlatMap<
+                Iter<'a, (VirtualKeyCode, u32)>,
+                KeyThenCode,
+                fn(&(VirtualKeyCode, u32)) -> KeyThenCode,
+            >,
         >,
-    >,
         Map<Iter<'a, (u32, ControllerButton)>, fn(&(u32, ControllerButton)) -> Button>,
     >,
 }
