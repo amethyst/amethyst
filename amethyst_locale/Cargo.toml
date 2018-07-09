@@ -1,0 +1,30 @@
+[package]
+name = "amethyst_locale"
+version = "0.1.0"
+authors = ["Joël Lupien <jojolepromain@gmail.com>"]
+readme = "README.md"
+description = """
+Localisation bindings.
+"""
+exclude = ["examples/*"]
+license = "MIT/Apache-2.0"
+keywords = ["game", "localisation", "resource", "management", "amethyst"]
+categories = ["filesystem,localisation"]
+
+documentation = "https://www.amethyst.rs/doc/master/doc/amethyst/"
+homepage = "https://www.amethyst.rs/"
+repository = "https://github.com/amethyst/amethyst"
+
+[badges]
+appveyor = { repository = "amethyst/amethyst", branch = "develop" }
+travis-ci = { repository = "amethyst/amethyst" }
+
+[dependencies]
+amethyst_assets = { path = "../amethyst_assets", version = "0.3" }
+amethyst_core = { path = "../amethyst_core", version = "0.2" }
+fluent = "0.2.0"
+
+thread_profiler = { version = "0.1", optional = true }
+
+[features]
+profiler = [ "thread_profiler/thread_profiler" ]

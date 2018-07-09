@@ -23,8 +23,11 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Add shape prefab support ([#785])
 * Specialised UI prefab format ([#786])
 * Add generation of normals/tangents in GLTF ([#784])
+* Localisation using FTL files and the fluent-rs library ([#663])
 * Add basic scene prefab ([#791])
 * Improve ergonomics of examples ([#793])
+* Derive `PartialEq` for `MaterialPrimitive` ([#809])
+* Make `with_bindings_from_file` return a Result ([#811])
 
 ### Changed
 * UI systems will now never overwrite your local `UiTransform` values ([#774])
@@ -48,6 +51,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Log an error if a pass tries to render a mesh with incompatible vertex buffers ([#749])
 * Standardize vsync across examples ([746])
 
+[#663]: https://github.com/amethyst/amethyst/pull/663
 [#746]: https://github.com/amethyst/amethyst/pull/746
 [#749]: https://github.com/amethyst/amethyst/pull/749
 [#751]: https://github.com/amethyst/amethyst/pull/751
@@ -73,6 +77,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#791]: https://github.com/amethyst/amethyst/pull/791
 [#789]: https://github.com/amethyst/amethyst/pull/789
 [#793]: https://github.com/amethyst/amethyst/pull/793
+[#809]: https://github.com/amethyst/amethyst/pull/809
+[#811]: https://github.com/amethyst/amethyst/pull/811
 
 ## [0.7.0] - 2018-05
 ### Added

@@ -178,7 +178,7 @@ fn toggle_or_cycle_animation(
     if let Some((entity, Some(animations))) = entity.map(|entity| (entity, sets.get(entity))) {
         if animations.animations.len() > scene.animation_index {
             let animation = animations.animations.get(&scene.animation_index).unwrap();
-            let mut set = get_animation_set::<usize, Transform>(controls, entity);
+            let mut set = get_animation_set::<usize, Transform>(controls, entity).unwrap();
             if set.has_animation(scene.animation_index) {
                 set.toggle(scene.animation_index);
             } else {

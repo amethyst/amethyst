@@ -165,7 +165,7 @@ fn main() -> Result<(), Error> {
     let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
 
     let display_config_path = format!(
-        "{}/examples/renderable/resources/display_config.ron",
+        "{}/examples/custom_game_data/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
     );
 

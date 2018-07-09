@@ -53,7 +53,7 @@ let binding_path = format!(
     env!("CARGO_MANIFEST_DIR")
 );
 
-let input_bundle = InputBundle::<String, String>::new().with_bindings_from_file(binding_path);
+let input_bundle = InputBundle::<String, String>::new().with_bindings_from_file(binding_path)?;
 
 let game_data = GameDataBuilder::default()
     .with_bundle(TransformBundle::new())?

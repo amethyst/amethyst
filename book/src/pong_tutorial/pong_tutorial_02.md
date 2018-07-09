@@ -98,7 +98,10 @@ Inside this function, we'll `register` our `Paddle` component on the mutable
 `World` object we're passed by Amethyst's state machine when the game starts up.
 
 ```rust,ignore
-fn on_start(&mut self, world: &mut World) {
+
+fn on_start(&mut self, data: StateData<GameData>) {
+    let StateData { world, .. } = data;
+
     world.register::<Paddle>();
 }
 ```
@@ -197,7 +200,7 @@ fn generate_rectangle_vertices(left: f32,
         },
         PosTex {
             position: [left, top, 0.0],
-            tex_coord: [1.0, 1.0],
+            tex_coord: [0.0, 1.0],
         },
         PosTex {
             position: [right, top, 0.],
@@ -340,10 +343,12 @@ Now let's add our initialise functions to the `on_start` function in `impl State
 for Pong`.
 
 ```rust,ignore
-fn on_start(&mut self, world: &mut World) {
-    world.register::<Paddle>();
-    initialise_paddles(world);
-    initialise_camera(world);
+fn on_start(&mut self, data: StateData<GameData>) {
+  let StateData { world, .. } = data;
+
+  world.register::<Paddle>();
+  initialise_paddles(world);
+  initialise_camera(world);
 }
 ```
 
@@ -371,10 +376,11 @@ As it turns out, the components we're missing are `GlobalTransform` and
 also add the `TransformSystem` for working with those components:
 
 ```rust,ignore
-let mut game = Application::build("./", Pong)?
-    .with_bundle(TransformBundle::new())? //Add this bundle
-    .with_bundle(RenderBundle::new(pipe, Some(config)))?
-    .build()?;
+let game_data = GameDataBuilder::default()
+  .with_bundle(RenderBundle::new(pipe, Some(config)))?
+  .with_bundle(TransformBundle::new())?; //Add this bundle
+
+let mut game = Application::new("./", Pong, game_data)?;
 ```
 
 Also we'll need to import that structure:

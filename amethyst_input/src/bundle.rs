@@ -2,8 +2,9 @@
 
 use std::hash::Hash;
 use std::path::Path;
+use std::result::Result as StdResult;
 
-use amethyst_config::Config;
+use amethyst_config::{Config, ConfigError};
 use amethyst_core::bundle::{Result, SystemBundle};
 use amethyst_core::specs::prelude::DispatcherBuilder;
 use serde::de::DeserializeOwned;
@@ -27,7 +28,8 @@ use {Bindings, InputSystem};
 ///
 /// No errors returned from this bundle.
 ///
-#[derive(Default)]
+#[derive(Derivative)]
+#[derivative(Default(bound = ""))]
 pub struct InputBundle<AX, AC>
 where
     AX: Hash + Eq,
@@ -38,8 +40,8 @@ where
 
 impl<AX, AC> InputBundle<AX, AC>
 where
-    AX: Hash + Eq + DeserializeOwned + Serialize + Default,
-    AC: Hash + Eq + DeserializeOwned + Serialize + Default,
+    AX: Hash + Eq,
+    AC: Hash + Eq,
 {
     /// Create a new input bundle with no bindings
     pub fn new() -> Self {
@@ -53,8 +55,12 @@ where
     }
 
     /// Load bindings from file
-    pub fn with_bindings_from_file<P: AsRef<Path>>(self, file: P) -> Self {
-        self.with_bindings(Bindings::load(file))
+    pub fn with_bindings_from_file<P: AsRef<Path>>(self, file: P) -> StdResult<Self, ConfigError>
+    where
+        AX: DeserializeOwned + Serialize,
+        AC: DeserializeOwned + Serialize,
+    {
+        Ok(self.with_bindings(Bindings::load_no_fallback(file)?))
     }
 }
 

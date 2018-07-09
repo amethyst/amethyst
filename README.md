@@ -17,7 +17,7 @@
 [gc]: https://gitter.im/orgs/amethyst/rooms
 [di]: https://discord.gg/GnP5Whs
 
-**Warning: The book and the documentation are missing content. Amethyst is undergoing a lot of changes at the moment.**
+**Warning: The engine is still in alpha, and thus it changes very fast. You may find out that some parts of the documentation can be outdated. If you find such an occurrence, feel free to open an issue and it will be fixed in no time.**
 
 ## Goals
 
@@ -77,7 +77,7 @@ $ sudo apt install libasound2-dev libx11-xcb-dev
 ### Fedora
 
 ```
-$ sudo yum install alsa-lib-devel
+$ sudo dnf install alsa-lib-devel
 ```
 
 ## Building Documentation
