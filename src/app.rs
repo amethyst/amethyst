@@ -376,7 +376,7 @@ impl<S> ApplicationBuilder<S> {
         use rustc_version_runtime;
 
         if !log_enabled!(Level::Error) {
-            println!(
+            eprintln!(
                 "WARNING: No logger detected! Did you forget to call `amethyst::start_logger()`?"
             );
         }
