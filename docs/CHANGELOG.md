@@ -43,6 +43,10 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Refactor GLTF loader to use prefabs ([#784])
 * Point lights use `GlobalTransform` for positioning rather than a separate `center` ([#794])
 * Point lights now require a `GlobalTransform` component to be included in rendering ([#794])
+* `amethyst_input::input_handler::{keys_that_are_down, mouse_buttons_that_are_down, scan_codes_that_are_down, buttons_that_are_down}` now all return `impl Iterator` instead of concrete wrapper types ([#816])
+
+### Removed
+* Remove `amethyst_input::{KeyCodes, ScanCodes, MouseButtons, Buttons}` in favor of `impl trait` ([#816])
 
 ### Fixed
 * Resizing fixed on OSX ([#767])
@@ -79,6 +83,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#793]: https://github.com/amethyst/amethyst/pull/793
 [#809]: https://github.com/amethyst/amethyst/pull/809
 [#811]: https://github.com/amethyst/amethyst/pull/811
+[#816]: https://github.com/amethyst/amethyst/pull/816
 
 ## [0.7.0] - 2018-05
 ### Added
