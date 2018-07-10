@@ -84,11 +84,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#793]: https://github.com/amethyst/amethyst/pull/793
 [#809]: https://github.com/amethyst/amethyst/pull/809
 [#811]: https://github.com/amethyst/amethyst/pull/811
-<<<<<<< HEAD
 [#816]: https://github.com/amethyst/amethyst/pull/816
-=======
 [#815]: https://github.com/amethyst/amethyst/pull/815
->>>>>>> Update changelog
 
 ## [0.7.0] - 2018-05
 ### Added
