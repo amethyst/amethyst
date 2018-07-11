@@ -1,7 +1,6 @@
-use super::{ConnectionState, NetConnection, NetConnectionPool, NetEvent, NetIdentity,
-            NetReceiveBuffer, NetSendBuffer, NetSourcedEvent};
+use super::{ConnectionState, NetConnection, NetEvent, NetIdentity};
 use shrev::ReaderId;
-use specs::{Fetch, FetchMut, System};
+use amethyst_core::specs::{Read, Write, System,WriteStorage};
 
 /// Manages the network connections.
 /// The way it is done depends if it is assigned to work as a server or as a client.
@@ -23,19 +22,19 @@ use specs::{Fetch, FetchMut, System};
 /// Input: Disconnected
 ///
 // TODO: Allow user to specify how uuid are assigned to connections.
-pub struct ConnectionManagerSystem<T>
+pub struct ConnectionManagerSystem<E>
 where
-    T: PartialEq,
+    E: PartialEq,
 {
     /// The reader for the NetReceiveBuffer.
-    net_event_reader: Option<ReaderId<NetSourcedEvent<T>>>,
+    net_event_reader: Option<ReaderId<E>>,
     /// Indicates how it should handle events and reply to them.
     is_server: bool,
 }
 
-impl<T> ConnectionManagerSystem<T>
+impl<E> ConnectionManagerSystem<E>
 where
-    T: PartialEq,
+    E: PartialEq,
 {
     /// Creates a new ConnectionManagerSystem.
     pub fn new(is_server: bool) -> Self {
@@ -46,18 +45,16 @@ where
     }
 }
 
-impl<'a, T> System<'a> for ConnectionManagerSystem<T>
+impl<'a, E> System<'a> for ConnectionManagerSystem<E>
 where
-    T: Send + Sync + PartialEq + 'static,
+    E: Send + Sync + PartialEq + 'static,
 {
     type SystemData = (
-        FetchMut<'a, NetReceiveBuffer<T>>,
-        FetchMut<'a, NetConnectionPool>,
-        FetchMut<'a, NetSendBuffer<T>>,
-        Fetch<'a, NetIdentity>,
+        WriteStorage<'a, NetConnection<E>>,
+        WriteStorage<'a, NetIdentity>,
     );
-    fn run(&mut self, (mut events, mut pool, mut send_buf, identity): Self::SystemData) {
-        if self.net_event_reader.is_none() {
+    fn run(&mut self, (mut net_connections, mut identities): Self::SystemData) {
+        /*if self.net_event_reader.is_none() {
             self.net_event_reader = Some(events.buf.register_reader());
         }
 
@@ -131,6 +128,6 @@ where
                     _ => {}
                 }
             }
-        }
+        }*/
     }
 }

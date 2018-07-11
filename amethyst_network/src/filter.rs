@@ -1,5 +1,5 @@
 //! The network filter base trait
-use super::{ConnectionState, NetConnectionPool, NetEvent};
+use super::{ConnectionState, NetEvent};
 use std::marker::PhantomData;
 use std::net::SocketAddr;
 
@@ -9,7 +9,7 @@ where
     T: PartialEq,
 {
     /// Check if the event is allowed to pass through this filter.
-    fn allow(&mut self, pool: &NetConnectionPool, source: &SocketAddr, event: &NetEvent<T>)
+    fn allow(&mut self, source: &SocketAddr, event: &NetEvent<T>)
         -> bool;
 }
 
@@ -43,11 +43,10 @@ where
     /// Checks if the event is from a connected client.
     fn allow(
         &mut self,
-        pool: &NetConnectionPool,
         source: &SocketAddr,
         event: &NetEvent<T>,
     ) -> bool {
-        if let Some(ref conn) = pool.connection_from_address(source) {
+        /*if let Some(ref conn) = pool.connection_from_address(source) {
             if conn.state == ConnectionState::Connected {
                 true
             } else {
@@ -55,6 +54,11 @@ where
             }
         } else {
             FilterConnected::event_bypass(event)
-        }
+        }*/
+
+
+
+        // insert :joy: emoji here
+        true
     }
 }

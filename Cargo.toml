@@ -41,6 +41,7 @@ nightly = [
     "amethyst_config/nightly",
     "amethyst_core/nightly",
     "amethyst_controls/nightly",
+    "amethyst_network/nightly",
     "amethyst_renderer/nightly",
     "amethyst_input/nightly",
     "amethyst_ui/nightly",

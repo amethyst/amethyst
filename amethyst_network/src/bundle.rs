@@ -1,11 +1,10 @@
-use super::{ConnectionManagerSystem, NetConnectionPool, NetIdentity, NetReceiveBuffer,
-            NetSendBuffer, NetSocketSystem};
+use super::{ConnectionManagerSystem, NetSocketSystem};
 use amethyst_core::bundle::{SystemBundle, Result};
 use filter::NetFilter;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
-use shred::DispatcherBuilder;
-use specs::World;
+use amethyst_core::shred::DispatcherBuilder;
+use amethyst_core::specs::World;
 use std::net::SocketAddr;
 use uuid::Uuid;
 
@@ -66,7 +65,7 @@ impl<'a, 'b, 'c, T> SystemBundle<'a, 'b> for NetworkBundle<'c, T>
 where
     T: Send + Sync + PartialEq + Serialize + Clone + DeserializeOwned + 'static,
 {
-    fn build(self,mut builder: DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(mut self,mut builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
         //let mut pool = NetConnectionPool::new();
         //world.add_resource(NetSendBuffer::<T>::new());
         //world.add_resource(NetReceiveBuffer::<T>::new());
@@ -80,11 +79,11 @@ where
             info!("Starting NetworkBundle using a random port.");
         }
 
-        let mut s = NetSocketSystem::<T>::new(self.ip, self.port.unwrap(), self.filters)
+        let mut s = NetSocketSystem::<T>::new(self.ip, self.port.unwrap())
             .expect("Failed to open network system.");
-        if let Some(c) = self.connect_to {
+        /*if let Some(c) = self.connect_to {
             s.connect(c, &mut pool, uuid);
-        }
+        }*/
 
         //world.add_resource(pool);
         //world.add_resource(NetIdentity { uuid });
@@ -96,6 +95,6 @@ where
             &["net_socket"],
         );
 
-        Ok()
+        Ok(())
     }
 }

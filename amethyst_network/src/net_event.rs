@@ -53,15 +53,3 @@ impl<T> NetEvent<T> {
         }
     }
 }
-
-///Carries the source of the event. Useful for debugging, security checks, gameplay logic, etc...
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct NetSourcedEvent<T> {
-    /// The event.
-    pub event: NetEvent<T>,
-    /// The source of this event.
-    /// Might be none if the client is connecting.
-    pub uuid: Option<Uuid>,
-    /// The socket from which we received this event or to which we want to send it to.
-    pub socket: SocketAddr,
-}

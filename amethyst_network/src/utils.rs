@@ -1,16 +1,17 @@
 extern crate bincode;
 
-use super::{NetConnection, NetConnectionPool, NetEvent, NetSendBuffer, NetSourcedEvent};
+use super::{NetConnection, NetEvent};
 use bincode::{deserialize, serialize, Infinite};
 use bincode::internal::ErrorKind;
 use mio::net::UdpSocket;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use std::clone::Clone;
+use std::net::SocketAddr;
 
 /// Sends an event to the target NetConnection using the provided network Socket.
 /// The socket has to be bound.
-pub fn send_event<T>(event: &NetEvent<T>, target: &NetConnection, socket: &UdpSocket)
+pub fn send_event<T>(event: &NetEvent<T>, target: &SocketAddr, socket: &UdpSocket)
 where
     T: Serialize,
 {
@@ -18,7 +19,7 @@ where
     match ser {
         Ok(s) => {
             let slice = s.as_slice();
-            if let Err(e) = socket.send_to(slice, &target.target) {
+            if let Err(e) = socket.send_to(slice, target) {
                 error!("Failed to send data to network socket: {}", e);
             }
         }
@@ -33,7 +34,7 @@ where
 {
     deserialize::<NetEvent<T>>(data)
 }
-
+/*
 /// Send an event to a network connection by adding the event to the send queue.
 /// This will eventually have support for reliability settings.
 pub fn send_to<T>(event: NetEvent<T>, buf: &mut NetSendBuffer<T>, target: &NetConnection)
@@ -70,3 +71,4 @@ pub fn send_to_all_except<T>(
         send_to(event.clone(), buf, conn);
     }
 }
+*/

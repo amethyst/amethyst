@@ -1,24 +1,45 @@
 //! Network Connection and states.
 
-use super::NetSourcedEvent;
 use shrev::EventChannel;
-use specs::{Component, VecStorage};
+use amethyst_core::specs::{Component, VecStorage};
 use std::net::SocketAddr;
 use uuid::Uuid;
+use super::NetEvent;
+
+// TODO: Think about relationship between NetConnection and NetIdentity.
 
 /// A network connection target data.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct NetConnection {
+pub struct NetConnection<E> {
     /// The remote socket address of this connection.
     pub target: SocketAddr,
     /// The state of the connection.
     pub state: ConnectionState,
-    /// UUID of the owner at the endpoint of this connection.
-    /// Will be none during the connection phase of the client, until the server acknowledges the connection.
-    pub uuid: Option<Uuid>,
+    pub send_buffer: EventChannel<NetEvent<E>>,
+    pub receive_buffer: EventChannel<NetEvent<E>>,
 }
 
-impl Eq for NetConnection {}
+impl<E: Send+Sync+'static> NetConnection<E>{
+  pub fn new(target: SocketAddr) -> Self{
+    NetConnection{
+      target,
+      state: ConnectionState::Connecting,
+      send_buffer: EventChannel::<NetEvent<E>>::new(),
+      receive_buffer: EventChannel::<NetEvent<E>>::new(),
+    }
+  }
+}
+
+impl<E> PartialEq for NetConnection<E> {
+  fn eq(&self, other: &Self) -> bool {
+        self.target == other.target && self.state == other.state
+    }
+}
+
+impl<E: PartialEq> Eq for NetConnection<E> {}
+
+impl<E: Send+Sync+'static> Component for NetConnection<E>{
+  type Storage = VecStorage<Self>;
+}
 
 ///The state of the connection.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -41,7 +62,7 @@ pub struct NetIdentity {
 }
 
 impl Default for NetIdentity{
-  pub fn default() -> Self{
+  fn default() -> Self{
     NetIdentity{
       uuid: Uuid::new_v4(),
     }
@@ -52,6 +73,8 @@ impl Component for NetIdentity {
     type Storage = VecStorage<NetIdentity>;
 }
 
+
+/*
 /// The list of network connections allocated by the network system.
 #[derive(Default)]
 pub struct NetConnectionPool {
@@ -101,56 +124,6 @@ impl NetConnectionPool {
 
 impl Component for NetConnectionPool {
     type Storage = VecStorage<NetConnectionPool>;
-}
+}*/
 
-/// The resource containing the events that should be send by the NetworkSocketSystem.
-#[derive(Default)]
-pub struct NetSendBuffer<T> {
-    /// The event buffer.
-    pub buf: EventChannel<NetSourcedEvent<T>>,
-}
 
-impl<T> NetSendBuffer<T>
-where
-    T: Send + Sync + 'static,
-{
-    /// Creates a new empty NetSendBuffer
-    pub fn new() -> NetSendBuffer<T> {
-        NetSendBuffer {
-            buf: EventChannel::<NetSourcedEvent<T>>::new(),
-        }
-    }
-}
-
-impl<T> Component for NetSendBuffer<T>
-where
-    T: Send + Sync + 'static,
-{
-    type Storage = VecStorage<NetSendBuffer<T>>;
-}
-
-/// The resource containing the events that were received and not filtered by the NetworkSocketSystem.
-#[derive(Default)]
-pub struct NetReceiveBuffer<T> {
-    /// The event buffer.
-    pub buf: EventChannel<NetSourcedEvent<T>>,
-}
-
-impl<T> NetReceiveBuffer<T>
-where
-    T: Send + Sync + 'static,
-{
-    /// Creates a new empty NetSendBuffer
-    pub fn new() -> NetReceiveBuffer<T> {
-        NetReceiveBuffer {
-            buf: EventChannel::<NetSourcedEvent<T>>::new(),
-        }
-    }
-}
-
-impl<T> Component for NetReceiveBuffer<T>
-where
-    T: Send + Sync + 'static,
-{
-    type Storage = VecStorage<NetReceiveBuffer<T>>;
-}

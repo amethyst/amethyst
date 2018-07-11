@@ -11,6 +11,10 @@ homepage = "https://www.amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 license = "MIT/Apache-2.0"
 
+[features]
+profiler = [ "thread_profiler/thread_profiler" ]
+nightly = [ "amethyst_core/nightly" ]
+
 [dependencies]
 amethyst_assets = { path = "../amethyst_assets", version = "0.3" }
 amethyst_core = { path = "../amethyst_core", version = "0.2" }
@@ -19,7 +23,7 @@ shrev = "0.8.1"
 shred = "0.5"
 bincode = "0.9.2"
 log = "0.4"
-specs = { version = "0.10", features = ["serde"] }
 uuid = { version = "0.5.1", features = ["v4","serde"] }
 rand = "0.4"
 mio = "0.6"
+thread_profiler = { version = "0.1" , optional = true }

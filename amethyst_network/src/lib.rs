@@ -13,7 +13,6 @@ extern crate rand;
 extern crate serde;
 extern crate shred;
 extern crate shrev;
-extern crate specs;
 extern crate uuid;
 
 mod bundle;
@@ -23,12 +22,12 @@ mod filter;
 mod net_event;
 mod network_socket;
 mod utils;
+mod test;
 
 pub use bundle::NetworkBundle;
-pub use connection::{ConnectionState, NetConnection, NetConnectionPool, NetIdentity,
-                     NetReceiveBuffer, NetSendBuffer};
+pub use connection::{ConnectionState, NetConnection, NetIdentity};
 pub use connection_manager::ConnectionManagerSystem;
 pub use filter::{FilterConnected, NetFilter};
-pub use net_event::{NetEvent, NetSourcedEvent};
+pub use net_event::{NetEvent};
 pub use network_socket::NetSocketSystem;
-pub use utils::{deserialize_event, send_event, send_to, send_to_all, send_to_all_except};
+pub use utils::{deserialize_event, send_event, /*send_to, send_to_all, send_to_all_except*/};
