@@ -48,7 +48,9 @@ script: |
   # Build and test without profiler
   cargo test --all -v &&
   # Build and test with profiler
-  cargo test --all --features profiler -v 
+  cargo test --all --features profiler -v &&
+  # Build and test with sdl_controller
+  cargo test --all --features sdl_controller -v
 
 # Push notifications to `amethyst/general` and `amethyst/engine` Gitter chats.
 notifications:

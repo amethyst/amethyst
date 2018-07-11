@@ -45,3 +45,4 @@ build: false
 test_script:
   - cargo test --all -v
   - cargo test --all -v --features profiler
+  - cargo test --all -v --features sdl_controller
