@@ -8,6 +8,9 @@ extern crate serde;
 extern crate smallvec;
 extern crate winit;
 
+#[cfg(feature = "sdl_controller")]
+extern crate sdl2;
+
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
 
@@ -15,10 +18,14 @@ pub use self::axis::Axis;
 pub use self::bindings::Bindings;
 pub use self::bundle::InputBundle;
 pub use self::button::Button;
+pub use self::controller::{ControllerAxis, ControllerButton};
 pub use self::event::InputEvent;
 pub use self::input_handler::InputHandler;
 pub use self::system::InputSystem;
 pub use self::util::{get_key, is_close_requested, is_key};
+
+#[cfg(feature = "sdl_controller")]
+pub use self::sdl_events_system::SdlEventsSystem;
 
 use std::iter::Iterator;
 
@@ -28,12 +35,16 @@ mod axis;
 mod bindings;
 mod bundle;
 mod button;
+mod controller;
 mod event;
 mod input_handler;
 mod local_mouse_button;
 mod local_virtual_key_code;
 mod system;
 mod util;
+
+#[cfg(feature = "sdl_controller")]
+mod sdl_events_system;
 
 struct KeyThenCode {
     value: (VirtualKeyCode, u32),
