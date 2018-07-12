@@ -23,8 +23,8 @@ log = "0.4"
 rayon = "1.0.1"
 serde = { version = "1", features = ["serde_derive"] }
 shred = { version = "0.7" }
-specs = { version = "0.11", features = ["common"] }
-specs-hierarchy = { version = "0.1" }
+specs = { version = "0.12", features = ["common"] }
+specs-hierarchy = { version = "0.2" }
 shrev = "1.0"
 
 thread_profiler = { version = "0.1" , optional = true }

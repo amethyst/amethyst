@@ -440,7 +440,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use amethyst_core::specs::{RunNow, World};
+    use amethyst_core::specs::{Builder, RunNow, World};
     use amethyst_core::{GlobalTransform, Time, Transform};
     use rayon::ThreadPoolBuilder;
     use std::sync::Arc;

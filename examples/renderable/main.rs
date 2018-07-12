@@ -12,12 +12,13 @@ use amethyst::core::timing::Time;
 use amethyst::core::transform::{Transform, TransformBundle};
 use amethyst::ecs::prelude::{Entity, Join, Read, ReadStorage, System, Write, WriteStorage};
 use amethyst::input::{get_key, is_close_requested, is_key, InputBundle};
+use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DrawShaded, Event, Light, PosNormTex,
                          VirtualKeyCode};
 use amethyst::ui::{UiBundle, UiCreator, UiFinder, UiText};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::utils::scene::BasicScenePrefab;
-use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
+use amethyst::Error;
 
 type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
