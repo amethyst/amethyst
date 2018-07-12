@@ -10,12 +10,13 @@ use amethyst::core::transform::TransformBundle;
 use amethyst::ecs::prelude::{Component, Entity};
 use amethyst::ecs::storage::NullStorage;
 use amethyst::input::{is_close_requested, is_key, InputBundle};
+use amethyst::prelude::*;
 use amethyst::renderer::{DisplayConfig, DrawShaded, Event, Pipeline, PosNormTex, RenderBundle,
                          Stage, VirtualKeyCode};
 use amethyst::ui::{DrawUi, UiBundle, UiCreator, UiLoader, UiPrefab};
 use amethyst::utils::fps_counter::FPSCounterBundle;
 use amethyst::utils::scene::BasicScenePrefab;
-use amethyst::{Application, Error, State, StateData, Trans};
+use amethyst::Error;
 
 use example_system::ExampleSystem;
 use game_data::{CustomGameData, CustomGameDataBuilder};

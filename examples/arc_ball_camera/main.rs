@@ -6,9 +6,10 @@ use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, RonFormat};
 use amethyst::controls::ArcBallControlBundle;
 use amethyst::core::transform::TransformBundle;
 use amethyst::input::{is_close_requested, is_key, InputBundle};
+use amethyst::prelude::*;
 use amethyst::renderer::{DrawShaded, Event, PosNormTex, VirtualKeyCode};
 use amethyst::utils::scene::BasicScenePrefab;
-use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
+use amethyst::Error;
 
 type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 

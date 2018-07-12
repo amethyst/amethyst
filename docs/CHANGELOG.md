@@ -39,7 +39,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Moved `MaterialTextureSet` to the renderer crate ([#760])
 * Use `fresnel` function in PBR shader ([#772])
 * Remove boilerplate for `run` + `main` in examples ([#764])
-* Update dependencies ([#752], [#751])
+* Update dependencies ([#752], [#751], [#817])
 * Formalized and documented support for overriding the global logger ([#776])
 * Refactor GLTF loader to use prefabs ([#784])
 * Point lights use `GlobalTransform` for positioning rather than a separate `center` ([#794])
@@ -86,6 +86,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#811]: https://github.com/amethyst/amethyst/pull/811
 [#816]: https://github.com/amethyst/amethyst/pull/816
 [#815]: https://github.com/amethyst/amethyst/pull/815
+[#817]: https://github.com/amethyst/amethyst/pull/817
 
 ## [0.7.0] - 2018-05
 ### Added

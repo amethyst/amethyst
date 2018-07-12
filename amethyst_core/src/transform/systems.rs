@@ -128,7 +128,7 @@ impl<'a> System<'a> for TransformSystem {
 mod tests {
     use cgmath::{Decomposed, Matrix4, One, Quaternion, Vector3, Zero};
     use shred::RunNow;
-    use specs::prelude::World;
+    use specs::prelude::{Builder, World};
     use specs_hierarchy::{Hierarchy, HierarchySystem};
     use transform::{GlobalTransform, Parent, Transform, TransformSystem};
 
