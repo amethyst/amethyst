@@ -25,7 +25,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
             let loader = world.read_resource::<Loader>();
             let texture_storage = world.read_resource::<AssetStorage<Texture>>();
             loader.load(
-                "img/pong_spritesheet.png",
+                "texture/pong_spritesheet.png",
                 PngFormat,
                 Default::default(),
                 (),
