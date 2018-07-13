@@ -27,3 +27,4 @@ uuid = { version = "0.5.1", features = ["v4","serde"] }
 rand = "0.4"
 mio = "0.6"
 thread_profiler = { version = "0.1" , optional = true }
+fern = "0.5"

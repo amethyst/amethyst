@@ -2,16 +2,16 @@
 
 use super::{deserialize_event, send_event, ConnectionState, NetConnection, NetEvent, NetFilter};
 use mio::{Events, Poll, PollOpt, Ready, Token};
-use mio::net::UdpSocket;
+//use mio::net::UdpSocket;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use shrev::*;
 use amethyst_core::specs::{Read, Write, ReadStorage, WriteStorage, System,Entity,Entities,Join,Resources,SystemData};
-use amethyst_core::specs::world::EntityRes;
 use std::clone::Clone;
-use std::io::Error;
+use std::io::{Error,ErrorKind};
 use std::net::IpAddr;
 use std::net::SocketAddr;
+use std::net::UdpSocket;
 use std::str;
 use std::str::FromStr;
 use std::time::Duration;
@@ -44,7 +44,7 @@ where
     //pub filters: Vec<Box<NetFilter<T>>>,
     
     /// The mio's `Poll`.
-    pub poll: Poll,
+    //pub poll: Poll,
     
     /// Readers corresponding to each of the Connections. Use to keep track of when to send which event to who.
     /// When: When there is a new event that hasn't been read yet.
@@ -67,12 +67,15 @@ where
             IpAddr::from_str(ip).expect("Unreadable input IP."),
             port,
         ))?;
-        let poll = Poll::new()?;
-        poll.register(&socket, SOCKET, Ready::readable(), PollOpt::level())?;
+        socket.set_nonblocking(true).unwrap();
+        //socket.set_write_timeout(Some(Duration::from_millis(100))).unwrap();
+        //let poll = Poll::new()?;
+        //poll.register(&socket, SOCKET, Ready::readable(), PollOpt::level())?;
+        //poll.register(&socket, SOCKET, Ready::readable(), PollOpt::edge())?;
         Ok(NetSocketSystem {
             socket,
             //filters,
-            poll,
+            //poll,
             send_queues_readers: HashMap::new(),
         })
     }
@@ -99,18 +102,28 @@ where
         WriteStorage<'a, NetConnection<E>>,
     );
     fn setup(&mut self, res: &mut Resources) {
+        Self::SystemData::setup(res);
         //type InitSystemData = (Entities<'a>,WriteStorage<'a,NetConnection<E>>);
-        for (entity,mut net_connection) in (&*res.fetch::<EntitiesRes>(),&mut res.write_storage::<NetConnection<E>>()).join() {
-          self.send_queues_readers.insert(entity,net_connection.send_buffer.register_reader());
-        }
+        //for (entity,mut net_connection) in (&*res.fetch::<EntitiesRes>(),&mut res.write_storage::<NetConnection<E>>()).join() {
+        
+        /*for (entity,mut net_connection) in (&*Entities::fetch(&res),&mut WriteStorage::<NetConnection<E>>::fetch(&res)).join() {
+          self.send_queues_readers.insert(entity.clone(),net_connection.send_buffer.register_reader());
+        }*/
     }
     fn run(&mut self, (entities,mut net_connections): Self::SystemData) {
+        self.socket.set_nonblocking(false).unwrap();
+        println!("RUN METHOD");
+        let mut count = 0;
         for (entity,mut net_connection) in (&*entities,&mut net_connections).join() {
+          println!("CONNECTION FOUND");
           let mut reader = self.send_queues_readers.entry(entity).or_insert(net_connection.send_buffer.register_reader());
-
-          for ev in net_connection.send_buffer.read(reader) {
-            if net_connection.state == ConnectionState::Connected || net_connection.state == ConnectionState::Connecting {
-              send_event(ev, &net_connection.target, &self.socket);
+          
+          let target = net_connection.target.clone();
+          if net_connection.state == ConnectionState::Connected || net_connection.state == ConnectionState::Connecting {
+            println!("GOOD STATE");
+            for ev in net_connection.send_buffer_early_read() {
+              count = count + 1;
+              send_event(ev, &target, &self.socket);
             /*let target = pool.connection_from_address(&ev.socket);
             if let Some(t) = target {
                 if t.state == ConnectionState::Connected || t.state == ConnectionState::Connecting {
@@ -124,22 +137,24 @@ where
             }
           }
         }
-
+        println!("Sent {} packets", count);
+        self.socket.set_nonblocking(true).unwrap();
         // Receives event through mio's `Poll`.
         // I'm not sure if this is the right way to use Poll, but it seems to work.
-        let mut events = Events::with_capacity(2048);
-        let mut buf = [0 as u8; 2048];
-        loop {
-            self.poll
-                .poll(&mut events, Some(Duration::from_millis(0)))
-                .expect("Failed to poll network socket.");
+        //let mut events = Events::with_capacity(2048);
+        let mut buf = [0 as u8;2048];
+        //loop {
+            //self.poll.poll(&mut events, Some(Duration::from_millis(0))).expect("Failed to poll network socket.");
+            //self.poll.poll(&mut events, Some(Duration::from_millis(100))).expect("Failed to poll network socket.");
+            //self.poll.poll(&mut events, None).expect("Failed to poll network socket.");
 
-            if events.is_empty() {
+            /*if events.is_empty() {
                 break;
-            }
-
-            for raw_event in events.iter() {
-                if raw_event.readiness().is_readable() {
+            }*/
+            loop{
+            //for raw_event in events.iter() {
+                //println!("EVENT!!!");
+                //if raw_event.readiness().is_readable() {
                     match self.socket.recv_from(&mut buf) {
                         // Data received
                         Ok((amt, src)) => {
@@ -176,11 +191,17 @@ where
                           }
                       }
                       Err(e) => {
-                          error!("Could not receive datagram: {}", e);
+                          if e.kind() == ErrorKind::WouldBlock{
+                              error!("WouldBlock: {}", e);
+                              break;
+                          } else { 
+                              error!("Could not receive datagram: {}... retrying.", e);
+                          }
                       }
                     }
-                }
             }
-        }
+                //}
+            //}
+        //}
     }
 }

@@ -14,6 +14,7 @@ extern crate serde;
 extern crate shred;
 extern crate shrev;
 extern crate uuid;
+extern crate fern;
 
 mod bundle;
 mod connection;
