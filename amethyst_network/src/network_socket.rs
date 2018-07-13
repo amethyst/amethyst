@@ -193,7 +193,7 @@ where
                       Err(e) => {
                           if e.kind() == ErrorKind::WouldBlock{
                               error!("WouldBlock: {}", e);
-                              break;
+                                break;
                           } else { 
                               error!("Could not receive datagram: {}... retrying.", e);
                           }
