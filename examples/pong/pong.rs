@@ -35,7 +35,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
 
         // Setup our game.
         initialise_paddles(world, spritesheet.clone());
-        initialise_balls(world, spritesheet);
+        initialise_ball(world, spritesheet);
         initialise_camera(world);
         initialise_audio(world);
         initialise_score(world);
@@ -149,7 +149,7 @@ fn initialise_paddles(world: &mut World, spritesheet: TextureHandle) {
 }
 
 /// Initialises one ball in the middle-ish of the arena.
-fn initialise_balls(world: &mut World, spritesheet: TextureHandle) {
+fn initialise_ball(world: &mut World, spritesheet: TextureHandle) {
     use {ARENA_HEIGHT, ARENA_WIDTH, BALL_RADIUS, BALL_VELOCITY_X, BALL_VELOCITY_Y, PADDLE_WIDTH};
 
     // Create the translation.
