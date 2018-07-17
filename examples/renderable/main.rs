@@ -13,8 +13,8 @@ use amethyst::core::transform::{Transform, TransformBundle};
 use amethyst::ecs::prelude::{Entity, Join, Read, ReadStorage, System, Write, WriteStorage};
 use amethyst::input::{get_key, is_close_requested, is_key_down, InputBundle};
 use amethyst::prelude::*;
-use amethyst::renderer::{AmbientColor, Camera, DrawShaded, Event, Light, PosNormTex,
-                         VirtualKeyCode};
+use amethyst::renderer::{AmbientColor, Camera, DrawShaded, ElementState, Event, Light,
+                         PosNormTex, VirtualKeyCode};
 use amethyst::ui::{UiBundle, UiCreator, UiFinder, UiText};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::utils::scene::BasicScenePrefab;
@@ -87,27 +87,27 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
             return Trans::Quit;
         }
         match get_key(&event) {
-            Some(VirtualKeyCode::R) => {
+            Some((VirtualKeyCode::R,ElementState::Pressed)) => {
                 w.exec(|mut state: Write<DemoState>| {
                     state.light_color = [0.8, 0.2, 0.2, 1.0];
                 });
             }
-            Some(VirtualKeyCode::G) => {
+            Some((VirtualKeyCode::G,ElementState::Pressed)) => {
                 w.exec(|mut state: Write<DemoState>| {
                     state.light_color = [0.2, 0.8, 0.2, 1.0];
                 });
             }
-            Some(VirtualKeyCode::B) => {
+            Some((VirtualKeyCode::B,ElementState::Pressed)) => {
                 w.exec(|mut state: Write<DemoState>| {
                     state.light_color = [0.2, 0.2, 0.8, 1.0];
                 });
             }
-            Some(VirtualKeyCode::W) => {
+            Some((VirtualKeyCode::W,ElementState::Pressed)) => {
                 w.exec(|mut state: Write<DemoState>| {
                     state.light_color = [1.0, 1.0, 1.0, 1.0];
                 });
             }
-            Some(VirtualKeyCode::A) => {
+            Some((VirtualKeyCode::A,ElementState::Pressed)) => {
                 w.exec(
                     |(mut state, mut color): (Write<DemoState>, Write<AmbientColor>)| {
                         if state.ambient_light {
@@ -120,7 +120,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
                     },
                 );
             }
-            Some(VirtualKeyCode::D) => {
+            Some((VirtualKeyCode::D,ElementState::Pressed)) => {
                 w.exec(
                     |(mut state, mut lights): (Write<DemoState>, WriteStorage<Light>)| {
                         if state.directional_light {
@@ -141,7 +141,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
                     },
                 );
             }
-            Some(VirtualKeyCode::P) => {
+            Some((VirtualKeyCode::P,ElementState::Pressed)) => {
                 w.exec(|mut state: Write<DemoState>| {
                     if state.point_light {
                         state.point_light = false;
