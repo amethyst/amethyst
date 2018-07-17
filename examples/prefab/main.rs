@@ -5,7 +5,7 @@ extern crate rayon;
 
 use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, RonFormat};
 use amethyst::core::TransformBundle;
-use amethyst::input::{is_close_requested, is_key};
+use amethyst::input::{is_close_requested, is_key_down};
 use amethyst::prelude::*;
 use amethyst::renderer::{DrawShaded, Event, PosNormTex, VirtualKeyCode};
 use amethyst::utils::scene::BasicScenePrefab;
@@ -24,7 +24,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for AssetsExample {
     }
 
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_key(&event, VirtualKeyCode::Escape) || is_close_requested(&event) {
+        if is_key_down(&event, VirtualKeyCode::Escape) || is_close_requested(&event) {
             Trans::Quit
         } else {
             Trans::None

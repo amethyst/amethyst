@@ -18,7 +18,7 @@ In `src` there's a `main.rs` file. Delete everything, then add these imports:
 extern crate amethyst;
 
 use amethyst::prelude::*;
-use amethyst::input::{is_close_requested, is_key};
+use amethyst::input::{is_close_requested, is_key_down};
 use amethyst::renderer::{DisplayConfig, DrawFlat, Event, KeyboardInput,
                          Pipeline, PosTex, RenderBundle, Stage,
                          VirtualKeyCode, WindowEvent};
@@ -41,7 +41,7 @@ just implement two methods:
 ```rust,ignore
 impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
             Trans::Quit
         } else {
             Trans::None

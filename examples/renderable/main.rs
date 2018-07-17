@@ -11,7 +11,7 @@ use amethyst::core::cgmath::{Quaternion, Rad, Rotation, Rotation3};
 use amethyst::core::timing::Time;
 use amethyst::core::transform::{Transform, TransformBundle};
 use amethyst::ecs::prelude::{Entity, Join, Read, ReadStorage, System, Write, WriteStorage};
-use amethyst::input::{get_key, is_close_requested, is_key, InputBundle};
+use amethyst::input::{get_key, is_close_requested, is_key_down, InputBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::{AmbientColor, Camera, DrawShaded, Event, Light, PosNormTex,
                          VirtualKeyCode};
@@ -45,7 +45,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Loading {
     }
 
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
             Trans::Quit
         } else {
             Trans::None
@@ -83,7 +83,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
     fn handle_event(&mut self, data: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
         let w = data.world;
         // Exit if user hits Escape or closes the window
-        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
             return Trans::Quit;
         }
         match get_key(&event) {

@@ -9,7 +9,7 @@ use amethyst::animation::{get_animation_set, AnimationBundle, AnimationCommand, 
 use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, RonFormat};
 use amethyst::core::{Transform, TransformBundle};
 use amethyst::ecs::prelude::Entity;
-use amethyst::input::{get_key, is_close_requested, is_key};
+use amethyst::input::{get_key, is_close_requested, is_key_down};
 use amethyst::prelude::*;
 use amethyst::renderer::{DrawShaded, Event, PosNormTex, VirtualKeyCode};
 use amethyst::utils::scene::BasicScenePrefab;
@@ -54,7 +54,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
 
     fn handle_event(&mut self, data: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
         let StateData { world, .. } = data;
-        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
             return Trans::Quit;
         }
         match get_key(&event) {

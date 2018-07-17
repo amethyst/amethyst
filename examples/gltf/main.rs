@@ -13,7 +13,7 @@ use amethyst::controls::{ControlTagPrefab, FlyControlBundle};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::error::Error;
 use amethyst::ecs::prelude::{Entity, ReadStorage, Write, WriteStorage};
-use amethyst::input::{is_close_requested, is_key};
+use amethyst::input::{is_close_requested, is_key_down};
 use amethyst::prelude::*;
 use amethyst::renderer::*;
 use amethyst::utils::tag::{Tag, TagFinder};
@@ -110,9 +110,9 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
 
     fn handle_event(&mut self, data: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
         let StateData { world, .. } = data;
-        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
             Trans::Quit
-        } else if is_key(&event, VirtualKeyCode::Space) {
+        } else if is_key_down(&event, VirtualKeyCode::Space) {
             toggle_or_cycle_animation(
                 self.entity,
                 &mut world.write_resource(),
