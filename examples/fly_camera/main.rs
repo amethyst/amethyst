@@ -5,7 +5,7 @@ extern crate amethyst;
 use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, RonFormat};
 use amethyst::controls::FlyControlBundle;
 use amethyst::core::transform::TransformBundle;
-use amethyst::input::{is_close_requested, is_key, InputBundle};
+use amethyst::input::{is_close_requested, is_key_down, InputBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::{DrawShaded, Event, PosNormTex, VirtualKeyCode};
 use amethyst::utils::scene::BasicScenePrefab;
@@ -24,7 +24,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for ExampleState {
     }
 
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
             Trans::Quit
         } else {
             Trans::None
