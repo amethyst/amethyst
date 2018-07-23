@@ -2,7 +2,7 @@ use amethyst::assets::Loader;
 use amethyst::core::cgmath::Vector3;
 use amethyst::core::transform::{GlobalTransform, Transform};
 use amethyst::ecs::prelude::World;
-use amethyst::input::{is_close_requested, is_key};
+use amethyst::input::{is_close_requested, is_key_down};
 use amethyst::prelude::*;
 use amethyst::renderer::{Camera, Event, Material, MeshHandle, PosTex, Projection, VirtualKeyCode,
                          WindowMessages};
@@ -28,7 +28,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
     }
 
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
             Trans::Quit
         } else {
             Trans::None

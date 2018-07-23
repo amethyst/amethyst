@@ -24,7 +24,7 @@ use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::cgmath::{Matrix4, Point3, Transform as CgTransform, Vector3};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::Entity;
-use amethyst::input::{is_close_requested, is_key, InputBundle};
+use amethyst::input::{is_close_requested, is_key_down, InputBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::{Camera, ColorMask, DrawFlat, Event, Material, MaterialDefaults,
                          MaterialTextureSet, Mesh, PosTex, Projection, ScreenDimensions,
@@ -154,7 +154,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
     }
 
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
             Trans::Quit
         } else {
             Trans::None
@@ -185,6 +185,8 @@ fn initialise_camera(world: &mut World) -> Entity {
 }
 
 fn main() -> amethyst::Result<()> {
+    amethyst::start_logger(Default::default());
+
     let path = format!(
         "{}/examples/sprites/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")

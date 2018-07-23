@@ -39,19 +39,87 @@ stops complaining about unused imports. In `pong.rs` we'll need these use
 statements to make it through this chapter:
 
 ```rust,ignore
-use amethyst::assets::Loader;
-use amethyst::core::cgmath::Vector3;
+use amethyst::assets::{AssetStorage, Loader};
+use amethyst::core::cgmath::{Vector3, Matrix4};
 use amethyst::core::transform::{GlobalTransform, Transform};
 use amethyst::ecs::prelude::{Component, DenseVecStorage};
+use amethyst::input::{is_close_requested, is_key_down};
 use amethyst::prelude::*;
-use amethyst::renderer::{Camera, Event, KeyboardInput, Material, MaterialDefaults, MeshHandle,
-                         PosTex, VirtualKeyCode, WindowEvent};
+use amethyst::renderer::{
+    Camera, Event, PngFormat, Projection, Sprite, Texture, TextureHandle,
+    VirtualKeyCode, WithSpriteRender,
+};
 ```
+
+## Get around the World
+
+First, in `pong.rs`, let's add a new method to our State implementation: `on_start`.
+This method is called, as you probably guessed, when the State starts.
+We will leave it empty for now, but it will become useful later down the line.
+
+```rust,ignore
+fn on_start(&mut self, data: StateData<GameData>) {
+
+}
+```
+
+The `StateData<GameData>` is a structure given to all State methods. The important
+part of its content here is its `world` field.
+
+The `World` structure gets passed around everywhere. It carries with it all the
+elements of the runtime of our game: entities, components and systems.
+Remember when we added bundles in our `main.rs`, they were in fact adding
+all the systems they were holding inside the `World` before we actually
+ran the game.
+
+## Look at your game through the Camera
+
+The first thing we will need in our game is a Camera. This is the component
+that will determine what is rendered on screen. It behaves just like a
+real life camera: it records a specific part of the world and can be
+moved around at will.
+
+First, let's define some constants:
+
+```rust,ignore
+const ARENA_HEIGHT: f32 = 100.0;
+const ARENA_WIDTH: f32 = 100.0;
+```
+
+These constants will determine the size of our arena.
+So, as we're making a pong game, we want to create a camera that will cover
+the entire arena. Let's do it!
+
+```rust,ignore
+fn initialise_camera(world: &mut World) {
+    world.create_entity()
+        .with(Camera::from(Projection::orthographic(
+            0.0,
+            ARENA_WIDTH,
+            ARENA_HEIGHT,
+            0.0,
+        )))
+        .with(GlobalTransform(
+            Matrix4::from_translation(Vector3::new(0.0, 0.0, 1.0)).into()
+        ))
+        .build();
+}
+```
+
+We create an entity that will carry our camera, with an orthographic projection
+of the size of our arena (as we want it to cover it all). Ignore the
+`GlobalTransform` for now, we'll deal with it in more details later on.
+Note that as the origin of our camera is in the bottom left corner, we set
+`ARENA_HEIGHT` as the top and `0.0` as the bottom.
+
+> Orthographic projections are a type of 3D visualization on 2D screens
+> that keeps the size ratio of the 2D images displayed intact. They are very
+> useful in games without actual 3D, like our pong example. Perspective projections
+> are another way of displaying graphics, more useful in 3D scenes.
 
 ## Our first Component
 
 In `pong.rs` let's create our first `Component`, a definition of a paddle.
-
 
 ```rust,ignore
 #[derive(PartialEq, Eq)]
@@ -91,28 +159,6 @@ like that `Component` data stored, we can now add the `Paddle` component to
 entities in our game. For more on storage types, check out the
 [Specs documentation][sb-storage].
 
-## Where is the world?
-
-Now it's time to add a new method to our State implementation: `on_start`.
-Inside this function, we'll `register` our `Paddle` component on the mutable
-`World` object we're passed by Amethyst's state machine when the game starts up.
-
-```rust,ignore
-
-fn on_start(&mut self, data: StateData<GameData>) {
-    let StateData { world, .. } = data;
-
-    world.register::<Paddle>();
-}
-```
-
-This `World` gets passed around everywhere. It carries with it all the
-components in our game. Not only the components we create, but the ones the
-Amethyst engine itself relies on. For instance, in our `main.rs` we added a
-`RenderBundle::new()` to our game before calling `run()`. That added default
-rendering components like `Camera`, `Material`, and `Mesh` to the `World`, some
-of which we'll be using soon.
-
 ## Initialise some entities
 
 Now that we have a Paddle component, let's define some paddle entities that
@@ -121,12 +167,13 @@ include that component and add them to our `World`.
 First let's look at our math imports:
 
 ```rust,ignore
-use amethyst::core::cgmath::Vector3;
+use amethyst::core::cgmath::{Vector3, Matrix4};
 use amethyst::core::transform::{GlobalTransform, Transform};
 ```
 
 Amethyst uses the [cgmath crate][cg] under the hood and exposes it for our use.
 Today we just grabbed the `Vector3` type, which is a very good math thing to have.
+(we also grabbed `Matrix4` for the `GlobalTransform` earlier, but we won't use it here)
 
 `Transform` and `GlobalTransform` are Amethyst ECS components which carry
 position and orientation information. `Transform` is relative
@@ -135,28 +182,29 @@ to a parent if one exists, while `GlobalTransform` is, well, global.
 Let's also define some constants for convenience:
 
 ```rust,ignore
-const PADDLE_HEIGHT: f32 = 0.30;
-const PADDLE_WIDTH: f32 = 0.05;
-const PADDLE_COLOUR: [f32; 4] = [0.0, 0.0, 1.0, 1.0];
+const PADDLE_HEIGHT: f32 = 16.0;
+const PADDLE_WIDTH: f32 = 4.0;
 ```
 
 Okay, let's make some entities! We'll define an `initialise_paddles` function
-which will create left and right paddle entities and attach `Transform`
-components to them to position them in our world. Our canvas goes from
-`-1.0,-1.0` on the bottom left to `1.0,1.0` on the top right, which will make
-more sense when we define the camera.
+which will create left and right paddle entities and attach a `Transform`
+component to each to position them in our world. As we defined earlier,
+our canvas is from `0.0` to `ARENA_WIDTH` in the horizontal dimension and
+from `0.0` to `ARENA_HEIGHT` in the vertical dimension.
+Keep in mind that the anchor point of our entities will be in the middle of the
+image we will want to render on top of them. This is a good rule to follow in
+general as it makes operations like rotation easier.
 
 ```rust,ignore
 /// Initialises one paddle on the left, and one paddle on the right.
 fn initialise_paddles(world: &mut World) {
-
     let mut left_transform = Transform::default();
     let mut right_transform = Transform::default();
 
     // Correctly position the paddles.
-    let y = -PADDLE_HEIGHT / 2.0;
-    left_transform.translation = Vector3::new(-1.0, y, 0.0);
-    right_transform.translation = Vector3::new(1.0 - PADDLE_WIDTH, y, 0.0);
+    let y = ARENA_HEIGHT / 2.0;
+    left_transform.translation = Vector3::new(PADDLE_WIDTH * 0.5, y, 0.0);
+    right_transform.translation = Vector3::new(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
 
     // Create a left plank entity.
     world
@@ -181,114 +229,81 @@ virtual world, but we'll need to do some more work to actually *draw* them.
 
 ## Drawing
 
-Here's a utility function to generate the six vertices of a rectangle (a
-rectangle in computer graphics is typically drawn with two triangles):
+The first thing we will have to do is load the sprite sheet we will use for all our
+graphics in the game. Here, it is located in `texture/pong_spritesheet.png`.
+We will perform the loading in the `on_start` method.
 
 ```rust,ignore
-fn generate_rectangle_vertices(left: f32,
-                               bottom: f32,
-                               right: f32,
-                               top: f32) -> Vec<PosTex> {
-    vec![
-        PosTex {
-            position: [left, bottom, 0.],
-            tex_coord: [0.0, 0.0],
-        },
-        PosTex {
-            position: [right, bottom, 0.0],
-            tex_coord: [1.0, 0.0],
-        },
-        PosTex {
-            position: [left, top, 0.0],
-            tex_coord: [0.0, 1.0],
-        },
-        PosTex {
-            position: [right, top, 0.],
-            tex_coord: [1.0, 1.0],
-        },
-        PosTex {
-            position: [left, top, 0.],
-            tex_coord: [0.0, 1.0],
-        },
-        PosTex {
-            position: [right, bottom, 0.0],
-            tex_coord: [0.0, 0.0],
-        },
-    ]
-}
-```
+let world = data.world;
 
-`PosTex` is a type defined by `amethyst_renderer`. It's a vertex format with
-position and UV texture coordinate attributes. In our rendering pipeline, if
-you'll recall, we created a `DrawFlat::<PosTex>` pass, which draws a `PosTex`
-mesh. Right now our vertices are simply in a standard Rust `Vector`. To create a
-mesh from them we'll write another utility function, which generates a
-`MeshHandle`:
-
-```rust,ignore
-fn create_mesh(world: &World, vertices: Vec<PosTex>) -> MeshHandle {
+// Load the spritesheet necessary to render the graphics.
+let spritesheet = {
     let loader = world.read_resource::<Loader>();
-    loader.load_from_data(vertices.into(), (), &world.read_resource())
-}
+    let texture_storage = world.read_resource::<AssetStorage<Texture>>();
+    loader.load(
+        "texture/pong_spritesheet.png",
+        PngFormat,
+        Default::default(),
+        (),
+        &texture_storage,
+    )
+};
 ```
 
 The `Loader` is an asset loader which is defined as a `resource` (not a `Entity`
 , `Component`, or `System`, but still a part of our ECS `world`). It was created
 when we built our Application in `main.rs`, and it can read assets like .obj
-files, but also it can `load_from_data` as in our use case.
+files, but also it can `load` a .png as a `Texture` as in our use case.
 
 > Resources in Specs are a type of data which can be shared between systems,
 > while being independent from entities, in contrast to components, which are
 > attached to specific entities. We'll explore this more later on.
 
-The `load_from_data` function returns a `Handle<Mesh>`, also known as a
-`MeshHandle`. Since `Handle` implements component, we can attach it to our
-entity. Once the mesh is fully loaded, a system which asks the handle for the
-mesh will receive it. If the mesh isn't loaded yet, the handle will return
-`None`. In this minimal scenario, the mesh will be available on the next
-frame.
+The `AssetStorage<Texture>` is also a `resource`, this is where the loader will
+put the `Texture` it will load from our sprite sheet. In order to manage them
+while remaining fast, Amethyst does not give us direct access to the assets we load.
+If it did otherwise, we would have to wait for the texture to be fully loaded to do all the
+other things we have to prepare, which would be a waste of time!
+Instead, the `load` function will return a `Handle<Texture>` (also known as `TextureHandle`).
+This handle "points" to the place where the asset will be loaded. In Rust terms, it is
+equivalent to a reference-counted option. It is extremely useful, especially as cloning
+the handle does not clone the asset in memory, so many things can use the same asset at once.
 
-In addition to mesh data, we also need a material to draw our mesh with.
-We'll use the Amethyst renderer's `MaterialDefaults` (another resource) and only
-change the albedo color:
+Now that we have a handle to our sprite sheet's texture, we can communicate it to our
+`initialise_paddle` function by changing its signature to:
 
 ```rust,ignore
-/// Creates a solid material of the specified colour.
-fn create_colour_material(world: &World, colour: [f32; 4]) -> Material {
-    let mat_defaults = world.read_resource::<MaterialDefaults>();
-    let loader = world.read_resource::<Loader>();
-
-    let albedo = loader.load_from_data(colour.into(),
-                                       (),
-                                       &world.read_resource());
-
-    Material {
-        albedo,
-        ..mat_defaults.0.clone()
-    }
-}
+fn initialise_paddles(world: &mut World, spritesheet: TextureHandle)
 ```
 
-Now let's return to inside our `initialise_paddles` function and actually create
-this mesh and material.
+We now need to define what part of the spritesheet we want to render.
+To do that, we need to create a `Sprite`, which is a fancy name to call a rectangle on
+the sprite sheet, before the creation of the entities. This is dead simple:
 
 ```rust,ignore
-let mesh = create_mesh(
-    world,
-    generate_rectangle_vertices(0.0, 0.0, PADDLE_WIDTH, PADDLE_HEIGHT),
-);
-
-let material = create_colour_material(world, PADDLE_COLOUR);
+// Build the sprite for the paddles.
+let sprite = Sprite {
+    left: 0.0,
+    right: PADDLE_WIDTH,
+    top: 0.0,
+    bottom: PADDLE_HEIGHT,
+};
 ```
 
-Now we just add these components to our paddle entities:
+Here, we take the rectangle from `(0.0 ; 0.0)` to `(PADDLE_WIDTH ; PADDLE_HEIGHT)`
+on the sprite sheet to be displayed.
+
+Then, using the `WithSpriteRender` trait, we can easily modify our
+entity creation code to have the entities display the sprite.
 
 ```rust,ignore
+const SPRITESHEET_SIZE: (f32, f32) = (8.0, 16.0);
+
 // Create a left plank entity.
 world
     .create_entity()
-    .with(mesh.clone())
-    .with(material.clone())
+    .with_sprite(&sprite, spritesheet.clone(), SPRITESHEET_SIZE)
+    .expect("Failed to add sprite render on left paddle")
     .with(Paddle::new(Side::Left))
     .with(GlobalTransform::default())
     .with(left_transform)
@@ -297,90 +312,92 @@ world
 // Create right plank entity.
 world
     .create_entity()
-    .with(mesh)
-    .with(material)
+    .with_sprite(&sprite, spritesheet, SPRITESHEET_SIZE)
+    .expect("Failed to add sprite render on right paddle")
     .with(Paddle::new(Side::Right))
     .with(GlobalTransform::default())
     .with(right_transform)
     .build();
 ```
 
-We're almost done! We just need to create a camera to view all our beautiful
-graphics (two blue pong paddles) with.
+Please note that we need to manually specify the size of our sprite sheet.
+This is because if we happened to add our sprite to the entity while the
+sprite sheet is not loaded yet, there would be no way for the renderer to
+get the size of the texture it needs to do its magic.
 
-```rust,ignore
-fn initialise_camera(world: &mut World) {
-    world
-        .create_entity()
-        .with(Camera::standard_2d())
-        .build();
-}
-```
+> Behind the scene, the `with_sprite` method adds `Mesh` and `Material`
+> components to your entity. It is a utility function to spare you from
+> the rendering details, but Amethyst can expose all the precision of
+> the rendering process if you need it. Many utility functions like this
+> exist in Amethyst to make prototyping easier.
 
-The camera is another entity, with a `Camera` component. Amethyst's
-[`standard_2d` camera][2d] uses an orthographic projection, and defines a
-screenspace coordinate system of `-1.0,-1.0` in the bottom left and `1.0,1.0` in
-the top right.
-
-If you want to to define your own coordinate system, you can use something like
-this:
-
-```rust,ignore
-fn initialise_camera(world: &mut World) {
-    world.create_entity()
-        .with(Camera::from(Projection::orthographic(0.0, WIDTH, HEIGHT, 0.0)))
-        .with(GlobalTransform(Matrix4::from_translation
-                (Vector3::new(0.0, 0.0, 1.0)).into())
-             )
-        .build();
-}
-```
-
-To use that custom camera you'll need to define WIDTH and HEIGHT constants, and
-redo the position math in the `initialise_paddles` function.
+> Here, we are using the `with_sprite` utility twice for the same sprite.
+> Keep in mind however that another syntax exists in the `SpriteRenderData` struct
+> when we need multiple entities to display the exact same sprite, leading
+> to improved performance. Here, however, it is negligible.
 
 Now let's add our initialise functions to the `on_start` function in `impl State
-for Pong`.
+for Pong`. It now looks like this:
 
 ```rust,ignore
 fn on_start(&mut self, data: StateData<GameData>) {
-  let StateData { world, .. } = data;
+    let world = data.world;
 
-  world.register::<Paddle>();
-  initialise_paddles(world);
-  initialise_camera(world);
+    // Load the spritesheet necessary to render the graphics.
+    let spritesheet = {
+        let loader = world.read_resource::<Loader>();
+        let texture_storage = world.read_resource::<AssetStorage<Texture>>();
+        loader.load(
+            "texture/pong_spritesheet.png",
+            PngFormat,
+            Default::default(),
+            (),
+            &texture_storage,
+        )
+    };
+
+    initialise_paddles(world, spritesheet);
+    initialise_camera(world);
 }
 ```
 
 Okay! We've defined our `Paddle` component, and created two entities which have
-`Paddle`, `GlobalTransform`, `MeshHandle`, and `Material` components. When our game
-starts, we'll register the `Paddle` component and then add the left and right
-paddles to the world, along with a camera.
+a `Paddle` component, a `GlobalTransform` component and a sprite. When our game
+starts, we'll add the left and right paddles to the world, along with a camera.
 
-Let's run this and see what happens. On my machine I get a panic that reads:
+Before we continue, one last note.
+Components do not have to be registered manually to be used, however you need to have
+something that uses them to have them be registered automatically.
+As nothing uses our `Paddle` component yet, we will register it manually before we initialise
+our paddles in the `on_start` method by calling:
+
+```rust,ignore
+world.register::<Paddle>();
+```
+
+And we're done.
+Let's run our game and have fun for days!
 
 ```
 thread 'main' panicked at 'Tried to fetch a resource, but the resource does not exist.
 Try adding the resource by inserting it manually or using the `setup` method.
 ```
 
-It looks like we're missing at least one component registration. In addition to
-components we define ourselves, Amethyst has a lot of internal systems and
-components it uses to keep things running. For simplicity, these have been
-wrapped up into "Bundles" which include related components, systems, and
-resources. We can add these to our Application using the `with_bundle` method,
-and in fact we already have one of these in `main.rs`: the `RenderBundle`.
+Ah, oops. We forgot something.
 
-As it turns out, the components we're missing are `GlobalTransform` and
-`Transform`, and we can add those with the `TransformBundle`, which will
-also add the `TransformSystem` for working with those components:
+Amethyst has a lot of internal systems it uses to keep things running we need to bring
+into the context of the `World`. For simplicity, these have been wrapped up into "Bundles"
+which include related systems and resources. We can add these to our Application using the
+`with_bundle` method, and in fact we already have one of these in `main.rs`: the `RenderBundle`.
+
+As it turns out, the system we're missing is `TransformSystem`, and we can add it with the 
+`TransformBundle`.
 
 ```rust,ignore
-let game_data = GameDataBuilder::default()
-  .with_bundle(RenderBundle::new(pipe, Some(config)))?
-  .with_bundle(TransformBundle::new())?; //Add this bundle
-
-let mut game = Application::new("./", Pong, game_data)?;
+let mut game = Application::build("./", Pong)?
+    .with_bundle(TransformBundle::new())? // Add this bundle
+    .with_bundle(RenderBundle::new(pipe, Some(config)))?
+    .build()?;
 ```
 
 Also we'll need to import that structure:

@@ -14,13 +14,13 @@
 * [x] Basic UI support for text, text fields, buttons and images
 * [x] Scenes can be imported from [glTF] files
 * [x] Includes a simple state manager
+* [x] Gamepad support
 
 ## Planned
 
 * [ ] Networking
 * [ ] Scripting support
 * [ ] Defining scenes and prefabs with RON files
-* [ ] Gamepad support
 * [ ] Platform support: Android, iOS
 * [ ] Modular, composable and extensible editor that can be fully controlled by a REPL
 

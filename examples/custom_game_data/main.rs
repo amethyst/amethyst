@@ -9,13 +9,14 @@ use amethyst::config::Config;
 use amethyst::core::transform::TransformBundle;
 use amethyst::ecs::prelude::{Component, Entity};
 use amethyst::ecs::storage::NullStorage;
-use amethyst::input::{is_close_requested, is_key, InputBundle};
+use amethyst::input::{is_close_requested, is_key_down, InputBundle};
+use amethyst::prelude::*;
 use amethyst::renderer::{DisplayConfig, DrawShaded, Event, Pipeline, PosNormTex, RenderBundle,
                          Stage, VirtualKeyCode};
 use amethyst::ui::{DrawUi, UiBundle, UiCreator, UiLoader, UiPrefab};
 use amethyst::utils::fps_counter::FPSCounterBundle;
 use amethyst::utils::scene::BasicScenePrefab;
-use amethyst::{Application, Error, State, StateData, Trans};
+use amethyst::Error;
 
 use example_system::ExampleSystem;
 use game_data::{CustomGameData, CustomGameDataBuilder};
@@ -79,7 +80,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>> for Loading {
         _: StateData<CustomGameData>,
         event: Event,
     ) -> Trans<CustomGameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
             Trans::Quit
         } else {
             Trans::None
@@ -114,9 +115,9 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>> for Paused {
         data: StateData<CustomGameData>,
         event: Event,
     ) -> Trans<CustomGameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
             Trans::Quit
-        } else if is_key(&event, VirtualKeyCode::Space) {
+        } else if is_key_down(&event, VirtualKeyCode::Space) {
             let _ = data.world.delete_entity(self.ui);
             Trans::Pop
         } else {
@@ -140,9 +141,9 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>> for Main {
         data: StateData<CustomGameData>,
         event: Event,
     ) -> Trans<CustomGameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
             Trans::Quit
-        } else if is_key(&event, VirtualKeyCode::Space) {
+        } else if is_key_down(&event, VirtualKeyCode::Space) {
             Trans::Push(Box::new(Paused {
                 ui: data.world
                     .create_entity()
@@ -161,6 +162,8 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>> for Main {
 }
 
 fn main() -> Result<(), Error> {
+    amethyst::start_logger(Default::default());
+
     // Add our meshes directory to the asset loader.
     let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
 

@@ -47,6 +47,9 @@ nightly = [
     "amethyst_ui/nightly",
     "amethyst_utils/nightly",
 ]
+sdl_controller = [
+    "amethyst_input/sdl_controller",
+]
 
 [dependencies]
 amethyst_animation = { path = "amethyst_animation", version = "0.2.0" }
@@ -62,7 +65,7 @@ amethyst_input = { path = "amethyst_input", version = "0.3" }
 amethyst_ui = { path = "amethyst_ui", version = "0.2" }
 amethyst_utils = { path = "amethyst_utils", version = "0.2" }
 derivative = "1.0"
-fern = "0.5"
+fern = { version = "0.5", features = ["colored"] }
 log = "0.4"
 rayon = "1.0.1"
 rustc_version_runtime = "0.1"

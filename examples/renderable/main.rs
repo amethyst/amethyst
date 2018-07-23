@@ -11,13 +11,14 @@ use amethyst::core::cgmath::{Quaternion, Rad, Rotation, Rotation3};
 use amethyst::core::timing::Time;
 use amethyst::core::transform::{Transform, TransformBundle};
 use amethyst::ecs::prelude::{Entity, Join, Read, ReadStorage, System, Write, WriteStorage};
-use amethyst::input::{get_key, is_close_requested, is_key, InputBundle};
-use amethyst::renderer::{AmbientColor, Camera, DrawShaded, Event, Light, PosNormTex,
-                         VirtualKeyCode};
+use amethyst::input::{get_key, is_close_requested, is_key_down, InputBundle};
+use amethyst::prelude::*;
+use amethyst::renderer::{AmbientColor, Camera, DrawShaded, ElementState, Event, Light,
+                         PosNormTex, VirtualKeyCode};
 use amethyst::ui::{UiBundle, UiCreator, UiFinder, UiText};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::utils::scene::BasicScenePrefab;
-use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
+use amethyst::Error;
 
 type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
@@ -44,7 +45,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Loading {
     }
 
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
             Trans::Quit
         } else {
             Trans::None
@@ -82,31 +83,31 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
     fn handle_event(&mut self, data: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
         let w = data.world;
         // Exit if user hits Escape or closes the window
-        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
             return Trans::Quit;
         }
         match get_key(&event) {
-            Some(VirtualKeyCode::R) => {
+            Some((VirtualKeyCode::R,ElementState::Pressed)) => {
                 w.exec(|mut state: Write<DemoState>| {
                     state.light_color = [0.8, 0.2, 0.2, 1.0];
                 });
             }
-            Some(VirtualKeyCode::G) => {
+            Some((VirtualKeyCode::G,ElementState::Pressed)) => {
                 w.exec(|mut state: Write<DemoState>| {
                     state.light_color = [0.2, 0.8, 0.2, 1.0];
                 });
             }
-            Some(VirtualKeyCode::B) => {
+            Some((VirtualKeyCode::B,ElementState::Pressed)) => {
                 w.exec(|mut state: Write<DemoState>| {
                     state.light_color = [0.2, 0.2, 0.8, 1.0];
                 });
             }
-            Some(VirtualKeyCode::W) => {
+            Some((VirtualKeyCode::W,ElementState::Pressed)) => {
                 w.exec(|mut state: Write<DemoState>| {
                     state.light_color = [1.0, 1.0, 1.0, 1.0];
                 });
             }
-            Some(VirtualKeyCode::A) => {
+            Some((VirtualKeyCode::A,ElementState::Pressed)) => {
                 w.exec(
                     |(mut state, mut color): (Write<DemoState>, Write<AmbientColor>)| {
                         if state.ambient_light {
@@ -119,7 +120,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
                     },
                 );
             }
-            Some(VirtualKeyCode::D) => {
+            Some((VirtualKeyCode::D,ElementState::Pressed)) => {
                 w.exec(
                     |(mut state, mut lights): (Write<DemoState>, WriteStorage<Light>)| {
                         if state.directional_light {
@@ -140,7 +141,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
                     },
                 );
             }
-            Some(VirtualKeyCode::P) => {
+            Some((VirtualKeyCode::P,ElementState::Pressed)) => {
                 w.exec(|mut state: Write<DemoState>| {
                     if state.point_light {
                         state.point_light = false;
@@ -163,6 +164,8 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
 }
 
 fn main() -> Result<(), Error> {
+    amethyst::start_logger(Default::default());
+
     // Add our meshes directory to the asset loader.
     let resources_directory = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
 

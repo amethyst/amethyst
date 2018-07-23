@@ -7,6 +7,8 @@
 
 extern crate ron;
 extern crate serde;
+#[macro_use]
+extern crate log;
 
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
@@ -115,7 +117,12 @@ where
 {
     fn load<P: AsRef<Path>>(path: P) -> Self {
         Self::load_no_fallback(path.as_ref()).unwrap_or_else(|e| {
-            println!("1: Failed to load config: {}", e);
+            if let Some(path) = path.as_ref().to_str() {
+                error!("Failed to load config file '{}': {}", path, e);
+            } else {
+                error!("Failed to load config: {}", e);
+            }
+
 
             Self::default()
         })

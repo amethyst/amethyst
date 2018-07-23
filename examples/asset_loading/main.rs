@@ -7,11 +7,11 @@ extern crate rayon;
 use amethyst::assets::{Loader, Result as AssetResult, SimpleFormat};
 use amethyst::core::cgmath::{Array, Vector3, Matrix4};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
-use amethyst::ecs::prelude::World;
-use amethyst::input::{is_close_requested, is_key, InputBundle};
+use amethyst::input::{is_close_requested, is_key_down, InputBundle};
+use amethyst::prelude::*;
 use amethyst::renderer::{Camera, DrawShaded, Event, Light, Material, MaterialDefaults, Mesh,
                          MeshData, PointLight, PosNormTex, Projection, Rgba, VirtualKeyCode};
-use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
+use amethyst::Error;
 
 #[derive(Clone)]
 struct Custom;
@@ -95,7 +95,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for AssetsExample {
     }
 
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
             Trans::Quit
         } else {
             Trans::None
@@ -109,6 +109,8 @@ impl<'a, 'b> State<GameData<'a, 'b>> for AssetsExample {
 }
 
 fn main() -> Result<(), Error> {
+    amethyst::start_logger(Default::default());
+
     // Add our meshes directory to the asset loader.
     let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
 

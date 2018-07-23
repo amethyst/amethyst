@@ -18,7 +18,7 @@ In `src` there's a `main.rs` file. Delete everything, then add these imports:
 extern crate amethyst;
 
 use amethyst::prelude::*;
-use amethyst::input::{is_close_requested, is_key};
+use amethyst::input::{is_close_requested, is_key_down};
 use amethyst::renderer::{DisplayConfig, DrawFlat, Event, KeyboardInput,
                          Pipeline, PosTex, RenderBundle, Stage,
                          VirtualKeyCode, WindowEvent};
@@ -31,17 +31,17 @@ includes the basic (and most important) types like `Application`, `World`, and
 Now we create our core game struct:
 
 ```rust,ignore
-struct Pong;
+pub struct Pong;
 ```
 
 We'll be implementing the [`State`][st] trait on this struct, which is used by
 Amethyst's state machine to start, stop, and update the game. But for now we'll
-just implement one method:
+just implement two methods:
 
 ```rust,ignore
 impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
             Trans::Quit
         } else {
             Trans::None
@@ -79,7 +79,15 @@ fn main() -> amethyst::Result<()> {
 }
 ```
 
-Inside `main()` we first define a path for our display_config.ron file and load it.
+Inside `main()` we first start the default amethyst logger so we can see
+errors, warnings and debug messages while the program is running.
+
+```rust,ignore
+amethyst::start_logger(Default::default());
+```
+
+After the logger is started, we define a path for our display_config.ron file
+and load it.
 
 ```rust,ignore
 let path = "./resources/display_config.ron";
@@ -147,6 +155,10 @@ Then we call `.run()` on `game` which begins the gameloop. The game will
 continue to run until our `State` returns `Trans::Quit`, or when all states have
 been popped off the state machine's stack.
 
+Finally, let's create a `texture` folder in the root of the project. This
+will contain the [spritesheet texture][ss] `pong_spritesheet.png` we will need
+to render the elements of the game.
+
 Success! Now we should be able to compile and run this code and get a window.
 It should look something like this:
 
@@ -156,3 +168,4 @@ It should look something like this:
 [st]: https://www.amethyst.rs/doc/master/doc/amethyst/trait.State.html
 [ap]: https://www.amethyst.rs/doc/master/doc/amethyst/struct.Application.html
 [gs]: ./getting_started.html
+[ss]: ./images/pong_tutorial/pong_spritesheet.png

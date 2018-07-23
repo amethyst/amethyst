@@ -1,14 +1,14 @@
 extern crate amethyst;
 
-use amethyst::input::{is_close_requested, is_key};
+use amethyst::input::{is_close_requested, is_key_down};
 use amethyst::prelude::*;
 use amethyst::renderer::{DrawFlat, Event, PosTex, VirtualKeyCode};
 
-struct Pong;
+pub struct Pong;
 
 impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
             Trans::Quit
         } else {
             Trans::None
@@ -22,14 +22,20 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
 }
 
 fn main() -> amethyst::Result<()> {
+    amethyst::start_logger(Default::default());
+
     let path = format!(
         "{}/examples/pong_tutorial_01/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
     );
 
+    // This line is not mentioned in the pong tutorial as it is specific to the context
+    // of the git repository. It only is a different location to load the assets from.
+    let assets_dir = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
+
     let game_data =
         GameDataBuilder::default().with_basic_renderer(path, DrawFlat::<PosTex>::new(), false)?;
-    let mut game = Application::new("./", Pong, game_data)?;
+    let mut game = Application::new(assets_dir, Pong, game_data)?;
     game.run();
     Ok(())
 }

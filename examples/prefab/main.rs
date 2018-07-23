@@ -5,10 +5,11 @@ extern crate rayon;
 
 use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, RonFormat};
 use amethyst::core::TransformBundle;
-use amethyst::input::{is_close_requested, is_key};
+use amethyst::input::{is_close_requested, is_key_down};
+use amethyst::prelude::*;
 use amethyst::renderer::{DrawShaded, Event, PosNormTex, VirtualKeyCode};
 use amethyst::utils::scene::BasicScenePrefab;
-use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
+use amethyst::Error;
 
 type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
@@ -23,7 +24,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for AssetsExample {
     }
 
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_key(&event, VirtualKeyCode::Escape) || is_close_requested(&event) {
+        if is_key_down(&event, VirtualKeyCode::Escape) || is_close_requested(&event) {
             Trans::Quit
         } else {
             Trans::None
@@ -38,6 +39,8 @@ impl<'a, 'b> State<GameData<'a, 'b>> for AssetsExample {
 
 /// Wrapper around the main, so we can return errors easily.
 fn main() -> Result<(), Error> {
+    amethyst::start_logger(Default::default());
+
     // Add our meshes directory to the asset loader.
     let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
 

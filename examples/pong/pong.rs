@@ -2,7 +2,7 @@ use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::cgmath::Vector3;
 use amethyst::core::transform::{GlobalTransform, Transform};
 use amethyst::ecs::prelude::World;
-use amethyst::input::{is_close_requested, is_key};
+use amethyst::input::{is_close_requested, is_key_down};
 use amethyst::prelude::*;
 use amethyst::renderer::{
     Camera, Event, PngFormat, Projection, Sprite, SpriteRenderData, Texture, TextureHandle,
@@ -25,7 +25,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
             let loader = world.read_resource::<Loader>();
             let texture_storage = world.read_resource::<AssetStorage<Texture>>();
             loader.load(
-                "img/pong_spritesheet.png",
+                "texture/pong_spritesheet.png",
                 PngFormat,
                 Default::default(),
                 (),
@@ -35,7 +35,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
 
         // Setup our game.
         initialise_paddles(world, spritesheet.clone());
-        initialise_balls(world, spritesheet);
+        initialise_ball(world, spritesheet);
         initialise_camera(world);
         initialise_audio(world);
         initialise_score(world);
@@ -43,7 +43,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
     }
 
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key(&event, VirtualKeyCode::Escape) {
+        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
             Trans::Quit
         } else {
             Trans::None
@@ -149,7 +149,7 @@ fn initialise_paddles(world: &mut World, spritesheet: TextureHandle) {
 }
 
 /// Initialises one ball in the middle-ish of the arena.
-fn initialise_balls(world: &mut World, spritesheet: TextureHandle) {
+fn initialise_ball(world: &mut World, spritesheet: TextureHandle) {
     use {ARENA_HEIGHT, ARENA_WIDTH, BALL_RADIUS, BALL_VELOCITY_X, BALL_VELOCITY_Y, PADDLE_WIDTH};
 
     // Create the translation.
