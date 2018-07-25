@@ -85,7 +85,7 @@ pub struct SpriteRenderData<'a> {
 }
 
 impl<'a> SpriteRenderData<'a> {
-    fn build_mesh_and_material(
+    pub fn build_mesh_and_material(
         &mut self,
         sprite: &Sprite,
         texture: TextureHandle,
