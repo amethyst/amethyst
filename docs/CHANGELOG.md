@@ -48,6 +48,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Point lights now require a `GlobalTransform` component to be included in rendering ([#794])
 * `amethyst_input::input_handler::{keys_that_are_down, mouse_buttons_that_are_down, scan_codes_that_are_down, buttons_that_are_down}` now all return `impl Iterator` instead of concrete wrapper types ([#816])
 * Renamed is_key to is_key_down and fixed example to react when the key is pressed instead of released. ([#822])
+* SpriteRenderData now allows to retrieve the MeshHandle and Material before inserting them into an entity. ([#825])
 
 ### Removed
 * Remove `amethyst_input::{KeyCodes, ScanCodes, MouseButtons, Buttons}` in favor of `impl trait` ([#816])
@@ -93,6 +94,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#817]: https://github.com/amethyst/amethyst/pull/817
 [#818]: https://github.com/amethyst/amethyst/pull/818
 [#822]: https://github.com/amethyst/amethyst/pull/822
+[#825]: https://github.com/amethyst/amethyst/pull/825
 
 ## [0.7.0] - 2018-05
 ### Added
