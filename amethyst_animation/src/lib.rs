@@ -56,6 +56,9 @@ extern crate log;
 extern crate minterpolate;
 #[macro_use]
 extern crate serde;
+extern crate typename;
+#[macro_use]
+extern crate typename_derive;
 
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;

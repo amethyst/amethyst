@@ -13,6 +13,9 @@ extern crate rayon;
 #[macro_use]
 extern crate serde;
 extern crate specs_hierarchy;
+extern crate typename;
+#[macro_use]
+extern crate typename_derive;
 
 #[macro_use]
 #[cfg(feature = "profiler")]

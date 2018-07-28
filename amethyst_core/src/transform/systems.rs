@@ -9,6 +9,7 @@ use transform::{GlobalTransform, HierarchyEvent, Parent, ParentHierarchy, Transf
 
 /// Handles updating `GlobalTransform` components based on the `Transform`
 /// component and parents.
+#[derive(TypeName)]
 pub struct TransformSystem {
     local_modified: BitSet,
     global_modified: BitSet,
