@@ -26,6 +26,8 @@ shred = { version = "0.7" }
 specs = { version = "0.12", features = ["common"] }
 specs-hierarchy = { version = "0.2" }
 shrev = "1.0"
+typename = "0.1"
+typename_derive = "0.1"
 
 thread_profiler = { version = "0.1" , optional = true }
 

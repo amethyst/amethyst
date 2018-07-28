@@ -3,6 +3,7 @@ use std::marker;
 
 use amethyst_core::specs::prelude::{Component, DispatcherBuilder};
 use amethyst_core::{Result, SystemBundle};
+use typename::TypeName;
 
 use resources::AnimationSampling;
 use skinning::VertexSkinningSystem;
@@ -81,7 +82,7 @@ impl<'a, T> SamplingBundle<'a, T> {
 
 impl<'a, 'b, 'c, T> SystemBundle<'a, 'b> for SamplingBundle<'c, T>
 where
-    T: AnimationSampling + Component,
+    T: AnimationSampling + Component + TypeName,
 {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
         builder.add(SamplerProcessor::<T::Primitive>::new(), "", &[]);
@@ -135,8 +136,8 @@ impl<'a, I, T> AnimationBundle<'a, I, T> {
 
 impl<'a, 'b, 'c, I, T> SystemBundle<'a, 'b> for AnimationBundle<'c, I, T>
 where
-    I: PartialEq + Eq + Hash + Copy + Send + Sync + 'static,
-    T: AnimationSampling + Component + Clone,
+    I: PartialEq + Eq + Hash + Copy + Send + Sync + TypeName + 'static,
+    T: AnimationSampling + Component + Clone + TypeName,
 {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
         builder.add(AnimationProcessor::<T>::new(), "", &[]);

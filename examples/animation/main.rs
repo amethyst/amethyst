@@ -3,10 +3,13 @@
 extern crate amethyst;
 #[macro_use]
 extern crate serde;
+extern crate typename;
+#[macro_use]
+extern crate typename_derive;
 
 use amethyst::animation::{
-    get_animation_set, AnimationBundle, AnimationCommand, AnimationSet, AnimationSetPrefab,
-    DeferStartRelation, EndControl, StepDirection,
+    get_animation_set, AnimationBundle, AnimationCommand, AnimationControlSystem, AnimationSet,
+    AnimationSetPrefab, DeferStartRelation, EndControl, SamplerInterpolationSystem, StepDirection,
 };
 use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, RonFormat};
 use amethyst::core::{Transform, TransformBundle};
@@ -15,13 +18,14 @@ use amethyst::input::{get_key, is_close_requested, is_key_down};
 use amethyst::prelude::*;
 use amethyst::renderer::{DrawShaded, ElementState, Event, PosNormTex, VirtualKeyCode};
 use amethyst::utils::scene::BasicScenePrefab;
+use typename::TypeName;
 
 type MyPrefabData = (
     Option<BasicScenePrefab<Vec<PosNormTex>>>,
     Option<AnimationSetPrefab<AnimationId, Transform>>,
 );
 
-#[derive(Eq, PartialOrd, PartialEq, Hash, Debug, Copy, Clone, Deserialize, Serialize)]
+#[derive(Eq, PartialOrd, PartialEq, Hash, Debug, Copy, Clone, Deserialize, Serialize, TypeName)]
 enum AnimationId {
     Scale,
     Rotate,
@@ -177,10 +181,13 @@ fn main() -> amethyst::Result<()> {
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
         .with_bundle(AnimationBundle::<AnimationId, Transform>::new(
-            "animation_control_system",
-            "sampler_interpolation_system",
+            &AnimationControlSystem::<AnimationId, Transform>::type_name(),
+            &SamplerInterpolationSystem::<Transform>::type_name(),
         ))?
-        .with_bundle(TransformBundle::new().with_dep(&["sampler_interpolation_system"]))?
+        .with_bundle(
+            TransformBundle::new()
+                .with_dep(&[&SamplerInterpolationSystem::<Transform>::type_name()]),
+        )?
         .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;
     let mut game = Application::new(resources, Example::default(), game_data)?;
     game.run();

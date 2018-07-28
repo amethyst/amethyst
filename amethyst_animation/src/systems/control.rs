@@ -10,6 +10,7 @@ use amethyst_core::specs::prelude::{
 use amethyst_core::timing::secs_to_duration;
 use fnv::FnvHashMap;
 use minterpolate::InterpolationPrimitive;
+use typename::TypeName;
 
 use resources::{
     Animation, AnimationCommand, AnimationControl, AnimationControlSet, AnimationHierarchy,
@@ -28,10 +29,11 @@ use resources::{
 /// - `I`: identifier type for running animations, only one animation can be run at the same time
 ///        with the same id
 /// - `T`: the component type that the animation should be applied to
-#[derive(Default)]
+#[derive(Default, TypeName)]
 pub struct AnimationControlSystem<I, T>
 where
-    I: Eq + Hash,
+    I: Eq + Hash + TypeName,
+    T: TypeName,
 {
     m: marker::PhantomData<(I, T)>,
     next_id: u64,
@@ -42,7 +44,8 @@ where
 
 impl<I, T> AnimationControlSystem<I, T>
 where
-    I: Eq + Hash,
+    I: Eq + Hash + TypeName,
+    T: TypeName,
 {
     pub fn new() -> Self {
         AnimationControlSystem {
@@ -57,8 +60,8 @@ where
 
 impl<'a, I, T> System<'a> for AnimationControlSystem<I, T>
 where
-    I: PartialEq + Eq + Hash + Copy + Send + Sync + 'static,
-    T: AnimationSampling + Component + Clone,
+    I: PartialEq + Eq + Hash + Copy + Send + Sync + TypeName + 'static,
+    T: AnimationSampling + Component + Clone + TypeName,
 {
     type SystemData = (
         Entities<'a>,
@@ -216,9 +219,11 @@ where
     match &control.state {
         &ControlState::Running(_) => find_max_duration(
             control.id,
-            samplers.get(*hierarchy
-                .and_then(|h| h.nodes.values().next())
-                .unwrap_or(entity)),
+            samplers.get(
+                *hierarchy
+                    .and_then(|h| h.nodes.values().next())
+                    .unwrap_or(entity),
+            ),
         ),
         _ => -1.0,
     }

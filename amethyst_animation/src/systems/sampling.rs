@@ -8,6 +8,7 @@ use amethyst_core::{
 };
 use itertools::Itertools;
 use minterpolate::InterpolationPrimitive;
+use typename::TypeName;
 
 use resources::{
     AnimationSampling, ApplyData, BlendMethod, ControlState, EndControl, Sampler, SamplerControl,
@@ -25,10 +26,10 @@ use resources::{
 /// ### Type parameters:
 ///
 /// - `T`: the component type that the animation should be applied to
-#[derive(Default)]
+#[derive(Default, TypeName)]
 pub struct SamplerInterpolationSystem<T>
 where
-    T: AnimationSampling,
+    T: AnimationSampling + TypeName,
 {
     m: marker::PhantomData<T>,
     inner: Vec<(f32, T::Channel, T::Primitive)>,
@@ -37,7 +38,7 @@ where
 
 impl<T> SamplerInterpolationSystem<T>
 where
-    T: AnimationSampling,
+    T: AnimationSampling + TypeName,
 {
     pub fn new() -> Self {
         Self {
@@ -50,7 +51,7 @@ where
 
 impl<'a, T> System<'a> for SamplerInterpolationSystem<T>
 where
-    T: AnimationSampling + Component,
+    T: AnimationSampling + Component + TypeName,
 {
     type SystemData = (
         Read<'a, Time>,
@@ -75,7 +76,8 @@ where
                 for channel in &self.channels {
                     match comp.blend_method(channel) {
                         None => {
-                            if let Some(p) = self.inner
+                            if let Some(p) = self
+                                .inner
                                 .iter()
                                 .filter(|p| p.1 == *channel)
                                 .map(|p| p.2)
@@ -265,9 +267,7 @@ where
                 .iter()
                 .filter(|o| o.1 == *channel)
                 .map(|o| single_blend::<T>(total_blend_weight, o))
-                .fold(T::default_primitive(channel), |acc, p| {
-                    acc.add(&p)
-                }),
+                .fold(T::default_primitive(channel), |acc, p| acc.add(&p)),
         )
     }
 }
