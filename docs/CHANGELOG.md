@@ -31,6 +31,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Make `with_bindings_from_file` return a Result ([#811])
 * Logger initialization is now optional and can be enabled with a call to `amethyst::start_logger()` ([#815])
 * Gamepad support with optional builtin SDL controller event source ([#818])
+* Promote `UiButton` to a fundamental Ui component ([#798])
 
 ### Changed
 * UI systems will now never overwrite your local `UiTransform` values ([#774])
@@ -49,6 +50,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `amethyst_input::input_handler::{keys_that_are_down, mouse_buttons_that_are_down, scan_codes_that_are_down, buttons_that_are_down}` now all return `impl Iterator` instead of concrete wrapper types ([#816])
 * Renamed is_key to is_key_down and fixed example to react when the key is pressed instead of released. ([#822])
 * SpriteRenderData now allows to retrieve the MeshHandle and Material before inserting them into an entity. ([#825])
+* Update the pong tutorial + changelog for SpriteRenderData. ([#805])
+* Loosen up generic type bounds for InputBundle. ([#808])
 
 ### Removed
 * Remove `amethyst_input::{KeyCodes, ScanCodes, MouseButtons, Buttons}` in favor of `impl trait` ([#816])
@@ -58,7 +61,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Fix color format ([#766])
 * Remove individual example READMEs ([#758])
 * Log an error if a pass tries to render a mesh with incompatible vertex buffers ([#749])
-* Standardize vsync across examples ([746])
+* Standardize vsync across examples ([#746])
+* Minor Pong tutorial fixes. ([#807])
+* Fix wrong resource paths in examples. ([#812])
 
 [#663]: https://github.com/amethyst/amethyst/pull/663
 [#746]: https://github.com/amethyst/amethyst/pull/746
@@ -79,6 +84,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#774]: https://github.com/amethyst/amethyst/pull/774
 [#777]: https://github.com/amethyst/amethyst/pull/777
 [#776]: https://github.com/amethyst/amethyst/pull/776
+[#798]: https://github.com/amethyst/amethyst/pull/798
 [#716]: https://github.com/amethyst/amethyst/pull/716
 [#784]: https://github.com/amethyst/amethyst/pull/784
 [#785]: https://github.com/amethyst/amethyst/pull/785
@@ -87,8 +93,12 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#789]: https://github.com/amethyst/amethyst/pull/789
 [#793]: https://github.com/amethyst/amethyst/pull/793
 [#804]: https://github.com/amethyst/amethyst/pull/804
+[#805]: https://github.com/amethyst/amethyst/pull/805
+[#807]: https://github.com/amethyst/amethyst/pull/807
+[#808]: https://github.com/amethyst/amethyst/pull/808
 [#809]: https://github.com/amethyst/amethyst/pull/809
 [#811]: https://github.com/amethyst/amethyst/pull/811
+[#812]: https://github.com/amethyst/amethyst/pull/812
 [#816]: https://github.com/amethyst/amethyst/pull/816
 [#815]: https://github.com/amethyst/amethyst/pull/815
 [#817]: https://github.com/amethyst/amethyst/pull/817
