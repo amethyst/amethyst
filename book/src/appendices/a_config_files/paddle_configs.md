@@ -162,7 +162,7 @@ keep the left paddle blue so the final `config.ron` file will be as follows:
 ```
 
 
-[add_resource]: https://docs.rs/specs/0.10.0/specs/struct.World.html#method.add_resource
-[add_with_id]: https://docs.rs/specs/0.10.0/specs/struct.World.html#method.add_resource_with_id
+[add_resource]: https://docs.rs/specs/0.12.0/specs/struct.World.html#method.add_resource
+[add_with_id]: https://docs.rs/specs/0.12.0/specs/struct.World.html#method.add_resource_with_id
 
 
