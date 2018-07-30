@@ -17,20 +17,40 @@
 [gc]: https://gitter.im/orgs/amethyst/rooms
 [di]: https://discord.gg/GnP5Whs
 
-**Warning: The engine is still in alpha, and thus it changes very fast. You may find out that some parts of the documentation can be outdated. If you find such an occurrence, feel free to open an issue and it will be fixed in no time.**
+## What is amethyst?!
 
-## Goals
+Amethyst is a game engine aiming to be fast and as configurable as possible.
 
-* Massively parallel architecture
-* Powered by a correct [Entity Component System][ecs] model
-* Rapid prototyping with [RON] files for prefabs and an abstract scripting API
+## Principles
+
+Those principles are what make amethyst unique and a leader in the world of game engines.
+
+* Massively parallel architecture.
+* Powered by a correct [Entity Component System][ecs] model.
+* Rapid prototyping with [RON] (Json-like) files for prefabs and an abstract scripting API.
+* Strong focus on encouraging reusability and clean interfaces.
 
 [ecs]: https://en.wikipedia.org/wiki/Entity–component–system
 [RON]: https://github.com/ron-rs/ron
 
+## Why amethyst? Why not some other engine?
+
+While other game engines are all really good (Unity, Unreal, JMonkeyEngine, Godot, LibGdx, ...),
+they all lack proper multithreading support.
+
+This allows game built with amethyst to use up to 99.9% of your processing power to make it run as smooth as possible.
+
+Using the [ecs] architecture, the code of games can be cleanly divided between data and behaviour, making it easy to understand what is going on,
+even if the game is running on a massive 64 threads processor.
+
+By design, the amethyst engine encourages you to write clean and reusable code for your behaviours and data structures, allowing engine users to easily
+share useful components, thus reducing development time and cost.
+
+While we may not be feature-packed (yet!), we all strongly believe that the community-oriented side of amethyst will make it thrive forward!
+
 ## Features
 
-Please visit the [features page][feat] for a list of features Amethyst provides and will provide.
+Please visit the [features page][feat] for a list of features Amethyst provides.
 
 [feat]: docs/FEATURES.md
 
@@ -46,7 +66,9 @@ Please visit the [features page][feat] for a list of features Amethyst provides 
 
 ## Usage
 
-Please read the [online book][bk] for a comprehensive tutorial to using Amethyst.
+Amethyst is written in rust and thus is considered by many that are learning the basics of rust as hard.
+Don't be afraid of challenges! Rust is a wonderful language once you get to know it.
+We made a lot of [documentation][bk] that will teach you everything you need to use amethyst like a pro!
 
 [bk]: https://www.amethyst.rs/book/master/
 
@@ -57,6 +79,14 @@ To compile any of the examples run:
 $ cargo run --example name_of_example
 ```
 All available examples are listed under [examples][ex].
+
+Our most advanced example is currently called pong. It is a pong game, as you guessed it.
+```
+$ cargo run --example pong
+```
+
+There is quite a few prototype games that were made with amethyst. A list will be available soon.
+While we create this list, feel free to join our discord and ask about which projects are currently being made with amethyst.
 
 For a full-blown "Hello World" tutorial check out the [Getting Started][gs] chapter
 in the book.
@@ -104,7 +134,7 @@ We do not support anything other than the most recent Rust stable release. Use n
 
 Please check out the [FAQ][faq] before asking.
 
-If you have a question, just ask on [Gitter][gt] or [Discord][di] and we'll help you and add it to the FAQ.
+If you have a question, just ask on [Gitter][gt] or [Discord][di] (most active) and we'll help you.
 
 Other places you may want to check out are [r/rust_gamedev][rg] and [#rust-gamedev IRC][irc].
 
@@ -113,14 +143,6 @@ Other places you may want to check out are [r/rust_gamedev][rg] and [#rust-gamed
 [di]: https://discord.gg/GnP5Whs
 [rg]: https://www.reddit.com/r/rust_gamedev/
 [irc]: https://botbot.me/mozilla/rust-gamedev/
-
-## License
-
-Amethyst is free and open source software distributed under the terms of both
-the [MIT License][lm] and the [Apache License 2.0][la].
-
-[lm]: docs/LICENSE-MIT
-[la]: docs/LICENSE-APACHE
 
 ## Contributing
 
@@ -131,6 +153,19 @@ getting started. Don't know what to hack on? Check our [active projects][pr], or
 [cm]: docs/CONTRIBUTING.md
 [pr]: https://github.com/amethyst/amethyst/projects
 [it]: https://github.com/amethyst/amethyst/issues
+
+We have a [good first issue][gfi] category that groups all issues or feature request that can be made without having an extensive knowledge of rust or amethyst.
+Working on those issues is a good, if not the best way to learn.
+
+[gfi]: https://github.com/amethyst/amethyst/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
+
+## License
+
+Amethyst is free and open source software distributed under the terms of both
+the [MIT License][lm] and the [Apache License 2.0][la].
+
+[lm]: docs/LICENSE-MIT
+[la]: docs/LICENSE-APACHE
 
 Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
