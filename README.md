@@ -23,7 +23,7 @@ Amethyst is a game engine aiming to be fast and as configurable as possible.
 
 ## Principles
 
-Those principles are what make amethyst unique and a leader in the world of game engines.
+Those principles are what make amethyst unique and competitive in the world of game engines.
 
 * Massively parallel architecture.
 * Powered by a correct [Entity Component System][ecs] model.
@@ -36,7 +36,11 @@ Those principles are what make amethyst unique and a leader in the world of game
 ## Why Amethyst?
 
 ### Extreme Multithreading
-While other game engines are all really good (Unity, Unreal, JMonkeyEngine, Godot, LibGdx, ...), they all lack engine-level multithreading support.
+While other game engines are all really good (Unity, Unreal, JMonkeyEngine, Godot, LibGdx, ...), they were often not built with multithreading integration in mind from the start.
+
+_Of course, they do have separate thread for audio, input and networking, but here we are talking about complete multithreading of the game logic code, including the user's code._
+
+Amethyst developers, on the other hand, started by implementing a parallel [ecs] first, and then started making the engine over this infrastructure.
 
 This allows game built with amethyst to use up to 99.9% of your processing power to make it run as smooth as possible.
 
@@ -70,9 +74,7 @@ Please visit the [features page][feat] for a list of features Amethyst provides.
 
 ## Usage
 
-Amethyst is written in rust and thus is considered by many that are learning the basics of rust as hard.
-Don't be afraid of challenges! Rust is a wonderful language once you get to know it.
-We made a lot of [documentation][bk] that will teach you everything you need to use amethyst like a pro!
+While the engine can be hard to use at times, we made a lot of [documentation][bk] that will teach you everything you need to use amethyst comfortably!
 
 [bk]: https://www.amethyst.rs/book/master/
 
