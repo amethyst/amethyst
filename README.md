@@ -35,16 +35,20 @@ Those principles are what make amethyst unique and a leader in the world of game
 
 ## Why amethyst? Why not some other engine?
 
-While other game engines are all really good (Unity, Unreal, JMonkeyEngine, Godot, LibGdx, ...),
-they all lack proper multithreading support.
+### Extreme Multithreading
+While other game engines are all really good (Unity, Unreal, JMonkeyEngine, Godot, LibGdx, ...), they all lack engine-level multithreading support.
 
 This allows game built with amethyst to use up to 99.9% of your processing power to make it run as smooth as possible.
 
 Using the [ecs] architecture, the code of games can be cleanly divided between data and behaviour, making it easy to understand what is going on,
 even if the game is running on a massive 64 threads processor.
 
+### Clean
+
 By design, the amethyst engine encourages you to write clean and reusable code for your behaviours and data structures, allowing engine users to easily
 share useful components, thus reducing development time and cost.
+
+### Community
 
 While we may not be feature-packed (yet!), we all strongly believe that the community-oriented side of amethyst will make it thrive forward!
 
