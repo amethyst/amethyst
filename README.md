@@ -151,15 +151,21 @@ Other places you may want to check out are [r/rust_gamedev][rg] and [#rust-gamed
 ## Contributing
 
 We are a community project that welcomes contribution from anyone. If you're
-interested in helping out, please read the [CONTRIBUTING.md][cm] file before
-getting started. Don't know what to hack on? Check our [active projects][pr], or search though [our issue tracker][it].
+interested in helping out, please read the [contribution guidelines][cm] file before
+getting started.
+
+We have a [good first issue][gfi] category that groups all issues or feature request that can be made without having an extensive knowledge of rust or amethyst.
+Working on those issues is a good, if not the best way to learn.
+
+If you think you are not yet ready to code yet, you can still contribute by reviewing code written by other members of the community.
+In fact, code reviews ensures that the code that gets added to amethyst is of the highest quality as possible.
+Pull requests available for reviews are [here][pr].
+
+If for some reason we don't have any open PR or good first issues (that would be a good thing), you can look through the [issue tracker][it].
 
 [cm]: docs/CONTRIBUTING.md
 [pr]: https://github.com/amethyst/amethyst/projects
 [it]: https://github.com/amethyst/amethyst/issues
-
-We have a [good first issue][gfi] category that groups all issues or feature request that can be made without having an extensive knowledge of rust or amethyst.
-Working on those issues is a good, if not the best way to learn.
 
 [gfi]: https://github.com/amethyst/amethyst/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
 
