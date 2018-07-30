@@ -9,7 +9,7 @@ Howdy! This book will teach you everything you need to know about building video
 games and interactive simulations with the Amethyst game engine. This engine is
 written entirely in [Rust][rs], a safe and fast systems programming language,
 and sports a clean and modern design. More correctly, though, Amethyst is
-actually a suite of separate libraries and tools that collectively make up a
+actually a collection of separate libraries and tools that collectively make up a
 game engine.
 
 [rs]: https://www.rust-lang.org/
@@ -31,8 +31,8 @@ This book is split into three sections (more coming). This page is the first. Th
 * [Pong Tutorial][pt] – Build a basic pong game in Rust.
 * [Glossary][gl] - Defines special terms used throughout the book.
 
-[gs]: ./getting_started.html
-[pt]: ./pong_tutorial.html
+[gs]: ./getting-started.html
+[pt]: ./pong-tutorial.html
 [gl]: ./glossary.html
 
 Read the crate-level [API documentation][ad] for more details.

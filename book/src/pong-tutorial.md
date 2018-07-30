@@ -6,7 +6,7 @@ examples folder. This tutorial breaks that project up into discrete steps so
 it's easier to understand what everything is doing. If you've cloned the 
 Amethyst repo, you can run any of the examples like so:
 
-```
+```norun
 cargo run --example pong_tutorial_01
 ```
 
@@ -33,6 +33,6 @@ let path = "./resources/display_config.ron";
 * [Drawing the paddles][02]
 
 [pong]: https://github.com/amethyst/amethyst/tree/develop/examples/pong
-[01]: ./pong_tutorial/pong_tutorial_01.html
-[02]: ./pong_tutorial/pong_tutorial_02.html
+[01]: ./pong-tutorial/pong-tutorial-01.html
+[02]: ./pong-tutorial/pong-tutorial-02.html
 

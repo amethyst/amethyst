@@ -167,5 +167,5 @@ It should look something like this:
 
 [st]: https://www.amethyst.rs/doc/master/doc/amethyst/trait.State.html
 [ap]: https://www.amethyst.rs/doc/master/doc/amethyst/struct.Application.html
-[gs]: ./getting_started.html
+[gs]: ./getting-started.html
 [ss]: ./images/pong_tutorial/pong_spritesheet.png

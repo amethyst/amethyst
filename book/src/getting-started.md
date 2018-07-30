@@ -13,25 +13,31 @@ If you are on Linux, you'll need to install `libasound2-dev` and `libx11-xcb-dev
 
 ## Setting up Amethyst
 
-You can either use the [Amethyst CLI][cl] or just cargo to set up your project.
-After executing
+You can either use the [Amethyst CLI][cl] or cargo to set up your project.
 
+### Amethyst CLI (Easiest)
+If you wish to use the Amethyst cli tool, you can install it like so
+
+```norun
+cargo install amethyst_cli
 ```
-amethyst new game
+
+and then run
+
+```norun
+amethyst new <game-name>
 ```
 
 you should get `Cargo.toml`, `src/main.rs` and `resources/display_config.ron`.
+
+### Cargo (Manual)
+
 In case you're doing this with `cargo`, here's what you need to do:
 
 * Add `amethyst` as dependency in your `Cargo.toml`.
 * Create a `resources` folder and put a `display_config.ron` in it.
-* Start with one of the [examples][ex] from the Amethyst repository (e.g. `window`)
-  for the source code. Watch out to use the right example for the version of Amethyst
-  you specified in `Cargo.toml`.
+* (Optionnal) Copy the code from one of amethyst's examples.
 
-We don't have any tutorials yet, but there's a [Gitter room][gi] where you can
-ask in case you want an explanation for something. If you'd like to help out,
-a tutorial would be much appreciated!
 
 [cl]: https://github.com/amethyst/tools
 [gi]: https://gitter.im/amethyst/general
