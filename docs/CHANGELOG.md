@@ -9,6 +9,13 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ## Unreleased
 ### Added
+### Changed
+### Removed
+### Fixed
+
+
+## [0.8.0] - 2018-08
+### Added
 * UI `ScaleMode` is now functional, permitting percentage based `UiTransform`s. ([#774])
 * Add serde trait derives to many core components ([#760])
 * Add a generic asset `Format` for `ron` files ([#760])
@@ -98,6 +105,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#808]: https://github.com/amethyst/amethyst/pull/808
 [#809]: https://github.com/amethyst/amethyst/pull/809
 [#811]: https://github.com/amethyst/amethyst/pull/811
+[#794]: https://github.com/amethyst/amethyst/pull/794
 [#812]: https://github.com/amethyst/amethyst/pull/812
 [#816]: https://github.com/amethyst/amethyst/pull/816
 [#815]: https://github.com/amethyst/amethyst/pull/815
