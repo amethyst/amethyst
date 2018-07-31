@@ -110,6 +110,8 @@ fn initialise_paddles(world: &mut World, spritesheet: TextureHandle) {
 
     // Build the sprite for the paddles.
     let sprite = Sprite {
+        width: PADDLE_WIDTH,
+        height: PADDLE_HEIGHT,
         left: 0.0,
         right: PADDLE_WIDTH,
         top: 0.0,

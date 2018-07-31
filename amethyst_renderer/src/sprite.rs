@@ -21,10 +21,6 @@ pub type SpriteSheetHandle = Handle<SpriteSheet>;
 pub struct SpriteSheet {
     /// Index into `MaterialTextureSet` of the texture for this sprite sheet.
     pub texture_id: u64,
-    /// Pixel width of each sprite
-    pub sprite_w: f32,
-    /// Pixel height of each sprite
-    pub sprite_h: f32,
     /// A list of sprites in this sprite sheet.
     pub sprites: Vec<Sprite>,
 }
@@ -41,14 +37,18 @@ impl From<SpriteSheet> for AssetsResult<ProcessingState<SpriteSheet>> {
     }
 }
 
-/// Texture coordinates of each sprite in a sprite sheet.
+/// Dimensions and texture coordinates of each sprite in a sprite sheet.
 ///
-/// These should be in normalized coordinates:
+/// The texture coordinates should be normalized to a value between 0.0 and 1.0:
 ///
 /// * X axis: 0.0 is the left side and 1.0 is the right side.
 /// * Y axis: 0.0 is the top and 1.0 is the bottom.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Sprite {
+    /// Pixel width of the sprite
+    pub width: f32,
+    /// Pixel height of the sprite
+    pub height: f32,
     /// Normalized left x coordinate
     pub left: f32,
     /// Normalized right x coordinate
@@ -59,9 +59,13 @@ pub struct Sprite {
     pub bottom: f32,
 }
 
-impl From<((f32, f32), (f32, f32))> for Sprite {
-    fn from(((left, right), (top, bottom)): ((f32, f32), (f32, f32))) -> Self {
+impl From<((f32, f32), (f32, f32), (f32, f32))> for Sprite {
+    fn from(
+        ((width, height), (left, right), (top, bottom)): ((f32, f32), (f32, f32), (f32, f32)),
+    ) -> Self {
         Sprite {
+            width,
+            height,
             left,
             right,
             top,
@@ -70,13 +74,15 @@ impl From<((f32, f32), (f32, f32))> for Sprite {
     }
 }
 
-impl From<[f32; 4]> for Sprite {
-    fn from(uv: [f32; 4]) -> Self {
+impl From<[f32; 6]> for Sprite {
+    fn from(uv: [f32; 6]) -> Self {
         Sprite {
-            left: uv[0],
-            right: uv[1],
-            top: uv[2],
-            bottom: uv[3],
+            width: uv[0],
+            height: uv[1],
+            left: uv[2],
+            right: uv[3],
+            top: uv[4],
+            bottom: uv[5],
         }
     }
 }
@@ -216,28 +222,32 @@ mod test {
     use super::Sprite;
 
     #[test]
-    fn sprite_from_tuple_maps_coordinates_correctly() {
+    fn sprite_from_tuple_maps_fields_correctly() {
         assert_eq!(
             Sprite {
+                width: 10.,
+                height: 20.,
                 left: 0.,
                 right: 0.5,
                 top: 0.75,
                 bottom: 1.0,
             },
-            ((0.0, 0.5), (0.75, 1.0)).into()
+            ((10., 20.), (0.0, 0.5), (0.75, 1.0)).into()
         );
     }
 
     #[test]
-    fn sprite_from_slice_maps_coordinates_correctly() {
+    fn sprite_from_slice_maps_fields_correctly() {
         assert_eq!(
             Sprite {
+                width: 10.,
+                height: 20.,
                 left: 0.,
                 right: 0.5,
                 top: 0.75,
                 bottom: 1.0,
             },
-            [0.0, 0.5, 0.75, 1.0].into()
+            [10., 20., 0.0, 0.5, 0.75, 1.0].into()
         );
     }
 }

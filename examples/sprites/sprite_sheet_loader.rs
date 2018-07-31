@@ -33,10 +33,10 @@ pub fn load(texture_id: u64, definition: &sprite::SpriteSheetDefinition) -> Spri
             let sprite = create_sprite(
                 image_w,
                 image_h,
+                definition.sprite_w,
+                definition.sprite_h,
                 offset_x,
                 offset_y,
-                offset_x + definition.sprite_w,
-                offset_y + definition.sprite_h,
             );
 
             let sprite_number = row * definition.column_count + col;
@@ -48,8 +48,6 @@ pub fn load(texture_id: u64, definition: &sprite::SpriteSheetDefinition) -> Spri
 
     SpriteSheet {
         texture_id,
-        sprite_w: definition.sprite_w,
-        sprite_h: definition.sprite_h,
         sprites,
     }
 }
@@ -80,18 +78,21 @@ fn offset_distances(definition: &sprite::SpriteSheetDefinition) -> (f32, f32) {
 ///
 /// * `image_w`: Width of the full sprite sheet.
 /// * `image_h`: Height of the full sprite sheet.
+/// * `sprite_w`: Width of the sprite.
+/// * `sprite_h`: Height of the sprite.
 /// * `pixel_left`: Pixel X coordinate of the left side of the sprite.
 /// * `pixel_top`: Pixel Y coordinate of the top of the sprite.
-/// * `pixel_right`: Pixel X coordinate of the right side of the sprite.
-/// * `pixel_bottom`: Pixel Y coordinate of the bottom of the sprite.
 fn create_sprite(
     image_w: f32,
     image_h: f32,
+    sprite_w: f32,
+    sprite_h: f32,
     pixel_left: f32,
     pixel_top: f32,
-    pixel_right: f32,
-    pixel_bottom: f32,
 ) -> Sprite {
+    let pixel_right = pixel_left + sprite_w;
+    let pixel_bottom = pixel_top + sprite_h;
+
     // Texture coordinates are expressed as fractions of the position on the image.
     let left = pixel_left / image_w;
     let top = pixel_top / image_h;
@@ -99,6 +100,8 @@ fn create_sprite(
     let bottom = pixel_bottom / image_h;
 
     Sprite {
+        width: sprite_w,
+        height: sprite_h,
         left,
         top,
         right,

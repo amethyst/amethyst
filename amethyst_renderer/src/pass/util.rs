@@ -13,7 +13,7 @@ use mtl::{Material, MaterialDefaults, MaterialTextureSet, TextureOffset};
 use pass::set_skinning_buffers;
 use pipe::{Effect, EffectBuilder};
 use skinning::JointTransforms;
-use sprite::{SpriteRenderInfo, SpriteSheet};
+use sprite::{Sprite, SpriteRenderInfo, SpriteSheet};
 use tex::Texture;
 use types::{Encoder, Slice};
 use vertex::Attributes;
@@ -258,13 +258,9 @@ pub(crate) fn set_vertex_args(
     effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
 }
 
-pub(crate) fn set_sprite_args(
-    effect: &mut Effect,
-    encoder: &mut Encoder,
-    sprite_sheet: &SpriteSheet,
-) {
+pub(crate) fn set_sprite_args(effect: &mut Effect, encoder: &mut Encoder, sprite: &Sprite) {
     let geometry_args = SpriteArgs {
-        sprite_dimensions: [sprite_sheet.sprite_w, sprite_sheet.sprite_h].into(),
+        sprite_dimensions: [sprite.width, sprite.height].into(),
         offsets: [0.0; 2].into(),
     };
     effect.update_constant_buffer("SpriteArgs", &geometry_args.std140(), encoder);
@@ -364,7 +360,11 @@ pub(crate) fn draw_sprite(
 
     // Sprite vertex shader
     set_vertex_args(effect, encoder, camera, global.unwrap());
-    set_sprite_args(effect, encoder, sprite_sheet);
+    set_sprite_args(
+        effect,
+        encoder,
+        &sprite_sheet.sprites[sprite_render_info.sprite_number],
+    );
 
     add_texture(effect, texture.unwrap());
 

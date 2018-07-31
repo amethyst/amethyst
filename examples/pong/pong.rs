@@ -126,6 +126,8 @@ fn initialise_paddles(world: &mut World, spritesheet: TextureHandle) {
 
     // Build the sprite for the paddles.
     let sprite = Sprite {
+        width: PADDLE_WIDTH,
+        height: PADDLE_HEIGHT,
         left: 0.0,
         right: PADDLE_WIDTH,
         top: 0.0,
@@ -157,11 +159,14 @@ fn initialise_ball(world: &mut World, spritesheet: TextureHandle) {
     local_transform.translation = Vector3::new(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
 
     // Create the sprite for the ball.
+    let ball_diameter = BALL_RADIUS * 2.0;
     let sprite = Sprite {
+        width: ball_diameter,
+        height: ball_diameter,
         left: PADDLE_WIDTH,
         right: SPRITESHEET_SIZE.0,
         top: 0.0,
-        bottom: BALL_RADIUS * 2.0,
+        bottom: ball_diameter,
     };
 
     world
