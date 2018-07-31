@@ -13,15 +13,19 @@ If you don't understand how something works in amethyst, knowing the concepts pr
 
 ## Chapters
 * [State][st]
-* Component
-* Entity
-* Resource
-* World
-* System
-* Dispatcher
-* EventChannel
+* [Component][comp]
+* [Entity][ent]
+* [Resource][res]
+* [World][world]
+* [System][sys]
+* [Dispatcher][dispatch]
+* [EventChannel][evc]
 
 [st]: ./concepts/state.html
 [comp]: ./concepts/component.html
+[ent]: ./concepts/entity.html
+[res]: ./concepts/resource.html
+[world]: ./concepts/world.html
 [sys]: ./concepts/system.html
+[dispatch]: ./concepts/dispatcher.html
 [evc]: ./concepts/event-channel.html
