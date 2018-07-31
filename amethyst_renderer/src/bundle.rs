@@ -1,9 +1,11 @@
 //! ECS rendering bundle
 
+use amethyst_assets::Processor;
 use amethyst_core::bundle::{Result, ResultExt, SystemBundle};
 use amethyst_core::specs::prelude::DispatcherBuilder;
 use config::DisplayConfig;
 use pipe::{PipelineBuild, PolyPipeline};
+use sprite::SpriteSheet;
 use system::RenderSystem;
 use visibility::VisibilitySortingSystem;
 
@@ -59,7 +61,12 @@ impl<'a, 'b, 'c, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> SystemBun
             );
         };
         builder.add_thread_local(
-            RenderSystem::build(self.pipe, self.config).chain_err(|| "Renderer error!")?
+            RenderSystem::build(self.pipe, self.config).chain_err(|| "Renderer error!")?,
+        );
+        builder.add(
+            Processor::<SpriteSheet>::new(),
+            "sprite_sheet_processor",
+            &[],
         );
         Ok(())
     }

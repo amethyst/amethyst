@@ -48,6 +48,8 @@ pub fn load(texture_id: u64, definition: &sprite::SpriteSheetDefinition) -> Spri
 
     SpriteSheet {
         texture_id,
+        sprite_w: definition.sprite_w,
+        sprite_h: definition.sprite_h,
         sprites,
     }
 }

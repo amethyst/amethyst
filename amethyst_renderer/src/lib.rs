@@ -79,6 +79,7 @@ pub use mesh::{vertex_data, Mesh, MeshBuilder, MeshHandle, VertexBuffer};
 pub use mtl::{Material, MaterialDefaults, MaterialTextureSet, TextureOffset};
 pub use pass::{
     DrawFlat, DrawFlatSeparate, DrawPbm, DrawPbmSeparate, DrawShaded, DrawShadedSeparate,
+    DrawSprite, DrawSpriteSeparate,
 };
 pub use pipe::{
     ColorBuffer, Data, DepthBuffer, DepthMode, Effect, EffectBuilder, Init, Meta, NewEffect,
@@ -92,7 +93,9 @@ pub use skinning::{
     AnimatedComboMeshCreator, AnimatedVertexBufferCombination, JointIds, JointTransforms,
     JointTransformsPrefab, JointWeights,
 };
-pub use sprite::{Sprite, SpriteRenderData, SpriteSheet, SpriteSheetHandle, WithSpriteRender};
+pub use sprite::{
+    Sprite, SpriteRenderData, SpriteRenderInfo, SpriteSheet, SpriteSheetHandle, WithSpriteRender,
+};
 pub use system::RenderSystem;
 pub use tex::{Texture, TextureBuilder, TextureHandle};
 pub use transparent::{

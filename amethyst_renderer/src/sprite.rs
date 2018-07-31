@@ -1,6 +1,8 @@
-use amethyst_assets::{Asset, AssetStorage, Handle, Loader};
+use amethyst_assets::{
+    Asset, AssetStorage, Handle, Loader, ProcessingState, Result as AssetsResult,
+};
 use amethyst_core::specs::prelude::{
-    Entity, EntityBuilder, Read, ReadExpect, VecStorage, WriteStorage,
+    Component, Entity, EntityBuilder, Read, ReadExpect, VecStorage, WriteStorage,
 };
 use error::Result;
 use mesh::{Mesh, MeshHandle};
@@ -19,17 +21,27 @@ pub type SpriteSheetHandle = Handle<SpriteSheet>;
 pub struct SpriteSheet {
     /// Index into `MaterialTextureSet` of the texture for this sprite sheet.
     pub texture_id: u64,
+    /// Pixel width of each sprite
+    pub sprite_w: f32,
+    /// Pixel height of each sprite
+    pub sprite_h: f32,
     /// A list of sprites in this sprite sheet.
     pub sprites: Vec<Sprite>,
 }
 
 impl Asset for SpriteSheet {
-    const NAME: &'static str = "renderer::Sprite";
+    const NAME: &'static str = "renderer::SpriteSheet";
     type Data = Self;
     type HandleStorage = VecStorage<Handle<Self>>;
 }
 
-/// A description of a frame in a sprite sheet.
+impl From<SpriteSheet> for AssetsResult<ProcessingState<SpriteSheet>> {
+    fn from(sprite_sheet: SpriteSheet) -> AssetsResult<ProcessingState<SpriteSheet>> {
+        Ok(ProcessingState::Loaded(sprite_sheet))
+    }
+}
+
+/// Texture coordinates of each sprite in a sprite sheet.
 ///
 /// These should be in normalized coordinates:
 ///
@@ -69,6 +81,22 @@ impl From<[f32; 4]> for Sprite {
     }
 }
 
+/// Information for rendering a sprite.
+///
+/// Instead of using a `Mesh` on a `DrawFlat` render pass, we can use a simpler set of shaders to
+/// render sprites. This struct carries the information necessary for the sprite pass.
+#[derive(Clone, Debug, PartialEq)]
+pub struct SpriteRenderInfo {
+    /// Handle to the sprite sheet of the sprite
+    pub sprite_sheet: SpriteSheetHandle,
+    /// Index of the sprite on the sprite sheet
+    pub sprite_number: usize,
+}
+
+impl Component for SpriteRenderInfo {
+    type Storage = VecStorage<Self>;
+}
+
 /// SystemData containing the data necessary to handle new rendered sprites
 #[derive(SystemData)]
 pub struct SpriteRenderData<'a> {
@@ -85,7 +113,6 @@ pub struct SpriteRenderData<'a> {
 }
 
 impl<'a> SpriteRenderData<'a> {
-    
     /// Creates a MeshHandle and Material from the sprite and texture data.
     /// Useful if you plan on re-using the same sprite a lot and don't want to
     /// load the assets each time.
@@ -100,7 +127,8 @@ impl<'a> SpriteRenderData<'a> {
 
         let vertices =
             Shape::Plane(None).generate::<Vec<PosTex>>(Some((half_width, half_height, 0.0)));
-        let mesh = self.loader
+        let mesh = self
+            .loader
             .load_from_data(vertices, (), &self.asset_storage);
 
         let material = Material {
