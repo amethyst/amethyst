@@ -4,7 +4,7 @@
 The word "state" can mean at lot of different things in computer science.
 In the case of amethyst, it is used to represent the "game stage".
 
-A game stage is "general" and "global" section of the game.
+A game stage is a *general* and *global* section of the game.
 
 ## Example
 
@@ -50,8 +50,8 @@ Transitions are simply the "switching" between two states.
 For example, from `LoadingState`, go to state `MainMenuState`.
 
 Amethyst has multiple types of transitions.
-*You can Push a `State` over another.
-*You can also Switch a `State`, which replaces the current `State` by a new one.
+* You can Push a `State` over another.
+* You can also Switch a `State`, which replaces the current `State` by a new one.
 
 ## Life Cycle
 
