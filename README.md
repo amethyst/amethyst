@@ -36,17 +36,17 @@ Those principles are what make amethyst unique and competitive in the world of g
 ## Why Amethyst?
 
 ### Extreme Multithreading
-Amethyst developers, started by implementing a parallel [ecs] first and then started making the engine over this infrastructure.
 
+Amethyst is based over a very powerful parallel [ecs] called specs.
 This allows game built with amethyst to use up to **99.9%** of your processing power to make it run as smooth and as fast as possible.
-
-Using the [ecs] architecture, the code of games can be cleanly divided between data and behaviour, making it easy to understand what is going on,
-even if the game is running on a massive 64 threads processor.
 
 ### Clean
 
 By design, the amethyst engine encourages you to write clean and reusable code for your behaviours and data structures, allowing engine users to easily
 share useful components, thus reducing development time and cost.
+
+Using the [ecs] architecture, the code of games can be cleanly divided between data and behaviour, making it easy to understand what is going on,
+even if the game is running on a massive 64 threads processor.
 
 ### Community
 
@@ -153,19 +153,15 @@ Other places you may want to check out are [r/rust_gamedev][rg] and [#rust-gamed
 We are a community project that welcomes contributions from anyone. 
 
 If you're interested in helping out, please read the [contribution guidelines][cm] 
-file before getting started.
+file before getting started. 
 
 We have a [good first issue][gfi] category that groups all issues or feature request
 that can be made without having an extensive knowledge of rust or amethyst.
-
 Working on those issues is a good, if not the best way to learn.
 
-If you think you are not yet ready to code yet, you can still contribute by reviewing code written by other members of the community.
-
+If you think you are not ready to code yet, you can still contribute by reviewing code written by other members of the community.
 In fact, code reviews ensures that the code that gets added to amethyst is of the highest quality as possible.
-
 Pull requests available for reviews are [here][pr].
-
 
 If for some reason we don't have any open PR or good first issues (that would be a good thing),
 you can look through the [issue tracker][it].
