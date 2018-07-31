@@ -33,7 +33,7 @@ impl Component for MyComponent {
 }
 ```
 
-## Storages???
+## Storages?
 
 `Component`s, in contrast with popular belief, should not be stored directly inside of a `Entity`.
 
@@ -48,5 +48,3 @@ Here's a comparison of the most used ones:
 * `FlaggedStorage`: Used to keep track of changes of a component. Useful for caching purposes.
 
 For more information, see the [specs storage reference](https://docs.rs/specs/latest/specs/storage/index.html).
-
-## Derive

@@ -38,7 +38,7 @@ Those principles are what make amethyst unique and competitive in the world of g
 ### Extreme Multithreading
 
 Amethyst is based over a very powerful parallel [ecs] called specs.
-This allows game built with amethyst to use up to **99.9%** of your processing power to make it run as smooth and as fast as possible.
+This allows games built with amethyst to maximize the processing power usage to make it run as smooth and as fast as possible, without the headache of multithread programming.
 
 ### Clean
 
@@ -89,7 +89,7 @@ Our most advanced example is currently called pong. It is a pong game, as you gu
 $ cargo run --example pong
 ```
 
-There is quite a few prototype games that were made with amethyst. A list will be available soon.
+There are quite a few prototype games that were made with amethyst. A list will be available soon.
 While we create this list, feel free to join our discord and ask about which projects are currently being made with amethyst.
 
 For a full-blown "Hello World" tutorial check out the [Getting Started][gs] chapter
