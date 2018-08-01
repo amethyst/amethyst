@@ -86,10 +86,10 @@ This is possible using the `join` method. You may be familiar with joining opera
 
 Needless to say that you can use it with only one storage to iterate over all entities with a specific component.
 
-Keep in mind that **the `join` method is only available by importing `amethyst::ecs::join::Join`**.
+Keep in mind that **the `join` method is only available by importing `amethyst::ecs::Join`**.
 
 ```rust,ignore
-use amethyst::ecs::join::Join;
+use amethyst::ecs::Join;
 
 struct MakeObjectsFall;
 
