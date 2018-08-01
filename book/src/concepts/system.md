@@ -112,7 +112,7 @@ Cool! Now that looks like something we'll actually do in our games!
 
 ## Manipulating the structure of entities
 
-It may sometimes be interesting to manipulate the structure of entities in a system, such as creating new ones or modifying the component layout of existing ones. This kind of processes is used with the `Entities<'a>` system data.
+It may sometimes be interesting to manipulate the structure of entities in a system, such as creating new ones or modifying the component layout of existing ones. This kind of process is done using the `Entities<'a>` system data.
 
 > Requesting `Entities<'a>` does not impact performance, as it contains only immutable resources and therefore [does not block the dispatching]().
 
