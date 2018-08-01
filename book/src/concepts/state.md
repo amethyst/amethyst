@@ -25,11 +25,11 @@ All of these can be divided in different states:
 * ResultState
 
 While you could effectively insert all the game's logic into a single state `GameState`,
-dividing it in multiple parts makes it much easier to program and maintain.
+dividing it in multiple parts makes it much easier to reason about and maintain.
 
 ## State Manager
 
-Amethyst has a built-in state manager, which allows switching easily between different `State`s.
+Amethyst has a built-in state manager, which allows easily switching between different `State`s.
 It is based on the concept of a pushdown-automaton, which is a combination of a Stack and a State Machine.
 
 ### Stack

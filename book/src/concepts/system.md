@@ -232,3 +232,15 @@ impl<'a> System<'a> for MyFirstSystem {
     }
 }
 ```
+
+## The setup method
+
+Systems have a method called setup which is called a single time, before the any of the system runs.
+Here is how to use it:
+```rust,ignore
+    fn setup(&mut self, res: &mut Resources) {
+        // Ensures that resources that implement `Default` and are present in your `SystemData` are added to `Resources`.
+        Self::SystemData::setup(&mut res);
+        // Do what you want with `Resources` here.
+    }
+```
