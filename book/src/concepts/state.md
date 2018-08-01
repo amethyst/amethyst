@@ -53,11 +53,13 @@ Amethyst has multiple types of transitions.
 * You can Push a `State` over another.
 * You can also Switch a `State`, which replaces the current `State` by a new one.
 
+Events are what trigger the transitions. In the case of amethyst, it is the different methods called on the `State`. Continue reading to learn about them.
+
 ## Life Cycle
 
 `State` are only valid for a certain period of time, during which a lot of things can occur.
-A `State` contains method to reflect the most common of those things:
-* on_start: When it is added to the stack, this method is called.
+A `State` contains methods that reflect the most commons of those events:
+* on_start: When the state is added to the stack, this method is called.
 * on_stop: When it is removed from the stack, this method is called.
 * on_pause: When a `State` is pushed over the current one, the current one is paused.
 * on_resume: When the `State` that was pushed over the current `State` is popped, the current one resumes.
@@ -66,7 +68,7 @@ A `State` contains method to reflect the most common of those things:
 * update: This method is called as often as possible by the engine.
 
 
-**IMPORTANT: If you use the update method in your state, you need to manually call `world.dispatch()`. For more information, read the "More" section at the end of the world chapter.**
+**IMPORTANT: If you use the update method in your state, you need to manually call `world.dispatch()`. For more information, read the "More" section at the end of the world chapter [here](./concepts/world.md#More).**
 
 ## Game Data
 
@@ -150,7 +152,7 @@ impl State<()> for GameplayState {
     }
 }
 
-impl State<()> for GameplayState {
+impl State<()> for PausedState {
     fn handle_event(&mut self, _data: StateData<()>, event: Event) -> Trans<()> {
         if is_key_down(&event, VirtualKeyCode::Escape) {
             // Go back to the `GameplayState`.

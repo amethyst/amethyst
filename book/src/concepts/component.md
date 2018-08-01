@@ -37,7 +37,7 @@ impl Component for MyComponent {
 
 `Component`s, in contrast with popular belief, should not be stored directly inside of a `Entity`.
 
-They are instead stored in different type of `Storage`, which all have different performance strategy.
+They are instead stored in different types of `Storage`, which all have different performance strategy.
 
 When implementing `Component` for a type, you have to specify which storage strategy it should use.
 
@@ -52,7 +52,7 @@ For more information, see the [specs storage reference](https://docs.rs/specs/la
 ## Tags
 
 Components can also be used to "tag" entities.
-The usual way to do it is to create an empty struct, and implement `NullStorage` for it.
+The usual way to do it is to create an empty struct, and implement `Component` using `NullStorage` as the `Storage` type for it.
 Null storage means that it is not going to take memory space to store those components.
 
 You will learn how to use those tag components in the system chapter.

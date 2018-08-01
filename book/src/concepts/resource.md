@@ -7,7 +7,8 @@ For example, the score of a pong game is global to the whole game and isn't owne
 
 ## Creating a resource
 
-Resources are stored in a, well, `Resources` type. This type is usually stored into a `World` instanced, which is covered in the next chapter.
+Resources are stored in a, well, `Resources` type. This type is usually stored into a `World` instance, which is covered in the next chapter.
+Normally you don't create a `Resources` instance yourself. It is usually made by amethyst automatically.
 
 Adding a resource to a `Resources` instance is done like this:
 ```rust

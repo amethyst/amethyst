@@ -11,7 +11,7 @@ There are two common ways to create entities:
 * From a `World` instance. See the relevant chapter in the book.
 * From a `System` using `Entities`. See the system chapter in the book.
 
-## Getting components from an entity
+## Getting components of an entity
 
 You can't! Well, at least not directly from an `Entity` instance.
 As mentionned in the component book page, `Component`s are not directly attached to entities; they are inserted into storages.
