@@ -6,7 +6,7 @@ A system is where the logic of the game is executed. In practice, it consists of
 
 ## Structure
 
-A system struct is a structure implementing the trait `amethyst::ecs::prelude::System`.
+A system struct is a structure implementing the trait `amethyst::ecs::System`.
 
 Here is a very simple example implementation:
 
@@ -204,7 +204,7 @@ Keep in mind that inserting a component on an entity that already has a componen
 
 While this is a rarely useful, it is possible to create custom `SystemData` types.
 
-The [Dispatcher]() populates the `SystemData` on every call of the `run` method. To do that, your `SystemData` type must implement the trait `amethyst::ecs::prelude::SystemData` in order to have it be valid.
+The [Dispatcher]() populates the `SystemData` on every call of the `run` method. To do that, your `SystemData` type must implement the trait `amethyst::ecs::SystemData` in order to have it be valid.
 
 This is rather complicated trait to implement, fortunately Amethyst provides a derive macro for it, that can implement the trait to any struct as long as all its fields are `SystemData`. Most of the time however, you will not even need to implement it at all as you will be using `SystemData` structs provided by the engine.
 
