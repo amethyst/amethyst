@@ -72,6 +72,8 @@ done the following things first:
 6. You used `cargo fmt` at the root of the crate to format the code.
    Make sure that `cargo fmt --version` returns the latest stable version.
    If this is not the case, run `rustup update` or install [rustfmt]
+7. For new features or changes to an existing one,
+   add or change either the book tutorial or the examples.
 
 [lm]: LICENSE-MIT
 [la]: LICENSE-APACHE
