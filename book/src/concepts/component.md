@@ -48,3 +48,11 @@ Here's a comparison of the most used ones:
 * `FlaggedStorage`: Used to keep track of changes of a component. Useful for caching purposes.
 
 For more information, see the [specs storage reference](https://docs.rs/specs/latest/specs/storage/index.html).
+
+## Tags
+
+Components can also be used to "tag" entities.
+The usual way to do it is to create an empty struct, and implement `NullStorage` for it.
+Null storage means that it is not going to take memory space to store those components.
+
+You will learn how to use those tag components in the system chapter.
