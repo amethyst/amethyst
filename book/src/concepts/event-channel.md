@@ -84,7 +84,7 @@ world.add_resource(
     }
 );
 ```
-_Note: You can also derive `Default`, this way you don't have to manually create your resource and add it._
+_Note: You can also derive `Default`, this way you don't have to manually create your resource and add it. Resources implementing `Default` are automatically added to `Resources` when a `System` uses them (`Read` or `Write` in `SystemData`)._
 
 In the **producer** `System`, get a mutable reference to your resource:
 ```rust,ignore
