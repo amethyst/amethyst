@@ -6,11 +6,11 @@ A system is where the logic of the game is executed. In practice, it consists of
 
 ## Structure
 
-A system struct is a structure implementing the trait `amethyst::ecs::prelude::System`.
+A system struct is a structure implementing the trait `amethyst::ecs::System`.
 
 Here is a very simple example implementation:
 
-```rust
+```rust,ignore
 struct MyFirstSystem;
 
 impl<'a> System<'a> for MyFirstSystem {
@@ -30,15 +30,14 @@ In the definition of a system, the trait requires you to define a type `SystemDa
 
 The Amethyst engine provides useful system data types to use in order to access the context of a game. Here are some of the most important ones:
 
-* **Read<'a, Resource>** allows you to obtain an immutable reference to a [resource]() of the type you specify.
-* **Write<'a, Resource>** allows you to obtain a mutable reference to a [resource]() of the type you specify.
-* **ReadStorage<'a, Component>** allows you to obtain an immutable reference to the entire storage of a certain [component]() type.
-* **WriteStorage<'a, Component>** allows you to obtain a mutable reference to the entire storage of a certain [component]() type.
+* **Read<'a, Resource>** (respectively **Write<'a, Resource>**) allows you to obtain an immutable (respectively mutable) reference to a [resource]() of the type you specify. This is guaranteed to not fail as if the resource is not available, it will give you the ``Default::default()`` of your resource. 
+* **ReadExpect<'a, Resource>** (respectively **WriteExpect<'a, Resource>**) is a failable alternative to the previous system data, so that you can use resources that do not implement the `Default` trait.
+* **ReadStorage<'a, Component>** (respectively **WriteStorage<'a, Component>**) allows you to obtain an immutable (respectively mutable) reference to the entire storage of a certain [component]() type.
 * **Entities<'a>** allows you to create or destroy [entities]() in the context of a system.
 
 You can then use one, or multiple of them via a tuple.
 
-```rust
+```rust,ignore
 struct MyFirstSystem;
 
 impl<'a> System<'a> for MyFirstSystem {
@@ -60,7 +59,7 @@ Once you have access to a storage, you can use them in different ways.
 
 Sometimes, it can be useful to get a component in the storage for a specific entity. This can easily be done using the `get` or, for mutable storages, `get_mut` methods.
 
-```rust
+```rust,ignore
 struct CameraGoesUp;
 
 impl<'a> System<'a> for CameraGoesUp {
@@ -87,7 +86,11 @@ This is possible using the `join` method. You may be familiar with joining opera
 
 Needless to say that you can use it with only one storage to iterate over all entities with a specific component.
 
-```rust
+Keep in mind that **the `join` method is only available by importing `amethyst::ecs::Join`**.
+
+```rust,ignore
+use amethyst::ecs::Join;
+
 struct MakeObjectsFall;
 
 impl<'a> System<'a> for MakeObjectsFall {
@@ -120,7 +123,7 @@ It may sometimes be interesting to manipulate the structure of entities in a sys
 
 Creating an entity while in the context of a system is very similar to the way one would create an entity using the [World]() struct. The only difference is that one needs to provide mutable storages of all the components they plan to add to the entity.
 
-```rust
+```rust,ignore
 struct SpawnEnemies {
     counter: u32
 }
@@ -158,7 +161,7 @@ entities.delete(entity);
 
 Sometimes, when you iterate over components, you may want to also know what entity you are working with. To do that, you can use the joining operation with `Entities<'a>`.
 
-```rust
+```rust,ignore
 struct MakeObjectsFall;
 
 impl<'a> System<'a> for MakeObjectsFall {
@@ -187,7 +190,7 @@ This system does the same thing as the previous `MakeObjectsFall`, but also clea
 You can also insert or removes components from a specific entity.
 To do that, you need to get a mutable storage of the component you want to modify, and simply do:
 
-```rust
+```rust,ignore
 // Add the component
 write_storage.insert(entity, MyComponent);
 
@@ -201,13 +204,13 @@ Keep in mind that inserting a component on an entity that already has a componen
 
 While this is a rarely useful, it is possible to create custom `SystemData` types.
 
-The [Dispatcher]() populates the `SystemData` on every call of the `run` method. To do that, your `SystemData` type must implement the trait `amethyst::ecs::prelude::SystemData` in order to have it be valid.
+The [Dispatcher]() populates the `SystemData` on every call of the `run` method. To do that, your `SystemData` type must implement the trait `amethyst::ecs::SystemData` in order to have it be valid.
 
 This is rather complicated trait to implement, fortunately Amethyst provides a derive macro for it, that can implement the trait to any struct as long as all its fields are `SystemData`. Most of the time however, you will not even need to implement it at all as you will be using `SystemData` structs provided by the engine.
 
 Please note that tuples of structs implementing `SystemData` are themselves `SystemData`. This is very useful when you need to request multiple `SystemData` at once quickly.
 
-```rust
+```rust,ignore
 #[derive(SystemData)]
 struct MySystemData<'a> {
     foo: ReadStorage<'a, FooComponent>,
