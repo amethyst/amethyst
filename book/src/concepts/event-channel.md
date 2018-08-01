@@ -17,7 +17,7 @@ The only exception to this is when you have a **SINGLE** external thread produci
 In this specific case, you can create a resource holding a Arc<Mutex<EventChannel<T>>>.
 
 If your use case involves multiple event producers, you should use some other type of event queuing method.
-In those case, you can use a `System` reading from a mpsc channel and moving the events into a `EventChannel`.
+In those case, you can use a `System` reading from a [mpsc channel](https://doc.rust-lang.org/std/sync/mpsc/) and moving the events into a `EventChannel`.
 You can also use other rust crates for that purpose.
 
 ## Creating an event channel
