@@ -68,7 +68,6 @@ Internally, the `World` interacts with `EntitiesRes`, which is a resource holdin
 ## Accessing a `Component`
 
 ```rust,ignore
-    
     // Create an `Entity` with `MyComponent`.
     // `World` will implicitely write to the component's storage in `Resources`.
     let my_entity = world.create_entity().with(MyComponent).build();
@@ -125,7 +124,7 @@ All:
 
 ## Exec
 
-Sometimes, you will want to do create an entity where you need to fetch resources to create the correct components for it.
+Sometimes, you will want to create an entity where you need to fetch resources to create the correct components for it.
 There is a function that acts as a shorthand for this:
 
 ```rust,ignore

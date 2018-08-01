@@ -68,7 +68,7 @@ A `State` contains methods that reflect the most commons of those events:
 * update: This method is called as often as possible by the engine.
 
 
-**IMPORTANT: If you use the update method in your state, you need to manually call `world.dispatch()`. For more information, read the "More" section at the end of the world chapter [here](./concepts/world.md#More).**
+**IMPORTANT: If you use the update method in your state, you need to manually call `world.dispatch()`. For more information, read the "More" section at the end of the world chapter [here](./concepts/world.md#more).**
 
 ## Game Data
 
