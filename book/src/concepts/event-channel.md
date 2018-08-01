@@ -88,13 +88,13 @@ _Note: You can also derive `Default`, this way you don't have to manually create
 
 In the **producer** `System`, get a mutable reference to your resource:
 ```rust,ignore
-// Since we have a single element, we need the last "," to ensure `SystemData` is considered as a struct.
-type SystemData = (Write<'a, MyEventChannel>,);
+type SystemData = Write<'a, MyEventChannel>;
 ```
 
 In the **receiver** `System`s, you need to store the `ReaderId` somewhere.
 ```rust,ignore
 struct ReceiverSystem {
+    // The type inside of ReaderId should be the type of the event you are using.
     reader: Option<ReaderId<i32>>,
 }
 ```
@@ -112,7 +112,7 @@ Then, in the `System`'s setup method:
 
 Finally, you can read events from your `System`.
 ```rust,ignore
-    fn run (&mut self, (my_event_channel,): Self::SystemData) {
+    fn run (&mut self, my_event_channel: Self::SystemData) {
         for event in &my_event_channel.read(&mut self.reader) {
             info!("Received an event: {}", event);
         }
