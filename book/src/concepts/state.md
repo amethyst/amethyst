@@ -72,8 +72,7 @@ A `State` contains methods that reflect the most commons of those events:
 
 ## Game Data
 
-`State`s have, well, a state. The actual data that a `State` can contain is arbitrary.
-
+`State`s can have arbitrary data associated with them.
 If you need to store data that is tightly coupled to your `State`, the classic way is to put it in the `State`'s struct.
 
 `State`s also have internal data, which is any type T.

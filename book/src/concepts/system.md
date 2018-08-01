@@ -83,6 +83,9 @@ However, this approach is pretty rare because most of the time you don't know wh
 Most of the time, you will want to perform logic on all entities with a specific components, or even all entities with a selection of components.
 
 This is possible using the `join` method. You may be familiar with joining operations if you have ever worked with databases. The `join` method takes multiple storages, and iterates over all entities that have a component in each of those storages.
+It works like an "AND" gate. It will return an iterator containing a tuple of all the requested components if they are **ALL** on the same entity.
+
+If you join with components A,B and C, only the entities that have **ALL** those components will be considered.
 
 Needless to say that you can use it with only one storage to iterate over all entities with a specific component.
 

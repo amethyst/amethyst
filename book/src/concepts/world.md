@@ -124,6 +124,8 @@ All:
 
 ## Exec
 
+**This is just to show that this feature exists. It is normal to not understand what it does until you read the system chapter**
+
 Sometimes, you will want to create an entity where you need to fetch resources to create the correct components for it.
 There is a function that acts as a shorthand for this:
 

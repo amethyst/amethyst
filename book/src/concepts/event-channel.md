@@ -65,7 +65,7 @@ It is the `ReaderId` that needs to be mutable to keep track of where your last r
 
 ## Patterns
 
-When using the event channel, we usually re-use the same pattern over and over to maximize parallelism.
+When using the event channel, we usually re-use the same pattern over and over again to maximize parallelism.
 It goes as follow:
 
 Create a resource holding the event channel:
@@ -86,17 +86,21 @@ world.add_resource(
 ```
 _Note: You can also derive `Default`, this way you don't have to manually create your resource and add it._
 
-In the producer `System`, get a mutable reference to your resource:
+In the **producer** `System`, get a mutable reference to your resource:
 ```rust,ignore
 // Since we have a single element, we need the last "," to ensure `SystemData` is considered as a struct.
 type SystemData = (Write<'a, MyEventChannel>,);
 ```
 
-In the receiver `System`s, you need to store the `ReaderId` somewhere.
+In the **receiver** `System`s, you need to store the `ReaderId` somewhere.
 ```rust,ignore
 struct ReceiverSystem {
     reader: Option<ReaderId<i32>>,
 }
+```
+and you also need to get read access:
+```rust,ignore
+    type SystemData = (Read<'a, MyEventChannel>,);
 ```
 
 Then, in the `System`'s setup method:

@@ -58,7 +58,7 @@ If you have a use case where you need to delete a resource, you probably need to
 ## Storages, part 2
 
 A `Component`'s `Storage` is a resource.
-The components are affected to entities, but as said previously, they are not "owned" by the entities at the implementation level.
+The components are "attached" to entities, but as said previously, they are not "owned" by the entities at the implementation level.
 By storing them into `Storage`s and by having `Storage` be placed inside `Resources`,
 it allows global access to all of the components at runtime with minimal effort.
 
