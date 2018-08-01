@@ -1,4 +1,4 @@
-use amethyst::renderer::{Sprite, SpriteSheet};
+use amethyst::renderer::{Sprite, SpriteSheet, TextureCoordinates};
 
 use sprite;
 
@@ -99,12 +99,17 @@ fn create_sprite(
     let right = pixel_right / image_w;
     let bottom = pixel_bottom / image_h;
 
-    Sprite {
-        width: sprite_w,
-        height: sprite_h,
+    let tex_coords = TextureCoordinates {
         left,
         top,
         right,
         bottom,
+    };
+
+    Sprite {
+        width: sprite_w,
+        height: sprite_h,
+        offsets: [0.0, 0.0],
+        tex_coords,
     }
 }

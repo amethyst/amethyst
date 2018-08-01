@@ -38,17 +38,26 @@ impl From<SpriteSheet> for AssetsResult<ProcessingState<SpriteSheet>> {
 }
 
 /// Dimensions and texture coordinates of each sprite in a sprite sheet.
-///
-/// The texture coordinates should be normalized to a value between 0.0 and 1.0:
-///
-/// * X axis: 0.0 is the left side and 1.0 is the right side.
-/// * Y axis: 0.0 is the top and 1.0 is the bottom.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Sprite {
     /// Pixel width of the sprite
     pub width: f32,
     /// Pixel height of the sprite
     pub height: f32,
+    /// Number of pixels to shift the sprite to the left and down relative to the entity
+    pub offsets: [f32; 2],
+    /// Texture coordinates of the sprite
+    pub tex_coords: TextureCoordinates,
+}
+
+/// Texture coordinates of the sprite
+///
+/// The coordinates should be normalized to a value between 0.0 and 1.0:
+///
+/// * X axis: 0.0 is the left side and 1.0 is the right side.
+/// * Y axis: 0.0 is the top and 1.0 is the bottom.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct TextureCoordinates {
     /// Normalized left x coordinate
     pub left: f32,
     /// Normalized right x coordinate
@@ -59,13 +68,26 @@ pub struct Sprite {
     pub bottom: f32,
 }
 
-impl From<((f32, f32), (f32, f32), (f32, f32))> for Sprite {
-    fn from(
-        ((width, height), (left, right), (top, bottom)): ((f32, f32), (f32, f32), (f32, f32)),
-    ) -> Self {
+impl From<((f32, f32), [f32; 4])> for Sprite {
+    fn from((dimensions, tex_coords): ((f32, f32), [f32; 4])) -> Self {
+        Self::from((dimensions, [0.0; 2], tex_coords))
+    }
+}
+
+impl From<((f32, f32), [f32; 2], [f32; 4])> for Sprite {
+    fn from(((width, height), offsets, tex_coords): ((f32, f32), [f32; 2], [f32; 4])) -> Self {
         Sprite {
             width,
             height,
+            offsets,
+            tex_coords: TextureCoordinates::from(tex_coords),
+        }
+    }
+}
+
+impl From<((f32, f32), (f32, f32))> for TextureCoordinates {
+    fn from(((left, right), (top, bottom)): ((f32, f32), (f32, f32))) -> Self {
+        TextureCoordinates {
             left,
             right,
             top,
@@ -74,15 +96,13 @@ impl From<((f32, f32), (f32, f32), (f32, f32))> for Sprite {
     }
 }
 
-impl From<[f32; 6]> for Sprite {
-    fn from(uv: [f32; 6]) -> Self {
-        Sprite {
-            width: uv[0],
-            height: uv[1],
-            left: uv[2],
-            right: uv[3],
-            top: uv[4],
-            bottom: uv[5],
+impl From<[f32; 4]> for TextureCoordinates {
+    fn from(uv: [f32; 4]) -> Self {
+        TextureCoordinates {
+            left: uv[0],
+            right: uv[1],
+            top: uv[2],
+            bottom: uv[3],
         }
     }
 }
@@ -128,11 +148,11 @@ impl<'a> SpriteRenderData<'a> {
         texture: TextureHandle,
         size: (f32, f32),
     ) -> (MeshHandle, Material) {
-        let half_width = (sprite.right - sprite.left) * 0.5;
-        let half_height = (sprite.bottom - sprite.top) * 0.5;
-
-        let vertices =
-            Shape::Plane(None).generate::<Vec<PosTex>>(Some((half_width, half_height, 0.0)));
+        let vertices = Shape::Plane(None).generate::<Vec<PosTex>>(Some((
+            sprite.offsets[0],
+            sprite.offsets[1],
+            0.0,
+        )));
         let mesh = self
             .loader
             .load_from_data(vertices, (), &self.asset_storage);
@@ -140,8 +160,14 @@ impl<'a> SpriteRenderData<'a> {
         let material = Material {
             albedo: texture,
             albedo_offset: TextureOffset {
-                u: (sprite.left / size.0, sprite.right / size.0),
-                v: (1.0 - sprite.bottom / size.1, 1.0 - sprite.top / size.1),
+                u: (
+                    sprite.tex_coords.left / size.0,
+                    sprite.tex_coords.right / size.0,
+                ),
+                v: (
+                    1.0 - sprite.tex_coords.bottom / size.1,
+                    1.0 - sprite.tex_coords.top / size.1,
+                ),
             },
             ..self.material_defaults.0.clone()
         };
@@ -219,35 +245,67 @@ impl<'a> WithSpriteRender for EntityBuilder<'a> {
 
 #[cfg(test)]
 mod test {
-    use super::Sprite;
+    use super::{Sprite, TextureCoordinates};
+
+    #[test]
+    fn texture_coordinates_from_tuple_maps_fields_correctly() {
+        assert_eq!(
+            TextureCoordinates {
+                left: 0.,
+                right: 0.5,
+                top: 0.75,
+                bottom: 1.0,
+            },
+            ((0.0, 0.5), (0.75, 1.0)).into()
+        );
+    }
+
+    #[test]
+    fn texture_coordinates_from_slice_maps_fields_correctly() {
+        assert_eq!(
+            TextureCoordinates {
+                left: 0.,
+                right: 0.5,
+                top: 0.75,
+                bottom: 1.0,
+            },
+            [0.0, 0.5, 0.75, 1.0].into()
+        );
+    }
 
     #[test]
     fn sprite_from_tuple_maps_fields_correctly() {
         assert_eq!(
             Sprite {
                 width: 10.,
-                height: 20.,
-                left: 0.,
-                right: 0.5,
-                top: 0.75,
-                bottom: 1.0,
+                height: 40.,
+                offsets: [5., 20.],
+                tex_coords: TextureCoordinates {
+                    left: 0.,
+                    right: 0.5,
+                    top: 0.75,
+                    bottom: 1.0,
+                },
             },
-            ((10., 20.), (0.0, 0.5), (0.75, 1.0)).into()
+            ((10., 40.), [5., 20.], [0.0, 0.5, 0.75, 1.0]).into()
         );
     }
 
     #[test]
-    fn sprite_from_slice_maps_fields_correctly() {
+    fn sprite_offsets_default_to_zero() {
         assert_eq!(
             Sprite {
                 width: 10.,
-                height: 20.,
-                left: 0.,
-                right: 0.5,
-                top: 0.75,
-                bottom: 1.0,
+                height: 40.,
+                offsets: [0., 0.],
+                tex_coords: TextureCoordinates {
+                    left: 0.,
+                    right: 0.5,
+                    top: 0.75,
+                    bottom: 1.0,
+                },
             },
-            [10., 20., 0.0, 0.5, 0.75, 1.0].into()
+            ((10., 40.), [0.0, 0.5, 0.75, 1.0]).into()
         );
     }
 }

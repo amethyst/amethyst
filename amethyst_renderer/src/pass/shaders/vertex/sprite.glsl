@@ -18,8 +18,8 @@ layout (std140) uniform AlbedoOffset {
     vec2 v_offset;
 } albedo_offset;
 
-out vec2 tex_uv;
 out vec2 uv;
+out vec2 tex_uv;
 
 // Position coordinates for two triangles that form a quad.
 const vec2 positions[6] = vec2[](
@@ -47,7 +47,7 @@ vec2 texture_coords(vec2 coords, vec2 u, vec2 v) {
 void main() {
     vec2 position = positions[gl_VertexID];
 
-    uv = position * sprite_dimensions;
+    uv = position * sprite_dimensions - offsets;
     tex_uv = texture_coords(position, albedo_offset.u_offset, albedo_offset.v_offset);
 
     vec4 vertex = vec4(uv, 0.0, 1.0);

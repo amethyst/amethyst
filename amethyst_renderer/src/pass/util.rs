@@ -261,7 +261,7 @@ pub(crate) fn set_vertex_args(
 pub(crate) fn set_sprite_args(effect: &mut Effect, encoder: &mut Encoder, sprite: &Sprite) {
     let geometry_args = SpriteArgs {
         sprite_dimensions: [sprite.width, sprite.height].into(),
-        offsets: [0.0; 2].into(),
+        offsets: sprite.offsets.into(),
     };
     effect.update_constant_buffer("SpriteArgs", &geometry_args.std140(), encoder);
 }
@@ -370,11 +370,12 @@ pub(crate) fn draw_sprite(
 
     // Set texture coordinates
     let sprite = &sprite_sheet.sprites[sprite_render_info.sprite_number];
+    let tex_coords = &sprite.tex_coords;
     effect.update_constant_buffer(
         "AlbedoOffset",
         &TextureOffsetPod {
-            u_offset: [sprite.left, sprite.right].into(),
-            v_offset: [sprite.top, sprite.bottom].into(),
+            u_offset: [tex_coords.left, tex_coords.right].into(),
+            v_offset: [tex_coords.top, tex_coords.bottom].into(),
         }.std140(),
         encoder,
     );

@@ -5,8 +5,8 @@ use amethyst::ecs::prelude::World;
 use amethyst::input::{is_close_requested, is_key_down};
 use amethyst::prelude::*;
 use amethyst::renderer::{
-    Camera, Event, PngFormat, Projection, Sprite, SpriteRenderData, Texture, TextureHandle,
-    VirtualKeyCode, WindowMessages, WithSpriteRender,
+    Camera, Event, PngFormat, Projection, Sprite, SpriteRenderData, Texture, TextureCoordinates,
+    TextureHandle, VirtualKeyCode, WindowMessages, WithSpriteRender,
 };
 use amethyst::ui::{Anchor, TtfFormat, UiText, UiTransform};
 use systems::ScoreText;
@@ -125,13 +125,17 @@ fn initialise_paddles(world: &mut World, spritesheet: TextureHandle) {
         .build();
 
     // Build the sprite for the paddles.
-    let sprite = Sprite {
-        width: PADDLE_WIDTH,
-        height: PADDLE_HEIGHT,
+    let tex_coords = TextureCoordinates {
         left: 0.0,
         right: PADDLE_WIDTH,
         top: 0.0,
         bottom: PADDLE_HEIGHT,
+    };
+    let sprite = Sprite {
+        width: PADDLE_WIDTH,
+        height: PADDLE_HEIGHT,
+        offsets: [PADDLE_WIDTH / 2.0, PADDLE_HEIGHT / 2.0],
+        tex_coords,
     };
 
     // Add the sprite to the paddles.
@@ -160,13 +164,17 @@ fn initialise_ball(world: &mut World, spritesheet: TextureHandle) {
 
     // Create the sprite for the ball.
     let ball_diameter = BALL_RADIUS * 2.0;
-    let sprite = Sprite {
-        width: ball_diameter,
-        height: ball_diameter,
+    let tex_coords = TextureCoordinates {
         left: PADDLE_WIDTH,
         right: SPRITESHEET_SIZE.0,
         top: 0.0,
         bottom: ball_diameter,
+    };
+    let sprite = Sprite {
+        width: ball_diameter,
+        height: ball_diameter,
+        offsets: [BALL_RADIUS, BALL_RADIUS],
+        tex_coords,
     };
 
     world

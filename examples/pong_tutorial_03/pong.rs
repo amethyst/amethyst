@@ -5,8 +5,8 @@ use amethyst::ecs::prelude::{Component, DenseVecStorage};
 use amethyst::input::{is_close_requested, is_key_down};
 use amethyst::prelude::*;
 use amethyst::renderer::{
-    Camera, Event, PngFormat, Projection, Sprite, Texture, TextureHandle, VirtualKeyCode,
-    WithSpriteRender,
+    Camera, Event, PngFormat, Projection, Sprite, Texture, TextureCoordinates, TextureHandle,
+    VirtualKeyCode, WithSpriteRender,
 };
 
 pub const ARENA_HEIGHT: f32 = 100.0;
@@ -109,13 +109,17 @@ fn initialise_paddles(world: &mut World, spritesheet: TextureHandle) {
     right_transform.translation = Vector3::new(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
 
     // Build the sprite for the paddles.
-    let sprite = Sprite {
-        width: PADDLE_WIDTH,
-        height: PADDLE_HEIGHT,
+    let tex_coords = TextureCoordinates {
         left: 0.0,
         right: PADDLE_WIDTH,
         top: 0.0,
         bottom: PADDLE_HEIGHT,
+    };
+    let sprite = Sprite {
+        width: PADDLE_WIDTH,
+        height: PADDLE_HEIGHT,
+        offsets: [PADDLE_WIDTH / 2.0, PADDLE_HEIGHT / 2.0],
+        tex_coords,
     };
 
     // Create a left plank entity.
