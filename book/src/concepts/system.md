@@ -30,10 +30,10 @@ In the definition of a system, the trait requires you to define a type `SystemDa
 
 The Amethyst engine provides useful system data types to use in order to access the context of a game. Here are some of the most important ones:
 
-* **Read<'a, Resource>** (respectively **Write<'a, Resource>**) allows you to obtain an immutable (respectively mutable) reference to a [resource]() of the type you specify. This is guaranteed to not fail as if the resource is not available, it will give you the ``Default::default()`` of your resource. 
+* **Read<'a, Resource>** (respectively **Write<'a, Resource>**) allows you to obtain an immutable (respectively mutable) reference to a resource of the type you specify. This is guaranteed to not fail as if the resource is not available, it will give you the ``Default::default()`` of your resource. 
 * **ReadExpect<'a, Resource>** (respectively **WriteExpect<'a, Resource>**) is a failable alternative to the previous system data, so that you can use resources that do not implement the `Default` trait.
-* **ReadStorage<'a, Component>** (respectively **WriteStorage<'a, Component>**) allows you to obtain an immutable (respectively mutable) reference to the entire storage of a certain [component]() type.
-* **Entities<'a>** allows you to create or destroy [entities]() in the context of a system.
+* **ReadStorage<'a, Component>** (respectively **WriteStorage<'a, Component>**) allows you to obtain an immutable (respectively mutable) reference to the entire storage of a certain `Component` type.
+* **Entities<'a>** allows you to create or destroy entities in the context of a system.
 
 You can then use one, or multiple of them via a tuple.
 
@@ -120,11 +120,11 @@ Cool! Now that looks like something we'll actually do in our games!
 
 It may sometimes be interesting to manipulate the structure of entities in a system, such as creating new ones or modifying the component layout of existing ones. This kind of process is done using the `Entities<'a>` system data.
 
-> Requesting `Entities<'a>` does not impact performance, as it contains only immutable resources and therefore [does not block the dispatching]().
+> Requesting `Entities<'a>` does not impact performance, as it contains only immutable resources and therefore [does not block the dispatching](./concepts/dispatcher.html).
 
 ### Creating new entities in a system
 
-Creating an entity while in the context of a system is very similar to the way one would create an entity using the [World]() struct. The only difference is that one needs to provide mutable storages of all the components they plan to add to the entity.
+Creating an entity while in the context of a system is very similar to the way one would create an entity using the `World` struct. The only difference is that one needs to provide mutable storages of all the components they plan to add to the entity.
 
 ```rust,ignore
 struct SpawnEnemies {
@@ -207,7 +207,7 @@ Keep in mind that inserting a component on an entity that already has a componen
 
 While this is a rarely useful, it is possible to create custom `SystemData` types.
 
-The [Dispatcher]() populates the `SystemData` on every call of the `run` method. To do that, your `SystemData` type must implement the trait `amethyst::ecs::SystemData` in order to have it be valid.
+The `Dispatcher` populates the `SystemData` on every call of the `run` method. To do that, your `SystemData` type must implement the trait `amethyst::ecs::SystemData` in order to have it be valid.
 
 This is rather complicated trait to implement, fortunately Amethyst provides a derive macro for it, that can implement the trait to any struct as long as all its fields are `SystemData`. Most of the time however, you will not even need to implement it at all as you will be using `SystemData` structs provided by the engine.
 
