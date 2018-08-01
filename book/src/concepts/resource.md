@@ -62,3 +62,7 @@ By storing them into `Storage`s and by having `Storage` be placed inside `Resour
 it allows global access to all of the components at runtime with minimal effort.
 
 Actually accessing the components inside `Storage`s will be covered in the world and system sections of the book.
+
+**WARNING:**
+If you try to fetch the component directly, you will not get the storage. You will get a `Default::default()` instance of that component.
+To get the `Storage` resource that HOLDS all the `MyComponent` instances, you need to fetch `ReadStorage<MyComponent>`.

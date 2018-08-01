@@ -65,6 +65,9 @@ A `State` contains method to reflect the most common of those things:
 * fixed_update: This method is called at a fixed time interval (default 1/60th second).
 * update: This method is called as often as possible by the engine.
 
+
+**IMPORTANT: If you use the update method in your state, you need to manually call `world.dispatch()`. For more information, read the "More" section at the end of the world chapter.**
+
 ## Game Data
 
 `State`s have, well, a state. The actual data that a `State` can contain is arbitrary.
