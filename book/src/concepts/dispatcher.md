@@ -8,7 +8,7 @@ When a dispatcher is created, it is associated with the systems that it will exe
 
 ## Respecting mutability rules
 
-When a system wants to access a `Storage` of a resource, they can do so either mutably or immutably. This works just like in Rust: either only one system can request something mutably and no other system can access it, or multiple systems can request something but only immutably.
+When a system wants to access a `Storage` or a resource, they can do so either mutably or immutably. This works just like in Rust: either only one system can request something mutably and no other system can access it, or multiple systems can request something but only immutably.
 
 The dispatcher looks at all the `SystemData` in the systems and builds execution stages.
 

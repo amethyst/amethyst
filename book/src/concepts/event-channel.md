@@ -68,7 +68,7 @@ It goes as follow:
 Create the event channel and add it to to the world during `State` creation:
 ```rust,ignore
 world.add_resource(
-    channel: EventChannel::<MyEvent>::new(),
+    EventChannel::<MyEvent>::new(),
 );
 ```
 _Note: You can also derive `Default`, this way you don't have to manually create your resource and add it. Resources implementing `Default` are automatically added to `Resources` when a `System` uses them (`Read` or `Write` in `SystemData`)._
