@@ -381,7 +381,7 @@ pub(crate) fn draw_sprite(
         "AlbedoOffset",
         &TextureOffsetPod {
             u_offset: [tex_coords.left, tex_coords.right].into(),
-            v_offset: [tex_coords.top, tex_coords.bottom].into(),
+            v_offset: [tex_coords.bottom, tex_coords.top].into(),
         }.std140(),
         encoder,
     );

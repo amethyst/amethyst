@@ -112,8 +112,8 @@ fn initialise_paddles(world: &mut World, spritesheet: TextureHandle) {
     let tex_coords = TextureCoordinates {
         left: 0.0,
         right: PADDLE_WIDTH,
-        top: 0.0,
-        bottom: PADDLE_HEIGHT,
+        bottom: SPRITESHEET_SIZE.1 - PADDLE_HEIGHT,
+        top: SPRITESHEET_SIZE.1,
     };
     let sprite = Sprite {
         width: PADDLE_WIDTH,

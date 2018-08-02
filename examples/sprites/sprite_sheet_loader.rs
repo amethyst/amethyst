@@ -16,10 +16,7 @@ pub fn load(texture_id: u64, definition: &sprite::SpriteSheetDefinition) -> Spri
         offset_h * definition.row_count as f32,
     );
 
-    // Push the rows in reverse order because the texture coordinates are treated as beginning
-    // from the bottom of the image, whereas for this example I want the top left sprite to be
-    // the first sprite
-    for row in (0..definition.row_count).rev() {
+    for row in 0..definition.row_count {
         for col in 0..definition.column_count {
             // Sprites are numbered in the following pattern:
             //
@@ -95,15 +92,15 @@ fn create_sprite(
 
     // Texture coordinates are expressed as fractions of the position on the image.
     let left = pixel_left / image_w;
-    let top = pixel_top / image_h;
     let right = pixel_right / image_w;
-    let bottom = pixel_bottom / image_h;
+    let top = 1.0 - pixel_top / image_h;
+    let bottom = 1.0 - pixel_bottom / image_h;
 
     let tex_coords = TextureCoordinates {
         left,
-        top,
         right,
         bottom,
+        top,
     };
 
     Sprite {

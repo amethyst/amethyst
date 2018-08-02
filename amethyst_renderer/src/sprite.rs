@@ -56,17 +56,17 @@ pub struct Sprite {
 /// The coordinates should be normalized to a value between 0.0 and 1.0:
 ///
 /// * X axis: 0.0 is the left side and 1.0 is the right side.
-/// * Y axis: 0.0 is the top and 1.0 is the bottom.
+/// * Y axis: 0.0 is the bottom and 1.0 is the top.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct TextureCoordinates {
     /// Normalized left x coordinate
     pub left: f32,
     /// Normalized right x coordinate
     pub right: f32,
-    /// Normalized top y coordinate
-    pub top: f32,
     /// Normalized bottom y coordinate
     pub bottom: f32,
+    /// Normalized top y coordinate
+    pub top: f32,
 }
 
 impl From<((f32, f32), [f32; 4])> for Sprite {
@@ -87,12 +87,12 @@ impl From<((f32, f32), [f32; 2], [f32; 4])> for Sprite {
 }
 
 impl From<((f32, f32), (f32, f32))> for TextureCoordinates {
-    fn from(((left, right), (top, bottom)): ((f32, f32), (f32, f32))) -> Self {
+    fn from(((left, right), (bottom, top)): ((f32, f32), (f32, f32))) -> Self {
         TextureCoordinates {
             left,
             right,
-            top,
             bottom,
+            top,
         }
     }
 }
@@ -102,8 +102,8 @@ impl From<[f32; 4]> for TextureCoordinates {
         TextureCoordinates {
             left: uv[0],
             right: uv[1],
-            top: uv[2],
-            bottom: uv[3],
+            bottom: uv[2],
+            top: uv[3],
         }
     }
 }
@@ -170,8 +170,8 @@ impl<'a> SpriteRenderData<'a> {
                     sprite.tex_coords.right / size.0,
                 ),
                 v: (
-                    1.0 - sprite.tex_coords.bottom / size.1,
-                    1.0 - sprite.tex_coords.top / size.1,
+                    sprite.tex_coords.bottom / size.1,
+                    sprite.tex_coords.top / size.1,
                 ),
             },
             ..self.material_defaults.0.clone()
@@ -319,8 +319,8 @@ mod test {
             TextureCoordinates {
                 left: 0.,
                 right: 0.5,
-                top: 0.75,
-                bottom: 1.0,
+                bottom: 0.75,
+                top: 1.0,
             },
             ((0.0, 0.5), (0.75, 1.0)).into()
         );
@@ -332,8 +332,8 @@ mod test {
             TextureCoordinates {
                 left: 0.,
                 right: 0.5,
-                top: 0.75,
-                bottom: 1.0,
+                bottom: 0.75,
+                top: 1.0,
             },
             [0.0, 0.5, 0.75, 1.0].into()
         );
@@ -349,8 +349,8 @@ mod test {
                 tex_coords: TextureCoordinates {
                     left: 0.,
                     right: 0.5,
-                    top: 0.75,
-                    bottom: 1.0,
+                    bottom: 0.75,
+                    top: 1.0,
                 },
             },
             ((10., 40.), [5., 20.], [0.0, 0.5, 0.75, 1.0]).into()
@@ -367,8 +367,8 @@ mod test {
                 tex_coords: TextureCoordinates {
                     left: 0.,
                     right: 0.5,
-                    top: 0.75,
-                    bottom: 1.0,
+                    bottom: 0.75,
+                    top: 1.0,
                 },
             },
             ((10., 40.), [0.0, 0.5, 0.75, 1.0]).into()
