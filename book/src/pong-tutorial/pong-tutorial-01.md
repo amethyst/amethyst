@@ -162,10 +162,10 @@ to render the elements of the game.
 Success! Now we should be able to compile and run this code and get a window.
 It should look something like this:
 
-![Step one](./images/pong_tutorial/pong_01.png)
+![Step one](../images/pong_tutorial/pong_01.png)
 
 
 [st]: https://www.amethyst.rs/doc/master/doc/amethyst/trait.State.html
 [ap]: https://www.amethyst.rs/doc/master/doc/amethyst/struct.Application.html
-[gs]: ./getting_started.html
-[ss]: ./images/pong_tutorial/pong_spritesheet.png
+[gs]: ../getting-started.html
+[ss]: ../images/pong_tutorial/pong_spritesheet.png

@@ -169,3 +169,4 @@ The only thing that remains now is to use our `CustomGameDataBuilder` when build
 
 Those are the basics of creating a custom `GameData` structure. Now get out there and
 build your game!
+

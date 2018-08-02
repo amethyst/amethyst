@@ -68,10 +68,9 @@ Another great advantage of the ECS model is the ability to rapidly prototype
 a game simply by describing objects' characteristics in terms of creating
 entities and attaching components to them, with very little game code involved.
 And all of this data can be easily serialized or de-serialized into a
-human-friendly plain text format like [YAML][ya] (what we use) or [JSON][js].
+human-friendly plain text format like [RON][ron] (Json derivative).
 
-[ya]: http://www.yaml.org/
-[js]: http://www.json.org/
+[ron]: https://github.com/ron-rs/ron
 
 For more detailed explanations of entity-component-system designs, please
 [see this great post on Reddit][p1] and [this Stack Overflow answer][p2].
