@@ -20,7 +20,7 @@
     * [Channel](./animation/channel.md)
     * [Sampler](./animation/sampler.md)
     * [Definition](./animation/definition.md)
-* [Custom `GameData`](./game_data.md)
+* [Custom `GameData`](./game-data.md)
 * [Glossary](./glossary.md)
 * [Appendix A: Config Files](./appendices/a_config_files.md)
     * [Adding an Arena Config](./appendices/a_config_files/arena_config.md)

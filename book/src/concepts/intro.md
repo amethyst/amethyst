@@ -10,7 +10,7 @@ Though I would suggest reading this, as it can be hard to understand the example
 
 If you don't understand how something works in amethyst, knowing the concepts presented here will help you understand how some implementations are made.
 
-[pt]: ./pong-tutorial.html
+[pt]: ../pong-tutorial.html
 
 ## Chapters
 * [State][st]
@@ -22,11 +22,11 @@ If you don't understand how something works in amethyst, knowing the concepts pr
 * [Dispatcher][dispatch]
 * [EventChannel][evc]
 
-[st]: ./concepts/state.html
-[comp]: ./concepts/component.html
-[ent]: ./concepts/entity.html
-[res]: ./concepts/resource.html
-[world]: ./concepts/world.html
-[sys]: ./concepts/system.html
-[dispatch]: ./concepts/dispatcher.html
-[evc]: ./concepts/event-channel.html
+[st]: ./state.html
+[comp]: ./component.html
+[ent]: ./entity.html
+[res]: ./resource.html
+[world]: ./world.html
+[sys]: ./system.html
+[dispatch]: ./dispatcher.html
+[evc]: ./event-channel.html

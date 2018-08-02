@@ -19,19 +19,21 @@ and [Apache][al]. This means that the engine is given to you at no cost
 and its source code is completely yours to tinker with. The code is available on
 [GitHub][am]. Contributions and feature requests will always be welcomed!
 
-[ml]: https://github.com/amethyst/amethyst/blob/master/LICENSE-MIT
-[al]: https://github.com/amethyst/amethyst/blob/master/LICENSE-APACHE
+[ml]: https://github.com/amethyst/amethyst/blob/master/docs/LICENSE-MIT
+[al]: https://github.com/amethyst/amethyst/blob/master/docs/LICENSE-APACHE
 [am]: https://github.com/amethyst/amethyst/tree/master
 
 ## Getting started
 
-This book is split into three sections (more coming). This page is the first. The others are:
+This book is split into four sections (more coming). This page is the first. The others are:
 
 * [Getting Started][gs] – Prepare your computer for Amethyst development.
+* [Concepts][cc] - An overview of the concepts used in Amethyst. Recommended.
 * [Pong Tutorial][pt] – Build a basic pong game in Rust.
 * [Glossary][gl] - Defines special terms used throughout the book.
 
 [gs]: ./getting-started.html
+[cc]: ./concepts/intro.html
 [pt]: ./pong-tutorial.html
 [gl]: ./glossary.html
 

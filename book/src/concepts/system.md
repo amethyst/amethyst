@@ -120,7 +120,7 @@ Cool! Now that looks like something we'll actually do in our games!
 
 It may sometimes be interesting to manipulate the structure of entities in a system, such as creating new ones or modifying the component layout of existing ones. This kind of process is done using the `Entities<'a>` system data.
 
-> Requesting `Entities<'a>` does not impact performance, as it contains only immutable resources and therefore [does not block the dispatching](./concepts/dispatcher.html).
+> Requesting `Entities<'a>` does not impact performance, as it contains only immutable resources and therefore [does not block the dispatching](./dispatcher.html).
 
 ### Creating new entities in a system
 

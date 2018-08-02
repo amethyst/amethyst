@@ -27,12 +27,5 @@ But for your own project you'll probably want something like this:
 let path = "./resources/display_config.ron";
 ```
 
-## Chapters
-
-* [Opening (and closing!) a window][01]
-* [Drawing the paddles][02]
-
 [pong]: https://github.com/amethyst/amethyst/tree/develop/examples/pong
-[01]: ./pong-tutorial/pong-tutorial-01.html
-[02]: ./pong-tutorial/pong-tutorial-02.html
 
