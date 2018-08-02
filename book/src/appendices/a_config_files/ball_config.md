@@ -140,7 +140,4 @@ very easy with RON; we just add an additional level of nesting.
 This configuration sets the ball to be orange, while retaining the same size and velocity as the original 
 example.
 
-[Click here to continue to the last chapter, configuring paddles][2]
-
-[2]: ./appendices/a_config_files/paddle_configs.html
 [vec2]: https://docs.rs/cgmath/0.16.0/cgmath/struct.Vector2.html

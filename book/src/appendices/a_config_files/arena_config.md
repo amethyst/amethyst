@@ -111,11 +111,9 @@ arena: (
 )
 ```
 
-[Click here to continue to the next chapter][1]
 
-[config]: https://docs.rs/amethyst_config/0.5.0/amethyst_config/trait.Config.html
-[ecsbundle]: https://docs.rs/amethyst_core/0.1.0/amethyst_core/bundle/trait.ECSBundle.html
-[ecsbuild]: https://docs.rs/amethyst_core/0.1.0/amethyst_core/bundle/trait.ECSBundle.html#tymethod.build
-[1]: ./appendices/a_config_files/ball_config.html
+[config]: https://docs.rs/amethyst_config/0.6.0/amethyst_config/trait.Config.html
+[ecsbundle]: https://docs.rs/amethyst_core/0.2.0/amethyst_core/bundle/trait.ECSBundle.html
+[ecsbuild]: https://docs.rs/amethyst_core/0.2.0/amethyst_core/bundle/trait.ECSBundle.html#tymethod.build
 [serde_default]: https://serde.rs/attr-default.html
 [default]: https://doc.rust-lang.org/std/default/trait.Default.html
