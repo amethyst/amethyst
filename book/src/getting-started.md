@@ -36,7 +36,7 @@ In case you're doing this with `cargo`, here's what you need to do:
 
 * Add `amethyst` as dependency in your `Cargo.toml`.
 * Create a `resources` folder and put a `display_config.ron` in it.
-* (Optionnal) Copy the code from one of amethyst's examples.
+* (Optional) Copy the code from one of amethyst's examples.
 
 
 [cl]: https://github.com/amethyst/tools
