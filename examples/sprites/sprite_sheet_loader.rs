@@ -109,7 +109,7 @@ fn create_sprite(
     Sprite {
         width: sprite_w,
         height: sprite_h,
-        offsets: [0.0, 0.0],
+        offsets: [sprite_w / 2.0, sprite_h / 2.0],
         tex_coords,
     }
 }

@@ -55,7 +55,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
         // we don't need to multiply the Y offset because we are only drawing the sprites in 1 row.
         let sprite_count = sprite_sheet.sprites.len();
         let sprite_offset_x = sprite_count as f32 * sprite_w / 2.;
-        let sprite_offset_y = sprite_h / 2.;
+        let sprite_offset_y = sprite_h;
 
         let sprite_sheet_handle = {
             let loader = world.read_resource::<Loader>();
@@ -97,6 +97,42 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
             let sprite_render_info = SpriteRenderInfo {
                 sprite_sheet: sprite_sheet_handle.clone(),
                 sprite_number: i % sprite_count,
+                flip_horizontal: false,
+                flip_vertical: false,
+            };
+
+            debug!("sprite_render_info: `{:?}`", sprite_render_info);
+
+            let entity = world
+                .create_entity()
+                // Render info of the default sprite
+                .with(sprite_render_info)
+                // Shift sprite to some part of the window
+                .with(sprite_transform)
+                // Used by the engine to compute and store the rendered position.
+                .with(GlobalTransform::default())
+                .build();
+
+            // Store the entity
+            self.entities.push(entity);
+        }
+
+        // Create an entity per sprite.
+        for i in 0..sprite_count {
+            let mut sprite_transform = Transform::default();
+            sprite_transform.translation =
+                Vector3::new(i as f32 * sprite_w, sprite_offset_y + sprite_h * 0.5, 0.);
+
+            // This combines multiple `Transform`ations.
+            // You need to `use amethyst::core::cgmath::Transform`;
+
+            CgTransform::<Point3<f32>>::concat_self(&mut sprite_transform, &common_transform);
+
+            let sprite_render_info = SpriteRenderInfo {
+                sprite_sheet: sprite_sheet_handle.clone(),
+                sprite_number: i % sprite_count,
+                flip_horizontal: (i % 2) & 1 == 1,
+                flip_vertical: ((i >> 1) % 2) & 1 == 1,
             };
 
             debug!("sprite_render_info: `{:?}`", sprite_render_info);

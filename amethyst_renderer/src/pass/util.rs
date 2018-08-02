@@ -41,6 +41,8 @@ pub(crate) struct VertexArgs {
 pub(crate) struct SpriteArgs {
     sprite_dimensions: vec2,
     offsets: vec2,
+    flip_horizontal: boolean,
+    flip_vertical: boolean,
 }
 
 #[repr(C, align(16))]
@@ -258,10 +260,17 @@ pub(crate) fn set_vertex_args(
     effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
 }
 
-pub(crate) fn set_sprite_args(effect: &mut Effect, encoder: &mut Encoder, sprite: &Sprite) {
+pub(crate) fn set_sprite_args(
+    effect: &mut Effect,
+    encoder: &mut Encoder,
+    sprite: &Sprite,
+    sprite_render_info: &SpriteRenderInfo,
+) {
     let geometry_args = SpriteArgs {
         sprite_dimensions: [sprite.width, sprite.height].into(),
         offsets: sprite.offsets.into(),
+        flip_horizontal: sprite_render_info.flip_horizontal.into(),
+        flip_vertical: sprite_render_info.flip_vertical.into(),
     };
     effect.update_constant_buffer("SpriteArgs", &geometry_args.std140(), encoder);
 }
@@ -358,18 +367,15 @@ pub(crate) fn draw_sprite(
         return;
     }
 
+    let sprite = &sprite_sheet.sprites[sprite_render_info.sprite_number];
+
     // Sprite vertex shader
     set_vertex_args(effect, encoder, camera, global.unwrap());
-    set_sprite_args(
-        effect,
-        encoder,
-        &sprite_sheet.sprites[sprite_render_info.sprite_number],
-    );
+    set_sprite_args(effect, encoder, sprite, sprite_render_info);
 
     add_texture(effect, texture.unwrap());
 
     // Set texture coordinates
-    let sprite = &sprite_sheet.sprites[sprite_render_info.sprite_number];
     let tex_coords = &sprite.tex_coords;
     effect.update_constant_buffer(
         "AlbedoOffset",

@@ -117,6 +117,10 @@ pub struct SpriteRenderInfo {
     pub sprite_sheet: SpriteSheetHandle,
     /// Index of the sprite on the sprite sheet
     pub sprite_number: usize,
+    /// Whether the sprite should be flipped horizontally
+    pub flip_horizontal: bool,
+    /// Whether the sprite should be flipped horizontally
+    pub flip_vertical: bool,
 }
 
 impl Component for SpriteRenderInfo {
