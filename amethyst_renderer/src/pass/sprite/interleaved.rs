@@ -13,7 +13,7 @@ use mtl::MaterialTextureSet;
 use pass::util::{draw_sprite, get_camera, setup_textures, SpriteArgs, VertexArgs};
 use pipe::pass::{Pass, PassData};
 use pipe::{DepthMode, Effect, NewEffect};
-use sprite::{SpriteRenderInfo, SpriteSheet};
+use sprite::{SpriteRender, SpriteSheet};
 use tex::Texture;
 use types::{Encoder, Factory};
 use visibility::Visibility;
@@ -54,7 +54,7 @@ impl<'a> PassData<'a> for DrawSprite {
         Read<'a, AssetStorage<Texture>>,
         Read<'a, MaterialTextureSet>,
         Option<Read<'a, Visibility>>,
-        ReadStorage<'a, SpriteRenderInfo>,
+        ReadStorage<'a, SpriteRender>,
         ReadStorage<'a, GlobalTransform>,
     );
 }
@@ -94,18 +94,18 @@ impl Pass for DrawSprite {
             tex_storage,
             material_texture_set,
             visibility,
-            sprite_render_info,
+            sprite_render,
             global,
         ): <Self as PassData<'a>>::Data,
     ) {
         let camera = get_camera(active, &camera, &global);
 
         match visibility {
-            None => for (sprite_render_info, global) in (&sprite_render_info, &global).join() {
+            None => for (sprite_render, global) in (&sprite_render, &global).join() {
                 draw_sprite(
                     encoder,
                     effect,
-                    sprite_render_info,
+                    sprite_render,
                     &sprite_sheet_storage,
                     &tex_storage,
                     &material_texture_set,
@@ -114,13 +114,13 @@ impl Pass for DrawSprite {
                 );
             },
             Some(ref visibility) => {
-                for (sprite_render_info, global, _) in
-                    (&sprite_render_info, &global, &visibility.visible_unordered).join()
+                for (sprite_render, global, _) in
+                    (&sprite_render, &global, &visibility.visible_unordered).join()
                 {
                     draw_sprite(
                         encoder,
                         effect,
-                        sprite_render_info,
+                        sprite_render,
                         &sprite_sheet_storage,
                         &tex_storage,
                         &material_texture_set,
@@ -130,11 +130,11 @@ impl Pass for DrawSprite {
                 }
 
                 for entity in &visibility.visible_ordered {
-                    if let Some(sprite_render_info) = sprite_render_info.get(*entity) {
+                    if let Some(sprite_render) = sprite_render.get(*entity) {
                         draw_sprite(
                             encoder,
                             effect,
-                            sprite_render_info,
+                            sprite_render,
                             &sprite_sheet_storage,
                             &tex_storage,
                             &material_texture_set,

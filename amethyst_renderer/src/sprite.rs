@@ -112,7 +112,7 @@ impl From<[f32; 4]> for TextureCoordinates {
 /// Instead of using a `Mesh` on a `DrawFlat` render pass, we can use a simpler set of shaders to
 /// render sprites. This struct carries the information necessary for the sprite pass.
 #[derive(Clone, Debug, PartialEq)]
-pub struct SpriteRenderInfo {
+pub struct SpriteRender {
     /// Handle to the sprite sheet of the sprite
     pub sprite_sheet: SpriteSheetHandle,
     /// Index of the sprite on the sprite sheet
@@ -123,7 +123,7 @@ pub struct SpriteRenderInfo {
     pub flip_vertical: bool,
 }
 
-impl Component for SpriteRenderInfo {
+impl Component for SpriteRender {
     type Storage = VecStorage<Self>;
 }
 

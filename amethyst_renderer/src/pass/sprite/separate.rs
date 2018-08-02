@@ -13,7 +13,7 @@ use mtl::MaterialTextureSet;
 use pass::util::{draw_sprite, get_camera, setup_textures, SpriteArgs, VertexArgs};
 use pipe::pass::{Pass, PassData};
 use pipe::{DepthMode, Effect, NewEffect};
-use sprite::{SpriteRenderInfo, SpriteSheet};
+use sprite::{SpriteRender, SpriteSheet};
 use tex::Texture;
 use types::{Encoder, Factory};
 use visibility::Visibility;
@@ -55,7 +55,7 @@ impl<'a> PassData<'a> for DrawSpriteSeparate {
         Read<'a, AssetStorage<Texture>>,
         Read<'a, MaterialTextureSet>,
         Option<Read<'a, Visibility>>,
-        ReadStorage<'a, SpriteRenderInfo>,
+        ReadStorage<'a, SpriteRender>,
         ReadStorage<'a, GlobalTransform>,
     );
 }
@@ -96,20 +96,20 @@ impl Pass for DrawSpriteSeparate {
             tex_storage,
             material_texture_set,
             visibility,
-            sprite_render_info,
+            sprite_render,
             global,
         ): <Self as PassData<'a>>::Data,
     ) {
         let camera = get_camera(active, &camera, &global);
 
         match visibility {
-            None => for (_entity, sprite_render_info, global) in
-                (&*entities, &sprite_render_info, &global).join()
+            None => for (_entity, sprite_render, global) in
+                (&*entities, &sprite_render, &global).join()
             {
                 draw_sprite(
                     encoder,
                     effect,
-                    sprite_render_info,
+                    sprite_render,
                     &sprite_sheet_storage,
                     &tex_storage,
                     &material_texture_set,
@@ -118,9 +118,9 @@ impl Pass for DrawSpriteSeparate {
                 );
             },
             Some(ref visibility) => {
-                for (_entity, sprite_render_info, global, _) in (
+                for (_entity, sprite_render, global, _) in (
                     &*entities,
-                    &sprite_render_info,
+                    &sprite_render,
                     &global,
                     &visibility.visible_unordered,
                 ).join()
@@ -128,7 +128,7 @@ impl Pass for DrawSpriteSeparate {
                     draw_sprite(
                         encoder,
                         effect,
-                        sprite_render_info,
+                        sprite_render,
                         &sprite_sheet_storage,
                         &tex_storage,
                         &material_texture_set,
@@ -138,11 +138,11 @@ impl Pass for DrawSpriteSeparate {
                 }
 
                 for entity in &visibility.visible_ordered {
-                    if let Some(sprite_render_info) = sprite_render_info.get(*entity) {
+                    if let Some(sprite_render) = sprite_render.get(*entity) {
                         draw_sprite(
                             encoder,
                             effect,
-                            sprite_render_info,
+                            sprite_render,
                             &sprite_sheet_storage,
                             &tex_storage,
                             &material_texture_set,

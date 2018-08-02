@@ -13,7 +13,7 @@ use mtl::{Material, MaterialDefaults, MaterialTextureSet, TextureOffset};
 use pass::set_skinning_buffers;
 use pipe::{Effect, EffectBuilder};
 use skinning::JointTransforms;
-use sprite::{Sprite, SpriteRenderInfo, SpriteSheet};
+use sprite::{Sprite, SpriteRender, SpriteSheet};
 use tex::Texture;
 use types::{Encoder, Slice};
 use vertex::Attributes;
@@ -264,13 +264,13 @@ pub(crate) fn set_sprite_args(
     effect: &mut Effect,
     encoder: &mut Encoder,
     sprite: &Sprite,
-    sprite_render_info: &SpriteRenderInfo,
+    sprite_render: &SpriteRender,
 ) {
     let geometry_args = SpriteArgs {
         sprite_dimensions: [sprite.width, sprite.height].into(),
         offsets: sprite.offsets.into(),
-        flip_horizontal: sprite_render_info.flip_horizontal.into(),
-        flip_vertical: sprite_render_info.flip_vertical.into(),
+        flip_horizontal: sprite_render.flip_horizontal.into(),
+        flip_vertical: sprite_render.flip_vertical.into(),
     };
     effect.update_constant_buffer("SpriteArgs", &geometry_args.std140(), encoder);
 }
@@ -328,7 +328,7 @@ pub(crate) fn draw_mesh(
 pub(crate) fn draw_sprite(
     encoder: &mut Encoder,
     effect: &mut Effect,
-    sprite_render_info: &SpriteRenderInfo,
+    sprite_render: &SpriteRender,
     sprite_sheet_storage: &AssetStorage<SpriteSheet>,
     tex_storage: &AssetStorage<Texture>,
     material_texture_set: &MaterialTextureSet,
@@ -339,11 +339,11 @@ pub(crate) fn draw_sprite(
         return;
     }
 
-    let sprite_sheet = sprite_sheet_storage.get(&sprite_render_info.sprite_sheet);
+    let sprite_sheet = sprite_sheet_storage.get(&sprite_render.sprite_sheet);
     if sprite_sheet.is_none() {
         warn!(
-            "Sprite sheet not loaded for sprite_render_info: `{:?}`.",
-            sprite_render_info
+            "Sprite sheet not loaded for sprite_render: `{:?}`.",
+            sprite_render
         );
         return;
     }
@@ -367,11 +367,11 @@ pub(crate) fn draw_sprite(
         return;
     }
 
-    let sprite = &sprite_sheet.sprites[sprite_render_info.sprite_number];
+    let sprite = &sprite_sheet.sprites[sprite_render.sprite_number];
 
     // Sprite vertex shader
     set_vertex_args(effect, encoder, camera, global.unwrap());
-    set_sprite_args(effect, encoder, sprite, sprite_render_info);
+    set_sprite_args(effect, encoder, sprite, sprite_render);
 
     add_texture(effect, texture.unwrap());
 

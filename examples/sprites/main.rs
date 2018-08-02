@@ -23,7 +23,7 @@ use amethyst::input::{is_close_requested, is_key_down, InputBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::{
     Camera, ColorMask, DrawSprite, Event, MaterialTextureSet, Projection, ScreenDimensions,
-    SpriteRenderInfo, SpriteSheet, SpriteSheetHandle, VirtualKeyCode, ALPHA,
+    SpriteRender, SpriteSheet, SpriteSheetHandle, VirtualKeyCode, ALPHA,
 };
 use amethyst::ui::UiBundle;
 
@@ -112,19 +112,19 @@ impl Example {
 
             CgTransform::<Point3<f32>>::concat_self(&mut sprite_transform, &common_transform);
 
-            let sprite_render_info = SpriteRenderInfo {
+            let sprite_render = SpriteRender {
                 sprite_sheet: sprite_sheet_handle.clone(),
                 sprite_number: i % sprite_count,
                 flip_horizontal: false,
                 flip_vertical: false,
             };
 
-            debug!("sprite_render_info: `{:?}`", sprite_render_info);
+            debug!("sprite_render: `{:?}`", sprite_render);
 
             let entity = world
                 .create_entity()
                 // Render info of the default sprite
-                .with(sprite_render_info)
+                .with(sprite_render)
                 // Shift sprite to some part of the window
                 .with(sprite_transform)
                 // Used by the engine to compute and store the rendered position.
@@ -152,19 +152,19 @@ impl Example {
 
             CgTransform::<Point3<f32>>::concat_self(&mut sprite_transform, &common_transform);
 
-            let sprite_render_info = SpriteRenderInfo {
+            let sprite_render = SpriteRender {
                 sprite_sheet: sprite_sheet_handle.clone(),
                 sprite_number: i % sprite_count,
                 flip_horizontal: (i % 2) & 1 == 1,
                 flip_vertical: ((i >> 1) % 2) & 1 == 1,
             };
 
-            debug!("sprite_render_info: `{:?}`", sprite_render_info);
+            debug!("sprite_render: `{:?}`", sprite_render);
 
             let entity = world
                 .create_entity()
                 // Render info of the default sprite
-                .with(sprite_render_info)
+                .with(sprite_render)
                 // Shift sprite to some part of the window
                 .with(sprite_transform)
                 // Used by the engine to compute and store the rendered position.
