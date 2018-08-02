@@ -85,7 +85,7 @@ Most of the time, you will want to perform logic on all entities with a specific
 This is possible using the `join` method. You may be familiar with joining operations if you have ever worked with databases. The `join` method takes multiple storages, and iterates over all entities that have a component in each of those storages.
 It works like an "AND" gate. It will return an iterator containing a tuple of all the requested components if they are **ALL** on the same entity.
 
-If you join with components A,B and C, only the entities that have **ALL** those components will be considered.
+If you join with components A, B and C, only the entities that have **ALL** those components will be considered.
 
 Needless to say that you can use it with only one storage to iterate over all entities with a specific component.
 
@@ -190,7 +190,7 @@ This system does the same thing as the previous `MakeObjectsFall`, but also clea
 
 ### Adding or removing components
 
-You can also insert or removes components from a specific entity.
+You can also insert or remove components from a specific entity.
 To do that, you need to get a mutable storage of the component you want to modify, and simply do:
 
 ```rust,ignore
@@ -238,7 +238,7 @@ impl<'a> System<'a> for MyFirstSystem {
 
 ## The setup method
 
-Systems have a method called setup which is called a single time, before the any of the system runs.
+Systems have a method called setup which is called a single time, before any of the system runs.
 Here is how to use it:
 ```rust,ignore
     fn setup(&mut self, res: &mut Resources) {
