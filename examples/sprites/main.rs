@@ -23,9 +23,11 @@ use amethyst::input::{is_close_requested, is_key_down, InputBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::{
     Camera, ColorMask, DrawSprite, Event, MaterialTextureSet, Projection, ScreenDimensions,
-    SpriteRenderInfo, SpriteSheet, VirtualKeyCode, ALPHA,
+    SpriteRenderInfo, SpriteSheet, SpriteSheetHandle, VirtualKeyCode, ALPHA,
 };
 use amethyst::ui::UiBundle;
+
+use sprite::SpriteSheetDefinition;
 
 #[derive(Debug, Default)]
 struct Example {
@@ -39,32 +41,14 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
 
         initialise_camera(world);
 
-        let sprite_sheet_texture = png_loader::load("texture/bat.32x32.png", world);
-
-        let sprite_w = 32.;
-        let sprite_h = 32.;
-        let sprite_sheet_definition =
-            sprite::SpriteSheetDefinition::new(sprite_w, sprite_h, 2, 6, false);
-
-        let sprite_sheet_index = 0;
-        let sprite_sheet = sprite_sheet_loader::load(sprite_sheet_index, &sprite_sheet_definition);
+        let (sprite_sheet_handle, sprite_count, sprite_w, sprite_h) = load_sprite_sheet(world);
 
         // Calculate offset to centre all sprites
         //
         // The X offset needs to be multiplied because we are drawing the sprites across the window;
         // we don't need to multiply the Y offset because we are only drawing the sprites in 1 row.
-        let sprite_count = sprite_sheet.sprites.len();
         let sprite_offset_x = sprite_count as f32 * sprite_w / 2.;
         let sprite_offset_y = sprite_h;
-
-        let sprite_sheet_handle = {
-            let loader = world.read_resource::<Loader>();
-            loader.load_from_data(
-                sprite_sheet,
-                (),
-                &world.read_resource::<AssetStorage<SpriteSheet>>(),
-            )
-        };
 
         let (width, height) = {
             let dim = world.read_resource::<ScreenDimensions>();
@@ -78,12 +62,46 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
             0.,
         );
 
-        // Store sprite sheet texture in the world's `MaterialTextureSet` resource (singleton hash
-        // map)
-        world
-            .write_resource::<MaterialTextureSet>()
-            .insert(sprite_sheet_index, sprite_sheet_texture);
+        self.draw_sprites_regular(
+            world,
+            &common_transform,
+            sprite_sheet_handle.clone(),
+            sprite_count,
+            sprite_w,
+        );
+        self.draw_sprites_flipped(
+            world,
+            &common_transform,
+            sprite_sheet_handle,
+            sprite_count,
+            sprite_w,
+            sprite_h,
+        );
+    }
 
+    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
+        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+            Trans::Quit
+        } else {
+            Trans::None
+        }
+    }
+
+    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+        data.data.update(&data.world);
+        Trans::None
+    }
+}
+
+impl Example {
+    fn draw_sprites_regular(
+        &mut self,
+        world: &mut World,
+        common_transform: &Transform,
+        sprite_sheet_handle: SpriteSheetHandle,
+        sprite_count: usize,
+        sprite_w: f32,
+    ) {
         // Create an entity per sprite.
         for i in 0..sprite_count {
             let mut sprite_transform = Transform::default();
@@ -116,15 +134,21 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
             // Store the entity
             self.entities.push(entity);
         }
+    }
 
+    fn draw_sprites_flipped(
+        &mut self,
+        world: &mut World,
+        common_transform: &Transform,
+        sprite_sheet_handle: SpriteSheetHandle,
+        sprite_count: usize,
+        sprite_w: f32,
+        sprite_h: f32,
+    ) {
         // Create an entity per sprite.
         for i in 0..sprite_count {
             let mut sprite_transform = Transform::default();
-            sprite_transform.translation =
-                Vector3::new(i as f32 * sprite_w, sprite_offset_y + sprite_h * 0.5, 0.);
-
-            // This combines multiple `Transform`ations.
-            // You need to `use amethyst::core::cgmath::Transform`;
+            sprite_transform.translation = Vector3::new(i as f32 * sprite_w, sprite_h * 1.5, 0.);
 
             CgTransform::<Point3<f32>>::concat_self(&mut sprite_transform, &common_transform);
 
@@ -151,19 +175,40 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
             self.entities.push(entity);
         }
     }
+}
 
-    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-            Trans::Quit
-        } else {
-            Trans::None
-        }
-    }
+/// Loads and returns a handle to a sprite sheet.
+///
+/// The sprite sheet consists of two parts:
+///
+/// * texture: the pixel data
+/// * `SpriteSheet`: the layout information of the sprites on the image
+fn load_sprite_sheet(world: &mut World) -> (SpriteSheetHandle, usize, f32, f32) {
+    let sprite_sheet_index = 0;
 
-    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
-        data.data.update(&data.world);
-        Trans::None
-    }
+    // Store texture in the world's `MaterialTextureSet` resource (singleton hash map)
+    let texture = png_loader::load("texture/bat.32x32.png", world);
+    world
+        .write_resource::<MaterialTextureSet>()
+        .insert(sprite_sheet_index, texture);
+
+    let sprite_w = 32.;
+    let sprite_h = 32.;
+    let sprite_sheet_definition = SpriteSheetDefinition::new(sprite_w, sprite_h, 2, 6, false);
+
+    let sprite_sheet = sprite_sheet_loader::load(sprite_sheet_index, &sprite_sheet_definition);
+    let sprite_count = sprite_sheet.sprites.len();
+
+    let sprite_sheet_handle = {
+        let loader = world.read_resource::<Loader>();
+        loader.load_from_data(
+            sprite_sheet,
+            (),
+            &world.read_resource::<AssetStorage<SpriteSheet>>(),
+        )
+    };
+
+    (sprite_sheet_handle, sprite_count, sprite_w, sprite_h)
 }
 
 /// This method initialises a camera which will view our sprite.
