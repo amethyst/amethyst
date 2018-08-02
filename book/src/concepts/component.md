@@ -37,14 +37,15 @@ impl Component for MyComponent {
 
 `Component`s, in contrast with popular belief, should not be stored directly inside of a `Entity`.
 
-They are instead stored in different types of `Storage`, which all have different performance strategy.
+They are instead stored in different types of `Storage`, which all have different performance strategies.
 
 When implementing `Component` for a type, you have to specify which storage strategy it should use.
 
 Here's a comparison of the most used ones:
-* `VecStorage`: Elements are stored into a contiguous array. Uses more memory than `DenseVecStorage` but is more performant when you use a `Component` type a lot.
 * `DenseVecStorage`: Elements are stored in a contiguous array. No empty space is left between `Component`s, allowing a lowered memory usage.
   This is less performant than `VecStorage`.
+* `VecStorage`: Elements are stored into a contiguous array. Uses more memory than `DenseVecStorage` but is more performant when you use a `Component` type a lot.
+  Only use this when you know that a LOT of your entities are going to have that `Component` type. (More than 90%, for example).
 * `FlaggedStorage`: Used to keep track of changes of a component. Useful for caching purposes.
 
 For more information, see the [specs storage reference](https://docs.rs/specs/latest/specs/storage/index.html).

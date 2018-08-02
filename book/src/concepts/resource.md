@@ -52,8 +52,8 @@ Other ways of fetching a resource will be covered in the system section of the b
 
 ## Deleting a resource
 
-At the time of writing this book, you can't.
-If you have a use case where you need to delete a resource, you probably need to use a custom `GameData` or multiple `World`.
+There is no method to properly "delete" a resource added to the world.
+The usual method to achieve something similar is to add an `Option<MyResource>` and to set it to `None` when you want to delete it.
 
 ## Storages, part 2
 

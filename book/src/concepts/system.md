@@ -205,7 +205,7 @@ Keep in mind that inserting a component on an entity that already has a componen
 
 ## The SystemData trait
 
-While this is a rarely useful, it is possible to create custom `SystemData` types.
+While this is rarely useful, it is possible to create custom `SystemData` types.
 
 The `Dispatcher` populates the `SystemData` on every call of the `run` method. To do that, your `SystemData` type must implement the trait `amethyst::ecs::SystemData` in order to have it be valid.
 

@@ -69,7 +69,7 @@ Internally, the `World` interacts with `EntitiesRes`, which is a resource holdin
 
 ```rust,ignore
     // Create an `Entity` with `MyComponent`.
-    // `World` will implicitely write to the component's storage in `Resources`.
+    // `World` will implicitly write to the component's storage in `Resources`.
     let my_entity = world.create_entity().with(MyComponent).build();
     
     // Get a ReadStorage<MyComponent>

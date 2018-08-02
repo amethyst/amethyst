@@ -11,7 +11,7 @@ A game stage is a *general* and *global* section of the game.
 Let's go with an example.
 You are making a pong game.
 
-* When the user opens up the game, it first loads all the assets and shows a pretty loading screen.
+* When the user opens up the game, it first loads all the assets and shows a loading screen.
 * Then, the main menu shows up, asking you if you want to start a game in single or multiplayer.
 * Once you select an option, the game displays the paddles and the ball and starts playing.
 * By pressing escape, you can toggle the "pause" menu.

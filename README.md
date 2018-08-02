@@ -23,7 +23,7 @@ Amethyst is a game engine aiming to be fast and as configurable as possible.
 
 ## Principles
 
-Those principles are what make amethyst unique and competitive in the world of game engines.
+These principles are what make amethyst unique and competitive in the world of game engines.
 
 * Massively parallel architecture.
 * Powered by a correct [Entity Component System][ecs] model.
@@ -38,7 +38,7 @@ Those principles are what make amethyst unique and competitive in the world of g
 ### Extreme Multithreading
 
 Amethyst is based over a very powerful parallel [ecs] called specs.
-This allows games built with amethyst to maximize the processing power usage to make it run as smooth and as fast as possible, without the headache of multithread programming.
+This allows games built with Amethyst to maximize the processing power usage to make it run as smooth and as fast as possible, without the headache of multithread programming.
 
 ### Clean
 
@@ -46,11 +46,11 @@ By design, the amethyst engine encourages you to write clean and reusable code f
 share useful components, thus reducing development time and cost.
 
 Using the [ecs] architecture, the code of games can be cleanly divided between data and behaviour, making it easy to understand what is going on,
-even if the game is running on a massive 64 threads processor.
+even if the game is running on a massive 64 cores processor.
 
 ### Community
 
-While we may not be feature-packed (yet!), we all strongly believe that the community-oriented side of amethyst will make it thrive forward!
+While we may not be feature-packed (yet!), we all strongly believe that the community-oriented side of amethyst will thrive as we move forward!
 
 ## Features
 
@@ -84,13 +84,13 @@ $ cargo run --example name_of_example
 ```
 All available examples are listed under [examples][ex].
 
-Our most advanced example is currently called pong. It is a pong game, as you guessed it.
+Our most advanced example is currently called pong. It is a pong game, as you may have guessed it.
 ```
 $ cargo run --example pong
 ```
 
-There are quite a few prototype games that were made with amethyst. A list will be available soon.
-While we create this list, feel free to join our discord and ask about which projects are currently being made with amethyst.
+There are quite a few prototype games that were made with Amethyst. A list will be available soon.
+While we create this list, feel free to join our discord and ask about which projects are currently being made with Amethyst.
 
 For a full-blown "Hello World" tutorial check out the [Getting Started][gs] chapter
 in the book.
@@ -138,7 +138,7 @@ We do not support anything other than the most recent Rust stable release. Use n
 
 Please check out the [FAQ][faq] before asking.
 
-If you have a question, just ask on [Gitter][gt] or [Discord][di] (most active) and we'll help you.
+If you have a question, just ask on [Discord][di] (most active) or [Gitter][gt] and we'll help you.
 
 Other places you may want to check out are [r/rust_gamedev][rg] and [#rust-gamedev IRC][irc].
 

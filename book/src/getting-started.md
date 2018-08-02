@@ -19,7 +19,7 @@ You can either use the [Amethyst CLI][cl] or cargo to set up your project.
 If you wish to use the Amethyst cli tool, you can install it like so
 
 ```norun
-cargo install amethyst_cli
+cargo install amethyst_tools
 ```
 
 and then run
