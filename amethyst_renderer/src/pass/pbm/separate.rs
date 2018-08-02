@@ -32,6 +32,9 @@ static ATTRIBUTES: [Attributes<'static>; 4] = [
 ];
 
 /// Draw mesh with physically based lighting
+///
+/// See the [crate level documentation](index.html) for information about interleaved and separate
+/// passes.
 #[derive(Default, Clone, Debug, PartialEq)]
 pub struct DrawPbmSeparate {
     skinning: bool,

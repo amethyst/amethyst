@@ -1,8 +1,6 @@
 pub use self::interleaved::DrawSprite;
-pub use self::separate::DrawSpriteSeparate;
 
 mod interleaved;
-mod separate;
 
 use pass::util::TextureType;
 

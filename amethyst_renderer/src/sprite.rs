@@ -249,6 +249,11 @@ impl<'a> WithSpriteRender for EntityBuilder<'a> {
 }
 
 /// Sprite sheets used by sprite render animations
+///
+/// In sprite animations, it is plausible to switch the `SpriteSheet` during the animation.
+/// `Animation`s require their primitives to be `Copy`. However, `Handle<SpriteSheet>`s are `Clone`
+/// but not `Copy`. Therefore, to allow switching of the `SpriteSheet`, we use a `Copy` ID, and map
+/// that to the sprite sheet handle so that it can be looked up when being sampled in the animation.
 #[derive(Debug, Default)]
 pub struct SpriteSheetSet {
     sprite_sheets: FnvHashMap<u64, SpriteSheetHandle>,
