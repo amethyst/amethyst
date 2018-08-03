@@ -36,3 +36,7 @@ pub mod transform;
 
 /// A rayon thread pool wrapped in an `Arc`. This should be used as resource in `World`.
 pub type ThreadPool = Arc<rayon::ThreadPool>;
+
+pub fn always_true() -> bool {
+    true
+}
