@@ -211,19 +211,19 @@ impl<'a> System<'a> for MouseFocusUpdateSystem {
 // System which hides the cursor when the window is focused
 pub struct CursorHideSystem {
     event_reader: Option<ReaderId<Event>>,
-    hidden: bool,
+    released: bool,
 }
 
 impl CursorHideSystem {
     pub fn new() -> CursorHideSystem {
         CursorHideSystem { 
             event_reader: None,
-            hidden: true,
+            released: false,
         }
     }
 
     pub fn toggle(&mut self) {
-        self.hidden = !self.hidden;
+        self.released = !self.released;
     }
 }
 
@@ -237,7 +237,7 @@ impl<'a> System<'a> for CursorHideSystem {
             match *event {
                 Event::WindowEvent { ref event, .. } => match event {
                     &WindowEvent::Focused(focused) => {
-                        if focused && self.hidden {
+                        if focused && !self.released {
                             grab_cursor(&mut msg)
                         } else {
                             release_cursor(&mut msg)
