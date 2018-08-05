@@ -141,13 +141,8 @@ We will talk about what `SystemData` is in the system chapter.
 
 ## More
 
-Normally, `World` is created and updated automatically by the `State`.
-If you need to manually create it, please refer to the methods in the [specs documentation](https://docs.rs/specs/latest/specs/world/struct.World.html).
-
-If you are implementing the `update` method in your `State`, **YOU NEED TO ADD THE FOLLOWING AT THE END OF THE METHOD**:
-
-```rust,ignore
-   world.maintain();
-```
+Because of an implementation detail, for the world to be updated you need to call `state_data.data.update(&state_data.world)` inside of the state update method.
 If you do not do this, the world will not update and the game will look like it froze.
 If you have a bug where nothing happens at all, this is the first thing you should check!
+
+*NOTE: This will no longer be necessary in future release 0.9 of Amethyst.*

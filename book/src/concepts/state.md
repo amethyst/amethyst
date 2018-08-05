@@ -68,7 +68,7 @@ A `State` contains methods that reflect the most commons of those events:
 * update: This method is called as often as possible by the engine.
 
 
-**IMPORTANT: If you use the update method in your state, you need to manually call `world.dispatch()`. For more information, read the "More" section at the end of the world chapter [here](./world.md#more).**
+**IMPORTANT: In order to have the game working, you NEED to implement the `update` method and have it call `data.data.update(&mut data.world)`. This is an implementation detail and will no longer be necessary in future release 0.9 of Amethyst. For more information, read the "More" section at the end of the world chapter [here](./world.md#more).**
 
 ## Game Data
 
