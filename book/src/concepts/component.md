@@ -23,12 +23,13 @@ enum Shape {
     Sphere { radius: f32 },
     RectangularPrism { height: f32, width: f32, depth: f32 },
 }
+
 pub struct Shape {
     shape: Shape,
 }
 
-pub struct Material {
-    material_name: String,
+pub struct Content {
+    content_name: String,
 }
 ```
 
@@ -36,11 +37,12 @@ and then you implement the `Component` trait for them:
 
 ```rust,ignore
 use amethyst::ecs::{Component, VecStorage};
+
 impl Component for Shape {
     type Storage = VecStorage<Self>;
 }
 
-impl Component for Material {
+impl Component for Content {
     type Storage = VecStorage<Self>;
 }
 ```
