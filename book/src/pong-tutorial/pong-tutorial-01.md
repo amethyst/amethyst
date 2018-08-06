@@ -21,7 +21,6 @@ use amethyst::input::{is_close_requested, is_key_down};
 use amethyst::prelude::*;
 use amethyst::renderer::{DisplayConfig, DrawFlat, Event, Pipeline,
                          PosTex, RenderBundle, Stage, VirtualKeyCode};
-use amethyst::LoggerConfig;
 ```
 
 We'll be learning more about these as we go through this tutorial. The prelude
@@ -79,8 +78,8 @@ fn main() -> amethyst::Result<()> {
 }
 ```
 
-Inside `main()` we first start the default amethyst logger so we can see
-errors, warnings and debug messages while the program is running.
+Inside `main()` we first start the amethyst logger with a default `LoggerConfig`
+so we can see errors, warnings and debug messages while the program is running.
 
 ```rust,ignore
 amethyst::start_logger(Default::default());
