@@ -12,15 +12,14 @@ mod systems;
 
 use std::time::Duration;
 
-use amethyst::Result;
 use amethyst::audio::AudioBundle;
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::transform::TransformBundle;
 use amethyst::ecs::prelude::{Component, DenseVecStorage};
 use amethyst::input::InputBundle;
 use amethyst::prelude::*;
-use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline, PosTex, RenderBundle, Stage};
-use amethyst::ui::{DrawUi, UiBundle};
+use amethyst::renderer::{DrawFlat, PosTex};
+use amethyst::ui::UiBundle;
 
 use audio::Music;
 use bundle::PongBundle;
@@ -33,24 +32,17 @@ const AUDIO_MUSIC: &'static [&'static str] = &[
 const AUDIO_BOUNCE: &'static str = "audio/bounce.ogg";
 const AUDIO_SCORE: &'static str = "audio/score.ogg";
 
-fn main() {
-    if let Err(e) = run() {
-        println!("Failed to execute example: {}", e);
-        ::std::process::exit(1);
-    }
-}
+fn main() -> amethyst::Result<()> {
+    amethyst::start_logger(Default::default());
 
-fn run() -> Result<()> {
     use pong::Pong;
 
     let display_config_path = format!(
-        "{}/examples/pong/resources/display.ron",
+        "{}/examples/appendix_a/resources/display.ron",
         env!("CARGO_MANIFEST_DIR")
     );
-    let display_config = DisplayConfig::load(display_config_path);
-
     let key_bindings_path = format!(
-        "{}/examples/pong/resources/input.ron",
+        "{}/examples/appendix_a/resources/input.ron",
         env!("CARGO_MANIFEST_DIR")
     );
 
@@ -59,23 +51,18 @@ fn run() -> Result<()> {
         env!("CARGO_MANIFEST_DIR")
     );
     let assets_dir = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
-    let pipe = Pipeline::build().with_stage(
-        Stage::with_backbuffer()
-            .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawFlat::<PosTex>::new())
-            .with_pass(DrawUi::new()),
-    );
+
     let pong_config = PongConfig::load(&config);
 
     let game_data = GameDataBuilder::default()
         .with_bundle(
-            InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path),
+            InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?
         )?
         .with_bundle(PongBundle::default())?
         .with_bundle(TransformBundle::new().with_dep(&["ball_system", "paddle_system"]))?
         .with_bundle(AudioBundle::new(|music: &mut Music| music.music.next()))?
         .with_bundle(UiBundle::<String, String>::new())?
-        .with_bundle(RenderBundle::new(pipe, Some(display_config)))?;
+        .with_basic_renderer(display_config_path, DrawFlat::<PosTex>::new(), true)?;
 
     let mut game = Application::build(assets_dir, Pong)?
         .with_frame_limit(

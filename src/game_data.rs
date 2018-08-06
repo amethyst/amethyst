@@ -1,9 +1,11 @@
+use std::path::Path;
 use std::sync::Arc;
 
-use core::SystemBundle;
 use core::specs::prelude::{Dispatcher, DispatcherBuilder, System, World};
+use core::SystemBundle;
 use error::{Error, Result};
 use rayon::ThreadPool;
+use renderer::pipe::pass::Pass;
 
 /// Initialise trait for game data
 pub trait DataInit<T> {
@@ -216,6 +218,42 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
             .build(&mut self.disp_builder)
             .map_err(|err| Error::Core(err))?;
         Ok(self)
+    }
+
+    /// Create a basic renderer with a single given `Pass`, and optional support for the `DrawUi` pass.
+    ///
+    /// Will set the clear color to black.
+    ///
+    /// ### Parameters:
+    ///
+    /// - `path`: Path to the `DisplayConfig` configuration file
+    /// - `pass`: The single pass in the render graph
+    /// - `with_ui`: If set to true, will add the UI render pass
+    pub fn with_basic_renderer<A, P>(self, path: A, pass: P, with_ui: bool) -> Result<Self>
+    where
+        A: AsRef<Path>,
+        P: Pass + 'b,
+    {
+        use config::Config;
+        use renderer::{DisplayConfig, Pipeline, RenderBundle, Stage};
+        use ui::DrawUi;
+        let config = DisplayConfig::load(path);
+        if with_ui {
+            let pipe = Pipeline::build().with_stage(
+                Stage::with_backbuffer()
+                    .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
+                    .with_pass(pass)
+                    .with_pass(DrawUi::new()),
+            );
+            self.with_bundle(RenderBundle::new(pipe, Some(config)))
+        } else {
+            let pipe = Pipeline::build().with_stage(
+                Stage::with_backbuffer()
+                    .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
+                    .with_pass(pass),
+            );
+            self.with_bundle(RenderBundle::new(pipe, Some(config)))
+        }
     }
 }
 

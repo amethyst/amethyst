@@ -1,7 +1,7 @@
 use std::mem;
 
-use amethyst_core::GlobalTransform;
 use amethyst_core::specs::prelude::{Join, ReadStorage};
+use amethyst_core::GlobalTransform;
 
 use glsl_layout::*;
 
@@ -10,7 +10,6 @@ use light::Light;
 use pipe::{Effect, EffectBuilder};
 use resources::AmbientColor;
 use types::Encoder;
-
 
 #[derive(Clone, Copy, Debug, Uniform)]
 pub(crate) struct FragmentArgs {
@@ -36,19 +35,22 @@ pub(crate) fn set_light_args(
     effect: &mut Effect,
     encoder: &mut Encoder,
     light: &ReadStorage<Light>,
+    global: &ReadStorage<GlobalTransform>,
     ambient: &AmbientColor,
     camera: Option<(&Camera, &GlobalTransform)>,
 ) {
-    let point_lights: Vec<_> = light
+    let point_lights: Vec<_> = (light, global)
         .join()
-        .filter_map(|light| {
+        .filter_map(|(light, transform)| {
             if let Light::Point(ref light) = *light {
-                Some(PointLightPod {
-                    position: light.center.into(),
-                    color: light.color.into(),
-                    intensity: light.intensity,
-                    pad: 0.0,
-                }.std140())
+                Some(
+                    PointLightPod {
+                        position: transform.0.w.truncate().into(),
+                        color: light.color.into(),
+                        intensity: light.intensity,
+                        pad: 0.0,
+                    }.std140(),
+                )
             } else {
                 None
             }
@@ -59,10 +61,12 @@ pub(crate) fn set_light_args(
         .join()
         .filter_map(|light| {
             if let Light::Directional(ref light) = *light {
-                Some(DirectionalLightPod {
-                    color: light.color.into(),
-                    direction: light.direction.into(),
-                }.std140())
+                Some(
+                    DirectionalLightPod {
+                        color: light.color.into(),
+                        direction: light.direction.into(),
+                    }.std140(),
+                )
             } else {
                 None
             }
@@ -91,8 +95,16 @@ pub(crate) fn set_light_args(
 
 pub(crate) fn setup_light_buffers(builder: &mut EffectBuilder) {
     builder
-        .with_raw_constant_buffer("FragmentArgs", mem::size_of::<<FragmentArgs as Uniform>::Std140>(), 1)
-        .with_raw_constant_buffer("PointLights", mem::size_of::<<PointLightPod as Uniform>::Std140>(), 128)
+        .with_raw_constant_buffer(
+            "FragmentArgs",
+            mem::size_of::<<FragmentArgs as Uniform>::Std140>(),
+            1,
+        )
+        .with_raw_constant_buffer(
+            "PointLights",
+            mem::size_of::<<PointLightPod as Uniform>::Std140>(),
+            128,
+        )
         .with_raw_constant_buffer(
             "DirectionalLights",
             mem::size_of::<<DirectionalLightPod as Uniform>::Std140>(),

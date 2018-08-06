@@ -5,22 +5,26 @@ use std::hash::{Hash, Hasher};
 
 use amethyst_assets::{AssetStorage, Loader};
 use amethyst_core::cgmath::vec4 as cg_vec4;
-use amethyst_core::specs::prelude::{Entities, Entity, Join, Read, ReadExpect, ReadStorage,
-                                    WriteStorage};
+use amethyst_core::specs::prelude::{
+    Entities, Entity, Join, Read, ReadExpect, ReadStorage, WriteStorage,
+};
 use amethyst_renderer::error::Result;
 use amethyst_renderer::pipe::pass::{Pass, PassData};
 use amethyst_renderer::pipe::{Effect, NewEffect};
-use amethyst_renderer::{Encoder, Factory, Mesh, PosTex, Resources, ScreenDimensions, Texture,
-                        TextureData, TextureHandle, TextureMetadata, VertexFormat};
+use amethyst_renderer::{
+    Encoder, Factory, Mesh, PosTex, Resources, ScreenDimensions, Texture, TextureData,
+    TextureHandle, TextureMetadata, VertexFormat,
+};
 use fnv::FnvHashMap as HashMap;
 use gfx::preset::blend;
 use gfx::pso::buffer::ElemStride;
 use gfx::state::ColorMask;
-use gfx_glyph::{BuiltInLineBreaker, FontId, GlyphBrush, GlyphBrushBuilder, GlyphCruncher,
-                HorizontalAlign, Layout, Scale, SectionText, VariedSection, VerticalAlign};
-use glsl_layout::{Uniform, vec2, vec4};
+use gfx_glyph::{
+    BuiltInLineBreaker, FontId, GlyphBrush, GlyphBrushBuilder, GlyphCruncher, HorizontalAlign,
+    Layout, Point, Scale, SectionText, VariedSection, VerticalAlign,
+};
+use glsl_layout::{vec2, vec4, Uniform};
 use hibitset::BitSet;
-use rusttype::Point;
 use unicode_segmentation::UnicodeSegmentation;
 
 use super::*;
@@ -50,7 +54,9 @@ impl Eq for KeyColor {}
 
 impl PartialEq for KeyColor {
     fn eq(&self, other: &Self) -> bool {
-        self.0[0] == other.0[0] && self.0[1] == other.0[1] && self.0[2] == other.0[2]
+        self.0[0] == other.0[0]
+            && self.0[1] == other.0[1]
+            && self.0[2] == other.0[2]
             && self.0[3] == other.0[3]
     }
 }
@@ -70,9 +76,7 @@ pub struct DrawUi {
     next_brush_cache_id: u64,
 }
 
-type GlyphBrushCache = HashMap<
-    u64, GlyphBrush<'static, Resources, Factory>
->;
+type GlyphBrushCache = HashMap<u64, GlyphBrush<'static, Resources, Factory>>;
 
 impl DrawUi {
     /// Create instance of `DrawUi` pass
@@ -138,7 +142,11 @@ impl Pass for DrawUi {
         use std::mem;
         effect
             .simple(VERT_SRC, FRAG_SRC)
-            .with_raw_constant_buffer("VertexArgs", mem::size_of::<<VertexArgs as Uniform>::Std140>(), 1)
+            .with_raw_constant_buffer(
+                "VertexArgs",
+                mem::size_of::<<VertexArgs as Uniform>::Std140>(),
+                1,
+            )
             .with_raw_vertex_buffer(PosTex::ATTRIBUTES, PosTex::size() as ElemStride, 0)
             .with_texture("albedo")
             .with_blended_output("color", ColorMask::all(), blend::ALPHA, None)
@@ -231,20 +239,22 @@ impl Pass for DrawUi {
         for &(_z, entity) in &self.cached_draw_order.cache {
             // This won't panic as we guaranteed earlier these entities are present.
             let ui_transform = ui_transform.get(entity).unwrap();
-            let vertex_args = VertexArgs {
-                proj_vec: proj_vec.into(),
-                // Coordinates are middle centered. It makes it easier to do layouting in most cases.
-                coord: [
-                    ui_transform.global_x - ui_transform.width / 2.0,
-                    ui_transform.global_y - ui_transform.height / 2.0,
-                ].into(),
-                dimension: [ui_transform.width, ui_transform.height].into(),
-            };
-            effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
             if let Some(image) = ui_image
                 .get(entity)
                 .and_then(|image| tex_storage.get(&image.texture))
             {
+                let vertex_args = VertexArgs {
+                    proj_vec: proj_vec.into(),
+                    // Coordinates are middle centered. It makes it easier to do layouting in most cases.
+                    coord: [
+                        ui_transform.pixel_x - ui_transform.pixel_width / 2.0
+                            + screen_dimensions.width() / 2.,
+                        ui_transform.pixel_y - ui_transform.pixel_height / 2.0
+                            + screen_dimensions.height() / 2.,
+                    ].into(),
+                    dimension: [ui_transform.pixel_width, ui_transform.pixel_height].into(),
+                };
+                effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
                 effect.data.textures.push(image.view().clone());
                 effect.data.samplers.push(image.sampler().clone());
                 effect.draw(mesh.slice(), encoder);
@@ -259,8 +269,10 @@ impl Pass for DrawUi {
                         Some(font) => font,
                         None => continue,
                     };
-                    self.glyph_brushes.insert(self.next_brush_cache_id, GlyphBrushBuilder::using_font(font.0.clone())
-                                    .build(factory.clone()));
+                    self.glyph_brushes.insert(
+                        self.next_brush_cache_id,
+                        GlyphBrushBuilder::using_font(font.0.clone()).build(factory.clone()),
+                    );
                     ui_text.brush_id = Some(self.next_brush_cache_id);
                     ui_text.cached_font = ui_text.font.clone();
                     self.next_brush_cache_id += 1;
@@ -324,14 +336,12 @@ impl Pass for DrawUi {
                             },
                         ]
                     })
-                    .unwrap_or(vec![
-                        SectionText {
-                            text: rendered_string,
-                            scale: Scale::uniform(ui_text.font_size),
-                            color: ui_text.color,
-                            font_id: FontId(0),
-                        },
-                    ]);
+                    .unwrap_or(vec![SectionText {
+                        text: rendered_string,
+                        scale: Scale::uniform(ui_text.font_size),
+                        color: ui_text.color,
+                        font_id: FontId(0),
+                    }]);
                 // TODO: If you're adding multi-line support you need to change this to use
                 // Layout::Wrap.
                 let layout = Layout::SingleLine {
@@ -341,10 +351,12 @@ impl Pass for DrawUi {
                 };
                 let section = VariedSection {
                     screen_position: (
-                        ui_transform.global_x - ui_transform.width / 2.0,
-                        ui_transform.global_y - ui_transform.height / 2.0,
+                        ui_transform.pixel_x - ui_transform.pixel_width / 2.0
+                            + screen_dimensions.width() / 2.,
+                        ui_transform.pixel_y - ui_transform.pixel_height / 2.0
+                            + screen_dimensions.height() / 2.,
                     ),
-                    bounds: (ui_transform.width, ui_transform.height),
+                    bounds: (ui_transform.pixel_width, ui_transform.pixel_height),
                     z: ui_transform.global_z / highest_abs_z,
                     layout,
                     text,
@@ -416,7 +428,7 @@ impl Pass for DrawUi {
                     &effect.data.out_blends[0],
                     &effect.data.out_depth.as_ref().unwrap().0,
                 ) {
-                    eprintln!("Unable to draw text! Error: {:?}", err);
+                    error!("Unable to draw text! Error: {:?}", err);
                 }
                 // Render cursor
                 if focused.entity == Some(entity) {
@@ -441,7 +453,6 @@ impl Pass for DrawUi {
                                     .get(&FontId(0))
                                     .unwrap()
                                     .glyph(' ')
-                                    .unwrap()
                                     .scaled(Scale::uniform(ui_text.font_size))
                                     .h_metrics()
                                     .advance_width
@@ -478,8 +489,11 @@ impl Pass for DrawUi {
                                 width = 2.0;
                             }
                             let pos = glyph.map(|g| g.position()).unwrap_or(Point {
-                                x: ui_transform.global_x - ui_transform.width / 2.0,
-                                y: ui_transform.global_y - ui_transform.height / 2.0 + ascent,
+                                x: ui_transform.pixel_x - ui_transform.pixel_width / 2.0
+                                    + screen_dimensions.width() / 2.,
+                                y: ui_transform.pixel_y - ui_transform.pixel_height / 2.0
+                                    + ascent
+                                    + screen_dimensions.height() / 2.,
                             });
                             let mut x = pos.x;
                             if let Some(glyph) = glyph {
@@ -496,7 +510,11 @@ impl Pass for DrawUi {
                                 coord: [x, y].into(),
                                 dimension: [width, height].into(),
                             };
-                            effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
+                            effect.update_constant_buffer(
+                                "VertexArgs",
+                                &vertex_args.std140(),
+                                encoder,
+                            );
                             effect.draw(mesh.slice(), encoder);
                         }
                         effect.data.textures.clear();

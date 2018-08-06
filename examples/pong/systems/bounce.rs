@@ -1,8 +1,8 @@
 use std::ops::Deref;
 
 use amethyst::assets::AssetStorage;
-use amethyst::audio::Source;
 use amethyst::audio::output::Output;
+use amethyst::audio::Source;
 use amethyst::core::transform::Transform;
 use amethyst::ecs::prelude::{Join, Read, ReadExpect, ReadStorage, System, WriteStorage};
 use audio::{play_bounce, Sounds};
@@ -47,8 +47,8 @@ impl<'s> System<'s> for BounceSystem {
 
             // Bounce at the paddles.
             for (paddle, paddle_transform) in (&paddles, &transforms).join() {
-                let paddle_x = paddle_transform.translation[0];
-                let paddle_y = paddle_transform.translation[1];
+                let paddle_x = paddle_transform.translation[0] - paddle.width * 0.5;
+                let paddle_y = paddle_transform.translation[1] - paddle.height * 0.5;
 
                 // To determine whether the ball has collided with a paddle, we create a larger
                 // rectangle around the current one, by subtracting the ball radius from the

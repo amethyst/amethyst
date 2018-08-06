@@ -1,14 +1,17 @@
-use amethyst::assets::Loader;
+use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::cgmath::Vector3;
 use amethyst::core::transform::{GlobalTransform, Transform};
 use amethyst::ecs::prelude::World;
+use amethyst::input::{is_close_requested, is_key_down};
 use amethyst::prelude::*;
-use amethyst::renderer::{Camera, Event, KeyboardInput, Material, MeshHandle, PosTex, Projection,
-                         VirtualKeyCode, WindowEvent, WindowMessages};
-use amethyst::ui::{Anchor, Anchored, TtfFormat, UiText, UiTransform};
+use amethyst::renderer::{
+    Camera, Event, PngFormat, Projection, Sprite, SpriteRenderData, Texture, TextureHandle,
+    VirtualKeyCode, WindowMessages, WithSpriteRender,
+};
+use amethyst::ui::{Anchor, TtfFormat, UiText, UiTransform};
 use systems::ScoreText;
-use {ARENA_HEIGHT, ARENA_WIDTH};
 use {Ball, Paddle, Side};
+use {ARENA_HEIGHT, ARENA_WIDTH, SPRITESHEET_SIZE};
 
 pub struct Pong;
 
@@ -17,9 +20,22 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
         let StateData { world, .. } = data;
         use audio::initialise_audio;
 
+        // Load the spritesheet necessary to render the graphics.
+        let spritesheet = {
+            let loader = world.read_resource::<Loader>();
+            let texture_storage = world.read_resource::<AssetStorage<Texture>>();
+            loader.load(
+                "texture/pong_spritesheet.png",
+                PngFormat,
+                Default::default(),
+                (),
+                &texture_storage,
+            )
+        };
+
         // Setup our game.
-        initialise_paddles(world);
-        initialise_balls(world);
+        initialise_paddles(world, spritesheet.clone());
+        initialise_ball(world, spritesheet);
         initialise_camera(world);
         initialise_audio(world);
         initialise_score(world);
@@ -27,19 +43,10 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
     }
 
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        match event {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            virtual_keycode: Some(VirtualKeyCode::Escape),
-                            ..
-                        },
-                    ..
-                } => Trans::Quit,
-                _ => Trans::None,
-            },
-            _ => Trans::None,
+        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+            Trans::Quit
+        } else {
+            Trans::None
         }
     }
 
@@ -80,30 +87,20 @@ fn hide_cursor(world: &mut World) {
 }
 
 /// Initialises one paddle on the left, and one paddle on the right.
-fn initialise_paddles(world: &mut World) {
-    use {PADDLE_COLOUR, PADDLE_HEIGHT, PADDLE_VELOCITY, PADDLE_WIDTH};
+fn initialise_paddles(world: &mut World, spritesheet: TextureHandle) {
+    use {PADDLE_HEIGHT, PADDLE_VELOCITY, PADDLE_WIDTH};
 
     let mut left_transform = Transform::default();
     let mut right_transform = Transform::default();
 
     // Correctly position the paddles.
     let y = (ARENA_HEIGHT - PADDLE_HEIGHT) / 2.0;
-    left_transform.translation = Vector3::new(0.0, y, 0.0);
-    right_transform.translation = Vector3::new(ARENA_WIDTH - PADDLE_WIDTH, y, 0.0);
-
-    // Create the mesh and the material needed.
-    let mesh = create_mesh(
-        world,
-        generate_rectangle_vertices(0.0, 0.0, PADDLE_WIDTH, PADDLE_HEIGHT),
-    );
-
-    let material = create_colour_material(world, PADDLE_COLOUR);
+    left_transform.translation = Vector3::new(PADDLE_WIDTH * 0.5, y, 0.0);
+    right_transform.translation = Vector3::new(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
 
     // Create a left plank entity.
-    world
+    let paddle_left = world
         .create_entity()
-        .with(mesh.clone())
-        .with(material.clone())
         .with(Paddle {
             side: Side::Left,
             width: PADDLE_WIDTH,
@@ -115,10 +112,8 @@ fn initialise_paddles(world: &mut World) {
         .build();
 
     // Create right plank entity.
-    world
+    let paddle_right = world
         .create_entity()
-        .with(mesh)
-        .with(material)
         .with(Paddle {
             side: Side::Right,
             width: PADDLE_WIDTH,
@@ -128,22 +123,51 @@ fn initialise_paddles(world: &mut World) {
         .with(GlobalTransform::default())
         .with(right_transform)
         .build();
+
+    // Build the sprite for the paddles.
+    let sprite = Sprite {
+        left: 0.0,
+        right: PADDLE_WIDTH,
+        top: 0.0,
+        bottom: PADDLE_HEIGHT,
+    };
+
+    // Add the sprite to the paddles.
+    // This is done in a separate step here because as they are identical sprites,
+    // adding them both at once allows for better performance. Check out the ball
+    // sprite to see how to add a sprite to only one entity.
+    world
+        .exec(|mut data: SpriteRenderData| {
+            data.add_multiple(
+                vec![paddle_left, paddle_right],
+                &sprite,
+                spritesheet,
+                SPRITESHEET_SIZE,
+            )
+        })
+        .expect("Error creating SpriteRender for paddles");
 }
 
 /// Initialises one ball in the middle-ish of the arena.
-fn initialise_balls(world: &mut World) {
-    use {ARENA_HEIGHT, ARENA_WIDTH, BALL_COLOUR, BALL_RADIUS, BALL_VELOCITY_X, BALL_VELOCITY_Y};
+fn initialise_ball(world: &mut World, spritesheet: TextureHandle) {
+    use {ARENA_HEIGHT, ARENA_WIDTH, BALL_RADIUS, BALL_VELOCITY_X, BALL_VELOCITY_Y, PADDLE_WIDTH};
 
-    // Create the mesh, material and translation.
-    let mesh = create_mesh(world, generate_circle_vertices(BALL_RADIUS, 16));
-    let material = create_colour_material(world, BALL_COLOUR);
+    // Create the translation.
     let mut local_transform = Transform::default();
     local_transform.translation = Vector3::new(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
 
+    // Create the sprite for the ball.
+    let sprite = Sprite {
+        left: PADDLE_WIDTH,
+        right: SPRITESHEET_SIZE.0,
+        top: 0.0,
+        bottom: BALL_RADIUS * 2.0,
+    };
+
     world
         .create_entity()
-        .with(mesh)
-        .with(material)
+        .with_sprite(&sprite, spritesheet, SPRITESHEET_SIZE)
+        .expect("Error creating SpriteRender for ball")
         .with(Ball {
             radius: BALL_RADIUS,
             velocity: [BALL_VELOCITY_X, BALL_VELOCITY_Y],
@@ -161,9 +185,27 @@ fn initialise_score(world: &mut World) {
         (),
         &world.read_resource(),
     );
-    let p1_transform = UiTransform::new("P1".to_string(), -50., 50., 1., 55., 50., 0);
+    let p1_transform = UiTransform::new(
+        "P1".to_string(),
+        Anchor::TopMiddle,
+        -50.,
+        50.,
+        1.,
+        55.,
+        50.,
+        0,
+    );
 
-    let p2_transform = UiTransform::new("P2".to_string(), 50., 50., 1., 55., 50., 0);
+    let p2_transform = UiTransform::new(
+        "P2".to_string(),
+        Anchor::TopMiddle,
+        50.,
+        50.,
+        1.,
+        55.,
+        50.,
+        0,
+    );
 
     let p1_score = world
         .create_entity()
@@ -174,7 +216,6 @@ fn initialise_score(world: &mut World) {
             [1.0, 1.0, 1.0, 1.0],
             50.,
         ))
-        .with(Anchored::new(Anchor::TopMiddle))
         .build();
     let p2_score = world
         .create_entity()
@@ -185,91 +226,6 @@ fn initialise_score(world: &mut World) {
             [1.0, 1.0, 1.0, 1.0],
             50.,
         ))
-        .with(Anchored::new(Anchor::TopMiddle))
         .build();
     world.add_resource(ScoreText { p1_score, p2_score });
-}
-
-/// Converts a vector of vertices into a mesh.
-fn create_mesh(world: &World, vertices: Vec<PosTex>) -> MeshHandle {
-    let loader = world.read_resource::<Loader>();
-    loader.load_from_data(vertices.into(), (), &world.read_resource())
-}
-
-/// Creates a solid material of the specified colour.
-fn create_colour_material(world: &World, colour: [f32; 4]) -> Material {
-    // TODO: optimize
-
-    use amethyst::renderer::MaterialDefaults;
-
-    let mat_defaults = world.read_resource::<MaterialDefaults>();
-    let loader = world.read_resource::<Loader>();
-
-    let albedo = loader.load_from_data(colour.into(), (), &world.read_resource());
-
-    Material {
-        albedo,
-        ..mat_defaults.0.clone()
-    }
-}
-
-/// Generates vertices for a circle. The circle will be made of `resolution`
-/// triangles.
-fn generate_circle_vertices(radius: f32, resolution: usize) -> Vec<PosTex> {
-    use std::f32::consts::PI;
-
-    let mut vertices = Vec::with_capacity(resolution * 3);
-    let angle_offset = 2.0 * PI / resolution as f32;
-
-    // Helper function to generate the vertex at the specified angle.
-    let generate_vertex = |angle: f32| {
-        let x = angle.cos();
-        let y = angle.sin();
-        PosTex {
-            position: [x * radius, y * radius, 0.0],
-            tex_coord: [x, y],
-        }
-    };
-
-    for index in 0..resolution {
-        vertices.push(PosTex {
-            position: [0.0, 0.0, 0.0],
-            tex_coord: [0.0, 0.0],
-        });
-
-        vertices.push(generate_vertex(angle_offset * index as f32));
-        vertices.push(generate_vertex(angle_offset * (index + 1) as f32));
-    }
-
-    vertices
-}
-
-/// Generates six vertices forming a rectangle.
-fn generate_rectangle_vertices(left: f32, bottom: f32, right: f32, top: f32) -> Vec<PosTex> {
-    vec![
-        PosTex {
-            position: [left, bottom, 0.],
-            tex_coord: [0.0, 0.0],
-        },
-        PosTex {
-            position: [right, bottom, 0.0],
-            tex_coord: [1.0, 0.0],
-        },
-        PosTex {
-            position: [left, top, 0.0],
-            tex_coord: [1.0, 1.0],
-        },
-        PosTex {
-            position: [right, top, 0.],
-            tex_coord: [1.0, 1.0],
-        },
-        PosTex {
-            position: [left, top, 0.],
-            tex_coord: [0.0, 1.0],
-        },
-        PosTex {
-            position: [right, bottom, 0.0],
-            tex_coord: [0.0, 0.0],
-        },
-    ]
 }

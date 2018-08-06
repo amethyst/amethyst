@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_assets"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["torkleyy <torkleyy@gmail.com>"]
 readme = "README.md"
 description = """
@@ -20,21 +20,22 @@ appveyor = { repository = "amethyst/amethyst", branch = "develop" }
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
-amethyst_core = { path = "../amethyst_core", version = "0.2" }
+amethyst_core = { path = "../amethyst_core", version = "0.3.0" }
 crossbeam = "0.3.0"
 derivative = "1.0"
 error-chain = "0.11"
 fnv = "1"
 hibitset = { version = "0.5.0", features = ["parallel"] }
 log = "0.4"
-parking_lot = "0.4.4"
+parking_lot = "0.5"
 rayon = "1.0.1"
-
+serde = { version = "1", features = ["serde_derive"] }
+shred = { version = "0.7" }
+shred-derive = { version = "0.5" }
+ron = "0.2"
 thread_profiler = { version = "0.1", optional = true }
 
 [dev-dependencies]
-ron = "0.1.4"
-serde = { version = "1", features = ["serde_derive"] }
 
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]

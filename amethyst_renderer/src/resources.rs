@@ -1,17 +1,34 @@
 //! `amethyst` rendering ecs resources
 
+use amethyst_assets::{PrefabData, PrefabError};
+use amethyst_core::specs::{Entity, Write};
 use smallvec::SmallVec;
 use winit::Window;
 
 use color::Rgba;
 
 /// The ambient color of a scene
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct AmbientColor(pub Rgba);
 
 impl AsRef<Rgba> for AmbientColor {
     fn as_ref(&self) -> &Rgba {
         &self.0
+    }
+}
+
+impl<'a> PrefabData<'a> for AmbientColor {
+    type SystemData = Write<'a, AmbientColor>;
+    type Result = ();
+
+    fn load_prefab(
+        &self,
+        _: Entity,
+        ambient: &mut Self::SystemData,
+        _: &[Entity],
+    ) -> Result<(), PrefabError> {
+        ambient.0 = self.0.clone();
+        Ok(())
     }
 }
 
@@ -53,16 +70,20 @@ pub struct ScreenDimensions {
     h: f32,
     /// Width divided by height.
     aspect_ratio: f32,
+    /// The ratio between the backing framebuffer resolution and the window size in screen pixels.
+    /// This is typically one for a normal display and two for a retina display.
+    hidpi: f32,
     pub(crate) dirty: bool,
 }
 
 impl ScreenDimensions {
     /// Creates a new screen dimensions object with the given width and height.
-    pub fn new(w: u32, h: u32) -> ScreenDimensions {
+    pub fn new(w: u32, h: u32, hidpi: f32) -> ScreenDimensions {
         ScreenDimensions {
             w: w as f32,
             h: h as f32,
             aspect_ratio: w as f32 / h as f32,
+            hidpi,
             dirty: false,
         }
     }
@@ -86,6 +107,12 @@ impl ScreenDimensions {
     /// Returns the current aspect ratio of the window.
     pub fn aspect_ratio(&self) -> f32 {
         self.aspect_ratio
+    }
+
+    /// Returns the ratio between the backing framebuffer resolution and the window size in screen pixels.
+    /// This is typically one for a normal display and two for a retina display.
+    pub fn hidpi_factor(&self) -> f32 {
+        self.hidpi
     }
 
     /// Updates the width and height of the screen and recomputes the aspect

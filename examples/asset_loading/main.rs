@@ -5,15 +5,15 @@ extern crate amethyst;
 extern crate rayon;
 
 use amethyst::assets::{Loader, Result as AssetResult, SimpleFormat};
-use amethyst::config::Config;
-use amethyst::core::cgmath::{Array, Vector3};
+use amethyst::core::cgmath::{Array, Matrix4, Vector3};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
-use amethyst::ecs::prelude::World;
-use amethyst::input::InputBundle;
-use amethyst::renderer::{Camera, DisplayConfig, DrawShaded, Event, KeyboardInput, Light, Material,
-                         MaterialDefaults, Mesh, MeshData, Pipeline, PointLight, PosNormTex,
-                         Projection, RenderBundle, Rgba, Stage, VirtualKeyCode, WindowEvent};
-use amethyst::{Application, Error, GameData, GameDataBuilder, State, StateData, Trans};
+use amethyst::input::{is_close_requested, is_key_down, InputBundle};
+use amethyst::prelude::*;
+use amethyst::renderer::{
+    Camera, DrawShaded, Event, Light, Material, MaterialDefaults, Mesh, MeshData, PointLight,
+    PosNormTex, Projection, Rgba, VirtualKeyCode,
+};
+use amethyst::Error;
 
 #[derive(Clone)]
 struct Custom;
@@ -97,25 +97,10 @@ impl<'a, 'b> State<GameData<'a, 'b>> for AssetsExample {
     }
 
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        match event {
-            Event::WindowEvent { event, .. } => {
-                match event {
-                    WindowEvent::KeyboardInput {
-                        input:
-                            KeyboardInput {
-                                virtual_keycode: Some(VirtualKeyCode::Escape),
-                                ..
-                            },
-                        ..
-                    } => {
-                        // If the user pressed the escape key, or requested the window to be closed,
-                        // quit the application.
-                        Trans::Quit
-                    }
-                    _ => Trans::None,
-                }
-            }
-            _ => Trans::None,
+        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+            Trans::Quit
+        } else {
+            Trans::None
         }
     }
 
@@ -125,16 +110,9 @@ impl<'a, 'b> State<GameData<'a, 'b>> for AssetsExample {
     }
 }
 
-fn main() {
-    if let Err(error) = run() {
-        eprintln!("Could not run the example!");
-        eprintln!("{}", error);
-        ::std::process::exit(1);
-    }
-}
+fn main() -> Result<(), Error> {
+    amethyst::start_logger(Default::default());
 
-/// Wrapper around the main, so we can return errors easily.
-fn run() -> Result<(), Error> {
     // Add our meshes directory to the asset loader.
     let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
 
@@ -143,17 +121,10 @@ fn run() -> Result<(), Error> {
         env!("CARGO_MANIFEST_DIR")
     );
 
-    let display_config = DisplayConfig::load(display_config_path);
-    let pipeline_builder = Pipeline::build().with_stage(
-        Stage::with_backbuffer()
-            .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawShaded::<PosNormTex>::new()),
-    );
-
     let game_data = GameDataBuilder::default()
         .with_bundle(InputBundle::<String, String>::new())?
         .with_bundle(TransformBundle::new())?
-        .with_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?;
+        .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;
 
     let mut game = Application::new(resources_directory, AssetsExample, game_data)?;
     game.run();
@@ -174,12 +145,18 @@ fn initialise_camera(world: &mut World) {
 /// Adds lights to the scene.
 fn initialise_lights(world: &mut World) {
     let light: Light = PointLight {
-        center: [5.0, -20.0, 15.0].into(),
         intensity: 100.0,
         radius: 1.0,
         color: Rgba::white(),
         ..Default::default()
     }.into();
 
-    world.create_entity().with(light).build();
+    let transform = Matrix4::from_translation([5.0, -20.0, 15.0].into());
+
+    // Add point light.
+    world
+        .create_entity()
+        .with(light)
+        .with(GlobalTransform(transform.into()))
+        .build();
 }

@@ -30,6 +30,8 @@ layout (std140) uniform DirectionalLights {
 uniform vec3 ambient_color;
 uniform vec3 camera_position;
 
+uniform float alpha_cutoff;
+
 uniform sampler2D albedo;
 uniform sampler2D emission;
 uniform sampler2D normal;
@@ -118,7 +120,12 @@ vec3 fresnel(float HdotV, vec3 fresnel_base) {
 }
 
 void main() {
-    vec3 albedo             = texture(albedo, tex_coords(vertex.tex_coord, albedo_offset.u_offset, albedo_offset.v_offset)).rgb;
+    vec4 albedo_alpha       = texture(albedo, tex_coords(vertex.tex_coord, albedo_offset.u_offset, albedo_offset.v_offset)).rgba;
+
+    float alpha             = albedo_alpha.a;
+    if(alpha < alpha_cutoff) discard;
+
+    vec3 albedo             = albedo_alpha.rgb;
     vec3 emission           = texture(emission, tex_coords(vertex.tex_coord, emission_offset.u_offset, emission_offset.v_offset)).rgb;
     vec3 normal             = texture(normal, tex_coords(vertex.tex_coord, normal_offset.u_offset, normal_offset.v_offset)).rgb;
     float metallic          = texture(metallic, tex_coords(vertex.tex_coord, metallic_offset.u_offset, metallic_offset.v_offset)).r;
@@ -153,7 +160,7 @@ void main() {
         float HdotV = max(dot(halfway, view_direction), 0.0);
         float geometry = geometry(NdotV, NdotL, roughness2);
 
-        vec3 fresnel = fresnel_base + (1.0 - fresnel_base) * pow(1.0 - HdotV, 5.0);
+        vec3 fresnel = fresnel(HdotV, fresnel_base);
         vec3 diffuse = vec3(1.0) - fresnel;
         diffuse *= 1.0 - metallic;
 
@@ -167,5 +174,5 @@ void main() {
     vec3 ambient = ambient_color * albedo * ambient_occlusion;
     vec3 color = ambient + lighted + emission;
    
-    out_color = vec4(color, 1.0);
+    out_color = vec4(color, alpha);
 }

@@ -8,6 +8,9 @@ extern crate serde;
 extern crate smallvec;
 extern crate winit;
 
+#[cfg(feature = "sdl_controller")]
+extern crate sdl2;
+
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
 
@@ -15,48 +18,33 @@ pub use self::axis::Axis;
 pub use self::bindings::Bindings;
 pub use self::bundle::InputBundle;
 pub use self::button::Button;
+pub use self::controller::{ControllerAxis, ControllerButton};
 pub use self::event::InputEvent;
 pub use self::input_handler::InputHandler;
 pub use self::system::InputSystem;
+pub use self::util::{get_key, is_close_requested, is_key_down};
 
-use std::iter::{Chain, FlatMap, Iterator, Map};
-use std::slice::Iter;
+#[cfg(feature = "sdl_controller")]
+pub use self::sdl_events_system::SdlEventsSystem;
 
-use winit::{MouseButton, VirtualKeyCode};
+use std::iter::Iterator;
+
+use winit::VirtualKeyCode;
 
 mod axis;
 mod bindings;
 mod bundle;
 mod button;
+mod controller;
 mod event;
 mod input_handler;
 mod local_mouse_button;
 mod local_virtual_key_code;
 mod system;
+mod util;
 
-// This entire set ot types is to be eliminated once impl Trait is released.
-
-/// Iterator over keycodes
-pub type KeyCodes<'a> =
-    Map<Iter<'a, (VirtualKeyCode, u32)>, fn(&(VirtualKeyCode, u32)) -> VirtualKeyCode>;
-
-/// Iterator over key scan codes
-pub type ScanCodes<'a> = Map<Iter<'a, (VirtualKeyCode, u32)>, fn(&(VirtualKeyCode, u32)) -> u32>;
-
-/// Iterator over MouseButtons
-pub type MouseButtons<'a> = Iter<'a, MouseButton>;
-
-/// An iterator over buttons
-pub struct Buttons<'a> {
-    iterator: Chain<
-        Map<Iter<'a, MouseButton>, fn(&MouseButton) -> Button>,
-        FlatMap<
-            Iter<'a, (VirtualKeyCode, u32)>,
-            KeyThenCode,
-            fn(&(VirtualKeyCode, u32)) -> KeyThenCode,
-        >,
-    >,
-}
+#[cfg(feature = "sdl_controller")]
+mod sdl_events_system;
 
 struct KeyThenCode {
     value: (VirtualKeyCode, u32),
@@ -81,13 +69,5 @@ impl Iterator for KeyThenCode {
             1 => Some(Button::ScanCode(self.value.1)),
             _ => None,
         }
-    }
-}
-
-impl<'a> Iterator for Buttons<'a> {
-    type Item = Button;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iterator.next()
     }
 }

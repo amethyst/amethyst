@@ -52,9 +52,9 @@ where
     }
 
     fn build(&self, factory: &mut Factory) -> Result<VertexBuffer> {
-        use gfx::Factory;
         use gfx::buffer::Role;
         use gfx::memory::{cast_slice, Bind};
+        use gfx::Factory;
 
         let verts = self.0.as_ref();
         let slice = cast_slice(verts);

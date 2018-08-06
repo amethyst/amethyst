@@ -1,6 +1,6 @@
 [package]
 name = "amethyst"
-version = "0.7.0"
+version = "0.8.0"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
 description = "Data-oriented game engine written in Rust"
 exclude = ["examples/*", "book/*"]
@@ -28,8 +28,9 @@ profiler = [
     "amethyst_config/profiler",
     "amethyst_core/profiler",
     "amethyst_controls/profiler",
-    "amethyst_renderer/profiler",
     "amethyst_input/profiler",
+    "amethyst_locale/profiler",
+    "amethyst_renderer/profiler",
     "amethyst_ui/profiler",
     "amethyst_utils/profiler",
 ]
@@ -45,31 +46,36 @@ nightly = [
     "amethyst_ui/nightly",
     "amethyst_utils/nightly",
 ]
+sdl_controller = [
+    "amethyst_input/sdl_controller",
+]
 
 [dependencies]
-amethyst_animation = { path = "amethyst_animation", version = "0.2.0" }
-amethyst_assets = { path = "amethyst_assets", version = "0.3.0" }
-amethyst_audio = { path = "amethyst_audio", version = "0.2.0" }
-amethyst_config = { path = "amethyst_config", version = "0.6.0" }
-amethyst_core = { path = "amethyst_core", version = "0.2.0" }
-amethyst_controls = { path = "amethyst_controls", version = "0.1.0" }
-amethyst_renderer = { path = "amethyst_renderer", version = "0.7" }
-amethyst_input = { path = "amethyst_input", version = "0.3" }
-amethyst_ui = { path = "amethyst_ui", version = "0.2" }
-amethyst_utils = { path = "amethyst_utils", version = "0.2" }
+amethyst_animation = { path = "amethyst_animation", version = "0.3.0" }
+amethyst_assets = { path = "amethyst_assets", version = "0.4.0" }
+amethyst_audio = { path = "amethyst_audio", version = "0.3.0" }
+amethyst_config = { path = "amethyst_config", version = "0.7.0" }
+amethyst_core = { path = "amethyst_core", version = "0.3.0" }
+amethyst_controls = { path = "amethyst_controls", version = "0.2.0" }
+amethyst_locale = { path = "amethyst_locale", version = "0.2.0" }
+amethyst_renderer = { path = "amethyst_renderer", version = "0.8.0" }
+amethyst_input = { path = "amethyst_input", version = "0.4.0" }
+amethyst_ui = { path = "amethyst_ui", version = "0.3.0" }
+amethyst_utils = { path = "amethyst_utils", version = "0.3.0" }
 derivative = "1.0"
-fern = "0.5"
+fern = { version = "0.5", features = ["colored"] }
 log = "0.4"
 rayon = "1.0.1"
 rustc_version_runtime = "0.1"
-winit = "0.13.1"
+winit = "0.15"
 
 thread_profiler = { version = "0.1", optional = true }
 
 [dev-dependencies]
-amethyst_gltf = { path = "amethyst_gltf", version = "0.2" }
-genmesh = "0.5"
-ron = "0.1"
+amethyst_gltf = { path = "amethyst_gltf", version = "0.3.0" }
+env_logger = "0.5.10"
+genmesh = "0.6"
+ron = "0.2"
 serde = "1.0"
 serde_derive = "1.0"
 
@@ -149,12 +155,20 @@ name = "appendix_a"
 path = "examples/appendix_a/main.rs"
 
 [[example]]
+name = "locale"
+path = "examples/locale/main.rs"
+
+[[example]]
 name = "custom_game_data"
 path = "examples/custom_game_data/main.rs"
 
 [[example]]
 name = "arc_ball_camera"
 path = "examples/arc_ball_camera/main.rs"
+
+[[example]]
+name = "prefab"
+path = "examples/prefab/main.rs"
 
 [workspace]
 members = ["amethyst_gltf"]

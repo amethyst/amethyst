@@ -1,11 +1,12 @@
-use amethyst_core::cgmath::BaseNum;
 use amethyst_core::cgmath::num_traits::NumCast;
+use amethyst_core::cgmath::BaseNum;
 use amethyst_core::specs::prelude::{Entity, WriteStorage};
 use minterpolate::InterpolationPrimitive;
 
 use resources::{AnimationControlSet, AnimationSampling};
 
-/// Get the animation set for an entity. If none exists, one will be added.
+/// Get the animation set for an entity. If none exists, one will be added. If entity is invalid,
+/// (eg. removed before) None will be returned.
 ///
 /// ### Type parameters:
 ///
@@ -15,15 +16,15 @@ use resources::{AnimationControlSet, AnimationSampling};
 pub fn get_animation_set<'a, I, T>(
     controls: &'a mut WriteStorage<AnimationControlSet<I, T>>,
     entity: Entity,
-) -> &'a mut AnimationControlSet<I, T>
+) -> Option<&'a mut AnimationControlSet<I, T>>
 where
     I: Send + Sync + 'static,
     T: AnimationSampling,
 {
     controls
         .entry(entity)
-        .unwrap()
-        .or_insert_with(AnimationControlSet::default)
+        .ok()
+        .map(|entry| entry.or_insert_with(AnimationControlSet::default))
 }
 
 /// Sampler primitive

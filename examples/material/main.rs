@@ -1,15 +1,13 @@
 //! Displays spheres with physically based materials.
 
 extern crate amethyst;
-extern crate genmesh;
 
 use amethyst::assets::Loader;
-use amethyst::core::cgmath::{Deg, Matrix4, Vector3};
+use amethyst::core::cgmath::{Deg, Matrix4};
 use amethyst::core::transform::GlobalTransform;
+use amethyst::input::{is_close_requested, is_key_down};
 use amethyst::prelude::*;
 use amethyst::renderer::*;
-use genmesh::generators::SphereUV;
-use genmesh::{MapToVertices, Triangulate, Vertices};
 
 struct Example;
 
@@ -17,8 +15,6 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
         let mat_defaults = world.read_resource::<MaterialDefaults>().0.clone();
-        let verts = gen_sphere(32, 32).into();
-        let albedo = [1.0, 1.0, 1.0, 1.0].into();
 
         println!("Load mesh");
         let (mesh, albedo) = {
@@ -26,8 +22,12 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
 
             let meshes = &world.read_resource();
             let textures = &world.read_resource();
-            let mesh: MeshHandle = loader.load_from_data(verts, (), meshes);
-            let albedo = loader.load_from_data(albedo, (), textures);
+            let mesh: MeshHandle = loader.load_from_data(
+                Shape::Sphere(32, 32).generate::<Vec<PosNormTangTex>>(None),
+                (),
+                meshes,
+            );
+            let albedo = loader.load_from_data([1.0, 1.0, 1.0, 1.0].into(), (), textures);
 
             (mesh, albedo)
         };
@@ -72,22 +72,34 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
 
         println!("Create lights");
         let light1: Light = PointLight {
-            center: [6.0, 6.0, -6.0].into(),
             intensity: 6.0,
             color: [0.8, 0.0, 0.0].into(),
             ..PointLight::default()
         }.into();
 
+        let light1_transform =
+            GlobalTransform(Matrix4::from_translation([6.0, 6.0, -6.0].into()).into());
+
         let light2: Light = PointLight {
-            center: [6.0, -6.0, -6.0].into(),
             intensity: 5.0,
             color: [0.0, 0.3, 0.7].into(),
             ..PointLight::default()
         }.into();
 
-        world.create_entity().with(light1).build();
+        let light2_transform =
+            GlobalTransform(Matrix4::from_translation([6.0, -6.0, -6.0].into()).into());
 
-        world.create_entity().with(light2).build();
+        world
+            .create_entity()
+            .with(light1)
+            .with(light1_transform)
+            .build();
+
+        world
+            .create_entity()
+            .with(light2)
+            .with(light2_transform)
+            .build();
 
         println!("Put camera");
 
@@ -101,19 +113,10 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
     }
 
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        match event {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            virtual_keycode: Some(VirtualKeyCode::Escape),
-                            ..
-                        },
-                    ..
-                } => Trans::Quit,
-                _ => Trans::None,
-            },
-            _ => Trans::None,
+        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+            Trans::Quit
+        } else {
+            Trans::None
         }
     }
 
@@ -123,47 +126,22 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
     }
 }
 
-fn run() -> Result<(), amethyst::Error> {
+fn main() -> amethyst::Result<()> {
+    amethyst::start_logger(Default::default());
+
     let path = format!(
         "{}/examples/material/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
     );
-    let config = DisplayConfig::load(&path);
 
     let resources = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
 
-    let pipe = Pipeline::build().with_stage(
-        Stage::with_backbuffer()
-            .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawPbm::<PosNormTangTex>::new()),
-    );
-    let game_data = GameDataBuilder::default().with_bundle(RenderBundle::new(pipe, Some(config)))?;
+    let game_data = GameDataBuilder::default().with_basic_renderer(
+        path,
+        DrawPbm::<PosNormTangTex>::new(),
+        false,
+    )?;
     let mut game = Application::new(&resources, Example, game_data)?;
     game.run();
     Ok(())
-}
-
-fn main() {
-    if let Err(e) = run() {
-        println!("Failed to execute example: {}", e);
-        ::std::process::exit(1);
-    }
-}
-
-fn gen_sphere(u: usize, v: usize) -> Vec<PosNormTangTex> {
-    SphereUV::new(u, v)
-        .vertex(|vertex| {
-            let normal = Vector3::from(vertex.normal);
-            let up = Vector3::from([0.0, 1.0, 0.0]);
-            let tangent = normal.cross(up).cross(normal);
-            PosNormTangTex {
-                position: vertex.pos,
-                normal: vertex.normal,
-                tangent: tangent.into(),
-                tex_coord: [0.1, 0.1],
-            }
-        })
-        .triangulate()
-        .vertices()
-        .collect()
 }

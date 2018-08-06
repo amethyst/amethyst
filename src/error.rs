@@ -63,3 +63,9 @@ impl From<renderer::error::Error> for Error {
         Error::Core(core::Error::with_chain(err, "Renderer error"))
     }
 }
+
+impl From<ConfigError> for Error {
+    fn from(err: ConfigError) -> Self {
+        Error::Config(err)
+    }
+}

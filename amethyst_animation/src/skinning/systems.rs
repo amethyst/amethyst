@@ -1,7 +1,9 @@
-use amethyst_core::GlobalTransform;
 use amethyst_core::cgmath::{Matrix4, SquareMatrix};
-use amethyst_core::specs::prelude::{BitSet, InsertedFlag, Join, ModifiedFlag, ReadStorage,
-                                    ReaderId, Resources, System, WriteStorage};
+use amethyst_core::specs::prelude::{
+    BitSet, InsertedFlag, Join, ModifiedFlag, ReadStorage, ReaderId, Resources, System,
+    WriteStorage,
+};
+use amethyst_core::GlobalTransform;
 use amethyst_renderer::JointTransforms;
 
 use super::resources::*;

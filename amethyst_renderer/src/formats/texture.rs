@@ -1,18 +1,24 @@
 pub use imagefmt::Error as ImageError;
 
 use std::io::Cursor;
+use std::result::Result as StdResult;
 
-use Renderer;
-use amethyst_assets::{Result, ResultExt, SimpleFormat};
+use amethyst_assets::{
+    AssetStorage, Format, Handle, Loader, PrefabData, PrefabError, ProcessingState,
+    ProgressCounter, Result, ResultExt, SimpleFormat,
+};
+use amethyst_core::specs::prelude::{Entity, Read, ReadExpect};
 use gfx::format::{ChannelType, SurfaceType};
 use gfx::texture::SamplerInfo;
 use gfx::traits::Pod;
 use imagefmt;
 use imagefmt::{ColFmt, Image};
 use tex::{Texture, TextureBuilder};
+use Renderer;
 
 /// Texture metadata, used while loading
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(default)]
 pub struct TextureMetadata {
     /// Sampler info
     pub sampler: Option<SamplerInfo>,
@@ -80,9 +86,10 @@ impl TextureMetadata {
 }
 
 /// Texture data for loading
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum TextureData {
     /// Image data
+    #[serde(skip)]
     Image(ImageData, TextureMetadata),
 
     /// Color
@@ -126,14 +133,119 @@ impl TextureData {
     }
 }
 
+impl<'a> PrefabData<'a> for TextureData {
+    type SystemData = (ReadExpect<'a, Loader>, Read<'a, AssetStorage<Texture>>);
+    type Result = Handle<Texture>;
+
+    fn load_prefab(
+        &self,
+        _: Entity,
+        system_data: &mut Self::SystemData,
+        _: &[Entity],
+    ) -> StdResult<Handle<Texture>, PrefabError> {
+        Ok(system_data
+            .0
+            .load_from_data(self.clone(), (), &system_data.1))
+    }
+}
+
+/// `PrefabData` for loading `Texture`s.
+///
+/// Will not add any `Component`s to the `Entity`, will only return a `Handle`
+///
+/// ### Type parameters:
+///
+/// - `F`: `Format` to use for loading the `Texture`s from file
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub enum TexturePrefab<F>
+where
+    F: Format<Texture, Options = TextureMetadata>,
+{
+    /// Texture data
+    Data(TextureData),
+
+    /// Load file with format
+    File(String, F, TextureMetadata),
+
+    /// Clone handle only
+    #[serde(skip)]
+    Handle(Handle<Texture>),
+}
+
+impl<'a, F> PrefabData<'a> for TexturePrefab<F>
+where
+    F: Format<Texture, Options = TextureMetadata> + Clone + Sync,
+{
+    type SystemData = (ReadExpect<'a, Loader>, Read<'a, AssetStorage<Texture>>);
+
+    type Result = Handle<Texture>;
+
+    fn load_prefab(
+        &self,
+        _: Entity,
+        system_data: &mut Self::SystemData,
+        _: &[Entity],
+    ) -> StdResult<Handle<Texture>, PrefabError> {
+        let handle = match *self {
+            TexturePrefab::Data(ref data) => {
+                system_data
+                    .0
+                    .load_from_data(data.clone(), (), &system_data.1)
+            }
+
+            TexturePrefab::File(ref name, ref format, ref options) => system_data.0.load(
+                name.as_ref(),
+                format.clone(),
+                options.clone(),
+                (),
+                &system_data.1,
+            ),
+
+            TexturePrefab::Handle(ref handle) => handle.clone(),
+        };
+        Ok(handle)
+    }
+
+    fn trigger_sub_loading(
+        &mut self,
+        progress: &mut ProgressCounter,
+        system_data: &mut Self::SystemData,
+    ) -> StdResult<bool, PrefabError> {
+        let handle = match *self {
+            TexturePrefab::Data(ref data) => Some(system_data.0.load_from_data(
+                data.clone(),
+                progress,
+                &system_data.1,
+            )),
+
+            TexturePrefab::File(ref name, ref format, ref options) => Some(system_data.0.load(
+                name.as_ref(),
+                format.clone(),
+                options.clone(),
+                progress,
+                &system_data.1,
+            )),
+
+            TexturePrefab::Handle(_) => None,
+        };
+        if let Some(handle) = handle {
+            *self = TexturePrefab::Handle(handle);
+            Ok(true)
+        } else {
+            Ok(false)
+        }
+    }
+}
+
 /// ImageData provided by formats, can be interpreted as a texture.
 #[derive(Clone, Debug)]
 pub struct ImageData {
     /// The raw image data.
     pub raw: Image<u8>,
 }
+
 /// Allows loading of jpg or jpeg files.
-#[derive(Clone)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct JpgFormat;
 
 impl JpgFormat {
@@ -156,7 +268,7 @@ impl SimpleFormat<Texture> for JpgFormat {
 }
 
 /// Allows loading of PNG files.
-#[derive(Clone)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct PngFormat;
 
 impl PngFormat {
@@ -179,7 +291,7 @@ impl SimpleFormat<Texture> for PngFormat {
 }
 
 /// Allows loading of BMP files.
-#[derive(Clone)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct BmpFormat;
 
 impl SimpleFormat<Texture> for BmpFormat {
@@ -197,9 +309,12 @@ impl SimpleFormat<Texture> for BmpFormat {
 }
 
 /// Create a texture asset.
-pub fn create_texture_asset(data: TextureData, renderer: &mut Renderer) -> Result<Texture> {
+pub fn create_texture_asset(
+    data: TextureData,
+    renderer: &mut Renderer,
+) -> Result<ProcessingState<Texture>> {
     use self::TextureData::*;
-    match data {
+    let t = match data {
         Image(image_data, options) => {
             create_texture_asset_from_image(image_data, options, renderer)
         }
@@ -252,7 +367,8 @@ pub fn create_texture_asset(data: TextureData, renderer: &mut Renderer) -> Resul
                 .create_texture(tb)
                 .chain_err(|| "Failed to build texture")
         }
-    }
+    };
+    t.map(|t| ProcessingState::Loaded(t))
 }
 
 fn apply_options<D, T>(
@@ -328,6 +444,31 @@ fn create_texture_asset_from_image(
     renderer
         .create_texture(tb)
         .chain_err(|| "Failed to create texture from texture data")
+}
+
+/// Aggregate texture format
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub enum TextureFormat {
+    /// Jpeg
+    Jpg,
+    /// Png
+    Png,
+    /// Bmp
+    Bmp,
+}
+
+impl SimpleFormat<Texture> for TextureFormat {
+    const NAME: &'static str = "TextureFormat";
+
+    type Options = TextureMetadata;
+
+    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
+        match *self {
+            TextureFormat::Jpg => SimpleFormat::import(&JpgFormat, bytes, options),
+            TextureFormat::Png => SimpleFormat::import(&PngFormat, bytes, options),
+            TextureFormat::Bmp => SimpleFormat::import(&BmpFormat, bytes, options),
+        }
+    }
 }
 
 #[cfg(test)]

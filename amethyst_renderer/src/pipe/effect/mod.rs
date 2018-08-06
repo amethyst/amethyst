@@ -41,8 +41,8 @@ pub(crate) enum ProgramSource<'a> {
 
 impl<'a> ProgramSource<'a> {
     pub fn compile(&self, fac: &mut Factory) -> Result<ShaderSet<Resources>> {
-        use gfx::Factory;
         use gfx::traits::FactoryExt;
+        use gfx::Factory;
 
         match *self {
             ProgramSource::Simple(ref vs, ref ps) => fac.create_shader_set(vs, ps)
@@ -78,8 +78,8 @@ impl Effect {
         match self.globals.get(name.as_ref()) {
             Some(i) => self.data.globals[*i] = data.convert(),
             None => {
-                eprintln!(
-                    "WARNING: Global update for effect failed! Global not found: {:?}",
+                warn!(
+                    "Global update for effect failed! Global not found: {:?}",
                     name.as_ref()
                 );
             }
@@ -99,8 +99,8 @@ impl Effect {
                     .expect("Failed to update buffer (TODO: replace expect)");
             }
             None => {
-                eprintln!(
-                    "WARNING: Buffer update for effect failed! Buffer not found: {:?}",
+                warn!(
+                    "Buffer update for effect failed! Buffer not found: {:?}",
                     name.as_ref()
                 );
             }
@@ -119,8 +119,8 @@ impl Effect {
                 enc.update_constant_buffer::<T>(unsafe { mem::transmute(raw) }, &data)
             }
             None => {
-                eprintln!(
-                    "WARNING: Buffer update for effect failed! Buffer not found: {:?}",
+                warn!(
+                    "Buffer update for effect failed! Buffer not found: {:?}",
                     name.as_ref()
                 );
             }
@@ -313,8 +313,8 @@ impl<'a> EffectBuilder<'a> {
 
     /// TODO: Support render targets as inputs.
     pub fn build(&mut self) -> Result<Effect> {
-        use gfx::Factory;
         use gfx::traits::FactoryExt;
+        use gfx::Factory;
 
         debug!("Building effect");
         debug!("Compiling shaders");

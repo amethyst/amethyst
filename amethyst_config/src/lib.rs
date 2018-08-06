@@ -2,11 +2,12 @@
 //!
 
 #![crate_name = "amethyst_config"]
-#![crate_type = "lib"]
 #![doc(html_logo_url = "http://tinyurl.com/hgsb45k")]
 
 extern crate ron;
 extern crate serde;
+#[macro_use]
+extern crate log;
 
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
@@ -115,7 +116,11 @@ where
 {
     fn load<P: AsRef<Path>>(path: P) -> Self {
         Self::load_no_fallback(path.as_ref()).unwrap_or_else(|e| {
-            println!("1: Failed to load config: {}", e);
+            if let Some(path) = path.as_ref().to_str() {
+                error!("Failed to load config file '{}': {}", path, e);
+            } else {
+                error!("Failed to load config: {}", e);
+            }
 
             Self::default()
         })
@@ -137,7 +142,7 @@ where
         };
 
         if path.extension().and_then(|e| e.to_str()) == Some("ron") {
-            let mut d = Deserializer::from_bytes(&content);
+            let mut d = Deserializer::from_bytes(&content)?;
             let val = T::deserialize(&mut d)?;
             d.end()?;
 

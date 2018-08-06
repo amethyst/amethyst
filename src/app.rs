@@ -1,14 +1,12 @@
 //! The core engine framework.
 
 use std::error::Error as StdError;
-use std::io;
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 
 use core::shrev::{EventChannel, ReaderId};
-use fern;
-use log::LevelFilter;
+use log::Level;
 use rayon::ThreadPoolBuilder;
 use shred::Resource;
 #[cfg(feature = "profiler")]
@@ -31,6 +29,69 @@ use vergen;
 /// Since Application functions as the root of the game, Amethyst does not need
 /// to use any global variables. Within this object is everything that your
 /// game needs to run.
+///
+/// # Logging
+///
+/// Amethyst performs logging internally using the [log] crate. By default, `Application` will
+/// initialize a global logger that simply sends logs to the console. You can take advantage of
+/// this and use the logging macros in `log` once you've created your `Application` instance:
+///
+/// ```
+/// extern crate amethyst;
+/// #[macro_use]
+/// extern crate log;
+///
+/// use amethyst::prelude::*;
+/// use amethyst::core::transform::{Parent, Transform};
+/// use amethyst::ecs::prelude::System;
+///
+/// struct NullState;
+/// impl State<()> for NullState {}
+///
+/// fn main() -> amethyst::Result<()> {
+///     // Build the application instance to initialize the default logger.
+///     let mut game = Application::build("assets/", NullState)?
+///         .build(())?;
+///
+///     // Now logging can be performed as normal.
+///     info!("Using the default logger provided by amethyst");
+///     warn!("Uh-oh, something went wrong!");
+///
+///     Ok(())
+/// }
+/// ```
+///
+/// You can also setup your own logging system. Simply intialize any global logger that supports
+/// [log], and it will be used instead of the default logger:
+///
+/// ```
+/// extern crate amethyst;
+/// #[macro_use]
+/// extern crate log;
+/// extern crate env_logger;
+///
+/// use amethyst::prelude::*;
+/// use amethyst::core::transform::{Parent, Transform};
+/// use amethyst::ecs::prelude::System;
+///
+/// struct NullState;
+/// impl State<()> for NullState {}
+///
+/// fn main() -> amethyst::Result<()> {
+///     // Initialize your custom logger (using env_logger in this case) before creating the
+///     // `Application` instance.
+///     env_logger::init();
+///
+///     // The default logger will be automatically disabled and any logging amethyst does
+///     // will go through your custom logger.
+///     let mut game = Application::build("assets/", NullState)?
+///         .build(())?;
+///
+///     Ok(())
+/// }
+/// ```
+///
+/// [log]: https://crates.io/crates/log
 #[derive(Derivative)]
 #[derivative(Debug)]
 pub struct Application<'a, T> {
@@ -314,22 +375,14 @@ impl<S> ApplicationBuilder<S> {
     pub fn new<P: AsRef<Path>>(path: P, initial_state: S) -> Result<Self> {
         use rustc_version_runtime;
 
-        fern::Dispatch::new()
-            .format(|out, message, record| {
-                out.finish(format_args!(
-                    "[{}][{}] {}",
-                    record.target(),
-                    record.level(),
-                    message
-                ))
-            })
-            .level(LevelFilter::Debug)
-            .chain(io::stdout())
-            .apply()
-            .unwrap_or_else(|e| warn!("Application tried to override existing logger: {}", e));
+        if !log_enabled!(Level::Error) {
+            eprintln!(
+                "WARNING: No logger detected! Did you forget to call `amethyst::start_logger()`?"
+            );
+        }
 
         info!("Initializing Amethyst...");
-        info!("Version: {}", vergen::semver());
+        info!("Version: {}", env!("CARGO_PKG_VERSION"));
         info!("Platform: {}", vergen::target());
         info!("Amethyst git commit: {}", vergen::sha());
         let rustc_meta = rustc_version_runtime::version_meta();

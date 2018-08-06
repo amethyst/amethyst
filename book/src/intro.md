@@ -9,7 +9,7 @@ Howdy! This book will teach you everything you need to know about building video
 games and interactive simulations with the Amethyst game engine. This engine is
 written entirely in [Rust][rs], a safe and fast systems programming language,
 and sports a clean and modern design. More correctly, though, Amethyst is
-actually a suite of separate libraries and tools that collectively make up a
+actually a collection of separate libraries and tools that collectively make up a
 game engine.
 
 [rs]: https://www.rust-lang.org/
@@ -19,23 +19,25 @@ and [Apache][al]. This means that the engine is given to you at no cost
 and its source code is completely yours to tinker with. The code is available on
 [GitHub][am]. Contributions and feature requests will always be welcomed!
 
-[ml]: https://github.com/amethyst/amethyst/blob/master/LICENSE-MIT
-[al]: https://github.com/amethyst/amethyst/blob/master/LICENSE-APACHE
+[ml]: https://github.com/amethyst/amethyst/blob/master/docs/LICENSE-MIT
+[al]: https://github.com/amethyst/amethyst/blob/master/docs/LICENSE-APACHE
 [am]: https://github.com/amethyst/amethyst/tree/master
 
 ## Getting started
 
-This book is split into seven chapters (more coming). This page is the first. The others are:
+This book is split into four sections (more coming). This page is the first. The others are:
 
 * [Getting Started][gs] – Prepare your computer for Amethyst development.
+* [Concepts][cc] - An overview of the concepts used in Amethyst. Recommended.
 * [Pong Tutorial][pt] – Build a basic pong game in Rust.
 * [Animation][anim] – Explains the architecture of the `amethyst_animation` crate.
 * [Custom `GameData`][gad] - Shows you how to structure more complex games that need to change the system graph.
 * [Glossary][gl] - Defines special terms used throughout the book.
 * [Appendix A: Config Files][ax_a] - Shows you how to define your data in RON files.
 
-[gs]: ./getting_started.html
-[pt]: ./pong_tutorial.html
+[gs]: ./getting-started.html
+[cc]: ./concepts/intro.html
+[pt]: ./pong-tutorial.html
 [anim]: ./animation.html
 [gad]: ./game_data.html
 [gl]: ./glossary.html

@@ -3,8 +3,9 @@ use error::{Error, Result};
 use fnv::FnvHashMap as HashMap;
 use gfx::memory::Pod;
 use mesh::{Mesh, MeshBuilder, VertexDataSet};
-use pipe::{ColorBuffer, DepthBuffer, PipelineBuild, PipelineData, PolyPipeline, Target,
-           TargetBuilder};
+use pipe::{
+    ColorBuffer, DepthBuffer, PipelineBuild, PipelineData, PolyPipeline, Target, TargetBuilder,
+};
 use tex::{Texture, TextureBuilder};
 use types::{ColorFormat, DepthFormat, Device, Encoder, Factory, Window};
 use winit::{EventsLoop, Window as WinitWindow, WindowBuilder};
@@ -77,6 +78,8 @@ impl Renderer {
         if let Some(size) = self.window().get_inner_size() {
             if size != self.cached_size {
                 self.cached_size = size;
+                #[cfg(feature = "opengl")]
+                self.window.resize(size.0, size.1);
                 self.resize(pipe, size);
             }
         }

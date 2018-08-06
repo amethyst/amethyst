@@ -39,6 +39,14 @@ impl<'a, 'b> CustomGameDataBuilder<'a, 'b> {
         }
     }
 
+    pub fn with_base<S>(mut self, system: S, name: &str, dependencies: &[&str]) -> Self
+    where
+        for<'c> S: System<'c> + Send + 'a,
+    {
+        self.base.add(system, name, dependencies);
+        self
+    }
+
     pub fn with_base_bundle<B>(mut self, bundle: B) -> Result<Self>
     where
         B: SystemBundle<'a, 'b>,

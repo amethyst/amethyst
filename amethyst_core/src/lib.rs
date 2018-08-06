@@ -8,7 +8,6 @@ pub extern crate specs;
 extern crate error_chain;
 extern crate fnv;
 extern crate hibitset;
-#[macro_use]
 extern crate log;
 extern crate rayon;
 #[macro_use]
@@ -21,9 +20,6 @@ extern crate thread_profiler;
 
 #[cfg(all(target_os = "emscripten", not(no_threading)))]
 compile_error!("the cfg flag \"no_threading\" is required when building for emscripten");
-
-//#[cfg(test)]
-//extern crate quickcheck;
 
 pub use bundle::{Error, ErrorKind, Result, SystemBundle};
 pub use orientation::Orientation;

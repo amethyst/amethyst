@@ -82,7 +82,7 @@ fn main() {
             |mut s| {
                 s.insert_str(0, ">> ");
 
-                Ok(DummyAsset(s))
+                Ok(ProcessingState::Loaded(DummyAsset(s)))
             },
             frame_number,
             &*pool,

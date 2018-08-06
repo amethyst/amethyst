@@ -2,10 +2,12 @@
 //!
 //! TODO: Remove redundant padding once `#[repr(align(...))]` stabilizes.
 
-use amethyst_core::specs::prelude::{Component, DenseVecStorage};
+use amethyst_assets::{PrefabData, PrefabError};
+use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entity, Write, WriteStorage};
 use gfx;
 
 use color::Rgba;
+use resources::AmbientColor;
 
 /// A light source.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
@@ -26,6 +28,7 @@ pub enum Light {
 /// A directional light source.
 #[repr(C)]
 #[derive(Clone, ConstantBuffer, Debug, Deserialize, PartialEq, Serialize)]
+#[serde(default)]
 pub struct DirectionalLight {
     /// Color of the light in RGBA8 format.
     pub color: Rgba,
@@ -48,7 +51,9 @@ impl From<DirectionalLight> for Light {
     }
 }
 
-/// A point light source.
+/// A point light source. Uses the `Transform` set of components for
+/// positioning, and requires a `GlobalTransform` component to be included
+/// in rendering.
 ///
 /// Lighting calculations are based off of the Frostbite engine's lighting,
 /// which is explained in detail here in [this presentation][fb]. Below is
@@ -70,9 +75,8 @@ impl From<DirectionalLight> for Light {
 /// [fb]: http://www.frostbite.com/wp-content/uploads/2014/11/course_notes_moving_frostbite_to_pbr.pdf
 #[repr(C)]
 #[derive(Clone, ConstantBuffer, Debug, Deserialize, PartialEq, Serialize)]
+#[serde(default)]
 pub struct PointLight {
-    /// Location of the light source in three dimensional space.
-    pub center: [f32; 3], //TODO: Replace with a cgmath type when gfx version > 0.16
     /// Color of the light in RGBA8 format.
     pub color: Rgba,
     /// Brightness of the light source, in lumens.
@@ -87,7 +91,6 @@ pub struct PointLight {
 impl Default for PointLight {
     fn default() -> Self {
         PointLight {
-            center: [0.0, 0.0, 0.0],
             color: Rgba::default(),
             intensity: 10.0,
             radius: 10.0,
@@ -105,6 +108,7 @@ impl From<PointLight> for Light {
 /// A spot light source.
 #[repr(C)]
 #[derive(Clone, ConstantBuffer, Debug, Deserialize, PartialEq, Serialize)]
+#[serde(default)]
 pub struct SpotLight {
     /// Opening angle of the light cone in degrees.
     pub angle: f32, //TODO: Replace with a cgmath type when gfx version > 0.16
@@ -146,6 +150,7 @@ impl From<SpotLight> for Light {
 /// A realistic disk-shaped sun light source.
 #[repr(C)]
 #[derive(Clone, ConstantBuffer, Debug, Deserialize, PartialEq, Serialize)]
+#[serde(default)]
 pub struct SunLight {
     /// The sun's angular radius in degrees.
     pub ang_rad: f32, //TODO: Replace with a cgmath type when gfx version > 0.16
@@ -176,4 +181,49 @@ impl From<SunLight> for Light {
 
 impl Component for Light {
     type Storage = DenseVecStorage<Self>;
+}
+
+impl<'a> PrefabData<'a> for Light {
+    type SystemData = WriteStorage<'a, Light>;
+    type Result = ();
+
+    fn load_prefab(
+        &self,
+        entity: Entity,
+        storage: &mut Self::SystemData,
+        _: &[Entity],
+    ) -> Result<(), PrefabError> {
+        storage.insert(entity, self.clone()).map(|_| ())
+    }
+}
+
+/// Prefab for lighting
+#[derive(Default, Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct LightPrefab {
+    light: Option<Light>,
+    ambient_color: Option<AmbientColor>,
+}
+
+impl<'a> PrefabData<'a> for LightPrefab {
+    type SystemData = (
+        <Light as PrefabData<'a>>::SystemData,
+        Write<'a, AmbientColor>,
+    );
+    type Result = ();
+
+    fn load_prefab(
+        &self,
+        entity: Entity,
+        system_data: &mut Self::SystemData,
+        _: &[Entity],
+    ) -> Result<(), PrefabError> {
+        if let Some(ref light) = self.light {
+            light.load_prefab(entity, &mut system_data.0, &[])?;
+        }
+        if let Some(ref ambient_color) = self.ambient_color {
+            *system_data.1 = ambient_color.clone();
+        }
+        Ok(())
+    }
 }

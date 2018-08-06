@@ -12,10 +12,11 @@ extern crate serde;
 use std::sync::Arc;
 
 use amethyst_assets::*;
-use amethyst_core::Time;
 use amethyst_core::specs::common::Errors;
-use amethyst_core::specs::prelude::{Dispatcher, DispatcherBuilder, Read, ReadExpect, System,
-                                    VecStorage, World, Write};
+use amethyst_core::specs::prelude::{
+    Builder, Dispatcher, DispatcherBuilder, Read, ReadExpect, System, VecStorage, World, Write,
+};
+use amethyst_core::Time;
 use rayon::{ThreadPool, ThreadPoolBuilder};
 
 struct App {
@@ -118,7 +119,7 @@ impl<'a> System<'a> for RenderingSystem {
             |vertex_data| {
                 // Upload vertex data to GPU and give back an asset
 
-                Ok(MeshAsset { buffer: () })
+                Ok(ProcessingState::Loaded(MeshAsset { buffer: () }))
             },
             time.frame_number(),
             &**pool,
@@ -156,8 +157,8 @@ impl State {
                     eprintln!("Asset loading failed!");
                     eprintln!("-- Errors --");
                     progress.errors().iter().enumerate().for_each(|(n, e)| {
-                        eprintln!("{}: error: {}", n, e);
-                        for cause in e.iter().skip(1) {
+                        eprintln!("{}: error: {}", n, e.error);
+                        for cause in e.error.iter().skip(1) {
                             eprintln!("{}: caused by: {}", n, cause);
                         }
                     });

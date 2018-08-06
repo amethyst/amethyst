@@ -30,6 +30,11 @@ addons:
   apt:
     packages:
       - libasound2-dev
+      - libsdl2-dev
+
+# Install SDL development libraries from homebrew on macOS
+before_install:
+ - "if [ ${TRAVIS_OS_NAME} = 'osx' ]; then brew update && brew install sdl2; fi"
 
 # This build doesn't require sudo, but turning it on gives us more disk space
 # We need the extra space as we keep running out.
@@ -37,7 +42,10 @@ sudo: required
 
 # Force third-party crates to persist from previous builds and update only when
 # needed.
-cache: cargo
+cache: 
+  - cargo
+  - directories:
+      - target
 
 # Allow binaries installed from Cargo.
 before_script:
@@ -48,7 +56,9 @@ script: |
   # Build and test without profiler
   cargo test --all -v &&
   # Build and test with profiler
-  cargo test --all --features profiler -v 
+  cargo test --all --features profiler -v &&
+  # Build and test with sdl_controller
+  cargo test --all --features sdl_controller -v
 
 # Push notifications to `amethyst/general` and `amethyst/engine` Gitter chats.
 notifications:

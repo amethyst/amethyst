@@ -1,13 +1,16 @@
 use amethyst::core::cgmath::{Quaternion, Rad, Rotation, Rotation3};
 use amethyst::core::{Time, Transform};
-use amethyst::ecs::prelude::{Join, Read, ReadStorage, System, WriteExpect, WriteStorage};
+use amethyst::ecs::prelude::{Entity, Join, Read, ReadStorage, System, WriteExpect, WriteStorage};
 use amethyst::renderer::{Camera, Light};
-use amethyst::ui::UiText;
+use amethyst::ui::{UiFinder, UiText};
 use amethyst::utils::fps_counter::FPSCounter;
 
 use super::DemoState;
 
-pub struct ExampleSystem;
+#[derive(Default)]
+pub struct ExampleSystem {
+    fps_display: Option<Entity>,
+}
 
 impl<'a> System<'a> for ExampleSystem {
     type SystemData = (
@@ -18,10 +21,12 @@ impl<'a> System<'a> for ExampleSystem {
         WriteExpect<'a, DemoState>,
         WriteStorage<'a, UiText>,
         Read<'a, FPSCounter>,
+        UiFinder<'a>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (mut lights, time, camera, mut transforms, mut state, mut ui_text, fps_counter) = data;
+        let (mut lights, time, camera, mut transforms, mut state, mut ui_text, fps_counter, finder) =
+            data;
         let light_angular_velocity = -1.0;
         let light_orbit_radius = 15.0;
         let light_z = 6.0;
@@ -41,24 +46,33 @@ impl<'a> System<'a> for ExampleSystem {
             transform.rotation = (delta_rot * Quaternion::from(transform.rotation)).into();
         }
 
-        for point_light in (&mut lights).join().filter_map(|light| {
-            if let Light::Point(ref mut point_light) = *light {
-                Some(point_light)
-            } else {
-                None
-            }
-        }) {
-            point_light.center[0] = light_orbit_radius * state.light_angle.cos();
-            point_light.center[1] = light_orbit_radius * state.light_angle.sin();
-            point_light.center[2] = light_z;
+        for (point_light, transform) in (&mut lights, &mut transforms).join().filter_map(
+            |(light, transform)| {
+                if let Light::Point(ref mut point_light) = *light {
+                    Some((point_light, transform))
+                } else {
+                    None
+                }
+            },
+        ) {
+            transform.translation.x = light_orbit_radius * state.light_angle.cos();
+            transform.translation.y = light_orbit_radius * state.light_angle.sin();
+            transform.translation.z = light_z;
 
             point_light.color = state.light_color.into();
         }
 
-        if let Some(fps_display) = ui_text.get_mut(state.fps_display) {
-            if time.frame_number() % 20 == 0 {
-                let fps = fps_counter.sampled_fps();
-                fps_display.text = format!("FPS: {:.*}", 2, fps);
+        if let None = self.fps_display {
+            if let Some(fps_entity) = finder.find("fps_text") {
+                self.fps_display = Some(fps_entity);
+            }
+        }
+        if let Some(fps_entity) = self.fps_display {
+            if let Some(fps_display) = ui_text.get_mut(fps_entity) {
+                if time.frame_number() % 20 == 0 {
+                    let fps = fps_counter.sampled_fps();
+                    fps_display.text = format!("FPS: {:.*}", 2, fps);
+                }
             }
         }
     }

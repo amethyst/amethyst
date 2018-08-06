@@ -1,4 +1,9 @@
-use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entity, FlaggedStorage};
+use std::result::Result as StdResult;
+
+use amethyst_assets::{PrefabData, PrefabError};
+use amethyst_core::specs::prelude::{
+    Component, DenseVecStorage, Entity, FlaggedStorage, WriteStorage,
+};
 use gfx::format::{ChannelType, Format, SurfaceType};
 
 use error::Result;
@@ -69,7 +74,7 @@ fn build_mesh_with_combo(
 }
 
 /// Mesh creator for `VertexBufferCombination`.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct AnimatedComboMeshCreator {
     combo: AnimatedVertexBufferCombination,
 }
@@ -85,10 +90,45 @@ impl MeshCreator for AnimatedComboMeshCreator {
     fn build(self: Box<Self>, renderer: &mut Renderer) -> Result<Mesh> {
         build_mesh_with_combo(self.combo, renderer)
     }
+
+    fn box_clone(&self) -> Box<MeshCreator> {
+        Box::new((*self).clone())
+    }
 }
 
 impl From<AnimatedVertexBufferCombination> for AnimatedComboMeshCreator {
     fn from(combo: AnimatedVertexBufferCombination) -> Self {
         Self::new(combo)
+    }
+}
+
+/// Prefab for `JointTransforms`
+#[derive(Default, Clone, Debug, Deserialize, Serialize)]
+pub struct JointTransformsPrefab {
+    /// Index of skin `Entity`
+    pub skin: usize,
+    /// Number of joints in the skin
+    pub size: usize,
+}
+
+impl<'a> PrefabData<'a> for JointTransformsPrefab {
+    type SystemData = WriteStorage<'a, JointTransforms>;
+    type Result = ();
+
+    fn load_prefab(
+        &self,
+        entity: Entity,
+        storage: &mut Self::SystemData,
+        entities: &[Entity],
+    ) -> StdResult<(), PrefabError> {
+        storage
+            .insert(
+                entity,
+                JointTransforms {
+                    skin: entities[self.skin],
+                    matrices: vec![[[0.; 4]; 4]; self.size],
+                },
+            )
+            .map(|_| ())
     }
 }

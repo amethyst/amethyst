@@ -1,8 +1,10 @@
 //! Local transform component.
 
-use cgmath::{Angle, Array, Basis2, Deg, ElementWise, EuclideanSpace, Euler, InnerSpace, Matrix3,
-             Matrix4, One, Point2, Point3, Quaternion, Rad, Rotation, Rotation2, Rotation3,
-             Transform as CgTransform, Vector2, Vector3, Zero};
+use cgmath::{
+    Angle, Array, Basis2, Deg, ElementWise, EuclideanSpace, Euler, InnerSpace, Matrix3, Matrix4,
+    One, Point2, Point3, Quaternion, Rad, Rotation, Rotation2, Rotation3, Transform as CgTransform,
+    Vector2, Vector3, Zero,
+};
 use orientation::Orientation;
 use specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
 
@@ -11,7 +13,8 @@ use specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
 /// Used for rendering position and orientation.
 ///
 /// The transforms are preformed in this order: scale, then rotation, then translation.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
 pub struct Transform {
     /// Quaternion [w (scalar), x, y, z]
     pub rotation: Quaternion<f32>,
@@ -54,8 +57,10 @@ impl Transform {
         self.rotation = Quaternion::look_at(Point3::from_vec(self.translation) - position, up);
         // Catch NaNs etc. in debug mode.
         debug_assert!(
-            self.rotation.s.is_finite() && self.rotation.v.x.is_finite()
-                && self.rotation.v.y.is_finite() && self.rotation.v.z.is_finite(),
+            self.rotation.s.is_finite()
+                && self.rotation.v.x.is_finite()
+                && self.rotation.v.y.is_finite()
+                && self.rotation.v.z.is_finite(),
             "`look_at` should be finite to be useful"
         );
         self

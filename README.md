@@ -1,4 +1,4 @@
-<img align="left" width="64px" src="book/images/amethyst_thumb.png" />
+<img align="left" width="64px" src="book/src/images/amethyst_thumb.png" />
 
 # Amethyst
 
@@ -17,20 +17,44 @@
 [gc]: https://gitter.im/orgs/amethyst/rooms
 [di]: https://discord.gg/GnP5Whs
 
-**Warning: The book and the documentation are missing content. Amethyst is undergoing a lot of changes at the moment.**
+## What is Amethyst?!
 
-## Goals
+Amethyst is a game engine aiming to be fast and as configurable as possible.
 
-* Massively parallel architecture
-* Powered by a correct [Entity Component System][ecs] model
-* Rapid prototyping with [RON] files for prefabs and an abstract scripting API
+## Principles
+
+These principles are what make amethyst unique and competitive in the world of game engines.
+
+* Massively parallel architecture.
+* Powered by a correct [Entity Component System][ecs] model.
+* Rapid prototyping with [RON] (Json-like) files for prefabs and an abstract scripting API.
+* Strong focus on encouraging reusability and clean interfaces.
 
 [ecs]: https://en.wikipedia.org/wiki/Entity–component–system
 [RON]: https://github.com/ron-rs/ron
 
+## Why Amethyst?
+
+### Extreme Multithreading
+
+Amethyst is based over a very powerful parallel [ecs] called specs.
+This allows games built with Amethyst to maximize the processing power usage to make it run as smooth and as fast as possible, without the headache of multithread programming.
+
+### Clean
+
+By design, the amethyst engine encourages you to write clean and reusable code for your behaviours and data structures, allowing engine users to easily
+share useful components, thus reducing development time and cost.
+
+Using the [ecs] architecture, the code of games can be cleanly divided between data and behaviour, making it easy to understand what is going on,
+even if the game is running on a massive 64 cores processor.
+
+### Community
+
+While we may not be feature-packed (yet!), we all strongly believe that the community-oriented side of amethyst will thrive as we move forward!
+
 ## Features
 
-Please visit the [features page][feat] for a list of features Amethyst provides and will provide.
+Please visit the [features page][feat] for a list of features Amethyst provides.
 
 [feat]: docs/FEATURES.md
 
@@ -46,7 +70,9 @@ Please visit the [features page][feat] for a list of features Amethyst provides 
 
 ## Usage
 
-Please read the [online book][bk] for a comprehensive tutorial to using Amethyst.
+While the engine can be hard to use at times, we made a lot of [documentation][bk] that will teach you everything you need to use amethyst comfortably!
+
+If you don't understand a part of the documentation, please let us know. Join us on discord or gitter, or open an issue, we are always happy to help!
 
 [bk]: https://www.amethyst.rs/book/master/
 
@@ -57,6 +83,14 @@ To compile any of the examples run:
 $ cargo run --example name_of_example
 ```
 All available examples are listed under [examples][ex].
+
+Our most advanced example is currently called pong. It is a pong game, as you may have guessed it.
+```
+$ cargo run --example pong
+```
+
+There are quite a few prototype games that were made with Amethyst. A list will be available soon.
+While we create this list, feel free to join our discord and ask about which projects are currently being made with Amethyst.
 
 For a full-blown "Hello World" tutorial check out the [Getting Started][gs] chapter
 in the book.
@@ -77,20 +111,8 @@ $ sudo apt install libasound2-dev libx11-xcb-dev
 ### Fedora
 
 ```
-$ sudo yum install alsa-lib-devel
+$ sudo dnf install alsa-lib-devel
 ```
-
-## OSX audio workaround
-
-If you're using audio on OSX for the time being a workaround is necessary.  Add this to your Cargo.toml
-
-```
-[patch.crates-io]
-coreaudio-sys = { git = "https://github.com/RustAudio/coreaudio-sys.git", rev = "cf3a8321f461655a304ee8aa3139d5c5c88fd379" }
-```
-
-We're working on getting this resolved so this is no longer necessary, but right now this is out of our control.  Note this
-still may not work on older Macs.
 
 ## Building Documentation
 
@@ -116,7 +138,7 @@ We do not support anything other than the most recent Rust stable release. Use n
 
 Please check out the [FAQ][faq] before asking.
 
-If you have a question, just ask on [Gitter][gt] or [Discord][di] and we'll help you and add it to the FAQ.
+If you have a question, just ask on [Discord][di] (most active) or [Gitter][gt] and we'll help you.
 
 Other places you may want to check out are [r/rust_gamedev][rg] and [#rust-gamedev IRC][irc].
 
@@ -126,6 +148,30 @@ Other places you may want to check out are [r/rust_gamedev][rg] and [#rust-gamed
 [rg]: https://www.reddit.com/r/rust_gamedev/
 [irc]: https://botbot.me/mozilla/rust-gamedev/
 
+## Contributing
+
+We are a community project that welcomes contributions from anyone. 
+
+If you're interested in helping out, please read the [contribution guidelines][cm] 
+file before getting started. 
+
+We have a [good first issue][gfi] category that groups all issues or feature request
+that can be made without having an extensive knowledge of rust or amethyst.
+Working on those issues is a good, if not the best way to learn.
+
+If you think you are not ready to code yet, you can still contribute by reviewing code written by other members of the community.
+In fact, code reviews ensures that the code that gets added to amethyst is of the highest quality as possible.
+Pull requests available for reviews are [here][pr].
+
+If for some reason we don't have any open PR or good first issues (that would be a good thing),
+you can look through the [issue tracker][it].
+
+[cm]: docs/CONTRIBUTING.md
+[pr]: https://github.com/amethyst/amethyst/projects
+[it]: https://github.com/amethyst/amethyst/issues
+
+[gfi]: https://github.com/amethyst/amethyst/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
+
 ## License
 
 Amethyst is free and open source software distributed under the terms of both
@@ -133,16 +179,6 @@ the [MIT License][lm] and the [Apache License 2.0][la].
 
 [lm]: docs/LICENSE-MIT
 [la]: docs/LICENSE-APACHE
-
-## Contributing
-
-We are a community project that welcomes contribution from anyone. If you're
-interested in helping out, please read the [CONTRIBUTING.md][cm] file before
-getting started. Don't know what to hack on? Check our [active projects][pr], or search though [our issue tracker][it].
-
-[cm]: docs/CONTRIBUTING.md
-[pr]: https://github.com/amethyst/amethyst/projects
-[it]: https://github.com/amethyst/amethyst/issues
 
 Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in the work by you, as defined in the Apache-2.0 license, shall be

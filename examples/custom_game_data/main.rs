@@ -3,44 +3,51 @@
 extern crate amethyst;
 extern crate rayon;
 
-use amethyst::assets::{Completion, HotReloadBundle, ProgressCounter};
+use amethyst::assets::{
+    Completion, Handle, Prefab, PrefabLoader, PrefabLoaderSystem, ProgressCounter, RonFormat,
+};
 use amethyst::config::Config;
-use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::transform::TransformBundle;
-use amethyst::ecs::prelude::{Component, Entity, Join, World};
+use amethyst::ecs::prelude::{Component, Entity};
 use amethyst::ecs::storage::NullStorage;
-use amethyst::input::InputBundle;
-use amethyst::renderer::{DisplayConfig, DrawShaded, Event, Pipeline, PosNormTex, RenderBundle,
-                         Stage};
-use amethyst::ui::{DrawUi, UiBundle};
+use amethyst::input::{is_close_requested, is_key_down, InputBundle};
+use amethyst::prelude::*;
+use amethyst::renderer::{
+    DisplayConfig, DrawShaded, Event, Pipeline, PosNormTex, RenderBundle, Stage, VirtualKeyCode,
+};
+use amethyst::ui::{DrawUi, UiBundle, UiCreator, UiLoader, UiPrefab};
 use amethyst::utils::fps_counter::FPSCounterBundle;
-use amethyst::{Application, Error, State, StateData, Trans};
+use amethyst::utils::scene::BasicScenePrefab;
+use amethyst::Error;
 
 use example_system::ExampleSystem;
 use game_data::{CustomGameData, CustomGameDataBuilder};
-use graphic::{add_graphics_to_world, load_assets, Assets};
-use input::{is_exit, is_pause};
-use ui::{create_load_ui, create_paused_ui};
 
 mod example_system;
 mod game_data;
-mod graphic;
-mod input;
-mod ui;
+
+type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
 pub struct DemoState {
     light_angle: f32,
     light_color: [f32; 4],
     camera_angle: f32,
-    fps_display: Entity,
 }
 
 #[derive(Default)]
 struct Loading {
-    progress: Option<ProgressCounter>,
+    progress: ProgressCounter,
+    scene: Option<Handle<Prefab<MyPrefabData>>>,
+    load_ui: Option<Entity>,
+    paused_ui: Option<Handle<UiPrefab>>,
 }
-struct Main;
-struct Paused;
+struct Main {
+    scene: Handle<Prefab<MyPrefabData>>,
+    paused_ui: Handle<UiPrefab>,
+}
+struct Paused {
+    ui: Entity,
+}
 
 #[derive(Default)]
 struct Tag;
@@ -49,27 +56,24 @@ impl Component for Tag {
     type Storage = NullStorage<Self>;
 }
 
-fn delete_state_tagged(world: &mut World) {
-    let entities = (&*world.entities(), &world.read_storage::<Tag>())
-        .join()
-        .map(|(e, _)| e)
-        .collect::<Vec<_>>();
-    if let Err(err) = world.delete_entities(&entities) {
-        eprintln!("Failed deleting entities: {}", err);
-    }
-}
-
 impl<'a, 'b> State<CustomGameData<'a, 'b>> for Loading {
     fn on_start(&mut self, data: StateData<CustomGameData>) {
-        data.world.register::<Tag>();
-        self.progress = Some(load_assets(data.world));
-        let font = data.world.read_resource::<Assets>().font.clone();
-        let fps_display = create_load_ui(data.world, font.clone());
+        self.scene = Some(data.world.exec(|loader: PrefabLoader<MyPrefabData>| {
+            loader.load("prefab/renderable.ron", RonFormat, (), &mut self.progress)
+        }));
+
+        self.load_ui = Some(data.world.exec(|mut creator: UiCreator| {
+            creator.create("ui/fps.ron", &mut self.progress);
+            creator.create("ui/loading.ron", &mut self.progress)
+        }));
+        self.paused_ui = Some(
+            data.world
+                .exec(|loader: UiLoader| loader.load("ui/paused.ron", &mut self.progress)),
+        );
         data.world.add_resource::<DemoState>(DemoState {
             light_angle: 0.0,
             light_color: [1.0; 4],
             camera_angle: 0.0,
-            fps_display,
         });
     }
 
@@ -78,7 +82,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>> for Loading {
         _: StateData<CustomGameData>,
         event: Event,
     ) -> Trans<CustomGameData<'a, 'b>> {
-        if is_exit(event) {
+        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
             Trans::Quit
         } else {
             Trans::None
@@ -87,15 +91,20 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>> for Loading {
 
     fn update(&mut self, data: StateData<CustomGameData>) -> Trans<CustomGameData<'a, 'b>> {
         data.data.update(&data.world, true);
-        match self.progress.as_ref().unwrap().complete() {
+        match self.progress.complete() {
             Completion::Failed => {
                 eprintln!("Failed loading assets");
                 Trans::Quit
             }
             Completion::Complete => {
                 println!("Assets loaded, swapping state");
-                delete_state_tagged(data.world);
-                Trans::Switch(Box::new(Main))
+                if let Some(entity) = self.load_ui {
+                    let _ = data.world.delete_entity(entity);
+                }
+                Trans::Switch(Box::new(Main {
+                    scene: self.scene.as_ref().unwrap().clone(),
+                    paused_ui: self.paused_ui.as_ref().unwrap().clone(),
+                }))
             }
             Completion::Loading => Trans::None,
         }
@@ -103,20 +112,15 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>> for Loading {
 }
 
 impl<'a, 'b> State<CustomGameData<'a, 'b>> for Paused {
-    fn on_start(&mut self, data: StateData<CustomGameData>) {
-        let font = data.world.read_resource::<Assets>().font.clone();
-        create_paused_ui(data.world, font);
-    }
-
     fn handle_event(
         &mut self,
         data: StateData<CustomGameData>,
         event: Event,
     ) -> Trans<CustomGameData<'a, 'b>> {
-        if is_exit(event.clone()) {
+        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
             Trans::Quit
-        } else if is_pause(event) {
-            delete_state_tagged(data.world);
+        } else if is_key_down(&event, VirtualKeyCode::Space) {
+            let _ = data.world.delete_entity(self.ui);
             Trans::Pop
         } else {
             Trans::None
@@ -131,18 +135,23 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>> for Paused {
 
 impl<'a, 'b> State<CustomGameData<'a, 'b>> for Main {
     fn on_start(&mut self, data: StateData<CustomGameData>) {
-        add_graphics_to_world(data.world);
+        data.world.create_entity().with(self.scene.clone()).build();
     }
 
     fn handle_event(
         &mut self,
-        _: StateData<CustomGameData>,
+        data: StateData<CustomGameData>,
         event: Event,
     ) -> Trans<CustomGameData<'a, 'b>> {
-        if is_exit(event.clone()) {
+        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
             Trans::Quit
-        } else if is_pause(event) {
-            Trans::Push(Box::new(Paused))
+        } else if is_key_down(&event, VirtualKeyCode::Space) {
+            Trans::Push(Box::new(Paused {
+                ui: data.world
+                    .create_entity()
+                    .with(self.paused_ui.clone())
+                    .build(),
+            }))
         } else {
             Trans::None
         }
@@ -154,21 +163,14 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>> for Main {
     }
 }
 
-fn main() {
-    if let Err(error) = run() {
-        eprintln!("Could not run the example!");
-        eprintln!("{}", error);
-        ::std::process::exit(1);
-    }
-}
+fn main() -> Result<(), Error> {
+    amethyst::start_logger(Default::default());
 
-/// Wrapper around the main, so we can return errors easily.
-fn run() -> Result<(), Error> {
     // Add our meshes directory to the asset loader.
     let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
 
     let display_config_path = format!(
-        "{}/examples/renderable/resources/display_config.ron",
+        "{}/examples/custom_game_data/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
     );
 
@@ -180,17 +182,15 @@ fn run() -> Result<(), Error> {
             .with_pass(DrawUi::new()),
     );
     let game_data = CustomGameDataBuilder::default()
-        .with_running::<ExampleSystem>(ExampleSystem, "example_system", &[])
+        .with_base(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
+        .with_running::<ExampleSystem>(ExampleSystem::default(), "example_system", &[])
         .with_base_bundle(TransformBundle::new())?
         .with_base_bundle(UiBundle::<String, String>::new())?
-        .with_base_bundle(HotReloadBundle::default())?
         .with_base_bundle(FPSCounterBundle::default())?
         .with_base_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?
         .with_base_bundle(InputBundle::<String, String>::new())?;
 
-    let mut game = Application::build(resources_directory, Loading::default())?
-        .with_frame_limit(FrameRateLimitStrategy::Unlimited, 0)
-        .build(game_data)?;
+    let mut game = Application::build(resources_directory, Loading::default())?.build(game_data)?;
     game.run();
 
     Ok(())

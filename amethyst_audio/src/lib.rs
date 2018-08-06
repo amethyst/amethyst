@@ -5,6 +5,8 @@ extern crate cpal;
 #[macro_use]
 extern crate log;
 extern crate rodio;
+#[macro_use]
+extern crate serde;
 extern crate smallvec;
 
 #[macro_use]
@@ -13,7 +15,7 @@ extern crate thread_profiler;
 
 pub use self::bundle::AudioBundle;
 pub use self::components::*;
-pub use self::formats::{FlacFormat, OggFormat, WavFormat};
+pub use self::formats::{AudioFormat, FlacFormat, Mp3Format, OggFormat, WavFormat};
 pub use self::sink::AudioSink;
 pub use self::source::{Source, SourceHandle};
 pub use self::systems::*;

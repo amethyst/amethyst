@@ -18,20 +18,21 @@ mod sprite_sheet_loader;
 
 use std::time::Duration;
 
-use amethyst::animation::{get_animation_set, AnimationBundle, AnimationCommand, AnimationControl,
-                          ControlState, EndControl, MaterialTextureSet};
+use amethyst::animation::{
+    get_animation_set, AnimationBundle, AnimationCommand, AnimationControl, ControlState,
+    EndControl,
+};
 use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::cgmath::{Matrix4, Point3, Transform as CgTransform, Vector3};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::Entity;
-use amethyst::input::InputBundle;
+use amethyst::input::{is_close_requested, is_key_down, InputBundle};
 use amethyst::prelude::*;
-use amethyst::renderer::{Camera, ColorMask, DisplayConfig, DrawFlat, Event, KeyboardInput,
-                         Material, MaterialDefaults, Mesh, Pipeline, PosTex, Projection,
-                         RenderBundle, ScreenDimensions, Stage, VirtualKeyCode, WindowEvent, ALPHA};
-use amethyst::ui::{DrawUi, UiBundle};
-
-const BACKGROUND_COLOUR: [f32; 4] = [0.0, 0.0, 0.0, 1.0]; // black
+use amethyst::renderer::{
+    Camera, ColorMask, DrawFlat, Event, Material, MaterialDefaults, MaterialTextureSet, Mesh,
+    PosTex, Projection, ScreenDimensions, VirtualKeyCode, ALPHA,
+};
+use amethyst::ui::UiBundle;
 
 #[derive(Debug, Default)]
 struct Example {
@@ -134,7 +135,8 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
             // We also need to trigger the animation, not just attach it to the entity
             let mut animation_control_set_storage = world.write_storage();
             let animation_set =
-                get_animation_set::<u32, Material>(&mut animation_control_set_storage, entity);
+                get_animation_set::<u32, Material>(&mut animation_control_set_storage, entity)
+                    .unwrap();
 
             let animation_id = 0;
 
@@ -155,20 +157,10 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
     }
 
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        match event {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            virtual_keycode: Some(VirtualKeyCode::Escape),
-                            ..
-                        },
-                    ..
-                }
-                | WindowEvent::CloseRequested => Trans::Quit,
-                _ => Trans::None,
-            },
-            _ => Trans::None,
+        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+            Trans::Quit
+        } else {
+            Trans::None
         }
     }
 
@@ -187,10 +179,7 @@ fn initialise_camera(world: &mut World) -> Entity {
     world
         .create_entity()
         .with(Camera::from(Projection::orthographic(
-            0.0,
-            width,
-            height,
-            0.0,
+            0.0, width, height, 0.0,
         )))
         .with(GlobalTransform(Matrix4::from_translation(
             Vector3::new(0.0, 0.0, 1.0).into(),
@@ -198,21 +187,15 @@ fn initialise_camera(world: &mut World) -> Entity {
         .build()
 }
 
-fn run() -> Result<(), amethyst::Error> {
+fn main() -> amethyst::Result<()> {
+    amethyst::start_logger(Default::default());
+
     let path = format!(
         "{}/examples/sprites/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
     );
 
     let assets_directory = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
-    let config = DisplayConfig::load(&path);
-
-    let pipe = Pipeline::build().with_stage(
-        Stage::with_backbuffer()
-            .clear_target(BACKGROUND_COLOUR, 1.0)
-            .with_pass(DrawFlat::<PosTex>::new().with_transparency(ColorMask::all(), ALPHA, None))
-            .with_pass(DrawUi::new()),
-    );
 
     let game_data = GameDataBuilder::default()
         .with_bundle(AnimationBundle::<u32, Material>::new(
@@ -225,7 +208,7 @@ fn run() -> Result<(), amethyst::Error> {
                 .with_dep(&["animation_control_system", "sampler_interpolation_system"]),
         )?
         // RenderBundle gives us a window
-        .with_bundle(RenderBundle::new(pipe, Some(config)))?
+        .with_basic_renderer(path, DrawFlat::<PosTex>::new().with_transparency(ColorMask::all(), ALPHA, None), true)?
         // UiBundle relies on this as some Ui objects take input
         .with_bundle(InputBundle::<String, String>::new())?
         // Draws textures
@@ -234,13 +217,6 @@ fn run() -> Result<(), amethyst::Error> {
     game.run();
 
     Ok(())
-}
-
-fn main() {
-    if let Err(e) = run() {
-        error!("Failed to execute example: {}", e);
-        ::std::process::exit(1);
-    }
 }
 
 /// Returns a set of vertices that make up a rectangular mesh of the given size.

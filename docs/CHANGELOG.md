@@ -7,6 +7,113 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [kc]: http://keepachangelog.com/
 [sv]: http://semver.org/
 
+## Unreleased
+### Added
+### Changed
+### Removed
+### Fixed
+
+
+## [0.8.0] - 2018-08
+### Added
+* UI `ScaleMode` is now functional, permitting percentage based `UiTransform`s. ([#774])
+* Add serde trait derives to many core components ([#760])
+* Add a generic asset `Format` for `ron` files ([#760])
+* Improve error handling for asset loading ([#773])
+* Add bundle for the arc ball camera ([#770])
+* Add utility functions for dealing with common input ([#759])
+* Add alpha cutoff support to the PBR shader ([#756])
+* Basic renderer setup helper function ([#771])
+* Shape mesh generators ([#777])
+* Derive `PartialEq` for `SpriteSheet` ([#789])
+* Add core support for Prefabs ([#716])
+* Add shape prefab support ([#785])
+* Specialised UI prefab format ([#786])
+* Add generation of normals/tangents in GLTF ([#784])
+* Localisation using FTL files and the fluent-rs library ([#663])
+* Add basic scene prefab ([#791])
+* Improve ergonomics of examples ([#793])
+* Beginner-friendly utilities for sprite rendering ([#804])
+* Derive `PartialEq` for `MaterialPrimitive` ([#809])
+* Make `with_bindings_from_file` return a Result ([#811])
+* Logger initialization is now optional and can be enabled with a call to `amethyst::start_logger()` ([#815])
+* Gamepad support with optional builtin SDL controller event source ([#818])
+* Promote `UiButton` to a fundamental Ui component ([#798])
+
+### Changed
+* UI systems will now never overwrite your local `UiTransform` values ([#774])
+* Global `UiTransform` values are no longer writable ([#774])
+* `UiResize` refactored to be more user friendly and more helpful ([#774])
+* `Anchored` and `Stretched` components have been folded into `UiTransform` ([#774])
+* Refactored asset loading so `Processor`s can defer storage insertion ([#760])
+* Moved `MaterialTextureSet` to the renderer crate ([#760])
+* Use `fresnel` function in PBR shader ([#772])
+* Remove boilerplate for `run` + `main` in examples ([#764])
+* Update dependencies ([#752], [#751], [#817])
+* Formalized and documented support for overriding the global logger ([#776])
+* Refactor GLTF loader to use prefabs ([#784])
+* Point lights use `GlobalTransform` for positioning rather than a separate `center` ([#794])
+* Point lights now require a `GlobalTransform` component to be included in rendering ([#794])
+* `amethyst_input::input_handler::{keys_that_are_down, mouse_buttons_that_are_down, scan_codes_that_are_down, buttons_that_are_down}` now all return `impl Iterator` instead of concrete wrapper types ([#816])
+* Renamed is_key to is_key_down and fixed example to react when the key is pressed instead of released. ([#822])
+* SpriteRenderData now allows to retrieve the MeshHandle and Material before inserting them into an entity. ([#825])
+* Update the pong tutorial + changelog for SpriteRenderData. ([#805])
+* Loosen up generic type bounds for InputBundle. ([#808])
+
+### Removed
+* Remove `amethyst_input::{KeyCodes, ScanCodes, MouseButtons, Buttons}` in favor of `impl trait` ([#816])
+
+### Fixed
+* Resizing fixed on OSX ([#767])
+* Fix color format ([#766])
+* Remove individual example READMEs ([#758])
+* Log an error if a pass tries to render a mesh with incompatible vertex buffers ([#749])
+* Standardize vsync across examples ([#746])
+* Minor Pong tutorial fixes. ([#807])
+* Fix wrong resource paths in examples. ([#812])
+
+[#663]: https://github.com/amethyst/amethyst/pull/663
+[#746]: https://github.com/amethyst/amethyst/pull/746
+[#749]: https://github.com/amethyst/amethyst/pull/749
+[#751]: https://github.com/amethyst/amethyst/pull/751
+[#752]: https://github.com/amethyst/amethyst/pull/752
+[#756]: https://github.com/amethyst/amethyst/pull/756
+[#758]: https://github.com/amethyst/amethyst/pull/758
+[#759]: https://github.com/amethyst/amethyst/pull/759
+[#760]: https://github.com/amethyst/amethyst/pull/760
+[#764]: https://github.com/amethyst/amethyst/pull/764
+[#766]: https://github.com/amethyst/amethyst/pull/766
+[#767]: https://github.com/amethyst/amethyst/pull/767
+[#770]: https://github.com/amethyst/amethyst/pull/770
+[#771]: https://github.com/amethyst/amethyst/pull/771
+[#772]: https://github.com/amethyst/amethyst/pull/772
+[#773]: https://github.com/amethyst/amethyst/pull/773
+[#774]: https://github.com/amethyst/amethyst/pull/774
+[#777]: https://github.com/amethyst/amethyst/pull/777
+[#776]: https://github.com/amethyst/amethyst/pull/776
+[#798]: https://github.com/amethyst/amethyst/pull/798
+[#716]: https://github.com/amethyst/amethyst/pull/716
+[#784]: https://github.com/amethyst/amethyst/pull/784
+[#785]: https://github.com/amethyst/amethyst/pull/785
+[#786]: https://github.com/amethyst/amethyst/pull/786
+[#791]: https://github.com/amethyst/amethyst/pull/791
+[#789]: https://github.com/amethyst/amethyst/pull/789
+[#793]: https://github.com/amethyst/amethyst/pull/793
+[#804]: https://github.com/amethyst/amethyst/pull/804
+[#805]: https://github.com/amethyst/amethyst/pull/805
+[#807]: https://github.com/amethyst/amethyst/pull/807
+[#808]: https://github.com/amethyst/amethyst/pull/808
+[#809]: https://github.com/amethyst/amethyst/pull/809
+[#811]: https://github.com/amethyst/amethyst/pull/811
+[#794]: https://github.com/amethyst/amethyst/pull/794
+[#812]: https://github.com/amethyst/amethyst/pull/812
+[#816]: https://github.com/amethyst/amethyst/pull/816
+[#815]: https://github.com/amethyst/amethyst/pull/815
+[#817]: https://github.com/amethyst/amethyst/pull/817
+[#818]: https://github.com/amethyst/amethyst/pull/818
+[#822]: https://github.com/amethyst/amethyst/pull/822
+[#825]: https://github.com/amethyst/amethyst/pull/825
+
 ## [0.7.0] - 2018-05
 ### Added
 * Documentation for Animation crate ([#631]).
@@ -15,7 +122,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * UI Layouts ([#591]).
 * UI Events ([#580]).
 * Introduce a generic animation system, with support for both  transform and texture animation ([#558]), ([#566]), ([#567]), ([#569]), ([#570]), ([#611]), ([#641]), ([#644])
-* Add transparency support to core passes ([#543]), ([#574]), ([#584]) 
+* Add transparency support to core passes ([#543]), ([#574]), ([#584])
 * Add vertex skinning ([#545]), ([#619])
 * Expose a basic visibility ordering system, with the ability to swap in better replacement systems ([#595])
 * Audio `Output` is now added directly rather than as an `Option`, should now be fetched with `Option<Read<'a, Output>>` ([#679])

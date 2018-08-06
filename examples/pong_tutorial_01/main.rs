@@ -1,27 +1,17 @@
 extern crate amethyst;
 
-use amethyst::Result;
+use amethyst::input::{is_close_requested, is_key_down};
 use amethyst::prelude::*;
-use amethyst::renderer::{DisplayConfig, DrawFlat, Event, KeyboardInput, Pipeline, PosTex,
-                         RenderBundle, Stage, VirtualKeyCode, WindowEvent};
+use amethyst::renderer::{DrawFlat, Event, PosTex, VirtualKeyCode};
 
-struct Pong;
+pub struct Pong;
 
 impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        match event {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            virtual_keycode: Some(VirtualKeyCode::Escape),
-                            ..
-                        },
-                    ..
-                } => Trans::Quit,
-                _ => Trans::None,
-            },
-            _ => Trans::None,
+        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+            Trans::Quit
+        } else {
+            Trans::None
         }
     }
 
@@ -31,28 +21,21 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
     }
 }
 
-fn run() -> Result<()> {
+fn main() -> amethyst::Result<()> {
+    amethyst::start_logger(Default::default());
+
     let path = format!(
         "{}/examples/pong_tutorial_01/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
     );
-    let config = DisplayConfig::load(&path);
 
-    let pipe = Pipeline::build().with_stage(
-        Stage::with_backbuffer()
-            .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawFlat::<PosTex>::new()),
-    );
+    // This line is not mentioned in the pong tutorial as it is specific to the context
+    // of the git repository. It only is a different location to load the assets from.
+    let assets_dir = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
 
-    let game_data = GameDataBuilder::default().with_bundle(RenderBundle::new(pipe, Some(config)))?;
-    let mut game = Application::new("./", Pong, game_data)?;
+    let game_data =
+        GameDataBuilder::default().with_basic_renderer(path, DrawFlat::<PosTex>::new(), false)?;
+    let mut game = Application::new(assets_dir, Pong, game_data)?;
     game.run();
     Ok(())
-}
-
-fn main() {
-    if let Err(e) = run() {
-        println!("Error occurred during game execution: {}", e);
-        ::std::process::exit(1);
-    }
 }

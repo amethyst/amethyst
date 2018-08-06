@@ -3,33 +3,37 @@
 use std::collections::HashMap;
 use std::error::Error as StdError;
 use std::fmt;
-use std::mem;
 use std::sync::Arc;
 
-use self::importer::{get_image_data, import, Buffers, ImageFormat};
-use animation::{InterpolationFunction, InterpolationPrimitive, Sampler, SamplerPrimitive,
-                TransformChannel};
-use assets::{Error as AssetError, Format, FormatValue, Result as AssetResult, ResultExt, Source};
-use core::cgmath::{Matrix4, SquareMatrix};
+use animation::AnimationHierarchyPrefab;
+use assets::{
+    Error as AssetError, Format, FormatValue, Prefab, Result as AssetResult, ResultExt, Source,
+};
 use core::transform::Transform;
-use gfx::Primitive;
-use gfx::texture::SamplerInfo;
 use gltf;
 use gltf::Gltf;
-use gltf_utils::AccessorIter;
-use itertools::Itertools;
-use renderer::{Color, JointIds, JointWeights, JpgFormat, Normal, PngFormat, Position, Separate,
-               Tangent, TexCoord, TextureMetadata};
 
+use self::animation::load_animations;
+use self::importer::{get_image_data, import, Buffers, ImageFormat};
+use self::material::load_material;
+use self::mesh::load_mesh;
+use self::skin::load_skin;
 use super::*;
 
+mod animation;
 mod importer;
+mod material;
+mod mesh;
+mod skin;
 
-/// Gltf scene format, will cause the whole default scene to be loaded from the given file.
+/// Gltf scene format, will load a single scene from a Gltf file.
 ///
 /// Using the `GltfSceneLoaderSystem` a `Handle<GltfSceneAsset>` from this format can be attached
 /// to an entity in ECS, and the system will then load the full scene using the given entity
 /// as the root node of the scene hierarchy.
+///
+/// See `GltfSceneOptions` for more information about the load options.
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct GltfSceneFormat;
 
 /// Format errors
@@ -41,11 +45,14 @@ pub enum GltfError {
     /// GLTF have no default scene and the number of scenes is not 1
     InvalidSceneGltf(usize),
 
-    /// GLTF primitive use a primitive type not support by gfx
-    PrimitiveMissingInGfx(String),
-
     /// GLTF primitive missing positions
     MissingPositions,
+
+    /// GLTF animation channel missing input
+    MissingInputs,
+
+    /// GLTF animation channel missing output
+    MissingOutputs,
 
     /// External file failed loading
     Asset(AssetError),
@@ -60,8 +67,9 @@ impl StdError for GltfError {
         match *self {
             GltfImporterError(_) => "Gltf import error",
             InvalidSceneGltf(_) => "Gltf has no default scene, and the number of scenes is not 1",
-            PrimitiveMissingInGfx(_) => "Primitive missing in gfx",
             MissingPositions => "Primitive missing positions",
+            MissingInputs => "Channel missing inputs",
+            MissingOutputs => "Channel missing outputs",
             Asset(_) => "File loading error",
             NotImplemented => "Not implemented",
         }
@@ -84,10 +92,11 @@ impl fmt::Display for GltfError {
             GltfImporterError(ref err) => {
                 write!(f, "{}: {}", self.description(), err.description())
             }
-            PrimitiveMissingInGfx(ref err) => write!(f, "{}: {}", self.description(), err),
             Asset(ref err) => write!(f, "{}: {}", self.description(), err.description()),
             InvalidSceneGltf(size) => write!(f, "{}: {}", self.description(), size),
-            MissingPositions | NotImplemented => write!(f, "{}", self.description()),
+            MissingPositions | NotImplemented | MissingInputs | MissingOutputs => {
+                write!(f, "{}", self.description())
+            }
         }
     }
 }
@@ -104,7 +113,7 @@ impl From<AssetError> for GltfError {
     }
 }
 
-impl Format<GltfSceneAsset> for GltfSceneFormat {
+impl Format<Prefab<GltfPrefab>> for GltfSceneFormat {
     const NAME: &'static str = "GLTFScene";
 
     type Options = GltfSceneOptions;
@@ -115,13 +124,10 @@ impl Format<GltfSceneAsset> for GltfSceneFormat {
         source: Arc<Source>,
         options: GltfSceneOptions,
         _create_reload: bool,
-    ) -> AssetResult<FormatValue<GltfSceneAsset>> {
-        let gltf = load_gltf(source, &name, options).chain_err(|| "Failed to import gltf scene")?;
-        if gltf.default_scene.is_some() || gltf.scenes.len() == 1 {
-            Ok(FormatValue::data(gltf)) // TODO: create `Reload` object
-        } else {
-            Err(GltfError::InvalidSceneGltf(gltf.scenes.len())).chain_err(|| "Invalid GLTF scene")
-        }
+    ) -> AssetResult<FormatValue<Prefab<GltfPrefab>>> {
+        Ok(FormatValue::data(
+            load_gltf(source, &name, options).chain_err(|| "Failed to import gltf scene")?
+        ))
     }
 }
 
@@ -129,7 +135,7 @@ fn load_gltf(
     source: Arc<Source>,
     name: &str,
     options: GltfSceneOptions,
-) -> Result<GltfSceneAsset, GltfError> {
+) -> Result<Prefab<GltfPrefab>, GltfError> {
     debug!("Loading GLTF scene {}", name);
     import(source.clone(), name)
         .map_err(GltfError::GltfImporterError)
@@ -142,584 +148,223 @@ fn load_data(
     options: &GltfSceneOptions,
     source: Arc<Source>,
     name: &str,
-) -> Result<GltfSceneAsset, GltfError> {
-    // TODO: morph targets, cameras
-    // TODO: KHR_materials_common extension
-    debug!("Loading nodes");
-    let nodes = load_nodes(gltf, buffers, options)?;
-    debug!("Loading scenes");
-    let scenes = gltf.scenes()
-        .map(|ref scene| load_scene(scene))
-        .collect::<Result<Vec<GltfScene>, GltfError>>()?;
-    let default_scene = gltf.default_scene().map(|s| s.index());
-    debug!("Loading materials");
-    let materials = gltf.materials()
-        .map(|ref m| load_material(m, buffers, source.clone(), name))
-        .collect::<Result<Vec<GltfMaterial>, GltfError>>()?;
-    debug!("Loading animations");
-    let animations = if options.load_animations {
-        gltf.animations()
-            .map(|ref animation| load_animation(animation, buffers))
-            .collect::<Result<Vec<GltfAnimation>, GltfError>>()?
-    } else {
-        Vec::default()
-    };
-    debug!("Loading skins");
-    let skins = load_skins(gltf, buffers)?;
-
-    Ok(GltfSceneAsset {
-        nodes,
-        scenes,
-        materials,
-        animations,
-        default_scene,
-        options: options.clone(),
-        skins,
-    })
-}
-
-fn load_animation(
-    animation: &gltf::Animation,
-    buffers: &Buffers,
-) -> Result<GltfAnimation, GltfError> {
-    let samplers = animation
-        .channels()
-        .map(|ref channel| load_channel(channel, buffers))
-        .collect::<Result<Vec<_>, GltfError>>()?;
-    Ok(GltfAnimation {
-        samplers,
-        handle: None,
-    })
-}
-
-fn load_channel(
-    channel: &gltf::animation::Channel,
-    buffers: &Buffers,
-) -> Result<(usize, TransformChannel, Sampler<SamplerPrimitive<f32>>), GltfError> {
-    use gltf::animation::TrsProperty::*;
-    use gltf_utils::AccessorIter;
-    let sampler = channel.sampler();
-    let target = channel.target();
-    let input = gltf_utils::AccessorIter::new(sampler.input(), buffers).collect::<Vec<f32>>();
-    let node_index = target.node().index();
-
-    match target.path() {
-        Translation => {
-            let output = AccessorIter::new(sampler.output(), buffers)
-                .map(|t| SamplerPrimitive::Vec3(t))
-                .collect::<Vec<_>>();
-            Ok((
-                node_index,
-                TransformChannel::Translation,
-                Sampler {
-                    input,
-                    function: map_interpolation_type(&sampler.interpolation()),
-                    output,
-                },
-            ))
-        }
-        Scale => {
-            let output = AccessorIter::new(sampler.output(), buffers)
-                .map(|t| SamplerPrimitive::Vec3(t))
-                .collect::<Vec<_>>();
-            Ok((
-                node_index,
-                TransformChannel::Scale,
-                Sampler {
-                    input,
-                    function: map_interpolation_type(&sampler.interpolation()),
-                    output,
-                },
-            ))
-        }
-        Rotation => {
-            let output = AccessorIter::<[f32; 4]>::new(sampler.output(), buffers)
-                .map(|q| [q[3], q[0], q[1], q[2]].into())
-                .collect::<Vec<_>>();
-            // gltf quat format: [x, y, z, w], our quat format: [w, x, y, z]
-            let ty = map_interpolation_type(&sampler.interpolation());
-            let ty = if ty == InterpolationFunction::Linear {
-                InterpolationFunction::SphericalLinear
-            } else {
-                ty
-            };
-            Ok((
-                node_index,
-                TransformChannel::Rotation,
-                Sampler {
-                    input,
-                    function: ty,
-                    output,
-                },
-            ))
-        }
-        Weights => Err(GltfError::NotImplemented),
-    }
-}
-
-fn map_interpolation_type<T>(
-    ty: &gltf::animation::InterpolationAlgorithm,
-) -> InterpolationFunction<T>
-where
-    T: InterpolationPrimitive,
-{
-    use gltf::animation::InterpolationAlgorithm::*;
-
-    match *ty {
-        Linear => InterpolationFunction::Linear,
-        Step => InterpolationFunction::Step,
-        CubicSpline => InterpolationFunction::CubicSpline,
-        CatmullRomSpline => InterpolationFunction::CatmullRomSpline,
-    }
-}
-
-// Load a single material, and transform into a format usable by the engine
-fn load_material(
-    material: &gltf::Material,
-    buffers: &Buffers,
-    source: Arc<Source>,
-    name: &str,
-) -> Result<GltfMaterial, GltfError> {
-    let base_color = load_texture_with_factor(
-        material.pbr_metallic_roughness().base_color_texture(),
-        material.pbr_metallic_roughness().base_color_factor(),
+) -> Result<Prefab<GltfPrefab>, GltfError> {
+    let scene_index = get_scene_index(gltf, options)?;
+    let mut prefab = Prefab::<GltfPrefab>::new();
+    load_scene(
+        gltf,
+        scene_index,
         buffers,
-        source.clone(),
+        options,
+        source,
         name,
-    ).map(|(texture, factor)| (GltfTexture::new(texture), factor))?;
-
-    let (metallic, roughness) = load_texture_with_factor(
-        material
-            .pbr_metallic_roughness()
-            .metallic_roughness_texture(),
-        [
-            material.pbr_metallic_roughness().metallic_factor(),
-            material.pbr_metallic_roughness().roughness_factor(),
-            1.0,
-            1.0,
-        ],
-        buffers,
-        source.clone(),
-        name,
-    ).map(|(texture, factors)| {
-        deconstruct_metallic_roughness(texture, factors[0], factors[1])
-    })?;
-
-    let double_sided = material.double_sided();
-    let alpha = (
-        match material.alpha_mode() {
-            gltf::material::AlphaMode::Opaque => AlphaMode::Opaque,
-            gltf::material::AlphaMode::Blend => AlphaMode::Blend,
-            gltf::material::AlphaMode::Mask => AlphaMode::Mask,
-        },
-        material.alpha_cutoff(),
-    );
-
-    let em_factor = material.emissive_factor();
-    let emissive =
-        load_texture_with_factor(
-            material.emissive_texture(),
-            [em_factor[0], em_factor[1], em_factor[2], 1.0],
-            buffers,
-            source.clone(),
-            name,
-        ).map(|(texture, factor)| (GltfTexture::new(texture), [factor[0], factor[1], factor[2]]))?;
-
-    // Can't use map/and_then because of Result returning from the load_texture function
-    let normal = match material.normal_texture() {
-        Some(normal_texture) => Some((
-            GltfTexture::new(load_texture(
-                &normal_texture.texture(),
-                buffers,
-                source.clone(),
-                name,
-            )?),
-            normal_texture.scale(),
-        )),
-
-        None => None,
-    };
-
-    // Can't use map/and_then because of Result returning from the load_texture function
-    let occlusion = match material.occlusion_texture() {
-        Some(occlusion_texture) => Some((
-            GltfTexture::new(load_texture(
-                &occlusion_texture.texture(),
-                buffers,
-                source.clone(),
-                name,
-            )?),
-            occlusion_texture.strength(),
-        )),
-
-        None => None,
-    };
-
-    Ok(GltfMaterial {
-        base_color,
-        metallic,
-        roughness,
-        normal,
-        occlusion,
-        emissive,
-        alpha,
-        double_sided,
-    })
+        &mut prefab,
+    )?;
+    Ok(prefab)
 }
 
-fn deconstruct_metallic_roughness(
-    data: TextureData,
-    metallic_factor: f32,
-    roughness_factor: f32,
-) -> ((GltfTexture, f32), (GltfTexture, f32)) {
-    (
-        (
-            GltfTexture::new(deconstruct_image(&data, 2, 4)), // metallic from B channel
-            metallic_factor,
-        ),
-        (
-            GltfTexture::new(deconstruct_image(&data, 1, 4)), // roughness from G channel
-            roughness_factor,
-        ),
-    )
-}
-
-fn deconstruct_image(data: &TextureData, offset: usize, step: usize) -> TextureData {
-    use gfx::format::SurfaceType;
-    match *data {
-        TextureData::Image(ref image_data, ref metadata) => {
-            let metadata = metadata
-                .clone()
-                .with_size(image_data.raw.w as u16, image_data.raw.h as u16)
-                .with_format(SurfaceType::R8);
-            let image_data = image_data
-                .raw
-                .buf
-                .iter()
-                .dropping(offset)
-                .step(step)
-                .cloned()
-                .collect();
-            TextureData::U8(image_data, metadata)
-        }
-        TextureData::Rgba(ref color, ref metadata) => {
-            TextureData::Rgba([color[offset]; 4], metadata.clone())
-        }
-        _ => unreachable!(), // We only support color and image for textures from gltf files
+fn get_scene_index(gltf: &Gltf, options: &GltfSceneOptions) -> Result<usize, GltfError> {
+    let num_scenes = gltf.scenes().len();
+    match (options.scene_index, gltf.default_scene()) {
+        (Some(index), _) if index >= num_scenes => Err(GltfError::InvalidSceneGltf(num_scenes)),
+        (Some(index), _) => Ok(index),
+        (None, Some(scene)) => Ok(scene.index()),
+        (None, _) if num_scenes > 1 => Err(GltfError::InvalidSceneGltf(num_scenes)),
+        (None, _) => Ok(0),
     }
 }
 
-fn load_texture_with_factor(
-    texture: Option<gltf::texture::Info>,
-    factor: [f32; 4],
-    buffers: &Buffers,
-    source: Arc<Source>,
-    name: &str,
-) -> Result<(TextureData, [f32; 4]), GltfError> {
-    match texture {
-        Some(info) => Ok((
-            load_texture(&info.texture(), buffers, source, name)?,
-            factor,
-        )),
-        None => Ok((TextureData::color(factor), [1.0, 1.0, 1.0, 1.0])),
-    }
-}
-
-fn load_texture(
-    texture: &gltf::Texture,
-    buffers: &Buffers,
-    source: Arc<Source>,
-    name: &str,
-) -> Result<TextureData, GltfError> {
-    let (data, format) = get_image_data(&texture.source(), buffers, source, name.as_ref())?;
-    let metadata = TextureMetadata::default().with_sampler(load_sampler_info(&texture.sampler()));
-    Ok(match format {
-        ImageFormat::Png => PngFormat.from_data(data, metadata),
-        ImageFormat::Jpeg => JpgFormat.from_data(data, metadata),
-    }?)
-}
-
-fn load_sampler_info(sampler: &gltf::texture::Sampler) -> SamplerInfo {
-    use gfx::texture::{FilterMethod, WrapMode};
-    use gltf::texture::{MagFilter, WrappingMode};
-    // gfx only have support for a single filter, therefore we use mag filter, and ignore min filter
-    let filter = match sampler.mag_filter() {
-        None | Some(MagFilter::Nearest) => FilterMethod::Scale,
-        Some(MagFilter::Linear) => FilterMethod::Bilinear,
-    };
-    let wrap_s = match sampler.wrap_s() {
-        WrappingMode::ClampToEdge => WrapMode::Clamp,
-        WrappingMode::MirroredRepeat => WrapMode::Mirror,
-        WrappingMode::Repeat => WrapMode::Tile,
-    };
-    let wrap_t = match sampler.wrap_t() {
-        WrappingMode::ClampToEdge => WrapMode::Clamp,
-        WrappingMode::MirroredRepeat => WrapMode::Mirror,
-        WrappingMode::Repeat => WrapMode::Tile,
-    };
-    let mut s = SamplerInfo::new(filter, wrap_s);
-    s.wrap_mode.1 = wrap_t;
-    s
-}
-
-fn load_scene(scene: &gltf::Scene) -> Result<GltfScene, GltfError> {
-    Ok(GltfScene {
-        root_nodes: scene.nodes().map(|n| n.index()).collect(),
-    })
-}
-
-fn load_nodes(
-    gltf: &gltf::Gltf,
+fn load_scene(
+    gltf: &Gltf,
+    scene_index: usize,
     buffers: &Buffers,
     options: &GltfSceneOptions,
-) -> Result<Vec<GltfNode>, GltfError> {
-    let mut node_map = HashMap::default();
-    let mut nodes = vec![];
-
-    for node in gltf.nodes() {
-        let node_index = nodes.len();
-        let node = load_node(&node, buffers, node_index, &mut node_map, options)?;
-        nodes.push(node);
-    }
-
-    for (node_index, node) in nodes.iter_mut().enumerate() {
-        match node_map.get(&node_index) {
-            Some(parent_index) => node.parent = Some(*parent_index),
-            _ => (),
+    source: Arc<Source>,
+    name: &str,
+    prefab: &mut Prefab<GltfPrefab>,
+) -> Result<(), GltfError> {
+    let scene = gltf.scenes().nth(scene_index).unwrap();
+    let mut node_map = HashMap::new();
+    let mut skin_map = HashMap::new();
+    let mut bounding_box = GltfNodeExtent::default();
+    if scene.nodes().len() == 1 {
+        load_node(
+            gltf,
+            &scene.nodes().next().unwrap(),
+            0,
+            buffers,
+            options,
+            source,
+            name,
+            prefab,
+            &mut node_map,
+            &mut skin_map,
+            &mut bounding_box,
+        )?;
+    } else {
+        for node in scene.nodes() {
+            let index = prefab.add(Some(0), None);
+            load_node(
+                gltf,
+                &node,
+                index,
+                buffers,
+                options,
+                source.clone(),
+                name,
+                prefab,
+                &mut node_map,
+                &mut skin_map,
+                &mut bounding_box,
+            )?;
+        }
+        if bounding_box.valid() {
+            prefab.data_or_default(0).extent = Some(bounding_box.clone());
         }
     }
 
-    Ok(nodes)
+    // load skins
+    for (node_index, skin_info) in skin_map {
+        load_skin(
+            &gltf.skins().nth(skin_info.skin_index).unwrap(),
+            buffers,
+            *node_map.get(&node_index).unwrap(),
+            &node_map,
+            skin_info.mesh_indices,
+            prefab,
+        )?;
+    }
+
+    // load animations, if applicable
+    if options.load_animations {
+        let mut hierarchy_prefab = AnimationHierarchyPrefab::default();
+        hierarchy_prefab.nodes = node_map
+            .iter()
+            .map(|(node, entity)| (*node, *entity))
+            .collect();
+        prefab
+            .data_or_default(0)
+            .animatable
+            .get_or_insert_with(Default::default)
+            .hierarchy = Some(hierarchy_prefab);
+
+        prefab
+            .data_or_default(0)
+            .animatable
+            .get_or_insert_with(Default::default)
+            .animation_set = Some(load_animations(gltf, buffers, &node_map)?);
+    }
+
+    Ok(())
+}
+
+#[derive(Debug)]
+struct SkinInfo {
+    skin_index: usize,
+    mesh_indices: Vec<usize>,
 }
 
 fn load_node(
+    gltf: &Gltf,
     node: &gltf::Node,
+    entity_index: usize,
     buffers: &Buffers,
-    node_index: usize,
-    node_map: &mut HashMap<usize, usize>,
     options: &GltfSceneOptions,
-) -> Result<GltfNode, GltfError> {
-    let children = node.children().map(|c| c.index()).collect::<Vec<_>>();
+    source: Arc<Source>,
+    name: &str,
+    prefab: &mut Prefab<GltfPrefab>,
+    node_map: &mut HashMap<usize, usize>,
+    skin_map: &mut HashMap<usize, SkinInfo>,
+    parent_bounding_box: &mut GltfNodeExtent,
+) -> Result<(), GltfError> {
+    node_map.insert(node.index(), entity_index);
 
-    for child in node.children() {
-        node_map.insert(child.index(), node_index);
-    }
-
-    let primitives = match node.mesh() {
-        Some(mesh) => match load_mesh(&mesh, buffers, options) {
-            Err(err) => return Err(err),
-            Ok(primitives) => primitives,
-        },
-        None => Vec::default(),
-    };
-
+    // Load transformation data, default will be identity
     let (translation, rotation, scale) = node.transform().decomposed();
     let mut local_transform = Transform::default();
     local_transform.translation = translation.into();
     // gltf quat format: [x, y, z, w], our quat format: [w, x, y, z]
     local_transform.rotation = [rotation[3], rotation[0], rotation[1], rotation[2]].into();
     local_transform.scale = scale.into();
+    prefab.data_or_default(entity_index).transform = Some(local_transform);
 
-    let skin = node.skin().map(|s| s.index());
+    // check for skinning
+    let mut skin = node.skin().map(|skin| SkinInfo {
+        skin_index: skin.index(),
+        mesh_indices: Vec::default(),
+    });
 
-    Ok(GltfNode {
-        primitives,
-        children,
-        parent: None,
-        local_transform,
-        skin,
-    })
-}
+    let mut bounding_box = GltfNodeExtent::default();
 
-fn load_skins(gltf: &gltf::Gltf, buffers: &Buffers) -> Result<Vec<GltfSkin>, GltfError> {
-    gltf.skins().map(|s| load_skin(&s, buffers)).collect()
-}
-
-fn load_skin(skin: &gltf::Skin, buffers: &Buffers) -> Result<GltfSkin, GltfError> {
-    let joints = skin.joints().map(|j| j.index()).collect::<Vec<_>>();
-    let skeleton = skin.skeleton().map(|s| s.index());
-    let inverse_bind_matrices = skin.inverse_bind_matrices()
-        .map(|acc| AccessorIter::<[f32; 16]>::new(acc, buffers))
-        .map(|matrices| {
-            matrices
-                .map(|m| unsafe { mem::transmute::<[f32; 16], [[f32; 4]; 4]>(m) })
-                .collect::<Vec<_>>()
-        })
-        .unwrap_or(vec![Matrix4::identity().into(); joints.len()]);
-
-    Ok(GltfSkin {
-        joints,
-        skeleton,
-        inverse_bind_matrices,
-    })
-}
-
-fn flip_check(uv: [f32; 2], flip_v: bool) -> [f32; 2] {
-    if flip_v {
-        [uv[0], 1. - uv[1]]
-    } else {
-        uv
-    }
-}
-
-fn load_mesh(
-    mesh: &gltf::Mesh,
-    buffers: &Buffers,
-    options: &GltfSceneOptions,
-) -> Result<Vec<GltfPrimitive>, GltfError> {
-    // TODO: simplify loading here when we have support for indexed meshes
-    // All attributes can then be mapped directly instead of using faces to unwind the indexing
-    use gltf_utils::PrimitiveIterators;
-
-    let mut primitives = vec![];
-
-    for primitive in mesh.primitives() {
-        let faces = primitive.indices_u32(buffers).map(|mut iter| {
-            let mut faces = vec![];
-            while let (Some(a), Some(b), Some(c)) = (iter.next(), iter.next(), iter.next()) {
-                faces.push(a as usize);
-                faces.push(b as usize);
-                faces.push(c as usize);
+    // load graphics
+    if let Some(mesh) = node.mesh() {
+        let mut graphics = load_mesh(&mesh, buffers, options)?;
+        if graphics.len() == 1 {
+            // single primitive can be loaded directly onto the node
+            let (mesh, material_index, bounds) = graphics.remove(0);
+            bounding_box.extend_range(&bounds);
+            let prefab_data = prefab.entity(entity_index).unwrap().data_or_default();
+            prefab_data.mesh = Some(mesh);
+            if let Some(material) = material_index.and_then(|index| gltf.materials().nth(index)) {
+                prefab_data.material =
+                    Some(load_material(&material, buffers, source.clone(), name)?);
             }
-            faces
-        });
-
-        let positions = primitive
-            .positions(buffers)
-            .map(|positions| match faces {
-                Some(ref faces) => {
-                    let vertices = positions.collect::<Vec<_>>();
-                    faces
-                        .iter()
-                        .map(|i| Separate::<Position>::new(vertices[*i]))
-                        .collect::<Vec<_>>()
+            // if we have a skin we need to track the mesh entities
+            if let Some(ref mut skin) = skin {
+                skin.mesh_indices.push(entity_index);
+            }
+        } else if graphics.len() > 1 {
+            // if we have multiple primitives,
+            // we need to add each primitive as a child entity to the node
+            for (mesh, material_index, bounds) in graphics {
+                let mesh_entity = prefab.add(Some(entity_index), None);
+                let prefab_data = prefab.entity(mesh_entity).unwrap().data_or_default();
+                prefab_data.transform = Some(Transform::default());
+                prefab_data.mesh = Some(mesh);
+                if let Some(material) = material_index.and_then(|index| gltf.materials().nth(index))
+                {
+                    prefab_data.material =
+                        Some(load_material(&material, buffers, source.clone(), name)?);
                 }
-                None => positions
-                    .map(|pos| Separate::<Position>::new(pos))
-                    .collect(),
-            })
-            .ok_or(GltfError::MissingPositions)?;
-        let bounds = primitive.position_bounds().unwrap();
 
-        let colors = primitive
-            .colors_rgba_f32(0, 1., buffers)
-            .map(|colors| match faces {
-                Some(ref faces) => {
-                    let colors = colors.collect::<Vec<_>>();
-                    faces
-                        .iter()
-                        .map(|i| Separate::<Color>::new(colors[*i]))
-                        .collect()
+                // if we have a skin we need to track the mesh entities
+                if let Some(ref mut skin) = skin {
+                    skin.mesh_indices.push(mesh_entity);
                 }
-                None => colors.map(|color| Separate::<Color>::new(color)).collect(),
-            });
 
-        let tex_coord = match primitive.tex_coords_f32(0, buffers) {
-            Some(tex_coords) => Some(tex_coords.collect::<Vec<[f32; 2]>>()),
-            None => match options.generate_tex_coords {
-                Some((u, v)) => Some((0..positions.len()).map(|_| [u, v]).collect()),
-                None => None,
-            },
-        }.map(|texs| match faces {
-            Some(ref faces) => faces
-                .iter()
-                .map(|i| Separate::<TexCoord>::new(flip_check(texs[*i], options.flip_v_coord)))
-                .collect(),
-            None => texs.into_iter()
-                .map(|t| Separate::<TexCoord>::new(flip_check(t, options.flip_v_coord)))
-                .collect(),
-        });
-
-        let normals = primitive.normals(buffers).map(|normals| match faces {
-            Some(ref faces) => {
-                let normals = normals.collect::<Vec<_>>();
-                faces
-                    .iter()
-                    .map(|i| Separate::<Normal>::new(normals[*i]))
-                    .collect()
+                // extent
+                bounding_box.extend_range(&bounds);
+                prefab_data.extent = Some(bounds.into());
             }
-            None => normals.map(|n| Separate::<Normal>::new(n)).collect(),
-        });
-
-        let tangents = primitive.tangents(buffers).map(|tangents| match faces {
-            Some(ref faces) => {
-                let tangents = tangents.collect::<Vec<_>>();
-                faces
-                    .iter()
-                    .map(|i| {
-                        Separate::<Tangent>::new([
-                            tangents[*i][0],
-                            tangents[*i][1],
-                            tangents[*i][2],
-                        ])
-                    })
-                    .collect()
-            }
-            None => tangents
-                .map(|t| Separate::<Tangent>::new([t[0], t[1], t[2]]))
-                .collect(),
-        });
-
-        let joint_ids = primitive.joints_u16(0, buffers).map(|joints| match faces {
-            Some(ref faces) => {
-                let joints = joints.collect::<Vec<_>>();
-                faces
-                    .iter()
-                    .map(|i| Separate::<JointIds>::new(joints[*i]))
-                    .collect()
-            }
-            None => joints.map(|j| Separate::<JointIds>::new(j)).collect(),
-        });
-        trace!("Joint ids: {:?}", joint_ids);
-
-        let joint_weights = primitive
-            .weights_f32(0, buffers)
-            .map(|weights| match faces {
-                Some(ref faces) => {
-                    let weights = weights.collect::<Vec<_>>();
-                    faces
-                        .iter()
-                        .map(|i| Separate::<JointWeights>::new(weights[*i]))
-                        .collect()
-                }
-                None => weights.map(|w| Separate::<JointWeights>::new(w)).collect(),
-            });
-        trace!("Joint weights: {:?}", joint_weights);
-
-        let material = primitive.material().index();
-
-        match map_mode(primitive.mode()) {
-            Ok(primitive) => primitives.push(GltfPrimitive {
-                extents: bounds.min..bounds.max,
-                primitive,
-                indices: faces,
-                material,
-                attributes: (
-                    positions,
-                    colors,
-                    tex_coord,
-                    normals,
-                    tangents,
-                    joint_ids,
-                    joint_weights,
-                ),
-                handle: None,
-            }),
-            Err(err) => return Err(err),
         }
     }
-    Ok(primitives)
-}
 
-fn map_mode(mode: gltf::mesh::Mode) -> Result<Primitive, GltfError> {
-    use gltf::mesh::Mode::*;
-    match mode {
-        Points => Ok(Primitive::PointList),
-        Lines => Ok(Primitive::LineList),
-        LineLoop => Err(GltfError::PrimitiveMissingInGfx("LineLoop".to_string())),
-        LineStrip => Ok(Primitive::LineStrip),
-        Triangles => Ok(Primitive::TriangleList),
-        TriangleStrip => Ok(Primitive::TriangleStrip),
-        TriangleFan => Err(GltfError::PrimitiveMissingInGfx("TriangleFan".to_string())),
+    // load children
+    for child in node.children() {
+        let index = prefab.add(Some(entity_index), None);
+        load_node(
+            gltf,
+            &child,
+            index,
+            buffers,
+            options,
+            source.clone(),
+            name,
+            prefab,
+            node_map,
+            skin_map,
+            &mut bounding_box,
+        )?;
     }
+    if bounding_box.valid() {
+        parent_bounding_box.extend(&bounding_box);
+        prefab.data_or_default(entity_index).extent = Some(bounding_box);
+    }
+
+    // propagate skin information
+    if let Some(skin) = skin {
+        skin_map.insert(node.index(), skin);
+    }
+
+    Ok(())
 }

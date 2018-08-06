@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_audio"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Xaeroxe <kieseljake@gmail.com>"]
 description = "Audio support for Amethyst"
 exclude = ["examples/*"]
@@ -19,16 +19,17 @@ appveyor = { repository = "amethyst/amethyst", branch = "develop" }
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
-amethyst_assets = { path = "../amethyst_assets", version = "0.3.0"}
-amethyst_core = { path = "../amethyst_core", version = "0.2.0"}
+amethyst_assets = { path = "../amethyst_assets", version = "0.4.0"}
+amethyst_core = { path = "../amethyst_core", version = "0.3.0"}
 cpal = "0.8"
 log = "0.4"
-rodio = "0.7"
+rodio = "0.8"
+serde = { version = "1.0", features = ["derive"] }
 
 thread_profiler = { version = "0.1", optional = true }
 
 [dependencies.smallvec]
-version = "0.4.2"
+version = "0.6"
 features = ["serde"]
 
 [features]

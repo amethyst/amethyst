@@ -1,8 +1,9 @@
 use amethyst::assets::{Handle, Loader};
 use amethyst::prelude::*;
 use amethyst::renderer::{Material, SpriteSheet};
-use amethyst_animation::{Animation, InterpolationFunction, MaterialChannel, MaterialPrimitive,
-                         Sampler};
+use amethyst_animation::{
+    Animation, InterpolationFunction, MaterialChannel, MaterialPrimitive, Sampler,
+};
 
 pub fn grey_bat(sprite_sheet: &SpriteSheet, world: &mut World) -> Handle<Animation<Material>> {
     let sprite_offsets = [5, 4, 3, 2, 1, 0, 1, 2, 3, 4, 4]
@@ -22,8 +23,8 @@ pub fn grey_bat(sprite_sheet: &SpriteSheet, world: &mut World) -> Handle<Animati
         input: vec![0., 2.3],
         function: InterpolationFunction::Step,
         output: vec![
-            MaterialPrimitive::Texture(sprite_sheet.index),
-            MaterialPrimitive::Texture(sprite_sheet.index),
+            MaterialPrimitive::Texture(sprite_sheet.texture_id),
+            MaterialPrimitive::Texture(sprite_sheet.texture_id),
         ],
     };
 
@@ -59,7 +60,7 @@ pub fn brown_bat(sprite_sheet: &SpriteSheet, world: &mut World) -> Handle<Animat
     let texture_sampler = Sampler {
         input: vec![0.],
         function: InterpolationFunction::Step,
-        output: vec![MaterialPrimitive::Texture(sprite_sheet.index)],
+        output: vec![MaterialPrimitive::Texture(sprite_sheet.texture_id)],
     };
 
     let loader = world.write_resource::<Loader>();

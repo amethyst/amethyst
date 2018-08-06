@@ -57,7 +57,8 @@ done the following things first:
 
 1. You have ensured the pull request is based on a recent version of your
    respective branch.
-2. You have processed your source code with `cargo fmt`.
+2. You have processed your source code with `cargo fmt` (we use latest rustup stable, 
+   0.4 at the time of writing).
 3. All of the following commands completed without errors.
    * `cargo build`
    * `cargo test --all`
@@ -67,16 +68,23 @@ done the following things first:
    state otherwise, any contribution intentionally submitted for inclusion in
    the work by you, as defined in the Apache 2.0 license, shall be dual
    licensed as above, without any additional terms or conditions.
+5. You added your change in docs/CHANGELOG.md and linked your pull request number.
+6. You used `cargo fmt` at the root of the crate to format the code.
+   Make sure that `cargo fmt --version` returns the latest stable version.
+   If this is not the case, run `rustup update` or install [rustfmt]
+7. For new features or changes to an existing one,
+   add or change either the book tutorial or the examples.
 
 [lm]: LICENSE-MIT
 [la]: LICENSE-APACHE
+[rustfmt]: https://github.com/rust-lang-nursery/rustfmt
 
 > If you want to be publicly known as an author, feel free to add your name
 > and/or GitHub username to the AUTHORS.md file in your pull request.
 
 Once you have submitted your pull request, please wait for a reviewer to give
 feedback on it. If no one responds, feel free to @-mention a developer or post
-publicly on the [appropriate chat room][gi] on Gitter asking for a review. Once
+publicly on the [appropriate chat room][gi] on Gitter or on Discord asking for a review. Once
 your code has been reviewed, revised if necessary, and then signed-off by a
 developer, it will be merged into the source tree.
 
@@ -86,6 +94,8 @@ developer, it will be merged into the source tree.
 * Pull Requests shall be approved by at least two members (two approvals from contributors can count as one member approval.)
 * Merging a PR shall be done with `bors r+`
 * If a member self-requested a review, the PR shall not be merged until they reviewed the PR (exception: the member becomes inactive)
+
+Everyone is welcome to review pull requests that they find interesting. It helps save time and improve the code quality for everyone, as well as gaining experience while doing so.
 
 Note: The author of a PR cannot approve their own PR.
 

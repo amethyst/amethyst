@@ -1,7 +1,8 @@
 # Licenses for audio assets
 
-This is incomplete for now.
-
+ - `boop.ogg`: Contributed by Jacob Kiesel, released into the Public Domain (CC0)
+ - `confirm.ogg`: Contributed by Jacob Kiesel, released into the Public Domain (CC0)
+ - `bounce.ogg`: Contributed by Jacob Kiesel, released into the Public Domain (CC0)
  - `score.ogg`: Contributed by Richard Dodd, released into the Public Domain (CC0)
  - `Computer_Music_All-Stars_-_Wheres_My_Jetpack.ogg` (BY)
  - `Computer_Music_All-Starts_-_Albatross_v2.ogg` (BY)

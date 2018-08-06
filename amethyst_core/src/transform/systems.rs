@@ -1,8 +1,10 @@
 //! Scene graph system and types
 
 use hibitset::BitSet;
-use specs::prelude::{Entities, InsertedFlag, Join, ModifiedFlag, ReadExpect, ReadStorage,
-                     ReaderId, Resources, System, WriteStorage};
+use specs::prelude::{
+    Entities, InsertedFlag, Join, ModifiedFlag, ReadExpect, ReadStorage, ReaderId, Resources,
+    System, WriteStorage,
+};
 use transform::{GlobalTransform, HierarchyEvent, Parent, ParentHierarchy, Transform};
 
 /// Handles updating `GlobalTransform` components based on the `Transform`
@@ -60,9 +62,10 @@ impl<'a> System<'a> for TransformSystem {
         {
             match *event {
                 HierarchyEvent::Removed(entity) => {
-                    if let Err(err) = entities.delete(entity) {
-                        error!("Failed removing entity {:?}: {}", entity, err);
-                    }
+                    // Sometimes the user may have already deleted the entity.
+                    // This is fine, so we'll ignore any errors this may give
+                    // since it can only fail due to the entity already being dead.
+                    let _ = entities.delete(entity);
                 }
                 HierarchyEvent::Modified(entity) => {
                     self.local_modified.add(entity.id());
@@ -127,10 +130,9 @@ impl<'a> System<'a> for TransformSystem {
 mod tests {
     use cgmath::{Decomposed, Matrix4, One, Quaternion, Vector3, Zero};
     use shred::RunNow;
-    use specs::prelude::World;
+    use specs::prelude::{Builder, World};
     use specs_hierarchy::{Hierarchy, HierarchySystem};
     use transform::{GlobalTransform, Parent, Transform, TransformSystem};
-    //use quickcheck::{Arbitrary, Gen};
 
     // If this works, then all other tests should work.
     #[test]

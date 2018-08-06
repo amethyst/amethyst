@@ -1,0 +1,140 @@
+#![enable(implicit_some)]
+Container(
+    transform: (
+        id: "background",
+        anchor: Middle,
+        stretch: XY( x_margin: 0., y_margin: 0.),
+        width: 20.,
+        height: 20.,
+    ),
+    background: (
+        image: Data(Rgba((0.36, 0.10, 0.57, 1.0), ())),
+    ),
+    children: [
+        Container(
+            transform: (
+                id: "top_right",
+                x: -32.,
+                y: 32.,
+                z: -1.,
+                width: 64.,
+                height: 64.,
+                anchor: TopRight,
+            ),
+            background: (
+                image: Data(Rgba((0.09, 0.02, 0.25, 1.0), ())),
+            ),
+            children: [
+                Image(
+                    transform: (
+                        id: "middle_top_right",
+                        z: -2.,
+                        width: 32.,
+                        height: 32.,
+                        anchor: Middle,
+                        stretch: XY( x_margin: 2., y_margin: 0.),
+                    ),
+                    image: (
+                        image: Data(Rgba((0.18, 0.05, 0.85, 1.0), ())),
+                    )
+                ),
+            ]
+        ),
+        Image(
+            transform: (
+                id: "logo",
+                y: -32.,
+                z: -3.,
+                width: 64.,
+                height: 64.,
+                tab_order: 1,
+                anchor: BottomMiddle,
+                mouse_reactive: true,
+            ),
+            image: (
+                image: File("texture/logo_transparent.png", Png, ()),
+            )
+        ),
+        Text(
+            transform: (
+                id: "hello_world",
+                z: -4.,
+                width: 500.,
+                height: 75.,
+                tab_order: 1,
+                anchor: Middle,
+            ),
+            text: (
+                text: "Hello World",
+                font: File("font/square.ttf", Ttf, ()),
+                font_size: 75.,
+                color: (0.2, 0.2, 1.0, 1.0),
+                editable: (
+                    max_length: 12,
+                ),
+            )
+        ),
+        Button(
+            transform: (
+                id: "btn_transform",
+                y: 32.,
+                z: -1.,
+                width: 128.,
+                height: 64.,
+                tab_order: 9,
+                anchor: TopMiddle,
+                mouse_reactive: true,
+            ),
+            button: (
+                text: "Button!",
+                font: File("font/square.ttf", Ttf, ()),
+                font_size: 20.,
+                normal_text_color: (0.2, 0.2, 1.0, 1.0),
+                normal_image: Data(Rgba((0., 1., 0., 1.), ())),
+                hover_image: Data(Rgba((0.3, 1., 0.3, 1.), ())),
+                press_image: Data(Rgba((0.15, 1., 0.15, 1.), ())),
+                hover_sound: File("audio/boop.ogg", Ogg, ()),
+                press_sound: File("audio/confirm.ogg", Ogg, ()),
+            )
+        ),
+        Button(
+            transform: (
+                id: "simple_btn",
+                x: 250.,
+                y: 50.,
+                z: -1.,
+                width: 128.,
+                height: 64.,
+                tab_order: 9,
+                anchor: TopLeft,
+                mouse_reactive: true,
+            ),
+            button: (
+                text: "Simpler!",
+                font: File("font/square.ttf", Ttf, ()),
+                font_size: 32.,
+                normal_text_color: (0.0, 0.0, 0.0, 1.0),
+                normal_image: Data(Rgba((0.82, 0.83, 0.83, 1.0), ())),
+            )
+        ),
+        Text(
+            transform: (
+                id: "fps",
+                x: 100.,
+                y: 12.5,
+                z: -3.,
+                width: 200.,
+                height: 25.,
+                tab_order: 2,
+                anchor: TopLeft,
+                transparent: true,
+            ),
+            text: (
+                text: "N/A",
+                font: File("font/square.ttf", Ttf, ()),
+                font_size: 25.,
+                color: (1.0, 1.0, 1.0, 1.0),
+            )
+        ),
+    ],
+)

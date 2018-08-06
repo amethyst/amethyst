@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_core"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Simon Rönnberg <seamonr@gmail.com>"]
 description = "Amethyst core"
 
@@ -23,12 +23,14 @@ log = "0.4"
 rayon = "1.0.1"
 serde = { version = "1", features = ["serde_derive"] }
 shred = { version = "0.7" }
-specs = { version = "0.11", features = ["common"] }
-specs-hierarchy = { version = "0.1" }
+specs = { version = "0.12", features = ["common"] }
+specs-hierarchy = { version = "0.2" }
 shrev = "1.0"
-quickcheck = "0.4.1"
 
 thread_profiler = { version = "0.1" , optional = true }
+
+[dev-dependencies]
+amethyst = { path = "..", version = "0.8.0" }
 
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]
