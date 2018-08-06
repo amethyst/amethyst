@@ -44,8 +44,6 @@ sudo: required
 # needed.
 cache: 
   - cargo
-  - directories:
-      - target
 
 # Allow binaries installed from Cargo.
 before_script:

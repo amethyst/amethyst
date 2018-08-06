@@ -42,7 +42,6 @@ branches:
 # needed.
 cache:
   - .cargo
-  - target
 
 # Since this is not a .NET project, we can flip the build system off.
 build: false
