@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_assets"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["torkleyy <torkleyy@gmail.com>"]
 readme = "README.md"
 description = """
@@ -20,7 +20,7 @@ appveyor = { repository = "amethyst/amethyst", branch = "develop" }
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
-amethyst_core = { path = "../amethyst_core", version = "0.2" }
+amethyst_core = { path = "../amethyst_core", version = "0.3.0" }
 crossbeam = "0.3.0"
 derivative = "1.0"
 error-chain = "0.11"

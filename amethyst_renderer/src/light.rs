@@ -52,7 +52,7 @@ impl From<DirectionalLight> for Light {
 }
 
 /// A point light source. Uses the `Transform` set of components for
-/// positioning, and requires a `GlobalTransform` component to be included 
+/// positioning, and requires a `GlobalTransform` component to be included
 /// in rendering.
 ///
 /// Lighting calculations are based off of the Frostbite engine's lighting,

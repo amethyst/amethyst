@@ -6,8 +6,9 @@ use std::fmt;
 use std::sync::Arc;
 
 use animation::AnimationHierarchyPrefab;
-use assets::{Error as AssetError, Format, FormatValue, Prefab, Result as AssetResult, ResultExt,
-             Source};
+use assets::{
+    Error as AssetError, Format, FormatValue, Prefab, Result as AssetResult, ResultExt, Source,
+};
 use core::transform::Transform;
 use gltf;
 use gltf::Gltf;
@@ -124,9 +125,9 @@ impl Format<Prefab<GltfPrefab>> for GltfSceneFormat {
         options: GltfSceneOptions,
         _create_reload: bool,
     ) -> AssetResult<FormatValue<Prefab<GltfPrefab>>> {
-        Ok(
-            FormatValue::data(load_gltf(source, &name, options).chain_err(|| "Failed to import gltf scene")?),
-        )
+        Ok(FormatValue::data(
+            load_gltf(source, &name, options).chain_err(|| "Failed to import gltf scene")?
+        ))
     }
 }
 

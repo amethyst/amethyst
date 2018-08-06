@@ -55,10 +55,9 @@ where
 {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
         builder.add(Processor::<Source>::new(), "source_processor", &[]);
-        if let Some(_) = default_output_device() {
+        if default_output_device().is_some() {
             builder.add(DjSystem::new(self.picker), "dj_system", self.dep);
         }
-
         Ok(())
     }
 }

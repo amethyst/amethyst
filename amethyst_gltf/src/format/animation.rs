@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 
-use animation::{AnimationPrefab, AnimationSetPrefab, InterpolationFunction,
-                InterpolationPrimitive, Sampler, SamplerPrimitive, TransformChannel};
+use animation::{
+    AnimationPrefab, AnimationSetPrefab, InterpolationFunction, InterpolationPrimitive, Sampler,
+    SamplerPrimitive, TransformChannel,
+};
 use core::Transform;
 use gltf;
 

@@ -18,6 +18,9 @@ use std::time::Duration;
 use std::collections::HashMap;
 use uuid::Uuid;
 
+use std::thread;
+use std::sync::mpsc::{channel,Sender,Receiver};
+
 const SOCKET: Token = Token(0);
 
 // If a client sends both a connect event and other events,
@@ -45,6 +48,8 @@ where
     
     /// The mio's `Poll`.
     //pub poll: Poll,
+    pub tx: Sender,
+    pub rx: Receiver,
     
     /// Readers corresponding to each of the Connections. Use to keep track of when to send which event to who.
     /// When: When there is a new event that hasn't been read yet.
@@ -68,6 +73,16 @@ where
             port,
         ))?;
         socket.set_nonblocking(true).unwrap();
+        
+        // this -> thread
+        let (tx1,rx1) = channel();
+        // thread -> this
+        let (tx2,rx2) = channel();
+        
+        thread::spawn(move ||{
+            //rx1,tx2
+        });
+        
         //socket.set_write_timeout(Some(Duration::from_millis(100))).unwrap();
         //let poll = Poll::new()?;
         //poll.register(&socket, SOCKET, Ready::readable(), PollOpt::level())?;
@@ -76,6 +91,8 @@ where
             socket,
             //filters,
             //poll,
+            tx: tx1,
+            rx: rx2,
             send_queues_readers: HashMap::new(),
         })
     }

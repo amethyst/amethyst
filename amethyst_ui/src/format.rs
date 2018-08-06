@@ -3,6 +3,7 @@ use amethyst_core::specs::prelude::VecStorage;
 use gfx_glyph::Font;
 
 /// A loaded set of fonts from a file.
+#[derive(Clone)]
 pub struct FontAsset(pub Font<'static>);
 
 /// A handle to font data stored with `amethyst_assets`.

@@ -1,8 +1,9 @@
 use amethyst::assets::{Handle, Loader};
 use amethyst::prelude::*;
 use amethyst::renderer::{Material, SpriteSheet};
-use amethyst_animation::{Animation, InterpolationFunction, MaterialChannel, MaterialPrimitive,
-                         Sampler};
+use amethyst_animation::{
+    Animation, InterpolationFunction, MaterialChannel, MaterialPrimitive, Sampler,
+};
 
 pub fn grey_bat(sprite_sheet: &SpriteSheet, world: &mut World) -> Handle<Animation<Material>> {
     let sprite_offsets = [5, 4, 3, 2, 1, 0, 1, 2, 3, 4, 4]

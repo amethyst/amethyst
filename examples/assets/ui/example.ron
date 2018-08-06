@@ -83,15 +83,18 @@ Container(
                 height: 64.,
                 tab_order: 9,
                 anchor: TopMiddle,
+                mouse_reactive: true,
             ),
-            background: (
-                image: Data(Rgba((0., 1., 0., 1.), ())),
-            ),
-            text: (
+            button: (
                 text: "Button!",
                 font: File("font/square.ttf", Ttf, ()),
                 font_size: 20.,
-                color: (0.2, 0.2, 1.0, 1.0),
+                normal_text_color: (0.2, 0.2, 1.0, 1.0),
+                normal_image: Data(Rgba((0., 1., 0., 1.), ())),
+                hover_image: Data(Rgba((0.3, 1., 0.3, 1.), ())),
+                press_image: Data(Rgba((0.15, 1., 0.15, 1.), ())),
+                hover_sound: File("audio/boop.ogg", Ogg, ()),
+                press_sound: File("audio/confirm.ogg", Ogg, ()),
             )
         ),
         Button(
@@ -104,15 +107,14 @@ Container(
                 height: 64.,
                 tab_order: 9,
                 anchor: TopLeft,
+                mouse_reactive: true,
             ),
-            background: (
-                image: Data(Rgba((0.82, 0.83, 0.83, 1.0), ())),
-            ),
-            text: (
+            button: (
                 text: "Simpler!",
                 font: File("font/square.ttf", Ttf, ()),
                 font_size: 32.,
-                color: (0.0, 0.0, 0.0, 1.0),
+                normal_text_color: (0.0, 0.0, 0.0, 1.0),
+                normal_image: Data(Rgba((0.82, 0.83, 0.83, 1.0), ())),
             )
         ),
         Text(

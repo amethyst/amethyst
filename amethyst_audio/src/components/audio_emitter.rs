@@ -53,4 +53,3 @@ impl AudioEmitter {
 impl Component for AudioEmitter {
     type Storage = BTreeStorage<Self>;
 }
-

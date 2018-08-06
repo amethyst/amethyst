@@ -85,7 +85,11 @@ pub struct SpriteRenderData<'a> {
 }
 
 impl<'a> SpriteRenderData<'a> {
-    fn build_mesh_and_material(
+    
+    /// Creates a MeshHandle and Material from the sprite and texture data.
+    /// Useful if you plan on re-using the same sprite a lot and don't want to
+    /// load the assets each time.
+    pub fn build_mesh_and_material(
         &mut self,
         sprite: &Sprite,
         texture: TextureHandle,

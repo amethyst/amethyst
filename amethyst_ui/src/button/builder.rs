@@ -1,7 +1,10 @@
-use super::{Anchor, FontAsset, FontHandle, MouseReactive, Stretch, TtfFormat, UiImage, UiText,
-            UiTransform};
-///! A clickable button.
+use {
+    Anchor, FontAsset, FontHandle, MouseReactive, OnUiActionImage, OnUiActionSound, Stretch,
+    TtfFormat, UiButton, UiImage, UiText, UiTransform,
+};
+
 use amethyst_assets::{AssetStorage, Loader};
+use amethyst_audio::SourceHandle;
 use amethyst_core::specs::prelude::{Entities, Entity, Read, ReadExpect, World, WriteStorage};
 use amethyst_core::Parent;
 use amethyst_renderer::{Texture, TextureHandle};
@@ -27,13 +30,9 @@ pub struct UiButtonBuilderResources<'a> {
     parent: WriteStorage<'a, Parent>,
     text: WriteStorage<'a, UiText>,
     transform: WriteStorage<'a, UiTransform>,
-}
-
-impl<'a> UiButtonBuilderResources<'a> {
-    /// Grab the resources we need from the world.
-    pub fn from_world(world: &'a World) -> Self {
-        Self::fetch(&world.res)
-    }
+    button: WriteStorage<'a, UiButton>,
+    action_image: WriteStorage<'a, OnUiActionImage>,
+    action_sound: WriteStorage<'a, OnUiActionSound>,
 }
 
 /// Convenience structure for building a button
@@ -53,6 +52,13 @@ pub struct UiButtonBuilder {
     font_size: f32,
     image: Option<TextureHandle>,
     parent: Option<Entity>,
+    hover_image: Option<TextureHandle>,
+    hover_text_color: Option<[f32; 4]>,
+    press_image: Option<TextureHandle>,
+    press_text_color: Option<[f32; 4]>,
+    hover_sound: Option<SourceHandle>,
+    press_sound: Option<SourceHandle>,
+    release_sound: Option<SourceHandle>,
 }
 
 impl Default for UiButtonBuilder {
@@ -73,16 +79,15 @@ impl Default for UiButtonBuilder {
             font_size: 32.,
             image: None,
             parent: None,
+            hover_image: None,
+            hover_text_color: None,
+            press_image: None,
+            press_text_color: None,
+            hover_sound: None,
+            press_sound: None,
+            release_sound: None,
         }
     }
-}
-
-/// A clickable button.
-pub struct UiButton {
-    /// The actual text of the button.
-    pub text: Entity,
-    /// Represents the background of the image. Defaults to a grey rectangle.
-    pub image: Entity,
 }
 
 impl UiButtonBuilder {
@@ -180,8 +185,51 @@ impl UiButtonBuilder {
         self
     }
 
-    // unwraps are safe because we create the entities inside
-    fn build(mut self, mut res: UiButtonBuilderResources) -> UiButton {
+    /// Text color to use when the mouse is hovering over this button
+    pub fn with_hover_text_color(mut self, text_color: [f32; 4]) -> Self {
+        self.hover_text_color = Some(text_color);
+        self
+    }
+
+    /// Set text color when the button is pressed
+    pub fn with_press_text_color(mut self, text_color: [f32; 4]) -> Self {
+        self.press_text_color = Some(text_color);
+        self
+    }
+
+    /// Button image to use when the mouse is hovering over this button
+    pub fn with_hover_image(mut self, image: TextureHandle) -> Self {
+        self.hover_image = Some(image);
+        self
+    }
+
+    /// Button image to use when this button is pressed
+    pub fn with_press_image(mut self, image: TextureHandle) -> Self {
+        self.press_image = Some(image);
+        self
+    }
+
+    /// Sound emitted when this button is hovered over
+    pub fn with_hover_sound(mut self, sound: SourceHandle) -> Self {
+        self.hover_sound = Some(sound);
+        self
+    }
+
+    /// Sound emitted when this button is pressed
+    pub fn with_press_sound(mut self, sound: SourceHandle) -> Self {
+        self.press_sound = Some(sound);
+        self
+    }
+
+    /// Sound emitted when this button is released
+    pub fn with_release_sound(mut self, sound: SourceHandle) -> Self {
+        self.release_sound = Some(sound);
+        self
+    }
+
+    /// Build this with the `UiButtonBuilderResources`.    
+    pub fn build(mut self, mut res: UiButtonBuilderResources) -> Entity {
+        // unwraps are safe because we create the entities inside
         let mut id = self.name.clone();
         let image_entity = res.entities.create();
         res.transform
@@ -208,7 +256,7 @@ impl UiButtonBuilder {
             .insert(
                 image_entity,
                 UiImage {
-                    texture: image_handle,
+                    texture: image_handle.clone(),
                 },
             )
             .unwrap();
@@ -253,19 +301,44 @@ impl UiButtonBuilder {
             .insert(
                 text_entity,
                 Parent {
-                    entity: image_entity.clone(),
+                    entity: image_entity,
                 },
             )
             .unwrap();
 
-        UiButton {
-            text: text_entity,
-            image: image_entity,
+        res.button
+            .insert(
+                image_entity,
+                UiButton {
+                    normal_text_color: self.text_color,
+                    hover_text_color: self.hover_text_color,
+                    press_text_color: self.press_text_color,
+                },
+            )
+            .unwrap();
+        if self.hover_image.is_some() || self.press_image.is_some() {
+            res.action_image
+                .insert(
+                    image_entity,
+                    OnUiActionImage::new(Some(image_handle), self.hover_image, self.press_image),
+                )
+                .unwrap();
         }
+
+        if self.hover_sound.is_some() || self.press_sound.is_some() || self.release_sound.is_some()
+        {
+            res.action_sound
+                .insert(
+                    image_entity,
+                    OnUiActionSound::new(self.hover_sound, self.press_sound, self.release_sound),
+                )
+                .unwrap();
+        }
+        image_entity
     }
 
     /// Create the UiButton based on provided configuration parameters.
-    pub fn build_from_world(self, world: &World) -> UiButton {
-        self.build(UiButtonBuilderResources::from_world(world))
+    pub fn build_from_world(self, world: &World) -> Entity {
+        self.build(UiButtonBuilderResources::fetch(&world.res))
     }
 }
