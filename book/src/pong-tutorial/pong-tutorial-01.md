@@ -41,11 +41,11 @@ just implement two methods:
 ```rust,ignore
 impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-      if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-          Trans::Quit
-      } else {
-          Trans::None
-      }
+        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+            Trans::Quit
+        } else {
+            Trans::None
+        }
     }
 
     fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
