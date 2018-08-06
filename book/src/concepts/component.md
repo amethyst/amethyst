@@ -18,7 +18,7 @@ Creating a component is easy.
 
 You declare a struct:
 
-```rust
+```rust,ignore
 pub struct MyComponent {
     some_property: String,
 }
