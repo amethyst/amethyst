@@ -19,7 +19,7 @@ Creating a component is easy.
 You declare a struct:
 
 ```rust
-pub struct MyComponent{
+pub struct MyComponent {
     some_property: String,
 }
 ```
