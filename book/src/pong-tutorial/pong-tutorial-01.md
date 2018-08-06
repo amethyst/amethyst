@@ -18,7 +18,7 @@ In `src` there's a `main.rs` file. Delete everything, then add these imports:
 extern crate amethyst;
 
 use amethyst::prelude::*;
-use amethyst::input::{is_close_requested, is_key_down};
+use amethyst::LoggerConfig;
 use amethyst::renderer::{DisplayConfig, DrawFlat, Event, KeyboardInput,
                          Pipeline, PosTex, RenderBundle, Stage,
                          VirtualKeyCode, WindowEvent};
@@ -41,11 +41,20 @@ just implement two methods:
 ```rust,ignore
 impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-            Trans::Quit
-        } else {
-            Trans::None
-        }
+      match event {
+          Event::WindowEvent { event, .. } => match event {
+              WindowEvent::KeyboardInput {
+                  input:
+                      KeyboardInput {
+                          virtual_keycode: Some(VirtualKeyCode::Escape),
+                          ..
+                      },
+                  ..
+              } => Trans::Quit,
+              _ => Trans::None,
+          },
+          _ => Trans::None,
+      }
     }
 
     fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
@@ -146,8 +155,8 @@ Ok(())
 We've discovered Amethyst's root object: [Application][ap]. It binds the OS
 event loop, state machines, timers and other core components in a central place.
 Here we're creating a new `RenderBundle`, adding the `Pipeline` we created,
-along with our config, and building. There is also a helper function 
-`with_basic_renderer` on `GameDataBuilder` that you can use to create your 
+along with our config, and building. There is also a helper function
+`with_basic_renderer` on `GameDataBuilder` that you can use to create your
 `Pipeline` and `RenderBundle`, that performs most of the actions above. In the
 full `pong` example in the `Amethyst` repository that function is used instead.
 
