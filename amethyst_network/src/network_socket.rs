@@ -23,6 +23,13 @@ use std::sync::mpsc::{channel,Sender,Receiver};
 
 const SOCKET: Token = Token(0);
 
+
+enum InternalSocketEvent<E>{
+    SendEvents{target: NetConnection<E>,events: Vec<E>},
+    Stop,
+}
+
+
 // If a client sends both a connect event and other events,
 // only the connect event will be considered valid and all others will be lost.
 
@@ -81,6 +88,24 @@ where
         
         thread::spawn(move ||{
             //rx1,tx2
+            let send_queue = rx1;
+            let receive_queue = tx2;
+            let mut socket = socket;
+            loop 'outer{
+                // send
+                for control_event in send_queue.try_iter() {
+                    match control_event {
+                        SendEvents{target,events} => {
+                            for ev in events {
+                                send_event(ev, &target, &self.socket);
+                            }
+                        },
+                        Stop => break 'outer,
+                    }
+                }
+                // receive
+                
+            }
         });
         
         //socket.set_write_timeout(Some(Duration::from_millis(100))).unwrap();
@@ -88,7 +113,7 @@ where
         //poll.register(&socket, SOCKET, Ready::readable(), PollOpt::level())?;
         //poll.register(&socket, SOCKET, Ready::readable(), PollOpt::edge())?;
         Ok(NetSocketSystem {
-            socket,
+            //socket,
             //filters,
             //poll,
             tx: tx1,
@@ -128,19 +153,15 @@ where
         }*/
     }
     fn run(&mut self, (entities,mut net_connections): Self::SystemData) {
-        self.socket.set_nonblocking(false).unwrap();
-        println!("RUN METHOD");
-        let mut count = 0;
+        //self.socket.set_nonblocking(false).unwrap();
         for (entity,mut net_connection) in (&*entities,&mut net_connections).join() {
-          println!("CONNECTION FOUND");
           let mut reader = self.send_queues_readers.entry(entity).or_insert(net_connection.send_buffer.register_reader());
           
           let target = net_connection.target.clone();
           if net_connection.state == ConnectionState::Connected || net_connection.state == ConnectionState::Connecting {
-            println!("GOOD STATE");
-            for ev in net_connection.send_buffer_early_read() {
-              count = count + 1;
-              send_event(ev, &target, &self.socket);
+	      //for ev in net_connection.send_buffer_early_read() {
+                  //send_event(ev, &target, &self.socket);
+                  self.tx.send(InternalSocket::SendEvents{target, net_connection.send_buffer_early_read().collect()).unwrap();
             /*let target = pool.connection_from_address(&ev.socket);
             if let Some(t) = target {
                 if t.state == ConnectionState::Connected || t.state == ConnectionState::Connecting {
@@ -151,11 +172,10 @@ where
             } else {
                 warn!("Targeted address is not in the NetConnection pool.")
             }*/
-            }
+            //}
           }
         }
-        println!("Sent {} packets", count);
-        self.socket.set_nonblocking(true).unwrap();
+        //self.socket.set_nonblocking(true).unwrap();
         // Receives event through mio's `Poll`.
         // I'm not sure if this is the right way to use Poll, but it seems to work.
         //let mut events = Events::with_capacity(2048);
