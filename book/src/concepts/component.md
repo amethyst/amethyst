@@ -24,10 +24,12 @@ enum Shape {
     RectangularPrism { height: f32, width: f32, depth: f32 },
 }
 
+/// This `Component` describes the shape of an `Entity`
 pub struct Shape {
     shape: Shape,
 }
 
+/// This `Component` describes the contents of an `Entity`
 pub struct Content {
     content_name: String,
 }
