@@ -85,7 +85,7 @@ When calling your `State`'s methods, the engine will pass a `StateData` struct w
 
 ## Code
 
-Yes! Its finally time to get some code in here!
+Yes! It's finally time to get some code in here!
 
 Here will just be a small code snippet that shows the basics of `State`'s usage.
 For more advanced examples, see the following pong tutorial.
