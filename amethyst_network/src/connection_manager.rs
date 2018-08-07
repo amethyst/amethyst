@@ -22,7 +22,7 @@ use amethyst_core::specs::{Read, Write, System,WriteStorage};
 /// Input: Disconnected
 ///
 // TODO: Allow user to specify how uuid are assigned to connections.
-pub struct ConnectionManagerSystem<E>
+pub struct ConnectionManagerSystem<E: 'static>
 where
     E: PartialEq,
 {

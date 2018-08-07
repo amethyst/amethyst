@@ -9,7 +9,7 @@ use super::NetEvent;
 // TODO: Think about relationship between NetConnection and NetIdentity.
 
 /// A network connection target data.
-pub struct NetConnection<E> {
+pub struct NetConnection<E: 'static> {
     /// The remote socket address of this connection.
     pub target: SocketAddr,
     /// The state of the connection.

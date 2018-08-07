@@ -89,11 +89,11 @@ where
         //world.add_resource(NetIdentity { uuid });
 
         builder.add(s, "net_socket", &[]);
-        builder.add(
+        /*builder.add(
             ConnectionManagerSystem::<T>::new(self.is_server),
             "connection_manager",
             &["net_socket"],
-        );
+        );*/
 
         Ok(())
     }

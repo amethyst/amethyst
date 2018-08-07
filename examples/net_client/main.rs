@@ -5,7 +5,7 @@ extern crate log;
 use amethyst::Result;
 use amethyst::core::Time;
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
-use amethyst::ecs::{Fetch, FetchMut, System};
+use amethyst::ecs::{Read,Write,ReadStorage,WriteStorage,Join,System};
 use amethyst::network::*;
 use amethyst::prelude::*;
 use amethyst::shrev::ReaderId;
@@ -14,38 +14,37 @@ use std::net::SocketAddr;
 use std::str::FromStr;
 use std::time::Duration;
 
-fn main() {
-    if let Err(e) = run() {
-        error!("Failed to execute example: {}", e);
-        ::std::process::exit(1);
-    }
-}
-
-fn run() -> Result<()> {
-    let game = Application::build("", State1)?
+fn main() -> Result<()>{
+    amethyst::start_logger(Default::default());
+    let game_data = GameDataBuilder::default()
+        .with_bundle(NetworkBundle::<()>::new_client(
+            "127.0.0.1",
+            Some(3455 as u16),
+            vec![],
+        ))?
+        .with(SpamSystem::new(), "spam", &[]);
+    let mut game = Application::build("./", State1)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             144,
         )
-        .with_bundle(
-            NetworkBundle::<()>::new_client(
-                "127.0.0.1",
-                None,
-                vec![Box::new(FilterConnected::<()>::new())],
-            ).with_connect(SocketAddr::new(
-                IpAddr::from_str("127.0.0.1").unwrap(),
-                3456 as u16,
-            )),
-        )?
-        .with(SpamSystem::new(), "spam_system", &[])
-        .with(ReaderSystem::new(), "reader", &[]);
-
-    Ok(game.build()?.run())
+        .build(game_data)?;
+    game.run();
+    Ok(())
 }
 
 /// Default empty state
 pub struct State1;
-impl State for State1 {}
+impl<'a,'b> State<GameData<'a,'b>> for State1 {
+    fn on_start(&mut self, mut data: StateData<GameData>) {
+        data.world.create_entity().with(NetConnection::<()>::new("127.0.0.1:3456".parse().unwrap()));
+    }
+    
+    fn update(&mut self, mut data: StateData<GameData>) -> Trans<GameData<'a,'b>> {
+        data.data.update(&mut data.world);
+        Trans::None
+    }
+}
 
 /// A simple system that sends a ton of messages to all connections.
 /// In this case, only the server is connected.
@@ -59,12 +58,14 @@ impl SpamSystem {
 
 impl<'a> System<'a> for SpamSystem {
     type SystemData = (
-        FetchMut<'a, NetSendBuffer<()>>,
-        Fetch<'a, NetConnectionPool>,
-        Fetch<'a, Time>,
+        WriteStorage<'a, NetConnection<()>>,
+        Read<'a, Time>,
     );
-    fn run(&mut self, (mut send_buf, pool, time): Self::SystemData) {
+    fn run(&mut self, (mut connections, time): Self::SystemData) {
+        for (mut conn,) in (&mut connections,).join() {
+        info!("Sending 10k messages.");
         for i in 0..10000 {
+            info!("Sending to queue {}",i);
             let ev = NetEvent::TextMessage {
                 msg: format!(
                     "CL: frame:{},abs_time:{},c:{}",
@@ -73,11 +74,14 @@ impl<'a> System<'a> for SpamSystem {
                     i
                 ),
             };
-            send_to_all(ev, &mut send_buf, &pool);
+            //send_to_all(ev, &mut send_buf, &pool);
+            conn.send_buffer.single_write(ev);
         }
+       }
     }
 }
 
+/*
 /// A simple system reading received events.
 /// Used to see events sent by the net_echo_server example.
 struct ReaderSystem {
@@ -103,4 +107,4 @@ impl<'a> System<'a> for ReaderSystem {
             }
         }
     }
-}
+}*/
