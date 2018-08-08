@@ -16,17 +16,13 @@ In this example, the bottle is the entity, and the properties are components.
 
 Creating a component is easy.
 
-You declare the relevant structs:
+You declare the relevant underlying data:
 
 ```rust,ignore
+/// This `Component` describes the shape of an `Entity`
 enum Shape {
     Sphere { radius: f32 },
     RectangularPrism { height: f32, width: f32, depth: f32 },
-}
-
-/// This `Component` describes the shape of an `Entity`
-pub struct Shape {
-    shape: Shape,
 }
 
 /// This `Component` describes the contents of an `Entity`
