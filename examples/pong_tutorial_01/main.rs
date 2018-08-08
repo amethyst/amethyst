@@ -2,7 +2,7 @@ extern crate amethyst;
 
 use amethyst::input::{is_close_requested, is_key_down};
 use amethyst::prelude::*;
-use amethyst::renderer::{DrawFlat, Event, PosTex, VirtualKeyCode};
+use amethyst::renderer::{DrawSprite, Event, VirtualKeyCode};
 
 pub struct Pong;
 
@@ -34,7 +34,7 @@ fn main() -> amethyst::Result<()> {
     let assets_dir = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
 
     let game_data =
-        GameDataBuilder::default().with_basic_renderer(path, DrawFlat::<PosTex>::new(), false)?;
+        GameDataBuilder::default().with_basic_renderer(path, DrawSprite::new(), false)?;
     let mut game = Application::new(assets_dir, Pong, game_data)?;
     game.run();
     Ok(())

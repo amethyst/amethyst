@@ -112,8 +112,7 @@ pub use skinning::{
     JointTransformsPrefab, JointWeights,
 };
 pub use sprite::{
-    Sprite, SpriteRender, SpriteRenderData, SpriteSheet, SpriteSheetHandle, SpriteSheetSet,
-    TextureCoordinates, WithSpriteRender,
+    Sprite, SpriteRender, SpriteSheet, SpriteSheetHandle, SpriteSheetSet, TextureCoordinates,
 };
 pub use system::RenderSystem;
 pub use tex::{Texture, TextureBuilder, TextureHandle};

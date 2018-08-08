@@ -15,7 +15,7 @@ use amethyst::core::transform::TransformBundle;
 use amethyst::ecs::prelude::{Component, DenseVecStorage};
 use amethyst::input::InputBundle;
 use amethyst::prelude::*;
-use amethyst::renderer::{DrawFlat, PosTex};
+use amethyst::renderer::DrawSprite;
 use amethyst::ui::UiBundle;
 
 use audio::Music;
@@ -68,19 +68,17 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with_bundle(
-            InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?
-        )?
-        .with_bundle(PongBundle)?
+            InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?,
+        )?.with_bundle(PongBundle)?
         .with_bundle(TransformBundle::new().with_dep(&["ball_system", "paddle_system"]))?
         .with_bundle(AudioBundle::new(|music: &mut Music| music.music.next()))?
         .with_bundle(UiBundle::<String, String>::new())?
-        .with_basic_renderer(display_config_path, DrawFlat::<PosTex>::new(), true)?;
+        .with_basic_renderer(display_config_path, DrawSprite::new(), true)?;
     let mut game = Application::build(assets_dir, Pong)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             144,
-        )
-        .build(game_data)?;
+        ).build(game_data)?;
     game.run();
     Ok(())
 }
