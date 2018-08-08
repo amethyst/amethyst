@@ -1,7 +1,7 @@
 # State
 
 ## What is a state?
-The word "state" can mean at lot of different things in computer science.
+The word "state" can mean a lot of different things in computer science.
 In the case of amethyst, it is used to represent the "game stage".
 
 A game stage is a *general* and *global* section of the game.
