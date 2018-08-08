@@ -10,7 +10,6 @@
 [s4]: https://badges.gitter.im/amethyst/general.svg
 [s5]: https://img.shields.io/discord/425678876929163284.svg?logo=discord
 [s6]: https://tokei.rs/b1/github/amethyst/amethyst?category=code
-
 [tc]: https://travis-ci.org/amethyst/amethyst/
 [ci]: https://crates.io/crates/amethyst/
 [li]: COPYING
@@ -27,11 +26,11 @@ These principles are what make amethyst unique and competitive in the world of g
 
 * Massively parallel architecture.
 * Powered by a correct [Entity Component System][ecs] model.
-* Rapid prototyping with [RON] (Json-like) files for prefabs and an abstract scripting API.
+* Rapid prototyping with [RON](Json-like) files for prefabs and an abstract scripting API.
 * Strong focus on encouraging reusability and clean interfaces.
 
 [ecs]: https://en.wikipedia.org/wiki/Entity–component–system
-[RON]: https://github.com/ron-rs/ron
+[ron]: https://github.com/ron-rs/ron
 
 ## Why Amethyst?
 
@@ -64,7 +63,6 @@ Please visit the [features page][feat] for a list of features Amethyst provides.
 
 [adb1]: https://img.shields.io/badge/docs-develop-blue.svg
 [adb2]: https://img.shields.io/badge/docs-master-blue.svg
-
 [ad1]: https://www.amethyst.rs/doc/develop.html
 [ad2]: https://www.amethyst.rs/doc/master.html
 
@@ -79,12 +77,15 @@ If you don't understand a part of the documentation, please let us know. Join us
 ## Getting started
 
 To compile any of the examples run:
+
 ```
 $ cargo run --example name_of_example
 ```
+
 All available examples are listed under [examples][ex].
 
 Our most advanced example is currently called pong. It is a pong game, as you may have guessed it.
+
 ```
 $ cargo run --example pong
 ```
@@ -123,6 +124,14 @@ $ cargo install mdbook
 $ mdbook build book
 ```
 
+If you're actively editing the documentation, it's easiest to run:
+
+```
+$ mdbook serve book
+```
+
+and go to `http://localhost:3000`. For more information, see the [mdBook project](https://github.com/rust-lang-nursery/mdBook).
+
 The text can be found in `book/html/index.html`. To generate the API
 documentation locally, do:
 
@@ -150,10 +159,10 @@ Other places you may want to check out are [r/rust_gamedev][rg] and [#rust-gamed
 
 ## Contributing
 
-We are a community project that welcomes contributions from anyone. 
+We are a community project that welcomes contributions from anyone.
 
-If you're interested in helping out, please read the [contribution guidelines][cm] 
-file before getting started. 
+If you're interested in helping out, please read the [contribution guidelines][cm]
+file before getting started.
 
 We have a [good first issue][gfi] category that groups all issues or feature request
 that can be made without having an extensive knowledge of rust or amethyst.
@@ -169,7 +178,6 @@ you can look through the [issue tracker][it].
 [cm]: docs/CONTRIBUTING.md
 [pr]: https://github.com/amethyst/amethyst/projects
 [it]: https://github.com/amethyst/amethyst/issues
-
 [gfi]: https://github.com/amethyst/amethyst/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
 
 ## License
