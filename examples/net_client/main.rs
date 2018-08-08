@@ -37,7 +37,7 @@ fn main() -> Result<()>{
 pub struct State1;
 impl<'a,'b> State<GameData<'a,'b>> for State1 {
     fn on_start(&mut self, mut data: StateData<GameData>) {
-        data.world.create_entity().with(NetConnection::<()>::new("127.0.0.1:3456".parse().unwrap()));
+        data.world.create_entity().with(NetConnection::<()>::new("127.0.0.1:3456".parse().unwrap())).build();
     }
     
     fn update(&mut self, mut data: StateData<GameData>) -> Trans<GameData<'a,'b>> {
@@ -65,7 +65,6 @@ impl<'a> System<'a> for SpamSystem {
         for (mut conn,) in (&mut connections,).join() {
         info!("Sending 10k messages.");
         for i in 0..10000 {
-            info!("Sending to queue {}",i);
             let ev = NetEvent::TextMessage {
                 msg: format!(
                     "CL: frame:{},abs_time:{},c:{}",

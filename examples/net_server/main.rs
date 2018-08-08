@@ -33,7 +33,7 @@ fn main() -> Result<()>{
 pub struct State1;
 impl<'a,'b> State<GameData<'a,'b>> for State1 {
     fn on_start(&mut self, mut data: StateData<GameData>) {
-        data.world.create_entity().with(NetConnection::<()>::new("127.0.0.1:3455".parse().unwrap()));
+        data.world.create_entity().with(NetConnection::<()>::new("127.0.0.1:3455".parse().unwrap())).build();
     }
     
     fn update(&mut self, mut data: StateData<GameData>) -> Trans<GameData<'a,'b>> {
@@ -64,7 +64,7 @@ impl<'a> System<'a> for SpamReceiveSystem {
             for ev in conn.receive_buffer.read(self.reader.as_mut().unwrap()) {
                 count += 1;
                 match ev {
-                    &NetEvent::TextMessage { ref msg } => println!("{}", msg),
+                    &NetEvent::TextMessage { ref msg } => {},//println!("{}", msg),
                     _ => {}
                 }
             }

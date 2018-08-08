@@ -104,7 +104,7 @@ where
                     match control_event {
                         InternalSocketEvent::SendEvents{target,events} => {
                             for ev in events {
-                                info!("Sending event");
+                                //info!("Sending event");
                                 send_event(&ev, &target, &socket);
                             }
                         },
@@ -182,13 +182,10 @@ where
     }
     fn run(&mut self, (entities,mut net_connections): Self::SystemData) {
         //self.socket.set_nonblocking(false).unwrap();
-        info!("1");
         for (entity,mut net_connection) in (&*entities,&mut net_connections).join() {
           let mut reader = self.send_queues_readers.entry(entity).or_insert(net_connection.send_buffer.register_reader());
-          info!("2");
           let target = net_connection.target.clone();
           if net_connection.state == ConnectionState::Connected || net_connection.state == ConnectionState::Connecting {
-              info!("3");
 	      //for ev in net_connection.send_buffer_early_read() {
                   //send_event(ev, &target, &self.socket);
                   self.tx.send(InternalSocketEvent::SendEvents{target, events: net_connection.send_buffer_early_read().cloned().collect()}).unwrap();
@@ -205,7 +202,6 @@ where
             //}
           }
         }
-        info!("4");
         //self.socket.set_nonblocking(true).unwrap();
         // Receives event through mio's `Poll`.
         // I'm not sure if this is the right way to use Poll, but it seems to work.
