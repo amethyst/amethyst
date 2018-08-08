@@ -1,4 +1,4 @@
-# Entity
+# Entity [![develop docs](https://img.shields.io/badge/docs-develop-blue.svg)](https://www.amethyst.rs/doc/develop/doc/amethyst/ecs/prelude/struct.Entity.html) [![master docs](https://img.shields.io/badge/docs-master-blue.svg)](https://www.amethyst.rs/doc/master/doc/amethyst/ecs/prelude/struct.Entity.html)
 
 ## What is an entity?
 
@@ -8,6 +8,7 @@ For example, a car could be an entity, with its properties being `Component`s.
 ## Creating an entity
 
 There are two common ways to create entities:
+
 * From a `World` instance. See the relevant chapter in the book.
 * From a `System` using `Entities`. See the system chapter in the book.
 
@@ -17,4 +18,3 @@ You can't! Well, at least not directly from an `Entity` instance.
 As mentioned in the component book page, `Component`s are not directly attached to entities; they are inserted into storages.
 
 `Storage` access and modification will be covered in the resource, world and system sections of the book.
-

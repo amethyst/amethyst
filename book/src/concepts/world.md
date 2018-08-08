@@ -1,4 +1,4 @@
-# World
+# World [![develop docs](https://img.shields.io/badge/docs-develop-blue.svg)](https://www.amethyst.rs/doc/develop/doc/amethyst/ecs/prelude/struct.World.html) [![master docs](https://img.shields.io/badge/docs-master-blue.svg)](https://www.amethyst.rs/doc/master/doc/amethyst/ecs/prelude/struct.World.html)
 
 ## What is a world?
 
@@ -16,10 +16,10 @@ struct MyResource;
 fn main() {
     // We create a new `World` instance.
     let mut world = World::new();
-    
+
     // We create our resource.
     let my = MyResource;
-    
+
     // We add the resource to the world.
     world.add_resource(my);
 }
@@ -28,11 +28,13 @@ fn main() {
 ## Fetching a resource
 
 Here's how to fetch a read-only resource. Be aware that this method panics if the resource isn't inserted into `Resources`.
+
 ```rust,ignore
     let my = world.read_resource::<MyResource>();
 ```
 
 If you are not sure that the resource will be present, use the methods available on `Resources`, as shown in the resource chapter.
+
 ```rust,ignore
     let my = world.res.entry::<MyResource>().or_insert_with(|| MyResource);
 ```
@@ -56,6 +58,7 @@ Finally, you call the build() method on the entity builder to get the actual ent
 ```
 
 Shorter version:
+
 ```rust,ignore
     let my_entity = world
        .create_entity()
@@ -71,10 +74,10 @@ Internally, the `World` interacts with `EntitiesRes`, which is a resource holdin
     // Create an `Entity` with `MyComponent`.
     // `World` will implicitly write to the component's storage in `Resources`.
     let my_entity = world.create_entity().with(MyComponent).build();
-    
+
     // Get a ReadStorage<MyComponent>
     let storage = world.read_storage::<MyComponent>();
-    
+
     // Get the actual component from the storage.
     let my = storage.get(&my_entity).expect("Failed to get component for entity: {:?}", my_entity);
 ```
@@ -101,16 +104,19 @@ It is pretty rare to use this, but can be useful in some occasions.
 ## Delete an entity
 
 Single:
+
 ```rust,ignore
     world.delete_entity(my_entity).expect("Failed to delete entity. Was it already removed?");
 ```
 
 Multiple:
+
 ```rust,ignore
     world.delete_entities(entity_vec.as_slice()).expect("Failed to delete entities from specified list.");
 ```
 
 All:
+
 ```rust,ignore
     world.delete_all().expect("Failed to delete all entities.");
 ```
@@ -145,4 +151,4 @@ Because of an implementation detail, for the world to be updated you need to cal
 If you do not do this, the world will not update and the game will look like it froze.
 If you have a bug where nothing happens at all, this is the first thing you should check!
 
-*NOTE: This will no longer be necessary in future release 0.9 of Amethyst.*
+_NOTE: This will no longer be necessary in future release 0.9 of Amethyst._

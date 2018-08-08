@@ -1,4 +1,4 @@
-# Component
+# Component [![develop docs](https://img.shields.io/badge/docs-develop-blue.svg)](https://www.amethyst.rs/doc/develop/doc/amethyst/ecs/prelude/trait.Component.html) [![master docs](https://img.shields.io/badge/docs-master-blue.svg)](https://www.amethyst.rs/doc/master/doc/amethyst/ecs/prelude/trait.Component.html)
 
 ## What is a `Component`?
 
@@ -42,6 +42,7 @@ They are instead stored in different types of `Storage`, which all have differen
 When implementing `Component` for a type, you have to specify which storage strategy it should use.
 
 Here's a comparison of the most used ones:
+
 * `DenseVecStorage`: Elements are stored in a contiguous array. No empty space is left between `Component`s, allowing a lowered memory usage.
   This is less performant than `VecStorage`.
 * `VecStorage`: Elements are stored into a contiguous array. Uses more memory than `DenseVecStorage` but is more performant when you use a `Component` type a lot.

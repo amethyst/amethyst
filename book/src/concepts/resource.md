@@ -1,4 +1,4 @@
-# Resource
+# Resource [![develop docs](https://img.shields.io/badge/docs-develop-blue.svg)](https://www.amethyst.rs/doc/develop/doc/amethyst/ecs/prelude/struct.Resources.html) [![master docs](https://img.shields.io/badge/docs-master-blue.svg)](https://www.amethyst.rs/doc/master/doc/amethyst/ecs/prelude/struct.Resources.html)
 
 ## What is a resource?
 
@@ -11,6 +11,7 @@ Resources are stored in a, well, `Resources` type. This type is usually stored i
 Normally you don't create a `Resources` instance yourself. It is usually made by amethyst automatically.
 
 Adding a resource to a `Resources` instance is done like this:
+
 ```rust
 use amethyst::ecs::{Resources};
 
@@ -20,11 +21,11 @@ struct MyResource {
 
 fn main() {
     let mut resources = Resources::new();
-    
+
     let my = MyResource {
         game_score: 0,
     };
-    
+
     resources.insert(my);
 }
 ```
@@ -32,18 +33,21 @@ fn main() {
 ## Fetching a resource (from `Resources`)
 
 Fetching a resource can be done like this:
+
 ```rust,ignore
 // Returns a Option<MyResource>
 let fetched = resources.try_fetch::<MyResource>().expect("No MyResource present in Resources");
 ```
 
 If you want to get a resource and create it if it doesn't exist:
+
 ```rust,ignore
 // If the resource isn't inside `Resources`, it will insert the instance we created earlier.
 let fetched = resources.entry::<MyResource>().or_insert_with(|| my);
 ```
 
 If you want to change a resource that is already inside of `Resources`:
+
 ```rust,ignore
 let mut fetched = resources.try_fetch_mut::<MyResource>().expect("No MyResource present in Resources");
 ```

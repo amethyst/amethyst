@@ -1,4 +1,4 @@
-# Dispatcher
+# Dispatcher [![develop docs](https://img.shields.io/badge/docs-develop-blue.svg)](https://www.amethyst.rs/doc/develop/doc/amethyst/ecs/prelude/struct.Dispatcher.html) [![master docs](https://img.shields.io/badge/docs-master-blue.svg)](https://www.amethyst.rs/doc/master/doc/amethyst/ecs/prelude/struct.Dispatcher.html)
 
 ## What is a `Dispatcher`?
 
@@ -14,5 +14,4 @@ The dispatcher looks at all the `SystemData` in the systems and builds execution
 
 If you want to have the best performance possible, you should prefer immutable over mutable whenever it is possible. (`Read` instead of `Write`, `ReadStorage` instead of `WriteStorage`).
 
-_Note: Please however keep in mind that `Write` is still preferable to interior mutability, such as `Mutex` or `RwLock` for example.
-
+\_Note: Please however keep in mind that `Write` is still preferable to interior mutability, such as `Mutex` or `RwLock` for example.

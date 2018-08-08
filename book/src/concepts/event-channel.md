@@ -1,6 +1,6 @@
-# Event Channel
+# Event Channel [![develop docs](https://img.shields.io/badge/docs-develop-blue.svg)](https://www.amethyst.rs/doc/develop/doc/amethyst/shrev/struct.EventChannel.html) [![master docs](https://img.shields.io/badge/docs-master-blue.svg)](https://www.amethyst.rs/doc/master/doc/amethyst/shrev/struct.EventChannel.html)
 
-This chapter will be easier than the previous ones. 
+This chapter will be easier than the previous ones.
 
 While it is not essential to understand it to use amethyst, it can make your life much much easier in a lot of situations where using only data would make your code too complex.
 
@@ -22,18 +22,20 @@ Super simple!
         A,
         B,
     }
-    
+
     let mut channel = EventChannel::<MyEvent>::new();
 ```
 
 ## Writing events to the event channel
 
-Single: 
+Single:
+
 ```rust,ignore
     channel.single_write(MyEvent::A);
 ```
 
-Multiple: 
+Multiple:
+
 ```rust,ignore
     channel.iter_write(vec![MyEvent::A, MyEvent::A, MyEvent::B].iter());
 ```
@@ -57,6 +59,7 @@ Then, when you want to read the events:
         println!("Received event value of: {:?}", event);
     }
 ```
+
 Note that you only need to have a read access to the channel when reading events.
 It is the `ReaderId` that needs to be mutable to keep track of where your last read was.
 
@@ -66,31 +69,38 @@ When using the event channel, we usually re-use the same pattern over and over a
 It goes as follow:
 
 Create the event channel and add it to to the world during `State` creation:
+
 ```rust,ignore
 world.add_resource(
     EventChannel::<MyEvent>::new(),
 );
 ```
+
 _Note: You can also derive `Default`, this way you don't have to manually create your resource and add it. Resources implementing `Default` are automatically added to `Resources` when a `System` uses them (`Read` or `Write` in `SystemData`)._
 
 In the **producer** `System`, get a mutable reference to your resource:
+
 ```rust,ignore
 type SystemData = Write<'a, EventChannel<MyEvent>>;
 ```
 
 In the **receiver** `System`s, you need to store the `ReaderId` somewhere.
+
 ```rust,ignore
 struct ReceiverSystem {
     // The type inside of ReaderId should be the type of the event you are using.
     reader: Option<ReaderId<MyEvent>>,
 }
 ```
+
 and you also need to get read access:
+
 ```rust,ignore
     type SystemData = Read<'a, EventChannel<MyEvent>>;
 ```
 
 Then, in the `System`'s setup method:
+
 ```rust,ignore
     // IMPORTANT: You need to setup your system data BEFORE you try to fetch the resource. Especially if you plan use `Default` to create your resource.
     Self::SystemData::setup(&mut res);
@@ -98,6 +108,7 @@ Then, in the `System`'s setup method:
 ```
 
 Finally, you can read events from your `System`.
+
 ```rust,ignore
     fn run (&mut self, my_event_channel: Self::SystemData) {
         for event in &my_event_channel.read(&mut self.reader) {

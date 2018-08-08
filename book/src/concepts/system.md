@@ -1,4 +1,4 @@
-# System
+# System [![develop docs](https://img.shields.io/badge/docs-develop-blue.svg)](https://www.amethyst.rs/doc/develop/doc/amethyst/ecs/prelude/trait.System.html) [![master docs](https://img.shields.io/badge/docs-master-blue.svg)](https://www.amethyst.rs/doc/master/doc/amethyst/ecs/prelude/trait.System.html)
 
 ## What is a `System`?
 
@@ -30,7 +30,7 @@ In the definition of a system, the trait requires you to define a type `SystemDa
 
 The Amethyst engine provides useful system data types to use in order to access the context of a game. Here are some of the most important ones:
 
-* **Read<'a, Resource>** (respectively **Write<'a, Resource>**) allows you to obtain an immutable (respectively mutable) reference to a resource of the type you specify. This is guaranteed to not fail as if the resource is not available, it will give you the ``Default::default()`` of your resource. 
+* **Read<'a, Resource>** (respectively **Write<'a, Resource>**) allows you to obtain an immutable (respectively mutable) reference to a resource of the type you specify. This is guaranteed to not fail as if the resource is not available, it will give you the `Default::default()` of your resource.
 * **ReadExpect<'a, Resource>** (respectively **WriteExpect<'a, Resource>**) is a failable alternative to the previous system data, so that you can use resources that do not implement the `Default` trait.
 * **ReadStorage<'a, Component>** (respectively **WriteStorage<'a, Component>**) allows you to obtain an immutable (respectively mutable) reference to the entire storage of a certain `Component` type.
 * **Entities<'a>** allows you to create or destroy entities in the context of a system.
@@ -74,7 +74,7 @@ impl<'a> System<'a> for CameraGoesUp {
 }
 ```
 
-This system makes the current main camera (obtained through the  `amethyst::renderer::ActiveCamera` resource) go up by 0.1 unit every iteration of the game loop!
+This system makes the current main camera (obtained through the `amethyst::renderer::ActiveCamera` resource) go up by 0.1 unit every iteration of the game loop!
 
 However, this approach is pretty rare because most of the time you don't know what entity you want to manipulate, and in fact you may want to apply your changes to multiple entities.
 
@@ -156,6 +156,7 @@ This system will spawn a new enemy every 200 game loop iterations.
 ### Removing an entity
 
 Deleting an entity is very easy using `Entities<'a>`.
+
 ```rust
 entities.delete(entity);
 ```
@@ -230,7 +231,7 @@ impl<'a> System<'a> for MyFirstSystem {
         if data.baz.should_process() {
             for (foo, mut bar) in (&data.foo, &mut data.bar) {
                 bar.stuff += foo.stuff;
-            } 
+            }
         }
     }
 }
@@ -240,6 +241,7 @@ impl<'a> System<'a> for MyFirstSystem {
 
 Systems have a method called setup which is called a single time, before any of the system runs.
 Here is how to use it:
+
 ```rust,ignore
     fn setup(&mut self, res: &mut Resources) {
         // Ensures that resources that implement `Default` and are present in your `SystemData` are added to `Resources`.
