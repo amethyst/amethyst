@@ -2,13 +2,13 @@
 
 ## What is a `Component`?
 
-A component is any struct that can be "attached" to an `Entity` (we will cover entity in the next chapter).
+A component is any struct that can be "attached" to an `Entity` (which we will cover in the next chapter).
 
 ## Usage
 
 The relationship between an entity and a component closely ressembles the relation between a real-life object and its properties.
 
-For example, a bottle of water has a shape, a volume, a color and is made of a material(usually plastic).
+For example, a bottle of water has a shape, a volume, a color and is made of a material (usually plastic).
 
 In this example, the bottle is the entity, and the properties are components.
 
@@ -18,8 +18,8 @@ Creating a component is easy.
 
 You declare a struct:
 
-```rust
-pub struct MyComponent{
+```rust,ignore
+pub struct MyComponent {
     some_property: String,
 }
 ```

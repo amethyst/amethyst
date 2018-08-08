@@ -39,7 +39,7 @@ This book is split into four sections (more coming). This page is the first. The
 [cc]: ./concepts/intro.html
 [pt]: ./pong-tutorial.html
 [anim]: ./animation.html
-[gad]: ./game_data.html
+[gad]: ./game-data.html
 [gl]: ./glossary.html
 [ax_a]: ./appendices/a_config_files.html
 
