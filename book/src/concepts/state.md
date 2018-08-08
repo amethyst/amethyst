@@ -81,7 +81,7 @@ In most cases, the two following are the most used: `()` and `GameData`.
 `()` means that there is no data associated with this `State`. This is usually used for tests and not for actual games.
 `GameData` is the de-facto standard. It is a struct containing a `Dispatcher` (which will be discussed later).
 
-When calling your `State`'s methods, the engine will pass a `StateData` struct which contains both the `World` (which will also be discussed later) and the Game Data type that you choosed.
+When calling your `State`'s methods, the engine will pass a `StateData` struct which contains both the `World` (which will also be discussed later) and the Game Data type that you chose.
 
 ## Code
 
