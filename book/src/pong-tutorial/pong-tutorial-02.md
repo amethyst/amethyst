@@ -369,7 +369,7 @@ Before we continue, one last note.
 Components do not have to be registered manually to be used, however you need to have
 something that uses them to have them be registered automatically.
 As nothing uses our `Paddle` component yet, we will register it manually before we initialise
-our paddles in the `on_start` method by calling:
+our paddles in the `on_start` method by calling before everything else:
 
 ```rust,ignore
 world.register::<Paddle>();
