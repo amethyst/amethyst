@@ -76,7 +76,7 @@ mod paddle;
 pub use self::paddle::PaddleSystem;
 ```
 
-We're finally ready to implement the `PaddleSystem`:
+We're finally ready to implement the `PaddleSystem` in `systems/paddle.rs`:
 
 ```rust,ignore
 use amethyst::core::transform::components::Transform;
