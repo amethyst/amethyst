@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ## Unreleased
 ### Added
+* `amethyst::input::utils::{ is_mouse_button_down, was_mouse_button_released}` added for basic mouse support. ([#867])
 ### Changed
 ### Removed
 ### Fixed
