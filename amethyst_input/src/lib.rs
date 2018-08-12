@@ -22,7 +22,9 @@ pub use self::controller::{ControllerAxis, ControllerButton};
 pub use self::event::InputEvent;
 pub use self::input_handler::InputHandler;
 pub use self::system::InputSystem;
-pub use self::util::{get_key, is_close_requested, is_key_down};
+pub use self::util::{
+    get_key, is_close_requested, is_key_down, is_mouse_button_down, was_mouse_button_released,
+};
 
 #[cfg(feature = "sdl_controller")]
 pub use self::sdl_events_system::SdlEventsSystem;
