@@ -27,5 +27,7 @@ vec2 tex_coords(vec2 coord, vec2 u, vec2 v) {
 }
 
 void main() {
+    float inv_gamma = 2.2;
     color = texture(albedo, tex_coords(vertex.tex_coord, albedo_offset.u_offset, albedo_offset.v_offset));
+    color.rgb = pow(color.rgb, vec3(inv_gamma));
 }
