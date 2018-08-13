@@ -42,7 +42,8 @@ sudo: required
 
 # Force third-party crates to persist from previous builds and update only when
 # needed.
-cache: cargo
+cache: 
+  - cargo
 
 # Allow binaries installed from Cargo.
 before_script:

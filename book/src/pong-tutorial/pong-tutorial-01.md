@@ -60,7 +60,7 @@ used to react to events. It returns a `Trans`, which is an enum of state machine
 transitions. In this case, we're watching for the Escape keycode, and the
 `CloseRequested` event from the Window. If we receive it, we'll return
 `Trans::Quit` which will be used to clean up the `State` and close the application.
-All other keyboard input is ignored or now.
+All other keyboard input is ignored for now.
 
 The `update` method is executed after events have happened.  In this instance
 we're just using it to execute our dispatcher.  More on that later.

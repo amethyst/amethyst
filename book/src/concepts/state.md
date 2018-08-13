@@ -1,7 +1,7 @@
 # State
 
 ## What is a state?
-The word "state" can mean at lot of different things in computer science.
+The word "state" can mean a lot of different things in computer science.
 In the case of amethyst, it is used to represent the "game stage".
 
 A game stage is a *general* and *global* section of the game.
@@ -68,7 +68,7 @@ A `State` contains methods that reflect the most commons of those events:
 * update: This method is called as often as possible by the engine.
 
 
-**IMPORTANT: If you use the update method in your state, you need to manually call `world.dispatch()`. For more information, read the "More" section at the end of the world chapter [here](./world.md#more).**
+**IMPORTANT: In order to have the game working, you NEED to implement the `update` method and have it call `data.data.update(&mut data.world)`. This is an implementation detail and will no longer be necessary in future release 0.9 of Amethyst. For more information, read the "More" section at the end of the world chapter [here](./world.md#more).**
 
 ## Game Data
 
@@ -81,11 +81,11 @@ In most cases, the two following are the most used: `()` and `GameData`.
 `()` means that there is no data associated with this `State`. This is usually used for tests and not for actual games.
 `GameData` is the de-facto standard. It is a struct containing a `Dispatcher` (which will be discussed later).
 
-When calling your `State`'s methods, the engine will pass a `StateData` struct which contains both the `World` (which will also be discussed later) and the Game Data type that you choosed.
+When calling your `State`'s methods, the engine will pass a `StateData` struct which contains both the `World` (which will also be discussed later) and the Game Data type that you chose.
 
 ## Code
 
-Yes! Its finally time to get some code in here!
+Yes! It's finally time to get some code in here!
 
 Here will just be a small code snippet that shows the basics of `State`'s usage.
 For more advanced examples, see the following pong tutorial.

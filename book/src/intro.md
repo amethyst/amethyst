@@ -30,12 +30,18 @@ This book is split into four sections (more coming). This page is the first. The
 * [Getting Started][gs] – Prepare your computer for Amethyst development.
 * [Concepts][cc] - An overview of the concepts used in Amethyst. Recommended.
 * [Pong Tutorial][pt] – Build a basic pong game in Rust.
+* [Animation][anim] – Explains the architecture of the `amethyst_animation` crate.
+* [Custom `GameData`][gad] - Shows you how to structure more complex games that need to change the system graph.
 * [Glossary][gl] - Defines special terms used throughout the book.
+* [Appendix A: Config Files][ax_a] - Shows you how to define your data in RON files.
 
 [gs]: ./getting-started.html
 [cc]: ./concepts/intro.html
 [pt]: ./pong-tutorial.html
+[anim]: ./animation.html
+[gad]: ./game-data.html
 [gl]: ./glossary.html
+[ax_a]: ./appendices/a_config_files.html
 
 Read the crate-level [API documentation][ad] for more details.
 
@@ -58,17 +64,20 @@ weigh before using them, especially in regards to performance and scalability.
 [ud]: https://www.unrealengine.com/
 [jme]: http://jmonkeyengine.org/
 
-We think that basing the amethyst engine on good and modern principles will allow us to make an open source game engine that can actually be more performant than those engines.
+We think that basing the Amethyst engine on good and modern principles will allow us to make an open source game engine that can actually be more performant than those engines.
 Those principles are:
+
 1. Modularity.
 
    Modularity is at the core of the [Unix philosophy][up], which proved itself to be an excellent way of developing software over the years.
    You will always be free to use the built-in modules, or to write your own and integrate them easily into the engine.
    Since modules are small and well integrated, it is easier to reason about what they do and how they relate to other modules.
+
 2. Parallelism.
 
-   Modern computers, even cheap ones, all have multithread/multicores CPU. With the years, there will be more and more opportunities for parallelism to improve performance.
+   Modern computers, even cheap ones, all have multithread / multicores CPU. With the years, there will be more and more opportunities for parallelism to improve performance.
    With a proper parallel engine, we are convinced that your game will be more and more performant over the years without even needing you to update it.
+
 3. Data-oriented/Data-driven.
 
    Building your game around the data makes it really easy to prototype and quickly build a game.
@@ -80,6 +89,7 @@ Those principles are:
 
 We are always happy to welcome new contributors!
 
-If you want to contribute, or have questions, let us know either on [GitHub][db] or on [Gitter][gt]
+If you want to contribute, or have questions, let us know either on [GitHub][db], on [Gitter][gt] or on [Discord].
 
 [gt]: https://gitter.im/amethyst/general/
+[Discord]: https://discord.gg/GnP5Whs

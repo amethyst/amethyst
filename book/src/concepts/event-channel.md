@@ -87,7 +87,7 @@ struct ReceiverSystem {
 ```
 and you also need to get read access:
 ```rust,ignore
-    type SystemData = (Read<'a, EventChannel<MyEvent>>,);
+    type SystemData = Read<'a, EventChannel<MyEvent>>;
 ```
 
 Then, in the `System`'s setup method:
