@@ -17,11 +17,12 @@ In `src` there's a `main.rs` file. Delete everything, then add these imports:
 ```rust,ignore
 extern crate amethyst;
 
-use amethyst::prelude::*;
 use amethyst::input::{is_close_requested, is_key_down};
-use amethyst::renderer::{DisplayConfig, DrawFlat, Event, KeyboardInput,
-                         Pipeline, PosTex, RenderBundle, Stage,
-                         VirtualKeyCode, WindowEvent};
+use amethyst::prelude::*;
+use amethyst::renderer::{
+    DisplayConfig, DrawFlat, Event, KeyboardInput, Pipeline, PosNormTex, PosTex, RenderBundle,
+    Stage, VirtualKeyCode, WindowEvent,
+};
 ```
 
 We'll be learning more about these as we go through this tutorial. The prelude
