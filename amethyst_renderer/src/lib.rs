@@ -126,6 +126,7 @@ pub use vertex::{
     With,
 };
 pub use visibility::{Visibility, VisibilitySortingSystem};
+pub use sprite_visibility::{SpriteVisibility, SpriteVisibilitySortingSystem};
 
 pub mod error;
 pub mod mouse;
@@ -155,3 +156,4 @@ mod transparent;
 mod types;
 mod vertex;
 mod visibility;
+mod sprite_visibility;

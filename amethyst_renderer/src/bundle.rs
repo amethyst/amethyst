@@ -8,6 +8,7 @@ use pipe::{PipelineBuild, PolyPipeline};
 use sprite::SpriteSheet;
 use system::RenderSystem;
 use visibility::VisibilitySortingSystem;
+use sprite_visibility::SpriteVisibilitySortingSystem;
 
 /// Rendering bundle
 ///
@@ -26,6 +27,7 @@ where
     pipe: B,
     config: Option<DisplayConfig>,
     visibility_sorting: Option<&'a [&'a str]>,
+    sprite_visibility_sorting: Option<&'a [&'a str]>,
 }
 
 impl<'a, B, P> RenderBundle<'a, B, P>
@@ -39,12 +41,19 @@ where
             pipe,
             config,
             visibility_sorting: None,
+            sprite_visibility_sorting: None,
         }
     }
 
     /// Enable transparent mesh sorting, with the given dependencies
     pub fn with_visibility_sorting(mut self, dep: &'a [&'a str]) -> Self {
         self.visibility_sorting = Some(dep);
+        self
+    }
+
+    /// Enable transparent sprite sorting, with the given dependencies
+    pub fn with_sprite_visibility_sorting(mut self, dep: &'a [&'a str]) -> Self {
+        self.sprite_visibility_sorting = Some(dep);
         self
     }
 }
@@ -57,6 +66,13 @@ impl<'a, 'b, 'c, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> SystemBun
             builder.add(
                 VisibilitySortingSystem::new(),
                 "visibility_sorting_system",
+                dep,
+            );
+        };
+        if let Some(dep) = self.sprite_visibility_sorting {
+            builder.add(
+                SpriteVisibilitySortingSystem::new(),
+                "sprite_visibility_sorting_system",
                 dep,
             );
         };

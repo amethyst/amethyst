@@ -16,7 +16,7 @@ use pipe::{DepthMode, Effect, NewEffect};
 use sprite::{SpriteRender, SpriteSheet};
 use tex::Texture;
 use types::{Encoder, Factory};
-use visibility::Visibility;
+use sprite_visibility::SpriteVisibility;
 
 /// Draws sprites on a 2D quad.
 #[derive(Derivative, Clone, Debug, PartialEq)]
@@ -53,7 +53,7 @@ impl<'a> PassData<'a> for DrawSprite {
         Read<'a, AssetStorage<SpriteSheet>>,
         Read<'a, AssetStorage<Texture>>,
         Read<'a, MaterialTextureSet>,
-        Option<Read<'a, Visibility>>,
+        Option<Read<'a, SpriteVisibility>>,
         ReadStorage<'a, SpriteRender>,
         ReadStorage<'a, GlobalTransform>,
     );
