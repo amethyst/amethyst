@@ -85,7 +85,6 @@ pub struct SpriteRenderData<'a> {
 }
 
 impl<'a> SpriteRenderData<'a> {
-    
     /// Creates a MeshHandle and Material from the sprite and texture data.
     /// Useful if you plan on re-using the same sprite a lot and don't want to
     /// load the assets each time.
