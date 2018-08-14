@@ -29,6 +29,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ## [0.8.0] - 2018-08
 ### Added
+* Support for progressive jpeg loading. ([#877])
 * UI `ScaleMode` is now functional, permitting percentage based `UiTransform`s. ([#774])
 * Add serde trait derives to many core components ([#760])
 * Add a generic asset `Format` for `ron` files ([#760])
@@ -54,6 +55,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Promote `UiButton` to a fundamental Ui component ([#798])
 
 ### Changed
+* Replaced the `imagefmt` crate with `image`. ([#877])
 * UI systems will now never overwrite your local `UiTransform` values ([#774])
 * Global `UiTransform` values are no longer writable ([#774])
 * `UiResize` refactored to be more user friendly and more helpful ([#774])
