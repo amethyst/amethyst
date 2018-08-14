@@ -1,4 +1,5 @@
 use specs::{Component, DenseVecStorage, EntityBuilder, WriteStorage};
+use specs::world::LazyBuilder;
 
 /// A component that gives a name to an `Entity`
 pub struct Named {
@@ -32,6 +33,13 @@ impl<'a> WithNamed for EntityBuilder<'a> {
             .0
             .insert(self.entity, Named::new(name))
             .unwrap();
+        self
+    }
+}
+
+impl<'a> WithNamed for LazyBuilder<'a> {
+    fn named(self, name: &'static str) -> Self {
+        self.lazy.insert::<Named>(self.entity, Named::new(name));
         self
     }
 }
