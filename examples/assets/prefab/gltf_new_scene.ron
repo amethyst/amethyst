@@ -4,7 +4,7 @@ Prefab (
     entities: [
         (
             data: (
-                light: (ambient_color: ((0.5, 0.5, 0.5, 0.5))),
+                light: (ambient_color: ((0.1, 0.1, 0.1, 0.1))),
             ),
         ),
         (
@@ -27,7 +27,7 @@ Prefab (
             parent: 2,
             data: (
                 transform: (
-                    translation: (x: 0., y: 0., z: 10.0),
+                    translation: (x: 0., y: 0., z: 3.0),
                 ),
                 camera: Perspective((
                     fovy: Rad (1.0471975512),

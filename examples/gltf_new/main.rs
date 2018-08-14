@@ -210,7 +210,7 @@ fn main() -> Result<(), amethyst::Error> {
     amethyst::start_logger(Default::default());
 
     let path = format!(
-        "{}/examples/gltf/resources/display_config.ron",
+        "{}/examples/gltf_new/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
     );
 
@@ -230,7 +230,7 @@ fn main() -> Result<(), amethyst::Error> {
         .with_basic_renderer(
             path,
             DrawPbmSeparate::new()
-                .with_vertex_skinning()
+                //.with_vertex_skinning()
                 .with_transparency(ColorMask::all(), ALPHA, Some(DepthMode::LessEqualWrite)),
             false,
         )?

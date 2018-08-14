@@ -32,8 +32,6 @@ pub struct TextureMetadata {
     pub channel: Option<ChannelType>,
 }
 
-
-
 impl Default for TextureMetadata {
     fn default() -> Self {
         Self {
@@ -246,7 +244,8 @@ pub struct ImageData {
 
 
 fn load_into_rgba8_from_memory(data: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
-    ::image::load_from_memory(&data)
+    use image::load_from_memory;
+    load_from_memory(&data)
         .map(|image| {
             match image {
                 DynamicImage::ImageRgba8(im) => im,

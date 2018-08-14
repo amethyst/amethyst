@@ -129,7 +129,7 @@ fn deconstruct_image(data: &TextureData, offset: usize, step: usize) -> TextureD
                 .with_format(SurfaceType::R8);
             let image_data = image_data
                 .rgba
-                .clone() // Should this be avoided? The function takes data by reference.
+                .clone()
                 .into_raw()
                 .iter()
                 .dropping(offset)
