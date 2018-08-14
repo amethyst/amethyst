@@ -78,7 +78,8 @@ pub use light::{DirectionalLight, Light, LightPrefab, PointLight, SpotLight, Sun
 pub use mesh::{vertex_data, Mesh, MeshBuilder, MeshHandle, VertexBuffer};
 pub use mtl::{Material, MaterialDefaults, MaterialTextureSet, TextureOffset};
 pub use pass::{
-    DrawFlat, DrawFlatSeparate, DrawPbm, DrawPbmSeparate, DrawShaded, DrawShadedSeparate,
+    get_camera, set_vertex_args, DrawFlat, DrawFlatSeparate, DrawPbm, DrawPbmSeparate, DrawShaded,
+    DrawShadedSeparate,
 };
 pub use pipe::{
     ColorBuffer, Data, DepthBuffer, DepthMode, Effect, EffectBuilder, Init, Meta, NewEffect,
