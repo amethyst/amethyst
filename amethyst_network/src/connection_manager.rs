@@ -1,6 +1,6 @@
 use super::{ConnectionState, NetConnection, NetEvent, NetIdentity};
+use amethyst_core::specs::{Read, System, Write, WriteStorage};
 use shrev::ReaderId;
-use amethyst_core::specs::{Read, Write, System,WriteStorage};
 
 /// Manages the network connections.
 /// The way it is done depends if it is assigned to work as a server or as a client.

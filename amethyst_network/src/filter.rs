@@ -9,8 +9,7 @@ where
     T: PartialEq,
 {
     /// Check if the event is allowed to pass through this filter.
-    fn allow(&mut self, source: &SocketAddr, event: &NetEvent<T>)
-        -> bool;
+    fn allow(&mut self, source: &SocketAddr, event: &NetEvent<T>) -> bool;
 }
 
 /// A filter that checks if the incoming event is from a connected client.
@@ -41,11 +40,7 @@ where
     T: PartialEq + Send + Sync,
 {
     /// Checks if the event is from a connected client.
-    fn allow(
-        &mut self,
-        source: &SocketAddr,
-        event: &NetEvent<T>,
-    ) -> bool {
+    fn allow(&mut self, source: &SocketAddr, event: &NetEvent<T>) -> bool {
         /*if let Some(ref conn) = pool.connection_from_address(source) {
             if conn.state == ConnectionState::Connected {
                 true
@@ -55,8 +50,6 @@ where
         } else {
             FilterConnected::event_bypass(event)
         }*/
-
-
 
         // insert :joy: emoji here
         true

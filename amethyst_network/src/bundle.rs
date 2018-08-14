@@ -1,12 +1,10 @@
-use super::{ConnectionManagerSystem, NetSocketSystem};
-use amethyst_core::bundle::{SystemBundle, Result};
-use filter::NetFilter;
-use serde::Serialize;
-use serde::de::DeserializeOwned;
+use super::NetSocketSystem;
+use amethyst_core::bundle::{Result, SystemBundle};
 use amethyst_core::shred::DispatcherBuilder;
-use amethyst_core::specs::World;
+use filter::NetFilter;
+use serde::de::DeserializeOwned;
+use serde::Serialize;
 use std::net::SocketAddr;
-use uuid::Uuid;
 
 /// A convenience bundle to create the infrastructure needed to send and receive network messages.
 pub struct NetworkBundle<'a, T> {
@@ -25,11 +23,7 @@ pub struct NetworkBundle<'a, T> {
 
 impl<'a, T> NetworkBundle<'a, T> {
     /// Creates a new NetworkBundle in client mode.
-    pub fn new_client(
-        ip: &'a str,
-        port: Option<u16>,
-        filters: Vec<Box<NetFilter<T>>>,
-    ) -> Self {
+    pub fn new_client(ip: &'a str, port: Option<u16>, filters: Vec<Box<NetFilter<T>>>) -> Self {
         NetworkBundle {
             ip,
             port,
@@ -40,11 +34,7 @@ impl<'a, T> NetworkBundle<'a, T> {
     }
 
     /// Creates a new NetworkBundle in server mode
-    pub fn new_server(
-        ip: &'a str,
-        port: Option<u16>,
-        filters: Vec<Box<NetFilter<T>>>,
-    ) -> Self {
+    pub fn new_server(ip: &'a str, port: Option<u16>, filters: Vec<Box<NetFilter<T>>>) -> Self {
         NetworkBundle {
             ip,
             port,
@@ -65,7 +55,7 @@ impl<'a, 'b, 'c, T> SystemBundle<'a, 'b> for NetworkBundle<'c, T>
 where
     T: Send + Sync + PartialEq + Serialize + Clone + DeserializeOwned + 'static,
 {
-    fn build(mut self,mut builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(mut self, mut builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
         //let mut pool = NetConnectionPool::new();
         //world.add_resource(NetSendBuffer::<T>::new());
         //world.add_resource(NetReceiveBuffer::<T>::new());

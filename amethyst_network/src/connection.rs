@@ -1,10 +1,10 @@
 //! Network Connection and states.
 
-use shrev::{EventChannel,ReaderId,EventIterator};
+use super::NetEvent;
 use amethyst_core::specs::{Component, VecStorage};
+use shrev::{EventChannel, EventIterator, ReaderId};
 use std::net::SocketAddr;
 use uuid::Uuid;
-use super::NetEvent;
 
 // TODO: Think about relationship between NetConnection and NetIdentity.
 
@@ -20,41 +20,41 @@ pub struct NetConnection<E: 'static> {
     send_reader: ReaderId<NetEvent<E>>,
 }
 
-impl<E: Send+Sync+'static> NetConnection<E>{
-  pub fn new(target: SocketAddr) -> Self{
-    let mut send_buffer = EventChannel::new();
-    let send_reader = send_buffer.register_reader();
-    NetConnection{
-      target,
-      state: ConnectionState::Connecting,
-      send_buffer,
-      receive_buffer: EventChannel::<NetEvent<E>>::new(),
-      send_reader,
+impl<E: Send + Sync + 'static> NetConnection<E> {
+    pub fn new(target: SocketAddr) -> Self {
+        let mut send_buffer = EventChannel::new();
+        let send_reader = send_buffer.register_reader();
+        NetConnection {
+            target,
+            state: ConnectionState::Connecting,
+            send_buffer,
+            receive_buffer: EventChannel::<NetEvent<E>>::new(),
+            send_reader,
+        }
     }
-  }
-  
-  /// Function used ONLY by NetSocketSystem.
-  /// Since most users will want to both create the connection and send messages on the same frame,
-  /// we need a way to read those. Since the NetSocketSystem runs after the creation of the NetConnection,
-  /// it cannot possibly have registered his reader early enough to catch the initial messages that the user wants to send.
-  ///
-  /// The downside of this is that you are forced to take NetConnection mutably inside of NetSocketSystem.
-  /// If someone finds a better solution, please open a PR.
-  pub fn send_buffer_early_read(&mut self) -> EventIterator<NetEvent<E>> {
-    self.send_buffer.read(&mut self.send_reader)
-  }
+
+    /// Function used ONLY by NetSocketSystem.
+    /// Since most users will want to both create the connection and send messages on the same frame,
+    /// we need a way to read those. Since the NetSocketSystem runs after the creation of the NetConnection,
+    /// it cannot possibly have registered his reader early enough to catch the initial messages that the user wants to send.
+    ///
+    /// The downside of this is that you are forced to take NetConnection mutably inside of NetSocketSystem.
+    /// If someone finds a better solution, please open a PR.
+    pub fn send_buffer_early_read(&mut self) -> EventIterator<NetEvent<E>> {
+        self.send_buffer.read(&mut self.send_reader)
+    }
 }
 
 impl<E> PartialEq for NetConnection<E> {
-  fn eq(&self, other: &Self) -> bool {
+    fn eq(&self, other: &Self) -> bool {
         self.target == other.target && self.state == other.state
     }
 }
 
 impl<E: PartialEq> Eq for NetConnection<E> {}
 
-impl<E: Send+Sync+'static> Component for NetConnection<E>{
-  type Storage = VecStorage<Self>;
+impl<E: Send + Sync + 'static> Component for NetConnection<E> {
+    type Storage = VecStorage<Self>;
 }
 
 ///The state of the connection.
@@ -77,18 +77,17 @@ pub struct NetIdentity {
     pub uuid: Uuid,
 }
 
-impl Default for NetIdentity{
-  fn default() -> Self{
-    NetIdentity{
-      uuid: Uuid::new_v4(),
+impl Default for NetIdentity {
+    fn default() -> Self {
+        NetIdentity {
+            uuid: Uuid::new_v4(),
+        }
     }
-  }
 }
 
 impl Component for NetIdentity {
     type Storage = VecStorage<NetIdentity>;
 }
-
 
 /*
 /// The list of network connections allocated by the network system.
@@ -141,5 +140,3 @@ impl NetConnectionPool {
 impl Component for NetConnectionPool {
     type Storage = VecStorage<NetConnectionPool>;
 }*/
-
-

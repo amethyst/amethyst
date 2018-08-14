@@ -2,15 +2,15 @@ extern crate amethyst;
 #[macro_use]
 extern crate log;
 
-use amethyst::Result;
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
-use amethyst::ecs::{WriteStorage, System, Join};
+use amethyst::ecs::{Join, System, WriteStorage};
 use amethyst::network::*;
 use amethyst::prelude::*;
 use amethyst::shrev::ReaderId;
+use amethyst::Result;
 use std::time::Duration;
 
-fn main() -> Result<()>{
+fn main() -> Result<()> {
     amethyst::start_logger(Default::default());
     let game_data = GameDataBuilder::default()
         .with_bundle(NetworkBundle::<()>::new_server(
@@ -31,12 +31,15 @@ fn main() -> Result<()>{
 
 /// Default empty state
 pub struct State1;
-impl<'a,'b> State<GameData<'a,'b>> for State1 {
+impl<'a, 'b> State<GameData<'a, 'b>> for State1 {
     fn on_start(&mut self, mut data: StateData<GameData>) {
-        data.world.create_entity().with(NetConnection::<()>::new("127.0.0.1:3455".parse().unwrap())).build();
+        data.world
+            .create_entity()
+            .with(NetConnection::<()>::new("127.0.0.1:3455".parse().unwrap()))
+            .build();
     }
-    
-    fn update(&mut self, mut data: StateData<GameData>) -> Trans<GameData<'a,'b>> {
+
+    fn update(&mut self, mut data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
         data.data.update(&mut data.world);
         Trans::None
     }
@@ -57,14 +60,14 @@ impl<'a> System<'a> for SpamReceiveSystem {
     type SystemData = (WriteStorage<'a, NetConnection<()>>,);
     fn run(&mut self, (mut connections,): Self::SystemData) {
         let mut count = 0;
-        for (mut conn,) in (&mut connections,).join(){
+        for (mut conn,) in (&mut connections,).join() {
             if self.reader.is_none() {
                 self.reader = Some(conn.receive_buffer.register_reader());
             }
             for ev in conn.receive_buffer.read(self.reader.as_mut().unwrap()) {
                 count += 1;
                 match ev {
-                    &NetEvent::TextMessage { ref msg } => {},//println!("{}", msg),
+                    &NetEvent::TextMessage { ref msg } => {} //println!("{}", msg),
                     _ => {}
                 }
             }
