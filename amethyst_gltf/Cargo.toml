@@ -24,7 +24,6 @@ fnv = "1"
 gltf = "0.11"
 gfx = "0.17"
 hibitset = { version = "0.5.0", features = ["parallel"] }
-imagefmt = "4.0"
 itertools = "0.7"
 log = "0.4"
 mikktspace = { version = "0.1" }

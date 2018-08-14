@@ -123,6 +123,10 @@ name = "gltf"
 path = "examples/gltf/main.rs"
 
 [[example]]
+name = "gltf_new"
+path = "examples/gltf_new/main.rs"
+
+[[example]]
 name = "ui"
 path = "examples/ui/main.rs"
 
