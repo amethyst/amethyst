@@ -115,8 +115,7 @@ All:
     world.delete_all().expect("Failed to delete all entities.");
 ```
 
-__Note: Entities are lazily deleted. They are effectively removed only when world.maintain() is called, once per frame.
-You do not need to call this method yourself.__
+__Note: Entities are lazily deleted, which means that deletion only happens at the end of the frame and not immediately when calling the `delete` method.__
 
 ## Check if the entity was deleted
 
