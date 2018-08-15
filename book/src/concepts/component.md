@@ -34,14 +34,14 @@ pub struct Content {
 and then you implement the `Component` trait for them:
 
 ```rust,ignore
-use amethyst::ecs::{Component, VecStorage};
+use amethyst::ecs::{Component, DenseVecStorage};
 
 impl Component for Shape {
-    type Storage = VecStorage<Self>;
+    type Storage = DenseVecStorage<Self>;
 }
 
 impl Component for Content {
-    type Storage = VecStorage<Self>;
+    type Storage = DenseVecStorage<Self>;
 }
 ```
 
