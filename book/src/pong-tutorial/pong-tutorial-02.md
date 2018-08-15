@@ -394,10 +394,9 @@ As it turns out, the system we're missing is `TransformSystem`, and we can add i
 `TransformBundle`.
 
 ```rust,ignore
-let mut game = Application::build("./", Pong)?
-    .with_bundle(TransformBundle::new())? // Add this bundle
+let game_data = GameDataBuilder::default()
     .with_bundle(RenderBundle::new(pipe, Some(config)))?
-    .build()?;
+    .with_bundle(TransformBundle::new())?;
 ```
 
 Also we'll need to import that structure:

@@ -115,6 +115,9 @@ All:
     world.delete_all().expect("Failed to delete all entities.");
 ```
 
+__Note: Entities are lazily deleted. They are effectively removed only when world.maintain() is called, once per frame.
+You do not need to call this method yourself.__
+
 ## Check if the entity was deleted
 
 ```rust,ignore
@@ -130,11 +133,9 @@ Sometimes, you will want to create an entity where you need to fetch resources t
 There is a function that acts as a shorthand for this:
 
 ```rust,ignore
-    world
-        .exec(|mut data: SomeSystemData| {
-            data.do_something();
-        })
-    .expect("Error creating SpriteRender for paddles");
+    world.exec(|mut data: MySystemData| {
+        data.do_something();
+    });
 ```
 
 We will talk about what `SystemData` is in the system chapter.
