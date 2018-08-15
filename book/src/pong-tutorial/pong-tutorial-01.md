@@ -17,11 +17,10 @@ In `src` there's a `main.rs` file. Delete everything, then add these imports:
 ```rust,ignore
 extern crate amethyst;
 
-use amethyst::prelude::*;
 use amethyst::input::{is_close_requested, is_key_down};
-use amethyst::renderer::{DisplayConfig, DrawFlat, Event, KeyboardInput,
-                         Pipeline, PosTex, RenderBundle, Stage,
-                         VirtualKeyCode, WindowEvent};
+use amethyst::prelude::*;
+use amethyst::renderer::{DisplayConfig, DrawFlat, Event, Pipeline,
+                         PosTex, RenderBundle, Stage, VirtualKeyCode};
 ```
 
 We'll be learning more about these as we go through this tutorial. The prelude
@@ -79,8 +78,8 @@ fn main() -> amethyst::Result<()> {
 }
 ```
 
-Inside `main()` we first start the default amethyst logger so we can see
-errors, warnings and debug messages while the program is running.
+Inside `main()` we first start the amethyst logger with a default `LoggerConfig`
+so we can see errors, warnings and debug messages while the program is running.
 
 ```rust,ignore
 amethyst::start_logger(Default::default());
@@ -146,8 +145,8 @@ Ok(())
 We've discovered Amethyst's root object: [Application][ap]. It binds the OS
 event loop, state machines, timers and other core components in a central place.
 Here we're creating a new `RenderBundle`, adding the `Pipeline` we created,
-along with our config, and building. There is also a helper function 
-`with_basic_renderer` on `GameDataBuilder` that you can use to create your 
+along with our config, and building. There is also a helper function
+`with_basic_renderer` on `GameDataBuilder` that you can use to create your
 `Pipeline` and `RenderBundle`, that performs most of the actions above. In the
 full `pong` example in the `Amethyst` repository that function is used instead.
 
