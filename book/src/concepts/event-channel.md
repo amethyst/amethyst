@@ -103,7 +103,7 @@ Then, in the `System`'s setup method:
 Finally, you can read events from your `System`.
 ```rust,ignore
     fn run (&mut self, my_event_channel: Self::SystemData) {
-        for event in &my_event_channel.read(&mut self.reader) {
+        for event in my_event_channel.read(&mut self.reader) {
             info!("Received an event: {:?}", event);
         }
     }
