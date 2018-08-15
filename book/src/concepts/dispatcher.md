@@ -14,5 +14,5 @@ The dispatcher looks at all the `SystemData` in the systems and builds execution
 
 If you want to have the best performance possible, you should prefer immutable over mutable whenever it is possible. (`Read` instead of `Write`, `ReadStorage` instead of `WriteStorage`).
 
-_Note: Please however keep in mind that `Write` is still preferable to locks in most cases, such as `Mutex` or `RwLock` for example.
+__Note: Please however keep in mind that `Write` is still preferable to locks in most cases, such as `Mutex` or `RwLock` for example.__
 
