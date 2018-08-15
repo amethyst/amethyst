@@ -1,0 +1,26 @@
+[package]
+name = "amethyst_xr"
+version = "0.1.0"
+authors = ["Ellie <hi@ellie.moe>"]
+description = "XR for Amethyst"
+
+documentation = "https://www.amethyst.rs/doc/master/doc/amethyst_xr/"
+homepage = "https://www.amethyst.rs/"
+repository = "https://github.com/amethyst/amethyst"
+
+license = "MIT/Apache-2.0"
+
+[badges]
+appveyor = { repository = "amethyst/amethyst" }
+travis-ci = { repository = "amethyst/amethyst" }
+
+[dependencies]
+amethyst_core = { path = "../amethyst_core", version = "0.2.0" }
+amethyst_assets = { path = "../amethyst_assets", version = "0.3.0" }
+amethyst_renderer = { path = "../amethyst_renderer", version = "0.7.0" }
+
+thread_profiler = { version = "0.1", optional = true }
+
+[features]
+profiler = [ "thread_profiler/thread_profiler" ]
+nightly = [ "amethyst_core/nightly" ]
