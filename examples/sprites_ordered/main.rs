@@ -218,7 +218,6 @@ impl Example {
         let &LoadedSpriteSheet {
             sprite_count,
             sprite_w,
-            sprite_h,
             ..
         } = self
             .loaded_sprite_sheet
@@ -237,7 +236,6 @@ impl Example {
         // The X offset needs to be multiplied because we are drawing the sprites across the window;
         // we don't need to multiply the Y offset because we are only drawing the sprites in 1 row.
         let sprite_offset_x = sprite_count as f32 * sprite_w * SPRITE_SPACING_RATIO / 2.;
-        let sprite_offset_y = sprite_h;
 
         let (width, height) = {
             let dim = world.read_resource::<ScreenDimensions>();
@@ -272,7 +270,7 @@ impl Example {
                 i as f32
             };
             sprite_transform.translation =
-                Vector3::new(i as f32 * sprite_w * SPRITE_SPACING_RATIO, 0., z);
+                Vector3::new(i as f32 * sprite_w * SPRITE_SPACING_RATIO, z, z);
 
             // This combines multiple `Transform`ations.
             // You need to `use amethyst::core::cgmath::Transform`;
@@ -371,6 +369,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(TransformBundle::new())?
         .with_bundle(
             RenderBundle::new(pipe, Some(display_config))
+                .with_sprite_sheet_processor()
                 .with_sprite_visibility_sorting(&["transform_system"]),
         )?;
 

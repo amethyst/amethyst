@@ -29,8 +29,9 @@ use amethyst::ecs::prelude::Entity;
 use amethyst::input::{is_close_requested, is_key_down, InputBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::{
-    Camera, ColorMask, DrawSprite, Event, MaterialTextureSet, Projection, ScreenDimensions,
-    SpriteRender, SpriteSheet, SpriteSheetHandle, SpriteSheetSet, VirtualKeyCode, ALPHA,
+    Camera, ColorMask, DisplayConfig, DrawSprite, Event, MaterialTextureSet, Pipeline, Projection,
+    RenderBundle, ScreenDimensions, SpriteRender, SpriteSheet, SpriteSheetHandle, SpriteSheetSet,
+    Stage, VirtualKeyCode, ALPHA,
 };
 use amethyst::ui::UiBundle;
 
@@ -320,19 +321,23 @@ fn initialise_camera(world: &mut World) -> Entity {
         .create_entity()
         .with(Camera::from(Projection::orthographic(
             0.0, width, height, 0.0,
-        )))
-        .with(GlobalTransform(Matrix4::from_translation(
+        ))).with(GlobalTransform(Matrix4::from_translation(
             Vector3::new(0.0, 0.0, 1.0).into(),
-        )))
-        .build()
+        ))).build()
 }
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
-    let path = format!(
+    let display_config = DisplayConfig::load(format!(
         "{}/examples/sprites/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
+    ));
+
+    let pipe = Pipeline::build().with_stage(
+        Stage::with_backbuffer()
+            .clear_target([0., 0., 0., 1.], 1.)
+            .with_pass(DrawSprite::new().with_transparency(ColorMask::all(), ALPHA, None)),
     );
 
     let assets_directory = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
@@ -348,7 +353,7 @@ fn main() -> amethyst::Result<()> {
                 .with_dep(&["animation_control_system", "sampler_interpolation_system"]),
         )?
         // RenderBundle gives us a window
-        .with_basic_renderer(path, DrawSprite::new().with_transparency(ColorMask::all(), ALPHA, None), true)?
+        .with_bundle(RenderBundle::new(pipe, Some(display_config)).with_sprite_sheet_processor())?
         // UiBundle relies on this as some Ui objects take input
         .with_bundle(InputBundle::<String, String>::new())?
         // Draws textures

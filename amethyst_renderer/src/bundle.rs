@@ -6,9 +6,9 @@ use amethyst_core::specs::prelude::DispatcherBuilder;
 use config::DisplayConfig;
 use pipe::{PipelineBuild, PolyPipeline};
 use sprite::SpriteSheet;
+use sprite_visibility::SpriteVisibilitySortingSystem;
 use system::RenderSystem;
 use visibility::VisibilitySortingSystem;
-use sprite_visibility::SpriteVisibilitySortingSystem;
 
 /// Rendering bundle
 ///
@@ -28,6 +28,7 @@ where
     config: Option<DisplayConfig>,
     visibility_sorting: Option<&'a [&'a str]>,
     sprite_visibility_sorting: Option<&'a [&'a str]>,
+    sprite_sheet_processor_enabled: bool,
 }
 
 impl<'a, B, P> RenderBundle<'a, B, P>
@@ -42,6 +43,7 @@ where
             config,
             visibility_sorting: None,
             sprite_visibility_sorting: None,
+            sprite_sheet_processor_enabled: false,
         }
     }
 
@@ -54,6 +56,15 @@ where
     /// Enable transparent sprite sorting, with the given dependencies
     pub fn with_sprite_visibility_sorting(mut self, dep: &'a [&'a str]) -> Self {
         self.sprite_visibility_sorting = Some(dep);
+        self
+    }
+
+    /// Enable the sprite sheet processor
+    ///
+    /// If you load a `SpriteSheet` in memory as an asset `Format`, this adds the `Processor` that
+    /// will convert it to the `Asset`.
+    pub fn with_sprite_sheet_processor(mut self) -> Self {
+        self.sprite_sheet_processor_enabled = true;
         self
     }
 }
@@ -76,13 +87,15 @@ impl<'a, 'b, 'c, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> SystemBun
                 dep,
             );
         };
+        if self.sprite_sheet_processor_enabled {
+            builder.add(
+                Processor::<SpriteSheet>::new(),
+                "sprite_sheet_processor",
+                &[],
+            );
+        }
         builder.add_thread_local(
             RenderSystem::build(self.pipe, self.config).chain_err(|| "Renderer error!")?,
-        );
-        builder.add(
-            Processor::<SpriteSheet>::new(),
-            "sprite_sheet_processor",
-            &[],
         );
         Ok(())
     }
