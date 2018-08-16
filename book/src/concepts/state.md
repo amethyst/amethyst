@@ -92,7 +92,7 @@ For more advanced examples, see the following pong tutorial.
 
 ### Creating a State
 
-```rust
+```rust,no_run,noplaypen
 extern crate amethyst;
 use amethyst::{GameData, State, StateData};
 
@@ -130,10 +130,11 @@ Those are:
 
 Let's use handle_event to go to the `PausedState` and come back by pressing the "Escape" key.
 
-```rust
+```rust,no_run,noplaypen
 extern crate amethyst;
 use amethyst::{State, StateData, Trans};
 use amethyst::renderer::{Event, VirtualKeyCode};
+use amethyst::input::is_key_down;
 
 struct GameplayState;
 struct PausedState;
@@ -161,5 +162,4 @@ impl State<()> for PausedState {
         Trans::None
     }
 }
-
 ```

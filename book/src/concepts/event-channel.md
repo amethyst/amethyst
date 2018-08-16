@@ -15,10 +15,12 @@ In most cases, the `EventChannel` should be stored in a global resource for ease
 
 Super simple!
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::shrev::EventChannel;
     // In the following examples, we are going to use `MyEvent` values as events.
     #[derive(Debug)]
-    pub enum MyEvent{
+    pub enum MyEvent {
         A,
         B,
     }
@@ -29,13 +31,31 @@ Super simple!
 ## Writing events to the event channel
 
 Single: 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# #[derive(Debug)]
+# pub enum MyEvent {
+#   A,
+#   B,
+# }
+# fn main() {
+#   let mut channel = amethyst::shrev::EventChannel::<MyEvent>::new();
     channel.single_write(MyEvent::A);
+# }
 ```
 
 Multiple: 
-```rust,ignore
-    channel.iter_write(vec![MyEvent::A, MyEvent::A, MyEvent::B].iter());
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# #[derive(Debug)]
+# pub enum MyEvent {
+#   A,
+#   B,
+# }
+# fn main() {
+#   let mut channel = amethyst::shrev::EventChannel::<MyEvent>::new();
+    channel.iter_write(vec![MyEvent::A, MyEvent::A, MyEvent::B].into_iter());
+# }
 ```
 
 ## Reading events
@@ -44,18 +64,37 @@ This is the part where it becomes tricky.
 To be able to track where each of the receiver's reading is at, the `EventChannel` needs to be aware of their presence.
 This is done by registering a `ReaderId`.
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# #[derive(Debug)]
+# pub enum MyEvent {
+#   A,
+#   B,
+# }
+# fn main() {
+#   let mut channel = amethyst::shrev::EventChannel::<MyEvent>::new();
     let mut reader = channel.register_reader();
+# }
 ```
 
 Then, when you want to read the events:
 
-```rust,ignore
-    for event in channel.read_event(&mut reader){
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# #[derive(Debug)]
+# pub enum MyEvent {
+#   A,
+#   B,
+# }
+# fn main() {
+#   let mut channel = amethyst::shrev::EventChannel::<MyEvent>::new();
+#   let mut reader = channel.register_reader();
+    for event in channel.read(&mut reader) {
         // The type of the event is inferred from the generic type
         // we assigned to the `EventChannel<MyEvent>` earlier when creating it.
         println!("Received event value of: {:?}", event);
     }
+# }
 ```
 Note that you only need to have a read access to the channel when reading events.
 It is the `ReaderId` that needs to be mutable to keep track of where your last read was.
@@ -66,42 +105,113 @@ When using the event channel, we usually re-use the same pattern over and over a
 It goes as follow:
 
 Create the event channel and add it to to the world during `State` creation:
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::shrev::EventChannel;
+# #[derive(Debug)]
+# pub enum MyEvent {
+#   A,
+#   B,
+# }
+# fn main() {
+#   let mut world = amethyst::ecs::World::new();
 world.add_resource(
     EventChannel::<MyEvent>::new(),
 );
+# }
 ```
 _Note: You can also derive `Default`, this way you don't have to manually create your resource and add it. Resources implementing `Default` are automatically added to `Resources` when a `System` uses them (`Read` or `Write` in `SystemData`)._
 
 In the **producer** `System`, get a mutable reference to your resource:
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::ecs::Write;
+# use amethyst::shrev::EventChannel;
+# #[derive(Debug)]
+# pub enum MyEvent {
+#   A,
+#   B,
+# }
+# struct MySystem;
+# impl<'a> amethyst::ecs::System<'a> for MySystem {
 type SystemData = Write<'a, EventChannel<MyEvent>>;
+#   fn run(&mut self, _: Self::SystemData) { }
+# }
 ```
 
 In the **receiver** `System`s, you need to store the `ReaderId` somewhere.
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::shrev::ReaderId;
+# #[derive(Debug)]
+# pub enum MyEvent {
+#   A,
+#   B,
+# }
 struct ReceiverSystem {
     // The type inside of ReaderId should be the type of the event you are using.
     reader: Option<ReaderId<MyEvent>>,
 }
 ```
 and you also need to get read access:
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::ecs::Read;
+# use amethyst::shrev::EventChannel;
+# #[derive(Debug)]
+# pub enum MyEvent {
+#   A,
+#   B,
+# }
+# struct MySystem;
+# impl<'a> amethyst::ecs::System<'a> for MySystem {
     type SystemData = Read<'a, EventChannel<MyEvent>>;
+#   fn run(&mut self, _: Self::SystemData) { }
+# }
 ```
 
 Then, in the `System`'s setup method:
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::shrev::{EventChannel, ReaderId};
+# use amethyst::ecs::SystemData;
+# #[derive(Debug)]
+# pub enum MyEvent {
+#   A,
+#   B,
+# }
+# struct MySystem { reader: Option<ReaderId<MyEvent>>, }
+# impl<'a> amethyst::ecs::System<'a> for MySystem {
+#   type SystemData = ();
+#   fn run(&mut self, _: Self::SystemData) { }
+#   fn setup(&mut self, res: &mut amethyst::ecs::Resources) {
     // IMPORTANT: You need to setup your system data BEFORE you try to fetch the resource. Especially if you plan use `Default` to create your resource.
-    Self::SystemData::setup(&mut res);
-    self.reader = Some(res.fetch_mut::<EventChannel<MyEvent>>().unwrap().register_reader());
+    Self::SystemData::setup(res);
+    self.reader = Some(res.fetch_mut::<EventChannel<MyEvent>>().register_reader());
+#   }
+# }
+
 ```
 
 Finally, you can read events from your `System`.
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::ecs::Read;
+# use amethyst::shrev::EventChannel;
+# #[derive(Debug)]
+# pub enum MyEvent {
+#   A,
+#   B,
+# }
+# struct MySystem {
+#   reader: Option<amethyst::shrev::ReaderId<MyEvent>>,
+# }
+# impl<'a> amethyst::ecs::System<'a> for MySystem {
+#   type SystemData = Read<'a, EventChannel<MyEvent>>;
     fn run (&mut self, my_event_channel: Self::SystemData) {
-        for event in &my_event_channel.read(&mut self.reader) {
-            info!("Received an event: {:?}", event);
+        for event in my_event_channel.read(self.reader.as_mut().unwrap()) {
+            println!("Received an event: {:?}", event);
         }
     }
+# }
 ```

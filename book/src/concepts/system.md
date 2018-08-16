@@ -10,7 +10,9 @@ A system struct is a structure implementing the trait `amethyst::ecs::System`.
 
 Here is a very simple example implementation:
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::ecs::System;
 struct MyFirstSystem;
 
 impl<'a> System<'a> for MyFirstSystem {
@@ -37,7 +39,10 @@ The Amethyst engine provides useful system data types to use in order to access 
 
 You can then use one, or multiple of them via a tuple.
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::ecs::{System, Read};
+# use amethyst::core::timing::Time;
 struct MyFirstSystem;
 
 impl<'a> System<'a> for MyFirstSystem {
@@ -59,13 +64,17 @@ Once you have access to a storage, you can use them in different ways.
 
 Sometimes, it can be useful to get a component in the storage for a specific entity. This can easily be done using the `get` or, for mutable storages, `get_mut` methods.
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::ecs::{System, ReadExpect, WriteStorage};
+# use amethyst::core::Transform;
+# use amethyst::renderer::ActiveCamera;
 struct CameraGoesUp;
 
 impl<'a> System<'a> for CameraGoesUp {
     type SystemData = (
         WriteStorage<'a, Transform>,
-        Read<'a, ActiveCamera>,
+        ReadExpect<'a, ActiveCamera>,
     );
 
     fn run(&mut self, (mut transforms, camera): Self::SystemData) {
@@ -74,7 +83,7 @@ impl<'a> System<'a> for CameraGoesUp {
 }
 ```
 
-This system makes the current main camera (obtained through the  `amethyst::renderer::ActiveCamera` resource) go up by 0.1 unit every iteration of the game loop!
+This system makes the current main camera (obtained through the `amethyst::renderer::ActiveCamera` resource) go up by 0.1 unit every iteration of the game loop! Notice that as the `ActiveCamera` resource does not implement `Default`, we had to use `ReadExpect`.
 
 However, this approach is pretty rare because most of the time you don't know what entity you want to manipulate, and in fact you may want to apply your changes to multiple entities.
 
@@ -91,7 +100,14 @@ Needless to say that you can use it with only one storage to iterate over all en
 
 Keep in mind that **the `join` method is only available by importing `amethyst::ecs::Join`**.
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::ecs::{System, ReadStorage, WriteStorage};
+# use amethyst::core::Transform;
+# struct FallingObject;
+# impl amethyst::ecs::Component for FallingObject {
+#   type Storage = amethyst::ecs::VecStorage<FallingObject>;
+# }
 use amethyst::ecs::Join;
 
 struct MakeObjectsFall;
@@ -126,7 +142,14 @@ It may sometimes be interesting to manipulate the structure of entities in a sys
 
 Creating an entity while in the context of a system is very similar to the way one would create an entity using the `World` struct. The only difference is that one needs to provide mutable storages of all the components they plan to add to the entity.
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::ecs::{System, WriteStorage, Entities};
+# use amethyst::core::Transform;
+# struct Enemy;
+# impl amethyst::ecs::Component for Enemy {
+#   type Storage = amethyst::ecs::VecStorage<Enemy>;
+# }
 struct SpawnEnemies {
     counter: u32
 }
@@ -156,15 +179,31 @@ This system will spawn a new enemy every 200 game loop iterations.
 ### Removing an entity
 
 Deleting an entity is very easy using `Entities<'a>`.
-```rust
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::ecs::{System, Entities, Entity};
+# struct MySystem { entity: Entity }
+# impl<'a> System<'a> for MySystem {
+#   type SystemData = Entities<'a>;
+#   fn run(&mut self, entities: Self::SystemData) {
+#       let entity = self.entity;
 entities.delete(entity);
+#   }
+# }
 ```
 
 ### Iterating over components with associated entity
 
 Sometimes, when you iterate over components, you may want to also know what entity you are working with. To do that, you can use the joining operation with `Entities<'a>`.
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::ecs::{Join, System, Entities, WriteStorage, ReadStorage};
+# use amethyst::core::Transform;
+# struct FallingObject;
+# impl amethyst::ecs::Component for FallingObject {
+#   type Storage = amethyst::ecs::VecStorage<FallingObject>;
+# }
 struct MakeObjectsFall;
 
 impl<'a> System<'a> for MakeObjectsFall {
@@ -193,12 +232,25 @@ This system does the same thing as the previous `MakeObjectsFall`, but also clea
 You can also insert or remove components from a specific entity.
 To do that, you need to get a mutable storage of the component you want to modify, and simply do:
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::ecs::{System, Entities, Entity, WriteStorage};
+# struct MyComponent;
+# impl amethyst::ecs::Component for MyComponent {
+#   type Storage = amethyst::ecs::VecStorage<MyComponent>;
+# }
+# struct MySystem { entity: Entity }
+# impl<'a> System<'a> for MySystem {
+#   type SystemData = WriteStorage<'a, MyComponent>;
+#   fn run(&mut self, mut write_storage: Self::SystemData) {
+#       let entity = self.entity;
 // Add the component
 write_storage.insert(entity, MyComponent);
 
 // Remove the component
 write_storage.remove(entity);
+#   }
+# }
 ```
 
 Keep in mind that inserting a component on an entity that already has a component of the same type **will overwrite the previous one**.
@@ -214,6 +266,7 @@ This is rather complicated trait to implement, fortunately Amethyst provides a d
 Please note that tuples of structs implementing `SystemData` are themselves `SystemData`. This is very useful when you need to request multiple `SystemData` at once quickly.
 
 ```rust,ignore
+# // This one remains ignore because for some reason mdbook can't find the SystemData derive macro
 #[derive(SystemData)]
 struct MySystemData<'a> {
     foo: ReadStorage<'a, FooComponent>,
@@ -240,10 +293,18 @@ impl<'a> System<'a> for MyFirstSystem {
 
 Systems have a method called setup which is called a single time, before any of the system runs.
 Here is how to use it:
-```rust,ignore
+
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::ecs::{System, Resources, SystemData, Entity};
+# struct MySystem { entity: Entity }
+# impl<'a> System<'a> for MySystem {
+#   type SystemData = ();
+#   fn run(&mut self, _: Self::SystemData) { }
     fn setup(&mut self, res: &mut Resources) {
         // Ensures that resources that implement `Default` and are present in your `SystemData` are added to `Resources`.
-        Self::SystemData::setup(&mut res);
+        Self::SystemData::setup(res);
         // Do what you want with `Resources` here.
     }
+# }
 ```
