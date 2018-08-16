@@ -64,7 +64,7 @@ If you are not sure that the resource will be present, use the methods available
 You first start by creating the entity builder.
 Then, you can add components to your entity.
 Finally, you call the build() method on the entity builder to get the actual entity.
-Please note that **in order to use this syntax, you need to import the ``amethyst::prelude::Builder;`` trait.**
+Please note that **in order to use this syntax, you need to import the ``amethyst::prelude::Builder`` trait.**
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;

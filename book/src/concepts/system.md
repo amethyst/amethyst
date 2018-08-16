@@ -106,7 +106,7 @@ Keep in mind that **the `join` method is only available by importing `amethyst::
 # use amethyst::core::Transform;
 # struct FallingObject;
 # impl amethyst::ecs::Component for FallingObject {
-#   type Storage = amethyst::ecs::VecStorage<FallingObject>;
+#   type Storage = amethyst::ecs::DenseVecStorage<FallingObject>;
 # }
 use amethyst::ecs::Join;
 
@@ -151,7 +151,7 @@ Creating an entity while in the context of a system is very similar to the way o
 #   type Storage = amethyst::ecs::VecStorage<Enemy>;
 # }
 struct SpawnEnemies {
-    counter: u32
+    counter: u32,
 }
 
 impl<'a> System<'a> for SpawnEnemies {
@@ -304,7 +304,7 @@ Here is how to use it:
     fn setup(&mut self, res: &mut Resources) {
         // Ensures that resources that implement `Default` and are present in your `SystemData` are added to `Resources`.
         Self::SystemData::setup(res);
-        // Do what you want with `Resources` here.
+        // Do what you want with `Resources` past this point.
     }
 # }
 ```
