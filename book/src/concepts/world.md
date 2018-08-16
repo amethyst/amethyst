@@ -190,6 +190,8 @@ All:
 # }
 ```
 
+__Note: Entities are lazily deleted, which means that deletion only happens at the end of the frame and not immediately when calling the `delete` method.__
+
 ## Check if the entity was deleted
 
 ```rust,no_run,noplaypen

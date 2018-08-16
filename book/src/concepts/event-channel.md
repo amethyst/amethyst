@@ -99,6 +99,9 @@ Then, when you want to read the events:
 Note that you only need to have a read access to the channel when reading events.
 It is the `ReaderId` that needs to be mutable to keep track of where your last read was.
 
+**IMPORTANT: The event channel automatically grows as events are added to it and only decreases in size once all readers have read through the older events.
+This mean that if you create a `ReaderId` but don't read from it on each frame, the event channel will start to consume more and more memory.**
+
 ## Patterns
 
 When using the event channel, we usually re-use the same pattern over and over again to maximize parallelism.

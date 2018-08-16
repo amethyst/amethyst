@@ -12,7 +12,7 @@ you're having trouble getting the project to run, double check the
 We've opened and closed a window, so we're basically done! But let's write this
 functionality ourselves so we're sure we know what's going on.
 
-In `src` there's a `main.rs` file. Delete everything, then add these imports:
+**In `src` there's a `main.rs` file. Delete everything in that file, then add these imports:**
 
 ```rust,no_run,noplaypen
 extern crate amethyst;
