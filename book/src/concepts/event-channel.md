@@ -51,7 +51,7 @@ This is done by registering a `ReaderId`.
 Then, when you want to read the events:
 
 ```rust,ignore
-    for event in channel.read_event(&mut reader){
+    for event in channel.read(&mut reader){
         // The type of the event is inferred from the generic type
         // we assigned to the `EventChannel<MyEvent>` earlier when creating it.
         println!("Received event value of: {:?}", event);
@@ -59,6 +59,9 @@ Then, when you want to read the events:
 ```
 Note that you only need to have a read access to the channel when reading events.
 It is the `ReaderId` that needs to be mutable to keep track of where your last read was.
+
+**IMPORTANT: The event channel automatically grows as events are added to it and only decreases in size once all readers have read through the older events.
+This mean that if you create a `ReaderId` but don't read from it on each frame, the event channel will start to consume more and more memory.**
 
 ## Patterns
 
@@ -100,7 +103,7 @@ Then, in the `System`'s setup method:
 Finally, you can read events from your `System`.
 ```rust,ignore
     fn run (&mut self, my_event_channel: Self::SystemData) {
-        for event in &my_event_channel.read(&mut self.reader) {
+        for event in my_event_channel.read(&mut self.reader) {
             info!("Received an event: {:?}", event);
         }
     }

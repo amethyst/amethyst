@@ -28,14 +28,14 @@ Then, in `main.rs` declare a module:
 mod pong;
 ```
 
-And in the `run()` function add:
+And in main.rs, at the top of the file, add this import:
 
 ```rust,ignore
 use pong::Pong;
 ```
 
 Now you can just delete various `main.rs` use statements until the Rust compiler
-stops complaining about unused imports. In `pong.rs` we'll need these use
+stops complaining about unused imports. In the `pong.rs` file we'll need these use
 statements to make it through this chapter:
 
 ```rust,ignore
@@ -313,10 +313,9 @@ already have one of these in `main.rs`: the `RenderBundle`. We can just follow
 the pattern and add the `TransformBundle`.
 
 ```rust,ignore
-let mut game = Application::build("./", Pong)?
-    .with_bundle(TransformBundle::new())? // Add this bundle
-    .with_bundle(RenderBundle::new(pipe, Some(config)))?
-    .build()?;
+let game_data = GameDataBuilder::default()
+    .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
+    .with_bundle(TransformBundle::new())?;
 ```
 
 Also we'll need to import it:
