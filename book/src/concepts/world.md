@@ -190,6 +190,8 @@ All:
 # }
 ```
 
+__Note: Entities are lazily deleted, which means that deletion only happens at the end of the frame and not immediately when calling the `delete` method.__
+
 ## Check if the entity was deleted
 
 ```rust,no_run,noplaypen
@@ -214,19 +216,18 @@ There is a function that acts as a shorthand for this:
 # extern crate amethyst;
 # use amethyst::ecs::ReadExpect;
 # struct Dummy;
-# type SomeSystemData<'a> = ReadExpect<'a, Dummy>;
+# type MySystemData<'a> = ReadExpect<'a, Dummy>;
 # trait DoSomething {
 #   fn do_something(&mut self);
 # }
-# impl<'a> DoSomething for SomeSystemData<'a> {
+# impl<'a> DoSomething for MySystemData<'a> {
 #   fn do_something(&mut self) { }
 # }
 # fn main() {
 #   let mut world = amethyst::ecs::World::new();
-    world
-        .exec(|mut data: SomeSystemData| {
-            data.do_something();
-        });
+    world.exec(|mut data: MySystemData| {
+        data.do_something();
+    });
 # }
 ```
 

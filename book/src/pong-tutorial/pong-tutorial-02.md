@@ -28,14 +28,14 @@ Then, in `main.rs` declare a module:
 mod pong;
 ```
 
-And in the `run()` function add:
+And in main.rs, at the top of the file, add this import:
 
 ```rust,ignore
 use pong::Pong;
 ```
 
 Now you can just delete various `main.rs` use statements until the Rust compiler
-stops complaining about unused imports. In `pong.rs` we'll need these use
+stops complaining about unused imports. In the `pong.rs` file we'll need these use
 statements to make it through this chapter:
 
 ```rust,no_run,noplaypen
