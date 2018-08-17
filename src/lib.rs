@@ -86,6 +86,8 @@ pub use core::shred;
 pub use core::shrev;
 pub use core::specs as ecs;
 
+pub use renderer::state_event::StateEvent;
+
 pub mod prelude;
 
 mod app;
@@ -93,4 +95,5 @@ mod error;
 mod game_data;
 mod logger;
 mod state;
+mod state_event;
 mod vergen;

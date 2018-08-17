@@ -110,6 +110,7 @@ pub use visibility::{Visibility, VisibilitySortingSystem};
 pub mod error;
 pub mod mouse;
 pub mod pipe;
+pub mod state_event;
 
 #[macro_use]
 mod macros;

@@ -1,7 +1,7 @@
 //! Utilities for game state management.
 
 use ecs::prelude::World;
-use renderer::Event;
+use StateEvent;
 
 /// State data encapsulates the data sent to all state functions from the application main loop.
 pub struct StateData<'a, T>
@@ -54,7 +54,7 @@ pub trait State<T> {
     fn on_resume(&mut self, _data: StateData<T>) {}
 
     /// Executed on every frame before updating, for use in reacting to events.
-    fn handle_event(&mut self, _data: StateData<T>, _event: Event) -> Trans<T> {
+    fn handle_event(&mut self, _data: StateData<T>, _event: StateEvent) -> Trans<T> {
         Trans::None
     }
 
@@ -106,7 +106,7 @@ impl<'a, T> StateMachine<'a, T> {
     }
 
     /// Passes a single event to the active state to handle.
-    pub fn handle_event(&mut self, data: StateData<T>, event: Event) {
+    pub fn handle_event(&mut self, data: StateData<T>, event: StateEvent) {
         let StateData { world, data } = data;
         if self.running {
             let trans = match self.state_stack.last_mut() {

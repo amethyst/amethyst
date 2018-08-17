@@ -10,6 +10,7 @@ use amethyst_core::specs::prelude::{
     Read, ReadExpect, Resources, RunNow, SystemData, Write, WriteExpect,
 };
 use amethyst_core::Time;
+use amethyst::StateEvent;
 use rayon::ThreadPool;
 use winit::{DeviceEvent, Event, WindowEvent};
 
@@ -135,7 +136,7 @@ where
         self.renderer.events_mut().poll_events(|new_event| {
             compress_events(events, new_event);
         });
-        event_handler.iter_write(events.drain(..));
+        event_handler.iter_write(events.drain(..).map(|e| StateEvent::Window(e)));
     }
 }
 
@@ -150,7 +151,7 @@ type AssetLoadingData<'a> = (
 type WindowData<'a> = (Write<'a, WindowMessages>, WriteExpect<'a, ScreenDimensions>);
 
 type RenderData<'a, P> = (
-    Write<'a, EventChannel<Event>>,
+    Write<'a, EventChannel<StateEvent>>,
     <P as PipelineData<'a>>::Data,
 );
 

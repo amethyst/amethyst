@@ -98,7 +98,7 @@ pub struct Application<'a, T> {
     /// The world
     #[derivative(Debug = "ignore")]
     world: World,
-    events_reader_id: ReaderId<Event>,
+    events_reader_id: ReaderId<StateEvent>,
     states: StateMachine<'a, T>,
     ignore_window_close: bool,
     data: T,
@@ -223,7 +223,7 @@ impl<'a, T> Application<'a, T> {
             profile_scope!("handle_event");
 
             let events = world
-                .read_resource::<EventChannel<Event>>()
+                .read_resource::<EventChannel<StateEvent>>()
                 .read(&mut self.events_reader_id)
                 .cloned()
                 .collect::<Vec<_>>();
@@ -232,7 +232,7 @@ impl<'a, T> Application<'a, T> {
                 states.handle_event(StateData::new(world, &mut self.data), event.clone());
                 if !self.ignore_window_close {
                     if cfg!(target_os = "ios") {
-                        if let &Event::WindowEvent {
+                        if let &WindowEvent(Event::WindowEvent) {
                             event: WindowEvent::Destroyed,
                             ..
                         } = &event
@@ -240,7 +240,7 @@ impl<'a, T> Application<'a, T> {
                             states.stop(StateData::new(world, &mut self.data));
                         }
                     } else {
-                        if let &Event::WindowEvent {
+                        if let &WindowEvent(Event::WindowEvent) {
                             event: WindowEvent::CloseRequested,
                             ..
                         } = &event
@@ -407,7 +407,7 @@ impl<S> ApplicationBuilder<S> {
             .map_err(|err| Error::Core(err.description().to_string().into()))?;
         world.add_resource(Loader::new(path.as_ref().to_owned(), pool.clone()));
         world.add_resource(pool);
-        world.add_resource(EventChannel::<Event>::with_capacity(2000));
+        world.add_resource(EventChannel::<StateEvent>::with_capacity(2000));
         world.add_resource(Errors::default());
         world.add_resource(FrameLimiter::default());
         world.add_resource(Stopwatch::default());
@@ -685,7 +685,7 @@ impl<S> ApplicationBuilder<S> {
         profile_scope!("new");
 
         let reader_id = self.world
-            .write_resource::<EventChannel<Event>>()
+            .write_resource::<EventChannel<StateEvent>>()
             .register_reader();
 
         let data = init.build(&mut self.world);
