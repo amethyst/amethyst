@@ -229,7 +229,8 @@ pub(crate) fn setup_vertex_args(builder: &mut EffectBuilder) {
     );
 }
 
-pub(crate) fn set_vertex_args(
+/// Sets the vertex argument in the constant buffer.
+pub fn set_vertex_args(
     effect: &mut Effect,
     encoder: &mut Encoder,
     camera: Option<(&Camera, &GlobalTransform)>,
@@ -300,7 +301,8 @@ pub(crate) fn draw_mesh(
     effect.clear();
 }
 
-pub(crate) fn get_camera<'a>(
+/// Returns the main camera and its `GlobalTransform`
+pub fn get_camera<'a>(
     active: Option<Read<'a, ActiveCamera>>,
     camera: &'a ReadStorage<Camera>,
     global: &'a ReadStorage<GlobalTransform>,
