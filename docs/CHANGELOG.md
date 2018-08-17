@@ -10,9 +10,11 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ## Unreleased
 ### Added
 ### Changed
+* Made get_camera public. ([#878)]
 ### Removed
 ### Fixed
 
+[#878]: https://github.com/amethyst/amethyst/pull/878
 
 ## [0.8.0] - 2018-08
 ### Added
