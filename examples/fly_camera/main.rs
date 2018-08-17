@@ -5,6 +5,7 @@ extern crate amethyst;
 use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, RonFormat};
 use amethyst::controls::FlyControlBundle;
 use amethyst::core::transform::TransformBundle;
+use amethyst::core::WithNamed;
 use amethyst::input::{is_close_requested, is_key_down, InputBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::{DrawShaded, Event, PosNormTex, VirtualKeyCode};
@@ -20,7 +21,11 @@ impl<'a, 'b> State<GameData<'a, 'b>> for ExampleState {
         let prefab_handle = data.world.exec(|loader: PrefabLoader<MyPrefabData>| {
             loader.load("prefab/fly_camera.ron", RonFormat, (), ())
         });
-        data.world.create_entity().with(prefab_handle).build();
+        data.world
+            .create_entity()
+            .named("Fly Camera Scene")
+            .with(prefab_handle)
+            .build();
     }
 
     fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
