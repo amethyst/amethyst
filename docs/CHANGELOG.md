@@ -9,10 +9,12 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ## Unreleased
 ### Added
+* Added Named Component. ([#879])
 ### Changed
 ### Removed
 ### Fixed
 
+[#879]: https://github.com/amethyst/amethyst/pull/879
 
 ## [0.8.0] - 2018-08
 ### Added
