@@ -38,7 +38,8 @@ Now you can just delete various `main.rs` use statements until the Rust compiler
 stops complaining about unused imports. In the `pong.rs` file we'll need these use
 statements to make it through this chapter:
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
 use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::cgmath::{Vector3, Matrix4};
 use amethyst::core::transform::{GlobalTransform, Transform};
@@ -58,10 +59,15 @@ First, in `pong.rs`, let's add a new method to our State implementation: `on_sta
 This method is called, as you probably guessed, when the State starts.
 We will leave it empty for now, but it will become useful later down the line.
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::prelude::*;
+# struct MyState;
+# impl<'a, 'b> State<GameData<'a, 'b>> for MyState {
 fn on_start(&mut self, data: StateData<GameData>) {
 
 }
+# }
 ```
 
 The `StateData<GameData>` is a structure given to all State methods. The important
@@ -82,7 +88,7 @@ moved around at will.
 
 First, let's define some constants:
 
-```rust,ignore
+```rust,no_run,noplaypen
 const ARENA_HEIGHT: f32 = 100.0;
 const ARENA_WIDTH: f32 = 100.0;
 ```
@@ -91,7 +97,15 @@ These constants will determine the size of our arena.
 So, as we're making a pong game, we want to create a camera that will cover
 the entire arena. Let's do it!
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# const ARENA_HEIGHT: f32 = 100.0;
+# const ARENA_WIDTH: f32 = 100.0;
+# use amethyst::prelude::*;
+# use amethyst::ecs::World;
+# use amethyst::renderer::{Camera, Projection};
+# use amethyst::core::cgmath::{Vector3, Matrix4};
+# use amethyst::core::{Transform, GlobalTransform};
 fn initialise_camera(world: &mut World) {
     world.create_entity()
         .with(Camera::from(Projection::orthographic(
@@ -136,7 +150,7 @@ much better from then on, we promise!
 
 In `pong.rs` let's create our first `Component`, a definition of a paddle.
 
-```rust,ignore
+```rust,no_run,noplaypen
 #[derive(PartialEq, Eq)]
 enum Side {
     Left,
@@ -163,7 +177,10 @@ impl Paddle {
 "But that just looks like a regular struct!" you might say. And you're right,
 here's the special sauce:
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::ecs::{Component, DenseVecStorage};
+# struct Paddle;
 impl Component for Paddle {
     type Storage = DenseVecStorage<Self>;
 }
@@ -181,7 +198,8 @@ include that component and add them to our `World`.
 
 First let's look at our math imports:
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
 use amethyst::core::cgmath::{Vector3, Matrix4};
 use amethyst::core::transform::{GlobalTransform, Transform};
 ```
@@ -196,7 +214,7 @@ to a parent if one exists, while `GlobalTransform` is, well, global.
 
 Let's also define some constants for convenience:
 
-```rust,ignore
+```rust,no_run,noplaypen
 const PADDLE_HEIGHT: f32 = 16.0;
 const PADDLE_WIDTH: f32 = 4.0;
 ```
@@ -210,7 +228,27 @@ Keep in mind that the anchor point of our entities will be in the middle of the
 image we will want to render on top of them. This is a good rule to follow in
 general as it makes operations like rotation easier.
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::prelude::*;
+# use amethyst::core::{Transform, GlobalTransform};
+# use amethyst::core::cgmath::Vector3;
+# use amethyst::ecs::World;
+# enum Side {
+#   Left,
+#   Right,
+# }
+# struct Paddle;
+# impl amethyst::ecs::Component for Paddle {
+#   type Storage = amethyst::ecs::VecStorage<Paddle>;    
+# }
+# impl Paddle {
+#   fn new(side: Side) -> Paddle { Paddle }
+# }
+# const PADDLE_HEIGHT: f32 = 16.0;
+# const PADDLE_WIDTH: f32 = 4.0;
+# const ARENA_HEIGHT: f32 = 100.0;
+# const ARENA_WIDTH: f32 = 100.0;
 /// Initialises one paddle on the left, and one paddle on the right.
 fn initialise_paddles(world: &mut World) {
     let mut left_transform = Transform::default();
@@ -245,18 +283,23 @@ virtual world, but we'll need to do some more work to actually *draw* them.
 As a sanity check, let's make sure the code for initialising the paddles
 compiles. Update the `on_start` method to the following:
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::prelude::*;
+# struct MyState;
+# impl<'a, 'b> State<GameData<'a, 'b>> for MyState {
 fn on_start(&mut self, data: StateData<GameData>) {
     let world = data.world;
 
     initialise_paddles(world);
     initialise_camera(world);
 }
+# }
 ```
 
 Let's run our blank screen game!
 
-```
+```text,ignore
 thread 'main' panicked at 'Tried to fetch a resource, but the resource does not exist.
 Try adding the resource by inserting it manually or using the `setup` method.
 ```
@@ -266,7 +309,7 @@ Uh oh, what's wrong? Sadly the message is pretty difficult to decipher.
 If you are using a `nightly` compiler and enable the `nightly` feature of
 Amethyst, you will receive a more informative error message:
 
-```
+```text,ignore
 thread 'main' panicked at 'Tried to fetch a resource of type "amethyst::specs::storage::MaskedStorage<pong::Paddle>", but the resource does not exist.
 Try adding the resource by inserting it manually or using the `setup` method.'
 ```
@@ -277,8 +320,16 @@ set up in the `World`. The error message above means we have registered the
 this by adding the following line before `initialise_paddles(world)` in the
 `on_start` method:
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# struct Paddle;
+# impl amethyst::ecs::Component for Paddle {
+#   type Storage = amethyst::ecs::VecStorage<Paddle>;    
+# }
+# fn register() {
+#   let mut world = amethyst::ecs::World::new();
 world.register::<Paddle>();
+# }
 ```
 
 This is rather inconvenient &mdash; to need to manually register each component
@@ -290,14 +341,14 @@ live with registering the `Paddle` component manually.
 
 Let's run the game again.
 
-```
+```text,ignore
 thread 'main' panicked at 'Tried to fetch a resource, but the resource does not exist.
 Try adding the resource by inserting it manually or using the `setup` method.
 ```
 
 Ah, oops. We forgot something. Turning on the `nightly` feature, we get:
 
-```
+```text_ignore
 thread 'main' panicked at 'Tried to fetch a resource of type "specs::storage::MaskedStorage<transform::components::local_transform::Transform>", but the resource does not exist.
 Try adding the resource by inserting it manually or using the `setup` method.'
 ```
@@ -312,15 +363,32 @@ add these to our Application's `GameData` using the `with_bundle` method. We
 already have one of these in `main.rs`: the `RenderBundle`. We can just follow
 the pattern and add the `TransformBundle`.
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::prelude::*;
+# use amethyst::core::transform::TransformBundle;
+# use amethyst::renderer::{DisplayConfig, DrawSprite, Event, Pipeline,
+#                        RenderBundle, Stage, VirtualKeyCode};
+# fn main() -> amethyst::Result<()> {
+# let path = "./resources/display_config.ron";
+# let config = DisplayConfig::load(&path);
+# let pipe = Pipeline::build().with_stage(Stage::with_backbuffer()
+#       .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
+#       .with_pass(DrawSprite::new()),
+# );
+# struct Pong;
+# impl<'a, 'b> State<GameData<'a, 'b>> for Pong { }
 let game_data = GameDataBuilder::default()
     .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
     .with_bundle(TransformBundle::new())?;
+# Ok(())
+# }
 ```
 
 Also we'll need to import it:
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
 use amethyst::core::transform::TransformBundle;
 ```
 
@@ -340,18 +408,21 @@ is quite a lot to do to load a sprite sheet, so we will construct the
 First, let's declare an additional constant for the spritesheet. This will be
 used when defining how the sprites are laid out on the sprite sheet.
 
-```rust,ignore
+```rust,no_run,noplaypen
 const SPRITESHEET_SIZE: (f32, f32) = (8.0, 16.0);
 ```
 
 Next, we declare the function and load the image.
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::prelude::*;
+# use amethyst::assets::{Loader, AssetStorage};
+# use amethyst::renderer::{Texture, PngFormat, TextureHandle, SpriteSheetHandle};
+# use amethyst::ecs::World;
 fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
     // Load the sprite sheet necessary to render the graphics.
     // The texture is the pixel data
-    // `sprite_sheet` is the layout of the sprites on the image
-
     // `texture_handle` is a cloneable reference to the texture
     let texture_handle = {
         let loader = world.read_resource::<Loader>();
@@ -390,12 +461,30 @@ the handle does not clone the asset in memory, so many things can use the same a
 
 Heading back to the code, we need to add this snippet after loading the texture.
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::prelude::*;
+# use amethyst::assets::{Loader, AssetStorage};
+# use amethyst::renderer::{Texture, PngFormat, TextureHandle, MaterialTextureSet, SpriteSheetHandle};
+# use amethyst::ecs::World;
+# fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
+#   let texture_handle = {
+#       let loader = world.read_resource::<Loader>();
+#       let texture_storage = world.read_resource::<AssetStorage<Texture>>();
+#       loader.load(
+#           "texture/pong_spritesheet.png",
+#           PngFormat,
+#           Default::default(),
+#           (),
+#           &texture_storage,
+#       )
+#   };
 // `texture_id` is a application defined ID given to the texture to store in
 // the `World`. This is needed to link the texture to the sprite_sheet.
 let texture_id = 0;
 let mut material_texture_set = world.write_resource::<MaterialTextureSet>();
 material_texture_set.insert(texture_id, texture_handle);
+# }
 ```
 
 The `MaterialTextureSet` is yet another `resource`, which is a bi-directional
@@ -408,7 +497,31 @@ We now need to define what part of the texture we want to render. To do that, we
 need to create a `Sprite`, which is a fancy name to call a rectangle on the
 sprite sheet. Behold, texture coordinates!
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::prelude::*;
+# use amethyst::assets::{Loader, AssetStorage};
+# use amethyst::renderer::{Texture, PngFormat, TextureHandle, MaterialTextureSet,
+                           TextureCoordinates, Sprite, SpriteSheet, SpriteSheetHandle};
+# use amethyst::ecs::World;
+# const PADDLE_HEIGHT: f32 = 16.0;
+# const PADDLE_WIDTH: f32 = 4.0;
+# const SPRITESHEET_SIZE: (f32, f32) = (8.0, 16.0);
+# fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
+#   let texture_handle = {
+#       let loader = world.read_resource::<Loader>();
+#       let texture_storage = world.read_resource::<AssetStorage<Texture>>();
+#       loader.load(
+#           "texture/pong_spritesheet.png",
+#           PngFormat,
+#           Default::default(),
+#           (),
+#           &texture_storage,
+#       )
+#   };
+# let texture_id = 0;
+# let mut material_texture_set = world.write_resource::<MaterialTextureSet>();
+# material_texture_set.insert(texture_id, texture_handle);  
 // Create the sprite for the paddles.
 //
 // Texture coordinates are expressed as a proportion of the sprite sheet's
@@ -433,6 +546,7 @@ let paddle_sprite = Sprite {
 };
 
 // Collate the sprite layout information into a sprite sheet
+// `sprite_sheet` is the layout of the sprites on the image
 let sprite_sheet = SpriteSheet {
     texture_id,
     sprites: vec![paddle_sprite],
@@ -445,6 +559,7 @@ let sprite_sheet_handle = {
 };
 
 sprite_sheet_handle
+# }
 ```
 
 That's quite a bit of code, and well deserving of the comments. In the
@@ -474,27 +589,36 @@ Phew! That's a lot to take in; but it's not over yet! We have to link the sprite
 to the paddle. We update the `initialise_paddle` function by changing its
 signature to:
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::ecs::World;
+# use amethyst::renderer::SpriteSheetHandle;
 fn initialise_paddles(world: &mut World, sprite_sheet: SpriteSheetHandle)
+# { }
 ```
 
 Inside `initialise_paddles`, we construct a `SpriteRender` for each paddle.
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::ecs::World;
+# use amethyst::renderer::{SpriteSheetHandle, SpriteRender};
+# fn initialise_paddles(world: &mut World, sprite_sheet: SpriteSheetHandle) {
 // Assign the sprites for the paddles
 let sprite_render_left = SpriteRender {
-    sprite_sheet: sprite_sheet_handle.clone(),
+    sprite_sheet: sprite_sheet.clone(),
     sprite_number: 0, // paddle is the first sprite in the sprite_sheet
     flip_horizontal: false,
     flip_vertical: false,
 };
 
 let sprite_render_right = SpriteRender {
-    sprite_sheet: sprite_sheet_handle,
+    sprite_sheet: sprite_sheet,
     sprite_number: 0,
     flip_horizontal: true,
     flip_vertical: false,
 };
+# }
 ```
 
 `SpriteRender` is the `Component` that indicates which sprite of which sprite
@@ -503,7 +627,24 @@ sprite in the sprite sheet, we use `0` for the `sprite_number`.
 
 Next we simply add the components to the paddle entities:
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::ecs::World;
+# use amethyst::renderer::{SpriteSheetHandle, SpriteRender};
+# use amethyst::prelude::*;
+# fn initialise_paddles(world: &mut World, sprite_sheet: SpriteSheetHandle) {
+# let sprite_render_left = SpriteRender {
+#   sprite_sheet: sprite_sheet.clone(),
+#   sprite_number: 0, // paddle is the first sprite in the sprite_sheet
+#   flip_horizontal: false,
+#   flip_vertical: false,
+# };
+# let sprite_render_right = SpriteRender {
+#   sprite_sheet: sprite_sheet,
+#   sprite_number: 0,
+#   flip_horizontal: true,
+#   flip_vertical: false,
+# }; 
 // Create a left plank entity.
 world
     .create_entity()
@@ -517,18 +658,30 @@ world
     .with(sprite_render_right)
     // ... other components
     .build();
+# }
 ```
 
 We're nearly there, we just have to wire up the sprite to the paddles. We put it
 all together in the `on_start()` method:
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::prelude::*;
+# use amethyst::renderer::{TextureHandle, SpriteSheetHandle};
+# use amethyst::ecs::World;
+# struct Paddle;
+# impl amethyst::ecs::Component for Paddle {
+#   type Storage = amethyst::ecs::VecStorage<Paddle>;    
+# }
+# fn initialise_paddles(world: &mut World, spritesheet: TextureHandle) { }
+# fn initialise_camera(world: &mut World) { }
+# fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle { unimplemented!() }
+# struct MyState;
+# impl<'a, 'b> State<GameData<'a, 'b>> for MyState {
 fn on_start(&mut self, data: StateData<GameData>) {
     let world = data.world;
 
     // Load the spritesheet necessary to render the graphics.
-    // `spritesheet` is the layout of the sprites on the image;
-    // `texture` is the pixel data.
     let sprite_sheet_handle = load_sprite_sheet(world);
 
     world.register::<Paddle>();
@@ -536,6 +689,7 @@ fn on_start(&mut self, data: StateData<GameData>) {
     initialise_paddles(world, sprite_sheet_handle);
     initialise_camera(world);
 }
+# }
 ```
 
 And we're done. Let's run our game and have fun!

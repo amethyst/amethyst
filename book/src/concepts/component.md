@@ -18,7 +18,7 @@ Creating a component is easy.
 
 You declare the relevant underlying data:
 
-```rust,ignore
+```rust,no_run,noplaypen
 /// This `Component` describes the shape of an `Entity`
 enum Shape {
     Sphere { radius: f32 },
@@ -33,7 +33,10 @@ pub struct Content {
 
 and then you implement the `Component` trait for them:
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# struct Shape;
+# struct Content;
 use amethyst::ecs::{Component, DenseVecStorage};
 
 impl Component for Shape {
