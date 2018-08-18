@@ -94,7 +94,7 @@ impl<'a> PrefabData<'a> for ScenePrefabData {
     }
 }
 
-impl<'a, 'b> State<GameData<'a, 'b>, ()> for Example {
+impl<'a, 'b> SimpleState<'a, 'b> for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
 
@@ -116,7 +116,7 @@ impl<'a, 'b> State<GameData<'a, 'b>, ()> for Example {
         &mut self,
         data: StateData<GameData>,
         event: StateEvent<()>,
-    ) -> Trans<GameData<'a, 'b>, ()> {
+    ) -> SimpleTrans<'a, 'b> {
         let StateData { world, .. } = data;
         if let StateEvent::Window(event) = &event {
             if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
@@ -137,7 +137,7 @@ impl<'a, 'b> State<GameData<'a, 'b>, ()> for Example {
         }
     }
 
-    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>, ()> {
+    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans<'a, 'b> {
         if !self.initialised {
             let remove = match self.progress.as_ref().map(|p| p.complete()) {
                 None | Some(Completion::Loading) => false,
@@ -178,7 +178,6 @@ impl<'a, 'b> State<GameData<'a, 'b>, ()> for Example {
                 }
             }
         }
-        data.data.update(&data.world);
         Trans::None
     }
 }

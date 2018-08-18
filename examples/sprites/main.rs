@@ -24,11 +24,11 @@ use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::cgmath::{Matrix4, Point3, Transform as CgTransform, Vector3};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::Entity;
-use amethyst::input::{is_close_requested, is_key_down, InputBundle};
+use amethyst::input::InputBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{
     Camera, ColorMask, DrawFlat, Material, MaterialDefaults, MaterialTextureSet, Mesh, PosTex,
-    Projection, ScreenDimensions, VirtualKeyCode, ALPHA,
+    Projection, ScreenDimensions, ALPHA,
 };
 use amethyst::ui::UiBundle;
 use std::time::Duration;
@@ -39,7 +39,7 @@ struct Example {
     entities: Vec<Entity>,
 }
 
-impl<'a, 'b> State<GameData<'a, 'b>, ()> for Example {
+impl<'a, 'b> SimpleState<'a, 'b> for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
 
@@ -153,27 +153,6 @@ impl<'a, 'b> State<GameData<'a, 'b>, ()> for Example {
             // Store the entity
             self.entities.push(entity);
         }
-    }
-
-    fn handle_event(
-        &mut self,
-        _: StateData<GameData>,
-        event: StateEvent<()>,
-    ) -> Trans<GameData<'a, 'b>, ()> {
-        if let StateEvent::Window(event) = &event {
-            if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-                Trans::Quit
-            } else {
-                Trans::None
-            }
-        } else {
-            Trans::None
-        }
-    }
-
-    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>, ()> {
-        data.data.update(&data.world);
-        Trans::None
     }
 }
 

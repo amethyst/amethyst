@@ -1,7 +1,8 @@
 //! Utilities for game state management.
 
+use amethyst_input::is_close_requested;
 use ecs::prelude::World;
-use StateEvent;
+use {GameData, StateEvent};
 
 /// State data encapsulates the data sent to all state functions from the application main loop.
 pub struct StateData<'a, T>
@@ -39,6 +40,13 @@ pub enum Trans<T, E> {
     Quit,
 }
 
+/// An empty `Trans`. Made to be used with `EmptyState`.
+pub type EmptyTrans = Trans<(), ()>;
+
+/// A simple default `Trans`. Made to be used with `SimpleState`.
+/// By default it contains a `GameData` as its `StateData` and doesn't have a custom event type.
+pub type SimpleTrans<'a, 'b> = Trans<GameData<'a, 'b>, ()>;
+
 /// A trait which defines game states that can be used by the state machine.
 pub trait State<T, E: Send + Sync + 'static> {
     /// Executed when the game state begins.
@@ -67,6 +75,173 @@ pub trait State<T, E: Send + Sync + 'static> {
     /// Executed on every frame immediately, as fast as the engine will allow.
     fn update(&mut self, _data: StateData<T>) -> Trans<T, E> {
         Trans::None
+    }
+}
+
+/// An empty `State` trait. It contains no `StateData` or custom `StateEvent`.
+/// A simple `State` trait. It contains `GameData` as its `StateData` and no custom `StateEvent`.
+pub trait EmptyState {
+    /// Executed when the game state begins.
+    fn on_start(&mut self, _data: StateData<()>) {}
+
+    /// Executed when the game state exits.
+    fn on_stop(&mut self, _data: StateData<()>) {}
+
+    /// Executed when a different game state is pushed onto the stack.
+    fn on_pause(&mut self, _data: StateData<()>) {}
+
+    /// Executed when the application returns to this game state once again.
+    fn on_resume(&mut self, _data: StateData<()>) {}
+
+    /// Executed on every frame before updating, for use in reacting to events.
+    fn handle_event(&mut self, _data: StateData<()>, event: StateEvent<()>) -> EmptyTrans {
+        if let StateEvent::Window(event) = &event {
+            if is_close_requested(&event) {
+                Trans::Quit
+            } else {
+                Trans::None
+            }
+        } else {
+            Trans::None
+        }
+    }
+
+    /// Executed repeatedly at stable, predictable intervals (1/60th of a second
+    /// by default).
+    fn fixed_update(&mut self, _data: StateData<()>) -> EmptyTrans {
+        Trans::None
+    }
+
+    /// Executed on every frame immediately, as fast as the engine will allow.
+    fn update(&mut self, _data: StateData<()>) -> EmptyTrans {
+        Trans::None
+    }
+}
+impl<T: EmptyState> State<(), ()> for T {
+    //pub trait SimpleState<'a,'b>: State<GameData<'a,'b>,()> {
+
+    /// Executed when the game state begins.
+    fn on_start(&mut self, data: StateData<()>) {
+        self.on_start(data)
+    }
+
+    /// Executed when the game state exits.
+    fn on_stop(&mut self, data: StateData<()>) {
+        self.on_stop(data)
+    }
+
+    /// Executed when a different game state is pushed onto the stack.
+    fn on_pause(&mut self, data: StateData<()>) {
+        self.on_pause(data)
+    }
+
+    /// Executed when the application returns to this game state once again.
+    fn on_resume(&mut self, data: StateData<()>) {
+        self.on_resume(data)
+    }
+
+    /// Executed on every frame before updating, for use in reacting to events.
+    fn handle_event(&mut self, data: StateData<()>, event: StateEvent<()>) -> EmptyTrans {
+        self.handle_event(data, event)
+    }
+
+    /// Executed repeatedly at stable, predictable intervals (1/60th of a second
+    /// by default).
+    fn fixed_update(&mut self, data: StateData<()>) -> EmptyTrans {
+        self.fixed_update(data)
+    }
+
+    /// Executed on every frame immediately, as fast as the engine will allow.
+    fn update(&mut self, data: StateData<()>) -> EmptyTrans {
+        self.update(data)
+    }
+}
+
+/// A simple `State` trait. It contains `GameData` as its `StateData` and no custom `StateEvent`.
+pub trait SimpleState<'a, 'b> {
+    /// Executed when the game state begins.
+    fn on_start(&mut self, _data: StateData<GameData>) {}
+
+    /// Executed when the game state exits.
+    fn on_stop(&mut self, _data: StateData<GameData>) {}
+
+    /// Executed when a different game state is pushed onto the stack.
+    fn on_pause(&mut self, _data: StateData<GameData>) {}
+
+    /// Executed when the application returns to this game state once again.
+    fn on_resume(&mut self, _data: StateData<GameData>) {}
+
+    /// Executed on every frame before updating, for use in reacting to events.
+    fn handle_event(
+        &mut self,
+        _data: StateData<GameData>,
+        event: StateEvent<()>,
+    ) -> SimpleTrans<'a, 'b> {
+        if let StateEvent::Window(event) = &event {
+            if is_close_requested(&event) {
+                Trans::Quit
+            } else {
+                Trans::None
+            }
+        } else {
+            Trans::None
+        }
+    }
+
+    /// Executed repeatedly at stable, predictable intervals (1/60th of a second
+    /// by default).
+    fn fixed_update(&mut self, _data: StateData<GameData>) -> SimpleTrans<'a, 'b> {
+        Trans::None
+    }
+
+    /// Executed on every frame immediately, as fast as the engine will allow.
+    fn update(&mut self, _data: &mut StateData<GameData>) -> SimpleTrans<'a, 'b> {
+        Trans::None
+    }
+}
+impl<'a, 'b, T: SimpleState<'a, 'b>> State<GameData<'a, 'b>, ()> for T {
+    //pub trait SimpleState<'a,'b>: State<GameData<'a,'b>,()> {
+
+    /// Executed when the game state begins.
+    fn on_start(&mut self, data: StateData<GameData>) {
+        self.on_start(data)
+    }
+
+    /// Executed when the game state exits.
+    fn on_stop(&mut self, data: StateData<GameData>) {
+        self.on_stop(data)
+    }
+
+    /// Executed when a different game state is pushed onto the stack.
+    fn on_pause(&mut self, data: StateData<GameData>) {
+        self.on_pause(data)
+    }
+
+    /// Executed when the application returns to this game state once again.
+    fn on_resume(&mut self, data: StateData<GameData>) {
+        self.on_resume(data)
+    }
+
+    /// Executed on every frame before updating, for use in reacting to events.
+    fn handle_event(
+        &mut self,
+        data: StateData<GameData>,
+        event: StateEvent<()>,
+    ) -> SimpleTrans<'a, 'b> {
+        self.handle_event(data, event)
+    }
+
+    /// Executed repeatedly at stable, predictable intervals (1/60th of a second
+    /// by default).
+    fn fixed_update(&mut self, data: StateData<GameData>) -> SimpleTrans<'a, 'b> {
+        self.fixed_update(data)
+    }
+
+    /// Executed on every frame immediately, as fast as the engine will allow.
+    fn update(&mut self, mut data: StateData<GameData>) -> SimpleTrans<'a, 'b> {
+        let r = self.update(&mut data);
+        data.data.update(&data.world);
+        r
     }
 }
 

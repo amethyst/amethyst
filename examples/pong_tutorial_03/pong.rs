@@ -2,10 +2,9 @@ use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::cgmath::{Matrix4, Vector3};
 use amethyst::core::transform::{GlobalTransform, Transform};
 use amethyst::ecs::prelude::{Component, DenseVecStorage};
-use amethyst::input::{is_close_requested, is_key_down};
 use amethyst::prelude::*;
 use amethyst::renderer::{
-    Camera, PngFormat, Projection, Sprite, Texture, TextureHandle, VirtualKeyCode, WithSpriteRender,
+    Camera, PngFormat, Projection, Sprite, Texture, TextureHandle, WithSpriteRender,
 };
 
 pub const ARENA_HEIGHT: f32 = 100.0;
@@ -18,7 +17,7 @@ const SPRITESHEET_SIZE: (f32, f32) = (8.0, 16.0);
 
 pub struct Pong;
 
-impl<'a, 'b> State<GameData<'a, 'b>, ()> for Pong {
+impl<'a, 'b> SimpleState<'a, 'b> for Pong {
     fn on_start(&mut self, data: StateData<GameData>) {
         let world = data.world;
 
@@ -39,27 +38,6 @@ impl<'a, 'b> State<GameData<'a, 'b>, ()> for Pong {
 
         initialise_paddles(world, spritesheet);
         initialise_camera(world);
-    }
-
-    fn handle_event(
-        &mut self,
-        _: StateData<GameData>,
-        event: StateEvent<()>,
-    ) -> Trans<GameData<'a, 'b>, ()> {
-        if let StateEvent::Window(event) = &event {
-            if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-                Trans::Quit
-            } else {
-                Trans::None
-            }
-        } else {
-            Trans::None
-        }
-    }
-
-    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>, ()> {
-        data.data.update(&data.world);
-        Trans::None
     }
 }
 

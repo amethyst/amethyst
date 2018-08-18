@@ -35,7 +35,7 @@ struct Example {
     scene: Handle<Prefab<MyPrefabData>>,
 }
 
-impl<'a, 'b> State<GameData<'a, 'b>, ()> for Loading {
+impl<'a, 'b> SimpleState<'a, 'b> for Loading {
     fn on_start(&mut self, data: StateData<GameData>) {
         self.prefab = Some(data.world.exec(|loader: PrefabLoader<MyPrefabData>| {
             loader.load("prefab/renderable.ron", RonFormat, (), &mut self.progress)
@@ -47,23 +47,7 @@ impl<'a, 'b> State<GameData<'a, 'b>, ()> for Loading {
         });
     }
 
-    fn handle_event(
-        &mut self,
-        _: StateData<GameData>,
-        event: StateEvent<()>,
-    ) -> Trans<GameData<'a, 'b>, ()> {
-        if let StateEvent::Window(event) = &event {
-            if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-                Trans::Quit
-            } else {
-                Trans::None
-            }
-        } else {
-            Trans::None
-        }
-    }
-
-    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>, ()> {
+    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans<'a, 'b> {
         data.data.update(&data.world);
         match self.progress.complete() {
             Completion::Failed => {
@@ -84,7 +68,7 @@ impl<'a, 'b> State<GameData<'a, 'b>, ()> for Loading {
     }
 }
 
-impl<'a, 'b> State<GameData<'a, 'b>, ()> for Example {
+impl<'a, 'b> SimpleState<'a, 'b> for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
 
@@ -95,7 +79,7 @@ impl<'a, 'b> State<GameData<'a, 'b>, ()> for Example {
         &mut self,
         data: StateData<GameData>,
         event: StateEvent<()>,
-    ) -> Trans<GameData<'a, 'b>, ()> {
+    ) -> SimpleTrans<'a, 'b> {
         let w = data.world;
         if let StateEvent::Window(event) = &event {
             // Exit if user hits Escape or closes the window
@@ -171,11 +155,6 @@ impl<'a, 'b> State<GameData<'a, 'b>, ()> for Example {
                 _ => (),
             }
         }
-        Trans::None
-    }
-
-    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>, ()> {
-        data.data.update(&data.world);
         Trans::None
     }
 }
