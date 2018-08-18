@@ -134,12 +134,19 @@ Note that as the origin of our camera is in the bottom left corner, we set
 
 To finish setting up the camera, let's call it in our State's `on_start` method:
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::prelude::*;
+# use amethyst::ecs::World;
+# fn initialise_camera(world: &mut World) { }
+# struct MyState;
+# impl<'a, 'b> State<GameData<'a, 'b>> for MyState {
 fn on_start(&mut self, data: StateData<GameData>) {
     let world = data.world;
 
     initialise_camera(world);
 }
+# }
 ```
 
 If you run the game now, you will see... a blank window. Unfortunately this will
@@ -286,6 +293,9 @@ compiles. Update the `on_start` method to the following:
 ```rust,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::*;
+# use amethyst::ecs::World;
+# fn initialise_paddles(world: &mut World) { }
+# fn initialise_camera(world: &mut World) { }
 # struct MyState;
 # impl<'a, 'b> State<GameData<'a, 'b>> for MyState {
 fn on_start(&mut self, data: StateData<GameData>) {
@@ -437,6 +447,7 @@ fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
     };
 
     //...
+#   unimplemented!()
 }
 ```
 
@@ -467,7 +478,7 @@ Heading back to the code, we need to add this snippet after loading the texture.
 # use amethyst::assets::{Loader, AssetStorage};
 # use amethyst::renderer::{Texture, PngFormat, TextureHandle, MaterialTextureSet, SpriteSheetHandle};
 # use amethyst::ecs::World;
-# fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
+# fn load_sprite_sheet(world: &mut World) {
 #   let texture_handle = {
 #       let loader = world.read_resource::<Loader>();
 #       let texture_storage = world.read_resource::<AssetStorage<Texture>>();
@@ -673,7 +684,7 @@ all together in the `on_start()` method:
 # impl amethyst::ecs::Component for Paddle {
 #   type Storage = amethyst::ecs::VecStorage<Paddle>;    
 # }
-# fn initialise_paddles(world: &mut World, spritesheet: TextureHandle) { }
+# fn initialise_paddles(world: &mut World, spritesheet: SpriteSheetHandle) { }
 # fn initialise_camera(world: &mut World) { }
 # fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle { unimplemented!() }
 # struct MyState;
