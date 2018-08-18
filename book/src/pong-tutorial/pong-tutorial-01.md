@@ -139,7 +139,7 @@ in this tutorial.
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::renderer::{Pipeline, DrawFlat, PosTex, Stage};
+# use amethyst::renderer::{Pipeline, DrawFlat, PosTex, Stage, DrawSprite};
 # fn main() {
 let pipe = Pipeline::build().with_stage(
     Stage::with_backbuffer()
