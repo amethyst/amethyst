@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Changed
 ### Removed
 ### Fixed
+* Fix DrawFlat render gamma. ([#868)]
 
 
 ## [0.8.0] - 2018-08
