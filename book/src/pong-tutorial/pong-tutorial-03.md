@@ -72,8 +72,8 @@ let input_bundle = InputBundle::<String, String>::new().with_bindings_from_file(
 # struct Pong;
 # impl<'a, 'b> State<GameData<'a, 'b>> for Pong { }
 let game_data = GameDataBuilder::default()
+    .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
     .with_bundle(TransformBundle::new())?
-    .with_bundle(RenderBundle::new(pipe, Some(config)))?
     .with_bundle(input_bundle)?;
 let mut game = Application::new("./", Pong, game_data)?;
 game.run();
@@ -168,8 +168,8 @@ Now lets add this system to our `GameDataBuilder` in `main.rs`:
 # let input_bundle = amethyst::input::InputBundle::<String, String>::new();
 // in the run() function
 let game_data = GameDataBuilder::default()
+    .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
     .with_bundle(TransformBundle::new())?
-    .with_bundle(RenderBundle::new(pipe, Some(config)))?
     .with_bundle(input_bundle)?
     .with(systems::PaddleSystem, "paddle_system", &["input_system"]); // Add this line
 # Ok(())

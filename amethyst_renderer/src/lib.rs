@@ -1,6 +1,24 @@
 //! A data parallel rendering engine developed by the [Amethyst][am] project.
+//!
 //! The source code is available for download on [GitHub][gh]. See the
 //! [online book][bk] for a complete guide to using Amethyst.
+//!
+//! # Background
+//!
+//! This crate provides OpenGL graphics rendering functionality through various *rendering passes*.
+//! The rendering passes may handle different domains of rendering, such as "draw game objects" vs
+//! "render text"; or they can handle the same domain with different variations, such as "draw
+//! objects with lighting" vs "draw objects ignoring lighting".
+//!
+//! ## Skinning: Interleaved Versus Separate Passes
+//!
+//! In an application, objects may be composed of multiple renderable entities, such as a main body
+//! and separate limbs. Where the limbs join the the body, it will look more realistic if the
+//! vertex positions are affected by the relative positions to the body and limb.
+//!
+//! This is where, for a `DrawX` pass, you will find a corresponding `DrawXSeparate` pass which
+//! supports vertex skinning and joint transformations to improve the render. An exception to this
+//! is the `DrawSprite` pass, which does not support joint transformations.
 //!
 //! [am]: https://www.amethyst.rs/
 //! [gh]: https://github.com/amethyst/amethyst/tree/develop/src/renderer
@@ -79,7 +97,7 @@ pub use mesh::{vertex_data, Mesh, MeshBuilder, MeshHandle, VertexBuffer};
 pub use mtl::{Material, MaterialDefaults, MaterialTextureSet, TextureOffset};
 pub use pass::{
     get_camera, set_vertex_args, DrawFlat, DrawFlatSeparate, DrawPbm, DrawPbmSeparate, DrawShaded,
-    DrawShadedSeparate,
+    DrawShadedSeparate, DrawSprite,
 };
 pub use pipe::{
     ColorBuffer, Data, DepthBuffer, DepthMode, Effect, EffectBuilder, Init, Meta, NewEffect,
@@ -93,7 +111,9 @@ pub use skinning::{
     AnimatedComboMeshCreator, AnimatedVertexBufferCombination, JointIds, JointTransforms,
     JointTransformsPrefab, JointWeights,
 };
-pub use sprite::{Sprite, SpriteRenderData, SpriteSheet, SpriteSheetHandle, WithSpriteRender};
+pub use sprite::{
+    Sprite, SpriteRender, SpriteSheet, SpriteSheetHandle, SpriteSheetSet, TextureCoordinates,
+};
 pub use system::RenderSystem;
 pub use tex::{Texture, TextureBuilder, TextureHandle};
 pub use transparent::{
@@ -106,6 +126,7 @@ pub use vertex::{
     With,
 };
 pub use visibility::{Visibility, VisibilitySortingSystem};
+pub use sprite_visibility::{SpriteVisibility, SpriteVisibilitySortingSystem};
 
 pub mod error;
 pub mod mouse;
@@ -135,3 +156,4 @@ mod transparent;
 mod types;
 mod vertex;
 mod visibility;
+mod sprite_visibility;

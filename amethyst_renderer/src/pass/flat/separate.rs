@@ -28,6 +28,13 @@ static ATTRIBUTES: [Attributes<'static>; 2] = [
 ];
 
 /// Draw mesh without lighting
+///
+/// See the [crate level documentation](index.html) for information about interleaved and separate
+/// passes.
+///
+/// # Type Parameters
+///
+/// * `V`: `VertexFormat`
 #[derive(Derivative, Clone, Debug, PartialEq)]
 #[derivative(Default(bound = "Self: Pass"))]
 pub struct DrawFlatSeparate {

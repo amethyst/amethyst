@@ -9,12 +9,13 @@ use glsl_layout::*;
 
 use cam::{ActiveCamera, Camera};
 use mesh::Mesh;
-use mtl::{Material, MaterialDefaults, TextureOffset};
+use mtl::{Material, MaterialDefaults, MaterialTextureSet, TextureOffset};
 use pass::set_skinning_buffers;
 use pipe::{Effect, EffectBuilder};
 use skinning::JointTransforms;
+use sprite::{Sprite, SpriteRender, SpriteSheet};
 use tex::Texture;
-use types::Encoder;
+use types::{Encoder, Slice};
 use vertex::Attributes;
 
 pub(crate) enum TextureType {
@@ -33,6 +34,15 @@ pub(crate) struct VertexArgs {
     proj: mat4,
     view: mat4,
     model: mat4,
+}
+
+#[repr(C, align(16))]
+#[derive(Clone, Copy, Debug, Uniform)]
+pub(crate) struct SpriteArgs {
+    sprite_dimensions: vec2,
+    offsets: vec2,
+    flip_horizontal: boolean,
+    flip_vertical: boolean,
 }
 
 #[repr(C, align(16))]
@@ -251,6 +261,21 @@ pub fn set_vertex_args(
     effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
 }
 
+pub(crate) fn set_sprite_args(
+    effect: &mut Effect,
+    encoder: &mut Encoder,
+    sprite: &Sprite,
+    sprite_render: &SpriteRender,
+) {
+    let geometry_args = SpriteArgs {
+        sprite_dimensions: [sprite.width, sprite.height].into(),
+        offsets: sprite.offsets.into(),
+        flip_horizontal: sprite_render.flip_horizontal.into(),
+        flip_vertical: sprite_render.flip_vertical.into(),
+    };
+    effect.update_constant_buffer("SpriteArgs", &geometry_args.std140(), encoder);
+}
+
 pub(crate) fn draw_mesh(
     encoder: &mut Encoder,
     effect: &mut Effect,
@@ -298,6 +323,80 @@ pub(crate) fn draw_mesh(
     );
 
     effect.draw(mesh.slice(), encoder);
+    effect.clear();
+}
+
+pub(crate) fn draw_sprite(
+    encoder: &mut Encoder,
+    effect: &mut Effect,
+    sprite_render: &SpriteRender,
+    sprite_sheet_storage: &AssetStorage<SpriteSheet>,
+    tex_storage: &AssetStorage<Texture>,
+    material_texture_set: &MaterialTextureSet,
+    camera: Option<(&Camera, &GlobalTransform)>,
+    global: Option<&GlobalTransform>,
+) {
+    if global.is_none() {
+        return;
+    }
+
+    let sprite_sheet = sprite_sheet_storage.get(&sprite_render.sprite_sheet);
+    if sprite_sheet.is_none() {
+        warn!(
+            "Sprite sheet not loaded for sprite_render: `{:?}`.",
+            sprite_render
+        );
+        return;
+    }
+    let sprite_sheet = sprite_sheet.unwrap();
+
+    let texture_handle = material_texture_set.handle(sprite_sheet.texture_id);
+    if texture_handle.is_none() {
+        warn!(
+            "Texture handle not found for texture id: `{}`.",
+            sprite_sheet.texture_id
+        );
+        return;
+    }
+
+    let texture = tex_storage.get(&texture_handle.unwrap());
+    if texture.is_none() {
+        warn!(
+            "Texture not loaded for texture id: `{}`.",
+            sprite_sheet.texture_id
+        );
+        return;
+    }
+
+    let sprite = &sprite_sheet.sprites[sprite_render.sprite_number];
+
+    // Sprite vertex shader
+    set_vertex_args(effect, encoder, camera, global.unwrap());
+    set_sprite_args(effect, encoder, sprite, sprite_render);
+
+    add_texture(effect, texture.unwrap());
+
+    // Set texture coordinates
+    let tex_coords = &sprite.tex_coords;
+    effect.update_constant_buffer(
+        "AlbedoOffset",
+        &TextureOffsetPod {
+            u_offset: [tex_coords.left, tex_coords.right].into(),
+            v_offset: [tex_coords.bottom, tex_coords.top].into(),
+        }.std140(),
+        encoder,
+    );
+
+    effect.draw(
+        &Slice {
+            start: 0,
+            end: 6,
+            base_vertex: 0,
+            instances: None,
+            buffer: Default::default(),
+        },
+        encoder,
+    );
     effect.clear();
 }
 

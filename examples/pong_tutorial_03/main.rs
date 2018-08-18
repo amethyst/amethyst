@@ -6,7 +6,7 @@ mod systems;
 use amethyst::core::transform::TransformBundle;
 use amethyst::input::InputBundle;
 use amethyst::prelude::*;
-use amethyst::renderer::{DrawFlat, PosTex};
+use amethyst::renderer::{DisplayConfig, DrawSprite, Pipeline, RenderBundle, Stage};
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
@@ -16,6 +16,13 @@ fn main() -> amethyst::Result<()> {
     let path = format!(
         "{}/examples/pong_tutorial_03/resources/display_config.ron",
         env!("CARGO_MANIFEST_DIR")
+    );
+    let config = DisplayConfig::load(&path);
+
+    let pipe = Pipeline::build().with_stage(
+        Stage::with_backbuffer()
+            .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
+            .with_pass(DrawSprite::new()),
     );
 
     let binding_path = format!(
@@ -27,11 +34,12 @@ fn main() -> amethyst::Result<()> {
     // of the git repository. It only is a different location to load the assets from.
     let assets_dir = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
 
-    let input_bundle = InputBundle::<String, String>::new().with_bindings_from_file(binding_path)?;
+    let input_bundle =
+        InputBundle::<String, String>::new().with_bindings_from_file(binding_path)?;
 
     let game_data = GameDataBuilder::default()
+        .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
         .with_bundle(TransformBundle::new())?
-        .with_basic_renderer(path, DrawFlat::<PosTex>::new(), false)?
         .with_bundle(input_bundle)?
         .with(systems::PaddleSystem, "paddle_system", &["input_system"]);
     let mut game = Application::new(assets_dir, Pong, game_data)?;
